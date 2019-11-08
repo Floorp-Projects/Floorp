@@ -49,11 +49,7 @@ bool IsValidKeyPathString(const nsAString& aKeyPath) {
 
   // If the very last character was a '.', the tokenizer won't give us an empty
   // token, but the keyPath is still invalid.
-  if (!aKeyPath.IsEmpty() && aKeyPath.CharAt(aKeyPath.Length() - 1) == '.') {
-    return false;
-  }
-
-  return true;
+  return aKeyPath.IsEmpty() || aKeyPath.CharAt(aKeyPath.Length() - 1) != '.';
 }
 
 enum KeyExtractionOptions { DoNotCreateProperties, CreateProperties };

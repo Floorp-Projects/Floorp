@@ -176,7 +176,7 @@ class NS_NO_VTABLE IDBRequest::ResultCallback {
                              JS::MutableHandle<JS::Value> aResult) = 0;
 
  protected:
-  ResultCallback() {}
+  ResultCallback() = default;
 };
 
 class IDBOpenDBRequest final : public IDBRequest {

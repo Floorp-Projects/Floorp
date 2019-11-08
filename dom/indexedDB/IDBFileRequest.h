@@ -90,7 +90,7 @@ class NS_NO_VTABLE IDBFileRequest::ResultCallback {
                              JS::MutableHandle<JS::Value> aResult) = 0;
 
  protected:
-  ResultCallback() {}
+  ResultCallback() = default;
 };
 
 }  // namespace dom

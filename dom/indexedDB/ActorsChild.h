@@ -67,6 +67,9 @@ class ThreadLocal {
   NS_DECL_OWNINGTHREAD
 
  public:
+  ThreadLocal() = delete;
+  ThreadLocal(const ThreadLocal& aOther) = delete;
+
   void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(ThreadLocal); }
 
   const LoggingInfo& GetLoggingInfo() const {
@@ -122,9 +125,6 @@ class ThreadLocal {
  private:
   explicit ThreadLocal(const nsID& aBackgroundChildLoggingId);
   ~ThreadLocal();
-
-  ThreadLocal() = delete;
-  ThreadLocal(const ThreadLocal& aOther) = delete;
 };
 
 class BackgroundFactoryChild final : public PBackgroundIDBFactoryChild {
@@ -145,6 +145,8 @@ class BackgroundFactoryChild final : public PBackgroundIDBFactoryChild {
     return mFactory;
   }
 
+  bool SendDeleteMe() = delete;
+
  private:
   // Only created by IDBFactory.
   explicit BackgroundFactoryChild(IDBFactory* aFactory);
@@ -155,27 +157,24 @@ class BackgroundFactoryChild final : public PBackgroundIDBFactoryChild {
   void SendDeleteMeInternal();
 
   // IPDL methods are only called by IPDL.
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual PBackgroundIDBFactoryRequestChild*
-  AllocPBackgroundIDBFactoryRequestChild(
+  PBackgroundIDBFactoryRequestChild* AllocPBackgroundIDBFactoryRequestChild(
       const FactoryRequestParams& aParams) override;
 
-  virtual bool DeallocPBackgroundIDBFactoryRequestChild(
+  bool DeallocPBackgroundIDBFactoryRequestChild(
       PBackgroundIDBFactoryRequestChild* aActor) override;
 
-  virtual PBackgroundIDBDatabaseChild* AllocPBackgroundIDBDatabaseChild(
+  PBackgroundIDBDatabaseChild* AllocPBackgroundIDBDatabaseChild(
       const DatabaseSpec& aSpec,
       PBackgroundIDBFactoryRequestChild* aRequest) override;
 
-  virtual bool DeallocPBackgroundIDBDatabaseChild(
+  bool DeallocPBackgroundIDBDatabaseChild(
       PBackgroundIDBDatabaseChild* aActor) override;
 
   mozilla::ipc::IPCResult RecvPBackgroundIDBDatabaseConstructor(
       PBackgroundIDBDatabaseChild* aActor, const DatabaseSpec& aSpec,
       PBackgroundIDBFactoryRequestChild* aRequest) override;
-
-  bool SendDeleteMe() = delete;
 };
 
 class BackgroundDatabaseChild;
@@ -249,16 +248,15 @@ class BackgroundFactoryRequestChild final
   bool HandleResponse(const DeleteDatabaseRequestResponse& aResponse);
 
   // IPDL methods are only called by IPDL.
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult Recv__delete__(
+  mozilla::ipc::IPCResult Recv__delete__(
       const FactoryRequestResponse& aResponse) override;
 
-  virtual mozilla::ipc::IPCResult RecvPermissionChallenge(
+  mozilla::ipc::IPCResult RecvPermissionChallenge(
       const PrincipalInfo& aPrincipalInfo) override;
 
-  virtual mozilla::ipc::IPCResult RecvBlocked(
-      const uint64_t& aCurrentVersion) override;
+  mozilla::ipc::IPCResult RecvBlocked(const uint64_t& aCurrentVersion) override;
 };
 
 class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
@@ -290,6 +288,8 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
     return mDatabase;
   }
 
+  bool SendDeleteMe() = delete;
+
  private:
   // Only constructed by BackgroundFactoryChild.
   BackgroundDatabaseChild(const DatabaseSpec& aSpec,
@@ -305,55 +305,51 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
   void ReleaseDOMObject();
 
   // IPDL methods are only called by IPDL.
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual PBackgroundIDBDatabaseFileChild* AllocPBackgroundIDBDatabaseFileChild(
+  PBackgroundIDBDatabaseFileChild* AllocPBackgroundIDBDatabaseFileChild(
       const IPCBlob& aIPCBlob) override;
 
-  virtual bool DeallocPBackgroundIDBDatabaseFileChild(
+  bool DeallocPBackgroundIDBDatabaseFileChild(
       PBackgroundIDBDatabaseFileChild* aActor) override;
 
-  virtual PBackgroundIDBDatabaseRequestChild*
-  AllocPBackgroundIDBDatabaseRequestChild(
+  PBackgroundIDBDatabaseRequestChild* AllocPBackgroundIDBDatabaseRequestChild(
       const DatabaseRequestParams& aParams) override;
 
-  virtual bool DeallocPBackgroundIDBDatabaseRequestChild(
+  bool DeallocPBackgroundIDBDatabaseRequestChild(
       PBackgroundIDBDatabaseRequestChild* aActor) override;
 
-  virtual PBackgroundIDBTransactionChild* AllocPBackgroundIDBTransactionChild(
+  PBackgroundIDBTransactionChild* AllocPBackgroundIDBTransactionChild(
       const nsTArray<nsString>& aObjectStoreNames, const Mode& aMode) override;
 
-  virtual bool DeallocPBackgroundIDBTransactionChild(
+  bool DeallocPBackgroundIDBTransactionChild(
       PBackgroundIDBTransactionChild* aActor) override;
 
-  virtual PBackgroundIDBVersionChangeTransactionChild*
+  PBackgroundIDBVersionChangeTransactionChild*
   AllocPBackgroundIDBVersionChangeTransactionChild(
       const uint64_t& aCurrentVersion, const uint64_t& aRequestedVersion,
       const int64_t& aNextObjectStoreId, const int64_t& aNextIndexId) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvPBackgroundIDBVersionChangeTransactionConstructor(
+  mozilla::ipc::IPCResult RecvPBackgroundIDBVersionChangeTransactionConstructor(
       PBackgroundIDBVersionChangeTransactionChild* aActor,
       const uint64_t& aCurrentVersion, const uint64_t& aRequestedVersion,
       const int64_t& aNextObjectStoreId, const int64_t& aNextIndexId) override;
 
-  virtual bool DeallocPBackgroundIDBVersionChangeTransactionChild(
+  bool DeallocPBackgroundIDBVersionChangeTransactionChild(
       PBackgroundIDBVersionChangeTransactionChild* aActor) override;
 
-  virtual PBackgroundMutableFileChild* AllocPBackgroundMutableFileChild(
+  PBackgroundMutableFileChild* AllocPBackgroundMutableFileChild(
       const nsString& aName, const nsString& aType) override;
 
-  virtual bool DeallocPBackgroundMutableFileChild(
+  bool DeallocPBackgroundMutableFileChild(
       PBackgroundMutableFileChild* aActor) override;
 
-  virtual mozilla::ipc::IPCResult RecvVersionChange(
+  mozilla::ipc::IPCResult RecvVersionChange(
       const uint64_t& aOldVersion, const Maybe<uint64_t>& aNewVersion) override;
 
-  virtual mozilla::ipc::IPCResult RecvInvalidate() override;
+  mozilla::ipc::IPCResult RecvInvalidate() override;
 
-  virtual mozilla::ipc::IPCResult RecvCloseAfterInvalidationComplete() override;
-
-  bool SendDeleteMe() = delete;
+  mozilla::ipc::IPCResult RecvCloseAfterInvalidationComplete() override;
 };
 
 class BackgroundDatabaseRequestChild final
@@ -376,7 +372,7 @@ class BackgroundDatabaseRequestChild final
   bool HandleResponse(const CreateFileRequestResponse& aResponse);
 
   // IPDL methods are only called by IPDL.
-  virtual mozilla::ipc::IPCResult Recv__delete__(
+  mozilla::ipc::IPCResult Recv__delete__(
       const DatabaseRequestResponse& aResponse) override;
 };
 
@@ -419,7 +415,7 @@ class BackgroundTransactionBase {
 
  private:
   // Only called by BackgroundVersionChangeTransactionChild.
-  void SetDOMTransaction(IDBTransaction* aDOMObject);
+  void SetDOMTransaction(IDBTransaction* aTransaction);
 };
 
 class BackgroundTransactionChild final : public BackgroundTransactionBase,
@@ -429,10 +425,12 @@ class BackgroundTransactionChild final : public BackgroundTransactionBase,
 
  public:
 #ifdef DEBUG
-  virtual void AssertIsOnOwningThread() const override;
+  void AssertIsOnOwningThread() const override;
 #endif
 
   void SendDeleteMeInternal();
+
+  bool SendDeleteMe() = delete;
 
  private:
   // Only created by IDBDatabase.
@@ -442,23 +440,21 @@ class BackgroundTransactionChild final : public BackgroundTransactionBase,
   ~BackgroundTransactionChild();
 
   // IPDL methods are only called by IPDL.
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvComplete(const nsresult& aResult) override;
 
-  virtual PBackgroundIDBRequestChild* AllocPBackgroundIDBRequestChild(
+  PBackgroundIDBRequestChild* AllocPBackgroundIDBRequestChild(
       const RequestParams& aParams) override;
 
-  virtual bool DeallocPBackgroundIDBRequestChild(
+  bool DeallocPBackgroundIDBRequestChild(
       PBackgroundIDBRequestChild* aActor) override;
 
-  virtual PBackgroundIDBCursorChild* AllocPBackgroundIDBCursorChild(
+  PBackgroundIDBCursorChild* AllocPBackgroundIDBCursorChild(
       const OpenCursorParams& aParams) override;
 
-  virtual bool DeallocPBackgroundIDBCursorChild(
+  bool DeallocPBackgroundIDBCursorChild(
       PBackgroundIDBCursorChild* aActor) override;
-
-  bool SendDeleteMe() = delete;
 };
 
 class BackgroundVersionChangeTransactionChild final
@@ -470,10 +466,12 @@ class BackgroundVersionChangeTransactionChild final
 
  public:
 #ifdef DEBUG
-  virtual void AssertIsOnOwningThread() const override;
+  void AssertIsOnOwningThread() const override;
 #endif
 
   void SendDeleteMeInternal(bool aFailedConstructor);
+
+  bool SendDeleteMe() = delete;
 
  private:
   // Only created by BackgroundDatabaseChild.
@@ -489,23 +487,21 @@ class BackgroundVersionChangeTransactionChild final
   }
 
   // IPDL methods are only called by IPDL.
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvComplete(const nsresult& aResult) override;
 
-  virtual PBackgroundIDBRequestChild* AllocPBackgroundIDBRequestChild(
+  PBackgroundIDBRequestChild* AllocPBackgroundIDBRequestChild(
       const RequestParams& aParams) override;
 
-  virtual bool DeallocPBackgroundIDBRequestChild(
+  bool DeallocPBackgroundIDBRequestChild(
       PBackgroundIDBRequestChild* aActor) override;
 
-  virtual PBackgroundIDBCursorChild* AllocPBackgroundIDBCursorChild(
+  PBackgroundIDBCursorChild* AllocPBackgroundIDBCursorChild(
       const OpenCursorParams& aParams) override;
 
-  virtual bool DeallocPBackgroundIDBCursorChild(
+  bool DeallocPBackgroundIDBCursorChild(
       PBackgroundIDBCursorChild* aActor) override;
-
-  bool SendDeleteMe() = delete;
 };
 
 class BackgroundMutableFileChild final : public PBackgroundMutableFileChild {
@@ -535,6 +531,8 @@ class BackgroundMutableFileChild final : public PBackgroundMutableFileChild {
 
   void ReleaseDOMObject();
 
+  bool SendDeleteMe() = delete;
+
  private:
   // Only constructed by BackgroundDatabaseChild.
   BackgroundMutableFileChild(const nsAString& aName, const nsAString& aType);
@@ -545,15 +543,13 @@ class BackgroundMutableFileChild final : public PBackgroundMutableFileChild {
   void SendDeleteMeInternal();
 
   // IPDL methods are only called by IPDL.
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual PBackgroundFileHandleChild* AllocPBackgroundFileHandleChild(
+  PBackgroundFileHandleChild* AllocPBackgroundFileHandleChild(
       const FileMode& aMode) override;
 
-  virtual bool DeallocPBackgroundFileHandleChild(
+  bool DeallocPBackgroundFileHandleChild(
       PBackgroundFileHandleChild* aActor) override;
-
-  bool SendDeleteMe() = delete;
 };
 
 class BackgroundRequestChild final : public BackgroundRequestChildBase,
@@ -585,7 +581,7 @@ class BackgroundRequestChild final : public BackgroundRequestChildBase,
   void OnPreprocessFinished(uint32_t aCloneDataIndex,
                             UniquePtr<JSStructuredCloneData> aCloneData);
 
-  void OnPreprocessFailed(uint32_t aModuleSetIndex, nsresult aErrorCode);
+  void OnPreprocessFailed(uint32_t aCloneDataIndex, nsresult aErrorCode);
 
   UniquePtr<JSStructuredCloneData> GetNextCloneData();
 
@@ -609,12 +605,12 @@ class BackgroundRequestChild final : public BackgroundRequestChildBase,
   nsresult HandlePreprocess(const nsTArray<PreprocessInfo>& aPreprocessInfos);
 
   // IPDL methods are only called by IPDL.
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult Recv__delete__(
+  mozilla::ipc::IPCResult Recv__delete__(
       const RequestResponse& aResponse) override;
 
-  virtual mozilla::ipc::IPCResult RecvPreprocess(
+  mozilla::ipc::IPCResult RecvPreprocess(
       const PreprocessParams& aParams) override;
 };
 
@@ -737,9 +733,9 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
                                       Args&&... aArgs);
 
   // IPDL methods are only called by IPDL.
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult RecvResponse(
+  mozilla::ipc::IPCResult RecvResponse(
       const CursorResponse& aResponse) override;
 
  public:
@@ -774,6 +770,8 @@ class BackgroundFileHandleChild : public PBackgroundFileHandleChild {
 
   void SendDeleteMeInternal();
 
+  bool SendDeleteMe() = delete;
+
  private:
   // Only created by IDBMutableFile.
   explicit BackgroundFileHandleChild(IDBFileHandle* aFileHandle);
@@ -785,17 +783,15 @@ class BackgroundFileHandleChild : public PBackgroundFileHandleChild {
   void NoteComplete();
 
   // IPDL methods are only called by IPDL.
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvComplete(const bool& aAborted) override;
 
-  virtual PBackgroundFileRequestChild* AllocPBackgroundFileRequestChild(
+  PBackgroundFileRequestChild* AllocPBackgroundFileRequestChild(
       const FileRequestParams& aParams) override;
 
-  virtual bool DeallocPBackgroundFileRequestChild(
+  bool DeallocPBackgroundFileRequestChild(
       PBackgroundFileRequestChild* aActor) override;
-
-  bool SendDeleteMe() = delete;
 };
 
 class BackgroundFileRequestChild final : public PBackgroundFileRequestChild {
@@ -833,13 +829,13 @@ class BackgroundFileRequestChild final : public PBackgroundFileRequestChild {
   void HandleResponse(JS::Handle<JS::Value> aResponse);
 
   // IPDL methods are only called by IPDL.
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult Recv__delete__(
+  mozilla::ipc::IPCResult Recv__delete__(
       const FileRequestResponse& aResponse) override;
 
-  virtual mozilla::ipc::IPCResult RecvProgress(
-      const uint64_t& aProgress, const uint64_t& aProgressMax) override;
+  mozilla::ipc::IPCResult RecvProgress(const uint64_t& aProgress,
+                                       const uint64_t& aProgressMax) override;
 };
 
 class BackgroundUtilsChild final : public PBackgroundIndexedDBUtilsChild {
@@ -855,6 +851,8 @@ class BackgroundUtilsChild final : public PBackgroundIndexedDBUtilsChild {
     NS_ASSERT_OWNINGTHREAD(BackgroundUtilsChild);
   }
 
+  bool SendDeleteMe() = delete;
+
  private:
   // Only created by IndexedDatabaseManager.
   explicit BackgroundUtilsChild(IndexedDatabaseManager* aManager);
@@ -865,9 +863,7 @@ class BackgroundUtilsChild final : public PBackgroundIndexedDBUtilsChild {
   void SendDeleteMeInternal();
 
   // IPDL methods are only called by IPDL.
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
-
-  bool SendDeleteMe() = delete;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
 }  // namespace indexedDB
