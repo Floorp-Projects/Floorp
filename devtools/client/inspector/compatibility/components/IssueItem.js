@@ -58,11 +58,33 @@ class IssueItem extends PureComponent {
     return testDataSet;
   }
 
+  _renderCauses() {
+    const { deprecated, experimental } = this.props;
+
+    const causes = [];
+
+    if (deprecated) {
+      causes.push("deprecated");
+    }
+
+    if (experimental) {
+      causes.push("experimental");
+    }
+
+    return causes.length
+      ? dom.span(
+          { className: "compatibility-issue-item__causes" },
+          `(${causes.join(",")})`
+        )
+      : null;
+  }
+
   render() {
     const { property, url } = this.props;
 
     return dom.li(
       {
+        className: "compatibility-issue-item",
         key: property,
         ...this._getTestDataAttributes(),
       },
@@ -74,7 +96,8 @@ class IssueItem extends PureComponent {
           onClick: e => this._onLinkClicked(e),
         },
         property
-      )
+      ),
+      this._renderCauses()
     );
   }
 }
