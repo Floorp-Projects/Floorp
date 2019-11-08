@@ -626,7 +626,7 @@ sftk_hasNullPassword(SFTKSlot *slot, SFTKDBHandle *keydb)
     pwenabled = PR_FALSE;
     if (sftkdb_HasPasswordSet(keydb) == SECSuccess) {
         PRBool tokenRemoved = PR_FALSE;
-        SECStatus rv = sftkdb_CheckPassword(keydb, "", &tokenRemoved);
+        SECStatus rv = sftkdb_CheckPasswordNull(keydb, &tokenRemoved);
         if (tokenRemoved) {
             sftk_CloseAllSessions(slot, PR_FALSE);
         }
@@ -3947,7 +3947,7 @@ NSC_SetPIN(CK_SESSION_HANDLE hSession, CK_CHAR_PTR pOldPin,
             PZ_Unlock(slot->slotLock);
 
             tokenRemoved = PR_FALSE;
-            rv = sftkdb_CheckPassword(handle, "", &tokenRemoved);
+            rv = sftkdb_CheckPasswordNull(handle, &tokenRemoved);
             if (tokenRemoved) {
                 sftk_CloseAllSessions(slot, PR_FALSE);
             }

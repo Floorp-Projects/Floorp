@@ -1213,6 +1213,8 @@ nsslowkey_EncodePW(SECOidTag alg, const SECItem *salt, SECItem *data)
     unsigned char one = 1;
     SECItem *epw = NULL;
     SECItem *encParam;
+    int iterLen = 0;
+    int saltLen;
     SECStatus rv;
 
     param.salt = *salt;
@@ -1220,6 +1222,17 @@ nsslowkey_EncodePW(SECOidTag alg, const SECItem *salt, SECItem *data)
     param.iter.data = &one;
     param.iter.len = 1;
     edi.encryptedData = *data;
+
+    iterLen = salt->len > 1 ? salt->data[salt->len - 1] : 2;
+    saltLen = (salt->len - iterLen) - 1;
+    /* if the resulting saltLen is a sha hash length, then assume that
+     * the iteration count is tacked on the end of the buffer */
+    if ((saltLen == SHA1_LENGTH) || (saltLen == SHA256_LENGTH) || (saltLen == SHA384_LENGTH) || (saltLen == SHA224_LENGTH) ||
+        (saltLen == SHA512_LENGTH)) {
+        param.iter.data = &salt->data[saltLen];
+        param.iter.len = iterLen;
+        param.salt.len = saltLen;
+    }
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (arena == NULL) {
@@ -1270,9 +1283,23 @@ nsslowkey_DecodePW(const SECItem *derData, SECOidTag *alg, SECItem *salt)
     if (rv != SECSuccess) {
         goto loser;
     }
-    rv = SECITEM_CopyItem(NULL, salt, &param.salt);
-    if (rv != SECSuccess) {
-        goto loser;
+    /* if the iteration count isn't one, tack it at the end of the salt */
+    if (!((param.iter.len == 1) && (param.iter.data[0] == 1))) {
+        int total_len = param.salt.len + param.iter.len + 1;
+        salt->data = PORT_Alloc(total_len);
+        if (salt->data == NULL) {
+            goto loser;
+        }
+        PORT_Memcpy(salt->data, param.salt.data, param.salt.len);
+        PORT_Memcpy(&salt->data[param.salt.len], param.iter.data,
+                    param.iter.len);
+        salt->data[total_len - 1] = param.iter.len;
+        salt->len = total_len;
+    } else {
+        rv = SECITEM_CopyItem(NULL, salt, &param.salt);
+        if (rv != SECSuccess) {
+            goto loser;
+        }
     }
     pwe = SECITEM_DupItem(&edi.encryptedData);
 
