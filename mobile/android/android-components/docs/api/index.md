@@ -106,6 +106,7 @@
 | [mozilla.components.feature.media.state](mozilla.components.feature.media.state/index.md) |  |
 | [mozilla.components.feature.privatemode.feature](mozilla.components.feature.privatemode.feature/index.md) |  |
 | [mozilla.components.feature.prompts](mozilla.components.feature.prompts/index.md) |  |
+| [mozilla.components.feature.prompts.dialog](mozilla.components.feature.prompts.dialog/index.md) |  |
 | [mozilla.components.feature.prompts.share](mozilla.components.feature.prompts.share/index.md) |  |
 | [mozilla.components.feature.push](mozilla.components.feature.push/index.md) |  |
 | [mozilla.components.feature.pwa](mozilla.components.feature.pwa/index.md) |  |
