@@ -22,6 +22,8 @@
 #include "vm/Realm.h"
 #include "vm/SymbolType.h"
 
+#include "vm/Activation-inl.h"  // js::Activation::hasWasmExitFP
+
 namespace js {
 
 class ContextChecks {
