@@ -1,6 +1,6 @@
 function LocationChangeListener(browser) {
   this.browser = browser;
-  browser.addProgressListener(this);
+  browser.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_LOCATION);
 }
 
 LocationChangeListener.prototype = {
@@ -26,16 +26,7 @@ const FILES = gTestPath
   .replace("chrome://mochitests/content/", "http://example.com/");
 
 function waitForPageShow(browser) {
-  return ContentTask.spawn(browser, null, async function() {
-    ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-    await new Promise(resolve => {
-      let listener = () => {
-        removeEventListener("pageshow", listener, true);
-        resolve();
-      };
-      addEventListener("pageshow", listener, true);
-    });
-  });
+  return BrowserTestUtils.waitForContentEvent(browser, "pageshow", true);
 }
 
 add_task(async function() {
