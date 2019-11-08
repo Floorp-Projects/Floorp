@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.graphics.drawable.toBitmap
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.fragment_search.*
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
@@ -24,6 +25,7 @@ import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.asActivity
@@ -93,6 +95,7 @@ class AwesomeBarView(
     private val defaultSearchSuggestionProvider: SearchSuggestionProvider
     private val searchSuggestionProviderMap: MutableMap<SearchEngine, SearchSuggestionProvider>
     private var providersInUse = mutableSetOf<AwesomeBar.SuggestionProvider>()
+    internal var isKeyboardDismissedProgrammatically: Boolean = false
 
     private val loadUrlUseCase = object : SessionUseCases.LoadUrlUseCase {
         override fun invoke(url: String, flags: EngineSession.LoadUrlFlags) {
@@ -176,6 +179,20 @@ class AwesomeBarView(
         searchShortcutsButton.setOnClickListener {
             interactor.onSearchShortcutsButtonClicked()
         }
+
+        val recyclerListener = object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                when (newState) {
+                    RecyclerView.SCROLL_STATE_DRAGGING ->
+                        if (!isKeyboardDismissedProgrammatically) {
+                        view.hideKeyboard()
+                        isKeyboardDismissedProgrammatically = true
+                    }
+                    RecyclerView.SCROLL_STATE_IDLE -> isKeyboardDismissedProgrammatically = false
+                }
+            }
+        }
+        view.addOnScrollListener(recyclerListener)
     }
 
     fun update(state: SearchFragmentState) {
