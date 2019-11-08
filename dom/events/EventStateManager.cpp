@@ -5545,6 +5545,24 @@ void EventStateManager::NativeAnonymousContentRemoved(nsIContent* aContent) {
   MOZ_ASSERT(aContent->IsRootOfNativeAnonymousSubtree());
   RemoveNodeFromChainIfNeeded(NS_EVENT_STATE_HOVER, aContent, false);
   RemoveNodeFromChainIfNeeded(NS_EVENT_STATE_ACTIVE, aContent, false);
+
+  if (mLastLeftMouseDownContent &&
+      nsContentUtils::ContentIsFlattenedTreeDescendantOf(
+          mLastLeftMouseDownContent, aContent)) {
+    mLastLeftMouseDownContent = aContent->GetFlattenedTreeParent();
+  }
+
+  if (mLastMiddleMouseDownContent &&
+      nsContentUtils::ContentIsFlattenedTreeDescendantOf(
+          mLastMiddleMouseDownContent, aContent)) {
+    mLastMiddleMouseDownContent = aContent->GetFlattenedTreeParent();
+  }
+
+  if (mLastRightMouseDownContent &&
+      nsContentUtils::ContentIsFlattenedTreeDescendantOf(
+          mLastRightMouseDownContent, aContent)) {
+    mLastRightMouseDownContent = aContent->GetFlattenedTreeParent();
+  }
 }
 
 void EventStateManager::ContentRemoved(Document* aDocument,
