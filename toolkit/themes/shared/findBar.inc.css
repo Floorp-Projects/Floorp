@@ -41,7 +41,7 @@ findbar[noanim] {
 
 /* Don't apply theme colors on findbar when header image is applied to avoid
 contrast issues, see bug 1506913 */
-:root[lwtheme-image] findbar {
+html|html[lwtheme-image] findbar {
   --lwt-toolbar-field-background-color: initial;
   --lwt-toolbar-field-color: initial;
   --lwt-toolbar-field-border-color: initial;
