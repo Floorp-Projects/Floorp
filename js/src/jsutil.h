@@ -11,17 +11,6 @@
 #ifndef jsutil_h
 #define jsutil_h
 
-#include "mozilla/Assertions.h"
-#include "mozilla/HashFunctions.h"
-#include "mozilla/MathAlgorithms.h"
-#include "mozilla/MemoryChecking.h"
-#include "mozilla/PodOperations.h"
-
-#include <limits.h>
-
-#include "js/Initialization.h"
-#include "js/Utility.h"
-#include "js/Value.h"
 #include "util/BitArray.h"
 #include "util/DiagnosticAssertions.h"
 #include "util/Memory.h"
