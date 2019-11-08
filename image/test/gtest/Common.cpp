@@ -24,7 +24,6 @@ namespace image {
 
 using namespace gfx;
 
-using std::abs;
 using std::vector;
 
 static bool sImageLibInitialized = false;
@@ -193,20 +192,25 @@ bool RectIsSolidColor(SourceSurface* aSurface, const IntRect& aRect,
   ASSERT_TRUE_OR_RETURN(data != nullptr, false);
 
   BGRAColor pmColor = aColor.Premultiply();
+  uint32_t expectedPixel = pmColor.AsPixel();
+
   int32_t rowLength = mapping.GetStride();
   for (int32_t row = rect.Y(); row < rect.YMost(); ++row) {
     for (int32_t col = rect.X(); col < rect.XMost(); ++col) {
       int32_t i = row * rowLength + col * 4;
-      if (aFuzz != 0) {
-        ASSERT_LE_OR_RETURN(abs(pmColor.mBlue - data[i + 0]), aFuzz, false);
-        ASSERT_LE_OR_RETURN(abs(pmColor.mGreen - data[i + 1]), aFuzz, false);
-        ASSERT_LE_OR_RETURN(abs(pmColor.mRed - data[i + 2]), aFuzz, false);
-        ASSERT_LE_OR_RETURN(abs(pmColor.mAlpha - data[i + 3]), aFuzz, false);
-      } else {
-        ASSERT_EQ_OR_RETURN(pmColor.mBlue, data[i + 0], false);
-        ASSERT_EQ_OR_RETURN(pmColor.mGreen, data[i + 1], false);
-        ASSERT_EQ_OR_RETURN(pmColor.mRed, data[i + 2], false);
-        ASSERT_EQ_OR_RETURN(pmColor.mAlpha, data[i + 3], false);
+      uint32_t gotPixel = *reinterpret_cast<uint32_t*>(data + i);
+      if (expectedPixel != gotPixel) {
+        BGRAColor gotColor = BGRAColor::FromPixel(gotPixel);
+        if (abs(pmColor.mBlue - gotColor.mBlue) > aFuzz ||
+            abs(pmColor.mGreen - gotColor.mGreen) > aFuzz ||
+            abs(pmColor.mRed - gotColor.mRed) > aFuzz ||
+            abs(pmColor.mAlpha - gotColor.mAlpha) > aFuzz) {
+          EXPECT_EQ(pmColor.mBlue, gotColor.mBlue);
+          EXPECT_EQ(pmColor.mGreen, gotColor.mGreen);
+          EXPECT_EQ(pmColor.mRed, gotColor.mRed);
+          EXPECT_EQ(pmColor.mAlpha, gotColor.mAlpha);
+          ASSERT_EQ_OR_RETURN(expectedPixel, gotPixel, false);
+        }
       }
     }
   }
@@ -236,10 +240,13 @@ bool RowHasPixels(SourceSurface* aSurface, int32_t aRow,
   int32_t rowLength = mapping.GetStride();
   for (int32_t col = 0; col < surfaceSize.width; ++col) {
     int32_t i = aRow * rowLength + col * 4;
-    ASSERT_EQ_OR_RETURN(aPixels[col].mBlue, data[i + 0], false);
-    ASSERT_EQ_OR_RETURN(aPixels[col].mGreen, data[i + 1], false);
-    ASSERT_EQ_OR_RETURN(aPixels[col].mRed, data[i + 2], false);
-    ASSERT_EQ_OR_RETURN(aPixels[col].mAlpha, data[i + 3], false);
+    uint32_t gotPixelData = *reinterpret_cast<uint32_t*>(data + i);
+    BGRAColor gotPixel = BGRAColor::FromPixel(gotPixelData);
+    EXPECT_EQ(aPixels[col].mBlue, gotPixel.mBlue);
+    EXPECT_EQ(aPixels[col].mGreen, gotPixel.mGreen);
+    EXPECT_EQ(aPixels[col].mRed, gotPixel.mRed);
+    EXPECT_EQ(aPixels[col].mAlpha, gotPixel.mAlpha);
+    ASSERT_EQ_OR_RETURN(aPixels[col].AsPixel(), gotPixelData, false);
   }
 
   return true;

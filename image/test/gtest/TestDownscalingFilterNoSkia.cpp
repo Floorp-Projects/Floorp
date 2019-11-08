@@ -50,6 +50,6 @@ TEST(ImageDownscalingFilter, NoSkia)
 
   // Configuring a DownscalingFilter should fail without Skia.
   AssertConfiguringPipelineFails(
-      decoder, DownscalingConfig{IntSize(100, 100), SurfaceFormat::B8G8R8A8},
-      SurfaceConfig{decoder, IntSize(50, 50), SurfaceFormat::B8G8R8A8, false});
+      decoder, DownscalingConfig{IntSize(100, 100), SurfaceFormat::OS_RGBA},
+      SurfaceConfig{decoder, IntSize(50, 50), SurfaceFormat::OS_RGBA, false});
 }
