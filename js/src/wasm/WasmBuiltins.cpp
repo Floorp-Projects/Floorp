@@ -249,7 +249,7 @@ ABIArgType ToABIType(MIRType type) {
     case MIRType::Float32:
       return ArgType_Float32;
     case MIRType::Double:
-      return ArgType_Double;
+      return ArgType_Float64;
     default:
       MOZ_CRASH("unexpected type");
   }
@@ -1403,7 +1403,7 @@ static Maybe<ABIFunctionType> ToBuiltinABIFunctionType(
       abiType = ArgType_Float32 << RetType_Shift;
       break;
     case ValType::F64:
-      abiType = ArgType_Double << RetType_Shift;
+      abiType = ArgType_Float64 << RetType_Shift;
       break;
     default:
       return Nothing();
@@ -1419,7 +1419,7 @@ static Maybe<ABIFunctionType> ToBuiltinABIFunctionType(
         abiType |= (ArgType_Float32 << (ArgType_Shift * (i + 1)));
         break;
       case ValType::F64:
-        abiType |= (ArgType_Double << (ArgType_Shift * (i + 1)));
+        abiType |= (ArgType_Float64 << (ArgType_Shift * (i + 1)));
         break;
       default:
         return Nothing();
