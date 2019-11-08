@@ -972,7 +972,7 @@
 
       var modifier = docElement.getAttribute("titlemodifier");
       if (docTitle) {
-        newTitle += docElement.getAttribute("titlepreface");
+        newTitle += docElement.getAttribute("titlepreface") || "";
         newTitle += docTitle;
         if (modifier) {
           newTitle += sep;
