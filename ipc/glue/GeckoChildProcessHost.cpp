@@ -179,8 +179,6 @@ class BaseProcessLauncher {
     return XRE_ChildProcessTypeToString(mProcessType);
   }
 
-  nsCOMPtr<nsIEventTarget> GetIPCLauncher();
-
   nsCOMPtr<nsISerialEventTarget> mLaunchThread;
   GeckoProcessType mProcessType;
   UniquePtr<base::LaunchOptions> mLaunchOptions;
@@ -840,7 +838,7 @@ IPCLaunchThreadObserver::Observe(nsISupports* aSubject, const char* aTopic,
   return rv;
 }
 
-nsCOMPtr<nsIEventTarget> BaseProcessLauncher::GetIPCLauncher() {
+nsCOMPtr<nsIEventTarget> GetIPCLauncher() {
   StaticMutexAutoLock lock(gIPCLaunchThreadMutex);
   if (!gIPCLaunchThread) {
     nsCOMPtr<nsIThread> thread;
@@ -867,7 +865,7 @@ nsCOMPtr<nsIEventTarget> BaseProcessLauncher::GetIPCLauncher() {
 
 // Other platforms use an on-demand thread pool.
 
-nsCOMPtr<nsIEventTarget> BaseProcessLauncher::GetIPCLauncher() {
+nsCOMPtr<nsIEventTarget> GetIPCLauncher() {
   nsCOMPtr<nsIEventTarget> pool =
       mozilla::SharedThreadPool::Get(NS_LITERAL_CSTRING("IPC Launch"));
   MOZ_DIAGNOSTIC_ASSERT(pool);
