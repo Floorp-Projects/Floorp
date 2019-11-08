@@ -26,7 +26,7 @@ void WithRemoveFrameRectFilter(const IntSize& aSize, const IntRect& aFrameRect,
 
   WithFilterPipeline(
       decoder, std::forward<Func>(aFunc), RemoveFrameRectConfig{aFrameRect},
-      SurfaceConfig{decoder, aSize, SurfaceFormat::B8G8R8A8, false});
+      SurfaceConfig{decoder, aSize, SurfaceFormat::OS_RGBA, false});
 }
 
 void AssertConfiguringRemoveFrameRectFilterFails(const IntSize& aSize,
@@ -36,7 +36,7 @@ void AssertConfiguringRemoveFrameRectFilterFails(const IntSize& aSize,
 
   AssertConfiguringPipelineFails(
       decoder, RemoveFrameRectConfig{aFrameRect},
-      SurfaceConfig{decoder, aSize, SurfaceFormat::B8G8R8A8, false});
+      SurfaceConfig{decoder, aSize, SurfaceFormat::OS_RGBA, false});
 }
 
 TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_0_0_100_100)

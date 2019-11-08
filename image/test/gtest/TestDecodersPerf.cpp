@@ -54,8 +54,8 @@ static void CheckDecoderState(const ImageTestCase& aTestCase, Decoder* aDecoder,
 
   // Verify that the resulting surfaces matches our expectations.
   EXPECT_TRUE(surface->IsDataSourceSurface());
-  EXPECT_TRUE(surface->GetFormat() == SurfaceFormat::B8G8R8X8 ||
-              surface->GetFormat() == SurfaceFormat::B8G8R8A8);
+  EXPECT_TRUE(surface->GetFormat() == SurfaceFormat::OS_RGBX ||
+              surface->GetFormat() == SurfaceFormat::OS_RGBA);
   EXPECT_EQ(aOutputSize, surface->GetSize());
 }
 

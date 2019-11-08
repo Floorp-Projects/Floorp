@@ -40,7 +40,7 @@ RawAccessFrameRef WithBlendAnimationFilter(Decoder* aDecoder,
   }
 
   BlendAnimationConfig blendAnim{aDecoder};
-  SurfaceConfig surfaceSink{aDecoder, aOutputSize, SurfaceFormat::B8G8R8A8,
+  SurfaceConfig surfaceSink{aDecoder, aOutputSize, SurfaceFormat::OS_RGBA,
                             false, Some(aAnimParams)};
 
   auto func = [&](Decoder* aDecoder, SurfaceFilter* aFilter) {
@@ -65,8 +65,8 @@ void AssertConfiguringBlendAnimationFilterFails(const IntRect& aFrameRect,
   AnimationParams animParams{aFrameRect, FrameTimeout::FromRawMilliseconds(0),
                              0, BlendMethod::SOURCE, DisposalMethod::KEEP};
   BlendAnimationConfig blendAnim{decoder};
-  SurfaceConfig surfaceSink{decoder, aOutputSize, SurfaceFormat::B8G8R8A8,
-                            false, Some(animParams)};
+  SurfaceConfig surfaceSink{decoder, aOutputSize, SurfaceFormat::OS_RGBA, false,
+                            Some(animParams)};
   AssertConfiguringPipelineFails(decoder, blendAnim, surfaceSink);
 }
 
