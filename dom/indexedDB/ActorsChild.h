@@ -726,9 +726,6 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
 
   void HandleResponse(const nsTArray<IndexCursorResponse>& aResponses);
 
-  StructuredCloneReadInfo PrepareCloneReadInfo(
-      SerializedStructuredCloneReadInfo&& aCloneInfo) const;
-
   template <typename T, typename Func>
   void HandleMultipleCursorResponses(const nsTArray<T>& aResponses,
                                      const Func& aHandleRecord);

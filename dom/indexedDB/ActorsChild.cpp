@@ -505,28 +505,83 @@ class PermissionRequestMainProcessHelper final : public PermissionRequestBase {
   virtual void OnPromptComplete(PermissionValue aPermissionValue) override;
 };
 
-void DeserializeStructuredCloneFiles(
+auto DeserializeStructuredCloneFiles(
     IDBDatabase* aDatabase,
     const nsTArray<SerializedStructuredCloneFile>& aSerializedFiles,
-    bool aForPreprocess, nsTArray<StructuredCloneFile>& aFiles) {
-  MOZ_ASSERT(aFiles.IsEmpty());
+    bool aForPreprocess) {
   MOZ_ASSERT_IF(aForPreprocess, aSerializedFiles.Length() == 1);
 
-  if (!aSerializedFiles.IsEmpty()) {
-    const uint32_t count = aSerializedFiles.Length();
-    aFiles.SetCapacity(count);
+  const auto count = aSerializedFiles.Length();
+  auto files = nsTArray<StructuredCloneFile>(count);
 
-    for (uint32_t index = 0; index < count; index++) {
-      const SerializedStructuredCloneFile& serializedFile =
-          aSerializedFiles[index];
+  for (const auto& serializedFile : aSerializedFiles) {
+    MOZ_ASSERT_IF(aForPreprocess, serializedFile.type() ==
+                                      StructuredCloneFile::eStructuredClone);
 
-      MOZ_ASSERT_IF(aForPreprocess, serializedFile.type() ==
-                                        StructuredCloneFile::eStructuredClone);
+    const BlobOrMutableFile& blobOrMutableFile = serializedFile.file();
 
-      const BlobOrMutableFile& blobOrMutableFile = serializedFile.file();
+    switch (serializedFile.type()) {
+      case StructuredCloneFile::eBlob: {
+        MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::TIPCBlob);
 
-      switch (serializedFile.type()) {
-        case StructuredCloneFile::eBlob: {
+        const IPCBlob& ipcBlob = blobOrMutableFile.get_IPCBlob();
+
+        const RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(ipcBlob);
+        MOZ_ASSERT(blobImpl);
+
+        RefPtr<Blob> blob = Blob::Create(aDatabase->GetOwnerGlobal(), blobImpl);
+        MOZ_ASSERT(blob);
+
+        const DebugOnly<StructuredCloneFile*> file =
+            files.EmplaceBack(StructuredCloneFile::eBlob, std::move(blob));
+        MOZ_ASSERT(file);
+
+        break;
+      }
+
+      case StructuredCloneFile::eMutableFile: {
+        MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t ||
+                   blobOrMutableFile.type() ==
+                       BlobOrMutableFile::TPBackgroundMutableFileChild);
+
+        switch (blobOrMutableFile.type()) {
+          case BlobOrMutableFile::Tnull_t: {
+            const DebugOnly<StructuredCloneFile*> file =
+                files.EmplaceBack(StructuredCloneFile::eMutableFile);
+            MOZ_ASSERT(file);
+
+            break;
+          }
+
+          case BlobOrMutableFile::TPBackgroundMutableFileChild: {
+            auto* const actor = static_cast<BackgroundMutableFileChild*>(
+                blobOrMutableFile.get_PBackgroundMutableFileChild());
+            MOZ_ASSERT(actor);
+
+            actor->EnsureDOMObject();
+
+            auto* const mutableFile =
+                static_cast<IDBMutableFile*>(actor->GetDOMObject());
+            MOZ_ASSERT(mutableFile);
+
+            const DebugOnly<StructuredCloneFile*> file =
+                files.EmplaceBack(mutableFile);
+            MOZ_ASSERT(file);
+
+            actor->ReleaseDOMObject();
+
+            break;
+          }
+
+          default:
+            MOZ_CRASH("Should never get here!");
+        }
+
+        break;
+      }
+
+      case StructuredCloneFile::eStructuredClone: {
+        if (aForPreprocess) {
           MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::TIPCBlob);
 
           const IPCBlob& ipcBlob = blobOrMutableFile.get_IPCBlob();
@@ -538,112 +593,51 @@ void DeserializeStructuredCloneFiles(
               Blob::Create(aDatabase->GetOwnerGlobal(), blobImpl);
           MOZ_ASSERT(blob);
 
-          StructuredCloneFile* const file = aFiles.AppendElement();
+          const DebugOnly<StructuredCloneFile*> file = files.EmplaceBack(
+              StructuredCloneFile::eStructuredClone, std::move(blob));
           MOZ_ASSERT(file);
-
-          file->mType = StructuredCloneFile::eBlob;
-          file->mBlob.swap(blob);
-
-          break;
-        }
-
-        case StructuredCloneFile::eMutableFile: {
-          MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t ||
-                     blobOrMutableFile.type() ==
-                         BlobOrMutableFile::TPBackgroundMutableFileChild);
-
-          switch (blobOrMutableFile.type()) {
-            case BlobOrMutableFile::Tnull_t: {
-              StructuredCloneFile* const file = aFiles.AppendElement();
-              MOZ_ASSERT(file);
-
-              file->mType = StructuredCloneFile::eMutableFile;
-
-              break;
-            }
-
-            case BlobOrMutableFile::TPBackgroundMutableFileChild: {
-              auto* const actor = static_cast<BackgroundMutableFileChild*>(
-                  blobOrMutableFile.get_PBackgroundMutableFileChild());
-              MOZ_ASSERT(actor);
-
-              actor->EnsureDOMObject();
-
-              auto* const mutableFile =
-                  static_cast<IDBMutableFile*>(actor->GetDOMObject());
-              MOZ_ASSERT(mutableFile);
-
-              StructuredCloneFile* const file = aFiles.AppendElement();
-              MOZ_ASSERT(file);
-
-              file->mType = StructuredCloneFile::eMutableFile;
-              file->mMutableFile = mutableFile;
-
-              actor->ReleaseDOMObject();
-
-              break;
-            }
-
-            default:
-              MOZ_CRASH("Should never get here!");
-          }
-
-          break;
-        }
-
-        case StructuredCloneFile::eStructuredClone: {
-          if (aForPreprocess) {
-            MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::TIPCBlob);
-
-            const IPCBlob& ipcBlob = blobOrMutableFile.get_IPCBlob();
-
-            const RefPtr<BlobImpl> blobImpl =
-                IPCBlobUtils::Deserialize(ipcBlob);
-            MOZ_ASSERT(blobImpl);
-
-            RefPtr<Blob> blob =
-                Blob::Create(aDatabase->GetOwnerGlobal(), blobImpl);
-            MOZ_ASSERT(blob);
-
-            StructuredCloneFile* const file = aFiles.AppendElement();
-            MOZ_ASSERT(file);
-
-            file->mType = StructuredCloneFile::eStructuredClone;
-            file->mBlob.swap(blob);
-          } else {
-            MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t);
-
-            StructuredCloneFile* const file = aFiles.AppendElement();
-            MOZ_ASSERT(file);
-
-            file->mType = StructuredCloneFile::eStructuredClone;
-          }
-
-          break;
-        }
-
-        case StructuredCloneFile::eWasmBytecode:
-        case StructuredCloneFile::eWasmCompiled: {
+        } else {
           MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t);
 
-          StructuredCloneFile* const file = aFiles.AppendElement();
+          const DebugOnly<StructuredCloneFile*> file =
+              files.EmplaceBack(StructuredCloneFile::eStructuredClone);
           MOZ_ASSERT(file);
-
-          file->mType = serializedFile.type();
-
-          // Don't set mBlob, support for storing WebAssembly.Modules has been
-          // removed in bug 1469395. Support for de-serialization of
-          // WebAssembly.Modules has been removed in bug 1561876. Full removal
-          // is tracked in bug 1487479.
-
-          break;
         }
 
-        default:
-          MOZ_CRASH("Should never get here!");
+        break;
       }
+
+      case StructuredCloneFile::eWasmBytecode:
+      case StructuredCloneFile::eWasmCompiled: {
+        MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t);
+
+        const DebugOnly<StructuredCloneFile*> file =
+            files.EmplaceBack(serializedFile.type());
+        MOZ_ASSERT(file);
+
+        // Don't set mBlob, support for storing WebAssembly.Modules has been
+        // removed in bug 1469395. Support for de-serialization of
+        // WebAssembly.Modules has been removed in bug 1561876. Full removal
+        // is tracked in bug 1487479.
+
+        break;
+      }
+
+      default:
+        MOZ_CRASH("Should never get here!");
     }
   }
+
+  return files;
+}
+
+StructuredCloneReadInfo DeserializeStructuredCloneReadInfo(
+    SerializedStructuredCloneReadInfo&& aSerialized, IDBDatabase* aDatabase) {
+  return StructuredCloneReadInfo{
+      std::move(aSerialized.data().data),
+      DeserializeStructuredCloneFiles(aDatabase, aSerialized.files(),
+                                      /* aForPreprocess */ false),
+      aDatabase, aSerialized.hasPreprocessInfo()};
 }
 
 void DispatchErrorEvent(IDBRequest* aRequest, nsresult aErrorCode,
@@ -2671,11 +2665,8 @@ void BackgroundRequestChild::HandleResponse(
   auto& serializedCloneInfo =
       const_cast<SerializedStructuredCloneReadInfo&>(aResponse);
 
-  StructuredCloneReadInfo cloneReadInfo(std::move(serializedCloneInfo));
-
-  DeserializeStructuredCloneFiles(mTransaction->Database(), aResponse.files(),
-                                  /* aForPreprocess */ false,
-                                  cloneReadInfo.mFiles);
+  auto cloneReadInfo = DeserializeStructuredCloneReadInfo(
+      std::move(serializedCloneInfo), mTransaction->Database());
 
   if (cloneReadInfo.mHasPreprocessInfo) {
     UniquePtr<JSStructuredCloneData> cloneData = GetNextCloneData();
@@ -2708,14 +2699,8 @@ void BackgroundRequestChild::HandleResponse(
       StructuredCloneReadInfo* cloneReadInfo = cloneReadInfos.AppendElement();
 
       // Move relevant data into the cloneReadInfo
-      *cloneReadInfo = std::move(serializedCloneInfo);
-
-      // Get the files
-      nsTArray<StructuredCloneFile> files;
-      DeserializeStructuredCloneFiles(database, serializedCloneInfo.files(),
-                                      /* aForPreprocess */ false, files);
-
-      cloneReadInfo->mFiles = std::move(files);
+      *cloneReadInfo = DeserializeStructuredCloneReadInfo(
+          std::move(serializedCloneInfo), database);
 
       if (cloneReadInfo->mHasPreprocessInfo) {
         UniquePtr<JSStructuredCloneData> cloneData = GetNextCloneData();
@@ -2755,9 +2740,9 @@ nsresult BackgroundRequestChild::HandlePreprocess(
 
   mPreprocessHelpers.SetLength(1);
 
-  nsTArray<StructuredCloneFile> files;
-  DeserializeStructuredCloneFiles(database, aPreprocessInfo.files(),
-                                  /* aForPreprocess */ true, files);
+  const auto files =
+      DeserializeStructuredCloneFiles(database, aPreprocessInfo.files(),
+                                      /* aForPreprocess */ true);
 
   MOZ_ASSERT(files.Length() == 1);
 
@@ -2797,9 +2782,9 @@ nsresult BackgroundRequestChild::HandlePreprocess(
   for (uint32_t index = 0; index < count; index++) {
     const PreprocessInfo& preprocessInfo = aPreprocessInfos[index];
 
-    nsTArray<StructuredCloneFile> files;
-    DeserializeStructuredCloneFiles(database, preprocessInfo.files(),
-                                    /* aForPreprocess */ true, files);
+    const auto files =
+        DeserializeStructuredCloneFiles(database, preprocessInfo.files(),
+                                        /* aForPreprocess */ true);
 
     MOZ_ASSERT(files.Length() == 1);
 
@@ -3623,33 +3608,11 @@ void BackgroundCursorChild::HandleMultipleCursorResponses(
   DispatchSuccessEvent(&helper);
 }
 
-// Note: the parameter type is an rvalue reference, since passing it by value
-// yields a 'Type must not be used as parameter' error
-StructuredCloneReadInfo BackgroundCursorChild::PrepareCloneReadInfo(
-    SerializedStructuredCloneReadInfo&& aCloneInfo) const {
-  StructuredCloneReadInfo cloneReadInfo(
-      std::forward<SerializedStructuredCloneReadInfo>(aCloneInfo));
-  cloneReadInfo.mDatabase = mTransaction->Database();
-
-  // TODO: This uses response.cloneInfo() after it was apparently moved
-  // above, which would be invalid. However, it was not really moved,
-  // since
-  // StructuredCloneReadInfo::StructuredCloneReadInfo(SerializedStructuredCloneReadInfo&&)
-  // does not touch 'files' at all. This is, however, confusing.
-  // Can't this be done in the constructor of StructuredCloneReadInfo as
-  // well?
-  // Note: this will be fixed in a subsequent patch for bug 1168606.
-  DeserializeStructuredCloneFiles(mTransaction->Database(), aCloneInfo.files(),
-                                  /* aForPreprocess */ false,
-                                  cloneReadInfo.mFiles);
-
-  return cloneReadInfo;
-}
-
 void BackgroundCursorChild::HandleResponse(
     const nsTArray<ObjectStoreCursorResponse>& aResponses) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mObjectStore);
+  MOZ_ASSERT(mTransaction);
 
   HandleMultipleCursorResponses(
       aResponses, [this](const bool useAsCurrentResult,
@@ -3659,7 +3622,8 @@ void BackgroundCursorChild::HandleResponse(
         // might not be the case for all cached records.
         HandleIndividualCursorResponse(
             useAsCurrentResult, std::move(response.key()),
-            PrepareCloneReadInfo(std::move(response.cloneInfo())));
+            DeserializeStructuredCloneReadInfo(std::move(response.cloneInfo()),
+                                               mTransaction->Database()));
       });
 }
 
@@ -3680,6 +3644,7 @@ void BackgroundCursorChild::HandleResponse(
     const nsTArray<IndexCursorResponse>& aResponses) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mIndex);
+  MOZ_ASSERT(mTransaction);
 
   HandleMultipleCursorResponses(
       aResponses,
@@ -3687,7 +3652,8 @@ void BackgroundCursorChild::HandleResponse(
         HandleIndividualCursorResponse(
             useAsCurrentResult, std::move(response.key()),
             std::move(response.sortKey()), std::move(response.objectKey()),
-            PrepareCloneReadInfo(std::move(response.cloneInfo())));
+            DeserializeStructuredCloneReadInfo(std::move(response.cloneInfo()),
+                                               mTransaction->Database()));
       });
 }
 
