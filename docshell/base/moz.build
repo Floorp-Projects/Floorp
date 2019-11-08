@@ -5,13 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files('**'):
-    BUG_COMPONENT = ('Core', 'Document Navigation')
+    BUG_COMPONENT = ('Core', 'DOM: Navigation')
 
 with Files('crashtests/430628*'):
-    BUG_COMPONENT = ('Core', 'Editor')
+    BUG_COMPONENT = ('Core', 'DOM: Editor')
 
 with Files('crashtests/432114*'):
-    BUG_COMPONENT = ('Core', 'Editor')
+    BUG_COMPONENT = ('Core', 'DOM: Editor')
 
 with Files('crashtests/500328*'):
     BUG_COMPONENT = ('Firefox', 'Bookmarks & History')

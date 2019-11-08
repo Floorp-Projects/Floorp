@@ -123,13 +123,13 @@ with Files('tests/chrome/*autocomplete*'):
     BUG_COMPONENT = ('Toolkit', 'Autocomplete')
 
 with Files('tests/chrome/*drop*'):
-    BUG_COMPONENT = ('Core', 'Drag and Drop')
+    BUG_COMPONENT = ('Core', 'DOM: Drag & Drop')
 
 with Files('tests/chrome/*1048178*'):
     BUG_COMPONENT = ('Core', 'XUL')
 
 with Files('tests/chrome/*253481*'):
-    BUG_COMPONENT = ('Core', 'Editor')
+    BUG_COMPONENT = ('Core', 'DOM: Editor')
 
 with Files('tests/chrome/*263683*'):
     BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
@@ -181,7 +181,7 @@ with Files('tests/mochitest/*autocomplete*'):
     BUG_COMPONENT = ('Toolkit', 'Autocomplete')
 
 with Files('tests/mochitest/*mousecapture*'):
-    BUG_COMPONENT = ('Core', 'User events and focus handling')
+    BUG_COMPONENT = ('Core', 'DOM: UI Events & Focus Handling')
 
 with Files('tests/reftests/*multiline*'):
     BUG_COMPONENT = ('Core', 'XBL')
@@ -208,7 +208,7 @@ with Files('tests/widgets/*menubar*'):
     BUG_COMPONENT = ('Core', 'XUL')
 
 with Files('tests/widgets/*capture*'):
-    BUG_COMPONENT = ('Core', 'User events and focus handling')
+    BUG_COMPONENT = ('Core', 'DOM: UI Events & Focus Handling')
 
 with Files('tests/widgets/*popup*'):
     BUG_COMPONENT = ('Toolkit', 'XUL Widgets')

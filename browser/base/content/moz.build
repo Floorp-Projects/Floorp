@@ -65,7 +65,7 @@ with Files("test/popups/**"):
     BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 with Files("test/referrer/**"):
-    BUG_COMPONENT = ("Core", "Document Navigation")
+    BUG_COMPONENT = ("Core", "DOM: Navigation")
 
 with Files("test/sanitize/**"):
     BUG_COMPONENT = ("Toolkit", "Data Sanitization")

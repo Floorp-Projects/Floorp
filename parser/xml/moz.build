@@ -5,6 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files('**'):
-    BUG_COMPONENT = ('Core', 'HTML: Parser')
+    BUG_COMPONENT = ('Core', 'DOM: HTML Parser')
 
 TEST_DIRS += ['test']

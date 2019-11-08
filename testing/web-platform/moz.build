@@ -55,13 +55,13 @@ with Files("mozilla/tests/dom/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("mozilla/tests/editor/**"):
-    BUG_COMPONENT = ("Core", "Editor")
+    BUG_COMPONENT = ("Core", "DOM: Editor")
 
 with Files("mozilla/tests/fetch/**"):
     BUG_COMPONENT = ("Core", "DOM: Networking")
 
 with Files("mozilla/tests/focus/**"):
-    BUG_COMPONENT = ("Core", "Editor")
+    BUG_COMPONENT = ("Core", "DOM: Editor")
 
 with Files("mozilla/tests/html/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
@@ -123,7 +123,7 @@ with Files("tests/FileAPI/**"):
     BUG_COMPONENT = ("Core", "DOM: File")
 
 with Files("tests/IndexedDB/**"):
-    BUG_COMPONENT = ("Core", "DOM: IndexedDB")
+    BUG_COMPONENT = ("Core", "Storage: IndexedDB")
 
 with Files("tests/WebCryptoAPI/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
@@ -448,7 +448,7 @@ with Files("tests/dpub-aria/**"):
     BUG_COMPONENT = ("Core", "Disability Access APIs")
 
 with Files("tests/editing/**"):
-    BUG_COMPONENT = ("Core", "Editor")
+    BUG_COMPONENT = ("Core", "DOM: Editor")
 
 with Files("tests/element-timing/**"):
     BUG_COMPONENT = ("Core", "Performance")
@@ -582,10 +582,10 @@ with Files("tests/old-tests/submission/Microsoft/foreigncontent/**"):
     BUG_COMPONENT = ("Core", "SVG")
 
 with Files("tests/old-tests/submission/Microsoft/history/**"):
-    BUG_COMPONENT = ("Core", "Document Navigation")
+    BUG_COMPONENT = ("Core", "DOM: Navigation")
 
 with Files("tests/old-tests/submission/Microsoft/selection/**"):
-    BUG_COMPONENT = ("Core", "Selection")
+    BUG_COMPONENT = ("Core", "DOM: Selection")
 
 with Files("tests/orientation-event/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
@@ -667,7 +667,7 @@ with Files("tests/secure-contexts/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("tests/selection/**"):
-    BUG_COMPONENT = ("Core", "Selection")
+    BUG_COMPONENT = ("Core", "DOM: Selection")
 
 with Files("tests/server-timing/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
@@ -682,7 +682,7 @@ with Files("tests/speech-api/**"):
     BUG_COMPONENT = ("Core", "Web Speech")
 
 with Files("tests/storage/**"):
-    BUG_COMPONENT = ("Core", "DOM: Quota Manager")
+    BUG_COMPONENT = ("Core", "Storage: Quota Manager")
 
 with Files("tests/streams/**"):
     BUG_COMPONENT = ("Core", "Javascript Engine")
@@ -760,7 +760,7 @@ with Files("tests/websockets/**"):
     BUG_COMPONENT = ("Core", "Networking: WebSockets")
 
 with Files("tests/webstorage/**"):
-    BUG_COMPONENT = ("Core", "DOM: Web Storage")
+    BUG_COMPONENT = ("Core", "Storage: localStorage & sessionStorage")
 
 with Files("tests/webusb/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")

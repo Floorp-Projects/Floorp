@@ -198,7 +198,7 @@ with Files('reftest-sanity/**'):
 with Files('scrolling/**'):
     BUG_COMPONENT = ('Core', 'Layout')
 with Files('selection/**'):
-    BUG_COMPONENT = ('Core', 'Selection')
+    BUG_COMPONENT = ('Core', 'DOM: Selection')
 with Files('svg/**'):
     BUG_COMPONENT = ('Core', 'SVG')
 with Files('tab-size/**'):
@@ -236,7 +236,7 @@ with Files('transform-3d/**'):
 with Files('unicode/**'):
     BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
 with Files('view-source/**'):
-    BUG_COMPONENT = ('Core', 'HTML: Parser')
+    BUG_COMPONENT = ('Core', 'DOM: HTML Parser')
 with Files('w3c-css/**'):
     BUG_COMPONENT = ('Core', 'Layout')
 with Files('w3c-css/received/css-conditional/**'):

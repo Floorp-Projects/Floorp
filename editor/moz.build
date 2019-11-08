@@ -34,4 +34,4 @@ TESTING_JS_MODULES += [
 ]
 
 with Files('**'):
-    BUG_COMPONENT = ('Core', 'Editor')
+    BUG_COMPONENT = ('Core', 'DOM: Editor')
