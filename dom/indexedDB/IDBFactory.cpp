@@ -308,13 +308,7 @@ bool IDBFactory::AllowedForWindow(nsPIDOMWindowInner* aWindow) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
 
-  nsCOMPtr<nsIPrincipal> principal;
-  nsresult rv = AllowedForWindowInternal(aWindow, getter_AddRefs(principal));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  return true;
+  return !NS_WARN_IF(NS_FAILED(AllowedForWindowInternal(aWindow, nullptr)));
 }
 
 // static
@@ -369,7 +363,9 @@ nsresult IDBFactory::AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
     }
   }
 
-  principal.forget(aPrincipal);
+  if (aPrincipal) {
+    principal.forget(aPrincipal);
+  }
   return NS_OK;
 }
 
@@ -388,15 +384,13 @@ bool IDBFactory::AllowedForPrincipal(nsIPrincipal* aPrincipal,
       *aIsSystemPrincipal = true;
     }
     return true;
-  } else if (aIsSystemPrincipal) {
+  }
+
+  if (aIsSystemPrincipal) {
     *aIsSystemPrincipal = false;
   }
 
-  if (aPrincipal->GetIsNullPrincipal()) {
-    return false;
-  }
-
-  return true;
+  return !aPrincipal->GetIsNullPrincipal();
 }
 
 void IDBFactory::UpdateActiveTransactionCount(int32_t aDelta) {

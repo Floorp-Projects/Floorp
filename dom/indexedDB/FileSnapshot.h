@@ -40,14 +40,14 @@ class BlobImplSnapshot final : public BlobImpl, public PIBlobImplSnapshot {
   nsWeakPtr mFileHandle;
 
  public:
-  BlobImplSnapshot(BlobImpl* aImpl, IDBFileHandle* aFileHandle);
+  BlobImplSnapshot(BlobImpl* aFileImpl, IDBFileHandle* aFileHandle);
 
   NS_DECL_ISUPPORTS_INHERITED
 
  private:
-  BlobImplSnapshot(BlobImpl* aImpl, nsIWeakReference* aFileHandle);
+  BlobImplSnapshot(BlobImpl* aFileImpl, nsIWeakReference* aFileHandle);
 
-  ~BlobImplSnapshot();
+  ~BlobImplSnapshot() = default;
 
   // BlobImpl
   virtual void GetName(nsAString& aName) const override {

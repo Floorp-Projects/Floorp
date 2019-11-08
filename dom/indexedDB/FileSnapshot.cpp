@@ -135,7 +135,7 @@ class StreamWrapper::CloseRunnable final : public Runnable {
       : Runnable("StreamWrapper::CloseRunnable"),
         mStreamWrapper(aStreamWrapper) {}
 
-  ~CloseRunnable() {}
+  ~CloseRunnable() = default;
 
   NS_IMETHOD
   Run() override;
@@ -159,8 +159,6 @@ BlobImplSnapshot::BlobImplSnapshot(BlobImpl* aFileImpl,
   MOZ_ASSERT(aFileImpl);
   MOZ_ASSERT(aFileHandle);
 }
-
-BlobImplSnapshot::~BlobImplSnapshot() {}
 
 NS_IMPL_ISUPPORTS_INHERITED(BlobImplSnapshot, BlobImpl, PIBlobImplSnapshot)
 

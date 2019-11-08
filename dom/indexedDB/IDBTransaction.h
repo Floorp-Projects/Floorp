@@ -219,7 +219,7 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
 
   void Abort(IDBRequest* aRequest);
 
-  void Abort(nsresult aAbortCode);
+  void Abort(nsresult aErrorCode);
 
   int64_t LoggingSerialNumber() const {
     AssertIsOnOwningThread();

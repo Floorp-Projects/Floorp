@@ -91,7 +91,7 @@ const uint32_t kFileCopyBufferSize = 32768;
 
 ThreadLocal::ThreadLocal(const nsID& aBackgroundChildLoggingId)
     : mLoggingInfo(aBackgroundChildLoggingId, 1, -1, 1),
-      mCurrentTransaction(0) {
+      mCurrentTransaction(nullptr) {
   MOZ_COUNT_CTOR(mozilla::dom::indexedDB::ThreadLocal);
 
   // NSID_LENGTH counts the null terminator, SetLength() does not.
@@ -1156,7 +1156,6 @@ class MOZ_STACK_CLASS FileHandleResultHelper final
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
     }
-    rv = NS_OK;
 
     if (NS_WARN_IF(!xpc::StringToJsval(aCx, tmpString, aResult))) {
       return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
@@ -3247,7 +3246,7 @@ class BackgroundCursorChild::DelayedActionRunnable final
   }
 
  private:
-  ~DelayedActionRunnable() {}
+  ~DelayedActionRunnable() = default;
 
   NS_DECL_NSIRUNNABLE
   nsresult Cancel() override;

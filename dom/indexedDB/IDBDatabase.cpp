@@ -79,7 +79,7 @@ class CancelableRunnableWrapper final : public CancelableRunnable {
   }
 
  private:
-  ~CancelableRunnableWrapper() {}
+  ~CancelableRunnableWrapper() = default;
 
   NS_DECL_NSIRUNNABLE
   nsresult Cancel() override;

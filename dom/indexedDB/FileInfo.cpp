@@ -38,7 +38,7 @@ class FileInfoImpl final : public FileInfo {
   }
 
  private:
-  ~FileInfoImpl() {}
+  ~FileInfoImpl() = default;
 
   virtual int64_t Id() const override { return int64_t(mFileId); }
 };
@@ -48,8 +48,6 @@ class FileInfoImpl final : public FileInfo {
 FileInfo::FileInfo(FileManager* aFileManager) : mFileManager(aFileManager) {
   MOZ_ASSERT(aFileManager);
 }
-
-FileInfo::~FileInfo() {}
 
 // static
 FileInfo* FileInfo::Create(FileManager* aFileManager, int64_t aId) {
