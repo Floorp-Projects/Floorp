@@ -10,6 +10,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.mozilla.fenix.components.FenixSnackbar
+import android.app.AlertDialog
+import org.mozilla.fenix.R
+import android.content.Context
+import android.view.accessibility.AccessibilityManager
 import java.util.concurrent.atomic.AtomicBoolean
 
 internal const val UNDO_DELAY = 3000L
@@ -40,29 +44,58 @@ fun CoroutineScope.allowUndo(
     // writing a volatile variable.
     val requestedUndo = AtomicBoolean(false)
 
-    // Launch an indefinite snackbar.
-    val snackbar = FenixSnackbar
-        .make(view, FenixSnackbar.LENGTH_INDEFINITE)
-        .setText(message)
-        .setAnchorView(anchorView)
-        .setAction(undoActionTitle) {
-            requestedUndo.set(true)
+    fun showUndoDialog() {
+        val dialogBuilder = AlertDialog.Builder(view.context)
+        dialogBuilder.setMessage(message).setCancelable(false)
+            .setPositiveButton(R.string.a11y_dialog_deleted_confirm) { _, _ ->
+            launch {
+                operation.invoke()
+            }
+        }.setNegativeButton(R.string.a11y_dialog_deleted_undo) { _, _ ->
             launch {
                 onCancel.invoke()
             }
         }
+        val alert = dialogBuilder.create()
+        alert.show()
+    }
 
-    // If user engages with the snackbar, it'll get automatically dismissed.
-    snackbar.show()
+    fun showUndoSnackbar() {
+        val snackbar = FenixSnackbar
+            .make(view, FenixSnackbar.LENGTH_INDEFINITE)
+            .setText(message)
+            .setAnchorView(anchorView)
+            .setAction(undoActionTitle) {
+                requestedUndo.set(true)
+                launch {
+                    onCancel.invoke()
+                }
+            }
 
-    // Wait a bit, and if user didn't request cancellation, proceed with
-    // requested operation and hide the snackbar.
-    launch {
-        delay(UNDO_DELAY)
+        snackbar.show()
 
-        if (!requestedUndo.get()) {
-            snackbar.dismiss()
-            operation.invoke()
+        // Wait a bit, and if user didn't request cancellation, proceed with
+        // requested operation and hide the snackbar.
+        launch {
+            delay(UNDO_DELAY)
+
+            if (!requestedUndo.get()) {
+                snackbar.dismiss()
+                operation.invoke()
+            }
         }
     }
+
+    //  It is difficult to use our Snackbars quickly enough with
+    //  Talkback enabled, so in that case we show a dialog instead
+    if (touchExplorationEnabled(view)) {
+        showUndoDialog()
+    } else {
+        showUndoSnackbar()
+    }
+}
+
+fun touchExplorationEnabled(view: View): Boolean {
+    val am = view.context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+    return am.isTouchExplorationEnabled
 }
