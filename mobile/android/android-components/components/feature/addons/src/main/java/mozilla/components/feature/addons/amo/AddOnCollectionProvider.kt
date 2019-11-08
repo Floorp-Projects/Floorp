@@ -29,7 +29,7 @@ internal const val DEFAULT_COLLECTION_NAME = "7e8d6dc651b54ab385fb8791bf9dac"
  * to [DEFAULT_COLLECTION_NAME].
  * @property client A reference of [Client] for interacting with the AMO HTTP api.
  */
-class AddOnsCollectionsProvider(
+class AddOnCollectionProvider(
     private val serverURL: String = DEFAULT_SERVER_URL,
     private val collectionName: String = DEFAULT_COLLECTION_NAME,
     private val client: Client

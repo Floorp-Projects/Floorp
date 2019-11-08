@@ -47,7 +47,7 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
         recyclerView = rootView.findViewById(R.id.add_ons_list)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         scope.launch {
-            val addOns = requireContext().components.addOnsProvider.getAvailableAddOns()
+            val addOns = requireContext().components.addOnProvider.getAvailableAddOns()
 
             scope.launch(Dispatchers.Main) {
                 val adapter = AddOnsAdapter(

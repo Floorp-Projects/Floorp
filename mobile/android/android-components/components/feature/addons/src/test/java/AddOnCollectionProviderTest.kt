@@ -21,7 +21,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
-class AddOnsCollectionsProviderTest {
+class AddOnCollectionProviderTest {
 
     @Test
     fun `getAvailableAddOns - with a successful status response must contain add-ons`() {
@@ -35,7 +35,7 @@ class AddOnsCollectionsProviderTest {
         whenever(mockedResponse.status).thenReturn(200)
         whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
 
-        val provider = AddOnsCollectionsProvider(client = mockedClient)
+        val provider = AddOnCollectionProvider(client = mockedClient)
 
         runBlocking {
             val addOns = provider.getAvailableAddOns()
@@ -101,7 +101,7 @@ class AddOnsCollectionsProviderTest {
         whenever(mockedResponse.status).thenReturn(200)
         whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
 
-        val provider = AddOnsCollectionsProvider(client = mockedClient)
+        val provider = AddOnCollectionProvider(client = mockedClient)
 
         runBlocking {
             val addOns = provider.getAvailableAddOns()
@@ -141,7 +141,7 @@ class AddOnsCollectionsProviderTest {
         whenever(mockedResponse.status).thenReturn(500)
         whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
 
-        val provider = AddOnsCollectionsProvider(client = mockedClient)
+        val provider = AddOnCollectionProvider(client = mockedClient)
 
         runBlocking {
             val addOns = provider.getAvailableAddOns()
