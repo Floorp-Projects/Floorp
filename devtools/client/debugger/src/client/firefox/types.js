@@ -143,7 +143,7 @@ export type PausedPacket = {
   actor: ActorId,
   from: ActorId,
   type: string,
-  frame: FrameFront,
+  frame: FramePacket,
   why: {
     actors: ActorId[],
     type: string,
@@ -367,7 +367,7 @@ export type ObjectFront = {
  * @static
  */
 export type ThreadFront = {
-  getFrames: (number, number) => Promise<{| frames: FrameFront[] |}>,
+  getFrames: (number, number) => Promise<{| frames: FramePacket[] |}>,
   resume: Function => Promise<*>,
   stepIn: Function => Promise<*>,
   stepOver: Function => Promise<*>,
