@@ -9,6 +9,8 @@
 #include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
 
+#include <algorithm>
+
 #include "jsutil.h"
 
 #include "gc/Marking.h"
@@ -783,7 +785,7 @@ const JSFunctionSpec StructMetaTypeDescr::typedObjectMethods[] = {JS_FS_END};
 CheckedInt32 StructMetaTypeDescr::Layout::addField(int32_t fieldAlignment,
                                                    int32_t fieldSize) {
   // Alignment of the struct is the max of the alignment of its fields.
-  structAlignment = js::Max(structAlignment, fieldAlignment);
+  structAlignment = std::max(structAlignment, fieldAlignment);
 
   // Align the pointer.
   CheckedInt32 offset = RoundUpToAlignment(sizeSoFar, fieldAlignment);

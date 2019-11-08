@@ -58,7 +58,7 @@ class RareArgumentsData {
 // modification.
 struct ArgumentsData {
   /*
-   * numArgs = Max(numFormalArgs, numActualArgs)
+   * numArgs = std::max(numFormalArgs, numActualArgs)
    * The array 'args' has numArgs elements.
    */
   uint32_t numArgs;

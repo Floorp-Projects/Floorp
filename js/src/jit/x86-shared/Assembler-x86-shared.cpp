@@ -6,6 +6,8 @@
 
 #include "mozilla/Maybe.h"
 
+#include <algorithm>
+
 #include "gc/Marking.h"
 #include "jit/JitRealm.h"
 #if defined(JS_CODEGEN_X86)
@@ -327,7 +329,7 @@ void CPUInfo::SetSSEVersion() {
   }
 
   if (maxEnabledSSEVersion != UnknownSSE) {
-    maxSSEVersion = Min(maxSSEVersion, maxEnabledSSEVersion);
+    maxSSEVersion = std::min(maxSSEVersion, maxEnabledSSEVersion);
   }
 
   static constexpr int AVXBit = 1 << 28;

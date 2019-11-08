@@ -20,6 +20,8 @@
 
 #include "mozilla/ArrayUtils.h"
 
+#include <algorithm>
+
 #include "jit/JitScript.h"
 #include "jit/RegisterAllocator.h"
 #include "js/Printf.h"
@@ -752,7 +754,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
   MOZ_ALWAYS_TRUE(coerceArgTypes.append(MIRType::Pointer));
   unsigned oolBytesNeeded = StackArgBytes(coerceArgTypes);
 
-  unsigned bytesNeeded = Max(normalBytesNeeded, oolBytesNeeded);
+  unsigned bytesNeeded = std::max(normalBytesNeeded, oolBytesNeeded);
 
   // Note the jit caller ensures the stack is aligned *after* the call
   // instruction.
@@ -1544,7 +1546,7 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
   unsigned argOffset =
       AlignBytes(StackArgBytes(invokeArgTypes), sizeof(double));
   unsigned argBytes =
-      Max<size_t>(1, fi.funcType().args().length()) * sizeof(Value);
+      std::max<size_t>(1, fi.funcType().args().length()) * sizeof(Value);
   unsigned framePushed =
       StackDecrementForCall(ABIStackAlignment,
                             sizeof(Frame),  // pushed by prologue

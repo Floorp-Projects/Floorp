@@ -11,6 +11,8 @@
 #ifndef gc_Verifier_h
 #define gc_Verifier_h
 
+#include <algorithm>
+
 #include "gc/Cell.h"
 
 namespace js {
@@ -44,17 +46,17 @@ inline CellColor GetCellColor(Cell* cell) {
 
 inline CellColor ExpectedWeakMapValueColor(CellColor keyColor,
                                            CellColor mapColor) {
-  return Min(keyColor, mapColor);
+  return std::min(keyColor, mapColor);
 }
 
 inline CellColor ExpectedWeakMapKeyColor(CellColor mapColor,
                                          CellColor delegateColor) {
-  return Min(mapColor, delegateColor);
+  return std::min(mapColor, delegateColor);
 }
 
 inline CellColor ExpectedKeyAndDelegateColor(CellColor keyColor,
                                              CellColor delegateColor) {
-  return Max(keyColor, delegateColor);
+  return std::max(keyColor, delegateColor);
 }
 
 }  // namespace gc

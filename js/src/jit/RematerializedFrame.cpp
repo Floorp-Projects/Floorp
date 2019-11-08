@@ -6,6 +6,7 @@
 
 #include "jit/RematerializedFrame.h"
 
+#include <algorithm>
 #include <utility>
 
 #include "debugger/DebugAPI.h"
@@ -61,7 +62,7 @@ RematerializedFrame* RematerializedFrame::New(JSContext* cx, uint8_t* top,
                                               MaybeReadFallback& fallback) {
   unsigned numFormals =
       iter.isFunctionFrame() ? iter.calleeTemplate()->nargs() : 0;
-  unsigned argSlots = Max(numFormals, iter.numActualArgs());
+  unsigned argSlots = std::max(numFormals, iter.numActualArgs());
   unsigned extraSlots = argSlots + iter.script()->nfixed();
 
   // One Value slot is included in sizeof(RematerializedFrame), so we can

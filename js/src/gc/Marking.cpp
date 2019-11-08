@@ -13,6 +13,8 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TypeTraits.h"
 
+#include <algorithm>
+
 #include "jsfriendapi.h"
 
 #include "builtin/ModuleObject.h"
@@ -1980,7 +1982,7 @@ MarkStack::SavedValueArray GCMarker::saveValueRange(
     if (array.start == array.end) {
       index = obj->slotSpan();
     } else if (array.start >= vp && array.start < vp + nfixed) {
-      MOZ_ASSERT(array.end == vp + Min(nfixed, obj->slotSpan()));
+      MOZ_ASSERT(array.end == vp + std::min(nfixed, obj->slotSpan()));
       index = array.start - vp;
     } else {
       MOZ_ASSERT(array.start >= obj->slots_ &&
@@ -2024,7 +2026,7 @@ MarkStack::ValueArray GCMarker::restoreValueArray(
     if (index < nslots) {
       if (index < nfixed) {
         start = vp + index;
-        end = vp + Min(nfixed, nslots);
+        end = vp + std::min(nfixed, nslots);
       } else {
         start = obj->slots_ + index - nfixed;
         end = obj->slots_ + nslots - nfixed;
@@ -2313,7 +2315,7 @@ inline bool MarkStack::ensureSpace(size_t count) {
 }
 
 bool MarkStack::enlarge(size_t count) {
-  size_t newCapacity = Min(maxCapacity_.ref(), capacity() * 2);
+  size_t newCapacity = std::min(maxCapacity_.ref(), capacity() * 2);
   if (newCapacity < capacity() + count) {
     return false;
   }
@@ -2881,18 +2883,18 @@ void js::gc::StoreBuffer::SlotsEdge::trace(TenuringTracer& mover) const {
     uint32_t numShifted = obj->getElementsHeader()->numShiftedElements();
     uint32_t clampedStart = start_;
     clampedStart = numShifted < clampedStart ? clampedStart - numShifted : 0;
-    clampedStart = Min(clampedStart, initLen);
+    clampedStart = std::min(clampedStart, initLen);
     uint32_t clampedEnd = start_ + count_;
     clampedEnd = numShifted < clampedEnd ? clampedEnd - numShifted : 0;
-    clampedEnd = Min(clampedEnd, initLen);
+    clampedEnd = std::min(clampedEnd, initLen);
     MOZ_ASSERT(clampedStart <= clampedEnd);
     mover.traceSlots(
         static_cast<HeapSlot*>(obj->getDenseElements() + clampedStart)
             ->unsafeUnbarrieredForTracing(),
         clampedEnd - clampedStart);
   } else {
-    uint32_t start = Min(start_, obj->slotSpan());
-    uint32_t end = Min(start_ + count_, obj->slotSpan());
+    uint32_t start = std::min(start_, obj->slotSpan());
+    uint32_t end = std::min(start_ + count_, obj->slotSpan());
     MOZ_ASSERT(start <= end);
     mover.traceObjectSlots(obj, start, end - start);
   }

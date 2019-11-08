@@ -9,6 +9,8 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ScopeExit.h"
 
+#include <algorithm>
+
 #include "builtin/Eval.h"
 #include "builtin/TypedObject.h"
 #include "frontend/SourceNotes.h"
@@ -1096,7 +1098,7 @@ AbortReasonOr<Ok> IonBuilder::buildInline(IonBuilder* callerBuilder,
   MOZ_ASSERT(!info().needsArgsObj());
 
   // Initialize actually set arguments.
-  uint32_t existing_args = Min<uint32_t>(callInfo.argc(), info().nargs());
+  uint32_t existing_args = std::min<uint32_t>(callInfo.argc(), info().nargs());
   for (size_t i = 0; i < existing_args; ++i) {
     MDefinition* arg = callInfo.getArg(i);
     current->initSlot(info().argSlot(i), arg);
@@ -6207,7 +6209,7 @@ bool IonBuilder::testNeedsArgumentCheck(JSFunction* target,
                           jitScript->thisTypes(sweep, targetScript))) {
     return true;
   }
-  uint32_t expected_args = Min<uint32_t>(callInfo.argc(), target->nargs());
+  uint32_t expected_args = std::min<uint32_t>(callInfo.argc(), target->nargs());
   for (size_t i = 0; i < expected_args; i++) {
     if (!ArgumentTypesMatch(callInfo.getArg(i),
                             jitScript->argTypes(sweep, targetScript, i))) {
@@ -6241,7 +6243,7 @@ AbortReasonOr<MCall*> IonBuilder::makeCallHelper(
   // Collect number of missing arguments provided that the target is
   // scripted. Native functions are passed an explicit 'argc' parameter.
   if (target && !target->isBuiltinNative()) {
-    targetArgs = Max<uint32_t>(target->nargs(), callInfo.argc());
+    targetArgs = std::max<uint32_t>(target->nargs(), callInfo.argc());
   }
 
   bool isDOMCall = false;

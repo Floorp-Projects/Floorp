@@ -20,6 +20,8 @@
 
 #include "mozilla/MathAlgorithms.h"
 
+#include <algorithm>
+
 #include "jit/CodeGenerator.h"
 
 #include "wasm/WasmBaselineCompile.h"
@@ -1015,7 +1017,7 @@ class FunctionCompiler {
 
     uint32_t stackBytes = call->abi_.stackBytesConsumedSoFar();
 
-    maxStackArgBytes_ = Max(maxStackArgBytes_, stackBytes);
+    maxStackArgBytes_ = std::max(maxStackArgBytes_, stackBytes);
     return true;
   }
 
