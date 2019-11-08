@@ -30,8 +30,8 @@ const TEST_DATA = [
   {
     selector: ".has-issue",
     expectedIssues: [
-      { property: "user-modify" },
       { property: "border-inline-color" },
+      { property: "user-modify" },
     ],
   },
   {

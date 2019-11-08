@@ -2,50 +2,14 @@
 
 exports[`IssueItem component renders an issue of CSS property 1`] = `
 <li
-  data-qa-property="test-property"
-  key="test-property:CSS_PROPERTY"
+  key="test-property"
 >
-  <div
-    data-qa-key="type"
-    data-qa-value="\\"CSS_PROPERTY\\""
-    key="type"
+  <a
+    href="test-url"
+    onClick={[Function]}
+    title="test-url"
   >
-    type:"CSS_PROPERTY"
-  </div>
-  <div
-    data-qa-key="property"
-    data-qa-value="\\"test-property\\""
-    key="property"
-  >
-    property:"test-property"
-  </div>
-  <div
-    data-qa-key="url"
-    data-qa-value="\\"test-url\\""
-    key="url"
-  >
-    url:"test-url"
-  </div>
-  <div
-    data-qa-key="deprecated"
-    data-qa-value="false"
-    key="deprecated"
-  >
-    deprecated:false
-  </div>
-  <div
-    data-qa-key="experimental"
-    data-qa-value="false"
-    key="experimental"
-  >
-    experimental:false
-  </div>
-  <div
-    data-qa-key="unsupportedBrowsers"
-    data-qa-value="[{\\"id\\":\\"firefox\\",\\"name\\":\\"Firefox\\",\\"version\\":\\"70\\",\\"status\\":\\"nightly\\"}]"
-    key="unsupportedBrowsers"
-  >
-    unsupportedBrowsers:[{"id":"firefox","name":"Firefox","version":"70","status":"nightly"}]
-  </div>
+    test-property
+  </a>
 </li>
 `;

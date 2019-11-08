@@ -4,11 +4,4 @@
 
 "use strict";
 
-module.exports = {
-  prefs: {
-    getBoolPref: (pref, defaultValue) => {
-      // We always use the default value while jest testing.
-      return !!defaultValue;
-    },
-  },
-};
+module.exports = {};
