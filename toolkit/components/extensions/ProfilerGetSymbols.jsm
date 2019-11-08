@@ -98,6 +98,7 @@ this.ProfilerGetSymbols = {
       const worker = new ChromeWorker(
         "resource://gre/modules/ProfilerGetSymbols-worker.js"
       );
+
       worker.onmessage = msg => {
         if (msg.data.error) {
           const error = msg.data.error;
@@ -118,6 +119,31 @@ this.ProfilerGetSymbols = {
         }
         resolve(msg.data.result);
       };
+
+      // Handle uncaught errors from the worker script. onerror is called if
+      // there's a syntax error in the worker script, for example, or when an
+      // unhandled exception is thrown, but not for unhandled promise
+      // rejections. Without this handler, mistakes during development such as
+      // syntax errors can be hard to track down.
+      worker.onerror = errorEvent => {
+        worker.terminate();
+        const { message, filename, lineno } = errorEvent;
+        const error = new Error(message, filename, lineno);
+        error.name = "WorkerError";
+        reject(error);
+      };
+
+      // Handle errors from messages that cannot be deserialized. I'm not sure
+      // how to get into such a state, but having this handler seems like a good
+      // idea.
+      worker.onmessageerror = errorEvent => {
+        worker.terminate();
+        const { message, filename, lineno } = errorEvent;
+        const error = new Error(message, filename, lineno);
+        error.name = "WorkerMessageError";
+        reject(error);
+      };
+
       worker.postMessage({ binaryPath, debugPath, breakpadId, module });
     });
   },
