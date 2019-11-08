@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <thread>
 
+#include "util/Memory.h"
 #include "util/Text.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmCompile.h"

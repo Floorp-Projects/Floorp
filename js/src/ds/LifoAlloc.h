@@ -28,6 +28,7 @@
 #include "jsutil.h"
 
 #include "js/UniquePtr.h"
+#include "util/Memory.h"
 
 namespace js {
 

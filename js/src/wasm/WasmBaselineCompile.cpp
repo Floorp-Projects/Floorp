@@ -139,6 +139,7 @@
 #  include "jit/mips64/Assembler-mips64.h"
 #endif
 
+#include "util/Memory.h"
 #include "wasm/WasmGC.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmInstance.h"

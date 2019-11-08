@@ -17,6 +17,7 @@
 
 #include "ds/LifoAlloc.h"
 #include "js/CharacterEncoding.h"
+#include "util/Memory.h"
 #include "util/Text.h"
 #include "util/Windows.h"
 #include "vm/JSContext.h"

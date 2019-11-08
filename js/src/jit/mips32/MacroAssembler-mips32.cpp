@@ -17,6 +17,7 @@
 #include "jit/mips32/Simulator-mips32.h"
 #include "jit/MoveEmitter.h"
 #include "jit/SharedICRegisters.h"
+#include "util/Memory.h"
 
 #include "jit/MacroAssembler-inl.h"
 

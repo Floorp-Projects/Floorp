@@ -16,6 +16,7 @@
 #include "js/PropertySpec.h"
 #include "js/SharedArrayBuffer.h"
 #include "js/Wrapper.h"
+#include "util/Memory.h"
 #include "vm/SharedMem.h"
 #include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmTypes.h"

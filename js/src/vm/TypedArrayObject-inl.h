@@ -23,6 +23,7 @@
 #include "jit/AtomicOperations.h"
 #include "js/Conversions.h"
 #include "js/Value.h"
+#include "util/Memory.h"
 #include "vm/BigIntType.h"
 #include "vm/JSContext.h"
 #include "vm/NativeObject.h"
