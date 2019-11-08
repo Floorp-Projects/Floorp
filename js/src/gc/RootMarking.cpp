@@ -312,7 +312,8 @@ void js::TraceRuntime(JSTracer* trc) {
   MOZ_ASSERT(!trc->isMarkingTracer());
 
   JSRuntime* rt = trc->runtime();
-  AutoEmptyNurseryAndPrepareForTracing prep(rt->mainContextFromOwnThread());
+  rt->gc.evictNursery();
+  AutoPrepareForTracing prep(rt->mainContextFromOwnThread());
   gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::TRACE_HEAP);
   rt->gc.traceRuntime(trc, prep);
 }
