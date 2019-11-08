@@ -9,8 +9,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "jsutil.h"
-
 #include "gc/Marking.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitRealm.h"

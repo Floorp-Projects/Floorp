@@ -11,8 +11,6 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
 
-#include "jsutil.h"
-
 #include "js/Utility.h"
 #include "util/Memory.h"
 

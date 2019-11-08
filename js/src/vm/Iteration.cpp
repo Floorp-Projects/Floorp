@@ -20,7 +20,6 @@
 #include <new>
 
 #include "jstypes.h"
-#include "jsutil.h"
 
 #include "builtin/Array.h"
 #include "builtin/SelfHostingDefines.h"

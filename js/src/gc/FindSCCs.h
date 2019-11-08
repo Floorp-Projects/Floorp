@@ -12,7 +12,6 @@
 #include <algorithm>
 
 #include "jsfriendapi.h"
-#include "jsutil.h"
 
 #include "js/HashTable.h"
 

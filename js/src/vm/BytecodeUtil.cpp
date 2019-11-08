@@ -25,7 +25,6 @@
 #include "jsapi.h"
 #include "jsnum.h"
 #include "jstypes.h"
-#include "jsutil.h"
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/SourceNotes.h"

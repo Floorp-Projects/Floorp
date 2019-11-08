@@ -16,7 +16,6 @@
 #include <utility>      // std::move
 
 #include "jsapi.h"
-#include "jsutil.h"
 
 #include "debugger/DebugAPI.h"
 #include "js/BuildId.h"  // JS::BuildIdCharVector

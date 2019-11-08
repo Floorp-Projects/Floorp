@@ -14,6 +14,8 @@
 #include "jstypes.h"
 #include "gc/Cell.h"
 #include "gc/Scheduling.h"
+#include "js/GCAPI.h"
+#include "js/HeapAPI.h"
 #include "vm/MallocProvider.h"
 
 namespace JS {

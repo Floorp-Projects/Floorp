@@ -13,8 +13,6 @@
 
 #include <stddef.h>
 
-#include "jsutil.h"
-
 #include "gc/DeletePolicy.h"
 #include "gc/Heap.h"
 #include "gc/Policy.h"

@@ -13,8 +13,8 @@
 #include "mozilla/EndianUtils.h"
 
 #include "jstypes.h"
-#include "jsutil.h"
 
+#include "js/Utility.h"
 #include "util/Memory.h"
 
 using namespace js;

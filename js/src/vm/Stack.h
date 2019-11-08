@@ -16,8 +16,6 @@
 
 #include <algorithm>
 
-#include "jsutil.h"
-
 #include "gc/Rooting.h"
 #ifdef CHECK_OSIPOINT_REGISTERS
 #  include "jit/Registers.h"  // for RegisterDump
