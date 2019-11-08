@@ -1777,9 +1777,13 @@ SearchService.prototype = {
     let region = Services.prefs.getCharPref("browser.search.region", "default");
 
     await engineSelector.init();
+    let channel = AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
+      ? "esr"
+      : AppConstants.MOZ_UPDATE_CHANNEL;
     let { engines, privateDefault } = engineSelector.fetchEngineConfiguration(
       locale,
-      region
+      region,
+      channel
     );
 
     const defaultEngine = engines[0];
