@@ -3438,6 +3438,12 @@ nsresult BrowserChild::CanCancelContentJS(
       return NS_ERROR_FAILURE;
     }
 
+    if (aNavigationURI->SchemeIs("javascript")) {
+      // "javascript:" URIs don't (necessarily) trigger navigation to a
+      // different page, so don't allow the current page's JS to terminate.
+      return NS_OK;
+    }
+
     // If navigating directly to a URL (e.g. via hitting Enter in the location
     // bar), then we can cancel anytime the next URL is different from the
     // current, *excluding* the ref ("#").
