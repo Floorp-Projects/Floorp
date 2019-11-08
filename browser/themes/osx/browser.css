@@ -60,8 +60,7 @@
   content: "";
   display: -moz-box;
   -moz-appearance: toolbox;
-  height: 1px;
-  margin-top: -1px;
+  height: 0;
   opacity: 0.001;
 }
 
