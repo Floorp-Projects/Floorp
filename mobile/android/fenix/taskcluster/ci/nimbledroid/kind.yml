@@ -9,34 +9,33 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - build
+    - signing
 
-job-defaults:
-    description: Upload APKs to Nimbledroid for performance measurement and tracking
-    worker-type: b-android
-    worker:
-        docker-image: {in-tree: nimbledroid}
-        max-run-time: 600
-    run-on-tasks-for: []
-    treeherder:
-        kind: test
-        tier: 2
-        platform: android-all/opt
-    scopes:
-        - secrets:get:project/mobile/fenix/nimbledroid
-    run:
-        using: run-task
-        use-caches: false
-        command:
-            - python
-            - /builds/worker/checkouts/src/automation/taskcluster/upload_apk_nimbledroid.py
-            - {artifact-reference: "<build/public/build/armeabi-v7a/geckoNightly/target.apk>"}
 
 jobs:
     nightly:
         attributes:
             nightly: true
-        treeherder:
-            symbol: nimbledroid
         dependencies:
-            build: build-nightly
+            signing: signing-nightly
+        description: Upload APKs to Nimbledroid for performance measurement and tracking
+        run:
+            commands:
+                - [wget, {artifact-reference: '<signing/public/build/armeabi-v7a/geckoNightly/target.apk>'}, '-O', target.apk]
+                - [python, automation/taskcluster/upload_apk_nimbledroid.py, target.apk, .nimbledroid_token]
+            secrets:
+                - name: project/mobile/fenix/nimbledroid
+                  key: api_key
+                  path: .nimbledroid_token
+            using: run-commands
+            use-caches: false
+        run-on-tasks-for: []
+        treeherder:
+            kind: test
+            platform: android-all/opt
+            symbol: nimbledroid
+            tier: 2
+        worker:
+            docker-image: {in-tree: nimbledroid}
+            max-run-time: 600
+        worker-type: b-android

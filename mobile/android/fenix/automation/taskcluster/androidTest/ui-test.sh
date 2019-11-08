@@ -34,7 +34,6 @@ display_help() {
 }
 
 get_abs_filename() {
-  # $1 : relative filename
   relative_filename="$1"
   echo "$(cd "$(dirname "$relative_filename")" && pwd)/$(basename "$relative_filename")"
 }

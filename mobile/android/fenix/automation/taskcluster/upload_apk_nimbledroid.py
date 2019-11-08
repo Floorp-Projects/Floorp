@@ -7,7 +7,6 @@ This script talks to the taskcluster secrets service to obtain the
 Nimbledroid account key and upload Klar and Focus apk to Nimbledroid for perf analysis.
 """
 
-import taskcluster
 import requests
 import json
 import urllib2
@@ -33,18 +32,11 @@ def uploadApk(apk,key):
 	print json.dumps(response.json(), indent=4)
 
 
-def uploadNightlyFenixApk(apk_url, key):
-	apk_data = urllib2.urlopen(apk_url).read()
-	with open('./fenix_example_nd.apk', 'wb') as f:
-		f.write(apk_data)
-	uploadApk({'apk' : open('fenix_example_nd.apk')},key)
+apk_path = sys.argv[1]
+token_file = sys.argv[2]
 
+with open(token_file) as f:
+	key = f.read()
 
-# Get JSON data from taskcluster secrets service
-secrets = taskcluster.Secrets({
-	'rootUrl': os.environ.get('TASKCLUSTER_PROXY_URL', 'https://taskcluster.net'),
-})
-data = secrets.get('project/mobile/fenix/nimbledroid')
-# upload the nightly build to Nimbledroid
-apk_url = sys.argv[1]
-uploadNightlyFenixApk(apk_url, data['secret']['api_key'])
+with open(apk_path) as apk_file:
+	uploadApk({'apk': apk_file}, key)
