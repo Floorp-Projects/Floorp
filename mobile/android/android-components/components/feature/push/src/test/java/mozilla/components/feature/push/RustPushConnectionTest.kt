@@ -109,7 +109,7 @@ class RustPushConnectionTest {
             connection.unsubscribeAll()
         }
 
-        verify(api).unsubscribe("")
+        verify(api).unsubscribeAll()
     }
 
     @Test(expected = IllegalStateException::class)

@@ -63,8 +63,7 @@ internal class RustPushConnection(
     override suspend fun unsubscribeAll(): Boolean = synchronized(this) {
         val pushApi = api
         check(pushApi != null) { "Rust API is not initiated; updateToken hasn't been called yet." }
-        // TODO replace with unsubscribeAll when API exists
-        return pushApi.unsubscribe("")
+        return pushApi.unsubscribeAll()
     }
 
     @GuardedBy("this")

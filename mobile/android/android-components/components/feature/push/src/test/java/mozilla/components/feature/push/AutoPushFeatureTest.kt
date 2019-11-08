@@ -100,7 +100,7 @@ class AutoPushFeatureTest {
         }
 
         verify(service).stop()
-        verify(connection, times(PushType.values().size)).unsubscribe(anyString())
+        verify(connection).unsubscribeAll()
         assertTrue(feature.job.isCancelled)
     }
 
