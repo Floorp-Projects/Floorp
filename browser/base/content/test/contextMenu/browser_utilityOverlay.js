@@ -2,29 +2,7 @@
  *  License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const gTests = [
-  test_eventMatchesKey,
-  test_getTopWin,
-  test_openNewTabWith,
-  test_openUILink,
-];
-
-function test() {
-  waitForExplicitFinish();
-  executeSoon(runNextTest);
-}
-
-function runNextTest() {
-  if (gTests.length) {
-    let testFun = gTests.shift();
-    info("Running " + testFun.name);
-    testFun();
-  } else {
-    finish();
-  }
-}
-
-function test_eventMatchesKey() {
+add_task(async function test_eventMatchesKey() {
   let eventMatchResult;
   let key;
   let checkEvent = function(e) {
@@ -71,47 +49,41 @@ function test_eventMatchesKey() {
     // fail when they simulate key presses.
     document.removeEventListener("keypress", checkEvent);
   }
+});
 
-  runNextTest();
-}
-
-function test_getTopWin() {
+add_task(async function test_getTopWin() {
   is(getTopWin(), window, "got top window");
-  runNextTest();
-}
+});
 
-function test_openNewTabWith() {
+add_task(async function test_openNewTabWith() {
+  const kURL = "http://example.com/";
+  let tabLoadPromise = BrowserTestUtils.waitForNewTab(gBrowser, kURL, true);
   openNewTabWith("http://example.com/", null, {
     triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
   });
-  let tab = (gBrowser.selectedTab = gBrowser.tabs[1]);
-  BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
-    is(
-      tab.linkedBrowser.currentURI.spec,
-      "http://example.com/",
-      "example.com loaded"
-    );
-    gBrowser.removeCurrentTab();
-    runNextTest();
-  });
-}
+  let tab = await tabLoadPromise;
+  is(tab.linkedBrowser.currentURI.spec, kURL, "example.com loaded");
+  gBrowser.removeCurrentTab();
+});
 
-function test_openUILink() {
-  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(
+add_task(async function test_openUILink() {
+  const kURL = "http://example.org/";
+  let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:blank"
-  ));
-  BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
-    is(
-      tab.linkedBrowser.currentURI.spec,
-      "http://example.org/",
-      "example.org loaded"
-    );
-    gBrowser.removeCurrentTab();
-    runNextTest();
-  });
+  );
+  let loadPromise = BrowserTestUtils.browserLoaded(
+    tab.linkedBrowser,
+    false,
+    kURL
+  );
 
-  openUILink("http://example.org/", null, {
+  openUILink(kURL, null, {
     triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
   }); // defaults to "current"
-}
+
+  await loadPromise;
+
+  is(tab.linkedBrowser.currentURI.spec, kURL, "example.org loaded");
+  gBrowser.removeCurrentTab();
+});
