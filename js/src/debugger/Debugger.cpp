@@ -22,7 +22,7 @@
 #include "mozilla/Variant.h"           // for AsVariant, AsVariantTemporary
 #include "mozilla/Vector.h"            // for Vector, Vector<>::ConstRange
 
-#include <algorithm>   // for std::max
+#include <algorithm>   // for std::find, std::max
 #include <functional>  // for function
 #include <stddef.h>    // for size_t
 #include <stdint.h>    // for uint32_t, uint64_t, int32_t
@@ -31,7 +31,6 @@
 #include "jsapi.h"        // for CallArgs, CallArgsFromVp
 #include "jsfriendapi.h"  // for GetErrorMessage
 #include "jstypes.h"      // for JS_PUBLIC_API
-#include "jsutil.h"       // for Find
 
 #include "builtin/Array.h"               // for NewDenseFullyAllocatedArray
 #include "builtin/Promise.h"             // for PromiseObject
@@ -4550,8 +4549,10 @@ bool Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global) {
       Realm::DebuggerVector& v = realm->getDebuggers();
       for (auto p = v.begin(); p != v.end(); p++) {
         Realm* next = (*p)->object->realm();
-        if (Find(visited, next) == visited.end() && !visited.append(next)) {
-          return false;
+        if (std::find(visited.begin(), visited.end(), next) == visited.end()) {
+          if (!visited.append(next)) {
+            return false;
+          }
         }
       }
     }

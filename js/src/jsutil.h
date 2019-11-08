@@ -96,22 +96,6 @@ static inline size_t EraseIf(Container& c, Pred pred) {
   return removed;
 }
 
-template <class T>
-static inline T* Find(T* beg, T* end, const T& v) {
-  for (T* p = beg; p != end; ++p) {
-    if (*p == v) {
-      return p;
-    }
-  }
-  return end;
-}
-
-template <class Container>
-static inline typename Container::ElementType* Find(
-    Container& c, const typename Container::ElementType& v) {
-  return Find(c.begin(), c.end(), v);
-}
-
 template <class Container1, class Container2>
 static inline bool EqualContainers(const Container1& lhs,
                                    const Container2& rhs) {
