@@ -32,6 +32,8 @@
 .actionIcon,
 .actionsMenu .menulist-icon {
   margin-inline-end: 2px;
+  height: 16px;
+  width: 16px;
 }
 
 .actionsMenu > menupopup > menuitem > .menu-iconic-left {
