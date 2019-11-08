@@ -47,7 +47,9 @@ add_task(async function() {
   }
   for (const feature of acceptedFeatures) {
     ok(
-      allFeaturesAcceptedByProfiler.includes(feature),
+      // Bug 1594566 - ignore Responsiveness until the extension is updated
+      allFeaturesAcceptedByProfiler.includes(feature) ||
+        feature == "responsiveness",
       `The schema of the geckoProfiler.start() method mentions a "${feature}" feature which is not supported by the profiler.`
     );
   }
