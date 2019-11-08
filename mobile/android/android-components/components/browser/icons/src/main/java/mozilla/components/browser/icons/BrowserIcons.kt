@@ -113,17 +113,8 @@ class BrowserIcons(
         val request = prepare(context, preparers, initialRequest)
 
         // (2) Then try to load an icon.
-        val (result, resource) = load(context, request, loaders)
-
-        val icon = when (result) {
-            IconLoader.Result.NoResult -> return generator.generate(context, request)
-
-            is IconLoader.Result.BitmapResult -> Icon(result.bitmap, source = result.source)
-
-            is IconLoader.Result.BytesResult ->
-                decode(result.bytes, decoders, desiredSize)?.let { Icon(it, source = result.source) }
-                    ?: return generator.generate(context, request)
-        }
+        val (icon, resource) = load(context, request, loaders, decoders, desiredSize)
+            ?: generator.generate(context, request) to null
 
         // (3) Finally process the icon.
         return process(context, processors, request, resource, icon, desiredSize)
@@ -212,8 +203,10 @@ private fun prepare(context: Context, preparers: List<IconPreprarer>, request: I
 private fun load(
     context: Context,
     request: IconRequest,
-    loaders: List<IconLoader>
-): Pair<IconLoader.Result, IconRequest.Resource?> {
+    loaders: List<IconLoader>,
+    decoders: List<IconDecoder>,
+    desiredSize: DesiredSize
+): Pair<Icon, IconRequest.Resource>? {
     request.resources
         .asSequence()
         .distinct()
@@ -222,16 +215,31 @@ private fun load(
             loaders.forEach { loader ->
                 val result = loader.load(context, request, resource)
 
-                if (result != IconLoader.Result.NoResult) {
-                    return Pair(result, resource)
+                val icon = decodeIconLoaderResult(result, decoders, desiredSize)
+
+                if (icon != null) {
+                    return Pair(icon, resource)
                 }
             }
         }
 
-    return Pair(IconLoader.Result.NoResult, null)
+    return null
 }
 
-private fun decode(
+private fun decodeIconLoaderResult(
+    result: IconLoader.Result,
+    decoders: List<IconDecoder>,
+    desiredSize: DesiredSize
+): Icon? = when (result) {
+    IconLoader.Result.NoResult -> null
+
+    is IconLoader.Result.BitmapResult -> Icon(result.bitmap, source = result.source)
+
+    is IconLoader.Result.BytesResult ->
+        decodeBytes(result.bytes, decoders, desiredSize)?.let { Icon(it, source = result.source) }
+}
+
+private fun decodeBytes(
     data: ByteArray,
     decoders: List<IconDecoder>,
     desiredSize: DesiredSize
