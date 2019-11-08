@@ -8,7 +8,6 @@
 #define wasm_utility_h
 
 #include <algorithm>
-
 namespace js {
 namespace wasm {
 
