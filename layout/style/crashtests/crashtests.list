@@ -310,3 +310,4 @@ load 1579788.html
 load 1580307.html
 load 1581579.html
 pref(dom.paintWorklet.enabled,true) pref(dom.worklet.enabled,true) load 1593766.html
+pref(layout.css.motion-path.enabled,true) pref(layout.css.individual-transform.enabled,true) load 1594960.html
