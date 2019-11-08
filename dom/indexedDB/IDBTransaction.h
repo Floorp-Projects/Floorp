@@ -86,8 +86,16 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
   int64_t mNextObjectStoreId;
   int64_t mNextIndexId;
 
-  nsresult mAbortCode;
-  uint32_t mPendingRequestCount;
+  nsresult mAbortCode;  ///< The result that caused the transaction to be
+                        ///< aborted, or NS_OK if not aborted.
+                        ///< NS_ERROR_DOM_INDEXEDDB_ABORT_ERR indicates that the
+                        ///< user explicitly requested aborting. Should be
+                        ///< renamed to mResult or so, because it is actually
+                        ///< used to check if the transaction has been aborted.
+  uint32_t mPendingRequestCount;  ///< Counted via OnNewRequest and
+                                  ///< OnRequestFinished, so that the
+                                  ///< transaction can auto-commit when the last
+                                  ///< pending request finished.
 
   const nsString mFilename;
   const uint32_t mLineNo;
@@ -96,8 +104,11 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
   ReadyState mReadyState;
   const Mode mMode;
 
-  bool mCreating;
-  bool mRegistered;
+  bool mCreating;    ///< Set between successful creation until the transaction
+                     ///< has run on the event-loop.
+  bool mRegistered;  ///< Whether mDatabase->RegisterTransaction() has been
+                     ///< called (which may not be the case if construction was
+                     ///< incomplete).
   bool mAbortedByScript;
   bool mNotedActiveTransaction;
 
@@ -198,6 +209,7 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
 
   IDBDatabase* Db() const { return Database(); }
 
+  // Only for use by ProfilerHelpers.h
   const nsTArray<nsString>& ObjectStoreNamesInternal() const {
     AssertIsOnOwningThread();
     return mObjectStoreNames;
@@ -262,8 +274,8 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBTransaction, DOMEventTargetHelper)
 
   // nsWrapperCache
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   // EventTarget
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
