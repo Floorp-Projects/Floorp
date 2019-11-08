@@ -49,6 +49,9 @@ const EXPIRY_TIME_IN_MS = 5 * 60 * 1000; // 5 minutes
 let gCachedWASMModulePromise = null;
 let gCachedWASMModuleExpiryTimer = 0;
 
+// Keep active workers alive (see bug 1592227).
+let gActiveWorkers = new Set();
+
 function clearCachedWASMModule() {
   gCachedWASMModulePromise = null;
   gCachedWASMModuleExpiryTimer = 0;
@@ -98,8 +101,10 @@ this.ProfilerGetSymbols = {
       const worker = new ChromeWorker(
         "resource://gre/modules/ProfilerGetSymbols-worker.js"
       );
+      gActiveWorkers.add(worker);
 
       worker.onmessage = msg => {
+        gActiveWorkers.delete(worker);
         if (msg.data.error) {
           const error = msg.data.error;
           if (error.name) {
@@ -126,6 +131,7 @@ this.ProfilerGetSymbols = {
       // rejections. Without this handler, mistakes during development such as
       // syntax errors can be hard to track down.
       worker.onerror = errorEvent => {
+        gActiveWorkers.delete(worker);
         worker.terminate();
         const { message, filename, lineno } = errorEvent;
         const error = new Error(message, filename, lineno);
@@ -137,6 +143,7 @@ this.ProfilerGetSymbols = {
       // how to get into such a state, but having this handler seems like a good
       // idea.
       worker.onmessageerror = errorEvent => {
+        gActiveWorkers.delete(worker);
         worker.terminate();
         const { message, filename, lineno } = errorEvent;
         const error = new Error(message, filename, lineno);
