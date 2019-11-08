@@ -12,6 +12,7 @@
 #include "mozilla/TaggedAnonymousMemory.h"
 
 #include "js/HeapAPI.h"
+#include "util/Memory.h"
 #include "vm/Runtime.h"
 
 #ifdef XP_WIN

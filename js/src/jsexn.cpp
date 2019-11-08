@@ -28,6 +28,7 @@
 #include "js/UniquePtr.h"
 #include "js/Warnings.h"  // JS::{,Set}WarningReporter
 #include "js/Wrapper.h"
+#include "util/Memory.h"
 #include "util/StringBuffer.h"
 #include "vm/ErrorObject.h"
 #include "vm/GlobalObject.h"

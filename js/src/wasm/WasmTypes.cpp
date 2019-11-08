@@ -19,6 +19,7 @@
 #include "wasm/WasmTypes.h"
 
 #include "js/Printf.h"
+#include "util/Memory.h"
 #include "vm/ArrayBufferObject.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmInstance.h"

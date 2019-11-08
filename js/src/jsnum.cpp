@@ -33,6 +33,7 @@
 #endif
 #include "js/PropertySpec.h"
 #include "util/DoubleToString.h"
+#include "util/Memory.h"
 #include "util/StringBuffer.h"
 #include "vm/BigIntType.h"
 #include "vm/GlobalObject.h"

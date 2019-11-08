@@ -19,6 +19,7 @@
 #include "jit/VMFunctions.h"
 #include "proxy/DeadObjectProxy.h"
 #include "proxy/Proxy.h"
+#include "util/Memory.h"
 
 #include "jit/JSJitFrameIter-inl.h"
 #include "jit/MacroAssembler-inl.h"
