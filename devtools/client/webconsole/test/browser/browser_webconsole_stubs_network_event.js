@@ -5,89 +5,96 @@
 
 const {
   STUBS_UPDATE_ENV,
-  formatPacket,
-  formatNetworkEventStub,
-  formatFile,
   getStubFilePath,
+  getCleanedPacket,
+  writeStubsToFile,
 } = require("devtools/client/webconsole/test/browser/stub-generator-helpers");
 
 const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html";
+const STUB_FILE = "networkEvent.js";
 
 add_task(async function() {
   const isStubsUpdate = env.get(STUBS_UPDATE_ENV) == "true";
-  const filePath = getStubFilePath("networkEvent.js", env);
-  info(`${isStubsUpdate ? "Update" : "Check"} stubs at ${filePath}`);
+  info(`${isStubsUpdate ? "Update" : "Check"} ${STUB_FILE}`);
 
   const generatedStubs = await generateNetworkEventStubs();
 
   if (isStubsUpdate) {
-    await OS.File.writeAtomic(filePath, generatedStubs);
-    ok(true, `${filePath} was successfully updated`);
+    await writeStubsToFile(
+      getStubFilePath(STUB_FILE, env, true),
+      generatedStubs,
+      true
+    );
+    ok(true, `${STUB_FILE} was updated`);
     return;
   }
 
-  const repoStubFileContent = await OS.File.read(filePath, {
-    encoding: "utf-8",
-  });
-  is(generatedStubs, repoStubFileContent, "stubs file is up to date");
+  const existingStubs = require(getStubFilePath(STUB_FILE));
+  const FAILURE_MSG =
+    "The network event stubs file needs to be updated by running " +
+    "`mach test devtools/client/webconsole/test/browser/" +
+    "browser_webconsole_stubs_network_event.js --headless " +
+    "--setenv WEBCONSOLE_STUBS_UPDATE=true`";
 
-  if (generatedStubs != repoStubFileContent) {
-    ok(
-      false,
-      "The network event stubs file needs to be updated by running " +
-        "`mach test devtools/client/webconsole/test/browser/" +
-        "browser_webconsole_stubs_network_event.js --headless " +
-        "--setenv WEBCONSOLE_STUBS_UPDATE=true`"
-    );
+  if (generatedStubs.size !== existingStubs.stubPackets.size) {
+    ok(false, FAILURE_MSG);
+    return;
+  }
+
+  let failed = false;
+  for (const [key, packet] of generatedStubs) {
+    // packet.updates are handle by the webconsole front, and can be updated after
+    // we cleaned the packet, so the order isn't guaranteed. Let's sort the array
+    // here so the test doesn't fail.
+    const existingPacket = existingStubs.stubPackets.get(key);
+    if (packet.updates && existingPacket.updates) {
+      packet.updates.sort();
+      existingPacket.updates.sort();
+    }
+
+    const packetStr = JSON.stringify(packet, null, 2);
+    const existingPacketStr = JSON.stringify(existingPacket, null, 2);
+    is(packetStr, existingPacketStr, `"${key}" packet has expected value`);
+    failed = failed || packetStr !== existingPacketStr;
+  }
+
+  if (failed) {
+    ok(false, FAILURE_MSG);
+  } else {
+    ok(true, "Stubs are up to date");
   }
 });
 
 async function generateNetworkEventStubs() {
-  const stubs = {
-    preparedMessages: [],
-    packets: [],
-  };
-
+  const packets = new Map();
   const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
   const { ui } = toolbox.getCurrentPanel().hud;
 
   for (const [key, code] of getCommands()) {
-    const onNetwork = new Promise(resolve => {
-      toolbox.target.activeConsole.once("networkEvent", function onNetworkEvent(
-        res
-      ) {
-        stubs.packets.push(formatPacket(key, res));
-        stubs.preparedMessages.push(formatNetworkEventStub(key, res));
-        toolbox.target.activeConsole.off("networkEvent", onNetworkEvent);
-        resolve();
-      });
+    const consoleFront = await toolbox.target.getFront("console");
+    const onNetwork = consoleFront.once("networkEvent", packet => {
+      packets.set(key, getCleanedPacket(key, packet));
     });
 
-    const onNetworkUpdate = new Promise(resolve => {
-      ui.once("network-message-updated", function onNetworkUpdated(res) {
-        const updateKey = `${key} update`;
-        // We cannot ensure the form of the network update packet, some properties
-        // might be in another order than in the original packet.
-        // Hand-picking only what we need should prevent this.
-        const packet = {
-          networkInfo: {
-            _type: res.networkInfo._type,
-            actor: res.networkInfo.actor,
-            request: res.networkInfo.request,
-            response: res.networkInfo.response,
-            totalTime: res.networkInfo.totalTime,
-          },
-        };
-
-        stubs.packets.push(formatPacket(updateKey, packet));
-        stubs.preparedMessages.push(formatNetworkEventStub(updateKey, res));
-        resolve();
-      });
+    const onNetworkUpdate = ui.once("network-message-updated", res => {
+      const updateKey = `${key} update`;
+      // We cannot ensure the form of the network update packet, some properties
+      // might be in another order than in the original packet.
+      // Hand-picking only what we need should prevent this.
+      const packet = {
+        networkInfo: {
+          _type: res.networkInfo._type,
+          actor: res.networkInfo.actor,
+          request: res.networkInfo.request,
+          response: res.networkInfo.response,
+          totalTime: res.networkInfo.totalTime,
+        },
+      };
+      packets.set(updateKey, getCleanedPacket(updateKey, packet));
     });
 
     await ContentTask.spawn(gBrowser.selectedBrowser, code, function(subCode) {
-      console.log("subCode", subCode);
       const script = content.document.createElement("script");
       script.append(
         content.document.createTextNode(`function triggerPacket() {${subCode}}`)
@@ -101,7 +108,7 @@ async function generateNetworkEventStubs() {
   }
 
   await closeTabAndToolbox();
-  return formatFile(stubs, "NetworkEventMessage");
+  return packets;
 }
 
 function getCommands() {

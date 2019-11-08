@@ -5,60 +5,71 @@
 
 const {
   STUBS_UPDATE_ENV,
-  formatPacket,
-  formatStub,
-  formatFile,
+  getCleanedPacket,
   getStubFilePath,
+  writeStubsToFile,
 } = require("devtools/client/webconsole/test/browser/stub-generator-helpers");
 
 const TEST_URI = "data:text/html;charset=utf-8,stub generation";
+const STUB_FILE = "evaluationResult.js";
 
 add_task(async function() {
   const isStubsUpdate = env.get(STUBS_UPDATE_ENV) == "true";
-  const filePath = getStubFilePath("evaluationResult.js", env);
-  info(`${isStubsUpdate ? "Update" : "Check"} stubs at ${filePath}`);
+  info(`${isStubsUpdate ? "Update" : "Check"} ${STUB_FILE}`);
 
   const generatedStubs = await generateEvaluationResultStubs();
 
   if (isStubsUpdate) {
-    await OS.File.writeAtomic(filePath, generatedStubs);
-    ok(true, `${filePath} was successfully updated`);
+    await writeStubsToFile(
+      getStubFilePath(STUB_FILE, env, true),
+      generatedStubs
+    );
+    ok(true, `${STUB_FILE} was updated`);
     return;
   }
 
-  const repoStubFileContent = await OS.File.read(filePath, {
-    encoding: "utf-8",
-  });
-  is(generatedStubs, repoStubFileContent, "stubs file is up to date");
+  const existingStubs = require(getStubFilePath(STUB_FILE));
+  const FAILURE_MSG =
+    "The evaluationResult stubs file needs to be updated by running " +
+    "`mach test devtools/client/webconsole/test/browser/" +
+    "browser_webconsole_stubs_evaluation_result.js --headless " +
+    "--setenv WEBCONSOLE_STUBS_UPDATE=true`";
 
-  if (generatedStubs != repoStubFileContent) {
-    ok(
-      false,
-      "The evaluationResult stubs file needs to be updated by running " +
-        "`mach test devtools/client/webconsole/test/browser/" +
-        "browser_webconsole_stubs_evaluation_result.js --headless " +
-        "--setenv WEBCONSOLE_STUBS_UPDATE=true`"
+  if (generatedStubs.size !== existingStubs.stubPackets.size) {
+    ok(false, FAILURE_MSG);
+    return;
+  }
+
+  let failed = false;
+  for (const [key, packet] of generatedStubs) {
+    const packetStr = JSON.stringify(packet, null, 2);
+    const existingPacketStr = JSON.stringify(
+      existingStubs.stubPackets.get(key),
+      null,
+      2
     );
+    is(packetStr, existingPacketStr, `"${key}" packet has expected value`);
+    failed = failed || packetStr !== existingPacketStr;
+  }
+
+  if (failed) {
+    ok(false, FAILURE_MSG);
+  } else {
+    ok(true, "Stubs are up to date");
   }
 });
 
 async function generateEvaluationResultStubs() {
-  const stubs = {
-    preparedMessages: [],
-    packets: [],
-  };
-
+  const stubs = new Map();
   const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
 
   for (const [key, code] of getCommands()) {
     const packet = await toolbox.target.activeConsole.evaluateJS(code);
-
-    stubs.packets.push(formatPacket(key, packet));
-    stubs.preparedMessages.push(formatStub(key, packet));
+    stubs.set(key, getCleanedPacket(key, packet));
   }
 
   await closeTabAndToolbox();
-  return formatFile(stubs, "ConsoleMessage");
+  return stubs;
 }
 
 function getCommands() {

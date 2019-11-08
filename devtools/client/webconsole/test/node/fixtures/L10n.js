@@ -3,55 +3,52 @@
 
 "use strict";
 
+const strings = {
+  "level.error": "Error",
+  consoleCleared: "Console was cleared.",
+  webConsoleXhrIndicator: "XHR",
+  webConsoleMoreInfoLabel: "Learn More",
+  "webconsole.clearButton.tooltip": "Clear the Web Console output",
+  "webconsole.toggleFilterButton.tooltip": "Toggle filter bar",
+  "webconsole.filterInput.placeholder": "Filter output",
+  "webconsole.errorsFilterButton.label": "Errors",
+  "webconsole.warningsFilterButton.label": "Warnings",
+  "webconsole.logsFilterButton.label": "Logs",
+  "webconsole.infoFilterButton.label": "Info",
+  "webconsole.debugFilterButton.label": "Debug",
+  "webconsole.cssFilterButton.label": "CSS",
+  "webconsole.xhrFilterButton.label": "XHR",
+  "webconsole.requestsFilterButton.label": "Requests",
+  "messageRepeats.tooltip2": "#1 repeat;#1 repeats",
+  "webconsole.filteredMessagesByText.label": "#1 hidden;#1 hidden",
+  "webconsole.filteredMessagesByText.tooltip":
+    "#1 item hidden by text filter;#1 items hidden by text filter",
+  "webconsole.group.contentBlocked": "Content blocked messages",
+  cdFunctionInvalidArgument:
+    "Cannot cd() to the given window. Invalid argument.",
+};
+
 // @TODO Load the actual strings from webconsole.properties instead.
 class L10n {
   getStr(str) {
-    switch (str) {
-      case "level.error":
-        return "Error";
-      case "consoleCleared":
-        return "Console was cleared.";
-      case "webConsoleXhrIndicator":
-        return "XHR";
-      case "webConsoleMoreInfoLabel":
-        return "Learn More";
-      case "webconsole.clearButton.tooltip":
-        return "Clear the Web Console output";
-      case "webconsole.toggleFilterButton.tooltip":
-        return "Toggle filter bar";
-      case "webconsole.filterInput.placeholder":
-        return "Filter output";
-      case "webconsole.errorsFilterButton.label":
-        return "Errors";
-      case "webconsole.warningsFilterButton.label":
-        return "Warnings";
-      case "webconsole.logsFilterButton.label":
-        return "Logs";
-      case "webconsole.infoFilterButton.label":
-        return "Info";
-      case "webconsole.debugFilterButton.label":
-        return "Debug";
-      case "webconsole.cssFilterButton.label":
-        return "CSS";
-      case "webconsole.xhrFilterButton.label":
-        return "XHR";
-      case "webconsole.requestsFilterButton.label":
-        return "Requests";
-      case "messageRepeats.tooltip2":
-        return "#1 repeat;#1 repeats";
-      case "webconsole.filteredMessagesByText.label":
-        return "#1 hidden;#1 hidden";
-      case "webconsole.filteredMessagesByText.tooltip":
-        return "#1 item hidden by text filter;#1 items hidden by text filter";
-      case "webconsole.group.contentBlocked":
-        return "Content blocked messages";
-      default:
-        return str;
-    }
+    return strings[str] || str;
   }
 
-  getFormatStr(str) {
-    return this.getStr(str);
+  getFormatStr(str, ...rest) {
+    switch (str) {
+      case "counterDoesntExist":
+        return `Counter “${rest[0]}” doesn’t exist.`;
+      case "timerDoesntExist":
+        return `Timer “${rest[0]}” doesn’t exist.`;
+      case "timerAlreadyExists":
+        return `Timer “${rest[0]}” already exists.`;
+      case "timeLog":
+        return `${rest[0]}: ${rest[1]}ms`;
+      case "console.timeEnd":
+        return `${rest[0]}: ${rest[1]}ms - timer ended`;
+      default:
+        return this.getStr(str);
+    }
   }
 
   timestampString(milliseconds) {
