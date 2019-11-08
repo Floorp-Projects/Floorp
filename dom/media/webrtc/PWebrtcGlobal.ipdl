@@ -4,16 +4,24 @@
 
 include protocol PContent;
 
+#ifdef MOZ_WEBRTC
 include "mozilla/media/webrtc/WebrtcGlobal.h";
 
 using struct mozilla::dom::RTCStatsReportInternal from "mozilla/dom/RTCStatsReportBinding.h";
 using WebrtcGlobalLog from "mozilla/media/webrtc/WebrtcGlobal.h";
+#endif
 
 namespace mozilla {
 namespace dom {
 
 async protocol PWebrtcGlobal {
   manager PContent;
+
+parent: // child -> parent messages
+  async __delete__();
+#ifdef MOZ_WEBRTC
+  async GetStatsResult(int aRequestId, RTCStatsReportInternal[] aStats);
+  async GetLogResult(int aRequestId, WebrtcGlobalLog aLog);
 
 child: // parent -> child messages
   async GetStatsRequest(int aRequestId, nsString aPcIdFilter);
@@ -22,12 +30,10 @@ child: // parent -> child messages
   async ClearLogRequest();
   async SetAecLogging(bool aEnable);
   async SetDebugMode(int aLevel);
-
-parent: // child -> parent messages
-  async GetStatsResult(int aRequestId, RTCStatsReportInternal[] aStats);
-  async GetLogResult(int aRequestId, WebrtcGlobalLog aLog);
-  async __delete__();
+#endif
 };
 
 } // end namespace net
 } // end namespace mozilla
+
+
