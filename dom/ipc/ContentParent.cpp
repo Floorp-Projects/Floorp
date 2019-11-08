@@ -3727,7 +3727,8 @@ ContentParent::AllocPExternalHelperAppParent(
     const uint32_t& aContentDispositionHint,
     const nsString& aContentDispositionFilename, const bool& aForceSave,
     const int64_t& aContentLength, const bool& aWasFileChannel,
-    const Maybe<URIParams>& aReferrer, PBrowserParent* aBrowser) {
+    const Maybe<URIParams>& aReferrer, BrowsingContext* aContext,
+    const bool& aShouldCloseWindow) {
   RefPtr<ExternalHelperAppParent> parent = new ExternalHelperAppParent(
       uri, aContentLength, aWasFileChannel, aContentDisposition,
       aContentDispositionHint, aContentDispositionFilename);
@@ -3741,9 +3742,11 @@ mozilla::ipc::IPCResult ContentParent::RecvPExternalHelperAppConstructor(
     const uint32_t& aContentDispositionHint,
     const nsString& aContentDispositionFilename, const bool& aForceSave,
     const int64_t& aContentLength, const bool& aWasFileChannel,
-    const Maybe<URIParams>& aReferrer, PBrowserParent* aBrowser) {
+    const Maybe<URIParams>& aReferrer, BrowsingContext* aContext,
+    const bool& aShouldCloseWindow) {
   static_cast<ExternalHelperAppParent*>(actor)->Init(
-      loadInfoArgs, aMimeContentType, aForceSave, aReferrer, aBrowser);
+      loadInfoArgs, aMimeContentType, aForceSave, aReferrer, aContext,
+      aShouldCloseWindow);
   return IPC_OK();
 }
 

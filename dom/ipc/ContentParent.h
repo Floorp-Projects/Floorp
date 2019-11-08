@@ -890,7 +890,8 @@ class ContentParent final : public PContentParent,
       const uint32_t& aContentDispositionHint,
       const nsString& aContentDispositionFilename, const bool& aForceSave,
       const int64_t& aContentLength, const bool& aWasFileChannel,
-      const Maybe<URIParams>& aReferrer, PBrowserParent* aBrowser);
+      const Maybe<URIParams>& aReferrer, BrowsingContext* aContext,
+      const bool& aShouldCloseWindow);
 
   mozilla::ipc::IPCResult RecvPExternalHelperAppConstructor(
       PExternalHelperAppParent* actor, const Maybe<URIParams>& uri,
@@ -899,7 +900,8 @@ class ContentParent final : public PContentParent,
       const uint32_t& aContentDispositionHint,
       const nsString& aContentDispositionFilename, const bool& aForceSave,
       const int64_t& aContentLength, const bool& aWasFileChannel,
-      const Maybe<URIParams>& aReferrer, PBrowserParent* aBrowser) override;
+      const Maybe<URIParams>& aReferrer, BrowsingContext* aContext,
+      const bool& aShouldCloseWindow) override;
 
   already_AddRefed<PHandlerServiceParent> AllocPHandlerServiceParent();
 
