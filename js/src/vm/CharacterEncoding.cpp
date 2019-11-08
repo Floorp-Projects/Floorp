@@ -60,18 +60,18 @@ static size_t GetDeflatedUTF8StringLength(const CharT* chars, size_t nchars) {
       continue;
     }
     uint32_t v;
-    if (LeadSurrogateMin <= c && c <= TrailSurrogateMax) {
+    if (IsSurrogate(c)) {
       /* nbytes sets 1 length since this is surrogate pair. */
-      if (c >= TrailSurrogateMin || (chars + 1) == end) {
+      if (IsTrailSurrogate(c) || (chars + 1) == end) {
         nbytes += 2; /* Bad Surrogate */
         continue;
       }
       char16_t c2 = chars[1];
-      if (c2 < TrailSurrogateMin || c2 > TrailSurrogateMax) {
+      if (!IsTrailSurrogate(c2)) {
         nbytes += 2; /* Bad Surrogate */
         continue;
       }
-      v = ((c - LeadSurrogateMin) << 10) + (c2 - TrailSurrogateMin) + NonBMPMin;
+      v = UTF16Decode(c, c2);
       nbytes--;
       chars++;
     } else {
@@ -205,8 +205,7 @@ static uint32_t Utf8ToOneUcs4CharImpl(const uint8_t* utf8Buffer,
 
   // WTF-8 allows lone surrogate.
   if (std::is_same<InputCharsT, UTF8Chars>::value &&
-      MOZ_UNLIKELY(ucs4Char >= LeadSurrogateMin &&
-                   ucs4Char <= TrailSurrogateMax)) {
+      MOZ_UNLIKELY(IsSurrogate(ucs4Char))) {
     return INVALID_UTF8;
   }
 
@@ -231,7 +230,7 @@ static void ReportBufferTooSmall(JSContext* cx, uint32_t dummy) {
 
 static void ReportTooBigCharacter(JSContext* cx, uint32_t v) {
   char buffer[10];
-  SprintfLiteral(buffer, "0x%x", v + NonBMPMin);
+  SprintfLiteral(buffer, "0x%x", v);
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_UTF8_CHAR_TOO_LARGE, buffer);
 }
@@ -335,22 +334,17 @@ static bool InflateUTF8ToUTF16(JSContext* cx, const InputCharsT src,
         if (dst(char16_t(v)) == LoopDisposition::Break) {
           break;
         }
-      } else {
-        v -= NonBMPMin;
-        if (v <= 0xFFFFF) {
-          // The n-byte UTF8 code unit will fit in two CharT units.
-          if (dst(char16_t((v >> 10) + LeadSurrogateMin)) ==
-              LoopDisposition::Break) {
-            break;
-          }
-          if (dst(char16_t((v & 0x3FF) + TrailSurrogateMin)) ==
-              LoopDisposition::Break) {
-            break;
-          }
-        } else {
-          // The n-byte UTF8 code unit won't fit in two CharT units.
-          INVALID(ReportTooBigCharacter, v, 1);
+      } else if (v <= NonBMPMax) {
+        // The n-byte UTF8 code unit will fit in two CharT units.
+        if (dst(LeadSurrogate(v)) == LoopDisposition::Break) {
+          break;
         }
+        if (dst(TrailSurrogate(v)) == LoopDisposition::Break) {
+          break;
+        }
+      } else {
+        // The n-byte UTF8 code unit won't fit in two CharT units.
+        INVALID(ReportTooBigCharacter, v, 1);
       }
 
     invalidMultiByteCodeUnit:

@@ -70,14 +70,14 @@ static bool HasUnpairedSurrogate(const char16_t* chars, size_t nchars,
                                  char16_t* unpaired) {
   for (const char16_t* end = chars + nchars; chars != end; chars++) {
     char16_t c = *chars;
-    if (unicode::LeadSurrogateMin <= c && c <= unicode::TrailSurrogateMax) {
+    if (unicode::IsSurrogate(c)) {
       chars++;
-      if (c >= unicode::TrailSurrogateMin || chars == end) {
+      if (unicode::IsTrailSurrogate(c) || chars == end) {
         *unpaired = c;
         return true;
       }
       char16_t c2 = *chars;
-      if (c2 < unicode::TrailSurrogateMin || c2 > unicode::TrailSurrogateMax) {
+      if (!unicode::IsTrailSurrogate(c2)) {
         *unpaired = c;
         return true;
       }
