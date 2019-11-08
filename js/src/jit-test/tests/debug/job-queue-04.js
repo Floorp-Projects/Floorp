@@ -21,4 +21,4 @@ dbg.onNewScript = script => {};
 // the correct condition).
 oomTest(() => {
     g.eval("(function() {})");
-});
+}, {expectExceptionOnFailure: false});
