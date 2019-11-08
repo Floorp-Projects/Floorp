@@ -546,9 +546,19 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   static qcms_transform* GetCMSRGBATransform();
 
   /**
-   * Return sRGBA -> output device transform.
+   * Return sBGRA -> output device transform.
    */
   static qcms_transform* GetCMSBGRATransform();
+
+  /**
+   * Return OS RGBA -> output device transform.
+   */
+  static qcms_transform* GetCMSOSRGBATransform();
+
+  /**
+   * Return OS RGBA QCMS type.
+   */
+  static qcms_data_type GetCMSOSRGBAType();
 
   virtual void FontsPrefsChanged(const char* aPref);
 
