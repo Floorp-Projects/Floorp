@@ -46,7 +46,6 @@ It is augmented as it progresses through the system, with various information:
              // RESULT_SOURCE.*, that can be returned by the model.
 
     // Properties added by the Model.
-    preselected; // {boolean} whether the first result should be preselected.
     results; // {array} list of UrlbarResult objects.
     tokens; // {array} tokens extracted from the searchString, each token is an
             // object in the form {type, value, lowerCaseValue}.

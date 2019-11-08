@@ -404,7 +404,7 @@ class UrlbarController {
       case "resultsadded": {
         // We should connect to an heuristic result, if it exists.
         if (
-          (result == context.results[0] && context.preselected) ||
+          (result == context.results[0] && result.heuristic) ||
           result.autofill
         ) {
           if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH) {

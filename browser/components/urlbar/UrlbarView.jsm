@@ -442,10 +442,12 @@ class UrlbarView {
     }
     this._updateResults(queryContext);
 
-    let isFirstPreselectedResult = false;
+    let isHeuristicResult = false;
     if (queryContext.lastResultCount == 0) {
-      if (queryContext.preselected) {
-        isFirstPreselectedResult = true;
+      let firstResult = queryContext.results[0];
+
+      if (firstResult.heuristic) {
+        isHeuristicResult = true;
         this._selectElement(this._getFirstSelectableElement(), {
           updateInput: false,
           setAccessibleFocus: this.controller._userSelectionBehavior == "arrow",
@@ -469,15 +471,15 @@ class UrlbarView {
 
       // The input field applies autofill on input, without waiting for results.
       // Once we get results, we can ask it to correct wrong predictions.
-      this.input.maybeClearAutofillPlaceholder(queryContext.results[0]);
+      this.input.maybeClearAutofillPlaceholder(firstResult);
     }
 
     this._openPanel();
 
-    if (isFirstPreselectedResult) {
-      // The first, preselected result may be a search alias result, so apply
-      // formatting if necessary.  Conversely, the first result of the previous
-      // query may have been an alias, so remove formatting if necessary.
+    if (isHeuristicResult) {
+      // The heuristic result may be a search alias result, so apply formatting
+      // if necessary.  Conversely, the heuristic result of the previous query
+      // may have been an alias, so remove formatting if necessary.
       this.input.formatValue();
     }
   }

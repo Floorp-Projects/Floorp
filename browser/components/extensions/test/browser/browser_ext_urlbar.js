@@ -82,7 +82,6 @@ add_task(async function tip_onResultPicked_mainButton_noURL_enter() {
     waitForFocus,
     value: "test",
   });
-  EventUtils.synthesizeKey("KEY_ArrowDown");
   EventUtils.synthesizeKey("KEY_Enter");
   await ext.awaitMessage("onResultPicked received");
   await ext.unload();
@@ -121,7 +120,6 @@ add_task(async function tip_onResultPicked_mainButton_url_enter() {
     ext.onMessage("onResultPicked received", () => {
       Assert.ok(false, "onResultPicked should not be called");
     });
-    EventUtils.synthesizeKey("KEY_ArrowDown");
     EventUtils.synthesizeKey("KEY_Enter");
     await loadedPromise;
     Assert.equal(gBrowser.currentURI.spec, "http://example.com/");
@@ -171,7 +169,7 @@ add_task(async function tip_onResultPicked_helpButton_url_enter() {
     ext.onMessage("onResultPicked received", () => {
       Assert.ok(false, "onResultPicked should not be called");
     });
-    EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: 2 });
+    EventUtils.synthesizeKey("KEY_ArrowDown");
     EventUtils.synthesizeKey("KEY_Enter");
     await loadedPromise;
     Assert.equal(gBrowser.currentURI.spec, "http://example.com/");
