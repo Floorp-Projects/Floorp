@@ -17,6 +17,7 @@
 
 #include "jsutil.h"
 
+#include "js/Initialization.h"
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"
 #include "threading/ThreadId.h"
@@ -67,7 +68,7 @@ class Thread {
           mozilla::IsSame<DerefO, Options>::value, void*>::Type>
   explicit Thread(O&& options = Options())
       : id_(ThreadId()), options_(std::forward<O>(options)) {
-    MOZ_ASSERT(js::IsInitialized());
+    MOZ_ASSERT(isInitialized());
   }
 
   // Start a thread of execution at functor |f| with parameters |args|. This
@@ -136,6 +137,14 @@ class Thread {
   // Dispatch to per-platform implementation of thread creation.
   MOZ_MUST_USE bool create(THREAD_RETURN_TYPE(THREAD_CALL_API* aMain)(void*),
                            void* aArg);
+
+  // An internal version of JS_IsInitialized() that returns whether SpiderMonkey
+  // is currently initialized or is in the process of being initialized.
+  static inline bool isInitialized() {
+    using namespace JS::detail;
+    return libraryInitState == InitState::Initializing ||
+           libraryInitState == InitState::Running;
+  }
 };
 
 namespace ThisThread {
