@@ -10,7 +10,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AboutPages: "resource://normandy-content/AboutPages.jsm",
   AddonRollouts: "resource://normandy/lib/AddonRollouts.jsm",
   AddonStudies: "resource://normandy/lib/AddonStudies.jsm",
   CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
@@ -90,12 +89,6 @@ var Normandy = {
     CleanupManager.addCleanupHandler(() =>
       Services.prefs.removeObserver(PREF_LOGGING_LEVEL, LogManager.configure)
     );
-
-    try {
-      await AboutPages.init();
-    } catch (err) {
-      log.error("Failed to initialize about pages:", err);
-    }
 
     try {
       await AddonStudies.init();
