@@ -99,7 +99,7 @@ struct IDBObjectStore::StructuredCloneWriteInfo {
     MOZ_COUNT_CTOR(StructuredCloneWriteInfo);
   }
 
-  StructuredCloneWriteInfo(StructuredCloneWriteInfo&& aCloneWriteInfo)
+  StructuredCloneWriteInfo(StructuredCloneWriteInfo&& aCloneWriteInfo) noexcept
       : mCloneBuffer(std::move(aCloneWriteInfo.mCloneBuffer)),
         mDatabase(aCloneWriteInfo.mDatabase),
         mOffsetToKeyProp(aCloneWriteInfo.mOffsetToKeyProp) {
@@ -1066,14 +1066,10 @@ bool IDBObjectStore::DeserializeValue(JSContext* aCx,
 
   // FIXME: Consider to use StructuredCloneHolder here and in other
   //        deserializing methods.
-  if (!JS_ReadStructuredClone(
-          aCx, aCloneReadInfo.mData, JS_STRUCTURED_CLONE_VERSION,
-          JS::StructuredCloneScope::DifferentProcessForIndexedDB, aValue,
-          JS::CloneDataPolicy(), &callbacks, &aCloneReadInfo)) {
-    return false;
-  }
-
-  return true;
+  return JS_ReadStructuredClone(
+      aCx, aCloneReadInfo.mData, JS_STRUCTURED_CLONE_VERSION,
+      JS::StructuredCloneScope::DifferentProcessForIndexedDB, aValue,
+      JS::CloneDataPolicy(), &callbacks, &aCloneReadInfo);
 }
 
 namespace {

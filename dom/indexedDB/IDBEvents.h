@@ -91,10 +91,10 @@ class IDBVersionChangeEvent final : public Event {
   IDBVersionChangeEvent(EventTarget* aOwner, uint64_t aOldVersion)
       : Event(aOwner, nullptr, nullptr), mOldVersion(aOldVersion) {}
 
-  ~IDBVersionChangeEvent() {}
+  ~IDBVersionChangeEvent() = default;
 
   static already_AddRefed<IDBVersionChangeEvent> CreateInternal(
-      EventTarget* aOwner, const nsAString& aName, uint64_t aOldVersion,
+      EventTarget* aOwner, const nsAString& aType, uint64_t aOldVersion,
       const Nullable<uint64_t>& aNewVersion);
 };
 

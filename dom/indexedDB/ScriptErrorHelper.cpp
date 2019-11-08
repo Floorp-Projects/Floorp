@@ -143,7 +143,7 @@ class ScriptErrorRunnable final : public mozilla::Runnable {
   }
 
  private:
-  virtual ~ScriptErrorRunnable() {}
+  virtual ~ScriptErrorRunnable() = default;
 };
 
 }  // namespace

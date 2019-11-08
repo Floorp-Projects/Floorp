@@ -214,7 +214,7 @@ class IDBObjectStore final : public nsISupports, public nsWrapperCache {
 
   already_AddRefed<IDBIndex> Index(const nsAString& aName, ErrorResult& aRv);
 
-  void DeleteIndex(const nsAString& aIndexName, ErrorResult& aRv);
+  void DeleteIndex(const nsAString& aName, ErrorResult& aRv);
 
   already_AddRefed<IDBRequest> Count(JSContext* aCx, JS::Handle<JS::Value> aKey,
                                      ErrorResult& aRv);
