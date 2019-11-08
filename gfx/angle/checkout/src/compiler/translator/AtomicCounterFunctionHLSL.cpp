@@ -9,6 +9,7 @@
 
 #include "compiler/translator/AtomicCounterFunctionHLSL.h"
 
+#include "compiler/translator/Common.h"
 #include "compiler/translator/ImmutableStringBuilder.h"
 #include "compiler/translator/InfoSink.h"
 #include "compiler/translator/IntermNode.h"
@@ -23,6 +24,10 @@ constexpr ImmutableString kAtomicCounterIncrement("atomicCounterIncrement");
 constexpr ImmutableString kAtomicCounterDecrement("atomicCounterDecrement");
 constexpr ImmutableString kAtomicCounterBaseName("_acbase_");
 }  // namespace
+
+AtomicCounterFunctionHLSL::AtomicCounterFunctionHLSL(bool forceResolution)
+    : mForceResolution(forceResolution)
+{}
 
 ImmutableString AtomicCounterFunctionHLSL::useAtomicCounterFunction(const ImmutableString &name)
 {
@@ -65,34 +70,41 @@ void AtomicCounterFunctionHLSL::atomicCounterFunctionHeader(TInfoSinkBase &out)
     {
         out << "uint " << atomicFunction.first
             << "(in RWByteAddressBuffer counter, int address)\n"
-               "{\n";
+               "{\n"
+               "    uint ret;\n";
+
         switch (atomicFunction.second)
         {
             case AtomicCounterFunction::INCREMENT:
+                out << "    counter.InterlockedAdd(address, 1u, ret);\n";
+                break;
             case AtomicCounterFunction::DECREMENT:
-                out << "    uint ret;\n"
-                       "    counter.InterlockedAdd(address, ";
-                if (atomicFunction.second == AtomicCounterFunction::DECREMENT)
-                {
-                    out << "0u - ";
-                }
-                out << "1u, ret);\n"
-                    << "    return ret;\n";
+                out << "    counter.InterlockedAdd(address, 0u - 1u, ret);\n"
+                       "    ret -= 1u;\n";  // atomicCounterDecrement is a post-decrement op
                 break;
             case AtomicCounterFunction::LOAD:
-                out << "    return counter.Load(address);\n";
+                out << "    ret = counter.Load(address);\n";
                 break;
             default:
                 UNREACHABLE();
                 break;
         }
-        out << "}\n\n";
+
+        if (mForceResolution && atomicFunction.second != AtomicCounterFunction::LOAD)
+        {
+            out << "    if (ret == 0) {\n"
+                   "        ret = 0 - ret;\n"
+                   "    }\n";
+        }
+
+        out << "    return ret;\n"
+               "}\n\n";
     }
 }
 
 ImmutableString getAtomicCounterNameForBinding(int binding)
 {
-    std::stringstream counterName;
+    std::stringstream counterName = sh::InitializeStream<std::stringstream>();
     counterName << kAtomicCounterBaseName << binding;
     return ImmutableString(counterName.str());
 }
