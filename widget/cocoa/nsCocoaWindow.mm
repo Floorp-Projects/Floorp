@@ -2257,13 +2257,16 @@ void nsCocoaWindow::SetInputContext(const InputContext& aContext,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void nsCocoaWindow::GetEditCommands(NativeKeyBindingsType aType, const WidgetKeyboardEvent& aEvent,
+bool nsCocoaWindow::GetEditCommands(NativeKeyBindingsType aType, const WidgetKeyboardEvent& aEvent,
                                     nsTArray<CommandInt>& aCommands) {
   // Validate the arguments.
-  nsIWidget::GetEditCommands(aType, aEvent, aCommands);
+  if (NS_WARN_IF(!nsIWidget::GetEditCommands(aType, aEvent, aCommands))) {
+    return false;
+  }
 
   NativeKeyBindings* keyBindings = NativeKeyBindings::GetInstance(aType);
   keyBindings->GetEditCommands(aEvent, aCommands);
+  return true;
 }
 
 already_AddRefed<nsIWidget> nsIWidget::CreateTopLevelWindow() {

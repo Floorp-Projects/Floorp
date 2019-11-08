@@ -528,13 +528,18 @@ bool PuppetWidget::AsyncPanZoomEnabled() const {
   return mBrowserChild && mBrowserChild->AsyncPanZoomEnabled();
 }
 
-void PuppetWidget::GetEditCommands(NativeKeyBindingsType aType,
+bool PuppetWidget::GetEditCommands(NativeKeyBindingsType aType,
                                    const WidgetKeyboardEvent& aEvent,
                                    nsTArray<CommandInt>& aCommands) {
   // Validate the arguments.
-  nsIWidget::GetEditCommands(aType, aEvent, aCommands);
-
+  if (NS_WARN_IF(!nsIWidget::GetEditCommands(aType, aEvent, aCommands))) {
+    return false;
+  }
+  if (NS_WARN_IF(!mBrowserChild)) {
+    return false;
+  }
   mBrowserChild->RequestEditCommands(aType, aEvent, aCommands);
+  return true;
 }
 
 LayerManager* PuppetWidget::GetLayerManager(
