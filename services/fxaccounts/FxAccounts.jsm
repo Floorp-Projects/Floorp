@@ -24,6 +24,7 @@ const {
   ASSERTION_USE_PERIOD,
   CERT_LIFETIME,
   ERRNO_INVALID_AUTH_TOKEN,
+  ERRNO_INVALID_FXA_ASSERTION,
   ERROR_AUTH_ERROR,
   ERROR_INVALID_PARAMETER,
   ERROR_NO_ACCOUNT,
@@ -54,6 +55,12 @@ ChromeUtils.defineModuleGetter(
   this,
   "FxAccountsClient",
   "resource://gre/modules/FxAccountsClient.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "FxAccountsOAuthGrantClient",
+  "resource://gre/modules/FxAccountsOAuthGrantClient.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
@@ -526,8 +533,12 @@ class FxAccounts {
    *          AUTH_ERROR
    *          UNKNOWN_ERROR
    */
-  getOAuthToken(options = {}) {
-    return this._internal.getOAuthToken(options);
+  async getOAuthToken(options = {}) {
+    try {
+      return await this._internal.getOAuthToken(options);
+    } catch (err) {
+      throw this._internal._errorToErrorClass(err);
+    }
   }
 
   /**
@@ -835,6 +846,15 @@ FxAccountsInternal.prototype = {
       this._fxAccountsClient = new FxAccountsClient();
     }
     return this._fxAccountsClient;
+  },
+
+  get fxAccountsOAuthGrantClient() {
+    if (!this._fxAccountsOAuthGrantClient) {
+      this._fxAccountsOAuthGrantClient = new FxAccountsOAuthGrantClient({
+        client_id: FX_OAUTH_CLIENT_ID,
+      });
+    }
+    return this._fxAccountsOAuthGrantClient;
   },
 
   // The profile object used to fetch the actual user profile.
@@ -1564,15 +1584,36 @@ FxAccountsInternal.prototype = {
 
   // Does the actual fetch of an oauth token for getOAuthToken()
   async _doTokenFetch(scopeString) {
-    return this.withVerifiedAccountState(async state => {
-      const { sessionToken } = await state.getUserAccountData(["sessionToken"]);
-      const result = await this.fxAccountsClient.oauthToken(
-        sessionToken,
-        FX_OAUTH_CLIENT_ID,
+    // Ideally, we would auth this call directly with our `sessionToken` rather than
+    // going via a BrowserID assertion. Before we can do so we need to resolve some
+    // data-volume processing issues in the server-side FxA metrics pipeline.
+    let token;
+    let oAuthURL = this.fxAccountsOAuthGrantClient.serverURL.href;
+    let assertion = await this.getAssertion(oAuthURL);
+    try {
+      let result = await this.fxAccountsOAuthGrantClient.getTokenFromAssertion(
+        assertion,
         scopeString
       );
-      return result.access_token;
-    });
+      token = result.access_token;
+    } catch (err) {
+      // If we get a 401 fetching the token it may be that our certificate
+      // needs to be regenerated.
+      if (err.code !== 401 || err.errno !== ERRNO_INVALID_FXA_ASSERTION) {
+        throw err;
+      }
+      log.warn(
+        "OAuth server returned 401, refreshing certificate and retrying token fetch"
+      );
+      await this.invalidateCertificate();
+      assertion = await this.getAssertion(oAuthURL);
+      let result = await this.fxAccountsOAuthGrantClient.getTokenFromAssertion(
+        assertion,
+        scopeString
+      );
+      token = result.access_token;
+    }
+    return token;
   },
 
   getOAuthToken(options = {}) {
@@ -1655,6 +1696,16 @@ FxAccountsInternal.prototype = {
           log.warn("FxA failed to revoke a cached token", err);
         });
       }
+    });
+  },
+
+  /**
+   * Invalidate the FxA certificate, so that it will be refreshed from the server
+   * the next time it is needed.
+   */
+  invalidateCertificate() {
+    return this.withCurrentAccountState(async currentState => {
+      await currentState.updateUserAccountData({ cert: null });
     });
   },
 

@@ -625,6 +625,7 @@ add_task(async function test_signCertificate() {
   let server = httpd_setup({
     "/certificate/sign": function(request, response) {
       Assert.ok(request.hasHeader("Authorization"));
+      Assert.ok(request.queryString.startsWith("service="));
 
       if (tries === 0) {
         tries += 1;
