@@ -244,7 +244,7 @@ function transformConsoleAPICallPacket(packet) {
       }
     : null;
 
-  if (type === "logPointError" || type === "logPoint") {
+  if (frame && (type === "logPointError" || type === "logPoint")) {
     frame.options = { logPoint: true };
   }
 
