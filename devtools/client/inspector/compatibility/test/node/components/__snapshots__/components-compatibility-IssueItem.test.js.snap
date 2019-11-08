@@ -1,10 +1,75 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`IssueItem component renders an issue of CSS property 1`] = `
+exports[`IssueItem component renders a deprecated issue of CSS property 1`] = `
 <li
+  className="compatibility-issue-item"
   key="test-property"
 >
   <a
+    className="compatibility-issue-item__mdn-link devtools-monospace"
+    href="test-url"
+    onClick={[Function]}
+    title="test-url"
+  >
+    test-property
+  </a>
+  <span
+    className="compatibility-issue-item__causes"
+  >
+    (deprecated)
+  </span>
+</li>
+`;
+
+exports[`IssueItem component renders an experimental issue of CSS property 1`] = `
+<li
+  className="compatibility-issue-item"
+  key="test-property"
+>
+  <a
+    className="compatibility-issue-item__mdn-link devtools-monospace"
+    href="test-url"
+    onClick={[Function]}
+    title="test-url"
+  >
+    test-property
+  </a>
+  <span
+    className="compatibility-issue-item__causes"
+  >
+    (experimental)
+  </span>
+</li>
+`;
+
+exports[`IssueItem component renders an issue which has both deprecated and experimental 1`] = `
+<li
+  className="compatibility-issue-item"
+  key="test-property"
+>
+  <a
+    className="compatibility-issue-item__mdn-link devtools-monospace"
+    href="test-url"
+    onClick={[Function]}
+    title="test-url"
+  >
+    test-property
+  </a>
+  <span
+    className="compatibility-issue-item__causes"
+  >
+    (deprecated, experimental)
+  </span>
+</li>
+`;
+
+exports[`IssueItem component renders an unsupported issue of CSS property 1`] = `
+<li
+  className="compatibility-issue-item"
+  key="test-property"
+>
+  <a
+    className="compatibility-issue-item__mdn-link devtools-monospace"
     href="test-url"
     onClick={[Function]}
     title="test-url"
