@@ -2573,13 +2573,17 @@ class Sampler {
 
   // This method suspends and resumes the samplee thread. It calls the passed-in
   // function-like object aProcessRegs (passing it a populated |const
-  // Registers&| arg) while the samplee thread is suspended.
+  // Registers&| arg) while the samplee thread is suspended.  Note that
+  // the aProcessRegs function must be very careful not to do anything that
+  // requires a lock, since we may have interrupted the thread at any point.
+  // As an example, you can't call TimeStamp::Now() since on windows it
+  // takes a lock on the performance counter.
   //
   // Func must be a function-like object of type `void()`.
   template <typename Func>
   void SuspendAndSampleAndResumeThread(
       PSLockRef aLock, const RegisteredThread& aRegisteredThread,
-      const Func& aProcessRegs);
+      const TimeStamp& aNow, const Func& aProcessRegs);
 
  private:
 #if defined(GP_OS_linux) || defined(GP_OS_android)
@@ -2868,7 +2872,8 @@ void SamplerThread::Run() {
             // Suspend the thread and collect its stack data in the local
             // buffer.
             mSampler.SuspendAndSampleAndResumeThread(
-                lock, *registeredThread, [&](const Registers& aRegs) {
+                lock, *registeredThread, now,
+                [&](const Registers& aRegs, const TimeStamp& aNow) {
                   DoPeriodicSample(lock, *registeredThread, *profiledThreadData,
                                    now, aRegs, samplePos, localProfileBuffer);
 
@@ -3046,8 +3051,8 @@ void SamplerThread::Run() {
 
                   TimeDuration currentEventDelay;
                   TimeDuration currentEventRunning;
-                  registeredThread->GetRunningEventDelay(currentEventDelay,
-                                                         currentEventRunning);
+                  registeredThread->GetRunningEventDelay(
+                      aNow, currentEventDelay, currentEventRunning);
 
                   // Note: a different definition of responsiveness than the
                   // 16ms event injection.
@@ -4863,8 +4868,10 @@ void profiler_suspend_and_sample_thread(int aThreadId, uint32_t aFeatures,
 
       // Suspend, sample, and then resume the target thread.
       Sampler sampler(lock);
+      TimeStamp now = TimeStamp::Now();
       sampler.SuspendAndSampleAndResumeThread(
-          lock, registeredThread, [&](const Registers& aRegs) {
+          lock, registeredThread, now,
+          [&](const Registers& aRegs, const TimeStamp& aNow) {
             // The target thread is now suspended. Collect a native backtrace,
             // and call the callback.
             bool isSynchronous = false;
@@ -4877,7 +4884,8 @@ void profiler_suspend_and_sample_thread(int aThreadId, uint32_t aFeatures,
               DoFramePointerBacktrace(lock, registeredThread, aRegs,
                                       nativeStack);
 #  elif defined(USE_MOZ_STACK_WALK)
-          DoMozStackWalkBacktrace(lock, registeredThread, aRegs, nativeStack);
+              DoMozStackWalkBacktrace(lock, registeredThread, aRegs,
+                                      nativeStack);
 #  else
 #    error "Invalid configuration"
 #  endif

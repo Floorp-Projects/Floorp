@@ -113,7 +113,7 @@ void Sampler::Disable(PSLockRef aLock) {}
 template <typename Func>
 void Sampler::SuspendAndSampleAndResumeThread(
     PSLockRef aLock, const RegisteredThread& aRegisteredThread,
-    const Func& aProcessRegs) {
+    const TimeStamp& aNow, const Func& aProcessRegs) {
   HANDLE profiled_thread =
       aRegisteredThread.GetPlatformData()->ProfiledThread();
   if (profiled_thread == nullptr) {
@@ -159,7 +159,7 @@ void Sampler::SuspendAndSampleAndResumeThread(
 
   Registers regs;
   PopulateRegsFromContext(regs, &context);
-  aProcessRegs(regs);
+  aProcessRegs(regs, aNow);
 
   //----------------------------------------------------------------//
   // Resume the target thread.
