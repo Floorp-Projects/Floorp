@@ -44,6 +44,35 @@ function readFileInto(file, dataBuf) {
   }
 }
 
+// Returns a plain object that is Structured Cloneable and has name and
+// description properties.
+function createPlainErrorObject(e) {
+  // OS.File.Error has an empty message property; it constructs the error
+  // message on-demand in its toString() method. So we handle those errors
+  // specially.
+  if (!(e instanceof OS.File.Error)) {
+    // Regular errors: just rewrap the object.
+    if (e instanceof Error) {
+      const { name, message, fileName, lineNumber } = e;
+      return { name, message, fileName, lineNumber };
+    }
+    // The WebAssembly code throws errors with fields error_type and error_msg.
+    if (e.error_type) {
+      return {
+        name: e.error_type,
+        message: e.error_msg,
+      };
+    }
+  }
+
+  return {
+    name: e instanceof OS.File.Error ? "OSFileError" : "Error",
+    message: e.toString(),
+    fileName: e.fileName,
+    lineNumber: e.lineNumber,
+  };
+}
+
 onmessage = async e => {
   try {
     const { binaryPath, debugPath, breakpadId, module } = e.data;
@@ -89,7 +118,7 @@ onmessage = async e => {
       }
     }
   } catch (error) {
-    postMessage({ error });
+    postMessage({ error: createPlainErrorObject(error) });
   }
   close();
 };

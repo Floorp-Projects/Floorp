@@ -135,11 +135,13 @@ function receiveProfile(profile, getSymbolTableCallback) {
         });
       },
       error => {
+        // Re-wrap the error object into an object that is Structured Clone-able.
+        const { name, message, lineNumber, fileName } = error;
         mm.sendAsyncMessage(SYMBOL_TABLE_RESPONSE_EVENT, {
           status: "error",
           debugName,
           breakpadId,
-          error: `${error}`,
+          error: { name, message, lineNumber, fileName },
         });
       }
     );
