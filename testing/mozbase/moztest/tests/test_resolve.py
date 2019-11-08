@@ -252,6 +252,11 @@ def test_subsuites(resolver):
     assert len(tests) == 1
     assert tests[0]['name'] == 'src/TestInstrumentationA.java'
 
+    # Resolve tests *without* a subsuite.
+    tests = list(resolver.resolve_tests(flavor='browser-chrome', subsuite='undefined'))
+    assert len(tests) == 1
+    assert tests[0]['name'] == 'browser_chrome.js'
+
 
 def test_wildcard_patterns(resolver):
     """Test matching paths by wildcard."""
