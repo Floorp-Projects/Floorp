@@ -288,7 +288,7 @@ void Sampler::Disable(PSLockRef aLock) {
 template <typename Func>
 void Sampler::SuspendAndSampleAndResumeThread(
     PSLockRef aLock, const RegisteredThread& aRegisteredThread,
-    const Func& aProcessRegs) {
+    const TimeStamp& aNow, const Func& aProcessRegs) {
   // Only one sampler thread can be sampling at once.  So we expect to have
   // complete control over |sSigHandlerCoordinator|.
   MOZ_ASSERT(!sSigHandlerCoordinator);
@@ -343,7 +343,7 @@ void Sampler::SuspendAndSampleAndResumeThread(
   // Extract the current register values.
   Registers regs;
   PopulateRegsFromContext(regs, &sSigHandlerCoordinator->mUContext);
-  aProcessRegs(regs);
+  aProcessRegs(regs, aNow);
 
   //----------------------------------------------------------------//
   // Resume the target thread.

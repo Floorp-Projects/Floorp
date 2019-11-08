@@ -160,7 +160,8 @@ class RegisteredThread final {
   // aRunning is the time the event has been running.  If no event is
   // running these will both be TimeDuration() (i.e. 0).  Both are out
   // params, and are always set.  Their initial value is discarded.
-  void GetRunningEventDelay(TimeDuration& aDelay, TimeDuration& aRunning);
+  void GetRunningEventDelay(const TimeStamp& aNow, TimeDuration& aDelay,
+                            TimeDuration& aRunning);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 

@@ -1934,7 +1934,7 @@ class Sampler {
   template <typename Func>
   void SuspendAndSampleAndResumeThread(
       PSLockRef aLock, const RegisteredThread& aRegisteredThread,
-      const Func& aProcessRegs);
+      const TimeStamp& aNow, const Func& aProcessRegs);
 
  private:
 #  if defined(GP_OS_linux) || defined(GP_OS_android)
@@ -2134,7 +2134,8 @@ void SamplerThread::Run() {
             buffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
             mSampler.SuspendAndSampleAndResumeThread(
-                lock, *registeredThread, [&](const Registers& aRegs) {
+                lock, *registeredThread, now,
+                [&](const Registers& aRegs, const TimeStamp& aNow) {
                   DoPeriodicSample(lock, *registeredThread, *profiledThreadData,
                                    aRegs, samplePos, localProfileBuffer);
                 });
@@ -3434,10 +3435,12 @@ void profiler_suspend_and_sample_thread(int aThreadId, uint32_t aFeatures,
 
       // Suspend, sample, and then resume the target thread.
       Sampler sampler(lock);
+      TimeStamp now = TimeStamp::NowUnfuzzed();
       sampler.SuspendAndSampleAndResumeThread(
-          lock, registeredThread, [&](const Registers& aRegs) {
-            // The target thread is now suspended. Collect a native backtrace,
-            // and call the callback.
+          lock, registeredThread, now,
+          [&](const Registers& aRegs, const TimeStamp& aNow) {
+            // The target thread is now suspended. Collect a native
+            // backtrace, and call the callback.
             bool isSynchronous = false;
 #  if defined(HAVE_FASTINIT_NATIVE_UNWIND)
             if (aSampleNative) {
@@ -3448,7 +3451,8 @@ void profiler_suspend_and_sample_thread(int aThreadId, uint32_t aFeatures,
               DoFramePointerBacktrace(lock, registeredThread, aRegs,
                                       nativeStack);
 #    elif defined(USE_MOZ_STACK_WALK)
-          DoMozStackWalkBacktrace(lock, registeredThread, aRegs, nativeStack);
+              DoMozStackWalkBacktrace(lock, registeredThread, aRegs,
+                                      nativeStack);
 #    else
 #      error "Invalid configuration"
 #    endif

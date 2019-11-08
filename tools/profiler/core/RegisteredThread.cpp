@@ -45,13 +45,17 @@ size_t RegisteredThread::SizeOfIncludingThis(
   return n;
 }
 
-void RegisteredThread::GetRunningEventDelay(TimeDuration& aDelay,
+void RegisteredThread::GetRunningEventDelay(const TimeStamp& aNow,
+                                            TimeDuration& aDelay,
                                             TimeDuration& aRunning) {
   if (mThread) {  // can be null right at the start of a process
     TimeStamp start;
     mThread->GetRunningEventDelay(&aDelay, &start);
     if (!start.IsNull()) {
-      aRunning = TimeStamp::Now() - start;
+      // Note: the timestamp used here will be from when we started to
+      // suspend and sample the thread; which is also the timestamp
+      // associated with the sample.
+      aRunning = aNow - start;
       return;
     }
   }
