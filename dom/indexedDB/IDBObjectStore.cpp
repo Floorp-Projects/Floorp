@@ -273,9 +273,9 @@ bool StructuredCloneWriteCallback(JSContext* aCx,
       return false;
     }
 
-    StructuredCloneFile* const newFile = cloneWriteInfo->mFiles.AppendElement();
-    newFile->mMutableFile = mutableFile;
-    newFile->mType = StructuredCloneFile::eMutableFile;
+    const DebugOnly<StructuredCloneFile*> newFile =
+        cloneWriteInfo->mFiles.EmplaceBack(mutableFile);
+    MOZ_ASSERT(newFile);
 
     return true;
   }
@@ -337,10 +337,9 @@ bool StructuredCloneWriteCallback(JSContext* aCx,
         }
       }
 
-      StructuredCloneFile* const newFile =
-          cloneWriteInfo->mFiles.AppendElement();
-      newFile->mBlob = blob;
-      newFile->mType = StructuredCloneFile::eBlob;
+      const DebugOnly<StructuredCloneFile*> newFile =
+          cloneWriteInfo->mFiles.EmplaceBack(StructuredCloneFile::eBlob, blob);
+      MOZ_ASSERT(newFile);
 
       return true;
     }
@@ -381,9 +380,9 @@ bool CopyingStructuredCloneWriteCallback(JSContext* aCx,
         return false;
       }
 
-      StructuredCloneFile* const newFile = cloneInfo->mFiles.AppendElement();
-      newFile->mBlob = blob;
-      newFile->mType = StructuredCloneFile::eBlob;
+      const DebugOnly<StructuredCloneFile*> newFile =
+          cloneInfo->mFiles.EmplaceBack(StructuredCloneFile::eBlob, blob);
+      MOZ_ASSERT(newFile);
 
       return true;
     }
@@ -404,9 +403,9 @@ bool CopyingStructuredCloneWriteCallback(JSContext* aCx,
         return false;
       }
 
-      StructuredCloneFile* const newFile = cloneInfo->mFiles.AppendElement();
-      newFile->mMutableFile = mutableFile;
-      newFile->mType = StructuredCloneFile::eMutableFile;
+      const DebugOnly<StructuredCloneFile*> newFile =
+          cloneInfo->mFiles.EmplaceBack(mutableFile);
+      MOZ_ASSERT(newFile);
 
       return true;
     }
