@@ -35,6 +35,9 @@ function installAddonEngine(name = "engine-addon") {
 /**
  * Copy the engine-distribution.xml engine to a fake distribution
  * created in the profile, and registered with the directory service.
+ *
+ * @returns {nsIFile}
+ *   An object referencing the distribution directory.
  */
 function installDistributionEngine() {
   const XRE_APP_DISTRIBUTION_DIR = "XREAppDist";
@@ -64,4 +67,5 @@ function installDistributionEngine() {
       return null;
     },
   });
+  return distDir;
 }

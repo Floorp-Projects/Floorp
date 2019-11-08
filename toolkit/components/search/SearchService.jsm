@@ -1144,11 +1144,20 @@ SearchService.prototype = {
           distDirs.push(dir);
         }
       } catch (ex) {
-        if (!(ex instanceof OS.File.Error) || !ex.becauseNoSuchFile) {
+        if (!(ex instanceof OS.File.Error)) {
+          throw ex;
+        }
+        if (ex.becauseAccessDenied) {
+          Cu.reportError(
+            "Not loading distribution files because access was denied."
+          );
+        } else if (!ex.becauseNoSuchFile) {
           throw ex;
         }
       } finally {
-        iterator.close();
+        // If there's an issue on close, we can't do anything about it. It could
+        // be that reading the iterator never fully opened.
+        iterator.close().catch(Cu.reportError);
       }
     }
 
