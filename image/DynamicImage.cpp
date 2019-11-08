@@ -141,7 +141,7 @@ DynamicImage::GetFrameAtSize(const IntSize& aSize, uint32_t aWhichFrame,
                              uint32_t aFlags) {
   RefPtr<DrawTarget> dt =
       gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-          aSize, SurfaceFormat::OS_RGBA);
+          aSize, SurfaceFormat::B8G8R8A8);
   if (!dt || !dt->IsValid()) {
     gfxWarning()
         << "DynamicImage::GetFrame failed in CreateOffscreenContentDrawTarget";
@@ -198,8 +198,8 @@ DynamicImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
 
   if (aSize == drawableSize) {
     gfxUtils::DrawPixelSnapped(aContext, mDrawable, SizeDouble(drawableSize),
-                               aRegion, SurfaceFormat::OS_RGBA, aSamplingFilter,
-                               aOpacity);
+                               aRegion, SurfaceFormat::B8G8R8A8,
+                               aSamplingFilter, aOpacity);
     return ImgDrawResult::SUCCESS;
   }
 
@@ -213,7 +213,7 @@ DynamicImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
   aContext->Multiply(gfxMatrix::Scaling(scale.width, scale.height));
 
   gfxUtils::DrawPixelSnapped(aContext, mDrawable, SizeDouble(drawableSize),
-                             region, SurfaceFormat::OS_RGBA, aSamplingFilter,
+                             region, SurfaceFormat::B8G8R8A8, aSamplingFilter,
                              aOpacity);
   return ImgDrawResult::SUCCESS;
 }

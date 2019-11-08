@@ -43,7 +43,7 @@ void WithSurfaceSink(Func aFunc) {
 
   WithFilterPipeline(decoder, std::forward<Func>(aFunc),
                      SurfaceConfig{decoder, IntSize(100, 100),
-                                   SurfaceFormat::OS_RGBA, flipVertically});
+                                   SurfaceFormat::B8G8R8A8, flipVertically});
 }
 
 void ResetForNextPass(SurfaceFilter* aSink) {
