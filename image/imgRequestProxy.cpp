@@ -661,16 +661,6 @@ imgRequestProxy::SetLoadFlags(nsLoadFlags flags) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-imgRequestProxy::GetTRRMode(nsIRequest::TRRMode* aTRRMode) {
-  return GetTRRModeImpl(aTRRMode);
-}
-
-NS_IMETHODIMP
-imgRequestProxy::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
-  return SetTRRModeImpl(aTRRMode);
-}
-
 /**  imgIRequest methods **/
 
 NS_IMETHODIMP
