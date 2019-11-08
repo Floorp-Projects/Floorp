@@ -583,10 +583,10 @@ LexerTransition<ICOState> nsICODecoder::FinishMask() {
     }
     int32_t stride = mDownscaler->TargetSize().width * sizeof(uint32_t);
     DebugOnly<bool> ret =
-        // We know the format is B8G8R8A8 because we always assume bmp's inside
+        // We know the format is OS_RGBA because we always assume bmp's inside
         // ico's are transparent.
-        PremultiplyData(imageData, stride, SurfaceFormat::B8G8R8A8, imageData,
-                        stride, SurfaceFormat::B8G8R8A8,
+        PremultiplyData(imageData, stride, SurfaceFormat::OS_RGBA, imageData,
+                        stride, SurfaceFormat::OS_RGBA,
                         mDownscaler->TargetSize());
     MOZ_ASSERT(ret);
   }

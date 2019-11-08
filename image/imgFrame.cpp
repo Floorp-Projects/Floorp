@@ -158,7 +158,7 @@ static bool ClearSurface(DataSourceSurface* aSurface, const IntSize& aSize,
   uint8_t* data = aSurface->GetData();
   MOZ_ASSERT(data);
 
-  if (aFormat == SurfaceFormat::B8G8R8X8) {
+  if (aFormat == SurfaceFormat::OS_RGBX) {
     // Skia doesn't support RGBX surfaces, so ensure the alpha value is set
     // to opaque white. While it would be nice to only do this for Skia,
     // imgFrame can run off main thread and past shutdown where
@@ -230,7 +230,7 @@ nsresult imgFrame::InitForDecoder(const nsIntSize& aImageSize,
     // surface because if we use BGRX, the next frame composited into the
     // surface could be BGRA and cause rendering problems.
     MOZ_ASSERT(aAnimParams);
-    mFormat = SurfaceFormat::B8G8R8A8;
+    mFormat = SurfaceFormat::OS_RGBA;
   } else {
     mFormat = aFormat;
   }
@@ -554,7 +554,7 @@ imgFrame::SurfaceWithFormat imgFrame::SurfaceForDrawing(
     // transparent pixels in the padding or undecoded area
     RefPtr<DrawTarget> target =
         gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-            mImageSize, SurfaceFormat::B8G8R8A8);
+            mImageSize, SurfaceFormat::OS_RGBA);
     if (!target) {
       return SurfaceWithFormat();
     }

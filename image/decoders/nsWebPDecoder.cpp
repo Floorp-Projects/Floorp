@@ -23,7 +23,7 @@ nsWebPDecoder::nsWebPDecoder(RasterImage* aImage)
       mBlend(BlendMethod::OVER),
       mDisposal(DisposalMethod::KEEP),
       mTimeout(FrameTimeout::Forever()),
-      mFormat(SurfaceFormat::B8G8R8X8),
+      mFormat(SurfaceFormat::OS_RGBX),
       mLastRow(0),
       mCurrentFrame(0),
       mData(nullptr),
@@ -205,12 +205,26 @@ nsresult nsWebPDecoder::CreateFrame(const nsIntRect& aFrameRect) {
   // full frame, then we are transparent even if there is no alpha
   if (mCurrentFrame == 0 && !aFrameRect.IsEqualEdges(FullFrame())) {
     MOZ_ASSERT(HasAnimation());
-    mFormat = SurfaceFormat::B8G8R8A8;
+    mFormat = SurfaceFormat::OS_RGBA;
     PostHasTransparency();
   }
 
   WebPInitDecBuffer(&mBuffer);
-  mBuffer.colorspace = MODE_BGRA;
+
+  switch (SurfaceFormat::OS_RGBA) {
+    case SurfaceFormat::B8G8R8A8:
+      mBuffer.colorspace = MODE_BGRA;
+      break;
+    case SurfaceFormat::A8R8G8B8:
+      mBuffer.colorspace = MODE_ARGB;
+      break;
+    case SurfaceFormat::R8G8B8A8:
+      mBuffer.colorspace = MODE_RGBA;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown OS_RGBA");
+      return NS_ERROR_FAILURE;
+  }
 
   mDecoder = WebPINewDecoder(&mBuffer);
   if (!mDecoder) {
@@ -223,10 +237,10 @@ nsresult nsWebPDecoder::CreateFrame(const nsIntRect& aFrameRect) {
   // WebP doesn't guarantee that the alpha generated matches the hint in the
   // header, so we always need to claim the input is BGRA. If the output is
   // BGRX, swizzling will mask off the alpha channel.
-  SurfaceFormat inFormat = SurfaceFormat::B8G8R8A8;
+  SurfaceFormat inFormat = SurfaceFormat::OS_RGBA;
 
   SurfacePipeFlags pipeFlags = SurfacePipeFlags();
-  if (mFormat == SurfaceFormat::B8G8R8A8 &&
+  if (mFormat == SurfaceFormat::OS_RGBA &&
       !(GetSurfaceFlags() & SurfaceFlags::NO_PREMULTIPLY_ALPHA)) {
     pipeFlags |= SurfacePipeFlags::PREMULTIPLY_ALPHA;
   }
@@ -254,8 +268,8 @@ void nsWebPDecoder::EndFrame() {
   MOZ_ASSERT(HasSize());
   MOZ_ASSERT(mDecoder);
 
-  auto opacity = mFormat == SurfaceFormat::B8G8R8A8 ? Opacity::SOME_TRANSPARENCY
-                                                    : Opacity::FULLY_OPAQUE;
+  auto opacity = mFormat == SurfaceFormat::OS_RGBA ? Opacity::SOME_TRANSPARENCY
+                                                   : Opacity::FULLY_OPAQUE;
 
   MOZ_LOG(sWebPLog, LogLevel::Debug,
           ("[this=%p] nsWebPDecoder::EndFrame -- frame %u, opacity %d, "
@@ -320,9 +334,10 @@ void nsWebPDecoder::ApplyColorProfile(const char* aProfile, size_t aLength) {
   }
 
   // Create the color management transform.
-  mTransform = qcms_transform_create(mInProfile, QCMS_DATA_BGRA_8,
-                                     gfxPlatform::GetCMSOutputProfile(),
-                                     QCMS_DATA_BGRA_8, (qcms_intent)intent);
+  qcms_data_type type = gfxPlatform::GetCMSOSRGBAType();
+  mTransform = qcms_transform_create(mInProfile, type,
+                                     gfxPlatform::GetCMSOutputProfile(), type,
+                                     (qcms_intent)intent);
   MOZ_LOG(sWebPLog, LogLevel::Debug,
           ("[this=%p] nsWebPDecoder::ApplyColorProfile -- use tagged "
            "transform\n",
@@ -380,7 +395,7 @@ LexerResult nsWebPDecoder::ReadHeader(WebPDemuxer* aDemuxer, bool aIsComplete) {
 
   bool alpha = flags & WebPFeatureFlags::ALPHA_FLAG;
   if (alpha) {
-    mFormat = SurfaceFormat::B8G8R8A8;
+    mFormat = SurfaceFormat::OS_RGBA;
     PostHasTransparency();
   }
 
@@ -538,8 +553,8 @@ LexerResult nsWebPDecoder::ReadMultiple(WebPDemuxer* aDemuxer,
         break;
     }
 
-    mFormat = iter.has_alpha || mCurrentFrame > 0 ? SurfaceFormat::B8G8R8A8
-                                                  : SurfaceFormat::B8G8R8X8;
+    mFormat = iter.has_alpha || mCurrentFrame > 0 ? SurfaceFormat::OS_RGBA
+                                                  : SurfaceFormat::OS_RGBX;
     mTimeout = FrameTimeout::FromRawMilliseconds(iter.duration);
     nsIntRect frameRect(iter.x_offset, iter.y_offset, iter.width, iter.height);
 

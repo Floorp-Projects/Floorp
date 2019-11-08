@@ -107,35 +107,40 @@ class SurfacePipeFactory {
     const bool premultiplyAlpha =
         bool(aFlags & SurfacePipeFlags::PREMULTIPLY_ALPHA);
 
-    // Early swizzles are for unpacking RGB or forcing RGBA/BGRA to RGBX/BGRX.
-    // We should never want to premultiply in either case, because the image's
-    // alpha channel will always be opaque. This must be done before downscaling
-    // and color management.
-    bool unpackOrMaskSwizzle = aInFormat == gfx::SurfaceFormat::R8G8B8 ||
-                               ((aInFormat == gfx::SurfaceFormat::R8G8B8A8 &&
-                                 aOutFormat == gfx::SurfaceFormat::R8G8B8X8) ||
-                                (aInFormat == gfx::SurfaceFormat::B8G8R8A8 &&
-                                 aOutFormat == gfx::SurfaceFormat::B8G8R8X8));
-
-    // Late swizzles are for premultiplying RGBA/BGRA and/or possible converting
-    // between RGBA and BGRA. It must happen after color management, and before
-    // downscaling.
-    bool swapOrAlphaSwizzle = ((aInFormat == gfx::SurfaceFormat::R8G8B8A8 &&
-                                aOutFormat == gfx::SurfaceFormat::B8G8R8A8) ||
-                               (aInFormat == gfx::SurfaceFormat::B8G8R8A8 &&
-                                aOutFormat == gfx::SurfaceFormat::R8G8B8A8)) ||
-                              premultiplyAlpha;
-
     MOZ_ASSERT(aInFormat == gfx::SurfaceFormat::R8G8B8 ||
                aInFormat == gfx::SurfaceFormat::R8G8B8A8 ||
                aInFormat == gfx::SurfaceFormat::R8G8B8X8 ||
-               aInFormat == gfx::SurfaceFormat::B8G8R8A8 ||
-               aInFormat == gfx::SurfaceFormat::B8G8R8X8);
+               aInFormat == gfx::SurfaceFormat::OS_RGBA ||
+               aInFormat == gfx::SurfaceFormat::OS_RGBX);
 
-    MOZ_ASSERT(aOutFormat == gfx::SurfaceFormat::R8G8B8A8 ||
-               aOutFormat == gfx::SurfaceFormat::R8G8B8X8 ||
-               aOutFormat == gfx::SurfaceFormat::B8G8R8A8 ||
-               aOutFormat == gfx::SurfaceFormat::B8G8R8X8);
+    MOZ_ASSERT(aOutFormat == gfx::SurfaceFormat::OS_RGBA ||
+               aOutFormat == gfx::SurfaceFormat::OS_RGBX);
+
+    const bool inFormatRgb = aInFormat == gfx::SurfaceFormat::R8G8B8;
+
+    const bool inFormatOpaque = aInFormat == gfx::SurfaceFormat::OS_RGBX ||
+                                aInFormat == gfx::SurfaceFormat::R8G8B8X8 ||
+                                inFormatRgb;
+    const bool outFormatOpaque = aOutFormat == gfx::SurfaceFormat::OS_RGBX;
+
+    const bool inFormatOrder = aInFormat == gfx::SurfaceFormat::R8G8B8A8 ||
+                               aInFormat == gfx::SurfaceFormat::R8G8B8X8;
+    const bool outFormatOrder = aOutFormat == gfx::SurfaceFormat::R8G8B8A8 ||
+                                aOutFormat == gfx::SurfaceFormat::R8G8B8X8;
+
+    // Early swizzles are for unpacking RGB or forcing RGBA/BGRA_U32 to
+    // RGBX/BGRX_U32. We should never want to premultiply in either case,
+    // because the image's alpha channel will always be opaque. This must be
+    // done before downscaling and color management.
+    bool unpackOrMaskSwizzle =
+        inFormatRgb ||
+        (!inFormatOpaque && outFormatOpaque && inFormatOrder == outFormatOrder);
+
+    // Late swizzles are for premultiplying RGBA/BGRA_U32 and/or possible
+    // converting between RGBA and BGRA_U32. It must happen after color
+    // management, and before downscaling.
+    bool swapOrAlphaSwizzle =
+        (!inFormatRgb && inFormatOrder != outFormatOrder) || premultiplyAlpha;
 
     if (unpackOrMaskSwizzle && swapOrAlphaSwizzle) {
       MOZ_ASSERT_UNREACHABLE("Early and late swizzles not supported");

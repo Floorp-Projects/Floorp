@@ -287,11 +287,13 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool aNonBlock
   //  - 1 byte for the image width, as u8
   //  - 1 byte for the image height, as u8
   //  - the raw image data as BGRA, width * height * 4 bytes.
-  size_t bufferCapacity = 2 + width * height * 4;
+  size_t bufferCapacity = 4 + width * height * 4;
   UniquePtr<uint8_t[]> fileBuf = MakeUnique<uint8_t[]>(bufferCapacity);
   fileBuf[0] = uint8_t(width);
   fileBuf[1] = uint8_t(height);
-  uint8_t* imageBuf = &fileBuf[2];
+  fileBuf[2] = uint8_t(mozilla::gfx::SurfaceFormat::B8G8R8A8);
+  fileBuf[3] = 0;
+  uint8_t* imageBuf = &fileBuf[4];
 
   // Create a CGBitmapContext around imageBuf and draw iconImage to it.
   // This gives us the image data in the format we want: BGRA, four bytes per
