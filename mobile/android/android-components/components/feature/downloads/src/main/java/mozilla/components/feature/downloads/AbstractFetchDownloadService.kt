@@ -41,7 +41,7 @@ import mozilla.components.feature.downloads.ext.withResponse
 import mozilla.components.feature.downloads.facts.emitNotificationResumeFact
 import mozilla.components.feature.downloads.facts.emitNotificationPauseFact
 import mozilla.components.feature.downloads.facts.emitNotificationCancelFact
-import mozilla.components.feature.downloads.facts.emitNotificationRetryFact
+import mozilla.components.feature.downloads.facts.emitNotificationTryAgainFact
 import mozilla.components.feature.downloads.facts.emitNotificationOpenFact
 import java.io.File
 import java.io.FileOutputStream
@@ -137,7 +137,7 @@ abstract class AbstractFetchDownloadService : Service() {
                             startDownloadJob(currentDownloadJobState.state)
                         }
 
-                        emitNotificationRetryFact()
+                        emitNotificationTryAgainFact()
                     }
 
                     ACTION_OPEN -> {

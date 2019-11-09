@@ -24,7 +24,7 @@ class DownloadsFacts {
 internal fun emitNotificationResumeFact() = emitNotificationFact(Action.RESUME)
 internal fun emitNotificationPauseFact() = emitNotificationFact(Action.PAUSE)
 internal fun emitNotificationCancelFact() = emitNotificationFact(Action.CANCEL)
-internal fun emitNotificationRetryFact() = emitNotificationFact(Action.RETRY)
+internal fun emitNotificationTryAgainFact() = emitNotificationFact(Action.TRY_AGAIN)
 internal fun emitNotificationOpenFact() = emitNotificationFact(Action.OPEN)
 
 private fun emitNotificationFact(

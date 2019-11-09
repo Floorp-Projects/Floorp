@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.downloads
 
-import android.app.DownloadManager.EXTRA_DOWNLOAD_ID
 import android.app.Service
 import android.content.Intent
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -19,11 +18,14 @@ import mozilla.components.feature.downloads.AbstractFetchDownloadService.Compani
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_PAUSE
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_RESUME
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_TRY_AGAIN
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.FAILED
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.CANCELLED
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.ACTIVE
+import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.CANCELLED
+import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.FAILED
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.PAUSED
 import mozilla.components.feature.downloads.ext.putDownloadExtra
+import mozilla.components.feature.downloads.facts.DownloadsFacts.Items.NOTIFICATION
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
@@ -127,7 +129,14 @@ class AbstractFetchDownloadServiceTest {
             putExtra(DownloadNotification.EXTRA_DOWNLOAD_ID, providedDownload.value.id)
         }
 
-        service.broadcastReceiver.onReceive(testContext, pauseIntent)
+        CollectionProcessor.withFactCollection { facts ->
+            service.broadcastReceiver.onReceive(testContext, pauseIntent)
+
+            val pauseFact = facts[0]
+            assertEquals(Action.PAUSE, pauseFact.action)
+            assertEquals(NOTIFICATION, pauseFact.item)
+        }
+
         service.downloadJobs[providedDownload.value.id]?.job?.join()
         assertEquals(PAUSED, service.downloadJobs[providedDownload.value.id]?.status)
     }
@@ -161,7 +170,14 @@ class AbstractFetchDownloadServiceTest {
 
         assertFalse(service.downloadJobs[providedDownload.value.id]!!.downloadDeleted)
 
-        service.broadcastReceiver.onReceive(testContext, cancelIntent)
+        CollectionProcessor.withFactCollection { facts ->
+            service.broadcastReceiver.onReceive(testContext, cancelIntent)
+
+            val cancelFact = facts[0]
+            assertEquals(Action.CANCEL, cancelFact.action)
+            assertEquals(NOTIFICATION, cancelFact.item)
+        }
+
         service.downloadJobs[providedDownload.value.id]?.job?.join()
 
         assertEquals(CANCELLED, service.downloadJobs[providedDownload.value.id]?.status)
@@ -207,7 +223,14 @@ class AbstractFetchDownloadServiceTest {
             putExtra(DownloadNotification.EXTRA_DOWNLOAD_ID, providedDownload.value.id)
         }
 
-        service.broadcastReceiver.onReceive(testContext, resumeIntent)
+        CollectionProcessor.withFactCollection { facts ->
+            service.broadcastReceiver.onReceive(testContext, resumeIntent)
+
+            val resumeFact = facts[0]
+            assertEquals(Action.RESUME, resumeFact.action)
+            assertEquals(NOTIFICATION, resumeFact.item)
+        }
+
         service.downloadJobs[providedDownload.value.id]?.job?.join()
 
         assertEquals(ACTIVE, service.downloadJobs[providedDownload.value.id]?.status)
@@ -243,7 +266,14 @@ class AbstractFetchDownloadServiceTest {
             putExtra(DownloadNotification.EXTRA_DOWNLOAD_ID, providedDownload.value.id)
         }
 
-        service.broadcastReceiver.onReceive(testContext, tryAgainIntent)
+        CollectionProcessor.withFactCollection { facts ->
+            service.broadcastReceiver.onReceive(testContext, tryAgainIntent)
+
+            val tryAgainFact = facts[0]
+            assertEquals(Action.TRY_AGAIN, tryAgainFact.action)
+            assertEquals(NOTIFICATION, tryAgainFact.item)
+        }
+
         service.downloadJobs[providedDownload.value.id]?.job?.join()
 
         assertEquals(ACTIVE, service.downloadJobs[providedDownload.value.id]?.status)

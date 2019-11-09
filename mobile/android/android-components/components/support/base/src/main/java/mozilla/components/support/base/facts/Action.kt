@@ -54,7 +54,7 @@ enum class Action {
     /**
      * The user has retried something.
      */
-    RETRY,
+    TRY_AGAIN,
 
     /**
      * The user has opened something.
