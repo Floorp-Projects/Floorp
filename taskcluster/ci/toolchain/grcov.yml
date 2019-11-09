@@ -42,6 +42,7 @@ win64-grcov:
         toolchain-artifact: public/build/grcov.tar.bz2
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+        tooltool-downloads: internal
     fetches:
         toolchain:
             - win64-rust-1.34

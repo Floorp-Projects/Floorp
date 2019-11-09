@@ -60,6 +60,7 @@ win64-cbindgen:
         resources:
             - taskcluster/scripts/misc/tooltool-download.sh
         toolchain-artifact: public/build/cbindgen.tar.bz2
+        tooltool-downloads: internal
     fetches:
         toolchain:
             - win64-rust-1.34

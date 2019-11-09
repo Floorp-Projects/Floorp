@@ -18,6 +18,7 @@ linux64-cctools-port:
     run:
         script: build-cctools-port.sh
         toolchain-artifact: public/build/cctools.tar.xz
+        tooltool-downloads: internal
     fetches:
         toolchain:
             - linux64-clang-8

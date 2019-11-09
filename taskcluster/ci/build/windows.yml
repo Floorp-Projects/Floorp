@@ -6,6 +6,10 @@ job-defaults:
     run:
         using: mozharness
         use-caches: false
+        tooltool-downloads: internal
+        extra-config:
+            "tooltool_servers": ['http://taskcluster/tooltool.mozilla-releng.net/']
+            'tooltool_url': 'http://taskcluster/tooltool.mozilla-releng.net/'
 
 win32/debug:
     description: "Win32 Debug"
