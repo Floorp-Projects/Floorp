@@ -65,6 +65,7 @@ win64-sccache:
         toolchain-artifact: public/build/sccache.tar.bz2
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+        tooltool-downloads: internal
     fetches:
         toolchain:
             - win64-rust-1.34
