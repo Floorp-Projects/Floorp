@@ -5,7 +5,20 @@ const { E10SUtils } = ChromeUtils.import(
   "resource://gre/modules/E10SUtils.jsm"
 );
 
-const PREF_NAME = "browser.tabs.remote.useCrossOriginOpenerPolicy";
+const COOP_PREF = "browser.tabs.remote.useCrossOriginOpenerPolicy";
+const DOCUMENT_CHANNEL_PREF = "browser.tabs.documentchannel";
+
+async function setPref() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[COOP_PREF, true], [DOCUMENT_CHANNEL_PREF, true]],
+  });
+}
+
+async function unsetPref() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[COOP_PREF, false], [DOCUMENT_CHANNEL_PREF, false]],
+  });
+}
 
 function httpURL(filename, host = "https://example.com") {
   let root = getRootDirectory(gTestPath).replace(
@@ -178,7 +191,7 @@ async function test_download_from(initCoop, downloadCoop) {
 // Check that multiple navigations of the same tab will only switch processes
 // when it's expected.
 add_task(async function test_multiple_nav_process_switches() {
-  await SpecialPowers.pushPrefEnv({ set: [[PREF_NAME, true]] });
+  await setPref();
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -291,7 +304,7 @@ add_task(async function test_multiple_nav_process_switches() {
 });
 
 add_task(async function test_disabled() {
-  await SpecialPowers.pushPrefEnv({ set: [[PREF_NAME, false]] });
+  await unsetPref();
   await test_coop(
     httpURL("coop_header.sjs", "https://example.com"),
     httpURL("coop_header.sjs", "https://example.com"),
@@ -315,7 +328,7 @@ add_task(async function test_disabled() {
 });
 
 add_task(async function test_enabled() {
-  await SpecialPowers.pushPrefEnv({ set: [[PREF_NAME, true]] });
+  await setPref();
 
   function checkIsCoopRemoteType(remoteType) {
     Assert.ok(
@@ -417,7 +430,7 @@ add_task(async function test_enabled() {
 
 add_task(async function test_download() {
   requestLongerTimeout(4);
-  await SpecialPowers.pushPrefEnv({ set: [[PREF_NAME, true]] });
+  await setPref();
 
   let initCoopArray = ["", "same-site", "same-origin"];
 
