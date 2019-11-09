@@ -137,8 +137,8 @@ tasks:
         scopes:
           - queue:scheduler-id:${scheduler_id}
           - queue:create-task:highest:mobile-3/b-linux
-          - queue:create-task:highest:scriptworker-prov-v1/mobile-signing-v1
-          - queue:create-task:highest:scriptworker-prov-v1/mobile-pushapk-v1
+          - queue:create-task:highest:scriptworker-k8s/mobile-3-signing
+          - queue:create-task:highest:scriptworker-k8s/mobile-3-pushapk
           - project:mobile:focus:releng:signing:cert:release-signing
           - project:mobile:focus:releng:signing:format:autograph_focus
           - project:mobile:focus:releng:googleplay:product:focus
@@ -220,8 +220,8 @@ tasks:
         scopes:
           - queue:scheduler-id:${scheduler_id}
           - queue:create-task:highest:mobile-3/b-linux
-          - queue:create-task:highest:scriptworker-prov-v1/mobile-signing-v1
-          - queue:create-task:highest:scriptworker-prov-v1/mobile-pushapk-v1
+          - queue:create-task:highest:scriptworker-k8s/mobile-3-signing
+          - queue:create-task:highest:scriptworker-k8s/mobile-3-pushapk
           - project:mobile:focus:releng:signing:cert:release-signing
           - project:mobile:focus:releng:signing:format:autograph_focus
           - project:mobile:focus:releng:googleplay:product:focus

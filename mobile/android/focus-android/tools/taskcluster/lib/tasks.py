@@ -71,7 +71,7 @@ class TaskBuilder(object):
         deadline = taskcluster.fromNow('1 day')
 
         return {
-            "workerType": 'mobile-signing-v1',
+            "workerType": 'mobile-3-signing',
             "taskGroupId": self.task_id,
             "schedulerId": self.scheduler_id,
             "expires": taskcluster.stringDate(expires),
@@ -95,7 +95,7 @@ class TaskBuilder(object):
                     }
                 ]
             },
-            "provisionerId": "scriptworker-prov-v1",
+            "provisionerId": "scriptworker-k8s",
             "metadata": {
                 "name": name,
                 "description": description,
@@ -110,7 +110,7 @@ class TaskBuilder(object):
         deadline = taskcluster.fromNow('1 day')
 
         return {
-            "workerType": 'mobile-pushapk-v1',
+            "workerType": 'mobile-3-pushapk',
             "taskGroupId": self.task_id,
             "schedulerId": self.scheduler_id,
             "expires": taskcluster.stringDate(expires),
@@ -134,7 +134,7 @@ class TaskBuilder(object):
                     }
                 ]
             },
-            "provisionerId": "scriptworker-prov-v1",
+            "provisionerId": "scriptworker-k8s",
             "metadata": {
                 "name": name,
                 "description": description,
