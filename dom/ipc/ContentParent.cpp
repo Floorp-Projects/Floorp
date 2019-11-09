@@ -2157,9 +2157,12 @@ void ContentParent::LaunchSubprocessInternal(
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   // If we're launching a middleman process for a
   // recording or replay, start the sandbox later.
-  if (sEarlySandboxInit && IsContentSandboxEnabled() &&
-      !IsRecordingOrReplaying()) {
+  bool sandboxEnabled = IsContentSandboxEnabled();
+  if (sandboxEnabled && sEarlySandboxInit && !IsRecordingOrReplaying()) {
     AppendSandboxParams(extraArgs);
+  }
+  if (sandboxEnabled) {
+    mSubprocess->DisableOSActivityMode();
   }
 #endif
 
