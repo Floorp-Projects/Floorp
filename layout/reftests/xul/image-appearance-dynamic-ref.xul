@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <style xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
+    image {
+      list-style-image: url(colors-16x8.png);
+      -moz-appearance: button-arrow-up;
+    }
+  ]]></style>
+  <hbox>
+    <image/>
+  </hbox>
+</window>
