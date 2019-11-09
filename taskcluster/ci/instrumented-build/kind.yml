@@ -134,6 +134,7 @@ jobs:
                 - builds/releng_base_firefox.py
                 - builds/taskcluster_base_windows.py
                 - builds/taskcluster_base_win32.py
+            tooltool-downloads: internal
             extra-config:
                 stage_platform: win32
                 "tooltool_servers": ['http://taskcluster/tooltool.mozilla-releng.net/']
@@ -164,6 +165,7 @@ jobs:
                 - builds/releng_base_firefox.py
                 - builds/taskcluster_base_windows.py
                 - builds/taskcluster_base_win64.py
+            tooltool-downloads: internal
             extra-config:
                 stage_platform: win64
                 "tooltool_servers": ['http://taskcluster/tooltool.mozilla-releng.net/']
