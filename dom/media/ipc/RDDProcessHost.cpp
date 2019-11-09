@@ -43,6 +43,7 @@ RDDProcessHost::RDDProcessHost(Listener* aListener)
     sLaunchWithMacSandbox =
         Preferences::GetBool("security.sandbox.rdd.mac.earlyinit");
   }
+  mDisableOSActivityMode = sLaunchWithMacSandbox;
 #endif
 }
 

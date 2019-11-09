@@ -131,6 +131,9 @@ class BaseProcessLauncher {
         mIsFileContent(aHost->mIsFileContent),
         mEnableSandboxLogging(aHost->mEnableSandboxLogging),
 #endif
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+        mDisableOSActivityMode(aHost->mDisableOSActivityMode),
+#endif
         mTmpDirName(aHost->mTmpDirName),
         mChildId(++gChildCounter) {
     SprintfLiteral(mPidString, "%d", base::GetCurrentProcId());
@@ -191,6 +194,11 @@ class BaseProcessLauncher {
   int32_t mSandboxLevel;
   bool mIsFileContent;
   bool mEnableSandboxLogging;
+#endif
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+  // Controls whether or not the process will be launched with
+  // environment variable OS_ACTIVITY_MODE set to "disabled".
+  bool mDisableOSActivityMode;
 #endif
   nsCString mTmpDirName;
   LaunchResults mResults = LaunchResults();
@@ -327,6 +335,9 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
       mChildProcessHandle(0),
 #if defined(MOZ_WIDGET_COCOA)
       mChildTask(MACH_PORT_NULL),
+#endif
+#if defined(MOZ_SANDBOX) && defined(XP_MACOSX)
+      mDisableOSActivityMode(false),
 #endif
       mDestroying(false) {
   MOZ_COUNT_CTOR(GeckoChildProcessHost);
@@ -1065,6 +1076,15 @@ bool PosixProcessLauncher::DoSetup() {
     interpose.Append(path.get());
     interpose.AppendLiteral("/libplugin_child_interpose.dylib");
     mLaunchOptions->env_map["DYLD_INSERT_LIBRARIES"] = interpose.get();
+
+    // Prevent connection attempts to diagnosticd(8) to save cycles. Log
+    // messages can trigger these connection attempts, but access to
+    // diagnosticd is blocked in sandboxed child processes.
+#    ifdef MOZ_SANDBOX
+    if (mDisableOSActivityMode) {
+      mLaunchOptions->env_map["OS_ACTIVITY_MODE"] = "disable";
+    }
+#    endif         // defined(MOZ_SANDBOX)
 #  endif           // defined(OS_LINUX) || defined(OS_BSD)
   }
 
@@ -1634,6 +1654,10 @@ bool GeckoChildProcessHost::StaticFillMacSandboxInfo(MacSandboxInfo& aInfo) {
 
 bool GeckoChildProcessHost::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
   return GeckoChildProcessHost::StaticFillMacSandboxInfo(aInfo);
+}
+
+void GeckoChildProcessHost::DisableOSActivityMode() {
+  mDisableOSActivityMode = true;
 }
 
 //
