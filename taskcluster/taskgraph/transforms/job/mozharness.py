@@ -241,7 +241,7 @@ def mozharness_on_generic_worker(config, job, taskdesc):
 
     # fail if invalid run options are included
     invalid = []
-    for prop in ['tooltool-downloads', 'taskcluster-proxy', 'need-xvfb']:
+    for prop in ['need-xvfb']:
         if prop in run and run.pop(prop):
             invalid.append(prop)
     if not run.pop('keep-artifacts', True):
@@ -251,6 +251,8 @@ def mozharness_on_generic_worker(config, job, taskdesc):
                         ', '.join(invalid))
 
     worker = taskdesc['worker'] = job['worker']
+
+    worker['taskcluster-proxy'] = run.pop('taskcluster-proxy', None)
 
     setup_secrets(config, job, taskdesc)
 
