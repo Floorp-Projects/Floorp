@@ -33,7 +33,7 @@ async function obtainObjectWithCPOW(hud) {
 
   info("Open the browser content toolbox and send a message");
   const toolbox = await gDevToolsBrowser.openContentProcessToolbox(gBrowser);
-  await toolbox.target.activeConsole.evaluateJS(`
+  await toolbox.target.activeConsole.evaluateJSAsync(`
     let {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
     Services.cpmm.sendAsyncMessage("cpow", null, {cpow: {a:1}});
   `);

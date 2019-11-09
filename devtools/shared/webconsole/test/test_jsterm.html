@@ -20,15 +20,9 @@ let gState;
 
 let {MAX_AUTOCOMPLETE_ATTEMPTS,MAX_AUTOCOMPLETIONS} = require("devtools/shared/webconsole/js-property-provider");
 
-// This test runs all of its assertions twice - once with
-// evaluateJS and once with evaluateJSAsync.
-let evaluatingSync = true;
+
 function evaluateJS(input, options = {}) {
-  if (evaluatingSync) {
-    return gState.webConsoleFront.evaluateJS(input, options);
-  } else {
-    return gState.webConsoleFront.evaluateJSAsync(input, options);
-  }
+  return gState.webConsoleFront.evaluateJSAsync(input, options);
 }
 
 function startTest()
@@ -266,12 +260,7 @@ function testEnd()
   // Otherwise, end the test.
   closeDebugger(gState, function() {
     gState = null;
-    if (evaluatingSync) {
-      evaluatingSync = false;
-      startTest();
-    } else {
-      SimpleTest.finish();
-    }
+    SimpleTest.finish();
   });
 }
 

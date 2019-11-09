@@ -32,7 +32,7 @@ add_task(async function() {
 });
 
 async function evaluateJSAndCheckResult(webConsoleFront, input, expected) {
-  const response = await webConsoleFront.evaluateJS(input);
+  const response = await webConsoleFront.evaluateJSAsync(input);
   checkObject(response, expected);
 }
 
@@ -51,7 +51,6 @@ async function registerNewCommand(webConsoleFront) {
 
   const command = "setFoo('bar')";
   await evaluateJSAndCheckResult(webConsoleFront, command, {
-    from: webConsoleFront.actor,
     input: command,
     result: "ok",
   });
@@ -84,12 +83,10 @@ async function wrapCommand(webConsoleFront) {
   });
 
   await evaluateJSAndCheckResult(webConsoleFront, "keys('>o_/')", {
-    from: webConsoleFront.actor,
     result: "bang!",
   });
 
   await evaluateJSAndCheckResult(webConsoleFront, "keys({foo: 'bar'})", {
-    from: webConsoleFront.actor,
     result: {
       class: "Array",
       preview: {
@@ -115,7 +112,6 @@ async function unregisterCommand(webConsoleFront) {
   });
 
   await evaluateJSAndCheckResult(webConsoleFront, "setFoo", {
-    from: webConsoleFront.actor,
     input: "setFoo",
     result: {
       type: "undefined",
@@ -136,7 +132,6 @@ async function registerAccessor(webConsoleFront) {
 
   const command = "$foo.textContent = '>o_/'";
   await evaluateJSAndCheckResult(webConsoleFront, command, {
-    from: webConsoleFront.actor,
     input: command,
     result: ">o_/",
   });

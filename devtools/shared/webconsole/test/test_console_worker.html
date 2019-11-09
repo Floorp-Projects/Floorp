@@ -71,7 +71,7 @@ let testConsoleAPI = async function (state) {
     info("testConsoleAPI: adding listener for consoleAPICall");
     state.webConsoleFront.on("consoleAPICall", onConsoleAPICall);
 
-    state.webConsoleFront.evaluateJS("console.log('Log was requested from worker')",
+    state.webConsoleFront.evaluateJSAsync("console.log('Log was requested from worker')",
       () => { });
   });
 };
