@@ -22,6 +22,12 @@ Mozilla Source Tree Documentation
    {testing_doc}
 
 .. toctree::
+   :caption: Localization
+   :maxdepth: 1
+
+   {l10n_doc}
+
+.. toctree::
    :caption: Python
    :maxdepth: 1
 
