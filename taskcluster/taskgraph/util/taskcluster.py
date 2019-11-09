@@ -24,7 +24,7 @@ testing = False
 
 # Default rootUrl to use if none is given in the environment; this should point
 # to the production Taskcluster deployment used for CI.
-PRODUCTION_TASKCLUSTER_ROOT_URL = 'https://taskcluster.net'
+PRODUCTION_TASKCLUSTER_ROOT_URL = 'https://firefox-ci-tc.services.mozilla.com'
 
 # the maximum number of parallel Taskcluster API calls to make
 CONCURRENCY = 50
