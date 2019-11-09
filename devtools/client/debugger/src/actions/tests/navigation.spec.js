@@ -29,7 +29,6 @@ const threadFront = {
   }),
   getSourceActorBreakpointPositions: async () => ({}),
   getSourceActorBreakableLines: async () => [],
-  detachWorkers: () => {},
 };
 
 describe("navigation", () => {

@@ -36,7 +36,6 @@ export function willNavigate(event: Object) {
     clearWasmStates();
     clearDocuments();
     parser.clear();
-    client.detachWorkers();
     const thread = getMainThread(getState());
 
     dispatch({
