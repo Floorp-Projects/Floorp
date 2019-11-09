@@ -77,6 +77,7 @@ GMPProcessParent::GMPProcessParent(const std::string& aGMPPath)
   MOZ_COUNT_CTOR(GMPProcessParent);
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   MOZ_ASSERT(sIsMainThreadInitDone == true);
+  mDisableOSActivityMode = sLaunchWithMacSandbox;
 #endif
 }
 
