@@ -58,7 +58,7 @@ function setupCommands(dependencies: Dependencies) {
   currentThreadFront = dependencies.threadFront;
   currentTarget = dependencies.tabTarget;
   debuggerClient = dependencies.debuggerClient;
-  targets = { worker: {}, contentProcess: {} };
+  targets = {};
   sourceActors = {};
   breakpoints = {};
 }
@@ -217,12 +217,6 @@ function locationKey(location: BreakpointLocation) {
   return `${sourceUrl}:${sourceId}:${line}:${column}`;
 }
 
-function detachWorkers() {
-  for (const thread of listThreadFronts()) {
-    thread.detach();
-  }
-}
-
 function maybeGenerateLogGroupId(options) {
   if (
     options.logValue &&
@@ -313,12 +307,10 @@ function autocomplete(
 }
 
 function navigate(url: string): Promise<*> {
-  targets = { worker: {}, contentProcess: {} };
   return currentTarget.navigateTo({ url });
 }
 
 function reload(): Promise<*> {
-  targets = { worker: {}, contentProcess: {} };
   return currentTarget.reload();
 }
 
@@ -587,7 +579,6 @@ const clientCommands = {
   setSkipPausing,
   setEventListenerBreakpoints,
   getEventListenerBreakpointTypes,
-  detachWorkers,
   lookupTarget,
   getFrontByID,
   timeWarp,
