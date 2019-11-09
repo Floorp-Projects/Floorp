@@ -63,7 +63,8 @@ SK_API SkTypeface* SkCreateTypefaceFromDWriteFont(IDWriteFactory* aFactory,
                                                   SkFontStyle aStyle,
                                                   int aRenderingMode,
                                                   float aGamma,
-                                                  float aContrast);
+                                                  float aContrast,
+                                                  float aClearTypeLevel);
 
 SK_API sk_sp<SkFontMgr> SkFontMgr_New_GDI();
 SK_API sk_sp<SkFontMgr> SkFontMgr_New_DirectWrite(IDWriteFactory* factory = NULL,

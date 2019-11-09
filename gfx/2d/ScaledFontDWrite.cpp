@@ -122,20 +122,19 @@ static inline DWRITE_FONT_STRETCH DWriteFontStretchFromStretch(
   return DWRITE_FONT_STRETCH_UNDEFINED;
 }
 
-ScaledFontDWrite::ScaledFontDWrite(IDWriteFontFace* aFontFace,
-                                   const RefPtr<UnscaledFont>& aUnscaledFont,
-                                   Float aSize, bool aUseEmbeddedBitmap,
-                                   DWRITE_RENDERING_MODE aRenderingMode,
-                                   IDWriteRenderingParams* aParams,
-                                   Float aGamma, Float aContrast,
-                                   const gfxFontStyle* aStyle)
+ScaledFontDWrite::ScaledFontDWrite(
+    IDWriteFontFace* aFontFace, const RefPtr<UnscaledFont>& aUnscaledFont,
+    Float aSize, bool aUseEmbeddedBitmap, DWRITE_RENDERING_MODE aRenderingMode,
+    IDWriteRenderingParams* aParams, Float aGamma, Float aContrast,
+    Float aClearTypeLevel, const gfxFontStyle* aStyle)
     : ScaledFontBase(aUnscaledFont, aSize),
       mFontFace(aFontFace),
       mUseEmbeddedBitmap(aUseEmbeddedBitmap),
       mRenderingMode(aRenderingMode),
       mParams(aParams),
       mGamma(aGamma),
-      mContrast(aContrast) {
+      mContrast(aContrast),
+      mClearTypeLevel(aClearTypeLevel) {
   if (aStyle) {
     mStyle = SkFontStyle(aStyle->weight.ToIntRounded(),
                          DWriteFontStretchFromStretch(aStyle->stretch),
@@ -182,8 +181,14 @@ SkTypeface* ScaledFontDWrite::CreateSkTypeface() {
     contrast = 1.0f;
   }
 
+  Float clearTypeLevel = mClearTypeLevel;
+  if (clearTypeLevel < 0.0f || clearTypeLevel > 1.0f) {
+    clearTypeLevel = 1.0f;
+  }
+
   return SkCreateTypefaceFromDWriteFont(factory, mFontFace, mStyle,
-                                        (int)mRenderingMode, gamma, contrast);
+                                        (int)mRenderingMode, gamma, contrast,
+                                        clearTypeLevel);
 }
 
 void ScaledFontDWrite::SetupSkFontDrawOptions(SkFont& aFont) {
@@ -400,7 +405,8 @@ ScaledFontDWrite::InstanceData::InstanceData(
       mApplySyntheticBold(false),
       mRenderingMode(DWRITE_RENDERING_MODE_DEFAULT),
       mGamma(2.2f),
-      mContrast(1.0f) {
+      mContrast(1.0f),
+      mClearTypeLevel(1.0f) {
   if (aOptions) {
     if (aOptions->flags & wr::FontInstanceFlags_EMBEDDED_BITMAPS) {
       mUseEmbeddedBitmap = true;
@@ -419,6 +425,7 @@ ScaledFontDWrite::InstanceData::InstanceData(
   if (aPlatformOptions) {
     mGamma = aPlatformOptions->gamma / 100.0f;
     mContrast = aPlatformOptions->contrast / 100.0f;
+    mClearTypeLevel = aPlatformOptions->cleartype_level / 100.0f;
   }
 }
 
@@ -513,7 +520,9 @@ bool ScaledFontDWrite::GetWRFontInstanceOptions(
   wr::FontInstancePlatformOptions platformOptions;
   platformOptions.gamma = uint16_t(std::round(mGamma * 100.0f));
   platformOptions.contrast =
-      uint16_t(std::round(std::min(mContrast, 1.0f) * 100.0f));
+      uint8_t(std::round(std::min(mContrast, 1.0f) * 100.0f));
+  platformOptions.cleartype_level =
+      uint8_t(std::round(std::min(mClearTypeLevel, 1.0f) * 100.0f));
 
   *aOutOptions = Some(options);
   *aOutPlatformOptions = Some(platformOptions);
@@ -648,7 +657,7 @@ already_AddRefed<ScaledFont> UnscaledFontDWrite::CreateScaledFont(
   RefPtr<ScaledFontBase> scaledFont = new ScaledFontDWrite(
       face, this, aGlyphSize, instanceData.mUseEmbeddedBitmap,
       instanceData.mRenderingMode, nullptr, instanceData.mGamma,
-      instanceData.mContrast);
+      instanceData.mContrast, instanceData.mClearTypeLevel);
 
   return scaledFont.forget();
 }
@@ -668,7 +677,7 @@ AntialiasMode ScaledFontDWrite::GetDefaultAAMode() {
   switch (defaultMode) {
     case AntialiasMode::SUBPIXEL:
     case AntialiasMode::DEFAULT:
-      if (mParams && mParams->GetClearTypeLevel() == 0.0f) {
+      if (mClearTypeLevel == 0.0f) {
         defaultMode = AntialiasMode::GRAY;
       }
       break;

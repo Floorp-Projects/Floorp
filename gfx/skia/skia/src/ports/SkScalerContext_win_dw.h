@@ -53,7 +53,8 @@ private:
 
     template<bool APPLY_PREBLEND, bool RGB>
     static void RGBToLcd16(const uint8_t* SK_RESTRICT src, const SkGlyph& glyph,
-                           const uint8_t* tableR, const uint8_t* tableG, const uint8_t* tableB);
+                           const uint8_t* tableR, const uint8_t* tableG, const uint8_t* tableB,
+                           int clearTypeLevel);
 
     const void* drawDWMask(const SkGlyph& glyph,
                            DWRITE_RENDERING_MODE renderingMode,
@@ -99,6 +100,7 @@ private:
     DWRITE_TEXT_ANTIALIAS_MODE fAntiAliasMode;
     DWRITE_GRID_FIT_MODE fGridFitMode;
     bool fIsColorFont;
+    int fClearTypeLevel;
 };
 
 #endif

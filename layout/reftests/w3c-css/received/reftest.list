@@ -154,7 +154,7 @@ pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-000.xht 
 pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-all-001.xht css-multicol/multicol-span-all-001-ref.xht
 pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-all-002.xht css-multicol/multicol-span-all-002-ref.xht
 pref(layout.css.column-span.enabled,true) fails-if(!OSX) random-if(OSX) == css-multicol/multicol-span-all-003.xht css-multicol/multicol-count-002-ref.xht
-pref(layout.css.column-span.enabled,true) fuzzy-if(winWidget,40-47,8-8) fuzzy-if(OSX,0-27,0-11) == css-multicol/multicol-span-all-block-sibling-003.xht css-multicol/multicol-span-all-block-sibling-3-ref.xht
+pref(layout.css.column-span.enabled,true) fuzzy-if(winWidget,16-47,8-8) fuzzy-if(OSX,0-27,0-11) == css-multicol/multicol-span-all-block-sibling-003.xht css-multicol/multicol-span-all-block-sibling-3-ref.xht
 pref(layout.css.column-span.enabled,true) fails-if(geckoview) == css-multicol/multicol-span-all-margin-001.xht css-multicol/multicol-span-all-margin-001-ref.xht # Bug 1558509 for GV
 pref(layout.css.column-span.enabled,true) fails-if(geckoview) == css-multicol/multicol-span-all-margin-002.xht css-multicol/multicol-span-all-margin-002-ref.xht # Bug 1558509 for GV
 pref(layout.css.column-span.enabled,true) fails == css-multicol/multicol-span-all-margin-bottom-001.xht css-multicol/multicol-span-all-margin-bottom-001-ref.xht # Upstream version patched in bug 1496275. It should pass after importing wpt in bug 1584324.

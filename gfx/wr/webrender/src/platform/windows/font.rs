@@ -72,7 +72,7 @@ struct FontFace {
 pub struct FontContext {
     fonts: FastHashMap<FontKey, FontFace>,
     variations: FastHashMap<(FontKey, dwrote::DWRITE_FONT_SIMULATIONS, Vec<FontVariation>), dwrote::FontFace>,
-    gamma_luts: FastHashMap<(u16, u16), GammaLut>,
+    gamma_luts: FastHashMap<(u16, u8), GammaLut>,
 }
 
 // DirectWrite is safe to use on multiple threads and non-shareable resources are
@@ -552,7 +552,8 @@ impl FontContext {
         let mut bgra_pixels = self.convert_to_bgra(&pixels, texture_type, font.render_mode, bitmaps,
                                                    font.flags.contains(FontInstanceFlags::SUBPIXEL_BGR));
 
-        let FontInstancePlatformOptions { gamma, contrast, .. } = font.platform_options.unwrap_or_default();
+        let FontInstancePlatformOptions { gamma, contrast, cleartype_level, .. } =
+            font.platform_options.unwrap_or_default();
         let gamma_lut = self.gamma_luts
             .entry((gamma, contrast))
             .or_insert_with(||
@@ -561,7 +562,12 @@ impl FontContext {
                     gamma as f32 / 100.0,
                     gamma as f32 / 100.0,
                 ));
-        gamma_lut.preblend(&mut bgra_pixels, font.color);
+        if bitmaps || texture_type == dwrote::DWRITE_TEXTURE_ALIASED_1x1 ||
+           font.render_mode != FontRenderMode::Subpixel {
+            gamma_lut.preblend(&mut bgra_pixels, font.color);
+        } else {
+            gamma_lut.preblend_scaled(&mut bgra_pixels, font.color, cleartype_level);
+        }
 
         let format = if bitmaps {
             GlyphFormat::Bitmap

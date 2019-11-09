@@ -604,6 +604,7 @@ already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFont(
     DWRITE_RENDERING_MODE renderingMode = params->GetRenderingMode();
     FLOAT gamma = params->GetGamma();
     FLOAT contrast = params->GetEnhancedContrast();
+    FLOAT clearTypeLevel = params->GetClearTypeLevel();
     if (forceGDI || renderingMode == DWRITE_RENDERING_MODE_GDI_CLASSIC) {
       renderingMode = DWRITE_RENDERING_MODE_GDI_CLASSIC;
       gamma = GetSystemGDIGamma();
@@ -618,7 +619,8 @@ already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFont(
     const gfxFontStyle* fontStyle = GetStyle();
     mAzureScaledFont = Factory::CreateScaledFontForDWriteFont(
         mFontFace, fontStyle, GetUnscaledFont(), GetAdjustedSize(),
-        useEmbeddedBitmap, (int)renderingMode, params, gamma, contrast);
+        useEmbeddedBitmap, (int)renderingMode, params, gamma, contrast,
+        clearTypeLevel);
     if (!mAzureScaledFont) {
       return nullptr;
     }

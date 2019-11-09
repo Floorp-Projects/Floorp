@@ -247,6 +247,7 @@ SkScalerContext_DW::SkScalerContext_DW(sk_sp<DWriteFontTypeface> typefaceRef,
     fIsColorFont = typeface->fFactory2 &&
                    typeface->fDWriteFontFace2 &&
                    typeface->fDWriteFontFace2->IsColorFont();
+    fClearTypeLevel = int(typeface->GetClearTypeLevel() * 256);
 
     // In general, all glyphs should use DWriteFontFace::GetRecommendedRenderingMode
     // except when bi-level rendering is requested or there are embedded
@@ -340,7 +341,6 @@ SkScalerContext_DW::SkScalerContext_DW(sk_sp<DWriteFontTypeface> typefaceRef,
         fTextSizeMeasure = realTextSize;
         fMeasuringMode = DWRITE_MEASURING_MODE_NATURAL;
 
-        DWriteFontTypeface* typeface = static_cast<DWriteFontTypeface*>(getTypeface());
         switch (typeface->GetRenderingMode()) {
         case DWRITE_RENDERING_MODE_NATURAL:
         case DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC:
@@ -916,14 +916,14 @@ void SkScalerContext_DW::RGBToA8(const uint8_t* SK_RESTRICT src,
 template<bool APPLY_PREBLEND, bool RGB>
 void SkScalerContext_DW::RGBToLcd16(const uint8_t* SK_RESTRICT src, const SkGlyph& glyph,
                                     const uint8_t* tableR, const uint8_t* tableG,
-                                    const uint8_t* tableB) {
+                                    const uint8_t* tableB, int clearTypeLevel) {
     const size_t dstRB = glyph.rowBytes();
     const int width = glyph.width();
     uint16_t* SK_RESTRICT dst = static_cast<uint16_t*>(glyph.fImage);
 
     for (int y = 0; y < glyph.height(); y++) {
         for (int i = 0; i < width; i++) {
-            U8CPU r, g, b;
+            int r, g, b;
             if (RGB) {
                 r = sk_apply_lut_if<APPLY_PREBLEND>(*(src++), tableR);
                 g = sk_apply_lut_if<APPLY_PREBLEND>(*(src++), tableG);
@@ -933,6 +933,8 @@ void SkScalerContext_DW::RGBToLcd16(const uint8_t* SK_RESTRICT src, const SkGlyp
                 g = sk_apply_lut_if<APPLY_PREBLEND>(*(src++), tableG);
                 r = sk_apply_lut_if<APPLY_PREBLEND>(*(src++), tableR);
             }
+            r = g + (((r - g) * clearTypeLevel) >> 8);
+            b = g + (((b - g) * clearTypeLevel) >> 8);
             dst[i] = SkPack888ToRGB16(r, g, b);
         }
         dst = SkTAddOffset<uint16_t>(dst, dstRB);
@@ -1192,15 +1194,15 @@ void SkScalerContext_DW::generateImage(const SkGlyph& glyph) {
         SkASSERT(SkMask::kLCD16_Format == glyph.fMaskFormat);
         if (fPreBlend.isApplicable()) {
             if (fRec.fFlags & SkScalerContext::kLCD_BGROrder_Flag) {
-                RGBToLcd16<true, false>(src, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB);
+                RGBToLcd16<true, false>(src, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB, fClearTypeLevel);
             } else {
-                RGBToLcd16<true, true>(src, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB);
+                RGBToLcd16<true, true>(src, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB, fClearTypeLevel);
             }
         } else {
             if (fRec.fFlags & SkScalerContext::kLCD_BGROrder_Flag) {
-                RGBToLcd16<false, false>(src, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB);
+                RGBToLcd16<false, false>(src, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB, fClearTypeLevel);
             } else {
-                RGBToLcd16<false, true>(src, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB);
+                RGBToLcd16<false, true>(src, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB, fClearTypeLevel);
             }
         }
     }
