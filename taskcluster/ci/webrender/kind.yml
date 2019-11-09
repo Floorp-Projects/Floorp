@@ -230,6 +230,7 @@ jobs:
             using: run-task
             use-caches: false
             command: '$GECKO_PATH/taskcluster/scripts/misc/wrench-windows-tests.sh'
+            tooltool-downloads: internal
         treeherder:
             platform: windows10-64-qr/release
             symbol: WR(wrench)
