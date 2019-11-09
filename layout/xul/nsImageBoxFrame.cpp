@@ -256,20 +256,9 @@ void nsImageBoxFrame::UpdateImage() {
         }
       }
     }
-  } else {
-    // Only get the list-style-image if we aren't being drawn
-    // by a native theme.
-    auto* display = StyleDisplay();
-    if (!(display->HasAppearance() && nsBox::gTheme &&
-          nsBox::gTheme->ThemeSupportsWidget(nullptr, this,
-                                             display->mAppearance))) {
-      // get the list-style-image
-      imgRequestProxy* styleRequest = StyleList()->GetListStyleImage();
-      if (styleRequest) {
-        styleRequest->SyncClone(mListener, mContent->GetComposedDoc(),
-                                getter_AddRefs(mImageRequest));
-      }
-    }
+  } else if (auto* styleRequest = GetRequestFromStyle()) {
+    styleRequest->SyncClone(mListener, mContent->GetComposedDoc(),
+                            getter_AddRefs(mImageRequest));
   }
 
   if (!mImageRequest) {
@@ -602,15 +591,19 @@ bool nsImageBoxFrame::CanOptimizeToImageLayer() {
   return true;
 }
 
-//
-// DidSetComputedStyle
-//
-// When the ComputedStyle changes, make sure that all of our image is up to
-// date.
-//
+imgRequestProxy* nsImageBoxFrame::GetRequestFromStyle() {
+  const nsStyleDisplay* disp = StyleDisplay();
+  if (disp->HasAppearance() && nsBox::gTheme &&
+      nsBox::gTheme->ThemeSupportsWidget(nullptr, this, disp->mAppearance)) {
+    return nullptr;
+  }
+
+  return StyleList()->GetListStyleImage();
+}
+
 /* virtual */
-void nsImageBoxFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
-  nsLeafBoxFrame::DidSetComputedStyle(aOldComputedStyle);
+void nsImageBoxFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
+  nsLeafBoxFrame::DidSetComputedStyle(aOldStyle);
 
   // Fetch our subrect.
   const nsStyleList* myList = StyleList();
@@ -619,22 +612,20 @@ void nsImageBoxFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   if (mUseSrcAttr || mSuppressStyleCheck)
     return;  // No more work required, since the image isn't specified by style.
 
-  // If we're using a native theme implementation, we shouldn't draw anything.
-  const nsStyleDisplay* disp = StyleDisplay();
-  if (disp->HasAppearance() && nsBox::gTheme &&
-      nsBox::gTheme->ThemeSupportsWidget(nullptr, this, disp->mAppearance))
-    return;
-
-  // If list-style-image changes, we have a new image.
+  // If the image to use changes, we have a new image.
   nsCOMPtr<nsIURI> oldURI, newURI;
-  if (mImageRequest) mImageRequest->GetURI(getter_AddRefs(oldURI));
-  if (myList->GetListStyleImage())
-    myList->GetListStyleImage()->GetURI(getter_AddRefs(newURI));
+  if (mImageRequest) {
+    mImageRequest->GetURI(getter_AddRefs(oldURI));
+  }
+  if (auto* newImage = GetRequestFromStyle()) {
+    newImage->GetURI(getter_AddRefs(newURI));
+  }
   bool equal;
   if (newURI == oldURI ||  // handles null==null
       (newURI && oldURI && NS_SUCCEEDED(newURI->Equals(oldURI, &equal)) &&
-       equal))
+       equal)) {
     return;
+  }
 
   UpdateImage();
 }  // DidSetComputedStyle
