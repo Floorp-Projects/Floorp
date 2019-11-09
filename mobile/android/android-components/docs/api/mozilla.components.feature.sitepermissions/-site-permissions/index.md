@@ -2,7 +2,7 @@
 
 # SitePermissions
 
-`data class SitePermissions` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissions.kt#L15)
+`data class SitePermissions` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissions.kt#L16)
 
 A site permissions and its state.
 
@@ -16,7 +16,7 @@ A site permissions and its state.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SitePermissions(parcel: <ERROR CLASS>)``SitePermissions(origin: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, location: `[`Status`](-status/index.md)` = NO_DECISION, notification: `[`Status`](-status/index.md)` = NO_DECISION, microphone: `[`Status`](-status/index.md)` = NO_DECISION, camera: `[`Status`](-status/index.md)` = NO_DECISION, bluetooth: `[`Status`](-status/index.md)` = NO_DECISION, localStorage: `[`Status`](-status/index.md)` = NO_DECISION, savedAt: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`)`<br>A site permissions and its state. |
+| [&lt;init&gt;](-init-.md) | `SitePermissions(origin: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, location: `[`Status`](-status/index.md)` = NO_DECISION, notification: `[`Status`](-status/index.md)` = NO_DECISION, microphone: `[`Status`](-status/index.md)` = NO_DECISION, camera: `[`Status`](-status/index.md)` = NO_DECISION, bluetooth: `[`Status`](-status/index.md)` = NO_DECISION, localStorage: `[`Status`](-status/index.md)` = NO_DECISION, savedAt: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`)`<br>A site permissions and its state. |
 
 ### Properties
 
@@ -35,15 +35,7 @@ A site permissions and its state.
 
 | Name | Summary |
 |---|---|
-| [describeContents](describe-contents.md) | `fun describeContents(): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
-| [writeToParcel](write-to-parcel.md) | `fun writeToParcel(parcel: <ERROR CLASS>, flags: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-
-### Companion Object Functions
-
-| Name | Summary |
-|---|---|
-| [createFromParcel](create-from-parcel.md) | `fun createFromParcel(parcel: <ERROR CLASS>): `[`SitePermissions`](./index.md) |
-| [newArray](new-array.md) | `fun newArray(size: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`SitePermissions`](./index.md)`?>` |
+| [get](get.md) | `operator fun get(permissionType: `[`Permission`](../-site-permissions-storage/-permission/index.md)`): `[`Status`](-status/index.md)<br>Gets the current status for a [Permission](../-site-permissions-storage/-permission/index.md) type |
 
 ### Extension Functions
 

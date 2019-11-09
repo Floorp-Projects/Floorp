@@ -2,7 +2,7 @@
 
 # SyncReason
 
-`sealed class SyncReason` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sync/SyncManager.kt#L21)
+`sealed class SyncReason` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sync/SyncManager.kt#L22)
 
 A collection of objects describing a reason for running a sync.
 
