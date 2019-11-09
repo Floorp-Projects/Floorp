@@ -986,11 +986,12 @@ already_AddRefed<ScaledFont> Factory::CreateScaledFontForDWriteFont(
     IDWriteFontFace* aFontFace, const gfxFontStyle* aStyle,
     const RefPtr<UnscaledFont>& aUnscaledFont, float aSize,
     bool aUseEmbeddedBitmap, int aRenderingMode,
-    IDWriteRenderingParams* aParams, Float aGamma, Float aContrast) {
-  return MakeAndAddRef<ScaledFontDWrite>(aFontFace, aUnscaledFont, aSize,
-                                         aUseEmbeddedBitmap,
-                                         (DWRITE_RENDERING_MODE)aRenderingMode,
-                                         aParams, aGamma, aContrast, aStyle);
+    IDWriteRenderingParams* aParams, Float aGamma, Float aContrast,
+    Float aClearTypeLevel) {
+  return MakeAndAddRef<ScaledFontDWrite>(
+      aFontFace, aUnscaledFont, aSize, aUseEmbeddedBitmap,
+      (DWRITE_RENDERING_MODE)aRenderingMode, aParams, aGamma, aContrast,
+      aClearTypeLevel, aStyle);
 }
 
 already_AddRefed<ScaledFont> Factory::CreateScaledFontForGDIFont(
