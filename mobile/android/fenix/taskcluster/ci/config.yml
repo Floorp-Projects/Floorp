@@ -35,26 +35,23 @@ workers:
             os: linux
             worker-type: 'images'
         dep-signing:
-            provisioner: scriptworker-prov-v1
+            provisioner: scriptworker-k8s
             implementation: scriptworker-signing
             os: scriptworker
-            worker-type: mobile-signing-dep-v1
+            worker-type: mobile-t-signing
         signing:
-            provisioner: scriptworker-prov-v1
+            provisioner: scriptworker-k8s
             implementation: scriptworker-signing
             os: scriptworker
             worker-type:
                 by-level:
-                    "3": mobile-signing-v1
-                    default: mobile-signing-dep-v1
+                    "3": mobile-3-signing
+                    default: mobile-t-signing
         push-apk:
-            provisioner: scriptworker-prov-v1
+            provisioner: scriptworker-k8s
             implementation: scriptworker-pushapk
             os: scriptworker
-            worker-type:
-                by-level:
-                    "3": mobile-pushapk-v1
-                    default: mobile-pushapk-dep-v1
+            worker-type: 'mobile-{level}-pushapk'
         t-bitbar.*:
             provisioner: proj-autophone
             implementation: generic-worker
