@@ -163,42 +163,28 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
   }
 
   /**
-   * Evaluate a JavaScript expression.
+   * Evaluate a JavaScript expression asynchronously.
    *
-   * @param string string
-   *        The code you want to evaluate.
-   * @param object [options={}]
-   *        Options for evaluation:
+   * @param {String} string: The code you want to evaluate.
+   * @param {Object} opts: Options for evaluation:
    *
-   *        - frameActor: a FrameActor ID. The FA holds a reference to
+   *        - {String} frameActor: a FrameActor ID. The FA holds a reference to
    *        a Debugger.Frame. This option allows you to evaluate the string in
    *        the frame of the given FA.
    *
-   *        - url: the url to evaluate the script as. Defaults to
+   *        - {String} url: the url to evaluate the script as. Defaults to
    *        "debugger eval code".
    *
-   *        - selectedNodeActor: the NodeActor ID of the current
+   *        - {String} selectedNodeActor: the NodeActor ID of the current
    *        selection in the Inspector, if such a selection
    *        exists. This is used by helper functions that can
-   *        reference the currently selected node in the Inspector,
-   *        like $0.
-   * @return request
-   *         Request object that implements both Promise and EventEmitter interfaces
-   */
-  evaluateJS(string, opts = {}) {
-    const options = {
-      text: string,
-      frameActor: opts.frameActor,
-      url: opts.url,
-      selectedNodeActor: opts.selectedNodeActor,
-      selectedObjectActor: opts.selectedObjectActor,
-    };
-    return super.evaluateJS(options);
-  }
-
-  /**
-   * Evaluate a JavaScript expression asynchronously.
-   * See evaluateJS for parameter and response information.
+   *        reference the currently selected node in the Inspector, like $0.
+   *
+   *        - {String} selectedObjectActor: the actorID of a given objectActor.
+   *        This is used by context menu entries to get a reference to an object, in order
+   *        to perform some operation on it (copy it, store it as a global variable, …).
+   *
+   * @return {Promise}: A promise that resolves with the response.
    */
   async evaluateJSAsync(string, opts = {}) {
     const options = {

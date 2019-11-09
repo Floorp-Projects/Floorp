@@ -65,7 +65,7 @@ async function getFrames(target) {
   ok(front.hasActor("thread"), "Got the thread actor");
   // Ensure sending at least one request to an actor...
   const consoleFront = await front.getFront("console");
-  const { result } = await consoleFront.evaluateJS("var a = 42; a");
+  const { result } = await consoleFront.evaluateJSAsync("var a = 42; a");
   is(result, 42, "console.eval worked");
 
   // Although we can get metadata about the child frames,
