@@ -18,7 +18,7 @@ from taskgraph.transforms.job.common import (
     docker_worker_add_workspace_cache,
     setup_secrets,
     docker_worker_add_artifacts,
-    docker_worker_add_tooltool,
+    add_tooltool,
 )
 
 haz_run_schema = Schema({
@@ -51,7 +51,7 @@ def docker_worker_hazard(config, job, taskdesc):
 
     docker_worker_add_artifacts(config, job, taskdesc)
     docker_worker_add_workspace_cache(config, job, taskdesc)
-    docker_worker_add_tooltool(config, job, taskdesc)
+    add_tooltool(config, job, taskdesc)
     setup_secrets(config, job, taskdesc)
 
     env = worker['env']
