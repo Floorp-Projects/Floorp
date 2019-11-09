@@ -234,6 +234,10 @@ static void SetPrefValueForFeature(int32_t aFeature, int32_t aValue,
                                    const nsACString& aFailureId) {
   const char* prefname = GetPrefNameForFeature(aFeature);
   if (!prefname) return;
+  if (XRE_IsParentProcess()) {
+    delete GfxInfoBase::sFeatureStatus;
+    GfxInfoBase::sFeatureStatus = nullptr;
+  }
 
   Preferences::SetInt(prefname, aValue);
   if (!aFailureId.IsEmpty()) {
@@ -247,6 +251,10 @@ static void RemovePrefForFeature(int32_t aFeature) {
   const char* prefname = GetPrefNameForFeature(aFeature);
   if (!prefname) return;
 
+  if (XRE_IsParentProcess()) {
+    delete GfxInfoBase::sFeatureStatus;
+    GfxInfoBase::sFeatureStatus = nullptr;
+  }
   Preferences::ClearUser(prefname);
 }
 
@@ -653,6 +661,27 @@ GfxInfoBase::GetFeatureStatus(int32_t aFeature, nsACString& aFailureId,
   nsresult rv =
       GetFeatureStatusImpl(aFeature, aStatus, version, driverInfo, aFailureId);
   return rv;
+}
+
+void GfxInfoBase::GetAllFeatures(dom::XPCOMInitData& xpcomInit) {
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
+  if (!sFeatureStatus) {
+    sFeatureStatus = new nsTArray<dom::GfxInfoFeatureStatus>();
+    for (int32_t i = 1; i <= nsIGfxInfo::FEATURE_MAX_VALUE; ++i) {
+      int32_t status = 0;
+      nsAutoCString failureId;
+      GetFeatureStatus(i, failureId, &status);
+      dom::GfxInfoFeatureStatus gfxFeatureStatus;
+      gfxFeatureStatus.feature() = i;
+      gfxFeatureStatus.status() = status;
+      gfxFeatureStatus.failureId() = failureId;
+      sFeatureStatus->AppendElement(gfxFeatureStatus);
+    }
+  }
+  for (const auto& status : *sFeatureStatus) {
+    dom::GfxInfoFeatureStatus copy = status;
+    xpcomInit.gfxFeatureStatus().AppendElement(copy);
+  }
 }
 
 // Matching OS go somewhat beyond the simple equality check because of the

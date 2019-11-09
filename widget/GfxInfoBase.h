@@ -75,6 +75,9 @@ class GfxInfoBase : public nsIGfxInfo,
       int32_t* aOffMainThreadPaintWorkerCount) override;
   NS_IMETHOD GetTargetFrameRate(uint32_t* aTargetFrameRate) override;
 
+  // Non-XPCOM method to get IPC data:
+  void GetAllFeatures(dom::XPCOMInitData& xpcomInit);
+
   // Initialization function. If you override this, you must call this class's
   // version of Init first.
   // We need Init to be called separately from the constructor so we can
