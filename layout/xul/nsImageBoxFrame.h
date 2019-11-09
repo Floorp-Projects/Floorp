@@ -63,7 +63,7 @@ class nsImageBoxFrame final : public nsLeafBoxFrame {
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                                     int32_t aModType) override;
 
-  virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
+  virtual void DidSetComputedStyle(ComputedStyle* aOldStyle) override;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot,
                            PostDestroyData& aPostDestroyData) override;
@@ -71,6 +71,13 @@ class nsImageBoxFrame final : public nsLeafBoxFrame {
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
+
+  /**
+   * Gets the image request to be loaded from the current style.
+   *
+   * May be null if themed.
+   */
+  imgRequestProxy* GetRequestFromStyle();
 
   /**
    * Update mUseSrcAttr from appropriate content attributes or from
