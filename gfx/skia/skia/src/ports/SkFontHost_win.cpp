@@ -367,9 +367,12 @@ SkTypeface* SkCreateTypefaceFromDWriteFont(IDWriteFactory* aFactory,
                                            SkFontStyle aStyle,
                                            int aRenderingMode,
                                            float aGamma,
-                                           float aContrast)
+                                           float aContrast,
+                                           float aClearTypeLevel)
 {
-  return DWriteFontTypeface::Create(aFactory, aFontFace, aStyle, (DWRITE_RENDERING_MODE)aRenderingMode, aGamma, aContrast);
+  return DWriteFontTypeface::Create(aFactory, aFontFace, aStyle,
+                                    (DWRITE_RENDERING_MODE)aRenderingMode,
+                                    aGamma, aContrast, aClearTypeLevel);
 }
 
 /**

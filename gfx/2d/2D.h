@@ -1886,7 +1886,8 @@ class GFX2D_API Factory {
       IDWriteFontFace* aFontFace, const gfxFontStyle* aStyle,
       const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
       bool aUseEmbeddedBitmap, int aRenderingMode,
-      IDWriteRenderingParams* aParams, Float aGamma, Float aContrast);
+      IDWriteRenderingParams* aParams, Float aGamma, Float aContrast,
+      Float aClearTypeLevel);
 
   static already_AddRefed<ScaledFont> CreateScaledFontForGDIFont(
       const void* aLogFont, const RefPtr<UnscaledFont>& aUnscaledFont,

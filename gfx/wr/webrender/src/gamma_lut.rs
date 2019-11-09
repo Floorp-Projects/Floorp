@@ -311,6 +311,33 @@ impl GammaLut {
         }
     }
 
+    // Assumes pixels are in BGRA format. Assumes pixel values are in linear space already.
+    pub fn preblend_scaled(&self, pixels: &mut [u8], color: ColorU, percent: u8) {
+        if percent >= 100 {
+            self.preblend(pixels, color);
+            return;
+        }
+
+        let table_r = self.get_table(color.r);
+        let table_g = self.get_table(color.g);
+        let table_b = self.get_table(color.b);
+        let scale = (percent as i32 * 256) / 100;
+
+        for pixel in pixels.chunks_mut(4) {
+            let (mut b, g, mut r) = (
+                table_b[pixel[0] as usize] as i32,
+                table_g[pixel[1] as usize] as i32,
+                table_r[pixel[2] as usize] as i32,
+            );
+            b = g + (((b - g) * scale) >> 8);
+            r = g + (((r - g) * scale) >> 8);
+            pixel[0] = b as u8;
+            pixel[1] = g as u8;
+            pixel[2] = r as u8;
+            pixel[3] = max(max(b, g), r) as u8;
+        }
+    }
+
     #[cfg(target_os="macos")]
     pub fn coregraphics_convert_to_linear(&self, pixels: &mut [u8]) {
         for pixel in pixels.chunks_mut(4) {

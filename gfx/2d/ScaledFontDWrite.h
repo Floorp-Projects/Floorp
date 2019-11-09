@@ -29,14 +29,16 @@ class ScaledFontDWrite final : public ScaledFontBase {
         mUseEmbeddedBitmap(false),
         mRenderingMode(DWRITE_RENDERING_MODE_DEFAULT),
         mGamma(2.2f),
-        mContrast(1.0f) {}
+        mContrast(1.0f),
+        mClearTypeLevel(1.0f) {}
 
   ScaledFontDWrite(IDWriteFontFace* aFontFace,
                    const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
                    bool aUseEmbeddedBitmap,
                    DWRITE_RENDERING_MODE aRenderingMode,
                    IDWriteRenderingParams* aParams, Float aGamma,
-                   Float aContrast, const gfxFontStyle* aStyle = nullptr);
+                   Float aContrast, Float aClearTypeLevel,
+                   const gfxFontStyle* aStyle = nullptr);
 
   FontType GetType() const override { return FontType::DWRITE; }
 
@@ -87,6 +89,7 @@ class ScaledFontDWrite final : public ScaledFontBase {
   RefPtr<IDWriteRenderingParams> mParams;
   Float mGamma;
   Float mContrast;
+  Float mClearTypeLevel;
 
 #ifdef USE_CAIRO_SCALED_FONT
   cairo_font_face_t* CreateCairoFontFace(
@@ -104,7 +107,8 @@ class ScaledFontDWrite final : public ScaledFontBase {
           mApplySyntheticBold(aScaledFont->HasSyntheticBold()),
           mRenderingMode(aScaledFont->mRenderingMode),
           mGamma(aScaledFont->mGamma),
-          mContrast(aScaledFont->mContrast) {}
+          mContrast(aScaledFont->mContrast),
+          mClearTypeLevel(aScaledFont->mClearTypeLevel) {}
 
     InstanceData(const wr::FontInstanceOptions* aOptions,
                  const wr::FontInstancePlatformOptions* aPlatformOptions);
@@ -114,6 +118,7 @@ class ScaledFontDWrite final : public ScaledFontBase {
     DWRITE_RENDERING_MODE mRenderingMode;
     Float mGamma;
     Float mContrast;
+    Float mClearTypeLevel;
   };
 };
 
