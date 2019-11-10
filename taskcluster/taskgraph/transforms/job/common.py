@@ -230,6 +230,8 @@ def add_tooltool(config, job, taskdesc, internal=False):
         taskdesc['worker'].setdefault('env', {}).update({
             'TOOLTOOL_CACHE': '{workdir}/tooltool-cache'.format(**job['run']),
         })
+    elif not internal:
+        return
 
     taskdesc['worker']['taskcluster-proxy'] = True
     taskdesc['scopes'].extend([
