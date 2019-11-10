@@ -17,7 +17,7 @@ let gState;
 let gWin;
 
 function evaluateJS(input) {
-  return gState.webConsoleFront.evaluateJSAsync(input);
+  return gState.webConsoleFront.evaluateJS(input);
 }
 
 function startTest() {
@@ -128,6 +128,7 @@ let checkQuerySelectorAllException = async function () {
 
 function basicResultCheck(response, input, output) {
   checkObject(response, {
+    from: gState.actor,
     input: input,
     result: output,
   });

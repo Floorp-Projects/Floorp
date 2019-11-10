@@ -18,7 +18,7 @@ let gWin;
 let tests;
 
 function evaluateJS(input) {
-  return gState.webConsoleFront.evaluateJSAsync(input);
+  return gState.webConsoleFront.evaluateJS(input);
 }
 
 function startTest() {
@@ -38,6 +38,7 @@ tests = [
   async function keys() {
     let response = await evaluateJS("keys({foo: 'bar'})");
     checkObject(response, {
+      from: gState.actor,
       result: {
         class: "Array",
         preview: {
@@ -50,6 +51,7 @@ tests = [
   async function values() {
     let response = await evaluateJS("values({foo: 'bar'})");
     checkObject(response, {
+      from: gState.actor,
       result: {
         class: "Array",
         preview: {

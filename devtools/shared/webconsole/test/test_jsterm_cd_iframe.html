@@ -47,13 +47,14 @@ function onAttach(aState, aResponse)
 function doCheckParent()
 {
   info("check parent window");
-  gState.webConsoleFront.evaluateJSAsync("window.foobarObject.bug609872")
+  gState.webConsoleFront.evaluateJS("window.foobarObject.bug609872")
     .then(onFooObjectFromParent);
 }
 
 function onFooObjectFromParent(aResponse)
 {
   checkObject(aResponse, {
+    from: gState.actor,
     input: "window.foobarObject.bug609872",
     result: "parent",
   });
@@ -67,12 +68,13 @@ function onFooObjectFromParent(aResponse)
 function doCdIframe()
 {
   info("test cd('iframe')");
-  gState.webConsoleFront.evaluateJSAsync("cd('iframe')").then(onCdIframe);
+  gState.webConsoleFront.evaluateJS("cd('iframe')").then(onCdIframe);
 }
 
 function onCdIframe(aResponse)
 {
   checkObject(aResponse, {
+    from: gState.actor,
     input: "cd('iframe')",
     result: { type: "undefined" },
     helperResult: { type: "cd" },
@@ -86,13 +88,14 @@ function onCdIframe(aResponse)
 function doCheckIframe()
 {
   info("check foobarObject from the iframe");
-  gState.webConsoleFront.evaluateJSAsync("window.foobarObject.bug609872")
+  gState.webConsoleFront.evaluateJS("window.foobarObject.bug609872")
     .then(onFooObjectFromIframe);
 }
 
 function onFooObjectFromIframe(aResponse)
 {
   checkObject(aResponse, {
+    from: gState.actor,
     input: "window.foobarObject.bug609872",
     result: "child",
   });
@@ -106,12 +109,13 @@ function onFooObjectFromIframe(aResponse)
 function doCdContentIframe()
 {
   info("test cd('#content-iframe')");
-  gState.webConsoleFront.evaluateJSAsync("cd('#content-iframe')").then(onCdContentIframe);
+  gState.webConsoleFront.evaluateJS("cd('#content-iframe')").then(onCdContentIframe);
 }
 
 function onCdContentIframe(aResponse)
 {
   checkObject(aResponse, {
+    from: gState.actor,
     input: "cd('#content-iframe')",
     result: { type: "undefined" },
     helperResult: { type: "cd" },
@@ -127,12 +131,13 @@ function doCdSandboxedIframe()
   // when passing a content window reference.
   let cmd = "cd(document.getElementById('sandboxed-iframe').contentWindow)";
   info("test " + cmd);
-  gState.webConsoleFront.evaluateJSAsync(cmd).then(onCdSandboxedIframe.bind(null, cmd));
+  gState.webConsoleFront.evaluateJS(cmd).then(onCdSandboxedIframe.bind(null, cmd));
 }
 
 function onCdSandboxedIframe(cmd, aResponse)
 {
   checkObject(aResponse, {
+    from: gState.actor,
     input: cmd,
     result: { type: "undefined" },
     helperResult: { type: "cd" },
@@ -146,13 +151,14 @@ function onCdSandboxedIframe(cmd, aResponse)
 function doCheckSandboxedIframe()
 {
   info("check foobarObject from the sandboxed iframe");
-  gState.webConsoleFront.evaluateJSAsync("window.foobarObject.bug1051224")
+  gState.webConsoleFront.evaluateJS("window.foobarObject.bug1051224")
     .then(onFooObjectFromSandboxedIframe);
 }
 
 function onFooObjectFromSandboxedIframe(aResponse)
 {
   checkObject(aResponse, {
+    from: gState.actor,
     input: "window.foobarObject.bug1051224",
     result: "sandboxed",
   });
@@ -166,12 +172,13 @@ function onFooObjectFromSandboxedIframe(aResponse)
 function doCdParent()
 {
   info("test cd() back to parent");
-  gState.webConsoleFront.evaluateJSAsync("cd()").then(onCdParent);
+  gState.webConsoleFront.evaluateJS("cd()").then(onCdParent);
 }
 
 function onCdParent(aResponse)
 {
   checkObject(aResponse, {
+    from: gState.actor,
     input: "cd()",
     result: { type: "undefined" },
     helperResult: { type: "cd" },
@@ -184,13 +191,14 @@ function onCdParent(aResponse)
 
 function doCheckParent2()
 {
-  gState.webConsoleFront.evaluateJSAsync("window.foobarObject.bug609872")
+  gState.webConsoleFront.evaluateJS("window.foobarObject.bug609872")
     .then(onFooObjectFromParent2);
 }
 
 function onFooObjectFromParent2(aResponse)
 {
   checkObject(aResponse, {
+    from: gState.actor,
     input: "window.foobarObject.bug609872",
     result: "parent",
   });

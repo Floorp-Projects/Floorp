@@ -64,7 +64,7 @@ async function generateEvaluationResultStubs() {
   const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
 
   for (const [key, code] of getCommands()) {
-    const packet = await toolbox.target.activeConsole.evaluateJSAsync(code);
+    const packet = await toolbox.target.activeConsole.evaluateJS(code);
     stubs.set(key, getCleanedPacket(key, packet));
   }
 
