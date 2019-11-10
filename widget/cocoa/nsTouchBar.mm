@@ -88,10 +88,24 @@ static const uint32_t kInputIconSize = 16;
           continue;
         }
 
-        TouchBarInput* convertedInput = [[TouchBarInput alloc] initWithXPCOM:input];
+        TouchBarInput* convertedInput;
+        NSTouchBarItemIdentifier newInputIdentifier =
+            [TouchBarInput nativeIdentifierWithXPCOM:input];
+        if (!newInputIdentifier) {
+          continue;
+        }
 
-        // Add new input to dictionary for lookup of properties in delegate.
-        self.mappedLayoutItems[[convertedInput nativeIdentifier]] = convertedInput;
+        // If there is already an input in mappedLayoutItems with this identifier,
+        // that means updateItem fired before this initialization. The input
+        // cached by updateItem is more current, so we should use that one.
+        if (self.mappedLayoutItems[newInputIdentifier]) {
+          convertedInput = self.mappedLayoutItems[newInputIdentifier];
+        } else {
+          convertedInput = [[TouchBarInput alloc] initWithXPCOM:input];
+          // Add new input to dictionary for lookup of properties in delegate.
+          self.mappedLayoutItems[[convertedInput nativeIdentifier]] = convertedInput;
+        }
+
         orderedIdentifiers[i] = [convertedInput nativeIdentifier];
       }
       [orderedIdentifiers addObject:@"NSTouchBarItemIdentifierFlexibleSpace"];
@@ -171,23 +185,25 @@ static const uint32_t kInputIconSize = 16;
   if ([[input type] hasSuffix:@"popover"]) {
     NSPopoverTouchBarItem* newPopoverItem =
         [[NSPopoverTouchBarItem alloc] initWithIdentifier:aIdentifier];
+    [newPopoverItem setCustomizationLabel:[input title]];
     // We initialize popoverTouchBar here because we only allow setting this
     // property on popover creation. Updating popoverTouchBar for every update
     // of the popover item would be very expensive.
     newPopoverItem.popoverTouchBar = [[nsTouchBar alloc] initWithInputs:[input children]];
-    [self updatePopover:newPopoverItem input:input];
+    [self updatePopover:newPopoverItem withIdentifier:[input nativeIdentifier]];
     return newPopoverItem;
   }
 
   // Our new item, which will be initialized depending on aIdentifier.
   NSCustomTouchBarItem* newItem = [[NSCustomTouchBarItem alloc] initWithIdentifier:aIdentifier];
+  [newItem setCustomizationLabel:[input title]];
 
   if ([[input type] hasSuffix:@"scrollView"]) {
-    [self updateScrollView:newItem input:input];
+    [self updateScrollView:newItem withIdentifier:[input nativeIdentifier]];
     return newItem;
   } else if ([[input type] hasSuffix:@"label"]) {
     NSTextField* label = [NSTextField labelWithString:@""];
-    [self updateLabel:label input:input];
+    [self updateLabel:label withIdentifier:[input nativeIdentifier]];
     newItem.view = label;
     return newItem;
   }
@@ -197,15 +213,19 @@ static const uint32_t kInputIconSize = 16;
   newItem.view = button;
 
   if ([[input type] hasSuffix:@"button"] && ![[input type] hasPrefix:@"scrollView"]) {
-    [self updateButton:button input:input];
+    [self updateButton:button withIdentifier:[input nativeIdentifier]];
   } else if ([[input type] hasSuffix:@"mainButton"]) {
-    [self updateMainButton:button input:input];
+    [self updateMainButton:button withIdentifier:[input nativeIdentifier]];
   }
   return newItem;
 }
 
 - (bool)updateItem:(TouchBarInput*)aInput {
   NSTouchBarItem* item = [self itemForIdentifier:[aInput nativeIdentifier]];
+
+  // Update our canonical copy of the input.
+  [self replaceMappedLayoutItem:aInput];
+
   // If we can't immediately find item, there are three possibilities:
   //   * It is a button in a ScrollView, which can't be found with itemForIdentifier; or
   //   * It is contained within a popover; or
@@ -213,11 +233,9 @@ static const uint32_t kInputIconSize = 16;
   // We check for each possibility here.
   if (!item) {
     if ([self maybeUpdateScrollViewChild:aInput]) {
-      [self replaceMappedLayoutItem:aInput];
       return true;
     }
     if ([self maybeUpdatePopoverChild:aInput]) {
-      [self replaceMappedLayoutItem:aInput];
       return true;
     }
     return false;
@@ -225,21 +243,20 @@ static const uint32_t kInputIconSize = 16;
 
   if ([[aInput type] hasSuffix:@"button"]) {
     [(NSCustomTouchBarItem*)item setCustomizationLabel:[aInput title]];
-    [self updateButton:(NSButton*)item.view input:aInput];
+    [self updateButton:(NSButton*)item.view withIdentifier:[aInput nativeIdentifier]];
   } else if ([[aInput type] hasSuffix:@"mainButton"]) {
     [(NSCustomTouchBarItem*)item setCustomizationLabel:[aInput title]];
-    [self updateMainButton:(NSButton*)item.view input:aInput];
+    [self updateMainButton:(NSButton*)item.view withIdentifier:[aInput nativeIdentifier]];
   } else if ([[aInput type] hasSuffix:@"scrollView"]) {
     [(NSCustomTouchBarItem*)item setCustomizationLabel:[aInput title]];
-    [self updateScrollView:(NSCustomTouchBarItem*)item input:aInput];
+    [self updateScrollView:(NSCustomTouchBarItem*)item withIdentifier:[aInput nativeIdentifier]];
   } else if ([[aInput type] hasSuffix:@"popover"]) {
     [(NSPopoverTouchBarItem*)item setCustomizationLabel:[aInput title]];
-    [self updatePopover:(NSPopoverTouchBarItem*)item input:aInput];
+    [self updatePopover:(NSPopoverTouchBarItem*)item withIdentifier:[aInput nativeIdentifier]];
   } else if ([[aInput type] hasSuffix:@"label"]) {
-    [self updateLabel:(NSTextField*)item.view input:aInput];
+    [self updateLabel:(NSTextField*)item.view withIdentifier:[aInput nativeIdentifier]];
   }
 
-  [self replaceMappedLayoutItem:aInput];
   return true;
 }
 
@@ -263,7 +280,7 @@ static const uint32_t kInputIconSize = 16;
   NSButton* scrollViewButton = self.scrollViewButtons[[aInput nativeIdentifier]];
   if (scrollViewButton) {
     // ScrollView buttons are similar to mainButtons except for their width.
-    [self updateMainButton:scrollViewButton input:aInput];
+    [self updateMainButton:scrollViewButton withIdentifier:[aInput nativeIdentifier]];
     uint32_t buttonSize =
         MAX(scrollViewButton.attributedTitle.size.width + kInputIconSize + kInputSpacing,
             kScrollViewButtonWidth);
@@ -293,72 +310,91 @@ static const uint32_t kInputIconSize = 16;
   self.mappedLayoutItems[[aItem nativeIdentifier]] = aItem;
 }
 
-- (void)updateButton:(NSButton*)aButton input:(TouchBarInput*)aInput {
-  if (!aButton || !aInput) {
+- (void)updateButton:(NSButton*)aButton withIdentifier:(NSTouchBarItemIdentifier)aIdentifier {
+  if (!aButton || !aIdentifier) {
     return;
   }
 
-  aButton.title = [aInput title];
-  if (![aInput isIconPositionSet]) {
+  TouchBarInput* input = self.mappedLayoutItems[aIdentifier];
+  if (!input) {
+    return;
+  }
+
+  aButton.title = [input title];
+  if (![input isIconPositionSet]) {
     [aButton setImagePosition:NSImageOnly];
-    [aInput setIconPositionSet:true];
+    [input setIconPositionSet:true];
   }
 
-  if ([aInput imageURI]) {
-    RefPtr<nsTouchBarInputIcon> icon = [aInput icon];
+  if ([input imageURI]) {
+    RefPtr<nsTouchBarInputIcon> icon = [input icon];
     if (!icon) {
-      icon = new nsTouchBarInputIcon([aInput document], aButton);
-      [aInput setIcon:icon];
+      icon = new nsTouchBarInputIcon([input document], aButton);
+      [input setIcon:icon];
     }
-    icon->SetupIcon([aInput imageURI]);
+    icon->SetupIcon([input imageURI]);
   }
-  [aButton setEnabled:![aInput isDisabled]];
+  [aButton setEnabled:![input isDisabled]];
 
-  if ([aInput color]) {
-    aButton.bezelColor = [aInput color];
+  if ([input color]) {
+    aButton.bezelColor = [input color];
   }
 
-  objc_setAssociatedObject(aButton, &sIdentifierAssociationKey, [aInput nativeIdentifier],
+  objc_setAssociatedObject(aButton, &sIdentifierAssociationKey, aIdentifier,
                            OBJC_ASSOCIATION_RETAIN);
 }
 
-- (void)updateMainButton:(NSButton*)aMainButton input:(TouchBarInput*)aInput {
-  if (!aMainButton || !aInput) {
+- (void)updateMainButton:(NSButton*)aMainButton
+          withIdentifier:(NSTouchBarItemIdentifier)aIdentifier {
+  if (!aMainButton || !aIdentifier) {
+    return;
+  }
+
+  TouchBarInput* input = self.mappedLayoutItems[aIdentifier];
+  if (!input) {
     return;
   }
   // If empty, string is still being localized. Display a blank input instead.
-  if ([[aInput title] isEqualToString:@""]) {
+  if ([[input title] isEqualToString:@""]) {
     [aMainButton setImagePosition:NSNoImage];
   } else {
     [aMainButton setImagePosition:NSImageLeft];
   }
   aMainButton.imageHugsTitle = YES;
-  [aInput setIconPositionSet:true];
+  [input setIconPositionSet:true];
 
-  [self updateButton:aMainButton input:aInput];
+  [self updateButton:aMainButton withIdentifier:aIdentifier];
+
   [aMainButton.widthAnchor constraintGreaterThanOrEqualToConstant:MAIN_BUTTON_WIDTH].active = YES;
   [aMainButton setContentHuggingPriority:1.0
                           forOrientation:NSLayoutConstraintOrientationHorizontal];
 }
 
-- (void)updatePopover:(NSPopoverTouchBarItem*)aPopoverItem input:(TouchBarInput*)aInput {
-  if (!aPopoverItem || !aInput) {
+- (void)updatePopover:(NSPopoverTouchBarItem*)aPopoverItem
+       withIdentifier:(NSTouchBarItemIdentifier)aIdentifier {
+  if (!aPopoverItem || !aIdentifier) {
     return;
   }
+
+  TouchBarInput* input = self.mappedLayoutItems[aIdentifier];
+  if (!input) {
+    return;
+  }
+
   aPopoverItem.showsCloseButton = YES;
-  if ([aInput imageURI]) {
-    RefPtr<nsTouchBarInputIcon> icon = [aInput icon];
+  if ([input imageURI]) {
+    RefPtr<nsTouchBarInputIcon> icon = [input icon];
     if (!icon) {
-      icon = new nsTouchBarInputIcon([aInput document], nil, nil, aPopoverItem);
-      [aInput setIcon:icon];
+      icon = new nsTouchBarInputIcon([input document], nil, nil, aPopoverItem);
+      [input setIcon:icon];
     }
-    icon->SetupIcon([aInput imageURI]);
-  } else if ([aInput title]) {
-    aPopoverItem.collapsedRepresentationLabel = [aInput title];
+    icon->SetupIcon([input imageURI]);
+  } else if ([input title]) {
+    aPopoverItem.collapsedRepresentationLabel = [input title];
   }
 
   // Special handling to show/hide the search popover if the Urlbar is focused.
-  if ([[aInput nativeIdentifier] isEqualToString:SearchPopoverIdentifier]) {
+  if ([[input nativeIdentifier] isEqualToString:SearchPopoverIdentifier]) {
     // We can reach this code during window shutdown. We only want to toggle
     // showPopover if we are in a normal running state.
     if (!mTouchBarHelper) {
@@ -372,10 +408,17 @@ static const uint32_t kInputIconSize = 16;
   }
 }
 
-- (void)updateScrollView:(NSCustomTouchBarItem*)aScrollViewItem input:(TouchBarInput*)aInput {
-  if (!aScrollViewItem || ![aInput children]) {
+- (void)updateScrollView:(NSCustomTouchBarItem*)aScrollViewItem
+          withIdentifier:(NSTouchBarItemIdentifier)aIdentifier {
+  if (!aScrollViewItem || !aIdentifier) {
     return;
   }
+
+  TouchBarInput* input = self.mappedLayoutItems[aIdentifier];
+  if (!input || ![input children]) {
+    return;
+  }
+
   NSMutableDictionary* constraintViews = [NSMutableDictionary dictionary];
   NSView* documentView = [[NSView alloc] initWithFrame:NSZeroRect];
   NSString* layoutFormat = @"H:|-8-";
@@ -384,15 +427,16 @@ static const uint32_t kInputIconSize = 16;
   // NSCharacterSet to strip illegal characters.
   NSCharacterSet* charactersToRemove = [[NSCharacterSet alphanumericCharacterSet] invertedSet];
 
-  for (TouchBarInput* childInput in [aInput children]) {
+  for (TouchBarInput* childInput in [input children]) {
     if (![[childInput type] hasSuffix:@"button"]) {
       continue;
     }
+    [self replaceMappedLayoutItem:childInput];
     NSButton* button = [NSButton buttonWithTitle:[childInput title]
                                           target:self
                                           action:@selector(touchBarAction:)];
     // ScrollView buttons are similar to mainButtons except for their width.
-    [self updateMainButton:button input:childInput];
+    [self updateMainButton:button withIdentifier:[childInput nativeIdentifier]];
     uint32_t buttonSize = MAX(button.attributedTitle.size.width + kInputIconSize + kInputSpacing,
                               kScrollViewButtonWidth);
     [[button widthAnchor] constraintGreaterThanOrEqualToConstant:buttonSize].active = YES;
@@ -425,11 +469,16 @@ static const uint32_t kInputIconSize = 16;
   aScrollViewItem.view = scrollView;
 }
 
-- (void)updateLabel:(NSTextField*)aLabel input:aInput {
-  if (!aLabel || ![aInput title]) {
+- (void)updateLabel:(NSTextField*)aLabel withIdentifier:(NSTouchBarItemIdentifier)aIdentifier {
+  if (!aLabel || !aIdentifier) {
     return;
   }
-  [aLabel setStringValue:[aInput title]];
+
+  TouchBarInput* input = self.mappedLayoutItems[aIdentifier];
+  if (!input || ![input title]) {
+    return;
+  }
+  [aLabel setStringValue:[input title]];
 }
 
 - (NSTouchBarItem*)makeShareScrubberForIdentifier:(NSTouchBarItemIdentifier)aIdentifier {
@@ -809,6 +858,24 @@ static const uint32_t kInputIconSize = 16;
     identifier = [identifier stringByAppendingPathExtension:aKey];
   }
   return identifier;
+}
+
++ (NSTouchBarItemIdentifier)nativeIdentifierWithXPCOM:(nsCOMPtr<nsITouchBarInput>)aInput {
+  nsAutoString keyStr;
+  nsresult rv = aInput->GetKey(keyStr);
+  if (NS_FAILED(rv)) {
+    return nil;
+  }
+  NSString* key = nsCocoaUtils::ToNSString(keyStr);
+
+  nsAutoString typeStr;
+  rv = aInput->GetType(typeStr);
+  if (NS_FAILED(rv)) {
+    return nil;
+  }
+  NSString* type = nsCocoaUtils::ToNSString(typeStr);
+
+  return [TouchBarInput nativeIdentifierWithType:type withKey:key];
 }
 
 @end
