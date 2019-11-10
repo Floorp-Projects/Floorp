@@ -1147,6 +1147,8 @@ bitflags! {
         const SMART_PROFILER        = 1 << 26;
         /// Dynamically control whether picture caching is enabled.
         const DISABLE_PICTURE_CACHING = 1 << 27;
+        /// If set, dump picture cache invalidation debug to console.
+        const INVALIDATION_DBG = 1 << 28;
     }
 }
 
