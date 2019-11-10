@@ -2145,6 +2145,7 @@ impl PrimitiveStore {
                             &self.opacity_bindings,
                             &self.images,
                             surface_index,
+                            surface.surface_spatial_node_index,
                         ) {
                             prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
                             // Ensure the primitive clip is popped - perhaps we can use
