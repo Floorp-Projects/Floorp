@@ -72,11 +72,12 @@ using namespace mozilla::dom;
 - (void)dealloc;
 
 /**
- * We make this helper method static so that other classes can query a
+ * We make these helper methods static so that other classes can query a
  * TouchBarInput's nativeIdentifier (e.g. nsTouchBarUpdater looking up a
  * popover in mappedLayoutItems).
  */
 + (NSTouchBarItemIdentifier)nativeIdentifierWithType:(NSString*)aType withKey:(NSString*)aKey;
++ (NSTouchBarItemIdentifier)nativeIdentifierWithXPCOM:(nsCOMPtr<nsITouchBarInput>)aInput;
 
 @end
 
@@ -162,11 +163,14 @@ using namespace mozilla::dom;
 /**
  * Update or create various subclasses of TouchBarItem.
  */
-- (void)updateButton:(NSButton*)aButton input:(TouchBarInput*)aInput;
-- (void)updateMainButton:(NSButton*)aMainButton input:(TouchBarInput*)aInput;
-- (void)updatePopover:(NSPopoverTouchBarItem*)aPopoverItem input:(TouchBarInput*)aInput;
-- (void)updateScrollView:(NSCustomTouchBarItem*)aScrollViewItem input:(TouchBarInput*)aInput;
-- (void)updateLabel:(NSTextField*)aLabel input:(TouchBarInput*)aInput;
+- (void)updateButton:(NSButton*)aButton withIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
+- (void)updateMainButton:(NSButton*)aMainButton
+          withIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
+- (void)updatePopover:(NSPopoverTouchBarItem*)aPopoverItem
+       withIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
+- (void)updateScrollView:(NSCustomTouchBarItem*)aScrollViewItem
+          withIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
+- (void)updateLabel:(NSTextField*)aLabel withIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
 - (NSTouchBarItem*)makeShareScrubberForIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
 
 /**
