@@ -105,7 +105,7 @@ async function checkEvaluateInTopFrameThrows(dbg, text) {
   const { frames } = await threadFront.getFrames(0, 1);
   ok(frames.length == 1, "Got one frame");
   const options = { thread: threadFront.actor, frameActor: frames[0].actor };
-  const response = await consoleFront.evaluateJSAsync(text, options);
+  const response = await consoleFront.evaluateJS(text, options);
   ok(response.exception, "Eval threw an exception");
 }
 
