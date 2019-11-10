@@ -199,6 +199,11 @@ export type Actions = {
 };
 
 type ConsoleClient = {
+  evaluateJS: (
+    script: Script,
+    func: Function,
+    params?: { frameActor: ?FrameId }
+  ) => void,
   evaluateJSAsync: (
     script: Script,
     func: Function,
