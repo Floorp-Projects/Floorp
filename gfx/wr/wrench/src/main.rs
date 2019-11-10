@@ -710,6 +710,11 @@ fn render<'a>(
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
                             do_render = true;
                         }
+                        VirtualKeyCode::B => {
+                            debug_flags.toggle(DebugFlags::INVALIDATION_DBG);
+                            wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
+                            do_render = true;
+                        }
                         VirtualKeyCode::P => {
                             debug_flags.toggle(DebugFlags::PROFILER_DBG);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));

@@ -74,6 +74,11 @@ impl ItemUid {
         let uid = NEXT_UID.fetch_add(1, Ordering::Relaxed);
         ItemUid { uid }
     }
+
+    // Intended for debug usage only
+    pub fn get_uid(&self) -> usize {
+        self.uid
+    }
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
