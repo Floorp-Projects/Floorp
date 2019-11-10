@@ -1442,6 +1442,10 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec) {
   }
 
   nsIRequest::TRRMode effectiveRequestMode = rec->EffectiveTRRMode();
+
+  LOG(("NameLookup: %s effectiveTRRmode: %d", rec->host.get(),
+       effectiveRequestMode));
+
   if (effectiveRequestMode != nsIRequest::TRR_DISABLED_MODE &&
       !((rec->flags & RES_DISABLE_TRR))) {
     rv = TrrLookup(rec);
