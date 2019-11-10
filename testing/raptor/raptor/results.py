@@ -426,8 +426,11 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
 
     def _extract_vmetrics_jobs(self, test, browsertime_json, browsertime_results):
         # XXX will do better later
-        url = ("https://queue.taskcluster.net/v1/task/%s/runs/0/artifacts/public/"
-               "test_info/" % os.environ.get("TASK_ID", "??"))
+        url = ("{root_url}/api/queue/v1/task/{task_id}/runs/0/artifacts/public/"
+               "test_info/".format(
+                   root_url=os.environ.get('TASKCLUSTER_ROOT_URL', 'taskcluster-root-url.invalid'),
+                   task_id=os.environ.get("TASK_ID", "??"),
+               ))
 
         json_url = url + "/".join(browsertime_json.split(os.path.sep)[-3:])
         files = []
