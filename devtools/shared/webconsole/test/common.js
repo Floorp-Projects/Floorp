@@ -37,15 +37,24 @@ async function connectToDebugger() {
 
 async function attachConsole(listeners, callback) {
   const { state, response } = await _attachConsole(listeners);
-  callback(state, response);
+  if (callback) {
+    return callback(state, response);
+  }
+  return { state, response };
 }
 async function attachConsoleToTab(listeners, callback) {
   const { state, response } = await _attachConsole(listeners, true);
-  callback(state, response);
+  if (callback) {
+    return callback(state, response);
+  }
+  return { state, response };
 }
 async function attachConsoleToWorker(listeners, callback) {
   const { state, response } = await _attachConsole(listeners, true, true);
-  callback(state, response);
+  if (callback) {
+    return callback(state, response);
+  }
+  return { state, response };
 }
 
 var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
@@ -146,6 +155,10 @@ function checkConsoleAPICall(call, expected) {
 }
 
 function checkObject(object, expected) {
+  if (object && object.getGrip) {
+    object = object.getGrip();
+  }
+
   for (const name of Object.keys(expected)) {
     const expectedValue = expected[name];
     const value = object[name];
