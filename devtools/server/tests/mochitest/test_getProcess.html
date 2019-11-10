@@ -92,7 +92,7 @@ function runTests() {
 
         // Ensure sending at least one request to an actor...
         const consoleFront = await front.getFront("console");
-        const { result } = await consoleFront.evaluateJS("var a = 42; a");
+        const { result } = await consoleFront.evaluateJSAsync("var a = 42; a");
         is(result, 42, "console.eval worked");
 
         getProcessAgain(front, content.id);
@@ -151,5 +151,5 @@ function runTests() {
 
 </script>
 </pre>
-</body>
+  </body>
 </html>

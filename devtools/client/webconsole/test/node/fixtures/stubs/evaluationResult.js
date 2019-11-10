@@ -16,6 +16,7 @@ const {
 
 const stubPackets = new Map();
 stubPackets.set(`new Date(0)`, {
+  "resultID": "1573385647471-0",
   "input": "new Date(0)",
   "result": {
     "type": "object",
@@ -30,19 +31,12 @@ stubPackets.set(`new Date(0)`, {
     }
   },
   "timestamp": 1572868073590,
-  "exception": null,
-  "frame": null,
-  "helperResult": null,
-  "notes": null,
   "from": "server0.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`asdf()`, {
-  "input": "asdf()",
-  "result": {
-    "type": "undefined"
-  },
-  "timestamp": 1572868073933,
+  "resultID": "1573385647554-1",
+  "errorMessageName": "JSMSG_NOT_DEFINED",
   "exception": {
     "type": "object",
     "actor": "server0.conn0.child1/obj25",
@@ -72,23 +66,22 @@ stubPackets.set(`asdf()`, {
       "functionName": null
     }
   ],
-  "errorMessageName": "JSMSG_NOT_DEFINED",
   "frame": {
     "source": "debugger eval code",
     "line": 1,
     "column": 1
   },
-  "helperResult": null,
-  "notes": null,
+  "input": "asdf()",
+  "result": {
+    "type": "undefined"
+  },
+  "timestamp": 1572868073933,
   "from": "server0.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`1 + @`, {
-  "input": "1 + @",
-  "result": {
-    "type": "undefined"
-  },
-  "timestamp": 1572868073955,
+  "resultID": "1573385647562-2",
+  "errorMessageName": "JSMSG_ILLEGAL_CHARACTER",
   "exception": {
     "type": "object",
     "actor": "server0.conn0.child1/obj26",
@@ -109,26 +102,21 @@ stubPackets.set(`1 + @`, {
   },
   "exceptionMessage": "SyntaxError: illegal character",
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Illegal_character?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
-  "exceptionStack": null,
-  "errorMessageName": "JSMSG_ILLEGAL_CHARACTER",
   "frame": {
     "source": "debugger eval code",
     "line": 1,
     "column": 4
   },
-  "helperResult": null,
-  "notes": null,
+  "input": "1 + @",
+  "result": {
+    "type": "undefined"
+  },
+  "timestamp": 1572868073955,
   "from": "server0.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`inspect({a: 1})`, {
-  "input": "inspect({a: 1})",
-  "result": {
-    "type": "undefined"
-  },
-  "timestamp": 1572868073976,
-  "exception": null,
-  "frame": null,
+  "resultID": "1573385647565-3",
   "helperResult": {
     "type": "inspectObject",
     "input": "inspect({a: 1})",
@@ -157,45 +145,40 @@ stubPackets.set(`inspect({a: 1})`, {
       }
     }
   },
-  "notes": null,
+  "input": "inspect({a: 1})",
+  "result": {
+    "type": "undefined"
+  },
+  "timestamp": 1572868073976,
   "from": "server0.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`cd(document)`, {
+  "resultID": "1573385647570-4",
+  "helperResult": {
+    "type": "error",
+    "message": "cdFunctionInvalidArgument"
+  },
   "input": "cd(document)",
   "result": {
     "type": "undefined"
   },
   "timestamp": 1572868074010,
-  "exception": null,
-  "frame": null,
-  "helperResult": {
-    "type": "error",
-    "message": "cdFunctionInvalidArgument"
-  },
-  "notes": null,
   "from": "server0.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`undefined`, {
+  "resultID": "1573385647572-5",
   "input": "undefined",
   "result": {
     "type": "undefined"
   },
   "timestamp": 1572868074023,
-  "exception": null,
-  "frame": null,
-  "helperResult": null,
-  "notes": null,
   "from": "server0.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`longString message Error`, {
-  "input": "throw new Error(\"Long error \".repeat(10000))",
-  "result": {
-    "type": "undefined"
-  },
-  "timestamp": 1572868074038,
+  "resultID": "1573385647576-6",
   "exception": {
     "type": "object",
     "actor": "server0.conn0.child1/obj32",
@@ -240,17 +223,16 @@ stubPackets.set(`longString message Error`, {
     "line": 1,
     "column": 7
   },
-  "helperResult": null,
-  "notes": null,
+  "input": "throw new Error(\"Long error \".repeat(10000))",
+  "result": {
+    "type": "undefined"
+  },
+  "timestamp": 1572868074038,
   "from": "server0.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`eval throw ""`, {
-  "input": "throw \"\"",
-  "result": {
-    "type": "undefined"
-  },
-  "timestamp": 1572868074059,
+  "resultID": "1573385647580-7",
   "exception": "",
   "exceptionMessage": "",
   "exceptionStack": [
@@ -268,17 +250,16 @@ stubPackets.set(`eval throw ""`, {
     "line": 1,
     "column": 1
   },
-  "helperResult": null,
-  "notes": null,
+  "input": "throw \"\"",
+  "result": {
+    "type": "undefined"
+  },
+  "timestamp": 1572868074059,
   "from": "server0.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`eval throw "tomato"`, {
-  "input": "throw \"tomato\"",
-  "result": {
-    "type": "undefined"
-  },
-  "timestamp": 1572868074071,
+  "resultID": "1573385647583-8",
   "exception": "tomato",
   "exceptionMessage": "tomato",
   "exceptionStack": [
@@ -296,8 +277,11 @@ stubPackets.set(`eval throw "tomato"`, {
     "line": 1,
     "column": 1
   },
-  "helperResult": null,
-  "notes": null,
+  "input": "throw \"tomato\"",
+  "result": {
+    "type": "undefined"
+  },
+  "timestamp": 1572868074071,
   "from": "server0.conn0.child1/consoleActor2"
 });
 
