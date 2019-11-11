@@ -150,7 +150,7 @@
               "cak", "da", "de", "dsb", "el", "eo", "es-CL", "es-ES",
               "es-MX", "eu", "fa", "ff", "fi", "fr", "fy-NL", "gn",
               "gu-IN", "hi-IN", "hr", "hsb", "ia", "is", "it",
-              "ja-JP-mac", "ja", "ka", "kab", "km", "kn", "lij", "lo",
+              "ja-JP-macos", "ja", "ka", "kab", "km", "kn", "lij", "lo",
               "lt", "mai", "mk", "ml", "ms", "my", "nb-NO", "ne-NP", "nl",
               "nn-NO", "oc", "or", "pa-IN", "pt-BR", "rm", "ro", "son",
               "sq", "sr", "sv-SE", "th", "tl", "trs", "uk", "ur", "uz",
@@ -370,7 +370,7 @@
         },
         "telemetryId": "amazon-ca"
       }, {
-        "included": { "locales": { "matches": ["ja-JP-mac", "ja"] } },
+        "included": { "locales": { "matches": ["ja-JP-macos", "ja"] } },
         "webExtension": {
           "locales": ["jp"]
         },
@@ -1237,7 +1237,7 @@
         "id": "oshiete-goo@search.mozilla.org",
         "version": "1.0"
       },
-      "appliesTo": [{ "included": { "locales": { "matches": ["ja-JP-mac", "jp"]}}}]
+      "appliesTo": [{ "included": { "locales": { "matches": ["ja-JP-macos", "jp"]}}}]
     },
     {
       "webExtension": {
@@ -1321,7 +1321,7 @@
         "id": "rakuten@search.mozilla.org",
         "version": "1.2"
       },
-      "appliesTo": [{ "included": { "locales": { "matches": ["ja-JP-mac", "jp"]}}}]
+      "appliesTo": [{ "included": { "locales": { "matches": ["ja-JP-macos", "jp"]}}}]
     },
     {
       "webExtension": {
@@ -1371,7 +1371,7 @@
           "sl", "tl", "tr", "ur", "uz", "wo"
         ]}}
       }, {
-        "included": { "locales": { "matches": ["ja-JP-mac", "ja"]}},
+        "included": { "locales": { "matches": ["ja-JP-macos", "ja"]}},
         "webExtension": {
           "locales": ["ja"]
         }
@@ -1420,14 +1420,14 @@
         "id": "yahoo-jp@search.mozilla.org",
         "version": "1.0"
       },
-      "appliesTo": [{ "included": { "locales": { "matches": ["ja-JP-mac", "ja"]}}}]
+      "appliesTo": [{ "included": { "locales": { "matches": ["ja-JP-macos", "ja"]}}}]
     },
     {
       "webExtension": {
         "id": "yahoo-jp-auctions@search.mozilla.org",
         "version": "1.2"
       },
-      "appliesTo": [{ "included": { "locales": { "matches": ["ja-JP-mac", "ja"]}}}]
+      "appliesTo": [{ "included": { "locales": { "matches": ["ja-JP-macos", "ja"]}}}]
     },
     {
       "webExtension": {

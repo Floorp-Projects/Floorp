@@ -51,7 +51,7 @@ const test = new SearchConfigTest({
             "ia",
             "is",
             "it",
-            "ja-JP-mac",
+            "ja-JP-macos",
             "ja",
             "ka",
             "kab",
