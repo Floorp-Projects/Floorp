@@ -288,6 +288,11 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
   void OnNewRequest();
 
   void OnRequestFinished(bool aRequestCompletedSuccessfully);
+
+  template <typename Func>
+  auto DoWithTransactionChild(const Func& aFunc) const;
+
+  bool HasTransactionChild() const;
 };
 
 }  // namespace dom
