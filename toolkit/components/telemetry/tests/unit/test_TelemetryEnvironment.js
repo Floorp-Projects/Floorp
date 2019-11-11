@@ -1381,7 +1381,7 @@ add_task(async function test_addonsWatch_InterestingChange() {
 });
 
 add_task(async function test_pluginsWatch_Add() {
-  if (gIsAndroid) {
+  if (!gIsFirefox) {
     Assert.ok(true, "Skipping: there is no Plugin Manager on Android.");
     return;
   }
@@ -1423,7 +1423,7 @@ add_task(async function test_pluginsWatch_Add() {
 });
 
 add_task(async function test_pluginsWatch_Remove() {
-  if (gIsAndroid) {
+  if (!gIsFirefox) {
     Assert.ok(true, "Skipping: there is no Plugin Manager on Android.");
     return;
   }
