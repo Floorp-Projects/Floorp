@@ -31,9 +31,6 @@ with Files("en-US/chrome/layout/MediaDocument.properties"):
 with Files("en-US/chrome/layout/printing.properties"):
     BUG_COMPONENT = ("Core", "Printing: Output")
 
-with Files("en-US/chrome/layout/xbl.properties"):
-    BUG_COMPONENT = ("Core", "XBL")
-
 with Files("en-US/chrome/layout/xmlparser.properties"):
     BUG_COMPONENT = ("Core", "XML")
 

@@ -1085,7 +1085,6 @@ class nsContentUtils {
    */
   enum PropertiesFile {
     eCSS_PROPERTIES,
-    eXBL_PROPERTIES,
     eXUL_PROPERTIES,
     eLAYOUT_PROPERTIES,
     eFORMS_PROPERTIES,
