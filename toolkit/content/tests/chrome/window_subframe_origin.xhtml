@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="window" title="Subframe Origin Tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<iframe
+  style="margin-left:20px; margin-top:20px; min-height:300px; max-width:300px; max-height:300px; border:solid 1px black;"
+  src="frame_subframe_origin_subframe1.xhtml"></iframe>
+<caption id="parentcap" label=""/>
+
+<script>
+
+// Fire a mouse move event aimed at this window, and check to be
+// sure the client coords translate from widget to the dom correctly.
+
+function runTests()
+{
+  synthesizeMouse(document.getElementById("window"), 1, 2, { type: "mousemove" });
+}
+
+window.arguments[0].SimpleTest.waitForFocus(runTests, window);
+
+function mouseMove(e) {
+  var element = e.target;
+  var el = document.getElementById("parentcap");
+  el.label = "client: (" + e.clientX + "," + e.clientY + ")";
+  window.arguments[0].SimpleTest.is(e.clientX, 1, "mouse event clientX");
+  window.arguments[0].SimpleTest.is(e.clientY, 2, "mouse event clientY");
+  // fire the next test on the sub frame
+  frames[0].runTests();
+}
+
+window.addEventListener("mousemove",mouseMove, false);
+
+</script>
+</window>
