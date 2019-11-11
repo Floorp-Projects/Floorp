@@ -143,6 +143,15 @@ def run_tests(config, browser_config):
         browser_config['preferences']['dom.serviceWorkers.parent_intercept'] = True
         browser_config['preferences']['browser.tabs.documentchannel'] = True
 
+    browser_config['preferences']['network.proxy.type'] = 2
+    browser_config['preferences']['network.proxy.autoconfig_url'] = """data:text/plain,
+function FindProxyForURL(url, host) {
+  if (url.startsWith('http')) {
+   return 'PROXY %s';
+  }
+  return 'DIRECT';
+}""" % browser_config['webserver']
+
     # If --code-coverage files are expected, set flag in browser config so ffsetup knows
     # that it needs to delete any ccov files resulting from browser initialization
     # NOTE: This is only supported in production; local setup of ccov folders and
