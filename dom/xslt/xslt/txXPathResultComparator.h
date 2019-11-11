@@ -59,9 +59,17 @@ class txResultStringComparator : public txXPathResultComparator {
     StringValue();
     ~StringValue();
 
+    nsresult initCaseKeyBuffer(nsICollation* aCollation);
+
     uint8_t* mKey;
-    void* mCaseKey;
-    uint32_t mLength, mCaseLength;
+    union {
+      nsString* mCaseKeyString;
+      uint8_t* mCaseKeyBuffer;
+    };
+    // When mCaseKeyLength is nonzero, we have an mCaseKeyBuffer, which needs to
+    // be freed with free().  Otherwise we have an mCaseKeyString, which needs
+    // to have operator delete called on it.
+    uint32_t mLength, mCaseKeyLength;
   };
 };
 
