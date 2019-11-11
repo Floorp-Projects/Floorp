@@ -38,6 +38,9 @@ add_task(async function test_isURIVisited() {
   for (let scheme in SCHEMES) {
     info("Testing scheme " + scheme);
     for (let t in PlacesUtils.history.TRANSITIONS) {
+      if (t == "EMBED") {
+        continue;
+      }
       info("With transition " + t);
       let aTransition = PlacesUtils.history.TRANSITIONS[t];
 

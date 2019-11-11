@@ -27,7 +27,7 @@ a:visited > tspan       { fill: lime; }
   </text>
 
   <!-- text in link -->
-  <a xlink:href="">
+  <a xlink:href="visited-page.html">
     <text x="10" y="50" fill="red">This should be green</text>
   </a>
 
@@ -40,7 +40,7 @@ a:visited > tspan       { fill: lime; }
 
   <!-- tspan in link -->
   <text>
-    <a xlink:href="">
+    <a xlink:href="visited-page.html">
       <tspan x="10" y="100" fill="red">This should be green</tspan>
     </a>
   </text>

@@ -6,20 +6,10 @@ const prefix =
 
 add_task(async function() {
   registerCleanupFunction(PlacesUtils.history.clear);
-  let contentPage = prefix + "iframe.html";
-
   let normalWindow = await BrowserTestUtils.openNewBrowserWindow();
-  let normalBrowser = normalWindow.gBrowser.selectedBrowser;
-  await BrowserTestUtils.loadURI(normalBrowser, contentPage);
-  await BrowserTestUtils.browserLoaded(normalBrowser, false, contentPage);
-
   let privateWindow = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
-  let privateBrowser = privateWindow.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURI(privateBrowser, contentPage);
-  await BrowserTestUtils.browserLoaded(privateBrowser, false, contentPage);
-
   let tests = [
     {
       private: false,
@@ -51,37 +41,42 @@ add_task(async function() {
 
   let uri = Services.io.newURI(prefix + tests[0].subtest);
   for (let test of tests) {
+    info(test.subtest);
     let promise = TestUtils.topicObserved(test.topic, subject =>
       uri.equals(subject.QueryInterface(Ci.nsIURI))
     );
-    let browser = test.private ? privateBrowser : normalBrowser;
-    await ContentTask.spawn(browser, prefix + test.subtest, async function(
-      aSrc
-    ) {
-      content.document.getElementById("iframe").src = aSrc;
-    });
-    await promise;
-
-    if (test.color) {
-      // In e10s waiting for visited-status-resolution is not enough to ensure links
-      // have been updated, because it only tells us that messages to update links
-      // have been dispatched. We must still wait for the actual links to update.
-      await BrowserTestUtils.waitForCondition(async function() {
-        let color = await ContentTask.spawn(browser, null, async function() {
-          let iframe = content.document.getElementById("iframe");
-          let elem = iframe.contentDocument.getElementById("link");
-          return content.windowUtils.getVisitedDependentComputedStyle(
-            elem,
-            "",
-            "color"
-          );
-        });
-        return color == test.color;
-      }, test.message);
-      // The harness will consider the test as failed overall if there were no
-      // passes or failures, so record it as a pass.
-      ok(true, test.message);
-    }
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser: test.private ? privateWindow.gBrowser : normalWindow.gBrowser,
+        url: prefix + test.subtest,
+      },
+      async function(browser) {
+        await promise;
+        if (test.color) {
+          // In e10s waiting for visited-status-resolution is not enough to ensure links
+          // have been updated, because it only tells us that messages to update links
+          // have been dispatched. We must still wait for the actual links to update.
+          await TestUtils.waitForCondition(async function() {
+            let color = await ContentTask.spawn(
+              browser,
+              null,
+              async function() {
+                let elem = content.document.getElementById("link");
+                return content.windowUtils.getVisitedDependentComputedStyle(
+                  elem,
+                  "",
+                  "color"
+                );
+              }
+            );
+            return color == test.color;
+          }, test.message);
+          // The harness will consider the test as failed overall if there were no
+          // passes or failures, so record it as a pass.
+          ok(true, test.message);
+        }
+      }
+    );
   }
 
   let promisePBExit = TestUtils.topicObserved("last-pb-context-exited");
