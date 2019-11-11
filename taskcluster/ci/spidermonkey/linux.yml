@@ -8,6 +8,8 @@ job-defaults:
         docker-image: {in-tree: debian7-amd64-build}
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/jsshell.manifest"
+    run:
+        tooltool-downloads: public
 
 sm-package-linux64/opt:
     description: "Spidermonkey source package and test"
