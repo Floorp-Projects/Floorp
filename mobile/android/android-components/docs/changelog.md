@@ -99,6 +99,8 @@ permalink: /changelog/
 * **service-sync-logins**
   * `AsyncLoginsStorage` interface gained a new method: `importLoginsAsync`, used for bulk-inserting logins (for example, during a migration).
 
+* **service-glean**: Glean now provides a Gradle plugin for automating the conversion from metrics.yaml and pings.yaml files to Kotlin code. This should be used instead of the deprecated Gradle script.  See [integrating with the build system docs](https://mozilla.github.io/glean/book/user/adding-glean-to-your-project.html#integrating-with-the-build-system) for more information.
+
 # 24.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v23.0.0...v24.0.0)
@@ -250,7 +252,6 @@ permalink: /changelog/
   ```
 * **engine-gecko-nightly**
   * Adds setDynamicToolbarMaxHeight ApI.
-
 
 * **feature-push**
   * Added `unsubscribeAll` support from the Rust native layer.
