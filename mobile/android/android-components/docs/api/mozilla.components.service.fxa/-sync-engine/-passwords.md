@@ -2,10 +2,12 @@
 
 # Passwords
 
-`object Passwords : `[`SyncEngine`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L73)
+`object Passwords : `[`SyncEngine`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L75)
 
-A 'logins/passwords' engine. When using this engine, make sure to set an encryption key used to unlock the store
-as 'passwords_key' via [SecureAbove22Preferences](../../mozilla.components.lib.dataprotect/-secure-above22-preferences/index.md).
+A 'logins/passwords' engine.
+
+When using this engine, make sure to pass a [SecureAbove22Preferences](../../mozilla.components.lib.dataprotect/-secure-above22-preferences/index.md) instance to
+[GlobalSyncableStoreProvider.configureKeyStorage](../../mozilla.components.service.fxa.sync/-global-syncable-store-provider/configure-key-storage.md) with a key storage instance that has a "passwords" key set.
 
 ### Inherited Properties
 

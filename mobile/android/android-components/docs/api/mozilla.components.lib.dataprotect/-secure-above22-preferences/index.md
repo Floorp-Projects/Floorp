@@ -2,7 +2,7 @@
 
 # SecureAbove22Preferences
 
-`class SecureAbove22Preferences : KeyValuePreferences` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/SecureAbove22Preferences.kt#L56)
+`class SecureAbove22Preferences : KeyValuePreferences` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/SecureAbove22Preferences.kt#L63)
 
 A wrapper around [SharedPreferences](#) which encrypts contents on supported API versions (23+).
 Otherwise, this simply delegates to [SharedPreferences](#).
@@ -14,16 +14,19 @@ in which case previously stored values will be lost as well. Applications are en
 
 `context` - A [Context](#), used for accessing [SharedPreferences](#).
 
+`name` - A name for this storage, used for isolating different instances of [SecureAbove22Preferences](./index.md).
+
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SecureAbove22Preferences(context: <ERROR CLASS>)`<br>A wrapper around [SharedPreferences](#) which encrypts contents on supported API versions (23+). Otherwise, this simply delegates to [SharedPreferences](#). |
+| [&lt;init&gt;](-init-.md) | `SecureAbove22Preferences(context: <ERROR CLASS>, name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`<br>A wrapper around [SharedPreferences](#) which encrypts contents on supported API versions (23+). Otherwise, this simply delegates to [SharedPreferences](#). |
 
 ### Functions
 
 | Name | Summary |
 |---|---|
+| [all](all.md) | `fun all(): `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>`<br>Retrieves all key/value pairs present in the store. |
 | [clear](clear.md) | `fun clear(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears all key/value pairs from the storage. |
 | [getString](get-string.md) | `fun getString(key: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>Retrieves a stored [key](#). See [putString](#) for storing a [key](#). |
 | [putString](put-string.md) | `fun putString(key: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, value: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Stores [value](#) under [key](#). Retrieve it using [getString](#). |

@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`SecureAbove22Preferences(context: <ERROR CLASS>)`
+`SecureAbove22Preferences(context: <ERROR CLASS>, name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`
 
 A wrapper around [SharedPreferences](#) which encrypts contents on supported API versions (23+).
 Otherwise, this simply delegates to [SharedPreferences](#).
@@ -13,3 +13,5 @@ in which case previously stored values will be lost as well. Applications are en
 ### Parameters
 
 `context` - A [Context](#), used for accessing [SharedPreferences](#).
+
+`name` - A name for this storage, used for isolating different instances of [SecureAbove22Preferences](index.md).

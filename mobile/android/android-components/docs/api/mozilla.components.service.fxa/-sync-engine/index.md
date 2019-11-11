@@ -13,7 +13,7 @@ Describes possible sync engines that device can support.
 | [Bookmarks](-bookmarks.md) | `object Bookmarks : `[`SyncEngine`](./index.md)<br>A bookmarks engine. |
 | [History](-history.md) | `object History : `[`SyncEngine`](./index.md)<br>A history engine. |
 | [Other](-other/index.md) | `data class Other : `[`SyncEngine`](./index.md)<br>An engine that's none of the above, described by [name](-other/name.md). |
-| [Passwords](-passwords.md) | `object Passwords : `[`SyncEngine`](./index.md)<br>A 'logins/passwords' engine. When using this engine, make sure to set an encryption key used to unlock the store as 'passwords_key' via [SecureAbove22Preferences](../../mozilla.components.lib.dataprotect/-secure-above22-preferences/index.md). |
+| [Passwords](-passwords.md) | `object Passwords : `[`SyncEngine`](./index.md)<br>A 'logins/passwords' engine. |
 
 ### Properties
 
@@ -34,4 +34,4 @@ Describes possible sync engines that device can support.
 | [Bookmarks](-bookmarks.md) | `object Bookmarks : `[`SyncEngine`](./index.md)<br>A bookmarks engine. |
 | [History](-history.md) | `object History : `[`SyncEngine`](./index.md)<br>A history engine. |
 | [Other](-other/index.md) | `data class Other : `[`SyncEngine`](./index.md)<br>An engine that's none of the above, described by [name](-other/name.md). |
-| [Passwords](-passwords.md) | `object Passwords : `[`SyncEngine`](./index.md)<br>A 'logins/passwords' engine. When using this engine, make sure to set an encryption key used to unlock the store as 'passwords_key' via [SecureAbove22Preferences](../../mozilla.components.lib.dataprotect/-secure-above22-preferences/index.md). |
+| [Passwords](-passwords.md) | `object Passwords : `[`SyncEngine`](./index.md)<br>A 'logins/passwords' engine. |
