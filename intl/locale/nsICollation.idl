@@ -51,15 +51,13 @@ interface nsICollation : nsISupports {
   long compareString(in long strength, in AString string1, in AString string2);
 
   // allocate sort key from input string
-  // returns newly allocated key, and its band its byte length
-  [noscript] void allocateRawSortKey(in long strength,
-                                     in AString stringIn,
-                                     [array,size_is(outLen)] out octet key,
-                                     out unsigned long outLen);
+  // returns newly allocated key
+  [noscript] Array<octet> allocateRawSortKey(in long strength,
+                                             in AString stringIn);
 
   // compare two sort keys
-  // length is a byte length, result is same as strcmp
-  [noscript] long compareRawSortKey([const,array,size_is(len1)] in octet key1, in unsigned long len1,
-                                    [const,array,size_is(len2)] in octet key2, in unsigned long len2);
+  // result is same as strcmp
+  [noscript] long compareRawSortKey(in Array<octet> key1,
+                                    in Array<octet> key2);
 
 };
