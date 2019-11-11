@@ -17,8 +17,12 @@ exclude: true
 - Added [`GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture`][72.1]. This indicates
   if a load was requested while a user gesture was active (e.g., a tap).
   ([bug 1555337]({{bugzilla}}1555337))
+- ⚠️  Refactored `AutofillElement` and `AutofillSupport` into the
+  [`Autofill`][72.2] API.
+  ([bug 1591462]({{bugzilla}}1591462))
 
 [72.1]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture-
+[72.2]: {{javadoc_uri}}/Autofill.html
 
 ## v71
 - Added a content blocking flag for blocked social cookies to [`ContentBlocking`][70.17].
@@ -69,9 +73,6 @@ exclude: true
   ([bug 1402369]({{bugzilla}}1402369))
 - Added [`GeckoDisplay.screenshot`][71.23] allowing apps finer grain control over screenshots.
   ([bug 1577192]({{bugzilla}}1577192))
-- ⚠️  Refactored `AutofillElement` and `AutofillSupport` into the
-  [`Autofill`][71.24] API.
-  ([bug 1591462]({{bugzilla}}1591462))
 
 [71.1]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onBooleanScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.2]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onLongScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
@@ -95,7 +96,6 @@ exclude: true
 [71.21]: {{javadoc_uri}}/GeckoView.html#setAutofillEnabled-boolean-
 [71.22]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onSharePrompt-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.PromptDelegate.SharePrompt-
 [71.23]: {{javadoc_uri}}/GeckoDisplay.html#screenshot--
-[71.24]: {{javadoc_uri}}/Autofill.html
 
 ## v70
 - Added API for session context assignment
