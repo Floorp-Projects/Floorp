@@ -120,8 +120,6 @@ class Repackage(BaseScript):
             cmd.extend([
                 '--tooltool-manifest',
                 os.path.join(dirs['abs_mozilla_dir'], manifest_src),
-                '--tooltool-url',
-                config['tooltool_url'],
             ])
             auth_file = self._get_tooltool_auth_file()
             if auth_file:
