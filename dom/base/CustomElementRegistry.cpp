@@ -174,6 +174,12 @@ void CustomElementData::SetCustomElementDefinition(
   mCustomElementDefinition = aDefinition;
 }
 
+void CustomElementData::AttachedInternals() {
+  MOZ_ASSERT(!mIsAttachedInternals);
+
+  mIsAttachedInternals = true;
+}
+
 CustomElementDefinition* CustomElementData::GetCustomElementDefinition() {
   MOZ_ASSERT(mCustomElementDefinition ? mState == State::eCustom
                                       : mState != State::eCustom);
