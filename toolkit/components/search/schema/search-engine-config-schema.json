@@ -217,9 +217,9 @@
       "description": "Two-letter region codes.",
       "items": {
         "type": "string",
-        "pattern": "^[a-z][a-z]$",
+        "pattern": "^([a-z][a-z]|default)$",
         "minLength": 2,
-        "maxLength": 2
+        "maxLength": 7
       }
     },
     "localeDetails": {
@@ -232,9 +232,8 @@
           "title": "Matches exactly the codes",
           "items": {
             "type": "string",
-            "pattern": "^[a-z][a-z](\\-[A-Z][A-Z])?$",
-            "minLength": 2,
-            "maxLength": 5
+            "pattern": "^([a-z]{2,3}(\\-[a-zA-Z]{2,})?(-macos)?|default)$",
+            "minLength": 2
           }
         },
         "startsWith": {
@@ -242,9 +241,9 @@
           "title": "Matches any code starting with",
           "items": {
             "type": "string",
-            "pattern": "^[a-z][a-z]$",
+            "pattern": "^[a-z]{2,3}$",
             "minLength": 2,
-            "maxLength": 2
+            "maxLength": 3
           }
         }
       }
