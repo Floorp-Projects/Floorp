@@ -1,253 +1,170 @@
-function contentTask() {
-  let finish;
-  let promise = new Promise(resolve => {
-    finish = resolve;
-  });
+"use strict";
 
-  let contentWindow;
-  let originalLocation;
-  let currentTest = -1;
-  let stayingOnPage = true;
-
-  const TEST_PAGE =
-    "http://mochi.test:8888/browser/docshell/test/browser/file_bug1046022.html";
-  const TARGETED_PAGE =
-    "data:text/html," +
-    encodeURIComponent("<body>Shouldn't be seeing this</body>");
-
-  let loadExpected = TEST_PAGE;
-  var testsLength;
-
-  function onTabLoaded(event) {
-    info("A document loaded in a tab!");
-    let loadedPage = event.target.location.href;
-    if (
-      loadedPage == "about:blank" ||
-      event.originalTarget != content.document
-    ) {
-      return;
-    }
-
-    if (!loadExpected) {
-      ok(
-        false,
-        "Expected no page loads, but loaded " + loadedPage + " instead!"
-      );
-      return;
-    }
-
-    if (!testsLength) {
-      testsLength = content.wrappedJSObject.testFns.length;
-    }
-
-    is(loadedPage, loadExpected, "Loaded the expected page");
-    if (contentWindow) {
-      is(contentWindow.document, event.target, "Same doc");
-    }
-    if (onAfterPageLoad) {
-      onAfterPageLoad();
-    }
-  }
-
-  function onAfterTargetedPageLoad() {
-    ok(
-      !stayingOnPage,
-      "We should only fire if we're expecting to let the onbeforeunload dialog proceed to the new location"
-    );
-    is(
-      content.location.href,
-      TARGETED_PAGE,
-      "Should have loaded the expected new page"
-    );
-
-    runNextTest();
-  }
-
-  function onTabModalDialogLoaded() {
-    info(content.location.href);
-    is(content, contentWindow, "Window should be the same still.");
-    is(
-      content.location.href,
-      originalLocation,
-      "Page should not have changed."
-    );
-    is(content.mySuperSpecialMark, 42, "Page should not have refreshed.");
-
-    ok(
-      !content.dialogWasInvoked,
-      "Dialog should only be invoked once per test."
-    );
-    content.dialogWasInvoked = true;
-
-    addMessageListener("test-beforeunload:dialog-gone", function listener(msg) {
-      removeMessageListener(msg.name, listener);
-
-      info("Dialog is gone");
-      // If we're staying on the page, run the next test from here
-      if (stayingOnPage) {
-        Services.tm.dispatchToMainThread(runNextTest);
-      }
-      // if we accepted a page load in the dialog, the next test will get started
-      // by the load handler for that page loading
-    });
-
-    // If we're going to let the page load, set us up to listen for that happening:
-    if (!stayingOnPage) {
-      loadExpected = TARGETED_PAGE;
-      onAfterPageLoad = onAfterTargetedPageLoad;
-    }
-
-    sendAsyncMessage("test-beforeunload:dialog-response", stayingOnPage);
-  }
-
-  // Listen for the dialog being created
-  addMessageListener("test-beforeunload:dialog", onTabModalDialogLoaded);
-
-  function runNextTest() {
-    currentTest++;
-    if (currentTest >= testsLength) {
-      if (!stayingOnPage) {
-        finish();
-        return;
-      }
-      // Run the same tests again, but this time let the navigation happen:
-      stayingOnPage = false;
-      // Remove onbeforeunload handler, or this load will trigger the dialog...
-      contentWindow.onbeforeunload = null;
-      currentTest = 0;
-    }
-
-    if (!stayingOnPage) {
-      // Right now we're on the data: page. Null contentWindow out to
-      // avoid CPOW errors when contentWindow is no longer the correct
-      // outer window proxy object.
-      contentWindow = null;
-
-      onAfterPageLoad = runCurrentTest;
-      loadExpected = TEST_PAGE;
-      content.location = TEST_PAGE;
-    } else {
-      runCurrentTest();
-    }
-  }
-
-  function runCurrentTest() {
-    // Reset things so we're sure the previous tests failings don't influence this one:
-    contentWindow = content;
-    contentWindow.mySuperSpecialMark = 42;
-    contentWindow.dialogWasInvoked = false;
-    originalLocation = contentWindow.location.href;
-    // And run this test:
-    info(
-      "Running test with onbeforeunload " +
-        contentWindow.wrappedJSObject.testFns[currentTest].toSource()
-    );
-    contentWindow.onbeforeunload =
-      contentWindow.wrappedJSObject.testFns[currentTest];
-    sendAsyncMessage("test-beforeunload:reset");
-    content.location = TARGETED_PAGE;
-  }
-
-  var onAfterPageLoad = runNextTest;
-
-  addEventListener("load", onTabLoaded, true);
-
-  content.location = TEST_PAGE;
-
-  return promise.then(() => {
-    // Remove the handler, or closing this tab will prove tricky:
-    if (contentWindow) {
-      try {
-        contentWindow.onbeforeunload = null;
-      } catch (ex) {}
-    }
-    contentWindow = null;
-  });
-}
-
-SpecialPowers.pushPrefEnv({
-  set: [["dom.require_user_interaction_for_beforeunload", false]],
-});
-
-var testTab;
+const TEST_PAGE =
+  "http://mochi.test:8888/browser/docshell/test/browser/file_bug1046022.html";
+const TARGETED_PAGE =
+  "data:text/html," +
+  encodeURIComponent("<body>Shouldn't be seeing this</body>");
 
 var loadStarted = false;
 var tabStateListener = {
-  onStateChange(webprogress, request, stateFlags, status) {
-    let startDocumentFlags =
-      Ci.nsIWebProgressListener.STATE_START |
-      Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
-    if ((stateFlags & startDocumentFlags) == startDocumentFlags) {
-      loadStarted = true;
+  resolveLoad: null,
+  expectLoad: null,
+
+  onStateChange(webprogress, request, flags, status) {
+    const WPL = Ci.nsIWebProgressListener;
+    if (flags & WPL.STATE_IS_WINDOW) {
+      if (flags & WPL.STATE_START) {
+        loadStarted = true;
+      } else if (flags & WPL.STATE_STOP) {
+        let url = request.QueryInterface(Ci.nsIChannel).URI.spec;
+        is(url, this.expectLoad, "Should only see expected document loads");
+        if (url == this.expectLoad) {
+          this.resolveLoad();
+        }
+      }
     }
   },
-  onStatusChange: () => {},
-  onLocationChange: () => {},
-  onSecurityChange: () => {},
-  onProgressChange: () => {},
-  onContentBlockingEvent: () => {},
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIWebProgressListener,
+    Ci.nsISupportsWeakReference,
+  ]),
 };
 
-function onTabModalDialogLoaded(node) {
-  let mm = testTab.linkedBrowser.messageManager;
-  mm.sendAsyncMessage("test-beforeunload:dialog");
+function promiseLoaded(url, callback) {
+  if (tabStateListener.expectLoad) {
+    throw new Error("Can't wait for multiple loads at once");
+  }
+  tabStateListener.expectLoad = url;
+  return new Promise(resolve => {
+    tabStateListener.resolveLoad = resolve;
+    if (callback) {
+      callback();
+    }
+  }).then(() => {
+    tabStateListener.expectLoad = null;
+    tabStateListener.resolveLoad = null;
+  });
+}
 
-  if (gMultiProcessBrowser) {
-    // In non-e10s, onTabModalDialogLoaded fires synchronously while
-    // the test-beforeunload:reset message is sent
-    // asynchronously. It's easier to simply disable this assertion in
-    // non-e10s than to make everything work correctly in both
-    // configurations.
-    ok(!loadStarted, "No load should be started.");
+async function promiseStayOnPagePrompt(acceptNavigation) {
+  loadStarted = false;
+  let [dialog] = await TestUtils.topicObserved("tabmodal-dialog-loaded");
+
+  ok(!loadStarted, "No load should be started");
+
+  let button = dialog.querySelector(
+    acceptNavigation ? ".tabmodalprompt-button0" : ".tabmodalprompt-button1"
+  );
+  button.click();
+
+  // Make a trip through the event loop so that, if anything is going to
+  // happen after we deny the navigation, it has a chance to happen
+  // before we return to our caller.
+  await new Promise(executeSoon);
+}
+
+add_task(async function test() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.require_user_interaction_for_beforeunload", false]],
+  });
+
+  let testTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    TEST_PAGE,
+    false,
+    true
+  );
+  let browser = testTab.linkedBrowser;
+  browser.addProgressListener(
+    tabStateListener,
+    Ci.nsIWebProgress.NOTIFY_STATE_WINDOW
+  );
+
+  const NUM_TESTS = 6;
+  await SpecialPowers.spawn(browser, [NUM_TESTS], testCount => {
+    let { testFns } = this.content.wrappedJSObject;
+    Assert.equal(
+      testFns.length,
+      testCount,
+      "Should have the correct number of test functions"
+    );
+  });
+
+  for (let allowNavigation of [false, true]) {
+    for (let i = 0; i < NUM_TESTS; i++) {
+      info(
+        `Running test ${i} with navigation ${
+          allowNavigation ? "allowed" : "forbidden"
+        }`
+      );
+
+      if (allowNavigation) {
+        // If we're allowing navigations, we need to re-load the test
+        // page after each test, since the tests will each navigate away
+        // from it.
+        await promiseLoaded(TEST_PAGE, () => {
+          browser.loadURI(TEST_PAGE, {
+            triggeringPrincipal: document.nodePrincipal,
+          });
+        });
+      }
+
+      let promptPromise = promiseStayOnPagePrompt(allowNavigation);
+      let loadPromise;
+      if (allowNavigation) {
+        loadPromise = promiseLoaded(TARGETED_PAGE);
+      }
+
+      let winID = await SpecialPowers.spawn(
+        browser,
+        [i, TARGETED_PAGE],
+        (testIdx, url) => {
+          let { testFns } = this.content.wrappedJSObject;
+          this.content.onbeforeunload = testFns[testIdx];
+          this.content.location = url;
+          return this.content.windowUtils.currentInnerWindowID;
+        }
+      );
+
+      await promptPromise;
+      await loadPromise;
+
+      if (allowNavigation) {
+        await SpecialPowers.spawn(
+          browser,
+          [TARGETED_PAGE, winID],
+          (url, winID) => {
+            this.content.onbeforeunload = null;
+            Assert.equal(
+              this.content.location.href,
+              url,
+              "Page should have navigated to the correct URL"
+            );
+            Assert.notEqual(
+              this.content.windowUtils.currentInnerWindowID,
+              winID,
+              "Page should have a new inner window"
+            );
+          }
+        );
+      } else {
+        await SpecialPowers.spawn(browser, [TEST_PAGE, winID], (url, winID) => {
+          this.content.onbeforeunload = null;
+          Assert.equal(
+            this.content.location.href,
+            url,
+            "Page should have the same URL"
+          );
+          Assert.equal(
+            this.content.windowUtils.currentInnerWindowID,
+            winID,
+            "Page should have the same inner window"
+          );
+        });
+      }
+    }
   }
 
-  // Now listen for the dialog going away again...
-  let observer = new MutationObserver(function(muts) {
-    if (!node.parentNode) {
-      observer.disconnect();
-      observer = null;
-
-      Services.tm.dispatchToMainThread(() => {
-        mm.sendAsyncMessage("test-beforeunload:dialog-gone");
-      });
-    }
-  });
-  observer.observe(node.parentNode, { childList: true });
-
-  BrowserTestUtils.waitForMessage(mm, "test-beforeunload:dialog-response").then(
-    stayingOnPage => {
-      let button = node.querySelector(
-        stayingOnPage ? ".tabmodalprompt-button1" : ".tabmodalprompt-button0"
-      );
-      // ... and then actually make the dialog go away
-      info("Clicking button: " + button.label);
-      EventUtils.synthesizeMouseAtCenter(button, {});
-    }
-  );
-}
-
-// Listen for the dialog being created
-Services.obs.addObserver(onTabModalDialogLoaded, "tabmodal-dialog-loaded");
-
-function test() {
-  waitForExplicitFinish();
-  gBrowser.addProgressListener(tabStateListener);
-
-  testTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-
-  testTab.linkedBrowser.messageManager.addMessageListener(
-    "test-beforeunload:reset",
-    () => {
-      loadStarted = false;
-    }
-  );
-
-  ContentTask.spawn(testTab.linkedBrowser, null, contentTask).then(finish);
-}
-
-registerCleanupFunction(function() {
-  Services.obs.removeObserver(onTabModalDialogLoaded, "tabmodal-dialog-loaded");
-  gBrowser.removeProgressListener(tabStateListener);
   gBrowser.removeTab(testTab);
 });
