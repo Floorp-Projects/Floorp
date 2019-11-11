@@ -33,10 +33,17 @@ class PerftestResultsHandler(object):
         self.page_timeout_list = []
         self.images = []
         self.supporting_data = None
+        self.browser_version = None
+        self.browser_name = None
 
     @abstractmethod
     def add(self, new_result_json):
         raise NotImplementedError()
+
+    def add_browser_meta(self, browser_name, browser_version):
+        # sets the browser metadata for the perfherder data
+        self.browser_name = browser_name
+        self.browser_version = browser_version
 
     def add_image(self, screenshot, test_name, page_cycle):
         # add to results
@@ -172,6 +179,7 @@ class RaptorResultsHandler(PerftestResultsHandler):
         # summarize the result data, write to file and output PERFHERDER_DATA
         LOG.info("summarizing raptor test results")
         output = RaptorOutput(self.results, self.supporting_data, test_config['subtest_alert_on'])
+        output.set_browser_meta(self.browser_name, self.browser_version)
         output.summarize(test_names)
         # that has each browser cycle separate; need to check if there were multiple browser
         # cycles, and if so need to combine results from all cycles into one overall result
@@ -563,7 +571,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         output = BrowsertimeOutput(self.results,
                                    self.supporting_data,
                                    test_config['subtest_alert_on'])
-
+        output.set_browser_meta(self.browser_name, self.browser_version)
         output.summarize(test_names)
         success, out_perfdata = output.output(test_names)
 
