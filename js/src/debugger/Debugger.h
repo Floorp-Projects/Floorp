@@ -1396,8 +1396,6 @@ class WasmBreakpointSite : public BreakpointSite {
   void trace(JSTracer* trc) override;
   void delete_(JSFreeOp* fop);
   void remove(JSFreeOp* fop) override;
-
-  wasm::Instance& instance() { return instanceObject->instance(); }
 };
 
 inline WasmBreakpointSite* BreakpointSite::asWasm() {
