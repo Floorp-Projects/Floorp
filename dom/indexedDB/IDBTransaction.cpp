@@ -583,8 +583,7 @@ void IDBTransaction::AbortInternal(const nsresult aAbortCode,
   RefPtr<DOMException> error = aError;
 
   const bool isVersionChange = mMode == VERSION_CHANGE;
-  const bool isInvalidated = mDatabase->IsInvalidated();
-  bool needToSendAbort = mReadyState == INITIAL;
+  const bool needToSendAbort = mReadyState == INITIAL;
 
   mAbortCode = aAbortCode;
   mReadyState = DONE;
@@ -594,7 +593,7 @@ void IDBTransaction::AbortInternal(const nsresult aAbortCode,
     // If a version change transaction is aborted, we must revert the world
     // back to its previous state unless we're being invalidated after the
     // transaction already completed.
-    if (!isInvalidated) {
+    if (!mDatabase->IsInvalidated()) {
       mDatabase->RevertToPreviousState();
     }
 
@@ -608,6 +607,8 @@ void IDBTransaction::AbortInternal(const nsresult aAbortCode,
         mDatabase->Spec()->objectStores();
 
     if (specArray.IsEmpty()) {
+      // This case is specially handled as a performance optimization, it is
+      // equivalent to the else block.
       mObjectStores.Clear();
       mDeletedObjectStores.Clear();
     } else {
@@ -847,7 +848,7 @@ DOMException* IDBTransaction::GetError() const {
 already_AddRefed<DOMStringList> IDBTransaction::ObjectStoreNames() const {
   AssertIsOnOwningThread();
 
-  if (mMode == IDBTransaction::VERSION_CHANGE) {
+  if (mMode == VERSION_CHANGE) {
     return mDatabase->ObjectStoreNames();
   }
 
