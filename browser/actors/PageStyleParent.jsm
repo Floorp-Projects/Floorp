@@ -15,10 +15,10 @@ class PageStyleParent extends JSWindowActorParent {
 
     let permanentKey = browser.permanentKey;
     let window = browser.ownerGlobal;
-    if (window.closed) {
+    let styleMenu = window.gPageStyleMenu;
+    if (window.closed || !styleMenu) {
       return;
     }
-    let styleMenu = window.gPageStyleMenu;
 
     switch (msg.name) {
       case "PageStyle:Add":
