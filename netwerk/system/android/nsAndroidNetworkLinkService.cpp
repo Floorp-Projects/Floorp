@@ -134,7 +134,22 @@ nsAndroidNetworkLinkService::GetNetworkID(nsACString& aNetworkID) {
 NS_IMETHODIMP
 nsAndroidNetworkLinkService::GetDnsSuffixList(
     nsTArray<nsCString>& aDnsSuffixList) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aDnsSuffixList.Clear();
+  if (!mozilla::AndroidBridge::Bridge()) {
+    NS_WARNING("GetDnsSuffixList is not supported without a bridge connection");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  auto suffixList = java::GeckoAppShell::GetDNSDomains();
+  if (!suffixList) {
+    return NS_OK;
+  }
+
+  nsAutoCString list(suffixList->ToCString());
+  for (const nsACString& suffix : list.Split(',')) {
+    aDnsSuffixList.AppendElement(suffix);
+  }
+  return NS_OK;
 }
 
 void nsAndroidNetworkLinkService::OnNetworkChanged() {
