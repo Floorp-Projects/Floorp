@@ -21,6 +21,7 @@
 
 #include "jit/arm/Assembler-arm.h"
 #include "jit/arm/Simulator-arm.h"
+#include "jit/FlushICache.h"  // js::jit::FlushICache
 #include "jit/RegisterSets.h"
 
 #if !defined(__linux__) || defined(ANDROID) || defined(JS_SIMULATOR_ARM)

@@ -564,8 +564,6 @@ inline bool hasMultiAlias() { return false; }
 
 uint32_t GetARM64Flags();
 
-void FlushICache(void* code, size_t size);
-
 }  // namespace jit
 }  // namespace js
 
