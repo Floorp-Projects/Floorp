@@ -105,8 +105,6 @@ struct CustomElementData {
   void SetCustomElementDefinition(CustomElementDefinition* aDefinition);
   CustomElementDefinition* GetCustomElementDefinition();
   nsAtom* GetCustomElementType() const { return mType; }
-  void AttachedInternals();
-  bool HasAttachedInternals() const { return mIsAttachedInternals; }
 
   void Traverse(nsCycleCollectionTraversalCallback& aCb) const;
   void Unlink();
@@ -125,7 +123,6 @@ struct CustomElementData {
   // this would be x-button.
   RefPtr<nsAtom> mType;
   RefPtr<CustomElementDefinition> mCustomElementDefinition;
-  bool mIsAttachedInternals = false;
 };
 
 #define ALREADY_CONSTRUCTED_MARKER nullptr
@@ -140,8 +137,7 @@ struct CustomElementDefinition {
                           int32_t aNamespaceID,
                           CustomElementConstructor* aConstructor,
                           nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
-                          UniquePtr<LifecycleCallbacks>&& aCallbacks,
-                          bool aDisableInternals, bool aDisableShadow);
+                          UniquePtr<LifecycleCallbacks>&& aCallbacks);
 
   // The type (name) for this custom element, for <button is="x-foo"> or <x-foo>
   // this would be x-foo.
@@ -161,12 +157,6 @@ struct CustomElementDefinition {
 
   // The lifecycle callbacks to call for this custom element.
   UniquePtr<LifecycleCallbacks> mCallbacks;
-
-  // Determine whether to allow to attachInternals() for this custom element.
-  bool mDisableInternals = false;
-
-  // Determine whether to allow to attachShadow() for this custom element.
-  bool mDisableShadow = false;
 
   // A construction stack. Use nullptr to represent an "already constructed
   // marker".
@@ -467,10 +457,6 @@ class CustomElementRegistry final : public nsISupports, public nsWrapperCache {
 
  private:
   ~CustomElementRegistry();
-
-  bool JSObjectToAtomArray(JSContext* aCx, JS::Handle<JSObject*> aConstructor,
-                           const char16_t* aName,
-                           nsTArray<RefPtr<nsAtom>>& aArray, ErrorResult& aRv);
 
   static UniquePtr<CustomElementCallback> CreateCustomElementCallback(
       Document::ElementCallbackType aType, Element* aCustomElement,
