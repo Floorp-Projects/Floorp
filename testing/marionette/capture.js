@@ -21,6 +21,7 @@ this.EXPORTED_SYMBOLS = ["capture"];
 const CONTEXT_2D = "2d";
 const BG_COLOUR = "rgb(255,255,255)";
 const MAX_CANVAS_DIMENSION = 32767;
+const MAX_CANVAS_AREA = 472907776;
 const PNG_MIME = "image/png";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -101,6 +102,17 @@ capture.canvas = async function(
         " pixels"
     );
     height = Math.floor(MAX_CANVAS_DIMENSION / scale);
+    canvasHeight = height * scale;
+  }
+
+  // If the area is larger, reduce the height to keep the full width.
+  if (canvasWidth * canvasHeight > MAX_CANVAS_AREA) {
+    logger.warn(
+      "Limiting screen capture area to maximum allowed " +
+        MAX_CANVAS_AREA +
+        " pixels"
+    );
+    height = Math.floor(MAX_CANVAS_AREA / (canvasWidth * scale));
     canvasHeight = height * scale;
   }
 

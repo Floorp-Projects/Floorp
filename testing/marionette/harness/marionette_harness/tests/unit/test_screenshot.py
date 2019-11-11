@@ -233,6 +233,16 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
         screenshot = self.marionette.screenshot()
         self.assert_png(screenshot)
 
+    def test_capture_horizontal_bounds(self):
+        self.marionette.navigate(inline("<body style='margin-left: 32768px'>foo"))
+        screenshot = self.marionette.screenshot()
+        self.assert_png(screenshot)
+
+    def test_capture_area_bounds(self):
+        self.marionette.navigate(inline("<body style='margin-right: 21747px; margin-top: 21747px'>foo"))
+        screenshot = self.marionette.screenshot()
+        self.assert_png(screenshot)
+
     def test_capture_element(self):
         self.marionette.navigate(box)
         el = self.marionette.find_element(By.TAG_NAME, "div")
