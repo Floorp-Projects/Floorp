@@ -152,6 +152,9 @@ either Raptor or browsertime."""
 
         self.browser_name, self.browser_version = self.get_browser_meta()
 
+        browser_name, browser_version = self.get_browser_meta()
+        self.results_handler.add_browser_meta(self.config['app'], browser_version)
+
         # debug mode is currently only supported when running locally
         self.debug_mode = debug_mode if self.config['run_local'] else False
 
@@ -809,6 +812,8 @@ class Raptor(Perftest):
             cpu_test=self.config.get('cpu_test'),
             memory_test=self.config.get('memory_test'),
         )
+        browser_name, browser_version = self.get_browser_meta()
+        self.results_handler.add_browser_meta(self.config['app'], browser_version)
 
         self.start_control_server()
 

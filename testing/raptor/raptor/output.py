@@ -33,10 +33,17 @@ class PerftestOutput(object):
         self.summarized_supporting_data = []
         self.summarized_screenshots = []
         self.subtest_alert_on = subtest_alert_on
+        self.browser_name = None
+        self.browser_version = None
 
     @abstractmethod
     def summarize(self, test_names):
         raise NotImplementedError()
+
+    def set_browser_meta(self, browser_name, browser_version):
+        # sets the browser metadata for the perfherder data
+        self.browser_name = browser_name
+        self.browser_version = browser_version
 
     def summarize_supporting_data(self):
         '''
@@ -123,7 +130,14 @@ class PerftestOutput(object):
         # split the supporting data by type, there will be one
         # perfherder output per type
         for data_type in support_data_by_type:
-            self.summarized_supporting_data.append(support_data_by_type[data_type])
+            data = support_data_by_type[data_type]
+            if self.browser_name:
+                data['application'] = {
+                    'name': self.browser_name
+                }
+                if self.browser_version:
+                    data['application']['version'] = self.browser_version
+            self.summarized_supporting_data.append(data)
 
         return
 
@@ -189,6 +203,13 @@ class PerftestOutput(object):
             # will still be output from output_supporting_data
             LOG.info("scenario test type was run %s" % not_posting)
             output_perf_data = False
+
+        if self.browser_name:
+            self.summarized_results['application'] = {
+                'name': self.browser_name
+            }
+            if self.browser_version:
+                self.summarized_results['application']['version'] = self.browser_version
 
         total_perfdata = 0
         if output_perf_data:
