@@ -1494,10 +1494,11 @@ void ServiceWorkerManager::LoadRegistration(
   registration->SetLastUpdateTime(aRegistration.lastUpdateTime());
 
   nsLoadFlags importsLoadFlags = nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
-  if (aRegistration.updateViaCache() !=
-      static_cast<uint16_t>(ServiceWorkerUpdateViaCache::None)) {
-    importsLoadFlags |= nsIRequest::VALIDATE_ALWAYS;
-  }
+  importsLoadFlags |=
+      aRegistration.updateViaCache() ==
+              static_cast<uint16_t>(ServiceWorkerUpdateViaCache::None)
+          ? nsIRequest::LOAD_NORMAL
+          : nsIRequest::VALIDATE_ALWAYS;
 
   const nsCString& currentWorkerURL = aRegistration.currentWorkerURL();
   if (!currentWorkerURL.IsEmpty()) {
