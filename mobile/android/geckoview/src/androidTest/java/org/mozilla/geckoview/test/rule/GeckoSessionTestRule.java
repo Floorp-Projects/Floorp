@@ -10,6 +10,7 @@ import org.json.JSONException;
 import org.json.JSONTokener;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.geckoview.Autofill;
 import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
@@ -870,6 +871,10 @@ public class GeckoSessionTestRule implements TestRule {
             return GeckoSession.class.getMethod("setContentBlockingDelegate", cls)
                    .invoke(session, delegate);
         }
+        if (cls == Autofill.Delegate.class) {
+            return GeckoSession.class.getMethod("setAutofillDelegate", cls)
+                   .invoke(session, delegate);
+        }
         return GeckoSession.class.getMethod("set" + cls.getSimpleName(), cls)
                .invoke(session, delegate);
     }
@@ -883,6 +888,10 @@ public class GeckoSessionTestRule implements TestRule {
         }
         if (cls == ContentBlocking.Delegate.class) {
             return GeckoSession.class.getMethod("getContentBlockingDelegate")
+                   .invoke(session);
+        }
+        if (cls == Autofill.Delegate.class) {
+            return GeckoSession.class.getMethod("getAutofillDelegate")
                    .invoke(session);
         }
         return GeckoSession.class.getMethod("get" + cls.getSimpleName())
