@@ -24,8 +24,6 @@
 using namespace mozilla;
 using namespace mozilla::layout;
 
-namespace css = mozilla::css;
-
 #undef DEBUG_TABLE_STRATEGY
 
 BasicTableLayoutStrategy::BasicTableLayoutStrategy(nsTableFrame* aTableFrame)
