@@ -2599,7 +2599,6 @@ bool nsDisplayListBuilder::AddToWillChangeBudget(nsIFrame* aFrame,
 
   if (aFrame->MayHaveWillChangeBudget()) {
     // The frame is already in the will-change budget.
-    MOZ_ASSERT(mFrameWillChangeBudgets.Contains(aFrame));
     return true;
   }
 
@@ -2660,7 +2659,6 @@ void nsDisplayListBuilder::ClearWillChangeBudgetStatus(nsIFrame* aFrame) {
   MOZ_ASSERT(IsForPainting());
 
   if (!aFrame->MayHaveWillChangeBudget()) {
-    MOZ_ASSERT(!mFrameWillChangeBudgets.Contains(aFrame));
     return;
   }
 
