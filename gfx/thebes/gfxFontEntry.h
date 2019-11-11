@@ -335,12 +335,12 @@ class gfxFontEntry {
   // Caller must release with hb_face_destroy() when finished with it,
   // and the font entry will be notified via ForgetHBFace.
   hb_face_t* GetHBFace();
-  virtual void ForgetHBFace();
+  void ForgetHBFace();
 
   // Get Graphite face corresponding to this font file.
   // Caller must call gfxFontEntry::ReleaseGrFace when finished with it.
   gr_face* GetGrFace();
-  virtual void ReleaseGrFace(gr_face* aFace);
+  void ReleaseGrFace(gr_face* aFace);
 
   // Does the font have graphite contextuals that involve the space glyph
   // (and therefore we should bypass the word cache)?
