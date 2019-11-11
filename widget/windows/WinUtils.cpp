@@ -2217,6 +2217,8 @@ bool WinUtils::PreparePathForTelemetry(nsAString& aPath,
   ptrdiff_t cutLen = leafStart - flatPath.get();
   if (cutLen) {
     aPath.Cut(0, cutLen);
+  } else if (aFlags & PathTransformFlags::RequireFilePath) {
+    return false;
   }
 
   return true;
