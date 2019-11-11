@@ -15,7 +15,6 @@ config = {
         'UPLOAD_PATH': os.path.join(os.getcwd(), 'public', 'build'),
     },
 
-    "tooltool_url": 'https://tooltool.mozilla-releng.net/',
     'tooltool_manifest_src': "browser/config/tooltool-manifests/win64/releng.manifest",
 
     # use mozmake?
