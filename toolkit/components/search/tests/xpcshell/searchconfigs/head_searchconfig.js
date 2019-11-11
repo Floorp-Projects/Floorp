@@ -237,7 +237,12 @@ class SearchConfigTest {
     });
     // "en-US" is not in all-locales as it is the default locale
     // add it manually to ensure it is tested.
-    return [...data.split("\n").filter(e => e != ""), "en-US"];
+    let locales = [...data.split("\n").filter(e => e != ""), "en-US"];
+    // BCP47 requires all variants are 5-8 characters long. Our
+    // build sytem uses the short `mac` variant, this is invalid, and inside
+    // the app we turn it into `ja-JP-macos`
+    locales = locales.map(l => (l == "ja-JP-mac" ? "ja-JP-macos" : l));
+    return locales;
   }
 
   /**
