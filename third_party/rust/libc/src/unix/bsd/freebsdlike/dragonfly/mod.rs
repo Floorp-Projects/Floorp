@@ -1060,10 +1060,3 @@ extern {
     pub fn fstatfs(fd: ::c_int, buf: *mut statfs) -> ::c_int;
     pub fn uname(buf: *mut ::utsname) -> ::c_int;
 }
-
-cfg_if! {
-    if #[cfg(libc_thread_local)] {
-        mod errno;
-        pub use self::errno::*;
-    }
-}

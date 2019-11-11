@@ -1,13 +1,13 @@
+use config::Options;
 use std::io::Read;
-use ::config::Options;
 
-use serde;
-use byteorder::ReadBytesExt;
-use serde::de::IntoDeserializer;
-use serde::de::Error as DeError;
-use ::{Error, ErrorKind, Result};
-use ::internal::SizeLimit;
 use self::read::BincodeRead;
+use byteorder::ReadBytesExt;
+use internal::SizeLimit;
+use serde;
+use serde::de::Error as DeError;
+use serde::de::IntoDeserializer;
+use {Error, ErrorKind, Result};
 
 pub mod read;
 
@@ -19,7 +19,7 @@ pub mod read;
 /// The ByteOrder that is chosen will impact the endianness that
 /// is used to read integers out of the reader.
 ///
-/// ```rust,ignore
+/// ```ignore
 /// let d = Deserializer::new(&mut some_reader, SizeLimit::new());
 /// serde::Deserialize::deserialize(&mut deserializer);
 /// let bytes_read = d.bytes_read();
@@ -108,6 +108,31 @@ where
     impl_nums!(f32, deserialize_f32, visit_f32, read_f32);
     impl_nums!(f64, deserialize_f64, visit_f64, read_f64);
 
+    #[cfg(has_i128)]
+    impl_nums!(u128, deserialize_u128, visit_u128, read_u128);
+
+    #[cfg(has_i128)]
+    impl_nums!(i128, deserialize_i128, visit_i128, read_i128);
+
+    serde_if_integer128! {
+        #[cfg(not(has_i128))]
+        fn deserialize_u128<V>(self, visitor: V) -> Result<V::Value>
+        where
+            V: serde::de::Visitor<'de>
+        {
+            let _ = visitor;
+            Err(DeError::custom("u128 is not supported. Use Rustc ≥ 1.26."))
+        }
+
+        #[cfg(not(has_i128))]
+        fn deserialize_i128<V>(self, visitor: V) -> Result<V::Value>
+        where
+            V: serde::de::Visitor<'de>
+        {
+            let _ = visitor;
+            Err(DeError::custom("i128 is not supported. Use Rustc ≥ 1.26."))
+        }
+    }
 
     #[inline]
     fn deserialize_u8<V>(self, visitor: V) -> Result<V::Value>
@@ -209,12 +234,16 @@ where
         V: serde::de::Visitor<'de>,
     {
         impl<'de, 'a, R: 'a, O> serde::de::EnumAccess<'de> for &'a mut Deserializer<R, O>
-        where R: BincodeRead<'de>, O: Options {
+        where
+            R: BincodeRead<'de>,
+            O: Options,
+        {
             type Error = Error;
             type Variant = Self;
 
             fn variant_seed<V>(self, seed: V) -> Result<(V::Value, Self::Variant)>
-                where V: serde::de::DeserializeSeed<'de>,
+            where
+                V: serde::de::DeserializeSeed<'de>,
             {
                 let idx: u32 = try!(serde::de::Deserialize::deserialize(&mut *self));
                 let val: Result<_> = seed.deserialize(idx.into_deserializer());
@@ -234,13 +263,9 @@ where
             len: usize,
         }
 
-        impl<
-            'de,
-            'a,
-            'b: 'a,
-            R: BincodeRead<'de> + 'b,
-            O: Options,
-        > serde::de::SeqAccess<'de> for Access<'a, R, O> {
+        impl<'de, 'a, 'b: 'a, R: BincodeRead<'de> + 'b, O: Options> serde::de::SeqAccess<'de>
+            for Access<'a, R, O>
+        {
             type Error = Error;
 
             fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
@@ -300,13 +325,9 @@ where
             len: usize,
         }
 
-        impl<
-            'de,
-            'a,
-            'b: 'a,
-            R: BincodeRead<'de> + 'b,
-            O: Options,
-        > serde::de::MapAccess<'de> for Access<'a, R, O> {
+        impl<'de, 'a, 'b: 'a, R: BincodeRead<'de> + 'b, O: Options> serde::de::MapAccess<'de>
+            for Access<'a, R, O>
+        {
             type Error = Error;
 
             fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>>
@@ -409,7 +430,10 @@ where
 }
 
 impl<'de, 'a, R, O> serde::de::VariantAccess<'de> for &'a mut Deserializer<R, O>
-where R: BincodeRead<'de>, O: Options{
+where
+    R: BincodeRead<'de>,
+    O: Options,
+{
     type Error = Error;
 
     fn unit_variant(self) -> Result<()> {
@@ -417,44 +441,43 @@ where R: BincodeRead<'de>, O: Options{
     }
 
     fn newtype_variant_seed<T>(self, seed: T) -> Result<T::Value>
-        where T: serde::de::DeserializeSeed<'de>,
+    where
+        T: serde::de::DeserializeSeed<'de>,
     {
         serde::de::DeserializeSeed::deserialize(seed, self)
     }
 
-    fn tuple_variant<V>(self,
-                      len: usize,
-                      visitor: V) -> Result<V::Value>
-        where V: serde::de::Visitor<'de>,
+    fn tuple_variant<V>(self, len: usize, visitor: V) -> Result<V::Value>
+    where
+        V: serde::de::Visitor<'de>,
     {
         serde::de::Deserializer::deserialize_tuple(self, len, visitor)
     }
 
-    fn struct_variant<V>(self,
-                       fields: &'static [&'static str],
-                       visitor: V) -> Result<V::Value>
-        where V: serde::de::Visitor<'de>,
+    fn struct_variant<V>(self, fields: &'static [&'static str], visitor: V) -> Result<V::Value>
+    where
+        V: serde::de::Visitor<'de>,
     {
         serde::de::Deserializer::deserialize_tuple(self, fields.len(), visitor)
     }
 }
 static UTF8_CHAR_WIDTH: [u8; 256] = [
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0x1F
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0x3F
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0x5F
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0x7F
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 0x9F
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 0xBF
-0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, // 0xDF
-3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3, // 0xEF
-4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0, // 0xFF
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, // 0x1F
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, // 0x3F
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, // 0x5F
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, // 0x7F
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, // 0x9F
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, // 0xBF
+    0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+    2, // 0xDF
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, // 0xEF
+    4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0xFF
 ];
 
 // This function is a copy of core::str::utf8_char_width

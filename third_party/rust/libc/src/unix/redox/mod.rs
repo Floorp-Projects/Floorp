@@ -539,7 +539,6 @@ extern {
 
     pub fn strerror_r(errnum: ::c_int, buf: *mut c_char,
                       buflen: ::size_t) -> ::c_int;
-    pub fn __errno_location() -> *mut ::c_int;
 
     // malloc.h
     pub fn memalign(align: ::size_t, size: ::size_t) -> *mut ::c_void;

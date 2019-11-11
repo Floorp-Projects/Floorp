@@ -193,19 +193,6 @@ impl siginfo_t {
         }
         (*(self as *const siginfo_t as *const siginfo_sigfault)).si_addr
     }
-
-    pub unsafe fn si_value(&self) -> ::sigval {
-        #[repr(C)]
-        struct siginfo_timer {
-            _si_signo: ::c_int,
-            _si_errno: ::c_int,
-            _si_code: ::c_int,
-            _si_tid: ::c_int,
-            _si_overrun: ::c_int,
-            si_sigval: ::sigval,
-        }
-        (*(self as *const siginfo_t as *const siginfo_timer)).si_sigval
-    }
 }
 
 s_no_extra_traits! {
@@ -1024,11 +1011,6 @@ extern {
                       buf: *mut ::c_char,
                       buflen: ::size_t,
                       result: *mut *mut ::group) -> ::c_int;
-    pub fn pthread_getname_np(thread: ::pthread_t,
-                              name: *mut ::c_char,
-                              len: ::size_t) -> ::c_int;
-    pub fn pthread_setname_np(thread: ::pthread_t,
-                              name: *const ::c_char) -> ::c_int;
 }
 
 cfg_if! {

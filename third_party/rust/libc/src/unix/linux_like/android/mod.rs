@@ -2192,18 +2192,3 @@ cfg_if! {
         // Unknown target_pointer_width
     }
 }
-
-impl siginfo_t {
-    pub unsafe fn si_value(&self) -> ::sigval {
-        #[repr(C)]
-        struct siginfo_timer {
-            _si_signo: ::c_int,
-            _si_errno: ::c_int,
-            _si_code: ::c_int,
-            _si_tid: ::c_int,
-            _si_overrun: ::c_int,
-            si_sigval: ::sigval,
-        }
-        (*(self as *const siginfo_t as *const siginfo_timer)).si_sigval
-    }
-}

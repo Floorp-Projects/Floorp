@@ -308,21 +308,6 @@ s! {
     }
 }
 
-impl siginfo_t {
-    pub unsafe fn si_value(&self) -> ::sigval {
-        #[repr(C)]
-        struct siginfo_timer {
-            _si_signo: ::c_int,
-            _si_errno: ::c_int,
-            _si_code: ::c_int,
-            _pid: ::pid_t,
-            _uid: ::uid_t,
-            value: ::sigval,
-        }
-        (*(self as *const siginfo_t as *const siginfo_timer)).value
-    }
-}
-
 s_no_extra_traits! {
     pub struct dirent {
         pub d_fileno: ::ino_t,

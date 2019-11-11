@@ -1,7 +1,7 @@
-use std::io;
-use std::{error, fmt};
-use std::str::Utf8Error;
 use std::error::Error as StdError;
+use std::io;
+use std::str::Utf8Error;
+use std::{error, fmt};
 
 use serde;
 
@@ -47,14 +47,14 @@ impl StdError for ErrorKind {
             ErrorKind::InvalidBoolEncoding(_) => "invalid u8 while decoding bool",
             ErrorKind::InvalidCharEncoding => "char is not valid",
             ErrorKind::InvalidTagEncoding(_) => "tag for enum is not valid",
-            ErrorKind::SequenceMustHaveLength =>
-                "Bincode can only encode sequences and maps that have a knowable size ahead of time",
+            ErrorKind::SequenceMustHaveLength => {
+                "Bincode can only encode sequences and maps that have a knowable size ahead of time"
+            }
             ErrorKind::DeserializeAnyNotSupported => {
                 "Bincode doesn't support serde::Deserializer::deserialize_any"
             }
             ErrorKind::SizeLimit => "the size limit has been reached",
             ErrorKind::Custom(ref msg) => msg,
-
         }
     }
 
@@ -91,16 +91,12 @@ impl fmt::Display for ErrorKind {
             ErrorKind::InvalidTagEncoding(tag) => {
                 write!(fmt, "{}, found {}", self.description(), tag)
             }
-            ErrorKind::SequenceMustHaveLength => {
-                write!(fmt, "{}", self.description())
-            }
+            ErrorKind::SequenceMustHaveLength => write!(fmt, "{}", self.description()),
             ErrorKind::SizeLimit => write!(fmt, "{}", self.description()),
-            ErrorKind::DeserializeAnyNotSupported => {
-                write!(
-                    fmt,
-                    "Bincode does not support the serde::Deserializer::deserialize_any method"
-                )
-            }
+            ErrorKind::DeserializeAnyNotSupported => write!(
+                fmt,
+                "Bincode does not support the serde::Deserializer::deserialize_any method"
+            ),
             ErrorKind::Custom(ref s) => s.fmt(fmt),
         }
     }

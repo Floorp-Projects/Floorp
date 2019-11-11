@@ -1,14 +1,14 @@
 use super::internal::{Bounded, Infinite, SizeLimit};
-use ::error::Result;
 use byteorder::{BigEndian, ByteOrder, LittleEndian, NativeEndian};
-use {DeserializerAcceptor, SerializerAcceptor};
-use serde;
-use std::io::{Write, Read};
-use std::marker::PhantomData;
 use de::read::BincodeRead;
+use error::Result;
+use serde;
+use std::io::{Read, Write};
+use std::marker::PhantomData;
+use {DeserializerAcceptor, SerializerAcceptor};
 
-use self::LimitOption::*;
 use self::EndianOption::*;
+use self::LimitOption::*;
 
 struct DefaultOptions(Infinite);
 
@@ -110,7 +110,6 @@ pub(crate) struct WithOtherEndian<O: Options, E: ByteOrder> {
     _endian: PhantomData<E>,
 }
 
-
 impl<O: Options, L: SizeLimit> WithOtherLimit<O, L> {
     #[inline(always)]
     pub(crate) fn new(options: O, limit: L) -> WithOtherLimit<O, L> {
@@ -179,7 +178,7 @@ macro_rules! config_map {
                 $call
             }
         }
-    }
+    };
 }
 
 impl Config {
@@ -217,7 +216,7 @@ impl Config {
     /// Sets the endianness to big-endian
     #[inline(always)]
     pub fn big_endian(&mut self) -> &mut Self {
-        self.endian= EndianOption::Big;
+        self.endian = EndianOption::Big;
         self
     }
 
@@ -245,7 +244,11 @@ impl Config {
     /// If the serialization would take more bytes than allowed by the size limit, an error
     /// is returned and *no bytes* will be written into the `Writer`
     #[inline(always)]
-    pub fn serialize_into<W: Write, T: ?Sized + serde::Serialize>(&self, w: W, t: &T) -> Result<()> {
+    pub fn serialize_into<W: Write, T: ?Sized + serde::Serialize>(
+        &self,
+        w: W,
+        t: &T,
+    ) -> Result<()> {
         config_map!(self, opts => ::internal::serialize_into(w, t, opts))
     }
 
@@ -258,20 +261,45 @@ impl Config {
     /// TODO: document
     #[doc(hidden)]
     #[inline(always)]
-    pub fn deserialize_in_place<'a, R, T: >(&self, reader: R, place: &mut T) -> Result<()>
+    pub fn deserialize_in_place<'a, R, T>(&self, reader: R, place: &mut T) -> Result<()>
     where
         R: BincodeRead<'a>,
-        T: serde::de::Deserialize<'a>
+        T: serde::de::Deserialize<'a>,
     {
         config_map!(self, opts => ::internal::deserialize_in_place(reader, opts, place))
+    }
+
+    /// Deserializes a slice of bytes with state `seed` using this configuration.
+    #[inline(always)]
+    pub fn deserialize_seed<'a, T: serde::de::DeserializeSeed<'a>>(
+        &self,
+        seed: T,
+        bytes: &'a [u8],
+    ) -> Result<T::Value> {
+        config_map!(self, opts => ::internal::deserialize_seed(seed, bytes, opts))
     }
 
     /// Deserializes an object directly from a `Read`er using this configuration
     ///
     /// If this returns an `Error`, `reader` may be in an invalid state.
     #[inline(always)]
-    pub fn deserialize_from<R: Read, T: serde::de::DeserializeOwned>(&self, reader: R) -> Result<T> {
+    pub fn deserialize_from<R: Read, T: serde::de::DeserializeOwned>(
+        &self,
+        reader: R,
+    ) -> Result<T> {
         config_map!(self, opts => ::internal::deserialize_from(reader, opts))
+    }
+
+    /// Deserializes an object directly from a `Read`er with state `seed` using this configuration
+    ///
+    /// If this returns an `Error`, `reader` may be in an invalid state.
+    #[inline(always)]
+    pub fn deserialize_from_seed<'a, R: Read, T: serde::de::DeserializeSeed<'a>>(
+        &self,
+        seed: T,
+        reader: R,
+    ) -> Result<T::Value> {
+        config_map!(self, opts => ::internal::deserialize_from_seed(seed, reader, opts))
     }
 
     /// Deserializes an object from a custom `BincodeRead`er using the default configuration.
@@ -280,16 +308,38 @@ impl Config {
     ///
     /// If this returns an `Error`, `reader` may be in an invalid state.
     #[inline(always)]
-    pub fn deserialize_from_custom<'a, R: BincodeRead<'a>, T: serde::de::DeserializeOwned>(&self, reader: R) -> Result<T> {
+    pub fn deserialize_from_custom<'a, R: BincodeRead<'a>, T: serde::de::DeserializeOwned>(
+        &self,
+        reader: R,
+    ) -> Result<T> {
         config_map!(self, opts => ::internal::deserialize_from_custom(reader, opts))
+    }
+
+    /// Deserializes an object from a custom `BincodeRead`er with state `seed` using the default
+    /// configuration. It is highly recommended to use `deserialize_from` unless you need to
+    /// implement `BincodeRead` for performance reasons.
+    ///
+    /// If this returns an `Error`, `reader` may be in an invalid state.
+    #[inline(always)]
+    pub fn deserialize_from_custom_seed<
+        'a,
+        R: BincodeRead<'a>,
+        T: serde::de::DeserializeSeed<'a>,
+    >(
+        &self,
+        seed: T,
+        reader: R,
+    ) -> Result<T::Value> {
+        config_map!(self, opts => ::internal::deserialize_from_custom_seed(seed, reader, opts))
     }
 
     /// Executes the acceptor with a serde::Deserializer instance.
     /// NOT A PART OF THE STABLE PUBLIC API
     #[doc(hidden)]
-    pub fn with_deserializer<'a, A,  R>(&self, reader: R, acceptor: A) -> A::Output
-    where A: DeserializerAcceptor<'a>,
-          R: BincodeRead<'a>
+    pub fn with_deserializer<'a, A, R>(&self, reader: R, acceptor: A) -> A::Output
+    where
+        A: DeserializerAcceptor<'a>,
+        R: BincodeRead<'a>,
     {
         config_map!(self, opts => {
             let mut deserializer = ::de::Deserializer::new(reader, opts);
@@ -301,8 +351,9 @@ impl Config {
     /// NOT A PART OF THE STABLE PUBLIC API
     #[doc(hidden)]
     pub fn with_serializer<A, W>(&self, writer: W, acceptor: A) -> A::Output
-    where A: SerializerAcceptor,
-        W: Write
+    where
+        A: SerializerAcceptor,
+        W: Write,
     {
         config_map!(self, opts => {
             let mut serializer = ::ser::Serializer::new(writer, opts);
