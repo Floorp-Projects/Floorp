@@ -47,6 +47,7 @@ async function runTest() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.tabs.remote.useHTTPResponseProcessSelection", true],
+      ["browser.tabs.documentchannel", true],
       ["dom.serviceWorkers.enabled", true],
       ["dom.serviceWorkers.exemptFromPerDomainMax", true],
       ["dom.serviceWorkers.testing.enabled", true],

@@ -2,7 +2,9 @@ const { E10SUtils } = ChromeUtils.import(
   "resource://gre/modules/E10SUtils.jsm"
 );
 
-const PREF_NAME = "browser.tabs.remote.useHTTPResponseProcessSelection";
+const RESPONSE_PROCESS_SELECTION_PREF =
+  "browser.tabs.remote.useHTTPResponseProcessSelection";
+const DOCUMENT_CHANNEL_PREF = "browser.tabs.documentchannel";
 const HISTORY = [
   { url: httpURL("dummy_page.html") },
   { url: fileURL("dummy_page.html") },
@@ -119,11 +121,21 @@ async function runTest() {
 }
 
 add_task(async function prefDisabled() {
-  await SpecialPowers.pushPrefEnv({ set: [[PREF_NAME, false]] });
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [RESPONSE_PROCESS_SELECTION_PREF, false],
+      [DOCUMENT_CHANNEL_PREF, false],
+    ],
+  });
   await runTest();
 });
 
 add_task(async function prefEnabled() {
-  await SpecialPowers.pushPrefEnv({ set: [[PREF_NAME, true]] });
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [RESPONSE_PROCESS_SELECTION_PREF, true],
+      [DOCUMENT_CHANNEL_PREF, true],
+    ],
+  });
   await runTest();
 });
