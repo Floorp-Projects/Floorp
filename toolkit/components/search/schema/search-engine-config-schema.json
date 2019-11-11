@@ -29,8 +29,8 @@
     "webExtension": {
       "$ref": "#/definitions/webExtension"
     },
-    "codes": {
-      "$ref": "#/definitions/codes"
+    "params": {
+      "$ref": "#/definitions/params"
     }
   },
   "definitions": {
@@ -147,10 +147,10 @@
         "type": "string"
       }
     },
-    "codes": {
+    "params": {
       "type": "object",
-      "title": "Codes",
-      "description": "Various codes for the search engines",
+      "title": "Parameters",
+      "description": "Various parameters for the search engines",
       "properties": {
         "searchUrlGetParams": {
           "title": "Search URL GET Parameters",
@@ -162,12 +162,12 @@
           "description": "Extra parameters for search suggestion URLs (e.g. 'pc=foo').",
           "$ref": "#/definitions/searchUrlCodes"
         },
-        "searchUrlGetParams": {
+        "searchUrlPostParams": {
           "title": "Search URL POST Parameters",
           "description": "Extra parameters for search URLs (e.g. 'pc=foo').",
           "$ref": "#/definitions/searchUrlCodes"
         },
-        "suggestUrlGetParams": {
+        "suggestUrlPostParams": {
           "title": "Suggestion URL POST Parameters",
           "description": "Extra parameters for search suggestion URLs (e.g. 'pc=foo').",
           "$ref": "#/definitions/searchUrlCodes"
@@ -307,8 +307,8 @@
         "telemetryId": {
           "$ref": "#/definitions/telemetryId"
         },
-        "codes": {
-          "$ref": "#/definitions/codes"
+        "params": {
+          "$ref": "#/definitions/params"
         }
       }
     }

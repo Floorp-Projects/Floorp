@@ -2541,16 +2541,18 @@ SearchService.prototype = {
 
     // Modern Config encodes params as objects whereas they are
     // strings in webExtensions, stringify them here.
-    [
-      "searchUrlGetParams",
-      "searchUrlPostParams",
-      "suggestUrlGetParams",
-      "suggestUrlPostParams",
-    ].forEach(key => {
-      if (key in config) {
-        params[key] = new URLSearchParams(config[key]).toString();
-      }
-    });
+    if ("params" in config) {
+      [
+        "searchUrlGetParams",
+        "searchUrlPostParams",
+        "suggestUrlGetParams",
+        "suggestUrlPostParams",
+      ].forEach(key => {
+        if (key in config.params) {
+          params[key] = new URLSearchParams(config.params[key]).toString();
+        }
+      });
+    }
 
     if ("telemetryId" in config) {
       params.telemetryId = config.telemetryId;
