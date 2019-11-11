@@ -1880,103 +1880,6 @@ class ImportEcKeyTask : public ImportKeyTask {
   }
 };
 
-class ImportDhKeyTask : public ImportKeyTask {
- public:
-  ImportDhKeyTask(nsIGlobalObject* aGlobal, JSContext* aCx,
-                  const nsAString& aFormat, const ObjectOrString& aAlgorithm,
-                  bool aExtractable, const Sequence<nsString>& aKeyUsages) {
-    Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
-  }
-
-  ImportDhKeyTask(nsIGlobalObject* aGlobal, JSContext* aCx,
-                  const nsAString& aFormat, JS::Handle<JSObject*> aKeyData,
-                  const ObjectOrString& aAlgorithm, bool aExtractable,
-                  const Sequence<nsString>& aKeyUsages) {
-    Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
-    if (NS_SUCCEEDED(mEarlyRv)) {
-      SetKeyData(aCx, aKeyData);
-      NS_ENSURE_SUCCESS_VOID(mEarlyRv);
-    }
-  }
-
-  void Init(nsIGlobalObject* aGlobal, JSContext* aCx, const nsAString& aFormat,
-            const ObjectOrString& aAlgorithm, bool aExtractable,
-            const Sequence<nsString>& aKeyUsages) {
-    ImportKeyTask::Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable,
-                        aKeyUsages);
-    if (NS_FAILED(mEarlyRv)) {
-      return;
-    }
-
-    if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
-      RootedDictionary<DhImportKeyParams> params(aCx);
-      mEarlyRv = Coerce(aCx, params, aAlgorithm);
-      if (NS_FAILED(mEarlyRv)) {
-        mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
-        return;
-      }
-
-      CryptoBuffer prime;
-      ATTEMPT_BUFFER_INIT(mPrime, params.mPrime);
-
-      CryptoBuffer generator;
-      ATTEMPT_BUFFER_INIT(mGenerator, params.mGenerator);
-    }
-  }
-
- private:
-  CryptoBuffer mPrime;
-  CryptoBuffer mGenerator;
-
-  virtual nsresult DoCrypto() override {
-    // Import the key data itself
-    UniqueSECKEYPublicKey pubKey;
-
-    if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW) ||
-        mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
-      // Public key import
-      if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
-        pubKey = CryptoKey::PublicDhKeyFromRaw(mKeyData, mPrime, mGenerator);
-      } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
-        pubKey = CryptoKey::PublicKeyFromSpki(mKeyData);
-      } else {
-        MOZ_ASSERT(false);
-      }
-
-      if (!pubKey) {
-        return NS_ERROR_DOM_DATA_ERR;
-      }
-
-      if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
-        ATTEMPT_BUFFER_ASSIGN(mPrime, &pubKey->u.dh.prime);
-        ATTEMPT_BUFFER_ASSIGN(mGenerator, &pubKey->u.dh.base);
-      }
-
-      if (NS_FAILED(mKey->SetPublicKey(pubKey.get()))) {
-        return NS_ERROR_DOM_OPERATION_ERR;
-      }
-
-      mKey->SetType(CryptoKey::PUBLIC);
-    } else {
-      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-    }
-
-    return NS_OK;
-  }
-
-  virtual nsresult AfterCrypto() override {
-    // Check permissions for the requested operation
-    if (mKey->HasUsageOtherThan(CryptoKey::DERIVEBITS | CryptoKey::DERIVEKEY)) {
-      return NS_ERROR_DOM_DATA_ERR;
-    }
-
-    if (!mKey->Algorithm().MakeDh(mAlgName, mPrime, mGenerator)) {
-      return NS_ERROR_DOM_OPERATION_ERR;
-    }
-    return NS_OK;
-  }
-};
-
 class ExportKeyTask : public WebCryptoTask {
  public:
   ExportKeyTask(const nsAString& aFormat, CryptoKey& aKey)
@@ -2006,11 +1909,7 @@ class ExportKeyTask : public WebCryptoTask {
   virtual nsresult DoCrypto() override {
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
       if (mPublicKey && mPublicKey->keyType == dhKey) {
-        nsresult rv = CryptoKey::PublicDhKeyToRaw(mPublicKey.get(), mResult);
-        if (NS_FAILED(rv)) {
-          return NS_ERROR_DOM_OPERATION_ERR;
-        }
-        return NS_OK;
+        return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       }
 
       if (mPublicKey && mPublicKey->keyType == ecKey) {
@@ -2307,39 +2206,6 @@ GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
     mKeyPair->mPublicKey.get()->Algorithm().MakeEc(mAlgName, mNamedCurve);
     mKeyPair->mPrivateKey.get()->Algorithm().MakeEc(mAlgName, mNamedCurve);
     mMechanism = CKM_EC_KEY_PAIR_GEN;
-  } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_DH)) {
-    RootedDictionary<DhKeyGenParams> params(aCx);
-    mEarlyRv = Coerce(aCx, params, aAlgorithm);
-    if (NS_FAILED(mEarlyRv)) {
-      mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
-      return;
-    }
-
-    CryptoBuffer prime;
-    ATTEMPT_BUFFER_INIT(prime, params.mPrime);
-
-    CryptoBuffer generator;
-    ATTEMPT_BUFFER_INIT(generator, params.mGenerator);
-
-    // Set up params.
-    if (!prime.ToSECItem(mArena.get(), &mDhParams.prime) ||
-        !generator.ToSECItem(mArena.get(), &mDhParams.base)) {
-      mEarlyRv = NS_ERROR_DOM_UNKNOWN_ERR;
-      return;
-    }
-
-    // Create algorithm.
-    if (!mKeyPair->mPublicKey.get()->Algorithm().MakeDh(mAlgName, prime,
-                                                        generator)) {
-      mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
-      return;
-    }
-    if (!mKeyPair->mPrivateKey.get()->Algorithm().MakeDh(mAlgName, prime,
-                                                         generator)) {
-      mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
-      return;
-    }
-    mMechanism = CKM_DH_PKCS_KEY_PAIR_GEN;
   } else {
     mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     return;
@@ -2354,8 +2220,7 @@ GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
   } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
     privateAllowedUsages = CryptoKey::DECRYPT | CryptoKey::UNWRAPKEY;
     publicAllowedUsages = CryptoKey::ENCRYPT | CryptoKey::WRAPKEY;
-  } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_ECDH) ||
-             mAlgName.EqualsLiteral(WEBCRYPTO_ALG_DH)) {
+  } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_ECDH)) {
     privateAllowedUsages = CryptoKey::DERIVEKEY | CryptoKey::DERIVEBITS;
     publicAllowedUsages = 0;
   } else {
@@ -2872,101 +2737,6 @@ class DeriveEcdhBitsTask : public ReturnArrayBufferViewTask {
   }
 };
 
-class DeriveDhBitsTask : public ReturnArrayBufferViewTask {
- public:
-  DeriveDhBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
-                   CryptoKey& aKey, uint32_t aLength)
-      : mLength(aLength), mPrivKey(aKey.GetPrivateKey()) {
-    Init(aCx, aAlgorithm, aKey);
-  }
-
-  DeriveDhBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
-                   CryptoKey& aKey, const ObjectOrString& aTargetAlgorithm)
-      : mPrivKey(aKey.GetPrivateKey()) {
-    mEarlyRv = GetKeyLengthForAlgorithm(aCx, aTargetAlgorithm, mLength);
-    if (NS_SUCCEEDED(mEarlyRv)) {
-      Init(aCx, aAlgorithm, aKey);
-    }
-  }
-
-  void Init(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey) {
-    Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_DH);
-    CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_DH);
-
-    // Check that we have a private key.
-    if (!mPrivKey) {
-      mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      return;
-    }
-
-    mLength = mLength >> 3;  // bits to bytes
-
-    // Retrieve the peer's public key.
-    RootedDictionary<DhKeyDeriveParams> params(aCx);
-    mEarlyRv = Coerce(aCx, params, aAlgorithm);
-    if (NS_FAILED(mEarlyRv)) {
-      mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
-      return;
-    }
-
-    CryptoKey* publicKey = params.mPublic;
-    mPubKey = publicKey->GetPublicKey();
-    if (!mPubKey) {
-      mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      return;
-    }
-
-    KeyAlgorithmProxy alg1 = publicKey->Algorithm();
-    CHECK_KEY_ALGORITHM(alg1, WEBCRYPTO_ALG_DH);
-
-    // Both keys must use the same prime and generator.
-    KeyAlgorithmProxy alg2 = aKey.Algorithm();
-    if (alg1.mDh.mPrime != alg2.mDh.mPrime ||
-        alg1.mDh.mGenerator != alg2.mDh.mGenerator) {
-      mEarlyRv = NS_ERROR_DOM_DATA_ERR;
-      return;
-    }
-  }
-
- private:
-  size_t mLength;
-  UniqueSECKEYPrivateKey mPrivKey;
-  UniqueSECKEYPublicKey mPubKey;
-
-  virtual nsresult DoCrypto() override {
-    // CKM_SHA512_HMAC and CKA_SIGN are key type and usage attributes of the
-    // derived symmetric key and don't matter because we ignore them anyway.
-    UniquePK11SymKey symKey(
-        PK11_PubDeriveWithKDF(mPrivKey.get(), mPubKey.get(), PR_FALSE, nullptr,
-                              nullptr, CKM_DH_PKCS_DERIVE, CKM_SHA512_HMAC,
-                              CKA_SIGN, 0, CKD_NULL, nullptr, nullptr));
-
-    if (!symKey.get()) {
-      return NS_ERROR_DOM_OPERATION_ERR;
-    }
-
-    nsresult rv = MapSECStatus(PK11_ExtractKeyValue(symKey.get()));
-    if (NS_FAILED(rv)) {
-      return NS_ERROR_DOM_OPERATION_ERR;
-    }
-
-    // This doesn't leak, because the SECItem* returned by PK11_GetKeyData
-    // just refers to a buffer managed by symKey. The assignment copies the
-    // data, so mResult manages one copy, while symKey manages another.
-    ATTEMPT_BUFFER_ASSIGN(mResult, PK11_GetKeyData(symKey.get()));
-
-    if (mLength > mResult.Length()) {
-      return NS_ERROR_DOM_DATA_ERR;
-    }
-
-    if (!mResult.SetLength(mLength, fallible)) {
-      return NS_ERROR_DOM_UNKNOWN_ERR;
-    }
-
-    return NS_OK;
-  }
-};
-
 template <class KeyEncryptTask>
 class WrapKeyTask : public ExportKeyTask {
  public:
@@ -3177,9 +2947,6 @@ WebCryptoTask* WebCryptoTask::CreateImportKeyTask(
              algName.EqualsLiteral(WEBCRYPTO_ALG_ECDSA)) {
     return new ImportEcKeyTask(aGlobal, aCx, aFormat, aKeyData, aAlgorithm,
                                aExtractable, aKeyUsages);
-  } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_DH)) {
-    return new ImportDhKeyTask(aGlobal, aCx, aFormat, aKeyData, aAlgorithm,
-                               aExtractable, aKeyUsages);
   } else {
     return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
   }
@@ -3216,8 +2983,7 @@ WebCryptoTask* WebCryptoTask::CreateExportKeyTask(const nsAString& aFormat,
       algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_PSS) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_ECDSA) ||
-      algName.EqualsLiteral(WEBCRYPTO_ALG_ECDH) ||
-      algName.EqualsLiteral(WEBCRYPTO_ALG_DH)) {
+      algName.EqualsLiteral(WEBCRYPTO_ALG_ECDH)) {
     return new ExportKeyTask(aFormat, aKey);
   }
 
@@ -3255,8 +3021,7 @@ WebCryptoTask* WebCryptoTask::CreateGenerateKeyTask(
              algName.EqualsASCII(WEBCRYPTO_ALG_RSA_OAEP) ||
              algName.EqualsASCII(WEBCRYPTO_ALG_RSA_PSS) ||
              algName.EqualsASCII(WEBCRYPTO_ALG_ECDH) ||
-             algName.EqualsASCII(WEBCRYPTO_ALG_ECDSA) ||
-             algName.EqualsASCII(WEBCRYPTO_ALG_DH)) {
+             algName.EqualsASCII(WEBCRYPTO_ALG_ECDSA)) {
     return new GenerateAsymmetricKeyTask(aGlobal, aCx, aAlgorithm, aExtractable,
                                          aKeyUsages);
   } else {
@@ -3329,10 +3094,6 @@ WebCryptoTask* WebCryptoTask::CreateDeriveBitsTask(
 
   if (algName.EqualsASCII(WEBCRYPTO_ALG_ECDH)) {
     return new DeriveEcdhBitsTask(aCx, aAlgorithm, aKey, aLength);
-  }
-
-  if (algName.EqualsASCII(WEBCRYPTO_ALG_DH)) {
-    return new DeriveDhBitsTask(aCx, aAlgorithm, aKey, aLength);
   }
 
   if (algName.EqualsASCII(WEBCRYPTO_ALG_HKDF)) {

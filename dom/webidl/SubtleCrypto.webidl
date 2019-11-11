@@ -80,12 +80,6 @@ dictionary RsaPssParams : Algorithm {
 };
 
 [GenerateInit]
-dictionary DhKeyGenParams : Algorithm {
-  required BigInteger prime;
-  required BigInteger generator;
-};
-
-[GenerateInit]
 dictionary EcKeyGenParams : Algorithm {
   required NamedCurve namedCurve;
 };
@@ -102,11 +96,6 @@ dictionary HmacDerivedKeyParams : HmacImportParams {
 
 [GenerateInit]
 dictionary EcdhKeyDeriveParams : Algorithm {
-  required CryptoKey public;
-};
-
-[GenerateInit]
-dictionary DhKeyDeriveParams : Algorithm {
   required CryptoKey public;
 };
 

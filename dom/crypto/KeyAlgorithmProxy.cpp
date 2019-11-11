@@ -31,10 +31,6 @@ bool KeyAlgorithmProxy::WriteStructuredClone(
     }
     case EC:
       return StructuredCloneHolder::WriteString(aWriter, mEc.mNamedCurve);
-    case DH: {
-      return WriteBuffer(aWriter, mDh.mPrime) &&
-             WriteBuffer(aWriter, mDh.mGenerator);
-    }
   }
 
   return false;
@@ -92,15 +88,6 @@ bool KeyAlgorithmProxy::ReadStructuredClone(JSStructuredCloneReader* aReader) {
       }
 
       mEc.mName = mName;
-      return true;
-    }
-    case DH: {
-      if (!ReadBuffer(aReader, mDh.mPrime) ||
-          !ReadBuffer(aReader, mDh.mGenerator)) {
-        return false;
-      }
-
-      mDh.mName = mName;
       return true;
     }
   }
