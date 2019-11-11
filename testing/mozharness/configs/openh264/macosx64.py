@@ -32,6 +32,4 @@ config = {
         'PATH': ('{MOZ_FETCHES_DIR}/clang/bin/:%(PATH)s'
                  .format(MOZ_FETCHES_DIR=os.environ['MOZ_FETCHES_DIR'])),
     },
-    "tooltool_servers": ['http://taskcluster/tooltool.mozilla-releng.net/'],
-    "tooltool_url": 'http://taskcluster/tooltool.mozilla-releng.net/',
 }

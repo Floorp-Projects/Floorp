@@ -165,8 +165,6 @@ class PackageFrontend(MachCommandBase):
                      help='Explicit tooltool manifest to process')
     @CommandArgument('--authentication-file', metavar='FILE',
                      help='Use the RelengAPI token found in the given file to authenticate')
-    @CommandArgument('--tooltool-url', metavar='URL',
-                     help='Use the given url as tooltool server')
     @CommandArgument('--no-unpack', action='store_true',
                      help='Do not unpack any downloaded file')
     @CommandArgument('--retry', type=int, default=4,
@@ -179,7 +177,7 @@ class PackageFrontend(MachCommandBase):
     def artifact_toolchain(self, verbose=False, cache_dir=None,
                            skip_cache=False, from_build=(),
                            tooltool_manifest=None, authentication_file=None,
-                           tooltool_url=None, no_unpack=False, retry=None,
+                           no_unpack=False, retry=None,
                            artifact_manifest=None, files=()):
         '''Download, cache and install pre-built toolchains.
         '''
@@ -189,7 +187,6 @@ class PackageFrontend(MachCommandBase):
             open_manifest,
             unpack_file,
         )
-        from requests.adapters import HTTPAdapter
         import redo
         import requests
 
@@ -213,25 +210,15 @@ class PackageFrontend(MachCommandBase):
         if not cache_dir:
             cache_dir = os.path.join(self._mach_context.state_dir, 'toolchains')
 
-        tooltool_url = (tooltool_url or
-                        'https://tooltool.mozilla-releng.net').rstrip('/')
+        tooltool_host = os.environ.get('TOOLTOOL_HOST', 'tooltool.mozilla-releng.net')
+        taskcluster_proxy_url = os.environ.get('TASKCLUSTER_PROXY_URL')
+        if taskcluster_proxy_url:
+            tooltool_url = '{}/{}'.format(taskcluster_proxy_url, tooltool_host)
+        else:
+            tooltool_url = 'https://{}'.format(tooltool_host)
 
         cache = ArtifactCache(cache_dir=cache_dir, log=self.log,
                               skip_cache=skip_cache)
-
-        if authentication_file:
-            with open(authentication_file, 'rb') as f:
-                token = f.read().strip()
-
-            class TooltoolAuthenticator(HTTPAdapter):
-                def send(self, request, *args, **kwargs):
-                    request.headers['Authorization'] = \
-                        'Bearer {}'.format(token)
-                    return super(TooltoolAuthenticator, self).send(
-                        request, *args, **kwargs)
-
-            cache._download_manager.session.mount(
-                tooltool_url, TooltoolAuthenticator())
 
         class DownloadRecord(FileRecord):
             def __init__(self, url, *args, **kwargs):
