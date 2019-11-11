@@ -130,10 +130,8 @@ nsCollation::Initialize(const nsACString& locale) {
 
 NS_IMETHODIMP
 nsCollation::AllocateRawSortKey(int32_t strength, const nsAString& stringIn,
-                                uint8_t** key, uint32_t* outLen) {
+                                nsTArray<uint8_t>& key) {
   NS_ENSURE_TRUE(mInit, NS_ERROR_NOT_INITIALIZED);
-  NS_ENSURE_ARG_POINTER(key);
-  NS_ENSURE_ARG_POINTER(outLen);
 
   nsresult res = EnsureCollator(strength);
   NS_ENSURE_SUCCESS(res, res);
@@ -146,19 +144,13 @@ nsCollation::AllocateRawSortKey(int32_t strength, const nsAString& stringIn,
       ucol_getSortKey(mCollatorICU, str, stringInLen, nullptr, 0);
   NS_ENSURE_TRUE((stringInLen == 0 || keyLength > 0), NS_ERROR_FAILURE);
 
-  // Since key is freed elsewhere with free, allocate with malloc.
-  uint8_t* newKey = (uint8_t*)malloc(keyLength + 1);
-  if (!newKey) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  key.SetLength(keyLength + 1);
 
-  keyLength =
-      ucol_getSortKey(mCollatorICU, str, stringInLen, newKey, keyLength + 1);
+  keyLength = ucol_getSortKey(mCollatorICU, str, stringInLen, key.Elements(),
+                              keyLength + 1);
   NS_ENSURE_TRUE((stringInLen == 0 || keyLength > 0), NS_ERROR_FAILURE);
 
-  *key = newKey;
-  *outLen = keyLength;
-
+  key.SetLength(keyLength);
   return NS_OK;
 }
 
@@ -195,21 +187,27 @@ nsCollation::CompareString(int32_t strength, const nsAString& string1,
 }
 
 NS_IMETHODIMP
-nsCollation::CompareRawSortKey(const uint8_t* key1, uint32_t len1,
-                               const uint8_t* key2, uint32_t len2,
-                               int32_t* result) {
+nsCollation::CompareRawSortKey(const nsTArray<uint8_t>& key1,
+                               const nsTArray<uint8_t>& key2, int32_t* result) {
   NS_ENSURE_TRUE(mInit, NS_ERROR_NOT_INITIALIZED);
-  NS_ENSURE_ARG_POINTER(key1);
-  NS_ENSURE_ARG_POINTER(key2);
   NS_ENSURE_ARG_POINTER(result);
   *result = 0;
 
-  int32_t tmpResult = strcmp((const char*)key1, (const char*)key2);
+  size_t minLength = std::min(key1.Length(), key2.Length());
+  int32_t tmpResult = strncmp((const char*)key1.Elements(),
+                              (const char*)key2.Elements(), minLength);
   int32_t res;
   if (tmpResult < 0) {
     res = -1;
   } else if (tmpResult > 0) {
     res = 1;
+  } else if (key1.Length() > minLength) {
+    // First string contains second one, so comes later, hence return > 0.
+    res = 1;
+  } else if (key2.Length() > minLength) {
+    // First string is a substring of second one, so comes earlier,
+    // hence return < 0.
+    res = -1;
   } else {
     res = 0;
   }
