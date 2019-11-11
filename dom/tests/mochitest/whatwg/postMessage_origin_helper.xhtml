@@ -5,6 +5,11 @@
   <script type="application/javascript"><![CDATA[
 function receiveMessage(evt)
 {
+  if (event.data === "PING") {
+    window.parent.postMessage("PONG", "*");
+    return;
+  }
+
   var response = "PASS";
 
   if (evt.origin !== "http://mochi.test:8888")
