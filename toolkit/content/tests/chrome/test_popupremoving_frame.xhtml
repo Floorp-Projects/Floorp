@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Popup Unload Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<!--
+  This test checks that popup elements are removed when the document is changed.
+  -->
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+
+<iframe id="frame" width="300" height="150" src="frame_popupremoving_frame.xhtml"/>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var gMenus = [];
+
+function popupsOpened()
+{
+  var framedoc = $("frame").contentDocument;
+  framedoc.addEventListener("DOMAttrModified", modified, false);
+
+  // this is the order in which the menus should be hidden (reverse of the
+  // order they were opened in). The second menu is removed during the
+  // mutation listener, so gets the event afterwards.
+  gMenus.push(framedoc.getElementById("nestedmenu4"));
+  gMenus.push(framedoc.getElementById("nestedmenu2"));
+  gMenus.push(framedoc.getElementById("nestedmenu3"));
+  gMenus.push(framedoc.getElementById("nestedmenu1"));
+  gMenus.push(framedoc.getElementById("separatemenu4"));
+  gMenus.push(framedoc.getElementById("separatemenu2"));
+  gMenus.push(framedoc.getElementById("separatemenu3"));
+  gMenus.push(framedoc.getElementById("separatemenu1"));
+
+  framedoc.location = "about:blank";
+}
+
+function modified(event)
+{
+  if (event.attrName != "open")
+    return;
+
+  var framedoc = $("frame").contentDocument;
+
+  var tohide = null;
+  if (event.target.id == "separatemenu3")
+    tohide = framedoc.getElementById("separatemenu2");
+  else if (event.target.id == "nestedmenu3")
+    tohide = framedoc.getElementById("nestedmenu2");
+
+  if (tohide) {
+    tohide.hidden = true;
+    // force a layout flush
+    $("frame").contentDocument.documentElement.clientWidth;
+  }
+
+  is(event.target, gMenus.shift(), event.target.id + " hidden");
+  if (gMenus.length == 0)
+    SimpleTest.finish();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

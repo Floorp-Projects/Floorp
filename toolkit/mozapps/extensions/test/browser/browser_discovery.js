@@ -452,7 +452,8 @@ add_test(async function() {
 // Test for Bug 703929 - Loading the discover view from a chrome XUL file fails when
 // the add-on manager is reopened.
 add_test(async function() {
-  const url = "chrome://mochitests/content/" + RELATIVE_DIR + "addon_prefs.xul";
+  const url =
+    "chrome://mochitests/content/" + RELATIVE_DIR + "addon_prefs.xhtml";
   Services.prefs.setCharPref(PREF_DISCOVERURL, url);
 
   let aWindow = await open_manager("addons://discover/");

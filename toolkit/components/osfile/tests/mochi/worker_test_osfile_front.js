@@ -657,7 +657,7 @@ function test_exists_file() {
     "osfile",
     "tests",
     "mochi",
-    "test_osfile_front.xul"
+    "test_osfile_front.xhtml"
   );
   info("test_exists_file: starting");
   ok(
