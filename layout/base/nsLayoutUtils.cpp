@@ -1068,6 +1068,11 @@ static bool GetDisplayPortImpl(
     return false;
   }
 
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+  if (frame && !frame->PresShell()->AsyncPanZoomEnabled()) {
+    return false;
+  }
+
   if (!aResult) {
     // We have displayport data, but the caller doesn't want the actual
     // rect, so we don't need to actually compute it.
@@ -1076,7 +1081,6 @@ static bool GetDisplayPortImpl(
 
   bool isDisplayportSuppressed = false;
 
-  nsIFrame* frame = aContent->GetPrimaryFrame();
   if (frame) {
     nsPresContext* presContext = frame->PresContext();
     MOZ_ASSERT(presContext);
