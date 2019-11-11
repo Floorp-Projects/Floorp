@@ -24,36 +24,33 @@ taskgraph:
 workers:
     aliases:
         b-android:
-            provisioner: aws-provisioner-v1
+            provisioner: 'mobile-{level}'
             implementation: docker-worker
             os: linux
-            worker-type: 'mobile-{level}-b-andrcmp'
+            worker-type: b-linux-large
         images:
             provisioner: 'mobile-{level}'
             implementation: docker-worker
             os: linux
             worker-type: images
         dep-signing:
-            provisioner: scriptworker-prov-v1
+            provisioner: scriptworker-k8s
             implementation: scriptworker-signing
             os: scriptworker
-            worker-type: mobile-signing-dep-v1
+            worker-type: mobile-t-signing
         signing:
-            provisioner: scriptworker-prov-v1
+            provisioner: scriptworker-k8s
             implementation: scriptworker-signing
             os: scriptworker
             worker-type:
                 by-level:
-                    "3": mobile-signing-v1
-                    default: mobile-signing-dep-v1
+                    "3": mobile-3-signing
+                    default: mobile-t-signing
         beetmover:
-            provisioner: scriptworker-prov-v1
+            provisioner: scriptworker-k8s
             implementation: scriptworker-beetmover
             os: scriptworker
-            worker-type:
-                by-level:
-                    "3": mobile-beetmover-v1
-                    default: mobile-beetmover-dev
+            worker-type: 'mobile-{level}-beetmover'
 
 scriptworker:
     scope-prefix: project:mobile:android-components:releng
