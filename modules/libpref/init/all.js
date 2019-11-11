@@ -3886,6 +3886,8 @@ pref("signon.includeOtherSubdomainsInLookup", false);
 pref("signon.masterPasswordReprompt.timeout_ms", 900000); // 15 Minutes
 pref("signon.showAutoCompleteFooter", false);
 pref("signon.showAutoCompleteOrigins", false);
+// Enable login manager storage.
+pref("signon.storeSignons", true);
 
 // Satchel (Form Manager) prefs
 pref("browser.formfill.debug",            false);
