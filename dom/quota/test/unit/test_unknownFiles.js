@@ -24,17 +24,15 @@ function* testSteps() {
     dir: false,
   };
 
-  const unknownOriginFiles = [
-    {
-      path: "storage/permanent/chrome/foo.bar",
-      dir: false,
-    },
+  const unknownOriginFile = {
+    path: "storage/permanent/chrome/foo.bar",
+    dir: false,
+  };
 
-    {
-      path: "storage/permanent/chrome/foo",
-      dir: true,
-    },
-  ];
+  const unknownClient = {
+    path: "storage/permanent/chrome/foo",
+    dir: true,
+  };
 
   function createFile(unknownFile) {
     let file = getRelativeFile(unknownFile.path);
@@ -117,59 +115,99 @@ function* testSteps() {
 
   ok(request.resultCode == NS_OK, "Initialization succeeded");
 
-  for (let unknownFile of unknownOriginFiles) {
-    info("Creating unknown file");
+  info("Creating unknown file");
 
-    file = createFile(unknownFile);
+  file = createFile(unknownOriginFile);
 
-    info("Initializing origin");
+  info("Initializing origin");
 
-    request = initChromeOrigin("persistent", continueToNextStepSync);
-    yield undefined;
+  request = initChromeOrigin("persistent", continueToNextStepSync);
+  yield undefined;
 
-    ok(request.resultCode == NS_ERROR_UNEXPECTED, "Initialization failed");
-    ok(request.result === null, "The request result is null");
+  ok(
+    request.resultCode == NS_OK,
+    "Initialization succeeded even though there are unknown files in origin " +
+      "directories"
+  );
 
-    info("Getting usage");
+  info("Getting usage");
 
-    request = getCurrentUsage(continueToNextStepSync);
-    yield undefined;
+  request = getCurrentUsage(continueToNextStepSync);
+  yield undefined;
 
-    ok(request.resultCode == NS_ERROR_UNEXPECTED, "Get usage failed");
-    ok(request.result === null, "The request result is null");
+  ok(
+    request.resultCode == NS_OK,
+    "Get usage succeeded even though there are unknown files in origin " +
+      "directories"
+  );
 
-    file.remove(/* recursive */ false);
+  info("Clearing origin");
 
-    info("Getting usage");
+  request = clearChromeOrigin(continueToNextStepSync);
+  yield undefined;
 
-    request = getCurrentUsage(continueToNextStepSync);
-    yield undefined;
+  ok(request.resultCode == NS_OK, "Clearing succeeded");
 
-    ok(request.resultCode == NS_OK, "Get usage succeeded");
+  info("Stage 4 - Testing unknown client files found during origin init");
 
-    info("Initializing origin");
+  info("Creating unknown file");
 
-    request = initChromeOrigin("persistent", continueToNextStepSync);
-    yield undefined;
+  file = createFile(unknownClient);
 
-    ok(request.resultCode == NS_OK, "Initialization succeeded");
+  info("Initializing origin");
 
-    file = createFile(unknownFile);
+  request = initChromeOrigin("persistent", continueToNextStepSync);
+  yield undefined;
 
-    info("Getting usage");
+  ok(request.resultCode == NS_ERROR_UNEXPECTED, "Initialization failed");
+  ok(request.result === null, "The request result is null");
 
-    request = getCurrentUsage(continueToNextStepSync);
-    yield undefined;
+  info("Getting usage");
 
-    ok(request.resultCode == NS_OK, "Get usage succeeded");
+  request = getCurrentUsage(continueToNextStepSync);
+  yield undefined;
 
-    info("Clearing origin");
+  ok(request.resultCode == NS_ERROR_UNEXPECTED, "Initialization failed");
+  ok(request.result === null, "The request result is null");
 
-    request = clearChromeOrigin(continueToNextStepSync);
-    yield undefined;
+  file.remove(/* recursive */ false);
 
-    ok(request.resultCode == NS_OK, "Clearing succeeded");
-  }
+  info("Getting usage");
+
+  request = getCurrentUsage(continueToNextStepSync);
+  yield undefined;
+
+  ok(request.resultCode == NS_OK, "Get usage succeeded");
+
+  info("Clearing origin");
+
+  request = clearChromeOrigin(continueToNextStepSync);
+  yield undefined;
+
+  ok(request.resultCode == NS_OK, "Clearing succeeded");
+
+  info("Initializing origin");
+
+  request = initChromeOrigin("persistent", continueToNextStepSync);
+  yield undefined;
+
+  ok(request.resultCode == NS_OK, "Initialization succeeded");
+
+  file = createFile(unknownClient);
+
+  info("Getting usage");
+
+  request = getCurrentUsage(continueToNextStepSync);
+  yield undefined;
+
+  ok(request.resultCode == NS_OK, "Get usage succeeded");
+
+  info("Clearing origin");
+
+  request = clearChromeOrigin(continueToNextStepSync);
+  yield undefined;
+
+  ok(request.resultCode == NS_OK, "Clearing succeeded");
 
   info("Clearing");
 
