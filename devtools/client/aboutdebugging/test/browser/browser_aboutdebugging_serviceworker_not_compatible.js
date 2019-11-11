@@ -3,8 +3,9 @@
 
 "use strict";
 
-// Test migrated from
-// devtools/client/aboutdebugging/test/browser_service_workers_not_compatible.js
+// This test started running during a GC and timing out on coverage platforms.
+// See Bug 1526153.
+requestLongerTimeout(2);
 
 const TEST_DATA = [
   {
