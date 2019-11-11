@@ -90,7 +90,30 @@ or stackwalking was not initialized, there will be no native frames present, and
 the stack will consist only of label stack and chrome JS script frames.
 
 A single frame in the stack is either a raw string, representing a label stack
-or chrome JS script frame, or a native stack frame:
+or chrome JS script frame, or a native stack frame.
+
+Label stack frames contain the static string from all insances of the
+AUTO_PROFILER_LABEL* macros. Additionally, dynamic strings are collected from
+all usages of the AUTO_PROFILER_LABEL_DYNAMIC*_NONSENSITIVE macros. The dynamic
+strings are simply appended to the static strings after a space character.
+
+Current dynamic string collections are as follows:
+
++--------------------------------------------------+-----------------------------------------+
+| Static string                                    | Dynamic                                 |
++==================================================+=========================================+
+| ChromeUtils::Import                              | Associated chrome:// or resource:// URI |
++--------------------------------------------------+-----------------------------------------+
+| nsJSContext::GarbageCollectNow                   | GC reason string                        |
++--------------------------------------------------+-----------------------------------------+
+| mozJSSubScriptLoader::DoLoadSubScriptWithOptions | Associated chrome:// or resource:// URI |
++--------------------------------------------------+-----------------------------------------+
+| PresShell::DoFlushPendingNotifications           | Flush type                              |
++--------------------------------------------------+-----------------------------------------+
+| nsObserverService::NotifyObservers               | Associated observer topic               |
++--------------------------------------------------+-----------------------------------------+
+
+Native stack frames are as such:
 
 .. code-block:: js
 

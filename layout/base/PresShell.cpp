@@ -3955,8 +3955,9 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
     "Display"
   };
   // clang-format on
-  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("PresShell::DoFlushPendingNotifications",
-                                   LAYOUT, flushTypeNames[flushType]);
+  AUTO_PROFILER_LABEL_DYNAMIC_CSTR_NONSENSITIVE(
+      "PresShell::DoFlushPendingNotifications", LAYOUT,
+      flushTypeNames[flushType]);
 #endif
 
 #ifdef ACCESSIBILITY
