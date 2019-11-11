@@ -624,9 +624,6 @@ add_task(async function test_add_visit() {
     visits: [],
   };
   for (let t in PlacesUtils.history.TRANSITIONS) {
-    if (t == "EMBED") {
-      continue;
-    }
     let transitionType = PlacesUtils.history.TRANSITIONS[t];
     place.visits.push(new VisitInfo(transitionType, VISIT_TIME));
   }
@@ -687,9 +684,6 @@ add_task(async function test_properties_saved() {
   // Check each transition type to make sure it is saved properly.
   let places = [];
   for (let t in PlacesUtils.history.TRANSITIONS) {
-    if (t == "EMBED") {
-      continue;
-    }
     let transitionType = PlacesUtils.history.TRANSITIONS[t];
     let place = {
       uri: NetUtil.newURI(
