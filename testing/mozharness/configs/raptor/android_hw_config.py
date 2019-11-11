@@ -15,7 +15,6 @@ config = {
     "tooltool_cache": "/builds/tooltool_cache",
     "download_tooltool": True,
     "minidump_stackwalk_path": "linux64-minidump_stackwalk",
-    "tooltool_servers": ['https://tooltool.mozilla-releng.net/'],
     "minidump_tooltool_manifest_path": "config/tooltool-manifests/linux64/releng.manifest",
     "hostutils_manifest_path": "testing/config/tooltool-manifests/linux64/hostutils.manifest",
 }

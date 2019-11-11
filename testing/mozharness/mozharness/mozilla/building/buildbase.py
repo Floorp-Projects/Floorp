@@ -603,33 +603,6 @@ items from that key's value."
         self.info("Both --dump-config and --dump-config-hierarchy don't "
                   "actually run any actions.")
 
-    def _assert_cfg_valid_for_action(self, dependencies, action):
-        """ assert dependency keys are in config for given action.
-
-        Takes a list of dependencies and ensures that each have an
-        assoctiated key in the config. Displays error messages as
-        appropriate.
-
-        """
-        # TODO add type and value checking, not just keys
-        # TODO solution should adhere to: bug 699343
-        # TODO add this to BaseScript when the above is done
-        # for now, let's just use this as a way to save typing...
-        c = self.config
-        undetermined_keys = []
-        err_template = "The key '%s' could not be determined \
-and is needed for the action '%s'. Please add this to your config \
-or run without that action (ie: --no-{action})"
-        for dep in dependencies:
-            if dep not in c:
-                undetermined_keys.append(dep)
-        if undetermined_keys:
-            fatal_msgs = [err_template % (key, action)
-                          for key in undetermined_keys]
-            self.fatal("".join(fatal_msgs))
-        # otherwise:
-        return  # all good
-
     def _query_build_prop_from_app_ini(self, prop, app_ini_path=None):
         dirs = self.query_abs_dirs()
         print_conf_setting_path = os.path.join(dirs['abs_src_dir'],
@@ -805,10 +778,6 @@ or run without that action (ie: --no-{action})"
         env = self.query_build_env()
         env.update(self.query_mach_build_env())
 
-        self._assert_cfg_valid_for_action(
-            ['tooltool_url'],
-            'build'
-        )
         c = self.config
         dirs = self.query_abs_dirs()
         toolchains = os.environ.get('MOZ_TOOLCHAINS')
@@ -831,8 +800,6 @@ or run without that action (ie: --no-{action})"
             cmd.extend([
                 '--tooltool-manifest',
                 os.path.join(dirs['abs_src_dir'], manifest_src),
-                '--tooltool-url',
-                c['tooltool_url'],
             ])
             auth_file = self._get_tooltool_auth_file()
             if auth_file:
