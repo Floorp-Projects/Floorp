@@ -993,7 +993,7 @@ description#identity-popup-content-verifier,
   min-width: 26px;
   border-radius: 10px;
   background-color: #F9F9FA;
-  border: 1px solid var(--panel-separator-color);
+  border: 1px solid hsla(210,4%,10%,.14);
   margin-top: 4px;
   margin-bottom: 4px;
   margin-inline-start: 1px;
