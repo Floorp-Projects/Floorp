@@ -21,16 +21,6 @@ impl ::Clone for timezone {
     fn clone(&self) -> timezone { *self }
 }
 
-impl siginfo_t {
-    pub unsafe fn si_addr(&self) -> *mut ::c_void {
-        self.si_addr
-    }
-
-    pub unsafe fn si_value(&self) -> ::sigval {
-        self.si_value
-    }
-}
-
 s! {
     pub struct in_addr {
         pub s_addr: ::in_addr_t,
@@ -78,9 +68,7 @@ s! {
         pub si_uid: ::uid_t,
         pub si_status: ::c_int,
         pub si_addr: *mut ::c_void,
-        pub si_value: ::sigval,
-        _pad1: ::c_long,
-        _pad2: [::c_int; 7],
+        _pad: [::c_int; 12],
     }
 
     pub struct sigaction {
