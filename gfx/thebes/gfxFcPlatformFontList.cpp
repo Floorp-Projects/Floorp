@@ -475,12 +475,6 @@ hb_blob_t* gfxFontconfigFontEntry::GetFontTable(uint32_t aTableTag) {
   return gfxFontEntry::GetFontTable(aTableTag);
 }
 
-void gfxFontconfigFontEntry::ForgetHBFace() { gfxFontEntry::ForgetHBFace(); }
-
-void gfxFontconfigFontEntry::ReleaseGrFace(gr_face* aFace) {
-  gfxFontEntry::ReleaseGrFace(aFace);
-}
-
 double gfxFontconfigFontEntry::GetAspect() {
   if (mAspect != 0.0) {
     return mAspect;
