@@ -450,7 +450,7 @@ UniqueSECKEYPublicKey CryptoKey::PublicKeyFromSpki(CryptoBuffer& aKeyData) {
   bool isECDHAlgorithm =
       SECITEM_ItemsAreEqual(&SEC_OID_DATA_EC_DH, &spki->algorithm.algorithm);
 
-  // Check for |id-ecDH|. Per the WebCrypto spec we must
+  // Check for |id-ecDH|. Per old versions of the WebCrypto spec we must
   // support this OID but NSS does unfortunately not know it. Let's
   // change the algorithm to |id-ecPublicKey| to make NSS happy.
   if (isECDHAlgorithm) {
@@ -495,17 +495,6 @@ nsresult CryptoKey::PublicKeyToSpki(SECKEYPublicKey* aPubKey,
   spki.reset(SECKEY_CreateSubjectPublicKeyInfo(aPubKey));
   if (!spki) {
     return NS_ERROR_DOM_OPERATION_ERR;
-  }
-
-  // Per WebCrypto spec we must export ECDH SPKIs with the algorithm OID
-  // id-ecDH (1.3.132.112). NSS doesn't know about this OID and there is
-  // no way to specify the algorithm to use when exporting a public key.
-  if (aPubKey->keyType == ecKey) {
-    SECStatus rv = SECITEM_CopyItem(spki->arena, &spki->algorithm.algorithm,
-                                    &SEC_OID_DATA_EC_DH);
-    if (rv != SECSuccess) {
-      return NS_ERROR_DOM_OPERATION_ERR;
-    }
   }
 
   const SEC_ASN1Template* tpl = SEC_ASN1_GET(CERT_SubjectPublicKeyInfoTemplate);

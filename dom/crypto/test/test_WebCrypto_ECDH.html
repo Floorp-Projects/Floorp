@@ -394,7 +394,7 @@ TestArray.addTest(
       var derived = imported.then(doExport);
 
       return derived.then(function(x) {
-        if (!util.memcmp(x, tv.ecdh_p256.spki)) {
+        if (!util.memcmp(x, tv.ecdh_p256.spki_id_ecpk)) {
           throw new Error("exported key is invalid");
         }
 
