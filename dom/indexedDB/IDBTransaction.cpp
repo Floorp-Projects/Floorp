@@ -37,6 +37,21 @@ namespace dom {
 using namespace mozilla::dom::indexedDB;
 using namespace mozilla::ipc;
 
+bool IDBTransaction::HasTransactionChild() const {
+  return (mMode == VERSION_CHANGE
+              ? static_cast<void*>(
+                    mBackgroundActor.mVersionChangeBackgroundActor)
+              : mBackgroundActor.mNormalBackgroundActor) != nullptr;
+}
+
+template <typename Func>
+auto IDBTransaction::DoWithTransactionChild(const Func& aFunc) const {
+  MOZ_ASSERT(HasTransactionChild());
+  return mMode == VERSION_CHANGE
+             ? aFunc(*mBackgroundActor.mVersionChangeBackgroundActor)
+             : aFunc(*mBackgroundActor.mNormalBackgroundActor);
+}
+
 IDBTransaction::IDBTransaction(IDBDatabase* const aDatabase,
                                const nsTArray<nsString>& aObjectStoreNames,
                                const Mode aMode, nsString aFilename,
@@ -108,12 +123,7 @@ IDBTransaction::~IDBTransaction() {
   MOZ_ASSERT(!mCreating);
   MOZ_ASSERT(!mNotedActiveTransaction);
   MOZ_ASSERT(mSentCommitOrAbort);
-  MOZ_ASSERT_IF(
-      mMode == VERSION_CHANGE && mBackgroundActor.mVersionChangeBackgroundActor,
-      mFiredCompleteOrAbort);
-  MOZ_ASSERT_IF(
-      mMode != VERSION_CHANGE && mBackgroundActor.mNormalBackgroundActor,
-      mFiredCompleteOrAbort);
+  MOZ_ASSERT_IF(HasTransactionChild(), mFiredCompleteOrAbort);
 
   if (mRegistered) {
     mDatabase->UnregisterTransaction(this);
@@ -122,19 +132,16 @@ IDBTransaction::~IDBTransaction() {
 #endif
   }
 
-  if (mMode == VERSION_CHANGE) {
-    if (auto* actor = mBackgroundActor.mVersionChangeBackgroundActor) {
-      actor->SendDeleteMeInternal(/* aFailedConstructor */ false);
-
-      MOZ_ASSERT(!mBackgroundActor.mVersionChangeBackgroundActor,
-                 "SendDeleteMeInternal should have cleared!");
+  if (HasTransactionChild()) {
+    if (mMode == VERSION_CHANGE) {
+      mBackgroundActor.mVersionChangeBackgroundActor->SendDeleteMeInternal(
+          /* aFailedConstructor */ false);
+    } else {
+      mBackgroundActor.mNormalBackgroundActor->SendDeleteMeInternal();
     }
-  } else if (auto* actor = mBackgroundActor.mNormalBackgroundActor) {
-    actor->SendDeleteMeInternal();
-
-    MOZ_ASSERT(!mBackgroundActor.mNormalBackgroundActor,
-               "SendDeleteMeInternal should have cleared!");
   }
+  MOZ_ASSERT(!HasTransactionChild(),
+             "SendDeleteMeInternal should have cleared!");
 
   ReleaseWrapper(this);
   mozilla::DropJSObjects(this);
@@ -273,17 +280,9 @@ BackgroundRequestChild* IDBTransaction::StartRequest(
 
   BackgroundRequestChild* const actor = new BackgroundRequestChild(aRequest);
 
-  if (mMode == VERSION_CHANGE) {
-    MOZ_ASSERT(mBackgroundActor.mVersionChangeBackgroundActor);
-
-    mBackgroundActor.mVersionChangeBackgroundActor
-        ->SendPBackgroundIDBRequestConstructor(actor, aParams);
-  } else {
-    MOZ_ASSERT(mBackgroundActor.mNormalBackgroundActor);
-
-    mBackgroundActor.mNormalBackgroundActor
-        ->SendPBackgroundIDBRequestConstructor(actor, aParams);
-  }
+  DoWithTransactionChild([actor, &aParams](auto& transactionChild) {
+    transactionChild.SendPBackgroundIDBRequestConstructor(actor, aParams);
+  });
 
   MOZ_ASSERT(actor->GetActorEventTarget(),
              "The event target shall be inherited from its manager actor.");
@@ -300,17 +299,9 @@ void IDBTransaction::OpenCursor(BackgroundCursorChild* const aBackgroundActor,
   MOZ_ASSERT(aBackgroundActor);
   MOZ_ASSERT(aParams.type() != OpenCursorParams::T__None);
 
-  if (mMode == VERSION_CHANGE) {
-    MOZ_ASSERT(mBackgroundActor.mVersionChangeBackgroundActor);
-
-    mBackgroundActor.mVersionChangeBackgroundActor
-        ->SendPBackgroundIDBCursorConstructor(aBackgroundActor, aParams);
-  } else {
-    MOZ_ASSERT(mBackgroundActor.mNormalBackgroundActor);
-
-    mBackgroundActor.mNormalBackgroundActor
-        ->SendPBackgroundIDBCursorConstructor(aBackgroundActor, aParams);
-  }
+  DoWithTransactionChild([aBackgroundActor, &aParams](auto& actor) {
+    actor.SendPBackgroundIDBCursorConstructor(aBackgroundActor, aParams);
+  });
 
   MOZ_ASSERT(aBackgroundActor->GetActorEventTarget(),
              "The event target shall be inherited from its manager actor.");
@@ -389,13 +380,7 @@ void IDBTransaction::SendCommit() {
       "All requests complete, committing transaction", "IDBTransaction commit",
       LoggingSerialNumber(), requestSerialNumber);
 
-  if (mMode == VERSION_CHANGE) {
-    MOZ_ASSERT(mBackgroundActor.mVersionChangeBackgroundActor);
-    mBackgroundActor.mVersionChangeBackgroundActor->SendCommit();
-  } else {
-    MOZ_ASSERT(mBackgroundActor.mNormalBackgroundActor);
-    mBackgroundActor.mNormalBackgroundActor->SendCommit();
-  }
+  DoWithTransactionChild([](auto& actor) { actor.SendCommit(); });
 
 #ifdef DEBUG
   mSentCommitOrAbort = true;
@@ -416,13 +401,8 @@ void IDBTransaction::SendAbort(const nsresult aResultCode) {
       "Aborting transaction with result 0x%x", "IDBTransaction abort (0x%x)",
       LoggingSerialNumber(), requestSerialNumber, aResultCode);
 
-  if (mMode == VERSION_CHANGE) {
-    MOZ_ASSERT(mBackgroundActor.mVersionChangeBackgroundActor);
-    mBackgroundActor.mVersionChangeBackgroundActor->SendAbort(aResultCode);
-  } else {
-    MOZ_ASSERT(mBackgroundActor.mNormalBackgroundActor);
-    mBackgroundActor.mNormalBackgroundActor->SendAbort(aResultCode);
-  }
+  DoWithTransactionChild(
+      [aResultCode](auto& actor) { actor.SendAbort(aResultCode); });
 
 #ifdef DEBUG
   mSentCommitOrAbort = true;
