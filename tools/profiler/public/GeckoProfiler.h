@@ -47,7 +47,11 @@
 #  define AUTO_PROFILER_LABEL(label, categoryPair)
 #  define AUTO_PROFILER_LABEL_CATEGORY_PAIR(categoryPair)
 #  define AUTO_PROFILER_LABEL_DYNAMIC_CSTR(label, categoryPair, cStr)
+#  define AUTO_PROFILER_LABEL_DYNAMIC_CSTR_NONSENSITIVE(label, categoryPair, \
+                                                        cStr)
 #  define AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(label, categoryPair, nsCStr)
+#  define AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE( \
+      label, categoryPair, nsCStr)
 #  define AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(label, categoryPair, nsStr)
 #  define AUTO_PROFILER_LABEL_FAST(label, categoryPair, ctx)
 #  define AUTO_PROFILER_LABEL_DYNAMIC_FAST(label, dynamicString, categoryPair, \
@@ -685,6 +689,15 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
     mozilla::AutoProfilerLabel PROFILER_RAII(                         \
         label, cStr, JS::ProfilingCategoryPair::categoryPair)
 
+// Like AUTO_PROFILER_LABEL_DYNAMIC_CSTR, but with the NONSENSITIVE flag to
+// note that it does not contain sensitive information (so we can include it
+// in, for example, the BackgroundHangMonitor)
+#  define AUTO_PROFILER_LABEL_DYNAMIC_CSTR_NONSENSITIVE(label, categoryPair, \
+                                                        cStr)                \
+    mozilla::AutoProfilerLabel PROFILER_RAII(                                \
+        label, cStr, JS::ProfilingCategoryPair::categoryPair,                \
+        uint32_t(js::ProfilingStackFrame::Flags::NONSENSITIVE))
+
 // Similar to AUTO_PROFILER_LABEL_DYNAMIC_CSTR, but takes an nsACString.
 //
 // Note: The use of the Maybe<>s ensures the scopes for the dynamic string and
@@ -699,6 +712,18 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
       autoCStr.emplace(nsCStr);                                              \
       raiiObjectNsCString.emplace(label, autoCStr->get(),                    \
                                   JS::ProfilingCategoryPair::categoryPair);  \
+    }
+
+// See note above AUTO_PROFILER_LABEL_DYNAMIC_CSTR_NONSENSITIVE
+#  define AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE(              \
+      label, categoryPair, nsCStr)                                         \
+    mozilla::Maybe<nsAutoCString> autoCStr;                                \
+    mozilla::Maybe<mozilla::AutoProfilerLabel> raiiObjectNsCString;        \
+    if (profiler_is_active()) {                                            \
+      autoCStr.emplace(nsCStr);                                            \
+      raiiObjectNsCString.emplace(                                         \
+          label, autoCStr->get(), JS::ProfilingCategoryPair::categoryPair, \
+          uint32_t(js::ProfilingStackFrame::Flags::NONSENSITIVE));         \
     }
 
 // Similar to AUTO_PROFILER_LABEL_DYNAMIC_CSTR, but takes an nsString that is
