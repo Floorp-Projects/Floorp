@@ -19,7 +19,14 @@ static NS_NAMED_LITERAL_CSTRING(kMozillaExtension, "mozillaextension");
 static NS_NAMED_LITERAL_CSTRING(kOtherExtension, "otherextension");
 static NS_NAMED_LITERAL_CSTRING(kSuspectedUserChromeJS,
                                 "suspectedUserChromeJS");
+static NS_NAMED_LITERAL_CSTRING(kSanitizedWindowsURL, "sanitizedWindowsURL");
+static NS_NAMED_LITERAL_CSTRING(kSanitizedWindowsPath, "sanitizedWindowsPath");
 static NS_NAMED_LITERAL_CSTRING(kOther, "other");
+
+#define ASSERT_AND_PRINT(first, second, condition)                      \
+  fprintf(stderr, "First: %s\n", first.get());                          \
+  fprintf(stderr, "Second: %s\n", NS_ConvertUTF16toUTF8(second).get()); \
+  ASSERT_TRUE((condition));
 
 TEST(FilenameEvalParser, ResourceChrome)
 {
@@ -114,16 +121,6 @@ TEST(FilenameEvalParser, UserChromeJS)
 TEST(FilenameEvalParser, SingleFile)
 {
   {
-    NS_NAMED_LITERAL_STRING(str, "firegestures/content");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
-    ASSERT_TRUE(ret.first() != kSingleString && !ret.second().isSome());
-  }
-  {
-    NS_NAMED_LITERAL_STRING(str, "firegestures\\content");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
-    ASSERT_TRUE(ret.first() != kSingleString && !ret.second().isSome());
-  }
-  {
     NS_NAMED_LITERAL_STRING(str, "browser.uc.js?2456");
     FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
     ASSERT_TRUE(ret.first() == kSingleString && ret.second().isSome() &&
@@ -140,23 +137,99 @@ TEST(FilenameEvalParser, SingleFile)
 TEST(FilenameEvalParser, Other)
 {
   {
-    NS_NAMED_LITERAL_STRING(str, "firegestures/content");
+    NS_NAMED_LITERAL_STRING(str, "firegestures--content");
     FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
     ASSERT_TRUE(ret.first() == kOther && !ret.second().isSome());
+  }
+  {
+    NS_NAMED_LITERAL_STRING(str, "gallop://thing/fire");
+    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+#if defined(XP_WIN)
+    ASSERT_TRUE(ret.first() == kSanitizedWindowsURL &&
+                ret.second().value() == NS_LITERAL_STRING("gallop"));
+#else
+    ASSERT_TRUE(ret.first() == kOther && !ret.second().isSome());
+#endif
+  }
+  {
+    NS_NAMED_LITERAL_STRING(str, "gallop://fire");
+    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+#if defined(XP_WIN)
+    ASSERT_TRUE(ret.first() == kSanitizedWindowsURL &&
+                ret.second().value() == NS_LITERAL_STRING("gallop"));
+#else
+    ASSERT_TRUE(ret.first() == kOther && !ret.second().isSome());
+#endif
+  }
+  {
+    NS_NAMED_LITERAL_STRING(str, "firegestures/content");
+    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+#if defined(XP_WIN)
+    ASSERT_TRUE(ret.first() == kSanitizedWindowsPath &&
+                ret.second().value() == NS_LITERAL_STRING("content"));
+#else
+    ASSERT_TRUE(ret.first() == kOther && !ret.second().isSome());
+#endif
   }
   {
     NS_NAMED_LITERAL_STRING(str, "firegestures\\content");
     FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+#if defined(XP_WIN)
+    ASSERT_TRUE(ret.first() == kSanitizedWindowsPath &&
+                ret.second().value() == NS_LITERAL_STRING("content"));
+#else
     ASSERT_TRUE(ret.first() == kOther && !ret.second().isSome());
+#endif
   }
   {
     NS_NAMED_LITERAL_STRING(str, "/home/tom/files/thing");
     FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+#if defined(XP_WIN)
+    ASSERT_TRUE(ret.first() == kSanitizedWindowsPath &&
+                ret.second().value() == NS_LITERAL_STRING("thing"));
+#else
     ASSERT_TRUE(ret.first() == kOther && !ret.second().isSome());
+#endif
   }
   {
     NS_NAMED_LITERAL_STRING(str, "file://c/uers/tom/file.txt");
     FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+#if defined(XP_WIN)
+    ASSERT_TRUE(ret.first() == kSanitizedWindowsURL &&
+                ret.second().value() ==
+                    NS_LITERAL_STRING("file://.../file.txt"));
+#else
     ASSERT_TRUE(ret.first() == kOther && !ret.second().isSome());
+#endif
+  }
+  {
+    NS_NAMED_LITERAL_STRING(str, "c:/uers/tom/file.txt");
+    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+#if defined(XP_WIN)
+    ASSERT_TRUE(ret.first() == kSanitizedWindowsPath &&
+                ret.second().value() == NS_LITERAL_STRING("file.txt"));
+#else
+    ASSERT_TRUE(ret.first() == kOther && !ret.second().isSome());
+#endif
+  }
+  {
+    NS_NAMED_LITERAL_STRING(str, "http://example.com/");
+    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+#if defined(XP_WIN)
+    ASSERT_TRUE(ret.first() == kSanitizedWindowsURL &&
+                ret.second().value() == NS_LITERAL_STRING("http"));
+#else
+    ASSERT_TRUE(ret.first() == kOther && !ret.second().isSome());
+#endif
+  }
+  {
+    NS_NAMED_LITERAL_STRING(str, "http://example.com/thing.html");
+    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+#if defined(XP_WIN)
+    ASSERT_TRUE(ret.first() == kSanitizedWindowsURL &&
+                ret.second().value() == NS_LITERAL_STRING("http"));
+#else
+    ASSERT_TRUE(ret.first() == kOther && !ret.second().isSome());
+#endif
   }
 }
