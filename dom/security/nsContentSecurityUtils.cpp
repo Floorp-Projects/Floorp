@@ -13,6 +13,10 @@
 #include "nsIHttpChannel.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIURI.h"
+#if defined(XP_WIN)
+#  include "WinUtils.h"
+#  include <wininet.h>
+#endif
 
 #include "mozilla/dom/Document.h"
 
@@ -151,6 +155,11 @@ FilenameType nsContentSecurityUtils::FilenameToEvalType(
   static NS_NAMED_LITERAL_CSTRING(kOtherExtension, "otherextension");
   static NS_NAMED_LITERAL_CSTRING(kSuspectedUserChromeJS,
                                   "suspectedUserChromeJS");
+#if defined(XP_WIN)
+  static NS_NAMED_LITERAL_CSTRING(kSanitizedWindowsURL, "sanitizedWindowsURL");
+  static NS_NAMED_LITERAL_CSTRING(kSanitizedWindowsPath,
+                                  "sanitizedWindowsPath");
+#endif
   static NS_NAMED_LITERAL_CSTRING(kOther, "other");
   static NS_NAMED_LITERAL_CSTRING(kOtherWorker, "other-on-worker");
   static NS_NAMED_LITERAL_CSTRING(kRegexFailure, "regexfailure");
@@ -208,6 +217,30 @@ FilenameType nsContentSecurityUtils::FilenameToEvalType(
   if (regexMatch) {
     return FilenameType(kSuspectedUserChromeJS, Nothing());
   }
+
+#if defined(XP_WIN)
+  auto flags = mozilla::widget::WinUtils::PathTransformFlags::Default |
+               mozilla::widget::WinUtils::PathTransformFlags::RequireFilePath;
+  nsAutoString strSanitizedPath(fileName);
+  if (widget::WinUtils::PreparePathForTelemetry(strSanitizedPath, flags)) {
+    DWORD cchDecodedUrl = INTERNET_MAX_URL_LENGTH;
+    WCHAR szOut[INTERNET_MAX_URL_LENGTH];
+    HRESULT hr =
+        ::CoInternetParseUrl(fileName.get(), PARSE_SCHEMA, 0, szOut,
+                             INTERNET_MAX_URL_LENGTH, &cchDecodedUrl, 0);
+    if (hr == S_OK && cchDecodedUrl) {
+      nsAutoString sanitizedPathAndScheme;
+      sanitizedPathAndScheme.Append(szOut);
+      if (sanitizedPathAndScheme == NS_LITERAL_STRING("file")) {
+        sanitizedPathAndScheme.Append(NS_LITERAL_STRING("://.../"));
+        sanitizedPathAndScheme.Append(strSanitizedPath);
+      }
+      return FilenameType(kSanitizedWindowsURL, Some(sanitizedPathAndScheme));
+    } else {
+      return FilenameType(kSanitizedWindowsPath, Some(strSanitizedPath));
+    }
+  }
+#endif
 
   return FilenameType(kOther, Nothing());
 }

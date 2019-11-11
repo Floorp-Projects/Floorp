@@ -1710,6 +1710,12 @@ security:
         mozillaextension - An extension claiming to be from *mozilla.org
         otherextension - Another extension not from Mozilla
         suspectedUserChromeJS - A filepath ending in .uc.js
+        sanitizedWindowsPath - A filepath, on Windows, sanitized by WinUtils::PreparePathForTelemetry
+                               which is a bare filename or a subpath of %ProgramFiles%, %SystemRoot%,
+                               or %TEMP%
+        sanitizedWindowsURL - A partial URL, on Windows, consisting of either file://../ followed by
+                              the value prepared as for sanitizedWindowsPath, or the bare scheme of
+                              the original url
         other - Unknown
         other-on-worker - We cannot do a regex; it is not chromeuri or resourceuri, but
                           could be any other.
