@@ -28,6 +28,7 @@ ChromeUtils.defineModuleGetter(
 
 const PREALLOCATED_PREF = "dom.ipc.processPrelaunch.enabled";
 const MESSAGES = ["CPStartup:Go", "Content:BrowserChildReady"];
+let domainID = 1;
 
 /* global ExtensionAPI */
 
@@ -99,7 +100,11 @@ this.cpstartup = class extends ExtensionAPI {
     // Start the timer and the profiler right before the tab open on the parent side.
     TalosParentProfiler.resume("tab opening starts");
     this.startStamp = Services.telemetry.msSystemNow();
-    this.tab = gBrowser.selectedTab = gBrowser.addTrustedTab(url);
+    let newDomainURL = url.replace(
+      /http:\/\/127\.0\.0\.1:[0-9]+/,
+      "http://domain_" + domainID++
+    );
+    this.tab = gBrowser.selectedTab = gBrowser.addTrustedTab(newDomainURL);
 
     let { tab, delta } = await this.whenTabReady();
     TalosParentProfiler.pause("tab opening end");
