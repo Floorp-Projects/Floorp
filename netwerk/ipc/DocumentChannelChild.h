@@ -57,7 +57,7 @@ class DocumentChannelChild final : public PDocumentChannelChild,
 
   mozilla::ipc::IPCResult RecvFailedAsyncOpen(const nsresult& aStatusCode);
 
-  mozilla::ipc::IPCResult RecvCancelForProcessSwitch();
+  mozilla::ipc::IPCResult RecvDisconnectChildListeners(const nsresult& aStatus);
 
   mozilla::ipc::IPCResult RecvDeleteSelf();
 

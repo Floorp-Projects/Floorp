@@ -218,7 +218,7 @@ void DocumentChannelParent::FinishReplacementChannelSetup(bool aSucceeded) {
   nsresult rv;
 
   if (mDoingProcessSwitch && CanSend()) {
-    Unused << SendCancelForProcessSwitch();
+    Unused << SendDisconnectChildListeners(NS_BINDING_ABORTED);
   }
 
   nsCOMPtr<nsIParentChannel> redirectChannel;
