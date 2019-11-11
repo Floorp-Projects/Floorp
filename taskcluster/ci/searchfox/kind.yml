@@ -120,9 +120,6 @@ jobs:
                 - builds/taskcluster_base_win64.py
                 - builds/taskcluster_sub_win64/searchfox_debug.py
             tooltool-downloads: internal
-            extra-config:
-                "tooltool_servers": ['http://taskcluster/tooltool.mozilla-releng.net/']
-                'tooltool_url': 'http://taskcluster/tooltool.mozilla-releng.net/'
         fetches:
             toolchain:
                 - win64-clang-cl

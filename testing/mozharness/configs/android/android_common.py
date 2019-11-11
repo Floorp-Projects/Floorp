@@ -43,7 +43,6 @@ config = {
         'run-tests',
     ],
     "tooltool_cache": os.environ.get("TOOLTOOL_CACHE"),
-    "tooltool_servers": ['http://taskcluster/tooltool.mozilla-releng.net/'],
     "hostutils_manifest_path": "testing/config/tooltool-manifests/linux64/hostutils.manifest",
     "avds_dir": "/builds/worker/workspace/build/.android",
     # "log_format": "%(levelname)8s - %(message)s",

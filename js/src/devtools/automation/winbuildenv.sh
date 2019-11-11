@@ -27,7 +27,6 @@ mk_export_correct_style VC_PATH
 if ! which mozmake 2>/dev/null; then
     export PATH="$PATH:$SOURCE/.."
     if ! which mozmake 2>/dev/null; then
-  TT_SERVER=${TT_SERVER:-https://tooltool.mozilla-releng.net/}
-  ( cd $SOURCE/..; $SOURCE/mach artifact toolchain -v --tooltool-manifest $SOURCE/browser/config/tooltool-manifests/${platform:-win32}/releng.manifest --tooltool-url $TT_SERVER --retry 4${TOOLTOOL_CACHE:+ --cache-dir ${TOOLTOOL_CACHE}}${MOZ_TOOLCHAINS:+ ${MOZ_TOOLCHAINS}})
+  ( cd $SOURCE/..; $SOURCE/mach artifact toolchain -v --tooltool-manifest $SOURCE/browser/config/tooltool-manifests/${platform:-win32}/releng.manifest --retry 4${TOOLTOOL_CACHE:+ --cache-dir ${TOOLTOOL_CACHE}}${MOZ_TOOLCHAINS:+ ${MOZ_TOOLCHAINS}})
     fi
 fi
