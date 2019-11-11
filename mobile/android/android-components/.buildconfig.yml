@@ -400,3 +400,7 @@ projects:
     path: samples/dataprotect
     description: 'An app demoing how to use the Dataprotect component to load and store encrypted data in SharedPreferences.'
     publish: false
+  tooling-glean-gradle-plugin:
+    path: components/tooling/glean-gradle-plugin
+    description: 'A Gradle plugin to generate code for Glean metrics.'
+    publish: true

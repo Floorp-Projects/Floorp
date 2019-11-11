@@ -1,0 +1,82 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+plugins {
+    id 'groovy'
+    id 'maven-publish'
+    id 'java-gradle-plugin'
+    id 'org.jetbrains.kotlin.jvm'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation gradleApi()
+    implementation localGroovy()
+    implementation "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+
+            pom {
+                groupId = config.componentsGroupId
+                artifactId = archivesBaseName
+                description = project.ext.description
+                version = config.componentsVersion + (project.hasProperty('snapshot') ? '-SNAPSHOT' : '')
+
+                licenses {
+                    license {
+                        name = libLicense
+                        url = libLicenseUrl
+                    }
+                }
+
+                developers {
+                    developer {
+                        name = 'Mozilla Glean Team'
+                        email = 'glean-team@mozilla.com'
+                    }
+                }
+
+                scm {
+                    connection = libVcsUrl
+                    developerConnection = libVcsUrl
+                    url = libUrl
+                }
+            }
+        }
+    }
+}
+
+task lintRelease {
+  doLast {
+    // Do nothing. We execute the same set of tasks for all our modules in parallel on taskcluster.
+    // This project doesn't have a lint task. To avoid special casing our automation I just added
+    // an empty lint task here.
+  }
+}
+
+task assembleAndroidTest {
+  doLast {
+    // Do nothing. Like the `lint` task above this is just a dummy task so that this module
+    // behaves like our others and we do not need to special case it in automation.
+  }
+}
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
