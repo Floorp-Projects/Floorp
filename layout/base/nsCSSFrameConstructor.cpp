@@ -10170,9 +10170,18 @@ void nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
   nsIFrame* prevFrame = nullptr;
   nsIFrame* frame = aParentFrameList;
 
+  // This loop attempts to implement "Finding the First Letter":
+  // https://drafts.csswg.org/css-pseudo-4/#application-in-css
+  // FIXME: we don't handle nested blocks correctly yet though (bug 214004)
   while (frame) {
     nsIFrame* nextFrame = frame->GetNextSibling();
 
+    // Skip all ::markers.
+    if (frame->Style()->GetPseudoType() == PseudoStyleType::marker) {
+      prevFrame = frame;
+      frame = nextFrame;
+      continue;
+    }
     LayoutFrameType frameType = frame->Type();
     if (LayoutFrameType::Text == frameType) {
       // Wrap up first-letter content in a letter frame
