@@ -31,6 +31,28 @@
 // Include this last to avoid path problems on Windows.
 #include "ActorsChild.h"
 
+namespace {
+// TODO: Move this to xpcom/ds.
+template <typename T, typename Range, typename Transformation>
+nsTHashtable<T> TransformToHashtable(const Range& aRange,
+                                     const Transformation& aTransformation) {
+  // TODO: Determining the size of the range is not syntactically necessary (and
+  // requires random access iterators if expressed this way). It is a
+  // performance optimization. We could resort to std::distance to support any
+  // iterator category, but this would lead to a double iteration of the range
+  // in case of non-random-access iterators. It is hard to determine in general
+  // if double iteration or reallocation is worse.
+  auto res = nsTHashtable<T>(aRange.cend() - aRange.cbegin());
+  // TOOD: std::transform could be used if nsTHashtable had an insert_iterator,
+  // and this would also allow a more generic version not depending on
+  // nsTHashtable at all.
+  for (const auto& item : aRange) {
+    res.PutEntry(aTransformation(item));
+  }
+  return res;
+}
+}  // namespace
+
 namespace mozilla {
 namespace dom {
 
@@ -96,21 +118,14 @@ IDBTransaction::IDBTransaction(IDBDatabase* const aDatabase,
 
 #ifdef DEBUG
   if (!aObjectStoreNames.IsEmpty()) {
-    nsTArray<nsString> sortedNames(aObjectStoreNames);
-    sortedNames.Sort();
-
-    const uint32_t count = sortedNames.Length();
-    MOZ_ASSERT(count == aObjectStoreNames.Length());
-
     // Make sure the array is properly sorted.
-    for (uint32_t index = 0; index < count; index++) {
-      MOZ_ASSERT(aObjectStoreNames[index] == sortedNames[index]);
-    }
+    MOZ_ASSERT(
+        std::is_sorted(aObjectStoreNames.cbegin(), aObjectStoreNames.cend()));
 
     // Make sure there are no duplicates in our objectStore names.
-    for (uint32_t index = 0; index < count - 1; index++) {
-      MOZ_ASSERT(sortedNames[index] != sortedNames[index + 1]);
-    }
+    MOZ_ASSERT(aObjectStoreNames.cend() ==
+               std::adjacent_find(aObjectStoreNames.cbegin(),
+                                  aObjectStoreNames.cend()));
   }
 #endif
 
@@ -313,14 +328,12 @@ void IDBTransaction::OpenCursor(BackgroundCursorChild* const aBackgroundActor,
 void IDBTransaction::RefreshSpec(const bool aMayDelete) {
   AssertIsOnOwningThread();
 
-  for (uint32_t count = mObjectStores.Length(), index = 0; index < count;
-       index++) {
-    mObjectStores[index]->RefreshSpec(aMayDelete);
+  for (auto& objectStore : mObjectStores) {
+    objectStore->RefreshSpec(aMayDelete);
   }
 
-  for (uint32_t count = mDeletedObjectStores.Length(), index = 0; index < count;
-       index++) {
-    mDeletedObjectStores[index]->RefreshSpec(false);
+  for (auto& objectStore : mDeletedObjectStores) {
+    objectStore->RefreshSpec(false);
   }
 }
 
@@ -469,12 +482,16 @@ already_AddRefed<IDBObjectStore> IDBTransaction::CreateObjectStore(
 
 #ifdef DEBUG
   {
-    const nsString& name = aSpec.metadata().name();
-
-    for (uint32_t count = mObjectStores.Length(), index = 0; index < count;
-         index++) {
-      MOZ_ASSERT(mObjectStores[index]->Name() != name);
-    }
+    // TODO: Bind name outside of lambda capture as a workaround for GCC 7 bug
+    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66735.
+    const auto& name = aSpec.metadata().name();
+    // TODO: Use #ifdef and local variable as a workaround for Bug 1583449.
+    const bool objectStoreNameDoesNotYetExist =
+        std::all_of(mObjectStores.cbegin(), mObjectStores.cend(),
+                    [&name](const auto& objectStore) {
+                      return objectStore->Name() != name;
+                    });
+    MOZ_ASSERT(objectStoreNameDoesNotYetExist);
   }
 #endif
 
@@ -501,20 +518,20 @@ void IDBTransaction::DeleteObjectStore(const int64_t aObjectStoreId) {
       mBackgroundActor.mVersionChangeBackgroundActor->SendDeleteObjectStore(
           aObjectStoreId));
 
-  for (uint32_t count = mObjectStores.Length(), index = 0; index < count;
-       index++) {
-    RefPtr<IDBObjectStore>& objectStore = mObjectStores[index];
+  const auto foundIt =
+      std::find_if(mObjectStores.begin(), mObjectStores.end(),
+                   [aObjectStoreId](const auto& objectStore) {
+                     return objectStore->Id() == aObjectStoreId;
+                   });
+  if (foundIt != mObjectStores.end()) {
+    auto& objectStore = *foundIt;
+    objectStore->NoteDeletion();
 
-    if (objectStore->Id() == aObjectStoreId) {
-      objectStore->NoteDeletion();
+    RefPtr<IDBObjectStore>* deletedObjectStore =
+        mDeletedObjectStores.AppendElement();
+    deletedObjectStore->swap(objectStore);
 
-      RefPtr<IDBObjectStore>* deletedObjectStore =
-          mDeletedObjectStores.AppendElement();
-      deletedObjectStore->swap(mObjectStores[index]);
-
-      mObjectStores.RemoveElementAt(index);
-      break;
-    }
+    mObjectStores.RemoveElementAt(foundIt);
   }
 }
 
@@ -610,46 +627,43 @@ void IDBTransaction::AbortInternal(const nsresult aAbortCode,
       // This case is specially handled as a performance optimization, it is
       // equivalent to the else block.
       mObjectStores.Clear();
-      mDeletedObjectStores.Clear();
     } else {
-      nsTHashtable<nsUint64HashKey> validIds(specArray.Length());
+      const auto validIds = TransformToHashtable<nsUint64HashKey>(
+          specArray, [](const auto& spec) {
+            const int64_t objectStoreId = spec.metadata().id();
+            MOZ_ASSERT(objectStoreId);
+            return static_cast<uint64_t>(objectStoreId);
+          });
 
-      for (uint32_t specCount = specArray.Length(), specIndex = 0;
-           specIndex < specCount; specIndex++) {
-        const int64_t objectStoreId = specArray[specIndex].metadata().id();
-        MOZ_ASSERT(objectStoreId);
+      mObjectStores.RemoveElementsAt(
+          std::remove_if(mObjectStores.begin(), mObjectStores.end(),
+                         [&validIds](const auto& objectStore) {
+                           return !validIds.Contains(
+                               uint64_t(objectStore->Id()));
+                         }),
+          mObjectStores.end());
 
-        validIds.PutEntry(uint64_t(objectStoreId));
-      }
-
-      for (uint32_t objCount = mObjectStores.Length(), objIndex = 0;
-           objIndex < objCount;
-           /* incremented conditionally */) {
-        const int64_t objectStoreId = mObjectStores[objIndex]->Id();
+      // TODO: if nsTArray had an insert iterator, we could use the following
+      // instead:
+      // std::copy_if(std::make_move_iterator(mDeletedObjectStores.begin()),
+      //              std::make_move_iterator(mDeletedObjectStores.end()),
+      //              std::back_inserter(mObjectStores),
+      //              [&validIds](const auto& deletedObjectStore) {
+      //                const int64_t objectStoreId = deletedObjectStore->Id();
+      //                MOZ_ASSERT(objectStoreId);
+      //                return validIds.Contains(uint64_t(objectStoreId));
+      //              });
+      for (auto& deletedObjectStore : mDeletedObjectStores) {
+        const int64_t objectStoreId = deletedObjectStore->Id();
         MOZ_ASSERT(objectStoreId);
 
         if (validIds.Contains(uint64_t(objectStoreId))) {
-          objIndex++;
-        } else {
-          mObjectStores.RemoveElementAt(objIndex);
-          objCount--;
+          RefPtr<IDBObjectStore>* objectStore = mObjectStores.AppendElement();
+          objectStore->swap(deletedObjectStore);
         }
-      }
-
-      if (!mDeletedObjectStores.IsEmpty()) {
-        for (uint32_t objCount = mDeletedObjectStores.Length(), objIndex = 0;
-             objIndex < objCount; objIndex++) {
-          const int64_t objectStoreId = mDeletedObjectStores[objIndex]->Id();
-          MOZ_ASSERT(objectStoreId);
-
-          if (validIds.Contains(uint64_t(objectStoreId))) {
-            RefPtr<IDBObjectStore>* objectStore = mObjectStores.AppendElement();
-            objectStore->swap(mDeletedObjectStores[objIndex]);
-          }
-        }
-        mDeletedObjectStores.Clear();
       }
     }
+    mDeletedObjectStores.Clear();
   }
 
   // Fire the abort event if there are no outstanding requests. Otherwise the
@@ -873,13 +887,13 @@ already_AddRefed<IDBObjectStore> IDBTransaction::ObjectStore(
     const nsTArray<ObjectStoreSpec>& objectStores =
         mDatabase->Spec()->objectStores();
 
-    for (uint32_t count = objectStores.Length(), index = 0; index < count;
-         index++) {
-      const ObjectStoreSpec& objectStore = objectStores[index];
-      if (objectStore.metadata().name() == aName) {
-        spec = &objectStore;
-        break;
-      }
+    const auto foundIt =
+        std::find_if(objectStores.cbegin(), objectStores.cend(),
+                     [&aName](const auto& objectStore) {
+                       return objectStore.metadata().name() == aName;
+                     });
+    if (foundIt != objectStores.cend()) {
+      spec = &*foundIt;
     }
   }
 
@@ -888,21 +902,16 @@ already_AddRefed<IDBObjectStore> IDBTransaction::ObjectStore(
     return nullptr;
   }
 
-  const int64_t desiredId = spec->metadata().id();
-
   RefPtr<IDBObjectStore> objectStore;
 
-  for (uint32_t count = mObjectStores.Length(), index = 0; index < count;
-       index++) {
-    RefPtr<IDBObjectStore>& existingObjectStore = mObjectStores[index];
-
-    if (existingObjectStore->Id() == desiredId) {
-      objectStore = existingObjectStore;
-      break;
-    }
-  }
-
-  if (!objectStore) {
+  const auto foundIt = std::find_if(
+      mObjectStores.cbegin(), mObjectStores.cend(),
+      [desiredId = spec->metadata().id()](const auto& existingObjectStore) {
+        return existingObjectStore->Id() == desiredId;
+      });
+  if (foundIt != mObjectStores.cend()) {
+    objectStore = *foundIt;
+  } else {
     objectStore = IDBObjectStore::Create(this, *spec);
     MOZ_ASSERT(objectStore);
 
