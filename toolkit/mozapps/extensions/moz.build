@@ -45,6 +45,12 @@ elif CONFIG['MOZ_BUILD_APP'] == 'mobile/android':
     FINAL_TARGET_FILES.chrome.chrome.content += [
         '!%s' % built_in_addons,
     ]
+elif CONFIG['MOZ_BUILD_APP'] == 'comm/mail':
+    manifest.flags = ['--features=features']
+
+    FINAL_TARGET_FILES.chrome.browser.content += [
+        '!%s' % built_in_addons,
+    ]
 
 EXTRA_PP_COMPONENTS += [
     'extensions.manifest',
