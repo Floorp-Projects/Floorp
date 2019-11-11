@@ -39,6 +39,7 @@ import mozilla.components.feature.accounts.FxaWebChannelFeature
 import mozilla.components.feature.app.links.AppLinksFeature
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
+import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.downloads.manager.FetchDownloadManager
 import mozilla.components.feature.intent.ext.EXTRA_SESSION_ID
@@ -72,10 +73,10 @@ import org.mozilla.fenix.components.toolbar.BrowserToolbarViewInteractor
 import org.mozilla.fenix.components.toolbar.DefaultBrowserToolbarController
 import org.mozilla.fenix.components.toolbar.QuickActionSheetState
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
+import org.mozilla.fenix.downloads.DownloadNotificationBottomSheetDialog
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.enterToImmersiveMode
-import org.mozilla.fenix.ext.getDimenInDip
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
@@ -256,27 +257,40 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                 view = view
             )
 
-            downloadsFeature.set(
-                feature = DownloadsFeature(
+            val downloadFeature = DownloadsFeature(
+                context.applicationContext,
+                store = store,
+                useCases = context.components.useCases.downloadUseCases,
+                fragmentManager = childFragmentManager,
+                customTabId = customTabSessionId,
+                downloadManager = FetchDownloadManager(
                     context.applicationContext,
-                    store = store,
-                    useCases = context.components.useCases.downloadUseCases,
-                    fragmentManager = childFragmentManager,
-                    customTabId = customTabSessionId,
-                    downloadManager = FetchDownloadManager(
-                        context.applicationContext,
-                        DownloadService::class
-                    ),
-                    promptsStyling = DownloadsFeature.PromptsStyling(
-                        gravity = Gravity.BOTTOM,
-                        shouldWidthMatchParent = true,
-                        positiveButtonBackgroundColor = ThemeManager.resolveAttribute(R.attr.accent, context),
-                        positiveButtonTextColor = ThemeManager.resolveAttribute(R.attr.contrastText, context),
-                        positiveButtonRadius = context.getDimenInDip(R.dimen.tab_corner_radius)
-                    ),
-                    onNeedToRequestPermissions = { permissions ->
-                        requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
-                    }),
+                    DownloadService::class
+                ),
+                promptsStyling = DownloadsFeature.PromptsStyling(
+                    gravity = Gravity.BOTTOM,
+                    shouldWidthMatchParent = true,
+                    positiveButtonBackgroundColor = ThemeManager.resolveAttribute(R.attr.accent, context),
+                    positiveButtonTextColor = ThemeManager.resolveAttribute(R.attr.contrastText, context),
+                    positiveButtonRadius = (resources.getDimensionPixelSize(R.dimen.tab_corner_radius)).toFloat()
+                ),
+                onNeedToRequestPermissions = { permissions ->
+                    requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
+                }
+            )
+
+            downloadFeature.onDownloadCompleted = { download, _, downloadJobStatus ->
+                val dialog = DownloadNotificationBottomSheetDialog(
+                    context = context,
+                    didFail = downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED,
+                    download = download,
+                    tryAgain = downloadFeature::tryAgain
+                )
+                dialog.show()
+            }
+
+            downloadsFeature.set(
+                downloadFeature,
                 owner = this,
                 view = view
             )
