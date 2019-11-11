@@ -512,10 +512,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // the connection manager
   RefPtr<nsHttpConnectionMgr> mConnMgr;
 
-  // This thread is used for performing operations that should not block
-  // the main thread.
-  nsCOMPtr<nsIThread> mBackgroundThread;
-
   //
   // prefs
   //
