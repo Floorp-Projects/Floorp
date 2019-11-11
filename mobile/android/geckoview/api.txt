@@ -59,7 +59,7 @@ import java.util.List;
 import java.util.Map;
 import org.json.JSONObject;
 import org.mozilla.geckoview.AllowOrDeny;
-import org.mozilla.geckoview.AutofillElement;
+import org.mozilla.geckoview.Autofill;
 import org.mozilla.geckoview.CompositorController;
 import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.ContentBlockingController;
@@ -105,28 +105,65 @@ package org.mozilla.geckoview {
     enum_constant public static final AllowOrDeny DENY;
   }
 
-  public class AutofillElement {
-    ctor protected AutofillElement();
-    field public static final int HINT_EMAIL_ADDRESS = 0;
-    field public static final int HINT_NONE = -1;
-    field public static final int HINT_PASSWORD = 1;
-    field public static final int HINT_URL = 2;
-    field public static final int HINT_USERNAME = 3;
-    field public static final int INPUT_TYPE_NONE = -1;
-    field public static final int INPUT_TYPE_NUMBER = 1;
-    field public static final int INPUT_TYPE_PHONE = 2;
-    field public static final int INPUT_TYPE_TEXT = 0;
-    field @NonNull public final Map<String,String> attributes;
-    field @NonNull public final Collection<AutofillElement> children;
-    field @NonNull public final Rect dimensions;
-    field @NonNull public final String domain;
-    field public final boolean enabled;
-    field public final boolean focusable;
-    field public final boolean focused;
-    field public final int hint;
-    field public final int id;
-    field public final int inputType;
-    field @NonNull public final String tag;
+  public class Autofill {
+    ctor public Autofill();
+  }
+
+  public static interface Autofill.Delegate {
+    method @UiThread default public void onAutofill(@NonNull GeckoSession, int, @Nullable Autofill.Node);
+  }
+
+  public static final class Autofill.Hint {
+    method @AnyThread @Nullable public static String toString(int);
+    field public static final int EMAIL_ADDRESS = 0;
+    field public static final int NONE = -1;
+    field public static final int PASSWORD = 1;
+    field public static final int URI = 2;
+    field public static final int USERNAME = 3;
+  }
+
+  public static final class Autofill.InputType {
+    method @AnyThread @Nullable public static String toString(int);
+    field public static final int NONE = -1;
+    field public static final int NUMBER = 1;
+    field public static final int PHONE = 2;
+    field public static final int TEXT = 0;
+  }
+
+  public static final class Autofill.Node {
+    method @UiThread public void fillViewStructure(@NonNull View, @NonNull ViewStructure, int);
+    method @AnyThread @Nullable public String getAttribute(@NonNull String);
+    method @AnyThread @NonNull public Map<String,String> getAttributes();
+    method @AnyThread @NonNull public Collection<Autofill.Node> getChildren();
+    method @AnyThread @NonNull public Rect getDimensions();
+    method @AnyThread @NonNull public String getDomain();
+    method @AnyThread public boolean getEnabled();
+    method @AnyThread public boolean getFocusable();
+    method @AnyThread public boolean getFocused();
+    method @AnyThread public int getHint();
+    method @AnyThread public int getId();
+    method @AnyThread public int getInputType();
+    method @AnyThread @NonNull public String getTag();
+    method @AnyThread @NonNull public String getValue();
+    method @AnyThread public boolean getVisible();
+  }
+
+  public static final class Autofill.Notify {
+    method @AnyThread @Nullable public static String toString(int);
+    field public static final int NODE_ADDED = 3;
+    field public static final int NODE_BLURRED = 7;
+    field public static final int NODE_FOCUSED = 6;
+    field public static final int NODE_REMOVED = 4;
+    field public static final int NODE_UPDATED = 5;
+    field public static final int SESSION_CANCELED = 2;
+    field public static final int SESSION_COMMITTED = 1;
+    field public static final int SESSION_STARTED = 0;
+  }
+
+  public static final class Autofill.Session {
+    method @UiThread public void fillViewStructure(@NonNull View, @NonNull ViewStructure, int);
+    method @AnyThread @NonNull public Rect getDefaultDimensions();
+    method @AnyThread @NonNull public Autofill.Node getRoot();
   }
 
   @UiThread public class BasicSelectionActionDelegate implements ActionMode.Callback GeckoSession.SelectionActionDelegate {
@@ -541,8 +578,8 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public static String createDataUri(@NonNull String, @Nullable String);
     method @AnyThread public void exitFullScreen();
     method @UiThread @NonNull public SessionAccessibility getAccessibility();
-    method @UiThread @Nullable public GeckoSession.AutofillDelegate getAutofillDelegate();
-    method @UiThread @NonNull public AutofillElement getAutofillElements();
+    method @UiThread @Nullable public Autofill.Delegate getAutofillDelegate();
+    method @UiThread @NonNull public Autofill.Session getAutofillSession();
     method @UiThread public void getClientBounds(@NonNull RectF);
     method @UiThread public void getClientToScreenMatrix(@NonNull Matrix);
     method @UiThread public void getClientToSurfaceMatrix(@NonNull Matrix);
@@ -594,7 +631,7 @@ package org.mozilla.geckoview {
     method @AnyThread public void reload();
     method @AnyThread public void restoreState(@NonNull GeckoSession.SessionState);
     method @AnyThread public void setActive(boolean);
-    method @UiThread public void setAutofillDelegate(@Nullable GeckoSession.AutofillDelegate);
+    method @UiThread public void setAutofillDelegate(@Nullable Autofill.Delegate);
     method @AnyThread public void setContentBlockingDelegate(@Nullable ContentBlocking.Delegate);
     method @UiThread public void setContentDelegate(@Nullable GeckoSession.ContentDelegate);
     method @AnyThread public void setFocused(boolean);
@@ -626,18 +663,6 @@ package org.mozilla.geckoview {
     field public static final int LOAD_FLAGS_NONE = 0;
     field public static final int LOAD_FLAGS_REPLACE_HISTORY = 64;
     field @Nullable protected GeckoSession.Window mWindow;
-  }
-
-  public static interface GeckoSession.AutofillDelegate {
-    method @UiThread default public void onAutofill(@NonNull GeckoSession, int, int);
-    field public static final int AUTOFILL_NOTIFY_CANCELED = 2;
-    field public static final int AUTOFILL_NOTIFY_COMMITTED = 1;
-    field public static final int AUTOFILL_NOTIFY_STARTED = 0;
-    field public static final int AUTOFILL_NOTIFY_VIEW_ADDED = 3;
-    field public static final int AUTOFILL_NOTIFY_VIEW_ENTERED = 6;
-    field public static final int AUTOFILL_NOTIFY_VIEW_EXITED = 7;
-    field public static final int AUTOFILL_NOTIFY_VIEW_REMOVED = 4;
-    field public static final int AUTOFILL_NOTIFY_VIEW_UPDATED = 5;
   }
 
   public static interface GeckoSession.ContentDelegate {
