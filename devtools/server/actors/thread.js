@@ -1318,7 +1318,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return stepFrame;
   },
 
-  frames: function(request) {
+  frames: function(start, count) {
     if (this.state !== "paused") {
       return {
         error: "wrongState",
@@ -1326,9 +1326,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
           "Stack frames are only available while the debuggee is paused.",
       };
     }
-
-    const start = request.start ? request.start : 0;
-    const count = request.count;
 
     // Find the starting frame...
     let frame = this.youngestFrame;
@@ -1338,8 +1335,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       i++;
     }
 
-    // Return request.count frames, or all remaining
-    // frames if count is not defined.
+    // Return count frames, or all remaining frames if count is not defined.
     const frames = [];
     for (; frame && (!count || i < start + count); i++, frame = frame.older) {
       const sourceActor = this.sources.createSourceActor(frame.script.source);
