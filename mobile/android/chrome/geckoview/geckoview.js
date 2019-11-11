@@ -527,6 +527,12 @@ function startup() {
         frameScript: "chrome://geckoview/content/SessionStateAggregator.js",
       },
     },
+    {
+      name: "GeckoViewAutofill",
+      onInit: {
+        frameScript: "chrome://geckoview/content/GeckoViewAutofillChild.js",
+      },
+    },
   ]);
 
   Services.tm.dispatchToMainThread(() => {
