@@ -385,6 +385,7 @@ def make_job_description(config, jobs):
         if job.get('extra'):
             job_description['extra'] = job['extra']
 
+        job_description['run']['tooltool-downloads'] = job['tooltool']
         if job['worker-type'] == "b-win2012":
             job_description['worker'] = {
                 'os': 'windows',
@@ -398,7 +399,6 @@ def make_job_description(config, jobs):
                 'max-run-time': job['run-time'],
                 'chain-of-trust': True,
             }
-            job_description['run']['tooltool-downloads'] = job['tooltool']
             job_description['run']['need-xvfb'] = True
 
         if job.get('docker-image'):
