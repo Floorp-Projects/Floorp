@@ -67,11 +67,11 @@ void CMapBasicTests::SetUp() {
   LoadFont(font_name.c_str(), font_factory, &font_array);
   ASSERT_FALSE(font_array.empty());
   Ptr<Font> font = font_array.at(0);
-  ASSERT_NE(font, reinterpret_cast<Font*>(NULL));
+  ASSERT_NE(font, static_cast<Font*>(NULL));
   cmap_table_ = down_cast<CMapTable*>(font->GetTable(Tag::cmap));
   if (!cmap_table_)
     fprintf(stderr, "No CMap: %s\n", font_name.c_str());
-  ASSERT_NE(cmap_table_, reinterpret_cast<CMapTable*>(NULL));
+  ASSERT_NE(cmap_table_, static_cast<CMapTable*>(NULL));
 
   // Loading the XML file
   document_ = TiXmlDocument((font_name + ".xml").c_str());
@@ -85,7 +85,7 @@ TEST_P(CMapBasicTests, BasicTest) {
   TiXmlNodeVector* cmaps = GetNodesWithName(cmap_table->at(0), "cmap");
   const TiXmlAttribute* num_cmaps_attr = GetAttribute(cmap_table->at(0),
                                                       "num_cmaps");
-  ASSERT_NE(num_cmaps_attr, reinterpret_cast<TiXmlAttribute*>(NULL));
+  ASSERT_NE(num_cmaps_attr, static_cast<TiXmlAttribute*>(NULL));
   // But there may be more than one CMap in this table
   ASSERT_LE(cmaps->size(), (size_t)num_cmaps_attr->IntValue());
   for (TiXmlNodeVector::iterator it = cmaps->begin();

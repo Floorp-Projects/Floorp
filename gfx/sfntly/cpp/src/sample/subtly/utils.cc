@@ -79,7 +79,7 @@ bool SerializeFont(const char* font_path, FontFactory* factory, Font* font) {
 #else
   output_file = fopen(font_path, "wb");
 #endif
-  if (output_file == reinterpret_cast<FILE*>(NULL))
+  if (output_file == static_cast<FILE*>(NULL))
     return false;
   for (size_t i = 0; i < output_stream.Size(); ++i) {
     fwrite(&(output_stream.Get()[i]), 1, 1, output_file);
