@@ -174,12 +174,6 @@ void CustomElementData::SetCustomElementDefinition(
   mCustomElementDefinition = aDefinition;
 }
 
-void CustomElementData::AttachedInternals() {
-  MOZ_ASSERT(!mIsAttachedInternals);
-
-  mIsAttachedInternals = true;
-}
-
 CustomElementDefinition* CustomElementData::GetCustomElementDefinition() {
   MOZ_ASSERT(mCustomElementDefinition ? mState == State::eCustom
                                       : mState != State::eCustom);
@@ -642,61 +636,6 @@ int32_t CustomElementRegistry::InferNamespace(
   return kNameSpaceID_XHTML;
 }
 
-bool CustomElementRegistry::JSObjectToAtomArray(
-    JSContext* aCx, JS::Handle<JSObject*> aConstructor, const char16_t* aName,
-    nsTArray<RefPtr<nsAtom>>& aArray, ErrorResult& aRv) {
-  JS::RootedValue iterable(aCx, JS::UndefinedValue());
-  if (!JS_GetUCProperty(aCx, aConstructor, aName,
-                        std::char_traits<char16_t>::length(aName), &iterable)) {
-    aRv.NoteJSContextException(aCx);
-    return false;
-  }
-
-  if (!iterable.isUndefined()) {
-    if (!iterable.isObject()) {
-      aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(nsDependentString(aName));
-      return false;
-    }
-
-    JS::ForOfIterator iter(aCx);
-    if (!iter.init(iterable, JS::ForOfIterator::AllowNonIterable)) {
-      aRv.NoteJSContextException(aCx);
-      return false;
-    }
-
-    if (!iter.valueIsIterable()) {
-      aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(nsDependentString(aName));
-      return false;
-    }
-
-    JS::Rooted<JS::Value> attribute(aCx);
-    while (true) {
-      bool done;
-      if (!iter.next(&attribute, &done)) {
-        aRv.NoteJSContextException(aCx);
-        return false;
-      }
-      if (done) {
-        break;
-      }
-
-      nsAutoString attrStr;
-      if (!ConvertJSValueToString(aCx, attribute, eStringify, eStringify,
-                                  attrStr)) {
-        aRv.NoteJSContextException(aCx);
-        return false;
-      }
-
-      if (!aArray.AppendElement(NS_Atomize(attrStr))) {
-        aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
-
 // https://html.spec.whatwg.org/multipage/scripting.html#element-definition
 void CustomElementRegistry::Define(
     JSContext* aCx, const nsAString& aName,
@@ -843,9 +782,6 @@ void CustomElementRegistry::Define(
 
   auto callbacksHolder = MakeUnique<LifecycleCallbacks>();
   nsTArray<RefPtr<nsAtom>> observedAttributes;
-  AutoTArray<RefPtr<nsAtom>, 2> disabledFeatures;
-  bool disableInternals = false;
-  bool disableShadow = false;
   {  // Set mIsCustomDefinitionRunning.
     /**
      * 9. Set this CustomElementRegistry's element definition is running flag.
@@ -905,36 +841,58 @@ void CustomElementRegistry::Define(
      *          any exceptions from the conversion.
      */
     if (callbacksHolder->mAttributeChangedCallback.WasPassed()) {
-      if (!JSObjectToAtomArray(aCx, constructor, u"observedAttributes",
-                               observedAttributes, aRv)) {
-        return;
-      }
-    }
+      JS::Rooted<JS::Value> observedAttributesIterable(aCx);
 
-    /**
-     * 14.6. Let disabledFeatures be an empty sequence<DOMString>.
-     * 14.7. Let disabledFeaturesIterable be Get(constructor,
-     *       "disabledFeatures"). Rethrow any exceptions.
-     * 14.8. If disabledFeaturesIterable is not undefined, then set
-     *       disabledFeatures to the result of converting
-     *       disabledFeaturesIterable to a sequence<DOMString>.
-     *       Rethrow any exceptions from the conversion.
-     */
-    if (StaticPrefs::dom_webcomponents_elementInternals_enabled()) {
-      if (!JSObjectToAtomArray(aCx, constructor, u"disabledFeatures",
-                               disabledFeatures, aRv)) {
+      if (!JS_GetProperty(aCx, constructor, "observedAttributes",
+                          &observedAttributesIterable)) {
+        aRv.NoteJSContextException(aCx);
         return;
       }
 
-      // 14.9. Set disableInternals to true if disabledFeaturesSequence contains
-      //       "internals".
-      disableInternals = disabledFeatures.Contains(
-          static_cast<nsStaticAtom*>(nsGkAtoms::internals));
+      if (!observedAttributesIterable.isUndefined()) {
+        if (!observedAttributesIterable.isObject()) {
+          aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(
+              NS_LITERAL_STRING("observedAttributes"));
+          return;
+        }
 
-      // 14.10. Set disableShadow to true if disabledFeaturesSequence contains
-      //        "shadow".
-      disableShadow = disabledFeatures.Contains(
-          static_cast<nsStaticAtom*>(nsGkAtoms::shadow));
+        JS::ForOfIterator iter(aCx);
+        if (!iter.init(observedAttributesIterable,
+                       JS::ForOfIterator::AllowNonIterable)) {
+          aRv.NoteJSContextException(aCx);
+          return;
+        }
+
+        if (!iter.valueIsIterable()) {
+          aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(
+              NS_LITERAL_STRING("observedAttributes"));
+          return;
+        }
+
+        JS::Rooted<JS::Value> attribute(aCx);
+        while (true) {
+          bool done;
+          if (!iter.next(&attribute, &done)) {
+            aRv.NoteJSContextException(aCx);
+            return;
+          }
+          if (done) {
+            break;
+          }
+
+          nsAutoString attrStr;
+          if (!ConvertJSValueToString(aCx, attribute, eStringify, eStringify,
+                                      attrStr)) {
+            aRv.NoteJSContextException(aCx);
+            return;
+          }
+
+          if (!observedAttributes.AppendElement(NS_Atomize(attrStr))) {
+            aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+            return;
+          }
+        }
+      }
     }
   }  // Unset mIsCustomDefinitionRunning
 
@@ -957,8 +915,7 @@ void CustomElementRegistry::Define(
 
   RefPtr<CustomElementDefinition> definition = new CustomElementDefinition(
       nameAtom, localNameAtom, nameSpaceID, &aFunctionConstructor,
-      std::move(observedAttributes), std::move(callbacksHolder),
-      disableInternals, disableShadow);
+      std::move(observedAttributes), std::move(callbacksHolder));
 
   CustomElementDefinition* def = definition.get();
   mCustomDefinitions.Put(nameAtom, definition.forget());
@@ -1095,19 +1052,8 @@ already_AddRefed<Promise> CustomElementRegistry::WhenDefined(
 namespace {
 
 MOZ_CAN_RUN_SCRIPT
-static void DoUpgrade(Element* aElement, CustomElementDefinition* aDefinition,
-                      CustomElementConstructor* aConstructor,
+static void DoUpgrade(Element* aElement, CustomElementConstructor* aConstructor,
                       ErrorResult& aRv) {
-  if (aDefinition->mDisableShadow && aElement->GetShadowRoot()) {
-    aRv.ThrowDOMException(
-        NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-        nsPrintfCString(
-            "Custom element upgrade to '%s' is disabled due to shadow root "
-            "already exists",
-            NS_ConvertUTF16toUTF8(aDefinition->mType->GetUTF16String()).get()));
-    return;
-  }
-
   JS::Rooted<JS::Value> constructResult(RootingCx());
   // Rethrow the exception since it might actually throw the exception from the
   // upgrade steps back out to the caller of document.createElement.
@@ -1178,8 +1124,7 @@ void CustomElementRegistry::Upgrade(Element* aElement,
   AutoConstructionStackEntry acs(aDefinition->mConstructionStack, aElement);
 
   // Step 6 and step 7.
-  DoUpgrade(aElement, aDefinition, MOZ_KnownLive(aDefinition->mConstructor),
-            aRv);
+  DoUpgrade(aElement, MOZ_KnownLive(aDefinition->mConstructor), aRv);
   if (aRv.Failed()) {
     data->mState = CustomElementData::State::eFailed;
     // Empty element's custom element reaction queue.
@@ -1460,16 +1405,13 @@ CustomElementDefinition::CustomElementDefinition(
     nsAtom* aType, nsAtom* aLocalName, int32_t aNamespaceID,
     CustomElementConstructor* aConstructor,
     nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
-    UniquePtr<LifecycleCallbacks>&& aCallbacks, bool aDisableInternals,
-    bool aDisableShadow)
+    UniquePtr<LifecycleCallbacks>&& aCallbacks)
     : mType(aType),
       mLocalName(aLocalName),
       mNamespaceID(aNamespaceID),
       mConstructor(aConstructor),
       mObservedAttributes(std::move(aObservedAttributes)),
-      mCallbacks(std::move(aCallbacks)),
-      mDisableInternals(aDisableInternals),
-      mDisableShadow(aDisableShadow) {}
+      mCallbacks(std::move(aCallbacks)) {}
 
 }  // namespace dom
 }  // namespace mozilla
