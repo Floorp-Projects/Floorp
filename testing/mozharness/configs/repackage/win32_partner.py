@@ -5,7 +5,6 @@ platform = "win32"
 config = {
     "repack_id": os.environ.get("REPACK_ID"),
 
-    'tooltool_url': 'https://tooltool.mozilla-releng.net/',
     'run_configure': False,
 
     'env': {

@@ -137,8 +137,6 @@ jobs:
             tooltool-downloads: internal
             extra-config:
                 stage_platform: win32
-                "tooltool_servers": ['http://taskcluster/tooltool.mozilla-releng.net/']
-                'tooltool_url': 'http://taskcluster/tooltool.mozilla-releng.net/'
         fetches:
             toolchain:
                 - win64-clang-cl
@@ -168,8 +166,6 @@ jobs:
             tooltool-downloads: internal
             extra-config:
                 stage_platform: win64
-                "tooltool_servers": ['http://taskcluster/tooltool.mozilla-releng.net/']
-                'tooltool_url': 'http://taskcluster/tooltool.mozilla-releng.net/'
         fetches:
             toolchain:
                 - win64-clang-cl

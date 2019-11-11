@@ -54,7 +54,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                 # jobs have a minimal `hg pull`.
                 "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
                 "repo_base": "https://hg.mozilla.org",
-                'tooltool_url': 'https://tooltool.mozilla-releng.net/',
                 "graph_selector": "/server/collect.cgi",
                 # only used for make uploadsymbols
                 'old_packages': [

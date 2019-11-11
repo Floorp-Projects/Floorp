@@ -2,7 +2,6 @@
 
 set -x
 
-TOOLTOOL_SERVER=${TOOLTOOL_SERVER:-https://tooltool.mozilla-releng.net/}
 SPIDERMONKEY_VARIANT=${SPIDERMONKEY_VARIANT:-plain}
 UPLOAD_DIR=${UPLOAD_DIR:-$HOME/artifacts/}
 WORK=${WORK:-$HOME/workspace}
@@ -57,7 +56,7 @@ fi
 # manifests.
 BROWSER_PLATFORM=$PLATFORM_OS$BITS
 
-(cd $TOOLTOOL_CHECKOUT && ${SRCDIR}/mach artifact toolchain${TOOLTOOL_MANIFEST:+ -v $TOOLTOOL_AUTH_FLAGS --tooltool-url $TOOLTOOL_SERVER --tooltool-manifest $SRCDIR/$TOOLTOOL_MANIFEST}${TOOLTOOL_CACHE:+ --cache-dir $TOOLTOOL_CACHE}${MOZ_TOOLCHAINS:+ ${MOZ_TOOLCHAINS}})
+(cd $TOOLTOOL_CHECKOUT && ${SRCDIR}/mach artifact toolchain${TOOLTOOL_MANIFEST:+ -v $TOOLTOOL_AUTH_FLAGS --tooltool-manifest $SRCDIR/$TOOLTOOL_MANIFEST}${TOOLTOOL_CACHE:+ --cache-dir $TOOLTOOL_CACHE}${MOZ_TOOLCHAINS:+ ${MOZ_TOOLCHAINS}})
 
 ) || exit 1 # end of set -e scope
 

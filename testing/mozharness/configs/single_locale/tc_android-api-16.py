@@ -15,7 +15,6 @@ config = {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
         "output_dir": "%(abs_work_dir)s/src",
     },
-    "tooltool_servers": ['http://taskcluster/tooltool.mozilla-releng.net/'],
 
     "upload_env": {
         'UPLOAD_PATH': '/builds/worker/artifacts/',
