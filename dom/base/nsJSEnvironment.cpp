@@ -1151,8 +1151,8 @@ void nsJSContext::GarbageCollectNow(JS::GCReason aReason,
                                     IsIncremental aIncremental,
                                     IsShrinking aShrinking,
                                     int64_t aSliceMillis) {
-  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("nsJSContext::GarbageCollectNow", GCCC,
-                                   JS::ExplainGCReason(aReason));
+  AUTO_PROFILER_LABEL_DYNAMIC_CSTR_NONSENSITIVE(
+      "nsJSContext::GarbageCollectNow", GCCC, JS::ExplainGCReason(aReason));
 
   MOZ_ASSERT_IF(aSliceMillis, aIncremental == IncrementalGC);
 

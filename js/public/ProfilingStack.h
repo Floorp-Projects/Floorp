@@ -211,7 +211,9 @@ class ProfilingStackFrame {
     // and to be replaced by the subcategory's label.
     LABEL_DETERMINED_BY_CATEGORY_PAIR = 1 << 8,
 
-    FLAGS_BITCOUNT = 9,
+    NONSENSITIVE = 1 << 9,
+
+    FLAGS_BITCOUNT = 10,
     FLAGS_MASK = (1 << FLAGS_BITCOUNT) - 1
   };
 
@@ -223,6 +225,10 @@ class ProfilingStackFrame {
 
   bool isLabelFrame() const {
     return uint32_t(flagsAndCategoryPair_) & uint32_t(Flags::IS_LABEL_FRAME);
+  }
+
+  bool isNonsensitive() const {
+    return uint32_t(flagsAndCategoryPair_) & uint32_t(Flags::NONSENSITIVE);
   }
 
   bool isSpMarkerFrame() const {

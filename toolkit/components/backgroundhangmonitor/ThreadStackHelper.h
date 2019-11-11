@@ -11,6 +11,7 @@
 
 #  include "js/ProfilingStack.h"
 #  include "HangDetails.h"
+#  include "mozilla/Span.h"
 #  include "nsThread.h"
 
 #  include <stddef.h>
@@ -95,6 +96,7 @@ class ThreadStackHelper : public ProfilerStackCollector {
       const js::ProfilingStackFrame& aEntry) override;
 
  private:
+  bool MaybeAppendDynamicStackFrame(mozilla::Span<const char> aBuf);
   void TryAppendFrame(mozilla::HangEntry aFrame);
 
   // The profiler's unique thread identifier for the target thread.

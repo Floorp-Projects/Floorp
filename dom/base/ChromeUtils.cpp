@@ -412,8 +412,8 @@ void ChromeUtils::Import(const GlobalObject& aGlobal,
 
   NS_ConvertUTF16toUTF8 registryLocation(aResourceURI);
 
-  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("ChromeUtils::Import", OTHER,
-                                        registryLocation);
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE("ChromeUtils::Import",
+                                                     OTHER, registryLocation);
 
   JSContext* cx = aGlobal.Context();
 
