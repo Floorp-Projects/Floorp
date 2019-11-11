@@ -924,6 +924,11 @@ impl Tile {
             self.dirty_rect = self.rect;
         }
 
+        // Ensure that the dirty rect doesn't extend outside the local tile rect.
+        self.dirty_rect = self.dirty_rect
+            .intersection(&self.rect)
+            .unwrap_or(PictureRect::zero());
+
         // See if this tile is a simple color, in which case we can just draw
         // it as a rect, and avoid allocating a texture surface and drawing it.
         // TODO(gw): Initial native compositor interface doesn't support simple
