@@ -86,9 +86,6 @@ class gfxFontconfigFontEntry : public gfxFT2FontEntryBase {
 
   hb_blob_t* GetFontTable(uint32_t aTableTag) override;
 
-  void ForgetHBFace() override;
-  void ReleaseGrFace(gr_face* aFace) override;
-
   double GetAspect();
 
  protected:
