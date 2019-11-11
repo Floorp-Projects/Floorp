@@ -8,6 +8,8 @@ job-defaults:
         max-run-time: 36000
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
+    run:
+        tooltool-downloads: internal
 
 sm-plain-win64/debug:
     description: "Spidermonkey Plain win64 debug"
