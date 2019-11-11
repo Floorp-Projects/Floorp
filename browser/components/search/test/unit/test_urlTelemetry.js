@@ -149,7 +149,7 @@ async function testAdUrlClicked(serpUrl, adUrl, expectedAdKey) {
   SearchTelemetry._contentHandler.observeActivity(
     channel,
     Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION,
-    Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE
+    Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
   );
   // Since the content handler takes a moment to allow the channel information
   // to settle down, wait the same amount of time here.

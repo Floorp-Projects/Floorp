@@ -565,7 +565,7 @@ class ContentHandler {
       activityType !=
         Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION ||
       activitySubtype !=
-        Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE
+        Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
     ) {
       return;
     }
