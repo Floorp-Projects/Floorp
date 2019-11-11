@@ -91,21 +91,10 @@ bool nsHTMLDNSPrefetch::IsAllowed(Document* aDocument) {
   return aDocument->IsDNSPrefetchAllowed() && aDocument->GetWindow();
 }
 
-static uint32_t GetDNSFlagsFromLink(Link* aElement) {
-  if (!aElement || !aElement->GetElement() ||
-      !aElement->GetElement()->OwnerDoc()->GetChannel()) {
-    return 0;
-  }
-  nsIRequest::TRRMode mode =
-      aElement->GetElement()->OwnerDoc()->GetChannel()->GetTRRMode();
-  return nsIDNSService::GetFlagsFromTRRMode(mode);
-}
-
-nsresult nsHTMLDNSPrefetch::Prefetch(Link* aElement, uint32_t flags) {
+nsresult nsHTMLDNSPrefetch::Prefetch(Link* aElement, uint16_t flags) {
   if (!(sInitialized && sPrefetches && sDNSService && sDNSListener))
     return NS_ERROR_NOT_AVAILABLE;
 
-  flags |= GetDNSFlagsFromLink(aElement);
   return sPrefetches->Add(flags, aElement);
 }
 
@@ -123,7 +112,7 @@ nsresult nsHTMLDNSPrefetch::PrefetchHigh(Link* aElement) {
 
 nsresult nsHTMLDNSPrefetch::Prefetch(const nsAString& hostname, bool isHttps,
                                      const OriginAttributes& aOriginAttributes,
-                                     uint32_t flags) {
+                                     uint16_t flags) {
   if (IsNeckoChild()) {
     // We need to check IsEmpty() because net_IsValidHostName()
     // considers empty strings to be valid hostnames
@@ -165,28 +154,25 @@ nsresult nsHTMLDNSPrefetch::Prefetch(const nsAString& hostname, bool isHttps,
 
 nsresult nsHTMLDNSPrefetch::PrefetchLow(
     const nsAString& hostname, bool isHttps,
-    const OriginAttributes& aOriginAttributes, nsIRequest::TRRMode aMode) {
+    const OriginAttributes& aOriginAttributes) {
   return Prefetch(hostname, isHttps, aOriginAttributes,
-                  nsIDNSService::GetFlagsFromTRRMode(aMode) |
-                      nsIDNSService::RESOLVE_PRIORITY_LOW);
+                  nsIDNSService::RESOLVE_PRIORITY_LOW);
 }
 
 nsresult nsHTMLDNSPrefetch::PrefetchMedium(
     const nsAString& hostname, bool isHttps,
-    const OriginAttributes& aOriginAttributes, nsIRequest::TRRMode aMode) {
+    const OriginAttributes& aOriginAttributes) {
   return Prefetch(hostname, isHttps, aOriginAttributes,
-                  nsIDNSService::GetFlagsFromTRRMode(aMode) |
-                      nsIDNSService::RESOLVE_PRIORITY_MEDIUM);
+                  nsIDNSService::RESOLVE_PRIORITY_MEDIUM);
 }
 
 nsresult nsHTMLDNSPrefetch::PrefetchHigh(
     const nsAString& hostname, bool isHttps,
-    const OriginAttributes& aOriginAttributes, nsIRequest::TRRMode aMode) {
-  return Prefetch(hostname, isHttps, aOriginAttributes,
-                  nsIDNSService::GetFlagsFromTRRMode(aMode));
+    const OriginAttributes& aOriginAttributes) {
+  return Prefetch(hostname, isHttps, aOriginAttributes, 0);
 }
 
-nsresult nsHTMLDNSPrefetch::CancelPrefetch(Link* aElement, uint32_t flags,
+nsresult nsHTMLDNSPrefetch::CancelPrefetch(Link* aElement, uint16_t flags,
                                            nsresult aReason) {
   if (!(sInitialized && sPrefetches && sDNSService && sDNSListener))
     return NS_ERROR_NOT_AVAILABLE;
@@ -210,7 +196,7 @@ nsresult nsHTMLDNSPrefetch::CancelPrefetch(Link* aElement, uint32_t flags,
 
 nsresult nsHTMLDNSPrefetch::CancelPrefetch(
     const nsAString& hostname, bool isHttps,
-    const OriginAttributes& aOriginAttributes, uint32_t flags,
+    const OriginAttributes& aOriginAttributes, uint16_t flags,
     nsresult aReason) {
   // Forward this request to Necko Parent if we're a child process
   if (IsNeckoChild()) {
@@ -249,20 +235,14 @@ nsresult nsHTMLDNSPrefetch::CancelPrefetch(
 
 nsresult nsHTMLDNSPrefetch::CancelPrefetchLow(Link* aElement,
                                               nsresult aReason) {
-  return CancelPrefetch(
-      aElement,
-      GetDNSFlagsFromLink(aElement) | nsIDNSService::RESOLVE_PRIORITY_LOW,
-      aReason);
+  return CancelPrefetch(aElement, nsIDNSService::RESOLVE_PRIORITY_LOW, aReason);
 }
 
 nsresult nsHTMLDNSPrefetch::CancelPrefetchLow(
     const nsAString& hostname, bool isHttps,
-    const OriginAttributes& aOriginAttributes, nsIRequest::TRRMode aTRRMode,
-    nsresult aReason) {
+    const OriginAttributes& aOriginAttributes, nsresult aReason) {
   return CancelPrefetch(hostname, isHttps, aOriginAttributes,
-                        nsIDNSService::GetFlagsFromTRRMode(aTRRMode) |
-                            nsIDNSService::RESOLVE_PRIORITY_LOW,
-                        aReason);
+                        nsIDNSService::RESOLVE_PRIORITY_LOW, aReason);
 }
 
 void nsHTMLDNSPrefetch::LinkDestroyed(Link* aLink) {
@@ -321,7 +301,7 @@ void nsHTMLDNSPrefetch::nsDeferrals::Flush() {
   }
 }
 
-nsresult nsHTMLDNSPrefetch::nsDeferrals::Add(uint32_t flags, Link* aElement) {
+nsresult nsHTMLDNSPrefetch::nsDeferrals::Add(uint16_t flags, Link* aElement) {
   // The FIFO has no lock, so it can only be accessed on main thread
   NS_ASSERTION(NS_IsMainThread(), "nsDeferrals::Add must be on main thread");
 

@@ -620,10 +620,12 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
   }
 
   if (mIsTRRServiceChannel) {
-    mCaps |= NS_HTTP_LARGE_KEEPALIVE;
+    mCaps |= NS_HTTP_LARGE_KEEPALIVE | NS_HTTP_DISABLE_TRR;
   }
 
-  mCaps |= NS_HTTP_TRR_FLAGS_FROM_MODE(nsIRequest::GetTRRMode());
+  if (mLoadFlags & LOAD_DISABLE_TRR) {
+    mCaps |= NS_HTTP_DISABLE_TRR;
+  }
 
   // Finalize ConnectionInfo flags before SpeculativeConnect
   mConnectionInfo->SetAnonymous((mLoadFlags & LOAD_ANONYMOUS) != 0);
@@ -634,7 +636,7 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
                                      mBeConservative);
   mConnectionInfo->SetTlsFlags(mTlsFlags);
   mConnectionInfo->SetIsTrrServiceChannel(mIsTRRServiceChannel);
-  mConnectionInfo->SetTRRMode(nsIRequest::GetTRRMode());
+  mConnectionInfo->SetTrrDisabled(mCaps & NS_HTTP_DISABLE_TRR);
   mConnectionInfo->SetIPv4Disabled(mCaps & NS_HTTP_DISABLE_IPV4);
   mConnectionInfo->SetIPv6Disabled(mCaps & NS_HTTP_DISABLE_IPV6);
 
@@ -907,7 +909,7 @@ void nsHttpChannel::SpeculativeConnect() {
 
   Unused << gHttpHandler->SpeculativeConnect(
       mConnectionInfo, callbacks,
-      mCaps & (NS_HTTP_DISALLOW_SPDY | NS_HTTP_TRR_MODE_MASK |
+      mCaps & (NS_HTTP_DISALLOW_SPDY | NS_HTTP_DISABLE_TRR |
                NS_HTTP_DISABLE_IPV4 | NS_HTTP_DISABLE_IPV6));
 }
 
@@ -6839,8 +6841,8 @@ void nsHttpChannel::MaybeStartDNSPrefetch() {
          mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : ""));
     OriginAttributes originAttributes;
     NS_GetOriginAttributes(this, originAttributes);
-    mDNSPrefetch = new nsDNSPrefetch(
-        mURI, originAttributes, nsIRequest::GetTRRMode(), this, mTimingEnabled);
+    mDNSPrefetch =
+        new nsDNSPrefetch(mURI, originAttributes, this, mTimingEnabled);
     mDNSPrefetch->PrefetchHigh(mCaps & NS_HTTP_REFRESH_DNS);
   }
 }
