@@ -287,6 +287,18 @@ nsresult HeadlessLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
     case eIntID_GTKCSDReversedPlacement:
       aResult = 0;
       break;
+    case eIntID_SystemUsesDarkTheme:
+      aResult = 0;
+      break;
+    case eIntID_PrefersReducedMotion:
+      aResult = 0;
+      break;
+    case eIntID_PrimaryPointerCapabilities:
+      aResult = 0;
+      break;
+    case eIntID_AllPointerCapabilities:
+      aResult = 0;
+      break;
     default:
       NS_WARNING(
           "HeadlessLookAndFeel::GetIntImpl called with an unrecognized aID");
