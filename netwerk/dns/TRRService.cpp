@@ -528,26 +528,11 @@ bool TRRService::MaybeBootstrap(const nsACString& aPossible,
   return true;
 }
 
-// When running in TRR-only mode, the blacklist is not used and it will also
-// try resolving the localhost / .local names.
-bool TRRService::IsTRRBlacklisted(const nsACString& aHost,
-                                  const nsACString& aOriginSuffix,
-                                  bool aPrivateBrowsing,
-                                  bool aParentsToo)  // false if domain
-{
+bool TRRService::IsDomainBlacklisted(const nsACString& aHost,
+                                     const nsACString& aOriginSuffix,
+                                     bool aPrivateBrowsing) {
   // Only use the Storage API on the main thread
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
-
-  if (mMode == MODE_TRRONLY) {
-    return false;  // might as well try
-  }
-
-  LOG(("Checking if host [%s] is blacklisted", aHost.BeginReading()));
-  // hardcode these so as to not worry about expiration
-  if (StringEndsWith(aHost, NS_LITERAL_CSTRING(".local")) ||
-      aHost.Equals(NS_LITERAL_CSTRING("localhost"))) {
-    return true;
-  }
 
   if (mExcludedDomains.GetEntry(aHost)) {
     LOG(("Host [%s] is TRR blacklisted via pref\n", aHost.BeginReading()));
@@ -562,26 +547,6 @@ bool TRRService::IsTRRBlacklisted(const nsACString& aHost,
     return true;
   }
 
-  int32_t dot = aHost.FindChar('.');
-  if ((dot == kNotFound) && aParentsToo) {
-    // Only if a full host name. Domains can be dotless to be able to
-    // blacklist entire TLDs
-    return true;
-  } else if (dot != kNotFound) {
-    // there was a dot, check the parent first
-    dot++;
-    nsDependentCSubstring domain = Substring(aHost, dot, aHost.Length() - dot);
-    nsAutoCString check(domain);
-
-    // recursively check the domain part of this name
-    if (IsTRRBlacklisted(check, aOriginSuffix, aPrivateBrowsing, false)) {
-      // the domain name of this name is already TRR blacklisted
-      return true;
-    }
-  }
-
-  // These checks need to happen after the recursive result, otherwise we
-  // might not check the pref for parent domains.
   if (!mTRRBLStorage) {
     return false;
   }
@@ -611,6 +576,50 @@ bool TRRService::IsTRRBlacklisted(const nsACString& aHost,
     mTRRBLStorage->Remove(hashkey, aPrivateBrowsing ? DataStorage_Private
                                                     : DataStorage_Persistent);
   }
+  return false;
+}
+
+// When running in TRR-only mode, the blacklist is not used and it will also
+// try resolving the localhost / .local names.
+bool TRRService::IsTRRBlacklisted(const nsACString& aHost,
+                                  const nsACString& aOriginSuffix,
+                                  bool aPrivateBrowsing,
+                                  bool aParentsToo)  // false if domain
+{
+  if (mMode == MODE_TRRONLY) {
+    return false;  // might as well try
+  }
+
+  LOG(("Checking if host [%s] is blacklisted", aHost.BeginReading()));
+  // hardcode these so as to not worry about expiration
+  if (StringEndsWith(aHost, NS_LITERAL_CSTRING(".local")) ||
+      aHost.Equals(NS_LITERAL_CSTRING("localhost"))) {
+    return true;
+  }
+
+  int32_t dot = aHost.FindChar('.');
+  if ((dot == kNotFound) && aParentsToo) {
+    // Only if a full host name. Domains can be dotless to be able to
+    // blacklist entire TLDs
+    return true;
+  }
+
+  if (IsDomainBlacklisted(aHost, aOriginSuffix, aPrivateBrowsing)) {
+    return true;
+  }
+
+  nsDependentCSubstring domain = Substring(aHost, 0);
+  while (dot != kNotFound) {
+    dot++;
+    domain.Rebind(domain, dot, domain.Length() - dot);
+
+    if (IsDomainBlacklisted(domain, aOriginSuffix, aPrivateBrowsing)) {
+      return true;
+    }
+
+    dot = domain.FindChar('.');
+  }
+
   return false;
 }
 

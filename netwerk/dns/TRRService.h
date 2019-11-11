@@ -71,6 +71,10 @@ class TRRService : public nsIObserver,
   friend class ::nsDNSService;
   void GetParentalControlEnabledInternal();
 
+  bool IsDomainBlacklisted(const nsACString& aHost,
+                           const nsACString& aOriginSuffix,
+                           bool aPrivateBrowsing);
+
   bool mInitialized;
   Atomic<uint32_t, Relaxed> mMode;
   Atomic<uint32_t, Relaxed> mTRRBlacklistExpireTime;
