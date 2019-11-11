@@ -94,6 +94,7 @@ class GeckoViewAutofill {
         root,
         tag: element.tagName,
         type: element instanceof window.HTMLInputElement ? element.type : null,
+        value: element.value,
         editable:
           element instanceof window.HTMLInputElement &&
           [

@@ -64,7 +64,6 @@ import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
 import android.view.View;
 import android.view.ViewStructure;
-import android.view.autofill.AutofillManager;
 
 public class GeckoSession implements Parcelable {
     private static final String LOGTAG = "GeckoSession";
@@ -124,7 +123,7 @@ public class GeckoSession implements Parcelable {
     private OverscrollEdgeEffect mOverscroll;
     private DynamicToolbarAnimator mToolbar;
     private CompositorController mController;
-    private AutofillSupport mAutofillSupport;
+    private Autofill.Support mAutofillSupport;
 
     private boolean mAttachedCompositor;
     private boolean mCompositorReady;
@@ -1523,7 +1522,7 @@ public class GeckoSession implements Parcelable {
             mTextInput.onWindowChanged(mWindow);
         }
         if ((change == WINDOW_CLOSE || change == WINDOW_TRANSFER_OUT) && !inProgress) {
-            getAutofillSupport().clearAutofill();
+            getAutofillSupport().clear();
         }
     }
 
@@ -5691,59 +5690,10 @@ public class GeckoSession implements Parcelable {
             })
     /* package */ @interface VisitFlags {}
 
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef({
-            AutofillDelegate.AUTOFILL_NOTIFY_STARTED,
-            AutofillDelegate.AUTOFILL_NOTIFY_COMMITTED,
-            AutofillDelegate.AUTOFILL_NOTIFY_CANCELED,
-            AutofillDelegate.AUTOFILL_NOTIFY_VIEW_ADDED,
-            AutofillDelegate.AUTOFILL_NOTIFY_VIEW_REMOVED,
-            AutofillDelegate.AUTOFILL_NOTIFY_VIEW_UPDATED,
-            AutofillDelegate.AUTOFILL_NOTIFY_VIEW_ENTERED,
-            AutofillDelegate.AUTOFILL_NOTIFY_VIEW_EXITED})
-    /* package */ @interface AutofillNotification {}
 
-    public interface AutofillDelegate {
-
-        /** An autofill session has started, usually as a result of loading a page. */
-        int AUTOFILL_NOTIFY_STARTED = 0;
-        /** An autofill session has been committed, usually as a result of submitting a form. */
-        int AUTOFILL_NOTIFY_COMMITTED = 1;
-        /** An autofill session has been canceled, usually as a result of unloading a page. */
-        int AUTOFILL_NOTIFY_CANCELED = 2;
-        /** A view within the autofill session has been added. */
-        int AUTOFILL_NOTIFY_VIEW_ADDED = 3;
-        /** A view within the autofill session has been removed. */
-        int AUTOFILL_NOTIFY_VIEW_REMOVED = 4;
-        /** A view within the autofill session has been updated (e.g. change in state). */
-        int AUTOFILL_NOTIFY_VIEW_UPDATED = 5;
-        /** A view within the autofill session has gained focus. */
-        int AUTOFILL_NOTIFY_VIEW_ENTERED = 6;
-        /** A view within the autofill session has lost focus. */
-        int AUTOFILL_NOTIFY_VIEW_EXITED = 7;
-
-        /**
-         * Notify that an autofill event has occurred. The default implementation forwards the
-         * notification to the system {@link AutofillManager}. This method is
-         * only called on Android 6.0 and above, and it is called in viewless mode as well.
-         *
-         * @param session Session instance.
-         * @param notification Notification type as one of the {@link #AUTOFILL_NOTIFY_STARTED
-         *                     AUTO_FILL_NOTIFY_*} constants.
-         * @param virtualId Virtual ID of the target, or {@link View#NO_ID} if not
-         *                  applicable. The ID matches one of the virtual IDs provided by {@link
-         *                  GeckoSession#getAutofillElements()} and can be used
-         *                  with {@link GeckoSession#autofill}.
-         */
-        @UiThread
-        default void onAutofill(@NonNull GeckoSession session,
-                                @GeckoSession.AutofillNotification int notification,
-                                int virtualId) {}
-    }
-
-    private AutofillSupport getAutofillSupport() {
+    private Autofill.Support getAutofillSupport() {
         if (mAutofillSupport == null) {
-            mAutofillSupport = new AutofillSupport(this);
+            mAutofillSupport = new Autofill.Support(this);
         }
 
         return mAutofillSupport;
@@ -5752,18 +5702,18 @@ public class GeckoSession implements Parcelable {
     /**
      * Sets the autofill delegate for this session.
      *
-     * @param delegate An instance of {@link AutofillDelegate}.
+     * @param delegate An instance of {@link Autofill.Delegate}.
      */
     @UiThread
-    public void setAutofillDelegate(final @Nullable AutofillDelegate delegate) {
+    public void setAutofillDelegate(final @Nullable Autofill.Delegate delegate) {
         getAutofillSupport().setDelegate(delegate);
     }
 
     /**
-     * @return The current {@link AutofillDelegate} for this session, if any.
+     * @return The current {@link Autofill.Delegate} for this session, if any.
      */
     @UiThread
-    public @Nullable AutofillDelegate getAutofillDelegate() {
+    public @Nullable Autofill.Delegate getAutofillDelegate() {
         return getAutofillSupport().getDelegate();
     }
 
@@ -5786,7 +5736,7 @@ public class GeckoSession implements Parcelable {
      * @return The elements available for autofill.
      */
     @UiThread
-    public @NonNull AutofillElement getAutofillElements() {
-        return getAutofillSupport().getAutofillElements();
+    public @NonNull Autofill.Session getAutofillSession() {
+        return getAutofillSupport().getAutofillSession();
     }
 }
