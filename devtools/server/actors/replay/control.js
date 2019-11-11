@@ -1685,6 +1685,7 @@ async function findEventLogpointHits(checkpoint, event, callback) {
       if (point) {
         callback(point, ["Loading..."]);
         evaluateLogpoint({ point, text: "arguments[0]", callback });
+        queuePauseData({ point, trackCached: true });
       }
     }
   }
