@@ -144,8 +144,6 @@ s! {
         pub si_uid: ::uid_t,
         pub si_status: ::c_int,
         pub si_addr: *mut ::c_void,
-        //Requires it to be union for tests
-        //pub si_value: ::sigval,
         _pad: [usize; 9],
     }
 
@@ -613,28 +611,6 @@ s_no_extra_traits!{
         pub sigev_value: ::sigval,
         __unused1: *mut ::c_void,       //actually a function pointer
         pub sigev_notify_attributes: *mut ::pthread_attr_t
-    }
-}
-
-impl siginfo_t {
-    pub unsafe fn si_addr(&self) -> *mut ::c_void {
-        self.si_addr
-    }
-
-    pub unsafe fn si_value(&self) -> ::sigval {
-        #[repr(C)]
-        struct siginfo_timer {
-            _si_signo: ::c_int,
-            _si_errno: ::c_int,
-            _si_code: ::c_int,
-            _si_pid: ::pid_t,
-            _si_uid: ::uid_t,
-            _si_status: ::c_int,
-            _si_addr: *mut ::c_void,
-            si_value: ::sigval,
-        }
-
-        (*(self as *const siginfo_t as *const siginfo_timer)).si_value
     }
 }
 

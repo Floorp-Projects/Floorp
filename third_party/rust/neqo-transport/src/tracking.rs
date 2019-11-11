@@ -131,7 +131,7 @@ const MAX_TRACKED_RANGES: usize = 100;
 const MAX_ACKS_PER_FRAME: usize = 32;
 
 /// A structure that tracks what was included in an ACK.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AckToken {
     space: PNSpace,
     ranges: Vec<PacketRange>,

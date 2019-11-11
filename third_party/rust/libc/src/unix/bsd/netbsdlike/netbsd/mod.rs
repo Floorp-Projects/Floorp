@@ -9,22 +9,6 @@ pub type mqd_t = ::c_int;
 type __pthread_spin_t = __cpu_simple_lock_nv_t;
 pub type vm_size_t = ::uintptr_t;
 
-impl siginfo_t {
-    pub unsafe fn si_value(&self) -> ::sigval {
-        #[repr(C)]
-        struct siginfo_timer {
-            _si_signo: ::c_int,
-            _si_errno: ::c_int,
-            _si_code: ::c_int,
-            __pad1: ::c_int,
-            _pid: ::pid_t,
-            _uid: ::uid_t,
-            value: ::sigval,
-        }
-        (*(self as *const siginfo_t as *const siginfo_timer)).value
-    }
-}
-
 s! {
     pub struct aiocb {
         pub aio_offset: ::off_t,

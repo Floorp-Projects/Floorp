@@ -28,7 +28,7 @@ const INITIAL_RTT: Duration = Duration::from_millis(100);
 
 const PACKET_THRESHOLD: u64 = 3;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum RecoveryToken {
     Ack(AckToken),
     Stream(StreamRecoveryToken),
@@ -36,13 +36,15 @@ pub enum RecoveryToken {
     Flow(FlowControlRecoveryToken),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SentPacket {
     ack_eliciting: bool,
     //in_flight: bool, // TODO needed only for cc
     //size: u64, // TODO needed only for cc
     time_sent: Instant,
     pub(crate) tokens: Vec<RecoveryToken>,
+
+    time_declared_lost: Option<Instant>,
 }
 
 #[derive(Debug, Default)]
@@ -269,6 +271,7 @@ impl LossRecovery {
                 time_sent: now,
                 ack_eliciting,
                 tokens,
+                time_declared_lost: None,
             },
         );
         if ack_eliciting {
@@ -344,6 +347,7 @@ impl LossRecovery {
             .collect()
     }
 
+    /// Detect packets whose contents may need to be retransmitted.
     pub fn detect_lost_packets(&mut self, pn_space: PNSpace, now: Instant) -> Vec<SentPacket> {
         self.enable_timed_loss_detection = false;
         let loss_delay = self.loss_delay();
@@ -357,48 +361,77 @@ impl LossRecovery {
 
         let packet_space = &mut self.spaces[pn_space];
 
+        // Lost for retrans/CC purposes
         let mut lost_pns = SmallVec::<[_; 8]>::new();
+
+        // Lost for we-can-actually-forget-about-it purposes
+        let mut really_lost_pns = SmallVec::<[_; 8]>::new();
+
+        let largest_acked = packet_space.largest_acked;
+        let current_rtt = self.rtt_vals.rtt();
         for (pn, packet) in packet_space
             .sent_packets
-            .iter()
+            .iter_mut()
             // BTreeMap iterates in order of ascending PN
-            .take_while(|(&k, _)| Some(k) < packet_space.largest_acked)
+            .take_while(|(&k, _)| Some(k) < largest_acked)
         {
-            if packet.time_sent <= lost_deadline {
+            let lost = if packet.time_sent <= lost_deadline {
                 qdebug!(
                     "lost={}, time sent {:?} is before lost_deadline {:?}",
                     pn,
                     packet.time_sent,
                     lost_deadline
                 );
-                lost_pns.push(*pn);
-            } else if packet_space.largest_acked >= Some(*pn + PACKET_THRESHOLD) {
-                // Packets with packet numbers more than PACKET_THRESHOLD
-                // before largest acked are deemed lost.
+                true
+            } else if largest_acked >= Some(*pn + PACKET_THRESHOLD) {
                 qdebug!(
                     "lost={}, is >= {} from largest acked {:?}",
                     pn,
                     PACKET_THRESHOLD,
-                    packet_space.largest_acked
+                    largest_acked
                 );
+                true
+            } else {
+                false
+            };
+
+            if lost && packet.time_declared_lost.is_none() {
+                // TODO
+                // Inform the congestion controller of lost packets.
+
+                // Track declared-lost packets for a little while, maybe they
+                // will still show up?
+                packet.time_declared_lost = Some(now);
+
                 lost_pns.push(*pn);
+            } else if packet
+                .time_declared_lost
+                .map(|tdl| tdl + (current_rtt * 2) < now)
+                .unwrap_or(false)
+            {
+                really_lost_pns.push(*pn);
             } else {
                 // OOO but not quite lost yet. Set the timed loss detect timer
                 self.enable_timed_loss_detection = true;
             }
         }
 
+        for pn in really_lost_pns {
+            packet_space
+                .sent_packets
+                .remove(&pn)
+                .expect("PN must be in sent_packets");
+        }
+
         let mut lost_packets = Vec::with_capacity(lost_pns.len());
         for pn in lost_pns {
             let lost_packet = packet_space
                 .sent_packets
-                .remove(&pn)
-                .expect("PN must be in sent_packets");
+                .get(&pn)
+                .expect("PN must be in sent_packets")
+                .clone();
             lost_packets.push(lost_packet);
         }
-
-        // TODO
-        // Inform the congestion controller of lost packets.
 
         lost_packets
     }

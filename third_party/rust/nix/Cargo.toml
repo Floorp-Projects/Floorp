@@ -1,0 +1,55 @@
+[package]
+name        = "nix"
+description = "Rust friendly bindings to *nix APIs"
+version     = "0.13.1"
+authors     = ["The nix-rust Project Developers"]
+repository  = "https://github.com/nix-rust/nix"
+license     = "MIT"
+categories  = ["os::unix-apis"]
+exclude     = [
+  "/.gitignore",
+  "/.travis.yml",
+  "/ci/*",
+  "/Cross.toml",
+  "/RELEASE_PROCEDURE.md",
+  "/bors.toml"
+]
+
+[dependencies]
+libc = "0.2.57"
+bitflags = "1.0"
+cfg-if = "0.1.0"
+void = "1.0.2"
+
+[target.'cfg(target_os = "dragonfly")'.build-dependencies]
+cc = "1"
+
+[dev-dependencies]
+bytes = "0.4.8"
+lazy_static = "1.2"
+rand = "0.5"
+tempfile = "3"
+
+[target.'cfg(target_os = "freebsd")'.dev-dependencies]
+sysctl = "0.1"
+
+[[test]]
+name = "test"
+path = "test/test.rs"
+
+[[test]]
+name = "test-aio-drop"
+path = "test/sys/test_aio_drop.rs"
+
+[[test]]
+name = "test-lio-listio-resubmit"
+path = "test/sys/test_lio_listio_resubmit.rs"
+
+[[test]]
+name = "test-mount"
+path = "test/test_mount.rs"
+harness = false
+
+[[test]]
+name = "test-ptymaster-drop"
+path = "test/test_ptymaster_drop.rs"
