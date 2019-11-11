@@ -69,6 +69,9 @@ exclude: true
   ([bug 1402369]({{bugzilla}}1402369))
 - Added [`GeckoDisplay.screenshot`][71.23] allowing apps finer grain control over screenshots.
   ([bug 1577192]({{bugzilla}}1577192))
+- ⚠️  Refactored `AutofillElement` and `AutofillSupport` into the
+  [`Autofill`][71.24] API.
+  ([bug 1591462]({{bugzilla}}1591462))
 
 [71.1]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onBooleanScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.2]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onLongScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
@@ -92,6 +95,7 @@ exclude: true
 [71.21]: {{javadoc_uri}}/GeckoView.html#setAutofillEnabled-boolean-
 [71.22]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onSharePrompt-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.PromptDelegate.SharePrompt-
 [71.23]: {{javadoc_uri}}/GeckoDisplay.html#screenshot--
+[71.24]: {{javadoc_uri}}/Autofill.html
 
 ## v70
 - Added API for session context assignment
@@ -414,4 +418,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: c01c3629db0185ce919b026400328804d27985a6
+[api-version]: b8934264da833b5d36110e5d8136a0feef40623d

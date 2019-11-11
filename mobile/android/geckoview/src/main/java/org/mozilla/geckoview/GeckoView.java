@@ -33,7 +33,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.support.v4.view.ViewCompat;
-import android.text.InputType;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.SparseArray;
@@ -68,7 +67,7 @@ public class GeckoView extends FrameLayout {
     private boolean mAutofillEnabled = true;
 
     private GeckoSession.SelectionActionDelegate mSelectionActionDelegate;
-    private GeckoSession.AutofillDelegate mAutofillDelegate;
+    private Autofill.Delegate mAutofillDelegate;
 
     private static class SavedState extends BaseSavedState {
         public final GeckoSession session;
@@ -734,96 +733,8 @@ public class GeckoView extends FrameLayout {
             return;
         }
 
-        final AutofillElement root = mSession.getAutofillElements();
-        fillViewStructure(root, structure, flags);
-    }
-
-    @TargetApi(23)
-    private void fillViewStructure(final AutofillElement element, final ViewStructure structure, final int flags) {
-        if (Build.VERSION.SDK_INT >= 26) {
-            structure.setAutofillId(getAutofillId(), element.id);
-            structure.setWebDomain(element.domain);
-        }
-
-        structure.setId(element.id, null, null, null);
-        structure.setDimens(0, 0, 0, 0, element.dimensions.width(), element.dimensions.height());
-
-        if (Build.VERSION.SDK_INT >= 26) {
-            final ViewStructure.HtmlInfo.Builder htmlBuilder = structure.newHtmlInfoBuilder(element.tag);
-            for (final String key : element.attributes.keySet()) {
-                htmlBuilder.addAttribute(key, String.valueOf(element.attributes.get(key)));
-            }
-
-            structure.setHtmlInfo(htmlBuilder.build());
-        }
-
-        structure.setChildCount(element.children.size());
-        int childCount = 0;
-
-        for (final AutofillElement child : element.children) {
-            final ViewStructure childStructure = structure.newChild(childCount);
-            fillViewStructure(child, childStructure, flags);
-            childCount++;
-        }
-
-        switch (element.tag) {
-            case "input":
-            case "textarea":
-                structure.setClassName("android.widget.EditText");
-                structure.setEnabled(element.enabled);
-                structure.setFocusable(element.focusable);
-                structure.setFocused(element.focused);
-                structure.setVisibility(View.VISIBLE);
-
-                if (Build.VERSION.SDK_INT >= 26) {
-                    structure.setAutofillType(View.AUTOFILL_TYPE_TEXT);
-                }
-                break;
-            default:
-                if (childCount > 0) {
-                    structure.setClassName("android.view.ViewGroup");
-                } else {
-                    structure.setClassName("android.view.View");
-                }
-                break;
-        }
-
-        if (Build.VERSION.SDK_INT >= 26 && "input".equals(element.tag)) {
-            // LastPass will fill password to the field that setAutofillHints is unset and setInputType is set.
-            switch (element.hint) {
-                case AutofillElement.HINT_EMAIL_ADDRESS:
-                    structure.setAutofillHints(new String[] { View.AUTOFILL_HINT_EMAIL_ADDRESS });
-                    structure.setInputType(InputType.TYPE_CLASS_TEXT |
-                            InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
-                    break;
-                case AutofillElement.HINT_PASSWORD:
-                    structure.setAutofillHints(new String[] { View.AUTOFILL_HINT_PASSWORD });
-                    structure.setInputType(InputType.TYPE_CLASS_TEXT |
-                            InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD);
-                    break;
-                case AutofillElement.HINT_URL:
-                    structure.setInputType(InputType.TYPE_CLASS_TEXT |
-                            InputType.TYPE_TEXT_VARIATION_URI);
-                    break;
-                case AutofillElement.HINT_USERNAME:
-                    structure.setAutofillHints(new String[] { View.AUTOFILL_HINT_USERNAME });
-                    structure.setInputType(InputType.TYPE_CLASS_TEXT |
-                            InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);
-                    break;
-            }
-
-            switch (element.inputType) {
-                case AutofillElement.INPUT_TYPE_NUMBER:
-                    structure.setInputType(InputType.TYPE_CLASS_NUMBER);
-                    break;
-                case AutofillElement.INPUT_TYPE_PHONE:
-                    structure.setAutofillHints(new String[] { View.AUTOFILL_HINT_PHONE });
-                    structure.setInputType(InputType.TYPE_CLASS_PHONE);
-                    break;
-                default:
-                    break;
-            }
-        }
+        final Autofill.Session autofillSession = mSession.getAutofillSession();
+        autofillSession.fillViewStructure(this, structure, flags);
     }
 
     @Override
@@ -862,7 +773,7 @@ public class GeckoView extends FrameLayout {
     /**
      * Sets whether or not this View participates in Android autofill.
      *
-     * When enabled, this will set an {@link GeckoSession.AutofillDelegate} on the
+     * When enabled, this will set an {@link Autofill.Delegate} on the
      * {@link GeckoSession} for this instance.
      *
      * @param enabled Whether or not Android autofill is enabled for this view.
@@ -888,35 +799,16 @@ public class GeckoView extends FrameLayout {
         return mAutofillEnabled;
     }
 
-    private class AndroidAutofillDelegate implements GeckoSession.AutofillDelegate {
-
-        private AutofillElement findElementWithId(final AutofillElement root, final int id) {
-            if (root.id == id) {
-                return root;
-            }
-
-            for (AutofillElement child : root.children) {
-                final AutofillElement found = findElementWithId(child, id);
-                if (found != null) {
-                    return found;
-                }
-            }
-
-            return null;
-        }
+    private class AndroidAutofillDelegate implements Autofill.Delegate {
 
         private Rect displayRectForId(@NonNull final GeckoSession session,
-                                      @NonNull final int virtualId,
-                                      @Nullable final View view) {
-            final AutofillElement structure = session.getAutofillElements();
-            final AutofillElement element = findElementWithId(structure, virtualId);
-
-            if (element == null) {
+                                      @NonNull final Autofill.Node node) {
+            if (node == null) {
                 return new Rect(0, 0, 0, 0);
             }
 
             final Matrix matrix = new Matrix();
-            final RectF rectF = new RectF(element.dimensions);
+            final RectF rectF = new RectF(node.getDimensions());
             session.getPageToScreenMatrix(matrix);
             matrix.mapRect(rectF);
 
@@ -927,8 +819,8 @@ public class GeckoView extends FrameLayout {
 
         @Override
         public void onAutofill(@NonNull final GeckoSession session,
-                               @GeckoSession.AutofillNotification final int notification,
-                               final int virtualId) {
+                               final int notification,
+                               final Autofill.Node node) {
             ThreadUtils.assertOnUiThread();
             if (Build.VERSION.SDK_INT < 26) {
                 return;
@@ -941,21 +833,21 @@ public class GeckoView extends FrameLayout {
             }
 
             switch (notification) {
-                case AUTOFILL_NOTIFY_STARTED:
+                case Autofill.Notify.SESSION_STARTED:
                     // This line seems necessary for auto-fill to work on the initial page.
+                case Autofill.Notify.SESSION_CANCELED:
                     manager.cancel();
                     break;
-                case AUTOFILL_NOTIFY_COMMITTED:
+                case Autofill.Notify.SESSION_COMMITTED:
                     manager.commit();
                     break;
-                case AUTOFILL_NOTIFY_CANCELED:
-                    manager.cancel();
+                case Autofill.Notify.NODE_FOCUSED:
+                    manager.notifyViewEntered(
+                        GeckoView.this, node.getId(),
+                        displayRectForId(session, node));
                     break;
-                case AUTOFILL_NOTIFY_VIEW_ENTERED:
-                    manager.notifyViewEntered(GeckoView.this, virtualId, displayRectForId(session, virtualId, GeckoView.this));
-                    break;
-                case AUTOFILL_NOTIFY_VIEW_EXITED:
-                    manager.notifyViewExited(GeckoView.this, virtualId);
+                case Autofill.Notify.NODE_BLURRED:
+                    manager.notifyViewExited(GeckoView.this, node.getId());
                     break;
             }
         }
