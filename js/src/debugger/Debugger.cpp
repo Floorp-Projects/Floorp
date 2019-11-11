@@ -417,7 +417,7 @@ void WasmBreakpointSite::trace(JSTracer* trc) {
 }
 
 void WasmBreakpointSite::remove(JSFreeOp* fop) {
-  instance().destroyBreakpointSite(fop, offset);
+  instanceObject->instance().destroyBreakpointSite(fop, offset);
 }
 
 void WasmBreakpointSite::delete_(JSFreeOp* fop) {
@@ -2399,11 +2399,6 @@ ResumeMode DebugAPI::onTrap(JSContext* cx, MutableHandleValue vp) {
   // we check for that case below.
   Vector<Breakpoint*> triggered(cx);
   for (Breakpoint* bp = site->firstBreakpoint(); bp; bp = bp->nextInSite()) {
-    // Skip a breakpoint that is not set for the current wasm::Instance --
-    // single wasm::Code can handle breakpoints for mutiple instances.
-    if (!isJS && &bp->site->asWasm()->instance() != iter.wasmInstance()) {
-      continue;
-    }
     if (!triggered.append(bp)) {
       return ResumeMode::Terminate;
     }
