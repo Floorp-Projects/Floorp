@@ -5,11 +5,32 @@ const { E10SUtils } = ChromeUtils.import(
   "resource://gre/modules/E10SUtils.jsm"
 );
 
-let PREF_NAME = "browser.tabs.remote.useHTTPResponseProcessSelection";
 const PRINT_POSTDATA = httpURL("print_postdata.sjs");
 const FILE_DUMMY = fileURL("dummy_page.html");
 const DATA_URL = "data:text/html,Hello%2C World!";
 const DATA_STRING = "Hello, World!";
+
+const RESPONSE_PROCESS_SELECTION_PREF =
+  "browser.tabs.remote.useHTTPResponseProcessSelection";
+const DOCUMENT_CHANNEL_PREF = "browser.tabs.documentchannel";
+
+async function setPref() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [RESPONSE_PROCESS_SELECTION_PREF, true],
+      [DOCUMENT_CHANNEL_PREF, true],
+    ],
+  });
+}
+
+async function unsetPref() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [RESPONSE_PROCESS_SELECTION_PREF, false],
+      [DOCUMENT_CHANNEL_PREF, false],
+    ],
+  });
+}
 
 async function performLoad(browser, opts, action) {
   let loadedPromise = BrowserTestUtils.browserLoaded(
@@ -217,7 +238,7 @@ async function testLoadAndRedirect(
 }
 
 add_task(async function test_disabled() {
-  await SpecialPowers.pushPrefEnv({ set: [[PREF_NAME, false]] });
+  await unsetPref();
 
   // With the pref disabled, file URIs should successfully POST, but remain in
   // the 'file' process.
@@ -267,7 +288,7 @@ add_task(async function test_disabled() {
 });
 
 add_task(async function test_enabled() {
-  await SpecialPowers.pushPrefEnv({ set: [[PREF_NAME, true]] });
+  await setPref();
 
   // With the pref enabled, URIs should correctly switch processes & the POST
   // should succeed.
@@ -326,7 +347,7 @@ async function sendMessage(ext, method, url) {
 
 // TODO: Currently no test framework for ftp://.
 add_task(async function test_protocol() {
-  await SpecialPowers.pushPrefEnv({ set: [[PREF_NAME, true]] });
+  await setPref();
 
   // TODO: Processes should be switched due to navigation of different origins.
   await testLoadAndRedirect("data:,foo", false, true);

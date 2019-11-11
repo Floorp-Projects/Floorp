@@ -1,6 +1,9 @@
 add_task(async function setupPrefs() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.tabs.remote.useHTTPResponseProcessSelection", true]],
+    set: [
+      ["browser.tabs.remote.useHTTPResponseProcessSelection", true],
+      ["browser.tabs.documentchannel", true],
+    ],
   });
 });
 
