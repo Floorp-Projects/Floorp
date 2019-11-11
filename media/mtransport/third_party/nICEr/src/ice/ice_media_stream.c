@@ -526,7 +526,7 @@ int nr_ice_media_stream_unfreeze_pairs_foundation(nr_ice_media_stream *stream, c
     /* Now go through the check lists for the other streams */
     str=STAILQ_FIRST(&stream->pctx->peer_streams);
     while(str){
-      if(str!=stream){
+      if(str!=stream && !str->local_stream->obsolete){
         switch(str->ice_state){
           case NR_ICE_MEDIA_STREAM_CHECKS_ACTIVE:
             /* Unfreeze matching pairs */
