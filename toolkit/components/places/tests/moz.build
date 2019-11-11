@@ -43,7 +43,6 @@ TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.brows
     'browser/399606-location.replace.html',
     'browser/399606-window.location.href.html',
     'browser/399606-window.location.html',
-    'browser/461710_iframe.html',
     'browser/461710_link_page-2.html',
     'browser/461710_link_page-3.html',
     'browser/461710_link_page.html',

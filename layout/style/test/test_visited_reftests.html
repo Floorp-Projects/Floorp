@@ -128,8 +128,14 @@ async function runTests() {
   SimpleTest.requestFlakyTimeout("async link coloring");
   // Set caret to a known size, for tests of :visited caret-color styling
   await SpecialPowers.pushPrefEnv({'set': [['ui.caretWidth', 16]]});
-  await startIframe("visited-page.html");
+  info("opening visited page");
+  let win = window.open("css-visited/visited-page.html", "_blank");
+  await new Promise(resolve => {
+    win.onload = resolve;
+  });
+  info("running tests");
   await Promise.all(gTests.map(runTest));
+  win.close();
   SimpleTest.finish();
 }
 

@@ -378,18 +378,6 @@ class VisitedQuery final : public AsyncStatementCallback {
         new nsMainThreadPtrHolder<mozIVisitedStatusCallback>(
             "mozIVisitedStatusCallback", aCallback));
 
-    nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
-    NS_ENSURE_STATE(navHistory);
-    if (navHistory->hasEmbedVisit(aURI)) {
-      RefPtr<VisitedQuery> query = new VisitedQuery(aURI, callback, true);
-      // As per IHistory contract, we must notify asynchronously.
-      NS_DispatchToMainThread(
-          NewRunnableMethod("places::VisitedQuery::NotifyVisitedStatus", query,
-                            &VisitedQuery::NotifyVisitedStatus));
-
-      return NS_OK;
-    }
-
     History* history = History::GetService();
     NS_ENSURE_STATE(history);
     RefPtr<VisitedQuery> query = new VisitedQuery(aURI, callback);
@@ -467,9 +455,8 @@ class VisitedQuery final : public AsyncStatementCallback {
  private:
   explicit VisitedQuery(
       nsIURI* aURI,
-      const nsMainThreadPtrHandle<mozIVisitedStatusCallback>& aCallback,
-      bool aIsVisited = false)
-      : mURI(aURI), mCallback(aCallback), mIsVisited(aIsVisited) {}
+      const nsMainThreadPtrHandle<mozIVisitedStatusCallback>& aCallback)
+      : mURI(aURI), mCallback(aCallback), mIsVisited(false) {}
 
   ~VisitedQuery() {}
 
@@ -1375,9 +1362,11 @@ class SetPageTitle : public Runnable {
  *        The VisitData of the visit to store as an embed visit.
  * @param [optional] aCallback
  *        The mozIVisitInfoCallback to notify, if provided.
+ *
+ * FIXME(emilio, bug 1595484): We should get rid of EMBED visits completely.
  */
-void StoreAndNotifyEmbedVisit(VisitData& aPlace,
-                              mozIVisitInfoCallback* aCallback = nullptr) {
+void NotifyEmbedVisit(VisitData& aPlace,
+                      mozIVisitInfoCallback* aCallback = nullptr) {
   MOZ_ASSERT(aPlace.transitionType == nsINavHistoryService::TRANSITION_EMBED,
              "Must only pass TRANSITION_EMBED visits to this!");
   MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread!");
@@ -1385,12 +1374,9 @@ void StoreAndNotifyEmbedVisit(VisitData& aPlace,
   nsCOMPtr<nsIURI> uri;
   MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), aPlace.spec));
 
-  nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
-  if (!navHistory || !uri) {
+  if (!uri) {
     return;
   }
-
-  navHistory->registerEmbedVisit(uri, aPlace.visitTime);
 
   if (!!aCallback) {
     nsMainThreadPtrHandle<mozIVisitInfoCallback> callback(
@@ -1988,10 +1974,10 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
     }
   }
 
-  // EMBED visits are session-persistent and should not go through the database.
+  // EMBED visits should not go through the database.
   // They exist only to keep track of isVisited status during the session.
   if (place.transitionType == nsINavHistoryService::TRANSITION_EMBED) {
-    StoreAndNotifyEmbedVisit(place);
+    NotifyEmbedVisit(place);
   } else {
     mozIStorageConnection* dbConn = GetDBConn();
     NS_ENSURE_STATE(dbConn);
@@ -2043,18 +2029,10 @@ History::SetURITitle(nsIURI* aURI, const nsAString& aTitle) {
     return NS_OK;
   }
 
-  // Embed visits don't have a database entry, thus don't set a title on them.
-  if (navHistory->hasEmbedVisit(aURI)) {
-    return NS_OK;
-  }
-
   mozIStorageConnection* dbConn = GetDBConn();
   NS_ENSURE_STATE(dbConn);
 
-  rv = SetPageTitle::Start(dbConn, aURI, aTitle);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return SetPageTitle::Start(dbConn, aURI, aTitle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2175,7 +2153,7 @@ History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
       // If the visit is an embed visit, we do not actually add it to the
       // database.
       if (transitionType == nsINavHistoryService::TRANSITION_EMBED) {
-        StoreAndNotifyEmbedVisit(data, aCallback);
+        NotifyEmbedVisit(data, aCallback);
         visitData.RemoveLastElement();
         initialUpdatedCount++;
         continue;

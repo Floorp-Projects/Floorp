@@ -63,7 +63,7 @@ function step1()
   unvisref = snapshotWindow(subwin, false);
 
   // Now set the href of the link to a location that's actually visited.
-  link.href = window.location;
+  link.href = top.location;
 
   start = Date.now();
 

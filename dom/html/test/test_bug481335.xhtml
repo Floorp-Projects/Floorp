@@ -54,12 +54,14 @@ function checkLinkColor(aElmId, aExpectedColor, aMessage) {
     return utils.getVisitedDependentComputedStyle($(aElmId), "", "color");
   }
   while (getColor() != aExpectedColor) {
-    setTimeout(continueTest, 0);
+    requestIdleCallback(continueTest);
     return false;
   }
   is(getColor(), aExpectedColor, aMessage);
   return true;
 }
+
+let win;
 
 function* testIterator() {
   // After first load
@@ -71,8 +73,8 @@ function* testIterator() {
   while (!checkLinkColor("t", unvisitedColor, "Should be unvisited now"))
     yield undefined;
 
-  $("i").src = $("t").href;
-  yield undefined;
+  win.close();
+  win = window.open($("t").href, "_blank");
 
   // After second load
   while (!checkLinkColor("t", visitedColor, "Should be visited now"))
@@ -82,6 +84,7 @@ function* testIterator() {
             "Should still be visited after setting pathname to its existing value")) {
     yield undefined;
   }
+
   /* TODO uncomment this test with the landing of bug 534526.  See
    * https://bugzilla.mozilla.org/show_bug.cgi?id=461199#c167
   $("t").pathname += "x";
@@ -96,20 +99,21 @@ function* testIterator() {
   }
   */
 
-  $("i").src = $("t").href;
-  yield undefined;
+  win.close();
+  win = window.open($("t").href, "_blank");
 
   // After third load
   while (!checkLinkColor("t", visitedColor,
                          "Should be visited now after third load")) {
     yield undefined;
   }
+  win.close();
   SimpleTest.finish();
 }
 
 addLoadEvent(function() {
-  $("i").onload = continueTest;
-  $("i").src = $("t").href;
+  win = window.open($("t").href, "_blank");
+  requestIdleCallback(continueTest);
 });
 ]]>
 </script>

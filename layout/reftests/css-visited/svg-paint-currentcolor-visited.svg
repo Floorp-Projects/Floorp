@@ -12,5 +12,5 @@
     rect { fill: currentcolor; stroke: currentcolor; stroke-width: 20px; }
   </style>
 
-  <a href=""><rect x="10" y="10" width="80" height="80"/></a>
+  <a href="visited-page.html"><rect x="10" y="10" width="80" height="80"/></a>
 </svg>
