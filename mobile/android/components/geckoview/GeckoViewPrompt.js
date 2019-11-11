@@ -53,7 +53,6 @@ PromptFactory.prototype = {
   _handleClick: function(aEvent) {
     let target = aEvent.composedTarget;
     if (
-      aEvent.defaultPrevented ||
       target.isContentEditable ||
       target.disabled ||
       target.readOnly ||
