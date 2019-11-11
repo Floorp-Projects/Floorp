@@ -106,7 +106,7 @@ void nsHttpConnectionInfo::Init(const nsACString& host, int32_t port,
   mOriginAttributes = originAttributes;
   mTlsFlags = 0x0;
   mIsTrrServiceChannel = false;
-  mTRRMode = nsIRequest::TRR_DEFAULT_MODE;
+  mTrrDisabled = false;
   mIPv4Disabled = false;
   mIPv6Disabled = false;
 
@@ -234,13 +234,11 @@ void nsHttpConnectionInfo::BuildHashKey() {
     mHashKey.AppendLiteral("}");
   }
 
-  if (GetTRRMode() != nsIRequest::TRR_DEFAULT_MODE) {
-    // When connecting with another TRR mode, we enforce a separate connection
+  if (GetTrrDisabled()) {
+    // When connecting with TRR disabled, we enforce a separate connection
     // hashkey so that we also can trigger a fresh DNS resolver that then
     // doesn't use TRR as the previous connection might have.
-    mHashKey.AppendLiteral("[TRR:");
-    mHashKey.AppendInt(GetTRRMode());
-    mHashKey.AppendLiteral("]");
+    mHashKey.AppendLiteral("[NOTRR]");
   }
 
   if (GetIPv4Disabled()) {
@@ -327,7 +325,7 @@ already_AddRefed<nsHttpConnectionInfo> nsHttpConnectionInfo::Clone() const {
   clone->SetBeConservative(GetBeConservative());
   clone->SetTlsFlags(GetTlsFlags());
   clone->SetIsTrrServiceChannel(GetIsTrrServiceChannel());
-  clone->SetTRRMode(GetTRRMode());
+  clone->SetTrrDisabled(GetTrrDisabled());
   clone->SetIPv4Disabled(GetIPv4Disabled());
   clone->SetIPv6Disabled(GetIPv6Disabled());
   MOZ_ASSERT(clone->Equals(this));
@@ -353,7 +351,7 @@ void nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo** outCI) {
   clone->SetBeConservative(GetBeConservative());
   clone->SetTlsFlags(GetTlsFlags());
   clone->SetIsTrrServiceChannel(GetIsTrrServiceChannel());
-  clone->SetTRRMode(GetTRRMode());
+  clone->SetTrrDisabled(GetTrrDisabled());
   clone->SetIPv4Disabled(GetIPv4Disabled());
   clone->SetIPv6Disabled(GetIPv6Disabled());
 
@@ -380,9 +378,9 @@ nsresult nsHttpConnectionInfo::CreateWildCard(nsHttpConnectionInfo** outParam) {
   return NS_OK;
 }
 
-void nsHttpConnectionInfo::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
-  if (mTRRMode != aTRRMode) {
-    mTRRMode = aTRRMode;
+void nsHttpConnectionInfo::SetTrrDisabled(bool aNoTrr) {
+  if (mTrrDisabled != aNoTrr) {
+    mTrrDisabled = aNoTrr;
     RebuildHashKey();
   }
 }

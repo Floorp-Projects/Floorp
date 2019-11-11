@@ -1,8 +1,6 @@
 "use strict";
 
-const { NodeServer, HttpServer } = ChromeUtils.import(
-  "resource://testing-common/httpd.js"
-);
+const { NodeServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
   Ci.nsIDNSService
 );
@@ -101,15 +99,6 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("network.dns.native-is-localhost");
 });
 
-// This is an IP that is local, so we don't crash when connecting to it,
-// but also connecting to it fails, so we attempt to retry with regular DNS.
-const BAD_IP = (() => {
-  if (mozinfo.os == "linux") {
-    return "127.9.9.9";
-  }
-  return "0.0.0.0";
-})();
-
 class DNSListener {
   constructor(name, expectedAnswer, expectedSuccess = true) {
     this.name = name;
@@ -155,138 +144,26 @@ class DNSListener {
     return this.promise.then.apply(this.promise, arguments);
   }
 }
+
+Cu.importGlobalProperties(["fetch"]);
+
 add_task(async function test0_nodeExecute() {
   // This test checks that moz-http2.js running in node is working.
   // This should always be the first test in this file (except for setup)
   // otherwise we may encounter random failures when the http2 server is down.
 
-  await NodeServer.execute("bad_id", `"hello"`)
-    .then(() => ok(false, "expecting to throw"))
-    .catch(e => equal(e.message, "Error: could not find id"));
-});
-
-function makeChan(url, mode) {
-  let chan = NetUtil.newChannel({
-    uri: url,
-    loadUsingSystemPrincipal: true,
-  }).QueryInterface(Ci.nsIHttpChannel);
-  chan.setTRRMode(mode);
-  return chan;
-}
-
-add_task(
-  { skip_if: () => mozinfo.os == "mac" },
-  async function test_trr_flags() {
-    let httpserv = new HttpServer();
-    httpserv.registerPathHandler("/", function handler(metadata, response) {
-      let content = "ok";
-      response.setHeader("Content-Length", `${content.length}`);
-      response.bodyOutputStream.write(content, content.length);
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  let execPort = env.get("MOZNODE_EXEC_PORT");
+  await fetch(`http://127.0.0.1:${execPort}/test`)
+    .then(response => {
+      ok(true, "NodeServer is working");
+    })
+    .catch(e => {
+      ok(false, `There was an error ${e}`);
     });
-    httpserv.start(-1);
-    const URL = `http://example.com:${httpserv.identity.primaryPort}/`;
-
-    dns.clearCache(true);
-    Services.prefs.setCharPref(
-      "network.trr.uri",
-      `https://localhost:${h2Port}/doh?responseIP=${BAD_IP}`
-    );
-
-    Services.prefs.setIntPref("network.trr.mode", 0);
-    dns.clearCache(true);
-    let chan = makeChan(URL, Ci.nsIRequest.TRR_DEFAULT_MODE);
-    await new Promise(resolve => chan.asyncOpen(new ChannelListener(resolve)));
-    equal(chan.getTRRMode(), Ci.nsIRequest.TRR_DEFAULT_MODE);
-    dns.clearCache(true);
-    chan = makeChan(URL, Ci.nsIRequest.TRR_DISABLED_MODE);
-    await new Promise(resolve => chan.asyncOpen(new ChannelListener(resolve)));
-    equal(chan.getTRRMode(), Ci.nsIRequest.TRR_DISABLED_MODE);
-    dns.clearCache(true);
-    chan = makeChan(URL, Ci.nsIRequest.TRR_FIRST_MODE);
-    await new Promise(resolve => chan.asyncOpen(new ChannelListener(resolve)));
-    equal(chan.getTRRMode(), Ci.nsIRequest.TRR_FIRST_MODE);
-    dns.clearCache(true);
-    chan = makeChan(
-      `http://example.com:${httpserv.identity.primaryPort}/`,
-      Ci.nsIRequest.TRR_ONLY_MODE
-    );
-    // Should fail as it tries to connect to local but unavailable IP
-    await new Promise(resolve =>
-      chan.asyncOpen(new ChannelListener(resolve, null, CL_EXPECT_FAILURE))
-    );
-    equal(chan.getTRRMode(), Ci.nsIRequest.TRR_ONLY_MODE);
-
-    dns.clearCache(true);
-    Services.prefs.setCharPref(
-      "network.trr.uri",
-      `https://localhost:${h2Port}/doh?responseIP=${BAD_IP}`
-    );
-    Services.prefs.setIntPref("network.trr.mode", 2);
-
-    dns.clearCache(true);
-    chan = makeChan(URL, Ci.nsIRequest.TRR_DEFAULT_MODE);
-    // Does get the IP from TRR, but failure means it falls back to DNS.
-    await new Promise(resolve => chan.asyncOpen(new ChannelListener(resolve)));
-    dns.clearCache(true);
-    chan = makeChan(URL, Ci.nsIRequest.TRR_DISABLED_MODE);
-    await new Promise(resolve => chan.asyncOpen(new ChannelListener(resolve)));
-    dns.clearCache(true);
-    // Does get the IP from TRR, but failure means it falls back to DNS.
-    chan = makeChan(URL, Ci.nsIRequest.TRR_FIRST_MODE);
-    await new Promise(resolve => chan.asyncOpen(new ChannelListener(resolve)));
-    dns.clearCache(true);
-    chan = makeChan(URL, Ci.nsIRequest.TRR_ONLY_MODE);
-    await new Promise(resolve =>
-      chan.asyncOpen(new ChannelListener(resolve, null, CL_EXPECT_FAILURE))
-    );
-
-    dns.clearCache(true);
-    Services.prefs.setCharPref(
-      "network.trr.uri",
-      `https://localhost:${h2Port}/doh?responseIP=${BAD_IP}`
-    );
-    Services.prefs.setIntPref("network.trr.mode", 3);
-
-    dns.clearCache(true);
-    chan = makeChan(URL, Ci.nsIRequest.TRR_DEFAULT_MODE);
-    await new Promise(resolve =>
-      chan.asyncOpen(new ChannelListener(resolve, null, CL_EXPECT_FAILURE))
-    );
-    dns.clearCache(true);
-    chan = makeChan(URL, Ci.nsIRequest.TRR_DISABLED_MODE);
-    await new Promise(resolve => chan.asyncOpen(new ChannelListener(resolve)));
-    dns.clearCache(true);
-    chan = makeChan(URL, Ci.nsIRequest.TRR_FIRST_MODE);
-    await new Promise(resolve => chan.asyncOpen(new ChannelListener(resolve)));
-    dns.clearCache(true);
-    chan = makeChan(URL, Ci.nsIRequest.TRR_ONLY_MODE);
-    await new Promise(resolve =>
-      chan.asyncOpen(new ChannelListener(resolve, null, CL_EXPECT_FAILURE))
-    );
-
-    dns.clearCache(true);
-    Services.prefs.setIntPref("network.trr.mode", 5);
-    Services.prefs.setCharPref(
-      "network.trr.uri",
-      `https://localhost:${h2Port}/doh?responseIP=1.1.1.1`
-    );
-
-    dns.clearCache(true);
-    chan = makeChan(URL, Ci.nsIRequest.TRR_DEFAULT_MODE);
-    await new Promise(resolve => chan.asyncOpen(new ChannelListener(resolve)));
-    dns.clearCache(true);
-    chan = makeChan(URL, Ci.nsIRequest.TRR_DISABLED_MODE);
-    await new Promise(resolve => chan.asyncOpen(new ChannelListener(resolve)));
-    dns.clearCache(true);
-    chan = makeChan(URL, Ci.nsIRequest.TRR_FIRST_MODE);
-    await new Promise(resolve => chan.asyncOpen(new ChannelListener(resolve)));
-    dns.clearCache(true);
-    chan = makeChan(URL, Ci.nsIRequest.TRR_ONLY_MODE);
-    await new Promise(resolve => chan.asyncOpen(new ChannelListener(resolve)));
-
-    await new Promise(resolve => httpserv.stop(resolve));
-  }
-);
+});
 
 // verify basic A record
 add_task(async function test1() {
@@ -873,61 +750,15 @@ add_task(async function test24e() {
   await new DNSListener("bar.example.com", "127.0.0.1");
 });
 
-function observerPromise(topic) {
-  return new Promise(resolve => {
-    let observer = {
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
-      observe(aSubject, aTopic, aData) {
-        dump(`observe: ${aSubject}, ${aTopic}, ${aData} \n`);
-        if (aTopic == topic) {
-          Services.obs.removeObserver(observer, topic);
-          resolve(aData);
-        }
-      },
-    };
-    Services.obs.addObserver(observer, topic);
-  });
-}
-
 // TRR-first check that captivedetect.canonicalURL is resolved via native DNS
 add_task(async function test24f() {
   dns.clearCache(true);
-
-  const cpServer = new HttpServer();
-  cpServer.registerPathHandler("/cp", function handleRawData(
-    request,
-    response
-  ) {
-    response.setHeader("Content-Type", "text/plain", false);
-    response.setHeader("Cache-Control", "no-cache", false);
-    response.bodyOutputStream.write("data", 4);
-  });
-  cpServer.start(-1);
-  cpServer.identity.setPrimary(
-    "http",
-    "detectportal.firefox.com",
-    cpServer.identity.primaryPort
-  );
-  let cpPromise = observerPromise("captive-portal-login");
-
   Services.prefs.setCharPref(
     "captivedetect.canonicalURL",
-    `http://detectportal.firefox.com:${cpServer.identity.primaryPort}/cp`
+    "http://test.detectportal.com/success.txt"
   );
-  Services.prefs.setBoolPref("network.captive-portal-service.testMode", true);
-  Services.prefs.setBoolPref("network.captive-portal-service.enabled", true);
 
-  // The captive portal has to have used native DNS, otherwise creating
-  // a socket to a non-local IP would trigger a crash.
-  await cpPromise;
-  // Simply resolving the captive portal domain should still use TRR
-  await new DNSListener("detectportal.firefox.com", "192.192.192.192");
-
-  Services.prefs.clearUserPref("network.captive-portal-service.enabled");
-  Services.prefs.clearUserPref("network.captive-portal-service.testMode");
-  Services.prefs.clearUserPref("captivedetect.canonicalURL");
-
-  await new Promise(resolve => cpServer.stop(resolve));
+  await new DNSListener("test.detectportal.com", "127.0.0.1");
 });
 
 // TRR-first check that a domain is resolved via native DNS when parental control is enabled.
@@ -1041,45 +872,15 @@ add_task(async function test25e() {
   dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
   Services.prefs.setCharPref(
+    "captivedetect.canonicalURL",
+    "http://test.detectportal.com/success.txt"
+  );
+  Services.prefs.setCharPref(
     "network.trr.uri",
     `https://foo.example.com:${h2Port}/doh?responseIP=192.192.192.192`
   );
 
-  const cpServer = new HttpServer();
-  cpServer.registerPathHandler("/cp", function handleRawData(
-    request,
-    response
-  ) {
-    response.setHeader("Content-Type", "text/plain", false);
-    response.setHeader("Cache-Control", "no-cache", false);
-    response.bodyOutputStream.write("data", 4);
-  });
-  cpServer.start(-1);
-  cpServer.identity.setPrimary(
-    "http",
-    "detectportal.firefox.com",
-    cpServer.identity.primaryPort
-  );
-  let cpPromise = observerPromise("captive-portal-login");
-
-  Services.prefs.setCharPref(
-    "captivedetect.canonicalURL",
-    `http://detectportal.firefox.com:${cpServer.identity.primaryPort}/cp`
-  );
-  Services.prefs.setBoolPref("network.captive-portal-service.testMode", true);
-  Services.prefs.setBoolPref("network.captive-portal-service.enabled", true);
-
-  // The captive portal has to have used native DNS, otherwise creating
-  // a socket to a non-local IP would trigger a crash.
-  await cpPromise;
-  // // Simply resolving the captive portal domain should still use TRR
-  await new DNSListener("detectportal.firefox.com", "192.192.192.192");
-
-  Services.prefs.clearUserPref("network.captive-portal-service.enabled");
-  Services.prefs.clearUserPref("network.captive-portal-service.testMode");
-  Services.prefs.clearUserPref("captivedetect.canonicalURL");
-
-  await new Promise(resolve => cpServer.stop(resolve));
+  await new DNSListener("test.detectportal.com", "127.0.0.1");
 });
 
 // TRR-only check that a domain is resolved via native DNS when parental control is enabled.
@@ -1217,9 +1018,9 @@ add_task(async function test_connection_closed_no_bootstrap_localhost() {
 });
 
 add_task(async function test_connection_closed_no_bootstrap_no_excluded() {
-  // This test makes sure that even in mode 3 without a bootstrap address
-  // we are able to restart the TRR connection if it drops - the TRR service
-  // channel will use regular DNS to resolve the TRR address.
+  // This test exists to document what happens when we're in TRR only mode
+  // and we don't set a bootstrap address. We use DNS to resolve the
+  // initial URI, but if the connection fails, we don't fallback to DNS
   dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
   Services.prefs.setCharPref("network.trr.excluded-domains", "");
@@ -1239,8 +1040,11 @@ add_task(async function test_connection_closed_no_bootstrap_no_excluded() {
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
   );
-  dns.clearCache(true);
-  await new DNSListener("bar2.example.com", "3.3.3.3");
+  [, , inStatus] = await new DNSListener("bar2.example.com", undefined, false);
+  Assert.ok(
+    !Components.isSuccessCode(inStatus),
+    `${inStatus} should be an error code`
+  );
 });
 
 add_task(async function test_connection_closed_trr_first() {
