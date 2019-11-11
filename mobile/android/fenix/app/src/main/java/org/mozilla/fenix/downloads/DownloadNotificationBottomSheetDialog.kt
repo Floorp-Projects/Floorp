@@ -16,6 +16,8 @@ import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.toMegabyteString
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.theme.ThemeManager
 
 class DownloadNotificationBottomSheetDialog(
@@ -42,6 +44,7 @@ class DownloadNotificationBottomSheetDialog(
                 )
                 setOnClickListener {
                     tryAgain(download.id)
+                    context.metrics.track(Event.InAppNotificationDownloadTryAgain)
                     dismiss()
                 }
             }
@@ -66,6 +69,7 @@ class DownloadNotificationBottomSheetDialog(
                         contentType = download.contentType,
                         filePath = download.filePath
                     )
+                    context.metrics.track(Event.InAppNotificationDownloadOpen)
                     dismiss()
                 }
             }

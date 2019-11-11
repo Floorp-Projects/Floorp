@@ -1543,3 +1543,82 @@ experiments.metrics:
     notification_emails:
       - mcooper@mozilla.com
     expires: 2019-11-01
+
+download_notification:
+  resume:
+    type: event
+    description: >
+      A user resumed a download in the download notification
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5583
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/6554
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  pause:
+    type: event
+    description: >
+      A user paused a download in the download notification
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5583
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/6554
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  cancel:
+    type: event
+    description: >
+      A user cancelled a download in the download notification
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5583
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/6554
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  try_again:
+    type: event
+    description: >
+      A user tapped on try again when a download fails in the download notification
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5583
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/6554
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  open:
+    type: event
+    description: >
+      A user opened a downloaded file in the download notification
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5583
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/6554
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  in_app_open:
+    type: event
+    description: >
+      A user opened a downloaded file in the in-app notification link
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5583
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/6554
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  in_app_try_again:
+    type: event
+    description: >
+      A user tapped on try again when a download fails in the in-app notification link
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5583
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/6554
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
