@@ -90,11 +90,6 @@ let gWhitelist = [
     type: "double-quote",
   },
   {
-    file: "xbl.properties",
-    key: "CommandNotInChrome",
-    type: "double-quote",
-  },
-  {
     file: "dom.properties",
     key: "PatternAttributeCompileFailure",
     type: "single-quote",

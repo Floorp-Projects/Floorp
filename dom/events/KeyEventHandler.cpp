@@ -680,10 +680,10 @@ void KeyEventHandler::ReportKeyConflict(const char16_t* aKey,
   params.AppendElement(aKey);
   params.AppendElement(aModifiers);
   params.AppendElement(id);
-  nsContentUtils::ReportToConsole(
-      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("XBL Prototype Handler"),
-      doc, nsContentUtils::eXBL_PROPERTIES, aMessageName, params, nullptr,
-      EmptyString(), 0);
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  NS_LITERAL_CSTRING("Key Event Handler"), doc,
+                                  nsContentUtils::eDOM_PROPERTIES, aMessageName,
+                                  params, nullptr, EmptyString(), 0);
 }
 
 bool KeyEventHandler::ModifiersMatchMask(
