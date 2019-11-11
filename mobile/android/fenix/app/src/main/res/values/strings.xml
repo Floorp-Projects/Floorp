@@ -134,6 +134,8 @@
     <string name="preferences_default_search_engine">Default search engine</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Search</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">Address bar</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Help</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -191,6 +193,8 @@
     <string name="preferences_show_search_shortcuts">Show search shortcuts</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Show search suggestions</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">Show in private sessions</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">Show clipboard suggestions</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->

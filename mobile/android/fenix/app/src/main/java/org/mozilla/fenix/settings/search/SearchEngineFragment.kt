@@ -8,6 +8,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
+import androidx.preference.CheckBoxPreference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
@@ -29,6 +30,12 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
         val searchSuggestionsPreference =
             findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_show_search_suggestions))?.apply {
                 isChecked = context.settings().shouldShowSearchSuggestions
+            }
+
+        val searchSuggestionsInPrivatePreference =
+            findPreference<CheckBoxPreference>(getPreferenceKey(R.string.pref_key_show_search_suggestions_in_private))
+                ?.apply {
+                isChecked = context.settings().shouldShowSearchSuggestionsInPrivate
             }
 
         val showSearchShortcuts =
@@ -60,6 +67,15 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
         showHistorySuggestions?.onPreferenceChangeListener = SharedPreferenceUpdater()
         showBookmarkSuggestions?.onPreferenceChangeListener = SharedPreferenceUpdater()
         showClipboardSuggestions?.onPreferenceChangeListener = SharedPreferenceUpdater()
+        searchSuggestionsInPrivatePreference?.onPreferenceChangeListener = SharedPreferenceUpdater()
+
+        searchSuggestionsPreference?.setOnPreferenceClickListener {
+            if (!searchSuggestionsPreference.isChecked) {
+                searchSuggestionsInPrivatePreference?.isChecked = false
+                searchSuggestionsInPrivatePreference?.callChangeListener(false)
+            }
+            true
+        }
     }
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {

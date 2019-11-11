@@ -81,13 +81,20 @@ class SearchFragment : Fragment(), BackHandler {
             requireComponents.search.provider.getDefaultEngine(requireContext())
         )
 
+        val showSearchSuggestions = if ((activity as HomeActivity).browsingModeManager.mode.isPrivate) {
+            requireContext().settings().shouldShowSearchSuggestions &&
+                    requireContext().settings().shouldShowSearchSuggestionsInPrivate
+        } else {
+            requireContext().settings().shouldShowSearchSuggestions
+        }
+
         searchStore = StoreProvider.get(this) {
             SearchFragmentStore(
                 SearchFragmentState(
                     query = url,
                     searchEngineSource = currentSearchEngine,
                     defaultEngineSource = currentSearchEngine,
-                    showSearchSuggestions = requireContext().settings().shouldShowSearchSuggestions,
+                    showSearchSuggestions = showSearchSuggestions,
                     showSearchShortcuts = requireContext().settings().shouldShowSearchShortcuts && url.isEmpty(),
                     showClipboardSuggestions = requireContext().settings().shouldShowClipboardSuggestions,
                     showHistorySuggestions = requireContext().settings().shouldShowHistorySuggestions,

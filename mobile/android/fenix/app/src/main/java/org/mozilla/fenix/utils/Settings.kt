@@ -263,6 +263,11 @@ class Settings private constructor(
         default = true
     )
 
+    val shouldShowSearchSuggestionsInPrivate by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_show_search_suggestions_in_private),
+        default = false
+    )
+
     @VisibleForTesting(otherwise = PRIVATE)
     internal val trackingProtectionOnboardingCount by intPreference(
         appContext.getPreferenceKey(R.string.pref_key_tracking_protection_onboarding),
