@@ -10,6 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=557287
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=557287">Mozilla Bug 147777</a>
+<iframe id="display" src="visited_image_loading_frame_empty.html"></iframe>
 <pre id="test">
 <script type="application/ecmascript" src="visited_image_loading.sjs?reset"></script>
 <script type="application/javascript">
@@ -25,11 +26,10 @@ window.addEventListener("load", run);
 
 function run()
 {
-  subwin = window.open("visited_image_loading_frame_empty.html", "_blank");
-  subwin.addEventListener("load", function() {
-    subdoc = subwin.document;
-    setTimeout(check_link_styled, 50);
-  });
+  var frame = document.getElementById("display");
+  subdoc = frame.contentDocument;
+  subwin = frame.contentWindow;
+  setTimeout(check_link_styled, 50);
 }
 
 function visitedDependentComputedStyle(win, elem, property) {
@@ -59,7 +59,6 @@ function paint_listener(event)
   var s = document.createElement("script");
   s.src = "visited_image_loading.sjs?waitforresult";
   document.body.appendChild(s);
-  subwin.close();
 }
 
 </script>

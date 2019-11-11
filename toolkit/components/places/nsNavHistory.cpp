@@ -130,6 +130,9 @@ using namespace mozilla::places;
 // Max number of containers, used to initialize the params hash.
 #define HISTORY_DATE_CONT_LENGTH 8
 
+// Initial length of the embed visits cache.
+#define EMBED_VISITS_INITIAL_CACHE_LENGTH 64
+
 // Initial length of the recent events cache.
 #define RECENT_EVENTS_INITIAL_CACHE_LENGTH 64
 
@@ -374,6 +377,7 @@ nsNavHistory::nsNavHistory()
       mRecentTyped(RECENT_EVENTS_INITIAL_CACHE_LENGTH),
       mRecentLink(RECENT_EVENTS_INITIAL_CACHE_LENGTH),
       mRecentBookmark(RECENT_EVENTS_INITIAL_CACHE_LENGTH),
+      mEmbedVisits(EMBED_VISITS_INITIAL_CACHE_LENGTH),
       mHistoryEnabled(true),
       mNumVisitsForFrecency(10),
       mDecayFrecencyPendingCount(0),
@@ -2752,6 +2756,29 @@ nsresult nsNavHistory::FilterResultSet(
       break;
   }
 
+  return NS_OK;
+}
+
+void nsNavHistory::registerEmbedVisit(nsIURI* aURI, int64_t aTime) {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
+  VisitHashKey* visit = mEmbedVisits.PutEntry(aURI);
+  if (!visit) {
+    NS_WARNING("Unable to register a EMBED visit.");
+    return;
+  }
+  visit->visitTime = aTime;
+}
+
+bool nsNavHistory::hasEmbedVisit(nsIURI* aURI) {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
+  return !!mEmbedVisits.GetEntry(aURI);
+}
+
+NS_IMETHODIMP
+nsNavHistory::ClearEmbedVisits() {
+  mEmbedVisits.Clear();
   return NS_OK;
 }
 
