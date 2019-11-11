@@ -277,11 +277,12 @@ static void IncrementScaleRestyleCountIfNeeded(nsIFrame* aFrame,
   }
 
   // Compute the new scale due to the CSS transform property.
+  // Note: Motion path doesn't contribute to scale factor. (It only has 2d
+  // translate and 2d rotate, so we use Nothing() for it.)
   nsStyleTransformMatrix::TransformReferenceBox refBox(aFrame);
   Matrix4x4 transform = nsStyleTransformMatrix::ReadTransforms(
-      display->mTranslate, display->mRotate, display->mScale,
-      MotionPathUtils::ResolveMotionPath(aFrame), display->mTransform, refBox,
-      AppUnitsPerCSSPixel());
+      display->mTranslate, display->mRotate, display->mScale, Nothing(),
+      display->mTransform, refBox, AppUnitsPerCSSPixel());
   Matrix transform2D;
   if (!transform.Is2D(&transform2D)) {
     // We don't attempt to handle 3D transforms; just assume the scale changed.

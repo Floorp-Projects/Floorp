@@ -214,8 +214,6 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame {
   }
 #endif
 
-  virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
-
   /**
    * Finds the nsTextFrame for the closest rendered run to the specified point.
    */

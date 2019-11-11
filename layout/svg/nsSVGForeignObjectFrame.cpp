@@ -102,6 +102,8 @@ nsresult nsSVGForeignObjectFrame::AttributeChanged(int32_t aNameSpaceID,
 
 void nsSVGForeignObjectFrame::DidSetComputedStyle(
     ComputedStyle* aOldComputedStyle) {
+  nsContainerFrame::DidSetComputedStyle(aOldComputedStyle);
+
   if (aOldComputedStyle) {
     if (StyleSVGReset()->mX != aOldComputedStyle->StyleSVGReset()->mX ||
         StyleSVGReset()->mY != aOldComputedStyle->StyleSVGReset()->mY) {
