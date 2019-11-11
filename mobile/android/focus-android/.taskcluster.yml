@@ -15,6 +15,7 @@ tasks:
     then:
       created: {$fromNow: ''}
       deadline: {$fromNow: '2 hours'}
+      schedulerId: mobile-level-1
       provisionerId: mobile-1
       workerType: b-linux
       scopes: []
@@ -66,6 +67,7 @@ tasks:
         taskGroupId: {$eval: as_slugid("decision_task")}
         created: {$fromNow: ''}
         deadline: {$fromNow: '2 hours'}
+        schedulerId: mobile-level-3
         provisionerId: mobile-3
         workerType: b-linux
         routes:
