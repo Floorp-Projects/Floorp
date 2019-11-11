@@ -41,7 +41,7 @@ TEST(CMapEditingTest, RemoveAllButOneCMap) {
   FontBuilderPtr font_builder = builders[0];
   Ptr<CMapTable::Builder> cmap_table_builder =
       (CMapTable::Builder*)font_builder->GetTableBuilder(Tag::cmap);
-  ASSERT_NE(cmap_table_builder, reinterpret_cast<CMapTable::Builder*>(NULL));
+  ASSERT_NE(cmap_table_builder, static_cast<CMapTable::Builder*>(NULL));
   CMapTable::CMapBuilderMap*
       cmap_builders = cmap_table_builder->GetCMapBuilders();
   ASSERT_FALSE(cmap_builders->empty());
@@ -95,7 +95,7 @@ TEST(CMapEditingTest, CopyAllCMapsToNewFont) {
   ASSERT_EQ(cmap_table->NumCMaps(), new_cmap_table->NumCMaps());
   CMapTable::CMapPtr cmap;
   cmap.Attach(cmap_table->GetCMap(CMapTable::WINDOWS_BMP));
-  ASSERT_NE(cmap, reinterpret_cast<CMapTable::CMap*>(NULL));
+  ASSERT_NE(cmap, static_cast<CMapTable::CMap*>(NULL));
   ASSERT_EQ(CMapTable::WINDOWS_BMP, cmap->cmap_id());
 }
 }
