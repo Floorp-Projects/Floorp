@@ -559,7 +559,10 @@
       static insertFTLIfNeeded(path) {
         let container = document.head || document.querySelector("linkset");
         if (!container) {
-          if (document.contentType == "application/vnd.mozilla.xul+xml") {
+          if (
+            document.documentElement.namespaceURI ===
+            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          ) {
             container = document.createXULElement("linkset");
             document.documentElement.appendChild(container);
           } else if (document.documentURI == AppConstants.BROWSER_CHROME_URL) {
