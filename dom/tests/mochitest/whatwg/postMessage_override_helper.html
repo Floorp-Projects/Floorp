@@ -3,20 +3,16 @@
 <head>
   <title>Overriding postMessage and dispatchEvent bindings</title>
   <script type="application/javascript">
-    window.postMessage = function (evt)
-    {
+    window.postMessage = function (evt) {
       window.parent.postMessage("FAIL overridden postMessage called", "*");
     };
 
     var count = 0;
 
-    function receiveMessage(evt)
-    {
+    function receiveMessage(evt) {
       count++;
-      if (count == 1)
-      {
-        window.dispatchEvent = function(evt)
-        {
+      if (count == 2) {
+        window.dispatchEvent = function(evt) {
           window.parent.postMessage("FAIL", "*");
           throw "dispatchEvent threw";
         };
@@ -24,9 +20,8 @@
 
       window.parent.postMessage(evt.data, "http://mochi.test:8888");
     }
-    
-    function setup()
-    {
+
+    function setup() {
       var target = document.getElementById("location");
       target.textContent = location.hostname + ":" + (location.port || 80);
     }
