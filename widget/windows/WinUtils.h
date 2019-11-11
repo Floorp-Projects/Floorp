@@ -546,7 +546,9 @@ class WinUtils {
     Canonicalize = 1,
     Lengthen = 2,
     UnexpandEnvVars = 4,
-    Default = 7,
+    RequireFilePath = 8,
+
+    Default = 7,  // Default omits RequireFilePath
   };
 
   /**
