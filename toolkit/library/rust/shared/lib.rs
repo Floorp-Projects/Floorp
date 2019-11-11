@@ -54,6 +54,9 @@ extern crate audio_thread_priority;
 extern crate mdns_service;
 extern crate neqo_glue;
 
+#[cfg(feature = "wasm_library_sandboxing")]
+extern crate rlbox_lucet_sandbox;
+
 use std::boxed::Box;
 use std::env;
 use std::ffi::{CStr, CString};
