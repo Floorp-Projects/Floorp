@@ -732,6 +732,8 @@ void IDBDatabase::AbortTransactions(bool aShouldWarn) {
           aDatabase->mTransactions;
 
       if (!transactionTable.Count()) {
+        // Return early as an optimization, the remainder is a no-op in this
+        // case.
         return;
       }
 
@@ -754,6 +756,8 @@ void IDBDatabase::AbortTransactions(bool aShouldWarn) {
       MOZ_ASSERT(transactionsToAbort.Length() <= transactionTable.Count());
 
       if (transactionsToAbort.IsEmpty()) {
+        // Return early as an optimization, the remainder is a no-op in this
+        // case.
         return;
       }
 

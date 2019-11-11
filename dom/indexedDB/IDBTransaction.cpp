@@ -118,6 +118,8 @@ IDBTransaction::IDBTransaction(IDBDatabase* const aDatabase,
   MOZ_ASSERT(aDatabase);
   aDatabase->AssertIsOnOwningThread();
 
+  // This also nulls mBackgroundActor.mVersionChangeBackgroundActor, so this is
+  // valid also for mMode == VERSION_CHANGE.
   mBackgroundActor.mNormalBackgroundActor = nullptr;
 
 #ifdef DEBUG
