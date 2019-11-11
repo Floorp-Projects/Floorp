@@ -64,7 +64,8 @@ isThirdParty);
   // This message is sent to a child that has been redirected to another process.
   // As a consequence, it should cleanup the channel listeners and remove the
   // request from the loadGroup.
-  async CancelForProcessSwitch();
+  // aStatus must be an error result.
+  async DisconnectChildListeners(nsresult aStatus);
 
   async RedirectToRealChannel(uint32_t aRegistrarId,
                               nsIURI aURI,
