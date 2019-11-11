@@ -892,13 +892,6 @@ var PreferenceExperiments = {
           },
           experimentType: oldExperiment.experimentType,
         };
-        // Propogate any existing enrollmentId. This isn't likely to ever occur
-        // in the real world, but the tests have mock data that includes an
-        // enrollment ID here, which makes the tests that actually rely on
-        // enrollmentId easier.
-        if (oldExperiment.enrollmentId) {
-          v2Experiments[expName].enrollmentId = oldExperiment.enrollmentId;
-        }
       }
       storage.data.experiments = v2Experiments;
       storage.saveSoon();
@@ -929,19 +922,6 @@ var PreferenceExperiments = {
         if (experiment.name && !experiment.slug) {
           experiment.slug = experiment.name;
           delete experiment.name;
-        }
-      }
-      storage.saveSoon();
-    },
-
-    async migration05AddFillerEnrollmentId(storage = null) {
-      if (!storage) {
-        storage = await ensureStorage();
-      }
-      // Make sure that all experiments have a string enrollmentId
-      for (const experiment of Object.values(storage.data.experiments)) {
-        if (typeof experiment.enrollmentId != "string") {
-          experiment.enrollmentId = TelemetryEvents.NO_ENROLLMENT_ID_MARKER;
         }
       }
       storage.saveSoon();
