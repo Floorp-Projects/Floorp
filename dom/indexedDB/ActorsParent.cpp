@@ -5801,6 +5801,7 @@ class Database final
   bool mInvalidated;
   bool mActorWasAlive;
   bool mActorDestroyed;
+  nsCOMPtr<nsIEventTarget> mBackgroundThread;
 #ifdef DEBUG
   bool mAllBlobsUnmapped;
 #endif
@@ -5933,6 +5934,9 @@ class Database final
   ~Database() override {
     MOZ_ASSERT(mClosed);
     MOZ_ASSERT_IF(mActorWasAlive, mActorDestroyed);
+
+    NS_ProxyRelease("ReleaseIDBFactory", mBackgroundThread.get(),
+                    mFactory.forget());
   }
 
   already_AddRefed<FileInfo> GetBlob(const IPCBlob& aID);
@@ -12653,7 +12657,8 @@ Database::Database(Factory* aFactory, const PrincipalInfo& aPrincipalInfo,
       mClosed(false),
       mInvalidated(false),
       mActorWasAlive(false),
-      mActorDestroyed(false)
+      mActorDestroyed(false),
+      mBackgroundThread(GetCurrentThreadEventTarget())
 #ifdef DEBUG
       ,
       mAllBlobsUnmapped(false)
