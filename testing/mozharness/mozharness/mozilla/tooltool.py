@@ -10,10 +10,6 @@ TooltoolErrorList = PythonErrorList + [{
 }]
 
 
-TOOLTOOL_SERVERS = [
-    'https://tooltool.mozilla-releng.net/',
-]
-
 _here = os.path.abspath(os.path.dirname(__file__))
 _external_tools_path = os.path.normpath(os.path.join(_here, '..', '..',
                                                      'external_tools'))
@@ -21,8 +17,8 @@ _external_tools_path = os.path.normpath(os.path.join(_here, '..', '..',
 
 class TooltoolMixin(object):
     """Mixin class for handling tooltool manifests.
-    To use a tooltool server other than the Mozilla server, override
-    config['tooltool_servers'].  To specify a different authentication
+    To use a tooltool server other than the Mozilla server, set
+    TOOLTOOL_HOST in the environment.  To specify a different authentication
     file than that used in releng automation,override
     config['tooltool_authentication_file']; set it to None to not pass
     any authentication information (OK for public files)
@@ -66,17 +62,6 @@ class TooltoolMixin(object):
                 sys.executable, '-u',
                 os.path.join(_external_tools_path, 'tooltool.py'),
             ]
-
-        # get the tooltool servers from configuration
-        default_urls = self.config.get('tooltool_servers', TOOLTOOL_SERVERS)
-
-        # add slashes (bug 1155630)
-        def add_slash(url):
-            return url if url.endswith('/') else (url + '/')
-        default_urls = [add_slash(u) for u in default_urls]
-
-        for url in default_urls:
-            cmd.extend(['--tooltool-url' if self.topsrcdir else '--url', url])
 
         # handle authentication file, if given
         auth_file = self._get_auth_file()
