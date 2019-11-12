@@ -35,6 +35,7 @@ RefPtr<MediaControlService> MediaControlService::GetService() {
   }
   if (!gMediaControlService) {
     gMediaControlService = new MediaControlService();
+    gMediaControlService->Init();
   }
   RefPtr<MediaControlService> service = gMediaControlService.get();
   return service;
@@ -54,7 +55,11 @@ MediaControlService::MediaControlService() : mAudioFocusManager(this) {
   if (obs) {
     obs->AddObserver(this, "xpcom-shutdown", false);
   }
+}
+
+void MediaControlService::Init() {
   mMediaKeysHandlder = new MediaControlKeysHandler();
+  GetMediaControlKeysManager().Init();
   GetMediaControlKeysManager().AddListener(mMediaKeysHandlder.get());
 }
 
