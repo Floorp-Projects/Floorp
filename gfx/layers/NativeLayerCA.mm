@@ -266,11 +266,9 @@ IntRegion NativeLayerCA::CurrentSurfaceInvalidRegion() {
   return mInProgressSurface->mInvalidRegion;
 }
 
-void NativeLayerCA::InvalidateRegionThroughoutSwapchain(const IntRegion& aRegion) {
-  MutexAutoLock lock(mMutex);
-
+void NativeLayerCA::InvalidateRegionThroughoutSwapchain(const MutexAutoLock&,
+                                                        const IntRegion& aRegion) {
   IntRegion r = aRegion;
-  r.AndWith(IntRect(IntPoint(0, 0), mSize));
   if (mInProgressSurface) {
     mInProgressSurface->mInvalidRegion.OrWith(r);
   }
@@ -338,12 +336,16 @@ CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurface(const MutexAutoLock& aLock
   return mInProgressSurface->mSurface;
 }
 
-RefPtr<gfx::DrawTarget> NativeLayerCA::NextSurfaceAsDrawTarget(gfx::BackendType aBackendType) {
+RefPtr<gfx::DrawTarget> NativeLayerCA::NextSurfaceAsDrawTarget(const gfx::IntRegion& aUpdateRegion,
+                                                               gfx::BackendType aBackendType) {
   MutexAutoLock lock(mMutex);
   CFTypeRefPtr<IOSurfaceRef> surface = NextSurface(lock);
   if (!surface) {
     return nullptr;
   }
+
+  MOZ_RELEASE_ASSERT(IntRect({}, mSize).Contains(aUpdateRegion.GetBounds()));
+  InvalidateRegionThroughoutSwapchain(lock, aUpdateRegion);
 
   mInProgressLockedIOSurface = new MacIOSurface(std::move(surface));
   mInProgressLockedIOSurface->Lock(false);
@@ -367,13 +369,16 @@ gl::GLContext* NativeLayerCA::GetGLContext() {
   return mGLContext;
 }
 
-Maybe<GLuint> NativeLayerCA::NextSurfaceAsFramebuffer(bool aNeedsDepth) {
+Maybe<GLuint> NativeLayerCA::NextSurfaceAsFramebuffer(const gfx::IntRegion& aUpdateRegion,
+                                                      bool aNeedsDepth) {
   MutexAutoLock lock(mMutex);
   CFTypeRefPtr<IOSurfaceRef> surface = NextSurface(lock);
   if (!surface) {
     return Nothing();
   }
 
+  MOZ_RELEASE_ASSERT(IntRect({}, mSize).Contains(aUpdateRegion.GetBounds()));
+  InvalidateRegionThroughoutSwapchain(lock, aUpdateRegion);
   return Some(GetOrCreateFramebufferForSurface(lock, std::move(surface), aNeedsDepth));
 }
 
