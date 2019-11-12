@@ -12,6 +12,7 @@ categories:
         - modules/libpref
         - remote
         - services/common/services
+        - uriloader
     build_doc:
         - mach
         - tools/try
