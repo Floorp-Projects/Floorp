@@ -13065,6 +13065,22 @@ void CodeGenerator::visitIsObjectAndBranch(LIsObjectAndBranch* ins) {
   testObjectEmitBranch(Assembler::Equal, value, ins->ifTrue(), ins->ifFalse());
 }
 
+void CodeGenerator::visitIsNullOrUndefined(LIsNullOrUndefined* ins) {
+  Register output = ToRegister(ins->output());
+  ValueOperand value = ToValue(ins, LIsNullOrUndefined::Input);
+
+  Label isNotNull, done;
+  masm.branchTestNull(Assembler::NotEqual, value, &isNotNull);
+
+  masm.move32(Imm32(1), output);
+  masm.jump(&done);
+
+  masm.bind(&isNotNull);
+  masm.testUndefinedSet(Assembler::Equal, value, output);
+
+  masm.bind(&done);
+}
+
 void CodeGenerator::loadOutermostJSScript(Register reg) {
   // The "outermost" JSScript means the script that we are compiling
   // basically; this is not always the script associated with the

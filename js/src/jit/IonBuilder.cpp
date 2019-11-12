@@ -1932,6 +1932,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op) {
     case JSOP_RETRVAL:
     case JSOP_AND:
     case JSOP_OR:
+    case JSOP_COALESCE:
     case JSOP_TRY:
     case JSOP_THROW:
     case JSOP_GOTO:
@@ -3148,8 +3149,9 @@ AbortReasonOr<Ok> IonBuilder::jsop_dup2() {
 }
 
 AbortReasonOr<Ok> IonBuilder::visitTest(CFGTest* test) {
+  CFGTestKind kind = test->getKind();
   MDefinition* ins =
-      test->mustKeepCondition() ? current->peek(-1) : current->pop();
+      kind != CFGTestKind::ToBooleanAndPop ? current->peek(-1) : current->pop();
 
   // Create true and false branches.
   MBasicBlock* ifTrue;
@@ -3157,7 +3159,15 @@ AbortReasonOr<Ok> IonBuilder::visitTest(CFGTest* test) {
   MBasicBlock* ifFalse;
   MOZ_TRY_VAR(ifFalse, newBlock(current, test->falseBranch()->startPc()));
 
-  MTest* mir = newTest(ins, ifTrue, ifFalse);
+  MTest* mir;
+  if (kind == CFGTestKind::Coalesce) {
+    MIsNullOrUndefined* isNullOrUndefined =
+        MIsNullOrUndefined::New(alloc(), ins);
+    current->add(isNullOrUndefined);
+    mir = newTest(isNullOrUndefined, ifFalse, ifTrue);
+  } else {
+    mir = newTest(ins, ifTrue, ifFalse);
+  }
   current->end(mir);
 
   // Filter the types in the true branch.
