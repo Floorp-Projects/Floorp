@@ -137,7 +137,8 @@ struct CustomElementDefinition {
                           int32_t aNamespaceID,
                           CustomElementConstructor* aConstructor,
                           nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
-                          UniquePtr<LifecycleCallbacks>&& aCallbacks);
+                          UniquePtr<LifecycleCallbacks>&& aCallbacks,
+                          bool aDisableInternals);
 
   // The type (name) for this custom element, for <button is="x-foo"> or <x-foo>
   // this would be x-foo.
@@ -157,6 +158,9 @@ struct CustomElementDefinition {
 
   // The lifecycle callbacks to call for this custom element.
   UniquePtr<LifecycleCallbacks> mCallbacks;
+
+  // Determine whether to allow to attachInternals() for this custom element.
+  bool mDisableInternals = false;
 
   // A construction stack. Use nullptr to represent an "already constructed
   // marker".
@@ -457,6 +461,10 @@ class CustomElementRegistry final : public nsISupports, public nsWrapperCache {
 
  private:
   ~CustomElementRegistry();
+
+  bool JSObjectToAtomArray(JSContext* aCx, JS::Handle<JSObject*> aConstructor,
+                           const char16_t* aName,
+                           nsTArray<RefPtr<nsAtom>>& aArray, ErrorResult& aRv);
 
   static UniquePtr<CustomElementCallback> CreateCustomElementCallback(
       Document::ElementCallbackType aType, Element* aCustomElement,
