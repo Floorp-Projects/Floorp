@@ -42,6 +42,8 @@ nsresult Construct_nsIScriptSecurityManager(nsISupports* aOuter,
                                             const nsIID& aIID, void** aResult);
 nsresult LocalStorageManagerConstructor(nsISupports* aOuter, const nsIID& aIID,
                                         void** aResult);
+nsresult SessionStorageManagerConstructor(nsISupports* aOuter,
+                                          const nsIID& aIID, void** aResult);
 
 already_AddRefed<nsIPresentationService> NS_CreatePresentationService();
 
