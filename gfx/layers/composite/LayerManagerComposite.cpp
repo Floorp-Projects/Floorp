@@ -847,8 +847,8 @@ void LayerManagerComposite::UpdateDebugOverlayNativeLayers() {
     }
 
     mGPUStatsLayer->SetPosition(IntPoint(2, 5));
-    RefPtr<DrawTarget> dt =
-        mGPUStatsLayer->NextSurfaceAsDrawTarget(BackendType::SKIA);
+    RefPtr<DrawTarget> dt = mGPUStatsLayer->NextSurfaceAsDrawTarget(
+        IntRect({}, size), BackendType::SKIA);
     mTextRenderer->RenderTextToDrawTarget(dt, text, 600,
                                           TextRenderer::FontType::FixedWidth);
     mGPUStatsLayer->NotifySurfaceReady();
@@ -866,7 +866,7 @@ void LayerManagerComposite::UpdateDebugOverlayNativeLayers() {
             mNativeLayerRoot->CreateLayer(IntSize(20, 20), true);
         RefPtr<DrawTarget> dt =
             mUnusedTransformWarningLayer->NextSurfaceAsDrawTarget(
-                BackendType::SKIA);
+                IntRect(0, 0, 20, 20), BackendType::SKIA);
         dt->FillRect(Rect(0, 0, 20, 20), ColorPattern(Color(1, 0, 0, 1)));
         mUnusedTransformWarningLayer->NotifySurfaceReady();
       }
@@ -887,7 +887,7 @@ void LayerManagerComposite::UpdateDebugOverlayNativeLayers() {
             mNativeLayerRoot->CreateLayer(IntSize(20, 20), true);
         RefPtr<DrawTarget> dt =
             mDisabledApzWarningLayer->NextSurfaceAsDrawTarget(
-                BackendType::SKIA);
+                IntRect(0, 0, 20, 20), BackendType::SKIA);
         dt->FillRect(Rect(0, 0, 20, 20), ColorPattern(Color(1, 1, 0, 1)));
         mDisabledApzWarningLayer->NotifySurfaceReady();
       }

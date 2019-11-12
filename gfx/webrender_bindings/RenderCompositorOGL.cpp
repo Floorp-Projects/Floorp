@@ -68,8 +68,8 @@ bool RenderCompositorOGL::BeginFrame() {
     return false;
   }
 
+  gfx::IntSize bufferSize = GetBufferSize().ToUnknownSize();
   if (mNativeLayerRoot && !ShouldUseNativeCompositor()) {
-    gfx::IntSize bufferSize = GetBufferSize().ToUnknownSize();
     if (mNativeLayerForEntireWindow &&
         mNativeLayerForEntireWindow->GetSize() != bufferSize) {
       mNativeLayerRoot->RemoveLayer(mNativeLayerForEntireWindow);
@@ -84,8 +84,9 @@ bool RenderCompositorOGL::BeginFrame() {
     }
   }
   if (mNativeLayerForEntireWindow) {
+    gfx::IntRect bounds({}, bufferSize);
     Maybe<GLuint> fbo =
-        mNativeLayerForEntireWindow->NextSurfaceAsFramebuffer(true);
+        mNativeLayerForEntireWindow->NextSurfaceAsFramebuffer(bounds, true);
     if (!fbo) {
       return false;
     }
@@ -188,7 +189,7 @@ void RenderCompositorOGL::Bind(wr::NativeSurfaceId aId,
       "We currently do not support partial updates (max_update_rects is set to "
       "0), so we expect the dirty rect to always cover the entire layer.");
 
-  Maybe<GLuint> fbo = layer->NextSurfaceAsFramebuffer(true);
+  Maybe<GLuint> fbo = layer->NextSurfaceAsFramebuffer(dirtyRect, true);
   MOZ_RELEASE_ASSERT(fbo);  // TODO: make fallible
   mCurrentlyBoundNativeLayer = layer;
 
