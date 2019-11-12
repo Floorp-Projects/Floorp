@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef IPC_ErrorIPCUtils_h
+#define IPC_ErrorIPCUtils_h
+
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Move.h"
-
-#ifndef IPC_ErrorIPCUtils_h
-#  define IPC_ErrorIPCUtils_h
 
 namespace IPC {
 
@@ -32,9 +32,9 @@ struct ParamTraits<mozilla::ErrorResult> {
     MOZ_ASSERT_IF(aParam.IsJSException(),
                   aParam.mMightHaveUnreportedJSException);
     if (aParam.IsJSException()
-#  ifdef DEBUG
+#ifdef DEBUG
         || aParam.mMightHaveUnreportedJSException
-#  endif
+#endif
     ) {
       MOZ_CRASH(
           "Cannot encode an ErrorResult representing a Javascript exception");
