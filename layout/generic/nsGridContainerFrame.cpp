@@ -1149,20 +1149,34 @@ struct nsGridContainerFrame::TrackSizingFunctions {
   const StyleTrackSize& SizingFor(uint32_t aTrackIndex) const {
     static const StyleTrackSize kAutoTrackSize =
         StyleTrackSize::Breadth(StyleTrackBreadth::Auto());
-    auto getImplicitSize = [this](size_t aIndex) -> const StyleTrackSize& {
+    // |aIndex| is the relative index to mAutoSizing. A negative value means it
+    // is the last Nth element.
+    auto getImplicitSize = [this](int32_t aIndex) -> const StyleTrackSize& {
       MOZ_ASSERT(!(mAutoSizing.Length() == 1 &&
                    mAutoSizing.AsSpan()[0] == kAutoTrackSize),
                  "It's impossible to have one track with auto value because we "
                  "filter out this case during parsing");
+
+      if (mAutoSizing.IsEmpty()) {
+        return kAutoTrackSize;
+      }
+
       // If multiple track sizes are given, the pattern is repeated as necessary
       // to find the size of the implicit tracks.
-      return mAutoSizing.IsEmpty()
-                 ? kAutoTrackSize
-                 : mAutoSizing.AsSpan()[aIndex % mAutoSizing.Length()];
+      int32_t i = aIndex % int32_t(mAutoSizing.Length());
+      if (i < 0) {
+        i += mAutoSizing.Length();
+      }
+      return mAutoSizing.AsSpan()[i];
     };
 
     if (MOZ_UNLIKELY(aTrackIndex < mExplicitGridOffset)) {
-      return getImplicitSize(aTrackIndex);
+      // The last implicit grid track before the explicit grid receives the
+      // last specified size, and so on backwards. Therefore we pass the
+      // negative relative index to imply that we should get the implicit size
+      // from the last Nth specified grid auto size.
+      return getImplicitSize(int32_t(aTrackIndex) -
+                             int32_t(mExplicitGridOffset));
     }
     uint32_t index = aTrackIndex - mExplicitGridOffset;
     if (index >= mRepeatAutoStart) {
@@ -1173,7 +1187,7 @@ struct nsGridContainerFrame::TrackSizingFunctions {
       }
     }
     if (index >= mExpandedTracks.Length()) {
-      return getImplicitSize(index);
+      return getImplicitSize(index - mExpandedTracks.Length());
     }
     auto& indices = mExpandedTracks[index];
     const TrackListValue& value = mTrackListValues[indices.first()];
