@@ -59,6 +59,7 @@ class App extends PureComponent {
     return {
       devices: PropTypes.shape(Types.devices).isRequired,
       dispatch: PropTypes.func.isRequired,
+      leftAlignmentEnabled: PropTypes.bool.isRequired,
       networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
       screenshot: PropTypes.shape(Types.screenshot).isRequired,
       viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
@@ -341,6 +342,16 @@ class App extends PureComponent {
 
   onToggleLeftAlignment() {
     this.props.dispatch(toggleLeftAlignment());
+
+    if (Services.prefs.getBoolPref("devtools.responsive.browserUI.enabled")) {
+      window.postMessage(
+        {
+          type: "toggle-left-alignment",
+          leftAlignmentEnabled: this.props.leftAlignmentEnabled,
+        },
+        "*"
+      );
+    }
   }
 
   onToggleReloadOnTouchSimulation() {
@@ -462,4 +473,11 @@ class App extends PureComponent {
   }
 }
 
-module.exports = connect(state => state)(App);
+const mapStateToProps = state => {
+  return {
+    ...state,
+    leftAlignmentEnabled: state.ui.leftAlignmentEnabled,
+  };
+};
+
+module.exports = connect(mapStateToProps)(App);

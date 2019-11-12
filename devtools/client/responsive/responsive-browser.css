@@ -49,8 +49,19 @@
   width: var(--rdm-width);
 }
 
+.browserContainer.responsive-mode > .browserStack > *:not(.rdm-toolbar) {
+  margin-top: 65px;
+}
+
+.browserContainer.responsive-mode.left-aligned > .browserStack > * {
+  justify-self: left;
+}
+
+.browserContainer.responsive-mode.left-aligned > .browserStack > *:not(.rdm-toolbar) {
+  margin-left: 15px;
+}
+
 .browserContainer.responsive-mode > .browserStack > browser {
   border: 1px solid var(--devtools-splitter-color);
   box-shadow: var(--rdm-browser-box-shadow);
-  margin-top: 65px;
 }
