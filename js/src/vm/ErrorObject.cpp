@@ -15,6 +15,7 @@
 
 #include "js/CallArgs.h"
 #include "js/CharacterEncoding.h"
+#include "util/StringBuffer.h"
 #include "vm/GlobalObject.h"
 #include "vm/SelfHosting.h"
 #include "vm/StringType.h"
@@ -25,6 +26,256 @@
 #include "vm/Shape-inl.h"
 
 using namespace js;
+
+#define IMPLEMENT_ERROR_PROTO_CLASS(name)                        \
+  {                                                              \
+    js_Object_str, JSCLASS_HAS_CACHED_PROTO(JSProto_##name),     \
+        JS_NULL_CLASS_OPS,                                       \
+        &ErrorObject::classSpecs[JSProto_##name - JSProto_Error] \
+  }
+
+const JSClass ErrorObject::protoClasses[JSEXN_ERROR_LIMIT] = {
+    IMPLEMENT_ERROR_PROTO_CLASS(Error),
+
+    IMPLEMENT_ERROR_PROTO_CLASS(InternalError),
+    IMPLEMENT_ERROR_PROTO_CLASS(EvalError),
+    IMPLEMENT_ERROR_PROTO_CLASS(RangeError),
+    IMPLEMENT_ERROR_PROTO_CLASS(ReferenceError),
+    IMPLEMENT_ERROR_PROTO_CLASS(SyntaxError),
+    IMPLEMENT_ERROR_PROTO_CLASS(TypeError),
+    IMPLEMENT_ERROR_PROTO_CLASS(URIError),
+
+    IMPLEMENT_ERROR_PROTO_CLASS(DebuggeeWouldRun),
+    IMPLEMENT_ERROR_PROTO_CLASS(CompileError),
+    IMPLEMENT_ERROR_PROTO_CLASS(LinkError),
+    IMPLEMENT_ERROR_PROTO_CLASS(RuntimeError)};
+
+static bool exn_toSource(JSContext* cx, unsigned argc, Value* vp);
+
+static const JSFunctionSpec error_methods[] = {
+    JS_FN(js_toSource_str, exn_toSource, 0, 0),
+    JS_SELF_HOSTED_FN(js_toString_str, "ErrorToString", 0, 0), JS_FS_END};
+
+static const JSPropertySpec error_properties[] = {
+    JS_STRING_PS("message", "", 0), JS_STRING_PS("name", "Error", 0),
+    // Only Error.prototype has .stack!
+    JS_PSGS("stack", ErrorObject::getStack, ErrorObject::setStack, 0),
+    JS_PS_END};
+
+#define IMPLEMENT_ERROR_PROPERTIES(name) \
+  { JS_STRING_PS("message", "", 0), JS_STRING_PS("name", #name, 0), JS_PS_END }
+
+static const JSPropertySpec other_error_properties[JSEXN_ERROR_LIMIT - 1][3] = {
+    IMPLEMENT_ERROR_PROPERTIES(InternalError),
+    IMPLEMENT_ERROR_PROPERTIES(EvalError),
+    IMPLEMENT_ERROR_PROPERTIES(RangeError),
+    IMPLEMENT_ERROR_PROPERTIES(ReferenceError),
+    IMPLEMENT_ERROR_PROPERTIES(SyntaxError),
+    IMPLEMENT_ERROR_PROPERTIES(TypeError),
+    IMPLEMENT_ERROR_PROPERTIES(URIError),
+    IMPLEMENT_ERROR_PROPERTIES(DebuggeeWouldRun),
+    IMPLEMENT_ERROR_PROPERTIES(CompileError),
+    IMPLEMENT_ERROR_PROPERTIES(LinkError),
+    IMPLEMENT_ERROR_PROPERTIES(RuntimeError)};
+
+#define IMPLEMENT_NATIVE_ERROR_SPEC(name)                                    \
+  {                                                                          \
+    ErrorObject::createConstructor, ErrorObject::createProto, nullptr,       \
+        nullptr, nullptr,                                                    \
+        other_error_properties[JSProto_##name - JSProto_Error - 1], nullptr, \
+        JSProto_Error                                                        \
+  }
+
+#define IMPLEMENT_NONGLOBAL_ERROR_SPEC(name)                                 \
+  {                                                                          \
+    ErrorObject::createConstructor, ErrorObject::createProto, nullptr,       \
+        nullptr, nullptr,                                                    \
+        other_error_properties[JSProto_##name - JSProto_Error - 1], nullptr, \
+        JSProto_Error | ClassSpec::DontDefineConstructor                     \
+  }
+
+const ClassSpec ErrorObject::classSpecs[JSEXN_ERROR_LIMIT] = {
+    {ErrorObject::createConstructor, ErrorObject::createProto, nullptr, nullptr,
+     error_methods, error_properties},
+
+    IMPLEMENT_NATIVE_ERROR_SPEC(InternalError),
+    IMPLEMENT_NATIVE_ERROR_SPEC(EvalError),
+    IMPLEMENT_NATIVE_ERROR_SPEC(RangeError),
+    IMPLEMENT_NATIVE_ERROR_SPEC(ReferenceError),
+    IMPLEMENT_NATIVE_ERROR_SPEC(SyntaxError),
+    IMPLEMENT_NATIVE_ERROR_SPEC(TypeError),
+    IMPLEMENT_NATIVE_ERROR_SPEC(URIError),
+
+    IMPLEMENT_NONGLOBAL_ERROR_SPEC(DebuggeeWouldRun),
+    IMPLEMENT_NONGLOBAL_ERROR_SPEC(CompileError),
+    IMPLEMENT_NONGLOBAL_ERROR_SPEC(LinkError),
+    IMPLEMENT_NONGLOBAL_ERROR_SPEC(RuntimeError)};
+
+#define IMPLEMENT_ERROR_CLASS(name)                                   \
+  {                                                                   \
+    js_Error_str, /* yes, really */                                   \
+        JSCLASS_HAS_CACHED_PROTO(JSProto_##name) |                    \
+            JSCLASS_HAS_RESERVED_SLOTS(ErrorObject::RESERVED_SLOTS) | \
+            JSCLASS_BACKGROUND_FINALIZE,                              \
+        &ErrorObjectClassOps,                                         \
+        &ErrorObject::classSpecs[JSProto_##name - JSProto_Error]      \
+  }
+
+static void exn_finalize(JSFreeOp* fop, JSObject* obj);
+
+static const JSClassOps ErrorObjectClassOps = {
+    nullptr,               /* addProperty */
+    nullptr,               /* delProperty */
+    nullptr,               /* enumerate */
+    nullptr,               /* newEnumerate */
+    nullptr,               /* resolve */
+    nullptr,               /* mayResolve */
+    exn_finalize, nullptr, /* call        */
+    nullptr,               /* hasInstance */
+    nullptr,               /* construct   */
+    nullptr,               /* trace       */
+};
+
+const JSClass ErrorObject::classes[JSEXN_ERROR_LIMIT] = {
+    IMPLEMENT_ERROR_CLASS(Error), IMPLEMENT_ERROR_CLASS(InternalError),
+    IMPLEMENT_ERROR_CLASS(EvalError), IMPLEMENT_ERROR_CLASS(RangeError),
+    IMPLEMENT_ERROR_CLASS(ReferenceError), IMPLEMENT_ERROR_CLASS(SyntaxError),
+    IMPLEMENT_ERROR_CLASS(TypeError), IMPLEMENT_ERROR_CLASS(URIError),
+    // These Error subclasses are not accessible via the global object:
+    IMPLEMENT_ERROR_CLASS(DebuggeeWouldRun),
+    IMPLEMENT_ERROR_CLASS(CompileError), IMPLEMENT_ERROR_CLASS(LinkError),
+    IMPLEMENT_ERROR_CLASS(RuntimeError)};
+
+static void exn_finalize(JSFreeOp* fop, JSObject* obj) {
+  MOZ_ASSERT(fop->maybeOnHelperThread());
+  if (JSErrorReport* report = obj->as<ErrorObject>().getErrorReport()) {
+    // Bug 1560019: This allocation is not currently tracked.
+    fop->deleteUntracked(report);
+  }
+}
+
+static bool Error(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
+  // called as functions, without operator new.  But as we do not give
+  // each constructor a distinct JSClass, we must get the exception type
+  // ourselves.
+  JSExnType exnType =
+      JSExnType(args.callee().as<JSFunction>().getExtendedSlot(0).toInt32());
+
+  JSProtoKey protoKey =
+      JSCLASS_CACHED_PROTO_KEY(&ErrorObject::classes[exnType]);
+
+  // ES6 19.5.1.1 mandates the .prototype lookup happens before the toString
+  RootedObject proto(cx);
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, protoKey, &proto)) {
+    return false;
+  }
+
+  // Compute the error message, if any.
+  RootedString message(cx, nullptr);
+  if (args.hasDefined(0)) {
+    message = ToString<CanGC>(cx, args[0]);
+    if (!message) {
+      return false;
+    }
+  }
+
+  // Find the scripted caller, but only ones we're allowed to know about.
+  NonBuiltinFrameIter iter(cx, cx->realm()->principals());
+
+  RootedString fileName(cx);
+  uint32_t sourceId = 0;
+  if (args.length() > 1) {
+    fileName = ToString<CanGC>(cx, args[1]);
+  } else {
+    fileName = cx->runtime()->emptyString;
+    if (!iter.done()) {
+      if (const char* cfilename = iter.filename()) {
+        fileName = JS_NewStringCopyZ(cx, cfilename);
+      }
+      if (iter.hasScript()) {
+        sourceId = iter.script()->scriptSource()->id();
+      }
+    }
+  }
+  if (!fileName) {
+    return false;
+  }
+
+  uint32_t lineNumber, columnNumber = 0;
+  if (args.length() > 2) {
+    if (!ToUint32(cx, args[2], &lineNumber)) {
+      return false;
+    }
+  } else {
+    lineNumber = iter.done() ? 0 : iter.computeLine(&columnNumber);
+    columnNumber = FixupColumnForDisplay(columnNumber);
+  }
+
+  RootedObject stack(cx);
+  if (!CaptureStack(cx, &stack)) {
+    return false;
+  }
+
+  RootedObject obj(cx, ErrorObject::create(cx, exnType, stack, fileName,
+                                           sourceId, lineNumber, columnNumber,
+                                           nullptr, message, proto));
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+/* static */
+JSObject* ErrorObject::createProto(JSContext* cx, JSProtoKey key) {
+  JSExnType type = ExnTypeFromProtoKey(key);
+
+  if (type == JSEXN_ERR) {
+    return GlobalObject::createBlankPrototype(
+        cx, cx->global(), &ErrorObject::protoClasses[JSEXN_ERR]);
+  }
+
+  RootedObject protoProto(
+      cx, GlobalObject::getOrCreateErrorPrototype(cx, cx->global()));
+  if (!protoProto) {
+    return nullptr;
+  }
+
+  return GlobalObject::createBlankPrototypeInheriting(
+      cx, &ErrorObject::protoClasses[type], protoProto);
+}
+
+/* static */
+JSObject* ErrorObject::createConstructor(JSContext* cx, JSProtoKey key) {
+  JSExnType type = ExnTypeFromProtoKey(key);
+  RootedObject ctor(cx);
+
+  if (type == JSEXN_ERR) {
+    ctor = GenericCreateConstructor<Error, 1, gc::AllocKind::FUNCTION_EXTENDED>(
+        cx, key);
+  } else {
+    RootedFunction proto(
+        cx, GlobalObject::getOrCreateErrorConstructor(cx, cx->global()));
+    if (!proto) {
+      return nullptr;
+    }
+
+    ctor = NewFunctionWithProto(
+        cx, Error, 1, FunctionFlags::NATIVE_CTOR, nullptr, ClassName(key, cx),
+        proto, gc::AllocKind::FUNCTION_EXTENDED, SingletonObject);
+  }
+
+  if (!ctor) {
+    return nullptr;
+  }
+
+  ctor->as<JSFunction>().setExtendedSlot(0, Int32Value(type));
+  return ctor;
+}
 
 /* static */
 Shape* js::ErrorObject::assignInitialShape(JSContext* cx,
@@ -313,4 +564,87 @@ bool js::ErrorObject::setStack_impl(JSContext* cx, const CallArgs& args) {
   RootedValue val(cx, args[0]);
 
   return DefineDataProperty(cx, thisObj, cx->names().stack, val);
+}
+
+/*
+ * Return a string that may eval to something similar to the original object.
+ */
+static bool exn_toSource(JSContext* cx, unsigned argc, Value* vp) {
+  if (!CheckRecursionLimit(cx)) {
+    return false;
+  }
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  RootedObject obj(cx, ToObject(cx, args.thisv()));
+  if (!obj) {
+    return false;
+  }
+
+  RootedValue nameVal(cx);
+  RootedString name(cx);
+  if (!GetProperty(cx, obj, obj, cx->names().name, &nameVal) ||
+      !(name = ToString<CanGC>(cx, nameVal))) {
+    return false;
+  }
+
+  RootedValue messageVal(cx);
+  RootedString message(cx);
+  if (!GetProperty(cx, obj, obj, cx->names().message, &messageVal) ||
+      !(message = ValueToSource(cx, messageVal))) {
+    return false;
+  }
+
+  RootedValue filenameVal(cx);
+  RootedString filename(cx);
+  if (!GetProperty(cx, obj, obj, cx->names().fileName, &filenameVal) ||
+      !(filename = ValueToSource(cx, filenameVal))) {
+    return false;
+  }
+
+  RootedValue linenoVal(cx);
+  uint32_t lineno;
+  if (!GetProperty(cx, obj, obj, cx->names().lineNumber, &linenoVal) ||
+      !ToUint32(cx, linenoVal, &lineno)) {
+    return false;
+  }
+
+  JSStringBuilder sb(cx);
+  if (!sb.append("(new ") || !sb.append(name) || !sb.append("(")) {
+    return false;
+  }
+
+  if (!sb.append(message)) {
+    return false;
+  }
+
+  if (!filename->empty()) {
+    if (!sb.append(", ") || !sb.append(filename)) {
+      return false;
+    }
+  }
+  if (lineno != 0) {
+    /* We have a line, but no filename, add empty string */
+    if (filename->empty() && !sb.append(", \"\"")) {
+      return false;
+    }
+
+    JSString* linenumber = ToString<CanGC>(cx, linenoVal);
+    if (!linenumber) {
+      return false;
+    }
+    if (!sb.append(", ") || !sb.append(linenumber)) {
+      return false;
+    }
+  }
+
+  if (!sb.append("))")) {
+    return false;
+  }
+
+  JSString* str = sb.finishString();
+  if (!str) {
+    return false;
+  }
+  args.rval().setString(str);
+  return true;
 }
