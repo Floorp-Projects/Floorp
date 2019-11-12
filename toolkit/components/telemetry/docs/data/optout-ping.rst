@@ -1,6 +1,6 @@
 
-"optout" ping (obsolete)
-========================
+"optout" ping
+=============
 
 This ping is generated when a user turns off FHR upload from the Preferences panel, changing the related ``datareporting.healthreport.uploadEnabled`` :doc:`preference <../internals/preferences>`.
 
