@@ -26,7 +26,7 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
     return;
   }
 
-  const test = { withStoragePrincipalEnabled, prefValue };
+  const test = { withStoragePrincipalEnabled, dynamicFPITest, prefValue };
 
   // For dynamic FPI tests, we want to test the conditions as if
   // storage principal was enabled, so from now on we set this variable to
@@ -180,8 +180,8 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
     UrlClassifierTestUtils.cleanupTestTrackers();
   });
 
-  // Two ePartitionOrDeny iframes in the same tab in the same origin don't see
-  // the same localStorage values and no storage events are received from each
+  // Two ePartitionOrDeny iframes in the same tab in the same origin see
+  // the same localStorage values but no storage events are received from each
   // other.
   add_task(async _ => {
     log(test);
@@ -216,7 +216,8 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
       normalBrowser,
       {
         page: thirdPartyDomain + TEST_PATH + "localStorageEvents.html",
-        withStoragePrincipalEnabled,
+        withStoragePrincipalEnabled: test.withStoragePrincipalEnabled,
+        dynamicFPITest: test.dynamicFPITest,
       },
       async obj => {
         let ifr1 = content.document.createElement("iframe");
@@ -268,7 +269,7 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
           ifr2.contentWindow.postMessage("getValue", "*");
         });
 
-        if (obj.withStoragePrincipalEnabled) {
+        if (obj.withStoragePrincipalEnabled || obj.dynamicFPITest) {
           ok(
             value.startsWith("tracker-"),
             "The value is correctly set in ifr2"
@@ -289,11 +290,7 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
           ifr2.contentWindow.postMessage("getEvents", "*");
         });
 
-        if (obj.withStoragePrincipalEnabled) {
-          is(events, 1, "1 event received");
-        } else {
-          is(events, 0, "No events");
-        }
+        is(events, 0, "No events");
       }
     );
 
@@ -447,7 +444,8 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
       normalBrowser,
       {
         page: thirdPartyDomain + TEST_PATH + "localStorageEvents.html",
-        withStoragePrincipalEnabled,
+        withStoragePrincipalEnabled: test.withStoragePrincipalEnabled,
+        dynamicFPITest: test.dynamicFPITest,
       },
       async obj => {
         let ifr = content.document.createElement("iframe");
@@ -495,7 +493,7 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
           ifr.contentWindow.postMessage("getValue", "*");
         });
 
-        if (obj.withStoragePrincipalEnabled) {
+        if (obj.withStoragePrincipalEnabled || obj.dynamicFPITest) {
           is(value, value2, "The value is received");
         } else {
           is(value2, null, "The value is undefined");
@@ -634,7 +632,8 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
       normalBrowser,
       {
         page: thirdPartyDomain + TEST_PATH + "localStorageEvents.html",
-        withStoragePrincipalEnabled,
+        withStoragePrincipalEnabled: test.withStoragePrincipalEnabled,
+        dynamicFPITest: test.dynamicFPITest,
       },
       async obj => {
         let ifr = content.document.createElement("iframe");
@@ -682,7 +681,7 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
           ifr.contentWindow.postMessage("getValue", "*");
         });
 
-        if (obj.withStoragePrincipalEnabled) {
+        if (obj.withStoragePrincipalEnabled || obj.dynamicFPITest) {
           is(value, value2, "The value is equal");
         } else {
           is(value2, null, "The value is undefined");
