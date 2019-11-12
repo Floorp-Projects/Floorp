@@ -1598,6 +1598,13 @@
   value: true
   mirror: always
 
+# How often to check for CPOW timeouts (ms). CPOWs are only timed
+# out by the hang monitor.
+- name: dom.ipc.cpow.timeout
+  type: uint32_t
+  value: 500
+  mirror: always
+
 # Allow Flash async drawing mode in 64-bit release builds.
 - name: dom.ipc.plugins.asyncdrawing.enabled
   type: RelaxedAtomicBool
@@ -1608,6 +1615,24 @@
 - name: dom.ipc.plugins.unloadTimeoutSecs
   type: RelaxedAtomicUint32
   value: 30
+  mirror: always
+
+# Enable e10s hang monitoring (slow script checking and plugin hang detection).
+- name: dom.ipc.processHangMonitor
+  type: bool
+  value: true
+  mirror: once
+
+# Whether we report such process hangs
+- name: dom.ipc.reportProcessHangs
+  type: RelaxedAtomicBool
+# Don't report hangs in DEBUG builds. They're too slow and often a
+# debugger is attached.
+#ifdef DEBUG
+  value: false
+#else
+  value: true
+#endif
   mirror: always
 
 - name: dom.ipc.tabs.disabled
