@@ -1,6 +1,5 @@
-<?xml version="1.0"?>
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:xbl="http://www.mozilla.org/xbl">
+<!DOCTYPE HTML>
+<html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=319374
 -->
@@ -8,32 +7,28 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
   <title>Test for Bug 319374</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-  <xbl:bindings>                                  
-    <xbl:binding id="test">
-      <xbl:content>
-        <span attr="attribute"><span></span></span><span> anon text </span><br/>
-      </xbl:content>
-    </xbl:binding>
-  </xbl:bindings>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=319374">Mozilla Bug 319374</a>
 <p id="display"></p>
-<div id="content"><span style="-moz-binding: url(#test)"/><span style="-moz-binding: url(#test)"/><span style="-moz-binding: url(#test)"/></div>
+<div id="content"><custom-el></custom-el><custom-el></custom-el><custom-el></custom-el></div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-<![CDATA[
 
-/** Test for Bug 319374 **/
+customElements.define("custom-el", class extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this.shadowRoot.innerHTML =
+      `<span attr="attribute"><span></span></span><span> anon text </span><br>`;
+  }
+});
 
-  function testChangesInAnonymousTree() {
-    // Test 1: Make sure that modifying anonymous content doesn't 
+  function testChangesInShadowDOM() {
+    // Test 1: Make sure that modifying anonymous content doesn't
     //         cause non-anonymous XPath result to throw exceptions..
     var counter = 0;
     var error = null;
-    function getAnonymousNodes(e) {
-      return SpecialPowers.wrap(document).getAnonymousNodes(e);
-    }
     try {
       var xp = new XPathEvaluator();
       var result = xp.evaluate("*",
@@ -43,8 +38,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
                                null);
       var res = null;
       while (res = result.iterateNext()) {
-        ++counter; 
-        var anon = getAnonymousNodes(res);
+        ++counter;
+        let anon = res.shadowRoot.childNodes;
         anon[0].firstChild.remove(); // Removing a child node
         anon[0].removeAttribute("attr1"); // Removing an attribute
         anon[1].firstChild.data = "anon text changed" // Modifying text data
@@ -57,23 +52,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
 
     // Test 2: If the context node is in anonymous content, changing some
     //         other anonymous tree shouldn't cause XPath result to throw.
-    var anonAttr1 =
-      getAnonymousNodes(document.getElementById('content').
-        firstChild)[0].getAttributeNode('attr');
-    var anonAttr2 =
-      getAnonymousNodes(document.getElementById('content').
-        lastChild)[0].getAttributeNode('attr');
+    let shadowAttr1 = document.getElementById("content").firstChild.
+      shadowRoot.firstChild.getAttributeNode("attr");
+    let shadowAttr2 = document.getElementById("content").lastChild.
+      shadowRoot.firstChild.getAttributeNode("attr");
     var resultAttr = null;
     try {
-      var xp2 = SpecialPowers.wrap(xp).evaluate(".",
-                            anonAttr1,
+      var xp2 = xp.evaluate(".",
+                            shadowAttr1,
                             null,
                             XPathResult.UNORDERED_NODE_ITERATOR_TYPE,
                             null);
       // Attribute changing in a different anonymous tree.
-      anonAttr2.value = "foo";
+      shadowAttr2.value = "foo";
       resultAttr = xp2.iterateNext();
-      ok(SpecialPowers.compare(resultAttr, anonAttr1), "XPathEvaluator returned wrong attribute!")
+      is(resultAttr, shadowAttr1, "XPathEvaluator returned wrong attribute!");
     } catch (e) {
       ok(false, e);
     }
@@ -83,14 +76,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
     resultAttr = null;
     try {
       var xp3 = xp.evaluate(".",
-                            anonAttr1,
+                            shadowAttr1,
                             null,
                             XPathResult.UNORDERED_NODE_ITERATOR_TYPE,
                             null);
       // Attribute changing in the same anonymous tree.
-      anonAttr1.ownerElement.setAttribute("foo", "bar");
+      shadowAttr1.ownerElement.setAttribute("foo", "bar");
       resultAttr = xp3.iterateNext();
-      ok(resultAttr == anonAttr1,
+      ok(resultAttr == shadowAttr1,
          "XPathEvaluator should have thrown an exception!")
     } catch (e) {
       ok(true, e);
@@ -100,8 +93,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
   }
 
   SimpleTest.waitForExplicitFinish();
-  addLoadEvent(testChangesInAnonymousTree);
-]]>
+  addLoadEvent(testChangesInShadowDOM);
 </script>
 </pre>
 </body>
