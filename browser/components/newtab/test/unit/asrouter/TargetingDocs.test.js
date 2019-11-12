@@ -71,7 +71,13 @@ describe("ASRTargeting docs", () => {
     }
   });
   describe("No extra attributes in targeting-attributes.md", () => {
-    for (const targetingParam of DOCS_TARGETING_HEADINGS) {
+    // whitelist includes targeting attributes that are not implemented by
+    // ASRTargetingAttributes. For example trigger context passed to the evaluation
+    // context in when a trigger runs or ASRouter state used in the evaluation.
+    const whitelist = ["personalizedCfrThreshold", "personalizedCfrScores"];
+    for (const targetingParam of DOCS_TARGETING_HEADINGS.filter(
+      doc => !whitelist.includes(doc)
+    )) {
       // If this test is failing, you might has spelled something wrong or removed a targeting param without
       // removing its docs.
       it(`should have an implementation for ${targetingParam} in ASRouterTargeting.Environment`, () => {
