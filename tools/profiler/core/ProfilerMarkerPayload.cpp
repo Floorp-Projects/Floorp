@@ -940,7 +940,7 @@ void JsAllocationMarkerPayload::StreamPayload(
 BlocksRingBuffer::Length
 NativeAllocationMarkerPayload::TagAndSerializationBytes() const {
   return CommonPropsTagAndSerializationBytes() +
-         BlocksRingBuffer::SumBytes(mSize, mThreadId, mMemoryAddress);
+         BlocksRingBuffer::SumBytes(mSize);
 }
 
 void NativeAllocationMarkerPayload::SerializeTagAndPayload(
@@ -948,8 +948,6 @@ void NativeAllocationMarkerPayload::SerializeTagAndPayload(
   static const DeserializerTag tag = TagForDeserializer(Deserialize);
   SerializeTagAndCommonProps(tag, aEntryWriter);
   aEntryWriter.WriteObject(mSize);
-  aEntryWriter.WriteObject(mMemoryAddress);
-  aEntryWriter.WriteObject(mThreadId);
 }
 
 // static
@@ -958,10 +956,8 @@ UniquePtr<ProfilerMarkerPayload> NativeAllocationMarkerPayload::Deserialize(
   ProfilerMarkerPayload::CommonProps props =
       DeserializeCommonProps(aEntryReader);
   auto size = aEntryReader.ReadObject<int64_t>();
-  auto memoryAddress = aEntryReader.ReadObject<uintptr_t>();
-  auto threadId = aEntryReader.ReadObject<int>();
-  return UniquePtr<ProfilerMarkerPayload>(new NativeAllocationMarkerPayload(
-      std::move(props), size, memoryAddress, threadId));
+  return UniquePtr<ProfilerMarkerPayload>(
+      new NativeAllocationMarkerPayload(std::move(props), size));
 }
 
 void NativeAllocationMarkerPayload::StreamPayload(
@@ -970,8 +966,6 @@ void NativeAllocationMarkerPayload::StreamPayload(
   StreamCommonProps("Native allocation", aWriter, aProcessStartTime,
                     aUniqueStacks);
   aWriter.IntProperty("size", mSize);
-  aWriter.IntProperty("memoryAddress", static_cast<int64_t>(mMemoryAddress));
-  aWriter.IntProperty("threadId", mThreadId);
 }
 
 BlocksRingBuffer::Length IPCMarkerPayload::TagAndSerializationBytes() const {
