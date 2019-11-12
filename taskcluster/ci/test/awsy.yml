@@ -38,7 +38,6 @@ awsy:
 
 awsy-tp6:
     description: "Are we slim yet - tp6 pageset"
-    variants: ["fission"]
     treeherder-symbol: SY(sy-tp6)
     run-on-projects:
         by-test-platform:
@@ -49,7 +48,6 @@ awsy-tp6:
     mozharness:
         extra-options:
             - --tp6
-            - --enable-fission
 
 awsy-dmd:
     description: "Are we slim yet - dmd enabled"
