@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
     <script src="/tests/SimpleTest/EventUtils.js"></script>
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-    <script type="text/javascript" src="NavigationUtils.js"></script>        
+    <script type="text/javascript" src="NavigationUtils.js"></script>
     <style type="text/css">
       iframe { width: 90%; height: 50px; }
     </style>
@@ -23,7 +23,7 @@ window.onload = async function() {
   isBlank(frames[2], "Should not be able to navigate off-domain sibling by submitting form.");
   isBlank(frames[3], "Should not be able to navigate off-domain sibling by targeted hyperlink.");
 
-  xpcCleanupWindows();
+  await cleanupWindows();
   SimpleTest.finish();
 };
 </script>
