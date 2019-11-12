@@ -5,8 +5,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <algorithm>
-
 #include "gc/Heap.h"
 #include "gc/Verifier.h"
 #include "gc/WeakMap.h"
@@ -157,7 +155,7 @@ bool TestMarking() {
   return true;
 }
 
-static constexpr CellColor DontMark = CellColor::White;
+static const CellColor DontMark = CellColor::White;
 
 enum MarkKeyOrDelegate : bool { MarkKey = true, MarkDelegate = false };
 
@@ -165,7 +163,8 @@ bool TestJSWeakMaps() {
   for (auto keyOrDelegateColor : MarkedCellColors) {
     for (auto mapColor : MarkedCellColors) {
       for (auto markKeyOrDelegate : {MarkKey, MarkDelegate}) {
-        CellColor expected = std::min(keyOrDelegateColor, mapColor);
+        CellColor expected =
+            ExpectedWeakMapValueColor(keyOrDelegateColor, mapColor);
         CHECK(TestJSWeakMap(markKeyOrDelegate, keyOrDelegateColor, mapColor,
                             expected));
 #ifdef JS_GC_ZEAL
@@ -187,10 +186,10 @@ bool TestInternalWeakMaps() {
         continue;
       }
 
-      // The map is black. The delegate marks its key via wrapper preservation.
-      // The key maps its delegate and the value. Thus, all three end up the
-      // maximum of the key and delegate colors.
-      CellColor expected = std::max(keyMarkColor, delegateMarkColor);
+      CellColor keyOrDelegateColor =
+          ExpectedKeyAndDelegateColor(keyMarkColor, delegateMarkColor);
+      CellColor expected =
+          ExpectedWeakMapValueColor(keyOrDelegateColor, CellColor::Black);
       CHECK(TestInternalWeakMap(keyMarkColor, delegateMarkColor, expected));
 
 #ifdef JS_GC_ZEAL
@@ -241,9 +240,9 @@ bool TestJSWeakMap(MarkKeyOrDelegate markKey, CellColor weakMapMarkColor,
 
     ClearGrayRoots();
 
-    CHECK(weakMap->color() == weakMapMarkColor);
-    CHECK(keyOrDelegate->color() == keyOrDelegateMarkColor);
-    CHECK(value->color() == expectedValueColor);
+    CHECK(GetCellColor(weakMap) == weakMapMarkColor);
+    CHECK(GetCellColor(keyOrDelegate) == keyOrDelegateMarkColor);
+    CHECK(GetCellColor(value) == expectedValueColor);
   }
 
   return true;
@@ -297,9 +296,9 @@ bool TestJSWeakMapWithGrayUnmarking(MarkKeyOrDelegate markKey,
 
     ClearGrayRoots();
 
-    CHECK(weakMap->color() == weakMapMarkColor);
-    CHECK(keyOrDelegate->color() == keyOrDelegateMarkColor);
-    CHECK(value->color() == expectedValueColor);
+    CHECK(GetCellColor(weakMap) == weakMapMarkColor);
+    CHECK(GetCellColor(keyOrDelegate) == keyOrDelegateMarkColor);
+    CHECK(GetCellColor(value) == expectedValueColor);
   }
 
   JS_UnsetGCZeal(cx, uint8_t(ZealMode::YieldWhileGrayMarking));
@@ -370,9 +369,9 @@ bool TestInternalWeakMap(CellColor keyMarkColor, CellColor delegateMarkColor,
 
     ClearGrayRoots();
 
-    CHECK(key->color() == expectedColor);
-    CHECK(delegate->color() == expectedColor);
-    CHECK(value->color() == expectedColor);
+    CHECK(GetCellColor(key) == expectedColor);
+    CHECK(GetCellColor(delegate) == expectedColor);
+    CHECK(GetCellColor(value) == expectedColor);
   }
 
   return true;
@@ -422,9 +421,9 @@ bool TestInternalWeakMapWithGrayUnmarking(CellColor keyMarkColor,
 
     ClearGrayRoots();
 
-    CHECK(key->color() == expectedColor);
-    CHECK(delegate->color() == expectedColor);
-    CHECK(value->color() == expectedColor);
+    CHECK(GetCellColor(key) == expectedColor);
+    CHECK(GetCellColor(delegate) == expectedColor);
+    CHECK(GetCellColor(value) == expectedColor);
   }
 
   JS_UnsetGCZeal(cx, uint8_t(ZealMode::YieldWhileGrayMarking));

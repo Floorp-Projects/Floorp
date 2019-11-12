@@ -47,8 +47,8 @@ bool CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key, Cell* value);
 // the implicit edges stored in the map) and of removing (sweeping) table
 // entries when collection is complete.
 
-using WeakMapColors = HashMap<WeakMapBase*, js::gc::CellColor,
-                              DefaultHasher<WeakMapBase*>, SystemAllocPolicy>;
+typedef HashSet<WeakMapBase*, DefaultHasher<WeakMapBase*>, SystemAllocPolicy>
+    WeakMapSet;
 
 // Common base class for all WeakMap specializations, used for calling
 // subclasses' GC-related methods.
@@ -56,8 +56,6 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   friend class js::GCMarker;
 
  public:
-  using CellColor = js::gc::CellColor;
-
   WeakMapBase(JSObject* memOf, JS::Zone* zone);
   virtual ~WeakMapBase();
 
@@ -90,14 +88,18 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
 
   // Save information about which weak maps are marked for a zone.
   static bool saveZoneMarkedWeakMaps(JS::Zone* zone,
-                                     WeakMapColors& markedWeakMaps);
+                                     WeakMapSet& markedWeakMaps);
 
   // Restore information about which weak maps are marked for many zones.
-  static void restoreMarkedWeakMaps(WeakMapColors& markedWeakMaps);
+  static void restoreMarkedWeakMaps(WeakMapSet& markedWeakMaps);
 
 #if defined(JS_GC_ZEAL) || defined(DEBUG)
   static bool checkMarkingForZone(JS::Zone* zone);
 #endif
+
+  static JSObject* getDelegate(JSObject* key);
+  static JSObject* getDelegate(JSScript* script);
+  static JSObject* getDelegate(LazyScript* script);
 
  protected:
   // Instance member functions called by the above. Instantiations of WeakMap
@@ -110,7 +112,8 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
 
   // Any weakmap key types that want to participate in the non-iterative
   // ephemeron marking must override this method.
-  virtual void markKey(GCMarker* marker, gc::Cell* markedCell, gc::Cell* l) = 0;
+  virtual void markEntry(GCMarker* marker, gc::Cell* markedCell,
+                         gc::Cell* l) = 0;
 
   virtual bool markEntries(GCMarker* marker) = 0;
 
@@ -129,20 +132,9 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
 
   // Whether this object has been marked during garbage collection and which
   // color it was marked.
-  gc::CellColor mapColor;
+  bool marked;
+  gc::MarkColor markColor;
 };
-
-namespace detail {
-
-template <typename T>
-struct RemoveBarrier {};
-
-template <typename T>
-struct RemoveBarrier<js::HeapPtr<T>> {
-  using Type = T;
-};
-
-}  // namespace detail
 
 template <class Key, class Value>
 class WeakMap
@@ -168,8 +160,6 @@ class WeakMap
 
   // Resolve ambiguity with LinkedListElement<>::remove.
   using Base::remove;
-
-  using UnbarrieredKey = typename detail::RemoveBarrier<Key>::Type;
 
   explicit WeakMap(JSContext* cx, JSObject* memOf = nullptr);
 
@@ -221,10 +211,8 @@ class WeakMap
   }
 #endif
 
-  void markKey(GCMarker* marker, gc::Cell* markedCell,
-               gc::Cell* origKey) override;
-
-  bool markEntry(GCMarker* marker, Key& key, Value& value);
+  void markEntry(GCMarker* marker, gc::Cell* markedCell,
+                 gc::Cell* origKey) override;
 
   void trace(JSTracer* trc) override;
 
@@ -253,6 +241,10 @@ class WeakMap
   void exposeGCThingToActiveJS(JSObject* obj) const {
     JS::ExposeObjectToActiveJS(obj);
   }
+
+  bool keyNeedsMark(GCMarker* marker, JSObject* key) const;
+  bool keyNeedsMark(GCMarker* marker, JSScript* script) const;
+  bool keyNeedsMark(GCMarker* marker, LazyScript* script) const;
 
   bool findSweepGroupEdges() override {
     // This is overridden by ObjectValueWeakMap and DebuggerWeakMap.
