@@ -20,6 +20,7 @@ DIRS += [
     'locales',
     'node-properties',
     'performance',
+    'performance-new',
     'platform',
     'protocol',
     'qrcode',

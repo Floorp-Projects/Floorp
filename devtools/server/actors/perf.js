@@ -9,7 +9,7 @@ const { actorBridgeWithSpec } = require("devtools/server/actors/common");
 const { perfSpec } = require("devtools/shared/specs/perf");
 const {
   ActorReadyGeckoProfilerInterface,
-} = require("devtools/server/performance-new/gecko-profiler-interface");
+} = require("devtools/shared/performance-new/gecko-profiler-interface");
 
 /**
  * Pass on the events from the bridge to the actor.
