@@ -34,16 +34,31 @@ export interface Toolbox {
 }
 
 /**
+ * The actor version of the ActorReadyGeckoProfilerInterface returns promises,
+ * while if it's instantiated directly it will not return promises.
+ */
+type MaybePromise<T> = Promise<T> | T;
+
+/**
  * TS-TODO - Stub.
+ *
+ * Any method here that returns a MaybePromise<T> is because the
+ * ActorReadyGeckoProfilerInterface returns T while the PerfFront returns Promise<T>.
+ * Any method here that returns Promise<T> is because both the
+ * ActorReadyGeckoProfilerInterface and the PerfFront return promises.
  */
 export interface PerfFront {
-  startProfiler: any;
-  getProfileAndStopProfiler: any;
-  stopProfilerAndDiscardProfile: any;
-  getSymbolTable: any;
-  isActive: any;
-  isSupportedPlatform: any;
-  isLockedForPrivateBrowsing: any;
+  startProfiler: (options: RecordingStateFromPreferences) => MaybePromise<boolean>;
+  getProfileAndStopProfiler: () => Promise<any>;
+  stopProfilerAndDiscardProfile: () => MaybePromise<void>;
+  getSymbolTable: (path: string, breakpadId: string) => Promise<[number[], number[], number[]]>;
+  isActive: () => MaybePromise<boolean>;
+  isSupportedPlatform: () => MaybePromise<boolean>;
+  isLockedForPrivateBrowsing: () => MaybePromise<boolean>;
+  /**
+   * This method was was added in Firefox 72.
+   */
+  getSupportedFeatures: () => MaybePromise<string[]>
 }
 
 /**
@@ -136,7 +151,7 @@ export type ReceiveProfile = (
   getSymbolTableCallback: GetSymbolTableCallback
 ) => void;
 
-export type SetRecordingPreferences = (settings: object) => void;
+export type SetRecordingPreferences = (settings: RecordingStateFromPreferences) => MaybePromise<void>;
 
 /**
  * This is the type signature for a function to restart the browser with a given
