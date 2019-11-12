@@ -1246,12 +1246,7 @@ class BreakpointSite {
   friend class Breakpoint;
   friend class Debugger;
 
- public:
-  enum class Type { JS, Wasm };
-
  private:
-  Type type_;
-
   template <typename T>
   struct SiteLinkAccess {
     static mozilla::DoublyLinkedListElement<T>& Get(T* aThis) {
@@ -1264,17 +1259,15 @@ class BreakpointSite {
       mozilla::DoublyLinkedList<js::Breakpoint, SiteLinkAccess<js::Breakpoint>>;
   BreakpointList breakpoints;
 
-  gc::Cell* owningCell();
-
  protected:
-  BreakpointSite(Type type);
+  BreakpointSite(){};
   virtual ~BreakpointSite() {}
   void finalize(JSFreeOp* fop);
+  virtual gc::Cell* owningCell() = 0;
 
  public:
   Breakpoint* firstBreakpoint() const;
   bool hasBreakpoint(Breakpoint* bp);
-  Type type() const { return type_; }
 
   bool isEmpty() const;
   virtual void trace(JSTracer* trc);
@@ -1284,9 +1277,7 @@ class BreakpointSite {
       remove(fop);
     }
   }
-
-  inline JSBreakpointSite* asJS();
-  inline WasmBreakpointSite* asWasm();
+  virtual Realm* realm() const = 0;
 };
 
 /*
@@ -1378,12 +1369,11 @@ class JSBreakpointSite : public BreakpointSite {
   void trace(JSTracer* trc) override;
   void delete_(JSFreeOp* fop);
   void remove(JSFreeOp* fop) override;
-};
+  Realm* realm() const override;
 
-inline JSBreakpointSite* BreakpointSite::asJS() {
-  MOZ_ASSERT(type() == Type::JS);
-  return static_cast<JSBreakpointSite*>(this);
-}
+ private:
+  gc::Cell* owningCell() override;
+};
 
 class WasmBreakpointSite : public BreakpointSite {
  public:
@@ -1396,12 +1386,11 @@ class WasmBreakpointSite : public BreakpointSite {
   void trace(JSTracer* trc) override;
   void delete_(JSFreeOp* fop);
   void remove(JSFreeOp* fop) override;
-};
+  Realm* realm() const override;
 
-inline WasmBreakpointSite* BreakpointSite::asWasm() {
-  MOZ_ASSERT(type() == Type::Wasm);
-  return static_cast<WasmBreakpointSite*>(this);
-}
+ private:
+  gc::Cell* owningCell() override;
+};
 
 Breakpoint* Debugger::firstBreakpoint() const {
   if (breakpoints.isEmpty()) {

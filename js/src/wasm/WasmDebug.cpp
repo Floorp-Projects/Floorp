@@ -260,11 +260,13 @@ void DebugState::clearBreakpointsIn(JSFreeOp* fop, WasmInstanceObject* instance,
   for (WasmBreakpointSiteMap::Enum e(breakpointSites_); !e.empty();
        e.popFront()) {
     WasmBreakpointSite* site = e.front().value();
+    MOZ_ASSERT(site->instanceObject == instance);
+
     Breakpoint* nextbp;
     for (Breakpoint* bp = site->firstBreakpoint(); bp; bp = nextbp) {
       nextbp = bp->nextInSite();
-      if (bp->site->asWasm()->instanceObject == instance &&
-          (!dbg || bp->debugger == dbg) &&
+      MOZ_ASSERT(bp->site == site);
+      if ((!dbg || bp->debugger == dbg) &&
           (!handler || bp->getHandler() == handler)) {
         bp->delete_(fop);
       }

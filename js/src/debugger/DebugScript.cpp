@@ -138,7 +138,6 @@ void DebugScript::destroyBreakpointSite(JSFreeOp* fop, JSScript* script,
   DebugScript* debug = get(script);
   JSBreakpointSite*& site = debug->breakpoints[script->pcToOffset(pc)];
   MOZ_ASSERT(site);
-  MOZ_ASSERT(site->type() == BreakpointSite::Type::JS);
   MOZ_ASSERT(site->isEmpty());
 
   site->delete_(fop);
@@ -330,8 +329,7 @@ void DebugAPI::checkDebugScriptAfterMovingGC(DebugScript* ds) {
   for (uint32_t i = 0; i < ds->numSites; i++) {
     JSBreakpointSite* site = ds->breakpoints[i];
     if (site) {
-      MOZ_ASSERT(site->type() == BreakpointSite::Type::JS);
-      CheckGCThingAfterMovingGC(site->asJS()->script.get());
+      CheckGCThingAfterMovingGC(site->script.get());
     }
   }
 }
