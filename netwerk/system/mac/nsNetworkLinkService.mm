@@ -373,7 +373,7 @@ static bool scanArp(char* ip, char* mac, size_t maclen) {
     return false;
   }
   if (needed == 0) {
-    // empty table
+    LOG(("scanArp: empty table"));
     return false;
   }
 
@@ -676,6 +676,7 @@ bool nsNetworkLinkService::IPv6NetworkId(SHA1Sum* sha1) {
     freeifaddrs(ifap);
   }
   if (prefixAndNetmaskStore.empty()) {
+    LOG(("IPv6NetworkId failed"));
     return false;
   }
 
