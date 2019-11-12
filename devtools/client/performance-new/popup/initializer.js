@@ -64,7 +64,7 @@ const actions = require("devtools/client/performance-new/store/actions");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const {
   ActorReadyGeckoProfilerInterface,
-} = require("devtools/server/performance-new/gecko-profiler-interface");
+} = require("devtools/shared/performance-new/gecko-profiler-interface");
 
 const { LightweightThemeManager } = ChromeUtils.import(
   "resource://gre/modules/LightweightThemeManager.jsm"
