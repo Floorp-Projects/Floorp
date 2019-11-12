@@ -2185,8 +2185,7 @@ bool DebuggerScript::CallData::getBreakpoints() {
     if (!site) {
       continue;
     }
-    MOZ_ASSERT(site->type() == BreakpointSite::Type::JS);
-    if (!pc || site->asJS()->pc == pc) {
+    if (!pc || site->pc == pc) {
       for (Breakpoint* bp = site->firstBreakpoint(); bp;
            bp = bp->nextInSite()) {
         if (bp->debugger == dbg) {

@@ -305,8 +305,6 @@ bool js::ParseEvalOptions(JSContext* cx, HandleValue value,
 
 /*** Breakpoints ************************************************************/
 
-BreakpointSite::BreakpointSite(Type type) : type_(type) {}
-
 bool BreakpointSite::isEmpty() const { return breakpoints.isEmpty(); }
 
 void BreakpointSite::trace(JSTracer* trc) {
@@ -336,14 +334,6 @@ bool BreakpointSite::hasBreakpoint(Breakpoint* toFind) {
     }
   }
   return false;
-}
-
-inline gc::Cell* BreakpointSite::owningCell() {
-  if (type() == Type::JS) {
-    return asJS()->script;
-  }
-
-  return asWasm()->instanceObject;
 }
 
 Breakpoint::Breakpoint(Debugger* debugger, HandleObject wrappedDebugger,
@@ -383,7 +373,7 @@ Breakpoint* Breakpoint::nextInDebugger() { return debuggerLink.mNext; }
 Breakpoint* Breakpoint::nextInSite() { return siteLink.mNext; }
 
 JSBreakpointSite::JSBreakpointSite(JSScript* script, jsbytecode* pc)
-    : BreakpointSite(Type::JS), script(script), pc(pc) {
+    : script(script), pc(pc) {
   MOZ_ASSERT(!DebugAPI::hasBreakpointsAt(script, pc));
 }
 
@@ -402,11 +392,13 @@ void JSBreakpointSite::delete_(JSFreeOp* fop) {
   fop->delete_(script, this, MemoryUse::BreakpointSite);
 }
 
+gc::Cell* JSBreakpointSite::owningCell() { return script; }
+
+Realm* JSBreakpointSite::realm() const { return script->realm(); }
+
 WasmBreakpointSite::WasmBreakpointSite(WasmInstanceObject* instanceObject_,
                                        uint32_t offset_)
-    : BreakpointSite(Type::Wasm),
-      instanceObject(instanceObject_),
-      offset(offset_) {
+    : instanceObject(instanceObject_), offset(offset_) {
   MOZ_ASSERT(instanceObject_);
   MOZ_ASSERT(instanceObject_->instance().debugEnabled());
 }
@@ -425,6 +417,10 @@ void WasmBreakpointSite::delete_(JSFreeOp* fop) {
 
   fop->delete_(instanceObject, this, MemoryUse::BreakpointSite);
 }
+
+gc::Cell* WasmBreakpointSite::owningCell() { return instanceObject; }
+
+Realm* WasmBreakpointSite::realm() const { return instanceObject->realm(); }
 
 /*** Debugger hook dispatch *************************************************/
 
@@ -4737,19 +4733,9 @@ void Debugger::removeDebuggeeGlobal(JSFreeOp* fop, GlobalObject* global,
   Breakpoint* nextbp;
   for (Breakpoint* bp = firstBreakpoint(); bp; bp = nextbp) {
     nextbp = bp->nextInDebugger();
-    switch (bp->site->type()) {
-      case BreakpointSite::Type::JS:
-        if (bp->site->asJS()->script->realm() == global->realm()) {
-          bp->remove(fop);
-        }
-        break;
-      case BreakpointSite::Type::Wasm:
-        if (bp->site->asWasm()->instanceObject->realm() == global->realm()) {
-          bp->remove(fop);
-        }
-        break;
-      default:
-        MOZ_CRASH("unknown breakpoint type");
+
+    if (bp->site->realm() == global->realm()) {
+      bp->remove(fop);
     }
   }
   MOZ_ASSERT_IF(debuggees.empty(), !firstBreakpoint());
