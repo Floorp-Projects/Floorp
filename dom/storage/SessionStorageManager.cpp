@@ -17,7 +17,8 @@ namespace dom {
 
 using namespace StorageUtils;
 
-NS_IMPL_ISUPPORTS(SessionStorageManager, nsIDOMStorageManager)
+NS_IMPL_ISUPPORTS(SessionStorageManager, nsIDOMStorageManager,
+                  nsIDOMSessionStorageManager)
 
 SessionStorageManager::SessionStorageManager() {
   StorageObserver* observer = StorageObserver::Self();
@@ -70,11 +71,19 @@ SessionStorageManager::PrecacheStorage(nsIPrincipal* aPrincipal,
 }
 
 NS_IMETHODIMP
-SessionStorageManager::CreateStorage(mozIDOMWindow* aWindow,
-                                     nsIPrincipal* aPrincipal,
-                                     nsIPrincipal* aStoragePrincipal,
-                                     const nsAString& aDocumentURI,
-                                     bool aPrivate, Storage** aRetval) {
+SessionStorageManager::GetSessionStorageCache(
+    nsIPrincipal* aPrincipal, nsIPrincipal* aStoragePrincipal,
+    RefPtr<SessionStorageCache>* aRetVal) {
+  return GetSessionStorageCacheHelper(aPrincipal, aStoragePrincipal, true,
+                                      nullptr, aRetVal);
+}
+
+nsresult SessionStorageManager::GetSessionStorageCacheHelper(
+    nsIPrincipal* aPrincipal, nsIPrincipal* aStoragePrincipal,
+    bool aMakeIfNeeded, SessionStorageCache* aCloneFrom,
+    RefPtr<SessionStorageCache>* aRetVal) {
+  *aRetVal = nullptr;
+
   nsAutoCString originKey;
   nsAutoCString originAttributes;
   nsresult rv = GenerateOriginKey(aPrincipal, originAttributes, originKey);
@@ -84,14 +93,43 @@ SessionStorageManager::CreateStorage(mozIDOMWindow* aWindow,
 
   OriginKeyHashTable* table;
   if (!mOATable.Get(originAttributes, &table)) {
-    table = new OriginKeyHashTable();
-    mOATable.Put(originAttributes, table);
+    if (aMakeIfNeeded) {
+      table = new OriginKeyHashTable();
+      mOATable.Put(originAttributes, table);
+    } else {
+      return NS_OK;
+    }
   }
 
   RefPtr<SessionStorageCache> cache;
   if (!table->Get(originKey, getter_AddRefs(cache))) {
-    cache = new SessionStorageCache();
-    table->Put(originKey, cache);
+    if (aMakeIfNeeded) {
+      if (aCloneFrom) {
+        cache = aCloneFrom->Clone();
+      } else {
+        cache = new SessionStorageCache();
+      }
+      table->Put(originKey, cache);
+    } else {
+      return NS_OK;
+    }
+  }
+
+  *aRetVal = std::move(cache);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SessionStorageManager::CreateStorage(mozIDOMWindow* aWindow,
+                                     nsIPrincipal* aPrincipal,
+                                     nsIPrincipal* aStoragePrincipal,
+                                     const nsAString& aDocumentURI,
+                                     bool aPrivate, Storage** aRetval) {
+  RefPtr<SessionStorageCache> cache;
+  nsresult rv = GetSessionStorageCache(aPrincipal, aStoragePrincipal, &cache);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   nsCOMPtr<nsPIDOMWindowInner> inner = nsPIDOMWindowInner::From(aWindow);
@@ -111,21 +149,11 @@ SessionStorageManager::GetStorage(mozIDOMWindow* aWindow,
                                   bool aPrivate, Storage** aRetval) {
   *aRetval = nullptr;
 
-  nsAutoCString originKey;
-  nsAutoCString originAttributes;
-  nsresult rv = GenerateOriginKey(aPrincipal, originAttributes, originKey);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  OriginKeyHashTable* table;
-  if (!mOATable.Get(originAttributes, &table)) {
-    return NS_OK;
-  }
-
   RefPtr<SessionStorageCache> cache;
-  if (!table->Get(originKey, getter_AddRefs(cache))) {
-    return NS_OK;
+  nsresult rv = GetSessionStorageCacheHelper(aPrincipal, aStoragePrincipal,
+                                             false, nullptr, &cache);
+  if (NS_FAILED(rv) || !cache) {
+    return rv;
   }
 
   nsCOMPtr<nsPIDOMWindowInner> inner = nsPIDOMWindowInner::From(aWindow);
@@ -147,31 +175,10 @@ SessionStorageManager::CloneStorage(Storage* aStorage) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsAutoCString originKey;
-  nsAutoCString originAttributes;
-  nsresult rv =
-      GenerateOriginKey(aStorage->Principal(), originAttributes, originKey);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  OriginKeyHashTable* table;
-  if (!mOATable.Get(originAttributes, &table)) {
-    table = new OriginKeyHashTable();
-    mOATable.Put(originAttributes, table);
-  }
-
   RefPtr<SessionStorageCache> cache;
-  if (table->Get(originKey, getter_AddRefs(cache))) {
-    // Do not replace an existing sessionStorage.
-    return NS_OK;
-  }
-
-  cache = static_cast<SessionStorage*>(aStorage)->Cache()->Clone();
-  MOZ_ASSERT(cache);
-
-  table->Put(originKey, cache);
-  return NS_OK;
+  return GetSessionStorageCacheHelper(
+      aStorage->Principal(), aStorage->StoragePrincipal(), true,
+      static_cast<SessionStorage*>(aStorage)->Cache(), &cache);
 }
 
 NS_IMETHODIMP
@@ -185,23 +192,13 @@ SessionStorageManager::CheckStorage(nsIPrincipal* aPrincipal, Storage* aStorage,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsAutoCString originKey;
-  nsAutoCString originAttributes;
-  nsresult rv = GenerateOriginKey(aPrincipal, originAttributes, originKey);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   *aRetval = false;
 
-  OriginKeyHashTable* table;
-  if (!mOATable.Get(originAttributes, &table)) {
-    return NS_OK;
-  }
-
   RefPtr<SessionStorageCache> cache;
-  if (!table->Get(originKey, getter_AddRefs(cache))) {
-    return NS_OK;
+  nsresult rv = GetSessionStorageCacheHelper(
+      aPrincipal, aStorage->StoragePrincipal(), false, nullptr, &cache);
+  if (NS_FAILED(rv) || !cache) {
+    return rv;
   }
 
   if (aStorage->Type() != Storage::eSessionStorage) {
