@@ -5,7 +5,7 @@
 """
 import os
 import datetime
-import collections
+from collections.abc import MutableMapping
 import json
 
 from condprof.util import LOG
@@ -14,7 +14,7 @@ from condprof.util import LOG
 METADATA_NAME = "condprofile.json"
 
 
-class Metadata(collections.MutableMapping):
+class Metadata(MutableMapping):
     """ dict-like class that holds metadata for a profile.
     """
 
