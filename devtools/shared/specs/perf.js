@@ -79,6 +79,12 @@ const perfDescription = {
       request: {},
       response: { value: RetVal("boolean") },
     },
+
+    // Added in Firefox 72.
+    getSupportedFeatures: {
+      request: {},
+      response: { value: RetVal("array:string") },
+    },
   },
 };
 
