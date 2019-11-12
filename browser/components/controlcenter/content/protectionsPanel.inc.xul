@@ -149,8 +149,7 @@
             <label class="protections-popup-footer-button-label" flex="1">&protections.showreport.label;</label>
           </toolbarbutton>
           <hbox id="protections-popup-trackers-blocked-counter-box"
-                align="center"
-                end="0">
+                align="center">
             <description id="protections-popup-trackers-blocked-counter-description"
                          onclick="gProtectionsHandler.openProtections(true);"/>
           </hbox>

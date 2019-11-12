@@ -21,6 +21,19 @@
   -moz-user-select: text;
 }
 
+/*
+  The default min-height:auto value makes grid items (and XUL flex items) refuse
+  to be smaller than their content. In this case, we have some tall very content
+  inside of us, and yet we don't want to be taller than the viewport (and we know
+  the tall content will still be accessible via scrollbars regardless if we're a
+  shorter height). So we use min-height:0 to allow ourselves to be smaller than
+  our content height so we can fit the viewport size.
+*/
+#preferences-stack,
+#preferences-stack > * {
+  min-height: 0;
+}
+
 .main-content {
   padding-top: 0;
 }

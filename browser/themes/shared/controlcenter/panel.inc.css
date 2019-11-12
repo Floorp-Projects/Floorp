@@ -1095,6 +1095,7 @@ description#identity-popup-content-verifier,
   visibility: hidden;
   opacity: 0;
   transition: opacity 200ms linear;
+  justify-self: end;
 }
 
 #protections-popup-trackers-blocked-counter-box[showing] {
