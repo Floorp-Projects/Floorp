@@ -190,29 +190,12 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   return NS_OK;
 }
 
-class DocumentFailedAsyncOpenEvent
-    : public NeckoTargetChannelEvent<DocumentChannelChild> {
- public:
-  DocumentFailedAsyncOpenEvent(DocumentChannelChild* aChild,
-                               nsresult aStatusCode)
-      : NeckoTargetChannelEvent<DocumentChannelChild>(aChild),
-        mStatus(aStatusCode) {}
-
-  void Run() override { mChild->DoFailedAsyncOpen(mStatus); }
-
- private:
-  nsresult mStatus;
-};
-
 IPCResult DocumentChannelChild::RecvFailedAsyncOpen(
     const nsresult& aStatusCode) {
-  mEventQueue->RunOrEnqueue(
-      new DocumentFailedAsyncOpenEvent(this, aStatusCode));
+  RefPtr<DocumentChannelChild> self = this;
+  mEventQueue->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
+      this, [self, aStatusCode]() { self->ShutdownListeners(aStatusCode); }));
   return IPC_OK();
-}
-
-void DocumentChannelChild::DoFailedAsyncOpen(const nsresult& aStatusCode) {
-  ShutdownListeners(aStatusCode);
 }
 
 void DocumentChannelChild::ShutdownListeners(nsresult aStatusCode) {
