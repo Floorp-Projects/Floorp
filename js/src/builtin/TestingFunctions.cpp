@@ -164,6 +164,10 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  if (!JS_SetProperty(cx, info, "oom-backtraces", FalseHandleValue)) {
+    return false;
+  }
+
   RootedValue value(cx);
 #ifdef DEBUG
   value = BooleanValue(true);
@@ -378,15 +382,6 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   value = BooleanValue(false);
 #endif
   if (!JS_SetProperty(cx, info, "valgrind", value)) {
-    return false;
-  }
-
-#ifdef JS_OOM_DO_BACKTRACES
-  value = BooleanValue(true);
-#else
-  value = BooleanValue(false);
-#endif
-  if (!JS_SetProperty(cx, info, "oom-backtraces", value)) {
     return false;
   }
 

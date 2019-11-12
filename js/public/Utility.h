@@ -18,11 +18,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef JS_OOM_DO_BACKTRACES
-#  include <execinfo.h>
-#  include <stdio.h>
-#endif
-
 #include "jstypes.h"
 
 #include "mozmemory.h"
