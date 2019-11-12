@@ -1619,77 +1619,78 @@ void HttpChannelChild::ProcessFlushedForDiversion() {
                         true);
 }
 
-void HttpChannelChild::ProcessNotifyChannelClassifierProtectionDisabled(
-    uint32_t aAcceptedReason) {
+mozilla::ipc::IPCResult
+HttpChannelChild::RecvNotifyChannelClassifierProtectionDisabled(
+    const uint32_t& aAcceptedReason) {
   LOG(
-      ("HttpChannelChild::ProcessNotifyChannelClassifierProtectionDisabled "
+      ("HttpChannelChild::RecvNotifyChannelClassifierProtectionDisabled "
        "[this=%p aAcceptedReason=%" PRIu32 "]\n",
        this, aAcceptedReason));
-  MOZ_ASSERT(OnSocketThread());
+  MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<HttpChannelChild> self = this;
-  nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
-  neckoTarget->Dispatch(
-      NS_NewRunnableFunction(
-          "AntiTrackingCommon::NotifyChannelClassifierProtectionDisabled",
-          [self, aAcceptedReason]() {
-            UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
-                self, aAcceptedReason);
-          }),
-      NS_DISPATCH_NORMAL);
+  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(this, [=] {
+    UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
+        self, aAcceptedReason);
+  }));
+
+  return IPC_OK();
 }
 
-void HttpChannelChild::ProcessNotifyCookieAllowed() {
-  LOG(("HttpChannelChild::ProcessNotifyCookieAllowed [this=%p]\n", this));
-  MOZ_ASSERT(OnSocketThread());
+mozilla::ipc::IPCResult HttpChannelChild::RecvNotifyCookieAllowed() {
+  LOG(("HttpChannelChild::RecvNotifyCookieAllowed [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<HttpChannelChild> self = this;
-  nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
-  neckoTarget->Dispatch(
-      NS_NewRunnableFunction(
-          "UrlClassifierCommon::NotifyBlockingDecision",
-          [self]() {
-            AntiTrackingCommon::NotifyBlockingDecision(
-                self, AntiTrackingCommon::BlockingDecision::eAllow, 0);
-          }),
-      NS_DISPATCH_NORMAL);
+  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(this, [=] {
+    AntiTrackingCommon::NotifyBlockingDecision(
+        self, AntiTrackingCommon::BlockingDecision::eAllow, 0);
+  }));
+
+  return IPC_OK();
 }
 
-void HttpChannelChild::ProcessNotifyCookieBlocked(uint32_t aRejectedReason) {
-  LOG(("HttpChannelChild::ProcessNotifyCookieBlocked [this=%p]\n", this));
-  MOZ_ASSERT(OnSocketThread());
+mozilla::ipc::IPCResult HttpChannelChild::RecvNotifyCookieBlocked(
+    const uint32_t& aRejectedReason) {
+  LOG(("HttpChannelChild::RecvNotifyCookieBlocked [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<HttpChannelChild> self = this;
-  nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
-  neckoTarget->Dispatch(
-      NS_NewRunnableFunction("AntiTrackingCommon::NotifyBlockingDecision",
-                             [self, aRejectedReason]() {
-                               AntiTrackingCommon::NotifyBlockingDecision(
-                                   self,
-                                   AntiTrackingCommon::BlockingDecision::eBlock,
-                                   aRejectedReason);
-                             }),
-      NS_DISPATCH_NORMAL);
+  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(this, [=] {
+    AntiTrackingCommon::NotifyBlockingDecision(
+        self, AntiTrackingCommon::BlockingDecision::eBlock, aRejectedReason);
+  }));
+
+  return IPC_OK();
 }
 
-void HttpChannelChild::ProcessNotifyClassificationFlags(
-    uint32_t aClassificationFlags, bool aIsThirdParty) {
+mozilla::ipc::IPCResult HttpChannelChild::RecvNotifyClassificationFlags(
+    const uint32_t& aClassificationFlags, const bool& aIsThirdParty) {
   LOG(
-      ("HttpChannelChild::ProcessNotifyClassificationFlags thirdparty=%d "
+      ("HttpChannelChild::RecvNotifyClassificationFlags thirdparty=%d "
        "flags=%" PRIu32 " [this=%p]\n",
        static_cast<int>(aIsThirdParty), aClassificationFlags, this));
-  MOZ_ASSERT(OnSocketThread());
+  MOZ_ASSERT(NS_IsMainThread());
 
-  AddClassificationFlags(aClassificationFlags, aIsThirdParty);
+  RefPtr<HttpChannelChild> self = this;
+  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(this, [=] {
+    self->AddClassificationFlags(aClassificationFlags, aIsThirdParty);
+  }));
+
+  return IPC_OK();
 }
 
-void HttpChannelChild::ProcessNotifyFlashPluginStateChanged(
-    nsIHttpChannel::FlashPluginState aState) {
-  LOG(("HttpChannelChild::ProcessNotifyFlashPluginStateChanged [this=%p]\n",
+mozilla::ipc::IPCResult HttpChannelChild::RecvNotifyFlashPluginStateChanged(
+    const nsIHttpChannel::FlashPluginState& aState) {
+  LOG(("HttpChannelChild::RecvNotifyFlashPluginStateChanged [this=%p]\n",
        this));
-  MOZ_ASSERT(OnSocketThread());
+  MOZ_ASSERT(NS_IsMainThread());
 
-  SetFlashPluginState(aState);
+  RefPtr<HttpChannelChild> self = this;
+  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
+      this, [=] { self->SetFlashPluginState(aState); }));
+
+  return IPC_OK();
 }
 
 void HttpChannelChild::FlushedForDiversion() {
@@ -1708,40 +1709,38 @@ void HttpChannelChild::FlushedForDiversion() {
   }
 }
 
-void HttpChannelChild::ProcessSetClassifierMatchedInfo(
-    const nsCString& aList, const nsCString& aProvider,
-    const nsCString& aFullHash) {
-  LOG(("HttpChannelChild::ProcessSetClassifierMatchedInfo [this=%p]\n", this));
-  MOZ_ASSERT(OnSocketThread());
+mozilla::ipc::IPCResult HttpChannelChild::RecvSetClassifierMatchedInfo(
+    const ClassifierInfo& aInfo) {
+  LOG(("HttpChannelChild::RecvSetClassifierMatchedInfo [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
-  neckoTarget->Dispatch(
-      NewRunnableMethod<const nsCString, const nsCString, const nsCString>(
-          "HttpChannelChild::SetMatchedInfo", this,
-          &HttpChannelChild::SetMatchedInfo, aList, aProvider, aFullHash),
-      NS_DISPATCH_NORMAL);
+  RefPtr<HttpChannelChild> self = this;
+  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(this, [=]() {
+    self->SetMatchedInfo(aInfo.list(), aInfo.provider(), aInfo.fullhash());
+  }));
+
+  return IPC_OK();
 }
 
-void HttpChannelChild::ProcessSetClassifierMatchedTrackingInfo(
-    const nsCString& aLists, const nsCString& aFullHashes) {
-  LOG(("HttpChannelChild::ProcessSetClassifierMatchedTrackingInfo [this=%p]\n",
+mozilla::ipc::IPCResult HttpChannelChild::RecvSetClassifierMatchedTrackingInfo(
+    const ClassifierInfo& aInfo) {
+  LOG(("HttpChannelChild::RecvSetClassifierMatchedTrackingInfo [this=%p]\n",
        this));
-  MOZ_ASSERT(OnSocketThread());
+  MOZ_ASSERT(NS_IsMainThread());
 
   nsTArray<nsCString> lists, fullhashes;
-  for (const nsACString& token : aLists.Split(',')) {
+  for (const nsACString& token : aInfo.list().Split(',')) {
     lists.AppendElement(token);
   }
-  for (const nsACString& token : aFullHashes.Split(',')) {
+  for (const nsACString& token : aInfo.fullhash().Split(',')) {
     fullhashes.AppendElement(token);
   }
 
-  nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
-  neckoTarget->Dispatch(
-      NewRunnableMethod<const nsTArray<nsCString>, const nsTArray<nsCString>>(
-          "HttpChannelChild::SetMatchedTrackingInfo", this,
-          &HttpChannelChild::SetMatchedTrackingInfo, lists, fullhashes),
-      NS_DISPATCH_NORMAL);
+  RefPtr<HttpChannelChild> self = this;
+  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
+      this, [=]() { self->SetMatchedTrackingInfo(lists, fullhashes); }));
+
+  return IPC_OK();
 }
 
 void HttpChannelChild::ProcessDivertMessages() {

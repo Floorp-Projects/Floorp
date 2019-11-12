@@ -57,32 +57,6 @@ class HttpBackgroundChannelParent final : public PHttpBackgroundChannelParent {
   // over background channel.
   bool OnDiversion();
 
-  // To send NotifyChannelClassifierProtectionDisabled message over background
-  // channel.
-  bool OnNotifyChannelClassifierProtectionDisabled(uint32_t aAcceptedReason);
-
-  // To send NotifyCookieAllowed message over background channel.
-  bool OnNotifyCookieAllowed();
-
-  // To send NotifyCookieBlocked message over background channel.
-  bool OnNotifyCookieBlocked(uint32_t aRejectedReason);
-
-  // To send NotifyClassificationFlags message over background channel.
-  bool OnNotifyClassificationFlags(uint32_t aClassificationFlags,
-                                   bool aIsThirdParty);
-
-  // To send NotifyFlashPluginStateChanged message over background channel.
-  bool OnNotifyFlashPluginStateChanged(nsIHttpChannel::FlashPluginState aState);
-
-  // To send SetClassifierMatchedInfo message over background channel.
-  bool OnSetClassifierMatchedInfo(const nsACString& aList,
-                                  const nsACString& aProvider,
-                                  const nsACString& aFullHash);
-
-  // To send SetClassifierMatchedTrackingInfo message over background channel.
-  bool OnSetClassifierMatchedTrackingInfo(const nsACString& aLists,
-                                          const nsACString& aFullHashes);
-
  protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
