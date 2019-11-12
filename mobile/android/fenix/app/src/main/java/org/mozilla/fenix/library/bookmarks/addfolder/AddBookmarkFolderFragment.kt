@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.nav
@@ -88,6 +89,7 @@ class AddBookmarkFolderFragment : Fragment(R.layout.fragment_edit_bookmark) {
                         getString(R.string.bookmark_empty_title_error)
                     return true
                 }
+                this.view?.hideKeyboard()
                 lifecycleScope.launch(IO) {
                     val newGuid = requireComponents.core.bookmarksStorage.addFolder(
                         sharedViewModel.selectedFolder!!.guid, bookmarkNameEdit.text.toString(), null
