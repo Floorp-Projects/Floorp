@@ -130,7 +130,8 @@ class nsTableCellFrame : public nsContainerFrame,
   virtual mozilla::StyleVerticalAlignKeyword GetVerticalAlign() const;
 
   bool HasVerticalAlignBaseline() const {
-    return GetVerticalAlign() == mozilla::StyleVerticalAlignKeyword::Baseline;
+    return GetVerticalAlign() == mozilla::StyleVerticalAlignKeyword::Baseline &&
+           !GetContentEmpty();
   }
 
   bool CellHasVisibleContent(nscoord aBSize, nsTableFrame* tableFrame,
