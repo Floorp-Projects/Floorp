@@ -3503,26 +3503,16 @@ const PREF_SSL_IMPACT_ROOTS = ["security.tls.version.", "security.ssl3."];
 var BrowserOnClick = {
   init() {
     let mm = window.messageManager;
-    mm.addMessageListener("Browser:CertExceptionError", this);
     mm.addMessageListener("Browser:SiteBlockedError", this);
   },
 
   uninit() {
     let mm = window.messageManager;
-    mm.removeMessageListener("Browser:CertExceptionError", this);
     mm.removeMessageListener("Browser:SiteBlockedError", this);
   },
 
   receiveMessage(msg) {
     switch (msg.name) {
-      case "Browser:CertExceptionError":
-        this.onCertError(
-          msg.target,
-          msg.data.elementId,
-          msg.data.location,
-          msg.data.securityInfoAsString
-        );
-        break;
       case "Browser:SiteBlockedError":
         this.onAboutBlocked(
           msg.data.elementId,
@@ -3531,36 +3521,6 @@ var BrowserOnClick = {
           msg.data.location,
           msg.data.blockedInfo
         );
-        break;
-    }
-  },
-
-  onCertError(browser, elementId, location, securityInfoAsString) {
-    let securityInfo;
-    let cert;
-
-    switch (elementId) {
-      case "viewCertificate":
-        securityInfo = getSecurityInfo(securityInfoAsString);
-        cert = securityInfo.serverCert;
-        if (Services.prefs.getBoolPref("security.aboutcertificate.enabled")) {
-          let certChain = securityInfo.failedCertChain;
-          let certs = certChain.map(elem =>
-            encodeURIComponent(elem.getBase64DERString())
-          );
-          let certsStringURL = certs.map(elem => `cert=${elem}`);
-          certsStringURL = certsStringURL.join("&");
-          let url = `about:certificate?${certsStringURL}`;
-          openTrustedLinkIn(url, "tab");
-        } else {
-          Services.ww.openWindow(
-            window,
-            "chrome://pippki/content/certViewer.xul",
-            "_blank",
-            "centerscreen,chrome",
-            cert
-          );
-        }
         break;
     }
   },
