@@ -391,34 +391,14 @@ nscoord nsTableRowFrame::GetRowBaseline(WritingMode aWM) {
     return mMaxCellAscent;
   }
 
-  // If we don't have a baseline on any of the cells we go for the lowest
-  // content edge of the inner block frames.
-  // Every table cell has a cell frame with its border and padding. Inside
-  // the cell is a block frame. The cell is as high as the tallest cell in
-  // the parent row. As a consequence the block frame might not touch both
-  // the top and the bottom padding of it parent cell frame at the same time.
-  //
-  // bbbbbbbbbbbbbbbbbb             cell border:  b
-  // bppppppppppppppppb             cell padding: p
-  // bpxxxxxxxxxxxxxxpb             inner block:  x
-  // bpx            xpb
-  // bpx            xpb
-  // bpx            xpb
-  // bpxxxxxxxxxxxxxxpb  base line
-  // bp              pb
-  // bp              pb
-  // bppppppppppppppppb
-  // bbbbbbbbbbbbbbbbbb
+  // If we get here, we don't have a baseline on any of the cells in this row.
 
   nscoord ascent = 0;
-  nsSize containerSize = GetSize();
   for (nsIFrame* childFrame : mFrames) {
-    if (childFrame->IsTableCellFrame()) {
-      nsIFrame* firstKid = childFrame->PrincipalChildList().FirstChild();
-      ascent = std::max(
-          ascent,
-          LogicalRect(aWM, firstKid->GetNormalRect(), containerSize).BEnd(aWM));
-    }
+    MOZ_ASSERT(childFrame->IsTableCellFrame());
+    nscoord s = childFrame->SynthesizeBaselineBOffsetFromContentBox(
+        aWM, BaselineSharingGroup::First);
+    ascent = std::max(ascent, s);
   }
   return ascent;
 }
