@@ -3980,6 +3980,7 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 #endif
 
   // Set up profiling for each registered thread, if appropriate.
+  Maybe<int> mainThreadId;
   int tid = profiler_current_thread_id();
   const Vector<UniquePtr<RegisteredThread>>& registeredThreads =
       CorePS::RegisteredThreads(aLock);
@@ -4004,6 +4005,9 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
           // order to start profiling JS.
           TriggerPollJSSamplingOnMainThread();
         }
+      }
+      if (info->IsMainThread()) {
+        mainThreadId = Some(info->ThreadId());
       }
       registeredThread->RacyRegisteredThread().ReinitializeOnResume();
       if (registeredThread->GetJSContext()) {
@@ -4034,7 +4038,14 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
   if (ActivePS::FeatureNativeAllocations(aLock)) {
-    mozilla::profiler::enable_native_allocations();
+    if (mainThreadId.isSome()) {
+      mozilla::profiler::enable_native_allocations(mainThreadId.value());
+    } else {
+      NS_WARNING(
+          "The nativeallocations feature is turned on, but the main thread is "
+          "not being profiled. The allocations are only stored on the main "
+          "thread.");
+    }
   }
 #endif
 
@@ -4643,14 +4654,16 @@ bool profiler_is_locked_on_current_thread() {
   return gPSMutex.IsLockedOnCurrentThread();
 }
 
-bool profiler_add_native_allocation_marker(const int64_t aSize) {
+bool profiler_add_native_allocation_marker(int aMainThreadId, int64_t aSize) {
   if (!profiler_can_accept_markers()) {
-    return;
+    return false;
   }
   AUTO_PROFILER_STATS(add_marker_with_NativeAllocationMarkerPayload);
-  profiler_add_marker("Native allocation", JS::ProfilingCategoryPair::OTHER,
-                      NativeAllocationMarkerPayload(TimeStamp::Now(), aSize,
-                                                    profiler_get_backtrace()));
+  profiler_add_marker_for_thread(
+      aMainThreadId, JS::ProfilingCategoryPair::OTHER, "Native allocation",
+      MakeUnique<NativeAllocationMarkerPayload>(TimeStamp::Now(), aSize,
+                                                profiler_get_backtrace()));
+  return true;
 }
 
 void profiler_add_network_marker(
