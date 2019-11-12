@@ -158,6 +158,20 @@ browsertime:
         toolchain:
             - linux64-node
 
+wasi-sysroot:
+    description: "wasi sysroot build process"
+    treeherder:
+        symbol: TL(wasi-sysroot)
+    run:
+        script: build-wasi-sysroot.sh
+        sparse-profile: null
+        toolchain-artifact: public/build/wasi-sysroot.tar.xz
+    fetches:
+        fetch:
+            - wasi-libc
+        toolchain:
+            - linux64-clang
+
 wrench-deps:
     description: "Downloads all the crates needed for building wrench"
     treeherder:
