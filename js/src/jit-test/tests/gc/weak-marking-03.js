@@ -412,6 +412,7 @@ function grayMapKey() {
            "key is now marked black");
 
   finishgc(); // Finish the GC
+
   assertEq(getMarks().join("/"), "gray/black/gray",
            "at end: black/gray => gray");
 
@@ -483,3 +484,83 @@ function grayKeyMap() {
 
 if (this.enqueueMark)
   runtest(grayKeyMap);
+
+// Cause a key to be marked black *during gray marking*, by first marking a
+// delegate black, then marking the map and key gray. When the key is scanned,
+// it should be seen to be a CCW of a black delegate and so should itself be
+// marked black.
+//
+// Note that this is currently buggy -- the key will be marked because the
+// delegate is marked, but the color won't be taken into account. So the key
+// will be marked gray (or rather, it will see that it's already gray.) The bad
+// behavior this would cause is if:
+//
+//  1. You wrap an object in a CCW and use it as a weakmap key to some
+//     information.
+//  2. You keep a strong reference to the object (in its compartment).
+//  3. The only references to the CCW are gray, and are in fact part of a cycle.
+//  4. The CC runs and discards the CCW.
+//  5. You look up the object in the weakmap again. This creates a new wrapper
+//     to use as a key. It is not in the weakmap, so the information you stored
+//     before is not found. (It may have even been collected, if you had no
+//     other references to it.)
+//
+function blackDuringGray() {
+  const g = newGlobal({newCompartment: true});
+  const vals = {};
+  vals.map = new WeakMap();
+  vals.key = g.eval("Object.create(null)");
+  vals.val = Object.create(null);
+  vals.map.set(vals.key, vals.val);
+
+  g.delegate = vals.key;
+  addMarkObservers([vals.map, vals.key]);
+  g.addMarkObservers([vals.key]);
+  addMarkObservers([vals.val]);
+  // Mark observers: map, key, delegate, value
+
+  gc();
+
+  g.enqueueMark(vals.key); // Mark the delegate black
+  enqueueMark("yield"); // checkpoint 1
+
+  // Mark the map gray. This will scan through all entries, find our key, and
+  // mark it black because its delegate is black.
+  enqueueMark("set-color-gray");
+  enqueueMark(vals.map); // Mark the map gray
+
+  vals.map = null;
+  vals.val = null;
+  vals.key = null;
+  g.delegate = null;
+
+  const showmarks = () => {
+    print("[map,key,delegate,value] marked " + JSON.stringify(getMarks()));
+  };
+
+  print("Starting incremental GC");
+  startgc(100000);
+  // Checkpoint 1, after marking delegate black
+  showmarks();
+  var marks = getMarks();
+  assertEq(marks[0], "unmarked", "map is not marked yet");
+  assertEq(marks[1], "unmarked", "key is not marked yet");
+  assertEq(marks[2], "black", "delegate is black");
+  assertEq(marks[3], "unmarked", "values is not marked yet");
+
+  finishgc();
+  showmarks();
+  marks = getMarks();
+  assertEq(marks[0], "gray", "map is gray");
+  assertEq(marks[1], "black", "key inherits black even though in gray marking");
+  assertEq(marks[2], "black", "delegate is still black");
+  assertEq(marks[3], "gray", "gray map + black key => gray value");
+
+  clearMarkQueue();
+  clearMarkObservers();
+  grayRoot().length = 0;
+  g.eval("grayRoot().length = 0");
+}
+
+if (this.enqueueMark)
+  runtest(blackDuringGray);

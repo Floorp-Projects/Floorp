@@ -12,6 +12,7 @@
 #include "mozilla/ReentrancyGuard.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/Unused.h"
 
 #include <algorithm>
 
@@ -41,6 +42,7 @@
 #include "gc/GC-inl.h"
 #include "gc/Nursery-inl.h"
 #include "gc/PrivateIterators-inl.h"
+#include "gc/WeakMap-inl.h"
 #include "gc/Zone-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -654,12 +656,7 @@ void GCMarker::markEphemeronValues(gc::Cell* markedCell,
   DebugOnly<size_t> initialLen = values.length();
 
   for (const auto& markable : values) {
-    if (color == gc::MarkColor::Black &&
-        markable.weakmap->markColor == gc::MarkColor::Gray) {
-      continue;
-    }
-
-    markable.weakmap->markEntry(this, markedCell, markable.key);
+    markable.weakmap->markKey(this, markedCell, markable.key);
   }
 
   // The vector should not be appended to during iteration because the key is
@@ -2607,8 +2604,8 @@ void GCMarker::enterWeakMarkingMode() {
 
     for (SweepGroupZonesIter zone(runtime()); !zone.done(); zone.next()) {
       for (WeakMapBase* m : zone->gcWeakMapList()) {
-        if (m->marked) {
-          (void)m->markEntries(this);
+        if (m->mapColor) {
+          mozilla::Unused << m->markEntries(this);
         }
       }
     }
