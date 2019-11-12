@@ -63,8 +63,6 @@ async function testRtlAnchors(doc, tooltip) {
   const box1 = doc.getElementById("box1");
   const box2 = doc.getElementById("box2");
 
-  const { offsetTop, offsetLeft } = getOffsets(tooltip.doc);
-
   info("Display the tooltip on box1.");
   await showTooltip(tooltip, box1, { position: "bottom" });
 
@@ -73,14 +71,10 @@ async function testRtlAnchors(doc, tooltip) {
 
   // box1 uses RTL direction, so the tooltip should be aligned with the right edge of the
   // anchor, but it is shifted to the right to fit in the toolbox.
-  is(
-    panelRect.left,
-    0 + offsetLeft,
-    "Tooltip is aligned with left edge of the toolbox"
-  );
+  is(panelRect.left, 0, "Tooltip is aligned with left edge of the toolbox");
   is(
     panelRect.top,
-    anchorRect.bottom + offsetTop,
+    anchorRect.bottom,
     "Tooltip aligned with the anchor bottom edge"
   );
   is(
@@ -98,12 +92,12 @@ async function testRtlAnchors(doc, tooltip) {
   // box2 uses RTL direction, so the tooltip is aligned with the right edge of the anchor
   is(
     panelRect.right,
-    anchorRect.right + offsetLeft,
+    anchorRect.right,
     "Tooltip is aligned with right edge of anchor"
   );
   is(
     panelRect.top,
-    anchorRect.bottom + offsetTop,
+    anchorRect.bottom,
     "Tooltip aligned with the anchor bottom edge"
   );
   is(
@@ -132,8 +126,6 @@ async function testLtrAnchors(doc, tooltip) {
   const box3 = doc.getElementById("box3");
   const box4 = doc.getElementById("box4");
 
-  const { offsetTop, offsetLeft } = getOffsets(tooltip.doc);
-
   info("Display the tooltip on box3.");
   await showTooltip(tooltip, box3, { position: "bottom" });
 
@@ -143,12 +135,12 @@ async function testLtrAnchors(doc, tooltip) {
   // box3 uses LTR direction, so the tooltip is aligned with the left edge of the anchor.
   is(
     panelRect.left,
-    anchorRect.left + offsetLeft,
+    anchorRect.left,
     "Tooltip is aligned with left edge of anchor"
   );
   is(
     panelRect.top,
-    anchorRect.bottom + offsetTop,
+    anchorRect.bottom,
     "Tooltip aligned with the anchor bottom edge"
   );
   is(
@@ -167,12 +159,12 @@ async function testLtrAnchors(doc, tooltip) {
   // anchor, but it is shifted to the left to fit in the toolbox.
   is(
     panelRect.right,
-    TOOLBOX_WIDTH + offsetLeft,
+    TOOLBOX_WIDTH,
     "Tooltip is aligned with right edge of toolbox"
   );
   is(
     panelRect.top,
-    anchorRect.bottom + offsetTop,
+    anchorRect.bottom,
     "Tooltip aligned with the anchor bottom edge"
   );
   is(
