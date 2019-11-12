@@ -230,11 +230,22 @@ strong {
 }
 
 .tooltip-top .tooltip-arrow {
+  /**
+   * The -1px margin is there to make sure the middle of the arrow overlaps with
+   * the border of the tooltip container.
+   * The -2px is there because the rotated arrow is not visually as tall as its
+   * container. Since the positioning logic relies on measuring the size of the
+   * tooltip, this -2px ensures the measured size matches the visuals (and not
+   * simply the box model).
+   */
+  margin-bottom: -2px;
   margin-top: -1px;
 }
 
 .tooltip-bottom .tooltip-arrow {
+  /* See comment in .tooltip-top .tooltip-arrow (inverted here) */
   margin-bottom: -1px;
+  margin-top: -2px;
 }
 
 .tooltip-arrow:before {
@@ -315,6 +326,12 @@ strong {
    */
   width: calc(var(--arrow-width) + 2 * var(--shadow-margin));
   height: calc(var(--arrow-width) / 2 + var(--shadow-margin));
+
+  /**
+   * The rotated box slightly overlaps the left edge of the arrow container.
+   * This means the arrow is not centered in its own box by default.
+   */
+  padding-left: 1px;
 }
 
 .tooltip-container[type="doorhanger"] > .tooltip-arrow::before {
