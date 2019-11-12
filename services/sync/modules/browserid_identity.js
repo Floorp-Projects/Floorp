@@ -421,7 +421,7 @@ this.BrowserIDManager.prototype = {
         this._log.warn(
           "Token server returned 401, refreshing certificate and retrying token fetch"
         );
-        await fxa.keys.invalidateCertificate();
+        await fxa._internal.invalidateCertificate();
         keys = await fxa.keys.getKeys();
         token = await getToken(keys);
       }

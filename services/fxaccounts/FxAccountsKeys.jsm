@@ -265,14 +265,6 @@ class FxAccountsKeys {
   }
 
   /**
-   * Invalidate the FxA certificate, so that it will be refreshed from the server
-   * the next time it is needed.
-   */
-  invalidateCertificate() {
-    return this._fxia.invalidateCertificate();
-  }
-
-  /**
    * Derive the WebExtensions Sync Storage Key given the byte string kB.
    *
    * @returns Promise<HKDF(kB, undefined, "identity.mozilla.com/picl/v1/chrome.storage.sync", 64)>
