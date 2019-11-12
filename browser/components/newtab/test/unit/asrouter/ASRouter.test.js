@@ -122,6 +122,12 @@ describe("ASRouter", () => {
     sandbox.spy(ASRouterPreferences, "uninit");
     sandbox.spy(ASRouterPreferences, "addListener");
     sandbox.spy(ASRouterPreferences, "removeListener");
+    sandbox.replaceGetter(ASRouterPreferences, "personalizedCfr", function() {
+      return {
+        personalizedCfrScores: {},
+        personalizedCfrThreshold: 1.5,
+      };
+    });
 
     clock = sandbox.useFakeTimers();
     fetchStub = sandbox

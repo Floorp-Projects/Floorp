@@ -42,6 +42,8 @@ Please note that some targeting attributes require stricter controls on the tele
 * [userPrefs](#userprefs)
 * [attachedFxAOAuthClients](#attachedfxaoauthclients)
 * [platformName](#platformname)
+* [personalizedCfrScores](#personalizedcfrscores)
+* [personalizedCfrThreshold](#personalizedcfrthreshold)
 
 ## Detailed usage
 
@@ -592,4 +594,24 @@ declare const attachedFxAOAuthClients: Array<OAuthClient>
 
 ```
 declare const platformName = "linux" | "win" | "macosx" | "android" | "other";
+```
+
+### `personalizedCfrScores`
+
+#### Definition
+
+See more in [CFR Machine Learning Experiment](https://bugzilla.mozilla.org/show_bug.cgi?id=1594422).
+
+```
+declare const personalizedCfrScores = { [cfrId: string]: number (float); }
+```
+
+### `personalizedCfrThreshold`
+
+#### Definition
+
+See more in [CFR Machine Learning Experiment](https://bugzilla.mozilla.org/show_bug.cgi?id=1594422).
+
+```
+declare const personalizedCfrThreshold = float;
 ```

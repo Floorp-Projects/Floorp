@@ -1187,6 +1187,11 @@ class _ASRouter {
       trailheadTriplet,
     } = this.state;
 
+    const {
+      personalizedCfrScores,
+      personalizedCfrThreshold,
+    } = ASRouterPreferences.personalizedCfr;
+
     return {
       get messageImpressions() {
         return messageImpressions;
@@ -1199,6 +1204,12 @@ class _ASRouter {
       },
       get trailheadTriplet() {
         return trailheadTriplet;
+      },
+      get scores() {
+        return personalizedCfrScores;
+      },
+      get scoreThreshold() {
+        return personalizedCfrThreshold;
       },
     };
   }
