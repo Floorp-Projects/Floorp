@@ -1054,6 +1054,13 @@ bool nsTStringRepr<T>::EqualsASCII(const char* aData) const {
 }
 
 template <typename T>
+bool nsTStringRepr<T>::EqualsLatin1(const char* aData,
+                                    const size_type aLength) const {
+  return (this->mLength == aLength) &&
+         char_traits::equalsLatin1(this->mData, aData, aLength);
+}
+
+template <typename T>
 bool nsTStringRepr<T>::LowerCaseEqualsASCII(const char* aData,
                                             size_type aLen) const {
   return this->mLength == aLen &&
