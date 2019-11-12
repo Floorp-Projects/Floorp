@@ -4,13 +4,21 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 21.0.0-SNAPSHOT (In Development)
+# 22.0.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v20.0.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/81?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v21.0.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/82?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+# 21.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v20.0.0...v21.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/81?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v21.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v21.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v21.0.0/buildSrc/src/main/java/Config.kt)
 
 * **feature-downloads**
   * Added `tryAgain` which can be called on the feature in order to restart a failed download.
