@@ -50,6 +50,7 @@
 #include "util/NativeStack.h"
 #include "util/Windows.h"
 #include "vm/BytecodeUtil.h"
+#include "vm/ErrorObject.h"
 #include "vm/ErrorReporting.h"
 #include "vm/HelperThreads.h"
 #include "vm/Iteration.h"
