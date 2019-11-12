@@ -75,7 +75,7 @@ class MachCommands(MachCommandBase):
 
         runtime_testvars = {}
         for arg in ('webRootDir', 'pageManifest', 'resultsDir', 'entities', 'iterations',
-                    'perTabPause', 'settleWaitTime', 'maxTabs', 'dmd', 'tp6', 'enable_fission'):
+                    'perTabPause', 'settleWaitTime', 'maxTabs', 'dmd', 'tp6'):
             if arg in kwargs and kwargs[arg] is not None:
                 runtime_testvars[arg] = kwargs[arg]
 
@@ -238,9 +238,6 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--tp6', group='AWSY', action='store_true',
                      dest='tp6', default=False,
                      help='Use the tp6 pageset during testing.')
-    @CommandArgument('--enable-fission', group='AWSY', action='store_true',
-                     dest='enable_fission', default=False,
-                     help='Enable Fission (site isolation) in Gecko.')
     def run_awsy_test(self, tests, **kwargs):
         """mach awsy-test runs the in-tree version of the Are We Slim Yet
         (AWSY) tests.
