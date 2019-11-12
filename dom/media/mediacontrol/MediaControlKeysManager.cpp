@@ -5,6 +5,7 @@
 #include "MediaControlKeysManager.h"
 
 #include "MediaControlUtils.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Logging.h"
 
@@ -22,12 +23,17 @@ extern mozilla::LazyLogModule gMediaControlLog;
 namespace mozilla {
 namespace dom {
 
-MediaControlKeysManager::MediaControlKeysManager() {
-  StartMonitoringControlKeys();
+void MediaControlKeysManager::Init() {
+  mControllerAmountChangedListener =
+      MediaControlService::GetService()
+          ->MediaControllerAmountChangedEvent()
+          .Connect(AbstractThread::MainThread(), this,
+                   &MediaControlKeysManager::ControllerAmountChanged);
 }
 
 MediaControlKeysManager::~MediaControlKeysManager() {
   StopMonitoringControlKeys();
+  mControllerAmountChangedListener.DisconnectIfExists();
 }
 
 void MediaControlKeysManager::StartMonitoringControlKeys() {
@@ -49,6 +55,16 @@ void MediaControlKeysManager::StopMonitoringControlKeys() {
   if (mEventSource) {
     mEventSource->Close();
     mEventSource = nullptr;
+  }
+}
+
+void MediaControlKeysManager::ControllerAmountChanged(
+    uint64_t aControllerAmount) {
+  LOG("Controller amount changed=%" PRId64, aControllerAmount);
+  if (aControllerAmount > 0 && !mEventSource) {
+    StartMonitoringControlKeys();
+  } else if (aControllerAmount == 0 && mEventSource) {
+    StopMonitoringControlKeys();
   }
 }
 
