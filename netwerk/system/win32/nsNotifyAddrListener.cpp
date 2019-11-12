@@ -54,34 +54,9 @@ static LazyLogModule gNotifyAddrLog("nsNotifyAddr");
 static HMODULE sNetshell;
 static decltype(NcFreeNetconProperties)* sNcFreeNetconProperties;
 
-static HMODULE sIphlpapi;
-static decltype(NotifyIpInterfaceChange)* sNotifyIpInterfaceChange;
-static decltype(CancelMibChangeNotify2)* sCancelMibChangeNotify2;
-
-#define NETWORK_NOTIFY_CHANGED_PREF "network.notify.changed"
-#define NETWORK_NOTIFY_IPV6_PREF "network.notify.IPv6"
-
 // period during which to absorb subsequent network change events, in
 // milliseconds
 static const unsigned int kNetworkChangeCoalescingPeriod = 1000;
-
-static void InitIphlpapi(void) {
-  if (!sIphlpapi) {
-    sIphlpapi = LoadLibraryW(L"Iphlpapi.dll");
-    if (sIphlpapi) {
-      sNotifyIpInterfaceChange =
-          (decltype(NotifyIpInterfaceChange)*)GetProcAddress(
-              sIphlpapi, "NotifyIpInterfaceChange");
-      sCancelMibChangeNotify2 =
-          (decltype(CancelMibChangeNotify2)*)GetProcAddress(
-              sIphlpapi, "CancelMibChangeNotify2");
-    } else {
-      NS_WARNING(
-          "Failed to load Iphlpapi.dll - cannot detect network"
-          " changes!");
-    }
-  }
-}
 
 static void InitNetshellLibrary(void) {
   if (!sNetshell) {
@@ -100,12 +75,6 @@ static void FreeDynamicLibraries(void) {
     FreeLibrary(sNetshell);
     sNetshell = nullptr;
   }
-  if (sIphlpapi) {
-    sNotifyIpInterfaceChange = nullptr;
-    sCancelMibChangeNotify2 = nullptr;
-    FreeLibrary(sIphlpapi);
-    sIphlpapi = nullptr;
-  }
 }
 
 NS_IMPL_ISUPPORTS(nsNotifyAddrListener, nsINetworkLinkService, nsIRunnable,
@@ -119,9 +88,7 @@ nsNotifyAddrListener::nsNotifyAddrListener()
       mCheckEvent(nullptr),
       mShutdown(false),
       mIPInterfaceChecksum(0),
-      mCoalescingActive(false) {
-  InitIphlpapi();
-}
+      mCoalescingActive(false) {}
 
 nsNotifyAddrListener::~nsNotifyAddrListener() {
   NS_ASSERTION(!mThread, "nsNotifyAddrListener thread shutdown failed");
@@ -324,61 +291,31 @@ nsNotifyAddrListener::Run() {
 
   DWORD waitTime = INFINITE;
 
-  if (!sNotifyIpInterfaceChange || !sCancelMibChangeNotify2 ||
-      !StaticPrefs::network_notify_IPv6()) {
-    // For Windows versions which are older than Vista which lack
-    // NotifyIpInterfaceChange. Note this means no IPv6 support.
-    HANDLE ev = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-    NS_ENSURE_TRUE(ev, NS_ERROR_OUT_OF_MEMORY);
+  // Windows Vista and newer versions.
+  HANDLE interfacechange;
+  // The callback will simply invoke CheckLinkStatus()
+  DWORD ret = NotifyIpInterfaceChange(
+      StaticPrefs::network_notify_IPv6() ? AF_UNSPEC
+                                         : AF_INET,  // IPv4 and IPv6
+      (PIPINTERFACE_CHANGE_CALLBACK)OnInterfaceChange,
+      this,   // pass to callback
+      false,  // no initial notification
+      &interfacechange);
 
-    HANDLE handles[2] = {ev, mCheckEvent};
-    OVERLAPPED overlapped = {0};
-    bool shuttingDown = false;
-
-    overlapped.hEvent = ev;
-    while (!shuttingDown) {
-      HANDLE h;
-      DWORD ret = NotifyAddrChange(&h, &overlapped);
-
-      if (ret == ERROR_IO_PENDING) {
-        ret = WaitForMultipleObjects(2, handles, FALSE, waitTime);
-        if (ret == WAIT_OBJECT_0) {
-          CheckLinkStatus();
-        } else if (!mShutdown) {
-          waitTime = nextCoalesceWaitTime();
-        } else {
-          shuttingDown = true;
-        }
+  if (ret == NO_ERROR) {
+    do {
+      ret = WaitForSingleObject(mCheckEvent, waitTime);
+      if (!mShutdown) {
+        waitTime = nextCoalesceWaitTime();
       } else {
-        shuttingDown = true;
+        break;
       }
-    }
-    CloseHandle(ev);
+    } while (ret != WAIT_FAILED);
+    CancelMibChangeNotify2(interfacechange);
   } else {
-    // Windows Vista and newer versions.
-    HANDLE interfacechange;
-    // The callback will simply invoke CheckLinkStatus()
-    DWORD ret = sNotifyIpInterfaceChange(
-        AF_UNSPEC,  // IPv4 and IPv6
-        (PIPINTERFACE_CHANGE_CALLBACK)OnInterfaceChange,
-        this,   // pass to callback
-        false,  // no initial notification
-        &interfacechange);
-
-    if (ret == NO_ERROR) {
-      do {
-        ret = WaitForSingleObject(mCheckEvent, waitTime);
-        if (!mShutdown) {
-          waitTime = nextCoalesceWaitTime();
-        } else {
-          break;
-        }
-      } while (ret != WAIT_FAILED);
-      sCancelMibChangeNotify2(interfacechange);
-    } else {
-      LOG(("Link Monitor: sNotifyIpInterfaceChange returned %d\n", (int)ret));
-    }
+    LOG(("Link Monitor: NotifyIpInterfaceChange returned %d\n", (int)ret));
   }
+
   return NS_OK;
 }
 
@@ -504,7 +441,6 @@ bool nsNotifyAddrListener::CheckICSGateway(PIP_ADAPTER_ADDRESSES aAdapter) {
 
 bool nsNotifyAddrListener::CheckICSStatus(PWCHAR aAdapterName) {
   InitNetshellLibrary();
-
   // This method enumerates all privately shared connections and checks if some
   // of them has the same name as the one provided in aAdapterName. If such
   // connection is found in the collection the adapter is used as ICS gateway
