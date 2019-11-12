@@ -34,7 +34,7 @@ dictionary HalfOpenInfoDict {
 dictionary HttpConnectionElement {
   DOMString host = "";
   unsigned long port = 0;
-  boolean spdy = false;
+  DOMString httpVersion = "";
   boolean ssl = false;
   sequence<HttpConnInfo> active;
   sequence<HttpConnInfo> idle;
