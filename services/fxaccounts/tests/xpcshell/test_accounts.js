@@ -1600,6 +1600,9 @@ add_task(async function test_getOAuthToken_authErrorRefreshesCertificate() {
 });
 
 add_task(async function test_listAttachedOAuthClients() {
+  const ONE_HOUR = 60 * 60 * 1000;
+  const ONE_DAY = 24 * ONE_HOUR;
+
   let fxa = new MockFxAccounts();
   let alice = getTestUser("alice");
   alice.verified = true;
@@ -1607,29 +1610,14 @@ add_task(async function test_listAttachedOAuthClients() {
   let client = fxa._internal.fxAccountsClient;
   client.attachedClients = async () => {
     return [
-      {
-        clientId: null,
-        deviceId: "deadbeef",
-        sessionTokenId: "deadbeef",
-        name: "Good ol' desktop device",
-        scope: null,
-        lastAccessTime: 1569263031001,
-      },
-      {
-        clientId: null,
-        deviceId: null,
-        sessionTokenId: "deadbeef",
-        name: "Mobile device w/ no device record",
-        scope: null,
-        lastAccessTime: 1569263031001,
-      },
+      // This entry was previously filtered but no longer is!
       {
         clientId: "a2270f727f45f648",
         deviceId: "deadbeef",
         sessionTokenId: null,
         name: "Firefox Preview (no session token)",
         scope: ["profile", "https://identity.mozilla.com/apps/oldsync"],
-        lastAccessTime: 1569263031001,
+        lastAccessTime: Date.now(),
       },
       {
         clientId: "802d56ef2a9af9fa",
@@ -1637,7 +1625,7 @@ add_task(async function test_listAttachedOAuthClients() {
         sessionTokenId: null,
         name: "Firefox Monitor",
         scope: ["profile"],
-        lastAccessTime: 1569263031000,
+        lastAccessTime: Date.now() - ONE_DAY - ONE_HOUR,
       },
       {
         clientId: "1f30e32975ae5112",
@@ -1645,7 +1633,23 @@ add_task(async function test_listAttachedOAuthClients() {
         sessionTokenId: null,
         name: "Firefox Send",
         scope: ["profile", "https://identity.mozilla.com/apps/send"],
-        lastAccessTime: 1569263013000,
+        lastAccessTime: Date.now() - ONE_DAY * 2 - ONE_HOUR,
+      },
+      // One with a future date should be impossible, but having a negative
+      // result here would almost certainly confuse something!
+      {
+        clientId: "future-date",
+        deviceId: null,
+        sessionTokenId: null,
+        name: "Whatever",
+        lastAccessTime: Date.now() + ONE_DAY,
+      },
+      // A missing/null lastAccessTime should end up with a missing lastAccessedDaysAgo
+      {
+        clientId: "missing-date",
+        deviceId: null,
+        sessionTokenId: null,
+        name: "Whatever",
       },
     ];
   };
@@ -1654,14 +1658,24 @@ add_task(async function test_listAttachedOAuthClients() {
   const clients = await fxa.listAttachedOAuthClients();
   Assert.deepEqual(clients, [
     {
+      id: "a2270f727f45f648",
+      lastAccessedDaysAgo: 0,
+    },
+    {
       id: "802d56ef2a9af9fa",
-      name: "Firefox Monitor",
-      lastAccessTime: 1569263031000,
+      lastAccessedDaysAgo: 1,
     },
     {
       id: "1f30e32975ae5112",
-      name: "Firefox Send",
-      lastAccessTime: 1569263013000,
+      lastAccessedDaysAgo: 2,
+    },
+    {
+      id: "future-date",
+      lastAccessedDaysAgo: 0,
+    },
+    {
+      id: "missing-date",
+      lastAccessedDaysAgo: null,
     },
   ]);
 });
