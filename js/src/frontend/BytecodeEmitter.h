@@ -689,8 +689,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitUnary(UnaryNode* unaryNode);
   MOZ_MUST_USE bool emitRightAssociative(ListNode* node);
   MOZ_MUST_USE bool emitLeftAssociative(ListNode* node);
-  MOZ_MUST_USE bool emitNullCoalesce(ListNode* node);
-  MOZ_MUST_USE bool emitLogical(ListNode* node);
+  MOZ_MUST_USE bool emitShortCircuit(ListNode* node);
   MOZ_MUST_USE bool emitSequenceExpr(
       ListNode* node, ValueUsage valueUsage = ValueUsage::WantValue);
 
