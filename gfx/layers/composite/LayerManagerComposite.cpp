@@ -834,10 +834,6 @@ void LayerManagerComposite::UpdateDebugOverlayNativeLayers() {
   bool drawFps = StaticPrefs::layers_acceleration_draw_fps();
 
   if (drawFps) {
-    if (!mGPUStatsLayer) {
-      mGPUStatsLayer = mNativeLayerRoot->CreateLayer();
-    }
-
     GPUStats stats;
     stats.mScreenPixels = mRenderBounds.Area();
     mCompositor->GetFrameStats(&stats);
@@ -846,7 +842,11 @@ void LayerManagerComposite::UpdateDebugOverlayNativeLayers() {
     IntSize size = mTextRenderer->ComputeSurfaceSize(
         text, 600, TextRenderer::FontType::FixedWidth);
 
-    mGPUStatsLayer->SetRect(IntRect(IntPoint(2, 5), size));
+    if (!mGPUStatsLayer || mGPUStatsLayer->GetSize() != size) {
+      mGPUStatsLayer = mNativeLayerRoot->CreateLayer(size, false);
+    }
+
+    mGPUStatsLayer->SetPosition(IntPoint(2, 5));
     RefPtr<DrawTarget> dt =
         mGPUStatsLayer->NextSurfaceAsDrawTarget(BackendType::SKIA);
     mTextRenderer->RenderTextToDrawTarget(dt, text, 600,
@@ -862,17 +862,16 @@ void LayerManagerComposite::UpdateDebugOverlayNativeLayers() {
       // If we have an unused APZ transform on this composite, draw a 20x20 red
       // box in the top-right corner.
       if (!mUnusedTransformWarningLayer) {
-        mUnusedTransformWarningLayer = mNativeLayerRoot->CreateLayer();
-        mUnusedTransformWarningLayer->SetRect(IntRect(0, 0, 20, 20));
-        mUnusedTransformWarningLayer->SetIsOpaque(true);
+        mUnusedTransformWarningLayer =
+            mNativeLayerRoot->CreateLayer(IntSize(20, 20), true);
         RefPtr<DrawTarget> dt =
             mUnusedTransformWarningLayer->NextSurfaceAsDrawTarget(
                 BackendType::SKIA);
         dt->FillRect(Rect(0, 0, 20, 20), ColorPattern(Color(1, 0, 0, 1)));
         mUnusedTransformWarningLayer->NotifySurfaceReady();
       }
-      mUnusedTransformWarningLayer->SetRect(
-          IntRect(mRenderBounds.XMost() - 20, mRenderBounds.Y(), 20, 20));
+      mUnusedTransformWarningLayer->SetPosition(
+          IntPoint(mRenderBounds.XMost() - 20, mRenderBounds.Y()));
       mNativeLayerRoot->AppendLayer(mUnusedTransformWarningLayer);
 
       mUnusedApzTransformWarning = false;
@@ -884,17 +883,16 @@ void LayerManagerComposite::UpdateDebugOverlayNativeLayers() {
       // in the top-right corner, to the left of the unused-apz-transform
       // warning box.
       if (!mDisabledApzWarningLayer) {
-        mDisabledApzWarningLayer = mNativeLayerRoot->CreateLayer();
-        mDisabledApzWarningLayer->SetRect(IntRect(0, 0, 20, 20));
-        mDisabledApzWarningLayer->SetIsOpaque(true);
+        mDisabledApzWarningLayer =
+            mNativeLayerRoot->CreateLayer(IntSize(20, 20), true);
         RefPtr<DrawTarget> dt =
             mDisabledApzWarningLayer->NextSurfaceAsDrawTarget(
                 BackendType::SKIA);
         dt->FillRect(Rect(0, 0, 20, 20), ColorPattern(Color(1, 1, 0, 1)));
         mDisabledApzWarningLayer->NotifySurfaceReady();
       }
-      mDisabledApzWarningLayer->SetRect(
-          IntRect(mRenderBounds.XMost() - 40, mRenderBounds.Y(), 20, 20));
+      mDisabledApzWarningLayer->SetPosition(
+          IntPoint(mRenderBounds.XMost() - 40, mRenderBounds.Y()));
       mNativeLayerRoot->AppendLayer(mDisabledApzWarningLayer);
 
       mDisabledApzWarning = false;
@@ -1008,20 +1006,22 @@ void LayerManagerComposite::PlaceNativeLayer(
     std::deque<RefPtr<NativeLayer>>* aLayersToRecycle,
     IntRegion* aWindowInvalidRegion) {
   RefPtr<NativeLayer> layer;
-  if (aLayersToRecycle->empty()) {
-    layer = mNativeLayerRoot->CreateLayer();
+  if (aLayersToRecycle->empty() ||
+      aLayersToRecycle->front()->GetSize() != aRect.Size() ||
+      aLayersToRecycle->front()->IsOpaque() != aOpaque) {
+    layer = mNativeLayerRoot->CreateLayer(aRect.Size(), aOpaque);
     mNativeLayerRoot->AppendLayer(layer);
+    aWindowInvalidRegion->OrWith(aRect);
   } else {
     layer = aLayersToRecycle->front();
     aLayersToRecycle->pop_front();
+    IntRect oldRect = layer->GetRect();
+    if (!aRect.IsEqualInterior(oldRect)) {
+      aWindowInvalidRegion->OrWith(oldRect);
+      aWindowInvalidRegion->OrWith(aRect);
+    }
   }
-  IntRect oldRect = layer->GetRect();
-  if (!aRect.IsEqualInterior(oldRect)) {
-    aWindowInvalidRegion->OrWith(oldRect);
-    aWindowInvalidRegion->OrWith(aRect);
-  }
-  layer->SetRect(aRect);
-  layer->SetIsOpaque(aOpaque);
+  layer->SetPosition(aRect.TopLeft());
   mNativeLayers.push_back(layer);
 }
 
