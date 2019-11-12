@@ -79,7 +79,13 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
           "dest": "tp6",
           "default": False,
           "help": "Runs tests with the tp6 pageset.",
-          }]
+          }],
+        [["--enable-fission"],
+         {"action": "store_true",
+          "dest": "enable_fission",
+          "default": False,
+          "help": "Enable Fission (site isolation) in Gecko.",
+          }],
 
     ] + testing_config_options + copy.deepcopy(code_coverage_config_options)
 

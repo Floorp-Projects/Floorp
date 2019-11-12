@@ -87,7 +87,11 @@ class TestMemoryUsage(AwsyTestCase):
         self._urls = urls
 
         # Indicate that we're using tp6 in the perf data.
+        # ENABLE_FISSION is accessed through inheritance:
+        # MarionetteTestCase :: AwsyTestCase :: TestMemoryUsage
         self._extra_opts = ["tp6"]
+        if TestMemoryUsage.ENABLE_FISSION:
+            self._extra_opts.append("fission-enabled")
 
         # Now we setup the mitm proxy with our tp6 pageset.
         tp6_pageset_manifest = os.path.join(AWSY_PATH, 'tp6-pageset.manifest')

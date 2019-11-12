@@ -286,6 +286,7 @@ class CommonTestCase(unittest.TestCase):
 class MarionetteTestCase(CommonTestCase):
 
     match_re = re.compile(r"test_(.*)\.py$")
+    ENABLE_FISSION = False
 
     def __init__(self, marionette_weakref, fixtures, methodName='runTest',
                  filepath='', **kwargs):
@@ -294,6 +295,18 @@ class MarionetteTestCase(CommonTestCase):
 
         super(MarionetteTestCase, self).__init__(
             methodName, marionette_weakref=marionette_weakref, fixtures=fixtures, **kwargs)
+
+        fission_in_flags = kwargs.get('enable_fission', False)
+        fission_in_prefs_args = False
+        if (kwargs.get('prefs_args') is not None) and \
+                ('fission.autostart=true' in kwargs.get('prefs_args') or
+                 '"fission.autostart=true"' in kwargs.get('prefs_args')):
+            fission_in_prefs_args = True
+
+        # For 'mach awsy-test --tp6' fission is enabled through:
+        # "--enable-fission" flag on local runs
+        # or "prefs_args" on treeherder
+        MarionetteTestCase.ENABLE_FISSION = fission_in_flags or fission_in_prefs_args
 
     @classmethod
     def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette,
