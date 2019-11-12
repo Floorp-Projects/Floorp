@@ -17,7 +17,7 @@ add_task(async () => {
   Services.profiler.StartProfiler(entries, interval, features, threads);
 
   // Call the following to get a nice stack in the profiler:
-  // functionA -> functionB -> functionC -> captureAtLeastOneJsSample
+  // functionA -> functionB -> functionC -> doAtLeastOnePeriodicSample
   const sampleIndex = await functionA();
 
   const profile = await Services.profiler.getProfileDataAsync();
@@ -59,5 +59,5 @@ function functionB() {
 }
 
 async function functionC() {
-  return captureAtLeastOneJsSample();
+  return doAtLeastOnePeriodicSample();
 }

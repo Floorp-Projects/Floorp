@@ -113,7 +113,7 @@ async function startProfilerAndgetFileIOPayloads(features, filename) {
 
   const profile = await Services.profiler.getProfileDataAsync();
   Services.profiler.StopProfiler();
-  return getPayloadsOfTypeFromAllThreads(profile, "FileIO");
+  return getAllPayloadsOfType(profile, "FileIO");
 }
 
 /**
