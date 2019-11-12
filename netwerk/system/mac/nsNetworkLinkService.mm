@@ -488,10 +488,20 @@ static bool ipv4NetworkId(SHA1Sum* aSHA1) {
       inet_ntop(AF_INET, &sockin->sin_addr.s_addr, ip, sizeof(ip) - 1);
       char mac[18];
 
+      // TODO: cache the arp table instead of multiple system call.
       if (scanArp(ip, mac, sizeof(mac))) {
         hash.AppendElement(nsCString(mac));
       } else {
-        // TODO: fail over to ip and interface name
+        // Can't find a real MAC address. This might be a VPN gateway.
+        char buf[IFNAMSIZ] = {0};
+        char* ifName = if_indextoname(rtm->rtm_index, buf);
+        if (!ifName) {
+          LOG(("ipv4NetworkId: AF_INET if_indextoname failed"));
+          continue;
+        }
+
+        hash.AppendElement(nsCString(ifName));
+        hash.AppendElement(nsCString(ip));
       }
     } else if (gateway->sa_family == AF_LINK) {
       char buf[64];
@@ -499,14 +509,27 @@ static bool ipv4NetworkId(SHA1Sum* aSHA1) {
       if (getMac(sockdl, buf, sizeof(buf))) {
         hash.AppendElement(nsCString(buf));
       } else {
-        // TODO: fail over to interface name
+        char buf[IFNAMSIZ] = {0};
+        char* ifName = if_indextoname(rtm->rtm_index, buf);
+        if (!ifName) {
+          LOG(("ipv4NetworkId: AF_LINK if_indextoname failed"));
+          continue;
+        }
+
+        hash.AppendElement(nsCString(ifName));
       }
     }
   }
 
+  // We didn't get any valid hash key to generate network ID.
+  if (hash.IsEmpty()) {
+    LOG(("ipv4NetworkId: No valid hash key"));
+    return false;
+  }
+
   hash.Sort();
   for (uint32_t i = 0; i < hash.Length(); ++i) {
-    LOG(("Hashing string for network id: %s", hash[i].get()));
+    LOG(("ipv4NetworkId: Hashing string for network id: %s", hash[i].get()));
     aSHA1->update(hash[i].get(), hash[i].Length());
   }
 
