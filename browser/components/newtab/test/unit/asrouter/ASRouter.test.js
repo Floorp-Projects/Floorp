@@ -1094,6 +1094,31 @@ describe("ASRouter", () => {
         context: trigger.triggerContext,
       });
     });
+    it("should filter out messages without a trigger (or different) when a triggerId is defined", async () => {
+      const trigger = { triggerId: "foo" };
+      const message1 = {
+        id: "1",
+        campaign: "foocampaign",
+        trigger: { id: "foo" },
+      };
+      const message2 = {
+        id: "2",
+        campaign: "foocampaign",
+        trigger: { id: "bar" },
+      };
+      const message3 = {
+        id: "3",
+        campaign: "bazcampaign",
+      };
+      await Router.setState({ messages: [message2, message1, message3] });
+      // Just return the first message provided as arg
+      sandbox.stub(Router, "_findMessage").callsFake(args => args);
+
+      const result = Router.handleMessageRequest(trigger);
+
+      assert.lengthOf(result, 1);
+      assert.deepEqual(result[0], message1);
+    });
   });
 
   describe("#uninit", () => {
