@@ -35,6 +35,7 @@ httpServer.registerPathHandler("/test.js", function(_, response) {
 const TEST_URI = `http://localhost:${httpServer.identity.primaryPort}/`;
 
 add_task(async function() {
+  await pushPref("javascript.options.asyncstack", true);
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Call the log function defined in the test page");
