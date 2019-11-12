@@ -14,7 +14,6 @@ add_task(async function test_execute() {
   ];
 
   let notcount_visited_URIs = [
-    "http://www.test-embed.com/",
     "http://www.test-download.com/",
     "http://www.test-framed.com/",
     "http://www.test-reload.com/",
@@ -28,7 +27,6 @@ add_task(async function test_execute() {
       uri: uri("http://www.test-bookmark.com/"),
       transition: TRANSITION_BOOKMARK,
     },
-    { uri: uri("http://www.test-embed.com/"), transition: TRANSITION_EMBED },
     {
       uri: uri("http://www.test-framed.com/"),
       transition: TRANSITION_FRAMED_LINK,
