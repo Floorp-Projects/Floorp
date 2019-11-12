@@ -9,7 +9,6 @@ TEST_DIRS += [
 ]
 
 DIRS += [
-    'hyphenation/hyphen',
     'hyphenation/glue',
     'locale',
     'locales',
