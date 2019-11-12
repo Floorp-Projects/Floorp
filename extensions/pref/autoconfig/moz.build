@@ -7,3 +7,5 @@
 DIRS += ['src']
 
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+
+MARIONETTE_UNIT_MANIFESTS += ['test/marionette/manifest.ini']
