@@ -46,7 +46,7 @@ use crate::rule_tree::StrongRuleNode;
 use crate::selector_parser::PseudoElement;
 use servo_arc::{Arc, RawOffsetArc, UniqueArc};
 use std::marker::PhantomData;
-use std::mem::{forget, MaybeUninit};
+use std::mem::{forget, zeroed, ManuallyDrop};
 use std::{cmp, ops, ptr};
 use crate::values::{self, CustomIdent, Either, KeyframesName, None_};
 use crate::values::computed::{Percentage, TransitionProperty};
@@ -218,7 +218,7 @@ impl ComputedValuesInner {
         unsafe {
             let mut arc = UniqueArc::<ComputedValues>::new_uninit();
             bindings::Gecko_ComputedStyle_Init(
-                arc.as_mut_ptr() as *mut _,
+                &mut (*arc.as_mut_ptr()).0,
                 &self,
                 pseudo_ty,
             );
@@ -621,14 +621,14 @@ def set_gecko_property(ffi_name, expr):
 impl ${style_struct.gecko_struct_name} {
     #[allow(dead_code, unused_variables)]
     pub fn default(document: &structs::Document) -> Arc<Self> {
+        let mut result = Arc::new(${style_struct.gecko_struct_name} { gecko: ManuallyDrop::new(unsafe { zeroed() }) });
         unsafe {
-            let mut result = UniqueArc::<Self>::new_uninit();
             Gecko_Construct_Default_${style_struct.gecko_ffi_name}(
-                result.as_mut_ptr() as *mut _,
+                &mut *Arc::get_mut(&mut result).unwrap().gecko,
                 document,
             );
-            UniqueArc::assume_init(result).shareable()
         }
+        result
     }
 }
 impl Drop for ${style_struct.gecko_struct_name} {
@@ -641,9 +641,9 @@ impl Drop for ${style_struct.gecko_struct_name} {
 impl Clone for ${style_struct.gecko_struct_name} {
     fn clone(&self) -> Self {
         unsafe {
-            let mut result = MaybeUninit::<Self>::uninit();
-            Gecko_CopyConstruct_${style_struct.gecko_ffi_name}(result.as_mut_ptr() as *mut _, &*self.gecko);
-            result.assume_init()
+            let mut result = ${style_struct.gecko_struct_name} { gecko: ManuallyDrop::new(zeroed()) };
+            Gecko_CopyConstruct_${style_struct.gecko_ffi_name}(&mut *result.gecko, &*self.gecko);
+            result
         }
     }
 }
