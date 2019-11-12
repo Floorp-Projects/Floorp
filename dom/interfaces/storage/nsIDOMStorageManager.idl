@@ -10,6 +10,16 @@ interface mozIDOMWindow;
 
 webidl Storage;
 
+%{C++
+namespace mozilla {
+namespace dom {
+class SessionStorageCache;
+}  // namespace dom
+}  // namespace mozilla
+%}
+
+native SessionStorageCacheAddRefed(RefPtr<mozilla::dom::SessionStorageCache>);
+
 /**
  * General purpose interface that has two implementations, for localStorage
  * with "@mozilla.org/dom/localStorage-manager;1".
@@ -104,4 +114,19 @@ interface nsIDOMStorageManager : nsISupports
    */
   bool checkStorage(in nsIPrincipal aPrincipal,
                     in Storage aStorage);
+};
+
+[uuid(b3bfbbd0-e738-4cbf-b0f0-b65f25265e82)]
+interface nsIDOMSessionStorageManager : nsIDOMStorageManager {
+  /**
+   * Returns a SessionStorageCache object for the principal scope.
+   *
+   * @param aPrincipal
+   *    Principal to bound storage to.
+   * @param aStoragePrincipal
+   *    StoragePrincipal to bound storage to.
+   */
+   [noscript]
+   SessionStorageCacheAddRefed getSessionStorageCache(in nsIPrincipal aPrincipal,
+                                                      in nsIPrincipal aStoragePrincipal);
 };
