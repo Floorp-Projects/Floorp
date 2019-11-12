@@ -8,6 +8,9 @@ var EXPORTED_SYMBOLS = ["NetErrorChild"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { ChildMessagePort } = ChromeUtils.import(
+  "resource://gre/modules/remotepagemanager/RemotePageManagerChild.jsm"
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -17,16 +20,25 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 class NetErrorChild extends JSWindowActorChild {
+  actorCreated() {
+    this.messagePort = new ChildMessagePort(this, this.contentWindow);
+  }
+
   getSerializedSecurityInfo(docShell) {
     let securityInfo =
       docShell.failedChannel && docShell.failedChannel.securityInfo;
     if (!securityInfo) {
       return "";
     }
-    securityInfo.QueryInterface(Ci.nsITransportSecurityInfo)
-                .QueryInterface(Ci.nsISerializable);
+    securityInfo
+      .QueryInterface(Ci.nsITransportSecurityInfo)
+      .QueryInterface(Ci.nsISerializable);
 
     return gSerializationHelper.serializeToString(securityInfo);
+  }
+
+  receiveMessage(aMessage) {
+    this.messagePort.handleMessage(aMessage);
   }
 
   handleEvent(aEvent) {
