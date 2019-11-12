@@ -426,6 +426,7 @@ static int routingTable(char* gw, size_t aGwLen) {
   mib[3] = 0;
   mib[4] = NET_RT_DUMP;
   mib[5] = 0;
+
   if (sysctl(mib, 6, nullptr, &needed, nullptr, 0) < 0) {
     return 1;
   }
@@ -434,6 +435,66 @@ static int routingTable(char* gw, size_t aGwLen) {
 
   if (sysctl(mib, 6, &buf[0], &needed, nullptr, 0) < 0) {
     return 3;
+  }
+
+  char ip[INET_ADDRSTRLEN];
+
+  char* lim = &buf[0] + needed;
+
+  // `next + 1 < lim` ensures we have valid `rtm->rtm_msglen` which is an
+  // unsigned short at the beginning of `rt_msghdr`.
+  for (char* next = &buf[0]; next + 1 < lim; next += rtm->rtm_msglen) {
+    rtm = reinterpret_cast<struct rt_msghdr*>(next);
+
+    if (next + rtm->rtm_msglen > lim) {
+      LOG(("Rt msg is truncated..."));
+      break;
+    }
+
+    // Ignore the routing table message without destination/gateway sockaddr.
+    // Destination address is needed to check if the gateway is default or
+    // overwritten by VPN. If yes, hash the mac address or IP/interface name.
+    if ((rtm->rtm_addrs & (RTA_DST | RTA_GATEWAY)) != (RTA_DST | RTA_GATEWAY)) {
+      continue;
+    }
+
+    sa = reinterpret_cast<struct sockaddr*>(rtm + 1);
+
+    struct sockaddr* destination =
+        reinterpret_cast<struct sockaddr*>((char*)sa + RTAX_DST * SA_SIZE(sa));
+    if (!destination || destination->sa_family != AF_INET) {
+      continue;
+    }
+
+    sockin = reinterpret_cast<struct sockaddr_in*>(destination);
+    inet_ntop(AF_INET, &sockin->sin_addr.s_addr, ip, sizeof(ip) - 1);
+
+    // TODO: only filtered non-predefined destination
+    // Ignore if destination is non-predefined.
+    if (strcmp(ip, "0.0.0.0")) {
+      continue;
+    }
+
+    struct sockaddr* gateway =
+        reinterpret_cast<struct sockaddr*>((char*)sa + RTAX_GATEWAY * SA_SIZE(sa));
+
+    if (!gateway) {
+      continue;
+    }
+    if (gateway->sa_family == AF_INET) {
+      sockin = reinterpret_cast<struct sockaddr_in*>(gateway);
+      inet_ntop(AF_INET, &sockin->sin_addr.s_addr, ip, sizeof(ip) - 1);
+      char mac[18];
+      if (scanArp(ip, mac, sizeof(mac))) {
+        // TODO: use the mac to calculate network id
+      }
+    } else if (gateway->sa_family == AF_LINK) {
+      char buf[64];
+      struct sockaddr_dl* sockdl = reinterpret_cast<struct sockaddr_dl*>(gateway);
+      if (getMac(sockdl, buf, sizeof(buf))) {
+        // TODO: use the mac to calculate network id
+      }
+    }
   }
 
   // There's no need to iterate over the routing table
