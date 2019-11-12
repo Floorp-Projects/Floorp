@@ -435,40 +435,37 @@ class FxAccounts {
   }
 
   /**
-   * Returns an array listing all the OAuth clients
-   * connected to the authenticated user's account.
-   * Devices and web sessions are not included.
+   * Returns an array listing all the OAuth clients connected to the
+   * authenticated user's account. This includes browsers and web sessions - no
+   * filtering is done of the set returned by the FxA server.
    *
    * @typedef {Object} AttachedClient
    * @property {String} id - OAuth `client_id` of the client.
-   * @property {String} name - Client name. e.g. Firefox Monitor.
-   * @property {Number} lastAccessTime - Last access time in milliseconds.
+   * @property {Number} lastAccessedDaysAgo - How many days ago the client last
+   *    accessed the FxA server APIs.
    *
    * @returns {Array.<AttachedClient>} A list of attached clients.
    */
   async listAttachedOAuthClients() {
+    // We expose last accessed times in 'days ago'
+    const ONE_DAY = 24 * 60 * 60 * 1000;
+
     return this._withVerifiedAccountState(async state => {
       const { sessionToken } = await state.getUserAccountData(["sessionToken"]);
       const attachedClients = await this._internal.fxAccountsClient.attachedClients(
         sessionToken
       );
-      return attachedClients.reduce((oauthClients, client) => {
-        // This heuristic aims to keep tokens for "associated services"
-        // while throwing away the "browser" ones.
-        if (
-          client.clientId &&
-          !client.deviceId &&
-          !client.sessionTokenId &&
-          client.scope
-        ) {
-          oauthClients.push({
-            id: client.clientId,
-            name: client.name,
-            lastAccessTime: client.lastAccessTime,
-          });
-        }
-        return oauthClients;
-      }, []);
+      // We should use the server timestamp here - bug 1595635
+      let now = Date.now();
+      return attachedClients.map(client => {
+        const daysAgo = client.lastAccessTime
+          ? Math.max(Math.floor((now - client.lastAccessTime) / ONE_DAY), 0)
+          : null;
+        return {
+          id: client.clientId,
+          lastAccessedDaysAgo: daysAgo,
+        };
+      });
     });
   }
 
