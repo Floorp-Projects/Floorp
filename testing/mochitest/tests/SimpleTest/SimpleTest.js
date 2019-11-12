@@ -285,8 +285,8 @@ SimpleTest.record = function (condition, name, diag, stack) {
         SimpleTest.num_failed++;
         test.result = !test.result;
       }
-      var successInfo = {status:"FAIL", expected:"FAIL", message:"TEST-KNOWN-FAIL"};
-      var failureInfo = {status:"PASS", expected:"FAIL", message:"TEST-UNEXPECTED-PASS"};
+      var successInfo = {status:"PASS", expected:"PASS", message:"TEST-PASS"};
+      var failureInfo = {status:"FAIL", expected:"FAIL", message:"TEST-KNOWN-FAIL"};
     } else if (!test.result && usesFailurePatterns()) {
       if (recordIfMatchesFailurePattern(name, diag)) {
         test.result = true;
