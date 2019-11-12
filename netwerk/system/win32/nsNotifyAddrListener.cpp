@@ -224,6 +224,7 @@ void nsNotifyAddrListener::calculateNetworkId(void) {
     mNetworkId = output;
     Telemetry::Accumulate(Telemetry::NETWORK_ID2, 1);
     LOG(("calculateNetworkId: new NetworkID: %s", output.get()));
+    SendEvent(NS_NETWORK_LINK_DATA_NETWORKID_CHANGED);
   } else {
     Telemetry::Accumulate(Telemetry::NETWORK_ID2, 2);
     LOG(("calculateNetworkId: same NetworkID: %s", output.get()));
