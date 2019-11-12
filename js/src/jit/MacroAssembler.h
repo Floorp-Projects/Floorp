@@ -3333,15 +3333,15 @@ static inline MIRType ToMIRType(MIRType t) { return t; }
 static inline MIRType ToMIRType(ABIArgType argType) {
   switch (argType) {
     case ArgType_General:
-      return MIRType::Pointer;
-    case ArgType_Float64:
+      return MIRType::Int32;
+    case ArgType_Double:
       return MIRType::Double;
     case ArgType_Float32:
       return MIRType::Float32;
-    case ArgType_Int32:
-      return MIRType::Int32;
     case ArgType_Int64:
       return MIRType::Int64;
+    case ArgType_Pointer:
+      return MIRType::Pointer;
     default:
       break;
   }
