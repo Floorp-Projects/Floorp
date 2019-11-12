@@ -443,15 +443,4 @@ TEST(TArray, RemoveElementsAt_ByIterator)
   ASSERT_EQ(expected, array);
 }
 
-TEST(TArray, MakeBackInserter)
-{
-  const std::vector<int> src{1, 2, 3, 4};
-  nsTArray<int> dst;
-
-  std::copy(src.begin(), src.end(), MakeBackInserter(dst));
-
-  const nsTArray<int> expected{1, 2, 3, 4};
-  ASSERT_EQ(expected, dst);
-}
-
 }  // namespace TestTArray
