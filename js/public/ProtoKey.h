@@ -48,14 +48,7 @@
 #  define IF_TYPEDOBJ(REAL, IMAGINARY) IMAGINARY
 #endif
 
-#ifdef ENABLE_SHARED_ARRAY_BUFFER
-#  define IF_SAB(REAL, IMAGINARY) REAL
-#else
-#  define IF_SAB(REAL, IMAGINARY) IMAGINARY
-#endif
-
-#define JS_FOR_PROTOTYPES_(REAL, IMAGINARY, REAL_IF_INTL, REAL_IF_BDATA,     \
-                           REAL_IF_SAB)                                      \
+#define JS_FOR_PROTOTYPES_(REAL, IMAGINARY, REAL_IF_INTL, REAL_IF_BDATA)     \
   IMAGINARY(Null, InitNullClass, dummy)                                      \
   REAL(Object, InitViaClassSpec, OCLASP(Plain))                              \
   REAL(Function, InitViaClassSpec, &JSFunction::class_)                      \
@@ -147,7 +140,7 @@
 
 #define JS_FOR_PROTOTYPES(REAL, IMAGINARY)                      \
   JS_FOR_PROTOTYPES_(REAL, IMAGINARY, IF_INTL(REAL, IMAGINARY), \
-                     IF_TYPEDOBJ(REAL, IMAGINARY), IF_SAB(REAL, IMAGINARY))
+                     IF_TYPEDOBJ(REAL, IMAGINARY))
 
 #define JS_FOR_EACH_PROTOTYPE(MACRO) JS_FOR_PROTOTYPES(MACRO, MACRO)
 
