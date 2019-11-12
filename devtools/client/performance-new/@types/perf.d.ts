@@ -181,7 +181,7 @@ export interface RecordingStateFromPreferences {
   threads: string[];
   objdirs: string[];
   // The duration is currently not wired up to the UI yet. See Bug 1587165.
-  duration: number;
+  duration?: number;
 }
 
 /**
@@ -201,6 +201,11 @@ export interface InitializedValues {
   isPopup: boolean;
   // The popup and devtools panel use different codepaths for getting symbol tables.
   getSymbolTableGetter: (profile: object) => GetSymbolTableCallback;
+  // The list of profiler features that the current target supports. Note that
+  // this value is only null to support older Firefox browsers that are targeted
+  // by the actor system. This compatibility can be required when the ESR version
+  // is running at least Firefox 72.
+  supportedFeatures: string[] | null
 }
 
 /**
@@ -249,7 +254,18 @@ export type Action =
       isPopup: boolean;
       recordingSettingsFromPreferences: RecordingStateFromPreferences;
       getSymbolTableGetter: (profile: object) => GetSymbolTableCallback;
+      supportedFeatures: string[] | null;
     };
+
+export interface InitializeStoreValues {
+  perfFront: PerfFront;
+  receiveProfile: ReceiveProfile;
+  setRecordingPreferences: SetRecordingPreferences;
+  isPopup: boolean;
+  recordingPreferences: RecordingStateFromPreferences;
+  supportedFeatures: string[] | null;
+  getSymbolTableGetter: (profile: object) => GetSymbolTableCallback;
+}
 
 export type PopupBackgroundFeatures = { [feature: string]: boolean };
 
@@ -331,6 +347,6 @@ export interface PerformancePref {
  * This interface represents the global values that are potentially on the window
  * object in the popup. Coerce the "window" object into this interface.
  */
-export interface PopupWindow {
+export interface PopupWindow extends Window {
   gResizePopup?: (height: number) => void;
 }

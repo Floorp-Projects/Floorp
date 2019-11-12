@@ -2,12 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // @ts-check
-"use strict";
-
 /**
- * @typedef {import("../@types/perf").PerfFront} PerfFront
- * @typedef {import("../@types/perf").PreferenceFront} PreferenceFront
+ * @typedef {import("../@types/perf").InitializeStoreValues} InitializeStoreValues
+ * @typedef {import("../@types/perf").PopupWindow} PopupWindow
  */
+"use strict";
 
 /**
  * This file initializes the profiler popup UI. It is in charge of initializing
@@ -90,6 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
 async function gInit() {
   const store = createStore(reducers);
   const perfFrontInterface = new ActorReadyGeckoProfilerInterface();
+  const supportedFeatures = await perfFrontInterface.getSupportedFeatures();
 
   // Do some initialization, especially with privileged things that are part of the
   // the browser.
@@ -97,6 +97,7 @@ async function gInit() {
     actions.initializeStore({
       perfFront: perfFrontInterface,
       receiveProfile,
+      supportedFeatures,
       // Get the preferences from the current browser
       recordingPreferences: getRecordingPreferencesFromBrowser(),
       // In the popup, the preferences are stored directly on the current browser.
@@ -124,7 +125,11 @@ async function gInit() {
 
 function resizeWindow() {
   window.requestAnimationFrame(() => {
-    const { gResizePopup } = /** @type {any} */ (window);
+    // Coerce the window object into the PopupWindow interface.
+    /** @type {any} */
+    const anyWindow = window;
+    /** @type {PopupWindow} */
+    const { gResizePopup } = anyWindow;
     if (gResizePopup) {
       gResizePopup(document.body.clientHeight);
     }

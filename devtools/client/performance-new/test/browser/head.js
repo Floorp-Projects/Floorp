@@ -115,13 +115,21 @@ async function getElementFromPopupByText(text) {
 function maybeGetElementFromPopupByText(text) {
   info(`Immediately trying to find the element with the text "${text}".`);
   const xpath = `//*[contains(text(), '${text}')]`;
+  return getElementByXPath(getIframeDocument(), xpath);
+}
+
+/**
+ * Returns the popup's document.
+ * @returns {Document}
+ */
+function getIframeDocument() {
   const iframe = document.getElementById("PanelUI-profilerIframe");
   if (!iframe) {
     throw new Error(
       "This function assumes the profiler iframe is already present."
     );
   }
-  return getElementByXPath(iframe.contentDocument, xpath);
+  return iframe.contentDocument;
 }
 
 /**
