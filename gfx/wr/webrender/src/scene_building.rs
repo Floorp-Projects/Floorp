@@ -1888,7 +1888,11 @@ impl<'a> SceneBuilder<'a> {
                         // are scrollbars. Once this lands, we can simplify this logic considerably
                         // (and add a separate picture cache slice / OS layer for scroll bars).
                         if parent_sc.pipeline_id != stacking_context.pipeline_id && self.iframe_depth == 1 {
-                            self.content_slice_count = stacking_context.init_picture_caching(&self.clip_scroll_tree);
+                            self.content_slice_count = stacking_context.init_picture_caching(
+                                &self.clip_scroll_tree,
+                                &self.clip_store,
+                                &self.interners,
+                            );
 
                             // Mark that a user supplied tile cache was specified.
                             self.picture_caching_initialized = true;
@@ -1916,7 +1920,11 @@ impl<'a> SceneBuilder<'a> {
             // on the root stacking context. This can happen in Gecko when the parent process
             // provides the content display list (e.g. about:support, about:config etc).
             if !self.picture_caching_initialized {
-                self.content_slice_count = stacking_context.init_picture_caching(&self.clip_scroll_tree);
+                self.content_slice_count = stacking_context.init_picture_caching(
+                    &self.clip_scroll_tree,
+                    &self.clip_store,
+                    &self.interners,
+                );
                 self.picture_caching_initialized = true;
             }
 
@@ -3573,6 +3581,8 @@ impl FlattenedStackingContext {
     fn init_picture_caching(
         &mut self,
         clip_scroll_tree: &ClipScrollTree,
+        clip_store: &ClipStore,
+        interners: &Interners,
     ) -> usize {
         struct SliceInfo {
             cluster_index: usize,
@@ -3590,12 +3600,50 @@ impl FlattenedStackingContext {
 
             // We want to create a slice in the following conditions:
             // (1) This cluster is a scrollbar
-            // (2) This cluster begins a scroll root different from the current
+            // (2) Certain conditions when the scroll root changes (see below)
             // (3) No slice exists yet
             let create_new_slice =
                 cluster.flags.contains(ClusterFlags::SCROLLBAR_CONTAINER) ||
                 slices.last().map(|slice| {
-                    scroll_root != slice.scroll_root
+                    match (slice.scroll_root, scroll_root) {
+                        (ROOT_SPATIAL_NODE_INDEX, ROOT_SPATIAL_NODE_INDEX) => {
+                            // Both current slice and this cluster are fixed position, no need to cut
+                            false
+                        }
+                        (ROOT_SPATIAL_NODE_INDEX, _) => {
+                            // A real scroll root is being established, so create a cache slice
+                            true
+                        }
+                        (_, ROOT_SPATIAL_NODE_INDEX) => {
+                            // A fixed position slice is encountered within a scroll root. Only create
+                            // a slice in this case if all the clips referenced by this cluster are also
+                            // fixed position. There's no real point in creating slices for these cases,
+                            // since we'll have to rasterize them as the scrolling clip moves anyway. It
+                            // also allows us to retain subpixel AA in these cases. For these types of
+                            // slices, the intra-slice dirty rect handling typically works quite well
+                            // (a common case is parallax scrolling effects).
+                            for prim_instance in &cluster.prim_instances {
+                                let mut current_clip_chain_id = prim_instance.clip_chain_id;
+
+                                while current_clip_chain_id != ClipChainId::NONE {
+                                    let clip_chain_node = &clip_store
+                                        .clip_chain_nodes[current_clip_chain_id.0 as usize];
+                                    let clip_node_data = &interners.clip[clip_chain_node.handle];
+                                    let clip_scroll_root = clip_scroll_tree.find_scroll_root(clip_node_data.spatial_node_index);
+                                    if clip_scroll_root != ROOT_SPATIAL_NODE_INDEX {
+                                        return false;
+                                    }
+                                    current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
+                                }
+                            }
+
+                            true
+                        }
+                        (curr_scroll_root, scroll_root) => {
+                            // Two scrolling roots - only need a new slice if they differ
+                            curr_scroll_root != scroll_root
+                        }
+                    }
                 }).unwrap_or(true);
 
             // Create a new slice if required
