@@ -69,50 +69,69 @@ class TrackerBuckets {
             val loadedMap =
                 EnumMap<TrackingProtectionCategory, List<String>>(TrackingProtectionCategory::class.java)
             for (item in list) {
-                when {
-                    // Blocked categories
-                    item.cookiesHasBeenBlocked -> {
-                        blockedMap[CROSS_SITE_TRACKING_COOKIES] =
-                            blockedMap[CROSS_SITE_TRACKING_COOKIES].orEmpty() + item.url.tryGetHostFromUrl()
-                    }
-                    CRYPTOMINING in item.blockedCategories -> {
-                        blockedMap[CRYPTOMINERS] = blockedMap[CRYPTOMINERS].orEmpty() +
-                                item.url.tryGetHostFromUrl()
-                    }
-                    FINGERPRINTING in item.blockedCategories -> {
-                        blockedMap[FINGERPRINTERS] = blockedMap[FINGERPRINTERS].orEmpty() +
-                                item.url.tryGetHostFromUrl()
-                    }
-                    MOZILLA_SOCIAL in item.blockedCategories -> {
-                        blockedMap[SOCIAL_MEDIA_TRACKERS] =
-                            blockedMap[SOCIAL_MEDIA_TRACKERS].orEmpty() +
-                                    item.url.tryGetHostFromUrl()
-                    }
-                    TrackingCategory.SCRIPTS_AND_SUB_RESOURCES in item.blockedCategories -> {
-                        blockedMap[TRACKING_CONTENT] = blockedMap[TRACKING_CONTENT].orEmpty() +
-                                item.url.tryGetHostFromUrl()
-                    }
-                    // Loaded categories
-                    CRYPTOMINING in item.loadedCategories -> {
-                        loadedMap[CRYPTOMINERS] = loadedMap[CRYPTOMINERS].orEmpty() +
-                                item.url.tryGetHostFromUrl()
-                    }
-                    FINGERPRINTING in item.loadedCategories -> {
-                        loadedMap[FINGERPRINTERS] = loadedMap[FINGERPRINTERS].orEmpty() +
-                                item.url.tryGetHostFromUrl()
-                    }
-                    MOZILLA_SOCIAL in item.loadedCategories -> {
-                        loadedMap[SOCIAL_MEDIA_TRACKERS] =
-                            loadedMap[SOCIAL_MEDIA_TRACKERS].orEmpty() +
-                                    item.url.tryGetHostFromUrl()
-                    }
-                    TrackingCategory.SCRIPTS_AND_SUB_RESOURCES in item.loadedCategories -> {
-                        loadedMap[TRACKING_CONTENT] = loadedMap[TRACKING_CONTENT].orEmpty() +
-                                item.url.tryGetHostFromUrl()
-                    }
+
+                if (item.cookiesHasBeenBlocked) {
+                    blockedMap[CROSS_SITE_TRACKING_COOKIES] =
+                        blockedMap[CROSS_SITE_TRACKING_COOKIES].orEmpty() + item.url.tryGetHostFromUrl()
                 }
+
+                // Blocked categories
+                bucketBlockedCategories(item, blockedMap)
+
+                // Loaded categories
+                bucketLoadedCategories(item, loadedMap)
             }
             return BucketedTrackerLog(blockedMap, loadedMap)
+        }
+
+        private fun bucketLoadedCategories(
+            item: TrackerLog,
+            loadedMap: EnumMap<TrackingProtectionCategory, List<String>>
+        ) {
+            item.loadedCategories.forEach { category ->
+                if (CRYPTOMINING == category) {
+                    loadedMap[CRYPTOMINERS] = loadedMap[CRYPTOMINERS].orEmpty() +
+                            item.url.tryGetHostFromUrl()
+                }
+                if (FINGERPRINTING == category) {
+                    loadedMap[FINGERPRINTERS] = loadedMap[FINGERPRINTERS].orEmpty() +
+                            item.url.tryGetHostFromUrl()
+                }
+                if (MOZILLA_SOCIAL == category) {
+                    loadedMap[SOCIAL_MEDIA_TRACKERS] =
+                        loadedMap[SOCIAL_MEDIA_TRACKERS].orEmpty() +
+                                item.url.tryGetHostFromUrl()
+                }
+                if (TrackingCategory.SCRIPTS_AND_SUB_RESOURCES == category) {
+                    loadedMap[TRACKING_CONTENT] = loadedMap[TRACKING_CONTENT].orEmpty() +
+                            item.url.tryGetHostFromUrl()
+                }
+            }
+        }
+
+        private fun bucketBlockedCategories(
+            item: TrackerLog,
+            blockedMap: EnumMap<TrackingProtectionCategory, List<String>>
+        ) {
+            item.blockedCategories.forEach { category ->
+                if (CRYPTOMINING == category) {
+                    blockedMap[CRYPTOMINERS] = blockedMap[CRYPTOMINERS].orEmpty() +
+                            item.url.tryGetHostFromUrl()
+                }
+                if (FINGERPRINTING == category) {
+                    blockedMap[FINGERPRINTERS] = blockedMap[FINGERPRINTERS].orEmpty() +
+                            item.url.tryGetHostFromUrl()
+                }
+                if (MOZILLA_SOCIAL == category) {
+                    blockedMap[SOCIAL_MEDIA_TRACKERS] =
+                        blockedMap[SOCIAL_MEDIA_TRACKERS].orEmpty() +
+                                item.url.tryGetHostFromUrl()
+                }
+                if (TrackingCategory.SCRIPTS_AND_SUB_RESOURCES == category) {
+                    blockedMap[TRACKING_CONTENT] = blockedMap[TRACKING_CONTENT].orEmpty() +
+                            item.url.tryGetHostFromUrl()
+                }
+            }
         }
     }
 }

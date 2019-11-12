@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.trackingprotection
 
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory.CRYPTOMINING
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory.FINGERPRINTING
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory.MOZILLA_SOCIAL
 import mozilla.components.concept.engine.content.blocking.TrackerLog
@@ -13,6 +15,7 @@ import org.junit.Test
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CRYPTOMINERS
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.FINGERPRINTERS
 
+private typealias FenixTrackingProtectionCategory = TrackingProtectionCategory
 class TrackerBucketsTest {
 
     @Test
@@ -38,7 +41,7 @@ class TrackerBucketsTest {
         assertEquals(listOf("google.com"), buckets.buckets.blockedBucketMap[FINGERPRINTERS])
         assertEquals(
             listOf("facebook.com"),
-            buckets.buckets.loadedBucketMap[TrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS]
+            buckets.buckets.loadedBucketMap[FenixTrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS]
         )
         assertTrue(buckets.buckets.blockedBucketMap[CRYPTOMINERS].isNullOrEmpty())
         assertTrue(buckets.buckets.loadedBucketMap[CRYPTOMINERS].isNullOrEmpty())
@@ -60,7 +63,7 @@ class TrackerBucketsTest {
 
         assertEquals(
             mapOf(
-                TrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS to listOf("facebook.com")
+                FenixTrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS to listOf("facebook.com")
             ), buckets.buckets.loadedBucketMap
         )
 
@@ -69,5 +72,41 @@ class TrackerBucketsTest {
                 FINGERPRINTERS to listOf("google.com")
             ), buckets.buckets.blockedBucketMap
         )
+    }
+
+    @Test
+    fun `trackers in the same site but with different categories`() {
+        val buckets = TrackerBuckets()
+        val acCategories = listOf(
+            CRYPTOMINING,
+            MOZILLA_SOCIAL,
+            FINGERPRINTING,
+            SCRIPTS_AND_SUB_RESOURCES
+        )
+
+        buckets.updateIfNeeded(
+            listOf(
+                TrackerLog(
+                    url = "http://facebook.com",
+                    cookiesHasBeenBlocked = true,
+                    blockedCategories = acCategories,
+                    loadedCategories = acCategories
+                )
+            )
+        )
+
+        val expectedBlockedMap =
+            mapOf(
+                FenixTrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS to listOf("facebook.com"),
+                FenixTrackingProtectionCategory.TRACKING_CONTENT to listOf("facebook.com"),
+                FenixTrackingProtectionCategory.FINGERPRINTERS to listOf("facebook.com"),
+                FenixTrackingProtectionCategory.CRYPTOMINERS to listOf("facebook.com"),
+                FenixTrackingProtectionCategory.CROSS_SITE_TRACKING_COOKIES to listOf("facebook.com")
+            )
+        val expectedLoadedMap =
+            expectedBlockedMap - FenixTrackingProtectionCategory.CROSS_SITE_TRACKING_COOKIES
+
+        assertEquals(expectedBlockedMap, buckets.buckets.blockedBucketMap)
+        assertEquals(expectedLoadedMap, buckets.buckets.loadedBucketMap)
     }
 }
