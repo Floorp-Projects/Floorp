@@ -73,6 +73,7 @@ module.exports.addTests = ({testRunner, product, puppeteerPath}) => {
     product,
     FFOX,
     CHROME,
+    JUGGLER,
     puppeteer,
     expect,
     defaultBrowserOptions,
