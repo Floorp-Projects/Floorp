@@ -532,16 +532,12 @@ static nsRect JoinBoxesForBlockAxisSlice(nsIFrame* aFrame,
   auto wm = aFrame->GetWritingMode();
   nsIFrame* f = aFrame->GetNextContinuation();
   for (; f; f = f->GetNextContinuation()) {
-    MOZ_ASSERT(!(f->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT),
-               "anonymous ib-split block shouldn't have border/background");
     bSize += f->BSize(wm);
   }
   (wm.IsVertical() ? borderArea.width : borderArea.height) += bSize;
   bSize = 0;
   f = aFrame->GetPrevContinuation();
   for (; f; f = f->GetPrevContinuation()) {
-    MOZ_ASSERT(!(f->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT),
-               "anonymous ib-split block shouldn't have border/background");
     bSize += f->BSize(wm);
   }
   (wm.IsVertical() ? borderArea.x : borderArea.y) -= bSize;
