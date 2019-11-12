@@ -226,3 +226,16 @@ wasmFullPass(`
             (then)
             (else (local.get $i) (br $loop))))))`,
             55);
+
+wasmFullPass(`
+  (module
+    (func (export "run") (result i32)
+      (local i32)
+      i32.const 42
+      local.get 0
+      local.get 0
+      loop (param i32 i32 i32) (result i32)
+        drop
+        drop
+      end))`,
+             42);
