@@ -144,7 +144,10 @@ class OrderedHashTable {
 
   ~OrderedHashTable() {
     forEachRange<Range::onTableDestroyed>();
-    alloc.free_(hashTable, hashBuckets());
+    if (hashTable) {
+      // |hashBuckets()| isn't valid when |hashTable| hasn't been created.
+      alloc.free_(hashTable, hashBuckets());
+    }
     freeData(data, dataLength, dataCapacity);
   }
 
