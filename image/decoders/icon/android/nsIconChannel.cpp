@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <stdlib.h>
+#include "mozilla/gfx/Swizzle.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsMimeTypes.h"
@@ -66,7 +67,7 @@ static nsresult moz_icon_to_channel(nsIURI* aURI, const nsACString& aFileExt,
   // then the ARGB pixel values with pre-multiplied Alpha
   const int channels = 4;
   CheckedInt32 buf_size =
-      2 + channels * CheckedInt32(height) * CheckedInt32(width);
+      4 + channels * CheckedInt32(height) * CheckedInt32(width);
   if (!buf_size.isValid()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -75,6 +76,8 @@ static nsresult moz_icon_to_channel(nsIURI* aURI, const nsACString& aFileExt,
 
   *(out++) = width;
   *(out++) = height;
+  *(out++) = uint8_t(mozilla::gfx::SurfaceFormat::OS_RGBA);
+  *(out++) = 0;
 
   nsresult rv;
   if (XRE_IsParentProcess()) {
@@ -85,21 +88,10 @@ static nsresult moz_icon_to_channel(nsIURI* aURI, const nsACString& aFileExt,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Encode the RGBA data
-  const uint8_t* in = out;
-  for (int y = 0; y < height; ++y) {
-    for (int x = 0; x < width; ++x) {
-      uint8_t r = *(in++);
-      uint8_t g = *(in++);
-      uint8_t b = *(in++);
-      uint8_t a = *(in++);
-#define DO_PREMULTIPLY(c_) uint8_t(uint16_t(c_) * uint16_t(a) / uint16_t(255))
-      *(out++) = DO_PREMULTIPLY(b);
-      *(out++) = DO_PREMULTIPLY(g);
-      *(out++) = DO_PREMULTIPLY(r);
-      *(out++) = a;
-#undef DO_PREMULTIPLY
-    }
-  }
+  int32_t stride = 4 * width;
+  gfx::PremultiplyData(out, stride, gfx::SurfaceFormat::R8G8B8A8, out, stride,
+                       gfx::SurfaceFormat::OS_RGBA,
+                       gfx::IntSize(width, height));
 
   nsCOMPtr<nsIStringInputStream> stream =
       do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
