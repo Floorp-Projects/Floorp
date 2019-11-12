@@ -13,6 +13,7 @@ include PBackgroundSharedTypes;
 include NeckoChannelParams;
 include IPCServiceWorkerDescriptor;
 include IPCStream;
+include PURLClassifierInfo;
 
 include "mozilla/net/NeckoMessageUtils.h";
 
@@ -20,6 +21,7 @@ using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
 using mozilla::net::NetAddr from "mozilla/net/DNS.h";
 using struct mozilla::net::ResourceTimingStruct from "mozilla/net/TimingStruct.h";
 using refcounted class nsIReferrerInfo from "mozilla/dom/ReferrerInfoUtils.h";
+using nsIHttpChannel::FlashPluginState from "mozilla/net/NeckoMessageUtils.h";
 
 namespace mozilla {
 namespace net {
@@ -193,6 +195,29 @@ child:
   async OnProgress(int64_t progress, int64_t progressMax);
 
   async OnStatus(nsresult status);
+
+  // Tell the child that channel classifier protection was disabled for this
+  // load.
+  async NotifyChannelClassifierProtectionDisabled(uint32_t aAcceptedReason);
+
+  // Tell the child that cookies are allowed for this load.
+  async NotifyCookieAllowed();
+
+  // Tell the child that tracking cookies are blocked for this load.
+  async NotifyCookieBlocked(uint32_t aRejectedReason);
+
+  // Tell the child that the resource being loaded has been classified.
+  async NotifyClassificationFlags(uint32_t aClassificationFlags, bool aIsThirdParty);
+
+  // Tell the child that the current channel's document is not allowed to load
+  // flash content.
+  async NotifyFlashPluginStateChanged(FlashPluginState aState);
+
+  // Tell the child information of matched URL againts SafeBrowsing list
+  async SetClassifierMatchedInfo(ClassifierInfo info);
+
+  // Tell the child information of matched URL againts SafeBrowsing tracking list
+  async SetClassifierMatchedTrackingInfo(ClassifierInfo info);
 
 both:
   // After receiving this message, the parent also calls
