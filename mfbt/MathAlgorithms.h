@@ -245,10 +245,6 @@ inline uint_fast8_t CountTrailingZeroes64(uint64_t aValue) {
 #  endif
 }
 
-#  ifdef MOZ_HAVE_BITSCAN64
-#    undef MOZ_HAVE_BITSCAN64
-#  endif
-
 #elif defined(__clang__) || defined(__GNUC__)
 
 #  if defined(__clang__)
