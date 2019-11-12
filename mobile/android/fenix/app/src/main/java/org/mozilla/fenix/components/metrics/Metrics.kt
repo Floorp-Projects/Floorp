@@ -120,11 +120,15 @@ sealed class Event {
     object TrackingProtectionSettingsPanel : Event()
     object TrackingProtectionSettings : Event()
     object TrackingProtectionException : Event()
+    object OpenLogins : Event()
+    object OpenOneLogin : Event()
+    object CopyLogin : Event()
+    object ViewLoginPassword : Event()
 
     // Interaction events with extras
 
     data class PreferenceToggled(val preferenceKey: String, val enabled: Boolean, val context: Context) : Event() {
-        private val switchPreferenceTelemetryAllowList = listOf(
+        private val booleanPreferenceTelemetryAllowList = listOf(
             context.getString(R.string.pref_key_show_search_suggestions),
             context.getString(R.string.pref_key_remote_debugging),
             context.getString(R.string.pref_key_telemetry),
@@ -133,7 +137,8 @@ sealed class Event {
             context.getString(R.string.pref_key_search_browsing_history),
             context.getString(R.string.pref_key_show_clipboard_suggestions),
             context.getString(R.string.pref_key_show_search_shortcuts),
-            context.getString(R.string.pref_key_open_links_in_a_private_tab)
+            context.getString(R.string.pref_key_open_links_in_a_private_tab),
+            context.getString(R.string.pref_key_sync_logins)
         )
 
         override val extras: Map<Events.preferenceToggledKeys, String>?
@@ -144,7 +149,7 @@ sealed class Event {
 
         init {
             // If the event is not in the allow list, we don't want to track it
-            if (!switchPreferenceTelemetryAllowList.contains(preferenceKey)) { throw IllegalArgumentException() }
+            require(booleanPreferenceTelemetryAllowList.contains(preferenceKey))
         }
     }
 

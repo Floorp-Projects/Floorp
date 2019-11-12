@@ -108,23 +108,26 @@ events:
   preference_toggled:
     type: event
     description: >
-      A user toggled a preference switch in settings
+      A user toggled a boolean preference in settings
     extra_keys:
       preference_key:
-        description: "The preference key for the switch preference the user toggled. We currently track:
+        description: "The preference key for the boolean (true/false) preference the user toggled. We currently track:
           show_search_suggestions, remote_debugging, telemetry, tracking_protection, search_bookmarks,
-          search_browsing_history, show_clipboard_suggestions, show_search_shortcuts, and open_links_in_a_private_tab"
+          search_browsing_history, show_clipboard_suggestions, show_search_shortcuts, open_links_in_a_private_tab,
+          and pref_key_sync_logins"
       enabled:
         description: "Whether or not the preference is *now* enabled"
     bugs:
     - https://github.com/mozilla-mobile/fenix/issue/975
     - https://github.com/mozilla-mobile/fenix/issue/5094
     - https://github.com/mozilla-mobile/fenix/issues/5737
+    - https://github.com/mozilla-mobile/fenix/issues/5586
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1896
     - https://github.com/mozilla-mobile/fenix/pull/5704
     - https://github.com/mozilla-mobile/fenix/pull/5886
     - https://github.com/mozilla-mobile/fenix/pull/5975
+    - https://github.com/mozilla-mobile/fenix/pull/6352
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-03-01"
@@ -1439,6 +1442,52 @@ media_notification:
       - https://github.com/mozilla-mobile/fenix/issue/5197
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5520
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+
+logins:
+  open_logins:
+    type: event
+    description: >
+      A user accessed Logins in Settings
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5586
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/6352
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  open_individual_login:
+    type: event
+    description: >
+      A user accessed an individual login in saved logins
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5586
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/6352
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  copy_login:
+    type: event
+    description: >
+      A user copied a piece of a login in saved logins
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5586
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/6352
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  view_password_login:
+    type: event
+    description: >
+      A user viewed a password in an individual saved login
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5586
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/6352
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-03-01"

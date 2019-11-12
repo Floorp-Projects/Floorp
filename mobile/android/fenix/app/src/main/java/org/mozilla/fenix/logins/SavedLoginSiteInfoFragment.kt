@@ -14,6 +14,7 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_saved_login_site_info.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 
 class SavedLoginSiteInfoFragment : Fragment(R.layout.fragment_saved_login_site_info) {
@@ -58,6 +59,7 @@ class SavedLoginSiteInfoFragment : Fragment(R.layout.fragment_saved_login_site_i
             val clipboard = view.context.components.clipboardHandler
             clipboard.text = savedLoginItem.password
             showCopiedSnackbar(getString(R.string.logins_password_copied))
+            context?.components?.analytics?.metrics?.track(Event.CopyLogin)
         }
     }
 
@@ -69,6 +71,7 @@ class SavedLoginSiteInfoFragment : Fragment(R.layout.fragment_saved_login_site_i
 
     private fun togglePasswordReveal() {
         if (passwordInfoText.inputType == InputType.TYPE_TEXT_VARIATION_PASSWORD or InputType.TYPE_CLASS_TEXT) {
+            context?.components?.analytics?.metrics?.track(Event.ViewLoginPassword)
             revealPasswordItem.setImageDrawable(context?.getDrawable(R.drawable.ic_password_hide))
             passwordInfoText.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
             revealPasswordItem.contentDescription =

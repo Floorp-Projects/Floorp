@@ -29,6 +29,8 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -234,6 +236,7 @@ class LoginsFragment : PreferenceFragmentCompat(), AccountObserver {
     }
 
     private fun navigateToSavedLoginsFragment() {
+        context?.components?.analytics?.metrics?.track(Event.OpenLogins)
         val directions = LoginsFragmentDirections.actionLoginsFragmentToSavedLoginsFragment()
         findNavController().navigate(directions)
     }

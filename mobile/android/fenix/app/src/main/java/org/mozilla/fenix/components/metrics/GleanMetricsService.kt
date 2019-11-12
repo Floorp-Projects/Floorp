@@ -25,6 +25,7 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.FindInPage
 import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.Library
+import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Pings
@@ -400,6 +401,18 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.OpenedLink -> EventWrapper(
             { Events.openedLink.record(it) },
             { Events.openedLinkKeys.valueOf(it) }
+        )
+        is Event.OpenLogins -> EventWrapper<NoExtraKeys>(
+            { Logins.openLogins.record(it) }
+        )
+        is Event.OpenOneLogin -> EventWrapper<NoExtraKeys>(
+            { Logins.openIndividualLogin.record(it) }
+        )
+        is Event.CopyLogin -> EventWrapper<NoExtraKeys>(
+            { Logins.copyLogin.record(it) }
+        )
+        is Event.ViewLoginPassword -> EventWrapper<NoExtraKeys>(
+            { Logins.viewPasswordLogin.record(it) }
         )
         // Don't record other events in Glean:
         is Event.AddBookmark -> null

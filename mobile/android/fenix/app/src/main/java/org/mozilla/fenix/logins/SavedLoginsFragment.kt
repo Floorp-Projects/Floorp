@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 
 class SavedLoginsFragment : Fragment() {
@@ -70,6 +71,7 @@ class SavedLoginsFragment : Fragment() {
     }
 
     private fun itemClicked(item: SavedLoginsItem) {
+        context?.components?.analytics?.metrics?.track(Event.OpenOneLogin)
         val directions =
             SavedLoginsFragmentDirections.actionSavedLoginsFragmentToSavedLoginSiteInfoFragment(item)
         findNavController().navigate(directions)
