@@ -77,6 +77,11 @@ declare namespace MockedExports {
       activeWindow: ChromeWindow;
     };
     scriptSecurityManager: any;
+    startup: {
+      quit: (optionsBitmask: number) => void,
+      eForceQuit: number,
+      eRestart: number
+    };
   };
 
   const ServicesJSM: {
@@ -123,6 +128,8 @@ declare namespace MockedExports {
   };
 
   const Services: Services;
+
+  const chrome: any;
 }
 
 declare module "devtools/shared/event-emitter2" {
@@ -135,6 +142,10 @@ declare module "resource://gre/modules/Services.jsm" {
 
 declare module "Services" {
   export = MockedExports.Services;
+}
+
+declare module "chrome" {
+  export = MockedExports.chrome;
 }
 
 declare module "resource://gre/modules/osfile.jsm" {
