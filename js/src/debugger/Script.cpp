@@ -1510,6 +1510,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOP_RETRVAL:
     case JSOP_AND:
     case JSOP_OR:
+    case JSOP_COALESCE:
     case JSOP_TRY:
     case JSOP_THROW:
     case JSOP_GOTO:

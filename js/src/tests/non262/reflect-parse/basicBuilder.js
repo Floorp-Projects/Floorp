@@ -1,5 +1,5 @@
 // |reftest| skip-if(!xulRuntime.shell)
-function test() { 
+function test() {
 // Builder tests
 
 Pattern("program").match(Reflect.parse("42", {builder:{program:() => "program"}}));

@@ -466,6 +466,7 @@ class BaselineCodeGen {
   MOZ_MUST_USE bool emitToBoolean();
   MOZ_MUST_USE bool emitTest(bool branchIfTrue);
   MOZ_MUST_USE bool emitAndOr(bool branchIfTrue);
+  MOZ_MUST_USE bool emitCoalesce();
 
   MOZ_MUST_USE bool emitCall(JSOp op);
   MOZ_MUST_USE bool emitSpreadCall(JSOp op);
