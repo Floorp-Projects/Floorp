@@ -5249,6 +5249,10 @@
           return;
         }
 
+        if (!browser.docShell || event.target != browser.docShell.document) {
+          return;
+        }
+
         var titleChanged = this.setTabTitle(tab);
         if (titleChanged && !tab.selected && !tab.hasAttribute("busy")) {
           tab.setAttribute("titlechanged", "true");
