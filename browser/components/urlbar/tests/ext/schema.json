@@ -1,0 +1,15 @@
+[
+  {
+    "namespace": "experiments.urlbar",
+    "description": "APIs supporting urlbar experiments",
+    "functions": [
+      {
+        "name": "isBrowserShowingNotification",
+        "type": "function",
+        "async": true,
+        "description": "Returns true if the browser is showing any kind of notification.",
+        "parameters": []
+      }
+    ]
+  }
+]
