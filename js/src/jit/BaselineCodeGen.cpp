@@ -2154,6 +2154,24 @@ bool BaselineCodeGen<Handler>::emit_JSOP_OR() {
 }
 
 template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_JSOP_COALESCE() {
+  // COALESCE leaves the original value on the stack.
+  frame.syncStack(0);
+
+  masm.loadValue(frame.addressOfStackValue(-1), R0);
+
+  Label undefinedOrNull;
+
+  masm.branchTestUndefined(Assembler::Equal, R0, &undefinedOrNull);
+  masm.branchTestNull(Assembler::Equal, R0, &undefinedOrNull);
+  emitJump();
+
+  masm.bind(&undefinedOrNull);
+  // fall through
+  return true;
+}
+
+template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_NOT() {
   bool knownBoolean = frame.stackValueHasKnownType(-1, JSVAL_TYPE_BOOLEAN);
 
@@ -4741,7 +4759,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_GIMPLICITTHIS() {
     return true;
   };
   auto emitImplicitThis = [this]() { return emit_JSOP_IMPLICITTHIS(); };
-
   return emitTestScriptFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,
                             emitImplicitThis, pushUndefined, R2.scratchReg());
 }
