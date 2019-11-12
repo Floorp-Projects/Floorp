@@ -1088,6 +1088,7 @@ STATIC_ATOMS = [
     Atom("seltype", "seltype"),
     Atom("setcookie", "set-cookie"),
     Atom("setter", "setter"),
+    Atom("shadow", "shadow"),
     Atom("shape", "shape"),
     Atom("show", "show"),
     Atom("showcaret", "showcaret"),
