@@ -30,8 +30,8 @@ pub mod expected {
     pub const TOTAL_PRIMITIVES: Range<u64> =        1..5000;
     pub const VISIBLE_PRIMITIVES: Range<u64> =      1..5000;
     pub const USED_TARGETS: Range<u64> =            1..4;
-    pub const COLOR_TARGETS: Range<u64> =           1..4;
-    pub const ALPHA_TARGETS: Range<u64> =           0..2;
+    pub const COLOR_PASSES: Range<u64> =            1..4;
+    pub const ALPHA_PASSES: Range<u64> =            0..3;
     pub const RENDERED_PICTURE_CACHE_TILES: Range<u64> = 0..5;
     pub const TOTAL_PICTURE_CACHE_TILES: Range<u64> = 0..15;
     pub const CREATED_TARGETS: Range<u64> =         0..3;
@@ -832,8 +832,8 @@ pub struct RendererProfileCounters {
     pub draw_calls: AverageIntProfileCounter,
     pub vertices: AverageIntProfileCounter,
     pub vao_count_and_size: ResourceProfileCounter,
-    pub color_targets: AverageIntProfileCounter,
-    pub alpha_targets: AverageIntProfileCounter,
+    pub color_passes: AverageIntProfileCounter,
+    pub alpha_passes: AverageIntProfileCounter,
     pub texture_data_uploaded: AverageIntProfileCounter,
     pub rendered_picture_cache_tiles: AverageIntProfileCounter,
     pub total_picture_cache_tiles: AverageIntProfileCounter,
@@ -861,13 +861,13 @@ impl RendererProfileCounters {
                 None, Some(expected::VERTICES),
             ),
             vao_count_and_size: ResourceProfileCounter::new("VAO", None, None),
-            color_targets: AverageIntProfileCounter::new(
-                "Color Targets",
-                None, Some(expected::COLOR_TARGETS),
+            color_passes: AverageIntProfileCounter::new(
+                "Color passes",
+                None, Some(expected::COLOR_PASSES),
             ),
-            alpha_targets: AverageIntProfileCounter::new(
-                "Alpha Targets",
-                None, Some(expected::ALPHA_TARGETS),
+            alpha_passes: AverageIntProfileCounter::new(
+                "Alpha passes",
+                None, Some(expected::ALPHA_PASSES),
             ),
             texture_data_uploaded: AverageIntProfileCounter::new(
                 "Texture data, kb",
@@ -887,8 +887,8 @@ impl RendererProfileCounters {
     pub fn reset(&mut self) {
         self.draw_calls.reset();
         self.vertices.reset();
-        self.color_targets.reset();
-        self.alpha_targets.reset();
+        self.color_passes.reset();
+        self.alpha_passes.reset();
         self.texture_data_uploaded.reset();
         self.rendered_picture_cache_tiles.reset();
         self.total_picture_cache_tiles.reset();
@@ -1480,8 +1480,8 @@ impl Profiler {
         Profiler::draw_counters(
             &[
                 &renderer_profile.frame_time as &dyn ProfileCounter,
-                &renderer_profile.color_targets,
-                &renderer_profile.alpha_targets,
+                &renderer_profile.color_passes,
+                &renderer_profile.alpha_passes,
                 &renderer_profile.draw_calls,
                 &renderer_profile.vertices,
                 &renderer_profile.rendered_picture_cache_tiles,
@@ -1513,8 +1513,8 @@ impl Profiler {
             &[
                 &renderer_profile.frame_time as &dyn ProfileCounter,
                 &renderer_profile.frame_counter,
-                &renderer_profile.color_targets,
-                &renderer_profile.alpha_targets,
+                &renderer_profile.color_passes,
+                &renderer_profile.alpha_passes,
                 &renderer_profile.rendered_picture_cache_tiles,
                 &renderer_profile.total_picture_cache_tiles,
                 &renderer_profile.texture_data_uploaded,
@@ -1685,8 +1685,8 @@ impl Profiler {
                 &self.gpu_time,
             ],
             &[
-                &renderer_profile.color_targets,
-                &renderer_profile.alpha_targets,
+                &renderer_profile.color_passes,
+                &renderer_profile.alpha_passes,
                 &renderer_profile.draw_calls,
                 &renderer_profile.vertices,
                 &renderer_profile.rendered_picture_cache_tiles,
