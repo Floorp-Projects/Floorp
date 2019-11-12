@@ -35,6 +35,8 @@ import mozpack.path as mozpath
 
 from mozversioncontrol import get_repository_object
 
+from mozbuild.controller.clobber import Clobberer
+
 
 # Function used to run clang-format on a batch of files. It is a helper function
 # in order to integrate into the futures ecosystem clang-format.
@@ -58,6 +60,19 @@ def map_file_to_source(abs_path, source):
     if abs_path in source:
         return abs_path
     return None
+
+
+def prompt_bool(prompt, limit=5):
+    ''' Prompts the user with prompt and requires a boolean value. '''
+    from distutils.util import strtobool
+
+    for _ in range(limit):
+        try:
+            return strtobool(raw_input(prompt + "[Y/N]\n"))
+        except ValueError:
+            print("ERROR! Please enter a valid option! Please use any of the following:"
+                  " Y, N, True, False, 1, 0")
+    return False
 
 
 class StaticAnalysisSubCommand(SubCommand):
@@ -1735,7 +1750,22 @@ class StaticAnalysis(MachCommandBase):
         try:
             config = self.config_environment
         except Exception:
-            print('Looks like configure has not run yet, running it now...')
+            self.log(logging.WARNING, 'static-analysis', {},
+                     "Looks like configure has not run yet, running it now...")
+
+            clobber = Clobberer(self.topsrcdir, self.topobjdir)
+
+            if clobber.clobber_needed():
+                choice = prompt_bool(
+                    "Configuration has changed and Clobber is needed. "
+                    "Do you want to proceed?"
+                )
+                if not choice:
+                    self.log(logging.ERROR, 'static-analysis', {},
+                             "Without Clobber we cannot continue execution!")
+                    return (1, None, None)
+                os.environ["AUTOCLOBBER"] = "1"
+
             rc = builder.configure()
             if rc != 0:
                 return (rc, config, ran_configure)
