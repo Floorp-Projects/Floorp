@@ -31,6 +31,7 @@ static const DelegateInfo sPermissionsMap[] = {
     {"desktop-notification", nullptr,
      DelegatePolicy::ePersistDeniedCrossOrigin},
     {"persistent-storage", nullptr, DelegatePolicy::ePersistDeniedCrossOrigin},
+    {"vibration", nullptr, DelegatePolicy::ePersistDeniedCrossOrigin},
 };
 
 NS_IMPL_CYCLE_COLLECTION(PermissionDelegateHandler)
