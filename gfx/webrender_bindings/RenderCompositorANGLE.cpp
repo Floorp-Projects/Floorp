@@ -386,6 +386,11 @@ bool RenderCompositorANGLE::BeginFrame() {
           mSwapChain = swapChain1;
           mUseAlpha = useAlpha;
           mDCLayerTree->SetDefaultSwapChain(swapChain1);
+          // When alpha is used, we want to disable partial present.
+          // See Bug 1595027.
+          if (useAlpha) {
+            mFullRender = true;
+          }
         } else {
           gfxCriticalNote << "Failed to re-create SwapChain";
           RenderThread::Get()->HandleWebRenderError(
@@ -433,7 +438,13 @@ RenderedFrameId RenderCompositorANGLE::EndFrame(
 
     const LayoutDeviceIntSize& bufferSize = mBufferSize.ref();
 
-    if (mUsePartialPresent) {
+    // During high contrast mode, alpha is used. In this case,
+    // IDXGISwapChain1::Present1 shows nothing with compositor window.
+    // In this case, we want to disable partial present by full render.
+    // See Bug 1595027
+    MOZ_ASSERT_IF(mUsePartialPresent && mUseAlpha, mFullRender);
+
+    if (mUsePartialPresent && !mUseAlpha) {
       // Clear full render flag.
       mFullRender = false;
       // If there is no diry rect, we skip SwapChain present.
