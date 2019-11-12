@@ -154,6 +154,7 @@ function initializedValues(state = null, action) {
         setRecordingPreferences: action.setRecordingPreferences,
         isPopup: Boolean(action.isPopup),
         getSymbolTableGetter: action.getSymbolTableGetter,
+        supportedFeatures: action.supportedFeatures,
       };
     default:
       return state;

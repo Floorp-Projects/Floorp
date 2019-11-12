@@ -9,6 +9,14 @@ add_task(async function test() {
     "Test that the popup offers to restart the browser to set an enviroment flag."
   );
 
+  if (!Services.profiler.GetFeatures().includes("jstracer")) {
+    ok(
+      true,
+      "JS tracer is not supported on this platform, or is currently disabled. Skip the rest of the test."
+    );
+    return;
+  }
+
   {
     info("Ensure that JS Tracer is not currently enabled.");
     const {

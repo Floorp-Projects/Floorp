@@ -122,6 +122,11 @@ class ActorReadyGeckoProfilerInterface {
     Services.profiler.StopProfiler();
   }
 
+  /**
+   * @type {string} debugPath
+   * @type {string} breakpadId
+   * @returns {Promise<[number[], number[], number[]]>}
+   */
   async getSymbolTable(debugPath, breakpadId) {
     const [addr, index, buffer] = await Services.profiler.getSymbolTable(
       debugPath,
