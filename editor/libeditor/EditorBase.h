@@ -211,7 +211,9 @@ class EditorBase : public nsIEditor,
   nsPIDOMWindowInner* GetInnerWindow() const {
     return mDocument ? mDocument->GetInnerWindow() : nullptr;
   }
-  bool HasMutationEventListeners(
+  // @param aMutationEventType One or multiple of NS_EVENT_BITS_MUTATION_*.
+  // @return true, iff at least one of NS_EVENT_BITS_MUTATION_* is set.
+  bool MaybeHasMutationEventListeners(
       uint32_t aMutationEventType = 0xFFFFFFFF) const {
     if (!mIsHTMLEditorClass) {
       // DOM mutation event listeners cannot catch the changes of
