@@ -184,10 +184,7 @@ bool RenderCompositorANGLE::Initialize() {
     desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
     desc.SampleDesc.Count = 1;
     desc.SampleDesc.Quality = 0;
-    // DXGI_USAGE_SHADER_INPUT is set for improving performanc of copying from
-    // framebuffer to texture on intel gpu.
-    desc.BufferUsage =
-        DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_SHADER_INPUT;
+    desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 
     if (gfx::gfxVars::UseWebRenderFlipSequentialWin()) {
       useTripleBuffering = gfx::gfxVars::UseWebRenderTripleBufferingWin();
@@ -224,10 +221,7 @@ bool RenderCompositorANGLE::Initialize() {
     swapDesc.BufferDesc.RefreshRate.Denominator = 1;
     swapDesc.SampleDesc.Count = 1;
     swapDesc.SampleDesc.Quality = 0;
-    // DXGI_USAGE_SHADER_INPUT is set for improving performanc of copying from
-    // framebuffer to texture on intel gpu.
-    swapDesc.BufferUsage =
-        DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_SHADER_INPUT;
+    swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapDesc.BufferCount = 1;
     swapDesc.OutputWindow = hwnd;
     swapDesc.Windowed = TRUE;
@@ -339,9 +333,7 @@ RefPtr<IDXGISwapChain1> RenderCompositorANGLE::CreateSwapChainForDComp(
   desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
   desc.SampleDesc.Count = 1;
   desc.SampleDesc.Quality = 0;
-  // DXGI_USAGE_SHADER_INPUT is set for improving performanc of copying from
-  // framebuffer to texture on intel gpu.
-  desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_SHADER_INPUT;
+  desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
   if (aUseTripleBuffering) {
     desc.BufferCount = 3;
   } else {
