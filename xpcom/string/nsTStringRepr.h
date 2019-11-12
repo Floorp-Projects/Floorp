@@ -257,6 +257,10 @@ class nsTStringRepr {
   // null-terminated.
   bool NS_FASTCALL EqualsASCII(const char* aData) const;
 
+  // An efficient comparison with Latin1 characters that can be used even for
+  // wide strings.
+  bool EqualsLatin1(const char* aData, size_type aLength) const;
+
   // EqualsLiteral must ONLY be called with an actual literal string, or
   // a char array *constant* declared without an explicit size and with an
   // initializer that is a string literal or is otherwise null-terminated.
