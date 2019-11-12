@@ -369,7 +369,13 @@ deck {
 }
 
 stack {
-  display: -moz-stack;
+  display: grid;
+  position: relative;
+}
+
+stack > *|* {
+  grid-area: 1 / 1;
+  z-index: 0;
 }
 
 /********** tabbox *********/

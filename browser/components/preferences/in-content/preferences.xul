@@ -68,7 +68,7 @@
   <stringbundle id="browserBundle"
                 src="chrome://browser/locale/browser.properties"/>
 
-  <stack flex="1">
+  <stack id="preferences-stack" flex="1">
   <hbox flex="1">
 
     <vbox class="navigation">

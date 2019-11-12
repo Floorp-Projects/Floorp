@@ -178,12 +178,16 @@
 }
 
 #webRTC-preview:not([hidden]) {
-  display: -moz-stack;
+  display: grid;
   border-radius: 4px;
   border: 1px solid var(--panel-separator-color);
   overflow: hidden;
   min-width: 300px;
   min-height: 10em;
+}
+
+#webRTC-preview > *|* {
+  grid-area: 1 / 1;
 }
 
 html|*#webRTC-previewVideo {

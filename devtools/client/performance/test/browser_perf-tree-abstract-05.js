@@ -20,7 +20,13 @@ add_task(async function() {
   const container = document.createXULElement("vbox");
   container.style.height = "100%";
   container.style.overflow = "scroll";
-  await appendAndWaitForPaint(gBrowser.selectedBrowser.parentNode, container);
+  const browserStack = gBrowser.selectedBrowser.parentNode;
+  // Allow the browser stack to shrink since it will have really long content
+  browserStack.style.minHeight = "0";
+  registerCleanupFunction(() => {
+    browserStack.style.removeProperty("min-height");
+  });
+  await appendAndWaitForPaint(browserStack, container);
 
   const myDataSrc = {
     label: "root",
