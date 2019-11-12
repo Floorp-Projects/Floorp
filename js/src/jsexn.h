@@ -25,6 +25,8 @@ UniquePtr<JSErrorNotes::Note> CopyErrorNote(JSContext* cx,
 
 UniquePtr<JSErrorReport> CopyErrorReport(JSContext* cx, JSErrorReport* report);
 
+bool CaptureStack(JSContext* cx, MutableHandleObject stack);
+
 JSString* ComputeStackString(JSContext* cx);
 
 /*
