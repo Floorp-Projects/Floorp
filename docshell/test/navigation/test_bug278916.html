@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
     <script src="/tests/SimpleTest/EventUtils.js"></script>
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
     <script type="text/javascript" src="NavigationUtils.js"></script>
 <script>
-window.onload = function() {
+window.onload = async function() {
   document.getElementById("link0").href = target_url;
   sendMouseEvent({type: "click"}, "link0");
 
-  xpcWaitForFinishedFrames(function() {
-    var array_of_frames = xpcGetFramesByName("window0");
-    is(array_of_frames.length, 1, "Should only open one window using a fancy hyperlink.");
+  await waitForFinishedFrames(1);
 
-    for (var i = 0; i < array_of_frames.length; ++i)
-      array_of_frames[i].close();
+  var array_of_frames = await getFramesByName("window0");
+  is(array_of_frames.length, 1, "Should only open one window using a fancy hyperlink.");
 
-    xpcCleanupWindows();
-    SimpleTest.finish();
-  }, 1);
+  for (var i = 0; i < array_of_frames.length; ++i)
+    array_of_frames[i].close();
+
+  await cleanupWindows();
+  SimpleTest.finish();
 };
 </script>
 </head>

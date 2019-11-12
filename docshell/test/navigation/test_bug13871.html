@@ -1,34 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
     <script src="/tests/SimpleTest/EventUtils.js"></script>
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-    <script type="text/javascript" src="NavigationUtils.js"></script>        
+    <script type="text/javascript" src="NavigationUtils.js"></script>
     <style type="text/css">
       iframe { width: 90%; height: 50px; }
     </style>
 <script>
-function runTest() {
+async function runTest() {
   navigateByLocation(window0.frames[0]);
   navigateByOpen("window1_child0");
   navigateByForm("window2_child0");
   navigateByHyperlink("window3_child0");
 
-  xpcWaitForFinishedFrames(function() {
-    isInaccessible(window0.frames[0], "Should not be able to navigate off-domain frame by setting location.");
-    isInaccessible(window1.frames[0], "Should not be able to navigate off-domain frame by calling window.open.");
-    isInaccessible(window2.frames[0], "Should not be able to navigate off-domain frame by submitting form.");
-    isInaccessible(window3.frames[0], "Should not be able to navigate off-domain frame by targeted hyperlink.");
+  await waitForFinishedFrames(4);
 
-    window0.close();
-    window1.close();
-    window2.close();
-    window3.close();
+  isInaccessible(window0.frames[0], "Should not be able to navigate off-domain frame by setting location.");
+  isInaccessible(window1.frames[0], "Should not be able to navigate off-domain frame by calling window.open.");
+  isInaccessible(window2.frames[0], "Should not be able to navigate off-domain frame by submitting form.");
+  isInaccessible(window3.frames[0], "Should not be able to navigate off-domain frame by targeted hyperlink.");
 
-    xpcCleanupWindows();
-    SimpleTest.finish();
-  }, 4);
+  window0.close();
+  window1.close();
+  window2.close();
+  window3.close();
+
+  await cleanupWindows();
+  SimpleTest.finish();
 }
 
 // Because our open()'d windows are cross-origin, we can't wait for onload.

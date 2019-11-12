@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
     <script src="/tests/SimpleTest/EventUtils.js"></script>
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-    <script type="text/javascript" src="NavigationUtils.js"></script>        
+    <script type="text/javascript" src="NavigationUtils.js"></script>
     <style type="text/css">
       iframe { width: 90%; height: 200px; }
     </style>
@@ -13,77 +13,69 @@ if (navigator.platform.startsWith("Mac")) {
   SimpleTest.expectAssertions(0, 2);
 }
 
-function testTop() {
+async function testTop() {
   let window0 = window.open("iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#top,location", "_blank", "width=10,height=10");
 
-  xpcWaitForFinishedFrames(function() {
-    isInaccessible(window0, "Should be able to navigate off-domain top by setting location.");
-    window0.close();
-    xpcCleanupWindows();
+  await waitForFinishedFrames(1);
+  isInaccessible(window0, "Should be able to navigate off-domain top by setting location.");
+  window0.close();
+  await cleanupWindows();
 
-    let window1 = window.open("iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_top,open", "_blank", "width=10,height=10");
+  let window1 = window.open("iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_top,open", "_blank", "width=10,height=10");
 
-    xpcWaitForFinishedFrames(function() {
-      isInaccessible(window1, "Should be able to navigate off-domain top by calling window.open.");
-      window1.close();
-      xpcCleanupWindows();
+  await waitForFinishedFrames(1);
+  isInaccessible(window1, "Should be able to navigate off-domain top by calling window.open.");
+  window1.close();
+  await cleanupWindows();
 
-      let window2 = window.open("iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_top,form", "_blank", "width=10,height=10");
+  let window2 = window.open("iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_top,form", "_blank", "width=10,height=10");
 
-      xpcWaitForFinishedFrames(function() {
-        isInaccessible(window2, "Should be able to navigate off-domain top by submitting form.");
-        window2.close();
-        xpcCleanupWindows();
+  await waitForFinishedFrames(1);
+  isInaccessible(window2, "Should be able to navigate off-domain top by submitting form.");
+  window2.close();
+  await cleanupWindows();
 
-        let window3 = window.open("iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_top,hyperlink", "_blank", "width=10,height=10");
+  let window3 = window.open("iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_top,hyperlink", "_blank", "width=10,height=10");
 
-        xpcWaitForFinishedFrames(function() {
-          isInaccessible(window3, "Should be able to navigate off-domain top by targeted hyperlink.");
-          window3.close();
-          xpcCleanupWindows();
+  await waitForFinishedFrames(1);
+  isInaccessible(window3, "Should be able to navigate off-domain top by targeted hyperlink.");
+  window3.close();
+  await cleanupWindows();
 
-          testParent();
-        }, 1);
-      }, 1);
-    }, 1);
-  }, 1);
+  await testParent();
 }
 
-function testParent() {
+async function testParent() {
   document.getElementById("frames").innerHTML = '<iframe src="iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#parent,location"></iframe>';
 
-  xpcWaitForFinishedFrames(function() {
-    isAccessible(frames[0], "Should not be able to navigate off-domain parent by setting location.");
-    xpcCleanupWindows();
+  await waitForFinishedFrames(1);
+  isAccessible(frames[0], "Should not be able to navigate off-domain parent by setting location.");
+  await cleanupWindows();
 
-    document.getElementById("frames").innerHTML = '<iframe src="iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_parent,open"></iframe>';
+  document.getElementById("frames").innerHTML = '<iframe src="iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_parent,open"></iframe>';
 
-    xpcWaitForFinishedFrames(function() {
-      isAccessible(frames[0], "Should not be able to navigate off-domain parent by calling window.open.");
-      xpcCleanupWindows();
+  await waitForFinishedFrames(1);
+  isAccessible(frames[0], "Should not be able to navigate off-domain parent by calling window.open.");
+  await cleanupWindows();
 
-      document.getElementById("frames").innerHTML = '<iframe src="iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_parent,form"></iframe>';
+  document.getElementById("frames").innerHTML = '<iframe src="iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_parent,form"></iframe>';
 
-      xpcWaitForFinishedFrames(function() {
-        isAccessible(frames[0], "Should not be able to navigate off-domain parent by submitting form.");
-        xpcCleanupWindows();
+  await waitForFinishedFrames(1);
+  isAccessible(frames[0], "Should not be able to navigate off-domain parent by submitting form.");
+  await cleanupWindows();
 
-        document.getElementById("frames").innerHTML = '<iframe src="iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_parent,hyperlink"></iframe>';
+  document.getElementById("frames").innerHTML = '<iframe src="iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#_parent,hyperlink"></iframe>';
 
-        xpcWaitForFinishedFrames(function() {
-          isAccessible(frames[0], "Should not be able to navigate off-domain parent by targeted hyperlink.");
-          xpcCleanupWindows();
+  await waitForFinishedFrames(1);
+  isAccessible(frames[0], "Should not be able to navigate off-domain parent by targeted hyperlink.");
+  await cleanupWindows();
 
-          document.getElementById("frames").innerHTML = "";
-          SimpleTest.finish();
-        }, 1);
-      }, 1);
-    }, 1);
-  }, 1);
+  document.getElementById("frames").innerHTML = "";
+  SimpleTest.finish();
 }
 
-window.onload = function() {
-  testTop();
+window.onload = async function() {
+  await testTop();
 };
 </script>
 </head>
