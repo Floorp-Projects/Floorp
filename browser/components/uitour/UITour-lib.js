@@ -387,6 +387,8 @@ if (typeof Mozilla == "undefined") {
    * <li>{@link Mozilla.UITour.Configuration.Search|selectedSearchEngine}
    * - DEPRECATED, use 'search'</li>
    * <li>{@link Mozilla.UITour.Configuration.Sync|sync}</li>
+   * - DEPRECATED, use 'fxa'</li>
+   * <li>{@link Mozilla.UITour.Configuration.FxA|fxa}</li>
    * </ul>
    */
 
@@ -446,6 +448,65 @@ if (typeof Mozilla == "undefined") {
    * @property {Number} mobileDevices - Number of mobile devices
    * @property {Number} totalDevices - Total number of connected devices
    * @since 50
+   */
+
+  /**
+   * FxA status, including whether FxA is connected, device counts, services
+   * connected to this browser and services externally connected to the account.
+   * @typedef {Object} Mozilla.UITour.Configuration.FxA
+   * @property {Boolean} setup - Whether FxA is setup on this device. If false,
+   *    no other properties will exist.
+   * @property {Number} [numOtherDevices] - Number of devices connected to this
+   *    account, not counting this device.
+   * @property {Object.<String, Number>} [numDevicesByType] - A count of devices
+   *    connected to the account by device 'type'. Valid values for type are
+   *    defined by the FxA server but roughly correspond to form-factor with
+   *    values like 'desktop', 'mobile', 'vr', etc.
+   * @property {Mozilla.UITour.Configuration.AccountServices} [accountServices] -
+   *    Information about services attached to this account. These services
+   *    may be enabled on devices or applications external to this
+   *    browser and should not be confused with devices. For example, if the user
+   *    has enabled Monitor or Lockwise on one or more devices - including on
+   *    this device - that service will have a single entry here.
+   * @property {Mozilla.UITour.Configuration.BrowserServices} [browserServices] -
+   *    Information about account services attached to this browser, and with
+   *    special support implemented by this browser. You should not expect
+   *    every accountService connected in this browser to get a special entry
+   *    here. Indeed, what services, and in what circumstances they may appear
+   *    here in the future is largely TBD.
+   * @since 71
+   */
+
+  /**
+   * Information about clients attached to the account.
+   * An object. The key is a string ID of the attached service. A list of attached
+   *    service IDs can be found at
+   *    {@link https://docs.telemetry.mozilla.org/datasets/fxa_metrics/attribution.html#service-attribution|
+   *     on our telemetry documentation site}
+   * The value is a {@link Mozilla.UITour.Configuration.AccountService}
+   * @typedef {Object.<string, Mozilla.UITour.Configuration.AccountService>} Mozilla.UITour.Configuration.AccountService
+   * @since 71
+   */
+
+  /**
+   * Information about an account service
+   * @typedef {Object} Mozilla.UITour.Configuration.AccountService
+   * @property {String} id - The service ID. A list of attached
+   *    service IDs can be found at
+   *    {@link https://docs.telemetry.mozilla.org/datasets/fxa_metrics/attribution.html#service-attribution|
+   *     on our telemetry documentation site}
+   * @property {Number} lastAccessedWeeksAgo - How many weeks ago the service
+   *    was accessed by this account.
+   * @since 71
+   */
+
+  /**
+   * Information about a services attached to the browser. All properties are
+   * optional and only exist if the service is enabled.
+   *
+   * @typedef {Object} Mozilla.UITour.Configuration.BrowserServices
+   * @property {Mozilla.UITour.Configuration.Sync} sync - If sync is configured
+   * @since 71
    */
 
   /**
