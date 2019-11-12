@@ -12,6 +12,8 @@
  * @typedef {import("../@types/perf").ReceiveProfile} ReceiveProfile
  * @typedef {import("../@types/perf").SetRecordingPreferences} SetRecordingPreferences
  * @typedef {import("../@types/perf").GetSymbolTableCallback} GetSymbolTableCallback
+ * @typedef {import("../@types/perf").RestartBrowserWithEnvironmentVariable} RestartBrowserWithEnvironmentVariable
+ * @typedef {import("../@types/perf").GetEnvironmentVariable} GetEnvironmentVariable
  */
 /**
  * @template S
@@ -90,6 +92,9 @@ const getIsPopup = state => getInitializedValues(state).isPopup;
 const getSymbolTableGetter = state =>
   getInitializedValues(state).getSymbolTableGetter;
 
+/** @type {Selector<string | null>} */
+const getPromptEnvRestart = state => state.promptEnvRestart;
+
 module.exports = {
   getRecordingState,
   getRecordingUnexpectedlyStopped,
@@ -107,4 +112,5 @@ module.exports = {
   getSetRecordingPreferencesFn,
   getIsPopup,
   getSymbolTableGetter,
+  getPromptEnvRestart,
 };

@@ -161,6 +161,21 @@ function initializedValues(state = null, action) {
 }
 
 /**
+ * Some features may need a browser restart with an environment flag. Request
+ * one here.
+ *
+ * @type {Reducer<string | null>}
+ */
+function promptEnvRestart(state = null, action) {
+  switch (action.type) {
+    case "CHANGE_FEATURES":
+      return action.promptEnvRestart;
+    default:
+      return state;
+  }
+}
+
+/**
  * The main reducer for the performance-new client.
  * @type {Reducer<State>}
  */
@@ -177,4 +192,5 @@ module.exports = combineReducers({
   threads,
   objdirs,
   initializedValues,
+  promptEnvRestart,
 });

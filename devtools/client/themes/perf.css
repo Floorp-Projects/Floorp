@@ -371,3 +371,77 @@ a.perf-photon-button:focus {
   box-shadow: 0 0 0 2px var(--blue-50), 0 0 0 6px var(--blue-50-a30);
   outline: 0;
 }
+
+.perf-photon-button-micro {
+  height: 24px;
+}
+
+/* Photon message bar - https://design.firefox.com/photon/components/message-bars.html */
+
+.perf-photon-message-bar {
+  display: flex;
+  width: 100%;
+  min-height: 32px;
+  box-sizing: border-box;
+  align-items: center;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.perf-photon-message-bar-warning {
+  /* This should include an info icon, but it's left out since it's probably not worth
+   * adding and maintaining an extra icon here. */
+  padding: 4px 8px;
+  background: var(--yellow-50);
+  color: var(--yellow-90);
+  fill: var(--yellow-90);
+}
+
+.perf-photon-message-bar-warning-icon {
+  background: url("chrome://global/skin/icons/warning.svg");
+  -moz-context-properties: fill;
+  width: 16px;
+  height: 16px;
+  margin: 4px;
+}
+
+.perf-photon-message-bar .perf-photon-button {
+  margin-inline-start: 8px;
+}
+
+.perf-photon-message-bar-warning .perf-photon-button {
+  background-color: var(--yellow-60);
+}
+
+.perf-photon-message-bar-warning .perf-photon-button:hover {
+  background-color: var(--yellow-70);
+}
+
+.perf-photon-message-bar-warning .perf-photon-button:hover:active {
+  background-color: var(--yellow-80);
+}
+
+/* Restart prompt */
+
+.perf-env-restart {
+  /* Create an empty space at the top of the page. */
+  width: 100%;
+  height: 38px;
+}
+
+.perf-env-restart-fixed {
+  /* This style is for the floating bar */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  /* Create a new stacking context, so that the fixed positioning will be over the
+   * rest of the components */
+  z-index: 1;
+
+  border-radius: 0;
+}
