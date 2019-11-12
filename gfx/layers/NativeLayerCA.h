@@ -107,13 +107,13 @@ class NativeLayerCA : public NativeLayer {
   void SetPosition(const gfx::IntPoint& aPosition) override;
   gfx::IntPoint GetPosition() override;
   gfx::IntRect GetRect() override;
-  void InvalidateRegionThroughoutSwapchain(
-      const gfx::IntRegion& aRegion) override;
   RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
+      const gfx::IntRegion& aUpdateRegion,
       gfx::BackendType aBackendType) override;
   void SetGLContext(gl::GLContext* aGLContext) override;
   gl::GLContext* GetGLContext() override;
-  Maybe<GLuint> NextSurfaceAsFramebuffer(bool aNeedsDepth) override;
+  Maybe<GLuint> NextSurfaceAsFramebuffer(const gfx::IntRegion& aUpdateRegion,
+                                         bool aNeedsDepth) override;
   gfx::IntRegion CurrentSurfaceInvalidRegion() override;
   void NotifySurfaceReady() override;
   bool IsOpaque() override;
@@ -160,6 +160,11 @@ class NativeLayerCA : public NativeLayer {
   CALayer* UnderlyingCALayer() { return mWrappingCALayer; }
   void ApplyChanges();
   void SetBackingScale(float aBackingScale);
+
+  // Invalidates the specified region in all surfaces that are tracked by this
+  // layer.
+  void InvalidateRegionThroughoutSwapchain(const MutexAutoLock&,
+                                           const gfx::IntRegion& aRegion);
 
   GLuint GetOrCreateFramebufferForSurface(const MutexAutoLock&,
                                           CFTypeRefPtr<IOSurfaceRef> aSurface,

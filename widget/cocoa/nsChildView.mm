@@ -1508,8 +1508,8 @@ void nsChildView::EnsureContentLayerForMainThreadPainting() {
 void nsChildView::PaintWindowInContentLayer() {
   EnsureContentLayerForMainThreadPainting();
   mContentLayer->SetSurfaceIsFlipped(false);
-  mContentLayer->InvalidateRegionThroughoutSwapchain(mContentLayerInvalidRegion.ToUnknownRegion());
-  RefPtr<DrawTarget> dt = mContentLayer->NextSurfaceAsDrawTarget(gfx::BackendType::SKIA);
+  RefPtr<DrawTarget> dt = mContentLayer->NextSurfaceAsDrawTarget(
+      mContentLayerInvalidRegion.ToUnknownRegion(), gfx::BackendType::SKIA);
   if (!dt) {
     return;
   }
