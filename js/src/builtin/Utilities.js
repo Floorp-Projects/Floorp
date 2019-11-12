@@ -177,6 +177,15 @@ function GetTypeError(msg) {
     assert(false, "the catch block should've returned from this function.");
 }
 
+function GetAggregateError(msg) {
+    try {
+        FUN_APPLY(ThrowAggregateError, undefined, arguments);
+    } catch (e) {
+        return e;
+    }
+    assert(false, "the catch block should've returned from this function.");
+}
+
 function GetInternalError(msg) {
     try {
         FUN_APPLY(ThrowInternalError, undefined, arguments);
