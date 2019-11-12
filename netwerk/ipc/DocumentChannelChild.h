@@ -76,15 +76,12 @@ class DocumentChannelChild final : public PDocumentChannelChild,
       const LoadInfoArgs& aLoadInfo, nsIURI* aNewUri,
       ConfirmRedirectResolver&& aResolve);
 
-  void DoFailedAsyncOpen(const nsresult& aStatusCode);
-
   const nsTArray<DocumentChannelRedirect>& GetRedirectChain() const {
     return mRedirects;
   }
 
-  friend class NeckoTargetChannelEvent<DocumentChannelChild>;
-
  private:
+  friend class NeckoTargetChannelFunctionEvent;
   void ShutdownListeners(nsresult aStatusCode);
 
   ~DocumentChannelChild() = default;
