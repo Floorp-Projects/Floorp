@@ -6077,6 +6077,19 @@ class LIsObjectAndBranch : public LControlInstructionHelper<2, BOX_PIECES, 0> {
   MBasicBlock* ifFalse() const { return getSuccessor(1); }
 };
 
+class LIsNullOrUndefined : public LInstructionHelper<1, BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(IsNullOrUndefined);
+  static const size_t Input = 0;
+
+  explicit LIsNullOrUndefined(const LBoxAllocation& input)
+      : LInstructionHelper(classOpcode) {
+    setBoxOperand(Input, input);
+  }
+
+  MIsNullOrUndefined* mir() const { return mir_->toIsNullOrUndefined(); }
+};
+
 class LHasClass : public LInstructionHelper<1, 1, 0> {
  public:
   LIR_HEADER(HasClass);
