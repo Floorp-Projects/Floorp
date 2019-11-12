@@ -58,6 +58,10 @@ interface HTMLElement : Element {
   //readonly attribute boolean? commandHidden;
   //readonly attribute boolean? commandDisabled;
   //readonly attribute boolean? commandChecked;
+
+  // https://html.spec.whatwg.org/multipage/custom-elements.html#dom-attachinternals
+  [Pref="dom.webcomponents.elementInternals.enabled", Throws]
+  ElementInternals attachInternals();
 };
 
 // http://dev.w3.org/csswg/cssom-view/#extensions-to-the-htmlelement-interface

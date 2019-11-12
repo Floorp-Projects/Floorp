@@ -105,6 +105,8 @@ struct CustomElementData {
   void SetCustomElementDefinition(CustomElementDefinition* aDefinition);
   CustomElementDefinition* GetCustomElementDefinition();
   nsAtom* GetCustomElementType() const { return mType; }
+  void AttachedInternals();
+  bool HasAttachedInternals() const { return mIsAttachedInternals; }
 
   void Traverse(nsCycleCollectionTraversalCallback& aCb) const;
   void Unlink();
@@ -123,6 +125,7 @@ struct CustomElementData {
   // this would be x-button.
   RefPtr<nsAtom> mType;
   RefPtr<CustomElementDefinition> mCustomElementDefinition;
+  bool mIsAttachedInternals = false;
 };
 
 #define ALREADY_CONSTRUCTED_MARKER nullptr

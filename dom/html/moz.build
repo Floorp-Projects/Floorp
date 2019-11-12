@@ -49,6 +49,7 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'ElementInternals.h',
     'HTMLAllCollection.h',
     'HTMLAnchorElement.h',
     'HTMLAreaElement.h',
@@ -129,6 +130,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    'ElementInternals.cpp',
     'HTMLAllCollection.cpp',
     'HTMLAnchorElement.cpp',
     'HTMLAreaElement.cpp',
