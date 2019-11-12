@@ -38,14 +38,6 @@ async function check_no_enterprise_roots_imported(
   }
 }
 
-function der_array_to_string(derArray) {
-  let derString = "";
-  for (let b of derArray) {
-    derString += String.fromCharCode(b);
-  }
-  return derString;
-}
-
 async function check_some_enterprise_roots_imported(nssComponent, certDB) {
   let enterpriseRoots = nssComponent.getEnterpriseRoots();
   notEqual(enterpriseRoots, null, "enterprise roots list should not be null");
@@ -57,7 +49,7 @@ async function check_some_enterprise_roots_imported(nssComponent, certDB) {
   let foundNonBuiltIn = false;
   let savedDBKey = null;
   for (let certDer of enterpriseRoots) {
-    let cert = certDB.constructX509(der_array_to_string(certDer));
+    let cert = certDB.constructX509(certDer);
     notEqual(cert, null, "should be able to decode cert from DER");
     if (!cert.isBuiltInRoot && !savedDBKey) {
       foundNonBuiltIn = true;

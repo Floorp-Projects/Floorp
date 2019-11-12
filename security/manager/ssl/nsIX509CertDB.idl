@@ -223,7 +223,7 @@ interface nsIX509CertDB : nsISupports {
    *  @return The new certificate object.
    */
   [must_use]
-  nsIX509Cert constructX509(in ACString certDER);
+  nsIX509Cert constructX509(in Array<uint8_t> certDER);
 
   /**
    *  Verifies the signature on the given JAR file to verify that it has a
