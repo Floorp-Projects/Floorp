@@ -78,12 +78,6 @@ bool GetParentPrincipalAndTrackingOrigin(
     nsGlobalWindowInner* a3rdPartyTrackingWindow, uint32_t aBehavior,
     nsIPrincipal** aTopLevelStoragePrincipal, nsACString& aTrackingOrigin,
     nsIURI** aTrackingURI, nsIPrincipal** aTrackingPrincipal) {
-  Document* doc = a3rdPartyTrackingWindow->GetDocument();
-  // Make sure storage access isn't disabled
-  if (doc && (doc->StorageAccessSandboxed())) {
-    return false;
-  }
-
   // Now we need the principal and the origin of the parent window.
   nsCOMPtr<nsIPrincipal> topLevelStoragePrincipal =
       // Use the "top-level storage area principal" behaviour in reject tracker
@@ -1014,6 +1008,13 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
       return StorageAccessGrantPromise::CreateAndReject(false, __func__);
     }
 
+    Document* doc = parentWindow->GetExtantDoc();
+    // Make sure storage access isn't disabled
+    if (doc && (doc->StorageAccessSandboxed())) {
+      LOG(("Our document is sandboxed"));
+      return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+    }
+
     if (!GetParentPrincipalAndTrackingOrigin(
             parentWindow, behavior, getter_AddRefs(topLevelStoragePrincipal),
             trackingOrigin, getter_AddRefs(trackingURI),
@@ -1481,6 +1482,13 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
                                         aWindow, nullptr, aURI) == thirdParty);
   }
 #endif
+
+  Document* doc = aWindow->GetExtantDoc();
+  // Make sure storage access isn't disabled
+  if (doc && (doc->StorageAccessSandboxed())) {
+    LOG(("Our document is sandboxed"));
+    return false;
+  }
 
   nsCOMPtr<nsIPrincipal> parentPrincipal;
   nsCOMPtr<nsIURI> parentPrincipalURI;
