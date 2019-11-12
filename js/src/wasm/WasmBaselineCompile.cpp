@@ -1842,17 +1842,17 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
     MOZ_ASSERT(bytes % sizeof(uint32_t) == 0);
     uint32_t destOffset = stackOffset(destHeight);
     uint32_t srcOffset = stackOffset(srcHeight);
-    MOZ_ASSERT(destOffset >= bytes);
-    MOZ_ASSERT(srcOffset >= bytes);
     while (bytes >= sizeof(intptr_t)) {
-      masm.loadPtr(Address(sp_, srcOffset - bytes), temp);
-      masm.storePtr(temp, Address(sp_, destOffset - bytes));
+      masm.loadPtr(Address(sp_, srcOffset), temp);
+      masm.storePtr(temp, Address(sp_, destOffset));
+      destOffset += sizeof(intptr_t);
+      srcOffset += sizeof(intptr_t);
       bytes -= sizeof(intptr_t);
     }
     if (bytes) {
       MOZ_ASSERT(bytes == sizeof(uint32_t));
-      masm.load32(Address(sp_, srcOffset - bytes), temp);
-      masm.store32(temp, Address(sp_, destOffset - bytes));
+      masm.load32(Address(sp_, srcOffset), temp);
+      masm.store32(temp, Address(sp_, destOffset));
     }
   }
 
