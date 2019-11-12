@@ -3235,9 +3235,10 @@ nsresult HTMLEditor::DeleteParentBlocksWithTransactionIfEmpty(
 
   // If we have mutation event listeners, the next point is now outside of
   // editing host or editing hos has been changed.
-  if (HasMutationEventListeners(NS_EVENT_BITS_MUTATION_NODEREMOVED |
-                                NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
-                                NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
+  if (MaybeHasMutationEventListeners(
+          NS_EVENT_BITS_MUTATION_NODEREMOVED |
+          NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
+          NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
     Element* editingHost = GetActiveEditingHost();
     if (NS_WARN_IF(!editingHost) ||
         NS_WARN_IF(editingHost != wsObj.GetEditingHost())) {
