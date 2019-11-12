@@ -77,6 +77,7 @@
 #include "nsIPresentationService.h"
 #include "nsIScriptError.h"
 #include "ReferrerInfo.h"
+#include "PermissionDelegateHandler.h"
 
 #include "nsIExternalProtocolHandler.h"
 #include "BrowserChild.h"
@@ -771,15 +772,23 @@ bool Navigator::Vibrate(const nsTArray<uint32_t>& aPattern) {
   }
 
   mRequestedVibrationPattern.SwapElements(pattern);
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
-  if (!permMgr) {
+
+  PermissionDelegateHandler* permissionHandler =
+      doc->GetPermissionDelegateHandler();
+  if (NS_WARN_IF(!permissionHandler)) {
     return false;
   }
 
   uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
 
-  permMgr->TestPermissionFromPrincipal(doc->NodePrincipal(),
-                                       kVibrationPermissionType, &permission);
+  permissionHandler->GetPermission(kVibrationPermissionType, &permission,
+                                   false);
+
+  if (permission == nsIPermissionManager::DENY_ACTION) {
+    // Abort without observer service or on denied session permission.
+    SetVibrationPermission(false /* permitted */, false /* persistent */);
+    return false;
+  }
 
   if (permission == nsIPermissionManager::ALLOW_ACTION ||
       mRequestedVibrationPattern.IsEmpty() ||
@@ -790,14 +799,12 @@ bool Navigator::Vibrate(const nsTArray<uint32_t>& aPattern) {
     return true;
   }
 
+  // Request user permission.
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (!obs || permission == nsIPermissionManager::DENY_ACTION) {
-    // Abort without observer service or on denied session permission.
-    SetVibrationPermission(false /* permitted */, false /* persistent */);
+  if (!obs) {
     return true;
   }
 
-  // Request user permission.
   obs->NotifyObservers(ToSupports(this), "Vibration:Request", nullptr);
 
   return true;
