@@ -45,7 +45,7 @@ const NEWPROFILE_PING_DEFAULT_DELAY = 30 * 60 * 1000;
 
 // Ping types.
 const PING_TYPE_MAIN = "main";
-const PING_TYPE_OPTOUT = "optout";
+const PING_TYPE_DELETION_REQUEST = "deletion-request";
 
 // Session ping reasons.
 const REASON_GATHER_PAYLOAD = "gather-payload";
@@ -200,6 +200,8 @@ var TelemetryController = Object.freeze({
    *                  environment data.
    * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
    * @param {Boolean} [aOptions.usePingSender=false] if true, send the ping using the PingSender.
+   * @param {String} [aOptions.overrideClientId=undefined] if set, override the
+   *                 client id to the provided value. Implies aOptions.addClientId=true.
    * @returns {Promise} Test-only - a promise that resolves with the ping id once the ping is stored or sent.
    */
   submitExternalPing(aType, aPayload, aOptions = {}) {
@@ -233,6 +235,8 @@ var TelemetryController = Object.freeze({
    * @param {Boolean} [aOptions.overwrite=false] true overwrites a ping with the same name,
    *                  if found.
    * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
+   * @param {String} [aOptions.overrideClientId=undefined] if set, override the
+   *                 client id to the provided value. Implies aOptions.addClientId=true.
    *
    * @returns {Promise} A promise that resolves with the ping id when the ping is saved to
    *                    disk.
@@ -379,6 +383,8 @@ var Impl = {
    * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
    *                  environment data.
    * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
+   * @param {String} [aOptions.overrideClientId=undefined] if set, override the
+   *                 client id to the provided value. Implies aOptions.addClientId=true.
    *
    * @returns {Object} An object that contains the assembled ping data.
    */
@@ -402,8 +408,8 @@ var Impl = {
       payload,
     };
 
-    if (aOptions.addClientId) {
-      pingData.clientId = this._clientID;
+    if (aOptions.addClientId || aOptions.overrideClientId) {
+      pingData.clientId = aOptions.overrideClientId || this._clientID;
     }
 
     if (aOptions.addEnvironment) {
@@ -447,13 +453,16 @@ var Impl = {
    *                  environment data.
    * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
    * @param {Boolean} [aOptions.usePingSender=false] if true, send the ping using the PingSender.
+   * @param {String} [aOptions.overrideClientId=undefined] if set, override the
+   *                 client id to the provided value. Implies aOptions.addClientId=true.
    * @returns {Promise} Test-only - a promise that is resolved with the ping id once the ping is stored or sent.
    */
   async _submitPingLogic(aType, aPayload, aOptions) {
     // Make sure to have a clientId if we need one. This cover the case of submitting
     // a ping early during startup, before Telemetry is initialized, if no client id was
     // cached.
-    if (!this._clientID && aOptions.addClientId) {
+    if (!this._clientID && aOptions.addClientId && !aOptions.overrideClientId) {
+      this._log.trace("_submitPingLogic - Waiting on client id");
       Telemetry.getHistogramById(
         "TELEMETRY_PING_SUBMISSION_WAITING_CLIENTID"
       ).add();
@@ -497,6 +506,8 @@ var Impl = {
    *                  environment data.
    * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
    * @param {Boolean} [aOptions.usePingSender=false] if true, send the ping using the PingSender.
+   * @param {String} [aOptions.overrideClientId=undefined] if set, override the
+   *                 client id to the provided value. Implies aOptions.addClientId=true.
    * @returns {Promise} Test-only - a promise that is resolved with the ping id once the ping is stored or sent.
    */
   submitExternalPing: function send(aType, aPayload, aOptions) {
@@ -559,6 +570,8 @@ var Impl = {
    *                  environment data.
    * @param {Boolean} aOptions.overwrite true overwrites a ping with the same name, if found.
    * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
+   * @param {String} [aOptions.overrideClientId=undefined] if set, override the
+   *                 client id to the provided value. Implies aOptions.addClientId=true.
    *
    * @returns {Promise} A promise that resolves with the ping id when the ping is saved to
    *                    disk.
@@ -1002,7 +1015,7 @@ var Impl = {
 
   /**
    * Called whenever the FHR Upload preference changes (e.g. when user disables FHR from
-   * the preferences panel), this triggers sending the optout ping.
+   * the preferences panel), this triggers sending the "deletion-request" ping.
    */
   _onUploadPrefChange() {
     const uploadEnabled = Services.prefs.getBoolPref(
@@ -1050,13 +1063,18 @@ var Impl = {
         TelemetrySession.resetSubsessionCounter();
 
         // 5. Set ClientID to a known value
+        let oldClientId = this._clientID;
         this._clientID = await ClientID.setClientID(
           TelemetryUtils.knownClientID
         );
 
-        // 6. Send the optout ping.
-        this._log.trace("_onUploadPrefChange - Sending optout ping.");
-        this.submitExternalPing(PING_TYPE_OPTOUT, {}, { addClientId: false });
+        // 6. Send the deletion-request ping.
+        this._log.trace("_onUploadPrefChange - Sending deletion-request ping.");
+        this.submitExternalPing(
+          PING_TYPE_DELETION_REQUEST,
+          {},
+          { overrideClientId: oldClientId }
+        );
       }
     })();
 
@@ -1070,7 +1088,7 @@ var Impl = {
 
   _attachObservers() {
     if (IS_UNIFIED_TELEMETRY) {
-      // Watch the FHR upload setting to trigger optout pings.
+      // Watch the FHR upload setting to trigger "deletion-request" pings.
       Services.prefs.addObserver(
         TelemetryUtils.Preferences.FhrUploadEnabled,
         this,
