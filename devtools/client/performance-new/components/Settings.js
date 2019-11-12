@@ -1,7 +1,58 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// @ts-check
+/* eslint-disable react/prop-types */
+
+/**
+ * @typedef {Object} StateProps
+ * @property {number} interval
+ * @property {number} entries
+ * @property {string[]} features
+ * @property {string[]} threads
+ * @property {string} threadsString
+ * @property {string[]} objdirs
+ */
+
+/**
+ * @typedef {Object} ThunkDispatchProps
+ * @property {typeof actions.changeInterval} changeInterval
+ * @property {typeof actions.changeEntries} changeEntries
+ * @property {typeof actions.changeFeatures} changeFeatures
+ * @property {typeof actions.changeThreads} changeThreads
+ * @property {typeof actions.changeObjdirs} changeObjdirs
+ */
+
+/**
+ * @typedef {ResolveThunks<ThunkDispatchProps>} DispatchProps
+ */
+
+/**
+ * @typedef {Object} State
+ * @property {null | string} temporaryThreadText
+ */
+
+/**
+ * @typedef {import("react")} React
+ * @typedef {import("../@types/perf").PopupWindow} PopupWindow
+ * @typedef {import("../@types/perf").State} StoreState
+ * @typedef {StateProps & DispatchProps} Props
+ */
+
+/**
+ * @template P
+ * @typedef {import("react-redux").ResolveThunks<P>} ResolveThunks<P>
+ */
+
+/**
+ * @template InjectedProps
+ * @template NeededProps
+ * @typedef {import("react-redux")
+ *    .InferableComponentEnhancerWithProps<InjectedProps, NeededProps>
+ * } InferableComponentEnhancerWithProps<InjectedProps, NeededProps>
+ */
 "use strict";
+
 const {
   PureComponent,
   createFactory,
@@ -29,16 +80,11 @@ const {
   calculateOverhead,
 } = require("devtools/client/performance-new/utils");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const actions = require("devtools/client/performance-new/store/actions");
 const selectors = require("devtools/client/performance-new/store/selectors");
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "FilePicker",
-  "@mozilla.org/filepicker;1",
-  "nsIFilePicker"
-);
+const {
+  openFilePickerForObjdir,
+} = require("devtools/client/performance-new/browser");
 
 // sizeof(double) + sizeof(char)
 // http://searchfox.org/mozilla-central/rev/e8835f52eff29772a57dca7bcc86a9a312a23729/tools/profiler/core/ProfileEntry.h#73
@@ -46,6 +92,11 @@ const PROFILE_ENTRY_SIZE = 9;
 
 const NOTCHES = Array(22).fill("discrete-level-notch");
 
+/**
+ * @typedef {{ name: string, id: string, title: string }} ThreadColumn
+ */
+
+/** @type {Array<ThreadColumn[]>} */
 const threadColumns = [
   [
     {
@@ -210,29 +261,15 @@ const featureCheckboxes = [
 
 /**
  * This component manages the settings for recording a performance profile.
+ * @extends {React.PureComponent<Props, State>}
  */
 class Settings extends PureComponent {
-  static get propTypes() {
-    return {
-      // StateProps
-      interval: PropTypes.number.isRequired,
-      entries: PropTypes.number.isRequired,
-      features: PropTypes.array.isRequired,
-      threads: PropTypes.array.isRequired,
-      threadsString: PropTypes.string.isRequired,
-      objdirs: PropTypes.array.isRequired,
-
-      // DispatchProps
-      changeInterval: PropTypes.func.isRequired,
-      changeEntries: PropTypes.func.isRequired,
-      changeFeatures: PropTypes.func.isRequired,
-      changeThreads: PropTypes.func.isRequired,
-      changeObjdirs: PropTypes.func.isRequired,
-    };
-  }
-
+  /**
+   * @param {Props} props
+   */
   constructor(props) {
     super(props);
+    /** @type {State} */
     this.state = {
       // Allow the textbox to have a temporary tracked value.
       temporaryThreadText: null,
@@ -283,6 +320,10 @@ class Settings extends PureComponent {
     return notches;
   }
 
+  /**
+   * Handle the checkbox change.
+   * @param {React.ChangeEvent<HTMLInputElement>} event
+   */
   _handleThreadCheckboxChange(event) {
     const { threads, changeThreads } = this.props;
     const { checked, value } = event.target;
@@ -296,6 +337,10 @@ class Settings extends PureComponent {
     }
   }
 
+  /**
+   * Handle the checkbox change.
+   * @param {React.ChangeEvent<HTMLInputElement>} event
+   */
   _handleFeaturesCheckboxChange(event) {
     const { features, changeFeatures } = this.props;
     const { checked, value } = event.target;
@@ -311,18 +356,13 @@ class Settings extends PureComponent {
 
   _handleAddObjdir() {
     const { objdirs, changeObjdirs } = this.props;
-    FilePicker.init(window, "Pick build directory", FilePicker.modeGetFolder);
-    FilePicker.open(rv => {
-      if (rv == FilePicker.returnOK) {
-        const path = FilePicker.file.path;
-        if (path && !objdirs.includes(path)) {
-          const newObjdirs = [...objdirs, path];
-          changeObjdirs(newObjdirs);
-        }
-      }
-    });
+    openFilePickerForObjdir(window, objdirs, changeObjdirs);
   }
 
+  /**
+   * @param {number} index
+   * @return {void}
+   */
   _handleRemoveObjdir(index) {
     const { objdirs, changeObjdirs } = this.props;
     const newObjdirs = [...objdirs];
@@ -330,15 +370,25 @@ class Settings extends PureComponent {
     changeObjdirs(newObjdirs);
   }
 
+  /**
+   * @param {React.ChangeEvent<HTMLInputElement>} event
+   */
   _setThreadTextFromInput(event) {
     this.setState({ temporaryThreadText: event.target.value });
   }
 
+  /**
+   * @param {React.ChangeEvent<HTMLInputElement>} event
+   */
   _handleThreadTextCleanup(event) {
     this.setState({ temporaryThreadText: null });
     this.props.changeThreads(_threadTextToList(event.target.value));
   }
-
+  /**
+   * @param {ThreadColumn[]} threadDisplay
+   * @param {number} index
+   * @return {React.ReactNode}
+   */
   _renderThreadsColumns(threadDisplay, index) {
     const { threads } = this.props;
     return div(
@@ -365,8 +415,14 @@ class Settings extends PureComponent {
   }
 
   _renderThreads() {
+    const { temporaryThreadText } = this.state;
+
     return details(
-      { className: "perf-settings-details", onToggle: _handleToggle },
+      {
+        className: "perf-settings-details",
+        // @ts-ignore - The React type definitions don't know about onToggle.
+        onToggle: _handleToggle,
+      },
       summary(
         {
           className: "perf-settings-summary",
@@ -402,9 +458,9 @@ class Settings extends PureComponent {
                 id: "perf-settings-thread-text",
                 type: "text",
                 value:
-                  this.state.temporaryThreadText === null
-                    ? this.props.threads
-                    : this.state.temporaryThreadText,
+                  temporaryThreadText === null
+                    ? this.props.threads.join(",")
+                    : temporaryThreadText,
                 onBlur: this._handleThreadTextCleanup,
                 onFocus: this._setThreadTextFromInput,
                 onChange: this._setThreadTextFromInput,
@@ -418,7 +474,11 @@ class Settings extends PureComponent {
 
   _renderFeatures() {
     return details(
-      { className: "perf-settings-details", onToggle: _handleToggle },
+      {
+        className: "perf-settings-details",
+        // @ts-ignore - The React type definitions don't know about onToggle.
+        onToggle: _handleToggle,
+      },
       summary(
         {
           className: "perf-settings-summary",
@@ -468,6 +528,7 @@ class Settings extends PureComponent {
     return details(
       {
         className: "perf-settings-details",
+        // @ts-ignore - The React type definitions don't know about onToggle.
         onToggle: _handleToggle,
       },
       summary(
@@ -534,8 +595,8 @@ class Settings extends PureComponent {
 
 /**
  * Clean up the thread list string into a list of values.
- * @param string threads, comma separated values.
- * @return Array list of thread names
+ * @param {string} threads - Comma separated values.
+ * @return {string[]}
  */
 function _threadTextToList(threads) {
   return (
@@ -568,11 +629,20 @@ function _entriesTextDisplay(value) {
 }
 
 function _handleToggle() {
-  if (window.gResizePopup) {
-    window.gResizePopup(document.body.clientHeight);
+  /** @type {any} **/
+  const anyWindow = window;
+  /** @type {PopupWindow} */
+  const popupWindow = anyWindow;
+
+  if (popupWindow.gResizePopup) {
+    popupWindow.gResizePopup(document.body.clientHeight);
   }
 }
 
+/**
+ * @param {StoreState} state
+ * @returns {StateProps}
+ */
 function mapStateToProps(state) {
   return {
     interval: selectors.getInterval(state),
@@ -584,6 +654,7 @@ function mapStateToProps(state) {
   };
 }
 
+/** @type {ThunkDispatchProps} */
 const mapDispatchToProps = {
   changeInterval: actions.changeInterval,
   changeEntries: actions.changeEntries,
@@ -592,7 +663,9 @@ const mapDispatchToProps = {
   changeObjdirs: actions.changeObjdirs,
 };
 
-module.exports = connect(
+const SettingsConnected = connect(
   mapStateToProps,
   mapDispatchToProps
 )(Settings);
+
+module.exports = SettingsConnected;
