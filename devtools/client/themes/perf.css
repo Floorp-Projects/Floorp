@@ -267,6 +267,19 @@
   line-height: 1.6;
 }
 
+.perf-settings-feature-disabled-reason {
+  margin-top: 8px;
+}
+
+.perf-settings-checkbox-label-disabled {
+  opacity: 0.8;
+}
+
+.perf-settings-features-disabled-title {
+  margin: 26px 0 18px;
+  font-size: 13px;
+}
+
 .perf-settings-subtext {
   font-weight: bold;
 }

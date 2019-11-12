@@ -19,6 +19,7 @@ const {
  * @typedef {import("../@types/perf").PerfFront} PerfFront
  * @typedef {import("../@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
  * @typedef {import("../@types/perf").RecordingState} RecordingState
+ * @typedef {import("../@types/perf").InitializeStoreValues} InitializeStoreValues
  */
 
 /**
@@ -152,8 +153,8 @@ exports.changeObjdirs = objdirs =>
 /**
  * Receive the values to initialize the store. See the reducer for what values
  * are expected.
- * @param {object} values
- * @return {ThunkAction<void>}
+ * @param {InitializeStoreValues} values
+ * @return {Action}
  */
 exports.initializeStore = values => {
   const { recordingPreferences, ...initValues } = values;
