@@ -626,8 +626,12 @@ void nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput* aState,
   kidReflowInput.SetComputedBSize(computedBSize);
   kidReflowInput.ComputedMinBSize() = computedMinBSize;
   kidReflowInput.ComputedMaxBSize() = computedMaxBSize;
-  if (aState->mReflowInput.IsBResizeForWM(kidReflowInput.GetWritingMode())) {
+  const WritingMode kidWM = kidReflowInput.GetWritingMode();
+  if (aState->mReflowInput.IsBResizeForWM(kidWM)) {
     kidReflowInput.SetBResize(true);
+  }
+  if (aState->mReflowInput.IsBResizeForPercentagesForWM(kidWM)) {
+    kidReflowInput.mFlags.mIsBResizeForPercentages = true;
   }
 
   // Temporarily set mHasHorizontalScrollbar/mHasVerticalScrollbar to
