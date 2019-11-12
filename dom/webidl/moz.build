@@ -484,6 +484,7 @@ WEBIDL_FILES = [
     'DragEvent.webidl',
     'DynamicsCompressorNode.webidl',
     'Element.webidl',
+    'ElementInternals.webidl',
     'Event.webidl',
     'EventHandler.webidl',
     'EventListener.webidl',
