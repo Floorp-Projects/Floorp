@@ -51,31 +51,9 @@ static LazyLogModule gNotifyAddrLog("nsNotifyAddr");
 #define LOG(args) MOZ_LOG(gNotifyAddrLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gNotifyAddrLog, mozilla::LogLevel::Debug)
 
-static HMODULE sNetshell;
-static decltype(NcFreeNetconProperties)* sNcFreeNetconProperties;
-
 // period during which to absorb subsequent network change events, in
 // milliseconds
 static const unsigned int kNetworkChangeCoalescingPeriod = 1000;
-
-static void InitNetshellLibrary(void) {
-  if (!sNetshell) {
-    sNetshell = LoadLibraryW(L"Netshell.dll");
-    if (sNetshell) {
-      sNcFreeNetconProperties =
-          (decltype(NcFreeNetconProperties)*)GetProcAddress(
-              sNetshell, "NcFreeNetconProperties");
-    }
-  }
-}
-
-static void FreeDynamicLibraries(void) {
-  if (sNetshell) {
-    sNcFreeNetconProperties = nullptr;
-    FreeLibrary(sNetshell);
-    sNetshell = nullptr;
-  }
-}
 
 NS_IMPL_ISUPPORTS(nsNotifyAddrListener, nsINetworkLinkService, nsIRunnable,
                   nsIObserver)
@@ -92,7 +70,6 @@ nsNotifyAddrListener::nsNotifyAddrListener()
 
 nsNotifyAddrListener::~nsNotifyAddrListener() {
   NS_ASSERTION(!mThread, "nsNotifyAddrListener thread shutdown failed");
-  FreeDynamicLibraries();
 }
 
 NS_IMETHODIMP
@@ -418,93 +395,6 @@ nsNotifyAddrListener::ChangeEvent::Run() {
   return NS_OK;
 }
 
-// Bug 465158 features an explanation for this check. ICS being "Internet
-// Connection Sharing). The description says it is always IP address
-// 192.168.0.1 for this case.
-bool nsNotifyAddrListener::CheckICSGateway(PIP_ADAPTER_ADDRESSES aAdapter) {
-  if (!aAdapter->FirstUnicastAddress) return false;
-
-  LPSOCKADDR aAddress = aAdapter->FirstUnicastAddress->Address.lpSockaddr;
-  if (!aAddress) return false;
-
-  PSOCKADDR_IN in_addr = (PSOCKADDR_IN)aAddress;
-  bool isGateway = (aAddress->sa_family == AF_INET &&
-                    in_addr->sin_addr.S_un.S_un_b.s_b1 == 192 &&
-                    in_addr->sin_addr.S_un.S_un_b.s_b2 == 168 &&
-                    in_addr->sin_addr.S_un.S_un_b.s_b3 == 0 &&
-                    in_addr->sin_addr.S_un.S_un_b.s_b4 == 1);
-
-  if (isGateway) isGateway = CheckICSStatus(aAdapter->FriendlyName);
-
-  return isGateway;
-}
-
-bool nsNotifyAddrListener::CheckICSStatus(PWCHAR aAdapterName) {
-  InitNetshellLibrary();
-  // This method enumerates all privately shared connections and checks if some
-  // of them has the same name as the one provided in aAdapterName. If such
-  // connection is found in the collection the adapter is used as ICS gateway
-  bool isICSGatewayAdapter = false;
-
-  HRESULT hr;
-  RefPtr<INetSharingManager> netSharingManager;
-  hr = CoCreateInstance(CLSID_NetSharingManager, nullptr, CLSCTX_INPROC_SERVER,
-                        IID_INetSharingManager,
-                        getter_AddRefs(netSharingManager));
-
-  RefPtr<INetSharingPrivateConnectionCollection> privateCollection;
-  if (SUCCEEDED(hr)) {
-    hr = netSharingManager->get_EnumPrivateConnections(
-        ICSSC_DEFAULT, getter_AddRefs(privateCollection));
-  }
-
-  RefPtr<IEnumNetSharingPrivateConnection> privateEnum;
-  if (SUCCEEDED(hr)) {
-    RefPtr<IUnknown> privateEnumUnknown;
-    hr = privateCollection->get__NewEnum(getter_AddRefs(privateEnumUnknown));
-    if (SUCCEEDED(hr)) {
-      hr = privateEnumUnknown->QueryInterface(
-          IID_IEnumNetSharingPrivateConnection, getter_AddRefs(privateEnum));
-    }
-  }
-
-  if (SUCCEEDED(hr)) {
-    ULONG fetched;
-    VARIANT connectionVariant;
-    while (!isICSGatewayAdapter &&
-           SUCCEEDED(hr = privateEnum->Next(1, &connectionVariant, &fetched)) &&
-           fetched) {
-      if (connectionVariant.vt != VT_UNKNOWN) {
-        // We should call VariantClear here but it needs to link
-        // with oleaut32.lib that produces a Ts incrase about 10ms
-        // that is undesired. As it is quit unlikely the result would
-        // be of a different type anyway, let's pass the variant
-        // unfreed here.
-        NS_ERROR(
-            "Variant of unexpected type, expecting VT_UNKNOWN, we probably "
-            "leak it!");
-        continue;
-      }
-
-      RefPtr<INetConnection> connection;
-      if (SUCCEEDED(connectionVariant.punkVal->QueryInterface(
-              IID_INetConnection, getter_AddRefs(connection)))) {
-        connectionVariant.punkVal->Release();
-
-        NETCON_PROPERTIES* properties;
-        if (SUCCEEDED(connection->GetProperties(&properties))) {
-          if (!wcscmp(properties->pszwName, aAdapterName))
-            isICSGatewayAdapter = true;
-
-          if (sNcFreeNetconProperties) sNcFreeNetconProperties(properties);
-        }
-      }
-    }
-  }
-
-  return isICSGatewayAdapter;
-}
-
 DWORD
 nsNotifyAddrListener::CheckAdaptersAddresses(void) {
   ULONG len = 16384;
@@ -546,8 +436,7 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
          adapter = adapter->Next) {
       if (adapter->OperStatus != IfOperStatusUp ||
           !adapter->FirstUnicastAddress ||
-          adapter->IfType == IF_TYPE_SOFTWARE_LOOPBACK ||
-          CheckICSGateway(adapter)) {
+          adapter->IfType == IF_TYPE_SOFTWARE_LOOPBACK) {
         continue;
       }
 
