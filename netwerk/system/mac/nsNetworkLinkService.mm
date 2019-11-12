@@ -407,13 +407,14 @@ static bool scanArp(char* ip, char* mac, size_t maclen) {
   return false;
 }
 
-/*
- * Fetch the routing table and only return the first gateway,
- * Which is the default gateway.
- *
- * Returns 0 if the default gateway's IP has been found.
- */
-static int routingTable(char* gw, size_t aGwLen) {
+//
+// Figure out the current IPv4 "network identification" string.
+//
+// It detects the IP of the default gateways in the routing table, then the MAC
+// address of that IP in the ARP table before it hashes that string (to avoid
+// information leakage).
+//
+static bool ipv4NetworkId(SHA1Sum* aSHA1) {
   size_t needed;
   int mib[6];
   struct rt_msghdr* rtm;
@@ -428,18 +429,19 @@ static int routingTable(char* gw, size_t aGwLen) {
   mib[5] = 0;
 
   if (sysctl(mib, 6, nullptr, &needed, nullptr, 0) < 0) {
-    return 1;
+    return false;
   }
 
   UniquePtr<char[]> buf(new char[needed]);
 
   if (sysctl(mib, 6, &buf[0], &needed, nullptr, 0) < 0) {
-    return 3;
+    return false;
   }
 
   char ip[INET_ADDRSTRLEN];
 
   char* lim = &buf[0] + needed;
+  nsTArray<nsCString> hash;
 
   // `next + 1 < lim` ensures we have valid `rtm->rtm_msglen` which is an
   // unsigned short at the beginning of `rt_msghdr`.
@@ -485,47 +487,30 @@ static int routingTable(char* gw, size_t aGwLen) {
       sockin = reinterpret_cast<struct sockaddr_in*>(gateway);
       inet_ntop(AF_INET, &sockin->sin_addr.s_addr, ip, sizeof(ip) - 1);
       char mac[18];
+
       if (scanArp(ip, mac, sizeof(mac))) {
-        // TODO: use the mac to calculate network id
+        hash.AppendElement(nsCString(mac));
+      } else {
+        // TODO: fail over to ip and interface name
       }
     } else if (gateway->sa_family == AF_LINK) {
       char buf[64];
       struct sockaddr_dl* sockdl = reinterpret_cast<struct sockaddr_dl*>(gateway);
       if (getMac(sockdl, buf, sizeof(buf))) {
-        // TODO: use the mac to calculate network id
+        hash.AppendElement(nsCString(buf));
+      } else {
+        // TODO: fail over to interface name
       }
     }
   }
 
-  // There's no need to iterate over the routing table
-  // We're only looking for the first (default) gateway
-  rtm = reinterpret_cast<struct rt_msghdr*>(&buf[0]);
-  sa = reinterpret_cast<struct sockaddr*>(rtm + 1);
-  sa = reinterpret_cast<struct sockaddr*>(SA_SIZE(sa) + (char*)sa);
-  sockin = reinterpret_cast<struct sockaddr_in*>(sa);
-  inet_ntop(AF_INET, &sockin->sin_addr.s_addr, gw, aGwLen - 1);
-
-  return 0;
-}
-
-//
-// Figure out the current IPv4 "network identification" string.
-//
-// It detects the IP of the default gateway in the routing table, then the MAC
-// address of that IP in the ARP table before it hashes that string (to avoid
-// information leakage).
-//
-static bool ipv4NetworkId(SHA1Sum* sha1) {
-  char gw[INET_ADDRSTRLEN];
-  if (!routingTable(gw, sizeof(gw))) {
-    char mac[18];  // big enough for a printable MAC address
-    if (scanArp(gw, mac, sizeof(mac))) {
-      LOG(("networkid: MAC %s\n", mac));
-      sha1->update(mac, strlen(mac));
-      return true;
-    }
+  hash.Sort();
+  for (uint32_t i = 0; i < hash.Length(); ++i) {
+    LOG(("Hashing string for network id: %s", hash[i].get()));
+    aSHA1->update(hash[i].get(), hash[i].Length());
   }
-  return false;
+
+  return true;
 }
 
 //
