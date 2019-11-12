@@ -443,13 +443,6 @@ extern JS_FRIEND_API void DumpHeap(
     JSContext* cx, FILE* fp, DumpHeapNurseryBehaviour nurseryBehaviour,
     mozilla::MallocSizeOf mallocSizeOf = nullptr);
 
-#ifdef JS_OLD_GETTER_SETTER_METHODS
-JS_FRIEND_API bool obj_defineGetter(JSContext* cx, unsigned argc,
-                                    JS::Value* vp);
-JS_FRIEND_API bool obj_defineSetter(JSContext* cx, unsigned argc,
-                                    JS::Value* vp);
-#endif
-
 extern JS_FRIEND_API bool IsSystemRealm(JS::Realm* realm);
 
 extern JS_FRIEND_API bool IsSystemCompartment(JS::Compartment* comp);
