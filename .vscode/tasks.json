@@ -3,7 +3,7 @@
     // for the documentation about the tasks.json format
     "version": "2.0.0",
     "type": "shell",
-    "command": "${workspaceRoot}/mach",
+    "command": "${workspaceFolder}/mach",
     "windows": {
       "command": "\"\\mozilla-build\\start-shell.bat mach\""
     },
@@ -109,7 +109,7 @@
         "label": "mochitest",
         "args": ["mochitest", "${relativeFile}"],
         "problemMatcher": {
-          "fileLocation": ["relative", "${workspaceRoot}"],
+          "fileLocation": ["relative", "${workspaceFolder}"],
           "pattern": {
               "regexp": "^.*\\s+(TEST-UNEXPECTED-FAIL|TEST-UNEXPECTED-PASS)\\s+\\|\\s+([^\\s]*)\\s+\\|\\s+(.*)$",
               "severity": 1,
@@ -143,7 +143,7 @@
         "label": "xpcshell-test",
         "args": ["xpcshell-test", "${relativeFile}", "--sequential"],
         "problemMatcher": {
-          "fileLocation": ["relative", "${workspaceRoot}"],
+          "fileLocation": ["relative", "${workspaceFolder}"],
           "pattern": {
               "regexp": "^.*\\s+(FAIL|ERROR)\\s+\\[([^\\s]*)\\s+:\\s+(\\d+)\\]\\s+(.*)$",
               "severity": 1,
