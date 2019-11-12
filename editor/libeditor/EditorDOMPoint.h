@@ -686,6 +686,7 @@ class EditorDOMPointBase final {
       return RawRangeBoundary();
     }
     if (!mParent->IsContainerNode()) {
+      MOZ_ASSERT(mOffset.value() <= mParent->Length());
       // If the container is a data node like a text node, we need to create
       // RangeBoundaryBase instance only with mOffset because mChild is always
       // nullptr.
