@@ -363,7 +363,6 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mAllowAuth(mItemType == typeContent),
       mAllowKeywordFixup(false),
       mIsOffScreenBrowser(false),
-      mIsActive(true),
       mDisableMetaRefreshWhenInactive(false),
       mIsAppTab(false),
       mUseGlobalHistory(false),
@@ -1047,8 +1046,9 @@ bool nsDocShell::MaybeInitTiming() {
   }
 
   mTiming->NotifyNavigationStart(
-      mIsActive ? nsDOMNavigationTiming::DocShellState::eActive
-                : nsDOMNavigationTiming::DocShellState::eInactive);
+      mBrowsingContext->GetIsActive()
+          ? nsDOMNavigationTiming::DocShellState::eActive
+          : nsDOMNavigationTiming::DocShellState::eInactive);
 
   return canBeReset;
 }
@@ -5020,7 +5020,7 @@ nsDocShell::GetIsOffScreenBrowser(bool* aIsOffScreen) {
 NS_IMETHODIMP
 nsDocShell::SetIsActive(bool aIsActive) {
   // Keep track ourselves.
-  mIsActive = aIsActive;
+  mBrowsingContext->SetIsActive(aIsActive);
 
   // Tell the PresShell about it.
   if (RefPtr<PresShell> presShell = GetPresShell()) {
@@ -5076,7 +5076,7 @@ nsDocShell::SetIsActive(bool aIsActive) {
 
   // Restart or stop meta refresh timers if necessary
   if (mDisableMetaRefreshWhenInactive) {
-    if (mIsActive) {
+    if (mBrowsingContext->GetIsActive()) {
       ResumeRefreshURIs();
     } else {
       SuspendRefreshURIs();
@@ -5088,7 +5088,7 @@ nsDocShell::SetIsActive(bool aIsActive) {
 
 NS_IMETHODIMP
 nsDocShell::GetIsActive(bool* aIsActive) {
-  *aIsActive = mIsActive;
+  *aIsActive = mBrowsingContext->GetIsActive();
   return NS_OK;
 }
 
@@ -5442,7 +5442,7 @@ nsDocShell::RefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal, int32_t aDelay,
   }
 
   if (busyFlags & BUSY_FLAGS_BUSY ||
-      (!mIsActive && mDisableMetaRefreshWhenInactive)) {
+      (!mBrowsingContext->GetIsActive() && mDisableMetaRefreshWhenInactive)) {
     // We don't  want to create the timer right now. Instead queue up the
     // request and trigger the timer in EndPageLoad() or whenever we become
     // active.
@@ -6335,7 +6335,8 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
   }
   // if there's a refresh header in the channel, this method
   // will set it up for us.
-  if (mIsActive || !mDisableMetaRefreshWhenInactive) RefreshURIFromQueue();
+  if (mBrowsingContext->GetIsActive() || !mDisableMetaRefreshWhenInactive)
+    RefreshURIFromQueue();
 
   // Test whether this is the top frame or a subframe
   bool isTopFrame = true;
@@ -7613,7 +7614,7 @@ nsresult nsDocShell::RestoreFromHistory() {
 
     // this.AddChild(child) calls child.SetDocLoaderParent(this), meaning that
     // the child inherits our state. Among other things, this means that the
-    // child inherits our mIsActive mPrivateBrowsingId, which is what we want.
+    // child inherits our mPrivateBrowsingId, which is what we want.
     AddChild(childItem);
 
     contexts.AppendElement(childShell->GetBrowsingContext());
@@ -8440,7 +8441,7 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
   MOZ_ASSERT(!aLoadState->Target().IsEmpty(), "should have a target here!");
 
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIDocShell> targetDocShell;
+  RefPtr<BrowsingContext> targetContext;
 
   // Only _self, _parent, and _top are supported in noopener case.  But we
   // have to be careful to not apply that to the noreferrer case.  See bug
@@ -8452,19 +8453,17 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
       aLoadState->Target().LowerCaseEqualsLiteral("_self") ||
       aLoadState->Target().LowerCaseEqualsLiteral("_parent") ||
       aLoadState->Target().LowerCaseEqualsLiteral("_top")) {
-    if (BrowsingContext* context = mBrowsingContext->FindWithName(
-            aLoadState->Target(), /* aUseEntryGlobalForAccessCheck */ false)) {
-      targetDocShell = context->GetDocShell();
-    }
+    targetContext = mBrowsingContext->FindWithName(
+        aLoadState->Target(), /* aUseEntryGlobalForAccessCheck */ false);
   }
 
-  if (!targetDocShell) {
-    // If the targetDocShell doesn't exist, then this is a new docShell
-    // and we should consider this a TYPE_DOCUMENT load
+  if (!targetContext) {
+    // If the targetContext doesn't exist, then this is a new docShell and we
+    // should consider this a TYPE_DOCUMENT load
     //
     // For example, when target="_blank"
 
-    // If there's no targetDocShell, that means we are about to create a new
+    // If there's no targetContext, that means we are about to create a new
     // window. Perform a content policy check before creating the window. Please
     // note for all other docshell loads content policy checks are performed
     // within the contentSecurityManager when the channel is about to be
@@ -8509,10 +8508,10 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
     }
   }
 
-  if ((!targetDocShell || targetDocShell == static_cast<nsIDocShell*>(this))) {
+  if (!targetContext || (targetContext == mBrowsingContext)) {
     bool handled;
     rv = MaybeHandleLoadDelegate(aLoadState,
-                                 targetDocShell
+                                 targetContext
                                      ? nsIBrowserDOMWindow::OPEN_CURRENTWINDOW
                                      : nsIBrowserDOMWindow::OPEN_NEWWINDOW,
                                  &handled);
@@ -8535,7 +8534,7 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
   // with a null owner above.
   aLoadState->UnsetLoadFlag(INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL);
 
-  if (!targetDocShell) {
+  if (!targetContext) {
     // If the docshell's document is sandboxed, only open a new window
     // if the document's SANDBOXED_AUXILLARY_NAVIGATION flag is not set.
     // (i.e. if allow-popups is specified)
@@ -8635,39 +8634,22 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
     }
 
     if (newBC) {
-      targetDocShell = newBC->GetDocShell();
+      targetContext = newBC;
     }
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(targetDocShell, rv);
+  NS_ENSURE_TRUE(targetContext, rv);
   //
-  // Transfer the load to the target DocShell... Pass empty string as the
+  // Transfer the load to the target BrowsingContext... Pass empty string as the
   // window target name from to prevent recursive retargeting!
   //
-  nsDocShell* docShell = nsDocShell::Cast(targetDocShell);
   // No window target
   aLoadState->SetTarget(EmptyString());
   // No forced download
   aLoadState->SetFileName(VoidString());
-  rv = docShell->InternalLoad(aLoadState, aDocShell, aRequest);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Switch to target tab if we're currently focused window.
-  // Take loadDivertedInBackground into account so the behavior would be
-  // the same as how the tab first opened.
-  bool isTargetActive = false;
-  targetDocShell->GetIsActive(&isTargetActive);
-  nsCOMPtr<nsPIDOMWindowOuter> domWin = targetDocShell->GetWindow();
-  if (mIsActive && !isTargetActive && domWin &&
-      !Preferences::GetBool("browser.tabs.loadDivertedInBackground", false)) {
-    nsFocusManager::FocusWindow(domWin);
-  }
-
-  // Else we ran out of memory, or were a popup and got blocked,
-  // or something.
-
-  return rv;
+  return targetContext->InternalLoad(mBrowsingContext, aLoadState, aDocShell,
+                                     aRequest);
 }
 
 bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
@@ -9293,7 +9275,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     MOZ_ASSERT(!parent);
 #endif
     SetOrientationLock(hal::eScreenOrientation_None);
-    if (mIsActive) {
+    if (mBrowsingContext->GetIsActive()) {
       ScreenOrientation::UpdateActiveOrientationLock(
           hal::eScreenOrientation_None);
     }
@@ -9950,7 +9932,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
               mScriptGlobal->GetFrameElementInternal();
           popupBlocked = !PopupBlocker::TryUsePopupOpeningToken(
               loadingNode ? loadingNode->NodePrincipal() : nullptr);
-        } else if (mIsActive &&
+        } else if (mBrowsingContext->GetIsActive() &&
                    PopupBlocker::ConsumeTimerTokenForExternalProtocolIframe()) {
           popupBlocked = false;
         } else {
@@ -10204,8 +10186,8 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     }
   }
 
-  bool isActive =
-      mIsActive || (mLoadType & (LOAD_CMD_NORMAL | LOAD_CMD_HISTORY));
+  bool isActive = mBrowsingContext->GetIsActive() ||
+                  (mLoadType & (LOAD_CMD_NORMAL | LOAD_CMD_HISTORY));
   if (!CreateChannelForLoadState(
           aLoadState, loadInfo, this, this, initiatorType, loadFlags, mLoadType,
           cacheKey, isActive, isTopLevelDoc,

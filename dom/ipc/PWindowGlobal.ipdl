@@ -63,6 +63,8 @@ child:
 
   async LoadURIInChild(nsDocShellLoadState aLoadState, bool aSetNavigating);
 
+  async InternalLoadInChild(nsDocShellLoadState aLoadState, bool aTakeFocus);
+
   async DisplayLoadError(nsString aURI);
 
 both:
@@ -73,6 +75,8 @@ parent:
   // BrowsingContext. aTargetBC must be in the same BrowsingContextGroup as this
   // window global.
   async LoadURI(BrowsingContext aTargetBC, nsDocShellLoadState aLoadState, bool aSetNavigating);
+
+  async InternalLoad(BrowsingContext aTargetBC, nsDocShellLoadState aLoadState);
 
   /// Update the URI of the document in this WindowGlobal.
   async UpdateDocumentURI(nsIURI aUri);

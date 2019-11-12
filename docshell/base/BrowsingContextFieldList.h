@@ -12,6 +12,7 @@
 // `BrowsingContext`.
 MOZ_BC_FIELD(Name, nsString)
 MOZ_BC_FIELD(Closed, bool)
+MOZ_BC_FIELD(IsActive, bool)
 MOZ_BC_FIELD(EmbedderPolicy, nsILoadInfo::CrossOriginEmbedderPolicy)
 MOZ_BC_FIELD(OpenerPolicy, nsILoadInfo::CrossOriginOpenerPolicy)
 

@@ -34,6 +34,7 @@
 #include "nsIURIFixup.h"
 
 #include "nsDocShell.h"
+#include "nsFocusManager.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsIObserverService.h"
 #include "nsContentUtils.h"
@@ -210,6 +211,8 @@ BrowsingContext::BrowsingContext(BrowsingContext* aParent,
   MOZ_RELEASE_ASSERT(!mParent || mParent->Group() == mGroup);
   MOZ_RELEASE_ASSERT(mBrowsingContextId != 0);
   MOZ_RELEASE_ASSERT(mGroup);
+
+  mIsActive = true;
 }
 
 void BrowsingContext::SetDocShell(nsIDocShell* aDocShell) {
@@ -878,6 +881,57 @@ nsresult BrowsingContext::LoadURI(BrowsingContext* aAccessor,
     if (WindowGlobalChild* wgc =
             win->GetCurrentInnerWindow()->GetWindowGlobalChild()) {
       wgc->SendLoadURI(this, aLoadState, aSetNavigating);
+    }
+  }
+  return NS_OK;
+}
+
+nsresult BrowsingContext::InternalLoad(BrowsingContext* aAccessor,
+                                       nsDocShellLoadState* aLoadState,
+                                       nsIDocShell** aDocShell,
+                                       nsIRequest** aRequest) {
+  if (IsDiscarded() || (aAccessor && aAccessor->IsDiscarded())) {
+    return NS_OK;
+  }
+
+  bool isActive =
+      aAccessor->GetIsActive() && !mIsActive &&
+      !Preferences::GetBool("browser.tabs.loadDivertedInBackground", false);
+  if (mDocShell) {
+    nsresult rv = nsDocShell::Cast(mDocShell)->InternalLoad(
+        aLoadState, aDocShell, aRequest);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Switch to target tab if we're currently focused window.
+    // Take loadDivertedInBackground into account so the behavior would be
+    // the same as how the tab first opened.
+    nsCOMPtr<nsPIDOMWindowOuter> domWin = GetDOMWindow();
+    if (isActive && domWin) {
+      nsFocusManager::FocusWindow(domWin);
+    }
+
+    // Else we ran out of memory, or were a popup and got blocked,
+    // or something.
+
+    return rv;
+  }
+
+  if (!aAccessor && XRE_IsParentProcess()) {
+    Unused << Canonical()->GetCurrentWindowGlobal()->SendInternalLoadInChild(
+        aLoadState, isActive);
+  } else {
+    MOZ_DIAGNOSTIC_ASSERT(aAccessor);
+    MOZ_DIAGNOSTIC_ASSERT(aAccessor->Group() == Group());
+
+    if (!aAccessor->CanAccess(this)) {
+      return NS_ERROR_DOM_PROP_ACCESS_DENIED;
+    }
+
+    nsCOMPtr<nsPIDOMWindowOuter> win(aAccessor->GetDOMWindow());
+    MOZ_DIAGNOSTIC_ASSERT(win);
+    if (WindowGlobalChild* wgc =
+            win->GetCurrentInnerWindow()->GetWindowGlobalChild()) {
+      wgc->SendInternalLoad(this, aLoadState);
     }
   }
   return NS_OK;

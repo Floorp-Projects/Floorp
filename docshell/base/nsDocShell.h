@@ -1276,7 +1276,6 @@ class nsDocShell final : public nsDocLoader,
   bool mAllowAuth : 1;
   bool mAllowKeywordFixup : 1;
   bool mIsOffScreenBrowser : 1;
-  bool mIsActive : 1;
   bool mDisableMetaRefreshWhenInactive : 1;
   bool mIsAppTab : 1;
   bool mUseGlobalHistory : 1;
