@@ -42,10 +42,6 @@ Storage::Storage(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
     uint32_t rejectedReason = 0;
     StorageAccess access = StorageAllowedForWindow(mWindow, &rejectedReason);
 
-    MOZ_ASSERT(access != StorageAccess::eDeny ||
-               rejectedReason ==
-                   nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
-
     mIsSessionOnly = access <= StorageAccess::eSessionScoped;
   }
 }
