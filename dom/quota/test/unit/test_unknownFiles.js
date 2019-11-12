@@ -89,8 +89,11 @@ function* testSteps() {
   request = initOrigin(principal, "default", continueToNextStepSync);
   yield undefined;
 
-  ok(request.resultCode == NS_ERROR_UNEXPECTED, "Initialization failed");
-  ok(request.result === null, "The request result is null");
+  ok(
+    request.resultCode == NS_OK,
+    "Initialization succeeded even though there are unknown files in " +
+      "repositories"
+  );
 
   info("Clearing origin");
 

@@ -5042,11 +5042,10 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
         continue;
       }
 
+      // Unknown files during initialization are now allowed. Just warn if we
+      // find them.
       UNKNOWN_FILE_WARNING(leafName);
-
-      REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, Rep_UnexpectedFile);
-      RECORD_IN_NIGHTLY(statusKeeper, NS_ERROR_UNEXPECTED);
-      CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(NS_ERROR_UNEXPECTED);
+      continue;
     }
 
     int64_t timestamp;
