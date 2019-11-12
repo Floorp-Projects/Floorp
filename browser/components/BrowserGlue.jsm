@@ -144,6 +144,7 @@ let ACTORS = {
     child: {
       moduleURI: "resource:///actors/NetErrorChild.jsm",
       events: {
+        DOMWindowCreated: {},
         click: {},
       },
     },
@@ -505,8 +506,6 @@ XPCOMUtils.defineLazyGetter(
 // lazy module getters
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AboutNetErrorHandler:
-    "resource:///modules/aboutpages/AboutNetErrorHandler.jsm",
   AboutPrivateBrowsingHandler:
     "resource:///modules/aboutpages/AboutPrivateBrowsingHandler.jsm",
   AboutProtectionsHandler:
@@ -1651,8 +1650,6 @@ BrowserGlue.prototype = {
 
     NewTabUtils.init();
 
-    AboutNetErrorHandler.init();
-
     AboutPrivateBrowsingHandler.init();
 
     AboutProtectionsHandler.init();
@@ -1963,7 +1960,6 @@ BrowserGlue.prototype = {
 
     PageThumbs.uninit();
     NewTabUtils.uninit();
-    AboutNetErrorHandler.uninit();
     AboutPrivateBrowsingHandler.uninit();
     AboutProtectionsHandler.uninit();
 
