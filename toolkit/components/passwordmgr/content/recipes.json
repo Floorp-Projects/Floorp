@@ -50,6 +50,11 @@
       "usernameSelector": "#SFText_UserName",
       "passwordSelector": "#SFText_Password",
       "pathRegex": "^\/login\/login$"
+    },
+    {
+      "description": "Bug 1595339: Checking account type=password fields get login suggestions",
+      "hosts": ["www.dmv.ca.gov"],
+      "notPasswordSelector": "#bankRoutingNo, #validateBankRoutingNo, #bankAcctNo, #validateBankAcctNo"
     }
   ]
 }
