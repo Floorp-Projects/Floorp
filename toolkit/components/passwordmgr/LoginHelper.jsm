@@ -31,6 +31,7 @@ this.LoginHelper = {
   formlessCaptureEnabled: null,
   generationAvailable: null,
   generationEnabled: null,
+  includeOtherSubdomainsInLookup: null,
   insecureAutofill: null,
   managementURI: null,
   privateBrowsingCaptureEnabled: null,
@@ -63,6 +64,9 @@ this.LoginHelper = {
     );
     this.insecureAutofill = Services.prefs.getBoolPref(
       "signon.autofillForms.http"
+    );
+    this.includeOtherSubdomainsInLookup = Services.prefs.getBoolPref(
+      "signon.includeOtherSubdomainsInLookup"
     );
     this.managementURI = Services.prefs.getStringPref(
       "signon.management.overrideURI",
