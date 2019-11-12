@@ -37,8 +37,6 @@ add_task(async function() {
   tooltip.panel.appendChild(div);
   tooltip.setContentSize({ width: 50, height: 100 });
 
-  const { offsetTop, offsetLeft } = getOffsets(doc);
-
   info("Display the tooltip on box1.");
   await showTooltip(tooltip, box1, { x: 5, y: 10 });
 
@@ -46,16 +44,8 @@ add_task(async function() {
   let anchorRect = box1.getBoundingClientRect();
 
   // Tooltip will be displayed below box1
-  is(
-    panelRect.top,
-    anchorRect.bottom + 10 + offsetTop,
-    "Tooltip top has 10px offset"
-  );
-  is(
-    panelRect.left,
-    anchorRect.left + 5 + offsetLeft,
-    "Tooltip left has 5px offset"
-  );
+  is(panelRect.top, anchorRect.bottom + 10, "Tooltip top has 10px offset");
+  is(panelRect.left, anchorRect.left + 5, "Tooltip left has 5px offset");
   is(panelRect.height, 100, "Tooltip height is at 100px as expected");
 
   info("Display the tooltip on box2.");
@@ -66,16 +56,8 @@ add_task(async function() {
 
   // Tooltip will be displayed below box2, but can't be fully displayed because of the
   // offset
-  is(
-    panelRect.top,
-    anchorRect.bottom + 10 + offsetTop,
-    "Tooltip top has 10px offset"
-  );
-  is(
-    panelRect.left,
-    anchorRect.left + 5 + offsetLeft,
-    "Tooltip left has 5px offset"
-  );
+  is(panelRect.top, anchorRect.bottom + 10, "Tooltip top has 10px offset");
+  is(panelRect.left, anchorRect.left + 5, "Tooltip left has 5px offset");
   is(panelRect.height, 90, "Tooltip height is only 90px");
 
   info("Display the tooltip on box3.");
@@ -88,14 +70,10 @@ add_task(async function() {
   // offset
   is(
     panelRect.bottom,
-    anchorRect.top - 10 + offsetTop,
+    anchorRect.top - 10,
     "Tooltip bottom is 10px above anchor"
   );
-  is(
-    panelRect.left,
-    anchorRect.left + 5 + offsetLeft,
-    "Tooltip left has 5px offset"
-  );
+  is(panelRect.left, anchorRect.left + 5, "Tooltip left has 5px offset");
   is(panelRect.height, 90, "Tooltip height is only 90px");
 
   info("Display the tooltip on box4.");
@@ -107,14 +85,10 @@ add_task(async function() {
   // Tooltip will be displayed above box4
   is(
     panelRect.bottom,
-    anchorRect.top - 10 + offsetTop,
+    anchorRect.top - 10,
     "Tooltip bottom is 10px above anchor"
   );
-  is(
-    panelRect.left,
-    anchorRect.left + 5 + offsetLeft,
-    "Tooltip left has 5px offset"
-  );
+  is(panelRect.left, anchorRect.left + 5, "Tooltip left has 5px offset");
   is(panelRect.height, 100, "Tooltip height is at 100px as expected");
 
   await hideTooltip(tooltip);
