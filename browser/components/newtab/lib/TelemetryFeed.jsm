@@ -579,6 +579,8 @@ this.TelemetryFeed = class TelemetryFeed {
       case "snippets_user_event":
         event = await this.applySnippetsPolicy(event);
         break;
+      // Bug 1594125 added a new onboarding-like provider called `whats-new-panel`.
+      case "whats-new-panel_user_event":
       case "onboarding_user_event":
         event = await this.applyOnboardingPolicy(event);
         break;
