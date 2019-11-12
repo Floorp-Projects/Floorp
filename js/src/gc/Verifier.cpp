@@ -10,6 +10,8 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
 
+#include <algorithm>
+
 #ifdef MOZ_VALGRIND
 #  include <valgrind/memcheck.h>
 #endif
@@ -453,23 +455,6 @@ void js::gc::GCRuntime::finishVerifier() {
 
 #if defined(JS_GC_ZEAL) || defined(DEBUG)
 
-static const char* CellColorName(CellColor color) {
-  switch (color) {
-    case CellColor::White:
-      return "white";
-    case CellColor::Black:
-      return "black";
-    case CellColor::Gray:
-      return "gray";
-    default:
-      MOZ_CRASH("Unexpected cell color");
-  }
-}
-
-static const char* GetCellColorName(Cell* cell) {
-  return CellColorName(GetCellColor(cell));
-}
-
 class HeapCheckTracerBase : public JS::CallbackTracer {
  public:
   explicit HeapCheckTracerBase(JSRuntime* rt, WeakMapTraceKind weakTraceKind);
@@ -587,7 +572,7 @@ void HeapCheckTracerBase::dumpCellInfo(Cell* cell) {
   JSObject* obj =
       kind == JS::TraceKind::Object ? static_cast<JSObject*>(cell) : nullptr;
 
-  fprintf(stderr, "%s %s", GetCellColorName(cell), GCTraceKindToAscii(kind));
+  fprintf(stderr, "%s %s", cell->color().name(), GCTraceKindToAscii(kind));
   if (obj) {
     fprintf(stderr, " %s", obj->getClass()->name);
   }
@@ -769,31 +754,26 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
   Zone* valueZone = GetCellZoneFromAnyThread(value);
   MOZ_ASSERT(valueZone == zone || valueZone->isAtomsZone());
 
-  CellColor mapColor =
-      map->markColor == MarkColor::Black ? CellColor::Black : CellColor::Gray;
-  if (object && GetCellColor(object) != mapColor) {
+  if (object && object->color() != map->mapColor) {
     fprintf(stderr, "WeakMap object is marked differently to the map\n");
     fprintf(stderr, "(map %p is %s, object %p is %s)\n", map,
-            CellColorName(mapColor), object,
-            CellColorName(GetCellColor(object)));
+            map->mapColor.name(), object, object->color().name());
     ok = false;
   }
-
-  CellColor keyColor = GetCellColor(key);
 
   // Values belonging to other runtimes or in uncollected zones are treated as
   // black.
   CellColor valueColor = CellColor::Black;
   if (value->runtimeFromAnyThread() == zone->runtimeFromAnyThread() &&
       valueZone->isGCMarking()) {
-    valueColor = GetCellColor(value);
+    valueColor = value->color();
   }
 
-  if (valueColor < ExpectedWeakMapValueColor(mapColor, keyColor)) {
+  if (valueColor < std::min(map->mapColor, key->color())) {
     fprintf(stderr, "WeakMap value is less marked than map and key\n");
     fprintf(stderr, "(map %p is %s, key %p is %s, value %p is %s)\n", map,
-            CellColorName(mapColor), key, CellColorName(keyColor), value,
-            CellColorName(valueColor));
+            map->mapColor.name(), key, key->color().name(), value,
+            valueColor.name());
     ok = false;
   }
 
@@ -812,17 +792,17 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
 
   CellColor delegateColor;
   if (delegate->zone()->isGCMarking() || delegate->zone()->isGCSweeping()) {
-    delegateColor = GetCellColor(delegate);
+    delegateColor = delegate->color();
   } else {
     // IsMarked() assumes cells in uncollected zones are marked.
     delegateColor = CellColor::Black;
   }
 
-  if (keyColor < ExpectedWeakMapKeyColor(mapColor, delegateColor)) {
-    fprintf(stderr, "WeakMap key is less marked than map and delegate\n");
+  if (key->color() < std::min(map->mapColor, delegateColor)) {
+    fprintf(stderr, "WeakMap key is less marked than map or delegate\n");
     fprintf(stderr, "(map %p is %s, delegate %p is %s, key %p is %s)\n", map,
-            CellColorName(mapColor), delegate, CellColorName(delegateColor),
-            key, CellColorName(keyColor));
+            map->mapColor.name(), delegate, delegateColor.name(), key,
+            key->color().name());
     ok = false;
   }
 

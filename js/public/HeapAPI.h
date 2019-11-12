@@ -379,8 +379,6 @@ class JS_FRIEND_API GCCellPtr {
     return uintptr_t(p) | (uintptr_t(traceKind) & OutOfLineTraceKindMask);
   }
 
-  bool mayBeOwnedByOtherRuntimeSlow() const;
-
   JS::TraceKind outOfLineKind() const;
 
   uintptr_t ptr;
