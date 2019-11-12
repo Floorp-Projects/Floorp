@@ -59,6 +59,7 @@ class MediaControlService final : public nsIObserver {
   MediaControlService();
   ~MediaControlService();
 
+  void Init();
   void Shutdown();
 
   void PlayAllControllers() const;
