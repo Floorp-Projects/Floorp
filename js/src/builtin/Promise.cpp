@@ -2905,6 +2905,47 @@ static JSFunction* NewPromiseCombinatorElementFunction(
   return fn;
 }
 
+// ES2020 draft rev e97c95d064750fb949b6778584702dd658cf5624
+// 25.6.4.1.2 Promise.all Resolve Element Functions
+// 25.6.4.2.2 Promise.allSettled Resolve Element Functions
+// 25.6.4.2.3 Promise.allSettled Reject Element Functions
+//
+// Common implementation for Promise combinator element functions to check if
+// they've already been called.
+static bool PromiseCombinatorElementFunctionAlreadyCalled(
+    const CallArgs& args, MutableHandle<PromiseCombinatorDataHolder*> data,
+    uint32_t* index) {
+  // Step 1.
+  JSFunction* fn = &args.callee().as<JSFunction>();
+
+  // Step 2.
+  const Value& dataVal =
+      fn->getExtendedSlot(PromiseCombinatorElementFunctionSlot_Data);
+
+  // Step 3.
+  // We use the existence of the data holder as a signal for whether the Promise
+  // combinator element function was already called. Upon resolution, it's reset
+  // to `undefined`.
+  if (dataVal.isUndefined()) {
+    return true;
+  }
+
+  data.set(&dataVal.toObject().as<PromiseCombinatorDataHolder>());
+
+  // Step 4.
+  fn->setExtendedSlot(PromiseCombinatorElementFunctionSlot_Data,
+                      UndefinedValue());
+
+  // Step 5.
+  int32_t idx =
+      fn->getExtendedSlot(PromiseCombinatorElementFunctionSlot_ElementIndex)
+          .toInt32();
+  MOZ_ASSERT(idx >= 0);
+  *index = uint32_t(idx);
+
+  return false;
+}
+
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 25.6.4.1.1 PerformPromiseAll (iteratorRecord, constructor, resultCapability)
 static MOZ_MUST_USE bool PerformPromiseAll(
@@ -3037,35 +3078,15 @@ static MOZ_MUST_USE bool PerformPromiseAll(
 static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
                                              Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-
-  JSFunction* resolve = &args.callee().as<JSFunction>();
   RootedValue xVal(cx, args.get(0));
 
-  // Step 1.
-  const Value& dataVal =
-      resolve->getExtendedSlot(PromiseCombinatorElementFunctionSlot_Data);
-
-  // Step 2.
-  // We use the existence of the data holder as a signal for whether the
-  // Promise was already resolved. Upon resolution, it's reset to
-  // `undefined`.
-  if (dataVal.isUndefined()) {
+  // Steps 1-5.
+  Rooted<PromiseCombinatorDataHolder*> data(cx);
+  uint32_t index;
+  if (PromiseCombinatorElementFunctionAlreadyCalled(args, &data, &index)) {
     args.rval().setUndefined();
     return true;
   }
-
-  Rooted<PromiseCombinatorDataHolder*> data(
-      cx, &dataVal.toObject().as<PromiseCombinatorDataHolder>());
-
-  // Step 3.
-  resolve->setExtendedSlot(PromiseCombinatorElementFunctionSlot_Data,
-                           UndefinedValue());
-
-  // Step 4.
-  int32_t index =
-      resolve
-          ->getExtendedSlot(PromiseCombinatorElementFunctionSlot_ElementIndex)
-          .toInt32();
 
   // Step 5.
   RootedValue valuesVal(cx, data->valuesArray());
@@ -3314,20 +3335,13 @@ static bool PromiseAllSettledElementFunction(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
   HandleValue valueOrReason = args.get(0);
 
-  // Step 1.
-  JSFunction* resolve = &args.callee().as<JSFunction>();
-  Rooted<PromiseCombinatorDataHolder*> data(
-      cx, &resolve->getExtendedSlot(PromiseCombinatorElementFunctionSlot_Data)
-               .toObject()
-               .as<PromiseCombinatorDataHolder>());
-
-  // Steps 2-4 (moved below).
-
-  // Step 5.
-  int32_t index =
-      resolve
-          ->getExtendedSlot(PromiseCombinatorElementFunctionSlot_ElementIndex)
-          .toInt32();
+  // Steps 1-5.
+  Rooted<PromiseCombinatorDataHolder*> data(cx);
+  uint32_t index;
+  if (PromiseCombinatorElementFunctionAlreadyCalled(args, &data, &index)) {
+    args.rval().setUndefined();
+    return true;
+  }
 
   // Step 6.
   RootedValue valuesVal(cx, data->valuesArray());
@@ -3348,6 +3362,9 @@ static bool PromiseAllSettledElementFunction(JSContext* cx, unsigned argc,
   HandleNativeObject values = valuesObj.as<NativeObject>();
 
   // Steps 2-3.
+  // The already-called check above only handles the case when |this| function
+  // is called repeatedly, so we still need to check if the other pair of this
+  // resolving function was already called:
   // We use the element value as a signal for whether the Promise was already
   // fulfilled. Upon resolution, it's set to the result object created below.
   if (!values->getDenseElement(index).isUndefined()) {
