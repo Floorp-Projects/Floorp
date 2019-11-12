@@ -70,13 +70,14 @@ class SyncIntegrationTest {
         // currently is not possible to select each one (History/Bookmark) and verify its status
         // verifyCheckBoxesSelected()
         // Then select/unselect each one and verify again that its status is correct
+        // See issue #6544
         accountSettings {
             verifyBookmarksCheckbox()
             verifyHistoryCheckbox()
             verifySignOutButton()
             verifyDeviceName()
         }.disconnectAccount {
-            sleep(TestAssetHelper.waitingTime)
+            mDevice.waitNotNull(Until.findObjects(By.text("Settings")), TestAssetHelper.waitingTime)
             verifySettingsView()
         }
     }
@@ -160,7 +161,7 @@ class SyncIntegrationTest {
     }
 
     fun tapReturnToPreviousApp() {
-        sleep(TestAssetHelper.waitingTime)
+        mDevice.waitNotNull(Until.findObjects(By.text("Settings")), TestAssetHelper.waitingTime)
         mDevice.pressBack()
     }
 
