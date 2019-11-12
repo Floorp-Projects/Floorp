@@ -928,6 +928,18 @@ describe("TelemetryFeed", () => {
 
       assert.calledOnce(instance.applyOnboardingPolicy);
     });
+    it("should call applyOnboardingPolicy if action equals to whats-new-panel_user_event", async () => {
+      const data = {
+        action: "whats-new-panel_user_event",
+        event: "CLICK_BUTTON",
+        message_id: "whats-new-panel_message_01",
+      };
+      sandbox.stub(instance, "applyOnboardingPolicy");
+      const action = ac.ASRouterUserEvent(data);
+      await instance.createASRouterEvent(action);
+
+      assert.calledOnce(instance.applyOnboardingPolicy);
+    });
     it("should call applyUndesiredEventPolicy if action equals to asrouter_undesired_event", async () => {
       const data = {
         action: "asrouter_undesired_event",
