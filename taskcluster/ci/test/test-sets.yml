@@ -291,13 +291,6 @@ raptor-fetch-chromium:
 
 browsertime:
     - browsertime-tp6-1
-    - browsertime-tp6-2
-    - browsertime-tp6-3
-    - browsertime-tp6-4
-    - browsertime-tp6-7
-    - browsertime-tp6-11
-    - browsertime-tp6-17
-    - browsertime-tp6-24
     - browsertime-speedometer
 
 # Raptor desktop power tests
