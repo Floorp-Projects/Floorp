@@ -1541,7 +1541,12 @@ nsresult CreateImageBitmapFromBlob::GetMimeTypeAsync() {
 NS_IMETHODIMP
 CreateImageBitmapFromBlob::OnInputStreamReady(nsIAsyncInputStream* aStream) {
   // The stream should have data now. Let's start from scratch again.
-  return MimeTypeAndDecodeAndCropBlob();
+  nsresult rv = MimeTypeAndDecodeAndCropBlob();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MimeTypeAndDecodeAndCropBlobCompletedMainThread(nullptr, rv);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
