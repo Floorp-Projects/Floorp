@@ -52,7 +52,7 @@ already_AddRefed<nsIWebNavigation> XULFrameElement::GetWebNavigation() {
 Nullable<WindowProxyHolder> XULFrameElement::GetContentWindow() {
   RefPtr<nsDocShell> docShell = GetDocShell();
   if (docShell) {
-    return WindowProxyHolder(docShell->GetWindowProxy());
+    return docShell->GetWindowProxy();
   }
 
   return nullptr;
