@@ -11,3 +11,4 @@ Obsolete Documentation
    uitelemetry/index
    fhr/index
    hybrid-content
+   optout-ping

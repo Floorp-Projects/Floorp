@@ -10,8 +10,6 @@ Data documentation
    common-ping
    environment
    main-ping
-   optout-ping
-   deletion-ping
    crash-ping
    backgroundhangmonitor-ping
    anonymous-ping
