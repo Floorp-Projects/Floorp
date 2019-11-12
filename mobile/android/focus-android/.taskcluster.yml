@@ -73,11 +73,13 @@ tasks:
         routes:
           - 'notify.irc-channel.#android-ci.on-any'
         scopes:
-          - queue:create-task:mobile-3/b-linux
-          - queue:scheduler-id:mobile-level-3
-          - secrets:get:project/focus/firebase
-          - secrets:get:project/focus/nimbledroid
-          - queue:route:notify.irc-channel.#android-ci.on-any
+          $let:
+            short_head_branch:
+              $if: 'event.ref[:11] == "refs/heads/"'
+              then: {$eval: 'event.ref[11:]'}
+              else: ${event.ref}
+          in:
+            - 'assume:repo:focus-android:branch:${short_head_branch}'
         payload:
           maxRunTime: 7200
           image: mozillamobile/focus-android:1.2
@@ -137,15 +139,7 @@ tasks:
         priority: highest
         retries: 5
         scopes:
-          - queue:scheduler-id:${scheduler_id}
-          - queue:create-task:highest:mobile-3/b-linux
-          - queue:create-task:highest:scriptworker-k8s/mobile-3-signing
-          - queue:create-task:highest:scriptworker-k8s/mobile-3-pushapk
-          - project:mobile:focus:releng:signing:cert:release-signing
-          - project:mobile:focus:releng:signing:format:autograph_focus
-          - project:mobile:focus:releng:googleplay:product:focus
-          - secrets:get:project/focus/tokens
-          - queue:route:index.project.mobile.focus.release.latest
+          - assume:repo:focus-android:release
         routes:
           - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
         payload:
@@ -220,15 +214,7 @@ tasks:
         priority: medium
         retries: 5
         scopes:
-          - queue:scheduler-id:${scheduler_id}
-          - queue:create-task:highest:mobile-3/b-linux
-          - queue:create-task:highest:scriptworker-k8s/mobile-3-signing
-          - queue:create-task:highest:scriptworker-k8s/mobile-3-pushapk
-          - project:mobile:focus:releng:signing:cert:release-signing
-          - project:mobile:focus:releng:signing:format:autograph_focus
-          - project:mobile:focus:releng:googleplay:product:focus
-          - secrets:get:project/focus/tokens
-          - queue:route:index.project.mobile.focus.nightly.latest
+          - assume:repo:focus-android:cron:nightly
         routes:
           - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
         payload:
