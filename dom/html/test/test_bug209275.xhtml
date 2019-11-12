@@ -120,11 +120,12 @@ function* run() {
   $('colorlink').href = "http://example.com/" + rand;
   setXlinkHref($("ellipselink"), "http://example.com/" + rand);
 
-  // Load http://example.com/${rand} into an iframe so we can test that changing
-  // the document's base changes the visitedness of our links.
-  iframe.onload = continueTest;
-  iframeCw.location = "http://example.com/" + rand;
-  yield undefined; // wait for onload to fire.
+  // Load http://example.com/${rand} into a new window so we can test that
+  // changing the document's base changes the visitedness of our links.
+  //
+  // cross-origin window.open'd windows don't fire load / error events, so we
+  // wait to close it until we observed the visited color.
+  let win = window.open("http://example.com/" + rand, "_blank");
 
   // Make sure things are what as we expect them at the beginning.
   link123HrefIs("http://mochi.test:8888/", 1);
@@ -147,17 +148,19 @@ function* run() {
   // Because link coloring is asynchronous, we wait until it is updated (or we
   // timeout and fail anyway).
   while (getColor($('colorlink')) != visitedColor) {
-    setTimeout(continueTest, 0);
+    requestIdleCallback(continueTest);
     yield undefined;
   }
   is(getColor($('colorlink')), visitedColor,
      "Wrong link color after base change.");
   while (getFill($('ellipselink')) != visitedFill) {
-    setTimeout(continueTest, 0);
+    requestIdleCallback(continueTest);
     yield undefined;
   }
   is(getFill($('ellipselink')), visitedFill,
           "Wrong ellipse fill after base change.");
+
+  win.close();
 
   $('base1').href = "foo/";
   // Should be interpreted relative to current URI (not the current base), so
@@ -220,7 +223,6 @@ function* run() {
   // original base.  We do this twice, rebuilding the document in a different
   // way each time.
 
-  iframe.onload = null;
   iframeCw.location = "file_bug209275_1.html";
   yield undefined; // wait for our child to call us back.
   is(iframeCw.document.getElementById("link").href,
