@@ -23,6 +23,7 @@
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WeakPtr.h"
 
@@ -286,9 +287,6 @@ class HangMonitorParent : public PProcessHangMonitorParent,
   void ShutdownOnThread();
 
   const RefPtr<ProcessHangMonitor> mHangMonitor;
-
-  // This field is read-only after construction.
-  bool mReportHangs;
 
   // This field is only accessed on the hang thread.
   bool mIPCOpen;
@@ -703,8 +701,6 @@ HangMonitorParent::HangMonitorParent(ProcessHangMonitor* aMonitor)
       mBrowserCrashDumpHashLock("mBrowserCrashDumpIds lock"),
       mMainThreadTaskFactory(this) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  mReportHangs =
-      mozilla::Preferences::GetBool("dom.ipc.reportProcessHangs", false);
 }
 
 HangMonitorParent::~HangMonitorParent() {
@@ -886,7 +882,7 @@ mozilla::ipc::IPCResult HangMonitorParent::RecvHangEvidence(
   // chrome process, background thread
   MOZ_RELEASE_ASSERT(IsOnThread());
 
-  if (!mReportHangs) {
+  if (!StaticPrefs::dom_ipc_reportProcessHangs()) {
     return IPC_OK();
   }
 
@@ -921,7 +917,7 @@ mozilla::ipc::IPCResult HangMonitorParent::RecvClearHang() {
   // chrome process, background thread
   MOZ_RELEASE_ASSERT(IsOnThread());
 
-  if (!mReportHangs) {
+  if (!StaticPrefs::dom_ipc_reportProcessHangs()) {
     return IPC_OK();
   }
 
@@ -1340,7 +1336,7 @@ PProcessHangMonitorParent* ProcessHangMonitor::AddProcess(
     ContentParent* aContentParent) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  if (!mozilla::Preferences::GetBool("dom.ipc.processHangMonitor", false)) {
+  if (!StaticPrefs::dom_ipc_processHangMonitor_AtStartup()) {
     return nullptr;
   }
 
