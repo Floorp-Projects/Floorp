@@ -60,10 +60,6 @@ class nsNotifyAddrListener : public nsINetworkLinkService,
 
   DWORD CheckAdaptersAddresses(void);
 
-  // Checks for an Internet Connection Sharing (ICS) gateway.
-  bool CheckICSGateway(PIP_ADAPTER_ADDRESSES aAdapter);
-  bool CheckICSStatus(PWCHAR aAdapterName);
-
   // This threadpool only ever holds 1 thread. It is a threadpool and not a
   // regular thread so that we may call shutdownWithTimeout on it.
   nsCOMPtr<nsIThreadPool> mThread;
