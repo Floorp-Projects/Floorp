@@ -194,6 +194,8 @@ bool SetCloseOnExec(int fd) {
   return true;
 }
 
+bool ErrorIsBrokenPipe(int err) { return err == EPIPE || err == ECONNRESET; }
+
 }  // namespace
 //------------------------------------------------------------------------------
 
@@ -355,8 +357,10 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
       if (errno == EAGAIN) {
         return true;
       } else {
-        CHROMIUM_LOG(ERROR)
-            << "pipe error (" << pipe_ << "): " << strerror(errno);
+        if (!ErrorIsBrokenPipe(errno)) {
+          CHROMIUM_LOG(ERROR)
+              << "pipe error (fd " << pipe_ << "): " << strerror(errno);
+        }
         return false;
       }
     } else if (bytes_read == 0) {
@@ -725,7 +729,9 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
           break;
 #endif
         default:
-          CHROMIUM_LOG(ERROR) << "pipe error: " << strerror(errno);
+          if (!ErrorIsBrokenPipe(errno)) {
+            CHROMIUM_LOG(ERROR) << "pipe error: " << strerror(errno);
+          }
           return false;
       }
     }
