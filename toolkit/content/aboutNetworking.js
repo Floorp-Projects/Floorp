@@ -57,7 +57,7 @@ function displayHttp(data) {
     let row = document.createElement("tr");
     row.appendChild(col(data.connections[i].host));
     row.appendChild(col(data.connections[i].port));
-    row.appendChild(col(data.connections[i].spdy));
+    row.appendChild(col(data.connections[i].httpVersion));
     row.appendChild(col(data.connections[i].ssl));
     row.appendChild(col(data.connections[i].active.length));
     row.appendChild(col(data.connections[i].idle.length));

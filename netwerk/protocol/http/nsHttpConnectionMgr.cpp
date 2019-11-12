@@ -5338,7 +5338,13 @@ bool nsHttpConnectionMgr::GetConnectionData(nsTArray<HttpRetParams>* aArg) {
       hSocket.speculative = ent->mHalfOpens[i]->IsSpeculative();
       data.halfOpens.AppendElement(hSocket);
     }
-    data.spdy = ent->mUsingSpdy;
+    if (ent->mConnInfo->IsHttp3()) {
+      data.httpVersion = NS_LITERAL_CSTRING("HTTP/3");
+    } else if (ent->mUsingSpdy) {
+      data.httpVersion = NS_LITERAL_CSTRING("HTTP/2");
+    } else {
+      data.httpVersion = NS_LITERAL_CSTRING("HTTP <= 1.1");
+    }
     data.ssl = ent->mConnInfo->EndToEndSSL();
     aArg->AppendElement(data);
   }

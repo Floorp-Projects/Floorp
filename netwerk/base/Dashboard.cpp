@@ -432,7 +432,7 @@ nsresult Dashboard::GetHttpConnections(HttpData* aHttpData) {
 
     CopyASCIItoUTF16(httpData->mData[i].host, connection.mHost);
     connection.mPort = httpData->mData[i].port;
-    connection.mSpdy = httpData->mData[i].spdy;
+    CopyASCIItoUTF16(httpData->mData[i].httpVersion, connection.mHttpVersion);
     connection.mSsl = httpData->mData[i].ssl;
 
     connection.mActive.Construct();
