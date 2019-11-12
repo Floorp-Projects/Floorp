@@ -28,7 +28,14 @@ class nsHyphenator {
   void HyphenateWord(const nsAString& aString, uint32_t aStart, uint32_t aLimit,
                      nsTArray<bool>& aHyphens);
 
-  void* mDict;
+  const void* mDict;  // If mDictSize > 0, this points to a raw byte buffer
+                      // containing the hyphenation dictionary data (in the
+                      // memory-mapped omnijar, or owned by us if mOwnsDict);
+                      // if mDictSize == 0, it's a HyphDic reference created
+                      // by mapped_hyph_load_dictionary() and must be released
+                      // by calling mapped_hyph_free_dictionary().
+  uint32_t mDictSize;
+  bool mOwnsDict;
   bool mHyphenateCapitalized;
 };
 
