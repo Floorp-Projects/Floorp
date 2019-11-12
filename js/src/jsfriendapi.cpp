@@ -28,6 +28,7 @@
 #include "util/Poison.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/DateObject.h"
+#include "vm/ErrorObject.h"
 #include "vm/FrameIter.h"  // js::FrameIter
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
