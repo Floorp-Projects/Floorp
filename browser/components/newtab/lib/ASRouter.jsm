@@ -1626,7 +1626,10 @@ class _ASRouter {
       if (template && m.template !== template) {
         return false;
       }
-      if (m.trigger && m.trigger.id !== triggerId) {
+      if (triggerId && !m.trigger) {
+        return false;
+      }
+      if (triggerId && m.trigger.id !== triggerId) {
         return false;
       }
 
