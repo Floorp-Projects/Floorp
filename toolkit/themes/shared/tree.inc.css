@@ -191,6 +191,9 @@ treechildren::-moz-tree-cell-text(selected, editing) {
 }
 
 html|input.tree-input {
+  position: absolute;
+  top: 0;
+  left: 0;
   -moz-appearance: none;
   -moz-box-flex: 1;
   border: 1px solid Highlight;

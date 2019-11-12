@@ -61,7 +61,7 @@
         MozXULElement.parseXULToFragment(`
         <stack class="toolbarbutton-badge-stack">
           <image class="toolbarbutton-icon"/>
-          <label class="toolbarbutton-badge" top="0" end="0" crop="none"/>
+          <label class="toolbarbutton-badge" crop="none"/>
         </stack>
         <label class="toolbarbutton-text" crop="right" flex="1"/>
         <label class="toolbarbutton-multiline-text" flex="1"/>

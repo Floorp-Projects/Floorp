@@ -79,5 +79,4 @@ toolbarbutton:-moz-lwtheme:not(:hover):not([checked="true"]):not([open="true"]):
   max-width: 28px;
   line-height: 10px;
   text-align: center;
-  -moz-stack-sizing: ignore;
 }
