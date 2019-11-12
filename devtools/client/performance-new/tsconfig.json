@@ -15,5 +15,11 @@
   },
   "files": ["./@types/gecko.d.ts"],
   // Add a @ts-check comment to a JS file to start type checking it.
-  "include": ["./**/*.js"]
+  "include": ["./**/*.js"],
+  "exclude": [
+    // For some reason some test files were still being scanned, and creating
+    // transient errors. Manually exclude this directory until the tests are
+    // typed.
+    "./test"
+  ]
 }

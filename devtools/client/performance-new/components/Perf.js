@@ -8,7 +8,10 @@ const {
   createFactory,
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { div } = require("devtools/client/shared/vendor/react-dom-factories");
+const {
+  div,
+  button,
+} = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const RecordingButton = createFactory(
   require("devtools/client/performance-new/components/RecordingButton.js")
@@ -21,6 +24,9 @@ const Description = createFactory(
 );
 const actions = require("devtools/client/performance-new/store/actions");
 const selectors = require("devtools/client/performance-new/store/selectors");
+const {
+  restartBrowserWithEnvironmentVariable,
+} = require("devtools/client/performance-new/browser");
 
 /**
  * This is the top level component for initializing the performance recording panel.
@@ -41,6 +47,7 @@ class Perf extends PureComponent {
       recordingState: PropTypes.string.isRequired,
       isSupportedPlatform: PropTypes.bool,
       isPopup: PropTypes.bool,
+      promptEnvRestart: PropTypes.string,
 
       // DispatchProps:
       changeRecordingState: PropTypes.func.isRequired,
@@ -58,6 +65,7 @@ class Perf extends PureComponent {
     this.handlePrivateBrowsingEnding = this.handlePrivateBrowsingEnding.bind(
       this
     );
+    this.handleRestart = this.handleRestart.bind(this);
   }
 
   componentDidMount() {
@@ -244,8 +252,18 @@ class Perf extends PureComponent {
     this.props.changeRecordingState("available-to-record");
   }
 
+  handleRestart() {
+    const { promptEnvRestart } = this.props;
+    if (!promptEnvRestart) {
+      throw new Error(
+        "handleRestart() should only be called when promptEnvRestart exists."
+      );
+    }
+    restartBrowserWithEnvironmentVariable(promptEnvRestart, "1");
+  }
+
   render() {
-    const { isSupportedPlatform, isPopup } = this.props;
+    const { isSupportedPlatform, isPopup, promptEnvRestart } = this.props;
 
     if (isSupportedPlatform === null) {
       // We don't know yet if this is a supported platform, wait for a response.
@@ -256,6 +274,27 @@ class Perf extends PureComponent {
 
     return div(
       { className: `perf ${additionalClassName}` },
+      promptEnvRestart
+        ? div(
+            { className: "perf-env-restart" },
+            div(
+              {
+                className:
+                  "perf-photon-message-bar perf-photon-message-bar-warning perf-env-restart-fixed",
+              },
+              div({ className: "perf-photon-message-bar-warning-icon" }),
+              "The browser must be restarted to enable this feature.",
+              button(
+                {
+                  className: "perf-photon-button perf-photon-button-micro",
+                  type: "button",
+                  onClick: this.handleRestart,
+                },
+                "Restart"
+              )
+            )
+          )
+        : null,
       RecordingButton(),
       Settings(),
       isPopup ? null : Description()
@@ -269,6 +308,7 @@ function mapStateToProps(state) {
     recordingState: selectors.getRecordingState(state),
     isSupportedPlatform: selectors.getIsSupportedPlatform(state),
     isPopup: selectors.getIsPopup(state),
+    promptEnvRestart: selectors.getPromptEnvRestart(state),
   };
 }
 
