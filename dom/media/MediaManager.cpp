@@ -2194,38 +2194,12 @@ void MediaManager::DeviceListChanged() {
                 // Device has not been removed
                 continue;
               }
-
-              // Stop the coresponding SourceListener
-              nsGlobalWindowInner::InnerWindowByIdTable* windowsById =
-                  nsGlobalWindowInner::GetWindowsTable();
-              if (!windowsById) {
-                // We're in shutdown
-                continue;
-              }
-
-              for (auto iter = windowsById->Iter(); !iter.Done(); iter.Next()) {
-                nsGlobalWindowInner* window = iter.Data();
-                if (!window->IsCurrentInnerWindow()) {
-                  // Ignore non-current inner windows
-                  continue;
-                }
-                if (!window->GetOuterWindow()->IsTopLevelWindow()) {
-                  // Ignore non-top-level inner windows, to avoid hitting them
-                  // twice, since we'll be using IterateWindowListeners(). This
-                  // shouldn't miss any iframes, as they generally can't be
-                  // removed from DOM without OnNavigation. If it does miss them
-                  // OnNavigation does a comparable job (minus notifying the JS
-                  // that's about to be unloaded).
-                  continue;
-                }
-                IterateWindowListeners(
-                    window,
-                    [&id](const RefPtr<GetUserMediaWindowListener>& aListener) {
-                      aListener->StopRawID(id);
-                    });
+              // Stop the corresponding SourceListener
+              for (auto iter = mActiveWindows.Iter(); !iter.Done();
+                   iter.Next()) {
+                iter.UserData()->StopRawID(id);
               }
             }
-
             mDeviceIDs = deviceIDs;
           },
           [](RefPtr<MediaMgrError>&& reason) {});
