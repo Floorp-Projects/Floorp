@@ -36,13 +36,6 @@ RenderCompositorOGL::RenderCompositorOGL(
       mPreviousFrameDoneSync(nullptr),
       mThisFrameDoneSync(nullptr) {
   MOZ_ASSERT(mGL);
-
-  if (mNativeLayerRoot && !ShouldUseNativeCompositor()) {
-    mNativeLayerForEntireWindow = mNativeLayerRoot->CreateLayer();
-    mNativeLayerForEntireWindow->SetSurfaceIsFlipped(true);
-    mNativeLayerForEntireWindow->SetGLContext(mGL);
-    mNativeLayerRoot->AppendLayer(mNativeLayerForEntireWindow);
-  }
 }
 
 RenderCompositorOGL::~RenderCompositorOGL() {
@@ -75,9 +68,22 @@ bool RenderCompositorOGL::BeginFrame() {
     return false;
   }
 
+  if (mNativeLayerRoot && !ShouldUseNativeCompositor()) {
+    gfx::IntSize bufferSize = GetBufferSize().ToUnknownSize();
+    if (mNativeLayerForEntireWindow &&
+        mNativeLayerForEntireWindow->GetSize() != bufferSize) {
+      mNativeLayerRoot->RemoveLayer(mNativeLayerForEntireWindow);
+      mNativeLayerForEntireWindow = nullptr;
+    }
+    if (!mNativeLayerForEntireWindow) {
+      mNativeLayerForEntireWindow =
+          mNativeLayerRoot->CreateLayer(bufferSize, false);
+      mNativeLayerForEntireWindow->SetSurfaceIsFlipped(true);
+      mNativeLayerForEntireWindow->SetGLContext(mGL);
+      mNativeLayerRoot->AppendLayer(mNativeLayerForEntireWindow);
+    }
+  }
   if (mNativeLayerForEntireWindow) {
-    gfx::IntRect bounds({}, GetBufferSize().ToUnknownSize());
-    mNativeLayerForEntireWindow->SetRect(bounds);
     Maybe<GLuint> fbo =
         mNativeLayerForEntireWindow->NextSurfaceAsFramebuffer(true);
     if (!fbo) {
@@ -203,10 +209,9 @@ void RenderCompositorOGL::Unbind() {
 void RenderCompositorOGL::CreateSurface(wr::NativeSurfaceId aId,
                                         wr::DeviceIntSize aSize,
                                         bool aIsOpaque) {
-  RefPtr<layers::NativeLayer> layer = mNativeLayerRoot->CreateLayer();
-  layer->SetRect(gfx::IntRect(0, 0, aSize.width, aSize.height));
+  RefPtr<layers::NativeLayer> layer = mNativeLayerRoot->CreateLayer(
+      IntSize(aSize.width, aSize.height), aIsOpaque);
   layer->SetGLContext(mGL);
-  layer->SetIsOpaque(aIsOpaque);
   mNativeLayers.insert({wr::AsUint64(aId), layer});
 }
 
@@ -232,12 +237,12 @@ void RenderCompositorOGL::AddSurface(wr::NativeSurfaceId aId,
   MOZ_RELEASE_ASSERT(layerCursor != mNativeLayers.end());
   RefPtr<layers::NativeLayer> layer = layerCursor->second;
 
-  gfx::IntSize layerSize = layer->GetRect().Size();
+  gfx::IntSize layerSize = layer->GetSize();
   gfx::IntRect layerRect(aPosition.x, aPosition.y, layerSize.width,
                          layerSize.height);
   gfx::IntRect clipRect(aClipRect.origin.x, aClipRect.origin.y,
                         aClipRect.size.width, aClipRect.size.height);
-  layer->SetRect(layerRect);
+  layer->SetPosition(layerRect.TopLeft());
   layer->SetClipRect(Some(clipRect));
   mAddedLayers.AppendElement(layer);
 
