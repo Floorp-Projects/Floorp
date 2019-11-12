@@ -34,17 +34,6 @@ class MozFramebuffer;
 
 namespace layers {
 
-class IOSurfaceRegistry {
- public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(IOSurfaceRegistry)
-
-  virtual void RegisterSurface(CFTypeRefPtr<IOSurfaceRef> aSurface) = 0;
-  virtual void UnregisterSurface(CFTypeRefPtr<IOSurfaceRef> aSurface) = 0;
-
- protected:
-  virtual ~IOSurfaceRegistry() {}
-};
-
 // NativeLayerRootCA is the CoreAnimation implementation of the NativeLayerRoot
 // interface. A NativeLayerRootCA is created by the widget around an existing
 // CALayer with a call to CreateForCALayer.
@@ -91,13 +80,6 @@ class NativeLayerRootCA : public NativeLayerRoot {
 // finished, NotifySurfaceReady marks the surface as ready. This surface is
 // committed to the layer during the next call to ApplyChanges().
 // The swap chain keeps track of invalid areas within the surfaces.
-//
-// Creation and destruction of IOSurface objects is broadcast to an optional
-// "surface registry" so that associated objects such as framebuffer objects
-// don't need to be recreated on every frame: Instead, the surface registry can
-// maintain one object per IOSurface in this layer's swap chain, and those
-// objects will be reused in different frames as the layer cycles through the
-// surfaces in its swap chain.
 class NativeLayerCA : public NativeLayer {
  public:
   virtual NativeLayerCA* AsNativeLayerCA() override { return this; }
@@ -121,24 +103,6 @@ class NativeLayerCA : public NativeLayer {
   Maybe<gfx::IntRect> ClipRect() override;
   void SetSurfaceIsFlipped(bool aIsFlipped) override;
   bool SurfaceIsFlipped() override;
-
-  // Consumers may provide an object that implements the IOSurfaceRegistry
-  // interface.
-  // The registry's methods, Register/UnregisterSurface, will be called
-  // synchronously during calls to NextSurface(), SetSurfaceRegistry(), and the
-  // NativeLayer destructor, on the thread that those things happen to run on.
-  // If this layer already owns surfaces when SetSurfaceRegistry gets called
-  // with a non-null surface registry, those surfaces will immediately
-  // (synchronously) be registered with that registry. If the current surface
-  // registry is unset (via a call to SetSurfaceRegistry with a different value,
-  // such as null), and the NativeLayer still owns surfaces, then those surfaces
-  // will immediately be unregistered.
-  // Since NativeLayer objects are reference counted and can be used from
-  // different threads, it is recommended to call SetSurfaceRegistry(nullptr)
-  // before destroying the NativeLayer so that the UnregisterSurface calls
-  // happen at a deterministic time and on the right thread.
-  void SetSurfaceRegistry(RefPtr<IOSurfaceRegistry> aSurfaceRegistry);
-  RefPtr<IOSurfaceRegistry> GetSurfaceRegistry();
 
  protected:
   friend class NativeLayerRootCA;
@@ -180,8 +144,6 @@ class NativeLayerCA : public NativeLayer {
 
   // Controls access to all fields of this class.
   Mutex mMutex;
-
-  RefPtr<IOSurfaceRegistry> mSurfaceRegistry;  // can be null
 
   // Each IOSurface is initially created inside NextSurface.
   // The surface stays alive until the recycling mechanism in NextSurface
