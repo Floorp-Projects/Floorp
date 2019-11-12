@@ -9,7 +9,7 @@ add_task(async function() {
         label.href = newTabURL;
         label.id = "textlink-test";
         label.textContent = "click me";
-        doc.documentElement.append(label);
+        doc.body.append(label);
       });
 
       // Test that click will open tab in foreground.
