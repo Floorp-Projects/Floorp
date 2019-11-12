@@ -391,6 +391,15 @@ static bool intrinsic_ThrowSyntaxError(JSContext* cx, unsigned argc,
   return false;
 }
 
+static bool intrinsic_ThrowAggregateError(JSContext* cx, unsigned argc,
+                                          Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() >= 1);
+
+  ThrowErrorWithType(cx, JSEXN_AGGREGATEERR, args);
+  return false;
+}
+
 static bool intrinsic_ThrowInternalError(JSContext* cx, unsigned argc,
                                          Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2169,6 +2178,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ThrowRangeError", intrinsic_ThrowRangeError, 4, 0),
     JS_FN("ThrowTypeError", intrinsic_ThrowTypeError, 4, 0),
     JS_FN("ThrowSyntaxError", intrinsic_ThrowSyntaxError, 4, 0),
+    JS_FN("ThrowAggregateError", intrinsic_ThrowAggregateError, 4, 0),
     JS_FN("ThrowInternalError", intrinsic_ThrowInternalError, 4, 0),
     JS_FN("GetErrorMessage", intrinsic_GetErrorMessage, 1, 0),
     JS_FN("CreateModuleSyntaxError", intrinsic_CreateModuleSyntaxError, 4, 0),
