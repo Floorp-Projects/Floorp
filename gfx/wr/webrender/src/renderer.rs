@@ -3790,7 +3790,6 @@ impl Renderer {
         stats: &mut RendererStats,
     ) {
         self.profile_counters.rendered_picture_cache_tiles.inc();
-        self.profile_counters.color_targets.inc();
         let _gm = self.gpu_profile.start_marker("picture cache target");
         let framebuffer_kind = FramebufferKind::Other;
 
@@ -4260,7 +4259,7 @@ impl Renderer {
         frame_id: GpuFrameId,
         stats: &mut RendererStats,
     ) {
-        self.profile_counters.color_targets.inc();
+        self.profile_counters.color_passes.inc();
         let _gm = self.gpu_profile.start_marker("color target");
 
         // sanity check for the depth buffer
@@ -4521,7 +4520,7 @@ impl Renderer {
         render_tasks: &RenderTaskGraph,
         stats: &mut RendererStats,
     ) {
-        self.profile_counters.alpha_targets.inc();
+        self.profile_counters.alpha_passes.inc();
         let _gm = self.gpu_profile.start_marker("alpha target");
         let alpha_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_ALPHA);
 
@@ -5183,6 +5182,10 @@ impl Renderer {
                                 &frame.render_tasks,
                                 &mut results.stats,
                             );
+                        }
+
+                        if !picture_cache.is_empty() {
+                            self.profile_counters.color_passes.inc();
                         }
 
                         // Draw picture caching tiles for this pass.
