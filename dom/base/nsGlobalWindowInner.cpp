@@ -4542,6 +4542,7 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
   StorageAccess access = StorageAllowedForWindow(this);
 
   // We allow partitioned localStorage only to some hosts.
+  bool isolated = false;
   if (ShouldPartitionStorage(access)) {
     if (!mDoc) {
       access = StorageAccess::eDeny;
@@ -4553,6 +4554,8 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
       mDoc->NodePrincipal()->IsURIInPrefList(kPrefName, &isInList);
       if (!isInList) {
         access = StorageAccess::eDeny;
+      } else {
+        isolated = true;
       }
     }
   }
@@ -4569,16 +4572,22 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
     cookieSettings = net::CookieSettings::CreateBlockingAll();
   }
 
+  bool partitioningEnabled = StoragePartitioningEnabled(access, cookieSettings);
+  bool shouldPartition = ShouldPartitionStorage(access);
+  bool partition = partitioningEnabled && shouldPartition;
+
   // Note that this behavior is observable: if we grant storage permission to a
   // tracker, we pass from the partitioned LocalStorage (or a partitioned cookie
   // jar) to the 'normal' one. The previous data is lost and the 2
   // window.localStorage objects, before and after the permission granted, will
   // be different.
-  if ((StoragePartitioningEnabled(access, cookieSettings) ||
-       !ShouldPartitionStorage(access)) &&
-      (!mLocalStorage ||
-       mLocalStorage->Type() == Storage::ePartitionedLocalStorage ||
-       mLocalStorage->StoragePrincipal() != GetEffectiveStoragePrincipal())) {
+  if ((partitioningEnabled || !shouldPartition) &&
+      ((mLocalStorage && ((mLocalStorage->Type() !=
+                           (partition ? Storage::ePartitionedLocalStorage
+                                      : Storage::eLocalStorage)) ||
+                          mLocalStorage->StoragePrincipal() !=
+                              GetEffectiveStoragePrincipal())) ||
+       (!partition && !mLocalStorage))) {
     RefPtr<Storage> storage;
 
     if (NextGenLocalStorageEnabled()) {
@@ -4625,7 +4634,16 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
     MOZ_ASSERT(mLocalStorage);
   }
 
-  if (ShouldPartitionStorage(access) && !mLocalStorage) {
+  if (((partitioningEnabled && shouldPartition) || isolated) &&
+      !mLocalStorage) {
+    nsresult rv;
+    nsCOMPtr<nsIDOMSessionStorageManager> storageManager =
+        do_GetService("@mozilla.org/dom/sessionStorage-manager;1", &rv);
+    if (NS_FAILED(rv)) {
+      aError.Throw(rv);
+      return nullptr;
+    }
+
     nsIPrincipal* principal = GetPrincipal();
     if (!principal) {
       aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -4638,16 +4656,26 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
       return nullptr;
     }
 
-    RefPtr<SessionStorageCache> cache = new SessionStorageCache();
+    RefPtr<SessionStorageCache> cache;
+    if (isolated) {
+      cache = new SessionStorageCache();
+    } else {
+      // This will clone the session storage if it exists.
+      rv = storageManager->GetSessionStorageCache(principal, storagePrincipal,
+                                                  &cache);
+      if (NS_FAILED(rv)) {
+        aError.Throw(rv);
+        return nullptr;
+      }
+    }
 
     mLocalStorage =
         new PartitionedLocalStorage(this, principal, storagePrincipal, cache);
   }
 
-  MOZ_ASSERT_IF(
-      !StoragePartitioningEnabled(access, cookieSettings),
-      ShouldPartitionStorage(access) ==
-          (mLocalStorage->Type() == Storage::ePartitionedLocalStorage));
+  MOZ_ASSERT_IF(!partitioningEnabled,
+                shouldPartition == (mLocalStorage->Type() ==
+                                    Storage::ePartitionedLocalStorage));
 
   return mLocalStorage;
 }
