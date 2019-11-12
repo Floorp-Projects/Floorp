@@ -47,6 +47,15 @@ struct BGRAColor {
   static BGRAColor Blue() { return BGRAColor(0xFF, 0x00, 0x00, 0xFF); }
   static BGRAColor Transparent() { return BGRAColor(0x00, 0x00, 0x00, 0x00); }
 
+  static BGRAColor FromPixel(uint32_t aPixel) {
+    uint8_t r, g, b, a;
+    r = (aPixel >> gfx::SurfaceFormatBit::OS_R) & 0xFF;
+    g = (aPixel >> gfx::SurfaceFormatBit::OS_G) & 0xFF;
+    b = (aPixel >> gfx::SurfaceFormatBit::OS_B) & 0xFF;
+    a = (aPixel >> gfx::SurfaceFormatBit::OS_A) & 0xFF;
+    return BGRAColor(b, g, r, a, true);
+  }
+
   BGRAColor Premultiply() const {
     if (!mPremultiplied) {
       return BGRAColor(gfxPreMultiply(mBlue, mAlpha),
