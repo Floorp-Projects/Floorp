@@ -38,13 +38,6 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   return logger.log.bind(logger);
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "INCLUDE_OTHER_SUBDOMAINS_IN_LOOKUP",
-  "signon.includeOtherSubdomainsInLookup",
-  false
-);
-
 const EXPORTED_SYMBOLS = ["LoginManagerParent"];
 
 /**
@@ -371,7 +364,7 @@ class LoginManagerParent extends JSWindowActorParent {
       logins = this._searchAndDedupeLogins(formOrigin, {
         formActionOrigin: actionOrigin,
         ignoreActionAndRealm: true,
-        acceptDifferentSubdomains: INCLUDE_OTHER_SUBDOMAINS_IN_LOOKUP,
+        acceptDifferentSubdomains: LoginHelper.includeOtherSubdomainsInLookup,
       });
     }
 
@@ -437,7 +430,7 @@ class LoginManagerParent extends JSWindowActorParent {
       logins = this._searchAndDedupeLogins(formOrigin, {
         formActionOrigin: actionOrigin,
         ignoreActionAndRealm: true,
-        acceptDifferentSubdomains: INCLUDE_OTHER_SUBDOMAINS_IN_LOOKUP,
+        acceptDifferentSubdomains: LoginHelper.includeOtherSubdomainsInLookup,
       });
     }
 
