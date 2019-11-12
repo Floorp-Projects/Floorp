@@ -74,8 +74,8 @@ add_task(async function() {
   window2.close();
   window3.close();
 
-  xpcCleanupWindows();
-}, 4);
+  await cleanupWindows();
+});
 
 </script>
 </head>
