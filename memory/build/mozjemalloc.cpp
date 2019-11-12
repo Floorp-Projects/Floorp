@@ -1294,7 +1294,19 @@ static inline void pages_decommit(void* aAddr, size_t aSize) {
 #else
   if (mmap(aAddr, aSize, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1,
            0) == MAP_FAILED) {
-    MOZ_CRASH();
+    // We'd like to report the OOM for our tooling, but we can't allocate
+    // memory at this point, so avoid the use of printf.
+    const char out_of_mappings[] =
+        "[unhandlable oom] Failed to mmap, likely no more mappings "
+        "available " __FILE__ " : " MOZ_STRINGIFY(__LINE__);
+    if (errno == ENOMEM) {
+#ifndef ANDROID
+      fputs(out_of_mappings, stderr);
+      fflush(stderr);
+#endif
+      MOZ_CRASH_ANNOTATE(out_of_mappings);
+    }
+    MOZ_REALLY_CRASH(__LINE__);
   }
   MozTagAnonymousMemory(aAddr, aSize, "jemalloc-decommitted");
 #endif
