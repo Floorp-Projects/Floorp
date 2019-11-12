@@ -51,7 +51,7 @@ struct HttpRetParams {
   nsTArray<HalfOpenSockets> halfOpens;
   uint32_t counter;
   uint16_t port;
-  bool spdy;
+  nsCString httpVersion;
   bool ssl;
 };
 
