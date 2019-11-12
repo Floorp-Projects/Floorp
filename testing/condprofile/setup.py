@@ -18,7 +18,7 @@ else:
 
 setup(
     name="conditioned-profile",
-    version="0.1",
+    version="0.2",
     packages=find_packages(),
     description="Firefox Heavy Profile creator",
     include_package_data=True,

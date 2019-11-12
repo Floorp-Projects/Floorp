@@ -13,7 +13,7 @@ import shutil
 
 from condprof import check_install  # NOQA
 from condprof import progress
-from condprof.util import check_exists, download_file, TASK_CLUSTER, get_logger
+from condprof.util import download_file, TASK_CLUSTER, get_logger, ArchiveNotFound
 from condprof.changelog import Changelog
 
 
@@ -26,13 +26,21 @@ CHANGELOG_LINK = (
     ROOT_URL + "/v1/task/" + INDEX_PATH + "/" + PUBLIC_DIR + "/changelog.json"
 )
 DIRECT_LINK = "https://taskcluster-artifacts.net/%(task_id)s/0/public/condprof/"
+CONDPROF_CACHE = "~/.condprof-cache"
 
 
 class ProfileNotFoundError(Exception):
     pass
 
 
-def get_profile(target_dir, platform, scenario, customization="default", task_id=None):
+def get_profile(
+    target_dir,
+    platform,
+    scenario,
+    customization="default",
+    task_id=None,
+    download_cache=True,
+):
     """Extract a conditioned profile in the target directory.
 
     If task_id is provided, will grab the profile from that task. when not
@@ -51,14 +59,21 @@ def get_profile(target_dir, platform, scenario, customization="default", task_id
     else:
         url = DIRECT_LINK % params + filename
 
-    download_dir = tempfile.mkdtemp()
+    if not download_cache:
+        download_dir = tempfile.mkdtemp()
+    else:
+        # using a cache dir in the user home dir
+        download_dir = os.path.expanduser(CONDPROF_CACHE)
+        if not os.path.exists(download_dir):
+            os.makedirs(download_dir)
+
     downloaded_archive = os.path.join(download_dir, filename)
     get_logger().msg("Getting %s" % url)
-    exists, __ = check_exists(url)
-    if exists != 200:
-        raise ProfileNotFoundError(exists)
+    try:
+        archive = download_file(url, target=downloaded_archive)
+    except ArchiveNotFound:
+        raise ProfileNotFoundError(url)
 
-    archive = download_file(url, target=downloaded_archive)
     try:
         with tarfile.open(archive, "r:gz") as tar:
             get_logger().msg("Extracting the tarball content in %s" % target_dir)
@@ -76,7 +91,8 @@ def get_profile(target_dir, platform, scenario, customization="default", task_id
     except (OSError, tarfile.ReadError) as e:
         raise ProfileNotFoundError(str(e))
     finally:
-        shutil.rmtree(download_dir)
+        if not download_cache:
+            shutil.rmtree(download_dir)
     get_logger().msg("Success, we have a profile to work with")
     return target_dir
 
@@ -85,12 +101,13 @@ def read_changelog(platform):
     params = {"platform": platform}
     changelog_url = CHANGELOG_LINK % params
     get_logger().msg("Getting %s" % changelog_url)
-    exists, __ = check_exists(changelog_url)
-    if exists != 200:
-        raise ProfileNotFoundError(exists)
     download_dir = tempfile.mkdtemp()
     downloaded_changelog = os.path.join(download_dir, "changelog.json")
-    download_file(changelog_url, target=downloaded_changelog)
+    try:
+        download_file(changelog_url, target=downloaded_changelog)
+    except ArchiveNotFound:
+        shutil.rmtree(download_dir)
+        raise ProfileNotFoundError(changelog_url)
     return Changelog(download_dir)
 
 

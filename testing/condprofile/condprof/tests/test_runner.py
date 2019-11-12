@@ -31,11 +31,7 @@ class TestRunner(unittest.TestCase):
         self.archive_dir = tempfile.mkdtemp()
         responses.add(responses.GET, CHANGELOG, json={"error": "not found"}, status=404)
         responses.add(
-            responses.GET,
-            FTP,
-            content_type="application/text/html",
-            body=FTP_PAGE,
-            status=200,
+            responses.GET, FTP, content_type="text/html", body=FTP_PAGE, status=200
         )
 
         responses.add(
