@@ -118,7 +118,7 @@ function testUTF8InField(field, replacementPrefix, certificateBytesToAlter) {
     "should have enough ASCII replacements to make a unique issuer DN"
   );
   gUniqueIssuerCounter++;
-  let cert = gCertDB.constructX509(bytes);
+  let cert = gCertDB.constructX509(stringToArray(bytes));
   notEqual(cert[field], null, `accessing nsIX509Cert.${field} shouldn't fail`);
   notEqual(
     cert.ASN1Structure,

@@ -1191,19 +1191,19 @@ nsresult PendingLookup::GenerateWhitelistStringsForChain(
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIX509Cert> signer;
-  nsDependentCSubstring signerDER(
-      const_cast<char*>(aChain.element(0).certificate().data()),
-      aChain.element(0).certificate().size());
-  rv = certDB->ConstructX509(signerDER, getter_AddRefs(signer));
+  nsTArray<uint8_t> signerBytes;
+  signerBytes.AppendElements(aChain.element(0).certificate().data(),
+                             aChain.element(0).certificate().size());
+  rv = certDB->ConstructX509(signerBytes, getter_AddRefs(signer));
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (int i = 1; i < aChain.element_size(); ++i) {
     // Get the issuer.
     nsCOMPtr<nsIX509Cert> issuer;
-    nsDependentCSubstring issuerDER(
-        const_cast<char*>(aChain.element(i).certificate().data()),
-        aChain.element(i).certificate().size());
-    rv = certDB->ConstructX509(issuerDER, getter_AddRefs(issuer));
+    nsTArray<uint8_t> issuerBytes;
+    issuerBytes.AppendElements(aChain.element(i).certificate().data(),
+                               aChain.element(i).certificate().size());
+    rv = certDB->ConstructX509(issuerBytes, getter_AddRefs(issuer));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = GenerateWhitelistStringsForPair(signer, issuer);

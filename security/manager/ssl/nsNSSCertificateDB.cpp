@@ -842,21 +842,31 @@ nsNSSCertificateDB::ConstructX509FromBase64(const nsACString& base64,
     return rv;
   }
 
-  return ConstructX509(certDER, _retval);
+  return ConstructX509FromSpan(AsBytes(MakeSpan(certDER)), _retval);
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::ConstructX509(const nsACString& certDER,
+nsNSSCertificateDB::ConstructX509(const nsTArray<uint8_t>& certDER,
                                   nsIX509Cert** _retval) {
+  return ConstructX509FromSpan(MakeSpan(certDER.Elements(), certDER.Length()),
+                               _retval);
+}
+
+nsresult nsNSSCertificateDB::ConstructX509FromSpan(
+    Span<const uint8_t> aInputSpan, nsIX509Cert** _retval) {
   if (NS_WARN_IF(!_retval)) {
     return NS_ERROR_INVALID_POINTER;
   }
 
+  if (aInputSpan.Length() > std::numeric_limits<unsigned int>::max()) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
   SECItem certData;
   certData.type = siDERCertBuffer;
-  certData.data =
-      BitwiseCast<unsigned char*, const char*>(certDER.BeginReading());
-  certData.len = certDER.Length();
+  certData.data = const_cast<unsigned char*>(
+      reinterpret_cast<const unsigned char*>(aInputSpan.Elements()));
+  certData.len = aInputSpan.Length();
 
   UniqueCERTCertificate cert(CERT_NewTempCertificate(
       CERT_GetDefaultCertDB(), &certData, nullptr, false, true));
@@ -1002,7 +1012,8 @@ nsNSSCertificateDB::AddCert(const nsACString& aCertDER,
   }
 
   nsCOMPtr<nsIX509Cert> newCert;
-  nsresult rv = ConstructX509(aCertDER, getter_AddRefs(newCert));
+  nsresult rv = ConstructX509FromSpan(AsBytes(MakeSpan(aCertDER)),
+                                      getter_AddRefs(newCert));
   if (NS_FAILED(rv)) {
     return rv;
   }

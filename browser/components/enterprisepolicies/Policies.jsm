@@ -251,9 +251,13 @@ var Policies = {
                 return;
               }
               let certFile = reader.result;
+              let certFileArray = [];
+              for (let i = 0; i < certFile.length; i++) {
+                certFileArray.push(certFile.charCodeAt(i));
+              }
               let cert;
               try {
-                cert = gCertDB.constructX509(certFile);
+                cert = gCertDB.constructX509(certFileArray);
               } catch (e) {
                 try {
                   // It might be PEM instead of DER.

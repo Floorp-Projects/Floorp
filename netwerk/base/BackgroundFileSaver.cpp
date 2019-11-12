@@ -833,11 +833,12 @@ nsresult BackgroundFileSaver::ExtractSignatureInfo(const nsAString& filePath) {
             continue;
           }
           nsCOMPtr<nsIX509Cert> nssCert = nullptr;
-          nsDependentCSubstring certDER(
-              reinterpret_cast<char*>(
-                  certChainElement->pCertContext->pbCertEncoded),
+          nsTArray<uint8_t> certByte;
+          certByte.AppendElements(
+              certChainElement->pCertContext->pbCertEncoded,
               certChainElement->pCertContext->cbCertEncoded);
-          rv = certDB->ConstructX509(certDER, getter_AddRefs(nssCert));
+
+          rv = certDB->ConstructX509(certByte, getter_AddRefs(nssCert));
           if (!nssCert) {
             extractionSuccess = false;
             LOG(("Couldn't create NSS cert [this = %p]", this));
