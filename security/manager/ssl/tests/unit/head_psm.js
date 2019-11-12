@@ -206,7 +206,7 @@ function constructCertFromFile(filename) {
     Ci.nsIX509CertDB
   );
   try {
-    return certdb.constructX509(certBytes);
+    return certdb.constructX509(stringToArray(certBytes));
   } catch (e) {}
   // It might be PEM instead of DER.
   return certdb.constructX509FromBase64(pemToBase64(certBytes));

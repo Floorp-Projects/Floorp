@@ -394,10 +394,10 @@ nsresult TLSServerConnectionInfo::HandshakeCallback(PRFileDesc* aFD) {
     }
 
     nsCOMPtr<nsIX509Cert> clientCertPSM;
-    nsDependentCSubstring certDER(
-        reinterpret_cast<char*>(clientCert->derCert.data),
-        clientCert->derCert.len);
-    rv = certDB->ConstructX509(certDER, getter_AddRefs(clientCertPSM));
+    nsTArray<uint8_t> clientCertBytes;
+    clientCertBytes.AppendElements(clientCert->derCert.data,
+                                   clientCert->derCert.len);
+    rv = certDB->ConstructX509(clientCertBytes, getter_AddRefs(clientCertPSM));
     if (NS_FAILED(rv)) {
       return rv;
     }
