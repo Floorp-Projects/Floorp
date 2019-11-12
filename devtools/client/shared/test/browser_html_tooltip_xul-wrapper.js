@@ -40,7 +40,7 @@ add_task(async function() {
   registerCleanupFunction(() => {
     info("Restore original window dimensions and position.");
     win.resizeTo(originalWidth, originalHeight);
-    win.moveTo(originalTop, originalLeft);
+    win.moveTo(originalLeft, originalTop);
   });
 
   info("Create HTML tooltip");
