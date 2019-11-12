@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef mozilla_IntentionalCrash_h
+#define mozilla_IntentionalCrash_h
+
 #include <string>
 #include <sstream>
 #include <stdlib.h>
@@ -16,16 +19,13 @@
 #  include <unistd.h>
 #endif
 
-#ifndef mozilla_IntentionalCrash_h
-#  define mozilla_IntentionalCrash_h
-
 namespace mozilla {
 
 inline void NoteIntentionalCrash(const char* aProcessType) {
 // In opt builds we don't actually have the leak checking enabled, and the
 // sandbox doesn't allow writing to this path, so we just disable this
 // function's behaviour.
-#  ifdef MOZ_DEBUG
+#ifdef MOZ_DEBUG
   char* f = getenv("XPCOM_MEM_BLOAT_LOG");
   if (!f) {
     return;
@@ -55,7 +55,7 @@ inline void NoteIntentionalCrash(const char* aProcessType) {
     fprintf(processfd, "==> process %d will purposefully crash\n", getpid());
     fclose(processfd);
   }
-#  endif
+#endif
 }
 
 }  // namespace mozilla
