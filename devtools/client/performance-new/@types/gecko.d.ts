@@ -129,7 +129,65 @@ declare namespace MockedExports {
 
   const Services: Services;
 
-  const chrome: any;
+  // This class is needed by the Cc importing mechanism. e.g.
+  // Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+  class nsIFilePicker {}
+
+  interface FilePicker {
+    init: (window: Window, title: string, mode: number) => void;
+    open: (callback: (rv: number) => unknown) => void;
+    // The following are enum values.
+    modeGetFolder: number;
+    returnOK: number;
+    file: {
+      path: string
+    }
+  }
+
+  // This class is needed by the Cc importing mechanism. e.g.
+  // Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+  class nsIEnvironment {}
+
+  interface Environment {
+    get(envName: string): string;
+    set(envName: string, value: string): void;
+  }
+
+  const chrome: {
+    Cc: {
+      "@mozilla.org/process/environment;1": {
+        getService(service: nsIEnvironment): Environment
+      },
+      "@mozilla.org/filepicker;1": {
+        createInstance(instance: nsIFilePicker): FilePicker
+      }
+    },
+    Ci: {
+      nsIFilePicker: nsIFilePicker;
+      nsIEnvironment: nsIEnvironment;
+    },
+  };
+}
+
+
+declare module "devtools/client/shared/vendor/react" {
+  import * as React from "react";
+  export = React;
+}
+
+declare module "devtools/client/shared/vendor/react-dom-factories" {
+  import * as ReactDomFactories from "react-dom-factories";
+  export = ReactDomFactories;
+}
+
+declare module "devtools/client/shared/vendor/redux" {
+  import * as Redux from "redux";
+  export = Redux;
+}
+
+declare module "devtools/client/shared/vendor/react-redux" {
+  import * as ReactRedux from "react-redux";
+  export = ReactRedux;
 }
 
 declare module "devtools/shared/event-emitter2" {

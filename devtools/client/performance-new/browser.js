@@ -523,6 +523,28 @@ function getEnvironmentVariable(envName) {
   return env.get(envName);
 }
 
+/**
+ * @param {Window} window
+ * @param {string[]} objdirs
+ * @param {(objdirs: string[]) => unknown} changeObjdirs
+ */
+function openFilePickerForObjdir(window, objdirs, changeObjdirs) {
+  const { Cc, Ci } = lazyChrome();
+  const FilePicker = Cc["@mozilla.org/filepicker;1"].createInstance(
+    Ci.nsIFilePicker
+  );
+  FilePicker.init(window, "Pick build directory", FilePicker.modeGetFolder);
+  FilePicker.open(rv => {
+    if (rv == FilePicker.returnOK) {
+      const path = FilePicker.file.path;
+      if (path && !objdirs.includes(path)) {
+        const newObjdirs = [...objdirs, path];
+        changeObjdirs(newObjdirs);
+      }
+    }
+  });
+}
+
 module.exports = {
   receiveProfile,
   getRecordingPreferencesFromDebuggee,
@@ -530,4 +552,5 @@ module.exports = {
   createMultiModalGetSymbolTableFn,
   restartBrowserWithEnvironmentVariable,
   getEnvironmentVariable,
+  openFilePickerForObjdir,
 };

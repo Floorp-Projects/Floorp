@@ -311,3 +311,11 @@ export interface PerformancePref {
    */
   PopupEnabled: "devtools.performance.popup.enabled";
 }
+
+/**
+ * This interface represents the global values that are potentially on the window
+ * object in the popup. Coerce the "window" object into this interface.
+ */
+export interface PopupWindow {
+  gResizePopup?: (height: number) => void;
+}
