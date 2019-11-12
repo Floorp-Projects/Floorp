@@ -38,11 +38,11 @@ const global = this;
 // expect them to be.
 // The source code is at https://github.com/mstange/profiler-get-symbols/ .
 
-// Generated from https://github.com/mstange/profiler-get-symbols/commit/aee29d787991cedd50bd3481df16b47190b4f9e7
+// Generated from https://github.com/mstange/profiler-get-symbols/commit/90ee39f1d18d2727f07dc57bd93cff6bc73ce8a0
 const WASM_MODULE_URL =
-  "https://zealous-rosalind-a98ce8.netlify.com/wasm/55115f2a5d24981933dba6de2026f972769ed3830cd55b2d6a26a440673eb1374cd42e6c732a0423aa748a7bea7edb69.wasm";
+  "https://zealous-rosalind-a98ce8.netlify.com/wasm/8f7ca2f70e1cd21b5a2dbe96545672752887bfbd4e7b3b9437e9fc7c3da0a3bedae4584ff734f0c9f08c642e6b66ffab.wasm";
 const WASM_MODULE_INTEGRITY =
-  "sha384-VRFfKl0kmBkz26beICb5cnae04MM1VstaiakQGc+sTdM1C5scyoEI6p0invqfttp";
+  "sha384-j3yi9w4c0htaLb6WVFZydSiHv71OezuUN+n8fD2go77a5FhP9zTwyfCMZC5rZv+r";
 
 const EXPIRY_TIME_IN_MS = 5 * 60 * 1000; // 5 minutes
 
