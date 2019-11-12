@@ -137,6 +137,21 @@ let ACTORS = {
     },
   },
 
+  NetError: {
+    parent: {
+      moduleURI: "resource:///actors/NetErrorParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/NetErrorChild.jsm",
+      events: {
+        click: {},
+      },
+    },
+
+    matches: ["about:certerror?*", "about:neterror?*"],
+    allFrames: true,
+  },
+
   PageInfo: {
     child: {
       moduleURI: "resource:///actors/PageInfoChild.jsm",
@@ -332,17 +347,6 @@ let LEGACY_ACTORS = {
       events: {
         pageshow: { mozSystemGroup: true },
       },
-    },
-  },
-
-  NetError: {
-    child: {
-      module: "resource:///actors/NetErrorChild.jsm",
-      events: {
-        click: {},
-      },
-      matches: ["about:certerror?*", "about:neterror?*"],
-      allFrames: true,
     },
   },
 
