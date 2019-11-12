@@ -49,5 +49,5 @@ function doSyncWork(milliseconds) {
 
 function functionA() {
   doSyncWork(100);
-  doAtLeastOnePeriodicSample();
+  captureAtLeastOneJsSample();
 }
