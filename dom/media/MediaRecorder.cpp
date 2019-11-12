@@ -449,37 +449,55 @@ nsString SelectMimeType(bool aHasVideo, bool aHasAudio,
   Maybe<MediaContainerType> constrainedType =
       MakeMediaContainerType(aConstrainedMimeType);
 
-  nsCString majorType;
-  {
-    // Select major type and container.
-    if (constrainedType) {
-      MOZ_ASSERT_IF(aHasVideo, constrainedType->Type().HasVideoMajorType());
-      MOZ_ASSERT(!constrainedType->Type().HasApplicationMajorType());
-      majorType = constrainedType->Type().AsString();
-    } else if (aHasVideo) {
-      majorType = NS_LITERAL_CSTRING(VIDEO_WEBM);
-    } else {
-      majorType = NS_LITERAL_CSTRING(AUDIO_OGG);
-    }
-  }
+  // If we are recording video, Start() should have rejected any non-video mime
+  // types.
+  MOZ_ASSERT_IF(constrainedType && aHasVideo,
+                constrainedType->Type().HasVideoMajorType());
+  // IsTypeSupported() rejects application mime types.
+  MOZ_ASSERT_IF(constrainedType,
+                !constrainedType->Type().HasApplicationMajorType());
 
-  nsString codecs;
-  {
-    if (constrainedType && constrainedType->ExtendedType().HaveCodecs()) {
-      codecs = constrainedType->ExtendedType().Codecs().AsString();
-    } else {
-      if (aHasVideo && aHasAudio) {
-        codecs = NS_LITERAL_STRING("\"vp8, opus\"");
+  nsString result;
+  if (constrainedType && constrainedType->ExtendedType().HaveCodecs()) {
+    // The constrained mime type is fully defined (it has codecs!). No need to
+    // select anything.
+    result = NS_ConvertUTF8toUTF16(constrainedType->OriginalString());
+  } else {
+    // There is no constrained mime type, or there is and it is not fully
+    // defined but still valid. Select what's missing, so that we have major
+    // type, container and codecs.
+
+    // If there is a constrained mime type it should not have codecs defined,
+    // because then it is fully defined and used unchanged (covered earlier).
+    MOZ_ASSERT_IF(constrainedType,
+                  !constrainedType->ExtendedType().HaveCodecs());
+
+    nsCString majorType;
+    {
+      if (constrainedType) {
+        // There is a constrained type. It has both major type and container in
+        // order to be valid. Use them as is.
+        majorType = constrainedType->Type().AsString();
       } else if (aHasVideo) {
-        codecs = NS_LITERAL_STRING("vp8");
+        majorType = NS_LITERAL_CSTRING(VIDEO_WEBM);
       } else {
-        codecs = NS_LITERAL_STRING("opus");
+        majorType = NS_LITERAL_CSTRING(AUDIO_OGG);
       }
     }
-  }
 
-  nsString result = NS_ConvertUTF8toUTF16(nsPrintfCString(
-      "%s; codecs=%s", majorType.get(), NS_ConvertUTF16toUTF8(codecs).get()));
+    nsCString codecs;
+    {
+      if (aHasVideo && aHasAudio) {
+        codecs = NS_LITERAL_CSTRING("\"vp8, opus\"");
+      } else if (aHasVideo) {
+        codecs = NS_LITERAL_CSTRING("vp8");
+      } else {
+        codecs = NS_LITERAL_CSTRING("opus");
+      }
+    }
+    result = NS_ConvertUTF8toUTF16(
+        nsPrintfCString("%s; codecs=%s", majorType.get(), codecs.get()));
+  }
 
   MOZ_ASSERT_IF(aHasAudio,
                 CanRecordAudioTrackWith(MakeMediaContainerType(result),
