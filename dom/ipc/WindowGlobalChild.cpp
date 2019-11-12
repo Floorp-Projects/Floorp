@@ -20,6 +20,7 @@
 #include "mozilla/ipc/InProcessParent.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
+#include "nsFocusManager.h"
 #include "nsFrameLoaderOwner.h"
 #include "nsGlobalWindowInner.h"
 #include "nsFrameLoaderOwner.h"
@@ -239,6 +240,39 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvLoadURIInChild(
   mWindowGlobal->GetDocShell()->LoadURI(aLoadState, aSetNavigating);
   if (aSetNavigating) {
     mWindowGlobal->GetBrowserChild()->NotifyNavigationFinished();
+  }
+
+#ifdef MOZ_CRASHREPORTER
+  if (CrashReporter::GetEnabled()) {
+    nsCOMPtr<nsIURI> annotationURI;
+
+    nsresult rv = NS_MutateURI(aLoadState->URI())
+                      .SetUserPass(EmptyCString())
+                      .Finalize(annotationURI);
+
+    if (NS_FAILED(rv)) {
+      // Ignore failures on about: URIs.
+      annotationURI = aLoadState->URI();
+    }
+
+    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL,
+                                       annotationURI->GetSpecOrDefault());
+  }
+#endif
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult WindowGlobalChild::RecvInternalLoadInChild(
+    nsDocShellLoadState* aLoadState, bool aTakeFocus) {
+  nsDocShell::Cast(mWindowGlobal->GetDocShell())
+      ->InternalLoad(aLoadState, nullptr, nullptr);
+
+  if (aTakeFocus) {
+    if (nsCOMPtr<nsPIDOMWindowOuter> domWin =
+            mBrowsingContext->GetDOMWindow()) {
+      nsFocusManager::FocusWindow(domWin);
+    }
   }
 
 #ifdef MOZ_CRASHREPORTER
