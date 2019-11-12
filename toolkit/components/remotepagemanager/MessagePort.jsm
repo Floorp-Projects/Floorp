@@ -235,8 +235,8 @@ class MessageListener {
  * nsIMessageListenerManager
  */
 class MessagePort {
-  constructor(messageManager, portID) {
-    this.messageManager = messageManager;
+  constructor(messageManagerOrActor, portID) {
+    this.messageManager = messageManagerOrActor;
     this.portID = portID;
     this.destroyed = false;
     this.listener = new MessageListener();
@@ -253,6 +253,10 @@ class MessagePort {
   }
 
   addMessageListeners() {
+    if (!(this.messageManager instanceof Ci.nsIMessageSender)) {
+      return;
+    }
+
     this.messageManager.addMessageListener("RemotePage:Message", this.message);
     this.messageManager.addMessageListener(
       "RemotePage:Request",
@@ -265,6 +269,10 @@ class MessagePort {
   }
 
   removeMessageListeners() {
+    if (!(this.messageManager instanceof Ci.nsIMessageSender)) {
+      return;
+    }
+
     this.messageManager.removeMessageListener(
       "RemotePage:Message",
       this.message
@@ -401,12 +409,16 @@ class MessagePort {
     if (this.window) {
       id = this.window.docShell.browsingContext.id;
     }
-    this.messageManager.sendAsyncMessage("RemotePage:Message", {
-      portID: this.portID,
-      browsingContextID: id,
-      name,
-      data,
-    });
+    if (this.messageManager instanceof Ci.nsIMessageSender) {
+      this.messageManager.sendAsyncMessage("RemotePage:Message", {
+        portID: this.portID,
+        browsingContextID: id,
+        name,
+        data,
+      });
+    } else {
+      this.messageManager.sendAsyncMessage(name, data);
+    }
   }
 
   // Called to destroy this port
