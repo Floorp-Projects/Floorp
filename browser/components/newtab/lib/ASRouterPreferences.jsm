@@ -4,12 +4,28 @@
 "use strict";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const PROVIDER_PREF_BRANCH =
   "browser.newtabpage.activity-stream.asrouter.providers.";
 const DEVTOOLS_PREF =
   "browser.newtabpage.activity-stream.asrouter.devtoolsEnabled";
 const FXA_USERNAME_PREF = "services.sync.username";
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "personalizedCfrScores",
+  "browser.messaging-system.personalized-cfr.scores",
+  "{}"
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "personalizedCfrThreshold",
+  "browser.messaging-system.personalized-cfr.score-threshold",
+  0.0
+);
 
 const DEFAULT_STATE = {
   _initialized: false,
@@ -117,6 +133,19 @@ class _ASRouterPreferences {
       );
     }
     return this._devtoolsEnabled;
+  }
+
+  get personalizedCfr() {
+    let scores = {};
+    try {
+      scores = JSON.parse(personalizedCfrScores);
+    } catch (e) {
+      Cu.reportError(e);
+    }
+    return {
+      personalizedCfrScores: scores,
+      personalizedCfrThreshold: parseFloat(personalizedCfrThreshold),
+    };
   }
 
   observe(aSubject, aTopic, aPrefName) {
