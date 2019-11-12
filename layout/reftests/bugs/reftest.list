@@ -1332,7 +1332,6 @@ fuzzy-if(skiaContent,0-1,0-5) == 482659-1d.html 482659-1-ref.html
 pref(browser.display.focus_ring_width,1) == 491180-1.html 491180-1-ref.html
 pref(browser.display.focus_ring_width,1) == 491180-2.html 491180-2-ref.html
 == chrome://reftest/content/bugs/491323-1.xul chrome://reftest/content/bugs/491323-1-ref.xul
-== chrome://reftest/content/bugs/492239-1.xul chrome://reftest/content/bugs/492239-1-ref.xul
 == 492661-1.html 492661-1-ref.html
 == 493968-1.html 493968-1-ref.html
 == 494667-1.html 494667-1-ref.html
