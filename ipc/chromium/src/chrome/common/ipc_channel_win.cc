@@ -338,7 +338,9 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
           input_state_.is_pending = true;
           return true;
         }
-        CHROMIUM_LOG(ERROR) << "pipe error: " << err;
+        if (err != ERROR_BROKEN_PIPE) {
+          CHROMIUM_LOG(ERROR) << "pipe error: " << err;
+        }
         return false;
       }
       input_state_.is_pending = true;
@@ -455,7 +457,9 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
     output_state_.is_pending = false;
     if (!context || bytes_written == 0) {
       DWORD err = GetLastError();
-      CHROMIUM_LOG(ERROR) << "pipe error: " << err;
+      if (err != ERROR_BROKEN_PIPE) {
+        CHROMIUM_LOG(ERROR) << "pipe error: " << err;
+      }
       return false;
     }
     // Message was sent.
@@ -499,7 +503,9 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
 
       return true;
     }
-    CHROMIUM_LOG(ERROR) << "pipe error: " << err;
+    if (err != ERROR_BROKEN_PIPE) {
+      CHROMIUM_LOG(ERROR) << "pipe error: " << err;
+    }
     return false;
   }
 
