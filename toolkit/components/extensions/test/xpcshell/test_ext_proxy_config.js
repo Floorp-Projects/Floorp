@@ -15,6 +15,7 @@ const {
 } = AddonTestUtils;
 
 AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
