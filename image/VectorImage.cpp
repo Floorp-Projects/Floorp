@@ -1101,8 +1101,8 @@ already_AddRefed<SourceSurface> VectorImage::CreateSurface(
   // our gfxDrawable into it. (We use FILTER_NEAREST since we never scale here.)
   auto frame = MakeNotNull<RefPtr<imgFrame>>();
   nsresult rv = frame->InitWithDrawable(
-      aSVGDrawable, aParams.size, SurfaceFormat::B8G8R8A8,
-      SamplingFilter::POINT, aParams.flags, backend);
+      aSVGDrawable, aParams.size, SurfaceFormat::OS_RGBA, SamplingFilter::POINT,
+      aParams.flags, backend);
 
   // If we couldn't create the frame, it was probably because it would end
   // up way too big. Generally it also wouldn't fit in the cache, but the prefs
@@ -1182,7 +1182,7 @@ void VectorImage::Show(gfxDrawable* aDrawable,
   MOZ_ASSERT(aDrawable, "Should have a gfxDrawable by now");
   gfxUtils::DrawPixelSnapped(aParams.context, aDrawable,
                              SizeDouble(aParams.size), region,
-                             SurfaceFormat::B8G8R8A8, aParams.samplingFilter,
+                             SurfaceFormat::OS_RGBA, aParams.samplingFilter,
                              aParams.flags, aParams.opacity, false);
 
 #ifdef DEBUG

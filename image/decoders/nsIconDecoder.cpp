@@ -13,7 +13,7 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace image {
 
-static const uint32_t ICON_HEADER_SIZE = 2;
+static const uint32_t ICON_HEADER_SIZE = 4;
 
 nsIconDecoder::nsIconDecoder(RasterImage* aImage)
     : Decoder(aImage),
@@ -50,6 +50,7 @@ LexerTransition<nsIconDecoder::State> nsIconDecoder::ReadHeader(
   // Grab the width and height.
   uint8_t width = uint8_t(aData[0]);
   uint8_t height = uint8_t(aData[1]);
+  SurfaceFormat format = SurfaceFormat(aData[2]);
 
   // The input is 32bpp, so we expect 4 bytes of data per pixel.
   mBytesPerRow = width * 4;
@@ -67,8 +68,7 @@ LexerTransition<nsIconDecoder::State> nsIconDecoder::ReadHeader(
 
   MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
   Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
-      this, Size(), OutputSize(), FullFrame(), SurfaceFormat::B8G8R8A8,
-      SurfaceFormat::B8G8R8A8,
+      this, Size(), OutputSize(), FullFrame(), format, SurfaceFormat::OS_RGBA,
       /* aAnimParams */ Nothing(), mTransform, SurfacePipeFlags());
   if (!pipe) {
     return Transition::TerminateFailure();
@@ -85,19 +85,7 @@ LexerTransition<nsIconDecoder::State> nsIconDecoder::ReadRowOfPixels(
     const char* aData, size_t aLength) {
   MOZ_ASSERT(aLength % 4 == 0, "Rows should contain a multiple of four bytes");
 
-  auto result = mPipe.WritePixels<uint32_t>([&]() -> NextPixel<uint32_t> {
-    if (aLength == 0) {
-      return AsVariant(WriteState::NEED_MORE_DATA);  // Done with this row.
-    }
-
-    uint32_t pixel;
-    memcpy(&pixel, aData, 4);
-    aData += 4;
-    aLength -= 4;
-
-    return AsVariant(pixel);
-  });
-
+  auto result = mPipe.WriteBuffer(reinterpret_cast<const uint32_t*>(aData));
   MOZ_ASSERT(result != WriteState::FAILURE);
 
   Maybe<SurfaceInvalidRect> invalidRect = mPipe.TakeInvalidRect();
