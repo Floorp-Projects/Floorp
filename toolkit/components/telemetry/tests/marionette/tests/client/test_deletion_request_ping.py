@@ -3,11 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from telemetry_harness.testcase import TelemetryTestCase
-from telemetry_harness.ping_filters import ANY_PING, OPTOUT_PING, MAIN_SHUTDOWN_PING
+from telemetry_harness.ping_filters import ANY_PING, DELETION_REQUEST_PING, MAIN_SHUTDOWN_PING
 
 
-class TestOptoutPing(TelemetryTestCase):
-    """Tests for "optout" ping."""
+class TestDeletionRequestPing(TelemetryTestCase):
+    """Tests for "deletion-request" ping."""
 
     def disable_telemetry(self):
         self.marionette.instance.profile.set_persistent_preferences(
@@ -20,18 +20,18 @@ class TestOptoutPing(TelemetryTestCase):
         self.marionette.set_pref("datareporting.healthreport.uploadEnabled", True)
 
     def test_optout_ping_across_sessions(self):
-        """Test the "optout" ping behaviour across sessions."""
+        """Test the "deletion-request" ping behaviour across sessions."""
 
         # Get the client_id.
         client_id = self.wait_for_ping(self.install_addon, ANY_PING)["clientId"]
         self.assertIsValidUUID(client_id)
 
-        # Trigger an "optout" ping.
-        optout_ping = self.wait_for_ping(self.disable_telemetry, OPTOUT_PING)
+        # Trigger an "deletion-request" ping.
+        ping = self.wait_for_ping(self.disable_telemetry, DELETION_REQUEST_PING)
 
-        self.assertNotIn("clientId", optout_ping)
-        self.assertIn("payload", optout_ping)
-        self.assertNotIn("environment", optout_ping["payload"])
+        self.assertIn("clientId", ping)
+        self.assertIn("payload", ping)
+        self.assertNotIn("environment", ping["payload"])
 
         # Close Firefox cleanly.
         self.marionette.quit(in_app=True)
@@ -45,7 +45,7 @@ class TestOptoutPing(TelemetryTestCase):
         self.install_addon()
 
         # Ensure we've sent no pings since "optout".
-        self.assertEqual(self.ping_server.pings[-1], optout_ping)
+        self.assertEqual(self.ping_server.pings[-1], ping)
 
         # Turn Telemetry back on.
         self.enable_telemetry()
