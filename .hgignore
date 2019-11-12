@@ -102,6 +102,7 @@ _OPT\.OBJ/
 # Ignore node_module directories and npm artifacts
 ^remote/test/puppeteer/package-lock.json
 ^remote/test/puppeteer/node_modules/
+^remote/test/puppeteer/.local-chromium/
 
 # git checkout of libstagefright
 ^media/libstagefright/android$
