@@ -8,8 +8,8 @@
     <hbox flex="1"/>
   </hbox>
   <!-- overdraw the troublesome junctions between colored boxes -->
-  <spacer left="263" top="0" height="16" width="2" style="background:white;"/>
-  <spacer left="279" top="0" height="16" width="2" style="background:white;"/>
-  <spacer left="256" top="7" height="2" width="32" style="background:white;"/>
+  <spacer style="margin-left: 263px; margin-top: 0; height: 16px; width: 2px; background: white;"/>
+  <spacer style="margin-left: 279px; margin-top: 0; height: 16px; width: 2px; background: white;"/>
+  <spacer style="margin-left: 256px; margin-top: 7px; height: 2px; width: 32px; background: white;"/>
 </stack>
 </window>

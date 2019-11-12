@@ -10,15 +10,15 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
 <stack flex="1">
-  <label id="topleft" value="Top Left Corner" left="15" top="15"/>
-  <label id="topright" value="Top Right" right="15" top="15"/>
-  <label id="bottomleft" value="Bottom Left Corner" left="15" bottom="15"/>
-  <label id="bottomright" value="Bottom Right" right="15" bottom="15"/>
+  <label id="topleft" value="Top Left Corner" style="justify-self: left; margin-left: 15px; align-self: start; margin-top: 15px;"/>
+  <label id="topright" value="Top Right" style="justify-self: right; margin-right: 15px; align-self: start; margin-top: 15px;"/>
+  <label id="bottomleft" value="Bottom Left Corner" style="justify-self: left; margin-left: 15px; align-self: end; margin-bottom: 15px;"/>
+  <label id="bottomright" value="Bottom Right" style="justify-self: right; margin-right: 15px; align-self: end; margin-bottom: 15px;"/>
   <!-- Our SimpleTest/TestRunner.js runs tests inside an iframe which sizes are W=500 H=300.
        'left' and 'top' values need to be set so that the panel (popup) has enough room to display on its 4 sides. -->
-  <label id="middle" value="+/- Centered" left="225" top="135"/>
+  <label id="middle" value="+/- Centered" style="justify-self: left; margin-left: 225px; align-self: start; margin-top: 135px;"/>
   <iframe id="frame" type="content"
-          src="data:text/html,&lt;input id='input'&gt;" width="100" height="100" left="225" top="120"/>
+          src="data:text/html,&lt;input id='input'&gt;" style="width: 100px; height: 100px; justify-self: left; margin-left: 225px; align-self: start; margin-top: 120px;"/>
 </stack>
 
 <panel id="panel" type="arrow" animate="false"
@@ -168,14 +168,23 @@ function* nextTest()
 
     // switch to rtl mode
     document.documentElement.style.direction = "rtl";
-    $("topleft").setAttribute("right", "15");
-    $("topright").setAttribute("left", "15");
-    $("bottomleft").setAttribute("right", "15");
-    $("bottomright").setAttribute("left", "15");
-    $("topleft").removeAttribute("left");
-    $("topright").removeAttribute("right");
-    $("bottomleft").removeAttribute("left");
-    $("bottomright").removeAttribute("right");
+
+    $("topleft").style.marginRight = "15px";
+    $("topleft").style.justifySelf = "right";
+
+    $("topright").style.marginLeft = "15px";
+    $("topright").style.justifySelf = "left";
+
+    $("bottomleft").style.marginRight = "15px";
+    $("bottomleft").style.justifySelf = "right";
+
+    $("bottomright").style.marginLeft = "15px";
+    $("bottomright").style.justifySelf = "left";
+
+    $("topleft").style.removeProperty("marginLeft");
+    $("topright").style.removeProperty("marginRight");
+    $("bottomleft").style.removeProperty("marginLeft");
+    $("bottomright").style.removeProperty("marginRight");
   }
 
   // Test that a transition occurs when opening or closing the popup.

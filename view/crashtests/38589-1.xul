@@ -4,7 +4,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 		<scrollbox>
 			<stack>
-				<box left="50" top="50" style="opacity:0.3;">p </box> 
+				<box style="margin-top: 50px; margin-left: 50px; opacity: 0.3;">p </box> 
 			</stack>
 		</scrollbox>
 </window>
