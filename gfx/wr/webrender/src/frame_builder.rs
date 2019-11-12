@@ -615,7 +615,6 @@ impl FrameBuilder {
                 device_origin,
                 scene.output_rect.size,
             ),
-            background_color: scene.background_color,
             layer,
             profile_counters,
             passes,
@@ -953,7 +952,6 @@ pub struct Frame {
     pub content_origin: DeviceIntPoint,
     /// The rectangle to show the frame in, on screen.
     pub device_rect: DeviceIntRect,
-    pub background_color: Option<ColorF>,
     pub layer: DocumentLayer,
     pub passes: Vec<RenderPass>,
     #[cfg_attr(any(feature = "capture", feature = "replay"), serde(default = "FrameProfileCounters::new", skip))]
