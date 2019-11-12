@@ -12,6 +12,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/gfx/Swizzle.h"
 #include <algorithm>
 
 #include <gio/gio.h>
@@ -48,7 +49,7 @@ static nsresult moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI* aURI,
 
   const int n_channels = 4;
   CheckedInt32 buf_size =
-      2 + n_channels * CheckedInt32(height) * CheckedInt32(width);
+      4 + n_channels * CheckedInt32(height) * CheckedInt32(width);
   if (!buf_size.isValid()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -57,35 +58,18 @@ static nsresult moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI* aURI,
 
   *(out++) = width;
   *(out++) = height;
+  *(out++) = uint8_t(mozilla::gfx::SurfaceFormat::OS_RGBA);
+  *(out++) = 0;
 
   const guchar* const pixels = gdk_pixbuf_get_pixels(aPixbuf);
-  int rowextra = gdk_pixbuf_get_rowstride(aPixbuf) - width * n_channels;
+  int instride = gdk_pixbuf_get_rowstride(aPixbuf);
+  int outstride = width * n_channels;
 
   // encode the RGB data and the A data
-  const guchar* in = pixels;
-  for (int y = 0; y < height; ++y, in += rowextra) {
-    for (int x = 0; x < width; ++x) {
-      uint8_t r = *(in++);
-      uint8_t g = *(in++);
-      uint8_t b = *(in++);
-      uint8_t a = *(in++);
-#define DO_PREMULTIPLY(c_) uint8_t(uint16_t(c_) * uint16_t(a) / uint16_t(255))
-#if MOZ_LITTLE_ENDIAN
-      *(out++) = DO_PREMULTIPLY(b);
-      *(out++) = DO_PREMULTIPLY(g);
-      *(out++) = DO_PREMULTIPLY(r);
-      *(out++) = a;
-#else
-      *(out++) = a;
-      *(out++) = DO_PREMULTIPLY(r);
-      *(out++) = DO_PREMULTIPLY(g);
-      *(out++) = DO_PREMULTIPLY(b);
-#endif
-#undef DO_PREMULTIPLY
-    }
-  }
-
-  NS_ASSERTION(out == buf + buf_size.value(), "size miscalculation");
+  mozilla::gfx::PremultiplyData(pixels, instride,
+                                mozilla::gfx::SurfaceFormat::R8G8B8A8, out,
+                                outstride, mozilla::gfx::SurfaceFormat::OS_RGBA,
+                                mozilla::gfx::IntSize(width, height));
 
   nsresult rv;
   nsCOMPtr<nsIStringInputStream> stream =
