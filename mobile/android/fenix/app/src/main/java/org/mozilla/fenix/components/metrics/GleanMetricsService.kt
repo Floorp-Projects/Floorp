@@ -31,7 +31,6 @@ import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingMode
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingShortcut
 import org.mozilla.fenix.GleanMetrics.QrScanner
-import org.mozilla.fenix.GleanMetrics.QuickActionSheet
 import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
@@ -137,24 +136,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.BrowserMenuItemTapped -> EventWrapper(
             { Events.browserMenuAction.record(it) },
             { Events.browserMenuActionKeys.valueOf(it) }
-        )
-        is Event.QuickActionSheetOpened -> EventWrapper<NoExtraKeys>(
-            { QuickActionSheet.opened.record(it) }
-        )
-        is Event.QuickActionSheetClosed -> EventWrapper<NoExtraKeys>(
-            { QuickActionSheet.closed.record(it) }
-        )
-        is Event.QuickActionSheetShareTapped -> EventWrapper<NoExtraKeys>(
-            { QuickActionSheet.shareTapped.record(it) }
-        )
-        is Event.QuickActionSheetBookmarkTapped -> EventWrapper<NoExtraKeys>(
-            { QuickActionSheet.bookmarkTapped.record(it) }
-        )
-        is Event.QuickActionSheetDownloadTapped -> EventWrapper<NoExtraKeys>(
-            { QuickActionSheet.downloadTapped.record(it) }
-        )
-        is Event.QuickActionSheetOpenInAppTapped -> EventWrapper<NoExtraKeys>(
-            { QuickActionSheet.openAppTapped.record(it) }
         )
         is Event.OpenedBookmarkInNewTab -> EventWrapper<NoExtraKeys>(
             { BookmarksManagement.openInNewTab.record(it) }

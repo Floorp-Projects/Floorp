@@ -141,39 +141,6 @@ class SettingsTest {
     }
 
     @Test
-    fun autoBounceQuickActionSheetCount() {
-        // When just created
-        // Then
-        assertEquals(0, settings.autoBounceQuickActionSheetCount)
-
-        // When
-        settings.incrementAutomaticBounceQuickActionSheetCount()
-        settings.incrementAutomaticBounceQuickActionSheetCount()
-
-        // Then
-        assertEquals(2, settings.autoBounceQuickActionSheetCount)
-    }
-
-    @Test
-    fun shouldAutoBounceQuickActionSheet() {
-        // When just created
-        // Then
-        assertTrue(settings.shouldAutoBounceQuickActionSheet)
-
-        // When
-        settings.incrementAutomaticBounceQuickActionSheetCount()
-
-        // Then
-        assertTrue(settings.shouldAutoBounceQuickActionSheet)
-
-        // When
-        settings.incrementAutomaticBounceQuickActionSheetCount()
-
-        // Then
-        assertFalse(settings.shouldAutoBounceQuickActionSheet)
-    }
-
-    @Test
     fun showLoginsDialogWarningSync() {
         // When just created
         // Then

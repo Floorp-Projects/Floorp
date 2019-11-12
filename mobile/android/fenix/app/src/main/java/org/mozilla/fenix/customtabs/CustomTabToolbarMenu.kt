@@ -99,60 +99,58 @@ class CustomTabToolbarMenu(
     private val menuItems by lazy {
         listOf(
             menuToolbar,
-
             BrowserMenuDivider(),
-
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_share),
-                R.drawable.mozac_ic_share,
-                textColorResource = ThemeManager.resolveAttribute(
-                    R.attr.primaryText,
-                    context
-                ),
-                iconTintColorResource = ThemeManager.resolveAttribute(
-                    R.attr.primaryText,
-                    context
-                )
-            ) {
-                onItemTapped.invoke(ToolbarMenu.Item.Share)
-            },
-
-            BrowserMenuSwitch(context.getString(R.string.browser_menu_desktop_site),
-                { session?.desktopMode ?: false }, { checked ->
-                    onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
-                }),
-
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_find_in_page),
-                R.drawable.mozac_ic_search,
-                ThemeManager.resolveAttribute(R.attr.primaryText, context)
-            ) {
-                onItemTapped.invoke(ToolbarMenu.Item.FindInPage)
-            },
-
-            SimpleBrowserMenuItem(
-                {
-                    val appName = context.getString(R.string.app_name)
-                    context.getString(R.string.browser_menu_open_in_fenix, appName)
-                }(),
-                textColorResource = ThemeManager.resolveAttribute(
-                    R.attr.primaryText,
-                    context
-                )
-            ) {
-                onItemTapped.invoke(ToolbarMenu.Item.OpenInFenix)
-            },
-
+            share,
+            desktopMode,
+            findInPage,
+            openInFenix,
             BrowserMenuDivider(),
-
-            SimpleBrowserMenuItem(
-                {
-                    val appName = context.getString(R.string.app_name)
-                    context.getString(R.string.browser_menu_powered_by2, appName).toUpperCase()
-                }(),
-                ToolbarMenu.CAPTION_TEXT_SIZE,
-                ThemeManager.resolveAttribute(R.attr.primaryText, context)
-            )
+            poweredBy
         )
     }
+
+    private val share = BrowserMenuImageText(
+        label = context.getString(R.string.browser_menu_share),
+        imageResource = R.drawable.mozac_ic_share,
+        textColorResource = primaryTextColor(),
+        iconTintColorResource = primaryTextColor()
+    ) {
+        onItemTapped.invoke(ToolbarMenu.Item.Share)
+    }
+
+    private val desktopMode = BrowserMenuSwitch(
+        label = context.getString(R.string.browser_menu_desktop_site),
+        initialState = { session?.desktopMode ?: false }, listener = { checked ->
+            onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
+        })
+
+    private val findInPage = BrowserMenuImageText(
+        label = context.getString(R.string.browser_menu_find_in_page),
+        imageResource = R.drawable.mozac_ic_search,
+        iconTintColorResource = primaryTextColor()
+    ) {
+        onItemTapped.invoke(ToolbarMenu.Item.FindInPage)
+    }
+
+    private val openInFenix = SimpleBrowserMenuItem(
+        label = {
+            val appName = context.getString(R.string.app_name)
+            context.getString(R.string.browser_menu_open_in_fenix, appName)
+        }(),
+        textSize = ToolbarMenu.CAPTION_TEXT_SIZE,
+        textColorResource = primaryTextColor()
+    ) {
+        onItemTapped.invoke(ToolbarMenu.Item.OpenInFenix)
+    }
+
+    private val poweredBy = SimpleBrowserMenuItem(
+        label = {
+            val appName = context.getString(R.string.app_name)
+            context.getString(R.string.browser_menu_powered_by, appName).toUpperCase()
+        }(),
+        textSize = ToolbarMenu.CAPTION_TEXT_SIZE,
+        textColorResource = primaryTextColor()
+    )
+
+    private fun primaryTextColor() = ThemeManager.resolveAttribute(R.attr.primaryText, context)
 }

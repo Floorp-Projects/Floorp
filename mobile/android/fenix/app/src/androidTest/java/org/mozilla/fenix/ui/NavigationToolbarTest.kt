@@ -65,7 +65,6 @@ class NavigationToolbarTest {
         navigationToolbar {
         }.openThreeDotMenu {
             verifyThreeDotMenuExists()
-            verifyBackButton()
         }.goBack {
             verifyPageContent(defaultWebPage.content)
         }

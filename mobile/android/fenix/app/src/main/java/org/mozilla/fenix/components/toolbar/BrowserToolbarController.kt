@@ -11,18 +11,17 @@ import android.graphics.drawable.ColorDrawable
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
-import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.NavGraphDirections
@@ -31,14 +30,14 @@ import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
-import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.TabCollectionStorage
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.lib.Do
-import org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 
 /**
@@ -54,10 +53,13 @@ interface BrowserToolbarController {
 
 @Suppress("LargeClass")
 class DefaultBrowserToolbarController(
+    private val store: BrowserFragmentStore,
     private val activity: Activity,
     private val snackbar: FenixSnackbar?,
     private val navController: NavController,
+    private val readerModeController: ReaderModeController,
     private val browsingModeManager: BrowsingModeManager,
+    private val sessionManager: SessionManager,
     private val findInPageLauncher: () -> Unit,
     private val browserLayout: ViewGroup,
     private val engineView: EngineView,
@@ -66,7 +68,7 @@ class DefaultBrowserToolbarController(
     private val customTabSession: Session?,
     private val getSupportUrl: () -> String,
     private val openInFenixIntent: Intent,
-    private val bottomSheetBehavior: QuickActionSheetBehavior<NestedScrollView>,
+    private val bookmarkTapped: (Session) -> Unit,
     private val scope: LifecycleCoroutineScope,
     private val tabCollectionStorage: TabCollectionStorage
 ) : BrowserToolbarController {
@@ -163,7 +165,6 @@ class DefaultBrowserToolbarController(
                 browsingModeManager.mode = BrowsingMode.Private
             }
             ToolbarMenu.Item.FindInPage -> {
-                bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
                 findInPageLauncher()
                 activity.components.analytics.metrics.track(Event.FindInPageOpened)
             }
@@ -210,6 +211,35 @@ class DefaultBrowserToolbarController(
                 activity.finish()
             }
             ToolbarMenu.Item.Quit -> deleteAndQuit(activity, scope, snackbar)
+            is ToolbarMenu.Item.ReaderMode -> {
+                val enabled = currentSession?.readerMode
+                    ?: activity.components.core.sessionManager.selectedSession?.readerMode
+                    ?: false
+
+                if (enabled) {
+                    readerModeController.hideReaderView()
+                } else {
+                    readerModeController.showReaderView()
+                }
+            }
+            ToolbarMenu.Item.ReaderModeAppearance -> {
+                readerModeController.showControls()
+            }
+            ToolbarMenu.Item.OpenInApp -> {
+                val appLinksUseCases =
+                    activity.components.useCases.appLinksUseCases
+                val getRedirect = appLinksUseCases.appLinkRedirect
+                sessionManager.selectedSession?.let {
+                    val redirect = getRedirect.invoke(it.url)
+                    redirect.appIntent?.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    appLinksUseCases.openAppLink.invoke(redirect)
+                }
+            }
+            ToolbarMenu.Item.Bookmark -> {
+                sessionManager.selectedSession?.let {
+                    bookmarkTapped(it)
+                }
+            }
         }
     }
 
@@ -260,6 +290,16 @@ class DefaultBrowserToolbarController(
             ToolbarMenu.Item.SaveToCollection -> Event.BrowserMenuItemTapped.Item.SAVE_TO_COLLECTION
             ToolbarMenu.Item.AddToHomeScreen -> Event.BrowserMenuItemTapped.Item.ADD_TO_HOMESCREEN
             ToolbarMenu.Item.Quit -> Event.BrowserMenuItemTapped.Item.QUIT
+            is ToolbarMenu.Item.ReaderMode ->
+                if (item.isChecked) {
+                    Event.BrowserMenuItemTapped.Item.READER_MODE_ON
+                } else {
+                    Event.BrowserMenuItemTapped.Item.READER_MODE_OFF
+                }
+            ToolbarMenu.Item.ReaderModeAppearance ->
+                Event.BrowserMenuItemTapped.Item.READER_MODE_APPEARANCE
+            ToolbarMenu.Item.OpenInApp -> Event.BrowserMenuItemTapped.Item.OPEN_IN_APP
+            ToolbarMenu.Item.Bookmark -> Event.BrowserMenuItemTapped.Item.BOOKMARK
         }
 
         activity.components.analytics.metrics.track(Event.BrowserMenuItemTapped(eventItem))

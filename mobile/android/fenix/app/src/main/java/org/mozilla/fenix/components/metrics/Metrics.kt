@@ -50,12 +50,6 @@ sealed class Event {
     object AddBookmarkFolder : Event()
     object RemoveBookmarkFolder : Event()
     object RemoveBookmarks : Event()
-    object QuickActionSheetOpened : Event()
-    object QuickActionSheetClosed : Event()
-    object QuickActionSheetShareTapped : Event()
-    object QuickActionSheetBookmarkTapped : Event()
-    object QuickActionSheetDownloadTapped : Event()
-    object QuickActionSheetOpenInAppTapped : Event()
     object CustomTabsClosed : Event()
     object CustomTabsActionTapped : Event()
     object CustomTabsMenuOpened : Event()
@@ -300,7 +294,8 @@ sealed class Event {
         enum class Item {
             SETTINGS, LIBRARY, HELP, DESKTOP_VIEW_ON, DESKTOP_VIEW_OFF, FIND_IN_PAGE, NEW_TAB,
             NEW_PRIVATE_TAB, SHARE, REPORT_SITE_ISSUE, BACK, FORWARD, RELOAD, STOP, OPEN_IN_FENIX,
-            SAVE_TO_COLLECTION, ADD_TO_HOMESCREEN, QUIT
+            SAVE_TO_COLLECTION, ADD_TO_HOMESCREEN, QUIT, READER_MODE_ON, READER_MODE_OFF, OPEN_IN_APP,
+            BOOKMARK, READER_MODE_APPEARANCE
         }
 
         override val extras: Map<Events.browserMenuActionKeys, String>?

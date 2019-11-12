@@ -6,6 +6,7 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.net.Uri
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -67,6 +68,14 @@ class BrowserRobot {
             TestAssetHelper.waitingTime)
     }
 
+    fun createBookmark(url: Uri) {
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(url) {
+        }.openThreeDotMenu {
+            clickAddBookmarkButton()
+        }
+    }
+
     class Transition {
         private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         private fun threeDotButton() = onView(
@@ -106,16 +115,6 @@ class BrowserRobot {
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
         }
-
-        fun openQuickActionBar(interact: QuickActionBarRobot.() -> Unit): QuickActionBarRobot.Transition {
-            mDevice.waitNotNull(Until.gone(By.res("org.mozilla.fenix.debug:id/quick_action_sheet")),
-                TestAssetHelper.waitingTime
-            )
-            quickActionBarHandle().click()
-
-            QuickActionBarRobot().interact()
-            return QuickActionBarRobot.Transition()
-        }
     }
 }
 
@@ -133,4 +132,3 @@ fun dismissTrackingOnboarding() {
 fun navURLBar() = onView(withId(R.id.mozac_browser_toolbar_url_view))
 
 private fun tabsCounter() = onView(withId(R.id.counter_box))
-private fun quickActionBarHandle() = onView(withId(R.id.quick_action_sheet_handle))

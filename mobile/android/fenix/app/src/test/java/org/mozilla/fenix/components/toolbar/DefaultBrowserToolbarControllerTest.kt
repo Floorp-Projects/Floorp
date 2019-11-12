@@ -7,7 +7,6 @@ package org.mozilla.fenix.components.toolbar
 import android.content.Context
 import android.content.Intent
 import android.view.ViewGroup
-import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
@@ -52,7 +51,6 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.toTab
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
-import org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 
 @ExperimentalCoroutinesApi
@@ -72,8 +70,6 @@ class DefaultBrowserToolbarControllerTest {
     private val getSupportUrl: () -> String = { "https://supportUrl.org" }
     private val openInFenixIntent: Intent = mockk(relaxed = true)
     private val currentSessionAsTab: Tab = mockk(relaxed = true)
-    private val bottomSheetBehavior: QuickActionSheetBehavior<NestedScrollView> =
-        mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
     private val searchUseCases: SearchUseCases = mockk(relaxed = true)
     private val sessionUseCases: SessionUseCases = mockk(relaxed = true)
@@ -99,11 +95,14 @@ class DefaultBrowserToolbarControllerTest {
             customTabSession = null,
             getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
-            bottomSheetBehavior = bottomSheetBehavior,
             scope = scope,
             browserLayout = browserLayout,
             swipeRefresh = swipeRefreshLayout,
-            tabCollectionStorage = tabCollectionStorage
+            tabCollectionStorage = tabCollectionStorage,
+            bookmarkTapped = mockk(),
+            readerModeController = mockk(),
+            sessionManager = mockk(),
+            store = mockk()
         )
 
         mockkStatic(
@@ -338,7 +337,6 @@ class DefaultBrowserToolbarControllerTest {
 
         controller.handleToolbarItemInteraction(item)
 
-        verify { bottomSheetBehavior.state = QuickActionSheetBehavior.STATE_COLLAPSED }
         verify { findInPageLauncher() }
         verify { metrics.track(Event.FindInPageOpened) }
     }
@@ -466,11 +464,14 @@ class DefaultBrowserToolbarControllerTest {
             customTabSession = currentSession,
             getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
-            bottomSheetBehavior = bottomSheetBehavior,
             scope = scope,
             browserLayout = browserLayout,
             swipeRefresh = swipeRefreshLayout,
-            tabCollectionStorage = tabCollectionStorage
+            tabCollectionStorage = tabCollectionStorage,
+            bookmarkTapped = mockk(),
+            readerModeController = mockk(),
+            sessionManager = mockk(),
+            store = mockk()
         )
 
         val sessionManager: SessionManager = mockk(relaxed = true)

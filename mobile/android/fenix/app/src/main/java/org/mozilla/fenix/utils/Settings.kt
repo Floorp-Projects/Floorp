@@ -132,9 +132,6 @@ class Settings private constructor(
         get() = trackingProtectionOnboardingCount < trackingProtectionOnboardingMaximumCount &&
                 !trackingProtectionOnboardingShownThisSession
 
-    val shouldAutoBounceQuickActionSheet: Boolean
-        get() = autoBounceQuickActionSheetCount < autoBounceMaximumCount
-
     val shouldShowSecurityPinWarningSync: Boolean
         get() = loginsSecureWarningSyncCount < showLoginsSecureWarningSyncMaxCount
 
@@ -226,12 +223,6 @@ class Settings private constructor(
         }
 
     @VisibleForTesting(otherwise = PRIVATE)
-    internal val autoBounceQuickActionSheetCount by intPreference(
-        appContext.getPreferenceKey(R.string.pref_key_bounce_quick_action),
-        default = 0
-    )
-
-    @VisibleForTesting(otherwise = PRIVATE)
     internal val loginsSecureWarningSyncCount by intPreference(
         appContext.getPreferenceKey(R.string.pref_key_logins_secure_warning_sync),
         default = 0
@@ -254,13 +245,6 @@ class Settings private constructor(
         preferences.edit().putInt(
             appContext.getPreferenceKey(R.string.pref_key_logins_secure_warning_sync),
             loginsSecureWarningSyncCount + 1
-        ).apply()
-    }
-
-    fun incrementAutomaticBounceQuickActionSheetCount() {
-        preferences.edit().putInt(
-            appContext.getPreferenceKey(R.string.pref_key_bounce_quick_action),
-            autoBounceQuickActionSheetCount + 1
         ).apply()
     }
 

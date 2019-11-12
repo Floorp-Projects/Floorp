@@ -18,7 +18,6 @@ import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
-import org.mozilla.fenix.ui.robots.quickActionBar
 
 /**
  *  Tests for verifying basic functionality of bookmarks
@@ -66,12 +65,12 @@ class BookmarksTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-        }.openQuickActionBar {
+        }.openThreeDotMenu {
             verifyAddBookmarkButton()
-            clickBookmarkButton()
+            clickAddBookmarkButton()
         }
         browserScreen {
-        }.openQuickActionBar {
+        }.openThreeDotMenu {
             verifyEditBookmarkButton()
         }
     }
@@ -80,11 +79,8 @@ class BookmarksTest {
     fun addBookmarkTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
-        quickActionBar {
+        browserScreen {
             createBookmark(defaultWebPage.url)
-        }
-
-        navigationToolbar {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
@@ -109,9 +105,8 @@ class BookmarksTest {
     fun editBookmarkViewTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
-        quickActionBar { createBookmark(defaultWebPage.url) }
-
-        navigationToolbar {
+        browserScreen {
+            createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
@@ -130,9 +125,8 @@ class BookmarksTest {
     fun copyBookmarkURLTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
-        quickActionBar { createBookmark(defaultWebPage.url) }
-
-        navigationToolbar {
+        browserScreen {
+            createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
@@ -146,9 +140,8 @@ class BookmarksTest {
     fun openBookmarkInNewTabTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
-        quickActionBar { createBookmark(defaultWebPage.url) }
-
-        navigationToolbar {
+        browserScreen {
+            createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
@@ -164,9 +157,8 @@ class BookmarksTest {
     fun openBookmarkInPrivateTabTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
-        quickActionBar { createBookmark(defaultWebPage.url) }
-
-        navigationToolbar {
+        browserScreen {
+            createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
@@ -182,9 +174,8 @@ class BookmarksTest {
     fun deleteBookmarkTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
-        quickActionBar { createBookmark(defaultWebPage.url) }
-
-        navigationToolbar {
+        browserScreen {
+            createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {

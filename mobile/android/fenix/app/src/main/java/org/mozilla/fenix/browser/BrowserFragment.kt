@@ -20,19 +20,13 @@ import android.widget.RadioButton
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.fragment_browser.*
-import kotlinx.android.synthetic.main.fragment_browser.view.*
-import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.view.*
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.android.synthetic.main.fragment_browser.view.browserLayout
+import kotlinx.android.synthetic.main.fragment_browser.view.readerViewControlsBar
+import kotlinx.android.synthetic.main.fragment_home.bottom_bar
+import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.view.onboarding_message
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.readerview.ReaderViewFeature
@@ -40,18 +34,12 @@ import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
-import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.jetbrains.anko.dimen
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.toolbar.BrowserInteractor
-import org.mozilla.fenix.components.toolbar.BrowserToolbarController
-import org.mozilla.fenix.components.toolbar.BrowserToolbarViewInteractor
-import org.mozilla.fenix.components.toolbar.QuickActionSheetAction
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getDimenInDip
 import org.mozilla.fenix.ext.increaseTapArea
@@ -61,9 +49,6 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.mvi.getManagedEmitter
-import org.mozilla.fenix.quickactionsheet.DefaultQuickActionSheetController
-import org.mozilla.fenix.quickactionsheet.QuickActionSheetSessionObserver
-import org.mozilla.fenix.quickactionsheet.QuickActionSheetView
 
 /**
  * Fragment used for browsing the web within the main app.
@@ -71,10 +56,6 @@ import org.mozilla.fenix.quickactionsheet.QuickActionSheetView
 @ExperimentalCoroutinesApi
 @Suppress("TooManyFunctions", "LargeClass")
 class BrowserFragment : BaseBrowserFragment(), BackHandler {
-    private lateinit var quickActionSheetView: QuickActionSheetView
-    private var quickActionSheetSessionObserver: QuickActionSheetSessionObserver? = null
-
-    private val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewFeature>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -114,15 +95,6 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
                     if (available) {
                         context.components.analytics.metrics.track(Event.ReaderModeAvailable)
                     }
-
-                    browserStore.apply {
-                        dispatch(QuickActionSheetAction.ReadableStateChange(available))
-                        dispatch(
-                            QuickActionSheetAction.ReaderActiveStateChange(
-                                sessionManager.selectedSession?.readerMode ?: false
-                            )
-                        )
-                    }
                 },
                 owner = this,
                 view = view
@@ -134,8 +106,7 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
                 themeReaderViewControlsForPrivateMode(view.readerViewControlsBar)
             }
 
-            consumeFrom(browserStore) {
-                quickActionSheetView.update(it)
+            consumeFrom(browserFragmentStore) {
                 browserToolbarView.update(it)
             }
         }
@@ -144,13 +115,6 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
     override fun onStart() {
         super.onStart()
         subscribeToTabCollections()
-        quickActionSheetSessionObserver = QuickActionSheetSessionObserver(
-            lifecycleScope,
-            requireComponents,
-            dispatch = { action -> browserStore.dispatch(action) }
-        ).also { observer ->
-            getSessionById()?.register(observer, this, autoPause = true)
-        }
         getSessionById()?.register(toolbarSessionObserver, this, autoPause = true)
     }
 
@@ -173,41 +137,12 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
              * This fixes issue #5254.
              */
             (activity as HomeActivity).updateThemeForSession(it)
-            quickActionSheetSessionObserver?.updateBookmarkState(it)
         }
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
     }
 
     override fun onBackPressed(): Boolean {
         return readerViewFeature.onBackPressed() || super.onBackPressed()
-    }
-
-    override fun createBrowserToolbarViewInteractor(
-        browserToolbarController: BrowserToolbarController,
-        session: Session?
-    ): BrowserToolbarViewInteractor {
-        val context = requireContext()
-
-        val interactor = BrowserInteractor(
-            context = context,
-            store = browserStore,
-            browserToolbarController = browserToolbarController,
-            quickActionSheetController = DefaultQuickActionSheetController(
-                context = context,
-                navController = findNavController(),
-                sessionManager = context.components.core.sessionManager,
-                appLinksUseCases = context.components.useCases.appLinksUseCases,
-                bookmarkTapped = {
-                    lifecycleScope.launch { bookmarkTapped(it) }
-                }
-            ),
-            readerModeController = DefaultReaderModeController(readerViewFeature),
-            currentSession = session
-        )
-
-        quickActionSheetView = QuickActionSheetView(view!!.nestedScrollQuickAction, interactor)
-
-        return interactor
     }
 
     override fun navToQuickSettingsSheet(session: Session, sitePermissions: SitePermissions?) {
@@ -241,8 +176,8 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
     }
 
     override fun getEngineMargins(): Pair<Int, Int> {
-        val toolbarAndQASSize = resources.getDimensionPixelSize(R.dimen.toolbar_and_qab_height)
-        return 0 to toolbarAndQASSize
+        val toolbarSize = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+        return 0 to toolbarSize
     }
 
     override fun getAppropriateLayoutGravity() = Gravity.BOTTOM
@@ -277,51 +212,6 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         }
     }
 
-    private suspend fun bookmarkTapped(session: Session) = withContext(IO) {
-        val bookmarksStorage = requireComponents.core.bookmarksStorage
-        val existing =
-            bookmarksStorage.getBookmarksWithUrl(session.url).firstOrNull { it.url == session.url }
-        if (existing != null) {
-            // Bookmark exists, go to edit fragment
-            withContext(Main) {
-                nav(
-                    R.id.browserFragment,
-                    BrowserFragmentDirections.actionBrowserFragmentToBookmarkEditFragment(existing.guid)
-                )
-            }
-        } else {
-            // Save bookmark, then go to edit fragment
-            val guid = bookmarksStorage.addItem(
-                BookmarkRoot.Mobile.id,
-                url = session.url,
-                title = session.title,
-                position = null
-            )
-
-            withContext(Main) {
-                browserStore.dispatch(
-                    QuickActionSheetAction.BookmarkedStateChange(bookmarked = true)
-                )
-                requireComponents.analytics.metrics.track(Event.AddBookmark)
-
-                view?.let { view ->
-                    FenixSnackbar.make(view, Snackbar.LENGTH_LONG)
-                        .setAnchorView(browserToolbarView.view)
-                        .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
-                            nav(
-                                R.id.browserFragment,
-                                BrowserFragmentDirections.actionBrowserFragmentToBookmarkEditFragment(
-                                    guid
-                                )
-                            )
-                        }
-                        .setText(getString(R.string.bookmark_saved_snackbar))
-                        .show()
-                }
-            }
-        }
-    }
-
     private fun subscribeToTabCollections() {
         requireComponents.core.tabCollectionStorage.getCollections().observe(this, Observer {
             requireComponents.core.tabCollectionStorage.cachedTabCollections = it
@@ -331,11 +221,6 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
                 )
             )
         })
-    }
-
-    override fun onSessionSelected(session: Session) {
-        super.onSessionSelected(session)
-        quickActionSheetSessionObserver?.updateBookmarkState(session)
     }
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
@@ -415,7 +300,7 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         view,
         FenixSnackbarDelegate(
             view,
-            nestedScrollQuickAction
+            bottom_bar
         )
     )
 

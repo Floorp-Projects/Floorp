@@ -9,7 +9,6 @@ import android.view.Gravity
 import android.view.View
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.widget.NestedScrollView
 import com.airbnb.lottie.LottieCompositionFactory
 import com.airbnb.lottie.LottieDrawable
 import mozilla.components.browser.session.SessionManager
@@ -28,7 +27,6 @@ class CustomTabsIntegration(
     toolbar: BrowserToolbar,
     sessionId: String,
     activity: Activity,
-    quickActionbar: NestedScrollView,
     engineLayout: View,
     onItemTapped: (ToolbarMenu.Item) -> Unit = {}
 ) : LifecycleAwareFeature, BackHandler {
@@ -51,9 +49,6 @@ class CustomTabsIntegration(
                 gravity = Gravity.TOP
             }
         }
-
-        // Hide the Quick Action Bar.
-        quickActionbar.visibility = View.GONE
 
         val task = LottieCompositionFactory
             .fromRawRes(

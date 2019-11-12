@@ -32,8 +32,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BaseBrowserFragment
 import org.mozilla.fenix.browser.CustomTabContextMenuCandidate
 import org.mozilla.fenix.browser.FenixSnackbarDelegate
-import org.mozilla.fenix.components.toolbar.BrowserToolbarController
-import org.mozilla.fenix.components.toolbar.BrowserToolbarInteractor
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
@@ -63,12 +61,11 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
             customTabSessionId?.let { customTabSessionId ->
                 customTabsIntegration.set(
                     feature = CustomTabsIntegration(
-                        requireComponents.core.sessionManager,
-                        toolbar,
-                        customTabSessionId,
-                        activity,
-                        view.nestedScrollQuickAction,
-                        view.swipeRefresh,
+                        sessionManager = requireComponents.core.sessionManager,
+                        toolbar = toolbar,
+                        sessionId = customTabSessionId,
+                        activity = activity,
+                        engineLayout = view.swipeRefresh,
                         onItemTapped = { browserInteractor.onBrowserToolbarMenuItemTapped(it) }
                     ),
                     owner = this,
@@ -123,7 +120,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
                 }
             }
 
-            consumeFrom(browserStore) {
+            consumeFrom(browserFragmentStore) {
                 browserToolbarView.update(it)
             }
 
@@ -145,11 +142,6 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
     override fun removeSessionIfNeeded(): Boolean {
         return customTabsIntegration.onBackPressed() || super.removeSessionIfNeeded()
     }
-
-    override fun createBrowserToolbarViewInteractor(
-        browserToolbarController: BrowserToolbarController,
-        session: Session?
-    ) = BrowserToolbarInteractor(browserToolbarController)
 
     override fun navToQuickSettingsSheet(session: Session, sitePermissions: SitePermissions?) {
         val directions = ExternalAppBrowserFragmentDirections
