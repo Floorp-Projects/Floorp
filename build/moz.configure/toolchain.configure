@@ -960,6 +960,7 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
     def valid_compiler(compiler, provided_compiler, compiler_wrapper,
                        host_or_target, macos_sdk):
         wrapper = list(compiler_wrapper or ())
+        flags = prepare_flags(host_or_target, macos_sdk)
         if provided_compiler:
             provided_wrapper = list(provided_compiler.wrapper)
             # When doing a subconfigure, the compiler is set by old-configure
@@ -968,12 +969,7 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
             if provided_wrapper[:len(wrapper)] == wrapper:
                 provided_wrapper = provided_wrapper[len(wrapper):]
             wrapper.extend(provided_wrapper)
-            flags = provided_compiler.flags
-        else:
-            flags = []
-
-        if not flags:
-            flags = prepare_flags(host_or_target, macos_sdk)
+            flags.extend(provided_compiler.flags)
 
         info = check_compiler(wrapper + [compiler] + flags, language,
                               host_or_target)
