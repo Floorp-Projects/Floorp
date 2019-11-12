@@ -4214,6 +4214,14 @@ void LIRGenerator::visitIsObject(MIsObject* ins) {
   define(lir, ins);
 }
 
+void LIRGenerator::visitIsNullOrUndefined(MIsNullOrUndefined* ins) {
+  MDefinition* opd = ins->input();
+  MOZ_ASSERT(opd->type() == MIRType::Value);
+  LIsNullOrUndefined* lir =
+      new (alloc()) LIsNullOrUndefined(useBoxAtStart(opd));
+  define(lir, ins);
+}
+
 void LIRGenerator::visitHasClass(MHasClass* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   MOZ_ASSERT(ins->type() == MIRType::Boolean);
