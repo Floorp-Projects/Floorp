@@ -161,7 +161,7 @@ class MediaCache {
   // file backing will be provided.
   static RefPtr<MediaCache> GetMediaCache(int64_t aContentLength);
 
-  nsISerialEventTarget* OwnerThread() const { return sThread; }
+  nsIEventTarget* OwnerThread() const { return sThread; }
 
   // Brutally flush the cache contents. Main thread only.
   void Flush();
@@ -2196,18 +2196,17 @@ bool MediaCacheStream::AreAllStreamsForResourceSuspended(AutoLock& aLock) {
   return true;
 }
 
-RefPtr<GenericPromise> MediaCacheStream::Close() {
+void MediaCacheStream::Close() {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mMediaCache) {
-    return GenericPromise::CreateAndResolve(true, __func__);
+    return;
   }
-
-  return InvokeAsync(OwnerThread(), "MediaCacheStream::Close",
-                     [this, client = RefPtr<ChannelMediaResource>(mClient)] {
-                       AutoLock lock(mMediaCache->Monitor());
-                       CloseInternal(lock);
-                       return GenericPromise::CreateAndResolve(true, __func__);
-                     });
+  OwnerThread()->Dispatch(NS_NewRunnableFunction(
+      "MediaCacheStream::Close",
+      [this, client = RefPtr<ChannelMediaResource>(mClient)]() {
+        AutoLock lock(mMediaCache->Monitor());
+        CloseInternal(lock);
+      }));
 }
 
 void MediaCacheStream::CloseInternal(AutoLock& aLock) {
@@ -2735,7 +2734,7 @@ void MediaCacheStream::InitAsCloneInternal(MediaCacheStream* aOriginal) {
   lock.NotifyAll();
 }
 
-nsISerialEventTarget* MediaCacheStream::OwnerThread() const {
+nsIEventTarget* MediaCacheStream::OwnerThread() const {
   return mMediaCache->OwnerThread();
 }
 

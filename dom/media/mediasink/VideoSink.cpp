@@ -156,6 +156,18 @@ VideoSink::~VideoSink() {
 #endif
 }
 
+const MediaSink::PlaybackParams& VideoSink::GetPlaybackParams() const {
+  AssertOwnerThread();
+
+  return mAudioSink->GetPlaybackParams();
+}
+
+void VideoSink::SetPlaybackParams(const PlaybackParams& aParams) {
+  AssertOwnerThread();
+
+  mAudioSink->SetPlaybackParams(aParams);
+}
+
 RefPtr<VideoSink::EndedPromise> VideoSink::OnEnded(TrackType aType) {
   AssertOwnerThread();
   MOZ_ASSERT(mAudioSink->IsStarted(), "Must be called after playback starts.");
@@ -209,12 +221,6 @@ void VideoSink::SetPreservesPitch(bool aPreservesPitch) {
   AssertOwnerThread();
 
   mAudioSink->SetPreservesPitch(aPreservesPitch);
-}
-
-double VideoSink::PlaybackRate() const {
-  AssertOwnerThread();
-
-  return mAudioSink->PlaybackRate();
 }
 
 void VideoSink::EnsureHighResTimersOnOnlyIfPlaying() {
@@ -434,8 +440,8 @@ void VideoSink::TryUpdateRenderedVideoFrames() {
   // If we send this future frame to the compositor now, it will be rendered
   // immediately and break A/V sync. Instead, we schedule a timer to send it
   // later.
-  int64_t delta =
-      (v->mTime - clockTime).ToMicroseconds() / mAudioSink->PlaybackRate();
+  int64_t delta = (v->mTime - clockTime).ToMicroseconds() /
+                  mAudioSink->GetPlaybackParams().mPlaybackRate;
   TimeStamp target = nowTime + TimeDuration::FromMicroseconds(delta);
   RefPtr<VideoSink> self = this;
   mUpdateScheduler.Ensure(
@@ -475,7 +481,7 @@ void VideoSink::RenderVideoFrames(int32_t aMaxFrames, int64_t aClockTime,
 
   AutoTArray<ImageContainer::NonOwningImage, 16> images;
   TimeStamp lastFrameTime;
-  double playbackRate = mAudioSink->PlaybackRate();
+  MediaSink::PlaybackParams params = mAudioSink->GetPlaybackParams();
   for (uint32_t i = 0; i < frames.Length(); ++i) {
     VideoData* frame = frames[i];
     bool wasSent = frame->IsSentToCompositor();
@@ -493,8 +499,8 @@ void VideoSink::RenderVideoFrames(int32_t aMaxFrames, int64_t aClockTime,
 
     MOZ_ASSERT(!aClockTimeStamp.IsNull());
     int64_t delta = frame->mTime.ToMicroseconds() - aClockTime;
-    TimeStamp t =
-        aClockTimeStamp + TimeDuration::FromMicroseconds(delta / playbackRate);
+    TimeStamp t = aClockTimeStamp +
+                  TimeDuration::FromMicroseconds(delta / params.mPlaybackRate);
     if (!lastFrameTime.IsNull() && t <= lastFrameTime) {
       // Timestamps out of order; drop the new frame. In theory we should
       // probably replace the previous frame with the new frame if the
@@ -607,8 +613,9 @@ void VideoSink::UpdateRenderedVideoFrames() {
   int64_t nextFrameTime = frames[1]->mTime.ToMicroseconds();
   int64_t delta = std::max(nextFrameTime - clockTime.ToMicroseconds(),
                            MIN_UPDATE_INTERVAL_US);
-  TimeStamp target = nowTime + TimeDuration::FromMicroseconds(
-                                   delta / mAudioSink->PlaybackRate());
+  TimeStamp target =
+      nowTime + TimeDuration::FromMicroseconds(
+                    delta / mAudioSink->GetPlaybackParams().mPlaybackRate);
 
   RefPtr<VideoSink> self = this;
   mUpdateScheduler.Ensure(
@@ -640,7 +647,7 @@ void VideoSink::MaybeResolveEndPromise() {
           "end promise. clockTime=%" PRId64 ", endTime=%" PRId64,
           clockTime.ToMicroseconds(), mVideoFrameEndTime.ToMicroseconds());
       int64_t delta = (mVideoFrameEndTime - clockTime).ToMicroseconds() /
-                      mAudioSink->PlaybackRate();
+                      mAudioSink->GetPlaybackParams().mPlaybackRate;
       TimeStamp target = nowTime + TimeDuration::FromMicroseconds(delta);
       auto resolveEndPromise = [self = RefPtr<VideoSink>(this)]() {
         self->mEndPromiseHolder.ResolveIfExists(true, __func__);

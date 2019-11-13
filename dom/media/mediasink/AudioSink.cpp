@@ -6,7 +6,6 @@
 
 #include "AudioSink.h"
 #include "AudioConverter.h"
-#include "AudioDeviceInfo.h"
 #include "MediaQueue.h"
 #include "VideoUtils.h"
 #include "mozilla/CheckedInt.h"
@@ -35,11 +34,9 @@ using media::TimeUnit;
 
 AudioSink::AudioSink(AbstractThread* aThread,
                      MediaQueue<AudioData>& aAudioQueue,
-                     const TimeUnit& aStartTime, const AudioInfo& aInfo,
-                     AudioDeviceInfo* aAudioDevice)
+                     const TimeUnit& aStartTime, const AudioInfo& aInfo)
     : mStartTime(aStartTime),
       mInfo(aInfo),
-      mAudioDevice(aAudioDevice),
       mPlaying(true),
       mMonitor("AudioSink"),
       mWritten(0),
@@ -186,7 +183,7 @@ nsresult AudioSink::InitializeAudioStream(const PlaybackParams& aParams) {
   // StaticPrefs::accessibility_monoaudio_enable() or
   // StaticPrefs::media_forcestereo_enabled() is applied.
   nsresult rv = mAudioStream->Init(mOutputChannels, channelMap, mOutputRate,
-                                   mAudioDevice);
+                                   aParams.mSink);
   if (NS_FAILED(rv)) {
     mAudioStream->Shutdown();
     mAudioStream = nullptr;

@@ -6,7 +6,6 @@
 
 #include "MediaDecoder.h"
 
-#include "AudioDeviceInfo.h"
 #include "DOMMediaStream.h"
 #include "DecoderBenchmark.h"
 #include "ImageContainer.h"
@@ -226,46 +225,36 @@ void MediaDecoder::SetVolume(double aVolume) {
   mVolume = aVolume;
 }
 
-RefPtr<GenericPromise> MediaDecoder::SetSink(AudioDeviceInfo* aSinkDevice) {
+RefPtr<GenericPromise> MediaDecoder::SetSink(AudioDeviceInfo* aSink) {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
-  mSinkDevice = aSinkDevice;
-  return GetStateMachine()->InvokeSetSink(aSinkDevice);
+  return GetStateMachine()->InvokeSetSink(aSink);
 }
 
-void MediaDecoder::SetOutputCaptured(bool aCaptured) {
+void MediaDecoder::AddOutputStream(DOMMediaStream* aStream,
+                                   SharedDummyTrack* aDummyStream) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
   AbstractThread::AutoEnter context(AbstractMainThread());
-  mOutputCaptured = aCaptured;
-}
-
-void MediaDecoder::AddOutputTrack(RefPtr<ProcessedMediaTrack> aTrack) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
-  AbstractThread::AutoEnter context(AbstractMainThread());
-  nsTArray<RefPtr<ProcessedMediaTrack>> tracks = mOutputTracks;
-  tracks.AppendElement(std::move(aTrack));
-  mOutputTracks = tracks;
-}
-
-void MediaDecoder::RemoveOutputTrack(
-    const RefPtr<ProcessedMediaTrack>& aTrack) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
-  AbstractThread::AutoEnter context(AbstractMainThread());
-  nsTArray<RefPtr<ProcessedMediaTrack>> tracks = mOutputTracks;
-  if (tracks.RemoveElement(aTrack)) {
-    mOutputTracks = tracks;
+  mDecoderStateMachine->EnsureOutputStreamManager(aDummyStream);
+  if (mInfo) {
+    mDecoderStateMachine->EnsureOutputStreamManagerHasTracks(*mInfo);
   }
+  mDecoderStateMachine->AddOutputStream(aStream);
 }
 
-void MediaDecoder::SetOutputTracksPrincipal(
-    const RefPtr<nsIPrincipal>& aPrincipal) {
+void MediaDecoder::RemoveOutputStream(DOMMediaStream* aStream) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
   AbstractThread::AutoEnter context(AbstractMainThread());
-  mOutputPrincipal = MakePrincipalHandle(aPrincipal);
+  mDecoderStateMachine->RemoveOutputStream(aStream);
+}
+
+void MediaDecoder::SetOutputStreamPrincipal(nsIPrincipal* aPrincipal) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
+  AbstractThread::AutoEnter context(AbstractMainThread());
+  mDecoderStateMachine->SetOutputStreamPrincipal(aPrincipal);
 }
 
 double MediaDecoder::GetDuration() {
@@ -311,10 +300,6 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
       INIT_CANONICAL(mVolume, aInit.mVolume),
       INIT_CANONICAL(mPreservesPitch, aInit.mPreservesPitch),
       INIT_CANONICAL(mLooping, aInit.mLooping),
-      INIT_CANONICAL(mSinkDevice, nullptr),
-      INIT_CANONICAL(mOutputCaptured, false),
-      INIT_CANONICAL(mOutputTracks, nsTArray<RefPtr<ProcessedMediaTrack>>()),
-      INIT_CANONICAL(mOutputPrincipal, PRINCIPAL_HANDLE_NONE),
       INIT_CANONICAL(mPlayState, PLAY_STATE_LOADING),
       mSameOriginMedia(false),
       mVideoDecodingOberver(
@@ -390,10 +375,13 @@ void MediaDecoder::Shutdown() {
     nsCOMPtr<nsIRunnable> r =
         NS_NewRunnableFunction("MediaDecoder::Shutdown", [self]() {
           self->mVideoFrameContainer = nullptr;
-          self->ShutdownInternal();
+          MediaShutdownManager::Instance().Unregister(self);
         });
     mAbstractMainThread->Dispatch(r.forget());
   }
+
+  // Ask the owner to remove its audio/video tracks.
+  GetOwner()->RemoveMediaTracks();
 
   ChangeState(PLAY_STATE_SHUTDOWN);
   mVideoDecodingOberver->UnregisterEvent();
@@ -531,16 +519,11 @@ void MediaDecoder::OnStoreDecoderBenchmark(const VideoInfo& aInfo) {
   }
 }
 
-void MediaDecoder::ShutdownInternal() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MediaShutdownManager::Instance().Unregister(this);
-}
-
 void MediaDecoder::FinishShutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   SetStateMachine(nullptr);
   mVideoFrameContainer = nullptr;
-  ShutdownInternal();
+  MediaShutdownManager::Instance().Unregister(this);
 }
 
 nsresult MediaDecoder::InitializeStateMachine() {
@@ -659,6 +642,7 @@ double MediaDecoder::GetCurrentTime() {
 void MediaDecoder::OnMetadataUpdate(TimedMetadata&& aMetadata) {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
+  GetOwner()->RemoveMediaTracks();
   MetadataLoaded(MakeUnique<MediaInfo>(*aMetadata.mInfo),
                  UniquePtr<MetadataTags>(std::move(aMetadata.mTags)),
                  MediaDecoderEventVisibility::Observable);
@@ -681,6 +665,8 @@ void MediaDecoder::MetadataLoaded(
   mMediaSeekableOnlyInBufferedRanges =
       aInfo->mMediaSeekableOnlyInBufferedRanges;
   mInfo = aInfo.release();
+  GetOwner()->ConstructMediaTracks(mInfo);
+  mDecoderStateMachine->EnsureOutputStreamManagerHasTracks(*mInfo);
 
   // Make sure the element and the frame (if any) are told about
   // our new size.
@@ -871,6 +857,12 @@ void MediaDecoder::ChangeState(PlayState aState) {
     DDLOG(DDLogCategory::Property, "play_state", ToPlayStateStr(aState));
   }
   mPlayState = aState;
+
+  if (mPlayState == PLAY_STATE_PLAYING) {
+    GetOwner()->ConstructMediaTracks(mInfo);
+  } else if (IsEnded()) {
+    GetOwner()->RemoveMediaTracks();
+  }
 }
 
 bool MediaDecoder::IsLoopingBack(double aPrevPos, double aCurPos) const {
