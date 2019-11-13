@@ -5090,7 +5090,6 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback() {
 
   mSrcStream->UnregisterTrackListener(mMediaStreamTrackListener.get());
   mMediaStreamTrackListener = nullptr;
-  mSrcStreamTracksAvailable = false;
   mSrcStreamPlaybackEnded = false;
   mSrcStreamReportPlaybackEnded = false;
   mSrcStreamVideoPrincipal = nullptr;
@@ -5163,23 +5162,9 @@ void HTMLMediaElement::NotifyMediaStreamTrackAdded(
 
   UpdateReadyStateInternal();
 
-  if (!mSrcStreamTracksAvailable) {
-    mAbstractMainThread->Dispatch(NS_NewRunnableFunction(
-        "HTMLMediaElement::NotifyMediaStreamTrackAdded->FirstFrameLoaded",
-        [this, self = RefPtr<HTMLMediaElement>(this), stream = mSrcStream]() {
-          if (!mSrcStream || mSrcStream != stream) {
-            return;
-          }
-
-          LOG(LogLevel::Debug,
-              ("MediaElement %p MediaStream tracks available", this));
-
-          mSrcStreamTracksAvailable = true;
-
-          FirstFrameLoaded();
-          UpdateReadyStateInternal();
-        }));
-  }
+  mAbstractMainThread->TailDispatcher().AddDirectTask(
+      NewRunnableMethod("HTMLMediaElement::FirstFrameLoaded", this,
+                        &HTMLMediaElement::FirstFrameLoaded));
 }
 
 void HTMLMediaElement::NotifyMediaStreamTrackRemoved(
@@ -5600,13 +5585,6 @@ void HTMLMediaElement::UpdateReadyStateInternal() {
   }
 
   if (mSrcStream && mReadyState < HAVE_METADATA) {
-    if (!mSrcStreamTracksAvailable) {
-      LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
-                            "MediaStreamTracks not available yet",
-                            this));
-      return;
-    }
-
     bool hasAudioTracks = AudioTracks() && !AudioTracks()->IsEmpty();
     bool hasVideoTracks = VideoTracks() && !VideoTracks()->IsEmpty();
     if (!hasAudioTracks && !hasVideoTracks) {
@@ -7023,7 +7001,9 @@ MediaDecoderOwner::NextFrameStatus HTMLMediaElement::NextFrameStatus() {
     return mDecoder->NextFrameStatus();
   }
   if (mSrcStream) {
-    if (mSrcStreamTracksAvailable && !mSrcStreamPlaybackEnded) {
+    AutoTArray<RefPtr<MediaTrack>, 4> tracks;
+    GetAllEnabledMediaTracks(tracks);
+    if (!tracks.IsEmpty() && !mSrcStreamPlaybackEnded) {
       return NEXT_FRAME_AVAILABLE;
     }
     return NEXT_FRAME_UNAVAILABLE;
