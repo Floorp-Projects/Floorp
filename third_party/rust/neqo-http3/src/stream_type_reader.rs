@@ -46,12 +46,7 @@ impl NewStreamTypeReader {
                     }
                 }
                 Err(e) => {
-                    qdebug!(
-                        [conn],
-                        "Error reading stream type for stream {}: {:?}",
-                        stream_id,
-                        e
-                    );
+                    qdebug!([conn] "Error reading stream type for stream {}: {:?}", stream_id, e);
                     self.fin = true;
                     return None;
                 }

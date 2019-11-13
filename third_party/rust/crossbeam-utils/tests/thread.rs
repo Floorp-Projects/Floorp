@@ -23,8 +23,7 @@ fn join() {
             panic!("\"My honey is running out!\", said Pooh.");
         });
         assert!(panic_handle.join().is_err());
-    })
-    .unwrap();
+    }).unwrap();
 
     // There should be sufficient synchronization.
     assert_eq!(1, counter.load(Ordering::Relaxed));
@@ -39,8 +38,7 @@ fn counter() {
                 counter.fetch_add(1, Ordering::Relaxed);
             });
         }
-    })
-    .unwrap();
+    }).unwrap();
 
     assert_eq!(THREADS, counter.load(Ordering::Relaxed));
 }
@@ -56,11 +54,9 @@ fn counter_builder() {
                 .stack_size(SMALL_STACK_SIZE)
                 .spawn(|_| {
                     counter.fetch_add(1, Ordering::Relaxed);
-                })
-                .unwrap();
+                }).unwrap();
         }
-    })
-    .unwrap();
+    }).unwrap();
 
     assert_eq!(THREADS, counter.load(Ordering::Relaxed));
 }
@@ -99,7 +95,7 @@ fn panic_twice() {
 
     let err = result.unwrap_err();
     let vec = err
-        .downcast_ref::<Vec<Box<dyn Any + Send + 'static>>>()
+        .downcast_ref::<Vec<Box<Any + Send + 'static>>>()
         .unwrap();
     assert_eq!(2, vec.len());
 
@@ -119,7 +115,7 @@ fn panic_many() {
 
     let err = result.unwrap_err();
     let vec = err
-        .downcast_ref::<Vec<Box<dyn Any + Send + 'static>>>()
+        .downcast_ref::<Vec<Box<Any + Send + 'static>>>()
         .unwrap();
     assert_eq!(3, vec.len());
 
@@ -161,8 +157,7 @@ fn nesting() {
                 wrapper.recurse(scope, 5);
             });
         });
-    })
-    .unwrap();
+    }).unwrap();
 }
 
 #[test]
@@ -176,6 +171,5 @@ fn join_nested() {
         });
 
         sleep(Duration::from_millis(100));
-    })
-    .unwrap();
+    }).unwrap();
 }

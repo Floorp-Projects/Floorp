@@ -21,7 +21,7 @@ use crate::events::ConnectionEvents;
 use crate::flow_mgr::FlowMgr;
 use crate::stream_id::StreamId;
 use crate::{AppError, Error, Res};
-use neqo_common::{matches, qtrace};
+use neqo_common::qtrace;
 
 pub const RX_STREAM_DATA_WINDOW: u64 = 0xFFFF; // 64 KiB
 
@@ -464,15 +464,18 @@ impl RecvStream {
     }
 
     pub fn is_terminal(&self) -> bool {
-        matches!(
-            self.state,
-            RecvStreamState::ResetRecvd | RecvStreamState::DataRead
-        )
+        match self.state {
+            RecvStreamState::ResetRecvd | RecvStreamState::DataRead => true,
+            _ => false,
+        }
     }
 
     // App got all data but did not get the fin signal.
     fn needs_to_inform_app_about_fin(&self) -> bool {
-        matches!(self.state, RecvStreamState::DataRecvd { .. })
+        match self.state {
+            RecvStreamState::DataRecvd { .. } => true,
+            _ => false,
+        }
     }
 
     fn data_ready(&self) -> bool {
@@ -748,4 +751,5 @@ mod tests {
         assert_eq!(rx_ord.buffered(), 15);
         assert_eq!(rx_ord.retired(), 2);
     }
+
 }

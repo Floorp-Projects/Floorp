@@ -193,8 +193,6 @@ impl Guard {
     {
         if let Some(local) = self.local.as_ref() {
             local.defer(Deferred::new(move || drop(f())), self);
-        } else {
-            drop(f());
         }
     }
 

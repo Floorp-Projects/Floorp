@@ -1,11 +1,13 @@
 # backtrace-rs
 
+[![Build Status](https://travis-ci.org/alexcrichton/backtrace-rs.svg?branch=master)](https://travis-ci.org/alexcrichton/backtrace-rs)
+[![Build status](https://ci.appveyor.com/api/projects/status/v4l9oj4aqbbgyx44?svg=true)](https://ci.appveyor.com/project/alexcrichton/backtrace-rs)
+
 [Documentation](https://docs.rs/backtrace)
 
 A library for acquiring backtraces at runtime for Rust. This library aims to
-enhance the support of the standard library by providing a programmatic
-interface to work with, but it also supports simply easily printing the current
-backtrace like libstd's panics.
+enhance the support given by the standard library at `std::rt` by providing a
+more stable and programmatic interface.
 
 ## Install
 
@@ -14,9 +16,12 @@ backtrace like libstd's panics.
 backtrace = "0.3"
 ```
 
-Note that this crate requires `cc` and `ar` to be present on Unix systems when
-`libbacktrace` is used (which is the default). For configuring C compilers see
-the [`cc` crate documentation](https://github.com/alexcrichton/cc-rs).
+```rust
+extern crate backtrace;
+```
+
+Note that this crate requires `make`, `objcopy`, and `ar` to be present on Linux
+systems.
 
 ## Usage
 
@@ -49,7 +54,7 @@ fn main() {
         let symbol_address = frame.symbol_address();
 
         // Resolve this instruction pointer to a symbol name
-        backtrace::resolve_frame(frame, |symbol| {
+        backtrace::resolve(ip, |symbol| {
             if let Some(name) = symbol.name() {
                 // ...
             }
@@ -62,6 +67,11 @@ fn main() {
     });
 }
 ```
+
+## Platform Support
+
+This library currently supports OSX, Linux, and Windows. Support for other
+platforms is always welcome!
 
 # License
 
