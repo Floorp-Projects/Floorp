@@ -38,10 +38,11 @@
 use core::cell::{Cell, UnsafeCell};
 use core::mem::{self, ManuallyDrop};
 use core::num::Wrapping;
-use core::{ptr, fmt};
+use core::ptr;
 use core::sync::atomic;
 use core::sync::atomic::Ordering;
 
+use arrayvec::ArrayVec;
 use crossbeam_utils::CachePadded;
 
 use atomic::{Shared, Owned};
@@ -59,10 +60,10 @@ const MAX_OBJECTS: usize = 64;
 const MAX_OBJECTS: usize = 4;
 
 /// A bag of deferred functions.
+#[derive(Default, Debug)]
 pub struct Bag {
     /// Stashed objects.
-    deferreds: [Deferred; MAX_OBJECTS],
-    len: usize
+    deferreds: ArrayVec<[Deferred; MAX_OBJECTS]>,
 }
 
 /// `Bag::try_push()` requires that it is safe for another thread to execute the given functions.
@@ -76,7 +77,7 @@ impl Bag {
 
     /// Returns `true` if the bag is empty.
     pub fn is_empty(&self) -> bool {
-        self.len == 0
+        self.deferreds.is_empty()
     }
 
     /// Attempts to insert a deferred function into the bag.
@@ -88,13 +89,7 @@ impl Bag {
     ///
     /// It should be safe for another thread to execute the given function.
     pub unsafe fn try_push(&mut self, deferred: Deferred) -> Result<(), Deferred> {
-        if self.len < MAX_OBJECTS {
-            self.deferreds[self.len] = deferred;
-            self.len += 1;
-            Ok(())
-        } else {
-            Err(deferred)
-        }
+        self.deferreds.try_push(deferred).map_err(|e| e.element())
     }
 
     /// Seals the bag with the given epoch.
@@ -103,52 +98,14 @@ impl Bag {
     }
 }
 
-impl Default for Bag {
-    fn default() -> Self {
-        // TODO: [no_op; MAX_OBJECTS] syntax blocked by https://github.com/rust-lang/rust/issues/49147
-        #[cfg(not(feature = "sanitize"))]
-        return Bag { len: 0, deferreds:
-            [Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func),
-             Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func),
-             Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func),
-             Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func),
-             Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func),
-             Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func),
-             Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func),
-             Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func),
-             Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func),
-             Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func),
-             Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func),
-             Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func),
-             Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func),
-             Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func),
-             Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func),
-             Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func)]
-        };
-        #[cfg(feature = "sanitize")]
-        return Bag { len: 0, deferreds: [Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func), Deferred::new(no_op_func)] };
-    }
-}
-
 impl Drop for Bag {
     fn drop(&mut self) {
         // Call all deferred functions.
-        for deferred in &mut self.deferreds[..self.len] {
-            let no_op = Deferred::new(no_op_func);
-            let owned_deferred = mem::replace(deferred, no_op);
-            owned_deferred.call();
+        for deferred in self.deferreds.drain(..) {
+            deferred.call();
         }
     }
 }
-
-// can't #[derive(Debug)] because Debug is not implemented for arrays 64 items long
-impl fmt::Debug for Bag {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Bag").field("deferreds", &&self.deferreds[..self.len]).finish()
-    }
-}
-
-fn no_op_func() {}
 
 /// A pair of an epoch and a bag.
 #[derive(Default, Debug)]

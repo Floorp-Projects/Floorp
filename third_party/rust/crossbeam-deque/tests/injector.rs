@@ -6,8 +6,8 @@ use std::sync::atomic::Ordering::SeqCst;
 use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::sync::{Arc, Mutex};
 
-use deque::Steal::{Empty, Success};
 use deque::{Injector, Worker};
+use deque::Steal::{Empty, Success};
 use rand::Rng;
 use utils::thread::scope;
 
@@ -71,8 +71,7 @@ fn spsc() {
         for i in 0..COUNT {
             q.push(i);
         }
-    })
-    .unwrap();
+    }).unwrap();
 }
 
 #[test]
@@ -104,8 +103,7 @@ fn mpmc() {
                 }
             });
         }
-    })
-    .unwrap();
+    }).unwrap();
 
     for c in v {
         assert_eq!(c.load(SeqCst), THREADS);
@@ -149,8 +147,7 @@ fn stampede() {
                 remaining.fetch_sub(1, SeqCst);
             }
         }
-    })
-    .unwrap();
+    }).unwrap();
 }
 
 #[test]
@@ -208,8 +205,7 @@ fn stress() {
             }
         }
         done.store(true, SeqCst);
-    })
-    .unwrap();
+    }).unwrap();
 }
 
 #[test]
@@ -267,8 +263,7 @@ fn no_starvation() {
             }
         }
         done.store(true, SeqCst);
-    })
-    .unwrap();
+    }).unwrap();
 }
 
 #[test]
@@ -328,8 +323,7 @@ fn destructors() {
                 remaining.fetch_sub(1, SeqCst);
             }
         }
-    })
-    .unwrap();
+    }).unwrap();
 
     let rem = remaining.load(SeqCst);
     assert!(rem > 0);

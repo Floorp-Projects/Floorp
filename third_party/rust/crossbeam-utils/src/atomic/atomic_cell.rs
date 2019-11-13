@@ -2,12 +2,10 @@ use core::cell::UnsafeCell;
 use core::fmt;
 use core::mem;
 use core::ptr;
-use core::sync::atomic::{self, AtomicBool, Ordering};
+use core::slice;
+use core::sync::atomic::{self, AtomicBool, AtomicUsize, Ordering};
 
-#[cfg(feature = "std")]
-use std::panic::{RefUnwindSafe, UnwindSafe};
-
-use super::seq_lock::SeqLock;
+use Backoff;
 
 /// A thread-safe mutable memory location.
 ///
@@ -17,14 +15,9 @@ use super::seq_lock::SeqLock;
 /// global locks otherwise. You can call [`AtomicCell::<T>::is_lock_free()`] to check whether
 /// atomic instructions or locks will be used.
 ///
-/// Atomic loads use the [`Acquire`] ordering and atomic stores use the [`Release`] ordering.
-///
 /// [`Cell`]: https://doc.rust-lang.org/std/cell/struct.Cell.html
 /// [`AtomicCell::<T>::is_lock_free()`]: struct.AtomicCell.html#method.is_lock_free
-/// [`Acquire`]: https://doc.rust-lang.org/std/sync/atomic/enum.Ordering.html#variant.Acquire
-/// [`Release`]: https://doc.rust-lang.org/std/sync/atomic/enum.Ordering.html#variant.Release
-#[repr(transparent)]
-pub struct AtomicCell<T: ?Sized> {
+pub struct AtomicCell<T> {
     /// The inner value.
     ///
     /// If this value can be transmuted into a primitive atomic type, it will be treated as such.
@@ -36,11 +29,6 @@ pub struct AtomicCell<T: ?Sized> {
 unsafe impl<T: Send> Send for AtomicCell<T> {}
 unsafe impl<T: Send> Sync for AtomicCell<T> {}
 
-#[cfg(feature = "std")]
-impl<T> UnwindSafe for AtomicCell<T> {}
-#[cfg(feature = "std")]
-impl<T> RefUnwindSafe for AtomicCell<T> {}
-
 impl<T> AtomicCell<T> {
     /// Creates a new atomic cell initialized with `val`.
     ///
@@ -51,27 +39,26 @@ impl<T> AtomicCell<T> {
     ///
     /// let a = AtomicCell::new(7);
     /// ```
-    #[cfg(not(has_min_const_fn))]
     pub fn new(val: T) -> AtomicCell<T> {
         AtomicCell {
             value: UnsafeCell::new(val),
         }
     }
 
-    /// Creates a new atomic cell initialized with `val`.
+    /// Returns a mutable reference to the inner value.
     ///
     /// # Examples
     ///
     /// ```
     /// use crossbeam_utils::atomic::AtomicCell;
     ///
-    /// let a = AtomicCell::new(7);
+    /// let mut a = AtomicCell::new(7);
+    /// *a.get_mut() += 1;
+    ///
+    /// assert_eq!(a.load(), 8);
     /// ```
-    #[cfg(has_min_const_fn)]
-    pub const fn new(val: T) -> AtomicCell<T> {
-        AtomicCell {
-            value: UnsafeCell::new(val),
-        }
+    pub fn get_mut(&mut self) -> &mut T {
+        unsafe { &mut *self.value.get() }
     }
 
     /// Unwraps the atomic cell and returns its inner value.
@@ -163,61 +150,6 @@ impl<T> AtomicCell<T> {
     }
 }
 
-impl<T: ?Sized> AtomicCell<T> {
-    /// Returns a raw pointer to the underlying data in this atomic cell.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use crossbeam_utils::atomic::AtomicCell;
-    ///
-    /// let mut a = AtomicCell::new(5);
-    ///
-    /// let ptr = a.as_ptr();
-    /// ```
-    #[inline]
-    pub fn as_ptr(&self) -> *mut T {
-        self.value.get()
-    }
-
-    /// Returns a mutable reference to the inner value.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use crossbeam_utils::atomic::AtomicCell;
-    ///
-    /// let mut a = AtomicCell::new(7);
-    /// *a.get_mut() += 1;
-    ///
-    /// assert_eq!(a.load(), 8);
-    /// ```
-    #[doc(hidden)]
-    #[deprecated(note = "this method is unsound and will be removed in the next release")]
-    pub fn get_mut(&mut self) -> &mut T {
-        unsafe { &mut *self.value.get() }
-    }
-}
-
-impl<T: Default> AtomicCell<T> {
-    /// Takes the value of the atomic cell, leaving `Default::default()` in its place.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use crossbeam_utils::atomic::AtomicCell;
-    ///
-    /// let a = AtomicCell::new(5);
-    /// let five = a.take();
-    ///
-    /// assert_eq!(five, 5);
-    /// assert_eq!(a.into_inner(), 0);
-    /// ```
-    pub fn take(&self) -> T {
-        self.swap(Default::default())
-    }
-}
-
 impl<T: Copy> AtomicCell<T> {
     /// Loads a value.
     ///
@@ -248,10 +180,10 @@ impl<T: Copy + Eq> AtomicCell<T> {
     ///
     /// let a = AtomicCell::new(1);
     ///
-    /// assert_eq!(a.compare_and_swap(2, 3), 1);
+    /// assert_eq!(a.compare_exchange(2, 3), Err(1));
     /// assert_eq!(a.load(), 1);
     ///
-    /// assert_eq!(a.compare_and_swap(1, 2), 1);
+    /// assert_eq!(a.compare_exchange(1, 2), Ok(1));
     /// assert_eq!(a.load(), 2);
     /// ```
     pub fn compare_and_swap(&self, current: T, new: T) -> T {
@@ -279,8 +211,23 @@ impl<T: Copy + Eq> AtomicCell<T> {
     /// assert_eq!(a.compare_exchange(1, 2), Ok(1));
     /// assert_eq!(a.load(), 2);
     /// ```
-    pub fn compare_exchange(&self, current: T, new: T) -> Result<T, T> {
-        unsafe { atomic_compare_exchange_weak(self.value.get(), current, new) }
+    pub fn compare_exchange(&self, mut current: T, new: T) -> Result<T, T> {
+        loop {
+            match unsafe { atomic_compare_exchange_weak(self.value.get(), current, new) } {
+                Ok(_) => return Ok(current),
+                Err(previous) => {
+                    if previous != current {
+                        return Err(previous);
+                    }
+
+                    // The compare-exchange operation has failed and didn't store `new`. The
+                    // failure is either spurious, or `previous` was semantically equal to
+                    // `current` but not byte-equal. Let's retry with `previous` as the new
+                    // `current`.
+                    current = previous;
+                }
+            }
+        }
     }
 }
 
@@ -305,7 +252,7 @@ macro_rules! impl_arithmetic {
             pub fn fetch_add(&self, val: $t) -> $t {
                 if can_transmute::<$t, atomic::AtomicUsize>() {
                     let a = unsafe { &*(self.value.get() as *const atomic::AtomicUsize) };
-                    a.fetch_add(val as usize, Ordering::AcqRel) as $t
+                    a.fetch_add(val as usize, Ordering::SeqCst) as $t
                 } else {
                     let _guard = lock(self.value.get() as usize).write();
                     let value = unsafe { &mut *(self.value.get()) };
@@ -333,7 +280,7 @@ macro_rules! impl_arithmetic {
             pub fn fetch_sub(&self, val: $t) -> $t {
                 if can_transmute::<$t, atomic::AtomicUsize>() {
                     let a = unsafe { &*(self.value.get() as *const atomic::AtomicUsize) };
-                    a.fetch_sub(val as usize, Ordering::AcqRel) as $t
+                    a.fetch_sub(val as usize, Ordering::SeqCst) as $t
                 } else {
                     let _guard = lock(self.value.get() as usize).write();
                     let value = unsafe { &mut *(self.value.get()) };
@@ -359,7 +306,7 @@ macro_rules! impl_arithmetic {
             pub fn fetch_and(&self, val: $t) -> $t {
                 if can_transmute::<$t, atomic::AtomicUsize>() {
                     let a = unsafe { &*(self.value.get() as *const atomic::AtomicUsize) };
-                    a.fetch_and(val as usize, Ordering::AcqRel) as $t
+                    a.fetch_and(val as usize, Ordering::SeqCst) as $t
                 } else {
                     let _guard = lock(self.value.get() as usize).write();
                     let value = unsafe { &mut *(self.value.get()) };
@@ -385,7 +332,7 @@ macro_rules! impl_arithmetic {
             pub fn fetch_or(&self, val: $t) -> $t {
                 if can_transmute::<$t, atomic::AtomicUsize>() {
                     let a = unsafe { &*(self.value.get() as *const atomic::AtomicUsize) };
-                    a.fetch_or(val as usize, Ordering::AcqRel) as $t
+                    a.fetch_or(val as usize, Ordering::SeqCst) as $t
                 } else {
                     let _guard = lock(self.value.get() as usize).write();
                     let value = unsafe { &mut *(self.value.get()) };
@@ -411,7 +358,7 @@ macro_rules! impl_arithmetic {
             pub fn fetch_xor(&self, val: $t) -> $t {
                 if can_transmute::<$t, atomic::AtomicUsize>() {
                     let a = unsafe { &*(self.value.get() as *const atomic::AtomicUsize) };
-                    a.fetch_xor(val as usize, Ordering::AcqRel) as $t
+                    a.fetch_xor(val as usize, Ordering::SeqCst) as $t
                 } else {
                     let _guard = lock(self.value.get() as usize).write();
                     let value = unsafe { &mut *(self.value.get()) };
@@ -441,7 +388,7 @@ macro_rules! impl_arithmetic {
             #[inline]
             pub fn fetch_add(&self, val: $t) -> $t {
                 let a = unsafe { &*(self.value.get() as *const $atomic) };
-                a.fetch_add(val, Ordering::AcqRel)
+                a.fetch_add(val, Ordering::SeqCst)
             }
 
             /// Decrements the current value by `val` and returns the previous value.
@@ -461,7 +408,7 @@ macro_rules! impl_arithmetic {
             #[inline]
             pub fn fetch_sub(&self, val: $t) -> $t {
                 let a = unsafe { &*(self.value.get() as *const $atomic) };
-                a.fetch_sub(val, Ordering::AcqRel)
+                a.fetch_sub(val, Ordering::SeqCst)
             }
 
             /// Applies bitwise "and" to the current value and returns the previous value.
@@ -479,7 +426,7 @@ macro_rules! impl_arithmetic {
             #[inline]
             pub fn fetch_and(&self, val: $t) -> $t {
                 let a = unsafe { &*(self.value.get() as *const $atomic) };
-                a.fetch_and(val, Ordering::AcqRel)
+                a.fetch_and(val, Ordering::SeqCst)
             }
 
             /// Applies bitwise "or" to the current value and returns the previous value.
@@ -497,7 +444,7 @@ macro_rules! impl_arithmetic {
             #[inline]
             pub fn fetch_or(&self, val: $t) -> $t {
                 let a = unsafe { &*(self.value.get() as *const $atomic) };
-                a.fetch_or(val, Ordering::AcqRel)
+                a.fetch_or(val, Ordering::SeqCst)
             }
 
             /// Applies bitwise "xor" to the current value and returns the previous value.
@@ -515,7 +462,7 @@ macro_rules! impl_arithmetic {
             #[inline]
             pub fn fetch_xor(&self, val: $t) -> $t {
                 let a = unsafe { &*(self.value.get() as *const $atomic) };
-                a.fetch_xor(val, Ordering::AcqRel)
+                a.fetch_xor(val, Ordering::SeqCst)
             }
         }
     };
@@ -581,7 +528,7 @@ impl AtomicCell<bool> {
     #[inline]
     pub fn fetch_and(&self, val: bool) -> bool {
         let a = unsafe { &*(self.value.get() as *const AtomicBool) };
-        a.fetch_and(val, Ordering::AcqRel)
+        a.fetch_and(val, Ordering::SeqCst)
     }
 
     /// Applies logical "or" to the current value and returns the previous value.
@@ -602,7 +549,7 @@ impl AtomicCell<bool> {
     #[inline]
     pub fn fetch_or(&self, val: bool) -> bool {
         let a = unsafe { &*(self.value.get() as *const AtomicBool) };
-        a.fetch_or(val, Ordering::AcqRel)
+        a.fetch_or(val, Ordering::SeqCst)
     }
 
     /// Applies logical "xor" to the current value and returns the previous value.
@@ -623,7 +570,7 @@ impl AtomicCell<bool> {
     #[inline]
     pub fn fetch_xor(&self, val: bool) -> bool {
         let a = unsafe { &*(self.value.get() as *const AtomicBool) };
-        a.fetch_xor(val, Ordering::AcqRel)
+        a.fetch_xor(val, Ordering::SeqCst)
     }
 }
 
@@ -641,10 +588,100 @@ impl<T: Copy + fmt::Debug> fmt::Debug for AtomicCell<T> {
     }
 }
 
+/// Returns `true` if the two values are equal byte-for-byte.
+fn byte_eq<T>(a: &T, b: &T) -> bool {
+    unsafe {
+        let a = slice::from_raw_parts(a as *const _ as *const u8, mem::size_of::<T>());
+        let b = slice::from_raw_parts(b as *const _ as *const u8, mem::size_of::<T>());
+        a == b
+    }
+}
+
 /// Returns `true` if values of type `A` can be transmuted into values of type `B`.
 fn can_transmute<A, B>() -> bool {
     // Sizes must be equal, but alignment of `A` must be greater or equal than that of `B`.
     mem::size_of::<A>() == mem::size_of::<B>() && mem::align_of::<A>() >= mem::align_of::<B>()
+}
+
+/// A simple stamped lock.
+struct Lock {
+    /// The current state of the lock.
+    ///
+    /// All bits except the least significant one hold the current stamp. When locked, the state
+    /// equals 1 and doesn't contain a valid stamp.
+    state: AtomicUsize,
+}
+
+impl Lock {
+    /// If not locked, returns the current stamp.
+    ///
+    /// This method should be called before optimistic reads.
+    #[inline]
+    fn optimistic_read(&self) -> Option<usize> {
+        let state = self.state.load(Ordering::Acquire);
+        if state == 1 {
+            None
+        } else {
+            Some(state)
+        }
+    }
+
+    /// Returns `true` if the current stamp is equal to `stamp`.
+    ///
+    /// This method should be called after optimistic reads to check whether they are valid. The
+    /// argument `stamp` should correspond to the one returned by method `optimistic_read`.
+    #[inline]
+    fn validate_read(&self, stamp: usize) -> bool {
+        atomic::fence(Ordering::Acquire);
+        self.state.load(Ordering::Relaxed) == stamp
+    }
+
+    /// Grabs the lock for writing.
+    #[inline]
+    fn write(&'static self) -> WriteGuard {
+        let backoff = Backoff::new();
+        loop {
+            let previous = self.state.swap(1, Ordering::Acquire);
+
+            if previous != 1 {
+                atomic::fence(Ordering::Release);
+
+                return WriteGuard {
+                    lock: self,
+                    state: previous,
+                };
+            }
+
+            backoff.snooze();
+        }
+    }
+}
+
+/// A RAII guard that releases the lock and increments the stamp when dropped.
+struct WriteGuard {
+    /// The parent lock.
+    lock: &'static Lock,
+
+    /// The stamp before locking.
+    state: usize,
+}
+
+impl WriteGuard {
+    /// Releases the lock without incrementing the stamp.
+    #[inline]
+    fn abort(self) {
+        self.lock.state.store(self.state, Ordering::Release);
+    }
+}
+
+impl Drop for WriteGuard {
+    #[inline]
+    fn drop(&mut self) {
+        // Release the lock and increment the stamp.
+        self.lock
+            .state
+            .store(self.state.wrapping_add(2), Ordering::Release);
+    }
 }
 
 /// Returns a reference to the global lock associated with the `AtomicCell` at address `addr`.
@@ -657,7 +694,7 @@ fn can_transmute<A, B>() -> bool {
 /// scalability.
 #[inline]
 #[must_use]
-fn lock(addr: usize) -> &'static SeqLock {
+fn lock(addr: usize) -> &'static Lock {
     // The number of locks is a prime number because we want to make sure `addr % LEN` gets
     // dispersed across all locks.
     //
@@ -682,9 +719,10 @@ fn lock(addr: usize) -> &'static SeqLock {
     // In order to protect from such cases, we simply choose a large prime number for `LEN`.
     const LEN: usize = 97;
 
-    const L: SeqLock = SeqLock::INIT;
-
-    static LOCKS: [SeqLock; LEN] = [
+    const L: Lock = Lock {
+        state: AtomicUsize::new(0),
+    };
+    static LOCKS: [Lock; LEN] = [
         L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
         L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
         L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
@@ -765,7 +803,7 @@ fn atomic_is_lock_free<T>() -> bool {
 
 /// Atomically reads data from `src`.
 ///
-/// This operation uses the `Acquire` ordering. If possible, an atomic instructions is used, and a
+/// This operation uses the `SeqCst` ordering. If possible, an atomic instructions is used, and a
 /// global lock otherwise.
 unsafe fn atomic_load<T>(src: *mut T) -> T
 where
@@ -775,7 +813,7 @@ where
         T, a,
         {
             a = &*(src as *const _ as *const _);
-            mem::transmute_copy(&a.load(Ordering::Acquire))
+            mem::transmute_copy(&a.load(Ordering::SeqCst))
         },
         {
             let lock = lock(src as usize);
@@ -806,33 +844,34 @@ where
 
 /// Atomically writes `val` to `dst`.
 ///
-/// This operation uses the `Release` ordering. If possible, an atomic instructions is used, and a
+/// This operation uses the `SeqCst` ordering. If possible, an atomic instructions is used, and a
 /// global lock otherwise.
 unsafe fn atomic_store<T>(dst: *mut T, val: T) {
     atomic! {
         T, a,
         {
             a = &*(dst as *const _ as *const _);
-            a.store(mem::transmute_copy(&val), Ordering::Release);
+            let res = a.store(mem::transmute_copy(&val), Ordering::SeqCst);
             mem::forget(val);
+            res
         },
         {
             let _guard = lock(dst as usize).write();
-            ptr::write(dst, val);
+            ptr::write(dst, val)
         }
     }
 }
 
 /// Atomically swaps data at `dst` with `val`.
 ///
-/// This operation uses the `AcqRel` ordering. If possible, an atomic instructions is used, and a
+/// This operation uses the `SeqCst` ordering. If possible, an atomic instructions is used, and a
 /// global lock otherwise.
 unsafe fn atomic_swap<T>(dst: *mut T, val: T) -> T {
     atomic! {
         T, a,
         {
             a = &*(dst as *const _ as *const _);
-            let res = mem::transmute_copy(&a.swap(mem::transmute_copy(&val), Ordering::AcqRel));
+            let res = mem::transmute_copy(&a.swap(mem::transmute_copy(&val), Ordering::SeqCst));
             mem::forget(val);
             res
         },
@@ -848,48 +887,31 @@ unsafe fn atomic_swap<T>(dst: *mut T, val: T) -> T {
 ///
 /// Returns the old value on success, or the current value at `dst` on failure.
 ///
-/// This operation uses the `AcqRel` ordering. If possible, an atomic instructions is used, and a
+/// This operation uses the `SeqCst` ordering. If possible, an atomic instructions is used, and a
 /// global lock otherwise.
-unsafe fn atomic_compare_exchange_weak<T>(dst: *mut T, mut current: T, new: T) -> Result<T, T>
+unsafe fn atomic_compare_exchange_weak<T>(dst: *mut T, current: T, new: T) -> Result<T, T>
 where
-    T: Copy + Eq,
+    T: Copy,
 {
     atomic! {
         T, a,
         {
             a = &*(dst as *const _ as *const _);
-            let mut current_raw = mem::transmute_copy(&current);
-            let new_raw = mem::transmute_copy(&new);
-
-            loop {
-                match a.compare_exchange_weak(
-                    current_raw,
-                    new_raw,
-                    Ordering::AcqRel,
-                    Ordering::Acquire,
-                ) {
-                    Ok(_) => break Ok(current),
-                    Err(previous_raw) => {
-                        let previous = mem::transmute_copy(&previous_raw);
-
-                        if !T::eq(&previous, &current) {
-                            break Err(previous);
-                        }
-
-                        // The compare-exchange operation has failed and didn't store `new`. The
-                        // failure is either spurious, or `previous` was semantically equal to
-                        // `current` but not byte-equal. Let's retry with `previous` as the new
-                        // `current`.
-                        current = previous;
-                        current_raw = previous_raw;
-                    }
-                }
+            let res = a.compare_exchange_weak(
+                mem::transmute_copy(&current),
+                mem::transmute_copy(&new),
+                Ordering::SeqCst,
+                Ordering::SeqCst,
+            );
+            match res {
+                Ok(v) => Ok(mem::transmute_copy(&v)),
+                Err(v) => Err(mem::transmute_copy(&v)),
             }
         },
         {
             let guard = lock(dst as usize).write();
 
-            if T::eq(&*dst, &current) {
+            if byte_eq(&*dst, &current) {
                 Ok(ptr::replace(dst, new))
             } else {
                 let val = ptr::read(dst);
