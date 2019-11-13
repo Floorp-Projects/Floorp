@@ -15,7 +15,7 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Search or enter address</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header">No tabs opened</string>
+    <string name="no_open_tabs_header_2">No open tabs</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Your open tabs will be shown here.</string>
 

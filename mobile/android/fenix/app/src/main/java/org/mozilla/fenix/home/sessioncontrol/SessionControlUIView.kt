@@ -20,7 +20,7 @@ import org.mozilla.fenix.mvi.UIView
 
 val noTabMessage = AdapterItem.NoContentMessage(
     R.drawable.ic_tabs,
-    R.string.no_open_tabs_header,
+    R.string.no_open_tabs_header_2,
     R.string.no_open_tabs_description
 )
 
