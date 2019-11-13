@@ -5,12 +5,11 @@
 "use strict";
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
-
-startupAddonsManager();
-
 add_task(async function testReloadExitedAddon() {
   // Force sync plugin loading to avoid spurious install events from plugins.
   Services.prefs.setBoolPref("plugin.load_flash_only", false);
+
+  await startupAddonsManager();
 
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
