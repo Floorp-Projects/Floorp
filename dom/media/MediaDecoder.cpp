@@ -6,6 +6,7 @@
 
 #include "MediaDecoder.h"
 
+#include "AudioDeviceInfo.h"
 #include "DOMMediaStream.h"
 #include "DecoderBenchmark.h"
 #include "ImageContainer.h"
@@ -225,10 +226,11 @@ void MediaDecoder::SetVolume(double aVolume) {
   mVolume = aVolume;
 }
 
-RefPtr<GenericPromise> MediaDecoder::SetSink(AudioDeviceInfo* aSink) {
+RefPtr<GenericPromise> MediaDecoder::SetSink(AudioDeviceInfo* aSinkDevice) {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
-  return GetStateMachine()->InvokeSetSink(aSink);
+  mSinkDevice = aSinkDevice;
+  return GetStateMachine()->InvokeSetSink(aSinkDevice);
 }
 
 void MediaDecoder::SetOutputCaptured(bool aCaptured) {
@@ -309,6 +311,7 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
       INIT_CANONICAL(mVolume, aInit.mVolume),
       INIT_CANONICAL(mPreservesPitch, aInit.mPreservesPitch),
       INIT_CANONICAL(mLooping, aInit.mLooping),
+      INIT_CANONICAL(mSinkDevice, nullptr),
       INIT_CANONICAL(mOutputCaptured, false),
       INIT_CANONICAL(mOutputTracks, nsTArray<RefPtr<ProcessedMediaTrack>>()),
       INIT_CANONICAL(mOutputPrincipal, PRINCIPAL_HANDLE_NONE),

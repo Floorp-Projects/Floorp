@@ -32,10 +32,6 @@ class VideoSink : public MediaSink {
             MediaQueue<VideoData>& aVideoQueue, VideoFrameContainer* aContainer,
             FrameStatistics& aFrameStats, uint32_t aVQueueSentToCompositerSize);
 
-  const PlaybackParams& GetPlaybackParams() const override;
-
-  void SetPlaybackParams(const PlaybackParams& aParams) override;
-
   RefPtr<EndedPromise> OnEnded(TrackType aType) override;
 
   TimeUnit GetEndTime(TrackType aType) const override;
@@ -51,6 +47,8 @@ class VideoSink : public MediaSink {
   void SetPreservesPitch(bool aPreservesPitch) override;
 
   void SetPlaying(bool aPlaying) override;
+
+  double PlaybackRate() const override;
 
   void Redraw(const VideoInfo& aInfo) override;
 
