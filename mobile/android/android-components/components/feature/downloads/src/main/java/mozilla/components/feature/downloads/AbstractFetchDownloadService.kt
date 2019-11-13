@@ -45,6 +45,7 @@ import mozilla.components.feature.downloads.facts.emitNotificationPauseFact
 import mozilla.components.feature.downloads.facts.emitNotificationCancelFact
 import mozilla.components.feature.downloads.facts.emitNotificationTryAgainFact
 import mozilla.components.feature.downloads.facts.emitNotificationOpenFact
+import mozilla.components.support.utils.DownloadUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -329,15 +330,24 @@ abstract class AbstractFetchDownloadService : Service() {
      *
      * Encapsulates different behaviour depending on the SDK version.
      */
+    @Suppress("Deprecation")
     internal fun useFileStream(
         download: DownloadState,
         append: Boolean,
         block: (OutputStream) -> Unit
     ) {
+        // Update the file name to ensure it doesn't collide with one already on disk]
+        val downloadWithUniqueName = download.fileName?.let {
+            download.copy(fileName = DownloadUtils.uniqueFileName(
+                Environment.getExternalStoragePublicDirectory(download.destinationDirectory),
+                it
+            ))
+        } ?: download
+
         if (SDK_INT >= Build.VERSION_CODES.Q) {
-            useFileStreamScopedStorage(download, block)
+            useFileStreamScopedStorage(downloadWithUniqueName, block)
         } else {
-            useFileStreamLegacy(download, append, block)
+            useFileStreamLegacy(downloadWithUniqueName, append, block)
         }
     }
 
