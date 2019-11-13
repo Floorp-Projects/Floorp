@@ -832,8 +832,13 @@ var gCategories = {
     });
 
     this.node.addEventListener("click", aEvent => {
-      let viewId = this.node.selectedItem.value;
-      if (gViewController.currentViewId !== viewId) {
+      var selectedItem = this.node.selectedItem;
+      if (
+        aEvent.target.localName == "richlistitem" &&
+        aEvent.target == selectedItem
+      ) {
+        var viewId = selectedItem.value;
+
         gViewController.loadView(viewId);
       }
     });
