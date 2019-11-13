@@ -117,6 +117,7 @@ class JSTerm extends Component {
     this.hudId = this.webConsoleUI.hudId;
 
     this._onEditorChanges = this._onEditorChanges.bind(this);
+    this._onEditorBeforeChange = this._onEditorBeforeChange.bind(this);
     this.onContextMenu = this.onContextMenu.bind(this);
     this.imperativeUpdate = this.imperativeUpdate.bind(this);
 
@@ -124,6 +125,13 @@ class JSTerm extends Component {
     // as the user is typing.
     // The delay should be small enough to be unnoticed by the user.
     this.autocompleteUpdate = debounce(this.props.autocompleteUpdate, 75, this);
+
+    // Because the autocomplete has a slight delay (75ms), there can be time where the
+    // codeMirror completion text is out-of-date, which might lead to issue when the user
+    // accept the autocompletion while the update of the completion text is still pending.
+    // In order to account for that, we put any future value of the completion text in
+    // this property.
+    this.pendingCompletionText = null;
 
     /**
      * Last input value.
@@ -700,16 +708,42 @@ class JSTerm extends Component {
     // clear it before the change is done to prevent a visual glitch.
     // See Bugs 1491776 & 1558248.
     const { from, to, origin, text } = change;
+    const isAddedText =
+      from.line === to.line && from.ch === to.ch && origin === "+input";
+    const addedText = text.join("");
     const completionText = this.getAutoCompletionText();
 
     const addedCharacterMatchCompletion =
-      from.line === to.line &&
-      from.ch === to.ch &&
-      origin === "+input" &&
-      completionText.startsWith(text.join(""));
+      isAddedText && completionText.startsWith(addedText);
+
+    const addedCharacterMatchPopupItem =
+      isAddedText &&
+      this.autocompletePopup.items.some(({ preLabel, label }) =>
+        label.startsWith(preLabel + addedText)
+      );
 
     if (!completionText || change.canceled || !addedCharacterMatchCompletion) {
       this.setAutoCompletionText("");
+    }
+
+    if (!addedCharacterMatchCompletion && !addedCharacterMatchPopupItem) {
+      this.autocompletePopup.hidePopup();
+    } else if (
+      completionText &&
+      !change.canceled &&
+      (addedCharacterMatchCompletion || addedCharacterMatchPopupItem)
+    ) {
+      // The completion text will be updated when the debounced autocomplete update action
+      // is done, so in the meantime we set the pending value to pendingCompletionText.
+      // See Bug 1595068 for more information.
+      this.pendingCompletionText = completionText.substring(text.length);
+      // And we update the preLabel of the matching autocomplete items that may be used
+      // in the acceptProposedAutocompletion function.
+      this.autocompletePopup.items.forEach(item => {
+        if (item.label.startsWith(item.preLabel + addedText)) {
+          item.preLabel += addedText;
+        }
+      });
     }
   }
 
@@ -939,10 +973,12 @@ class JSTerm extends Component {
   }
 
   /**
-   * Clear the current completion information and close the autocomplete popup,
-   * if needed.
+   * Clear the current completion information, cancel any pending autocompletion update
+   * and close the autocomplete popup, if needed.
    */
   clearCompletion() {
+    this.autocompleteUpdate.cancel();
+
     this.setAutoCompletionText("");
     if (this.autocompletePopup) {
       this.autocompletePopup.clearItems();
@@ -995,6 +1031,7 @@ class JSTerm extends Component {
       }
     }
 
+    this.autocompleteUpdate.cancel();
     this.props.autocompleteClear();
 
     if (completionText) {
@@ -1047,6 +1084,8 @@ class JSTerm extends Component {
       return;
     }
 
+    this.pendingCompletionText = null;
+
     if (suffix && !this.canDisplayAutoCompletionText()) {
       suffix = "";
     }
@@ -1055,7 +1094,11 @@ class JSTerm extends Component {
   }
 
   getAutoCompletionText() {
-    return this.editor ? this.editor.getAutoCompletionText() : null;
+    const renderedCompletionText =
+      this.editor && this.editor.getAutoCompletionText();
+    return typeof this.pendingCompletionText === "string"
+      ? this.pendingCompletionText
+      : renderedCompletionText;
   }
 
   /**
@@ -1104,6 +1147,8 @@ class JSTerm extends Component {
   }
 
   destroy() {
+    this.autocompleteUpdate.cancel();
+
     if (this.autocompletePopup) {
       this.autocompletePopup.destroy();
       this.autocompletePopup = null;

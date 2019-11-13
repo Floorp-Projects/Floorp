@@ -122,10 +122,10 @@ add_task(async function() {
       );
     }
 
-    setInputValue(hud, "");
     const onPopupClose = autocompletePopup.once("popup-closed");
     EventUtils.synthesizeKey("KEY_Escape");
     await onPopupClose;
+    setInputValue(hud, "");
   }
 });
 
