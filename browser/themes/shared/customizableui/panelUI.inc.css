@@ -1825,33 +1825,37 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 #protections-popup #messaging-system-message-container {
   height: 260px;
   overflow: hidden;
-  transition: height .25s;
+  transition: margin-bottom .25s;
   border-top: 1px solid var(--panel-separator-color);
 }
 
 #protections-popup #messaging-system-message-container[disabled] {
-  height: 0;
+   /* Offset the height when hidden. This makes the panel content
+   * cover the info message and reveal it as it slides down, rather
+   * than the info message growing in height. */
+  margin-bottom: -260px;
+  pointer-events: none;
 }
 
 #protections-popup #messaging-system-message-container[disabled] #protections-popup-message {
-  /* height + margins */
-  transform: translateY(calc(-100% - 10px));
+  opacity: 0;
 }
 
 #protections-popup-message {
   display: flex;
   align-items: flex-end;
-  transition: transform .25s;
-  font-size: 1rem;
-}
-
-#protections-popup-message.whatsNew-hero-message {
+  height: calc(100% - 20px);
+  margin: 10px;
+  transition: opacity .25s;
+  opacity: 1; 
   background-image: url(chrome://browser/skin/controlcenter/hero-message-background.svg);
   background-repeat: no-repeat;
   background-position: top right;
-  height: calc(100% - 20px);
-  margin: 10px;
   color: white;
+}
+
+#protections-popup-message > .whatsNew-message-body > .text-link {
+  text-decoration: underline;
 }
 
 panelview[mainview] #PanelUI-whatsNew-content {
