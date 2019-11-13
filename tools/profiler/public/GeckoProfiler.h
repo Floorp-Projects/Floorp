@@ -775,7 +775,10 @@ void profiler_add_marker(const char* aMarkerName,
 
 void profiler_add_js_marker(const char* aMarkerName);
 void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info);
-void profiler_add_native_allocation_marker(int64_t aSize);
+
+// Returns true or or false depending on whether the marker was actually added
+// or not.
+bool profiler_add_native_allocation_marker(int64_t aSize);
 
 // Returns true if the profiler lock is currently held *on the current thread*.
 // This may be used by re-entrant code that may call profiler functions while
