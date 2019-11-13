@@ -4,26 +4,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXPORTS += [
-    'nsHyphenationManager.h',
-    'nsHyphenator.h',
-]
-
-UNIFIED_SOURCES += [
-    'nsHyphenationManager.cpp',
-    'nsHyphenator.cpp',
-]
-
 # These files cannot be built in unified mode because they include hnjalloc.h.
 SOURCES += [
-    'hnjstdio.cpp',
-]
-
-LOCAL_INCLUDES += [
-    '../hyphen',
+    'hyphen.c',
 ]
 
 FINAL_LIBRARY = 'xul'
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+LOCAL_INCLUDES += [
+    '../glue',
+]
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
