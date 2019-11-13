@@ -144,6 +144,9 @@ class DOMMediaStream : public DOMEventTargetHelper,
 
   // NON-WebIDL
 
+  // Returns true if this stream contains a live audio track.
+  bool Audible() const;
+
   /**
    * Returns true if this DOMMediaStream has aTrack in mTracks.
    */
