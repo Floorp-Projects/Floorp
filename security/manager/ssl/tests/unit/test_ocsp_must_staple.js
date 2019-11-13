@@ -42,6 +42,7 @@ function add_tests() {
     true,
     false,
     function(aSecInfo) {
+      Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", true);
       Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 1);
       Services.prefs.setBoolPref(
         "security.cert_pinning.process_headers_from_non_builtin_roots",
@@ -74,6 +75,7 @@ function add_tests() {
       Services.prefs.clearUserPref(
         "security.cert_pinning.process_headers_from_non_builtin_roots"
       );
+      Services.prefs.clearUserPref("security.cert_pinning.hpkp.enabled");
       Services.prefs.clearUserPref("security.cert_pinning.enforcement_level");
     }
   );

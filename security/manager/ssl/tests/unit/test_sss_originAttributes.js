@@ -9,6 +9,7 @@
 // Ensures nsISiteSecurityService APIs respects origin attributes.
 
 registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.cert_pinning.hpkp.enabled");
   Services.prefs.clearUserPref("security.cert_pinning.enforcement_level");
   Services.prefs.clearUserPref(
     "security.cert_pinning.process_headers_from_non_builtin_roots"
@@ -24,6 +25,7 @@ const GOOD_MAX_AGE = `max-age=${GOOD_MAX_AGE_SECONDS};`;
 
 do_get_profile(); // must be done before instantiating nsIX509CertDB
 
+Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", true);
 Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 2);
 Services.prefs.setBoolPref(
   "security.cert_pinning.process_headers_from_non_builtin_roots",

@@ -299,6 +299,9 @@ function check_pinning_telemetry() {
 }
 
 function run_test() {
+  // Ensure that static pinning works when HPKP is disabled.
+  Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", false);
+
   add_tls_server_setup("BadCertAndPinningServer", "bad_certs");
 
   // Add a user-specified trust anchor.

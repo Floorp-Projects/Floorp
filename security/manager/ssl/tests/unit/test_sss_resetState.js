@@ -129,12 +129,14 @@ function add_tests() {
 }
 
 registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.cert_pinning.hpkp.enabled");
   Services.prefs.clearUserPref(
     "sercurity.cert_pinning.process_headers_from_non_builtin_roots"
   );
 });
 
 function run_test() {
+  Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", true);
   Services.prefs.setBoolPref(
     "security.cert_pinning.process_headers_from_non_builtin_roots",
     true

@@ -213,6 +213,7 @@ class nsSiteSecurityService : public nsISiteSecurityService,
   uint64_t mMaxMaxAge;
   bool mUsePreloadList;
   int64_t mPreloadListTimeOffset;
+  bool mHPKPEnabled;
   bool mProcessPKPHeadersFromNonBuiltInRoots;
   RefPtr<mozilla::DataStorage> mSiteStateStorage;
   RefPtr<mozilla::DataStorage> mPreloadStateStorage;

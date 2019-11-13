@@ -49,6 +49,7 @@ const NON_ISSUED_KEY_HASH = "KHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN=";
 const PINNING_ROOT_KEY_HASH = "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=";
 
 function run_test() {
+  Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", true);
   Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 2);
 
   let stateFile = profileDir.clone();
@@ -145,6 +146,7 @@ function checkStateRead(aSubject, aTopic, aData) {
   }
 
   async_check_pins()
+    .then(checkHPKPDisabled)
     .then(function() {
       return new Promise((resolve, reject) => {
         do_timeout(1250, resolve);
@@ -409,6 +411,16 @@ async function async_check_pins() {
     certFromFile("b.preload.example.com-badca"),
     "b.preload.example.com"
   );
+}
+
+// Check that if HPKP is disabled, accumulated HPKP information isn't consulted.
+async function checkHPKPDisabled() {
+  Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", false);
+  await checkOK(
+    certFromFile("a.pinning2.example.com-badca"),
+    "a.pinning2.example.com"
+  );
+  Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", true);
 }
 
 async function checkExpiredState() {

@@ -17,7 +17,8 @@
 SimpleTest.waitForExplicitFinish();
 
 let gCurrentTestCase = -1;
-const HPKP_PREF = "security.cert_pinning.process_headers_from_non_builtin_roots";
+const HPKP_ENABLED_PREF = "security.cert_pinning.hpkp.enabled";
+const PROCESS_HPKP_FROM_NON_BUILTIN_ROOTS_PREF = "security.cert_pinning.process_headers_from_non_builtin_roots";
 
 // Static pins tested by unit/test_security-info-static-hpkp.js.
 const TEST_CASES = [
@@ -40,11 +41,11 @@ const TEST_CASES = [
 ];
 
 function startTest() {
-  // Need to enable this pref or pinning headers are rejected due test
-  // certificate.
-  Services.prefs.setBoolPref(HPKP_PREF, true);
+  Services.prefs.setBoolPref(HPKP_ENABLED_PREF, true);
+  Services.prefs.setBoolPref(PROCESS_HPKP_FROM_NON_BUILTIN_ROOTS_PREF, true);
   SimpleTest.registerCleanupFunction(() => {
-    Services.prefs.setBoolPref(HPKP_PREF, false);
+    Services.prefs.setBoolPref(HPKP_ENABLED_PREF, false);
+    Services.prefs.setBoolPref(PROCESS_HPKP_FROM_NON_BUILTIN_ROOTS_PREF, false);
 
     // Reset pinning state.
     let gSSService = Cc["@mozilla.org/ssservice;1"]
