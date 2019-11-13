@@ -5,7 +5,6 @@
 extern crate base64;
 extern crate byteorder;
 extern crate crossbeam_utils;
-extern crate lmdb;
 #[macro_use]
 extern crate log;
 extern crate moz_task;
@@ -22,20 +21,19 @@ extern crate tempfile;
 
 use byteorder::{NetworkEndian, ReadBytesExt, WriteBytesExt};
 use crossbeam_utils::atomic::AtomicCell;
-use lmdb::Error as LmdbError;
 use moz_task::{create_thread, is_main_thread, Task, TaskRunnable};
 use nserror::{
     nsresult, NS_ERROR_FAILURE, NS_ERROR_NOT_SAME_THREAD, NS_ERROR_NO_AGGREGATION,
     NS_ERROR_NULL_POINTER, NS_ERROR_UNEXPECTED, NS_OK,
 };
 use nsstring::{nsACString, nsAString, nsCStr, nsCString, nsString};
-use rkv::error::StoreError;
-use rkv::{migrate::Migrator, Rkv, SingleStore, StoreOptions, Value};
+use rkv::{StoreError, StoreOptions, Value};
+use rkv::backend::{SafeMode, SafeModeDatabase, SafeModeEnvironment, BackendEnvironmentBuilder};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::fmt::Display;
-use std::fs::{copy, create_dir_all, remove_file, File};
+use std::fs::{create_dir_all, remove_file, File};
 use std::io::{BufRead, BufReader};
 use std::mem::size_of;
 use std::os::raw::c_char;
@@ -45,7 +43,6 @@ use std::str;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, SystemTime};
 use storage_variant::VariantType;
-use tempfile::tempdir;
 use thin_vec::ThinVec;
 use xpcom::interfaces::{
     nsICRLiteState, nsICertInfo, nsICertStorage, nsICertStorageCallback, nsIFile,
@@ -60,6 +57,9 @@ const PREFIX_CRLITE: &str = "crlite";
 const PREFIX_SUBJECT: &str = "subject";
 const PREFIX_CERT: &str = "cert";
 const PREFIX_DATA_TYPE: &str = "datatype";
+
+type Rkv = rkv::Rkv<SafeModeEnvironment>;
+type SingleStore = rkv::SingleStore<SafeModeDatabase>;
 
 macro_rules! make_key {
     ( $prefix:expr, $( $part:expr ),+ ) => {
@@ -473,7 +473,7 @@ impl SecurityState {
             }
             match env_and_store.store.delete(&mut writer, &cert_key) {
                 Ok(()) => {}
-                Err(StoreError::LmdbError(lmdb::Error::NotFound)) => {}
+                Err(StoreError::KeyValuePairNotFound) => {}
                 Err(e) => return Err(SecurityStateError::from(e)),
             };
         }
@@ -740,21 +740,12 @@ fn get_store_path(profile_path: &PathBuf) -> Result<PathBuf, SecurityStateError>
 }
 
 fn make_env(path: &Path) -> Result<Rkv, SecurityStateError> {
-    let mut builder = Rkv::environment_builder();
+    let mut builder = Rkv::environment_builder::<SafeMode>();
     builder.set_max_dbs(2);
     builder.set_map_size(16777216); // 16MB
-    match Rkv::from_env(path, builder) {
-        Ok(env) => Ok(env),
-        Err(StoreError::LmdbError(LmdbError::Invalid)) => {
-            let temp_env = tempdir()?;
-            let mut migrator = Migrator::new(&path)?;
-            migrator.migrate(temp_env.path())?;
-            copy(temp_env.path().join("data.mdb"), path.join("data.mdb"))?;
-            copy(temp_env.path().join("lock.mdb"), path.join("lock.mdb"))?;
-            Rkv::from_env(path, builder)
-        },
-        Err(err) => Err(err),
-    }.map_err(SecurityStateError::from)
+    // Bug 1595004: Migrate databases between backends in the future,
+    // and handle 32 and 64 bit architectures in case of LMDB.
+    Rkv::from_builder(path, builder).map_err(SecurityStateError::from)
 }
 
 fn unconditionally_remove_file(path: &Path) -> Result<(), SecurityStateError> {
