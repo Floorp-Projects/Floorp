@@ -346,6 +346,12 @@ class EventTargetChainItem {
     if (mManager) {
       NS_ASSERTION(aVisitor.mEvent->mCurrentTarget == nullptr,
                    "CurrentTarget should be null!");
+
+      if (aVisitor.mEvent->mMessage == eMouseClick) {
+        aVisitor.mEvent->mFlags.mHadNonPrivilegedClickListeners =
+            aVisitor.mEvent->mFlags.mHadNonPrivilegedClickListeners ||
+            mManager->HasNonPrivilegedClickListeners();
+      }
       mManager->HandleEvent(aVisitor.mPresContext, aVisitor.mEvent,
                             &aVisitor.mDOMEvent, CurrentTarget(),
                             &aVisitor.mEventStatus, IsItemInShadowTree());

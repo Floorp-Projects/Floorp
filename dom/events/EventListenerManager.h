@@ -157,7 +157,9 @@ class EventListenerManagerBase {
   uint16_t mMayHaveSelectionChangeEventListener : 1;
   uint16_t mClearingListeners : 1;
   uint16_t mIsMainThreadELM : 1;
-  // uint16_t mUnused : 4;
+  uint16_t mHasNonPrivilegedClickListeners : 1;
+  uint16_t mUnknownNonPrivilegedClickListeners : 1;
+  // uint16_t mUnused : 2;
 };
 
 /*
@@ -426,6 +428,8 @@ class EventListenerManager final : public EventListenerManagerBase {
     return mMayHaveSelectionChangeEventListener;
   }
 
+  bool HasNonPrivilegedClickListeners();
+
   /**
    * Returns true if there may be a key event listener (keydown, keypress,
    * or keyup) registered, or false if there definitely isn't.
@@ -458,6 +462,8 @@ class EventListenerManager final : public EventListenerManagerBase {
   bool IsApzAwareListener(Listener* aListener);
   bool IsApzAwareEvent(nsAtom* aEvent);
 
+  // Return true if aListener is a non-chrome-privileged click event listner
+  bool IsNonChromeClickListener(Listener* aListener);
   /**
    * Remove all event listeners from the event target this EventListenerManager
    * is for.
