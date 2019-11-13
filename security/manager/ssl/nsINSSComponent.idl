@@ -64,7 +64,7 @@ interface nsINSSComponent : nsISupports {
    * thread. When any code that depends on the builtin roots module runs, it
    * must first wait for the module to be loaded.
    */
-  [noscript] void blockUntilLoadableRootsLoaded();
+  [noscript] void blockUntilLoadableCertsLoaded();
 
   /**
    * In theory a token on a PKCS#11 module can be inserted or removed at any

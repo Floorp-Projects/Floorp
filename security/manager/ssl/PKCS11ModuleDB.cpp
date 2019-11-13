@@ -83,7 +83,7 @@ PKCS11ModuleDB::AddModule(const nsAString& aModuleName,
 
   // There appears to be a deadlock if we try to load modules concurrently, so
   // just wait until the loadable roots module has been loaded.
-  nsresult rv = BlockUntilLoadableRootsLoaded();
+  nsresult rv = BlockUntilLoadableCertsLoaded();
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -110,7 +110,7 @@ NS_IMETHODIMP
 PKCS11ModuleDB::ListModules(nsISimpleEnumerator** _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
 
-  nsresult rv = BlockUntilLoadableRootsLoaded();
+  nsresult rv = BlockUntilLoadableCertsLoaded();
   if (NS_FAILED(rv)) {
     return rv;
   }

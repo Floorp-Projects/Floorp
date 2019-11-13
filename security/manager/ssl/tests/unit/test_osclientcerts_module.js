@@ -8,16 +8,20 @@
 // Ensure that the appropriate initialization has happened.
 do_get_profile();
 
-function run_test() {
-  // Check that if we have never added the osclientcerts module, that we don't
-  // find it in the module list.
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
+
+add_task(async function run_test() {
+  // Check that if we haven't loaded the osclientcerts module, we don't find it
+  // in the module list.
   checkPKCS11ModuleNotPresent("OS Client Cert Module", "osclientcerts");
 
-  // Check that adding the osclientcerts module makes it appear in the module
-  // list.
-  let libraryFile = Services.dirsvc.get("GreBinD", Ci.nsIFile);
-  libraryFile.append(ctypes.libraryName("osclientcerts"));
-  loadPKCS11Module(libraryFile, "OS Client Cert Module", true);
+  // Check that enabling the pref that loads the osclientcerts module makes it
+  // appear in the module list.
+  Services.prefs.setBoolPref("security.osclientcerts.autoload", true);
+  // Loading happens asynchronously, so we have to wait for the notification.
+  await TestUtils.topicObserved("psm:load-os-client-certs-module-task-ran");
   let testModule = checkPKCS11ModuleExists(
     "OS Client Cert Module",
     "osclientcerts"
@@ -36,11 +40,8 @@ function run_test() {
     "Actual and expected slot names should be equal"
   );
 
-  // Check that deleting the osclientcerts module makes it disappear from the
-  // module list.
-  let pkcs11ModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(
-    Ci.nsIPKCS11ModuleDB
-  );
-  pkcs11ModuleDB.deleteModule("OS Client Cert Module");
+  // Check that disabling the pref that loads the osclientcerts module (thus
+  // unloading the module) makes it disappear from the module list.
+  Services.prefs.setBoolPref("security.osclientcerts.autoload", false);
   checkPKCS11ModuleNotPresent("OS Client Cert Module", "osclientcerts");
-}
+});
