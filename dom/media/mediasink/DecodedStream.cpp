@@ -363,7 +363,8 @@ void DecodedStreamData::GetDebugInfo(dom::DecodedStreamDataDebugInfo& aInfo) {
 
 DecodedStream::DecodedStream(
     MediaDecoderStateMachine* aStateMachine,
-    nsTArray<RefPtr<ProcessedMediaTrack>> aOutputTracks,
+    nsTArray<RefPtr<ProcessedMediaTrack>> aOutputTracks, double aVolume,
+    double aPlaybackRate, bool aPreservesPitch,
     MediaQueue<AudioData>& aAudioQueue, MediaQueue<VideoData>& aVideoQueue)
     : mOwnerThread(aStateMachine->OwnerThread()),
       mWatchManager(this, mOwnerThread),
@@ -371,6 +372,9 @@ DecodedStream::DecodedStream(
       mPrincipalHandle(aStateMachine->OwnerThread(), PRINCIPAL_HANDLE_NONE,
                        "DecodedStream::mPrincipalHandle (Mirror)"),
       mOutputTracks(std::move(aOutputTracks)),
+      mVolume(aVolume),
+      mPlaybackRate(aPlaybackRate),
+      mPreservesPitch(aPreservesPitch),
       mAudioQueue(aAudioQueue),
       mVideoQueue(aVideoQueue) {
   mPrincipalHandle.Connect(aStateMachine->CanonicalOutputPrincipal());
@@ -380,16 +384,6 @@ DecodedStream::DecodedStream(
 
 DecodedStream::~DecodedStream() {
   MOZ_ASSERT(mStartTime.isNothing(), "playback should've ended.");
-}
-
-const MediaSink::PlaybackParams& DecodedStream::GetPlaybackParams() const {
-  AssertOwnerThread();
-  return mParams;
-}
-
-void DecodedStream::SetPlaybackParams(const PlaybackParams& aParams) {
-  AssertOwnerThread();
-  mParams = aParams;
 }
 
 RefPtr<DecodedStream::EndedPromise> DecodedStream::OnEnded(TrackType aType) {
@@ -549,17 +543,22 @@ void DecodedStream::SetPlaying(bool aPlaying) {
 
 void DecodedStream::SetVolume(double aVolume) {
   AssertOwnerThread();
-  mParams.mVolume = aVolume;
+  mVolume = aVolume;
 }
 
 void DecodedStream::SetPlaybackRate(double aPlaybackRate) {
   AssertOwnerThread();
-  mParams.mPlaybackRate = aPlaybackRate;
+  mPlaybackRate = aPlaybackRate;
 }
 
 void DecodedStream::SetPreservesPitch(bool aPreservesPitch) {
   AssertOwnerThread();
-  mParams.mPreservesPitch = aPreservesPitch;
+  mPreservesPitch = aPreservesPitch;
+}
+
+double DecodedStream::PlaybackRate() const {
+  AssertOwnerThread();
+  return mPlaybackRate;
 }
 
 static void SendStreamAudio(DecodedStreamData* aStream,
@@ -849,7 +848,7 @@ void DecodedStream::SendData() {
     return;
   }
 
-  SendAudio(mParams.mVolume, mPrincipalHandle);
+  SendAudio(mVolume, mPrincipalHandle);
   SendVideo(mPrincipalHandle);
 }
 
