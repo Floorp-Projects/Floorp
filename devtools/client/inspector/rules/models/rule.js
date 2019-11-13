@@ -77,9 +77,16 @@ class Rule {
     this.getUniqueSelector = this.getUniqueSelector.bind(this);
     this.onDeclarationsUpdated = this.onDeclarationsUpdated.bind(this);
     this.onLocationChanged = this.onLocationChanged.bind(this);
+    this.onStyleRuleFrontUpdated = this.onStyleRuleFrontUpdated.bind(this);
     this.updateSourceLocation = this.updateSourceLocation.bind(this);
 
-    this.domRule.on("declarations-updated", this.onDeclarationsUpdated);
+    // Added in Firefox 72 for backwards compatibility of initial fix for Bug 1557689.
+    // See follow-up fix in Bug 1593944.
+    if (this.domRule.traits.emitsRuleUpdatedEvent) {
+      this.domRule.on("rule-updated", this.onStyleRuleFrontUpdated);
+    } else {
+      this.domRule.on("declarations-updated", this.onDeclarationsUpdated);
+    }
   }
 
   destroy() {
@@ -87,7 +94,13 @@ class Rule {
       this.unsubscribeSourceMap();
     }
 
-    this.domRule.off("declarations-updated", this.onDeclarationsUpdated);
+    // Added in Firefox 72
+    if (this.domRule.traits.emitsRuleUpdatedEvent) {
+      this.domRule.off("rule-updated", this.onStyleRuleFrontUpdated);
+    } else {
+      this.domRule.off("declarations-updated", this.onDeclarationsUpdated);
+    }
+
     this.domRule.off("location-changed", this.onLocationChanged);
   }
 
@@ -577,6 +590,22 @@ class Rule {
   }
 
   /**
+   * Event handler for "rule-updated" event fired by StyleRuleActor.
+   *
+   * @param {StyleRuleFront} front
+   */
+  onStyleRuleFrontUpdated(front) {
+    // Overwritting this reference is not required, but it's here to avoid confusion.
+    // Whenever an actor is passed over the protocol, either as a return value or as
+    // payload on an event, the `form` of its corresponding front will be automatically
+    // updated. No action required.
+    // Even if this `domRule` reference here is not explicitly updated, lookups of
+    // `this.domRule.declarations` will point to the latest state of declarations set
+    // on the actor. Everything on `StyleRuleForm.form` will point to the latest state.
+    this.domRule = front;
+  }
+
+  /**
    * Get the list of TextProperties from the style. Needs
    * to parse the style's authoredText.
    */
@@ -856,6 +885,8 @@ class Rule {
   }
 
   /**
+   * TODO: Remove after Firefox 75. Keep until then for backwards-compatibility for Bug
+   * 1557689 which has an updated fix from Bug 1593944.
    * Handler for "declarations-updated" events fired from the StyleRuleActor for a
    * CSS rule when the status of any of its CSS declarations change.
    *
