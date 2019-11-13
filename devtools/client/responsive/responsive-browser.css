@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- #appcontent[devtoolstheme="light"] {
+#appcontent[devtoolstheme="light"] {
   --rdm-browser-container-background: #F5F5F6;
   --rdm-browser-box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
 }
@@ -25,6 +25,7 @@
 
 .browserContainer.responsive-mode .browserStack.device-modal-opened > .rdm-toolbar {
   height: 100%;
+  z-index: 1;
 }
 
 .browserContainer.responsive-mode > .browserStack {
@@ -32,9 +33,7 @@
   min-height: 0;
   min-width: 0;
   overflow: auto;
-
-  /* This could go post https://bugzilla.mozilla.org/show_bug.cgi?id=1576946 */
-  display: grid;
+  justify-items: center;
 }
 
 .browserContainer.responsive-mode > .browserStack.device-modal-opened {
@@ -42,9 +41,6 @@
 }
 
 .browserContainer.responsive-mode > .browserStack > * {
-  justify-self: center;
-  /* This could go post https://bugzilla.mozilla.org/show_bug.cgi?id=1576946 */
-  grid-area: 1 / 1;
   height: var(--rdm-height);
   width: var(--rdm-width);
 }
@@ -53,8 +49,8 @@
   margin-top: 65px;
 }
 
-.browserContainer.responsive-mode.left-aligned > .browserStack > * {
-  justify-self: left;
+.browserContainer.responsive-mode.left-aligned > .browserStack {
+  justify-items: left;
 }
 
 .browserContainer.responsive-mode.left-aligned > .browserStack > *:not(.rdm-toolbar) {
