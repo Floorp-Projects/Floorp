@@ -665,6 +665,9 @@ void AudioContext::UnregisterActiveNode(AudioNode* aNode) {
 }
 
 uint32_t AudioContext::MaxChannelCount() const {
+  if (nsRFPService::IsResistFingerprintingEnabled()) {
+    return 2;
+  }
   return std::min<uint32_t>(
       WebAudioUtils::MaxChannelCount,
       mIsOffline ? mNumberOfChannels : CubebUtils::MaxNumberOfChannels());
