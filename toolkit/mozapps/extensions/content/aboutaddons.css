@@ -442,6 +442,10 @@ addon-details {
   background-image: url("chrome://global/skin/icons/more.svg");
   background-repeat: no-repeat;
   background-position: center center;
+  /* Get the -badged ::after element in the right spot. */
+  padding: 1px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .more-options-button-badged::after {
@@ -451,16 +455,6 @@ addon-details {
   height: 5px;
   border-radius: 50%;
   background: var(--blue-50);
-  position: absolute;
-  top: 0;
-}
-
-.more-options-button-badged:-moz-locale-dir(ltr)::after {
-  right: 0;
-}
-
-.more-options-button-badged:-moz-locale-dir(rtl)::after {
-  left: 0;
 }
 
 panel-item {

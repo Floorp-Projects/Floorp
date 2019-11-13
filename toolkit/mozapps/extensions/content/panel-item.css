@@ -47,7 +47,7 @@ button:dir(rtl) {
   background: var(--blue-50);
   position: absolute;
   top: 4px;
-  left: 28px;
+  inset-inline-start: 28px;
 }
 
 button:focus,
