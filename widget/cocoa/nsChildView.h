@@ -705,9 +705,6 @@ class nsChildView final : public nsBaseWidget {
   // Always null if StaticPrefs::gfx_core_animation_enabled_AtStartup() is false.
   RefPtr<mozilla::layers::NativeLayerCA> mContentLayer;
 
-  // In BasicLayers mode, this is the invalid region of mContentLayer.
-  LayoutDeviceIntRegion mContentLayerInvalidRegion;
-
   mozilla::UniquePtr<mozilla::VibrancyManager> mVibrancyManager;
   RefPtr<mozilla::SwipeTracker> mSwipeTracker;
   mozilla::UniquePtr<mozilla::SwipeEventQueue> mSwipeEventQueue;

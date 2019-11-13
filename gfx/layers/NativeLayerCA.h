@@ -34,6 +34,17 @@ class MozFramebuffer;
 
 namespace layers {
 
+class IOSurfaceRegistry {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(IOSurfaceRegistry)
+
+  virtual void RegisterSurface(CFTypeRefPtr<IOSurfaceRef> aSurface) = 0;
+  virtual void UnregisterSurface(CFTypeRefPtr<IOSurfaceRef> aSurface) = 0;
+
+ protected:
+  virtual ~IOSurfaceRegistry() {}
+};
+
 // NativeLayerRootCA is the CoreAnimation implementation of the NativeLayerRoot
 // interface. A NativeLayerRootCA is created by the widget around an existing
 // CALayer with a call to CreateForCALayer.
@@ -52,8 +63,7 @@ class NativeLayerRootCA : public NativeLayerRoot {
   void SetBackingScale(float aBackingScale);
 
   // Overridden methods
-  already_AddRefed<NativeLayer> CreateLayer(const gfx::IntSize& aSize,
-                                            bool aIsOpaque) override;
+  already_AddRefed<NativeLayer> CreateLayer() override;
   void AppendLayer(NativeLayer* aLayer) override;
   void RemoveLayer(NativeLayer* aLayer) override;
   void SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) override;
@@ -80,38 +90,62 @@ class NativeLayerRootCA : public NativeLayerRoot {
 // finished, NotifySurfaceReady marks the surface as ready. This surface is
 // committed to the layer during the next call to ApplyChanges().
 // The swap chain keeps track of invalid areas within the surfaces.
+//
+// Creation and destruction of IOSurface objects is broadcast to an optional
+// "surface registry" so that associated objects such as framebuffer objects
+// don't need to be recreated on every frame: Instead, the surface registry can
+// maintain one object per IOSurface in this layer's swap chain, and those
+// objects will be reused in different frames as the layer cycles through the
+// surfaces in its swap chain.
 class NativeLayerCA : public NativeLayer {
  public:
   virtual NativeLayerCA* AsNativeLayerCA() override { return this; }
 
   // Overridden methods
-  gfx::IntSize GetSize() override;
-  void SetPosition(const gfx::IntPoint& aPosition) override;
-  gfx::IntPoint GetPosition() override;
+  void SetRect(const gfx::IntRect& aRect) override;
   gfx::IntRect GetRect() override;
+  void InvalidateRegionThroughoutSwapchain(
+      const gfx::IntRegion& aRegion) override;
   RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
-      const gfx::IntRegion& aUpdateRegion,
       gfx::BackendType aBackendType) override;
   void SetGLContext(gl::GLContext* aGLContext) override;
   gl::GLContext* GetGLContext() override;
-  Maybe<GLuint> NextSurfaceAsFramebuffer(const gfx::IntRegion& aUpdateRegion,
-                                         bool aNeedsDepth) override;
+  Maybe<GLuint> NextSurfaceAsFramebuffer(bool aNeedsDepth) override;
   gfx::IntRegion CurrentSurfaceInvalidRegion() override;
   void NotifySurfaceReady() override;
+  void SetIsOpaque(bool aIsOpaque) override;
   bool IsOpaque() override;
   void SetClipRect(const Maybe<gfx::IntRect>& aClipRect) override;
   Maybe<gfx::IntRect> ClipRect() override;
   void SetSurfaceIsFlipped(bool aIsFlipped) override;
   bool SurfaceIsFlipped() override;
 
+  // Consumers may provide an object that implements the IOSurfaceRegistry
+  // interface.
+  // The registry's methods, Register/UnregisterSurface, will be called
+  // synchronously during calls to NextSurface(), SetSurfaceRegistry(), and the
+  // NativeLayer destructor, on the thread that those things happen to run on.
+  // If this layer already owns surfaces when SetSurfaceRegistry gets called
+  // with a non-null surface registry, those surfaces will immediately
+  // (synchronously) be registered with that registry. If the current surface
+  // registry is unset (via a call to SetSurfaceRegistry with a different value,
+  // such as null), and the NativeLayer still owns surfaces, then those surfaces
+  // will immediately be unregistered.
+  // Since NativeLayer objects are reference counted and can be used from
+  // different threads, it is recommended to call SetSurfaceRegistry(nullptr)
+  // before destroying the NativeLayer so that the UnregisterSurface calls
+  // happen at a deterministic time and on the right thread.
+  void SetSurfaceRegistry(RefPtr<IOSurfaceRegistry> aSurfaceRegistry);
+  RefPtr<IOSurfaceRegistry> GetSurfaceRegistry();
+
  protected:
   friend class NativeLayerRootCA;
 
-  NativeLayerCA(const gfx::IntSize& aSize, bool aIsOpaque);
+  NativeLayerCA();
   ~NativeLayerCA() override;
 
   // Returns an IOSurface that can be drawn to. The size of the IOSurface will
-  // be the same as the size of this layer.
+  // be the size of the rect that has been passed to SetRect.
   // The returned surface is guaranteed to be not in use by the window server.
   // After a call to NextSurface, NextSurface must not be called again until
   // after NotifySurfaceReady has been called. Can be called on any thread. When
@@ -125,11 +159,6 @@ class NativeLayerCA : public NativeLayer {
   void ApplyChanges();
   void SetBackingScale(float aBackingScale);
 
-  // Invalidates the specified region in all surfaces that are tracked by this
-  // layer.
-  void InvalidateRegionThroughoutSwapchain(const MutexAutoLock&,
-                                           const gfx::IntRegion& aRegion);
-
   GLuint GetOrCreateFramebufferForSurface(const MutexAutoLock&,
                                           CFTypeRefPtr<IOSurfaceRef> aSurface,
                                           bool aNeedsDepth);
@@ -137,6 +166,7 @@ class NativeLayerCA : public NativeLayer {
   struct SurfaceWithInvalidRegion {
     CFTypeRefPtr<IOSurfaceRef> mSurface;
     gfx::IntRegion mInvalidRegion;
+    gfx::IntSize mSize;
   };
 
   std::vector<SurfaceWithInvalidRegion> RemoveExcessUnusedSurfaces(
@@ -145,12 +175,16 @@ class NativeLayerCA : public NativeLayer {
   // Controls access to all fields of this class.
   Mutex mMutex;
 
+  RefPtr<IOSurfaceRegistry> mSurfaceRegistry;  // can be null
+
   // Each IOSurface is initially created inside NextSurface.
   // The surface stays alive until the recycling mechanism in NextSurface
-  // determines it is no longer needed (because the swap chain has grown too
-  // long) or until the layer is destroyed. During the surface's lifetime, it
-  // will continuously move through the fields mInProgressSurface,
-  // mReadySurface, and back to front through the mSurfaces queue:
+  // determines it is no longer needed, for example because the layer size
+  // changed or because the swap chain has grown too long, or until the layer
+  // is destroyed.
+  // During the surface's lifetime, it will continuously move through the fields
+  // mInProgressSurface, mReadySurface, and back to front through the
+  // mSurfaces queue:
   //
   //  mSurfaces.front()
   //  ------[NextSurface()]-----> mInProgressSurface
@@ -217,7 +251,7 @@ class NativeLayerCA : public NativeLayer {
       mFramebuffers;
 
   gfx::IntPoint mPosition;
-  const gfx::IntSize mSize;
+  gfx::IntSize mSize;
   Maybe<gfx::IntRect> mClipRect;
 
   // Lazily initialized by first call to ApplyChanges. mWrappingLayer is the
@@ -229,10 +263,10 @@ class NativeLayerCA : public NativeLayer {
 
   float mBackingScale = 1.0f;
   bool mSurfaceIsFlipped = false;
-  const bool mIsOpaque = false;
-  bool mMutatedBackingScale = false;
-  bool mMutatedSurfaceIsFlipped = false;
+  bool mIsOpaque = false;
   bool mMutatedPosition = false;
+  bool mMutatedSize = false;
+  bool mMutatedIsOpaque = false;
   bool mMutatedClipRect = false;
 };
 

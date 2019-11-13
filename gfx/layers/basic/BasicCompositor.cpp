@@ -1034,8 +1034,9 @@ Maybe<gfx::IntRect> BasicCompositor::BeginRenderingToNativeLayer(
   RefPtr<CompositingRenderTarget> target;
   aNativeLayer->SetSurfaceIsFlipped(false);
   IntRegion invalidRelativeToLayer = mInvalidRegion.MovedBy(-rect.TopLeft());
-  RefPtr<DrawTarget> dt = aNativeLayer->NextSurfaceAsDrawTarget(
-      invalidRelativeToLayer, BackendType::SKIA);
+  aNativeLayer->InvalidateRegionThroughoutSwapchain(invalidRelativeToLayer);
+  RefPtr<DrawTarget> dt =
+      aNativeLayer->NextSurfaceAsDrawTarget(BackendType::SKIA);
   if (!dt) {
     return Nothing();
   }
