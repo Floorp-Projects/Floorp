@@ -116,7 +116,13 @@ add_task(function test_initialize() {
   let uniqueNumber = 1;
   for (let loginModifications of StatisticsTestData) {
     loginModifications.origin = `http://${uniqueNumber++}.example.com`;
-    Services.logins.addLogin(TestData.formLogin(loginModifications));
+    let login;
+    if (typeof loginModifications.httpRealm != "undefined") {
+      login = TestData.authLogin(loginModifications);
+    } else {
+      login = TestData.formLogin(loginModifications);
+    }
+    Services.logins.addLogin(login);
   }
 });
 

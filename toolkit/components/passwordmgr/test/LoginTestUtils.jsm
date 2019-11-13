@@ -147,6 +147,9 @@ this.LoginTestUtils.testData = {
     loginInfo.QueryInterface(Ci.nsILoginMetaInfo);
     if (modifications) {
       for (let [name, value] of Object.entries(modifications)) {
+        if (name == "httpRealm" && value !== null) {
+          throw new Error("httpRealm not supported for form logins");
+        }
         loginInfo[name] = value;
       }
     }
@@ -171,6 +174,11 @@ this.LoginTestUtils.testData = {
     loginInfo.QueryInterface(Ci.nsILoginMetaInfo);
     if (modifications) {
       for (let [name, value] of Object.entries(modifications)) {
+        if (name == "formActionOrigin" && value !== null) {
+          throw new Error(
+            "formActionOrigin not supported for HTTP auth. logins"
+          );
+        }
         loginInfo[name] = value;
       }
     }

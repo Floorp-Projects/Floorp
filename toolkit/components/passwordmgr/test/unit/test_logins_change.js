@@ -130,33 +130,29 @@ add_task(function test_invalid_httpRealm_formActionOrigin() {
   );
 
   // httpRealm === null, formActionOrigin === ""
-  // This is not enforced for now.
+  // TODO: This is not enforced for now.
   // checkLoginInvalid(TestData.formLogin({ formActionOrigin: "" }),
   //                   /without a httpRealm or formActionOrigin/);
 
   // httpRealm === "", formActionOrigin === ""
-  checkLoginInvalid(
-    TestData.formLogin({ formActionOrigin: "", httpRealm: "" }),
-    /both a httpRealm and formActionOrigin/
-  );
+  let login = TestData.formLogin({ formActionOrigin: "" });
+  login.httpRealm = "";
+  checkLoginInvalid(login, /both a httpRealm and formActionOrigin/);
 
   // !!httpRealm, !!formActionOrigin
-  checkLoginInvalid(
-    TestData.formLogin({ httpRealm: "The HTTP Realm" }),
-    /both a httpRealm and formActionOrigin/
-  );
+  login = TestData.formLogin();
+  login.httpRealm = "The HTTP Realm";
+  checkLoginInvalid(login, /both a httpRealm and formActionOrigin/);
 
   // httpRealm === "", !!formActionOrigin
-  checkLoginInvalid(
-    TestData.formLogin({ httpRealm: "" }),
-    /both a httpRealm and formActionOrigin/
-  );
+  login = TestData.formLogin();
+  login.httpRealm = "";
+  checkLoginInvalid(login, /both a httpRealm and formActionOrigin/);
 
   // !!httpRealm, formActionOrigin === ""
-  checkLoginInvalid(
-    TestData.authLogin({ formActionOrigin: "" }),
-    /both a httpRealm and formActionOrigin/
-  );
+  login = TestData.authLogin();
+  login.formActionOrigin = "";
+  checkLoginInvalid(login, /both a httpRealm and formActionOrigin/);
 });
 
 /**
