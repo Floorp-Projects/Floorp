@@ -390,7 +390,7 @@ void MediaDecoder::Shutdown() {
     nsCOMPtr<nsIRunnable> r =
         NS_NewRunnableFunction("MediaDecoder::Shutdown", [self]() {
           self->mVideoFrameContainer = nullptr;
-          MediaShutdownManager::Instance().Unregister(self);
+          self->ShutdownInternal();
         });
     mAbstractMainThread->Dispatch(r.forget());
   }
@@ -531,11 +531,16 @@ void MediaDecoder::OnStoreDecoderBenchmark(const VideoInfo& aInfo) {
   }
 }
 
+void MediaDecoder::ShutdownInternal() {
+  MOZ_ASSERT(NS_IsMainThread());
+  MediaShutdownManager::Instance().Unregister(this);
+}
+
 void MediaDecoder::FinishShutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   SetStateMachine(nullptr);
   mVideoFrameContainer = nullptr;
-  MediaShutdownManager::Instance().Unregister(this);
+  ShutdownInternal();
 }
 
 nsresult MediaDecoder::InitializeStateMachine() {

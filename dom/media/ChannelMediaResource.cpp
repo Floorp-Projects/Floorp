@@ -589,15 +589,15 @@ nsresult ChannelMediaResource::SetupChannelHeaders(int64_t aOffset) {
   return NS_OK;
 }
 
-nsresult ChannelMediaResource::Close() {
+RefPtr<GenericPromise> ChannelMediaResource::Close() {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   if (!mClosed) {
     CloseChannel();
-    mCacheStream.Close();
     mClosed = true;
+    return mCacheStream.Close();
   }
-  return NS_OK;
+  return GenericPromise::CreateAndResolve(true, __func__);
 }
 
 already_AddRefed<nsIPrincipal> ChannelMediaResource::GetCurrentPrincipal() {
