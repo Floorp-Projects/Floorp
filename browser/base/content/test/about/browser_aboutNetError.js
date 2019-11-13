@@ -7,12 +7,44 @@ const SSL3_PAGE = "https://ssl3.example.com/";
 const TLS10_PAGE = "https://tls1.example.com/";
 const TLS12_PAGE = "https://tls12.example.com/";
 
+// This includes all the cipher suite prefs we have.
+const CIPHER_SUITE_PREFS = [
+  "security.ssl3.dhe_rsa_aes_128_sha",
+  "security.ssl3.dhe_rsa_aes_256_sha",
+  "security.ssl3.ecdhe_ecdsa_aes_128_gcm_sha256",
+  "security.ssl3.ecdhe_ecdsa_aes_128_sha",
+  "security.ssl3.ecdhe_ecdsa_aes_256_gcm_sha384",
+  "security.ssl3.ecdhe_ecdsa_aes_256_sha",
+  "security.ssl3.ecdhe_ecdsa_chacha20_poly1305_sha256",
+  "security.ssl3.ecdhe_rsa_aes_128_gcm_sha256",
+  "security.ssl3.ecdhe_rsa_aes_128_sha",
+  "security.ssl3.ecdhe_rsa_aes_256_gcm_sha384",
+  "security.ssl3.ecdhe_rsa_aes_256_sha",
+  "security.ssl3.ecdhe_rsa_chacha20_poly1305_sha256",
+  "security.ssl3.rsa_aes_128_sha",
+  "security.ssl3.rsa_aes_256_sha",
+  "security.ssl3.rsa_des_ede3_sha",
+];
+
+function resetPrefs() {
+  Services.prefs.clearUserPref("security.tls.version.min");
+  Services.prefs.clearUserPref("security.tls.version.max");
+  Services.prefs.clearUserPref("security.tls.version.enable-deprecated");
+}
+
 add_task(async function resetToDefaultConfig() {
   info(
     "Change TLS config to cause page load to fail, check that reset button is shown and that it works"
   );
 
-  // Set ourselves up for TLS error
+  // Just twiddling version will trigger the TLS 1.0 offer.  So to test the
+  // broader UX, disable all cipher suites to trigger SSL_ERROR_SSL_DISABLED.
+  // This can be removed when security.tls.version.enable-deprecated is.
+  CIPHER_SUITE_PREFS.forEach(suitePref => {
+    Services.prefs.setBoolPref(suitePref, false);
+  });
+
+  // Set ourselves up for a TLS error.
   Services.prefs.setIntPref("security.tls.version.min", 1); // TLS 1.0
   Services.prefs.setIntPref("security.tls.version.max", 1);
 
@@ -58,11 +90,13 @@ add_task(async function resetToDefaultConfig() {
     prefResetButton.click();
   });
 
-  info("Waiting for the TLS 1.2 page to load after the click");
+  info("Waiting for the page to load after the click");
   await finalLoadComplete;
 
-  Services.prefs.clearUserPref("security.tls.version.min");
-  Services.prefs.clearUserPref("security.tls.version.max");
+  CIPHER_SUITE_PREFS.forEach(suitePref => {
+    Services.prefs.clearUserPref(suitePref);
+  });
+  resetPrefs();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
@@ -105,8 +139,7 @@ add_task(async function checkLearnMoreLink() {
     is(learnMoreLink.getAttribute("href"), _baseURL + "connection-not-secure");
   });
 
-  Services.prefs.clearUserPref("security.tls.version.min");
-  Services.prefs.clearUserPref("security.tls.version.max");
+  resetPrefs();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
@@ -168,9 +201,7 @@ add_task(async function checkEnable10() {
   info("Waiting for the TLS 1.0 page to load after the click");
   await finalLoadComplete;
 
-  Services.prefs.clearUserPref("security.tls.version.min");
-  Services.prefs.clearUserPref("security.tls.version.max");
-  Services.prefs.clearUserPref("security.tls.version.enable-deprecated");
+  resetPrefs();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
@@ -217,8 +248,6 @@ add_task(async function dontOffer10WhenAlreadyEnabled() {
     );
   });
 
-  Services.prefs.clearUserPref("security.tls.version.min");
-  Services.prefs.clearUserPref("security.tls.version.max");
-  Services.prefs.clearUserPref("security.tls.version.enable-deprecated");
+  resetPrefs();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
