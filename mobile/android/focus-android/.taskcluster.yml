@@ -15,7 +15,7 @@ tasks:
     then:
       created: {$fromNow: ''}
       deadline: {$fromNow: '2 hours'}
-      schedulerId: mobile-level-1
+      schedulerId: taskcluster-github
       provisionerId: mobile-1
       workerType: b-linux
       scopes: []
@@ -67,7 +67,7 @@ tasks:
         taskGroupId: {$eval: as_slugid("decision_task")}
         created: {$fromNow: ''}
         deadline: {$fromNow: '2 hours'}
-        schedulerId: mobile-level-3
+        schedulerId: taskcluster-github
         provisionerId: mobile-3
         workerType: b-linux
         routes:
@@ -125,7 +125,7 @@ tasks:
         decision_task_id: {$eval: as_slugid("decision_task")}
         expires_in: {$fromNow: '1 year'}
         repository: https://github.com/mozilla-mobile/focus-android
-        scheduler_id: mobile-level-3
+        scheduler_id: taskcluster-github
       in:
         taskId: ${decision_task_id}
         taskGroupId: ${decision_task_id}  # Must be explicit because of Chain of Trust
@@ -200,7 +200,7 @@ tasks:
         decision_task_id: {$eval: as_slugid("decision_task")}
         expires_in: {$fromNow: '1 year'}
         repository: https://github.com/mozilla-mobile/focus-android
-        scheduler_id: mobile-level-3
+        scheduler_id: taskcluster-github
       in:
         taskId: ${decision_task_id}
         taskGroupId: ${decision_task_id}  # Must be explicit because of Chain of Trust
