@@ -1917,17 +1917,6 @@ void HTMLMediaElement::AbortExistingLoads() {
     mFirstFrameListener = nullptr;
   }
 
-  // When aborting the existing loads, empty the objects in audio track list and
-  // video track list, no events (in particular, no removetrack events) are
-  // fired as part of this. Ending MediaTrack sends track ended notifications,
-  // so we empty the track lists prior.
-  if (AudioTracks()) {
-    AudioTracks()->EmptyTracks();
-  }
-  if (VideoTracks()) {
-    VideoTracks()->EmptyTracks();
-  }
-
   if (mDecoder) {
     fireTimeUpdate = mDecoder->GetCurrentTime() != 0.0;
     ShutdownDecoder();
@@ -1979,6 +1968,7 @@ void HTMLMediaElement::AbortExistingLoads() {
       RejectPromises(TakePendingPlayPromises(), NS_ERROR_DOM_MEDIA_ABORT_ERR);
     }
     ChangeNetworkState(NETWORK_EMPTY);
+    RemoveMediaTracks();
     ChangeReadyState(HAVE_NOTHING);
 
     // TODO: Apply the rules for text track cue rendering Bug 865407
@@ -2026,6 +2016,7 @@ void HTMLMediaElement::NoSupportedMediaSourceError(
     ShutdownDecoder();
   }
   mErrorSink->SetError(MEDIA_ERR_SRC_NOT_SUPPORTED, aErrorDetails);
+  RemoveMediaTracks();
   ChangeDelayLoadStatus(false);
   UpdateAudioChannelPlayingState();
   RejectPromises(TakePendingPlayPromises(),
@@ -2470,6 +2461,8 @@ void HTMLMediaElement::LoadFromSourceChildren() {
                "Must remember we're loading from source children");
 
   AddMutationObserverUnlessExists(this);
+
+  RemoveMediaTracks();
 
   while (true) {
     Element* child = GetNextSource();
@@ -5119,6 +5112,10 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
                                       UniquePtr<const MetadataTags> aTags) {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (mDecoder) {
+    ConstructMediaTracks(aInfo);
+  }
+
   SetMediaInfo(*aInfo);
 
   mIsEncrypted =
@@ -5234,12 +5231,6 @@ void HTMLMediaElement::DecodeError(const MediaResult& aError) {
   DecoderDoctorDiagnostics diagnostics;
   diagnostics.StoreDecodeError(OwnerDoc(), aError, src, __func__);
 
-  if (AudioTracks()) {
-    AudioTracks()->EmptyTracks();
-  }
-  if (VideoTracks()) {
-    VideoTracks()->EmptyTracks();
-  }
   if (mIsLoadingFromSourceChildren) {
     mErrorSink->ResetError();
     if (mSourceLoadCandidate) {
@@ -7241,11 +7232,9 @@ bool HTMLMediaElement::IsAudible() const {
 }
 
 void HTMLMediaElement::ConstructMediaTracks(const MediaInfo* aInfo) {
-  if (mMediaTracksConstructed || !aInfo) {
+  if (!aInfo) {
     return;
   }
-
-  mMediaTracksConstructed = true;
 
   AudioTrackList* audioList = AudioTracks();
   if (audioList && aInfo->HasAudio()) {
@@ -7273,12 +7262,9 @@ void HTMLMediaElement::RemoveMediaTracks() {
   if (mAudioTrackList) {
     mAudioTrackList->RemoveTracks();
   }
-
   if (mVideoTrackList) {
     mVideoTrackList->RemoveTracks();
   }
-
-  mMediaTracksConstructed = false;
 }
 
 class MediaElementGMPCrashHelper : public GMPCrashHelper {
