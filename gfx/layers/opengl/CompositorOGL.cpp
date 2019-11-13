@@ -769,8 +769,8 @@ CompositorOGL::RenderTargetForNativeLayer(NativeLayer* aNativeLayer,
   IntRect layerRect = aNativeLayer->GetRect();
   IntRegion invalidRelativeToLayer =
       aInvalidRegion.MovedBy(-layerRect.TopLeft());
-  Maybe<GLuint> fbo =
-      aNativeLayer->NextSurfaceAsFramebuffer(invalidRelativeToLayer, false);
+  aNativeLayer->InvalidateRegionThroughoutSwapchain(invalidRelativeToLayer);
+  Maybe<GLuint> fbo = aNativeLayer->NextSurfaceAsFramebuffer(false);
   if (!fbo) {
     return nullptr;
   }

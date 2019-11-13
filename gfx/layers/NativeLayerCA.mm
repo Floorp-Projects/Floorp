@@ -54,8 +54,8 @@ NativeLayerRootCA::~NativeLayerRootCA() {
   [mRootCALayer release];
 }
 
-already_AddRefed<NativeLayer> NativeLayerRootCA::CreateLayer(const IntSize& aSize, bool aIsOpaque) {
-  RefPtr<NativeLayer> layer = new NativeLayerCA(aSize, aIsOpaque);
+already_AddRefed<NativeLayer> NativeLayerRootCA::CreateLayer() {
+  RefPtr<NativeLayer> layer = new NativeLayerCA();
   return layer.forget();
 }
 
@@ -135,10 +135,11 @@ void NativeLayerRootCA::SetBackingScale(float aBackingScale) {
   }
 }
 
-NativeLayerCA::NativeLayerCA(const IntSize& aSize, bool aIsOpaque)
-    : mMutex("NativeLayerCA"), mSize(aSize), mIsOpaque(aIsOpaque) {}
+NativeLayerCA::NativeLayerCA() : mMutex("NativeLayerCA") {}
 
 NativeLayerCA::~NativeLayerCA() {
+  SetSurfaceRegistry(nullptr);  // or maybe MOZ_RELEASE_ASSERT(!mSurfaceRegistry) would be better?
+
   if (mInProgressLockedIOSurface) {
     mInProgressLockedIOSurface->Unlock(false);
     mInProgressLockedIOSurface = nullptr;
@@ -154,12 +155,46 @@ NativeLayerCA::~NativeLayerCA() {
   [mWrappingCALayer release];
 }
 
+void NativeLayerCA::SetSurfaceRegistry(RefPtr<IOSurfaceRegistry> aSurfaceRegistry) {
+  MutexAutoLock lock(mMutex);
+
+  if (mSurfaceRegistry) {
+    for (auto surf : mSurfaces) {
+      mSurfaceRegistry->UnregisterSurface(surf.mSurface);
+    }
+    if (mInProgressSurface) {
+      mSurfaceRegistry->UnregisterSurface(mInProgressSurface->mSurface);
+    }
+    if (mReadySurface) {
+      mSurfaceRegistry->UnregisterSurface(mReadySurface->mSurface);
+    }
+  }
+  mSurfaceRegistry = aSurfaceRegistry;
+  if (mSurfaceRegistry) {
+    for (auto surf : mSurfaces) {
+      mSurfaceRegistry->RegisterSurface(surf.mSurface);
+    }
+    if (mInProgressSurface) {
+      mSurfaceRegistry->RegisterSurface(mInProgressSurface->mSurface);
+    }
+    if (mReadySurface) {
+      mSurfaceRegistry->RegisterSurface(mReadySurface->mSurface);
+    }
+  }
+}
+
+RefPtr<IOSurfaceRegistry> NativeLayerCA::GetSurfaceRegistry() {
+  MutexAutoLock lock(mMutex);
+
+  return mSurfaceRegistry;
+}
+
 void NativeLayerCA::SetSurfaceIsFlipped(bool aIsFlipped) {
   MutexAutoLock lock(mMutex);
 
   if (aIsFlipped != mSurfaceIsFlipped) {
     mSurfaceIsFlipped = aIsFlipped;
-    mMutatedSurfaceIsFlipped = true;
+    mMutatedSize = true;
   }
 }
 
@@ -169,22 +204,17 @@ bool NativeLayerCA::SurfaceIsFlipped() {
   return mSurfaceIsFlipped;
 }
 
-IntSize NativeLayerCA::GetSize() {
-  MutexAutoLock lock(mMutex);
-  return mSize;
-}
-void NativeLayerCA::SetPosition(const IntPoint& aPosition) {
+void NativeLayerCA::SetRect(const IntRect& aRect) {
   MutexAutoLock lock(mMutex);
 
-  if (aPosition != mPosition) {
-    mPosition = aPosition;
+  if (aRect.TopLeft() != mPosition) {
+    mPosition = aRect.TopLeft();
     mMutatedPosition = true;
   }
-}
-
-IntPoint NativeLayerCA::GetPosition() {
-  MutexAutoLock lock(mMutex);
-  return mPosition;
+  if (aRect.Size() != mSize) {
+    mSize = aRect.Size();
+    mMutatedSize = true;
+  }
 }
 
 IntRect NativeLayerCA::GetRect() {
@@ -197,7 +227,18 @@ void NativeLayerCA::SetBackingScale(float aBackingScale) {
 
   if (aBackingScale != mBackingScale) {
     mBackingScale = aBackingScale;
-    mMutatedBackingScale = true;
+    mMutatedClipRect = true;
+    mMutatedPosition = true;
+    mMutatedSize = true;
+  }
+}
+
+void NativeLayerCA::SetIsOpaque(bool aIsOpaque) {
+  MutexAutoLock lock(mMutex);
+
+  if (aIsOpaque != mIsOpaque) {
+    mIsOpaque = aIsOpaque;
+    mMutatedIsOpaque = true;
   }
 }
 
@@ -230,9 +271,11 @@ IntRegion NativeLayerCA::CurrentSurfaceInvalidRegion() {
   return mInProgressSurface->mInvalidRegion;
 }
 
-void NativeLayerCA::InvalidateRegionThroughoutSwapchain(const MutexAutoLock&,
-                                                        const IntRegion& aRegion) {
+void NativeLayerCA::InvalidateRegionThroughoutSwapchain(const IntRegion& aRegion) {
+  MutexAutoLock lock(mMutex);
+
   IntRegion r = aRegion;
+  r.AndWith(IntRect(IntPoint(0, 0), mSize));
   if (mInProgressSurface) {
     mInProgressSurface->mInvalidRegion.OrWith(r);
   }
@@ -245,9 +288,10 @@ void NativeLayerCA::InvalidateRegionThroughoutSwapchain(const MutexAutoLock&,
 }
 
 CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurface(const MutexAutoLock& aLock) {
-  if (mSize.IsEmpty()) {
-    NSLog(@"NextSurface returning nullptr because of invalid mSize (%d, %d).", mSize.width,
-          mSize.height);
+  IntSize surfaceSize = mSize;
+  if (surfaceSize.IsEmpty()) {
+    NSLog(@"NextSurface returning nullptr because of invalid surfaceSize (%d, %d).",
+          surfaceSize.width, surfaceSize.height);
     return nullptr;
   }
 
@@ -256,22 +300,26 @@ CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurface(const MutexAutoLock& aLock
       "ERROR: Do not call NextSurface twice in sequence. Call NotifySurfaceReady before the "
       "next call to NextSurface.");
 
-  // Find the last surface in unusedSurfaces. If such
+  // Find the last surface in unusedSurfaces which has the right size. If such
   // a surface exists, it is the surface we will recycle.
   std::vector<SurfaceWithInvalidRegion> unusedSurfaces = RemoveExcessUnusedSurfaces(aLock);
+  auto surfIter = std::find_if(
+      unusedSurfaces.rbegin(), unusedSurfaces.rend(),
+      [surfaceSize](const SurfaceWithInvalidRegion& s) { return s.mSize == surfaceSize; });
 
   Maybe<SurfaceWithInvalidRegion> surf;
-  if (!unusedSurfaces.empty()) {
+  if (surfIter != unusedSurfaces.rend()) {
     // We found the surface we want to recycle.
-    surf = Some(unusedSurfaces.back());
+    surf = Some(*surfIter);
 
     // Remove surf from unusedSurfaces.
-    unusedSurfaces.pop_back();
+    // The reverse iterator makes this a bit cumbersome.
+    unusedSurfaces.erase(std::next(surfIter).base());
   } else {
     CFTypeRefPtr<IOSurfaceRef> newSurf = CFTypeRefPtr<IOSurfaceRef>::WrapUnderCreateRule(
         IOSurfaceCreate((__bridge CFDictionaryRef) @{
-          (__bridge NSString*)kIOSurfaceWidth : @(mSize.width),
-          (__bridge NSString*)kIOSurfaceHeight : @(mSize.height),
+          (__bridge NSString*)kIOSurfaceWidth : @(surfaceSize.width),
+          (__bridge NSString*)kIOSurfaceHeight : @(surfaceSize.height),
           (__bridge NSString*)kIOSurfacePixelFormat : @(kCVPixelFormatType_32BGRA),
           (__bridge NSString*)kIOSurfaceBytesPerElement : @(4),
         }));
@@ -279,11 +327,18 @@ CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurface(const MutexAutoLock& aLock
       NSLog(@"NextSurface returning nullptr because IOSurfaceCreate failed to create the surface.");
       return nullptr;
     }
-    surf = Some(SurfaceWithInvalidRegion{newSurf, IntRect({}, mSize)});
+    if (mSurfaceRegistry) {
+      mSurfaceRegistry->RegisterSurface(newSurf);
+    }
+    surf =
+        Some(SurfaceWithInvalidRegion{newSurf, IntRect(IntPoint(0, 0), surfaceSize), surfaceSize});
   }
 
   // Delete all other unused surfaces.
   for (auto unusedSurf : unusedSurfaces) {
+    if (mSurfaceRegistry) {
+      mSurfaceRegistry->UnregisterSurface(unusedSurf.mSurface);
+    }
     mFramebuffers.erase(unusedSurf.mSurface);
   }
   unusedSurfaces.clear();
@@ -294,16 +349,12 @@ CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurface(const MutexAutoLock& aLock
   return mInProgressSurface->mSurface;
 }
 
-RefPtr<gfx::DrawTarget> NativeLayerCA::NextSurfaceAsDrawTarget(const gfx::IntRegion& aUpdateRegion,
-                                                               gfx::BackendType aBackendType) {
+RefPtr<gfx::DrawTarget> NativeLayerCA::NextSurfaceAsDrawTarget(gfx::BackendType aBackendType) {
   MutexAutoLock lock(mMutex);
   CFTypeRefPtr<IOSurfaceRef> surface = NextSurface(lock);
   if (!surface) {
     return nullptr;
   }
-
-  MOZ_RELEASE_ASSERT(IntRect({}, mSize).Contains(aUpdateRegion.GetBounds()));
-  InvalidateRegionThroughoutSwapchain(lock, aUpdateRegion);
 
   mInProgressLockedIOSurface = new MacIOSurface(std::move(surface));
   mInProgressLockedIOSurface->Lock(false);
@@ -327,16 +378,13 @@ gl::GLContext* NativeLayerCA::GetGLContext() {
   return mGLContext;
 }
 
-Maybe<GLuint> NativeLayerCA::NextSurfaceAsFramebuffer(const gfx::IntRegion& aUpdateRegion,
-                                                      bool aNeedsDepth) {
+Maybe<GLuint> NativeLayerCA::NextSurfaceAsFramebuffer(bool aNeedsDepth) {
   MutexAutoLock lock(mMutex);
   CFTypeRefPtr<IOSurfaceRef> surface = NextSurface(lock);
   if (!surface) {
     return Nothing();
   }
 
-  MOZ_RELEASE_ASSERT(IntRect({}, mSize).Contains(aUpdateRegion.GetBounds()));
-  InvalidateRegionThroughoutSwapchain(lock, aUpdateRegion);
   return Some(GetOrCreateFramebufferForSurface(lock, std::move(surface), aNeedsDepth));
 }
 
@@ -399,12 +447,6 @@ void NativeLayerCA::ApplyChanges() {
     mContentCALayer = [[CALayer layer] retain];
     mContentCALayer.anchorPoint = NSZeroPoint;
     mContentCALayer.contentsGravity = kCAGravityTopLeft;
-    mContentCALayer.opaque = mIsOpaque;
-    if ([mContentCALayer respondsToSelector:@selector(setContentsOpaque:)]) {
-      // The opaque property seems to not be enough when using IOSurface contents.
-      // Additionally, call the private method setContentsOpaque.
-      [mContentCALayer setContentsOpaque:mIsOpaque];
-    }
     [mWrappingCALayer addSublayer:mContentCALayer];
   }
 
@@ -422,13 +464,7 @@ void NativeLayerCA::ApplyChanges() {
   auto globalLayerOrigin = mPosition;
   auto clipToLayerOffset = globalLayerOrigin - globalClipOrigin;
 
-  if (mMutatedBackingScale) {
-    mContentCALayer.bounds =
-        CGRectMake(0, 0, mSize.width / mBackingScale, mSize.height / mBackingScale);
-    mContentCALayer.contentsScale = mBackingScale;
-  }
-
-  if (mMutatedBackingScale || mMutatedClipRect) {
+  if (mMutatedClipRect) {
     mWrappingCALayer.position =
         CGPointMake(globalClipOrigin.x / mBackingScale, globalClipOrigin.y / mBackingScale);
     if (mClipRect) {
@@ -440,12 +476,15 @@ void NativeLayerCA::ApplyChanges() {
     }
   }
 
-  if (mMutatedBackingScale || mMutatedPosition || mMutatedClipRect) {
+  if (mMutatedPosition || mMutatedClipRect) {
     mContentCALayer.position =
         CGPointMake(clipToLayerOffset.x / mBackingScale, clipToLayerOffset.y / mBackingScale);
   }
 
-  if (mMutatedBackingScale || mMutatedSurfaceIsFlipped) {
+  if (mMutatedSize) {
+    mContentCALayer.bounds =
+        CGRectMake(0, 0, mSize.width / mBackingScale, mSize.height / mBackingScale);
+    mContentCALayer.contentsScale = mBackingScale;
     if (mSurfaceIsFlipped) {
       CGFloat height = mSize.height / mBackingScale;
       mContentCALayer.affineTransform = CGAffineTransformMake(1.0, 0.0, 0.0, -1.0, 0.0, height);
@@ -454,9 +493,18 @@ void NativeLayerCA::ApplyChanges() {
     }
   }
 
+  if (mMutatedIsOpaque) {
+    mContentCALayer.opaque = mIsOpaque;
+    if ([mContentCALayer respondsToSelector:@selector(setContentsOpaque:)]) {
+      // The opaque property seems to not be enough when using IOSurface contents.
+      // Additionally, call the private method setContentsOpaque.
+      [mContentCALayer setContentsOpaque:mIsOpaque];
+    }
+  }
+
   mMutatedPosition = false;
-  mMutatedBackingScale = false;
-  mMutatedSurfaceIsFlipped = false;
+  mMutatedSize = false;
+  mMutatedIsOpaque = false;
   mMutatedClipRect = false;
 
   if (mReadySurface) {
