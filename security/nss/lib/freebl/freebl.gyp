@@ -133,6 +133,24 @@
       ]
     },
     {
+      'target_name': 'gcm-aes-ppc_c_lib',
+      'type': 'static_library',
+      'sources': [
+        'gcm-ppc.c'
+      ],
+      'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports'
+      ],
+      'cflags': [
+        '-mcrypto',
+        '-maltivec'
+      ],
+      'cflags_mozilla': [
+        '-mcrypto',
+        '-maltivec'
+      ]
+    },
+    {
       'target_name': 'armv8_c_lib',
       'type': 'static_library',
       'sources': [
@@ -199,6 +217,11 @@
             'gcm-aes-aarch64_c_lib',
           ],
         }],
+        [ 'target_arch=="ppc64le"', {
+          'dependencies': [
+            'gcm-aes-ppc_c_lib',
+          ],
+        }],
         [ 'OS=="linux"', {
           'defines!': [
             'FREEBL_NO_DEPEND',
@@ -243,6 +266,11 @@
         [ 'target_arch=="arm64" or target_arch=="aarch64"', {
           'dependencies': [
             'gcm-aes-aarch64_c_lib',
+          ],
+        }],
+        [ 'target_arch=="ppc64" or target_arch=="ppc64le"', {
+          'dependencies': [
+            'gcm-aes-ppc_c_lib',
           ],
         }],
         [ 'OS!="linux"', {

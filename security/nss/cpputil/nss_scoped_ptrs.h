@@ -30,6 +30,7 @@ struct ScopedDelete {
   void operator()(PK11Context* context) { PK11_DestroyContext(context, true); }
   void operator()(PK11GenericObject* obj) { PK11_DestroyGenericObject(obj); }
   void operator()(PK11SlotInfo* slot) { PK11_FreeSlot(slot); }
+  void operator()(PK11SlotList* slots) { PK11_FreeSlotList(slots); }
   void operator()(PK11SymKey* key) { PK11_FreeSymKey(key); }
   void operator()(PK11URI* uri) { PK11URI_DestroyURI(uri); }
   void operator()(PLArenaPool* arena) { PORT_FreeArena(arena, PR_FALSE); }
@@ -72,6 +73,7 @@ SCOPED(CERTSubjectPublicKeyInfo);
 SCOPED(PK11Context);
 SCOPED(PK11GenericObject);
 SCOPED(PK11SlotInfo);
+SCOPED(PK11SlotList);
 SCOPED(PK11SymKey);
 SCOPED(PK11URI);
 SCOPED(PLArenaPool);

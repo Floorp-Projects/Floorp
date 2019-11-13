@@ -29,6 +29,7 @@ static PRBool arm_aes_support_ = PR_FALSE;
 static PRBool arm_sha1_support_ = PR_FALSE;
 static PRBool arm_sha2_support_ = PR_FALSE;
 static PRBool arm_pmull_support_ = PR_FALSE;
+static PRBool ppc_crypto_support_ = PR_FALSE;
 
 #ifdef NSS_X86_OR_X64
 /*
@@ -348,6 +349,32 @@ arm_sha2_support()
 {
     return arm_sha2_support_;
 }
+PRBool
+ppc_crypto_support()
+{
+    return ppc_crypto_support_;
+}
+
+#if defined(__powerpc__)
+
+#include <sys/auxv.h>
+
+// Defines from cputable.h in Linux kernel - PPC, letting us build on older kernels
+#ifndef PPC_FEATURE2_VEC_CRYPTO
+#define PPC_FEATURE2_VEC_CRYPTO 0x02000000
+#endif
+
+static void
+CheckPPCSupport()
+{
+    char *disable_hw_crypto = PR_GetEnvSecure("NSS_DISABLE_PPC_GHASH");
+
+    long hwcaps = getauxval(AT_HWCAP2);
+
+    ppc_crypto_support_ = hwcaps & PPC_FEATURE2_VEC_CRYPTO && disable_hw_crypto == NULL;
+}
+
+#endif /* __powerpc__ */
 
 static PRStatus
 FreeblInit(void)
@@ -356,6 +383,8 @@ FreeblInit(void)
     CheckX86CPUSupport();
 #elif (defined(__aarch64__) || defined(__arm__))
     CheckARMSupport();
+#elif (defined(__powerpc__))
+    CheckPPCSupport();
 #endif
     return PR_SUCCESS;
 }

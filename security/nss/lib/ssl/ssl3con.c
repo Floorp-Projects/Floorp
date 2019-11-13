@@ -1454,8 +1454,14 @@ ssl3_ComputeCommonKeyHash(SSLHashType hashAlg,
 {
     SECStatus rv;
     SECOidTag hashOID;
+    PRUint32 policy;
 
     if (hashAlg == ssl_hash_none) {
+        if ((NSS_GetAlgorithmPolicy(SEC_OID_SHA1, &policy) == SECSuccess) &&
+            !(policy & NSS_USE_ALG_IN_SSL_KX)) {
+            ssl_MapLowLevelError(SSL_ERROR_UNSUPPORTED_HASH_ALGORITHM);
+            return SECFailure;
+        }
         rv = PK11_HashBuf(SEC_OID_MD5, hashes->u.s.md5, hashBuf, bufLen);
         if (rv != SECSuccess) {
             ssl_MapLowLevelError(SSL_ERROR_MD5_DIGEST_FAILURE);
@@ -1469,6 +1475,11 @@ ssl3_ComputeCommonKeyHash(SSLHashType hashAlg,
         hashes->len = MD5_LENGTH + SHA1_LENGTH;
     } else {
         hashOID = ssl3_HashTypeToOID(hashAlg);
+        if ((NSS_GetAlgorithmPolicy(hashOID, &policy) == SECSuccess) &&
+            !(policy & NSS_USE_ALG_IN_SSL_KX)) {
+            ssl_MapLowLevelError(SSL_ERROR_UNSUPPORTED_HASH_ALGORITHM);
+            return SECFailure;
+        }
         hashes->len = HASH_ResultLenByOidTag(hashOID);
         if (hashes->len == 0 || hashes->len > sizeof(hashes->u.raw)) {
             ssl_MapLowLevelError(SSL_ERROR_UNSUPPORTED_HASH_ALGORITHM);

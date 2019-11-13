@@ -263,6 +263,7 @@ ifeq ($(CPU_ARCH),arm)
     MPI_SRCS += mpi_arm.c
 endif
 ifeq ($(CPU_ARCH),ppc)
+    EXTRA_SRCS += gcm-ppc.c
 ifdef USE_64
     DEFINES += -DNSS_NO_INIT_SUPPORT
 endif # USE_64
@@ -784,4 +785,8 @@ endif
 ifeq ($(CPU_ARCH),aarch64)
 $(OBJDIR)/$(PROG_PREFIX)aes-armv8$(OBJ_SUFFIX): CFLAGS += -march=armv8-a+crypto
 $(OBJDIR)/$(PROG_PREFIX)gcm-aarch64$(OBJ_SUFFIX): CFLAGS += -march=armv8-a+crypto
+endif
+
+ifeq ($(CPU_ARCH),ppc)
+$(OBJDIR)/$(PROG_PREFIX)gcm-ppc$(OBJ_SUFFIX): CFLAGS += -mcrypto -maltivec
 endif
