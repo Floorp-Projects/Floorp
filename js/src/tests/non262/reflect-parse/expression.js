@@ -89,6 +89,7 @@ assertExpr("(x &= y)", aExpr("&=", ident("x"), ident("y")));
 // Conditional expressions
 assertExpr("(x || y)", logExpr("||", ident("x"), ident("y")));
 assertExpr("(x && y)", logExpr("&&", ident("x"), ident("y")));
+assertExpr("(x ?? y)", logExpr("??", ident("x"), ident("y")));
 assertExpr("(w || x || y || z)", logExpr("||", logExpr("||", logExpr("||", ident("w"), ident("x")), ident("y")), ident("z")))
 assertExpr("(x ? y : z)", condExpr(ident("x"), ident("y"), ident("z")));
 
