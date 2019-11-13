@@ -8,134 +8,118 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use crate::{
-    error::StoreError,
-    read_transform,
-    readwrite::{
-        Readable,
-        Writer,
-    },
-    value::Value,
-};
-use lmdb::{
-    Cursor,
-    Database,
-    Iter as LmdbIter,
-    //    IterDup as LmdbIterDup,
-    RoCursor,
-    WriteFlags,
-};
+use std::marker::PhantomData;
 
-#[derive(Copy, Clone)]
-pub struct MultiStore {
-    db: Database,
+use crate::backend::{
+    BackendDatabase,
+    BackendFlags,
+    BackendIter,
+    BackendRoCursor,
+    BackendRwTransaction,
+};
+use crate::error::StoreError;
+use crate::helpers::read_transform;
+use crate::readwrite::{
+    Readable,
+    Writer,
+};
+use crate::value::Value;
+
+type EmptyResult = Result<(), StoreError>;
+
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+pub struct MultiStore<D> {
+    db: D,
 }
 
-pub struct Iter<'env> {
-    iter: LmdbIter<'env>,
-    cursor: RoCursor<'env>,
+pub struct Iter<'env, I> {
+    iter: I,
+    phantom: PhantomData<&'env ()>,
 }
 
-impl MultiStore {
-    pub(crate) fn new(db: Database) -> MultiStore {
+impl<D> MultiStore<D>
+where
+    D: BackendDatabase,
+{
+    pub(crate) fn new(db: D) -> MultiStore<D> {
         MultiStore {
             db,
         }
     }
 
     /// Provides a cursor to all of the values for the duplicate entries that match this key
-    pub fn get<T: Readable, K: AsRef<[u8]>>(self, reader: &T, k: K) -> Result<Iter, StoreError> {
-        let mut cursor = reader.open_ro_cursor(self.db)?;
-        let iter = cursor.iter_dup_of(k);
+    pub fn get<'env, R, I, C, K>(&self, reader: &'env R, k: K) -> Result<Iter<'env, I>, StoreError>
+    where
+        R: Readable<'env, Database = D, RoCursor = C>,
+        I: BackendIter<'env>,
+        C: BackendRoCursor<'env, Iter = I>,
+        K: AsRef<[u8]>,
+    {
+        let cursor = reader.open_ro_cursor(&self.db)?;
+        let iter = cursor.into_iter_dup_of(k);
+
         Ok(Iter {
             iter,
-            cursor,
+            phantom: PhantomData,
         })
     }
 
     /// Provides the first value that matches this key
-    pub fn get_first<T: Readable, K: AsRef<[u8]>>(self, reader: &T, k: K) -> Result<Option<Value>, StoreError> {
-        reader.get(self.db, &k)
+    pub fn get_first<'env, R, K>(&self, reader: &'env R, k: K) -> Result<Option<Value<'env>>, StoreError>
+    where
+        R: Readable<'env, Database = D>,
+        K: AsRef<[u8]>,
+    {
+        reader.get(&self.db, &k)
     }
 
     /// Insert a value at the specified key.
     /// This put will allow duplicate entries.  If you wish to have duplicate entries
     /// rejected, use the `put_with_flags` function and specify NO_DUP_DATA
-    pub fn put<K: AsRef<[u8]>>(self, writer: &mut Writer, k: K, v: &Value) -> Result<(), StoreError> {
-        writer.put(self.db, &k, v, WriteFlags::empty())
+    pub fn put<T, K>(&self, writer: &mut Writer<T>, k: K, v: &Value) -> EmptyResult
+    where
+        T: BackendRwTransaction<Database = D>,
+        K: AsRef<[u8]>,
+    {
+        writer.put(&self.db, &k, v, T::Flags::empty())
     }
 
-    pub fn put_with_flags<K: AsRef<[u8]>>(
-        self,
-        writer: &mut Writer,
-        k: K,
-        v: &Value,
-        flags: WriteFlags,
-    ) -> Result<(), StoreError> {
-        writer.put(self.db, &k, v, flags)
+    pub fn put_with_flags<T, K>(&self, writer: &mut Writer<T>, k: K, v: &Value, flags: T::Flags) -> EmptyResult
+    where
+        T: BackendRwTransaction<Database = D>,
+        K: AsRef<[u8]>,
+    {
+        writer.put(&self.db, &k, v, flags)
     }
 
-    pub fn delete_all<K: AsRef<[u8]>>(self, writer: &mut Writer, k: K) -> Result<(), StoreError> {
-        writer.delete(self.db, &k, None)
+    pub fn delete_all<T, K>(&self, writer: &mut Writer<T>, k: K) -> EmptyResult
+    where
+        T: BackendRwTransaction<Database = D>,
+        K: AsRef<[u8]>,
+    {
+        writer.delete(&self.db, &k, None)
     }
 
-    pub fn delete<K: AsRef<[u8]>>(self, writer: &mut Writer, k: K, v: &Value) -> Result<(), StoreError> {
-        writer.delete(self.db, &k, Some(&v.to_bytes()?))
+    pub fn delete<T, K>(&self, writer: &mut Writer<T>, k: K, v: &Value) -> EmptyResult
+    where
+        T: BackendRwTransaction<Database = D>,
+        K: AsRef<[u8]>,
+    {
+        writer.delete(&self.db, &k, Some(&v.to_bytes()?))
     }
 
-    /* TODO - Figure out how to solve the need to have the cursor stick around when
-     *        we are producing iterators from MultiIter
-    /// Provides an iterator starting at the lexographically smallest value in the store
-    pub fn iter_start(&self, store: MultiStore) -> Result<MultiIter, StoreError> {
-        let mut cursor = self.tx.open_ro_cursor(store.0).map_err(StoreError::LmdbError)?;
-
-        // We call Cursor.iter() instead of Cursor.iter_start() because
-        // the latter panics at "called `Result::unwrap()` on an `Err` value:
-        // NotFound" when there are no items in the store, whereas the former
-        // returns an iterator that yields no items.
-        //
-        // And since we create the Cursor and don't change its position, we can
-        // be sure that a call to Cursor.iter() will start at the beginning.
-        //
-        let iter = cursor.iter_dup();
-
-        Ok(MultiIter {
-            iter,
-            cursor,
-        })
-    }
-    */
-
-    pub fn clear(self, writer: &mut Writer) -> Result<(), StoreError> {
-        writer.clear(self.db)
+    pub fn clear<T>(&self, writer: &mut Writer<T>) -> EmptyResult
+    where
+        T: BackendRwTransaction<Database = D>,
+    {
+        writer.clear(&self.db)
     }
 }
 
-/*
-fn read_transform_owned(val: Result<&[u8], lmdb::Error>) -> Result<Option<OwnedValue>, StoreError> {
-    match val {
-        Ok(bytes) => Value::from_tagged_slice(bytes).map(|v| Some(OwnedValue::from(&v))).map_err(StoreError::DataError),
-        Err(lmdb::Error::NotFound) => Ok(None),
-        Err(e) => Err(StoreError::LmdbError(e)),
-    }
-}
-
-impl<'env> Iterator for MultiIter<'env> {
-    type Item = Iter<'env>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.iter.next() {
-            None => None,
-            Some(iter) => Some(Iter {
-                iter,
-                cursor,
-            }),
-        }
-    }
-}
-*/
-
-impl<'env> Iterator for Iter<'env> {
+impl<'env, I> Iterator for Iter<'env, I>
+where
+    I: BackendIter<'env>,
+{
     type Item = Result<(&'env [u8], Option<Value<'env>>), StoreError>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -145,7 +129,7 @@ impl<'env> Iterator for Iter<'env> {
                 Ok(val) => Some(Ok((key, val))),
                 Err(err) => Some(Err(err)),
             },
-            Some(Err(err)) => Some(Err(StoreError::LmdbError(err))),
+            Some(Err(err)) => Some(Err(err.into())),
         }
     }
 }

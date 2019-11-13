@@ -14,22 +14,20 @@
 //! the number of key/value pairs to create via the `-n <number>` flag
 //! (for which the default value is 50).
 
-extern crate rkv;
+use std::env::args;
+use std::fs;
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
 
+use rkv::backend::{
+    BackendEnvironmentBuilder,
+    Lmdb,
+};
 use rkv::{
     Rkv,
-    SingleStore,
     StoreOptions,
     Value,
-};
-use std::{
-    env::args,
-    fs::{
-        create_dir_all,
-        File,
-    },
-    io::Read,
-    path::Path,
 };
 
 fn main() {
@@ -69,19 +67,18 @@ fn main() {
     if path.is_none() {
         panic!("must provide a path to the LMDB environment");
     }
+
     let path = path.unwrap();
+    fs::create_dir_all(&path).expect("dir created");
 
-    create_dir_all(&path).expect("dir created");
-
-    let mut builder = Rkv::environment_builder();
+    let mut builder = Rkv::environment_builder::<Lmdb>();
     builder.set_max_dbs(2);
     // Allocate enough map to accommodate the largest random collection.
     // We currently do this by allocating twice the maximum possible size
     // of the pairs (assuming maximum key and value sizes).
     builder.set_map_size((511 + 65535) * num_pairs * 2);
-    let rkv = Rkv::from_env(Path::new(&path), builder).expect("Rkv");
-    let store: SingleStore =
-        rkv.open_single(database.as_ref().map(|x| x.as_str()), StoreOptions::create()).expect("opened");
+    let rkv = Rkv::from_builder(Path::new(&path), builder).expect("Rkv");
+    let store = rkv.open_single(database.as_ref().map(|x| x.as_str()), StoreOptions::create()).expect("opened");
     let mut writer = rkv.write().expect("writer");
 
     // Generate random values for the number of keys and key/value lengths.

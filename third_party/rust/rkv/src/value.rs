@@ -8,6 +8,8 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
+use std::fmt;
+
 use arrayref::array_ref;
 use bincode::{
     deserialize,
@@ -15,7 +17,6 @@ use bincode::{
     serialized_size,
 };
 use ordered_float::OrderedFloat;
-
 use uuid::{
     Bytes,
     Uuid,
@@ -68,8 +69,8 @@ impl Type {
     }
 }
 
-impl ::std::fmt::Display for Type {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error> {
+impl fmt::Display for Type {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         f.write_str(match *self {
             Type::Bool => "bool",
             Type::U64 => "u64",
@@ -119,18 +120,6 @@ fn uuid(bytes: &[u8]) -> Result<Value, DataError> {
 }
 
 impl<'s> Value<'s> {
-    fn expected_from_tagged_slice(expected: Type, slice: &'s [u8]) -> Result<Value<'s>, DataError> {
-        let (tag, data) = slice.split_first().ok_or(DataError::Empty)?;
-        let t = Type::from_tag(*tag)?;
-        if t == expected {
-            return Err(DataError::UnexpectedType {
-                expected,
-                actual: t,
-            });
-        }
-        Value::from_type_and_data(t, data)
-    }
-
     pub fn from_tagged_slice(slice: &'s [u8]) -> Result<Value<'s>, DataError> {
         let (tag, data) = slice.split_first().ok_or(DataError::Empty)?;
         let t = Type::from_tag(*tag)?;
@@ -207,8 +196,8 @@ impl<'s> From<&'s Value<'s>> for OwnedValue {
             Value::F64(v) => OwnedValue::F64(**v),
             Value::Instant(v) => OwnedValue::Instant(*v),
             Value::Uuid(v) => OwnedValue::Uuid(Uuid::from_bytes(**v)),
-            Value::Str(v) => OwnedValue::Str(v.to_string()),
-            Value::Json(v) => OwnedValue::Json(v.to_string()),
+            Value::Str(v) => OwnedValue::Str((*v).to_string()),
+            Value::Json(v) => OwnedValue::Json((*v).to_string()),
             Value::Blob(v) => OwnedValue::Blob(v.to_vec()),
         }
     }
@@ -232,8 +221,9 @@ impl<'s> From<&'s OwnedValue> for Value<'s> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ordered_float::OrderedFloat;
+
+    use super::*;
 
     #[test]
     fn test_value_serialized_size() {
