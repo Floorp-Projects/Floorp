@@ -33,17 +33,12 @@ template <class T>
 class MediaQueue;
 
 class DecodedStream : public MediaSink {
-  using MediaSink::PlaybackParams;
-
  public:
   DecodedStream(MediaDecoderStateMachine* aStateMachine,
                 nsTArray<RefPtr<ProcessedMediaTrack>> aOutputTracks,
+                double aVolume, double aPlaybackRate, bool aPreservesPitch,
                 MediaQueue<AudioData>& aAudioQueue,
                 MediaQueue<VideoData>& aVideoQueue);
-
-  // MediaSink functions.
-  const PlaybackParams& GetPlaybackParams() const override;
-  void SetPlaybackParams(const PlaybackParams& aParams) override;
 
   RefPtr<EndedPromise> OnEnded(TrackType aType) override;
   media::TimeUnit GetEndTime(TrackType aType) const override;
@@ -57,6 +52,8 @@ class DecodedStream : public MediaSink {
   void SetPlaybackRate(double aPlaybackRate) override;
   void SetPreservesPitch(bool aPreservesPitch) override;
   void SetPlaying(bool aPlaying) override;
+
+  double PlaybackRate() const override;
 
   nsresult Start(const media::TimeUnit& aStartTime,
                  const MediaInfo& aInfo) override;
@@ -100,7 +97,9 @@ class DecodedStream : public MediaSink {
   Mirror<PrincipalHandle> mPrincipalHandle;
   const nsTArray<RefPtr<ProcessedMediaTrack>> mOutputTracks;
 
-  PlaybackParams mParams;
+  double mVolume;
+  double mPlaybackRate;
+  bool mPreservesPitch;
 
   media::NullableTimeUnit mStartTime;
   media::TimeUnit mLastOutputTime;
