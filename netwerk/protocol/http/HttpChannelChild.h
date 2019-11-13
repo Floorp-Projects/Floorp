@@ -523,26 +523,11 @@ class HttpChannelChild final : public PHttpChannelChild,
   // Collect telemetry for the successful rate of OMT.
   void CollectOMTTelemetry();
 
-  friend class AssociateApplicationCacheEvent;
-  friend class StartRequestEvent;
-  friend class StopRequestEvent;
-  friend class TransportAndDataEvent;
-  friend class MaybeDivertOnDataHttpEvent;
-  friend class MaybeDivertOnStopHttpEvent;
-  friend class ProgressEvent;
-  friend class StatusEvent;
-  friend class FailedAsyncOpenEvent;
-  friend class Redirect1Event;
-  friend class Redirect3Event;
-  friend class DeleteSelfEvent;
-  friend class HttpFlushedForDiversionEvent;
-  friend class CancelEvent;
   friend class HttpAsyncAborter<HttpChannelChild>;
   friend class InterceptStreamListener;
   friend class InterceptedChannelContent;
   friend class HttpBackgroundChannelChild;
-  friend class NeckoTargetChannelEvent<HttpChannelChild>;
-  friend class ContinueDoNotifyListenerEvent;
+  friend class NeckoTargetChannelFunctionEvent;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpChannelChild, HTTP_CHANNEL_CHILD_IID)
