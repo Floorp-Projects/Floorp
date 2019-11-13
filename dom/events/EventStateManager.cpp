@@ -19,6 +19,7 @@
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Event.h"
@@ -4999,6 +5000,11 @@ nsresult EventStateManager::InitAndDispatchClickEvent(
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv = aPresShell->HandleEventWithTarget(
       &event, targetFrame, MOZ_KnownLive(target), &status);
+
+  if (event.mFlags.mHadNonPrivilegedClickListeners && !aNoContentDispatch) {
+    Telemetry::AccumulateCategorical(
+        Telemetry::LABELS_TYPES_OF_USER_CLICKS::Has_JS_Listener);
+  }
   // Copy mMultipleActionsPrevented flag from a click event to the mouseup
   // event only when it's set to true.  It may be set to true if an editor has
   // already handled it.  This is important to avoid two or more default
@@ -5123,6 +5129,14 @@ nsresult EventStateManager::DispatchClickEvents(
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+  }
+
+  // notDispatchToContents is used here because we don't want to
+  // count auxclicks.
+  if (XRE_IsParentProcess() && !IsRemoteTarget(aClickTarget) &&
+      !notDispatchToContents) {
+    Telemetry::AccumulateCategorical(
+        Telemetry::LABELS_TYPES_OF_USER_CLICKS::Browser_Chrome);
   }
 
   return rv;
