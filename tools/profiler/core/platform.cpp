@@ -4654,15 +4654,17 @@ bool profiler_is_locked_on_current_thread() {
   return gPSMutex.IsLockedOnCurrentThread();
 }
 
-bool profiler_add_native_allocation_marker(int aMainThreadId, int64_t aSize) {
+bool profiler_add_native_allocation_marker(int aMainThreadId, int64_t aSize,
+                                           uintptr_t aMemoryAddress) {
   if (!profiler_can_accept_markers()) {
     return false;
   }
   AUTO_PROFILER_STATS(add_marker_with_NativeAllocationMarkerPayload);
   profiler_add_marker_for_thread(
       aMainThreadId, JS::ProfilingCategoryPair::OTHER, "Native allocation",
-      MakeUnique<NativeAllocationMarkerPayload>(TimeStamp::Now(), aSize,
-                                                profiler_get_backtrace()));
+      MakeUnique<NativeAllocationMarkerPayload>(
+          TimeStamp::Now(), aSize, aMemoryAddress, profiler_current_thread_id(),
+          profiler_get_backtrace()));
   return true;
 }
 
