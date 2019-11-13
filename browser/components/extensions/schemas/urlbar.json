@@ -115,6 +115,13 @@
     },
     "functions": [
       {
+        "name": "closeView",
+        "type": "function",
+        "async": true,
+        "description": "Closes the urlbar view in the current window.",
+        "parameters": []
+      },
+      {
         "name": "focus",
         "type": "function",
         "async": true,
