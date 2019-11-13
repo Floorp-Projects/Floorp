@@ -32,6 +32,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -100,6 +101,72 @@ class AbstractFetchDownloadServiceTest {
         val intentCode = service.onStartCommand(downloadIntent, 0, 0)
 
         assertEquals(Service.START_REDELIVER_INTENT, intentCode)
+    }
+
+    @Test
+    fun `verifyDownload sets the download to failed if it is not complete`() = runBlocking {
+        val downloadState = DownloadState(
+            url = "mozilla.org/mozilla.txt",
+            filePath = "mozilla.txt",
+            contentLength = 50L
+        )
+
+        val downloadJobState = AbstractFetchDownloadService.DownloadJobState(
+            job = null,
+            state = downloadState,
+            currentBytesCopied = 5,
+            status = ACTIVE,
+            foregroundServiceId = 1,
+            downloadDeleted = false
+        )
+
+        service.verifyDownload(downloadJobState)
+
+        assertEquals(FAILED, downloadJobState.status)
+    }
+
+    @Test
+    fun `verifyDownload does NOT set the download to failed if it is paused`() = runBlocking {
+        val downloadState = DownloadState(
+            url = "mozilla.org/mozilla.txt",
+            filePath = "mozilla.txt",
+            contentLength = 50L
+        )
+
+        val downloadJobState = AbstractFetchDownloadService.DownloadJobState(
+            job = null,
+            state = downloadState,
+            currentBytesCopied = 5,
+            status = PAUSED,
+            foregroundServiceId = 1,
+            downloadDeleted = false
+        )
+
+        service.verifyDownload(downloadJobState)
+
+        assertEquals(PAUSED, downloadJobState.status)
+    }
+
+    @Test
+    fun `verifyDownload does NOT set the download to failed if it is complete`() = runBlocking {
+        val downloadState = DownloadState(
+            url = "mozilla.org/mozilla.txt",
+            filePath = "mozilla.txt",
+            contentLength = 50L
+        )
+
+        val downloadJobState = AbstractFetchDownloadService.DownloadJobState(
+            job = null,
+            state = downloadState,
+            currentBytesCopied = 50,
+            status = ACTIVE,
+            foregroundServiceId = 1,
+            downloadDeleted = false
+        )
+
+        service.verifyDownload(downloadJobState)
+
+        assertNotEquals(FAILED, downloadJobState.status)
     }
 
     @Test

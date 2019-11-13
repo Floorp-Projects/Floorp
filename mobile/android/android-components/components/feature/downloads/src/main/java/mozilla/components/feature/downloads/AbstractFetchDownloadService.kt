@@ -73,7 +73,7 @@ abstract class AbstractFetchDownloadService : Service() {
         var job: Job? = null,
         var state: DownloadState,
         var currentBytesCopied: Long = 0,
-        var status: DownloadJobStatus,
+        @Volatile var status: DownloadJobStatus,
         var foregroundServiceId: Int = 0,
         var downloadDeleted: Boolean = false
     )
@@ -93,7 +93,7 @@ abstract class AbstractFetchDownloadService : Service() {
         object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent?) {
                 val downloadId =
-                        intent?.extras?.getLong(DownloadNotification.EXTRA_DOWNLOAD_ID) ?: return
+                    intent?.extras?.getLong(DownloadNotification.EXTRA_DOWNLOAD_ID) ?: return
                 val currentDownloadJobState = downloadJobs[downloadId] ?: return
 
                 when (intent.action) {
@@ -144,10 +144,10 @@ abstract class AbstractFetchDownloadService : Service() {
 
                     ACTION_OPEN -> {
                         if (!openFile(
-                            context = context,
-                            filePath = currentDownloadJobState.state.filePath,
-                            contentType = currentDownloadJobState.state.contentType
-                        )) {
+                                context = context,
+                                filePath = currentDownloadJobState.state.filePath,
+                                contentType = currentDownloadJobState.state.contentType
+                            )) {
                             Toast.makeText(applicationContext,
                                 applicationContext.getString(R.string.mozac_feature_downloads_could_not_open_file),
                                 Toast.LENGTH_SHORT
@@ -285,6 +285,15 @@ abstract class AbstractFetchDownloadService : Service() {
             useFileStream(newDownloadState, isResumingDownload) { outStream ->
                 copyInChunks(downloadJobs[download.id]!!, inStream, outStream)
             }
+
+            verifyDownload(downloadJobs[download.id]!!)
+        }
+    }
+
+    internal fun verifyDownload(download: DownloadJobState) {
+        if (download.status != DownloadJobStatus.PAUSED &&
+            download.currentBytesCopied < download.state.contentLength ?: 0) {
+            download.status = DownloadJobStatus.FAILED
         }
     }
 
