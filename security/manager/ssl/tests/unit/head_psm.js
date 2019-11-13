@@ -1117,7 +1117,7 @@ function checkPKCS11ModuleNotPresent(moduleName, libraryName) {
     notEqual(
       module.name,
       moduleName,
-      "Non-test module name shouldn't equal 'PKCS11 Test Module'"
+      `Non-test module name shouldn't equal '${moduleName}'`
     );
     ok(
       !(module.libName && module.libName.includes(libraryName)),
