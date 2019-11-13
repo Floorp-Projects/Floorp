@@ -1709,9 +1709,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement,
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAudioChannelWrapper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mErrorSink->mError)
-  for (OutputMediaStream& s : tmp->mOutputStreams) {
-    s.mStream->SetFinishedOnInactive(true);
-  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutputStreams)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutputTrackSources)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPlayed)
@@ -3320,7 +3317,6 @@ void HTMLMediaElement::UpdateOutputTrackSources() {
     LOG(LogLevel::Debug,
         ("Playback ended or source changed. Discarding stream %p",
          mOutputStreams[i].mStream.get()));
-    mOutputStreams[i].mStream->SetFinishedOnInactive(true);
     mOutputStreams.RemoveElementAt(i);
     if (mOutputStreams.IsEmpty()) {
       mTracksCaptured = nullptr;
