@@ -18,11 +18,19 @@ this.experiments_urlbar = class extends ExtensionAPI {
           isBrowserShowingNotification() {
             let window = BrowserWindowTracker.getTopWindow();
 
-            // urlbar view, app menu notification, notification box (info bar)
+            // urlbar view and notification box (info bar)
             if (
               window.gURLBar.view.isOpen ||
-              AppMenuNotifications.activeNotification ||
               window.gBrowser.getNotificationBox().currentNotification
+            ) {
+              return true;
+            }
+
+            // app menu notification doorhanger
+            if (
+              AppMenuNotifications.activeNotification &&
+              !AppMenuNotifications.activeNotification.dismissed &&
+              !AppMenuNotifications.activeNotification.options.badgeOnly
             ) {
               return true;
             }
