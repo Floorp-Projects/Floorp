@@ -28,7 +28,6 @@ module.exports = {
     privileged: require("../lib/environments/privileged.js"),
   },
   processors: {
-    ".xml": require("../lib/processors/xbl-bindings"),
     ".xul": require("../lib/processors/xul"),
   },
   rules: {
