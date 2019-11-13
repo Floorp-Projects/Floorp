@@ -13,7 +13,7 @@ job-defaults:
     run-on-projects:
         by-test-platform:
             windows10-64-ref-hw-2017/opt: ['try', 'mozilla-central']
-            windows10-aarch64/opt: ['try', 'mozilla-central']
+            windows10-aarch64/opt: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try', 'ash']
             macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['try', 'trunk', 'mozilla-beta']
@@ -984,7 +984,7 @@ raptor-jetstream2-firefox:
     treeherder-symbol: Rap(js2)
     run-on-projects:
         by-test-platform:
-            windows10-aarch64/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['try']
             default: ['mozilla-central', 'try']
     tier: 3
     max-run-time: 8000
@@ -1001,7 +1001,7 @@ raptor-jetstream2-firefox-profiling:
     treeherder-symbol: Rap-Prof(js2)
     run-on-projects:
         by-test-platform:
-            windows10-aarch64/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['try']
             default: ['mozilla-central', 'try']
     max-run-time: 8000
     tier: 3

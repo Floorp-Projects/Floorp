@@ -16,7 +16,7 @@ job-defaults:
             default: ['fission']
     run-on-projects:
         by-test-platform:
-            windows10-aarch64/opt: ['try', 'mozilla-central']
+            windows10-aarch64/opt: ['try']
             default: built-projects
     mozharness:
         script:
@@ -248,7 +248,7 @@ mochitest-media:
         by-test-platform:
             android-hw-.*-api-16/opt: ['try']
             android-hw-.*-api-16/(?:debug|pgo)?: ['try', 'trunk', 'mozilla-beta', 'mozilla-release']
-            windows10-aarch64/opt: ['try', 'mozilla-central']
+            windows10-aarch64/opt: ['try']
             default: built-projects
     variants:
         by-test-platform:
@@ -326,7 +326,7 @@ mochitest-webgl1-core:
     treeherder-symbol: M(gl1c)
     run-on-projects:
         by-test-platform:
-            windows10-aarch64/opt: ['try', 'mozilla-central']
+            windows10-aarch64/opt: ['try']
             default: built-projects
     virtualization: virtual-with-gpu
     e10s: true
@@ -350,7 +350,7 @@ mochitest-webgl1-ext:
     treeherder-symbol: M(gl1e)
     run-on-projects:
         by-test-platform:
-            windows10-aarch64/opt: ['try', 'mozilla-central']
+            windows10-aarch64/opt: ['try']
             default: built-projects
     virtualization: virtual-with-gpu
     e10s: true
@@ -373,7 +373,7 @@ mochitest-webgl2-core:
     treeherder-symbol: M(gl2c)
     run-on-projects:
         by-test-platform:
-            windows10-aarch64/opt: ['try', 'mozilla-central']
+            windows10-aarch64/opt: ['try']
             default: built-projects
     virtualization: virtual-with-gpu
     e10s: true
@@ -396,7 +396,7 @@ mochitest-webgl2-ext:
     treeherder-symbol: M(gl2e)
     run-on-projects:
         by-test-platform:
-            windows10-aarch64/opt: ['try', 'mozilla-central']
+            windows10-aarch64/opt: ['try']
             default: built-projects
     virtualization: virtual-with-gpu
     chunks: 4
