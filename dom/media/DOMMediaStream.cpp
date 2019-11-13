@@ -373,6 +373,7 @@ already_AddRefed<DOMMediaStream> DOMMediaStream::Clone() {
 }
 
 bool DOMMediaStream::Active() const { return mActive; }
+bool DOMMediaStream::Audible() const { return mAudible; }
 
 MediaStreamTrack* DOMMediaStream::GetTrackById(const nsAString& aId) const {
   for (const auto& track : mTracks) {
