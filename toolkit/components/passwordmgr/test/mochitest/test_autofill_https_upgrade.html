@@ -46,7 +46,10 @@ async function prepareLoginsAndProcessForm(url, logins = []) {
 }
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["signon.schemeUpgrades", true],
+    ["signon.includeOtherSubdomainsInLookup", true],
+  ]});
 });
 
 add_task(async function test_simpleNoDupesNoAction() {
@@ -113,6 +116,39 @@ add_task(async function test_dedupe() {
   let uname = iframeDoc.getElementById("form-basic-username");
   let pword = iframeDoc.getElementById("form-basic-password");
   checkLoginForm(uname, "name1", pword, "passHTTPStoHTTPS");
+});
+
+add_task(async function test_dedupe_subdomain() {
+  // subdomain match (should be autofilled)
+  let loginToFill = new nsLoginInfo("http://test1.example.com", "http://test1.example.com", null,
+                                    "name1", "pass1");
+  const loginToFillGUID = "subdomain-match"
+  // Assign a GUID to this login so we can ensure this is the login that gets
+  // filled later.
+  loginToFill.QueryInterface(SpecialPowers.Ci.nsILoginMetaInfo).guid = loginToFillGUID;
+
+  await prepareLoginsAndProcessForm("https://test1.example.com" + MISSING_ACTION_PATH, [
+    // All logins have the same username and password:
+    // https: (scheme match)
+    new nsLoginInfo("https://example.com", "https://example.com", null,
+                    "name1", "pass1"),
+    loginToFill,
+    // formActionOrigin match
+    new nsLoginInfo("http://example.com", "https://test1.example.com", null,
+                    "name1", "pass1"),
+  ]);
+
+  let bc = getIframeBrowsingContext(window, 0);
+  await checkLoginFormInChildFrame(bc, "form-basic-username", "name1",
+                                   "form-basic-password", "pass1");
+
+  let filledGUID = await SpecialPowers.spawn(bc, [], function getFilledGUID() {
+    let LMC = this.content.getWindowGlobalChild().getActor("LoginManager");
+    let doc = this.content.document;
+    let form = doc.getElementById("form-basic");
+    return LMC.stateForDocument(doc).fillsByRootElement.get(form).guid;
+  });
+  is(filledGUID, loginToFillGUID, "Check the correct login was filled");
 });
 
 </script>
