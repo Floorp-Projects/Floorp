@@ -269,16 +269,6 @@ class nsNavHistory final : public nsSupportsWeakReference,
   bool hasHistoryEntries();
 
   /**
-   * Registers a TRANSITION_EMBED visit for the session.
-   *
-   * @param aURI
-   *        URI of the page.
-   * @param aTime
-   *        Visit time.  Only the last registered visit time is retained.
-   */
-  void registerEmbedVisit(nsIURI* aURI, int64_t aTime);
-
-  /**
    * Returns whether the specified url has a embed visit.
    *
    * @param aURI
@@ -486,18 +476,6 @@ class nsNavHistory final : public nsSupportsWeakReference,
   RecentEventHash mRecentTyped;
   RecentEventHash mRecentLink;
   RecentEventHash mRecentBookmark;
-
-  // Embed visits tracking.
-  class VisitHashKey : public nsURIHashKey {
-   public:
-    explicit VisitHashKey(const nsIURI* aURI) : nsURIHashKey(aURI) {}
-    VisitHashKey(VisitHashKey&& aOther) : nsURIHashKey(std::move(aOther)) {
-      MOZ_ASSERT_UNREACHABLE("Do not call me!");
-    }
-    PRTime visitTime;
-  };
-
-  nsTHashtable<VisitHashKey> mEmbedVisits;
 
   bool CheckIsRecentEvent(RecentEventHash* hashTable, const nsACString& url);
   void ExpireNonrecentEvents(RecentEventHash* hashTable);
