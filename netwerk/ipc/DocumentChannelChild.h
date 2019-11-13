@@ -12,6 +12,7 @@
 #include "mozilla/net/PDocumentChannelChild.h"
 #include "nsBaseChannel.h"
 #include "nsIChildChannel.h"
+#include "nsIClassifiedChannel.h"
 #include "nsITraceableChannel.h"
 
 #define DOCUMENT_CHANNEL_CHILD_IID                   \
@@ -26,6 +27,7 @@ namespace net {
 
 class DocumentChannelChild final : public PDocumentChannelChild,
                                    public nsBaseChannel,
+                                   public nsIClassifiedChannel,
                                    public nsITraceableChannel {
  public:
   DocumentChannelChild(nsDocShellLoadState* aLoadState,
@@ -36,6 +38,7 @@ class DocumentChannelChild final : public PDocumentChannelChild,
 
   NS_DECL_ISUPPORTS_INHERITED;
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
+  NS_DECL_NSICLASSIFIEDCHANNEL
   NS_DECL_NSITRACEABLECHANNEL
 
   NS_DECLARE_STATIC_IID_ACCESSOR(DOCUMENT_CHANNEL_CHILD_IID)
@@ -72,16 +75,33 @@ class DocumentChannelChild final : public PDocumentChannelChild,
   mozilla::ipc::IPCResult RecvAttachStreamFilter(
       Endpoint<extensions::PStreamFilterParent>&& aEndpoint);
 
+  mozilla::ipc::IPCResult RecvNotifyClassificationFlags(
+      const uint32_t& aClassificationFlags, const bool& aIsThirdParty);
+  mozilla::ipc::IPCResult RecvNotifyChannelClassifierProtectionDisabled(
+      const uint32_t& aAcceptedReason);
+  mozilla::ipc::IPCResult RecvNotifyCookieAllowed();
+  mozilla::ipc::IPCResult RecvNotifyCookieBlocked(
+      const uint32_t& aRejectedReason);
+
+  mozilla::ipc::IPCResult RecvSetClassifierMatchedInfo(
+      const nsCString& aList, const nsCString& aProvider,
+      const nsCString& aFullHash);
+  mozilla::ipc::IPCResult RecvSetClassifierMatchedTrackingInfo(
+      const nsCString& aLists, const nsCString& aFullHash);
+
   mozilla::ipc::IPCResult RecvConfirmRedirect(
       const LoadInfoArgs& aLoadInfo, nsIURI* aNewUri,
       ConfirmRedirectResolver&& aResolve);
+
+  void DoFailedAsyncOpen(const nsresult& aStatusCode);
 
   const nsTArray<DocumentChannelRedirect>& GetRedirectChain() const {
     return mRedirects;
   }
 
+  friend class NeckoTargetChannelEvent<DocumentChannelChild>;
+
  private:
-  friend class NeckoTargetChannelFunctionEvent;
   void ShutdownListeners(nsresult aStatusCode);
 
   ~DocumentChannelChild() = default;
@@ -89,6 +109,15 @@ class DocumentChannelChild final : public PDocumentChannelChild,
   RefPtr<ChannelEventQueue> mEventQueue;
   nsCOMPtr<nsIChannel> mRedirectChannel;
   nsTArray<DocumentChannelRedirect> mRedirects;
+
+  // Classified channel's matched information
+  uint32_t mFirstPartyClassificationFlags = 0;
+  uint32_t mThirdPartyClassificationFlags = 0;
+  nsCString mMatchedList;
+  nsCString mMatchedProvider;
+  nsCString mMatchedFullHash;
+  nsTArray<nsCString> mMatchedTrackingLists;
+  nsTArray<nsCString> mMatchedTrackingFullHashes;
 
   RedirectToRealChannelResolver mRedirectResolver;
 
