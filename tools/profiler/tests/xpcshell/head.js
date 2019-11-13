@@ -2,52 +2,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* import-globals-from ../shared-head.js */
+
+// This Services declaration may shadow another from head.js, so define it as
+// a var rather than a const.
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var { AppConstants } = ChromeUtils.import(
+
+const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-var { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-/**
- * Get the payloads of a type recursively, including from all subprocesses.
- *
- * @param {Object} profile The gecko profile.
- * @param {string} type The marker payload type, e.g. "DiskIO".
- * @param {Array} payloadTarget The recursive list of payloads.
- * @return {Array} The final payloads.
- */
-function getAllPayloadsOfType(profile, type, payloadTarget = []) {
-  for (const { markers } of profile.threads) {
-    for (const markerTuple of markers.data) {
-      const payload = markerTuple[markers.schema.data];
-      if (payload && payload.type === type) {
-        payloadTarget.push(payload);
-      }
-    }
-  }
-
-  for (const subProcess of profile.processes) {
-    getAllPayloadsOfType(subProcess, type, payloadTarget);
-  }
-
-  return payloadTarget;
+// Load the shared head
+const sharedHead = do_get_file("shared-head.js", false);
+if (!sharedHead) {
+  throw new Error("Could not load the shared head.");
 }
-
-/**
- * This is a helper function be able to run `await wait(500)`. Unfortunately
- * this is needed as the act of collecting functions relies on the periodic
- * sampling of the threads. See:
- * https://bugzilla.mozilla.org/show_bug.cgi?id=1529053
- *
- * @param {number} time
- * @returns {Promise}
- */
-function wait(time) {
-  return new Promise(resolve => {
-    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-    setTimeout(resolve, time);
-  });
-}
+Services.scriptloader.loadSubScript(
+  Services.io.newFileURI(sharedHead).spec,
+  this
+);
 
 /**
  * This function takes a thread, and a sample tuple from the "data" array, and
@@ -79,28 +53,6 @@ function getInflatedStackLocations(thread, sample) {
 
   // The profiler tree is inverted, so reverse the array.
   return locations.reverse();
-}
-
-/**
- * It can be helpful to deterministically do at least one more profile sample.
- * Sampling is done based on a timer. This function spins on a while loop until
- * at least one more sample is collected.
- *
- * @return {number} The index of the collected sample.
- */
-function doAtLeastOnePeriodicSample() {
-  function getProfileSampleCount() {
-    const profile = Services.profiler.getProfileData();
-    return profile.threads[0].samples.data.length;
-  }
-
-  const sampleCount = getProfileSampleCount();
-  // Create an infinite loop until a sample has been collected.
-  while (true) {
-    if (sampleCount < getProfileSampleCount()) {
-      return sampleCount;
-    }
-  }
 }
 
 /**
