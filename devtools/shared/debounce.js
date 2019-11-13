@@ -14,15 +14,23 @@
  *         The wait period
  * @param {Object} scope
  *         The scope to use for func
- * @return {Function} The debounced function
+ * @return {Function} The debounced function, which has a `cancel` method that the
+ *                    consumer can call to cancel any pending setTimeout callback.
  */
 exports.debounce = function(func, wait, scope) {
   let timer = null;
 
-  return function() {
+  function clearTimer(resetTimer = false) {
     if (timer) {
       clearTimeout(timer);
     }
+    if (resetTimer) {
+      timer = null;
+    }
+  }
+
+  const debouncedFunction = function() {
+    clearTimer();
 
     const args = arguments;
     timer = setTimeout(function() {
@@ -30,4 +38,8 @@ exports.debounce = function(func, wait, scope) {
       func.apply(scope, args);
     }, wait);
   };
+
+  debouncedFunction.cancel = clearTimer.bind(null, true);
+
+  return debouncedFunction;
 };
