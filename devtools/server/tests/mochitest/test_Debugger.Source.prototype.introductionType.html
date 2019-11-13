@@ -139,7 +139,7 @@ addTest(function InsertRover() {
 // Create a XUL document with a script element, and check its introduction type.
 addTest(function XULDocumentScript() {
   const xulFrame = document.createElement("iframe");
-  xulFrame.src = "doc_Debugger.Source.prototype.introductionType.xul";
+  xulFrame.src = "doc_Debugger.Source.prototype.introductionType.xhtml";
   xulFrame.onload = xulLoaded;
   info("Appending iframe containing XUL document");
   document.body.appendChild(xulFrame);

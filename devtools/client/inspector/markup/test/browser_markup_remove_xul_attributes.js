@@ -6,7 +6,7 @@
 // Test confirms that XUL attributes don't show up as empty
 // attributes after being deleted
 
-const TEST_URL = URL_ROOT + "doc_markup_xul.xul";
+const TEST_URL = URL_ROOT + "doc_markup_xul.xhtml";
 
 add_task(async function() {
   const { inspector, testActor } = await openInspectorForURL(TEST_URL);

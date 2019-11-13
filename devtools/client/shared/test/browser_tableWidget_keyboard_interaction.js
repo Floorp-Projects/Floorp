@@ -5,7 +5,7 @@
 
 "use strict";
 
-const TEST_URI = CHROME_URL_ROOT + "doc_tableWidget_keyboard_interaction.xul";
+const TEST_URI = CHROME_URL_ROOT + "doc_tableWidget_keyboard_interaction.xhtml";
 const TEST_OPT = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
 const { TableWidget } = require("devtools/client/shared/widgets/TableWidget");

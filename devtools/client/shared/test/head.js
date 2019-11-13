@@ -17,7 +17,7 @@ const { DOMHelpers } = require("devtools/shared/dom-helpers");
 const { Hosts } = require("devtools/client/framework/toolbox-hosts");
 
 const TEST_URI_ROOT = "http://example.com/browser/devtools/client/shared/test/";
-const OPTIONS_VIEW_URL = CHROME_URL_ROOT + "doc_options-view.xul";
+const OPTIONS_VIEW_URL = CHROME_URL_ROOT + "doc_options-view.xhtml";
 
 const EXAMPLE_URL =
   "chrome://mochitests/content/browser/devtools/client/shared/test/";

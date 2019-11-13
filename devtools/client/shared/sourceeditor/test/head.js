@@ -26,7 +26,7 @@ async function setup(additionalOpts = {}) {
     const opt = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
     const win = Services.ww.openWindow(
       null,
-      CHROME_URL_ROOT + "head.xul",
+      CHROME_URL_ROOT + "head.xhtml",
       "_blank",
       opt,
       null
