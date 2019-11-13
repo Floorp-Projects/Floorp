@@ -36,7 +36,7 @@ function start()
   snapshot1 = snapshotWindow(iframe.contentWindow, false);
 
   // Then, change one of the links in the iframe to being visited.
-  visitedlink.href = top.location;
+  visitedlink.href = window.location;
 
   // Then, start polling to see when the history has updated the display.
   setTimeout(poll_for_restyle, 100);
