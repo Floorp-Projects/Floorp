@@ -9,6 +9,7 @@
 #include "AudioDestinationNode.h"
 #include "nsIScriptError.h"
 #include "AudioNodeTrack.h"
+#include "MediaStreamTrack.h"
 
 namespace mozilla {
 namespace dom {
