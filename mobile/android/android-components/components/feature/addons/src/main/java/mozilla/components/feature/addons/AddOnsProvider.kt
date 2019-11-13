@@ -8,8 +8,12 @@ package mozilla.components.feature.addons
  * A contract that indicate how an add-on provider must behave.
  */
 interface AddOnsProvider {
+
     /**
      * Provides a list of all available add-ons.
+     *
+     * @param allowCache whether or not the result may be provided
+     * from a previously cached response, defaults to true.
      */
-    suspend fun getAvailableAddOns(): List<AddOn>
+    suspend fun getAvailableAddOns(allowCache: Boolean = true): List<AddOn>
 }

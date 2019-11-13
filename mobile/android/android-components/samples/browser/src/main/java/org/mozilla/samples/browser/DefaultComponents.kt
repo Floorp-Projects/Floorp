@@ -30,7 +30,7 @@ import mozilla.components.browser.storage.memory.InMemoryHistoryStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
-import mozilla.components.feature.addons.amo.AddOnsCollectionsProvider
+import mozilla.components.feature.addons.amo.AddOnCollectionProvider
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.customtabs.CustomTabIntentProcessor
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
@@ -54,6 +54,8 @@ import org.mozilla.samples.browser.addons.AddOnsActivity
 import org.mozilla.samples.browser.integration.FindInPageIntegration
 import org.mozilla.samples.browser.request.SampleRequestInterceptor
 import java.util.concurrent.TimeUnit
+
+private const val DAY_IN_MINUTES = 24 * 60L
 
 @Suppress("LargeClass")
 open class DefaultComponents(private val applicationContext: Context) {
@@ -114,7 +116,9 @@ open class DefaultComponents(private val applicationContext: Context) {
         }
     }
 
-    val addOnsProvider by lazy { AddOnsCollectionsProvider(client = client) }
+    val addOnProvider by lazy {
+        AddOnCollectionProvider(applicationContext, client, maxCacheAgeInMinutes = DAY_IN_MINUTES)
+    }
 
     val sessionUseCases by lazy { SessionUseCases(sessionManager) }
 
