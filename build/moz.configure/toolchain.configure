@@ -1405,12 +1405,12 @@ set_config('PREPROCESS_OPTION', preprocess_option)
 
 
 # We only want to include windows.configure when we are compiling on
-# Windows, for Windows.
+# Windows, or for Windows.
 
 
 @depends(target, host)
 def is_windows(target, host):
-    return host.kernel == 'WINNT' and target.kernel == 'WINNT'
+    return host.kernel == 'WINNT' or target.kernel == 'WINNT'
 
 
 include('windows.configure', when=is_windows)
@@ -2383,12 +2383,13 @@ def rc_names(c_compiler, toolchain_prefix):
     return ('rc',)
 
 
-check_prog('RC', rc_names, paths=sdk_bin_path)
+check_prog('RC', rc_names, paths=sdk_bin_path, when=target_is_windows)
 
 
-@depends(link, toolchain_prefix)
-def ar_config(link, toolchain_prefix):
-    if link:  # if LINKER is set, it's either for lld-link or link
+@depends(link, toolchain_prefix, c_compiler)
+def ar_config(link, toolchain_prefix, c_compiler):
+    if c_compiler.type == 'clang-cl' and link:
+        # if LINKER is set, it's either for lld-link or link
         if 'lld-link' in link:
             return namespace(
                 names=('llvm-lib',),
