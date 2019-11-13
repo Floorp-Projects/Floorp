@@ -654,17 +654,17 @@ sec_pkcs5CreateAlgorithmID(SECOidTag algorithm,
         pbeAlgorithm = SEC_OID_PKCS5_PBKDF2;
         /*
          * 'algorithm' is the overall algorithm oid tag used to wrap the
-         * entire algoithm ID block. For PKCS5v1 and PKCS12, this
+         * entire algorithm ID block. For PKCS5v1 and PKCS12, this
          * algorithm OID has encoded in it both the PBE KDF function
          * and the encryption algorithm. For PKCS 5v2, PBE KDF and
          * encryption/macing oids are encoded as parameters in
          * the algorithm ID block.
          *
          * Thus in PKCS5 v1 and PKCS12, this algorithm maps to a pkcs #11
-         * mechanism, where as in PKCS 5v2, this alogithm tag does not map
+         * mechanism, where as in PKCS 5v2, this algorithm tag does not map
          * directly to a PKCS #11 mechanim, instead the 2 oids in the
          * algorithm ID block map the the actual PKCS #11 mechanism.
-         * gorithm is). We use choose this algorithm oid based on the
+         * algorithm is). We use choose this algorithm oid based on the
          * cipherAlgorithm to determine what this should be (MAC1 or PBES2).
          */
         if (algorithm == SEC_OID_PKCS5_PBKDF2) {

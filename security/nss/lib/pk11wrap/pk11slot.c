@@ -419,6 +419,8 @@ PK11_NewSlotInfo(SECMODModule *mod)
     slot->hasRootCerts = PR_FALSE;
     slot->hasRootTrust = PR_FALSE;
     slot->nssToken = NULL;
+    slot->profileList = NULL;
+    slot->profileCount = 0;
     return slot;
 }
 
@@ -445,6 +447,9 @@ PK11_DestroySlot(PK11SlotInfo *slot)
 
     if (slot->mechanismList) {
         PORT_Free(slot->mechanismList);
+    }
+    if (slot->profileList) {
+        PORT_Free(slot->profileList);
     }
     if (slot->isThreadSafe && slot->sessionLock) {
         PZ_DestroyLock(slot->sessionLock);
@@ -1170,6 +1175,76 @@ PK11_ReadMechanismList(PK11SlotInfo *slot)
     return SECSuccess;
 }
 
+static SECStatus
+pk11_ReadProfileList(PK11SlotInfo *slot)
+{
+    CK_ATTRIBUTE findTemp[2];
+    CK_ATTRIBUTE *attrs;
+    CK_BBOOL cktrue = CK_TRUE;
+    CK_OBJECT_CLASS oclass = CKO_PROFILE;
+    int tsize;
+    int objCount;
+    CK_OBJECT_HANDLE *handles = NULL;
+    int i;
+
+    attrs = findTemp;
+    PK11_SETATTRS(attrs, CKA_TOKEN, &cktrue, sizeof(cktrue));
+    attrs++;
+    PK11_SETATTRS(attrs, CKA_CLASS, &oclass, sizeof(oclass));
+    attrs++;
+    tsize = attrs - findTemp;
+    PORT_Assert(tsize <= sizeof(findTemp) / sizeof(CK_ATTRIBUTE));
+
+    if (slot->profileList) {
+        PORT_Free(slot->profileList);
+        slot->profileList = NULL;
+    }
+    slot->profileCount = 0;
+
+    objCount = 0;
+    handles = pk11_FindObjectsByTemplate(slot, findTemp, tsize, &objCount);
+    if (handles == NULL) {
+        if (objCount < 0) {
+            return SECFailure; /* error code is set */
+        }
+        PORT_Assert(objCount == 0);
+        return SECSuccess;
+    }
+
+    slot->profileList = (CK_PROFILE_ID *)
+        PORT_Alloc(objCount * sizeof(CK_PROFILE_ID));
+    if (slot->profileList == NULL) {
+        PORT_Free(handles);
+        return SECFailure; /* error code is set */
+    }
+
+    for (i = 0; i < objCount; i++) {
+        CK_ULONG value;
+
+        value = PK11_ReadULongAttribute(slot, handles[i], CKA_PROFILE_ID);
+        if (value == CK_UNAVAILABLE_INFORMATION) {
+            continue;
+        }
+        slot->profileList[slot->profileCount++] = value;
+    }
+
+    PORT_Free(handles);
+    return SECSuccess;
+}
+
+static PRBool
+pk11_HasProfile(PK11SlotInfo *slot, CK_PROFILE_ID id)
+{
+    int i;
+
+    for (i = 0; i < slot->profileCount; i++) {
+        if (slot->profileList[i] == id) {
+            return PR_TRUE;
+        }
+    }
+    return PR_FALSE;
+}
+
 /*
  * initialize a new token
  * unlike initialize slot, this can be called multiple times in the lifetime
@@ -1290,6 +1365,11 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
     status = nssToken_Refresh(slot->nssToken);
     if (status != PR_SUCCESS)
         return SECFailure;
+
+    rv = pk11_ReadProfileList(slot);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
 
     if (!(slot->isInternal) && (slot->hasRandom)) {
         /* if this slot has a random number generater, use it to add entropy
@@ -1695,6 +1775,7 @@ PK11_IsFriendly(PK11SlotInfo *slot)
 {
     /* internal slot always has public readable certs */
     return (PRBool)(slot->isInternal ||
+                    pk11_HasProfile(slot, CKP_PUBLIC_CERTIFICATES_TOKEN) ||
                     ((slot->defaultFlags & SECMOD_FRIENDLY_FLAG) ==
                      SECMOD_FRIENDLY_FLAG));
 }

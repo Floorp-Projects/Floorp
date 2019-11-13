@@ -121,6 +121,11 @@ extern char *PORT_ArenaStrdup(PLArenaPool *arena, const char *str);
 SEC_END_PROTOS
 
 #define PORT_Assert PR_ASSERT
+/* This is a variation of PORT_Assert where the arguments will be always
+ * used either in Debug or not. But, in optimized mode the result will be
+ * ignored. See more details in Bug 1588015. */
+#define PORT_AssertArg PR_ASSERT_ARG
+
 /* This runs a function that should return SECSuccess.
  * Intended for NSS internal use only.
  * The return value is asserted in a debug build, otherwise it is ignored.

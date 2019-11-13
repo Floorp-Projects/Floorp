@@ -19,6 +19,6 @@
     "merge": "^1.2.0",
     "minimist": "^1.2.0",
     "slugid": "^1.1.0",
-    "taskcluster-client": "^1.2.1"
+    "taskcluster-client": "^22.0.0"
   }
 }
