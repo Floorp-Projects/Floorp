@@ -23,6 +23,7 @@ import java.util.LinkedList;
 
     private LinkedList<ByteBuffer> mBuffers = new LinkedList<>();
     private boolean mEOF;
+    private boolean mClosed;
     private boolean mResumed;
     private Support mSupport;
 
@@ -40,16 +41,29 @@ import java.util.LinkedList;
     public synchronized void close() throws IOException {
         super.close();
         sendEof();
+        mClosed = true;
     }
 
     @Override
     public synchronized int available() throws IOException {
+        if (mClosed) {
+            return 0;
+        }
+
         final ByteBuffer buf = mBuffers.peekFirst();
         return buf != null ? buf.remaining() : 0;
     }
 
+    private void ensureNotClosed() throws IOException {
+        if (mClosed) {
+            throw new IOException("Stream is closed");
+        }
+    }
+
     @Override
     public synchronized int read() throws IOException {
+        ensureNotClosed();
+
         int expect = Integer.SIZE / 8;
         byte[] bytes = new byte[expect];
 
@@ -75,6 +89,8 @@ import java.util.LinkedList;
     @Override
     public synchronized int read(final @NonNull byte[] dest, final int offset, final int length)
             throws IOException {
+        ensureNotClosed();
+
         while (!mEOF && mBuffers.size() == 0) {
             // The underlying channel is suspended, so resume that before
             // waiting for a buffer.
