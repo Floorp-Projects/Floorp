@@ -123,10 +123,7 @@ class AutoPushFeature(
 
         DeliveryManager.with(connection) {
             job = scope.launch {
-                // TODO replace with unsubscribeAll API when available
-                PushType.values().forEach { type ->
-                    unsubscribe(type.toChannelId())
-                }
+                unsubscribeAll()
                 job.cancel()
             }
         }
@@ -276,7 +273,7 @@ class AutoPushFeature(
     internal fun verifyActiveSubscriptions() {
         DeliveryManager.with(connection) {
             job = scope.launchAndTry {
-                val notifyObservers = connection.verifyConnection()
+                val notifyObservers = verifyConnection()
 
                 if (notifyObservers) {
                     logger.info("Subscriptions have changed; notifying observers..")

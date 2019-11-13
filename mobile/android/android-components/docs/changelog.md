@@ -59,6 +59,9 @@ permalink: /changelog/
     sitePermissions[Permission.LOCATION] //  ALLOWED will be returned
   ```
 
+* **feature-push**
+  * Added `unsubscribeAll` support from the Rust native layer.
+
 # 20.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v19.0.0...v20.0.0)
