@@ -1477,16 +1477,9 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
                      aParent.AsContent()->GetBindingParent(),
              "We should be passed the right binding parent");
 
-#ifdef MOZ_XUL
   // First set the binding parent
-  if (nsXULElement* xulElem = nsXULElement::FromNode(this)) {
-    xulElem->SetXULBindingParent(aContext.GetBindingParent());
-  } else
-#endif
-  {
-    if (Element* bindingParent = aContext.GetBindingParent()) {
-      ExtendedDOMSlots()->mBindingParent = bindingParent;
-    }
+  if (Element* bindingParent = aContext.GetBindingParent()) {
+    ExtendedDOMSlots()->mBindingParent = bindingParent;
   }
 
   const bool hadParent = !!GetParentNode();
@@ -1771,19 +1764,8 @@ void Element::UnbindFromTree(bool aNullParent) {
     SetSubtreeRootPointer(aNullParent ? this : mParent->SubtreeRoot());
   }
 
-  bool clearBindingParent = true;
-
-#ifdef MOZ_XUL
-  if (nsXULElement* xulElem = nsXULElement::FromNode(this)) {
-    xulElem->SetXULBindingParent(nullptr);
-    clearBindingParent = false;
-  }
-#endif
-
   if (nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots()) {
-    if (clearBindingParent) {
-      slots->mBindingParent = nullptr;
-    }
+    slots->mBindingParent = nullptr;
     if (aNullParent || !mParent->IsInShadowTree()) {
       slots->mContainingShadow = nullptr;
     }

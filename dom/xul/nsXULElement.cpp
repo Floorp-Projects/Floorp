@@ -103,7 +103,7 @@ uint32_t nsXULPrototypeAttribute::gNumCacheFills;
 //
 
 nsXULElement::nsXULElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsStyledElement(std::move(aNodeInfo)), mBindingParent(nullptr) {
+    : nsStyledElement(std::move(aNodeInfo)) {
   XUL_PROTOTYPE_ATTRIBUTE_METER(gNumElements);
 }
 
@@ -271,17 +271,7 @@ void NS_TrustedNewXULElement(
 //----------------------------------------------------------------------
 // nsISupports interface
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULElement)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULElement, nsStyledElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBindingParent);
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULElement, nsStyledElement)
-  // Why aren't we unlinking the prototype?
-  tmp->ClearHasID();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mBindingParent);
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED(nsXULElement, nsStyledElement)
 
 NS_IMPL_ADDREF_INHERITED(nsXULElement, nsStyledElement)
 NS_IMPL_RELEASE_INHERITED(nsXULElement, nsStyledElement)
