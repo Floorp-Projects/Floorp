@@ -488,30 +488,23 @@ void gfxTextRun::DrawPartialLigature(gfxFont* aFont, Range aRange,
   }
 }
 
-// Returns true if a glyph run is using a font with synthetic bolding enabled,
-// or a color font (COLR/SVG/sbix/CBDT), false otherwise. This is used to
+// Returns true if the font has synthetic bolding enabled,
+// or is a color font (COLR/SVG/sbix/CBDT), false otherwise. This is used to
 // check whether the text run needs to be explicitly composited in order to
 // support opacity.
-static bool HasSyntheticBoldOrColor(const gfxTextRun* aRun,
-                                    gfxTextRun::Range aRange) {
-  gfxTextRun::GlyphRunIterator iter(aRun, aRange);
-  while (iter.NextRun()) {
-    gfxFont* font = iter.GetGlyphRun()->mFont;
-    if (font) {
-      if (font->IsSyntheticBold()) {
-        return true;
-      }
-      gfxFontEntry* fe = font->GetFontEntry();
-      if (fe->TryGetSVGData(font) || fe->TryGetColorGlyphs()) {
-        return true;
-      }
-#if defined(XP_MACOSX)  // sbix fonts only supported via Core Text
-      if (fe->HasFontTable(TRUETYPE_TAG('s', 'b', 'i', 'x'))) {
-        return true;
-      }
-#endif
-    }
+static bool HasSyntheticBoldOrColor(gfxFont* aFont) {
+  if (aFont->IsSyntheticBold()) {
+    return true;
   }
+  gfxFontEntry* fe = aFont->GetFontEntry();
+  if (fe->TryGetSVGData(aFont) || fe->TryGetColorGlyphs()) {
+    return true;
+  }
+#if defined(XP_MACOSX)  // sbix fonts only supported via Core Text
+  if (fe->HasFontTable(TRUETYPE_TAG('s', 'b', 'i', 'x'))) {
+    return true;
+  }
+#endif
   return false;
 }
 
@@ -579,27 +572,10 @@ void gfxTextRun::Draw(Range aRange, gfx::Point aPt,
   // correctly unless first drawn without alpha
   BufferAlphaColor syntheticBoldBuffer(aParams.context);
   Color currentColor;
-  bool needToRestore = false;
-
-  if (aParams.drawMode & DrawMode::GLYPH_FILL &&
+  bool mayNeedBuffering =
+      aParams.drawMode & DrawMode::GLYPH_FILL &&
       aParams.context->HasNonOpaqueNonTransparentColor(currentColor) &&
-      HasSyntheticBoldOrColor(this, aRange) &&
-      !aParams.context->GetTextDrawer()) {
-    needToRestore = true;
-    // Measure text; use the bounding box to determine the area we need
-    // to buffer.
-    gfxTextRun::Metrics metrics =
-        MeasureText(aRange, gfxFont::LOOSE_INK_EXTENTS,
-                    aParams.context->GetDrawTarget(), aParams.provider);
-    if (IsRightToLeft()) {
-      metrics.mBoundingBox.MoveBy(
-          gfxPoint(aPt.x - metrics.mAdvanceWidth, aPt.y));
-    } else {
-      metrics.mBoundingBox.MoveBy(gfxPoint(aPt.x, aPt.y));
-    }
-    syntheticBoldBuffer.PushSolidColor(metrics.mBoundingBox, currentColor,
-                                       GetAppUnitsPerDevUnit());
-  }
+      !aParams.context->GetTextDrawer();
 
   // Set up parameters that will be constant across all glyph runs we need
   // to draw, regardless of the font used.
@@ -625,9 +601,27 @@ void gfxTextRun::Draw(Range aRange, gfx::Point aPt,
 
   while (iter.NextRun()) {
     gfxFont* font = iter.GetGlyphRun()->mFont;
-    uint32_t start = iter.GetStringStart();
-    uint32_t end = iter.GetStringEnd();
-    Range ligatureRange(start, end);
+    Range runRange(iter.GetStringStart(), iter.GetStringEnd());
+
+    bool needToRestore = false;
+    if (mayNeedBuffering && HasSyntheticBoldOrColor(font)) {
+      needToRestore = true;
+      // Measure text; use the bounding box to determine the area we need
+      // to buffer.
+      gfxTextRun::Metrics metrics =
+          MeasureText(runRange, gfxFont::LOOSE_INK_EXTENTS,
+                      aParams.context->GetDrawTarget(), aParams.provider);
+      if (IsRightToLeft()) {
+        metrics.mBoundingBox.MoveBy(
+            gfxPoint(aPt.x - metrics.mAdvanceWidth, aPt.y));
+      } else {
+        metrics.mBoundingBox.MoveBy(gfxPoint(aPt.x, aPt.y));
+      }
+      syntheticBoldBuffer.PushSolidColor(metrics.mBoundingBox, currentColor,
+                                         GetAppUnitsPerDevUnit());
+    }
+
+    Range ligatureRange(runRange);
     ShrinkToLigatureBoundaries(&ligatureRange);
 
     bool drawPartial =
@@ -636,8 +630,8 @@ void gfxTextRun::Draw(Range aRange, gfx::Point aPt,
     gfx::Point origPt = aPt;
 
     if (drawPartial) {
-      DrawPartialLigature(font, Range(start, ligatureRange.start), &aPt,
-                          aParams.provider, params,
+      DrawPartialLigature(font, Range(runRange.start, ligatureRange.start),
+                          &aPt, aParams.provider, params,
                           iter.GetGlyphRun()->mOrientation);
     }
 
@@ -645,7 +639,7 @@ void gfxTextRun::Draw(Range aRange, gfx::Point aPt,
                params, iter.GetGlyphRun()->mOrientation);
 
     if (drawPartial) {
-      DrawPartialLigature(font, Range(ligatureRange.end, end), &aPt,
+      DrawPartialLigature(font, Range(ligatureRange.end, runRange.end), &aPt,
                           aParams.provider, params,
                           iter.GetGlyphRun()->mOrientation);
     }
@@ -655,11 +649,11 @@ void gfxTextRun::Draw(Range aRange, gfx::Point aPt,
     } else {
       advance += (aPt.x - origPt.x) * params.direction;
     }
-  }
 
-  // composite result when synthetic bolding used
-  if (needToRestore) {
-    syntheticBoldBuffer.PopAlpha();
+    // composite result when synthetic bolding used
+    if (needToRestore) {
+      syntheticBoldBuffer.PopAlpha();
+    }
   }
 
   if (aParams.advanceWidth) {
