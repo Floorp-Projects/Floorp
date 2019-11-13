@@ -8,9 +8,9 @@ git = "https://github.com/shravanrn/nix/"
 replace-with = "vendored-sources"
 
 [source."https://github.com/mozilla/neqo"]
-branch = "master"
 git = "https://github.com/mozilla/neqo"
 replace-with = "vendored-sources"
+rev = "a17c1e83"
 
 [source."https://github.com/hsivonen/packed_simd"]
 branch = "rust_1_32"
