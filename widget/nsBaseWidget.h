@@ -448,9 +448,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   virtual RefPtr<mozilla::layers::NativeLayerRoot> GetNativeLayerRoot() {
     return nullptr;
   }
-  virtual void DrawWindowOverlay(
-      mozilla::widget::WidgetRenderingContext* aContext,
-      LayoutDeviceIntRect aRect) {}
   virtual already_AddRefed<DrawTarget> StartRemoteDrawing();
   virtual already_AddRefed<DrawTarget> StartRemoteDrawingInRegion(
       LayoutDeviceIntRegion& aInvalidRegion, BufferMode* aBufferMode) {

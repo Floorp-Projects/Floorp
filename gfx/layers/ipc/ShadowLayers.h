@@ -292,8 +292,6 @@ class ShadowLayerForwarder final : public LayersIPCActor,
   // compositor to shutdown.
   void SynchronouslyShutdown();
 
-  virtual void WindowOverlayChanged() { mWindowOverlayChanged = true; }
-
   /**
    * The following Alloc/Open/Destroy interfaces abstract over the
    * details of working with surfaces that are shared across
@@ -424,7 +422,6 @@ class ShadowLayerForwarder final : public LayersIPCActor,
   DiagnosticTypes mDiagnosticTypes;
   bool mIsFirstPaint;
   FocusTarget mFocusTarget;
-  bool mWindowOverlayChanged;
   nsTArray<PluginWindowData> mPluginWindowData;
   UniquePtr<ActiveResourceTracker> mActiveResourceTracker;
   uint64_t mNextLayerHandle;

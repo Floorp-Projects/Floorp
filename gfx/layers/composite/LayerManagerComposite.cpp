@@ -116,7 +116,6 @@ HostLayerManager::HostLayerManager()
     : mDebugOverlayWantsNextFrame(false),
       mWarningLevel(0.0f),
       mCompositorBridgeID(0),
-      mWindowOverlayChanged(false),
       mLastPaintTime(TimeDuration::Forever()),
       mRenderStartTime(TimeStamp::Now()) {}
 
@@ -618,7 +617,7 @@ void LayerManagerComposite::UpdateAndRender() {
     invalid = mInvalidRegion;
   }
 
-  if (invalid.IsEmpty() && !mWindowOverlayChanged) {
+  if (invalid.IsEmpty()) {
     // Composition requested, but nothing has changed. Don't do any work.
     mClonedLayerTreeProperties = LayerProperties::CloneFrom(GetRoot());
     mProfilerScreenshotGrabber.NotifyEmptyFrame();
@@ -646,7 +645,6 @@ void LayerManagerComposite::UpdateAndRender() {
 
   if (!mTarget && rendered) {
     mInvalidRegion.SetEmpty();
-    mWindowOverlayChanged = false;
   }
 
   // Update cached layer tree information.
@@ -1274,10 +1272,6 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   if (usingNativeLayers) {
     UpdateDebugOverlayNativeLayers();
   } else {
-    // Allow widget to render a custom foreground.
-    mCompositor->GetWidget()->DrawWindowOverlay(
-        &widgetContext, LayoutDeviceIntRect::FromUnknownRect(bounds));
-
 #if defined(MOZ_WIDGET_ANDROID)
     if (AndroidDynamicToolbarAnimator::IsEnabled()) {
       // Depending on the content shift the toolbar may be rendered on top of
