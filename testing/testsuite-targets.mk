@@ -224,7 +224,7 @@ stage-android: make-stage-dir
 	$(NSINSTALL) $(topsrcdir)/mobile/android/fonts $(DEPTH)/_tests/reftest
 	$(NSINSTALL) $(topsrcdir)/mobile/android/fonts $(DEPTH)/_tests/testing/mochitest
 	$(NSINSTALL) -D $(DEPTH)/_tests/reftest/hyphenation
-	$(NSINSTALL) $(wildcard $(topsrcdir)/intl/locales/*/hyphenation/*.dic) $(DEPTH)/_tests/reftest/hyphenation
+	$(NSINSTALL) $(wildcard $(topsrcdir)/intl/locales/*/hyphenation/*.hyf) $(DEPTH)/_tests/reftest/hyphenation
 
 ifdef MOZ_COPY_PDBS
 CPP_UNIT_TEST_BINS=$(filter-out $(wildcard $(DIST)/cppunittests/*.pdb), $(wildcard $(DIST)/cppunittests/*))
