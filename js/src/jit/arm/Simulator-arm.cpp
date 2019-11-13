@@ -2354,44 +2354,34 @@ typedef double (*Prototype_Double_DoubleDoubleDoubleDouble)(double arg0,
                                                             double arg2,
                                                             double arg3);
 
-typedef int32_t (*Prototype_General_Pointer)(int32_t);
-typedef int32_t (*Prototype_General_PointerGeneral)(int32_t, int32_t);
-typedef int32_t (*Prototype_General_PointerGeneralGeneral)(int32_t, int32_t,
-                                                           int32_t);
-typedef int32_t (*Prototype_General_PointerGeneralGeneralGeneralGeneral)(
-    int32_t, int32_t, int32_t, int32_t, int32_t);
-typedef int32_t (*Prototype_General_PointerGeneralGeneralGeneralGeneralGeneral)(
+typedef int32_t (*Prototype_Int32_General)(int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32)(int32_t, int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32Int32)(int32_t, int32_t, int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32Int32Int32Int32)(int32_t, int32_t,
+                                                               int32_t, int32_t,
+                                                               int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32Int32Int32Int32Int32)(
     int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
-typedef int32_t (*Prototype_General_PointerGeneralGeneralGeneralPointer)(
+typedef int32_t (*Prototype_Int32_GeneralInt32Int32Int32General)(
     int32_t, int32_t, int32_t, int32_t, int32_t);
-typedef int32_t (*Prototype_General_PointerGeneralGeneralInt64)(int32_t,
-                                                                int32_t,
-                                                                int32_t,
-                                                                int64_t);
-typedef int32_t (*Prototype_General_PointerGeneralGeneralPointer)(int32_t,
-                                                                  int32_t,
-                                                                  int32_t,
-                                                                  int32_t);
-typedef int32_t (*Prototype_General_PointerGeneralInt64Int64)(int32_t, int32_t,
-                                                              int64_t, int64_t);
-typedef int32_t (*Prototype_General_PointerGeneralPointerGeneral)(int32_t,
-                                                                  int32_t,
-                                                                  int32_t,
-                                                                  int32_t);
-typedef int32_t (*Prototype_General_PointerGeneralPointerGeneralGeneral)(
+typedef int32_t (*Prototype_Int32_GeneralInt32Int32Int64)(int32_t, int32_t,
+                                                          int32_t, int64_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32Int32General)(int32_t, int32_t,
+                                                            int32_t, int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32Int64Int64)(int32_t, int32_t,
+                                                          int64_t, int64_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32GeneralInt32)(int32_t, int32_t,
+                                                            int32_t, int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32GeneralInt32Int32)(
     int32_t, int32_t, int32_t, int32_t, int32_t);
-typedef int32_t (*Prototype_General_PointerPointer)(int32_t, int32_t);
-typedef int32_t (*Prototype_General_PointerPointerGeneralGeneral)(int32_t,
-                                                                  int32_t,
-                                                                  int32_t,
-                                                                  int32_t);
-typedef int32_t (*Prototype_Pointer_PointerGeneral)(int32_t, int32_t);
-typedef int32_t (*Prototype_Pointer_PointerGeneralGeneral)(int32_t, int32_t,
-                                                           int32_t);
-typedef int32_t (*Prototype_Pointer_PointerGeneralGeneralPointer)(int32_t,
-                                                                  int32_t,
-                                                                  int32_t,
-                                                                  int32_t);
+typedef int32_t (*Prototype_Int32_GeneralGeneral)(int32_t, int32_t);
+typedef int32_t (*Prototype_Int32_GeneralGeneralInt32Int32)(int32_t, int32_t,
+                                                            int32_t, int32_t);
+typedef int32_t (*Prototype_General_GeneralInt32)(int32_t, int32_t);
+typedef int32_t (*Prototype_General_GeneralInt32Int32)(int32_t, int32_t,
+                                                       int32_t);
+typedef int32_t (*Prototype_General_GeneralInt32Int32General)(int32_t, int32_t,
+                                                              int32_t, int32_t);
 
 // Fill the volatile registers with scratch values.
 //
@@ -2793,82 +2783,78 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
           break;
         }
 
-        case Args_General_Pointer: {
-          Prototype_General_Pointer target =
-              reinterpret_cast<Prototype_General_Pointer>(external);
+        case Args_Int32_General: {
+          Prototype_Int32_General target =
+              reinterpret_cast<Prototype_Int32_General>(external);
           int64_t result = target(arg0);
           scratchVolatileRegisters(/* scratchFloat = true */);
           setCallResult(result);
           break;
         }
-        case Args_General_PointerGeneral: {
-          Prototype_General_PointerGeneral target =
-              reinterpret_cast<Prototype_General_PointerGeneral>(external);
+        case Args_Int32_GeneralInt32: {
+          Prototype_Int32_GeneralInt32 target =
+              reinterpret_cast<Prototype_Int32_GeneralInt32>(external);
           int64_t result = target(arg0, arg1);
           scratchVolatileRegisters(/* scratchFloat = true */);
           setCallResult(result);
           break;
         }
-        case Args_General_PointerGeneralGeneral: {
-          Prototype_General_PointerGeneralGeneral target =
-              reinterpret_cast<Prototype_General_PointerGeneralGeneral>(
-                  external);
+        case Args_Int32_GeneralInt32Int32: {
+          Prototype_Int32_GeneralInt32Int32 target =
+              reinterpret_cast<Prototype_Int32_GeneralInt32Int32>(external);
           int64_t result = target(arg0, arg1, arg2);
           scratchVolatileRegisters(/* scratchFloat = true */);
           setCallResult(result);
           break;
         }
-        case Args_General_PointerGeneralGeneralGeneralGeneral: {
-          Prototype_General_PointerGeneralGeneralGeneralGeneral target =
-              reinterpret_cast<
-                  Prototype_General_PointerGeneralGeneralGeneralGeneral>(
+        case Args_Int32_GeneralInt32Int32Int32Int32: {
+          Prototype_Int32_GeneralInt32Int32Int32Int32 target =
+              reinterpret_cast<Prototype_Int32_GeneralInt32Int32Int32Int32>(
                   external);
           int64_t result = target(arg0, arg1, arg2, arg3, arg4);
           scratchVolatileRegisters(/* scratchFloat = true */);
           setCallResult(result);
           break;
         }
-        case Args_General_PointerGeneralGeneralGeneralGeneralGeneral: {
-          Prototype_General_PointerGeneralGeneralGeneralGeneralGeneral target =
+        case Args_Int32_GeneralInt32Int32Int32Int32Int32: {
+          Prototype_Int32_GeneralInt32Int32Int32Int32Int32 target =
               reinterpret_cast<
-                  Prototype_General_PointerGeneralGeneralGeneralGeneralGeneral>(
-                  external);
+                  Prototype_Int32_GeneralInt32Int32Int32Int32Int32>(external);
           int64_t result = target(arg0, arg1, arg2, arg3, arg4, arg5);
           scratchVolatileRegisters(/* scratchFloat = true */);
           setCallResult(result);
           break;
         }
-        case Args_General_PointerGeneralGeneralGeneralPointer: {
-          Prototype_General_PointerGeneralGeneralGeneralPointer target =
-              reinterpret_cast<
-                  Prototype_General_PointerGeneralGeneralGeneralPointer>(
+        case Args_Int32_GeneralInt32Int32Int32General: {
+          Prototype_Int32_GeneralInt32Int32Int32General target =
+              reinterpret_cast<Prototype_Int32_GeneralInt32Int32Int32General>(
                   external);
           int64_t result = target(arg0, arg1, arg2, arg3, arg4);
           scratchVolatileRegisters(/* scratchFloat = true */);
           setCallResult(result);
           break;
         }
-        case Args_General_PointerGeneralGeneralInt64: {
-          Prototype_General_PointerGeneralGeneralInt64 target =
-              reinterpret_cast<Prototype_General_PointerGeneralGeneralInt64>(
+        case Args_Int32_GeneralInt32Int32Int64: {
+          Prototype_Int32_GeneralInt32Int32Int64 target =
+              reinterpret_cast<Prototype_Int32_GeneralInt32Int32Int64>(
                   external);
           int64_t result = target(arg0, arg1, arg2, MakeInt64(arg3, arg4));
           scratchVolatileRegisters(/* scratchFloat = true */);
           setCallResult(result);
           break;
         }
-        case Args_General_PointerGeneralGeneralPointer: {
-          Prototype_General_PointerGeneralGeneralPointer target =
-              reinterpret_cast<Prototype_General_PointerGeneralGeneralPointer>(
+        case Args_Int32_GeneralInt32Int32General: {
+          Prototype_Int32_GeneralInt32Int32General target =
+              reinterpret_cast<Prototype_Int32_GeneralInt32Int32General>(
                   external);
           int64_t result = target(arg0, arg1, arg2, arg3);
           scratchVolatileRegisters(/* scratchFloat = true */);
           setCallResult(result);
           break;
         }
-        case Args_General_PointerGeneralInt64Int64: {
-          Prototype_General_PointerGeneralInt64Int64 target =
-              reinterpret_cast<Prototype_General_PointerGeneralInt64Int64>(
+        case Args_Int32_GeneralInt32Int64Int64: {
+          Prototype_Int32_GeneralInt32Int64Int64 target =
+              reinterpret_cast<Prototype_Int32_GeneralInt32Int64Int64>(
                   external);
           int64_t result =
               target(arg0, arg1, MakeInt64(arg2, arg3), MakeInt64(arg4, arg5));
@@ -2876,62 +2862,60 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
           setCallResult(result);
           break;
         }
-        case Args_General_PointerGeneralPointerGeneral: {
-          Prototype_General_PointerGeneralPointerGeneral target =
-              reinterpret_cast<Prototype_General_PointerGeneralPointerGeneral>(
+        case Args_Int32_GeneralInt32GeneralInt32: {
+          Prototype_Int32_GeneralInt32GeneralInt32 target =
+              reinterpret_cast<Prototype_Int32_GeneralInt32GeneralInt32>(
                   external);
           int64_t result = target(arg0, arg1, arg2, arg3);
           scratchVolatileRegisters(/* scratchFloat = true */);
           setCallResult(result);
           break;
         }
-        case Args_General_PointerGeneralPointerGeneralGeneral: {
-          Prototype_General_PointerGeneralPointerGeneralGeneral target =
-              reinterpret_cast<
-                  Prototype_General_PointerGeneralPointerGeneralGeneral>(
+        case Args_Int32_GeneralInt32GeneralInt32Int32: {
+          Prototype_Int32_GeneralInt32GeneralInt32Int32 target =
+              reinterpret_cast<Prototype_Int32_GeneralInt32GeneralInt32Int32>(
                   external);
           int64_t result = target(arg0, arg1, arg2, arg3, arg4);
           scratchVolatileRegisters(/* scratchFloat = true */);
           setCallResult(result);
           break;
         }
-        case Args_General_PointerPointer: {
-          Prototype_General_PointerPointer target =
-              reinterpret_cast<Prototype_General_PointerPointer>(external);
+        case Args_Int32_GeneralGeneral: {
+          Prototype_Int32_GeneralGeneral target =
+              reinterpret_cast<Prototype_Int32_GeneralGeneral>(external);
           int64_t result = target(arg0, arg1);
           scratchVolatileRegisters(/* scratchFloat = true */);
           setCallResult(result);
           break;
         }
-        case Args_General_PointerPointerGeneralGeneral: {
-          Prototype_General_PointerPointerGeneralGeneral target =
-              reinterpret_cast<Prototype_General_PointerPointerGeneralGeneral>(
+        case Args_Int32_GeneralGeneralInt32Int32: {
+          Prototype_Int32_GeneralGeneralInt32Int32 target =
+              reinterpret_cast<Prototype_Int32_GeneralGeneralInt32Int32>(
                   external);
           int64_t result = target(arg0, arg1, arg2, arg3);
           scratchVolatileRegisters(/* scratchFloat = true */);
           setCallResult(result);
           break;
         }
-        case Args_Pointer_PointerGeneral: {
-          Prototype_Pointer_PointerGeneral target =
-              reinterpret_cast<Prototype_Pointer_PointerGeneral>(external);
+        case Args_General_GeneralInt32: {
+          Prototype_General_GeneralInt32 target =
+              reinterpret_cast<Prototype_General_GeneralInt32>(external);
           int64_t result = target(arg0, arg1);
           scratchVolatileRegisters(/* scratchFloat = true */);
           setCallResult(result);
           break;
         }
-        case Args_Pointer_PointerGeneralGeneral: {
-          Prototype_Pointer_PointerGeneralGeneral target =
-              reinterpret_cast<Prototype_Pointer_PointerGeneralGeneral>(
-                  external);
+        case Args_General_GeneralInt32Int32: {
+          Prototype_General_GeneralInt32Int32 target =
+              reinterpret_cast<Prototype_General_GeneralInt32Int32>(external);
           int64_t result = target(arg0, arg1, arg2);
           scratchVolatileRegisters(/* scratchFloat = true */);
           setCallResult(result);
           break;
         }
-        case Args_Pointer_PointerGeneralGeneralPointer: {
-          Prototype_Pointer_PointerGeneralGeneralPointer target =
-              reinterpret_cast<Prototype_Pointer_PointerGeneralGeneralPointer>(
+        case Args_General_GeneralInt32Int32General: {
+          Prototype_General_GeneralInt32Int32General target =
+              reinterpret_cast<Prototype_General_GeneralInt32Int32General>(
                   external);
           int64_t result = target(arg0, arg1, arg2, arg3);
           scratchVolatileRegisters(/* scratchFloat = true */);
