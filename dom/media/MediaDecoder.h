@@ -43,6 +43,7 @@ class MediaMemoryInfo;
 class AbstractThread;
 class DOMMediaStream;
 class DecoderBenchmark;
+class ProcessedMediaTrack;
 class FrameStatistics;
 class VideoFrameContainer;
 class MediaFormatReader;
@@ -166,15 +167,23 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // replaying after the input as ended. In the latter case, the new source is
   // not connected to streams created by captureStreamUntilEnded.
 
-  // Add an output stream. All decoder output will be sent to the stream.
-  // The stream is initially blocked. The decoder is responsible for unblocking
-  // it while it is playing back.
-  void AddOutputStream(DOMMediaStream* aStream, SharedDummyTrack* aDummyStream);
-  // Remove an output stream added with AddOutputStream.
-  void RemoveOutputStream(DOMMediaStream* aStream);
-
-  // Update the principal for any output streams and their tracks.
-  void SetOutputStreamPrincipal(nsIPrincipal* aPrincipal);
+  // Turn output capturing of this decoder on or off. If it is on, the
+  // MediaDecoderStateMachine will only create a MediaSink after output tracks
+  // have been set. This is to ensure that it doesn't create a regular MediaSink
+  // while the owner has intended to capture the full output, thus missing to
+  // capture some of it. The owner of the MediaDecoder is responsible for adding
+  // output tracks while the output is captured.
+  void SetOutputCaptured(bool aCaptured);
+  // Add an output track. All decoder output for the track's media type will be
+  // sent to the track.
+  // Note that only one audio track and one video track is supported by
+  // MediaDecoder at this time. Passing in more of one type, or passing in a
+  // type that metadata says we are not decoding, is an error.
+  void AddOutputTrack(RefPtr<ProcessedMediaTrack> aTrack);
+  // Remove an output track added with AddOutputTrack.
+  void RemoveOutputTrack(const RefPtr<ProcessedMediaTrack>& aTrack);
+  // Update the principal for any output tracks.
+  void SetOutputTracksPrincipal(const RefPtr<nsIPrincipal>& aPrincipal);
 
   // Return the duration of the video in seconds.
   virtual double GetDuration();
