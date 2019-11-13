@@ -11,6 +11,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import os
+import subprocess
 import sys
 from abc import ABCMeta, abstractmethod, abstractproperty
 from argparse import Action, SUPPRESS
@@ -91,6 +92,63 @@ class Artifact(Template):
                 }
         except BuildEnvironmentNotFoundException:
             pass
+
+
+class Pernosco(Template):
+    arguments = [
+        [['--pernosco'],
+         {'action': 'store_true',
+          'default': None,
+          'help': 'Opt-in to analysis by the Pernosco debugging service.',
+          }],
+        [['--no-pernosco'],
+         {'dest': 'pernosco',
+          'action': 'store_false',
+          'default': None,
+          'help': 'Opt-out of the Pernosco debugging service (if you are on the whitelist).',
+          }],
+    ]
+
+    def add_arguments(self, parser):
+        group = parser.add_mutually_exclusive_group()
+        return super(Pernosco, self).add_arguments(group)
+
+    def context(self, pernosco, **kwargs):
+        if pernosco is None:
+            return
+
+        # The Pernosco service currently requires a Mozilla e-mail address to
+        # log in. Prevent people with non-Mozilla addresses from using this
+        # flag so they don't end up consuming time and resources only to
+        # realize they can't actually log in and see the reports.
+        if pernosco:
+            try:
+                output = subprocess.check_output(['ssh', '-G', 'hg.mozilla.org']).splitlines()
+                address = [l.rsplit(' ', 1)[-1] for l in output if l.startswith('user')][0]
+                if not address.endswith('@mozilla.com'):
+                    print(dedent("""\
+                        Pernosco requires a Mozilla e-mail address to view its reports. Please
+                        push to try with an @mozilla.com address to use --pernosco.
+
+                            Current user: {}
+                    """.format(address)))
+                    sys.exit(1)
+
+            except (subprocess.CalledProcessError, IndexError):
+                print("warning: failed to detect current user for 'hg.mozilla.org'")
+                print("Pernosco requires a Mozilla e-mail address to view its reports.")
+                while True:
+                    answer = raw_input("Do you have an @mozilla.com address? [Y/n]: ").lower()
+                    if answer == 'n':
+                        sys.exit(1)
+                    elif answer == 'y':
+                        break
+
+        return {
+            'env': {
+                'PERNOSCO': str(int(pernosco)),
+            }
+        }
 
 
 class Path(Template):
@@ -335,6 +393,7 @@ all_templates = {
     'env': Environment,
     'gecko-profile': GeckoProfile,
     'path': Path,
+    'pernosco': Pernosco,
     'rebuild': Rebuild,
     'debian-buster': DebianTests,
     'visual-metrics-jobs': VisualMetricsJobs,
