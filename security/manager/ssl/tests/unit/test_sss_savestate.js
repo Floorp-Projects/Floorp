@@ -94,6 +94,7 @@ function checkStateWritten(aSubject, aTopic, aData) {
 }
 
 function run_test() {
+  Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", true);
   Services.prefs.setIntPref("test.datastorage.write_timer_ms", 100);
   gProfileDir = do_get_profile();
   let SSService = Cc["@mozilla.org/ssservice;1"].getService(

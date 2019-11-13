@@ -14,6 +14,8 @@ const sss = Cc["@mozilla.org/ssservice;1"].getService(
 
 const { PinningBlocklistClient } = RemoteSecuritySettings.init();
 
+Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", true);
+
 add_task(async function test_uses_a_custom_signer() {
   Assert.notEqual(
     PinningBlocklistClient.signerName,

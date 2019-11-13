@@ -16,6 +16,7 @@ const { ForgetAboutSite } = ChromeUtils.import(
 do_get_profile(); // must be done before instantiating nsIX509CertDB
 
 registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.cert_pinning.hpkp.enabled");
   Services.prefs.clearUserPref("security.cert_pinning.enforcement_level");
   Services.prefs.clearUserPref(
     "security.cert_pinning.process_headers_from_non_builtin_roots"
@@ -45,6 +46,26 @@ function add_tests() {
       secInfo = aSecInfo;
     }
   );
+
+  // Test that with HPKP disabled, processing HPKP headers results in no
+  // information being saved.
+  add_task(async function() {
+    Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", false);
+    sss.processHeader(
+      Ci.nsISiteSecurityService.HEADER_HPKP,
+      uri,
+      GOOD_MAX_AGE + VALID_PIN + BACKUP_PIN,
+      secInfo,
+      0,
+      Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
+    );
+
+    Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", true);
+    Assert.ok(
+      !sss.isSecureURI(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0),
+      "a.pinning.example.com should not be HPKP"
+    );
+  });
 
   // Test the normal case of processing HSTS and HPKP headers for
   // a.pinning.example.com, using "Forget About Site" on a.pinning2.example.com,
@@ -266,6 +287,7 @@ function add_tests() {
 }
 
 function run_test() {
+  Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", true);
   Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 2);
   Services.prefs.setBoolPref(
     "security.cert_pinning.process_headers_from_non_builtin_roots",

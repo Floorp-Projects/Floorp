@@ -73,6 +73,7 @@ function checkSha256Keys(hpkpEntries) {
 }
 
 registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.cert_pinning.hpkp.enabled");
   Services.prefs.clearUserPref(
     "security.cert_pinning.process_headers_from_non_builtin_roots"
   );
@@ -138,6 +139,7 @@ function add_tests() {
 }
 
 function run_test() {
+  Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", true);
   Services.prefs.setBoolPref(
     "security.cert_pinning.process_headers_from_non_builtin_roots",
     true
