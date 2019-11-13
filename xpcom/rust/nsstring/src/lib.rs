@@ -1370,25 +1370,6 @@ pub mod test_helpers {
     /// This method can trigger Undefined Behavior if the accessing the member
     /// $member on a given type would use that type's `Deref` implementation.
     macro_rules! member_check {
-        ($T:ty, $member:ident, $method:ident) => {
-            #[no_mangle]
-            #[allow(non_snake_case)]
-            pub extern fn $method(size: *mut usize,
-                                  align: *mut usize,
-                                  offset: *mut usize) {
-                unsafe {
-                    // Create a temporary value of type T to get offsets, sizes
-                    // and aligns off of
-                    let tmp: $T = mem::zeroed();
-                    *size = mem::size_of_val(&tmp.$member);
-                    *align = mem::align_of_val(&tmp.$member);
-                    *offset =
-                        (&tmp.$member as *const _ as usize) -
-                        (&tmp as *const _ as usize);
-                    mem::forget(tmp);
-                }
-            }
-        };
         ($T:ty, $U:ty, $V:ty, $member:ident, $method:ident) => {
             #[no_mangle]
             #[allow(non_snake_case)]
@@ -1398,29 +1379,33 @@ pub mod test_helpers {
                 unsafe {
                     // Create a temporary value of type T to get offsets, sizes
                     // and alignments from.
-                    let tmp: $T = mem::zeroed();
+                    let tmp: mem::MaybeUninit<$T> = mem::MaybeUninit::uninit();
+                    // FIXME: This should use &raw references when available,
+                    // this is technically UB as it creates a reference to
+                    // uninitialized memory, but there's no better way to do
+                    // this right now.
+                    let tmp = &*tmp.as_ptr();
                     *size = mem::size_of_val(&tmp.$member);
                     *align = mem::align_of_val(&tmp.$member);
                     *offset =
                         (&tmp.$member as *const _ as usize) -
-                        (&tmp as *const _ as usize);
-                    mem::forget(tmp);
+                        (tmp as *const $T as usize);
 
-                    let tmp: $U = mem::zeroed();
+                    let tmp: mem::MaybeUninit<$U> = mem::MaybeUninit::uninit();
+                    let tmp = &*tmp.as_ptr();
                     assert_eq!(*size, mem::size_of_val(&tmp.hdr.$member));
                     assert_eq!(*align, mem::align_of_val(&tmp.hdr.$member));
                     assert_eq!(*offset,
                                (&tmp.hdr.$member as *const _ as usize) -
-                               (&tmp as *const _ as usize));
-                    mem::forget(tmp);
+                               (tmp as *const $U as usize));
 
-                    let tmp: $V = mem::zeroed();
+                    let tmp: mem::MaybeUninit<$V> = mem::MaybeUninit::uninit();
+                    let tmp = &*tmp.as_ptr();
                     assert_eq!(*size, mem::size_of_val(&tmp.hdr.$member));
                     assert_eq!(*align, mem::align_of_val(&tmp.hdr.$member));
                     assert_eq!(*offset,
                                (&tmp.hdr.$member as *const _ as usize) -
-                               (&tmp as *const _ as usize));
-                    mem::forget(tmp);
+                               (tmp as *const $V as usize));
                 }
             }
         }
