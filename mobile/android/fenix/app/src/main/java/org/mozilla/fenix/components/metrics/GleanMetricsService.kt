@@ -6,9 +6,8 @@ package org.mozilla.fenix.components.metrics
 
 import android.content.Context
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.MainScope
 import mozilla.components.service.glean.BuildConfig
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
@@ -439,7 +438,8 @@ class GleanMetricsService(private val context: Context) : MetricsService {
      * We need to keep an eye on when we are done starting so that we don't
      * accidentally stop ourselves before we've ever started.
      */
-    private lateinit var starter: Job
+    private lateinit var gleanInitializer: Job
+    private lateinit var gleanSetStartupMetrics: Job
 
     private val activationPing = ActivationPing(context)
 
@@ -454,7 +454,7 @@ class GleanMetricsService(private val context: Context) : MetricsService {
         // because it calls Google ad APIs that must be called *off* of the main thread.
         // These two things actually happen in parallel, but that should be ok because Glean
         // can handle events being recorded before it's initialized.
-        starter = MainScope().launch {
+        gleanInitializer = MainScope().launch {
             Glean.registerPings(Pings)
             Glean.initialize(context,
                 Configuration(channel = BuildConfig.BUILD_TYPE,
@@ -462,8 +462,11 @@ class GleanMetricsService(private val context: Context) : MetricsService {
                         lazy(LazyThreadSafetyMode.NONE) { context.components.core.client }
                     )))
         }
-
-        setStartupMetrics()
+        // setStartupMetrics is not a fast function. It does not need to be done before we can consider
+        // ourselves initialized. So, let's do it, well, later.
+        gleanSetStartupMetrics = MainScope().launch {
+            setStartupMetrics()
+        }
 
         context.settings().totalUriCount = 0
     }
@@ -495,10 +498,8 @@ class GleanMetricsService(private val context: Context) : MetricsService {
     }
 
     override fun stop() {
-        /*
-         * We cannot stop until we're done starting.
-         */
-        runBlocking { starter.join(); }
+        gleanInitializer.cancel()
+        gleanSetStartupMetrics.cancel()
         Glean.setUploadEnabled(false)
     }
 
