@@ -54,16 +54,32 @@
  * 
  */
 
+
+/*
+  What the Sniffer Should sniff, given a querystring for file_nosniff_navigation.sjs
+*/
+const EXPECTED_MIMES={
+  "xml": "text/xml",
+  "html": "text/html",
+  "img": "image/png",
+  "css": "text/plain",
+  "js": "text/plain",
+  "json": "text/plain", 
+  "": "text/plain"
+}
+
 SimpleTest.waitForExplicitFinish();
 
 window.addEventListener("load", ()=>{
   let noMimeFrames = Array.from(document.querySelectorAll(".no-mime"));
 
   noMimeFrames.forEach( frame => {
-    // In case of no Provided Content Type, not rendering or assuming text/plain is valid
-    let result = frame.contentWindow.document.URL == "about:blank" || frame.contentWindow.document.contentType == "text/plain";
-    let sniffTarget = (new URL(frame.src)).search;
-    window.opener.ok(result, `${sniffTarget} without MIME - was not Sniffed`);
+    // In case of no Provided Content Type + XTCO set, we still should do sniffing
+    let sniffedMimeType = frame.contentWindow.document.contentType;
+    let contentTypeQuery = (new URL(frame.src)).search.substr(1);
+    let expectedMime = EXPECTED_MIMES[contentTypeQuery];
+    let result = expectedMime == sniffedMimeType;
+    window.opener.ok(result, `${contentTypeQuery} without MIME send -> was Sniffed: ${frame.contentWindow.document.contentType}`);
   });
 
   let mismatchedMimes = Array.from(document.querySelectorAll(".mismatch-mime"));
@@ -71,7 +87,7 @@ window.addEventListener("load", ()=>{
     // In case the Server mismatches the Mime Type (sends content X as image/png)
     // assert that we do not sniff and correct this.
     let result = frame.contentWindow.document.contentType == "image/png";
-    let sniffTarget = (new URL(frame.src)).search;
+    let sniffTarget = (new URL(frame.src)).search.substr(1);
     window.opener.ok(result, `${sniffTarget} send as image/png - was not Sniffed`);
   });
 
@@ -82,7 +98,7 @@ window.addEventListener("load", ()=>{
     // We must not default here to text/plain
     // as the Server at least provided a mime type. 
     let result = frame.contentWindow.document.URL == "about:blank";
-    let sniffTarget = (new URL(frame.src)).search;
+    let sniffTarget = (new URL(frame.src)).search.substr(1);;
     window.opener.ok(result, `${sniffTarget} send as garbage/garbage - was not Sniffed`);
   });
   

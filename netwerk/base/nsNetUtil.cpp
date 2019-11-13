@@ -2726,10 +2726,15 @@ void NS_SniffContent(const char* aSnifferType, nsIRequest* aRequest,
        * The JSON-Viewer relies on its own sniffer to determine, if it can
        * render the page, so we need to make an exception if the Server provides
        * a application/ mime, as it might be json.
+
+       * Bug 1594766
+       * We also dont't skip sniffing if the currentContentType is empty
+       * because of legacy page compatibility issues.
        */
       nsAutoCString currentContentType;
       channel->GetContentType(currentContentType);
-      if (!StringBeginsWith(currentContentType,
+      if (!currentContentType.IsEmpty() &&
+          !StringBeginsWith(currentContentType,
                             NS_LITERAL_CSTRING("application/"))) {
         return;
       }
