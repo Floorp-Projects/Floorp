@@ -678,8 +678,8 @@ class EditorBase : public nsIEditor,
     void DidJoinContents(EditorBase& aEditorBase, nsIContent& aLeftContent,
                          nsIContent& aRightContent);
     void DidInsertText(EditorBase& aEditorBase,
-                       const EditorRawDOMPoint& aInsertionPoint,
-                       const nsAString& aString);
+                       const EditorRawDOMPoint& aInsertionBegin,
+                       const EditorRawDOMPoint& aInsertionEnd);
     void DidDeleteText(EditorBase& aEditorBase,
                        const EditorRawDOMPoint& aStartInTextNode);
     void WillDeleteRange(EditorBase& aEditorBase,
