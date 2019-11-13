@@ -4643,7 +4643,7 @@ bool profiler_is_locked_on_current_thread() {
   return gPSMutex.IsLockedOnCurrentThread();
 }
 
-void profiler_add_native_allocation_marker(const int64_t aSize) {
+bool profiler_add_native_allocation_marker(const int64_t aSize) {
   if (!profiler_can_accept_markers()) {
     return;
   }
