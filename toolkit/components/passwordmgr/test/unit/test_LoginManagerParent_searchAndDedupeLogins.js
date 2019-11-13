@@ -123,6 +123,13 @@ add_task(async function test_searchAndDedupeLogins_acceptDifferentSubdomains() {
       expected: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1],
     },
     {
+      description:
+        "HTTPS form, different origin, different scheme, same password, same hostPort preferred",
+      formActionOrigin: DOMAIN1_HTTPS_ORIGIN,
+      logins: [DOMAIN1_HTTP_TO_HTTP_U1_P1, DOMAIN2_HTTPS_TO_HTTPS_U1_P1],
+      expected: [DOMAIN1_HTTP_TO_HTTP_U1_P1],
+    },
+    {
       description: "HTTP form, different origin, different scheme",
       formActionOrigin: DOMAIN1_HTTP_ORIGIN,
       logins: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN2_HTTP_TO_HTTP_U1_P1],

@@ -177,9 +177,9 @@ class LoginManagerParent extends JSWindowActorParent {
     logins = LoginHelper.shadowHTTPLogins(logins);
 
     let resolveBy = [
+      "subdomain",
       "actionOrigin",
       "scheme",
-      "subdomain",
       "timePasswordChanged",
     ];
     return LoginHelper.dedupeLogins(
