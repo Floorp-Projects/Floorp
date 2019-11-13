@@ -84,6 +84,18 @@ var data = [
     fixed: "http://user:pass@example.com:8080/this/is/a/test.html",
   },
   {
+    wrong: "localhost:8080/?param=1",
+    fixed: "http://localhost:8080/?param=1",
+  },
+  {
+    wrong: "localhost:8080?param=1",
+    fixed: "http://localhost:8080/?param=1",
+  },
+  {
+    wrong: "localhost:8080#somewhere",
+    fixed: "http://localhost:8080/#somewhere",
+  },
+  {
     wrong: "whatever://this/is/a@b/test.html",
     fixed: kSearchEngineURL.replace(
       "{searchTerms}",
