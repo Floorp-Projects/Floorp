@@ -88,11 +88,6 @@ class NativeLayer {
   virtual void SetSurfaceIsFlipped(bool aIsFlipped) = 0;
   virtual bool SurfaceIsFlipped() = 0;
 
-  // Invalidates the specified region in all surfaces that are tracked by this
-  // layer.
-  virtual void InvalidateRegionThroughoutSwapchain(
-      const gfx::IntRegion& aRegion) = 0;
-
   // Returns a DrawTarget. The size of the DrawTarget will be the same as the
   // size of this layer. The caller should draw to that DrawTarget, then drop
   // its reference to the DrawTarget, and then call NotifySurfaceReady(). It can
@@ -102,8 +97,9 @@ class NativeLayer {
   // called on any thread. When used from multiple threads, callers need to make
   // sure that they still only call NextSurface* and NotifySurfaceReady
   // alternatingly and not in any other order.
+  // aUpdateRegion must not extend beyond the layer size.
   virtual RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
-      gfx::BackendType aBackendType) = 0;
+      const gfx::IntRegion& aUpdateRegion, gfx::BackendType aBackendType) = 0;
 
   // Set the GLContext to use for the MozFramebuffer that are returned from
   // NextSurfaceAsFramebuffer. If changed to a different value, all
@@ -131,15 +127,17 @@ class NativeLayer {
   // called on any thread. When used from multiple threads, callers need to make
   // sure that they still only call NextSurface and NotifySurfaceReady
   // alternatingly and not in any other order.
-  virtual Maybe<GLuint> NextSurfaceAsFramebuffer(bool aNeedsDepth) = 0;
+  // aUpdateRegion must not extend beyond the layer size.
+  virtual Maybe<GLuint> NextSurfaceAsFramebuffer(
+      const gfx::IntRegion& aUpdateRegion, bool aNeedsDepth) = 0;
 
   // The invalid region of the surface that has been returned from the most
   // recent call to NextSurface*. Newly-created surfaces are entirely invalid.
   // For surfaces that have been used before, the invalid region is the union of
-  // all invalid regions that have been passed to
-  // InvalidateRegionThroughoutSwapchain since the last time that
-  // NotifySurfaceReady was called for this surface. Can only be called between
-  // calls to NextSurface* and NotifySurfaceReady. Can be called on any thread.
+  // all invalid regions that have been passed to NextSurface* since the last
+  // time that NotifySurfaceReady was called for this surface. Can only be
+  // called between calls to NextSurface* and NotifySurfaceReady. Can be called
+  // on any thread.
   virtual gfx::IntRegion CurrentSurfaceInvalidRegion() = 0;
 
   // Indicates that the surface which has been returned from the most recent
