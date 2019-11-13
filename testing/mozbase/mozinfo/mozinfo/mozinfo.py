@@ -99,20 +99,19 @@ elif system.startswith(('MINGW', 'MSYS_NT')):
     info['os'] = 'win'
     os_version = version = unknown
 elif system == "Linux":
-    # Only attempt to import distro for Linux.
-    # https://github.com/nir0s/distro/issues/177
+    # Attempt to use distro package to determine Linux distribution first.
+    # Failing that, fall back to use the platform method.
+    # Note that platform.linux_distribution() will be deprecated as of 3.8
+    # and this block will be removed once support for 2.7/3.5 is dropped.
     try:
-        import distro
+        from distro import linux_distribution
     except ImportError:
-        pass
-    # First use distro package, then fall back to platform.
-    # This will only until Mozilla upgrades python to 3.8.
-    if hasattr(distro, "linux_distribution"):
-        (distribution, os_version, codename) = distro.linux_distribution()
-    elif hasattr(platform, "linux_distribution"):
-        (distribution, os_version, codename) = platform.linux_distribution()
-    else:
-        (distribution, os_version, codename) = platform.dist()
+        from platform import linux_distribution
+
+    output = linux_distribution()
+    (distribution, os_version, codename) = tuple(
+        str(item.title()) for item in output)
+
     if not processor:
         processor = machine
     version = "%s %s" % (distribution, os_version)
