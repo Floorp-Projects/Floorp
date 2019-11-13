@@ -39,6 +39,11 @@ def all_configure_options():
             result.append(ensure_unicode(__sandbox__._raw_options[option],
                                          system_encoding))
 
+    # We shouldn't need this, but currently, quote will return a byte string
+    # if result is empty, and that's not wanted here.
+    if not result:
+        return ''
+
     return quote(*result)
 
 
