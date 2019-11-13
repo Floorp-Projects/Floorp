@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test that reloading and seeking in a media element that's being captured doesn't crash</title>
+  <title>Test that reloading and seeking in a media element that's being captured behaves as expected</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <script src="manifest.js"></script>
@@ -49,8 +49,6 @@ function isGreaterThanOrEqualEps(a, b, msg) {
 async function startTest(test) {
   const seekTime = test.duration/2;
 
-  vout.onended = unexpected;
-
   v.src = test.name;
   v.name = test.name;
   vout.name = test.name;
@@ -66,44 +64,53 @@ async function startTest(test) {
 
   v.play();
 
+  await new Promise(r => v.onended = r);
+  isGreaterThanOrEqualEps(v.currentTime, test.duration,
+    "checking v.currentTime at first 'ended' event");
+
   await Promise.all([
-    new Promise(r => v.onended = r),
+    new Promise(r => vout.onended = r),
     new Promise(r => vout_untilended.onended = r),
   ]);
 
   isGreaterThanOrEqualEps(vout.currentTime, test.duration,
     "checking vout.currentTime at first 'ended' event");
-  isGreaterThanOrEqualEps(v.currentTime, test.duration,
-    "checking v.currentTime at first 'ended' event");
-  ok(!vout.ended, "checking vout has not ended");
+  ok(vout.ended, "checking vout has actually ended");
   ok(vout_untilended.ended, "checking vout_untilended has actually ended");
 
-  v.pause();
+  vout_untilended.srcObject.onaddtrack = unexpected;
+  vout_untilended.onplaying = unexpected;
+  vout_untilended.onended = unexpected;
+
+  const voutPreSeekCurrentTime = vout.currentTime;
   v.currentTime = seekTime;
   await new Promise(r => v.onseeked = r);
 
-  isGreaterThanOrEqualEps(v.currentTime, seekTime, "Finished seeking");
-  isGreaterThanOrEqualEps(vout.currentTime, test.duration,
+  is(v.currentTime, seekTime, "Finished seeking");
+  is(vout.currentTime, voutPreSeekCurrentTime,
     "checking vout.currentTime has not changed after seeking");
 
-  vout_untilended.onplaying = unexpected;
-  vout_untilended.onended = unexpected;
   v.play();
+  vout.play();
 
   await new Promise(r => v.onended = r);
-
   isGreaterThanOrEqualEps(v.currentTime, test.duration,
     "checking v.currentTime at second 'ended' event");
+
+  await new Promise(r => vout.onended = r);
   isGreaterThanOrEqualEps(vout.currentTime,
     (test.duration - seekTime) + test.duration,
     "checking vout.currentTime after seeking and playing through again");
+
   v.src = test.name + "?1";
   v.play();
+  vout.play();
 
   await new Promise(r => v.onended = r);
-
   isGreaterThanOrEqualEps(v.currentTime, test.duration,
     "checking v.currentTime at third 'ended' event");
+
+  await new Promise(r => vout.onended = r);
   isGreaterThanOrEqualEps(vout.currentTime,
     (test.duration - seekTime) + test.duration*2,
     "checking vout.currentTime after seeking, playing through and reloading");
