@@ -29,7 +29,7 @@ job-defaults:
     run-on-projects:
         by-test-platform:
             .*-devedition/.*: []  # don't run on devedition
-            windows10-aarch64/opt: ['try', 'mozilla-central']
+            windows10-aarch64/opt: ['try']
             default: ['try', 'integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
 
 awsy:
@@ -43,7 +43,7 @@ awsy-tp6:
         by-test-platform:
             .*-ccov/.*: []  # don't run on coverage
             .*-devedition/.*: []  # don't run on devedition
-            windows10-aarch64/opt: ['try', 'mozilla-central']
+            windows10-aarch64/opt: ['try']
             default: ['try', 'integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
     mozharness:
         extra-options:

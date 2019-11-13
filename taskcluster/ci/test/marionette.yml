@@ -18,7 +18,7 @@ job-defaults:
                     - remove_executables.py
     run-on-projects:
         by-test-platform:
-            windows10-aarch64/opt: ['try', 'mozilla-central']
+            windows10-aarch64/opt: ['try']
             default: built-projects
     tier:
         by-test-platform:
