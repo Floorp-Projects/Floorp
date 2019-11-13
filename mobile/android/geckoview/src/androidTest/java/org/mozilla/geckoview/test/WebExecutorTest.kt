@@ -315,6 +315,21 @@ class WebExecutorTest {
         stream.readBytes()
     }
 
+    @Test(expected = IOException::class)
+    fun readTimeout() {
+        val expectedCount = 1 * 1024 * 1024 // 1MB
+        val response = executor.fetch(WebRequest("$TEST_ENDPOINT/bytes/$expectedCount")).pollDefault()!!
+
+        assertThat("Status code should match", response.statusCode, equalTo(200))
+        assertThat("Content-Length should match", response.headers["Content-Length"]!!.toInt(), equalTo(expectedCount))
+
+        // Only allow 1ms of blocking. This should reliably timeout with 1MB of data.
+        response.setReadTimeoutMillis(1)
+
+        val stream = response.body!!
+        stream.readBytes()
+    }
+
     @Test
     fun testFetchStreamCancel() {
         val expectedCount = 1 * 1024 * 1024 // 1MB

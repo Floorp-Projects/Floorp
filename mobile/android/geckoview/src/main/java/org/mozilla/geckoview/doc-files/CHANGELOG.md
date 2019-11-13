@@ -20,9 +20,16 @@ exclude: true
 - ⚠️  Refactored `AutofillElement` and `AutofillSupport` into the
   [`Autofill`][72.2] API.
   ([bug 1591462]({{bugzilla}}1591462))
+- Make `read()` in the `InputStream` returned from [`WebResponse#body`][72.3] timeout according
+  to [`WebResponse#setReadTimeoutMillis()`][72.4]. The default timeout value is reflected in
+  [`WebResponse#DEFAULT_READ_TIMEOUT_MS`][72.5], currently 30s.
+  ([bug 1595145]({{bugzilla}}1595145))
 
 [72.1]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture-
 [72.2]: {{javadoc_uri}}/Autofill.html
+[72.3]: {{javadoc_uri}}/WebResponse.html#body
+[72.4]: {{javadoc_uri}}/WebResponse.html#setReadTimeoutMillis-long-
+[72.5]: {{javadoc_uri}}/WebResponse.html#DEFAULT_READ_TIMEOUT_MS
 
 ## v71
 - Added a content blocking flag for blocked social cookies to [`ContentBlocking`][70.17].
@@ -418,4 +425,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: df2caa160412647457546a27c33e2dd6d016cc28
+[api-version]: f4f62b0476eb283fbaf4be55e91b78dede9f0099
