@@ -2730,6 +2730,30 @@ Span<const ElementType> MakeSpan(
   return aTArray;
 }
 
+template <typename T>
+class nsTArrayBackInserter
+    : public std::iterator<std::output_iterator_tag, void, void, void, void> {
+  nsTArray<T>* mArray;
+
+ public:
+  explicit nsTArrayBackInserter(nsTArray<T>& aArray) : mArray{&aArray} {}
+
+  template <typename O>
+  nsTArrayBackInserter& operator=(O&& aValue) {
+    mArray->EmplaceBack(std::forward<O>(aValue));
+    return *this;
+  }
+
+  nsTArrayBackInserter& operator*() { return *this; }
+
+  void operator++() {}
+};
+
+template <typename T>
+auto MakeBackInserter(nsTArray<T>& aArray) {
+  return nsTArrayBackInserter<T>{aArray};
+}
+
 }  // namespace mozilla
 
 // MOZ_DBG support
