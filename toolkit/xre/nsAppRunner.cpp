@@ -5097,12 +5097,6 @@ mozilla::BinPathType XRE_GetChildProcBinPathType(
 // malloc_handle_oom for it.
 extern "C" void GeckoHandleOOM(size_t size) { mozalloc_handle_oom(size); }
 
-// Similarly, this wraps MOZ_Crash
-extern "C" void GeckoCrash(const char* aFilename, int aLine,
-                           const char* aReason) {
-  MOZ_Crash(aFilename, aLine, aReason);
-}
-
 // From toolkit/library/rust/shared/lib.rs
 extern "C" void install_rust_panic_hook();
 extern "C" void install_rust_oom_hook();
