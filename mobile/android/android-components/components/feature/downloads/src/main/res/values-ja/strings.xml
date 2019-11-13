@@ -2,19 +2,16 @@
 <resources>
     <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_downloads_notification_channel">ダウンロード一覧</string>
-    <!-- Text shown on the first row of an ongoing download notification. -->
-    <string name="mozac_feature_downloads_ongoing_notification_title">ダウンロード中</string>
-    <!-- Text shown on the second row of an ongoing download notification. -->
-    <string name="mozac_feature_downloads_ongoing_notification_text">ダウンロードしています</string>
 
+    <!-- Text shown on the second row of a paused download notification. -->
+    <string name="mozac_feature_downloads_paused_notification_text">ダウンロードを一時停止しました</string>
     <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
-    <string name="mozac_feature_downloads_completed_notification_text">ダウンロードが完了しました。</string>
+    <string name="mozac_feature_downloads_completed_notification_text2">ダウンロードが完了しました</string>
     <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
-    <string name="mozac_feature_downloads_failed_notification_text">ダウンロードに失敗しました。</string>
+    <string name="mozac_feature_downloads_failed_notification_text2">ダウンロードに失敗しました</string>
 
-    <!-- Alert dialog confirmation before download a file, this is the title. -->
-    <string name="mozac_feature_downloads_dialog_title">ファイルをダウンロード</string>
-
+    <!-- Alert dialog confirmation before download a file, this is the title. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_dialog_title2">ダウンロード (%1$s)</string>
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
     <string name="mozac_feature_downloads_dialog_download">ダウンロード</string>
 
@@ -23,4 +20,18 @@
 
     <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
     <string name="mozac_feature_downloads_file_not_supported2">%1$s はこのファイルの種類をダウンロードできません</string>
+
+    <!-- Button that pauses the download when pressed -->
+    <string name="mozac_feature_downloads_button_pause">一時停止</string>
+    <!-- Button that resumes the download when pressed -->
+    <string name="mozac_feature_downloads_button_resume">再開</string>
+    <!-- Button that cancels the download when pressed -->
+    <string name="mozac_feature_downloads_button_cancel">キャンセル</string>
+    <!-- Button that opens the downloaded file when pressed -->
+    <string name="mozac_feature_downloads_button_open">開く</string>
+    <!-- Button that restarts the download after a failed attempt -->
+    <string name="mozac_feature_downloads_button_try_again">再試行</string>
+
+    <!-- Content description for close button -->
+    <string name="mozac_feature_downloads_button_close">閉じる</string>
 </resources>
