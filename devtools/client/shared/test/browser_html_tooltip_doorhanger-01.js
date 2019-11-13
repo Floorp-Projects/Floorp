@@ -11,7 +11,7 @@
  */
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const TEST_URI = CHROME_URL_ROOT + "doc_html_tooltip_doorhanger-01.xul";
+const TEST_URI = CHROME_URL_ROOT + "doc_html_tooltip_doorhanger-01.xhtml";
 
 const {
   HTMLTooltip,
