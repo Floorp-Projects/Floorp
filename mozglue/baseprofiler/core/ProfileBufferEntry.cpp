@@ -347,7 +347,7 @@ static void WriteSample(SpliceableJSONWriter& aWriter,
   enum Schema : uint32_t {
     STACK = 0,
     TIME = 1,
-    RESPONSIVENESS = 2,
+    EVENT_DELAY = 2,
   };
 
   AutoArraySchemaWriter writer(aWriter, aUniqueStrings);
@@ -357,7 +357,7 @@ static void WriteSample(SpliceableJSONWriter& aWriter,
   writer.DoubleElement(TIME, aSample.mTime);
 
   if (aSample.mResponsiveness.isSome()) {
-    writer.DoubleElement(RESPONSIVENESS, *aSample.mResponsiveness);
+    writer.DoubleElement(EVENT_DELAY, *aSample.mResponsiveness);
   }
 }
 
