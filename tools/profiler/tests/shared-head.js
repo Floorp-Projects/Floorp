@@ -108,3 +108,15 @@ function captureAtLeastOneJsSample() {
     }
   }
 }
+
+/**
+ * This function pauses the profiler before getting the profile. Then after the
+ * getting the data, the profiler is stopped, and all profiler data is removed.
+ * @returns {Promise<Profile>}
+ */
+async function stopAndGetProfile() {
+  Services.profiler.PauseSampling();
+  const profile = await Services.profiler.getProfileDataAsync();
+  Services.profiler.StopProfiler();
+  return profile;
+}
