@@ -16,44 +16,45 @@
 <?xml-stylesheet href="chrome://browser/skin/preferences/in-content/containers.css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/in-content/privacy.css"?>
 
-<!DOCTYPE html>
+<!DOCTYPE window>
 
-<html xmlns="http://www.w3.org/1999/xhtml"
+<!-- @CSP: The 'oncommand' handler for 'focusSearch1' can not easily be rewritten (see Bug 371900)
+     hence we are allowing the inline handler in the script-src directive using the hash
+     sha512-X8+p/CqXeMdssOoFOf5RV+RpkvnN9pukQ20acGc7LqMgfYLW+lR0WAYT66OtSTpFHE/Qgx/ZCBs2RMc4QrA8FQ==
+     Additionally we should remove 'unsafe-inline' from style-src, see Bug 1579160 -->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
-        role="document">
+        csp="default-src chrome:; script-src chrome: 'sha512-X8+p/CqXeMdssOoFOf5RV+RpkvnN9pukQ20acGc7LqMgfYLW+lR0WAYT66OtSTpFHE/Qgx/ZCBs2RMc4QrA8FQ=='; img-src chrome: moz-icon: https: data:; style-src chrome: data: 'unsafe-inline'; object-src 'none'"
+        role="document"
+        data-l10n-id="pref-page"
+        data-l10n-attrs="title">
 
-<head>
-  <!-- @CSP: The 'oncommand' handler for 'focusSearch1' can not easily be rewritten (see Bug 371900)
-       hence we are allowing the inline handler in the script-src directive using the hash
-       sha512-X8+p/CqXeMdssOoFOf5RV+RpkvnN9pukQ20acGc7LqMgfYLW+lR0WAYT66OtSTpFHE/Qgx/ZCBs2RMc4QrA8FQ==
-       Additionally we should remove 'unsafe-inline' from style-src, see Bug 1579160 -->
-  <meta http-equiv="Content-Security-Policy" content="default-src chrome:; script-src chrome: 'sha512-X8+p/CqXeMdssOoFOf5RV+RpkvnN9pukQ20acGc7LqMgfYLW+lR0WAYT66OtSTpFHE/Qgx/ZCBs2RMc4QrA8FQ=='; img-src chrome: moz-icon: https: data:; style-src chrome: data: 'unsafe-inline'; object-src 'none'" />
+  <linkset>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="browser/branding/brandings.ftl"/>
+    <html:link rel="localization" href="browser/branding/sync-brand.ftl"/>
+    <html:link rel="localization" href="browser/preferences/preferences.ftl"/>
+    <!-- Used by fontbuilder.js -->
+    <html:link rel="localization" href="browser/preferences/fonts.ftl"/>
 
-  <title data-l10n-id="pref-page-title"></title>
+    <!-- Links below are only used for search-l10n-ids into subdialogs -->
+    <html:link rel="localization" href="browser/preferences/blocklists.ftl"/>
+    <html:link rel="localization" href="browser/preferences/clearSiteData.ftl"/>
+    <html:link rel="localization" href="browser/preferences/colors.ftl"/>
+    <html:link rel="localization" href="browser/preferences/connection.ftl"/>
+    <html:link rel="localization" href="browser/preferences/languages.ftl"/>
+    <html:link rel="localization" href="browser/preferences/permissions.ftl"/>
+    <html:link rel="localization" href="browser/preferences/selectBookmark.ftl"/>
+    <html:link rel="localization" href="browser/preferences/siteDataSettings.ftl"/>
+    <html:link rel="localization" href="browser/aboutDialog.ftl"/>
+    <html:link rel="localization" href="browser/sanitize.ftl"/>
+    <html:link rel="localization" href="toolkit/updates/history.ftl"/>
+    <html:link rel="localization" href="security/certificates/deviceManager.ftl"/>
+    <html:link rel="localization" href="security/certificates/certManager.ftl"/>
+  </linkset>
 
-  <link rel="localization" href="branding/brand.ftl"/>
-  <link rel="localization" href="browser/branding/brandings.ftl"/>
-  <link rel="localization" href="browser/branding/sync-brand.ftl"/>
-  <link rel="localization" href="browser/preferences/preferences.ftl"/>
-  <!-- Used by fontbuilder.js -->
-  <link rel="localization" href="browser/preferences/fonts.ftl"/>
-
-  <!-- Links below are only used for search-l10n-ids into subdialogs -->
-  <link rel="localization" href="browser/preferences/blocklists.ftl"/>
-  <link rel="localization" href="browser/preferences/clearSiteData.ftl"/>
-  <link rel="localization" href="browser/preferences/colors.ftl"/>
-  <link rel="localization" href="browser/preferences/connection.ftl"/>
-  <link rel="localization" href="browser/preferences/languages.ftl"/>
-  <link rel="localization" href="browser/preferences/permissions.ftl"/>
-  <link rel="localization" href="browser/preferences/selectBookmark.ftl"/>
-  <link rel="localization" href="browser/preferences/siteDataSettings.ftl"/>
-  <link rel="localization" href="browser/aboutDialog.ftl"/>
-  <link rel="localization" href="browser/sanitize.ftl"/>
-  <link rel="localization" href="toolkit/updates/history.ftl"/>
-  <link rel="localization" href="security/certificates/deviceManager.ftl"/>
-  <link rel="localization" href="security/certificates/certManager.ftl"/>
-
-  <link rel="shortcut icon" href="chrome://browser/skin/settings.svg"/>
+  <html:link rel="shortcut icon"
+              href="chrome://browser/skin/settings.svg"/>
 
   <script src="chrome://browser/content/utilityOverlay.js"/>
   <script src="chrome://global/content/preferencesBindings.js"/>
@@ -61,9 +62,6 @@
   <script src="chrome://browser/content/preferences/in-content/extensionControlled.js"/>
   <script src="chrome://browser/content/preferences/in-content/findInPage.js"/>
   <script src="chrome://browser/content/preferences/in-content/subdialogs.js"/>
-</head>
-
-<html:body xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <stringbundle id="pkiBundle"
                 src="chrome://pippki/locale/pippki.properties"/>
@@ -219,5 +217,4 @@
     </vbox>
   </vbox>
   </stack>
-</html:body>
-</html>
+</window>

@@ -4,7 +4,7 @@
 
 %include ../../../shared/incontentprefs/preferences.inc.css
 
-body {
+:root > * {
   font-size: 1.25em;
 }
 
