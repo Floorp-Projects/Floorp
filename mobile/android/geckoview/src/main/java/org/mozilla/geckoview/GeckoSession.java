@@ -12,7 +12,6 @@ import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.util.AbstractSequentialList;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -324,104 +323,7 @@ public class GeckoSession implements Parcelable {
             }
         };
 
-    private static class WebExtensionSender {
-        public String webExtensionId;
-        public String nativeApp;
-
-        public WebExtensionSender(final String webExtensionId, final String nativeApp) {
-            this.webExtensionId = webExtensionId;
-            this.nativeApp = nativeApp;
-        }
-
-        @Override
-        public boolean equals(final Object other) {
-            if (!(other instanceof WebExtensionSender)) {
-                return false;
-            }
-
-            WebExtensionSender o = (WebExtensionSender) other;
-            return webExtensionId.equals(o.webExtensionId) &&
-                    nativeApp.equals(o.nativeApp);
-        }
-
-        @Override
-        public int hashCode() {
-            int result = 17;
-            result = 31 * result + (webExtensionId != null ? webExtensionId.hashCode() : 0);
-            result = 31 * result + (nativeApp != null ? nativeApp.hashCode() : 0);
-            return result;
-        }
-    }
-
-    private final class WebExtensionListener implements BundleEventListener {
-        final private HashMap<WebExtensionSender, WebExtension.MessageDelegate> mMessageDelegates;
-        final private HashMap<String, WebExtension.ActionDelegate> mActionDelegates;
-
-        public WebExtensionListener() {
-            mMessageDelegates = new HashMap<>();
-            mActionDelegates = new HashMap<>();
-        }
-
-        /* package */ void registerListeners() {
-            getEventDispatcher().registerUiThreadListener(this,
-                    "GeckoView:WebExtension:Message",
-                    "GeckoView:WebExtension:PortMessage",
-                    "GeckoView:WebExtension:Connect",
-                    "GeckoView:WebExtension:CloseTab",
-
-                    // Browser and Page Actions
-                    "GeckoView:BrowserAction:Update",
-                    "GeckoView:BrowserAction:OpenPopup",
-                    "GeckoView:PageAction:Update",
-                    "GeckoView:PageAction:OpenPopup",
-                    null);
-        }
-
-        public void setActionDelegate(final WebExtension webExtension,
-                                      final WebExtension.ActionDelegate delegate) {
-            mActionDelegates.put(webExtension.id, delegate);
-        }
-
-        public WebExtension.ActionDelegate getActionDelegate(final WebExtension webExtension) {
-            return mActionDelegates.get(webExtension.id);
-        }
-
-        public void setMessageDelegate(final WebExtension webExtension,
-                                final WebExtension.MessageDelegate delegate,
-                                final String nativeApp) {
-            mMessageDelegates.put(new WebExtensionSender(webExtension.id, nativeApp), delegate);
-        }
-
-        public WebExtension.MessageDelegate getMessageDelegate(final WebExtension webExtension,
-                                                               final String nativeApp) {
-            return mMessageDelegates.get(new WebExtensionSender(webExtension.id, nativeApp));
-        }
-
-        @Override
-        public void handleMessage(final String event, final GeckoBundle message,
-                                  final EventCallback callback) {
-            if (mWindow == null) {
-                return;
-            }
-
-            if ("GeckoView:WebExtension:Message".equals(event)
-                    || "GeckoView:WebExtension:PortMessage".equals(event)
-                    || "GeckoView:WebExtension:Connect".equals(event)
-                    || "GeckoView:PageAction:Update".equals(event)
-                    || "GeckoView:PageAction:OpenPopup".equals(event)
-                    || "GeckoView:BrowserAction:Update".equals(event)
-                    || "GeckoView:BrowserAction:OpenPopup".equals(event)) {
-                mWindow.runtime.getWebExtensionDispatcher()
-                        .handleMessage(event, message, callback, GeckoSession.this);
-                return;
-            } else if ("GeckoView:WebExtension:CloseTab".equals(event)) {
-                mWindow.runtime.getWebExtensionController().closeTab(message, callback, GeckoSession.this);
-                return;
-            }
-        }
-    }
-
-    private final WebExtensionListener mWebExtensionListener;
+    private final WebExtension.Listener mWebExtensionListener;
 
     /**
      * Get the message delegate for <code>nativeApp</code>.
@@ -1354,7 +1256,7 @@ public class GeckoSession implements Parcelable {
         mSettings = new GeckoSessionSettings(settings, this);
         mListener.registerListeners();
 
-        mWebExtensionListener = new WebExtensionListener();
+        mWebExtensionListener = new WebExtension.Listener(this);
         mWebExtensionListener.registerListeners();
 
         if (BuildConfig.DEBUG && handlersCount != mSessionHandlers.length) {
@@ -1400,6 +1302,7 @@ public class GeckoSession implements Parcelable {
                     mEventDispatcher, mAccessibility != null ? mAccessibility.nativeProvider : null,
                     createInitData());
             onWindowChanged(WINDOW_TRANSFER_IN, /* inProgress */ false);
+            mWebExtensionListener.runtime = mWindow.runtime;
         }
     }
 
@@ -1520,6 +1423,7 @@ public class GeckoSession implements Parcelable {
         final boolean isRemote = mSettings.getUseMultiprocess();
 
         mWindow = new Window(runtime, this, mNativeQueue);
+        mWebExtensionListener.runtime = runtime;
 
         onWindowChanged(WINDOW_OPEN, /* inProgress */ true);
 
