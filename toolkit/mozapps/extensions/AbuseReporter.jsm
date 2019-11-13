@@ -253,12 +253,17 @@ const AbuseReporter = {
     const getAuthorField = fieldName =>
       details.authors && details.authors[0] && details.authors[0][fieldName];
 
+    // Normalize type "statictheme" (which is the type used on the AMO API side)
+    // into "theme" (because it is the type we use and expect on the Firefox side
+    // for this addon type).
+    const addonType = details.type === "statictheme" ? "theme" : details.type;
+
     return {
       id: addonId,
       name: getTranslatedValue(details.name),
       version: details.current_version.version,
       description: getTranslatedValue(details.summary),
-      type: details.type,
+      type: addonType,
       iconURL: details.icon_url,
       homepageURL: getTranslatedValue(details.homepage),
       supportURL: getTranslatedValue(details.support_url),
