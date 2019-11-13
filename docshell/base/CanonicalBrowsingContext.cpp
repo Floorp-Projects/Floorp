@@ -147,6 +147,22 @@ CanonicalBrowsingContext::GetEmbedderWindowGlobal() const {
   return WindowGlobalParent::GetByInnerWindowId(windowId);
 }
 
+nsISHistory* CanonicalBrowsingContext::GetSessionHistory() {
+  if (mSessionHistory) {
+    return mSessionHistory;
+  }
+
+  nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(GetDocShell());
+  if (webNav) {
+    RefPtr<ChildSHistory> shistory = webNav->GetSessionHistory();
+    if (shistory) {
+      return shistory->LegacySHistory();
+    }
+  }
+
+  return nullptr;
+}
+
 JSObject* CanonicalBrowsingContext::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return CanonicalBrowsingContext_Binding::Wrap(aCx, this, aGivenProto);

@@ -61,7 +61,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   already_AddRefed<WindowGlobalParent> GetEmbedderWindowGlobal() const;
 
-  nsISHistory* GetSessionHistory() { return mSessionHistory; }
+  nsISHistory* GetSessionHistory();
   void SetSessionHistory(nsISHistory* aSHistory) {
     mSessionHistory = aSHistory;
   }
