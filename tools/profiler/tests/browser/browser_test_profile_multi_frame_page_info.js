@@ -2,6 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+if (Services.prefs.getBoolPref("fission.autostart")) {
+  // Bug 1586105: these tests could time out in some extremely slow conditions,
+  // when fission is enabled.
+  // Requesting a longer timeout should make it pass.
+  requestLongerTimeout(2);
+}
+
 add_task(async function test_profile_multi_frame_page_info() {
   // Requesting the complete log to be able to debug Bug 1586105.
   SimpleTest.requestCompleteLog();
