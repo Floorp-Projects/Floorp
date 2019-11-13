@@ -11,6 +11,7 @@ import mozilla.components.browser.toolbar.facts.ToolbarFacts
 import mozilla.components.feature.contextmenu.facts.ContextMenuFacts
 import mozilla.components.feature.customtabs.CustomTabsFacts
 import mozilla.components.feature.findinpage.facts.FindInPageFacts
+import mozilla.components.feature.media.facts.MediaFacts
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
@@ -113,6 +114,9 @@ sealed class Event {
     object PrivateBrowsingStaticShortcutPrivateTab : Event()
     object TabMediaPlay : Event()
     object TabMediaPause : Event()
+    object MediaPlayState : Event()
+    object MediaPauseState : Event()
+    object MediaStopState : Event()
     object NotificationMediaPlay : Event()
     object NotificationMediaPause : Event()
     object TrackingProtectionTrackerList : Event()
@@ -328,13 +332,27 @@ private fun Fact.toEvent(): Event? = when (Pair(component, item)) {
     Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.CLOSE -> Event.CustomTabsClosed
     Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.ACTION_BUTTON -> Event.CustomTabsActionTapped
 
-    Component.FEATURE_MEDIA to "notification" -> {
+    Component.FEATURE_MEDIA to MediaFacts.Items.NOTIFICATION -> {
         when (action) {
             Action.PLAY -> {
                 Event.NotificationMediaPlay
             }
             Action.PAUSE -> {
                 Event.NotificationMediaPause
+            }
+            else -> null
+        }
+    }
+    Component.FEATURE_MEDIA to MediaFacts.Items.STATE -> {
+        when (action) {
+            Action.PLAY -> {
+                Event.MediaPlayState
+            }
+            Action.PAUSE -> {
+                Event.MediaPauseState
+            }
+            Action.STOP -> {
+                Event.MediaStopState
             }
             else -> null
         }

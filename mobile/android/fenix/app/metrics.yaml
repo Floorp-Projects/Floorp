@@ -1446,6 +1446,41 @@ media_notification:
       - fenix-core@mozilla.com
     expires: "2020-03-01"
 
+media_state:
+  play:
+    type: event
+    description: >
+      Media started playing.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5705
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/6463
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  pause:
+    type: event
+    description: >
+      Media playback was paused.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5705
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/6463
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  stop:
+    type: event
+    description: >
+      Media playback has ended.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5705
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/6463
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+
 logins:
   open_logins:
     type: event
