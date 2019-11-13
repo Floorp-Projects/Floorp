@@ -234,16 +234,14 @@
   }
 }
 
-#urlbar[breakout][breakout-extend] > #urlbar-background,
-#urlbar[breakout][breakout-extend] > .urlbarView {
+#urlbar[breakout][breakout-extend] > #urlbar-background {
   animation-name: urlbar-grow;
   animation-duration: 0s;
   animation-timing-function: var(--animation-easing-function);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  #urlbar[breakout][breakout-extend][breakout-extend-animate] > #urlbar-background,
-  #urlbar[breakout][breakout-extend][breakout-extend-animate] > .urlbarView {
+  #urlbar[breakout][breakout-extend][breakout-extend-animate] > #urlbar-background {
     animation-duration: 150ms;
   }
 }
