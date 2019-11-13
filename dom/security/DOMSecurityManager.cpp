@@ -121,9 +121,10 @@ nsresult DOMSecurityManager::ParseCSPAndEnforceFrameAncestorCheck(
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   nsContentPolicyType contentType = loadInfo->GetExternalContentPolicyType();
-  // frame-ancestor check only makes sense for subdocument loads, if this is
-  // not a load of such type, there is nothing to do here.
-  if (contentType != nsIContentPolicy::TYPE_SUBDOCUMENT) {
+  // frame-ancestor check only makes sense for subdocument and object loads,
+  // if this is not a load of such type, there is nothing to do here.
+  if (contentType != nsIContentPolicy::TYPE_SUBDOCUMENT &&
+      contentType != nsIContentPolicy::TYPE_OBJECT) {
     return NS_OK;
   }
 
