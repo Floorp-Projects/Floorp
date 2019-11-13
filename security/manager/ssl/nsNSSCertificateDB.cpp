@@ -67,7 +67,7 @@ nsNSSCertificateDB::FindCertByDBKey(const nsACString& aDBKey,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsresult rv = BlockUntilLoadableRootsLoaded();
+  nsresult rv = BlockUntilLoadableCertsLoaded();
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -687,7 +687,7 @@ nsNSSCertificateDB::IsCertTrusted(nsIX509Cert* cert, uint32_t certType,
   NS_ENSURE_ARG_POINTER(_isTrusted);
   *_isTrusted = false;
 
-  nsresult rv = BlockUntilLoadableRootsLoaded();
+  nsresult rv = BlockUntilLoadableCertsLoaded();
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -784,7 +784,7 @@ nsNSSCertificateDB::ImportPKCS12File(nsIFile* aFile, const nsAString& aPassword,
   if (!NS_IsMainThread()) {
     return NS_ERROR_NOT_SAME_THREAD;
   }
-  nsresult rv = BlockUntilLoadableRootsLoaded();
+  nsresult rv = BlockUntilLoadableCertsLoaded();
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -809,7 +809,7 @@ nsNSSCertificateDB::ExportPKCS12File(
   if (!NS_IsMainThread()) {
     return NS_ERROR_NOT_SAME_THREAD;
   }
-  nsresult rv = BlockUntilLoadableRootsLoaded();
+  nsresult rv = BlockUntilLoadableCertsLoaded();
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -879,7 +879,7 @@ void nsNSSCertificateDB::get_default_nickname(CERTCertificate* cert,
 
   CK_OBJECT_HANDLE keyHandle;
 
-  if (NS_FAILED(BlockUntilLoadableRootsLoaded())) {
+  if (NS_FAILED(BlockUntilLoadableCertsLoaded())) {
     return;
   }
 
@@ -1134,7 +1134,7 @@ NS_IMETHODIMP nsNSSCertificateDB::AsPKCS7Blob(
 
 NS_IMETHODIMP
 nsNSSCertificateDB::GetCerts(nsTArray<RefPtr<nsIX509Cert>>& _retval) {
-  nsresult rv = BlockUntilLoadableRootsLoaded();
+  nsresult rv = BlockUntilLoadableCertsLoaded();
   if (NS_FAILED(rv)) {
     return rv;
   }
