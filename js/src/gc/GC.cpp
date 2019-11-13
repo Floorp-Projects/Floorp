@@ -4300,7 +4300,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
    * collecting.
    */
 
-  WeakMapColors markedWeakMaps;
+  WeakMapSet markedWeakMaps;
 
   /*
    * For saving, smush all of the keys into one big table and split them back
