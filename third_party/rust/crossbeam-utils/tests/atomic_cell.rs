@@ -206,3 +206,29 @@ fn modular_usize() {
     assert_eq!(a.compare_exchange(Foo(10), Foo(15)), Ok(Foo(100)));
     assert_eq!(a.load().0, 15);
 }
+
+#[test]
+fn garbage_padding() {
+    #[derive(Copy, Clone, Eq, PartialEq)]
+    struct Object {
+        a: i64,
+        b: i32,
+    }
+
+    let cell = AtomicCell::new(Object { a: 0, b: 0 });
+    let _garbage = [0xfe, 0xfe, 0xfe, 0xfe, 0xfe]; // Needed
+    let next = Object { a: 0, b: 0 };
+
+    let prev = cell.load();
+    assert!(cell.compare_exchange(prev, next).is_ok());
+    println!();
+}
+
+#[cfg(has_min_const_fn)]
+#[test]
+fn const_atomic_cell_new() {
+    static CELL: AtomicCell<usize> = AtomicCell::new(0);
+
+    CELL.store(1);
+    assert_eq!(CELL.load(), 1);
+}

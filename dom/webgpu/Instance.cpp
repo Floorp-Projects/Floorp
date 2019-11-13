@@ -6,26 +6,72 @@
 #include "Instance.h"
 
 #include "Adapter.h"
-#include "InstanceProvider.h"
+#include "gfxConfig.h"
 #include "nsIGlobalObject.h"
+#include "ipc/WebGPUChild.h"
+#include "ipc/WebGPUTypes.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
 
 namespace mozilla {
 namespace webgpu {
 
-GPU_IMPL_CYCLE_COLLECTION(Instance, mParent)
+GPU_IMPL_CYCLE_COLLECTION(Instance, mBridge, mOwner)
 
 /*static*/
-RefPtr<Instance> Instance::Create(nsIGlobalObject* parent) {
-  return new Instance(parent);
+already_AddRefed<Instance> Instance::Create(nsIGlobalObject* aOwner) {
+  if (!gfx::gfxConfig::IsEnabled(gfx::Feature::WEBGPU)) {
+    return nullptr;
+  }
+
+  RefPtr<WebGPUChild> bridge =
+      layers::CompositorBridgeChild::Get()->GetWebGPUChild();
+  if (NS_WARN_IF(!bridge)) {
+    MOZ_CRASH("Failed to create an IPDL bridge for WebGPU!");
+  }
+
+  RefPtr<Instance> result = new Instance(aOwner, bridge);
+  return result.forget();
 }
 
-Instance::Instance(nsIGlobalObject* parent) : mParent(parent) {}
+Instance::Instance(nsIGlobalObject* aOwner, WebGPUChild* aBridge)
+    : mOwner(aOwner), mBridge(aBridge) {}
 
 Instance::~Instance() = default;
 
 JSObject* Instance::WrapObject(JSContext* cx,
                                JS::Handle<JSObject*> givenProto) {
   return dom::GPU_Binding::Wrap(cx, this, givenProto);
+}
+
+WebGPUChild* Instance::GetBridge() const { return mBridge; }
+
+already_AddRefed<dom::Promise> Instance::RequestAdapter(
+    const dom::GPURequestAdapterOptions& aOptions, ErrorResult& aRv) {
+  RefPtr<dom::Promise> promise = dom::Promise::Create(mOwner, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  RefPtr<Instance> instance = this;
+
+  mBridge->InstanceRequestAdapter(aOptions)->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [promise, instance](RawId id) {
+        MOZ_ASSERT(id != 0);
+        RefPtr<Adapter> adapter = new Adapter(instance, id);
+        promise->MaybeResolve(adapter);
+      },
+      [promise](const Maybe<ipc::ResponseRejectReason>& aRv) {
+        if (aRv.isSome()) {
+          promise->MaybeRejectWithDOMException(NS_ERROR_DOM_ABORT_ERR,
+                                               "Internal communication error!");
+        } else {
+          promise->MaybeRejectWithDOMException(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                               "No matching adapter found!");
+        }
+      });
+
+  return promise.forget();
 }
 
 }  // namespace webgpu

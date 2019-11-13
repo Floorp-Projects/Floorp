@@ -7,7 +7,7 @@
 #define GPU_DEVICE_H_
 
 #include "mozilla/RefPtr.h"
-
+#include "mozilla/webgpu/WebGPUTypes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 
 namespace mozilla {
@@ -55,6 +55,7 @@ class RenderPipeline;
 class Sampler;
 class ShaderModule;
 class Texture;
+class WebGPUChild;
 
 class Device final : public DOMEventTargetHelper {
  public:
@@ -62,15 +63,16 @@ class Device final : public DOMEventTargetHelper {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Device, DOMEventTargetHelper)
   GPU_DECL_JS_WRAP(Device)
 
-  explicit Device(nsIGlobalObject* aGlobal);
-
  private:
   Device() = delete;
   virtual ~Device();
 
+  const RefPtr<WebGPUChild> mBridge;
+  const RawId mId;
   nsString mLabel;
 
  public:
+  explicit Device(Adapter* const aParent, RawId aId);
   void GetLabel(nsAString& aValue) const;
   void SetLabel(const nsAString& aLabel);
 

@@ -65,6 +65,7 @@
 #include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/webrender/WebRenderAPI.h"
+#include "mozilla/webgpu/WebGPUParent.h"
 #include "mozilla/media/MediaSystemResourceService.h"  // for MediaSystemResourceService
 #include "mozilla/mozalloc.h"                          // for operator new, etc
 #include "mozilla/PerfStats.h"
@@ -1920,6 +1921,22 @@ bool CompositorBridgeParent::DeallocPWebRenderBridgeParent(
     }
   }
   parent->Release();  // IPDL reference
+  return true;
+}
+
+webgpu::PWebGPUParent* CompositorBridgeParent::AllocPWebGPUParent() {
+  MOZ_ASSERT(!mWebGPUBridge);
+  mWebGPUBridge = new webgpu::WebGPUParent();
+  mWebGPUBridge.get()->AddRef();  // IPDL reference
+  return mWebGPUBridge;
+}
+
+bool CompositorBridgeParent::DeallocPWebGPUParent(
+    webgpu::PWebGPUParent* aActor) {
+  webgpu::WebGPUParent* parent = static_cast<webgpu::WebGPUParent*>(aActor);
+  MOZ_ASSERT(mWebGPUBridge == parent);
+  parent->Release();  // IPDL reference
+  mWebGPUBridge = nullptr;
   return true;
 }
 

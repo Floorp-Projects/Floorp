@@ -213,7 +213,7 @@ impl HFrameReader {
             let fin;
             let mut input = match conn.stream_recv(stream_id, &mut buf[..]) {
                 Ok((0, true)) => {
-                    qtrace!([conn] "HFrameReader::receive: stream has been closed");
+                    qtrace!([conn], "HFrameReader::receive: stream has been closed");
                     break match self.state {
                         HFrameReaderState::BeforeFrame => Ok(true),
                         _ => Err(Error::HttpFrameError),
@@ -221,12 +221,22 @@ impl HFrameReader {
                 }
                 Ok((0, false)) => break Ok(false),
                 Ok((amount, f)) => {
-                    qtrace!([conn] "HFrameReader::receive: reading {} byte, fin={}", amount, f);
+                    qtrace!(
+                        [conn],
+                        "HFrameReader::receive: reading {} byte, fin={}",
+                        amount,
+                        f
+                    );
                     fin = f;
                     Decoder::from(&buf[..amount])
                 }
                 Err(e) => {
-                    qdebug!([conn] "HFrameReader::receive: error reading data from stream {}: {:?}", stream_id, e);
+                    qdebug!(
+                        [conn],
+                        "HFrameReader::receive: error reading data from stream {}: {:?}",
+                        stream_id,
+                        e
+                    );
                     break Err(e.into());
                 }
             };
@@ -238,7 +248,7 @@ impl HFrameReader {
             match self.state {
                 HFrameReaderState::BeforeFrame | HFrameReaderState::GetType => match progress {
                     IncrementalDecoderResult::Uint(v) => {
-                        qtrace!([conn] "HFrameReader::receive: read frame type {}", v);
+                        qtrace!([conn], "HFrameReader::receive: read frame type {}", v);
                         self.hframe_type = v;
                         self.decoder = IncrementalDecoder::decode_varint();
                         self.state = HFrameReaderState::GetLength;
@@ -252,7 +262,12 @@ impl HFrameReader {
                 HFrameReaderState::GetLength => {
                     match progress {
                         IncrementalDecoderResult::Uint(len) => {
-                            qtrace!([conn] "HFrameReader::receive: frame type {} length {}", self.hframe_type, len);
+                            qtrace!(
+                                [conn],
+                                "HFrameReader::receive: frame type {} length {}",
+                                self.hframe_type,
+                                len
+                            );
                             self.hframe_len = len;
                             self.state = match self.hframe_type {
                                 // DATA and HEADERS payload are left on the quic stream and picked up separately
@@ -310,7 +325,12 @@ impl HFrameReader {
                 HFrameReaderState::GetData => {
                     match progress {
                         IncrementalDecoderResult::Buffer(data) => {
-                            qtrace!([conn] "received frame {}: {}", self.hframe_type, hex(&data[..]));
+                            qtrace!(
+                                [conn],
+                                "received frame {}: {}",
+                                self.hframe_type,
+                                hex(&data[..])
+                            );
                             self.payload = data;
                             self.state = HFrameReaderState::Done;
                         }

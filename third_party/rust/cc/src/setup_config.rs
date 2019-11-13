@@ -8,19 +8,19 @@
 #![allow(bad_style)]
 #![allow(unused)]
 
+use crate::winapi::Interface;
+use crate::winapi::BSTR;
+use crate::winapi::LPCOLESTR;
+use crate::winapi::LPSAFEARRAY;
+use crate::winapi::S_FALSE;
+use crate::winapi::{CoCreateInstance, CLSCTX_ALL};
+use crate::winapi::{IUnknown, IUnknownVtbl};
+use crate::winapi::{HRESULT, LCID, LPCWSTR, PULONGLONG};
+use crate::winapi::{LPFILETIME, ULONG};
 use std::ffi::OsString;
 use std::ptr::null_mut;
-use winapi::Interface;
-use winapi::{LPFILETIME, ULONG};
-use winapi::S_FALSE;
-use winapi::BSTR;
-use winapi::LPCOLESTR;
-use winapi::{CoCreateInstance, CLSCTX_ALL};
-use winapi::LPSAFEARRAY;
-use winapi::{IUnknown, IUnknownVtbl};
-use winapi::{HRESULT, LCID, LPCWSTR, PULONGLONG};
 
-use com::{BStr, ComPtr};
+use crate::com::{BStr, ComPtr};
 
 // Bindings to the Setup.Configuration stuff
 pub type InstanceState = u32;
@@ -31,7 +31,7 @@ pub const eRegistered: InstanceState = 2;
 pub const eNoRebootRequired: InstanceState = 4;
 pub const eComplete: InstanceState = -1i32 as u32;
 
-RIDL!{#[uuid(0xb41463c3, 0x8866, 0x43b5, 0xbc, 0x33, 0x2b, 0x06, 0x76, 0xf7, 0xf4, 0x2e)]
+RIDL! {#[uuid(0xb41463c3, 0x8866, 0x43b5, 0xbc, 0x33, 0x2b, 0x06, 0x76, 0xf7, 0xf4, 0x2e)]
 interface ISetupInstance(ISetupInstanceVtbl): IUnknown(IUnknownVtbl) {
     fn GetInstanceId(
         pbstrInstanceId: *mut BSTR,
@@ -62,7 +62,7 @@ interface ISetupInstance(ISetupInstanceVtbl): IUnknown(IUnknownVtbl) {
     ) -> HRESULT,
 }}
 
-RIDL!{#[uuid(0x89143c9a, 0x05af, 0x49b0, 0xb7, 0x17, 0x72, 0xe2, 0x18, 0xa2, 0x18, 0x5c)]
+RIDL! {#[uuid(0x89143c9a, 0x05af, 0x49b0, 0xb7, 0x17, 0x72, 0xe2, 0x18, 0xa2, 0x18, 0x5c)]
 interface ISetupInstance2(ISetupInstance2Vtbl): ISetupInstance(ISetupInstanceVtbl) {
     fn GetState(
         pState: *mut InstanceState,
@@ -78,7 +78,7 @@ interface ISetupInstance2(ISetupInstance2Vtbl): ISetupInstance(ISetupInstanceVtb
     ) -> HRESULT,
 }}
 
-RIDL!{#[uuid(0x6380bcff, 0x41d3, 0x4b2e, 0x8b, 0x2e, 0xbf, 0x8a, 0x68, 0x10, 0xc8, 0x48)]
+RIDL! {#[uuid(0x6380bcff, 0x41d3, 0x4b2e, 0x8b, 0x2e, 0xbf, 0x8a, 0x68, 0x10, 0xc8, 0x48)]
 interface IEnumSetupInstances(IEnumSetupInstancesVtbl): IUnknown(IUnknownVtbl) {
     fn Next(
         celt: ULONG,
@@ -94,7 +94,7 @@ interface IEnumSetupInstances(IEnumSetupInstancesVtbl): IUnknown(IUnknownVtbl) {
     ) -> HRESULT,
 }}
 
-RIDL!{#[uuid(0x42843719, 0xdb4c, 0x46c2, 0x8e, 0x7c, 0x64, 0xf1, 0x81, 0x6e, 0xfd, 0x5b)]
+RIDL! {#[uuid(0x42843719, 0xdb4c, 0x46c2, 0x8e, 0x7c, 0x64, 0xf1, 0x81, 0x6e, 0xfd, 0x5b)]
 interface ISetupConfiguration(ISetupConfigurationVtbl): IUnknown(IUnknownVtbl) {
     fn EnumInstances(
         ppEnumInstances: *mut *mut IEnumSetupInstances,
@@ -108,7 +108,7 @@ interface ISetupConfiguration(ISetupConfigurationVtbl): IUnknown(IUnknownVtbl) {
     ) -> HRESULT,
 }}
 
-RIDL!{#[uuid(0x26aab78c, 0x4a60, 0x49d6, 0xaf, 0x3b, 0x3c, 0x35, 0xbc, 0x93, 0x36, 0x5d)]
+RIDL! {#[uuid(0x26aab78c, 0x4a60, 0x49d6, 0xaf, 0x3b, 0x3c, 0x35, 0xbc, 0x93, 0x36, 0x5d)]
 interface ISetupConfiguration2(ISetupConfiguration2Vtbl):
     ISetupConfiguration(ISetupConfigurationVtbl) {
     fn EnumAllInstances(
@@ -116,7 +116,7 @@ interface ISetupConfiguration2(ISetupConfiguration2Vtbl):
     ) -> HRESULT,
 }}
 
-RIDL!{#[uuid(0xda8d8a16, 0xb2b6, 0x4487, 0xa2, 0xf1, 0x59, 0x4c, 0xcc, 0xcd, 0x6b, 0xf5)]
+RIDL! {#[uuid(0xda8d8a16, 0xb2b6, 0x4487, 0xa2, 0xf1, 0x59, 0x4c, 0xcc, 0xcd, 0x6b, 0xf5)]
 interface ISetupPackageReference(ISetupPackageReferenceVtbl): IUnknown(IUnknownVtbl) {
     fn GetId(
         pbstrId: *mut BSTR,
@@ -141,7 +141,7 @@ interface ISetupPackageReference(ISetupPackageReferenceVtbl): IUnknown(IUnknownV
     ) -> HRESULT,
 }}
 
-RIDL!{#[uuid(0x42b21b78, 0x6192, 0x463e, 0x87, 0xbf, 0xd5, 0x77, 0x83, 0x8f, 0x1d, 0x5c)]
+RIDL! {#[uuid(0x42b21b78, 0x6192, 0x463e, 0x87, 0xbf, 0xd5, 0x77, 0x83, 0x8f, 0x1d, 0x5c)]
 interface ISetupHelper(ISetupHelperVtbl): IUnknown(IUnknownVtbl) {
     fn ParseVersion(
         pwszVersion: LPCOLESTR,
@@ -154,7 +154,7 @@ interface ISetupHelper(ISetupHelperVtbl): IUnknown(IUnknownVtbl) {
     ) -> HRESULT,
 }}
 
-DEFINE_GUID!{CLSID_SetupConfiguration,
+DEFINE_GUID! {CLSID_SetupConfiguration,
 0x177f0c4a, 0x1cd3, 0x4de7, 0xa3, 0x2c, 0x71, 0xdb, 0xbb, 0x9f, 0xa3, 0x6d}
 
 // Safe wrapper around the COM interfaces
@@ -196,7 +196,7 @@ impl SetupConfiguration {
     }
     pub fn enum_all_instances(&self) -> Result<EnumSetupInstances, i32> {
         let mut obj = null_mut();
-        let this = try!(self.0.cast::<ISetupConfiguration2>());
+        let this = self.0.cast::<ISetupConfiguration2>()?;
         let err = unsafe { this.EnumAllInstances(&mut obj) };
         if err < 0 {
             return Err(err);
@@ -249,7 +249,7 @@ impl SetupInstance {
     }
     pub fn product_path(&self) -> Result<OsString, i32> {
         let mut s = null_mut();
-        let this = try!(self.0.cast::<ISetupInstance2>());
+        let this = self.0.cast::<ISetupInstance2>()?;
         let err = unsafe { this.GetProductPath(&mut s) };
         let bstr = unsafe { BStr::from_raw(s) };
         if err < 0 {
