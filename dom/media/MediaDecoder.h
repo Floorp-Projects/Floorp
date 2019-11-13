@@ -403,6 +403,11 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   void SetStateMachineParameters();
 
+  // Called when MediaDecoder shutdown is finished. Subclasses use this to clean
+  // up internal structures, and unregister potential shutdown blockers when
+  // they're done.
+  virtual void ShutdownInternal();
+
   bool IsShutdown() const;
 
   // Called to notify the decoder that the duration has changed.
