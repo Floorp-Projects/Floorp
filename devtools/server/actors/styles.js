@@ -1120,7 +1120,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
    *
    * This is necessary because changes in one rule can cause the declarations in another
    * to not be applicable (inactive CSS). The observers of those rules should be notified.
-   * Rules will fire a "declarations-updated" event if their declarations changed states.
+   * Rules will fire a "rule-updated" event if any of their declarations changed state.
    *
    * Call this method whenever a CSS rule is mutated:
    * - a CSS declaration is added/changed/disabled/removed
@@ -1356,9 +1356,12 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       line: this.line || undefined,
       column: this.column,
       traits: {
-        // Whether the style rule actor implements the setRuleText
-        // method.
+        // Indicates whether StyleRuleActor implements and can use the setRuleText method.
+        // It cannot use it if the stylesheet was programmatically mutated via the CSSOM.
         canSetRuleText: this.canSetRuleText,
+        // Indicates that StyleRuleActor emits the "rule-updated" event.
+        // Added in Firefox 72.
+        emitsRuleUpdatedEvent: true,
       },
     };
 
@@ -1701,6 +1704,8 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     this.authoredText = newText;
     this.pageStyle.refreshObservedRules();
 
+    // Returning this updated actor over the protocol will update its corresponding front
+    // and any references to it.
     return this;
   },
 
@@ -2006,8 +2011,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    * check the states of declarations in this CSS rule.
    *
    * If any have changed their used/unused state, potentially as a result of changes in
-   * another rule, fire a "declarations-updated" event with all declarations and their
-   * updated states.
+   * another rule, fire a "rule-updated" event with this rule actor in its latest state.
    */
   refresh() {
     let hasChanged = false;
@@ -2030,7 +2034,16 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     }
 
     if (hasChanged) {
-      this.emit("declarations-updated", this._declarations);
+      // ⚠️ IMPORTANT ⚠️
+      // When an event is emitted via the protocol with the StyleRuleActor as payload, the
+      // corresponding StyleRuleFront will be automatically updated under the hood.
+      // Therefore, when the client looks up properties on the front reference it already
+      // has, it will get the latest values set on the actor, not the ones it originally
+      // had when the front was created. The client is not required to explicitly replace
+      // its previous front reference to the one it receives as this event's payload.
+      // The client doesn't even need to explicitly listen for this event.
+      // The update of the front happens automatically.
+      this.emit("rule-updated", this);
     }
   },
 });
