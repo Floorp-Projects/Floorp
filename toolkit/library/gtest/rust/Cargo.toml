@@ -28,6 +28,7 @@ new_cert_storage = ["gkrust-shared/new_cert_storage"]
 fuzzing_interfaces = ["gkrust-shared/fuzzing_interfaces", "gecko-fuzz-targets"]
 webrtc = ["gkrust-shared/webrtc"]
 wasm_library_sandboxing = ["gkrust-shared/wasm_library_sandboxing"]
+webgpu = ["gkrust-shared/webgpu"]
 
 [dependencies]
 bench-collections-gtest = { path = "../../../../xpcom/rust/gtest/bench-collections" }

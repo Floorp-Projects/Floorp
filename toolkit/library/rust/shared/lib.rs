@@ -54,6 +54,8 @@ extern crate audio_thread_priority;
 #[cfg(feature = "webrtc")]
 extern crate mdns_service;
 extern crate neqo_glue;
+#[cfg(feature = "webgpu")]
+extern crate wgpu_remote;
 
 #[cfg(feature = "wasm_library_sandboxing")]
 extern crate rlbox_lucet_sandbox;
@@ -197,11 +199,11 @@ fn str_truncate_valid(s: &str, mut mid: usize) -> &str {
 
 /// Similar to ArrayString, but with terminating nul character.
 #[derive(Debug, PartialEq)]
-struct ArrayCString<A: Array<Item = u8>> {
+struct ArrayCString<A: Copy + Array<Item = u8>> {
     inner: ArrayString<A>,
 }
 
-impl<S: AsRef<str>, A: Array<Item = u8>> From<S> for ArrayCString<A> {
+impl<S: AsRef<str>, A: Copy + Array<Item = u8>> From<S> for ArrayCString<A> {
     /// Contrary to ArrayString::from, truncates at the closest unicode
     /// character boundary.
     /// ```
@@ -211,7 +213,7 @@ impl<S: AsRef<str>, A: Array<Item = u8>> From<S> for ArrayCString<A> {
     /// ```
     fn from(s: S) -> Self {
         let s = s.as_ref();
-        let len = cmp::min(s.len(), A::capacity() - 1);
+        let len = cmp::min(s.len(), A::CAPACITY - 1);
         let mut result = Self {
             inner: ArrayString::from(str_truncate_valid(s, len)).unwrap(),
         };
@@ -220,7 +222,7 @@ impl<S: AsRef<str>, A: Array<Item = u8>> From<S> for ArrayCString<A> {
     }
 }
 
-impl<A: Array<Item = u8>> Deref for ArrayCString<A> {
+impl<A: Copy + Array<Item = u8>> Deref for ArrayCString<A> {
     type Target = str;
 
     fn deref(&self) -> &str {

@@ -88,7 +88,7 @@ impl Http3Client {
     }
 
     pub fn close(&mut self, now: Instant, error: AppError, msg: &str) {
-        qinfo!([self] "Close the connection error={} msg={}.", error, msg);
+        qinfo!([self], "Close the connection error={} msg={}.", error, msg);
         self.base_handler.close(now, error, msg);
     }
 
@@ -101,7 +101,7 @@ impl Http3Client {
         headers: &[Header],
     ) -> Res<u64> {
         qinfo!(
-            [self]
+            [self],
             "Fetch method={}, scheme={}, host={}, path={}",
             method,
             scheme,
@@ -125,17 +125,22 @@ impl Http3Client {
     }
 
     pub fn stream_reset(&mut self, stream_id: u64, error: AppError) -> Res<()> {
-        qinfo!([self] "reset_stream {} error={}.", stream_id, error);
+        qinfo!([self], "reset_stream {} error={}.", stream_id, error);
         self.base_handler.stream_reset(stream_id, error)
     }
 
     pub fn stream_close_send(&mut self, stream_id: u64) -> Res<()> {
-        qinfo!([self] "Close senidng side stream={}.", stream_id);
+        qinfo!([self], "Close senidng side stream={}.", stream_id);
         self.base_handler.stream_close_send(stream_id)
     }
 
     pub fn send_request_body(&mut self, stream_id: u64, buf: &[u8]) -> Res<usize> {
-        qinfo!([self] "send_request_body from stream {} sending {} bytes.", stream_id, buf.len());
+        qinfo!(
+            [self],
+            "send_request_body from stream {} sending {} bytes.",
+            stream_id,
+            buf.len()
+        );
         self.base_handler
             .transactions
             .get_mut(&stream_id)
@@ -144,7 +149,7 @@ impl Http3Client {
     }
 
     pub fn read_response_headers(&mut self, stream_id: u64) -> Res<(Vec<Header>, bool)> {
-        qinfo!([self] "read_response_headers from stream {}.", stream_id);
+        qinfo!([self], "read_response_headers from stream {}.", stream_id);
         let transaction = self
             .base_handler
             .transactions
@@ -167,7 +172,7 @@ impl Http3Client {
         stream_id: u64,
         buf: &mut [u8],
     ) -> Res<(usize, bool)> {
-        qinfo!([self] "read_data from stream {}.", stream_id);
+        qinfo!([self], "read_data from stream {}.", stream_id);
         let transaction = self
             .base_handler
             .transactions
@@ -219,17 +224,17 @@ impl Http3Client {
     }
 
     pub fn process(&mut self, dgram: Option<Datagram>, now: Instant) -> Output {
-        qtrace!([self] "Process.");
+        qtrace!([self], "Process.");
         self.base_handler.process(dgram, now)
     }
 
     pub fn process_input(&mut self, dgram: Datagram, now: Instant) {
-        qtrace!([self] "Process input.");
+        qtrace!([self], "Process input.");
         self.base_handler.process_input(dgram, now);
     }
 
     pub fn process_timer(&mut self, now: Instant) {
-        qtrace!([self] "Process timer.");
+        qtrace!([self], "Process timer.");
         self.base_handler.process_timer(now);
     }
 
@@ -238,13 +243,13 @@ impl Http3Client {
     }
 
     pub fn process_http3(&mut self, now: Instant) {
-        qtrace!([self] "Process http3 internal.");
+        qtrace!([self], "Process http3 internal.");
 
         self.base_handler.process_http3(now);
     }
 
     pub fn process_output(&mut self, now: Instant) -> Output {
-        qtrace!([self] "Process output.");
+        qtrace!([self], "Process output.");
         self.base_handler.process_output(now)
     }
 }

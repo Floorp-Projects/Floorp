@@ -264,17 +264,17 @@ impl Server {
         dgram: Option<Datagram>,
         now: Instant,
     ) -> Option<Datagram> {
-        qtrace!([self] "Process connection {:?}", c);
+        qtrace!([self], "Process connection {:?}", c);
         let out = c.borrow_mut().process(dgram, now);
         match out {
             Output::Datagram(_) => {
-                qtrace!([self] "Sending packet, added to waiting connections");
+                qtrace!([self], "Sending packet, added to waiting connections");
                 self.waiting.push_back(c.clone());
             }
             Output::Callback(delay) => {
                 let next = now + delay;
                 if next != c.borrow().last_timer {
-                    qtrace!([self] "Change timer to {:?}", next);
+                    qtrace!([self], "Change timer to {:?}", next);
                     self.remove_timer(&c);
                     c.borrow_mut().last_timer = next;
                     self.timers.add(next, c.clone());
@@ -285,7 +285,7 @@ impl Server {
             }
         }
         if c.borrow().has_events() {
-            qtrace!([self] "Connection active: {:?}", c);
+            qtrace!([self], "Connection active: {:?}", c);
             self.active.insert(ActiveConnectionRef { c: c.clone() });
         }
         if matches!(c.borrow().state(), State::Closed(_)) {
@@ -315,7 +315,7 @@ impl Server {
             RetryTokenResult::Pass => self.accept_connection(None, dgram, now),
             RetryTokenResult::Valid(dcid) => self.accept_connection(Some(dcid), dgram, now),
             RetryTokenResult::Validate => {
-                qinfo!([self] "Send retry for {:?}", hdr.dcid);
+                qinfo!([self], "Send retry for {:?}", hdr.dcid);
 
                 let res = self.retry.generate_token(&hdr.dcid, dgram.source(), now);
                 let token = if let Ok(t) = res {
@@ -348,7 +348,7 @@ impl Server {
         dgram: Datagram,
         now: Instant,
     ) -> Option<Datagram> {
-        qinfo!([self] "Accept connection");
+        qinfo!([self], "Accept connection");
         // The internal connection ID manager that we use is not used directly.
         // Instead, wrap it so that we can save connection IDs.
         let cid_mgr = Rc::new(RefCell::new(ServerConnectionIdManager {
@@ -370,7 +370,7 @@ impl Server {
             cid_mgr.borrow_mut().c = Some(c.clone());
             self.process_connection(c, Some(dgram), now)
         } else {
-            qwarn!([self] "Unable to create connection");
+            qwarn!([self], "Unable to create connection");
             None
         }
     }
@@ -384,7 +384,7 @@ impl Server {
         let hdr = match res {
             Ok(h) => h,
             _ => {
-                qtrace!([self] "Discarding {:?}", dgram);
+                qtrace!([self], "Discarding {:?}", dgram);
                 return None;
             }
         };
@@ -396,12 +396,12 @@ impl Server {
 
         if hdr.tipe == PacketType::Short {
             // TODO send a stateless reset here.
-            qtrace!([self] "Short header packet for an unknown connection");
+            qtrace!([self], "Short header packet for an unknown connection");
             return None;
         }
 
         if dgram.len() < MIN_INITIAL_PACKET_SIZE {
-            qtrace!([self] "Bogus packet: too short");
+            qtrace!([self], "Bogus packet: too short");
             return None;
         }
 
@@ -415,13 +415,13 @@ impl Server {
     /// Iterate through the pending connections looking for any that might want
     /// to send a datagram.  Stop at the first one that does.
     fn process_next_output(&mut self, now: Instant) -> Option<Datagram> {
-        qtrace!([self] "No packet to send, look at waiting connections");
+        qtrace!([self], "No packet to send, look at waiting connections");
         while let Some(c) = self.waiting.pop_front() {
             if let Some(d) = self.process_connection(c, None, now) {
                 return Some(d);
             }
         }
-        qtrace!([self] "No packet to send still, run timers");
+        qtrace!([self], "No packet to send still, run timers");
         while let Some(c) = self.timers.take_next(now) {
             if let Some(d) = self.process_connection(c, None, now) {
                 return Some(d);
@@ -447,16 +447,16 @@ impl Server {
         let out = out.or_else(|| self.process_next_output(now));
         match out {
             Some(d) => {
-                qtrace!([self] "Send packet: {:?}", d);
+                qtrace!([self], "Send packet: {:?}", d);
                 Output::Datagram(d)
             }
             _ => match self.next_time(now) {
                 Some(delay) => {
-                    qtrace!([self] "Wait: {:?}", delay);
+                    qtrace!([self], "Wait: {:?}", delay);
                     Output::Callback(delay)
                 }
                 _ => {
-                    qtrace!([self] "Go dormant");
+                    qtrace!([self], "Go dormant");
                     Output::None
                 }
             },

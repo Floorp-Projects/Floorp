@@ -74,7 +74,7 @@
 //! `'static` lifetime because the borrow checker cannot be sure when the thread will complete.
 //!
 //! A scope creates a clear boundary between variables outside the scope and threads inside the
-//! scope. Whenever a s.spawns a thread, it promises to join the thread before the scope ends.
+//! scope. Whenever a scope spawns a thread, it promises to join the thread before the scope ends.
 //! This way we guarantee to the borrow checker that scoped threads only live within the scope and
 //! can safely access variables outside it.
 //!
@@ -92,14 +92,14 @@
 //!         // Not going to compile because we're trying to borrow `s`,
 //!         // which lives *inside* the scope! :(
 //!         s.spawn(|_| println!("nested thread"));
-//!     }});
+//!     });
 //! });
 //! ```
 //!
 //! Fortunately, there is a solution. Every scoped thread is passed a reference to its scope as an
 //! argument, which can be used for spawning nested threads:
 //!
-//! ```ignore
+//! ```
 //! use crossbeam_utils::thread;
 //!
 //! thread::scope(|s| {
@@ -107,7 +107,7 @@
 //!     s.spawn(|s| {
 //!         // Yay, this works because we're using a fresh argument `s`! :)
 //!         s.spawn(|_| println!("nested thread"));
-//!     }});
+//!     });
 //! });
 //! ```
 //!
@@ -423,8 +423,8 @@ impl<'scope, 'env> ScopedThreadBuilder<'scope, 'env> {
                 let closure = move || closure.take().unwrap()();
 
                 // Allocate `clsoure` on the heap and erase the `'env` bound.
-                let closure: Box<FnMut() + Send + 'env> = Box::new(closure);
-                let closure: Box<FnMut() + Send + 'static> = unsafe { mem::transmute(closure) };
+                let closure: Box<dyn FnMut() + Send + 'env> = Box::new(closure);
+                let closure: Box<dyn FnMut() + Send + 'static> = unsafe { mem::transmute(closure) };
 
                 // Finally, spawn the closure.
                 let mut closure = closure;
