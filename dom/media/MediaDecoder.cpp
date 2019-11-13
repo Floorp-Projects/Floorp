@@ -235,14 +235,16 @@ void MediaDecoder::SetOutputCaptured(bool aCaptured) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
   AbstractThread::AutoEnter context(AbstractMainThread());
-  MOZ_CRASH("Not implemented");
+  mOutputCaptured = aCaptured;
 }
 
 void MediaDecoder::AddOutputTrack(RefPtr<ProcessedMediaTrack> aTrack) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
   AbstractThread::AutoEnter context(AbstractMainThread());
-  MOZ_CRASH("Not implemented");
+  nsTArray<RefPtr<ProcessedMediaTrack>> tracks = mOutputTracks;
+  tracks.AppendElement(std::move(aTrack));
+  mOutputTracks = tracks;
 }
 
 void MediaDecoder::RemoveOutputTrack(
@@ -250,7 +252,10 @@ void MediaDecoder::RemoveOutputTrack(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
   AbstractThread::AutoEnter context(AbstractMainThread());
-  MOZ_CRASH("Not implemented");
+  nsTArray<RefPtr<ProcessedMediaTrack>> tracks = mOutputTracks;
+  if (tracks.RemoveElement(aTrack)) {
+    mOutputTracks = tracks;
+  }
 }
 
 void MediaDecoder::SetOutputTracksPrincipal(
@@ -258,7 +263,7 @@ void MediaDecoder::SetOutputTracksPrincipal(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
   AbstractThread::AutoEnter context(AbstractMainThread());
-  MOZ_CRASH("Not implemented");
+  mOutputPrincipal = MakePrincipalHandle(aPrincipal);
 }
 
 double MediaDecoder::GetDuration() {
@@ -304,6 +309,9 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
       INIT_CANONICAL(mVolume, aInit.mVolume),
       INIT_CANONICAL(mPreservesPitch, aInit.mPreservesPitch),
       INIT_CANONICAL(mLooping, aInit.mLooping),
+      INIT_CANONICAL(mOutputCaptured, false),
+      INIT_CANONICAL(mOutputTracks, nsTArray<RefPtr<ProcessedMediaTrack>>()),
+      INIT_CANONICAL(mOutputPrincipal, PRINCIPAL_HANDLE_NONE),
       INIT_CANONICAL(mPlayState, PLAY_STATE_LOADING),
       mSameOriginMedia(false),
       mVideoDecodingOberver(
@@ -665,7 +673,6 @@ void MediaDecoder::MetadataLoaded(
   mMediaSeekableOnlyInBufferedRanges =
       aInfo->mMediaSeekableOnlyInBufferedRanges;
   mInfo = aInfo.release();
-  mDecoderStateMachine->EnsureOutputStreamManagerHasTracks(*mInfo);
 
   // Make sure the element and the frame (if any) are told about
   // our new size.
