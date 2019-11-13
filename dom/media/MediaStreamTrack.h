@@ -308,7 +308,7 @@ class MediaStreamTrackSource : public nsISupports {
   }
 
   // Principal identifying who may access the contents of this source.
-  nsCOMPtr<nsIPrincipal> mPrincipal;
+  RefPtr<nsIPrincipal> mPrincipal;
 
   // Currently registered sinks.
   nsTArray<WeakPtr<Sink>> mSinks;
