@@ -382,14 +382,14 @@ class nsIContent : public nsINode {
   /**
    * Gets content node with the binding (or native code, possibly on the
    * frame) responsible for our construction (and existence).  Used by
-   * anonymous content (both XBL-generated and native-anonymous).
+   * native-anonymous content and shadow DOM.
    *
    * null for all explicit content (i.e., content reachable from the top
    * of its GetParent() chain via child lists).
    *
    * @return the binding parent
    */
-  virtual mozilla::dom::Element* GetBindingParent() const {
+  mozilla::dom::Element* GetBindingParent() const {
     const nsExtendedContentSlots* slots = GetExistingExtendedContentSlots();
     return slots ? slots->mBindingParent.get() : nullptr;
   }
