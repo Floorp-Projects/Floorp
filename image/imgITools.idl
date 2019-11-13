@@ -6,8 +6,10 @@
 
 #include "nsISupports.idl"
 
+interface nsIChannel;
 interface nsIEventTarget;
 interface nsIInputStream;
+interface nsIURI;
 interface imgIContainer;
 interface imgILoader;
 interface imgICache;
@@ -51,6 +53,29 @@ interface imgITools : nsISupports
     [implicit_jscontext]
     imgIContainer decodeImageFromArrayBuffer(in jsval aArrayBuffer,
                                              in ACString aMimeType);
+
+    /**
+     * decodeImageFromChannelAsync
+     * See decodeImage. The main difference between this method and decodeImage
+     * is that here the operation is done async on a thread from the decode
+     * pool. When the operation is completed, the callback is executed with the
+     * result.
+     *
+     * @param aURI
+     *        The original URI of the image
+     * @param aChannel
+     *        Channel to the image to be decoded.
+     * @param aCallback
+     *        The callback is executed when the imgContainer is fully created.
+     * @param aObserver
+     *        Optional observer for the decoded image, the caller should make
+     *        sure the observer is kept alive as long as necessary, as ImageLib
+     *        does not keep a strong reference to the observer.
+     */
+    void decodeImageFromChannelAsync(in nsIURI aURI,
+                                     in nsIChannel aChannel,
+                                     in imgIContainerCallback aCallback,
+                                     in imgINotificationObserver aObserver);
 
     /**
      * decodeImageAsync
