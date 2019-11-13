@@ -51,12 +51,6 @@ window.Audit = (function() {
     }, message);
   }
 
-  function _logException(message, exception) {
-    test(function() {
-      throw exception;
-    }, message);
-  }
-
   function _throwException(message) {
     throw new Error(message);
   }
@@ -1187,28 +1181,15 @@ window.Audit = (function() {
     // task function.
     run() {
       this._state = TaskState.STARTED;
-
       // Print out the task entry with label and description.
       _logPassed(
           '> [' + this._label + '] ' +
           (this._description ? this._description : ''));
 
-      // Ideally we would just use testharness async_test instead of reinventing
-      // that wheel, but since it's been reinvented...  At least make sure that
-      // an exception while running a task doesn't preclude us running all the
-      // _other_ tasks for the test.
-      let testName = `Executing "${this.label}"`;
-      try {
+      return new Promise(resolve => {
+        this._resolve = resolve;
         this._taskFunction(this, this.should.bind(this));
-        _logPassed(testName);
-      } catch (e) {
-        _logException(testName, e);
-        if (this.state != TaskState.FINISHED) {
-          // We threw before calling done(), so do that manually to run our
-          // other tasks.
-          this.done();
-        }
-      }
+      });
     }
 
     // Update the task success based on the individual assertion/test inside.
@@ -1238,7 +1219,7 @@ window.Audit = (function() {
         _logFailed(message);
       }
 
-      this._taskRunner._runNextTask();
+      this._resolve();
     }
 
     // Runs |subTask| |time| milliseconds later. |setTimeout| is not allowed in
@@ -1271,18 +1252,9 @@ window.Audit = (function() {
     constructor() {
       this._tasks = {};
       this._taskSequence = [];
-      this._currentTaskIndex = -1;
 
       // Configure testharness.js for the async operation.
       setup(new Function(), {explicit_done: true});
-    }
-
-    _runNextTask() {
-      if (this._currentTaskIndex < this._taskSequence.length) {
-        this._tasks[this._taskSequence[this._currentTaskIndex++]].run();
-      } else {
-        this._finish();
-      }
     }
 
     _finish() {
@@ -1302,9 +1274,7 @@ window.Audit = (function() {
             prefix + this._taskSequence.length + ' tasks ran successfully.');
       }
 
-      // From testharness.js, report back to the test infrastructure that
-      // the task runner completed all the tasks.
-      _testharnessDone();
+      return Promise.resolve();
     }
 
     // |taskLabel| can be either a string or a dictionary. See Task constructor
@@ -1347,9 +1317,19 @@ window.Audit = (function() {
         return;
       }
 
-      // Start the first task.
-      this._currentTaskIndex = 0;
-      this._runNextTask();
+      for (let taskIndex in this._taskSequence) {
+        let task = this._tasks[this._taskSequence[taskIndex]];
+        // Some tests assume that tasks run in sequence, which is provided by
+        // promise_test().
+        promise_test(() => task.run(), `Executing "${task.label}"`);
+      }
+
+      // Schedule a summary report on completion.
+      promise_test(() => this._finish(), "Audit report");
+
+      // From testharness.js. The harness now need not wait for more subtests
+      // to be added.
+      _testharnessDone();
     }
   }
 
