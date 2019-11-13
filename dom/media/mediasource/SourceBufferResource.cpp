@@ -24,11 +24,11 @@ mozilla::LogModule* GetSourceBufferResourceLog() {
 
 namespace mozilla {
 
-nsresult SourceBufferResource::Close() {
+RefPtr<GenericPromise> SourceBufferResource::Close() {
   MOZ_ASSERT(OnThread());
   SBR_DEBUG("Close");
   mClosed = true;
-  return NS_OK;
+  return GenericPromise::CreateAndResolve(true, __func__);
 }
 
 nsresult SourceBufferResource::ReadAt(int64_t aOffset, char* aBuffer,

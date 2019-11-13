@@ -95,7 +95,7 @@ nsresult FileMediaResource::Open(nsIStreamListener** aStreamListener) {
   return NS_OK;
 }
 
-nsresult FileMediaResource::Close() {
+RefPtr<GenericPromise> FileMediaResource::Close() {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   // Since mChennel is only accessed by main thread, there is no necessary to
@@ -105,7 +105,7 @@ nsresult FileMediaResource::Close() {
     mChannel = nullptr;
   }
 
-  return NS_OK;
+  return GenericPromise::CreateAndResolve(true, __func__);
 }
 
 already_AddRefed<nsIPrincipal> FileMediaResource::GetCurrentPrincipal() {
