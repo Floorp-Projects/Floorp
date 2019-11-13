@@ -373,7 +373,6 @@ already_AddRefed<DOMMediaStream> DOMMediaStream::Clone() {
 }
 
 bool DOMMediaStream::Active() const { return mActive; }
-bool DOMMediaStream::Audible() const { return mAudible; }
 
 MediaStreamTrack* DOMMediaStream::GetTrackById(const nsAString& aId) const {
   for (const auto& track : mTracks) {
@@ -456,6 +455,20 @@ void DOMMediaStream::UnregisterTrackListener(TrackListener* aListener) {
   mTrackListeners.RemoveElement(aListener);
 }
 
+void DOMMediaStream::SetFinishedOnInactive(bool aFinishedOnInactive) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mFinishedOnInactive == aFinishedOnInactive) {
+    return;
+  }
+
+  mFinishedOnInactive = aFinishedOnInactive;
+
+  if (mFinishedOnInactive && !ContainsLiveTracks(mTracks)) {
+    NotifyTrackRemoved(nullptr);
+  }
+}
+
 void DOMMediaStream::NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -502,6 +515,10 @@ void DOMMediaStream::NotifyTrackRemoved(
       NS_ASSERTION(false, "Shouldn't remove a live track if already inactive");
       return;
     }
+  }
+
+  if (!mFinishedOnInactive) {
+    return;
   }
 
   if (mAudible) {

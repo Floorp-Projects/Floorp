@@ -60,11 +60,8 @@ class MediaResource : public DecoderDoctorLifeLogger<MediaResource> {
 
   // Close the resource, stop any listeners, channels, etc.
   // Cancels any currently blocking Read request and forces that request to
-  // return an error. This must be called (and resolve) before the MediaResource
-  // is deleted.
-  virtual RefPtr<GenericPromise> Close() {
-    return GenericPromise::CreateAndResolve(true, __func__);
-  }
+  // return an error.
+  virtual nsresult Close() { return NS_OK; }
 
   // These methods are called off the main thread.
   // Read up to aCount bytes from the stream. The read starts at

@@ -24,8 +24,6 @@ class MediaQueue;
  * A wrapper around AudioSink to provide the interface of MediaSink.
  */
 class AudioSinkWrapper : public MediaSink {
-  using PlaybackParams = AudioSink::PlaybackParams;
-
   // An AudioSink factory.
   class Creator {
    public:
@@ -48,17 +46,18 @@ class AudioSinkWrapper : public MediaSink {
   template <typename Function>
   AudioSinkWrapper(AbstractThread* aOwnerThread,
                    const MediaQueue<AudioData>& aAudioQueue,
-                   const Function& aFunc, double aVolume, double aPlaybackRate,
-                   bool aPreservesPitch)
+                   const Function& aFunc)
       : mOwnerThread(aOwnerThread),
         mCreator(new CreatorImpl<Function>(aFunc)),
         mIsStarted(false),
-        mParams(aVolume, aPlaybackRate, aPreservesPitch),
         // Give an invalid value to facilitate debug if used before playback
         // starts.
         mPlayDuration(media::TimeUnit::Invalid()),
         mAudioEnded(true),
         mAudioQueue(aAudioQueue) {}
+
+  const PlaybackParams& GetPlaybackParams() const override;
+  void SetPlaybackParams(const PlaybackParams& aParams) override;
 
   RefPtr<EndedPromise> OnEnded(TrackType aType) override;
   media::TimeUnit GetEndTime(TrackType aType) const override;
@@ -69,8 +68,6 @@ class AudioSinkWrapper : public MediaSink {
   void SetPlaybackRate(double aPlaybackRate) override;
   void SetPreservesPitch(bool aPreservesPitch) override;
   void SetPlaying(bool aPlaying) override;
-
-  double PlaybackRate() const override;
 
   nsresult Start(const media::TimeUnit& aStartTime,
                  const MediaInfo& aInfo) override;
