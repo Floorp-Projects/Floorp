@@ -75,7 +75,7 @@ void ChannelEventQueue::FlushQueue() {
       // Next event needs to run on another thread. Put it back to
       // the front of the queue can try resume on that thread.
       Suspend();
-      PrependEvent(std::move(event));
+      PrependEvent(event);
 
       needResumeOnOtherThread = true;
       {
