@@ -428,7 +428,6 @@ struct OpRepositionChild  { LayerHandle container; LayerHandle childLayer; Layer
 struct OpRaiseToTopChild  { LayerHandle container; LayerHandle childLayer; };
 
 struct OpSetDiagnosticTypes { DiagnosticTypes diagnostics; };
-struct OpWindowOverlayChanged { };
 
 struct ShmemSection {
   Shmem shmem;
@@ -558,8 +557,7 @@ union Edit {
   OpCreateRefLayer;
 
   OpSetDiagnosticTypes;
-  OpWindowOverlayChanged;
-
+  
   OpSetRoot;
   OpInsertAfter;
   OpPrependChild;

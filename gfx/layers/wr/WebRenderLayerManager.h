@@ -176,7 +176,6 @@ class WebRenderLayerManager final : public LayerManager {
   }
 
   void WrUpdated();
-  void WindowOverlayChanged() { mWindowOverlayChanged = true; }
   nsIWidget* GetWidget() { return mWidget; }
 
   dom::TabGroup* GetTabGroup();
@@ -215,7 +214,6 @@ class WebRenderLayerManager final : public LayerManager {
   // APZ to do it's job
   wr::RenderRootArray<WebRenderScrollData> mScrollDatas;
 
-  bool mWindowOverlayChanged;
   bool mNeedsComposite;
   bool mIsFirstPaint;
   FocusTarget mFocusTarget;

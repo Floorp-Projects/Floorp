@@ -192,7 +192,6 @@ ShadowLayerForwarder::ShadowLayerForwarder(
       mMessageLoop(MessageLoop::current()),
       mDiagnosticTypes(DiagnosticTypes::NO_DIAGNOSTIC),
       mIsFirstPaint(false),
-      mWindowOverlayChanged(false),
       mNextLayerHandle(1) {
   mTxn = new Transaction();
   if (TabGroup* tabGroup = mClientLayerManager->GetTabGroup()) {
@@ -565,9 +564,6 @@ bool ShadowLayerForwarder::EndTransaction(
     mDiagnosticTypes = diagnostics;
     mTxn->AddEdit(OpSetDiagnosticTypes(diagnostics));
   }
-  if (mWindowOverlayChanged) {
-    mTxn->AddEdit(OpWindowOverlayChanged());
-  }
 
   AutoTxnEnd _(mTxn);
 
@@ -659,8 +655,6 @@ bool ShadowLayerForwarder::EndTransaction(
       !mTxn->RotationChanged()) {
     return true;
   }
-
-  mWindowOverlayChanged = false;
 
   info.cset() = std::move(mTxn->mCset);
   info.setSimpleAttrs() = std::move(setSimpleAttrs);
