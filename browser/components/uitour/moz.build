@@ -11,5 +11,7 @@ BROWSER_CHROME_MANIFESTS += [
     'test/browser.ini',
 ]
 
+SPHINX_TREES['docs'] = 'docs'
+
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Tours')

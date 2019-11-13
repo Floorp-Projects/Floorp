@@ -16,4 +16,6 @@ This is the nascent documentation of the Firefox front-end code.
    base/sslerrorreport/index
    base/tabbrowser/index
    touchbar/index
+   components/uitour/docs/index
    components/payments/docs/index
+

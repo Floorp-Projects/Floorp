@@ -46,6 +46,7 @@ extensions = [
 # tree-wide (the default) will not work currently.
 js_source_path = [
     'browser/components/extensions',
+    'browser/components/uitour',
     'testing/marionette',
     'toolkit/components/extensions',
     'toolkit/components/extensions/parent',
