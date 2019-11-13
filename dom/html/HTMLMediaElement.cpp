@@ -3775,7 +3775,6 @@ HTMLMediaElement::HTMLMediaElement(
           OwnerDoc()->AbstractMainThreadFor(TaskCategory::Other)),
       mShutdownObserver(new ShutdownObserver),
       mPlayed(new TimeRanges(ToSupports(OwnerDoc()))),
-      mPaused(true, "HTMLMediaElement::mPaused"),
       mTracksCaptured(nullptr, "HTMLMediaElement::mTracksCaptured"),
       mErrorSink(new ErrorSink(this)),
       mAudioChannelWrapper(new AudioChannelAgentCallback(this)),
@@ -3807,6 +3806,13 @@ void HTMLMediaElement::Init() {
   mWatchManager.Watch(mTracksCaptured,
                       &HTMLMediaElement::UpdateOutputTrackSources);
   mWatchManager.Watch(mReadyState, &HTMLMediaElement::UpdateOutputTrackSources);
+
+  mWatchManager.Watch(mDownloadSuspendedByCache,
+                      &HTMLMediaElement::UpdateReadyStateInternal);
+  mWatchManager.Watch(mFirstFrameLoaded,
+                      &HTMLMediaElement::UpdateReadyStateInternal);
+  mWatchManager.Watch(mSrcStreamPlaybackEnded,
+                      &HTMLMediaElement::UpdateReadyStateInternal);
 
   ErrorResult rv;
 
@@ -4902,7 +4908,6 @@ class HTMLMediaElement::MediaStreamTrackListener
                           mElement->mSrcStream.get()));
 
     mElement->PlaybackEnded();
-    mElement->UpdateReadyStateInternal();
   }
 
   void NotifyInactive() override {
@@ -5160,8 +5165,8 @@ void HTMLMediaElement::NotifyMediaStreamTrackAdded(
     }
   }
 
-  UpdateReadyStateInternal();
-
+  // The set of enabled AudioTracks and selected video track might have changed.
+  mWatchManager.ManualNotify(&HTMLMediaElement::UpdateReadyStateInternal);
   mAbstractMainThread->TailDispatcher().AddDirectTask(
       NewRunnableMethod("HTMLMediaElement::FirstFrameLoaded", this,
                         &HTMLMediaElement::FirstFrameLoaded));
@@ -5266,19 +5271,18 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
     mDefaultPlaybackStartPosition = 0.0;
   }
 
-  UpdateReadyStateInternal();
+  mWatchManager.ManualNotify(&HTMLMediaElement::UpdateReadyStateInternal);
 }
 
 void HTMLMediaElement::FirstFrameLoaded() {
   LOG(LogLevel::Debug,
       ("%p, FirstFrameLoaded() mFirstFrameLoaded=%d mWaitingForKey=%d", this,
-       mFirstFrameLoaded, mWaitingForKey));
+       mFirstFrameLoaded.Ref(), mWaitingForKey));
 
   NS_ASSERTION(!mSuspendedAfterFirstFrame, "Should not have already suspended");
 
   if (!mFirstFrameLoaded) {
     mFirstFrameLoaded = true;
-    UpdateReadyStateInternal();
   }
 
   ChangeDelayLoadStatus(false);
@@ -5431,7 +5435,6 @@ void HTMLMediaElement::SeekAborted() {
 
 void HTMLMediaElement::NotifySuspendedByCache(bool aSuspendedByCache) {
   mDownloadSuspendedByCache = aSuspendedByCache;
-  UpdateReadyStateInternal();
 }
 
 void HTMLMediaElement::DownloadSuspended() {
@@ -5486,7 +5489,7 @@ void HTMLMediaElement::CheckProgress(bool aHaveNewProgress) {
     }
     // Download statistics may have been updated, force a recheck of the
     // readyState.
-    UpdateReadyStateInternal();
+    mWatchManager.ManualNotify(&HTMLMediaElement::UpdateReadyStateInternal);
   }
 
   if (now - mDataTime >= TimeDuration::FromMilliseconds(STALL_MS)) {
@@ -6220,7 +6223,7 @@ void HTMLMediaElement::UpdateMediaSize(const nsIntSize& aSize) {
   }
 
   mMediaInfo.mVideo.mDisplay = aSize;
-  UpdateReadyStateInternal();
+  mWatchManager.ManualNotify(&HTMLMediaElement::UpdateReadyStateInternal);
 
   if (mFirstFrameListener) {
     mSelectedVideoStreamTrack->RemoveVideoOutput(mFirstFrameListener);
@@ -6963,7 +6966,9 @@ void HTMLMediaElement::NotifyWaitingForKey() {
     // Note: algorithm continues in UpdateReadyStateInternal() when all decoded
     // data enqueued in the MDSM is consumed.
     mWaitingForKey = WAITING_FOR_KEY;
-    UpdateReadyStateInternal();
+    // mWaitingForKey changed outside of UpdateReadyStateInternal. This may
+    // affect mReadyState.
+    mWatchManager.ManualNotify(&HTMLMediaElement::UpdateReadyStateInternal);
   }
 }
 
