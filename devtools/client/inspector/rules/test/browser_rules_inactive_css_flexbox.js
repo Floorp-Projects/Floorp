@@ -154,7 +154,7 @@ add_task(async function() {
   await runInactiveCSSTests(view, inspector, BEFORE);
 
   // Toggle `display:flex` to disabled.
-  await toggleDeclaration(inspector, view, 0, {
+  await toggleDeclaration(view, 0, {
     display: "flex",
   });
   await runInactiveCSSTests(view, inspector, AFTER);
