@@ -18,7 +18,7 @@ add_task(async () => {
   const features = ["stackwalk"];
 
   Services.profiler.StartProfiler(entries, interval, features, threads);
-  const sampleIndex = await doAtLeastOnePeriodicSample();
+  const sampleIndex = await captureAtLeastOneJsSample();
 
   const profile = await Services.profiler.getProfileDataAsync();
   const [thread] = profile.threads;
