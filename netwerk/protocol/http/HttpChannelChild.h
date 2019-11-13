@@ -182,26 +182,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   mozilla::ipc::IPCResult RecvOverrideReferrerInfoDuringBeginConnect(
       nsIReferrerInfo* aReferrerInfo) override;
 
-  mozilla::ipc::IPCResult RecvNotifyChannelClassifierProtectionDisabled(
-      const uint32_t& aAcceptedReason) override;
-
-  mozilla::ipc::IPCResult RecvNotifyCookieAllowed() override;
-
-  mozilla::ipc::IPCResult RecvNotifyCookieBlocked(
-      const uint32_t& aRejectedReason) override;
-
-  mozilla::ipc::IPCResult RecvNotifyClassificationFlags(
-      const uint32_t& aClassificationFlags, const bool& aIsThirdParty) override;
-
-  mozilla::ipc::IPCResult RecvNotifyFlashPluginStateChanged(
-      const nsIHttpChannel::FlashPluginState& aState) override;
-
-  mozilla::ipc::IPCResult RecvSetClassifierMatchedInfo(
-      const ClassifierInfo& info) override;
-
-  mozilla::ipc::IPCResult RecvSetClassifierMatchedTrackingInfo(
-      const ClassifierInfo& info) override;
-
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual void DoNotifyListenerCleanup() override;
@@ -290,6 +270,19 @@ class HttpChannelChild final : public PHttpChannelChild,
                             const nsHttpHeaderArray& aResponseTrailers);
   void ProcessFlushedForDiversion();
   void ProcessDivertMessages();
+  void ProcessNotifyChannelClassifierProtectionDisabled(
+      uint32_t aAcceptedReason);
+  void ProcessNotifyCookieAllowed();
+  void ProcessNotifyCookieBlocked(uint32_t aRejectedReason);
+  void ProcessNotifyClassificationFlags(uint32_t aClassificationFlags,
+                                        bool aIsThirdParty);
+  void ProcessNotifyFlashPluginStateChanged(
+      nsIHttpChannel::FlashPluginState aState);
+  void ProcessSetClassifierMatchedInfo(const nsCString& aList,
+                                       const nsCString& aProvider,
+                                       const nsCString& aFullHash);
+  void ProcessSetClassifierMatchedTrackingInfo(const nsCString& aLists,
+                                               const nsCString& aFullHashes);
 
   // Return true if we need to tell the parent the size of unreported received
   // data
@@ -530,11 +523,26 @@ class HttpChannelChild final : public PHttpChannelChild,
   // Collect telemetry for the successful rate of OMT.
   void CollectOMTTelemetry();
 
+  friend class AssociateApplicationCacheEvent;
+  friend class StartRequestEvent;
+  friend class StopRequestEvent;
+  friend class TransportAndDataEvent;
+  friend class MaybeDivertOnDataHttpEvent;
+  friend class MaybeDivertOnStopHttpEvent;
+  friend class ProgressEvent;
+  friend class StatusEvent;
+  friend class FailedAsyncOpenEvent;
+  friend class Redirect1Event;
+  friend class Redirect3Event;
+  friend class DeleteSelfEvent;
+  friend class HttpFlushedForDiversionEvent;
+  friend class CancelEvent;
   friend class HttpAsyncAborter<HttpChannelChild>;
   friend class InterceptStreamListener;
   friend class InterceptedChannelContent;
   friend class HttpBackgroundChannelChild;
-  friend class NeckoTargetChannelFunctionEvent;
+  friend class NeckoTargetChannelEvent<HttpChannelChild>;
+  friend class ContinueDoNotifyListenerEvent;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpChannelChild, HTTP_CHANNEL_CHILD_IID)

@@ -70,36 +70,6 @@ class NeckoTargetChannelEvent : public ChannelEvent {
   T* mChild;
 };
 
-class ChannelFunctionEvent : public ChannelEvent {
- public:
-  ChannelFunctionEvent(
-      std::function<already_AddRefed<nsIEventTarget>()>&& aGetEventTarget,
-      std::function<void()>&& aCallback)
-      : mGetEventTarget(std::move(aGetEventTarget)),
-        mCallback(std::move(aCallback)) {}
-
-  void Run() override { mCallback(); }
-  already_AddRefed<nsIEventTarget> GetEventTarget() override {
-    return mGetEventTarget();
-  }
-
- private:
-  const std::function<already_AddRefed<nsIEventTarget>()> mGetEventTarget;
-  const std::function<void()> mCallback;
-};
-
-class NeckoTargetChannelFunctionEvent : public ChannelFunctionEvent {
- public:
-  template <typename T>
-  NeckoTargetChannelFunctionEvent(T* aChild, std::function<void()>&& aCallback)
-      : ChannelFunctionEvent(
-            [child = RefPtr<T>(aChild)]() {
-              MOZ_ASSERT(child);
-              return child->GetNeckoTarget();
-            },
-            std::move(aCallback)) {}
-};
-
 // Workaround for Necko re-entrancy dangers. We buffer IPDL messages in a
 // queue if still dispatching previous one(s) to listeners/observers.
 // Otherwise synchronous XMLHttpRequests and/or other code that spins the
@@ -132,7 +102,7 @@ class ChannelEventQueue final {
                            bool aAssertionWhenNotQueued = false);
 
   // Append ChannelEvent in front of the event queue.
-  inline nsresult PrependEvent(UniquePtr<ChannelEvent>&& aEvent);
+  inline nsresult PrependEvent(UniquePtr<ChannelEvent>& aEvent);
   inline nsresult PrependEvents(nsTArray<UniquePtr<ChannelEvent>>& aEvents);
 
   // After StartForcedQueueing is called, RunOrEnqueue() will start enqueuing
@@ -261,7 +231,7 @@ inline void ChannelEventQueue::EndForcedQueueing() {
 }
 
 inline nsresult ChannelEventQueue::PrependEvent(
-    UniquePtr<ChannelEvent>&& aEvent) {
+    UniquePtr<ChannelEvent>& aEvent) {
   MutexAutoLock lock(mMutex);
 
   // Prepending event while no queue flush foreseen might cause the following
