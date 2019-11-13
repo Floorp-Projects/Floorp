@@ -49,7 +49,8 @@ MediaStreamTrackAudioSourceNode::Create(
     return nullptr;
   }
 
-  if (aAudioContext.Graph() != aOptions.mMediaStreamTrack->Graph()) {
+  if (!aOptions.mMediaStreamTrack->Ended() &&
+      aAudioContext.Graph() != aOptions.mMediaStreamTrack->Graph()) {
     nsCOMPtr<nsPIDOMWindowInner> pWindow = aAudioContext.GetParentObject();
     Document* document = pWindow ? pWindow->GetExtantDoc() : nullptr;
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
@@ -76,8 +77,13 @@ void MediaStreamTrackAudioSourceNode::Init(MediaStreamTrack* aMediaStreamTrack,
   MOZ_ASSERT(aMediaStreamTrack);
 
   if (!aMediaStreamTrack->AsAudioStreamTrack()) {
-    mTrackListener.NotifyEnded(nullptr);
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  if (aMediaStreamTrack->Ended()) {
+    // The track is ended and will never produce any data. Pretend like this is
+    // fine.
     return;
   }
 
@@ -100,11 +106,11 @@ void MediaStreamTrackAudioSourceNode::Init(MediaStreamTrack* aMediaStreamTrack,
 
 void MediaStreamTrackAudioSourceNode::Destroy() {
   if (mInputTrack) {
+    mTrackListener.NotifyEnded(mInputTrack);
     mInputTrack->RemovePrincipalChangeObserver(this);
     mInputTrack->RemoveConsumer(&mTrackListener);
     mInputTrack = nullptr;
   }
-  mTrackListener.NotifyEnded(mInputTrack);
 
   if (mInputPort) {
     mInputPort->Destroy();
