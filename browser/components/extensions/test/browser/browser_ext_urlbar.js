@@ -424,3 +424,24 @@ add_task(async function focusSelectTrue() {
 
   await ext.unload();
 });
+
+// Tests the closeView function.
+add_task(async function closeView() {
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: "test",
+  });
+
+  let ext = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["urlbar"],
+    },
+    isPrivileged: true,
+    background: () => {
+      browser.urlbar.closeView();
+    },
+  });
+  await UrlbarTestUtils.promisePopupClose(window, () => ext.startup());
+  await ext.unload();
+});
