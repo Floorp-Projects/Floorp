@@ -271,7 +271,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   void DispatchAsyncEvent(const nsAString& aName) final;
 
   // Triggers a recomputation of readyState.
-  void UpdateReadyState() override { UpdateReadyStateInternal(); }
+  void UpdateReadyState() override {
+    mWatchManager.ManualNotify(&HTMLMediaElement::UpdateReadyStateInternal);
+  }
 
   // Dispatch events that were raised while in the bfcache
   nsresult DispatchPendingMediaEvents();
@@ -1561,7 +1563,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   // Playback of the video is paused either due to calling the
   // 'Pause' method, or playback not yet having started.
-  Watchable<bool> mPaused;
+  Watchable<bool> mPaused = {true, "HTMLMediaElement::mPaused"};
 
   // The following two fields are here for the private storage of the builtin
   // video controls, and control 'casting' of the video to external devices
@@ -1680,7 +1682,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   EncryptionInfo mPendingEncryptedInitData;
 
   // True if the media's channel's download has been suspended.
-  bool mDownloadSuspendedByCache = false;
+  Watchable<bool> mDownloadSuspendedByCache = {
+      false, "HTMLMediaElement::mDownloadSuspendedByCache"};
 
   // Disable the video playback by track selection. This flag might not be
   // enough if we ever expand the ability of supporting multi-tracks video
@@ -1818,7 +1821,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   bool mIsBlessed = false;
 
   // True if the first frame has been successfully loaded.
-  bool mFirstFrameLoaded = false;
+  Watchable<bool> mFirstFrameLoaded = {false,
+                                       "HTMLMediaElement::mFirstFrameLoaded"};
 
   // Media elements also have a default playback start position, which must
   // initially be set to zero seconds. This time is used to allow the element to
