@@ -139,14 +139,6 @@ class MediaDecoderOwner {
   virtual void DispatchEncrypted(const nsTArray<uint8_t>& aInitData,
                                  const nsAString& aInitDataType) = 0;
 
-  // Called by the media decoder to create audio/video tracks and add to its
-  // owner's track list.
-  virtual void ConstructMediaTracks(const MediaInfo* aInfo) = 0;
-
-  // Called by the media decoder to removes all audio/video tracks from its
-  // owner's track list.
-  virtual void RemoveMediaTracks() = 0;
-
   // Notified by the decoder that a decryption key is required before emitting
   // further output.
   virtual void NotifyWaitingForKey() {}
