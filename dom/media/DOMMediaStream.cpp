@@ -456,20 +456,6 @@ void DOMMediaStream::UnregisterTrackListener(TrackListener* aListener) {
   mTrackListeners.RemoveElement(aListener);
 }
 
-void DOMMediaStream::SetFinishedOnInactive(bool aFinishedOnInactive) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mFinishedOnInactive == aFinishedOnInactive) {
-    return;
-  }
-
-  mFinishedOnInactive = aFinishedOnInactive;
-
-  if (mFinishedOnInactive && !ContainsLiveTracks(mTracks)) {
-    NotifyTrackRemoved(nullptr);
-  }
-}
-
 void DOMMediaStream::NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -516,10 +502,6 @@ void DOMMediaStream::NotifyTrackRemoved(
       NS_ASSERTION(false, "Shouldn't remove a live track if already inactive");
       return;
     }
-  }
-
-  if (!mFinishedOnInactive) {
-    return;
   }
 
   if (mAudible) {
