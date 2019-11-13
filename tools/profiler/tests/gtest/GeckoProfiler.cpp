@@ -708,7 +708,7 @@ TEST(GeckoProfiler, Markers)
 
   PROFILER_ADD_MARKER_WITH_PAYLOAD("NativeAllocationMarkerPayload marker",
                                    OTHER, NativeAllocationMarkerPayload,
-                                   (ts1, 9876543210, nullptr));
+                                   (ts1, 9876543210, 1234, 5678, nullptr));
 
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "PrefMarkerPayload marker", OTHER, PrefMarkerPayload,
@@ -1137,6 +1137,8 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ_JSON(payload["endTime"], Double, ts1Double);
                 EXPECT_TRUE(payload["stack"].isNull());
                 EXPECT_EQ_JSON(payload["size"], Int64, 9876543210);
+                EXPECT_EQ_JSON(payload["memoryAddress"], Int64, 1234);
+                EXPECT_EQ_JSON(payload["threadId"], Int64, 5678);
 
               } else if (nameString == "PrefMarkerPayload marker") {
                 EXPECT_EQ(state, S_PrefMarkerPayload);
