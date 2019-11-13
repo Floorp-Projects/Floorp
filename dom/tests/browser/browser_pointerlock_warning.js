@@ -42,6 +42,9 @@ add_task(async function show_pointerlock_warning_escape() {
   await BrowserTestUtils.removeTab(tab);
 });
 
+/*
+// XXX Bug 1580961 - this part of the test is disabled.
+//
 // Make sure the pointerlock warning is shown, but this time escape is not pressed until after the
 // notification is closed via the timeout.
 add_task(async function show_pointerlock_warning_timeout() {
@@ -80,3 +83,4 @@ add_task(async function show_pointerlock_warning_timeout() {
 
   await BrowserTestUtils.removeTab(tab);
 });
+*/
