@@ -6,14 +6,17 @@
 
 package org.mozilla.fenix.ui.robots
 
-import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
-import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.allOf
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.mozilla.fenix.helpers.click
 
 /**
  * Implementation of Robot Pattern for the settings Theme sub menu.
@@ -21,6 +24,14 @@ import org.hamcrest.CoreMatchers
 class SettingsSubMenuThemeRobot {
 
     fun verifyThemes() = assertThemes()
+
+    fun verifyLightThemeApplied(expected: Boolean) = assertFalse("Light theme not selected", expected)
+
+    fun verifyDarkThemeApplied(expected: Boolean) = assertTrue("Dark theme not selected", expected)
+
+    fun selectDarkMode() = darkModeToggle().click()
+
+    fun selectLightMode() = lightModeToggle().click()
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -36,9 +47,9 @@ class SettingsSubMenuThemeRobot {
 }
 
 private fun assertThemes() {
-    onView(ViewMatchers.withText("Light"))
+    onView(withText("Light"))
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    onView(ViewMatchers.withText("Dark"))
+    onView(withText("Dark"))
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     // Conditionally unavailable on API 25
     // onView(ViewMatchers.withText("Follow device theme"))
@@ -46,4 +57,8 @@ private fun assertThemes() {
 }
 
 private fun goBackButton() =
-    Espresso.onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
+    onView(allOf(ViewMatchers.withContentDescription("Navigate up")))
+
+private fun darkModeToggle() = onView(withText("Dark"))
+
+private fun lightModeToggle() = onView(withText("Light"))

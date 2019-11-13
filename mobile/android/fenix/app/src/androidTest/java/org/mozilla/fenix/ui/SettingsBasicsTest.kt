@@ -4,13 +4,14 @@
 
 package org.mozilla.fenix.ui
 
+import android.content.res.Configuration
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.Rule
-import org.junit.Before
 import org.junit.After
+import org.junit.Before
 import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
@@ -41,6 +42,16 @@ class SettingsBasicsTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
+    }
+
+    private fun getUiTheme(): Boolean {
+        val mode = activityTestRule.activity.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK)
+
+        return when (mode) {
+            Configuration.UI_MODE_NIGHT_YES -> true // dark theme is set
+            Configuration.UI_MODE_NIGHT_NO -> false // dark theme is not set, using light theme
+            else -> false // default option is light theme
+        }
     }
 
     @Test
@@ -115,19 +126,18 @@ class SettingsBasicsTest {
         // Verify history and bookmarks are gone
     }
 
-    @Ignore("This is a stub test, ignore for now")
     @Test
     fun changeThemeSetting() {
-        // Open 3dot (main) menu
-        // Select settings
-        // Verify default theme appears as "Light"
-        // Select theme to enter theme sub-menu
-        // Verify them sub-menu has 3 options: "Light", "Dark" and "Set by Battery Saver"
-        // Select "Dark" theme
-        // Verify them is changed to Dark
-        // Optional:
-        // Select "Set by battery saver"
-        // Verify theme changes based on battery saver
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openThemeSubMenu {
+            verifyThemes()
+            selectDarkMode()
+            verifyDarkThemeApplied(getUiTheme())
+            selectLightMode()
+            verifyLightThemeApplied(getUiTheme())
+        }
     }
 
     @Ignore("This is a stub test, ignore for now")
