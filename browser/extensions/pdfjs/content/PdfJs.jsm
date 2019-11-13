@@ -39,6 +39,12 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/mime;1",
   "nsIMIMEService"
 );
+XPCOMUtils.defineLazyServiceGetter(
+  Svc,
+  "handlerService",
+  "@mozilla.org/uriloader/handler-service;1",
+  "nsIHandlerService"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "PdfjsChromeUtils",
@@ -99,7 +105,9 @@ var PdfJs = {
     }
     this._initialized = true;
 
-    if (!Services.prefs.getBoolPref(PREF_DISABLED, true)) {
+    if (Services.prefs.getBoolPref(PREF_DISABLED, false)) {
+      this._unbecomeHandler();
+    } else {
       this._migrate();
     }
 
@@ -141,7 +149,7 @@ var PdfJs = {
     let prefs = Services.prefs;
     if (
       handlerInfo.preferredAction !== Ci.nsIHandlerInfo.handleInternally &&
-      handlerInfo.preferredAction !== false
+      handlerInfo.alwaysAskBeforeHandling !== false
     ) {
       // Store the previous settings of preferredAction and
       // alwaysAskBeforeHandling in case we need to revert them in a hotfix that
@@ -150,14 +158,31 @@ var PdfJs = {
       prefs.setBoolPref(PREF_PREVIOUS_ASK, handlerInfo.alwaysAskBeforeHandling);
     }
 
-    let handlerService = Cc[
-      "@mozilla.org/uriloader/handler-service;1"
-    ].getService(Ci.nsIHandlerService);
-
     // Change and save mime handler settings.
     handlerInfo.alwaysAskBeforeHandling = false;
     handlerInfo.preferredAction = Ci.nsIHandlerInfo.handleInternally;
-    handlerService.store(handlerInfo);
+    Svc.handlerService.store(handlerInfo);
+  },
+
+  _unbecomeHandler: function _unbecomeHandler() {
+    let handlerInfo = Svc.mime.getFromTypeAndExtension(PDF_CONTENT_TYPE, "pdf");
+    if (handlerInfo.preferredAction === Ci.nsIHandlerInfo.handleInternally) {
+      // If PDFJS is disabled, but we're still marked to handleInternally,
+      // either put it back to what it was, or remove it.
+      if (Services.prefs.prefHasUserValue(PREF_PREVIOUS_ACTION)) {
+        handlerInfo.preferredAction = Services.prefs.getIntPref(
+          PREF_PREVIOUS_ACTION
+        );
+        handlerInfo.alwaysAskBeforeHandling = Services.prefs.getBoolPref(
+          PREF_PREVIOUS_ASK
+        );
+        Svc.handlerService.store(handlerInfo);
+      } else {
+        Svc.handlerService.remove(handlerInfo);
+        // Clear migration pref so the handler comes back if reenabled
+        Services.prefs.clearIntPref(PREF_MIGRATION_VERSION);
+      }
+    }
   },
 
   _isEnabled: function _isEnabled() {
