@@ -1294,7 +1294,7 @@ void nsChildView::Invalidate(const LayoutDeviceIntRect& aRect) {
 
   if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
     EnsureContentLayerForMainThreadPainting();
-    mContentLayerInvalidRegion.OrWith(aRect.Intersect(GetBounds()));
+    mContentLayer->InvalidateRegionThroughoutSwapchain(aRect.ToUnknownRect());
     [mView markLayerForDisplay];
   } else {
     [[mView pixelHostingView] setNeedsDisplayInRect:DevPixelsToCocoaPoints(aRect)];
@@ -1488,28 +1488,21 @@ bool nsChildView::PaintWindowInContext(CGContextRef aContext, const LayoutDevice
 }
 
 void nsChildView::EnsureContentLayerForMainThreadPainting() {
-  // Ensure we have an mContentLayer of the correct size.
-  // The content layer gets created on demand for BasicLayers windows. We do
-  // not create it during widget creation because, for non-BasicLayers windows,
-  // the compositing layer manager will create any layers it needs.
-  gfx::IntSize size = GetBounds().Size().ToUnknownSize();
-  if (mContentLayer && mContentLayer->GetSize() != size) {
-    mNativeLayerRoot->RemoveLayer(mContentLayer);
-    mContentLayer = nullptr;
-  }
   if (!mContentLayer) {
-    RefPtr<NativeLayer> contentLayer = mNativeLayerRoot->CreateLayer(size, false);
+    // The content layer gets created on demand for BasicLayers windows. We do
+    // not create it during widget creation because, for non-BasicLayers windows,
+    // the compositing layer manager will create any layers it needs.
+    RefPtr<NativeLayer> contentLayer = mNativeLayerRoot->CreateLayer();
     mNativeLayerRoot->AppendLayer(contentLayer);
     mContentLayer = contentLayer->AsNativeLayerCA();
-    mContentLayerInvalidRegion = GetBounds();
   }
 }
 
 void nsChildView::PaintWindowInContentLayer() {
   EnsureContentLayerForMainThreadPainting();
+  mContentLayer->SetRect(GetBounds().ToUnknownRect());
   mContentLayer->SetSurfaceIsFlipped(false);
-  RefPtr<DrawTarget> dt = mContentLayer->NextSurfaceAsDrawTarget(
-      mContentLayerInvalidRegion.ToUnknownRegion(), gfx::BackendType::SKIA);
+  RefPtr<DrawTarget> dt = mContentLayer->NextSurfaceAsDrawTarget(gfx::BackendType::SKIA);
   if (!dt) {
     return;
   }
@@ -1518,7 +1511,6 @@ void nsChildView::PaintWindowInContentLayer() {
       dt, LayoutDeviceIntRegion::FromUnknownRegion(mContentLayer->CurrentSurfaceInvalidRegion()),
       dt->GetSize());
   mContentLayer->NotifySurfaceReady();
-  mContentLayerInvalidRegion.SetEmpty();
 }
 
 void nsChildView::HandleMainThreadCATransaction() {
