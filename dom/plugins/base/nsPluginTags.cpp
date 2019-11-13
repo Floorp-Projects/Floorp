@@ -20,6 +20,7 @@
 #include <cctype>
 #include "mozilla/Encoding.h"
 #include "mozilla/dom/FakePluginTagInitBinding.h"
+#include "mozilla/StaticPrefs_plugin.h"
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxSettings.h"
@@ -41,7 +42,6 @@ using namespace mozilla;
 #define NS_PLUGIN_FLAG_CLICKTOPLAY 0x0020  // this is a click-to-play plugin
 
 static const char kPrefDefaultEnabledState[] = "plugin.default.state";
-static const char kPrefDefaultEnabledStateXpi[] = "plugin.defaultXpi.state";
 
 // The defaults here will be read from prefs and overwritten
 #if defined(MOZ_SANDBOX)
@@ -473,10 +473,15 @@ nsPluginTag::GetClicktoplay(bool* aClicktoplay) {
 NS_IMETHODIMP
 nsPluginTag::GetEnabledState(uint32_t* aEnabledState) {
   int32_t enabledState;
-  nsresult rv =
-      Preferences::GetInt(GetStatePrefNameForPlugin(this).get(), &enabledState);
-  if (enabledState == nsIPluginTag::STATE_ENABLED && mIsFlashPlugin) {
-    enabledState = nsIPluginTag::STATE_CLICKTOPLAY;
+  nsresult rv = NS_OK;
+  if (mIsFlashPlugin) {
+    enabledState = StaticPrefs::plugin_state_flash();
+    if (enabledState == nsIPluginTag::STATE_ENABLED) {
+      enabledState = nsIPluginTag::STATE_CLICKTOPLAY;
+    }
+  } else {
+    rv = Preferences::GetInt(GetStatePrefNameForPlugin(this).get(),
+                             &enabledState);
   }
   if (NS_SUCCEEDED(rv) && enabledState >= nsIPluginTag::STATE_DISABLED &&
       enabledState <= nsIPluginTag::STATE_ENABLED) {
@@ -484,6 +489,8 @@ nsPluginTag::GetEnabledState(uint32_t* aEnabledState) {
     return rv;
   }
 
+  // Something went wrong fetching the plugin's state (e.g. it wasn't flash
+  // and the preference was not present) - use the default state:
   enabledState = Preferences::GetInt(kPrefDefaultEnabledState,
                                      nsIPluginTag::STATE_ENABLED);
   if (enabledState == nsIPluginTag::STATE_ENABLED && mIsFlashPlugin) {
