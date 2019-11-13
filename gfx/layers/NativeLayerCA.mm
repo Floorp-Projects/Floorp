@@ -139,8 +139,6 @@ NativeLayerCA::NativeLayerCA(const IntSize& aSize, bool aIsOpaque)
     : mMutex("NativeLayerCA"), mSize(aSize), mIsOpaque(aIsOpaque) {}
 
 NativeLayerCA::~NativeLayerCA() {
-  SetSurfaceRegistry(nullptr);  // or maybe MOZ_RELEASE_ASSERT(!mSurfaceRegistry) would be better?
-
   if (mInProgressLockedIOSurface) {
     mInProgressLockedIOSurface->Unlock(false);
     mInProgressLockedIOSurface = nullptr;
@@ -154,40 +152,6 @@ NativeLayerCA::~NativeLayerCA() {
 
   [mContentCALayer release];
   [mWrappingCALayer release];
-}
-
-void NativeLayerCA::SetSurfaceRegistry(RefPtr<IOSurfaceRegistry> aSurfaceRegistry) {
-  MutexAutoLock lock(mMutex);
-
-  if (mSurfaceRegistry) {
-    for (auto surf : mSurfaces) {
-      mSurfaceRegistry->UnregisterSurface(surf.mSurface);
-    }
-    if (mInProgressSurface) {
-      mSurfaceRegistry->UnregisterSurface(mInProgressSurface->mSurface);
-    }
-    if (mReadySurface) {
-      mSurfaceRegistry->UnregisterSurface(mReadySurface->mSurface);
-    }
-  }
-  mSurfaceRegistry = aSurfaceRegistry;
-  if (mSurfaceRegistry) {
-    for (auto surf : mSurfaces) {
-      mSurfaceRegistry->RegisterSurface(surf.mSurface);
-    }
-    if (mInProgressSurface) {
-      mSurfaceRegistry->RegisterSurface(mInProgressSurface->mSurface);
-    }
-    if (mReadySurface) {
-      mSurfaceRegistry->RegisterSurface(mReadySurface->mSurface);
-    }
-  }
-}
-
-RefPtr<IOSurfaceRegistry> NativeLayerCA::GetSurfaceRegistry() {
-  MutexAutoLock lock(mMutex);
-
-  return mSurfaceRegistry;
 }
 
 void NativeLayerCA::SetSurfaceIsFlipped(bool aIsFlipped) {
@@ -315,17 +279,11 @@ CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurface(const MutexAutoLock& aLock
       NSLog(@"NextSurface returning nullptr because IOSurfaceCreate failed to create the surface.");
       return nullptr;
     }
-    if (mSurfaceRegistry) {
-      mSurfaceRegistry->RegisterSurface(newSurf);
-    }
     surf = Some(SurfaceWithInvalidRegion{newSurf, IntRect({}, mSize)});
   }
 
   // Delete all other unused surfaces.
   for (auto unusedSurf : unusedSurfaces) {
-    if (mSurfaceRegistry) {
-      mSurfaceRegistry->UnregisterSurface(unusedSurf.mSurface);
-    }
     mFramebuffers.erase(unusedSurf.mSurface);
   }
   unusedSurfaces.clear();
