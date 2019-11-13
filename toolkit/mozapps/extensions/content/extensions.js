@@ -828,19 +828,12 @@ var gCategories = {
     }
 
     this.node.addEventListener("select", () => {
+      // This is needed for keyboard support.
       gViewController.loadView(this.node.selectedItem.value);
     });
-
-    this.node.addEventListener("click", aEvent => {
-      var selectedItem = this.node.selectedItem;
-      if (
-        aEvent.target.localName == "richlistitem" &&
-        aEvent.target == selectedItem
-      ) {
-        var viewId = selectedItem.value;
-
-        gViewController.loadView(viewId);
-      }
+    this.node.addEventListener("click", () => {
+      // This is needed to return from details/shortcuts back to the list view.
+      gViewController.loadView(this.node.selectedItem.value);
     });
   },
 
