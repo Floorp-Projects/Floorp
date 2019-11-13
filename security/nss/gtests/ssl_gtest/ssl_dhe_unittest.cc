@@ -682,4 +682,100 @@ TEST_P(TlsConnectTls12, ConnectInconsistentSigAlgDHE) {
   ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
 }
 
+static void CheckSkeSigScheme(
+    std::shared_ptr<TlsHandshakeRecorder>& capture_ske,
+    uint16_t expected_scheme) {
+  TlsParser parser(capture_ske->buffer());
+  EXPECT_TRUE(parser.SkipVariable(2)) << " read dh_p";
+  EXPECT_TRUE(parser.SkipVariable(2)) << " read dh_q";
+  EXPECT_TRUE(parser.SkipVariable(2)) << " read dh_Ys";
+
+  uint32_t tmp;
+  EXPECT_TRUE(parser.Read(&tmp, 2)) << " read sig_scheme";
+  EXPECT_EQ(expected_scheme, static_cast<uint16_t>(tmp));
+}
+
+TEST_P(TlsConnectTls12, ConnectSigAlgEnabledByPolicyDhe) {
+  EnableOnlyDheCiphers();
+
+  const std::vector<SSLSignatureScheme> schemes = {ssl_sig_rsa_pkcs1_sha1,
+                                                   ssl_sig_rsa_pkcs1_sha384};
+
+  EnsureTlsSetup();
+  client_->SetSignatureSchemes(schemes.data(), schemes.size());
+  server_->SetSignatureSchemes(schemes.data(), schemes.size());
+  auto capture_ske = MakeTlsFilter<TlsHandshakeRecorder>(
+      server_, kTlsHandshakeServerKeyExchange);
+
+  StartConnect();
+  client_->Handshake();  // Send ClientHello
+
+  // Enable SHA-1 by policy.
+  SECStatus rv = NSS_SetAlgorithmPolicy(SEC_OID_SHA1, NSS_USE_ALG_IN_SSL_KX, 0);
+  ASSERT_EQ(SECSuccess, rv);
+  rv = NSS_SetAlgorithmPolicy(SEC_OID_APPLY_SSL_POLICY, NSS_USE_POLICY_IN_SSL,
+                              0);
+  ASSERT_EQ(SECSuccess, rv);
+
+  Handshake();  // Remainder of handshake
+  // The server should now report that it is connected
+  EXPECT_EQ(TlsAgent::STATE_CONNECTED, server_->state());
+
+  CheckSkeSigScheme(capture_ske, ssl_sig_rsa_pkcs1_sha1);
+}
+
+TEST_P(TlsConnectTls12, ConnectSigAlgDisabledByPolicyDhe) {
+  EnableOnlyDheCiphers();
+
+  const std::vector<SSLSignatureScheme> schemes = {ssl_sig_rsa_pkcs1_sha1,
+                                                   ssl_sig_rsa_pkcs1_sha384};
+
+  EnsureTlsSetup();
+  client_->SetSignatureSchemes(schemes.data(), schemes.size());
+  server_->SetSignatureSchemes(schemes.data(), schemes.size());
+  auto capture_ske = MakeTlsFilter<TlsHandshakeRecorder>(
+      server_, kTlsHandshakeServerKeyExchange);
+
+  StartConnect();
+  client_->Handshake();  // Send ClientHello
+
+  // Disable SHA-1 by policy after sending ClientHello so that CH
+  // includes SHA-1 signature scheme.
+  SECStatus rv = NSS_SetAlgorithmPolicy(SEC_OID_SHA1, 0, NSS_USE_ALG_IN_SSL_KX);
+  ASSERT_EQ(SECSuccess, rv);
+  rv = NSS_SetAlgorithmPolicy(SEC_OID_APPLY_SSL_POLICY, NSS_USE_POLICY_IN_SSL,
+                              0);
+  ASSERT_EQ(SECSuccess, rv);
+
+  Handshake();  // Remainder of handshake
+  // The server should now report that it is connected
+  EXPECT_EQ(TlsAgent::STATE_CONNECTED, server_->state());
+
+  CheckSkeSigScheme(capture_ske, ssl_sig_rsa_pkcs1_sha384);
+}
+
+TEST_P(TlsConnectPre12, ConnectSigAlgDisabledByPolicyDhePre12) {
+  EnableOnlyDheCiphers();
+
+  EnsureTlsSetup();
+  StartConnect();
+  client_->Handshake();  // Send ClientHello
+
+  // Disable SHA-1 by policy.  This will cause the connection fail as
+  // TLS 1.1 or earlier uses combined SHA-1 + MD5 signature.
+  SECStatus rv = NSS_SetAlgorithmPolicy(SEC_OID_SHA1, 0, NSS_USE_ALG_IN_SSL_KX);
+  ASSERT_EQ(SECSuccess, rv);
+  rv = NSS_SetAlgorithmPolicy(SEC_OID_APPLY_SSL_POLICY, NSS_USE_POLICY_IN_SSL,
+                              0);
+  ASSERT_EQ(SECSuccess, rv);
+
+  server_->ExpectSendAlert(kTlsAlertHandshakeFailure);
+  client_->ExpectReceiveAlert(kTlsAlertHandshakeFailure);
+
+  // Remainder of handshake
+  Handshake();
+
+  server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_HASH_ALGORITHM);
+}
+
 }  // namespace nss_test

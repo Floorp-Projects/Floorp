@@ -630,13 +630,18 @@ PK11_GetWindow(PK11SymKey *key)
 }
 
 /*
- * extract a symetric key value. NOTE: if the key is sensitive, we will
+ * extract a symmetric key value. NOTE: if the key is sensitive, we will
  * not be able to do this operation. This function is used to move
  * keys from one token to another */
 SECStatus
 PK11_ExtractKeyValue(PK11SymKey *symKey)
 {
     SECStatus rv;
+
+    if (symKey == NULL) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
 
     if (symKey->data.data != NULL) {
         if (symKey->size == 0) {

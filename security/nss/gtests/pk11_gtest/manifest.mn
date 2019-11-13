@@ -22,6 +22,7 @@ CPPSRCS = \
       pk11_import_unittest.cc \
       pk11_keygen.cc \
       pk11_key_unittest.cc \
+      pk11_module_unittest.cc \
       pk11_pbkdf2_unittest.cc \
       pk11_prf_unittest.cc \
       pk11_prng_unittest.cc \
@@ -29,6 +30,8 @@ CPPSRCS = \
       pk11_rsapss_unittest.cc \
       pk11_seed_cbc_unittest.cc \
       $(NULL)
+
+DEFINES += -DDLL_PREFIX=\"$(DLL_PREFIX)\" -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
 
 INCLUDES += -I$(CORE_DEPTH)/gtests/google_test/gtest/include \
             -I$(CORE_DEPTH)/gtests/common \

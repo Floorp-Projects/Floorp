@@ -164,7 +164,7 @@ class TlsConnectTestBase : public ::testing::Test {
   // ssl_extension_unittest.cc.
   const std::vector<SECOidTag> algorithms_ = {SEC_OID_APPLY_SSL_POLICY,
                                               SEC_OID_ANSIX9_DSA_SIGNATURE,
-                                              SEC_OID_CURVE25519};
+                                              SEC_OID_CURVE25519, SEC_OID_SHA1};
   std::vector<std::tuple<SECOidTag, uint32_t>> saved_policies_;
 
  private:
