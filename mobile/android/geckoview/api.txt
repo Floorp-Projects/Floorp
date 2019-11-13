@@ -26,7 +26,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.Surface;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewStructure;
 import android.view.autofill.AutofillValue;
@@ -1151,10 +1150,12 @@ package org.mozilla.geckoview {
     method public void setAutofillEnabled(boolean);
     method @UiThread public void setSession(@NonNull GeckoSession);
     method public void setVerticalClipping(int);
+    method public void setViewBackend(int);
     method public boolean shouldPinOnScreen();
+    field public static final int BACKEND_SURFACE_VIEW = 1;
+    field public static final int BACKEND_TEXTURE_VIEW = 2;
     field @NonNull protected final GeckoView.Display mDisplay;
     field @Nullable protected GeckoSession mSession;
-    field @Nullable protected SurfaceView mSurfaceView;
   }
 
   @AnyThread public class GeckoWebExecutor {
