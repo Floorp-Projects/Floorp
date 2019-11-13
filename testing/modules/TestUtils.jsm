@@ -21,7 +21,9 @@
 var EXPORTED_SYMBOLS = ["TestUtils"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { clearInterval, setInterval } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
 
 var TestUtils = {
   executeSoon(callbackFn) {
@@ -161,15 +163,13 @@ var TestUtils = {
    * @return Promise
    *        Resolves with the return value of the condition function.
    *        Rejects if timeout is exceeded or condition ever throws.
-   *
-   * NOTE: This is intentionally not using setInterval, using setTimeout
-   * instead. setInterval is not promise-safe.
    */
   waitForCondition(condition, msg, interval = 100, maxTries = 50) {
     return new Promise((resolve, reject) => {
       let tries = 0;
-      async function tryOnce() {
+      let intervalID = setInterval(async function() {
         if (tries >= maxTries) {
+          clearInterval(intervalID);
           msg += ` - timed out after ${maxTries} tries.`;
           reject(msg);
           return;
@@ -180,19 +180,17 @@ var TestUtils = {
           conditionPassed = await condition();
         } catch (e) {
           msg += ` - threw exception: ${e}`;
+          clearInterval(intervalID);
           reject(msg);
           return;
         }
 
         if (conditionPassed) {
+          clearInterval(intervalID);
           resolve(conditionPassed);
-          return;
         }
         tries++;
-        setTimeout(tryOnce, interval);
-      }
-
-      tryOnce();
+      }, interval);
     });
   },
 
