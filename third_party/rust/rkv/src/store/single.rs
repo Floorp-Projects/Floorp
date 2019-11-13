@@ -8,87 +8,124 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use crate::{
-    error::StoreError,
-    read_transform,
-    readwrite::{
-        Readable,
-        Writer,
-    },
-    value::Value,
-};
-use lmdb::{
-    Cursor,
-    Database,
-    Iter as LmdbIter,
-    RoCursor,
-    WriteFlags,
-};
+use std::marker::PhantomData;
 
-#[derive(Copy, Clone)]
-pub struct SingleStore {
-    db: Database,
+use crate::backend::{
+    BackendDatabase,
+    BackendFlags,
+    BackendIter,
+    BackendRoCursor,
+    BackendRwTransaction,
+};
+use crate::error::StoreError;
+use crate::helpers::read_transform;
+use crate::readwrite::{
+    Readable,
+    Writer,
+};
+use crate::value::Value;
+
+type EmptyResult = Result<(), StoreError>;
+
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+pub struct SingleStore<D> {
+    db: D,
 }
 
-pub struct Iter<'env> {
-    iter: LmdbIter<'env>,
-    cursor: RoCursor<'env>,
+pub struct Iter<'env, I> {
+    iter: I,
+    phantom: PhantomData<&'env ()>,
 }
 
-impl SingleStore {
-    pub(crate) fn new(db: Database) -> SingleStore {
+impl<D> SingleStore<D>
+where
+    D: BackendDatabase,
+{
+    pub(crate) fn new(db: D) -> SingleStore<D> {
         SingleStore {
             db,
         }
     }
 
-    pub fn get<T: Readable, K: AsRef<[u8]>>(self, reader: &T, k: K) -> Result<Option<Value>, StoreError> {
-        reader.get(self.db, &k)
+    pub fn get<'env, R, K>(&self, reader: &'env R, k: K) -> Result<Option<Value<'env>>, StoreError>
+    where
+        R: Readable<'env, Database = D>,
+        K: AsRef<[u8]>,
+    {
+        reader.get(&self.db, &k)
     }
 
     // TODO: flags
-    pub fn put<K: AsRef<[u8]>>(self, writer: &mut Writer, k: K, v: &Value) -> Result<(), StoreError> {
-        writer.put(self.db, &k, v, WriteFlags::empty())
+    pub fn put<T, K>(&self, writer: &mut Writer<T>, k: K, v: &Value) -> EmptyResult
+    where
+        T: BackendRwTransaction<Database = D>,
+        K: AsRef<[u8]>,
+    {
+        writer.put(&self.db, &k, v, T::Flags::empty())
     }
 
-    pub fn delete<K: AsRef<[u8]>>(self, writer: &mut Writer, k: K) -> Result<(), StoreError> {
-        writer.delete(self.db, &k, None)
+    #[cfg(not(feature = "db-dup-sort"))]
+    pub fn delete<T, K>(&self, writer: &mut Writer<T>, k: K) -> EmptyResult
+    where
+        T: BackendRwTransaction<Database = D>,
+        K: AsRef<[u8]>,
+    {
+        writer.delete(&self.db, &k)
     }
 
-    pub fn iter_start<T: Readable>(self, reader: &T) -> Result<Iter, StoreError> {
-        let mut cursor = reader.open_ro_cursor(self.db)?;
+    #[cfg(feature = "db-dup-sort")]
+    pub fn delete<T, K>(&self, writer: &mut Writer<T>, k: K) -> EmptyResult
+    where
+        T: BackendRwTransaction<Database = D>,
+        K: AsRef<[u8]>,
+    {
+        writer.delete(&self.db, &k, None)
+    }
 
-        // We call Cursor.iter() instead of Cursor.iter_start() because
-        // the latter panics at "called `Result::unwrap()` on an `Err` value:
-        // NotFound" when there are no items in the store, whereas the former
-        // returns an iterator that yields no items.
-        //
-        // And since we create the Cursor and don't change its position, we can
-        // be sure that a call to Cursor.iter() will start at the beginning.
-        //
-        let iter = cursor.iter();
+    pub fn iter_start<'env, R, I, C>(&self, reader: &'env R) -> Result<Iter<'env, I>, StoreError>
+    where
+        R: Readable<'env, Database = D, RoCursor = C>,
+        I: BackendIter<'env>,
+        C: BackendRoCursor<'env, Iter = I>,
+    {
+        let cursor = reader.open_ro_cursor(&self.db)?;
+        let iter = cursor.into_iter();
 
         Ok(Iter {
             iter,
-            cursor,
+            phantom: PhantomData,
         })
     }
 
-    pub fn iter_from<T: Readable, K: AsRef<[u8]>>(self, reader: &T, k: K) -> Result<Iter, StoreError> {
-        let mut cursor = reader.open_ro_cursor(self.db)?;
-        let iter = cursor.iter_from(k);
+    pub fn iter_from<'env, R, I, C, K>(&self, reader: &'env R, k: K) -> Result<Iter<'env, I>, StoreError>
+    where
+        R: Readable<'env, Database = D, RoCursor = C>,
+        I: BackendIter<'env>,
+        C: BackendRoCursor<'env, Iter = I>,
+        K: AsRef<[u8]>,
+    {
+        let cursor = reader.open_ro_cursor(&self.db)?;
+        let iter = cursor.into_iter_from(k);
+
         Ok(Iter {
             iter,
-            cursor,
+            phantom: PhantomData,
         })
     }
 
-    pub fn clear(self, writer: &mut Writer) -> Result<(), StoreError> {
-        writer.clear(self.db)
+    pub fn clear<T>(&self, writer: &mut Writer<T>) -> EmptyResult
+    where
+        D: BackendDatabase,
+        T: BackendRwTransaction<Database = D>,
+    {
+        writer.clear(&self.db)
     }
 }
 
-impl<'env> Iterator for Iter<'env> {
+impl<'env, I> Iterator for Iter<'env, I>
+where
+    I: BackendIter<'env>,
+{
     type Item = Result<(&'env [u8], Option<Value<'env>>), StoreError>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -98,7 +135,7 @@ impl<'env> Iterator for Iter<'env> {
                 Ok(val) => Some(Ok((key, val))),
                 Err(err) => Some(Err(err)),
             },
-            Some(Err(err)) => Some(Err(StoreError::LmdbError(err))),
+            Some(Err(err)) => Some(Err(err.into())),
         }
     }
 }
