@@ -84,6 +84,19 @@
         "description": "Possible types of results. <code>remote_tab</code>: A synced tab from another device. <code>search</code>: A search suggestion from a search engine. <code>tab</code>: An open tab in the browser. <code>tip</code>: An actionable message to help the user with their query. <code>url</code>: A URL that's not one of the other types."
       },
       {
+        "id": "SearchOptions",
+        "type": "object",
+        "description": "Options to the <code>search</code> function.",
+        "properties": {
+          "focus": {
+            "type": "boolean",
+            "optional": true,
+            "default": true,
+            "description": "Whether to focus the input field and select its contents."
+          }
+        }
+      },
+      {
         "id": "SourceType",
         "type": "string",
         "enum": ["bookmarks", "history", "local", "network", "search", "tabs"],
@@ -102,6 +115,21 @@
     },
     "functions": [
       {
+        "name": "focus",
+        "type": "function",
+        "async": true,
+        "description": "Focuses the urlbar in the current window.",
+        "parameters": [
+          {
+            "name": "select",
+            "type": "boolean",
+            "optional": true,
+            "default": false,
+            "description": "If true, the text in the urlbar will also be selected."
+          }
+        ]
+      },
+      {
         "name": "search",
         "type": "function",
         "async": true,
@@ -111,6 +139,13 @@
             "name": "searchString",
             "type": "string",
             "description": "The search string."
+          },
+          {
+            "name": "options",
+            "$ref": "SearchOptions",
+            "optional": true,
+            "default": {},
+            "description": "Options for the search."
           }
         ]
       }
