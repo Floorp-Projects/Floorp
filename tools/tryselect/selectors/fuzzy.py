@@ -45,6 +45,7 @@ TARGET_TASK_FILTERS = (
     'windows10-aarch64/opt.*',
     'android-hw.*',
     '.*android-geckoview-docs.*',
+    '.*win64-aarch64-laptop.*',
 )
 
 
