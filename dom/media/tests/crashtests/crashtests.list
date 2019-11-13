@@ -34,3 +34,4 @@ skip-if(Android) pref(media.getusermedia.browser.enabled,true) load 1560207.html
 load 1576938.html
 skip-if(Android) pref(media.getusermedia.audiocapture.enabled,true) load 1573536.html
 skip-if(!Android) pref(media.getusermedia.audiocapture.enabled,true) pref(media.navigator.permission.device,false) load 1573536.html # media.navigator.permission.device is mobile-only, so other platforms fail to set it (Bug 1350948)
+load 1594136.html

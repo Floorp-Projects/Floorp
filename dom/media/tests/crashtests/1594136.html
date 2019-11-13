@@ -1,0 +1,15 @@
+<html>
+<head>
+<script>
+function start () {
+  const context = new AudioContext();
+  const {stream} = new MediaStreamAudioDestinationNode(context);
+  const [track] = stream.getTracks();
+  track.stop();
+  context.createMediaStreamTrackSource(track);
+}
+
+document.addEventListener('DOMContentLoaded', start);
+</script>
+</head>
+</html>
