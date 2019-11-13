@@ -74,7 +74,7 @@ def generate_ui_test_task(dependencies, engine="Klar", device="arm"):
     '''
     if engine is "Klar":
         engine = "geckoview"
-        assemble_engine = engine 
+        assemble_engine = engine
     elif engine is "Webview":
         engine = "webview"
         assemble_engine = "Focus"
@@ -134,7 +134,7 @@ def generate_task(name, description, command, dependencies=[], artifacts={}, sco
         "created": taskcluster.stringDate(created),
         "tags": {},
         "priority": "lowest",
-        "schedulerId": "mobile-level-3",
+        "schedulerId": "taskcluster-github",
         "deadline": taskcluster.stringDate(deadline),
         "dependencies": [TASK_ID] + dependencies,
         "routes": routes,

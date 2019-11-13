@@ -37,7 +37,7 @@ def generate_screenshot_task(locales):
 	    "created": taskcluster.stringDate(created),
 	    "tags": {},
 	    "priority": "lowest",
-	    "schedulerId": "mobile-level-1",
+	    "schedulerId": "taskcluster-github",
 	    "deadline": taskcluster.stringDate(deadline),
 	    "dependencies": [ TASK_ID ],
 	    "routes": [],
