@@ -788,7 +788,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
             state = STATE_COMPLETED;
             gFailureReason = "timed out while taking snapshot (bug in harness?)";
             RemoveListeners();
-            CheckForProcessCrashExpectation();
+            CheckForProcessCrashExpectation(contentRootElement);
             setTimeout(RecordResult, 0, forURL);
             return;
         }
