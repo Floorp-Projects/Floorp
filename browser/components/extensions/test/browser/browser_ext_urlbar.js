@@ -1,6 +1,8 @@
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   UrlbarProviderExtension: "resource:///modules/UrlbarProviderExtension.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
@@ -277,5 +279,148 @@ add_task(async function searchEmpty() {
   Assert.equal(gURLBar.getAttribute("focused"), "true");
 
   await UrlbarTestUtils.promisePopupClose(window);
+  await ext.unload();
+});
+
+// Tests the search function with `focus: false`.
+add_task(async function searchFocusFalse() {
+  await PlacesUtils.history.clear();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesTestUtils.addVisits([
+    "http://example.com/test1",
+    "http://example.com/test2",
+  ]);
+
+  gURLBar.blur();
+
+  let ext = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["urlbar"],
+    },
+    isPrivileged: true,
+    background: () => {
+      browser.urlbar.search("test", { focus: false });
+    },
+  });
+  await ext.startup();
+
+  let context = await UrlbarTestUtils.promiseSearchComplete(window);
+  Assert.equal(gURLBar.value, "test");
+  Assert.equal(context.searchString, "test");
+  Assert.ok(!gURLBar.focused);
+  Assert.ok(!gURLBar.hasAttribute("focused"));
+
+  let resultCount = UrlbarTestUtils.getResultCount(window);
+  Assert.equal(resultCount, 3);
+
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.SEARCH);
+  Assert.equal(result.title, "test");
+
+  result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL);
+  Assert.equal(result.url, "http://example.com/test2");
+
+  result = await UrlbarTestUtils.getDetailsOfResultAt(window, 2);
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL);
+  Assert.equal(result.url, "http://example.com/test1");
+
+  await UrlbarTestUtils.promisePopupClose(window);
+  await ext.unload();
+});
+
+// Tests the search function with `focus: false` and an empty string.
+add_task(async function searchFocusFalseEmpty() {
+  await PlacesUtils.history.clear();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesTestUtils.addVisits([
+    "http://example.com/test1",
+    "http://example.com/test2",
+  ]);
+
+  gURLBar.blur();
+
+  let ext = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["urlbar"],
+    },
+    isPrivileged: true,
+    background: () => {
+      browser.urlbar.search("", { focus: false });
+    },
+  });
+  await ext.startup();
+
+  let context = await UrlbarTestUtils.promiseSearchComplete(window);
+  Assert.equal(gURLBar.value, "");
+  Assert.equal(context.searchString, "");
+  Assert.ok(!gURLBar.focused);
+  Assert.ok(!gURLBar.hasAttribute("focused"));
+
+  let resultCount = UrlbarTestUtils.getResultCount(window);
+  Assert.equal(resultCount, 2);
+
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL);
+  Assert.equal(result.url, "http://example.com/test2");
+
+  result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL);
+  Assert.equal(result.url, "http://example.com/test1");
+
+  await UrlbarTestUtils.promisePopupClose(window);
+  await ext.unload();
+});
+
+// Tests the focus function with select = false.
+add_task(async function focusSelectFalse() {
+  gURLBar.blur();
+  gURLBar.value = "test";
+  Assert.ok(!gURLBar.focused);
+  Assert.ok(!gURLBar.hasAttribute("focused"));
+
+  let ext = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["urlbar"],
+    },
+    isPrivileged: true,
+    background: () => {
+      browser.urlbar.focus();
+    },
+  });
+  await ext.startup();
+
+  await TestUtils.waitForCondition(() => gURLBar.focused);
+  Assert.ok(gURLBar.focused);
+  Assert.ok(gURLBar.hasAttribute("focused"));
+  Assert.equal(gURLBar.selectionStart, gURLBar.selectionEnd);
+
+  await ext.unload();
+});
+
+// Tests the focus function with select = true.
+add_task(async function focusSelectTrue() {
+  gURLBar.blur();
+  gURLBar.value = "test";
+  Assert.ok(!gURLBar.focused);
+  Assert.ok(!gURLBar.hasAttribute("focused"));
+
+  let ext = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["urlbar"],
+    },
+    isPrivileged: true,
+    background: () => {
+      browser.urlbar.focus(true);
+    },
+  });
+  await ext.startup();
+
+  await TestUtils.waitForCondition(() => gURLBar.focused);
+  Assert.ok(gURLBar.focused);
+  Assert.ok(gURLBar.hasAttribute("focused"));
+  Assert.equal(gURLBar.selectionStart, 0);
+  Assert.equal(gURLBar.selectionEnd, "test".length);
+
   await ext.unload();
 });

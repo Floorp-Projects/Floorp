@@ -859,9 +859,14 @@ class UrlbarInput {
    * @param {string} value
    *   The input's value will be set to this value, and the search will
    *   use it as its query.
+   * @param {boolean} [options.focus]
+   *   If true, the urlbar will be focused.  If false, the focus will remain
+   *   unchanged.
    */
-  search(value) {
-    this.window.focusAndSelectUrlBar();
+  search(value, { focus = true } = {}) {
+    if (focus) {
+      this.window.focusAndSelectUrlBar();
+    }
 
     // If the value is a restricted token, append a space.
     if (Object.values(UrlbarTokenizer.RESTRICT).includes(value)) {
