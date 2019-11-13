@@ -1038,7 +1038,7 @@ browsertime-tp6-1:
     run-visual-metrics:
         by-app:
             chrome: false
-            default: true
+            default: false
     mozharness:
         extra-options:
             - --browsertime
