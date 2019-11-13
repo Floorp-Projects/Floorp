@@ -28,6 +28,10 @@
   <script src="chrome://browser/content/utilityOverlay.js"/>
   <script src="chrome://global/content/editMenuOverlay.js"/>
   <script>
+    "use strict";
+    /* import-globals-from ../../../toolkit/content/globalOverlay.js */
+    /* import-globals-from ../../../toolkit/content/editMenuOverlay.js */
+    /* exported goUpdateSourceEditorMenuItems */
     function goUpdateSourceEditorMenuItems() {
       goUpdateGlobalEditMenuItems();
 

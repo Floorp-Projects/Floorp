@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* This file is loaded by both browser.xhtml and toolbox.xul. Therefore, rules
-   defined here can not rely on toolbox.xul variables. */
+/* This file is loaded by both browser.xhtml and toolbox.xhtml. Therefore, rules
+   defined here can not rely on toolbox.xhtml variables. */
 
 /* Splitters */
 
