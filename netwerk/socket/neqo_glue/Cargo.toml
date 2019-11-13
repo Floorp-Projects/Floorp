@@ -8,16 +8,16 @@ edition = "2018"
 name = "neqo_glue"
 
 [dependencies]
-neqo-http3 = { version = "0.1.4", git = "https://github.com/mozilla/neqo" }
-neqo-transport = { version = "0.1.4", git = "https://github.com/mozilla/neqo" }
-neqo-common = { version = "0.1.4", git = "https://github.com/mozilla/neqo" }
+neqo-http3 = { rev = "a17c1e83", git = "https://github.com/mozilla/neqo" }
+neqo-transport = { rev = "a17c1e83", git = "https://github.com/mozilla/neqo" }
+neqo-common = { rev = "a17c1e83", git = "https://github.com/mozilla/neqo" }
 nserror = { path = "../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../xpcom/rust/nsstring" }
 xpcom = { path = "../../../xpcom/rust/xpcom" }
 thin-vec = { version = "0.1.0", features = ["gecko-ffi"] }
 
 [dependencies.neqo-crypto]
-version = "0.1.4"
+rev = "a17c1e83"
 git = "https://github.com/mozilla/neqo"
 default-features = false
 features = ["gecko"]
