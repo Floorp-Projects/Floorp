@@ -8,8 +8,12 @@
       "command": "\"\\mozilla-build\\start-shell.bat mach\""
     },
     "args": ["--log-no-times"],
-    "echoCommand": true,
     "tasks": [
+      {
+        "label": "clobber",
+        "args": ["clobber"],
+        "problemMatcher": []
+      },
       {
         "label": "clobber-python",
         "args": ["clobber", "python"],
@@ -17,10 +21,12 @@
       },
       {
         "label": "configure",
+        "args": ["configure"],
         "problemMatcher": []
       },
       {
         "label": "build",
+        "args": ["build"],
         "problemMatcher": {
           "owner": "cpp",
           "fileLocation": "absolute",
@@ -36,7 +42,7 @@
       },
       {
         "label": "build-binaries",
-        "args": ["--log-no-times", "build", "binaries"],
+        "args": ["build", "binaries"],
         "problemMatcher": {
           "owner": "cpp",
           "fileLocation": "absolute",
@@ -56,7 +62,7 @@
       },
       {
         "label": "build-faster",
-        "args": ["--log-no-times", "build", "faster"],
+        "args": ["build", "faster"],
         "problemMatcher": {
           "owner": "cpp",
           "fileLocation": "absolute",
@@ -72,7 +78,7 @@
       },
       {
         "label": "run",
-        "args": ["-purgecaches"],
+        "args": ["run", "-purgecaches"],
         "problemMatcher": []
       },
       {
@@ -82,6 +88,7 @@
       },
       {
         "label": "eslint",
+        "args": ["eslint", "${file}"],
         "problemMatcher": ["$eslint-stylish"]
       },
       {
@@ -91,7 +98,7 @@
       },
       {
         "label": "test",
-        "args": ["${relativeFile}"],
+        "args": ["test", "${relativeFile}"],
         "group":"test",
         "presentation": {
             "reveal": "always",
@@ -100,7 +107,7 @@
       },
       {
         "label": "mochitest",
-        "args": ["${relativeFile}"],
+        "args": ["mochitest", "${relativeFile}"],
         "problemMatcher": {
           "fileLocation": ["relative", "${workspaceRoot}"],
           "pattern": {
@@ -117,7 +124,7 @@
       },
       {
         "label": "reftest",
-        "args": ["${relativeFile}"],
+        "args": ["reftest", "${relativeFile}"],
         "problemMatcher": {
           "fileLocation": ["absolute"],
           "pattern": {
@@ -134,7 +141,7 @@
       },
       {
         "label": "xpcshell-test",
-        "args": ["${relativeFile}", "--sequential"],
+        "args": ["xpcshell-test", "${relativeFile}", "--sequential"],
         "problemMatcher": {
           "fileLocation": ["relative", "${workspaceRoot}"],
           "pattern": {
