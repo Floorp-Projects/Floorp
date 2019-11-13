@@ -79,7 +79,7 @@ tasks:
               then: {$eval: 'event.ref[11:]'}
               else: ${event.ref}
           in:
-            - 'assume:repo:focus-android:branch:${short_head_branch}'
+            - 'assume:repo:github.com/mozilla-mobile/focus-android:branch:${short_head_branch}'
         payload:
           maxRunTime: 7200
           image: mozillamobile/focus-android:1.2
@@ -139,7 +139,7 @@ tasks:
         priority: highest
         retries: 5
         scopes:
-          - assume:repo:focus-android:release
+          - assume:repo:github.com/mozilla-mobile/focus-android:release
         routes:
           - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
         payload:
@@ -214,7 +214,7 @@ tasks:
         priority: medium
         retries: 5
         scopes:
-          - assume:repo:focus-android:cron:nightly
+          - assume:repo:github.com/mozilla-mobile/focus-android:cron:nightly
         routes:
           - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
         payload:
