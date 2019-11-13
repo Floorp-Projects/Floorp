@@ -863,3 +863,18 @@ add_task(async function test_query_amo_details() {
 
   amoAddonDetailsMap.clear();
 });
+
+add_task(async function test_statictheme_normalized_into_type_theme() {
+  const themeId = "not-installed-statictheme@mochi.test";
+  amoAddonDetailsMap.set(themeId, {
+    ...FAKE_AMO_DETAILS,
+    type: "statictheme",
+  });
+
+  const report = await AbuseReporter.createAbuseReport(themeId, REPORT_OPTIONS);
+
+  equal(report.addon.id, themeId, "Got a report for the expected theme id");
+  equal(report.addon.type, "theme", "Got the expected addon type");
+
+  amoAddonDetailsMap.clear();
+});
