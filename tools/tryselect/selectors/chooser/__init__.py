@@ -27,6 +27,7 @@ class ChooserParser(BaseTryParser):
         'env',
         'gecko-profile',
         'path',
+        'pernosco',
         'rebuild',
         'visual-metrics-jobs',
     ]
