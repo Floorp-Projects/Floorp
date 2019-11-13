@@ -352,7 +352,7 @@ add_task(async function test_dedupeLogins_resolveBy() {
       DOMAIN1_HTTPS_AUTH.origin,
     ],
     [
-      "resolveBy matching _searchAndDedupeLogins, prefer https: scheme over http: in primary and subdomains",
+      "resolveBy matching searchAndDedupeLogins, prefer domain matches then https: scheme over http:",
       // expected:
       [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN2_HTTPS_TO_HTTPS_U2_P2],
       // logins:
@@ -365,7 +365,7 @@ add_task(async function test_dedupeLogins_resolveBy() {
       // uniqueKeys:
       undefined,
       // resolveBy:
-      ["actionOrigin", "scheme", "subdomain", "timePasswordChanged"],
+      ["subdomain", "actionOrigin", "scheme", "timePasswordChanged"],
       // preferredOrigin:
       DOMAIN1_HTTPS_TO_HTTPS_U1_P1.origin,
     ],
