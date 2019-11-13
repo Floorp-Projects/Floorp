@@ -64,6 +64,7 @@ pref_groups = [
     'page_load',
     'permissions',
     'plain_text',
+    'plugin',
     'plugins',
     'preferences',
     'print',
