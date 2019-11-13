@@ -33,7 +33,8 @@ class NativeLayerRoot {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NativeLayerRoot)
 
-  virtual already_AddRefed<NativeLayer> CreateLayer() = 0;
+  virtual already_AddRefed<NativeLayer> CreateLayer(const gfx::IntSize& aSize,
+                                                    bool aIsOpaque) = 0;
   virtual void AppendLayer(NativeLayer* aLayer) = 0;
   virtual void RemoveLayer(NativeLayer* aLayer) = 0;
   virtual void SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) = 0;
@@ -66,15 +67,16 @@ class NativeLayer {
 
   virtual NativeLayerCA* AsNativeLayerCA() { return nullptr; }
 
-  // The location and size of the layer, in integer device pixels. This also
-  // determines the size of the surface that should be returned from the next
-  // call to NextSurface.
-  virtual void SetRect(const gfx::IntRect& aRect) = 0;
-  virtual gfx::IntRect GetRect() = 0;
-
-  // Set whether the layer is fully opaque.
-  virtual void SetIsOpaque(bool aIsOpaque) = 0;
+  // The size and opaqueness of a layer are supplied during layer creation and
+  // never change.
+  virtual gfx::IntSize GetSize() = 0;
   virtual bool IsOpaque() = 0;
+
+  // The location of the layer, in integer device pixels.
+  virtual void SetPosition(const gfx::IntPoint& aPosition) = 0;
+  virtual gfx::IntPoint GetPosition() = 0;
+
+  virtual gfx::IntRect GetRect() = 0;
 
   // Set an optional clip rect on the layer. The clip rect is in the same
   // coordinate space as the layer rect.
@@ -91,16 +93,15 @@ class NativeLayer {
   virtual void InvalidateRegionThroughoutSwapchain(
       const gfx::IntRegion& aRegion) = 0;
 
-  // Returns a DrawTarget. The size of the DrawTarget will be the size of the
-  // rect that has been passed to SetRect. The caller should draw to that
-  // DrawTarget, then drop its reference to the DrawTarget, and then call
-  // NotifySurfaceReady(). It can limit its drawing to
-  // CurrentSurfaceInvalidRegion() (which is in the DrawTarget's device space).
-  // After a call to NextSurface*, NextSurface* must not be called again until
-  // after NotifySurfaceReady has been called. Can be called on any thread. When
-  // used from multiple threads, callers need to make sure that they still only
-  // call NextSurface and NotifySurfaceReady alternatingly and not in any other
-  // order.
+  // Returns a DrawTarget. The size of the DrawTarget will be the same as the
+  // size of this layer. The caller should draw to that DrawTarget, then drop
+  // its reference to the DrawTarget, and then call NotifySurfaceReady(). It can
+  // limit its drawing to CurrentSurfaceInvalidRegion() (which is in the
+  // DrawTarget's device space). After a call to NextSurface*, NextSurface* must
+  // not be called again until after NotifySurfaceReady has been called. Can be
+  // called on any thread. When used from multiple threads, callers need to make
+  // sure that they still only call NextSurface* and NotifySurfaceReady
+  // alternatingly and not in any other order.
   virtual RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
       gfx::BackendType aBackendType) = 0;
 
@@ -115,10 +116,10 @@ class NativeLayer {
 
   // Must only be called if a non-null GLContext is set on this layer.
   // Returns a GLuint for a framebuffer that can be used for drawing to the
-  // surface. The size of the framebuffer will be the size of the rect that has
-  // been passed to SetRect. If aNeedsDepth is true, the framebuffer is created
-  // with a depth buffer. The caller should draw to the framebuffer, unbind
-  // it, and then call NotifySurfaceReady(). It can limit its drawing to
+  // surface. The size of the framebuffer will be the same as the size of this
+  // layer. If aNeedsDepth is true, the framebuffer is created with a depth
+  // buffer. The caller should draw to the framebuffer, unbind it, and then call
+  // NotifySurfaceReady(). It can limit its drawing to
   // CurrentSurfaceInvalidRegion() (which is in the framebuffer's device space,
   // possibly "upside down" if SurfaceIsFlipped()). The framebuffer will be
   // created using the GLContext that was set on this layer with a call to

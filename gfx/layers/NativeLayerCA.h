@@ -63,7 +63,8 @@ class NativeLayerRootCA : public NativeLayerRoot {
   void SetBackingScale(float aBackingScale);
 
   // Overridden methods
-  already_AddRefed<NativeLayer> CreateLayer() override;
+  already_AddRefed<NativeLayer> CreateLayer(const gfx::IntSize& aSize,
+                                            bool aIsOpaque) override;
   void AppendLayer(NativeLayer* aLayer) override;
   void RemoveLayer(NativeLayer* aLayer) override;
   void SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) override;
@@ -102,7 +103,9 @@ class NativeLayerCA : public NativeLayer {
   virtual NativeLayerCA* AsNativeLayerCA() override { return this; }
 
   // Overridden methods
-  void SetRect(const gfx::IntRect& aRect) override;
+  gfx::IntSize GetSize() override;
+  void SetPosition(const gfx::IntPoint& aPosition) override;
+  gfx::IntPoint GetPosition() override;
   gfx::IntRect GetRect() override;
   void InvalidateRegionThroughoutSwapchain(
       const gfx::IntRegion& aRegion) override;
@@ -113,7 +116,6 @@ class NativeLayerCA : public NativeLayer {
   Maybe<GLuint> NextSurfaceAsFramebuffer(bool aNeedsDepth) override;
   gfx::IntRegion CurrentSurfaceInvalidRegion() override;
   void NotifySurfaceReady() override;
-  void SetIsOpaque(bool aIsOpaque) override;
   bool IsOpaque() override;
   void SetClipRect(const Maybe<gfx::IntRect>& aClipRect) override;
   Maybe<gfx::IntRect> ClipRect() override;
@@ -141,11 +143,11 @@ class NativeLayerCA : public NativeLayer {
  protected:
   friend class NativeLayerRootCA;
 
-  NativeLayerCA();
+  NativeLayerCA(const gfx::IntSize& aSize, bool aIsOpaque);
   ~NativeLayerCA() override;
 
   // Returns an IOSurface that can be drawn to. The size of the IOSurface will
-  // be the size of the rect that has been passed to SetRect.
+  // be the same as the size of this layer.
   // The returned surface is guaranteed to be not in use by the window server.
   // After a call to NextSurface, NextSurface must not be called again until
   // after NotifySurfaceReady has been called. Can be called on any thread. When
@@ -166,7 +168,6 @@ class NativeLayerCA : public NativeLayer {
   struct SurfaceWithInvalidRegion {
     CFTypeRefPtr<IOSurfaceRef> mSurface;
     gfx::IntRegion mInvalidRegion;
-    gfx::IntSize mSize;
   };
 
   std::vector<SurfaceWithInvalidRegion> RemoveExcessUnusedSurfaces(
@@ -179,12 +180,10 @@ class NativeLayerCA : public NativeLayer {
 
   // Each IOSurface is initially created inside NextSurface.
   // The surface stays alive until the recycling mechanism in NextSurface
-  // determines it is no longer needed, for example because the layer size
-  // changed or because the swap chain has grown too long, or until the layer
-  // is destroyed.
-  // During the surface's lifetime, it will continuously move through the fields
-  // mInProgressSurface, mReadySurface, and back to front through the
-  // mSurfaces queue:
+  // determines it is no longer needed (because the swap chain has grown too
+  // long) or until the layer is destroyed. During the surface's lifetime, it
+  // will continuously move through the fields mInProgressSurface,
+  // mReadySurface, and back to front through the mSurfaces queue:
   //
   //  mSurfaces.front()
   //  ------[NextSurface()]-----> mInProgressSurface
@@ -251,7 +250,7 @@ class NativeLayerCA : public NativeLayer {
       mFramebuffers;
 
   gfx::IntPoint mPosition;
-  gfx::IntSize mSize;
+  const gfx::IntSize mSize;
   Maybe<gfx::IntRect> mClipRect;
 
   // Lazily initialized by first call to ApplyChanges. mWrappingLayer is the
@@ -263,10 +262,10 @@ class NativeLayerCA : public NativeLayer {
 
   float mBackingScale = 1.0f;
   bool mSurfaceIsFlipped = false;
-  bool mIsOpaque = false;
+  const bool mIsOpaque = false;
+  bool mMutatedBackingScale = false;
+  bool mMutatedSurfaceIsFlipped = false;
   bool mMutatedPosition = false;
-  bool mMutatedSize = false;
-  bool mMutatedIsOpaque = false;
   bool mMutatedClipRect = false;
 };
 
