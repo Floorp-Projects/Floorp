@@ -56,6 +56,7 @@ internal class MigrationResultsStore(context: Context) : SharedPreferencesCache<
                 Migration.History.javaClass.simpleName -> Migration.History
                 Migration.Bookmarks.javaClass.simpleName -> Migration.Bookmarks
                 Migration.OpenTabs.javaClass.simpleName -> Migration.OpenTabs
+                Migration.Gecko.javaClass.simpleName -> Migration.Gecko
                 else -> throw IllegalStateException("Unrecognized migration type: $migrationName")
             }
             result[migration] = MigrationRun(version = migrationVersion, success = migrationSuccess)
