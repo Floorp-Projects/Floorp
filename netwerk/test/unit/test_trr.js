@@ -1095,15 +1095,15 @@ add_task(async function test_dnsSuffix() {
     Services.prefs.setIntPref("network.trr.mode", mode);
     Services.prefs.setCharPref(
       "network.trr.uri",
-      `https://localhost:${h2Port}/doh?responseIP=1.2.3.4`
+      `https://localhost:${h2Port}/doh?responseIP=1.2.3.4&push=true`
     );
-    await new DNSListener("test.com", "1.2.3.4");
+    await new DNSListener("example.com", "1.2.3.4");
     dns.clearCache(true);
     Services.prefs.setIntPref("network.trr.mode", mode);
 
     dns.clearCache(true);
     let networkLinkService = {
-      dnsSuffixList: ["test.com"],
+      dnsSuffixList: ["example.com"],
       QueryInterface: ChromeUtils.generateQI([Ci.nsINetworkLinkService]),
     };
     Services.obs.notifyObservers(
@@ -1111,7 +1111,10 @@ add_task(async function test_dnsSuffix() {
       "network:link-status-changed",
       "changed"
     );
-    await new DNSListener("test.com", "127.0.0.1");
+    await new DNSListener("example.com", "127.0.0.1");
+
+    // Also test that we don't use the pushed entry.
+    await new DNSListener("push.example.com", "127.0.0.1");
 
     // Attempt to clean up, just in case
     networkLinkService.dnsSuffixList = [];
