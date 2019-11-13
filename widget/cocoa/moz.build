@@ -64,7 +64,6 @@ UNIFIED_SOURCES += [
     'nsWindowMap.mm',
     'OSXNotificationCenter.mm',
     'ProcInfo.mm',
-    'RectTextureImage.mm',
     'ScreenHelperCocoa.mm',
     'SwipeTracker.mm',
     'TextInputHandler.mm',

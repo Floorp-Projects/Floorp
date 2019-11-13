@@ -94,8 +94,6 @@ typedef struct _nsCocoaWindowList {
 
 - (ChildView*)mainChildView;
 
-- (NSArray*)titlebarControls;
-
 - (void)setWantsTitleDrawn:(BOOL)aDrawTitle;
 - (BOOL)wantsTitleDrawn;
 

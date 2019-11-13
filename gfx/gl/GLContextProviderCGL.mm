@@ -116,14 +116,10 @@ bool GLContextCGL::IsDoubleBuffered() const { return sCGLLibrary.UseDoubleBuffer
 bool GLContextCGL::SwapBuffers() {
   AUTO_PROFILER_LABEL("GLContextCGL::SwapBuffers", GRAPHICS);
 
-  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
-    // We do not have a framebuffer zero. Just do a flush.
-    // Flushing is necessary if we want our IOSurfaces to have the correct
-    // content once they're picked up by the WindowServer from our CALayers.
-    fFlush();
-  } else {
-    [mContext flushBuffer];
-  }
+  // We do not have a default framebuffer. Just do a flush.
+  // Flushing is necessary if we want our IOSurfaces to have the correct
+  // content once they're picked up by the WindowServer from our CALayers.
+  fFlush();
 
   return true;
 }
@@ -216,9 +212,6 @@ already_AddRefed<GLContext> GLContextProviderCGL::CreateForWindow(nsIWidget* aWi
   if (!context) {
     return nullptr;
   }
-
-  GLint opaque = StaticPrefs::gfx_compositor_glcontext_opaque();
-  [context setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
 
   RefPtr<GLContextCGL> glContext = new GLContextCGL(CreateContextFlags::NONE, caps, context, false);
 
