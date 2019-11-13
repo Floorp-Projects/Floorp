@@ -5,6 +5,9 @@
 const EXPORTED_SYMBOLS = ["BackgroundPageThumbs"];
 
 const DEFAULT_CAPTURE_TIMEOUT = 30000; // ms
+// For testing, the above timeout is excessive, and makes our tests overlong.
+const TESTING_CAPTURE_TIMEOUT = 5000; // ms
+
 const DESTROY_BROWSER_TIMEOUT = 60000; // ms
 const FRAME_SCRIPT_URL =
   "chrome://global/content/backgroundPageThumbsContent.js";
@@ -473,11 +476,15 @@ Capture.prototype = {
     this.startDate = new Date();
     tel("CAPTURE_QUEUE_TIME_MS", this.startDate - this.creationDate);
 
+    let fallbackTimeout = Cu.isInAutomation
+      ? TESTING_CAPTURE_TIMEOUT
+      : DEFAULT_CAPTURE_TIMEOUT;
+
     // timeout timer
     let timeout =
       typeof this.options.timeout == "number"
         ? this.options.timeout
-        : DEFAULT_CAPTURE_TIMEOUT;
+        : fallbackTimeout;
     this._timeoutTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     this._timeoutTimer.initWithCallback(
       this,
