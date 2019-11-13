@@ -1546,6 +1546,8 @@ package org.mozilla.geckoview {
 
   @AnyThread public class WebResponse extends WebMessage {
     ctor protected WebResponse(@NonNull WebResponse.Builder);
+    method public void setReadTimeoutMillis(long);
+    field public static final long DEFAULT_READ_TIMEOUT_MS = 30000L;
     field @Nullable public final InputStream body;
     field public final boolean redirected;
     field public final int statusCode;

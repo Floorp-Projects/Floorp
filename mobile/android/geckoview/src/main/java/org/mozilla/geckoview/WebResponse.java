@@ -22,6 +22,11 @@ import java.io.InputStream;
 @AnyThread
 public class WebResponse extends WebMessage {
     /**
+     * The default read timeout for the {@link #body} stream.
+     */
+    public static final long DEFAULT_READ_TIMEOUT_MS = 30000;
+
+    /**
      * The HTTP status code for the response, e.g. 200.
      */
     public final int statusCode;
@@ -42,6 +47,22 @@ public class WebResponse extends WebMessage {
         this.statusCode = builder.mStatusCode;
         this.redirected = builder.mRedirected;
         this.body = builder.mBody;
+
+        this.setReadTimeoutMillis(DEFAULT_READ_TIMEOUT_MS);
+    }
+
+    /**
+     * Sets the maximum amount of time to wait for data in the {@link #body} read() method.
+     * By default, the read timeout is set to {@link #DEFAULT_READ_TIMEOUT_MS}.
+     *
+     * If 0, there will be no timeout and read() will block indefinitely.
+     *
+     * @param millis The duration in milliseconds for the timeout.
+     */
+    public void setReadTimeoutMillis(final long millis) {
+        if (this.body != null && this.body instanceof GeckoInputStream) {
+            ((GeckoInputStream)this.body).setReadTimeoutMillis(millis);
+        }
     }
 
     /**
