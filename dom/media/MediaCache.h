@@ -217,12 +217,12 @@ class MediaCacheStream : public DecoderDoctorLifeLogger<MediaCacheStream> {
   // on this class.
   void InitAsClone(MediaCacheStream* aOriginal);
 
-  nsIEventTarget* OwnerThread() const;
+  nsISerialEventTarget* OwnerThread() const;
 
   // These are called on the main thread.
-  // This must be called (and return) before the ChannelMediaResource
+  // This must be called (and resolve) before the ChannelMediaResource
   // used to create this MediaCacheStream is deleted.
-  void Close();
+  RefPtr<GenericPromise> Close();
   // This returns true when the stream has been closed.
   bool IsClosed(AutoLock&) const { return mClosed; }
   // Returns true when this stream is can be shared by a new resource load.
