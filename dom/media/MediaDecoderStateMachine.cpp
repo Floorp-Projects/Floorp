@@ -2591,6 +2591,7 @@ RefPtr<ShutdownPromise> MediaDecoderStateMachine::ShutdownState::Enter() {
   master->mVolume.DisconnectIfConnected();
   master->mPreservesPitch.DisconnectIfConnected();
   master->mLooping.DisconnectIfConnected();
+  master->mSinkDevice.DisconnectIfConnected();
   master->mOutputCaptured.DisconnectIfConnected();
   master->mOutputTracks.DisconnectIfConnected();
   master->mOutputPrincipal.DisconnectIfConnected();
@@ -2641,6 +2642,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
       INIT_MIRROR(mVolume, 1.0),
       INIT_MIRROR(mPreservesPitch, true),
       INIT_MIRROR(mLooping, false),
+      INIT_MIRROR(mSinkDevice, nullptr),
       INIT_MIRROR(mOutputCaptured, false),
       INIT_MIRROR(mOutputTracks, nsTArray<RefPtr<ProcessedMediaTrack>>()),
       INIT_MIRROR(mOutputPrincipal, PRINCIPAL_HANDLE_NONE),
@@ -2649,8 +2651,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
       INIT_CANONICAL(mCanonicalOutputPrincipal, PRINCIPAL_HANDLE_NONE),
       INIT_CANONICAL(mDuration, NullableTimeUnit()),
       INIT_CANONICAL(mCurrentPosition, TimeUnit::Zero()),
-      INIT_CANONICAL(mIsAudioDataAudible, false),
-      mSetSinkRequestsCount(0) {
+      INIT_CANONICAL(mIsAudioDataAudible, false) {
   MOZ_COUNT_CTOR(MediaDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
@@ -2677,6 +2678,7 @@ void MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder) {
   mVolume.Connect(aDecoder->CanonicalVolume());
   mPreservesPitch.Connect(aDecoder->CanonicalPreservesPitch());
   mLooping.Connect(aDecoder->CanonicalLooping());
+  mSinkDevice.Connect(aDecoder->CanonicalSinkDevice());
   mOutputCaptured.Connect(aDecoder->CanonicalOutputCaptured());
   mOutputTracks.Connect(aDecoder->CanonicalOutputTracks());
   mOutputPrincipal.Connect(aDecoder->CanonicalOutputPrincipal());
@@ -2698,6 +2700,8 @@ void MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder) {
   mWatchManager.Watch(mOutputPrincipal,
                       &MediaDecoderStateMachine::OutputPrincipalChanged);
 
+  mMediaSink = CreateMediaSink();
+
   MOZ_ASSERT(!mStateObj);
   auto* s = new DecodeMetadataState(this);
   mStateObj.reset(s);
@@ -2714,21 +2718,23 @@ MediaSink* MediaDecoderStateMachine::CreateAudioSink() {
     MOZ_ASSERT(self->OnTaskQueue());
     AudioSink* audioSink =
         new AudioSink(self->mTaskQueue, self->mAudioQueue, self->GetMediaTime(),
-                      self->Info().mAudio);
+                      self->Info().mAudio, self->mSinkDevice.Ref());
 
     self->mAudibleListener = audioSink->AudibleEvent().Connect(
         self->mTaskQueue, self.get(),
         &MediaDecoderStateMachine::AudioAudibleChanged);
     return audioSink;
   };
-  return new AudioSinkWrapper(mTaskQueue, mAudioQueue, audioSinkCreator);
+  return new AudioSinkWrapper(mTaskQueue, mAudioQueue, audioSinkCreator,
+                              mVolume, mPlaybackRate, mPreservesPitch);
 }
 
-already_AddRefed<MediaSink> MediaDecoderStateMachine::CreateMediaSink(
-    bool aOutputCaptured) {
+already_AddRefed<MediaSink> MediaDecoderStateMachine::CreateMediaSink() {
+  MOZ_ASSERT(OnTaskQueue());
   RefPtr<MediaSink> audioSink =
-      aOutputCaptured
-          ? new DecodedStream(this, mOutputTracks, mAudioQueue, mVideoQueue)
+      mOutputCaptured
+          ? new DecodedStream(this, mOutputTracks, mVolume, mPlaybackRate,
+                              mPreservesPitch, mAudioQueue, mVideoQueue)
           : CreateAudioSink();
 
   RefPtr<MediaSink> mediaSink =
@@ -2818,8 +2824,6 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder) {
 
   mOnMediaNotSeekable = mReader->OnMediaNotSeekable().Connect(
       OwnerThread(), this, &MediaDecoderStateMachine::SetMediaNotSeekable);
-
-  mMediaSink = CreateMediaSink(mOutputCaptured);
 
   nsresult rv = mReader->Init();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3544,7 +3548,7 @@ void MediaDecoderStateMachine::UpdateOutputCaptured() {
   mMediaSink->Shutdown();
 
   // Create a new sink according to whether output is captured.
-  mMediaSink = CreateMediaSink(mOutputCaptured);
+  mMediaSink = CreateMediaSink();
 
   // Don't buffer as much when audio is captured because we don't need to worry
   // about high latency audio devices.
@@ -3570,42 +3574,35 @@ RefPtr<GenericPromise> MediaDecoderStateMachine::InvokeSetSink(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aSink);
 
-  Unused << ++mSetSinkRequestsCount;
   return InvokeAsync(OwnerThread(), this, __func__,
                      &MediaDecoderStateMachine::SetSink, aSink);
 }
 
 RefPtr<GenericPromise> MediaDecoderStateMachine::SetSink(
-    RefPtr<AudioDeviceInfo> aSink) {
+    RefPtr<AudioDeviceInfo> aSinkDevice) {
   MOZ_ASSERT(OnTaskQueue());
   if (mOutputCaptured) {
     // Not supported yet.
     return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
   }
 
-  // Backup current playback parameters.
-  bool wasPlaying = mMediaSink->IsPlaying();
-
-  if (--mSetSinkRequestsCount > 0) {
-    MOZ_ASSERT(mSetSinkRequestsCount > 0);
-    return GenericPromise::CreateAndResolve(wasPlaying, __func__);
+  if (mSinkDevice.Ref() != aSinkDevice) {
+    // A new sink was set before this ran.
+    return GenericPromise::CreateAndResolve(IsPlaying(), __func__);
   }
 
-  MediaSink::PlaybackParams params = mMediaSink->GetPlaybackParams();
-  params.mSink = std::move(aSink);
-
-  if (!mMediaSink->IsStarted()) {
-    mMediaSink->SetPlaybackParams(params);
-    return GenericPromise::CreateAndResolve(false, __func__);
+  if (mMediaSink->AudioDevice() == aSinkDevice) {
+    // The sink has not changed.
+    return GenericPromise::CreateAndResolve(IsPlaying(), __func__);
   }
+
+  const bool wasPlaying = IsPlaying();
 
   // Stop and shutdown the existing sink.
   StopMediaSink();
   mMediaSink->Shutdown();
   // Create a new sink according to whether audio is captured.
-  mMediaSink = CreateMediaSink(false);
-  // Restore playback parameters.
-  mMediaSink->SetPlaybackParams(params);
+  mMediaSink = CreateMediaSink();
   // Start the new sink
   if (wasPlaying) {
     nsresult rv = StartMediaSink();
