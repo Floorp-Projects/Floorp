@@ -1,0 +1,2 @@
+mozglue/static contains parts of the mozglue library that can/should be
+statically linked to e.g. js/Gecko.

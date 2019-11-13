@@ -140,7 +140,7 @@ def log_crashes(logger,
 # determining the appropriate frame for the crash signature.
 ABORT_SIGNATURES = (
     "Abort(char const*)",
-    "GeckoCrash",
+    "RustMozCrash",
     "NS_DebugBreak",
     # This signature is part of Rust panic stacks on some platforms. On
     # others, it includes a template parameter containing "core::panic::" and

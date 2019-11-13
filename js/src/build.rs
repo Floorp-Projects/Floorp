@@ -47,6 +47,7 @@ fn main() {
                "--dep",
                "--objdir", &out_dir,
                &variant])
+        .env("NO_RUST_PANIC_HOOK", "1")
         .env("SOURCE", &js_src)
         .env("PWD", &js_src)
         .stdout(Stdio::inherit())
