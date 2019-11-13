@@ -49,11 +49,6 @@ InProcessCompositorWidget::GetNativeLayerRoot() {
   return mWidget->GetNativeLayerRoot();
 }
 
-void InProcessCompositorWidget::DrawWindowOverlay(
-    WidgetRenderingContext* aContext, LayoutDeviceIntRect aRect) {
-  mWidget->DrawWindowOverlay(aContext, aRect);
-}
-
 already_AddRefed<gfx::DrawTarget>
 InProcessCompositorWidget::StartRemoteDrawing() {
   return mWidget->StartRemoteDrawing();
