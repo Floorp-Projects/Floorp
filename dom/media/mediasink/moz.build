@@ -8,6 +8,7 @@ UNIFIED_SOURCES += [
     'AudioSink.cpp',
     'AudioSinkWrapper.cpp',
     'DecodedStream.cpp',
+    'OutputStreamManager.cpp',
     'VideoSink.cpp',
 ]
 

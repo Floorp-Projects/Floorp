@@ -10,19 +10,19 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-const manager = new MediaTestManager;
+var manager = new MediaTestManager;
 
 function startTest(test, token) {
-  const elemType = getMajorMimeType(test.type);
-  const element = document.createElement(elemType);
+  var elemType = getMajorMimeType(test.type);
+  var element = document.createElement(elemType);
 
-  let audioOnchange = 0;
-  let audioOnaddtrack = 0;
-  let audioOnremovetrack = 0;
-  let videoOnchange = 0;
-  let videoOnaddtrack = 0;
-  let videoOnremovetrack = 0;
-  let isPlaying = false;
+  var audioOnchange = 0;
+  var audioOnaddtrack = 0;
+  var audioOnremovetrack = 0;
+  var videoOnchange = 0;
+  var videoOnaddtrack = 0;
+  var videoOnremovetrack = 0;
+  var isPlaying = false;
 
   isnot(element.audioTracks, undefined,
         'HTMLMediaElement::AudioTracks() property should be available.');
@@ -53,43 +53,26 @@ function startTest(test, token) {
     videoOnchange++;
   }
 
-  function checkTrackNotRemoved() {
-    is(audioOnremovetrack, 0, 'Should have no calls of onremovetrack on audioTracks.');
-    is(videoOnremovetrack, 0, 'Should have no calls of onremovetrack on videoTracks.');
-    if (isPlaying) {
-      is(element.audioTracks.length, test.hasAudio ? 1 : 0,
-        'Expected length of audioTracks.');
-      is(element.videoTracks.length, test.hasVideo ? 1 : 0,
-        'Expected length of videoTracks.');
-    }
-  }
-
   function checkTrackRemoved() {
-    is(element.audioTracks.length, 0, 'The length of audioTracks should be 0.');
-    is(element.videoTracks.length, 0, 'The length of videoTracks should be 0.');
     if (isPlaying) {
-      is(audioOnremovetrack, test.hasAudio ? 1 : 0,
-        'Expected calls of onremovetrack on audioTracks.');
-      is(videoOnremovetrack, test.hasVideo ? 1 : 0,
-        'Expected calls of onremovetrack on videoTracks.');
+      if (test.hasAudio) {
+        is(audioOnremovetrack, 1, 'Calls of onremovetrack on audioTracks should be 1.');
+        is(element.audioTracks.length, 0, 'The length of audioTracks should be 0.');
+      }
+      if (test.hasVideo) {
+        is(videoOnremovetrack, 1, 'Calls of onremovetrack on videoTracks should be 1.');
+        is(element.videoTracks.length, 0, 'The length of videoTracks should be 0.');
+      }
     }
   }
 
   function onended() {
     ok(true, 'Event ended is expected to be fired on element.');
-    checkTrackNotRemoved();
+    checkTrackRemoved();
     element.onended = null;
     element.onplaying = null;
     element.onpause = null;
-    element.src = "";
-    is(element.audioTracks.length, 0, 'audioTracks have been forgotten');
-    is(element.videoTracks.length, 0, 'videoTracks have been forgotten');
-    is(audioOnremovetrack, 0, 'No audio removetrack events yet');
-    is(videoOnremovetrack, 0, 'No video removetrack events yet');
-    setTimeout(() => {
-      checkTrackRemoved();
-      manager.finished(element.token);
-    }, 100);
+    manager.finished(element.token);
   }
 
   function checkTrackAdded() {
