@@ -636,7 +636,7 @@ class NodeBuilder {
   MOZ_MUST_USE bool updateExpression(HandleValue expr, bool incr, bool prefix,
                                      TokenPos* pos, MutableHandleValue dst);
 
-  MOZ_MUST_USE bool logicalExpression(bool lor, HandleValue left,
+  MOZ_MUST_USE bool logicalExpression(ParseNodeKind pnk, HandleValue left,
                                       HandleValue right, TokenPos* pos,
                                       MutableHandleValue dst);
 
@@ -1105,12 +1105,28 @@ bool NodeBuilder::updateExpression(HandleValue expr, bool incr, bool prefix,
                  "prefix", prefixVal, dst);
 }
 
-bool NodeBuilder::logicalExpression(bool lor, HandleValue left,
+bool NodeBuilder::logicalExpression(ParseNodeKind pnk, HandleValue left,
                                     HandleValue right, TokenPos* pos,
                                     MutableHandleValue dst) {
   RootedValue opName(cx);
-  if (!atomValue(lor ? "||" : "&&", &opName)) {
-    return false;
+  switch (pnk) {
+    case ParseNodeKind::OrExpr:
+      if (!atomValue("||", &opName)) {
+        return false;
+      }
+      break;
+    case ParseNodeKind::CoalesceExpr:
+      if (!atomValue("??", &opName)) {
+        return false;
+      }
+      break;
+    case ParseNodeKind::AndExpr:
+      if (!atomValue("&&", &opName)) {
+        return false;
+      }
+      break;
+    default:
+      MOZ_CRASH("Unexpected ParseNodeKind: Must be `Or`, `And`, or `Coalesce`");
   }
 
   RootedValue cb(cx, callbacks[AST_LOGICAL_EXPR]);
@@ -2568,9 +2584,10 @@ bool ASTSerializer::classField(ClassField* classField, MutableHandleValue dst) {
 bool ASTSerializer::leftAssociate(ListNode* node, MutableHandleValue dst) {
   MOZ_ASSERT(!node->empty());
 
-  ParseNodeKind kind = node->getKind();
-  bool lor = kind == ParseNodeKind::OrExpr;
-  bool logop = lor || kind == ParseNodeKind::AndExpr;
+  ParseNodeKind pnk = node->getKind();
+  bool lor = pnk == ParseNodeKind::OrExpr;
+  bool coalesce = pnk == ParseNodeKind::CoalesceExpr;
+  bool logop = lor || coalesce || pnk == ParseNodeKind::AndExpr;
 
   ParseNode* head = node->head();
   RootedValue left(cx);
@@ -2586,7 +2603,7 @@ bool ASTSerializer::leftAssociate(ListNode* node, MutableHandleValue dst) {
     TokenPos subpos(node->pn_pos.begin, next->pn_pos.end);
 
     if (logop) {
-      if (!builder.logicalExpression(lor, left, right, &subpos, &left)) {
+      if (!builder.logicalExpression(pnk, left, right, &subpos, &left)) {
         return false;
       }
     } else {
