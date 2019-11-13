@@ -392,6 +392,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
             spocs_per_domain: layoutResp.spocs.spocs_per_domain,
           },
         });
+        this.updatePlacements(sendUpdate, layoutResp.layout);
       }
     }
   }
