@@ -443,4 +443,22 @@ TEST(TArray, RemoveElementsAt_ByIterator)
   ASSERT_EQ(expected, array);
 }
 
+static_assert(std::is_copy_assignable<decltype(
+                  MakeBackInserter(std::declval<nsTArray<int>&>()))>::value,
+              "output iteraror must be copy-assignable");
+static_assert(std::is_copy_constructible<decltype(
+                  MakeBackInserter(std::declval<nsTArray<int>&>()))>::value,
+              "output iterator must be copy-constructible");
+
+TEST(TArray, MakeBackInserter)
+{
+  const std::vector<int> src{1, 2, 3, 4};
+  nsTArray<int> dst;
+
+  std::copy(src.begin(), src.end(), MakeBackInserter(dst));
+
+  const nsTArray<int> expected{1, 2, 3, 4};
+  ASSERT_EQ(expected, dst);
+}
+
 }  // namespace TestTArray
