@@ -4,6 +4,8 @@
 
 "use strict";
 
+startupAddonsManager();
+
 async function connect() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
@@ -14,12 +16,6 @@ async function connect() {
   const addons = await client.mainRoot.getFront("addons");
   return [client, addons];
 }
-
-// The AddonsManager test helper can only be called once per test script.
-// This `setup` task will run first.
-add_task(async function setup() {
-  await startupAddonsManager();
-});
 
 add_task(async function testSuccessfulInstall() {
   const [client, addons] = await connect();
