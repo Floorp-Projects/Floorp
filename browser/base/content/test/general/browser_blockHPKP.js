@@ -26,9 +26,10 @@ const gSSService = Cc["@mozilla.org/ssservice;1"].getService(
 );
 
 const kPinningDomain = "include-subdomains.pinning-dynamic.example.com";
-const khpkpPinninEnablePref =
+const kHPKPEnabledPref = "security.cert_pinning.hpkp.enabled";
+const kProcessHPKPFromNonBuiltInRootsPref =
   "security.cert_pinning.process_headers_from_non_builtin_roots";
-const kpkpEnforcementPref = "security.cert_pinning.enforcement_level";
+const kPinningEnforcementPref = "security.cert_pinning.enforcement_level";
 const kBadPinningDomain = "bad.include-subdomains.pinning-dynamic.example.com";
 const kURLPath =
   "/browser/browser/base/content/test/general/pinning_headers.sjs?";
@@ -37,11 +38,13 @@ function test() {
   waitForExplicitFinish();
   // Enable enforcing strict pinning and processing headers from
   // non-builtin roots.
-  Services.prefs.setIntPref(kpkpEnforcementPref, 2);
-  Services.prefs.setBoolPref(khpkpPinninEnablePref, true);
+  Services.prefs.setIntPref(kPinningEnforcementPref, 2);
+  Services.prefs.setBoolPref(kHPKPEnabledPref, true);
+  Services.prefs.setBoolPref(kProcessHPKPFromNonBuiltInRootsPref, true);
   registerCleanupFunction(function() {
-    Services.prefs.clearUserPref(kpkpEnforcementPref);
-    Services.prefs.clearUserPref(khpkpPinninEnablePref);
+    Services.prefs.clearUserPref(kPinningEnforcementPref);
+    Services.prefs.clearUserPref(kHPKPEnabledPref);
+    Services.prefs.clearUserPref(kProcessHPKPFromNonBuiltInRootsPref);
     let uri = Services.io.newURI("https://" + kPinningDomain);
     gSSService.resetState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
   });

@@ -109,6 +109,7 @@ const MULTIPLE_KEYS =
   PINNING_ROOT_KEY_HASH + STARTS_WITH_NUMBER + STARTS_WITH_SYMBOL;
 
 function run_test() {
+  Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", true);
   let profileDir = do_get_profile();
   let stateFile = profileDir.clone();
   stateFile.append(SSS_STATE_FILE_NAME);

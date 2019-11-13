@@ -201,11 +201,13 @@ function add_tests() {
 }
 
 registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.cert_pinning.hpkp.enabled");
   Services.prefs.clearUserPref("security.cert_pinning.enforcement_level");
   Services.prefs.clearUserPref("security.cert_pinning.max_max_age_seconds");
 });
 
 function run_test() {
+  Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", true);
   Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 2);
   Services.prefs.setIntPref(
     "security.cert_pinning.max_max_age_seconds",
