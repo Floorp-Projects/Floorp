@@ -1,19 +1,25 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-var prefs;
-var h2Port;
-var listen;
+let prefs;
+let h2Port;
+let listen;
 
-var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
-var threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
+const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
+  Ci.nsIDNSService
+);
+const threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
   Ci.nsIThreadManager
 );
-var mainThread = threadManager.currentThread;
+const mainThread = threadManager.currentThread;
 
 const defaultOriginAttributes = {};
 
-function run_test() {
-  var env = Cc["@mozilla.org/process/environment;1"].getService(
+function setup() {
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
   );
   h2Port = env.get("MOZHTTP2_PORT");
@@ -39,16 +45,19 @@ function run_test() {
   // don't confirm that TRR is working, just go!
   prefs.setCharPref("network.trr.confirmationNS", "skip");
 
+  // So we can change the pref without clearing the cache to check a pushed
+  // record with a TRR path that fails.
+  Services.prefs.setBoolPref("network.trr.clear-cache-on-pref-change", false);
+
   // The moz-http2 cert is for foo.example.com and is signed by http2-ca.pem
   // so add that cert to the trust list as a signing cert.  // the foo.example.com domain name.
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+  const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
     Ci.nsIX509CertDB
   );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
-  do_test_pending();
-  run_dns_tests();
 }
 
+setup();
 registerCleanupFunction(() => {
   prefs.clearUserPref("network.security.esni.enabled");
   prefs.clearUserPref("network.http.spdy.enabled");
@@ -65,46 +74,43 @@ registerCleanupFunction(() => {
   prefs.clearUserPref("network.trr.bootstrapAddress");
   prefs.clearUserPref("network.trr.blacklist-duration");
   prefs.clearUserPref("network.trr.request-timeout");
+  prefs.clearUserPref("network.trr.clear-cache-on-pref-change");
 });
 
-var test_answer = "bXkgdm9pY2UgaXMgbXkgcGFzc3dvcmQ=";
-var test_answer_addr = "127.0.0.1";
+let test_answer = "bXkgdm9pY2UgaXMgbXkgcGFzc3dvcmQ=";
+let test_answer_addr = "127.0.0.1";
 
-// check that we do lookup by type fine
-var listenerEsni = {
+class DNSListener {
+  constructor() {
+    this.promise = new Promise(resolve => {
+      this.resolve = resolve;
+    });
+  }
   onLookupByTypeComplete(inRequest, inRecord, inStatus) {
-    if (inRequest == listen) {
-      Assert.ok(!inStatus);
-      var answer = inRecord.getRecordsAsOneString();
-      Assert.equal(answer, test_answer);
-      do_test_finished();
-      run_dns_tests();
-    }
-  },
-  QueryInterface: ChromeUtils.generateQI(["nsIDNSListener"]),
-};
-
-// check that we do lookup for A record is fine
-var listenerAddr = {
+    this.resolve([inRequest, inRecord, inStatus, "onLookupByTypeComplete"]);
+  }
   onLookupComplete(inRequest, inRecord, inStatus) {
-    if (inRequest == listen) {
-      Assert.ok(!inStatus);
-      var answer = inRecord.getNextAddrAsString();
-      Assert.equal(answer, test_answer_addr);
-      do_test_finished();
-      run_dns_tests();
-    }
-  },
-  QueryInterface: ChromeUtils.generateQI(["nsIDNSListener"]),
-};
+    this.resolve([inRequest, inRecord, inStatus, "onLookupComplete"]);
+  }
+  // So we can await this as a promise.
+  then() {
+    return this.promise.then.apply(this.promise, arguments);
+  }
+}
 
-function testEsniRequest() {
+DNSListener.prototype.QueryInterface = ChromeUtils.generateQI([
+  Ci.nsIDNSListener,
+]);
+
+add_task(async function testEsniRequest() {
   // use the h2 server as DOH provider
   prefs.setCharPref(
     "network.trr.uri",
     "https://foo.example.com:" + h2Port + "/esni-dns"
   );
-  listen = dns.asyncResolveByType(
+
+  let listenerEsni = new DNSListener();
+  let request = dns.asyncResolveByType(
     "_esni.example.com",
     dns.RESOLVE_TYPE_TXT,
     0,
@@ -112,32 +118,48 @@ function testEsniRequest() {
     mainThread,
     defaultOriginAttributes
   );
-}
+
+  let [inRequest, inRecord, inStatus, inType] = await listenerEsni;
+  Assert.equal(inType, "onLookupByTypeComplete", "check correct type");
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.equal(inStatus, Cr.NS_OK, "status OK");
+  let answer = inRecord.getRecordsAsOneString();
+  Assert.equal(answer, test_answer, "got correct answer");
+});
 
 // verify esni record pushed on a A record request
-function testEsniPushPart1() {
+add_task(async function testEsniPushPart1() {
   prefs.setCharPref(
     "network.trr.uri",
     "https://foo.example.com:" + h2Port + "/esni-dns-push"
   );
-  listen = dns.asyncResolve(
+  let listenerAddr = new DNSListener();
+  let request = dns.asyncResolve(
     "_esni_push.example.com",
     0,
     listenerAddr,
     mainThread,
     defaultOriginAttributes
   );
-}
+
+  let [inRequest, inRecord, inStatus, inType] = await listenerAddr;
+  Assert.equal(inType, "onLookupComplete", "check correct type");
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.equal(inStatus, Cr.NS_OK, "status OK");
+  let answer = inRecord.getNextAddrAsString();
+  Assert.equal(answer, test_answer_addr, "got correct answer");
+});
 
 // verify the esni pushed record
-function testEsniPushPart2() {
+add_task(async function testEsniPushPart2() {
   // At this point the second host name should've been pushed and we can resolve it using
   // cache only. Set back the URI to a path that fails.
   prefs.setCharPref(
     "network.trr.uri",
     "https://foo.example.com:" + h2Port + "/404"
   );
-  listen = dns.asyncResolveByType(
+  let listenerEsni = new DNSListener();
+  let request = dns.asyncResolveByType(
     "_esni_push.example.com",
     dns.RESOLVE_TYPE_TXT,
     0,
@@ -145,20 +167,11 @@ function testEsniPushPart2() {
     mainThread,
     defaultOriginAttributes
   );
-}
 
-function testsDone() {
-  do_test_finished();
-  do_test_finished();
-}
-
-var tests = [testEsniRequest, testEsniPushPart1, testEsniPushPart2, testsDone];
-var current_test = 0;
-
-function run_dns_tests() {
-  if (current_test < tests.length) {
-    dump("starting test " + current_test + "\n");
-    do_test_pending();
-    tests[current_test++]();
-  }
-}
+  let [inRequest, inRecord, inStatus, inType] = await listenerEsni;
+  Assert.equal(inType, "onLookupByTypeComplete", "check correct type");
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.equal(inStatus, Cr.NS_OK, "status OK");
+  let answer = inRecord.getRecordsAsOneString();
+  Assert.equal(answer, test_answer, "got correct answer");
+});
