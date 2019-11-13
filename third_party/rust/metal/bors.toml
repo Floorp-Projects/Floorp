@@ -1,8 +1,0 @@
-status = [ "continuous-integration/travis-ci/push" ]
-
-# Based on <https://travis-ci.org/gfx-rs/metal-rs/builds/289529648>,
-# we can expect a build to spend four hours in Travis CI's queue.
-#
-# This gives the build five hours to run, with four hours to sit
-# and one hour to actually work.
-timeout-sec = 18000

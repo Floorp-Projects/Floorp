@@ -1,15 +1,9 @@
-use core::{fmt, str};
-
-cfg_if::cfg_if! {
-    if #[cfg(feature = "std")] {
-        use std::path::Path;
-        use std::prelude::v1::*;
-    }
-}
-
-use crate::backtrace::Frame;
-use crate::types::BytesOrWideString;
-use core::ffi::c_void;
+use std::fmt;
+#[cfg(not(feature = "cpp_demangle"))]
+use std::marker::PhantomData;
+use std::os::raw::c_void;
+use std::path::Path;
+use std::str;
 use rustc_demangle::{try_demangle, Demangle};
 
 /// Resolve an address to a symbol, passing the symbol to the specified
@@ -24,21 +18,6 @@ use rustc_demangle::{try_demangle, Demangle};
 ///
 /// Symbols yielded represent the execution at the specified `addr`, returning
 /// file/line pairs for that address (if available).
-///
-/// Note that if you have a `Frame` then it's recommended to use the
-/// `resolve_frame` function instead of this one.
-///
-/// # Required features
-///
-/// This function requires the `std` feature of the `backtrace` crate to be
-/// enabled, and the `std` feature is enabled by default.
-///
-/// # Panics
-///
-/// This function strives to never panic, but if the `cb` provided panics then
-/// some platforms will force a double panic to abort the process. Some
-/// platforms use a C library which internally uses callbacks which cannot be
-/// unwound through, so panicking from `cb` may trigger a process abort.
 ///
 /// # Example
 ///
@@ -57,125 +36,8 @@ use rustc_demangle::{try_demangle, Demangle};
 ///     });
 /// }
 /// ```
-#[cfg(feature = "std")]
-pub fn resolve<F: FnMut(&Symbol)>(addr: *mut c_void, cb: F) {
-    let _guard = crate::lock::lock();
-    unsafe { resolve_unsynchronized(addr, cb) }
-}
-
-/// Resolve a previously capture frame to a symbol, passing the symbol to the
-/// specified closure.
-///
-/// This functin performs the same function as `resolve` except that it takes a
-/// `Frame` as an argument instead of an address. This can allow some platform
-/// implementations of backtracing to provide more accurate symbol information
-/// or information about inline frames for example. It's recommended to use this
-/// if you can.
-///
-/// # Required features
-///
-/// This function requires the `std` feature of the `backtrace` crate to be
-/// enabled, and the `std` feature is enabled by default.
-///
-/// # Panics
-///
-/// This function strives to never panic, but if the `cb` provided panics then
-/// some platforms will force a double panic to abort the process. Some
-/// platforms use a C library which internally uses callbacks which cannot be
-/// unwound through, so panicking from `cb` may trigger a process abort.
-///
-/// # Example
-///
-/// ```
-/// extern crate backtrace;
-///
-/// fn main() {
-///     backtrace::trace(|frame| {
-///         backtrace::resolve_frame(frame, |symbol| {
-///             // ...
-///         });
-///
-///         false // only look at the top frame
-///     });
-/// }
-/// ```
-#[cfg(feature = "std")]
-pub fn resolve_frame<F: FnMut(&Symbol)>(frame: &Frame, cb: F) {
-    let _guard = crate::lock::lock();
-    unsafe { resolve_frame_unsynchronized(frame, cb) }
-}
-
-pub enum ResolveWhat<'a> {
-    Address(*mut c_void),
-    Frame(&'a Frame),
-}
-
-impl<'a> ResolveWhat<'a> {
-    #[allow(dead_code)]
-    fn address_or_ip(&self) -> *mut c_void {
-        match self {
-            ResolveWhat::Address(a) => adjust_ip(*a),
-            ResolveWhat::Frame(f) => adjust_ip(f.ip()),
-        }
-    }
-}
-
-// IP values from stack frames are typically (always?) the instruction
-// *after* the call that's the actual stack trace. Symbolizing this on
-// causes the filename/line number to be one ahead and perhaps into
-// the void if it's near the end of the function.
-//
-// This appears to basically always be the case on all platforms, so we always
-// subtract one from a resolved ip to resolve it to the previous call
-// instruction instead of the instruction being returned to.
-//
-// Ideally we would not do this. Ideally we would require callers of the
-// `resolve` APIs here to manually do the -1 and account that they want location
-// information for the *previous* instruction, not the current. Ideally we'd
-// also expose on `Frame` if we are indeed the address of the next instruction
-// or the current.
-//
-// For now though this is a pretty niche concern so we just internally always
-// subtract one. Consumers should keep working and getting pretty good results,
-// so we should be good enough.
-fn adjust_ip(a: *mut c_void) -> *mut c_void {
-    if a.is_null() {
-        a
-    } else {
-        (a as usize - 1) as *mut c_void
-    }
-}
-
-/// Same as `resolve`, only unsafe as it's unsynchronized.
-///
-/// This function does not have synchronization guarentees but is available when
-/// the `std` feature of this crate isn't compiled in. See the `resolve`
-/// function for more documentation and examples.
-///
-/// # Panics
-///
-/// See information on `resolve` for caveats on `cb` panicking.
-pub unsafe fn resolve_unsynchronized<F>(addr: *mut c_void, mut cb: F)
-where
-    F: FnMut(&Symbol),
-{
-    resolve_imp(ResolveWhat::Address(addr), &mut cb)
-}
-
-/// Same as `resolve_frame`, only unsafe as it's unsynchronized.
-///
-/// This function does not have synchronization guarentees but is available
-/// when the `std` feature of this crate isn't compiled in. See the
-/// `resolve_frame` function for more documentation and examples.
-///
-/// # Panics
-///
-/// See information on `resolve_frame` for caveats on `cb` panicking.
-pub unsafe fn resolve_frame_unsynchronized<F>(frame: &Frame, mut cb: F)
-where
-    F: FnMut(&Symbol),
-{
-    resolve_imp(ResolveWhat::Frame(frame), &mut cb)
+pub fn resolve<F: FnMut(&Symbol)>(addr: *mut c_void, mut cb: F) {
+    resolve_imp(addr, &mut cb)
 }
 
 /// A trait representing the resolution of a symbol in a file.
@@ -188,10 +50,7 @@ where
 /// name, filename, line number, precise address, etc. Not all information is
 /// always available in a symbol, however, so all methods return an `Option`.
 pub struct Symbol {
-    // TODO: this lifetime bound needs to be persisted eventually to `Symbol`,
-    // but that's currently a breaking change. For now this is safe since
-    // `Symbol` is only ever handed out by reference and can't be cloned.
-    inner: SymbolImp<'static>,
+    inner: SymbolImp,
 }
 
 impl Symbol {
@@ -210,21 +69,7 @@ impl Symbol {
 
     /// Returns the starting address of this function.
     pub fn addr(&self) -> Option<*mut c_void> {
-        self.inner.addr().map(|p| p as *mut _)
-    }
-
-    /// Returns the raw filename as a slice. This is mainly useful for `no_std`
-    /// environments.
-    pub fn filename_raw(&self) -> Option<BytesOrWideString> {
-        self.inner.filename_raw()
-    }
-
-    /// Returns the line number for where this symbol is currently executing.
-    ///
-    /// This return value is typically `Some` if `filename` returns `Some`, and
-    /// is consequently subject to similar caveats.
-    pub fn lineno(&self) -> Option<u32> {
-        self.inner.lineno()
+        self.inner.addr()
     }
 
     /// Returns the file name where this function was defined.
@@ -233,15 +78,16 @@ impl Symbol {
     /// unix platforms other than OSX) and when a binary is compiled with
     /// debuginfo. If neither of these conditions is met then this will likely
     /// return `None`.
-    ///
-    /// # Required features
-    ///
-    /// This function requires the `std` feature of the `backtrace` crate to be
-    /// enabled, and the `std` feature is enabled by default.
-    #[cfg(feature = "std")]
-    #[allow(unreachable_code)]
     pub fn filename(&self) -> Option<&Path> {
         self.inner.filename()
+    }
+
+    /// Returns the line number for where this symbol is currently executing.
+    ///
+    /// This return value is typically `Some` if `filename` returns `Some`, and
+    /// is consequently subject to similar caveats.
+    pub fn lineno(&self) -> Option<u32> {
+        self.inner.lineno()
     }
 }
 
@@ -254,14 +100,9 @@ impl fmt::Debug for Symbol {
         if let Some(addr) = self.addr() {
             d.field("addr", &addr);
         }
-
-        #[cfg(feature = "std")]
-        {
-            if let Some(filename) = self.filename() {
-                d.field("filename", &filename);
-            }
+        if let Some(filename) = self.filename() {
+            d.field("filename", &filename);
         }
-
         if let Some(lineno) = self.lineno() {
             d.field("lineno", &lineno);
         }
@@ -269,7 +110,8 @@ impl fmt::Debug for Symbol {
     }
 }
 
-cfg_if::cfg_if! {
+
+cfg_if! {
     if #[cfg(feature = "cpp_demangle")] {
         // Maybe a parsed C++ symbol, if parsing the mangled symbol as Rust
         // failed.
@@ -285,8 +127,6 @@ cfg_if::cfg_if! {
             }
         }
     } else {
-        use core::marker::PhantomData;
-
         // Make sure to keep this zero-sized, so that the `cpp_demangle` feature
         // has no cost when disabled.
         struct OptionCppSymbol<'a>(PhantomData<&'a ()>);
@@ -332,14 +172,14 @@ impl<'a> SymbolName<'a> {
         }
     }
 
-    /// Returns the raw (mangled) symbol name as a `str` if the symbol is valid utf-8.
-    ///
-    /// Use the `Display` implementation if you want the demangled version.
+    /// Returns the raw symbol name as a `str` if the symbols is valid utf-8.
     pub fn as_str(&self) -> Option<&'a str> {
         self.demangled
             .as_ref()
             .map(|s| s.as_str())
-            .or_else(|| str::from_utf8(self.bytes).ok())
+            .or_else(|| {
+                str::from_utf8(self.bytes).ok()
+            })
     }
 
     /// Returns the raw symbol name as a list of bytes
@@ -348,31 +188,7 @@ impl<'a> SymbolName<'a> {
     }
 }
 
-fn format_symbol_name(
-    fmt: fn(&str, &mut fmt::Formatter) -> fmt::Result,
-    mut bytes: &[u8],
-    f: &mut fmt::Formatter,
-) -> fmt::Result {
-    while bytes.len() > 0 {
-        match str::from_utf8(bytes) {
-            Ok(name) => {
-                fmt(name, f)?;
-                break;
-            }
-            Err(err) => {
-                fmt("\u{FFFD}", f)?;
-
-                match err.error_len() {
-                    Some(len) => bytes = &bytes[err.valid_up_to() + len..],
-                    None => break,
-                }
-            }
-        }
-    }
-    Ok(())
-}
-
-cfg_if::cfg_if! {
+cfg_if! {
     if #[cfg(feature = "cpp_demangle")] {
         impl<'a> fmt::Display for SymbolName<'a> {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -381,7 +197,7 @@ cfg_if::cfg_if! {
                 } else if let Some(ref cpp) = self.cpp_demangled.0 {
                     cpp.fmt(f)
                 } else {
-                    format_symbol_name(fmt::Display::fmt, self.bytes, f)
+                    String::from_utf8_lossy(self.bytes).fmt(f)
                 }
             }
         }
@@ -391,15 +207,15 @@ cfg_if::cfg_if! {
                 if let Some(ref s) = self.demangled {
                     s.fmt(f)
                 } else {
-                    format_symbol_name(fmt::Display::fmt, self.bytes, f)
+                    String::from_utf8_lossy(self.bytes).fmt(f)
                 }
             }
         }
     }
 }
 
-cfg_if::cfg_if! {
-    if #[cfg(all(feature = "std", feature = "cpp_demangle"))] {
+cfg_if! {
+    if #[cfg(feature = "cpp_demangle")] {
         impl<'a> fmt::Debug for SymbolName<'a> {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 use std::fmt::Write;
@@ -418,7 +234,7 @@ cfg_if::cfg_if! {
                     }
                 }
 
-                format_symbol_name(fmt::Debug::fmt, self.bytes, f)
+                String::from_utf8_lossy(self.bytes).fmt(f)
             }
         }
     } else {
@@ -427,55 +243,34 @@ cfg_if::cfg_if! {
                 if let Some(ref s) = self.demangled {
                     s.fmt(f)
                 } else {
-                    format_symbol_name(fmt::Debug::fmt, self.bytes, f)
+                    String::from_utf8_lossy(self.bytes).fmt(f)
                 }
             }
         }
     }
 }
 
-/// Attempt to reclaim that cached memory used to symbolicate addresses.
-///
-/// This method will attempt to release any global data structures that have
-/// otherwise been cached globally or in the thread which typically represent
-/// parsed DWARF information or similar.
-///
-/// # Caveats
-///
-/// While this function is always available it doesn't actually do anything on
-/// most implementations. Libraries like dbghelp or libbacktrace do not provide
-/// facilities to deallocate state and manage the allocated memory. For now the
-/// `gimli-symbolize` feature of this crate is the only feature where this
-/// function has any effect.
-#[cfg(feature = "std")]
-pub fn clear_symbol_cache() {
-    let _guard = crate::lock::lock();
-    unsafe {
-        clear_symbol_cache_imp();
-    }
-}
-
-mod dladdr;
-
-cfg_if::cfg_if! {
-    if #[cfg(all(windows, target_env = "msvc", feature = "dbghelp", not(target_vendor = "uwp")))] {
+cfg_if! {
+    if #[cfg(all(windows, feature = "dbghelp"))] {
         mod dbghelp;
         use self::dbghelp::resolve as resolve_imp;
         use self::dbghelp::Symbol as SymbolImp;
-        unsafe fn clear_symbol_cache_imp() {}
-    } else if #[cfg(all(
-        feature = "std",
-        feature = "gimli-symbolize",
-        any(
-            target_os = "linux",
-            target_os = "macos",
-            windows,
-        ),
-    ))] {
+    } else if #[cfg(all(feature = "gimli-symbolize",
+                        unix,
+                        target_os = "linux"))] {
         mod gimli;
         use self::gimli::resolve as resolve_imp;
         use self::gimli::Symbol as SymbolImp;
-        use self::gimli::clear_symbol_cache as clear_symbol_cache_imp;
+    } else if #[cfg(all(feature = "libbacktrace",
+                        unix,
+                        not(target_os = "fuchsia"),
+                        not(target_os = "emscripten"),
+                        not(target_os = "macos"),
+                        not(target_os = "ios")))] {
+        mod libbacktrace;
+        use self::libbacktrace::resolve as resolve_imp;
+        use self::libbacktrace::Symbol as SymbolImp;
+
     // Note that we only enable coresymbolication on iOS when debug assertions
     // are enabled because it's helpful in debug mode but it looks like apps get
     // rejected from the app store if they use this API, see #92 for more info
@@ -485,28 +280,15 @@ cfg_if::cfg_if! {
         mod coresymbolication;
         use self::coresymbolication::resolve as resolve_imp;
         use self::coresymbolication::Symbol as SymbolImp;
-        unsafe fn clear_symbol_cache_imp() {}
-    } else if #[cfg(all(feature = "libbacktrace",
-                        any(unix, all(windows, not(target_vendor = "uwp"), target_env = "gnu")),
-                        not(target_os = "fuchsia"),
-                        not(target_os = "emscripten")))] {
-        mod libbacktrace;
-        use self::libbacktrace::resolve as resolve_imp;
-        use self::libbacktrace::Symbol as SymbolImp;
-        unsafe fn clear_symbol_cache_imp() {}
     } else if #[cfg(all(unix,
                         not(target_os = "emscripten"),
-                        not(target_os = "fuchsia"),
                         feature = "dladdr"))] {
-        mod dladdr_resolve;
-        use self::dladdr_resolve::resolve as resolve_imp;
-        use self::dladdr_resolve::Symbol as SymbolImp;
-        unsafe fn clear_symbol_cache_imp() {}
+        mod dladdr;
+        use self::dladdr::resolve as resolve_imp;
+        use self::dladdr::Symbol as SymbolImp;
     } else {
         mod noop;
         use self::noop::resolve as resolve_imp;
         use self::noop::Symbol as SymbolImp;
-        #[allow(unused)]
-        unsafe fn clear_symbol_cache_imp() {}
     }
 }

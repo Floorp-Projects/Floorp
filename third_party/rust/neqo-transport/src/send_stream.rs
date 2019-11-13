@@ -16,7 +16,7 @@ use std::rc::Rc;
 use slice_deque::SliceDeque;
 use smallvec::SmallVec;
 
-use neqo_common::{matches, qdebug, qerror, qinfo, qtrace, qwarn, Encoder};
+use neqo_common::{matches, qerror, qinfo, qtrace, qwarn, Encoder};
 
 use crate::events::ConnectionEvents;
 use crate::flow_mgr::FlowMgr;
@@ -299,31 +299,20 @@ impl TxBuffer {
         can_buffer
     }
 
-    pub fn next_bytes(&self, mode: TxMode) -> Option<(u64, &[u8])> {
-        match mode {
-            TxMode::Normal => {
-                let (start, maybe_len) = self.ranges.first_unmarked_range();
+    pub fn next_bytes(&self, _mode: TxMode) -> Option<(u64, &[u8])> {
+        let (start, maybe_len) = self.ranges.first_unmarked_range();
 
-                if start == self.retired + u64::try_from(self.buffered()).unwrap() {
-                    return None;
-                }
+        if start == self.retired + u64::try_from(self.buffered()).unwrap() {
+            return None;
+        }
 
-                let buff_off = usize::try_from(start - self.retired).unwrap();
-                match maybe_len {
-                    Some(len) => Some((
-                        start,
-                        &self.send_buf[buff_off..buff_off + usize::try_from(len).unwrap()],
-                    )),
-                    None => Some((start, &self.send_buf[buff_off..])),
-                }
-            }
-            TxMode::Pto => {
-                if self.buffered() == 0 {
-                    None
-                } else {
-                    Some((self.retired, &self.send_buf))
-                }
-            }
+        let buff_off = usize::try_from(start - self.retired).unwrap();
+        match maybe_len {
+            Some(len) => Some((
+                start,
+                &self.send_buf[buff_off..buff_off + usize::try_from(len).unwrap()],
+            )),
+            None => Some((start, &self.send_buf[buff_off..])),
         }
     }
 
@@ -617,7 +606,10 @@ impl SendStream {
     }
 
     pub fn is_terminal(&self) -> bool {
-        matches!(self.state, SendStreamState::DataRecvd { .. } | SendStreamState::ResetRecvd)
+        match self.state {
+            SendStreamState::DataRecvd { .. } | SendStreamState::ResetRecvd => true,
+            _ => false,
+        }
     }
 
     pub fn send(&mut self, buf: &[u8]) -> Res<usize> {
@@ -769,7 +761,7 @@ impl SendStreams {
         for (stream_id, stream) in self {
             let fin = stream.final_size();
             if let Some((offset, data)) = stream.next_bytes(mode) {
-                qdebug!(
+                qtrace!(
                     "Stream {} sending bytes {}-{}, epoch {}, mode {:?}, remaining {}",
                     stream_id.as_u64(),
                     offset,
@@ -890,15 +882,6 @@ mod tests {
 
         let res = rt.first_unmarked_range();
         assert_eq!(res, (0, Some(5)));
-        assert_eq!(
-            rt.used.iter().nth(0).unwrap(),
-            (&5, &(5, RangeState::Acked))
-        );
-        assert_eq!(
-            rt.used.iter().nth(1).unwrap(),
-            (&13, &(2, RangeState::Sent))
-        );
-        assert!(rt.used.iter().nth(2).is_none());
         rt.mark_range(0, 5, RangeState::Sent);
 
         let res = rt.first_unmarked_range();

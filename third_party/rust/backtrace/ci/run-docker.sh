@@ -10,7 +10,7 @@ run() {
       --user `id -u`:`id -g` \
       --rm \
       --init \
-      --volume $(dirname $(dirname `which cargo`)):/cargo \
+      --volume $HOME/.cargo:/cargo \
       --env CARGO_HOME=/cargo \
       --volume `rustc --print sysroot`:/rust:ro \
       --env TARGET=$1 \

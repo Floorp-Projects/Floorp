@@ -1,12 +1,8 @@
-//! Empty implementation of unwinding used when no other implementation is
-//! appropriate.
-
-use core::ffi::c_void;
+use std::os::raw::c_void;
 
 #[inline(always)]
 pub fn trace(_cb: &mut FnMut(&super::Frame) -> bool) {}
 
-#[derive(Clone)]
 pub struct Frame;
 
 impl Frame {
