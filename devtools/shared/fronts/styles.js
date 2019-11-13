@@ -94,6 +94,7 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
   form(form) {
     this.actorID = form.actor;
     this._form = form;
+    this.traits = form.traits || {};
     if (this._mediaText) {
       this._mediaText = null;
     }
