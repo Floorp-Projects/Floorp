@@ -642,7 +642,6 @@ double MediaDecoder::GetCurrentTime() {
 void MediaDecoder::OnMetadataUpdate(TimedMetadata&& aMetadata) {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
-  GetOwner()->RemoveMediaTracks();
   MetadataLoaded(MakeUnique<MediaInfo>(*aMetadata.mInfo),
                  UniquePtr<MetadataTags>(std::move(aMetadata.mTags)),
                  MediaDecoderEventVisibility::Observable);
