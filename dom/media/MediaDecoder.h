@@ -49,7 +49,6 @@ class VideoFrameContainer;
 class MediaFormatReader;
 class MediaDecoderStateMachine;
 struct MediaPlaybackEvent;
-struct SharedDummyTrack;
 
 enum class Visibility : uint8_t;
 
@@ -168,11 +167,11 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // not connected to streams created by captureStreamUntilEnded.
 
   // Turn output capturing of this decoder on or off. If it is on, the
-  // MediaDecoderStateMachine will only create a MediaSink after output tracks
-  // have been set. This is to ensure that it doesn't create a regular MediaSink
+  // MediaDecoderStateMachine's media sink will only play after output tracks
+  // have been set. This is to ensure that it doesn't skip over any data
   // while the owner has intended to capture the full output, thus missing to
   // capture some of it. The owner of the MediaDecoder is responsible for adding
-  // output tracks while the output is captured.
+  // output tracks in a timely fashion while the output is captured.
   void SetOutputCaptured(bool aCaptured);
   // Add an output track. All decoder output for the track's media type will be
   // sent to the track.
@@ -615,6 +614,16 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   Canonical<bool> mLooping;
 
+  // Whether this MediaDecoder's output is captured. When captured, all decoded
+  // data must be played out through mOutputTracks.
+  Canonical<bool> mOutputCaptured;
+
+  // Tracks that, if set, will get data routed through them.
+  Canonical<nsTArray<RefPtr<ProcessedMediaTrack>>> mOutputTracks;
+
+  // PrincipalHandle to be used when feeding data into mOutputTracks.
+  Canonical<PrincipalHandle> mOutputPrincipal;
+
   // Media duration set explicitly by JS. At present, this is only ever present
   // for MSE.
   Maybe<double> mExplicitDuration;
@@ -647,6 +656,16 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
     return &mPreservesPitch;
   }
   AbstractCanonical<bool>* CanonicalLooping() { return &mLooping; }
+  AbstractCanonical<bool>* CanonicalOutputCaptured() {
+    return &mOutputCaptured;
+  }
+  AbstractCanonical<nsTArray<RefPtr<ProcessedMediaTrack>>>*
+  CanonicalOutputTracks() {
+    return &mOutputTracks;
+  }
+  AbstractCanonical<PrincipalHandle>* CanonicalOutputPrincipal() {
+    return &mOutputPrincipal;
+  }
   AbstractCanonical<PlayState>* CanonicalPlayState() { return &mPlayState; }
 
  private:
