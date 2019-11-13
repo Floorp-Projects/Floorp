@@ -693,10 +693,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   Document* GetDocument() const override;
 
-  void ConstructMediaTracks(const MediaInfo* aInfo) override;
-
-  void RemoveMediaTracks() override;
-
   already_AddRefed<GMPCrashHelper> CreateGMPCrashHelper() override;
 
   nsISerialEventTarget* MainThreadEventTarget() {
@@ -1248,6 +1244,18 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   // Pass information for deciding the video decode mode to decoder.
   void NotifyDecoderActivityChanges() const;
+
+  // Constructs an AudioTrack in mAudioTrackList if aInfo reports that audio is
+  // available, and a VideoTrack in mVideoTrackList if aInfo reports that video
+  // is available.
+  void ConstructMediaTracks(const MediaInfo* aInfo);
+
+  // Removes all MediaTracks from mAudioTrackList and mVideoTrackList and fires
+  // "removetrack" on the lists accordingly.
+  // Note that by spec, this should not fire "removetrack". However, it appears
+  // other user agents do, per
+  // https://wpt.fyi/results/media-source/mediasource-avtracks.html.
+  void RemoveMediaTracks();
 
   // Mark the decoder owned by the element as tainted so that the
   // suspend-video-decoder is disabled.
@@ -1806,10 +1814,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // True if media element has been forced into being considered 'hidden'.
   // For use by mochitests. Enabling pref "media.test.video-suspend"
   bool mForcedHidden = false;
-
-  // True if audio tracks and video tracks are constructed and added into the
-  // track list, false if all tracks are removed from the track list.
-  bool mMediaTracksConstructed = false;
 
   Visibility mVisibilityState = Visibility::Untracked;
 
