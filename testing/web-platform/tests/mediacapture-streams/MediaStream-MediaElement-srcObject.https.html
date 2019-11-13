@@ -300,12 +300,22 @@ promise_test(async t => {
   assert_equals(vid.readyState, vid.HAVE_NOTHING,
     "Video dimensions not known yet");
 
+  const start = performance.now();
   ctx.fillStyle = "green";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Wait for, and check, potentially playing
   await new Promise(r => vid.oncanplay = r);
-  assert_equals(vid.currentTime, 0, "currentTime has not advanced yet");
+  const canplayDuration = (performance.now() - start) / 1000;
+  // "canplay" was just dispatched from a task queued when the element became
+  // potentially playing. currentTime may not have progressed more than the time
+  // it took from becoming potentially playing to starting the
+  // canplay-dispatching task. Though the media clock and the js clock may be
+  // different, so we take double this duration, or 100ms, whichever is greater,
+  // as a safety margin.
+  const margin = Math.max(0.1, canplayDuration * 2);
+  assert_between_inclusive(vid.currentTime, 0, margin,
+    "currentTime has not advanced more than twice it took to dispatch canplay");
   assert_false(vid.paused, "Media element is not paused");
   assert_false(vid.ended, "Media element is not ended");
   assert_equals(vid.error, null,
