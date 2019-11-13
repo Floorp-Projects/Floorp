@@ -114,10 +114,6 @@ Or, if you prefer Git, by following the instruction here to clone from the
 Mercurial repository:
 
     https://github.com/glandium/git-cinnabar/wiki/Mozilla:-A-git-workflow-for-Gecko-development
-
-Or, if you really prefer vanilla flavor Git:
-
-    git clone https://github.com/mozilla/gecko-dev.git
 '''
 
 CONFIGURE_MERCURIAL = '''
