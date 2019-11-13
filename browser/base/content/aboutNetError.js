@@ -275,7 +275,9 @@ function initPage() {
     setupErrorUI();
 
     const errorCode = document.getNetErrorInfo().errorCodeString;
-    const isTlsVersionError = errorCode == "SSL_ERROR_UNSUPPORTED_VERSION";
+    const isTlsVersionError =
+      errorCode == "SSL_ERROR_UNSUPPORTED_VERSION" ||
+      errorCode == "SSL_ERROR_PROTOCOL_VERSION_ALERT";
     const tls10OverrideEnabled = RPMGetBoolPref(
       "security.tls.version.enable-deprecated"
     );
@@ -289,6 +291,7 @@ function initPage() {
         "SSL_ERROR_NO_CIPHERS_SUPPORTED",
         "SSL_ERROR_NO_CYPHER_OVERLAP",
         "SSL_ERROR_PROTOCOL_VERSION_ALERT",
+        "SSL_ERROR_SSL_DISABLED",
         "SSL_ERROR_UNSUPPORTED_VERSION",
       ].some(substring => {
         return substring == errorCode;
