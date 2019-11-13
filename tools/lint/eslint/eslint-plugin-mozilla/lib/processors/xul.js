@@ -17,7 +17,7 @@ let XMLParser = require("./processor-helpers").XMLParser;
 // Stores any XML parse error
 let xmlParseError = null;
 
-// Stores the lines of JS code generated from the XBL
+// Stores the lines of JS code generated from the XUL.
 let scriptLines = [];
 // Stores a map from the synthetic line number to the real line number
 // and column offset.
