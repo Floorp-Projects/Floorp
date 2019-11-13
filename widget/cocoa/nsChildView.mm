@@ -1294,7 +1294,7 @@ void nsChildView::Invalidate(const LayoutDeviceIntRect& aRect) {
 
   if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
     EnsureContentLayerForMainThreadPainting();
-    mContentLayer->InvalidateRegionThroughoutSwapchain(aRect.ToUnknownRect());
+    mContentLayerInvalidRegion.OrWith(aRect.Intersect(GetBounds()));
     [mView markLayerForDisplay];
   } else {
     [[mView pixelHostingView] setNeedsDisplayInRect:DevPixelsToCocoaPoints(aRect)];
@@ -1501,12 +1501,14 @@ void nsChildView::EnsureContentLayerForMainThreadPainting() {
     RefPtr<NativeLayer> contentLayer = mNativeLayerRoot->CreateLayer(size, false);
     mNativeLayerRoot->AppendLayer(contentLayer);
     mContentLayer = contentLayer->AsNativeLayerCA();
+    mContentLayerInvalidRegion = GetBounds();
   }
 }
 
 void nsChildView::PaintWindowInContentLayer() {
   EnsureContentLayerForMainThreadPainting();
   mContentLayer->SetSurfaceIsFlipped(false);
+  mContentLayer->InvalidateRegionThroughoutSwapchain(mContentLayerInvalidRegion.ToUnknownRegion());
   RefPtr<DrawTarget> dt = mContentLayer->NextSurfaceAsDrawTarget(gfx::BackendType::SKIA);
   if (!dt) {
     return;
@@ -1516,6 +1518,7 @@ void nsChildView::PaintWindowInContentLayer() {
       dt, LayoutDeviceIntRegion::FromUnknownRegion(mContentLayer->CurrentSurfaceInvalidRegion()),
       dt->GetSize());
   mContentLayer->NotifySurfaceReady();
+  mContentLayerInvalidRegion.SetEmpty();
 }
 
 void nsChildView::HandleMainThreadCATransaction() {
