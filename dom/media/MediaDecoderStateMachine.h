@@ -424,7 +424,7 @@ class MediaDecoderStateMachine
 
   // Always create mediasink which contains an AudioSink or DecodedStream
   // inside.
-  already_AddRefed<MediaSink> CreateMediaSink(bool aOutputCaptured);
+  already_AddRefed<MediaSink> CreateMediaSink();
 
   // Stops the media sink and shut it down.
   // The decoder monitor must be held with exactly one lock count.
@@ -704,6 +704,10 @@ class MediaDecoderStateMachine
   // upon reaching the end.
   Mirror<bool> mLooping;
 
+  // The device used with SetSink, or nullptr if no explicit device has been
+  // set.
+  Mirror<RefPtr<AudioDeviceInfo>> mSinkDevice;
+
   // Whether all output should be captured into mOutputTracks. While true, the
   // media sink will only play if there are output tracks.
   Mirror<bool> mOutputCaptured;
@@ -728,9 +732,6 @@ class MediaDecoderStateMachine
 
   // Used to distinguish whether the audio is producing sound.
   Canonical<bool> mIsAudioDataAudible;
-
-  // Used to count the number of pending requests to set a new sink.
-  Atomic<int> mSetSinkRequestsCount;
 
  public:
   AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() const;
