@@ -7,7 +7,6 @@
 #ifndef MediaSink_h_
 #define MediaSink_h_
 
-#include "AudioDeviceInfo.h"
 #include "MediaInfo.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
@@ -38,23 +37,6 @@ class MediaSink {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaSink);
   typedef mozilla::TrackInfo::TrackType TrackType;
-
-  struct PlaybackParams {
-    PlaybackParams()
-        : mVolume(1.0), mPlaybackRate(1.0), mPreservesPitch(true) {}
-    double mVolume;
-    double mPlaybackRate;
-    bool mPreservesPitch;
-    RefPtr<AudioDeviceInfo> mSink;
-  };
-
-  // Return the playback parameters of this sink.
-  // Can be called in any state.
-  virtual const PlaybackParams& GetPlaybackParams() const = 0;
-
-  // Set the playback parameters of this sink.
-  // Can be called in any state.
-  virtual void SetPlaybackParams(const PlaybackParams& aParams) = 0;
 
   // EndedPromise needs to be a non-exclusive promise as it is shared between
   // both the AudioSink and VideoSink.
@@ -100,6 +82,10 @@ class MediaSink {
   // Pause/resume the playback. Only work after playback starts.
   virtual void SetPlaying(bool aPlaying) = 0;
 
+  // Get the playback rate.
+  // Can be called in any state.
+  virtual double PlaybackRate() const = 0;
+
   // Single frame rendering operation may need to be done before playback
   // started (1st frame) or right after seek completed or playback stopped.
   // Do nothing if this sink has no video track. Can be called in any state.
@@ -121,6 +107,10 @@ class MediaSink {
   // Return true if playback is started and not paused otherwise false.
   // Can be called in any state.
   virtual bool IsPlaying() const = 0;
+
+  // The audio output device this MediaSink is playing audio data to. The
+  // default device is used if this returns null.
+  virtual const AudioDeviceInfo* AudioDevice() { return nullptr; }
 
   // Called on the state machine thread to shut down the sink. All resources
   // allocated by this sink should be released.
