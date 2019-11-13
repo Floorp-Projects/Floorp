@@ -3226,7 +3226,8 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                     """,
                     failureCode=failureCode)),
                 CGGeneric("JS::Rooted<JS::Value> aliasedVal(aCx);\n\n")
-            ] + [defineAliasesFor(m) for m in sorted(aliasedMembers)])
+            ] + [defineAliasesFor(m)
+                 for m in sorted(aliasedMembers, key=lambda m: m.identifier.name)])
         else:
             defineAliases = None
 
