@@ -473,21 +473,4 @@ public class WebExtension {
             return this.isTopLevel;
         }
     }
-
-    private static final MessageDelegate NULL_MESSAGE_DELEGATE = new MessageDelegate() {
-        @Override
-        public GeckoResult<Object> onMessage(final @NonNull String nativeApp,
-                                             final @NonNull Object message,
-                                             final @NonNull MessageSender sender) {
-            Log.d(LOGTAG, "Unhandled message from " + nativeApp + " id=" +
-                    sender.webExtension.id + ": " + message.toString());
-            return null;
-        }
-
-        @Override
-        public void onConnect(final @NonNull Port port) {
-            Log.d(LOGTAG, "Unhandled connect request from " +
-                    port.sender.webExtension.id);
-        }
-    };
 }
