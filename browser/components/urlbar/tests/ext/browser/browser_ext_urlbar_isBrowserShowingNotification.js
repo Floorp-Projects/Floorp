@@ -15,6 +15,25 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 // isBrowserShowingNotification should return false when there are no
 // notifications.
 add_task(async function noNotifications() {
+  // First, hide notifications that are currently showing.
+
+  // Escape closes many doorhangers and panels: tracking protection, site
+  // identity, page action panels, toolbar button panels.
+  EventUtils.synthesizeKey("KEY_Escape");
+
+  // urlbar view
+  await UrlbarTestUtils.promisePopupClose(window);
+
+  // notification box (info bar)
+  window.gBrowser.getNotificationBox().removeAllNotifications(true);
+
+  // app menu notification doorhanger
+  if (AppMenuNotifications.activeNotification) {
+    AppMenuNotifications.dismissNotification(
+      AppMenuNotifications.activeNotification.id
+    );
+  }
+
   await checkExtension(false);
 });
 
@@ -27,6 +46,7 @@ add_task(async function urlbarView() {
   });
   await checkExtension(true);
   await UrlbarTestUtils.promisePopupClose(window);
+  await checkExtension(false);
 });
 
 // isBrowserShowingNotification should return true when the tracking protection
@@ -41,6 +61,8 @@ add_task(async function trackingProtection() {
 
     EventUtils.synthesizeKey("KEY_Escape");
     await BrowserTestUtils.waitForPopupEvent(panel, "hidden");
+
+    await checkExtension(false);
   });
 });
 
@@ -56,6 +78,8 @@ add_task(async function siteIdentity() {
 
     EventUtils.synthesizeKey("KEY_Escape");
     await BrowserTestUtils.waitForPopupEvent(panel, "hidden");
+
+    await checkExtension(false);
   });
 });
 
@@ -72,10 +96,9 @@ add_task(async function notificationBox() {
     null,
     null
   );
-
   await checkExtension(true);
-
   box.removeNotification(note, true);
+  await checkExtension(false);
 });
 
 // isBrowserShowingNotification should return true when a page action panel is
@@ -90,6 +113,8 @@ add_task(async function pageActionPanel() {
 
     EventUtils.synthesizeKey("KEY_Escape");
     await BrowserTestUtils.waitForPopupEvent(panel, "hidden");
+
+    await checkExtension(false);
   });
 });
 
@@ -110,6 +135,8 @@ add_task(async function toolbarButtonPanel() {
   await TestUtils.waitForCondition(() => {
     return !document.getElementById("customizationui-widget-panel");
   });
+
+  await checkExtension(false);
 });
 
 // isBrowserShowingNotification should return true when an app menu notification
@@ -125,6 +152,13 @@ add_task(async function appMenuNotification() {
 
   AppMenuNotifications.dismissNotification("update-manual");
   await BrowserTestUtils.waitForPopupEvent(panel, "hidden");
+
+  await checkExtension(false);
+
+  // The notification remains in AppMenuNotifications and the badge remains on
+  // the button even though the panel was dismissed, so remove it for good now
+  // so it doesn't interfere with other tests.
+  AppMenuNotifications.removeNotification("update-manual");
 });
 
 async function checkExtension(expectedShowing) {
