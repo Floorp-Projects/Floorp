@@ -57,8 +57,9 @@ dictionary GPUObjectDescriptorBase {
     Exposed=Window,
 ]
 interface GPU {
-    //[Exposed=Window]
-    //Promise<GPUAdapter> requestAdapter(optional GPURequestAdapterOptions options = {});
+    // May reject with DOMException
+    [NewObject]
+    Promise<GPUAdapter> requestAdapter(optional GPURequestAdapterOptions options = {});
 };
 
 // Add a "webgpu" member to Navigator/Worker that contains the global instance of a "WebGPU"
@@ -82,8 +83,9 @@ interface GPUAdapter {
     //GPUExtensions getExtensions();
     //readonly attribute GPULimits limits; Don't expose higher limits for now.
 
-    // May reject with DOMException  // TODO: DOMException("OperationError")?
-    //Promise<GPUDevice> requestDevice(optional GPUDeviceDescriptor descriptor = {});
+    // May reject with DOMException
+    [NewObject]
+    Promise<GPUDevice> requestDevice(optional GPUDeviceDescriptor descriptor = {});
 };
 GPUAdapter includes GPUObjectBase;
 

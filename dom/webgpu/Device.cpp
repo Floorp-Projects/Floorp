@@ -7,17 +7,27 @@
 #include "Device.h"
 
 #include "Adapter.h"
+#include "ipc/WebGPUChild.h"
 
 namespace mozilla {
 namespace webgpu {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(Device, DOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(Device, DOMEventTargetHelper, mBridge)
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(Device, DOMEventTargetHelper)
 GPU_IMPL_JS_WRAP(Device)
 
-Device::Device(nsIGlobalObject* aGlobal) : DOMEventTargetHelper(aGlobal) {}
+Device::Device(Adapter* const aParent, RawId aId)
+    : DOMEventTargetHelper(aParent->GetParentObject()),
+      mBridge(aParent->GetBridge()),
+      mId(aId) {
+  Unused << mId;  // TODO: remove
+}
 
-Device::~Device() = default;
+Device::~Device() {
+  if (mBridge->IsOpen()) {
+    mBridge->SendDeviceDestroy(mId);
+  }
+}
 
 void Device::GetLabel(nsAString& aValue) const { aValue = mLabel; }
 void Device::SetLabel(const nsAString& aLabel) { mLabel = aLabel; }

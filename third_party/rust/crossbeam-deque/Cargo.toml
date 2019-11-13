@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "crossbeam-deque"
-version = "0.7.1"
+version = "0.7.2"
 authors = ["The Crossbeam Project Developers"]
 description = "Concurrent work-stealing deque"
 homepage = "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-deque"
@@ -23,9 +23,9 @@ categories = ["algorithms", "concurrency", "data-structures"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/crossbeam-rs/crossbeam"
 [dependencies.crossbeam-epoch]
-version = "0.7"
+version = "0.8"
 
 [dependencies.crossbeam-utils]
-version = "0.6.5"
+version = "0.7"
 [dev-dependencies.rand]
 version = "0.6"

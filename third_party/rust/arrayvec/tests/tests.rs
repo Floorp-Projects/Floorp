@@ -28,6 +28,44 @@ fn test_simple() {
 }
 
 #[test]
+fn test_capacity_left() {
+    let mut vec: ArrayVec<[usize; 4]> = ArrayVec::new();
+    assert_eq!(vec.remaining_capacity(), 4);
+    vec.push(1);
+    assert_eq!(vec.remaining_capacity(), 3);
+    vec.push(2);
+    assert_eq!(vec.remaining_capacity(), 2);
+    vec.push(3);
+    assert_eq!(vec.remaining_capacity(), 1);
+    vec.push(4);
+    assert_eq!(vec.remaining_capacity(), 0);
+}
+
+#[test]
+fn test_extend_from_slice() {
+    let mut vec: ArrayVec<[usize; 10]> = ArrayVec::new();
+
+    vec.try_extend_from_slice(&[1, 2, 3]).unwrap();
+    assert_eq!(vec.len(), 3);
+    assert_eq!(&vec[..], &[1, 2, 3]);
+    assert_eq!(vec.pop(), Some(3));
+    assert_eq!(&vec[..], &[1, 2]);
+}
+
+#[test]
+fn test_extend_from_slice_error() {
+    let mut vec: ArrayVec<[usize; 10]> = ArrayVec::new();
+
+    vec.try_extend_from_slice(&[1, 2, 3]).unwrap();
+    let res = vec.try_extend_from_slice(&[0; 8]);
+    assert_matches!(res, Err(_));
+
+    let mut vec: ArrayVec<[usize; 0]> = ArrayVec::new();
+    let res = vec.try_extend_from_slice(&[0; 1]);
+    assert_matches!(res, Err(_));
+}
+
+#[test]
 fn test_u16_index() {
     const N: usize = 4096;
     let mut vec: ArrayVec<[_; N]> = ArrayVec::new();
@@ -127,6 +165,80 @@ fn test_drop() {
 }
 
 #[test]
+fn test_drop_panics() {
+    use std::cell::Cell;
+    use std::panic::catch_unwind;
+    use std::panic::AssertUnwindSafe;
+
+    let flag = &Cell::new(0);
+
+    struct Bump<'a>(&'a Cell<i32>);
+
+    // Panic in the first drop
+    impl<'a> Drop for Bump<'a> {
+        fn drop(&mut self) {
+            let n = self.0.get();
+            self.0.set(n + 1);
+            if n == 0 {
+                panic!("Panic in Bump's drop");
+            }
+        }
+    }
+    // check if rust is new enough
+    flag.set(0);
+    {
+        let array = vec![Bump(flag), Bump(flag)];
+        let res = catch_unwind(AssertUnwindSafe(|| {
+            drop(array);
+        }));
+        assert!(res.is_err());
+    }
+
+    if flag.get() != 2 {
+        println!("test_drop_panics: skip, this version of Rust doesn't continue in drop_in_place");
+        return;
+    }
+
+    flag.set(0);
+    {
+        let mut array = ArrayVec::<[Bump; 128]>::new();
+        array.push(Bump(flag));
+        array.push(Bump(flag));
+        array.push(Bump(flag));
+
+        let res = catch_unwind(AssertUnwindSafe(|| {
+            drop(array);
+        }));
+        assert!(res.is_err());
+    }
+    // Check that all the elements drop, even if the first drop panics.
+    assert_eq!(flag.get(), 3);
+
+
+    flag.set(0);
+    {
+        let mut array = ArrayVec::<[Bump; 16]>::new();
+        array.push(Bump(flag));
+        array.push(Bump(flag));
+        array.push(Bump(flag));
+        array.push(Bump(flag));
+        array.push(Bump(flag));
+
+        let i = 2;
+        let tail_len = array.len() - i;
+
+        let res = catch_unwind(AssertUnwindSafe(|| {
+            array.truncate(i);
+        }));
+        assert!(res.is_err());
+        // Check that all the tail elements drop, even if the first drop panics.
+        assert_eq!(flag.get(), tail_len as i32);
+    }
+
+
+}
+
+#[test]
 fn test_extend() {
     let mut range = 0..10;
 
@@ -146,8 +258,8 @@ fn test_extend() {
 #[test]
 fn test_is_send_sync() {
     let data = ArrayVec::<[Vec<i32>; 5]>::new();
-    &data as &Send;
-    &data as &Sync;
+    &data as &dyn Send;
+    &data as &dyn Sync;
 }
 
 #[test]
@@ -157,6 +269,11 @@ fn test_compact_size() {
     type ByteArray = ArrayVec<[u8; 4]>;
     println!("{}", mem::size_of::<ByteArray>());
     assert!(mem::size_of::<ByteArray>() <= 8);
+
+    // 1 enum tag + 1 drop flag
+    type EmptyArray = ArrayVec<[u8; 0]>;
+    println!("{}", mem::size_of::<EmptyArray>());
+    assert!(mem::size_of::<EmptyArray>() <= 2);
 
     // 12 element size + 1 enum tag + 3 padding + 1 len + 1 drop flag + 2 padding
     type QuadArray = ArrayVec<[u32; 3]>;
@@ -187,6 +304,29 @@ fn test_drain() {
     assert_eq!(&v[..], &[0, 7]);
     v.drain(..);
     assert_eq!(&v[..], &[]);
+}
+
+#[test]
+fn test_drain_range_inclusive() {
+    let mut v = ArrayVec::from([0; 8]);
+    v.drain(0..=7);
+    assert_eq!(&v[..], &[]);
+
+    v.extend(0..);
+    v.drain(1..=4);
+    assert_eq!(&v[..], &[0, 5, 6, 7]);
+    let u: ArrayVec<[_; 3]> = v.drain(1..=2).rev().collect();
+    assert_eq!(&u[..], &[6, 5]);
+    assert_eq!(&v[..], &[0, 7]);
+    v.drain(..);
+    assert_eq!(&v[..], &[]);
+}
+
+#[test]
+#[should_panic]
+fn test_drain_range_inclusive_oob() {
+    let mut v = ArrayVec::from([0; 0]);
+    v.drain(0..=0);
 }
 
 #[test]
@@ -294,6 +434,7 @@ fn test_into_inner_3_() {
     assert_eq!(v.into_inner().unwrap(), [1, 2, 3, 4]);
 }
 
+#[cfg(feature="std")]
 #[test]
 fn test_write() {
     use std::io::Write;
@@ -328,6 +469,7 @@ fn array_clone_from() {
     assert_eq!(&t, &reference[..]);
 }
 
+#[cfg(feature="std")]
 #[test]
 fn test_string() {
     use std::error::Error;
@@ -353,9 +495,9 @@ fn test_string() {
     assert_eq!(tmut, "ab");
 
     // Test Error trait / try
-    let t = || -> Result<(), Box<Error>> {
+    let t = || -> Result<(), Box<dyn Error>> {
         let mut t = ArrayString::<[_; 2]>::new();
-        try!(t.try_push_str(text));
+        t.try_push_str(text)?;
         Ok(())
     }();
     assert!(t.is_err());
@@ -366,6 +508,14 @@ fn test_string_from() {
     let text = "hello world";
 	// Test `from` constructor
     let u = ArrayString::<[_; 11]>::from(text).unwrap();
+    assert_eq!(&u, text);
+    assert_eq!(u.len(), text.len());
+}
+
+#[test]
+fn test_string_parse_from_str() {
+    let text = "hello world";
+    let u: ArrayString<[_; 11]> = text.parse().unwrap();
     assert_eq!(&u, text);
     assert_eq!(u.len(), text.len());
 }
@@ -508,10 +658,22 @@ fn test_sizes_129_255() {
     ArrayVec::from([0u8; 255]);
 }
 
-
 #[test]
-fn test_newish_stable_uses_maybe_uninit() {
-    if option_env!("ARRAYVECTEST_ENSURE_MAYBEUNINIT").map(|s| !s.is_empty()).unwrap_or(false) {
-        assert!(cfg!(has_stable_maybe_uninit));
-    }
+fn test_extend_zst() {
+    let mut range = 0..10;
+    #[derive(Copy, Clone, PartialEq, Debug)]
+    struct Z; // Zero sized type
+
+    let mut array: ArrayVec<[_; 5]> = range.by_ref().map(|_| Z).collect();
+    assert_eq!(&array[..], &[Z; 5]);
+    assert_eq!(range.next(), Some(5));
+
+    array.extend(range.by_ref().map(|_| Z));
+    assert_eq!(range.next(), Some(6));
+
+    let mut array: ArrayVec<[_; 10]> = (0..3).map(|_| Z).collect();
+    assert_eq!(&array[..], &[Z; 3]);
+    array.extend((3..5).map(|_| Z));
+    assert_eq!(&array[..], &[Z; 5]);
+    assert_eq!(array.len(), 5);
 }

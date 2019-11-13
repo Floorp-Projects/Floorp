@@ -75,7 +75,7 @@ fn get_alpn(fd: *mut ssl::PRFileDesc, pre: bool) -> Res<Option<String>> {
         }
         _ => None,
     };
-    qinfo!([format!("{:p}", fd)] "got ALPN {:?}", alpn);
+    qinfo!([format!("{:p}", fd)], "got ALPN {:?}", alpn);
     Ok(alpn)
 }
 
@@ -290,7 +290,11 @@ impl SecretAgent {
             if st.is_none() {
                 *st = Some(alert.description);
             } else {
-                qwarn!([format!("{:p}", fd)] "duplicate alert {}", alert.description);
+                qwarn!(
+                    [format!("{:p}", fd)],
+                    "duplicate alert {}",
+                    alert.description
+                );
             }
         }
     }
@@ -510,7 +514,7 @@ impl SecretAgent {
 
     fn capture_error<T>(&mut self, res: Res<T>) -> Res<T> {
         if let Err(e) = &res {
-            qwarn!([self] "error: {:?}", e);
+            qwarn!([self], "error: {:?}", e);
             self.state = HandshakeState::Failed(e.clone());
         }
         res
@@ -528,7 +532,7 @@ impl SecretAgent {
             let info = self.capture_error(SecretAgentInfo::new(self.fd))?;
             HandshakeState::Complete(info)
         };
-        qinfo!([self] "state -> {:?}", self.state);
+        qinfo!([self], "state -> {:?}", self.state);
         Ok(())
     }
 
@@ -602,7 +606,7 @@ impl SecretAgent {
         if let HandshakeState::Authenticated(ref err) = self.state {
             let result =
                 secstatus_to_res(unsafe { ssl::SSL_AuthCertificateComplete(self.fd, *err) });
-            qdebug!([self] "SSL_AuthCertificateComplete: {:?}", result);
+            qdebug!([self], "SSL_AuthCertificateComplete: {:?}", result);
             // This should return SECSuccess, so don't use update_state().
             self.capture_error(result)?;
         }
@@ -679,7 +683,7 @@ impl Client {
         let resumption = resumption_ptr.as_mut().unwrap();
         let mut v = Vec::with_capacity(len as usize);
         v.extend_from_slice(std::slice::from_raw_parts(token, len as usize));
-        qdebug!([format!("{:p}", fd)] "Got resumption token");
+        qdebug!([format!("{:p}", fd)], "Got resumption token");
         *resumption = Some(v);
         ssl::SECSuccess
     }

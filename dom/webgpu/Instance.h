@@ -19,23 +19,29 @@ struct GPURequestAdapterOptions;
 
 namespace webgpu {
 class Adapter;
-class InstanceProvider;
+class GPUAdapter;
+class WebGPUChild;
 
 class Instance final : public nsWrapperCache {
  public:
   GPU_DECL_CYCLE_COLLECTION(Instance)
   GPU_DECL_JS_WRAP(Instance)
 
-  nsCOMPtr<nsIGlobalObject> mParent;
+  static already_AddRefed<Instance> Create(nsIGlobalObject* aOwner);
 
-  static RefPtr<Instance> Create(nsIGlobalObject* parent);
+  already_AddRefed<dom::Promise> RequestAdapter(
+      const dom::GPURequestAdapterOptions& aOptions, ErrorResult& aRv);
 
  private:
-  explicit Instance(nsIGlobalObject* parent);
+  explicit Instance(nsIGlobalObject* aOwner, WebGPUChild* aBridge);
   virtual ~Instance();
 
+  nsCOMPtr<nsIGlobalObject> mOwner;
+  const RefPtr<WebGPUChild> mBridge;
+
  public:
-  nsIGlobalObject* GetParentObject() const { return mParent.get(); }
+  nsIGlobalObject* GetParentObject() const { return mOwner; }
+  WebGPUChild* GetBridge() const;
 };
 
 }  // namespace webgpu

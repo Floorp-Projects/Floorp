@@ -51,17 +51,17 @@ impl Http3Server {
     }
 
     pub fn process(&mut self, dgram: Option<Datagram>, now: Instant) -> Output {
-        qtrace!([self] "Process.");
+        qtrace!([self], "Process.");
         self.base_handler.process(dgram, now)
     }
 
     pub fn process_input(&mut self, dgram: Datagram, now: Instant) {
-        qtrace!([self] "Process input.");
+        qtrace!([self], "Process input.");
         self.base_handler.process_input(dgram, now);
     }
 
     pub fn process_timer(&mut self, now: Instant) {
-        qtrace!([self] "Process timer.");
+        qtrace!([self], "Process timer.");
         self.base_handler.process_timer(now);
     }
 
@@ -70,17 +70,17 @@ impl Http3Server {
     }
 
     pub fn process_http3(&mut self, now: Instant) {
-        qtrace!([self] "Process http3 internal.");
+        qtrace!([self], "Process http3 internal.");
         self.base_handler.process_http3(now);
     }
 
     pub fn process_output(&mut self, now: Instant) -> Output {
-        qtrace!([self] "Process output.");
+        qtrace!([self], "Process output.");
         self.base_handler.process_output(now)
     }
 
     pub fn close(&mut self, now: Instant, error: AppError, msg: &str) {
-        qinfo!([self] "Close connection.");
+        qinfo!([self], "Close connection.");
         self.base_handler.close(now, error, msg);
     }
 
@@ -107,7 +107,7 @@ impl Http3Server {
     }
 
     pub fn set_response(&mut self, stream_id: u64, headers: &[Header], data: Vec<u8>) -> Res<()> {
-        qinfo!([self] "Set new respons for stream {}.", stream_id);
+        qinfo!([self], "Set new respons for stream {}.", stream_id);
         self.base_handler
             .transactions
             .get_mut(&stream_id)
@@ -119,12 +119,17 @@ impl Http3Server {
     }
 
     pub fn stream_stop_sending(&mut self, stream_id: u64, app_error: AppError) -> Res<()> {
-        qdebug!([self] "stop sending stream_id:{} error:{}.", stream_id, app_error);
+        qdebug!(
+            [self],
+            "stop sending stream_id:{} error:{}.",
+            stream_id,
+            app_error
+        );
         self.base_handler.stream_stop_sending(stream_id, app_error)
     }
 
     pub fn stream_reset(&mut self, stream_id: u64, app_error: AppError) -> Res<()> {
-        qdebug!([self] "reset stream_id:{} error:{}.", stream_id, app_error);
+        qdebug!([self], "reset stream_id:{} error:{}.", stream_id, app_error);
         self.base_handler.stream_reset(stream_id, app_error)
     }
 }

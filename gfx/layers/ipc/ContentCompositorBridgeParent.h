@@ -12,6 +12,10 @@
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
+namespace webgpu {
+class PWebGPUParent;
+}  // namespace webgpu
+
 namespace layers {
 
 class CanvasParent;
@@ -205,6 +209,9 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
       const wr::PipelineId& aPipelineId,
       const LayoutDeviceIntSize& aSize) override;
   bool DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor) override;
+
+  webgpu::PWebGPUParent* AllocPWebGPUParent() override;
+  bool DeallocPWebGPUParent(webgpu::PWebGPUParent* aActor) override;
 
   void ObserveLayersUpdate(LayersId aLayersId, LayersObserverEpoch aEpoch,
                            bool aActive) override;
