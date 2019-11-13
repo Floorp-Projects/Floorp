@@ -7,17 +7,26 @@
 //!
 //!     cargo run --example simple-store
 
+use std::fs;
+
+use tempfile::Builder;
+
+use rkv::backend::{
+    BackendStat,
+    Lmdb,
+    LmdbDatabase,
+    LmdbEnvironment,
+    LmdbRwTransaction,
+};
 use rkv::{
     Manager,
-    MultiStore,
     Rkv,
     StoreOptions,
     Value,
-    Writer,
 };
-use tempfile::Builder;
 
-use std::fs;
+type MultiStore = rkv::MultiStore<LmdbDatabase>;
+type Writer<'env> = rkv::Writer<LmdbRwTransaction<'env>>;
 
 fn getput<'env, 's>(store: MultiStore, writer: &'env mut Writer, ids: &'s mut Vec<String>) {
     let keys = vec!["str1", "str2", "str3"];
@@ -53,12 +62,12 @@ fn main() {
     let p = root.path();
 
     // The manager enforces that each process opens the same lmdb environment at most once
-    let created_arc = Manager::singleton().write().unwrap().get_or_create(p, Rkv::new).unwrap();
+    let mut manager = Manager::<LmdbEnvironment>::singleton().write().unwrap();
+    let created_arc = manager.get_or_create(p, Rkv::new::<Lmdb>).unwrap();
     let k = created_arc.read().unwrap();
 
     // Creates a store called "store"
     let store = k.open_single("store", StoreOptions::create()).unwrap();
-
     let multistore = k.open_multi("multistore", StoreOptions::create()).unwrap();
 
     println!("Inserting data...");
@@ -95,6 +104,7 @@ fn main() {
         delete(multistore, &mut writer);
         writer.commit().unwrap();
     }
+
     println!("Looking up keys...");
     {
         // Use a reader to query the store
@@ -179,5 +189,6 @@ fn main() {
         println!("Get from store value: {:?}", store.get(&reader, "foo").unwrap());
         println!("Get from another store value: {:?}", another_store.get(&reader, "foo").unwrap());
     }
+
     println!("Environment statistics: btree depth = {}", k.stat().unwrap().depth());
 }

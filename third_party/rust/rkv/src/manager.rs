@@ -8,74 +8,54 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use lazy_static::lazy_static;
-use std::collections::BTreeMap;
-
-use std::io::{
-    self,
-    Error,
-    ErrorKind,
-};
-
 use std::collections::btree_map::Entry;
-
+use std::collections::BTreeMap;
 use std::os::raw::c_uint;
-
 use std::path::{
     Path,
     PathBuf,
 };
-
+use std::result;
 use std::sync::{
     Arc,
     RwLock,
 };
 
-use url::Url;
+use lazy_static::lazy_static;
 
+use crate::backend::{
+    LmdbEnvironment,
+    SafeModeEnvironment,
+};
 use crate::error::StoreError;
-
+use crate::helpers::canonicalize_path;
 use crate::Rkv;
+
+type Result<T> = result::Result<T, StoreError>;
+type SharedRkv<E> = Arc<RwLock<Rkv<E>>>;
 
 lazy_static! {
     /// A process is only permitted to have one open handle to each Rkv environment.
     /// This manager exists to enforce that constraint: don't open environments directly.
-    static ref MANAGER: RwLock<Manager> = RwLock::new(Manager::new());
-}
-
-// Workaround the UNC path on Windows, see https://github.com/rust-lang/rust/issues/42869.
-// Otherwise, `Env::from_env()` will panic with error_no(123).
-fn canonicalize_path<'p, P>(path: P) -> io::Result<PathBuf>
-where
-    P: Into<&'p Path>,
-{
-    let canonical = path.into().canonicalize()?;
-    if cfg!(target_os = "windows") {
-        let url = Url::from_file_path(&canonical).map_err(|_e| Error::new(ErrorKind::Other, "URL passing error"))?;
-        return url.to_file_path().map_err(|_e| Error::new(ErrorKind::Other, "path canonicalization error"));
-    }
-    Ok(canonical)
+    static ref MANAGER_LMDB: RwLock<Manager<LmdbEnvironment>> = RwLock::new(Manager::new());
+    static ref MANAGER_SAFE_MODE: RwLock<Manager<SafeModeEnvironment>> = RwLock::new(Manager::new());
 }
 
 /// A process is only permitted to have one open handle to each Rkv environment.
 /// This manager exists to enforce that constraint: don't open environments directly.
-pub struct Manager {
-    environments: BTreeMap<PathBuf, Arc<RwLock<Rkv>>>,
+pub struct Manager<E> {
+    environments: BTreeMap<PathBuf, SharedRkv<E>>,
 }
 
-impl Manager {
-    fn new() -> Manager {
+impl<E> Manager<E> {
+    fn new() -> Manager<E> {
         Manager {
             environments: Default::default(),
         }
     }
 
-    pub fn singleton() -> &'static RwLock<Manager> {
-        &*MANAGER
-    }
-
     /// Return the open env at `path`, returning `None` if it has not already been opened.
-    pub fn get<'p, P>(&self, path: P) -> Result<Option<Arc<RwLock<Rkv>>>, ::std::io::Error>
+    pub fn get<'p, P>(&self, path: P) -> Result<Option<SharedRkv<E>>>
     where
         P: Into<&'p Path>,
     {
@@ -84,9 +64,9 @@ impl Manager {
     }
 
     /// Return the open env at `path`, or create it by calling `f`.
-    pub fn get_or_create<'p, F, P>(&mut self, path: P, f: F) -> Result<Arc<RwLock<Rkv>>, StoreError>
+    pub fn get_or_create<'p, F, P>(&mut self, path: P, f: F) -> Result<SharedRkv<E>>
     where
-        F: FnOnce(&Path) -> Result<Rkv, StoreError>,
+        F: FnOnce(&Path) -> Result<Rkv<E>>,
         P: Into<&'p Path>,
     {
         let canonical = canonicalize_path(path)?;
@@ -101,14 +81,9 @@ impl Manager {
 
     /// Return the open env at `path` with capacity `capacity`,
     /// or create it by calling `f`.
-    pub fn get_or_create_with_capacity<'p, F, P>(
-        &mut self,
-        path: P,
-        capacity: c_uint,
-        f: F,
-    ) -> Result<Arc<RwLock<Rkv>>, StoreError>
+    pub fn get_or_create_with_capacity<'p, F, P>(&mut self, path: P, capacity: c_uint, f: F) -> Result<SharedRkv<E>>
     where
-        F: FnOnce(&Path, c_uint) -> Result<Rkv, StoreError>,
+        F: FnOnce(&Path, c_uint) -> Result<Rkv<E>>,
         P: Into<&'p Path>,
     {
         let canonical = canonicalize_path(path)?;
@@ -122,12 +97,43 @@ impl Manager {
     }
 }
 
+impl Manager<LmdbEnvironment> {
+    pub fn singleton() -> &'static RwLock<Manager<LmdbEnvironment>> {
+        &*MANAGER_LMDB
+    }
+}
+
+impl Manager<SafeModeEnvironment> {
+    pub fn singleton() -> &'static RwLock<Manager<SafeModeEnvironment>> {
+        &*MANAGER_SAFE_MODE
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::fs;
     use tempfile::Builder;
 
     use super::*;
+    use crate::*;
+
+    use backend::Lmdb;
+
+    /// Test that a manager can be created with simple type inference.
+    #[test]
+    fn test_simple() {
+        let _ = Manager::<LmdbEnvironment>::singleton().write().unwrap();
+    }
+
+    /// Test that a shared Rkv instance can be created with simple type inference.
+    #[test]
+    fn test_simple_2() {
+        let root = Builder::new().prefix("test_simple").tempdir().expect("tempdir");
+        fs::create_dir_all(root.path()).expect("dir created");
+
+        let mut manager = Manager::<LmdbEnvironment>::singleton().write().unwrap();
+        let _ = manager.get_or_create(root.path(), Rkv::new::<Lmdb>).unwrap();
+    }
 
     /// Test that the manager will return the same Rkv instance each time for each path.
     #[test]
@@ -135,12 +141,12 @@ mod tests {
         let root = Builder::new().prefix("test_same").tempdir().expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
-        let mut manager = Manager::new();
+        let mut manager = Manager::<LmdbEnvironment>::new();
 
         let p = root.path();
         assert!(manager.get(p).expect("success").is_none());
 
-        let created_arc = manager.get_or_create(p, Rkv::new).expect("created");
+        let created_arc = manager.get_or_create(p, Rkv::new::<Lmdb>).expect("created");
         let fetched_arc = manager.get(p).expect("success").expect("existed");
         assert!(Arc::ptr_eq(&created_arc, &fetched_arc));
     }
@@ -148,12 +154,12 @@ mod tests {
     /// Test that one can mutate managed Rkv instances in surprising ways.
     #[test]
     fn test_mutate_managed_rkv() {
-        let mut manager = Manager::new();
+        let mut manager = Manager::<LmdbEnvironment>::new();
 
         let root1 = Builder::new().prefix("test_mutate_managed_rkv_1").tempdir().expect("tempdir");
         fs::create_dir_all(root1.path()).expect("dir created");
         let path1 = root1.path();
-        let arc = manager.get_or_create(path1, Rkv::new).expect("created");
+        let arc = manager.get_or_create(path1, Rkv::new::<Lmdb>).expect("created");
 
         // Arc<RwLock<>> has interior mutability, so we can replace arc's Rkv
         // instance with a new instance that has a different path.
@@ -162,7 +168,7 @@ mod tests {
         let path2 = root2.path();
         {
             let mut rkv = arc.write().expect("guard");
-            let rkv2 = Rkv::new(path2).expect("Rkv");
+            let rkv2 = Rkv::new::<Lmdb>(path2).expect("Rkv");
             *rkv = rkv2;
         }
 
@@ -174,7 +180,7 @@ mod tests {
 
         // Meanwhile, a new Arc for path2 has a different pointer, even though
         // its Rkv's path is the same as arc's current path.
-        let path2_arc = manager.get_or_create(path2, Rkv::new).expect("success");
+        let path2_arc = manager.get_or_create(path2, Rkv::new::<Lmdb>).expect("success");
         assert!(!Arc::ptr_eq(&path2_arc, &arc));
     }
 
@@ -184,12 +190,71 @@ mod tests {
         let root = Builder::new().prefix("test_same").tempdir().expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
-        let mut manager = Manager::new();
+        let mut manager = Manager::<LmdbEnvironment>::new();
 
         let p = root.path();
         assert!(manager.get(p).expect("success").is_none());
 
-        let created_arc = manager.get_or_create_with_capacity(p, 10, Rkv::with_capacity).expect("created");
+        let created_arc = manager.get_or_create_with_capacity(p, 10, Rkv::with_capacity::<Lmdb>).expect("created");
+        let fetched_arc = manager.get(p).expect("success").expect("existed");
+        assert!(Arc::ptr_eq(&created_arc, &fetched_arc));
+    }
+}
+
+#[cfg(test)]
+mod tests_safe {
+    use std::fs;
+    use tempfile::Builder;
+
+    use super::*;
+    use crate::*;
+
+    use backend::SafeMode;
+
+    /// Test that a manager can be created with simple type inference.
+    #[test]
+    fn test_simple() {
+        let _ = Manager::<SafeModeEnvironment>::singleton().write().unwrap();
+    }
+
+    /// Test that a shared Rkv instance can be created with simple type inference.
+    #[test]
+    fn test_simple_2() {
+        let root = Builder::new().prefix("test_simple").tempdir().expect("tempdir");
+        fs::create_dir_all(root.path()).expect("dir created");
+
+        let mut manager = Manager::<SafeModeEnvironment>::singleton().write().unwrap();
+        let _ = manager.get_or_create(root.path(), Rkv::new::<SafeMode>).unwrap();
+    }
+
+    /// Test that the manager will return the same Rkv instance each time for each path.
+    #[test]
+    fn test_same() {
+        let root = Builder::new().prefix("test_same").tempdir().expect("tempdir");
+        fs::create_dir_all(root.path()).expect("dir created");
+
+        let mut manager = Manager::<SafeModeEnvironment>::new();
+
+        let p = root.path();
+        assert!(manager.get(p).expect("success").is_none());
+
+        let created_arc = manager.get_or_create(p, Rkv::new::<SafeMode>).expect("created");
+        let fetched_arc = manager.get(p).expect("success").expect("existed");
+        assert!(Arc::ptr_eq(&created_arc, &fetched_arc));
+    }
+
+    /// Test that the manager will return the same Rkv instance each time for each path.
+    #[test]
+    fn test_same_with_capacity() {
+        let root = Builder::new().prefix("test_same").tempdir().expect("tempdir");
+        fs::create_dir_all(root.path()).expect("dir created");
+
+        let mut manager = Manager::<SafeModeEnvironment>::new();
+
+        let p = root.path();
+        assert!(manager.get(p).expect("success").is_none());
+
+        let created_arc = manager.get_or_create_with_capacity(p, 10, Rkv::with_capacity::<SafeMode>).expect("created");
         let fetched_arc = manager.get(p).expect("success").expect("existed");
         assert!(Arc::ptr_eq(&created_arc, &fetched_arc));
     }

@@ -8,12 +8,16 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
+use std::io;
+use std::num;
 use std::path::PathBuf;
+use std::str;
+use std::thread;
+use std::thread::ThreadId;
 
-use bincode;
 use failure::Fail;
-use lmdb;
 
+pub use crate::backend::SafeModeError;
 use crate::value::Type;
 
 #[derive(Debug, Fail)]
@@ -51,8 +55,17 @@ impl From<Box<bincode::ErrorKind>> for DataError {
 
 #[derive(Debug, Fail)]
 pub enum StoreError {
+    #[fail(display = "database corrupted")]
+    DatabaseCorrupted,
+
+    #[fail(display = "database invalid")]
+    DatabaseInvalid,
+
+    #[fail(display = "key/value pair not found")]
+    KeyValuePairNotFound,
+
     #[fail(display = "I/O error: {:?}", _0)]
-    IoError(::std::io::Error),
+    IoError(io::Error),
 
     #[fail(display = "directory does not exist or not a directory: {:?}", _0)]
     DirectoryDoesNotExistError(PathBuf),
@@ -60,28 +73,29 @@ pub enum StoreError {
     #[fail(display = "data error: {:?}", _0)]
     DataError(DataError),
 
-    #[fail(display = "lmdb error: {}", _0)]
+    #[fail(display = "lmdb backend error: {}", _0)]
     LmdbError(lmdb::Error),
 
+    #[fail(display = "safe mode backend error: {}", _0)]
+    SafeModeError(SafeModeError),
+
     #[fail(display = "read transaction already exists in thread {:?}", _0)]
-    ReadTransactionAlreadyExists(::std::thread::ThreadId),
+    ReadTransactionAlreadyExists(ThreadId),
 
     #[fail(display = "attempted to open DB during transaction in thread {:?}", _0)]
-    OpenAttemptedDuringTransaction(::std::thread::ThreadId),
+    OpenAttemptedDuringTransaction(ThreadId),
+
+    #[fail(display = "other backing store error: {}", _0)]
+    OtherError(i32),
 }
 
 impl StoreError {
     pub fn open_during_transaction() -> StoreError {
-        StoreError::OpenAttemptedDuringTransaction(::std::thread::current().id())
+        StoreError::OpenAttemptedDuringTransaction(thread::current().id())
     }
-}
 
-impl From<lmdb::Error> for StoreError {
-    fn from(e: lmdb::Error) -> StoreError {
-        match e {
-            lmdb::Error::BadRslot => StoreError::ReadTransactionAlreadyExists(::std::thread::current().id()),
-            e => StoreError::LmdbError(e),
-        }
+    pub fn read_transaction_already_exists() -> StoreError {
+        StoreError::ReadTransactionAlreadyExists(thread::current().id())
     }
 }
 
@@ -91,8 +105,8 @@ impl From<DataError> for StoreError {
     }
 }
 
-impl From<::std::io::Error> for StoreError {
-    fn from(e: ::std::io::Error) -> StoreError {
+impl From<io::Error> for StoreError {
+    fn from(e: io::Error) -> StoreError {
         StoreError::IoError(e)
     }
 }
@@ -109,7 +123,7 @@ pub enum MigrateError {
     IndeterminateBitDepth,
 
     #[fail(display = "I/O error: {:?}", _0)]
-    IoError(::std::io::Error),
+    IoError(io::Error),
 
     #[fail(display = "invalid DatabaseFlags bits")]
     InvalidDatabaseBits,
@@ -129,14 +143,17 @@ pub enum MigrateError {
     #[fail(display = "invalid page number")]
     InvalidPageNum,
 
-    #[fail(display = "lmdb error: {}", _0)]
+    #[fail(display = "lmdb backend error: {}", _0)]
     LmdbError(lmdb::Error),
+
+    #[fail(display = "safe mode backend error: {}", _0)]
+    SafeModeError(SafeModeError),
 
     #[fail(display = "string conversion error")]
     StringConversionError,
 
     #[fail(display = "TryFromInt error: {:?}", _0)]
-    TryFromIntError(::std::num::TryFromIntError),
+    TryFromIntError(num::TryFromIntError),
 
     #[fail(display = "unexpected Page variant")]
     UnexpectedPageVariant,
@@ -148,23 +165,23 @@ pub enum MigrateError {
     UnsupportedPageHeaderVariant,
 
     #[fail(display = "UTF8 error: {:?}", _0)]
-    Utf8Error(::std::str::Utf8Error),
+    Utf8Error(str::Utf8Error),
 }
 
-impl From<::std::io::Error> for MigrateError {
-    fn from(e: ::std::io::Error) -> MigrateError {
+impl From<io::Error> for MigrateError {
+    fn from(e: io::Error) -> MigrateError {
         MigrateError::IoError(e)
     }
 }
 
-impl From<::std::str::Utf8Error> for MigrateError {
-    fn from(e: ::std::str::Utf8Error) -> MigrateError {
+impl From<str::Utf8Error> for MigrateError {
+    fn from(e: str::Utf8Error) -> MigrateError {
         MigrateError::Utf8Error(e)
     }
 }
 
-impl From<::std::num::TryFromIntError> for MigrateError {
-    fn from(e: ::std::num::TryFromIntError) -> MigrateError {
+impl From<num::TryFromIntError> for MigrateError {
+    fn from(e: num::TryFromIntError) -> MigrateError {
         MigrateError::TryFromIntError(e)
     }
 }
@@ -183,8 +200,12 @@ impl From<String> for MigrateError {
 
 impl From<lmdb::Error> for MigrateError {
     fn from(e: lmdb::Error) -> MigrateError {
-        match e {
-            e => MigrateError::LmdbError(e),
-        }
+        MigrateError::LmdbError(e)
+    }
+}
+
+impl From<SafeModeError> for MigrateError {
+    fn from(e: SafeModeError) -> MigrateError {
+        MigrateError::SafeModeError(e)
     }
 }

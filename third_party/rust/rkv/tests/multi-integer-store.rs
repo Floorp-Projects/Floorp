@@ -7,22 +7,27 @@
 // under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
+#![cfg(all(feature = "db-dup-sort", feature = "db-int-key"))]
 
+use std::fs;
+
+use serde_derive::Serialize;
+use tempfile::Builder;
+
+use rkv::backend::Lmdb;
 use rkv::{
     PrimitiveInt,
     Rkv,
     StoreOptions,
     Value,
 };
-use serde_derive::Serialize;
-use std::fs;
-use tempfile::Builder;
 
 #[test]
 fn test_multi_integer_keys() {
     let root = Builder::new().prefix("test_integer_keys").tempdir().expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
-    let k = Rkv::new(root.path()).expect("new succeeded");
+
+    let k = Rkv::new::<Lmdb>(root.path()).expect("new succeeded");
     let s = k.open_multi_integer("s", StoreOptions::create()).expect("open");
 
     macro_rules! test_integer_keys {
