@@ -175,6 +175,10 @@ struct BaseEventFlags {
   // instance).
   bool mPostedToRemoteProcess : 1;
 
+  // At lease one of the event in the event path had non privileged click
+  // listener.
+  bool mHadNonPrivilegedClickListeners : 1;
+
   // If the event is being handled in target phase, returns true.
   inline bool InTargetPhase() const {
     return (mInBubblingPhase && mInCapturePhase);
@@ -365,7 +369,7 @@ struct BaseEventFlags {
   }
 
  private:
-  typedef uint32_t RawFlags;
+  typedef uint64_t RawFlags;
 
   inline void SetRawFlags(RawFlags aRawFlags) {
     static_assert(sizeof(BaseEventFlags) <= sizeof(RawFlags),
