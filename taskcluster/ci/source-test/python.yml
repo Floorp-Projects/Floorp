@@ -305,3 +305,21 @@ mozbuild:
             - 'python/mozversioncontrol/**'
             - 'testing/mozbase/**'
             - 'testing/xpcshell/xpcshellcommandline.py'
+
+condprof:
+    description: testing/condprofile unit tests
+    platform:
+        - linux64/opt
+        - macosx1014-64/opt
+        - windows10-64/opt
+    python-version: [2]
+    treeherder:
+        symbol: condprof
+    run:
+        using: python-test
+        subsuite: condprof
+    when:
+        files-changed:
+            - 'testing/condprofile/condprof**'
+            - 'testing/condprofile/setup.py'
+

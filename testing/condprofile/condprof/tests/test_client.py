@@ -64,3 +64,12 @@ class TestClient(unittest.TestCase):
 
         # and do a single extra HEAD call
         self.assertEqual(len(responses.calls), response_calls + 1)
+
+
+if __name__ == '__main__':
+    try:
+        import mozunit
+    except ImportError:
+        pass
+    else:
+        mozunit.main(runwith="unittest")

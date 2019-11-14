@@ -1,0 +1,3 @@
+include README.rst CHANGES LICENSE
+include test_responses.py tox.ini
+global-exclude *~
