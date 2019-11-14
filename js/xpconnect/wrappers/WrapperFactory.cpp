@@ -487,16 +487,6 @@ static const Wrapper* SelectWrapper(bool securityWrapper, XrayType xrayType,
 
   // There's never any reason to expose other objects to non-subsuming actors.
   // Just use an opaque wrapper in these cases.
-  //
-  // In general, we don't want opaque function wrappers to be callable.
-  // But in the case of XBL, we rely on content being able to invoke
-  // functions exposed from the XBL scope. We could remove this exception,
-  // if needed, by using ExportFunction to generate the content-side
-  // representations of XBL methods.
-  if (xrayType == XrayForJSObject && IsInContentXBLScope(obj)) {
-    return &FilteringWrapper<CrossCompartmentSecurityWrapper,
-                             OpaqueWithCall>::singleton;
-  }
   return &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
 }
 

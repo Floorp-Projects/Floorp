@@ -497,16 +497,6 @@ Scriptability& Scriptability::Get(JSObject* aScope) {
   return RealmPrivate::Get(aScope)->scriptability;
 }
 
-bool IsContentXBLCompartment(JS::Compartment* compartment) { return false; }
-
-bool IsContentXBLScope(JS::Realm* realm) {
-  return IsContentXBLCompartment(JS::GetCompartmentForRealm(realm));
-}
-
-bool IsInContentXBLScope(JSObject* obj) {
-  return IsContentXBLCompartment(js::GetObjectCompartment(obj));
-}
-
 bool IsUAWidgetCompartment(JS::Compartment* compartment) {
   // We always eagerly create compartment privates for UA Widget compartments.
   CompartmentPrivate* priv = CompartmentPrivate::Get(compartment);

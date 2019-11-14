@@ -905,9 +905,6 @@ class XPCWrappedNativeScope final
     return js::GetFirstGlobalInCompartment(Compartment());
   }
 
-  bool IsContentXBLScope() {
-    return xpc::IsContentXBLCompartment(Compartment());
-  }
   bool AllowContentXBLScope(JS::Realm* aRealm);
 
   // ID Object prototype caches.
