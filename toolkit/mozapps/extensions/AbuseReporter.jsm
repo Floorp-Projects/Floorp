@@ -23,6 +23,9 @@ const MAX_STRING_LENGTH = 255;
 // Minimum time between report submissions (in ms).
 const MIN_MS_BETWEEN_SUBMITS = 30000;
 
+// The addon types currently supported by the integrated abuse report panel.
+const SUPPORTED_ADDON_TYPES = ["extension", "theme"];
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AMTelemetry: "resource://gre/modules/AddonManager.jsm",
@@ -422,6 +425,15 @@ const AbuseReporter = {
     const report = await AbuseReporter.createAbuseReport(addonId, {
       reportEntryPoint,
     });
+
+    if (!SUPPORTED_ADDON_TYPES.includes(report.addon.type)) {
+      throw new Error(
+        `Addon type "${
+          report.addon.type
+        }" is not currently supported by the integrated abuse reporting feature`
+      );
+    }
+
     const params = Cc["@mozilla.org/array;1"].createInstance(
       Ci.nsIMutableArray
     );
