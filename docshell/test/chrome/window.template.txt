@@ -30,7 +30,7 @@
     //
     function testIterator()
     {
-      // Test steps go here.  See bug303267_window.xul for an example.
+      // Test steps go here.  See bug303267_window.xhtml for an example.
 
       // Tell the framework the test is finished.  Include the final 'yield' 
       // statement to prevent a StopIteration exception from being thrown.

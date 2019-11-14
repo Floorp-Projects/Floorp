@@ -8,7 +8,7 @@
 #
 #   perl gen_template.pl -b 303267
 #
-# Writes test case template files test_bug303267.xul and bug303267_window.xul
+# Writes test case template files test_bug303267.xhtml and bug303267_window.xhtml
 # to the current directory.
 
 use FindBin;
@@ -18,7 +18,7 @@ GetOptions("b=i"=> \$bug_number);
 $template = "$FindBin::RealBin/test.template.txt";
 
 open(IN,$template) or die("Failed to open input file for reading.");
-open(OUT, ">>test_bug" . $bug_number . ".xul") or die("Failed to open output file for appending.");
+open(OUT, ">>test_bug" . $bug_number . ".xhtml") or die("Failed to open output file for appending.");
 while((defined(IN)) && ($line = <IN>)) {
         $line =~ s/{BUGNUMBER}/$bug_number/g;
         print OUT $line;
@@ -29,7 +29,7 @@ close(OUT);
 $template = "$FindBin::RealBin/window.template.txt";
 
 open(IN,$template) or die("Failed to open input file for reading.");
-open(OUT, ">>bug" . $bug_number . "_window.xul") or die("Failed to open output file for appending.");
+open(OUT, ">>bug" . $bug_number . "_window.xhtml") or die("Failed to open output file for appending.");
 while((defined(IN)) && ($line = <IN>)) {
         $line =~ s/{BUGNUMBER}/$bug_number/g;
         print OUT $line;
