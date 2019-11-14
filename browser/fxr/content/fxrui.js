@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* import-globals-from common.js */
+/* import-globals-from permissions.js */
 
 // Configuration vars
 let homeURL = "https://webxr.today/";
@@ -15,6 +16,12 @@ let licenseURL =
 
 // https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/browser
 let browser = null;
+// Keep track of the current Permissions request to only allow one outstanding
+// request/prompt at a time.
+let currentPermissionRequest = null;
+// And, keep a queue of pending Permissions requests to resolve when the
+// current request finishes
+let pendingPermissionRequests = [];
 // The following variable map to UI elements whose behavior changes depending
 // on some state from the browser control
 let urlInput = null;
@@ -78,6 +85,10 @@ function setupBrowser() {
     browser.loadUrlWithSystemPrincipal = function(url) {
       this.loadURI(url, { triggeringPrincipal: gSystemPrincipal });
     };
+
+    // Expose this function for Permissions to be used on this browser element
+    // in other parts of the frontend
+    browser.fxrPermissionPrompt = permissionPrompt;
 
     urlInput.value = homeURL;
     browser.loadUrlWithSystemPrincipal(homeURL);
@@ -203,6 +214,10 @@ function setupUrlBar() {
   });
 }
 
+//
+// Code to manage Settings UI
+//
+
 function openSettings() {
   let browserSettingsUI = document.createXULElement("browser");
   browserSettingsUI.setAttribute("type", "chrome");
@@ -232,4 +247,36 @@ function showLicenseInfo() {
 function showReportIssue() {
   closeSettings();
   browser.loadUrlWithSystemPrincipal(reportIssueURL);
+}
+
+//
+// Code to manage Permissions UI
+//
+
+function permissionPrompt(aRequest) {
+  let newPrompt;
+  if (aRequest instanceof Ci.nsIContentPermissionRequest) {
+    newPrompt = new FxrContentPrompt(aRequest, this, finishPrompt);
+  } else {
+    newPrompt = new FxrWebRTCPrompt(aRequest, this, finishPrompt);
+  }
+
+  if (currentPermissionRequest) {
+    // There is already an outstanding request running. Cache this new request
+    // to be prompted later
+    pendingPermissionRequests.push(newPrompt);
+  } else {
+    currentPermissionRequest = newPrompt;
+    currentPermissionRequest.showPrompt();
+  }
+}
+
+function finishPrompt() {
+  if (pendingPermissionRequests.length) {
+    // Prompt the next request
+    currentPermissionRequest = pendingPermissionRequests.shift();
+    currentPermissionRequest.showPrompt();
+  } else {
+    currentPermissionRequest = null;
+  }
 }
