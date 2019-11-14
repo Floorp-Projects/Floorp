@@ -1670,6 +1670,7 @@ class Assembler : public AssemblerShared {
 
   static bool SupportsFloatingPoint() { return HasVFP(); }
   static bool SupportsUnalignedAccesses() { return HasARMv7(); }
+  static bool SupportsFastUnalignedAccesses() { return false; }
   static bool SupportsSimd() { return js::jit::SupportsSimd; }
 
   static bool HasRoundInstruction(RoundingMode mode) { return false; }
