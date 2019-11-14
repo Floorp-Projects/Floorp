@@ -744,7 +744,7 @@ linux64-fuzzing-ccov/opt:
     fetches:
         toolchain:
             - linux64-clang
-            - linux64-gcc
+            - linux64-gcc-7
             - linux64-cbindgen
             - linux64-rust
             - linux64-rust-size
@@ -1104,7 +1104,7 @@ linux64-ccov/opt:
         toolchain:
             - linux64-clang-9
             - linux64-rust
-            - linux64-gcc
+            - linux64-gcc-7
             - linux64-cbindgen
             - linux64-sccache
             - linux64-nasm
