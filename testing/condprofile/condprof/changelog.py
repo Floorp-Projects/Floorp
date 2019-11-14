@@ -21,6 +21,8 @@ class Changelog:
         if os.path.exists(self.location):
             with open(self.location) as f:
                 self._data = json.loads(f.read())
+                if "changes" not in self._data:
+                    self._data["changes"] = []
         else:
             self._data = {"changes": []}
 
