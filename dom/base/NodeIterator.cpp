@@ -171,8 +171,8 @@ already_AddRefed<nsINode> NodeIterator::NextOrPrevNode(
   } ac(&mWorkingPointer);
 
   while ((mWorkingPointer.*aMove)(mRoot)) {
-    nsCOMPtr<nsINode> testNode = mWorkingPointer.mNode;
-    int16_t filtered = TestNode(testNode, aResult);
+    nsCOMPtr<nsINode> testNode;
+    int16_t filtered = TestNode(mWorkingPointer.mNode, aResult, &testNode);
     if (aResult.Failed()) {
       return nullptr;
     }
