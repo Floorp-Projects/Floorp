@@ -132,9 +132,6 @@ class JitRuntime {
  private:
   friend class JitRealm;
 
-  // Executable allocator for all code except wasm code.
-  MainThreadData<ExecutableAllocator> execAlloc_;
-
   MainThreadData<uint64_t> nextCompilationId_;
 
   // Buffer for OSR from baseline to Ion. To avoid holding on to this for too
@@ -305,8 +302,6 @@ class JitRuntime {
   static void TraceJitcodeGlobalTableForMinorGC(JSTracer* trc);
   static MOZ_MUST_USE bool MarkJitcodeGlobalTableIteratively(GCMarker* marker);
   static void TraceWeakJitcodeGlobalTable(JSRuntime* rt, JSTracer* trc);
-
-  ExecutableAllocator& execAlloc() { return execAlloc_.ref(); }
 
   const BaselineICFallbackCode& baselineICFallbackCode() const {
     return baselineICFallbackCode_.ref();
@@ -500,11 +495,15 @@ class JitZone {
                 SystemAllocPolicy, IcStubCodeMapGCPolicy<CacheIRStubKey>>;
   BaselineCacheIRStubCodeMap baselineCacheIRStubCodes_;
 
+  // Executable allocator for all code except wasm code.
+  MainThreadData<ExecutableAllocator> execAlloc_;
+
  public:
   void traceWeak(JSTracer* trc);
 
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                              size_t* jitZone, size_t* baselineStubsOptimized,
+                              JS::CodeSizes* code, size_t* jitZone,
+                              size_t* baselineStubsOptimized,
                               size_t* cachedCFG) const;
 
   OptimizedICStubSpace* optimizedStubSpace() { return &optimizedStubSpace_; }
@@ -540,6 +539,9 @@ class JitZone {
     return ionCacheIRStubInfoSet_.add(p, std::move(key));
   }
   void purgeIonCacheIRStubInfo() { ionCacheIRStubInfoSet_.clearAndCompact(); }
+
+  ExecutableAllocator& execAlloc() { return execAlloc_.ref(); }
+  const ExecutableAllocator& execAlloc() const { return execAlloc_.ref(); }
 };
 
 class JitRealm {
