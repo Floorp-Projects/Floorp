@@ -30,6 +30,7 @@ import java.lang.IllegalStateException
 import kotlinx.coroutines.CompletableDeferred
 import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.support.test.argumentCaptor
+import org.mockito.Mockito.reset
 
 @RunWith(AndroidJUnit4::class)
 class FennecMigratorTest {
@@ -422,6 +423,13 @@ class FennecMigratorTest {
         }
 
         verifyZeroInteractions(accountManager)
+
+        // Does not run FxA migration again.
+        with(migrator.migrateAsync().await()) {
+            assertEquals(0, this.size)
+        }
+
+        verifyZeroInteractions(accountManager)
     }
 
     @Test
@@ -438,6 +446,13 @@ class FennecMigratorTest {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.FxA))
             assertTrue(this.getValue(Migration.FxA).success)
+        }
+
+        verifyZeroInteractions(accountManager)
+
+        // Does not run FxA migration again.
+        with(migrator.migrateAsync().await()) {
+            assertEquals(0, this.size)
         }
 
         verifyZeroInteractions(accountManager)
@@ -469,6 +484,14 @@ class FennecMigratorTest {
         assertEquals("252fsvj8932vj32movj97325hjfksdhfjstrg23yurt267r23", captor.value.authInfo.kSync)
         assertEquals("0b3ba79bfxdf32f3of32jowef7987f", captor.value.authInfo.kXCS)
         assertEquals("fjsdkfksf3e8f32f23f832fwf32jf89o327u2843gj23", captor.value.authInfo.sessionToken)
+
+        // Does not run FxA migration again.
+        reset(accountManager)
+        with(migrator.migrateAsync().await()) {
+            assertEquals(0, this.size)
+        }
+
+        verifyZeroInteractions(accountManager)
     }
 
     @Test
@@ -498,5 +521,13 @@ class FennecMigratorTest {
         assertEquals("252bc4ccc3a239fsdfsdf32fg32wf3w4e3472d41d1a204890", captor.value.authInfo.kSync)
         assertEquals("0b3ba79b18bd9fsdfsdf4g234adedd87", captor.value.authInfo.kXCS)
         assertEquals("fsdfjsdffsdf342f23g3ogou97328uo23ij", captor.value.authInfo.sessionToken)
+
+        // Does not run FxA migration again.
+        reset(accountManager)
+        with(migrator.migrateAsync().await()) {
+            assertEquals(0, this.size)
+        }
+
+        verifyZeroInteractions(accountManager)
     }
 }
