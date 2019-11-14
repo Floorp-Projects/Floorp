@@ -40,6 +40,37 @@ nsresult nsMIMEInfoWin::LaunchDefaultWithFile(nsIFile* aFile) {
   return aFile->Launch();
 }
 
+// Helper routine to call mozilla::ShellExecuteByExplorer
+static nsresult ShellExecuteWithIFile(const nsCOMPtr<nsIFile>& aExecutable,
+                                      const _variant_t& aArgs) {
+  nsresult rv;
+
+  nsAutoString execPath;
+  rv = aExecutable->GetTarget(execPath);
+  if (NS_FAILED(rv) || execPath.IsEmpty()) {
+    rv = aExecutable->GetPath(execPath);
+  }
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  _bstr_t execPathBStr(execPath.get());
+  _variant_t verb(L"open");
+  _variant_t workingDir;
+  _variant_t showCmd(SW_SHOWNORMAL);
+
+  // Ask Explorer to ShellExecute on our behalf, as some applications such as
+  // Skype for Business do not start correctly when inheriting our process's
+  // migitation policies.
+  mozilla::LauncherVoidResult shellExecuteOk = mozilla::ShellExecuteByExplorer(
+      execPathBStr, aArgs, verb, workingDir, showCmd);
+  if (shellExecuteOk.isErr()) {
+    return NS_ERROR_FILE_EXECUTION_FAILED;
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsMIMEInfoWin::LaunchWithFile(nsIFile* aFile) {
   nsresult rv;
@@ -130,7 +161,7 @@ nsMIMEInfoWin::LaunchWithFile(nsIFile* aFile) {
         return NS_ERROR_FILE_EXECUTION_FAILED;
       }
     }
-    return LaunchWithIProcess(executable, path);
+    return ShellExecuteWithIFile(executable, _variant_t(path.get()));
   }
 
   return NS_ERROR_INVALID_ARG;

@@ -23,6 +23,8 @@ addEventListener("fetch", function(evt) {
       return new Response("service worker generated download", {
         headers: {
           "Content-Disposition": 'attachment; filename="fake_download.bin"',
+          // Prevent the default text editor from being launched
+          "Content-Type": "application/octet-stream",
           // fake encoding header that should have no effect
           "Content-Encoding": "gzip",
         },
