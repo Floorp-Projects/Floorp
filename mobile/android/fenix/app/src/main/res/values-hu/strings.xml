@@ -14,7 +14,7 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Keressen, vagy adjon meg címet</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header">Nincsenek nyitott lapok</string>
+    <string name="no_open_tabs_header_2">Nincsenek nyitott lapok</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">A nyitott lapok itt fognak megjelenni.</string>
 
@@ -58,6 +58,10 @@
     <string name="browser_menu_refresh">Frissítés</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Leállítás</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">Könyvjelzőzés</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">Könyvjelző szerkesztése</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Súgó</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -90,6 +94,17 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by">%1$s ALAPOKON</string>
+
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">A motorháztető alatt: %1$s</string>
+
+    <!-- Browser menu button to put the the current page in reader mode -->
+    <string name="browser_menu_read">Olvasó nézet</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">Megnyitás alkalmazásban</string>
+    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
+    <string name="browser_menu_read_appearance">Megjelenés</string>
 
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
@@ -300,27 +315,6 @@
     <string name="preference_auto_battery_theme">Energiagazdálkodás által beállítva</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Az eszköz témájának követése</string>
-
-    <!-- Quick Action Sheet -->
-    <!-- Button in the browser chrome to share the current page -->
-    <string name="quick_action_share">Megosztás</string>
-    <!-- Button in the browser chrome to download the current page -->
-    <string name="quick_action_download">Letöltés</string>
-    <!-- Button in the browser chrome in the browser to bookmark the current page -->
-    <string name="quick_action_bookmark">Könyvjelző</string>
-    <!-- Button in the browser chrome in the browser to edit the bookmark of the current page -->
-    <string name="quick_action_bookmark_edit">Könyvjelző szerkesztése</string>
-    <!-- Button in the browser chrome in the browser to put the the current page in reader mode -->
-    <string name="quick_action_read">Olvasás</string>
-    <!-- Button in the browser chrome to exit reader mode -->
-    <string name="quick_action_read_close">Bezárás</string>
-    <!-- Button in the browser chrome to open the current page in an external app -->
-    <string name="quick_action_open_app_link">Megnyitás alkalmazásban</string>
-    <!-- Button in the browser chrome to configure reader mode appearance e.g. the used font type and size -->
-    <string name="quick_action_read_appearance">Megjelenés</string>
-    <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
-        with shortcuts to commonly used actions such as Share, Bookmark etc.. -->
-    <string name="quick_action_sheet_handle">Gyors műveletek</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -648,6 +642,8 @@
     <string name="notification_pbm_action_open">Megnyitás</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
     <string name="notification_pbm_action_delete_and_open">Törlés és megnyitás</string>
+    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_powered_by_channel_name">A motorháztető alatt</string>
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Gyűjtemény törölve</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -937,6 +933,9 @@
     <!-- Paste the text in the clipboard -->
     <string name="browser_toolbar_long_press_popup_paste">Beillesztés</string>
   
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL a vágólapra másolva</string>
+  
     <!-- Title text for the Add To Homescreen dialog -->
     <string name="add_to_homescreen_title">Kezdőképernyőhöz adás</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
@@ -1016,4 +1015,16 @@
     <string name="saved_login_reveal_password">Jelszó megjelenítése</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Jelszó elrejtése</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Feloldás a mentett bejelentkezések megtekintéshez</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Helyezze biztonságba bejelentkezéseit és jelszavait</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Állítsa be az eszköz lezárási mintáját, PIN-kódját vagy jelszavát, hogy megvédje a mentett bejelentkezéseit és jelszavait, ha valaki hozzáfér az eszközéhez.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">Később</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Beállítás most</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Eszköz feloldása</string>
 </resources>

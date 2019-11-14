@@ -1029,4 +1029,16 @@
     <string name="saved_login_reveal_password">Zobraziť heslo</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Skryť heslo</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Pre zobrazenie prihlasovacích údajov odomknite zariadenie</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Zabezpečte svoje prihlasovacie údaje</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Nastavte si vzor, kód alebo heslo, ktorým ochránite svoje uložené prihlasovacie údaje v prípade, že vaše zariadenie bude používať niekto iný.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">Neskôr</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Nastaviť</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Odomknite svoje zariadenie</string>
 </resources>

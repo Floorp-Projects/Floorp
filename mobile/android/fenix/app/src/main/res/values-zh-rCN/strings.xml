@@ -17,7 +17,7 @@
     <string name="search_hint">搜索或输入网址</string>
 
     <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header">无打开的标签页</string>
+    <string name="no_open_tabs_header_2">没有打开的标签页</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">您打开的标签页将显示于此。</string>
 
@@ -56,6 +56,10 @@
     <string name="browser_menu_refresh">刷新</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">停止</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">书签</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">编辑书签</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">帮助</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -94,6 +98,13 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">由 %1$s 提供</string>
+
+    <!-- Browser menu button to put the the current page in reader mode -->
+    <string name="browser_menu_read">阅读模式</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">在应用中打开</string>
+    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
+    <string name="browser_menu_read_appearance">外观</string>
 
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
@@ -311,28 +322,6 @@
     <string name="preference_auto_battery_theme">依系统省电模式设置</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">跟随设备主题</string>
-
-    <!-- Quick Action Sheet -->
-    <!-- Button in the browser chrome to share the current page -->
-    <string name="quick_action_share">分享</string>
-    <!-- Button in the browser chrome to download the current page -->
-    <string name="quick_action_download">下载</string>
-    <!-- Button in the browser chrome in the browser to bookmark the current page -->
-    <string name="quick_action_bookmark">添加书签</string>
-
-    <!-- Button in the browser chrome in the browser to edit the bookmark of the current page -->
-    <string name="quick_action_bookmark_edit">编辑书签</string>
-    <!-- Button in the browser chrome in the browser to put the the current page in reader mode -->
-    <string name="quick_action_read">阅读模式</string>
-    <!-- Button in the browser chrome to exit reader mode -->
-    <string name="quick_action_read_close">关闭</string>
-    <!-- Button in the browser chrome to open the current page in an external app -->
-    <string name="quick_action_open_app_link">在应用中打开</string>
-    <!-- Button in the browser chrome to configure reader mode appearance e.g. the used font type and size -->
-    <string name="quick_action_read_appearance">外观</string>
-    <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
-        with shortcuts to commonly used actions such as Share, Bookmark etc.. -->
-    <string name="quick_action_sheet_handle">快捷操作</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1051,4 +1040,16 @@
     <string name="saved_login_reveal_password">显示密码</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">隐藏密码</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">解锁以查看您存放的登录信息</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">保护您的登录名和密码</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">设置锁定方式、PIN 码或密码以保护您存放的登录名与密码，避免他人盗用。</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">稍后</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">立即设置</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">解锁您的设备</string>
 </resources>

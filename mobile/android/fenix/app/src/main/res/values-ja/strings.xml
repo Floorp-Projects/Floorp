@@ -90,6 +90,10 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by">POWERED BY %1$s</string>
 
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">Powered by %1$s</string>
+
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">スキャン</string>
@@ -656,6 +660,8 @@
     <string name="notification_pbm_action_open">開く</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
     <string name="notification_pbm_action_delete_and_open">削除して開く</string>
+    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_powered_by_channel_name">Powered By</string>
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">コレクションを削除しました</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -910,6 +916,8 @@
     <string name="etp_tracking_content_title">トラッキングコンテンツ</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">追跡コードを含む外部の広告、動画、その他のコンテンツの読み込みを停止します。一部のウェブサイトの機能に影響する場合があります。</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_message_2">盾が紫色の時は、%s がこのサイト上のトラッカーをブロックしています。ブロックしているものを確認するには盾をタップしてください。</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">このサイトでは保護が有効になっています</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -938,6 +946,9 @@
     <string name="browser_toolbar_long_press_popup_paste_and_go">貼り付けて移動</string>
     <!-- Paste the text in the clipboard -->
     <string name="browser_toolbar_long_press_popup_paste">貼り付け</string>
+  
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL をクリップボードにコピーしました</string>
   
     <!-- Title text for the Add To Homescreen dialog -->
     <string name="add_to_homescreen_title">ホーム画面に追加</string>
@@ -991,6 +1002,8 @@
     <string name="preferences_passwords_saved_logins_password">パスワード</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin">PIN を再入力してください</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">ロック解除して保存されたログイン情報を表示します</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning">この接続は安全ではありません。ここに入力したログイン情報は漏洩する可能性があります。</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
@@ -1017,4 +1030,16 @@
     <string name="saved_login_reveal_password">パスワードを表示</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">パスワードを隠す</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">ロック解除して保存されたログイン情報を表示します</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">ログイン情報とパスワードの保護</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">端末のロックパターンや PIN、パスワードを設定して、保存されたログイン情報とパスワードを他人の不正なアクセスから保護しましょう。</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">後で</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">今すぐ設定</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">端末のロック解除</string>
 </resources>

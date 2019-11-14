@@ -63,6 +63,10 @@
     <string name="browser_menu_refresh">Vernieuwen</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Stoppen</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">Bladwijzer maken</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">Bladwijzer bewerken</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Help</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -307,27 +311,6 @@
     <string name="preference_auto_battery_theme">Ingesteld door Batterijbesparing</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Apparaatthema volgen</string>
-
-    <!-- Quick Action Sheet -->
-    <!-- Button in the browser chrome to share the current page -->
-    <string name="quick_action_share">Delen</string>
-    <!-- Button in the browser chrome to download the current page -->
-    <string name="quick_action_download">Downloaden</string>
-    <!-- Button in the browser chrome in the browser to bookmark the current page -->
-    <string name="quick_action_bookmark">Bladwijzer maken</string>
-    <!-- Button in the browser chrome in the browser to edit the bookmark of the current page -->
-    <string name="quick_action_bookmark_edit">Bladwijzer bewerken</string>
-    <!-- Button in the browser chrome in the browser to put the the current page in reader mode -->
-    <string name="quick_action_read">Lezen</string>
-    <!-- Button in the browser chrome to exit reader mode -->
-    <string name="quick_action_read_close">Sluiten</string>
-    <!-- Button in the browser chrome to open the current page in an external app -->
-    <string name="quick_action_open_app_link">Openen in app</string>
-    <!-- Button in the browser chrome to configure reader mode appearance e.g. the used font type and size -->
-    <string name="quick_action_read_appearance">Vormgeving</string>
-    <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
-        with shortcuts to commonly used actions such as Share, Bookmark etc.. -->
-    <string name="quick_action_sheet_handle">Snelle acties</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1030,4 +1013,8 @@
     <string name="saved_login_reveal_password">Wachtwoord tonen</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Wachtwoord verbergen</string>
-</resources>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">Later</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Nu instellen</string>
+    </resources>

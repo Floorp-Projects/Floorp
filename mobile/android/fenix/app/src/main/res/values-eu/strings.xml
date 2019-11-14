@@ -92,6 +92,10 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by">%1$s TEKNOLOGIAREKIN</string>
 
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">%1$s nabigatzaileak hornitua</string>
+
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Eskaneatu</string>
@@ -651,6 +655,8 @@
     <string name="notification_pbm_action_open">Ireki</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
     <string name="notification_pbm_action_delete_and_open">Ezabatu eta ireki</string>
+    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_powered_by_channel_name">Hornitzailea</string>
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Bilduma ezabatuta</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -939,6 +945,9 @@
     <!-- Paste the text in the clipboard -->
     <string name="browser_toolbar_long_press_popup_paste">Itsatsi</string>
 
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URLa arbelean kopiatu da</string>
+  
     <!-- Title text for the Add To Homescreen dialog -->
     <string name="add_to_homescreen_title">Gehitu hasierako pantailan</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
@@ -1018,4 +1027,16 @@
     <string name="saved_login_reveal_password">Erakutsi pasahitza</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Ezkutatu pasahitza</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Desblokeatu gordetako saio-hasierak ikusteko</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Lortu zure saio-hasierak eta pasahitzak</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Konfiguratu gailua blokeatzeko patroia, PINa edo pasahitza zure saio-hasierak eta pasahitzak babesteko zure gailua beste norbaitek izango balu.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">Geroago</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Konfiguratu orain</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Desblokeatu zure gailua</string>
 </resources>
