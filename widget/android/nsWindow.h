@@ -341,9 +341,6 @@ class nsWindow final : public nsBaseWidget {
   nsTArray<nsWindow*> mChildren;
   nsWindow* mParent;
 
-  double mStartDist;
-  double mLastDist;
-
   nsCOMPtr<nsIIdleServiceInternal> mIdleService;
 
   bool mIsFullScreen;
