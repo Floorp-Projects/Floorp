@@ -217,6 +217,18 @@ const QueryCache = {
 };
 
 /**
+ * sortMessagesByOrder
+ *
+ * Each message has an associated order, which is guaranteed to be strictly
+ * positive. Sort the messages so that message shows in order specified
+ *
+ */
+
+function sortMessagesByOrder(messages) {
+  return messages.sort((a, b) => a.order - b.order);
+}
+
+/**
  * sortMessagesByWeightedRank
  *
  * Each message has an associated weight, which is guaranteed to be strictly
@@ -462,7 +474,18 @@ const TargetingGetters = {
     return TrackingDBService.sumAllEvents();
   },
   get attachedFxAOAuthClients() {
-    return this.usesFirefoxSync ? fxAccounts.listAttachedOAuthClients() : [];
+    // Explicitly catch error objects e.g.  NO_ACCOUNT triggered when
+    // setting FXA_USERNAME_PREF from tests
+    return this.usesFirefoxSync
+      ? new Promise(resolve => {
+          fxAccounts
+            .listAttachedOAuthClients()
+            .then(clients => {
+              resolve(clients);
+            })
+            .catch(() => resolve([]));
+        })
+      : [];
   },
   get platformName() {
     return AppConstants.platform;
@@ -568,8 +591,10 @@ this.ASRouterTargeting = {
     return result;
   },
 
-  _getSortedMessages(messages) {
-    const weightSortedMessages = sortMessagesByWeightedRank([...messages]);
+  _getSortedMessages(messages, ordered) {
+    const weightSortedMessages = ordered
+      ? sortMessagesByOrder(messages)
+      : sortMessagesByWeightedRank([...messages]);
     const sortedMessages = sortMessagesByTargeting(weightSortedMessages);
     return sortMessagesByPriority(sortedMessages);
   },
@@ -599,10 +624,17 @@ this.ASRouterTargeting = {
    * @param {trigger} string A trigger expression if a message for that trigger is desired
    * @param {obj|null} context A FilterExpression context. Defaults to TargetingGetters above.
    * @param {func} onError A function to handle errors (takes two params; error, message)
+   * @param {func} ordered An optional param when true sort message by order specified in message
    * @returns {obj} an AS router message
    */
-  async findMatchingMessage({ messages, trigger, context, onError }) {
-    const sortedMessages = this._getSortedMessages(messages);
+  async findMatchingMessage({
+    messages,
+    trigger,
+    context,
+    onError,
+    ordered = false,
+  }) {
+    const sortedMessages = this._getSortedMessages(messages, ordered);
     const combinedContext = this._getCombinedContext(trigger, context);
 
     for (const candidate of sortedMessages) {
@@ -623,10 +655,17 @@ this.ASRouterTargeting = {
    * @param {trigger} string A trigger expression if a message for that trigger is desired.
    * @param {obj|null} context A FilterExpression context. Defaults to TargetingGetters above.
    * @param {func} onError A function to handle errors (takes two params; error, message)
+   * @param {func} ordered An optional param when true sort message by order specified in message
    * @returns {Array} An array of AS router messages that match.
    */
-  async findAllMatchingMessages({ messages, trigger, context, onError }) {
-    const sortedMessages = this._getSortedMessages(messages);
+  async findAllMatchingMessages({
+    messages,
+    trigger,
+    context,
+    onError,
+    ordered = false,
+  }) {
+    const sortedMessages = this._getSortedMessages(messages, ordered);
     const combinedContext = this._getCombinedContext(trigger, context);
     const matchingMessages = [];
 
