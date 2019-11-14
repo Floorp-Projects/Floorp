@@ -386,6 +386,7 @@ package org.mozilla.geckoview {
     method @UiThread @NonNull public GeckoResult<Bitmap> capturePixels();
     method @UiThread public void screenOriginChanged(int, int);
     method @UiThread @NonNull public GeckoDisplay.ScreenshotBuilder screenshot();
+    method @UiThread public void setDynamicToolbarMaxHeight(int);
     method @UiThread public void setVerticalClipping(int);
     method @UiThread public boolean shouldPinOnScreen();
     method @UiThread public void surfaceChanged(@NonNull Surface, int, int);
@@ -1149,6 +1150,7 @@ package org.mozilla.geckoview {
     method public int onTouchEventForResult(@NonNull MotionEvent);
     method @UiThread @Nullable public GeckoSession releaseSession();
     method public void setAutofillEnabled(boolean);
+    method public void setDynamicToolbarMaxHeight(int);
     method @UiThread public void setSession(@NonNull GeckoSession);
     method public void setVerticalClipping(int);
     method public boolean shouldPinOnScreen();

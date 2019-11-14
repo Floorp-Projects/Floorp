@@ -37,6 +37,7 @@ using mozilla::gfx::MaybeMatrix4x4 from "mozilla/gfx/Matrix.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
 using mozilla::LayoutDevicePoint from "Units.h";
+using mozilla::ScreenIntCoord from "Units.h";
 using mozilla::ScreenIntPoint from "Units.h";
 using ScreenIntSize from "Units.h";
 using ScreenRect from "Units.h";
@@ -747,6 +748,8 @@ child:
                               ScreenRect aRemoteDocumentRect);
 
     async SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
+
+    async DynamicToolbarMaxHeightChanged(ScreenIntCoord height);
 
     async ParentActivated(bool aActivated);
 

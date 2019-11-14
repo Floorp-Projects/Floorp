@@ -139,6 +139,7 @@ public class GeckoSession implements Parcelable {
     private int mHeight; // Height of the surface (including toolbar);
     private int mClientHeight; // Height of the client area (i.e. excluding toolbar);
     private int mFixedBottomOffset; // The margin for fixed elements attached to the bottom of the viewport.
+    private int mDynamicToolbarMaxHeight = 0; // The maximum height of the dynamic toolbar
     private float mViewportLeft;
     private float mViewportTop;
     private float mViewportZoom = 1.0f;
@@ -203,6 +204,9 @@ public class GeckoSession implements Parcelable {
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
         public native void onBoundsChanged(int left, int top, int width, int height);
+
+        @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
+        public native void setDynamicToolbarMaxHeight(int height);
 
         // Gecko thread pauses compositor; blocks UI thread.
         @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
@@ -5268,6 +5272,26 @@ public class GeckoSession implements Parcelable {
         onWindowBoundsChanged();
     }
 
+    /* package */ void setDynamicToolbarMaxHeight(final int height) {
+        if (mDynamicToolbarMaxHeight == height) {
+            return;
+        }
+
+        if (mHeight != 0 && height != 0 && mHeight < height) {
+            throw new AssertionError("The maximum height of the dynamic toolbar (" +
+                                     height +
+                                     ") should be smaller than GeckoView height (" +
+                                     mHeight + ")");
+        }
+
+        mDynamicToolbarMaxHeight = height;
+
+        if (mAttachedCompositor) {
+            mCompositor.setDynamicToolbarMaxHeight(mDynamicToolbarMaxHeight);
+        }
+    }
+
+
     /* package */ void setFixedBottomOffset(final int offset) {
         mFixedBottomOffset = offset;
 
@@ -5292,6 +5316,7 @@ public class GeckoSession implements Parcelable {
         }
 
         mCompositor.sendToolbarAnimatorMessage(IS_COMPOSITOR_CONTROLLER_OPEN);
+        mCompositor.setDynamicToolbarMaxHeight(mDynamicToolbarMaxHeight);
     }
 
     /* package */ void onCompositorDetached() {
@@ -5442,6 +5467,14 @@ public class GeckoSession implements Parcelable {
     /* protected */ void onWindowBoundsChanged() {
         if (DEBUG) {
             ThreadUtils.assertOnUiThread();
+        }
+
+        if (mHeight != 0 && mDynamicToolbarMaxHeight != 0 &&
+            mHeight < mDynamicToolbarMaxHeight) {
+            throw new AssertionError("The maximum height of the dynamic toolbar (" +
+                                     mDynamicToolbarMaxHeight +
+                                     ") should be smaller than GeckoView height (" +
+                                     mHeight + ")");
         }
 
         final int toolbarHeight;

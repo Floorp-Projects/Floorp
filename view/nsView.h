@@ -449,6 +449,10 @@ class nsView final : public nsIWidgetListener {
   virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) override;
   virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth,
                              int32_t aHeight) override;
+#if defined(MOZ_WIDGET_ANDROID)
+  virtual void DynamicToolbarMaxHeightChanged(
+      mozilla::ScreenIntCoord aHeight) override;
+#endif
   virtual bool RequestWindowClose(nsIWidget* aWidget) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual void WillPaintWindow(nsIWidget* aWidget) override;

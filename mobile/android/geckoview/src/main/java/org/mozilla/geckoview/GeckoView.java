@@ -108,6 +108,7 @@ public class GeckoView extends FrameLayout {
         private boolean mValid;
 
         private int mClippingHeight;
+        private int mDynamicToolbarMaxHeight;
 
         public void acquire(final GeckoDisplay display) {
             mDisplay = display;
@@ -124,6 +125,7 @@ public class GeckoView extends FrameLayout {
                 final SurfaceHolder holder = GeckoView.this.mSurfaceView.getHolder();
                 final Rect frame = holder.getSurfaceFrame();
                 mDisplay.surfaceChanged(holder.getSurface(), frame.right, frame.bottom);
+                mDisplay.setDynamicToolbarMaxHeight(mDynamicToolbarMaxHeight);
                 GeckoView.this.setActive(true);
             }
         }
@@ -150,6 +152,7 @@ public class GeckoView extends FrameLayout {
                                    final int width, final int height) {
             if (mDisplay != null) {
                 mDisplay.surfaceChanged(holder.getSurface(), width, height);
+                mDisplay.setDynamicToolbarMaxHeight(mDynamicToolbarMaxHeight);
                 if (!mValid) {
                     GeckoView.this.setActive(true);
                 }
@@ -185,6 +188,13 @@ public class GeckoView extends FrameLayout {
 
             if (mDisplay != null) {
                 mDisplay.setVerticalClipping(clippingHeight);
+            }
+        }
+
+        public void setDynamicToolbarMaxHeight(final int height) {
+            mDynamicToolbarMaxHeight = height;
+            if (mDisplay != null) {
+                mDisplay.setDynamicToolbarMaxHeight(height);
             }
         }
 
@@ -288,6 +298,18 @@ public class GeckoView extends FrameLayout {
         ThreadUtils.assertOnUiThread();
 
         mDisplay.setVerticalClipping(clippingHeight);
+    }
+
+    /**
+     * Set the maximum height of the dynamic toolbar(s).
+     *
+     * If there are two or more dynamic toolbars, the height value should be the total amount of
+     * the height of each dynamic toolbar.
+     *
+     * @param height The the maximum height of the dynamic toolbar(s).
+     */
+    public void setDynamicToolbarMaxHeight(final int height) {
+        mDisplay.setDynamicToolbarMaxHeight(height);
     }
 
     /* package */ void setActive(final boolean active) {

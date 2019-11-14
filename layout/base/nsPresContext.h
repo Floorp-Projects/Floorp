@@ -381,6 +381,11 @@ class nsPresContext : public nsISupports,
   }
 
   /**
+   * Set the maximum height of the dynamic toolbar in nscoord units.
+   */
+  void SetDynamicToolbarMaxHeight(mozilla::ScreenIntCoord aHeight);
+
+  /**
    * Return true if this presentation context is a paginated
    * context.
    */
@@ -1168,6 +1173,8 @@ class nsPresContext : public nsISupports,
   mozilla::UniquePtr<gfxMissingFontRecorder> mMissingFonts;
 
   nsRect mVisibleArea;
+  // The maximum height of the dynamic toolbar on mobile.
+  mozilla::ScreenIntCoord mDynamicToolbarMaxHeight;
   nsSize mPageSize;
   float mPageScale;
   float mPPScale;
