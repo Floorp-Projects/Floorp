@@ -10,6 +10,7 @@ import mozilla.components.browser.engine.gecko.GeckoEngine
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.pwa.WebAppShortcutManager
+import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 
 class TestCore(context: Context) : Core(context) {
 
@@ -17,4 +18,5 @@ class TestCore(context: Context) : Core(context) {
     override val sessionManager = SessionManager(engine)
     override val store = mockk<BrowserStore>()
     override val webAppShortcutManager = mockk<WebAppShortcutManager>()
+    override fun getSecureAbove22Preferences() = mockk<SecureAbove22Preferences>(relaxed = true)
 }

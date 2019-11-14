@@ -191,19 +191,17 @@ class Core(private val context: Context) {
      * Shared Preferences that encrypt/decrypt using Android KeyStore and lib-dataprotect for 23+
      * otherwise simply stored
      */
-    val secureAbove22Preferences by lazy {
-        SecureAbove22Preferences(context, KEY_STORAGE_NAME)
-    }
+    fun getSecureAbove22Preferences() = SecureAbove22Preferences(context, KEY_STORAGE_NAME)
 
-    private val passwordsEncryptionKey =
-        secureAbove22Preferences.getString(PASSWORDS_KEY)
+    private val passwordsEncryptionKey: String =
+        getSecureAbove22Preferences().getString(PASSWORDS_KEY)
             ?: generateEncryptionKey(KEY_STRENGTH).also {
                 if (context.settings().passwordsEncryptionKeyGenerated) {
                     // We already had previously generated an encryption key, but we have lost it
                     Sentry.capture("Passwords encryption key for passwords storage was lost and we generated a new one")
                 }
                 context.settings().recordPasswordsEncryptionKeyGenerated()
-                secureAbove22Preferences.putString(PASSWORDS_KEY, it)
+                getSecureAbove22Preferences().putString(PASSWORDS_KEY, it)
             }
 
     /**
