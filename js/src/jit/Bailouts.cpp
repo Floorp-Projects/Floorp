@@ -25,6 +25,16 @@ using namespace js::jit;
 
 using mozilla::IsInRange;
 
+// This address is a magic number made to cause crashes while indicating that we
+// are making an attempt to mark the stack during a bailout.
+static constexpr uint32_t FAKE_EXITFP_FOR_BAILOUT_ADDR = 0xba2;
+static uint8_t* const FAKE_EXITFP_FOR_BAILOUT =
+    reinterpret_cast<uint8_t*>(FAKE_EXITFP_FOR_BAILOUT_ADDR);
+
+static_assert(!(FAKE_EXITFP_FOR_BAILOUT_ADDR & wasm::ExitOrJitEntryFPTag),
+              "FAKE_EXITFP_FOR_BAILOUT could be mistaken as a low-bit tagged "
+              "wasm exit fp");
+
 bool jit::Bailout(BailoutStack* sp, BaselineBailoutInfo** bailoutInfo) {
   JSContext* cx = TlsContext.get();
   MOZ_ASSERT(bailoutInfo);

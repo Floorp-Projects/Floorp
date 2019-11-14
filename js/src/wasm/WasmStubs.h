@@ -19,6 +19,7 @@
 #ifndef wasm_stubs_h
 #define wasm_stubs_h
 
+#include "wasm/WasmFrameIter.h"  // js::wasm::ExitReason
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmOpIter.h"
 
