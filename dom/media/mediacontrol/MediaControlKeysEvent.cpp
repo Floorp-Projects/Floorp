@@ -12,12 +12,6 @@
 
 extern mozilla::LazyLogModule gMediaControlLog;
 
-// avoid redefined macro in unified build
-#undef LOG
-#define LOG(msg, ...)                        \
-  MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
-          ("MediaControlKeysEventListener=%p, " msg, this, ##__VA_ARGS__))
-
 namespace mozilla {
 namespace dom {
 
@@ -35,11 +29,17 @@ static const char* ToMediaControlKeysEventStr(MediaControlKeysEvent aKeyEvent) {
   return "Unknown";
 }
 
+// avoid redefined macro in unified build
+#undef LOG_SOURCE
+#define LOG_SOURCE(msg, ...)                 \
+  MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
+          ("MediaControlKeysEventSource=%p, " msg, this, ##__VA_ARGS__))
+
 #undef LOG_KEY
 #define LOG_KEY(msg, key, ...)                                    \
   if (MOZ_LOG_TEST(gMediaControlLog, mozilla::LogLevel::Debug)) { \
     MOZ_LOG(gMediaControlLog, LogLevel::Debug,                    \
-            ("MediaControlKeysEventListener=%p, " msg, this,      \
+            ("MediaControlKeysHandler=%p, " msg, this,            \
              ToMediaControlKeysEventStr(key), ##__VA_ARGS__));    \
   }
 
@@ -78,14 +78,14 @@ NS_IMPL_ISUPPORTS0(MediaControlKeysEventSource)
 void MediaControlKeysEventSource::AddListener(
     MediaControlKeysEventListener* aListener) {
   MOZ_ASSERT(aListener);
-  LOG("Add listener %p", aListener);
+  LOG_SOURCE("Add listener %p", aListener);
   mListeners.AppendElement(aListener);
 }
 
 void MediaControlKeysEventSource::RemoveListener(
     MediaControlKeysEventListener* aListener) {
   MOZ_ASSERT(aListener);
-  LOG("Remove listener %p", aListener);
+  LOG_SOURCE("Remove listener %p", aListener);
   mListeners.RemoveElement(aListener);
 }
 
@@ -93,7 +93,10 @@ size_t MediaControlKeysEventSource::GetListenersNum() const {
   return mListeners.Length();
 }
 
-void MediaControlKeysEventSource::Close() { mListeners.Clear(); }
+void MediaControlKeysEventSource::Close() {
+  LOG_SOURCE("Close source");
+  mListeners.Clear();
+}
 
 }  // namespace dom
 }  // namespace mozilla
