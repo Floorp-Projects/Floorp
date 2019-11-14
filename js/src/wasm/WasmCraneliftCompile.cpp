@@ -25,6 +25,7 @@
 
 #include "wasm/cranelift/baldrapi.h"
 #include "wasm/cranelift/clifapi.h"
+#include "wasm/WasmFrameIter.h"  // js::wasm::GenerateFunction{Pro,Epi}logue
 #include "wasm/WasmGenerator.h"
 
 #include "jit/MacroAssembler-inl.h"

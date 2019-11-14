@@ -7,14 +7,19 @@
 #ifndef jit_Bailouts_h
 #define jit_Bailouts_h
 
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Attributes.h"  // MOZ_MUST_USE
+
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint8_t, uint32_t
 
 #include "jstypes.h"
 
-#include "jit/JitFrames.h"
-#include "jit/JSJitFrameIter.h"
-#include "wasm/WasmFrameIter.h"  // js::wasm::ExitOrJitEntryFPTag
+#include "jit/IonTypes.h"  // js::jit::Bailout{Id,Kind}, js::jit::SnapshotOffset
+#include "jit/JSJitFrameIter.h"  // js::jit::InlineFrameIterator
+#include "jit/Registers.h"       // js::jit::MachineState
+#include "js/TypeDecls.h"        // jsbytecode
+#include "vm/Stack.h"            // js::AbstractFramePtr
 
 namespace js {
 namespace jit {
@@ -130,23 +135,15 @@ static const BailoutId INVALID_BAILOUT_ID = BailoutId(-1);
 // Keep this arbitrarily small for now, for testing.
 static const uint32_t BAILOUT_TABLE_SIZE = 16;
 
-// This address is a magic number made to cause crashes while indicating that we
-// are making an attempt to mark the stack during a bailout.
-static const uint32_t FAKE_EXITFP_FOR_BAILOUT_ADDR = 0xba2;
-static uint8_t* const FAKE_EXITFP_FOR_BAILOUT =
-    reinterpret_cast<uint8_t*>(FAKE_EXITFP_FOR_BAILOUT_ADDR);
-
-static_assert(!(FAKE_EXITFP_FOR_BAILOUT_ADDR & wasm::ExitOrJitEntryFPTag),
-              "FAKE_EXITFP_FOR_BAILOUT could be mistaken as a low-bit tagged "
-              "wasm exit fp");
-
 // BailoutStack is an architecture specific pointer to the stack, given by the
 // bailout handler.
 class BailoutStack;
 class InvalidationBailoutStack;
 
+struct IonScript;
 class JitActivation;
 class JitActivationIterator;
+struct ResumeFromException;
 
 // Must be implemented by each architecture.
 
