@@ -23,6 +23,9 @@ extern mozilla::LazyLogModule gMediaControlLog;
 namespace mozilla {
 namespace dom {
 
+NS_IMPL_ISUPPORTS_INHERITED0(MediaControlKeysManager,
+                             MediaControlKeysEventSource)
+
 void MediaControlKeysManager::Init() {
   mControllerAmountChangedListener =
       MediaControlService::GetService()
@@ -48,6 +51,9 @@ void MediaControlKeysManager::CreateEventSource() {
 #ifdef MOZ_APPLEMEDIA
   mEventSource = new MediaHardwareKeysEventSourceMac();
 #endif
+  if (mEventSource) {
+    mEventSource->AddListener(this);
+  }
 }
 
 void MediaControlKeysManager::StopMonitoringControlKeys() {
@@ -68,24 +74,10 @@ void MediaControlKeysManager::ControllerAmountChanged(
   }
 }
 
-bool MediaControlKeysManager::AddListener(
-    MediaControlKeysEventListener* aListener) {
-  if (!mEventSource) {
-    LOG("No event source for adding a listener");
-    return false;
+void MediaControlKeysManager::OnKeyPressed(MediaControlKeysEvent aKeyEvent) {
+  for (auto listener : mListeners) {
+    listener->OnKeyPressed(aKeyEvent);
   }
-  mEventSource->AddListener(aListener);
-  return true;
-}
-
-bool MediaControlKeysManager::RemoveListener(
-    MediaControlKeysEventListener* aListener) {
-  if (!mEventSource) {
-    LOG("No event source for removing a listener");
-    return false;
-  }
-  mEventSource->RemoveListener(aListener);
-  return true;
 }
 
 }  // namespace dom
