@@ -11,4 +11,8 @@ EXTRA_JS_MODULES += [
     'RemoteWebNavigation.jsm',
 ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
