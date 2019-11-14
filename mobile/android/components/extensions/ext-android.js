@@ -40,11 +40,15 @@ extensions.on("page-shutdown", (type, context) => {
       // WebExtension as an embedded inline options page.
       return;
     }
-    let { BrowserApp } = context.xulBrowser.ownerGlobal;
+    const window = context.xulBrowser.ownerGlobal;
+    let { BrowserApp } = window;
     if (BrowserApp) {
       let nativeTab = BrowserApp.getTabForBrowser(context.xulBrowser);
       if (nativeTab) {
-        BrowserApp.closeTab(nativeTab);
+        GeckoViewTabBridge.closeTab({
+          window,
+          extensionId: context.extension.id,
+        });
       }
     }
   }
