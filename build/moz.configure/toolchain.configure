@@ -862,12 +862,12 @@ def default_cxx_compilers(c_compiler, other_c_compiler=None, other_cxx_compiler=
 
 
 @template
-def provided_program(env_var):
+def provided_program(env_var, when=None):
     '''Template handling cases where a program can be specified either as a
     path or as a path with applicable arguments.
     '''
 
-    @depends_if(env_var)
+    @depends_if(env_var, when=when)
     @imports(_from='itertools', _import='takewhile')
     @imports(_from='mozbuild.shellutil', _import='split', _as='shell_split')
     def provided(cmd):
