@@ -1077,6 +1077,11 @@ def enable_code_coverage(config, tests):
             if 'fuzzing' in test['build-platform']:
                 test['run-on-projects'] = []
                 continue
+
+            # For now, make all ccov opt tests tier-3.
+            if 'opt' in test['build-platform']:
+                test['tier'] = 3
+
             # Skip this transform for android code coverage builds.
             if 'android' in test['build-platform']:
                 test.setdefault('fetches', {}).setdefault('toolchain', []).append('linux64-grcov')
