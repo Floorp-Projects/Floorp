@@ -28,12 +28,6 @@
     "resource://gre/modules/E10SUtils.jsm"
   );
 
-  ChromeUtils.defineModuleGetter(
-    LazyModules,
-    "RemoteWebNavigation",
-    "resource://gre/modules/RemoteWebNavigation.jsm"
-  );
-
   const elementsToDestroyOnUnload = new Set();
 
   window.addEventListener(
@@ -1262,9 +1256,16 @@
          * the <browser> element may not be initialized yet.
          */
 
-        this._remoteWebNavigation = new LazyModules.RemoteWebNavigation(this);
+        this._remoteWebNavigation = Cc[
+          "@mozilla.org/remote-web-navigation;1"
+        ].createInstance(Ci.nsIWebNavigation);
+        this._remoteWebNavigationImpl = this._remoteWebNavigation.wrappedJSObject;
+        this._remoteWebNavigationImpl.swapBrowser(this);
 
         // Initialize contentPrincipal to the about:blank principal for this loadcontext
+        let { Services } = ChromeUtils.import(
+          "resource://gre/modules/Services.jsm"
+        );
         let aboutBlank = Services.io.newURI("about:blank");
         let ssm = Services.scriptSecurityManager;
         this._contentPrincipal = ssm.getLoadContextContentPrincipal(
@@ -1578,8 +1579,9 @@
 
     updateWebNavigationForLocationChange(aCanGoBack, aCanGoForward) {
       if (this.isRemoteBrowser && this.messageManager) {
-        this._remoteWebNavigation.canGoBack = aCanGoBack;
-        this._remoteWebNavigation.canGoForward = aCanGoForward;
+        let remoteWebNav = this._remoteWebNavigationImpl;
+        remoteWebNav.canGoBack = aCanGoBack;
+        remoteWebNav.canGoForward = aCanGoForward;
       }
     }
 
@@ -1612,7 +1614,7 @@
           this._documentContentType = aContentType;
         }
 
-        this._remoteWebNavigation._currentURI = aLocation;
+        this._remoteWebNavigationImpl._currentURI = aLocation;
         this._documentURI = aDocumentURI;
         this._contentTitle = aTitle;
         this._imageDocument = null;
@@ -1631,8 +1633,8 @@
 
     purgeSessionHistory() {
       if (this.isRemoteBrowser) {
-        this._remoteWebNavigation.canGoBack = false;
-        this._remoteWebNavigation.canGoForward = false;
+        this._remoteWebNavigationImpl.canGoBack = false;
+        this._remoteWebNavigationImpl.canGoForward = false;
       }
       try {
         this.sendMessageToActor(
@@ -1955,6 +1957,7 @@
         fieldsToSwap.push(
           ...[
             "_remoteWebNavigation",
+            "_remoteWebNavigationImpl",
             "_remoteWebProgressManager",
             "_remoteWebProgress",
             "_remoteFinder",
@@ -2007,8 +2010,8 @@
         this._fastFind = aOtherBrowser._fastFind = null;
       } else {
         // Rewire the remote listeners
-        this._remoteWebNavigation.swapBrowser(this);
-        aOtherBrowser._remoteWebNavigation.swapBrowser(aOtherBrowser);
+        this._remoteWebNavigationImpl.swapBrowser(this);
+        aOtherBrowser._remoteWebNavigationImpl.swapBrowser(aOtherBrowser);
 
         if (
           this._remoteWebProgressManager &&
