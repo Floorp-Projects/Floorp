@@ -17,8 +17,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["Blob", "FileReader"]);
 // Let the page settle for this amount of milliseconds before capturing to allow
 // for any in-page changes or redirects.
 const SETTLE_WAIT_TIME = 2500;
-// For testing, the above timeout is excessive, and makes our tests overlong.
-const TESTING_SETTLE_WAIT_TIME = 0;
 
 const STATE_LOADING = 1;
 const STATE_CAPTURING = 2;
@@ -142,14 +140,11 @@ const backgroundPageThumbsContent = {
         this._state == STATE_LOADING &&
         (Components.isSuccessCode(status) || status === Cr.NS_BINDING_ABORTED)
       ) {
-        let waitTime = Cu.isInAutomation
-          ? TESTING_SETTLE_WAIT_TIME
-          : SETTLE_WAIT_TIME;
         // The requested page has loaded or stopped/aborted, so capture the page
         // soon but first let it settle in case of in-page redirects
         if (this._captureTimer) {
           // There was additional activity, so restart the wait timer
-          this._captureTimer.delay = waitTime;
+          this._captureTimer.delay = SETTLE_WAIT_TIME;
         } else {
           // Stay in LOADING until we're actually ready to be CAPTURING
           this._captureTimer = Cc["@mozilla.org/timer;1"].createInstance(
@@ -161,7 +156,7 @@ const backgroundPageThumbsContent = {
               this._captureCurrentPage();
               delete this._captureTimer;
             },
-            waitTime,
+            SETTLE_WAIT_TIME,
             Ci.nsITimer.TYPE_ONE_SHOT
           );
         }
