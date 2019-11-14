@@ -201,10 +201,11 @@ def email_release_drivers(
 A new build has been started:
 
 Commit: [{revision}]({repo}/rev/{revision})
-Task group: [{task_group_id}](https://tools.taskcluster.net/groups/{task_group_id})
+Task group: [{task_group_id}]({root_url}/tasks/groups/{task_group_id})
 
 {email_buglist_string}
 """.format(repo=repo, revision=revision,
+           root_url=os.environ['TASKCLUSTER_ROOT_URL'],
            task_group_id=task_group_id,
            email_buglist_string=email_buglist_string)
 
