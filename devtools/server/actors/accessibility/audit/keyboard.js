@@ -87,6 +87,22 @@ const INTERACTIVE_ROLES = new Set([
   Ci.nsIAccessibleRole.ROLE_RICH_OPTION,
 ]);
 
+const INTERACTIVE_IF_FOCUSABLE_ROLES = new Set([
+  // If article is focusable, we can assume it is inside a feed.
+  Ci.nsIAccessibleRole.ROLE_ARTICLE,
+  // Column header can be focusable.
+  Ci.nsIAccessibleRole.ROLE_COLUMNHEADER,
+  Ci.nsIAccessibleRole.ROLE_GRID_CELL,
+  Ci.nsIAccessibleRole.ROLE_MENUBAR,
+  Ci.nsIAccessibleRole.ROLE_MENUPOPUP,
+  Ci.nsIAccessibleRole.ROLE_PAGETABLIST,
+  // Row header can be focusable.
+  Ci.nsIAccessibleRole.ROLE_ROWHEADER,
+  Ci.nsIAccessibleRole.ROLE_SCROLLBAR,
+  Ci.nsIAccessibleRole.ROLE_SEPARATOR,
+  Ci.nsIAccessibleRole.ROLE_TOOLBAR,
+]);
+
 /**
  * Determine if a node is dead or is not an element node.
  *
@@ -102,6 +118,49 @@ function isInvalidNode(node) {
     Cu.isDeadWrapper(node) ||
     node.nodeType !== nodeConstants.ELEMENT_NODE ||
     !node.ownerGlobal
+  );
+}
+
+/**
+ * Get role attribute for an accessible object if specified for its
+ * corresponding DOMNode.
+ *
+ * @param   {nsIAccessible} accessible
+ *          Accessible for which to determine its role attribute value.
+ *
+ * @returns {null|String}
+ *          Role attribute value if specified.
+ */
+function getAriaRoles(accessible) {
+  try {
+    return accessible.attributes.getStringProperty("xml-roles");
+  } catch (e) {
+    // No xml-roles. nsPersistentProperties throws if the attribute for a key
+    // is not found.
+  }
+
+  return null;
+}
+
+/**
+ * Determine if accessible is focusable with the keyboard.
+ *
+ * @param   {nsIAccessible} accessible
+ *          Accessible for which to determine if it is keyboard focusable.
+ *
+ * @returns {Boolean}
+ *          True if focusable with the keyboard.
+ */
+function isKeyboardFocusable(accessible) {
+  const state = {};
+  accessible.getState(state, {});
+  // State will be focusable even if the tabindex is negative.
+  return (
+    state.value & Ci.nsIAccessibleStates.STATE_FOCUSABLE &&
+    // Platform accessibility will still report STATE_FOCUSABLE even with the
+    // tabindex="-1" so we need to check that it is >= 0 to be considered
+    // keyboard focusable.
+    accessible.DOMNode.tabIndex > -1
   );
 }
 
@@ -245,9 +304,7 @@ function focusStyleRule(accessible) {
   }
 
   // Ignore non-focusable elements.
-  const state = {};
-  accessible.getState(state, {});
-  if (!(state.value & Ci.nsIAccessibleStates.STATE_FOCUSABLE)) {
+  if (!isKeyboardFocusable(accessible)) {
     return null;
   }
 
@@ -314,21 +371,11 @@ function focusableRule(accessible) {
     return null;
   }
 
-  // State will be focusable even if the tabindex is negative.
-  if (
-    state.value & Ci.nsIAccessibleStates.STATE_FOCUSABLE &&
-    accessible.DOMNode.tabIndex > -1
-  ) {
+  if (isKeyboardFocusable(accessible)) {
     return null;
   }
 
-  let ariaRoles;
-  try {
-    ariaRoles = accessible.attributes.getStringProperty("xml-roles");
-  } catch (e) {
-    // No xml-roles. nsPersistentProperties throws if the attribute for a key
-    // is not found.
-  }
+  const ariaRoles = getAriaRoles(accessible);
   if (
     ariaRoles &&
     (ariaRoles.includes("combobox") || ariaRoles.includes("listbox"))
@@ -361,12 +408,24 @@ function semanticsRule(accessible) {
     return null;
   }
 
-  const state = {};
-  accessible.getState(state, {});
-  if (state.value & Ci.nsIAccessibleStates.STATE_FOCUSABLE) {
+  if (isKeyboardFocusable(accessible)) {
+    if (INTERACTIVE_IF_FOCUSABLE_ROLES.has(accessible.role)) {
+      return null;
+    }
+
+    // ROLE_TABLE is used for grids too which are considered interactive.
+    if (accessible.role === Ci.nsIAccessibleRole.ROLE_TABLE) {
+      const ariaRoles = getAriaRoles(accessible);
+      if (ariaRoles && ariaRoles.includes("grid")) {
+        return null;
+      }
+    }
+
     return { score: WARNING, issue: FOCUSABLE_NO_SEMANTICS };
   }
 
+  const state = {};
+  accessible.getState(state, {});
   if (
     // Ignore text leafs.
     accessible.role === Ci.nsIAccessibleRole.ROLE_TEXT_LEAF ||
@@ -412,9 +471,7 @@ function tabIndexRule(accessible) {
     return null;
   }
 
-  const state = {};
-  accessible.getState(state, {});
-  if (!(state.value & Ci.nsIAccessibleStates.STATE_FOCUSABLE)) {
+  if (!isKeyboardFocusable(accessible)) {
     return null;
   }
 
