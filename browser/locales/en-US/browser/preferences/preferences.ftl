@@ -710,13 +710,9 @@ containers-remove-button =
 sync-signedout-caption = Take Your Web With You
 sync-signedout-description = Synchronize your bookmarks, history, tabs, passwords, add-ons, and preferences across all your devices.
 
-sync-signedout-account-title = Connect with a { -fxaccount-brand-name }
-sync-signedout-account-create = Don’t have an account? Get started
-    .accesskey = c
-
-sync-signedout-account-signin =
-    .label = Sign In…
-    .accesskey = I
+sync-signedout-account-signin2 =
+    .label = Sign in to { -sync-brand-short-name }…
+    .accesskey = i
 
 # This message contains two links and two icon images.
 #   `<img data-l10n-name="android-icon"/>` - Android logo icon

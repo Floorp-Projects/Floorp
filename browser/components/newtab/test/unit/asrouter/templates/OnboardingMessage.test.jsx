@@ -34,7 +34,7 @@ describe("OnboardingMessage", () => {
     globals = new GlobalOverrider();
     sandbox = sinon.createSandbox();
     globals.set("FxAccountsConfig", {
-      promiseEmailFirstURI: sandbox.stub().resolves("some/url"),
+      promiseConnectAccountURI: sandbox.stub().resolves("some/url"),
     });
     globals.set("AddonRepository", {
       getAddonsByIDs: ([content]) => [

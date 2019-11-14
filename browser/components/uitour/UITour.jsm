@@ -534,7 +534,7 @@ var UITour = {
           .then(() => {
             return data.email
               ? FxAccounts.config.promiseEmailURI(data.email, "uitour")
-              : FxAccounts.config.promiseSignUpURI("uitour");
+              : FxAccounts.config.promiseConnectAccountURI("uitour");
           })
           .then(uri => {
             const url = new URL(uri);

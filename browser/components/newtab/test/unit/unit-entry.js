@@ -353,7 +353,7 @@ const TEST_GLOBAL = {
     }
   },
   FxAccountsConfig: {
-    promiseEmailFirstURI(id) {
+    promiseConnectAccountURI(id) {
       return Promise.resolve(id);
     },
   },
