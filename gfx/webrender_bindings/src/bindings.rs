@@ -26,7 +26,7 @@ use gleam::gl;
 
 use webrender::{
     api::*, api::units::*, ApiRecordingReceiver, AsyncPropertySampler, AsyncScreenshotHandle,
-    BinaryRecorder, Compositor, DebugFlags, Device, ExternalImage, ExternalImageHandler, ExternalImageSource,
+    BinaryRecorder, Compositor, DebugFlags, Device,
     NativeSurfaceId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats,
     SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, VertexUsageHint,
     WrShaders, set_profiler_hooks, CompositorConfig, NativeSurfaceInfo

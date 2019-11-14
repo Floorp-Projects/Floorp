@@ -61,17 +61,17 @@ impl YuvImageProvider {
     }
 }
 
-impl webrender::ExternalImageHandler for YuvImageProvider {
+impl ExternalImageHandler for YuvImageProvider {
     fn lock(
         &mut self,
         key: ExternalImageId,
         _channel_index: u8,
         _rendering: ImageRendering
-    ) -> webrender::ExternalImage {
+    ) -> ExternalImage {
         let id = self.texture_ids[key.0 as usize];
-        webrender::ExternalImage {
+        ExternalImage {
             uv: TexelRect::new(0.0, 0.0, 1.0, 1.0),
-            source: webrender::ExternalImageSource::NativeTexture(id),
+            source: ExternalImageSource::NativeTexture(id),
         }
     }
     fn unlock(&mut self, _key: ExternalImageId, _channel_index: u8) {
@@ -198,8 +198,8 @@ impl Example for App {
     fn get_image_handlers(
         &mut self,
         gl: &dyn gl::Gl,
-    ) -> (Option<Box<dyn webrender::ExternalImageHandler>>,
-          Option<Box<dyn webrender::OutputImageHandler>>) {
+    ) -> (Option<Box<dyn ExternalImageHandler>>,
+          Option<Box<dyn OutputImageHandler>>) {
         let provider = YuvImageProvider::new(gl);
         self.texture_id = provider.texture_ids[0];
         (Some(Box::new(provider)), None)
