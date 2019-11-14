@@ -14,12 +14,12 @@ const Services = require("Services");
  * helps mozbrowser elements support this.
  *
  * It attempts to use the mozbrowser API wherever possible, however some methods don't
- * exist yet, so we fallback to the WebNavigation actor in those cases.
+ * exist yet, so we fallback to the WebNavigation frame script messages in those cases.
  * Ideally the mozbrowser API would eventually be extended to cover all properties and
  * methods used here.
  *
- * This is largely copied from RemoteWebNavigation.js, which uses the WebNavigation
- * actor to perform all actions.
+ * This is largely copied from RemoteWebNavigation.js, which uses the message manager to
+ * perform all actions.
  */
 function BrowserElementWebNavigation(browser) {
   this._browser = browser;
@@ -27,6 +27,10 @@ function BrowserElementWebNavigation(browser) {
 
 BrowserElementWebNavigation.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIWebNavigation]),
+
+  get _mm() {
+    return this._browser.frameLoader.messageManager;
+  },
 
   canGoBack: false,
   canGoForward: false,
@@ -74,7 +78,7 @@ BrowserElementWebNavigation.prototype = {
     );
     referrerInfo.init(referrerPolicy, true, referrer);
 
-    this._browser.browsingContext.loadURI(uri, {
+    this._browser.frameLoader.browsingContext.loadURI(uri, {
       loadFlags: flags,
       referrerInfo,
       postData,
@@ -135,15 +139,7 @@ BrowserElementWebNavigation.prototype = {
 
   _sendMessage(message, data) {
     try {
-      if (this._browser.frameLoader) {
-        const windowGlobal = this._browser.browsingContext
-          .currentWindowGlobal;
-        if (windowGlobal) {
-          windowGlobal
-            .getActor("WebNavigation")
-            .sendAsyncMessage(message, data);
-        }
-      }
+      this._mm.sendAsyncMessage(message, data);
     } catch (e) {
       Cu.reportError(e);
     }
