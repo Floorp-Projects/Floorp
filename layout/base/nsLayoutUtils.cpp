@@ -9002,6 +9002,18 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
         metrics.SetVisualScrollUpdateType(visualUpdate->mUpdateType);
         presShell->AcknowledgePendingVisualScrollUpdate();
       }
+      // Expand the layout viewport to the size including the area covered by
+      // the dynamic toolbar in the case where the dynamic toolbar is being
+      // used, otherwise when the dynamic toolbar transitions on the compositor,
+      // the layout viewport will be smaller than the visual viewport on the
+      // compositor, thus the layout viewport offset will be forced to be moved
+      // in FrameMetrics::KeepLayoutViewportEnclosingVisualViewport.
+      if (presContext->HasDynamicToolbar()) {
+        CSSRect viewport = metrics.GetLayoutViewport();
+        viewport.SizeTo(nsLayoutUtils::ExpandHeightForViewportUnits(
+            presContext, viewport.Size()));
+        metrics.SetLayoutViewport(viewport);
+      }
     }
 
     CSSRect viewport = metrics.GetLayoutViewport();
