@@ -21,21 +21,6 @@ void AudioSinkWrapper::Shutdown() {
   mCreator = nullptr;
 }
 
-const MediaSink::PlaybackParams& AudioSinkWrapper::GetPlaybackParams() const {
-  AssertOwnerThread();
-  return mParams;
-}
-
-void AudioSinkWrapper::SetPlaybackParams(const PlaybackParams& aParams) {
-  AssertOwnerThread();
-  if (mAudioSink) {
-    mAudioSink->SetVolume(aParams.mVolume);
-    mAudioSink->SetPlaybackRate(aParams.mPlaybackRate);
-    mAudioSink->SetPreservesPitch(aParams.mPreservesPitch);
-  }
-  mParams = aParams;
-}
-
 RefPtr<MediaSink::EndedPromise> AudioSinkWrapper::OnEnded(TrackType aType) {
   AssertOwnerThread();
   MOZ_ASSERT(mIsStarted, "Must be called after playback starts.");
@@ -152,6 +137,11 @@ void AudioSinkWrapper::SetPlaying(bool aPlaying) {
     // depends on the value of mPlayStartTime.
     mPlayStartTime = TimeStamp();
   }
+}
+
+double AudioSinkWrapper::PlaybackRate() const {
+  AssertOwnerThread();
+  return mParams.mPlaybackRate;
 }
 
 nsresult AudioSinkWrapper::Start(const TimeUnit& aStartTime,

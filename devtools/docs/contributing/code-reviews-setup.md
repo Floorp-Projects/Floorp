@@ -24,11 +24,4 @@ Once you understand the above, please [create a Phabricator account](https://moz
 
 ## Set up to send code for review
 
-There are two ways of doing this (sorry, let us explain!):
-
-* you can use [Arcanist](https://moz-conduit.readthedocs.io/en/latest/arcanist-user.html), which is the official command line tool that accompanies Phabricator, and should be enough for most of the cases.
-* or you could use [moz-phab](https://moz-conduit.readthedocs.io/en/latest/phabricator-user.html#using-moz-phab), which is a Mozilla-developed wrapper for Arcanist that makes it work better with the "Mozilla workflow".
-
-**We recommend you use Arcanist** for now, unless you are more experienced and know what you're doing, or want to take advantage of `moz-phab`'s features. You need to install Arcanist for `moz-phab` to work anyway.
-
-If you decide to use `moz-phab`, please be aware that we started using this new tool quite recently, and you might find bugs (or things that don't feel quite right), in which case you could either [have a look at the existing bugs](https://bugzilla.mozilla.org/buglist.cgi?product=Conduit&component=Review%20Wrapper&resolution=---) to see if someone else has encountered this again, or simply [file a bug](https://bugzilla.mozilla.org/enter_bug.cgi?product=Conduit&component=Review%20Wrapper) using your fancy new Bugzilla account 😀
+In order to push your commit to Phabricator, you need to install [moz-phab](https://moz-conduit.readthedocs.io/en/latest/phabricator-user.html#using-moz-phab).

@@ -1526,7 +1526,7 @@ void MediaFormatReader::NotifyNewOutput(
                     sample->mOffset, sample->mTime.ToMicroseconds(),
                     sample->mTimecode.ToMicroseconds(),
                     sample->mDuration.ToMicroseconds(),
-                    static_cast<AudioData*>(sample.get())->Frames(),
+                    sample->As<AudioData>()->Frames(),
                     sample->As<AudioData>()->mChannels,
                     sample->As<AudioData>()->mRate,
                     sample->As<AudioData>()->Data().Length());
@@ -2118,7 +2118,7 @@ void MediaFormatReader::Update(TrackType aTrack) {
 #ifdef XP_WIN
         // D3D11_YCBCR_IMAGE images are GPU based, we try to limit the amount
         // of GPU RAM used.
-        VideoData* videoData = static_cast<VideoData*>(output.get());
+        VideoData* videoData = output->As<VideoData>();
         mVideo.mIsHardwareAccelerated =
             mVideo.mIsHardwareAccelerated ||
             (videoData->mImage &&
@@ -2300,7 +2300,7 @@ void MediaFormatReader::ReturnOutput(MediaData* aData, TrackType aTrack) {
       aData->GetEndTime().ToMicroseconds());
 
   if (aTrack == TrackInfo::kAudioTrack) {
-    AudioData* audioData = static_cast<AudioData*>(aData);
+    AudioData* audioData = aData->As<AudioData>();
 
     if (audioData->mChannels != mInfo.mAudio.mChannels ||
         audioData->mRate != mInfo.mAudio.mRate) {
@@ -2315,7 +2315,7 @@ void MediaFormatReader::ReturnOutput(MediaData* aData, TrackType aTrack) {
     }
     mAudio.ResolvePromise(audioData, __func__);
   } else if (aTrack == TrackInfo::kVideoTrack) {
-    VideoData* videoData = static_cast<VideoData*>(aData);
+    VideoData* videoData = aData->As<VideoData>();
 
     if (videoData->mDisplay != mInfo.mVideo.mDisplay) {
       LOG("change of video display size (%dx%d->%dx%d)",

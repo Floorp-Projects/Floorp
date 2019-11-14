@@ -36,7 +36,7 @@ class SourceBufferResource final
       public DecoderDoctorLifeLogger<SourceBufferResource> {
  public:
   SourceBufferResource();
-  nsresult Close() override;
+  RefPtr<GenericPromise> Close() override;
   nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
                   uint32_t* aBytes) override;
   // Memory-based and no locks, caching discouraged.

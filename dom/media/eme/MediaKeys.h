@@ -149,7 +149,13 @@ class MediaKeys final : public nsIDocumentActivity,
                                    dom::MediaKeyStatus aMediaKeyStatus);
 
   template <typename T>
-  void ResolvePromiseWithResult(PromiseId aId, const T& aResult);
+  void ResolvePromiseWithResult(PromiseId aId, const T& aResult) {
+    RefPtr<DetailedPromise> promise(RetrievePromise(aId));
+    if (!promise) {
+      return;
+    }
+    promise->MaybeResolve(aResult);
+  }
 
  private:
   // Instantiate CDMProxy instance.

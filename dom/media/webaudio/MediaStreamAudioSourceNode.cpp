@@ -76,8 +76,8 @@ void MediaStreamAudioSourceNode::Init(DOMMediaStream* aMediaStream,
   mInputStream->AddConsumerToKeepAlive(ToSupports(this));
 
   mInputStream->RegisterTrackListener(this);
-  if (mInputStream->Active()) {
-    NotifyActive();
+  if (mInputStream->Audible()) {
+    NotifyAudible();
   }
   AttachToRightTrack(mInputStream, aRv);
 }
@@ -119,6 +119,7 @@ void MediaStreamAudioSourceNode::AttachToTrack(
   mInputPort = mInputTrack->ForwardTrackContentsTo(outputTrack);
   PrincipalChanged(mInputTrack);  // trigger enabling/disabling of the connector
   mInputTrack->AddPrincipalChangeObserver(this);
+  MarkActive();
 }
 
 void MediaStreamAudioSourceNode::DetachFromTrack() {
@@ -165,7 +166,6 @@ void MediaStreamAudioSourceNode::AttachToRightTrack(
 
     if (!track->Ended()) {
       AttachToTrack(track, aRv);
-      MarkActive();
     }
     return;
   }
@@ -202,7 +202,7 @@ void MediaStreamAudioSourceNode::NotifyTrackRemoved(
   }
 }
 
-void MediaStreamAudioSourceNode::NotifyActive() {
+void MediaStreamAudioSourceNode::NotifyAudible() {
   MOZ_ASSERT(mInputStream);
   Context()->StartBlockedAudioContextIfAllowed();
 }

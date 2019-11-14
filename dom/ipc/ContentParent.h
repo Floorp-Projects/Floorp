@@ -1394,6 +1394,8 @@ const nsDependentSubstring RemoteTypePrefix(
 // This is based on isWebRemoteType in E10SUtils.jsm.
 bool IsWebRemoteType(const nsAString& aContentProcessType);
 
+bool IsWebCoopCoepRemoteType(const nsAString& aContentProcessType);
+
 }  // namespace dom
 }  // namespace mozilla
 
