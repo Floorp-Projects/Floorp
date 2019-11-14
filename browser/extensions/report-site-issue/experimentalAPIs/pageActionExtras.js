@@ -22,11 +22,11 @@ this.pageActionExtras = class extends ExtensionAPI {
     return {
       pageActionExtras: {
         async setDefaultTitle(title) {
-          pageActionAPI.action.getContextData(null).title = title;
+          pageActionAPI.defaults.title = title;
           // Make sure the new default title is considered right away
           for (const window of windowTracker.browserWindows()) {
             const tab = window.gBrowser.selectedTab;
-            if (pageActionAPI.action.isShownForTab(tab)) {
+            if (pageActionAPI.isShown(tab)) {
               pageActionAPI.updateButton(window);
             }
           }
