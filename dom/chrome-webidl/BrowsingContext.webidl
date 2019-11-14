@@ -47,6 +47,10 @@ interface BrowsingContext {
    * See nsSandboxFlags.h for the possible flags.
    */
   attribute unsigned long sandboxFlags;
+
+  // The inRDMPane flag indicates whether or not Responsive Design Mode is
+  // active for the browsing context.
+  attribute boolean inRDMPane;
 };
 
 [Exposed=Window, ChromeOnly]
