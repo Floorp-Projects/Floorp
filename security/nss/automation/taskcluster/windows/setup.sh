@@ -17,9 +17,9 @@ hg_clone() {
 
 hg_clone https://hg.mozilla.org/build/tools tools b8d7c263dfc3
 tools/scripts/tooltool/tooltool_wrapper.sh \
-    $(dirname $0)/releng.manifest https://tooltool.mozilla-releng.net/ \
+    $(dirname $0)/releng.manifest http://taskcluster/tooltool.mozilla-releng.net/ \
     non-existant-file.sh /c/mozilla-build/python/python.exe \
-    /c/builds/tooltool.py --authentication-file /c/builds/relengapi.tok \
+    /c/builds/tooltool.py \
     -c /c/builds/tooltool_cache
 
 # This needs $m to be set.
