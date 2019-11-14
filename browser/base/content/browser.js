@@ -2830,9 +2830,6 @@ function focusAndSelectUrlBar() {
   }
 
   gURLBar.select();
-  // In cases where the Urlbar is focused but not expanded, the select call
-  // above may not result in an expansion.
-  gURLBar.startLayoutExtend();
 }
 
 function openLocation(event) {
