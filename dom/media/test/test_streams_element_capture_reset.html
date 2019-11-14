@@ -1,35 +1,39 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test that reloading and seeking in a media element that's being captured doesn't crash</title>
+  <title>Test that reloading and seeking in a media element that's being captured behaves as expected</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-  <script type="text/javascript" src="manifest.js"></script>
+  <script src="manifest.js"></script>
 </head>
 <body>
 <video id="v"></video>
 <video id="vout"></video>
 <video id="vout_untilended"></video>
 <pre id="test">
-<script class="testbody" type="text/javascript">
-SimpleTest.waitForExplicitFinish();
-
-var v = document.getElementById('v');
-var vout = document.getElementById('vout');
-var vout_untilended = document.getElementById('vout_untilended');
+<script>
+const v = document.getElementById('v');
+const vout = document.getElementById('vout');
+const vout_untilended = document.getElementById('vout_untilended');
 
 function dumpEvent(event) {
-  var video = event.target;
-  info(video.name + " GOT EVENT " + event.type +
-       " currentTime=" + video.currentTime +
-       " paused=" + video.paused +
-       " ended=" + video.ended +
-       " readyState=" + video.readyState);
+  const video = event.target;
+  info(
+    `${video.name}:${video.id} GOT EVENT ${event.type} ` +
+    `currentTime=${video.currentTime} paused=${video.paused} ` +
+    `ended=${video.ended} readyState=${video.readyState}`
+  );
 }
 
-var events = ["timeupdate", "seeking", "seeked", "ended", "playing", "pause"];
-for (var i = 0; i < events.length; ++i) {
-  v.addEventListener(events[i], dumpEvent);
+function unexpected(event) {
+  ok(false, `${event.type} event received on ${event.target.id} unexpectedly`);
+};
+
+const events = ["timeupdate", "seeking", "seeked", "ended", "playing", "pause"];
+for (const e of events) {
+  v.addEventListener(e, dumpEvent);
+  vout.addEventListener(e, dumpEvent);
+  vout_untilended.addEventListener(e, dumpEvent);
 }
 
 function isWithinEps(a, b, msg) {
@@ -42,92 +46,91 @@ function isGreaterThanOrEqualEps(a, b, msg) {
      "Got " + a + ", expected at least " + b + "; " + msg);
 }
 
-function startTest(test) {
-  var seekTime = test.duration/2;
-
-  function endedAfterReplay() {
-    isGreaterThanOrEqualEps(v.currentTime, test.duration, "checking v.currentTime at third 'ended' event");
-    isGreaterThanOrEqualEps(vout.currentTime, (test.duration - seekTime) + test.duration*2,
-	            "checking vout.currentTime after seeking, playing through and reloading");
-    SimpleTest.finish();
-  };
-
-  function endedAfterSeek() {
-    isGreaterThanOrEqualEps(v.currentTime, test.duration, "checking v.currentTime at second 'ended' event");
-    isGreaterThanOrEqualEps(vout.currentTime, (test.duration - seekTime) + test.duration,
-                "checking vout.currentTime after seeking and playing through again");
-    v.removeEventListener("ended", endedAfterSeek);
-    v.addEventListener("ended", endedAfterReplay);
-    v.src = test.name + "?1";
-    v.play();
-  };
-
-  function seeked() {
-    isGreaterThanOrEqualEps(v.currentTime, seekTime, "Finished seeking");
-    isGreaterThanOrEqualEps(vout.currentTime, test.duration,
-                "checking vout.currentTime has not changed after seeking");
-    v.removeEventListener("seeked", seeked);
-    function dontPlayAgain() {
-      ok(false, "vout_untilended should not play again");
-    }
-    vout_untilended.addEventListener("playing", dontPlayAgain);
-    vout_untilended.addEventListener("ended", dontPlayAgain);
-    v.addEventListener("ended", endedAfterSeek);
-    v.play();
-  };
-
-  function ended() {
-    // Don't compare current time until both v and vout_untilended are ended,
-    // otherwise, current time could be smaller than the duration.
-    if (!v.ended || !vout_untilended.ended) {
-      return;
-    }
-
-    isGreaterThanOrEqualEps(vout.currentTime, test.duration, "checking vout.currentTime at first 'ended' event");
-    isGreaterThanOrEqualEps(v.currentTime, test.duration, "checking v.currentTime at first 'ended' event");
-    is(vout.ended, false, "checking vout has not ended");
-    is(vout_untilended.ended, true, "checking vout_untilended has actually ended");
-
-    v.removeEventListener("ended", ended);
-    vout_untilended.removeEventListener("ended", ended);
-
-    v.pause();
-    v.currentTime = seekTime;
-    v.addEventListener("seeked", seeked);
-  };
-
-  v.addEventListener("ended", ended);
-  vout_untilended.addEventListener("ended", ended);
-
-  function checkNoEnded() {
-    ok(false, "ended event received unexpectedly");
-  };
-
-  vout.addEventListener("ended", checkNoEnded);
+async function startTest(test) {
+  const seekTime = test.duration/2;
 
   v.src = test.name;
   v.name = test.name;
+  vout.name = test.name;
+  vout_untilended.name = test.name;
   v.preload = "metadata";
+  await new Promise(r => v.onloadedmetadata = r);
 
-  function loadedmetadata() {
-    vout.srcObject = v.mozCaptureStream();
-    vout.play();
+  vout.srcObject = v.mozCaptureStream();
+  vout.play();
 
-    vout_untilended.srcObject = v.mozCaptureStreamUntilEnded();
-    vout_untilended.play();
+  vout_untilended.srcObject = v.mozCaptureStreamUntilEnded();
+  vout_untilended.play();
 
-    v.play();
-  };
+  v.play();
 
-  v.addEventListener("loadedmetadata", loadedmetadata, {once: true});
+  await new Promise(r => v.onended = r);
+  isGreaterThanOrEqualEps(v.currentTime, test.duration,
+    "checking v.currentTime at first 'ended' event");
+
+  await Promise.all([
+    new Promise(r => vout.onended = r),
+    new Promise(r => vout_untilended.onended = r),
+  ]);
+
+  isGreaterThanOrEqualEps(vout.currentTime, test.duration,
+    "checking vout.currentTime at first 'ended' event");
+  ok(vout.ended, "checking vout has actually ended");
+  ok(vout_untilended.ended, "checking vout_untilended has actually ended");
+
+  vout_untilended.srcObject.onaddtrack = unexpected;
+  vout_untilended.onplaying = unexpected;
+  vout_untilended.onended = unexpected;
+
+  const voutPreSeekCurrentTime = vout.currentTime;
+  v.currentTime = seekTime;
+  await new Promise(r => v.onseeked = r);
+
+  is(v.currentTime, seekTime, "Finished seeking");
+  is(vout.currentTime, voutPreSeekCurrentTime,
+    "checking vout.currentTime has not changed after seeking");
+
+  v.play();
+  vout.play();
+
+  await new Promise(r => v.onended = r);
+  isGreaterThanOrEqualEps(v.currentTime, test.duration,
+    "checking v.currentTime at second 'ended' event");
+
+  await new Promise(r => vout.onended = r);
+  isGreaterThanOrEqualEps(vout.currentTime,
+    (test.duration - seekTime) + test.duration,
+    "checking vout.currentTime after seeking and playing through again");
+
+  v.src = test.name + "?1";
+  v.play();
+  vout.play();
+
+  await new Promise(r => v.onended = r);
+  isGreaterThanOrEqualEps(v.currentTime, test.duration,
+    "checking v.currentTime at third 'ended' event");
+
+  await new Promise(r => vout.onended = r);
+  isGreaterThanOrEqualEps(vout.currentTime,
+    (test.duration - seekTime) + test.duration*2,
+    "checking vout.currentTime after seeking, playing through and reloading");
 }
 
-var testVideo = getPlayableVideo(gSmallTests);
-if (testVideo) {
-  startTest(testVideo);
-} else {
-  todo(false, "No playable video");
-}
+(async () => {
+  SimpleTest.waitForExplicitFinish();
+  try {
+    const testVideo = getPlayableVideo(gSmallTests);
+    if (testVideo) {
+      await startTest(testVideo);
+    } else {
+      todo(false, "No playable video");
+    }
+  } catch(e) {
+    ok(false, `Error: ${e}`);
+  } finally {
+    SimpleTest.finish();
+  }
+})();
 </script>
 </pre>
 </body>

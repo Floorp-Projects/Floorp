@@ -4380,14 +4380,6 @@ bool nsContentUtils::HasMutationListeners(nsINode* aNode, uint32_t aType,
       return true;
     }
 
-    if (aNode->IsContent()) {
-      nsIContent* insertionPoint = aNode->AsContent()->GetXBLInsertionPoint();
-      if (insertionPoint) {
-        aNode = insertionPoint->GetParent();
-        MOZ_ASSERT(aNode);
-        continue;
-      }
-    }
     aNode = aNode->GetParentNode();
   }
 

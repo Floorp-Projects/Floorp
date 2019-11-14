@@ -339,7 +339,7 @@ class AndroidMixin(object):
         import mozdevice
         try:
             self.device.install_app(apk, replace=replace)
-        except (mozdevice.ADBError, mozdevice.ADBTimeoutError) as e:
+        except (mozdevice.ADBError, mozdevice.ADBProcessError, mozdevice.ADBTimeoutError) as e:
             self.info('Failed to install %s on %s: %s %s' %
                       (apk, self.device_name,
                        type(e).__name__, e))
@@ -356,11 +356,11 @@ class AndroidMixin(object):
         try:
             package_name = self.query_package_name()
             self.device.uninstall_app(package_name)
-        except (mozdevice.ADBError, mozdevice.ADBTimeoutError) as e:
+        except (mozdevice.ADBError, mozdevice.ADBProcessError, mozdevice.ADBTimeoutError) as e:
             self.info('Failed to uninstall %s from %s: %s %s' %
                       (package_name, self.device_name,
                        type(e).__name__, e))
-            self.fatal('INFRA-ERROR: %s Failed to install %s' %
+            self.fatal('INFRA-ERROR: %s Failed to uninstall %s' %
                        (type(e).__name__, package_name),
                        EXIT_STATUS_DICT[TBPL_RETRY])
 
@@ -375,7 +375,15 @@ class AndroidMixin(object):
         return False
 
     def shell_output(self, cmd):
-        return self.device.shell_output(cmd, timeout=30)
+        try:
+            return self.device.shell_output(cmd, timeout=30)
+        except (mozdevice.ADBTimeoutError) as e:
+            self.info('Failed to run shell command %s from %s: %s %s' %
+                      (cmd, self.device_name,
+                       type(e).__name__, e))
+            self.fatal('INFRA-ERROR: %s Failed to run shell command %s' %
+                       (type(e).__name__, cmd),
+                       EXIT_STATUS_DICT[TBPL_RETRY])
 
     def device_screenshot(self, prefix):
         """

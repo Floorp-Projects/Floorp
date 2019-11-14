@@ -10,28 +10,29 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var manager = new MediaTestManager;
+const manager = new MediaTestManager;
 
 function startTest(test, token) {
   // Scenario to test:
   // 1. Audio tracks and video tracks should be added to the track list when
-  //    playing, and all tracks should be removed from the list after we seek
-  //    to the end.
-  // 2. All tracks should be added back to the list if we replay from the end,
-  //    and all tracks should be removed from the list after we seek to the end.
-  // 3. After seek to the middle from end of playback, all tracks should be
-  //    added back to the list if we play from here, and all tracks should be
-  //    removed from the list after we seek to the end.
+  //    metadata has loaded, and all tracks should remain even after we seek to
+  //    the end.
+  // 2. No tracks should be added back to the list if we replay from the end,
+  //    and no tracks should be removed from the list after we seek to the end.
+  // 3. After seek to the middle from end of playback, all tracks should remain
+  //    in the list if we play from here, and no tracks should be removed from
+  //    the list after we seek to the end.
+  // 4. Unsetting the media element's src attribute should remove all tracks.
 
-  var elemType = getMajorMimeType(test.type);
-  var element = document.createElement(elemType);
+  const elemType = getMajorMimeType(test.type);
+  const element = document.createElement(elemType);
 
-  var audioOnaddtrack = 0;
-  var audioOnremovetrack = 0;
-  var videoOnaddtrack = 0;
-  var videoOnremovetrack = 0;
-  var isPlaying = false;
-  var steps = 0;
+  let audioOnaddtrack = 0;
+  let audioOnremovetrack = 0;
+  let videoOnaddtrack = 0;
+  let videoOnremovetrack = 0;
+  let isPlaying = false;
+  let steps = 0;
 
   element.audioTracks.onaddtrack = function(e) {
     audioOnaddtrack++;
@@ -49,16 +50,23 @@ function startTest(test, token) {
     videoOnremovetrack++;
   }
 
-  function testTrackEventCalls(expectedCalls) {
+  function testExpectedAddtrack(expectedCalls) {
     if (test.hasAudio) {
       is(audioOnaddtrack, expectedCalls,
          'Calls of onaddtrack on audioTracks should be '+expectedCalls+' times.');
-      is(audioOnremovetrack, expectedCalls,
-         'Calls of onremovetrack on audioTracks should be '+expectedCalls+' times.');
     }
     if (test.hasVideo) {
       is(videoOnaddtrack, expectedCalls,
          'Calls of onaddtrack on videoTracks should be '+expectedCalls+' times.');
+    }
+  }
+
+  function testExpectedRemovetrack(expectedCalls) {
+    if (test.hasAudio) {
+      is(audioOnremovetrack, expectedCalls,
+         'Calls of onremovetrack on audioTracks should be '+expectedCalls+' times.');
+    }
+    if (test.hasVideo) {
       is(videoOnremovetrack, expectedCalls,
          'Calls of onremovetrack on videoTracks should be '+expectedCalls+' times.');
     }
@@ -76,21 +84,29 @@ function startTest(test, token) {
     if (isPlaying) {
       switch(steps) {
         case 1:
-          testTrackEventCalls(1);
+          testExpectedAddtrack(1);
+          testExpectedRemovetrack(0);
           element.onplaying = onplaying;
           element.play();
           steps++;
           break;
         case 2:
-          testTrackEventCalls(2);
+          testExpectedAddtrack(1);
+          testExpectedRemovetrack(0);
           element.currentTime = element.duration * 0.5;
           element.onplaying = onplaying;
           element.play();
           steps++;
           break;
         case 3:
-          testTrackEventCalls(3);
-          finishTesting();
+          testExpectedAddtrack(1);
+          testExpectedRemovetrack(0);
+          element.src = "";
+          setTimeout(() => {
+            testExpectedAddtrack(1);
+            testExpectedRemovetrack(1);
+            finishTesting();
+          }, 0);
           break;
       }
     } else {

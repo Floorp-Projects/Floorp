@@ -35,6 +35,7 @@ class NetlinkMsg;
 class NetlinkServiceListener : public nsISupports {
  public:
   virtual void OnNetworkChanged() = 0;
+  virtual void OnNetworkIDChanged() = 0;
   virtual void OnLinkUp() = 0;
   virtual void OnLinkDown() = 0;
   virtual void OnLinkStatusKnown() = 0;
