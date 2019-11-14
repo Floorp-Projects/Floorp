@@ -190,7 +190,10 @@ max-width: ${width}px; max-height: ${height}px`;
   async abort() {
     if (this.reftestWin && this.reftestWin != this.parentWindow) {
       this.driver.closeChromeWindow();
-      let parentHandle = this.driver.findWindow([this.parentWindow], () => true);
+      let parentHandle = this.driver.findWindow(
+        [this.parentWindow],
+        () => true
+      );
       await this.driver.setWindowHandle(parentHandle);
     }
     this.reftestWin = null;
