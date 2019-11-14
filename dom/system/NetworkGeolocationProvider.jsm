@@ -11,7 +11,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
-// PositionError has no interface object, so we can't use that here.
+// GeolocationPositionError has no interface object, so we can't use that here.
 const POSITION_UNAVAILABLE = 2;
 
 var gLoggingEnabled = false;

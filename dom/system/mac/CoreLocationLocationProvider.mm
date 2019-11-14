@@ -6,7 +6,7 @@
 
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsGeoPosition.h"
+#include "GeolocationPosition.h"
 #include "nsIConsoleService.h"
 #include "nsServiceManagerUtils.h"
 #include "CoreLocationLocationProvider.h"

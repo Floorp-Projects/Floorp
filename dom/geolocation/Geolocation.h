@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsGeoLocation_h
-#define nsGeoLocation_h
+#ifndef mozilla_dom_Geolocation_h
+#define mozilla_dom_Geolocation_h
 
 // Microsoft's API Name hackery sucks
 #undef CreateEvent
@@ -20,7 +20,8 @@
 
 #include "nsCycleCollectionParticipant.h"
 
-#include "nsGeoPosition.h"
+#include "GeolocationPosition.h"
+#include "GeolocationCoordinates.h"
 #include "nsIDOMGeoPosition.h"
 #include "nsIDOMGeoPositionCallback.h"
 #include "nsIDOMGeoPositionErrorCallback.h"
@@ -248,4 +249,4 @@ class Geolocation final : public nsIGeolocationUpdate, public nsWrapperCache {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif /* nsGeoLocation_h */
+#endif /* mozilla_dom_Geolocation_h */

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MLSFallback.h"
-#include "nsGeoPosition.h"
+#include "GeolocationPosition.h"
 #include "nsIGeolocationProvider.h"
 #include "nsServiceManagerUtils.h"
 

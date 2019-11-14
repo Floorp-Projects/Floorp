@@ -16,7 +16,7 @@
 #include "mozilla/dom/BodyExtractor.h"
 #include "mozilla/dom/FetchBinding.h"
 #include "mozilla/dom/File.h"
-#include "nsGeolocation.h"
+#include "Geolocation.h"
 #include "nsIClassOfService.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIContentPolicy.h"

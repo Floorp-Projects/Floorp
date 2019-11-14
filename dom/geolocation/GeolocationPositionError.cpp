@@ -7,7 +7,7 @@
 #include "mozilla/dom/GeolocationPositionError.h"
 #include "mozilla/dom/GeolocationPositionErrorBinding.h"
 #include "mozilla/CycleCollectedJSContext.h"  // for nsAutoMicroTask
-#include "nsGeolocation.h"
+#include "Geolocation.h"
 
 namespace mozilla {
 namespace dom {
