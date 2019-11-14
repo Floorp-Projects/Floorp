@@ -8,8 +8,12 @@
     "windows": {
       "command": "/mozilla-build/start-shell.bat",
       "args": [
+        "cd",
         // Use PowerShell to mangle path for mozilla-build environment
-        {"value": "$('${workspaceFolder}\\mach' -replace '\\\\','/')", "quoting": "weak"},
+        {"value": "$('${workspaceFolder}' -replace '\\\\','/')", "quoting": "weak"},
+        "';'",
+
+        "mach",
         "--log-no-times"
       ]
     },
