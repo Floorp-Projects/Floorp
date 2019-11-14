@@ -20,8 +20,6 @@ add_task(async function() {
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneSync", { leaveOpen: true });
 
-  // Ensure the "Sign Up" button in the hidden child of the <xul:deck>
-  // is selected and displayed on the screen.
   let weavePrefsDeck = gBrowser.contentDocument.getElementById(
     "weavePrefsDeck"
   );
@@ -29,12 +27,6 @@ add_task(async function() {
     weavePrefsDeck.selectedIndex,
     0,
     "Should select the #noFxaAccount child node"
-  );
-  let noFxaSignUp = weavePrefsDeck.children[0].querySelector("#noFxaSignUp");
-  is(
-    noFxaSignUp.textContent,
-    "Don\u2019t have an account? Get started",
-    "The Sign Up button should exist"
   );
 
   // Performs search.
@@ -46,7 +38,7 @@ add_task(async function() {
     "Search input should be focused when visiting preferences"
   );
 
-  let query = "Don\u2019t have an account? Get started";
+  let query = "Sync";
   let searchCompletedPromise = BrowserTestUtils.waitForEvent(
     gBrowser.contentWindow,
     "PreferencesSearchCompleted",
