@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.4.107';
-const pdfjsBuild = 'de77d668';
+const pdfjsVersion = '2.4.127';
+const pdfjsBuild = '21895aa7';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -148,15 +148,13 @@ var _primitives = __w_pdfjs_require__(6);
 
 var _pdf_manager = __w_pdfjs_require__(7);
 
-var _is_node = _interopRequireDefault(__w_pdfjs_require__(46));
+var _is_node = __w_pdfjs_require__(46);
 
 var _message_handler = __w_pdfjs_require__(47);
 
 var _worker_stream = __w_pdfjs_require__(48);
 
 var _core_utils = __w_pdfjs_require__(9);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var WorkerTask = function WorkerTaskClosure() {
   function WorkerTask(name) {
@@ -225,7 +223,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.4.107';
+    const workerVersion = '2.4.127';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -651,7 +649,7 @@ function isMessagePort(maybePort) {
   return typeof maybePort.postMessage === 'function' && 'onmessage' in maybePort;
 }
 
-if (typeof window === 'undefined' && !(0, _is_node.default)() && typeof self !== 'undefined' && isMessagePort(self)) {
+if (typeof window === 'undefined' && !_is_node.isNodeJS && typeof self !== 'undefined' && isMessagePort(self)) {
   WorkerMessageHandler.initializeFromPort(self);
 }
 
@@ -1389,6 +1387,10 @@ function stringToPDFString(str) {
     for (let i = 2; i < length; i += 2) {
       strBuf.push(String.fromCharCode(str.charCodeAt(i) << 8 | str.charCodeAt(i + 1)));
     }
+  } else if (str[0] === '\xFF' && str[1] === '\xFE') {
+    for (let i = 2; i < length; i += 2) {
+      strBuf.push(String.fromCharCode(str.charCodeAt(i + 1) << 8 | str.charCodeAt(i)));
+    }
   } else {
     for (let i = 0; i < length; ++i) {
       const code = PDFStringTranslateTable[str.charCodeAt(i)];
@@ -1504,7 +1506,9 @@ exports.createObjectURL = createObjectURL;
 "use strict";
 
 
-const globalScope = __w_pdfjs_require__(4);
+const {
+  globalScope
+} = __w_pdfjs_require__(4);
 
 ;
 
@@ -1515,7 +1519,12 @@ const globalScope = __w_pdfjs_require__(4);
 "use strict";
 
 
-module.exports = typeof window !== 'undefined' && window.Math === Math ? window : typeof global !== 'undefined' && global.Math === Math ? global : typeof self !== 'undefined' && self.Math === Math ? self : {};
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.globalScope = void 0;
+const globalScope = typeof window !== 'undefined' && window.Math === Math ? window : typeof global !== 'undefined' && global.Math === Math ? global : typeof self !== 'undefined' && self.Math === Math ? self : {};
+exports.globalScope = globalScope;
 
 /***/ }),
 /* 5 */
@@ -44739,9 +44748,12 @@ exports.PDFImage = PDFImage;
 "use strict";
 
 
-module.exports = function isNodeJS() {
-  return typeof process === 'object' && process + '' === '[object process]' && !process.versions['nw'] && !process.versions['electron'];
-};
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.isNodeJS = void 0;
+const isNodeJS = typeof process === 'object' && process + '' === '[object process]' && !process.versions['nw'] && !process.versions['electron'];
+exports.isNodeJS = isNodeJS;
 
 /***/ }),
 /* 47 */

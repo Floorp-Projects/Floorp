@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.107';
-var pdfjsBuild = 'de77d668';
+var pdfjsVersion = '2.4.127';
+var pdfjsBuild = '21895aa7';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -912,6 +912,10 @@ function stringToPDFString(str) {
     for (let i = 2; i < length; i += 2) {
       strBuf.push(String.fromCharCode(str.charCodeAt(i) << 8 | str.charCodeAt(i + 1)));
     }
+  } else if (str[0] === '\xFF' && str[1] === '\xFE') {
+    for (let i = 2; i < length; i += 2) {
+      strBuf.push(String.fromCharCode(str.charCodeAt(i + 1) << 8 | str.charCodeAt(i)));
+    }
   } else {
     for (let i = 0; i < length; ++i) {
       const code = PDFStringTranslateTable[str.charCodeAt(i)];
@@ -1027,7 +1031,9 @@ exports.createObjectURL = createObjectURL;
 "use strict";
 
 
-const globalScope = __w_pdfjs_require__(3);
+const {
+  globalScope
+} = __w_pdfjs_require__(3);
 
 ;
 
@@ -1038,7 +1044,12 @@ const globalScope = __w_pdfjs_require__(3);
 "use strict";
 
 
-module.exports = typeof window !== 'undefined' && window.Math === Math ? window : typeof global !== 'undefined' && global.Math === Math ? global : typeof self !== 'undefined' && self.Math === Math ? self : {};
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.globalScope = void 0;
+const globalScope = typeof window !== 'undefined' && window.Math === Math ? window : typeof global !== 'undefined' && global.Math === Math ? global : typeof self !== 'undefined' && self.Math === Math ? self : {};
+exports.globalScope = globalScope;
 
 /***/ }),
 /* 4 */
@@ -1079,7 +1090,7 @@ var _api_compatibility = __w_pdfjs_require__(8);
 
 var _canvas = __w_pdfjs_require__(9);
 
-var _global_scope = _interopRequireDefault(__w_pdfjs_require__(3));
+var _global_scope = __w_pdfjs_require__(3);
 
 var _worker_options = __w_pdfjs_require__(11);
 
@@ -1090,8 +1101,6 @@ var _metadata = __w_pdfjs_require__(13);
 var _transport_stream = __w_pdfjs_require__(15);
 
 var _webgl = __w_pdfjs_require__(16);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const DEFAULT_RANGE_CHUNK_SIZE = 65536;
 const RENDERING_CANCELLED_TIMEOUT = 100;
@@ -1271,7 +1280,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.4.107',
+    apiVersion: '2.4.127',
     source: {
       data: source.data,
       url: source.url,
@@ -1944,7 +1953,7 @@ class PDFPageProxy {
     reason,
     force = false
   }) {
-    (0, _util.assert)(reason instanceof Error, 'PDFPageProxy._abortOperatorList: Expected "reason" argument.');
+    (0, _util.assert)(reason instanceof Error || typeof reason === 'object' && reason !== null, 'PDFPageProxy._abortOperatorList: Expected "reason" argument.');
 
     if (!intentState.streamReader) {
       return;
@@ -2624,10 +2633,10 @@ class WorkerTransport {
 
           let fontRegistry = null;
 
-          if (params.pdfBug && _global_scope.default.FontInspector && _global_scope.default.FontInspector.enabled) {
+          if (params.pdfBug && _global_scope.globalScope.FontInspector && _global_scope.globalScope.FontInspector.enabled) {
             fontRegistry = {
               registerFont(font, url) {
-                _global_scope.default['FontInspector'].fontAdded(font, url);
+                _global_scope.globalScope['FontInspector'].fontAdded(font, url);
               }
 
             };
@@ -3091,8 +3100,8 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
         canvasInRendering.add(this._canvas);
       }
 
-      if (this._pdfBug && _global_scope.default.StepperManager && _global_scope.default.StepperManager.enabled) {
-        this.stepper = _global_scope.default.StepperManager.create(this.pageNumber - 1);
+      if (this._pdfBug && _global_scope.globalScope.StepperManager && _global_scope.globalScope.StepperManager.enabled) {
+        this.stepper = _global_scope.globalScope.StepperManager.create(this.pageNumber - 1);
         this.stepper.init(this.operatorList);
         this.stepper.nextBreakPoint = this.stepper.getNextBreakPoint();
       }
@@ -3205,9 +3214,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.4.107';
+const version = '2.4.127';
 exports.version = version;
-const build = 'de77d668';
+const build = '21895aa7';
 exports.build = build;
 
 /***/ }),
@@ -8357,9 +8366,7 @@ exports.renderTextLayer = void 0;
 
 var _util = __w_pdfjs_require__(1);
 
-var _global_scope = _interopRequireDefault(__w_pdfjs_require__(3));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+var _global_scope = __w_pdfjs_require__(3);
 
 var renderTextLayer = function renderTextLayerClosure() {
   var MAX_TEXT_DIVS_TO_RENDER = 100000;
@@ -8787,7 +8794,7 @@ var renderTextLayer = function renderTextLayerClosure() {
     this._textDivs = textDivs || [];
     this._textContentItemsStr = textContentItemsStr || [];
     this._enhanceTextSelection = !!enhanceTextSelection;
-    this._fontInspectorEnabled = !!(_global_scope.default.FontInspector && _global_scope.default.FontInspector.enabled);
+    this._fontInspectorEnabled = !!(_global_scope.globalScope.FontInspector && _global_scope.globalScope.FontInspector.enabled);
     this._reader = null;
     this._layoutTextLastFontSize = null;
     this._layoutTextLastFontFamily = null;
@@ -9686,7 +9693,7 @@ class LineAnnotationElement extends AnnotationElement {
     line.setAttribute('y1', data.rect[3] - data.lineCoordinates[1]);
     line.setAttribute('x2', data.rect[2] - data.lineCoordinates[2]);
     line.setAttribute('y2', data.rect[3] - data.lineCoordinates[3]);
-    line.setAttribute('stroke-width', data.borderStyle.width);
+    line.setAttribute('stroke-width', data.borderStyle.width || 1);
     line.setAttribute('stroke', 'transparent');
     svg.appendChild(line);
     this.container.append(svg);
@@ -9716,7 +9723,7 @@ class SquareAnnotationElement extends AnnotationElement {
     square.setAttribute('y', borderWidth / 2);
     square.setAttribute('width', width - borderWidth);
     square.setAttribute('height', height - borderWidth);
-    square.setAttribute('stroke-width', borderWidth);
+    square.setAttribute('stroke-width', borderWidth || 1);
     square.setAttribute('stroke', 'transparent');
     square.setAttribute('fill', 'none');
     svg.appendChild(square);
@@ -9747,7 +9754,7 @@ class CircleAnnotationElement extends AnnotationElement {
     circle.setAttribute('cy', height / 2);
     circle.setAttribute('rx', width / 2 - borderWidth / 2);
     circle.setAttribute('ry', height / 2 - borderWidth / 2);
-    circle.setAttribute('stroke-width', borderWidth);
+    circle.setAttribute('stroke-width', borderWidth || 1);
     circle.setAttribute('stroke', 'transparent');
     circle.setAttribute('fill', 'none');
     svg.appendChild(circle);
@@ -9785,7 +9792,7 @@ class PolylineAnnotationElement extends AnnotationElement {
     points = points.join(' ');
     const polyline = this.svgFactory.createElement(this.svgElementName);
     polyline.setAttribute('points', points);
-    polyline.setAttribute('stroke-width', data.borderStyle.width);
+    polyline.setAttribute('stroke-width', data.borderStyle.width || 1);
     polyline.setAttribute('stroke', 'transparent');
     polyline.setAttribute('fill', 'none');
     svg.appendChild(polyline);
@@ -9852,7 +9859,7 @@ class InkAnnotationElement extends AnnotationElement {
       points = points.join(' ');
       const polyline = this.svgFactory.createElement(this.svgElementName);
       polyline.setAttribute('points', points);
-      polyline.setAttribute('stroke-width', data.borderStyle.width);
+      polyline.setAttribute('stroke-width', data.borderStyle.width || 1);
       polyline.setAttribute('stroke', 'transparent');
       polyline.setAttribute('fill', 'none');
 
@@ -10060,9 +10067,7 @@ var _util = __w_pdfjs_require__(1);
 
 var _display_utils = __w_pdfjs_require__(6);
 
-var _is_node = _interopRequireDefault(__w_pdfjs_require__(20));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+var _is_node = __w_pdfjs_require__(20);
 
 let SVGGraphics = function () {
   throw new Error('Not implemented: SVGGraphics');
@@ -10078,9 +10083,12 @@ exports.SVGGraphics = SVGGraphics;
 "use strict";
 
 
-module.exports = function isNodeJS() {
-  return typeof process === 'object' && process + '' === '[object process]' && !process.versions['nw'] && !process.versions['electron'];
-};
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.isNodeJS = void 0;
+const isNodeJS = typeof process === 'object' && process + '' === '[object process]' && !process.versions['nw'] && !process.versions['electron'];
+exports.isNodeJS = isNodeJS;
 
 /***/ })
 /******/ ]);
