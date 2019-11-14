@@ -7,7 +7,7 @@
 
 %include ../../../../toolkit/themes/osx/global/shared.inc
 
-window {
+:root {
   font: -moz-dialog;
 }
 
