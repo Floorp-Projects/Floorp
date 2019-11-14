@@ -69,16 +69,6 @@
     "bug_numbers": [1493445],
     "description": "Record number of times particular features on about:config are used"
   },
-  "ADDON_MANAGER_UPGRADE_UI_SHOWN": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "53",
-    "kind": "count",
-    "description": "Recorded when the addon manager shows the modal upgrade UI. Should only be recorded once per upgrade.",
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1268548],
-    "alert_emails": ["kev@mozilla.com"]
-  },
   "ADDON_SHIM_USAGE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -6721,24 +6711,6 @@
     "n_buckets": 20,
     "description": "Gloda: indexing rate (message/s)"
   },
-  "FX_GESTURE_INSTALL_SNAPSHOT_OF_PAGE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "50",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 30,
-    "description": "Firefox: Time taken to store the image capture of the page to a canvas, for reuse while swiping through history (ms)."
-  },
-  "FX_GESTURE_COMPRESS_SNAPSHOT_OF_PAGE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "50",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 30,
-    "description": "Firefox: Time taken to kick off image compression of the canvas that will be used during swiping through history (ms)."
-  },
   "FX_TAB_CLOSE_TIME_ANIM_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -9053,14 +9025,6 @@
     "kind": "flag",
     "description": "Whether enablePrivilege has ever been called during the current session"
   },
-  "SUBJECT_PRINCIPAL_ACCESSED_WITHOUT_SCRIPT_ON_STACK": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "46",
-    "alert_emails": ["bholley@mozilla.com"],
-    "kind": "flag",
-    "description": "Whether the subject principal was accessed without script on the stack during the current session"
-  },
   "TOUCH_ENABLED_DEVICE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -11199,22 +11163,6 @@
     ],
     "description": "Percentage of the entries with the given content type. Numbers are sampled periodically, every time 2GB of data is written to the cache."
   },
-  "DATABASE_LOCKED_EXCEPTION": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "42",
-    "kind": "enumerated",
-    "description": "Record database locks when opening one of Fennec's databases. The index corresponds to how many attempts, beginning with 0.",
-    "n_values": 5
-  },
-  "DATABASE_SUCCESSFUL_UNLOCK": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "42",
-    "kind": "enumerated",
-    "description": "Record on which attempt we successfully unlocked a database. See DATABASE_LOCKED_EXCEPTION.",
-    "n_values": 5
-  },
   "SSL_TLS13_INTOLERANCE_REASON_PRE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -12076,87 +12024,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "The submission status when main/plugin/content crashes are submitted. 1 is success, 0 is failure. Keyed on the CrashManager Crash.type."
   },
-  "STUMBLER_TIME_BETWEEN_UPLOADS_SEC": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "45",
-    "kind": "exponential",
-    "n_buckets": 50,
-    "high": 259200,
-    "description": "Stumbler: The time in seconds between uploads."
-  },
-  "STUMBLER_VOLUME_BYTES_UPLOADED_PER_SEC": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "45",
-    "kind": "exponential",
-    "n_buckets": 50,
-    "high": 1000000,
-    "description": "Stumbler: Volume measurement of bytes uploaded, normalized to per-second."
-  },
-  "STUMBLER_TIME_BETWEEN_START_SEC": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "45",
-    "kind": "exponential",
-    "n_buckets": 50,
-    "high": 259200,
-    "description": "Stumbler: The time between the service starts."
-  },
-  "STUMBLER_UPLOAD_BYTES": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "45",
-    "kind": "exponential",
-    "n_buckets": 50,
-    "high": 1000000,
-    "description": "Stumbler: The bytes per upload."
-  },
-  "STUMBLER_UPLOAD_OBSERVATION_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "45",
-    "kind": "exponential",
-    "n_buckets": 50,
-    "high": 10000,
-    "description": "Stumbler: The observations per upload."
-  },
-  "STUMBLER_UPLOAD_CELL_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "45",
-    "kind": "exponential",
-    "n_buckets": 50,
-    "high": 10000,
-    "description": "Stumbler: The cells per upload."
-  },
-  "STUMBLER_UPLOAD_WIFI_AP_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "45",
-    "kind": "exponential",
-    "n_buckets": 50,
-    "high": 10000,
-    "description": "Stumbler: The Wi-Fi APs per upload."
-  },
-  "STUMBLER_OBSERVATIONS_PER_DAY": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "45",
-    "kind": "exponential",
-    "n_buckets": 50,
-    "high": 10000,
-    "description": "Stumbler: The number of observations between upload events, normalized to per day."
-  },
-  "STUMBLER_TIME_BETWEEN_RECEIVED_LOCATIONS_SEC": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "45",
-    "kind": "exponential",
-    "n_buckets": 50,
-    "high": 86400,
-    "description": "Stumbler: The time between receiving passive locations."
-  },
   "DATA_STORAGE_ENTRIES": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -12837,16 +12704,6 @@
     "expires_in_version": "44",
     "kind": "boolean",
     "description": "Was there an error while performing the v7 permissions DB migration?"
-  },
-  "PERF_MONITORING_TEST_CPU_RESCHEDULING_PROPORTION_MOVED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["dteller@mozilla.com"],
-    "expires_in_version": "48",
-    "kind": "linear",
-    "high": 100,
-    "n_buckets": 20,
-    "description": "Proportion (%) of reschedulings of the main process to another CPU during the execution of code inside a JS compartment. Updated while we are measuring jank."
   },
   "VIDEO_EME_REQUEST_SUCCESS_LATENCY_MS": {
     "record_in_processes": ["main", "content"],
