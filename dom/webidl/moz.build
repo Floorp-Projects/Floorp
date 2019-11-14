@@ -37,6 +37,12 @@ with Files("BatteryManager.webidl"):
 with Files("BiquadFilterNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
+with Files("Blob*"):
+    BUG_COMPONENT = ("Core", "DOM: File")
+
+with Files("BroadcastChannel.webidl"):
+    BUG_COMPONENT = ("Core", "DOM: postMessage")
+
 with Files("BrowserElement*"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
@@ -59,10 +65,10 @@ with Files("Client*"):
     BUG_COMPONENT = ("Core", "DOM: Service Workers")
 
 with Files("Clipboard.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Events")
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 with Files("ClipboardEvent.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Events")
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 with Files("ConstantSourceNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
@@ -103,14 +109,17 @@ with Files("FakePluginTagInit.webidl"):
 with Files("FeaturePolicy.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
+with Files("File*"):
+    BUG_COMPONENT = ("Core", "DOM: File")
+
 with Files("FocusEvent.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Events")
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 with Files("Font*"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
 with Files("FormData.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "DOM: Forms")
 
 with Files("Geolocation.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Geolocation")
@@ -134,7 +143,7 @@ with Files("HTML*"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("HashChangeEvent.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Events")
+    BUG_COMPONENT = ("Core", "DOM: Navigation")
 
 with Files("HiddenPluginEvent.webidl"):
     BUG_COMPONENT = ("Core", "Plug-ins")
@@ -148,11 +157,14 @@ with Files("IIRFilterNode.webidl"):
 with Files("Image*"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
+with Files("ImageBitmap*"):
+    BUG_COMPONENT = ("Core", "Canvas: 2D")
+
 with Files("ImageCapture*"):
     BUG_COMPONENT = ("Core", "Audio/Video")
 
 with Files("InputEvent.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Events")
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 with Files("InstallTrigger.webidl"):
     BUG_COMPONENT = ("Toolkit", "Add-ons Manager")
@@ -161,7 +173,7 @@ with Files("KeyAlgorithm.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
 with Files("Key*Event*"):
-    BUG_COMPONENT = ("Core", "DOM: Events")
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 with Files("KeyIdsInitData.webidl"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
@@ -196,6 +208,9 @@ with Files("MediaKey*"):
 with Files("Media*List*"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
+with Files("Message*"):
+    BUG_COMPONENT = ("Core", "DOM: postMessage")
+
 with Files("*Record*"):
     BUG_COMPONENT = ("Core", "Audio/Video: Recording")
 
@@ -206,7 +221,7 @@ with Files("MIDI*"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
 with Files("Mouse*"):
-    BUG_COMPONENT = ("Core", "DOM: Events")
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 with Files("MutationEvent.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Events")
@@ -236,10 +251,10 @@ with Files("PeriodicWave.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
 with Files("PointerEvent.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Events")
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 with Files("PopStateEvent.webidl*"):
-    BUG_COMPONENT = ("Core", "DOM: Events")
+    BUG_COMPONENT = ("Core", "DOM: Navigation")
 
 with Files("GeolocationPosition*"):
     BUG_COMPONENT = ("Core", "DOM: Geolocation")
@@ -269,7 +284,7 @@ with Files("ServiceWorker*"):
     BUG_COMPONENT = ("Core", "DOM: Service Workers")
 
 with Files("SimpleGestureEvent.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Events")
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 with Files("SocketCommon.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
@@ -305,13 +320,13 @@ with Files("UDP*"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
 with Files("UIEvent.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Events")
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 with Files("URL.webidl"):
     BUG_COMPONENT = ("Core", "Audio/Video")
 
 with Files("UserProximityEvent.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Events")
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 with Files("VTT*"):
     BUG_COMPONENT = ("Core", "Audio/Video")
@@ -338,7 +353,7 @@ with Files("Webrtc*"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
 with Files("WheelEvent.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Events")
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 with Files("WidevineCDMManifest.webidl"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
