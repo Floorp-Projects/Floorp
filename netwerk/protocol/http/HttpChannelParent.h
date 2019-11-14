@@ -129,13 +129,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
 
   base::ProcessId OtherPid() const;
 
-  // Called by nsHttpChannel when a process switch is about to start.
-  // aChannel: nsIHttpChannel caller.
-  // aIdentifier: identifier from SessionStore to be passed to the childChannel
-  //              in order to identify it.
-  nsresult TriggerCrossProcessSwitch(nsIHttpChannel* aChannel,
-                                     uint64_t aIdentifier);
-
   // Inform the child actor that our referrer info was modified late during
   // BeginConnect.
   void OverrideReferrerInfoDuringBeginConnect(nsIReferrerInfo* aReferrerInfo);
