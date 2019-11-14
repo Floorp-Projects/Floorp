@@ -155,7 +155,7 @@ RemoteWebNavigation.prototype = {
 
   _sendMessage(aMessage, aData) {
     try {
-      this._browser.messageManager.sendAsyncMessage(aMessage, aData);
+      this._browser.sendMessageToActor(aMessage, aData, "WebNavigation");
     } catch (e) {
       Cu.reportError(e);
     }
