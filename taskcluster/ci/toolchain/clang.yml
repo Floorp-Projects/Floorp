@@ -10,21 +10,21 @@ job-defaults:
         resources:
             - 'build/build-clang/build-clang.py'
 
-linux64-clang-4.0:
-    description: "Clang 4.0 toolchain build"
+linux64-clang-5.0:
+    description: "Clang 5.0 toolchain build"
     treeherder:
         symbol: TL(clang4.0)
     worker-type: b-linux-large
     run:
         script: build-clang.sh
         arguments:
-            - 'build/build-clang/clang-4.0-linux64.json'
+            - 'build/build-clang/clang-5.0-linux64.json'
         resources:
-            - 'build/build-clang/clang-4.0-linux64.json'
+            - 'build/build-clang/clang-5.0-linux64.json'
         toolchain-artifact: public/build/clang.tar.xz
     fetches:
         fetch:
-            - clang-4.0
+            - clang-5.0
         toolchain:
             - linux64-gcc-7
 

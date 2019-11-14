@@ -387,12 +387,12 @@ android-rs-glue:
         repo: https://github.com/rust-windowing/android-rs-glue
         revision: e3ac6edea5814e1faca0c31ea8fac6877cb929ea
 
-clang-4.0:
-    description: clang 4.0 source code
+clang-5.0:
+    description: clang 5.0.2 source code
     fetch:
         type: git
         repo: https://github.com/llvm/llvm-project
-        revision: 449c3ef93afc7a668eb35e67a83717453e28b25a
+        revision: 6a075b6de4cafebec9ca1ff9eec7229a617c93f6
 
 clang-7:
     description: clang 7 source code
