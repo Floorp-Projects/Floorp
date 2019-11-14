@@ -1483,6 +1483,24 @@ nsDOMWindowUtils::GetVisualViewportOffset(int32_t* aOffsetX,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SetDynamicToolbarMaxHeight(uint32_t aHeightInScreen) {
+  if (aHeightInScreen > INT32_MAX) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  RefPtr<nsPresContext> presContext = GetPresContext();
+  if (!presContext) {
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(presContext->IsRootContentDocumentCrossProcess());
+
+  presContext->SetDynamicToolbarMaxHeight(ScreenIntCoord(aHeightInScreen));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetScrollbarSize(bool aFlushLayout, int32_t* aWidth,
                                    int32_t* aHeight) {
   *aWidth = 0;
