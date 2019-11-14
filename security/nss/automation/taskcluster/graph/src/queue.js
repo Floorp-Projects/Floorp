@@ -17,7 +17,7 @@ let image_tasks = new Map();
 let parameters = {};
 
 let queue = new taskcluster.Queue({
-  rootUrl: process.env.TASKCLUSTER_PROXY_URL,
+  baseUrl: "http://taskcluster/queue/v1"
 });
 
 function fromNow(hours) {
@@ -156,8 +156,8 @@ function convertTask(def) {
   }, parameters);
 
   return {
-    provisionerId: def.provisioner || `nss-${process.env.MOZ_SCM_LEVEL}`,
-    workerType: def.workerType || "linux",
+    provisionerId: def.provisioner || "aws-provisioner-v1",
+    workerType: def.workerType || "hg-worker",
     schedulerId: process.env.TC_SCHEDULER_ID,
     taskGroupId: process.env.TASK_ID,
 

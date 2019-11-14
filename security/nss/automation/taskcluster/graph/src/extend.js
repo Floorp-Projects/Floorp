@@ -354,7 +354,8 @@ async function scheduleMac(name, base, args = "") {
        base.collection != "asan" &&
        base.collection != "fips" &&
        base.collection != "fuzz")) {
-    let nspr_gyp = gyp_cmd + "--nspr-only --nspr-test-build --nspr-test-run ";
+    let nspr_gyp = gyp_cmd + "--nspr-only --nspr-test-build ";
+    // TODO (bug 1385039): nspr_gyp += "--nspr-test-run ";
     let nspr_build = merge(build_base_without_command_symbol, {
       command: [
         MAC_CHECKOUT_CMD,
@@ -423,7 +424,8 @@ async function scheduleLinux(name, overrides, args = "") {
         overrides.collection != "asan" &&
         overrides.collection != "fips" &&
         overrides.collection != "fuzz")) {
-    let nspr_gyp = checkout_and_gyp + "--nspr-only --nspr-test-build --nspr-test-run ";
+    let nspr_gyp = checkout_and_gyp + "--nspr-only --nspr-test-build ";
+    // TODO (bug 1385039): nspr_gyp += "--nspr-test-run ";
 
     let nspr_base = merge({
       command: [
@@ -827,7 +829,7 @@ async function scheduleFuzzing32() {
 
 async function scheduleWindows(name, base, build_script) {
   base = merge(base, {
-    workerType: "win2012r2",
+    workerType: "nss-win2012r2",
     env: {
       PATH: "c:\\mozilla-build\\bin;c:\\mozilla-build\\python;" +
 	    "c:\\mozilla-build\\msys\\local\\bin;c:\\mozilla-build\\7zip;" +
@@ -837,9 +839,7 @@ async function scheduleWindows(name, base, build_script) {
 	    "c:\\mozilla-build\\moztools-x64\\bin;c:\\mozilla-build\\wget",
       DOMSUF: "localdomain",
       HOST: "localhost",
-    },
-    features: ["taskclusterProxy"],
-    scopes: ["project:releng:services/tooltool/api/download/internal"],
+    }
   });
 
   let artifacts_and_kind = {
@@ -868,7 +868,8 @@ async function scheduleWindows(name, base, build_script) {
        base.collection != "fips" &&
        base.collection != "fuzz")) {
     let nspr_gyp =
-      `bash -c 'nss/automation/taskcluster/windows/${build_script} --nspr-only --nspr-test-build --nspr-test-run'`;
+      `bash -c 'nss/automation/taskcluster/windows/${build_script} --nspr-only --nspr-test-build'`;
+      // TODO (bug 1385039): add --nspr-test-run
     let nspr_build = merge(build_without_command_symbol, {
       command: [
         WINDOWS_CHECKOUT_CMD,

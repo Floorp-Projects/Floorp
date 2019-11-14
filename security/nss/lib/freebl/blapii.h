@@ -86,6 +86,5 @@ PRBool arm_aes_support();
 PRBool arm_pmull_support();
 PRBool arm_sha1_support();
 PRBool arm_sha2_support();
-PRBool ppc_crypto_support();
 
 #endif /* _BLAPII_H_ */
