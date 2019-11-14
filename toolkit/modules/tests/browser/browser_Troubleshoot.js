@@ -863,6 +863,19 @@ const SNAPSHOT_SCHEMA = {
         },
       },
     },
+    remoteAgent: {
+      type: "object",
+      properties: {
+        listening: {
+          required: true,
+          type: "boolean",
+        },
+        url: {
+          required: true,
+          type: "string",
+        },
+      },
+    },
   },
 };
 

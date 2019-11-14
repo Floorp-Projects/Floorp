@@ -927,6 +927,14 @@ var snapshotFormatters = {
     $("javascript-incremental-gc").textContent = data.incrementalGCEnabled;
   },
 
+  remoteAgent(data) {
+    if (!AppConstants.ENABLE_REMOTE_AGENT) {
+      return;
+    }
+    $("remote-debugging-accepting-connections").textContent = data.listening;
+    $("remote-debugging-url").textContent = data.url;
+  },
+
   accessibility(data) {
     $("a11y-activated").textContent = data.isActive;
     $("a11y-force-disabled").textContent = data.forceDisabled || 0;
