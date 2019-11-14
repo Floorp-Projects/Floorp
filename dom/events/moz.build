@@ -5,6 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("Event*"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
 if CONFIG['OS_ARCH'] == 'WINNT':
