@@ -69,11 +69,12 @@ def taskcluster_url(logger, commits):
     cset_url = ('https://hg.mozilla.org/mozilla-central/json-pushes?'
                 'changeset={changeset}&version=2&tipsonly=1')
 
-    tc_url = ('https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.'
+    tc_url = ('https://firefox-ci-tc.services.mozilla.com/api/index/v1/'
+              'task/gecko.v2.mozilla-central.'
               'revision.{changeset}.source.manifest-upload')
 
-    default = ("https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central."
-               "latest.source.manifest-upload" +
+    default = ("https://firefox-ci-tc.services.mozilla.com/api/index/v1/"
+               "task/gecko.v2.mozilla-central.latest.source.manifest-upload" +
                artifact_path)
 
     for revision in commits:
