@@ -1324,6 +1324,29 @@ parent:
      */
     sync InitOtherFamilyNames(uint32_t aGeneration, bool aDefer) returns (bool aLoaded);
 
+    /**
+     * Ask the parent for a specific hyphenation resource (identified by URI)
+     * as a shared memory block.
+     *
+     * This is a sync method because at the point where a content process finds
+     * that it requires a particular hyphenation dictionary, this is blocking
+     * reflow; making it async would require scheduling another reflow after
+     * the resource is available, and a possible layout "jump" as line-breaks
+     * change. Note that the content process retains a reference to each such
+     * resource it requests, so it will only make this call once per locale for
+     * which hyphenation data exists.
+     *
+     * @param aURI
+     *   The URI (which currently must always point to an omnijar resource)
+     *   for the required hyphenation dictionary.
+     * @param aHandle
+     *   Returns the shmem handle to the resource (or an invalid shmem handle
+     *   in case of failure).
+     * @param aLoaded
+     *   Returns the size in bytes of the resource.
+     */
+    sync GetHyphDict(URIParams aURI) returns (Handle aHandle, uint32_t aSize);
+
     async CreateWindow(nullable PBrowser aThisTab,
                        PBrowser aNewTab,
                        uint32_t aChromeFlags,

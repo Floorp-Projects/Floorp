@@ -1127,6 +1127,10 @@ class ContentParent final : public PContentParent,
       const uint32_t& aGeneration,
       const mozilla::fontlist::Pointer& aFamilyPtr);
 
+  mozilla::ipc::IPCResult RecvGetHyphDict(
+      const mozilla::ipc::URIParams& aURIParams,
+      mozilla::ipc::SharedMemoryBasic::Handle* aOutHandle, uint32_t* aOutSize);
+
   mozilla::ipc::IPCResult RecvNotifyBenchmarkResult(const nsString& aCodecName,
                                                     const uint32_t& aDecodeFPS);
 
