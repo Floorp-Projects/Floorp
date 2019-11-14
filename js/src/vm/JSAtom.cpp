@@ -1259,11 +1259,10 @@ XDRResult js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp) {
 
   uint32_t atomIndex;
   MOZ_TRY(XDRAtomIndex(xdr, &atomIndex));
-  JSAtom* atom = xdr->atomTable()[atomIndex];
-
-  if (!atom) {
-    return xdr->fail(JS::TranscodeResult_Throw);
+  if (atomIndex >= xdr->atomTable().length()) {
+    return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
   }
+  JSAtom* atom = xdr->atomTable()[atomIndex];
 
   atomp.set(atom);
   return Ok();
