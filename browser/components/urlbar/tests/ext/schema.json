@@ -16,6 +16,13 @@
         "async": true,
         "description": "Returns true if there is an update ready to install.",
         "parameters": []
+      },
+      {
+        "name": "lastBrowserUpdateDate",
+        "type": "function",
+        "async": true,
+        "description": "Returns the date of the last browser update. If there's no update history, then the date the profile was first used is returned instead. The return value is milliseconds since 1 January 1970 UTC (i.e., suitable for passing to <code>new Date()</code>).",
+        "parameters": []
       }
     ]
   }
