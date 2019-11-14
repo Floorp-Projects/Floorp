@@ -6,13 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["WebNavigationChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
-
-class WebNavigationChild extends ActorChild {
+class WebNavigationChild extends JSWindowActorChild {
   get webNavigation() {
-    return this.mm.docShell.QueryInterface(Ci.nsIWebNavigation);
+    return this.docShell.QueryInterface(Ci.nsIWebNavigation);
   }
 
   receiveMessage(message) {
@@ -42,7 +38,7 @@ class WebNavigationChild extends ActorChild {
     try {
       fn();
     } finally {
-      this.mm.docShell
+      this.docShell
         .QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIBrowserChild)
         .notifyNavigationFinished();
@@ -50,22 +46,24 @@ class WebNavigationChild extends ActorChild {
   }
 
   goBack(params) {
-    if (this.webNavigation.canGoBack) {
-      this.mm.docShell.setCancelContentJSEpoch(params.cancelContentJSEpoch);
-      this._wrapURIChangeCall(() => this.webNavigation.goBack());
+    let wn = this.webNavigation;
+    if (wn.canGoBack) {
+      this.docShell.setCancelContentJSEpoch(params.cancelContentJSEpoch);
+      this._wrapURIChangeCall(() => wn.goBack());
     }
   }
 
   goForward(params) {
-    if (this.webNavigation.canGoForward) {
-      this.mm.docShell.setCancelContentJSEpoch(params.cancelContentJSEpoch);
-      this._wrapURIChangeCall(() => this.webNavigation.goForward());
+    let wn = this.webNavigation;
+    if (wn.canGoForward) {
+      this.docShell.setCancelContentJSEpoch(params.cancelContentJSEpoch);
+      this._wrapURIChangeCall(() => wn.goForward());
     }
   }
 
   gotoIndex(params) {
     let { index, cancelContentJSEpoch } = params || {};
-    this.mm.docShell.setCancelContentJSEpoch(cancelContentJSEpoch);
+    this.docShell.setCancelContentJSEpoch(cancelContentJSEpoch);
     this._wrapURIChangeCall(() => this.webNavigation.gotoIndex(index));
   }
 
@@ -77,7 +75,7 @@ class WebNavigationChild extends ActorChild {
         "WebNavigationChild.js",
         line
       );
-      debug.abort("WebNavigationChild.js", line);
+      debug.abort("WebNavigationChild.jsm", line);
     }
   }
 
