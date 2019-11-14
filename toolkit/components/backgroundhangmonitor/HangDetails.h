@@ -10,6 +10,7 @@
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/ProcessedStack.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Result.h"
 #include "mozilla/Move.h"
 #include "mozilla/HangTypes.h"
 #include "mozilla/HangAnnotations.h"
@@ -18,6 +19,11 @@
 #include "mozilla/TimeStamp.h"
 
 namespace mozilla {
+
+enum class PersistedToDisk {
+  No,
+  Yes,
+};
 
 /**
  * HangDetails is the concrete implementaion of nsIHangDetails, and contains the
@@ -29,8 +35,9 @@ class nsHangDetails : public nsIHangDetails {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIHANGDETAILS
 
-  explicit nsHangDetails(HangDetails&& aDetails)
-      : mDetails(std::move(aDetails)) {}
+  explicit nsHangDetails(HangDetails&& aDetails,
+                         PersistedToDisk aPersistedToDisk)
+      : mDetails(std::move(aDetails)), mPersistedToDisk(aPersistedToDisk) {}
 
   // Submit these HangDetails to the main thread. This will dispatch a runnable
   // to the main thread which will fire off the bhr-thread-hang observer
@@ -41,7 +48,11 @@ class nsHangDetails : public nsIHangDetails {
   virtual ~nsHangDetails() {}
 
   HangDetails mDetails;
+  PersistedToDisk mPersistedToDisk;
 };
+
+Result<Ok, nsresult> WriteHangDetailsToFile(HangDetails& aDetails,
+                                            nsIFile* aFile);
 
 /**
  * This runnable is run on the StreamTransportService threadpool in order to
@@ -53,14 +64,34 @@ class nsHangDetails : public nsIHangDetails {
  */
 class ProcessHangStackRunnable final : public Runnable {
  public:
-  explicit ProcessHangStackRunnable(HangDetails&& aHangDetails)
+  explicit ProcessHangStackRunnable(HangDetails&& aHangDetails,
+                                    PersistedToDisk aPersistedToDisk)
       : Runnable("ProcessHangStackRunnable"),
-        mHangDetails(std::move(aHangDetails)) {}
+        mHangDetails(std::move(aHangDetails)),
+        mPersistedToDisk(aPersistedToDisk) {}
 
   NS_IMETHOD Run() override;
 
  private:
   HangDetails mHangDetails;
+  PersistedToDisk mPersistedToDisk;
+};
+
+/**
+ * This runnable handles checking whether our last session wrote a permahang to
+ * disk which we were unable to submit through telemetry. If so, we read the
+ * permahang out and try again to submit it.
+ */
+class SubmitPersistedPermahangRunnable final : public Runnable {
+ public:
+  explicit SubmitPersistedPermahangRunnable(nsIFile* aPermahangFile)
+      : Runnable("SubmitPersistedPermahangRunnable"),
+        mPermahangFile(aPermahangFile) {}
+
+  NS_IMETHOD Run() override;
+
+ private:
+  nsCOMPtr<nsIFile> mPermahangFile;
 };
 
 }  // namespace mozilla
