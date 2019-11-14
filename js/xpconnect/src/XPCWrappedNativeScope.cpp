@@ -188,18 +188,6 @@ bool XPCWrappedNativeScope::AttachComponentsObject(JSContext* aCx) {
   return true;
 }
 
-JSObject* XPCWrappedNativeScope::EnsureContentXBLScope(JSContext* cx) {
-  JS::RootedObject global(cx, CurrentGlobalOrNull(cx));
-  MOZ_ASSERT(js::IsObjectInContextCompartment(global, cx));
-  MOZ_ASSERT(strcmp(js::GetObjectClass(global)->name,
-                    "nsXBLPrototypeScript compilation scope"));
-
-  // We can probably remove EnsureContentXBLScope and clean up all its callers,
-  // but a bunch (all?) of those callers will just go away when we remove XBL
-  // support, so it's simpler to just leave it here as a no-op.
-  return global;
-}
-
 bool XPCWrappedNativeScope::XBLScopeStateMatches(nsIPrincipal* aPrincipal) {
   return mAllowContentXBLScope ==
          !RemoteXULForbidsXBLScopeForPrincipal(aPrincipal);
@@ -213,19 +201,6 @@ bool XPCWrappedNativeScope::AllowContentXBLScope(Realm* aRealm) {
 }
 
 namespace xpc {
-JSObject* GetXBLScope(JSContext* cx, JSObject* contentScopeArg) {
-  JS::RootedObject contentScope(cx, contentScopeArg);
-  JSAutoRealm ar(cx, contentScope);
-  XPCWrappedNativeScope* nativeScope = ObjectScope(contentScope);
-
-  RootedObject scope(cx, nativeScope->EnsureContentXBLScope(cx));
-  NS_ENSURE_TRUE(scope, nullptr);  // See bug 858642.
-
-  scope = js::UncheckedUnwrap(scope);
-  JS::ExposeObjectToActiveJS(scope);
-  return scope;
-}
-
 JSObject* GetUAWidgetScope(JSContext* cx, JSObject* contentScopeArg) {
   JS::RootedObject contentScope(cx, contentScopeArg);
   JSAutoRealm ar(cx, contentScope);

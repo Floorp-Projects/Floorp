@@ -99,29 +99,9 @@ bool MightBeWebContentCompartment(JS::Compartment* compartment);
 
 void SetCompartmentChangedDocumentDomain(JS::Compartment* compartment);
 
-// Return a raw XBL scope object corresponding to contentScope, which must
-// be an object whose global is a DOM window.
-//
-// The return value is not wrapped into cx->compartment, so be sure to enter
-// its compartment before doing anything meaningful.
-//
-// Also note that XBL scopes are lazily created, so the return-value should be
-// null-checked unless the caller can ensure that the scope must already
-// exist.
-//
-// This function asserts if |contentScope| is itself in an XBL scope to catch
-// sloppy consumers. Conversely, GetXBLScopeOrGlobal will handle objects that
-// are in XBL scope (by just returning the global).
-JSObject* GetXBLScope(JSContext* cx, JSObject* contentScope);
-
 JSObject* GetUAWidgetScope(JSContext* cx, nsIPrincipal* principal);
 
 JSObject* GetUAWidgetScope(JSContext* cx, JSObject* contentScope);
-
-inline JSObject* GetXBLScopeOrGlobal(JSContext* cx, JSObject* obj) {
-  MOZ_ASSERT(!js::IsCrossCompartmentWrapper(obj));
-  return GetXBLScope(cx, obj);
-}
 
 // Returns whether XBL scopes have been explicitly disabled for code running
 // in this compartment. See the comment around mAllowContentXBLScope.
