@@ -699,8 +699,9 @@ bool nsLayoutUtils::AllowZoomingForDocument(
   // True if we allow zooming for all documents on this platform, or if we are
   // in RDM and handling meta viewports, which force zoom under some
   // circumstances.
+  BrowsingContext* bc = aDocument ? aDocument->GetBrowsingContext() : nullptr;
   return StaticPrefs::apz_allow_zooming() ||
-         (aDocument && aDocument->InRDMPane() &&
+         (bc && bc->InRDMPane() &&
           nsLayoutUtils::ShouldHandleMetaViewport(aDocument));
 }
 

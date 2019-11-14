@@ -13615,6 +13615,12 @@ bool Document::SetOrientationPendingPromise(Promise* aPromise) {
   return true;
 }
 
+void Document::SetRDMPaneOrientation(OrientationType aType, uint16_t aAngle) {
+  if (GetBrowsingContext()->InRDMPane()) {
+    SetCurrentOrientation(aType, aAngle);
+  }
+}
+
 static void DispatchPointerLockChange(Document* aTarget) {
   if (!aTarget) {
     return;
@@ -15924,8 +15930,9 @@ void Document::RemoveToplevelLoadingDocument(Document* aDoc) {
 
 // static
 bool Document::UseOverlayScrollbars(const Document* aDocument) {
+  BrowsingContext* bc = aDocument ? aDocument->GetBrowsingContext() : nullptr;
   return LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) ||
-         (aDocument && aDocument->InRDMPane());
+         (bc && bc->InRDMPane());
 }
 
 bool Document::HasRecentlyStartedForegroundLoads() {
