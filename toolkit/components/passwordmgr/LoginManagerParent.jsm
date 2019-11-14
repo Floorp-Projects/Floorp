@@ -132,7 +132,7 @@ class LoginManagerParent extends JSWindowActorParent {
    * @param {boolean} options.acceptDifferentSubdomains Include results for eTLD+1 matches
    * @param {boolean} options.ignoreActionAndRealm Include all form and HTTP auth logins for the site
    */
-  _searchAndDedupeLogins(
+  static searchAndDedupeLogins(
     formOrigin,
     {
       acceptDifferentSubdomains,
@@ -361,7 +361,7 @@ class LoginManagerParent extends JSWindowActorParent {
         guid,
       });
     } else {
-      logins = this._searchAndDedupeLogins(formOrigin, {
+      logins = LoginManagerParent.searchAndDedupeLogins(formOrigin, {
         formActionOrigin: actionOrigin,
         ignoreActionAndRealm: true,
         acceptDifferentSubdomains: LoginHelper.includeOtherSubdomainsInLookup,
@@ -427,7 +427,7 @@ class LoginManagerParent extends JSWindowActorParent {
       log("Creating new autocomplete search result.");
 
       // Autocomplete results do not need to match actionOrigin or exact origin.
-      logins = this._searchAndDedupeLogins(formOrigin, {
+      logins = LoginManagerParent.searchAndDedupeLogins(formOrigin, {
         formActionOrigin: actionOrigin,
         ignoreActionAndRealm: true,
         acceptDifferentSubdomains: LoginHelper.includeOtherSubdomainsInLookup,
@@ -617,7 +617,7 @@ class LoginManagerParent extends JSWindowActorParent {
 
     // Below here we have one login per hostPort + action + username with the
     // matching scheme being preferred.
-    let logins = this._searchAndDedupeLogins(origin, {
+    let logins = LoginManagerParent.searchAndDedupeLogins(origin, {
       formActionOrigin,
     });
 
@@ -865,7 +865,7 @@ class LoginManagerParent extends JSWindowActorParent {
       // Check if we already have a login saved for this site since we don't want to overwrite it in
       // case the user still needs their old password to successfully complete a password change.
       // An empty formActionOrigin is used as a wildcard to not restrict to action matches.
-      let logins = this._searchAndDedupeLogins(formOrigin, {
+      let logins = LoginManagerParent.searchAndDedupeLogins(formOrigin, {
         acceptDifferentSubdomains: false,
         httpRealm: null,
         ignoreActionAndRealm: false,
