@@ -658,6 +658,7 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
   NS_DECL_OWNINGTHREAD
 
   std::deque<CachedResponse> mCachedResponses, mDelayedResponses;
+  bool mInFlightResponseInvalidationNeeded;
 
  public:
   BackgroundCursorChild(IDBRequest* aRequest, IDBObjectStore* aObjectStore,
