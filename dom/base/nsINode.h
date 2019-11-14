@@ -1244,7 +1244,17 @@ class nsINode : public mozilla::dom::EventTarget {
 #endif
   }
 
-  bool IsInAnonymousSubtree() const;
+  /**
+   * Returns true if there is NOT a path through child lists
+   * from the top of this node's parent chain back to this node or
+   * if the node is in native anonymous subtree without a parent.
+   *
+   * TODO(emilio):: Remove this function, and use just
+   * IsInNativeAnonymousSubtree, or something?
+   */
+  bool IsInAnonymousSubtree() const {
+    return IsInNativeAnonymousSubtree();
+  }
 
   bool IsInSVGUseShadowTree() const {
     return !!GetContainingSVGUseShadowHost();

@@ -552,14 +552,6 @@ void nsINode::CheckNotNativeAnonymous() const {
 }
 #endif
 
-bool nsINode::IsInAnonymousSubtree() const {
-  if (!IsContent()) {
-    return false;
-  }
-
-  return AsContent()->IsInAnonymousSubtree();
-}
-
 std::ostream& operator<<(std::ostream& aStream, const nsINode& aNode) {
   nsAutoString elemDesc;
   const nsINode* curr = &aNode;
