@@ -288,6 +288,23 @@ class MediaDataDecoder : public DecoderDoctorLifeLogger<MediaDataDecoder> {
   // indicate that Decode should be called again before a MediaData is returned.
   virtual RefPtr<DecodePromise> Decode(MediaRawData* aSample) = 0;
 
+  // This could probably be implemented as a wrapper that takes a
+  // generic MediaDataDecoder and manages batching as needed.  For now
+  // only AudioTrimmer with RemoteMediaDataDecoder supports batch
+  // decoding.
+  // Inserts an array of samples into the decoder's decode pipeline. The
+  // DecodePromise will be resolved with the decoded MediaData. In case
+  // the decoder needs more input, the DecodePromise may be resolved
+  // with an empty array of samples to indicate that Decode should be
+  // called again before a MediaData is returned.
+  virtual bool CanDecodeBatch() { return false; }
+  virtual RefPtr<DecodePromise> DecodeBatch(
+      nsTArray<RefPtr<MediaRawData>>&& aSamples) {
+    MOZ_CRASH("DecodeBatch not implemented yet");
+    return MediaDataDecoder::DecodePromise::CreateAndReject(
+        NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__);
+  }
+
   // Causes all complete samples in the pipeline that can be decoded to be
   // output. If the decoder can't produce samples from the current output,
   // it drops the input samples. The decoder may be holding onto samples
