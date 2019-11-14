@@ -200,13 +200,6 @@ class nsIContent : public nsINode {
   }
 
   /**
-   * Returns true if there is NOT a path through child lists
-   * from the top of this node's parent chain back to this node or
-   * if the node is in native anonymous subtree without a parent.
-   */
-  inline bool IsInAnonymousSubtree() const;
-
-  /**
    * Return true iff this node is in an HTML document (in the HTML5 sense of
    * the term, i.e. not in an XHTML/XML document).
    */
