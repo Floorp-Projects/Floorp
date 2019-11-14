@@ -41,7 +41,6 @@
 #include "XrayWrapper.h"
 #include "nsPrintfCString.h"
 #include "mozilla/Sprintf.h"
-#include "nsGlobalWindow.h"
 #include "nsReadableUtils.h"
 
 #include "mozilla/dom/ScriptSettings.h"
@@ -3240,6 +3239,16 @@ bool CreateGlobalOptionsWithXPConnect::PostCreateGlobal(
 
   xpc::RealmPrivate::Init(aGlobal, site);
   return true;
+}
+
+uint64_t GetWindowID(void* aGlobal) { return 0; }
+
+uint64_t GetWindowID(nsGlobalWindowInner* aGlobal) {
+  return aGlobal->WindowID();
+}
+
+uint64_t GetWindowID(DedicatedWorkerGlobalScope* aGlobal) {
+  return aGlobal->WindowID();
 }
 
 #ifdef DEBUG

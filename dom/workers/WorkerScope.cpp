@@ -580,6 +580,10 @@ WorkerGlobalScope::GetOrCreateServiceWorkerRegistration(
   return ref.forget();
 }
 
+uint64_t WorkerGlobalScope::WindowID() const {
+  return mWorkerPrivate->WindowID();
+}
+
 void WorkerGlobalScope::FirstPartyStorageAccessGranted() {
   // Reset the IndexedDB factory.
   mIndexedDB = nullptr;
