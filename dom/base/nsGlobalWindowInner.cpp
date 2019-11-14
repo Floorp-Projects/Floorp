@@ -1057,13 +1057,6 @@ void nsGlobalWindowInner::ShutDown() {
   sInnerWindowsById = nullptr;
 }
 
-// static
-void nsGlobalWindowInner::CleanupCachedXBLHandlers() {
-  if (mCachedXBLPrototypeHandlers && mCachedXBLPrototypeHandlers->Count() > 0) {
-    mCachedXBLPrototypeHandlers->Clear();
-  }
-}
-
 void nsGlobalWindowInner::FreeInnerObjects() {
   if (IsDying()) {
     return;
@@ -1151,8 +1144,6 @@ void nsGlobalWindowInner::FreeInnerObjects() {
   UnlinkHostObjectURIs();
 
   NotifyWindowIDDestroyed("inner-window-destroyed");
-
-  CleanupCachedXBLHandlers();
 
   for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
     mAudioContexts[i]->Shutdown();
@@ -1275,12 +1266,6 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsGlobalWindowInner)
       return true;
     }
     tmp->mCanSkipCCGeneration = nsCCUncollectableMarker::sGeneration;
-    if (tmp->mCachedXBLPrototypeHandlers) {
-      for (auto iter = tmp->mCachedXBLPrototypeHandlers->Iter(); !iter.Done();
-           iter.Next()) {
-        iter.Data().exposeToActiveJS();
-      }
-    }
     if (EventListenerManager* elm = tmp->GetExistingListenerManager()) {
       elm->MarkForCC();
     }
@@ -1406,8 +1391,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
     JS::RealmBehaviorsRef(js::GetNonCCWObjectRealm(wrapper)).setNonLive();
   }
 
-  tmp->CleanupCachedXBLHandlers();
-
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mNavigator)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPerformance)
@@ -1520,12 +1503,6 @@ void nsGlobalWindowInner::RiskyUnlink() {
 #endif
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsGlobalWindowInner)
-  if (tmp->mCachedXBLPrototypeHandlers) {
-    for (auto iter = tmp->mCachedXBLPrototypeHandlers->Iter(); !iter.Done();
-         iter.Next()) {
-      aCallbacks.Trace(&iter.Data(), "Cached XBL prototype handler", aClosure);
-    }
-  }
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
@@ -3891,25 +3868,6 @@ void nsGlobalWindowInner::NotifyDOMWindowThawed(nsGlobalWindowInner* aWindow) {
                                        DOM_WINDOW_THAWED_TOPIC, nullptr);
     }
   }
-}
-
-JSObject* nsGlobalWindowInner::GetCachedXBLPrototypeHandler(
-    nsXBLPrototypeHandler* aKey) {
-  JS::Rooted<JSObject*> handler(RootingCx());
-  if (mCachedXBLPrototypeHandlers) {
-    mCachedXBLPrototypeHandlers->Get(aKey, handler.address());
-  }
-  return handler;
-}
-
-void nsGlobalWindowInner::CacheXBLPrototypeHandler(
-    nsXBLPrototypeHandler* aKey, JS::Handle<JSObject*> aHandler) {
-  if (!mCachedXBLPrototypeHandlers) {
-    mCachedXBLPrototypeHandlers = MakeUnique<XBLPrototypeHandlerTable>();
-    PreserveWrapper(ToSupports(this));
-  }
-
-  mCachedXBLPrototypeHandlers->Put(aKey, aHandler);
 }
 
 Element* nsGlobalWindowInner::GetFrameElement(nsIPrincipal& aSubjectPrincipal,

@@ -42,7 +42,6 @@ class nsIURI;
 class nsPIDOMWindowInner;
 class nsPIDOMWindowOuter;
 class nsPIWindowRoot;
-class nsXBLPrototypeHandler;
 
 typedef uint32_t SuspendTypes;
 
@@ -440,11 +439,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   bool HasSelectionChangeEventListeners() {
     return mMayHaveSelectionChangeEventListener;
   }
-
-  virtual JSObject* GetCachedXBLPrototypeHandler(
-      nsXBLPrototypeHandler* aKey) = 0;
-  virtual void CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
-                                        JS::Handle<JSObject*> aHandler) = 0;
 
   /*
    * Get and set the currently focused element within the document. If
