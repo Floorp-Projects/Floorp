@@ -66,6 +66,8 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
+import android.net.LinkProperties;
+import android.net.Network;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
@@ -1229,6 +1231,27 @@ public class GeckoAppShell {
                 Log.w(LOGTAG, "Connected to an unknown mobile network!");
                 return LINK_TYPE_UNKNOWN;
         }
+    }
+
+    @WrapForJNI(calledFrom = "gecko")
+    private static String getDNSDomains() {
+        if (Build.VERSION.SDK_INT < 23) {
+            return "";
+        }
+
+        ConnectivityManager cm = (ConnectivityManager)
+            getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        Network net = cm.getActiveNetwork();
+        if (net == null) {
+            return "";
+        }
+
+        LinkProperties lp = cm.getLinkProperties(net);
+        if (lp == null) {
+            return "";
+        }
+
+        return lp.getDomains();
     }
 
     @WrapForJNI(calledFrom = "gecko")
