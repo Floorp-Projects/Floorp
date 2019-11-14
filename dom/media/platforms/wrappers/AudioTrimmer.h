@@ -22,6 +22,11 @@ class AudioTrimmer : public MediaDataDecoder {
 
   RefPtr<InitPromise> Init() override;
   RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
+  bool CanDecodeBatch() override { return mDecoder->CanDecodeBatch(); }
+  RefPtr<DecodePromise> DecodeBatch(
+      nsTArray<RefPtr<MediaRawData>>&& aSamples) override {
+    return mDecoder->DecodeBatch(std::move(aSamples));
+  }
   RefPtr<DecodePromise> Drain() override;
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
