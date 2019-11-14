@@ -989,11 +989,12 @@ void LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLength,
     // To implement word-break:break-all, we overwrite the line-break class of
     // alphanumeric characters so they are treated the same as ideographic.
     // The relevant characters will have been assigned CLASS_CHARACTER, _CLOSE,
-    // or _NUMERIC by GetClass(), but those classes also include others that
-    // we don't want to touch here, so we re-check the Unicode line-break class
-    // to determine which ones to modify.
+    // _CLOSE_LIKE_CHARACTER, or _NUMERIC by GetClass(), but those classes also
+    // include others that we don't want to touch here, so we re-check the
+    // Unicode line-break class to determine which ones to modify.
     if (aWordBreak == WordBreak::BreakAll &&
-        (cl == CLASS_CHARACTER || cl == CLASS_CLOSE || cl == CLASS_NUMERIC)) {
+        (cl == CLASS_CHARACTER || cl == CLASS_CLOSE ||
+         cl == CLASS_CLOSE_LIKE_CHARACTER || cl == CLASS_NUMERIC)) {
       auto cls = GetLineBreakClass(ch);
       if (cls == U_LB_ALPHABETIC || cls == U_LB_NUMERIC ||
           cls == U_LB_AMBIGUOUS || cls == U_LB_COMPLEX_CONTEXT ||
@@ -1084,7 +1085,8 @@ void LineBreaker::GetJISx4051Breaks(const uint8_t* aChars, uint32_t aLength,
       cl = GetClass(ch, aLevel, aIsChineseOrJapanese);
     }
     if (aWordBreak == WordBreak::BreakAll &&
-        (cl == CLASS_CHARACTER || cl == CLASS_CLOSE || cl == CLASS_NUMERIC)) {
+        (cl == CLASS_CHARACTER || cl == CLASS_CLOSE ||
+         cl == CLASS_CLOSE_LIKE_CHARACTER || cl == CLASS_NUMERIC)) {
       auto cls = GetLineBreakClass(ch);
       // Don't need to check additional Japanese/Korean classes in 8-bit
       if (cls == U_LB_ALPHABETIC || cls == U_LB_NUMERIC ||
