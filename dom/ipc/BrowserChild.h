@@ -286,6 +286,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
       const mozilla::Maybe<mozilla::gfx::Matrix4x4>& aMatrix,
       const mozilla::ScreenRect& aRemoteDocumentRect);
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvDynamicToolbarMaxHeightChanged(
       const mozilla::ScreenIntCoord& aHeight);
 
