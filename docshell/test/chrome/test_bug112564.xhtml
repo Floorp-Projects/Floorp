@@ -4,17 +4,16 @@
   href="chrome://mochikit/content/tests/SimpleTest/test.css"
   type="text/css"?>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=298622.xul
+https://bugzilla.mozilla.org/show_bug.cgi?id=112564
 -->
-<window title="Mozilla Bug 298622"
+<window title="Mozilla Bug 112564"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
 <body  xmlns="http://www.w3.org/1999/xhtml">
 <a target="_blank"
-   href="https://bugzilla.mozilla.org/show_bug.cgi?id=298622">
-   Mozilla Bug 298622</a>
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=112564">Mozilla Bug 112564</a>
 <p id="display"></p>
 <div id="content" style="display: none">
 
@@ -26,10 +25,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=298622.xul
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
-/** Test for Bug 298622 **/
+/** Test for Bug 112564 **/
 
 SimpleTest.waitForExplicitFinish();
-window.openDialog("bug298622_window.xul", "bug298622",
+window.openDialog("bug112564_window.xhtml", "bug112564",
                   "chrome,width=600,height=600,noopener", window);
 
 ]]>
