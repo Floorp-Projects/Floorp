@@ -252,7 +252,7 @@ linux64-base-toolchains/opt:
         need-xvfb: true
     fetches:
         toolchain:
-            - linux64-clang-4.0
+            - linux64-clang-5.0
             - linux64-gcc-6
             - linux64-rust-1.37
             - linux64-cbindgen
@@ -289,7 +289,7 @@ linux64-base-toolchains/debug:
         need-xvfb: true
     fetches:
         toolchain:
-            - linux64-clang-4.0
+            - linux64-clang-5.0
             - linux64-gcc-6
             - linux64-rust-1.37
             - linux64-cbindgen
@@ -325,7 +325,7 @@ linux64-base-toolchains-clang/opt:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang-4.0
+            - linux64-clang-5.0
             - linux64-rust-1.37
             - linux64-cbindgen
             - linux64-nasm-2.13.02
@@ -361,7 +361,7 @@ linux64-base-toolchains-clang/debug:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang-4.0
+            - linux64-clang-5.0
             - linux64-rust-1.37
             - linux64-cbindgen
             - linux64-nasm-2.13.02
