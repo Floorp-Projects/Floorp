@@ -5,7 +5,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["ClickHandlerParent"];
+var EXPORTED_SYMBOLS = ["ContentClick"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -25,48 +25,34 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/E10SUtils.jsm"
 );
 
-let gContentClickListeners = new Set();
-
-class ClickHandlerParent extends JSWindowActorParent {
-  static addContentClickListener(listener) {
-    gContentClickListeners.add(listener);
-  }
-
-  static removeContentClickListener(listener) {
-    gContentClickListeners.delete(listener);
-  }
-
+var ContentClick = {
+  // Listeners are added in BrowserGlue.jsm
   receiveMessage(message) {
     switch (message.name) {
       case "Content:Click":
-        this.contentAreaClick(message.data);
-        this.notifyClickListeners(message.data);
+        this.contentAreaClick(message.json, message.target);
         break;
     }
-  }
+  },
 
   /**
    * Handles clicks in the content area.
    *
-   * @param data {Object} object that looks like an Event
+   * @param json {Object} JSON object that looks like an Event
    * @param browser {Element<browser>}
    */
-  contentAreaClick(data) {
+  contentAreaClick(json, browser) {
     // This is heavily based on contentAreaClick from browser.js (Bug 903016)
-    // The data is set up in a way to look like an Event.
-    let browser = this.manager.browsingContext.top.embedderElement;
-    if (browser.outerBrowser) {
-      browser = browser.outerBrowser; // handle RDM mode
-    }
+    // The json is set up in a way to look like an Event.
     let window = browser.ownerGlobal;
 
-    if (!data.href) {
+    if (!json.href) {
       // Might be middle mouse navigation.
       if (
         Services.prefs.getBoolPref("middlemouse.contentLoadURL") &&
         !Services.prefs.getBoolPref("general.autoScroll")
       ) {
-        window.middleMousePaste(data);
+        window.middleMousePaste(json);
       }
       return;
     }
@@ -84,14 +70,14 @@ class ClickHandlerParent extends JSWindowActorParent {
     // visits across frames should be preserved.
     try {
       if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
-        PlacesUIUtils.markPageAsFollowedLink(data.href);
+        PlacesUIUtils.markPageAsFollowedLink(json.href);
       }
     } catch (ex) {
       /* Skip invalid URIs. */
     }
 
     // This part is based on handleLinkClick.
-    var where = window.whereToOpenLink(data);
+    var where = window.whereToOpenLink(json);
     if (where == "current") {
       return;
     }
@@ -100,38 +86,23 @@ class ClickHandlerParent extends JSWindowActorParent {
 
     let params = {
       charset: browser.characterSet,
-      referrerInfo: E10SUtils.deserializeReferrerInfo(data.referrerInfo),
-      allowMixedContent: data.allowMixedContent,
-      isContentWindowPrivate: data.isContentWindowPrivate,
-      originPrincipal: data.originPrincipal,
-      originStoragePrincipal: data.originStoragePrincipal,
-      triggeringPrincipal: data.triggeringPrincipal,
-      csp: data.csp ? E10SUtils.deserializeCSP(data.csp) : null,
-      frameOuterWindowID: data.frameOuterWindowID,
+      referrerInfo: E10SUtils.deserializeReferrerInfo(json.referrerInfo),
+      allowMixedContent: json.allowMixedContent,
+      isContentWindowPrivate: json.isContentWindowPrivate,
+      originPrincipal: json.originPrincipal,
+      originStoragePrincipal: json.originStoragePrincipal,
+      triggeringPrincipal: json.triggeringPrincipal,
+      csp: json.csp ? E10SUtils.deserializeCSP(json.csp) : null,
+      frameOuterWindowID: json.frameOuterWindowID,
     };
 
     // The new tab/window must use the same userContextId.
-    if (data.originAttributes.userContextId) {
-      params.userContextId = data.originAttributes.userContextId;
+    if (json.originAttributes.userContextId) {
+      params.userContextId = json.originAttributes.userContextId;
     }
 
     params.allowInheritPrincipal = true;
 
-    window.openLinkIn(data.href, where, params);
-  }
-
-  notifyClickListeners(data) {
-    for (let listener of gContentClickListeners) {
-      try {
-        let browser = this.browsingContext.top.embedderElement;
-        if (browser.outerBrowser) {
-          browser = browser.outerBrowser; // Special-case responsive design mode
-        }
-
-        listener.onContentClick(browser, data);
-      } catch (ex) {
-        Cu.reportError(ex);
-      }
-    }
-  }
-}
+    window.openLinkIn(json.href, where, params);
+  },
+};
