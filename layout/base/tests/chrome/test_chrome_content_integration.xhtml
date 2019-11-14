@@ -4,6 +4,7 @@
                  type="text/css"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/chrome-harness.js"></script>
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
@@ -15,7 +16,8 @@
     SimpleTest.waitForExplicitFinish();
     // Run the test in a separate window so that the test runs as a chrome
     // window
-    window.openDialog("default_background_window.xul", "default_background",
+    var root = getRootDirectory(window.location.href);
+    window.openDialog(root + "chrome_content_integration_window.xhtml", "chrome_content_integration",
                       "chrome,width=200,height=300,noopener", window);
   ]]>
   </script>
