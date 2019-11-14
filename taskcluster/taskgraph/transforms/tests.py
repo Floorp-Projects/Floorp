@@ -1073,8 +1073,8 @@ def enable_code_coverage(config, tests):
     """Enable code coverage for the ccov build-platforms"""
     for test in tests:
         if 'ccov' in test['build-platform']:
-            # Do not run tests on fuzzing or opt build
-            if 'opt' in test['build-platform'] or 'fuzzing' in test['build-platform']:
+            # Do not run tests on fuzzing builds
+            if 'fuzzing' in test['build-platform']:
                 test['run-on-projects'] = []
                 continue
             # Skip this transform for android code coverage builds.
