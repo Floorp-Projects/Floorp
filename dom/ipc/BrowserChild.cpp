@@ -1269,7 +1269,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvUpdateDimensions(
   // This is used by RDM to respond correctly to changes to full zoom,
   // which also change the window size.
   RefPtr<Document> doc = GetTopLevelDocument();
-  if (doc && doc->InRDMPane()) {
+  BrowsingContext* bc = doc ? doc->GetBrowsingContext() : nullptr;
+  if (bc && bc->InRDMPane()) {
     RefPtr<AsyncEventDispatcher> dispatcher = new AsyncEventDispatcher(
         doc, NS_LITERAL_STRING("mozupdatedremoteframedimensions"),
         CanBubble::eYes, ChromeOnlyDispatch::eYes);
