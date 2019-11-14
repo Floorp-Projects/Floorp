@@ -3,7 +3,7 @@
 
 /* global browser */
 
-// This tests the browser.urlbarExperiments.isBrowserShowingNotification
+// This tests the browser.experiments.urlbar.isBrowserShowingNotification
 // WebExtension Experiment API.
 
 "use strict";
