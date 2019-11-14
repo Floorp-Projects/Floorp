@@ -234,6 +234,7 @@
 #include "nsStreamUtils.h"
 #include "nsIAsyncInputStream.h"
 #include "xpcpublic.h"
+#include "nsHyphenationManager.h"
 
 #include "mozilla/Sprintf.h"
 
@@ -5121,6 +5122,18 @@ mozilla::ipc::IPCResult ContentParent::RecvSetupFamilyCharMap(
   auto fontList = gfxPlatformFontList::PlatformFontList();
   MOZ_RELEASE_ASSERT(fontList, "gfxPlatformFontList not initialized?");
   fontList->SetupFamilyCharMap(aGeneration, aFamilyPtr);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvGetHyphDict(
+    const mozilla::ipc::URIParams& aURI,
+    mozilla::ipc::SharedMemoryBasic::Handle* aOutHandle, uint32_t* aOutSize) {
+  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
+  if (!uri) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  nsHyphenationManager::Instance()->ShareHyphDictToProcess(
+      uri, Pid(), aOutHandle, aOutSize);
   return IPC_OK();
 }
 
