@@ -879,12 +879,6 @@ class XPCWrappedNativeScope final
 
   void AddSizeOfIncludingThis(JSContext* cx, ScopeSizeInfo* scopeSizeInfo);
 
-  // Gets the appropriate scope object for XBL in this compartment. This method
-  // relies on compartment-per-global still (and release-asserts this). The
-  // context must be same-realm with this compartment's single global upon
-  // entering, and the scope object is wrapped into this compartment.
-  JSObject* EnsureContentXBLScope(JSContext* cx);
-
   // Check whether our mAllowContentXBLScope state matches the given
   // principal.  This is used to avoid sharing compartments on
   // mismatch.
