@@ -290,6 +290,38 @@ add_task(async function test_amo_report_on_report_already_inprogress() {
   await extension.unload();
 });
 
+add_task(async function test_reject_on_unsupported_addon_types() {
+  const addonId = "not-supported-addon-type@mochi.test";
+
+  await BrowserTestUtils.withNewTab(TESTPAGE, async browser => {
+    const fakeAMODetails = {
+      name: "fake name",
+      current_version: { version: "1.0" },
+      type: "fake-unsupported-addon-type",
+    };
+
+    AbuseReportTestUtils.amoAddonDetailsMap.set(addonId, fakeAMODetails);
+    registerCleanupFunction(() =>
+      AbuseReportTestUtils.amoAddonDetailsMap.clear()
+    );
+
+    let webAPIResult = await SpecialPowers.spawn(browser, [addonId], id =>
+      content.navigator.mozAddonManager
+        .reportAbuse(id)
+        .then(
+          res => ({ gotRejection: false, result: res }),
+          err => ({ gotRejection: true, message: err.message })
+        )
+    );
+
+    Assert.deepEqual(
+      webAPIResult,
+      { gotRejection: true, message: "Error creating abuse report" },
+      "Got the expected rejection from mozAddonManager.reportAbuse"
+    );
+  });
+});
+
 add_task(async function test_report_on_disabled_webapi() {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.abuseReport.amWebAPI.enabled", false]],
