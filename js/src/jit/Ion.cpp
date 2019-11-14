@@ -156,8 +156,7 @@ bool jit::InitializeJit() {
 }
 
 JitRuntime::JitRuntime()
-    : execAlloc_(),
-      nextCompilationId_(0),
+    : nextCompilationId_(0),
       exceptionTailOffset_(0),
       bailoutTailOffset_(0),
       profilerExitFrameTailOffset_(0),
@@ -609,13 +608,15 @@ size_t JitRealm::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
 }
 
 void JitZone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                                     size_t* jitZone,
+                                     JS::CodeSizes* code, size_t* jitZone,
                                      size_t* baselineStubsOptimized,
                                      size_t* cachedCFG) const {
   *jitZone += mallocSizeOf(this);
   *jitZone +=
       baselineCacheIRStubCodes_.shallowSizeOfExcludingThis(mallocSizeOf);
   *jitZone += ionCacheIRStubInfoSet_.shallowSizeOfExcludingThis(mallocSizeOf);
+
+  execAlloc().addSizeOfCode(code);
 
   *baselineStubsOptimized +=
       optimizedStubSpace_.sizeOfExcludingThis(mallocSizeOf);

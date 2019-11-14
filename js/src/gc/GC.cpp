@@ -5552,6 +5552,10 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(JSFreeOp* fop,
 
   /* Update the GC state for zones we have swept. */
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
+    if (jit::JitZone* jitZone = zone->jitZone()) {
+      // Clear out any small pools that we're hanging on to.
+      jitZone->execAlloc().purge();
+    }
     AutoLockGC lock(this);
     zone->changeGCState(Zone::Sweep, Zone::Finished);
     zone->updateGCThresholds(*this, invocationKind, lock);
@@ -6357,11 +6361,6 @@ void GCRuntime::endSweepPhase(bool destroyingRuntime) {
      * script's filename. See bug 323267.
      */
     SweepScriptData(rt);
-
-    /* Clear out any small pools that we're hanging on to. */
-    if (rt->hasJitRuntime()) {
-      rt->jitRuntime()->execAlloc().purge();
-    }
   }
 
   {

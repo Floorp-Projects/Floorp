@@ -213,9 +213,9 @@ static void StatsZoneCallback(JSRuntime* rt, void* data, Zone* zone) {
   rtStats->currZoneStats = &zStats;
 
   zone->addSizeOfIncludingThis(
-      rtStats->mallocSizeOf_, &zStats.typePool, &zStats.regexpZone,
-      &zStats.jitZone, &zStats.baselineStubsOptimized, &zStats.cachedCFG,
-      &zStats.uniqueIdMap, &zStats.shapeTables,
+      rtStats->mallocSizeOf_, &zStats.code, &zStats.typePool,
+      &zStats.regexpZone, &zStats.jitZone, &zStats.baselineStubsOptimized,
+      &zStats.cachedCFG, &zStats.uniqueIdMap, &zStats.shapeTables,
       &rtStats->runtime.atomsMarkBitmaps, &zStats.compartmentObjects,
       &zStats.crossCompartmentWrappersTables, &zStats.compartmentsPrivateData,
       &zStats.scriptCountsMap);
