@@ -1228,7 +1228,7 @@ class _ASRouter {
     });
   }
 
-  _findMessage(candidateMessages, trigger) {
+  _findMessage(candidateMessages, trigger, ordered = false) {
     const messages = candidateMessages.filter(m =>
       this.isBelowFrequencyCaps(m)
     );
@@ -1241,6 +1241,7 @@ class _ASRouter {
       trigger,
       context,
       onError: this._handleTargetingError,
+      ordered,
     });
   }
 
@@ -1350,7 +1351,8 @@ class _ASRouter {
         // Find a message that matches the targeting context - or break if there are no matching messages
         const message = await this._findMessage(
           bundledMessagesOfSameTemplate,
-          trigger
+          trigger,
+          true
         );
         if (!message) {
           /* istanbul ignore next */ // Code coverage in mochitests
