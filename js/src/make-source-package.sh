@@ -109,7 +109,6 @@ case $cmd in
         ${TOPSRCDIR}/mozglue/build \
         ${TOPSRCDIR}/mozglue/misc \
         ${TOPSRCDIR}/mozglue/moz.build \
-        ${TOPSRCDIR}/mozglue/static \
         ${tgtpath}/mozglue/
 
     ${MKDIR} -p ${tgtpath}/tools/fuzzing
