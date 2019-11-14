@@ -12,7 +12,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/dom/GeolocationPositionErrorBinding.h"
-#include "nsGeoPosition.h"
+#include "GeolocationPosition.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 

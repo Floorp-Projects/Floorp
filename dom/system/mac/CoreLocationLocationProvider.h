@@ -20,7 +20,7 @@
  * The solution then is to forward-declare CoreLocationObjects here and
  * hold a pointer to it in CoreLocationLocationProvider, and only actually
  * define it in CoreLocationLocationProvider.mm, thus making it safe
- * for nsGeolocation.cpp, which is C++-only, to include this header.
+ * for Geolocation.cpp, which is C++-only, to include this header.
  */
 class CoreLocationObjects;
 class MLSFallback;

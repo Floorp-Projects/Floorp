@@ -8,7 +8,7 @@
 #define dom_src_geolocation_IPC_serialiser
 
 #include "ipc/IPCMessageUtils.h"
-#include "nsGeoPosition.h"
+#include "mozilla/dom/GeolocationPosition.h"
 #include "nsIDOMGeoPosition.h"
 
 namespace IPC {

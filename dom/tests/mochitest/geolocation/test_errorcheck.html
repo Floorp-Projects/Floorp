@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=684722
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=684722">Mozilla Bug 684722</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -30,7 +30,7 @@ function test1() {
 }
 
 function errorCallback(error) {
-    // PositionError has no interface object, so we can't get constants off that.
+    // GeolocationPositionError has no interface object, so we can't get constants off that.
     is(error.code, error.POSITION_UNAVAILABLE,
        "Geolocation error handler fired");
     is(error.POSITION_UNAVAILABLE, 2,

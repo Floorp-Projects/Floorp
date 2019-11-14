@@ -151,7 +151,7 @@
 #include "nsICycleCollectorListener.h"
 #include "nsIDocShellTreeOwner.h"
 #include "mozilla/dom/Document.h"
-#include "nsGeolocation.h"
+#include "Geolocation.h"
 #include "nsIDragService.h"
 #include "mozilla/dom/WakeLock.h"
 #include "nsIExternalProtocolService.h"
