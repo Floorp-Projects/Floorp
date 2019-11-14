@@ -2900,178 +2900,7 @@ static bool EmitAtomicXchg(FunctionCompiler& f, ValType type,
   return true;
 }
 
-static bool EmitMemCopyCall(FunctionCompiler& f, MDefinition* dst,
-                            MDefinition* src, MDefinition* len) {
-  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
-
-  const SymbolicAddressSignature& callee =
-      (f.env().usesSharedMemory() ? SASigMemCopyShared : SASigMemCopy);
-  CallCompileState args;
-  if (!f.passInstance(callee.argTypes[0], &args)) {
-    return false;
-  }
-
-  if (!f.passArg(dst, callee.argTypes[1], &args)) {
-    return false;
-  }
-  if (!f.passArg(src, callee.argTypes[2], &args)) {
-    return false;
-  }
-  if (!f.passArg(len, callee.argTypes[3], &args)) {
-    return false;
-  }
-  MDefinition* memoryBase = f.memoryBase();
-  if (!f.passArg(memoryBase, callee.argTypes[4], &args)) {
-    return false;
-  }
-  if (!f.finishCall(&args)) {
-    return false;
-  }
-
-  return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
-}
-
-static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
-                              MDefinition* src, MDefinition* len) {
-  MOZ_ASSERT(MaxInlineMemoryCopyLength != 0);
-
-  MOZ_ASSERT(len->isConstant() && len->type() == MIRType::Int32);
-  uint32_t length = len->toConstant()->toInt32();
-
-  // A zero length copy is a no-op and cannot trap
-  if (length == 0) {
-    return true;
-  }
-
-  // Compute the number of copies of each width we will need to do
-  size_t remainder = length;
-#ifdef JS_64BIT
-  size_t numCopies8 = remainder / sizeof(uint64_t);
-  remainder %= sizeof(uint64_t);
-#endif
-  size_t numCopies4 = remainder / sizeof(uint32_t);
-  remainder %= sizeof(uint32_t);
-  size_t numCopies2 = remainder / sizeof(uint16_t);
-  remainder %= sizeof(uint16_t);
-  size_t numCopies1 = remainder;
-
-  // Load all source bytes from low to high using the widest transfer width we
-  // can for the system. We will trap without writing anything if any source
-  // byte is out-of-bounds.
-  size_t offset = 0;
-  DefVector loadedValues;
-
-#ifdef JS_64BIT
-  for (uint32_t i = 0; i < numCopies8; i++) {
-    MemoryAccessDesc access(Scalar::Int64, 1, offset, f.bytecodeOffset());
-    auto* load = f.load(src, &access, ValType::I64);
-    if (!load || !loadedValues.append(load)) {
-      return false;
-    }
-
-    offset += sizeof(uint64_t);
-  }
-#endif
-
-  for (uint32_t i = 0; i < numCopies4; i++) {
-    MemoryAccessDesc access(Scalar::Uint32, 1, offset, f.bytecodeOffset());
-    auto* load = f.load(src, &access, ValType::I32);
-    if (!load || !loadedValues.append(load)) {
-      return false;
-    }
-
-    offset += sizeof(uint32_t);
-  }
-
-  if (numCopies2) {
-    MemoryAccessDesc access(Scalar::Uint16, 1, offset, f.bytecodeOffset());
-    auto* load = f.load(src, &access, ValType::I32);
-    if (!load || !loadedValues.append(load)) {
-      return false;
-    }
-
-    offset += sizeof(uint16_t);
-  }
-
-  if (numCopies1) {
-    MemoryAccessDesc access(Scalar::Uint8, 1, offset, f.bytecodeOffset());
-    auto* load = f.load(src, &access, ValType::I32);
-    if (!load || !loadedValues.append(load)) {
-      return false;
-    }
-  }
-
-  // Store all source bytes to the destination from high to low. We will trap
-  // without writing anything on the first store if any dest byte is
-  // out-of-bounds.
-  offset = length;
-
-  if (numCopies1) {
-    offset -= sizeof(uint8_t);
-
-    MemoryAccessDesc access(Scalar::Uint8, 1, offset, f.bytecodeOffset());
-    auto* value = loadedValues.popCopy();
-    f.store(dst, &access, value);
-  }
-
-  if (numCopies2) {
-    offset -= sizeof(uint16_t);
-
-    MemoryAccessDesc access(Scalar::Uint16, 1, offset, f.bytecodeOffset());
-    auto* value = loadedValues.popCopy();
-    f.store(dst, &access, value);
-  }
-
-  for (uint32_t i = 0; i < numCopies4; i++) {
-    offset -= sizeof(uint32_t);
-
-    MemoryAccessDesc access(Scalar::Uint32, 1, offset, f.bytecodeOffset());
-    auto* value = loadedValues.popCopy();
-    f.store(dst, &access, value);
-  }
-
-#ifdef JS_64BIT
-  for (uint32_t i = 0; i < numCopies8; i++) {
-    offset -= sizeof(uint64_t);
-
-    MemoryAccessDesc access(Scalar::Int64, 1, offset, f.bytecodeOffset());
-    auto* value = loadedValues.popCopy();
-    f.store(dst, &access, value);
-  }
-#endif
-
-  return true;
-}
-
-static bool EmitMemCopy(FunctionCompiler& f) {
-  // Bulk memory must be available if shared memory is enabled.
-#ifndef ENABLE_WASM_BULKMEM_OPS
-  if (f.env().sharedMemoryEnabled == Shareable::False) {
-    return f.iter().fail("bulk memory ops disabled");
-  }
-#endif
-
-  MDefinition *dst, *src, *len;
-  uint32_t dstMemIndex;
-  uint32_t srcMemIndex;
-  if (!f.iter().readMemOrTableCopy(true, &dstMemIndex, &dst, &srcMemIndex, &src,
-                                   &len)) {
-    return false;
-  }
-
-  if (f.inDeadCode()) {
-    return true;
-  }
-
-  if (Assembler::SupportsFastUnalignedAccesses() && len->isConstant() &&
-      len->type() == MIRType::Int32 &&
-      uint32_t(len->toConstant()->toInt32()) <= MaxInlineMemoryCopyLength) {
-    return EmitMemCopyInline(f, dst, src, len);
-  }
-  return EmitMemCopyCall(f, dst, src, len);
-}
-
-static bool EmitTableCopy(FunctionCompiler& f) {
+static bool EmitMemOrTableCopy(FunctionCompiler& f, bool isMem) {
   // Bulk memory must be available if shared memory is enabled.
 #ifndef ENABLE_WASM_BULKMEM_OPS
   if (f.env().sharedMemoryEnabled == Shareable::False) {
@@ -3082,7 +2911,7 @@ static bool EmitTableCopy(FunctionCompiler& f) {
   MDefinition *dst, *src, *len;
   uint32_t dstTableIndex;
   uint32_t srcTableIndex;
-  if (!f.iter().readMemOrTableCopy(false, &dstTableIndex, &dst, &srcTableIndex,
+  if (!f.iter().readMemOrTableCopy(isMem, &dstTableIndex, &dst, &srcTableIndex,
                                    &src, &len)) {
     return false;
   }
@@ -3093,7 +2922,9 @@ static bool EmitTableCopy(FunctionCompiler& f) {
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  const SymbolicAddressSignature& callee = SASigTableCopy;
+  const SymbolicAddressSignature& callee =
+      isMem ? (f.env().usesSharedMemory() ? SASigMemCopyShared : SASigMemCopy)
+            : SASigTableCopy;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
@@ -3108,19 +2939,26 @@ static bool EmitTableCopy(FunctionCompiler& f) {
   if (!f.passArg(len, callee.argTypes[3], &args)) {
     return false;
   }
-  MDefinition* dti = f.constant(Int32Value(dstTableIndex), MIRType::Int32);
-  if (!dti) {
-    return false;
-  }
-  if (!f.passArg(dti, callee.argTypes[4], &args)) {
-    return false;
-  }
-  MDefinition* sti = f.constant(Int32Value(srcTableIndex), MIRType::Int32);
-  if (!sti) {
-    return false;
-  }
-  if (!f.passArg(sti, callee.argTypes[5], &args)) {
-    return false;
+  if (isMem) {
+    MDefinition* memoryBase = f.memoryBase();
+    if (!f.passArg(memoryBase, callee.argTypes[4], &args)) {
+      return false;
+    }
+  } else {
+    MDefinition* dti = f.constant(Int32Value(dstTableIndex), MIRType::Int32);
+    if (!dti) {
+      return false;
+    }
+    if (!f.passArg(dti, callee.argTypes[4], &args)) {
+      return false;
+    }
+    MDefinition* sti = f.constant(Int32Value(srcTableIndex), MIRType::Int32);
+    if (!sti) {
+      return false;
+    }
+    if (!f.passArg(sti, callee.argTypes[5], &args)) {
+      return false;
+    }
   }
   if (!f.finishCall(&args)) {
     return false;
@@ -3168,8 +3006,23 @@ static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
   return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
 }
 
-static bool EmitMemFillCall(FunctionCompiler& f, MDefinition* start,
-                            MDefinition* val, MDefinition* len) {
+static bool EmitMemFill(FunctionCompiler& f) {
+  // Bulk memory must be available if shared memory is enabled.
+#ifndef ENABLE_WASM_BULKMEM_OPS
+  if (f.env().sharedMemoryEnabled == Shareable::False) {
+    return f.iter().fail("bulk memory ops disabled");
+  }
+#endif
+
+  MDefinition *start, *val, *len;
+  if (!f.iter().readMemFill(&start, &val, &len)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
   const SymbolicAddressSignature& callee =
@@ -3198,112 +3051,6 @@ static bool EmitMemFillCall(FunctionCompiler& f, MDefinition* start,
   }
 
   return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
-}
-
-static bool EmitMemFillInline(FunctionCompiler& f, MDefinition* start,
-                              MDefinition* val, MDefinition* len) {
-  MOZ_ASSERT(MaxInlineMemoryFillLength != 0);
-
-  MOZ_ASSERT(len->isConstant() && len->type() == MIRType::Int32 &&
-             val->isConstant() && val->type() == MIRType::Int32);
-
-  uint32_t length = len->toConstant()->toInt32();
-  uint32_t value = val->toConstant()->toInt32();
-
-  // A zero length copy is a no-op and cannot trap
-  if (length == 0) {
-    return true;
-  }
-
-  // Compute the number of copies of each width we will need to do
-  size_t remainder = length;
-#ifdef JS_64BIT
-  size_t numCopies8 = remainder / sizeof(uint64_t);
-  remainder %= sizeof(uint64_t);
-#endif
-  size_t numCopies4 = remainder / sizeof(uint32_t);
-  remainder %= sizeof(uint32_t);
-  size_t numCopies2 = remainder / sizeof(uint16_t);
-  remainder %= sizeof(uint16_t);
-  size_t numCopies1 = remainder;
-
-  // Generate splatted definitions for wider fills as needed
-#ifdef JS_64BIT
-  MDefinition* val8 =
-      numCopies8 ? f.constant(int64_t(SplatByteToUInt<uint64_t>(value, 8)))
-                 : nullptr;
-#endif
-  MDefinition* val4 =
-      numCopies4 ? f.constant(Int32Value(SplatByteToUInt<uint32_t>(value, 4)),
-                              MIRType::Int32)
-                 : nullptr;
-  MDefinition* val2 =
-      numCopies2 ? f.constant(Int32Value(SplatByteToUInt<uint32_t>(value, 2)),
-                              MIRType::Int32)
-                 : nullptr;
-
-  // Store the fill value to the destination from high to low. We will trap
-  // without writing anything on the first store if any dest byte is
-  // out-of-bounds.
-  size_t offset = length;
-
-  if (numCopies1) {
-    offset -= sizeof(uint8_t);
-
-    MemoryAccessDesc access(Scalar::Uint8, 1, offset, f.bytecodeOffset());
-    f.store(start, &access, val);
-  }
-
-  if (numCopies2) {
-    offset -= sizeof(uint16_t);
-
-    MemoryAccessDesc access(Scalar::Uint16, 1, offset, f.bytecodeOffset());
-    f.store(start, &access, val2);
-  }
-
-  for (uint32_t i = 0; i < numCopies4; i++) {
-    offset -= sizeof(uint32_t);
-
-    MemoryAccessDesc access(Scalar::Uint32, 1, offset, f.bytecodeOffset());
-    f.store(start, &access, val4);
-  }
-
-#ifdef JS_64BIT
-  for (uint32_t i = 0; i < numCopies8; i++) {
-    offset -= sizeof(uint64_t);
-
-    MemoryAccessDesc access(Scalar::Int64, 1, offset, f.bytecodeOffset());
-    f.store(start, &access, val8);
-  }
-#endif
-
-  return true;
-}
-
-static bool EmitMemFill(FunctionCompiler& f) {
-  // Bulk memory must be available if shared memory is enabled.
-#ifndef ENABLE_WASM_BULKMEM_OPS
-  if (f.env().sharedMemoryEnabled == Shareable::False) {
-    return f.iter().fail("bulk memory ops disabled");
-  }
-#endif
-
-  MDefinition *start, *val, *len;
-  if (!f.iter().readMemFill(&start, &val, &len)) {
-    return false;
-  }
-
-  if (f.inDeadCode()) {
-    return true;
-  }
-
-  if (Assembler::SupportsFastUnalignedAccesses() && len->isConstant() &&
-      len->type() == MIRType::Int32 &&
-      uint32_t(len->toConstant()->toInt32()) <= MaxInlineMemoryFillLength &&
-      val->isConstant() && val->type() == MIRType::Int32) {
-    return EmitMemFillInline(f, start, val, len);
-  }
-  return EmitMemFillCall(f, start, val, len);
 }
 
 static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
@@ -4159,7 +3906,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitTruncate(f, ValType::F64, ValType::I64,
                                MiscOp(op.b1) == MiscOp::I64TruncUSatF64, true));
           case uint32_t(MiscOp::MemCopy):
-            CHECK(EmitMemCopy(f));
+            CHECK(EmitMemOrTableCopy(f, /*isMem=*/true));
           case uint32_t(MiscOp::DataDrop):
             CHECK(EmitDataOrElemDrop(f, /*isData=*/true));
           case uint32_t(MiscOp::MemFill):
@@ -4167,7 +3914,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(MiscOp::MemInit):
             CHECK(EmitMemOrTableInit(f, /*isMem=*/true));
           case uint32_t(MiscOp::TableCopy):
-            CHECK(EmitTableCopy(f));
+            CHECK(EmitMemOrTableCopy(f, /*isMem=*/false));
           case uint32_t(MiscOp::ElemDrop):
             CHECK(EmitDataOrElemDrop(f, /*isData=*/false));
           case uint32_t(MiscOp::TableInit):
