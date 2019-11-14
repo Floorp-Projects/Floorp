@@ -298,7 +298,14 @@ var webrtcUI = {
         break;
       }
       case "webrtc:Request":
-        prompt(aMessage.target, aMessage.data);
+        if (aMessage.target.fxrPermissionPrompt) {
+          // For Firefox Reality on Desktop, switch to a different mechanism to
+          // prompt the user since fewer permissions are available and since many
+          // UI dependencies are not availabe.
+          aMessage.target.fxrPermissionPrompt(aMessage.data);
+        } else {
+          prompt(aMessage.target, aMessage.data);
+        }
         break;
       case "webrtc:StopRecording":
         stopRecording(aMessage.target, aMessage.data);
