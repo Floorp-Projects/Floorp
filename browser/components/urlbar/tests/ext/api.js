@@ -8,7 +8,26 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 });
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "updateService",
+  "@mozilla.org/updates/update-service;1",
+  "nsIApplicationUpdateService"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "updateManager",
+  "@mozilla.org/updates/update-manager;1",
+  "nsIUpdateManager"
+);
+
+function updateStateIs(prefix) {
+  let update = updateManager.activeUpdate;
+  return !!(update && update.state.startsWith(prefix));
+}
 
 this.experiments_urlbar = class extends ExtensionAPI {
   getAPI() {
@@ -69,6 +88,23 @@ this.experiments_urlbar = class extends ExtensionAPI {
             }
 
             return false;
+          },
+
+          isBrowserUpdateReadyToInstall() {
+            if (
+              !updateService.canStageUpdates ||
+              !Services.policies.isAllowed("appUpdate")
+            ) {
+              return updateStateIs("pending");
+            }
+            if (updateStateIs("applied")) {
+              return true;
+            }
+            // If the state is pending and there is an error, staging failed and
+            // Firefox can be restarted to apply the update without staging.
+            let update = updateManager.activeUpdate;
+            let errorCode = update ? update.errorCode : 0;
+            return updateStateIs("pending") && errorCode != 0;
           },
         },
       },
