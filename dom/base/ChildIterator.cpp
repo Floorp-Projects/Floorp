@@ -94,7 +94,6 @@ nsIContent* ExplicitChildIterator::GetNextChild() {
 
 void FlattenedChildIterator::Init(bool aIgnoreXBL) {
   if (aIgnoreXBL) {
-    mXBLInvolved = Some(false);
     return;
   }
 
@@ -103,35 +102,14 @@ void FlattenedChildIterator::Init(bool aIgnoreXBL) {
   if (mParent->IsElement()) {
     if (ShadowRoot* shadow = mParent->AsElement()->GetShadowRoot()) {
       mParent = shadow;
-      mXBLInvolved = Some(true);
+      mXBLInvolved = true;
+      return;
+    }
+    if (mParentAsSlot) {
+      mXBLInvolved = true;
       return;
     }
   }
-}
-
-bool FlattenedChildIterator::ComputeWhetherXBLIsInvolved() const {
-  MOZ_ASSERT(mXBLInvolved.isNothing());
-  // We set mXBLInvolved to true if either the node we're iterating has a
-  // binding with content attached to it (in which case it is handled in Init),
-  // the node is generated XBL content and has an <xbl:children> child, or the
-  // node is a <slot> element.
-  if (!mParent->GetBindingParent()) {
-    return false;
-  }
-
-  if (mParentAsSlot) {
-    return true;
-  }
-
-  for (nsIContent* child = mParent->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    if (child->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
-      MOZ_ASSERT(child->GetBindingParent());
-      return true;
-    }
-  }
-
-  return false;
 }
 
 bool ExplicitChildIterator::Seek(const nsIContent* aChildToFind) {
