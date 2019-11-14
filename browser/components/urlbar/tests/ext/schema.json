@@ -9,6 +9,13 @@
         "async": true,
         "description": "Returns true if the browser is showing any kind of notification.",
         "parameters": []
+      },
+      {
+        "name": "isBrowserUpdateReadyToInstall",
+        "type": "function",
+        "async": true,
+        "description": "Returns true if there is an update ready to install.",
+        "parameters": []
       }
     ]
   }
