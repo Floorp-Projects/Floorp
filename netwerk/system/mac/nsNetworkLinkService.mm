@@ -84,7 +84,8 @@ nsNetworkLinkService::nsNetworkLinkService()
       mCFRunLoop(nullptr),
       mRunLoopSource(nullptr),
       mStoreRef(nullptr),
-      mMutex("nsNetworkLinkService::mMutex") {}
+      mMutex("nsNetworkLinkService::mMutex"),
+      mDoRouteCheckIPv4(false) {}
 
 nsNetworkLinkService::~nsNetworkLinkService() = default;
 
@@ -407,19 +408,90 @@ static bool scanArp(char* ip, char* mac, size_t maclen) {
   return false;
 }
 
-//
-// Figure out the current IPv4 "network identification" string.
-//
+// Append the mac address of rtm to `stringsToHash`. If it's not in arp table, append
+// ifname and IP address.
+static bool parseHashKey(struct rt_msghdr* rtm, nsTArray<nsCString>& stringsToHash,
+                         bool skipDstCheck) {
+  struct sockaddr* sa;
+  struct sockaddr_in* sockin;
+  char ip[INET_ADDRSTRLEN];
+
+  // Ignore the routing table message without destination/gateway sockaddr.
+  // Destination address is needed to check if the gateway is default or
+  // overwritten by VPN. If yes, append the mac address or IP/interface name to
+  // `stringsToHash`.
+  if ((rtm->rtm_addrs & (RTA_DST | RTA_GATEWAY)) != (RTA_DST | RTA_GATEWAY)) {
+    return false;
+  }
+
+  sa = reinterpret_cast<struct sockaddr*>(rtm + 1);
+
+  struct sockaddr* destination =
+      reinterpret_cast<struct sockaddr*>((char*)sa + RTAX_DST * SA_SIZE(sa));
+  if (!destination || destination->sa_family != AF_INET) {
+    return false;
+  }
+
+  sockin = reinterpret_cast<struct sockaddr_in*>(destination);
+
+  inet_ntop(AF_INET, &sockin->sin_addr.s_addr, ip, sizeof(ip) - 1);
+
+  if (!skipDstCheck && strcmp("0.0.0.0", ip)) {
+    return false;
+  }
+
+  struct sockaddr* gateway =
+      reinterpret_cast<struct sockaddr*>((char*)sa + RTAX_GATEWAY * SA_SIZE(sa));
+
+  if (!gateway) {
+    return false;
+  }
+  if (gateway->sa_family == AF_INET) {
+    sockin = reinterpret_cast<struct sockaddr_in*>(gateway);
+    inet_ntop(AF_INET, &sockin->sin_addr.s_addr, ip, sizeof(ip) - 1);
+    char mac[18];
+
+    // TODO: cache the arp table instead of multiple system call.
+    if (scanArp(ip, mac, sizeof(mac))) {
+      stringsToHash.AppendElement(nsCString(mac));
+    } else {
+      // Can't find a real MAC address. This might be a VPN gateway.
+      char buf[IFNAMSIZ] = {0};
+      char* ifName = if_indextoname(rtm->rtm_index, buf);
+      if (!ifName) {
+        LOG(("parseHashKey: AF_INET if_indextoname failed"));
+        return false;
+      }
+
+      stringsToHash.AppendElement(nsCString(ifName));
+      stringsToHash.AppendElement(nsCString(ip));
+    }
+  } else if (gateway->sa_family == AF_LINK) {
+    char buf[64];
+    struct sockaddr_dl* sockdl = reinterpret_cast<struct sockaddr_dl*>(gateway);
+    if (getMac(sockdl, buf, sizeof(buf))) {
+      stringsToHash.AppendElement(nsCString(buf));
+    } else {
+      char buf[IFNAMSIZ] = {0};
+      char* ifName = if_indextoname(rtm->rtm_index, buf);
+      if (!ifName) {
+        LOG(("parseHashKey: AF_LINK if_indextoname failed"));
+        return false;
+      }
+
+      stringsToHash.AppendElement(nsCString(ifName));
+    }
+  }
+  return true;
+}
+
 // It detects the IP of the default gateways in the routing table, then the MAC
 // address of that IP in the ARP table before it hashes that string (to avoid
 // information leakage).
-//
-static bool ipv4NetworkId(SHA1Sum* aSHA1) {
+bool nsNetworkLinkService::RoutingTable(nsTArray<nsCString>& aHash) {
   size_t needed;
   int mib[6];
   struct rt_msghdr* rtm;
-  struct sockaddr* sa;
-  struct sockaddr_in* sockin;
 
   mib[0] = CTL_NET;
   mib[1] = PF_ROUTE;
@@ -438,10 +510,8 @@ static bool ipv4NetworkId(SHA1Sum* aSHA1) {
     return false;
   }
 
-  char ip[INET_ADDRSTRLEN];
-
   char* lim = &buf[0] + needed;
-  nsTArray<nsCString> hash;
+  bool rv = false;
 
   // `next + 1 < lim` ensures we have valid `rtm->rtm_msglen` which is an
   // unsigned short at the beginning of `rt_msghdr`.
@@ -453,83 +523,84 @@ static bool ipv4NetworkId(SHA1Sum* aSHA1) {
       break;
     }
 
-    // Ignore the routing table message without destination/gateway sockaddr.
-    // Destination address is needed to check if the gateway is default or
-    // overwritten by VPN. If yes, hash the mac address or IP/interface name.
-    if ((rtm->rtm_addrs & (RTA_DST | RTA_GATEWAY)) != (RTA_DST | RTA_GATEWAY)) {
-      continue;
+    if (parseHashKey(rtm, aHash, false)) {
+      rv = true;
+    }
+  }
+  return rv;
+}
+
+// Detect the routing of network.netlink.route.check.IPv4
+bool nsNetworkLinkService::RoutingFromKernel(nsTArray<nsCString>& aHash) {
+  int sockfd;
+  if ((sockfd = socket(AF_ROUTE, SOCK_RAW, 0)) == -1) {
+    LOG(("RoutingFromKernel: Can create a socket for network id"));
+    return false;
+  }
+
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  size_t needed = 1024;
+  struct rt_msghdr* rtm;
+  struct sockaddr_in* sin;
+  UniquePtr<char[]> buf(new char[needed]);
+  pid_t pid;
+  int seq;
+
+  rtm = reinterpret_cast<struct rt_msghdr*>(&buf[0]);
+  memset(rtm, 0, sizeof(struct rt_msghdr));
+  rtm->rtm_msglen = sizeof(struct rt_msghdr) + sizeof(struct sockaddr_in);
+  rtm->rtm_version = RTM_VERSION;
+  rtm->rtm_type = RTM_GET;
+  rtm->rtm_addrs = RTA_DST;
+  rtm->rtm_pid = (pid = getpid());
+  rtm->rtm_seq = (seq = random());
+
+  sin = reinterpret_cast<struct sockaddr_in*>(rtm + 1);
+  memset(sin, 0, sizeof(struct sockaddr_in));
+  sin->sin_len = sizeof(struct sockaddr_in);
+  sin->sin_family = AF_INET;
+  sin->sin_addr = mRouteCheckIPv4;
+
+  if (write(sockfd, rtm, rtm->rtm_msglen) == -1) {
+    LOG(("RoutingFromKernel: write() failed. No route to the predefine destincation"));
+    return false;
+  }
+
+  do {
+    ssize_t r;
+    if ((r = read(sockfd, rtm, needed)) < 0) {
+      LOG(("RoutingFromKernel: read() failed."));
+      return false;
     }
 
-    sa = reinterpret_cast<struct sockaddr*>(rtm + 1);
+    LOG(("RoutingFromKernel: read() rtm_type: %d (%d), rtm_pid: %d (%d), rtm_seq: %d (%d)\n",
+         rtm->rtm_type, RTM_GET, rtm->rtm_pid, pid, rtm->rtm_seq, seq));
+  } while (rtm->rtm_type != RTM_GET || rtm->rtm_pid != pid || rtm->rtm_seq != seq);
 
-    struct sockaddr* destination =
-        reinterpret_cast<struct sockaddr*>((char*)sa + RTAX_DST * SA_SIZE(sa));
-    if (!destination || destination->sa_family != AF_INET) {
-      continue;
-    }
+  return parseHashKey(rtm, aHash, true);
+}
 
-    sockin = reinterpret_cast<struct sockaddr_in*>(destination);
-    inet_ntop(AF_INET, &sockin->sin_addr.s_addr, ip, sizeof(ip) - 1);
+// Figure out the current IPv4 "network identification" string.
+bool nsNetworkLinkService::IPv4NetworkId(SHA1Sum* aSHA1) {
+  nsTArray<nsCString> hash;
+  if (!RoutingTable(hash)) {
+    NS_WARNING("IPv4NetworkId: No default gateways");
+  }
 
-    // TODO: only filtered non-predefined destination
-    // Ignore if destination is non-predefined.
-    if (strcmp(ip, "0.0.0.0")) {
-      continue;
-    }
-
-    struct sockaddr* gateway =
-        reinterpret_cast<struct sockaddr*>((char*)sa + RTAX_GATEWAY * SA_SIZE(sa));
-
-    if (!gateway) {
-      continue;
-    }
-    if (gateway->sa_family == AF_INET) {
-      sockin = reinterpret_cast<struct sockaddr_in*>(gateway);
-      inet_ntop(AF_INET, &sockin->sin_addr.s_addr, ip, sizeof(ip) - 1);
-      char mac[18];
-
-      // TODO: cache the arp table instead of multiple system call.
-      if (scanArp(ip, mac, sizeof(mac))) {
-        hash.AppendElement(nsCString(mac));
-      } else {
-        // Can't find a real MAC address. This might be a VPN gateway.
-        char buf[IFNAMSIZ] = {0};
-        char* ifName = if_indextoname(rtm->rtm_index, buf);
-        if (!ifName) {
-          LOG(("ipv4NetworkId: AF_INET if_indextoname failed"));
-          continue;
-        }
-
-        hash.AppendElement(nsCString(ifName));
-        hash.AppendElement(nsCString(ip));
-      }
-    } else if (gateway->sa_family == AF_LINK) {
-      char buf[64];
-      struct sockaddr_dl* sockdl = reinterpret_cast<struct sockaddr_dl*>(gateway);
-      if (getMac(sockdl, buf, sizeof(buf))) {
-        hash.AppendElement(nsCString(buf));
-      } else {
-        char buf[IFNAMSIZ] = {0};
-        char* ifName = if_indextoname(rtm->rtm_index, buf);
-        if (!ifName) {
-          LOG(("ipv4NetworkId: AF_LINK if_indextoname failed"));
-          continue;
-        }
-
-        hash.AppendElement(nsCString(ifName));
-      }
-    }
+  if (!mDoRouteCheckIPv4 || !RoutingFromKernel(hash)) {
+    NS_WARNING("IPv4NetworkId: No route to the predefine destincation");
   }
 
   // We didn't get any valid hash key to generate network ID.
   if (hash.IsEmpty()) {
-    LOG(("ipv4NetworkId: No valid hash key"));
+    LOG(("IPv4NetworkId: No valid hash key"));
     return false;
   }
 
   hash.Sort();
   for (uint32_t i = 0; i < hash.Length(); ++i) {
-    LOG(("ipv4NetworkId: Hashing string for network id: %s", hash[i].get()));
+    LOG(("IPv4NetworkId: Hashing string for network id: %s", hash[i].get()));
     aSHA1->update(hash[i].get(), hash[i].Length());
   }
 
@@ -560,7 +631,7 @@ void nsNetworkLinkService::HashSortedPrefixesAndNetmasks(
   }
 }
 
-static bool ipv6NetworkId(SHA1Sum* sha1) {
+bool nsNetworkLinkService::IPv6NetworkId(SHA1Sum* sha1) {
   struct ifaddrs* ifap;
   std::vector<prefix_and_netmask> prefixAndNetmaskStore;
 
@@ -652,8 +723,8 @@ void nsNetworkLinkService::calculateNetworkIdInternal(void) {
   MOZ_ASSERT(!NS_IsMainThread(), "Should not be called on the main thread");
   SHA1Sum sha1;
   bool idChanged = false;
-  bool found4 = ipv4NetworkId(&sha1);
-  bool found6 = ipv6NetworkId(&sha1);
+  bool found4 = IPv4NetworkId(&sha1);
+  bool found6 = IPv6NetworkId(&sha1);
 
   if (found4 || found6) {
     // This 'addition' could potentially be a fixed number from the
@@ -699,6 +770,7 @@ void nsNetworkLinkService::calculateNetworkIdInternal(void) {
   static bool initialIDCalculation = true;
   if (idChanged && !initialIDCalculation) {
     RefPtr<nsNetworkLinkService> self = this;
+
     NS_DispatchToMainThread(
         NS_NewRunnableFunction("nsNetworkLinkService::calculateNetworkIdInternal",
                                [self]() { self->OnNetworkIdChanged(); }));
@@ -860,8 +932,16 @@ nsresult nsNetworkLinkService::Init(void) {
     mCFRunLoop = nullptr;
     return NS_ERROR_NOT_AVAILABLE;
   }
-
   UpdateReachability();
+
+  nsAutoCString routecheckIP;
+
+  rv = Preferences::GetCString("network.netlink.route.check.IPv4", routecheckIP);
+  if (NS_SUCCEEDED(rv)) {
+    if (inet_pton(AF_INET, routecheckIP.get(), &mRouteCheckIPv4) == 1) {
+      mDoRouteCheckIPv4 = true;
+    }
+  }
 
   calculateNetworkIdWithDelay(0);
 
