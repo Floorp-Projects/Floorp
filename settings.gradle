@@ -43,18 +43,12 @@ System.setProperty('android.home', json.substs.ANDROID_SDK_ROOT)
 include ':annotations'
 include ':geckoview'
 include ':geckoview_example'
-include ':messaging_example'
 include ':omnijar'
-include ':port_messaging_example'
-include ':thirdparty'
 
 project(':annotations').projectDir = new File("${json.topsrcdir}/mobile/android/annotations")
 project(':geckoview').projectDir = new File("${json.topsrcdir}/mobile/android/geckoview")
 project(':geckoview_example').projectDir = new File("${json.topsrcdir}/mobile/android/geckoview_example")
-project(':messaging_example').projectDir = new File("${json.topsrcdir}/mobile/android/examples/extensions/messaging_example/app")
 project(':omnijar').projectDir = new File("${json.topsrcdir}/mobile/android/app/omnijar")
-project(':port_messaging_example').projectDir = new File("${json.topsrcdir}/mobile/android/examples/extensions/port_messaging_example/app")
-project(':thirdparty').projectDir = new File("${json.topsrcdir}/mobile/android/thirdparty")
 
 // The Gradle instance is shared between settings.gradle and all the
 // other build.gradle files (see
