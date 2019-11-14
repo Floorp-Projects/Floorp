@@ -1173,7 +1173,7 @@ nsIGlobalObject* nsINode::GetOwnerGlobal() const {
 bool nsINode::UnoptimizableCCNode() const {
   const uintptr_t problematicFlags =
       (NODE_IS_ANONYMOUS_ROOT | NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE |
-       NODE_IS_NATIVE_ANONYMOUS_ROOT | NODE_MAY_BE_IN_BINDING_MNGR);
+       NODE_IS_NATIVE_ANONYMOUS_ROOT);
   return HasFlag(problematicFlags) || NodeType() == ATTRIBUTE_NODE ||
          // For strange cases like xbl:content/xbl:children
          (IsElement() && AsElement()->IsInNamespace(kNameSpaceID_XBL));
