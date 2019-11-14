@@ -20,7 +20,6 @@
 #include "nsString.h"
 #include "nsStringBuffer.h"
 #include "nsDependentString.h"
-#include "nsPrintfCString.h"
 #include "nsMemory.h"
 #include "prprf.h"
 #include "nsCOMPtr.h"
@@ -34,19 +33,6 @@
 #else
 #  include <pthread.h>
 #  include <unistd.h>
-#endif
-
-#ifdef STRING_BUFFER_CANARY
-#  define CHECK_STRING_BUFFER_CANARY(c)                      \
-    do {                                                     \
-      if ((c) != CANARY_OK) {                                \
-        MOZ_CRASH_UNSAFE_PRINTF("Bad canary value 0x%x", c); \
-      }                                                      \
-    } while (0)
-#else
-#  define CHECK_STRING_BUFFER_CANARY(c) \
-    do {                                \
-    } while (0)
 #endif
 
 using mozilla::Atomic;
@@ -187,8 +173,6 @@ void nsStringBuffer::AddRef() {
 }
 
 void nsStringBuffer::Release() {
-  CHECK_STRING_BUFFER_CANARY(mCanary);
-
   // Since this may be the last release on this thread, we need
   // release semantics so that prior writes on this thread are visible
   // to the thread that destroys the object when it reads mValue with
@@ -201,9 +185,6 @@ void nsStringBuffer::Release() {
     // the last release on other threads, that is, to ensure that
     // writes prior to that release are now visible on this thread.
     count = mRefCount.load(std::memory_order_acquire);
-#ifdef STRING_BUFFER_CANARY
-    mCanary = CANARY_POISON;
-#endif
 
     STRING_STAT_INCREMENT(Free);
     free(this);  // we were allocated with |malloc|
@@ -225,9 +206,6 @@ already_AddRefed<nsStringBuffer> nsStringBuffer::Alloc(size_t aSize) {
 
     hdr->mRefCount = 1;
     hdr->mStorageSize = aSize;
-#ifdef STRING_BUFFER_CANARY
-    hdr->mCanary = CANARY_OK;
-#endif
     NS_LOG_ADDREF(hdr, 1, "nsStringBuffer", sizeof(*hdr));
   }
   return dont_AddRef(hdr);
@@ -236,7 +214,6 @@ already_AddRefed<nsStringBuffer> nsStringBuffer::Alloc(size_t aSize) {
 nsStringBuffer* nsStringBuffer::Realloc(nsStringBuffer* aHdr, size_t aSize) {
   STRING_STAT_INCREMENT(Realloc);
 
-  CHECK_STRING_BUFFER_CANARY(aHdr->mCanary);
   NS_ASSERTION(aSize != 0, "zero capacity allocation not allowed");
   NS_ASSERTION(sizeof(nsStringBuffer) + aSize <= size_t(uint32_t(-1)) &&
                    sizeof(nsStringBuffer) + aSize > aSize,
@@ -324,12 +301,6 @@ size_t nsStringBuffer::SizeOfIncludingThisEvenIfShared(
     mozilla::MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this);
 }
-
-#ifdef STRING_BUFFER_CANARY
-void nsStringBuffer::FromDataCanaryCheckFailed() const {
-  MOZ_CRASH_UNSAFE_PRINTF("Bad canary value 0x%x in FromData", mCanary);
-}
-#endif
 
 // ---------------------------------------------------------------------------
 
