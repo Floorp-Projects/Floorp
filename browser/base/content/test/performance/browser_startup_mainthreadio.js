@@ -433,14 +433,14 @@ const startupPhases = {
       path: "ProfD:cert9.db-journal",
       condition: WIN,
       canonicalize: true,
-      stat: 2,
+      stat: 3,
     },
     {
       // bug 1370516 - NSS should be initialized off main thread.
       path: "ProfD:cert9.db-wal",
       condition: WIN,
       canonicalize: true,
-      stat: 2,
+      stat: 3,
     },
     {
       // bug 1370516 - NSS should be initialized off main thread.
