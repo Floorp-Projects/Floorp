@@ -12,7 +12,7 @@
 
 [package]
 name = "crossbeam-epoch"
-version = "0.7.2"
+version = "0.8.0"
 authors = ["The Crossbeam Project Developers"]
 description = "Epoch-based garbage collection"
 homepage = "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-epoch"
@@ -22,15 +22,11 @@ keywords = ["lock-free", "rcu", "atomic", "garbage"]
 categories = ["concurrency", "memory-management", "no-std"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/crossbeam-rs/crossbeam"
-[dependencies.arrayvec]
-version = "0.4"
-default-features = false
-
 [dependencies.cfg-if]
 version = "0.1.2"
 
 [dependencies.crossbeam-utils]
-version = "0.6"
+version = "0.7"
 default-features = false
 
 [dependencies.lazy_static]
@@ -45,10 +41,12 @@ version = "1"
 default-features = false
 [dev-dependencies.rand]
 version = "0.6"
+[build-dependencies.autocfg]
+version = "0.1.6"
 
 [features]
 alloc = ["crossbeam-utils/alloc"]
 default = ["std"]
-nightly = ["crossbeam-utils/nightly", "arrayvec/use_union"]
+nightly = ["crossbeam-utils/nightly"]
 sanitize = []
 std = ["crossbeam-utils/std", "lazy_static"]

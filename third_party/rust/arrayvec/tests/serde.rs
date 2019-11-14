@@ -1,4 +1,4 @@
-#![cfg(feature = "serde-1")]
+#![cfg(feature = "serde")]
 extern crate arrayvec;
 extern crate serde_test;
 

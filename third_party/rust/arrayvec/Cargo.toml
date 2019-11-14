@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "arrayvec"
-version = "0.4.11"
+version = "0.5.1"
 authors = ["bluss"]
 description = "A vector with fixed capacity, backed by an array (it can be stored on the stack too). Implements fixed capacity ArrayVec and ArrayString."
 documentation = "https://docs.rs/arrayvec/"
@@ -21,10 +22,16 @@ categories = ["data-structures", "no-std"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/bluss/arrayvec"
 [package.metadata.docs.rs]
-features = ["serde-1"]
+features = ["serde"]
 
 [package.metadata.release]
 no-dev-version = true
+tag-name = "{{version}}"
+[profile.bench]
+debug = true
+
+[profile.release]
+debug = true
 
 [[bench]]
 name = "extend"
@@ -33,10 +40,6 @@ harness = false
 [[bench]]
 name = "arraystring"
 harness = false
-[dependencies.nodrop]
-version = "0.1.12"
-default-features = false
-
 [dependencies.serde]
 version = "1.0"
 optional = true
@@ -56,6 +59,4 @@ version = "1.0"
 array-sizes-129-255 = []
 array-sizes-33-128 = []
 default = ["std"]
-serde-1 = ["serde"]
 std = []
-use_union = []

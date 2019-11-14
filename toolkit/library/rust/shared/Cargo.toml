@@ -34,7 +34,7 @@ log = {version = "0.4", features = ["release_max_level_info"]}
 env_logger = {version = "0.6", default-features = false} # disable `regex` to reduce code size
 cose-c = { version = "0.1.5" }
 jsrust_shared = { path = "../../../../js/src/rust/shared" }
-arrayvec = "0.4"
+arrayvec = "0.5"
 cert_storage = { path = "../../../../security/manager/ssl/cert_storage", optional = true }
 bitsdownload = { path = "../../../components/bitsdownload", optional = true }
 storage = { path = "../../../../storage/rust" }
@@ -44,6 +44,7 @@ audio_thread_priority = "0.20.2"
 mdns_service = { path="../../../../media/mtransport/mdns_service", optional = true }
 neqo_glue = { path = "../../../../netwerk/socket/neqo_glue" }
 rlbox_lucet_sandbox = { version = "0.1.0", optional = true }
+wgpu-remote = { path = "../../../../dom/webgpu/wgpu-remote", optional = true }
 
 [build-dependencies]
 rustc_version = "0.2"
@@ -72,6 +73,7 @@ new_cert_storage = ["cert_storage"]
 fuzzing_interfaces = []
 webrtc = ["mdns_service"]
 wasm_library_sandboxing = ["rlbox_lucet_sandbox"]
+webgpu = ["wgpu-remote"]
 
 [lib]
 path = "lib.rs"
