@@ -68,7 +68,7 @@ void MediaControlKeysHandler::OnKeyPressed(MediaControlKeysEvent aKeyEvent) {
       // TODO : implement related controller functions.
       return;
     default:
-      LOG("Error : undefined event!");
+      MOZ_ASSERT_UNREACHABLE("Error : undefined event!");
       return;
   }
 }
