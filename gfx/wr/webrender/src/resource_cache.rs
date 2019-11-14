@@ -1028,7 +1028,7 @@ impl ResourceCache {
             image.dirty_rect = image.dirty_rect.union(dirty_rect);
         }
 
-        image.tiling = get_blob_tiling(image.tiling, blob_size, max_texture_size);;
+        image.tiling = get_blob_tiling(image.tiling, blob_size, max_texture_size);
         image.valid_tiles_after_bounds_change = valid_tiles_after_bounds_change;
         image.visible_rect = *visible_rect;
     }
