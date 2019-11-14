@@ -191,7 +191,6 @@ bool XPCWrappedNativeScope::AttachComponentsObject(JSContext* aCx) {
 JSObject* XPCWrappedNativeScope::EnsureContentXBLScope(JSContext* cx) {
   JS::RootedObject global(cx, CurrentGlobalOrNull(cx));
   MOZ_ASSERT(js::IsObjectInContextCompartment(global, cx));
-  MOZ_ASSERT(!IsContentXBLScope());
   MOZ_ASSERT(strcmp(js::GetObjectClass(global)->name,
                     "nsXBLPrototypeScript compilation scope"));
 

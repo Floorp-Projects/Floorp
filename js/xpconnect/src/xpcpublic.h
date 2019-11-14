@@ -91,10 +91,6 @@ JSObject* TransplantObjectNukingXrayWaiver(JSContext* cx,
                                            JS::HandleObject origObj,
                                            JS::HandleObject target);
 
-bool IsContentXBLCompartment(JS::Compartment* compartment);
-bool IsContentXBLScope(JS::Realm* realm);
-bool IsInContentXBLScope(JSObject* obj);
-
 bool IsUAWidgetCompartment(JS::Compartment* compartment);
 bool IsUAWidgetScope(JS::Realm* realm);
 bool IsInUAWidgetScope(JSObject* obj);
@@ -124,9 +120,6 @@ JSObject* GetUAWidgetScope(JSContext* cx, JSObject* contentScope);
 
 inline JSObject* GetXBLScopeOrGlobal(JSContext* cx, JSObject* obj) {
   MOZ_ASSERT(!js::IsCrossCompartmentWrapper(obj));
-  if (IsInContentXBLScope(obj)) {
-    return JS::GetNonCCWObjectGlobal(obj);
-  }
   return GetXBLScope(cx, obj);
 }
 

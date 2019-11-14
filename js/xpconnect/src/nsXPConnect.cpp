@@ -1158,8 +1158,7 @@ bool IsChromeOrXBL(JSContext* cx, JSObject* /* unused */) {
   // Note that, for performance, we don't check AllowXULXBLForPrincipal here,
   // and instead rely on the fact that AllowContentXBLScope() only returns false
   // in remote XUL situations.
-  return AccessCheck::isChrome(c) || IsContentXBLCompartment(c) ||
-         !AllowContentXBLScope(realm);
+  return AccessCheck::isChrome(c) || !AllowContentXBLScope(realm);
 }
 
 bool IsNotUAWidget(JSContext* cx, JSObject* /* unused */) {
