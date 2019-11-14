@@ -5,6 +5,7 @@
 .inline-preview {
   display: inline-block;
   margin-inline-start: 8px;
+  user-select: none;
 }
 
 .inline-preview-outer {
