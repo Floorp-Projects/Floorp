@@ -2,18 +2,6 @@
 <resources>
     <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_downloads_notification_channel">Téléchargements</string>
-    <!-- Text shown on the first row of an ongoing download notification. -->
-    <string name="mozac_feature_downloads_ongoing_notification_title">Téléchargement…</string>
-    <!-- Text shown on the second row of an ongoing download notification. -->
-    <string name="mozac_feature_downloads_ongoing_notification_text">Téléchargement en cours</string>
-
-    <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
-    <string name="mozac_feature_downloads_completed_notification_text">Téléchargement terminé.</string>
-    <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
-    <string name="mozac_feature_downloads_failed_notification_text">Échec du téléchargement.</string>
-
-    <!-- Alert dialog confirmation before download a file, this is the title. -->
-    <string name="mozac_feature_downloads_dialog_title">Télécharger le fichier</string>
 
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
     <string name="mozac_feature_downloads_dialog_download">Télécharger</string>
@@ -23,4 +11,8 @@
 
     <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
     <string name="mozac_feature_downloads_file_not_supported2">%1$s ne peut pas télécharger ce type de fichier</string>
-</resources>
+
+    <!-- Message that appears when the downloaded file could not be opened-->
+    <string name="mozac_feature_downloads_could_not_open_file">Impossible d’ouvrir le fichier</string>
+
+    </resources>
