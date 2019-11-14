@@ -29,6 +29,7 @@ NSS_SRCDIRS = \
 	ssl_gtest \
 	$(SYSINIT_GTEST) \
 	nss_bogo_shim \
+	pkcs11testmodule \
 	$(NULL)
 endif
 endif

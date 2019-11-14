@@ -17,6 +17,10 @@
 #include "rijndael.h"
 #endif
 
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+#include <arm_neon.h>
+#endif
+
 SECStatus
 CTR_InitContext(CTRContext *ctr, void *context, freeblCipherFunc cipher,
                 const unsigned char *param)
@@ -114,6 +118,15 @@ ctr_xor(unsigned char *target, const unsigned char *x,
         const unsigned char *y, unsigned int count)
 {
     unsigned int i;
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+    while (count >= 16) {
+        vst1q_u8(target, veorq_u8(vld1q_u8(x), vld1q_u8(y)));
+        target += 16;
+        x += 16;
+        y += 16;
+        count -= 16;
+    }
+#endif
     for (i = 0; i < count; i++) {
         *target++ = *x++ ^ *y++;
     }
