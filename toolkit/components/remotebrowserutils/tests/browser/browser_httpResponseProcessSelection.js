@@ -238,6 +238,13 @@ async function testLoadAndRedirect(
 }
 
 add_task(async function test_disabled() {
+  if (gFissionBrowser) {
+    info(
+      `Skipping test. Cannot disable ${RESPONSE_PROCESS_SELECTION_PREF} with Fission.`
+    );
+    return;
+  }
+
   await unsetPref();
 
   // With the pref disabled, file URIs should successfully POST, but remain in
