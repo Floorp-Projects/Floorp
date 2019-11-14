@@ -13,8 +13,8 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   fetchNetworkUpdatePacket,
   propertiesEqual,
-} = require("../utils/request-utils");
-const { RESPONSE_HEADERS } = require("../constants");
+} = require("../../utils/request-utils");
+const { RESPONSE_HEADERS } = require("../../constants");
 
 // Components
 /* global

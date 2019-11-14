@@ -19,18 +19,18 @@ const {
   addThemeObserver,
   removeThemeObserver,
 } = require("devtools/client/shared/theme");
-const Actions = require("../actions/index");
+const Actions = require("../../actions/index");
 const {
   HEADERS,
   REQUESTS_WATERFALL,
   MIN_COLUMN_WIDTH,
   DEFAULT_COLUMN_WIDTH,
-} = require("../constants");
-const { getColumns, getWaterfallScale } = require("../selectors/index");
-const { getFormattedTime } = require("../utils/format-utils");
-const { L10N } = require("../utils/l10n");
-const RequestListHeaderContextMenu = require("../widgets/RequestListHeaderContextMenu");
-const WaterfallBackground = require("../widgets/WaterfallBackground");
+} = require("../../constants");
+const { getColumns, getWaterfallScale } = require("../../selectors/index");
+const { getFormattedTime } = require("../../utils/format-utils");
+const { L10N } = require("../../utils/l10n");
+const RequestListHeaderContextMenu = require("../../widgets/RequestListHeaderContextMenu");
+const WaterfallBackground = require("../../widgets/WaterfallBackground");
 const Draggable = createFactory(
   require("devtools/client/shared/components/splitter/Draggable")
 );

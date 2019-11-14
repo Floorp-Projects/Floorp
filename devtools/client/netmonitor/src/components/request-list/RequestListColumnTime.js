@@ -7,13 +7,13 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { getFormattedTime } = require("../utils/format-utils");
+const { getFormattedTime } = require("../../utils/format-utils");
 const {
   fetchNetworkUpdatePacket,
   getResponseTime,
   getStartTime,
   getEndTime,
-} = require("../utils/request-utils");
+} = require("../../utils/request-utils");
 
 /**
  * This component represents a column displaying selected

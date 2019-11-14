@@ -7,9 +7,9 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { getAbbreviatedMimeType } = require("../utils/request-utils");
+const { getFormattedIPAndPort } = require("../../utils/format-utils");
 
-class RequestListColumnType extends Component {
+class RequestListColumnRemoteIP extends Component {
   static get propTypes() {
     return {
       item: PropTypes.object.isRequired,
@@ -17,25 +17,23 @@ class RequestListColumnType extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    return this.props.item.mimeType !== nextProps.item.mimeType;
+    return this.props.item.remoteAddress !== nextProps.item.remoteAddress;
   }
 
   render() {
-    const { mimeType } = this.props.item;
-    let abbrevType;
-
-    if (mimeType) {
-      abbrevType = getAbbreviatedMimeType(mimeType);
-    }
+    const { remoteAddress, remotePort } = this.props.item;
+    const remoteIP = remoteAddress
+      ? getFormattedIPAndPort(remoteAddress, remotePort)
+      : "unknown";
 
     return dom.td(
       {
-        className: "requests-list-column requests-list-type",
-        title: mimeType,
+        className: "requests-list-column requests-list-remoteip",
+        title: remoteIP,
       },
-      abbrevType
+      remoteIP
     );
   }
 }
 
-module.exports = RequestListColumnType;
+module.exports = RequestListColumnRemoteIP;

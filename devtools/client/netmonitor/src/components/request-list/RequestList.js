@@ -10,7 +10,7 @@ const { div } = dom;
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 // Components
-const StatusBar = createFactory(require("./StatusBar"));
+const StatusBar = createFactory(require("../StatusBar"));
 
 loader.lazyGetter(this, "RequestListContent", function() {
   return createFactory(require("./RequestListContent"));
