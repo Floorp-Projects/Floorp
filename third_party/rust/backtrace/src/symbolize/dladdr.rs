@@ -8,52 +8,105 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::ffi::CStr;
-use std::mem;
-use std::os::raw::c_void;
-use std::path::Path;
+//! Common support for resolving with `dladdr`, often used as a fallback if
+//! other strategies don't work.
 
-use libc::{self, Dl_info};
+#![allow(dead_code)]
 
-use SymbolName;
+cfg_if::cfg_if! {
+    if #[cfg(all(unix, not(target_os = "emscripten"), feature = "dladdr"))] {
+        use core::ffi::c_void;
+        use core::marker;
+        use core::{mem, slice};
+        use crate::SymbolName;
+        use crate::types::BytesOrWideString;
+        use libc::{self, Dl_info};
 
-pub struct Symbol {
-    inner: Dl_info,
-}
-
-impl Symbol {
-    pub fn name(&self) -> Option<SymbolName> {
-        if self.inner.dli_sname.is_null() {
-            None
-        } else {
-            Some(SymbolName::new(unsafe {
-                CStr::from_ptr(self.inner.dli_sname).to_bytes()
-            }))
+        pub struct Symbol<'a> {
+            inner: Dl_info,
+            _marker: marker::PhantomData<&'a i32>,
         }
-    }
 
-    pub fn addr(&self) -> Option<*mut c_void> {
-        Some(self.inner.dli_saddr as *mut _)
-    }
+        impl Symbol<'_> {
+            pub fn name(&self) -> Option<SymbolName> {
+                if self.inner.dli_sname.is_null() {
+                    None
+                } else {
+                    let ptr = self.inner.dli_sname as *const u8;
+                    unsafe {
+                        let len = libc::strlen(self.inner.dli_sname);
+                        Some(SymbolName::new(slice::from_raw_parts(ptr, len)))
+                    }
+                }
+            }
 
-    pub fn filename(&self) -> Option<&Path> {
-        None
-    }
+            pub fn addr(&self) -> Option<*mut c_void> {
+                Some(self.inner.dli_saddr as *mut _)
+            }
 
-    pub fn lineno(&self) -> Option<u32> {
-        None
-    }
-}
+            pub fn filename_raw(&self) -> Option<BytesOrWideString> {
+                None
+            }
 
-pub fn resolve(addr: *mut c_void, cb: &mut FnMut(&super::Symbol)) {
-    unsafe {
-        let mut info: super::Symbol = super::Symbol {
-            inner: Symbol {
+            #[cfg(feature = "std")]
+            pub fn filename(&self) -> Option<&::std::path::Path> {
+                None
+            }
+
+            pub fn lineno(&self) -> Option<u32> {
+                None
+            }
+        }
+
+        pub unsafe fn resolve(addr: *mut c_void, cb: &mut FnMut(Symbol<'static>)) {
+            let mut info = Symbol {
                 inner: mem::zeroed(),
-            },
-        };
-        if libc::dladdr(addr as *mut _, &mut info.inner.inner) != 0 {
-            cb(&info)
+                _marker: marker::PhantomData,
+            };
+            // Skip null addresses to avoid calling into libc and having it do
+            // things with the dynamic symbol table for no reason.
+            if !addr.is_null() && libc::dladdr(addr as *mut _, &mut info.inner) != 0 {
+                cb(info)
+            }
+        }
+    } else {
+        use core::ffi::c_void;
+        use core::marker;
+        use crate::symbolize::SymbolName;
+        use crate::types::BytesOrWideString;
+
+        pub struct Symbol<'a> {
+            a: Void,
+            _b: marker::PhantomData<&'a i32>,
+        }
+
+        enum Void {}
+
+        impl Symbol<'_> {
+            pub fn name(&self) -> Option<SymbolName> {
+                match self.a {}
+            }
+
+            pub fn addr(&self) -> Option<*mut c_void> {
+                match self.a {}
+            }
+
+            pub fn filename_raw(&self) -> Option<BytesOrWideString> {
+                match self.a {}
+            }
+
+            #[cfg(feature = "std")]
+            pub fn filename(&self) -> Option<&::std::path::Path> {
+                match self.a {}
+            }
+
+            pub fn lineno(&self) -> Option<u32> {
+                match self.a {}
+            }
+        }
+
+        pub unsafe fn resolve(addr: *mut c_void, cb: &mut FnMut(Symbol<'static>)) {
+            drop((addr, cb));
         }
     }
 }

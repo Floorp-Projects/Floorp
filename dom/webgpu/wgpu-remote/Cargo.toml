@@ -1,0 +1,20 @@
+[package]
+name = "wgpu-remote"
+version = "0.1.0"
+authors = [
+	"Dzmitry Malyshau <kvark@mozilla.com>",
+	"Joshua Groves <josh@joshgroves.com>",
+]
+edition = "2018"
+
+[lib]
+#crate-type = ["lib", "cdylib", "staticlib"]
+crate-type = ["lib"]
+
+[features]
+default = []
+
+[dependencies]
+wgn = { path = "../wgpu-native", package = "wgpu-native", version = "0.4" }
+log = "0.4"
+parking_lot = { version = "0.9" }

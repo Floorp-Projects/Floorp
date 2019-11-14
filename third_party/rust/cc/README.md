@@ -2,8 +2,6 @@
 
 A library to compile C/C++/assembly into a Rust library/application.
 
-[![Build Status](https://dev.azure.com/alexcrichton/cc-rs/_apis/build/status/alexcrichton.cc-rs?branchName=master)](https://dev.azure.com/alexcrichton/cc-rs/_build/latest?definitionId=5&branchName=master)
-
 [Documentation](https://docs.rs/cc)
 
 A simple library meant to be used as a build dependency with Cargo packages in
@@ -27,8 +25,6 @@ Next up, you'll want to write a build script like so:
 
 ```rust,no_run
 // build.rs
-
-extern crate cc;
 
 fn main() {
     cc::Build::new()
@@ -143,8 +139,6 @@ required varies per platform, but there are three broad categories:
 `Build`:
 
 ```rust,no_run
-extern crate cc;
-
 fn main() {
     cc::Build::new()
         .cpp(true) // Switch to C++ library compilation.
@@ -163,8 +157,6 @@ linked to the crate target.
 on `Build` (currently for GNU/Clang toolchains only):
 
 ```rust,no_run
-extern crate cc;
-
 fn main() {
     cc::Build::new()
         // Switch to CUDA C++ library compilation using NVCC.
