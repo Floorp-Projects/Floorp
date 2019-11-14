@@ -26,23 +26,12 @@
       </vbox>
     </hbox>
     <hbox id="fxaNoLoginStatus" align="center" flex="1">
-      <vbox>
-        <image class="fxaProfileImage"/>
-      </vbox>
       <vbox flex="1">
         <hbox align="center" flex="1">
-          <hbox align="center" flex="1">
-            <label id="signedOutAccountBoxTitle"><html:h2 data-l10n-id="sync-signedout-account-title"/></label>
-          </hbox>
           <button id="noFxaSignIn"
                   is="highlightable-button"
                   class="accessory-button"
-                  data-l10n-id="sync-signedout-account-signin"/>
-        </hbox>
-        <hbox align="center" flex="1">
-          <html:a id="noFxaSignUp"
-                  class="openLink"
-                  data-l10n-id="sync-signedout-account-create" />
+                  data-l10n-id="sync-signedout-account-signin2"/>
         </hbox>
       </vbox>
     </hbox>
