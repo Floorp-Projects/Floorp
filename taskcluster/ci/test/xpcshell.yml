@@ -49,7 +49,7 @@ xpcshell:
             default: built-projects
     chunks:
         by-test-platform:
-            .*-ccov/debug: 6
+            .*-ccov/.*: 6
             android-em-7.*: 3
             macosx.*(?!-ccov)...../.*: 2
             linux64(-qr)?/debug: 6
@@ -61,7 +61,7 @@ xpcshell:
             macosx.*(?!-ccov)...../.*: 3600
             windows10-aarch64/.*: 3600
             windows7-32(-shippable)?/opt: 5400
-            .*-ccov/debug: 5400
+            .*-ccov/.*: 5400
             default: 2700
     allow-software-gl-layers: false
     tier:

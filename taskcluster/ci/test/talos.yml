@@ -26,7 +26,9 @@ job-defaults:
                     - talos/windows_config.py
                 windows10-64-ccov/debug:
                     - talos/windows_vm_config.py
-                linux64-ccov/debug:
+                windows10-64-ccov/debug:
+                    - talos/windows_vm_config.py
+                linux64-ccov/.*:
                     - talos/linux64_config_taskcluster.py
                 default:
                     - talos/linux_config.py
@@ -367,7 +369,7 @@ talos-xperf:
             default: []
     tier:
         by-test-platform:
-            windows10-64-ccov/debug: 3
+            windows10-64-ccov/.*: 3
             default: default
     mozharness:
         extra-options:

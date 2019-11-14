@@ -43,6 +43,7 @@ web-platform-tests:
             android.*: 18
             linux64-asan/opt: 18
             linux64-ccov/debug: 24
+            linux64-ccov/opt: 24
             linux.*/debug: 18
             macosx*/opt: 8
             macosx.*/debug: 16
@@ -51,7 +52,7 @@ web-platform-tests:
             default: 12
     max-run-time:
         by-test-platform:
-            .*-ccov/debug: 10800
+            .*-ccov/.*: 10800
             linux64-qr/debug: 9000
             default: 7200
     e10s: true
@@ -83,7 +84,7 @@ web-platform-tests-reftests:
             default: virtual
     chunks:
         by-test-platform:
-            .*-ccov/debug: 8
+            .*-ccov/.*: 8
             linux64(-qr|-asan)/.*: 6
             linux64(-shippable|-devedition)?/opt: 3
             macosx10.*-64/debug: 6
@@ -112,7 +113,7 @@ web-platform-tests-wdspec:
     treeherder-symbol: W(Wd)
     chunks:
         by-test-platform:
-            .*-ccov/debug: 4
+            .*-ccov/.*: 4
             default: 2
     mozharness:
         extra-options:
