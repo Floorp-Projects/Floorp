@@ -88,7 +88,7 @@ class MOZ_RAII BackgroundPriorityRegion final {
 
 /* static */
 RefPtr<UntrustedModulesProcessor> UntrustedModulesProcessor::Create() {
-#if defined(NIGHTLY_BUILD)
+#if defined(EARLY_BETA_OR_EARLIER)
   if (!XRE_IsParentProcess()) {
     // Not currently supported outside the parent process
     return nullptr;
@@ -102,7 +102,7 @@ RefPtr<UntrustedModulesProcessor> UntrustedModulesProcessor::Create() {
   return result.forget();
 #else
   return nullptr;
-#endif  // defined(NIGHTLY_BUILD)
+#endif  // defined(EARLY_BETA_OR_EARLIER)
 }
 
 NS_IMPL_ISUPPORTS(UntrustedModulesProcessor, nsIObserver)
