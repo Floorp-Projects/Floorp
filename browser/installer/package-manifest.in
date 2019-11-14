@@ -410,7 +410,6 @@ bin/libfreebl_64int_3.so
 #else
 @BINPATH@/crashreporter@BIN_SUFFIX@
 @RESPATH@/crashreporter.ini
-@BINPATH@/minidump-analyzer@BIN_SUFFIX@
 #ifdef XP_UNIX
 @RESPATH@/Throbber-small.gif
 #endif
@@ -419,6 +418,12 @@ bin/libfreebl_64int_3.so
 #ifdef MOZ_CRASHREPORTER_INJECTOR
 @BINPATH@/breakpadinjector.dll
 #endif
+#endif
+
+; [ minidump-analyzer ]
+;
+#ifdef MOZ_CRASHREPORTER
+@BINPATH@/minidump-analyzer@BIN_SUFFIX@
 #endif
 
 ; [ Ping Sender ]

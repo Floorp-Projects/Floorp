@@ -36,13 +36,6 @@ function runMinidumpAnalyzer(minidumpPath, allThreads) {
       const exeName = "minidump-analyzer" + binSuffix;
 
       let exe = Services.dirsvc.get("GreBinD", Ci.nsIFile);
-
-      if (AppConstants.platform === "macosx") {
-        exe.append("crashreporter.app");
-        exe.append("Contents");
-        exe.append("MacOS");
-      }
-
       exe.append(exeName);
 
       let args = [minidumpPath];
