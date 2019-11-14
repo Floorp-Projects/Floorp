@@ -117,6 +117,10 @@ def build_dict(config, env=os.environ):
         if d['buildapp'] == 'mobile/android':
             if d['processor'] == 'x86':
                 return 'android-x86'
+            if d['processor'] == 'x86_64':
+                return 'android-x86_64'
+            if d['processor'] == 'aarch64':
+                return 'android-aarch64'
             return 'android-arm'
 
     def guess_buildtype():
