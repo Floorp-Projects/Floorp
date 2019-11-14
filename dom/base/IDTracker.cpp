@@ -57,14 +57,12 @@ void IDTracker::ResetToURIFragmentID(nsIContent* aFromContent, nsIURI* aURI,
   if (NS_FAILED(rv) || ref.IsEmpty()) {
     return;
   }
-  rv = NS_OK;
 
-  nsIContent* bindingParent = aFromContent->GetBindingParent();
-  if (bindingParent && !aFromContent->IsInShadowTree()) {
+  if (aFromContent->IsInNativeAnonymousSubtree()) {
     // This happens, for example, if aFromContent is part of the content
     // inserted by a call to Document::InsertAnonymousContent, which we
-    // also want to handle.  (It also happens for <use>'s anonymous
-    // content etc.)
+    // also want to handle.  (It also happens for other native anonymous content
+    // etc.)
     Element* anonRoot =
         doc->GetAnonRootIfInAnonymousContentContainer(aFromContent);
     if (anonRoot) {
