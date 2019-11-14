@@ -929,6 +929,15 @@ static const TruncFlags TRUNC_SATURATING = TruncFlags(1) << 1;
 
 enum BranchDirection { FALSE_BRANCH, TRUE_BRANCH };
 
+template <typename T>
+constexpr T SplatByteToUInt(uint8_t val, uint8_t x) {
+  T splatted = val;
+  for (; x > 1; x--) {
+    splatted |= splatted << 8;
+  }
+  return splatted;
+}
+
 }  // namespace jit
 }  // namespace js
 

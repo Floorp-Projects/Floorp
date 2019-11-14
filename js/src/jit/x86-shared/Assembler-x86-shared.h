@@ -1081,6 +1081,7 @@ class AssemblerX86Shared : public AssemblerShared {
   static bool HasLZCNT() { return CPUInfo::IsLZCNTPresent(); }
   static bool SupportsFloatingPoint() { return CPUInfo::IsSSE2Present(); }
   static bool SupportsUnalignedAccesses() { return true; }
+  static bool SupportsFastUnalignedAccesses() { return true; }
   static bool SupportsSimd() { return CPUInfo::IsSSE2Present(); }
   static bool HasAVX() { return CPUInfo::IsAVXPresent(); }
 

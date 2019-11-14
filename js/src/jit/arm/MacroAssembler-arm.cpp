@@ -6049,6 +6049,7 @@ void MacroAssemblerARM::wasmUnalignedLoadImpl(
     Register tmp2, Register tmp3) {
   MOZ_ASSERT(ptr == ptrScratch);
   MOZ_ASSERT(tmp != ptr);
+  MOZ_ASSERT(!Assembler::SupportsFastUnalignedAccesses());
 
   uint32_t offset = access.offset();
   MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
