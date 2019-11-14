@@ -286,6 +286,9 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
       const mozilla::Maybe<mozilla::gfx::Matrix4x4>& aMatrix,
       const mozilla::ScreenRect& aRemoteDocumentRect);
 
+  mozilla::ipc::IPCResult RecvDynamicToolbarMaxHeightChanged(
+      const mozilla::ScreenIntCoord& aHeight);
+
   mozilla::ipc::IPCResult RecvActivate();
 
   mozilla::ipc::IPCResult RecvDeactivate();
@@ -538,6 +541,9 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   LayoutDeviceIntPoint GetClientOffset() const { return mClientOffset; }
   LayoutDeviceIntPoint GetChromeOffset() const { return mChromeOffset; };
+  ScreenIntCoord GetDynamicToolbarMaxHeight() const {
+    return mDynamicToolbarMaxHeight;
+  };
 
   bool IPCOpen() const { return mIPCOpen; }
 
@@ -829,6 +835,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   LayoutDeviceIntPoint mClientOffset;
   // Position of tab, relative to parent widget (typically the window)
   LayoutDeviceIntPoint mChromeOffset;
+  ScreenIntCoord mDynamicToolbarMaxHeight;
   TabId mUniqueId;
 
   // Whether or not this browser is the child part of the top level PBrowser

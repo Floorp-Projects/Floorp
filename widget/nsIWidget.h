@@ -2119,6 +2119,11 @@ class nsIWidget : public nsISupports {
    */
   virtual void RecvScreenPixels(mozilla::ipc::Shmem&& aMem,
                                 const ScreenIntSize& aSize) = 0;
+
+  virtual void UpdateDynamicToolbarMaxHeight(mozilla::ScreenIntCoord aHeight) {}
+  virtual mozilla::ScreenIntCoord GetDynamicToolbarMaxHeight() const {
+    return 0;
+  }
 #endif
 
   static already_AddRefed<nsIBidiKeyboard> CreateBidiKeyboard();

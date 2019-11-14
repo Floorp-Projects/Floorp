@@ -533,6 +533,10 @@ class BrowserParent final : public PBrowserParent,
   void HandleAccessKey(const WidgetKeyboardEvent& aEvent,
                        nsTArray<uint32_t>& aCharCodes);
 
+#if defined(MOZ_WIDGET_ANDROID)
+  void DynamicToolbarMaxHeightChanged(ScreenIntCoord aHeight);
+#endif
+
   void Activate();
 
   void Deactivate(bool aWindowLowering);

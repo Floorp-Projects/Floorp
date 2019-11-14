@@ -110,6 +110,24 @@ public class GeckoDisplay {
     }
 
     /**
+     * Set the maximum height of the dynamic toolbar(s).
+     *
+     * If the toolbar is dynamic, this function needs to be called with the maximum
+     * possible toolbar height so that Gecko can make the ICB static even during the dynamic
+     * toolbar height is being changed.
+     *
+     * @param height The maximum height of the dynamic toolbar(s).
+     */
+    @UiThread
+    public void setDynamicToolbarMaxHeight(final int height) {
+        ThreadUtils.assertOnUiThread();
+
+        if (mSession != null) {
+            mSession.setDynamicToolbarMaxHeight(height);
+        }
+    }
+
+    /**
      * Update the amount of vertical space that is clipped or visibly obscured in the bottom portion
      * of the display. Tells gecko where to put bottom fixed elements so they are fully visible.
      *

@@ -35,6 +35,11 @@ void nsIWidgetListener::SizeModeChanged(nsSizeMode aSizeMode) {}
 
 void nsIWidgetListener::UIResolutionChanged() {}
 
+#if defined(MOZ_WIDGET_ANDROID)
+void nsIWidgetListener::DynamicToolbarMaxHeightChanged(ScreenIntCoord aHeight) {
+}
+#endif
+
 void nsIWidgetListener::FullscreenWillChange(bool aInFullscreen) {}
 
 void nsIWidgetListener::FullscreenChanged(bool aInFullscreen) {}
