@@ -460,6 +460,9 @@ ScreenIntSize MobileViewportManager::GetCompositionSize(
     return ScreenIntSize();
   }
 
+  // FIXME: Bug 1586986 - To update VisualViewport in response to the dynamic
+  // toolbar transition we probably need to include the dynamic toolbar
+  // _current_ height.
   ScreenIntSize compositionSize(aDisplaySize);
   ScreenMargin scrollbars =
       mContext->ScrollbarAreaToExcludeFromCompositionBounds()
