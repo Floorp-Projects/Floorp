@@ -2352,7 +2352,6 @@ class MOZ_STACK_CLASS SandboxOptions : public OptionsBase {
         sameZoneAs(cx),
         freshCompartment(false),
         freshZone(false),
-        isContentXBLScope(false),
         isUAWidgetScope(false),
         invisibleToDebugger(false),
         discardSource(false),
@@ -2372,7 +2371,6 @@ class MOZ_STACK_CLASS SandboxOptions : public OptionsBase {
   JS::RootedObject sameZoneAs;
   bool freshCompartment;
   bool freshZone;
-  bool isContentXBLScope;
   bool isUAWidgetScope;
   bool invisibleToDebugger;
   bool discardSource;
