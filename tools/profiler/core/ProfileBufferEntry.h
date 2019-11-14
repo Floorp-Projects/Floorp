@@ -502,12 +502,13 @@ class UniqueStacks {
 //     {
 //       "location": 0,       /* index into stringTable */
 //       "relevantForJS": 1,  /* bool */
-//       "implementation": 2, /* index into stringTable */
-//       "optimizations": 3,  /* arbitrary JSON */
-//       "line": 4,           /* number */
-//       "column": 5,         /* number */
-//       "category": 6        /* index into profile.meta.categories */
-//       "subcategory": 7     /* index into
+//       "innerWindowID": 2,  /* inner window ID of global JS `window` object */
+//       "implementation": 3, /* index into stringTable */
+//       "optimizations": 4,  /* arbitrary JSON */
+//       "line": 5,           /* number */
+//       "column": 6,         /* number */
+//       "category": 7,       /* index into profile.meta.categories */
+//       "subcategory": 8     /* index into
 //       profile.meta.categories[category].subcategories */
 //     },
 //     "data":

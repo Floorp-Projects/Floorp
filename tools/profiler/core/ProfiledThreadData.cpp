@@ -81,6 +81,7 @@ void ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer,
         JSONSchemaWriter schema(aWriter);
         schema.WriteField("location");
         schema.WriteField("relevantForJS");
+        schema.WriteField("innerWindowID");
         schema.WriteField("implementation");
         schema.WriteField("optimizations");
         schema.WriteField("line");
