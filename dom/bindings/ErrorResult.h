@@ -164,6 +164,11 @@ class TErrorResult {
   operator const ErrorResult&() const;
   operator OOMReporter&();
 
+  // This method is deprecated.  Consumers should ThrowDOMException if they are
+  // throwing a DOMException.  If they have a random nsresult which may or may
+  // not correspond to a DOMException type, they should consider using an
+  // appropriate DOMException-type nsresult with an informative message and
+  // calling ThrowDOMException.
   void MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG Throw(nsresult rv) {
     MOZ_ASSERT(NS_FAILED(rv), "Please don't try throwing success");
     AssignErrorCode(rv);
@@ -368,7 +373,7 @@ class TErrorResult {
 
   // Backwards-compat to make conversion simpler.  We don't call
   // Throw() here because people can easily pass success codes to
-  // this.
+  // this.  This operator is deprecated and ideally shouldn't be used.
   void operator=(nsresult rv) { AssignErrorCode(rv); }
 
   bool Failed() const { return NS_FAILED(mResult); }
@@ -599,6 +604,7 @@ class ErrorResult : public binding_danger::TErrorResult<
 
   explicit ErrorResult(nsresult aRv) : BaseErrorResult(aRv) {}
 
+  // This operator is deprecated and ideally shouldn't be used.
   void operator=(nsresult rv) { BaseErrorResult::operator=(rv); }
 
   ErrorResult& operator=(ErrorResult&& aRHS) {
@@ -659,6 +665,7 @@ class CopyableErrorResult
 
   explicit CopyableErrorResult(nsresult aRv) : BaseErrorResult(aRv) {}
 
+  // This operator is deprecated and ideally shouldn't be used.
   void operator=(nsresult rv) { BaseErrorResult::operator=(rv); }
 
   CopyableErrorResult& operator=(CopyableErrorResult&& aRHS) {
