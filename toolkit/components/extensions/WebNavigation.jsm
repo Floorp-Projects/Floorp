@@ -23,6 +23,11 @@ ChromeUtils.defineModuleGetter(
   "UrlbarUtils",
   "resource:///modules/UrlbarUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "ClickHandlerParent",
+  "resource:///actors/ClickHandlerParent.jsm"
+);
 
 // Maximum amount of time that can be passed and still consider
 // the data recent (similar to how is done in nsNavHistory,
@@ -47,7 +52,8 @@ var Manager = {
 
     Services.obs.addObserver(this, "webNavigation-createdNavigationTarget");
 
-    Services.mm.addMessageListener("Content:Click", this);
+    ClickHandlerParent.addContentClickListener(this);
+
     Services.mm.addMessageListener("Extension:DOMContentLoaded", this);
     Services.mm.addMessageListener("Extension:StateChange", this);
     Services.mm.addMessageListener("Extension:DocumentChange", this);
@@ -65,7 +71,8 @@ var Manager = {
     Services.obs.removeObserver(this, "urlbar-user-start-navigation");
     Services.obs.removeObserver(this, "webNavigation-createdNavigationTarget");
 
-    Services.mm.removeMessageListener("Content:Click", this);
+    ClickHandlerParent.removeContentClickListener(this);
+
     Services.mm.removeMessageListener("Extension:StateChange", this);
     Services.mm.removeMessageListener("Extension:DocumentChange", this);
     Services.mm.removeMessageListener("Extension:HistoryChange", this);
@@ -303,10 +310,6 @@ var Manager = {
 
       case "Extension:DOMContentLoaded":
         this.onLoad(target, data);
-        break;
-
-      case "Content:Click":
-        this.onContentClick(target, data);
         break;
 
       case "Extension:CreatedNavigationTarget":
