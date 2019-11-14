@@ -5,9 +5,11 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  ProfileAge: "resource://gre/modules/ProfileAge.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
@@ -105,6 +107,19 @@ this.experiments_urlbar = class extends ExtensionAPI {
             let update = updateManager.activeUpdate;
             let errorCode = update ? update.errorCode : 0;
             return updateStateIs("pending") && errorCode != 0;
+          },
+
+          async lastBrowserUpdateDate() {
+            // Get the newest update in the update history.  This isn't perfect
+            // because these dates are when updates are applied, not when the
+            // user restarts with the update.  See bug 1595328.
+            if (updateManager.updateCount) {
+              let update = updateManager.getUpdateAt(0);
+              return update.installDate;
+            }
+            // Fall back to the profile age.
+            let age = await ProfileAge();
+            return (await age.firstUse) || age.created;
           },
         },
       },
