@@ -32,7 +32,7 @@ var eventOffsetY = 2;
 
 function openFullscreenWindow() {
     win = window.docShell.rootTreeItem.domWindow
-                .openDialog("bug665540_window.xul", "_blank", "resizable=yes,chrome", window);
+                .openDialog("bug665540_window.xhtml", "_blank", "resizable=yes,chrome", window);
     win.addEventListener("sizemodechange",
                          function() {
                            info("sizemodechange. windowState = " + win.windowState + " fullScreen = " + win.fullScreen);
