@@ -1830,24 +1830,15 @@ pk11_FindObjectsByTemplate(PK11SlotInfo *slot, CK_ATTRIBUTE *findTemplate,
 {
     CK_OBJECT_HANDLE *objID = NULL;
     CK_ULONG returned_count = 0;
-    PRBool owner = PR_TRUE;
-    CK_SESSION_HANDLE session;
-    PRBool haslock = PR_FALSE;
     CK_RV crv = CKR_SESSION_HANDLE_INVALID;
 
-    session = pk11_GetNewSession(slot, &owner);
-    haslock = (!owner || !(slot->isThreadSafe));
-    if (haslock) {
-        PK11_EnterSlotMonitor(slot);
-    }
-    if (session != CK_INVALID_SESSION) {
-        crv = PK11_GETTAB(slot)->C_FindObjectsInit(session,
+    PK11_EnterSlotMonitor(slot);
+    if (slot->session != CK_INVALID_SESSION) {
+        crv = PK11_GETTAB(slot)->C_FindObjectsInit(slot->session,
                                                    findTemplate, templCount);
     }
     if (crv != CKR_OK) {
-        if (haslock)
-            PK11_ExitSlotMonitor(slot);
-        pk11_CloseSession(slot, session, owner);
+        PK11_ExitSlotMonitor(slot);
         PORT_SetError(PK11_MapError(crv));
         *object_count = -1;
         return NULL;
@@ -1872,7 +1863,7 @@ pk11_FindObjectsByTemplate(PK11SlotInfo *slot, CK_ATTRIBUTE *findTemplate,
                 PORT_Free(oldObjID);
             break;
         }
-        crv = PK11_GETTAB(slot)->C_FindObjects(session,
+        crv = PK11_GETTAB(slot)->C_FindObjects(slot->session,
                                                &objID[*object_count], PK11_SEARCH_CHUNKSIZE, &returned_count);
         if (crv != CKR_OK) {
             PORT_SetError(PK11_MapError(crv));
@@ -1883,11 +1874,8 @@ pk11_FindObjectsByTemplate(PK11SlotInfo *slot, CK_ATTRIBUTE *findTemplate,
         *object_count += returned_count;
     } while (returned_count == PK11_SEARCH_CHUNKSIZE);
 
-    PK11_GETTAB(slot)->C_FindObjectsFinal(session);
-    if (haslock) {
-        PK11_ExitSlotMonitor(slot);
-    }
-    pk11_CloseSession(slot, session, owner);
+    PK11_GETTAB(slot)->C_FindObjectsFinal(slot->session);
+    PK11_ExitSlotMonitor(slot);
 
     if (objID && (*object_count == 0)) {
         PORT_Free(objID);

@@ -27,7 +27,6 @@
         'pk11_import_unittest.cc',
         'pk11_keygen.cc',
         'pk11_key_unittest.cc',
-        'pk11_module_unittest.cc',
         'pk11_pbkdf2_unittest.cc',
         'pk11_prf_unittest.cc',
         'pk11_prng_unittest.cc',
@@ -65,12 +64,6 @@
       ],
     }
   ],
-  'target_defaults': {
-    'defines': [
-      'DLL_PREFIX=\"<(dll_prefix)\"',
-      'DLL_SUFFIX=\"<(dll_suffix)\"'
-    ]
-  },
   'variables': {
     'module': 'nss'
   }
