@@ -10,6 +10,7 @@
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/StaticPrefs_media.h"
 #include <speex/speex_resampler.h>
 #include "nsXPCOMCIDInternal.h"
 #include "nsComponentManagerUtils.h"
@@ -79,6 +80,7 @@ class MediaDecodeTask final : public Runnable {
         mContainerType(aContainerType),
         mBuffer(aBuffer),
         mLength(aLength),
+        mBatchSize(StaticPrefs::media_rdd_webaudio_batch_size()),
         mDecodeJob(aDecodeJob),
         mPhase(PhaseEnum::Decode) {
     MOZ_ASSERT(aBuffer);
@@ -154,7 +156,8 @@ class MediaDecodeTask final : public Runnable {
  private:
   MediaContainerType mContainerType;
   uint8_t* mBuffer;
-  uint32_t mLength;
+  const uint32_t mLength;
+  const uint32_t mBatchSize;
   WebAudioDecodeJob& mDecodeJob;
   PhaseEnum mPhase;
   RefPtr<TaskQueue> mPDecoderTaskQueue;
@@ -311,9 +314,10 @@ void MediaDecodeTask::OnInitDecoderFailed() {
 void MediaDecodeTask::DoDemux() {
   MOZ_ASSERT(OnPDecoderTaskQueue());
 
-  mTrackDemuxer->GetSamples(1)->Then(PDecoderTaskQueue(), __func__, this,
-                                     &MediaDecodeTask::OnAudioDemuxCompleted,
-                                     &MediaDecodeTask::OnAudioDemuxFailed);
+  mTrackDemuxer->GetSamples(mBatchSize)
+      ->Then(PDecoderTaskQueue(), __func__, this,
+             &MediaDecodeTask::OnAudioDemuxCompleted,
+             &MediaDecodeTask::OnAudioDemuxFailed);
 }
 
 void MediaDecodeTask::OnAudioDemuxCompleted(
@@ -344,13 +348,29 @@ void MediaDecodeTask::DoDecode() {
     return;
   }
 
-  RefPtr<MediaRawData> sample = std::move(mRawSamples[0]);
+  if (mBatchSize > 1 && mDecoder->CanDecodeBatch()) {
+    nsTArray<RefPtr<MediaRawData>> rawSampleBatch;
+    const int batchSize = std::min((unsigned long)mBatchSize,
+                                   (unsigned long)mRawSamples.Length());
+    for (int i = 0; i < batchSize; ++i) {
+      rawSampleBatch.AppendElement(std::move(mRawSamples[i]));
+    }
 
-  mDecoder->Decode(sample)->Then(PDecoderTaskQueue(), __func__, this,
-                                 &MediaDecodeTask::OnAudioDecodeCompleted,
-                                 &MediaDecodeTask::OnAudioDecodeFailed);
+    mDecoder->DecodeBatch(std::move(rawSampleBatch))
+        ->Then(PDecoderTaskQueue(), __func__, this,
+               &MediaDecodeTask::OnAudioDecodeCompleted,
+               &MediaDecodeTask::OnAudioDecodeFailed);
 
-  mRawSamples.RemoveElementAt(0);
+    mRawSamples.RemoveElementsAt(0, batchSize);
+  } else {
+    RefPtr<MediaRawData> sample = std::move(mRawSamples[0]);
+
+    mDecoder->Decode(sample)->Then(PDecoderTaskQueue(), __func__, this,
+                                   &MediaDecodeTask::OnAudioDecodeCompleted,
+                                   &MediaDecodeTask::OnAudioDecodeFailed);
+
+    mRawSamples.RemoveElementAt(0);
+  }
 }
 
 void MediaDecodeTask::OnAudioDecodeCompleted(

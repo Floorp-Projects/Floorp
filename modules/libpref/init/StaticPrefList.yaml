@@ -5828,6 +5828,11 @@
 #endif
   mirror: always
 
+- name: media.rdd-webaudio.batch.size
+  type: RelaxedAtomicInt32
+  value: 100
+  mirror: always
+
 #ifdef ANDROID
   # Enable the MediaCodec PlatformDecoderModule by default.
 -   name: media.android-media-codec.enabled
