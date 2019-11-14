@@ -19,23 +19,22 @@ namespace dom {
  * create the event source when there is any existing controller and destroy it
  * when there is no controller.
  */
-class MediaControlKeysManager final {
+class MediaControlKeysManager final : public MediaControlKeysEventSource,
+                                      public MediaControlKeysEventListener {
  public:
+  NS_DECL_ISUPPORTS_INHERITED
   MediaControlKeysManager() = default;
-  ~MediaControlKeysManager();
 
-  // Return false when there is no event source created, so that we are not able
-  // to add or remove listener, otherwise, calling these methods should always
-  // succeed.
-  bool AddListener(MediaControlKeysEventListener* aListener);
-  bool RemoveListener(MediaControlKeysEventListener* aListener);
   void Init();
+
+  void OnKeyPressed(MediaControlKeysEvent aKeyEvent) override;
 
   // The callback function for monitoring the media controller amount changed
   // event.
   void ControllerAmountChanged(uint64_t aControllerAmount);
 
  private:
+  ~MediaControlKeysManager();
   void StartMonitoringControlKeys();
   void StopMonitoringControlKeys();
   void CreateEventSource();

@@ -39,7 +39,7 @@ class MediaControlService final : public nsIObserver {
   RefPtr<MediaController> GetOrCreateControllerById(const uint64_t aId) const;
   RefPtr<MediaController> GetControllerById(const uint64_t aId) const;
   AudioFocusManager& GetAudioFocusManager() { return mAudioFocusManager; }
-  MediaControlKeysManager& GetMediaControlKeysManager() {
+  MediaControlKeysEventSource* GetMediaControlKeysEventSource() {
     return mMediaControlKeysManager;
   }
 
@@ -70,7 +70,7 @@ class MediaControlService final : public nsIObserver {
   nsDataHashtable<nsUint64HashKey, RefPtr<MediaController>> mControllers;
   nsTArray<uint64_t> mControllerHistory;
   AudioFocusManager mAudioFocusManager;
-  MediaControlKeysManager mMediaControlKeysManager;
+  RefPtr<MediaControlKeysManager> mMediaControlKeysManager;
   RefPtr<MediaControlKeysEventListener> mMediaKeysHandlder;
   MediaEventProducer<uint64_t> mMediaControllerAmountChangedEvent;
 };
