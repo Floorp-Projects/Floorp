@@ -1095,6 +1095,16 @@
 ; installation time, then we don't get the opportunity to run this code at
 ; that time.
 !macro MigrateTaskBarShortcut
+  ; Find out if this is an ESR build or not, because it affects what we've
+  ; named some of our application registry keys.
+  ClearErrors
+  ${WordFind} "${UpdateChannel}" "esr" "E#" $3
+  ${If} ${Errors}
+    StrCpy $3 ""
+  ${Else}
+    StrCpy $3 " ESR"
+  ${EndIf}
+
   ${GetShortcutsLogPath} $0
   ${If} ${FileExists} "$0"
     ClearErrors
@@ -1102,7 +1112,9 @@
     ${If} ${Errors}
       ClearErrors
       WriteIniStr "$0" "TASKBAR" "Migrated" "true"
-      WriteINIStr "$0" "TASKBAR" "Pinned" "true"
+      WriteRegDWORD SHCTX \
+        "Software\Mozilla\${BrandFullNameInternal}\${AppVersion}$3 (${ARCH} ${AB_CD})\Main" \
+        "WasPinnedToTaskbar" 1
       ${If} ${AtLeastWin7}
         ; If we didn't run the stub installer, AddTaskbarSC will be empty.
         ; We determine whether to pin based on whether we're the default
@@ -1132,12 +1144,16 @@
         ; On Windows 10, we may have previously tried to make a taskbar pin
         ; and failed because the API we tried to use was blocked by the OS.
         ; We have an option that works in more cases now, so we're going to try
-        ; again, but also record that we've done so by writing "Pinned" into the
-        ; shortcuts log, so that we don't continue to do this repeatedly.
+        ; again, but also record that we've done so by writing a particular
+        ; registry value, so that we don't continue to do this repeatedly.
         ClearErrors
-        ReadINIStr $1 "$0" "TASKBAR" "Pinned"
+        ReadRegDWORD $2 SHCTX \
+            "Software\Mozilla\${BrandFullNameInternal}\${AppVersion}$3 (${ARCH} ${AB_CD})\Main" \
+            "WasPinnedToTaskbar"
         ${If} ${Errors}
-          WriteINIStr "$0" "TASKBAR" "Pinned" "true"
+          WriteRegDWORD SHCTX \
+            "Software\Mozilla\${BrandFullNameInternal}\${AppVersion}$3 (${ARCH} ${AB_CD})\Main" \
+            "WasPinnedToTaskbar" 1
           ${If} $AddTaskbarSC != "0"
             ${PinToTaskBar}
           ${EndIf}
