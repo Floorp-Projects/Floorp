@@ -1379,8 +1379,7 @@ nsSHistory::GotoIndex(int32_t aIndex) {
 NS_IMETHODIMP_(void)
 nsSHistory::EnsureCorrectEntryAtCurrIndex(nsISHEntry* aEntry) {
   int index = mRequestedIndex == -1 ? mIndex : mRequestedIndex;
-  MOZ_ASSERT(mIndex > -1);
-  if (mEntries[index] != aEntry) {
+  if (index > -1 && (mEntries[index] != aEntry)) {
     ReplaceEntry(index, aEntry);
   }
 }
