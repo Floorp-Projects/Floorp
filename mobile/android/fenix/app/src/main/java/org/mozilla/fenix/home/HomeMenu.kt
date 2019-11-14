@@ -32,7 +32,7 @@ class HomeMenu(
 
     val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
 
-    private val hasAccountProblem = context.components.backgroundServices.accountManager.accountNeedsReauth()
+    private val hasAccountProblem get() = context.components.backgroundServices.accountManager.accountNeedsReauth()
     private val primaryTextColor =
         ThemeManager.resolveAttribute(R.attr.primaryText, context)
 
