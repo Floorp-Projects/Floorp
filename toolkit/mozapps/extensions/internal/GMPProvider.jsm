@@ -348,11 +348,24 @@ GMPWrapper.prototype = {
     }
   },
 
+  /**
+   * Called by the addon manager to update GMP addons. For example this will be
+   * used if a user manually checks for GMP plugin updates by using the
+   * menu in about:addons.
+   *
+   * This function is not used if MediaKeySystemAccess is requested and
+   * Widevine is not yet installed, or if the user toggles prefs to enable EME.
+   * For the function used in those cases see `checkForUpdates`.
+   */
   findUpdates(aListener, aReason, aAppVersion, aPlatformVersion) {
     this._log.trace(
       "findUpdates() - " + this._plugin.id + " - reason=" + aReason
     );
 
+    // In the case of GMP addons we do not wish to implement AddonInstall, as
+    // we don't want to display information as in a normal addon install such
+    // as a download progress bar. As such, we short circuit our
+    // listeners by indicating that no updates exist (though some may).
     AddonManagerPrivate.callNoUpdateListeners(this, aListener);
 
     if (aReason === AddonManager.UPDATE_WHEN_PERIODIC_UPDATE) {
@@ -518,6 +531,12 @@ GMPWrapper.prototype = {
     }
   },
 
+  /**
+   * This is called if prefs are changed to enable EME, or if Widevine
+   * MediaKeySystemAccess is requested but the Widevine CDM is not installed.
+   *
+   * For the function used by the addon manager see `findUpdates`.
+   */
   checkForUpdates(delay) {
     if (this._isUpdateCheckPending) {
       return;
