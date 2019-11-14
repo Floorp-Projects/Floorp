@@ -9,7 +9,7 @@
   },
   "browserAction": {
     "url": "chrome://browser/content/parent/ext-browserAction.js",
-    "schema": "chrome://browser/content/schemas/browser_action.json",
+    "schema": "chrome://extensions/content/schemas/browser_action.json",
     "scopes": ["addon_parent"],
     "manifest": ["browser_action"],
     "paths": [
@@ -140,7 +140,7 @@
   },
   "pageAction": {
     "url": "chrome://browser/content/parent/ext-pageAction.js",
-    "schema": "chrome://browser/content/schemas/page_action.json",
+    "schema": "chrome://extensions/content/schemas/page_action.json",
     "scopes": ["addon_parent"],
     "manifest": ["page_action"],
     "paths": [
