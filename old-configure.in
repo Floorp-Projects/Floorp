@@ -308,15 +308,6 @@ if test -n "$COMPILE_ENVIRONMENT"; then
 fi
 
 dnl ========================================================
-dnl Add optional and non-optional hardening flags
-dnl ========================================================
-
-CFLAGS="$CFLAGS $MOZ_HARDENING_CFLAGS"
-CPPFLAGS="$CPPFLAGS $MOZ_HARDENING_CFLAGS"
-CXXFLAGS="$CXXFLAGS $MOZ_HARDENING_CFLAGS"
-LDFLAGS="$LDFLAGS $MOZ_HARDENING_LDFLAGS"
-
-dnl ========================================================
 dnl GNU specific defaults
 dnl ========================================================
 if test "$GNU_CC"; then

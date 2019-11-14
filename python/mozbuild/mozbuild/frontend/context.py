@@ -52,6 +52,12 @@ from types import FunctionType
 import itertools
 
 
+# The MOZ_HARDENING_CFLAGS and MOZ_HARDENING_LDFLAGS differ depending on whether
+# the context is under $TOPOBJDIR/js/src.
+def _context_under_js_src(context):
+    return mozpath.commonprefix([context.relsrcdir, 'js/src']) != ''
+
+
 class ContextDerivedValue(object):
     """Classes deriving from this one receive a special treatment in a
     Context. See Context documentation.
@@ -394,6 +400,11 @@ class LinkFlags(BaseCompileFlags):
 
         self.flag_variables = (
             ('OS', self._os_ldflags(), ('LDFLAGS',)),
+            ('MOZ_HARDENING_LDFLAGS',
+             (context.config.substs.get('MOZ_HARDENING_LDFLAGS_JS')
+              if _context_under_js_src(context) else
+              context.config.substs.get('MOZ_HARDENING_LDFLAGS')),
+             ('LDFLAGS')),
             ('DEFFILE', None, ('LDFLAGS',)),
             ('MOZBUILD', None, ('LDFLAGS',)),
             ('FIX_LINK_PATHS', context.config.substs.get('MOZ_FIX_LINK_PATHS'),
@@ -432,6 +443,11 @@ class CompileFlags(BaseCompileFlags):
             ('STL', context.config.substs.get('STL_FLAGS'), ('CXXFLAGS',)),
             ('VISIBILITY', context.config.substs.get('VISIBILITY_FLAGS'),
              ('CXXFLAGS', 'CFLAGS')),
+            ('MOZ_HARDENING_CFLAGS',
+             (context.config.substs.get('MOZ_HARDENING_CFLAGS_JS')
+              if _context_under_js_src(context) else
+              context.config.substs.get('MOZ_HARDENING_CFLAGS')),
+             ('CXXFLAGS', 'CFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
             ('DEFINES', None, ('CXXFLAGS', 'CFLAGS')),
             ('LIBRARY_DEFINES', None, ('CXXFLAGS', 'CFLAGS')),
             ('BASE_INCLUDES', ['-I%s' % main_src_dir, '-I%s' % context.objdir],

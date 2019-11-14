@@ -1622,10 +1622,10 @@ def security_hardening_cflags(hardening_flag, asan, debug, optimize, c_compiler,
     )
 
 
-add_old_configure_assignment('MOZ_HARDENING_CFLAGS', security_hardening_cflags.flags)
-add_old_configure_assignment('MOZ_HARDENING_LDFLAGS', security_hardening_cflags.ldflags)
-add_old_configure_assignment('MOZ_HARDENING_CFLAGS_JS', security_hardening_cflags.js_flags)
-add_old_configure_assignment('MOZ_HARDENING_LDFLAGS_JS', security_hardening_cflags.js_ldflags)
+set_config('MOZ_HARDENING_CFLAGS', security_hardening_cflags.flags)
+set_config('MOZ_HARDENING_LDFLAGS', security_hardening_cflags.ldflags)
+set_config('MOZ_HARDENING_CFLAGS_JS', security_hardening_cflags.js_flags)
+set_config('MOZ_HARDENING_LDFLAGS_JS', security_hardening_cflags.js_ldflags)
 
 
 # Frame pointers
