@@ -248,11 +248,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   void MaybeFlushPendingDiversion();
   void ResponseSynthesized();
 
-  void CrossProcessRedirectDone(
-      const nsresult& aResult,
-      const mozilla::Maybe<LoadInfoArgs>& aLoadInfoArgs);
-  void FinishCrossProcessSwitch(nsHttpChannel* aChannel, nsresult aStatus);
-
   // final step for Redirect2Verify procedure, will be invoked while both
   // redirecting and redirected channel are ready or any error happened.
   // OnRedirectVerifyCallback will be invoked for finishing the async

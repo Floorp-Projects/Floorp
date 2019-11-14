@@ -1230,57 +1230,6 @@ void HttpChannelParent::MaybeFlushPendingDiversion() {
   }
 }
 
-void HttpChannelParent::FinishCrossProcessSwitch(nsHttpChannel* aChannel,
-                                                 nsresult aStatus) {
-  if (NS_SUCCEEDED(aStatus)) {
-    nsCOMPtr<nsIRedirectResultListener> redirectListener;
-    NS_QueryNotificationCallbacks(aChannel, redirectListener);
-    MOZ_ASSERT(redirectListener);
-
-    // This updates ParentChannelListener to point to this parent and at
-    // the same time cancels the old channel.
-    redirectListener->OnRedirectResult(true);
-  }
-
-  aChannel->OnRedirectVerifyCallback(aStatus);
-}
-
-void HttpChannelParent::CrossProcessRedirectDone(
-    const nsresult& aResult,
-    const mozilla::Maybe<LoadInfoArgs>& aLoadInfoArgs) {
-  RefPtr<nsHttpChannel> chan = do_QueryObject(mChannel);
-  nsresult rv = aResult;
-  auto sendReply = MakeScopeExit([&]() { FinishCrossProcessSwitch(chan, rv); });
-
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  nsCOMPtr<nsILoadInfo> newLoadInfo;
-  rv = LoadInfoArgsToLoadInfo(aLoadInfoArgs, getter_AddRefs(newLoadInfo));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  if (newLoadInfo) {
-    chan->SetLoadInfo(newLoadInfo);
-  }
-
-  if (!mBgParent) {
-    sendReply.release();
-    RefPtr<HttpChannelParent> self = this;
-    WaitForBgParent()->Then(
-        GetMainThreadSerialEventTarget(), __func__,
-        [self, chan, aResult]() {
-          self->FinishCrossProcessSwitch(chan, aResult);
-        },
-        [self, chan](const nsresult& aRejectionRv) {
-          MOZ_ASSERT(NS_FAILED(aRejectionRv), "This should be an error code");
-          self->FinishCrossProcessSwitch(chan, aRejectionRv);
-        });
-  }
-}
-
 void HttpChannelParent::ResponseSynthesized() {
   // Suspend now even though the FinishSynthesizeResponse runnable has
   // not executed.  We want to suspend after we get far enough to trigger
