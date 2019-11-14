@@ -144,17 +144,14 @@ class FlattenedChildIterator : public ExplicitChildIterator {
         mOriginalContent(aOther.mOriginalContent),
         mXBLInvolved(aOther.mXBLInvolved) {}
 
+  // TODO(emilio): Rename to use shadow dom terminology.
   bool XBLInvolved() {
-    if (mXBLInvolved.isNothing()) {
-      mXBLInvolved = Some(ComputeWhetherXBLIsInvolved());
-    }
-    return *mXBLInvolved;
+    return mXBLInvolved;
   }
 
   const nsIContent* Parent() const { return mOriginalContent; }
 
  private:
-  bool ComputeWhetherXBLIsInvolved() const;
 
   void Init(bool aIgnoreXBL);
 
@@ -176,9 +173,7 @@ class FlattenedChildIterator : public ExplicitChildIterator {
  private:
   // For certain optimizations, nsCSSFrameConstructor needs to know if the child
   // list of the element that we're iterating matches its .childNodes.
-  //
-  // This is lazily computed when asked for it.
-  Maybe<bool> mXBLInvolved;
+  bool mXBLInvolved = false;
 };
 
 /**
