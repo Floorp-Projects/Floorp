@@ -2115,7 +2115,7 @@ bool nsContentUtils::IsCallerContentXBL() {
     return true;
   }
 
-  return xpc::IsContentXBLScope(realm);
+  return false;
 }
 
 bool nsContentUtils::IsCallerUAWidget() {
