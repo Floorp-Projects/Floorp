@@ -463,12 +463,13 @@ void UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame) {
   enum Schema : uint32_t {
     LOCATION = 0,
     RELEVANT_FOR_JS = 1,
-    IMPLEMENTATION = 2,
-    OPTIMIZATIONS = 3,
-    LINE = 4,
-    COLUMN = 5,
-    CATEGORY = 6,
-    SUBCATEGORY = 7
+    INNER_WINDOW_ID = 2,
+    IMPLEMENTATION = 3,
+    OPTIMIZATIONS = 4,
+    LINE = 5,
+    COLUMN = 6,
+    CATEGORY = 7,
+    SUBCATEGORY = 8
   };
 
   AutoArraySchemaWriter writer(mFrameTableWriter, *mUniqueStrings);
@@ -476,6 +477,11 @@ void UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame) {
   const NormalFrameData& data = aFrame.mData.as<NormalFrameData>();
   writer.StringElement(LOCATION, data.mLocation.get());
   writer.BoolElement(RELEVANT_FOR_JS, data.mRelevantForJS);
+
+  // It's okay to convert uint64_t to double here because DOM always creates IDs
+  // that are convertible to double.
+  writer.DoubleElement(INNER_WINDOW_ID, data.mInnerWindowID);
+
   if (data.mLine.isSome()) {
     writer.IntElement(LINE, *data.mLine);
   }
@@ -584,18 +590,24 @@ static void StreamJITFrame(JSContext* aContext, SpliceableJSONWriter& aWriter,
   enum Schema : uint32_t {
     LOCATION = 0,
     RELEVANT_FOR_JS = 1,
-    IMPLEMENTATION = 2,
-    OPTIMIZATIONS = 3,
-    LINE = 4,
-    COLUMN = 5,
-    CATEGORY = 6,
-    SUBCATEGORY = 7
+    INNER_WINDOW_ID = 2,
+    IMPLEMENTATION = 3,
+    OPTIMIZATIONS = 4,
+    LINE = 5,
+    COLUMN = 6,
+    CATEGORY = 7,
+    SUBCATEGORY = 8
   };
 
   AutoArraySchemaWriter writer(aWriter, aUniqueStrings);
 
   writer.StringElement(LOCATION, aJITFrame.label());
   writer.BoolElement(RELEVANT_FOR_JS, false);
+
+  // It's okay to convert uint64_t to double here because DOM always creates IDs
+  // that are convertible to double.
+  // Realm ID is the name of innerWindowID inside JS code.
+  writer.DoubleElement(INNER_WINDOW_ID, aJITFrame.realmID());
 
   JS::ProfilingFrameIterator::FrameKind frameKind = aJITFrame.frameKind();
   MOZ_ASSERT(frameKind == JS::ProfilingFrameIterator::Frame_Ion ||
