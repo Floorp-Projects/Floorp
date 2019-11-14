@@ -119,6 +119,10 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
+  // Temporarily disable the panel added in Bug 1594885.
+  // Should be cleaned up when the panel is properly implemented.
+  await pushPref("devtools.whatsnew.enabled", false);
+
   const tab = await addTab("about:blank");
   const toolbox = await openToolboxForTab(
     tab,
