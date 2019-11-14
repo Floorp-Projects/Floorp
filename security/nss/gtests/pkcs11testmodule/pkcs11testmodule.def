@@ -1,0 +1,8 @@
+;+NSS_3.48 { 	# NSS 3.48 release
+;+    global:
+LIBRARY pkcs11testmodule ;-
+EXPORTS ;-
+C_GetFunctionList;
+;+    local:
+;+       *;
+;+};

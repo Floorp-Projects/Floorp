@@ -111,6 +111,8 @@ struct PK11SlotInfoStr {
     CK_TOKEN_INFO tokenInfo;
     /* fast mechanism lookup */
     char mechanismBits[256];
+    CK_PROFILE_ID *profileList;
+    int profileCount;
 };
 
 /* Symetric Key structure. Reference Counted */

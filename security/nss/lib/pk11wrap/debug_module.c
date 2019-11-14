@@ -134,6 +134,7 @@ get_attr_type_str(CK_ATTRIBUTE_TYPE atype, char *str, int len)
         CASE(CKA_RESET_ON_INIT);
         CASE(CKA_HAS_RESET);
         CASE(CKA_VENDOR_DEFINED);
+        CASE(CKA_PROFILE_ID);
         CASE(CKA_NSS_URL);
         CASE(CKA_NSS_EMAIL);
         CASE(CKA_NSS_SMIME_INFO);
@@ -189,6 +190,7 @@ get_obj_class(CK_OBJECT_CLASS objClass, char *str, int len)
         CASE(CKO_SECRET_KEY);
         CASE(CKO_HW_FEATURE);
         CASE(CKO_DOMAIN_PARAMETERS);
+        CASE(CKO_PROFILE);
         CASE(CKO_NSS_CRL);
         CASE(CKO_NSS_SMIME);
         CASE(CKO_NSS_TRUST);
@@ -200,6 +202,27 @@ get_obj_class(CK_OBJECT_CLASS objClass, char *str, int len)
         PR_snprintf(str, len, "%s", a);
     else
         PR_snprintf(str, len, "0x%p", objClass);
+}
+
+static void
+get_profile_val(CK_PROFILE_ID profile, char *str, int len)
+{
+
+    const char *a = NULL;
+
+    switch (profile) {
+        CASE(CKP_INVALID_ID);
+        CASE(CKP_BASELINE_PROVIDER);
+        CASE(CKP_EXTENDED_PROVIDER);
+        CASE(CKP_AUTHENTICATION_TOKEN);
+        CASE(CKP_PUBLIC_CERTIFICATES_TOKEN);
+        default:
+            break;
+    }
+    if (a)
+        PR_snprintf(str, len, "%s", a);
+    else
+        PR_snprintf(str, len, "0x%p", profile);
 }
 
 static void
@@ -685,6 +708,14 @@ print_attr_value(CK_ATTRIBUTE_PTR attr)
                 len = PR_MIN(attr->ulValueLen + 1, sizeof valstr);
                 PR_snprintf(valstr, len, "%s", attr->pValue);
                 PR_LOG(modlog, 4, (fmt_s_qsq_d,
+                                   atype, valstr, attr->ulValueLen));
+                break;
+            }
+        case CKA_PROFILE_ID:
+            if (attr->ulValueLen > 0 && attr->pValue) {
+                CK_PROFILE_ID profile = *((CK_PROFILE_ID *)attr->pValue);
+                get_profile_val(profile, valstr, sizeof valstr);
+                PR_LOG(modlog, 4, (fmt_s_s_d,
                                    atype, valstr, attr->ulValueLen));
                 break;
             }
