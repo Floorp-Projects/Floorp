@@ -9,8 +9,9 @@ config = {
          'geckoview-docs',
          '--archive',
          '--upload', 'mozilla/geckoview',
-         '--upload-branch', 'gh-pages/javadoc/{project}',
-         '--upload-message', 'Update {project} javadoc to rev {revision}',
+         '--upload-branch', 'gh-pages'
+         '--javadoc-path', 'javadoc/{project}',
+         '--upload-message', 'Update {project} documentation to rev {revision}',
         ],
     ],
     'max_build_output_timeout': 0,
