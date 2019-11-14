@@ -1,24 +1,26 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:html="http://www.w3.org/1999/xhtml"
       class="reftest-wait">
   <head>
-    <bindings xmlns="http://www.mozilla.org/xbl">
-      <binding id="td">
-        <content>
-          <html:td><children/></html:td>
-        </content>
-      </binding>
-    </bindings>
-    <script>
+    <script><![CDATA[
+      customElements.define("custom-td", class extends HTMLDivElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: "open" });
+          let td = document.createElement('td');
+          td.append(document.createElement('slot'));
+          this.shadowRoot.append(td);
+        }
+      }, {
+        extends: "div",
+      });
       function f1() {
         document.getElementById("outer")
                 .appendChild(document.createTextNode("PASS"));
         document.documentElement.className = "";
       }
-    </script>
+    ]]></script>
   </head>
   <body onload="f1();">
-    <div id="outer" style="-moz-binding: url(#td)"/>
+    <div is="custom-td" id="outer"></div>
   </body>
-
 </html>

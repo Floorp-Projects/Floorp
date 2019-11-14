@@ -473,7 +473,7 @@ fuzzy-if(skiaContent,0-4,0-2) == 346774-1a.html 346774-1-ref.html
 fuzzy-if(skiaContent,0-4,0-2) == 346774-1b.html 346774-1-ref.html
 fuzzy-if(skiaContent,0-4,0-2) == 346774-1c.html 346774-1-ref.html
 == 347912-1.html 347912-1-ref.html
-skip-if(!xbl) == 348049-1.xhtml 348049-1-ref.xhtml
+== 348049-1.xhtml 348049-1-ref.xhtml
 == 348516-1.html 348516-1-ref.html
 == 348516-2.html 348516-2-ref.html
 != 348516-2.html 348516-2-notref.html
