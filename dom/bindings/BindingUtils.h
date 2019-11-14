@@ -54,6 +54,7 @@ enum UseCounter : int16_t;
 namespace dom {
 class CustomElementReactionsStack;
 class MessageManagerGlobal;
+class DedicatedWorkerGlobalScope;
 template <typename KeyType, typename ValueType>
 class Record;
 class WindowProxyHolder;
@@ -2812,6 +2813,10 @@ struct CreateGlobalOptions<nsGlobalWindowInner>
       ProtoAndIfaceCache::WindowLike;
 };
 
+uint64_t GetWindowID(void* aGlobal);
+uint64_t GetWindowID(nsGlobalWindowInner* aGlobal);
+uint64_t GetWindowID(DedicatedWorkerGlobalScope* aGlobal);
+
 // The return value is true if we created and successfully performed our part of
 // the setup for the global, false otherwise.
 //
@@ -2824,7 +2829,9 @@ bool CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
                   const JSClass* aClass, JS::RealmOptions& aOptions,
                   JSPrincipals* aPrincipal, bool aInitStandardClasses,
                   JS::MutableHandle<JSObject*> aGlobal) {
-  aOptions.creationOptions().setTrace(CreateGlobalOptions<T>::TraceGlobal);
+  aOptions.creationOptions()
+      .setTrace(CreateGlobalOptions<T>::TraceGlobal)
+      .setProfilerRealmID(GetWindowID(aNative));
   xpc::SetPrefableRealmOptions(aOptions);
 
   aGlobal.set(JS_NewGlobalObject(aCx, aClass, aPrincipal,

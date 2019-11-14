@@ -180,6 +180,12 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
+  uint64_t profilerRealmID() const { return profilerRealmID_; }
+  RealmCreationOptions& setProfilerRealmID(uint64_t id) {
+    profilerRealmID_ = id;
+    return *this;
+  }
+
  private:
   JSTraceOp traceGlobal_ = nullptr;
   CompartmentSpecifier compSpec_ = CompartmentSpecifier::NewCompartmentAndZone;
@@ -187,6 +193,7 @@ class JS_PUBLIC_API RealmCreationOptions {
     Compartment* comp_;
     Zone* zone_;
   };
+  uint64_t profilerRealmID_ = 0;
   bool invisibleToDebugger_ = false;
   bool mergeable_ = false;
   bool preserveJitCode_ = false;
