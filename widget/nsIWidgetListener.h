@@ -85,6 +85,10 @@ class nsIWidgetListener {
    */
   virtual void UIResolutionChanged();
 
+#if defined(MOZ_WIDGET_ANDROID)
+  virtual void DynamicToolbarMaxHeightChanged(mozilla::ScreenIntCoord aHeight);
+#endif
+
   /**
    * Called when the z-order of the window is changed. Returns true if the
    * notification was handled. aPlacement indicates the new z order. If

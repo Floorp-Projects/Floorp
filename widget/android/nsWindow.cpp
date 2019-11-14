@@ -982,6 +982,15 @@ class nsWindow::LayerViewSupport final
     mWindow->Resize(aLeft, aTop, aWidth, aHeight, /* repaint */ false);
   }
 
+  void SetDynamicToolbarMaxHeight(int32_t aHeight) {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (!mWindow) {
+      return;  // Already shut down.
+    }
+
+    mWindow->UpdateDynamicToolbarMaxHeight(ScreenIntCoord(aHeight));
+  }
+
   void SyncPauseCompositor() {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
@@ -1477,6 +1486,7 @@ nsWindow::nsWindow()
     : mScreenId(0),  // Use 0 (primary screen) as the default value.
       mIsVisible(false),
       mParent(nullptr),
+      mDynamicToolbarMaxHeight(0),
       mIsFullScreen(false),
       mIsDisablingWebRender(false) {}
 
@@ -2297,6 +2307,22 @@ void nsWindow::RecvScreenPixels(Shmem&& aMem, const ScreenIntSize& aSize) {
   MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
   if (NativePtr<LayerViewSupport>::Locked lvs{mLayerViewSupport}) {
     lvs->RecvScreenPixels(std::move(aMem), aSize);
+  }
+}
+
+void nsWindow::UpdateDynamicToolbarMaxHeight(ScreenIntCoord aHeight) {
+  if (mDynamicToolbarMaxHeight == aHeight) {
+    return;
+  }
+
+  mDynamicToolbarMaxHeight = aHeight;
+
+  if (mWidgetListener) {
+    mWidgetListener->DynamicToolbarMaxHeightChanged(aHeight);
+  }
+
+  if (mAttachedWidgetListener) {
+    mAttachedWidgetListener->DynamicToolbarMaxHeightChanged(aHeight);
   }
 }
 

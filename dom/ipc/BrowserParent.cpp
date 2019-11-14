@@ -908,6 +908,15 @@ void BrowserParent::InitRendering() {
   Unused << SendInitRendering(textureFactoryIdentifier, layersId,
                               mRemoteLayerTreeOwner.GetCompositorOptions(),
                               mRemoteLayerTreeOwner.IsLayersConnected());
+#if defined(MOZ_WIDGET_ANDROID)
+  if (XRE_IsParentProcess()) {
+    RefPtr<nsIWidget> widget = GetTopLevelWidget();
+    MOZ_ASSERT(widget);
+
+    Unused << SendDynamicToolbarMaxHeightChanged(
+        widget->GetDynamicToolbarMaxHeight());
+  }
+#endif
 }
 
 bool BrowserParent::AttachLayerManager() {
@@ -1081,6 +1090,14 @@ void BrowserParent::ThemeChanged() {
     Unused << SendThemeChanged(LookAndFeel::GetIntCache());
   }
 }
+
+#if defined(MOZ_WIDGET_ANDROID)
+void BrowserParent::DynamicToolbarMaxHeightChanged(ScreenIntCoord aHeight) {
+  if (!mIsDestroyed) {
+    Unused << SendDynamicToolbarMaxHeightChanged(aHeight);
+  }
+}
+#endif
 
 void BrowserParent::HandleAccessKey(const WidgetKeyboardEvent& aEvent,
                                     nsTArray<uint32_t>& aCharCodes) {
