@@ -55,14 +55,14 @@ function* doTest() {
   is(notificationCount, 1, "after created window");
 
   // Try loading in the window
-  testWin.location = "bug608669.xul";
+  testWin.location = "bug608669.xhtml";
   chromeWindow.onmessage = nextTest;
   yield undefined;
   is(notificationCount, 1, "after first load");
   is(testWin.x, "y", "reused window");
 
   // Try loading again in the window
-  testWin.location = "bug608669.xul?x";
+  testWin.location = "bug608669.xhtml?x";
   chromeWindow.onmessage = nextTest;
   yield undefined;
   is(notificationCount, 2, "after second load");
