@@ -84,7 +84,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
   }
 
   willDestroy() {
-    this.removeMouseButtonListeners();
+    this.stopTrackingMouseOverVideos();
     Services.prefs.removeObserver(TOGGLE_ENABLED_PREF, this.observerFunction);
   }
 
