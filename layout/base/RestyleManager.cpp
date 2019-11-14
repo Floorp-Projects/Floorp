@@ -3151,7 +3151,6 @@ static void VerifyFlatTree(const nsIContent& aContent) {
   for (auto* content = iter.GetNextChild(); content;
        content = iter.GetNextChild()) {
     MOZ_ASSERT(content->GetFlattenedTreeParentNodeForStyle() == &aContent);
-    MOZ_ASSERT(!content->IsActiveChildrenElement());
     VerifyFlatTree(*content);
   }
 }

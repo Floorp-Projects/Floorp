@@ -271,8 +271,6 @@ class nsIContent : public nsINode {
     return IsMathMLElement() && IsNodeInternal(aFirst, aArgs...);
   }
 
-  inline bool IsActiveChildrenElement() const;
-
   bool IsGeneratedContentContainerForBefore() const {
     return IsRootOfNativeAnonymousSubtree() &&
            mNodeInfo->NameAtom() == nsGkAtoms::mozgeneratedcontentbefore;
