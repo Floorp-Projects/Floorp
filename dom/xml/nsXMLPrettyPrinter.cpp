@@ -113,8 +113,8 @@ void nsXMLPrettyPrinter::MaybeUnhook(nsIContent* aContent) {
   // If it is not null but in the shadow tree or the <scrollbar> NACs,
   // the change was in the generated content, and it should be ignored.
   bool isGeneratedContent =
-      !aContent ? false
-                : aContent->GetBindingParent() || aContent->IsInShadowTree();
+      aContent &&
+      (aContent->IsInNativeAnonymousSubtree() || aContent->IsInShadowTree());
 
   if (!isGeneratedContent && !mUnhookPending) {
     // Can't blindly to mUnhookPending after AddScriptRunner,
