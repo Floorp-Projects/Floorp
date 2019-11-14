@@ -1577,10 +1577,6 @@ FontSizePrefs Gecko_GetBaseSize(nsAtom* aLanguage) {
   return sizes;
 }
 
-const Element* Gecko_GetBindingParent(const Element* aElement) {
-  return aElement->GetBindingParent();
-}
-
 static StaticRefPtr<UACacheReporter> gUACacheReporter;
 
 namespace mozilla {

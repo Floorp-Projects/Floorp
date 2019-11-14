@@ -561,10 +561,6 @@ mozilla::StyleGenericFontFamily Gecko_nsStyleFont_ComputeDefaultFontType(
 
 mozilla::FontSizePrefs Gecko_GetBaseSize(nsAtom* lang);
 
-// XBL related functions.
-const mozilla::dom::Element* Gecko_GetBindingParent(
-    const mozilla::dom::Element*);
-
 struct GeckoFontMetrics {
   nscoord mChSize;  // -1.0 indicates not found
   nscoord mXSize;
