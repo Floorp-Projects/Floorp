@@ -65,7 +65,6 @@ import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.ContentBlockingController;
 import org.mozilla.geckoview.DynamicToolbarAnimator;
 import org.mozilla.geckoview.GeckoDisplay;
-import org.mozilla.geckoview.GeckoResponse;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
@@ -170,19 +169,19 @@ package org.mozilla.geckoview {
     ctor public BasicSelectionActionDelegate(@NonNull Activity);
     ctor public BasicSelectionActionDelegate(@NonNull Activity, boolean);
     method public boolean areExternalActionsEnabled();
+    method public void clearSelection();
     method public void enableExternalActions(boolean);
+    method @Nullable public GeckoSession.SelectionActionDelegate.Selection getSelection();
+    method public boolean isActionAvailable();
     method public void onGetContentRect(@Nullable ActionMode, @Nullable View, @NonNull Rect);
-    method protected void clearSelection();
     method @NonNull protected String[] getAllActions();
     method protected boolean isActionAvailable(@NonNull String);
     method protected boolean performAction(@NonNull String, @NonNull MenuItem);
     method protected void prepareAction(@NonNull String, @NonNull MenuItem);
     field protected static final String ACTION_PROCESS_TEXT = "android.intent.action.PROCESS_TEXT";
     field @Nullable protected ActionMode mActionMode;
-    field @Nullable protected List<String> mActions;
     field @NonNull protected final Activity mActivity;
     field protected boolean mRepopulatedMenu;
-    field @Nullable protected GeckoResponse<String> mResponse;
     field @Nullable protected GeckoSession.SelectionActionDelegate.Selection mSelection;
     field @Nullable protected GeckoSession mSession;
     field @NonNull protected final Matrix mTempMatrix;
@@ -402,10 +401,6 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public GeckoDisplay.ScreenshotBuilder size(int, int);
     method @AnyThread @NonNull public GeckoDisplay.ScreenshotBuilder source(int, int, int, int);
     method @AnyThread @NonNull public GeckoDisplay.ScreenshotBuilder source(@NonNull Rect);
-  }
-
-  public interface GeckoResponse<T> {
-    method @AnyThread public void respond(@Nullable T);
   }
 
   @AnyThread public class GeckoResult<T> {
@@ -1021,7 +1016,7 @@ package org.mozilla.geckoview {
 
   public static interface GeckoSession.SelectionActionDelegate {
     method @UiThread default public void onHideAction(@NonNull GeckoSession, int);
-    method @UiThread default public void onShowActionRequest(@NonNull GeckoSession, @NonNull GeckoSession.SelectionActionDelegate.Selection, @NonNull String[], @NonNull GeckoResponse<String>);
+    method @UiThread default public void onShowActionRequest(@NonNull GeckoSession, @NonNull GeckoSession.SelectionActionDelegate.Selection);
     field public static final String ACTION_COLLAPSE_TO_END = "org.mozilla.geckoview.COLLAPSE_TO_END";
     field public static final String ACTION_COLLAPSE_TO_START = "org.mozilla.geckoview.COLLAPSE_TO_START";
     field public static final String ACTION_COPY = "org.mozilla.geckoview.COPY";
@@ -1042,6 +1037,18 @@ package org.mozilla.geckoview {
 
   public static class GeckoSession.SelectionActionDelegate.Selection {
     ctor protected Selection();
+    method @AnyThread public void collapseToEnd();
+    method @AnyThread public void collapseToStart();
+    method @AnyThread public void copy();
+    method @AnyThread public void cut();
+    method @AnyThread public void delete();
+    method @AnyThread public void execute(@NonNull String);
+    method @AnyThread public void hide();
+    method @AnyThread public boolean isActionAvailable(@NonNull String);
+    method @AnyThread public void paste();
+    method @AnyThread public void selectAll();
+    method @AnyThread public void unselect();
+    field @NonNull public final Collection<String> availableActions;
     field @Nullable public final RectF clientRect;
     field public final int flags;
     field @NonNull public final String text;

@@ -4,8 +4,6 @@
 
 package org.mozilla.geckoview.test
 
-import org.mozilla.geckoview.GeckoResponse
-import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.SelectionActionDelegate.*
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
@@ -27,6 +25,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameter
 import org.junit.runners.Parameterized.Parameters
+import org.mozilla.geckoview.GeckoSession
 
 @MediumTest
 @RunWith(Parameterized::class)
@@ -195,7 +194,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
 
     /** Main method that performs test logic. */
     private fun testThat(content: SelectedContent,
-                         respondingWith: (GeckoResponse<String>) -> Unit,
+                         respondingWith: (Selection) -> Unit,
                          result: (SelectedContent) -> Unit,
                          vararg sideEffects: (SelectedContent) -> Unit) {
 
@@ -211,15 +210,15 @@ class SelectionActionDelegateTest : BaseSessionTest() {
                 "layout.accessiblecaret.script_change_update_mode" to 2))
 
         mainSession.delegateDuringNextWait(object : Callbacks.SelectionActionDelegate {
-            override fun onShowActionRequest(session: GeckoSession, selection: GeckoSession.SelectionActionDelegate.Selection, actions: Array<out String>, response: GeckoResponse<String>) {
-                respondingWith(response)
+            override fun onShowActionRequest(session: GeckoSession, selection: GeckoSession.SelectionActionDelegate.Selection) {
+                respondingWith(selection)
             }
         })
 
         content.select()
         mainSession.waitUntilCalled(object : Callbacks.SelectionActionDelegate {
             @AssertCalled(count = 1)
-            override fun onShowActionRequest(session: GeckoSession, selection: Selection, actions: Array<out String>, response: GeckoResponse<String>) {
+            override fun onShowActionRequest(session: GeckoSession, selection: Selection) {
                 assertThat("Initial content should match",
                            selection.text, equalTo(content.initialContent))
             }
@@ -361,12 +360,12 @@ class SelectionActionDelegateTest : BaseSessionTest() {
 
     /** Lambda for responding with certain actions. */
 
-    private fun withResponse(vararg actions: String): (GeckoResponse<String>) -> Unit {
+    private fun withResponse(vararg actions: String): (Selection) -> Unit {
         var responded = false
         return { response ->
             if (!responded) {
                 responded = true
-                actions.forEach { response.respond(it) }
+                actions.forEach { response.execute(it) }
             }
         }
     }
@@ -378,14 +377,14 @@ class SelectionActionDelegateTest : BaseSessionTest() {
                                      expectedActions: Array<out String>) = { it: SelectedContent ->
         mainSession.forCallbacksDuringWait(object : Callbacks.SelectionActionDelegate {
             @AssertCalled(count = 1)
-            override fun onShowActionRequest(session: GeckoSession, selection: GeckoSession.SelectionActionDelegate.Selection, actions: Array<out String>, response: GeckoResponse<String>) {
+            override fun onShowActionRequest(session: GeckoSession, selection: GeckoSession.SelectionActionDelegate.Selection) {
                 assertThat("Selection text should be valid",
                            selection.text, equalTo(it.initialContent))
                 assertThat("Selection flags should be valid",
                            selection.flags, equalTo(expectedFlags))
                 assertThat("Selection rect should be valid",
                            selection.clientRect!!.isEmpty, equalTo(false))
-                assertThat("Actions must be valid", actions,
+                assertThat("Actions must be valid", selection.availableActions.toTypedArray(),
                            arrayContainingInAnyOrder(*expectedActions))
             }
         })
@@ -404,7 +403,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
     private fun changesSelectionTo(matcher: Matcher<String>) = { _: SelectedContent ->
         sessionRule.waitUntilCalled(object : Callbacks.SelectionActionDelegate {
             @AssertCalled(count = 1)
-            override fun onShowActionRequest(session: GeckoSession, selection: Selection, actions: Array<out String>, response: GeckoResponse<String>) {
+            override fun onShowActionRequest(session: GeckoSession, selection: Selection) {
                 assertThat("New selection text should match", selection.text, matcher)
             }
         })
