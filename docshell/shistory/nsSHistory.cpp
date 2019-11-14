@@ -831,10 +831,8 @@ nsSHistory::EvictAllContentViewers() {
 }
 
 static nsresult LoadURI(nsSHistory::LoadEntryResult& aLoadResult) {
-  nsCOMPtr<nsIDocShell> docShell = aLoadResult.mBrowsingContext->GetDocShell();
-  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-
-  return docShell->LoadURI(aLoadResult.mLoadState, false);
+  return aLoadResult.mBrowsingContext->LoadURI(nullptr, aLoadResult.mLoadState,
+                                               false);
 }
 
 NS_IMETHODIMP
