@@ -354,10 +354,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   uint8_t mNeedFlowControl : 1;
   uint8_t mSuspendedForFlowControl : 1;
 
-  // The child channel was cancelled, as the consumer was relocated to another
-  // process.
-  uint8_t mDoingCrossProcessRedirect : 1;
-
   // Number of events to wait before actually invoking AsyncOpen on the main
   // channel. For each asynchronous step required before InvokeAsyncOpen, should
   // increase 1 to mAsyncOpenBarrier and invoke TryInvokeAsyncOpen after
