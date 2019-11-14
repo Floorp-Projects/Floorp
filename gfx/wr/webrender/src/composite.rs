@@ -137,9 +137,19 @@ struct Occluder {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct CompositeState {
+    // TODO(gw): Consider splitting up CompositeState into separate struct types depending
+    //           on the selected compositing mode. Many of the fields in this state struct
+    //           are only applicable to either Native or Draw compositing mode.
+    /// List of tiles to be drawn by the native compositor. These are added in draw order
+    /// and not separated by kind (opacity is a property of the native surface).
+    pub native_tiles: Vec<CompositeTile>,
+    /// List of opaque tiles to be drawn by the Draw compositor.
     pub opaque_tiles: Vec<CompositeTile>,
+    /// List of alpha tiles to be drawn by the Draw compositor.
     pub alpha_tiles: Vec<CompositeTile>,
+    /// List of clear tiles to be drawn by the Draw compositor.
     pub clear_tiles: Vec<CompositeTile>,
+    /// Used to generate z-id values for tiles in the Draw compositor mode.
     pub z_generator: ZBufferIdGenerator,
     // If false, we can't rely on the dirty rects in the CompositeTile
     // instances. This currently occurs during a scroll event, as a
@@ -179,6 +189,7 @@ impl CompositeState {
         }
 
         CompositeState {
+            native_tiles: Vec::new(),
             opaque_tiles: Vec::new(),
             alpha_tiles: Vec::new(),
             clear_tiles: Vec::new(),
@@ -272,6 +283,48 @@ impl CompositeState {
 
         // Check if the tile area is completely covered
         ref_area == cover_area
+    }
+
+    /// Add a tile to the appropriate array, depending on tile properties and compositor mode.
+    pub fn push_tile(
+        &mut self,
+        tile: CompositeTile,
+        is_opaque: bool,
+    ) {
+        match (self.compositor_kind, &tile.surface) {
+            (CompositorKind::Draw { .. }, CompositeTileSurface::Color { .. }) => {
+                // Color tiles are, by definition, opaque. We might support non-opaque color
+                // tiles if we ever find pages that have a lot of these.
+                self.opaque_tiles.push(tile);
+            }
+            (CompositorKind::Draw { .. }, CompositeTileSurface::Clear) => {
+                // Clear tiles have a special bucket
+                self.clear_tiles.push(tile);
+            }
+            (CompositorKind::Draw { .. }, CompositeTileSurface::Texture { .. }) => {
+                // Texture surfaces get bucketed by opaque/alpha, for z-rejection
+                // on the Draw compositor mode.
+                if is_opaque {
+                    self.opaque_tiles.push(tile);
+                } else {
+                    self.alpha_tiles.push(tile);
+                }
+            }
+            (CompositorKind::Native { .. }, CompositeTileSurface::Color { .. }) => {
+                // Native compositor doesn't (yet) support color surfaces.
+                unreachable!();
+            }
+            (CompositorKind::Native { .. }, CompositeTileSurface::Clear) => {
+                // Native compositor doesn't support color surfaces.
+                unreachable!();
+            }
+            (CompositorKind::Native { .. }, CompositeTileSurface::Texture { .. }) => {
+                // Native tiles are supplied to the OS compositor in draw order,
+                // since there is no z-buffer involved (opacity is supplied as part
+                // of the surface properties).
+                self.native_tiles.push(tile);
+            }
+        }
     }
 }
 
