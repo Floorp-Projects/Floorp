@@ -185,6 +185,152 @@ add_task(async function() {
       "#section-1",
       null,
     ],
+    ["Tabindex -1 should not report an element as focusable", "#main", null],
+    [
+      "Not keyboard focusable element with no focus styling.",
+      "#not-keyboard-focusable-1",
+      null,
+    ],
+    ["Interactive grid that is not focusable.", "#grid-1", null],
+    ["Focusable interactive grid.", "#grid-2", null],
+    [
+      "Non interactive ARIA table does not need to be focusable.",
+      "#table-1",
+      null,
+    ],
+    [
+      "Focusable ARIA table does not have interactive semantics",
+      "#table-2",
+      { score: "WARNING", issue: "FOCUSABLE_NO_SEMANTICS" },
+    ],
+    ["Non interactive table does not need to be focusable.", "#table-3", null],
+    [
+      "Focusable table does not have interactive semantics",
+      "#table-4",
+      { score: "WARNING", issue: "FOCUSABLE_NO_SEMANTICS" },
+    ],
+    [
+      "Article that is not focusable is not considered interactive",
+      "#article-1",
+      null,
+    ],
+    ["Focusable article is considered interactive", "#article-2", null],
+    [
+      "Column header that is not focusable is not considered interactive (ARIA grid)",
+      "#columnheader-1",
+      null,
+    ],
+    [
+      "Column header that is not focusable is not considered interactive (ARIA table)",
+      "#columnheader-2",
+      null,
+    ],
+    [
+      "Column header that is not focusable is not considered interactive (table)",
+      "#columnheader-3",
+      null,
+    ],
+    [
+      "Column header that is focusable is considered interactive (table)",
+      "#columnheader-4",
+      null,
+    ],
+    [
+      "Column header that is not focusable is not considered interactive (table as ARIA grid)",
+      "#columnheader-5",
+      null,
+    ],
+    [
+      "Column header that is focusable is considered interactive (table as ARIA grid)",
+      "#columnheader-6",
+      null,
+    ],
+    [
+      "Row header that is not focusable is not considered interactive",
+      "#rowheader-1",
+      null,
+    ],
+    [
+      "Row header that is not focusable is not considered interactive",
+      "#rowheader-2",
+      null,
+    ],
+    [
+      "Row header that is not focusable is not considered interactive",
+      "#rowheader-3",
+      null,
+    ],
+    [
+      "Row header that is focusable is considered interactive",
+      "#rowheader-4",
+      null,
+    ],
+    [
+      "Row header that is not focusable is not considered interactive (table as ARIA grid)",
+      "#rowheader-5",
+      null,
+    ],
+    [
+      "Row header that is focusable is considered interactive (table as ARIA grid)",
+      "#rowheader-6",
+      null,
+    ],
+    [
+      "Gridcell that is not focusable is not considered interactive (ARIA grid)",
+      "#gridcell-1",
+      null,
+    ],
+    [
+      "Gridcell that is focusable is considered interactive (ARIA grid)",
+      "#gridcell-2",
+      null,
+    ],
+    [
+      "Gridcell that is not focusable is not considered interactive (table as ARIA grid)",
+      "#gridcell-3",
+      null,
+    ],
+    [
+      "Gridcell that is focusable is considered interactive (table as ARIA grid)",
+      "#gridcell-4",
+      null,
+    ],
+    [
+      "Tab list that is not focusable is not considered interactive",
+      "#tablist-1",
+      null,
+    ],
+    ["Focusable tab list is considered interactive", "#tablist-2", null],
+    [
+      "Scrollbar that is not focusable is not considered interactive",
+      "#scrollbar-1",
+      null,
+    ],
+    ["Focusable scrollbar is considered interactive", "#scrollbar-2", null],
+    [
+      "Separator that is not focusable is not considered interactive",
+      "#separator-1",
+      null,
+    ],
+    ["Focusable separator is considered interactive", "#separator-2", null],
+    [
+      "Toolbar that is not focusable is not considered interactive",
+      "#toolbar-1",
+      null,
+    ],
+    ["Focusable toolbar is considered interactive", "#toolbar-2", null],
+    [
+      "Menu popup that is not focusable is not considered interactive",
+      "#menu-1",
+      null,
+    ],
+    ["Focusable menu popup is considered interactive", "#menu-2", null],
+    [
+      "Menubar that is not focusable is not considered interactive",
+      "#menubar-1",
+      null,
+    ],
+    ["Focusable menubar is considered interactive", "#menubar-2", null],
   ];
 
   for (const [description, selector, expected] of tests) {
