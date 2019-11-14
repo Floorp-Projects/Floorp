@@ -35,7 +35,8 @@ nsTraversal::~nsTraversal() { /* destructor code */
  * @param aResult   Whether we succeeded
  * @returns         Filtervalue. See NodeFilter.webidl
  */
-int16_t nsTraversal::TestNode(nsINode* aNode, mozilla::ErrorResult& aResult) {
+int16_t nsTraversal::TestNode(nsINode* aNode, mozilla::ErrorResult& aResult,
+                              nsCOMPtr<nsINode>* aUnskippedNode) {
   if (mInAcceptNode) {
     aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return 0;
@@ -45,6 +46,10 @@ int16_t nsTraversal::TestNode(nsINode* aNode, mozilla::ErrorResult& aResult) {
 
   if (nodeType <= 12 && !((1 << (nodeType - 1)) & mWhatToShow)) {
     return NodeFilter_Binding::FILTER_SKIP;
+  }
+
+  if (aUnskippedNode) {
+    *aUnskippedNode = aNode;
   }
 
   if (!mFilter) {

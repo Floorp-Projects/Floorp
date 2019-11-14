@@ -33,11 +33,14 @@ class nsTraversal {
   /*
    * Tests if and how a node should be filtered. Uses mWhatToShow and
    * mFilter to test the node.
-   * @param aNode     Node to test
-   * @param aResult   Whether we succeeded
-   * @returns         Filtervalue. See NodeFilter.webidl
+   * @param aNode          Node to test
+   * @param aResult        Whether we succeeded
+   * @param aUnskippedNode If non-null is passed, set to aNode if node isn't
+   *                       filtered out by mWhatToShow.
+   * @returns              Filtervalue. See NodeFilter.webidl
    */
-  int16_t TestNode(nsINode* aNode, mozilla::ErrorResult& aResult);
+  int16_t TestNode(nsINode* aNode, mozilla::ErrorResult& aResult,
+                   nsCOMPtr<nsINode>* aUnskippedNode = nullptr);
 };
 
 #endif
