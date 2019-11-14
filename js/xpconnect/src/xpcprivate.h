@@ -2648,8 +2648,7 @@ class CompartmentPrivate {
 
     // Don't share if we have any weird state set.
     return !wantXrays && !isWebExtensionContentScript &&
-           !isContentXBLCompartment && !isUAWidgetCompartment &&
-           !universalXPConnectEnabled &&
+           !isUAWidgetCompartment && !universalXPConnectEnabled &&
            mScope->XBLScopeStateMatches(principal);
   }
 
@@ -2676,10 +2675,6 @@ class CompartmentPrivate {
   // to opt into CPOWs. It's necessary for the implementation of
   // RemoteAddonsParent.jsm.
   bool allowCPOWs;
-
-  // True if this compartment is a content XBL compartment. Every global in
-  // such a compartment is a content XBL scope.
-  bool isContentXBLCompartment;
 
   // True if this compartment is a UA widget compartment.
   bool isUAWidgetCompartment;
