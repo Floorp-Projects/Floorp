@@ -144,6 +144,9 @@ class DOMMediaStream : public DOMEventTargetHelper,
 
   // NON-WebIDL
 
+  // Returns true if this stream contains a live audio track.
+  bool Audible() const;
+
   /**
    * Returns true if this DOMMediaStream has aTrack in mTracks.
    */
@@ -185,10 +188,6 @@ class DOMMediaStream : public DOMEventTargetHelper,
   // UnregisterTrackListener before being destroyed, so we don't hold on to
   // a dead pointer. Main thread only.
   void UnregisterTrackListener(TrackListener* aListener);
-
-  // Tells this MediaStream whether it can go inactive as soon as no tracks
-  // are live anymore.
-  void SetFinishedOnInactive(bool aFinishedOnInactive);
 
  protected:
   virtual ~DOMMediaStream();
@@ -240,10 +239,6 @@ class DOMMediaStream : public DOMEventTargetHelper,
 
   // True if this stream has live audio tracks.
   bool mAudible = false;
-
-  // For compatibility with mozCaptureStream, we in some cases do not go
-  // inactive until the MediaDecoder lets us. (Remove this in Bug 1302379)
-  bool mFinishedOnInactive = true;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DOMMediaStream, NS_DOMMEDIASTREAM_IID)

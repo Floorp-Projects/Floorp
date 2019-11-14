@@ -59,6 +59,7 @@ class ChannelMediaDecoder
   };
 
  protected:
+  void ShutdownInternal() override;
   void OnPlaybackEvent(MediaPlaybackEvent&& aEvent) override;
   void DurationChanged() override;
   void MetadataLoaded(UniquePtr<MediaInfo> aInfo, UniquePtr<MetadataTags> aTags,
@@ -156,6 +157,10 @@ class ChannelMediaDecoder
   // True if we've been notified that the ChannelMediaResource has
   // a principal.
   bool mInitialChannelPrincipalKnown = false;
+
+  // Set in Shutdown() when we start closing mResource, if mResource is set.
+  // Must resolve before we unregister the shutdown blocker.
+  RefPtr<GenericPromise> mResourceClosePromise;
 };
 
 }  // namespace mozilla

@@ -49,7 +49,6 @@ nsIContent* ExplicitChildIterator::GetNextChild() {
   } else if (mDefaultChild) {
     // If we're already in default content, check if there are more nodes there
     MOZ_ASSERT(mChild);
-    MOZ_ASSERT(mChild->IsActiveChildrenElement());
 
     mDefaultChild = mDefaultChild->GetNextSibling();
     if (mDefaultChild) {
@@ -77,24 +76,11 @@ nsIContent* ExplicitChildIterator::GetNextChild() {
     mChild = mChild->GetNextSibling();
   }
 
-  // Iterate until we find a non-insertion point, or an insertion point with
-  // content.
-  while (mChild) {
-    if (mChild->IsActiveChildrenElement()) {
-      MOZ_ASSERT_UNREACHABLE("This needs to be revisited");
-    } else {
-      // mChild is not an insertion point, thus it is the next node to
-      // return from this iterator.
-      break;
-    }
-  }
-
   return mChild;
 }
 
 void FlattenedChildIterator::Init(bool aIgnoreXBL) {
   if (aIgnoreXBL) {
-    mXBLInvolved = Some(false);
     return;
   }
 
@@ -103,35 +89,14 @@ void FlattenedChildIterator::Init(bool aIgnoreXBL) {
   if (mParent->IsElement()) {
     if (ShadowRoot* shadow = mParent->AsElement()->GetShadowRoot()) {
       mParent = shadow;
-      mXBLInvolved = Some(true);
+      mXBLInvolved = true;
+      return;
+    }
+    if (mParentAsSlot) {
+      mXBLInvolved = true;
       return;
     }
   }
-}
-
-bool FlattenedChildIterator::ComputeWhetherXBLIsInvolved() const {
-  MOZ_ASSERT(mXBLInvolved.isNothing());
-  // We set mXBLInvolved to true if either the node we're iterating has a
-  // binding with content attached to it (in which case it is handled in Init),
-  // the node is generated XBL content and has an <xbl:children> child, or the
-  // node is a <slot> element.
-  if (!mParent->GetBindingParent()) {
-    return false;
-  }
-
-  if (mParentAsSlot) {
-    return true;
-  }
-
-  for (nsIContent* child = mParent->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    if (child->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
-      MOZ_ASSERT(child->GetBindingParent());
-      return true;
-    }
-  }
-
-  return false;
 }
 
 bool ExplicitChildIterator::Seek(const nsIContent* aChildToFind) {
@@ -143,7 +108,6 @@ bool ExplicitChildIterator::Seek(const nsIContent* aChildToFind) {
     mIndexInInserted = 0;
     mDefaultChild = nullptr;
     mIsFirst = false;
-    MOZ_ASSERT(!mChild->IsActiveChildrenElement());
     return true;
   }
 
@@ -214,18 +178,6 @@ nsIContent* ExplicitChildIterator::GetPreviousChild() {
     }
 
     mChild = mParent->GetLastChild();
-  }
-
-  // Iterate until we find a non-insertion point, or an insertion point with
-  // content.
-  while (mChild) {
-    if (mChild->IsActiveChildrenElement()) {
-      MOZ_ASSERT_UNREACHABLE("This needs to be revisited");
-    } else {
-      // mChild is not an insertion point, thus it is the next node to
-      // return from this iterator.
-      break;
-    }
   }
 
   if (!mChild) {

@@ -27,7 +27,7 @@ const {
 const SplitBox = createFactory(
   require("devtools/client/shared/components/splitter/SplitBox")
 );
-const RequestList = createFactory(require("./RequestList"));
+const RequestList = createFactory(require("./request-list/RequestList"));
 const Toolbar = createFactory(require("./Toolbar"));
 
 loader.lazyGetter(this, "NetworkDetailsPanel", function() {

@@ -112,7 +112,13 @@ const int32_t kDefaultDataThresholdBytes = 1024 * 1024;  // 1MB
 // The maximal size of a serialized object to be transfered through IPC.
 const int32_t kDefaultMaxSerializedMsgSize = IPC::Channel::kMaximumMessageSize;
 
-const int32_t kDefaultMaxPreloadExtraRecords = 0;
+// The maximum number of records to preload (in addition to the one requested by
+// the child).
+//
+// TODO: The current number was chosen for no particular reason. Telemetry
+// should be added to determine whether this is a reasonable number for an
+// overwhelming majority of cases.
+const int32_t kDefaultMaxPreloadExtraRecords = 64;
 
 #define IDB_PREF_BRANCH_ROOT "dom.indexedDB."
 

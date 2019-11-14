@@ -148,7 +148,9 @@ nsresult CloneableWithRangeMediaResource::Open(
   return NS_OK;
 }
 
-nsresult CloneableWithRangeMediaResource::Close() { return NS_OK; }
+RefPtr<GenericPromise> CloneableWithRangeMediaResource::Close() {
+  return GenericPromise::CreateAndResolve(true, __func__);
+}
 
 already_AddRefed<nsIPrincipal>
 CloneableWithRangeMediaResource::GetCurrentPrincipal() {

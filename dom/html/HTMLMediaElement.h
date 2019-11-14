@@ -113,6 +113,26 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   typedef mozilla::MediaDecoderOwner MediaDecoderOwner;
   typedef mozilla::MetadataTags MetadataTags;
 
+  // Helper struct to keep track of the MediaStreams returned by
+  // mozCaptureStream(). For each OutputMediaStream, dom::MediaTracks get
+  // captured into MediaStreamTracks which get added to
+  // OutputMediaStream::mStream.
+  struct OutputMediaStream {
+    OutputMediaStream(RefPtr<DOMMediaStream> aStream, bool aCapturingAudioOnly,
+                      bool aFinishWhenEnded);
+    ~OutputMediaStream();
+
+    RefPtr<DOMMediaStream> mStream;
+    const bool mCapturingAudioOnly;
+    const bool mFinishWhenEnded;
+    // If mFinishWhenEnded is true, this is the URI of the first resource
+    // mStream got tracks for, if not a MediaStream.
+    nsCOMPtr<nsIURI> mFinishWhenEndedLoadingSrc;
+    // If mFinishWhenEnded is true, this is the first MediaStream mStream got
+    // tracks for, if not a resource.
+    RefPtr<DOMMediaStream> mFinishWhenEndedAttrStream;
+  };
+
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(HTMLMediaElement)
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
@@ -251,7 +271,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   void DispatchAsyncEvent(const nsAString& aName) final;
 
   // Triggers a recomputation of readyState.
-  void UpdateReadyState() override { UpdateReadyStateInternal(); }
+  void UpdateReadyState() override {
+    mWatchManager.ManualNotify(&HTMLMediaElement::UpdateReadyStateInternal);
+  }
 
   // Dispatch events that were raised while in the bfcache
   nsresult DispatchPendingMediaEvents();
@@ -693,10 +715,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   Document* GetDocument() const override;
 
-  void ConstructMediaTracks(const MediaInfo* aInfo) override;
-
-  void RemoveMediaTracks() override;
-
   already_AddRefed<GMPCrashHelper> CreateGMPCrashHelper() override;
 
   nsISerialEventTarget* MainThreadEventTarget() {
@@ -729,36 +747,16 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   class AudioChannelAgentCallback;
   class ChannelLoader;
   class ErrorSink;
+  class MediaElementTrackSource;
   class MediaLoadListener;
   class MediaStreamRenderer;
   class MediaStreamTrackListener;
   class FirstFrameListener;
   class ShutdownObserver;
-  class StreamCaptureTrackSource;
 
   MediaDecoderOwner::NextFrameStatus NextFrameStatus();
 
   void SetDecoder(MediaDecoder* aDecoder);
-
-  // Holds references to the DOM wrappers for the MediaStreams that we're
-  // writing to.
-  struct OutputMediaStream {
-    OutputMediaStream();
-    ~OutputMediaStream();
-
-    RefPtr<DOMMediaStream> mStream;
-    // Dummy stream to keep mGraph from shutting down when MediaDecoder shuts
-    // down. Shared across all OutputMediaStreams as one stream is enough to
-    // keep the graph alive.
-    RefPtr<SharedDummyTrack> mGraphKeepAliveDummyStream;
-    bool mFinishWhenEnded;
-    bool mCapturingAudioOnly;
-    bool mCapturingDecoder;
-    bool mCapturingMediaStream;
-
-    // The following members are keeping state for a captured MediaStream.
-    nsTArray<Pair<nsString, RefPtr<MediaStreamTrackSource>>> mTracks;
-  };
 
   void PlayInternal(bool aHandlingUserInput);
 
@@ -855,27 +853,34 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   void NotifyMediaStreamTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack);
 
   /**
+   * Convenience method to get in a single list all enabled AudioTracks and, if
+   * this is a video element, the selected VideoTrack.
+   */
+  void GetAllEnabledMediaTracks(nsTArray<RefPtr<MediaTrack>>& aTracks);
+
+  /**
    * Enables or disables all tracks forwarded from mSrcStream to all
    * OutputMediaStreams. We do this for muting the tracks when pausing,
    * and unmuting when playing the media element again.
-   *
-   * If mSrcStream is unset, this does nothing.
    */
   void SetCapturedOutputStreamsEnabled(bool aEnabled);
 
   /**
-   * Create a new MediaStreamTrack for aTrack and add it to the DOMMediaStream
-   * in aOutputStream. This automatically sets the output track to enabled or
-   * disabled depending on our current playing state.
+   * Create a new MediaStreamTrack for the TrackSource corresponding to aTrack
+   * and add it to the DOMMediaStream in aOutputStream. This automatically sets
+   * the output track to enabled or disabled depending on our current playing
+   * state.
    */
-  void AddCaptureMediaTrackToOutputStream(dom::MediaTrack* aTrack,
-                                          OutputMediaStream& aOutputStream,
-                                          bool aAsyncAddtrack = true);
+  enum class AddTrackMode { ASYNC, SYNC };
+  void AddOutputTrackSourceToOutputStream(
+      MediaElementTrackSource* aSource, OutputMediaStream& aOutputStream,
+      AddTrackMode aMode = AddTrackMode::ASYNC);
 
   /**
-   * Discard all output streams that are flagged to finish when playback ends.
+   * Creates output track sources when this media element is captured, tracks
+   * exist, playback is not ended and readyState is >= HAVE_METADATA.
    */
-  void DiscardFinishWhenEndedOutputStreams();
+  void UpdateOutputTrackSources();
 
   /**
    * Returns an DOMMediaStream containing the played contents of this
@@ -889,8 +894,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
    * reaching the stream. No video tracks will be captured in this case.
    */
   already_AddRefed<DOMMediaStream> CaptureStreamInternal(
-      StreamCaptureBehavior aBehavior, StreamCaptureType aType,
-      MediaTrackGraph* aGraph);
+      StreamCaptureBehavior aFinishBehavior,
+      StreamCaptureType aStreamCaptureType, MediaTrackGraph* aGraph);
 
   /**
    * Initialize a decoder as a clone of an existing decoder in another
@@ -1249,6 +1254,18 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Pass information for deciding the video decode mode to decoder.
   void NotifyDecoderActivityChanges() const;
 
+  // Constructs an AudioTrack in mAudioTrackList if aInfo reports that audio is
+  // available, and a VideoTrack in mVideoTrackList if aInfo reports that video
+  // is available.
+  void ConstructMediaTracks(const MediaInfo* aInfo);
+
+  // Removes all MediaTracks from mAudioTrackList and mVideoTrackList and fires
+  // "removetrack" on the lists accordingly.
+  // Note that by spec, this should not fire "removetrack". However, it appears
+  // other user agents do, per
+  // https://wpt.fyi/results/media-source/mediasource-avtracks.html.
+  void RemoveMediaTracks();
+
   // Mark the decoder owned by the element as tainted so that the
   // suspend-video-decoder is disabled.
   void MarkAsTainted();
@@ -1330,9 +1347,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // enabled audio tracks, while mSrcStream is set.
   RefPtr<MediaStreamRenderer> mMediaStreamRenderer;
 
-  // True once mSrcStream's initial set of tracks are known.
-  bool mSrcStreamTracksAvailable = false;
-
   // True once PlaybackEnded() is called and we're playing a MediaStream.
   // Reset to false if we start playing mSrcStream again.
   Watchable<bool> mSrcStreamPlaybackEnded = {
@@ -1351,6 +1365,12 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Holds references to the DOM wrappers for the MediaStreams that we're
   // writing to.
   nsTArray<OutputMediaStream> mOutputStreams;
+
+  // Mapping for output tracks, from dom::MediaTrack ids to the
+  // MediaElementTrackSource that represents the source of all corresponding
+  // MediaStreamTracks captured from this element.
+  nsRefPtrHashtable<nsStringHashKey, MediaElementTrackSource>
+      mOutputTrackSources;
 
   // Holds a reference to the first-frame-getting track listener attached to
   // mSelectedVideoStreamTrack.
@@ -1543,7 +1563,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   // Playback of the video is paused either due to calling the
   // 'Pause' method, or playback not yet having started.
-  Watchable<bool> mPaused;
+  Watchable<bool> mPaused = {true, "HTMLMediaElement::mPaused"};
 
   // The following two fields are here for the private storage of the builtin
   // video controls, and control 'casting' of the video to external devices
@@ -1552,6 +1572,14 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   bool mAllowCasting = false;
   // True if currently casting this video
   bool mIsCasting = false;
+
+  // Set while there are some OutputMediaStreams this media element's enabled
+  // and selected tracks are captured into. When set, all tracks are captured
+  // into the graph of this dummy track.
+  // NB: This is a SharedDummyTrack to allow non-default graphs (AudioContexts
+  // with an explicit sampleRate defined) to capture this element. When
+  // cross-graph tracks are supported, this can become a bool.
+  Watchable<RefPtr<SharedDummyTrack>> mTracksCaptured;
 
   // True if the sound is being captured.
   bool mAudioCaptured = false;
@@ -1654,7 +1682,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   EncryptionInfo mPendingEncryptedInitData;
 
   // True if the media's channel's download has been suspended.
-  bool mDownloadSuspendedByCache = false;
+  Watchable<bool> mDownloadSuspendedByCache = {
+      false, "HTMLMediaElement::mDownloadSuspendedByCache"};
 
   // Disable the video playback by track selection. This flag might not be
   // enough if we ever expand the ability of supporting multi-tracks video
@@ -1792,7 +1821,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   bool mIsBlessed = false;
 
   // True if the first frame has been successfully loaded.
-  bool mFirstFrameLoaded = false;
+  Watchable<bool> mFirstFrameLoaded = {false,
+                                       "HTMLMediaElement::mFirstFrameLoaded"};
 
   // Media elements also have a default playback start position, which must
   // initially be set to zero seconds. This time is used to allow the element to
@@ -1806,10 +1836,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // True if media element has been forced into being considered 'hidden'.
   // For use by mochitests. Enabling pref "media.test.video-suspend"
   bool mForcedHidden = false;
-
-  // True if audio tracks and video tracks are constructed and added into the
-  // track list, false if all tracks are removed from the track list.
-  bool mMediaTracksConstructed = false;
 
   Visibility mVisibilityState = Visibility::Untracked;
 

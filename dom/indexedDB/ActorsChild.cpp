@@ -3261,7 +3261,8 @@ BackgroundCursorChild::BackgroundCursorChild(IDBRequest* aRequest,
       mIndex(nullptr),
       mCursor(nullptr),
       mStrongRequest(aRequest),
-      mDirection(aDirection) {
+      mDirection(aDirection),
+      mInFlightResponseInvalidationNeeded(false) {
   MOZ_ASSERT(aObjectStore);
   aObjectStore->AssertIsOnOwningThread();
   MOZ_ASSERT(mTransaction);
@@ -3278,7 +3279,8 @@ BackgroundCursorChild::BackgroundCursorChild(IDBRequest* aRequest,
       mIndex(aIndex),
       mCursor(nullptr),
       mStrongRequest(aRequest),
-      mDirection(aDirection) {
+      mDirection(aDirection),
+      mInFlightResponseInvalidationNeeded(false) {
   MOZ_ASSERT(aIndex);
   aIndex->AssertIsOnOwningThread();
   MOZ_ASSERT(mTransaction);
@@ -3496,6 +3498,19 @@ void BackgroundCursorChild::InvalidateCachedResponses() {
       mCachedResponses.size());
 
   mCachedResponses.clear();
+
+  // We only hold a strong cursor reference in mStrongCursor when
+  // continue()/similar has been called. In those cases we expect a response
+  // that will be received in the future, and it may include prefetched data
+  // that needs to be discarded.
+  if (mStrongCursor) {
+    IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
+        "PRELOAD: Setting flag to invalidate in-flight responses",
+        "Set flag to invalidate in-flight responses",
+        mTransaction->LoggingSerialNumber(), mRequest->LoggingSerialNumber());
+
+    mInFlightResponseInvalidationNeeded = true;
+  }
 }
 
 template <typename Condition>
@@ -3601,6 +3616,17 @@ void BackgroundCursorChild::HandleMultipleCursorResponses(
     // need to be cached.
     aHandleRecord(/* aUseAsCurrentResult */ isFirst, response);
     isFirst = false;
+
+    if (mInFlightResponseInvalidationNeeded) {
+      IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
+          "PRELOAD: Discarding remaining responses since "
+          "mInFlightResponseInvalidationNeeded is set",
+          "Discarding responses", mTransaction->LoggingSerialNumber(),
+          mRequest->LoggingSerialNumber());
+
+      mInFlightResponseInvalidationNeeded = false;
+      break;
+    }
   }
 
   ResultHelper helper(mRequest, mTransaction, mCursor);

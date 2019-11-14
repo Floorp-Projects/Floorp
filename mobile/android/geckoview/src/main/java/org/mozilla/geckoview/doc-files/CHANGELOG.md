@@ -24,12 +24,28 @@ exclude: true
   to [`WebResponse#setReadTimeoutMillis()`][72.4]. The default timeout value is reflected in
   [`WebResponse#DEFAULT_READ_TIMEOUT_MS`][72.5], currently 30s.
   ([bug 1595145]({{bugzilla}}1595145))
+- ⚠️  Removed `GeckoResponse`
+  ([bug 1581161]({{bugzilla}}1581161))
+- ⚠️  Removed `actions` and `response` arguments from [`SelectionActionDelegate.onShowActionRequest`][72.6]
+  and [`BasicSelectionActionDelegate.onShowActionRequest`][72.7]
+  ([bug 1581161]({{bugzilla}}1581161))
+- Added text selection action methods to [`SelectionActionDelegate.Selection`][72.8]
+  ([bug 1581161]({{bugzilla}}1581161))
+- Added [`BasicSelectionActionDelegate.getSelection`][72.9]
+  ([bug 1581161]({{bugzilla}}1581161))
+- Changed [`BasicSelectionActionDelegate.clearSelection`][72.10] to public.
+  ([bug 1581161]({{bugzilla}}1581161))
 
 [72.1]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture-
 [72.2]: {{javadoc_uri}}/Autofill.html
 [72.3]: {{javadoc_uri}}/WebResponse.html#body
 [72.4]: {{javadoc_uri}}/WebResponse.html#setReadTimeoutMillis-long-
 [72.5]: {{javadoc_uri}}/WebResponse.html#DEFAULT_READ_TIMEOUT_MS
+[72.6]: {{javadoc_uri}}/GeckoSession.SelectionActionDelegate.html#onShowActionRequest-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.SelectionActionDelegate.Selection-
+[72.7]: {{javadoc_uri}}/BasicSelectionActionDelegate.html#onShowActionRequest-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.SelectionActionDelegate.Selection-
+[72.8]: {{javadoc_uri}}/GeckoSession.SelectionActionDelegate.Selection.html
+[72.9]: {{javadoc_uri}}/BasicSelectionActionDelegate.html#getSelection-
+[72.10]: {{javadoc_uri}}/BasicSelectionActionDelegate.html#clearSelection-
 
 ## v71
 - Added a content blocking flag for blocked social cookies to [`ContentBlocking`][70.17].
@@ -427,4 +443,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 5fce802ebb83bfd1237dd1ad541dceccb3801d9d
+[api-version]: 8d6a09b6a33550dffb6303dc01c5e6ff2d3cc499

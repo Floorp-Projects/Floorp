@@ -27,6 +27,11 @@ branch = "cc"
 git = "https://github.com/kvark/rust-objc-exception"
 replace-with = "vendored-sources"
 
+[source."https://github.com/jfkthame/mapped_hyph.git"]
+git = "https://github.com/jfkthame/mapped_hyph.git"
+replace-with = "vendored-sources"
+tag = "v0.3.0"
+
 [source."https://github.com/hsivonen/packed_simd"]
 branch = "rust_1_32"
 git = "https://github.com/hsivonen/packed_simd"

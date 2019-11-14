@@ -6,6 +6,7 @@
 # automatically converted to platform-specific code at build time using the
 # `glean_parser` PyPI package.
 
+---
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 
 geckoview:
@@ -14,7 +15,8 @@ geckoview:
     time_unit: millisecond
     gecko_datapoint: GV_PAGE_LOAD_MS
     description: >
-      The time taken to load a page. This includes all static contents, no dynamic content.
+      The time taken to load a page. This includes all static contents, no
+      dynamic content.
       Loading of about: pages is not counted.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1499418
@@ -49,9 +51,12 @@ gfx:
     gecko_datapoint: COMPOSITE_TIME
     description: >
       The time taken to composite a frame.
-      On non-webrender this is the time taken in `CompositorBridgeParent::CompositeToTarget()`.
-      On webrender, this is the time taken from the start of `WebRenderBridgeParent::CompositeToTarget()`,
-      until the render thread has rendered the frame (in `RenderThread::HandleFrameOneDoc()`).
+      On non-webrender this is the time taken in
+      `CompositorBridgeParent::CompositeToTarget()`.
+      On webrender, this is the time taken from the start of
+      `WebRenderBridgeParent::CompositeToTarget()`,
+      until the render thread has rendered the frame (in
+      `RenderThread::HandleFrameOneDoc()`).
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1080160
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1529352
@@ -70,9 +75,10 @@ gfx.checkerboard:
     gecko_datapoint: CHECKERBOARD_DURATION
     description: >
       The duration of a checkerboard event.
-      Checkerboarding is when painting has not kept up with asynchronous panning and
-      zooming so the compositor has to display a "checkerboard pattern" (or in practice,
-      the background color) rather than the actual page content.
+      Checkerboarding is when painting has not kept up with asynchronous
+      panning and zooming so the compositor has to display a "checkerboard
+      pattern" (or in practice, the background color) rather than the actual
+      page content.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1238040
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1539309
@@ -92,9 +98,9 @@ gfx.checkerboard:
     unit: Pixels
     gecko_datapoint: CHECKERBOARD_PEAK
     description: >
-      The peak number of CSS pixels that checkerboarded during a checkerboard event.
-      The minimum value of the largest histogram bucket is the size of a 4k display with
-      maximum APZ zooming.
+      The peak number of CSS pixels that checkerboarded during a checkerboard
+      event. The minimum value of the largest histogram bucket is the size of
+      a 4k display with maximum APZ zooming.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1238040
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1539309
@@ -116,9 +122,10 @@ gfx.checkerboard:
       The first set is that in which checkerboarding was actually happening,
       since by definition it could potentially be happening.
       The second set is that in which the APZC is actively transforming content
-      in the compositor, since it could potentially transform it so as to display
-      checkerboarding to the user. Combined with other information, this allows us
-      to meaningfully say how frequently users actually enncounters checkerboarding.
+      in the compositor, since it could potentially transform it so as to
+      display checkerboarding to the user. Combined with other information,
+      this allows us to meaningfully say how frequently users actually
+      enncounters checkerboarding.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1238040
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1539309
@@ -141,7 +148,8 @@ gfx.checkerboard:
       An opaque measurement of the severity of a checkerboard event.
       This doesn't have units, it's just useful for comparing two checkerboard
       events to see which one is worse, for some implementation-specific
-      definition of "worse". The larger the value, the worse the checkerboarding.
+      definition of "worse". The larger the value, the worse the
+      checkerboarding.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1238040
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1539309
@@ -160,9 +168,10 @@ gfx.content:
     gecko_datapoint: CONTENT_PAINT_TIME
     description: >
       Time spent in the main-thread paint pipeline for content.
-      For non-webrender, this includes display list building, layer building, and when OMTP
-      is disabled, rasterization.
-      For webrender, this includes display list building, and webrender display list building.
+      For non-webrender, this includes display list building, layer building,
+      and when OMTP is disabled, rasterization.
+      For webrender, this includes display list building, and webrender display
+      list building.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1309442
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
@@ -180,8 +189,10 @@ gfx.content:
     time_unit: millisecond
     gecko_datapoint: CONTENT_FULL_PAINT_TIME
     description: >
-      Time spent in the full paint pipeline for content until it's ready for composition.
-      For non-webrender this includes `paint_time`, plus rasterization if OMTP is enabled.
+      Time spent in the full paint pipeline for content until it's ready for
+      composition.
+      For non-webrender this includes `paint_time`, plus rasterization if OMTP
+      is enabled.
       For webrender, this includes `paint_time`, plus scene building time.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1505858
@@ -203,8 +214,8 @@ gfx.content.frame_time:
     unit: Percentage of vsync interval
     gecko_datapoint: CONTENT_FRAME_TIME
     description: >
-      The time, in percentage of a vsync interval, spent from beginning a paint in
-      the content process until that frame is presented in the compositor.
+      The time, in percentage of a vsync interval, spent from beginning a paint
+      in the content process until that frame is presented in the compositor.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1470528
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1509536
@@ -225,8 +236,9 @@ gfx.content.frame_time:
     unit: Percentage of vsync interval
     gecko_datapoint: CONTENT_FRAME_TIME_VSYNC
     description: >
-      The time, in percentage of a vsync interval, spent from the vsync that started a
-      paint in the content process until that frame is presented in the compositor.
+      The time, in percentage of a vsync interval, spent from the vsync that
+      started a paint in the content process until that frame is presented in
+      the compositor.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1517355
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109
@@ -245,9 +257,9 @@ gfx.content.frame_time:
     unit: Percentage of vsync interval
     gecko_datapoint: CONTENT_FRAME_TIME_WITH_SVG
     description: >
-      The time, in percentage of a vsync interval, spent from beginning a paint in the
-      content process until that frame is presented in the compositor, for frames that
-      contained an SVG to be drawn by webrender.
+      The time, in percentage of a vsync interval, spent from beginning a paint
+      in the content process until that frame is presented in the compositor,
+      for frames that contained an SVG to be drawn by webrender.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1483549
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1509536
@@ -267,9 +279,9 @@ gfx.content.frame_time:
     unit: Percentage of vsync interval
     gecko_datapoint: CONTENT_FRAME_TIME_WITHOUT_RESOURCE_UPLOAD
     description: >
-      The time, in percentage of a vsync interval, spent from beginning a paint in the
-      content process until that frame is presented in the compositor by webrender,
-      excluding time spent uploading resources.
+      The time, in percentage of a vsync interval, spent from beginning a paint
+      in the content process until that frame is presented in the compositor by
+      webrender, excluding time spent uploading resources.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1503405
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109
@@ -288,9 +300,9 @@ gfx.content.frame_time:
     unit: Percentage of vsync interval
     gecko_datapoint: CONTENT_FRAME_TIME_WITHOUT_UPLOAD
     description: >
-      The time, in percentage of a vsync interval, spent from beginning a paint in the
-      content process until that frame is presented in the compositor by webrender,
-      excluding time spent uploading any content.
+      The time, in percentage of a vsync interval, spent from beginning a paint
+      in the content process until that frame is presented in the compositor by
+      webrender, excluding time spent uploading any content.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1503405
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109
@@ -314,7 +326,8 @@ gfx.content.frame_time:
       - no_vsync_no_id
     gecko_datapoint: CONTENT_FRAME_TIME_REASON
     description: >
-      The reason that `gfx.content.frame_time.from_paint` recorded a slow (>200ms) result, if any.
+      The reason that `gfx.content.frame_time.from_paint` recorded a slow
+      (>200ms) result, if any.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1510853
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109
@@ -349,8 +362,8 @@ gfx.webrender:
     time_unit: millisecond
     gecko_datapoint: WR_SCENESWAP_TIME
     description: >
-      The time taken to do a webrender scene swap. This is book-keeping that APZ must
-      perform once webrender has built a new scene.
+      The time taken to do a webrender scene swap. This is book-keeping that
+      APZ must perform once webrender has built a new scene.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1470901
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109
@@ -367,8 +380,9 @@ gfx.webrender:
     gecko_datapoint: WR_FRAMEBUILD_TIME
     description: >
       The time taken to build a webrender frame.
-      This involves calculating the visibility of primitives, requesting resources,
-      and building the render passes which will be used to render the frame.
+      This involves calculating the visibility of primitives, requesting
+      resources, and building the render passes which will be used to render
+      the frame.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1470901
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109

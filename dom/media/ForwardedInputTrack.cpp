@@ -60,11 +60,6 @@ void ForwardedInputTrack::RemoveInput(MediaInputPort* aPort) {
   TRACK_LOG(LogLevel::Debug,
             ("ForwardedInputTrack %p removing input %p", this, aPort));
   MOZ_ASSERT(aPort == mInputPort);
-  nsTArray<RefPtr<DirectMediaTrackListener>> listeners(mOwnedDirectListeners);
-  for (const auto& listener : listeners) {
-    // Remove listeners while the entry still exists.
-    RemoveDirectListenerImpl(listener);
-  }
   mInputPort = nullptr;
   ProcessedMediaTrack::RemoveInput(aPort);
 }
@@ -162,6 +157,10 @@ void ForwardedInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
     ProcessInputImpl(source, &video, aFrom, aTo, aFlags);
   } else {
     MOZ_CRASH("Unknown segment type");
+  }
+
+  if (mEnded) {
+    RemoveAllDirectListenersImpl();
   }
 }
 

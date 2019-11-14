@@ -131,26 +131,21 @@ enum {
   // NOTE: Should only be used on nsIContent nodes
   NODE_IS_NATIVE_ANONYMOUS_ROOT = NODE_FLAG_BIT(4),
 
-  // Whether a binding manager may have a pointer to this
-  NODE_MAY_BE_IN_BINDING_MNGR = NODE_FLAG_BIT(5),
-
-  NODE_IS_EDITABLE = NODE_FLAG_BIT(6),
-
-  // Free bit here.
+  NODE_IS_EDITABLE = NODE_FLAG_BIT(5),
 
   // Whether the node participates in a shadow tree.
-  NODE_IS_IN_SHADOW_TREE = NODE_FLAG_BIT(8),
+  NODE_IS_IN_SHADOW_TREE = NODE_FLAG_BIT(6),
 
   // Node has an :empty or :-moz-only-whitespace selector
-  NODE_HAS_EMPTY_SELECTOR = NODE_FLAG_BIT(9),
+  NODE_HAS_EMPTY_SELECTOR = NODE_FLAG_BIT(7),
 
   // A child of the node has a selector such that any insertion,
   // removal, or appending of children requires restyling the parent.
-  NODE_HAS_SLOW_SELECTOR = NODE_FLAG_BIT(10),
+  NODE_HAS_SLOW_SELECTOR = NODE_FLAG_BIT(8),
 
   // A child of the node has a :first-child, :-moz-first-node,
   // :only-child, :last-child or :-moz-last-node selector.
-  NODE_HAS_EDGE_CHILD_SELECTOR = NODE_FLAG_BIT(11),
+  NODE_HAS_EDGE_CHILD_SELECTOR = NODE_FLAG_BIT(9),
 
   // A child of the node has a selector such that any insertion or
   // removal of children requires restyling later siblings of that
@@ -159,7 +154,7 @@ enum {
   // other content tree changes (e.g., the child changes to or from
   // matching :empty due to a grandchild insertion or removal), the
   // child's later siblings must also be restyled.
-  NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS = NODE_FLAG_BIT(12),
+  NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS = NODE_FLAG_BIT(10),
 
   NODE_ALL_SELECTOR_FLAGS = NODE_HAS_EMPTY_SELECTOR | NODE_HAS_SLOW_SELECTOR |
                             NODE_HAS_EDGE_CHILD_SELECTOR |
@@ -167,28 +162,28 @@ enum {
 
   // This node needs to go through frame construction to get a frame (or
   // undisplayed entry).
-  NODE_NEEDS_FRAME = NODE_FLAG_BIT(13),
+  NODE_NEEDS_FRAME = NODE_FLAG_BIT(11),
 
   // At least one descendant in the flattened tree has NODE_NEEDS_FRAME set.
   // This should be set on every node on the flattened tree path between the
   // node(s) with NODE_NEEDS_FRAME and the root content.
-  NODE_DESCENDANTS_NEED_FRAMES = NODE_FLAG_BIT(14),
+  NODE_DESCENDANTS_NEED_FRAMES = NODE_FLAG_BIT(12),
 
   // Set if the node has the accesskey attribute set.
-  NODE_HAS_ACCESSKEY = NODE_FLAG_BIT(15),
+  NODE_HAS_ACCESSKEY = NODE_FLAG_BIT(13),
 
   // Set if the node has right-to-left directionality
-  NODE_HAS_DIRECTION_RTL = NODE_FLAG_BIT(16),
+  NODE_HAS_DIRECTION_RTL = NODE_FLAG_BIT(14),
 
   // Set if the node has left-to-right directionality
-  NODE_HAS_DIRECTION_LTR = NODE_FLAG_BIT(17),
+  NODE_HAS_DIRECTION_LTR = NODE_FLAG_BIT(15),
 
   NODE_ALL_DIRECTION_FLAGS = NODE_HAS_DIRECTION_LTR | NODE_HAS_DIRECTION_RTL,
 
-  NODE_HAS_BEEN_IN_UA_WIDGET = NODE_FLAG_BIT(18),
+  NODE_HAS_BEEN_IN_UA_WIDGET = NODE_FLAG_BIT(16),
 
   // Remaining bits are node type specific.
-  NODE_TYPE_SPECIFIC_BITS_OFFSET = 19
+  NODE_TYPE_SPECIFIC_BITS_OFFSET = 17
 };
 
 // Make sure we have space for our bits
