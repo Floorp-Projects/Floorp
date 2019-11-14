@@ -532,7 +532,6 @@ static_assert(sizeof(FragmentOrElement::nsDOMSlots) <= MaxDOMSlotSizeAllowed,
 
 void nsIContent::nsExtendedContentSlots::UnlinkExtendedSlots() {
   mBindingParent = nullptr;
-  mXBLInsertionPoint = nullptr;
   mContainingShadow = nullptr;
   mAssignedSlot = nullptr;
 }
@@ -547,9 +546,6 @@ void nsIContent::nsExtendedContentSlots::TraverseExtendedSlots(
 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mExtendedSlots->mAssignedSlot");
   aCb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIContent*, mAssignedSlot.get()));
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mExtendedSlots->mXBLInsertionPoint");
-  aCb.NoteXPCOMChild(mXBLInsertionPoint.get());
 }
 
 nsIContent::nsExtendedContentSlots::nsExtendedContentSlots() {}
@@ -882,18 +878,6 @@ void nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
     }
   }
 
-  // check for an anonymous parent
-  // XXX XBL2/sXBL issue
-  if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-    nsIContent* insertionParent = GetXBLInsertionParent();
-    NS_ASSERTION(!(aVisitor.mEventTargetAtParent && insertionParent &&
-                   aVisitor.mEventTargetAtParent != insertionParent),
-                 "Retargeting and having insertion parent!");
-    if (insertionParent) {
-      parent = insertionParent;
-    }
-  }
-
   if (!aVisitor.mEvent->mFlags.mComposedInNativeAnonymousContent &&
       IsRootOfNativeAnonymousSubtree() && OwnerDoc()->GetWindow()) {
     aVisitor.SetParentTarget(OwnerDoc()->GetWindow()->GetParentTarget(), true);
@@ -1082,18 +1066,6 @@ nsIContent* nsIContent::GetContainingShadowHost() const {
 void nsIContent::SetAssignedSlot(HTMLSlotElement* aSlot) {
   MOZ_ASSERT(aSlot || GetExistingExtendedContentSlots());
   ExtendedContentSlots()->mAssignedSlot = aSlot;
-}
-
-void nsIContent::SetXBLInsertionPoint(nsIContent* aContent) {
-  if (aContent) {
-    nsExtendedContentSlots* slots = ExtendedContentSlots();
-    SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
-    slots->mXBLInsertionPoint = aContent;
-  } else {
-    if (nsExtendedContentSlots* slots = GetExistingExtendedContentSlots()) {
-      slots->mXBLInsertionPoint = nullptr;
-    }
-  }
 }
 
 #ifdef DEBUG
