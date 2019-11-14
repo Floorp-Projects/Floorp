@@ -69,6 +69,8 @@ GeckoViewStartup.prototype = {
         GeckoViewUtils.addLazyGetter(this, "GeckoViewWebExtension", {
           module: "resource://gre/modules/GeckoViewWebExtension.jsm",
           ged: [
+            "GeckoView:BrowserAction:Click",
+            "GeckoView:PageAction:Click",
             "GeckoView:RegisterWebExtension",
             "GeckoView:UnregisterWebExtension",
             "GeckoView:WebExtension:PortDisconnect",
