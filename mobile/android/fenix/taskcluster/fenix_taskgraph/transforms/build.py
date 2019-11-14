@@ -35,6 +35,7 @@ def add_shippable_secrets(config, tasks):
 
         if task.pop("include-shippable-secrets", False) and config.params["level"] == "3":
             build_type = task["attributes"]["build-type"]
+            gradle_build_type = task["run"]["gradle-build-type"]
             secret_index = 'project/mobile/fenix/{}'.format(build_type)
             secrets.extend([{
                 "key": key,
@@ -42,7 +43,7 @@ def add_shippable_secrets(config, tasks):
                 "path": target_file,
             } for key, target_file in (
                 ('adjust', '.adjust_token'),
-                ('firebase', 'app/src/{}/res/values/firebase.xml'.format(build_type)),
+                ('firebase', 'app/src/{}/res/values/firebase.xml'.format(gradle_build_type)),
                 ('digital_asset_links', '.digital_asset_links_token'),
                 ('leanplum', '.leanplum_token'),
                 ('sentry_dsn', '.sentry_token'),
