@@ -1,3 +1,4 @@
 . "$topsrcdir/browser/config/mozconfigs/linux64/code-coverage"
 
 ac_add_options --enable-debug-symbols=-g1
+ac_add_options --enable-rust-tests
