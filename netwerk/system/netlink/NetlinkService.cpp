@@ -824,9 +824,10 @@ void NetlinkService::OnAddrMessage(struct nlmsghdr* aNlh) {
   }
 
   // There might be already an equal address in the array even in case of
-  // RTM_NEWADDR message, e.g. when lifetime of IPv6 address is renewed. Remove
-  // existing equal address in case of RTM_DELADDR as well as RTM_NEWADDR
-  // message and add a new one in the latter case.
+  // RTM_NEWADDR message, e.g. when lifetime of IPv6 address is renewed. Equal
+  // in this case means that IP and prefix is the same but some attributes might
+  // be different. Remove existing equal address in case of RTM_DELADDR as well
+  // as RTM_NEWADDR message and add a new one in the latter case.
   for (uint32_t i = 0; i < linkInfo->mAddresses.Length(); ++i) {
     if (linkInfo->mAddresses[i]->Equals(address)) {
       LOG(("Removing address [ifIdx=%u, addr=%s/%u]", ifIdx, addrStr.get(),
@@ -875,15 +876,7 @@ void NetlinkService::OnAddrMessage(struct nlmsghdr* aNlh) {
     }
   }
 
-  if (linkInfo->UpdateStatus()) {
-    TriggerNetworkIDCalculation();
-  } else {
-    // Even if the link status hasn't changed, network ID might have changed
-    // if it's an address change on a link that's up.
-    if (linkInfo->mLink->IsUp()) {
-      TriggerNetworkIDCalculation();
-    }
-  }
+  TriggerNetworkIDCalculation();
 }
 
 void NetlinkService::OnRouteMessage(struct nlmsghdr* aNlh) {
@@ -1794,6 +1787,7 @@ void NetlinkService::CalculateNetworkID() {
       listener = mListener;
     }
     if (listener) {
+      listener->OnNetworkIDChanged();
       listener->OnNetworkChanged();
     }
   }
