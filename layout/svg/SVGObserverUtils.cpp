@@ -1675,38 +1675,25 @@ already_AddRefed<nsIURI> SVGObserverUtils::GetBaseURLForLocalRef(
     nsIContent* content, nsIURI* aDocURI) {
   MOZ_ASSERT(content);
 
+  // Content is in a shadow tree.  If this URL was specified in the subtree
+  // referenced by the <use>, element, and that subtree came from a separate
+  // resource document, then we want the fragment-only URL to resolve to an
+  // element from the resource document.  Otherwise, the URL was specified
+  // somewhere in the document with the <use> element, and we want the
+  // fragment-only URL to resolve to an element in that document.
+  if (SVGUseElement* use = content->GetContainingSVGUseShadowHost()) {
+    if (nsIURI* originalURI = use->GetSourceDocURI()) {
+      bool isEqualsExceptRef = false;
+      aDocURI->EqualsExceptRef(originalURI, &isEqualsExceptRef);
+      if (isEqualsExceptRef) {
+        return do_AddRef(originalURI);
+      }
+    }
+  }
+
   // For a local-reference URL, resolve that fragment against the current
   // document that relative URLs are resolved against.
-  nsCOMPtr<nsIURI> baseURI = content->OwnerDoc()->GetDocumentURI();
-
-  nsCOMPtr<nsIURI> originalURI;
-  // Content is in a shadow tree.  If this URL was specified in the subtree
-  // referenced by the <use>(or -moz-binding) element, and that subtree came
-  // from a separate resource document, then we want the fragment-only URL
-  // to resolve to an element from the resource document.  Otherwise, the
-  // URL was specified somewhere in the document with the <use> element, and
-  // we want the fragment-only URL to resolve to an element in that document.
-  if (SVGUseElement* use = content->GetContainingSVGUseShadowHost()) {
-    originalURI = use->GetSourceDocURI();
-  } else if (content->IsInAnonymousSubtree()) {
-    nsIContent* bindingParent = content->GetBindingParent();
-
-    if (bindingParent) {
-      MOZ_ASSERT(content->IsInNativeAnonymousSubtree(),
-                 "a non-native anonymous tree which is not from "
-                 "an XBL binding?");
-    }
-  }
-
-  if (originalURI) {
-    bool isEqualsExceptRef = false;
-    aDocURI->EqualsExceptRef(originalURI, &isEqualsExceptRef);
-    if (isEqualsExceptRef) {
-      return originalURI.forget();
-    }
-  }
-
-  return baseURI.forget();
+  return do_AddRef(content->OwnerDoc()->GetDocumentURI());
 }
 
 already_AddRefed<URLAndReferrerInfo> SVGObserverUtils::GetFilterURI(
