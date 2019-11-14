@@ -5253,6 +5253,16 @@
           return;
         }
 
+        // Ignore empty title changes on internal pages. This prevents the title
+        // from changing while Fluent is populating the (initially-empty) title
+        // element.
+        if (
+          !browser.contentTitle &&
+          browser.contentPrincipal.isSystemPrincipal
+        ) {
+          return;
+        }
+
         var titleChanged = this.setTabTitle(tab);
         if (titleChanged && !tab.selected && !tab.hasAttribute("busy")) {
           tab.setAttribute("titlechanged", "true");
