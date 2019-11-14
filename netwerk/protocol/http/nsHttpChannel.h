@@ -378,7 +378,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   virtual MOZ_MUST_USE nsresult
   SetupReplacementChannel(nsIURI*, nsIChannel*, bool preserveMethod,
                           uint32_t redirectFlags) override;
-  nsresult StartCrossProcessRedirect();
 
   // proxy specific methods
   MOZ_MUST_USE nsresult ProxyFailover();
