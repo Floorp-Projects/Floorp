@@ -422,6 +422,43 @@ var PictureInPicture = {
       }
     }
 
+    // Figure out where to position the window on screen. If we have a player
+    // window this will account for any change in video size. Otherwise the
+    // video will be positioned in the bottom right.
+
+    if (isPlayerWindow) {
+      // We might need to move the window to keep its positioning in a similar
+      // part of the screen.
+      //
+      // Find the distance from each edge of the screen of the old video, we'll
+      // keep the closest edge in the same spot.
+      let prevWidth = windowOrPlayer.innerWidth;
+      let prevHeight = windowOrPlayer.innerHeight;
+      let distanceLeft = windowOrPlayer.screenX;
+      let distanceRight =
+        screenWidth.value - windowOrPlayer.screenX - prevWidth;
+      let distanceTop = windowOrPlayer.screenY;
+      let distanceBottom =
+        screenHeight.value - windowOrPlayer.screenY - prevHeight;
+
+      let left = windowOrPlayer.screenX;
+      let top = windowOrPlayer.screenY;
+
+      if (distanceRight < distanceLeft) {
+        // Closer to the right edge than the left. Move the window right by
+        // the difference in the video widths.
+        left += prevWidth - width;
+      }
+
+      if (distanceBottom < distanceTop) {
+        // Closer to the bottom edge than the top. Move the window down by
+        // the difference in the video heights.
+        top += prevHeight - height;
+      }
+
+      return { top, left, width, height };
+    }
+
     // Now that we have the dimensions of the video, we need to figure out how
     // to position it in the bottom right corner. Since we know the width of the
     // available rect, we need to subtract the dimensions of the window we're
@@ -452,8 +489,9 @@ var PictureInPicture = {
       return;
     }
 
-    let { width, height } = this.fitToScreen(win, videoData);
+    let { top, left, width, height } = this.fitToScreen(win, videoData);
     win.resizeTo(width, height);
+    win.moveTo(left, top);
   },
 
   openToggleContextMenu(window, data) {
