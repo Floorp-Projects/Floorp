@@ -1196,6 +1196,8 @@ class TestInfoCommand(MachCommandBase):
                      help='Include individual tests in report.')
     @CommandArgument('--show-summary', action='store_true',
                      help='Include summary in report.')
+    @CommandArgument('--show-annotations', action='store_true',
+                     help='Include list of manifest annotation conditions in report.')
     @CommandArgument('--filter-values',
                      help='Comma-separated list of value regular expressions to filter on; '
                           'displayed tests contain all specified values.')
@@ -1209,7 +1211,7 @@ class TestInfoCommand(MachCommandBase):
     @CommandArgument('--output-file',
                      help='Path to report file.')
     def test_report(self, components, flavor, subsuite, paths,
-                    show_manifests, show_tests, show_summary,
+                    show_manifests, show_tests, show_summary, show_annotations,
                     filter_values, filter_keys, show_components, output_file):
         import mozpack.path as mozpath
         import re
@@ -1233,7 +1235,7 @@ class TestInfoCommand(MachCommandBase):
             return True
 
         # Ensure useful report by default
-        if not show_manifests and not show_tests and not show_summary:
+        if not show_manifests and not show_tests and not show_summary and not show_annotations:
             show_manifests = True
             show_summary = True
 
@@ -1311,12 +1313,18 @@ class TestInfoCommand(MachCommandBase):
         if show_tests:
             by_component['tests'] = {}
 
-        if show_tests or show_summary:
+        if show_tests or show_summary or show_annotations:
             test_count = 0
             failed_count = 0
             skipped_count = 0
+            annotation_count = 0
+            condition_count = 0
             component_set = set()
             relpaths = []
+            conditions = {}
+            known_unconditional_annotations = ['skip', 'fail', 'asserts', 'random']
+            known_conditional_annotations = ['skip-if', 'fail-if', 'run-if',
+                                             'fails-if', 'fuzzy-if', 'random-if', 'asserts-if']
             for t in tests:
                 relpath = t.get('srcdir_relpath')
                 relpaths.append(relpath)
@@ -1325,6 +1333,33 @@ class TestInfoCommand(MachCommandBase):
             for t in tests:
                 if not matches_filters(t):
                     continue
+                if 'referenced-test' in t:
+                    # Avoid double-counting reftests: disregard reference file entries
+                    continue
+                if show_annotations:
+                    for key in t:
+                        if key in known_unconditional_annotations:
+                            annotation_count += 1
+                        if key in known_conditional_annotations:
+                            annotation_count += 1
+                            # Here 'key' is a manifest annotation type like 'skip-if' and t[key]
+                            # is the associated condition. For example, the manifestparser
+                            # manifest annotation, "skip-if = os == 'win'", is expected to be
+                            # encoded as t['skip-if'] = "os == 'win'".
+                            # To allow for reftest manifests, t[key] may have multiple entries
+                            # separated by ';', each corresponding to a condition for that test
+                            # and annotation type. For example,
+                            # "skip-if(Android&&webrender) skip-if(OSX)", would be
+                            # encoded as t['skip-if'] = "Android&&webrender;OSX".
+                            annotation_conditions = t[key].split(';')
+                            for condition in annotation_conditions:
+                                condition_count += 1
+                                # Trim reftest fuzzy-if ranges: everything after the first comma
+                                # eg. "Android,0-2,1-3" -> "Android"
+                                condition = condition.split(',')[0]
+                                if condition not in conditions:
+                                    conditions[condition] = 0
+                                conditions[condition] += 1
                 test_count += 1
                 relpath = t.get('srcdir_relpath')
                 if relpath in files_info:
@@ -1360,6 +1395,13 @@ class TestInfoCommand(MachCommandBase):
             by_component['summary']['tests'] = test_count
             by_component['summary']['failed tests'] = failed_count
             by_component['summary']['skipped tests'] = skipped_count
+
+        if show_annotations:
+            by_component['annotations'] = {}
+            by_component['annotations']['total annotations'] = annotation_count
+            by_component['annotations']['total conditions'] = condition_count
+            by_component['annotations']['unique conditions'] = len(conditions)
+            by_component['annotations']['conditions'] = conditions
 
         json_report = json.dumps(by_component, indent=2, sort_keys=True)
         if output_file:
