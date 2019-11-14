@@ -1010,7 +1010,7 @@ void AudioCallbackDriver::MixerCallback(AudioDataValue* aMixedBuffer,
 
 void AudioCallbackDriver::PanOutputIfNeeded(bool aMicrophoneActive) {
 #ifdef XP_MACOSX
-  cubeb_device* out;
+  cubeb_device* out = nullptr;
   int rv;
   char name[128];
   size_t length = sizeof(name);
@@ -1022,8 +1022,9 @@ void AudioCallbackDriver::PanOutputIfNeeded(bool aMicrophoneActive) {
 
   if (!strncmp(name, "MacBookPro", 10)) {
     if (cubeb_stream_get_current_device(mAudioStream, &out) == CUBEB_OK) {
+      MOZ_ASSERT(out);
       // Check if we are currently outputing sound on external speakers.
-      if (!strcmp(out->output_name, "ispk")) {
+      if (out->output_name && !strcmp(out->output_name, "ispk")) {
         // Pan everything to the right speaker.
         LOG(LogLevel::Debug, ("Using the built-in speakers, with%s audio input",
                               aMicrophoneActive ? "" : "out"));
