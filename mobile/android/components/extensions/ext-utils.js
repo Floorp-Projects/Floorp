@@ -404,13 +404,35 @@ class TabContext extends EventEmitter {
   constructor(getDefaultPrototype) {
     super();
 
+    windowTracker.addListener("progress", this);
+
     this.getDefaultPrototype = getDefaultPrototype;
     this.tabData = new Map();
+  }
 
-    GlobalEventDispatcher.registerListener(this, [
-      "Tab:Selected",
-      "Tab:Closed",
-    ]);
+  onLocationChange(browser, webProgress, request, locationURI, flags) {
+    if (!webProgress.isTopLevel) {
+      // Only pageAction and browserAction are consuming the "location-change" event
+      // to update their per-tab status, and they should only do so in response of
+      // location changes related to the top level frame (See Bug 1493470 for a rationale).
+      return;
+    }
+    const gBrowser = browser.ownerGlobal.gBrowser;
+    const tab = gBrowser.getTabForBrowser(browser);
+    // fromBrowse will be false in case of e.g. a hash change or history.pushState
+    const fromBrowse = !(
+      flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT
+    );
+    this.emit(
+      "location-change",
+      {
+        id: tab.id,
+        linkedBrowser: browser,
+        // TODO: we don't support selected so we just alway say we are
+        selected: true,
+      },
+      fromBrowse
+    );
   }
 
   get(tabId) {
@@ -426,28 +448,8 @@ class TabContext extends EventEmitter {
     this.tabData.delete(tabId);
   }
 
-  /**
-   * Required by the GlobalEventDispatcher module. This event will get
-   * called whenever one of the registered listeners fires.
-   * @param {string} event The event which fired.
-   * @param {object} data Information about the event which fired.
-   */
-  onEvent(event, data) {
-    switch (event) {
-      case "Tab:Selected":
-        this.emit("tab-selected", data.id);
-        break;
-      case "Tab:Closed":
-        this.emit("tab-closed", data.tabId);
-        break;
-    }
-  }
-
   shutdown() {
-    GlobalEventDispatcher.unregisterListener(this, [
-      "Tab:Selected",
-      "Tab:Closed",
-    ]);
+    windowTracker.removeListener("progress", this);
   }
 }
 
