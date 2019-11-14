@@ -288,7 +288,7 @@ class DownloadsFeatureTest {
 
         store.dispatch(ContentAction.UpdateDownloadAction(
             "test-tab", DownloadState("https://www.mozilla.org")
-        ))
+        )).joinBlocking()
 
         val downloadManager: DownloadManager = mock()
         doReturn(
