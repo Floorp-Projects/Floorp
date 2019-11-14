@@ -21,7 +21,11 @@ from six import string_types
 PORT = 8888
 
 PATH_MAPPINGS = {
-    '/js-input/webkit/PerformanceTests': 'third_party/webkit/PerformanceTests',
+    '/webkit/PerformanceTests': 'third_party/webkit/PerformanceTests',
+    # It is tempting to map to `testing/talos/talos/tests` instead, to avoid
+    # writing `tests/` in every path, but we can't do that because some files
+    # refer to scripts located in `../..`.
+    '/talos': 'testing/talos/talos',
 }
 
 
