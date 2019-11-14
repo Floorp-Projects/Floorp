@@ -371,6 +371,8 @@ class nsPresContext : public nsISupports,
    */
   void SetVisibleArea(const nsRect& r);
 
+  nsSize GetSizeForViewportUnits() const { return mSizeForViewportUnits; }
+
   /**
    * Set the maximum height of the dynamic toolbar in nscoord units.
    */

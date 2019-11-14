@@ -3544,6 +3544,17 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       aBuilder->ShouldBuildAsyncZoomContainer() && isRootContent;
 
   nsRect scrollPortClip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
+  // Expand the clip rect to the size including the area covered by dynamic
+  // toolbar in the case where the dynamic toolbar is being used since
+  // position:fixed elements attached to this root scroller might be taller than
+  // its scroll port (e.g 100vh). Even if the dynamic toolbar covers the taller
+  // area, it doesn't mean the area is clipped by the toolbar because the
+  // dynamic toolbar is laid out outside of our topmost window and it
+  // transitions without changing our topmost window size.
+  if (isRootContent && mOuter->PresContext()->HasDynamicToolbar()) {
+    scrollPortClip.SizeTo(nsLayoutUtils::ExpandHeightForViewportUnits(
+        mOuter->PresContext(), scrollPortClip.Size()));
+  }
   nsRect clipRect = scrollPortClip;
   // Our override of GetBorderRadii ensures we never have a radius at
   // the corners where we have a scrollbar.
