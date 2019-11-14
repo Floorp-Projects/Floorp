@@ -221,10 +221,10 @@ ALL_PROCESSES += [
     DllBlocklistEntry("safemon64.dll", ALL_VERSIONS),
 
     # FYunZip and PuddingZip cause crashes, bug 1576728
-    DllBlocklistEntry("oly64.dll", ALL_VERSIONS, condition='defined(NIGHTLY_BUILD)'),
-    DllBlocklistEntry("oly.dll", ALL_VERSIONS, condition='defined(NIGHTLY_BUILD)'),
-    DllBlocklistEntry("pdzipmenu64.dll", ALL_VERSIONS, condition='defined(NIGHTLY_BUILD)'),
-    DllBlocklistEntry("pdzipmenu32.dll", ALL_VERSIONS, condition='defined(NIGHTLY_BUILD)'),
+    DllBlocklistEntry("oly64.dll", (1, 1, 3, 19919)),
+    DllBlocklistEntry("oly.dll", (1, 1, 3, 19919)),
+    DllBlocklistEntry("pdzipmenu64.dll", UNVERSIONED),
+    DllBlocklistEntry("pdzipmenu32.dll", UNVERSIONED),
 
     # Old versions of Digital Guardian, bug 1318858
     DllBlocklistEntry("dgapi.dll", (7, 5, 0, 0xffff)),
