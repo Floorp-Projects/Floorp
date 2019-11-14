@@ -18,6 +18,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.*
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.util.Callbacks
 import org.mozilla.geckoview.test.util.HttpBin
 import java.net.URI
@@ -160,7 +161,11 @@ class WebExtensionTest : BaseSessionTest() {
         var tabsExtension : WebExtension? = null
         var extensionCreatedSession : GeckoSession? = null
 
-        val tabDelegate = object : WebExtensionController.TabDelegate {
+        sessionRule.addExternalDelegateUntilTestEnd(
+                WebExtensionController.TabDelegate::class,
+                sessionRule.runtime.webExtensionController::setTabDelegate,
+                { sessionRule.runtime.webExtensionController.tabDelegate = null },
+                object : WebExtensionController.TabDelegate {
             override fun onNewTab(source: WebExtension?, uri: String?): GeckoResult<GeckoSession> {
                 extensionCreatedSession = GeckoSession(sessionRule.session.settings)
                 return GeckoResult.fromValue(extensionCreatedSession)
@@ -173,9 +178,8 @@ class WebExtensionTest : BaseSessionTest() {
                 onCloseRequestResult.complete(null)
                 return GeckoResult.ALLOW;
             }
-        }
+        })
 
-        sessionRule.runtime.webExtensionController.tabDelegate = tabDelegate
         tabsExtension = WebExtension(TABS_CREATE_REMOVE_BACKGROUND)
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(tabsExtension))
@@ -197,18 +201,21 @@ class WebExtensionTest : BaseSessionTest() {
         val onCloseRequestResult = GeckoResult<Void>()
         val existingSession = sessionRule.createOpenSession()
 
-        val tabDelegate = object : WebExtensionController.TabDelegate {
+        existingSession.loadTestPath("$HELLO_HTML_PATH?tabToClose")
+        existingSession.waitForPageStop()
+
+        sessionRule.addExternalDelegateUntilTestEnd(
+                WebExtensionController.TabDelegate::class,
+                sessionRule.runtime.webExtensionController::setTabDelegate,
+                { sessionRule.runtime.webExtensionController.tabDelegate = null },
+                object : WebExtensionController.TabDelegate {
             override fun onCloseTab(source: WebExtension?, session: GeckoSession): GeckoResult<AllowOrDeny> {
                 Assert.assertEquals(existingSession, session)
                 onCloseRequestResult.complete(null)
                 return GeckoResult.ALLOW;
             }
-        }
+        })
 
-        existingSession.loadTestPath("$HELLO_HTML_PATH?tabToClose")
-        existingSession.waitForPageStop()
-
-        sessionRule.runtime.webExtensionController.tabDelegate = tabDelegate
         val tabsExtension = WebExtension(TABS_REMOVE_BACKGROUND)
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(tabsExtension))
@@ -616,7 +623,26 @@ class WebExtensionTest : BaseSessionTest() {
         assertThat("WebExtension page should have access to privileged APIs",
             sessionRule.waitForResult(result), equalTo("HELLO_FROM_PAGE"))
 
-        sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(extension))
+        // Test that after unregistering an extension, all its pages get closed
+        sessionRule.addExternalDelegateUntilTestEnd(
+                WebExtensionController.TabDelegate::class,
+                sessionRule.runtime.webExtensionController::setTabDelegate,
+                { sessionRule.runtime.webExtensionController.tabDelegate = null },
+                object : WebExtensionController.TabDelegate {})
+
+        val unregister = sessionRule.runtime.unregisterWebExtension(extension)
+
+        sessionRule.waitUntilCalled(object : WebExtensionController.TabDelegate {
+            @AssertCalled
+            override fun onCloseTab(source: WebExtension?,
+                                    session: GeckoSession): GeckoResult<AllowOrDeny> {
+                Assert.assertEquals(null, source)
+                Assert.assertEquals(mainSession, session)
+                return GeckoResult.ALLOW
+            }
+        })
+
+        sessionRule.waitForResult(unregister)
     }
 
     @Test
