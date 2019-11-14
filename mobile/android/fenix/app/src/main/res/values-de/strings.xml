@@ -16,7 +16,7 @@
     <string name="search_hint">Suche oder Adresse</string>
 
     <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header">Keine Tabs geöffnet</string>
+    <string name="no_open_tabs_header_2">Keine offenen Tabs</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Offene Tabs werden hier angezeigt.</string>
 
