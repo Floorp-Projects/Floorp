@@ -1,0 +1,38 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+using RawId from "mozilla/webgpu/WebGPUTypes.h";
+using dom::GPURequestAdapterOptions from "mozilla/dom/WebGPUBinding.h";
+using dom::GPUDeviceDescriptor from "mozilla/dom/WebGPUBinding.h";
+
+include "mozilla/webgpu/WebGPUSerialize.h";
+include protocol PCompositorBridge;
+
+namespace mozilla {
+namespace webgpu {
+
+/**
+ * Represents the connection between a WebGPUChild actor that issues WebGPU
+ * command from the content process, and a WebGPUParent in the compositor
+ * process that runs the commands.
+ */
+async protocol PWebGPU
+{
+  manager PCompositorBridge;
+
+parent:
+  async InstanceRequestAdapter(GPURequestAdapterOptions options, RawId[] ids) returns (RawId adapterId);
+  async AdapterRequestDevice(RawId selfId, GPUDeviceDescriptor desc, RawId newId);
+  async DeviceDestroy(RawId selfId);
+  async Shutdown();
+
+child:
+  async __delete__();
+};
+
+} // webgpu
+} // mozilla

@@ -18,6 +18,7 @@ include protocol PCompositorWidget;
 include protocol PLayerTransaction;
 include protocol PTexture;
 include protocol PWebRenderBridge;
+include protocol PWebGPU;
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 include "mozilla/layers/WebRenderMessageUtils.h";
@@ -101,6 +102,7 @@ sync refcounted protocol PCompositorBridge
   manages PTexture;
   manages PCompositorWidget;
   manages PWebRenderBridge;
+  manages PWebGPU;
 
 child:
   // The child should invalidate retained layers. This is used for local
@@ -165,6 +167,10 @@ parent:
   // Must be called after Initialize(), and only succeeds if AsyncPanZoomEnabled() is true.
   async PAPZ(LayersId layersId);
   async PAPZCTreeManager(LayersId layersId);
+
+  // Constructor for WebGPU IPDL
+  // Must be called before Initialize().
+  async PWebGPU();
 
   /**
    * Confirmation callback for UpdatePluginConfigurations and HideAllPlugins.

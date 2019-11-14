@@ -13,7 +13,7 @@ MOCHITEST_MANIFESTS += [
 ]
 
 DIRS += [
-    'thread',
+    'ffi',
 ]
 
 h_and_cpp = [
@@ -30,7 +30,6 @@ h_and_cpp = [
     'DeviceLostInfo',
     'Fence',
     'Instance',
-    'InstanceProvider',
     'ObjectModel',
     'OutOfMemoryError',
     'PipelineLayout',
@@ -50,5 +49,23 @@ h_and_cpp = [
 ]
 EXPORTS.mozilla.webgpu += [x + '.h' for x in h_and_cpp]
 UNIFIED_SOURCES += [x + '.cpp' for x in h_and_cpp]
+
+IPDL_SOURCES += [
+    'ipc/PWebGPU.ipdl',
+]
+
+EXPORTS.mozilla.webgpu += [
+    'ipc/WebGPUChild.h',
+    'ipc/WebGPUParent.h',
+    'ipc/WebGPUSerialize.h',
+    'ipc/WebGPUTypes.h',
+]
+
+UNIFIED_SOURCES += [
+    'ipc/WebGPUChild.cpp',
+    'ipc/WebGPUParent.cpp',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
