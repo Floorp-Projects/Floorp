@@ -17,12 +17,17 @@ static const int kSystemDefinedEventMediaKeysSubtype = 8;
 
 class MediaHardwareKeysEventListenerTest : public MediaControlKeysEventListener {
  public:
+  NS_DECL_ISUPPORTS
+
   void OnKeyPressed(MediaControlKeysEvent aKeyEvent) override { mReceivedEvent = aKeyEvent; }
   MediaControlKeysEvent GetResult() const { return mReceivedEvent; }
 
  private:
+  ~MediaHardwareKeysEventListenerTest() = default;
   MediaControlKeysEvent mReceivedEvent = MediaControlKeysEvent::eNone;
 };
+
+NS_IMPL_ISUPPORTS0(MediaHardwareKeysEventListenerTest)
 
 static void NotifyFakeMediaKeysEvent(RefPtr<MediaHardwareKeysEventSourceMac>& aSource,
                                      MediaControlKeysEvent aEvent, bool aIsKeyPressed) {
