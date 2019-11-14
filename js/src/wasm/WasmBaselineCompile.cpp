@@ -3928,6 +3928,18 @@ class BaseCompiler final : public BaseCompilerInterface {
     return true;
   }
 
+  MOZ_MUST_USE bool peek2xI32(int32_t* c0, int32_t* c1) {
+    MOZ_ASSERT(stk_.length() >= 2);
+    const Stk& v0 = *(stk_.end() - 1);
+    const Stk& v1 = *(stk_.end() - 2);
+    if (v0.kind() != Stk::ConstI32 || v1.kind() != Stk::ConstI32) {
+      return false;
+    }
+    *c0 = v0.i32val();
+    *c1 = v1.i32val();
+    return true;
+  }
+
   MOZ_MUST_USE bool popConstPositivePowerOfTwoI32(int32_t* c,
                                                   uint_fast8_t* power,
                                                   int32_t cutoff) {
@@ -7116,9 +7128,11 @@ class BaseCompiler final : public BaseCompilerInterface {
   MOZ_MUST_USE RegI32 maybeLoadTlsForAccess(const AccessCheck& check,
                                             RegI32 specific);
   MOZ_MUST_USE bool emitLoad(ValType type, Scalar::Type viewType);
-  MOZ_MUST_USE bool loadCommon(MemoryAccessDesc* access, ValType type);
+  MOZ_MUST_USE bool loadCommon(MemoryAccessDesc* access, AccessCheck check,
+                               ValType type);
   MOZ_MUST_USE bool emitStore(ValType resultType, Scalar::Type viewType);
-  MOZ_MUST_USE bool storeCommon(MemoryAccessDesc* access, ValType resultType);
+  MOZ_MUST_USE bool storeCommon(MemoryAccessDesc* access, AccessCheck check,
+                                ValType resultType);
   MOZ_MUST_USE bool emitSelect(bool typed);
 
   template <bool isSetLocal>
@@ -7268,9 +7282,13 @@ class BaseCompiler final : public BaseCompilerInterface {
   void emitAtomicXchg64(MemoryAccessDesc* access, WantResult wantResult);
   MOZ_MUST_USE bool bulkmemOpsEnabled();
   MOZ_MUST_USE bool emitMemCopy();
+  MOZ_MUST_USE bool emitMemCopyCall(uint32_t lineOrBytecode);
+  MOZ_MUST_USE bool emitMemCopyInline();
   MOZ_MUST_USE bool emitTableCopy();
   MOZ_MUST_USE bool emitDataOrElemDrop(bool isData);
   MOZ_MUST_USE bool emitMemFill();
+  MOZ_MUST_USE bool emitMemFillCall(uint32_t lineOrBytecode);
+  MOZ_MUST_USE bool emitMemFillInline();
   MOZ_MUST_USE bool emitMemOrTableInit(bool isMem);
 #ifdef ENABLE_WASM_REFTYPES
   MOZ_MUST_USE bool emitTableFill();
@@ -9819,9 +9837,8 @@ RegI32 BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check,
   return RegI32::Invalid();
 }
 
-bool BaseCompiler::loadCommon(MemoryAccessDesc* access, ValType type) {
-  AccessCheck check;
-
+bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
+                              ValType type) {
   RegI32 tls, temp1, temp2, temp3;
   needLoadTemps(*access, &temp1, &temp2, &temp3);
 
@@ -9908,12 +9925,11 @@ bool BaseCompiler::emitLoad(ValType type, Scalar::Type viewType) {
   }
 
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
-  return loadCommon(&access, type);
+  return loadCommon(&access, AccessCheck(), type);
 }
 
-bool BaseCompiler::storeCommon(MemoryAccessDesc* access, ValType resultType) {
-  AccessCheck check;
-
+bool BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
+                               ValType resultType) {
   RegI32 tls;
   RegI32 temp = needStoreTemp(*access, resultType);
 
@@ -9986,7 +10002,7 @@ bool BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType) {
   }
 
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
-  return storeCommon(&access, resultType);
+  return storeCommon(&access, AccessCheck(), resultType);
 }
 
 bool BaseCompiler::emitSelect(bool typed) {
@@ -10400,7 +10416,7 @@ bool BaseCompiler::emitAtomicLoad(ValType type, Scalar::Type viewType) {
                           Synchronization::Load());
 
   if (Scalar::byteSize(viewType) <= sizeof(void*)) {
-    return loadCommon(&access, type);
+    return loadCommon(&access, AccessCheck(), type);
   }
 
   MOZ_ASSERT(type == ValType::I64 && Scalar::byteSize(viewType) == 8);
@@ -10517,7 +10533,7 @@ bool BaseCompiler::emitAtomicStore(ValType type, Scalar::Type viewType) {
                           Synchronization::Store());
 
   if (Scalar::byteSize(viewType) <= sizeof(void*)) {
-    return storeCommon(&access, type);
+    return storeCommon(&access, AccessCheck(), type);
   }
 
   MOZ_ASSERT(type == ValType::I64 && Scalar::byteSize(viewType) == 8);
@@ -10685,6 +10701,17 @@ bool BaseCompiler::emitMemCopy() {
     return true;
   }
 
+  int32_t signedLength;
+  if (Assembler::SupportsFastUnalignedAccesses() &&
+      peekConstI32(&signedLength) &&
+      uint32_t(signedLength) <= MaxInlineMemoryCopyLength) {
+    return emitMemCopyInline();
+  }
+
+  return emitMemCopyCall(lineOrBytecode);
+}
+
+bool BaseCompiler::emitMemCopyCall(uint32_t lineOrBytecode) {
   pushHeapBase();
   if (!emitInstanceCall(lineOrBytecode,
                         usesSharedMemory() ? SASigMemCopyShared : SASigMemCopy,
@@ -10692,6 +10719,192 @@ bool BaseCompiler::emitMemCopy() {
     return false;
   }
 
+  return true;
+}
+
+bool BaseCompiler::emitMemCopyInline() {
+  MOZ_ASSERT(MaxInlineMemoryCopyLength != 0);
+
+  int32_t signedLength;
+  MOZ_ALWAYS_TRUE(popConstI32(&signedLength));
+  uint32_t length = signedLength;
+
+  RegI32 src = popI32();
+  RegI32 dest = popI32();
+
+  // A zero length copy is a no-op and cannot trap
+  if (length == 0) {
+    freeI32(src);
+    freeI32(dest);
+    return true;
+  }
+
+  // Compute the number of copies of each width we will need to do
+  size_t remainder = length;
+#ifdef JS_64BIT
+  size_t numCopies8 = remainder / sizeof(uint64_t);
+  remainder %= sizeof(uint64_t);
+#endif
+  size_t numCopies4 = remainder / sizeof(uint32_t);
+  remainder %= sizeof(uint32_t);
+  size_t numCopies2 = remainder / sizeof(uint16_t);
+  remainder %= sizeof(uint16_t);
+  size_t numCopies1 = remainder;
+
+  // Load all source bytes onto the value stack from low to high using the
+  // widest transfer width we can for the system. We will trap without writing
+  // anything if any source byte is out-of-bounds.
+  bool omitBoundsCheck = false;
+  size_t offset = 0;
+
+#ifdef JS_64BIT
+  for (uint32_t i = 0; i < numCopies8; i++) {
+    RegI32 temp = needI32();
+    moveI32(src, temp);
+    pushI32(temp);
+
+    MemoryAccessDesc access(Scalar::Int64, 1, offset, bytecodeOffset());
+    AccessCheck check;
+    check.omitBoundsCheck = omitBoundsCheck;
+    if (!loadCommon(&access, check, ValType::I64)) {
+      return false;
+    }
+
+    offset += sizeof(uint64_t);
+    omitBoundsCheck = true;
+  }
+#endif
+
+  for (uint32_t i = 0; i < numCopies4; i++) {
+    RegI32 temp = needI32();
+    moveI32(src, temp);
+    pushI32(temp);
+
+    MemoryAccessDesc access(Scalar::Uint32, 1, offset, bytecodeOffset());
+    AccessCheck check;
+    check.omitBoundsCheck = omitBoundsCheck;
+    if (!loadCommon(&access, check, ValType::I32)) {
+      return false;
+    }
+
+    offset += sizeof(uint32_t);
+    omitBoundsCheck = true;
+  }
+
+  if (numCopies2) {
+    RegI32 temp = needI32();
+    moveI32(src, temp);
+    pushI32(temp);
+
+    MemoryAccessDesc access(Scalar::Uint16, 1, offset, bytecodeOffset());
+    AccessCheck check;
+    check.omitBoundsCheck = omitBoundsCheck;
+    if (!loadCommon(&access, check, ValType::I32)) {
+      return false;
+    }
+
+    offset += sizeof(uint16_t);
+    omitBoundsCheck = true;
+  }
+
+  if (numCopies1) {
+    RegI32 temp = needI32();
+    moveI32(src, temp);
+    pushI32(temp);
+
+    MemoryAccessDesc access(Scalar::Uint8, 1, offset, bytecodeOffset());
+    AccessCheck check;
+    check.omitBoundsCheck = omitBoundsCheck;
+    if (!loadCommon(&access, check, ValType::I32)) {
+      return false;
+    }
+  }
+
+  // Store all source bytes from the value stack to the destination from
+  // high to low. We will trap without writing anything on the first store
+  // if any dest byte is out-of-bounds.
+  offset = length;
+  omitBoundsCheck = false;
+
+  if (numCopies1) {
+    offset -= sizeof(uint8_t);
+
+    RegI32 value = popI32();
+    RegI32 temp = needI32();
+    moveI32(dest, temp);
+    pushI32(temp);
+    pushI32(value);
+
+    MemoryAccessDesc access(Scalar::Uint8, 1, offset, bytecodeOffset());
+    AccessCheck check;
+    if (!storeCommon(&access, check, ValType::I32)) {
+      return false;
+    }
+
+    omitBoundsCheck = true;
+  }
+
+  if (numCopies2) {
+    offset -= sizeof(uint16_t);
+
+    RegI32 value = popI32();
+    RegI32 temp = needI32();
+    moveI32(dest, temp);
+    pushI32(temp);
+    pushI32(value);
+
+    MemoryAccessDesc access(Scalar::Uint16, 1, offset, bytecodeOffset());
+    AccessCheck check;
+    check.omitBoundsCheck = omitBoundsCheck;
+    if (!storeCommon(&access, check, ValType::I32)) {
+      return false;
+    }
+
+    omitBoundsCheck = true;
+  }
+
+  for (uint32_t i = 0; i < numCopies4; i++) {
+    offset -= sizeof(uint32_t);
+
+    RegI32 value = popI32();
+    RegI32 temp = needI32();
+    moveI32(dest, temp);
+    pushI32(temp);
+    pushI32(value);
+
+    MemoryAccessDesc access(Scalar::Uint32, 1, offset, bytecodeOffset());
+    AccessCheck check;
+    check.omitBoundsCheck = omitBoundsCheck;
+    if (!storeCommon(&access, check, ValType::I32)) {
+      return false;
+    }
+
+    omitBoundsCheck = true;
+  }
+
+#ifdef JS_64BIT
+  for (uint32_t i = 0; i < numCopies8; i++) {
+    offset -= sizeof(uint64_t);
+
+    RegI64 value = popI64();
+    RegI32 temp = needI32();
+    moveI32(dest, temp);
+    pushI32(temp);
+    pushI64(value);
+
+    MemoryAccessDesc access(Scalar::Int64, 1, offset, bytecodeOffset());
+    AccessCheck check;
+    check.omitBoundsCheck = omitBoundsCheck;
+    if (!storeCommon(&access, check, ValType::I64)) {
+      return false;
+    }
+
+    omitBoundsCheck = true;
+  }
+#endif
+
+  freeI32(dest);
+  freeI32(src);
   return true;
 }
 
@@ -10764,10 +10977,144 @@ bool BaseCompiler::emitMemFill() {
     return true;
   }
 
+  int32_t signedLength;
+  int32_t signedValue;
+  if (Assembler::SupportsFastUnalignedAccesses() &&
+      peek2xI32(&signedLength, &signedValue) &&
+      uint32_t(signedLength) <= MaxInlineMemoryFillLength) {
+    return emitMemFillInline();
+  }
+  return emitMemFillCall(lineOrBytecode);
+}
+
+bool BaseCompiler::emitMemFillCall(uint32_t lineOrBytecode) {
   pushHeapBase();
   return emitInstanceCall(
       lineOrBytecode, usesSharedMemory() ? SASigMemFillShared : SASigMemFill,
       /*pushReturnedValue=*/false);
+}
+
+bool BaseCompiler::emitMemFillInline() {
+  MOZ_ASSERT(MaxInlineMemoryFillLength != 0);
+
+  int32_t signedLength;
+  int32_t signedValue;
+  MOZ_ALWAYS_TRUE(popConstI32(&signedLength));
+  MOZ_ALWAYS_TRUE(popConstI32(&signedValue));
+  uint32_t length = uint32_t(signedLength);
+  uint32_t value = uint32_t(signedValue);
+
+  RegI32 dest = popI32();
+
+  // A zero length copy is a no-op and cannot trap
+  if (length == 0) {
+    freeI32(dest);
+    return true;
+  }
+
+  // Compute the number of copies of each width we will need to do
+  size_t remainder = length;
+#ifdef JS_64BIT
+  size_t numCopies8 = remainder / sizeof(uint64_t);
+  remainder %= sizeof(uint64_t);
+#endif
+  size_t numCopies4 = remainder / sizeof(uint32_t);
+  remainder %= sizeof(uint32_t);
+  size_t numCopies2 = remainder / sizeof(uint16_t);
+  remainder %= sizeof(uint16_t);
+  size_t numCopies1 = remainder;
+
+  MOZ_ASSERT(numCopies2 <= 1 && numCopies1 <= 1);
+
+  // Generate splatted definitions for wider fills as needed
+#ifdef JS_64BIT
+  uint64_t val8 = SplatByteToUInt<uint64_t>(value, 8);
+#endif
+  uint32_t val4 = SplatByteToUInt<uint32_t>(value, 4);
+  uint32_t val2 = SplatByteToUInt<uint32_t>(value, 2);
+  uint32_t val1 = value;
+
+  // Store the fill value to the destination from high to low. We will trap
+  // without writing anything on the first store if any dest byte is
+  // out-of-bounds.
+  size_t offset = length;
+  bool omitBoundsCheck = false;
+
+  if (numCopies1) {
+    offset -= sizeof(uint8_t);
+
+    RegI32 temp = needI32();
+    moveI32(dest, temp);
+    pushI32(temp);
+    pushI32(val1);
+
+    MemoryAccessDesc access(Scalar::Uint8, 1, offset, bytecodeOffset());
+    AccessCheck check;
+    if (!storeCommon(&access, check, ValType::I32)) {
+      return false;
+    }
+
+    omitBoundsCheck = true;
+  }
+
+  if (numCopies2) {
+    offset -= sizeof(uint16_t);
+
+    RegI32 temp = needI32();
+    moveI32(dest, temp);
+    pushI32(temp);
+    pushI32(val2);
+
+    MemoryAccessDesc access(Scalar::Uint16, 1, offset, bytecodeOffset());
+    AccessCheck check;
+    check.omitBoundsCheck = omitBoundsCheck;
+    if (!storeCommon(&access, check, ValType::I32)) {
+      return false;
+    }
+
+    omitBoundsCheck = true;
+  }
+
+  for (uint32_t i = 0; i < numCopies4; i++) {
+    offset -= sizeof(uint32_t);
+
+    RegI32 temp = needI32();
+    moveI32(dest, temp);
+    pushI32(temp);
+    pushI32(val4);
+
+    MemoryAccessDesc access(Scalar::Uint32, 1, offset, bytecodeOffset());
+    AccessCheck check;
+    check.omitBoundsCheck = omitBoundsCheck;
+    if (!storeCommon(&access, check, ValType::I32)) {
+      return false;
+    }
+
+    omitBoundsCheck = true;
+  }
+
+#ifdef JS_64BIT
+  for (uint32_t i = 0; i < numCopies8; i++) {
+    offset -= sizeof(uint64_t);
+
+    RegI32 temp = needI32();
+    moveI32(dest, temp);
+    pushI32(temp);
+    pushI64(val8);
+
+    MemoryAccessDesc access(Scalar::Int64, 1, offset, bytecodeOffset());
+    AccessCheck check;
+    check.omitBoundsCheck = omitBoundsCheck;
+    if (!storeCommon(&access, check, ValType::I64)) {
+      return false;
+    }
+
+    omitBoundsCheck = true;
+  }
+#endif
+
+  freeI32(dest);
+  return true;
 }
 
 bool BaseCompiler::emitMemOrTableInit(bool isMem) {
