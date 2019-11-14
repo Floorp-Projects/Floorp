@@ -563,6 +563,7 @@ declare const userPrefs: {
 ### `attachedFxAOAuthClients`
 
 Information about connected services associated with the FxA Account.
+Return an empty array if no account is found or an error occurs.
 
 #### Definition
 
@@ -574,7 +575,7 @@ interface OAuthClient {
   lastAccessTime: UnixEpochNumber;
 }
 
-declare const attachedFxAOAuthClients: Array<OAuthClient>
+declare const attachedFxAOAuthClients: Promise<OAuthClient[]>
 ```
 
 #### Examples
