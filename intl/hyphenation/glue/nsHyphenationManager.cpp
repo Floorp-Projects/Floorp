@@ -8,6 +8,7 @@
 #include "nsAtom.h"
 #include "nsIFile.h"
 #include "nsIURI.h"
+#include "nsIJARURI.h"
 #include "nsIProperties.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIDirectoryEnumerator.h"
@@ -224,6 +225,25 @@ void nsHyphenationManager::LoadPatternList() {
   }
 }
 
+// Extract the locale code we'll use to identify a given hyphenation resource
+// from the path name as found in omnijar or on disk.
+static already_AddRefed<nsAtom> LocaleAtomFromPath(const nsCString& aPath) {
+  MOZ_ASSERT(StringEndsWith(aPath, NS_LITERAL_CSTRING(".hyf")));
+  nsCString locale(aPath);
+  locale.Truncate(locale.Length() - 4);      // strip ".hyf"
+  locale.Cut(0, locale.RFindChar('/') + 1);  // strip directory
+  ToLowerCase(locale);
+  if (StringBeginsWith(locale, NS_LITERAL_CSTRING("hyph_"))) {
+    locale.Cut(0, 5);
+  }
+  for (uint32_t i = 0; i < locale.Length(); ++i) {
+    if (locale[i] == '_') {
+      locale.Replace(i, 1, '-');
+    }
+  }
+  return NS_Atomize(locale);
+}
+
 void nsHyphenationManager::LoadPatternListFromOmnijar(Omnijar::Type aType) {
   nsCString base;
   nsresult rv = Omnijar::GetURIString(aType, base);
@@ -257,21 +277,8 @@ void nsHyphenationManager::LoadPatternListFromOmnijar(Omnijar::Type aType) {
     if (NS_FAILED(rv)) {
       continue;
     }
-    ToLowerCase(locale);
-    locale.SetLength(locale.Length() - 4);     // strip ".hyf"
-    locale.Cut(0, locale.RFindChar('/') + 1);  // strip directory
-    if (StringBeginsWith(locale, NS_LITERAL_CSTRING("hyph_"))) {
-      locale.Cut(0, 5);
-    }
-    for (uint32_t i = 0; i < locale.Length(); ++i) {
-      if (locale[i] == '_') {
-        locale.Replace(i, 1, '-');
-      }
-    }
-    RefPtr<nsAtom> localeAtom = NS_Atomize(locale);
-    if (NS_SUCCEEDED(rv)) {
-      mPatternFiles.Put(localeAtom, uri);
-    }
+    RefPtr<nsAtom> localeAtom = LocaleAtomFromPath(locale);
+    mPatternFiles.Put(localeAtom, uri);
   }
 
   delete find;
@@ -301,28 +308,18 @@ void nsHyphenationManager::LoadPatternListFromDir(nsIFile* aDir) {
   while (NS_SUCCEEDED(files->GetNextFile(getter_AddRefs(file))) && file) {
     nsAutoString dictName;
     file->GetLeafName(dictName);
-    NS_ConvertUTF16toUTF8 locale(dictName);
-    ToLowerCase(locale);
-    if (!StringEndsWith(locale, NS_LITERAL_CSTRING(".hyf"))) {
+    NS_ConvertUTF16toUTF8 path(dictName);
+    if (!StringEndsWith(path, NS_LITERAL_CSTRING(".hyf"))) {
       continue;
     }
-    if (StringBeginsWith(locale, NS_LITERAL_CSTRING("hyph_"))) {
-      locale.Cut(0, 5);
-    }
-    locale.SetLength(locale.Length() - 4);  // strip ".hyf"
-    for (uint32_t i = 0; i < locale.Length(); ++i) {
-      if (locale[i] == '_') {
-        locale.Replace(i, 1, '-');
-      }
-    }
-#ifdef DEBUG_hyph
-    printf("adding hyphenation patterns for %s: %s\n", locale.get(),
-           NS_ConvertUTF16toUTF8(dictName).get());
-#endif
-    RefPtr<nsAtom> localeAtom = NS_Atomize(locale);
+    RefPtr<nsAtom> localeAtom = LocaleAtomFromPath(path);
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewFileURI(getter_AddRefs(uri), file);
     if (NS_SUCCEEDED(rv)) {
+#ifdef DEBUG_hyph
+      printf("adding hyphenation patterns for %s: %s\n",
+             nsAtomCString(localeAtom).get(), path.get());
+#endif
       mPatternFiles.Put(localeAtom, uri);
     }
   }
@@ -351,6 +348,33 @@ void nsHyphenationManager::LoadAliases() {
       }
     }
   }
+}
+
+void nsHyphenationManager::ShareHyphDictToProcess(
+    nsIURI* aURI, base::ProcessId aPid,
+    mozilla::ipc::SharedMemoryBasic::Handle* aOutHandle, uint32_t* aOutSize) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  // aURI will be referring to an omnijar resource (otherwise just bail).
+  *aOutHandle = ipc::SharedMemoryBasic::NULLHandle();
+  *aOutSize = 0;
+  nsCOMPtr<nsIJARURI> jar = do_QueryInterface(aURI);
+  if (!jar) {
+    MOZ_ASSERT_UNREACHABLE("not a JAR resource");
+    return;
+  }
+
+  // Extract the locale code from the URI, and get the corresponding
+  // hyphenator (loading it into shared memory if necessary).
+  nsCString path;
+  jar->GetJAREntry(path);
+  RefPtr<nsAtom> localeAtom = LocaleAtomFromPath(path);
+  RefPtr<nsHyphenator> hyph = GetHyphenator(localeAtom);
+  if (!hyph) {
+    MOZ_ASSERT_UNREACHABLE("failed to find hyphenator");
+    return;
+  }
+
+  hyph->ShareToProcess(aPid, aOutHandle, aOutSize);
 }
 
 size_t nsHyphenationManager::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
