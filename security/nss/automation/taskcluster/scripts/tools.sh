@@ -30,11 +30,7 @@ hg_clone() {
 }
 
 fetch_dist() {
-    if [ "$TASKCLUSTER_ROOT_URL" = "https://taskcluster.net" ] || [ -z "$TASKCLUSTER_ROOT_URL" ]; then
-        url=https://queue.taskcluster.net/v1/task/$TC_PARENT_TASK_ID/artifacts/public/dist.tar.bz2
-    else
-        url=$TASKCLUSTER_ROOT_URL/api/queue/v1/task/$TC_PARENT_TASK_ID/artifacts/public/dist.tar.bz2
-    fi
+    url=https://queue.taskcluster.net/v1/task/$TC_PARENT_TASK_ID/artifacts/public/dist.tar.bz2
     if [ ! -d "dist" ]; then
         for i in 0 2 5; do
             sleep $i
