@@ -168,6 +168,8 @@ const char nsXPLookAndFeel::sColorPrefs[][41] = {
     "ui.windowframe",
     "ui.windowtext",
     "ui.-moz-buttondefault",
+    "ui.-moz-default-color",
+    "ui.-moz-default-background-color",
     "ui.-moz-dialog",
     "ui.-moz-dialogtext",
     "ui.-moz-dragtargetzone",
@@ -211,6 +213,9 @@ const char nsXPLookAndFeel::sColorPrefs[][41] = {
     "ui.-moz-win-mediatext",
     "ui.-moz-win-communicationstext",
     "ui.-moz-nativehyperlinktext",
+    "ui.-moz-hyperlinktext",
+    "ui.-moz-activehyperlinktext",
+    "ui.-moz-visitedhyperlinktext",
     "ui.-moz-comboboxtext",
     "ui.-moz-combobox",
     "ui.-moz-gtk-info-bar-text"};
