@@ -16,6 +16,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.manifest.getOrNull
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
+import mozilla.components.feature.customtabs.CustomTabWindowFeature
 import mozilla.components.feature.pwa.ext.getTrustedScope
 import mozilla.components.feature.pwa.ext.trustedOrigins
 import mozilla.components.feature.pwa.feature.ManifestUpdateFeature
@@ -45,6 +46,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
     private val args by navArgs<ExternalAppBrowserFragmentArgs>()
 
     private val customTabsIntegration = ViewBoundFeatureWrapper<CustomTabsIntegration>()
+    private val windowFeature = ViewBoundFeatureWrapper<CustomTabWindowFeature>()
     private val hideToolbarFeature = ViewBoundFeatureWrapper<WebAppHideToolbarFeature>()
 
     @Suppress("LongMethod")
@@ -70,6 +72,16 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
                     ),
                     owner = this,
                     view = view)
+
+                windowFeature.set(
+                    feature = CustomTabWindowFeature(
+                        activity,
+                        components.core.store,
+                        customTabSessionId
+                    ),
+                    owner = this,
+                    view = view
+                )
 
                 hideToolbarFeature.set(
                     feature = WebAppHideToolbarFeature(

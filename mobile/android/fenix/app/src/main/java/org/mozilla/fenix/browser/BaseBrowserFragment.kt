@@ -53,7 +53,6 @@ import mozilla.components.feature.session.SwipeRefreshFeature
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
-import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -103,7 +102,6 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
     protected val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewFeature>()
 
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
-    private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
     private val contextMenuFeature = ViewBoundFeatureWrapper<ContextMenuFeature>()
     private val downloadsFeature = ViewBoundFeatureWrapper<DownloadsFeature>()
     private val appLinksFeature = ViewBoundFeatureWrapper<AppLinksFeature>()
@@ -238,15 +236,6 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                     engineView = view.engineView,
                     useCases = context.components.useCases.contextMenuUseCases,
                     customTabId = customTabSessionId
-                ),
-                owner = this,
-                view = view
-            )
-
-            windowFeature.set(
-                feature = WindowFeature(
-                    store = store,
-                    tabsUseCases = context.components.useCases.tabsUseCases
                 ),
                 owner = this,
                 view = view

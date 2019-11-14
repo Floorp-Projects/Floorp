@@ -22,18 +22,19 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.fragment_browser.view.browserLayout
-import kotlinx.android.synthetic.main.fragment_browser.view.readerViewControlsBar
-import kotlinx.android.synthetic.main.fragment_home.bottom_bar
-import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.view.onboarding_message
+import kotlinx.android.synthetic.main.fragment_browser.view.*
+import kotlinx.android.synthetic.main.fragment_home.*
+import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.sitepermissions.SitePermissions
+import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.jetbrains.anko.dimen
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -54,8 +55,10 @@ import org.mozilla.fenix.mvi.getManagedEmitter
  * Fragment used for browsing the web within the main app.
  */
 @ExperimentalCoroutinesApi
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("TooManyFunctions")
 class BrowserFragment : BaseBrowserFragment(), BackHandler {
+
+    private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -96,6 +99,15 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
                         context.components.analytics.metrics.track(Event.ReaderModeAvailable)
                     }
                 },
+                owner = this,
+                view = view
+            )
+
+            windowFeature.set(
+                feature = WindowFeature(
+                    store = context.components.core.store,
+                    tabsUseCases = context.components.useCases.tabsUseCases
+                ),
                 owner = this,
                 view = view
             )
