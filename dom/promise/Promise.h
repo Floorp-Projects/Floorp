@@ -89,6 +89,13 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
   void MaybeReject(JS::Handle<JS::Value> aValue) {
     MaybeSomething(aValue, &Promise::MaybeReject);
   }
+
+  // This method is deprecated.  Consumers should MaybeRejectWithDOMException if
+  // they are rejecting with a DOMException, or use one of the other
+  // MaybeReject* methods otherwise.  If they have a random nsresult which may
+  // or may not correspond to a DOMException type, they should consider using an
+  // appropriate DOMException-type nsresult with an informative message and
+  // calling MaybeRejectWithDOMException.
   inline void MaybeReject(nsresult aArg) {
     MOZ_ASSERT(NS_FAILED(aArg));
     MaybeSomething(aArg, &Promise::MaybeReject);
