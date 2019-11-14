@@ -25,35 +25,35 @@ var gTestId = -1;
 // note, win8 has a minimum inner window size of around 122 pixels. Don't go below this on min-width tests.
 var tests = [
   { testname: "unconstrained",
-    src: "windowminmaxsize1.xul",
+    src: "windowminmaxsize1.xhtml",
     width: 150, height: 150 },
   { testname: "constraint min style",
-    src: "windowminmaxsize2.xul",
+    src: "windowminmaxsize2.xhtml",
     width: 180, height: 210 },
   { testname: "constraint max style",
-    src: "windowminmaxsize3.xul",
+    src: "windowminmaxsize3.xhtml",
     width: 125, height: 140 },
   { testname: "constraint min attributes",
-    src: "windowminmaxsize4.xul",
+    src: "windowminmaxsize4.xhtml",
     width: 240, height: 220 },
   { testname: "constraint min attributes with width and height set",
-    src: "windowminmaxsize5.xul",
+    src: "windowminmaxsize5.xhtml",
     width: 215, height: 235 },
   { testname: "constraint max attributes",
-    src: "windowminmaxsize6.xul",
+    src: "windowminmaxsize6.xhtml",
     width: 125, height: 95 },
   // this gets the inner width as <window minwidth='210'> makes the box 210 pixels wide
   { testname: "constraint min width attribute only",
-    src: "windowminmaxsize7.xul",
+    src: "windowminmaxsize7.xhtml",
     width: 210, height: 150 },
   { testname: "constraint max width attribute only",
-    src: "windowminmaxsize8.xul",
+    src: "windowminmaxsize8.xhtml",
     width: 128, height: 150 },
   { testname: "constraint max width attribute with minheight",
-    src: "windowminmaxsize9.xul",
+    src: "windowminmaxsize9.xhtml",
     width: 195, height: 180 },
   { testname: "constraint minwidth, minheight, maxwidth and maxheight set",
-    src: "windowminmaxsize10.xul",
+    src: "windowminmaxsize10.xhtml",
     width: 150, height: 150, last: true }
 ];
 
@@ -169,7 +169,7 @@ function nextPopupTest(panel)
   if (++gTestId >= popupTests.length) {
     // Next, check a panel that has a titlebar to ensure that it is accounted for
     // properly in the size.
-    var titledPanelWindow = docShell.rootTreeItem.domWindow.open("titledpanelwindow.xul", "_blank", "chrome,resizable=yes");
+    var titledPanelWindow = docShell.rootTreeItem.domWindow.open("titledpanelwindow.xhtml", "_blank", "chrome,resizable=yes");
     SimpleTest.waitForFocus(titledPanelWindowOpened, titledPanelWindow);
   }
   else {

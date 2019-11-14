@@ -68,19 +68,19 @@ XUL <resizer> tests
       }
 
       if (/Mac/.test(navigator.platform)) {
-        window.openDialog("window_resizer.xul", "_blank", "left=200,top=200,outerWidth=300,outerHeight=300,chrome,noopener", window);
+        window.openDialog("window_resizer.xhtml", "_blank", "left=200,top=200,outerWidth=300,outerHeight=300,chrome,noopener", window);
       }
       else {
-        // Skip window_resizer.xul tests.
+        // Skip window_resizer.xhtml tests.
         todo(false, "We can't test GTK and Windows native drag resizing implementations.");
-        // Run window_resizer_element.xul test only.
+        // Run window_resizer_element.xhtml test only.
         lastResizerTest();
       }
     }
 
     function lastResizerTest()
     {
-      window.openDialog("window_resizer_element.xul", "_blank", "left=200,top=200,outerWidth=300,outerHeight=300,chrome,noopener", window);
+      window.openDialog("window_resizer_element.xhtml", "_blank", "left=200,top=200,outerWidth=300,outerHeight=300,chrome,noopener", window);
     }
 
     SimpleTest.waitForFocus(openPopup);
