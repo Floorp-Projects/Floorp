@@ -430,13 +430,12 @@ HTMLFormElement* nsGenericHTMLElement::FindAncestorForm(
   NS_ASSERTION(!HasAttr(kNameSpaceID_None, nsGkAtoms::form) ||
                    IsHTMLElement(nsGkAtoms::img),
                "FindAncestorForm should not be called if @form is set!");
-
-  // Make sure we don't end up finding a form that's anonymous from
-  // our point of view. See also nsGenericHTMLFormElement::UpdateFieldSet.
-  nsIContent* bindingParent = GetBindingParent();
+  if (IsInNativeAnonymousSubtree()) {
+    return nullptr;
+  }
 
   nsIContent* content = this;
-  while (content != bindingParent && content) {
+  while (content) {
     // If the current ancestor is a form, return it as our form
     if (content->IsHTMLElement(nsGkAtoms::form)) {
 #ifdef DEBUG
@@ -2104,14 +2103,15 @@ void nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
 }
 
 void nsGenericHTMLFormElement::UpdateFieldSet(bool aNotify) {
+  if (IsInNativeAnonymousSubtree()) {
+    MOZ_ASSERT(!mFieldSet);
+    return;
+  }
+
   nsIContent* parent = nullptr;
   nsIContent* prev = nullptr;
 
-  // Don't walk out of anonymous subtrees. Note the similar code in
-  // nsGenericHTMLElement::FindAncestorForm.
-  nsIContent* bindingParent = GetBindingParent();
-
-  for (parent = GetParent(); parent && parent != bindingParent;
+  for (parent = GetParent(); parent;
        prev = parent, parent = parent->GetParent()) {
     HTMLFieldSetElement* fieldset = HTMLFieldSetElement::FromNode(parent);
     if (fieldset && (!prev || fieldset->GetFirstLegend() != prev)) {
