@@ -22,16 +22,33 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/ExtensionPopups.jsm"
 );
 
-var { ExtensionParent } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionParent.jsm"
-);
-
-var { IconDetails, StartupCache } = ExtensionParent;
-
 var { DefaultWeakMap } = ExtensionUtils;
+
+var { PageActionBase } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionActions.jsm"
+);
 
 // WeakMap[Extension -> PageAction]
 let pageActionMap = new WeakMap();
+
+class PageAction extends PageActionBase {
+  constructor(extension, buttonDelegate) {
+    let tabContext = new TabContext(tab => this.getContextData(null));
+    super(tabContext, extension);
+    this.buttonDelegate = buttonDelegate;
+  }
+
+  updateOnChange(target) {
+    this.buttonDelegate.updateButton(target.ownerGlobal);
+  }
+
+  getTab(tabId) {
+    if (tabId !== null) {
+      return tabTracker.getTab(tabId);
+    }
+    return null;
+  }
+}
 
 this.pageAction = class extends ExtensionAPI {
   static for(extension) {
@@ -42,56 +59,17 @@ this.pageAction = class extends ExtensionAPI {
     let { extension } = this;
     let options = extension.manifest.page_action;
 
+    this.action = new PageAction(extension, this);
+    await this.action.loadIconData();
+
     let widgetId = makeWidgetId(extension.id);
     this.id = widgetId + "-page-action";
 
     this.tabManager = extension.tabManager;
 
-    // `show` can have three different values:
-    // - `false`. This means the page action is not shown.
-    //   It's set as default if show_matches is empty. Can also be set in a tab via
-    //   `pageAction.hide(tabId)`, e.g. in order to override show_matches.
-    // - `true`. This means the page action is shown.
-    //   It's never set as default because <all_urls> doesn't really match all URLs
-    //   (e.g. "about:" URLs). But can be set in a tab via `pageAction.show(tabId)`.
-    // - `undefined`.
-    //   This is the default value when there are some patterns in show_matches.
-    //   Can't be set as a tab-specific value.
-    let show, showMatches, hideMatches;
-    let show_matches = options.show_matches || [];
-    let hide_matches = options.hide_matches || [];
-    if (!show_matches.length) {
-      // Always hide by default. No need to do any pattern matching.
-      show = false;
-    } else {
-      // Might show or hide depending on the URL. Enable pattern matching.
-      const { restrictSchemes } = extension;
-      showMatches = new MatchPatternSet(show_matches, { restrictSchemes });
-      hideMatches = new MatchPatternSet(hide_matches, { restrictSchemes });
-    }
-
-    this.defaults = {
-      show,
-      showMatches,
-      hideMatches,
-      title: options.default_title || extension.name,
-      popup: options.default_popup || "",
-      pinned: options.pinned,
-    };
-
     this.browserStyle = options.browser_style;
 
-    this.tabContext = new TabContext(tab => this.defaults);
-
-    this.tabContext.on("location-change", this.handleLocationChange.bind(this)); // eslint-disable-line mozilla/balanced-listeners
-
     pageActionMap.set(extension, this);
-
-    this.defaults.icon = await StartupCache.get(
-      extension,
-      ["pageAction", "default_icon"],
-      () => this.normalize({ path: options.default_icon || "" })
-    );
 
     this.lastValues = new DefaultWeakMap(() => ({}));
 
@@ -122,10 +100,10 @@ this.pageAction = class extends ExtensionAPI {
         new PageActions.Action({
           id: widgetId,
           extensionID: extension.id,
-          title: this.defaults.title,
-          iconURL: this.defaults.icon,
-          pinnedToUrlbar: this.defaults.pinned,
-          disabled: !this.defaults.show,
+          title: this.action.getProperty(null, "title"),
+          iconURL: this.action.getProperty(null, "title"),
+          pinnedToUrlbar: this.action.getPinned(),
+          disabled: !this.action.getProperty(null, "enabled"),
           onCommand: (event, buttonNode) => {
             this.lastClickInfo = {
               button: event.button || 0,
@@ -151,10 +129,10 @@ this.pageAction = class extends ExtensionAPI {
 
       // If the page action is only enabled in some URLs, do pattern matching in
       // the active tabs and update the button if necessary.
-      if (show === undefined) {
+      if (this.action.getProperty(null, "enabled") === undefined) {
         for (let window of windowTracker.browserWindows()) {
           let tab = window.gBrowser.selectedTab;
-          if (this.isShown(tab)) {
+          if (this.action.isShownForTab(tab)) {
             this.updateButton(window);
           }
         }
@@ -164,8 +142,7 @@ this.pageAction = class extends ExtensionAPI {
 
   onShutdown(isAppShutdown) {
     pageActionMap.delete(this.extension);
-
-    this.tabContext.shutdown();
+    this.action.onShutdown();
 
     // Removing the browser page action causes PageActions to forget about it
     // across app restarts, so don't remove it on app shutdown, but do remove
@@ -177,46 +154,15 @@ this.pageAction = class extends ExtensionAPI {
     }
   }
 
-  // Returns the value of the property |prop| for the given tab, where
-  // |prop| is one of "show", "title", "icon", "popup".
-  getProperty(tab, prop) {
-    return this.tabContext.get(tab)[prop];
-  }
-
-  // Sets the value of the property |prop| for the given tab to the
-  // given value, symmetrically to |getProperty|.
-  //
-  // If |tab| is currently selected, updates the page action button to
-  // reflect the new value.
-  setProperty(tab, prop, value) {
-    if (value != null) {
-      this.tabContext.get(tab)[prop] = value;
-    } else {
-      delete this.tabContext.get(tab)[prop];
-    }
-
-    if (tab.selected) {
-      this.updateButton(tab.ownerGlobal);
-    }
-  }
-
-  normalize(details, context = null) {
-    let icon = IconDetails.normalize(details, this.extension, context);
-    if (!Object.keys(icon).length) {
-      icon = null;
-    }
-    return icon;
-  }
-
   // Updates the page action button in the given window to reflect the
   // properties of the currently selected tab:
   //
   // Updates "tooltiptext" and "aria-label" to match "title" property.
   // Updates "image" to match the "icon" property.
-  // Enables or disables the icon, based on the "show" and "patternMatching" properties.
+  // Enables or disables the icon, based on the "enabled" and "patternMatching" properties.
   updateButton(window) {
     let tab = window.gBrowser.selectedTab;
-    let tabData = this.tabContext.get(tab);
+    let tabData = this.action.getContextData(tab);
     let last = this.lastValues.get(window);
 
     window.requestAnimationFrame(() => {
@@ -232,10 +178,11 @@ this.pageAction = class extends ExtensionAPI {
         last.title = title;
       }
 
-      let show = tabData.show != null ? tabData.show : tabData.patternMatching;
-      if (last.show !== show) {
-        this.browserPageAction.setDisabled(!show, window);
-        last.show = show;
+      let enabled =
+        tabData.enabled != null ? tabData.enabled : tabData.patternMatching;
+      if (last.enabled !== enabled) {
+        this.browserPageAction.setDisabled(!enabled, window);
+        last.enabled = enabled;
       }
 
       let icon = tabData.icon;
@@ -244,28 +191,6 @@ this.pageAction = class extends ExtensionAPI {
         last.icon = icon;
       }
     });
-  }
-
-  // Checks whether the tab action is shown when the specified tab becomes active.
-  // Does pattern matching if necessary, and caches the result as a tab-specific value.
-  // @param {XULElement} tab
-  //        The tab to be checked
-  // @return boolean
-  isShown(tab) {
-    let tabData = this.tabContext.get(tab);
-
-    // If there is a "show" value, return it. Can be due to show(), hide() or empty show_matches.
-    if (tabData.show !== undefined) {
-      return tabData.show;
-    }
-
-    // Otherwise pattern matching must have been configured. Do it, caching the result.
-    if (tabData.patternMatching === undefined) {
-      let uri = tab.linkedBrowser.currentURI;
-      tabData.patternMatching =
-        tabData.showMatches.matches(uri) && !tabData.hideMatches.matches(uri);
-    }
-    return tabData.patternMatching;
   }
 
   /**
@@ -277,7 +202,7 @@ this.pageAction = class extends ExtensionAPI {
    * @param {Window} window
    */
   triggerAction(window) {
-    if (this.isShown(window.gBrowser.selectedTab)) {
+    if (this.action.isShownForTab(window.gBrowser.selectedTab)) {
       this.lastClickInfo = { button: 0, modifiers: [] };
       this.handleClick(window);
     }
@@ -315,7 +240,7 @@ this.pageAction = class extends ExtensionAPI {
 
     ExtensionTelemetry.pageActionPopupOpen.stopwatchStart(extension, this);
     let tab = window.gBrowser.selectedTab;
-    let popupURL = this.tabContext.get(tab).popup;
+    let popupURL = this.action.getProperty(tab, "popup");
 
     this.tabManager.addActiveTabPermission(tab);
 
@@ -360,48 +285,15 @@ this.pageAction = class extends ExtensionAPI {
     }
   }
 
-  /**
-   * Updates the `tabData` for any location change, however it only updates the button
-   * when the selected tab has a location change, or the selected tab has changed.
-   *
-   * @param {string} eventType
-   *        The type of the event, should be "location-change".
-   * @param {XULElement} tab
-   *        The tab whose location changed, or which has become selected.
-   * @param {boolean} [fromBrowse]
-   *        - `true` if navigation occurred in `tab`.
-   *        - `false` if the location changed but no navigation occurred, e.g. due to
-               a hash change or `history.pushState`.
-   *        - Omitted if TabSelect has occurred, tabData does not need to be updated.
-   */
-  handleLocationChange(eventType, tab, fromBrowse) {
-    if (fromBrowse === true) {
-      // Clear tab data on navigation.
-      this.tabContext.clear(tab);
-    } else if (fromBrowse === false) {
-      // Clear pattern matching cache when URL changes.
-      let tabData = this.tabContext.get(tab);
-      if (tabData.patternMatching !== undefined) {
-        tabData.patternMatching = undefined;
-      }
-    }
-
-    if (tab.selected) {
-      // isShown will do pattern matching (if necessary) and store the result
-      // so that updateButton knows whether the page action should be shown.
-      this.isShown(tab);
-      this.updateButton(tab.ownerGlobal);
-    }
-  }
-
   getAPI(context) {
-    let { extension } = context;
-
+    const { extension } = context;
     const { tabManager } = extension;
-    const pageAction = this;
+    const { action } = this;
 
     return {
       pageAction: {
+        ...action.api(context),
+
         onClicked: new EventManager({
           context,
           name: "pageAction.onClicked",
@@ -413,73 +305,16 @@ this.pageAction = class extends ExtensionAPI {
               );
             };
 
-            pageAction.on("click", listener);
+            this.on("click", listener);
             return () => {
-              pageAction.off("click", listener);
+              this.off("click", listener);
             };
           },
         }).api(),
 
-        show(tabId) {
-          let tab = tabTracker.getTab(tabId);
-          pageAction.setProperty(tab, "show", true);
-        },
-
-        hide(tabId) {
-          let tab = tabTracker.getTab(tabId);
-          pageAction.setProperty(tab, "show", false);
-        },
-
-        isShown(details) {
-          let tab = tabTracker.getTab(details.tabId);
-          return pageAction.isShown(tab);
-        },
-
-        setTitle(details) {
-          let tab = tabTracker.getTab(details.tabId);
-          pageAction.setProperty(tab, "title", details.title);
-        },
-
-        getTitle(details) {
-          let tab = tabTracker.getTab(details.tabId);
-
-          let title = pageAction.getProperty(tab, "title");
-          return Promise.resolve(title);
-        },
-
-        setIcon(details) {
-          let tab = tabTracker.getTab(details.tabId);
-
-          let icon = pageAction.normalize(details, context);
-
-          pageAction.setProperty(tab, "icon", icon);
-        },
-
-        setPopup(details) {
-          let tab = tabTracker.getTab(details.tabId);
-
-          // Note: Chrome resolves arguments to setIcon relative to the calling
-          // context, but resolves arguments to setPopup relative to the extension
-          // root.
-          // For internal consistency, we currently resolve both relative to the
-          // calling context.
-          let url = details.popup && context.uri.resolve(details.popup);
-          if (url && !context.checkLoadURL(url)) {
-            return Promise.reject({ message: `Access denied for URL ${url}` });
-          }
-          pageAction.setProperty(tab, "popup", url);
-        },
-
-        getPopup(details) {
-          let tab = tabTracker.getTab(details.tabId);
-
-          let popup = pageAction.getProperty(tab, "popup");
-          return Promise.resolve(popup);
-        },
-
-        openPopup: function() {
+        openPopup: () => {
           let window = windowTracker.topWindow;
-          pageAction.triggerAction(window);
+          this.triggerAction(window);
         },
       },
     };
