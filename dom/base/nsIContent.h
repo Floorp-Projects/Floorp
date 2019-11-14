@@ -445,29 +445,6 @@ class nsIContent : public nsINode {
    */
   mozilla::dom::HTMLSlotElement* GetAssignedSlotByMode() const;
 
-  nsIContent* GetXBLInsertionParent() const {
-    nsIContent* ip = GetXBLInsertionPoint();
-    return ip ? ip->GetParent() : nullptr;
-  }
-
-  /**
-   * Gets the insertion parent element of the XBL binding.
-   * The insertion parent is our one true parent in the transformed DOM.
-   *
-   * @return the insertion parent element.
-   */
-  nsIContent* GetXBLInsertionPoint() const {
-    const nsExtendedContentSlots* slots = GetExistingExtendedContentSlots();
-    return slots ? slots->mXBLInsertionPoint.get() : nullptr;
-  }
-
-  /**
-   * Sets the insertion parent element of the XBL binding.
-   *
-   * @param aContent The insertion parent element.
-   */
-  void SetXBLInsertionPoint(nsIContent* aContent);
-
   /**
    * Same as GetFlattenedTreeParentNode, but returns null if the parent is
    * non-nsIContent.
@@ -763,11 +740,6 @@ class nsIContent : public nsINode {
      * @see nsIContent::GetBindingParent
      */
     RefPtr<mozilla::dom::Element> mBindingParent;
-
-    /**
-     * @see nsIContent::GetXBLInsertionPoint
-     */
-    nsCOMPtr<nsIContent> mXBLInsertionPoint;
 
     /**
      * @see nsIContent::GetContainingShadow
