@@ -37,9 +37,15 @@ JitCode* Linker::newCode(JSContext* cx, CodeKind kind) {
   // ExecutableAllocator requires bytesNeeded to be aligned.
   bytesNeeded = AlignBytes(bytesNeeded, ExecutableAllocatorAlignment);
 
+  JitZone* jitZone = cx->zone()->getJitZone(cx);
+  if (!jitZone) {
+    // Note: don't call fail(cx) here, getJitZone reports OOM.
+    return nullptr;
+  }
+
   ExecutablePool* pool;
-  uint8_t* result = (uint8_t*)cx->runtime()->jitRuntime()->execAlloc().alloc(
-      cx, bytesNeeded, &pool, kind);
+  uint8_t* result =
+      (uint8_t*)jitZone->execAlloc().alloc(cx, bytesNeeded, &pool, kind);
   if (!result) {
     return fail(cx);
   }

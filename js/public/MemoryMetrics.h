@@ -507,7 +507,6 @@ struct RuntimeSizes {
   void addToServoSizes(ServoSizes* sizes) const {
     FOR_EACH_SIZE(ADD_TO_SERVO_SIZES);
     scriptSourceInfo.addToServoSizes(sizes);
-    code.addToServoSizes(sizes);
     gc.addToServoSizes(sizes);
   }
 
@@ -518,7 +517,6 @@ struct RuntimeSizes {
   // FineGrained, we subtract the measurements of the notable script sources
   // and move them into |notableScriptSources|.
   ScriptSourceInfo scriptSourceInfo;
-  CodeSizes code;
   GCSizes gc;
 
   typedef js::HashMap<const char*, ScriptSourceInfo, mozilla::CStringHasher,
@@ -683,6 +681,7 @@ struct ZoneStats {
     unusedGCThings.addToServoSizes(sizes);
     stringInfo.addToServoSizes(sizes);
     shapeInfo.addToServoSizes(sizes);
+    code.addToServoSizes(sizes);
   }
 
   FOR_EACH_SIZE(DECL_SIZE_ZERO);
@@ -694,6 +693,7 @@ struct ZoneStats {
   UnusedGCThingSizes unusedGCThings;
   StringInfo stringInfo;
   ShapeInfo shapeInfo;
+  CodeSizes code;
   void* extra = nullptr;  // This field can be used by embedders.
 
   typedef js::HashMap<JSString*, StringInfo,
