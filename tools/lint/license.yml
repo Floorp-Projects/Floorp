@@ -8,7 +8,7 @@ license:
         - build/pgo/js-input
         - build/workspace-hack/src/lib.rs
         - browser/app/blocklist.xml
-        - browser/components/pocket/
+        - browser/components/pocket/content/panels/
         - browser/components/shell/ScreenshotChild.jsm
         - browser/extensions/webcompat/about-compat/aboutCompat.html
         - browser/extensions/webcompat/injections/js
@@ -17,51 +17,29 @@ license:
         - config/external/nspr/_pl_bld.h
         - config/external/nspr/_pr_bld.h
         - config/system_header_util.py
-        - devtools/client/debugger/bin
-        - devtools/client/debugger/dist
-        - devtools/client/jsonview/lib/require.js
-        - devtools/client/shared
-        - devtools/server/actors/utils/shapes-utils.js
-        - devtools/shared
-        - docshell/resources/content/netError.js
-        - dom/manifest/Manifest.jsm
-        - dom/manifest/ManifestIcons.jsm
+        # Unknown origin
         - gfx/2d/MMIHelpers.h
+        # Generated code
         - gfx/2d/ShadersD2D1.h
-        - gfx/angle/update-angle.py
-        - gfx/angle/vendor_from_git.py
-        - gfx/layers/layerviewer/index.html
-        - gfx/layers/layerviewer/layerTreeView.js
-        - gfx/layers/protobuf/LayerScopePacket.pb.cc
-        - gfx/layers/protobuf/LayerScopePacket.pb.h
-        - gfx/thebes/CJKCompatSVS.cpp
-        - gfx/webrender_bindings/src/bindings.rs
-        - gfx/webrender_bindings/src/moz2d_renderer.rs
-        - gfx/webrender_bindings/src/program_cache.rs
         - intl/l10n/L10nRegistry.jsm
         - ipc/ipdl/ipdl/cxx/code.py
-        - layout/style/tools/cleanup_computed_getters.py
-        - layout/style/tools/cleanup_keywords.py
-        - layout/style/tools/cleanup_ktables.py
         - media/libdav1d/vcs_version.h
         - media/mtransport/mdns_service/mdns_service.h
-        - media/webrtc/signaling/src/sdp
-        - mobile/android/branding
         - mobile/android/components/extensions
         - mobile/android/geckoview/src/main/AndroidManifest.xml
         - mobile/android/geckoview/src/main/res/drawable/ic_generic_file.xml
         - mobile/android/geckoview_example/src/main
+        # Almost empty file
         - modules/libpref/greprefs.js
         - mozglue/android/NativeCrypto.h
-        - netwerk/base/rust-helper/src/lib.rs
         - parser/html/java/named-character-references.html
-        - python/l10n/convert_xul_to_fluent
         - python/mozboot/support/ConEmu.xml
         - python/mozbuild/mozbuild/action/tooltool.py
         - python/mozbuild/mozbuild/artifact_commands.py
         - python/mozbuild/mozbuild/export_telemetry_schema.py
         - python/mozbuild/mozpack/hg.py
         - python/mozlint/test/files/
+        # By design
         - python/mozrelease/mozrelease
         - security/generate_certdata.py
         - security/mac/hardenedruntime/browser.developer.entitlements.xml
@@ -73,24 +51,14 @@ license:
         - services/sync/modules-testing/fxa_utils.js
         - servo/components/hashglobe/src/alloc.rs
         - servo/components/hashglobe/src/shim.rs
-        - taskcluster/docker/firefox-snap/extract_locales_from_l10n_json.py
-        - taskcluster/docker/index-task/insert-indexes.js
-        - taskcluster/scripts/misc/android-gradle-dependencies/nexus.xml
-        - taskcluster/scripts/misc/repack_rust.py
-        - taskcluster/taskgraph/util/declarative_artifacts.py
-        - taskcluster/taskgraph/util/partners.py
         - toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/csd.pb.cc
         - toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/csd.pb.h
         - toolkit/mozapps/update/updater/crctable.h
         - tools/lint/eslint/eslint-plugin-mozilla/lib/configs
+        # By design
         - tools/lint/test/
-        - xpcom/base/ErrorList.py
-        - xpcom/components/gen_static_components.py
+        # generated file
         - xpcom/ds/HTMLAtoms.py
-        - xpcom/idl-parser/setup.py
-        - xpcom/io/crc32c.h
-        - xpcom/rust/gkrust_utils/src/lib.rs
-        - xpcom/rust/nserror/src/lib.rs
     extensions:
         - .c
         - .cc
