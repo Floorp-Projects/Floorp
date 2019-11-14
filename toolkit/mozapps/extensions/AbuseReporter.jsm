@@ -476,7 +476,7 @@ const AbuseReporter = {
       // Set the dialog window options (including a reasonable initial
       // window height size, eventually adjusted by the panel once it
       // has been rendered its content).
-      "dialog,centerscreen,alwaysOnTop,height=700",
+      "dialog,centerscreen,height=700",
       params
     );
 
