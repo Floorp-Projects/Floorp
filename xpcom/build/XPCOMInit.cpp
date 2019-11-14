@@ -743,15 +743,22 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
       // If you're seeing this crash and/or warning, some NSS resources are
       // still in use (see bugs 1417680 and 1230312). Set the environment
       // variable 'MOZ_IGNORE_NSS_SHUTDOWN_LEAKS' to some value to ignore this.
+      // Also, if leak checking is enabled, report this as a fake leak instead
+      // of crashing.
 #if defined(DEBUG) && !defined(ANDROID)
-      if (!getenv("MOZ_IGNORE_NSS_SHUTDOWN_LEAKS")) {
+      if (!getenv("MOZ_IGNORE_NSS_SHUTDOWN_LEAKS") &&
+          !getenv("XPCOM_MEM_BLOAT_LOG")) {
         MOZ_CRASH("NSS_Shutdown failed");
       } else {
+#  ifdef NS_BUILD_REFCNT_LOGGING
+        // Create a fake leak.
+        NS_LogCtor((void*)0x100, "NSSShutdownFailed", 100);
+#  endif  // NS_BUILD_REFCNT_LOGGING
         NS_WARNING("NSS_Shutdown failed");
       }
 #else
       NS_WARNING("NSS_Shutdown failed");
-#endif
+#endif  // defined(DEBUG) && !defined(ANDROID)
     }
   }
 
