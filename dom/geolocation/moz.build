@@ -8,22 +8,25 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 EXPORTS += [
-    'nsGeoPosition.h',
     'nsGeoPositionIPCSerialiser.h',
 ]
 
 EXPORTS.mozilla.dom += [
+    'Geolocation.h',
+    'GeolocationCoordinates.h',
+    'GeolocationPosition.h',
     'GeolocationPositionError.h',
 ]
 
 SOURCES += [
+    'Geolocation.cpp',
+    'GeolocationCoordinates.cpp',
+    'GeolocationPosition.cpp',
     'GeolocationPositionError.cpp',
-    'nsGeolocation.cpp',
 ]
 
 UNIFIED_SOURCES += [
     'MLSFallback.cpp',
-    'nsGeoPosition.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

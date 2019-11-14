@@ -8,7 +8,7 @@
 #define GpsdLocationProvider_h
 
 #include "nsCOMPtr.h"
-#include "nsGeolocation.h"
+#include "Geolocation.h"
 #include "nsIGeolocationProvider.h"
 
 class MLSFallback;
