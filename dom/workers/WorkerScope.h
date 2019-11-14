@@ -228,6 +228,8 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
   GetOrCreateServiceWorkerRegistration(
       const ServiceWorkerRegistrationDescriptor& aDescriptor) override;
 
+  uint64_t WindowID() const;
+
   void FirstPartyStorageAccessGranted();
 };
 
