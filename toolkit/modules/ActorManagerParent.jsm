@@ -236,13 +236,6 @@ let ACTORS = {
     allFrames: true,
   },
 
-  PurgeSessionHistory: {
-    child: {
-      moduleURI: "resource://gre/actors/PurgeSessionHistoryChild.jsm",
-    },
-    allFrames: true,
-  },
-
   Select: {
     parent: {
       moduleURI: "resource://gre/actors/SelectParent.jsm",
@@ -280,24 +273,6 @@ let ACTORS = {
     },
   },
 
-  UAWidgets: {
-    child: {
-      moduleURI: "resource://gre/actors/UAWidgetsChild.jsm",
-      events: {
-        UAWidgetSetupOrChange: {},
-        UAWidgetTeardown: {},
-      },
-    },
-
-    allFrames: true,
-  },
-
-  WebNavigation: {
-    child: {
-      moduleURI: "resource://gre/actors/WebNavigationChild.jsm",
-    },
-  },
-
   Zoom: {
     parent: {
       moduleURI: "resource://gre/actors/ZoomParent.jsm",
@@ -311,6 +286,24 @@ let ACTORS = {
       },
     },
 
+    allFrames: true,
+  },
+
+  UAWidgets: {
+    child: {
+      moduleURI: "resource://gre/actors/UAWidgetsChild.jsm",
+      events: {
+        UAWidgetSetupOrChange: {},
+        UAWidgetTeardown: {},
+      },
+    },
+
+    allFrames: true,
+  },
+  PurgeSessionHistory: {
+    child: {
+      moduleURI: "resource://gre/actors/PurgeSessionHistoryChild.jsm",
+    },
     allFrames: true,
   },
 };
@@ -464,6 +457,20 @@ let LEGACY_ACTORS = {
         "UnselectedTabHover:Disable": {},
       },
       messages: ["Browser:UnselectedTabHover"],
+    },
+  },
+
+  WebNavigation: {
+    child: {
+      module: "resource://gre/actors/WebNavigationChild.jsm",
+      messages: [
+        "WebNavigation:GoBack",
+        "WebNavigation:GoForward",
+        "WebNavigation:GotoIndex",
+        "WebNavigation:Reload",
+        "WebNavigation:SetOriginAttributes",
+        "WebNavigation:Stop",
+      ],
     },
   },
 };
