@@ -117,6 +117,7 @@ xattr -cr "${BUNDLE}"
 codesign --force -o runtime --verbose --sign "$IDENTITY" \
 "${BUNDLE}/Contents/MacOS/XUL" \
 "${BUNDLE}/Contents/MacOS/pingsender" \
+"${BUNDLE}/Contents/MacOS/minidump-analyzer" \
 "${BUNDLE}"/Contents/MacOS/*.dylib
 
 codesign --force -o runtime --verbose --sign "$IDENTITY" --deep \

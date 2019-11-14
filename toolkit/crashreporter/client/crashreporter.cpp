@@ -531,6 +531,16 @@ static string GetProgramPath(const string& exename) {
   string path = gArgv[0];
   size_t pos = path.rfind(UI_CRASH_REPORTER_FILENAME BIN_SUFFIX);
   path.erase(pos);
+#ifdef XP_MACOSX
+  // On macOS the crash reporter client is shipped as an application bundle
+  // contained within Firefox' main application bundle. So when it's invoked
+  // its current working directory looks like:
+  // Firefox.app/Contents/MacOS/crashreporter.app/Contents/MacOS/
+  // The other applications we ship with Firefox are stored in the main bundle
+  // (Firefox.app/Contents/MacOS/) so we we need to go back three directories
+  // to reach them.
+  path.append("../../../");
+#endif  // XP_MACOSX
   path.append(exename + BIN_SUFFIX);
 
   return path;

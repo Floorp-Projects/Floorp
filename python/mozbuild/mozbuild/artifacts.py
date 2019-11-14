@@ -460,6 +460,7 @@ class MacArtifactJob(ArtifactJob):
         'libmozavutil.dylib',
         'libmozavcodec.dylib',
         'libsoftokn3.dylib',
+        'minidump-analyzer',
         'pingsender',
         'plugin-container.app/Contents/MacOS/plugin-container',
         'updater.app/Contents/MacOS/org.mozilla.updater',
@@ -504,9 +505,6 @@ class MacArtifactJob(ArtifactJob):
 
             # These get copied into dist/bin with the path, so "root/a/b/c" -> "dist/bin/a/b/c".
             paths_keep_path = [
-                ('Contents/MacOS', [
-                    'crashreporter.app/Contents/MacOS/minidump-analyzer',
-                ]),
                 ('Contents/Resources', [
                     'browser/components/libbrowsercomps.dylib',
                     'dependentlibs.list',
