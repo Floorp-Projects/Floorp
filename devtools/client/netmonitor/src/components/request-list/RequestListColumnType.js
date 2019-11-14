@@ -7,9 +7,9 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { getFormattedSize } = require("../utils/format-utils");
+const { getAbbreviatedMimeType } = require("../../utils/request-utils");
 
-class RequestListColumnContentSize extends Component {
+class RequestListColumnType extends Component {
   static get propTypes() {
     return {
       item: PropTypes.object.isRequired,
@@ -17,18 +17,25 @@ class RequestListColumnContentSize extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    return this.props.item.contentSize !== nextProps.item.contentSize;
+    return this.props.item.mimeType !== nextProps.item.mimeType;
   }
 
   render() {
-    const { contentSize } = this.props.item;
-    const size =
-      typeof contentSize === "number" ? getFormattedSize(contentSize) : null;
+    const { mimeType } = this.props.item;
+    let abbrevType;
+
+    if (mimeType) {
+      abbrevType = getAbbreviatedMimeType(mimeType);
+    }
+
     return dom.td(
-      { className: "requests-list-column requests-list-size", title: size },
-      size
+      {
+        className: "requests-list-column requests-list-type",
+        title: mimeType,
+      },
+      abbrevType
     );
   }
 }
 
-module.exports = RequestListColumnContentSize;
+module.exports = RequestListColumnType;

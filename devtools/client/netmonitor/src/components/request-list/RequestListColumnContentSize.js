@@ -7,9 +7,9 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { getFormattedIPAndPort } = require("../utils/format-utils");
+const { getFormattedSize } = require("../../utils/format-utils");
 
-class RequestListColumnRemoteIP extends Component {
+class RequestListColumnContentSize extends Component {
   static get propTypes() {
     return {
       item: PropTypes.object.isRequired,
@@ -17,23 +17,18 @@ class RequestListColumnRemoteIP extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    return this.props.item.remoteAddress !== nextProps.item.remoteAddress;
+    return this.props.item.contentSize !== nextProps.item.contentSize;
   }
 
   render() {
-    const { remoteAddress, remotePort } = this.props.item;
-    const remoteIP = remoteAddress
-      ? getFormattedIPAndPort(remoteAddress, remotePort)
-      : "unknown";
-
+    const { contentSize } = this.props.item;
+    const size =
+      typeof contentSize === "number" ? getFormattedSize(contentSize) : null;
     return dom.td(
-      {
-        className: "requests-list-column requests-list-remoteip",
-        title: remoteIP,
-      },
-      remoteIP
+      { className: "requests-list-column requests-list-size", title: size },
+      size
     );
   }
 }
 
-module.exports = RequestListColumnRemoteIP;
+module.exports = RequestListColumnContentSize;

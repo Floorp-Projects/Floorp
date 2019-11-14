@@ -17,14 +17,14 @@ const {
   HTMLTooltip,
 } = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 
-const Actions = require("../actions/index");
-const { formDataURI } = require("../utils/request-utils");
+const Actions = require("../../actions/index");
+const { formDataURI } = require("../../utils/request-utils");
 const {
   getDisplayedRequests,
   getColumns,
   getSelectedRequest,
   getWaterfallScale,
-} = require("../selectors/index");
+} = require("../../selectors/index");
 
 loader.lazyRequireGetter(
   this,
@@ -44,7 +44,7 @@ loader.lazyGetter(this, "getImageDimensions", function() {
 // Components
 const RequestListHeader = createFactory(require("./RequestListHeader"));
 const RequestListItem = createFactory(require("./RequestListItem"));
-const RequestListContextMenu = require("../widgets/RequestListContextMenu");
+const RequestListContextMenu = require("../../widgets/RequestListContextMenu");
 
 const { div } = dom;
 
