@@ -7267,7 +7267,8 @@ class BaseCompiler final : public BaseCompilerInterface {
   MOZ_MUST_USE bool emitAtomicXchg(ValType type, Scalar::Type viewType);
   void emitAtomicXchg64(MemoryAccessDesc* access, WantResult wantResult);
   MOZ_MUST_USE bool bulkmemOpsEnabled();
-  MOZ_MUST_USE bool emitMemOrTableCopy(bool isMem);
+  MOZ_MUST_USE bool emitMemCopy();
+  MOZ_MUST_USE bool emitTableCopy();
   MOZ_MUST_USE bool emitDataOrElemDrop(bool isData);
   MOZ_MUST_USE bool emitMemFill();
   MOZ_MUST_USE bool emitMemOrTableInit(bool isMem);
@@ -10665,7 +10666,7 @@ bool BaseCompiler::bulkmemOpsEnabled() {
   return true;
 }
 
-bool BaseCompiler::emitMemOrTableCopy(bool isMem) {
+bool BaseCompiler::emitMemCopy() {
   if (!bulkmemOpsEnabled()) {
     return false;
   }
@@ -10675,7 +10676,7 @@ bool BaseCompiler::emitMemOrTableCopy(bool isMem) {
   uint32_t dstMemOrTableIndex = 0;
   uint32_t srcMemOrTableIndex = 0;
   Nothing nothing;
-  if (!iter_.readMemOrTableCopy(isMem, &dstMemOrTableIndex, &nothing,
+  if (!iter_.readMemOrTableCopy(true, &dstMemOrTableIndex, &nothing,
                                 &srcMemOrTableIndex, &nothing, &nothing)) {
     return false;
   }
@@ -10684,23 +10685,40 @@ bool BaseCompiler::emitMemOrTableCopy(bool isMem) {
     return true;
   }
 
-  if (isMem) {
-    MOZ_ASSERT(srcMemOrTableIndex == 0);
-    MOZ_ASSERT(dstMemOrTableIndex == 0);
-    pushHeapBase();
-    if (!emitInstanceCall(
-            lineOrBytecode,
-            usesSharedMemory() ? SASigMemCopyShared : SASigMemCopy,
-            /*pushReturnedValue=*/false)) {
-      return false;
-    }
-  } else {
-    pushI32(dstMemOrTableIndex);
-    pushI32(srcMemOrTableIndex);
-    if (!emitInstanceCall(lineOrBytecode, SASigTableCopy,
-                          /*pushReturnedValue=*/false)) {
-      return false;
-    }
+  pushHeapBase();
+  if (!emitInstanceCall(lineOrBytecode,
+                        usesSharedMemory() ? SASigMemCopyShared : SASigMemCopy,
+                        /*pushReturnedValue=*/false)) {
+    return false;
+  }
+
+  return true;
+}
+
+bool BaseCompiler::emitTableCopy() {
+  if (!bulkmemOpsEnabled()) {
+    return false;
+  }
+
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
+  uint32_t dstMemOrTableIndex = 0;
+  uint32_t srcMemOrTableIndex = 0;
+  Nothing nothing;
+  if (!iter_.readMemOrTableCopy(false, &dstMemOrTableIndex, &nothing,
+                                &srcMemOrTableIndex, &nothing, &nothing)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  pushI32(dstMemOrTableIndex);
+  pushI32(srcMemOrTableIndex);
+  if (!emitInstanceCall(lineOrBytecode, SASigTableCopy,
+                        /*pushReturnedValue=*/false)) {
+    return false;
   }
 
   return true;
@@ -12007,7 +12025,7 @@ bool BaseCompiler::emitBody() {
                 ValType::F64, ValType::I64));
 #endif
           case uint32_t(MiscOp::MemCopy):
-            CHECK_NEXT(emitMemOrTableCopy(/*isMem=*/true));
+            CHECK_NEXT(emitMemCopy());
           case uint32_t(MiscOp::DataDrop):
             CHECK_NEXT(emitDataOrElemDrop(/*isData=*/true));
           case uint32_t(MiscOp::MemFill):
@@ -12015,7 +12033,7 @@ bool BaseCompiler::emitBody() {
           case uint32_t(MiscOp::MemInit):
             CHECK_NEXT(emitMemOrTableInit(/*isMem=*/true));
           case uint32_t(MiscOp::TableCopy):
-            CHECK_NEXT(emitMemOrTableCopy(/*isMem=*/false));
+            CHECK_NEXT(emitTableCopy());
           case uint32_t(MiscOp::ElemDrop):
             CHECK_NEXT(emitDataOrElemDrop(/*isData=*/false));
           case uint32_t(MiscOp::TableInit):

@@ -2900,7 +2900,7 @@ static bool EmitAtomicXchg(FunctionCompiler& f, ValType type,
   return true;
 }
 
-static bool EmitMemOrTableCopy(FunctionCompiler& f, bool isMem) {
+static bool EmitMemCopy(FunctionCompiler& f) {
   // Bulk memory must be available if shared memory is enabled.
 #ifndef ENABLE_WASM_BULKMEM_OPS
   if (f.env().sharedMemoryEnabled == Shareable::False) {
@@ -2911,7 +2911,7 @@ static bool EmitMemOrTableCopy(FunctionCompiler& f, bool isMem) {
   MDefinition *dst, *src, *len;
   uint32_t dstTableIndex;
   uint32_t srcTableIndex;
-  if (!f.iter().readMemOrTableCopy(isMem, &dstTableIndex, &dst, &srcTableIndex,
+  if (!f.iter().readMemOrTableCopy(true, &dstTableIndex, &dst, &srcTableIndex,
                                    &src, &len)) {
     return false;
   }
@@ -2923,8 +2923,7 @@ static bool EmitMemOrTableCopy(FunctionCompiler& f, bool isMem) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
   const SymbolicAddressSignature& callee =
-      isMem ? (f.env().usesSharedMemory() ? SASigMemCopyShared : SASigMemCopy)
-            : SASigTableCopy;
+      (f.env().usesSharedMemory() ? SASigMemCopyShared : SASigMemCopy);
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
@@ -2939,26 +2938,67 @@ static bool EmitMemOrTableCopy(FunctionCompiler& f, bool isMem) {
   if (!f.passArg(len, callee.argTypes[3], &args)) {
     return false;
   }
-  if (isMem) {
-    MDefinition* memoryBase = f.memoryBase();
-    if (!f.passArg(memoryBase, callee.argTypes[4], &args)) {
-      return false;
-    }
-  } else {
-    MDefinition* dti = f.constant(Int32Value(dstTableIndex), MIRType::Int32);
-    if (!dti) {
-      return false;
-    }
-    if (!f.passArg(dti, callee.argTypes[4], &args)) {
-      return false;
-    }
-    MDefinition* sti = f.constant(Int32Value(srcTableIndex), MIRType::Int32);
-    if (!sti) {
-      return false;
-    }
-    if (!f.passArg(sti, callee.argTypes[5], &args)) {
-      return false;
-    }
+  MDefinition* memoryBase = f.memoryBase();
+  if (!f.passArg(memoryBase, callee.argTypes[4], &args)) {
+    return false;
+  }
+  if (!f.finishCall(&args)) {
+    return false;
+  }
+
+  return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
+}
+
+static bool EmitTableCopy(FunctionCompiler& f) {
+  // Bulk memory must be available if shared memory is enabled.
+#ifndef ENABLE_WASM_BULKMEM_OPS
+  if (f.env().sharedMemoryEnabled == Shareable::False) {
+    return f.iter().fail("bulk memory ops disabled");
+  }
+#endif
+
+  MDefinition *dst, *src, *len;
+  uint32_t dstTableIndex;
+  uint32_t srcTableIndex;
+  if (!f.iter().readMemOrTableCopy(false, &dstTableIndex, &dst, &srcTableIndex,
+                                   &src, &len)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  const SymbolicAddressSignature& callee = SASigTableCopy;
+  CallCompileState args;
+  if (!f.passInstance(callee.argTypes[0], &args)) {
+    return false;
+  }
+
+  if (!f.passArg(dst, callee.argTypes[1], &args)) {
+    return false;
+  }
+  if (!f.passArg(src, callee.argTypes[2], &args)) {
+    return false;
+  }
+  if (!f.passArg(len, callee.argTypes[3], &args)) {
+    return false;
+  }
+  MDefinition* dti = f.constant(Int32Value(dstTableIndex), MIRType::Int32);
+  if (!dti) {
+    return false;
+  }
+  if (!f.passArg(dti, callee.argTypes[4], &args)) {
+    return false;
+  }
+  MDefinition* sti = f.constant(Int32Value(srcTableIndex), MIRType::Int32);
+  if (!sti) {
+    return false;
+  }
+  if (!f.passArg(sti, callee.argTypes[5], &args)) {
+    return false;
   }
   if (!f.finishCall(&args)) {
     return false;
@@ -3906,7 +3946,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitTruncate(f, ValType::F64, ValType::I64,
                                MiscOp(op.b1) == MiscOp::I64TruncUSatF64, true));
           case uint32_t(MiscOp::MemCopy):
-            CHECK(EmitMemOrTableCopy(f, /*isMem=*/true));
+            CHECK(EmitMemCopy(f));
           case uint32_t(MiscOp::DataDrop):
             CHECK(EmitDataOrElemDrop(f, /*isData=*/true));
           case uint32_t(MiscOp::MemFill):
@@ -3914,7 +3954,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(MiscOp::MemInit):
             CHECK(EmitMemOrTableInit(f, /*isMem=*/true));
           case uint32_t(MiscOp::TableCopy):
-            CHECK(EmitMemOrTableCopy(f, /*isMem=*/false));
+            CHECK(EmitTableCopy(f));
           case uint32_t(MiscOp::ElemDrop):
             CHECK(EmitDataOrElemDrop(f, /*isData=*/false));
           case uint32_t(MiscOp::TableInit):
