@@ -657,7 +657,25 @@
           </tr>
         </tbody>
       </table>
+
       <!-- - - - - - - - - - - - - - - - - - - - - -->
+
+#if defined(ENABLE_REMOTE_AGENT)
+      <h2 class="major-section" data-l10n-id="remote-debugging-title"/>
+
+      <table>
+        <tbody>
+          <tr>
+            <th class="column" data-l10n-id="remote-debugging-accepting-connections"/>
+            <td id="remote-debugging-accepting-connections"></td>
+          </tr>
+          <tr>
+            <th class="column" data-l10n-id="remote-debugging-url"/>
+            <td id="remote-debugging-url"></td>
+          </tr>
+        </tbody>
+      </table>
+#endif
 
     </div>
 
