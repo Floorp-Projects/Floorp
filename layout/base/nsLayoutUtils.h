@@ -2996,6 +2996,16 @@ class nsLayoutUtils {
   static bool FrameIsMostlyScrolledOutOfViewInCrossProcess(
       const nsIFrame* aFrame, nscoord aMargin);
 
+  /**
+   * Expand the height of |aSize| to the size of `vh` units.
+   *
+   * With dynamic toolbar(s) the height for `vh` units is greater than the
+   * ICB height, we need to expand it in some places.
+   **/
+  template <typename SizeType>
+  static SizeType ExpandHeightForViewportUnits(nsPresContext* aPresContext,
+                                               const SizeType& aSize);
+
  private:
   /**
    * Helper function for LogTestDataForPaint().
@@ -3046,6 +3056,23 @@ template <typename PointType, typename RectType, typename CoordType>
   }
 
   return false;
+}
+
+template <typename SizeType>
+/* static */ SizeType nsLayoutUtils::ExpandHeightForViewportUnits(
+    nsPresContext* aPresContext, const SizeType& aSize) {
+  nsSize sizeForViewportUnits = aPresContext->GetSizeForViewportUnits();
+
+  // |aSize| might be the size expanded to the minimum-scale size whereas the
+  // size for viewport units is not scaled so that we need to expand the |aSize|
+  // height with the aspect ratio of the size for viewport units instead of just
+  // expanding to the size for viewport units.
+  float ratio = (float)sizeForViewportUnits.height / sizeForViewportUnits.width;
+
+  MOZ_ASSERT(aSize.height <=
+             NSCoordSaturatingNonnegativeMultiply(aSize.width, ratio));
+  return SizeType(aSize.width,
+                  NSCoordSaturatingNonnegativeMultiply(aSize.width, ratio));
 }
 
 namespace mozilla {
