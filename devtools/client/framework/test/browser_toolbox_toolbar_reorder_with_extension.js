@@ -23,6 +23,10 @@ const TEST_STARTING_ORDER = [
 ];
 
 add_task(async function() {
+  // Temporarily disable the panel added in Bug 1594885.
+  // Should be cleaned up when the panel is properly implemented.
+  await pushPref("devtools.whatsnew.enabled", false);
+
   const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
     manifest: {

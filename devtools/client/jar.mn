@@ -247,3 +247,6 @@ devtools.jar:
 
     # Application panel
     content/application/index.html (application/index.html)
+
+    # WhatsNew panel
+    content/whats-new/index.html (whats-new/index.html)
