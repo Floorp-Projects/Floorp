@@ -282,6 +282,8 @@ let gSiteDataSettings = {
           }
         }
       }
+    } else {
+      allowed = true;
     }
 
     // If the user cancelled the confirm dialog keep the site data window open,
