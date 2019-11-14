@@ -47,6 +47,9 @@ class nsNetworkLinkService : public nsINetworkLinkService,
   CFRunLoopSourceRef mRunLoopSource;
   SCDynamicStoreRef mStoreRef;
 
+  bool IPv4NetworkId(mozilla::SHA1Sum* sha1);
+  bool IPv6NetworkId(mozilla::SHA1Sum* sha1);
+
   void UpdateReachability();
   void OnIPConfigChanged();
   void OnNetworkIdChanged();
@@ -60,6 +63,8 @@ class nsNetworkLinkService : public nsINetworkLinkService,
   void calculateNetworkIdInternal(void);
   void DNSConfigChanged();
   void GetDnsSuffixListInternal();
+  bool RoutingFromKernel(nsTArray<nsCString>& aHash);
+  bool RoutingTable(nsTArray<nsCString>& aHash);
 
   mozilla::Mutex mMutex;
   nsCString mNetworkId;
@@ -71,6 +76,11 @@ class nsNetworkLinkService : public nsINetworkLinkService,
   // The timer used to delay the calculation of network id since it takes some
   // time to discover the gateway's MAC address.
   nsCOMPtr<nsITimer> mNetworkIdTimer;
+
+  // Is true if preference network.netlink.route.check.IPv4 was successfully
+  // parsed and stored to mRouteCheckIPv4
+  bool mDoRouteCheckIPv4;
+  struct in_addr mRouteCheckIPv4;
 };
 
 #endif /* NSNETWORKLINKSERVICEMAC_H_ */
