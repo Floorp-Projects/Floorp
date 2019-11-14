@@ -9,7 +9,8 @@ use peek_poke::PeekPoke;
 use std::ops::{Add, Sub};
 use std::sync::Arc;
 // local imports
-use crate::api::{IdNamespace, TileSize};
+use crate::api::{IdNamespace, PipelineId, TileSize};
+use crate::display_item::ImageRendering;
 use crate::font::{FontInstanceKey, FontInstanceData, FontKey, FontTemplate};
 use crate::units::*;
 
@@ -56,6 +57,54 @@ impl BlobImageKey {
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct ExternalImageId(pub u64);
+
+/// The source for an external image.
+pub enum ExternalImageSource<'a> {
+    /// A raw pixel buffer.
+    RawData(&'a [u8]),
+    /// A gl::GLuint texture handle.
+    NativeTexture(u32),
+    /// An invalid source.
+    Invalid,
+}
+
+/// The data that an external client should provide about
+/// an external image. For instance, if providing video frames,
+/// the application could call wr.render() whenever a new
+/// video frame is ready. Note that the UV coords are supplied
+/// in texel-space!
+pub struct ExternalImage<'a> {
+    /// UV coordinates for the image.
+    pub uv: TexelRect,
+    /// The source for this image's contents.
+    pub source: ExternalImageSource<'a>,
+}
+
+/// The interfaces that an application can implement to support providing
+/// external image buffers.
+/// When the application passes an external image to WR, it should keep that
+/// external image life time. People could check the epoch id in RenderNotifier
+/// at the client side to make sure that the external image is not used by WR.
+/// Then, do the clean up for that external image.
+pub trait ExternalImageHandler {
+    /// Lock the external image. Then, WR could start to read the image content.
+    /// The WR client should not change the image content until the unlock()
+    /// call. Provide ImageRendering for NativeTexture external images.
+    fn lock(&mut self, key: ExternalImageId, channel_index: u8, rendering: ImageRendering) -> ExternalImage;
+    /// Unlock the external image. WR should not read the image content
+    /// after this call.
+    fn unlock(&mut self, key: ExternalImageId, channel_index: u8);
+}
+
+/// Allows callers to receive a texture with the contents of a specific
+/// pipeline copied to it.
+pub trait OutputImageHandler {
+    /// Return the native texture handle and the size of the texture.
+    fn lock(&mut self, pipeline_id: PipelineId) -> Option<(u32, FramebufferIntSize)>;
+    /// Unlock will only be called if the lock() call succeeds, when WR has issued
+    /// the GL commands to copy the output to the texture handle.
+    fn unlock(&mut self, pipeline_id: PipelineId);
+}
 
 /// Specifies the type of texture target in driver terms.
 #[repr(u8)]
