@@ -46,6 +46,29 @@ class ObserverRegistryTest {
     }
 
     @Test
+    fun `observer gets queued notifications when registered`() {
+        val registry = ObserverRegistry<TestIntObserver>()
+
+        val observer = TestIntObserver()
+        val anotherObserver = TestIntObserver()
+        registry.notifyAtLeastOneObserver {
+            somethingChanged(1)
+        }
+        registry.notifyAtLeastOneObserver {
+            somethingChanged(2)
+        }
+        registry.notifyAtLeastOneObserver {
+            somethingChanged(3)
+        }
+        assertEquals(emptyList<Int>(), observer.notified)
+
+        registry.register(observer)
+        registry.register(anotherObserver)
+        assertEquals(listOf(1, 2, 3), observer.notified)
+        assertEquals(emptyList<Int>(), anotherObserver.notified)
+    }
+
+    @Test
     fun `observer does not get notified again after unregistering`() {
         val registry = ObserverRegistry<TestObserver>()
 

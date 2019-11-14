@@ -19,6 +19,7 @@ import androidx.lifecycle.LifecycleOwner
  *     }
  * </code>
  */
+@Suppress("TooManyFunctions")
 interface Observable<T> {
     /**
      * Registers an observer to get notified about changes.
@@ -69,6 +70,15 @@ interface Observable<T> {
      * @param block the notification (method on the observer to be invoked).
      */
     fun notifyObservers(block: T.() -> Unit)
+
+    /**
+     * Notifies all registered observers about a change. If there is no observer
+     * the notification is queued and sent to the first observer that is
+     * registered.
+     *
+     * @param block the notification (method on the observer to be invoked).
+     */
+    fun notifyAtLeastOneObserver(block: T.() -> Unit)
 
     /**
      * Pauses the provided observer. No notifications will be sent to this
