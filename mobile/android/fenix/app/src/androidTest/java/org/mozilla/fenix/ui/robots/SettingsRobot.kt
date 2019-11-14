@@ -28,6 +28,7 @@ class SettingsRobot {
 
     // BASICS SECTION
     fun verifyBasicsHeading() = assertBasicsHeading()
+
     fun verifySearchEngineButton() = assertSearchEngineButton()
     fun verifyThemeButton() = assertThemeButton()
     fun verifyThemeSelected() = assertThemeSelected()
@@ -36,7 +37,9 @@ class SettingsRobot {
 
     // PRIVACY SECTION
     fun verifyPrivacyHeading() = assertPrivacyHeading()
+
     fun verifyEnhancedTrackingProtectionButton() = assertEnhancedTrackingProtectionButton()
+    fun verifyLoginsButton() = assertLoginsButton()
     fun verifyEnhancedTrackingProtectionValue() = assertEnhancedTrackingProtectionValue()
     fun verifyAddPrivateBrowsingShortcutButton() = assertAddPrivateBrowsingShortcutButton()
     fun verifySitePermissionsButton() = assertSitePermissionsButton()
@@ -49,10 +52,12 @@ class SettingsRobot {
 
     // DEVELOPER TOOLS SECTION
     fun verifyDeveloperToolsHeading() = assertDeveloperToolsHeading()
+
     fun verifyRemoteDebug() = assertRemoteDebug()
 
     // ABOUT SECTION
     fun verifyAboutHeading() = assertAboutHeading()
+
     fun verifyHelp() = assertHelp()
     fun verifyRateOnGooglePlay() = assertRateOnGooglePlay()
     fun verifyAboutFirefoxPreview() = assertAboutFirefoxPreview()
@@ -118,47 +123,76 @@ private fun assertSettingsView() {
 // BASICS SECTION
 private fun assertBasicsHeading() = onView(ViewMatchers.withText("Basics"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertSearchEngineButton() {
     mDevice.wait(Until.findObject(By.text("Search")), waitingTime)
     onView(ViewMatchers.withText("Search"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
+
 private fun assertThemeButton() = onView(ViewMatchers.withText("Theme"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertThemeSelected() = onView(ViewMatchers.withText("Light"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertAccessibilityButton() = onView(ViewMatchers.withText("Accessibility"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertSetAsDefaultBrowserButton() = onView(ViewMatchers.withText("Set as default browser"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertSetAsDefaultBrowserButton() =
+    onView(ViewMatchers.withText("Set as default browser"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 // PRIVACY SECTION
 private fun assertPrivacyHeading() {
     onView(ViewMatchers.withText("Privacy"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
-private fun assertEnhancedTrackingProtectionButton() = onView(ViewMatchers.withText("Enhanced Tracking Protection"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertEnhancedTrackingProtectionButton() =
+    onView(ViewMatchers.withText("Enhanced Tracking Protection"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertEnhancedTrackingProtectionValue() = onView(ViewMatchers.withText("On"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertLoginsButton() {
+    TestHelper.scrollToElementByText("Passwords")
+    onView(ViewMatchers.withText("Passwords"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
+
 private fun assertAddPrivateBrowsingShortcutButton() {
+    TestHelper.scrollToElementByText("Add private browsing shortcut")
     mDevice.wait(Until.findObject(By.text("Add private browsing shortcut")), waitingTime)
     onView(ViewMatchers.withText("Add private browsing shortcut"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
+
 private fun assertSitePermissionsButton() {
     TestHelper.scrollToElementByText("Site permissions")
     onView(ViewMatchers.withText("Site permissions"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
-private fun assertDeleteBrowsingDataButton() = onView(ViewMatchers.withText("Delete browsing data"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertDeleteBrowsingDataOnQuitButton() = onView(ViewMatchers.withText("Delete browsing data on quit"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertDeleteBrowsingDataButton() {
+    TestHelper.scrollToElementByText("Delete browsing data")
+    onView(ViewMatchers.withText("Delete browsing data"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
+
+private fun assertDeleteBrowsingDataOnQuitButton() {
+    TestHelper.scrollToElementByText("Delete browsing data on quit")
+    onView(ViewMatchers.withText("Delete browsing data on quit"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
+
 private fun assertDataCollectionButton() = onView(ViewMatchers.withText("Data collection"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertPrivacyNoticeButton() = onView(ViewMatchers.withText("Privacy notice"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertLeakCanaryButton() = onView(ViewMatchers.withText("LeakCanary"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
@@ -168,6 +202,7 @@ private fun assertDeveloperToolsHeading() {
     onView(ViewMatchers.withText("Developer tools"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
+
 private fun assertRemoteDebug() = onView(ViewMatchers.withText("Remote debugging via USB"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
@@ -177,20 +212,24 @@ private fun assertAboutHeading() {
     onView(ViewMatchers.withText("About"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
+
 private fun assertHelp() {
     TestHelper.scrollToElementByText("About Firefox Preview")
     onView(ViewMatchers.withText("Help"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
+
 private fun assertRateOnGooglePlay() {
     TestHelper.scrollToElementByText("About Firefox Preview")
     onView(ViewMatchers.withText("Rate on Google Play"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
+
 private fun assertAboutFirefoxPreview() {
     TestHelper.scrollToElementByText("About Firefox Preview")
     onView(ViewMatchers.withText("About Firefox Preview"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun goBackButton() = onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
+private fun goBackButton() =
+    onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))

@@ -53,6 +53,8 @@ class SettingsPrivacyTest {
         // Verify item: "Tracking Protection" and default value: "On"
         // Verify item: "Tracking Protection" and default value: "On"
 
+        // Verify item: "Logins"
+
         // Verify item: "Site Permissions"
         // Click on: "Site permissions"
         // Verify sub-menu items...
@@ -92,6 +94,8 @@ class SettingsPrivacyTest {
             verifyPrivacyHeading()
             verifyEnhancedTrackingProtectionButton()
             verifyEnhancedTrackingProtectionValue()
+            // Logins
+            verifyLoginsButton()
             // drill down to submenu
             verifyAddPrivateBrowsingShortcutButton()
             verifySitePermissionsButton()
