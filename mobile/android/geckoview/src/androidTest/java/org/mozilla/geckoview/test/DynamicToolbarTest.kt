@@ -105,4 +105,32 @@ class DynamicToolbarTest : BaseSessionTest() {
             assertScreenshotResult(it.capturePixels(), reference)
         }
     }
+
+    // Asynchronous scrolling with the dynamic toolbar max height causes
+    // situations where the visual viewport size gets bigger than the layout
+    // viewport on the compositor thread because of 200vh position:fixed
+    // elements.  This is a test case that a 200vh position element is
+    // properly rendered its positions.
+    @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
+    @Test
+    fun layoutViewportExpansion() {
+        sessionRule.display?.run { setDynamicToolbarMaxHeight(SCREEN_HEIGHT / 2) }
+
+        val reference = getComparisonScreenshot(SCREEN_WIDTH, SCREEN_HEIGHT)
+
+        mainSession.loadTestPath(BaseSessionTest.FIXED_VH)
+        mainSession.waitForPageStop()
+
+        mainSession.evaluateJS("window.scrollTo(0, 100)")
+
+        // Scroll back to the original position by asynchronous scrolling.
+        mainSession.evaluateJS("window.scrollTo({ top: 0, behavior: 'smooth' })")
+
+        mainSession.evaluateJS("new Promise(resolve => window.setTimeout(resolve, 1000))")
+
+        sessionRule.display?.let {
+            assertScreenshotResult(it.capturePixels(), reference)
+        }
+    }
+
 }
