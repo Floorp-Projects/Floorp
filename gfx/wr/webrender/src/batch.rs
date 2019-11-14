@@ -1206,45 +1206,32 @@ impl BatchBuilder {
                                     let device_rect = (tile.world_rect * ctx.global_device_pixel_scale).round();
                                     let dirty_rect = (tile.world_dirty_rect * ctx.global_device_pixel_scale).round();
                                     let surface = tile.surface.as_ref().expect("no tile surface set!");
-                                    match surface {
+
+                                    let (surface, is_opaque) = match surface {
                                         TileSurface::Color { color } => {
-                                            composite_state.opaque_tiles.push(CompositeTile {
-                                                surface: CompositeTileSurface::Color { color: *color },
-                                                rect: device_rect,
-                                                dirty_rect,
-                                                clip_rect: device_clip_rect,
-                                                z_id,
-                                            });
+                                            (CompositeTileSurface::Color { color: *color }, true)
                                         }
                                         TileSurface::Clear => {
-                                            composite_state.clear_tiles.push(CompositeTile {
-                                                surface: CompositeTileSurface::Clear,
-                                                rect: device_rect,
-                                                dirty_rect,
-                                                clip_rect: device_clip_rect,
-                                                z_id,
-                                            });
+                                            (CompositeTileSurface::Clear, false)
                                         }
                                         TileSurface::Texture { descriptor, .. } => {
                                             let surface = descriptor.resolve(ctx.resource_cache);
-
-                                            let composite_tile = CompositeTile {
-                                                surface: CompositeTileSurface::Texture {
-                                                    surface,
-                                                },
-                                                rect: device_rect,
-                                                dirty_rect,
-                                                clip_rect: device_clip_rect,
-                                                z_id,
-                                            };
-
-                                            if tile.is_opaque || tile_cache.is_opaque() {
-                                                composite_state.opaque_tiles.push(composite_tile);
-                                            } else {
-                                                composite_state.alpha_tiles.push(composite_tile);
-                                            }
+                                            (
+                                                CompositeTileSurface::Texture { surface },
+                                                tile.is_opaque || tile_cache.is_opaque(),
+                                            )
                                         }
-                                    }
+                                    };
+
+                                    let tile = CompositeTile {
+                                        surface,
+                                        rect: device_rect,
+                                        dirty_rect,
+                                        clip_rect: device_clip_rect,
+                                        z_id,
+                                    };
+
+                                    composite_state.push_tile(tile, is_opaque);
                                 }
                             }
                             PictureCompositeMode::Filter(ref filter) => {
