@@ -1466,35 +1466,33 @@ async function test_report_action_hidden_on_langpack_addons() {
 async function test_report_hidden_on_report_unsupported_addontype() {
   await openAboutAddons();
 
+  // The error message bar is only being shown in the new implementation
+  // which opens the report in a dialog window, on the contrary when the
+  // report is shown in a about:addons subframe the report is cancelled
+  // but no error messagebar is going to be shown.
+  let onceCreateReportFailed;
+  let reportFrameEl;
   if (AbuseReporter.openDialogDisabled) {
-    const el = AbuseReportTestUtils.getReportFrame();
-
-    const onceCancelled = BrowserTestUtils.waitForEvent(
-      el,
+    reportFrameEl = AbuseReportTestUtils.getReportFrame();
+    onceCreateReportFailed = BrowserTestUtils.waitForEvent(
+      reportFrameEl,
       "abuse-report:cancel"
     );
-    AbuseReportTestUtils.triggerNewReport(
-      EXT_UNSUPPORTED_TYPE_ADDON_ID,
-      "menu"
-    );
-
-    await onceCancelled;
-
-    is(el.hidden, true, `report frame hidden on cancelled report`);
   } else {
-    const promiseNewWin = waitForNewWindow();
-    AbuseReportTestUtils.triggerNewReport(
-      EXT_UNSUPPORTED_TYPE_ADDON_ID,
-      "menu"
-    );
-    const win = await promiseNewWin;
-    const report = await AbuseReportTestUtils.getReportDialogParams()
-      .promiseReport;
+    onceCreateReportFailed = AbuseReportTestUtils.promiseMessageBars(1);
+  }
 
-    ok(!report, "Abuse Report dialog cancelled as expected");
-    await BrowserTestUtils.waitForCondition(
-      () => win.closed,
-      "Wait the report dialog to be closed"
+  AbuseReportTestUtils.triggerNewReport(EXT_UNSUPPORTED_TYPE_ADDON_ID, "menu");
+
+  await onceCreateReportFailed;
+
+  if (AbuseReporter.openDialogDisabled) {
+    is(reportFrameEl.hidden, true, "report frame should not be visible");
+  } else {
+    is(
+      AbuseReporter.getOpenDialog(),
+      undefined,
+      "report dialog should not be open"
     );
   }
 
