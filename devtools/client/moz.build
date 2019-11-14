@@ -28,7 +28,6 @@ DIRS += [
     'themes',
     'webconsole',
     'webreplay',
-    'whats-new',
 ]
 
 JAR_MANIFESTS += ['jar.mn']
