@@ -3,8 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 geckoview.jar:
-    content/schemas/browser_action.json
     content/schemas/browsing_data.json
     content/schemas/gecko_view_addons.json
-    content/schemas/page_action.json
     content/schemas/tabs.json
