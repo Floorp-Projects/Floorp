@@ -13,6 +13,8 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 
 import java.lang.annotation.Retention;
@@ -400,6 +402,104 @@ public class WebExtension {
         }
     };
 
+    private static class Sender {
+        public String webExtensionId;
+        public String nativeApp;
+
+        public Sender(final String webExtensionId, final String nativeApp) {
+            this.webExtensionId = webExtensionId;
+            this.nativeApp = nativeApp;
+        }
+
+        @Override
+        public boolean equals(final Object other) {
+            if (!(other instanceof Sender)) {
+                return false;
+            }
+
+            Sender o = (Sender) other;
+            return webExtensionId.equals(o.webExtensionId) &&
+                    nativeApp.equals(o.nativeApp);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = 17;
+            result = 31 * result + (webExtensionId != null ? webExtensionId.hashCode() : 0);
+            result = 31 * result + (nativeApp != null ? nativeApp.hashCode() : 0);
+            return result;
+        }
+    }
+
+    /* package */ final static class Listener implements BundleEventListener {
+        final private HashMap<Sender, WebExtension.MessageDelegate> mMessageDelegates;
+        final private HashMap<String, WebExtension.ActionDelegate> mActionDelegates;
+        final private GeckoSession mSession;
+        public GeckoRuntime runtime;
+
+        public Listener(final GeckoSession session) {
+            mMessageDelegates = new HashMap<>();
+            mActionDelegates = new HashMap<>();
+            mSession = session;
+        }
+
+        /* package */ void registerListeners() {
+            mSession.getEventDispatcher().registerUiThreadListener(this,
+                    "GeckoView:WebExtension:Message",
+                    "GeckoView:WebExtension:PortMessage",
+                    "GeckoView:WebExtension:Connect",
+                    "GeckoView:WebExtension:CloseTab",
+
+                    // Browser and Page Actions
+                    "GeckoView:BrowserAction:Update",
+                    "GeckoView:BrowserAction:OpenPopup",
+                    "GeckoView:PageAction:Update",
+                    "GeckoView:PageAction:OpenPopup");
+        }
+
+        public void setActionDelegate(final WebExtension webExtension,
+                                      final WebExtension.ActionDelegate delegate) {
+            mActionDelegates.put(webExtension.id, delegate);
+        }
+
+        public WebExtension.ActionDelegate getActionDelegate(final WebExtension webExtension) {
+            return mActionDelegates.get(webExtension.id);
+        }
+
+        public void setMessageDelegate(final WebExtension webExtension,
+                                       final WebExtension.MessageDelegate delegate,
+                                       final String nativeApp) {
+            mMessageDelegates.put(new Sender(webExtension.id, nativeApp), delegate);
+        }
+
+        public WebExtension.MessageDelegate getMessageDelegate(final WebExtension webExtension,
+                                                               final String nativeApp) {
+            return mMessageDelegates.get(new Sender(webExtension.id, nativeApp));
+        }
+
+        @Override
+        public void handleMessage(final String event, final GeckoBundle message,
+                                  final EventCallback callback) {
+            if (runtime == null) {
+                return;
+            }
+
+            if ("GeckoView:WebExtension:Message".equals(event)
+                    || "GeckoView:WebExtension:PortMessage".equals(event)
+                    || "GeckoView:WebExtension:Connect".equals(event)
+                    || "GeckoView:PageAction:Update".equals(event)
+                    || "GeckoView:PageAction:OpenPopup".equals(event)
+                    || "GeckoView:BrowserAction:Update".equals(event)
+                    || "GeckoView:BrowserAction:OpenPopup".equals(event)) {
+                runtime.getWebExtensionDispatcher()
+                        .handleMessage(event, message, callback, mSession);
+                return;
+            } else if ("GeckoView:WebExtension:CloseTab".equals(event)) {
+                runtime.getWebExtensionController().closeTab(message, callback, mSession);
+                return;
+            }
+        }
+    }
 
     /**
      * Describes the sender of a message from a WebExtension.
