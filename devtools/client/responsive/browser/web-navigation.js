@@ -136,7 +136,8 @@ BrowserElementWebNavigation.prototype = {
   _sendMessage(message, data) {
     try {
       if (this._browser.frameLoader) {
-        const windowGlobal = this._browser.browsingContext.currentWindowGlobal;
+        const windowGlobal = this._browser.browsingContext
+          .currentWindowGlobal;
         if (windowGlobal) {
           windowGlobal
             .getActor("WebNavigation")
