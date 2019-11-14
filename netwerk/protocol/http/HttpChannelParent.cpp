@@ -83,8 +83,7 @@ HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
       mWillSynthesizeResponse(false),
       mCacheNeedFlowControlInitialized(false),
       mNeedFlowControl(true),
-      mSuspendedForFlowControl(false),
-      mDoingCrossProcessRedirect(false) {
+      mSuspendedForFlowControl(false) {
   LOG(("Creating HttpChannelParent [this=%p]\n", this));
 
   // Ensure gHttpHandler is initialized: we need the atom table up and running.
@@ -793,12 +792,6 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvResume() {
 mozilla::ipc::IPCResult HttpChannelParent::RecvCancel(const nsresult& status) {
   LOG(("HttpChannelParent::RecvCancel [this=%p]\n", this));
 
-  // Don't cancel our channel if we're doing a CrossProcessRedirect.
-  if (mDoingCrossProcessRedirect) {
-    LOG(("Child was cancelled for cross-process redirect. Skip Cancel()."));
-    return IPC_OK();
-  }
-
   // May receive cancel before channel has been constructed!
   if (mChannel) {
     mChannel->Cancel(status);
@@ -1356,11 +1349,6 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   MOZ_RELEASE_ASSERT(!mDivertingFromChild,
                      "Cannot call OnStartRequest if diverting is set!");
 
-  if (mDoingCrossProcessRedirect) {
-    LOG(("Child was cancelled for cross-process redirect. Bail."));
-    return NS_OK;
-  }
-
   RefPtr<HttpBaseChannel> chan = do_QueryObject(aRequest);
   if (!chan) {
     LOG(("  aRequest is not HttpBaseChannel"));
@@ -1532,11 +1520,6 @@ HttpChannelParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
        this, aRequest, static_cast<uint32_t>(aStatusCode)));
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mDoingCrossProcessRedirect) {
-    LOG(("Child was cancelled for cross-process redirect. Bail."));
-    return NS_OK;
-  }
-
   MOZ_RELEASE_ASSERT(!mDivertingFromChild,
                      "Cannot call OnStopRequest if diverting is set!");
   ResourceTimingStruct timing;
@@ -1644,7 +1627,7 @@ HttpChannelParent::OnDataAvailable(nsIRequest* aRequest,
     // is ready to send OnTransportAndData.
     MOZ_ASSERT(mIPCClosed || mBgParent);
 
-    if (mIPCClosed || !mBgParent || mDoingCrossProcessRedirect ||
+    if (mIPCClosed || !mBgParent ||
         !mBgParent->OnTransportAndData(channelStatus, transportStatus, aOffset,
                                        toRead, data)) {
       return NS_ERROR_UNEXPECTED;
@@ -2090,11 +2073,6 @@ NS_IMETHODIMP
 HttpChannelParent::CompleteRedirect(bool succeeded) {
   LOG(("HttpChannelParent::CompleteRedirect [this=%p succeeded=%d]\n", this,
        succeeded));
-
-  if (mDoingCrossProcessRedirect) {
-    LOG(("Child was cancelled for cross-process redirect. Bail."));
-    return NS_OK;
-  }
 
   // If this was an internal redirect for a service worker interception then
   // we will not have a redirecting channel here.  Hide this redirect from
