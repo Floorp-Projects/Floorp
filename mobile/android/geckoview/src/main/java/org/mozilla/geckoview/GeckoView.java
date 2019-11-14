@@ -9,7 +9,6 @@ package org.mozilla.geckoview;
 import org.mozilla.gecko.AndroidGamepadManager;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.InputMethods;
-import org.mozilla.gecko.SurfaceViewWrapper;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -30,7 +29,6 @@ import android.os.Handler;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.AnyThread;
-import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
@@ -41,9 +39,8 @@ import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-import android.view.Surface;
+import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStructure;
@@ -54,9 +51,6 @@ import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.FrameLayout;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-
 @UiThread
 public class GeckoView extends FrameLayout {
     private static final String LOGTAG = "GeckoView";
@@ -66,7 +60,7 @@ public class GeckoView extends FrameLayout {
     protected @Nullable GeckoSession mSession;
     private boolean mStateSaved;
 
-    private @Nullable SurfaceViewWrapper mSurfaceWrapper;
+    protected @Nullable SurfaceView mSurfaceView;
 
     private boolean mIsResettingFocus;
 
@@ -107,7 +101,7 @@ public class GeckoView extends FrameLayout {
         };
     }
 
-    private class Display implements SurfaceViewWrapper.Listener {
+    private class Display implements SurfaceHolder.Callback {
         private final int[] mOrigin = new int[2];
 
         private GeckoDisplay mDisplay;
@@ -126,10 +120,10 @@ public class GeckoView extends FrameLayout {
 
             // Tell display there is already a surface.
             onGlobalLayout();
-            if (GeckoView.this.mSurfaceWrapper != null) {
-                final SurfaceViewWrapper wrapper = GeckoView.this.mSurfaceWrapper;
-                mDisplay.surfaceChanged(wrapper.getSurface(),
-                        wrapper.getWidth(), wrapper.getHeight());
+            if (GeckoView.this.mSurfaceView != null) {
+                final SurfaceHolder holder = GeckoView.this.mSurfaceView.getHolder();
+                final Rect frame = holder.getSurfaceFrame();
+                mDisplay.surfaceChanged(holder.getSurface(), frame.right, frame.bottom);
                 GeckoView.this.setActive(true);
             }
         }
@@ -147,11 +141,15 @@ public class GeckoView extends FrameLayout {
             return display;
         }
 
-        @Override // SurfaceListener
-        public void onSurfaceChanged(final Surface surface,
+        @Override // SurfaceHolder.Callback
+        public void surfaceCreated(final SurfaceHolder holder) {
+        }
+
+        @Override // SurfaceHolder.Callback
+        public void surfaceChanged(final SurfaceHolder holder, final int format,
                                    final int width, final int height) {
             if (mDisplay != null) {
-                mDisplay.surfaceChanged(surface, width, height);
+                mDisplay.surfaceChanged(holder.getSurface(), width, height);
                 if (!mValid) {
                     GeckoView.this.setActive(true);
                 }
@@ -159,8 +157,8 @@ public class GeckoView extends FrameLayout {
             mValid = true;
         }
 
-        @Override // SurfaceListener
-        public void onSurfaceDestroyed() {
+        @Override // SurfaceHolder.Callback
+        public void surfaceDestroyed(final SurfaceHolder holder) {
             if (mDisplay != null) {
                 mDisplay.surfaceDestroyed();
                 GeckoView.this.setActive(false);
@@ -172,8 +170,8 @@ public class GeckoView extends FrameLayout {
             if (mDisplay == null) {
                 return;
             }
-            if (GeckoView.this.mSurfaceWrapper != null) {
-                GeckoView.this.mSurfaceWrapper.getView().getLocationOnScreen(mOrigin);
+            if (GeckoView.this.mSurfaceView != null) {
+                GeckoView.this.mSurfaceView.getLocationOnScreen(mOrigin);
                 mDisplay.screenOriginChanged(mOrigin[0], mOrigin[1]);
             }
         }
@@ -231,14 +229,13 @@ public class GeckoView extends FrameLayout {
         // transparent).
         setWillNotCacheDrawing(false);
 
-        mSurfaceWrapper = new SurfaceViewWrapper(getContext());
-        mSurfaceWrapper.useSurfaceView(getContext());
-        mSurfaceWrapper.setListener(mDisplay);
-
-        mSurfaceWrapper.setBackgroundColor(Color.WHITE);
-        addView(mSurfaceWrapper.getView(),
+        mSurfaceView = new SurfaceView(getContext());
+        mSurfaceView.setBackgroundColor(Color.WHITE);
+        addView(mSurfaceView,
                 new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                            ViewGroup.LayoutParams.MATCH_PARENT));
+
+        mSurfaceView.getHolder().addCallback(mDisplay);
 
         final Activity activity = ActivityUtils.getActivityFromContext(getContext());
         if (activity != null) {
@@ -258,42 +255,8 @@ public class GeckoView extends FrameLayout {
     public void coverUntilFirstPaint(final int color) {
         ThreadUtils.assertOnUiThread();
 
-        if (mSurfaceWrapper != null) {
-            mSurfaceWrapper.setBackgroundColor(color);
-        }
-    }
-
-    /**
-     * This GeckoView instance will be backed by a {@link SurfaceView}.
-     *
-     * This option offers the best performance at the price of not being
-     * able to animate GeckoView.
-     */
-    public static final int BACKEND_SURFACE_VIEW = 1;
-    /**
-     * This GeckoView instance will be backed by a {@link TextureView}.
-     *
-     * This option offers worse performance compared to {@link #BACKEND_SURFACE_VIEW}
-     * but allows you to animate GeckoView or to paint a GeckoView on top of another GeckoView.
-     */
-    public static final int BACKEND_TEXTURE_VIEW = 2;
-
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef({BACKEND_SURFACE_VIEW, BACKEND_TEXTURE_VIEW})
-    /* protected */ @interface ViewBackend {}
-
-    /**
-     * Set which view should be used by this GeckoView instance to display content.
-     *
-     * By default, GeckoView will use a {@link SurfaceView}.
-     *
-     * @param backend Any of {@link #BACKEND_SURFACE_VIEW BACKEND_*}.
-     */
-    public void setViewBackend(final @ViewBackend int backend) {
-        if (backend == BACKEND_SURFACE_VIEW) {
-            mSurfaceWrapper.useSurfaceView(getContext());
-        } else if (backend == BACKEND_TEXTURE_VIEW) {
-            mSurfaceWrapper.useTextureView(getContext());
+        if (mSurfaceView != null) {
+            mSurfaceView.setBackgroundColor(color);
         }
     }
 
@@ -525,7 +488,7 @@ public class GeckoView extends FrameLayout {
         // For detecting changes in SurfaceView layout, we take a shortcut here and
         // override gatherTransparentRegion, instead of registering a layout listener,
         // which is more expensive.
-        if (mSurfaceWrapper != null) {
+        if (mSurfaceView != null) {
             mDisplay.onGlobalLayout();
         }
         return super.gatherTransparentRegion(region);

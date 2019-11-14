@@ -6,115 +6,285 @@
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ext-utils.js */
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  GeckoViewWebExtension: "resource://gre/modules/GeckoViewWebExtension.jsm",
-  ExtensionActionHelper: "resource://gre/modules/GeckoViewWebExtension.jsm",
-});
-
-const { PageActionBase } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionActions.jsm"
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
 );
 
-const PAGE_ACTION_PROPERTIES = [
-  "title",
-  "icon",
-  "popup",
-  "badgeText",
-  "enabled",
-  "patternMatching",
-];
+// Import the android PageActions module.
+ChromeUtils.defineModuleGetter(
+  this,
+  "PageActions",
+  "resource://gre/modules/PageActions.jsm"
+);
 
-class PageAction extends PageActionBase {
-  constructor(extension, clickDelegate) {
-    const tabContext = new TabContext(tabId => this.getContextData(null));
-    super(tabContext, extension);
-    this.clickDelegate = clickDelegate;
-    this.helper = new ExtensionActionHelper({
-      extension,
-      tabTracker,
-      windowTracker,
-      tabContext,
-      properties: PAGE_ACTION_PROPERTIES,
+var { ExtensionParent } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionParent.jsm"
+);
+
+var { IconDetails } = ExtensionParent;
+
+// WeakMap[Extension -> PageAction]
+let pageActionMap = new WeakMap();
+
+class PageAction extends EventEmitter {
+  constructor(manifest, extension) {
+    super();
+
+    this.id = null;
+
+    this.extension = extension;
+
+    this.defaults = {
+      icons: IconDetails.normalize({ path: manifest.default_icon }, extension),
+      popup: manifest.default_popup,
+    };
+
+    this.tabManager = extension.tabManager;
+    this.context = null;
+
+    this.tabContext = new TabContext(tabId => this.defaults);
+
+    this.options = {
+      title: manifest.default_title || extension.name,
+      id: `{${extension.uuid}}`,
+      clickCallback: () => {
+        let tab = tabTracker.activeTab;
+
+        this.tabManager.addActiveTabPermission(tab);
+
+        let popup = this.tabContext.get(tab.id).popup || this.defaults.popup;
+        if (popup) {
+          tabTracker.openExtensionPopupTab(popup);
+        } else {
+          this.emit("click", tab);
+        }
+      },
+    };
+
+    this.shouldShow = false;
+
+    // eslint-disable-next-line mozilla/balanced-listeners
+    this.tabContext.on("tab-selected", (evt, tabId) => {
+      this.onTabSelected(tabId);
+    });
+    // eslint-disable-next-line mozilla/balanced-listeners
+    this.tabContext.on("tab-closed", (evt, tabId) => {
+      this.onTabClosed(tabId);
     });
   }
 
-  updateOnChange(tab) {
-    const tabId = tab ? tab.id : null;
-    // The embedder only gets the override, not the full object
-    const action = tab
-      ? this.getContextData(tab)
-      : this.helper.extractProperties(this.globals);
-    this.helper.sendRequestForResult(tabId, {
-      action,
-      type: "GeckoView:PageAction:Update",
-    });
+  /**
+   * Updates the page action whenever a tab is selected.
+   * @param {Integer} tabId The ID of the selected tab.
+   */
+  onTabSelected(tabId) {
+    if (this.options.icon) {
+      this.hide();
+      let shouldShow = this.tabContext.get(tabId).show;
+      if (shouldShow) {
+        this.show();
+      }
+    }
   }
 
-  openPopup() {
-    const action = this.getContextData(tabTracker.activeTab);
-    this.helper.sendRequest(tabTracker.activeTab.id, {
-      action,
-      type: "GeckoView:PageAction:OpenPopup",
-    });
+  /**
+   * Removes the tab from the property map now that it is closed.
+   * @param {Integer} tabId The ID of the closed tab.
+   */
+  onTabClosed(tabId) {
+    this.tabContext.clear(tabId);
   }
 
-  getTab(tabId) {
-    return this.helper.getTab(tabId);
+  /**
+   * Sets the context for the page action.
+   * @param {Object} context The extension context.
+   */
+  setContext(context) {
+    this.context = context;
   }
 
-  click() {
-    this.clickDelegate.onClick();
+  /**
+   * Sets a property for the page action for the specified tab. If the property is set
+   * for the active tab, the page action is also updated.
+   *
+   * @param {Object} tab The tab to set.
+   * @param {string} prop The property to update - either "show" or "popup".
+   * @param {string} value The value to set the property to. If falsy, the property is deleted.
+   * @returns {Object} Promise which resolves when the property is set and the page action is
+   *    shown if necessary.
+   */
+  setProperty(tab, prop, value) {
+    if (tab == null) {
+      throw new Error("Tab must not be null");
+    }
+
+    let properties = this.tabContext.get(tab.id);
+    if (value) {
+      properties[prop] = value;
+    } else {
+      delete properties[prop];
+    }
+
+    if (prop === "show" && tab.id == tabTracker.activeTab.id) {
+      if (this.id && !value) {
+        return this.hide();
+      } else if (!this.id && value) {
+        return this.show();
+      }
+    }
+  }
+
+  /**
+   * Retreives a property of the page action for the specified tab.
+   *
+   * @param {Object} tab The tab to retrieve the property from. If null, the default value is returned.
+   * @param {string} prop The property to retreive - currently only "popup" is supported.
+   * @returns {string} the value stored for the specified property. If the value for the tab is undefined, then the
+   *    default value is returned.
+   */
+  getProperty(tab, prop) {
+    if (tab == null) {
+      return this.defaults[prop];
+    }
+
+    return this.tabContext.get(tab.id)[prop] || this.defaults[prop];
+  }
+
+  /**
+   * Show the page action for the active tab.
+   * @returns {Promise} resolves when the page action is shown.
+   */
+  show() {
+    // The PageAction icon has been created or it is being converted.
+    if (this.id || this.shouldShow) {
+      return Promise.resolve();
+    }
+
+    if (this.options.icon) {
+      this.id = PageActions.add(this.options);
+      return Promise.resolve();
+    }
+
+    this.shouldShow = true;
+
+    // Bug 1372782: Remove dependency on contentWindow from this file. It should
+    // be put in a separate file called ext-c-pageAction.js.
+    // Note: Fennec is not going to be multi-process for the foreseaable future,
+    // so this layering violation has no immediate impact. However, it is should
+    // be done at some point.
+    let { contentWindow } = this.context.xulBrowser;
+
+    // Bug 1372783: Why is this contentWindow.devicePixelRatio, while
+    // convertImageURLToDataURL uses browserWindow.devicePixelRatio?
+    let { icon } = IconDetails.getPreferredIcon(
+      this.defaults.icons,
+      this.extension,
+      16 * contentWindow.devicePixelRatio
+    );
+
+    let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+    return IconDetails.convertImageURLToDataURL(
+      icon,
+      contentWindow,
+      browserWindow
+    )
+      .then(dataURI => {
+        if (this.shouldShow) {
+          this.options.icon = dataURI;
+          this.id = PageActions.add(this.options);
+        }
+      })
+      .catch(() => {
+        // The "icon conversion" promise has been rejected, set `this.shouldShow` to `false`
+        // so that we will try again on the next `pageAction.show` call.
+        this.shouldShow = false;
+
+        return Promise.reject({
+          message: "Failed to load PageAction icon",
+        });
+      });
+  }
+
+  /**
+   * Hides the page action for the active tab.
+   */
+  hide() {
+    this.shouldShow = false;
+
+    if (this.id) {
+      PageActions.remove(this.id);
+      this.id = null;
+    }
+  }
+
+  shutdown() {
+    this.tabContext.shutdown();
+    this.hide();
   }
 }
 
 this.pageAction = class extends ExtensionAPI {
-  async onManifestEntry(entryName) {
-    const { extension } = this;
-    const action = new PageAction(extension, this);
-    await action.loadIconData();
-    this.action = action;
+  onManifestEntry(entryName) {
+    let { extension } = this;
+    let { manifest } = extension;
 
-    GeckoViewWebExtension.pageActions.set(extension, action);
-
-    // Notify the embedder of this action
-    action.updateOnChange(null);
-  }
-
-  onClick() {
-    this.emit("click", tabTracker.activeTab);
+    let pageAction = new PageAction(manifest.page_action, extension);
+    pageActionMap.set(extension, pageAction);
   }
 
   onShutdown() {
-    const { extension, action } = this;
-    action.onShutdown();
-    GeckoViewWebExtension.pageActions.delete(extension);
+    let { extension } = this;
+
+    if (pageActionMap.has(extension)) {
+      pageActionMap.get(extension).shutdown();
+      pageActionMap.delete(extension);
+    }
   }
 
   getAPI(context) {
     const { extension } = context;
     const { tabManager } = extension;
-    const { action } = this;
+
+    pageActionMap.get(extension).setContext(context);
 
     return {
       pageAction: {
-        ...action.api(context),
-
         onClicked: new EventManager({
           context,
           name: "pageAction.onClicked",
           register: fire => {
-            const listener = (event, tab) => {
+            let listener = (event, tab) => {
               fire.async(tabManager.convert(tab));
             };
-            this.on("click", listener);
+            pageActionMap.get(extension).on("click", listener);
             return () => {
-              this.off("click", listener);
+              pageActionMap.get(extension).off("click", listener);
             };
           },
         }).api(),
 
-        openPopup() {
-          action.openPopup();
+        show(tabId) {
+          let tab = tabTracker.getTab(tabId);
+          return pageActionMap.get(extension).setProperty(tab, "show", true);
+        },
+
+        hide(tabId) {
+          let tab = tabTracker.getTab(tabId);
+          pageActionMap.get(extension).setProperty(tab, "show", false);
+        },
+
+        setPopup(details) {
+          let tab = tabTracker.getTab(details.tabId);
+          let url = details.popup && context.uri.resolve(details.popup);
+          pageActionMap.get(extension).setProperty(tab, "popup", url);
+        },
+
+        getPopup(details) {
+          let tab = tabTracker.getTab(details.tabId);
+          let popup = pageActionMap.get(extension).getProperty(tab, "popup");
+          return Promise.resolve(popup);
         },
       },
     };
