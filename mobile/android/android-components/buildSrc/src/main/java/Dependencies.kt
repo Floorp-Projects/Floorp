@@ -32,6 +32,7 @@ object Versions {
     const val mozilla_glean = "19.1.0"
 
     const val material = "1.0.0"
+    const val nearby = "17.0.0"
 
     object AndroidX {
         const val annotation = "1.1.0"
@@ -107,6 +108,7 @@ object Dependencies {
     const val androidx_localbroadcastmanager = "androidx.localbroadcastmanager:localbroadcastmanager:${Versions.AndroidX.localbroadcastmanager}"
 
     const val google_material = "com.google.android.material:material:${Versions.material}"
+    const val google_nearby = "com.google.android.gms:play-services-nearby:${Versions.nearby}"
 
     const val tools_dokka = "org.jetbrains.dokka:dokka-android-gradle-plugin:${Versions.dokka}"
     const val tools_androidgradle = "com.android.tools.build:gradle:${Versions.android_gradle_plugin}"
