@@ -11,6 +11,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class FlowKtTest {
+
+    data class StringState(val value: String)
+    data class CharState(val value: Char)
+    data class IntState(val value: Int)
+
     @Test
     fun `ifChanged operator`() {
         val originalFlow = flowOf("A", "B", "B", "C", "A", "A", "A", "D", "A")
@@ -37,11 +42,56 @@ class FlowKtTest {
     }
 
     @Test
+    fun `ifChanged operator uses structural equality`() {
+        val originalFlow = flowOf(
+            StringState("A"),
+            StringState("B"),
+            StringState("B"),
+            StringState("C"),
+            StringState("A"),
+            StringState("A"),
+            StringState("A"),
+            StringState("D"),
+            StringState("A")
+        )
+
+        val items = runBlocking { originalFlow.ifChanged().toList() }
+
+        assertEquals(
+            listOf(
+                StringState("A"),
+                StringState("B"),
+                StringState("C"),
+                StringState("A"),
+                StringState("D"),
+                StringState("A")
+            ),
+            items
+        )
+    }
+
+    @Test
     fun `ifAnyChanged operator with block`() {
         val originalFlow = flowOf("banana", "bandanna", "bus", "apple", "big", "coconut", "circle", "home")
 
         val items = runBlocking {
             originalFlow.ifAnyChanged { item -> arrayOf(item[0], item[1]) }.toList()
+        }
+
+        assertEquals(
+            listOf("banana", "bus", "apple", "big", "coconut", "circle", "home"),
+            items
+        )
+    }
+
+    @Test
+    fun `ifAnyChanged operator uses structural equality`() {
+        val originalFlow = flowOf("banana", "bandanna", "bus", "apple", "big", "coconut", "circle", "home")
+
+        val items = runBlocking {
+            originalFlow.ifAnyChanged {
+                item -> arrayOf(CharState(item[0]), CharState(item[1]))
+            }.toList()
         }
 
         assertEquals(
@@ -66,5 +116,32 @@ class FlowKtTest {
         val sideEffectFlow = flowOf(listOf(0), listOf(0, 1), listOf(0, 1, 2, 3), listOf(4), listOf(5, 6, 7, 8))
         val sideEffectItems = runBlocking { sideEffectFlow.filterChanged { item -> item + counter++ }.toList() }
         assertEquals(listOf(0, 0, 1, 0, 1, 2, 3, 4, 5, 6, 7, 8), sideEffectItems)
+    }
+
+    @Test
+    fun `filterChanged operator check for structural equality`() {
+        val intFlow = flowOf(
+            listOf(IntState(0)),
+            listOf(IntState(0), IntState(1)),
+            listOf(IntState(0), IntState(1), IntState(2), IntState(3)),
+            listOf(IntState(4)),
+            listOf(IntState(5), IntState(6), IntState(7), IntState(8))
+        )
+
+        val identityItems = runBlocking { intFlow.filterChanged { item -> item }.toList() }
+        assertEquals(
+            listOf(
+                IntState(0),
+                IntState(1),
+                IntState(2),
+                IntState(3),
+                IntState(4),
+                IntState(5),
+                IntState(6),
+                IntState(7),
+                IntState(8)
+            ),
+            identityItems
+        )
     }
 }

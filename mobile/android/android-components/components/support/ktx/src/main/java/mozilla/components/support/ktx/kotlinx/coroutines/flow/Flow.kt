@@ -39,7 +39,7 @@ fun <T, R> Flow<T>.ifChanged(transform: (T) -> R): Flow<T> {
 
     return filter { value ->
         val mapped = transform(value)
-        if (!observedValueOnce || mapped !== lastMappedValue) {
+        if (!observedValueOnce || mapped != lastMappedValue) {
             lastMappedValue = mapped
             observedValueOnce = true
             true
@@ -96,7 +96,7 @@ fun <T, R> Flow<List<T>>.filterChanged(transform: (T) -> R): Flow<T> {
             values
         } else {
             values.filter {
-                !lastMapped.containsKey(it) || lastMapped[it] !== transform(it)
+                !lastMapped.containsKey(it) || lastMapped[it] != transform(it)
             }
         }
         lastMappedValues = values.map { Pair(it, transform(it)) }.toMap()
@@ -124,7 +124,7 @@ fun <T, R> Flow<T>.ifAnyChanged(transform: (T) -> Array<R>): Flow<T> {
         val mapped = transform(value)
         val hasChanges = lastMappedValues
             ?.asSequence()
-            ?.filterIndexed { i, r -> mapped[i] !== r }
+            ?.filterIndexed { i, r -> mapped[i] != r }
             ?.any()
 
         if (!observedValueOnce || hasChanges == true) {
