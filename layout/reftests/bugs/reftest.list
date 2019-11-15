@@ -2003,7 +2003,7 @@ skip-if(isDebugBuild&&winWidget) == 1330051.svg 1330051-ref.svg
 == 1369584-1b.html 1369584-1-ref.html
 == 1369954-1.xhtml 1369954-1-ref.xhtml
 == 1369985-1.html 1369985-1-ref.html
-skip-if(!xbl) == 1371130.xhtml 1371130-ref.xhtml
+== 1371130.xhtml 1371130-ref.xhtml
 == 1375315-1.html 1375315-1-ref.html
 == 1375315-2.html 1375315-2-ref.html
 == 1375315-3.html 1375315-3-ref.html
