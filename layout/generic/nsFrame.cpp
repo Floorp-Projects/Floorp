@@ -7856,9 +7856,9 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
     if (pWM.IsVertical() || pWM.IsBidiRTL()) {
       nsSize containerSize = parent->mRect.Size();
       LogicalRect lr(pWM, mRect, containerSize);
-      aTo += nsPrintfCString(" parent-wm=%s cs={%d,%d} logical-rect=%s",
-                             ToString(pWM).c_str(), containerSize.width,
-                             containerSize.height, ToString(lr).c_str());
+      aTo += nsPrintfCString(
+          " parent-wm=%s cs=(%s) logical-rect=%s", ToString(pWM).c_str(),
+          ToString(containerSize).c_str(), ToString(lr).c_str());
     }
   }
   nsIFrame* f = const_cast<nsIFrame*>(this);
@@ -7875,8 +7875,8 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
   bool hasNormalPosition;
   nsPoint normalPosition = GetNormalPosition(&hasNormalPosition);
   if (hasNormalPosition) {
-    aTo += nsPrintfCString(" normal-position={%d,%d}", normalPosition.x,
-                           normalPosition.y);
+    aTo += nsPrintfCString(" normal-position=%s",
+                           ToString(normalPosition).c_str());
   }
   if (0 != mState) {
     aTo += nsPrintfCString(" [state=%016llx]", (unsigned long long)mState);

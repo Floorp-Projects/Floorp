@@ -244,9 +244,9 @@ void nsLineBox::List(FILE* out, const char* aPrefix, uint32_t aFlags) const {
   nsRect bounds = GetPhysicalBounds();
   str += nsPrintfCString("%s ", ToString(bounds).c_str());
   if (mWritingMode.IsVertical() || mWritingMode.IsBidiRTL()) {
-    str += nsPrintfCString("wm=%s cs={%d,%d} logical-rect=%s ",
-                           ToString(mWritingMode).c_str(), mContainerSize.width,
-                           mContainerSize.height, ToString(mBounds).c_str());
+    str += nsPrintfCString(
+        "wm=%s cs=(%s) logical-rect=%s ", ToString(mWritingMode).c_str(),
+        ToString(mContainerSize).c_str(), ToString(mBounds).c_str());
   }
   if (mData &&
       (!mData->mOverflowAreas.VisualOverflow().IsEqualEdges(bounds) ||
