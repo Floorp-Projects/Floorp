@@ -8,16 +8,12 @@ import android.content.Context
 import android.view.ViewGroup
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
-import androidx.core.view.children
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.library_site_item.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.getColorFromAttr
-import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.setToolbarColors
-import org.mozilla.fenix.ext.showAndEnable
 
 open class LibraryPageView(
     override val containerView: ViewGroup
@@ -35,9 +31,7 @@ open class LibraryPageView(
             backgroundColor = context.getColorFromAttr(R.attr.foundation)
         )
         libraryItemsList.setItemViewCacheSize(0)
-        libraryItemsList.children.forEach { item ->
-            item.overflow_menu.showAndEnable()
-        }
+        libraryItemsList.adapter?.notifyItemRangeChanged(0, libraryItemsList.childCount)
     }
 
     protected fun setUiForSelectingMode(
@@ -50,9 +44,7 @@ open class LibraryPageView(
             backgroundColor = context.getColorFromAttr(R.attr.accentHighContrast)
         )
         libraryItemsList.setItemViewCacheSize(0)
-        libraryItemsList.children.forEach { item ->
-            item.overflow_menu.hideAndDisable()
-        }
+        libraryItemsList.adapter?.notifyItemRangeChanged(0, libraryItemsList.childCount)
     }
 
     private fun updateToolbar(title: String?, foregroundColor: Int, backgroundColor: Int) {
