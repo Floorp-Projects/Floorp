@@ -194,7 +194,7 @@ static bool Reflect_setPrototypeOf(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static const JSFunctionSpec reflect_methods[] = {
+static const JSFunctionSpec methods[] = {
     JS_SELF_HOSTED_FN("apply", "Reflect_apply", 3, 0),
     JS_SELF_HOSTED_FN("construct", "Reflect_construct", 2, 0),
     JS_SELF_HOSTED_FN("defineProperty", "Reflect_defineProperty", 3, 0),
@@ -214,17 +214,28 @@ static const JSFunctionSpec reflect_methods[] = {
 
 /*** Setup ******************************************************************/
 
-static JSObject* CreateReflectObject(JSContext* cx, JSProtoKey key) {
-  Handle<GlobalObject*> global = cx->global();
+JSObject* js::InitReflect(JSContext* cx, Handle<GlobalObject*> global) {
   RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
   if (!proto) {
     return nullptr;
   }
-  return NewObjectWithGivenProto<PlainObject>(cx, proto, SingletonObject);
+
+  RootedObject reflect(
+      cx, NewObjectWithGivenProto<PlainObject>(cx, proto, SingletonObject));
+  if (!reflect) {
+    return nullptr;
+  }
+  if (!JS_DefineFunctions(cx, reflect, methods)) {
+    return nullptr;
+  }
+
+  RootedValue value(cx, ObjectValue(*reflect));
+  if (!DefineDataProperty(cx, global, cx->names().Reflect, value,
+                          JSPROP_RESOLVING)) {
+    return nullptr;
+  }
+
+  global->setConstructor(JSProto_Reflect, value);
+
+  return reflect;
 }
-
-static const ClassSpec ReflectClassSpec = {CreateReflectObject, nullptr,
-                                           reflect_methods, nullptr};
-
-const JSClass js::ReflectClass = {"Reflect", 0, JS_NULL_CLASS_OPS,
-                                  &ReflectClassSpec};

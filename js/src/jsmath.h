@@ -15,6 +15,8 @@
 
 namespace js {
 
+class GlobalObject;
+
 typedef double (*UnaryFunType)(double);
 
 /*
@@ -22,6 +24,8 @@ typedef double (*UnaryFunType)(double);
  */
 
 extern const JSClass MathClass;
+
+extern JSObject* InitMathClass(JSContext* cx, Handle<GlobalObject*> global);
 
 extern uint64_t GenerateRandomSeed();
 

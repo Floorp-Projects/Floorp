@@ -453,7 +453,7 @@ const JSClass StringObject::class_ = {
     js_String_str,
     JSCLASS_HAS_RESERVED_SLOTS(StringObject::RESERVED_SLOTS) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_String),
-    &StringObjectClassOps, &StringObject::classSpec_};
+    &StringObjectClassOps};
 
 /*
  * Perform the initial |RequireObjectCoercible(thisv)| and |ToString(thisv)|
@@ -3942,60 +3942,67 @@ Shape* StringObject::assignInitialShape(JSContext* cx,
                                        JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
-JSObject* StringObject::createPrototype(JSContext* cx, JSProtoKey key) {
+JSObject* js::InitStringClass(JSContext* cx, Handle<GlobalObject*> global) {
   Rooted<JSString*> empty(cx, cx->runtime()->emptyString);
   Rooted<StringObject*> proto(
-      cx, GlobalObject::createBlankPrototype<StringObject>(cx, cx->global()));
+      cx, GlobalObject::createBlankPrototype<StringObject>(cx, global));
   if (!proto) {
     return nullptr;
   }
   if (!StringObject::init(cx, proto, empty)) {
     return nullptr;
   }
-  return proto;
-}
 
-static bool StringClassFinish(JSContext* cx, HandleObject ctor,
-                              HandleObject proto) {
-  HandleNativeObject nativeProto = proto.as<NativeObject>();
+  /* Now create the String function. */
+  RootedFunction ctor(cx);
+  ctor = GlobalObject::createConstructor(
+      cx, StringConstructor, cx->names().String, 1, gc::AllocKind::FUNCTION,
+      &jit::JitInfo_String);
+  if (!ctor) {
+    return nullptr;
+  }
+
+  if (!LinkConstructorAndPrototype(cx, ctor, proto)) {
+    return nullptr;
+  }
+
+  if (!DefinePropertiesAndFunctions(cx, proto, nullptr, string_methods) ||
+      !DefinePropertiesAndFunctions(cx, ctor, nullptr, string_static_methods)) {
+    return nullptr;
+  }
 
   // Create "trimLeft" as an alias for "trimStart".
   RootedValue trimFn(cx);
   RootedId trimId(cx, NameToId(cx->names().trimStart));
   RootedId trimAliasId(cx, NameToId(cx->names().trimLeft));
-  if (!NativeGetProperty(cx, nativeProto, trimId, &trimFn) ||
-      !NativeDefineDataProperty(cx, nativeProto, trimAliasId, trimFn, 0)) {
-    return false;
+  if (!NativeGetProperty(cx, proto, trimId, &trimFn) ||
+      !NativeDefineDataProperty(cx, proto, trimAliasId, trimFn, 0)) {
+    return nullptr;
   }
 
   // Create "trimRight" as an alias for "trimEnd".
   trimId = NameToId(cx->names().trimEnd);
   trimAliasId = NameToId(cx->names().trimRight);
-  if (!NativeGetProperty(cx, nativeProto, trimId, &trimFn) ||
-      !NativeDefineDataProperty(cx, nativeProto, trimAliasId, trimFn, 0)) {
-    return false;
+  if (!NativeGetProperty(cx, proto, trimId, &trimFn) ||
+      !NativeDefineDataProperty(cx, proto, trimAliasId, trimFn, 0)) {
+    return nullptr;
   }
 
   /*
    * Define escape/unescape, the URI encode/decode functions, and maybe
    * uneval on the global object.
    */
-  if (!JS_DefineFunctions(cx, cx->global(), string_functions)) {
-    return false;
+  if (!JS_DefineFunctions(cx, global, string_functions)) {
+    return nullptr;
   }
 
-  return true;
-}
+  if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_String, ctor,
+                                            proto)) {
+    return nullptr;
+  }
 
-const ClassSpec StringObject::classSpec_ = {
-    GenericCreateConstructor<StringConstructor, 1, gc::AllocKind::FUNCTION,
-                             &jit::JitInfo_String>,
-    StringObject::createPrototype,
-    string_static_methods,
-    nullptr,
-    string_methods,
-    nullptr,
-    StringClassFinish};
+  return proto;
+}
 
 #define ____ false
 
