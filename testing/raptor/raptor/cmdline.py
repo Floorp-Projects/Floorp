@@ -140,6 +140,9 @@ def create_parser(mach_interface=False):
             help="Run without multiple processes (e10s).")
     add_arg('--enable-webrender', dest="enable_webrender", action="store_true", default=False,
             help="Enable the WebRender compositor in Gecko.")
+    add_arg('--with-conditioned-profile', dest="with_conditioned_profile", action="store_true",
+            default=False,
+            help="Run Raptor tests with a conditioned profile.")
     if not mach_interface:
         add_arg('--run-local', dest="run_local", default=False, action="store_true",
                 help="Flag which indicates if Raptor is running locally or in production")

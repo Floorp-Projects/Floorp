@@ -133,6 +133,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "default": False,
             "help": "Enable the WebRender compositor in Gecko.",
         }],
+        [["--with-conditioned-profile"], {
+            "action": "store_true",
+            "dest": "with_conditioned_profile",
+            "default": False,
+            "help": "Run using the conditioned profile.",
+        }],
         [["--geckoProfile"], {
             "dest": "gecko_profile",
             "action": "store_true",
@@ -490,6 +496,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             options.extend(['--cpu-test'])
         if self.config.get('enable_webrender', False):
             options.extend(['--enable-webrender'])
+        if self.config.get('with_conditioned_profile', False):
+            options.extend(['--with-conditioned-profile'])
 
         for (arg,), details in Raptor.browsertime_options:
             # Allow overriding defaults on the `./mach raptor-test ...` command-line
