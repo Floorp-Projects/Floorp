@@ -5,15 +5,16 @@ Unit-Tests for moznetwork
 
 from __future__ import absolute_import
 
-import mock
-import mozinfo
-import moznetwork
 import re
 import subprocess
 from distutils.spawn import find_executable
 
-import mozunit
+import moznetwork
 import pytest
+
+import mock
+import mozinfo
+import mozunit
 
 
 @pytest.fixture(scope='session')
@@ -45,10 +46,10 @@ def ip_addresses():
                       "'ifconfig' or 'ipconfig' exists on your $PATH.")
 
     ps = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    standardoutput, standarderror = ps.communicate()
+    standardoutput, _ = ps.communicate()
 
     # Generate a list of IPs by parsing the output of ip/ifconfig
-    return [x.group() for x in re.finditer(regexip, standardoutput)]
+    return [x.group() for x in re.finditer(regexip, standardoutput.decode('UTF-8'))]
 
 
 def test_get_ip(ip_addresses):
@@ -57,16 +58,14 @@ def test_get_ip(ip_addresses):
     assert moznetwork.get_ip() in ip_addresses
 
 
+@pytest.mark.skipif(mozinfo.isWin, reason="Test is not supported in Windows")
 def test_get_ip_using_get_interface(ip_addresses):
     """ Test that the control flow path for get_ip() using
     _get_interface_list() is works """
-
-    if mozinfo.isLinux or mozinfo.isMac:
-
-        with mock.patch('socket.gethostbyname') as byname:
-            # Force socket.gethostbyname to return None
-            byname.return_value = None
-            assert moznetwork.get_ip() in ip_addresses
+    with mock.patch('socket.gethostbyname') as byname:
+        # Force socket.gethostbyname to return None
+        byname.return_value = None
+        assert moznetwork.get_ip() in ip_addresses
 
 
 if __name__ == '__main__':
