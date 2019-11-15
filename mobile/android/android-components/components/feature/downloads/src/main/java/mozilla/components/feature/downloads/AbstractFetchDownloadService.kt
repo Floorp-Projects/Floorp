@@ -291,7 +291,7 @@ abstract class AbstractFetchDownloadService : Service() {
     }
 
     internal fun verifyDownload(download: DownloadJobState) {
-        if (download.status != DownloadJobStatus.PAUSED &&
+        if (download.status == DownloadJobStatus.ACTIVE &&
             download.currentBytesCopied < download.state.contentLength ?: 0) {
             download.status = DownloadJobStatus.FAILED
         }

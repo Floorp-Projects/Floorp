@@ -20,6 +20,7 @@ import mozilla.components.feature.downloads.AbstractFetchDownloadService.Compani
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_TRY_AGAIN
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.ACTIVE
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.CANCELLED
+import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.COMPLETED
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.FAILED
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.PAUSED
 import mozilla.components.feature.downloads.ext.putDownloadExtra
@@ -160,6 +161,50 @@ class AbstractFetchDownloadServiceTest {
             state = downloadState,
             currentBytesCopied = 50,
             status = ACTIVE,
+            foregroundServiceId = 1,
+            downloadDeleted = false
+        )
+
+        service.verifyDownload(downloadJobState)
+
+        assertNotEquals(FAILED, downloadJobState.status)
+    }
+
+    @Test
+    fun `verifyDownload does NOT set the download to failed if it is cancelled`() = runBlocking {
+        val downloadState = DownloadState(
+            url = "mozilla.org/mozilla.txt",
+            filePath = "mozilla.txt",
+            contentLength = 50L
+        )
+
+        val downloadJobState = AbstractFetchDownloadService.DownloadJobState(
+            job = null,
+            state = downloadState,
+            currentBytesCopied = 50,
+            status = CANCELLED,
+            foregroundServiceId = 1,
+            downloadDeleted = false
+        )
+
+        service.verifyDownload(downloadJobState)
+
+        assertNotEquals(FAILED, downloadJobState.status)
+    }
+
+    @Test
+    fun `verifyDownload does NOT set the download to failed if it is status COMPLETED`() = runBlocking {
+        val downloadState = DownloadState(
+            url = "mozilla.org/mozilla.txt",
+            filePath = "mozilla.txt",
+            contentLength = 50L
+        )
+
+        val downloadJobState = AbstractFetchDownloadService.DownloadJobState(
+            job = null,
+            state = downloadState,
+            currentBytesCopied = 50,
+            status = COMPLETED,
             foregroundServiceId = 1,
             downloadDeleted = false
         )
