@@ -12,6 +12,7 @@ Supported Fennec migrations and their current versions.
 |---|---|
 | [Bookmarks](-bookmarks.md) | `object Bookmarks : `[`Migration`](./index.md)<br>Migrates bookmarks. Must run after history was migrated. |
 | [FxA](-fx-a.md) | `object FxA : `[`Migration`](./index.md)<br>Migrates FxA state. |
+| [Gecko](-gecko.md) | `object Gecko : `[`Migration`](./index.md)<br>Migrates Gecko(View) internal files. |
 | [History](-history.md) | `object History : `[`Migration`](./index.md)<br>Migrates history (both "places" and "visits"). |
 | [OpenTabs](-open-tabs.md) | `object OpenTabs : `[`Migration`](./index.md)<br>Migrates open tabs. |
 
@@ -33,5 +34,6 @@ Supported Fennec migrations and their current versions.
 |---|---|
 | [Bookmarks](-bookmarks.md) | `object Bookmarks : `[`Migration`](./index.md)<br>Migrates bookmarks. Must run after history was migrated. |
 | [FxA](-fx-a.md) | `object FxA : `[`Migration`](./index.md)<br>Migrates FxA state. |
+| [Gecko](-gecko.md) | `object Gecko : `[`Migration`](./index.md)<br>Migrates Gecko(View) internal files. |
 | [History](-history.md) | `object History : `[`Migration`](./index.md)<br>Migrates history (both "places" and "visits"). |
 | [OpenTabs](-open-tabs.md) | `object OpenTabs : `[`Migration`](./index.md)<br>Migrates open tabs. |

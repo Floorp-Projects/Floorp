@@ -10,7 +10,7 @@ A contract that indicate how an add-on provider must behave.
 
 | Name | Summary |
 |---|---|
-| [getAvailableAddOns](get-available-add-ons.md) | `abstract suspend fun getAvailableAddOns(): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`AddOn`](../-add-on/index.md)`>`<br>Provides a list of all available add-ons. |
+| [getAvailableAddOns](get-available-add-ons.md) | `abstract suspend fun getAvailableAddOns(allowCache: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`AddOn`](../-add-on/index.md)`>`<br>Provides a list of all available add-ons. |
 
 ### Extension Functions
 
@@ -22,4 +22,4 @@ A contract that indicate how an add-on provider must behave.
 
 | Name | Summary |
 |---|---|
-| [AddOnsCollectionsProvider](../../mozilla.components.feature.addons.amo/-add-ons-collections-provider/index.md) | `class AddOnsCollectionsProvider : `[`AddOnsProvider`](./index.md)<br>Provide access to the collections AMO API. https://addons-server.readthedocs.io/en/latest/topics/api/collections.html |
+| [AddOnCollectionProvider](../../mozilla.components.feature.addons.amo/-add-on-collection-provider/index.md) | `class AddOnCollectionProvider : `[`AddOnsProvider`](./index.md)<br>Provide access to the collections AMO API. https://addons-server.readthedocs.io/en/latest/topics/api/collections.html |

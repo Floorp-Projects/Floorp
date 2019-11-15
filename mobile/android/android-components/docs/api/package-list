@@ -154,6 +154,7 @@ mozilla.components.feature.customtabs.store
 mozilla.components.feature.customtabs.verify
 mozilla.components.feature.downloads
 mozilla.components.feature.downloads.ext
+mozilla.components.feature.downloads.facts
 mozilla.components.feature.downloads.manager
 mozilla.components.feature.findinpage
 mozilla.components.feature.findinpage.facts
@@ -203,6 +204,7 @@ mozilla.components.lib.jexl.grammar
 mozilla.components.lib.jexl.lexer
 mozilla.components.lib.jexl.parser
 mozilla.components.lib.jexl.value
+mozilla.components.lib.nearby
 mozilla.components.lib.publicsuffixlist
 mozilla.components.lib.publicsuffixlist.ext
 mozilla.components.lib.push.amazon

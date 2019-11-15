@@ -2,12 +2,12 @@
 
 # AbstractFetchDownloadService
 
-`abstract class AbstractFetchDownloadService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/AbstractFetchDownloadService.kt#L55)
+`abstract class AbstractFetchDownloadService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/AbstractFetchDownloadService.kt#L62)
 
 Service that performs downloads through a fetch [Client](../../mozilla.components.concept.fetch/-client/index.md) rather than through the native
 Android download manager.
 
-To use this service, you must create a subclass in your application and it to the manifest.
+To use this service, you must create a subclass in your application and add it to the manifest.
 
 ### Types
 
@@ -50,7 +50,7 @@ To use this service, you must create a subclass in your application and it to th
 
 | Name | Summary |
 |---|---|
-| [openFile](open-file.md) | `fun openFile(context: <ERROR CLASS>, filePath: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, contentType: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Launches an intent to open the given file |
+| [openFile](open-file.md) | `fun openFile(context: <ERROR CLASS>, filePath: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, contentType: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Launches an intent to open the given file, returns whether or not the file could be opened |
 
 ### Extension Functions
 
