@@ -2,7 +2,7 @@
 
 # FennecMigrator
 
-`class FennecMigrator` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L75)
+`class FennecMigrator` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L80)
 
 Entrypoint for Fennec data migration. See [Builder](-builder/index.md) for public API.
 

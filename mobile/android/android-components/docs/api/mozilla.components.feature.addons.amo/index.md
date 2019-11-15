@@ -6,4 +6,4 @@
 
 | Name | Summary |
 |---|---|
-| [AddOnsCollectionsProvider](-add-ons-collections-provider/index.md) | `class AddOnsCollectionsProvider : `[`AddOnsProvider`](../mozilla.components.feature.addons/-add-ons-provider/index.md)<br>Provide access to the collections AMO API. https://addons-server.readthedocs.io/en/latest/topics/api/collections.html |
+| [AddOnCollectionProvider](-add-on-collection-provider/index.md) | `class AddOnCollectionProvider : `[`AddOnsProvider`](../mozilla.components.feature.addons/-add-ons-provider/index.md)<br>Provide access to the collections AMO API. https://addons-server.readthedocs.io/en/latest/topics/api/collections.html |
