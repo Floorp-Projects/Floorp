@@ -630,8 +630,7 @@ static const JSFunctionSpec number_functions[] = {
 
 const JSClass NumberObject::class_ = {
     js_Number_str,
-    JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_HAS_CACHED_PROTO(JSProto_Number),
-    JS_NULL_CLASS_OPS, &NumberObject::classSpec_};
+    JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_HAS_CACHED_PROTO(JSProto_Number)};
 
 static bool Number(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -1340,18 +1339,24 @@ void js::FinishRuntimeNumberState(JSRuntime* rt) {
 }
 #endif
 
-JSObject* NumberObject::createPrototype(JSContext* cx, JSProtoKey key) {
-  NumberObject* numberProto =
-      GlobalObject::createBlankPrototype<NumberObject>(cx, cx->global());
+JSObject* js::InitNumberClass(JSContext* cx, Handle<GlobalObject*> global) {
+  Rooted<NumberObject*> numberProto(cx);
+  numberProto = GlobalObject::createBlankPrototype<NumberObject>(cx, global);
   if (!numberProto) {
     return nullptr;
   }
   numberProto->setPrimitiveValue(0);
-  return numberProto;
-}
 
-static bool NumberClassFinish(JSContext* cx, HandleObject ctor,
-                              HandleObject proto) {
+  RootedFunction ctor(cx);
+  ctor = GlobalObject::createConstructor(cx, Number, cx->names().Number, 1);
+  if (!ctor) {
+    return nullptr;
+  }
+
+  if (!LinkConstructorAndPrototype(cx, ctor, numberProto)) {
+    return nullptr;
+  }
+
   // Our NaN must be one particular canonical value, because we rely on NaN
   // encoding for our value representation.  See Value.h.
   static const JSConstDoubleSpec number_constants[] = {
@@ -1373,13 +1378,19 @@ static bool NumberClassFinish(JSContext* cx, HandleObject ctor,
 
   // Add numeric constants (MAX_VALUE, NaN, &c.) to the Number constructor.
   if (!JS_DefineConstDoubles(cx, ctor, number_constants)) {
-    return false;
+    return nullptr;
   }
 
-  Handle<GlobalObject*> global = cx->global();
+  if (!DefinePropertiesAndFunctions(cx, ctor, nullptr, number_static_methods)) {
+    return nullptr;
+  }
+
+  if (!DefinePropertiesAndFunctions(cx, numberProto, nullptr, number_methods)) {
+    return nullptr;
+  }
 
   if (!JS_DefineFunctions(cx, global, number_functions)) {
-    return false;
+    return nullptr;
   }
 
   // Number.parseInt should be the same function object as global parseInt.
@@ -1387,11 +1398,11 @@ static bool NumberClassFinish(JSContext* cx, HandleObject ctor,
   JSFunction* parseInt =
       DefineFunction(cx, global, parseIntId, num_parseInt, 2, JSPROP_RESOLVING);
   if (!parseInt) {
-    return false;
+    return nullptr;
   }
   RootedValue parseIntValue(cx, ObjectValue(*parseInt));
   if (!DefineDataProperty(cx, ctor, parseIntId, parseIntValue, 0)) {
-    return false;
+    return nullptr;
   }
 
   // Number.parseFloat should be the same function object as global
@@ -1400,11 +1411,11 @@ static bool NumberClassFinish(JSContext* cx, HandleObject ctor,
   JSFunction* parseFloat = DefineFunction(cx, global, parseFloatId,
                                           num_parseFloat, 1, JSPROP_RESOLVING);
   if (!parseFloat) {
-    return false;
+    return nullptr;
   }
   RootedValue parseFloatValue(cx, ObjectValue(*parseFloat));
   if (!DefineDataProperty(cx, ctor, parseFloatId, parseFloatValue, 0)) {
-    return false;
+    return nullptr;
   }
 
   RootedValue valueNaN(cx, JS::NaNValue());
@@ -1417,20 +1428,16 @@ static bool NumberClassFinish(JSContext* cx, HandleObject ctor,
       !NativeDefineDataProperty(
           cx, global, cx->names().Infinity, valueInfinity,
           JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_RESOLVING)) {
-    return false;
+    return nullptr;
   }
 
-  return true;
-}
+  if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_Number, ctor,
+                                            numberProto)) {
+    return nullptr;
+  }
 
-const ClassSpec NumberObject::classSpec_ = {
-    GenericCreateConstructor<Number, 1, gc::AllocKind::FUNCTION>,
-    NumberObject::createPrototype,
-    number_static_methods,
-    nullptr,
-    number_methods,
-    nullptr,
-    NumberClassFinish};
+  return numberProto;
+}
 
 static char* FracNumberToCString(JSContext* cx, ToCStringBuf* cbuf, double d,
                                  int base = 10) {

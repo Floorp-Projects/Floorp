@@ -11,7 +11,9 @@
 
 namespace js {
 
-extern const JSClass ReflectClass;
+class GlobalObject;
+
+extern JSObject* InitReflect(JSContext* cx, js::Handle<GlobalObject*> global);
 
 }  // namespace js
 

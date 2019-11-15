@@ -820,8 +820,8 @@ static const JSStdName* LookupStdName(const JSAtomState& names, JSAtom* name,
  * JSProtoKey does not correspond to a class with a meaningful constructor, we
  * insert a null entry into the table.
  */
-#define STD_NAME_ENTRY(name, clasp) {NAME_OFFSET(name), JSProto_##name},
-#define STD_DUMMY_ENTRY(name, dummy) {0, JSProto_Null},
+#define STD_NAME_ENTRY(name, init, clasp) {NAME_OFFSET(name), JSProto_##name},
+#define STD_DUMMY_ENTRY(name, init, dummy) {0, JSProto_Null},
 static const JSStdName standard_class_names[] = {
     JS_FOR_PROTOTYPES(STD_NAME_ENTRY, STD_DUMMY_ENTRY){0, JSProto_LIMIT}};
 
@@ -895,7 +895,9 @@ JS_PUBLIC_API bool JS_ResolveStandardClass(JSContext* cx, HandleObject obj,
   // If this class is anonymous, then it doesn't exist as a global
   // property, so we won't resolve anything.
   JSProtoKey key = stdnm ? stdnm->key : JSProto_Null;
-  if (key != JSProto_Null) {
+  if (key != JSProto_Null && key != JSProto_AsyncFunction &&
+      key != JSProto_GeneratorFunction &&
+      key != JSProto_AsyncGeneratorFunction) {
     const JSClass* clasp = ProtoKeyToClass(key);
     if (!clasp || clasp->specShouldDefineConstructor()) {
       if (!GlobalObject::ensureConstructor(cx, global, key)) {
@@ -968,6 +970,12 @@ static bool EnumerateStandardClassesInTable(JSContext* cx,
     }
 
     if (GlobalObject::skipDeselectedConstructor(cx, key)) {
+      continue;
+    }
+
+    // Async(Function|Generator) and Generator don't yet use ClassSpec.
+    if (key == JSProto_AsyncFunction || key == JSProto_GeneratorFunction ||
+        key == JSProto_AsyncGeneratorFunction) {
       continue;
     }
 

@@ -782,6 +782,9 @@ bool js::intl_supportedLocaleOrFallback(JSContext* cx, unsigned argc,
   return true;
 }
 
+const JSClass js::IntlClass = {js_Object_str,
+                               JSCLASS_HAS_CACHED_PROTO(JSProto_Intl)};
+
 static bool intl_toSource(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setString(cx->names().Intl);
@@ -793,8 +796,11 @@ static const JSFunctionSpec intl_static_methods[] = {
     JS_SELF_HOSTED_FN("getCanonicalLocales", "Intl_getCanonicalLocales", 1, 0),
     JS_FS_END};
 
-static JSObject* CreateIntlObject(JSContext* cx, JSProtoKey key) {
-  Handle<GlobalObject*> global = cx->global();
+/**
+ * Initializes the Intl Object and its standard built-in properties.
+ * Spec: ECMAScript Internationalization API Specification, 8.0, 8.1
+ */
+JSObject* js::InitIntlClass(JSContext* cx, Handle<GlobalObject*> global) {
   RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
   if (!proto) {
     return nullptr;
@@ -802,15 +808,17 @@ static JSObject* CreateIntlObject(JSContext* cx, JSProtoKey key) {
 
   // The |Intl| object is just a plain object with some "static" function
   // properties and some constructor properties.
-  return NewObjectWithGivenProto(cx, &IntlClass, proto, SingletonObject);
-}
+  RootedObject intl(
+      cx, NewObjectWithGivenProto(cx, &IntlClass, proto, SingletonObject));
+  if (!intl) {
+    return nullptr;
+  }
 
-/**
- * Initializes the Intl Object and its standard built-in properties.
- * Spec: ECMAScript Internationalization API Specification, 8.0, 8.1
- */
-static bool IntlClassFinish(JSContext* cx, HandleObject intl,
-                            HandleObject proto) {
+  // Add the static functions.
+  if (!JS_DefineFunctions(cx, intl, intl_static_methods)) {
+    return nullptr;
+  }
+
   // Add the constructor properties.
   RootedId ctorId(cx);
   RootedValue ctorValue(cx);
@@ -819,23 +827,27 @@ static bool IntlClassFinish(JSContext* cx, HandleObject intl,
         JSProto_PluralRules, JSProto_RelativeTimeFormat}) {
     JSObject* ctor = GlobalObject::getOrCreateConstructor(cx, protoKey);
     if (!ctor) {
-      return false;
+      return nullptr;
     }
 
     ctorId = NameToId(ClassName(protoKey, cx));
     ctorValue.setObject(*ctor);
     if (!DefineDataProperty(cx, intl, ctorId, ctorValue, 0)) {
-      return false;
+      return nullptr;
     }
   }
 
-  return true;
+  // The |Intl| object is fully set up now, so define the global property.
+  RootedValue intlValue(cx, ObjectValue(*intl));
+  if (!DefineDataProperty(cx, global, cx->names().Intl, intlValue,
+                          JSPROP_RESOLVING)) {
+    return nullptr;
+  }
+
+  // Also cache |Intl| to implement spec language that conditions behavior
+  // based on values being equal to "the standard built-in |Intl| object".
+  // Use |setConstructor| to correspond with |JSProto_Intl|.
+  global->setConstructor(JSProto_Intl, ObjectValue(*intl));
+
+  return intl;
 }
-
-static const ClassSpec IntlClassSpec = {
-    CreateIntlObject, nullptr, intl_static_methods, nullptr,
-    nullptr,          nullptr, IntlClassFinish};
-
-const JSClass js::IntlClass = {js_Object_str,
-                               JSCLASS_HAS_CACHED_PROTO(JSProto_Intl),
-                               JS_NULL_CLASS_OPS, &IntlClassSpec};
