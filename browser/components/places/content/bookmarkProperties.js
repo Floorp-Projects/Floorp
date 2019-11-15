@@ -440,7 +440,7 @@ var BookmarkPropertiesPanel = {
   },
 
   /**
-   * Determines whether the XUL textbox with the given ID contains a
+   * Determines whether the input with the given ID contains a
    * string that can be converted into an nsIURI.
    *
    * @param aTextboxID

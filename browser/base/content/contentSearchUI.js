@@ -21,7 +21,7 @@ this.ContentSearchUIController = (function() {
    *
    * @param inputElement
    *        Search suggestions will be based on the text in this text box.
-   *        Assumed to be an html:input.  xul:textbox is untested but might work.
+   *        Assumed to be an html:input.
    * @param tableParent
    *        The suggestion table is appended as a child to this element.  Since
    *        the table is absolutely positioned and its top and left values are set

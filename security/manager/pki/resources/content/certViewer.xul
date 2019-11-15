@@ -29,7 +29,7 @@
   table {
     border-spacing: 0.5ch 2px;
   }
-  td > textbox {
+  td > input {
     width: 100%;
   }
   th {

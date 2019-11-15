@@ -232,7 +232,7 @@ var gConnectionsDialog = {
 
   updateReloadButton() {
     // Disable the "Reload PAC" button if the selected proxy type is not PAC or
-    // if the current value of the PAC textbox does not match the value stored
+    // if the current value of the PAC input does not match the value stored
     // in prefs.  Likewise, disable the reload button if PAC is not configured
     // in prefs.
 
