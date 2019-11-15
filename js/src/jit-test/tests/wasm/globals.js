@@ -343,12 +343,12 @@ wasmAssert(`(module
     assertEq(mod.exports.f(), 1);
 
     {
-        // "value" is enumerable and is the first enumerated value
+        // "value" is enumerable
         let x = new Global({value: "i32"});
         let s = "";
         for ( let i in x )
             s = s + i + ",";
-        assertEq(s.substring(0,6), "value,");
+        assertEq(s, "valueOf,value,");
     }
 
     // "value" is defined on the prototype, not on the object
