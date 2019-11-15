@@ -50,6 +50,9 @@ class PublicSuffixList(
      *
      * Note that this method ignores the default "prevailing rule" described in the formal public suffix list algorithm:
      * If no rule matches then the passed [domain] is assumed to *not* be a public suffix.
+     *
+     * @param [domain] _must_ be a valid domain. [PublicSuffixList] performs no validation, and if any unexpected values
+     * are passed (e.g., a full URL, a domain with a trailing '/', etc) this may return an incorrect result.
      */
     fun isPublicSuffix(domain: String): Deferred<Boolean> = scope.async {
         when (data.getPublicSuffixOffset(domain)) {
@@ -68,6 +71,9 @@ class PublicSuffixList(
      * www.bcc.co.uk    -> bbc.co.uk
      * a.b.ide.kyoto.jp -> b.ide.kyoto.jp
      * ```
+     *
+     * @param [domain] _must_ be a valid domain. [PublicSuffixList] performs no validation, and if any unexpected values
+     * are passed (e.g., a full URL, a domain with a trailing '/', etc) this may return an incorrect result.
      */
     fun getPublicSuffixPlusOne(domain: String): Deferred<String?> = scope.async {
         when (val offset = data.getPublicSuffixOffset(domain)) {
@@ -89,6 +95,9 @@ class PublicSuffixList(
      * www.bcc.co.uk    -> co.uk
      * a.b.ide.kyoto.jp -> ide.kyoto.jp
      * ```
+     *
+     * @param [domain] _must_ be a valid domain. [PublicSuffixList] performs no validation, and if any unexpected values
+     * are passed (e.g., a full URL, a domain with a trailing '/', etc) this may return an incorrect result.
      */
     fun getPublicSuffix(domain: String) = scope.async {
         when (val offset = data.getPublicSuffixOffset(domain)) {
@@ -110,6 +119,9 @@ class PublicSuffixList(
      * www.bcc.co.uk    -> www.bbc
      * a.b.ide.kyoto.jp -> a.b
      * ```
+     *
+     * @param [domain] _must_ be a valid domain. [PublicSuffixList] performs no validation, and if any unexpected values
+     * are passed (e.g., a full URL, a domain with a trailing '/', etc) this may return an incorrect result.
      */
     fun stripPublicSuffix(domain: String) = scope.async {
         when (val offset = data.getPublicSuffixOffset(domain)) {
