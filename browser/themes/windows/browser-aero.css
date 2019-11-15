@@ -9,8 +9,8 @@
 @media (-moz-os-version: windows-win7),
        (-moz-os-version: windows-win8) {
   @media (-moz-windows-classic: 0) {
-    #main-window[sizemode="normal"] #navigator-toolbox > #titlebar > #toolbar-menubar:not([autohide="true"]) > #menubar-items,
-    #main-window[sizemode="normal"] #navigator-toolbox > #titlebar > #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .toolbar-items {
+    :root[sizemode="normal"] #toolbar-menubar:not([autohide="true"]) > #menubar-items,
+    :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .toolbar-items {
       margin-top: 1px;
     }
     /**
@@ -26,12 +26,12 @@
      *   The margin is also unwanted in the maximized case, but we want
      *   it in the restored window case.
      */
-    #main-window[sizemode="normal"] .titlebar-buttonbox {
+    :root[sizemode="normal"] .titlebar-buttonbox {
       -moz-appearance: -moz-window-button-box;
     }
 
     @media (-moz-windows-compositor) {
-      #main-window[sizemode="maximized"] .titlebar-buttonbox {
+      :root[sizemode="maximized"] .titlebar-buttonbox {
         -moz-appearance: -moz-window-button-box-maximized;
       }
     }
