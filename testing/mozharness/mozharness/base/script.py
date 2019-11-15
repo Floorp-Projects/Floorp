@@ -12,12 +12,12 @@ mozharness.
 from __future__ import print_function
 
 import codecs
-from contextlib import contextmanager
 import datetime
 import errno
 import fnmatch
 import functools
 import gzip
+import hashlib
 import inspect
 import itertools
 import os
@@ -31,12 +31,35 @@ import sys
 import tarfile
 import time
 import traceback
-import urllib2
 import zipfile
-import httplib
-import urlparse
-import hashlib
 import zlib
+from contextlib import contextmanager
+from io import BytesIO
+
+from mozprocess import ProcessHandler
+
+import mozinfo
+from mozharness.base.config import BaseConfig
+from mozharness.base.log import (DEBUG, ERROR, FATAL, INFO, WARNING,
+                                 ConsoleLogger, LogMixin, MultiFileLogger,
+                                 OutputParser, SimpleFileLogger)
+
+try:
+    import httplib
+except ImportError:
+    import http.client as httplib
+try:
+    import simplejson as json
+except ImportError:
+    import json
+try:
+    from urllib2 import quote, urlopen, Request
+except ImportError:
+    from urllib.request import quote, urlopen, Request
+try:
+    import urlparse
+except ImportError:
+    import urllib.parse as urlparse
 if os.name == 'nt':
     import locale
     try:
@@ -47,18 +70,9 @@ if os.name == 'nt':
         PYWIN32 = False
 
 try:
-    import simplejson as json
-    assert json
+    from urllib2 import HTTPError, URLError
 except ImportError:
-    import json
-
-from io import BytesIO
-
-import mozinfo
-from mozprocess import ProcessHandler
-from mozharness.base.config import BaseConfig
-from mozharness.base.log import MultiFileLogger, SimpleFileLogger, ConsoleLogger, \
-    LogMixin, OutputParser, DEBUG, INFO, ERROR, FATAL, WARNING
+    from urllib.error import HTTPError, URLError
 
 
 class ContentLengthMismatch(Exception):
@@ -370,27 +384,27 @@ class ScriptMixin(PlatformMixin):
             return parsed.netloc
 
     def _urlopen(self, url, **kwargs):
-        """ open the url `url` using `urllib2`.
+        """ open the url `url` using `urllib2`.`
         This method can be overwritten to extend its complexity
 
         Args:
-            url (str | urllib2.Request): url to open
-            kwargs: Arbitrary keyword arguments passed to the `urllib2.urlopen` function.
+            url (str | urllib.request.Request): url to open
+            kwargs: Arbitrary keyword arguments passed to the `urllib.request.urlopen` function.
 
         Returns:
             file-like: file-like object with additional methods as defined in
-                       `urllib2.urlopen`_.
+                       `urllib.request.urlopen`_.
             None: None may be returned if no handler handles the request.
 
         Raises:
             urllib2.URLError: on errors
 
-        .. _urllib2.urlopen:
+        .. urillib.request.urlopen:
         https://docs.python.org/2/library/urllib2.html#urllib2.urlopen
         """
         # http://bugs.python.org/issue13359 - urllib2 does not automatically quote the URL
-        url_quoted = urllib2.quote(url, safe='%/:=&?~#+!$,;\'@()*[]|')
-        return urllib2.urlopen(url_quoted, **kwargs)
+        url_quoted = quote(url, safe='%/:=&?~#+!$,;\'@()*[]|')
+        return urlopen(url_quoted, **kwargs)
 
     def fetch_url_into_memory(self, url):
         ''' Downloads a file from a url into memory instead of disk.
@@ -422,7 +436,7 @@ class ScriptMixin(PlatformMixin):
                 url = 'file://%s' % os.path.abspath(url)
                 parsed_url = urlparse.urlparse(url)
 
-        request = urllib2.Request(url)
+        request = Request(url)
         # When calling fetch_url_into_memory() you should retry when we raise
         # one of these exceptions:
         # * Bug 1300663 - HTTPError: HTTP Error 404: Not Found
@@ -436,7 +450,7 @@ class ScriptMixin(PlatformMixin):
         # * Bug 1301807 - BadStatusLine: ''
         #
         # Bug 1309912 - Adding timeout in hopes to solve blocking on response.read() (bug 1300413)
-        response = urllib2.urlopen(request, timeout=30)
+        response = urlopen(request, timeout=30)
 
         if parsed_url.scheme in ('http', 'https'):
             content_length = int(response.headers.get('Content-Length'))
@@ -515,7 +529,7 @@ class ScriptMixin(PlatformMixin):
                 block = f.read(1024 ** 2)
                 if not block:
                     if f_length is not None and got_length != f_length:
-                        raise urllib2.URLError(
+                        raise URLError(
                             "Download incomplete; content-length was %d, "
                             "but only received %d" % (f_length, got_length))
                     break
@@ -536,10 +550,10 @@ class ScriptMixin(PlatformMixin):
                         f_in.close()
                 os.remove(file_name + '.gz')
             return file_name
-        except urllib2.HTTPError as e:
+        except HTTPError as e:
             self.warning("Server returned status %s %s for %s" % (str(e.code), str(e), url))
             raise
-        except urllib2.URLError as e:
+        except URLError as e:
             self.warning("URL Error: %s" % url)
 
             # Failures due to missing local files won't benefit from retry.
@@ -577,7 +591,7 @@ class ScriptMixin(PlatformMixin):
         """
         retry_args = dict(
             failure_status=None,
-            retry_exceptions=(urllib2.HTTPError, urllib2.URLError,
+            retry_exceptions=(HTTPError, URLError,
                               httplib.BadStatusLine,
                               socket.timeout, socket.error),
             error_message="Can't download from %s to %s!" % (url, file_name),
@@ -728,8 +742,8 @@ class ScriptMixin(PlatformMixin):
         # 1) Let's fetch the file
         retry_args = dict(
             retry_exceptions=(
-                urllib2.HTTPError,
-                urllib2.URLError,
+                HTTPError,
+                URLError,
                 httplib.BadStatusLine,
                 socket.timeout,
                 socket.error,
