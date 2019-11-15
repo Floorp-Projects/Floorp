@@ -8,6 +8,67 @@ const { LoginManagerContextMenu } = ChromeUtils.import(
   "resource://gre/modules/LoginManagerContextMenu.jsm"
 );
 
+const dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, {
+  dateStyle: "medium",
+});
+
+const ORIGIN_HTTP_EXAMPLE_ORG = "http://example.org";
+const ORIGIN_HTTPS_EXAMPLE_ORG = "https://example.org";
+const ORIGIN_HTTPS_EXAMPLE_ORG_8080 = "https://example.org:8080";
+const ORIGIN_HTTPS_SUB_EXAMPLE_ORG = "https://sub.example.org";
+
+const FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1 = formLogin({
+  formActionOrigin: ORIGIN_HTTPS_EXAMPLE_ORG,
+  guid: "FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1",
+  origin: ORIGIN_HTTPS_EXAMPLE_ORG,
+});
+
+// HTTP version of the above
+const FORM_LOGIN_HTTP_EXAMPLE_ORG_U1_P1 = formLogin({
+  formActionOrigin: ORIGIN_HTTP_EXAMPLE_ORG,
+  guid: "FORM_LOGIN_HTTP_EXAMPLE_ORG_U1_P1",
+  origin: ORIGIN_HTTP_EXAMPLE_ORG,
+});
+
+// Same as above but with a different password
+const FORM_LOGIN_HTTP_EXAMPLE_ORG_U1_P2 = formLogin({
+  formActionOrigin: ORIGIN_HTTP_EXAMPLE_ORG,
+  guid: "FORM_LOGIN_HTTP_EXAMPLE_ORG_U1_P2",
+  origin: ORIGIN_HTTP_EXAMPLE_ORG,
+  password: "pass2",
+});
+
+// Non-default port
+
+const FORM_LOGIN_HTTPS_EXAMPLE_ORG_8080_U1_P2 = formLogin({
+  formActionOrigin: ORIGIN_HTTPS_EXAMPLE_ORG_8080,
+  guid: "FORM_LOGIN_HTTPS_EXAMPLE_ORG_8080_U1_P2",
+  origin: ORIGIN_HTTPS_EXAMPLE_ORG_8080,
+  password: "pass2",
+});
+
+// Subdomain
+
+const FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P1 = formLogin({
+  formActionOrigin: ORIGIN_HTTPS_SUB_EXAMPLE_ORG,
+  guid: "FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P1",
+  origin: ORIGIN_HTTPS_SUB_EXAMPLE_ORG,
+});
+
+const FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P2 = formLogin({
+  formActionOrigin: ORIGIN_HTTPS_SUB_EXAMPLE_ORG,
+  guid: "FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P2",
+  origin: ORIGIN_HTTPS_SUB_EXAMPLE_ORG,
+  password: "pass2",
+});
+
+// HTTP Auth.
+
+const HTTP_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1 = authLogin({
+  guid: "FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1",
+  origin: ORIGIN_HTTPS_EXAMPLE_ORG,
+});
+
 XPCOMUtils.defineLazyGetter(this, "_stringBundle", function() {
   return Services.strings.createBundle(
     "chrome://passwordmgr/locale/passwordmgr.properties"
@@ -18,69 +79,337 @@ XPCOMUtils.defineLazyGetter(this, "_stringBundle", function() {
  * Prepare data for the following tests.
  */
 add_task(async function test_initialize() {
-  for (let login of loginList()) {
-    Services.logins.addLogin(login);
-  }
+  Services.prefs.setBoolPref("signon.schemeUpgrades", true);
+  Services.prefs.setBoolPref("signon.includeOtherSubdomainsInLookup", true);
 });
+
+add_task(async function test_sameOriginOnlyHTTPS() {
+  await runTestcase({
+    formOrigin: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.origin,
+    savedLogins: [FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1],
+    expectedItems: [
+      {
+        login: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+      },
+    ],
+  });
+});
+
+add_task(async function test_sameOriginOnlyHTTPS_noUsername() {
+  let loginWithoutUsername = FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.clone();
+  loginWithoutUsername.QueryInterface(Ci.nsILoginMetaInfo).guid = "no-username";
+  loginWithoutUsername.username = "";
+  await runTestcase({
+    formOrigin: loginWithoutUsername.origin,
+    savedLogins: [loginWithoutUsername],
+    expectedItems: [
+      {
+        login: loginWithoutUsername,
+        time: true,
+      },
+    ],
+  });
+});
+
+add_task(async function test_sameOriginOnlyHTTP() {
+  await runTestcase({
+    formOrigin: FORM_LOGIN_HTTP_EXAMPLE_ORG_U1_P1.origin,
+    savedLogins: [FORM_LOGIN_HTTP_EXAMPLE_ORG_U1_P1],
+    expectedItems: [
+      {
+        login: FORM_LOGIN_HTTP_EXAMPLE_ORG_U1_P1,
+      },
+    ],
+  });
+});
+
+// Scheme upgrade/downgrade tasks
+
+add_task(async function test_sameOriginDedupeSchemeUpgrade() {
+  await runTestcase({
+    formOrigin: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.origin,
+    savedLogins: [
+      FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+      FORM_LOGIN_HTTP_EXAMPLE_ORG_U1_P1,
+    ],
+    expectedItems: [
+      {
+        login: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+      },
+    ],
+  });
+});
+
+add_task(async function test_sameOriginSchemeDowngrade() {
+  // Should have no https: when formOrigin is https:
+  await runTestcase({
+    formOrigin: FORM_LOGIN_HTTP_EXAMPLE_ORG_U1_P1.origin,
+    savedLogins: [
+      FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+      FORM_LOGIN_HTTP_EXAMPLE_ORG_U1_P1,
+    ],
+    expectedItems: [
+      {
+        login: FORM_LOGIN_HTTP_EXAMPLE_ORG_U1_P1,
+      },
+    ],
+  });
+});
+
+add_task(async function test_sameOriginShadowedSchemeUpgrade() {
+  await runTestcase({
+    formOrigin: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.origin,
+    savedLogins: [
+      FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+      FORM_LOGIN_HTTP_EXAMPLE_ORG_U1_P2, // Different password
+    ],
+    expectedItems: [
+      {
+        login: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+      },
+    ],
+  });
+});
+
+add_task(async function test_sameOriginShadowedSchemeDowngrade() {
+  // Should have no https: when formOrigin is https:
+  await runTestcase({
+    formOrigin: FORM_LOGIN_HTTP_EXAMPLE_ORG_U1_P1.origin,
+    savedLogins: [
+      FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+      FORM_LOGIN_HTTP_EXAMPLE_ORG_U1_P2, // Different password
+    ],
+    expectedItems: [
+      {
+        login: FORM_LOGIN_HTTP_EXAMPLE_ORG_U1_P2,
+      },
+    ],
+  });
+});
+
+// Non-default port tasks
+
+add_task(async function test_sameDomainDifferentPort_onDefault() {
+  await runTestcase({
+    formOrigin: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.origin,
+    savedLogins: [
+      FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+      FORM_LOGIN_HTTPS_EXAMPLE_ORG_8080_U1_P2,
+    ],
+    expectedItems: [
+      {
+        login: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+        time: true,
+      },
+      "--", // separator
+      FORM_LOGIN_HTTPS_EXAMPLE_ORG_8080_U1_P2.displayOrigin, // group heading
+      {
+        login: FORM_LOGIN_HTTPS_EXAMPLE_ORG_8080_U1_P2,
+        time: true,
+      },
+    ],
+  });
+});
+
+add_task(async function test_sameDomainDifferentPort_onNonDefault() {
+  await runTestcase({
+    // Swap the formOrigin compared to above
+    formOrigin: FORM_LOGIN_HTTPS_EXAMPLE_ORG_8080_U1_P2.origin,
+    savedLogins: [
+      FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+      FORM_LOGIN_HTTPS_EXAMPLE_ORG_8080_U1_P2,
+    ],
+    expectedItems: [
+      {
+        login: FORM_LOGIN_HTTPS_EXAMPLE_ORG_8080_U1_P2,
+        time: true,
+      },
+      "--", // separator
+      FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.displayOrigin, // group heading
+      {
+        login: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+        time: true,
+      },
+    ],
+  });
+});
+
+// Subdomain tasks
+
+add_task(async function test_onlySubdomainOnBaseDomain() {
+  await runTestcase({
+    formOrigin: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.origin,
+    savedLogins: [FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P1],
+    expectedItems: [
+      // No separator
+      FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P1.displayOrigin,
+      {
+        login: FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P1,
+      },
+    ],
+  });
+});
+
+add_task(async function test_subdomainDedupeOnBaseDomain() {
+  await runTestcase({
+    formOrigin: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.origin,
+    savedLogins: [
+      FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+      FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P1,
+    ],
+    expectedItems: [
+      {
+        login: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+      },
+    ],
+  });
+});
+
+add_task(async function test_subdomainDedupeOnSubDomain() {
+  await runTestcase({
+    formOrigin: FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P1.origin,
+    savedLogins: [
+      FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+      FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P1,
+    ],
+    expectedItems: [
+      {
+        login: FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P1,
+      },
+    ],
+  });
+});
+
+add_task(async function test_subdomainIncludedOnBaseDomain() {
+  await runTestcase({
+    formOrigin: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.origin,
+    savedLogins: [
+      FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+      FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P2,
+    ],
+    expectedItems: [
+      {
+        login: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+        time: true,
+      },
+      "--", // separator
+      FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P2.displayOrigin, // group heading
+      {
+        login: FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P2,
+        time: true,
+      },
+    ],
+  });
+});
+
+add_task(async function test_subdomainIncludedOnSubDomain() {
+  await runTestcase({
+    formOrigin: FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P2.origin,
+    savedLogins: [
+      FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+      FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P2,
+    ],
+    expectedItems: [
+      {
+        login: FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P2,
+        time: true,
+      },
+      "--", // separator
+      FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.displayOrigin, // group heading
+      {
+        login: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+        time: true,
+      },
+    ],
+  });
+});
+
+// HTTP auth. suggestions
+
+add_task(async function test_sameOriginOnlyHTTPAuth() {
+  await runTestcase({
+    formOrigin: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.origin,
+    savedLogins: [HTTP_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1],
+    expectedItems: [
+      // No separator
+      HTTP_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.displayOrigin, // group heading
+      {
+        login: HTTP_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+      },
+    ],
+  });
+});
+
+// Helpers
+
+function formLogin(modifications = {}) {
+  let mods = Object.assign(
+    {},
+    {
+      timePasswordChanged: 1573821296000,
+    },
+    modifications
+  );
+  return TestData.formLogin(mods);
+}
+
+function authLogin(modifications = {}) {
+  let mods = Object.assign(
+    {},
+    {
+      timePasswordChanged: 1573821296000,
+    },
+    modifications
+  );
+  return TestData.authLogin(mods);
+}
 
 /**
  * Tests if the LoginManagerContextMenu returns the correct login items.
  */
-add_task(async function test_contextMenuAddAndRemoveLogins() {
+async function runTestcase({ formOrigin, savedLogins, expectedItems }) {
   const DOCUMENT_CONTENT = "<form><input id='pw' type=password></form>";
-  const INPUT_QUERY = "input[type='password']";
 
-  let testOrigins = [
-    "http://www.example.com",
-    "http://www2.example.com",
-    "http://www3.example.com",
-    "http://empty.example.com",
-  ];
-
-  for (let origin of testOrigins) {
-    info("test for origin: " + origin);
-    // Get expected logins for this test.
-    let logins = getExpectedLogins(origin);
-
-    // Create the logins menuitems fragment.
-    let { fragment, document } = createLoginsFragment(
-      origin,
-      DOCUMENT_CONTENT,
-      INPUT_QUERY
-    );
-
-    if (!logins.length) {
-      Assert.ok(fragment === null, "Null returned. No logins where found.");
-      continue;
-    }
-    let items = [...fragment.querySelectorAll("menuitem")];
-
-    // Check if the items are those expected to be listed.
-    Assert.ok(checkLoginItems(logins, items), "All expected logins found.");
-    document.body.appendChild(fragment);
-
-    // Try to clear the fragment.
-    LoginManagerContextMenu.clearLoginsFromMenu(document);
-    Assert.equal(
-      fragment.querySelectorAll("menuitem").length,
-      0,
-      "All items correctly cleared."
-    );
+  for (let login of savedLogins) {
+    Services.logins.addLogin(login);
   }
 
+  // Create the logins menuitems fragment.
+  let { fragment, document } = createLoginsFragment(
+    formOrigin,
+    DOCUMENT_CONTENT
+  );
+
+  if (!expectedItems.length) {
+    Assert.ok(fragment === null, "Null returned. No logins were found.");
+    return;
+  }
+  let actualItems = [...fragment.children];
+
+  // Check if the items are those expected to be listed.
+  checkLoginItems(actualItems, expectedItems);
+
+  document.body.appendChild(fragment);
+
+  // Try to clear the fragment.
+  LoginManagerContextMenu.clearLoginsFromMenu(document);
+  Assert.equal(
+    document.querySelectorAll("menuitem, menuseparator, menucaption").length,
+    0,
+    "All items correctly cleared."
+  );
+
   Services.logins.removeAllLogins();
-});
+}
 
 /**
  * Create a fragment with a menuitem for each login.
  */
-function createLoginsFragment(url, content, elementQuery) {
-  const CHROME_URL = "chrome://mock-chrome";
+function createLoginsFragment(url, content) {
+  const CHROME_URL = "chrome://mock-chrome/content/";
 
   // Create a mock document.
   let document = MockDocument.createTestDocument(CHROME_URL, content);
-  let inputElement = document.querySelector(elementQuery);
-  MockDocument.mockOwnerDocumentProperty(inputElement, document, url);
 
   // We also need a simple mock Browser object for this test.
   document.createXULElement = document.createElement.bind(document);
@@ -92,143 +421,54 @@ function createLoginsFragment(url, content, elementQuery) {
   return {
     document,
     fragment: LoginManagerContextMenu.addLoginsToMenu(
-      inputElement,
+      null,
       browser,
       formOrigin
     ),
   };
 }
 
-/**
- * Check if every login have it's corresponding menuitem.
- * Duplicates and empty usernames have a date appended.
- */
-function checkLoginItems(logins, items) {
-  function findDuplicates(unfilteredLoginList) {
-    let seen = new Set();
-    let duplicates = new Set();
-    for (let login of unfilteredLoginList) {
-      if (seen.has(login.username)) {
-        duplicates.add(login.username);
-      }
-      seen.add(login.username);
-    }
-    return duplicates;
-  }
-  let duplicates = findDuplicates(logins);
+function checkLoginItems(actualItems, expectedDetails) {
+  for (let [i, expectedDetail] of expectedDetails.entries()) {
+    let actualElement = actualItems[i];
 
-  let dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-  });
-  for (let login of logins) {
-    if (login.username && !duplicates.has(login.username)) {
-      // If login is not duplicate and we can't find an item for it, fail.
-      if (!items.find(item => item.label == login.username)) {
-        return false;
-      }
+    // Separator
+    if (expectedDetail == "--") {
+      Assert.equal(actualElement.localName, "menuseparator", "Check localName");
       continue;
     }
 
-    let meta = login.QueryInterface(Ci.nsILoginMetaInfo);
-    let time = dateAndTimeFormatter.format(new Date(meta.timePasswordChanged));
-    // If login is duplicate, check if we have a login item with appended date.
-    if (
-      login.username &&
-      !items.find(item => item.label == login.username + " (" + time + ")")
-    ) {
-      return false;
+    // Section heading
+    if (typeof expectedDetail == "string") {
+      Assert.equal(actualElement.localName, "menucaption", "Check localName");
+      continue;
     }
-    // If login is empty, check if we have a login item with appended date.
-    if (
-      !login.username &&
-      !items.find(
-        item =>
-          item.label ==
-          _stringBundle.GetStringFromName("noUsername") + " (" + time + ")"
-      )
-    ) {
-      return false;
+
+    Assert.equal(actualElement.localName, "menuitem", "Check localName");
+    Assert.equal(
+      actualElement.id,
+      "login-" + expectedDetail.login.guid,
+      `Check id ${i}`
+    );
+
+    let expectedLabel = expectedDetail.login.username;
+    if (!expectedLabel) {
+      expectedLabel += _stringBundle.GetStringFromName("noUsername");
     }
+    if (expectedDetail.time) {
+      expectedLabel +=
+        " (" +
+        dateAndTimeFormatter.format(
+          new Date(expectedDetail.login.timePasswordChanged)
+        ) +
+        ")";
+    }
+    Assert.equal(actualElement.label, expectedLabel, `Check label ${i}`);
   }
-  return true;
-}
 
-/**
- * Gets the list of expected logins for an origin.
- */
-function getExpectedLogins(origin) {
-  return Services.logins
-    .getAllLogins()
-    .filter(entry => entry.origin === origin);
-}
-
-function loginList() {
-  return [
-    new LoginInfo(
-      "http://www.example.com",
-      "http://www.example.com",
-      null,
-      "username1",
-      "password",
-      "form_field_username",
-      "form_field_password"
-    ),
-
-    new LoginInfo(
-      "http://www.example.com",
-      "http://www.example.com",
-      null,
-      "username2",
-      "password",
-      "form_field_username",
-      "form_field_password"
-    ),
-
-    new LoginInfo(
-      "http://www2.example.com",
-      "http://www.example.com",
-      null,
-      "username",
-      "password",
-      "form_field_username",
-      "form_field_password"
-    ),
-    new LoginInfo(
-      "http://www2.example.com",
-      "http://www2.example.com",
-      null,
-      "username",
-      "password2",
-      "form_field_username",
-      "form_field_password"
-    ),
-    new LoginInfo(
-      "http://www2.example.com",
-      "http://www2.example.com",
-      null,
-      "username2",
-      "password2",
-      "form_field_username",
-      "form_field_password"
-    ),
-
-    new LoginInfo(
-      "http://www3.example.com",
-      "http://www.example.com",
-      null,
-      "",
-      "password",
-      "form_field_username",
-      "form_field_password"
-    ),
-    new LoginInfo(
-      "http://www3.example.com",
-      "http://www3.example.com",
-      null,
-      "",
-      "password2",
-      "form_field_username",
-      "form_field_password"
-    ),
-  ];
+  Assert.equal(
+    actualItems.length,
+    expectedDetails.length,
+    "Should have the correct number of menu items"
+  );
 }
