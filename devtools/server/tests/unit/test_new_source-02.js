@@ -8,31 +8,20 @@
  */
 
 var gDebuggee;
-var gClient;
 var gTargetFront;
 var gThreadFront;
 
-function run_test() {
-  Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
-  });
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-stack");
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
+add_task(
+  threadFrontTest(
+    async ({ threadFront, debuggee, targetFront }) => {
       gThreadFront = threadFront;
       gTargetFront = targetFront;
+      gDebuggee = debuggee;
       test_simple_new_source();
-    });
-  });
-  do_test_pending();
-}
+    },
+    { waitForFinish: true }
+  )
+);
 
 function test_simple_new_source() {
   gThreadFront.once("paused", function() {
@@ -46,7 +35,7 @@ function test_simple_new_source() {
         Assert.ok(!!packet.source);
         Assert.ok(!!packet.source.url.match(/example\.com/));
 
-        finishClient(gClient);
+        threadFrontTestFinished();
       });
 
       const consoleFront = await gTargetFront.getFront("console");

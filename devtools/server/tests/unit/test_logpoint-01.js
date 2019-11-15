@@ -12,22 +12,17 @@ var gDebuggee;
 var gClient;
 var gThreadFront;
 
-function run_test() {
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-logpoint");
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-logpoint", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
+add_task(
+  threadFrontTest(
+    async ({ threadFront, debuggee, client }) => {
       gThreadFront = threadFront;
+      gDebuggee = debuggee;
+      gClient = client;
       test_simple_breakpoint();
-    });
-  });
-  do_test_pending();
-}
+    },
+    { waitForFinish: true }
+  )
+);
 
 function test_simple_breakpoint() {
   const rootActor = gClient.transport._serverConnection.rootActor;
@@ -58,7 +53,7 @@ function test_simple_breakpoint() {
     await gThreadFront.resume();
     Assert.equal(lastMessage.level, "logPoint");
     Assert.equal(lastMessage.arguments[0], "three");
-    finishClient(gClient);
+    threadFrontTestFinished();
   });
 
   /* eslint-disable */

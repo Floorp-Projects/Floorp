@@ -12,25 +12,18 @@
  */
 
 var gDebuggee;
-var gClient;
 var gThreadFront;
 
-function run_test() {
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-black-box");
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-black-box", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
+add_task(
+  threadFrontTest(
+    async ({ threadFront, debuggee }) => {
       gThreadFront = threadFront;
+      gDebuggee = debuggee;
       test_black_box();
-    });
-  });
-  do_test_pending();
-}
+    },
+    { waitForFinish: true }
+  )
+);
 
 const BLACK_BOXED_URL = "http://example.com/blackboxme.js";
 const SOURCE_URL = "http://example.com/source.js";
@@ -107,7 +100,7 @@ async function test_unblack_box_breakpoint(sourceFront) {
     // nastiness to skip over it.
     gThreadFront.once("paused", async () => {
       await gThreadFront.resume();
-      finishClient(gClient);
+      threadFrontTestFinished();
     });
     await gThreadFront.resume();
   });

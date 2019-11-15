@@ -5,39 +5,22 @@
 "use strict";
 
 var gDebuggee;
-var gClient;
 var gThreadFront;
 
 // This test ensures that we can create SourceActors and SourceFronts properly,
 // and that they can communicate over the protocol to fetch the source text for
 // a given script.
 
-function run_test() {
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-grips");
-  Cu.evalInSandbox(
-    "" +
-      function stopMe(arg1) {
-        debugger;
-      },
-    gDebuggee,
-    "1.8",
-    getFileUrl("test_source-01.js")
-  );
-
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
+add_task(
+  threadFrontTest(
+    async ({ threadFront, debuggee }) => {
       gThreadFront = threadFront;
+      gDebuggee = debuggee;
       test_source();
-    });
-  });
-  do_test_pending();
-}
+    },
+    { waitForFinish: true }
+  )
+);
 
 const SOURCE_URL = "http://example.com/foobar.js";
 const SOURCE_CONTENT = "stopMe()";
@@ -66,11 +49,21 @@ function test_source() {
         Assert.equal(SOURCE_CONTENT, response.source);
 
         gThreadFront.resume().then(function() {
-          finishClient(gClient);
+          threadFrontTestFinished();
         });
       });
     });
   });
+
+  Cu.evalInSandbox(
+    "" +
+      function stopMe(arg1) {
+        debugger;
+      },
+    gDebuggee,
+    "1.8",
+    getFileUrl("test_source-01.js")
+  );
 
   Cu.evalInSandbox(SOURCE_CONTENT, gDebuggee, "1.8", SOURCE_URL);
 }

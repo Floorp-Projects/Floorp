@@ -9,45 +9,24 @@
  */
 
 var gDebuggee;
-var gClient;
 var gThreadFront;
 
-Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
-
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
-});
-
-function run_test() {
-  if (typeof WebAssembly == "undefined") {
-    // wasm is not enabled for this platform
-    return;
-  }
-
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-wasm-source");
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    Assert.ok(gClient.mainRoot.traits.wasmBinarySource);
-
-    attachTestTabAndResume(gClient, "test-wasm-source", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
+add_task(
+  threadFrontTest(
+    async ({ threadFront, debuggee, client }) => {
       gThreadFront = threadFront;
-      gThreadFront
-        .reconfigure({
-          observeAsmJS: true,
-          wasmBinarySource: true,
-        })
-        .then(function() {
-          test_source();
-        });
-    });
-  });
-  do_test_pending();
-}
+      gDebuggee = debuggee;
+
+      await gThreadFront.reconfigure({
+        observeAsmJS: true,
+        wasmBinarySource: true,
+      });
+
+      test_source();
+    },
+    { waitForFinish: true, doNotRunWorker: true }
+  )
+);
 
 const EXPECTED_CONTENT = String.fromCharCode(
   0,
@@ -135,7 +114,7 @@ function test_source() {
         Assert.equal(EXPECTED_CONTENT, sourceContent.binary);
 
         gThreadFront.resume().then(function() {
-          finishClient(gClient);
+          threadFrontTestFinished();
         });
       });
     });

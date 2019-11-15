@@ -9,26 +9,13 @@
 
 const URL = "foo.js";
 
-function run_test() {
-  initTestDebuggerServer();
-  const debuggee = addTestGlobal("test-symbols");
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
+add_task(
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    await testSymbols(threadFront, debuggee);
+  })
+);
 
-  client.connect().then(function() {
-    attachTestTabAndResume(client, "test-symbols", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
-      add_task(testSymbols.bind(null, threadFront, client, debuggee));
-      run_next_test();
-    });
-  });
-
-  do_test_pending();
-}
-
-async function testSymbols(threadFront, client, debuggee) {
+async function testSymbols(threadFront, debuggee) {
   const evalCode = () => {
     /* eslint-disable */
     Cu.evalInSandbox(
@@ -61,6 +48,4 @@ async function testSymbols(threadFront, client, debuggee) {
 
   equal(iteratorSymbol.value.type, "symbol");
   equal(iteratorSymbol.value.name, "Symbol.iterator");
-
-  finishClient(client);
 }
