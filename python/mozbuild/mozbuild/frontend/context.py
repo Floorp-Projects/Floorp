@@ -404,7 +404,7 @@ class LinkFlags(BaseCompileFlags):
              (context.config.substs.get('MOZ_HARDENING_LDFLAGS_JS')
               if _context_under_js_src(context) else
               context.config.substs.get('MOZ_HARDENING_LDFLAGS')),
-             ('LDFLAGS')),
+             ('LDFLAGS',)),
             ('DEFFILE', None, ('LDFLAGS',)),
             ('MOZBUILD', None, ('LDFLAGS',)),
             ('FIX_LINK_PATHS', context.config.substs.get('MOZ_FIX_LINK_PATHS'),
