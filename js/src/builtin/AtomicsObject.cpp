@@ -72,9 +72,6 @@
 
 using namespace js;
 
-const JSClass AtomicsObject::class_ = {
-    "Atomics", JSCLASS_HAS_CACHED_PROTO(JSProto_Atomics)};
-
 static bool ReportBadArrayType(JSContext* cx) {
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_ATOMICS_BAD_ARRAY);
@@ -957,42 +954,25 @@ const JSFunctionSpec AtomicsMethods[] = {
     JS_FN("wake", atomics_notify, 3, 0),  // Legacy name
     JS_FS_END};
 
-JSObject* AtomicsObject::initClass(JSContext* cx,
-                                   Handle<GlobalObject*> global) {
-  // Create Atomics Object.
-  RootedObject objProto(cx,
-                        GlobalObject::getOrCreateObjectPrototype(cx, global));
-  if (!objProto) {
-    return nullptr;
-  }
-  RootedObject Atomics(cx, NewObjectWithGivenProto(cx, &AtomicsObject::class_,
-                                                   objProto, SingletonObject));
-  if (!Atomics) {
-    return nullptr;
-  }
+static const JSPropertySpec AtomicsProperties[] = {
+    JS_STRING_SYM_PS(toStringTag, "Atomics", JSPROP_READONLY), JS_PS_END};
 
-  if (!JS_DefineFunctions(cx, Atomics, AtomicsMethods)) {
+static JSObject* CreateAtomicsObject(JSContext* cx, JSProtoKey key) {
+  Handle<GlobalObject*> global = cx->global();
+  RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
+  if (!proto) {
     return nullptr;
   }
-  if (!DefineToStringTag(cx, Atomics, cx->names().Atomics)) {
-    return nullptr;
-  }
-
-  RootedValue AtomicsValue(cx, ObjectValue(*Atomics));
-
-  // Everything is set up, install Atomics on the global object.
-  if (!DefineDataProperty(cx, global, cx->names().Atomics, AtomicsValue,
-                          JSPROP_RESOLVING)) {
-    return nullptr;
-  }
-
-  global->setConstructor(JSProto_Atomics, AtomicsValue);
-  return Atomics;
+  return NewObjectWithGivenProto(cx, &AtomicsObject::class_, proto,
+                                 SingletonObject);
 }
 
-JSObject* js::InitAtomicsClass(JSContext* cx, Handle<GlobalObject*> global) {
-  return AtomicsObject::initClass(cx, global);
-}
+static const ClassSpec AtomicsClassSpec = {CreateAtomicsObject, nullptr,
+                                           AtomicsMethods, AtomicsProperties};
+
+const JSClass AtomicsObject::class_ = {
+    "Atomics", JSCLASS_HAS_CACHED_PROTO(JSProto_Atomics), JS_NULL_CLASS_OPS,
+    &AtomicsClassSpec};
 
 #undef CXX11_ATOMICS
 #undef GNU_ATOMICS

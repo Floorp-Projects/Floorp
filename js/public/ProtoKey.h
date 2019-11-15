@@ -108,7 +108,7 @@
   REAL(WeakSet, InitViaClassSpec, OCLASP(WeakSet))                           \
   REAL(TypedArray, InitViaClassSpec,                                         \
        &js::TypedArrayObject::sharedTypedArrayPrototypeClass)                \
-  REAL(Atomics, InitAtomicsClass, OCLASP(Atomics))                           \
+  REAL(Atomics, InitViaClassSpec, OCLASP(Atomics))                           \
   REAL(SavedFrame, InitViaClassSpec, &js::SavedFrame::class_)                \
   REAL(Promise, InitViaClassSpec, OCLASP(Promise))                           \
   REAL(AsyncFunction, InitAsyncFunction, nullptr)                            \
