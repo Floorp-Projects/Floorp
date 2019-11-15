@@ -830,6 +830,11 @@ class LogicalPoint {
     return *this;
   }
 
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const LogicalPoint& aPoint) {
+    return aStream << aPoint.mPoint;
+  }
+
  private:
   friend class LogicalRect;
 
@@ -1347,6 +1352,11 @@ class LogicalMargin {
     return LogicalMargin(GetWritingMode(), BStart() - aMargin.BStart(),
                          IEnd() - aMargin.IEnd(), BEnd() - aMargin.BEnd(),
                          IStart() - aMargin.IStart());
+  }
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const LogicalMargin& aMargin) {
+    return aStream << aMargin.mMargin;
   }
 
  private:
