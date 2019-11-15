@@ -59,6 +59,7 @@ const PREFS_WHITELIST = [
   "extensions.checkCompatibility",
   "extensions.formautofill.",
   "extensions.lastAppVersion",
+  "fission.autostart",
   "font.",
   "general.autoScroll",
   "general.useragent.",
