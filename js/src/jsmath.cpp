@@ -95,9 +95,6 @@ static bool math_function(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<F>(cx, args[0], args.rval());
 }
 
-const JSClass js::MathClass = {js_Math_str,
-                               JSCLASS_HAS_CACHED_PROTO(JSProto_Math)};
-
 bool js::math_abs_handle(JSContext* cx, js::HandleValue v,
                          js::MutableHandleValue r) {
   double x;
@@ -937,31 +934,27 @@ static const JSFunctionSpec math_static_methods[] = {
     JS_INLINABLE_FN("cbrt", math_cbrt, 1, 0, MathCbrt),
     JS_FS_END};
 
-JSObject* js::InitMathClass(JSContext* cx, Handle<GlobalObject*> global) {
+static const JSPropertySpec math_static_properties[] = {
+    JS_STRING_SYM_PS(toStringTag, "Math", JSPROP_READONLY), JS_PS_END};
+
+static JSObject* CreateMathObject(JSContext* cx, JSProtoKey key) {
+  Handle<GlobalObject*> global = cx->global();
   RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
   if (!proto) {
     return nullptr;
   }
-  RootedObject Math(
-      cx, NewObjectWithGivenProto(cx, &MathClass, proto, SingletonObject));
-  if (!Math) {
-    return nullptr;
-  }
-
-  if (!JS_DefineProperty(cx, global, js_Math_str, Math, JSPROP_RESOLVING)) {
-    return nullptr;
-  }
-  if (!JS_DefineFunctions(cx, Math, math_static_methods)) {
-    return nullptr;
-  }
-  if (!JS_DefineConstDoubles(cx, Math, math_constants)) {
-    return nullptr;
-  }
-  if (!DefineToStringTag(cx, Math, cx->names().Math)) {
-    return nullptr;
-  }
-
-  global->setConstructor(JSProto_Math, ObjectValue(*Math));
-
-  return Math;
+  return NewObjectWithGivenProto(cx, &MathClass, proto, SingletonObject);
 }
+
+static bool MathClassFinish(JSContext* cx, HandleObject ctor,
+                            HandleObject proto) {
+  return JS_DefineConstDoubles(cx, ctor, math_constants);
+}
+
+static const ClassSpec MathClassSpec = {
+    CreateMathObject, nullptr, math_static_methods, math_static_properties,
+    nullptr,          nullptr, MathClassFinish};
+
+const JSClass js::MathClass = {js_Math_str,
+                               JSCLASS_HAS_CACHED_PROTO(JSProto_Math),
+                               JS_NULL_CLASS_OPS, &MathClassSpec};
