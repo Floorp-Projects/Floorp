@@ -2,10 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "src/regexp/regexp-dotprinter.h"
+#include "new-regexp/regexp-dotprinter.h"
 
-#include "src/regexp/regexp-compiler.h"
-#include "src/utils/ostreams.h"
+#include "new-regexp/regexp-compiler.h"
 
 namespace v8 {
 namespace internal {

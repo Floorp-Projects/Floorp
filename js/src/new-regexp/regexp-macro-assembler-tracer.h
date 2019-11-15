@@ -5,7 +5,7 @@
 #ifndef V8_REGEXP_REGEXP_MACRO_ASSEMBLER_TRACER_H_
 #define V8_REGEXP_REGEXP_MACRO_ASSEMBLER_TRACER_H_
 
-#include "src/regexp/regexp-macro-assembler.h"
+#include "new-regexp/regexp-macro-assembler.h"
 
 namespace v8 {
 namespace internal {

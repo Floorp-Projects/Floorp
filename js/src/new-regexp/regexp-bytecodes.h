@@ -5,8 +5,6 @@
 #ifndef V8_REGEXP_REGEXP_BYTECODES_H_
 #define V8_REGEXP_REGEXP_BYTECODES_H_
 
-#include "src/base/macros.h"
-#include "src/common/globals.h"
 
 namespace v8 {
 namespace internal {

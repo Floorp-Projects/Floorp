@@ -2,14 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "src/regexp/regexp-bytecode-generator.h"
+#include "new-regexp/regexp-bytecode-generator.h"
 
-#include "src/ast/ast.h"
-#include "src/objects/objects-inl.h"
-#include "src/regexp/regexp-bytecode-generator-inl.h"
-#include "src/regexp/regexp-bytecode-peephole.h"
-#include "src/regexp/regexp-bytecodes.h"
-#include "src/regexp/regexp-macro-assembler.h"
+#include "new-regexp/regexp-bytecode-generator-inl.h"
+#include "new-regexp/regexp-bytecode-peephole.h"
+#include "new-regexp/regexp-bytecodes.h"
+#include "new-regexp/regexp-macro-assembler.h"
 
 namespace v8 {
 namespace internal {
