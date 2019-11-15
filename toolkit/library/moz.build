@@ -265,6 +265,11 @@ OS_LIBS += CONFIG['ICONV_LIBS']
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
     OS_LIBS += CONFIG['TK_LIBS']
 
+if CONFIG['OS_ARCH'] == 'OpenBSD':
+    OS_LIBS += [
+        'sndio',
+    ]
+
 if CONFIG['MOZ_ENABLE_DBUS']:
     OS_LIBS += CONFIG['MOZ_DBUS_GLIB_LIBS']
 

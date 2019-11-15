@@ -49,6 +49,7 @@ if CONFIG['OS_ARCH'] == 'OpenBSD':
         'cubeb_sndio.c',
     ]
     DEFINES['USE_SNDIO'] = True
+    DEFINES['DISABLE_LIBSNDIO_DLOPEN'] = True
 
 if CONFIG['OS_TARGET'] == 'Darwin':
     SOURCES += [
