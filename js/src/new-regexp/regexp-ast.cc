@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "src/regexp/regexp-ast.h"
-#include "src/utils/ostreams.h"
+#include "new-regexp/regexp-ast.h"
 
 namespace v8 {
 namespace internal {

@@ -2,15 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "src/regexp/regexp-compiler.h"
+#include "new-regexp/regexp-compiler.h"
 
-#include "src/base/safe_conversions.h"
-#include "src/execution/isolate.h"
-#include "src/objects/objects-inl.h"
-#include "src/regexp/regexp-macro-assembler-arch.h"
-#include "src/regexp/regexp-macro-assembler-tracer.h"
-#include "src/strings/unicode-inl.h"
-#include "src/zone/zone-list-inl.h"
+#include "new-regexp/regexp-macro-assembler-arch.h"
+#include "new-regexp/regexp-macro-assembler-tracer.h"
 
 #ifdef V8_INTL_SUPPORT
 #include "unicode/locid.h"

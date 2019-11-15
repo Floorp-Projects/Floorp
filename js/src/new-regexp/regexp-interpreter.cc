@@ -4,19 +4,12 @@
 
 // A simple interpreter for the Irregexp byte code.
 
-#include "src/regexp/regexp-interpreter.h"
+#include "new-regexp/regexp-interpreter.h"
 
-#include "src/ast/ast.h"
-#include "src/base/small-vector.h"
-#include "src/logging/counters.h"
-#include "src/objects/js-regexp-inl.h"
-#include "src/objects/objects-inl.h"
-#include "src/regexp/regexp-bytecodes.h"
-#include "src/regexp/regexp-macro-assembler.h"
-#include "src/regexp/regexp-stack.h"  // For kMaximumStackSize.
-#include "src/regexp/regexp.h"
-#include "src/strings/unicode.h"
-#include "src/utils/utils.h"
+#include "new-regexp/regexp-bytecodes.h"
+#include "new-regexp/regexp-macro-assembler.h"
+#include "new-regexp/regexp-stack.h"  // For kMaximumStackSize.
+#include "new-regexp/regexp.h"
 
 #ifdef V8_INTL_SUPPORT
 #include "unicode/uchar.h"

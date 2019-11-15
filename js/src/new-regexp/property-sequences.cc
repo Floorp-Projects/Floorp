@@ -4,7 +4,7 @@
 
 #ifdef V8_INTL_SUPPORT
 
-#include "src/regexp/property-sequences.h"
+#include "new-regexp/property-sequences.h"
 
 namespace v8 {
 namespace internal {

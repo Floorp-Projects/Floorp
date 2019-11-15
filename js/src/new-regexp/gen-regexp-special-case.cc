@@ -7,7 +7,6 @@
 #include <iostream>
 #include <sstream>
 
-#include "src/base/logging.h"
 #include "unicode/uchar.h"
 #include "unicode/uniset.h"
 

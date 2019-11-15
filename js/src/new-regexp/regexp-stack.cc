@@ -2,10 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "src/regexp/regexp-stack.h"
+#include "new-regexp/regexp-stack.h"
 
-#include "src/execution/isolate.h"
-#include "src/utils/memcopy.h"
 
 namespace v8 {
 namespace internal {

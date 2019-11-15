@@ -5,10 +5,9 @@
 #ifndef V8_REGEXP_REGEXP_BYTECODE_GENERATOR_INL_H_
 #define V8_REGEXP_REGEXP_BYTECODE_GENERATOR_INL_H_
 
-#include "src/regexp/regexp-bytecode-generator.h"
+#include "new-regexp/regexp-bytecode-generator.h"
 
-#include "src/ast/ast.h"
-#include "src/regexp/regexp-bytecodes.h"
+#include "new-regexp/regexp-bytecodes.h"
 
 namespace v8 {
 namespace internal {

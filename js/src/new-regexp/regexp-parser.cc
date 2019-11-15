@@ -2,20 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "src/regexp/regexp-parser.h"
+#include "new-regexp/regexp-parser.h"
 
 #include <vector>
 
-#include "src/execution/isolate.h"
-#include "src/heap/factory.h"
-#include "src/objects/objects-inl.h"
-#include "src/regexp/property-sequences.h"
-#include "src/regexp/regexp-macro-assembler.h"
-#include "src/regexp/regexp.h"
-#include "src/strings/char-predicates-inl.h"
-#include "src/utils/ostreams.h"
-#include "src/utils/utils.h"
-#include "src/zone/zone-list-inl.h"
+#include "new-regexp/property-sequences.h"
+#include "new-regexp/regexp-macro-assembler.h"
+#include "new-regexp/regexp.h"
 
 #ifdef V8_INTL_SUPPORT
 #include "unicode/uniset.h"

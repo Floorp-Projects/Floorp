@@ -7,8 +7,7 @@
 
 #include <bitset>
 
-#include "src/base/small-vector.h"
-#include "src/regexp/regexp-nodes.h"
+#include "new-regexp/regexp-nodes.h"
 
 namespace v8 {
 namespace internal {

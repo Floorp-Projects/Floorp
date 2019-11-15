@@ -2,13 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "src/regexp/regexp-macro-assembler.h"
+#include "new-regexp/regexp-macro-assembler.h"
 
-#include "src/codegen/assembler.h"
-#include "src/execution/isolate-inl.h"
-#include "src/execution/simulator.h"
-#include "src/regexp/regexp-stack.h"
-#include "src/strings/unicode-inl.h"
+#include "new-regexp/regexp-stack.h"
 
 #ifdef V8_INTL_SUPPORT
 #include "unicode/uchar.h"

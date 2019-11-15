@@ -2,11 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "src/regexp/regexp-bytecodes.h"
+#include "new-regexp/regexp-bytecodes.h"
 
 #include <cctype>
 
-#include "src/utils/utils.h"
 
 namespace v8 {
 namespace internal {

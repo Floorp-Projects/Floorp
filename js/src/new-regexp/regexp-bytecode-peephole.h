@@ -5,8 +5,6 @@
 #ifndef V8_REGEXP_REGEXP_BYTECODE_PEEPHOLE_H_
 #define V8_REGEXP_REGEXP_BYTECODE_PEEPHOLE_H_
 
-#include "src/common/globals.h"
-#include "src/zone/zone-containers.h"
 
 namespace v8 {
 namespace internal {
