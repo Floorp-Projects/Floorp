@@ -774,7 +774,7 @@ if (AppConstants.MOZ_CRASHREPORTER) {
 if (AppConstants.MOZ_SANDBOX) {
   dataProviders.sandbox = function sandbox(done) {
     let data = {};
-    if (AppConstants.platform == "linux") {
+    if (AppConstants.unixstyle == "linux") {
       const keys = [
         "hasSeccompBPF",
         "hasSeccompTSync",
