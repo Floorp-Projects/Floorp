@@ -532,8 +532,15 @@ Sync11Service.prototype = {
     }
     const declinedEngines = meta.payload.declined;
     const allEngines = this.engineManager.getAll().map(e => e.name);
-    for (const engine of allEngines) {
-      Svc.Prefs.set(`engine.${engine}`, !declinedEngines.includes(engine));
+    // We don't want our observer of the enabled prefs to treat the change as
+    // a user-change, otherwise we will do the wrong thing with declined etc.
+    this._ignorePrefObserver = true;
+    try {
+      for (const engine of allEngines) {
+        Svc.Prefs.set(`engine.${engine}`, !declinedEngines.includes(engine));
+      }
+    } finally {
+      this._ignorePrefObserver = false;
     }
   },
 
@@ -1362,31 +1369,37 @@ Sync11Service.prototype = {
           this.identity.prefetchMigrationSentinel(this);
         }
 
-        // Now let's update our declined engines (but only if we have a metaURL;
-        // if Sync failed due to no node we will not have one)
-        if (this.metaURL) {
-          let meta = await this.recordManager.get(this.metaURL);
-          if (!meta) {
-            this._log.warn("No meta/global; can't update declined state.");
-            return;
-          }
-
-          let declinedEngines = new DeclinedEngines(this);
-          let didChange = declinedEngines.updateDeclined(
-            meta,
-            this.engineManager
-          );
-          if (!didChange) {
-            this._log.info(
-              "No change to declined engines. Not reuploading meta/global."
-            );
-            return;
-          }
-
-          await this.uploadMetaGlobal(meta);
-        }
+        // Now let's update our declined engines
+        await this._maybeUpdateDeclined();
       })
     )();
+  },
+
+  /**
+   * Update the "declined" information in meta/global if necessary.
+   */
+  async _maybeUpdateDeclined() {
+    // if Sync failed due to no node we will not have a meta URL, so can't
+    // update anything.
+    if (!this.metaURL) {
+      return;
+    }
+    let meta = await this.recordManager.get(this.metaURL);
+    if (!meta) {
+      this._log.warn("No meta/global; can't update declined state.");
+      return;
+    }
+
+    let declinedEngines = new DeclinedEngines(this);
+    let didChange = declinedEngines.updateDeclined(meta, this.engineManager);
+    if (!didChange) {
+      this._log.info(
+        "No change to declined engines. Not reuploading meta/global."
+      );
+      return;
+    }
+
+    await this.uploadMetaGlobal(meta);
   },
 
   /**
