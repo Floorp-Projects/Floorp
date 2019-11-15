@@ -3,7 +3,8 @@
 
 "use strict";
 
-const PERMISSIONS_URL = "chrome://browser/content/preferences/permissions.xul";
+const PERMISSIONS_URL =
+  "chrome://browser/content/preferences/permissions.xhtml";
 
 const _checkAndOpenCookiesDialog = async doc => {
   let cookieExceptionsButton = doc.getElementById("cookieExceptions");

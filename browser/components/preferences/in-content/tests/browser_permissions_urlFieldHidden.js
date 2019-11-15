@@ -1,6 +1,7 @@
 "use strict";
 
-const PERMISSIONS_URL = "chrome://browser/content/preferences/permissions.xul";
+const PERMISSIONS_URL =
+  "chrome://browser/content/preferences/permissions.xhtml";
 
 add_task(async function urlFieldVisibleForPopupPermissions(finish) {
   await openPreferencesViaOpenPreferencesAPI("panePrivacy", {

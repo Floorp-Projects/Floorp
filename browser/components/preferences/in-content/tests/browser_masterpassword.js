@@ -34,7 +34,7 @@ add_task(async function() {
   checkbox.click();
   is(
     dialogURL,
-    "chrome://mozapps/content/preferences/changemp.xul",
+    "chrome://mozapps/content/preferences/changemp.xhtml",
     "clicking on the checkbox should open the masterpassword dialog"
   );
   ok(!button.disabled, "master password button should now be enabled");
@@ -44,7 +44,7 @@ add_task(async function() {
   button.doCommand();
   is(
     dialogURL,
-    "chrome://mozapps/content/preferences/changemp.xul",
+    "chrome://mozapps/content/preferences/changemp.xhtml",
     "clicking on the button should open the masterpassword dialog"
   );
   ok(!button.disabled, "master password button should still be enabled");
@@ -55,7 +55,7 @@ add_task(async function() {
   checkbox.click();
   is(
     dialogURL,
-    "chrome://mozapps/content/preferences/removemp.xul",
+    "chrome://mozapps/content/preferences/removemp.xhtml",
     "clicking on the checkbox to uncheck master password should show the removal dialog"
   );
   ok(button.disabled, "master password button should now be disabled");

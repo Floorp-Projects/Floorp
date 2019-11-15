@@ -7,7 +7,7 @@ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 AddonTestUtils.initMochitest(this);
 
 const BROWSER_LANGUAGES_URL =
-  "chrome://browser/content/preferences/browserLanguages.xul";
+  "chrome://browser/content/preferences/browserLanguages.xhtml";
 const DICTIONARY_ID_PL = "pl@dictionaries.addons.mozilla.org";
 const TELEMETRY_CATEGORY = "intl.ui.browserLanguage";
 
