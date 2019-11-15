@@ -1333,6 +1333,17 @@ class nsINode : public mozilla::dom::EventTarget {
                    NODE_HAS_BEEN_IN_UA_WIDGET);
   }
 
+  const nsIContent* GetChromeOnlyAccessSubtreeRootParent() const {
+    if (!ChromeOnlyAccess()) {
+      return nullptr;
+    }
+    // We can have NAC in UA widgets, but not the other way around.
+    if (IsInNativeAnonymousSubtree()) {
+      return GetClosestNativeAnonymousSubtreeRootParent();
+    }
+    return GetContainingShadowHost();
+  }
+
   bool IsInShadowTree() const { return HasFlag(NODE_IS_IN_SHADOW_TREE); }
 
   /**

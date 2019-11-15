@@ -159,11 +159,10 @@ NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(
 nsIContent* nsIContent::FindFirstNonChromeOnlyAccessContent() const {
   // This handles also nested native anonymous content.
   for (const nsIContent* content = this; content;
-       content = content->GetBindingParent()) {
+       content = content->GetChromeOnlyAccessSubtreeRootParent()) {
     if (!content->ChromeOnlyAccess()) {
       // Oops, this function signature allows casting const to
-      // non-const.  (Then again, so does
-      // GetChildAt_Deprecated(0)->GetParent().)
+      // non-const.  (Then again, so does GetFirstChild()->GetParent().)
       return const_cast<nsIContent*>(content);
     }
   }
