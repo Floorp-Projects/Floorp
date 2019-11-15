@@ -1786,10 +1786,7 @@ HttpChannelParent::NotifyChannelClassifierProtectionDisabled(
        "aAcceptedReason=%" PRIu32 "]\n",
        this, aAcceptedReason));
   if (!mIPCClosed) {
-    MOZ_ASSERT(mBgParent);
-    Unused << NS_WARN_IF(
-        !mBgParent->OnNotifyChannelClassifierProtectionDisabled(
-            aAcceptedReason));
+    Unused << SendNotifyChannelClassifierProtectionDisabled(aAcceptedReason);
   }
   return NS_OK;
 }
@@ -1798,8 +1795,7 @@ NS_IMETHODIMP
 HttpChannelParent::NotifyCookieAllowed() {
   LOG(("HttpChannelParent::NotifyCookieAllowed [this=%p]\n", this));
   if (!mIPCClosed) {
-    MOZ_ASSERT(mBgParent);
-    Unused << NS_WARN_IF(!mBgParent->OnNotifyCookieAllowed());
+    Unused << SendNotifyCookieAllowed();
   }
   return NS_OK;
 }
@@ -1808,8 +1804,7 @@ NS_IMETHODIMP
 HttpChannelParent::NotifyCookieBlocked(uint32_t aRejectedReason) {
   LOG(("HttpChannelParent::NotifyCookieBlocked [this=%p]\n", this));
   if (!mIPCClosed) {
-    MOZ_ASSERT(mBgParent);
-    Unused << NS_WARN_IF(!mBgParent->OnNotifyCookieBlocked(aRejectedReason));
+    Unused << SendNotifyCookieBlocked(aRejectedReason);
   }
   return NS_OK;
 }
@@ -1820,9 +1815,12 @@ HttpChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
                                             const nsACString& aFullHash) {
   LOG(("HttpChannelParent::SetClassifierMatchedInfo [this=%p]\n", this));
   if (!mIPCClosed) {
-    MOZ_ASSERT(mBgParent);
-    Unused << mBgParent->OnSetClassifierMatchedInfo(aList, aProvider,
-                                                    aFullHash);
+    ClassifierInfo info;
+    info.list() = aList;
+    info.provider() = aProvider;
+    info.fullhash() = aFullHash;
+
+    Unused << SendSetClassifierMatchedInfo(info);
   }
   return NS_OK;
 }
@@ -1833,9 +1831,11 @@ HttpChannelParent::SetClassifierMatchedTrackingInfo(
   LOG(("HttpChannelParent::SetClassifierMatchedTrackingInfo [this=%p]\n",
        this));
   if (!mIPCClosed) {
-    MOZ_ASSERT(mBgParent);
-    Unused << mBgParent->OnSetClassifierMatchedTrackingInfo(aLists,
-                                                            aFullHashes);
+    ClassifierInfo info;
+    info.list() = aLists;
+    info.fullhash() = aFullHashes;
+
+    Unused << SendSetClassifierMatchedTrackingInfo(info);
   }
   return NS_OK;
 }
@@ -1848,9 +1848,8 @@ HttpChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
        "classificationFlags=%" PRIu32 ", thirdparty=%d [this=%p]\n",
        aClassificationFlags, static_cast<int>(aIsThirdParty), this));
   if (!mIPCClosed) {
-    MOZ_ASSERT(mBgParent);
-    Unused << mBgParent->OnNotifyClassificationFlags(aClassificationFlags,
-                                                     aIsThirdParty);
+    Unused << SendNotifyClassificationFlags(aClassificationFlags,
+                                            aIsThirdParty);
   }
   return NS_OK;
 }
@@ -1860,8 +1859,7 @@ HttpChannelParent::NotifyFlashPluginStateChanged(
     nsIHttpChannel::FlashPluginState aState) {
   LOG(("HttpChannelParent::NotifyFlashPluginStateChanged [this=%p]\n", this));
   if (!mIPCClosed) {
-    MOZ_ASSERT(mBgParent);
-    Unused << mBgParent->OnNotifyFlashPluginStateChanged(aState);
+    Unused << SendNotifyFlashPluginStateChanged(aState);
   }
   return NS_OK;
 }
