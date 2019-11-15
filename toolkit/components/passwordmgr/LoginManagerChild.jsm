@@ -1543,7 +1543,8 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     let autoFilledLogin = this.stateForDocument(doc).fillsByRootElement.get(
       form.rootElement
     );
-    this.sendAsyncMessage("PasswordManager:onFormSubmit", {
+
+    let detail = {
       origin,
       formActionOrigin,
       autoFilledLoginGuid: autoFilledLogin && autoFilledLogin.guid,
@@ -1551,7 +1552,13 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       newPasswordField: mockPassword,
       oldPasswordField: mockOldPassword,
       dismissedPrompt,
-    });
+    };
+
+    this.sendAsyncMessage("PasswordManager:onFormSubmit", detail);
+
+    detail.form = form;
+    const evt = new CustomEvent("PasswordManager:onFormSubmit", { detail });
+    win.windowRoot.dispatchEvent(evt);
   }
 
   _maybeStopTreatingAsGeneratedPasswordField(event) {

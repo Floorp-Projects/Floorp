@@ -231,6 +231,21 @@ class GeckoViewAutofill {
     }
   }
 
+  commitAutofill(aFormLike) {
+    if (!aFormLike) {
+      throw new Error("null-form on autofill commit");
+    }
+    debug`Committing auto-fill for ${aFormLike.rootElement.tagName}`;
+
+    const info =
+      this._autoFillInfos && this._autoFillInfos.get(aFormLike.rootElement);
+
+    if (info) {
+      debug`Committing info ${info}`;
+      this._eventDispatcher.dispatch("GeckoView:CommitAutofill", info);
+    }
+  }
+
   /**
    * Clear all tracked auto-fill forms and notify Java.
    */
