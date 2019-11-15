@@ -15,6 +15,7 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.OnLifecycleEvent
 import java.util.Collections
+import java.util.LinkedList
 import java.util.WeakHashMap
 
 /**
@@ -29,6 +30,7 @@ class ObserverRegistry<T> : Observable<T> {
     private val lifecycleObservers = WeakHashMap<T, LifecycleBoundObserver<T>>()
     private val viewObservers = WeakHashMap<T, ViewBoundObserver<T>>()
     private val pausedObservers = Collections.newSetFromMap(WeakHashMap<T, Boolean>())
+    private val queuedNotifications = LinkedList<T.() -> Unit>()
 
     /**
      * Registers an observer to get notified about changes. Does nothing if [observer] is already registered.
@@ -39,6 +41,10 @@ class ObserverRegistry<T> : Observable<T> {
     @Synchronized
     override fun register(observer: T) {
         observers.add(observer)
+
+        while (!queuedNotifications.isEmpty()) {
+            queuedNotifications.poll()?.let { notify -> observer.notify() }
+        }
     }
 
     @Synchronized
@@ -130,6 +136,15 @@ class ObserverRegistry<T> : Observable<T> {
             if (!pausedObservers.contains(it)) {
                 it.block()
             }
+        }
+    }
+
+    @Synchronized
+    override fun notifyAtLeastOneObserver(block: T.() -> Unit) {
+        if (observers.isEmpty()) {
+            queuedNotifications.add(block)
+        } else {
+            notifyObservers(block)
         }
     }
 

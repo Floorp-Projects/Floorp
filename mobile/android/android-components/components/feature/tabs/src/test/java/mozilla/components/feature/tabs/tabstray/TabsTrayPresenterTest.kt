@@ -292,6 +292,8 @@ private class MockedTabsTray : TabsTray {
 
     override fun notifyObservers(block: TabsTray.Observer.() -> Unit) {}
 
+    override fun notifyAtLeastOneObserver(block: TabsTray.Observer.() -> Unit) {}
+
     override fun <R> wrapConsumers(block: TabsTray.Observer.(R) -> Boolean): List<(R) -> Boolean> = emptyList()
 
     override fun isObserved(): Boolean = false

@@ -189,7 +189,7 @@ class GeckoEngineSession(
             disableTrackingProtectionOnGecko()
         }
         geckoSession.settings.useTrackingProtection = shouldBlockContent
-        notifyObservers { onTrackerBlockingEnabledChange(enabled) }
+        notifyAtLeastOneObserver { onTrackerBlockingEnabledChange(enabled) }
     }
 
     /**

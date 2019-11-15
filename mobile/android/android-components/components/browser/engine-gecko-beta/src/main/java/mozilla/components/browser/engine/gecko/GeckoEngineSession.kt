@@ -189,7 +189,7 @@ class GeckoEngineSession(
         if (!enabled) {
             disableTrackingProtectionOnGecko()
         }
-        notifyObservers { onTrackerBlockingEnabledChange(enabled) }
+        notifyAtLeastOneObserver { onTrackerBlockingEnabledChange(enabled) }
     }
 
     /**
