@@ -415,35 +415,28 @@ void nsBoxFrame::GetInitialDirection(bool& aIsNormal) {
     // horizontally inverted chrome.
     aIsNormal = (StyleVisibility()->mDirection ==
                  NS_STYLE_DIRECTION_LTR);  // If text runs RTL then so do we.
-  } else
+    if (GetContent()->IsElement()) {
+      Element* element = GetContent()->AsElement();
+
+      // Now see if we have an attribute. The attribute overrides
+      // the style system 'direction' property.
+      static Element::AttrValuesArray strings[] = {nsGkAtoms::ltr,
+                                                   nsGkAtoms::rtl, nullptr};
+      int32_t index = element->FindAttrValueIn(
+          kNameSpaceID_None, nsGkAtoms::dir, strings, eCaseMatters);
+      if (index >= 0) {
+        bool values[] = {true, false};
+        aIsNormal = values[index];
+      }
+    }
+  } else {
     aIsNormal = true;  // Assume a normal direction in the vertical case.
+  }
 
   // Now check the style system to see if we should invert aIsNormal.
   const nsStyleXUL* boxInfo = StyleXUL();
   if (boxInfo->mBoxDirection == StyleBoxDirection::Reverse) {
     aIsNormal = !aIsNormal;  // Invert our direction.
-  }
-
-  if (!GetContent()->IsElement()) {
-    return;
-  }
-
-  Element* element = GetContent()->AsElement();
-
-  // Now see if we have an attribute.  The attribute overrides
-  // the style system value.
-  if (IsXULHorizontal()) {
-    static Element::AttrValuesArray strings[] = {
-        nsGkAtoms::reverse, nsGkAtoms::ltr, nsGkAtoms::rtl, nullptr};
-    int32_t index = element->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::dir,
-                                             strings, eCaseMatters);
-    if (index >= 0) {
-      bool values[] = {!aIsNormal, true, false};
-      aIsNormal = values[index];
-    }
-  } else if (element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
-                                  nsGkAtoms::reverse, eCaseMatters)) {
-    aIsNormal = !aIsNormal;
   }
 }
 
