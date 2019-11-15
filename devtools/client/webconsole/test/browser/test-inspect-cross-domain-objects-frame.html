@@ -11,12 +11,13 @@
       {
         var obj1 = { hello: "world!", bug: 869003 };
         var obj2 = Object.assign(function func(arg){}, obj1);
-        console.log("foobar", obj1, obj2);
+        var obj3 = document.getElementById("testEl");
+        console.log("foobar", obj1, obj2, obj3);
       };
     </script>
   </head>
   <body>
-    <p>Make sure users can inspect objects from cross-domain iframes.</p>
+    <p id="testEl">Make sure users can inspect objects from cross-domain iframes.</p>
     <p>Iframe window.</p>
   </body>
 </html>
