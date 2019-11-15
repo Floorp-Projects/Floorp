@@ -9,6 +9,8 @@ package mozilla.components.feature.addons.amo
 import android.content.Context
 import android.util.AtomicFile
 import androidx.annotation.VisibleForTesting
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isSuccess
@@ -87,6 +89,29 @@ class AddOnCollectionProvider(
                     emptyList()
                 }
             }
+    }
+
+    /**
+     * Fetches given AddOn icon from the url and returns a decoded Bitmap
+     * @throws IOException if the request could not be executed due to cancellation,
+     * a connectivity problem or a timeout.
+     */
+    @Throws(IOException::class)
+    suspend fun getAddOnIconBitmap(addOn: AddOn): Bitmap? {
+        var bitmap: Bitmap? = null
+        if (addOn.iconUrl != "") {
+            client.fetch(
+                    Request(url = addOn.iconUrl)
+            ).use { response ->
+                if (response.isSuccess) {
+                    response.body.useStream {
+                        bitmap = BitmapFactory.decodeStream(it)
+                    }
+                }
+            }
+        }
+
+        return bitmap
     }
 
     @VisibleForTesting

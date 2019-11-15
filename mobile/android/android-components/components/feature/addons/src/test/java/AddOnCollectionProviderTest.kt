@@ -4,11 +4,13 @@
 
 package mozilla.components.feature.addons.amo
 
+import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
+import mozilla.components.feature.addons.AddOn
 import mozilla.components.support.test.any
 import mozilla.components.support.test.file.loadResourceAsString
 import mozilla.components.support.test.mock
@@ -24,6 +26,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import java.util.Date
+import java.io.InputStream
 
 @RunWith(AndroidJUnit4::class)
 class AddOnCollectionProviderTest {
@@ -221,5 +224,62 @@ class AddOnCollectionProviderTest {
 
         whenever(provider.getCacheLastUpdated(testContext)).thenReturn(Date().time + 60 * MINUTE_IN_MS)
         assertFalse(provider.cacheExpired(testContext))
+    }
+
+    @Test
+    fun `getAddOnIconBitmap - with a successful status will return a bitmap`() {
+        val mockedClient = mock<Client>()
+        val mockedResponse = mock<Response>()
+        val stream: InputStream = javaClass.getResourceAsStream("/png/mozac.png")!!.buffered()
+        val responseBody = Response.Body(stream)
+
+        whenever(mockedResponse.body).thenReturn(responseBody)
+        whenever(mockedResponse.status).thenReturn(200)
+        whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
+
+        val provider = AddOnCollectionProvider(testContext, client = mockedClient)
+        val addOn = AddOn(
+                id = "id",
+                authors = mock(),
+                categories = mock(),
+                downloadUrl = "https://example.com",
+                version = "version",
+                iconUrl = "https://example.com/image.png",
+                createdAt = "0",
+                updatedAt = "0"
+        )
+
+        runBlocking {
+            val bitmap = provider.getAddOnIconBitmap(addOn)
+            assertTrue(bitmap is Bitmap)
+        }
+    }
+
+    @Test
+    fun `getAddOnIconBitmap - with an unsuccessful status will return null`() {
+        val mockedClient = mock<Client>()
+        val mockedResponse = mock<Response>()
+        val mockedMockedBody = mock<Response.Body>()
+
+        whenever(mockedResponse.body).thenReturn(mockedMockedBody)
+        whenever(mockedResponse.status).thenReturn(500)
+        whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
+
+        val provider = AddOnCollectionProvider(testContext, client = mockedClient)
+        val addOn = AddOn(
+                id = "id",
+                authors = mock(),
+                categories = mock(),
+                downloadUrl = "https://example.com",
+                version = "version",
+                iconUrl = "https://example.com/image.png",
+                createdAt = "0",
+                updatedAt = "0"
+        )
+
+        runBlocking {
+            val bitmap = provider.getAddOnIconBitmap(addOn)
+            assertNull(bitmap)
+        }
     }
 }

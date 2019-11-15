@@ -28,7 +28,6 @@
                 android:layout_height="32dp"
                 android:layout_gravity="center"
                 android:src="@drawable/mozac_ic_extensions"
-                android:tint="@android:color/black"
                 android:importantForAccessibility="no"
                 android:scaleType="fitCenter" />
 

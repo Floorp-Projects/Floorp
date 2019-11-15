@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.AddOn
 import org.mozilla.samples.browser.R
@@ -62,7 +63,7 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
     /**
      * An adapter for displaying add-on items.
      */
-    class AddOnsAdapter(
+    inner class AddOnsAdapter(
         private val clickListener: View.OnClickListener,
         private val addOns: List<AddOn>
     ) :
@@ -109,6 +110,16 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
             holder.view.tag = addOn
             holder.view.setOnClickListener(clickListener)
             holder.addButton.setOnClickListener(clickListener)
+
+            scope.launch {
+                val iconBitmap = context.components.addOnProvider.getAddOnIconBitmap(addOn)
+
+                iconBitmap?.let {
+                    MainScope().launch {
+                        holder.iconView.setImageBitmap(it)
+                    }
+                }
+            }
         }
     }
 
