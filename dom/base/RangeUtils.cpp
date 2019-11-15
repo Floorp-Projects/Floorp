@@ -67,10 +67,8 @@ bool RangeUtils::IsValidPoints(
     const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
     const RangeBoundaryBase<EPT, ERT>& aEndBoundary) {
   // Use NS_WARN_IF() only for the cases where the arguments are unexpected.
-  if (NS_WARN_IF(!aStartBoundary.IsSet()) ||
-      NS_WARN_IF(!aEndBoundary.IsSet()) ||
-      NS_WARN_IF(!IsValidOffset(aStartBoundary)) ||
-      NS_WARN_IF(!IsValidOffset(aEndBoundary))) {
+  if (NS_WARN_IF(!aStartBoundary.IsSetAndValid()) ||
+      NS_WARN_IF(!aEndBoundary.IsSetAndValid())) {
     return false;
   }
 
