@@ -19,6 +19,7 @@
 #endif
 
 #include "mozilla/dom/Document.h"
+#include "mozilla/StaticPrefs_extensions.h"
 
 /*
  * Performs a Regular Expression match, optionally returning the results.
@@ -310,13 +311,17 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
   static NS_NAMED_LITERAL_STRING(sAllowedEval2,
                                  "function anonymous(\n) {\nreturn this\n}");
 
+  if (MOZ_LIKELY(!aIsSystemPrincipal && !XRE_IsE10sParentProcess())) {
+    // We restrict eval in the system principal and parent process.
+    // Other uses (like web content and null principal) are allowed.
+    return true;
+  }
+
   if (aIsSystemPrincipal &&
       StaticPrefs::security_allow_eval_with_system_principal()) {
-    MOZ_LOG(
-        sCSMLog, LogLevel::Debug,
-        ("Allowing eval() %s because allowing pref is "
-         "enabled",
-         (aIsSystemPrincipal ? "with System Principal" : "in parent process")));
+    MOZ_LOG(sCSMLog, LogLevel::Debug,
+            ("Allowing eval() with System Principal because allowing pref is "
+             "enabled"));
     return true;
   }
 
@@ -325,11 +330,6 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
     MOZ_LOG(sCSMLog, LogLevel::Debug,
             ("Allowing eval() in parent process because allowing pref is "
              "enabled"));
-    return true;
-  }
-
-  if (!aIsSystemPrincipal && !XRE_IsE10sParentProcess()) {
-    // Usage of eval we are unconcerned with.
     return true;
   }
 
@@ -357,6 +357,14 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
                                    : "in parent process")));
       return true;
     }
+  }
+
+  if (XRE_IsE10sParentProcess() &&
+      !StaticPrefs::extensions_webextensions_remote()) {
+    MOZ_LOG(sCSMLog, LogLevel::Debug,
+            ("Allowing eval() in parent process because the web extension "
+             "process is disabled"));
+    return true;
   }
 
   // We permit these two common idioms to get access to the global JS object
