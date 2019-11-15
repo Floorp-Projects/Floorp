@@ -6,6 +6,16 @@ add_task(async () => {
   if (!AppConstants.MOZ_GECKO_PROFILER) {
     return;
   }
+
+  if (!Services.profiler.GetFeatures().includes("nativeallocations")) {
+    Assert.ok(
+      true,
+      "Native allocations are not supported by this build, " +
+        "skip run the rest of the test."
+    );
+    return;
+  }
+
   Assert.ok(
     !Services.profiler.IsActive(),
     "The profiler is not currently active"
