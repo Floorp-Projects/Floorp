@@ -11,18 +11,11 @@
 #ifndef jsexn_h
 #define jsexn_h
 
-#include "mozilla/Assertions.h"
-
 #include "jsapi.h"
-#include "jspubtd.h"
-#include "jstypes.h"
 #include "NamespaceImports.h"
 
-#include "js/ErrorReport.h"
-#include "js/RootingAPI.h"
-#include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
-#include "js/Utility.h"
+#include "vm/JSContext.h"
 
 namespace js {
 class ErrorObject;
@@ -31,8 +24,6 @@ UniquePtr<JSErrorNotes::Note> CopyErrorNote(JSContext* cx,
                                             JSErrorNotes::Note* note);
 
 UniquePtr<JSErrorReport> CopyErrorReport(JSContext* cx, JSErrorReport* report);
-
-bool CaptureStack(JSContext* cx, MutableHandleObject stack);
 
 JSString* ComputeStackString(JSContext* cx);
 
@@ -68,7 +59,6 @@ extern JSObject* CopyErrorObject(JSContext* cx,
 static_assert(
     JSEXN_ERR == 0 &&
         JSProto_Error + JSEXN_INTERNALERR == JSProto_InternalError &&
-        JSProto_Error + JSEXN_AGGREGATEERR == JSProto_AggregateError &&
         JSProto_Error + JSEXN_EVALERR == JSProto_EvalError &&
         JSProto_Error + JSEXN_RANGEERR == JSProto_RangeError &&
         JSProto_Error + JSEXN_REFERENCEERR == JSProto_ReferenceError &&
@@ -119,8 +109,6 @@ bool GetInternalError(JSContext* cx, unsigned errorNumber,
                       MutableHandleValue error);
 bool GetTypeError(JSContext* cx, unsigned errorNumber,
                   MutableHandleValue error);
-bool GetAggregateError(JSContext* cx, unsigned errorNumber,
-                       MutableHandleValue error);
 
 }  // namespace js
 

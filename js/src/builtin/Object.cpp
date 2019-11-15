@@ -21,7 +21,6 @@
 #include "vm/AsyncFunction.h"
 #include "vm/DateObject.h"
 #include "vm/EqualityOperations.h"  // js::SameValue
-#include "vm/ErrorObject.h"
 #include "vm/JSContext.h"
 #include "vm/RegExpObject.h"
 

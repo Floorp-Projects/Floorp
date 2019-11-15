@@ -50,7 +50,6 @@
 #include "util/NativeStack.h"
 #include "util/Windows.h"
 #include "vm/BytecodeUtil.h"
-#include "vm/ErrorObject.h"
 #include "vm/ErrorReporting.h"
 #include "vm/HelperThreads.h"
 #include "vm/Iteration.h"
@@ -1403,9 +1402,13 @@ void JSContext::setPendingException(HandleValue v, HandleSavedFrame stack) {
   check(v);
 }
 
+static const size_t MAX_REPORTED_STACK_DEPTH = 1u << 7;
+
 void JSContext::setPendingExceptionAndCaptureStack(HandleValue value) {
   RootedObject stack(this);
-  if (!CaptureStack(this, &stack)) {
+  if (!CaptureCurrentStack(
+          this, &stack,
+          JS::StackCapture(JS::MaxFrames(MAX_REPORTED_STACK_DEPTH)))) {
     clearPendingException();
   }
 
