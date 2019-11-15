@@ -215,7 +215,7 @@ this.LoginTestUtils.testData = {
         "form_field_password"
       ),
 
-      // Subdomains are treated as completely different sites.
+      // Subdomains can be treated as completely different sites depending on the UI invoked.
       new LoginInfo(
         "https://example.com",
         "https://example.com",
