@@ -348,20 +348,19 @@ static nsIContent* GetRootForContentSubtree(nsIContent* aContent) {
   // Special case for ShadowRoot because the ShadowRoot itself is
   // the root. This is necessary to prevent selection from crossing
   // the ShadowRoot boundary.
-  ShadowRoot* containingShadow = aContent->GetContainingShadow();
-  if (containingShadow) {
+  //
+  // FIXME(emilio): The NAC check should probably be done before this? We can
+  // have NAC inside shadow DOM.
+  if (ShadowRoot* containingShadow = aContent->GetContainingShadow()) {
     return containingShadow;
   }
-
-  nsIContent* stop = aContent->GetBindingParent();
-  while (aContent) {
-    nsIContent* parent = aContent->GetParent();
-    if (parent == stop) {
-      break;
-    }
-    aContent = parent;
+  if (nsIContent* nativeAnonRoot = aContent->GetClosestNativeAnonymousSubtreeRoot()) {
+    return nativeAnonRoot;
   }
-  return aContent;
+  if (Document* doc = aContent->GetUncomposedDoc()) {
+    return doc->GetRootElement();
+  }
+  return nsIContent::FromNode(aContent->SubtreeRoot());
 }
 
 nsIContent* nsINode::GetSelectionRootContent(PresShell* aPresShell) {
@@ -374,7 +373,7 @@ nsIContent* nsINode::GetSelectionRootContent(PresShell* aPresShell) {
     return nullptr;
   }
 
-  if (static_cast<nsIContent*>(this)->HasIndependentSelection()) {
+  if (AsContent()->HasIndependentSelection()) {
     // This node should be a descendant of input/textarea editor.
     nsIContent* content = GetTextEditorRootContent();
     if (content) return content;
@@ -392,7 +391,7 @@ nsIContent* nsINode::GetSelectionRootContent(PresShell* aPresShell) {
         NS_ENSURE_TRUE(editorRoot, nullptr);
         return nsContentUtils::IsInSameAnonymousTree(this, editorRoot)
                    ? editorRoot
-                   : GetRootForContentSubtree(static_cast<nsIContent*>(this));
+                   : GetRootForContentSubtree(AsContent());
       }
       // If the document isn't editable but this is editable, this is in
       // contenteditable.  Use the editing host element for selection root.
@@ -416,7 +415,7 @@ nsIContent* nsINode::GetSelectionRootContent(PresShell* aPresShell) {
   // root.  Otherwise, we can return the content simply.
   NS_ENSURE_TRUE(content, nullptr);
   if (!nsContentUtils::IsInSameAnonymousTree(this, content)) {
-    content = GetRootForContentSubtree(static_cast<nsIContent*>(this));
+    content = GetRootForContentSubtree(AsContent());
     // Fixup for ShadowRoot because the ShadowRoot itself does not have a frame.
     // Use the host as the root.
     if (ShadowRoot* shadowRoot = ShadowRoot::FromNode(content)) {
