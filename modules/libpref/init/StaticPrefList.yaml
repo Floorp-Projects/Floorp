@@ -5499,7 +5499,7 @@
 
 - name: media.mediacapabilities.from-database
   type: RelaxedAtomicBool
-  value: true
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # AudioSink
