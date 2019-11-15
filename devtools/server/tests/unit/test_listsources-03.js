@@ -8,29 +8,18 @@
  */
 
 var gDebuggee;
-var gClient;
 var gThreadFront;
 
-function run_test() {
-  Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
-  });
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-sources");
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-sources", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
+add_task(
+  threadFrontTest(
+    async ({ threadFront, debuggee }) => {
       gThreadFront = threadFront;
+      gDebuggee = debuggee;
       test_simple_listsources();
-    });
-  });
-  do_test_pending();
-}
+    },
+    { waitForFinish: true }
+  )
+);
 
 function test_simple_listsources() {
   gThreadFront.once("paused", function(packet) {
@@ -47,7 +36,7 @@ function test_simple_listsources() {
       );
 
       gThreadFront.resume().then(function() {
-        finishClient(gClient);
+        threadFrontTestFinished();
       });
     });
   });

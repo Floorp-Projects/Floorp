@@ -8,25 +8,15 @@
  */
 
 var gDebuggee;
-var gClient;
 var gThreadFront;
 
-function run_test() {
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-object-grip");
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-object-grip", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
-      gThreadFront = threadFront;
-      testObjectGroup();
-    });
-  });
-  do_test_pending();
-}
+add_task(
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    gThreadFront = threadFront;
+    gDebuggee = debuggee;
+    await testObjectGroup();
+  })
+);
 
 function evalCode() {
   evalCallback(gDebuggee, function runTest() {
@@ -60,5 +50,4 @@ const testObjectGroup = async function() {
   Assert.equal(packet.ownProperties.length.value, 1);
 
   await resume(gThreadFront);
-  finishClient(gClient);
 };

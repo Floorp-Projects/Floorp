@@ -7,32 +7,18 @@
 // request work properly.
 
 var gDebuggee;
-var gClient;
 var gThreadFront;
 
-function run_test() {
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-grips");
-  Cu.evalInSandbox(
-    function stopMe() {
-      debugger;
-    }.toString(),
-    gDebuggee
-  );
-
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
+add_task(
+  threadFrontTest(
+    async ({ threadFront, debuggee }) => {
       gThreadFront = threadFront;
+      gDebuggee = debuggee;
       add_pause_listener();
-    });
-  });
-  do_test_pending();
-}
+    },
+    { waitForFinish: true }
+  )
+);
 
 function add_pause_listener() {
   gThreadFront.once("paused", function(packet) {
@@ -46,6 +32,13 @@ function add_pause_listener() {
 }
 
 function eval_code() {
+  Cu.evalInSandbox(
+    function stopMe() {
+      debugger;
+    }.toString(),
+    gDebuggee
+  );
+
   Cu.evalInSandbox(
     [
       "this.line0 = Error().lineNumber;",
@@ -70,6 +63,6 @@ function test_bad_definition_site(obj) {
   try {
     obj._client.request("definitionSite", () => Assert.ok(false));
   } catch (e) {
-    gThreadFront.resume().then(() => finishClient(gClient));
+    gThreadFront.resume().then(() => threadFrontTestFinished());
   }
 }

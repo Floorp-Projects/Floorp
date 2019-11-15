@@ -5,34 +5,20 @@
 "use strict";
 
 var gDebuggee;
-var gClient;
 var gThreadFront;
-
-Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
-
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
-});
 
 // Test that closures can be inspected.
 
-function run_test() {
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-closures");
-
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-closures", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
+add_task(
+  threadFrontTest(
+    async ({ threadFront, debuggee }) => {
       gThreadFront = threadFront;
+      gDebuggee = debuggee;
       test_object_grip();
-    });
-  });
-  do_test_pending();
-}
+    },
+    { waitForFinish: true }
+  )
+);
 
 function test_object_grip() {
   gThreadFront.once("paused", async function(packet) {
@@ -71,7 +57,7 @@ function test_object_grip() {
     Assert.equal(bindings.variables.foo.value, 10);
 
     await gThreadFront.resume();
-    finishClient(gClient);
+    threadFrontTestFinished();
   });
 
   /* eslint-disable */

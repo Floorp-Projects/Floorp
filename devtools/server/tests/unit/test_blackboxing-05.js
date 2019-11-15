@@ -9,30 +9,18 @@
  */
 
 var gDebuggee;
-var gClient;
 var gThreadFront;
 
-function run_test() {
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-black-box");
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-black-box", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
+add_task(
+  threadFrontTest(
+    async ({ threadFront, debuggee }) => {
       gThreadFront = threadFront;
-      // XXX: We have to do an executeSoon so that the error isn't caught and
-      // reported by DebuggerClient.requester (because we are using the local
-      // transport and share a stack) which causes the test to fail.
-      Services.tm.dispatchToMainThread({
-        run: test_black_box,
-      });
-    });
-  });
-  do_test_pending();
-}
+      gDebuggee = debuggee;
+      test_black_box();
+    },
+    { waitForFinish: true }
+  )
+);
 
 const BLACK_BOXED_URL = "http://example.com/blackboxme.js";
 const SOURCE_URL = "http://example.com/source.js";
@@ -95,7 +83,7 @@ function test_black_box_exception() {
         "We shouldn't pause while in the black boxed source."
       );
       await gThreadFront.resume();
-      finishClient(gClient);
+      threadFrontTestFinished();
     });
 
     gThreadFront.resume();

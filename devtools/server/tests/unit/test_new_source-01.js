@@ -8,32 +8,25 @@
  */
 
 var gDebuggee;
-var gClient;
 var gThreadFront;
 
-function run_test() {
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-stack");
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
+add_task(
+  threadFrontTest(
+    async ({ threadFront, debuggee }) => {
       gThreadFront = threadFront;
+      gDebuggee = debuggee;
       test_simple_new_source();
-    });
-  });
-  do_test_pending();
-}
+    },
+    { waitForFinish: true }
+  )
+);
 
 function test_simple_new_source() {
   gThreadFront.once("newSource", function(packet) {
     Assert.ok(!!packet.source);
     Assert.ok(!!packet.source.url.match(/test_new_source-01.js$/));
 
-    finishClient(gClient);
+    threadFrontTestFinished();
   });
 
   Cu.evalInSandbox(

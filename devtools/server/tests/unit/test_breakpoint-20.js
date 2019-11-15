@@ -9,24 +9,15 @@
  */
 
 var gDebuggee;
-var gClient;
 
-function run_test() {
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-breakpoints");
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestThread(gClient, "test-breakpoints", testBreakpoint);
-  });
-  do_test_pending();
-}
+add_task(
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    gDebuggee = debuggee;
+    await testBreakpoint(threadFront);
+  })
+);
 
-const testBreakpoint = async function(
-  threadResponse,
-  targetFront,
-  threadFront,
-  tabResponse
-) {
+const testBreakpoint = async function(threadFront) {
   evalSetupCode();
 
   // Load the test source once.
@@ -42,8 +33,6 @@ const testBreakpoint = async function(
 
   const source = await getSource(threadFront, "test.js");
   setBreakpoint(threadFront, { sourceUrl: source.url, line: 3 });
-
-  await resume(threadFront);
 
   // Load the test source again.
 
@@ -98,8 +87,6 @@ const testBreakpoint = async function(
     "debuggerStatement",
     "And we should hit the debugger statement after the pause."
   );
-
-  finishClient(gClient);
 };
 
 function evalSetupCode() {

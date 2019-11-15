@@ -9,39 +9,25 @@
  * rejected.
  */
 
-function run_test() {
-  initTestDebuggerServer();
-  const debuggee = addTestGlobal("test-promise-state");
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  client.connect().then(function() {
-    attachTestTabAndResume(client, "test-promise-state", function(
-      response,
-      targetFront,
+add_task(
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
       threadFront
-    ) {
-      (async function() {
-        const packet = await executeOnNextTickAndWaitForPause(
-          () => evalCode(debuggee),
-          threadFront
-        );
+    );
 
-        const grip = packet.frame.environment.bindings.variables.p;
-        ok(grip.value.preview);
-        equal(grip.value.class, "Promise");
-        equal(grip.value.promiseState.state, "rejected");
-        equal(
-          grip.value.promiseState.reason.actorID,
-          packet.frame.arguments[0].actorID,
-          "The promise's rejected state reason should be the same value passed " +
-            "to the then function"
-        );
-
-        finishClient(client);
-      })();
-    });
-  });
-  do_test_pending();
-}
+    const grip = packet.frame.environment.bindings.variables.p;
+    ok(grip.value.preview);
+    equal(grip.value.class, "Promise");
+    equal(grip.value.promiseState.state, "rejected");
+    equal(
+      grip.value.promiseState.reason.actorID,
+      packet.frame.arguments[0].actorID,
+      "The promise's rejected state reason should be the same value passed " +
+        "to the then function"
+    );
+  })
+);
 
 function evalCode(debuggee) {
   /* eslint-disable */

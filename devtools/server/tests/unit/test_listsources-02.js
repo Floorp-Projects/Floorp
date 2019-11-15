@@ -7,35 +7,27 @@
  * Check getting sources before there are any.
  */
 
-var gClient;
 var gThreadFront;
 
 var gNumTimesSourcesSent = 0;
 
-function run_test() {
-  initTestDebuggerServer();
-  addTestGlobal("test-stack");
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.request = (function(origRequest) {
-    return function(request, onResponse) {
-      if (request.type === "sources") {
-        ++gNumTimesSourcesSent;
-      }
-      return origRequest.call(this, request, onResponse);
-    };
-  })(gClient.request);
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
+add_task(
+  threadFrontTest(
+    async ({ threadFront, debuggee, client }) => {
       gThreadFront = threadFront;
+      client.request = (function(origRequest) {
+        return function(request, onResponse) {
+          if (request.type === "sources") {
+            ++gNumTimesSourcesSent;
+          }
+          return origRequest.call(this, request, onResponse);
+        };
+      })(client.request);
       test_listing_zero_sources();
-    });
-  });
-  do_test_pending();
-}
+    },
+    { waitForFinish: true }
+  )
+);
 
 function test_listing_zero_sources() {
   gThreadFront.getSources().then(function(packet) {
@@ -49,6 +41,6 @@ function test_listing_zero_sources() {
         " might have had to send one to determine feature support."
     );
 
-    finishClient(gClient);
+    threadFrontTestFinished();
   });
 }

@@ -9,25 +9,18 @@
  */
 
 var gDebuggee;
-var gClient;
 var gThreadFront;
 
-function run_test() {
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-conditional-breakpoint");
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-conditional-breakpoint", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
+add_task(
+  threadFrontTest(
+    async ({ threadFront, debuggee }) => {
       gThreadFront = threadFront;
+      gDebuggee = debuggee;
       test_simple_breakpoint();
-    });
-  });
-  do_test_pending();
-}
+    },
+    { waitForFinish: true }
+  )
+);
 
 function test_simple_breakpoint() {
   let hitBreakpoint = false;
@@ -48,7 +41,7 @@ function test_simple_breakpoint() {
       gThreadFront.removeBreakpoint(location);
 
       gThreadFront.resume().then(function() {
-        finishClient(gClient);
+        threadFrontTestFinished();
       });
     });
 
