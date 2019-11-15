@@ -183,6 +183,7 @@ editor/libeditor/tests/browserscope/
 # Third-party
 gfx/ots/
 gfx/skia/
+gfx/wgpu
 gfx/wr/
 
 # intl/ exclusions
