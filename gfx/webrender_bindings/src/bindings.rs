@@ -2007,6 +2007,13 @@ pub extern "C" fn wr_api_capture(
         }
     }
 
+	#[cfg(target_os = "windows")]
+	{
+		if let Some(storage_path) = dirs::data_local_dir() {
+			path = PathBuf::from(storage_path).join(path);
+		}
+	}
+
     // Increment the extension until we find a fresh path
     while path.is_dir() {
         let count: u32 = path.extension()
