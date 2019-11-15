@@ -43,7 +43,7 @@ function test_richlistbox()
 
   // Test that dir="reverse" is ignored and behaves the same as dir="normal".
   for (let dir of ["reverse", "normal"]) {
-    richListBox.style.mozBoxDirection = dir;
+    richListBox.dir = dir;
     richListBox.selectedIndex = 0;
     sendKey("DOWN");
     is(richListBox.currentIndex, 1, "Selection should move to the next item");
