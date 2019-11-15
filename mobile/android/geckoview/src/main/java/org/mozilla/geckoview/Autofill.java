@@ -26,6 +26,7 @@ import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewStructure;
 import android.view.autofill.AutofillManager;
+import android.view.autofill.AutofillValue;
 
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -643,6 +644,7 @@ public class Autofill {
             if (Build.VERSION.SDK_INT >= 26) {
                 structure.setAutofillId(view.getAutofillId(), getId());
                 structure.setWebDomain(getDomain());
+                structure.setAutofillValue(AutofillValue.forText(getValue()));
             }
 
             structure.setId(getId(), null, null, null);
@@ -678,7 +680,10 @@ public class Autofill {
                     structure.setEnabled(getEnabled());
                     structure.setFocusable(getFocusable());
                     structure.setFocused(getFocused());
-                    structure.setVisibility(View.VISIBLE);
+                    structure.setVisibility(
+                            getVisible()
+                            ? View.VISIBLE
+                            : View.INVISIBLE);
 
                     if (Build.VERSION.SDK_INT >= 26) {
                         structure.setAutofillType(View.AUTOFILL_TYPE_TEXT);
@@ -972,6 +977,8 @@ public class Autofill {
                             onFocusChanged(message);
                         } else if ("GeckoView:CommitAutofill".equals(event)) {
                             commit(message);
+                        } else if ("GeckoView:UpdateAutofill".equals(event)) {
+                            update(message);
                         }
                     }
                 },
@@ -979,6 +986,7 @@ public class Autofill {
                 "GeckoView:ClearAutofill",
                 "GeckoView:CommitAutofill",
                 "GeckoView:OnAutofillFocus",
+                "GeckoView:UpdateAutofill",
                 null);
 
             mAutofillSession = new Session(geckoSession);
@@ -1096,6 +1104,34 @@ public class Autofill {
             maybeDispatch(
                     Notify.SESSION_COMMITTED,
                     getAutofillSession().getNode(id));
+        }
+
+        /* package */ void update(@Nullable final GeckoBundle message) {
+            if (getAutofillSession().isEmpty()) {
+                return;
+            }
+
+            final int id = message.getInt("id");
+
+            if (DEBUG) {
+                Log.d(LOGTAG, "update(" + id + ")");
+            }
+
+            final Node node = getAutofillSession().getNode(id);
+            final String value = message.getString("value");
+
+            if (node == null) {
+                Log.d(LOGTAG, "could not find node " + id);
+                return;
+            }
+
+            if (DEBUG) {
+                Log.d(LOGTAG, "updating node " + id + " value from " +
+                      node.getValue() + " to " + value);
+            }
+
+            node.setValue(value);
+            maybeDispatch(Notify.NODE_UPDATED, node);
         }
 
         /* package */ void clear() {
