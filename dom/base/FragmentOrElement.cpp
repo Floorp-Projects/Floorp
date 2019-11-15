@@ -872,7 +872,8 @@ void nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
     aVisitor.mEventTargetAtParent = parent;
   } else if (parent && aVisitor.mOriginalTargetIsInAnon) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mEvent->mTarget));
-    if (content && content->GetBindingParent() == parent) {
+    if (content &&
+        content->GetClosestNativeAnonymousSubtreeRootParent() == parent) {
       aVisitor.mEventTargetAtParent = parent;
     }
   }
