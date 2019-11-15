@@ -1242,15 +1242,7 @@ class nsINode : public mozilla::dom::EventTarget {
    * Returns true if |this| or any of its ancestors is native anonymous.
    */
   bool IsInNativeAnonymousSubtree() const {
-#ifdef DEBUG
-    if (HasFlag(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE)) {
-      return true;
-    }
-    CheckNotNativeAnonymous();
-    return false;
-#else
     return HasFlag(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE);
-#endif
   }
 
   /**
@@ -2040,12 +2032,6 @@ class nsINode : public mozilla::dom::EventTarget {
   virtual void SetTextContentInternal(const nsAString& aTextContent,
                                       nsIPrincipal* aSubjectPrincipal,
                                       mozilla::ErrorResult& aError) {}
-
-#ifdef DEBUG
-  // Note: virtual so that IsInNativeAnonymousSubtree can be called accross
-  // module boundaries.
-  virtual void CheckNotNativeAnonymous() const;
-#endif
 
   void EnsurePreInsertionValidity1(mozilla::ErrorResult& aError);
   void EnsurePreInsertionValidity2(bool aReplace, nsINode& aNewChild,
