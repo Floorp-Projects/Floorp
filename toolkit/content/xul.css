@@ -66,7 +66,7 @@
 
 /****** elements that have no visual representation ******/
 
-script, commandset, command,
+script, data, commandset, command,
 broadcasterset, broadcaster, observes,
 keyset, key, toolbarpalette, template,
 treeitem, treeseparator, treerow, treecell {
