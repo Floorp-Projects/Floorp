@@ -970,11 +970,14 @@ public class Autofill {
                             clear();
                         } else if ("GeckoView:OnAutofillFocus".equals(event)) {
                             onFocusChanged(message);
+                        } else if ("GeckoView:CommitAutofill".equals(event)) {
+                            commit(message);
                         }
                     }
                 },
                 "GeckoView:AddAutofill",
                 "GeckoView:ClearAutofill",
+                "GeckoView:CommitAutofill",
                 "GeckoView:OnAutofillFocus",
                 null);
 
@@ -1077,6 +1080,22 @@ public class Autofill {
             }
 
             mDelegate.onAutofill(mGeckoSession, notification, node);
+        }
+
+        /* package */ void commit(@Nullable final GeckoBundle message) {
+            if (getAutofillSession().isEmpty()) {
+                return;
+            }
+
+            final int id = message.getInt("id");
+
+            if (DEBUG) {
+                Log.d(LOGTAG, "commit(" + id + ")");
+            }
+
+            maybeDispatch(
+                    Notify.SESSION_COMMITTED,
+                    getAutofillSession().getNode(id));
         }
 
         /* package */ void clear() {
