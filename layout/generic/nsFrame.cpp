@@ -7842,8 +7842,7 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
   if (IBprevsibling) {
     aTo += nsPrintfCString(" IBSplitPrevSibling=%p", IBprevsibling);
   }
-  aTo += nsPrintfCString(" {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width,
-                         mRect.height);
+  aTo += nsPrintfCString(" %s", ToString(mRect).c_str());
 
   mozilla::WritingMode wm = GetWritingMode();
   if (wm.IsVertical() || wm.IsBidiRTL()) {
@@ -7866,13 +7865,11 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
   if (f->HasOverflowAreas()) {
     nsRect vo = f->GetVisualOverflowRect();
     if (!vo.IsEqualEdges(mRect)) {
-      aTo += nsPrintfCString(" vis-overflow={%d,%d,%d,%d}", vo.x, vo.y,
-                             vo.width, vo.height);
+      aTo += nsPrintfCString(" vis-overflow=%s", ToString(vo).c_str());
     }
     nsRect so = f->GetScrollableOverflowRect();
     if (!so.IsEqualEdges(mRect)) {
-      aTo += nsPrintfCString(" scr-overflow={%d,%d,%d,%d}", so.x, so.y,
-                             so.width, so.height);
+      aTo += nsPrintfCString(" scr-overflow=%s", ToString(so).c_str());
     }
   }
   bool hasNormalPosition;
