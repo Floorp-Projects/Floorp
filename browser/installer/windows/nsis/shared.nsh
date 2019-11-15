@@ -1095,16 +1095,6 @@
 ; installation time, then we don't get the opportunity to run this code at
 ; that time.
 !macro MigrateTaskBarShortcut
-  ; Find out if this is an ESR build or not, because it affects what we've
-  ; named some of our application registry keys.
-  ClearErrors
-  ${WordFind} "${UpdateChannel}" "esr" "E#" $3
-  ${If} ${Errors}
-    StrCpy $3 ""
-  ${Else}
-    StrCpy $3 " ESR"
-  ${EndIf}
-
   ${GetShortcutsLogPath} $0
   ${If} ${FileExists} "$0"
     ClearErrors
@@ -1112,8 +1102,8 @@
     ${If} ${Errors}
       ClearErrors
       WriteIniStr "$0" "TASKBAR" "Migrated" "true"
-      WriteRegDWORD SHCTX \
-        "Software\Mozilla\${BrandFullNameInternal}\${AppVersion}$3 (${ARCH} ${AB_CD})\Main" \
+      WriteRegDWORD HKCU \
+        "Software\Mozilla\${AppName}\Installer\$AppUserModelID" \
         "WasPinnedToTaskbar" 1
       ${If} ${AtLeastWin7}
         ; If we didn't run the stub installer, AddTaskbarSC will be empty.
@@ -1147,12 +1137,12 @@
         ; again, but also record that we've done so by writing a particular
         ; registry value, so that we don't continue to do this repeatedly.
         ClearErrors
-        ReadRegDWORD $2 SHCTX \
-            "Software\Mozilla\${BrandFullNameInternal}\${AppVersion}$3 (${ARCH} ${AB_CD})\Main" \
+        ReadRegDWORD $2 HKCU \
+            "Software\Mozilla\${AppName}\Installer\$AppUserModelID" \
             "WasPinnedToTaskbar"
         ${If} ${Errors}
-          WriteRegDWORD SHCTX \
-            "Software\Mozilla\${BrandFullNameInternal}\${AppVersion}$3 (${ARCH} ${AB_CD})\Main" \
+          WriteRegDWORD HKCU \
+            "Software\Mozilla\${AppName}\Installer\$AppUserModelID" \
             "WasPinnedToTaskbar" 1
           ${If} $AddTaskbarSC != "0"
             ${PinToTaskBar}
