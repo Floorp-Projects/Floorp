@@ -23,8 +23,10 @@
 #include "nsStringStream.h"
 #include "nsContentUtils.h"
 #include "nsProxyRelease.h"
+#include "nsIStreamListener.h"
 #include "ImageFactory.h"
 #include "Image.h"
+#include "IProgressObserver.h"
 #include "ScriptedNotificationObserver.h"
 #include "imgIScriptedNotificationObserver.h"
 #include "gfxPlatform.h"
@@ -38,6 +40,145 @@ namespace mozilla {
 namespace image {
 
 namespace {
+
+static nsresult sniff_mimetype_callback(nsIInputStream* in, void* data,
+                                        const char* fromRawSegment,
+                                        uint32_t toOffset, uint32_t count,
+                                        uint32_t* writeCount) {
+  nsCString* mimeType = static_cast<nsCString*>(data);
+  MOZ_ASSERT(mimeType, "mimeType is null!");
+
+  if (count > 0) {
+    imgLoader::GetMimeTypeFromContent(fromRawSegment, count, *mimeType);
+  }
+
+  *writeCount = 0;
+  return NS_ERROR_FAILURE;
+}
+
+// Provides WeakPtr for imgINotificationObserver
+class NotificationObserverWrapper : public imgINotificationObserver,
+                                    public mozilla::SupportsWeakPtr<NotificationObserverWrapper> {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_FORWARD_IMGINOTIFICATIONOBSERVER(mObserver->)
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsGeolocationRequest)
+
+  explicit NotificationObserverWrapper(imgINotificationObserver* observer) : mObserver(observer) {}
+
+ private:
+  virtual ~NotificationObserverWrapper() = default;
+  nsCOMPtr<imgINotificationObserver> mObserver;
+};
+
+NS_IMPL_ISUPPORTS(NotificationObserverWrapper, imgINotificationObserver)
+
+class ImageDecoderListener final : public nsIStreamListener,
+                                   public IProgressObserver,
+                                   public imgIContainer {
+ public:
+  NS_DECL_ISUPPORTS
+
+  ImageDecoderListener(nsIURI* aURI, imgIContainerCallback* aCallback,
+                       imgINotificationObserver* aObserver)
+      : mURI(aURI),
+        mImage(nullptr),
+        mCallback(aCallback),
+        mObserver(new NotificationObserverWrapper(aObserver)) {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  NS_IMETHOD
+  OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
+                  uint64_t aOffset, uint32_t aCount) override {
+    if (!mImage) {
+      nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+
+      nsCString mimeType;
+      channel->GetContentType(mimeType);
+
+      if (aInputStream) {
+        // Look at the first few bytes and see if we can tell what the data is from
+        // that since servers tend to lie. :(
+        uint32_t unused;
+        aInputStream->ReadSegments(sniff_mimetype_callback, &mimeType, aCount, &unused);
+      }
+
+      RefPtr<ProgressTracker> tracker = new ProgressTracker();
+      if (mObserver) {
+        tracker->AddObserver(this);
+      }
+
+      mImage = ImageFactory::CreateImage(channel, tracker, mimeType, mURI,
+                                         /* aIsMultiPart */ false, 0);
+
+      if (mImage->HasError()) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+
+    return mImage->OnImageDataAvailable(aRequest, nullptr, aInputStream,
+                                        aOffset, aCount);
+  }
+
+  NS_IMETHOD
+  OnStartRequest(nsIRequest* aRequest) override {
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  OnStopRequest(nsIRequest* aRequest, nsresult aStatus) override {
+    // Depending on the error, we might not have received any data yet, in which case we would not
+    // have an |mImage|
+    if (mImage) {
+      mImage->OnImageDataComplete(aRequest, nullptr, aStatus, true);
+    }
+
+    nsCOMPtr<imgIContainer> container;
+    if (NS_SUCCEEDED(aStatus)) {
+      container = this;
+    }
+
+    mCallback->OnImageReady(container, aStatus);
+    return NS_OK;
+  }
+
+  virtual void Notify(int32_t aType,
+                      const nsIntRect* aRect = nullptr) override {
+    if (mObserver) {
+      mObserver->Notify(nullptr, aType, aRect);
+    }
+  }
+
+  virtual void OnLoadComplete(bool aLastPart) override {}
+
+  // Other notifications are ignored.
+  virtual void SetHasImage() override {}
+  virtual bool NotificationsDeferred() const override { return false; }
+  virtual void MarkPendingNotify() override {}
+  virtual void ClearPendingNotify() override {}
+
+  // imgIContainer
+  NS_FORWARD_IMGICONTAINER(mImage->)
+
+  nsresult GetNativeSizes(nsTArray<nsIntSize>& aNativeSizes) const override {
+    return mImage->GetNativeSizes(aNativeSizes);
+  }
+
+  size_t GetNativeSizesLength() const override {
+    return mImage->GetNativeSizesLength();
+  }
+
+ private:
+  virtual ~ImageDecoderListener() = default;
+
+  nsCOMPtr<nsIURI> mURI;
+  RefPtr<image::Image> mImage;
+  nsCOMPtr<imgIContainerCallback> mCallback;
+  WeakPtr<NotificationObserverWrapper> mObserver;
+};
+
+NS_IMPL_ISUPPORTS(ImageDecoderListener, nsIStreamListener, imgIContainer)
 
 class ImageDecoderHelper final : public Runnable,
                                  public nsIInputStreamCallback {
@@ -232,6 +373,22 @@ imgTools::DecodeImageFromBuffer(const char* aBuffer, uint32_t aSize,
   // All done.
   image.forget(aContainer);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+imgTools::DecodeImageFromChannelAsync(nsIURI* aURI, nsIChannel* aChannel,
+                                      imgIContainerCallback* aCallback,
+                                      imgINotificationObserver* aObserver) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  NS_ENSURE_ARG_POINTER(aURI);
+  NS_ENSURE_ARG_POINTER(aChannel);
+  NS_ENSURE_ARG_POINTER(aCallback);
+
+  RefPtr<ImageDecoderListener> listener =
+      new ImageDecoderListener(aURI, aCallback, aObserver);
+
+  return aChannel->AsyncOpen(listener);
 }
 
 NS_IMETHODIMP
