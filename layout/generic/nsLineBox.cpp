@@ -14,6 +14,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/WritingModes.h"
+#include "mozilla/ToString.h"
 #include "nsBidiPresUtils.h"
 #include "nsFrame.h"
 #include "nsIFrameInlines.h"
@@ -244,10 +245,10 @@ void nsLineBox::List(FILE* out, const char* aPrefix, uint32_t aFlags) const {
   str += nsPrintfCString("{%d,%d,%d,%d} ", bounds.x, bounds.y, bounds.width,
                          bounds.height);
   if (mWritingMode.IsVertical() || mWritingMode.IsBidiRTL()) {
-    str +=
-        nsPrintfCString("{%s: %d,%d,%d,%d; cs=%d,%d} ",
-                        mWritingMode.DebugString(), IStart(), BStart(), ISize(),
-                        BSize(), mContainerSize.width, mContainerSize.height);
+    str += nsPrintfCString("wm=%s cs={%d,%d} logical-rect={%d,%d,%d,%d} ",
+                           ToString(mWritingMode).c_str(), mContainerSize.width,
+                           mContainerSize.height, IStart(), BStart(), ISize(),
+                           BSize());
   }
   if (mData &&
       (!mData->mOverflowAreas.VisualOverflow().IsEqualEdges(bounds) ||
