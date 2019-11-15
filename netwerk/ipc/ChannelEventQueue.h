@@ -70,6 +70,58 @@ class NeckoTargetChannelEvent : public ChannelEvent {
   T* mChild;
 };
 
+class ChannelFunctionEvent : public ChannelEvent {
+ public:
+  ChannelFunctionEvent(
+      std::function<already_AddRefed<nsIEventTarget>()>&& aGetEventTarget,
+      std::function<void()>&& aCallback)
+      : mGetEventTarget(std::move(aGetEventTarget)),
+        mCallback(std::move(aCallback)) {}
+
+  void Run() override { mCallback(); }
+  already_AddRefed<nsIEventTarget> GetEventTarget() override {
+    return mGetEventTarget();
+  }
+
+ private:
+  const std::function<already_AddRefed<nsIEventTarget>()> mGetEventTarget;
+  const std::function<void()> mCallback;
+};
+
+// UnsafePtr is a work-around our static analyzer that requires all
+// ref-counted objects to be captured in lambda via a RefPtr
+// The ChannelEventQueue makes it safe to capture "this" by pointer only.
+// This is required as work-around to prevent cycles until bug 1596295
+// is resolved.
+template <typename T>
+class UnsafePtr {
+ public:
+  explicit UnsafePtr(T* aPtr) : mPtr(aPtr) {}
+
+  T& operator*() const { return *mPtr; }
+  T* operator->() const {
+    MOZ_ASSERT(mPtr, "dereferencing a null pointer");
+    return mPtr;
+  }
+  operator T*() const& { return mPtr; }
+  explicit operator bool() const { return mPtr != nullptr; }
+
+ private:
+  T* const mPtr;
+};
+
+class NeckoTargetChannelFunctionEvent : public ChannelFunctionEvent {
+ public:
+  template <typename T>
+  NeckoTargetChannelFunctionEvent(T* aChild, std::function<void()>&& aCallback)
+      : ChannelFunctionEvent(
+            [child = UnsafePtr<T>(aChild)]() {
+              MOZ_ASSERT(child);
+              return child->GetNeckoTarget();
+            },
+            std::move(aCallback)) {}
+};
+
 // Workaround for Necko re-entrancy dangers. We buffer IPDL messages in a
 // queue if still dispatching previous one(s) to listeners/observers.
 // Otherwise synchronous XMLHttpRequests and/or other code that spins the
