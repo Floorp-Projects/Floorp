@@ -83,14 +83,6 @@ class RangeUtils final {
    *     nsRange should accept only 0 - INT32_MAX as valid offset for now.
    */
   static bool IsValidOffset(uint32_t aOffset) { return aOffset <= INT32_MAX; }
-  static bool IsValidOffset(nsINode* aNode, uint32_t aOffset) {
-    return aNode && IsValidOffset(aOffset) &&
-           static_cast<size_t>(aOffset) <= aNode->Length();
-  }
-  template <typename PT, typename RT>
-  static bool IsValidOffset(const RangeBoundaryBase<PT, RT>& aBoundary) {
-    return IsValidOffset(aBoundary.Container(), aBoundary.Offset());
-  }
 
   /**
    * Return true if aStartContainer/aStartOffset and aEndContainer/aEndOffset
