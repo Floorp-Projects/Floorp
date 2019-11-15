@@ -28,19 +28,10 @@ class CryptoBuffer : public FallibleTArray<uint8_t> {
   uint8_t* Assign(const ArrayBufferView& aData);
   uint8_t* Assign(const ArrayBufferViewOrArrayBuffer& aData);
   uint8_t* Assign(const OwningArrayBufferViewOrArrayBuffer& aData);
+  uint8_t* Assign(const Uint8Array& aArray);
 
   uint8_t* AppendSECItem(const SECItem* aItem);
   uint8_t* AppendSECItem(const SECItem& aItem);
-
-  template <typename T, JSObject* UnwrapArray(JSObject*),
-            void GetLengthAndDataAndSharedness(JSObject*, uint32_t*, bool*,
-                                               T**)>
-  uint8_t* Assign(
-      const TypedArray_base<T, UnwrapArray, GetLengthAndDataAndSharedness>&
-          aArray) {
-    aArray.ComputeLengthAndData();
-    return Assign(aArray.Data(), aArray.Length());
-  }
 
   nsresult FromJwkBase64(const nsString& aBase64);
   nsresult ToJwkBase64(nsString& aBase64) const;
