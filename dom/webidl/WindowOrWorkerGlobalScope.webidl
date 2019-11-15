@@ -14,6 +14,7 @@
 [Exposed=(Window,Worker)]
 interface mixin WindowOrWorkerGlobalScope {
   [Replaceable] readonly attribute USVString origin;
+  readonly attribute boolean crossOriginIsolated;
 
   // base64 utility methods
   [Throws]
