@@ -69,6 +69,7 @@ class nsIContent : public nsINode {
   explicit nsIContent(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
       : nsINode(std::move(aNodeInfo)) {
     MOZ_ASSERT(mNodeInfo);
+    MOZ_ASSERT(static_cast<nsINode*>(this) == reinterpret_cast<nsINode*>(this));
     SetNodeIsContent();
   }
 #endif  // MOZILLA_INTERNAL_API
@@ -871,14 +872,5 @@ class nsIContent : public nsINode {
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContent, NS_ICONTENT_IID)
-
-inline nsIContent* nsINode::AsContent() {
-  MOZ_ASSERT(IsContent());
-  return static_cast<nsIContent*>(this);
-}
-
-inline const nsIContent* nsINode::AsContent() const {
-  return const_cast<nsINode*>(this)->AsContent();
-}
 
 #endif /* nsIContent_h___ */
