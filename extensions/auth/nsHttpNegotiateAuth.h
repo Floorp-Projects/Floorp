@@ -31,9 +31,6 @@ class nsHttpNegotiateAuth final : public nsIHttpAuthenticator {
   // tests if the host part of an uri is fully qualified
   bool TestNonFqdn(nsIURI* uri);
 
-  // Thread for GenerateCredentialsAsync
-  RefPtr<mozilla::LazyIdleThread> mNegotiateThread;
-
   // Singleton pointer
   static mozilla::StaticRefPtr<nsHttpNegotiateAuth> gSingleton;
 };

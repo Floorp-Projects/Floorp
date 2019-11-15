@@ -326,7 +326,7 @@ NS_IMPL_ISUPPORTS(GetNextTokenCompleteEvent, nsIRunnable, nsICancelable)
 // GetNextTokenRunnable
 //
 // This runnable is created by GenerateCredentialsAsync and it runs
-// in nsHttpNegotiateAuth::mNegotiateThread and calling GenerateCredentials.
+// on the background thread pool and calls GenerateCredentials.
 //
 class GetNextTokenRunnable final : public mozilla::Runnable {
   ~GetNextTokenRunnable() override = default;
@@ -436,17 +436,12 @@ nsHttpNegotiateAuth::GenerateCredentialsAsync(
   nsCOMPtr<nsIRunnable> getNextTokenRunnable = new GetNextTokenRunnable(
       authChannel, challenge, isProxyAuth, domain, username, password,
       sessionState, continuationState, cancelEvent);
-  cancelEvent.forget(aCancelable);
 
-  nsresult rv;
-  if (!mNegotiateThread) {
-    mNegotiateThread = new mozilla::LazyIdleThread(
-        DEFAULT_THREAD_TIMEOUT_MS, NS_LITERAL_CSTRING("NegotiateAuth"));
-    NS_ENSURE_TRUE(mNegotiateThread, NS_ERROR_OUT_OF_MEMORY);
-  }
-  rv = mNegotiateThread->Dispatch(getNextTokenRunnable, NS_DISPATCH_NORMAL);
+  nsresult rv = NS_DispatchBackgroundTask(
+      getNextTokenRunnable, nsIEventTarget::DISPATCH_EVENT_MAY_BLOCK);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  cancelEvent.forget(aCancelable);
   return NS_OK;
 }
 
