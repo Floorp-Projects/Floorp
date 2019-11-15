@@ -297,12 +297,22 @@ var PictureInPicture = {
       screenWidth,
       screenHeight
     );
+    let fullLeft = {},
+      fullTop = {},
+      fullWidth = {},
+      fullHeight = {};
+    screen.GetRectDisplayPix(fullLeft, fullTop, fullWidth, fullHeight);
 
     // We have to divide these dimensions by the CSS scale factor for the
     // display in order for the video to be positioned correctly on displays
     // that are not at a 1.0 scaling.
-    screenWidth.value = screenWidth.value / screen.defaultCSSScaleFactor;
-    screenHeight.value = screenHeight.value / screen.defaultCSSScaleFactor;
+    let scaleFactor = screen.contentsScaleFactor / screen.defaultCSSScaleFactor;
+    screenWidth.value *= scaleFactor;
+    screenHeight.value *= scaleFactor;
+    screenLeft.value =
+      (screenLeft.value - fullLeft.value) * scaleFactor + fullLeft.value;
+    screenTop.value =
+      (screenTop.value - fullTop.value) * scaleFactor + fullTop.value;
 
     // For now, the Picture in Picture window will be a maximum of a quarter
     // of the screen height, and a third of the screen width.
