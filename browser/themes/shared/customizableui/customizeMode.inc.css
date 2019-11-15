@@ -42,7 +42,8 @@
 }
 
 #customization-panel-container {
-  padding: 0 20px 25px;
+  --customization-panel-padding: 20px;
+  padding: 0 var(--customization-panel-padding) 25px;
 }
 
 #customization-footer {
@@ -488,22 +489,11 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   -moz-context-properties: fill, stroke;
   fill: var(--arrowpanel-background);
   stroke: var(--arrowpanel-border-color);
-  /* The arrow needs to point to the overflow button. The numbers involved
-   * are:
-   * overflow button width: (16px + 2 * 2px padding
-   * + 2 * toolbarbutton-inner-padding)
-   * hamburger button width: (16px + 2 * 5px padding
-   * + 2 * toolbarbutton-inner-padding)
-   * hamburger button border + margin: 1px + 2px
-   * The total desired offset from the right edge of the window is thus:
-   * 10px + 1 * toolbarbutton-inner-padding (center of overflow button) +
-   * 29px + 2 * toolbarbutton-inner-padding
-   * The #customization-panel-container has a 20px margin, so that leaves:
-   * 19px + 3 * toolbarbutton-inner-padding
-   * Finally, we need to center the arrow, which is 20px wide, so subtract
-   * 10px.
+  /* JS code sets --panel-arrow-offset to the distance between the middle of the
+   * overflow button and the end of the window. We subtract the padding of our
+   * container (#customization-panel-container) and half our own width:
    */
-  margin-inline-end: calc(9px + 3 * var(--toolbarbutton-inner-padding));
+  margin-inline-end: calc(var(--panel-arrow-offset) - var(--customization-panel-padding) - 10px);
   vertical-align: top;
 }
 
