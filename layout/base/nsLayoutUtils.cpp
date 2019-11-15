@@ -8522,7 +8522,7 @@ nsSize nsLayoutUtils::CalculateCompositionSizeForFrame(
   PresShell* presShell = presContext->PresShell();
 
   bool isRootContentDocRootScrollFrame =
-      presContext->IsRootContentDocument() &&
+      presContext->IsRootContentDocumentCrossProcess() &&
       aFrame == presShell->GetRootScrollFrame();
   if (isRootContentDocRootScrollFrame) {
     ParentLayerRect compBounds;
@@ -9201,7 +9201,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
   // correspond to what would be visible because they don't get modified by
   // setCSSViewport.
   bool isRootContentDocRootScrollFrame =
-      isRootScrollFrame && presContext->IsRootContentDocument();
+      isRootScrollFrame && presContext->IsRootContentDocumentCrossProcess();
   if (isRootContentDocRootScrollFrame) {
     UpdateCompositionBoundsForRCDRSF(frameBounds, presContext, true);
   }
