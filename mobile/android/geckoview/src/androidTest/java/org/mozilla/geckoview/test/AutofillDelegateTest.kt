@@ -30,6 +30,68 @@ import org.mozilla.geckoview.test.util.Callbacks
 @MediumTest
 class AutofillDelegateTest : BaseSessionTest() {
 
+    @Test fun autofillCommit() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("signon.rememberSignons" to true))
+
+        mainSession.loadTestPath(FORMS_HTML_PATH)
+        // Wait for the auto-fill nodes to populate.
+        sessionRule.waitUntilCalled(object : Callbacks.AutofillDelegate {
+            // For the root document and the iframe document, each has a form group and
+            // a group for inputs outside of forms, so the total count is 4.
+            @AssertCalled(count = 4)
+            override fun onAutofill(session: GeckoSession,
+                                    notification: Int,
+                                    node: Autofill.Node?) {
+                assertThat("Should be starting auto-fill",
+                           notification,
+                           equalTo(forEachCall(
+                              Autofill.Notify.SESSION_STARTED,
+                              Autofill.Notify.NODE_ADDED)))
+            }
+        })
+
+        // Assign node values.
+        mainSession.evaluateJS("document.querySelector('#user1').value = 'user1x'")
+        mainSession.evaluateJS("document.querySelector('#pass1').value = 'pass1x'")
+        mainSession.evaluateJS("document.querySelector('#email1').value = 'e@mail.com'")
+        mainSession.evaluateJS("document.querySelector('#number1').value = '1'")
+
+        // Submit the session.
+        mainSession.evaluateJS("document.querySelector('#form1').submit()")
+
+        sessionRule.waitUntilCalled(object : Callbacks.AutofillDelegate {
+            @AssertCalled(count = 5)
+            override fun onAutofill(session: GeckoSession,
+                                    notification: Int,
+                                    node: Autofill.Node?) {
+                val info = sessionRule.currentCall
+
+                if (info.counter < 5) {
+                    assertThat("Should be an update notification",
+                               notification,
+                               equalTo(Autofill.Notify.NODE_UPDATED))
+                } else {
+                    assertThat("Should be a commit notification",
+                               notification,
+                               equalTo(Autofill.Notify.SESSION_COMMITTED))
+
+                    assertThat("Values should match",
+                               countAutofillNodes({ it.value == "user1x" }),
+                               equalTo(1))
+                    assertThat("Values should match",
+                               countAutofillNodes({ it.value == "pass1x" }),
+                               equalTo(1))
+                    assertThat("Values should match",
+                               countAutofillNodes({ it.value == "e@mail.com" }),
+                               equalTo(1))
+                    assertThat("Values should match",
+                               countAutofillNodes({ it.value == "1" }),
+                               equalTo(1))
+                }
+            }
+        })
+    }
+
     @Test fun autofill() {
         // Test parts of the Oreo auto-fill API; there is another autofill test in
         // SessionAccessibility for a11y auto-fill support.
