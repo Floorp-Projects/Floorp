@@ -493,12 +493,9 @@ static void ProcessTranslate(Matrix4x4& aMatrix,
     case StyleTranslate::Tag::None:
       return;
     case StyleTranslate::Tag::Translate:
-      return ProcessTranslate(aMatrix, aTranslate.AsTranslate()._0,
-                              aTranslate.AsTranslate()._1, aRefBox);
-    case StyleTranslate::Tag::Translate3D:
-      return ProcessTranslate3D(aMatrix, aTranslate.AsTranslate3D()._0,
-                                aTranslate.AsTranslate3D()._1,
-                                aTranslate.AsTranslate3D()._2, aRefBox);
+      return ProcessTranslate3D(aMatrix, aTranslate.AsTranslate()._0,
+                                aTranslate.AsTranslate()._1,
+                                aTranslate.AsTranslate()._2, aRefBox);
     default:
       MOZ_ASSERT_UNREACHABLE("Huh?");
   }
@@ -528,10 +525,7 @@ static void ProcessScale(Matrix4x4& aMatrix, const StyleScale& aScale,
       return;
     case StyleScale::Tag::Scale:
       return ProcessScaleHelper(aMatrix, aScale.AsScale()._0,
-                                aScale.AsScale()._1, 1.0f);
-    case StyleScale::Tag::Scale3D:
-      return ProcessScaleHelper(aMatrix, aScale.AsScale3D()._0,
-                                aScale.AsScale3D()._1, aScale.AsScale3D()._2);
+                                aScale.AsScale()._1, aScale.AsScale()._2);
     default:
       MOZ_ASSERT_UNREACHABLE("Huh?");
   }
