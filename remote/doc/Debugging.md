@@ -1,6 +1,7 @@
 Debugging
 =========
 
+
 Increasing the logging verbosity
 --------------------------------
 
@@ -11,6 +12,7 @@ If you use mach to start Firefox:
 
 	./mach run --setpref "remote.enabled=true" --setpref "remote.log.level=Debug" --remote-debugger
 
+
 Enabling logging of emitted events
 ----------------------------------
 
@@ -20,4 +22,28 @@ you can use the `toolkit.dump.emit` [preference]:
 
     ./mach run --setpref "remote.enabled=true" --setpref "toolkit.dump.emit=true" --remote-debugger
 
+
+Logging observer notifications
+------------------------------
+
+[System observer notifications] are used extensively throughout the
+code and it can sometimes be useful to log these to see what is
+available and when they are fired.
+
+The `MOZ_LOG` environment variable controls the C++ logs and takes
+the name of the subsystem along with a verbosity setting.  See
+[prlog.h] for more details.
+
+	MOZ_LOG=ObserverService:5
+
+You can optionally redirect logs away from stdout to a file:
+
+	MOZ_LOG_FILE=service.log
+
+This enables `LogLevel::Debug` level information and places all
+output in the file service.log in your current working directory.
+
+
 [preference]: ./Prefs.html
+[System observer notifications]: https://developer.mozilla.org/en-US/docs/Archive/Add-ons/Overlay_Extensions/XUL_School/Observer_Notifications
+[prlog.h]: https://searchfox.org/mozilla-central/source/nsprpub/pr/include/prlog.h
