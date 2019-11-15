@@ -906,6 +906,9 @@ void MediaFormatReader::ShutdownDecoder(TrackType aTrack) {
 
 void MediaFormatReader::NotifyDecoderBenchmarkStore() {
   MOZ_ASSERT(OnTaskQueue());
+  if (!StaticPrefs::media_mediacapabilities_from_database()) {
+    return;
+  }
   auto& decoder = GetDecoderData(TrackInfo::kVideoTrack);
   if (decoder.GetCurrentInfo() && decoder.GetCurrentInfo()->GetAsVideoInfo()) {
     VideoInfo info = *(decoder.GetCurrentInfo()->GetAsVideoInfo());

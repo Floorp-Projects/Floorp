@@ -7,6 +7,7 @@
 #include "DecoderBenchmark.h"
 #include "mozilla/BenchmarkStorageChild.h"
 #include "mozilla/media/MediaUtils.h"
+#include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {
 
@@ -211,6 +212,10 @@ void DecoderBenchmark::CheckVersion(const nsACString& aDecoderName) {
   if (!XRE_IsContentProcess()) {
     NS_WARNING(
         "Checking version is only allowed only from the content process.");
+    return;
+  }
+
+  if (!StaticPrefs::media_mediacapabilities_from_database()) {
     return;
   }
 
