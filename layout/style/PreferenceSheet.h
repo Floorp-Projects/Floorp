@@ -36,6 +36,7 @@ struct PreferenceSheet {
 
     bool mUnderlineLinks = true;
     bool mUseFocusColors = false;
+    bool mUseDocumentColors = true;
     uint8_t mFocusRingWidth = 1;
     uint8_t mFocusRingStyle = 1;
     bool mFocusRingOnAnything = false;

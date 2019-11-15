@@ -63,6 +63,17 @@ static bool UseAccessibilityTheme(bool aIsChrome) {
          !!LookAndFeel::GetInt(LookAndFeel::eIntID_UseAccessibilityTheme, 0);
 }
 
+static bool UseDocumentColors(bool aIsChrome, bool aUseAcccessibilityTheme) {
+  switch (StaticPrefs::browser_display_document_color_use()) {
+    case 1:
+      return true;
+    case 2:
+      return aIsChrome;
+    default:
+      return !aUseAcccessibilityTheme;
+  }
+}
+
 void PreferenceSheet::Prefs::Load(bool aIsChrome) {
   *this = {};
 
@@ -119,6 +130,7 @@ void PreferenceSheet::Prefs::Load(bool aIsChrome) {
   // opaque.
   mDefaultBackgroundColor =
       NS_ComposeColors(NS_RGB(0xFF, 0xFF, 0xFF), mDefaultBackgroundColor);
+  mUseDocumentColors = UseDocumentColors(aIsChrome, mUseAccessibilityTheme);
 }
 
 void PreferenceSheet::Initialize() {
