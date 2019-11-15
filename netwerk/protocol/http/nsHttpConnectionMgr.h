@@ -170,7 +170,7 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   // @param aTrans: a transaction that contains a sticky connection. We'll
   //                take the transport of this connection.
   MOZ_MUST_USE nsresult CompleteUpgrade(
-      nsHttpTransaction* aTrans, nsIHttpUpgradeListener* aUpgradeListener);
+      HttpTransactionShell* aTrans, nsIHttpUpgradeListener* aUpgradeListener);
 
   // called to update a parameter after the connection manager has already
   // been initialized.

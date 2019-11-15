@@ -840,7 +840,7 @@ nsresult nsHttpChannel::ContinueConnect() {
   return DoConnect();
 }
 
-nsresult nsHttpChannel::DoConnect(nsHttpTransaction* aTransWithStickyConn) {
+nsresult nsHttpChannel::DoConnect(HttpTransactionShell* aTransWithStickyConn) {
   LOG(("nsHttpChannel::DoConnect [this=%p, aTransWithStickyConn=%p]\n", this,
        aTransWithStickyConn));
 
@@ -6120,7 +6120,7 @@ NS_IMETHODIMP nsHttpChannel::CloseStickyConnection() {
   }
 
   if (!(mCaps & NS_HTTP_STICKY_CONNECTION ||
-        mTransaction->Caps() & NS_HTTP_STICKY_CONNECTION)) {
+        mTransaction->HasStickyConnection())) {
     LOG(("  not sticky"));
     return NS_OK;
   }
@@ -7939,9 +7939,9 @@ nsHttpChannel::OnStopRequest(nsIRequest* request, nsresult status) {
     // when it has a sticky connection.
     // In the case we need to retry an authentication request, we need to
     // reuse the connection of |transactionWithStickyConn|.
-    RefPtr<nsHttpTransaction> transactionWithStickyConn;
+    RefPtr<HttpTransactionShell> transactionWithStickyConn;
     if (mCaps & NS_HTTP_STICKY_CONNECTION ||
-        mTransaction->Caps() & NS_HTTP_STICKY_CONNECTION) {
+        mTransaction->HasStickyConnection()) {
       transactionWithStickyConn = mTransaction;
       LOG(("  transaction %p has sticky connection",
            transactionWithStickyConn.get()));
@@ -8038,7 +8038,7 @@ nsHttpChannel::OnStopRequest(nsIRequest* request, nsresult status) {
 
 nsresult nsHttpChannel::ContinueOnStopRequestAfterAuthRetry(
     nsresult aStatus, bool aAuthRetry, bool aIsFromNet, bool aContentComplete,
-    nsHttpTransaction* aTransWithStickyConn) {
+    HttpTransactionShell* aTransWithStickyConn) {
   LOG(
       ("nsHttpChannel::ContinueOnStopRequestAfterAuthRetry "
        "[this=%p, aStatus=%" PRIx32
@@ -9010,7 +9010,7 @@ nsHttpChannel::ResumeAt(uint64_t aStartPos, const nsACString& aEntityID) {
 }
 
 nsresult nsHttpChannel::DoAuthRetry(
-    nsHttpTransaction* aTransWithStickyConn,
+    HttpTransactionShell* aTransWithStickyConn,
     const std::function<nsresult(nsHttpChannel*, nsresult)>&
         aContinueOnStopRequestFunc) {
   LOG(("nsHttpChannel::DoAuthRetry [this=%p, aTransWithStickyConn=%p]\n", this,
@@ -9037,7 +9037,7 @@ nsresult nsHttpChannel::DoAuthRetry(
   // notify "http-on-modify-request" observers
   CallOnModifyRequestObservers();
 
-  RefPtr<nsHttpTransaction> trans(aTransWithStickyConn);
+  RefPtr<HttpTransactionShell> trans(aTransWithStickyConn);
   return CallOrWaitForResume(
       [trans{std::move(trans)}, aContinueOnStopRequestFunc](auto* self) {
         return self->ContinueDoAuthRetry(trans, aContinueOnStopRequestFunc);
@@ -9045,7 +9045,7 @@ nsresult nsHttpChannel::DoAuthRetry(
 }
 
 nsresult nsHttpChannel::ContinueDoAuthRetry(
-    nsHttpTransaction* aTransWithStickyConn,
+    HttpTransactionShell* aTransWithStickyConn,
     const std::function<nsresult(nsHttpChannel*, nsresult)>&
         aContinueOnStopRequestFunc) {
   LOG(("nsHttpChannel::ContinueDoAuthRetry [this=%p]\n", this));
@@ -9078,7 +9078,7 @@ nsresult nsHttpChannel::ContinueDoAuthRetry(
   // notify "http-on-before-connect" observers
   gHttpHandler->OnBeforeConnect(this);
 
-  RefPtr<nsHttpTransaction> trans(aTransWithStickyConn);
+  RefPtr<HttpTransactionShell> trans(aTransWithStickyConn);
   return CallOrWaitForResume(
       [trans{std::move(trans)}, aContinueOnStopRequestFunc](auto* self) {
         nsresult rv = self->DoConnect(trans);

@@ -982,6 +982,32 @@ nsresult nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter* writer,
   return rv;
 }
 
+bool nsHttpTransaction::ProxyConnectFailed() { return mProxyConnectFailed; }
+
+nsISupports* nsHttpTransaction::SecurityInfo() { return mSecurityInfo; }
+
+bool nsHttpTransaction::HasStickyConnection() const {
+  return mCaps & NS_HTTP_STICKY_CONNECTION;
+}
+
+bool nsHttpTransaction::ResponseIsComplete() { return mResponseIsComplete; }
+
+int64_t nsHttpTransaction::GetTransferSize() { return mTransferSize; }
+
+int64_t nsHttpTransaction::GetRequestSize() { return mRequestSize; }
+
+void nsHttpTransaction::SetTransactionObserver(TransactionObserver* arg) {
+  mTransactionObserver = arg;
+}
+
+void nsHttpTransaction::SetPushedStream(Http2PushedStreamWrapper* push) {
+  mPushedStream = push;
+}
+
+bool nsHttpTransaction::ResolvedByTRR() { return mResolvedByTRR; }
+
+nsHttpTransaction* nsHttpTransaction::AsHttpTransaction() { return this; }
+
 void nsHttpTransaction::Close(nsresult reason) {
   LOG(("nsHttpTransaction::Close [this=%p reason=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(reason)));

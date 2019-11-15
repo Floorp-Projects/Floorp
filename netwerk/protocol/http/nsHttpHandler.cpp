@@ -2699,5 +2699,33 @@ bool nsHttpHandler::IsHttp3VersionSupportedHex(const nsACString& version) {
   return version.LowerCaseEqualsLiteral(kHttp3VersionHEX);
 }
 
+nsresult nsHttpHandler::InitiateTransaction(HttpTransactionShell* aTrans,
+                                            int32_t aPriority) {
+  return mConnMgr->AddTransaction(aTrans->AsHttpTransaction(), aPriority);
+}
+nsresult nsHttpHandler::InitiateTransactionWithStickyConn(
+    HttpTransactionShell* aTrans, int32_t aPriority,
+    HttpTransactionShell* aTransWithStickyConn) {
+  return mConnMgr->AddTransactionWithStickyConn(
+      aTrans->AsHttpTransaction(), aPriority,
+      aTransWithStickyConn->AsHttpTransaction());
+}
+
+nsresult nsHttpHandler::RescheduleTransaction(HttpTransactionShell* trans,
+                                              int32_t priority) {
+  return mConnMgr->RescheduleTransaction(trans->AsHttpTransaction(), priority);
+}
+
+void nsHttpHandler::UpdateClassOfServiceOnTransaction(
+    HttpTransactionShell* trans, uint32_t classOfService) {
+  mConnMgr->UpdateClassOfServiceOnTransaction(trans->AsHttpTransaction(),
+                                              classOfService);
+}
+
+nsresult nsHttpHandler::CancelTransaction(HttpTransactionShell* trans,
+                                          nsresult reason) {
+  return mConnMgr->CancelTransaction(trans->AsHttpTransaction(), reason);
+}
+
 }  // namespace net
 }  // namespace mozilla
