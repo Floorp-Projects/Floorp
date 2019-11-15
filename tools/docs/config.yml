@@ -18,6 +18,7 @@ categories:
         - tools/try
         - build/buildsystem
         - taskcluster
+        - tools/docs
     testing_doc:
         - testing/marionette
         - testing/geckodriver
