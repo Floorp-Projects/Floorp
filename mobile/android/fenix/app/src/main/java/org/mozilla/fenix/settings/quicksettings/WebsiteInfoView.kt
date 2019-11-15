@@ -11,10 +11,8 @@ import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.quicksettings_website_info.view.*
-import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
 
@@ -42,7 +40,7 @@ class WebsiteInfoView(
     }
 
     private fun bindUrl(url: String) {
-        view.url.text = url.toUri().hostWithoutCommonPrefixes
+        view.url.text = url
     }
 
     private fun bindSecurityInfo(
