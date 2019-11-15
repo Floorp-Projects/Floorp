@@ -28,7 +28,9 @@ class SavedLoginSiteInfoFragment : Fragment(R.layout.fragment_saved_login_site_i
 
     override fun onPause() {
         // If we pause this fragment, we want to pop users back to reauth
-        findNavController().popBackStack(R.id.loginsFragment, false)
+        if (findNavController().currentDestination?.id != R.id.savedLoginsFragment) {
+            findNavController().popBackStack(R.id.loginsFragment, false)
+        }
         super.onPause()
     }
 
