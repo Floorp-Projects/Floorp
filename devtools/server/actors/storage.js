@@ -26,8 +26,6 @@ loader.lazyGetter(
   () => Cu.getGlobalForObject(ExtensionProcessScript).WebExtensionPolicy
 );
 
-const CHROME_ENABLED_PREF = "devtools.chrome.enabled";
-const REMOTE_ENABLED_PREF = "devtools.debugger.remote-enabled";
 const EXTENSION_STORAGE_ENABLED_PREF =
   "devtools.storage.extensionStorage.enabled";
 
@@ -47,8 +45,6 @@ const COOKIE_SAMESITE = {
   STRICT: "Strict",
   UNSET: "Unset",
 };
-
-const SAFE_HOSTS_PREFIXES_REGEX = /^(about\+|https?\+|file\+|moz-extension\+)/;
 
 // GUID to be used as a separator in compound keys. This must match the same
 // constant in devtools/client/storage/ui.js,
@@ -155,8 +151,7 @@ StorageActors.defaults = function(typeName, observationTopics) {
 
     /**
      * Returns a list of currently known hosts for the target window. This list
-     * contains unique hosts from the window + all inner windows. If
-     * this._internalHosts is defined then these will also be added to the list.
+     * contains unique hosts from the window + all inner windows.
      */
     get hosts() {
       const hosts = new Set();
@@ -164,11 +159,6 @@ StorageActors.defaults = function(typeName, observationTopics) {
         const host = this.getHostName(location);
 
         if (host) {
-          hosts.add(host);
-        }
-      }
-      if (this._internalHosts) {
-        for (const host of this._internalHosts) {
           hosts.add(host);
         }
       }
@@ -2135,7 +2125,7 @@ ObjectStoreMetadata.prototype = {
  * @param {IDBDatabase} db
  *        The particular indexed db.
  * @param {String} storage
- *        Storage type, either "temporary", "default" or "persistent".
+ *        Storage type, either "temporary" or "default".
  */
 function DatabaseMetadata(origin, db, storage) {
   this._origin = origin;
@@ -2206,21 +2196,6 @@ StorageActors.createActor(
       protocol.Actor.prototype.destroy.call(this);
 
       this.storageActor = null;
-    },
-
-    /**
-     * Returns a list of currently known hosts for the target window. This list
-     * contains unique hosts from the window, all inner windows and all permanent
-     * indexedDB hosts defined inside the browser.
-     */
-    async getHosts() {
-      // Add internal hosts to this._internalHosts, which will be picked up by
-      // the this.hosts getter. Because this.hosts is a property on the default
-      // storage actor and inherited by all storage actors we have to do it this
-      // way.
-      this._internalHosts = await this.getInternalHosts();
-
-      return this.hosts;
     },
 
     /**
@@ -2344,7 +2319,7 @@ StorageActors.createActor(
     async preListStores() {
       this.hostVsStores = new Map();
 
-      for (const host of await this.getHosts()) {
+      for (const host of await this.hosts) {
         await this.populateStoresForHost(host);
       }
     },
@@ -2457,7 +2432,6 @@ StorageActors.createActor(
         this.removeDB = indexedDBHelpers.removeDB;
         this.removeDBRecord = indexedDBHelpers.removeDBRecord;
         this.splitNameAndStorage = indexedDBHelpers.splitNameAndStorage;
-        this.getInternalHosts = indexedDBHelpers.getInternalHosts;
         return;
       }
 
@@ -2473,10 +2447,6 @@ StorageActors.createActor(
       this.splitNameAndStorage = callParentProcessAsync.bind(
         null,
         "splitNameAndStorage"
-      );
-      this.getInternalHosts = callParentProcessAsync.bind(
-        null,
-        "getInternalHosts"
       );
       this.getDBNamesForHost = callParentProcessAsync.bind(
         null,
@@ -2610,34 +2580,6 @@ var indexedDBHelpers = {
   },
 
   /**
-   * Get all "internal" hosts. Internal hosts are database namespaces used by
-   * the browser.
-   */
-  async getInternalHosts() {
-    // Return an empty array if the browser toolbox is not enabled.
-    if (
-      !Services.prefs.getBoolPref(CHROME_ENABLED_PREF) ||
-      !Services.prefs.getBoolPref(REMOTE_ENABLED_PREF)
-    ) {
-      return this.backToChild("getInternalHosts", []);
-    }
-
-    const profileDir = OS.Constants.Path.profileDir;
-    const storagePath = OS.Path.join(profileDir, "storage", "permanent");
-    const iterator = new OS.File.DirectoryIterator(storagePath);
-    const hosts = [];
-
-    await iterator.forEach(entry => {
-      if (entry.isDir && !SAFE_HOSTS_PREFIXES_REGEX.test(entry.name)) {
-        hosts.push(entry.name);
-      }
-    });
-    iterator.close();
-
-    return this.backToChild("getInternalHosts", hosts);
-  },
-
-  /**
    * Opens an indexed db connection for the given `principal` and
    * database `name`.
    */
@@ -2764,14 +2706,11 @@ var indexedDBHelpers = {
     // We expect sqlite DB paths to look something like this:
     // - PathToProfileDir/storage/default/http+++www.example.com/
     //   idb/1556056096MeysDaabta.sqlite
-    // - PathToProfileDir/storage/permanent/http+++www.example.com/
-    //   idb/1556056096MeysDaabta.sqlite
     // - PathToProfileDir/storage/temporary/http+++www.example.com/
     //   idb/1556056096MeysDaabta.sqlite
     // The subdirectory inside the storage folder is determined by the storage
     // type:
     // - default:   { storage: "default" } or not specified.
-    // - permanent: { storage: "persistent" }.
     // - temporary: { storage: "temporary" }.
     const sqliteFiles = await this.findSqlitePathsForHost(
       storagePath,
@@ -2786,7 +2725,7 @@ var indexedDBHelpers = {
 
       files.push({
         file: relative,
-        storage: storage === "permanent" ? "persistent" : storage,
+        storage,
       });
     }
 
@@ -2841,15 +2780,18 @@ var indexedDBHelpers = {
   },
 
   /**
-   * Find all the storage types, such as "default", "permanent", or "temporary".
-   * These names have changed over time, so it seems simpler to look through all types
-   * that currently exist in the profile.
+   * Find all the storage types, such as "default" or "temporary".
+   * These names have changed over time, so it seems simpler to look through all
+   * types that currently exist in the profile.
    */
   async findStorageTypePaths(storagePath) {
     const iterator = new OS.File.DirectoryIterator(storagePath);
     const typePaths = [];
     await iterator.forEach(entry => {
-      if (entry.isDir) {
+      if (
+        entry.isDir &&
+        (entry.path.endsWith("/default") || entry.path.endsWith("/temporary"))
+      ) {
         typePaths.push(entry.path);
       }
     });
@@ -2974,7 +2916,7 @@ var indexedDBHelpers = {
    * @param {string} dbName
    *        The name of the indexed db from the above host.
    * @param {String} storage
-   *        Storage type, either "temporary", "default" or "persistent".
+   *        Storage type, either "temporary" or "default".
    * @param {Object} requestOptions
    *        An object in the following format:
    *        {
@@ -3097,9 +3039,6 @@ var indexedDBHelpers = {
       case "getDBMetaData": {
         const [host, principal, name, storage] = args;
         return indexedDBHelpers.getDBMetaData(host, principal, name, storage);
-      }
-      case "getInternalHosts": {
-        return indexedDBHelpers.getInternalHosts();
       }
       case "splitNameAndStorage": {
         const [name] = args;
