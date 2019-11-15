@@ -493,9 +493,4 @@ nsRect ToAppUnits(const mozilla::gfx::IntRectTyped<units>& aRect,
                 NSIntPixelsToAppUnits(aRect.Height(), aAppUnitsPerPixel));
 }
 
-#ifdef DEBUG
-// Diagnostics
-extern FILE* operator<<(FILE* out, const nsRect& rect);
-#endif  // DEBUG
-
 #endif /* NSRECT_H */
