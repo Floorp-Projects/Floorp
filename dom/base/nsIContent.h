@@ -185,11 +185,18 @@ class nsIContent : public nsINode {
    */
   nsIContent* FindFirstNonChromeOnlyAccessContent() const;
 
+#ifdef DEBUG
+  void AssertAnonymousSubtreeRelatedInvariants() const;
+#endif
+
   /**
    * Returns true if and only if this node has a parent, but is not in
    * its parent's child list.
    */
   bool IsRootOfAnonymousSubtree() const {
+#ifdef DEBUG
+    AssertAnonymousSubtreeRelatedInvariants();
+#endif
     return HasFlag(NODE_IS_ANONYMOUS_ROOT);
   }
 
@@ -363,6 +370,21 @@ class nsIContent : public nsINode {
    *         by the plug-in.
    */
   virtual IMEState GetDesiredIMEState();
+
+  /**
+   * Gets content node with the binding (or native code, possibly on the
+   * frame) responsible for our construction (and existence).  Used by
+   * native-anonymous content and shadow DOM.
+   *
+   * null for all explicit content (i.e., content reachable from the top
+   * of its GetParent() chain via child lists).
+   *
+   * @return the binding parent
+   */
+  mozilla::dom::Element* GetBindingParent() const {
+    const nsExtendedContentSlots* slots = GetExistingExtendedContentSlots();
+    return slots ? slots->mBindingParent.get() : nullptr;
+  }
 
   /**
    * Gets the ShadowRoot binding for this element.
@@ -695,6 +717,13 @@ class nsIContent : public nsINode {
 
     virtual size_t SizeOfExcludingThis(
         mozilla::MallocSizeOf aMallocSizeOf) const;
+
+    /**
+     * The nearest enclosing content node with a binding that created us.
+     *
+     * @see nsIContent::GetBindingParent
+     */
+    RefPtr<mozilla::dom::Element> mBindingParent;
 
     /**
      * @see nsIContent::GetContainingShadow

@@ -62,6 +62,7 @@ ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
   SetFlags(NODE_IS_IN_SHADOW_TREE);
   Bind();
 
+  ExtendedDOMSlots()->mBindingParent = aElement;
   ExtendedDOMSlots()->mContainingShadow = this;
 }
 
