@@ -563,7 +563,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
             return;
         }
 
-        SendUpdateCanvasForEvent(event, contentRootElement);
+        SendUpdateCanvasForEvent(forURL, event, contentRootElement);
         // These events are fired immediately after a paint. Don't
         // confuse ourselves by firing synchronously if we triggered the
         // paint ourselves.
@@ -1359,8 +1359,15 @@ function elementDescription(element)
         '>';
 }
 
-function SendUpdateCanvasForEvent(event, contentRootElement)
+function SendUpdateCanvasForEvent(forURL, event, contentRootElement)
 {
+    if (forURL != gCurrentURL) {
+        LogInfo("SendUpdateCanvasForEvent called for previous document");
+        // This is a test we are already done with that is clearing out.
+        // Don't do anything.
+        return;
+    }
+
     var win = content;
     var scale = markupDocumentViewer().fullZoom;
 
