@@ -23,7 +23,8 @@ class PerftestResultsHandler(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, gecko_profile=False, power_test=False,
-                 cpu_test=False, memory_test=False, app=None, **kwargs):
+                 cpu_test=False, memory_test=False, app=None, with_conditioned_profile=False,
+                 **kwargs):
         self.gecko_profile = gecko_profile
         self.power_test = power_test
         self.cpu_test = cpu_test
@@ -35,6 +36,7 @@ class PerftestResultsHandler(object):
         self.supporting_data = None
         self.browser_version = None
         self.browser_name = None
+        self.with_conditioned_profile = with_conditioned_profile
 
     @abstractmethod
     def add(self, new_result_json):
@@ -173,6 +175,8 @@ class RaptorResultsHandler(PerftestResultsHandler):
         # add to results
         LOG.info("received results in RaptorResultsHandler.add")
         new_result = RaptorTestResult(new_result_json)
+        if self.with_conditioned_profile:
+            new_result.extra_options.append('condprof')
         self.results.append(new_result)
 
     def summarize_and_output(self, test_config, tests, test_names):

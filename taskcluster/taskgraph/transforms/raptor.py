@@ -40,6 +40,10 @@ raptor_description_schema = Schema({
         'test-platform', 'app',
         Any('cold', 'warm', 'both'),
     ),
+    Optional('condprof'): optionally_keyed_by(
+        'app',
+        bool,
+    ),
     # Configs defined in the 'test_description_schema'.
     Optional('max-run-time'): optionally_keyed_by(
         'app',
@@ -121,6 +125,7 @@ def split_apps(config, tests):
 @transforms.add
 def handle_keyed_by_app(config, tests):
     fields = [
+        'condprof',
         'variants',
         'limit-platforms',
         'activity',
@@ -161,6 +166,31 @@ def split_pageload(config, tests):
         symbol += '-c'
         test['treeherder-symbol'] = join_symbol(group, symbol)
         yield test
+
+
+@transforms.add
+def build_condprof_tests(config, tests):
+    for test in tests:
+        if not test.pop('condprof', False):
+            yield test
+            continue
+
+        # Make condprof test
+        condprof_test = deepcopy(test)
+        yield test
+
+        extra_options = condprof_test.setdefault('mozharness', {}).setdefault('extra-options', [])
+        extra_options.append('--with-conditioned-profile')
+
+        group, symbol = split_symbol(condprof_test['treeherder-symbol'])
+        symbol += '-condprof'
+
+        condprof_test['description'] += " with condprof"
+        condprof_test['try-name'] += '-condprof'
+        condprof_test['test-name'] += '-condprof'
+        condprof_test['treeherder-symbol'] = join_symbol(group, symbol)
+
+        yield condprof_test
 
 
 @transforms.add
