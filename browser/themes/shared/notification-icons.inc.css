@@ -306,12 +306,14 @@ html|*#webRTC-previewVideo {
 
 #plugin-icon-badge {
   list-style-image: url(chrome://browser/skin/notification-icons/plugin-badge.svg);
+  width: 16px;
+  height: 16px;
   opacity: 0;
   transition: opacity 1.5s;
 }
 
-#plugins-notification-icon[extraAttr="inactive"] > .plugin-icon {
-  fill: #bfbfbf;
+#plugins-notification-icon:not(.plugin-blocked)[extraAttr="inactive"] > .plugin-icon {
+  fill-opacity: 0.25;
 }
 
 #plugins-notification-icon[extraAttr="inactive"] > #plugin-icon-badge {
