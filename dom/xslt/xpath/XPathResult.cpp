@@ -205,22 +205,11 @@ nsresult XPathResult::SetExprResult(txAExprResult* aExprResult,
 
 void XPathResult::Invalidate(const nsIContent* aChangeRoot) {
   nsCOMPtr<nsINode> contextNode = do_QueryReferent(mContextNode);
-  if (contextNode && aChangeRoot && aChangeRoot->GetBindingParent()) {
-    // If context node is in anonymous content, changes to
-    // non-anonymous content need to invalidate the XPathResult. If
-    // the changes are happening in a different anonymous trees, no
-    // invalidation should happen.
-    nsIContent* ctxBindingParent = nullptr;
-    if (contextNode->IsContent()) {
-      ctxBindingParent = contextNode->AsContent()->GetBindingParent();
-    } else if (auto* attr = Attr::FromNode(contextNode)) {
-      if (Element* parent = attr->GetElement()) {
-        ctxBindingParent = parent->GetBindingParent();
-      }
-    }
-    if (ctxBindingParent != aChangeRoot->GetBindingParent()) {
-      return;
-    }
+  // If the changes are happening in a different anonymous trees, no
+  // invalidation should happen.
+  if (contextNode && aChangeRoot &&
+      !nsContentUtils::IsInSameAnonymousTree(contextNode, aChangeRoot)) {
+    return;
   }
 
   mInvalidIteratorState = true;
