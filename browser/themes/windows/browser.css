@@ -252,11 +252,11 @@
 
 /* ::::: titlebar ::::: */
 
-#main-window[tabsintitlebar][sizemode="normal"] #navigator-toolbox > #titlebar {
+:root[tabsintitlebar][sizemode="normal"] #titlebar {
   -moz-appearance: -moz-window-titlebar;
 }
 
-#main-window[tabsintitlebar][sizemode="maximized"] #navigator-toolbox > #titlebar {
+:root[tabsintitlebar][sizemode="maximized"] #titlebar {
   -moz-appearance: -moz-window-titlebar-maximized;
 }
 
@@ -278,7 +278,7 @@
 }
 
 @media (-moz-windows-classic) {
-  #main-window[tabsintitlebar][sizemode="normal"] #navigator-toolbox > #titlebar > #toolbar-menubar {
+  :root[tabsintitlebar][sizemode="normal"] #toolbar-menubar {
     margin-top: 4px;
   }
 }
