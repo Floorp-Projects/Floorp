@@ -24,7 +24,7 @@ LegacySHistory::LegacySHistory(SHistoryParent* aSHistoryParent,
   aRootBC->SetSessionHistory(this);
 }
 
-static void FillInLoadResult(PContentParent* aManager, nsresult aRv,
+static void FillInLoadResult(nsresult aRv,
                              const nsSHistory::LoadEntryResult& aLoadResult,
                              LoadSHEntryResult* aResult) {
   if (NS_SUCCEEDED(aRv)) {
@@ -111,7 +111,7 @@ bool SHistoryParent::RecvGotoIndex(int32_t aIndex,
                                    LoadSHEntryResult* aLoadResult) {
   nsSHistory::LoadEntryResult loadResult;
   nsresult rv = mHistory->GotoIndex(aIndex, loadResult);
-  FillInLoadResult(Manager(), rv, loadResult, aLoadResult);
+  FillInLoadResult(rv, loadResult, aLoadResult);
   return true;
 }
 
@@ -193,9 +193,13 @@ bool SHistoryParent::RecvRemoveFrameEntries(PSHEntryParent* aEntry) {
 
 bool SHistoryParent::RecvReload(const uint32_t& aReloadFlags,
                                 LoadSHEntryResult* aLoadResult) {
-  nsSHistory::LoadEntryResult loadResult;
+  Maybe<nsSHistory::LoadEntryResult> loadResult;
   nsresult rv = mHistory->Reload(aReloadFlags, loadResult);
-  FillInLoadResult(Manager(), rv, loadResult, aLoadResult);
+  if (NS_SUCCEEDED(rv) && !loadResult) {
+    *aLoadResult = NS_OK;
+  } else {
+    FillInLoadResult(rv, loadResult.ref(), aLoadResult);
+  }
   return true;
 }
 
