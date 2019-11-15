@@ -536,20 +536,6 @@ void nsINode::LastRelease() {
   FragmentOrElement::RemoveBlackMarkedNode(this);
 }
 
-#ifdef DEBUG
-void nsINode::CheckNotNativeAnonymous() const {
-  if (!IsContent()) return;
-  nsIContent* content =
-      static_cast<const nsIContent*>(this)->GetBindingParent();
-  while (content) {
-    if (content->IsRootOfNativeAnonymousSubtree()) {
-      NS_ERROR("Element not marked to be in native anonymous subtree!");
-      break;
-    }
-    content = content->GetBindingParent();
-  }
-}
-#endif
 
 std::ostream& operator<<(std::ostream& aStream, const nsINode& aNode) {
   nsAutoString elemDesc;
