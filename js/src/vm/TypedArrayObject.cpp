@@ -2301,22 +2301,21 @@ struct CompareStringInfinityOrNaN;
 template <>
 struct CompareStringInfinityOrNaN<Latin1Char> {
   using CharTraitT = char;
-  static constexpr char Infinity[] = "Infinity";
-  static constexpr char NaN[] = "NaN";
+  static const char Infinity[];
+  static const char NaN[];
 };
 
 template <>
 struct CompareStringInfinityOrNaN<char16_t> {
   using CharTraitT = char16_t;
-  static constexpr char16_t Infinity[] = u"Infinity";
-  static constexpr char16_t NaN[] = u"NaN";
+  static const char16_t Infinity[];
+  static const char16_t NaN[];
 };
 
-// These definitions can be removed when we compile with C++17.
-constexpr char CompareStringInfinityOrNaN<Latin1Char>::Infinity[];
-constexpr char CompareStringInfinityOrNaN<Latin1Char>::NaN[];
-constexpr char16_t CompareStringInfinityOrNaN<char16_t>::Infinity[];
-constexpr char16_t CompareStringInfinityOrNaN<char16_t>::NaN[];
+const char CompareStringInfinityOrNaN<Latin1Char>::Infinity[] = "Infinity";
+const char CompareStringInfinityOrNaN<Latin1Char>::NaN[] = "NaN";
+const char16_t CompareStringInfinityOrNaN<char16_t>::Infinity[] = u"Infinity";
+const char16_t CompareStringInfinityOrNaN<char16_t>::NaN[] = u"NaN";
 
 template <typename CharT>
 static inline bool StringIsInfinity(mozilla::Range<const CharT> s) {
