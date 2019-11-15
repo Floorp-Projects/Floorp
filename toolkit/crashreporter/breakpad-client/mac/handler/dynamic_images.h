@@ -114,7 +114,8 @@ class DynamicImage {
                string file_path,
                uintptr_t image_mod_date,
                mach_port_t task,
-               cpu_type_t cpu_type)
+               cpu_type_t cpu_type,
+               cpu_subtype_t cpu_subtype)
     : header_(header, header + header_size),
       header_size_(header_size),
       load_address_(load_address),
@@ -125,7 +126,8 @@ class DynamicImage {
       file_path_(file_path),
       file_mod_date_(image_mod_date),
       task_(task),
-      cpu_type_(cpu_type) {
+      cpu_type_(cpu_type),
+      cpu_subtype_ (cpu_subtype) {
     CalculateMemoryAndVersionInfo();
   }
 
@@ -152,8 +154,11 @@ class DynamicImage {
   // Task owning this loaded image
   mach_port_t GetTask() {return task_;}
 
-  // CPU type of the task
+  // CPU type of the task and the image
   cpu_type_t GetCPUType() {return cpu_type_;}
+
+  // CPU subtype of the image
+  cpu_type_t GetCPUSubtype() {return cpu_subtype_;}
 
   // filetype from the Mach-O header.
   uint32_t GetFileType();
@@ -194,7 +199,8 @@ class DynamicImage {
   uintptr_t               file_mod_date_;  // time_t of image file
 
   mach_port_t             task_;
-  cpu_type_t              cpu_type_;        // CPU type of task_
+  cpu_type_t              cpu_type_;        // CPU type of task_ and image
+  cpu_subtype_t           cpu_subtype_;     // CPU subtype of image
 };
 
 //==============================================================================

@@ -142,7 +142,7 @@ class MinidumpGenerator {
                   MDMemoryDescriptor *stack_location);
   bool WriteContext(breakpad_thread_state_data_t state,
                     MDLocationDescriptor *register_location);
-  bool WriteCVRecord(MDRawModule *module, int cpu_type,
+  bool WriteCVRecord(MDRawModule *module, int cpu_type, int cpu_subtype,
                      const char *module_path, bool in_memory);
   bool WriteModuleStream(unsigned int index, MDRawModule *module);
   size_t CalculateStackSize(mach_vm_address_t start_addr);
