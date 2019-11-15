@@ -1319,7 +1319,7 @@ var gPrivacyPane = {
    */
   showClearPrivateDataSettings() {
     gSubDialog.open(
-      "chrome://browser/content/preferences/sanitize.xul",
+      "chrome://browser/content/preferences/sanitize.xhtml",
       "resizable=no"
     );
   },
@@ -1445,7 +1445,7 @@ var gPrivacyPane = {
       hideStatusColumn: true,
     };
     gSubDialog.open(
-      "chrome://browser/content/preferences/permissions.xul",
+      "chrome://browser/content/preferences/permissions.xhtml",
       null,
       params
     );
@@ -1456,7 +1456,7 @@ var gPrivacyPane = {
    */
   showBlockLists() {
     gSubDialog.open(
-      "chrome://browser/content/preferences/blocklists.xul",
+      "chrome://browser/content/preferences/blocklists.xhtml",
       null
     );
   },
@@ -1616,7 +1616,7 @@ var gPrivacyPane = {
       permissionType: "cookie",
     };
     gSubDialog.open(
-      "chrome://browser/content/preferences/permissions.xul",
+      "chrome://browser/content/preferences/permissions.xhtml",
       null,
       params
     );
@@ -1624,7 +1624,7 @@ var gPrivacyPane = {
 
   showSiteDataSettings() {
     gSubDialog.open(
-      "chrome://browser/content/preferences/siteDataSettings.xul"
+      "chrome://browser/content/preferences/siteDataSettings.xhtml"
     );
   },
 
@@ -1660,7 +1660,7 @@ var gPrivacyPane = {
   },
 
   clearSiteData() {
-    gSubDialog.open("chrome://browser/content/preferences/clearSiteData.xul");
+    gSubDialog.open("chrome://browser/content/preferences/clearSiteData.xhtml");
   },
 
   // GEOLOCATION
@@ -1673,7 +1673,7 @@ var gPrivacyPane = {
     let params = { permissionType: "geo" };
 
     gSubDialog.open(
-      "chrome://browser/content/preferences/sitePermissions.xul",
+      "chrome://browser/content/preferences/sitePermissions.xhtml",
       "resizable=yes",
       params
     );
@@ -1689,7 +1689,7 @@ var gPrivacyPane = {
     let params = { permissionType: "camera" };
 
     gSubDialog.open(
-      "chrome://browser/content/preferences/sitePermissions.xul",
+      "chrome://browser/content/preferences/sitePermissions.xhtml",
       "resizable=yes",
       params
     );
@@ -1705,7 +1705,7 @@ var gPrivacyPane = {
     let params = { permissionType: "microphone" };
 
     gSubDialog.open(
-      "chrome://browser/content/preferences/sitePermissions.xul",
+      "chrome://browser/content/preferences/sitePermissions.xhtml",
       "resizable=yes",
       params
     );
@@ -1721,7 +1721,7 @@ var gPrivacyPane = {
     let params = { permissionType: "desktop-notification" };
 
     gSubDialog.open(
-      "chrome://browser/content/preferences/sitePermissions.xul",
+      "chrome://browser/content/preferences/sitePermissions.xhtml",
       "resizable=yes",
       params
     );
@@ -1733,7 +1733,7 @@ var gPrivacyPane = {
     var params = { permissionType: "autoplay-media" };
 
     gSubDialog.open(
-      "chrome://browser/content/preferences/sitePermissions.xul",
+      "chrome://browser/content/preferences/sitePermissions.xhtml",
       "resizable=yes",
       params
     );
@@ -1755,7 +1755,7 @@ var gPrivacyPane = {
     };
 
     gSubDialog.open(
-      "chrome://browser/content/preferences/permissions.xul",
+      "chrome://browser/content/preferences/permissions.xhtml",
       "resizable=yes",
       params
     );
@@ -1800,7 +1800,7 @@ var gPrivacyPane = {
     };
 
     gSubDialog.open(
-      "chrome://browser/content/preferences/permissions.xul",
+      "chrome://browser/content/preferences/permissions.xhtml",
       null,
       params
     );
@@ -1864,7 +1864,7 @@ var gPrivacyPane = {
       this._initMasterPasswordUI();
     } else {
       gSubDialog.open(
-        "chrome://mozapps/content/preferences/removemp.xul",
+        "chrome://mozapps/content/preferences/removemp.xhtml",
         null,
         null,
         this._initMasterPasswordUI.bind(this)
@@ -1877,7 +1877,7 @@ var gPrivacyPane = {
    */
   changeMasterPassword() {
     gSubDialog.open(
-      "chrome://mozapps/content/preferences/changemp.xul",
+      "chrome://mozapps/content/preferences/changemp.xhtml",
       "resizable=no",
       null,
       this._initMasterPasswordUI.bind(this)
@@ -2081,7 +2081,7 @@ var gPrivacyPane = {
     var params = this._addonParams;
 
     gSubDialog.open(
-      "chrome://browser/content/preferences/permissions.xul",
+      "chrome://browser/content/preferences/permissions.xhtml",
       null,
       params
     );

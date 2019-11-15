@@ -506,7 +506,7 @@ async function runTest(test, getObservances) {
   historyMode.doCommand();
 
   let promiseSubDialogLoaded = promiseLoadSubDialog(
-    "chrome://browser/content/preferences/permissions.xul"
+    "chrome://browser/content/preferences/permissions.xhtml"
   );
   doc.getElementById("cookieExceptions").doCommand();
 

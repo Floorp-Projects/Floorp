@@ -100,7 +100,7 @@ add_task(async function() {
   );
 
   let promiseSubDialogLoaded = promiseLoadSubDialog(
-    "chrome://browser/content/preferences/fonts.xul"
+    "chrome://browser/content/preferences/fonts.xhtml"
   );
   doc.getElementById("advancedFonts").click();
   let win = await promiseSubDialogLoaded;

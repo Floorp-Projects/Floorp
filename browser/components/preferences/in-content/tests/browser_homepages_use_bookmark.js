@@ -36,7 +36,7 @@ add_task(async function testSetHomepageFromBookmark() {
   doc.getElementById("homeMode").value = 2;
 
   let promiseSubDialogLoaded = promiseLoadSubDialog(
-    "chrome://browser/content/preferences/selectBookmark.xul"
+    "chrome://browser/content/preferences/selectBookmark.xhtml"
   );
   doc.getElementById("useBookmarkBtn").click();
 
@@ -66,7 +66,7 @@ add_task(async function testSetHomepageFromTopLevelFolder() {
   doc.getElementById("homeMode").value = 2;
 
   let promiseSubDialogLoaded = promiseLoadSubDialog(
-    "chrome://browser/content/preferences/selectBookmark.xul"
+    "chrome://browser/content/preferences/selectBookmark.xhtml"
   );
   doc.getElementById("useBookmarkBtn").click();
 

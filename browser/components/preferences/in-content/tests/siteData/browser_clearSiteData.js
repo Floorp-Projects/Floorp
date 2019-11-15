@@ -64,7 +64,7 @@ async function testClearData(clearSiteData, clearCache) {
   let clearSiteDataButton = doc.getElementById("clearSiteDataButton");
 
   let dialogOpened = promiseLoadSubDialog(
-    "chrome://browser/content/preferences/clearSiteData.xul"
+    "chrome://browser/content/preferences/clearSiteData.xhtml"
   );
   clearSiteDataButton.doCommand();
   let dialogWin = await dialogOpened;

@@ -90,7 +90,7 @@ add_task(async function() {
 
   // Now try to 'manage' this list:
   dialogLoadedPromise = promiseLoadSubDialog(
-    "chrome://browser/content/preferences/applicationManager.xul"
+    "chrome://browser/content/preferences/applicationManager.xhtml"
   );
 
   let manageItem = list.menupopup.querySelector(".manage-app-item");

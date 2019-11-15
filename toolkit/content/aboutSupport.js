@@ -1498,7 +1498,7 @@ function setupEventListeners() {
     if (button) {
       button.addEventListener("click", function(event) {
         window.docShell.rootTreeItem.domWindow.openDialog(
-          "chrome://mozapps/content/update/history.xul",
+          "chrome://mozapps/content/update/history.xhtml",
           "Update:History",
           "centerscreen,resizable=no,titlebar,modal"
         );

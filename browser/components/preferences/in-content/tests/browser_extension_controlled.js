@@ -23,7 +23,7 @@ AddonTestUtils.initMochitest(this);
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 const CHROME_URL_ROOT = TEST_DIR + "/";
 const PERMISSIONS_URL =
-  "chrome://browser/content/preferences/sitePermissions.xul";
+  "chrome://browser/content/preferences/sitePermissions.xhtml";
 let sitePermissionsDialog;
 
 function getSupportsFile(path) {
@@ -970,7 +970,7 @@ add_task(async function testExtensionControlledProxyConfig() {
   const CONTROLLED_SECTION_ID = "proxyExtensionContent";
   const CONTROLLED_BUTTON_ID = "disableProxyExtension";
   const CONNECTION_SETTINGS_DESC_ID = "connectionSettingsDescription";
-  const PANEL_URL = "chrome://browser/content/preferences/connection.xul";
+  const PANEL_URL = "chrome://browser/content/preferences/connection.xhtml";
 
   await SpecialPowers.pushPrefEnv({ set: [[PROXY_PREF, PROXY_DEFAULT]] });
 

@@ -5,7 +5,7 @@ add_task(async function() {
 
   async function languagesSubdialogOpened() {
     const promiseSubDialogLoaded = promiseLoadSubDialog(
-      "chrome://browser/content/preferences/languages.xul"
+      "chrome://browser/content/preferences/languages.xhtml"
     );
     contentDocument.getElementById("chooseLanguage").click();
     const win = await promiseSubDialogLoaded;

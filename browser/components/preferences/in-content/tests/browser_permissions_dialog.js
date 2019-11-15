@@ -11,7 +11,7 @@ var { SitePermissions } = ChromeUtils.import(
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const PERMISSIONS_URL =
-  "chrome://browser/content/preferences/sitePermissions.xul";
+  "chrome://browser/content/preferences/sitePermissions.xhtml";
 const URL = "http://www.example.com";
 const URI = Services.io.newURI(URL);
 var sitePermissionsDialog;
