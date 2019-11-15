@@ -115,6 +115,18 @@ void JitcodeGlobalEntry::IonEntry::youngestFrameLocationAtAddr(
   *pc = (*script)->offsetToPC(pcOffset);
 }
 
+uint64_t JitcodeGlobalEntry::IonEntry::lookupRealmID(void* ptr) const {
+  uint32_t ptrOffset;
+  JitcodeRegionEntry region = RegionAtAddr(*this, ptr, &ptrOffset);
+  JitcodeRegionEntry::ScriptPcIterator locationIter = region.scriptPcIterator();
+  MOZ_ASSERT(locationIter.hasMore());
+  uint32_t scriptIdx, pcOffset;
+  locationIter.readNext(&scriptIdx, &pcOffset);
+
+  JSScript* script = getScript(scriptIdx);
+  return script->realm()->creationOptions().profilerRealmID();
+}
+
 void JitcodeGlobalEntry::IonEntry::destroy() {
   // The region table is stored at the tail of the compacted data,
   // which means the start of the region table is a pointer to
@@ -190,6 +202,10 @@ void JitcodeGlobalEntry::BaselineEntry::youngestFrameLocationAtAddr(
   *pc = script_->baselineScript()->approximatePcForNativeAddress(script_, addr);
 }
 
+uint64_t JitcodeGlobalEntry::BaselineEntry::lookupRealmID() const {
+  return script_->realm()->creationOptions().profilerRealmID();
+}
+
 void JitcodeGlobalEntry::BaselineEntry::destroy() {
   if (!str_) {
     return;
@@ -215,6 +231,10 @@ uint32_t JitcodeGlobalEntry::BaselineInterpreterEntry::callStackAtAddr(
 
 void JitcodeGlobalEntry::BaselineInterpreterEntry::youngestFrameLocationAtAddr(
     void* ptr, JSScript** script, jsbytecode** pc) const {
+  MOZ_CRASH("shouldn't be called for BaselineInterpreter entries");
+}
+
+uint64_t JitcodeGlobalEntry::BaselineInterpreterEntry::lookupRealmID() const {
   MOZ_CRASH("shouldn't be called for BaselineInterpreter entries");
 }
 
@@ -251,6 +271,12 @@ void JitcodeGlobalEntry::IonCacheEntry::youngestFrameLocationAtAddr(
     JSRuntime* rt, void* ptr, JSScript** script, jsbytecode** pc) const {
   const JitcodeGlobalEntry& entry = RejoinEntry(rt, *this, ptr);
   return entry.youngestFrameLocationAtAddr(rt, rejoinAddr(), script, pc);
+}
+
+uint64_t JitcodeGlobalEntry::IonCacheEntry::lookupRealmID(JSRuntime* rt,
+                                                          void* ptr) const {
+  const JitcodeGlobalEntry& entry = RejoinEntry(rt, *this, ptr);
+  return entry.lookupRealmID(rt, ptr);
 }
 
 static int ComparePointers(const void* a, const void* b) {
@@ -1548,6 +1574,10 @@ JS::ProfiledFrameHandle::frameKind() const {
     return JS::ProfilingFrameIterator::Frame_Baseline;
   }
   return JS::ProfilingFrameIterator::Frame_Ion;
+}
+
+JS_PUBLIC_API uint64_t JS::ProfiledFrameHandle::realmID() const {
+  return entry_.lookupRealmID(rt_, addr_);
 }
 
 JS_PUBLIC_API JS::ProfiledFrameRange JS::GetProfiledFrames(JSContext* cx,

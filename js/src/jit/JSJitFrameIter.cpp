@@ -644,7 +644,7 @@ const char* JSJitProfilingFrameIterator::baselineInterpreterLabel() const {
 }
 
 void JSJitProfilingFrameIterator::baselineInterpreterScriptPC(
-    JSScript** script, jsbytecode** pc) const {
+    JSScript** script, jsbytecode** pc, uint64_t* realmID) const {
   MOZ_ASSERT(type_ == FrameType::BaselineJS);
   BaselineFrame* blFrame =
       (BaselineFrame*)(fp_ - BaselineFrame::FramePointerOffset -
@@ -658,6 +658,8 @@ void JSJitProfilingFrameIterator::baselineInterpreterScriptPC(
     if ((*script)->containsPC(interpPC)) {
       *pc = interpPC;
     }
+
+    *realmID = (*script)->realm()->creationOptions().profilerRealmID();
   }
 }
 

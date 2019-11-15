@@ -34,6 +34,7 @@ namespace baseprofiler {
   MACRO(FrameFlags, uint64_t, sizeof(uint64_t))                      \
   MACRO(DynamicStringFragment, char*, ProfileBufferEntry::kNumChars) \
   MACRO(JitReturnAddr, void*, sizeof(void*))                         \
+  MACRO(InnerWindowID, uint64_t, sizeof(uint64_t))                   \
   MACRO(LineNumber, int, sizeof(int))                                \
   MACRO(ColumnNumber, int, sizeof(int))                              \
   MACRO(NativeLeafAddr, void*, sizeof(void*))                        \
@@ -163,14 +164,15 @@ class UniqueStacks {
  public:
   struct FrameKey {
     explicit FrameKey(const char* aLocation)
-        : mData(NormalFrameData{std::string(aLocation), false, Nothing(),
+        : mData(NormalFrameData{std::string(aLocation), false, 0, Nothing(),
                                 Nothing()}) {}
 
     FrameKey(std::string&& aLocation, bool aRelevantForJS,
-             const Maybe<unsigned>& aLine, const Maybe<unsigned>& aColumn,
+             uint64_t aInnerWindowID, const Maybe<unsigned>& aLine,
+             const Maybe<unsigned>& aColumn,
              const Maybe<ProfilingCategoryPair>& aCategoryPair)
-        : mData(NormalFrameData{aLocation, aRelevantForJS, aLine, aColumn,
-                                aCategoryPair}) {}
+        : mData(NormalFrameData{aLocation, aRelevantForJS, aInnerWindowID,
+                                aLine, aColumn, aCategoryPair}) {}
 
     FrameKey(const FrameKey& aToCopy) = default;
 
@@ -184,6 +186,7 @@ class UniqueStacks {
 
       std::string mLocation;
       bool mRelevantForJS;
+      uint64_t mInnerWindowID;
       Maybe<unsigned> mLine;
       Maybe<unsigned> mColumn;
       Maybe<ProfilingCategoryPair> mCategoryPair;
@@ -203,6 +206,7 @@ class UniqueStacks {
           hash = AddToHash(hash, HashString(data.mLocation.c_str()));
         }
         hash = AddToHash(hash, data.mRelevantForJS);
+        hash = mozilla::AddToHash(hash, data.mInnerWindowID);
         if (data.mLine.isSome()) {
           hash = AddToHash(hash, *data.mLine);
         }

@@ -123,6 +123,7 @@ class MOZ_NON_PARAM JS_PUBLIC_API ProfilingFrameIterator {
     void* endStackAddress;
     const char* label;
     JSScript* interpreterScript;
+    uint64_t realmID;
 
    public:
     void* returnAddress() const {
@@ -198,6 +199,8 @@ class MOZ_STACK_CLASS ProfiledFrameHandle {
 
   JS_PUBLIC_API void forEachOptimizationTypeInfo(
       ForEachTrackedOptimizationTypeInfoOp& op) const;
+
+  JS_PUBLIC_API uint64_t realmID() const;
 };
 
 class ProfiledFrameRange {

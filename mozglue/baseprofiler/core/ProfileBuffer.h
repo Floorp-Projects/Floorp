@@ -50,7 +50,7 @@ class ProfileBuffer final {
   uint64_t AddThreadIdEntry(int aThreadId);
 
   void CollectCodeLocation(const char* aLabel, const char* aStr,
-                           uint32_t aFrameFlags,
+                           uint32_t aFrameFlags, uint64_t aInnerWindowID,
                            const Maybe<uint32_t>& aLineNumber,
                            const Maybe<uint32_t>& aColumnNumber,
                            const Maybe<ProfilingCategoryPair>& aCategoryPair);

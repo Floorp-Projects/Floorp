@@ -1491,7 +1491,7 @@ static void MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
         JSScript* script = jsFrame.interpreterScript;
         jsbytecode* pc = jsFrame.interpreterPC();
         js::ProfilingStackFrame stackFrame;
-        stackFrame.initJsFrame("", jsFrame.label, script, pc);
+        stackFrame.initJsFrame("", jsFrame.label, script, pc, jsFrame.realmID);
         aCollector.CollectProfilingStackFrame(stackFrame);
       } else {
         MOZ_ASSERT(jsFrame.kind == JS::ProfilingFrameIterator::Frame_Ion ||
@@ -2253,7 +2253,7 @@ static UniquePtr<ProfileBuffer> CollectJavaThreadProfileData(
         parentFrameWasIdleFrame = false;
       }
 
-      buffer->CollectCodeLocation("", frameNameString.get(), 0, Nothing(),
+      buffer->CollectCodeLocation("", frameNameString.get(), 0, 0, Nothing(),
                                   Nothing(), categoryPair);
     }
     sampleId++;
