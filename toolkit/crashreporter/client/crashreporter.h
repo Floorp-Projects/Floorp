@@ -19,7 +19,7 @@
 #include <iostream>
 #include <fstream>
 
-#define MAX_COMMENT_LENGTH 500
+#define MAX_COMMENT_LENGTH 10000
 
 #if defined(XP_WIN)
 
