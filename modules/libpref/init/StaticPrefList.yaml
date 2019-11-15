@@ -2769,7 +2769,7 @@
 # This pref governs whether we run webextensions in a separate process (true)
 # or the parent/main process (false)
 - name: extensions.webextensions.remote
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 

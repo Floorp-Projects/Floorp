@@ -16,6 +16,7 @@
 #endif
 
 #include "mozilla/dom/Document.h"
+#include "mozilla/StaticPrefs_extensions.h"
 
 /*
  * Performs a Regular Expression match, optionally returning the results.
@@ -307,13 +308,17 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
   static NS_NAMED_LITERAL_STRING(sAllowedEval2,
                                  "function anonymous(\n) {\nreturn this\n}");
 
+  if (MOZ_LIKELY(!aIsSystemPrincipal && !XRE_IsE10sParentProcess())) {
+    // We restrict eval in the system principal and parent process.
+    // Other uses (like web content and null principal) are allowed.
+    return true;
+  }
+
   if (aIsSystemPrincipal &&
       StaticPrefs::security_allow_eval_with_system_principal()) {
-    MOZ_LOG(
-        sCSMLog, LogLevel::Debug,
-        ("Allowing eval() %s because allowing pref is "
-         "enabled",
-         (aIsSystemPrincipal ? "with System Principal" : "in parent process")));
+    MOZ_LOG(sCSMLog, LogLevel::Debug,
+            ("Allowing eval() with System Principal because allowing pref is "
+             "enabled"));
     return true;
   }
 
@@ -325,13 +330,8 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
     return true;
   }
 
-  if (!aIsSystemPrincipal && !XRE_IsE10sParentProcess()) {
-    // Usage of eval we are unconcerned with.
-    return true;
-  }
-
-  // We only perform checks of these two preferences on the Main Thread
-  // (because a String-based preference checks is only safe on Main Thread.)
+  // We only perform a check of this preference on the Main Thread
+  // (because a String-based preference check is only safe on Main Thread.)
   // The consequence of this is that if a user is using userChromeJS _and_
   // the scripts they use start a worker and that worker uses eval - we will
   // enter this function, skip over these pref checks that would normally cause
@@ -370,6 +370,14 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
                                    : "in parent process")));
       return true;
     }
+  }
+
+  if (XRE_IsE10sParentProcess() &&
+      !StaticPrefs::extensions_webextensions_remote()) {
+    MOZ_LOG(sCSMLog, LogLevel::Debug,
+            ("Allowing eval() in parent process because the web extension "
+             "process is disabled"));
+    return true;
   }
 
   // We permit these two common idioms to get access to the global JS object
