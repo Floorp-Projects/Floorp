@@ -56,7 +56,7 @@
   REAL(Boolean, InitViaClassSpec, OCLASP(Boolean))                           \
   REAL(JSON, InitViaClassSpec, CLASP(JSON))                                  \
   REAL(Date, InitViaClassSpec, OCLASP(Date))                                 \
-  REAL(Math, InitMathClass, CLASP(Math))                                     \
+  REAL(Math, InitViaClassSpec, CLASP(Math))                                  \
   REAL(Number, InitViaClassSpec, OCLASP(Number))                             \
   REAL(String, InitViaClassSpec, OCLASP(String))                             \
   REAL(RegExp, InitViaClassSpec, OCLASP(RegExp))                             \
