@@ -871,6 +871,12 @@ public class GeckoView extends FrameLayout {
                 case Autofill.Notify.NODE_BLURRED:
                     manager.notifyViewExited(GeckoView.this, node.getId());
                     break;
+                case Autofill.Notify.NODE_UPDATED:
+                    manager.notifyValueChanged(
+                            GeckoView.this,
+                            node.getId(),
+                            AutofillValue.forText(node.getValue()));
+                    break;
             }
         }
     }
