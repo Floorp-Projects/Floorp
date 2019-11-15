@@ -20,6 +20,15 @@ class GeckoViewAutofillChild extends GeckoViewChildModule {
   onInit() {
     debug`onInit`;
 
+    // Listen to Gecko's autofill commit events.
+    content.windowRoot.addEventListener(
+      "PasswordManager:onFormSubmit",
+      aEvent => {
+        const formLike = aEvent.detail.form;
+        this._autofill.commitAutofill(formLike);
+      }
+    );
+
     const options = {
       mozSystemGroup: true,
       capture: false,
