@@ -44,7 +44,7 @@ audio_thread_priority = "0.20.2"
 mdns_service = { path="../../../../media/mtransport/mdns_service", optional = true }
 neqo_glue = { path = "../../../../netwerk/socket/neqo_glue" }
 rlbox_lucet_sandbox = { version = "0.1.0", optional = true }
-wgpu-remote = { path = "../../../../dom/webgpu/wgpu-remote", optional = true }
+wgpu-remote = { path = "../../../../gfx/wgpu/wgpu-remote", optional = true }
 mapped_hyph = { git = "https://github.com/jfkthame/mapped_hyph.git", tag = "v0.3.0" }
 
 [build-dependencies]

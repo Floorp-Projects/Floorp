@@ -99,6 +99,7 @@ gfx/qcms/.*
 gfx/sfntly/.*
 gfx/skia/.*
 gfx/vr/service/openvr/.*
+gfx/wgpu/.*
 gfx/wr/.*
 gfx/ycbcr/.*
 intl/hyphenation/hyphen/.*

@@ -23,7 +23,7 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     ffi_generated = GENERATED_FILES['wgpu_ffi_generated.h']
     ffi_generated.script = '/layout/style/RunCbindgen.py:generate'
     ffi_generated.inputs = [
-        '/dom/webgpu/wgpu-remote',
+        '/gfx/wgpu/wgpu-remote',
     ]
 
 

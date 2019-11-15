@@ -34,7 +34,7 @@ PR_REPOSITORIES = {
     },
     'webgpu': {
         'github': 'gfx-rs/wgpu',
-        'path': 'dom/webgpu',
+        'path': 'gfx/wgpu',
         'bugzilla_product': 'Core',
         'bugzilla_component': 'Graphics: WebGPU',
     },
