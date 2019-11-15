@@ -395,8 +395,6 @@ class nsIContent : public nsINode {
 
   /**
    * Gets the root of the node tree for this content if it is in a shadow tree.
-   * This method is called |GetContainingShadow| instead of |GetRootShadowRoot|
-   * to avoid confusion with |GetShadowRoot|.
    *
    * @return The ShadowRoot that is the root of the node tree.
    */
@@ -404,14 +402,6 @@ class nsIContent : public nsINode {
     const nsExtendedContentSlots* slots = GetExistingExtendedContentSlots();
     return slots ? slots->mContainingShadow.get() : nullptr;
   }
-
-  /**
-   * Gets the shadow host if this content is in a shadow tree. That is, the host
-   * of |GetContainingShadow|, if its not null.
-   *
-   * @return The shadow host, if this is in shadow tree, or null.
-   */
-  nsIContent* GetContainingShadowHost() const;
 
   /**
    * Gets the assigned slot associated with this content.

@@ -580,9 +580,23 @@ std::ostream& operator<<(std::ostream& aStream, const nsINode& aNode) {
   return aStream << str.get();
 }
 
+ShadowRoot* nsINode::GetContainingShadow() const {
+  if (!IsInShadowTree()) {
+    return nullptr;
+  }
+  return AsContent()->GetContainingShadow();
+}
+
+nsIContent* nsINode::GetContainingShadowHost() const {
+  if (ShadowRoot* shadow = GetContainingShadow()) {
+    return shadow->GetHost();
+  }
+  return nullptr;
+}
+
 SVGUseElement* nsINode::DoGetContainingSVGUseShadowHost() const {
   MOZ_ASSERT(IsInShadowTree());
-  return SVGUseElement::FromNodeOrNull(AsContent()->GetContainingShadowHost());
+  return SVGUseElement::FromNodeOrNull(GetContainingShadowHost());
 }
 
 void nsINode::GetNodeValueInternal(nsAString& aNodeValue) {
