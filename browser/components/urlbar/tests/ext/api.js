@@ -121,6 +121,30 @@ this.experiments_urlbar = class extends ExtensionAPI {
             let age = await ProfileAge();
             return (await age.firstUse) || age.created;
           },
+
+          restartBrowser() {
+            // Notify all windows that an application quit has been requested.
+            let cancelQuit = Cc[
+              "@mozilla.org/supports-PRBool;1"
+            ].createInstance(Ci.nsISupportsPRBool);
+            Services.obs.notifyObservers(
+              cancelQuit,
+              "quit-application-requested",
+              "restart"
+            );
+            // Something aborted the quit process.
+            if (cancelQuit.data) {
+              return;
+            }
+            // If already in safe mode restart in safe mode.
+            if (Services.appinfo.inSafeMode) {
+              Services.startup.restartInSafeMode(Ci.nsIAppStartup.eAttemptQuit);
+            } else {
+              Services.startup.quit(
+                Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
+              );
+            }
+          },
         },
       },
     };
