@@ -673,10 +673,10 @@
         let isRTL = this.matches(":-moz-locale-dir(rtl)");
 
         if (position.indexOf("start_") == 0) {
-          container.dir = "reverse";
+          container.style.MozBoxDirection = "reverse";
           this.setAttribute("side", isRTL ? "left" : "right");
         } else {
-          container.dir = "";
+          container.style.removeProperty("-moz-box-direction");
           this.setAttribute("side", isRTL ? "right" : "left");
         }
       } else if (
@@ -693,10 +693,10 @@
         arrowbox.style.transform = "translate(" + -offset + "px, 0)";
 
         if (position.indexOf("before_") == 0) {
-          container.dir = "reverse";
+          container.style.MozBoxDirection = "reverse";
           this.setAttribute("side", "bottom");
         } else {
-          container.dir = "";
+          container.style.removeProperty("-moz-box-direction");
           this.setAttribute("side", "top");
         }
       }
