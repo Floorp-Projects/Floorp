@@ -1056,13 +1056,6 @@ bool FragmentOrElement::IsLink(nsIURI** aURI) const {
   return false;
 }
 
-nsIContent* nsIContent::GetContainingShadowHost() const {
-  if (mozilla::dom::ShadowRoot* shadow = GetContainingShadow()) {
-    return shadow->GetHost();
-  }
-  return nullptr;
-}
-
 void nsIContent::SetAssignedSlot(HTMLSlotElement* aSlot) {
   MOZ_ASSERT(aSlot || GetExistingExtendedContentSlots());
   ExtendedContentSlots()->mAssignedSlot = aSlot;

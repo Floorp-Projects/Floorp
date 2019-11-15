@@ -73,13 +73,7 @@ nsFind::~nsFind() = default;
 
 static nsIContent& AnonymousSubtreeRootParent(const nsINode& aNode) {
   MOZ_ASSERT(aNode.IsInNativeAnonymousSubtree());
-
-  nsIContent* current = aNode.GetParent();
-  while (current->IsInNativeAnonymousSubtree()) {
-    current = current->GetParent();
-    MOZ_ASSERT(current, "huh?");
-  }
-  return *current;
+  return *aNode.GetClosestNativeAnonymousSubtreeRootParent();
 }
 
 static void DumpNode(const nsINode* aNode) {
