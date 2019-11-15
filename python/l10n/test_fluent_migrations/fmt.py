@@ -1,8 +1,11 @@
 from __future__ import absolute_import, print_function
+import codecs
+from difflib import unified_diff
 import logging
 import os
 import re
 import shutil
+import sys
 
 import hglib
 from mozboot.util import get_state_dir
@@ -12,6 +15,7 @@ from compare_locales.merge import merge_channels
 from compare_locales.paths.files import ProjectFiles
 from compare_locales.paths.configparser import TOMLParser
 from fluent.migrate import validator
+from fluent.syntax import FluentParser, FluentSerializer
 
 
 def inspect_migration(path):
@@ -40,6 +44,20 @@ def prepare_object_dir(cmd):
             cwd=state_dir,
         )
     return obj_dir
+
+
+def diff_resources(left_path, right_path):
+    parser = FluentParser(with_spans=False)
+    serializer = FluentSerializer(with_junk=True)
+    lines = []
+    for p in (left_path, right_path):
+        with codecs.open(p, encoding='utf-8') as fh:
+            res = parser.parse(fh.read())
+            lines.append(serializer.serialize(res).splitlines(True))
+    sys.stdout.writelines(
+        chunk.encode('utf-8')
+        for chunk in unified_diff(lines[0], lines[1], left_path, right_path)
+    )
 
 
 def test_migration(cmd, obj_dir, to_test, references):
@@ -123,11 +141,10 @@ def test_migration(cmd, obj_dir, to_test, references):
         }, 'No migration applied for {file}')
         return rv
     for ref in references:
-        cmd.run_process([
-            'diff', '-u', '-B',
+        diff_resources(
             mozpath.join(work_dir, 'reference', ref),
             mozpath.join(work_dir, 'en-US', ref),
-        ], ensure_exit_code=False, line_handler=print)
+        )
     messages = [l.desc for l in client.log('::{} - ::{}'.format(tip, old_tip))]
     bug = re.search('[0-9]{5,}', migration_name).group()
     # Just check first message for bug number, they're all following the same pattern
