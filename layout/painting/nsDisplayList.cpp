@@ -236,12 +236,6 @@ static Scale GetScale(const StyleScale& aValue) {
       auto& scale = aValue.AsScale();
       result.x() = scale._0;
       result.y() = scale._1;
-      break;
-    }
-    case StyleScale::Tag::Scale3D: {
-      auto& scale = aValue.AsScale3D();
-      result.x() = scale._0;
-      result.y() = scale._1;
       result.z() = scale._2;
       break;
     }
@@ -272,11 +266,6 @@ static Translation GetTranslate(const StyleTranslate& aValue,
       break;
     case StyleTranslate::Tag::Translate: {
       auto& translate = aValue.AsTranslate();
-      result = GetTranslate(aRefBox, translate._0, translate._1);
-      break;
-    }
-    case StyleTranslate::Tag::Translate3D: {
-      auto& translate = aValue.AsTranslate3D();
       result = GetTranslate(aRefBox, translate._0, translate._1, translate._2);
       break;
     }

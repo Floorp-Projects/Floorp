@@ -425,12 +425,12 @@ already_AddRefed<RawServoAnimationValue> AnimationValue::FromAnimatable(
     }
     case layers::Animatable::TScale: {
       const layers::Scale& s = aAnimatable.get_Scale();
-      auto scale = StyleScale::Scale3D(s.x(), s.y(), s.z());
+      auto scale = StyleScale::Scale(s.x(), s.y(), s.z());
       return Servo_AnimationValue_Scale(&scale).Consume();
     }
     case layers::Animatable::TTranslation: {
       const layers::Translation& t = aAnimatable.get_Translation();
-      auto translate = StyleTranslate::Translate3D(
+      auto translate = StyleTranslate::Translate(
           LengthPercentage::FromPixels(t.x()),
           LengthPercentage::FromPixels(t.y()), Length{t.z()});
       return Servo_AnimationValue_Translate(&translate).Consume();
