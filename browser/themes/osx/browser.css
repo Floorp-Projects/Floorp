@@ -602,34 +602,6 @@
   position: static;
 }
 
-/**
- * Tab Drag and Drop
- */
-
-.tab-drop-indicator-box {
-  -moz-box-align: center;
-}
-
-.tab-drop-indicator {
-  list-style-image: url(chrome://browser/skin/tabbrowser/tabDragIndicator.png);
-  margin-top: -2px;
-  /* The z-index needs to be big enough to trump other positioned UI pieces
-     that we want to overlay. The expanded urlbar uses 3. */
-  z-index: 4;
-}
-
-@media (min-resolution: 2dppx) {
-  .tab-drop-indicator {
-    list-style-image: url(chrome://browser/skin/tabbrowser/tabDragIndicator@2x.png);
-    width: 12px;
-  }
-}
-
-/* Bookmarks toolbar */
-#PlacesToolbarDropIndicator {
-  list-style-image: url(chrome://browser/skin/places/toolbarDropMarker.png);
-}
-
 /* Bookmark drag and drop styles */
 
 .bookmark-item[dragover-into="true"] {

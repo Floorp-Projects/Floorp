@@ -112,6 +112,8 @@
   skin/classic/browser/panel-icon-magnifier.svg                (../shared/panel-icon-magnifier.svg)
 #endif
   skin/classic/browser/panel-icon-retry.svg                    (../shared/panel-icon-retry.svg)
+  skin/classic/browser/toolbar-drag-indicator.svg              (../shared/toolbar-drag-indicator.svg)
+
   skin/classic/browser/preferences/in-content/bookmark.svg     (../shared/incontentprefs/bookmark.svg)
   skin/classic/browser/preferences/in-content/critters-postcard.jpg       (../shared/incontentprefs/critters-postcard.jpg)
   skin/classic/browser/preferences/in-content/extensions.svg   (../shared/incontentprefs/extensions.svg)
@@ -241,6 +243,7 @@
 
   skin/classic/browser/tabbrowser/tab-connecting.png           (../shared/tabbrowser/tab-connecting.png)
   skin/classic/browser/tabbrowser/tab-connecting@2x.png        (../shared/tabbrowser/tab-connecting@2x.png)
+  skin/classic/browser/tabbrowser/tab-drag-indicator.svg       (../shared/tabbrowser/tab-drag-indicator.svg)
   skin/classic/browser/tabbrowser/tab-loading.png              (../shared/tabbrowser/tab-loading.png)
   skin/classic/browser/tabbrowser/tab-loading@2x.png           (../shared/tabbrowser/tab-loading@2x.png)
   skin/classic/browser/tabbrowser/tab-loading-inverted.png     (../shared/tabbrowser/tab-loading-inverted.png)
