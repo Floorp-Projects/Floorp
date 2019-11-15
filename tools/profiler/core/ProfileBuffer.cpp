@@ -76,7 +76,8 @@ uint64_t ProfileBuffer::AddThreadIdEntry(int aThreadId) {
 
 void ProfileBuffer::CollectCodeLocation(
     const char* aLabel, const char* aStr, uint32_t aFrameFlags,
-    const Maybe<uint32_t>& aLineNumber, const Maybe<uint32_t>& aColumnNumber,
+    uint64_t aInnerWindowID, const Maybe<uint32_t>& aLineNumber,
+    const Maybe<uint32_t>& aColumnNumber,
     const Maybe<JS::ProfilingCategoryPair>& aCategoryPair) {
   AddEntry(ProfileBufferEntry::Label(aLabel));
   AddEntry(ProfileBufferEntry::FrameFlags(uint64_t(aFrameFlags)));
@@ -96,6 +97,10 @@ void ProfileBuffer::CollectCodeLocation(
 
       AddEntry(ProfileBufferEntry::DynamicStringFragment(chars));
     }
+  }
+
+  if (aInnerWindowID) {
+    AddEntry(ProfileBufferEntry::InnerWindowID(aInnerWindowID));
   }
 
   if (aLineNumber) {
@@ -185,7 +190,7 @@ void ProfileBufferCollector::CollectJitReturnAddr(void* aAddr) {
 }
 
 void ProfileBufferCollector::CollectWasmFrame(const char* aLabel) {
-  mBuf.CollectCodeLocation("", aLabel, 0, Nothing(), Nothing(), Nothing());
+  mBuf.CollectCodeLocation("", aLabel, 0, 0, Nothing(), Nothing(), Nothing());
 }
 
 void ProfileBufferCollector::CollectProfilingStackFrame(
@@ -239,6 +244,7 @@ void ProfileBufferCollector::CollectProfilingStackFrame(
     }
   }
 
-  mBuf.CollectCodeLocation(label, dynamicString, aFrame.flags(), line, column,
+  mBuf.CollectCodeLocation(label, dynamicString, aFrame.flags(),
+                           aFrame.realmID(), line, column,
                            Some(aFrame.categoryPair()));
 }

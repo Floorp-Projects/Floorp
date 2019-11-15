@@ -240,7 +240,8 @@ UniqueStacks::StackKey UniqueStacks::AppendFrame(const StackKey& aStack,
 bool UniqueStacks::FrameKey::NormalFrameData::operator==(
     const NormalFrameData& aOther) const {
   return mLocation == aOther.mLocation &&
-         mRelevantForJS == aOther.mRelevantForJS && mLine == aOther.mLine &&
+         mRelevantForJS == aOther.mRelevantForJS &&
+         mInnerWindowID == aOther.mInnerWindowID && mLine == aOther.mLine &&
          mColumn == aOther.mColumn && mCategoryPair == aOther.mCategoryPair;
 }
 
@@ -740,6 +741,12 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
             frameLabel += label;
           }
 
+          uint64_t innerWindowID = 0;
+          if (e.Has() && e.Get().IsInnerWindowID()) {
+            innerWindowID = uint64_t(e.Get().GetUint64());
+            e.Next();
+          }
+
           Maybe<unsigned> line;
           if (e.Has() && e.Get().IsLineNumber()) {
             line = Some(unsigned(e.Get().GetInt()));
@@ -760,9 +767,9 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
           }
 
           stack = aUniqueStacks.AppendFrame(
-              stack,
-              UniqueStacks::FrameKey(std::move(frameLabel), relevantForJS, line,
-                                     column, categoryPair));
+              stack, UniqueStacks::FrameKey(std::move(frameLabel),
+                                            relevantForJS, innerWindowID, line,
+                                            column, categoryPair));
 
         } else {
           break;

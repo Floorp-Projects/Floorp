@@ -34,6 +34,7 @@ class ProfilerCodeAddressService;
   MACRO(FrameFlags, uint64_t, sizeof(uint64_t))                      \
   MACRO(DynamicStringFragment, char*, ProfileBufferEntry::kNumChars) \
   MACRO(JitReturnAddr, void*, sizeof(void*))                         \
+  MACRO(InnerWindowID, uint64_t, sizeof(uint64_t))                   \
   MACRO(LineNumber, int, sizeof(int))                                \
   MACRO(ColumnNumber, int, sizeof(int))                              \
   MACRO(NativeLeafAddr, void*, sizeof(void*))                        \
@@ -267,15 +268,15 @@ class UniqueStacks {
  public:
   struct FrameKey {
     explicit FrameKey(const char* aLocation)
-        : mData(NormalFrameData{nsCString(aLocation), false, mozilla::Nothing(),
-                                mozilla::Nothing()}) {}
+        : mData(NormalFrameData{nsCString(aLocation), false, 0,
+                                mozilla::Nothing(), mozilla::Nothing()}) {}
 
     FrameKey(nsCString&& aLocation, bool aRelevantForJS,
-             const mozilla::Maybe<unsigned>& aLine,
+             uint64_t aInnerWindowID, const mozilla::Maybe<unsigned>& aLine,
              const mozilla::Maybe<unsigned>& aColumn,
              const mozilla::Maybe<JS::ProfilingCategoryPair>& aCategoryPair)
-        : mData(NormalFrameData{aLocation, aRelevantForJS, aLine, aColumn,
-                                aCategoryPair}) {}
+        : mData(NormalFrameData{aLocation, aRelevantForJS, aInnerWindowID,
+                                aLine, aColumn, aCategoryPair}) {}
 
     FrameKey(void* aJITAddress, uint32_t aJITDepth, uint32_t aRangeIndex)
         : mData(JITFrameData{aJITAddress, aJITDepth, aRangeIndex}) {}
@@ -292,6 +293,7 @@ class UniqueStacks {
 
       nsCString mLocation;
       bool mRelevantForJS;
+      uint64_t mInnerWindowID;
       mozilla::Maybe<unsigned> mLine;
       mozilla::Maybe<unsigned> mColumn;
       mozilla::Maybe<JS::ProfilingCategoryPair> mCategoryPair;
@@ -319,6 +321,7 @@ class UniqueStacks {
                                     mozilla::HashString(data.mLocation.get()));
         }
         hash = mozilla::AddToHash(hash, data.mRelevantForJS);
+        hash = mozilla::AddToHash(hash, data.mInnerWindowID);
         if (data.mLine.isSome()) {
           hash = mozilla::AddToHash(hash, *data.mLine);
         }

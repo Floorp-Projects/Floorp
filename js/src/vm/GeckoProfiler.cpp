@@ -224,7 +224,9 @@ bool GeckoProfilerThread::enter(JSContext* cx, JSScript* script) {
   }
 #endif
 
-  profilingStack_->pushJsFrame("", dynamicString, script, script->code());
+  profilingStack_->pushJsFrame(
+      "", dynamicString, script, script->code(),
+      script->realm()->creationOptions().profilerRealmID());
   return true;
 }
 
