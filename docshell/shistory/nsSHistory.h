@@ -137,7 +137,10 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
     RefPtr<nsDocShellLoadState> mLoadState;
   };
 
-  nsresult Reload(uint32_t aReloadFlags, LoadEntryResult& aLoadResult);
+  // If this doesn't return an error then either aLoadResult is set to nothing,
+  // in which case the caller should ignore the load, or it returns a valid
+  // LoadEntryResult in aLoadResult which the caller should use to do the load.
+  nsresult Reload(uint32_t aReloadFlags, Maybe<LoadEntryResult>& aLoadResult);
   nsresult ReloadCurrentEntry(LoadEntryResult& aLoadResult);
   nsresult GotoIndex(int32_t aIndex, LoadEntryResult& aLoadResult);
 
