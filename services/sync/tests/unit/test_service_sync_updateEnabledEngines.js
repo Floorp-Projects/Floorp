@@ -3,6 +3,10 @@
 
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
+const { EngineSynchronizer } = ChromeUtils.import(
+  "resource://services-sync/stages/enginesync.js"
+);
+
 function QuietStore() {
   Store.call("Quiet");
 }
@@ -485,6 +489,78 @@ add_task(async function test_service_updateLocalEnginesState() {
   await Service.updateLocalEnginesState();
   // Now disabled.
   Assert.ok(!engine.enabled);
+});
+
+add_task(async function test_service_enableAfterUpdateState() {
+  Service.syncID = "abcdefghij";
+  const engine = Service.engineManager.get("steam");
+  const metaWBO = new ServerWBO("global", {
+    syncID: Service.syncID,
+    storageVersion: STORAGE_VERSION,
+    declined: ["steam"],
+    engines: { someengine: {} },
+  });
+  const server = httpd_setup({
+    "/1.1/johndoe/storage/meta/global": metaWBO.handler(),
+  });
+  await SyncTestingInfrastructure(server, "johndoe");
+
+  // Disconnect sync.
+  await Service.startOver();
+  Service.identity._findCluster = () => server.baseURI + "/1.1/johndoe/";
+
+  // Update engine state from the server.
+  await Service.updateLocalEnginesState();
+  // Now disabled, reflecting what's on the server.
+  Assert.ok(!engine.enabled);
+  // Enable the engine, as though the user selected it via CWTS.
+  engine.enabled = true;
+
+  // Do the "reconcile local and remote states" dance.
+  let engineSync = new EngineSynchronizer(Service);
+  await engineSync._updateEnabledEngines();
+  await Service._maybeUpdateDeclined();
+  // engine should remain enabled.
+  Assert.ok(engine.enabled);
+  // engine should no longer appear in declined on the server.
+  Assert.deepEqual(metaWBO.data.declined, []);
+});
+
+add_task(async function test_service_disableAfterUpdateState() {
+  Service.syncID = "abcdefghij";
+  const engine = Service.engineManager.get("steam");
+  const metaWBO = new ServerWBO("global", {
+    syncID: Service.syncID,
+    storageVersion: STORAGE_VERSION,
+    declined: [],
+    engines: { steam: {} },
+  });
+  const server = httpd_setup({
+    "/1.1/johndoe/storage/meta/global": metaWBO.handler(),
+  });
+  await SyncTestingInfrastructure(server, "johndoe");
+
+  // Disconnect sync.
+  await Service.startOver();
+  Service.identity._findCluster = () => server.baseURI + "/1.1/johndoe/";
+
+  // Update engine state from the server.
+  await Service.updateLocalEnginesState();
+  // Now enabled, reflecting what's on the server.
+  Assert.ok(engine.enabled);
+  // Disable the engine, as though via CWTS.
+  engine.enabled = false;
+
+  // Do the "reconcile local and remote states" dance.
+  let engineSync = new EngineSynchronizer(Service);
+  await engineSync._updateEnabledEngines();
+  await Service._maybeUpdateDeclined();
+  // engine should remain disabled.
+  Assert.ok(!engine.enabled);
+  // engine should now appear in declined on the server.
+  Assert.deepEqual(metaWBO.data.declined, ["steam"]);
+  // and should have been removed from engines.
+  Assert.deepEqual(metaWBO.data.engines, {});
 });
 
 add_task(async function test_service_updateLocalEnginesState_no_meta_global() {
