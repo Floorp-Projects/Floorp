@@ -14,6 +14,6 @@
     app:layout_constraintBottom_toTopOf="@id/search_divider"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper"
+    app:layout_constraintTop_toBottomOf="@id/awesomeBar_barrier"
     mozac:awesomeBarDescriptionTextColor="?secondaryText"
     mozac:awesomeBarTitleTextColor="?primaryText" />

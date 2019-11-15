@@ -14,11 +14,11 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.ext.searchEngineManager
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.searchEngineManager
 
 /**
  * An interface that handles the view manipulation of the Search, triggered by the Interactor
@@ -68,6 +68,12 @@ class DefaultSearchController(
         store.dispatch(SearchFragmentAction.UpdateQuery(text))
         store.dispatch(SearchFragmentAction.ShowSearchShortcutEnginePicker(
             text.isEmpty() && context.settings().shouldShowSearchShortcuts
+        ))
+        store.dispatch(SearchFragmentAction.ShowSearchSuggestionsHint(
+            text.isNotEmpty() &&
+                    (context as HomeActivity).browsingModeManager.mode.isPrivate &&
+                    !context.settings().shouldShowSearchSuggestionsInPrivate &&
+                    !context.settings().showSearchSuggestionsInPrivateOnboardingFinished
         ))
     }
 

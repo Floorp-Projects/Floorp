@@ -31,6 +31,7 @@ object SupportUtils {
         WHATS_NEW("whats-new-firefox-preview"),
         SEND_TABS("send-tab-preview"),
         SET_AS_DEFAULT_BROWSER("set-firefox-preview-default"),
+        SEARCH_SUGGESTION("how-search-firefox-preview"),
         CUSTOM_SEARCH_ENGINES("custom-search-engines")
     }
 

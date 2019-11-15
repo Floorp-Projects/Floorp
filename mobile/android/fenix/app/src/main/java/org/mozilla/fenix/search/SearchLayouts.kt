@@ -71,7 +71,7 @@ internal fun SearchFragment.setOutOfExperimentConstraints(layout: ConstraintLayo
         awesomeBar {
             connect(
                 TOP to TOP of UNSET,
-                TOP to BOTTOM of search_with_shortcuts,
+                TOP to BOTTOM of awesomeBar_barrier,
                 BOTTOM to TOP of pillWrapper
             )
         }

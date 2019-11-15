@@ -14,13 +14,16 @@ import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewStub
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.transition.TransitionInflater
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
+import kotlinx.android.synthetic.main.search_suggestions_onboarding.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.qr.QrFeature
@@ -34,12 +37,13 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getSpannable
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.awesomebar.AwesomeBarView
 import org.mozilla.fenix.search.toolbar.ToolbarView
+import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 
 @Suppress("TooManyFunctions", "LargeClass")
 class SearchFragment : Fragment(), BackHandler {
@@ -95,6 +99,7 @@ class SearchFragment : Fragment(), BackHandler {
                     searchEngineSource = currentSearchEngine,
                     defaultEngineSource = currentSearchEngine,
                     showSearchSuggestions = showSearchSuggestions,
+                    showSearchSuggestionsHint = false,
                     showSearchShortcuts = requireContext().settings().shouldShowSearchShortcuts && url.isEmpty(),
                     showClipboardSuggestions = requireContext().settings().shouldShowClipboardSuggestions,
                     showHistorySuggestions = requireContext().settings().shouldShowHistorySuggestions,
@@ -184,6 +189,34 @@ class SearchFragment : Fragment(), BackHandler {
             qrFeature.get()?.scan(R.id.container)
         }
 
+        val stubListener = ViewStub.OnInflateListener { _, inflated ->
+            inflated.learn_more.setOnClickListener {
+                (activity as HomeActivity)
+                    .openToBrowserAndLoad(
+                        searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
+                            SupportUtils.SumoTopic.SEARCH_SUGGESTION),
+                        newTab = searchStore.state.session == null,
+                        from = BrowserDirection.FromSearch
+                    )
+            }
+
+            inflated.allow.setOnClickListener {
+                inflated.visibility = View.GONE
+                context?.settings()?.shouldShowSearchSuggestionsInPrivate = true
+                context?.settings()?.showSearchSuggestionsInPrivateOnboardingFinished = true
+            }
+
+            inflated.dismiss.setOnClickListener {
+                inflated.visibility = View.GONE
+                context?.settings()?.shouldShowSearchSuggestionsInPrivate = false
+                context?.settings()?.showSearchSuggestionsInPrivateOnboardingFinished = true
+            }
+        }
+
+        view.search_suggestions_onboarding.setOnInflateListener((stubListener)
+
+        )
+
         view.toolbar_wrapper.clipToOutline = false
 
         fill_link_from_clipboard.setOnClickListener {
@@ -200,6 +233,7 @@ class SearchFragment : Fragment(), BackHandler {
             toolbarView.update(it)
             updateSearchWithLabel(it)
             updateClipboardSuggestion(it, requireContext().components.clipboardHandler.url)
+            updateSearchSuggestionsHintVisibility(it)
         }
 
         startPostponedEnterTransition()
@@ -285,6 +319,11 @@ class SearchFragment : Fragment(), BackHandler {
         return if (requireContext().settings().shouldShowHistorySuggestions) {
             requireComponents.core.historyStorage
         } else null
+    }
+
+    private fun updateSearchSuggestionsHintVisibility(state: SearchFragmentState) {
+        view?.findViewById<View>(R.id.search_suggestions_onboarding)
+            ?.isVisible = state.showSearchSuggestionsHint
     }
 
     companion object {

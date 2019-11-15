@@ -11,6 +11,18 @@
     android:background="?foundation"
     tools:context=".search.SearchFragment">
 
+
+    <ViewStub
+        android:id="@+id/search_suggestions_onboarding"
+        android:inflatedId="@+id/search_suggestions_onboarding"
+        android:layout="@layout/search_suggestions_onboarding"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/awesomeBar_barrier"
+        app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper"/>
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/toolbar_wrapper"
         android:layout_width="0dp"
@@ -103,10 +115,17 @@
         android:layout_marginTop="@dimen/search_fragment_shortcuts_label_margin_vertical"
         android:layout_marginEnd="@dimen/search_fragment_shortcuts_label_margin_horizontal"
         android:text="@string/search_shortcuts_search_with"
-        android:visibility="gone"
         app:layout_constraintStart_toStartOf="@id/toolbar_wrapper"
         app:layout_constraintTop_toBottomOf="@id/fill_link_from_clipboard"
+        app:layout_constraintBottom_toTopOf="@id/awesomeBar_barrier"
         tools:text="Search with" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/awesomeBar_barrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="search_with_shortcuts,search_suggestions_onboarding"/>
 
     <View
         android:id="@+id/search_divider"
