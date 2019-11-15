@@ -86,7 +86,7 @@
   REAL(BigInt64Array, InitViaClassSpec, TYPED_ARRAY_CLASP(BigInt64))         \
   REAL(BigUint64Array, InitViaClassSpec, TYPED_ARRAY_CLASP(BigUint64))       \
   REAL(BigInt, InitViaClassSpec, OCLASP(BigInt))                             \
-  REAL(Proxy, InitProxyClass, &js::ProxyClass)                               \
+  REAL(Proxy, InitViaClassSpec, CLASP(Proxy))                                \
   REAL(WeakMap, InitViaClassSpec, OCLASP(WeakMap))                           \
   REAL(Map, InitViaClassSpec, OCLASP(Map))                                   \
   REAL(Set, InitViaClassSpec, OCLASP(Set))                                   \

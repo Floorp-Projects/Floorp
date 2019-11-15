@@ -753,9 +753,17 @@ const ObjectOps js::ProxyObjectOps = {
     proxy_DeleteProperty, Proxy::getElements,
     Proxy::fun_toString};
 
-const JSClass js::ProxyClass =
-    PROXY_CLASS_DEF("Proxy", JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy) |
-                                 JSCLASS_HAS_RESERVED_SLOTS(2));
+static const JSFunctionSpec proxy_static_methods[] = {
+    JS_FN("revocable", proxy_revocable, 2, 0), JS_FS_END};
+
+static const ClassSpec ProxyClassSpec = {
+    GenericCreateConstructor<js::proxy, 2, gc::AllocKind::FUNCTION>, nullptr,
+    proxy_static_methods, nullptr};
+
+const JSClass js::ProxyClass = PROXY_CLASS_DEF_WITH_CLASS_SPEC(
+    "Proxy",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy) | JSCLASS_HAS_RESERVED_SLOTS(2),
+    &ProxyClassSpec);
 
 JS_FRIEND_API JSObject* js::NewProxyObject(JSContext* cx,
                                            const BaseProxyHandler* handler,
@@ -793,25 +801,4 @@ void ProxyObject::renew(const BaseProxyHandler* handler, const Value& priv) {
   for (size_t i = 0; i < numReservedSlots(); i++) {
     setReservedSlot(i, UndefinedValue());
   }
-}
-
-JSObject* js::InitProxyClass(JSContext* cx, Handle<GlobalObject*> global) {
-  static const JSFunctionSpec static_methods[] = {
-      JS_FN("revocable", proxy_revocable, 2, 0), JS_FS_END};
-
-  RootedFunction ctor(cx);
-  ctor = GlobalObject::createConstructor(cx, proxy, cx->names().Proxy, 2);
-  if (!ctor) {
-    return nullptr;
-  }
-
-  if (!JS_DefineFunctions(cx, ctor, static_methods)) {
-    return nullptr;
-  }
-  if (!JS_DefineProperty(cx, global, "Proxy", ctor, JSPROP_RESOLVING)) {
-    return nullptr;
-  }
-
-  global->setConstructor(JSProto_Proxy, ObjectValue(*ctor));
-  return ctor;
 }
