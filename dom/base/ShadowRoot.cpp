@@ -466,7 +466,7 @@ void ShadowRoot::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   aVisitor.SetParentTarget(shadowHost, false);
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mEvent->mTarget));
-  if (content && content->GetBindingParent() == shadowHost) {
+  if (content && content->GetContainingShadow() == this) {
     aVisitor.mEventTargetAtParent = shadowHost;
   }
 }
