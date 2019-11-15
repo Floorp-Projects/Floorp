@@ -6842,18 +6842,11 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // (to ensure it's readable over any possible background-images),
   // if all of the following hold:
   //    (A) the backplate feature is preffed on
-  //    (B) we are in high-contrast mode [by browser setting or
-  //        windows setting]
-  //    (C) this is web content (not chrome) -- mUseAccessibilityTheme
-  //        already checks this, so we check IsChrome() explicitly
-  //        in the browser_display_document_color_use == 2 case.
+  //    (B) we are not honoring the document colors
   const bool shouldDrawBackplate =
       StaticPrefs::browser_display_permit_backplate() &&
-      (((PresContext()->PrefSheetPrefs().mUseAccessibilityTheme &&
-         StaticPrefs::browser_display_document_color_use() == 0) ||
-        (StaticPrefs::browser_display_document_color_use() == 2 &&
-         !PresContext()->IsChrome())) &&
-       !IsComboboxControlFrame());
+      !PresContext()->PrefSheetPrefs().mUseDocumentColors &&
+      !IsComboboxControlFrame();
 
   // Don't use the line cursor if we might have a descendant placeholder ...
   // it might skip lines that contain placeholders but don't themselves
