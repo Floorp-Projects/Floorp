@@ -23,7 +23,6 @@ browser.jar:
   skin/classic/browser/notification-icons/geo.svg          (notification-icons/geo.svg)
 * skin/classic/browser/places/sidebar.css                   (places/sidebar.css)
   skin/classic/browser/places/organizer.css                 (places/organizer.css)
-  skin/classic/browser/places/toolbarDropMarker.png         (places/toolbarDropMarker.png)
   skin/classic/browser/places/editBookmark.css              (places/editBookmark.css)
   skin/classic/browser/preferences/alwaysAsk.png            (preferences/alwaysAsk.png)
   skin/classic/browser/preferences/application.png          (preferences/application.png)
@@ -33,8 +32,6 @@ browser.jar:
 * skin/classic/browser/preferences/in-content/dialog.css      (preferences/in-content/dialog.css)
   skin/classic/browser/preferences/applications.css         (preferences/applications.css)
   skin/classic/browser/share.svg                            (share.svg)
-  skin/classic/browser/tabbrowser/tabDragIndicator.png                   (tabbrowser/tabDragIndicator.png)
-  skin/classic/browser/tabbrowser/tabDragIndicator@2x.png                (tabbrowser/tabDragIndicator@2x.png)
   skin/classic/browser/e10s-64@2x.png                                  (../shared/e10s-64@2x.png)
 
 % override chrome://browser/skin/notification-icons/geo-detailed.svg       chrome://browser/skin/notification-icons/geo.svg
