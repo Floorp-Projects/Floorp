@@ -44,6 +44,87 @@ class GeckoViewAutofill {
     this._addElement(aFormLike, /* fromDeferredTask */ false);
   }
 
+  _getInfo(aElement, aParent, aRoot, aUsernameField) {
+    let info = this._autoFillInfos.get(aElement);
+    if (info) {
+      return info;
+    }
+
+    const window = aElement.ownerGlobal;
+    const bounds = aElement.getBoundingClientRect();
+
+    info = {
+      id: ++this._autoFillId,
+      parent: aParent,
+      root: aRoot,
+      tag: aElement.tagName,
+      type: aElement instanceof window.HTMLInputElement ? aElement.type : null,
+      value: aElement.value,
+      editable:
+        aElement instanceof window.HTMLInputElement &&
+        [
+          "color",
+          "date",
+          "datetime-local",
+          "email",
+          "month",
+          "number",
+          "password",
+          "range",
+          "search",
+          "tel",
+          "text",
+          "time",
+          "url",
+          "week",
+        ].includes(aElement.type),
+      disabled:
+        aElement instanceof window.HTMLInputElement ? aElement.disabled : null,
+      attributes: Object.assign(
+        {},
+        ...Array.from(aElement.attributes)
+          .filter(attr => attr.localName !== "value")
+          .map(attr => ({ [attr.localName]: attr.value }))
+      ),
+      origin: aElement.ownerDocument.location.origin,
+      autofillhint: "",
+      bounds: {
+        left: bounds.left,
+        top: bounds.top,
+        right: bounds.right,
+        bottom: bounds.bottom,
+      },
+    };
+
+    if (aElement === aUsernameField) {
+      info.autofillhint = "username"; // AUTOFILL.HINT.USERNAME
+    }
+
+    this._autoFillInfos.set(aElement, info);
+    this._autoFillElements.set(info.id, Cu.getWeakReference(aElement));
+    return info;
+  }
+
+  _updateInfoValues(aElements) {
+    if (!this._autoFillInfos) {
+      return;
+    }
+
+    const updated = [];
+    for (const element of aElements) {
+      const info = this._autoFillInfos.get(element);
+      if (!info || info.value === element.value) {
+        continue;
+      }
+      debug`Updating value ${info.value} to ${element.value}`;
+
+      info.value = element.value;
+      this._autoFillInfos.set(element, info);
+      updated.push(info);
+    }
+    return updated;
+  }
+
   _addElement(aFormLike, aFromDeferredTask) {
     let task =
       this._autoFillTasks && this._autoFillTasks.get(aFormLike.rootElement);
@@ -80,67 +161,7 @@ class GeckoViewAutofill {
       this._autoFillElements = new Map();
     }
 
-    let sendFocusEvent = false;
     const window = aFormLike.rootElement.ownerGlobal;
-    const getInfo = (element, parent, root, usernameField) => {
-      let info = this._autoFillInfos.get(element);
-      if (info) {
-        return info;
-      }
-      const bounds = element.getBoundingClientRect();
-      info = {
-        id: ++this._autoFillId,
-        parent,
-        root,
-        tag: element.tagName,
-        type: element instanceof window.HTMLInputElement ? element.type : null,
-        value: element.value,
-        editable:
-          element instanceof window.HTMLInputElement &&
-          [
-            "color",
-            "date",
-            "datetime-local",
-            "email",
-            "month",
-            "number",
-            "password",
-            "range",
-            "search",
-            "tel",
-            "text",
-            "time",
-            "url",
-            "week",
-          ].includes(element.type),
-        disabled:
-          element instanceof window.HTMLInputElement ? element.disabled : null,
-        attributes: Object.assign(
-          {},
-          ...Array.from(element.attributes)
-            .filter(attr => attr.localName !== "value")
-            .map(attr => ({ [attr.localName]: attr.value }))
-        ),
-        origin: element.ownerDocument.location.origin,
-        autofillhint: "",
-        bounds: {
-          left: bounds.left,
-          top: bounds.top,
-          right: bounds.right,
-          bottom: bounds.bottom,
-        },
-      };
-
-      if (element === usernameField) {
-        info.autofillhint = "username"; // AUTOFILL_HINT_USERNAME
-      }
-
-      this._autoFillInfos.set(element, info);
-      this._autoFillElements.set(info.id, Cu.getWeakReference(element));
-      sendFocusEvent |= element === element.ownerDocument.activeElement;
-      return info;
-    };
-
     // Get password field to get better form data via LoginManagerChild.
     let passwordField;
     for (const field of aFormLike.elements) {
@@ -157,16 +178,26 @@ class GeckoViewAutofill {
       window
     ).getUserNameAndPasswordFields(passwordField || aFormLike.elements[0]);
 
-    const rootInfo = getInfo(aFormLike.rootElement, null, undefined, null);
+    const focusedElement = aFormLike.rootElement.ownerDocument.activeElement;
+    let sendFocusEvent = aFormLike.rootElement === focusedElement;
+
+    const rootInfo = this._getInfo(
+      aFormLike.rootElement,
+      null,
+      undefined,
+      null
+    );
+
     rootInfo.root = rootInfo.id;
     rootInfo.children = aFormLike.elements
       .filter(
         element =>
           !usernameField || element.type != "text" || element == usernameField
       )
-      .map(element =>
-        getInfo(element, rootInfo.id, rootInfo.id, usernameField)
-      );
+      .map(element => {
+        sendFocusEvent |= element === focusedElement;
+        return this._getInfo(element, rootInfo.id, rootInfo.id, usernameField);
+      });
 
     this._eventDispatcher.dispatch("GeckoView:AddAutofill", rootInfo, {
       onSuccess: responses => {
@@ -235,13 +266,22 @@ class GeckoViewAutofill {
     if (!aFormLike) {
       throw new Error("null-form on autofill commit");
     }
+
     debug`Committing auto-fill for ${aFormLike.rootElement.tagName}`;
 
-    const info =
-      this._autoFillInfos && this._autoFillInfos.get(aFormLike.rootElement);
+    const updatedNodeInfos = this._updateInfoValues([
+      aFormLike.rootElement,
+      ...aFormLike.elements,
+    ]);
 
+    for (const updatedInfo of updatedNodeInfos) {
+      debug`Updating node ${updatedInfo}`;
+      this._eventDispatcher.dispatch("GeckoView:UpdateAutofill", updatedInfo);
+    }
+
+    const info = this._getInfo(aFormLike.rootElement);
     if (info) {
-      debug`Committing info ${info}`;
+      debug`Committing node ${info}`;
       this._eventDispatcher.dispatch("GeckoView:CommitAutofill", info);
     }
   }
