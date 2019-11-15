@@ -3379,15 +3379,21 @@ bool HTMLEditor::IsInObservedSubtree(nsIContent* aChild) {
     return false;
   }
 
-  Element* root = GetRoot();
-  // To be super safe here, check both ChromeOnlyAccess and GetBindingParent.
-  // That catches (also unbound) native anonymous content, XBL and ShadowDOM.
-  if (root && (root->ChromeOnlyAccess() != aChild->ChromeOnlyAccess() ||
-               root->GetBindingParent() != aChild->GetBindingParent())) {
-    return false;
+  // FIXME(emilio, bug 1596856): This should probably work if the root is in the
+  // same shadow tree as the child, probably? I don't know what the
+  // contenteditable-in-shadow-dom situation is.
+  if (Element* root = GetRoot()) {
+    // To be super safe here, check both ChromeOnlyAccess and NAC / Shadow DOM.
+    // That catches (also unbound) native anonymous content and ShadowDOM.
+    if (root->ChromeOnlyAccess() != aChild->ChromeOnlyAccess() ||
+        root->IsInNativeAnonymousSubtree() != aChild->IsInNativeAnonymousSubtree() ||
+        root->IsInShadowTree() != aChild->IsInShadowTree()) {
+      return false;
+    }
   }
 
-  return !aChild->ChromeOnlyAccess() && !aChild->GetBindingParent();
+  return !aChild->ChromeOnlyAccess() && !aChild->IsInShadowTree() &&
+         !aChild->IsInNativeAnonymousSubtree();
 }
 
 void HTMLEditor::DoContentInserted(nsIContent* aChild,
