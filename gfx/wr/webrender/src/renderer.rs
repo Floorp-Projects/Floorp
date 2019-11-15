@@ -2490,7 +2490,16 @@ impl Renderer {
                                 let device_size = self.device_size;
                                 self.render_impl(device_size).ok();
                             }
-                            self.active_documents[pos].1 = doc;
+
+                            let mut old_doc = mem::replace(
+                                &mut self.active_documents[pos].1,
+                                doc,
+                            );
+
+                            // If the document we are overwriting has any pending
+                            // native surface updates, ensure they are flushed
+                            // before replacing with the new document.
+                            self.update_native_surfaces(&mut old_doc.frame.composite_state);
                         }
                         None => self.active_documents.push((document_id, doc)),
                     }
@@ -5008,11 +5017,11 @@ impl Renderer {
 
     fn update_native_surfaces(
         &mut self,
-        composite_state: &CompositeState,
+        composite_state: &mut CompositeState,
     ) {
         match self.compositor_config {
             CompositorConfig::Native { ref mut compositor, .. } => {
-                for op in &composite_state.native_surface_updates {
+                for op in composite_state.native_surface_updates.drain(..) {
                     match op.details {
                         NativeSurfaceOperationDetails::CreateSurface { size, is_opaque } => {
                             let _inserted = self.allocated_native_surfaces.insert(op.id);
@@ -5065,7 +5074,7 @@ impl Renderer {
         self.device.disable_stencil();
 
         self.bind_frame_data(frame);
-        self.update_native_surfaces(&frame.composite_state);
+        self.update_native_surfaces(&mut frame.composite_state);
 
         for (_pass_index, pass) in frame.passes.iter_mut().enumerate() {
             #[cfg(not(target_os = "android"))]
