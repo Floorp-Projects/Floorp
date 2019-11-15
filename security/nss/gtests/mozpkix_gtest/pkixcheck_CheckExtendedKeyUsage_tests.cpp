@@ -558,7 +558,7 @@ private:
     return checker.Check(derCert, nullptr, keepGoing);
   }
 
-  Result CheckRevocation(EndEntityOrCA, const CertID&, Time, Duration,
+  Result CheckRevocation(EndEntityOrCA, const CertID&, Time, Time, Duration,
                          const Input*, const Input*) override
   {
     return Success;
