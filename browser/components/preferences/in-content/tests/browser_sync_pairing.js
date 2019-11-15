@@ -135,7 +135,7 @@ async function runWithPairingDialog(test) {
   await openPreferencesViaOpenPreferencesAPI("paneSync", { leaveOpen: true });
 
   let promiseSubDialogLoaded = promiseLoadSubDialog(
-    "chrome://browser/content/preferences/in-content/fxaPairDevice.xul"
+    "chrome://browser/content/preferences/in-content/fxaPairDevice.xhtml"
   );
   gBrowser.contentWindow.gSyncPane.pairAnotherDevice();
 

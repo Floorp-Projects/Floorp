@@ -396,7 +396,7 @@ var gHomePane = {
   setHomePageToBookmark() {
     const rv = { urls: null, names: null };
     gSubDialog.open(
-      "chrome://browser/content/preferences/selectBookmark.xul",
+      "chrome://browser/content/preferences/selectBookmark.xhtml",
       "resizable=yes, modal=yes",
       rv,
       this._setHomePageToBookmarkClosed.bind(this, rv)

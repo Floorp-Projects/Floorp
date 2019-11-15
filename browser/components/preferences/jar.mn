@@ -3,38 +3,38 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
-    content/browser/preferences/applicationManager.xul
+    content/browser/preferences/applicationManager.xhtml
     content/browser/preferences/applicationManager.js
-    content/browser/preferences/blocklists.xul
+    content/browser/preferences/blocklists.xhtml
     content/browser/preferences/blocklists.js
-    content/browser/preferences/browserLanguages.xul
+    content/browser/preferences/browserLanguages.xhtml
     content/browser/preferences/browserLanguages.js
     content/browser/preferences/clearSiteData.css
     content/browser/preferences/clearSiteData.js
-    content/browser/preferences/clearSiteData.xul
-    content/browser/preferences/colors.xul
+    content/browser/preferences/clearSiteData.xhtml
+    content/browser/preferences/colors.xhtml
     content/browser/preferences/colors.js
-    content/browser/preferences/connection.xul
+    content/browser/preferences/connection.xhtml
     content/browser/preferences/connection.js
-    content/browser/preferences/fonts.xul
+    content/browser/preferences/fonts.xhtml
     content/browser/preferences/fonts.js
     content/browser/preferences/handlers.css
-    content/browser/preferences/languages.xul
+    content/browser/preferences/languages.xhtml
     content/browser/preferences/languages.js
-    content/browser/preferences/permissions.xul
-    content/browser/preferences/sitePermissions.xul
+    content/browser/preferences/permissions.xhtml
+    content/browser/preferences/sitePermissions.xhtml
     content/browser/preferences/sitePermissions.js
     content/browser/preferences/sitePermissions.css
-    content/browser/preferences/containers.xul
+    content/browser/preferences/containers.xhtml
     content/browser/preferences/containers.js
     content/browser/preferences/permissions.js
-    content/browser/preferences/sanitize.xul
+    content/browser/preferences/sanitize.xhtml
     content/browser/preferences/sanitize.js
-    content/browser/preferences/selectBookmark.xul
+    content/browser/preferences/selectBookmark.xhtml
     content/browser/preferences/selectBookmark.js
-    content/browser/preferences/siteDataSettings.xul
+    content/browser/preferences/siteDataSettings.xhtml
     content/browser/preferences/siteDataSettings.js
-*   content/browser/preferences/siteDataRemoveSelected.xul
+*   content/browser/preferences/siteDataRemoveSelected.xhtml
     content/browser/preferences/siteDataRemoveSelected.js
-    content/browser/preferences/translation.xul
+    content/browser/preferences/translation.xhtml
     content/browser/preferences/translation.js
