@@ -3,26 +3,27 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=396519
+https://bugzilla.mozilla.org/show_bug.cgi?id=113934
 -->
-<window title="Mozilla Bug 396519"
+<window title="Mozilla Bug 113934"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
-  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=396519"
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=113934"
      target="_blank">Mozilla Bug 396519</a>
   </body>
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-
-    /** Test for Bug 396519 **/
-
     SimpleTest.waitForExplicitFinish();
-    window.openDialog("bug396519_window.xul", "bug396519",
-                      "chrome,width=600,height=600,noopener", window);
+
+    addLoadEvent(function() {
+      window.openDialog("bug113934_window.xhtml?content", "bug113934",
+                        "chrome,width=800,height=800,noopener", window);
+    });
 
   ]]></script>
 </window>
