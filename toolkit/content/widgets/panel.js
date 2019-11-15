@@ -136,10 +136,10 @@
         var isRTL = window.getComputedStyle(this).direction == "rtl";
 
         if (position.indexOf("start_") == 0) {
-          container.style.mozBoxDirection = "reverse";
+          container.dir = "reverse";
           this.setAttribute("side", isRTL ? "left" : "right");
         } else {
-          container.style.removeProperty("-moz-box-direction");
+          container.dir = "";
           this.setAttribute("side", isRTL ? "right" : "left");
         }
       } else if (
