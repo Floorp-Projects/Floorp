@@ -37,13 +37,15 @@ nsINode* RangeUtils::ComputeRootNode(nsINode* aNode) {
     nsIContent* content = aNode->AsContent();
 
     // If the node is in a shadow tree then the ShadowRoot is the root.
+    //
+    // FIXME(emilio): Should this be after the NAC check below? We can have NAC
+    // inside Shadow DOM which will peek this path rather than the one below.
     if (ShadowRoot* containingShadow = content->GetContainingShadow()) {
       return containingShadow;
     }
 
-    // If the node has a binding parent, that should be the root.
-    // XXXbz maybe only for native anonymous content?
-    if (nsINode* root = content->GetBindingParent()) {
+    // If the node is in NAC, then the NAC parent should be the root.
+    if (nsINode* root = content->GetClosestNativeAnonymousSubtreeRootParent()) {
       return root;
     }
   }
