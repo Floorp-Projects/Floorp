@@ -18,8 +18,15 @@ using JS::Symbol;
 using namespace js;
 
 const JSClass SymbolObject::class_ = {
-    "Symbol", JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
-                  JSCLASS_HAS_CACHED_PROTO(JSProto_Symbol)};
+    "Symbol",
+    JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
+        JSCLASS_HAS_CACHED_PROTO(JSProto_Symbol),
+    JS_NULL_CLASS_OPS, &SymbolObject::classSpec_};
+
+// This uses PlainObject::class_ because: "The Symbol prototype object is an
+// ordinary object. It is not a Symbol instance and does not have a
+// [[SymbolData]] internal slot." (ES6 rev 24, 19.4.3)
+const JSClass& SymbolObject::protoClass_ = PlainObject::class_;
 
 SymbolObject* SymbolObject::create(JSContext* cx, JS::HandleSymbol symbol) {
   SymbolObject* obj = NewBuiltinClassInstance<SymbolObject>(cx);
@@ -31,7 +38,8 @@ SymbolObject* SymbolObject::create(JSContext* cx, JS::HandleSymbol symbol) {
 }
 
 const JSPropertySpec SymbolObject::properties[] = {
-    JS_PSG("description", descriptionGetter, 0), JS_PS_END};
+    JS_PSG("description", descriptionGetter, 0),
+    JS_STRING_SYM_PS(toStringTag, "Symbol", JSPROP_READONLY), JS_PS_END};
 
 const JSFunctionSpec SymbolObject::methods[] = {
     JS_FN(js_toString_str, toString, 0, 0),
@@ -41,55 +49,33 @@ const JSFunctionSpec SymbolObject::methods[] = {
 const JSFunctionSpec SymbolObject::staticMethods[] = {
     JS_FN("for", for_, 1, 0), JS_FN("keyFor", keyFor, 1, 0), JS_FS_END};
 
-JSObject* SymbolObject::initClass(JSContext* cx, Handle<GlobalObject*> global,
-                                  bool defineMembers) {
-  // This uses &JSObject::class_ because: "The Symbol prototype object is an
-  // ordinary object. It is not a Symbol instance and does not have a
-  // [[SymbolData]] internal slot." (ES6 rev 24, 19.4.3)
-  RootedObject proto(
-      cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
-  if (!proto) {
-    return nullptr;
-  }
+static bool SymbolClassFinish(JSContext* cx, HandleObject ctor,
+                              HandleObject proto) {
+  HandleNativeObject nativeCtor = ctor.as<NativeObject>();
 
-  RootedFunction ctor(cx, GlobalObject::createConstructor(
-                              cx, construct, ClassName(JSProto_Symbol, cx), 0));
-  if (!ctor) {
-    return nullptr;
-  }
-
-  if (defineMembers) {
-    // Define the well-known symbol properties, such as Symbol.iterator.
-    ImmutablePropertyNamePtr* names = cx->names().wellKnownSymbolNames();
-    RootedValue value(cx);
-    unsigned attrs = JSPROP_READONLY | JSPROP_PERMANENT;
-    WellKnownSymbols* wks = cx->runtime()->wellKnownSymbols;
-    for (size_t i = 0; i < JS::WellKnownSymbolLimit; i++) {
-      value.setSymbol(wks->get(i));
-      if (!NativeDefineDataProperty(cx, ctor, names[i], value, attrs)) {
-        return nullptr;
-      }
+  // Define the well-known symbol properties, such as Symbol.iterator.
+  ImmutablePropertyNamePtr* names = cx->names().wellKnownSymbolNames();
+  RootedValue value(cx);
+  unsigned attrs = JSPROP_READONLY | JSPROP_PERMANENT;
+  WellKnownSymbols* wks = cx->runtime()->wellKnownSymbols;
+  for (size_t i = 0; i < JS::WellKnownSymbolLimit; i++) {
+    value.setSymbol(wks->get(i));
+    if (!NativeDefineDataProperty(cx, nativeCtor, names[i], value, attrs)) {
+      return false;
     }
   }
-
-  if (!LinkConstructorAndPrototype(cx, ctor, proto)) {
-    return nullptr;
-  }
-
-  if (defineMembers) {
-    if (!DefinePropertiesAndFunctions(cx, proto, properties, methods) ||
-        !DefineToStringTag(cx, proto, cx->names().Symbol) ||
-        !DefinePropertiesAndFunctions(cx, ctor, nullptr, staticMethods)) {
-      return nullptr;
-    }
-  }
-
-  if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_Symbol, ctor,
-                                            proto)) {
-    return nullptr;
-  }
-  return proto;
+  return true;
 }
+
+const ClassSpec SymbolObject::classSpec_ = {
+    GenericCreateConstructor<SymbolObject::construct, 0,
+                             gc::AllocKind::FUNCTION>,
+    GenericCreatePrototype<SymbolObject>,
+    staticMethods,
+    nullptr,
+    methods,
+    properties,
+    SymbolClassFinish};
 
 // ES6 rev 24 (2014 Apr 27) 19.4.1.1 and 19.4.1.2
 bool SymbolObject::construct(JSContext* cx, unsigned argc, Value* vp) {
@@ -239,12 +225,4 @@ bool SymbolObject::descriptionGetter_impl(JSContext* cx, const CallArgs& args) {
 bool SymbolObject::descriptionGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<IsSymbol, descriptionGetter_impl>(cx, args);
-}
-
-JSObject* js::InitSymbolClass(JSContext* cx, Handle<GlobalObject*> global) {
-  return SymbolObject::initClass(cx, global, true);
-}
-
-JSObject* js::InitBareSymbolCtor(JSContext* cx, Handle<GlobalObject*> global) {
-  return SymbolObject::initClass(cx, global, false);
 }
