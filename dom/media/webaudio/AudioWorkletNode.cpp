@@ -26,9 +26,9 @@ class WorkletNodeEngine final : public AudioNodeEngine {
   }
 
   MOZ_CAN_RUN_SCRIPT
-  void ConstructProcessor(
-      AudioWorkletImpl* aWorkletImpl, const nsAString& aName,
-      NotNull<StructuredCloneHolder*> aOptionsSerialization);
+  void ConstructProcessor(AudioWorkletImpl* aWorkletImpl,
+                          const nsAString& aName,
+                          NotNull<StructuredCloneHolder*> aSerializedOptions);
 
   void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
@@ -118,13 +118,13 @@ void WorkletNodeEngine::SendProcessorError() {
 
 void WorkletNodeEngine::ConstructProcessor(
     AudioWorkletImpl* aWorkletImpl, const nsAString& aName,
-    NotNull<StructuredCloneHolder*> aOptionsSerialization) {
+    NotNull<StructuredCloneHolder*> aSerializedOptions) {
   MOZ_ASSERT(mInputs.mPorts.empty() && mOutputs.mPorts.empty());
   RefPtr<AudioWorkletGlobalScope> global = aWorkletImpl->GetGlobalScope();
   MOZ_ASSERT(global);  // global has already been used to register processor
   JS::RootingContext* cx = RootingCx();
   mProcessor.init(cx);
-  if (!global->ConstructProcessor(aName, aOptionsSerialization, &mProcessor) ||
+  if (!global->ConstructProcessor(aName, aSerializedOptions, &mProcessor) ||
       // mInputs and mOutputs outer arrays are fixed length and so much of the
       // initialization need only be performed once (i.e. here).
       NS_WARN_IF(!mInputs.mPorts.growBy(InputCount())) ||
