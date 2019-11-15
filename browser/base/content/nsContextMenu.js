@@ -974,10 +974,14 @@ class nsContextMenu {
     }
 
     let formOrigin = LoginHelper.getLoginOrigin(documentURI.spec);
+    let formActionOrigin = LoginHelper.getLoginOrigin(
+      loginFillInfo.formActionOrigin
+    );
     let fragment = nsContextMenu.LoginManagerContextMenu.addLoginsToMenu(
       this.targetIdentifier,
       this.browser,
-      formOrigin
+      formOrigin,
+      formActionOrigin
     );
     let isGeneratedPasswordEnabled =
       LoginHelper.generationAvailable && LoginHelper.generationEnabled;
