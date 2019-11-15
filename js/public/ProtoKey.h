@@ -110,7 +110,7 @@
   REAL(Atomics, InitViaClassSpec, OCLASP(Atomics))                           \
   REAL(SavedFrame, InitViaClassSpec, &js::SavedFrame::class_)                \
   REAL(Promise, InitViaClassSpec, OCLASP(Promise))                           \
-  REAL(AsyncFunction, InitAsyncFunction, nullptr)                            \
+  REAL(AsyncFunction, InitViaClassSpec, CLASP(AsyncFunction))                \
   REAL(GeneratorFunction, InitViaClassSpec, CLASP(GeneratorFunction))        \
   REAL(AsyncGeneratorFunction, InitAsyncGeneratorFunction, nullptr)          \
   REAL(ReadableStream, InitViaClassSpec, &js::ReadableStream::class_)        \
