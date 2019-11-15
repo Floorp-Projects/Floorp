@@ -5797,6 +5797,8 @@
   type: RelaxedAtomicBool
 #if defined(XP_LINUX) && !defined(ANDROID)
   value: true
+#elif defined(XP_MACOSX)
+  value: true
 #else
   value: false
 #endif
