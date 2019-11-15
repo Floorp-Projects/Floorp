@@ -102,8 +102,7 @@
   REAL_IF_INTL(PluralRules, InitViaClassSpec, OCLASP(PluralRules))           \
   REAL_IF_INTL(RelativeTimeFormat, InitViaClassSpec,                         \
                OCLASP(RelativeTimeFormat))                                   \
-  REAL_IF_BDATA(TypedObject, InitTypedObjectModuleObject,                    \
-                OCLASP(TypedObjectModule))                                   \
+  REAL_IF_BDATA(TypedObject, InitViaClassSpec, OCLASP(TypedObjectModule))    \
   REAL(Reflect, InitViaClassSpec, CLASP(Reflect))                            \
   REAL(WeakSet, InitViaClassSpec, OCLASP(WeakSet))                           \
   REAL(TypedArray, InitViaClassSpec,                                         \
