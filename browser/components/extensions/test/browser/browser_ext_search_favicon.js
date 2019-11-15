@@ -34,13 +34,11 @@ function promiseEngineIconLoaded(engineName) {
 add_task(async function test_search_favicon() {
   let searchExt = ExtensionTestUtils.loadExtension({
     manifest: {
-      icons: {
-        16: "someFavicon.png",
-      },
       chrome_settings_overrides: {
         search_provider: {
           name: "Engine Only",
           search_url: "https://example.com/",
+          favicon_url: "someFavicon.png",
         },
       },
     },
@@ -79,13 +77,11 @@ add_task(async function test_search_favicon() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["search"],
-      icons: {
-        16: "myFavicon.png",
-      },
       chrome_settings_overrides: {
         search_provider: {
           name: "My Engine",
           search_url: "https://example.org/",
+          favicon_url: "myFavicon.png",
         },
       },
     },

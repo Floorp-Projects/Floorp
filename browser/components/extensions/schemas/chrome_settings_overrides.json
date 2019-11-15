@@ -39,7 +39,7 @@
                   "favicon_url": {
                     "type": "string",
                     "optional": true,
-                    "format": "url",
+                    "format": "relativeUrl",
                     "preprocess": "localize"
                   },
                   "suggest_url": {
