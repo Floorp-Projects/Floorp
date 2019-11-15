@@ -566,8 +566,6 @@ tabmodalprompt {
   [orient="vertical"] { -moz-box-orient: vertical; }
   [orient="horizontal"] { -moz-box-orient: horizontal; }
 
-  [dir="reverse"] { -moz-box-direction: reverse; }
-
   [align="start"] { -moz-box-align: start; }
   [align="center"] { -moz-box-align: center; }
   [align="end"] { -moz-box-align: end; }
