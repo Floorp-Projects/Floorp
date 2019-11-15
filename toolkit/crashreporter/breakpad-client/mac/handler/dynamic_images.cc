@@ -459,7 +459,8 @@ void ReadImageInfo(DynamicImages& images,
                                    file_path,
                                    static_cast<uintptr_t>(info.file_mod_date_),
                                    images.task_,
-                                   images.cpu_type_);
+                                   images.cpu_type_,
+                                   header->cpusubtype);
 
       if (new_image->IsValid()) {
         images.image_list_.push_back(DynamicImageRef(new_image));
