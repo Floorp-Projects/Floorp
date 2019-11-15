@@ -27,7 +27,7 @@ const whitelist = [
   },
 
   {
-    file: "chrome://browser/skin/places/toolbarDropMarker.png",
+    file: "chrome://browser/skin/toolbar-drag-indicator.svg",
     platforms: ["linux", "win", "macosx"],
   },
 

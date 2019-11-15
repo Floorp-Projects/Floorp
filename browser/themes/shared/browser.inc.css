@@ -91,6 +91,10 @@
   min-height: 22px;
 }
 
+#PlacesToolbarDropIndicator {
+  list-style-image: url(chrome://browser/skin/toolbar-drag-indicator.svg);
+}
+
 /* rules for menupopup drop indicators */
 menupopup::part(drop-indicator-bar) {
   position: relative;
