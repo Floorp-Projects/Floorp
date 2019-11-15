@@ -384,6 +384,8 @@ CustomizeMode.prototype = {
         toolbar.setAttribute("customizing", true);
       }
 
+      this._updateOverflowPanelArrowOffset();
+
       await this._doTransition(true);
 
       // Let everybody in this window know that we're about to customize.
@@ -585,6 +587,39 @@ CustomizeMode.prototype = {
       docEl.removeAttribute("customize-entered");
     }
     return Promise.resolve();
+  },
+
+  /**
+   * The overflow panel in customize mode should have its arrow pointing
+   * at the overflow button. In order to do this correctly, we pass the
+   * distance between the inside of window and the middle of the button
+   * to the customize mode markup in which the arrow and panel are placed.
+   */
+  async _updateOverflowPanelArrowOffset() {
+    let currentDensity = this.document.documentElement.getAttribute(
+      "uidensity"
+    );
+    let offset = await this.window.promiseDocumentFlushed(() => {
+      let overflowButton = this.$("nav-bar-overflow-button");
+      let buttonRect = overflowButton.getBoundingClientRect();
+      let endDistance;
+      if (this.window.RTL_UI) {
+        endDistance = buttonRect.left;
+      } else {
+        endDistance = this.window.innerWidth - buttonRect.right;
+      }
+      return endDistance + buttonRect.width / 2;
+    });
+    if (
+      !this.document ||
+      currentDensity != this.document.documentElement.getAttribute("uidensity")
+    ) {
+      return;
+    }
+    this.$("customization-panelWrapper").style.setProperty(
+      "--panel-arrow-offset",
+      offset + "px"
+    );
   },
 
   _getCustomizableChildForNode(aNode) {
@@ -1366,6 +1401,7 @@ CustomizeMode.prototype = {
 
   updateUIDensity(mode) {
     this.window.gUIDensity.update(mode);
+    this._updateOverflowPanelArrowOffset();
   },
 
   setUIDensity(mode) {
@@ -1384,10 +1420,12 @@ CustomizeMode.prototype = {
 
     this._onUIChange();
     panel.hidePopup();
+    this._updateOverflowPanelArrowOffset();
   },
 
   resetUIDensity() {
     this.window.gUIDensity.update();
+    this._updateOverflowPanelArrowOffset();
   },
 
   onUIDensityMenuShowing() {
