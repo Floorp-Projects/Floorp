@@ -7847,8 +7847,8 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
 
   mozilla::WritingMode wm = GetWritingMode();
   if (wm.IsVertical() || wm.IsBidiRTL()) {
-    aTo += nsPrintfCString(" wm=%s logical-size={%d,%d}", ToString(wm).c_str(),
-                           ISize(), BSize());
+    aTo += nsPrintfCString(" wm=%s logical-size=(%s)", ToString(wm).c_str(),
+                           ToString(GetLogicalSize()).c_str());
   }
 
   nsIFrame* parent = GetParent();

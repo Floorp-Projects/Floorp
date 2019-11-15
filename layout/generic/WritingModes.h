@@ -1041,6 +1041,11 @@ class LogicalSize {
     return *this;
   }
 
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const LogicalSize& aSize) {
+    return aStream << aSize.mSize;
+  }
+
  private:
   friend class LogicalRect;
 
