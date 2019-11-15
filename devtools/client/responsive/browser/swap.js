@@ -455,8 +455,8 @@ function addXULBrowserDecorations(browser) {
   // without errors.  During the swap process above, these will move from the
   // the new inner browser to the original tab's browser (step 4) and then to
   // the temporary container tab's browser (step 7), which is then closed.
-  if (browser._remoteWebNavigationImpl == undefined) {
-    browser._remoteWebNavigationImpl = {
+  if (browser._remoteWebNavigation == undefined) {
+    browser._remoteWebNavigation = {
       swapBrowser() {},
     };
   }
