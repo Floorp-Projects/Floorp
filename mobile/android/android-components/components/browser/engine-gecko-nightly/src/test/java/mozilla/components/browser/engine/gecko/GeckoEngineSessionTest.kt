@@ -1897,7 +1897,8 @@ class GeckoEngineSessionTest {
             observedTriggeredByWebContent = null
             observedUrl = null
             navigationDelegate.value.onLoadRequest(
-                mock(), mockLoadRequest(fakeUrl, triggeredByRedirect = true))
+                mock(), mockLoadRequest(fakeUrl, triggeredByRedirect = true,
+                hasUserGesture = expectedTriggeredByWebContent))
             progressDelegate.value.onPageStop(mock(), true)
             assertNotNull(observedTriggeredByWebContent)
             assertEquals(expectedTriggeredByWebContent, observedTriggeredByWebContent!!)
