@@ -603,10 +603,24 @@ menuitem.bookmark-item {
   outline-offset: -6px;
 }
 
+/* Tab DnD indicator */
+.tab-drop-indicator {
+  list-style-image: url(chrome://browser/skin/tabbrowser/tabDragIndicator.png);
+  margin-bottom: -9px;
+  /* The z-index needs to be big enough to trump other positioned UI pieces
+     that we want to overlay. The expanded urlbar uses 3. */
+  z-index: 4;
+}
+
 /* All tabs menupopup */
 
 .alltabs-item[selected="true"] {
   font-weight: bold;
+}
+
+/* Bookmarks toolbar */
+#PlacesToolbarDropIndicator {
+  list-style-image: url(chrome://browser/skin/places/toolbarDropMarker.png);
 }
 
 toolbarbutton.bookmark-item[dragover="true"][open="true"] {
