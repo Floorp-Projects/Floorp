@@ -11,14 +11,10 @@
  * JS boolean interface.
  */
 
-#include "NamespaceImports.h"
+struct JSContext;
+class JSString;
 
 namespace js {
-
-class GlobalObject;
-
-extern JSObject* InitBooleanClass(JSContext* cx,
-                                  js::Handle<GlobalObject*> global);
 
 extern JSString* BooleanToString(JSContext* cx, bool b);
 
