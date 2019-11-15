@@ -36,7 +36,7 @@ exclude: true
 - Changed [`BasicSelectionActionDelegate.clearSelection`][72.10] to public.
   ([bug 1581161]({{bugzilla}}1581161))
 - Added `Autofill` commit support.
-  ([bug 1577005]({{bugzilla}1577005}))
+  ([bug 1577005]({{bugzilla}}1577005))
 
 [72.1]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture-
 [72.2]: {{javadoc_uri}}/Autofill.html
