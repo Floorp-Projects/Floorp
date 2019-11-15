@@ -1265,7 +1265,8 @@ class TestInfoCommand(MachCommandBase):
 
         manifest_paths = set()
         for t in tests:
-            manifest_paths.add(t['manifest'])
+            if 'manifest' in t and t['manifest'] is not None:
+                manifest_paths.add(t['manifest'])
         manifest_count = len(manifest_paths)
         print("Resolver found {} tests, {} manifests".format(len(tests), manifest_count))
 
@@ -1285,7 +1286,6 @@ class TestInfoCommand(MachCommandBase):
                 relpath = mozpath.relpath(manifest_path, self.topsrcdir)
                 if mozpath.commonprefix((manifest_path, self.topsrcdir)) != self.topsrcdir:
                     continue
-                print("  {}".format(relpath))
                 manifest_info = None
                 if relpath in files_info:
                     bug_component = files_info[relpath].get('BUG_COMPONENT')
