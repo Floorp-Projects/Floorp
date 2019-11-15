@@ -75,7 +75,7 @@ static_assert(
     "each corresponding JSExnType and JSProtoKey value be separated "
     "by the same constant value");
 
-static inline JSProtoKey GetExceptionProtoKey(JSExnType exn) {
+static inline constexpr JSProtoKey GetExceptionProtoKey(JSExnType exn) {
   MOZ_ASSERT(JSEXN_ERR <= exn);
   MOZ_ASSERT(exn < JSEXN_WARN);
   return JSProtoKey(JSProto_Error + int(exn));

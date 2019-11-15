@@ -130,12 +130,12 @@
        &js::ByteLengthQueuingStrategy::class_)                               \
   REAL(CountQueuingStrategy, InitViaClassSpec,                               \
        &js::CountQueuingStrategy::class_)                                    \
-  REAL(WebAssembly, InitWebAssemblyClass, CLASP(WebAssembly))                \
-  IMAGINARY(WasmModule, dummy, dummy)                                        \
-  IMAGINARY(WasmInstance, dummy, dummy)                                      \
-  IMAGINARY(WasmMemory, dummy, dummy)                                        \
-  IMAGINARY(WasmTable, dummy, dummy)                                         \
-  IMAGINARY(WasmGlobal, dummy, dummy)                                        \
+  REAL(WebAssembly, InitViaClassSpec, CLASP(WebAssembly))                    \
+  REAL(WasmModule, InitViaClassSpec, OCLASP(WasmModule))                     \
+  REAL(WasmInstance, InitViaClassSpec, OCLASP(WasmInstance))                 \
+  REAL(WasmMemory, InitViaClassSpec, OCLASP(WasmMemory))                     \
+  REAL(WasmTable, InitViaClassSpec, OCLASP(WasmTable))                       \
+  REAL(WasmGlobal, InitViaClassSpec, OCLASP(WasmGlobal))                     \
   REAL(FinalizationGroup, InitViaClassSpec, OCLASP(FinalizationGroup))
 
 #define JS_FOR_PROTOTYPES(REAL, IMAGINARY)                      \
