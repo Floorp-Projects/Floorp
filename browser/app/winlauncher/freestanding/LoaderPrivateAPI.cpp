@@ -84,6 +84,7 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS LoaderPrivateAPIImp final
   void NotifyEndDllLoad(void* aContext, NTSTATUS aLoadNtStatus,
                         ModuleLoadInfo&& aModuleLoadInfo) final;
   nt::AllocatedUnicodeString GetSectionName(void* aSectionAddr) final;
+  nt::MemorySectionNameBuf GetSectionNameBuffer(void* aSectionAddr) final;
 
   // LoaderPrivateAPI
   void NotifyBeginDllLoad(void** aContext,
@@ -205,6 +206,21 @@ nt::AllocatedUnicodeString LoaderPrivateAPIImp::GetSectionName(
   }
 
   return nt::AllocatedUnicodeString(&buf.mSectionFileName);
+}
+
+nt::MemorySectionNameBuf LoaderPrivateAPIImp::GetSectionNameBuffer(
+    void* aSectionAddr) {
+  const HANDLE kCurrentProcess = reinterpret_cast<HANDLE>(-1);
+
+  nt::MemorySectionNameBuf buf;
+  NTSTATUS ntStatus =
+      ::NtQueryVirtualMemory(kCurrentProcess, aSectionAddr, MemorySectionName,
+                             &buf, sizeof(buf), nullptr);
+  if (!NT_SUCCESS(ntStatus)) {
+    return nt::MemorySectionNameBuf();
+  }
+
+  return buf;
 }
 
 void LoaderPrivateAPIImp::NotifyBeginDllLoad(
