@@ -112,7 +112,8 @@
   REAL(Promise, InitViaClassSpec, OCLASP(Promise))                           \
   REAL(AsyncFunction, InitViaClassSpec, CLASP(AsyncFunction))                \
   REAL(GeneratorFunction, InitViaClassSpec, CLASP(GeneratorFunction))        \
-  REAL(AsyncGeneratorFunction, InitAsyncGeneratorFunction, nullptr)          \
+  REAL(AsyncGeneratorFunction, InitViaClassSpec,                             \
+       CLASP(AsyncGeneratorFunction))                                        \
   REAL(ReadableStream, InitViaClassSpec, &js::ReadableStream::class_)        \
   REAL(ReadableStreamDefaultReader, InitViaClassSpec,                        \
        &js::ReadableStreamDefaultReader::class_)                             \
