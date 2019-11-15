@@ -57,7 +57,7 @@
   REAL(JSON, InitJSONClass, CLASP(JSON))                                     \
   REAL(Date, InitViaClassSpec, OCLASP(Date))                                 \
   REAL(Math, InitMathClass, CLASP(Math))                                     \
-  REAL(Number, InitNumberClass, OCLASP(Number))                              \
+  REAL(Number, InitViaClassSpec, OCLASP(Number))                             \
   REAL(String, InitStringClass, OCLASP(String))                              \
   REAL(RegExp, InitViaClassSpec, OCLASP(RegExp))                             \
   REAL(Error, InitViaClassSpec, ERROR_CLASP(JSEXN_ERR))                      \
