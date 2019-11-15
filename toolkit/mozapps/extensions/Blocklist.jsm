@@ -3239,7 +3239,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   Blocklist,
   "useXML",
   "extensions.blocklist.useXML",
-  false,
+  true,
   () => Blocklist.onUpdateImplementation(true)
 );
 
