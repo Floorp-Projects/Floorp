@@ -87,6 +87,8 @@ void MediaStreamTrackAudioSourceNode::Init(MediaStreamTrack* aMediaStreamTrack,
     return;
   }
 
+  MarkActive();
+
   MediaTrackGraph* graph = Context()->Graph();
 
   AudioNodeEngine* engine = new MediaStreamTrackAudioSourceNodeEngine(this);
