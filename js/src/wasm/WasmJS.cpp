@@ -684,6 +684,16 @@ static bool GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial,
   return true;
 }
 
+template <class Class, const char* name>
+static JSObject* CreateWasmConstructor(JSContext* cx, JSProtoKey key) {
+  RootedAtom className(cx, Atomize(cx, name, strlen(name)));
+  if (!className) {
+    return nullptr;
+  }
+
+  return NewNativeConstructor(cx, Class::construct, 1, className);
+}
+
 // ============================================================================
 // WebAssembly.Module class and methods
 
@@ -701,9 +711,26 @@ const JSClass WasmModuleObject::class_ = {
         JSCLASS_HAS_RESERVED_SLOTS(WasmModuleObject::RESERVED_SLOTS) |
         JSCLASS_FOREGROUND_FINALIZE,
     &WasmModuleObject::classOps_,
+    &WasmModuleObject::classSpec_,
 };
 
-const JSPropertySpec WasmModuleObject::properties[] = {JS_PS_END};
+const JSClass& WasmModuleObject::protoClass_ = PlainObject::class_;
+
+static constexpr char WasmModuleName[] = "Module";
+
+const ClassSpec WasmModuleObject::classSpec_ = {
+    CreateWasmConstructor<WasmModuleObject, WasmModuleName>,
+    GenericCreatePrototype<WasmModuleObject>,
+    WasmModuleObject::static_methods,
+    nullptr,
+    WasmModuleObject::methods,
+    WasmModuleObject::properties,
+    nullptr,
+    ClassSpec::DontDefineConstructor};
+
+const JSPropertySpec WasmModuleObject::properties[] = {
+    JS_STRING_SYM_PS(toStringTag, "WebAssembly.Module", JSPROP_READONLY),
+    JS_PS_END};
 
 const JSFunctionSpec WasmModuleObject::methods[] = {JS_FS_END};
 
@@ -1232,7 +1259,22 @@ const JSClass WasmInstanceObject::class_ = {
         JSCLASS_HAS_RESERVED_SLOTS(WasmInstanceObject::RESERVED_SLOTS) |
         JSCLASS_FOREGROUND_FINALIZE,
     &WasmInstanceObject::classOps_,
+    &WasmInstanceObject::classSpec_,
 };
+
+const JSClass& WasmInstanceObject::protoClass_ = PlainObject::class_;
+
+static constexpr char WasmInstanceName[] = "Instance";
+
+const ClassSpec WasmInstanceObject::classSpec_ = {
+    CreateWasmConstructor<WasmInstanceObject, WasmInstanceName>,
+    GenericCreatePrototype<WasmInstanceObject>,
+    WasmInstanceObject::static_methods,
+    nullptr,
+    WasmInstanceObject::methods,
+    WasmInstanceObject::properties,
+    nullptr,
+    ClassSpec::DontDefineConstructor};
 
 static bool IsInstance(HandleValue v) {
   return v.isObject() && v.toObject().is<WasmInstanceObject>();
@@ -1255,6 +1297,7 @@ bool WasmInstanceObject::exportsGetter(JSContext* cx, unsigned argc,
 
 const JSPropertySpec WasmInstanceObject::properties[] = {
     JS_PSG("exports", WasmInstanceObject::exportsGetter, JSPROP_ENUMERATE),
+    JS_STRING_SYM_PS(toStringTag, "WebAssembly.Instance", JSPROP_READONLY),
     JS_PS_END};
 
 const JSFunctionSpec WasmInstanceObject::methods[] = {JS_FS_END};
@@ -1657,7 +1700,21 @@ const JSClass WasmMemoryObject::class_ = {
     JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(WasmMemoryObject::RESERVED_SLOTS) |
         JSCLASS_FOREGROUND_FINALIZE,
-    &WasmMemoryObject::classOps_};
+    &WasmMemoryObject::classOps_, &WasmMemoryObject::classSpec_};
+
+const JSClass& WasmMemoryObject::protoClass_ = PlainObject::class_;
+
+static constexpr char WasmMemoryName[] = "Memory";
+
+const ClassSpec WasmMemoryObject::classSpec_ = {
+    CreateWasmConstructor<WasmMemoryObject, WasmMemoryName>,
+    GenericCreatePrototype<WasmMemoryObject>,
+    WasmMemoryObject::static_methods,
+    nullptr,
+    WasmMemoryObject::methods,
+    WasmMemoryObject::properties,
+    nullptr,
+    ClassSpec::DontDefineConstructor};
 
 /* static */
 void WasmMemoryObject::finalize(JSFreeOp* fop, JSObject* obj) {
@@ -1771,6 +1828,7 @@ bool WasmMemoryObject::bufferGetter(JSContext* cx, unsigned argc, Value* vp) {
 
 const JSPropertySpec WasmMemoryObject::properties[] = {
     JS_PSG("buffer", WasmMemoryObject::bufferGetter, JSPROP_ENUMERATE),
+    JS_STRING_SYM_PS(toStringTag, "WebAssembly.Memory", JSPROP_READONLY),
     JS_PS_END};
 
 /* static */
@@ -2009,7 +2067,21 @@ const JSClass WasmTableObject::class_ = {
     JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(WasmTableObject::RESERVED_SLOTS) |
         JSCLASS_FOREGROUND_FINALIZE,
-    &WasmTableObject::classOps_};
+    &WasmTableObject::classOps_, &WasmTableObject::classSpec_};
+
+const JSClass& WasmTableObject::protoClass_ = PlainObject::class_;
+
+static constexpr char WasmTableName[] = "Table";
+
+const ClassSpec WasmTableObject::classSpec_ = {
+    CreateWasmConstructor<WasmTableObject, WasmTableName>,
+    GenericCreatePrototype<WasmTableObject>,
+    WasmTableObject::static_methods,
+    nullptr,
+    WasmTableObject::methods,
+    WasmTableObject::properties,
+    nullptr,
+    ClassSpec::DontDefineConstructor};
 
 bool WasmTableObject::isNewborn() const {
   MOZ_ASSERT(is<WasmTableObject>());
@@ -2163,6 +2235,7 @@ bool WasmTableObject::lengthGetter(JSContext* cx, unsigned argc, Value* vp) {
 
 const JSPropertySpec WasmTableObject::properties[] = {
     JS_PSG("length", WasmTableObject::lengthGetter, JSPROP_ENUMERATE),
+    JS_STRING_SYM_PS(toStringTag, "WebAssembly.Table", JSPROP_READONLY),
     JS_PS_END};
 
 static bool ToTableIndex(JSContext* cx, HandleValue v, const Table& table,
@@ -2383,7 +2456,21 @@ const JSClass WasmGlobalObject::class_ = {
     "WebAssembly.Global",
     JSCLASS_HAS_RESERVED_SLOTS(WasmGlobalObject::RESERVED_SLOTS) |
         JSCLASS_BACKGROUND_FINALIZE,
-    &WasmGlobalObject::classOps_};
+    &WasmGlobalObject::classOps_, &WasmGlobalObject::classSpec_};
+
+const JSClass& WasmGlobalObject::protoClass_ = PlainObject::class_;
+
+static constexpr char WasmGlobalName[] = "Global";
+
+const ClassSpec WasmGlobalObject::classSpec_ = {
+    CreateWasmConstructor<WasmGlobalObject, WasmGlobalName>,
+    GenericCreatePrototype<WasmGlobalObject>,
+    WasmGlobalObject::static_methods,
+    nullptr,
+    WasmGlobalObject::methods,
+    WasmGlobalObject::properties,
+    nullptr,
+    ClassSpec::DontDefineConstructor};
 
 /* static */
 void WasmGlobalObject::trace(JSTracer* trc, JSObject* obj) {
@@ -2712,6 +2799,7 @@ bool WasmGlobalObject::valueSetter(JSContext* cx, unsigned argc, Value* vp) {
 const JSPropertySpec WasmGlobalObject::properties[] = {
     JS_PSGS("value", WasmGlobalObject::valueGetter,
             WasmGlobalObject::valueSetter, JSPROP_ENUMERATE),
+    JS_STRING_SYM_PS(toStringTag, "WebAssembly.Global", JSPROP_READONLY),
     JS_PS_END};
 
 const JSFunctionSpec WasmGlobalObject::methods[] = {
@@ -3706,146 +3794,69 @@ static const JSFunctionSpec WebAssembly_static_methods[] = {
           JSPROP_ENUMERATE),
     JS_FS_END};
 
-const JSClass js::WebAssemblyClass = {
-    js_WebAssembly_str, JSCLASS_HAS_CACHED_PROTO(JSProto_WebAssembly)};
-
-template <class Class>
-static bool InitConstructor(JSContext* cx, HandleObject wasm, const char* name,
-                            MutableHandleObject proto) {
-  proto.set(NewBuiltinClassInstance<PlainObject>(cx, SingletonObject));
-  if (!proto) {
-    return false;
-  }
-
-  if (!DefinePropertiesAndFunctions(cx, proto, Class::properties,
-                                    Class::methods)) {
-    return false;
-  }
-
-  RootedAtom className(cx, Atomize(cx, name, strlen(name)));
-  if (!className) {
-    return false;
-  }
-
-  RootedFunction ctor(cx,
-                      NewNativeConstructor(cx, Class::construct, 1, className));
-  if (!ctor) {
-    return false;
-  }
-
-  if (!DefinePropertiesAndFunctions(cx, ctor, nullptr, Class::static_methods)) {
-    return false;
-  }
-
-  if (!LinkConstructorAndPrototype(cx, ctor, proto)) {
-    return false;
-  }
-
-  UniqueChars tagStr(JS_smprintf("WebAssembly.%s", name));
-  if (!tagStr) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  RootedAtom tag(cx, Atomize(cx, tagStr.get(), strlen(tagStr.get())));
-  if (!tag) {
-    return false;
-  }
-  if (!DefineToStringTag(cx, proto, tag)) {
-    return false;
-  }
-
-  RootedId id(cx, AtomToId(className));
-  RootedValue ctorValue(cx, ObjectValue(*ctor));
-  return DefineDataProperty(cx, wasm, id, ctorValue, 0);
-}
-
-static bool InitErrorClass(JSContext* cx, HandleObject wasm, const char* name,
-                           JSExnType exn) {
-  Handle<GlobalObject*> global = cx->global();
-  RootedObject proto(
-      cx, GlobalObject::getOrCreateCustomErrorPrototype(cx, global, exn));
-  if (!proto) {
-    return false;
-  }
-
-  RootedAtom className(cx, Atomize(cx, name, strlen(name)));
-  if (!className) {
-    return false;
-  }
-
-  RootedId id(cx, AtomToId(className));
-  RootedValue ctorValue(cx, global->getConstructor(GetExceptionProtoKey(exn)));
-  return DefineDataProperty(cx, wasm, id, ctorValue, 0);
-}
-
-JSObject* js::InitWebAssemblyClass(JSContext* cx,
-                                   Handle<GlobalObject*> global) {
+static JSObject* CreateWebAssemblyObject(JSContext* cx, JSProtoKey key) {
   MOZ_RELEASE_ASSERT(HasSupport(cx));
 
-  MOZ_ASSERT(!global->isStandardClassResolved(JSProto_WebAssembly));
-
+  Handle<GlobalObject*> global = cx->global();
   RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
   if (!proto) {
     return nullptr;
   }
-
-  RootedObject wasm(cx, NewObjectWithGivenProto(cx, &WebAssemblyClass, proto,
-                                                SingletonObject));
-  if (!wasm) {
-    return nullptr;
-  }
-
-  if (!JS_DefineFunctions(cx, wasm, WebAssembly_static_methods)) {
-    return nullptr;
-  }
-
-  RootedObject moduleProto(cx), instanceProto(cx), memoryProto(cx),
-      tableProto(cx);
-  RootedObject globalProto(cx);
-  if (!InitConstructor<WasmModuleObject>(cx, wasm, "Module", &moduleProto)) {
-    return nullptr;
-  }
-  if (!InitConstructor<WasmInstanceObject>(cx, wasm, "Instance",
-                                           &instanceProto)) {
-    return nullptr;
-  }
-  if (!InitConstructor<WasmMemoryObject>(cx, wasm, "Memory", &memoryProto)) {
-    return nullptr;
-  }
-  if (!InitConstructor<WasmTableObject>(cx, wasm, "Table", &tableProto)) {
-    return nullptr;
-  }
-  if (!InitConstructor<WasmGlobalObject>(cx, wasm, "Global", &globalProto)) {
-    return nullptr;
-  }
-  if (!InitErrorClass(cx, wasm, "CompileError", JSEXN_WASMCOMPILEERROR)) {
-    return nullptr;
-  }
-  if (!InitErrorClass(cx, wasm, "LinkError", JSEXN_WASMLINKERROR)) {
-    return nullptr;
-  }
-  if (!InitErrorClass(cx, wasm, "RuntimeError", JSEXN_WASMRUNTIMEERROR)) {
-    return nullptr;
-  }
-
-  // Perform the final fallible write of the WebAssembly object to a global
-  // object property at the end. Only after that succeeds write all the
-  // constructor and prototypes to the JSProto slots. This ensures that
-  // initialization is atomic since a failed initialization can be retried.
-
-  if (!JS_DefineProperty(cx, global, js_WebAssembly_str, wasm,
-                         JSPROP_RESOLVING)) {
-    return nullptr;
-  }
-
-  global->setPrototype(JSProto_WasmModule, ObjectValue(*moduleProto));
-  global->setPrototype(JSProto_WasmInstance, ObjectValue(*instanceProto));
-  global->setPrototype(JSProto_WasmMemory, ObjectValue(*memoryProto));
-  global->setPrototype(JSProto_WasmTable, ObjectValue(*tableProto));
-  global->setPrototype(JSProto_WasmGlobal, ObjectValue(*globalProto));
-  global->setConstructor(JSProto_WebAssembly, ObjectValue(*wasm));
-
-  MOZ_ASSERT(global->isStandardClassResolved(JSProto_WebAssembly));
-  return wasm;
+  return NewObjectWithGivenProto(cx, &WebAssemblyClass, proto, SingletonObject);
 }
+
+static bool WebAssemblyClassFinish(JSContext* cx, HandleObject wasm,
+                                   HandleObject proto) {
+  struct NameAndProtoKey {
+    const char* const name;
+    JSProtoKey key;
+  };
+
+  constexpr NameAndProtoKey entries[] = {
+      {"Module", JSProto_WasmModule},
+      {"Instance", JSProto_WasmInstance},
+      {"Memory", JSProto_WasmMemory},
+      {"Table", JSProto_WasmTable},
+      {"Global", JSProto_WasmGlobal},
+      {"CompileError", GetExceptionProtoKey(JSEXN_WASMCOMPILEERROR)},
+      {"LinkError", GetExceptionProtoKey(JSEXN_WASMLINKERROR)},
+      {"RuntimeError", GetExceptionProtoKey(JSEXN_WASMRUNTIMEERROR)},
+  };
+
+  RootedValue ctorValue(cx);
+  RootedId id(cx);
+  for (const auto& entry : entries) {
+    const char* name = entry.name;
+    JSProtoKey key = entry.key;
+
+    JSObject* ctor = GlobalObject::getOrCreateConstructor(cx, key);
+    if (!ctor) {
+      return false;
+    }
+    ctorValue.setObject(*ctor);
+
+    JSAtom* className = Atomize(cx, name, strlen(name));
+    if (!className) {
+      return false;
+    }
+    id.set(AtomToId(className));
+
+    if (!DefineDataProperty(cx, wasm, id, ctorValue, 0)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+static const ClassSpec WebAssemblyClassSpec = {CreateWebAssemblyObject,
+                                               nullptr,
+                                               WebAssembly_static_methods,
+                                               nullptr,
+                                               nullptr,
+                                               nullptr,
+                                               WebAssemblyClassFinish};
+
+const JSClass js::WebAssemblyClass = {
+    js_WebAssembly_str, JSCLASS_HAS_CACHED_PROTO(JSProto_WebAssembly),
+    JS_NULL_CLASS_OPS, &WebAssemblyClassSpec};
