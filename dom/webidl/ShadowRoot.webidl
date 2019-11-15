@@ -26,6 +26,7 @@ interface ShadowRoot : DocumentFragment
 
   Element? getElementById(DOMString elementId);
 
+  // https://w3c.github.io/DOM-Parsing/#the-innerhtml-mixin
   [CEReactions, SetterThrows]
   attribute [TreatNullAs=EmptyString] DOMString innerHTML;
 
