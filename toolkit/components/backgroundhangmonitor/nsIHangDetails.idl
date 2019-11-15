@@ -21,12 +21,6 @@ class HangDetails;
 interface nsIHangDetails : nsISupports
 {
   /**
-   * The hang was persisted to disk as a permahang, so we can clear the
-   * permahang file once we submit this.
-   */
-  readonly attribute bool wasPersisted;
-
-  /**
    * The detected duration of the hang in milliseconds.
    */
   readonly attribute double duration;
