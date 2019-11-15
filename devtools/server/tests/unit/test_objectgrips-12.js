@@ -11,37 +11,18 @@ const { PromiseTestUtils } = ChromeUtils.import(
 );
 
 var gDebuggee;
-var gClient;
 var gThreadFront;
 
-Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
-
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
-});
-
-function run_test() {
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-grips");
-  gDebuggee.eval(
-    function stopMe(arg1) {
-      debugger;
-    }.toString()
-  );
-
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
+add_task(
+  threadFrontTest(
+    async ({ threadFront, debuggee }) => {
       gThreadFront = threadFront;
+      gDebuggee = debuggee;
       test_display_string();
-    });
-  });
-  do_test_pending();
-}
+    },
+    { waitForFinish: true }
+  )
+);
 
 function test_display_string() {
   const testCases = [
@@ -171,10 +152,16 @@ function test_display_string() {
         loop();
       } else {
         await gThreadFront.resume();
-        finishClient(gClient);
+        threadFrontTestFinished();
       }
     })();
   });
+
+  gDebuggee.eval(
+    function stopMe(arg1) {
+      debugger;
+    }.toString()
+  );
 
   const inputs = testCases.map(({ input }) => input).join(",");
   gDebuggee.eval("stopMe(" + inputs + ")");

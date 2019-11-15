@@ -9,30 +9,17 @@ var gClient;
 var gThreadFront;
 const { EnvironmentFront } = require("devtools/shared/fronts/environment");
 
-Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
-
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
-});
-
-// Test that the EnvironmentFront's getBindings() method works as expected.
-function run_test() {
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-bindings");
-
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-bindings", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
+add_task(
+  threadFrontTest(
+    async ({ threadFront, debuggee, client }) => {
       gThreadFront = threadFront;
+      gDebuggee = debuggee;
+      gClient = client;
       test_banana_environment();
-    });
-  });
-  do_test_pending();
-}
+    },
+    { waitForFinish: true }
+  )
+);
 
 function test_banana_environment() {
   gThreadFront.once("paused", async function(packet) {
@@ -57,7 +44,7 @@ function test_banana_environment() {
     response = await grandpaClient.getBindings();
     Assert.equal(response.arguments[0].y.value, "y");
     await gThreadFront.resume();
-    finishClient(gClient);
+    threadFrontTestFinished();
   });
 
   gDebuggee.eval(

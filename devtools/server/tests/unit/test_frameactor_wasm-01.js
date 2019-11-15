@@ -9,38 +9,22 @@
  */
 
 var gDebuggee;
-var gClient;
 var gThreadFront;
 
-function run_test() {
-  if (typeof WebAssembly == "undefined") {
-    // wasm is not enabled for this platform
-    return;
-  }
-
-  Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
-  });
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-stack");
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", async function(
-      response,
-      targetFront,
-      threadFront
-    ) {
+add_task(
+  threadFrontTest(
+    async ({ threadFront, debuggee }) => {
       gThreadFront = threadFront;
+      gDebuggee = debuggee;
       await gThreadFront.reconfigure({
         observeAsmJS: true,
         wasmBinarySource: true,
       });
       test_pause_frame();
-    });
-  });
-  do_test_pending();
-}
+    },
+    { waitForFinish: true }
+  )
+);
 
 function test_pause_frame() {
   gThreadFront.once("paused", function(packet) {
@@ -57,7 +41,7 @@ function test_pause_frame() {
       Assert.equal(location.column > 0, true);
       Assert.equal(/^wasm:(?:[^:]*:)*?[0-9a-f]{16}$/.test(source.url), true);
 
-      finishClient(gClient);
+      threadFrontTestFinished();
     });
   });
 

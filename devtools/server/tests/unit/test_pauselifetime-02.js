@@ -12,26 +12,17 @@ var gDebuggee;
 var gClient;
 var gThreadFront;
 
-function run_test() {
-  Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
-  });
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-stack");
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
+add_task(
+  threadFrontTest(
+    async ({ threadFront, debuggee, client }) => {
       gThreadFront = threadFront;
+      gDebuggee = debuggee;
+      gClient = client;
       test_pause_frame();
-    });
-  });
-  do_test_pending();
-}
+    },
+    { waitForFinish: true }
+  )
+);
 
 function test_pause_frame() {
   gThreadFront.once("paused", async function(packet) {
@@ -60,7 +51,7 @@ function test_pause_frame() {
         ok(true, "bogusRequest thrown");
         Assert.equal(e.error, "noSuchActor");
       }
-      finishClient(gClient);
+      threadFrontTestFinished();
     });
   });
 

@@ -7,34 +7,17 @@ var gDebuggee;
 var gClient;
 var gThreadFront;
 
-Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
-
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
-});
-
-function run_test() {
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-grips");
-  gDebuggee.eval(
-    function stopMe(arg1) {
-      debugger;
-    }.toString()
-  );
-
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
+add_task(
+  threadFrontTest(
+    async ({ threadFront, debuggee, client }) => {
       gThreadFront = threadFront;
+      gDebuggee = debuggee;
+      gClient = client;
       test_longstring_grip();
-    });
-  });
-  do_test_pending();
-}
+    },
+    { waitForFinish: true }
+  )
+);
 
 function test_longstring_grip() {
   const longString =
@@ -81,6 +64,12 @@ function test_longstring_grip() {
       });
     }
   });
+
+  gDebuggee.eval(
+    function stopMe(arg1) {
+      debugger;
+    }.toString()
+  );
 
   gDebuggee.eval('stopMe("' + longString + '")');
 }

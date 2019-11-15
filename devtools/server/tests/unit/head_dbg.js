@@ -901,12 +901,16 @@ async function setupTestFromUrl(url) {
  *        - bool wantXrays
  *          Whether the debuggee wants Xray vision with respect to same-origin objects
  *          outside the sandbox. Defaults to true.
+ *        - bool waitForFinish
+ *          Whether to wait for a call to threadFrontTestFinished after the test
+ *          function finishes.
  */
 function threadFrontTest(test, options = {}) {
   const {
     principal = systemPrincipal,
     doNotRunWorker = false,
     wantXrays = true,
+    waitForFinish = false,
   } = options;
 
   async function runThreadFrontTestWithServer(server, test) {
@@ -932,7 +936,18 @@ function threadFrontTest(test, options = {}) {
     );
 
     // Run the test function
-    await test({ threadFront, debuggee, client, server, targetFront });
+    const args = { threadFront, debuggee, client, server, targetFront };
+    if (waitForFinish) {
+      // Use dispatchToMainThread so that the test function does not have to
+      // finish executing before the test itself finishes.
+      const promise = new Promise(
+        resolve => (threadFrontTestFinished = resolve)
+      );
+      Services.tm.dispatchToMainThread(() => test(args));
+      await promise;
+    } else {
+      await test(args);
+    }
 
     // Cleanup the client after the test ran
     await client.close();
@@ -954,3 +969,10 @@ function threadFrontTest(test, options = {}) {
     }
   };
 }
+
+// This callback is used in tandem with the waitForFinish option of
+// threadFrontTest to support thread front tests that use promises to
+// asynchronously finish the tests, instead of using async/await.
+// Newly written tests should avoid using this. See bug 1596114 for migrating
+// existing tests to async/await and removing this functionality.
+let threadFrontTestFinished;

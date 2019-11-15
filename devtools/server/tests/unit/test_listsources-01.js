@@ -6,37 +6,29 @@
 /**
  * Check basic getSources functionality.
  */
-
 var gDebuggee;
-var gClient;
 var gThreadFront;
 
 var gNumTimesSourcesSent = 0;
 
-function run_test() {
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-stack");
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.request = (function(origRequest) {
-    return function(request, onResponse) {
-      if (request.type === "sources") {
-        ++gNumTimesSourcesSent;
-      }
-      return origRequest.call(this, request, onResponse);
-    };
-  })(gClient.request);
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", function(
-      response,
-      targetFront,
-      threadFront
-    ) {
+add_task(
+  threadFrontTest(
+    async ({ threadFront, debuggee, client }) => {
       gThreadFront = threadFront;
+      gDebuggee = debuggee;
+      client.request = (function(origRequest) {
+        return function(request, onResponse) {
+          if (request.type === "sources") {
+            ++gNumTimesSourcesSent;
+          }
+          return origRequest.call(this, request, onResponse);
+        };
+      })(client.request);
       test_simple_listsources();
-    });
-  });
-  do_test_pending();
-}
+    },
+    { waitForFinish: true }
+  )
+);
 
 function test_simple_listsources() {
   gThreadFront.once("paused", function(packet) {
@@ -54,7 +46,7 @@ function test_simple_listsources() {
       );
 
       gThreadFront.resume().then(function() {
-        finishClient(gClient);
+        threadFrontTestFinished();
       });
     });
   });
