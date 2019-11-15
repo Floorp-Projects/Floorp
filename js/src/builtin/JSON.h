@@ -15,9 +15,12 @@
 
 namespace js {
 
+class GlobalObject;
 class StringBuffer;
 
 extern const JSClass JSONClass;
+
+extern JSObject* InitJSONClass(JSContext* cx, Handle<GlobalObject*> obj);
 
 enum class StringifyBehavior { Normal, RestrictedSafe };
 

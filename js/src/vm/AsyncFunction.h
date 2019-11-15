@@ -16,8 +16,7 @@
 namespace js {
 
 class AsyncFunctionGeneratorObject;
-
-extern const JSClass AsyncFunctionClass;
+class GlobalObject;
 
 // Resume the async function when the `await` operand resolves.
 // Split into two functions depending on whether the awaited value was
@@ -56,6 +55,9 @@ class AsyncFunctionGeneratorObject : public AbstractGeneratorObject {
     return &getFixedSlot(PROMISE_SLOT).toObject().as<PromiseObject>();
   }
 };
+
+extern JSObject* InitAsyncFunction(JSContext* cx,
+                                   js::Handle<GlobalObject*> global);
 
 }  // namespace js
 
