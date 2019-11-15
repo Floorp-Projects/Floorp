@@ -16,7 +16,7 @@
 
 namespace js {
 
-class GlobalObject;
+extern const JSClass GeneratorFunctionClass;
 
 enum class GeneratorResumeKind { Next, Throw, Return };
 
@@ -224,9 +224,6 @@ AbstractGeneratorObject* GetGeneratorObjectForFrame(JSContext* cx,
                                                     AbstractFramePtr frame);
 
 void SetGeneratorClosed(JSContext* cx, AbstractFramePtr frame);
-
-extern JSObject* InitGeneratorFunction(JSContext* cx,
-                                       js::Handle<GlobalObject*> global);
 
 }  // namespace js
 
