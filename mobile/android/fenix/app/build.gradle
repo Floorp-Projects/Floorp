@@ -80,6 +80,34 @@ android {
                     "sharedUserId": "org.mozilla.firefox.sharedID"
             ]
         }
+        fennecBeta releaseTemplate >> {
+            buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
+            applicationIdSuffix ".firefox_beta"
+            manifestPlaceholders = [
+                    // This release type is meant to replace Firefox (Release channel) and therefore needs to inherit
+                    // its sharedUserId for all eternity. See:
+                    // https://searchfox.org/mozilla-central/search?q=moz_android_shared_id&case=false&regexp=false&path=
+                    // Shipping an app update without sharedUserId can have
+                    // fatal consequences. For example see:
+                    //  - https://issuetracker.google.com/issues/36924841
+                    //  - https://issuetracker.google.com/issues/36905922
+                    "sharedUserId": "org.mozilla.firefox.sharedID"
+            ]
+        }
+        fennecNightly releaseTemplate >> {
+            buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
+            applicationIdSuffix ".fennec_aurora"
+            manifestPlaceholders = [
+                    // This release type is meant to replace Firefox (Release channel) and therefore needs to inherit
+                    // its sharedUserId for all eternity. See:
+                    // https://searchfox.org/mozilla-central/search?q=moz_android_shared_id&case=false&regexp=false&path=
+                    // Shipping an app update without sharedUserId can have
+                    // fatal consequences. For example see:
+                    //  - https://issuetracker.google.com/issues/36924841
+                    //  - https://issuetracker.google.com/issues/36905922
+                    "sharedUserId": "org.mozilla.fennec.sharedID"
+            ]
+        }
     }
 
     variantFilter { // There's a "release" build type that exists by default that we don't use (it's replaced by "nightly" and "beta")
@@ -97,7 +125,8 @@ android {
         // | fenixBeta          | ❌            | ✅       | Fenix Beta ships with GV Beta
         // | fenixProduction    | ❌            | ✅       | Fenix Production ships with GV Beta
         // | fennecProduction   | ❌            | ✅       | Fenix build to replace production Firefox builds
-        //
+        // | fennecBeta         | ❌            | ✅       | Fenix build to replace beta Firefox builds
+        // | fennecNightly      | ✅            | ❌       | Fenix build to replace Nightly Firefox builds
 
         def flavors = flavors*.name.toString().toLowerCase()
 
@@ -109,7 +138,11 @@ android {
             setIgnore true
         }
 
-        if (buildType.name == 'fennecProduction' && flavors.contains("geckonightly")) {
+        if ((buildType.name == 'fennecProduction' || buildType.name == 'fennecBeta') && flavors.contains("geckonightly")) {
+            setIgnore true
+        }
+
+        if (buildType.name == 'fennecNightly' && flavors.contains("geckobeta")) {
             setIgnore true
         }
     }
@@ -124,6 +157,18 @@ android {
     sourceSets {
         androidTest {
             resources.srcDirs += ['src/androidTest/resources']
+        }
+        fennecNightly {
+            java.srcDirs = ['src/migration/java']
+            manifest.srcFile "src/migration/AndroidManifest.xml"
+        }
+        fennecBeta {
+            java.srcDirs = ['src/migration/java']
+            manifest.srcFile "src/migration/AndroidManifest.xml"
+        }
+        fennecProduction {
+            java.srcDirs = ['src/migration/java']
+            manifest.srcFile "src/migration/AndroidManifest.xml"
         }
     }
 
@@ -397,6 +442,8 @@ dependencies {
 
     // We only care about support-migration in builds that will be overwriting Fennec.
     fennecProductionImplementation Deps.mozilla_support_migration
+    fennecBetaImplementation Deps.mozilla_support_migration
+    fennecNightlyImplementation Deps.mozilla_support_migration
 
     implementation Deps.mozilla_ui_colors
     implementation Deps.mozilla_ui_icons
