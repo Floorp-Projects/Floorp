@@ -578,14 +578,14 @@ class nsCompleteUpgradeData : public ARefBase {
 };
 
 nsresult nsHttpConnectionMgr::CompleteUpgrade(
-    nsHttpTransaction* aTrans, nsIHttpUpgradeListener* aUpgradeListener) {
+    HttpTransactionShell* aTrans, nsIHttpUpgradeListener* aUpgradeListener) {
   // test if aUpgradeListener is a wrapped JsObject
   nsCOMPtr<nsIXPConnectWrappedJS> wrapper = do_QueryInterface(aUpgradeListener);
 
   bool wrapped = !!wrapper;
 
-  RefPtr<nsCompleteUpgradeData> data =
-      new nsCompleteUpgradeData(aTrans, aUpgradeListener, wrapped);
+  RefPtr<nsCompleteUpgradeData> data = new nsCompleteUpgradeData(
+      aTrans->AsHttpTransaction(), aUpgradeListener, wrapped);
   return PostEvent(&nsHttpConnectionMgr::OnMsgCompleteUpgrade, 0, data);
 }
 

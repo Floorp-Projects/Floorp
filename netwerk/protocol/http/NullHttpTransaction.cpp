@@ -90,7 +90,6 @@ NullHttpTransaction::NullHttpTransaction(nsHttpConnectionInfo* ci,
     : mStatus(NS_OK),
       mCaps(caps | NS_HTTP_ALLOW_KEEPALIVE),
       mRequestHead(nullptr),
-      mCapsToClear(0),
       mIsDone(false),
       mClaimed(false),
       mFastOpenStatus(TFO_NOT_TRIED),
@@ -196,12 +195,7 @@ bool NullHttpTransaction::IsDone() { return mIsDone; }
 
 nsresult NullHttpTransaction::Status() { return mStatus; }
 
-uint32_t NullHttpTransaction::Caps() { return mCaps & ~mCapsToClear; }
-
-void NullHttpTransaction::SetDNSWasRefreshed() {
-  MOZ_ASSERT(NS_IsMainThread(), "SetDNSWasRefreshed on main thread only!");
-  mCapsToClear |= NS_HTTP_REFRESH_DNS;
-}
+uint32_t NullHttpTransaction::Caps() { return mCaps; }
 
 nsresult NullHttpTransaction::ReadSegments(nsAHttpSegmentReader* reader,
                                            uint32_t count,

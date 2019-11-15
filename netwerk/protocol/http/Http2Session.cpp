@@ -4507,10 +4507,6 @@ uint32_t Http2Session::Caps() {
   return 0;
 }
 
-void Http2Session::SetDNSWasRefreshed() {
-  MOZ_ASSERT(false, "Http2Session::SetDNSWasRefreshed()");
-}
-
 nsHttpRequestHead* Http2Session::RequestHead() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(false,

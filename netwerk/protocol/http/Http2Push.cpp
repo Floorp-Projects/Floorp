@@ -451,8 +451,6 @@ nsresult Http2PushTransactionBuffer::Status() { return mStatus; }
 
 uint32_t Http2PushTransactionBuffer::Caps() { return 0; }
 
-void Http2PushTransactionBuffer::SetDNSWasRefreshed() {}
-
 uint64_t Http2PushTransactionBuffer::Available() {
   return mBufferedHTTP1Used - mBufferedHTTP1Consumed;
 }
