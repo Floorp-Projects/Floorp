@@ -20,7 +20,7 @@ import mozharness
 
 from mozharness.base.errors import PythonErrorList
 from mozharness.base.log import OutputParser, DEBUG, ERROR, CRITICAL, INFO
-from mozharness.mozilla.automation import TBPL_RETRY, TBPL_WORST_LEVEL_TUPLE
+from mozharness.mozilla.automation import TBPL_SUCCESS, TBPL_RETRY, TBPL_WORST_LEVEL_TUPLE
 from mozharness.mozilla.testing.android import AndroidMixin
 from mozharness.mozilla.testing.errors import HarnessErrorList, TinderBoxPrintRe
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
@@ -764,6 +764,8 @@ class RaptorOutputParser(OutputParser):
         super(RaptorOutputParser, self).__init__(**kwargs)
         self.minidump_output = None
         self.found_perf_data = []
+        self.tbpl_status = TBPL_SUCCESS
+        self.worst_log_level = INFO
         self.harness_retry_re = TinderBoxPrintRe['harness_error']['retry_regex']
 
     def parse_single_line(self, line):
