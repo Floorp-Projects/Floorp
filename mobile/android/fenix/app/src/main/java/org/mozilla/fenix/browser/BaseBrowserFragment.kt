@@ -23,7 +23,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.component_search.toolbar
+import kotlinx.android.synthetic.main.component_search.*
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.Dispatchers.IO
@@ -264,13 +264,17 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
             )
 
             downloadFeature.onDownloadCompleted = { download, _, downloadJobStatus ->
-                val dialog = DownloadNotificationBottomSheetDialog(
-                    context = context,
-                    didFail = downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED,
-                    download = download,
-                    tryAgain = downloadFeature::tryAgain
-                )
-                dialog.show()
+                // If the download is just paused, don't show any in-app notification
+                if (downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.COMPLETED ||
+                    downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED) {
+                    val dialog = DownloadNotificationBottomSheetDialog(
+                        context = context,
+                        didFail = downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED,
+                        download = download,
+                        tryAgain = downloadFeature::tryAgain
+                    )
+                    dialog.show()
+                }
             }
 
             downloadsFeature.set(
