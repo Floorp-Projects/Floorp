@@ -100,7 +100,7 @@ class EverythingFailsByDefaultTrustDomain : public TrustDomain {
                       Result::FATAL_ERROR_LIBRARY_FAILURE);
   }
 
-  Result CheckRevocation(EndEntityOrCA, const CertID&, Time, Duration,
+  Result CheckRevocation(EndEntityOrCA, const CertID&, Time, Time, Duration,
                          /*optional*/ const Input*,
                          /*optional*/ const Input*) override {
     ADD_FAILURE();
