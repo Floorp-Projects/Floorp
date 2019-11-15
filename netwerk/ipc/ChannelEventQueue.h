@@ -154,8 +154,8 @@ class ChannelEventQueue final {
                            bool aAssertionWhenNotQueued = false);
 
   // Append ChannelEvent in front of the event queue.
-  inline nsresult PrependEvent(UniquePtr<ChannelEvent>&& aEvent);
-  inline nsresult PrependEvents(nsTArray<UniquePtr<ChannelEvent>>& aEvents);
+  inline void PrependEvent(UniquePtr<ChannelEvent>&& aEvent);
+  inline void PrependEvents(nsTArray<UniquePtr<ChannelEvent>>& aEvents);
 
   // After StartForcedQueueing is called, RunOrEnqueue() will start enqueuing
   // events that will be run/flushed when EndForcedQueueing is called.
@@ -282,7 +282,7 @@ inline void ChannelEventQueue::EndForcedQueueing() {
   }
 }
 
-inline nsresult ChannelEventQueue::PrependEvent(
+inline void ChannelEventQueue::PrependEvent(
     UniquePtr<ChannelEvent>&& aEvent) {
   MutexAutoLock lock(mMutex);
 
@@ -292,17 +292,10 @@ inline nsresult ChannelEventQueue::PrependEvent(
   // the added event.
   MOZ_ASSERT(mSuspended || !!mForcedCount);
 
-  UniquePtr<ChannelEvent>* newEvent =
-      mEventQueue.InsertElementAt(0, std::move(aEvent));
-
-  if (!newEvent) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
+  mEventQueue.InsertElementAt(0, std::move(aEvent));
 }
 
-inline nsresult ChannelEventQueue::PrependEvents(
+inline void ChannelEventQueue::PrependEvents(
     nsTArray<UniquePtr<ChannelEvent>>& aEvents) {
   MutexAutoLock lock(mMutex);
 
@@ -312,17 +305,11 @@ inline nsresult ChannelEventQueue::PrependEvents(
   // the added events.
   MOZ_ASSERT(mSuspended || !!mForcedCount);
 
-  UniquePtr<ChannelEvent>* newEvents =
-      mEventQueue.InsertElementsAt(0, aEvents.Length());
-  if (!newEvents) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  mEventQueue.InsertElementsAt(0, aEvents.Length());
 
   for (uint32_t i = 0; i < aEvents.Length(); i++) {
-    newEvents[i] = std::move(aEvents[i]);
+    mEventQueue[i] = std::move(aEvents[i]);
   }
-
-  return NS_OK;
 }
 
 inline void ChannelEventQueue::CompleteResume() {

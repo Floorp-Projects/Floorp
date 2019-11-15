@@ -3342,14 +3342,12 @@ HttpChannelChild::UnknownDecoderInvolvedOnStartRequestCalled() {
 
   mUnknownDecoderInvolved = false;
 
-  nsresult rv = NS_OK;
-
   if (mDivertingToParent) {
-    rv = mEventQ->PrependEvents(mUnknownDecoderEventQ);
+    mEventQ->PrependEvents(mUnknownDecoderEventQ);
   }
   mUnknownDecoderEventQ.Clear();
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
