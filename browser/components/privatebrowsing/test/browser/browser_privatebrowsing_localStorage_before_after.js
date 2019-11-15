@@ -18,23 +18,27 @@ add_task(async function test() {
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
-  let privateBrowser = BrowserTestUtils.addTab(
-    privateWin.gBrowser,
-    prefix + "browser_privatebrowsing_localStorage_before_after_page.html"
-  ).linkedBrowser;
-  await BrowserTestUtils.browserLoaded(privateBrowser);
+  let testURL =
+    prefix + "browser_privatebrowsing_localStorage_before_after_page.html";
+  await BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser, testURL);
 
-  is(privateBrowser.contentTitle, "1", "localStorage should contain 1 item");
+  is(
+    privateWin.gBrowser.selectedBrowser.contentTitle,
+    "1",
+    "localStorage should contain 1 item"
+  );
 
   // Step 2.
   let win = await BrowserTestUtils.openNewBrowserWindow();
-  let browser = BrowserTestUtils.addTab(
-    win.gBrowser,
-    prefix + "browser_privatebrowsing_localStorage_before_after_page2.html"
-  ).linkedBrowser;
-  await BrowserTestUtils.browserLoaded(browser);
+  testURL =
+    prefix + "browser_privatebrowsing_localStorage_before_after_page2.html";
+  await BrowserTestUtils.openNewForegroundTab(win.gBrowser, testURL);
 
-  is(browser.contentTitle, "null|0", "localStorage should contain 0 items");
+  is(
+    win.gBrowser.selectedBrowser.contentTitle,
+    "null|0",
+    "localStorage should contain 0 items"
+  );
 
   // Cleanup
   await BrowserTestUtils.closeWindow(privateWin);
