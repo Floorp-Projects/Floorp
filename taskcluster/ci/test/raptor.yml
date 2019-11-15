@@ -47,6 +47,7 @@ raptor-tp6-1-firefox:
     variants: ["fission"]
     try-name: raptor-tp6-1-firefox
     treeherder-symbol: Rap(tp6-1)
+    condprof: True
     mozharness:
         extra-options:
             - --test=raptor-tp6-1
@@ -688,6 +689,7 @@ raptor-tp6-1-firefox-cold:
     try-name: raptor-tp6-1-firefox-cold
     treeherder-symbol: Rap(tp6-c-1)
     tier: 2
+    condprof: True
     mozharness:
         extra-options:
             - --test=raptor-tp6-1-cold

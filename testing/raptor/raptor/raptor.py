@@ -26,6 +26,8 @@ import mozinfo
 import mozprocess
 import mozproxy.utils as mpu
 import mozversion
+from condprof.client import get_profile
+from condprof.util import get_current_platform
 from logger.logger import RaptorLogger
 from mozdevice import ADBDevice
 from mozlog import commandline
@@ -103,7 +105,7 @@ either Raptor or browsertime."""
                  symbols_path=None, host=None, power_test=False, cpu_test=False, memory_test=False,
                  is_release_build=False, debug_mode=False, post_startup_delay=None,
                  interrupt_handler=None, e10s=True, enable_webrender=False,
-                 results_handler_class=RaptorResultsHandler,
+                 results_handler_class=RaptorResultsHandler, with_conditioned_profile=False,
                  **kwargs):
 
         # Override the magic --host HOST_IP with the value of the environment variable.
@@ -129,6 +131,7 @@ either Raptor or browsertime."""
             'enable_control_server_wait': memory_test or cpu_test,
             'e10s': e10s,
             'enable_webrender': enable_webrender,
+            'with_conditioned_profile': with_conditioned_profile,
         }
         # We can never use e10s on fennec
         if self.config['app'] == 'fennec':
@@ -146,6 +149,7 @@ either Raptor or browsertime."""
         self.post_startup_delay = post_startup_delay
         self.device = None
         self.profile_class = profile_class or app
+        self.conditioned_profile_dir = None
         self.firefox_android_apps = FIREFOX_ANDROID_APPS
         self.interrupt_handler = interrupt_handler
         self.results_handler = results_handler_class(**self.config)
@@ -168,8 +172,41 @@ either Raptor or browsertime."""
 
         self.build_browser_profile()
 
+    def get_conditioned_profile(self):
+        """Downloads a platform-specific conditioned profile, using the
+        condprofile client API; returns a self.conditioned_profile_dir"""
+
+        # create a temp file to help ensure uniqueness
+        temp_download_dir = tempfile.mkdtemp()
+        LOG.info("Making temp_download_dir from inside get_conditioned_profile {}"
+                 .format(temp_download_dir))
+        platform = get_current_platform()
+        cond_prof_target_dir = get_profile(temp_download_dir, platform, "cold")
+        LOG.info("temp_download_dir is: {}".format(temp_download_dir))
+        LOG.info("cond_prof_target_dir is: {}".format(cond_prof_target_dir))
+
+        self.conditioned_profile_dir = os.path.join(temp_download_dir, cond_prof_target_dir)
+        if not os.path.exists(cond_prof_target_dir):
+            LOG.critical("Can't find target_dir {}, from get_profile()"
+                         "temp_download_dir {}, platform {}, cold"
+                         .format(cond_prof_target_dir, temp_download_dir, platform))
+            raise OSError
+
+        LOG.info("self.conditioned_profile_dir is now set: {}"
+                 .format(self.conditioned_profile_dir))
+        shutil.rmtree(temp_download_dir)
+
+        return self.conditioned_profile_dir
+
     def build_browser_profile(self):
-        self.profile = create_profile(self.profile_class)
+        # if --with-conditioned-profile was passed in via the commandline,
+        # we need to fetch and use a conditioned profile
+        if self.config['with_conditioned_profile']:
+            self.get_conditioned_profile()
+            self.profile = create_profile(self.profile_class, profile=self.conditioned_profile_dir)
+        else:
+            # have mozprofile create a new profile for us
+            self.profile = create_profile(self.profile_class)
 
         # Merge extra profile data from testing/profiles
         with open(os.path.join(self.profile_data_dir, 'profiles.json'), 'r') as fh:
@@ -811,6 +848,7 @@ class Raptor(Perftest):
             power_test=self.config.get('power_test'),
             cpu_test=self.config.get('cpu_test'),
             memory_test=self.config.get('memory_test'),
+            with_conditioned_profile=self.config['with_conditioned_profile']
         )
         browser_name, browser_version = self.get_browser_meta()
         self.results_handler.add_browser_meta(self.config['app'], browser_version)
@@ -1727,6 +1765,7 @@ def main(args=sys.argv[1:]):
                           intent=args.intent,
                           interrupt_handler=SignalHandler(),
                           enable_webrender=args.enable_webrender,
+                          with_conditioned_profile=args.with_conditioned_profile,
                           )
 
     success = raptor.run_tests(raptor_test_list, raptor_test_names)
