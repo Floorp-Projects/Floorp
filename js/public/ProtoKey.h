@@ -58,7 +58,7 @@
   REAL(Date, InitViaClassSpec, OCLASP(Date))                                 \
   REAL(Math, InitMathClass, CLASP(Math))                                     \
   REAL(Number, InitViaClassSpec, OCLASP(Number))                             \
-  REAL(String, InitStringClass, OCLASP(String))                              \
+  REAL(String, InitViaClassSpec, OCLASP(String))                             \
   REAL(RegExp, InitViaClassSpec, OCLASP(RegExp))                             \
   REAL(Error, InitViaClassSpec, ERROR_CLASP(JSEXN_ERR))                      \
   REAL(InternalError, InitViaClassSpec, ERROR_CLASP(JSEXN_INTERNALERR))      \
