@@ -94,8 +94,6 @@
 
 namespace js {
 
-class GlobalObject;
-
 /*
  * Helper method for converting a double into other scalar
  * types in the same way that JavaScript would. In particular,
@@ -535,6 +533,9 @@ class TypedObjectModuleObject : public NativeObject {
   };
 
   static const JSClass class_;
+
+ private:
+  static const ClassSpec classSpec_;
 };
 
 /* Base type for transparent and opaque typed objects. */
@@ -1050,9 +1051,6 @@ inline bool IsTypeDescrClass(const JSClass* clasp) {
 inline bool TypedObject::opaque() const {
   return IsOpaqueTypedObjectClass(getClass());
 }
-
-JSObject* InitTypedObjectModuleObject(JSContext* cx,
-                                      JS::Handle<GlobalObject*> global);
 
 }  // namespace js
 

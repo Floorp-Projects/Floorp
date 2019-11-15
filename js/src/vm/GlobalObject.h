@@ -455,9 +455,7 @@ class GlobalObject : public NativeObject {
 
   static JSObject* getOrCreateTypedObjectModule(JSContext* cx,
                                                 Handle<GlobalObject*> global) {
-    return getOrCreateObject(cx, global,
-                             APPLICATION_SLOTS + JSProto_TypedObject,
-                             initTypedObjectModule);
+    return getOrCreateConstructor(cx, JSProto_TypedObject);
   }
 
   static TypeDescr* getOrCreateScalarTypeDescr(JSContext* cx,
