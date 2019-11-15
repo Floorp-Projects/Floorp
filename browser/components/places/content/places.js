@@ -724,7 +724,7 @@ var PlacesOrganizer = {
     infoBox.hidden = false;
     let selectedNode = aNodeList.length == 1 ? aNodeList[0] : null;
 
-    // If a textbox within a panel is focused, force-blur it so its contents
+    // If an input within a panel is focused, force-blur it so its contents
     // are saved
     if (gEditItemOverlay.itemId != -1) {
       var focusedElement = document.commandDispatcher.focusedElement;
