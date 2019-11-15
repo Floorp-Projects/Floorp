@@ -40,4 +40,4 @@ An outline of the schema may be found on the `Search Configuration Schema`_ page
 .. _JSON schema: https://json-schema.org/
 .. _stored in mozilla-central: https://searchfox.org/mozilla-central/source/toolkit/components/search/schema/
 .. _Search Configuration Schema: SearchConfigurationSchema.html
-.. _viewed live: https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/search-engine-configuration/records
+.. _viewed live: https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/search-config/records
