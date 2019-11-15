@@ -2,17 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "src/regexp/regexp-bytecode-peephole.h"
+#include "new-regexp/regexp-bytecode-peephole.h"
 
-#include "src/execution/isolate.h"
-#include "src/flags/flags.h"
-#include "src/objects/fixed-array.h"
-#include "src/objects/objects-inl.h"
-#include "src/regexp/regexp-bytecodes.h"
-#include "src/utils/memcopy.h"
-#include "src/utils/utils.h"
-#include "src/zone/zone-containers.h"
-#include "src/zone/zone.h"
+#include "new-regexp/regexp-bytecodes.h"
 
 namespace v8 {
 namespace internal {

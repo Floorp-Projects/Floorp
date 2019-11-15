@@ -7,7 +7,7 @@
 #ifndef V8_REGEXP_REGEXP_INTERPRETER_H_
 #define V8_REGEXP_REGEXP_INTERPRETER_H_
 
-#include "src/regexp/regexp.h"
+#include "new-regexp/regexp.h"
 
 namespace v8 {
 namespace internal {
