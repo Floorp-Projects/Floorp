@@ -1168,3 +1168,15 @@ interface OES_fbo_render_mipmap {
 interface WEBGL_explicit_present {
     void present();
 };
+
+// https://immersive-web.github.io/webxr/#dom-webglcontextattributes-xrcompatible
+partial dictionary WebGLContextAttributes {
+    [Pref="dom.vr.webxr.enabled"]
+    boolean xrCompatible = false;
+};
+
+// https://immersive-web.github.io/webxr/#dom-webglrenderingcontextbase-makexrcompatible
+partial interface mixin WebGLRenderingContextBase {
+    [NewObject, Pref="dom.vr.webxr.enabled"]
+    Promise<void> makeXRCompatible();
+};
