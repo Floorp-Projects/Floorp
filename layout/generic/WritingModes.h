@@ -1825,6 +1825,12 @@ class LogicalRect {
     return mISize > 0 && mBSize > 0;
   }
 
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const LogicalRect& aRect) {
+    return aStream << '(' << aRect.IStart() << ',' << aRect.BStart() << ','
+                   << aRect.ISize() << ',' << aRect.BSize() << ')';
+  }
+
  private:
   LogicalRect() = delete;
 
