@@ -49,7 +49,6 @@
 #include "vm/AsyncIteration.h"
 #include "vm/DateObject.h"
 #include "vm/EnvironmentObject.h"
-#include "vm/ErrorObject.h"
 #include "vm/GeneratorObject.h"
 #include "vm/HelperThreads.h"
 #include "vm/JSContext.h"
@@ -140,11 +139,6 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
 
     case JSProto_FinalizationGroup:
       return !cx->realm()->creationOptions().getWeakRefsEnabled();
-
-#ifndef NIGHTLY_BUILD
-    case JSProto_AggregateError:
-      return true;
-#endif
 
     default:
       return false;
