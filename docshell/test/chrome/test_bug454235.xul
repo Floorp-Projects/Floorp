@@ -49,7 +49,7 @@ function doTest() {
 
   ]]></script>
   <box flex="1" style="visibility: hidden; border:5px black solid">
-    <browser style="border:5px blue solid" id="hiddenBrowser" src="bug454235-subframe.xhtml"/>
-    <browser style="border:5px yellow solid" id="offScreenBrowser" src="bug454235-subframe.xhtml"/>
+    <browser style="border:5px blue solid" id="hiddenBrowser" src="bug454235-subframe.xul"/>
+    <browser style="border:5px yellow solid" id="offScreenBrowser" src="bug454235-subframe.xul"/>
   </box>
 </window>
