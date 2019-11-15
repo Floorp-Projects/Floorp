@@ -530,12 +530,16 @@ static_assert(sizeof(FragmentOrElement::nsDOMSlots) <= MaxDOMSlotSizeAllowed,
               "DOM slots cannot be grown without consideration");
 
 void nsIContent::nsExtendedContentSlots::UnlinkExtendedSlots() {
+  mBindingParent = nullptr;
   mContainingShadow = nullptr;
   mAssignedSlot = nullptr;
 }
 
 void nsIContent::nsExtendedContentSlots::TraverseExtendedSlots(
     nsCycleCollectionTraversalCallback& aCb) {
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mExtendedSlots->mBindingParent");
+  aCb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIContent*, mBindingParent));
+
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mExtendedSlots->mContainingShadow");
   aCb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIContent*, mContainingShadow));
 
@@ -629,6 +633,7 @@ size_t FragmentOrElement::nsDOMSlots::SizeOfIncludingThis(
 
   // The following member are not measured:
   // - mControllers: because it is non-owning
+  // - mBindingParent: because it is some ancestor element.
   return n;
 }
 
@@ -1055,6 +1060,28 @@ void nsIContent::SetAssignedSlot(HTMLSlotElement* aSlot) {
   MOZ_ASSERT(aSlot || GetExistingExtendedContentSlots());
   ExtendedContentSlots()->mAssignedSlot = aSlot;
 }
+
+#ifdef DEBUG
+void nsIContent::AssertAnonymousSubtreeRelatedInvariants() const {
+  MOZ_ASSERT(!IsRootOfNativeAnonymousSubtree() ||
+                 (GetParent() && GetBindingParent() == GetParent()),
+             "root of native anonymous subtree must have parent equal "
+             "to binding parent");
+  MOZ_ASSERT(!GetParent() || !IsInComposedDoc() ||
+                 ((GetBindingParent() == GetParent()) ==
+                  HasFlag(NODE_IS_ANONYMOUS_ROOT)) ||
+                 // Unfortunately default content for XBL insertion points
+                 // is anonymous content that is bound with the parent of
+                 // the insertion point as the parent but the bound element
+                 // for the binding as the binding parent.  So we have to
+                 // complicate the assert a bit here.
+                 (GetBindingParent() &&
+                  (GetBindingParent() == GetParent()->GetBindingParent()) ==
+                      HasFlag(NODE_IS_ANONYMOUS_ROOT)),
+             "For connected nodes, flag and GetBindingParent() check "
+             "should match");
+}
+#endif
 
 void FragmentOrElement::GetTextContentInternal(nsAString& aTextContent,
                                                OOMReporter& aError) {
