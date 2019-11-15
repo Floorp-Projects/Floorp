@@ -20,10 +20,8 @@
 #include "js/ForOfIterator.h"  // JS::ForOfIterator
 #include "js/PropertySpec.h"
 #include "util/Poison.h"
-#include "vm/ArrayObject.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
-#include "vm/ErrorObject.h"
 #include "vm/GeneratorObject.h"
 #include "vm/Iteration.h"
 #include "vm/JSContext.h"
@@ -32,7 +30,6 @@
 
 #include "debugger/DebugAPI-inl.h"
 #include "vm/Compartment-inl.h"
-#include "vm/ErrorObject-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
@@ -95,9 +92,14 @@ enum RejectFunctionSlots {
   RejectFunctionSlot_ResolveFunction,
 };
 
-enum PromiseCombinatorElementFunctionSlots {
-  PromiseCombinatorElementFunctionSlot_Data = 0,
-  PromiseCombinatorElementFunctionSlot_ElementIndex,
+enum PromiseAllResolveElementFunctionSlots {
+  PromiseAllResolveElementFunctionSlot_Data = 0,
+  PromiseAllResolveElementFunctionSlot_ElementIndex,
+};
+
+enum PromiseAllSettledElementFunctionSlots {
+  PromiseAllSettledElementFunctionSlot_Data = 0,
+  PromiseAllSettledElementFunctionSlot_ElementIndex,
 };
 
 enum ReactionJobSlots {
@@ -132,6 +134,14 @@ enum BuiltinThenableJobSlots {
   // The thenable to use as the receiver when calling the built-in `then`
   // function.
   BuiltinThenableJobSlot_Thenable,
+};
+
+enum PromiseAllDataHolderSlots {
+  PromiseAllDataHolderSlot_Promise = 0,
+  PromiseAllDataHolderSlot_RemainingElements,
+  PromiseAllDataHolderSlot_ValuesArray,
+  PromiseAllDataHolderSlot_ResolveFunction,
+  PromiseAllDataHolderSlots,
 };
 
 struct PromiseCapability {
@@ -195,188 +205,64 @@ class MutableWrappedPtrOperations<PromiseCapability, Wrapper>
 
 }  // namespace js
 
-struct PromiseCombinatorElements;
-
-class PromiseCombinatorDataHolder : public NativeObject {
-  enum {
-    Slot_Promise = 0,
-    Slot_RemainingElements,
-    Slot_ValuesArray,
-    Slot_ResolveOrRejectFunction,
-    SlotsCount,
-  };
-
+class PromiseAllDataHolder : public NativeObject {
  public:
   static const JSClass class_;
-  JSObject* promiseObj() { return &getFixedSlot(Slot_Promise).toObject(); }
-  JSObject* resolveOrRejectObj() {
-    return &getFixedSlot(Slot_ResolveOrRejectFunction).toObject();
+  JSObject* promiseObj() {
+    return &getFixedSlot(PromiseAllDataHolderSlot_Promise).toObject();
   }
-  Value valuesArray() { return getFixedSlot(Slot_ValuesArray); }
+  JSObject* resolveObj() {
+    return &getFixedSlot(PromiseAllDataHolderSlot_ResolveFunction).toObject();
+  }
+  Value valuesArray() {
+    return getFixedSlot(PromiseAllDataHolderSlot_ValuesArray);
+  }
   int32_t remainingCount() {
-    return getFixedSlot(Slot_RemainingElements).toInt32();
+    return getFixedSlot(PromiseAllDataHolderSlot_RemainingElements).toInt32();
   }
   int32_t increaseRemainingCount() {
-    int32_t remainingCount = getFixedSlot(Slot_RemainingElements).toInt32();
+    int32_t remainingCount =
+        getFixedSlot(PromiseAllDataHolderSlot_RemainingElements).toInt32();
     remainingCount++;
-    setFixedSlot(Slot_RemainingElements, Int32Value(remainingCount));
+    setFixedSlot(PromiseAllDataHolderSlot_RemainingElements,
+                 Int32Value(remainingCount));
     return remainingCount;
   }
   int32_t decreaseRemainingCount() {
-    int32_t remainingCount = getFixedSlot(Slot_RemainingElements).toInt32();
+    int32_t remainingCount =
+        getFixedSlot(PromiseAllDataHolderSlot_RemainingElements).toInt32();
     remainingCount--;
-    MOZ_ASSERT(remainingCount >= 0, "unpaired calls to decreaseRemainingCount");
-    setFixedSlot(Slot_RemainingElements, Int32Value(remainingCount));
+    setFixedSlot(PromiseAllDataHolderSlot_RemainingElements,
+                 Int32Value(remainingCount));
     return remainingCount;
   }
-
-  static PromiseCombinatorDataHolder* New(
-      JSContext* cx, HandleObject resultPromise,
-      Handle<PromiseCombinatorElements> elements, HandleObject resolveOrReject);
 };
 
-const JSClass PromiseCombinatorDataHolder::class_ = {
-    "PromiseCombinatorDataHolder", JSCLASS_HAS_RESERVED_SLOTS(SlotsCount)};
+const JSClass PromiseAllDataHolder::class_ = {
+    "PromiseAllDataHolder",
+    JSCLASS_HAS_RESERVED_SLOTS(PromiseAllDataHolderSlots)};
 
-// Smart pointer to the "F.[[Values]]" part of the state of a Promise.all or
-// Promise.allSettled invocation, or the "F.[[Errors]]" part of the state of a
-// Promise.any invocation. Copes with compartment issues when setting an
-// element.
-struct MOZ_STACK_CLASS PromiseCombinatorElements final {
-  // Object value holding the elements array. The object can be a wrapper.
-  Value value;
-
-  // Unwrapped elements array. May not belong to the current compartment!
-  ArrayObject* unwrappedArray = nullptr;
-
-  // Set to true if the |setElement| method needs to wrap its input value.
-  bool setElementNeedsWrapping = false;
-
-  PromiseCombinatorElements() = default;
-
-  void trace(JSTracer* trc);
-};
-
-void PromiseCombinatorElements::trace(JSTracer* trc) {
-  TraceRoot(trc, &value, "PromiseCombinatorElements::value");
-  if (unwrappedArray) {
-    TraceRoot(trc, &unwrappedArray,
-              "PromiseCombinatorElements::unwrappedArray");
-  }
-}
-
-namespace js {
-
-template <typename Wrapper>
-class WrappedPtrOperations<PromiseCombinatorElements, Wrapper> {
-  const PromiseCombinatorElements& elements() const {
-    return static_cast<const Wrapper*>(this)->get();
-  }
-
- public:
-  HandleValue value() const {
-    return HandleValue::fromMarkedLocation(&elements().value);
-  }
-
-  HandleArrayObject unwrappedArray() const {
-    return HandleArrayObject::fromMarkedLocation(&elements().unwrappedArray);
-  }
-};
-
-template <typename Wrapper>
-class MutableWrappedPtrOperations<PromiseCombinatorElements, Wrapper>
-    : public WrappedPtrOperations<PromiseCombinatorElements, Wrapper> {
-  PromiseCombinatorElements& elements() {
-    return static_cast<Wrapper*>(this)->get();
-  }
-
- public:
-  MutableHandleValue value() {
-    return MutableHandleValue::fromMarkedLocation(&elements().value);
-  }
-
-  MutableHandle<ArrayObject*> unwrappedArray() {
-    return MutableHandle<ArrayObject*>::fromMarkedLocation(
-        &elements().unwrappedArray);
-  }
-
-  void initialize(ArrayObject* arrayObj) {
-    unwrappedArray().set(arrayObj);
-    value().setObject(*arrayObj);
-
-    // |needsWrapping| isn't tracked here, because all modifications on the
-    // initial elements don't require any wrapping.
-  }
-
-  void initialize(PromiseCombinatorDataHolder* data, ArrayObject* arrayObj,
-                  bool needsWrapping) {
-    unwrappedArray().set(arrayObj);
-    value().set(data->valuesArray());
-    elements().setElementNeedsWrapping = needsWrapping;
-  }
-
-  MOZ_MUST_USE bool pushUndefined(JSContext* cx) {
-    // Helper for the AutoRealm we need to work with |array|. We mostly do this
-    // for performance; we could go ahead and do the define via a cross-
-    // compartment proxy instead...
-    AutoRealm ar(cx, unwrappedArray());
-
-    HandleArrayObject arrayObj = unwrappedArray();
-    return js::NewbornArrayPush(cx, arrayObj, UndefinedValue());
-  }
-
-  // `Promise.all` Resolve Element Functions
-  // Step 9. Set values[index] to x.
-  //
-  // `Promise.allSettled` Resolve Element Functions
-  // `Promise.allSettled` Reject Element Functions
-  // Step 12. Set values[index] to obj.
-  //
-  // `Promise.any` Reject Element Functions
-  // Step 9. Set errors[index] to x.
-  //
-  // These handler functions are always created in the compartment of the
-  // Promise.all/allSettled/any function, which isn't necessarily the same
-  // compartment as unwrappedArray as explained in NewPromiseCombinatorElements.
-  // So before storing |val| we may need to enter unwrappedArray's compartment.
-  MOZ_MUST_USE bool setElement(JSContext* cx, uint32_t index, HandleValue val) {
-    // The index is guaranteed to be initialized to `undefined`.
-    MOZ_ASSERT(unwrappedArray()->getDenseElement(index).isUndefined());
-
-    if (elements().setElementNeedsWrapping) {
-      AutoRealm ar(cx, unwrappedArray());
-
-      RootedValue rootedVal(cx, val);
-      if (!cx->compartment()->wrap(cx, &rootedVal)) {
-        return false;
-      }
-      unwrappedArray()->setDenseElement(index, rootedVal);
-    } else {
-      unwrappedArray()->setDenseElement(index, val);
-    }
-    return true;
-  }
-};
-
-}  // namespace js
-
-PromiseCombinatorDataHolder* PromiseCombinatorDataHolder::New(
-    JSContext* cx, HandleObject resultPromise,
-    Handle<PromiseCombinatorElements> elements, HandleObject resolveOrReject) {
-  auto* dataHolder = NewBuiltinClassInstance<PromiseCombinatorDataHolder>(cx);
+static PromiseAllDataHolder* NewPromiseAllDataHolder(JSContext* cx,
+                                                     HandleObject resultPromise,
+                                                     HandleValue valuesArray,
+                                                     HandleObject resolve) {
+  PromiseAllDataHolder* dataHolder =
+      NewBuiltinClassInstance<PromiseAllDataHolder>(cx);
   if (!dataHolder) {
     return nullptr;
   }
 
   cx->check(resultPromise);
-  cx->check(elements.value());
-  cx->check(resolveOrReject);
+  cx->check(valuesArray);
+  cx->check(resolve);
 
-  dataHolder->setFixedSlot(Slot_Promise, ObjectValue(*resultPromise));
-  dataHolder->setFixedSlot(Slot_RemainingElements, Int32Value(1));
-  dataHolder->setFixedSlot(Slot_ValuesArray, elements.value());
-  dataHolder->setFixedSlot(Slot_ResolveOrRejectFunction,
-                           ObjectValue(*resolveOrReject));
+  dataHolder->setFixedSlot(PromiseAllDataHolderSlot_Promise,
+                           ObjectValue(*resultPromise));
+  dataHolder->setFixedSlot(PromiseAllDataHolderSlot_RemainingElements,
+                           Int32Value(1));
+  dataHolder->setFixedSlot(PromiseAllDataHolderSlot_ValuesArray, valuesArray);
+  dataHolder->setFixedSlot(PromiseAllDataHolderSlot_ResolveFunction,
+                           ObjectValue(*resolve));
   return dataHolder;
 }
 
@@ -2392,46 +2278,38 @@ static MOZ_MUST_USE bool PerformPromiseAllSettled(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     Handle<PromiseCapability> resultCapability, bool* done);
 
-static MOZ_MUST_USE bool PerformPromiseAny(
-    JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
-    Handle<PromiseCapability> resultCapability, bool* done);
-
 static MOZ_MUST_USE bool PerformPromiseRace(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     Handle<PromiseCapability> resultCapability, bool* done);
 
-enum class CombinatorKind { All, AllSettled, Any, Race };
+enum class IterationMode { All, AllSettled, Race };
 
-// ES2020 draft rev e97c95d064750fb949b6778584702dd658cf5624
+// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 //
 // Unified implementation of
 // 25.6.4.1 Promise.all ( iterable )
-// 25.6.4.2 Promise.allSettled ( iterable )
-// 25.6.4.4 Promise.race ( iterable )
+// 25.6.4.3 Promise.race ( iterable )
 //
-// Promise.any (Stage 3 proposal)
-// https://tc39.es/proposal-promise-any/
+// Promise.allSettled (Stage 4 proposal)
+// https://tc39.github.io/proposal-promise-allSettled/
 //
-// Promise.any ( iterable )
-static MOZ_MUST_USE bool CommonPromiseCombinator(JSContext* cx, CallArgs& args,
-                                                 CombinatorKind kind) {
+// Promise.allSettled ( iterable )
+static MOZ_MUST_USE bool CommonStaticAllRace(JSContext* cx, CallArgs& args,
+                                             IterationMode mode) {
   HandleValue iterable = args.get(0);
 
   // Step 2 (moved from NewPromiseCapability, step 1).
   HandleValue CVal = args.thisv();
   if (!CVal.isObject()) {
     const char* message;
-    switch (kind) {
-      case CombinatorKind::All:
+    switch (mode) {
+      case IterationMode::All:
         message = "Receiver of Promise.all call";
         break;
-      case CombinatorKind::AllSettled:
+      case IterationMode::AllSettled:
         message = "Receiver of Promise.allSettled call";
         break;
-      case CombinatorKind::Any:
-        message = "Receiver of Promise.any call";
-        break;
-      case CombinatorKind::Race:
+      case IterationMode::Race:
         message = "Receiver of Promise.race call";
         break;
     }
@@ -2457,17 +2335,14 @@ static MOZ_MUST_USE bool CommonPromiseCombinator(JSContext* cx, CallArgs& args,
 
   if (!iter.valueIsIterable()) {
     const char* message;
-    switch (kind) {
-      case CombinatorKind::All:
+    switch (mode) {
+      case IterationMode::All:
         message = "Argument of Promise.all";
         break;
-      case CombinatorKind::AllSettled:
+      case IterationMode::AllSettled:
         message = "Argument of Promise.allSettled";
         break;
-      case CombinatorKind::Any:
-        message = "Argument of Promise.any";
-        break;
-      case CombinatorKind::Race:
+      case IterationMode::Race:
         message = "Argument of Promise.race";
         break;
     }
@@ -2478,17 +2353,14 @@ static MOZ_MUST_USE bool CommonPromiseCombinator(JSContext* cx, CallArgs& args,
 
   // Step 5.
   bool done, result;
-  switch (kind) {
-    case CombinatorKind::All:
+  switch (mode) {
+    case IterationMode::All:
       result = PerformPromiseAll(cx, iter, C, promiseCapability, &done);
       break;
-    case CombinatorKind::AllSettled:
+    case IterationMode::AllSettled:
       result = PerformPromiseAllSettled(cx, iter, C, promiseCapability, &done);
       break;
-    case CombinatorKind::Any:
-      result = PerformPromiseAny(cx, iter, C, promiseCapability, &done);
-      break;
-    case CombinatorKind::Race:
+    case IterationMode::Race:
       result = PerformPromiseRace(cx, iter, C, promiseCapability, &done);
       break;
   }
@@ -2513,7 +2385,7 @@ static MOZ_MUST_USE bool CommonPromiseCombinator(JSContext* cx, CallArgs& args,
 // 25.6.4.1 Promise.all ( iterable )
 static bool Promise_static_all(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CommonPromiseCombinator(cx, args, CombinatorKind::All);
+  return CommonStaticAllRace(cx, args, IterationMode::All);
 }
 
 static MOZ_MUST_USE bool PerformPromiseThen(
@@ -2524,10 +2396,6 @@ static MOZ_MUST_USE bool PerformPromiseThenWithoutSettleHandlers(
     JSContext* cx, Handle<PromiseObject*> promise,
     Handle<PromiseObject*> promiseToResolve,
     Handle<PromiseCapability> resultCapability);
-
-static JSFunction* NewPromiseCombinatorElementFunction(
-    JSContext* cx, Native native,
-    Handle<PromiseCombinatorDataHolder*> dataHolder, uint32_t index);
 
 static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
                                              Value* vp);
@@ -2568,25 +2436,23 @@ MOZ_MUST_USE JSObject* js::GetWaitForAllPromise(
     // Sub-steps 1-2 (omitted).
 
     // Sub-step 3.
-    Rooted<PromiseCombinatorElements> values(cx);
-    {
-      auto* valuesArray = NewDenseFullyAllocatedArray(cx, promiseCount);
-      if (!valuesArray) {
-        return nullptr;
-      }
-      valuesArray->ensureDenseInitializedLength(cx, 0, promiseCount);
-
-      values.initialize(valuesArray);
+    RootedNativeObject valuesArray(
+        cx, NewDenseFullyAllocatedArray(cx, promiseCount));
+    if (!valuesArray) {
+      return nullptr;
     }
+    valuesArray->ensureDenseInitializedLength(cx, 0, promiseCount);
 
     // Sub-step 4.
     // Create our data holder that holds all the things shared across
     // every step of the iterator.  In particular, this holds the
     // remainingElementsCount (as an integer reserved slot), the array of
     // values, and the resolve function from our PromiseCapability.
-    Rooted<PromiseCombinatorDataHolder*> dataHolder(cx);
-    dataHolder = PromiseCombinatorDataHolder::New(
-        cx, resultCapability.promise(), values, resultCapability.resolve());
+    RootedValue valuesArrayVal(cx, ObjectValue(*valuesArray));
+    Rooted<PromiseAllDataHolder*> dataHolder(cx);
+    dataHolder =
+        NewPromiseAllDataHolder(cx, resultCapability.promise(), valuesArrayVal,
+                                resultCapability.resolve());
     if (!dataHolder) {
       return nullptr;
     }
@@ -2604,17 +2470,25 @@ MOZ_MUST_USE JSObject* js::GetWaitForAllPromise(
       // Steps e-g (omitted).
 
       // Step h.
-      values.unwrappedArray()->setDenseElement(index, UndefinedHandleValue);
+      valuesArray->setDenseElement(index, UndefinedHandleValue);
 
       // Step i, vastly simplified.
       RootedObject nextPromiseObj(cx, promises[index]);
 
-      // Steps j-o.
-      JSFunction* resolveFunc = NewPromiseCombinatorElementFunction(
-          cx, PromiseAllResolveElementFunction, dataHolder, index);
+      // Step j.
+      RootedFunction resolveFunc(
+          cx,
+          NewNativeFunction(cx, PromiseAllResolveElementFunction, 1, nullptr,
+                            gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
       if (!resolveFunc) {
         return nullptr;
       }
+
+      // Steps k-o.
+      resolveFunc->setExtendedSlot(PromiseAllResolveElementFunctionSlot_Data,
+                                   ObjectValue(*dataHolder));
+      resolveFunc->setExtendedSlot(
+          PromiseAllResolveElementFunctionSlot_ElementIndex, Int32Value(index));
 
       // Step p.
       dataHolder->increaseRemainingCount();
@@ -2646,8 +2520,9 @@ MOZ_MUST_USE JSObject* js::GetWaitForAllPromise(
 
     // Sub-step d.iii-iv.
     if (remainingCount == 0) {
+      RootedValue valuesArrayVal(cx, ObjectValue(*valuesArray));
       if (!ResolvePromiseInternal(cx, resultCapability.promise(),
-                                  values.value())) {
+                                  valuesArrayVal)) {
         return nullptr;
       }
     }
@@ -2723,16 +2598,15 @@ static MOZ_MUST_USE JSObject* CommonStaticResolveRejectImpl(
 
 static bool IsPromiseSpecies(JSContext* cx, JSFunction* species);
 
-// ES2020 draft rev e97c95d064750fb949b6778584702dd658cf5624
+// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 25.6.4.1.1 Runtime Semantics: PerformPromiseAll, steps 5-6 and step 8.
-// 25.6.4.2.1 Runtime Semantics: PerformPromiseAllSettled, steps 5-6 and step 8.
-// 25.6.4.4.1 Runtime Semantics: PerformPromiseRace, steps 3-5.
+// 25.6.4.3.1 Runtime Semantics: PerformPromiseRace, steps 3-5.
 //
-// Promise.any (Stage 3 proposal)
-// https://tc39.es/proposal-promise-any/
-// Runtime Semantics: PerformPromiseAny, steps 6-8.
+// Promise.allSettled (Stage 4 proposal)
+// https://tc39.github.io/proposal-promise-allSettled/
+// Runtime Semantics: PerformPromiseAllSettled, steps 5-6 and step 8.
 template <typename T>
-static MOZ_MUST_USE bool CommonPerformPromiseCombinator(
+static MOZ_MUST_USE bool CommonPerformPromiseAllRace(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     HandleObject resultPromise, bool* done, bool resolveReturnsUndefined,
     T getResolveAndReject) {
@@ -3030,139 +2904,6 @@ static MOZ_MUST_USE bool CommonPerformPromiseCombinator(
   }
 }
 
-// Create the elements for the Promise combinators Promise.all and
-// Promise.allSettled.
-static MOZ_MUST_USE bool NewPromiseCombinatorElements(
-    JSContext* cx, Handle<PromiseCapability> resultCapability,
-    MutableHandle<PromiseCombinatorElements> elements) {
-  // We have to be very careful about which compartments we create things for
-  // the Promise combinators. In particular, we have to maintain the invariant
-  // that anything stored in a reserved slot is same-compartment with the object
-  // whose reserved slot it's in. But we want to create the values array in the
-  // compartment of the result capability's Promise, because that array can get
-  // exposed as the Promise's resolution value to code that has access to the
-  // Promise (in particular code from that compartment), and that should work,
-  // even if the Promise compartment is less-privileged than our caller
-  // compartment.
-  //
-  // So the plan is as follows: Create the values array in the promise
-  // compartment. Create the promise resolving functions and the data holder in
-  // our current compartment, i.e. the compartment of the Promise combinator
-  // function. Store a cross-compartment wrapper to the values array in the
-  // holder. This should be OK because the only things we hand the promise
-  // resolving functions to are the "then" calls we do and in the case when the
-  // Promise's compartment is not the current compartment those are happening
-  // over Xrays anyway, which means they get the canonical "then" function and
-  // content can't see our promise resolving functions.
-
-  if (IsWrapper(resultCapability.promise())) {
-    JSObject* unwrappedPromiseObj =
-        CheckedUnwrapStatic(resultCapability.promise());
-    MOZ_ASSERT(unwrappedPromiseObj);
-
-    {
-      AutoRealm ar(cx, unwrappedPromiseObj);
-      auto* array = NewDenseEmptyArray(cx);
-      if (!array) {
-        return false;
-      }
-      elements.initialize(array);
-    }
-
-    if (!cx->compartment()->wrap(cx, elements.value())) {
-      return false;
-    }
-  } else {
-    auto* array = NewDenseEmptyArray(cx);
-    if (!array) {
-      return false;
-    }
-
-    elements.initialize(array);
-  }
-  return true;
-}
-
-// Retrieve the combinator elements from the data holder.
-static MOZ_MUST_USE bool GetPromiseCombinatorElements(
-    JSContext* cx, Handle<PromiseCombinatorDataHolder*> data,
-    MutableHandle<PromiseCombinatorElements> elements) {
-  bool needsWrapping = false;
-  JSObject* valuesObj = &data->valuesArray().toObject();
-  if (IsProxy(valuesObj)) {
-    // See comment for NewPromiseCombinatorElements for why we unwrap here.
-    valuesObj = UncheckedUnwrap(valuesObj);
-
-    if (JS_IsDeadWrapper(valuesObj)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_DEAD_OBJECT);
-      return false;
-    }
-
-    needsWrapping = true;
-  }
-
-  elements.initialize(data, &valuesObj->as<ArrayObject>(), needsWrapping);
-  return true;
-}
-
-static JSFunction* NewPromiseCombinatorElementFunction(
-    JSContext* cx, Native native,
-    Handle<PromiseCombinatorDataHolder*> dataHolder, uint32_t index) {
-  JSFunction* fn = NewNativeFunction(
-      cx, native, 1, nullptr, gc::AllocKind::FUNCTION_EXTENDED, GenericObject);
-  if (!fn) {
-    return nullptr;
-  }
-
-  fn->setExtendedSlot(PromiseCombinatorElementFunctionSlot_Data,
-                      ObjectValue(*dataHolder));
-  fn->setExtendedSlot(PromiseCombinatorElementFunctionSlot_ElementIndex,
-                      Int32Value(index));
-  return fn;
-}
-
-// ES2020 draft rev e97c95d064750fb949b6778584702dd658cf5624
-// 25.6.4.1.2 Promise.all Resolve Element Functions
-// 25.6.4.2.2 Promise.allSettled Resolve Element Functions
-// 25.6.4.2.3 Promise.allSettled Reject Element Functions
-//
-// Common implementation for Promise combinator element functions to check if
-// they've already been called.
-static bool PromiseCombinatorElementFunctionAlreadyCalled(
-    const CallArgs& args, MutableHandle<PromiseCombinatorDataHolder*> data,
-    uint32_t* index) {
-  // Step 1.
-  JSFunction* fn = &args.callee().as<JSFunction>();
-
-  // Step 2.
-  const Value& dataVal =
-      fn->getExtendedSlot(PromiseCombinatorElementFunctionSlot_Data);
-
-  // Step 3.
-  // We use the existence of the data holder as a signal for whether the Promise
-  // combinator element function was already called. Upon resolution, it's reset
-  // to `undefined`.
-  if (dataVal.isUndefined()) {
-    return true;
-  }
-
-  data.set(&dataVal.toObject().as<PromiseCombinatorDataHolder>());
-
-  // Step 4.
-  fn->setExtendedSlot(PromiseCombinatorElementFunctionSlot_Data,
-                      UndefinedValue());
-
-  // Step 5.
-  int32_t idx =
-      fn->getExtendedSlot(PromiseCombinatorElementFunctionSlot_ElementIndex)
-          .toInt32();
-  MOZ_ASSERT(idx >= 0);
-  *index = uint32_t(idx);
-
-  return false;
-}
-
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 25.6.4.1.1 PerformPromiseAll (iteratorRecord, constructor, resultCapability)
 static MOZ_MUST_USE bool PerformPromiseAll(
@@ -3176,9 +2917,51 @@ static MOZ_MUST_USE bool PerformPromiseAll(
   // Step 2 (omitted).
 
   // Step 3.
-  Rooted<PromiseCombinatorElements> values(cx);
-  if (!NewPromiseCombinatorElements(cx, resultCapability, &values)) {
-    return false;
+  // We have to be very careful about which compartments we create things in
+  // here.  In particular, we have to maintain the invariant that anything
+  // stored in a reserved slot is same-compartment with the object whose
+  // reserved slot it's in.  But we want to create the values array in the
+  // Promise's compartment, because that array can get exposed to
+  // code that has access to the Promise (in particular code from
+  // that compartment), and that should work, even if the Promise
+  // compartment is less-privileged than our caller compartment.
+  //
+  // So the plan is as follows: Create the values array in the promise
+  // compartment.  Create the PromiseAllResolveElement function
+  // and the data holder in our current compartment.  Store a
+  // cross-compartment wrapper to the values array in the holder.  This
+  // should be OK because the only things we hand the
+  // PromiseAllResolveElement function to are the "then" calls we do and in
+  // the case when the Promise's compartment is not the current compartment
+  // those are happening over Xrays anyway, which means they get the
+  // canonical "then" function and content can't see our
+  // PromiseAllResolveElement.
+  RootedArrayObject valuesArray(cx);
+  RootedValue valuesArrayVal(cx);
+  if (IsWrapper(resultCapability.promise())) {
+    JSObject* unwrappedPromiseObj =
+        CheckedUnwrapStatic(resultCapability.promise());
+    MOZ_ASSERT(unwrappedPromiseObj);
+
+    {
+      AutoRealm ar(cx, unwrappedPromiseObj);
+      valuesArray = NewDenseEmptyArray(cx);
+      if (!valuesArray) {
+        return false;
+      }
+    }
+
+    valuesArrayVal.setObject(*valuesArray);
+    if (!cx->compartment()->wrap(cx, &valuesArrayVal)) {
+      return false;
+    }
+  } else {
+    valuesArray = NewDenseEmptyArray(cx);
+    if (!valuesArray) {
+      return false;
+    }
+
+    valuesArrayVal.setObject(*valuesArray);
   }
 
   // Step 4.
@@ -3186,9 +2969,10 @@ static MOZ_MUST_USE bool PerformPromiseAll(
   // every step of the iterator.  In particular, this holds the
   // remainingElementsCount (as an integer reserved slot), the array of
   // values, and the resolve function from our PromiseCapability.
-  Rooted<PromiseCombinatorDataHolder*> dataHolder(cx);
-  dataHolder = PromiseCombinatorDataHolder::New(
-      cx, resultCapability.promise(), values, resultCapability.resolve());
+  Rooted<PromiseAllDataHolder*> dataHolder(cx);
+  dataHolder =
+      NewPromiseAllDataHolder(cx, resultCapability.promise(), valuesArrayVal,
+                              resultCapability.resolve());
   if (!dataHolder) {
     return false;
   }
@@ -3196,20 +2980,35 @@ static MOZ_MUST_USE bool PerformPromiseAll(
   // Step 7.
   uint32_t index = 0;
 
-  auto getResolveAndReject = [cx, &resultCapability, &values, &dataHolder,
+  auto getResolveAndReject = [cx, &resultCapability, &valuesArray, &dataHolder,
                               &index](MutableHandleValue resolveFunVal,
                                       MutableHandleValue rejectFunVal) {
     // Step 8.h.
-    if (!values.pushUndefined(cx)) {
-      return false;
+    {  // Scope for the AutoRealm we need to work with valuesArray.  We
+      // mostly do this for performance; we could go ahead and do the define via
+      // a cross-compartment proxy instead...
+      AutoRealm ar(cx, valuesArray);
+
+      if (!NewbornArrayPush(cx, valuesArray, UndefinedValue())) {
+        return false;
+      }
     }
 
-    // Steps 8.j-p.
-    JSFunction* resolveFunc = NewPromiseCombinatorElementFunction(
-        cx, PromiseAllResolveElementFunction, dataHolder, index);
+    // Steps 8.j-k.
+    JSFunction* resolveFunc =
+        NewNativeFunction(cx, PromiseAllResolveElementFunction, 1, nullptr,
+                          gc::AllocKind::FUNCTION_EXTENDED, GenericObject);
     if (!resolveFunc) {
       return false;
     }
+
+    // Steps 8.l, 8.n-p.
+    resolveFunc->setExtendedSlot(PromiseAllResolveElementFunctionSlot_Data,
+                                 ObjectValue(*dataHolder));
+
+    // Step 8.m.
+    resolveFunc->setExtendedSlot(
+        PromiseAllResolveElementFunctionSlot_ElementIndex, Int32Value(index));
 
     // Step 8.q.
     dataHolder->increaseRemainingCount();
@@ -3224,9 +3023,8 @@ static MOZ_MUST_USE bool PerformPromiseAll(
   };
 
   // Steps 5-6 and 8.
-  if (!CommonPerformPromiseCombinator(cx, iterator, C,
-                                      resultCapability.promise(), done, true,
-                                      getResolveAndReject)) {
+  if (!CommonPerformPromiseAllRace(cx, iterator, C, resultCapability.promise(),
+                                   done, true, getResolveAndReject)) {
     return false;
   }
 
@@ -3235,60 +3033,93 @@ static MOZ_MUST_USE bool PerformPromiseAll(
 
   // Steps 8.d.iii-iv.
   if (remainingCount == 0) {
-    return RunResolutionFunction(cx, resultCapability.resolve(), values.value(),
+    return RunResolutionFunction(cx, resultCapability.resolve(), valuesArrayVal,
                                  ResolveMode, resultCapability.promise());
   }
 
   return true;
 }
 
-// ES2020 draft rev e97c95d064750fb949b6778584702dd658cf5624
-// 25.6.4.1.2 Promise.all Resolve Element Functions
+// ES2016, 25.4.4.1.2.
 static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
                                              Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  HandleValue xVal = args.get(0);
 
-  // Steps 1-5.
-  Rooted<PromiseCombinatorDataHolder*> data(cx);
-  uint32_t index;
-  if (PromiseCombinatorElementFunctionAlreadyCalled(args, &data, &index)) {
+  JSFunction* resolve = &args.callee().as<JSFunction>();
+  RootedValue xVal(cx, args.get(0));
+
+  // Step 1.
+  const Value& dataVal =
+      resolve->getExtendedSlot(PromiseAllResolveElementFunctionSlot_Data);
+
+  // Step 2.
+  // We use the existence of the data holder as a signal for whether the
+  // Promise was already resolved. Upon resolution, it's reset to
+  // `undefined`.
+  if (dataVal.isUndefined()) {
     args.rval().setUndefined();
     return true;
   }
 
-  // Step 6.
-  Rooted<PromiseCombinatorElements> values(cx);
-  if (!GetPromiseCombinatorElements(cx, data, &values)) {
-    return false;
+  Rooted<PromiseAllDataHolder*> data(
+      cx, &dataVal.toObject().as<PromiseAllDataHolder>());
+
+  // Step 3.
+  resolve->setExtendedSlot(PromiseAllResolveElementFunctionSlot_Data,
+                           UndefinedValue());
+
+  // Step 4.
+  int32_t index =
+      resolve
+          ->getExtendedSlot(PromiseAllResolveElementFunctionSlot_ElementIndex)
+          .toInt32();
+
+  // Step 5.
+  RootedValue valuesVal(cx, data->valuesArray());
+  RootedObject valuesObj(cx, &valuesVal.toObject());
+  if (IsProxy(valuesObj)) {
+    // See comment for PerformPromiseAll, step 3 for why we unwrap here.
+    valuesObj = UncheckedUnwrap(valuesObj);
+
+    if (JS_IsDeadWrapper(valuesObj)) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_DEAD_OBJECT);
+      return false;
+    }
+
+    AutoRealm ar(cx, valuesObj);
+    if (!cx->compartment()->wrap(cx, &xVal)) {
+      return false;
+    }
   }
+  HandleNativeObject values = valuesObj.as<NativeObject>();
 
-  // Step 7 (moved under step 11).
-  // Step 8 (moved to step 10).
+  // Step 6 (moved under step 10).
+  // Step 7 (moved to step 9).
 
-  // Step 9.
-  if (!values.setElement(cx, index, xVal)) {
-    return false;
-  }
+  // Step 8.
+  // The index is guaranteed to be initialized to `undefined`.
+  MOZ_ASSERT(values->getDenseElement(index).isUndefined());
+  values->setDenseElement(index, xVal);
 
-  // Steps 8,10.
+  // Steps 7,9.
   uint32_t remainingCount = data->decreaseRemainingCount();
 
-  // Step 11.
+  // Step 10.
   if (remainingCount == 0) {
-    // Step 11.a. (Omitted, happened in PerformPromiseAll.)
-    // Step 11.b.
+    // Step 10.a. (Omitted, happened in PerformPromiseAll.)
+    // Step 10.b.
 
-    // Step 7 (Adapted to work with PromiseCombinatorDataHolder's layout).
-    RootedObject resolveAllFun(cx, data->resolveOrRejectObj());
+    // Step 6 (Adapted to work with PromiseAllDataHolder's layout).
+    RootedObject resolveAllFun(cx, data->resolveObj());
     RootedObject promiseObj(cx, data->promiseObj());
-    if (!RunResolutionFunction(cx, resolveAllFun, values.value(), ResolveMode,
+    if (!RunResolutionFunction(cx, resolveAllFun, valuesVal, ResolveMode,
                                promiseObj)) {
       return false;
     }
   }
 
-  // Step 12.
+  // Step 11.
   args.rval().setUndefined();
   return true;
 }
@@ -3297,7 +3128,7 @@ static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
 // 25.6.4.3 Promise.race ( iterable )
 static bool Promise_static_race(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CommonPromiseCombinator(cx, args, CombinatorKind::Race);
+  return CommonStaticAllRace(cx, args, IterationMode::Race);
 }
 
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
@@ -3327,15 +3158,15 @@ static MOZ_MUST_USE bool PerformPromiseRace(
   };
 
   // Steps 3-5.
-  return CommonPerformPromiseCombinator(
-      cx, iterator, C, resultCapability.promise(), done, isDefaultResolveFn,
-      getResolveAndReject);
+  return CommonPerformPromiseAllRace(cx, iterator, C,
+                                     resultCapability.promise(), done,
+                                     isDefaultResolveFn, getResolveAndReject);
 }
 
 enum class PromiseAllSettledElementFunctionKind { Resolve, Reject };
 
-// ES2020 draft rev e97c95d064750fb949b6778584702dd658cf5624
-// 25.6.4.2 Promise.allSettled ( iterable )
+// Promise.allSettled (Stage 4 proposal)
+// https://tc39.github.io/proposal-promise-allSettled/
 //
 // Promise.allSettled Resolve Element Functions
 // Promise.allSettled Reject Element Functions
@@ -3343,17 +3174,17 @@ template <PromiseAllSettledElementFunctionKind Kind>
 static bool PromiseAllSettledElementFunction(JSContext* cx, unsigned argc,
                                              Value* vp);
 
-// ES2020 draft rev e97c95d064750fb949b6778584702dd658cf5624
-// 25.6.4.2 Promise.allSettled ( iterable )
+// Promise.allSettled (Stage 4 proposal)
+// https://tc39.github.io/proposal-promise-allSettled/
 //
 // Promise.allSettled ( iterable )
 static bool Promise_static_allSettled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CommonPromiseCombinator(cx, args, CombinatorKind::AllSettled);
+  return CommonStaticAllRace(cx, args, IterationMode::AllSettled);
 }
 
-// ES2020 draft rev e97c95d064750fb949b6778584702dd658cf5624
-// 25.6.4.2 Promise.allSettled ( iterable )
+// Promise.allSettled (Stage 4 proposal)
+// https://tc39.github.io/proposal-promise-allSettled/
 //
 // PerformPromiseAllSettled ( iteratorRecord, constructor, resultCapability )
 static MOZ_MUST_USE bool PerformPromiseAllSettled(
@@ -3367,9 +3198,34 @@ static MOZ_MUST_USE bool PerformPromiseAllSettled(
   // Step 2 (omitted).
 
   // Step 3.
-  Rooted<PromiseCombinatorElements> values(cx);
-  if (!NewPromiseCombinatorElements(cx, resultCapability, &values)) {
-    return false;
+  // See the big comment in PerformPromiseAll about which objects should be
+  // created in which compartments.
+  RootedArrayObject valuesArray(cx);
+  RootedValue valuesArrayVal(cx);
+  if (IsWrapper(resultCapability.promise())) {
+    JSObject* unwrappedPromiseObj =
+        CheckedUnwrapStatic(resultCapability.promise());
+    MOZ_ASSERT(unwrappedPromiseObj);
+
+    {
+      AutoRealm ar(cx, unwrappedPromiseObj);
+      valuesArray = NewDenseEmptyArray(cx);
+      if (!valuesArray) {
+        return false;
+      }
+    }
+
+    valuesArrayVal.setObject(*valuesArray);
+    if (!cx->compartment()->wrap(cx, &valuesArrayVal)) {
+      return false;
+    }
+  } else {
+    valuesArray = NewDenseEmptyArray(cx);
+    if (!valuesArray) {
+      return false;
+    }
+
+    valuesArrayVal.setObject(*valuesArray);
   }
 
   // Step 4.
@@ -3377,9 +3233,10 @@ static MOZ_MUST_USE bool PerformPromiseAllSettled(
   // of the iterator. In particular, this holds the remainingElementsCount
   // (as an integer reserved slot), the array of values, and the resolve
   // function from our PromiseCapability.
-  Rooted<PromiseCombinatorDataHolder*> dataHolder(cx);
-  dataHolder = PromiseCombinatorDataHolder::New(
-      cx, resultCapability.promise(), values, resultCapability.resolve());
+  Rooted<PromiseAllDataHolder*> dataHolder(cx);
+  dataHolder =
+      NewPromiseAllDataHolder(cx, resultCapability.promise(), valuesArrayVal,
+                              resultCapability.resolve());
   if (!dataHolder) {
     return false;
   }
@@ -3387,12 +3244,18 @@ static MOZ_MUST_USE bool PerformPromiseAllSettled(
   // Step 7.
   uint32_t index = 0;
 
-  auto getResolveAndReject = [cx, &values, &dataHolder, &index](
+  auto getResolveAndReject = [cx, &valuesArray, &dataHolder, &index](
                                  MutableHandleValue resolveFunVal,
                                  MutableHandleValue rejectFunVal) {
     // Step 8.h.
-    if (!values.pushUndefined(cx)) {
-      return false;
+    {  // Scope for the AutoRealm we need to work with valuesArray.  We
+      // mostly do this for performance; we could go ahead and do the define via
+      // a cross-compartment proxy instead...
+      AutoRealm ar(cx, valuesArray);
+
+      if (!NewbornArrayPush(cx, valuesArray, UndefinedValue())) {
+        return false;
+      }
     }
 
     auto PromiseAllSettledResolveElementFunction =
@@ -3402,21 +3265,39 @@ static MOZ_MUST_USE bool PerformPromiseAllSettled(
         PromiseAllSettledElementFunction<
             PromiseAllSettledElementFunctionKind::Reject>;
 
-    // Steps 8.j-q.
-    JSFunction* resolveFunc = NewPromiseCombinatorElementFunction(
-        cx, PromiseAllSettledResolveElementFunction, dataHolder, index);
+    // Steps 8.j-m.
+    JSFunction* resolveFunc = NewNativeFunction(
+        cx, PromiseAllSettledResolveElementFunction, 1, nullptr,
+        gc::AllocKind::FUNCTION_EXTENDED, GenericObject);
     if (!resolveFunc) {
       return false;
     }
     resolveFunVal.setObject(*resolveFunc);
 
-    // Steps 8.r-x.
-    JSFunction* rejectFunc = NewPromiseCombinatorElementFunction(
-        cx, PromiseAllSettledRejectElementFunction, dataHolder, index);
+    // Steps 8.o-q.
+    resolveFunc->setExtendedSlot(PromiseAllSettledElementFunctionSlot_Data,
+                                 ObjectValue(*dataHolder));
+
+    // Step 8.n.
+    resolveFunc->setExtendedSlot(
+        PromiseAllSettledElementFunctionSlot_ElementIndex, Int32Value(index));
+
+    // Steps 8.r-t.
+    JSFunction* rejectFunc = NewNativeFunction(
+        cx, PromiseAllSettledRejectElementFunction, 1, nullptr,
+        gc::AllocKind::FUNCTION_EXTENDED, GenericObject);
     if (!rejectFunc) {
       return false;
     }
     rejectFunVal.setObject(*rejectFunc);
+
+    // Steps 8.v-x.
+    rejectFunc->setExtendedSlot(PromiseAllSettledElementFunctionSlot_Data,
+                                ObjectValue(*dataHolder));
+
+    // Step 8.u.
+    rejectFunc->setExtendedSlot(
+        PromiseAllSettledElementFunctionSlot_ElementIndex, Int32Value(index));
 
     // Step 8.y.
     dataHolder->increaseRemainingCount();
@@ -3429,9 +3310,8 @@ static MOZ_MUST_USE bool PerformPromiseAllSettled(
   };
 
   // Steps 5-6 and 8.
-  if (!CommonPerformPromiseCombinator(cx, iterator, C,
-                                      resultCapability.promise(), done, true,
-                                      getResolveAndReject)) {
+  if (!CommonPerformPromiseAllRace(cx, iterator, C, resultCapability.promise(),
+                                   done, true, getResolveAndReject)) {
     return false;
   }
 
@@ -3440,43 +3320,61 @@ static MOZ_MUST_USE bool PerformPromiseAllSettled(
 
   // Steps 8.d.iii-iv.
   if (remainingCount == 0) {
-    return RunResolutionFunction(cx, resultCapability.resolve(), values.value(),
+    return RunResolutionFunction(cx, resultCapability.resolve(), valuesArrayVal,
                                  ResolveMode, resultCapability.promise());
   }
 
   return true;
 }
 
-// ES2020 draft rev e97c95d064750fb949b6778584702dd658cf5624
-// 25.6.4.2.2 Promise.allSettled Resolve Element Functions
-// 25.6.4.2.3 Promise.allSettled Reject Element Functions
+// Promise.allSettled (Stage 4 proposal)
+// https://tc39.github.io/proposal-promise-allSettled/
+//
+// Promise.allSettled Resolve Element Functions
+// Promise.allSettled Reject Element Functions
 template <PromiseAllSettledElementFunctionKind Kind>
 static bool PromiseAllSettledElementFunction(JSContext* cx, unsigned argc,
                                              Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   HandleValue valueOrReason = args.get(0);
 
-  // Steps 1-5.
-  Rooted<PromiseCombinatorDataHolder*> data(cx);
-  uint32_t index;
-  if (PromiseCombinatorElementFunctionAlreadyCalled(args, &data, &index)) {
-    args.rval().setUndefined();
-    return true;
-  }
+  // Step 1.
+  JSFunction* resolve = &args.callee().as<JSFunction>();
+  Rooted<PromiseAllDataHolder*> data(
+      cx, &resolve->getExtendedSlot(PromiseAllSettledElementFunctionSlot_Data)
+               .toObject()
+               .as<PromiseAllDataHolder>());
+
+  // Steps 2-4 (moved below).
+
+  // Step 5.
+  int32_t index =
+      resolve
+          ->getExtendedSlot(PromiseAllSettledElementFunctionSlot_ElementIndex)
+          .toInt32();
 
   // Step 6.
-  Rooted<PromiseCombinatorElements> values(cx);
-  if (!GetPromiseCombinatorElements(cx, data, &values)) {
-    return false;
+  RootedValue valuesVal(cx, data->valuesArray());
+  RootedObject valuesObj(cx, &valuesVal.toObject());
+  bool needsWrapping = false;
+  if (IsProxy(valuesObj)) {
+    // See comment for PerformPromiseAllSettled, step 3 for why we unwrap here.
+    valuesObj = UncheckedUnwrap(valuesObj);
+
+    if (JS_IsDeadWrapper(valuesObj)) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_DEAD_OBJECT);
+      return false;
+    }
+
+    needsWrapping = true;
   }
+  HandleNativeObject values = valuesObj.as<NativeObject>();
 
   // Steps 2-3.
-  // The already-called check above only handles the case when |this| function
-  // is called repeatedly, so we still need to check if the other pair of this
-  // resolving function was already called:
   // We use the element value as a signal for whether the Promise was already
   // fulfilled. Upon resolution, it's set to the result object created below.
-  if (!values.unwrappedArray()->getDenseElement(index).isUndefined()) {
+  if (!values->getDenseElement(index).isUndefined()) {
     args.rval().setUndefined();
     return true;
   }
@@ -3511,11 +3409,16 @@ static bool PromiseAllSettledElementFunction(JSContext* cx, unsigned argc,
     return false;
   }
 
-  // Steps 4, 12.
   RootedValue objVal(cx, ObjectValue(*obj));
-  if (!values.setElement(cx, index, objVal)) {
-    return false;
+  if (needsWrapping) {
+    AutoRealm ar(cx, valuesObj);
+    if (!cx->compartment()->wrap(cx, &objVal)) {
+      return false;
+    }
   }
+
+  // Steps 4, 12.
+  values->setDenseElement(index, objVal);
 
   // Steps 8, 13.
   uint32_t remainingCount = data->decreaseRemainingCount();
@@ -3525,10 +3428,10 @@ static bool PromiseAllSettledElementFunction(JSContext* cx, unsigned argc,
     // Step 14.a. (Omitted, happened in PerformPromiseAllSettled.)
     // Step 14.b.
 
-    // Step 7 (Adapted to work with PromiseCombinatorDataHolder's layout).
-    RootedObject resolveAllFun(cx, data->resolveOrRejectObj());
+    // Step 7 (Adapted to work with PromiseAllDataHolder's layout).
+    RootedObject resolveAllFun(cx, data->resolveObj());
     RootedObject promiseObj(cx, data->promiseObj());
-    if (!RunResolutionFunction(cx, resolveAllFun, values.value(), ResolveMode,
+    if (!RunResolutionFunction(cx, resolveAllFun, valuesVal, ResolveMode,
                                promiseObj)) {
       return false;
     }
@@ -3537,224 +3440,6 @@ static bool PromiseAllSettledElementFunction(JSContext* cx, unsigned argc,
   // Step 15.
   args.rval().setUndefined();
   return true;
-}
-
-// Promise.any (Stage 3 proposal)
-// https://tc39.es/proposal-promise-any/
-//
-// Promise.any ( iterable )
-static bool Promise_static_any(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  return CommonPromiseCombinator(cx, args, CombinatorKind::Any);
-}
-
-// Promise.any (Stage 3 proposal)
-// https://tc39.es/proposal-promise-any/
-//
-// Promise.any Reject Element Functions
-static bool PromiseAnyRejectElementFunction(JSContext* cx, unsigned argc,
-                                            Value* vp);
-
-// Promise.any (Stage 3 proposal)
-// https://tc39.es/proposal-promise-any/
-//
-// ThrowAggregateError ( errors )
-static void ThrowAggregateError(JSContext* cx,
-                                Handle<PromiseCombinatorElements> errors,
-                                HandleObject promise);
-
-// Promise.any (Stage 3 proposal)
-// https://tc39.es/proposal-promise-any/
-//
-// PerformPromiseAny ( iteratorRecord, constructor, resultCapability )
-static MOZ_MUST_USE bool PerformPromiseAny(
-    JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
-    Handle<PromiseCapability> resultCapability, bool* done) {
-  *done = false;
-
-  // Step 1.
-  MOZ_ASSERT(C->isConstructor());
-
-  // Step 2 (omitted).
-
-  // Step 3.
-  Rooted<PromiseCombinatorElements> errors(cx);
-  if (!NewPromiseCombinatorElements(cx, resultCapability, &errors)) {
-    return false;
-  }
-
-  // Step 4.
-  // Create our data holder that holds all the things shared across every step
-  // of the iterator. In particular, this holds the remainingElementsCount (as
-  // an integer reserved slot), the array of errors, and the reject function
-  // from our PromiseCapability.
-  Rooted<PromiseCombinatorDataHolder*> dataHolder(cx);
-  dataHolder = PromiseCombinatorDataHolder::New(
-      cx, resultCapability.promise(), errors, resultCapability.reject());
-  if (!dataHolder) {
-    return false;
-  }
-
-  // Step 5.
-  uint32_t index = 0;
-
-  auto getResolveAndReject = [cx, &resultCapability, &errors, &dataHolder,
-                              &index](MutableHandleValue resolveFunVal,
-                                      MutableHandleValue rejectFunVal) {
-    // Step 8.h.
-    if (!errors.pushUndefined(cx)) {
-      return false;
-    }
-
-    // Steps 8.j-p.
-    JSFunction* rejectFunc = NewPromiseCombinatorElementFunction(
-        cx, PromiseAnyRejectElementFunction, dataHolder, index);
-    if (!rejectFunc) {
-      return false;
-    }
-
-    // Step 8.q.
-    dataHolder->increaseRemainingCount();
-
-    // Step 8.s.
-    index++;
-    MOZ_ASSERT(index > 0);
-
-    resolveFunVal.setObject(*resultCapability.resolve());
-    rejectFunVal.setObject(*rejectFunc);
-    return true;
-  };
-
-  // BlockOnPromise fast path requires the passed onFulfilled function doesn't
-  // return an object value, because otherwise the skipped promise creation is
-  // detectable due to missing property lookups.
-  bool isDefaultResolveFn =
-      IsNativeFunction(resultCapability.resolve(), ResolvePromiseFunction);
-
-  // Steps 6-8.
-  if (!CommonPerformPromiseCombinator(
-          cx, iterator, C, resultCapability.promise(), done, isDefaultResolveFn,
-          getResolveAndReject)) {
-    return false;
-  }
-
-  // Step 8.d.ii.
-  int32_t remainingCount = dataHolder->decreaseRemainingCount();
-
-  // Step 8.d.iii.
-  if (remainingCount == 0) {
-    ThrowAggregateError(cx, errors, resultCapability.promise());
-    return false;
-  }
-
-  // Step 8.d.iv.
-  return true;
-}
-
-// Promise.any (Stage 3 proposal)
-// https://tc39.es/proposal-promise-any/
-//
-// Promise.any Reject Element Functions
-static bool PromiseAnyRejectElementFunction(JSContext* cx, unsigned argc,
-                                            Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  HandleValue xVal = args.get(0);
-
-  // Steps 1-5.
-  Rooted<PromiseCombinatorDataHolder*> data(cx);
-  uint32_t index;
-  if (PromiseCombinatorElementFunctionAlreadyCalled(args, &data, &index)) {
-    args.rval().setUndefined();
-    return true;
-  }
-
-  // Step 6.
-  Rooted<PromiseCombinatorElements> errors(cx);
-  if (!GetPromiseCombinatorElements(cx, data, &errors)) {
-    return false;
-  }
-
-  // Step 9.
-  if (!errors.setElement(cx, index, xVal)) {
-    return false;
-  }
-
-  // Steps 8, 10.
-  uint32_t remainingCount = data->decreaseRemainingCount();
-
-  // Step 11.
-  if (remainingCount == 0) {
-    // Step 7 (Adapted to work with PromiseCombinatorDataHolder's layout).
-    RootedObject rejectFun(cx, data->resolveOrRejectObj());
-    RootedObject promiseObj(cx, data->promiseObj());
-
-    ThrowAggregateError(cx, errors, promiseObj);
-
-    RootedValue reason(cx);
-    if (!MaybeGetAndClearException(cx, &reason)) {
-      return false;
-    }
-
-    if (!RunResolutionFunction(cx, rejectFun, reason, RejectMode, promiseObj)) {
-      return false;
-    }
-  }
-
-  // Step 12.
-  args.rval().setUndefined();
-  return true;
-}
-
-// Promise.any (Stage 3 proposal)
-// https://tc39.es/proposal-promise-any/
-//
-// ThrowAggregateError ( errors )
-static void ThrowAggregateError(JSContext* cx,
-                                Handle<PromiseCombinatorElements> errors,
-                                HandleObject promise) {
-  MOZ_ASSERT(!cx->isExceptionPending());
-
-  // Create the AggregateError in the same realm as the array object.
-  AutoRealm ar(cx, errors.unwrappedArray());
-
-  RootedObject allocationSite(cx);
-  mozilla::Maybe<JS::AutoSetAsyncStackForNewCalls> asyncStack;
-
-  // Provide a more useful error stack if possible: This function is typically
-  // called from Promise job queue, which doesn't have any JS frames on the
-  // stack. So when we create the AggregateError below, its stack property will
-  // be set to the empty string, which makes it harder to debug the error cause.
-  // To avoid this situation set-up an async stack based on the Promise
-  // allocation site, which should point to calling site of |Promise.any|.
-  if (promise->is<PromiseObject>()) {
-    allocationSite = promise->as<PromiseObject>().allocationSite();
-    if (allocationSite) {
-      asyncStack.emplace(
-          cx, allocationSite, "Promise.any",
-          JS::AutoSetAsyncStackForNewCalls::AsyncCallKind::IMPLICIT);
-    }
-  }
-
-  // AutoSetAsyncStackForNewCalls requires a new activation before it takes
-  // effect, so call into the self-hosting helper to set-up new call frames.
-  RootedValue error(cx);
-  if (!GetAggregateError(cx, JSMSG_PROMISE_ANY_REJECTION, &error)) {
-    return;
-  }
-
-  // |error| isn't guaranteed to be an AggregateErrorObject in case of OOM.
-  RootedSavedFrame stack(cx);
-  if (error.isObject() && error.toObject().is<AggregateErrorObject>()) {
-    auto* aggregateError = &error.toObject().as<AggregateErrorObject>();
-    aggregateError->setAggregateErrors(errors.unwrappedArray());
-
-    // Adopt the existing saved frames when present.
-    if (JSObject* errorStack = aggregateError->stack()) {
-      stack = &errorStack->as<SavedFrame>();
-    }
-  }
-
-  cx->setPendingException(error, stack);
 }
 
 // https://tc39.github.io/ecma262/#sec-promise.reject
@@ -6073,9 +5758,6 @@ static const JSPropertySpec promise_properties[] = {
 static const JSFunctionSpec promise_static_methods[] = {
     JS_FN("all", Promise_static_all, 1, 0),
     JS_FN("allSettled", Promise_static_allSettled, 1, 0),
-#ifdef NIGHTLY_BUILD
-    JS_FN("any", Promise_static_any, 1, 0),
-#endif
     JS_FN("race", Promise_static_race, 1, 0),
     JS_FN("reject", Promise_reject, 1, 0),
     JS_FN("resolve", Promise_static_resolve, 1, 0),

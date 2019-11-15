@@ -19,7 +19,6 @@
 #include "js/CharacterEncoding.h"
 #include "js/UniquePtr.h"
 #include "vm/ArrayObject.h"
-#include "vm/ErrorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSObject.h"
 #include "vm/RegExpObject.h"
