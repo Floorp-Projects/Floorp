@@ -896,7 +896,6 @@ JS_PUBLIC_API bool JS_ResolveStandardClass(JSContext* cx, HandleObject obj,
   // property, so we won't resolve anything.
   JSProtoKey key = stdnm ? stdnm->key : JSProto_Null;
   if (key != JSProto_Null && key != JSProto_AsyncFunction &&
-      key != JSProto_GeneratorFunction &&
       key != JSProto_AsyncGeneratorFunction) {
     const JSClass* clasp = ProtoKeyToClass(key);
     if (!clasp || clasp->specShouldDefineConstructor()) {
@@ -973,9 +972,8 @@ static bool EnumerateStandardClassesInTable(JSContext* cx,
       continue;
     }
 
-    // Async(Function|Generator) and Generator don't yet use ClassSpec.
-    if (key == JSProto_AsyncFunction || key == JSProto_GeneratorFunction ||
-        key == JSProto_AsyncGeneratorFunction) {
+    // Async(Function|Generator) don't yet use ClassSpec.
+    if (key == JSProto_AsyncFunction || key == JSProto_AsyncGeneratorFunction) {
       continue;
     }
 
