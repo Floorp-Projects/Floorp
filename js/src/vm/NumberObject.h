@@ -7,15 +7,15 @@
 #ifndef vm_NumberObject_h
 #define vm_NumberObject_h
 
-#include "jsnum.h"
+#include "vm/NativeObject.h"
 
 namespace js {
-
-class GlobalObject;
 
 class NumberObject : public NativeObject {
   /* Stores this Number object's [[PrimitiveValue]]. */
   static const unsigned PRIMITIVE_VALUE_SLOT = 0;
+
+  static const ClassSpec classSpec_;
 
  public:
   static const unsigned RESERVED_SLOTS = 1;
@@ -32,13 +32,11 @@ class NumberObject : public NativeObject {
   double unbox() const { return getFixedSlot(PRIMITIVE_VALUE_SLOT).toNumber(); }
 
  private:
+  static JSObject* createPrototype(JSContext* cx, JSProtoKey key);
+
   inline void setPrimitiveValue(double d) {
     setFixedSlot(PRIMITIVE_VALUE_SLOT, NumberValue(d));
   }
-
-  /* For access to init, as Number.prototype is special. */
-  friend JSObject* js::InitNumberClass(JSContext* cx,
-                                       Handle<GlobalObject*> global);
 };
 
 }  // namespace js
