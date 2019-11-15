@@ -102,7 +102,7 @@ class ChannelEventQueue final {
                            bool aAssertionWhenNotQueued = false);
 
   // Append ChannelEvent in front of the event queue.
-  inline nsresult PrependEvent(UniquePtr<ChannelEvent>& aEvent);
+  inline nsresult PrependEvent(UniquePtr<ChannelEvent>&& aEvent);
   inline nsresult PrependEvents(nsTArray<UniquePtr<ChannelEvent>>& aEvents);
 
   // After StartForcedQueueing is called, RunOrEnqueue() will start enqueuing
@@ -231,7 +231,7 @@ inline void ChannelEventQueue::EndForcedQueueing() {
 }
 
 inline nsresult ChannelEventQueue::PrependEvent(
-    UniquePtr<ChannelEvent>& aEvent) {
+    UniquePtr<ChannelEvent>&& aEvent) {
   MutexAutoLock lock(mMutex);
 
   // Prepending event while no queue flush foreseen might cause the following
