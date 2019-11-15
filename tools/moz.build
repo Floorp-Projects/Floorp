@@ -65,6 +65,8 @@ with Files('compare-locales/docs/**'):
 
 SPHINX_TREES['try'] = 'tryselect/docs'
 
+SPHINX_TREES['docs'] = 'docs/docs'
+
 with Files('tryselect/docs/**'):
     SCHEDULES.exclusive = ['docs']
 
