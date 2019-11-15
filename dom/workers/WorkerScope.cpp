@@ -386,6 +386,10 @@ void WorkerGlobalScope::GetOrigin(nsAString& aOrigin) const {
   aOrigin = mWorkerPrivate->Origin();
 }
 
+bool WorkerGlobalScope::CrossOriginIsolated() const {
+  return mWorkerPrivate->CrossOriginIsolated();
+}
+
 void WorkerGlobalScope::Atob(const nsAString& aAtob, nsAString& aOutput,
                              ErrorResult& aRv) const {
   mWorkerPrivate->AssertIsOnWorkerThread();

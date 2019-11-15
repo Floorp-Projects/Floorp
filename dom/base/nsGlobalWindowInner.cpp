@@ -2359,13 +2359,19 @@ void nsGlobalWindowInner::UpdateTopInnerWindow() {
   mTopInnerWindow->UpdateWebSocketCount(-(int32_t)mNumOfOpenWebSockets);
 }
 
-bool nsGlobalWindowInner::IsCrossOriginIsolated() const {
+bool nsGlobalWindowInner::IsSharedMemoryAllowed() const {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (StaticPrefs::
           dom_postMessage_sharedArrayBuffer_bypassCOOP_COEP_insecure_enabled()) {
     return true;
   }
+
+  return CrossOriginIsolated();
+}
+
+bool nsGlobalWindowInner::CrossOriginIsolated() const {
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (!StaticPrefs::dom_postMessage_sharedArrayBuffer_withCOOP_COEP()) {
     return false;
