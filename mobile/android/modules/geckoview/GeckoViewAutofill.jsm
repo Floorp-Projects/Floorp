@@ -24,10 +24,10 @@ const { debug, warn } = GeckoViewUtils.initLogging("Autofill"); // eslint-disabl
 class GeckoViewAutofill {
   constructor(aEventDispatcher) {
     this._eventDispatcher = aEventDispatcher;
-    this._autoFillId = 0;
-    this._autoFillElements = undefined;
-    this._autoFillInfos = undefined;
-    this._autoFillTasks = undefined;
+    this._autofillId = 0;
+    this._autofillElements = undefined;
+    this._autofillInfos = undefined;
+    this._autofillTasks = undefined;
   }
 
   /**
@@ -45,7 +45,7 @@ class GeckoViewAutofill {
   }
 
   _getInfo(aElement, aParent, aRoot, aUsernameField) {
-    let info = this._autoFillInfos.get(aElement);
+    let info = this._autofillInfos.get(aElement);
     if (info) {
       return info;
     }
@@ -54,7 +54,7 @@ class GeckoViewAutofill {
     const bounds = aElement.getBoundingClientRect();
 
     info = {
-      id: ++this._autoFillId,
+      id: ++this._autofillId,
       parent: aParent,
       root: aRoot,
       tag: aElement.tagName,
@@ -100,26 +100,26 @@ class GeckoViewAutofill {
       info.autofillhint = "username"; // AUTOFILL.HINT.USERNAME
     }
 
-    this._autoFillInfos.set(aElement, info);
-    this._autoFillElements.set(info.id, Cu.getWeakReference(aElement));
+    this._autofillInfos.set(aElement, info);
+    this._autofillElements.set(info.id, Cu.getWeakReference(aElement));
     return info;
   }
 
   _updateInfoValues(aElements) {
-    if (!this._autoFillInfos) {
+    if (!this._autofillInfos) {
       return;
     }
 
     const updated = [];
     for (const element of aElements) {
-      const info = this._autoFillInfos.get(element);
+      const info = this._autofillInfos.get(element);
       if (!info || info.value === element.value) {
         continue;
       }
       debug`Updating value ${info.value} to ${element.value}`;
 
       info.value = element.value;
-      this._autoFillInfos.set(element, info);
+      this._autofillInfos.set(element, info);
       updated.push(info);
     }
     return updated;
@@ -127,7 +127,7 @@ class GeckoViewAutofill {
 
   _addElement(aFormLike, aFromDeferredTask) {
     let task =
-      this._autoFillTasks && this._autoFillTasks.get(aFormLike.rootElement);
+      this._autofillTasks && this._autofillTasks.get(aFormLike.rootElement);
     if (task && !aFromDeferredTask) {
       // We already have a pending task; cancel that and start a new one.
       debug`Canceling previous auto-fill task`;
@@ -145,20 +145,20 @@ class GeckoViewAutofill {
       debug`Deferring auto-fill task`;
       task = new DeferredTask(() => this._addElement(aFormLike, true), 100);
       task.arm();
-      if (!this._autoFillTasks) {
-        this._autoFillTasks = new WeakMap();
+      if (!this._autofillTasks) {
+        this._autofillTasks = new WeakMap();
       }
-      this._autoFillTasks.set(aFormLike.rootElement, task);
+      this._autofillTasks.set(aFormLike.rootElement, task);
       return;
     }
 
     debug`Adding auto-fill ${aFormLike.rootElement.tagName}`;
 
-    this._autoFillTasks.delete(aFormLike.rootElement);
+    this._autofillTasks.delete(aFormLike.rootElement);
 
-    if (!this._autoFillInfos) {
-      this._autoFillInfos = new WeakMap();
-      this._autoFillElements = new Map();
+    if (!this._autofillInfos) {
+      this._autofillInfos = new WeakMap();
+      this._autofillElements = new Map();
     }
 
     const window = aFormLike.rootElement.ownerGlobal;
@@ -209,7 +209,7 @@ class GeckoViewAutofill {
 
         for (const id in responses) {
           const entry =
-            this._autoFillElements && this._autoFillElements.get(+id);
+            this._autofillElements && this._autofillElements.get(+id);
           const element = entry && entry.get();
           const value = responses[id] || "";
 
@@ -256,7 +256,7 @@ class GeckoViewAutofill {
     debug`Auto-fill focus on ${aTarget && aTarget.tagName}`;
 
     const info =
-      aTarget && this._autoFillInfos && this._autoFillInfos.get(aTarget);
+      aTarget && this._autofillInfos && this._autofillInfos.get(aTarget);
     if (!aTarget || info) {
       this._eventDispatcher.dispatch("GeckoView:OnAutofillFocus", info);
     }
@@ -292,9 +292,9 @@ class GeckoViewAutofill {
   clearElements() {
     debug`Clearing auto-fill`;
 
-    this._autoFillTasks = undefined;
-    this._autoFillInfos = undefined;
-    this._autoFillElements = undefined;
+    this._autofillTasks = undefined;
+    this._autofillInfos = undefined;
+    this._autofillElements = undefined;
 
     this._eventDispatcher.sendRequest({
       type: "GeckoView:ClearAutofill",
