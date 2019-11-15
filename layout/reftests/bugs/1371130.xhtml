@@ -1,23 +1,28 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <bindings xmlns="http://www.mozilla.org/xbl"
-              xmlns:xhtml="http://www.w3.org/1999/xhtml">
-      <binding id="a">
-        <content>
-          <xhtml:p>
-            <children></children>
-          </xhtml:p>
-          <xhtml:span>This should also be green.</xhtml:span>
-        </content>
-      </binding>
-    </bindings>
+    <script>
+      customElements.define("custom-div", class extends HTMLDivElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: "open" });
+
+          let p = document.createElement("p");
+          p.append(document.createElement("slot"));
+          let span = document.createElement("span");
+          span.textContent = "This should not be green.";
+          this.shadowRoot.append(p, span);
+        }
+      }, {
+        extends: "div",
+      });
+    </script>
     <style>
       span { color: red; }
       div.x > span { color: green; }
     </style>
   </head>
   <body onload="document.body.offsetTop; document.querySelector('div').className = 'x'">
-    <div style="-moz-binding: url(#a)">
+    <div is="custom-div">
       <span>This should be green.</span>
     </div>
   </body>
