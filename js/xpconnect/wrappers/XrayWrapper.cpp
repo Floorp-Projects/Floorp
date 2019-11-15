@@ -45,15 +45,15 @@ using namespace XrayUtils;
 
 #define Between(x, a, b) (a <= x && x <= b)
 
-static_assert(JSProto_URIError - JSProto_Error == 7,
+static_assert(JSProto_URIError - JSProto_Error == 8,
               "New prototype added in error object range");
 #define AssertErrorObjectKeyInBounds(key)                      \
   static_assert(Between(key, JSProto_Error, JSProto_URIError), \
                 "We depend on js/ProtoKey.h ordering here");
 MOZ_FOR_EACH(AssertErrorObjectKeyInBounds, (),
-             (JSProto_Error, JSProto_InternalError, JSProto_EvalError,
-              JSProto_RangeError, JSProto_ReferenceError, JSProto_SyntaxError,
-              JSProto_TypeError, JSProto_URIError));
+             (JSProto_Error, JSProto_InternalError, JSProto_AggregateError,
+              JSProto_EvalError, JSProto_RangeError, JSProto_ReferenceError,
+              JSProto_SyntaxError, JSProto_TypeError, JSProto_URIError));
 
 static_assert(JSProto_Uint8ClampedArray - JSProto_Int8Array == 8,
               "New prototype added in typed array range");
