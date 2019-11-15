@@ -25,6 +25,7 @@
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/ToString.h"
 
 #include "nsCOMPtr.h"
 #include "nsFlexContainerFrame.h"
@@ -7846,7 +7847,7 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
 
   mozilla::WritingMode wm = GetWritingMode();
   if (wm.IsVertical() || wm.IsBidiRTL()) {
-    aTo += nsPrintfCString(" wm=%s logical-size={%d,%d}", wm.DebugString(),
+    aTo += nsPrintfCString(" wm=%s logical-size={%d,%d}", ToString(wm).c_str(),
                            ISize(), BSize());
   }
 
@@ -7857,8 +7858,8 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
       nsSize containerSize = parent->mRect.Size();
       LogicalRect lr(pWM, mRect, containerSize);
       aTo += nsPrintfCString(
-          " parent-wm=%s cs={%d,%d} logicalRect={%d,%d,%d,%d}",
-          pWM.DebugString(), containerSize.width, containerSize.height,
+          " parent-wm=%s cs={%d,%d} logical-rect={%d,%d,%d,%d}",
+          ToString(pWM).c_str(), containerSize.width, containerSize.height,
           lr.IStart(pWM), lr.BStart(pWM), lr.ISize(pWM), lr.BSize(pWM));
     }
   }
