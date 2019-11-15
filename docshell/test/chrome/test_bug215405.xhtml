@@ -4,16 +4,16 @@
   href="chrome://mochikit/content/tests/SimpleTest/test.css"
   type="text/css"?>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=364461
+https://bugzilla.mozilla.org/show_bug.cgi?id=215405
 -->
-<window title="Mozilla Bug 364461"
+<window title="Mozilla Bug 215405"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
 <body  xmlns="http://www.w3.org/1999/xhtml">
 <a target="_blank"
-   href="https://bugzilla.mozilla.org/show_bug.cgi?id=364461">Mozilla Bug 364461</a>
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=215405">Mozilla Bug 215405</a>
 <p id="display"></p>
 <div id="content" style="display: none">
 
@@ -25,18 +25,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=364461
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
-/** Test for Bug 364461 **/
+/** Test for Bug 215405 **/
 
 SimpleTest.waitForExplicitFinish();
+window.openDialog("bug215405_window.xhtml", "bug215405",
+                  "chrome,width=600,height=600,noopener", window);
 
-SpecialPowers.pushPrefEnv({
-  "set":[["security.data_uri.block_toplevel_data_uri_navigations", false]]
-}, runTests);
-
-function runTests() {
-  window.openDialog("bug364461_window.xul", "bug364461",
-                    "chrome,width=600,height=600,noopener", window);
-}
 ]]>
 </script>
 
