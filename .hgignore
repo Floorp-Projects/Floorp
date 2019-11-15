@@ -201,7 +201,9 @@ tps_result\.json
 # Ignore browsertime output directory
 ^browsertime-results
 
-# Ignore the build directories of WebRender standalone builds.
+# Ignore the build directories of WebGPU and WebRender standalone builds.
+gfx/wgpu/target
+gfx/wgpu/.*/build
 gfx/wr/target/
 
 # Ignore this files in certviewer

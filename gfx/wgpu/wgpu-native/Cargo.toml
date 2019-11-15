@@ -13,8 +13,8 @@ keywords = ["graphics"]
 license = "MPL-2.0"
 
 [lib]
+# Enabling these targets makes our CI bots try to build them and fail atm
 #crate-type = ["lib", "cdylib", "staticlib"]
-crate-type = ["lib"]
 
 [features]
 default = []

@@ -1,0 +1,46 @@
+header = """/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */"""
+autogen_warning = """/* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
+ * To generate this file:
+ *   1. Get the latest cbindgen using `cargo install --force cbindgen`
+ *      a. Alternatively, you can clone `https://github.com/eqrion/cbindgen` and use a tagged release
+ *   2. Run `rustup run nightly cbindgen toolkit/library/rust/ --lockfile Cargo.lock --crate wgpu-remote -o dom/webgpu/ffi/wgpu_ffi_generated.h`
+ */
+
+#define WGPU_LOCAL
+"""
+include_version = true
+braces = "SameLine"
+line_length = 100
+tab_width = 2
+language = "C"
+
+[export]
+prefix = "WGPU"
+#TODO: figure out why cbindgen even tries to export a private type...
+exclude = ["BufferMapResult"]
+
+[parse]
+parse_deps = false
+
+[parse.expand]
+features = ["local"]
+
+[fn]
+
+[struct]
+derive_eq = true
+
+[enum]
+prefix_with_name = true
+derive_helper_methods = true
+
+[macro_expansion]
+bitflags = true
+
+[defines]
+"feature = local" = "WGPU_LOCAL"
+"feature = gfx-backend-gl" = "WGPU_BACKEND_GL"
+"feature = winit" = "WGPU_WINIT"
+"feature = glutin" = "WGPU_GLUTIN"

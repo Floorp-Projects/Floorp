@@ -26,6 +26,7 @@ exclude = [
 
   # Excluded because these crates have their own Cargo workspaces so they can't
   # be included in the top-level one.
+  "gfx/wgpu",
   "gfx/wr",
   "media/audioipc",
   "media/cubeb-rs",
