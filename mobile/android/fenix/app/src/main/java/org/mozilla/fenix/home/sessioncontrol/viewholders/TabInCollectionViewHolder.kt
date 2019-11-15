@@ -19,7 +19,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.loadIntoView
-import org.mozilla.fenix.ext.urlToTrimmedHost
+import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
@@ -70,7 +70,7 @@ class TabInCollectionViewHolder(
     }
 
     private fun updateTabUI() {
-        collection_tab_hostname.text = tab.url.urlToTrimmedHost(view.context)
+        collection_tab_hostname.text = tab.url.toShortUrl(view.context.components.publicSuffixList)
 
         collection_tab_title.text = tab.title
         collection_tab_icon.context.components.core.icons.loadIntoView(collection_tab_icon, tab.url)

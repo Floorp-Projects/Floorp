@@ -44,7 +44,7 @@ import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.setToolbarColors
-import org.mozilla.fenix.ext.urlToTrimmedHost
+import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 import org.mozilla.fenix.library.bookmarks.DesktopFolders
 import java.util.concurrent.TimeUnit
@@ -191,7 +191,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                                         .setText(
                                             getString(
                                                 R.string.bookmark_deletion_snackbar_message,
-                                                it.url?.urlToTrimmedHost(activity) ?: it.title
+                                                it.url?.toShortUrl(context.components.publicSuffixList) ?: it.title
                                             )
                                         )
                                         .show()

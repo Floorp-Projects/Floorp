@@ -44,7 +44,7 @@ import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.minus
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.ext.urlToTrimmedHost
+import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.share.ShareTab
 import org.mozilla.fenix.utils.allowUndo
@@ -279,7 +279,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler {
                 val bookmarkNode = selected.first()
                 getString(
                     R.string.bookmark_deletion_snackbar_message,
-                    bookmarkNode.url?.urlToTrimmedHost(context!!) ?: bookmarkNode.title
+                    bookmarkNode.url?.toShortUrl(context!!.components.publicSuffixList) ?: bookmarkNode.title
                 )
             }
             else -> throw IllegalStateException("Illegal event type in onDeleteSome")

@@ -15,12 +15,12 @@ fun Session.toTab(context: Context, selected: Boolean? = null, mediaState: Media
 
 fun Session.toTab(publicSuffixList: PublicSuffixList, selected: Boolean? = null, mediaState: MediaState? = null): Tab {
     return Tab(
-        this.id,
-        this.url,
-        this.url.urlToTrimmedHost(publicSuffixList),
-        this.title,
-        selected,
-        mediaState,
-        this.icon
+        sessionId = this.id,
+        url = this.url,
+        hostname = this.url.toShortUrl(publicSuffixList),
+        title = this.title,
+        selected = selected,
+        mediaState = mediaState,
+        icon = this.icon
     )
 }

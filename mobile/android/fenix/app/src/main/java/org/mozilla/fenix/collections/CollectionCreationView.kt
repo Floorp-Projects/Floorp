@@ -27,7 +27,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
-import org.mozilla.fenix.ext.urlToTrimmedHost
+import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 
@@ -268,7 +268,7 @@ class CollectionCreationView(
                 Tab(
                     tab.id.toString(),
                     tab.url,
-                    tab.url.urlToTrimmedHost(view.context),
+                    tab.url.toShortUrl(view.context.components.publicSuffixList),
                     tab.title
                 )
             }.let { tabs ->
