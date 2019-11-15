@@ -91,6 +91,7 @@ class Optional;
 class OwningNodeOrString;
 template <typename>
 class Sequence;
+class ShadowRoot;
 class SVGUseElement;
 class Text;
 class TextOrElementOrDocument;
@@ -1260,9 +1261,57 @@ class nsINode : public mozilla::dom::EventTarget {
    * TODO(emilio):: Remove this function, and use just
    * IsInNativeAnonymousSubtree, or something?
    */
-  bool IsInAnonymousSubtree() const {
-    return IsInNativeAnonymousSubtree();
+  bool IsInAnonymousSubtree() const { return IsInNativeAnonymousSubtree(); }
+
+  /**
+   * If |this| or any ancestor is native anonymous, return the root of the
+   * native anonymous subtree. Note that in case of nested native anonymous
+   * content, this returns the innermost root, not the outermost.
+   */
+  nsIContent* GetClosestNativeAnonymousSubtreeRoot() const {
+    if (!IsInNativeAnonymousSubtree()) {
+      return nullptr;
+    }
+    MOZ_ASSERT(IsContent(), "How did non-content end up in NAC?");
+    for (const nsINode* node = this; node; node = node->GetParentNode()) {
+      if (node->IsRootOfNativeAnonymousSubtree()) {
+        return const_cast<nsINode*>(node)->AsContent();
+      }
+    }
+    // FIXME(emilio): This should not happen, usually, but editor removes nodes
+    // in native anonymous subtrees, and we don't clean nodes from the current
+    // event content stack from ContentRemoved, so it can actually happen, see
+    // bug 1510208.
+    NS_WARNING("GetClosestNativeAnonymousSubtreeRoot on disconnected NAC!");
+    return nullptr;
   }
+
+  /**
+   * If |this| or any ancestor is native anonymous, return the parent of the
+   * native anonymous subtree. Note that in case of nested native anonymous
+   * content, this returns the parent of the innermost root, not the outermost.
+   */
+  nsIContent* GetClosestNativeAnonymousSubtreeRootParent() const {
+    const nsIContent* root = GetClosestNativeAnonymousSubtreeRoot();
+    if (!root) {
+      return nullptr;
+    }
+    // We could put this in nsIContentInlines.h or such to avoid this
+    // reinterpret_cast, but it doesn't seem worth it.
+    return reinterpret_cast<const nsINode*>(root)->GetParent();
+  }
+
+  /**
+   * Gets the root of the node tree for this content if it is in a shadow tree.
+   */
+  mozilla::dom::ShadowRoot* GetContainingShadow() const;
+  /**
+   * Gets the shadow host if this content is in a shadow tree. That is, the host
+   * of |GetContainingShadow|, if its not null.
+   *
+   * @return The shadow host, if this is in shadow tree, or null.
+   */
+  nsIContent* GetContainingShadowHost() const;
 
   bool IsInSVGUseShadowTree() const {
     return !!GetContainingSVGUseShadowHost();
