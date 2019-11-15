@@ -1,0 +1,143 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>PageAction Test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+var {ContentTaskUtils} = SpecialPowers.Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
+var {PageActions} = SpecialPowers.Cu.import("resource://gre/modules/PageActions.jsm", {});
+
+add_task(async function test_pageAction() {
+  async function background() {
+    let tabCreatedPromise = new Promise(resolve => {
+      let onTabCreated = tab => {
+        browser.tabs.onCreated.removeListener(onTabCreated);
+        resolve();
+      };
+      browser.tabs.onCreated.addListener(onTabCreated);
+    });
+
+    async function createNewTab(url) {
+      let [tab] = await Promise.all([
+        browser.tabs.create({url}),
+        tabCreatedPromise,
+      ]);
+      return tab;
+    }
+
+    let tab1 = await createNewTab("about:blank");
+    let tab2 = await createNewTab("about:blank");
+
+    browser.test.onMessage.addListener(async (msg, data) => {
+      if (msg === "select-tab") {
+        const onActivatedListener = ({tabId}) => {
+          if (tabId === data) {
+            browser.tabs.onActivated.removeListener(onActivatedListener);
+            browser.test.sendMessage("tab-selected");
+          }
+        };
+        browser.tabs.onActivated.addListener(onActivatedListener);
+
+        await browser.tabs.update(data, {active: true});
+      } else if (msg === "pageAction-show") {
+        browser.pageAction.show(data).then(() => {
+          browser.test.sendMessage("page-action-shown");
+        });
+      } else if (msg === "pageAction-hide") {
+        browser.pageAction.hide(data).then(() => {
+          browser.test.sendMessage("page-action-hidden");
+        });
+      } else if (msg === "finish") {
+        await browser.tabs.remove([tab1.id, tab2.id]);
+        browser.test.notifyPass("pageAction");
+      }
+    });
+
+    browser.pageAction.onClicked.addListener(tab => {
+      browser.test.sendMessage("page-action-clicked", tab);
+    });
+
+    browser.test.sendMessage("tabs", {tab1, tab2});
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      "name": "PageAction Extension",
+      "page_action": {
+        "default_title": "Page Action",
+        "default_icon": {
+          "18": "extension.png",
+        },
+      },
+      "applications": {
+        "gecko": {
+          "id": "foo@bar.com",
+        },
+      },
+    },
+    files: {
+      "extension.png": TEST_ICON_ARRAYBUFFER,
+    },
+  });
+
+  await extension.startup();
+
+  async function checkTab(tabId, uuid, showAfterSelecting) {
+    ok(!PageActions.isShown(uuid), "The PageAction should not be shown");
+
+    if (showAfterSelecting) {
+      extension.sendMessage("select-tab", tabId);
+      await extension.awaitMessage("tab-selected");
+      ok(!PageActions.isShown(uuid), "The PageAction should still not be shown");
+      extension.sendMessage("pageAction-show", tabId);
+      await extension.awaitMessage("page-action-shown");
+      ok(PageActions.isShown(uuid), "The PageAction should be shown");
+    } else {
+      extension.sendMessage("pageAction-show", tabId);
+      await extension.awaitMessage("page-action-shown");
+      ok(!PageActions.isShown(uuid), "The PageAction should still not be shown");
+      extension.sendMessage("select-tab", tabId);
+      await extension.awaitMessage("tab-selected");
+      // Wait until the page action is shown.
+      await ContentTaskUtils.waitForCondition(() => PageActions.isShown(uuid));
+    }
+
+    PageActions.synthesizeClick(uuid);
+    const clickedTab = await extension.awaitMessage("page-action-clicked");
+    is(clickedTab.id, tabId, "Got the expected tab id in the pageAction.onClicked event");
+
+    ok(PageActions.isShown(uuid), "The PageAction should be shown");
+    extension.sendMessage("pageAction-hide", tabId);
+    await extension.awaitMessage("page-action-hidden");
+  }
+
+  const tabs = await extension.awaitMessage("tabs");
+  const uuid = `{${extension.uuid}}`;
+
+  await checkTab(tabs.tab1.id, uuid, true /* showAfterSelecting */);
+  await checkTab(tabs.tab2.id, uuid, false /* showAfterSelecting */);
+
+  // Show the page action for the active tab.
+  extension.sendMessage("pageAction-show", tabs.tab2.id);
+  await extension.awaitMessage("page-action-shown");
+  ok(PageActions.isShown(uuid), "The PageAction should be shown");
+
+  extension.sendMessage("finish");
+  await extension.awaitFinish("pageAction");
+
+  await extension.unload();
+  ok(!PageActions.isShown(uuid), "The PageAction should be removed after unload");
+});
+</script>
+
+</body>
+</html>

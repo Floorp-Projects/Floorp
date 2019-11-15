@@ -10,7 +10,6 @@ with Files('**'):
 
 EXTRA_JS_MODULES += [
     'Extension.jsm',
-    'ExtensionActions.jsm',
     'ExtensionActivityLog.jsm',
     'ExtensionChild.jsm',
     'ExtensionChildDevToolsUtils.jsm',
