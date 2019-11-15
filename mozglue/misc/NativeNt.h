@@ -242,6 +242,12 @@ struct MemorySectionNameBuf : public _MEMORY_SECTION_NAME {
 
   // Native NT paths, so we can't assume MAX_PATH. Use a larger buffer.
   WCHAR mBuf[2 * MAX_PATH];
+
+  bool IsEmpty() const {
+    return !mSectionFileName.Buffer || !mSectionFileName.Length;
+  }
+
+  operator PCUNICODE_STRING() const { return &mSectionFileName; }
 };
 
 inline bool FindCharInUnicodeString(const UNICODE_STRING& aStr, WCHAR aChar,

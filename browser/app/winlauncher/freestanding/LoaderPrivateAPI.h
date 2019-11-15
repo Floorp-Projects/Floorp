@@ -41,6 +41,12 @@ class NS_NO_VTABLE LoaderPrivateAPI : public nt::LoaderAPI {
    * built-in observer.
    */
   virtual bool IsDefaultObserver() const = 0;
+
+  /**
+   * Returns the name of a given mapped section address as a local instance of
+   * nt::MemorySectionNameBuf.  This does not involve heap allocation.
+   */
+  virtual nt::MemorySectionNameBuf GetSectionNameBuffer(void* aSectionAddr) = 0;
 };
 
 /**

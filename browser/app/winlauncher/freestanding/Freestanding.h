@@ -29,7 +29,14 @@ namespace freestanding {
  */
 template <typename T, typename... Args>
 inline static T* RtlNew(Args&&... aArgs) {
-  void* ptr = ::RtlAllocateHeap(nt::RtlGetProcessHeap(), 0, sizeof(T));
+  HANDLE processHeap = nt::RtlGetProcessHeap();
+  if (!processHeap) {
+    // Handle the case where the process heap is not initialized because
+    // passing nullptr to RtlAllocateHeap crashes the process.
+    return nullptr;
+  }
+
+  void* ptr = ::RtlAllocateHeap(processHeap, 0, sizeof(T));
   if (!ptr) {
     return nullptr;
   }
