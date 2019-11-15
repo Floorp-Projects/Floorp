@@ -49,6 +49,7 @@ mochitest:
     tier:
         by-test-platform:
             windows10-aarch64.*: 2
+            linux64-ccov/opt: 3
             default: default
     chunks:
         by-test-platform:
@@ -96,6 +97,7 @@ mochitest-browser-chrome:
     tier:
         by-test-platform:
             windows10-aarch64.*: 2
+            linux64-ccov/opt: 3
             default: default
     chunks:
         by-test-platform:
@@ -174,6 +176,7 @@ mochitest-devtools-chrome:
     tier:
         by-test-platform:
             windows10-aarch64.*: 2
+            linux64-ccov/opt: 3
             default: default
     max-run-time:
         by-test-platform:
