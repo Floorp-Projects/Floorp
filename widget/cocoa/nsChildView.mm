@@ -1714,17 +1714,19 @@ bool nsChildView::PreRender(WidgetRenderingContext* aContext) {
 }
 
 void nsChildView::PostRender(WidgetRenderingContext* aContext) {
-  auto compositingState = mCompositingState.Lock();
-  if (compositingState->mAsyncCATransactionsSuspended) {
-    // We should not trigger a CATransactions on this thread. Instead, let the
-    // main thread take care of calling ApplyChanges at an appropriate time.
-    compositingState->mNativeLayerChangesPending = true;
-  } else {
-    // Force a CoreAnimation layer tree update from this thread.
-    [NSAnimationContext beginGrouping];
-    mNativeLayerRoot->ApplyChanges();
-    compositingState->mNativeLayerChangesPending = false;
-    [NSAnimationContext endGrouping];
+  {  // scope for lock
+    auto compositingState = mCompositingState.Lock();
+    if (compositingState->mAsyncCATransactionsSuspended) {
+      // We should not trigger a CATransactions on this thread. Instead, let the
+      // main thread take care of calling ApplyChanges at an appropriate time.
+      compositingState->mNativeLayerChangesPending = true;
+    } else {
+      // Force a CoreAnimation layer tree update from this thread.
+      [NSAnimationContext beginGrouping];
+      mNativeLayerRoot->ApplyChanges();
+      compositingState->mNativeLayerChangesPending = false;
+      [NSAnimationContext endGrouping];
+    }
   }
   mViewTearDownLock.Unlock();
 }
