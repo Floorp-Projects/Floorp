@@ -104,7 +104,7 @@
                OCLASP(RelativeTimeFormat))                                   \
   REAL_IF_BDATA(TypedObject, InitTypedObjectModuleObject,                    \
                 OCLASP(TypedObjectModule))                                   \
-  REAL(Reflect, InitReflect, nullptr)                                        \
+  REAL(Reflect, InitViaClassSpec, CLASP(Reflect))                            \
   REAL(WeakSet, InitViaClassSpec, OCLASP(WeakSet))                           \
   REAL(TypedArray, InitViaClassSpec,                                         \
        &js::TypedArrayObject::sharedTypedArrayPrototypeClass)                \
