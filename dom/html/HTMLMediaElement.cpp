@@ -1692,7 +1692,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement,
                                                 nsGenericHTMLElement)
-  tmp->mWatchManager.Shutdown();
   tmp->RemoveMutationObserver(tmp);
   if (tmp->mSrcStream) {
     // Need to EndMediaStreamPlayback to clear mSrcStream and make sure
@@ -5075,20 +5074,17 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback() {
   mFirstFrameListener = nullptr;
 
   if (mMediaStreamRenderer) {
-    if (!mWatchManager.IsShutdown()) {
-      mWatchManager.Unwatch(
-          mPaused, &HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying);
-      mWatchManager.Unwatch(
-          mReadyState, &HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying);
-      mWatchManager.Unwatch(
-          mSrcStreamPlaybackEnded,
-          &HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying);
-      mWatchManager.Unwatch(
-          mSrcStreamPlaybackEnded,
-          &HTMLMediaElement::UpdateSrcStreamReportPlaybackEnded);
-      mWatchManager.Unwatch(mMediaStreamRenderer->CurrentGraphTime(),
-                            &HTMLMediaElement::UpdateSrcStreamTime);
-    }
+    mWatchManager.Unwatch(mPaused,
+                          &HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying);
+    mWatchManager.Unwatch(mReadyState,
+                          &HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying);
+    mWatchManager.Unwatch(mSrcStreamPlaybackEnded,
+                          &HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying);
+    mWatchManager.Unwatch(
+        mSrcStreamPlaybackEnded,
+        &HTMLMediaElement::UpdateSrcStreamReportPlaybackEnded);
+    mWatchManager.Unwatch(mMediaStreamRenderer->CurrentGraphTime(),
+                          &HTMLMediaElement::UpdateSrcStreamTime);
     mMediaStreamRenderer->Shutdown();
     mMediaStreamRenderer = nullptr;
   }
