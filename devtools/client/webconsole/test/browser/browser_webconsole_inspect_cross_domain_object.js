@@ -8,8 +8,7 @@
 
 const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/" +
-  "test/browser/" +
-  "test-inspect-cross-domain-objects-top.html";
+  "test/browser/test-inspect-cross-domain-objects-top.html";
 
 add_task(async function() {
   requestLongerTimeout(2);
@@ -31,11 +30,11 @@ add_task(async function() {
   const objectInspectors = [...node.querySelectorAll(".tree")];
   is(
     objectInspectors.length,
-    2,
+    3,
     "There is the expected number of object inspectors"
   );
 
-  const [oi1, oi2] = objectInspectors;
+  const [oi1, oi2, oi3] = objectInspectors;
 
   info("Expanding the first object inspector");
   await expandObjectInspector(oi1);
@@ -73,6 +72,44 @@ add_task(async function() {
   ok(oi2.textContent.includes('hello: "world!"'), "Expected content");
   ok(oi2.textContent.includes("length: 1"), "Expected content");
   ok(oi2.textContent.includes('name: "func"'), "Expected content");
+
+  info(
+    "Check that the logged element can be highlighted and clicked to jump to inspector"
+  );
+  const toolbox = hud.toolbox;
+  // Loading the inspector panel at first, to make it possible to listen for
+  // new node selections
+  await toolbox.loadTool("inspector");
+
+  const elementNode = oi3.querySelector(".objectBox-node");
+  ok(elementNode !== null, "Node was logged as expected");
+  const view = node.ownerDocument.defaultView;
+
+  info("Highlight the node by moving the cursor on it");
+  // the inspector should be initialized first and then the node should
+  // highlight after the hover effect.
+  const inspectorFront = await toolbox.target.getFront("inspector");
+  const onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
+
+  EventUtils.synthesizeMouseAtCenter(elementNode, { type: "mousemove" }, view);
+
+  await onNodeHighlight;
+  ok(true, "Highlighter is displayed");
+  // Move the mouse out of the node to prevent failure when test is run multiple times.
+  EventUtils.synthesizeMouseAtCenter(oi1, { type: "mousemove" }, view);
+
+  const openInInspectorIcon = elementNode.querySelector(".open-inspector");
+  ok(openInInspectorIcon !== null, "There is an open in inspector icon");
+
+  info(
+    "Clicking on the inspector icon and waiting for the inspector to be selected"
+  );
+  const onNewNode = toolbox.selection.once("new-node-front");
+  openInInspectorIcon.click();
+  const inspectorSelectedNodeFront = await onNewNode;
+
+  ok(true, "Inspector selected and new node got selected");
+  is(inspectorSelectedNodeFront.id, "testEl", "The expected node was selected");
 });
 
 function expandObjectInspector(oi) {
