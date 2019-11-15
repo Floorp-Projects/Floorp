@@ -37,7 +37,7 @@ const release = {
     {
       header: `Block URLs in the Network panel`,
       description: `Test how a page loads without specific files, like CSS or JavaScript. Right-click network requests and select “Block URL” or use the new Request Blocking pane.`,
-      href: `https://developer.mozilla.org/docs/Tools/Network_Monitor/request_list#Block_a_specific_URL?utm_source=devtools&utm_medium=devtools_whatsnew`,
+      href: `https://developer.mozilla.org/docs/Tools/Network_Monitor/request_list?utm_source=devtools&utm_medium=devtools_whatsnew#Block_a_specific_URL`,
     },
     {
       header: `New multi-line editor mode in Console`,
@@ -48,7 +48,7 @@ const release = {
     {
       header: `Search across all Network Headers and Content`,
       description: `The new Search pane lets you search across all network headers and response bodies in the Network panel.`,
-      href: `https://developer.mozilla.org/docs/Tools/Network_Monitor/request_list#Search_Requests?utm_source=devtools&utm_medium=devtools_whatsnew`,
+      href: `https://developer.mozilla.org/docs/Tools/Network_Monitor/request_list?utm_source=devtools&utm_medium=devtools_whatsnew#Search_Requests`,
     },
     {
       header: `Log on Events`,
@@ -58,12 +58,12 @@ const release = {
     {
       header: `Quick search in Event Listeners Breakpoints`,
       description: `Quickly find the right event category and type with the new filter field in the Debugger’s Event Listener Breakpoints pane. `,
-      href: `https://developer.mozilla.org/docs/Tools/Debugger/Set_event_listener_breakpoints??utm_source=devtools&utm_medium=devtools_whatsnew`,
+      href: `https://developer.mozilla.org/docs/Tools/Debugger/Set_event_listener_breakpoints?utm_source=devtools&utm_medium=devtools_whatsnew`,
     },
     {
       header: `New in 70: Inactive CSS rules indicator in Rules pane`,
       description: `The Inspector now grays out CSS declarations that don’t affect the selected element and shows a tooltip explaining why—and even how to fix it.`,
-      href: `https://developer.mozilla.org/docs/Tools/Page_Inspector/How_to/Examine_and_edit_CSS?utm_source=devtools&utm_medium=devtools_whatsnew`,
+      href: `https://hacks.mozilla.org/2019/10/firefox-70-a-bountiful-release-for-all/#developertools`,
     },
     {
       header: `New in 70: Pause on DOM Mutation in Debugger`,
@@ -78,7 +78,7 @@ const release = {
     {
       header: `New in 70: Auditing checks in the Accessibility inspector`,
       description: `The Accessibility Inspector’s “Check for issues” tool can now audit for keyboard accessibility in addition to color contrast and text labels.`,
-      href: `https://developer.mozilla.org/docs/Tools/Accessibility_inspector#Check_for_accessibility_issues?utm_source=devtools&utm_medium=devtools_whatsnew`,
+      href: `https://developer.mozilla.org/docs/Tools/Accessibility_inspector?utm_source=devtools&utm_medium=devtools_whatsnew#Check_for_accessibility_issues`,
     },
   ],
 };
