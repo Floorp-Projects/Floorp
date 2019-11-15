@@ -12,6 +12,7 @@
 #include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/NativeObject.h"
 #include "vm/Realm.h"
 #include "vm/SelfHosting.h"
 
@@ -21,40 +22,55 @@ using namespace js;
 
 using mozilla::Maybe;
 
-JSObject* js::InitAsyncFunction(JSContext* cx, Handle<GlobalObject*> global) {
-  RootedObject asyncFunctionProto(
-      cx, NewSingletonObjectWithFunctionPrototype(cx, global));
-  if (!asyncFunctionProto) {
-    return nullptr;
-  }
-
-  if (!DefineToStringTag(cx, asyncFunctionProto, cx->names().AsyncFunction)) {
-    return nullptr;
-  }
-
+static JSObject* CreateAsyncFunction(JSContext* cx, JSProtoKey key) {
   RootedObject proto(
       cx, GlobalObject::getOrCreateFunctionConstructor(cx, cx->global()));
   if (!proto) {
     return nullptr;
   }
-  HandlePropertyName name = cx->names().AsyncFunction;
-  RootedObject asyncFunction(
-      cx,
-      NewFunctionWithProto(cx, AsyncFunctionConstructor, 1,
-                           FunctionFlags::NATIVE_CTOR, nullptr, name, proto));
-  if (!asyncFunction) {
-    return nullptr;
-  }
-  if (!LinkConstructorAndPrototype(cx, asyncFunction, asyncFunctionProto,
-                                   JSPROP_PERMANENT | JSPROP_READONLY,
-                                   JSPROP_READONLY)) {
-    return nullptr;
-  }
 
-  global->setConstructor(JSProto_AsyncFunction, ObjectValue(*asyncFunction));
-  global->setPrototype(JSProto_AsyncFunction, ObjectValue(*asyncFunctionProto));
-  return asyncFunction;
+  HandlePropertyName name = cx->names().AsyncFunction;
+  return NewFunctionWithProto(cx, AsyncFunctionConstructor, 1,
+                              FunctionFlags::NATIVE_CTOR, nullptr, name, proto);
 }
+
+static JSObject* CreateAsyncFunctionPrototype(JSContext* cx, JSProtoKey key) {
+  return NewSingletonObjectWithFunctionPrototype(cx, cx->global());
+}
+
+static bool AsyncFunctionClassFinish(JSContext* cx, HandleObject asyncFunction,
+                                     HandleObject asyncFunctionProto) {
+  // Change the "constructor" property to non-writable before adding any other
+  // properties, so it's still the last property and can be modified without a
+  // dictionary-mode transition.
+  MOZ_ASSERT(StringEqualsAscii(
+      JSID_TO_LINEAR_STRING(
+          asyncFunctionProto->as<NativeObject>().lastProperty()->propid()),
+      "constructor"));
+  MOZ_ASSERT(!asyncFunctionProto->as<NativeObject>().inDictionaryMode());
+
+  RootedValue asyncFunctionVal(cx, ObjectValue(*asyncFunction));
+  if (!DefineDataProperty(cx, asyncFunctionProto, cx->names().constructor,
+                          asyncFunctionVal, JSPROP_READONLY)) {
+    return false;
+  }
+  MOZ_ASSERT(!asyncFunctionProto->as<NativeObject>().inDictionaryMode());
+
+  return DefineToStringTag(cx, asyncFunctionProto, cx->names().AsyncFunction);
+}
+
+static const ClassSpec AsyncFunctionClassSpec = {
+    CreateAsyncFunction,
+    CreateAsyncFunctionPrototype,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    AsyncFunctionClassFinish,
+    ClassSpec::DontDefineConstructor};
+
+const JSClass js::AsyncFunctionClass = {"AsyncFunction", 0, JS_NULL_CLASS_OPS,
+                                        &AsyncFunctionClassSpec};
 
 enum class ResumeKind { Normal, Throw };
 
