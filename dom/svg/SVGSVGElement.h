@@ -195,8 +195,11 @@ class SVGSVGElement final : public SVGSVGElementBase {
    * can't use GetOwnerSVGElement() as it relies on GetParent(). This code is
    * basically a simplified version of GetOwnerSVGElement that uses the parent
    * parameters passed in instead.
+   *
+   * FIXME(bug 1596690): GetOwnerSVGElement() uses the flattened tree parent
+   * rather than the DOM tree parent nowadays.
    */
-  bool WillBeOutermostSVG(nsINode& aParent, Element* aBindingParent) const;
+  bool WillBeOutermostSVG(nsINode& aParent) const;
 
   // invalidate viewbox -> viewport xform & inform frames
   void InvalidateTransformNotifyFrame();
