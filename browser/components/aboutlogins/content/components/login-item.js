@@ -478,9 +478,10 @@ export default class LoginItem extends HTMLElement {
     switch (type) {
       case "delete": {
         options = {
-          title: "confirm-delete-dialog-title",
+          title: "about-logins-confirm-remove-dialog-title",
           message: "confirm-delete-dialog-message",
-          confirmButtonLabel: "confirm-delete-dialog-confirm-button",
+          confirmButtonLabel:
+            "about-logins-confirm-remove-dialog-confirm-button",
         };
         break;
       }

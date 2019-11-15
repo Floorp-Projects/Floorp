@@ -76,7 +76,7 @@ about-logins-intro-import = If your logins are saved in another browser, you can
 
 login-item-new-login-title = Create New Login
 login-item-edit-button = Edit
-login-item-delete-button = Delete
+about-logins-login-item-remove-button = Remove
 login-item-origin-label = Website address
 login-item-origin =
   .placeholder = https://www.example.com
@@ -130,9 +130,9 @@ confirmation-dialog-cancel-button = Cancel
 confirmation-dialog-dismiss-button =
   .title = Cancel
 
-confirm-delete-dialog-title = Delete this login?
+about-logins-confirm-remove-dialog-title = Remove this login?
 confirm-delete-dialog-message = This action cannot be undone.
-confirm-delete-dialog-confirm-button = Delete
+about-logins-confirm-remove-dialog-confirm-button = Remove
 
 confirm-discard-changes-dialog-title = Discard unsaved changes?
 confirm-discard-changes-dialog-message = All unsaved changes will be lost.
