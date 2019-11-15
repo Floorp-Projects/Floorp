@@ -9,6 +9,7 @@
 #include "js/PropertySpec.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
+#include "vm/GlobalObject.h"
 #include "vm/JSObject.h"
 
 #include "debugger/DebugAPI-inl.h"
@@ -240,61 +241,85 @@ JSObject* js::NewSingletonObjectWithFunctionPrototype(
   return obj;
 }
 
-JSObject* js::InitGeneratorFunction(JSContext* cx,
-                                    Handle<GlobalObject*> global) {
-  RootedObject iteratorProto(
-      cx, GlobalObject::getOrCreateIteratorPrototype(cx, global));
-  if (!iteratorProto) {
-    return nullptr;
-  }
-
-  RootedObject genObjectProto(cx, GlobalObject::createBlankPrototypeInheriting(
-                                      cx, &PlainObject::class_, iteratorProto));
-  if (!genObjectProto) {
-    return nullptr;
-  }
-  if (!DefinePropertiesAndFunctions(cx, genObjectProto, nullptr,
-                                    generator_methods) ||
-      !DefineToStringTag(cx, genObjectProto, cx->names().Generator)) {
-    return nullptr;
-  }
-
-  RootedObject genFunctionProto(
-      cx, NewSingletonObjectWithFunctionPrototype(cx, global));
-  if (!genFunctionProto) {
-    return nullptr;
-  }
-  if (!LinkConstructorAndPrototype(cx, genFunctionProto, genObjectProto,
-                                   JSPROP_READONLY, JSPROP_READONLY) ||
-      !DefineToStringTag(cx, genFunctionProto, cx->names().GeneratorFunction)) {
-    return nullptr;
-  }
-
+static JSObject* CreateGeneratorFunction(JSContext* cx, JSProtoKey key) {
   RootedObject proto(
       cx, GlobalObject::getOrCreateFunctionConstructor(cx, cx->global()));
   if (!proto) {
     return nullptr;
   }
+
   HandlePropertyName name = cx->names().GeneratorFunction;
-  RootedObject genFunction(
-      cx, NewFunctionWithProto(cx, Generator, 1, FunctionFlags::NATIVE_CTOR,
-                               nullptr, name, proto, gc::AllocKind::FUNCTION,
-                               SingletonObject));
-  if (!genFunction) {
-    return nullptr;
+  return NewFunctionWithProto(cx, Generator, 1, FunctionFlags::NATIVE_CTOR,
+                              nullptr, name, proto, gc::AllocKind::FUNCTION,
+                              SingletonObject);
+}
+
+static JSObject* CreateGeneratorFunctionPrototype(JSContext* cx,
+                                                  JSProtoKey key) {
+  return NewSingletonObjectWithFunctionPrototype(cx, cx->global());
+}
+
+static bool GeneratorFunctionClassFinish(JSContext* cx,
+                                         HandleObject genFunction,
+                                         HandleObject genFunctionProto) {
+  Handle<GlobalObject*> global = cx->global();
+
+  // Change the "constructor" property to non-writable before adding any other
+  // properties, so it's still the last property and can be modified without a
+  // dictionary-mode transition.
+  MOZ_ASSERT(StringEqualsAscii(
+      JSID_TO_LINEAR_STRING(
+          genFunctionProto->as<NativeObject>().lastProperty()->propid()),
+      "constructor"));
+  MOZ_ASSERT(!genFunctionProto->as<NativeObject>().inDictionaryMode());
+
+  RootedValue genFunctionVal(cx, ObjectValue(*genFunction));
+  if (!DefineDataProperty(cx, genFunctionProto, cx->names().constructor,
+                          genFunctionVal, JSPROP_READONLY)) {
+    return false;
   }
-  if (!LinkConstructorAndPrototype(cx, genFunction, genFunctionProto,
-                                   JSPROP_PERMANENT | JSPROP_READONLY,
-                                   JSPROP_READONLY)) {
-    return nullptr;
+  MOZ_ASSERT(!genFunctionProto->as<NativeObject>().inDictionaryMode());
+
+  RootedObject iteratorProto(
+      cx, GlobalObject::getOrCreateIteratorPrototype(cx, global));
+  if (!iteratorProto) {
+    return false;
+  }
+
+  RootedObject genObjectProto(cx, GlobalObject::createBlankPrototypeInheriting(
+                                      cx, &PlainObject::class_, iteratorProto));
+  if (!genObjectProto) {
+    return false;
+  }
+  if (!DefinePropertiesAndFunctions(cx, genObjectProto, nullptr,
+                                    generator_methods) ||
+      !DefineToStringTag(cx, genObjectProto, cx->names().Generator)) {
+    return false;
+  }
+
+  if (!LinkConstructorAndPrototype(cx, genFunctionProto, genObjectProto,
+                                   JSPROP_READONLY, JSPROP_READONLY) ||
+      !DefineToStringTag(cx, genFunctionProto, cx->names().GeneratorFunction)) {
+    return false;
   }
 
   global->setGeneratorObjectPrototype(genObjectProto);
-  global->setConstructor(JSProto_GeneratorFunction, ObjectValue(*genFunction));
-  global->setPrototype(JSProto_GeneratorFunction,
-                       ObjectValue(*genFunctionProto));
-  return genFunction;
+
+  return true;
 }
+
+static const ClassSpec GeneratorFunctionClassSpec = {
+    CreateGeneratorFunction,
+    CreateGeneratorFunctionPrototype,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    GeneratorFunctionClassFinish,
+    ClassSpec::DontDefineConstructor};
+
+const JSClass js::GeneratorFunctionClass = {
+    "GeneratorFunction", 0, JS_NULL_CLASS_OPS, &GeneratorFunctionClassSpec};
 
 bool AbstractGeneratorObject::isAfterYield() {
   return isAfterYieldOrAwait(JSOP_YIELD);
