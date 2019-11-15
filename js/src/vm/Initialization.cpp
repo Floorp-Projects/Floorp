@@ -92,8 +92,6 @@ static void CheckCanonicalNaN() {
     if (!code) return #code " failed"; \
   } while (0)
 
-extern "C" void install_rust_panic_hook();
-
 JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
     bool isDebugBuild) {
   // Verify that our DEBUG setting matches the caller's.
@@ -110,10 +108,6 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
              "how do we have live runtimes before JS_Init?");
 
   libraryInitState = InitState::Initializing;
-
-#ifndef NO_RUST_PANIC_HOOK
-  install_rust_panic_hook();
-#endif
 
   PRMJ_NowInit();
 
