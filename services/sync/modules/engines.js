@@ -626,21 +626,6 @@ EngineManager.prototype = {
   },
 
   /**
-   * Mark any non-enabled engines as declined.
-   *
-   * This is useful after initial customization during setup.
-   */
-  declineDisabled() {
-    for (let e of this.getAll()) {
-      if (!e.enabled) {
-        this._log.debug("Declining disabled engine " + e.name);
-        this._declined.add(e.name);
-      }
-    }
-    this.persistDeclined();
-  },
-
-  /**
    * Register an Engine to the service. Alternatively, give an array of engine
    * objects to register.
    *
