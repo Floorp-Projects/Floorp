@@ -41,9 +41,6 @@ using mozilla::RangedPtr;
 
 using JS::AutoStableStringChars;
 
-const JSClass js::JSONClass = {js_JSON_str,
-                               JSCLASS_HAS_CACHED_PROTO(JSProto_JSON)};
-
 /* ES5 15.12.3 Quote.
  * Requires that the destination has enough space allocated for src after
  * escaping (that is, `2 + 6 * (srcEnd - srcBegin)` characters).
@@ -1104,30 +1101,21 @@ static const JSFunctionSpec json_static_methods[] = {
     JS_FN("parse", json_parse, 2, 0), JS_FN("stringify", json_stringify, 3, 0),
     JS_FS_END};
 
-JSObject* js::InitJSONClass(JSContext* cx, Handle<GlobalObject*> global) {
+static const JSPropertySpec json_static_properties[] = {
+    JS_STRING_SYM_PS(toStringTag, "JSON", JSPROP_READONLY), JS_PS_END};
+
+static JSObject* CreateJSONObject(JSContext* cx, JSProtoKey key) {
+  Handle<GlobalObject*> global = cx->global();
   RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
   if (!proto) {
     return nullptr;
   }
-  RootedObject JSON(
-      cx, NewObjectWithGivenProto(cx, &JSONClass, proto, SingletonObject));
-  if (!JSON) {
-    return nullptr;
-  }
-
-  if (!JS_DefineProperty(cx, global, js_JSON_str, JSON, JSPROP_RESOLVING)) {
-    return nullptr;
-  }
-
-  if (!JS_DefineFunctions(cx, JSON, json_static_methods)) {
-    return nullptr;
-  }
-
-  if (!DefineToStringTag(cx, JSON, cx->names().JSON)) {
-    return nullptr;
-  }
-
-  global->setConstructor(JSProto_JSON, ObjectValue(*JSON));
-
-  return JSON;
+  return NewObjectWithGivenProto(cx, &JSONClass, proto, SingletonObject);
 }
+
+static const ClassSpec JSONClassSpec = {
+    CreateJSONObject, nullptr, json_static_methods, json_static_properties};
+
+const JSClass js::JSONClass = {js_JSON_str,
+                               JSCLASS_HAS_CACHED_PROTO(JSProto_JSON),
+                               JS_NULL_CLASS_OPS, &JSONClassSpec};
