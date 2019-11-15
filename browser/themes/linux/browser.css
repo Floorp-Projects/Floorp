@@ -104,6 +104,11 @@ menuitem.bookmark-item {
   color: HighlightText !important;
 }
 
+/* Bookmarks toolbar */
+#PlacesToolbarDropIndicator {
+  list-style-image: url(chrome://browser/skin/places/toolbarDropMarker.png);
+}
+
 .bookmark-item[cutting] > .toolbarbutton-icon,
 .bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-icon {
   opacity: 0.5;
@@ -366,6 +371,15 @@ notification[value="translation"] menulist > .menulist-dropmarker {
 
 #context_closeTab {
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");
+}
+
+/* Tab drag and drop */
+.tab-drop-indicator {
+  list-style-image: url(chrome://browser/skin/tabbrowser/tabDragIndicator.png);
+  margin-bottom: -9px;
+  /* The z-index needs to be big enough to trump other positioned UI pieces
+     that we want to overlay. The expanded urlbar uses 3. */
+  z-index: 4;
 }
 
 /* All tabs menupopup */
