@@ -713,14 +713,6 @@ uint32_t TLSFilterTransaction::Caps() {
   return mTransaction->Caps();
 }
 
-void TLSFilterTransaction::SetDNSWasRefreshed() {
-  if (!mTransaction) {
-    return;
-  }
-
-  mTransaction->SetDNSWasRefreshed();
-}
-
 void TLSFilterTransaction::SetProxyConnectFailed() {
   if (!mTransaction) {
     return;

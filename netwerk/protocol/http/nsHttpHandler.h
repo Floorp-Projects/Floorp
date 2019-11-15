@@ -45,7 +45,7 @@ class EventTokenBucket;
 class Tickler;
 class nsHttpConnection;
 class nsHttpConnectionInfo;
-class nsHttpTransaction;
+class HttpTransactionShell;
 class AltSvcMapping;
 
 /*
@@ -264,39 +264,28 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // Called to kick-off a new transaction, by default the transaction
   // will be put on the pending transaction queue if it cannot be
   // initiated at this time.  Callable from any thread.
-  MOZ_MUST_USE nsresult InitiateTransaction(nsHttpTransaction* trans,
-                                            int32_t priority) {
-    return mConnMgr->AddTransaction(trans, priority);
-  }
+  MOZ_MUST_USE nsresult InitiateTransaction(HttpTransactionShell* trans,
+                                            int32_t priority);
 
   // This function is also called to kick-off a new transaction. But the new
   // transaction will take a sticky connection from |transWithStickyConn|
   // and reuse it.
-  MOZ_MUST_USE nsresult
-  InitiateTransactionWithStickyConn(nsHttpTransaction* trans, int32_t priority,
-                                    nsHttpTransaction* transWithStickyConn) {
-    return mConnMgr->AddTransactionWithStickyConn(trans, priority,
-                                                  transWithStickyConn);
-  }
+  MOZ_MUST_USE nsresult InitiateTransactionWithStickyConn(
+      HttpTransactionShell* trans, int32_t priority,
+      HttpTransactionShell* transWithStickyConn);
 
   // Called to change the priority of an existing transaction that has
   // already been initiated.
-  MOZ_MUST_USE nsresult RescheduleTransaction(nsHttpTransaction* trans,
-                                              int32_t priority) {
-    return mConnMgr->RescheduleTransaction(trans, priority);
-  }
+  MOZ_MUST_USE nsresult RescheduleTransaction(HttpTransactionShell* trans,
+                                              int32_t priority);
 
-  void UpdateClassOfServiceOnTransaction(nsHttpTransaction* trans,
-                                         uint32_t classOfService) {
-    mConnMgr->UpdateClassOfServiceOnTransaction(trans, classOfService);
-  }
+  void UpdateClassOfServiceOnTransaction(HttpTransactionShell* trans,
+                                         uint32_t classOfService);
 
   // Called to cancel a transaction, which may or may not be assigned to
   // a connection.  Callable from any thread.
-  MOZ_MUST_USE nsresult CancelTransaction(nsHttpTransaction* trans,
-                                          nsresult reason) {
-    return mConnMgr->CancelTransaction(trans, reason);
-  }
+  MOZ_MUST_USE nsresult CancelTransaction(HttpTransactionShell* trans,
+                                          nsresult reason);
 
   // Called when a connection is done processing a transaction.  Callable
   // from any thread.

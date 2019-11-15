@@ -691,10 +691,6 @@ uint32_t Http3Session::Caps() {
   return 0;
 }
 
-void Http3Session::SetDNSWasRefreshed() {
-  MOZ_ASSERT(false, "Http3Session::SetDNSWasRefreshed()");
-}
-
 nsresult Http3Session::ReadSegments(nsAHttpSegmentReader* reader,
                                     uint32_t count, uint32_t* countRead) {
   bool again = false;
