@@ -289,6 +289,17 @@ void DocumentChannelParent::FinishReplacementChannelSetup(bool aSucceeded) {
         [redirectChannel](const ClassificationFlagsParams& aParams) {
           redirectChannel->NotifyClassificationFlags(
               aParams.mClassificationFlags, aParams.mIsThirdParty);
+        },
+        [redirectChannel](
+            const NotifyChannelClassifierProtectionDisabledParams& aParams) {
+          redirectChannel->NotifyChannelClassifierProtectionDisabled(
+              aParams.mAcceptedReason);
+        },
+        [redirectChannel](const NotifyCookieAllowedParams&) {
+          redirectChannel->NotifyCookieAllowed();
+        },
+        [redirectChannel](const NotifyCookieBlockedParams& aParams) {
+          redirectChannel->NotifyCookieBlocked(aParams.mRejectedReason);
         });
   }
 
@@ -692,31 +703,6 @@ DocumentChannelParent::GetInterface(const nsIID& aIID, void** result) {
 // cache a list of them, and then ask the 'real' channel to forward them for us
 // after it's created.
 NS_IMETHODIMP
-DocumentChannelParent::NotifyChannelClassifierProtectionDisabled(
-    uint32_t aAcceptedReason) {
-  if (CanSend()) {
-    Unused << SendNotifyChannelClassifierProtectionDisabled(aAcceptedReason);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentChannelParent::NotifyCookieAllowed() {
-  if (CanSend()) {
-    Unused << SendNotifyCookieAllowed();
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentChannelParent::NotifyCookieBlocked(uint32_t aRejectedReason) {
-  if (CanSend()) {
-    Unused << SendNotifyCookieBlocked(aRejectedReason);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 DocumentChannelParent::NotifyFlashPluginStateChanged(
     nsIHttpChannel::FlashPluginState aState) {
   mIParentChannelFunctions.AppendElement(
@@ -733,11 +719,6 @@ DocumentChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
   params.mProvider = aProvider;
   params.mFullHash = aFullHash;
 
-  if (CanSend()) {
-    Unused << SendSetClassifierMatchedInfo(params.mList, params.mProvider,
-                                           params.mFullHash);
-  }
-
   mIParentChannelFunctions.AppendElement(
       IParentChannelFunction{VariantIndex<1>{}, std::move(params)});
   return NS_OK;
@@ -750,11 +731,6 @@ DocumentChannelParent::SetClassifierMatchedTrackingInfo(
   params.mLists = aLists;
   params.mFullHashes = aFullHash;
 
-  if (CanSend()) {
-    Unused << SendSetClassifierMatchedTrackingInfo(params.mLists,
-                                                   params.mFullHashes);
-  }
-
   mIParentChannelFunctions.AppendElement(
       IParentChannelFunction{VariantIndex<2>{}, std::move(params)});
   return NS_OK;
@@ -763,14 +739,32 @@ DocumentChannelParent::SetClassifierMatchedTrackingInfo(
 NS_IMETHODIMP
 DocumentChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
                                                  bool aIsThirdParty) {
-  if (CanSend()) {
-    Unused << SendNotifyClassificationFlags(aClassificationFlags,
-                                            aIsThirdParty);
-  }
-
   mIParentChannelFunctions.AppendElement(IParentChannelFunction{
       VariantIndex<3>{},
       ClassificationFlagsParams{aClassificationFlags, aIsThirdParty}});
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocumentChannelParent::NotifyChannelClassifierProtectionDisabled(
+    uint32_t aAcceptedReason) {
+  mIParentChannelFunctions.AppendElement(IParentChannelFunction{
+      VariantIndex<4>{},
+      NotifyChannelClassifierProtectionDisabledParams{aAcceptedReason}});
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocumentChannelParent::NotifyCookieAllowed() {
+  mIParentChannelFunctions.AppendElement(
+      IParentChannelFunction{VariantIndex<5>{}, NotifyCookieAllowedParams()});
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocumentChannelParent::NotifyCookieBlocked(uint32_t aRejectedReason) {
+  mIParentChannelFunctions.AppendElement(IParentChannelFunction{
+      VariantIndex<6>{}, NotifyCookieBlockedParams{aRejectedReason}});
   return NS_OK;
 }
 

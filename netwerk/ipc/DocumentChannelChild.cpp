@@ -43,7 +43,6 @@ NS_INTERFACE_MAP_BEGIN(DocumentChannelChild)
         "Trying to request nsIHttpChannel from DocumentChannelChild, this is "
         "likely broken");
   }
-  NS_INTERFACE_MAP_ENTRY(nsIClassifiedChannel)
   NS_INTERFACE_MAP_ENTRY(nsITraceableChannel)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(DocumentChannelChild)
 NS_INTERFACE_MAP_END_INHERITING(nsBaseChannel)
@@ -470,57 +469,6 @@ IPCResult DocumentChannelChild::RecvConfirmRedirect(
   return IPC_OK();
 }
 
-IPCResult DocumentChannelChild::RecvNotifyClassificationFlags(
-    const uint32_t& aClassificationFlags, const bool& aIsThirdParty) {
-  if (aIsThirdParty) {
-    mThirdPartyClassificationFlags |= aClassificationFlags;
-  } else {
-    mFirstPartyClassificationFlags |= aClassificationFlags;
-  }
-  return IPC_OK();
-}
-
-IPCResult DocumentChannelChild::RecvNotifyChannelClassifierProtectionDisabled(
-    const uint32_t& aAcceptedReason) {
-  UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
-      this, aAcceptedReason);
-  return IPC_OK();
-}
-
-IPCResult DocumentChannelChild::RecvNotifyCookieAllowed() {
-  AntiTrackingCommon::NotifyBlockingDecision(
-      this, AntiTrackingCommon::BlockingDecision::eAllow, 0);
-  return IPC_OK();
-}
-
-IPCResult DocumentChannelChild::RecvNotifyCookieBlocked(
-    const uint32_t& aRejectedReason) {
-  AntiTrackingCommon::NotifyBlockingDecision(
-      this, AntiTrackingCommon::BlockingDecision::eBlock, aRejectedReason);
-  return IPC_OK();
-}
-
-IPCResult DocumentChannelChild::RecvSetClassifierMatchedInfo(
-    const nsCString& aList, const nsCString& aProvider,
-    const nsCString& aFullHash) {
-  SetMatchedInfo(aList, aProvider, aFullHash);
-  return IPC_OK();
-}
-
-IPCResult DocumentChannelChild::RecvSetClassifierMatchedTrackingInfo(
-    const nsCString& aLists, const nsCString& aFullHash) {
-  nsTArray<nsCString> lists, fullhashes;
-  for (const nsACString& token : aLists.Split(',')) {
-    lists.AppendElement(token);
-  }
-  for (const nsACString& token : aFullHash.Split(',')) {
-    fullhashes.AppendElement(token);
-  }
-
-  SetMatchedTrackingInfo(lists, fullhashes);
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocumentChannelChild::RecvAttachStreamFilter(
     Endpoint<extensions::PStreamFilterParent>&& aEndpoint) {
   extensions::StreamFilterParent::Attach(this, std::move(aEndpoint));
@@ -540,64 +488,6 @@ DocumentChannelChild::SetNewListener(nsIStreamListener* aListener,
 
   wrapper.forget(_retval);
   mListener = aListener;
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// DocumentChannelChild::nsIClassifiedChannel
-
-NS_IMETHODIMP
-DocumentChannelChild::GetMatchedList(nsACString& aList) {
-  aList = mMatchedList;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentChannelChild::GetMatchedProvider(nsACString& aProvider) {
-  aProvider = mMatchedProvider;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentChannelChild::GetMatchedFullHash(nsACString& aFullHash) {
-  aFullHash = mMatchedFullHash;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentChannelChild::SetMatchedInfo(const nsACString& aList,
-                                     const nsACString& aProvider,
-                                     const nsACString& aFullHash) {
-  NS_ENSURE_ARG(!aList.IsEmpty());
-
-  mMatchedList = aList;
-  mMatchedProvider = aProvider;
-  mMatchedFullHash = aFullHash;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentChannelChild::GetMatchedTrackingLists(nsTArray<nsCString>& aLists) {
-  aLists = mMatchedTrackingLists;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentChannelChild::GetMatchedTrackingFullHashes(
-    nsTArray<nsCString>& aFullHashes) {
-  aFullHashes = mMatchedTrackingFullHashes;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentChannelChild::SetMatchedTrackingInfo(
-    const nsTArray<nsCString>& aLists, const nsTArray<nsCString>& aFullHashes) {
-  NS_ENSURE_ARG(!aLists.IsEmpty());
-  // aFullHashes can be empty for non hash-matching algorithm, for example,
-  // host based test entries in preference.
-
-  mMatchedTrackingLists = aLists;
-  mMatchedTrackingFullHashes = aFullHashes;
   return NS_OK;
 }
 
@@ -639,66 +529,6 @@ DocumentChannelChild::Resume() {
   }
 
   mEventQueue->Resume();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentChannelChild::IsTrackingResource(bool* aIsTrackingResource) {
-  MOZ_ASSERT(!mFirstPartyClassificationFlags ||
-             !mThirdPartyClassificationFlags);
-  *aIsTrackingResource = UrlClassifierCommon::IsTrackingClassificationFlag(
-                             mThirdPartyClassificationFlags) ||
-                         UrlClassifierCommon::IsTrackingClassificationFlag(
-                             mFirstPartyClassificationFlags);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentChannelChild::IsThirdPartyTrackingResource(bool* aIsTrackingResource) {
-  MOZ_ASSERT(
-      !(mFirstPartyClassificationFlags && mThirdPartyClassificationFlags));
-  *aIsTrackingResource = UrlClassifierCommon::IsTrackingClassificationFlag(
-      mThirdPartyClassificationFlags);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentChannelChild::IsSocialTrackingResource(
-    bool* aIsSocialTrackingResource) {
-  MOZ_ASSERT(!mFirstPartyClassificationFlags ||
-             !mThirdPartyClassificationFlags);
-  *aIsSocialTrackingResource =
-      UrlClassifierCommon::IsSocialTrackingClassificationFlag(
-          mThirdPartyClassificationFlags) ||
-      UrlClassifierCommon::IsSocialTrackingClassificationFlag(
-          mFirstPartyClassificationFlags);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentChannelChild::GetClassificationFlags(uint32_t* aClassificationFlags) {
-  MOZ_ASSERT(aClassificationFlags);
-  if (mThirdPartyClassificationFlags) {
-    *aClassificationFlags = mThirdPartyClassificationFlags;
-  } else {
-    *aClassificationFlags = mFirstPartyClassificationFlags;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentChannelChild::GetFirstPartyClassificationFlags(
-    uint32_t* aClassificationFlags) {
-  MOZ_ASSERT(aClassificationFlags);
-  *aClassificationFlags = mFirstPartyClassificationFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentChannelChild::GetThirdPartyClassificationFlags(
-    uint32_t* aClassificationFlags) {
-  MOZ_ASSERT(aClassificationFlags);
-  *aClassificationFlags = mThirdPartyClassificationFlags;
   return NS_OK;
 }
 
