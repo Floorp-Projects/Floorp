@@ -503,10 +503,18 @@ class nsINode : public mozilla::dom::EventTarget {
 
   /**
    * Return this node as nsIContent.  Should only be used for nodes for which
-   * IsContent() is true.  This is defined inline in nsIContent.h.
+   * IsContent() is true.
+   *
+   * The assertion in nsIContent's constructor makes this safe.
    */
-  inline nsIContent* AsContent();
-  inline const nsIContent* AsContent() const;
+  nsIContent* AsContent() {
+    MOZ_ASSERT(IsContent());
+    return reinterpret_cast<nsIContent*>(this);
+  }
+  const nsIContent* AsContent() const {
+    MOZ_ASSERT(IsContent());
+    return reinterpret_cast<const nsIContent*>(this);
+  }
 
   /*
    * Return whether the node is a Text node (which might be an actual
@@ -904,7 +912,7 @@ class nsINode : public mozilla::dom::EventTarget {
    */
   nsIContent* GetParent() const {
     return MOZ_LIKELY(GetBoolFlag(ParentIsContent))
-               ? reinterpret_cast<nsIContent*>(mParent)
+               ? mParent->AsContent()
                : nullptr;
   }
 
