@@ -192,8 +192,7 @@ UniqueChars js::AtomToPrintableString(JSContext* cx, JSAtom* atom) {
   return QuoteString(cx, atom);
 }
 
-#define DEFINE_PROTO_STRING(name, init, clasp) \
-  const char js_##name##_str[] = #name;
+#define DEFINE_PROTO_STRING(name, clasp) const char js_##name##_str[] = #name;
 JS_FOR_EACH_PROTOTYPE(DEFINE_PROTO_STRING)
 #undef DEFINE_PROTO_STRING
 
@@ -251,8 +250,7 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
   {js_##idpart##_str, sizeof(text) - 1},
       FOR_EACH_COMMON_PROPERTYNAME(COMMON_NAME_INFO)
 #undef COMMON_NAME_INFO
-#define COMMON_NAME_INFO(name, init, clasp) \
-  {js_##name##_str, sizeof(#name) - 1},
+#define COMMON_NAME_INFO(name, clasp) {js_##name##_str, sizeof(#name) - 1},
           JS_FOR_EACH_PROTOTYPE(COMMON_NAME_INFO)
 #undef COMMON_NAME_INFO
 #define COMMON_NAME_INFO(name) {#name, sizeof(#name) - 1},
