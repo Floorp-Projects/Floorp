@@ -28,6 +28,7 @@ features = ["capture", "serialize_program"]
 
 [target.'cfg(target_os = "windows")'.dependencies]
 dwrote = "0.9"
+dirs = "1.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.6"
