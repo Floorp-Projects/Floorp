@@ -2585,6 +2585,12 @@
   value: true
   mirror: always
 
+# Is support for WebXR APIs enabled?
+- name: dom.vr.webxr.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # W3C draft pointer events
 - name: dom.w3c_pointer_events.enabled
   type: RelaxedAtomicBool

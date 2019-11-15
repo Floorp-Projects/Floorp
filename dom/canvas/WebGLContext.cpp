@@ -112,6 +112,7 @@ bool WebGLContextOptions::operator==(const WebGLContextOptions& r) const {
   eq &= (antialias == r.antialias);
   eq &= (preserveDrawingBuffer == r.preserveDrawingBuffer);
   eq &= (failIfMajorPerformanceCaveat == r.failIfMajorPerformanceCaveat);
+  eq &= (xrCompatible == r.xrCompatible);
   eq &= (powerPreference == r.powerPreference);
   return eq;
 }
@@ -141,6 +142,7 @@ WebGLContext::WebGLContext()
   mIsMesa = false;
   mWebGLError = 0;
   mVRReady = false;
+  mXRCompatible = false;
 
   mViewportX = 0;
   mViewportY = 0;
@@ -357,6 +359,7 @@ WebGLContext::SetContextOptions(JSContext* cx, JS::Handle<JS::Value> options,
   newOpts.failIfMajorPerformanceCaveat =
       attributes.mFailIfMajorPerformanceCaveat;
   newOpts.powerPreference = attributes.mPowerPreference;
+  newOpts.xrCompatible = attributes.mXrCompatible;
 
   if (attributes.mAlpha.WasPassed()) {
     newOpts.alpha = attributes.mAlpha.Value();
@@ -958,6 +961,12 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight) {
   }
 #endif
 
+  if (mOptions.xrCompatible) {
+    // TODO: Bug 1580258 - WebGLContext.MakeXRCompatible needs to switch to
+    //                     the device connected to the XR hardware
+    mXRCompatible = true;
+  }
+
   mResetLayer = true;
   mOptionsFrozen = true;
 
@@ -1305,6 +1314,7 @@ void WebGLContext::GetContextAttributes(
   result.mPreserveDrawingBuffer = mOptions.preserveDrawingBuffer;
   result.mFailIfMajorPerformanceCaveat = mOptions.failIfMajorPerformanceCaveat;
   result.mPowerPreference = mOptions.powerPreference;
+  result.mXrCompatible = mOptions.xrCompatible;
 }
 
 // -
@@ -2364,6 +2374,42 @@ bool WebGLContext::ValidateDeleteObject(
   if (object->IsDeleteRequested()) return false;
 
   return true;
+}
+
+already_AddRefed<Promise> WebGLContext::MakeXRCompatible(ErrorResult& aRv) {
+  const FuncScope funcScope(*this, "MakeXRCompatible");
+  nsCOMPtr<nsIGlobalObject> global;
+  // TODO: Bug 1596921
+  // Should use nsICanvasRenderingContextInternal::GetParentObject
+  // once it has been updated to work in the offscreencanvas case
+  if (mCanvasElement) {
+    global = GetOwnerDoc()->GetScopeObject();
+  } else if (mOffscreenCanvas) {
+    global = mOffscreenCanvas->GetOwnerGlobal();
+  }
+  if (!global) {
+    aRv.ThrowDOMException(NS_ERROR_DOM_INVALID_ACCESS_ERR,
+                          "Using a WebGL context that is not attached to "
+                          "either a canvas or an OffscreenCanvas");
+    return nullptr;
+  }
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  if (IsContextLost()) {
+    promise->MaybeRejectWithDOMException(
+        NS_ERROR_DOM_INVALID_STATE_ERR,
+        "Can not make context XR compatible when context is already lost.");
+    return promise.forget();
+  }
+
+  // TODO: Bug 1580258 - WebGLContext.MakeXRCompatible needs to switch to
+  //                     the device connected to the XR hardware
+
+  mXRCompatible = true;
+
+  promise->MaybeResolveWithUndefined();
+  return promise.forget();
 }
 
 bool WebGLContext::ShouldResistFingerprinting() const {
