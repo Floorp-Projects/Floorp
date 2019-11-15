@@ -228,7 +228,7 @@ void Zone::sweepWeakKeysAfterMinorGC() {
     // If the key has a delegate, then it will map to a WeakKeyEntryVector
     // containing the key that needs to be updated.
 
-    JSObject* delegate = WeakMapBase::getDelegate(key->as<JSObject>());
+    JSObject* delegate = gc::detail::GetDelegate(key->as<JSObject>());
     if (!delegate) {
       continue;
     }
