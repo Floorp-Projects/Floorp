@@ -242,8 +242,7 @@ void nsLineBox::List(FILE* out, const char* aPrefix, uint32_t aFlags) const {
     str += nsPrintfCString("bm=%d ", GetCarriedOutBEndMargin().get());
   }
   nsRect bounds = GetPhysicalBounds();
-  str += nsPrintfCString("{%d,%d,%d,%d} ", bounds.x, bounds.y, bounds.width,
-                         bounds.height);
+  str += nsPrintfCString("%s ", ToString(bounds).c_str());
   if (mWritingMode.IsVertical() || mWritingMode.IsBidiRTL()) {
     str += nsPrintfCString("wm=%s cs={%d,%d} logical-rect=%s ",
                            ToString(mWritingMode).c_str(), mContainerSize.width,
@@ -252,15 +251,10 @@ void nsLineBox::List(FILE* out, const char* aPrefix, uint32_t aFlags) const {
   if (mData &&
       (!mData->mOverflowAreas.VisualOverflow().IsEqualEdges(bounds) ||
        !mData->mOverflowAreas.ScrollableOverflow().IsEqualEdges(bounds))) {
-    str += nsPrintfCString("vis-overflow=%d,%d,%d,%d scr-overflow=%d,%d,%d,%d ",
-                           mData->mOverflowAreas.VisualOverflow().x,
-                           mData->mOverflowAreas.VisualOverflow().y,
-                           mData->mOverflowAreas.VisualOverflow().width,
-                           mData->mOverflowAreas.VisualOverflow().height,
-                           mData->mOverflowAreas.ScrollableOverflow().x,
-                           mData->mOverflowAreas.ScrollableOverflow().y,
-                           mData->mOverflowAreas.ScrollableOverflow().width,
-                           mData->mOverflowAreas.ScrollableOverflow().height);
+    str += nsPrintfCString(
+        "vis-overflow=%s scr-overflow=%s ",
+        ToString(mData->mOverflowAreas.VisualOverflow()).c_str(),
+        ToString(mData->mOverflowAreas.ScrollableOverflow()).c_str());
   }
   fprintf_stderr(out, "%s<\n", str.get());
 
