@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -32,6 +33,10 @@ class SavedLoginsFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        activity?.window?.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
         activity?.title = getString(R.string.preferences_passwords_saved_logins)
         (activity as AppCompatActivity).supportActionBar?.show()
     }
@@ -67,6 +72,7 @@ class SavedLoginsFragment : Fragment() {
     override fun onPause() {
         // If we pause this fragment, we want to pop users back to reauth
         if (findNavController().currentDestination?.id != R.id.savedLoginSiteInfoFragment) {
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
             findNavController().popBackStack(R.id.loginsFragment, false)
         }
         super.onPause()

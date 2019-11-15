@@ -7,6 +7,7 @@ package org.mozilla.fenix.logins
 import android.os.Bundle
 import android.text.InputType
 import android.view.View
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -29,6 +30,7 @@ class SavedLoginSiteInfoFragment : Fragment(R.layout.fragment_saved_login_site_i
     override fun onPause() {
         // If we pause this fragment, we want to pop users back to reauth
         if (findNavController().currentDestination?.id != R.id.savedLoginsFragment) {
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
             findNavController().popBackStack(R.id.loginsFragment, false)
         }
         super.onPause()
@@ -91,6 +93,10 @@ class SavedLoginSiteInfoFragment : Fragment(R.layout.fragment_saved_login_site_i
 
     override fun onResume() {
         super.onResume()
+        activity?.window?.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
         activity?.title = savedLoginItem.url
         (activity as AppCompatActivity).supportActionBar?.show()
     }
