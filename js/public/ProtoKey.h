@@ -91,7 +91,7 @@
   REAL(Map, InitViaClassSpec, OCLASP(Map))                                   \
   REAL(Set, InitViaClassSpec, OCLASP(Set))                                   \
   REAL(DataView, InitViaClassSpec, OCLASP(DataView))                         \
-  REAL(Symbol, InitSymbolClass, OCLASP(Symbol))                              \
+  REAL(Symbol, InitViaClassSpec, OCLASP(Symbol))                             \
   REAL(SharedArrayBuffer, InitViaClassSpec, OCLASP(SharedArrayBuffer))       \
   REAL_IF_INTL(Intl, InitIntlClass, CLASP(Intl))                             \
   REAL_IF_INTL(Collator, InitViaClassSpec, OCLASP(Collator))                 \
