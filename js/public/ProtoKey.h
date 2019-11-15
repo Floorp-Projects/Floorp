@@ -93,7 +93,7 @@
   REAL(DataView, InitViaClassSpec, OCLASP(DataView))                         \
   REAL(Symbol, InitViaClassSpec, OCLASP(Symbol))                             \
   REAL(SharedArrayBuffer, InitViaClassSpec, OCLASP(SharedArrayBuffer))       \
-  REAL_IF_INTL(Intl, InitIntlClass, CLASP(Intl))                             \
+  REAL_IF_INTL(Intl, InitViaClassSpec, CLASP(Intl))                          \
   REAL_IF_INTL(Collator, InitViaClassSpec, OCLASP(Collator))                 \
   REAL_IF_INTL(DateTimeFormat, InitViaClassSpec, OCLASP(DateTimeFormat))     \
   REAL_IF_INTL(Locale, InitViaClassSpec, OCLASP(Locale))                     \
