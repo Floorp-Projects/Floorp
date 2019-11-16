@@ -101,10 +101,10 @@ this.TestingCrashManager.prototype = {
     })();
   },
 
-  createEventsFile(filename, type, date, content, index = 0) {
+  createEventsFile(filename, type, date, id, content, index = 0) {
     let path = OS.Path.join(this._eventsDirs[index], filename);
-
-    let data = type + "\n" + Math.floor(date.getTime() / 1000) + "\n" + content;
+    let dateInSecs = Math.floor(date.getTime() / 1000);
+    let data = type + "\n" + dateInSecs + "\n" + id + "\n" + content;
     let encoder = new TextEncoder();
     let array = encoder.encode(data);
 

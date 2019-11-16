@@ -71,6 +71,7 @@ using google_breakpad::ProcessResult;
 using google_breakpad::ProcessState;
 using google_breakpad::StackFrame;
 
+using mozilla::IFStream;
 using mozilla::OFStream;
 using mozilla::Unused;
 
@@ -360,6 +361,22 @@ static bool ProcessMinidump(Json::Value& aStackTraces,
   return true;
 }
 
+static bool ReadExtraFile(const string& aExtraDataPath, Json::Value& aExtra) {
+  IFStream f(
+#if defined(XP_WIN)
+      UTF8ToWide(aExtraDataPath).c_str(),
+#else
+      aExtraDataPath.c_str(),
+#endif  // defined(XP_WIN)
+      ios::in);
+  if (!f.is_open()) {
+    return false;
+  }
+
+  Json::CharReaderBuilder builder;
+  return parseFromStream(builder, f, &aExtra, nullptr);
+}
+
 // Update the extra data file by adding the StackTraces and ModuleSignatureInfo
 // fields that contain the JSON outputs of this program.
 static bool UpdateExtraDataFile(const string& aDumpPath,
@@ -373,29 +390,33 @@ static bool UpdateExtraDataFile(const string& aDumpPath,
   }
 
   extraDataPath.replace(dot, extraDataPath.length() - dot, kExtraDataExtension);
-  bool res = false;
 
-  // We want to open the extra file in append mode.
-  ios_base::openmode mode = ios::out | ios::app;
+  Json::Value extra;
+  if (!ReadExtraFile(extraDataPath, extra)) {
+    return false;
+  }
+
   OFStream f(
 #if defined(XP_WIN)
       UTF8ToWide(extraDataPath).c_str(),
 #else
       extraDataPath.c_str(),
 #endif  // defined(XP_WIN)
-      mode);
+      ios::out | ios::trunc);
 
+  bool res = false;
   if (f.is_open()) {
-    Json::FastWriter writer;
-
-    f << "StackTraces=" << writer.write(aStackTraces);
-    res = !f.fail();
-
+    extra["StackTraces"] = aStackTraces;
     if (!!aCertSubjects) {
-      f << "ModuleSignatureInfo=" << writer.write(aCertSubjects);
-      res &= !f.fail();
+      extra["ModuleSignatureInfo"] = aCertSubjects;
     }
 
+    Json::StreamWriterBuilder builder;
+    builder["indentation"] = "";
+    std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+    writer->write(extra, &f);
+    f << "\n";
+    res = !f.fail();
     f.close();
   }
 
