@@ -6,9 +6,7 @@
 
 package org.mozilla.fenix.ui.robots
 
-import android.content.Context
 import android.net.Uri
-import android.view.inputmethod.InputMethodManager
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -25,7 +23,6 @@ import org.hamcrest.Matchers.containsString
 import org.junit.Assert
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.click
-import java.io.IOException
 
 /**
  * Implementation of Robot Pattern for the bookmarks menu.
