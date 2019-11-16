@@ -77,6 +77,11 @@ class AddBookmarkFolderFragment : Fragment(R.layout.fragment_edit_bookmark) {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        bookmarkNameEdit.hideKeyboard()
+    }
+
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.bookmarks_add_folder, menu)
     }
