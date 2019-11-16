@@ -215,14 +215,14 @@ void nsColumnSetFrame::CreateBorderRenderers(
     border.SetBorderWidth(eSideTop, ruleWidth);
     border.SetBorderStyle(eSideTop, ruleStyle);
     border.mBorderTopColor = StyleColor::FromColor(ruleColor);
-    skipSides |= mozilla::eSideBitsLeftRight;
-    skipSides |= mozilla::eSideBitsBottom;
+    skipSides |= mozilla::SideBits::eLeftRight;
+    skipSides |= mozilla::SideBits::eBottom;
   } else {
     border.SetBorderWidth(eSideLeft, ruleWidth);
     border.SetBorderStyle(eSideLeft, ruleStyle);
     border.mBorderLeftColor = StyleColor::FromColor(ruleColor);
-    skipSides |= mozilla::eSideBitsTopBottom;
-    skipSides |= mozilla::eSideBitsRight;
+    skipSides |= mozilla::SideBits::eTopBottom;
+    skipSides |= mozilla::SideBits::eRight;
   }
   // If we use box-decoration-break: slice (the default), the border
   // renderers will require clipping if we have continuations (see the

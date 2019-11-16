@@ -1476,19 +1476,19 @@ ScreenPoint AsyncCompositionManager::ComputeFixedMarginsOffset(
   // Work out the necessary translation, in screen space.
   ScreenPoint translation;
 
-  if ((aFixedSides & eSideBitsLeftRight) == eSideBitsLeftRight) {
+  if ((aFixedSides & SideBits::eLeftRight) == SideBits::eLeftRight) {
     translation.x += (aFixedMargins.left - aFixedMargins.right) / 2;
-  } else if (aFixedSides & eSideBitsRight) {
+  } else if (aFixedSides & SideBits::eRight) {
     translation.x -= aFixedMargins.right;
-  } else if (aFixedSides & eSideBitsLeft) {
+  } else if (aFixedSides & SideBits::eLeft) {
     translation.x += aFixedMargins.left;
   }
 
-  if ((aFixedSides & eSideBitsTopBottom) == eSideBitsTopBottom) {
+  if ((aFixedSides & SideBits::eTopBottom) == SideBits::eTopBottom) {
     translation.y += (aFixedMargins.top - aFixedMargins.bottom) / 2;
-  } else if (aFixedSides & eSideBitsBottom) {
+  } else if (aFixedSides & SideBits::eBottom) {
     translation.y -= aFixedMargins.bottom;
-  } else if (aFixedSides & eSideBitsTop) {
+  } else if (aFixedSides & SideBits::eTop) {
     translation.y += aFixedMargins.top;
   }
 
