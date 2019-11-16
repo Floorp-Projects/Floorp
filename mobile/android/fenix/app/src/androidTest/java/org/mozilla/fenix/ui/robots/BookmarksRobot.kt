@@ -6,7 +6,9 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.content.Context
 import android.net.Uri
+import android.view.inputmethod.InputMethodManager
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -16,10 +18,14 @@ import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
+import org.junit.Assert
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.click
+import java.io.IOException
 
 /**
  * Implementation of Robot Pattern for the bookmarks menu.
@@ -50,6 +56,10 @@ class BookmarksRobot {
 
     fun verifyHomeScreen() = HomeScreenRobot().verifyHomeScreen()
 
+    fun verifyKeyboardHidden() = assertKeyboardVisibility(isExpectedToBeVisible = false)
+
+    fun verifyKeyboardVisible() = assertKeyboardVisibility(isExpectedToBeVisible = true)
+
     fun clickAddFolderButton() {
         addFolderButton().click()
     }
@@ -68,11 +78,11 @@ class BookmarksRobot {
     }
 
     class Transition {
-        fun goBack(interact: BookmarksRobot.() -> Unit): BookmarksRobot.Transition {
+        fun goBack(interact: BookmarksRobot.() -> Unit): Transition {
             goBackButton().click()
 
             BookmarksRobot().interact()
-            return BookmarksRobot.Transition()
+            return Transition()
         }
 
         fun openThreeDotMenu(interact: ThreeDotMenuBookmarksRobot.() -> Unit): ThreeDotMenuBookmarksRobot.Transition {
@@ -155,3 +165,11 @@ private fun assertBookmarkFolderSelector() =
 private fun assertBookmarkURLEditBox() =
     onView(withId(R.id.bookmarkUrlEdit))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private fun assertKeyboardVisibility(isExpectedToBeVisible: Boolean) =
+    Assert.assertEquals(
+        isExpectedToBeVisible,
+        UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+            .executeShellCommand("dumpsys input_method | grep mInputShown")
+            .contains("mInputShown=true")
+    )

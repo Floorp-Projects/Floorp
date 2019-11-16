@@ -98,6 +98,19 @@ class BookmarksTest {
             addNewFolderName(bookmarksFolderName)
             saveNewFolder()
             verifyFolderTitle(bookmarksFolderName)
+            verifyKeyboardHidden()
+        }
+    }
+
+    @Test
+    fun cancelCreateBookmarkFolderTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openBookmarks {
+            clickAddFolderButton()
+            addNewFolderName(bookmarksFolderName)
+            navigateUp()
+            verifyKeyboardHidden()
         }
     }
 
