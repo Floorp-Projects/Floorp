@@ -104,7 +104,7 @@ def fix_me(filename):
         license_template = TEMPLATES['public_domain_license']
         test = True
 
-    if ext in ['.cpp', '.c', '.cc', '.h', '.m', '.mm', '.rs', '.js', '.jsm', '.jsx']:
+    if ext in ['.cpp', '.c', '.cc', '.h', '.m', '.mm', '.rs', '.js', '.jsm', '.jsx', '.css']:
         for i, l in enumerate(license_template):
             start = " "
             end = ""
@@ -119,13 +119,13 @@ def fix_me(filename):
         add_header(filename, license)
         return
 
-    if ext in ['.py'] or filename.endswith(".inc.xul"):
+    if ext in ['.py', '.ftl', '.properties'] or filename.endswith(".inc.xul"):
         for l in license_template:
             license.append("# " + l.strip() + "\n")
         add_header(filename, license)
         return
 
-    if ext in ['.xml', '.xul', '.html', '.xhtml']:
+    if ext in ['.xml', '.xul', '.html', '.xhtml', '.dtd', '.svg']:
         for i, l in enumerate(license_template):
             start = "   - "
             end = ""
