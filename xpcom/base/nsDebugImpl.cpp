@@ -8,6 +8,7 @@
 #include "base/process_util.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/IntentionalCrash.h"
 #include "mozilla/Printf.h"
 
 #include "MainThreadUtils.h"
@@ -436,7 +437,10 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
   }
 }
 
-static void Abort(const char* aMsg) { mozalloc_abort(aMsg); }
+static void Abort(const char* aMsg) {
+  NoteIntentionalCrash(XRE_ChildProcessTypeToString(XRE_GetProcessType()));
+  mozalloc_abort(aMsg);
+}
 
 static void RealBreak() {
 #if defined(_WIN32)
