@@ -1,4 +1,4 @@
-function run_test() {
+add_task(async function run_test() {
   // Test that minidump-analyzer gracefully handles corrupt PE files.
   let exe = do_get_file("test_crash_win64cfi_not_a_pe.exe");
   ok(exe);
@@ -9,7 +9,7 @@ function run_test() {
   // but should not be calculated via CFI. If we see CFI here that would be an
   // indication that either our alternative EXE was not used, or we failed to
   // abandon unwind info parsing.
-  do_x64CFITest(
+  await do_x64CFITest(
     "CRASH_X64CFI_ALLOC_SMALL",
     [
       { symbol: "CRASH_X64CFI_ALLOC_SMALL", trust: "context" },
@@ -17,4 +17,4 @@ function run_test() {
     ],
     ["--force-use-module", exe.path]
   );
-}
+});

@@ -59,26 +59,12 @@ function run_test() {
   } catch (ex) {
     Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
-  try {
-    cr.annotateCrashReport("TestKey", "da\0ta");
-    do_throw(
-      "Calling annotateCrashReport() with a '\\0' in data should have thrown!"
-    );
-  } catch (ex) {
-    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
-  }
   cr.annotateCrashReport("TestKey", "testData1");
   // Replace previous data.
   cr.annotateCrashReport("TestKey", "testData2");
+  // Allow nul chars in annotations.
+  cr.annotateCrashReport("TestKey", "da\0ta");
 
-  try {
-    cr.appendAppNotesToCrashReport("da\0ta");
-    do_throw(
-      "Calling appendAppNotesToCrashReport() with a '\\0' in data should have thrown!"
-    );
-  } catch (ex) {
-    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
-  }
   cr.appendAppNotesToCrashReport("additional testData3");
   // Add more data.
   cr.appendAppNotesToCrashReport("additional testData4");
