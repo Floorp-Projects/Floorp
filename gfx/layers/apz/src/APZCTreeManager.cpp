@@ -1882,7 +1882,7 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
           return result;
         }
         touchData.mScreenPoint = *untransformedScreenPoint;
-        if (mFixedPosSidesForInputBlock != eSideBitsNone) {
+        if (mFixedPosSidesForInputBlock != SideBits::eNone) {
           RecursiveMutexAutoLock lock(mTreeLock);
           touchData.mScreenPoint -=
               RoundedToInt(AsyncCompositionManager::ComputeFixedMarginsOffset(
@@ -3177,7 +3177,7 @@ Maybe<ScreenIntPoint> APZCTreeManager::ConvertToGecko(
   Maybe<ScreenIntPoint> geckoPoint =
       UntransformBy(transformScreenToGecko, aPoint);
   if (geckoPoint) {
-    if (mFixedPosSidesForInputBlock != eSideBitsNone) {
+    if (mFixedPosSidesForInputBlock != SideBits::eNone) {
       *geckoPoint -=
           RoundedToInt(AsyncCompositionManager::ComputeFixedMarginsOffset(
               mFixedLayerMargins, mFixedPosSidesForInputBlock));
