@@ -1,94 +1,94 @@
-== chrome://reftest/content/xul/css-flex-1.xul css-flex-1-ref.html
+== chrome://reftest/content/xul/css-flex-1.xhtml css-flex-1-ref.html
 
-== chrome://reftest/content/xul/menuitem-key.xul chrome://reftest/content/xul/menuitem-key-ref.xul
+== chrome://reftest/content/xul/menuitem-key.xhtml chrome://reftest/content/xul/menuitem-key-ref.xhtml
 # these random-if(Android) are due to differences between Android Native & Xul, see bug 732569
-random-if(Android) == chrome://reftest/content/xul/menulist-shrinkwrap-1.xul chrome://reftest/content/xul/menulist-shrinkwrap-1-ref.xul
-random-if(Android) == chrome://reftest/content/xul/menulist-shrinkwrap-2.xul chrome://reftest/content/xul/menulist-shrinkwrap-2-ref.xul
-== chrome://reftest/content/xul/textbox-overflow-1.xul chrome://reftest/content/xul/textbox-overflow-1-ref.xul # for bug 749658
+random-if(Android) == chrome://reftest/content/xul/menulist-shrinkwrap-1.xhtml chrome://reftest/content/xul/menulist-shrinkwrap-1-ref.xhtml
+random-if(Android) == chrome://reftest/content/xul/menulist-shrinkwrap-2.xhtml chrome://reftest/content/xul/menulist-shrinkwrap-2-ref.xhtml
+== chrome://reftest/content/xul/textbox-overflow-1.xhtml chrome://reftest/content/xul/textbox-overflow-1-ref.xhtml # for bug 749658
 # accesskeys are not normally displayed on Mac, so set a pref to enable them
-pref(ui.key.menuAccessKey,18) == chrome://reftest/content/xul/accesskey.xul chrome://reftest/content/xul/accesskey-ref.xul
-pref(layout.css.xul-tree-pseudos.content.enabled,true) fuzzy-if(xulRuntime.widgetToolkit=="gtk",0-1,0-11) == chrome://reftest/content/xul/tree-row-outline-1.xul chrome://reftest/content/xul/tree-row-outline-1-ref.xul # win8: bug 1254832
-skip-if(!cocoaWidget) fails-if(webrender&&cocoaWidget) == chrome://reftest/content/xul/mac-tab-toolbar.xul chrome://reftest/content/xul/mac-tab-toolbar-ref.xul
-pref(layout.css.xul-tree-pseudos.content.enabled,true) != chrome://reftest/content/xul/tree-row-outline-1.xul chrome://reftest/content/xul/tree-row-outline-1-notref.xul
-== chrome://reftest/content/xul/text-crop.xul chrome://reftest/content/xul/text-crop-ref.xul
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == chrome://reftest/content/xul/text-small-caps-1.xul chrome://reftest/content/xul/text-small-caps-1-ref.xul
-fuzzy-if(skiaContent,0-1,0-60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,0-1,0-31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,0-1,0-50) fuzzy-if(webrender,0-1,350-1050) == chrome://reftest/content/xul/inactive-fixed-bg-bug1205630.xul inactive-fixed-bg-bug1205630-ref.html
-fuzzy-if(skiaContent,0-1,0-60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,0-1,0-31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,0-1,0-50) fuzzy-if(webrender,0-1,450-1100) == chrome://reftest/content/xul/inactive-fixed-bg-bug1272525.xul inactive-fixed-bg-bug1272525-ref.html
+pref(ui.key.menuAccessKey,18) == chrome://reftest/content/xul/accesskey.xhtml chrome://reftest/content/xul/accesskey-ref.xhtml
+pref(layout.css.xul-tree-pseudos.content.enabled,true) fuzzy-if(xulRuntime.widgetToolkit=="gtk",0-1,0-11) == chrome://reftest/content/xul/tree-row-outline-1.xhtml chrome://reftest/content/xul/tree-row-outline-1-ref.xhtml # win8: bug 1254832
+skip-if(!cocoaWidget) fails-if(webrender&&cocoaWidget) == chrome://reftest/content/xul/mac-tab-toolbar.xhtml chrome://reftest/content/xul/mac-tab-toolbar-ref.xhtml
+pref(layout.css.xul-tree-pseudos.content.enabled,true) != chrome://reftest/content/xul/tree-row-outline-1.xhtml chrome://reftest/content/xul/tree-row-outline-1-notref.xhtml
+== chrome://reftest/content/xul/text-crop.xhtml chrome://reftest/content/xul/text-crop-ref.xhtml
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == chrome://reftest/content/xul/text-small-caps-1.xhtml chrome://reftest/content/xul/text-small-caps-1-ref.xhtml
+fuzzy-if(skiaContent,0-1,0-60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,0-1,0-31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,0-1,0-50) fuzzy-if(webrender,0-1,350-1050) == chrome://reftest/content/xul/inactive-fixed-bg-bug1205630.xhtml inactive-fixed-bg-bug1205630-ref.html
+fuzzy-if(skiaContent,0-1,0-60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,0-1,0-31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,0-1,0-50) fuzzy-if(webrender,0-1,450-1100) == chrome://reftest/content/xul/inactive-fixed-bg-bug1272525.xhtml inactive-fixed-bg-bug1272525-ref.html
 
 # Tests for XUL <image> with 'object-fit' & 'object-position':
 # These tests should be very similar to tests in our w3c-css/submitted/images3
 # reftest directory. They live here because they use XUL, and it
 # wouldn't be fair of us to make a W3C testsuite implicitly depend on XUL.
-== chrome://reftest/content/xul/object-fit-contain-png-001.xul object-fit-contain-png-001-ref.html
-== chrome://reftest/content/xul/object-fit-contain-png-002.xul object-fit-contain-png-002-ref.html
-== chrome://reftest/content/xul/object-fit-contain-svg-001.xul object-fit-contain-svg-001-ref.html
-== chrome://reftest/content/xul/object-fit-contain-svg-002.xul object-fit-contain-svg-002-ref.html
-== chrome://reftest/content/xul/object-fit-contain-svg-003.xul object-fit-contain-svg-003-ref.html
-== chrome://reftest/content/xul/object-fit-contain-svg-004.xul object-fit-contain-svg-004-ref.html
-== chrome://reftest/content/xul/object-fit-contain-svg-005.xul object-fit-contain-svg-005-ref.html
-== chrome://reftest/content/xul/object-fit-contain-svg-006.xul object-fit-contain-svg-006-ref.html
-== chrome://reftest/content/xul/object-fit-cover-png-001.xul object-fit-cover-png-001-ref.html
-== chrome://reftest/content/xul/object-fit-cover-png-002.xul object-fit-cover-png-002-ref.html
-== chrome://reftest/content/xul/object-fit-cover-svg-001.xul object-fit-cover-svg-001-ref.html
-== chrome://reftest/content/xul/object-fit-cover-svg-002.xul object-fit-cover-svg-002-ref.html
-== chrome://reftest/content/xul/object-fit-cover-svg-003.xul object-fit-cover-svg-003-ref.html
-== chrome://reftest/content/xul/object-fit-cover-svg-004.xul object-fit-cover-svg-004-ref.html
-== chrome://reftest/content/xul/object-fit-cover-svg-005.xul object-fit-cover-svg-005-ref.html
-== chrome://reftest/content/xul/object-fit-cover-svg-006.xul object-fit-cover-svg-006-ref.html
-== chrome://reftest/content/xul/object-fit-fill-png-001.xul object-fit-fill-png-001-ref.html
-== chrome://reftest/content/xul/object-fit-fill-png-002.xul object-fit-fill-png-002-ref.html
-== chrome://reftest/content/xul/object-fit-fill-svg-001.xul object-fit-fill-svg-001-ref.html
-== chrome://reftest/content/xul/object-fit-fill-svg-002.xul object-fit-fill-svg-002-ref.html
-== chrome://reftest/content/xul/object-fit-fill-svg-003.xul object-fit-fill-svg-003-ref.html
-== chrome://reftest/content/xul/object-fit-fill-svg-004.xul object-fit-fill-svg-004-ref.html
-== chrome://reftest/content/xul/object-fit-fill-svg-005.xul object-fit-fill-svg-005-ref.html
-== chrome://reftest/content/xul/object-fit-fill-svg-006.xul object-fit-fill-svg-006-ref.html
-== chrome://reftest/content/xul/object-fit-none-png-001.xul object-fit-none-png-001-ref.html
-== chrome://reftest/content/xul/object-fit-none-png-002.xul object-fit-none-png-002-ref.html
-== chrome://reftest/content/xul/object-fit-none-svg-001.xul object-fit-none-svg-001-ref.html
-== chrome://reftest/content/xul/object-fit-none-svg-002.xul object-fit-none-svg-002-ref.html
-== chrome://reftest/content/xul/object-fit-none-svg-003.xul object-fit-none-svg-003-ref.html
-== chrome://reftest/content/xul/object-fit-none-svg-004.xul object-fit-none-svg-004-ref.html
-== chrome://reftest/content/xul/object-fit-none-svg-005.xul object-fit-none-svg-005-ref.html
-== chrome://reftest/content/xul/object-fit-none-svg-006.xul object-fit-none-svg-006-ref.html
-== chrome://reftest/content/xul/object-fit-scale-down-png-001.xul object-fit-scale-down-png-001-ref.html
-== chrome://reftest/content/xul/object-fit-scale-down-png-002.xul object-fit-scale-down-png-002-ref.html
-== chrome://reftest/content/xul/object-fit-scale-down-svg-001.xul object-fit-scale-down-svg-001-ref.html
-== chrome://reftest/content/xul/object-fit-scale-down-svg-002.xul object-fit-scale-down-svg-002-ref.html
-== chrome://reftest/content/xul/object-fit-scale-down-svg-003.xul object-fit-scale-down-svg-003-ref.html
-== chrome://reftest/content/xul/object-fit-scale-down-svg-004.xul object-fit-scale-down-svg-004-ref.html
-== chrome://reftest/content/xul/object-fit-scale-down-svg-005.xul object-fit-scale-down-svg-005-ref.html
-== chrome://reftest/content/xul/object-fit-scale-down-svg-006.xul object-fit-scale-down-svg-006-ref.html
-== chrome://reftest/content/xul/object-position-png-001.xul object-position-png-001-ref.html
-== chrome://reftest/content/xul/object-position-png-002.xul object-position-png-002-ref.html
+== chrome://reftest/content/xul/object-fit-contain-png-001.xhtml object-fit-contain-png-001-ref.html
+== chrome://reftest/content/xul/object-fit-contain-png-002.xhtml object-fit-contain-png-002-ref.html
+== chrome://reftest/content/xul/object-fit-contain-svg-001.xhtml object-fit-contain-svg-001-ref.html
+== chrome://reftest/content/xul/object-fit-contain-svg-002.xhtml object-fit-contain-svg-002-ref.html
+== chrome://reftest/content/xul/object-fit-contain-svg-003.xhtml object-fit-contain-svg-003-ref.html
+== chrome://reftest/content/xul/object-fit-contain-svg-004.xhtml object-fit-contain-svg-004-ref.html
+== chrome://reftest/content/xul/object-fit-contain-svg-005.xhtml object-fit-contain-svg-005-ref.html
+== chrome://reftest/content/xul/object-fit-contain-svg-006.xhtml object-fit-contain-svg-006-ref.html
+== chrome://reftest/content/xul/object-fit-cover-png-001.xhtml object-fit-cover-png-001-ref.html
+== chrome://reftest/content/xul/object-fit-cover-png-002.xhtml object-fit-cover-png-002-ref.html
+== chrome://reftest/content/xul/object-fit-cover-svg-001.xhtml object-fit-cover-svg-001-ref.html
+== chrome://reftest/content/xul/object-fit-cover-svg-002.xhtml object-fit-cover-svg-002-ref.html
+== chrome://reftest/content/xul/object-fit-cover-svg-003.xhtml object-fit-cover-svg-003-ref.html
+== chrome://reftest/content/xul/object-fit-cover-svg-004.xhtml object-fit-cover-svg-004-ref.html
+== chrome://reftest/content/xul/object-fit-cover-svg-005.xhtml object-fit-cover-svg-005-ref.html
+== chrome://reftest/content/xul/object-fit-cover-svg-006.xhtml object-fit-cover-svg-006-ref.html
+== chrome://reftest/content/xul/object-fit-fill-png-001.xhtml object-fit-fill-png-001-ref.html
+== chrome://reftest/content/xul/object-fit-fill-png-002.xhtml object-fit-fill-png-002-ref.html
+== chrome://reftest/content/xul/object-fit-fill-svg-001.xhtml object-fit-fill-svg-001-ref.html
+== chrome://reftest/content/xul/object-fit-fill-svg-002.xhtml object-fit-fill-svg-002-ref.html
+== chrome://reftest/content/xul/object-fit-fill-svg-003.xhtml object-fit-fill-svg-003-ref.html
+== chrome://reftest/content/xul/object-fit-fill-svg-004.xhtml object-fit-fill-svg-004-ref.html
+== chrome://reftest/content/xul/object-fit-fill-svg-005.xhtml object-fit-fill-svg-005-ref.html
+== chrome://reftest/content/xul/object-fit-fill-svg-006.xhtml object-fit-fill-svg-006-ref.html
+== chrome://reftest/content/xul/object-fit-none-png-001.xhtml object-fit-none-png-001-ref.html
+== chrome://reftest/content/xul/object-fit-none-png-002.xhtml object-fit-none-png-002-ref.html
+== chrome://reftest/content/xul/object-fit-none-svg-001.xhtml object-fit-none-svg-001-ref.html
+== chrome://reftest/content/xul/object-fit-none-svg-002.xhtml object-fit-none-svg-002-ref.html
+== chrome://reftest/content/xul/object-fit-none-svg-003.xhtml object-fit-none-svg-003-ref.html
+== chrome://reftest/content/xul/object-fit-none-svg-004.xhtml object-fit-none-svg-004-ref.html
+== chrome://reftest/content/xul/object-fit-none-svg-005.xhtml object-fit-none-svg-005-ref.html
+== chrome://reftest/content/xul/object-fit-none-svg-006.xhtml object-fit-none-svg-006-ref.html
+== chrome://reftest/content/xul/object-fit-scale-down-png-001.xhtml object-fit-scale-down-png-001-ref.html
+== chrome://reftest/content/xul/object-fit-scale-down-png-002.xhtml object-fit-scale-down-png-002-ref.html
+== chrome://reftest/content/xul/object-fit-scale-down-svg-001.xhtml object-fit-scale-down-svg-001-ref.html
+== chrome://reftest/content/xul/object-fit-scale-down-svg-002.xhtml object-fit-scale-down-svg-002-ref.html
+== chrome://reftest/content/xul/object-fit-scale-down-svg-003.xhtml object-fit-scale-down-svg-003-ref.html
+== chrome://reftest/content/xul/object-fit-scale-down-svg-004.xhtml object-fit-scale-down-svg-004-ref.html
+== chrome://reftest/content/xul/object-fit-scale-down-svg-005.xhtml object-fit-scale-down-svg-005-ref.html
+== chrome://reftest/content/xul/object-fit-scale-down-svg-006.xhtml object-fit-scale-down-svg-006-ref.html
+== chrome://reftest/content/xul/object-position-png-001.xhtml object-position-png-001-ref.html
+== chrome://reftest/content/xul/object-position-png-002.xhtml object-position-png-002-ref.html
 
-== chrome://reftest/content/xul/image-appearance-dynamic.xul chrome://reftest/content/xul/image-appearance-dynamic-ref.xul
+== chrome://reftest/content/xul/image-appearance-dynamic.xhtml chrome://reftest/content/xul/image-appearance-dynamic-ref.xhtml
 
 # Tests for rendering SVG images in a XUL <treecell>:
 # XXXdholbert: These are marked as "random" right now, since they might not
 # render the images they trying to test in time for the reftest snapshot, per
 # bug 1218954.
-skip == chrome://reftest/content/xul/treecell-image-svg-1a.xul chrome://reftest/content/xul/treecell-image-svg-1-ref.xul # bug 1218954
-skip == chrome://reftest/content/xul/treecell-image-svg-1b.xul chrome://reftest/content/xul/treecell-image-svg-1-ref.xul # bug 1218954
+skip == chrome://reftest/content/xul/treecell-image-svg-1a.xhtml chrome://reftest/content/xul/treecell-image-svg-1-ref.xhtml # bug 1218954
+skip == chrome://reftest/content/xul/treecell-image-svg-1b.xhtml chrome://reftest/content/xul/treecell-image-svg-1-ref.xhtml # bug 1218954
 
-== chrome://reftest/content/xul/treechildren-padding-percent-1.xul chrome://reftest/content/xul/treechildren-padding-percent-1-ref.xul
+== chrome://reftest/content/xul/treechildren-padding-percent-1.xhtml chrome://reftest/content/xul/treechildren-padding-percent-1-ref.xhtml
 
-pref(layout.css.xul-tree-pseudos.content.enabled,true) != chrome://reftest/content/xul/treetwisty-svg-context-paint-1-not-ref.xul chrome://reftest/content/xul/treetwisty-svg-context-paint-1-ref.xul
-pref(layout.css.xul-tree-pseudos.content.enabled,true) test-pref(svg.context-properties.content.enabled,true) == chrome://reftest/content/xul/treetwisty-svg-context-paint-1.xul chrome://reftest/content/xul/treetwisty-svg-context-paint-1-ref.xul
+pref(layout.css.xul-tree-pseudos.content.enabled,true) != chrome://reftest/content/xul/treetwisty-svg-context-paint-1-not-ref.xhtml chrome://reftest/content/xul/treetwisty-svg-context-paint-1-ref.xhtml
+pref(layout.css.xul-tree-pseudos.content.enabled,true) test-pref(svg.context-properties.content.enabled,true) == chrome://reftest/content/xul/treetwisty-svg-context-paint-1.xhtml chrome://reftest/content/xul/treetwisty-svg-context-paint-1-ref.xhtml
 
 # resizer (non-native-themed)
 
-!= chrome://reftest/content/xul/resizer-bottomend.xul chrome://reftest/content/xul/blank-window.xul
-== chrome://reftest/content/xul/resizer-bottomend.xul chrome://reftest/content/xul/resizer-bottomright.xul
-!= chrome://reftest/content/xul/resizer-bottomend.xul chrome://reftest/content/xul/resizer-bottomend-rtl.xul
-!= chrome://reftest/content/xul/resizer-bottomend-rtl.xul chrome://reftest/content/xul/blank-window.xul
-== chrome://reftest/content/xul/resizer-bottomend-rtl.xul chrome://reftest/content/xul/resizer-bottomend-flipped.xul
-== chrome://reftest/content/xul/resizer-bottomleft-rtl.xul chrome://reftest/content/xul/resizer-bottomleft.xul
-== chrome://reftest/content/xul/resizer-bottomright-rtl.xul chrome://reftest/content/xul/resizer-bottomright.xul
+!= chrome://reftest/content/xul/resizer-bottomend.xhtml chrome://reftest/content/xul/blank-window.xhtml
+== chrome://reftest/content/xul/resizer-bottomend.xhtml chrome://reftest/content/xul/resizer-bottomright.xhtml
+!= chrome://reftest/content/xul/resizer-bottomend.xhtml chrome://reftest/content/xul/resizer-bottomend-rtl.xhtml
+!= chrome://reftest/content/xul/resizer-bottomend-rtl.xhtml chrome://reftest/content/xul/blank-window.xhtml
+== chrome://reftest/content/xul/resizer-bottomend-rtl.xhtml chrome://reftest/content/xul/resizer-bottomend-flipped.xhtml
+== chrome://reftest/content/xul/resizer-bottomleft-rtl.xhtml chrome://reftest/content/xul/resizer-bottomleft.xhtml
+== chrome://reftest/content/xul/resizer-bottomright-rtl.xhtml chrome://reftest/content/xul/resizer-bottomright.xhtml
 
-!= chrome://reftest/content/xul/resizer-bottomstart.xul chrome://reftest/content/xul/blank-window.xul
-== chrome://reftest/content/xul/resizer-bottomstart.xul chrome://reftest/content/xul/resizer-bottomleft.xul
-== chrome://reftest/content/xul/resizer-bottomstart.xul chrome://reftest/content/xul/resizer-left.xul
-!= chrome://reftest/content/xul/resizer-bottomstart.xul chrome://reftest/content/xul/resizer-bottomstart-rtl.xul
-!= chrome://reftest/content/xul/resizer-bottomstart-rtl.xul chrome://reftest/content/xul/blank-window.xul
-== chrome://reftest/content/xul/resizer-bottomstart-rtl.xul chrome://reftest/content/xul/resizer-bottomend.xul
+!= chrome://reftest/content/xul/resizer-bottomstart.xhtml chrome://reftest/content/xul/blank-window.xhtml
+== chrome://reftest/content/xul/resizer-bottomstart.xhtml chrome://reftest/content/xul/resizer-bottomleft.xhtml
+== chrome://reftest/content/xul/resizer-bottomstart.xhtml chrome://reftest/content/xul/resizer-left.xhtml
+!= chrome://reftest/content/xul/resizer-bottomstart.xhtml chrome://reftest/content/xul/resizer-bottomstart-rtl.xhtml
+!= chrome://reftest/content/xul/resizer-bottomstart-rtl.xhtml chrome://reftest/content/xul/blank-window.xhtml
+== chrome://reftest/content/xul/resizer-bottomstart-rtl.xhtml chrome://reftest/content/xul/resizer-bottomend.xhtml
