@@ -1,9 +1,10 @@
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { parseKeyValuePairsFromFile } = ChromeUtils.import(
+  "resource://gre/modules/KeyValueParser.jsm"
+);
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var success = false;
 var observerFired = false;
-var observerPromise = null;
 
 var testObserver = {
   idleHang: true,
@@ -30,37 +31,32 @@ var testObserver = {
     pluginExtraFile.append(pluginId + ".extra");
     ok(pluginExtraFile.exists(), "plugin extra file exists");
 
-    observerPromise = OS.File.read(pluginExtraFile.path, {
-      encoding: "utf-8",
-    }).then(json => {
-      let extraData = JSON.parse(json);
+    let extraData = parseKeyValuePairsFromFile(pluginExtraFile);
 
-      // check additional dumps
-      ok(
-        "additional_minidumps" in extraData,
-        "got field for additional minidumps"
-      );
-      let additionalDumps = extraData.additional_minidumps.split(",");
-      ok(
-        additionalDumps.includes("browser"),
-        "browser in additional_minidumps"
-      );
+    // check additional dumps
 
-      for (let name of additionalDumps) {
-        let file = profD.clone();
-        file.append(pluginId + "-" + name + ".dmp");
-        ok(file.exists(), "additional dump '" + name + "' exists");
-      }
+    ok(
+      "additional_minidumps" in extraData,
+      "got field for additional minidumps"
+    );
+    let additionalDumps = extraData.additional_minidumps.split(",");
+    ok(additionalDumps.includes("browser"), "browser in additional_minidumps");
 
-      // check cpu usage field
-      ok("PluginCpuUsage" in extraData, "got extra field for plugin cpu usage");
-      let cpuUsage = parseFloat(extraData.PluginCpuUsage);
-      if (this.idleHang) {
-        ok(cpuUsage == 0, "plugin cpu usage is 0%");
-      } else {
-        ok(cpuUsage > 0, "plugin cpu usage is >0%");
-      }
-    });
+    for (let name of additionalDumps) {
+      let file = profD.clone();
+      file.append(pluginId + "-" + name + ".dmp");
+      ok(file.exists(), "additional dump '" + name + "' exists");
+    }
+
+    // check cpu usage field
+
+    ok("PluginCpuUsage" in extraData, "got extra field for plugin cpu usage");
+    let cpuUsage = parseFloat(extraData.PluginCpuUsage);
+    if (this.idleHang) {
+      ok(cpuUsage == 0, "plugin cpu usage is 0%");
+    } else {
+      ok(cpuUsage > 0, "plugin cpu usage is >0%");
+    }
   },
 
   QueryInterface: ChromeUtils.generateQI([
@@ -106,7 +102,5 @@ function onPluginCrashed(aEvent) {
 
   Services.obs.removeObserver(testObserver, "plugin-crashed");
 
-  observerPromise.then(() => {
-    SimpleTest.finish();
-  });
+  SimpleTest.finish();
 }

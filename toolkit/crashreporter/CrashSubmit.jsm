@@ -12,6 +12,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const {
+  parseKeyValuePairs,
+  parseKeyValuePairsFromFileAsync,
+} = ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, [
   "File",
   "FormData",
@@ -27,7 +31,6 @@ const FAILED = "failed";
 const SUBMITTING = "submitting";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const SUBMISSION_REGEX = /^bp-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // TODO: this is still synchronous; need an async INI parser to make it async
 function parseINIStrings(path) {
@@ -126,23 +129,34 @@ function getPendingMinidump(id) {
 }
 
 async function synthesizeExtraFile(extra) {
-  let url = "https://crash-reports.mozilla.com/submit?id=";
-  Services.appinfo.ID +
+  let data =
+    "ServerURL=https://crash-reports.mozilla.com/submit?id=" +
+    Services.appinfo.ID +
     "&version=" +
     Services.appinfo.version +
     "&buildid=" +
-    Services.appinfo.appBuildID;
-  let data = {
-    ServerURL: url,
-    Vendor: Services.appinfo.vendor,
-    ProductName: Services.appinfo.name,
-    ProductID: Services.appinfo.ID,
-    Version: Services.appinfo.version,
-    BuildID: Services.appinfo.appBuildID,
-    ReleaseChannel: AppConstants.MOZ_UPDATE_CHANNEL,
-  };
+    Services.appinfo.appBuildID +
+    "\n" +
+    "Vendor=" +
+    Services.appinfo.vendor +
+    "\n" +
+    "ProductName=" +
+    Services.appinfo.name +
+    "\n" +
+    "ProductID=" +
+    Services.appinfo.ID +
+    "\n" +
+    "Version=" +
+    Services.appinfo.version +
+    "\n" +
+    "BuildID=" +
+    Services.appinfo.appBuildID +
+    "\n" +
+    "ReleaseChannel=" +
+    AppConstants.MOZ_UPDATE_CHANNEL +
+    "\n";
 
-  await OS.File.writeAtomic(extra, JSON.stringify(data), { encoding: "utf-8" });
+  await OS.File.writeAtomic(extra, data, { encoding: "utf-8" });
 }
 
 async function writeSubmittedReportAsync(crashID, viewURL) {
@@ -213,24 +227,6 @@ Submitter.prototype = {
     }
   },
 
-  parseResponse: function Submitter_parseResponse(response) {
-    let parsedResponse = {};
-
-    for (let line of response.split("\n")) {
-      let data = line.split("=");
-
-      if (
-        (data.length == 2 &&
-          (data[0] == "CrashID" && SUBMISSION_REGEX.test(data[1]))) ||
-        data[0] == "ViewURL"
-      ) {
-        parsedResponse[data[0]] = data[1];
-      }
-    }
-
-    return parsedResponse;
-  },
-
   submitForm: function Submitter_submitForm() {
     if (!("ServerURL" in this.extraKeyVals)) {
       return false;
@@ -252,19 +248,15 @@ Submitter.prototype = {
     let formData = new FormData();
 
     // add the data
-    delete this.extraKeyVals.ServerURL;
-    delete this.extraKeyVals.StackTraces;
-
-    let payload = Object.assign({}, this.extraKeyVals);
+    for (let [name, value] of Object.entries(this.extraKeyVals)) {
+      if (name != "ServerURL" && name != "StackTraces") {
+        formData.append(name, value);
+      }
+    }
     if (this.noThrottle) {
       // tell the server not to throttle this, since it was manually submitted
-      payload.Throttleable = "0";
+      formData.append("Throttleable", "0");
     }
-    let json = new Blob([JSON.stringify(payload)], {
-      type: "application/json",
-    });
-    formData.append("extra", json);
-
     // add the minidumps
     let promises = [
       File.createFromFileName(this.dump).then(file => {
@@ -298,7 +290,7 @@ Submitter.prototype = {
     xhr.addEventListener("readystatechange", evt => {
       if (xhr.readyState == 4) {
         let ret =
-          xhr.status === 200 ? this.parseResponse(xhr.responseText) : {};
+          xhr.status === 200 ? parseKeyValuePairs(xhr.responseText) : {};
         let submitted = !!ret.CrashID;
         let p = Promise.resolve();
 
@@ -399,9 +391,7 @@ Submitter.prototype = {
     this.extra = extra;
     this.memory = memoryExists ? memory : null;
 
-    let decoder = new TextDecoder();
-    let extraData = await OS.File.read(extra);
-    let extraKeyVals = JSON.parse(decoder.decode(extraData));
+    let extraKeyVals = await parseKeyValuePairsFromFileAsync(extra);
 
     for (let key in extraKeyVals) {
       if (!(key in this.extraKeyVals)) {

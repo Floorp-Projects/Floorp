@@ -9,12 +9,6 @@ function getEventDir() {
   return OS.Path.join(do_get_tempdir().path, "crash-events");
 }
 
-function sendCommandAsync(command) {
-  return new Promise(resolve => {
-    sendCommand(command, resolve);
-  });
-}
-
 /*
  * Run an xpcshell subprocess and crash it.
  *
@@ -43,7 +37,7 @@ function sendCommandAsync(command) {
  *       exit with an error.
  *
  */
-async function do_crash(setup, callback, canReturnZero) {
+function do_crash(setup, callback, canReturnZero) {
   // get current process filename (xpcshell)
   let bin = Services.dirsvc.get("XREExeF", Ci.nsIFile);
   if (!bin.exists()) {
@@ -92,7 +86,7 @@ async function do_crash(setup, callback, canReturnZero) {
     Assert.notEqual(process.exitValue, 0);
   }
 
-  await handleMinidump(callback);
+  handleMinidump(callback);
 }
 
 function getMinidump() {
@@ -130,7 +124,7 @@ function runMinidumpAnalyzer(dumpFile, additionalArgs) {
   process.run(true /* blocking */, args, args.length);
 }
 
-async function handleMinidump(callback) {
+function handleMinidump(callback) {
   // find minidump
   let minidump = getMinidump();
 
@@ -144,33 +138,35 @@ async function handleMinidump(callback) {
   let memoryfile = minidump.clone();
   memoryfile.leafName = memoryfile.leafName.slice(0, -4) + ".memory.json.gz";
 
-  let cleanup = function() {
-    [minidump, extrafile, memoryfile].forEach(file => {
-      if (file.exists()) {
-        file.remove(false);
-      }
-    });
-  };
-
   // Just in case, don't let these files linger.
-  registerCleanupFunction(cleanup);
+  registerCleanupFunction(function() {
+    if (minidump.exists()) {
+      minidump.remove(false);
+    }
+    if (extrafile.exists()) {
+      extrafile.remove(false);
+    }
+    if (memoryfile.exists()) {
+      memoryfile.remove(false);
+    }
+  });
 
   Assert.ok(extrafile.exists());
-  let data = await OS.File.read(extrafile.path);
-  let decoder = new TextDecoder();
-  let extra = JSON.parse(decoder.decode(data));
+  let extra = parseKeyValuePairsFromFile(extrafile);
 
   if (callback) {
-    await callback(minidump, extra, extrafile);
+    callback(minidump, extra, extrafile);
   }
 
-  cleanup();
-}
-
-function spinEventLoop() {
-  return new Promise(resolve => {
-    executeSoon(resolve);
-  });
+  if (minidump.exists()) {
+    minidump.remove(false);
+  }
+  if (extrafile.exists()) {
+    extrafile.remove(false);
+  }
+  if (memoryfile.exists()) {
+    memoryfile.remove(false);
+  }
 }
 
 /**
@@ -180,8 +176,9 @@ function spinEventLoop() {
  * to set data as needed _before_ the crash.  The tail file triggers a generic
  * crash after setup.
  */
-async function do_content_crash(setup, callback) {
+function do_content_crash(setup, callback) {
   do_load_child_test_harness();
+  do_test_pending();
 
   // Setting the minidump path won't work in the child, so we need to do
   // that here.
@@ -202,19 +199,28 @@ async function do_content_crash(setup, callback) {
     }
   }
 
+  let handleCrash = function() {
+    let id = getMinidump().leafName.slice(0, -4);
+    Services.crashmanager.ensureCrashIsPresent(id).then(() => {
+      try {
+        handleMinidump(callback);
+      } catch (x) {
+        do_report_unexpected_exception(x);
+      }
+      do_test_finished();
+    });
+  };
+
   do_get_profile();
-  await makeFakeAppDir();
-  await sendCommandAsync('load("' + headfile.path.replace(/\\/g, "/") + '");');
-  await sendCommandAsync(setup);
-  await sendCommandAsync('load("' + tailfile.path.replace(/\\/g, "/") + '");');
-  await spinEventLoop();
-  let id = getMinidump().leafName.slice(0, -4);
-  await Services.crashmanager.ensureCrashIsPresent(id);
-  try {
-    await handleMinidump(callback);
-  } catch (x) {
-    do_report_unexpected_exception(x);
-  }
+  makeFakeAppDir().then(() => {
+    sendCommand('load("' + headfile.path.replace(/\\/g, "/") + '");', () =>
+      sendCommand(setup, () =>
+        sendCommand('load("' + tailfile.path.replace(/\\/g, "/") + '");', () =>
+          executeSoon(handleCrash)
+        )
+      )
+    );
+  });
 }
 
 /**
@@ -223,8 +229,9 @@ async function do_content_crash(setup, callback) {
  * This variant accepts a trigger function which runs in the content process
  * and does something to _trigger_ the crash.
  */
-async function do_triggered_content_crash(trigger, callback) {
+function do_triggered_content_crash(trigger, callback) {
   do_load_child_test_harness();
+  do_test_pending();
 
   // Setting the minidump path won't work in the child, so we need to do
   // that here.
@@ -243,21 +250,33 @@ async function do_triggered_content_crash(trigger, callback) {
     }
   }
 
+  let handleCrash = function() {
+    let id = getMinidump().leafName.slice(0, -4);
+    Services.crashmanager.ensureCrashIsPresent(id).then(() => {
+      try {
+        handleMinidump(callback);
+      } catch (x) {
+        do_report_unexpected_exception(x);
+      }
+      do_test_finished();
+    });
+  };
+
   do_get_profile();
-  await makeFakeAppDir();
-  await sendCommandAsync('load("' + headfile.path.replace(/\\/g, "/") + '");');
-  await sendCommandAsync(trigger);
-  await spinEventLoop();
-  let id = getMinidump().leafName.slice(0, -4);
-  await Services.crashmanager.ensureCrashIsPresent(id);
-  try {
-    await handleMinidump(callback);
-  } catch (x) {
-    do_report_unexpected_exception(x);
-  }
+  makeFakeAppDir().then(() => {
+    sendCommand('load("' + headfile.path.replace(/\\/g, "/") + '");', () =>
+      sendCommand(trigger, () => executeSoon(handleCrash))
+    );
+  });
 }
 
 // Import binary APIs via js-ctypes.
 var { CrashTestUtils } = ChromeUtils.import(
   "resource://test/CrashTestUtils.jsm"
 );
+var {
+  parseKeyValuePairs,
+  parseKeyValuePairsFromFile,
+  parseKeyValuePairsFromFileAsync,
+  parseKeyValuePairsFromLines,
+} = ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");

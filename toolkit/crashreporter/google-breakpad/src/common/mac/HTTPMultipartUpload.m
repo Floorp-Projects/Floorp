@@ -93,7 +93,7 @@ static NSData *SendSynchronousNSURLRequest(NSURLRequest *req,
 - (NSString *)multipartBoundary;
 // Each of the following methods will append the starting multipart boundary,
 // but not the ending one.
-- (NSData *)formDataForJSON:(NSString *)json;
+- (NSData *)formDataForKey:(NSString *)key value:(NSString *)value;
 - (NSData *)formDataForFileContents:(NSData *)contents name:(NSString *)name;
 - (NSData *)formDataForFile:(NSString *)file name:(NSString *)name;
 @end
@@ -110,16 +110,13 @@ static NSData *SendSynchronousNSURLRequest(NSURLRequest *req,
 }
 
 //=============================================================================
-- (NSData *)formDataForJSON:(NSString *)json {
-  NSMutableData *data = [NSMutableData data];
-  NSString *fmt = @"--%@\r\nContent-Disposition: form-data; name=\"extra\"; "
-                   "filename=\"extra.json\"\r\nContent-Type: application/json\r\n\r\n";
-  NSString *form = [NSString stringWithFormat:fmt, boundary_];
+- (NSData *)formDataForKey:(NSString *)key value:(NSString *)value {
+  NSString *escaped = PercentEncodeNSString(key);
+  NSString *fmt =
+    @"--%@\r\nContent-Disposition: form-data; name=\"%@\"\r\n\r\n%@\r\n";
+  NSString *form = [NSString stringWithFormat:fmt, boundary_, escaped, value];
 
-  [data appendData:[form dataUsingEncoding:NSUTF8StringEncoding]];
-  [data appendData:[json dataUsingEncoding:NSUTF8StringEncoding]];
-
-  return data;
+  return [form dataUsingEncoding:NSUTF8StringEncoding];
 }
 
 //=============================================================================
@@ -174,15 +171,15 @@ static NSData *SendSynchronousNSURLRequest(NSURLRequest *req,
 }
 
 //=============================================================================
-- (void)setParameters:(NSMutableString *)parameters {
+- (void)setParameters:(NSDictionary *)parameters {
   if (parameters != parameters_) {
     [parameters_ release];
-    parameters_ = [parameters mutableCopy];
+    parameters_ = [parameters copy];
   }
 }
 
 //=============================================================================
-- (NSMutableString *)parameters {
+- (NSDictionary *)parameters {
   return parameters_;
 }
 
@@ -213,8 +210,16 @@ static NSData *SendSynchronousNSURLRequest(NSURLRequest *req,
   [req setValue:[NSString stringWithFormat:@"multipart/form-data; boundary=%@",
     boundary_] forHTTPHeaderField:@"Content-type"];
 
-  // Add JSON parameters to the message
-  [postBody appendData:[self formDataForJSON:parameters_]];
+  // Add any parameters to the message
+  NSArray *parameterKeys = [parameters_ allKeys];
+  NSString *key;
+
+  NSInteger count = [parameterKeys count];
+  for (NSInteger i = 0; i < count; ++i) {
+    key = [parameterKeys objectAtIndex:i];
+    [postBody appendData:[self formDataForKey:key
+                                        value:[parameters_ objectForKey:key]]];
+  }
 
   // Add any files to the message
   NSArray *fileNames = [files_ allKeys];
