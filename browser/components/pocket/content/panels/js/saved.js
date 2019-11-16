@@ -148,19 +148,25 @@ var PKT_SAVED_OVERLAY = function(options) {
     myself.updateSlidingTagList();
   };
   this.updateSlidingTagList = function() {
-    var inputleft = $(".token-input-input-token input").position().left;
-    var listleft = $(".token-input-list").position().left;
-    var listleftmanual = parseInt($(".token-input-list").css("left"));
+    var cssDir;
+    if (document.dir == "ltr") {
+      cssDir = "left";
+    } else {
+      cssDir = "right";
+    }
+    var inputleft = $(".token-input-input-token input").position()[cssDir];
+    var listleft = $(".token-input-list").position()[cssDir];
+    var listleftmanual = parseInt($(".token-input-list").css(cssDir));
     var listleftnatural = listleft - listleftmanual;
     var leftwidth = $(".pkt_ext_tag_input_wrapper").outerWidth();
 
     if (inputleft + listleft + 20 > leftwidth) {
       $(".token-input-list").css(
-        "left",
+        cssDir,
         Math.min((inputleft + listleftnatural - leftwidth + 20) * -1, 0) + "px"
       );
     } else {
-      $(".token-input-list").css("left", "0");
+      $(".token-input-list").css(cssDir, "0");
     }
   };
   this.checkPlaceholderStatus = function() {
