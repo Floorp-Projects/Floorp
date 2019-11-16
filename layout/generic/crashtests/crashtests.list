@@ -21,8 +21,8 @@ load 309322-2.html
 load 309322-3.html
 load 309322-4.html
 load 310556-1.xhtml
-load chrome://reftest/content/crashtests/layout/generic/crashtests/321224.xul
-load chrome://reftest/content/crashtests/layout/generic/crashtests/322780-1.xul
+load chrome://reftest/content/crashtests/layout/generic/crashtests/321224.xhtml
+load chrome://reftest/content/crashtests/layout/generic/crashtests/322780-1.xhtml
 load 323381-1.html
 load 323381-2.html
 load 323386-1.html
@@ -234,7 +234,7 @@ load 413582-1.xhtml
 load 413582-2.html
 load 413712-1.xhtml # bug 1323680
 load 414061-1.html
-load chrome://reftest/content/crashtests/layout/generic/crashtests/414180-1.xul
+load chrome://reftest/content/crashtests/layout/generic/crashtests/414180-1.xhtml
 load 414719-1.html
 load 415685-1.html
 load 415818.xhtml
@@ -285,7 +285,7 @@ load 437565-3.xhtml
 load 438259-1.html
 load 438266-1.html
 skip load 438509-1.html # bug 511234
-load chrome://reftest/content/crashtests/layout/generic/crashtests/442860-1.xul
+load chrome://reftest/content/crashtests/layout/generic/crashtests/442860-1.xhtml
 load 443528-1.html
 load 444230-1.html
 load 444484-1.html
@@ -368,7 +368,7 @@ load 505912-1.html
 load 507566.html
 load 508154-1.xhtml
 load 508168-1.html
-load chrome://reftest/content/crashtests/layout/generic/crashtests/508816-1.xul
+load chrome://reftest/content/crashtests/layout/generic/crashtests/508816-1.xhtml
 load 508908-1.html
 load 509749-1.html
 load 511482.html
@@ -569,7 +569,7 @@ load 986899.html
 load 1001233.html
 load 1001258-1.html
 load 1001994.html
-load chrome://reftest/content/crashtests/layout/generic/crashtests/1003441.xul
+load chrome://reftest/content/crashtests/layout/generic/crashtests/1003441.xhtml
 load 1015562.html
 asserts(1-2) asserts-if(Android,1-3) load 1015563-1.html
 asserts(1-2) load 1015563-2.html
@@ -719,7 +719,7 @@ load 1513282.html
 load 1515124.html
 pref(layout.css.column-span.enabled,true) load 1517033.html
 pref(layout.css.column-span.enabled,true) load 1517297.html
-load chrome://reftest/content/crashtests/layout/generic/crashtests/1520798-1.xul
+load chrome://reftest/content/crashtests/layout/generic/crashtests/1520798-1.xhtml
 load 1520798-2.html
 load 1528771.html
 load 1539656.html
