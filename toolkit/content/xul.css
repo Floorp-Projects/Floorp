@@ -377,6 +377,15 @@ stack {
 stack > *|* {
   grid-area: 1 / 1;
   z-index: 0;
+
+  /*
+    The default `min-height: auto` value makes grid items refuse to be smaller
+    than their content. This doesn't match the traditional behavior of XUL stack,
+    which often shoehorns tall content into a smaller stack and allows the content
+    to decide how to handle overflow (e.g. by scaling down if it's an image, or
+    by adding scrollbars if it's scrollable).
+  */
+  min-height: 0;
 }
 
 /********** tabbox *********/
