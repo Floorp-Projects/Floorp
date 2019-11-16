@@ -48,7 +48,7 @@ class BookmarksRobot {
 
     fun verifyEditBookmarksView() = assertEditBookmarksView()
 
-    fun verifyBoomarkNameEditBox() = assertBookmarkNameEditBox()
+    fun verifyBookmarkNameEditBox() = assertBookmarkNameEditBox()
 
     fun verifyBookmarkURLEditBox() = assertBookmarkURLEditBox()
 

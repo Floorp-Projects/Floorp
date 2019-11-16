@@ -127,7 +127,7 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.clickEdit {
             verifyEditBookmarksView()
-            verifyBoomarkNameEditBox()
+            verifyBookmarkNameEditBox()
             verifyBookmarkURLEditBox()
             verifyParentFolderSelector()
             navigateUp()
