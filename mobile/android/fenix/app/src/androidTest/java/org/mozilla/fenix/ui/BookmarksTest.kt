@@ -95,6 +95,7 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openBookmarks {
             clickAddFolderButton()
+            verifyKeyboardVisible()
             addNewFolderName(bookmarksFolderName)
             saveNewFolder()
             verifyFolderTitle(bookmarksFolderName)
