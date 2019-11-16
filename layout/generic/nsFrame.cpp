@@ -1619,33 +1619,33 @@ nsIFrame::Sides nsIFrame::GetSkipSides(const ReflowInput* aReflowInput) const {
 
   if (logicalSkip.BStart()) {
     if (writingMode.IsVertical()) {
-      skip |= writingMode.IsVerticalLR() ? eSideBitsLeft : eSideBitsRight;
+      skip |= writingMode.IsVerticalLR() ? SideBits::eLeft : SideBits::eRight;
     } else {
-      skip |= eSideBitsTop;
+      skip |= SideBits::eTop;
     }
   }
 
   if (logicalSkip.BEnd()) {
     if (writingMode.IsVertical()) {
-      skip |= writingMode.IsVerticalLR() ? eSideBitsRight : eSideBitsLeft;
+      skip |= writingMode.IsVerticalLR() ? SideBits::eRight : SideBits::eLeft;
     } else {
-      skip |= eSideBitsBottom;
+      skip |= SideBits::eBottom;
     }
   }
 
   if (logicalSkip.IStart()) {
     if (writingMode.IsVertical()) {
-      skip |= eSideBitsTop;
+      skip |= SideBits::eTop;
     } else {
-      skip |= writingMode.IsBidiLTR() ? eSideBitsLeft : eSideBitsRight;
+      skip |= writingMode.IsBidiLTR() ? SideBits::eLeft : SideBits::eRight;
     }
   }
 
   if (logicalSkip.IEnd()) {
     if (writingMode.IsVertical()) {
-      skip |= eSideBitsBottom;
+      skip |= SideBits::eBottom;
     } else {
-      skip |= writingMode.IsBidiLTR() ? eSideBitsRight : eSideBitsLeft;
+      skip |= writingMode.IsBidiLTR() ? SideBits::eRight : SideBits::eLeft;
     }
   }
   return skip;

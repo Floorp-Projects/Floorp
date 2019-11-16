@@ -1893,30 +1893,30 @@ void nsLayoutUtils::SetFixedPositionLayerData(
   // defaulting to top-left.
   LayerPoint anchor(anchorRect.x, anchorRect.y);
 
-  SideBits sides = eSideBitsNone;
+  SideBits sides = SideBits::eNone;
   if (aFixedPosFrame != aViewportFrame) {
     const nsStylePosition* position = aFixedPosFrame->StylePosition();
     if (!position->mOffset.Get(eSideRight).IsAuto()) {
-      sides |= eSideBitsRight;
+      sides |= SideBits::eRight;
       if (!position->mOffset.Get(eSideLeft).IsAuto()) {
-        sides |= eSideBitsLeft;
+        sides |= SideBits::eLeft;
         anchor.x = anchorRect.x + anchorRect.width / 2.f;
       } else {
         anchor.x = anchorRect.XMost();
       }
     } else if (!position->mOffset.Get(eSideLeft).IsAuto()) {
-      sides |= eSideBitsLeft;
+      sides |= SideBits::eLeft;
     }
     if (!position->mOffset.Get(eSideBottom).IsAuto()) {
-      sides |= eSideBitsBottom;
+      sides |= SideBits::eBottom;
       if (!position->mOffset.Get(eSideTop).IsAuto()) {
-        sides |= eSideBitsTop;
+        sides |= SideBits::eTop;
         anchor.y = anchorRect.y + anchorRect.height / 2.f;
       } else {
         anchor.y = anchorRect.YMost();
       }
     } else if (!position->mOffset.Get(eSideTop).IsAuto()) {
-      sides |= eSideBitsTop;
+      sides |= SideBits::eTop;
     }
   }
 

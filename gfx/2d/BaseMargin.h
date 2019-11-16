@@ -17,18 +17,21 @@ namespace mozilla {
  * Sides represents a set of physical sides.
  */
 struct Sides final {
-  Sides() : mBits(0) {}
+  Sides() : mBits(SideBits::eNone) {}
   explicit Sides(SideBits aSideBits) {
-    MOZ_ASSERT((aSideBits & ~eSideBitsAll) == 0, "illegal side bits");
+    MOZ_ASSERT((aSideBits & ~SideBits::eAll) == SideBits::eNone,
+               "illegal side bits");
     mBits = aSideBits;
   }
-  bool IsEmpty() const { return mBits == 0; }
-  bool Top() const { return (mBits & eSideBitsTop) != 0; }
-  bool Right() const { return (mBits & eSideBitsRight) != 0; }
-  bool Bottom() const { return (mBits & eSideBitsBottom) != 0; }
-  bool Left() const { return (mBits & eSideBitsLeft) != 0; }
+  bool IsEmpty() const { return mBits == SideBits::eNone; }
+  bool Top() const { return (mBits & SideBits::eTop) == SideBits::eTop; }
+  bool Right() const { return (mBits & SideBits::eRight) == SideBits::eRight; }
+  bool Bottom() const {
+    return (mBits & SideBits::eBottom) == SideBits::eBottom;
+  }
+  bool Left() const { return (mBits & SideBits::eLeft) == SideBits::eLeft; }
   bool Contains(SideBits aSideBits) const {
-    MOZ_ASSERT((aSideBits & ~eSideBitsAll) == 0, "illegal side bits");
+    MOZ_ASSERT(!(aSideBits & ~SideBits::eAll), "illegal side bits");
     return (mBits & aSideBits) == aSideBits;
   }
   Sides operator|(Sides aOther) const {
@@ -44,7 +47,7 @@ struct Sides final {
   bool operator!=(Sides aOther) const { return !(*this == aOther); }
 
  private:
-  uint8_t mBits;
+  SideBits mBits;
 };
 
 namespace gfx {

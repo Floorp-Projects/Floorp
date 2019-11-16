@@ -368,7 +368,7 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
     MOZ_ASSERT(IsValid());
 
     // TODO: Implement for WebRender.
-    return eSideBitsNone;
+    return SideBits::eNone;
   }
 
   Maybe<uint64_t> GetZoomAnimationId() const {
