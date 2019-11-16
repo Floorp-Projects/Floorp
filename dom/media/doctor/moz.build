@@ -8,6 +8,9 @@ TEST_DIRS += [
     'gtest',
 ]
 
+# Needed for plugin IPC types required by nsPluginHost
+include('/ipc/chromium/chromium-config.mozbuild')
+
 EXPORTS += [
     'DDLogCategory.h',
     'DDLoggedTypeTraits.h',

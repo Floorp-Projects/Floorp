@@ -205,7 +205,7 @@ class BlocklistPromiseHandler final
         // We update blocklist info in content processes asynchronously
         // by just sending a new plugin list to content.
         host->IncrementChromeEpoch();
-        host->SendPluginsToContent();
+        host->BroadcastPluginsToContent();
       }
 
       // Now notify observers that we're done updating plugin state.
@@ -470,7 +470,7 @@ nsresult nsPluginHost::ActuallyReloadPlugins() {
   if (XRE_IsParentProcess()) {
     // If the plugin list changed, update content. If the plugin list changed
     // for the content process, it will also reload plugins.
-    SendPluginsToContent();
+    BroadcastPluginsToContent();
   }
 
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsPluginHost::ReloadPlugins End\n"));
@@ -630,6 +630,8 @@ nsresult nsPluginHost::UnloadPlugins() {
     sPluginTempDir->Remove(true);
     NS_RELEASE(sPluginTempDir);
   }
+  mSerializablePlugins.Clear();
+  mSerializableFakePlugins.Clear();
 
   mPluginsLoaded = false;
 
@@ -1927,7 +1929,7 @@ nsresult nsPluginHost::LoadPlugins() {
             self->AddPluginTag(pluginTag);
           }
           self->IncrementChromeEpoch();
-          self->SendPluginsToContent();
+          self->BroadcastPluginsToContent();
         }
 
         // Do blocklist queries immediately after.
@@ -2077,21 +2079,11 @@ nsresult nsPluginHost::SetPluginsInContent(
   return NS_OK;
 }
 
-nsresult nsPluginHost::SendPluginsToContent() {
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  nsTArray<PluginTag> pluginTags;
-  nsTArray<FakePluginTag> fakePluginTags;
-  // Load plugins so that the epoch is correct.
-  nsresult rv = LoadPlugins();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  uint32_t newPluginEpoch = ChromeEpoch();
-
+nsresult nsPluginHost::UpdateCachedSerializablePluginList() {
   nsTArray<nsCOMPtr<nsIInternalPluginTag>> plugins;
   GetPlugins(plugins, true);
+  mSerializablePlugins.Clear();
+  mSerializableFakePlugins.Clear();
 
   for (size_t i = 0; i < plugins.Length(); i++) {
     nsCOMPtr<nsIInternalPluginTag> basetag = plugins[i];
@@ -2103,7 +2095,7 @@ nsresult nsPluginHost::SendPluginsToContent() {
       nsFakePluginTag* tag = static_cast<nsFakePluginTag*>(basetag.get());
       mozilla::ipc::URIParams handlerURI;
       SerializeURI(tag->HandlerURI(), handlerURI);
-      fakePluginTags.AppendElement(FakePluginTag(
+      mSerializableFakePlugins.AppendElement(FakePluginTag(
           tag->Id(), handlerURI, tag->Name(), tag->Description(),
           tag->MimeTypes(), tag->MimeDescriptions(), tag->Extensions(),
           tag->GetNiceFileName(), tag->SandboxScript()));
@@ -2119,17 +2111,51 @@ nsresult nsPluginHost::SendPluginsToContent() {
       return NS_ERROR_FAILURE;
     }
 
-    pluginTags.AppendElement(PluginTag(
+    mSerializablePlugins.AppendElement(PluginTag(
         tag->mId, tag->Name(), tag->Description(), tag->MimeTypes(),
         tag->MimeDescriptions(), tag->Extensions(), tag->mIsFlashPlugin,
         tag->mSupportsAsyncRender, tag->FileName(), tag->Version(),
         tag->mLastModifiedTime, tag->mSandboxLevel, blocklistState));
   }
+  return NS_OK;
+}
+
+nsresult nsPluginHost::BroadcastPluginsToContent() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  // Load plugins so that the epoch is correct.
+  nsresult rv = LoadPlugins();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = UpdateCachedSerializablePluginList();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  uint32_t newPluginEpoch = ChromeEpoch();
+
   nsTArray<dom::ContentParent*> parents;
   dom::ContentParent::GetAll(parents);
   for (auto p : parents) {
-    Unused << p->SendSetPluginList(newPluginEpoch, pluginTags, fakePluginTags);
+    Unused << p->SendSetPluginList(newPluginEpoch, mSerializablePlugins,
+                                   mSerializableFakePlugins);
   }
+  return NS_OK;
+}
+
+nsresult nsPluginHost::SendPluginsToContent(dom::ContentParent* parent) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(parent);
+  // Load plugins so that the epoch is correct.
+  nsresult rv = LoadPlugins();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  Unused << parent->SendSetPluginList(ChromeEpoch(), mSerializablePlugins,
+                                      mSerializableFakePlugins);
   return NS_OK;
 }
 
