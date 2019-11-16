@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.nav
@@ -49,6 +50,7 @@ class AddBookmarkFolderFragment : Fragment(R.layout.fragment_edit_bookmark) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         bookmarkUrlLabel.visibility = GONE
         bookmarkUrlEdit.visibility = GONE
+        bookmarkNameEdit.showKeyboard()
     }
 
     override fun onResume() {
