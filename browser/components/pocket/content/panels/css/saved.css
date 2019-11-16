@@ -374,7 +374,6 @@
 }
 .pkt_ext_containersaved .pkt_ext_tag_input_wrapper .token-input-list {
     display: block;
-    inset-inline-start: 0;
     height: 1.7em;
     overflow: hidden;
     position: relative;
@@ -709,6 +708,7 @@
     text-transform: none;
     vertical-align: top;
     width: auto;
+    unicode-bidi: plaintext;
 }
 .pkt_ext_containersaved .token-input-token p:before {
     content: none;
