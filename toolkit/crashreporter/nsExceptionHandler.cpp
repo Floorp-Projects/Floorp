@@ -181,7 +181,7 @@ static const XP_CHAR extraFileExtension[] = XP_TEXT(".extra");
 static const XP_CHAR memoryReportExtension[] = XP_TEXT(".memory.json.gz");
 static xpstring* defaultMemoryReportPath = nullptr;
 
-static const char kCrashMainID[] = "crash.main.3\n";
+static const char kCrashMainID[] = "crash.main.2\n";
 
 static google_breakpad::ExceptionHandler* gExceptionHandler = nullptr;
 
@@ -527,133 +527,128 @@ bool copy_file(const char* from, const char* to) {
 /**
  * The PlatformWriter class provides a tool to create and write to a file that
  * is safe to call from within an exception handler. To use it this way the
- * file path needs to be provided as a bare C string.
+ * file path needs to be provided as a bare C string. If the writer is created
+ * using an nsIFile instance it will *not* be safe to use from a crashed
+ * context.
  */
+#ifdef XP_WIN
+
 class PlatformWriter {
  public:
-#ifdef XP_WIN
-  typedef HANDLE NativeFileDesc;
-  typedef wchar_t NativeChar;
-#elif defined(XP_UNIX)
-  typedef int NativeFileDesc;
-  typedef char NativeChar;
-#else
-#  error "Need implementation of PlatformWriter for this platform"
-#endif
+  PlatformWriter() : mHandle(INVALID_HANDLE_VALUE) {}
 
-  const NativeFileDesc kInvalidFileDesc =
-#ifdef XP_WIN
-      INVALID_HANDLE_VALUE;
-#elif defined(XP_UNIX)
-      -1;
-#endif
+  explicit PlatformWriter(const wchar_t* path) : PlatformWriter() {
+    Open(path);
+  }
 
-  PlatformWriter() : mFD(kInvalidFileDesc) {}
-  explicit PlatformWriter(const NativeChar* aPath) : PlatformWriter() {
-    Open(aPath);
+  explicit PlatformWriter(nsIFile* file) : PlatformWriter() {
+    nsAutoString path;
+    if (NS_SUCCEEDED(file->GetPath(path))) {
+      Open(path.get());
+    }
   }
 
   ~PlatformWriter() {
     if (Valid()) {
-#ifdef XP_WIN
-      CloseHandle(mFD);
-#elif defined(XP_UNIX)
-      sys_close(mFD);
-#endif
+      CloseHandle(mHandle);
     }
   }
 
-  void Open(const NativeChar* aPath) {
-#ifdef XP_WIN
-    mFD = CreateFile(aPath, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
-                     FILE_ATTRIBUTE_NORMAL, nullptr);
-#elif defined(XP_UNIX)
-    mFD = sys_open(aPath, O_WRONLY | O_CREAT | O_TRUNC, 0600);
-#endif
+  void Open(const wchar_t* path) {
+    mHandle = CreateFile(path, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
+                         FILE_ATTRIBUTE_NORMAL, nullptr);
   }
 
-  void OpenHandle(NativeFileDesc aFD) { mFD = aFD; }
-  bool Valid() { return mFD != kInvalidFileDesc; }
+  void OpenHandle(HANDLE aHandle) { mHandle = aHandle; }
 
-  void WriteBuffer(const char* aBuffer, size_t aLen) {
+  bool Valid() { return mHandle != INVALID_HANDLE_VALUE; }
+
+  void WriteBuffer(const char* buffer, size_t len) {
     if (!Valid()) {
       return;
     }
-#ifdef XP_WIN
     DWORD nBytes;
-    WriteFile(mFD, aBuffer, aLen, &nBytes, nullptr);
-#elif defined(XP_UNIX)
-    mozilla::Unused << sys_write(mFD, aBuffer, aLen);
-#endif
+    WriteFile(mHandle, buffer, len, &nBytes, nullptr);
   }
 
-  void WriteString(const char* aStr) { WriteBuffer(aStr, my_strlen(aStr)); }
-
-  template <int N>
-  void WriteLiteral(const char (&aStr)[N]) {
-    WriteBuffer(aStr, N - 1);
-  }
-
-  NativeFileDesc FileDesc() { return mFD; }
+  HANDLE Handle() { return mHandle; }
 
  private:
-  NativeFileDesc mFD;
+  HANDLE mHandle;
 };
 
-class JSONAnnotationWriter : public AnnotationWriter {
+#elif defined(XP_UNIX)
+
+class PlatformWriter {
  public:
-  explicit JSONAnnotationWriter(PlatformWriter& aPlatformWriter)
-      : mWriter(aPlatformWriter), mEmpty(true) {
-    mWriter.WriteBuffer("{", 1);
+  PlatformWriter() : mFD(-1) {}
+
+  explicit PlatformWriter(const char* path) : PlatformWriter() { Open(path); }
+
+  explicit PlatformWriter(nsIFile* file) : PlatformWriter() {
+    nsAutoCString path;
+    if (NS_SUCCEEDED(file->GetNativePath(path))) {
+      Open(path.get());
+    }
   }
 
-  ~JSONAnnotationWriter() { mWriter.WriteBuffer("}", 1); }
+  ~PlatformWriter() {
+    if (Valid()) {
+      sys_close(mFD);
+    }
+  }
 
-  void Write(Annotation aAnnotation, const char* aValue,
-             size_t aLen = 0) override {
-    size_t len = aLen ? aLen : my_strlen(aValue);
-    const char* annotationStr = AnnotationToString(aAnnotation);
+  void Open(const char* path) {
+    mFD = sys_open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+  }
 
-    WritePrefix();
-    mWriter.WriteBuffer(annotationStr, my_strlen(annotationStr));
-    WriteSeparator();
-    WriteEscapedString(aValue, len);
-    WriteSuffix();
+  void OpenHandle(int aFd) { mFD = aFd; }
+
+  bool Valid() { return mFD != -1; }
+
+  void WriteBuffer(const char* buffer, size_t len) {
+    if (!Valid()) {
+      return;
+    }
+    Unused << sys_write(mFD, buffer, len);
+  }
+
+ private:
+  int mFD;
+};
+
+#else
+#  error "Need implementation of PlatformWrite for this platform"
+#endif
+
+template <int N>
+static void WriteLiteral(PlatformWriter& pw, const char (&str)[N]) {
+  pw.WriteBuffer(str, N - 1);
+}
+
+static void WriteString(PlatformWriter& pw, const char* str) {
+  pw.WriteBuffer(str, my_strlen(str));
+}
+
+class AnnotationWriter {
+ public:
+  virtual void Write(Annotation aAnnotation, const char* aValue) = 0;
+};
+
+class INIAnnotationWriter : public AnnotationWriter {
+ public:
+  explicit INIAnnotationWriter(PlatformWriter& aPlatformWriter)
+      : mPlatformWriter(aPlatformWriter) {}
+
+  void Write(Annotation aAnnotation, const char* aValue) override {
+    WriteString(mPlatformWriter, AnnotationToString(aAnnotation));
+    WriteLiteral(mPlatformWriter, "=");
+    WriteString(mPlatformWriter, aValue);
+    WriteLiteral(mPlatformWriter, "\n");
   };
 
  private:
-  void WritePrefix() {
-    if (mEmpty) {
-      mWriter.WriteBuffer("\"", 1);
-      mEmpty = false;
-    } else {
-      mWriter.WriteBuffer(",\"", 2);
-    }
-  }
-
-  void WriteSeparator() { mWriter.WriteBuffer("\":\"", 3); }
-  void WriteSuffix() { mWriter.WriteBuffer("\"", 1); }
-  void WriteEscapedString(const char* aStr, size_t aLen) {
-    for (size_t i = 0; i < aLen; i++) {
-      uint8_t c = aStr[i];
-      if (c <= 0x1f || c == '\\' || c == '\"') {
-        mWriter.WriteBuffer("\\u00", 4);
-        WriteHexDigitAsAsciiChar((c & 0x00f0) >> 4);
-        WriteHexDigitAsAsciiChar(c & 0x000f);
-      } else {
-        mWriter.WriteBuffer(aStr + i, 1);
-      }
-    }
-  }
-
-  void WriteHexDigitAsAsciiChar(uint8_t u) {
-    char buf[1];
-    buf[0] = static_cast<unsigned>((u < 10) ? '0' + u : 'a' + (u - 10));
-    mWriter.WriteBuffer(buf, 1);
-  }
-
-  PlatformWriter mWriter;
-  bool mEmpty;
+  PlatformWriter& mPlatformWriter;
 };
 
 class BinaryAnnotationWriter : public AnnotationWriter {
@@ -661,9 +656,8 @@ class BinaryAnnotationWriter : public AnnotationWriter {
   explicit BinaryAnnotationWriter(PlatformWriter& aPlatformWriter)
       : mPlatformWriter(aPlatformWriter) {}
 
-  void Write(Annotation aAnnotation, const char* aValue,
-             size_t aLen = 0) override {
-    uint64_t len = aLen ? aLen : my_strlen(aValue);
+  void Write(Annotation aAnnotation, const char* aValue) override {
+    uint64_t len = my_strlen(aValue);
     mPlatformWriter.WriteBuffer((const char*)&aAnnotation, sizeof(aAnnotation));
     mPlatformWriter.WriteBuffer((const char*)&len, sizeof(len));
     mPlatformWriter.WriteBuffer(aValue, len);
@@ -923,6 +917,32 @@ static bool LaunchCrashHandlerService(XP_CHAR* aProgramPath,
 
 #endif
 
+static void WriteEscapedMozCrashReason(PlatformWriter& aWriter) {
+  if (gMozCrashReason == nullptr) {
+    return;  // No crash reason, bail out
+  }
+
+  const char* reason = gMozCrashReason;
+  size_t len = my_strlen(gMozCrashReason);
+
+  WriteString(aWriter, AnnotationToString(Annotation::MozCrashReason));
+  WriteLiteral(aWriter, "=");
+
+  // The crash reason might not be escaped so escape it one character at a time
+  // and write out the resulting string.
+  for (size_t i = 0; i < len; i++) {
+    if (reason[i] == '\\') {
+      WriteLiteral(aWriter, "\\\\");
+    } else if (reason[i] == '\n') {
+      WriteLiteral(aWriter, "\\n");
+    } else {
+      aWriter.WriteBuffer(reason + i, 1);
+    }
+  }
+
+  WriteLiteral(aWriter, "\n");
+}
+
 static void WriteMozCrashReason(AnnotationWriter& aWriter) {
   if (gMozCrashReason != nullptr) {
     aWriter.Write(Annotation::MozCrashReason, gMozCrashReason);
@@ -932,11 +952,11 @@ static void WriteMozCrashReason(AnnotationWriter& aWriter) {
 static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
                                                 const phc::AddrInfo* addrInfo,
                                                 time_t crashTime) {
-  JSONAnnotationWriter writer(pw);
+  INIAnnotationWriter writer(pw);
   for (auto key : MakeEnumeratedRange(Annotation::Count)) {
     const nsCString& value = crashReporterAPIData_Table[key];
     if (!value.IsEmpty()) {
-      writer.Write(key, value.get(), value.Length());
+      writer.Write(key, value.get());
     }
   }
 
@@ -984,13 +1004,12 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
   }
 
 #  ifdef HAS_DLL_BLOCKLIST
-  // HACK: The DLL blocklist code will manually write its annotations as JSON
-  DllBlocklist_WriteNotes(writer);
+  DllBlocklist_WriteNotes(pw.Handle());
 #  endif
 #endif  // XP_WIN
 
   WriteMemoryStatus(writer);
-  WriteMozCrashReason(writer);
+  WriteEscapedMozCrashReason(pw);
 
   char oomAllocationSizeBuffer[32] = "";
   if (gOOMAllocationSize) {
@@ -1060,11 +1079,11 @@ static void WriteCrashEventFile(time_t crashTime, const char* crashTimeString,
 #endif
 
     eventFile.Open(crashEventPath);
-    eventFile.WriteLiteral(kCrashMainID);
-    eventFile.WriteString(crashTimeString);
-    eventFile.WriteLiteral("\n");
-    eventFile.WriteString(id_ascii);
-    eventFile.WriteLiteral("\n");
+    WriteLiteral(eventFile, kCrashMainID);
+    WriteString(eventFile, crashTimeString);
+    WriteLiteral(eventFile, "\n");
+    WriteString(eventFile, id_ascii);
+    WriteLiteral(eventFile, "\n");
     WriteAnnotationsForMainProcessCrash(eventFile, addrInfo, crashTime);
   }
 }
@@ -1135,7 +1154,7 @@ bool MinidumpCallback(
   // write crash time to file
   if (lastCrashTimeFilename[0] != 0) {
     PlatformWriter lastCrashFile(lastCrashTimeFilename);
-    lastCrashFile.WriteString(crashTimeString);
+    WriteString(lastCrashFile, crashTimeString);
   }
 
   WriteCrashEventFile(crashTime, crashTimeString, addrInfo,
@@ -1285,7 +1304,8 @@ static void PrepareChildExceptionTimeAnnotations(
   apiData.OpenHandle(f);
   BinaryAnnotationWriter writer(apiData);
 
-  // ...and write out any annotations.
+  // ...and write out any annotations. These must be escaped if necessary
+  // (but don't call EscapeAnnotation here, because it touches the heap).
   WriteMemoryStatus(writer);
 
   char oomAllocationSizeBuffer[32] = "";
@@ -1974,6 +1994,40 @@ nsresult UnsetExceptionHandler() {
   return NS_OK;
 }
 
+static void ReplaceChar(nsCString& str, const nsACString& character,
+                        const nsACString& replacement) {
+  nsCString::const_iterator iter, end;
+
+  str.BeginReading(iter);
+  str.EndReading(end);
+
+  while (FindInReadable(character, iter, end)) {
+    nsCString::const_iterator start;
+    str.BeginReading(start);
+    int32_t pos = end - start;
+    str.Replace(pos - 1, 1, replacement);
+
+    str.BeginReading(iter);
+    iter.advance(pos + replacement.Length() - 1);
+    str.EndReading(end);
+  }
+}
+
+static nsresult EscapeAnnotation(const nsACString& data,
+                                 nsCString& escapedData) {
+  if (FindInReadable(NS_LITERAL_CSTRING("\0"), data))
+    return NS_ERROR_INVALID_ARG;
+
+  escapedData = data;
+
+  // escape backslashes
+  ReplaceChar(escapedData, NS_LITERAL_CSTRING("\\"),
+              NS_LITERAL_CSTRING("\\\\"));
+  // escape newlines
+  ReplaceChar(escapedData, NS_LITERAL_CSTRING("\n"), NS_LITERAL_CSTRING("\\n"));
+  return NS_OK;
+}
+
 class DelayedNote {
  public:
   DelayedNote(Annotation aKey, const nsACString& aData)
@@ -2035,11 +2089,15 @@ nsresult AnnotateCrashReport(Annotation key, unsigned int data) {
 nsresult AnnotateCrashReport(Annotation key, const nsACString& data) {
   if (!GetEnabled()) return NS_ERROR_NOT_INITIALIZED;
 
+  nsCString escapedData;
+  nsresult rv = EscapeAnnotation(data, escapedData);
+  if (NS_FAILED(rv)) return rv;
+
   if (!XRE_IsParentProcess()) {
     // The newer CrashReporterClient can be used from any thread.
     if (RefPtr<CrashReporterClient> client =
             CrashReporterClient::GetSingleton()) {
-      client->AnnotateCrashReport(key, data);
+      client->AnnotateCrashReport(key, escapedData);
       return NS_OK;
     }
 
@@ -2051,7 +2109,8 @@ nsresult AnnotateCrashReport(Annotation key, const nsACString& data) {
   }
 
   MutexAutoLock lock(*crashReporterAPILock);
-  crashReporterAPIData_Table[key] = data;
+
+  crashReporterAPIData_Table[key] = escapedData;
 
   return NS_OK;
 }
@@ -2118,10 +2177,20 @@ void SetMinidumpAnalysisAllThreads() {
 nsresult AppendAppNotesToCrashReport(const nsACString& data) {
   if (!GetEnabled()) return NS_ERROR_NOT_INITIALIZED;
 
+  if (FindInReadable(NS_LITERAL_CSTRING("\0"), data))
+    return NS_ERROR_INVALID_ARG;
+
   if (!XRE_IsParentProcess()) {
+    // Since we don't go through AnnotateCrashReport in the parent process,
+    // we must ensure that the data is escaped and valid before the parent
+    // sees it.
+    nsCString escapedData;
+    nsresult rv = EscapeAnnotation(data, escapedData);
+    if (NS_FAILED(rv)) return rv;
+
     if (RefPtr<CrashReporterClient> client =
             CrashReporterClient::GetSingleton()) {
-      client->AppendAppNotes(data);
+      client->AppendAppNotes(escapedData);
       return NS_OK;
     }
 
@@ -2787,8 +2856,12 @@ static void ReadAndValidateExceptionTimeAnnotations(
       value.Append(c);
     } while (len > 0);
 
+    nsAutoCString escapedValue;
+    nsresult rv = EscapeAnnotation(value, escapedValue);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
     // Looks good, save the (annotation, value) pair
-    aAnnotations[static_cast<Annotation>(rawAnnotation)] = value;
+    aAnnotations[static_cast<Annotation>(rawAnnotation)] = escapedValue;
   } while (res > 0);
 }
 
@@ -2798,11 +2871,11 @@ static bool WriteExtraFile(PlatformWriter pw,
     return false;
   }
 
-  JSONAnnotationWriter writer(pw);
+  INIAnnotationWriter writer(pw);
   for (auto key : MakeEnumeratedRange(Annotation::Count)) {
     const nsCString& value = aAnnotations[key];
     if (!value.IsEmpty()) {
-      writer.Write(key, value.get(), value.Length());
+      writer.Write(key, value.get());
     }
   }
 
@@ -2816,15 +2889,8 @@ bool WriteExtraFile(const nsAString& id, const AnnotationTable& annotations) {
   }
 
   extra->Append(id + NS_LITERAL_STRING(".extra"));
-#ifdef XP_WIN
-  nsAutoString path;
-  NS_ENSURE_SUCCESS(extra->GetPath(path), false);
-#elif defined(XP_UNIX)
-  nsAutoCString path;
-  NS_ENSURE_SUCCESS(extra->GetNativePath(path), false);
-#endif
 
-  return WriteExtraFile(PlatformWriter(path.get()), annotations);
+  return WriteExtraFile(PlatformWriter(extra), annotations);
 }
 
 static void ReadExceptionTimeAnnotations(AnnotationTable& aAnnotations,

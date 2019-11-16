@@ -10,7 +10,6 @@ var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionData: "resource://gre/modules/Extension.jsm",
@@ -25,6 +24,53 @@ class SpecialPowersError extends Error {
   get name() {
     return "SpecialPowersError";
   }
+}
+
+function parseKeyValuePairs(text) {
+  var lines = text.split("\n");
+  var data = {};
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i] == "") {
+      continue;
+    }
+
+    // can't just .split() because the value might contain = characters
+    let eq = lines[i].indexOf("=");
+    if (eq != -1) {
+      let [key, value] = [
+        lines[i].substring(0, eq),
+        lines[i].substring(eq + 1),
+      ];
+      if (key && value) {
+        data[key] = value.replace(/\\n/g, "\n").replace(/\\\\/g, "\\");
+      }
+    }
+  }
+  return data;
+}
+
+function parseKeyValuePairsFromFile(file) {
+  var fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
+  fstream.init(file, -1, 0, 0);
+  var is = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(
+    Ci.nsIConverterInputStream
+  );
+  is.init(
+    fstream,
+    "UTF-8",
+    1024,
+    Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER
+  );
+  var str = {};
+  var contents = "";
+  while (is.readString(4096, str) != 0) {
+    contents += str.value;
+  }
+  is.close();
+  fstream.close();
+  return parseKeyValuePairs(contents);
 }
 
 function getTestPlugin(pluginName) {
@@ -234,9 +280,8 @@ class SpecialPowersParent extends JSWindowActorParent {
           addDumpIDToMessage("pluginDumpID");
           addDumpIDToMessage("browserDumpID");
 
-          let self = this;
           let pluginID = aSubject.getPropertyAsAString("pluginDumpID");
-          let extra = self._getExtraData(pluginID);
+          let extra = this._getExtraData(pluginID);
           if (extra && "additional_minidumps" in extra) {
             let dumpNames = extra.additional_minidumps.split(",");
             for (let name of dumpNames) {
@@ -254,7 +299,6 @@ class SpecialPowersParent extends JSWindowActorParent {
 
           addDumpIDToMessage("dumpID");
         }
-
         this.sendAsyncMessage("SPProcessCrashService", message);
         break;
     }
@@ -277,22 +321,13 @@ class SpecialPowersParent extends JSWindowActorParent {
     return this._pendingCrashDumpDir;
   }
 
-  async _getExtraData(dumpId) {
+  _getExtraData(dumpId) {
     let extraFile = this._getCrashDumpDir().clone();
     extraFile.append(dumpId + ".extra");
     if (!extraFile.exists()) {
       return null;
     }
-
-    var fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
-      Ci.nsIFileInputStream
-    );
-    fstream.init(extraFile, -1, 0, 0);
-    let available = fstream.available();
-    let json = NetUtil.readInputStreamToString(fstream, available);
-    fstream.close();
-
-    return JSON.parse(json);
+    return parseKeyValuePairsFromFile(extraFile);
   }
 
   _deleteCrashDumpFiles(aFilenames) {
