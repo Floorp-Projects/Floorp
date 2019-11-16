@@ -9,7 +9,6 @@
 #include <Cocoa/Cocoa.h>
 #include "HTTPMultipartUpload.h"
 #include "crashreporter.h"
-#include "json/json.h"
 
 // Defined below
 @class TextViewWithPlaceHolder;
@@ -47,7 +46,7 @@
 }
 
 - (void)showCrashUI:(const StringTable&)files
-    queryParameters:(const Json::Value&)queryParameters
+    queryParameters:(const StringTable&)queryParameters
             sendURL:(const std::string&)sendURL;
 - (void)showErrorUI:(const std::string&)message;
 - (void)showReportInfo;

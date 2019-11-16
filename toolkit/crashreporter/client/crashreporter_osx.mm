@@ -23,7 +23,7 @@ using namespace CrashReporter;
 static NSAutoreleasePool* gMainPool;
 static CrashReporterUI* gUI = 0;
 static StringTable gFiles;
-static Json::Value gQueryParameters;
+static StringTable gQueryParameters;
 static string gURLParameter;
 static string gSendURL;
 static vector<string> gRestartArgs;
@@ -92,7 +92,7 @@ static bool RestartApplication() {
 }
 
 - (void)showCrashUI:(const StringTable&)files
-    queryParameters:(const Json::Value&)queryParameters
+    queryParameters:(const StringTable&)queryParameters
             sendURL:(const string&)sendURL {
   gFiles = files;
   gQueryParameters = queryParameters;
@@ -127,9 +127,9 @@ static bool RestartApplication() {
   if (gRTLlayout) [mCommentText toggleBaseWritingDirection:self];
   [[mEmailText cell] setPlaceholderString:Str(ST_EMAILGRAYTEXT)];
 
-  if (gQueryParameters.isMember("URL")) {
+  if (gQueryParameters.find("URL") != gQueryParameters.end()) {
     // save the URL value in case the checkbox gets unchecked
-    gURLParameter = gQueryParameters["URL"].asString();
+    gURLParameter = gQueryParameters["URL"];
   } else {
     // no URL specified, hide checkbox
     [mIncludeURLButton removeFromSuperview];
@@ -197,20 +197,13 @@ static bool RestartApplication() {
                                   forKey:NSFontAttributeName];
 
   [mViewReportTextView setString:@""];
-  for (Json::ValueConstIterator iter = gQueryParameters.begin(); iter != gQueryParameters.end();
-       ++iter) {
-    NSAttributedString* key = [[NSAttributedString alloc] initWithString:NSSTR(iter.name() + ": ")
+  for (StringTable::iterator iter = gQueryParameters.begin(); iter != gQueryParameters.end();
+       iter++) {
+    NSAttributedString* key = [[NSAttributedString alloc] initWithString:NSSTR(iter->first + ": ")
                                                               attributes:boldAttr];
-    string str;
-    if (iter->isString()) {
-      str = iter->asString();
-    } else {
-      Json::StreamWriterBuilder builder;
-      builder["indentation"] = "";
-      str = writeString(builder, *iter);
-    }
-    NSAttributedString* value = [[NSAttributedString alloc] initWithString:NSSTR(str + "\n")
-                                                                attributes:normalAttr];
+    NSAttributedString* value =
+        [[NSAttributedString alloc] initWithString:NSSTR(iter->second + "\n")
+                                        attributes:normalAttr];
     [[mViewReportTextView textStorage] appendAttributedString:key];
     [[mViewReportTextView textStorage] appendAttributedString:value];
     [key release];
@@ -291,7 +284,7 @@ static bool RestartApplication() {
   if ([[[mCommentText textStorage] mutableString] length] > 0)
     gQueryParameters["Comments"] = [[[mCommentText textStorage] mutableString] UTF8String];
   else
-    gQueryParameters.removeMember("Comments");
+    gQueryParameters.erase("Comments");
 }
 
 // Limit the comment field to 500 bytes in UTF-8
@@ -466,7 +459,7 @@ static bool RestartApplication() {
   if ([mIncludeURLButton state] == NSOnState && !gURLParameter.empty()) {
     gQueryParameters["URL"] = gURLParameter;
   } else {
-    gQueryParameters.removeMember("URL");
+    gQueryParameters.erase("URL");
   }
 }
 
@@ -476,7 +469,7 @@ static bool RestartApplication() {
     gQueryParameters["Email"] = [email UTF8String];
     [mEmailText setEnabled:YES];
   } else {
-    gQueryParameters.removeMember("Email");
+    gQueryParameters.erase("Email");
     [mEmailText setEnabled:NO];
   }
 }
@@ -506,14 +499,27 @@ static bool RestartApplication() {
   mPost = [[HTTPMultipartUpload alloc] initWithURL:url];
   if (!mPost) return false;
 
+  NSMutableDictionary* parameters =
+      [[NSMutableDictionary alloc] initWithCapacity:gQueryParameters.size()];
+  if (!parameters) return false;
+
+  StringTable::const_iterator end = gQueryParameters.end();
+  for (StringTable::const_iterator i = gQueryParameters.begin(); i != end; i++) {
+    NSString* key = NSSTR(i->first);
+    NSString* value = NSSTR(i->second);
+    if (key && value) {
+      [parameters setObject:value forKey:key];
+    } else {
+      ostringstream message;
+      message << "Warning: skipping annotation '" << i->first
+              << "' due to malformed UTF-8 encoding";
+      LogMessage(message.str());
+    }
+  }
+
   for (StringTable::const_iterator i = gFiles.begin(); i != gFiles.end(); i++) {
     [mPost addFileAtPath:NSSTR(i->second) name:NSSTR(i->first)];
   }
-
-  Json::StreamWriterBuilder builder;
-  builder["indentation"] = "";
-  string output = writeString(builder, gQueryParameters).append("\r\n");
-  NSMutableString* parameters = [[NSMutableString alloc] initWithUTF8String:output.c_str()];
 
   [mPost setParameters:parameters];
   [parameters release];
@@ -688,7 +694,7 @@ void UIShowDefaultUI() {
   [NSApp run];
 }
 
-bool UIShowCrashUI(const StringTable& files, const Json::Value& queryParameters,
+bool UIShowCrashUI(const StringTable& files, const StringTable& queryParameters,
                    const string& sendURL, const vector<string>& restartArgs) {
   gRestartArgs = restartArgs;
 

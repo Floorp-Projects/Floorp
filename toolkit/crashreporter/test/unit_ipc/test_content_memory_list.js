@@ -4,7 +4,7 @@
 /* import-globals-from ../unit/head_crashreporter.js */
 load("../unit/head_crashreporter.js");
 
-add_task(async function run_test() {
+function run_test() {
   var is_win7_or_newer = false;
   var ph = Cc["@mozilla.org/network/protocol;1?name=http"].getService(
     Ci.nsIHttpProtocolHandler
@@ -18,7 +18,7 @@ add_task(async function run_test() {
     is_win7_or_newer = true;
   }
 
-  await do_content_crash(null, function(mdump, extra) {
+  do_content_crash(null, function(mdump, extra) {
     Assert.ok(mdump.exists());
     Assert.ok(mdump.fileSize > 0);
     if (is_win7_or_newer) {
@@ -30,4 +30,4 @@ add_task(async function run_test() {
       );
     }
   });
-});
+}

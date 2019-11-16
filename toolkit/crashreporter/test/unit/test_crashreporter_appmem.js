@@ -1,5 +1,5 @@
-add_task(async function run_test() {
-  await do_crash(
+function run_test() {
+  do_crash(
     function() {
       let appAddr = CrashTestUtils.saveAppMemory();
       crashReporter.registerAppMemory(appAddr, 32);
@@ -10,4 +10,4 @@ add_task(async function run_test() {
       Assert.ok(CrashTestUtils.dumpCheckMemory(mdump.path));
     }
   );
-});
+}
