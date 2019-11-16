@@ -193,18 +193,11 @@ BoxModel.prototype = {
         isPositionEditable,
       });
 
-      const actorCanGetOffSetParent = await nodeFront.targetFront.actorHasMethod(
-        "domwalker",
-        "getOffsetParent"
+      // Update the redux store with the latest offset parent DOM node
+      const offsetParent = await inspectorFront.walker.getOffsetParent(
+        nodeFront
       );
-
-      if (actorCanGetOffSetParent) {
-        // Update the redux store with the latest offset parent DOM node
-        const offsetParent = await inspectorFront.walker.getOffsetParent(
-          nodeFront
-        );
-        this.store.dispatch(updateOffsetParent(offsetParent));
-      }
+      this.store.dispatch(updateOffsetParent(offsetParent));
 
       // Update the redux store with the latest layout properties and update the box
       // model view.
