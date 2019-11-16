@@ -11,7 +11,7 @@ log = "0.4"
 moz_task = { path = "../../../../xpcom/rust/moz_task" }
 nserror = { path = "../../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
-rkv = { git = "https://github.com/mozilla/rkv", branch = "safe-mode", tag = "0.11.0", default-features = false }
+rkv = { git = "https://github.com/mozilla/rkv", rev="6a866fdad2ca880df9b87fcbc9921abac1e91914", default-features = false }
 rust_cascade = "0.3.4"
 sha2 = "^0.8"
 storage_variant = { path = "../../../../storage/variant" }
