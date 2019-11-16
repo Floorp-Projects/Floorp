@@ -8,9 +8,9 @@ git = "https://github.com/shravanrn/nix/"
 replace-with = "vendored-sources"
 
 [source."https://github.com/mozilla/rkv"]
-branch = "safe-mode"
 git = "https://github.com/mozilla/rkv"
 replace-with = "vendored-sources"
+rev = "6a866fdad2ca880df9b87fcbc9921abac1e91914"
 
 [source."https://github.com/mozilla/neqo"]
 git = "https://github.com/mozilla/neqo"

@@ -439,7 +439,7 @@ dependencies = [
  "moz_task 0.1.0",
  "nserror 0.1.0",
  "nsstring 0.1.0",
- "rkv 0.11.0 (git+https://github.com/mozilla/rkv?branch=safe-mode)",
+ "rkv 0.11.0 (git+https://github.com/mozilla/rkv?rev=6a866fdad2ca880df9b87fcbc9921abac1e91914)",
  "rust_cascade 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "sha2 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "storage_variant 0.1.0",
@@ -3091,7 +3091,7 @@ dependencies = [
 [[package]]
 name = "rkv"
 version = "0.11.0"
-source = "git+https://github.com/mozilla/rkv?branch=safe-mode#6a866fdad2ca880df9b87fcbc9921abac1e91914"
+source = "git+https://github.com/mozilla/rkv?rev=6a866fdad2ca880df9b87fcbc9921abac1e91914#6a866fdad2ca880df9b87fcbc9921abac1e91914"
 dependencies = [
  "arrayref 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -4751,7 +4751,7 @@ dependencies = [
 "checksum rendy-memory 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "08f99de535d9e48d9cfab780b521702cc0d7183d354872d223967b75abae1199"
 "checksum ringbuf 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "588456c74d5ff0a5806bc084818e043e767533f743c11ee6f3ccf298599c6847"
 "checksum rkv 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)" = "9aab7c645d32e977e186448b0a5c2c3139a91a7f630cfd8a8c314d1d145e78bf"
-"checksum rkv 0.11.0 (git+https://github.com/mozilla/rkv?branch=safe-mode)" = "<none>"
+"checksum rkv 0.11.0 (git+https://github.com/mozilla/rkv?rev=6a866fdad2ca880df9b87fcbc9921abac1e91914)" = "<none>"
 "checksum rlbox_lucet_sandbox 0.1.0 (git+https://github.com/PLSysSec/rlbox_lucet_sandbox/?rev=997c648eb0eaeaaa7a00a9eee20431f750b4e190)" = "<none>"
 "checksum ron 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)" = "da06feaa07f69125ab9ddc769b11de29090122170b402547f64b86fe16ebc399"
 "checksum runloop 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5d79b4b604167921892e84afbbaad9d5ad74e091bf6c511d9dbfb0593f09fabd"
