@@ -38,6 +38,9 @@ permalink: /changelog/
 * **feature-customtabs**
   * ⚠️ `CustomTabWindowFeature` now takes `Activity` instead of `Context`.
 
+* **concept-sync**, **service-firefox-accounts**
+  * `OAuthAccount@authorizeOAuthCode` method is now `authorizeOAuthCodeAsync`.
+
 # 21.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v20.0.0...v21.0.0)

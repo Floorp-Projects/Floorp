@@ -7,14 +7,12 @@ package mozilla.components.service.fxa.sync
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import mozilla.components.concept.sync.AuthException
-import mozilla.components.concept.sync.AuthExceptionType
 import mozilla.components.concept.sync.StoreSyncStatus
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.concept.sync.SyncResult
 import mozilla.components.concept.sync.SyncStatus
-import mozilla.components.service.fxa.manager.authErrorRegistry
+import mozilla.components.service.fxa.manager.GlobalAccountManager
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -67,9 +65,7 @@ class StorageSync(
             // See https://github.com/mozilla-mobile/android-components/issues/3322
             if (message != null && message.contains("401")) {
                 logger.error("Hit an auth error during syncing")
-                authErrorRegistry.notifyObservers {
-                    onAuthErrorAsync(AuthException(AuthExceptionType.UNAUTHORIZED))
-                }
+                GlobalAccountManager.authError(it.exception)
             } else {
                 logger.error("Error synchronizing a $storeName store", it.exception)
             }

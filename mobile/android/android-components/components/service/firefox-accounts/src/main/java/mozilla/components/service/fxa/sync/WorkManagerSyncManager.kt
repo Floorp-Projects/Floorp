@@ -23,16 +23,14 @@ import androidx.work.WorkerParameters
 import mozilla.appservices.syncmanager.SyncParams
 import mozilla.appservices.syncmanager.SyncServiceStatus
 import mozilla.appservices.syncmanager.SyncManager as RustSyncManager
-import mozilla.components.concept.sync.AuthException
-import mozilla.components.concept.sync.AuthExceptionType
 import mozilla.components.concept.sync.LockableStore
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.service.fxa.FxaDeviceSettingsCache
 import mozilla.components.service.fxa.SyncAuthInfoCache
 import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.SyncEngine
+import mozilla.components.service.fxa.manager.GlobalAccountManager
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
-import mozilla.components.service.fxa.manager.authErrorRegistry
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -331,7 +329,7 @@ class WorkManagerSyncWorker(
     }
 
     @Suppress("LongMethod", "ComplexMethod")
-    private fun doSync(syncableStores: Map<SyncEngine, SyncableStore>): Result {
+    private suspend fun doSync(syncableStores: Map<SyncEngine, SyncableStore>): Result {
         // We need to tell RustSyncManager about instances of supported stores ('places' and 'logins').
         syncableStores.entries.forEach {
             // We're assuming all syncable stores live in Rust.
@@ -485,10 +483,7 @@ class WorkManagerSyncWorker(
             // Failure cases.
             SyncServiceStatus.AUTH_ERROR -> {
                 logger.error("Auth error")
-                authErrorRegistry.notifyObservers {
-                    // TODO simplify this nesting
-                    onAuthErrorAsync(AuthException(AuthExceptionType.UNAUTHORIZED))
-                }
+                GlobalAccountManager.authError()
                 Result.failure()
             }
             SyncServiceStatus.SERVICE_ERROR -> {
