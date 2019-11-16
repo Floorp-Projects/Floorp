@@ -29,7 +29,7 @@
 
 // HTTPUpload provides a "nice" API to send a multipart HTTP(S) POST
 // request using libcurl.  It currently supports requests that contain
-// a set of string parameters (key/value pairs), and a file to upload.
+// parameters encoded in a JSON string, and a file to upload.
 
 #ifndef COMMON_LINUX_HTTP_UPLOAD_H__
 #define COMMON_LINUX_HTTP_UPLOAD_H__
@@ -49,8 +49,7 @@ class HTTPUpload {
   // request to the given URL.
   // Each key in |files| is the name of the file part of the request
   // (i.e. it corresponds to the name= attribute on an <input type="file">.
-  // Parameter names must contain only printable ASCII characters,
-  // and may not contain a quote (") character.
+  // Parameters are specified as a JSON-encoded string in |parameters|.
   // Only HTTP(S) URLs are currently supported.  Returns true on success.
   // If the request is successful and response_body is non-NULL,
   // the response body will be returned in response_body.
@@ -59,7 +58,7 @@ class HTTPUpload {
   // If the send fails, a description of the error will be
   // returned in error_description.
   static bool SendRequest(const string &url,
-                          const map<string, string> &parameters,
+                          const string &parameters,
                           const map<string, string> &files,
                           const string &proxy,
                           const string &proxy_user_pwd,
@@ -69,11 +68,6 @@ class HTTPUpload {
                           string *error_description);
 
  private:
-  // Checks that the given list of parameters has only printable
-  // ASCII characters in the parameter name, and does not contain
-  // any quote (") characters.  Returns true if so.
-  static bool CheckParameters(const map<string, string> &parameters);
-
   // Checks the curl_lib parameter points to a valid curl lib.
   static bool CheckCurlLib(void* curl_lib);
 

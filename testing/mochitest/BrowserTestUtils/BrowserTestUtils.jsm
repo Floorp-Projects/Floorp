@@ -29,6 +29,7 @@ const { TestUtils } = ChromeUtils.import(
 const { ContentTask } = ChromeUtils.import(
   "resource://testing-common/ContentTask.jsm"
 );
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
@@ -1641,13 +1642,6 @@ var BrowserTestUtils = {
     browsingContext
   ) {
     let extra = {};
-    let KeyValueParser = {};
-    if (AppConstants.MOZ_CRASHREPORTER) {
-      ChromeUtils.import(
-        "resource://gre/modules/KeyValueParser.jsm",
-        KeyValueParser
-      );
-    }
 
     if (!browser.isRemoteBrowser) {
       throw new Error("<xul:browser> needs to be remote in order to crash");
@@ -1718,19 +1712,23 @@ var BrowserTestUtils = {
         if (dumpID) {
           removalPromise = Services.crashmanager
             .ensureCrashIsPresent(dumpID)
-            .then(() => {
+            .then(async () => {
               let minidumpDirectory = getMinidumpDirectory();
               let extrafile = minidumpDirectory.clone();
               extrafile.append(dumpID + ".extra");
               if (extrafile.exists()) {
-                dump(`\nNo .extra file for dumpID: ${dumpID}\n`);
                 if (AppConstants.MOZ_CRASHREPORTER) {
-                  extra = KeyValueParser.parseKeyValuePairsFromFile(extrafile);
+                  let extradata = await OS.File.read(extrafile.path, {
+                    encoding: "utf-8",
+                  });
+                  extra = JSON.parse(extradata);
                 } else {
                   dump(
                     "\nCrashReporter not enabled - will not return any extra data\n"
                   );
                 }
+              } else {
+                dump(`\nNo .extra file for dumpID: ${dumpID}\n`);
               }
 
               if (shouldClearMinidumps) {

@@ -55,7 +55,7 @@ static const char kUserAgent[] = "Breakpad/1.0 (Linux)";
 
 // static
 bool HTTPUpload::SendRequest(const string &url,
-                             const map<string, string> &parameters,
+                             const string &parameters,
                              const map<string, string> &files,
                              const string &proxy,
                              const string &proxy_user_pwd,
@@ -65,9 +65,6 @@ bool HTTPUpload::SendRequest(const string &url,
                              string *error_description) {
   if (response_code != NULL)
     *response_code = 0;
-
-  if (!CheckParameters(parameters))
-    return false;
 
   // We may have been linked statically; if curl_easy_init is in the
   // current binary, no need to search for a dynamic version.
@@ -133,14 +130,14 @@ bool HTTPUpload::SendRequest(const string &url,
   // Add form data.
   CURLFORMcode (*curl_formadd)(struct curl_httppost **, struct curl_httppost **, ...);
   *(void**) (&curl_formadd) = dlsym(curl_lib, "curl_formadd");
-  map<string, string>::const_iterator iter = parameters.begin();
-  for (; iter != parameters.end(); ++iter)
-    (*curl_formadd)(&formpost, &lastptr,
-                 CURLFORM_COPYNAME, iter->first.c_str(),
-                 CURLFORM_COPYCONTENTS, iter->second.c_str(),
-                 CURLFORM_END);
+  (*curl_formadd)(&formpost, &lastptr, CURLFORM_COPYNAME, "extra",
+                  CURLFORM_BUFFER, "extra.json", CURLFORM_BUFFERPTR,
+                  parameters.c_str(), CURLFORM_BUFFERLENGTH,
+                  parameters.length(), CURLFORM_CONTENTTYPE, "application/json",
+                  CURLFORM_END);
 
   // Add form files.
+  map<string, string>::const_iterator iter = files.begin();
   for (iter = files.begin(); iter != files.end(); ++iter) {
     (*curl_formadd)(&formpost, &lastptr,
                  CURLFORM_COPYNAME, iter->first.c_str(),
@@ -208,23 +205,6 @@ bool HTTPUpload::CheckCurlLib(void* curl_lib) {
   return curl_lib &&
       dlsym(curl_lib, "curl_easy_init") &&
       dlsym(curl_lib, "curl_easy_setopt");
-}
-
-// static
-bool HTTPUpload::CheckParameters(const map<string, string> &parameters) {
-  for (map<string, string>::const_iterator pos = parameters.begin();
-       pos != parameters.end(); ++pos) {
-    const string &str = pos->first;
-    if (str.size() == 0)
-      return false;  // disallow empty parameter names
-    for (unsigned int i = 0; i < str.size(); ++i) {
-      int c = str[i];
-      if (c < 32 || c == '"' || c > 127) {
-        return false;
-      }
-    }
-  }
-  return true;
 }
 
 }  // namespace google_breakpad

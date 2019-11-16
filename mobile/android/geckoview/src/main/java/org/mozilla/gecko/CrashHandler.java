@@ -15,6 +15,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Process;
 import android.util.Log;
+import org.json.JSONObject;
+import org.json.JSONException;
 
 import org.mozilla.geckoview.BuildConfig;
 import org.mozilla.geckoview.GeckoRuntime;
@@ -417,20 +419,18 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
             final String url = getServerUrl(extras);
             extras.putString("ServerURL", url);
 
+            JSONObject json = new JSONObject();
+            for (String key : extras.keySet()) {
+                json.put(key, extras.get(key));
+            }
+
             final BufferedWriter extraWriter = new BufferedWriter(new FileWriter(extraFile));
             try {
-                for (String key : extras.keySet()) {
-                    // Each extra line is in the format, key=value, with newlines escaped.
-                    extraWriter.write(key);
-                    extraWriter.write('=');
-                    extraWriter.write(String.valueOf(extras.get(key)).replace("\n", "\\n"));
-                    extraWriter.write('\n');
-                }
+                extraWriter.write(json.toString());
             } finally {
                 extraWriter.close();
             }
-
-        } catch (final IOException e) {
+        } catch (final IOException | JSONException e) {
             Log.e(LOGTAG, "Error writing extra file", e);
             return false;
         }
