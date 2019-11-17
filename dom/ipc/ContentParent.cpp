@@ -5505,10 +5505,7 @@ void ContentParent::EnsurePermissionsByKey(const nsCString& aKey) {
   // by this call to GetPermissionManager, and we've added the key to
   // mActivePermissionKeys, then the permission manager will send down a
   // SendAddPermission before receiving the SendSetPermissionsWithKey message.
-  RefPtr<nsPermissionManager> permManager = nsPermissionManager::GetInstance();
-  if (!permManager) {
-    return;
-  }
+  nsCOMPtr<nsIPermissionManager> permManager = services::GetPermissionManager();
 
   if (mActivePermissionKeys.Contains(aKey)) {
     return;
@@ -5516,7 +5513,10 @@ void ContentParent::EnsurePermissionsByKey(const nsCString& aKey) {
   mActivePermissionKeys.PutEntry(aKey);
 
   nsTArray<IPC::Permission> perms;
-  permManager->GetPermissionsWithKey(aKey, perms);
+  nsresult rv = permManager->GetPermissionsWithKey(aKey, perms);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
 
   Unused << SendSetPermissionsWithKey(aKey, perms);
 }

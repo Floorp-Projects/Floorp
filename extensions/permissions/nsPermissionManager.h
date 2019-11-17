@@ -29,10 +29,6 @@
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
 
-namespace IPC {
-struct Permission;
-}
-
 namespace mozilla {
 class OriginAttributesPattern;
 }
@@ -210,6 +206,9 @@ class nsPermissionManager final : public nsIPermissionManager,
    */
   static void Startup();
 
+  nsresult RemovePermissionsWithAttributes(
+      mozilla::OriginAttributesPattern& aAttrs);
+
   /**
    * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
    * permission keys.
@@ -293,68 +292,6 @@ class nsPermissionManager final : public nsIPermissionManager,
    * permissions available for the given principal.
    */
   bool PermissionAvailable(nsIPrincipal* aPrincipal, const nsACString& aType);
-
-  /**
-   * The content process doesn't have access to every permission. Instead, when
-   * LOAD_DOCUMENT_URI channels for http://, https://, and ftp:// URIs are
-   * opened, the permissions for those channels are sent down to the content
-   * process before the OnStartRequest message. Permissions for principals with
-   * other schemes are sent down at process startup.
-   *
-   * Permissions are keyed and grouped by "Permission Key"s.
-   * `nsPermissionManager::GetKeyForPrincipal` provides the mechanism for
-   * determining the permission key for a given principal.
-   *
-   * This method may only be called in the parent process. It fills the nsTArray
-   * argument with the IPC::Permission objects which have a matching permission
-   * key.
-   *
-   * @param permissionKey  The key to use to find the permissions of interest.
-   * @param perms  An array which will be filled with the permissions which
-   *               match the given permission key.
-   */
-  void GetPermissionsWithKey(const nsACString& aPermissionKey,
-                             nsTArray<IPC::Permission>& aPerms);
-
-  /**
-   * See `nsPermissionManager::GetPermissionsWithKey` for more info on
-   * Permission keys.
-   *
-   * `SetPermissionsWithKey` may only be called in the Child process, and
-   * initializes the permission manager with the permissions for a given
-   * Permission key. marking permissions with that key as available.
-   *
-   * @param permissionKey  The key for the permissions which have been sent
-   * over.
-   * @param perms  An array with the permissions which match the given key.
-   */
-  void SetPermissionsWithKey(const nsACString& aPermissionKey,
-                             nsTArray<IPC::Permission>& aPerms);
-
-  /**
-   * Add a callback which should be run when all permissions are available for
-   * the given nsIPrincipal. This method invokes the callback runnable
-   * synchronously when the permissions are already available. Otherwise the
-   * callback will be run asynchronously in SystemGroup when all permissions
-   * are available in the future.
-   *
-   * NOTE: This method will not request the permissions be sent by the parent
-   * process. This should only be used to wait for permissions which may not
-   * have arrived yet in order to ensure they are present.
-   *
-   * @param aPrincipal The principal to wait for permissions to be available
-   * for.
-   * @param aRunnable  The runnable to run when permissions are available for
-   * the given principal.
-   */
-  void WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
-                                nsIRunnable* aRunnable);
-
-  /**
-   * True if any "preload" permissions are present. This is used to avoid making
-   * potentially expensive permissions checks in nsContentBlocker.
-   */
-  bool HasPreloadPermissions();
 
  private:
   virtual ~nsPermissionManager();
@@ -589,10 +526,6 @@ class nsPermissionManager final : public nsIPermissionManager,
 
   template <class T>
   nsresult RemovePermissionEntries(T aCondition);
-
-  nsresult RemovePermissionsWithAttributes(const nsAString& aPattern);
-  nsresult RemovePermissionsWithAttributes(
-      mozilla::OriginAttributesPattern& aAttrs);
 
   nsRefPtrHashtable<nsCStringHashKey,
                     mozilla::GenericNonExclusivePromise::Private>
