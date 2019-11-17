@@ -34,7 +34,7 @@ impl ControlStreamLocal {
     pub fn send(&mut self, conn: &mut Connection) -> Res<()> {
         if let Some(stream_id) = self.stream_id {
             if !self.buf.is_empty() {
-                qtrace!([self] "sending data.");
+                qtrace!([self], "sending data.");
                 let sent = conn.stream_send(stream_id, &self.buf[..])?;
                 if sent == self.buf.len() {
                     self.buf.clear();
@@ -48,7 +48,7 @@ impl ControlStreamLocal {
     }
 
     pub fn create(&mut self, conn: &mut Connection) -> Res<()> {
-        qtrace!([self] "Create a control stream.");
+        qtrace!([self], "Create a control stream.");
         self.stream_id = Some(conn.stream_create(StreamType::UniDi)?);
         let mut enc = Encoder::default();
         enc.encode_varint(HTTP3_UNI_STREAM_TYPE_CONTROL as u64);
