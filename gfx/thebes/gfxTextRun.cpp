@@ -1734,6 +1734,8 @@ void gfxFontGroup::BuildFontList() {
       AddFamilyToFontList(f.mFamily.mUnshared, f.mGeneric);
     }
   }
+
+  mFontListGeneration = pfl->GetGeneration();
 }
 
 void gfxFontGroup::AddPlatformFont(const nsACString& aName, bool aQuotedName,
