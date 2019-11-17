@@ -2250,21 +2250,6 @@ nsresult nsPermissionManager::LegacyTestPermissionFromURI(
 }
 
 NS_IMETHODIMP
-nsPermissionManager::TestPermissionFromWindow(mozIDOMWindow* aWindow,
-                                              const nsACString& aType,
-                                              uint32_t* aPermission) {
-  NS_ENSURE_ARG(aWindow);
-  nsCOMPtr<nsPIDOMWindowInner> window = nsPIDOMWindowInner::From(aWindow);
-
-  // Get the document for security check
-  RefPtr<Document> document = window->GetExtantDoc();
-  NS_ENSURE_TRUE(document, NS_NOINTERFACE);
-
-  nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
-  return TestPermissionFromPrincipal(principal, aType, aPermission);
-}
-
-NS_IMETHODIMP
 nsPermissionManager::TestPermissionFromPrincipal(nsIPrincipal* aPrincipal,
                                                  const nsACString& aType,
                                                  uint32_t* aPermission) {
