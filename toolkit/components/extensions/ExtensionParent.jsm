@@ -24,6 +24,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
+  BroadcastConduit: "resource://gre/modules/ConduitsParent.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
@@ -901,13 +902,15 @@ ParentAPIManager = {
   proxyContexts: new Map(),
 
   init() {
+    // TODO: remove/replace everything that deals with message managers below.
     Services.obs.addObserver(this, "message-manager-close");
 
-    Services.mm.addMessageListener("API:CreateProxyContext", this);
-    Services.mm.addMessageListener("API:CloseProxyContext", this, true);
-    Services.mm.addMessageListener("API:Call", this);
-    Services.mm.addMessageListener("API:AddListener", this);
-    Services.mm.addMessageListener("API:RemoveListener", this);
+    this.conduit = new BroadcastConduit(this, {
+      id: "ParentAPIManager",
+      recv: ["CreateProxyContext", "APICall", "AddListener", "RemoveListener"],
+      send: ["CallResult"],
+      query: ["RunListener"],
+    });
   },
 
   attachMessageManager(extension, processMessageManager) {
@@ -945,32 +948,9 @@ ParentAPIManager = {
     }
   },
 
-  receiveMessage({ name, data, target }) {
-    try {
-      switch (name) {
-        case "API:CreateProxyContext":
-          this.createProxyContext(data, target);
-          break;
-
-        case "API:CloseProxyContext":
-          this.closeProxyContext(data.childId);
-          break;
-
-        case "API:Call":
-          this.call(data, target);
-          break;
-
-        case "API:AddListener":
-          this.addListener(data, target);
-          break;
-
-        case "API:RemoveListener":
-          this.removeListener(data);
-          break;
-      }
-    } catch (e) {
-      Cu.reportError(e);
-    }
+  recvCreateProxyContext(data, { actor, sender }) {
+    this.conduit.reportOnClosed(sender.id);
+    this.createProxyContext(data, actor.browsingContext.top.embedderElement);
   },
 
   createProxyContext(data, target) {
@@ -1036,6 +1016,10 @@ ParentAPIManager = {
     this.proxyContexts.set(childId, context);
   },
 
+  recvConduitClosed(sender) {
+    this.closeProxyContext(sender.id);
+  },
+
   closeProxyContext(childId) {
     let context = this.proxyContexts.get(childId);
     if (context) {
@@ -1079,6 +1063,10 @@ ParentAPIManager = {
     }
   },
 
+  async recvAPICall(data, { actor }) {
+    return this.call(data, actor.browsingContext.top.embedderElement);
+  },
+
   async call(data, target) {
     let context = this.getContextById(data.childId);
     if (context.parentMessageManager !== target.messageManager) {
@@ -1094,16 +1082,12 @@ ParentAPIManager = {
         return;
       }
 
-      context.parentMessageManager.sendAsyncMessage(
-        "API:CallResult",
-        Object.assign(
-          {
-            childId: data.childId,
-            callId: data.callId,
-          },
-          result
-        )
-      );
+      this.conduit.sendCallResult(data.childId, {
+        childId: data.childId,
+        callId: data.callId,
+        path: data.path,
+        ...result,
+      });
     };
 
     try {
@@ -1143,6 +1127,10 @@ ParentAPIManager = {
     }
   },
 
+  recvAddListener(data, { actor }) {
+    this.addListener(data, actor.browsingContext.top.embedderElement);
+  },
+
   async addListener(data, target) {
     let context = this.getContextById(data.childId);
     if (context.parentMessageManager !== target.messageManager) {
@@ -1151,39 +1139,30 @@ ParentAPIManager = {
 
     let { childId } = data;
     let handlingUserInput = false;
-    let lowPriority = data.path.startsWith("webRequest.");
 
-    function listener(...listenerArgs) {
-      return context
-        .sendMessage(
-          context.parentMessageManager,
-          "API:RunListener",
-          {
-            childId,
-            handlingUserInput,
-            listenerId: data.listenerId,
-            path: data.path,
-            get args() {
-              return new StructuredCloneHolder(listenerArgs);
-            },
-          },
-          {
-            lowPriority,
-            recipient: { childId },
-          }
-        )
-        .then(result => {
-          let rv = result && result.deserialize(global);
-          ExtensionActivityLog.log(
-            context.extension.id,
-            context.viewType,
-            "api_event",
-            data.path,
-            { args: listenerArgs, result: rv }
-          );
-          return rv;
-        });
-    }
+    // TODO: conduit.idleRunListener
+    let lowPriority = data.path.startsWith("webRequest."); // eslint-disable-line
+
+    let listener = async (...listenerArgs) => {
+      let result = await this.conduit.queryRunListener(childId, {
+        childId,
+        handlingUserInput,
+        listenerId: data.listenerId,
+        path: data.path,
+        get args() {
+          return new StructuredCloneHolder(listenerArgs);
+        },
+      });
+      let rv = result && result.deserialize(global);
+      ExtensionActivityLog.log(
+        context.extension.id,
+        context.viewType,
+        "api_event",
+        data.path,
+        { args: listenerArgs, result: rv }
+      );
+      return rv;
+    };
 
     context.listenerProxies.set(data.listenerId, listener);
 
@@ -1215,7 +1194,7 @@ ParentAPIManager = {
     );
   },
 
-  async removeListener(data) {
+  async recvRemoveListener(data) {
     let context = this.getContextById(data.childId);
     let listener = context.listenerProxies.get(data.listenerId);
 

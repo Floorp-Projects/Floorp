@@ -1072,7 +1072,7 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
     map.ids.set(id, listener);
     map.listeners.set(listener, id);
 
-    this.childApiManager.messageManager.sendAsyncMessage("API:AddListener", {
+    this.childApiManager.conduit.sendAddListener({
       childId: this.childApiManager.id,
       listenerId: id,
       path: this.path,
@@ -1092,7 +1092,7 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
     map.ids.delete(id);
     map.removedIds.add(id);
 
-    this.childApiManager.messageManager.sendAsyncMessage("API:RemoveListener", {
+    this.childApiManager.conduit.sendRemoveListener({
       childId: this.childApiManager.id,
       listenerId: id,
       path: this.path,
@@ -1173,10 +1173,12 @@ class ChildAPIManager {
 
     this.id = `${context.extension.id}.${context.contextId}`;
 
-    MessageChannel.addListener(messageManager, "API:RunListener", this);
-    messageManager.addMessageListener("API:CallResult", this);
-
-    this.messageFilterStrict = { childId: this.id };
+    let global = context.contentWindow.getWindowGlobalChild();
+    this.conduit = global.getActor("Conduits").openConduit(this, {
+      id: this.id,
+      send: ["CreateProxyContext", "APICall", "AddListener", "RemoveListener"],
+      recv: ["CallResult", "RunListener"],
+    });
 
     this.listeners = new DefaultMap(() => ({
       ids: new Map(),
@@ -1194,7 +1196,7 @@ class ChildAPIManager {
     };
     Object.assign(params, contextData);
 
-    this.messageManager.sendAsyncMessage("API:CreateProxyContext", params);
+    this.conduit.sendCreateProxyContext(params);
 
     this.permissionsChangedCallbacks = new Set();
     this.updatePermissions = null;
@@ -1217,50 +1219,42 @@ class ChildAPIManager {
     this.schema.inject(obj, this);
   }
 
-  receiveMessage({ name, messageName, data }) {
-    if (data.childId != this.id) {
-      return;
+  recvCallResult(data) {
+    let deferred = this.callPromises.get(data.callId);
+    this.callPromises.delete(data.callId);
+    if ("error" in data) {
+      deferred.reject(data.error);
+    } else {
+      let result = data.result.deserialize(this.context.cloneScope);
+
+      deferred.resolve(new NoCloneSpreadArgs(result));
     }
+  }
 
-    switch (name || messageName) {
-      case "API:RunListener":
-        let map = this.listeners.get(data.path);
-        let listener = map.ids.get(data.listenerId);
+  recvRunListener(data) {
+    let map = this.listeners.get(data.path);
+    let listener = map.ids.get(data.listenerId);
 
-        if (listener) {
-          let args = data.args.deserialize(this.context.cloneScope);
-          let fire = () => this.context.applySafeWithoutClone(listener, args);
-          return Promise.resolve(
-            data.handlingUserInput
-              ? withHandlingUserInput(this.context.contentWindow, fire)
-              : fire()
-          ).then(result => {
-            if (result !== undefined) {
-              return new StructuredCloneHolder(result, this.context.cloneScope);
-            }
-            return result;
-          });
+    if (listener) {
+      let args = data.args.deserialize(this.context.cloneScope);
+      let fire = () => this.context.applySafeWithoutClone(listener, args);
+      return Promise.resolve(
+        data.handlingUserInput
+          ? withHandlingUserInput(this.context.contentWindow, fire)
+          : fire()
+      ).then(result => {
+        if (result !== undefined) {
+          return new StructuredCloneHolder(result, this.context.cloneScope);
         }
-        if (!map.removedIds.has(data.listenerId)) {
-          Services.console.logStringMessage(
-            `Unknown listener at childId=${data.childId} path=${
-              data.path
-            } listenerId=${data.listenerId}\n`
-          );
-        }
-        break;
-
-      case "API:CallResult":
-        let deferred = this.callPromises.get(data.callId);
-        if ("error" in data) {
-          deferred.reject(data.error);
-        } else {
-          let result = data.result.deserialize(this.context.cloneScope);
-
-          deferred.resolve(new NoCloneSpreadArgs(result));
-        }
-        this.callPromises.delete(data.callId);
-        break;
+        return result;
+      });
+    }
+    if (!map.removedIds.has(data.listenerId)) {
+      Services.console.logStringMessage(
+        `Unknown listener at childId=${data.childId} path=${
+          data.path
+        } listenerId=${data.listenerId}\n`
+      );
     }
   }
 
@@ -1271,11 +1265,7 @@ class ChildAPIManager {
    * @param {Array} args The parameters for the function.
    */
   callParentFunctionNoReturn(path, args) {
-    this.messageManager.sendAsyncMessage("API:Call", {
-      childId: this.id,
-      path,
-      args,
-    });
+    this.conduit.sendAPICall({ childId: this.id, path, args });
   }
 
   /**
@@ -1299,7 +1289,8 @@ class ChildAPIManager {
     // logged the api_call.  Flag it so the parent doesn't log again.
     let { alreadyLogged = true } = options;
 
-    this.messageManager.sendAsyncMessage("API:Call", {
+    // TODO: conduit.queryAPICall()
+    this.conduit.sendAPICall({
       childId: this.id,
       callId,
       path,
@@ -1335,11 +1326,8 @@ class ChildAPIManager {
   }
 
   close() {
-    this.messageManager.sendAsyncMessage("API:CloseProxyContext", {
-      childId: this.id,
-    });
-    this.messageManager.removeMessageListener("API:CallResult", this);
-    MessageChannel.removeListener(this.messageManager, "API:RunListener", this);
+    // Reports CONDUIT_CLOSED on the parent side.
+    this.conduit.close();
 
     if (this.updatePermissions) {
       this.context.extension.off("add-permissions", this.updatePermissions);

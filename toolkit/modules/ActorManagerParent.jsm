@@ -105,6 +105,18 @@ let ACTORS = {
     allFrames: true,
   },
 
+  Conduits: {
+    parent: {
+      moduleURI: "resource://gre/modules/ConduitsParent.jsm",
+    },
+
+    child: {
+      moduleURI: "resource://gre/modules/ConduitsChild.jsm",
+    },
+
+    allFrames: true,
+  },
+
   DateTimePicker: {
     parent: {
       moduleURI: "resource://gre/actors/DateTimePickerParent.jsm",
