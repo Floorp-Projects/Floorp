@@ -927,7 +927,7 @@ nsBufferedOutputStream::Write(const char* buf, uint32_t count,
   uint32_t written = 0;
   *result = 0;
   if (!mStream) {
-    // We special case this situtaion.
+    // We special case this situation.
     // We should catch the failure, NS_BASE_STREAM_CLOSED ASAP, here.
     // If we don't, eventually Flush() is called in the while loop below
     // after so many writes.
