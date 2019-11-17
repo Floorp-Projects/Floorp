@@ -1049,6 +1049,17 @@ class gfxFontGroup final : public gfxTextRunFactory {
       int32_t aAppUnitsPerDevPixel, mozilla::gfx::ShapedTextFlags aFlags,
       LazyReferenceDrawTargetGetter& aRefDrawTargetGetter);
 
+  void CheckForUpdatedPlatformList() {
+    auto* pfl = gfxPlatformFontList::PlatformFontList();
+    if (mFontListGeneration != pfl->GetGeneration()) {
+      // Forget cached fonts that may no longer be valid.
+      mLastPrefFamily = FontFamily();
+      mLastPrefFont = nullptr;
+      mFonts.Clear();
+      BuildFontList();
+    }
+  }
+
  protected:
   friend class mozilla::PostTraversalTask;
 
@@ -1356,6 +1367,9 @@ class gfxFontGroup final : public gfxTextRunFactory {
   bool mSkipDrawing;  // hide text while waiting for a font
                       // download to complete (or fallback
                       // timer to fire)
+
+  uint32_t mFontListGeneration = 0;  // platform font list generation for this
+                                     // fontgroup
 
   /**
    * Textrun creation short-cuts for special cases where we don't need to

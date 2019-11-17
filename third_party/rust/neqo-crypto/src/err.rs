@@ -188,5 +188,4 @@ mod tests {
             _ => panic!("bad error type"),
         }
     }
-
 }
