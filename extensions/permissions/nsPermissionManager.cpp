@@ -2279,6 +2279,21 @@ nsresult nsPermissionManager::LegacyTestPermissionFromURI(
 }
 
 NS_IMETHODIMP
+nsPermissionManager::TestPermissionFromWindow(mozIDOMWindow* aWindow,
+                                              const nsACString& aType,
+                                              uint32_t* aPermission) {
+  NS_ENSURE_ARG(aWindow);
+  nsCOMPtr<nsPIDOMWindowInner> window = nsPIDOMWindowInner::From(aWindow);
+
+  // Get the document for security check
+  RefPtr<Document> document = window->GetExtantDoc();
+  NS_ENSURE_TRUE(document, NS_NOINTERFACE);
+
+  nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
+  return TestPermissionFromPrincipal(principal, aType, aPermission);
+}
+
+NS_IMETHODIMP
 nsPermissionManager::TestPermissionFromPrincipal(nsIPrincipal* aPrincipal,
                                                  const nsACString& aType,
                                                  uint32_t* aPermission) {
@@ -2651,7 +2666,8 @@ nsresult nsPermissionManager::RemoveAllModifiedSince(
       });
 }
 
-nsresult nsPermissionManager::RemovePermissionsWithAttributes(
+NS_IMETHODIMP
+nsPermissionManager::RemovePermissionsWithAttributes(
     const nsAString& aPattern) {
   ENSURE_NOT_CHILD_PROCESS;
   mozilla::OriginAttributesPattern pattern;
@@ -3026,10 +3042,62 @@ void nsPermissionManager::UpdateDB(
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
-void nsPermissionManager::GetPermissionsWithKey(
-    const nsACString& aPermissionKey, nsTArray<IPC::Permission>& aPerms) {
+NS_IMETHODIMP
+nsPermissionManager::UpdateExpireTime(nsIPrincipal* aPrincipal,
+                                      const nsACString& aType,
+                                      bool aExactHostMatch,
+                                      uint64_t aSessionExpireTime,
+                                      uint64_t aPersistentExpireTime) {
+  NS_ENSURE_ARG_POINTER(aPrincipal);
+
+  uint64_t nowms = PR_Now() / 1000;
+  if (aSessionExpireTime < nowms || aPersistentExpireTime < nowms) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    return NS_OK;
+  }
+
+  // Setting the expire time of an nsEP is non-sensical.
+  if (IsExpandedPrincipal(aPrincipal)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  MOZ_ASSERT(PermissionAvailable(aPrincipal, aType));
+
+  int32_t typeIndex = GetTypeIndex(aType, false);
+  // If type == -1, the type isn't known,
+  // so just return NS_OK
+  if (typeIndex == -1) return NS_OK;
+
+  PermissionHashKey* entry =
+      GetPermissionHashKey(aPrincipal, typeIndex, aExactHostMatch);
+  if (!entry) {
+    return NS_OK;
+  }
+
+  int32_t idx = entry->GetPermissionIndex(typeIndex);
+  if (-1 == idx) {
+    return NS_OK;
+  }
+
+  PermissionEntry& perm = entry->GetPermissions()[idx];
+  if (perm.mExpireType == EXPIRE_TIME) {
+    perm.mExpireTime = aPersistentExpireTime;
+  } else if (perm.mExpireType == EXPIRE_SESSION && perm.mExpireTime != 0) {
+    perm.mExpireTime = aSessionExpireTime;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPermissionManager::GetPermissionsWithKey(const nsACString& aPermissionKey,
+                                           nsTArray<IPC::Permission>& aPerms) {
   aPerms.Clear();
-  MOZ_ASSERT(XRE_IsParentProcess());
+  if (NS_WARN_IF(XRE_IsContentProcess())) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
     PermissionHashKey* entry = iter.Get();
@@ -3062,11 +3130,16 @@ void nsPermissionManager::GetPermissionsWithKey(
       }
     }
   }
+
+  return NS_OK;
 }
 
-void nsPermissionManager::SetPermissionsWithKey(
-    const nsACString& aPermissionKey, nsTArray<IPC::Permission>& aPerms) {
-  MOZ_ASSERT(XRE_IsParentProcess());
+NS_IMETHODIMP
+nsPermissionManager::SetPermissionsWithKey(const nsACString& aPermissionKey,
+                                           nsTArray<IPC::Permission>& aPerms) {
+  if (NS_WARN_IF(XRE_IsParentProcess())) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   RefPtr<GenericNonExclusivePromise::Private> promise;
   bool foundKey =
@@ -3080,7 +3153,7 @@ void nsPermissionManager::SetPermissionsWithKey(
   } else if (foundKey) {
     // NOTE: We shouldn't be sent two InitializePermissionsWithKey for the same
     // key, but it's possible.
-    return;
+    return NS_OK;
   }
   mPermissionKeyPromiseMap.Put(aPermissionKey, nullptr);
 
@@ -3108,6 +3181,7 @@ void nsPermissionManager::SetPermissionsWithKey(
                 perm.expireTime, modificationTime, eNotify, eNoDBOperation,
                 true /* ignoreSessionPermissions */);
   }
+  return NS_OK;
 }
 
 /* static */
@@ -3237,13 +3311,14 @@ bool nsPermissionManager::PermissionAvailable(nsIPrincipal* aPrincipal,
   return true;
 }
 
-void nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
-                                                   nsIRunnable* aRunnable) {
+NS_IMETHODIMP
+nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
+                                              nsIRunnable* aRunnable) {
   MOZ_ASSERT(aRunnable);
 
   if (!XRE_IsContentProcess()) {
     aRunnable->Run();
-    return;
+    return NS_OK;
   }
 
   nsTArray<RefPtr<GenericNonExclusivePromise>> promises;
@@ -3269,7 +3344,7 @@ void nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
   // sensitive.
   if (promises.IsEmpty()) {
     aRunnable->Run();
-    return;
+    return NS_OK;
   }
 
   auto* thread = SystemGroup::AbstractMainThreadFor(TaskCategory::Other);
@@ -3283,8 +3358,11 @@ void nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
                 "nsPermissionManager permission promise rejected. We're "
                 "probably shutting down.");
           });
+  return NS_OK;
 }
 
-bool nsPermissionManager::HasPreloadPermissions() {
-  return sPreloadPermissionCount > 0;
+NS_IMETHODIMP
+nsPermissionManager::GetHasPreloadPermissions(bool* aResult) {
+  *aResult = sPreloadPermissionCount > 0;
+  return NS_OK;
 }
