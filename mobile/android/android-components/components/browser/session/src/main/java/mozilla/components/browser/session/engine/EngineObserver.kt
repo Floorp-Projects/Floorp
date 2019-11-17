@@ -69,18 +69,24 @@ internal class EngineObserver(
         return sessionUri.scheme == newUri.scheme && sessionUri.host == newUri.host
     }
 
-    override fun onLoadRequest(url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
+    override fun onLoadRequest(
+        url: String,
+        triggeredByRedirect: Boolean,
+        triggeredByWebContent: Boolean,
+        shouldLoadUri: (Boolean) -> Unit
+    ) {
         if (triggeredByRedirect || triggeredByWebContent) {
             session.searchTerms = ""
         }
 
-        session.loadRequestMetadata = LoadRequestMetadata(
+        session.loadRequestMetadata = Consumable.from(LoadRequestMetadata(
             url,
             arrayOf(
                 if (triggeredByRedirect) LoadRequestOption.REDIRECT else LoadRequestOption.NONE,
                 if (triggeredByWebContent) LoadRequestOption.WEB_CONTENT else LoadRequestOption.NONE
-            )
-        )
+            ),
+            shouldLoadUri
+        ))
     }
 
     override fun onTitleChange(title: String) {

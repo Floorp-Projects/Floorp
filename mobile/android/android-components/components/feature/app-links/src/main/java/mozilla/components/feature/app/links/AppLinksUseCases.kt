@@ -26,9 +26,16 @@ private const val MARKET_INTENT_URI_PACKAGE_PREFIX = "market://details?id="
  *
  * Since browsers are able to open HTTPS pages, existing browser apps are excluded from the list of
  * apps that trigger a redirect to an external app.
+ *
+ * @param context Context the feature is associated with.
+ * @param launchInApp If {true} then launch app links in third party app(s). Default to false because
+ * of security concerns.
+ * @param browserPackageNames Set of browser package names installed.
+ * @param unguessableWebUrl URL is not likely to be opened by a native app but will fallback to a browser.
  */
 class AppLinksUseCases(
     private val context: Context,
+    private val launchInApp: () -> Boolean = { false },
     browserPackageNames: Set<String>? = null,
     unguessableWebUrl: String = "https://${UUID.randomUUID()}.net"
 ) {
@@ -83,7 +90,7 @@ class AppLinksUseCases(
                 redirectData.resolveInfo == null -> null
                 includeHttpAppLinks && (ignoreDefaultBrowser ||
                     (redirectData.appIntent != null && isDefaultBrowser(redirectData.appIntent))) -> null
-                !includeHttpAppLinks && isAppIntentHttpOrHttps -> null
+                !launchInApp() && isAppIntentHttpOrHttps -> null
                 else -> redirectData.appIntent
             }
 

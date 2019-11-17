@@ -230,12 +230,12 @@ class SessionTest {
         val session = Session("https://www.mozilla.org")
         session.register(observer)
 
-        session.loadRequestMetadata = LoadRequestMetadata(
+        session.loadRequestMetadata = Consumable.from(LoadRequestMetadata(
             "https://www.mozilla.org",
             arrayOf(LoadRequestOption.REDIRECT)
-        )
+        ))
 
-        assertTrue(session.loadRequestMetadata.isSet(LoadRequestOption.REDIRECT))
+        assertTrue(session.loadRequestMetadata.peek()?.isSet(LoadRequestOption.REDIRECT)!!)
         verify(observer, times(1)).onLoadRequest(eq(session), eq("https://www.mozilla.org"), eq(true), eq(false))
         verifyNoMoreInteractions(observer)
     }

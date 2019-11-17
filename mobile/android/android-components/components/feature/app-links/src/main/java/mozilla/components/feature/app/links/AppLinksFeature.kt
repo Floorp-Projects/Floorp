@@ -34,10 +34,20 @@ import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
  * adjoining UI. The UI will be activated in https://github.com/mozilla-mobile/android-components/issues/2974
  * and https://github.com/mozilla-mobile/android-components/issues/2975.
  *
+ * @param context Context the feature is associated with.
+ * @param sessionManager Provides access to a centralized registry of all active sessions.
+ * @param sessionId the session ID to observe.
+ * @param interceptLinkClicks If {true} then intercept link clicks.
  * @param alwaysAllowedSchemes List of schemes that will always be allowed to be opened in a third-party
  * app even if [interceptLinkClicks] is `false`.
  * @param alwaysDeniedSchemes List of schemes that will never be opened in a third-party app even if
  * [interceptLinkClicks] is `true`.
+ * @param fragmentManager FragmentManager for interacting with fragments.
+ * @param dialog The dialog for redirect.
+ * @param launchInApp If {true} then launch app links in third party app(s). Default to false because
+ * of security concerns.
+ * @param useCases These use cases allow for the detection of, and opening of links that other apps
+ * have registered to open.
  */
 class AppLinksFeature(
     private val context: Context,
@@ -48,7 +58,8 @@ class AppLinksFeature(
     private val alwaysDeniedSchemes: Set<String> = setOf("javascript", "about"),
     private val fragmentManager: FragmentManager? = null,
     private var dialog: RedirectDialogFragment = SimpleRedirectDialogFragment.newInstance(),
-    private val useCases: AppLinksUseCases = AppLinksUseCases(context)
+    private val launchInApp: () -> Boolean = { false },
+    private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp)
 ) : LifecycleAwareFeature {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -58,8 +69,8 @@ class AppLinksFeature(
             url: String,
             triggeredByRedirect: Boolean,
             triggeredByWebContent: Boolean
-        ) {
-            handleLoadRequest(session, url, triggeredByWebContent)
+        ): Boolean {
+            return handleLoadRequest(session, url, triggeredByWebContent)
         }
     }
 
@@ -81,37 +92,44 @@ class AppLinksFeature(
         }
     }
 
+    @SuppressWarnings("ReturnCount")
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun handleLoadRequest(session: Session, url: String, triggeredByWebContent: Boolean) {
+    internal fun handleLoadRequest(
+        session: Session,
+        url: String,
+        triggeredByWebContent: Boolean
+    ): Boolean {
         if (!triggeredByWebContent) {
-            return
+            return false
         }
 
         // If we're already on the site, and we're clicking around then
         // let's not go to an external app.
         if (url.hostname() == session.url.hostname()) {
-            return
+            return false
         }
 
         val redirect = useCases.interceptedAppLinkRedirect(url)
 
         if (redirect.isRedirect()) {
-            handleRedirect(redirect, session)
+            return handleRedirect(redirect, session)
         }
+
+        return false
     }
 
+    @SuppressWarnings("ReturnCount")
     @SuppressLint("MissingPermission")
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun handleRedirect(redirect: AppLinkRedirect, session: Session) {
+    internal fun handleRedirect(redirect: AppLinkRedirect, session: Session): Boolean {
         if (!redirect.hasExternalApp()) {
-            handleFallback(redirect, session)
-            return
+            return handleFallback(redirect, session)
         }
 
         redirect.appIntent?.data?.scheme?.let { scheme ->
             if ((!interceptLinkClicks && !alwaysAllowedSchemes.contains(scheme)) ||
                 alwaysDeniedSchemes.contains(scheme)) {
-                return
+                return false
             }
         }
 
@@ -121,7 +139,7 @@ class AppLinksFeature(
 
         if (!session.private || fragmentManager == null) {
             doOpenApp()
-            return
+            return true
         }
 
         dialog.setAppLinkRedirect(redirect)
@@ -130,14 +148,19 @@ class AppLinksFeature(
         if (!isAlreadyADialogCreated()) {
             dialog.show(fragmentManager, FRAGMENT_TAG)
         }
+
+        return true
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun handleFallback(redirect: AppLinkRedirect, session: Session) {
+    internal fun handleFallback(redirect: AppLinkRedirect, session: Session): Boolean {
         redirect.fallbackUrl?.let {
-            val c = sessionManager.getOrCreateEngineSession(session)
-            c.loadUrl(it)
+            val engineSession = sessionManager.getOrCreateEngineSession(session)
+            engineSession.loadUrl(it)
+            return true
         }
+
+        return false
     }
 
     private fun isAlreadyADialogCreated(): Boolean {

@@ -59,7 +59,7 @@ class AppLinksUseCasesTest {
     @Test
     fun `A URL that matches zero apps is not an app link`() {
         val context = createContext()
-        val subject = AppLinksUseCases(context, emptySet())
+        val subject = AppLinksUseCases(context, { true }, emptySet())
 
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
         assertFalse(redirect.isRedirect())
@@ -68,11 +68,11 @@ class AppLinksUseCasesTest {
     @Test
     fun `A web URL that matches more than zero apps is an app link`() {
         val context = createContext(appUrl to appPackage)
-        val subject = AppLinksUseCases(context, emptySet())
+        val subject = AppLinksUseCases(context, { true }, emptySet())
 
-        // We will not redirect to it when we click on it.
+        // We will redirect to it if browser option set to true.
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
-        assertFalse(redirect.isRedirect())
+        assertTrue(redirect.isRedirect())
 
         // But we do from a context menu.
         val menuRedirect = subject.appLinkRedirect(appUrl)
@@ -80,9 +80,21 @@ class AppLinksUseCasesTest {
     }
 
     @Test
+    fun `Will not redirect app link if browser option set to false`() {
+        val context = createContext(appUrl to appPackage)
+        val subject = AppLinksUseCases(context, { false }, emptySet())
+
+        val redirect = subject.interceptedAppLinkRedirect(appUrl)
+        assertFalse(redirect.isRedirect())
+
+        val menuRedirect = subject.appLinkRedirect(appUrl)
+        assertFalse(menuRedirect.isRedirect())
+    }
+
+    @Test
     fun `A URL that matches only excluded packages is not an app link`() {
         val context = createContext(appUrl to browserPackage)
-        val subject = AppLinksUseCases(context, setOf(browserPackage))
+        val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
 
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
         assertFalse(redirect.isRedirect())
@@ -91,7 +103,7 @@ class AppLinksUseCasesTest {
     @Test
     fun `A URL that also matches excluded packages is an app link`() {
         val context = createContext(appUrl to appPackage, appUrl to browserPackage)
-        val subject = AppLinksUseCases(context, setOf(browserPackage))
+        val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
 
         val redirect = subject.appLinkRedirect(appUrl)
         assertTrue(redirect.isRedirect())
@@ -110,7 +122,7 @@ class AppLinksUseCasesTest {
     fun `A intent scheme uri with an installed app`() {
         val uri = "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;end"
         val context = createContext(uri to appPackage, appUrl to browserPackage)
-        val subject = AppLinksUseCases(context, setOf(browserPackage))
+        val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
 
         val redirect = subject.interceptedAppLinkRedirect(uri)
         assertTrue(redirect.hasExternalApp())
@@ -125,7 +137,7 @@ class AppLinksUseCasesTest {
     fun `A market scheme uri is an install link`() {
         val uri = "intent://details/#Intent;scheme=market;package=com.google.play;end"
         val context = createContext(uri to appPackage, appUrl to browserPackage)
-        val subject = AppLinksUseCases(context, setOf(browserPackage))
+        val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
 
         val redirect = subject.appLinkRedirect.invoke(uri)
 
@@ -136,7 +148,7 @@ class AppLinksUseCasesTest {
     @Test
     fun `A intent scheme uri without an installed app`() {
         val context = createContext(appUrl to browserPackage)
-        val subject = AppLinksUseCases(context, setOf(browserPackage))
+        val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
 
         val uri = "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;end"
 
@@ -150,7 +162,7 @@ class AppLinksUseCasesTest {
     @Test
     fun `A intent scheme uri with a fallback, but without an installed app`() {
         val context = createContext(appUrl to browserPackage)
-        val subject = AppLinksUseCases(context, setOf(browserPackage))
+        val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
 
         val uri = "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;S.browser_fallback_url=http%3A%2F%2Fzxing.org;end"
 
@@ -168,7 +180,7 @@ class AppLinksUseCasesTest {
         val context = createContext()
         val appIntent = Intent()
         val redirect = AppLinkRedirect(appIntent, appUrl)
-        val subject = AppLinksUseCases(context, setOf(browserPackage))
+        val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
 
         subject.openAppLink(redirect)
 
