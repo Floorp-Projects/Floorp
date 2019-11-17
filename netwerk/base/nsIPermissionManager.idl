@@ -32,7 +32,6 @@
 
 interface nsIObserver;
 interface nsIPrincipal;
-interface mozIDOMWindow;
 interface nsIPermission;
 interface nsIRunnable;
 
@@ -151,16 +150,6 @@ interface nsIPermissionManager : nsISupports
    */
   uint32_t testPermissionFromPrincipal(in nsIPrincipal principal,
                                        in ACString type);
-
-  /**
-   * Test whether the principal associated with the window's document has the
-   * permission to perform a given action.  System principals will always
-   * have permissions granted.
-   * This function will perform a pref lookup to permissions.default.<type>
-   * if the specific permission type is part of the whitelist for that functionality.
-   */
-  uint32_t testPermissionFromWindow(in mozIDOMWindow window,
-                                    in ACString type);
 
   /**
    * See testExactPermission() above.
