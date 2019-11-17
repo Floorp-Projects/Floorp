@@ -206,9 +206,6 @@ class nsPermissionManager final : public nsIPermissionManager,
    */
   static void Startup();
 
-  nsresult RemovePermissionsWithAttributes(
-      mozilla::OriginAttributesPattern& aAttrs);
-
   /**
    * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
    * permission keys.
@@ -526,6 +523,10 @@ class nsPermissionManager final : public nsIPermissionManager,
 
   template <class T>
   nsresult RemovePermissionEntries(T aCondition);
+
+  nsresult RemovePermissionsWithAttributes(const nsAString& aPattern);
+  nsresult RemovePermissionsWithAttributes(
+      mozilla::OriginAttributesPattern& aAttrs);
 
   nsRefPtrHashtable<nsCStringHashKey,
                     mozilla::GenericNonExclusivePromise::Private>
