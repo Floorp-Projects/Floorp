@@ -2651,8 +2651,7 @@ nsresult nsPermissionManager::RemoveAllModifiedSince(
       });
 }
 
-NS_IMETHODIMP
-nsPermissionManager::RemovePermissionsWithAttributes(
+nsresult nsPermissionManager::RemovePermissionsWithAttributes(
     const nsAString& aPattern) {
   ENSURE_NOT_CHILD_PROCESS;
   mozilla::OriginAttributesPattern pattern;
