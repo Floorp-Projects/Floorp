@@ -199,11 +199,6 @@ interface nsIPermissionManager : nsISupports
   readonly attribute Array<nsIPermission> all;
 
   /**
-   * Remove all permissions that will match the origin pattern.
-   */
-  void removePermissionsWithAttributes(in AString patternAsJSON);
-
-  /**
    * If the current permission is set to expire, reset the expiration time. If
    * there is no permission or the current permission does not expire, this
    * method will silently return.
