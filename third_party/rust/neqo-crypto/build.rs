@@ -231,7 +231,9 @@ fn build_bindings(base: &str, bindings: &Bindings, flags: &[String], gecko: bool
 
     println!("cargo:rerun-if-changed={}", header);
 
-    let mut builder = Builder::default().header(header).generate_comments(false);
+    let mut builder = Builder::default().header(header);
+    builder = builder.generate_comments(false);
+    builder = builder.derive_debug(false); // https://github.com/rust-lang/rust-bindgen/issues/372
 
     builder = builder.clang_arg("-v");
 

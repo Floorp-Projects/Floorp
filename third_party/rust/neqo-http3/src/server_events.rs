@@ -4,33 +4,144 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::connection::{Http3Events, Http3State};
-use crate::Header;
-use neqo_common::matches;
-use neqo_transport::AppError;
+use crate::connection::{Http3Connection, Http3ServerHandler, Http3State};
+use crate::server_connection_events::{Http3ServerConnEvent, Http3ServerConnEvents};
+use crate::transaction_server::TransactionServer;
+use crate::{Error, Header, Res};
+use neqo_common::{qdebug, qinfo};
+use neqo_transport::server::ActiveConnectionRef;
+use neqo_transport::{AppError, Connection};
 
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::rc::Rc;
+use std::time::Instant;
 
-#[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Clone)]
+pub type Http3ServerConnection =
+    Http3Connection<Http3ServerConnEvents, TransactionServer, Http3ServerHandler>;
+
+#[derive(Debug)]
+pub struct Http3Handler {
+    handler: Http3ServerConnection,
+}
+
+impl Http3Handler {
+    pub fn new(max_table_size: u32, max_blocked_streams: u16) -> Self {
+        Http3Handler {
+            handler: Http3Connection::new(max_table_size, max_blocked_streams),
+        }
+    }
+    pub fn set_response(&mut self, stream_id: u64, headers: &[Header], data: Vec<u8>) -> Res<()> {
+        self.handler
+            .transactions
+            .get_mut(&stream_id)
+            .ok_or(Error::InvalidStreamId)?
+            .set_response(headers, data, &mut self.handler.qpack_encoder);
+        self.handler.insert_streams_have_data_to_send(stream_id);
+        Ok(())
+    }
+
+    pub fn stream_reset(
+        &mut self,
+        conn: &mut Connection,
+        stream_id: u64,
+        app_error: AppError,
+    ) -> Res<()> {
+        self.handler.stream_reset(conn, stream_id, app_error)
+    }
+
+    pub fn process_http3(&mut self, conn: &mut Connection, now: Instant) {
+        self.handler.process_http3(conn, now);
+    }
+
+    pub fn next_event(&mut self) -> Option<Http3ServerConnEvent> {
+        self.handler.events.next_event()
+    }
+
+    pub fn should_be_processed(&self) -> bool {
+        self.handler.has_data_to_send() | self.handler.events.has_events()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ClientRequestStream {
+    conn: ActiveConnectionRef,
+    handler: Rc<RefCell<Http3Handler>>,
+    stream_id: u64,
+}
+
+impl ::std::fmt::Display for ClientRequestStream {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        let conn: &Connection = &self.conn.borrow();
+        write!(
+            f,
+            "Http3 server conn={:?} stream_id={}",
+            conn, self.stream_id
+        )
+    }
+}
+
+impl ClientRequestStream {
+    pub fn new(
+        conn: ActiveConnectionRef,
+        handler: Rc<RefCell<Http3Handler>>,
+        stream_id: u64,
+    ) -> Self {
+        ClientRequestStream {
+            conn,
+            handler,
+            stream_id,
+        }
+    }
+    pub fn set_response(&mut self, headers: &[Header], data: Vec<u8>) -> Res<()> {
+        qinfo!([self], "Set new response.");
+        self.handler
+            .borrow_mut()
+            .set_response(self.stream_id, headers, data)
+    }
+
+    pub fn stream_stop_sending(&mut self, app_error: AppError) -> Res<()> {
+        qdebug!(
+            [self],
+            "stop sending stream_id:{} error:{}.",
+            self.stream_id,
+            app_error
+        );
+        self.conn
+            .borrow_mut()
+            .stream_stop_sending(self.stream_id, app_error)?;
+        Ok(())
+    }
+
+    pub fn stream_reset(&mut self, app_error: AppError) -> Res<()> {
+        qdebug!([self], "reset error:{}.", app_error);
+        self.handler.borrow_mut().stream_reset(
+            &mut self.conn.borrow_mut(),
+            self.stream_id,
+            app_error,
+        )
+    }
+}
+
+#[derive(Debug, Clone)]
 pub enum Http3ServerEvent {
     /// Headers are ready.
     Headers {
-        stream_id: u64,
+        request: ClientRequestStream,
         headers: Vec<Header>,
         fin: bool,
     },
     /// Request data is ready.
     Data {
-        stream_id: u64,
+        request: ClientRequestStream,
         data: Vec<u8>,
         fin: bool,
     },
-    /// Peer reset the stream.
-    Reset { stream_id: u64, error: AppError },
-    /// Connection state change.
-    StateChange(Http3State),
+    /// When individual connection change state. It is only used for tests.
+    StateChange {
+        conn: ActiveConnectionRef,
+        state: Http3State,
+    },
 }
 
 #[derive(Debug, Default, Clone)]
@@ -41,13 +152,6 @@ pub struct Http3ServerEvents {
 impl Http3ServerEvents {
     fn insert(&self, event: Http3ServerEvent) {
         self.events.borrow_mut().push_back(event);
-    }
-
-    fn remove<F>(&self, f: F)
-    where
-        F: Fn(&Http3ServerEvent) -> bool,
-    {
-        self.events.borrow_mut().retain(|evt| !f(evt))
     }
 
     pub fn events(&self) -> impl Iterator<Item = Http3ServerEvent> {
@@ -62,36 +166,19 @@ impl Http3ServerEvents {
         self.events.borrow_mut().pop_front()
     }
 
-    pub fn headers(&self, stream_id: u64, headers: Vec<Header>, fin: bool) {
+    pub fn headers(&self, request: ClientRequestStream, headers: Vec<Header>, fin: bool) {
         self.insert(Http3ServerEvent::Headers {
-            stream_id,
+            request,
             headers,
             fin,
         });
     }
 
-    pub fn data(&self, stream_id: u64, data: Vec<u8>, fin: bool) {
-        self.insert(Http3ServerEvent::Data {
-            stream_id,
-            data,
-            fin,
-        });
-    }
-}
-
-impl Http3Events for Http3ServerEvents {
-    fn reset(&self, stream_id: u64, error: AppError) {
-        self.insert(Http3ServerEvent::Reset { stream_id, error });
+    pub fn connection_state_change(&self, conn: ActiveConnectionRef, state: Http3State) {
+        self.insert(Http3ServerEvent::StateChange { conn, state });
     }
 
-    fn connection_state_change(&self, state: Http3State) {
-        self.insert(Http3ServerEvent::StateChange(state));
-    }
-
-    fn remove_events_for_stream_id(&self, stream_id: u64) {
-        self.remove(|evt| {
-            matches!(evt,
-                Http3ServerEvent::Reset { stream_id: x, .. } if *x == stream_id)
-        });
+    pub fn data(&self, request: ClientRequestStream, data: Vec<u8>, fin: bool) {
+        self.insert(Http3ServerEvent::Data { request, data, fin });
     }
 }

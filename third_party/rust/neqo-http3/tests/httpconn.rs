@@ -13,11 +13,11 @@ use test_fixture::*;
 
 const RESPONSE_DATA: &[u8] = &[0x61, 0x62, 0x63];
 
-fn process_server_events(conn: &mut Http3Server) {
+fn process_server_events(server: &mut Http3Server) {
     let mut request_found = false;
-    while let Some(event) = conn.next_event() {
+    while let Some(event) = server.next_event() {
         if let Http3ServerEvent::Headers {
-            stream_id,
+            mut request,
             headers,
             fin,
         } = event
@@ -32,15 +32,15 @@ fn process_server_events(conn: &mut Http3Server) {
                 ]
             );
             assert_eq!(fin, true);
-            conn.set_response(
-                stream_id,
-                &[
-                    (String::from(":status"), String::from("200")),
-                    (String::from("content-length"), String::from("3")),
-                ],
-                RESPONSE_DATA.to_vec(),
-            )
-            .unwrap();
+            request
+                .set_response(
+                    &[
+                        (String::from(":status"), String::from("200")),
+                        (String::from("content-length"), String::from("3")),
+                    ],
+                    RESPONSE_DATA.to_vec(),
+                )
+                .unwrap();
             request_found = true;
         }
     }
@@ -86,7 +86,6 @@ fn connect() -> (Http3Client, Http3Server, Option<Datagram>) {
     let mut hconn_s = default_http3_server();
 
     assert_eq!(hconn_c.state(), Http3State::Initializing);
-    assert_eq!(hconn_s.state(), Http3State::Initializing);
     let out = hconn_c.process(None, now()); // Initial
     let out = hconn_s.process(out.dgram(), now()); // Initial + Handshake
     let out = hconn_c.process(out.dgram(), now()); // ACK
@@ -97,7 +96,6 @@ fn connect() -> (Http3Client, Http3Server, Option<Datagram>) {
     let out = hconn_c.process(None, now()); // Handshake
     assert_eq!(hconn_c.state(), Http3State::Connected);
     let out = hconn_s.process(out.dgram(), now()); // Handshake
-    assert_eq!(hconn_s.state(), Http3State::Connected);
     let out = hconn_c.process(out.dgram(), now());
     let out = hconn_s.process(out.dgram(), now());
     // assert_eq!(hconn_s.settings_received, true);
@@ -130,6 +128,8 @@ fn test_fetch() {
     let out = hconn_s.process(None, now());
 
     eprintln!("-----client");
+    let _ = hconn_c.process(out.dgram(), now());
+    let out = hconn_s.process(None, now());
     let _ = hconn_c.process(out.dgram(), now());
     process_client_events(&mut hconn_c);
 }

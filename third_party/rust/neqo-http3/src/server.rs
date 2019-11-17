@@ -4,139 +4,169 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::connection::{Http3Connection, Http3ServerHandler, Http3State};
-use crate::server_events::{Http3ServerEvent, Http3ServerEvents};
-use crate::transaction_server::TransactionServer;
-use crate::{Error, Header, Res};
-use neqo_common::{qdebug, qinfo, qtrace, Datagram};
+use crate::connection::Http3State;
+use crate::server_connection_events::Http3ServerConnEvent;
+use crate::server_events::{
+    ClientRequestStream, Http3Handler, Http3ServerEvent, Http3ServerEvents,
+};
+use crate::Res;
+use neqo_common::{qtrace, Datagram};
 use neqo_crypto::AntiReplay;
-use neqo_transport::{AppError, Connection, ConnectionIdManager, Output, Role};
+use neqo_transport::server::{ActiveConnectionRef, Server};
+use neqo_transport::{ConnectionIdManager, Output};
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::time::Instant;
 
+type HandlerRef = Rc<RefCell<Http3Handler>>;
+
 pub struct Http3Server {
-    base_handler: Http3Connection<Http3ServerEvents, TransactionServer, Http3ServerHandler>,
+    server: Server,
+    max_table_size: u32,
+    max_blocked_streams: u16,
+    connections: HashMap<ActiveConnectionRef, HandlerRef>,
+    events: Http3ServerEvents,
 }
 
 impl ::std::fmt::Display for Http3Server {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        write!(f, "Http3 connection {:?}", self.role())
+        write!(f, "Http3 server ")
     }
 }
 
 impl Http3Server {
     pub fn new(
+        now: Instant,
         certs: &[impl AsRef<str>],
         protocols: &[impl AsRef<str>],
-        anti_replay: &AntiReplay,
+        anti_replay: AntiReplay,
         cid_manager: Rc<RefCell<dyn ConnectionIdManager>>,
         max_table_size: u32,
         max_blocked_streams: u16,
     ) -> Res<Http3Server> {
         Ok(Http3Server {
-            base_handler: Http3Connection::new_server(
-                certs,
-                protocols,
-                anti_replay,
-                cid_manager,
-                max_table_size,
-                max_blocked_streams,
-            )?,
+            server: Server::new(now, certs, protocols, anti_replay, cid_manager)?,
+            max_table_size,
+            max_blocked_streams,
+            connections: HashMap::new(),
+            events: Http3ServerEvents::default(),
         })
     }
 
-    fn role(&self) -> Role {
-        self.base_handler.role()
-    }
-
     pub fn process(&mut self, dgram: Option<Datagram>, now: Instant) -> Output {
-        qtrace!([self] "Process.");
-        self.base_handler.process(dgram, now)
-    }
-
-    pub fn process_input(&mut self, dgram: Datagram, now: Instant) {
-        qtrace!([self] "Process input.");
-        self.base_handler.process_input(dgram, now);
-    }
-
-    pub fn process_timer(&mut self, now: Instant) {
-        qtrace!([self] "Process timer.");
-        self.base_handler.process_timer(now);
-    }
-
-    pub fn conn(&mut self) -> &mut Connection {
-        &mut self.base_handler.conn
+        qtrace!([self], "Process.");
+        let out = self.server.process(dgram, now);
+        self.process_http3(now);
+        // If we do not that a dgram already try again after process_http3.
+        match out {
+            Output::Datagram(d) => {
+                qtrace!([self], "Send packet: {:?}", d);
+                Output::Datagram(d)
+            }
+            _ => self.server.process(None, now),
+        }
     }
 
     pub fn process_http3(&mut self, now: Instant) {
-        qtrace!([self] "Process http3 internal.");
-        self.base_handler.process_http3(now);
-    }
+        qtrace!([self], "Process http3 internal.");
+        let mut active_conns = self.server.active_connections();
 
-    pub fn process_output(&mut self, now: Instant) -> Output {
-        qtrace!([self] "Process output.");
-        self.base_handler.process_output(now)
-    }
+        // We need to find connections that needs to be process on http3 level.
+        let mut http3_active: Vec<ActiveConnectionRef> = self
+            .connections
+            .iter()
+            .filter(|(conn, handler)| {
+                handler.borrow().should_be_processed() && !active_conns.contains(&conn)
+            })
+            .map(|(conn, _)| conn)
+            .cloned()
+            .collect();
+        // For http_active connection we need to put them in neqo-transport's server
+        // waiting queue.
+        http3_active
+            .iter()
+            .for_each(|conn| self.server.add_to_waiting(conn.clone()));
+        active_conns.append(&mut http3_active);
+        active_conns.dedup();
+        let max_table_size = self.max_table_size;
+        let max_blocked_streams = self.max_blocked_streams;
+        for mut conn in active_conns {
+            let handler = self.connections.entry(conn.clone()).or_insert_with(|| {
+                Rc::new(RefCell::new(Http3Handler::new(
+                    max_table_size,
+                    max_blocked_streams,
+                )))
+            });
 
-    pub fn close(&mut self, now: Instant, error: AppError, msg: &str) {
-        qinfo!([self] "Close connection.");
-        self.base_handler.close(now, error, msg);
-    }
-
-    pub fn state(&self) -> Http3State {
-        self.base_handler.state.clone()
+            handler
+                .borrow_mut()
+                .process_http3(&mut conn.borrow_mut(), now);
+            let mut remove = false;
+            while let Some(e) = handler.borrow_mut().next_event() {
+                match e {
+                    Http3ServerConnEvent::Headers {
+                        stream_id,
+                        headers,
+                        fin,
+                    } => self.events.headers(
+                        ClientRequestStream::new(conn.clone(), handler.clone(), stream_id),
+                        headers,
+                        fin,
+                    ),
+                    Http3ServerConnEvent::Data {
+                        stream_id,
+                        data,
+                        fin,
+                    } => self.events.data(
+                        ClientRequestStream::new(conn.clone(), handler.clone(), stream_id),
+                        data,
+                        fin,
+                    ),
+                    Http3ServerConnEvent::StateChange(state) => {
+                        self.events
+                            .connection_state_change(conn.clone(), state.clone());
+                        if let Http3State::Closed { .. } = state {
+                            remove = true;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            if remove {
+                self.connections.remove(&conn.clone());
+            }
+        }
     }
 
     /// Get all current events. Best used just in debug/testing code, use
     /// next_event() instead.
     pub fn events(&mut self) -> impl Iterator<Item = Http3ServerEvent> {
-        self.base_handler.events.events()
+        self.events.events()
     }
 
     /// Return true if there are outstanding events.
     pub fn has_events(&self) -> bool {
-        self.base_handler.events.has_events()
+        self.events.has_events()
     }
 
     /// Get events that indicate state changes on the connection. This method
     /// correctly handles cases where handling one event can obsolete
     /// previously-queued events, or cause new events to be generated.
     pub fn next_event(&mut self) -> Option<Http3ServerEvent> {
-        self.base_handler.events.next_event()
-    }
-
-    pub fn set_response(&mut self, stream_id: u64, headers: &[Header], data: Vec<u8>) -> Res<()> {
-        qinfo!([self] "Set new respons for stream {}.", stream_id);
-        self.base_handler
-            .transactions
-            .get_mut(&stream_id)
-            .ok_or(Error::InvalidStreamId)?
-            .set_response(headers, data, &mut self.base_handler.qpack_encoder);
-        self.base_handler
-            .insert_streams_have_data_to_send(stream_id);
-        Ok(())
-    }
-
-    pub fn stream_stop_sending(&mut self, stream_id: u64, app_error: AppError) -> Res<()> {
-        qdebug!([self] "stop sending stream_id:{} error:{}.", stream_id, app_error);
-        self.base_handler.stream_stop_sending(stream_id, app_error)
-    }
-
-    pub fn stream_reset(&mut self, stream_id: u64, app_error: AppError) -> Res<()> {
-        qdebug!([self] "reset stream_id:{} error:{}.", stream_id, app_error);
-        self.base_handler.stream_reset(stream_id, app_error)
+        self.events.next_event()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Error;
     use neqo_common::matches;
     use neqo_crypto::AuthenticationStatus;
     use neqo_qpack::encoder::QPackEncoder;
     use neqo_transport::{
-        CloseError, ConnectionEvent, FixedConnectionIdManager, State, StreamType,
+        CloseError, Connection, ConnectionEvent, FixedConnectionIdManager, State, StreamType,
     };
     use test_fixture::*;
 
@@ -144,9 +174,10 @@ mod tests {
     pub fn default_http3_server() -> Http3Server {
         fixture_init();
         Http3Server::new(
+            now(),
             DEFAULT_KEYS,
             DEFAULT_ALPN,
-            &anti_replay(),
+            anti_replay(),
             Rc::new(RefCell::new(FixedConnectionIdManager::new(5))),
             100,
             100,
@@ -154,13 +185,29 @@ mod tests {
         .expect("create a default server")
     }
 
-    fn assert_closed(hconn: &Http3Server, expected: Error) {
-        match hconn.state() {
-            Http3State::Closing(err) | Http3State::Closed(err) => {
-                assert_eq!(err, CloseError::Application(expected.code()))
-            }
-            _ => panic!("Wrong state {:?}", hconn.state()),
+    fn assert_closed(hconn: &mut Http3Server, expected: Error) {
+        let err = CloseError::Application(expected.code());
+        let closed = |e| {
+            matches!(e,
+            Http3ServerEvent::StateChange{ state: Http3State::Closing(e), .. }
+            | Http3ServerEvent::StateChange{ state: Http3State::Closed(e), .. }
+              if e == err)
         };
+        assert!(hconn.events().any(closed));
+    }
+
+    fn assert_connected(hconn: &mut Http3Server) {
+        let connected =
+            |e| matches!(e, Http3ServerEvent::StateChange{ state: Http3State::Connected, ..} );
+        assert!(hconn.events().any(connected));
+    }
+
+    fn assert_not_closed(hconn: &mut Http3Server) {
+        let closed = |e| {
+            matches!(e,
+            Http3ServerEvent::StateChange{ state: Http3State::Closing(..), .. })
+        };
+        assert!(!hconn.events().any(closed));
     }
 
     // Start a client/server and check setting frame.
@@ -176,7 +223,6 @@ mod tests {
         let mut hconn = default_http3_server();
         let mut neqo_trans_conn = default_client();
 
-        assert_eq!(hconn.state(), Http3State::Initializing);
         let out = neqo_trans_conn.process(None, now());
         let out = hconn.process(out.dgram(), now());
         let out = neqo_trans_conn.process(out.dgram(), now());
@@ -186,7 +232,7 @@ mod tests {
         neqo_trans_conn.authenticated(AuthenticationStatus::Ok, now());
         let out = neqo_trans_conn.process(None, now());
         let out = hconn.process(out.dgram(), now());
-        assert_eq!(hconn.state(), Http3State::Connected);
+        assert_connected(&mut hconn);
         neqo_trans_conn.process(out.dgram(), now());
 
         let mut connected = false;
@@ -271,7 +317,7 @@ mod tests {
         hconn.process(out.dgram(), now());
 
         // assert no error occured.
-        assert_eq!(hconn.state(), Http3State::Connected);
+        assert_not_closed(&mut hconn);
         (
             hconn,
             PeerConnection {
@@ -298,7 +344,7 @@ mod tests {
             .unwrap();
         let out = peer_conn.conn.process(None, now());
         hconn.process(out.dgram(), now());
-        assert_closed(&hconn, Error::HttpClosedCriticalStream);
+        assert_closed(&mut hconn, Error::HttpClosedCriticalStream);
     }
 
     // Server: test missing SETTINGS frame
@@ -313,7 +359,7 @@ mod tests {
         assert_eq!(sent, Ok(4));
         let out = neqo_trans_conn.process(None, now());
         hconn.process(out.dgram(), now());
-        assert_closed(&hconn, Error::HttpMissingSettings);
+        assert_closed(&mut hconn, Error::HttpMissingSettings);
     }
 
     // Server: receiving SETTINGS frame twice causes connection close
@@ -329,7 +375,7 @@ mod tests {
         assert_eq!(sent, Ok(8));
         let out = peer_conn.conn.process(None, now());
         hconn.process(out.dgram(), now());
-        assert_closed(&hconn, Error::HttpFrameUnexpected);
+        assert_closed(&mut hconn, Error::HttpFrameUnexpected);
     }
 
     fn test_wrong_frame_on_control_stream(v: &[u8]) {
@@ -340,8 +386,7 @@ mod tests {
 
         let out = peer_conn.conn.process(None, now());
         hconn.process(out.dgram(), now());
-
-        assert_closed(&hconn, Error::HttpFrameUnexpected);
+        assert_closed(&mut hconn, Error::HttpFrameUnexpected);
     }
 
     // send DATA frame on a cortrol stream
@@ -382,6 +427,8 @@ mod tests {
         let out = peer_conn.conn.process(None, now());
         let out = hconn.process(out.dgram(), now());
         peer_conn.conn.process(out.dgram(), now());
+        let out = hconn.process(None, now());
+        peer_conn.conn.process(out.dgram(), now());
 
         // check for stop-sending with Error::HttpStreamCreationError.
         let mut stop_sending_event_found = false;
@@ -397,7 +444,7 @@ mod tests {
             }
         }
         assert!(stop_sending_event_found);
-        assert_eq!(hconn.state(), Http3State::Connected);
+        assert_not_closed(&mut hconn);
     }
 
     // Server: receiving a push stream on a server should cause WrongStreamDirection
@@ -411,7 +458,7 @@ mod tests {
         let out = peer_conn.conn.process(None, now());
         let out = hconn.process(out.dgram(), now());
         peer_conn.conn.process(out.dgram(), now());
-        assert_closed(&hconn, Error::HttpStreamCreationError);
+        assert_closed(&mut hconn, Error::HttpStreamCreationError);
     }
 
     //// Test reading of a slowly streamed frame. bytes are received one by one
@@ -459,7 +506,7 @@ mod tests {
         let out = peer_conn.process(None, now());
         hconn.process(out.dgram(), now());
 
-        assert_eq!(hconn.state(), Http3State::Connected);
+        assert_not_closed(&mut hconn);
 
         // Now test PushPromise
         sent = peer_conn.stream_send(control_stream, &[0x5]);
@@ -478,7 +525,7 @@ mod tests {
         hconn.process(out.dgram(), now());
 
         // PUSH_PROMISE on a control stream will cause an error
-        assert_closed(&hconn, Error::HttpFrameUnexpected);
+        assert_closed(&mut hconn, Error::HttpFrameUnexpected);
     }
 
     // Test reading of a slowly streamed frame. bytes are received one by one
@@ -493,7 +540,7 @@ mod tests {
         let out = peer_conn.process(None, now());
         hconn.process(out.dgram(), now());
 
-        assert_closed(&hconn, Error::HttpFrameError);
+        assert_closed(&mut hconn, Error::HttpFrameError);
     }
 
     const REQUEST_WITH_BODY: &[u8] = &[
@@ -554,7 +601,7 @@ mod tests {
                     headers_frames += 1;
                 }
                 Http3ServerEvent::Data {
-                    stream_id,
+                    mut request,
                     data,
                     fin,
                 } => {
@@ -563,9 +610,8 @@ mod tests {
                     } else {
                         assert_eq!(data, &REQUEST_WITH_BODY[25..]);
                         assert_eq!(fin, true);
-                        hconn
+                        request
                             .set_response(
-                                stream_id,
                                 &[
                                     (String::from(":status"), String::from("200")),
                                     (String::from("content-length"), String::from("3")),
@@ -602,7 +648,7 @@ mod tests {
         while let Some(event) = hconn.next_event() {
             match event {
                 Http3ServerEvent::Headers {
-                    stream_id,
+                    mut request,
                     headers,
                     fin,
                 } => {
@@ -617,12 +663,11 @@ mod tests {
                     );
                     assert_eq!(fin, false);
                     headers_frames += 1;
-                    hconn
-                        .stream_stop_sending(stream_id, Error::HttpEarlyResponse.code())
+                    request
+                        .stream_stop_sending(Error::HttpEarlyResponse.code())
                         .unwrap();
-                    hconn
+                    request
                         .set_response(
-                            stream_id,
                             &[
                                 (String::from(":status"), String::from("200")),
                                 (String::from("content-length"), String::from("3")),
@@ -683,11 +728,10 @@ mod tests {
         while let Some(event) = hconn.next_event() {
             match event {
                 Http3ServerEvent::Headers {
-                    stream_id,
+                    mut request,
                     headers,
                     fin,
                 } => {
-                    assert_eq!(request_stream_id, stream_id);
                     assert_eq!(
                         headers,
                         vec![
@@ -699,8 +743,8 @@ mod tests {
                     );
                     assert_eq!(fin, false);
                     headers_frames += 1;
-                    hconn
-                        .stream_reset(stream_id, Error::HttpRequestRejected.code())
+                    request
+                        .stream_reset(Error::HttpRequestRejected.code())
                         .unwrap();
                 }
                 Http3ServerEvent::Data { .. } => {

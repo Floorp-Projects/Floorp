@@ -6,11 +6,15 @@
 
 // Directly relating to QUIC frames.
 
-use neqo_common::{qdebug, Decoder, Encoder};
+use neqo_common::{matches, qdebug, Decoder, Encoder};
+use neqo_crypto::Epoch;
 
 use crate::stream_id::StreamIndex;
 use crate::{AppError, TransportError};
 use crate::{ConnectionError, Error, Res};
+
+use std::cmp::min;
+use std::convert::TryFrom;
 
 #[allow(clippy::module_name_repetitions)]
 pub type FrameType = u64;
@@ -142,6 +146,7 @@ pub enum Frame {
         stream_id: u64,
         offset: u64,
         data: Vec<u8>,
+        fill: bool,
     },
     MaxData {
         maximum_data: u64,
@@ -197,7 +202,9 @@ impl Frame {
             Frame::StopSending { .. } => FRAME_TYPE_STOP_SENDING,
             Frame::Crypto { .. } => FRAME_TYPE_CRYPTO,
             Frame::NewToken { .. } => FRAME_TYPE_NEW_TOKEN,
-            Frame::Stream { fin, offset, .. } => {
+            Frame::Stream {
+                fin, offset, fill, ..
+            } => {
                 let mut t = FRAME_TYPE_STREAM;
                 if *fin {
                     t |= STREAM_FRAME_BIT_FIN;
@@ -205,7 +212,9 @@ impl Frame {
                 if *offset > 0 {
                     t |= STREAM_FRAME_BIT_OFF;
                 }
-                t |= STREAM_FRAME_BIT_LEN;
+                if !*fill {
+                    t |= STREAM_FRAME_BIT_LEN;
+                }
                 t
             }
             Frame::MaxData { .. } => FRAME_TYPE_MAX_DATA,
@@ -226,6 +235,68 @@ impl Frame {
                 FRAME_TYPE_CONNECTION_CLOSE_TRANSPORT + error_code.frame_type_bit()
             }
         }
+    }
+
+    /// Create a CRYPTO frame that fits the available space and its length.
+    pub fn new_crypto(offset: u64, data: &[u8], space: usize) -> (Frame, usize) {
+        // Subtract the frame type and offset from available space.
+        let mut remaining = space - 1 - Encoder::varint_len(offset);
+        // Then subtract space for the length field.
+        let data_len = min(remaining - 1, data.len());
+        remaining -= Encoder::varint_len(u64::try_from(data_len).unwrap());
+        remaining = min(data.len(), remaining);
+        (
+            Frame::Crypto {
+                offset,
+                data: data[..remaining].to_vec(),
+            },
+            remaining,
+        )
+    }
+
+    /// Create a STREAM frame that fits the available space.
+    /// Return a tuple of a frame and the amount of data it carries.
+    pub fn new_stream(
+        stream_id: u64,
+        offset: u64,
+        data: &[u8],
+        fin: bool,
+        space: usize,
+    ) -> (Frame, usize) {
+        let mut remaining = space - 1 - Encoder::varint_len(stream_id);
+        if offset > 0 {
+            remaining -= Encoder::varint_len(offset);
+        }
+        let (fin, fill) = if data.len() > remaining {
+            // More data than fits, fill the packet and negate |fin|.
+            (false, true)
+        } else if data.len() == remaining {
+            // Exact fit, fill the packet, keep |fin|.
+            (fin, true)
+        } else {
+            // Too small, so include a length.
+            let data_len = min(remaining - 1, data.len());
+            remaining -= Encoder::varint_len(u64::try_from(data_len).unwrap());
+            remaining = min(data.len(), remaining);
+            // In case the added length causes this to spill over, check |fin| again.
+            (fin && remaining == data.len(), false)
+        };
+        qdebug!(
+            "Frame::new_stream fill {} fin {} data {}",
+            fill,
+            fin,
+            remaining
+        );
+        (
+            Frame::Stream {
+                stream_id,
+                offset,
+                data: data[..remaining].to_vec(),
+                fin,
+                fill,
+            },
+            remaining,
+        )
     }
 
     pub fn marshal(&self, enc: &mut Encoder) {
@@ -275,13 +346,18 @@ impl Frame {
                 stream_id,
                 offset,
                 data,
+                fill,
                 ..
             } => {
                 enc.encode_varint(*stream_id);
                 if *offset > 0 {
                     enc.encode_varint(*offset);
                 }
-                enc.encode_vvec(&data);
+                if *fill {
+                    enc.encode(&data);
+                } else {
+                    enc.encode_vvec(&data);
+                }
             }
             Frame::MaxData { maximum_data } => {
                 enc.encode_varint(*maximum_data);
@@ -345,10 +421,7 @@ impl Frame {
     }
 
     pub fn ack_eliciting(&self) -> bool {
-        match self {
-            Frame::Ack { .. } | Frame::Padding => false,
-            _ => true,
-        }
+        !matches!(self, Frame::Ack { .. } | Frame::Padding | Frame::ConnectionClose { .. })
     }
 
     /// Converts AckRanges as encoded in a ACK frame (see -transport
@@ -404,12 +477,14 @@ impl Frame {
             Frame::Stream {
                 stream_id,
                 offset,
+                fill,
                 data,
                 fin,
             } => Some(format!(
-                "Stream {{ stream_id: {}, offset: {}, len: {} fin: {} }}",
+                "Stream {{ stream_id: {}, offset: {}, len: {}{} fin: {} }}",
                 stream_id,
                 offset,
+                if *fill { ">>" } else { "" },
                 data.len(),
                 fin,
             )),
@@ -417,13 +492,20 @@ impl Frame {
             _ => Some(format!("{:?}", self)),
         }
     }
-}
 
-/// Calculate the crypto frame header size so we know how much data we can fit
-pub fn crypto_frame_hdr_len(offset: u64, remaining: usize) -> usize {
-    let mut hdr_len = 1; // for frame type
-    hdr_len += Encoder::varint_len(offset);
-    hdr_len + Encoder::varint_len(remaining as u64)
+    pub fn is_allowed(&self, epoch: Epoch) -> bool {
+        qdebug!("is_allowed {:?} {}", self, epoch);
+        if matches!(self, Frame::Padding | Frame::Ping) {
+            true
+        } else if matches!(self, Frame::Crypto {..} | Frame::Ack {..} | Frame::ConnectionClose { error_code: CloseError::Transport(_), .. })
+        {
+            epoch != 1
+        } else if matches!(self, Frame::NewToken {..} | Frame::ConnectionClose {..}) {
+            epoch >= 3
+        } else {
+            epoch == 1 || epoch >= 3 // Application data
+        }
+    }
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -508,7 +590,8 @@ pub fn decode_frame(dec: &mut Decoder) -> Res<Frame> {
                 dv!(dec)
             };
             qdebug!("STREAM {}", t);
-            let data = if (t & STREAM_FRAME_BIT_LEN) == 0 {
+            let fill = (t & STREAM_FRAME_BIT_LEN) == 0;
+            let data = if fill {
                 qdebug!("STREAM frame extends to the end of the packet");
                 dec.decode_remainder()
             } else {
@@ -520,6 +603,7 @@ pub fn decode_frame(dec: &mut Decoder) -> Res<Frame> {
                 stream_id: s,
                 offset: o,
                 data: data.to_vec(), // TODO(mt) unnecessary copy.
+                fill,
             })
         }
         FRAME_TYPE_MAX_DATA => Ok(Frame::MaxData {
@@ -591,7 +675,6 @@ pub fn decode_frame(dec: &mut Decoder) -> Res<Frame> {
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum TxMode {
     Normal,
-    #[allow(dead_code)]
     Pto,
 }
 
@@ -689,30 +772,35 @@ mod tests {
     #[test]
     fn test_stream() {
         // First, just set the length bit.
-        let mut f = Frame::Stream {
+        let f = Frame::Stream {
             fin: false,
             stream_id: 5,
             offset: 0,
             data: vec![1, 2, 3],
+            fill: false,
         };
 
         enc_dec(&f, "0a0503010203");
 
-        // Now verify that we can parse without the length
-        // bit, because we never generate this.
-        let enc = Encoder::from_hex("0805010203");
-        let mut dec = enc.as_decoder();
-        let f2 = decode_frame(&mut dec).unwrap();
-        assert_eq!(f, f2);
-
         // Now with offset != 0 and FIN
-        f = Frame::Stream {
+        let f = Frame::Stream {
             fin: true,
             stream_id: 5,
             offset: 1,
             data: vec![1, 2, 3],
+            fill: false,
         };
         enc_dec(&f, "0f050103010203");
+
+        // Now to fill the packet.
+        let f = Frame::Stream {
+            fin: true,
+            stream_id: 5,
+            offset: 0,
+            data: vec![1, 2, 3],
+            fill: true,
+        };
+        enc_dec(&f, "0905010203");
     }
 
     #[test]

@@ -5,19 +5,18 @@
 // except according to those terms.
 
 use std::cell::RefCell;
-use std::cmp::min;
 use std::rc::Rc;
 
 use neqo_common::{hex, qdebug, qinfo, qtrace};
 use neqo_crypto::aead::Aead;
 use neqo_crypto::hp::HpKey;
 use neqo_crypto::{
-    hkdf, Agent, AntiReplay, Cipher, Epoch, SymKey, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384,
-    TLS_VERSION_1_3,
+    hkdf, Agent, AntiReplay, Cipher, Epoch, RecordList, SymKey, TLS_AES_128_GCM_SHA256,
+    TLS_AES_256_GCM_SHA384, TLS_VERSION_1_3,
 };
 
 use crate::connection::Role;
-use crate::frame::{crypto_frame_hdr_len, Frame, TxMode};
+use crate::frame::{Frame, TxMode};
 use crate::packet::{CryptoCtx, PacketNumber};
 use crate::recovery::RecoveryToken;
 use crate::recv_stream::RxStreamOrderer;
@@ -62,12 +61,12 @@ impl Crypto {
     }
 
     // Create the initial crypto state.
-    pub fn create_initial_state(&mut self, role: Role, dcid: &[u8]) -> CryptoState {
+    pub fn create_initial_state(&mut self, role: Role, dcid: &[u8]) {
         const CLIENT_INITIAL_LABEL: &str = "client in";
         const SERVER_INITIAL_LABEL: &str = "server in";
 
         qinfo!(
-            [self]
+            [self],
             "Creating initial cipher state role={:?} dcid={}",
             role,
             hex(dcid)
@@ -78,10 +77,19 @@ impl Crypto {
             Role::Server => (SERVER_INITIAL_LABEL, CLIENT_INITIAL_LABEL),
         };
 
-        CryptoState {
+        self.states[0] = Some(CryptoState {
             epoch: 0,
             tx: CryptoDxState::new_initial(CryptoDxDirection::Write, write_label, dcid),
             rx: CryptoDxState::new_initial(CryptoDxDirection::Read, read_label, dcid),
+        });
+    }
+
+    /// Buffer crypto records for sending.
+    pub fn buffer_records(&mut self, records: RecordList) {
+        for r in records {
+            assert_eq!(r.ct, 22);
+            qdebug!([self], "Adding CRYPTO data {:?}", r);
+            self.streams[r.epoch as usize].tx.send(&r.data);
         }
     }
 
@@ -94,7 +102,7 @@ impl Crypto {
 
         let cs = &mut self.states[epoch as usize];
         if cs.is_none() {
-            qtrace!([label] "Build crypto state for epoch {}", epoch);
+            qtrace!([label], "Build crypto state for epoch {}", epoch);
             assert!(epoch != 0); // This state is made directly.
 
             let cipher = match (epoch, self.tls.info()) {
@@ -103,7 +111,7 @@ impl Crypto {
                 (_, Some(info)) => Some(info.cipher_suite()),
             };
             if cipher.is_none() {
-                qdebug!([label] "cipher info not available yet");
+                qdebug!([label], "cipher info not available yet");
                 return Err(Error::KeysNotFound);
             }
             let cipher = cipher.unwrap();
@@ -123,7 +131,7 @@ impl Crypto {
                 | (Some(_), None, Role::Server, 1)
                 | (Some(_), Some(_), _, _) => {}
                 (None, None, _, _) => {
-                    qdebug!([label] "Keying material not available for epoch {}", epoch);
+                    qdebug!([label], "Keying material not available for epoch {}", epoch);
                     return Err(Error::KeysNotFound);
                 }
                 _ => panic!("bad configuration of keys"),
@@ -167,12 +175,7 @@ impl Crypto {
     ) -> Option<(Frame, Option<RecoveryToken>)> {
         let tx_stream = &mut self.streams[epoch as usize].tx;
         if let Some((offset, data)) = tx_stream.next_bytes(mode) {
-            let frame_hdr_len = crypto_frame_hdr_len(offset, remaining);
-            let length = min(data.len(), remaining - frame_hdr_len);
-            let frame = Frame::Crypto {
-                offset,
-                data: data[..length].to_vec(),
-            };
+            let (frame, length) = Frame::new_crypto(offset, data, remaining);
             tx_stream.mark_as_sent(offset, length);
 
             qdebug!(
@@ -276,7 +279,7 @@ impl CryptoCtx for CryptoDxState {
 
     fn aead_decrypt(&self, pn: PacketNumber, hdr: &[u8], body: &[u8]) -> Res<Vec<u8>> {
         qinfo!(
-            [self]
+            [self],
             "aead_decrypt pn={} hdr={} body={}",
             pn,
             hex(hdr),
@@ -289,7 +292,7 @@ impl CryptoCtx for CryptoDxState {
 
     fn aead_encrypt(&self, pn: PacketNumber, hdr: &[u8], body: &[u8]) -> Res<Vec<u8>> {
         qdebug!(
-            [self]
+            [self],
             "aead_encrypt pn={} hdr={} body={}",
             pn,
             hex(hdr),
@@ -300,7 +303,7 @@ impl CryptoCtx for CryptoDxState {
         let mut out = vec![0; size];
         let res = self.aead.encrypt(pn, hdr, body, &mut out)?;
 
-        qdebug!([self] "aead_encrypt ct={}", hex(res),);
+        qdebug!([self], "aead_encrypt ct={}", hex(res),);
 
         Ok(res.to_vec())
     }

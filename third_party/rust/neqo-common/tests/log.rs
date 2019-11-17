@@ -31,11 +31,11 @@ fn args() {
 #[test]
 fn context() {
     let context = "context";
-    qerror!([context] "error");
-    qwarn!([context] "warn");
-    qinfo!([context] "info");
-    qdebug!([context] "debug");
-    qtrace!([context] "trace");
+    qerror!([context], "error");
+    qwarn!([context], "warn");
+    qinfo!([context], "info");
+    qdebug!([context], "debug");
+    qtrace!([context], "trace");
 }
 
 #[test]

@@ -33,9 +33,9 @@ impl ControlStreamRemote {
     }
 
     pub fn add_remote_stream(&mut self, stream_id: u64) -> Res<()> {
-        qinfo!([self] "A new control stream {}.", stream_id);
+        qinfo!([self], "A new control stream {}.", stream_id);
         if self.stream_id.is_some() {
-            qdebug!([self] "A control stream already exists");
+            qdebug!([self], "A control stream already exists");
             return Err(Error::HttpStreamCreationError);
         }
         self.stream_id = Some(stream_id);
@@ -45,7 +45,7 @@ impl ControlStreamRemote {
     pub fn receive_if_this_stream(&mut self, conn: &mut Connection, stream_id: u64) -> Res<bool> {
         if let Some(id) = self.stream_id {
             if id == stream_id {
-                qdebug!([self] "Receiving data.");
+                qdebug!([self], "Receiving data.");
                 self.fin = self.frame_reader.receive(conn, stream_id)?;
                 return Ok(true);
             }

@@ -2319,5 +2319,9 @@ void gfxPlatformFontList::InitOtherFamilyNames(uint32_t aGeneration,
   InitOtherFamilyNames(aDefer);
 }
 
+uint32_t gfxPlatformFontList::GetGeneration() const {
+  return SharedFontList() ? SharedFontList()->GetGeneration() : 0;
+}
+
 #undef LOG
 #undef LOG_ENABLED

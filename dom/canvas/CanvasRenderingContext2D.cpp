@@ -3978,6 +3978,9 @@ gfxFontGroup* CanvasRenderingContext2D::GetCurrentFontStyle() {
         NS_ERROR("Default canvas font is invalid");
       }
     }
+  } else {
+    // The fontgroup needs to check if its cached families/faces are valid.
+    CurrentState().fontGroup->CheckForUpdatedPlatformList();
   }
 
   return CurrentState().fontGroup;

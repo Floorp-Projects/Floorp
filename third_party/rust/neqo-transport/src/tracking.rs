@@ -84,12 +84,12 @@ impl PacketRange {
         assert!(!self.contains(pn));
         // Only insert if this is adjacent the current range.
         if (self.largest + 1) == pn {
-            qtrace!([self] "Adding largest {}", pn);
+            qtrace!([self], "Adding largest {}", pn);
             self.largest += 1;
             self.ack_needed = true;
             true
         } else if self.smallest == (pn + 1) {
-            qtrace!([self] "Adding smallest {}", pn);
+            qtrace!([self], "Adding smallest {}", pn);
             self.smallest -= 1;
             self.ack_needed = true;
             true
@@ -100,7 +100,7 @@ impl PacketRange {
 
     /// Maybe merge a lower-numbered range into this.
     pub fn merge_smaller(&mut self, other: &Self) {
-        qinfo!([self] "Merging {}", other);
+        qinfo!([self], "Merging {}", other);
         // This only works if they are immediately adjacent.
         assert_eq!(self.smallest - 1, other.largest);
 
@@ -113,7 +113,7 @@ impl PacketRange {
     /// Requires that other is equal to this, or a larger range.
     pub fn acknowledged(&mut self, other: &Self) {
         if (other.smallest <= self.smallest) && (other.largest >= self.largest) {
-            qinfo!([self] "Acknowledged");
+            qinfo!([self], "Acknowledged");
             self.ack_needed = false;
         }
     }
@@ -201,6 +201,8 @@ impl RecvdPackets {
 
     /// Add the packet to the tracked set.
     pub fn set_received(&mut self, now: Instant, pn: u64, ack_eliciting: bool) {
+        let next_in_order_pn = self.ranges.get(0).map(|pr| pr.largest + 1).unwrap_or(0);
+        qdebug!("next in order pn: {}", next_in_order_pn);
         let i = self.add(pn);
 
         // The new addition was the largest, so update the time we use for calculating ACK delay.
@@ -212,18 +214,21 @@ impl RecvdPackets {
         if self.ranges.len() > MAX_TRACKED_RANGES {
             let oldest = self.ranges.pop_back().unwrap();
             if oldest.ack_needed {
-                qwarn!([self] "Dropping unacknowledged ACK range: {}", oldest);
+                qwarn!([self], "Dropping unacknowledged ACK range: {}", oldest);
             // TODO(mt) Record some statistics about this so we can tune MAX_TRACKED_RANGES.
             } else {
-                qdebug!([self] "Drop ACK range: {}", oldest);
+                qdebug!([self], "Drop ACK range: {}", oldest);
             }
             self.min_tracked = oldest.largest + 1;
         }
 
         if ack_eliciting {
-            // On the first ack-eliciting packet since sending an ACK, set a delay.
-            // On the second, remove that delay.
-            if self.ack_time.is_none() && self.space == PNSpace::ApplicationData {
+            // Send ACK right away if out-of-order
+            // On the first in-order ack-eliciting packet since sending an ACK,
+            // set a delay. On the second, remove that delay.
+            if pn != next_in_order_pn {
+                self.ack_time = Some(now);
+            } else if self.ack_time.is_none() && self.space == PNSpace::ApplicationData {
                 self.ack_time = Some(now + ACK_DELAY);
             } else {
                 self.ack_time = Some(now);
@@ -502,6 +507,24 @@ mod tests {
 
             // Any packet will be acknowledged straight away.
             rp.set_received(now(), 0, true);
+            assert_eq!(Some(now()), rp.ack_time());
+            assert!(rp.ack_now(now()));
+        }
+    }
+
+    #[test]
+    fn ooo_no_ack_delay() {
+        for space in &[
+            PNSpace::Initial,
+            PNSpace::Handshake,
+            PNSpace::ApplicationData,
+        ] {
+            let mut rp = RecvdPackets::new(*space);
+            assert!(rp.ack_time().is_none());
+            assert!(!rp.ack_now(now()));
+
+            // Any OoO packet will be acknowledged straight away.
+            rp.set_received(now(), 3, true);
             assert_eq!(Some(now()), rp.ack_time());
             assert!(rp.ack_now(now()));
         }

@@ -41,13 +41,16 @@ let gSyncChooseWhatToSync = {
     // These 2 engines are unique in that there are prefs that make the
     // entire engine unavailable (which is distinct from "disabled").
     let enginePrefs = [
-      ["services.sync.engine.addresses.available", ".sync-engine-addresses"],
-      [
-        "services.sync.engine.creditcards.available",
-        ".sync-engine-creditcards",
-      ],
+      ["services.sync.engine.addresses", ".sync-engine-addresses"],
+      ["services.sync.engine.creditcards", ".sync-engine-creditcards"],
     ];
-    for (let [availablePref, className] of enginePrefs) {
+    for (let [enabledPref, className] of enginePrefs) {
+      let availablePref = enabledPref + ".available";
+      // If the engine is enabled we force it to be available, otherwise we see
+      // spooky things happen (like it magically re-appear later)
+      if (Services.prefs.getBoolPref(enabledPref, false)) {
+        Services.prefs.setBoolPref(availablePref, true);
+      }
       if (!Services.prefs.getBoolPref(availablePref)) {
         let elt = document.querySelector(className);
         elt.hidden = true;
