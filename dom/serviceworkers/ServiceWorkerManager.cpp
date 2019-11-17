@@ -63,7 +63,6 @@
 
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
-#include "nsPermissionManager.h"
 #include "nsProxyRelease.h"
 #include "nsQueryObject.h"
 #include "nsTArray.h"
@@ -2132,7 +2131,7 @@ void ServiceWorkerManager::DispatchFetchEvent(nsIInterceptedChannel* aChannel,
 
   MOZ_DIAGNOSTIC_ASSERT(serviceWorker);
 
-  RefPtr<ContinueDispatchFetchEventRunnable> continueRunnable =
+  nsCOMPtr<nsIRunnable> continueRunnable =
       new ContinueDispatchFetchEventRunnable(serviceWorker->WorkerPrivate(),
                                              aChannel, loadGroup,
                                              loadInfo->GetIsDocshellReload());
@@ -2142,14 +2141,10 @@ void ServiceWorkerManager::DispatchFetchEvent(nsIInterceptedChannel* aChannel,
   // wait for them if they have not.
   nsCOMPtr<nsIRunnable> permissionsRunnable = NS_NewRunnableFunction(
       "dom::ServiceWorkerManager::DispatchFetchEvent", [=]() {
-        RefPtr<nsPermissionManager> permMgr =
-            nsPermissionManager::GetInstance();
-        if (permMgr) {
-          permMgr->WhenPermissionsAvailable(serviceWorker->Principal(),
-                                            continueRunnable);
-        } else {
-          continueRunnable->HandleError();
-        }
+        nsCOMPtr<nsIPermissionManager> permMgr =
+            services::GetPermissionManager();
+        MOZ_ALWAYS_SUCCEEDS(permMgr->WhenPermissionsAvailable(
+            serviceWorker->Principal(), continueRunnable));
       });
 
   nsCOMPtr<nsIUploadChannel2> uploadChannel =
