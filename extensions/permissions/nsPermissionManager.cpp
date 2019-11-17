@@ -2997,12 +2997,11 @@ void nsPermissionManager::UpdateDB(
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
-NS_IMETHODIMP
-nsPermissionManager::GetPermissionsWithKey(const nsACString& aPermissionKey,
-                                           nsTArray<IPC::Permission>& aPerms) {
+bool nsPermissionManager::GetPermissionsWithKey(
+    const nsACString& aPermissionKey, nsTArray<IPC::Permission>& aPerms) {
   aPerms.Clear();
   if (NS_WARN_IF(XRE_IsContentProcess())) {
-    return NS_ERROR_NOT_AVAILABLE;
+    return false;
   }
 
   for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
@@ -3037,14 +3036,13 @@ nsPermissionManager::GetPermissionsWithKey(const nsACString& aPermissionKey,
     }
   }
 
-  return NS_OK;
+  return true;
 }
 
-NS_IMETHODIMP
-nsPermissionManager::SetPermissionsWithKey(const nsACString& aPermissionKey,
-                                           nsTArray<IPC::Permission>& aPerms) {
+void nsPermissionManager::SetPermissionsWithKey(
+    const nsACString& aPermissionKey, nsTArray<IPC::Permission>& aPerms) {
   if (NS_WARN_IF(XRE_IsParentProcess())) {
-    return NS_ERROR_NOT_AVAILABLE;
+    return;
   }
 
   RefPtr<GenericNonExclusivePromise::Private> promise;
@@ -3059,7 +3057,7 @@ nsPermissionManager::SetPermissionsWithKey(const nsACString& aPermissionKey,
   } else if (foundKey) {
     // NOTE: We shouldn't be sent two InitializePermissionsWithKey for the same
     // key, but it's possible.
-    return NS_OK;
+    return;
   }
   mPermissionKeyPromiseMap.Put(aPermissionKey, nullptr);
 
@@ -3087,7 +3085,6 @@ nsPermissionManager::SetPermissionsWithKey(const nsACString& aPermissionKey,
                 perm.expireTime, modificationTime, eNotify, eNoDBOperation,
                 true /* ignoreSessionPermissions */);
   }
-  return NS_OK;
 }
 
 /* static */
@@ -3217,14 +3214,13 @@ bool nsPermissionManager::PermissionAvailable(nsIPrincipal* aPrincipal,
   return true;
 }
 
-NS_IMETHODIMP
-nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
-                                              nsIRunnable* aRunnable) {
+void nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
+                                                   nsIRunnable* aRunnable) {
   MOZ_ASSERT(aRunnable);
 
   if (!XRE_IsContentProcess()) {
     aRunnable->Run();
-    return NS_OK;
+    return;
   }
 
   nsTArray<RefPtr<GenericNonExclusivePromise>> promises;
@@ -3250,7 +3246,7 @@ nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
   // sensitive.
   if (promises.IsEmpty()) {
     aRunnable->Run();
-    return NS_OK;
+    return;
   }
 
   auto* thread = SystemGroup::AbstractMainThreadFor(TaskCategory::Other);
@@ -3264,11 +3260,8 @@ nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
                 "nsPermissionManager permission promise rejected. We're "
                 "probably shutting down.");
           });
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPermissionManager::GetHasPreloadPermissions(bool* aResult) {
-  *aResult = sPreloadPermissionCount > 0;
-  return NS_OK;
+bool nsPermissionManager::HasPreloadPermissions() {
+  return sPreloadPermissionCount > 0;
 }
