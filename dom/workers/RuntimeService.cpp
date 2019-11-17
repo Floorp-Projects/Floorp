@@ -2494,7 +2494,8 @@ bool IsCurrentThreadRunningWorker() {
 }
 
 bool IsCurrentThreadRunningChromeWorker() {
-  return GetCurrentThreadWorkerPrivate()->UsesSystemPrincipal();
+  WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
+  return wp && wp->UsesSystemPrincipal();
 }
 
 JSContext* GetCurrentWorkerThreadJSContext() {
