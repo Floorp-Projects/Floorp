@@ -239,12 +239,7 @@ RemoteWorkerManager::SelectTargetActorForServiceWorker(
     auto scopeExit = MakeScopeExit(
         [&] { contentParents.AppendElement(std::move(contentParent)); });
 
-    const nsAString& remoteType = contentParent->GetRemoteType();
-    MOZ_DIAGNOSTIC_ASSERT(
-        !IsWebCoopCoepRemoteType(remoteType),
-        "COOP+COEP processes don't support remote workers right now");
-
-    if (IsWebRemoteType(remoteType)) {
+    if (IsWebRemoteType(contentParent->GetRemoteType())) {
       auto lock = contentParent->mRemoteWorkerActorData.Lock();
 
       if (lock->mCount || !lock->mShutdownStarted) {
