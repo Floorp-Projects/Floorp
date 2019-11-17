@@ -23,6 +23,7 @@ import mozilla.components.support.base.log.logger.Logger
 import java.lang.UnsupportedOperationException
 
 private const val NOTIFICATION_CHANNEL_ID = "mozac.feature.webnotifications.generic.channel"
+private const val NOTIFICATION_TAG_ID = "mozac.feature.webnotifications.generic.tag"
 
 /**
  * Feature implementation for configuring and displaying web notifications to the user.
@@ -66,7 +67,7 @@ class WebNotificationFeature(
         ensureNotificationGroupAndChannelExists()
 
         notificationIdMap[webNotification.tag]?.let {
-            notificationManager?.cancel(it)
+            notificationManager?.cancel(NOTIFICATION_TAG_ID, it)
         }
 
         pendingRequestId++
@@ -76,13 +77,13 @@ class WebNotificationFeature(
         GlobalScope.launch(Dispatchers.IO) {
             val notification = nativeNotificationBridge.convertToAndroidNotification(
                 webNotification, context, NOTIFICATION_CHANNEL_ID, activityClass, pendingRequestId)
-            notificationManager?.notify(notificationId, notification)
+            notificationManager?.notify(NOTIFICATION_TAG_ID, notificationId, notification)
         }
     }
 
     override fun onCloseNotification(webNotification: WebNotification) {
         notificationIdMap[webNotification.tag]?.let {
-            notificationManager?.cancel(it)
+            notificationManager?.cancel(NOTIFICATION_TAG_ID, it)
         }
     }
 
