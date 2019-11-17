@@ -444,6 +444,14 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
     return mCodepointsWithNoFonts.test(aCh);
   }
 
+  // If using the shared font list, returns a generation count that is
+  // incremented if/when the platform list is reinitialized (e.g. because
+  // fonts are installed/removed while the browser is running), such that
+  // existing references to shared font family or face objects and character
+  // maps will no longer be valid.
+  // (The legacy (non-shared) list just returns 0 here.)
+  uint32_t GetGeneration() const;
+
  protected:
   friend class mozilla::fontlist::FontList;
   friend class InitOtherFamilyNamesForStylo;
