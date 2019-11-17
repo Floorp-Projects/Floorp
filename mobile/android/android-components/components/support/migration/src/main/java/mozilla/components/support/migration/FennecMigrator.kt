@@ -68,6 +68,37 @@ data class VersionedMigration(val migration: Migration, val version: Int = migra
 }
 
 /**
+ * Exceptions related to Fennec migrations.
+ *
+ * See https://github.com/mozilla-mobile/android-components/issues/5095 for stripping any possible PII from these
+ * exceptions.
+ */
+sealed class FennecMigratorException(cause: Exception) : Exception(cause) {
+    /**
+     * Unexpected exception while migrating history.
+     * @param cause Original exception which caused the problem.
+     */
+    class MigrateHistoryException(cause: Exception) : FennecMigratorException(cause)
+
+    /**
+     * Unexpected exception while migrating bookmarks.
+     * @param cause Original exception which caused the problem.
+     */
+    class MigrateBookmarksException(cause: Exception) : FennecMigratorException(cause)
+
+    /**
+     * Unexpected exception while migrating open tabs.
+     * @param cause Original exception which caused the problem.
+     */
+    class MigrateOpenTabsException(cause: Exception) : FennecMigratorException(cause)
+    /**
+     * Unexpected exception while migrating gecko profile.
+     * @param cause Original exception which caused the problem.
+     */
+    class MigrateGeckoException(cause: Exception) : FennecMigratorException(cause)
+}
+
+/**
  * Entrypoint for Fennec data migration. See [Builder] for public API.
  *
  * @param context Application context used for accessing the file system.
@@ -320,6 +351,7 @@ class FennecMigrator private constructor(
             logger.debug("Migrated history.")
             Result.Success(Unit)
         } catch (e: Exception) {
+            crashReporter.submitCaughtException(FennecMigratorException.MigrateHistoryException(e))
             Result.Failure(e)
         }
     }
@@ -342,6 +374,9 @@ class FennecMigrator private constructor(
             logger.debug("Migrated bookmarks.")
             Result.Success(Unit)
         } catch (e: Exception) {
+            crashReporter.submitCaughtException(
+                FennecMigratorException.MigrateBookmarksException(e)
+            )
             Result.Failure(e)
         }
     }
@@ -362,6 +397,9 @@ class FennecMigrator private constructor(
             }
             result
         } catch (e: Exception) {
+            crashReporter.submitCaughtException(
+                FennecMigratorException.MigrateOpenTabsException(e)
+            )
             Result.Failure(e)
         }
     }
@@ -421,6 +459,9 @@ class FennecMigrator private constructor(
             logger.debug("Migrated gecko files.")
             result
         } catch (e: Exception) {
+            crashReporter.submitCaughtException(
+                FennecMigratorException.MigrateGeckoException(e)
+            )
             Result.Failure(e)
         }
     }
