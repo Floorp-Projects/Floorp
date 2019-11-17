@@ -28,5 +28,5 @@ pub fn dump_packet(conn: &Connection, dir: &str, hdr: &PacketHdr, payload: &[u8]
             s.push_str(&format!("\n  {} {}", dir, &x));
         }
     }
-    qdebug!([conn] "pn={} type={:?}{}", hdr.pn, hdr.tipe, s);
+    qdebug!([conn], "pn={} type={:?}{}", hdr.pn, hdr.tipe, s);
 }
