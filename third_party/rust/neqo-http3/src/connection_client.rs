@@ -20,12 +20,13 @@ use std::time::Instant;
 use crate::{Error, Res};
 
 pub struct Http3Client {
+    conn: Connection,
     base_handler: Http3Connection<Http3ClientEvents, TransactionClient, Http3ClientHandler>,
 }
 
 impl ::std::fmt::Display for Http3Client {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        write!(f, "Http3 connection {:?}", self.role())
+        write!(f, "Http3 client")
     }
 }
 
@@ -40,15 +41,14 @@ impl Http3Client {
         max_blocked_streams: u16,
     ) -> Res<Http3Client> {
         Ok(Http3Client {
-            base_handler: Http3Connection::new_client(
+            conn: Connection::new_client(
                 server_name,
                 protocols,
                 cid_manager,
                 local_addr,
                 remote_addr,
-                max_table_size,
-                max_blocked_streams,
             )?,
+            base_handler: Http3Connection::new(max_table_size, max_blocked_streams),
         })
     }
 
@@ -58,16 +58,13 @@ impl Http3Client {
         max_blocked_streams: u16,
     ) -> Res<Http3Client> {
         Ok(Http3Client {
-            base_handler: Http3Connection::new_client_with_conn(
-                c,
-                max_table_size,
-                max_blocked_streams,
-            )?,
+            conn: c,
+            base_handler: Http3Connection::new(max_table_size, max_blocked_streams),
         })
     }
 
     pub fn role(&self) -> Role {
-        self.base_handler.role()
+        self.conn.role()
     }
 
     pub fn state(&self) -> Http3State {
@@ -75,21 +72,21 @@ impl Http3Client {
     }
 
     pub fn tls_info(&self) -> Option<&SecretAgentInfo> {
-        self.base_handler.conn.tls_info()
+        self.conn.tls_info()
     }
 
     /// Get the peer's certificate.
     pub fn peer_certificate(&self) -> Option<CertificateInfo> {
-        self.base_handler.conn.peer_certificate()
+        self.conn.peer_certificate()
     }
 
     pub fn authenticated(&mut self, status: AuthenticationStatus, now: Instant) {
-        self.base_handler.conn.authenticated(status, now);
+        self.conn.authenticated(status, now);
     }
 
     pub fn close(&mut self, now: Instant, error: AppError, msg: &str) {
-        qinfo!([self] "Close the connection error={} msg={}.", error, msg);
-        self.base_handler.close(now, error, msg);
+        qinfo!([self], "Close the connection error={} msg={}.", error, msg);
+        self.base_handler.close(&mut self.conn, now, error, msg);
     }
 
     pub fn fetch(
@@ -101,14 +98,14 @@ impl Http3Client {
         headers: &[Header],
     ) -> Res<u64> {
         qinfo!(
-            [self]
+            [self],
             "Fetch method={}, scheme={}, host={}, path={}",
             method,
             scheme,
             host,
             path
         );
-        let id = self.base_handler.conn().stream_create(StreamType::BiDi)?;
+        let id = self.conn.stream_create(StreamType::BiDi)?;
         self.base_handler.add_transaction(
             id,
             TransactionClient::new(
@@ -125,26 +122,33 @@ impl Http3Client {
     }
 
     pub fn stream_reset(&mut self, stream_id: u64, error: AppError) -> Res<()> {
-        qinfo!([self] "reset_stream {} error={}.", stream_id, error);
-        self.base_handler.stream_reset(stream_id, error)
+        qinfo!([self], "reset_stream {} error={}.", stream_id, error);
+        self.base_handler
+            .stream_reset(&mut self.conn, stream_id, error)
     }
 
     pub fn stream_close_send(&mut self, stream_id: u64) -> Res<()> {
-        qinfo!([self] "Close senidng side stream={}.", stream_id);
-        self.base_handler.stream_close_send(stream_id)
+        qinfo!([self], "Close senidng side stream={}.", stream_id);
+        self.base_handler
+            .stream_close_send(&mut self.conn, stream_id)
     }
 
     pub fn send_request_body(&mut self, stream_id: u64, buf: &[u8]) -> Res<usize> {
-        qinfo!([self] "send_request_body from stream {} sending {} bytes.", stream_id, buf.len());
+        qinfo!(
+            [self],
+            "send_request_body from stream {} sending {} bytes.",
+            stream_id,
+            buf.len()
+        );
         self.base_handler
             .transactions
             .get_mut(&stream_id)
             .ok_or(Error::InvalidStreamId)?
-            .send_request_body(&mut self.base_handler.conn, buf)
+            .send_request_body(&mut self.conn, buf)
     }
 
     pub fn read_response_headers(&mut self, stream_id: u64) -> Res<(Vec<Header>, bool)> {
-        qinfo!([self] "read_response_headers from stream {}.", stream_id);
+        qinfo!([self], "read_response_headers from stream {}.", stream_id);
         let transaction = self
             .base_handler
             .transactions
@@ -167,14 +171,14 @@ impl Http3Client {
         stream_id: u64,
         buf: &mut [u8],
     ) -> Res<(usize, bool)> {
-        qinfo!([self] "read_data from stream {}.", stream_id);
+        qinfo!([self], "read_data from stream {}.", stream_id);
         let transaction = self
             .base_handler
             .transactions
             .get_mut(&stream_id)
             .ok_or(Error::InvalidStreamId)?;
 
-        match transaction.read_response_data(&mut self.base_handler.conn, buf) {
+        match transaction.read_response_data(&mut self.conn, buf) {
             Ok((amount, fin)) => {
                 if fin {
                     self.base_handler.transactions.remove(&stream_id);
@@ -184,10 +188,7 @@ impl Http3Client {
                     // pick up subsequent already-received data frames in
                     // the stream even if no new packets arrive to cause
                     // process_http3() to run.
-                    transaction.receive(
-                        &mut self.base_handler.conn,
-                        &mut self.base_handler.qpack_decoder,
-                    )?;
+                    transaction.receive(&mut self.conn, &mut self.base_handler.qpack_decoder)?;
                 }
                 Ok((amount, fin))
             }
@@ -219,33 +220,37 @@ impl Http3Client {
     }
 
     pub fn process(&mut self, dgram: Option<Datagram>, now: Instant) -> Output {
-        qtrace!([self] "Process.");
-        self.base_handler.process(dgram, now)
+        qtrace!([self], "Process.");
+        if let Some(d) = dgram {
+            self.process_input(d, now);
+        }
+        self.process_http3(now);
+        self.process_output(now)
     }
 
     pub fn process_input(&mut self, dgram: Datagram, now: Instant) {
-        qtrace!([self] "Process input.");
-        self.base_handler.process_input(dgram, now);
+        qtrace!([self], "Process input.");
+        self.conn.process_input(dgram, now);
     }
 
     pub fn process_timer(&mut self, now: Instant) {
-        qtrace!([self] "Process timer.");
-        self.base_handler.process_timer(now);
+        qtrace!([self], "Process timer.");
+        self.conn.process_timer(now);
     }
 
     pub fn conn(&mut self) -> &mut Connection {
-        &mut self.base_handler.conn
+        &mut self.conn
     }
 
     pub fn process_http3(&mut self, now: Instant) {
-        qtrace!([self] "Process http3 internal.");
+        qtrace!([self], "Process http3 internal.");
 
-        self.base_handler.process_http3(now);
+        self.base_handler.process_http3(&mut self.conn, now);
     }
 
     pub fn process_output(&mut self, now: Instant) -> Output {
-        qtrace!([self] "Process output.");
-        self.base_handler.process_output(now)
+        qtrace!([self], "Process output.");
+        self.conn.process_output(now)
     }
 }
 
