@@ -32,6 +32,31 @@
   <script src="chrome://mozapps/content/extensions/extensions.js"/>
   <script src="chrome://mozapps/content/extensions/abuse-report-frame.js"/>
 
+  <popupset>
+    <menulist popuponly="true" id="ContentSelectDropdown" hidden="true">
+      <menupopup rolluponmousewheel="true"
+                 activateontab="true" position="after_start"
+                 level="parent"
+#ifdef XP_WIN
+                 consumeoutsideclicks="false" ignorekeys="shortcuts"
+#endif
+        />
+    </menulist>
+
+    <panel is="autocomplete-richlistbox-popup"
+           type="autocomplete-richlistbox"
+           id="PopupAutoComplete"
+           noautofocus="true"
+           hidden="true"
+           norolluponanchor="true"
+           nomaxresults="true" />
+
+    <menupopup id="contentAreaContextMenu">
+      <!-- a dummy element used to forward the context menu related to the extension's
+           options page XUL browsers to the context menu defined in the parent chrome window -->
+    </menupopup>
+  </popupset>
+
   <stack id="main-page-stack" flex="1">
   <hbox id="main-page-content" flex="1">
     <vbox id="category-box">

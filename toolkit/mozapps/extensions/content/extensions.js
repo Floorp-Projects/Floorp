@@ -102,6 +102,14 @@ function initialize(event) {
   }
   document.removeEventListener("load", initialize, true);
 
+  let contentAreaContextMenu = document.getElementById(
+    "contentAreaContextMenu"
+  );
+  contentAreaContextMenu.addEventListener("popupshowing", function(event) {
+    Cu.reportError("This dummy menupopup is not supposed to be shown");
+    return false;
+  });
+
   let addonPage = document.getElementById("addons-page");
   addonPage.addEventListener("dragenter", function(event) {
     gDragDrop.onDragOver(event);
@@ -1532,6 +1540,28 @@ var gDragDrop = {
     }
   },
 };
+
+// Force the options_ui remote browser to recompute window.mozInnerScreenX and
+// window.mozInnerScreenY when the "addon details" page has been scrolled
+// (See Bug 1390445 for rationale).
+{
+  const UPDATE_POSITION_DELAY = 100;
+
+  const updatePositionTask = new DeferredTask(() => {
+    const browser = document.getElementById("addon-options");
+    if (browser && browser.isRemoteBrowser) {
+      browser.frameLoader.requestUpdatePosition();
+    }
+  }, UPDATE_POSITION_DELAY);
+
+  window.addEventListener(
+    "scroll",
+    () => {
+      updatePositionTask.arm();
+    },
+    true
+  );
+}
 
 const addonTypes = new Set([
   "extension",
