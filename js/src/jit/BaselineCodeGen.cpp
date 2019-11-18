@@ -6028,7 +6028,25 @@ bool BaselineInterpreterCodeGen::emitGeneratorThrowOrReturnCallVM() {
 
   using Fn = bool (*)(JSContext*, BaselineFrame*,
                       Handle<AbstractGeneratorObject*>, HandleValue, uint32_t);
-  return callVM<Fn, jit::GeneratorThrowOrReturn>();
+  if (!callVM<Fn, jit::GeneratorThrowOrReturn>()) {
+    return false;
+  }
+
+  // Control only flows out of GeneratorThrowOrReturn if the debugger
+  // overrode the function resumption with an explicit return value, so here
+  // we want to do all of the cleanup on the baseline frame that _would_ have
+  // happened inside the epilogue of the baseline frame execution.
+
+  // Save the frame's return value to return from resume.
+  masm.loadValue(frame.addressOfReturnValue(), JSReturnOperand);
+
+  // Remove the baseline frame from the stack.
+  masm.moveToStackPtr(BaselineFrameReg);
+  masm.pop(BaselineFrameReg);
+
+  masm.ret();
+
+  return true;
 }
 
 template <>
