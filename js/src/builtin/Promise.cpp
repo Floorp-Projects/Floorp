@@ -4481,16 +4481,16 @@ MOZ_MUST_USE bool js::AsyncGeneratorEnqueue(JSContext* cx,
                                             MutableHandleValue result) {
   // Step 1 (implicit).
 
-  // Step 2.
-  Rooted<PromiseObject*> resultPromise(
-      cx, CreatePromiseObjectForAsyncGenerator(cx));
-  if (!resultPromise) {
-    return false;
-  }
-
   // Step 3.
   if (!asyncGenVal.isObject() ||
-      !asyncGenVal.toObject().is<AsyncGeneratorObject>()) {
+      !asyncGenVal.toObject().canUnwrapAs<AsyncGeneratorObject>()) {
+    // Step 2.
+    Rooted<PromiseObject*> resultPromise(
+        cx, CreatePromiseObjectForAsyncGenerator(cx));
+    if (!resultPromise) {
+      return false;
+    }
+
     // Step 3.a.
     RootedValue badGeneratorError(cx);
     if (!GetTypeError(cx, JSMSG_NOT_AN_ASYNC_GENERATOR, &badGeneratorError)) {
@@ -4508,32 +4508,61 @@ MOZ_MUST_USE bool js::AsyncGeneratorEnqueue(JSContext* cx,
   }
 
   Rooted<AsyncGeneratorObject*> asyncGenObj(
-      cx, &asyncGenVal.toObject().as<AsyncGeneratorObject>());
+      cx, &asyncGenVal.toObject().unwrapAs<AsyncGeneratorObject>());
 
-  // Step 5 (reordered).
-  Rooted<AsyncGeneratorRequest*> request(
-      cx, AsyncGeneratorObject::createRequest(cx, asyncGenObj, completionKind,
-                                              completionValue, resultPromise));
-  if (!request) {
-    return false;
-  }
+  bool wrapResult = false;
+  {
+    // The |resultPromise| must be same-compartment with |asyncGenObj|, because
+    // it is stored in AsyncGeneratorRequest, which in turn is stored in a
+    // reserved slot of |asyncGenObj|.
+    // So we first enter the realm of |asyncGenObj|, then create the result
+    // promise and resume the generator, and finally wrap the result promise to
+    // match the original compartment.
 
-  // Steps 4, 6.
-  if (!AsyncGeneratorObject::enqueueRequest(cx, asyncGenObj, request)) {
-    return false;
-  }
+    mozilla::Maybe<AutoRealm> ar;
+    RootedValue completionVal(cx, completionValue);
+    if (asyncGenObj->compartment() != cx->compartment()) {
+      ar.emplace(cx, asyncGenObj);
+      wrapResult = true;
 
-  // Step 7.
-  if (!asyncGenObj->isExecuting() && !asyncGenObj->isAwaitingYieldReturn()) {
-    // Step 8.
-    if (!AsyncGeneratorResumeNext(cx, asyncGenObj, ResumeNextKind::Enqueue)) {
+      if (!cx->compartment()->wrap(cx, &completionVal)) {
+        return false;
+      }
+    }
+
+    // Step 2.
+    Rooted<PromiseObject*> resultPromise(
+        cx, CreatePromiseObjectForAsyncGenerator(cx));
+    if (!resultPromise) {
       return false;
     }
+
+    // Step 5 (reordered).
+    Rooted<AsyncGeneratorRequest*> request(
+        cx, AsyncGeneratorObject::createRequest(cx, asyncGenObj, completionKind,
+                                                completionVal, resultPromise));
+    if (!request) {
+      return false;
+    }
+
+    // Steps 4, 6.
+    if (!AsyncGeneratorObject::enqueueRequest(cx, asyncGenObj, request)) {
+      return false;
+    }
+
+    // Step 7.
+    if (!asyncGenObj->isExecuting() && !asyncGenObj->isAwaitingYieldReturn()) {
+      // Step 8.
+      if (!AsyncGeneratorResumeNext(cx, asyncGenObj, ResumeNextKind::Enqueue)) {
+        return false;
+      }
+    }
+
+    // Step 9.
+    result.setObject(*resultPromise);
   }
 
-  // Step 9.
-  result.setObject(*resultPromise);
-  return true;
+  return !wrapResult || cx->compartment()->wrap(cx, result);
 }
 
 static bool Promise_catch_impl(JSContext* cx, unsigned argc, Value* vp,
