@@ -7,6 +7,8 @@
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const Types = require("devtools/client/shared/vendor/react-prop-types");
 const { openDocLink } = require("devtools/client/shared/link");
+var Services = require("Services");
+const isMacOS = Services.appinfo.OS === "Darwin";
 
 const {
   Component,
@@ -97,6 +99,13 @@ const dev = {
   ],
 };
 
+function openLink(href, e) {
+  return openDocLink(href, {
+    relatedToCurrent: true,
+    inBackground: isMacOS ? e.metaKey : e.ctrlKey,
+  });
+}
+
 class Aside extends Component {
   render() {
     return dom.aside(
@@ -113,7 +122,7 @@ class Aside extends Component {
               className: "devtools-button",
               onClick: e => {
                 e.preventDefault();
-                openDocLink(aside.href);
+                openLink(aside.href, e);
               },
             },
             aside.cta
@@ -142,7 +151,7 @@ class Feature extends Component {
           href,
           onClick: e => {
             e.preventDefault();
-            openDocLink(href);
+            openLink(href, e);
           },
         },
         dom.h3({}, header),
@@ -159,7 +168,7 @@ function Link(text, href) {
       href,
       onClick: e => {
         e.preventDefault();
-        openDocLink(href);
+        openLink(href, e);
       },
     },
     text
