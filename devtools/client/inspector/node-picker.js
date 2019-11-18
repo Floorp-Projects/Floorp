@@ -17,16 +17,16 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
  * walkerFront and selection api. The nodeFront is stateless, with the
  * HighlighterFront managing it's own state.
  *
- * @param {Target} target
- *        The target the toolbox will debug
+ * @param {TargetList} targetList
+ *        The TargetList component referencing all the targets to be debugged
  * @param {Selection} selection
  *        The global Selection object
  */
 class NodePicker extends EventEmitter {
-  constructor(target, selection) {
+  constructor(targetList, selection) {
     super();
 
-    this.target = target;
+    this.targetList = targetList;
     this.selection = selection;
 
     // Whether or not the node picker is active.
@@ -80,8 +80,10 @@ class NodePicker extends EventEmitter {
 
     // Get all the inspector fronts where the picker should start, and cache them locally
     // so we can stop the picker when needed for the same list of inspector fronts.
-    const inspectorFront = await this.target.getFront("inspector");
-    this._currentInspectorFronts = await inspectorFront.getAllInspectorFronts();
+    this._currentInspectorFronts = await this.targetList.getAllFronts(
+      this.targetList.TYPES.FRAME,
+      "inspector"
+    );
 
     for (const { walker, highlighter } of this._currentInspectorFronts) {
       walker.on("picker-node-hovered", this._onHovered);

@@ -372,7 +372,7 @@ class FontInspector {
       return [];
     }
 
-    const inspectorFronts = await this.inspector.inspectorFront.getAllInspectorFronts();
+    const inspectorFronts = await this.inspector.getAllInspectorFronts();
 
     let allFonts = [];
     for (const { pageStyle } of inspectorFronts) {

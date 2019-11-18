@@ -513,7 +513,7 @@ SelectorAutocompleter.prototype = {
       query += "*";
     }
 
-    this._lastQuery = this.inspector.inspectorFront
+    this._lastQuery = this.inspector
       // Get all inspectors where we want suggestions from.
       .getAllInspectorFronts()
       .then(inspectors => {

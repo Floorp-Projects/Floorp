@@ -454,10 +454,33 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     };
   }
 
+  /**
+   * Ensure that the RootNode of this Walker has the right parent NodeFront.
+   *
+   * This method does nothing if we are on the top level target's WalkerFront,
+   * as the RootNode won't have any parent.
+   *
+   * Otherwise, if we are in an iframe's WalkerFront, we would expect the parent
+   * of the RootNode (i.e. the NodeFront for the document loaded within the iframe)
+   * to be the <iframe>'s NodeFront. Because of fission, the two NodeFront may refer
+   * to DOM Element running in distinct processes and so the NodeFront comes from
+   * two distinct Targets and two distinct WalkerFront.
+   * This is why we need this manual "reparent" code to do the glue between the
+   * two documents.
+   */
   async reparentRemoteFrame() {
     // Get the parent target, which most likely runs in another process
     const descriptorFront = this.targetFront.descriptorFront;
+    // If we are on the top target, descriptorFront will be the RootFront
+    // and won't have the getParentTarget method.
+    if (!descriptorFront.getParentTarget) {
+      return;
+    }
     const parentTarget = await descriptorFront.getParentTarget();
+    // Don't reparent if we are on the top target
+    if (parentTarget == this.targetFront) {
+      return;
+    }
     // Get the NodeFront for the embedder element
     // i.e. the <iframe> element which is hosting the document that
     const parentWalker = (await parentTarget.getFront("inspector")).walker;
