@@ -509,45 +509,24 @@ const STATE_WAITING_TO_FINISH = 4;
 const STATE_COMPLETED = 5;
 
 function FlushRendering(aFlushMode) {
-    var anyPendingPaintsGeneratedInDescendants = false;
-
-    function flushWindow(win) {
-        var utils = win.windowUtils;
-        var afterPaintWasPending = utils.isMozAfterPaintPending;
-
-        var root = win.document.documentElement;
-        if (root && !root.classList.contains("reftest-no-flush")) {
-            try {
-                if (aFlushMode === FlushMode.IGNORE_THROTTLED_ANIMATIONS) {
-                    utils.flushLayoutWithoutThrottledAnimations();
-                } else {
-                    root.getBoundingClientRect();
-                }
-            } catch (e) {
-                LogWarning("flushWindow failed: " + e + "\n");
-            }
+    let browsingContext = content.docShell.browsingContext;
+    let ignoreThrottledAnimations = (aFlushMode === FlushMode.IGNORE_THROTTLED_ANIMATIONS);
+    let promise = content.getWindowGlobalChild().getActor("ReftestFission").sendQuery("FlushRendering", {browsingContext, ignoreThrottledAnimations});
+    return promise.then(function(result) {
+        for (let errorString of result.errorStrings) {
+            LogError(errorString);
         }
-
-        if (!afterPaintWasPending && utils.isMozAfterPaintPending) {
-            LogInfo("FlushRendering generated paint for window " + win.location.href);
-            anyPendingPaintsGeneratedInDescendants = true;
+        for (let warningString of result.warningStrings) {
+            LogWarning(warningString);
         }
-
-        for (var i = 0; i < win.frames.length; ++i) {
-            try {
-                flushWindow(win.frames[i]);
-            } catch (e) {
-                Cu.reportError(e);
-            }
+        for (let infoString of result.infoStrings) {
+            LogInfo(infoString);
         }
-    }
-
-    flushWindow(content);
-
-    if (anyPendingPaintsGeneratedInDescendants &&
-        !windowUtils().isMozAfterPaintPending) {
-        LogWarning("Internal error: descendant frame generated a MozAfterPaint event, but the root document doesn't have one!");
-    }
+    }, function(reason) {
+        // We expect actors to go away causing sendQuery's to fail, so
+        // just note it.
+        LogInfo("FlushRendering sendQuery to parent rejected: " + reason);
+    });
 }
 
 function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, forURL) {
@@ -1122,6 +1101,15 @@ function LoadURI(uri)
     webNavigation().loadURI(uri, loadURIOptions);
 }
 
+function LogError(str)
+{
+    if (gVerbose) {
+        sendSyncMessage("reftest:Log", { type: "error", msg: str });
+    } else {
+        sendAsyncMessage("reftest:Log", { type: "error", msg: str });
+    }
+}
+
 function LogWarning(str)
 {
     if (gVerbose) {
@@ -1166,12 +1154,27 @@ function SynchronizeForSnapshot(flags)
         }
     }
 
-    windowUtils().updateLayerTree();
+    let browsingContext = content.docShell.browsingContext;
+    let promise = content.getWindowGlobalChild().getActor("ReftestFission").sendQuery("UpdateLayerTree", {browsingContext});
+    return promise.then(function (result) {
+        for (let errorString of result) {
+            LogError(errorString);
+        }
 
-    // Setup async scroll offsets now, because any scrollable layers should
-    // have had their AsyncPanZoomControllers created.
-    setupAsyncScrollOffsets({allowFailure:false});
-    setupAsyncZoom({allowFailure:false});
+        // Setup async scroll offsets now, because any scrollable layers should
+        // have had their AsyncPanZoomControllers created.
+        setupAsyncScrollOffsets({allowFailure:false});
+        setupAsyncZoom({allowFailure:false});
+    }, function(reason) {
+        // We expect actors to go away causing sendQuery's to fail, so
+        // just note it.
+        LogInfo("UpdateLayerTree sendQuery to parent rejected: " + reason);
+
+        // Setup async scroll offsets now, because any scrollable layers should
+        // have had their AsyncPanZoomControllers created.
+        setupAsyncScrollOffsets({allowFailure:false});
+        setupAsyncZoom({allowFailure:false});
+    });
 }
 
 function RegisterMessageListeners()
