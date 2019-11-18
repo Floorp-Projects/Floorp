@@ -1794,8 +1794,21 @@ const CachedMeasuringReflowResult&
 nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
     FlexItem& aItem, nsPresContext* aPresContext,
     ReflowInput& aChildReflowInput) {
-  if (const auto* cachedResult =
-          aItem.Frame()->GetProperty(CachedFlexMeasuringReflow())) {
+  if (HasAnyStateBits(NS_STATE_FLEX_MEASUREMENTS_INTERRUPTED) &&
+      !aPresContext->HasPendingInterrupt()) {
+    // Our measurements are from an earlier reflow which was interrupted.
+    // (and the current reflow is not [yet] interrupted, so we have a chance
+    // to maybe get a more accurate measurement now).
+    // Purge our potentially-invalid item measurements.
+    for (nsIFrame* frame : mFrames) {
+      frame->DeleteProperty(CachedFlexMeasuringReflow());
+    }
+    RemoveStateBits(NS_STATE_FLEX_MEASUREMENTS_INTERRUPTED);
+    MOZ_LOG(gFlexContainerLog, LogLevel::Debug,
+            ("[perf] MeasureAscentAndBSizeForFlexItem purged all "
+             "cached values\n"));
+  } else if (const auto* cachedResult =
+                 aItem.Frame()->GetProperty(CachedFlexMeasuringReflow())) {
     if (cachedResult->IsValidFor(aChildReflowInput)) {
       return *cachedResult;
     }
@@ -4293,16 +4306,17 @@ void FlexLine::PositionItemsInCrossAxis(
 
 void nsFlexContainerFrame::DidReflow(nsPresContext* aPresContext,
                                      const ReflowInput* aReflowInput) {
-  // Remove the cached values if we got an interrupt because the values will be
-  // the wrong ones for following reflows.
+  // If we got an interrupt, we make a note here that our cached measurements
+  // are potentially invalid, because our descendant block frames' reflows may
+  // have bailed out early due to the interrupt.  We'll keep these invalid
+  // measurements for the rest of this reflow (to avoid repeating the same
+  // bogus measurement), and purge them on the next (non-interrupted) reflow.
   //
   // TODO(emilio): Can we do this only for the kids that are interrupted? We
   // probably want to figure out what the right thing to do here is regarding
   // interrupts, see bug 1495532.
   if (aPresContext->HasPendingInterrupt()) {
-    for (nsIFrame* frame : mFrames) {
-      frame->DeleteProperty(CachedFlexMeasuringReflow());
-    }
+    AddStateBits(NS_STATE_FLEX_MEASUREMENTS_INTERRUPTED);
   }
   nsContainerFrame::DidReflow(aPresContext, aReflowInput);
 }
