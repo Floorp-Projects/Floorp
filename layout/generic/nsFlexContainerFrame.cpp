@@ -1804,9 +1804,7 @@ nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
       frame->DeleteProperty(CachedFlexMeasuringReflow());
     }
     RemoveStateBits(NS_STATE_FLEX_MEASUREMENTS_INTERRUPTED);
-    MOZ_LOG(gFlexContainerLog, LogLevel::Debug,
-            ("[perf] MeasureAscentAndBSizeForFlexItem purged all "
-             "cached values\n"));
+    FLEX_LOG("[perf] MeasureAscentAndBSizeForFlexItem purged cached values");
   } else if (const auto* cachedResult =
                  aItem.Frame()->GetProperty(CachedFlexMeasuringReflow())) {
     if (cachedResult->IsValidFor(aChildReflowInput)) {
