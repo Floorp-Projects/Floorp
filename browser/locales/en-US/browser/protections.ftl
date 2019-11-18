@@ -79,16 +79,15 @@ lockwise-passwords-stored =
 turn-on-sync = Turn on { -sync-brand-short-name }…
   .title = Go to sync preferences
 
-manage-devices = Manage devices
+manage-connected-devices = Manage devices…
 
 # Variables:
 #   $count (Number) - Number of devices connected with sync.
-lockwise-sync-status =
+lockwise-connected-device-status =
   { $count ->
-     [one] Syncing to { $count } other device
-    *[other] Syncing to { $count } other devices
+     [one] Connected to { $count } device
+    *[other] Connected to { $count } devices
   }
-lockwise-sync-not-syncing-devices = Not syncing to other devices
 
 monitor-title = Look out for data breaches
 monitor-link = How it works

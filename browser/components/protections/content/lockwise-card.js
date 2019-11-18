@@ -140,15 +140,10 @@ export default class LockwiseCard {
 
     const syncedDevicesText = container.querySelector(".synced-devices-text");
     const textEl = syncedDevicesText.querySelector("span");
-    if (syncedDevices) {
-      textEl.setAttribute(
-        "data-l10n-args",
-        JSON.stringify({ count: syncedDevices })
-      );
-      textEl.setAttribute("data-l10n-id", "lockwise-sync-status");
-    } else {
-      textEl.setAttribute("data-l10n-id", "lockwise-sync-not-syncing-devices");
-    }
+    document.l10n.setAttributes(textEl, "lockwise-connected-device-status", {
+      count: syncedDevices,
+    });
+
     // Display the link for enabling sync if no synced devices are detected.
     if (syncedDevices === 0) {
       const syncLink = this.doc.getElementById("turn-on-sync");
