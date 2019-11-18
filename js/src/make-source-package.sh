@@ -7,6 +7,7 @@ set -e
 
 : ${MKDIR:=mkdir}
 : ${TAR:=tar}
+: ${RSYNC:=rsync}
 : ${AUTOCONF:=$(which autoconf-2.13 autoconf2.13 autoconf213 | head -1)}
 : ${SRCDIR:=$(cd $(dirname $0); pwd 2>/dev/null)}
 : ${MOZJS_NAME:=mozjs}
@@ -35,6 +36,7 @@ echo "Environment:"
 echo "    MAKE = $MAKE"
 echo "    MKDIR = $MKDIR"
 echo "    TAR = $TAR"
+echo "    RSYNC = $RSYNC"
 echo "    AUTOCONF = $AUTOCONF"
 echo "    STAGING = $STAGING"
 echo "    DIST = $DIST"
@@ -69,132 +71,84 @@ case $cmd in
 
     ${MKDIR} -p ${tgtpath}
 
-    # Top-level config and build files
-    cp -pPR \
-        ${TOPSRCDIR}/LICENSE \
-        ${TOPSRCDIR}/Makefile.in \
-        ${TOPSRCDIR}/configure.py \
-        ${TOPSRCDIR}/moz.build \
-        ${TOPSRCDIR}/moz.configure \
-        ${TOPSRCDIR}/test.mozbuild \
-        ${tgtpath}/
+    rsync \
+        --delete-excluded \
+        --prune-empty-dirs \
+        --quiet \
+        --recursive \
+        "${TOPSRCDIR}"/ ${tgtpath}/ \
+        --filter=". -" <<FILTER_EOF
+# Top-level config and build files
 
-    # Additional libraries (optionally) used by SpiderMonkey
-    cp -pPR \
-        ${TOPSRCDIR}/mfbt \
-        ${TOPSRCDIR}/nsprpub \
-        ${tgtpath}/
++ /configure.py
++ /LICENSE
++ /Makefile.in
++ /moz.build
++ /moz.configure
++ /test.mozbuild
 
-    ${MKDIR} -p ${tgtpath}/intl
-    cp -pPR \
-        ${TOPSRCDIR}/intl/icu \
-        ${tgtpath}/intl/
+# Additional libraries (optionally) used by SpiderMonkey
 
-    ${MKDIR} -p ${tgtpath}/memory
-    cp -pPR \
-        ${TOPSRCDIR}/memory/moz.build \
-        ${TOPSRCDIR}/memory/build \
-        ${TOPSRCDIR}/memory/mozalloc \
-        ${tgtpath}/memory/
++ /mfbt/**
++ /nsprpub/**
 
-    ${MKDIR} -p ${tgtpath}/modules
-    cp -pPR \
-        ${TOPSRCDIR}/modules/fdlibm \
-        ${TOPSRCDIR}/modules/zlib \
-        ${tgtpath}/modules/
++ /intl/icu/**
 
-    ${MKDIR} -p ${tgtpath}/mozglue
-    cp -pPR \
-        ${TOPSRCDIR}/mozglue/baseprofiler \
-        ${TOPSRCDIR}/mozglue/build \
-        ${TOPSRCDIR}/mozglue/misc \
-        ${TOPSRCDIR}/mozglue/moz.build \
-        ${TOPSRCDIR}/mozglue/static \
-        ${tgtpath}/mozglue/
++ /memory/build/**
++ /memory/moz.build
++ /memory/mozalloc/**
 
-    ${MKDIR} -p ${tgtpath}/tools/fuzzing
-    cp -pPR \
-        ${TOPSRCDIR}/tools/fuzzing/moz.build \
-        ${TOPSRCDIR}/tools/fuzzing/interface \
-        ${TOPSRCDIR}/tools/fuzzing/registry \
-        ${TOPSRCDIR}/tools/fuzzing/libfuzzer \
-        ${tgtpath}/tools/fuzzing/
++ /modules/fdlibm/**
++ /modules/zlib/**
 
++ /mozglue/baseprofiler/**
++ /mozglue/build/**
++ /mozglue/misc/**
++ /mozglue/moz.build
++ /mozglue/static/**
 
-    # Build system and dependencies
-    cp -pPR \
-        ${TOPSRCDIR}/build \
-        ${TOPSRCDIR}/config \
-        ${TOPSRCDIR}/python \
-        ${tgtpath}/
++ /tools/fuzzing/moz.build
++ /tools/fuzzing/interface/**
++ /tools/fuzzing/registry/**
++ /tools/fuzzing/libfuzzer/**
 
-    ${MKDIR} -p ${tgtpath}/.cargo
-    cp -pPR \
-        ${TOPSRCDIR}/.cargo/config.in \
-        ${tgtpath}/.cargo/
+# Build system and dependencies
 
-    ${MKDIR} -p ${tgtpath}/third_party
-    cp -pPR \
-        ${TOPSRCDIR}/third_party/python \
-        ${TOPSRCDIR}/third_party/rust \
-        ${tgtpath}/third_party/
++ /build/**
++ /config/**
++ /python/**
 
-    ${MKDIR} -p ${tgtpath}/dom/bindings
-    cp -pPR \
-        ${TOPSRCDIR}/dom/bindings/mozwebidlcodegen \
-        ${tgtpath}/dom/bindings/
++ /.cargo/config.in
 
-    ${MKDIR} -p ${tgtpath}/layout/tools/reftest
-    cp -pPR \
-        ${TOPSRCDIR}/layout/tools/reftest/reftest \
-        ${tgtpath}/layout/tools/reftest/
++ /third_party/python/**
++ /third_party/rust/**
 
-    ${MKDIR} -p ${tgtpath}/testing
-    cp -pPR \
-        ${TOPSRCDIR}/testing/mozbase \
-        ${tgtpath}/testing/
++ /dom/bindings/mozwebidlcodegen/**
 
-    ${MKDIR} -p ${tgtpath}/testing/web-platform/tests
-    cp -pPR \
-        ${TOPSRCDIR}/testing/web-platform/tests/streams \
-        ${tgtpath}/testing/web-platform/tests/
++ /layout/tools/reftest/reftest/**
 
-    ${MKDIR} -p ${tgtpath}/taskcluster/taskgraph
-    cp -pPR \
-        ${TOPSRCDIR}/taskcluster/moz.build \
-        ${tgtpath}/taskcluster/
-    cp -pPR \
-        ${TOPSRCDIR}/taskcluster/taskgraph/test \
-        ${tgtpath}/taskcluster/taskgraph/
++ /testing/mozbase/**
++ /testing/web-platform/tests/streams/**
 
-    ${MKDIR} -p ${tgtpath}/toolkit/crashreporter/tools
-    cp -pPR \
-        ${TOPSRCDIR}/toolkit/crashreporter/tools/symbolstore.py \
-        ${tgtpath}/toolkit/crashreporter/tools/
++ /taskcluster/moz.build
++ /taskcluster/taskgraph/test/**
 
-    ${MKDIR} -p ${tgtpath}/toolkit/mozapps/installer
-    cp -pPR \
-        ${TOPSRCDIR}/toolkit/mozapps/installer/package-name.mk \
-        ${TOPSRCDIR}/toolkit/mozapps/installer/upload-files.mk \
-        ${tgtpath}/toolkit/mozapps/installer/
++ /toolkit/crashreporter/tools/symbolstore.py
++ /toolkit/mozapps/installer/package-name.mk
++ /toolkit/mozapps/installer/upload-files.mk
 
+# SpiderMonkey itself
 
-    # SpiderMonkey itself
++ /js/src/**
++ /js/app.mozbuild
++ /js/*.configure
++ /js/examples/**
++ /js/public/**
++ /js/rust/**
 
-    ${MKDIR} -p ${tgtpath}/js/src
-    cp -pPR \
-        ${TOPSRCDIR}/js/app.mozbuild \
-        ${TOPSRCDIR}/js/*.configure \
-        ${tgtpath}/js/
-    cp -pPR \
-        ${TOPSRCDIR}/js/examples \
-        ${TOPSRCDIR}/js/public \
-        ${TOPSRCDIR}/js/rust \
-        ${tgtpath}/js/
-
-    find ${TOPSRCDIR}/js/src -mindepth 1 -maxdepth 1 -not -path ${STAGING} -a -not -name ${pkg} \
-        -exec cp -pPR {} ${tgtpath}/js/src/ \;
-
++ */
+- /**
+FILTER_EOF
 
     # Generate configure files to avoid build dependency on autoconf-2.13
     cp -pPR ${TOPSRCDIR}/js/src/configure.in ${tgtpath}/js/src/configure
