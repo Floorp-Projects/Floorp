@@ -249,10 +249,6 @@ README_EOF
     # Remove *.pyc and *.pyo files if any
     find ${tgtpath} -type f -name "*.pyc" -o -name "*.pyo" | xargs rm -f
 
-    # Remove non-JS Cargo.toml files (for example, the invalid Cargo.toml files
-    # used for some testing).
-    find ${tgtpath} -type f -name Cargo.toml | grep -v js | xargs rm -f
-
     # Roll the tarball
     echo "Packaging source tarball at ${pkgpath}..."
     ${TAR} $taropts ${pkgpath} -C ${STAGING} ${version}
