@@ -1,11 +1,5 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
-
 // This function is pretty tightly tied to Extension.jsm.
 // Its job is to fill in the |tab| property of the sender.
 const getSender = (extension, target, sender) => {
@@ -78,7 +72,7 @@ global.openOptionsPage = extension => {
 extensions.registerModules({
   browserAction: {
     url: "chrome://geckoview/content/ext-browserAction.js",
-    schema: "chrome://geckoview/content/schemas/browser_action.json",
+    schema: "chrome://extensions/content/schemas/browser_action.json",
     scopes: ["addon_parent"],
     manifest: ["browser_action"],
     paths: [["browserAction"]],
@@ -92,7 +86,7 @@ extensions.registerModules({
   },
   pageAction: {
     url: "chrome://geckoview/content/ext-pageAction.js",
-    schema: "chrome://geckoview/content/schemas/page_action.json",
+    schema: "chrome://extensions/content/schemas/page_action.json",
     scopes: ["addon_parent"],
     manifest: ["page_action"],
     paths: [["pageAction"]],
@@ -103,12 +97,7 @@ extensions.registerModules({
     scopes: ["addon_parent"],
     paths: [["tabs"]],
   },
+  geckoViewAddons: {
+    schema: "chrome://geckoview/content/schemas/gecko_view_addons.json",
+  },
 });
-
-if (!Services.androidBridge.isFennec) {
-  extensions.registerModules({
-    geckoViewAddons: {
-      schema: "chrome://geckoview/content/schemas/gecko_view_addons.json",
-    },
-  });
-}

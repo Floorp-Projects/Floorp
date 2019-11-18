@@ -14,8 +14,8 @@
 #include "nsIConsoleReportCollector.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrincipal.h"
-#include "nsIPermissionManager.h"
 #include "nsNetUtil.h"
+#include "nsPermissionManager.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
@@ -474,10 +474,12 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
           }
         });
 
-    nsCOMPtr<nsIPermissionManager> permissionManager =
-        services::GetPermissionManager();
-    MOZ_ALWAYS_SUCCEEDS(
-        permissionManager->WhenPermissionsAvailable(principal, r));
+    RefPtr<nsPermissionManager> permissionManager =
+        nsPermissionManager::GetInstance();
+    if (!permissionManager) {
+      return NS_ERROR_FAILURE;
+    }
+    permissionManager->WhenPermissionsAvailable(principal, r);
   } else {
     if (NS_WARN_IF(!runnable->Dispatch())) {
       rv = NS_ERROR_FAILURE;

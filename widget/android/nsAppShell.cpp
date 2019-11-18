@@ -66,6 +66,7 @@
 #include "GeckoSystemStateListener.h"
 #include "GeckoTelemetryDelegate.h"
 #include "GeckoVRManager.h"
+#include "ImageDecoderSupport.h"
 #include "PrefsHelper.h"
 #include "ScreenHelperAndroid.h"
 #include "Telemetry.h"
@@ -434,6 +435,7 @@ nsAppShell::nsAppShell()
     mozilla::GeckoSystemStateListener::Init();
     mozilla::PrefsHelper::Init();
     mozilla::widget::Telemetry::Init();
+    mozilla::widget::ImageDecoderSupport::Init();
     mozilla::widget::WebExecutorSupport::Init();
     mozilla::widget::Base64UtilsSupport::Init();
     nsWindow::InitNatives();

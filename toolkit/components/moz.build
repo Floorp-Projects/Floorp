@@ -56,7 +56,6 @@ DIRS += [
     'promiseworker',
     'prompts',
     'protobuf',
-    'reader',
     'remotebrowserutils',
     'remotepagemanager',
     'reflect',
@@ -85,7 +84,10 @@ DIRS += [
 ]
 
 if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
-    DIRS += ['narrate'];
+    DIRS += [
+      'narrate',
+      'reader',
+    ];
 
     if CONFIG['NS_PRINTING']:
         DIRS += ['printing']

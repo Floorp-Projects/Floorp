@@ -243,7 +243,7 @@ void StreamSamplesAndMarkers(const char* aName, int aThreadId,
       JSONSchemaWriter schema(aWriter);
       schema.WriteField("stack");
       schema.WriteField("time");
-      schema.WriteField("responsiveness");
+      schema.WriteField("eventDelay");
     }
 
     aWriter.StartArrayProperty("data");

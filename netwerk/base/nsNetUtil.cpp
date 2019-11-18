@@ -2736,6 +2736,9 @@ void NS_SniffContent(const char* aSnifferType, nsIRequest* aRequest,
       if (!currentContentType.IsEmpty() &&
           !StringBeginsWith(currentContentType,
                             NS_LITERAL_CSTRING("application/"))) {
+        Telemetry::AccumulateCategorical(
+            mozilla::Telemetry::LABELS_XCTO_NOSNIFF_TOPLEVEL_NAV_EXCEPTIONS::
+                NoException);
         return;
       }
     }

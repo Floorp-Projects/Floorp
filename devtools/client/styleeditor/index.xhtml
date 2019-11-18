@@ -86,78 +86,73 @@
 
   <keyset id="sourceEditorKeys"/>
 
-  <stack id="style-editor-chrome" class="loading theme-body">
-
-    <box class="splitview-root devtools-responsive-container" context="sidebar-context">
-      <box class="splitview-controller">
-        <box class="splitview-main">
-          <toolbar class="devtools-toolbar">
-             <hbox class="devtools-toolbarbutton-group">
-              <toolbarbutton class="style-editor-newButton devtools-toolbarbutton"
-                          accesskey="&newButton.accesskey;"
-                          tooltiptext="&newButton.tooltip;"/>
-              <toolbarbutton class="style-editor-importButton devtools-toolbarbutton"
-                          accesskey="&importButton.accesskey;"
-                          tooltiptext="&importButton.tooltip;"/>
-            </hbox>
-            <spacer/>
-            <toolbarbutton id="style-editor-options"
-                        class="devtools-toolbarbutton devtools-option-toolbarbutton"
-                        tooltiptext="&optionsButton.tooltip;"/>
-          </toolbar>
-        </box>
-        <box id="splitview-resizer-target" class="theme-sidebar splitview-nav-container"
-                persist="height">
-          <html:ol class="splitview-nav" tabindex="0"></html:ol>
-          <html:div class="splitview-nav placeholder empty">
-            <html:p><html:strong>&noStyleSheet.label;</html:strong></html:p>
-            <html:p>&noStyleSheet-tip-start.label;
-              <html:a href="#"
-                class="style-editor-newButton">&noStyleSheet-tip-action.label;</html:a>
-              &noStyleSheet-tip-end.label;</html:p>
-          </html:div>
-        </box> <!-- .splitview-nav-container -->
-      </box>   <!-- .splitview-controller -->
-      <splitter class="devtools-side-splitter devtools-invisible-splitter"/>
-      <box class="splitview-side-details devtools-main-content"/>
-
-      <html:div id="splitview-templates" hidden="true">
-        <html:li id="splitview-tpl-summary-stylesheet" tabindex="0">
-          <label class="stylesheet-enabled" tabindex="0"
-            tooltiptext="&visibilityToggle.tooltip;"
-            accesskey="&saveButton.accesskey;"></label>
-          <html:hgroup class="stylesheet-info">
-            <html:h1><html:a class="stylesheet-name" tabindex="0"><label crop="center"/></html:a></html:h1>
-            <html:div class="stylesheet-more">
-              <html:h3 class="stylesheet-title"></html:h3>
-              <html:h3 class="stylesheet-linked-file"></html:h3>
-              <html:h3 class="stylesheet-rule-count"></html:h3>
-              <spacer/>
-              <html:h3><label class="stylesheet-saveButton"
-                    tooltiptext="&saveButton.tooltip;"
-                    accesskey="&saveButton.accesskey;">&saveButton.label;</label></html:h3>
-            </html:div>
-          </html:hgroup>
-        </html:li>
-
-        <box id="splitview-tpl-details-stylesheet" class="splitview-details">
-          <hbox class="stylesheet-details-container">
-            <box class="stylesheet-editor-input textbox"
-                 data-placeholder="&editorTextbox.placeholder;"/>
-            <splitter class="devtools-side-splitter"/>
-            <vbox class="stylesheet-sidebar theme-sidebar" hidden="true">
-              <toolbar class="devtools-toolbar">
-                &mediaRules.label;
-              </toolbar>
-              <vbox class="stylesheet-media-container" flex="1">
-                <html:div class="stylesheet-media-list" />
-              </vbox>
-            </vbox>
+  <box id="style-editor-chrome" class="devtools-responsive-container loading theme-body" context="sidebar-context">
+    <box class="splitview-controller">
+      <box class="splitview-main">
+        <toolbar class="devtools-toolbar">
+          <hbox class="devtools-toolbarbutton-group">
+            <toolbarbutton class="style-editor-newButton devtools-toolbarbutton"
+                        accesskey="&newButton.accesskey;"
+                        tooltiptext="&newButton.tooltip;"/>
+            <toolbarbutton class="style-editor-importButton devtools-toolbarbutton"
+                        accesskey="&importButton.accesskey;"
+                        tooltiptext="&importButton.tooltip;"/>
           </hbox>
-        </box>
-      </html:div> <!-- #splitview-templates -->
-    </box>   <!-- .splitview-root -->
+          <spacer/>
+          <toolbarbutton id="style-editor-options"
+                      class="devtools-toolbarbutton devtools-option-toolbarbutton"
+                      tooltiptext="&optionsButton.tooltip;"/>
+        </toolbar>
+      </box>
+      <box id="splitview-resizer-target" class="theme-sidebar splitview-nav-container"
+              persist="height">
+        <html:ol class="splitview-nav" tabindex="0"></html:ol>
+        <html:div class="splitview-nav placeholder empty">
+          <html:p><html:strong>&noStyleSheet.label;</html:strong></html:p>
+          <html:p>&noStyleSheet-tip-start.label;
+            <html:a href="#"
+              class="style-editor-newButton">&noStyleSheet-tip-action.label;</html:a>
+            &noStyleSheet-tip-end.label;</html:p>
+        </html:div>
+      </box> <!-- .splitview-nav-container -->
+    </box>   <!-- .splitview-controller -->
+    <splitter class="devtools-side-splitter devtools-invisible-splitter"/>
+    <box class="splitview-side-details devtools-main-content"/>
 
-  </stack>
+    <html:div id="splitview-templates" hidden="true">
+      <html:li id="splitview-tpl-summary-stylesheet" tabindex="0">
+        <label class="stylesheet-enabled" tabindex="0"
+          tooltiptext="&visibilityToggle.tooltip;"
+          accesskey="&saveButton.accesskey;"></label>
+        <html:hgroup class="stylesheet-info">
+          <html:h1><html:a class="stylesheet-name" tabindex="0"><label crop="center"/></html:a></html:h1>
+          <html:div class="stylesheet-more">
+            <html:h3 class="stylesheet-title"></html:h3>
+            <html:h3 class="stylesheet-linked-file"></html:h3>
+            <html:h3 class="stylesheet-rule-count"></html:h3>
+            <spacer/>
+            <html:h3><label class="stylesheet-saveButton"
+                  tooltiptext="&saveButton.tooltip;"
+                  accesskey="&saveButton.accesskey;">&saveButton.label;</label></html:h3>
+          </html:div>
+        </html:hgroup>
+      </html:li>
 
+      <box id="splitview-tpl-details-stylesheet" class="splitview-details">
+        <hbox class="stylesheet-details-container">
+          <box class="stylesheet-editor-input textbox"
+               data-placeholder="&editorTextbox.placeholder;"/>
+          <splitter class="devtools-side-splitter"/>
+          <vbox class="stylesheet-sidebar theme-sidebar" hidden="true">
+            <toolbar class="devtools-toolbar">
+              &mediaRules.label;
+            </toolbar>
+            <vbox class="stylesheet-media-container" flex="1">
+              <html:div class="stylesheet-media-list" />
+            </vbox>
+          </vbox>
+        </hbox>
+      </box>
+    </html:div> <!-- #splitview-templates -->
+  </box>
 </window>

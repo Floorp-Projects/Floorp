@@ -84,38 +84,6 @@ function* do_run_test() {
     0
   );
 
-  // add a permission for renewal
-  pm.addFromPrincipal(
-    principal,
-    "test/expiration-perm-renewable",
-    1,
-    pm.EXPIRE_TIME,
-    now + 100
-  );
-  pm.addFromPrincipal(
-    principal,
-    "test/expiration-session-renewable",
-    1,
-    pm.EXPIRE_SESSION,
-    now + 100
-  );
-
-  // And immediately renew them with longer timeouts
-  pm.updateExpireTime(
-    principal,
-    "test/expiration-perm-renewable",
-    true,
-    now + 100,
-    now + 1e6
-  );
-  pm.updateExpireTime(
-    principal,
-    "test/expiration-session-renewable",
-    true,
-    now + 1e6,
-    now + 100
-  );
-
   // check that the second two haven't expired yet
   Assert.equal(
     1,
@@ -128,17 +96,6 @@ function* do_run_test() {
   Assert.equal(
     1,
     pm.testPermissionFromPrincipal(principal, "test/expiration-perm-nexp")
-  );
-  Assert.equal(
-    1,
-    pm.testPermissionFromPrincipal(principal, "test/expiration-perm-renewable")
-  );
-  Assert.equal(
-    1,
-    pm.testPermissionFromPrincipal(
-      principal,
-      "test/expiration-session-renewable"
-    )
   );
 
   // ... and the first one has
@@ -181,19 +138,6 @@ function* do_run_test() {
   Assert.equal(
     null,
     pm.getPermissionObject(principal, "test/expiration-session-exp2", false)
-  );
-
-  // Check that the renewable permissions actually got renewed
-  Assert.equal(
-    1,
-    pm.testPermissionFromPrincipal(principal, "test/expiration-perm-renewable")
-  );
-  Assert.equal(
-    1,
-    pm.testPermissionFromPrincipal(
-      principal,
-      "test/expiration-session-renewable"
-    )
   );
 
   do_finish_generator_test(test_generator);

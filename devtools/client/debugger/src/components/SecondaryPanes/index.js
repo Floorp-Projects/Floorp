@@ -490,6 +490,7 @@ class SecondaryPanes extends Component<Props, State> {
     return (
       <SplitBox
         initialSize="300px"
+        minSize={10}
         maxSize="50%"
         splitterSize={1}
         startPanel={

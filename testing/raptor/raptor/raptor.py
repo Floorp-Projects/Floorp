@@ -168,6 +168,11 @@ either Raptor or browsertime."""
             LOG.info("debug-mode enabled, reducing post-browser startup pause to %d ms"
                      % self.post_startup_delay)
 
+        if self.config['with_conditioned_profile']:
+            self.post_startup_delay = 0
+            LOG.info("Using conditioned profile; setting post-startup-delay to: {}"
+                     .format(self.post_startup_delay))
+
         LOG.info("main raptor init, config is: %s" % str(self.config))
 
         self.build_browser_profile()

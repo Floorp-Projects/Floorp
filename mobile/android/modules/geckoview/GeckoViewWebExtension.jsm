@@ -4,7 +4,11 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["GeckoViewConnection", "GeckoViewWebExtension"];
+var EXPORTED_SYMBOLS = [
+  "ExtensionActionHelper",
+  "GeckoViewConnection",
+  "GeckoViewWebExtension",
+];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -18,9 +22,75 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
   ExtensionChild: "resource://gre/modules/ExtensionChild.jsm",
+  GeckoViewTabBridge: "resource://gre/modules/GeckoViewTab.jsm",
 });
 
 const { debug, warn } = GeckoViewUtils.initLogging("Console"); // eslint-disable-line no-unused-vars
+
+/** Provides common logic between page and browser actions */
+class ExtensionActionHelper {
+  constructor({
+    tabTracker,
+    windowTracker,
+    tabContext,
+    properties,
+    extension,
+  }) {
+    this.tabTracker = tabTracker;
+    this.windowTracker = windowTracker;
+    this.tabContext = tabContext;
+    this.properties = properties;
+    this.extension = extension;
+  }
+
+  getTab(aTabId) {
+    if (aTabId !== null) {
+      return this.tabTracker.getTab(aTabId);
+    }
+    return null;
+  }
+
+  getWindow(aWindowId) {
+    if (aWindowId !== null) {
+      return this.windowTracker.getWindow(aWindowId);
+    }
+    return null;
+  }
+
+  extractProperties(aAction) {
+    const merged = {};
+    for (const p of this.properties) {
+      merged[p] = aAction[p];
+    }
+    return merged;
+  }
+
+  eventDispatcherFor(aTabId) {
+    if (!aTabId) {
+      return EventDispatcher.instance;
+    }
+
+    const windowId = GeckoViewTabBridge.tabIdToWindowId(aTabId);
+    const window = this.windowTracker.getWindow(windowId);
+    return window.WindowEventDispatcher;
+  }
+
+  sendRequestForResult(aTabId, aData) {
+    return this.eventDispatcherFor(aTabId).sendRequestForResult({
+      ...aData,
+      aTabId,
+      extensionId: this.extension.id,
+    });
+  }
+
+  sendRequest(aTabId, aData) {
+    return this.eventDispatcherFor(aTabId).sendRequest({
+      ...aData,
+      aTabId,
+      extensionId: this.extension.id,
+    });
+  }
+}
 
 class EmbedderPort extends ExtensionChild.Port {
   constructor(...args) {
@@ -197,10 +267,47 @@ var GeckoViewWebExtension = {
     }
   },
 
+  extensionById(aId) {
+    const scope = this.extensionScopes.get(aId);
+    if (!scope) {
+      return null;
+    }
+
+    return scope.extension;
+  },
+
   onEvent(aEvent, aData, aCallback) {
     debug`onEvent ${aEvent} ${aData}`;
 
     switch (aEvent) {
+      case "GeckoView:BrowserAction:Click": {
+        const extension = this.extensionById(aData.extensionId);
+        if (!extension) {
+          return;
+        }
+
+        const browserAction = this.browserActions.get(extension);
+        if (!browserAction) {
+          return;
+        }
+
+        browserAction.click();
+        break;
+      }
+      case "GeckoView:PageAction:Click": {
+        const extension = this.extensionById(aData.extensionId);
+        if (!extension) {
+          return;
+        }
+
+        const pageAction = this.pageActions.get(extension);
+        if (!pageAction) {
+          return;
+        }
+
+        pageAction.click();
+        break;
+      }
       case "GeckoView:RegisterWebExtension": {
         const uri = Services.io.newURI(aData.locationUri);
         if (
@@ -260,3 +367,7 @@ var GeckoViewWebExtension = {
 };
 
 GeckoViewWebExtension.extensionScopes = new Map();
+// WeakMap[Extension -> BrowserAction]
+GeckoViewWebExtension.browserActions = new WeakMap();
+// WeakMap[Extension -> PageAction]
+GeckoViewWebExtension.pageActions = new WeakMap();

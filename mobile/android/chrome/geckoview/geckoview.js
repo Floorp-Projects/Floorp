@@ -197,6 +197,11 @@ var ModuleManager = {
     Object.assign(this._settings, aSettings);
     this._frozenSettings = Object.freeze(Object.assign({}, this._settings));
 
+    const windowType = aSettings.isPopup
+      ? "navigator:popup"
+      : "navigator:geckoview";
+    window.document.documentElement.setAttribute("windowType", windowType);
+
     this.forEach(module => {
       if (module.impl) {
         module.impl.onSettingsUpdate();

@@ -29,7 +29,13 @@ import java.util.Map;
                     "GeckoView:WebExtension:Message",
                     "GeckoView:WebExtension:PortMessage",
                     "GeckoView:WebExtension:Connect",
-                    "GeckoView:WebExtension:Disconnect"
+                    "GeckoView:WebExtension:Disconnect",
+
+                    // {Browser,Page}Actions
+                    "GeckoView:BrowserAction:Update",
+                    "GeckoView:BrowserAction:OpenPopup",
+                    "GeckoView:PageAction:Update",
+                    "GeckoView:PageAction:OpenPopup"
             );
             mHandlerRegistered = true;
         }
@@ -231,6 +237,71 @@ import java.util.Map;
             exception -> callback.sendError(exception));
     }
 
+    private WebExtension extensionFromBundle(final GeckoBundle message) {
+        final String extensionId = message.getString("extensionId");
+
+        final WebExtension extension = mExtensions.get(extensionId);
+        if (extension == null) {
+            if (BuildConfig.DEBUG) {
+                // TODO: Bug 1582185 Some gecko tests install WebExtensions that we
+                // don't know about and cause this to trigger.
+                // throw new RuntimeException("Could not find extension: " + extensionId);
+            }
+            Log.e(LOGTAG, "Could not find extension: " + extensionId);
+        }
+
+        return extension;
+    }
+
+    private void openPopup(final GeckoBundle message, final GeckoSession session,
+                           final @WebExtension.Action.ActionType int actionType) {
+        final WebExtension extension = extensionFromBundle(message);
+        if (extension == null) {
+            return;
+        }
+
+        final WebExtension.Action action = new WebExtension.Action(
+                actionType, message.getBundle("action"), extension);
+
+        final WebExtension.ActionDelegate delegate = actionDelegateFor(extension, session);
+        if (delegate == null) {
+            return;
+        }
+
+        final GeckoResult<GeckoSession> popup = delegate.onOpenPopup(extension, action);
+        action.openPopup(popup);
+    }
+
+    private WebExtension.ActionDelegate actionDelegateFor(final WebExtension extension,
+                                                          final GeckoSession session) {
+        if (session == null) {
+            return extension.actionDelegate;
+        }
+
+        return session.getWebExtensionActionDelegate(extension);
+    }
+
+    private void actionUpdate(final GeckoBundle message, final GeckoSession session,
+                              final @WebExtension.Action.ActionType int actionType) {
+        final WebExtension extension = extensionFromBundle(message);
+        if (extension == null) {
+            return;
+        }
+
+        final WebExtension.ActionDelegate delegate = actionDelegateFor(extension, session);
+        if (delegate == null) {
+            return;
+        }
+
+        final WebExtension.Action action = new WebExtension.Action(
+                actionType, message.getBundle("action"), extension);
+        if (actionType == WebExtension.Action.TYPE_BROWSER_ACTION) {
+            delegate.onBrowserAction(extension, session, action);
+        } else if (actionType == WebExtension.Action.TYPE_PAGE_ACTION) {
+            delegate.onPageAction(extension, session, action);
+        }
+    }
+
     public void handleMessage(final String event, final GeckoBundle message,
                               final EventCallback callback, final GeckoSession session) {
         if ("GeckoView:WebExtension:Disconnect".equals(event)) {
@@ -238,6 +309,18 @@ import java.util.Map;
             return;
         } else if ("GeckoView:WebExtension:PortMessage".equals(event)) {
             portMessage(message, callback);
+            return;
+        } else if ("GeckoView:BrowserAction:Update".equals(event)) {
+            actionUpdate(message, session, WebExtension.Action.TYPE_BROWSER_ACTION);
+            return;
+        } else if ("GeckoView:PageAction:Update".equals(event)) {
+            actionUpdate(message, session, WebExtension.Action.TYPE_PAGE_ACTION);
+            return;
+        } else if ("GeckoView:BrowserAction:OpenPopup".equals(event)) {
+            openPopup(message, session, WebExtension.Action.TYPE_BROWSER_ACTION);
+            return;
+        } else if ("GeckoView:PageAction:OpenPopup".equals(event)) {
+            openPopup(message, session, WebExtension.Action.TYPE_PAGE_ACTION);
             return;
         }
 

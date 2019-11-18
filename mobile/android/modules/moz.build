@@ -22,7 +22,6 @@ DIRS += ['geckoview']
 EXTRA_JS_MODULES += [
     'Accounts.jsm',
     'ActionBarHandler.jsm',
-    'BrowserActions.jsm',
     'dbg-browser-actors.js',
     'DownloadNotifications.jsm',
     'FormAssistant.jsm',
@@ -35,7 +34,6 @@ EXTRA_JS_MODULES += [
     'MediaPlayerApp.jsm',
     'NetErrorHelper.jsm',
     'Notifications.jsm',
-    'PageActions.jsm',
     'Prompt.jsm',
     'RuntimePermissions.jsm',
     'Sanitizer.jsm',

@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1573507879434">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1573804224556">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3546,6 +3546,14 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="53d8f35e-99ec-44fd-8082-3b713a5afcb3" id="extension@safeguard.ws">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="19c04aaf-c02d-4583-9978-c519245cd4fb" id="/^((\{c8476e06-0a50-41ec-a840-a2db436cf38c\})|(youtube\.downloader@firefox\.dev)|(youtubedownloader@firefox\.com)|(youtubehddownloader@firefox\.com)|(youtube\.d@firefox\.dev)|(advblock@blocker)|(YouTube@HD\.Downloader)|(adt-3\.0\.7@blocker)|(\{7131880e-d327-4802-b5ed-fee33c281abd\})|(\{5cb84843-504e-406e-8fb7-051c7fc3c9d3\})|(\{d8686bde-e666-4084-ae01-c75aa7a30f93\})|(\{96d35545-d94a-4ee1-bc43-d3055650587c\})|(ali-image-search@4\.0)|(\{e7634c48-0d36-448e-891e-b2036beebcd0\})|(\{442de29c-b710-45d4-b121-7b4be387c327\})|(lite-vpn-4\.1\.14@gmail\.com))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="d39750c3-a305-4487-bc0f-21500c3597dd" id="/^((_1gMembers_@www\.inboxace\.com)|(_39Members_@www\.mapsgalaxy\.com)|(_5zMembers_@www\.couponxplorer\.com)|(_65Members_@download\.fromdoctopdf\.com)|(_flMembers_@free\.myformsfinder\.com))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>

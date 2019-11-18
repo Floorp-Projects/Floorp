@@ -2877,7 +2877,7 @@ void SamplerThread::Run() {
                   DoPeriodicSample(lock, *registeredThread, *profiledThreadData,
                                    now, aRegs, samplePos, localProfileBuffer);
 
-                  // For "responsiveness", we want the input delay - but if
+                  // For "eventDelay", we want the input delay - but if
                   // there are no events in the input queue (or even if there
                   // are), we're interested in how long the delay *would* be for
                   // an input event now, which would be the time to finish the
@@ -3054,8 +3054,8 @@ void SamplerThread::Run() {
                   registeredThread->GetRunningEventDelay(
                       aNow, currentEventDelay, currentEventRunning);
 
-                  // Note: a different definition of responsiveness than the
-                  // 16ms event injection.
+                  // Note: eventDelay is a different definition of
+                  // responsiveness than the 16ms event injection.
 
                   // Don't suppress 0's for now; that can be a future
                   // optimization.  We probably want one zero to be stored
@@ -3066,7 +3066,7 @@ void SamplerThread::Run() {
                            currentEventRunning.ToMilliseconds());
                 });
 
-            // If we got responsiveness data, store it before the CompactStack.
+            // If we got eventDelay data, store it before the CompactStack.
             // Note: It is not stored inside the CompactStack so that it doesn't
             // get incorrectly duplicated when the thread is sleeping.
             if (unresponsiveDuration_ms.isSome()) {

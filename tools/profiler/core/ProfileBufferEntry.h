@@ -460,11 +460,11 @@ class UniqueStacks {
 //     {
 //       "stack": 0,          /* index into stackTable */
 //       "time": 1,           /* number */
-//       "responsiveness": 2, /* number */
+//       "eventDelay": 2,     /* number */
 //     },
 //     "data":
 //     [
-//       [ 1, 0.0, 0.0 ]      /* { stack: 1, time: 0.0, responsiveness: 0.0 } */
+//       [ 1, 0.0, 0.0 ]      /* { stack: 1, time: 0.0, eventDelay: 0.0 } */
 //     ]
 //   },
 //

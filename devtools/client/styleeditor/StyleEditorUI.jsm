@@ -174,9 +174,7 @@ StyleEditorUI.prototype = {
    * Build the initial UI and wire buttons with event handlers.
    */
   createUI: function() {
-    const viewRoot = this._root.parentNode.querySelector(".splitview-root");
-
-    this._view = new SplitView(viewRoot);
+    this._view = new SplitView(this._root);
 
     wire(this._view.rootElement, ".style-editor-newButton", () => {
       this._debuggee.addStyleSheet(null);

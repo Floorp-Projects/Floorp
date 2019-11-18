@@ -262,15 +262,19 @@ Unsigned
   __ https://searchfox.org/mozilla-central/rev/3a61fb322f74a0396878468e50e4f4e97e369825/toolkit/components/extensions/Extension.jsm#1816
   __ https://searchfox.org/mozilla-central/search?q=MOZ_ALLOW_LEGACY_EXTENSIONS&redirect=false
 
-  They can be also be loaded normally (not temporarily) if you use a Firefox
-  build where the build-time setting ``AppConstants.MOZ_REQUIRE_SIGNING`` is
-  false [source__, source__] and you set the ``xpinstall.signatures.required``
-  pref to false. As in the previous paragraph, such builds include Nightly and
-  Developer Edition but not Beta or Release [source__].
+  They can be also be loaded normally (not temporarily) in a custom build where
+  ``AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS`` is true (as above), or where the
+  build-time setting ``AppConstants.MOZ_REQUIRE_SIGNING`` [source__, source__]
+  and ``xpinstall.signatures.required`` pref are both false. As in the previous
+  paragraph, such builds include Nightly and Developer Edition but not Beta or
+  Release [source__]. In addition, your custom build must modify the
+  ``Extension.isPrivileged`` getter__ to return true. This getter determines
+  whether an extension can access privileged APIs.
 
   __ https://searchfox.org/mozilla-central/rev/7088fc958db5935eba24b413b1f16d6ab7bd13ea/toolkit/mozapps/extensions/internal/XPIProvider.jsm#2378
   __ https://searchfox.org/mozilla-central/rev/7088fc958db5935eba24b413b1f16d6ab7bd13ea/toolkit/mozapps/extensions/internal/AddonSettings.jsm#36
   __ https://searchfox.org/mozilla-central/search?q=MOZ_REQUIRE_SIGNING&case=false&regexp=false&path=
+  __ https://searchfox.org/mozilla-central/rev/b58e44b74ef2b4a44bdfb4140c2565ac852504be/toolkit/components/extensions/Extension.jsm#1849
 
   Extensions remain unsigned as you develop them. See the Workflow_ section for
   more.
@@ -299,17 +303,10 @@ Signed for release
   You encounter extensions that are signed for release when you are writing
   extensions for experiments. See the Experiments_ section for details.
 
-The ``Extension.isPrivileged`` getter__ determines whether an extension can
-access privileged APIs. If you have a custom Firefox build and you want to grant
-your extension access regardless of its signed state and how it's loaded, you
-can modify the getter to return true unconditionally. This can be useful in a
-pinch.
-
-To see console logs from extensions in the browser console, check the "Show
-Content Messages" checkbox in the console. This is necessary because extensions
-run outside the main process.
-
-__ https://searchfox.org/mozilla-central/rev/34cb8d0a2a324043bcfc2c56f37b31abe7fb23a8/toolkit/components/extensions/Extension.jsm#1812
+.. important::
+  To see console logs from extensions in the browser console, select the "Show
+  Content Messages" option in the console's settings. This is necessary because
+  extensions run outside the main process.
 
 Experiments
 -----------

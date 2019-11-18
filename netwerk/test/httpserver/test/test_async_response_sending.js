@@ -1001,7 +1001,7 @@ function CustomPipe(name) {
           "])"
       );
 
-      Assert.ok(increments.length > 0, "bad increments");
+      Assert.greater(increments.length, 0, "bad increments");
       Assert.ok(
         increments.every(function(v) {
           return v > 0;
