@@ -123,8 +123,6 @@ case $cmd in
 + /third_party/python/**
 + /third_party/rust/**
 
-+ /dom/bindings/mozwebidlcodegen/**
-
 + /layout/tools/reftest/reftest/**
 
 + /testing/mozbase/**
