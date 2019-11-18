@@ -73,12 +73,6 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "isShadowAnonymous",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "isShadowHost",
   "devtools/shared/layout/utils",
   true
@@ -254,7 +248,6 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       isAfterPseudoElement: isAfterPseudoElement(this.rawNode),
       isAnonymous: isAnonymous(this.rawNode),
       isNativeAnonymous: isNativeAnonymous(this.rawNode),
-      isShadowAnonymous: isShadowAnonymous(this.rawNode),
       isShadowRoot: shadowRoot,
       shadowRootMode: getShadowRootMode(this.rawNode),
       isShadowHost: isShadowHost(this.rawNode),
@@ -358,11 +351,14 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 
     // Normal counting misses ::before/::after.  Also, some anonymous children
     // may ultimately be skipped, so we have to consult with the walker.
+    //
+    // FIXME: We should be able to just check <slot> rather than
+    // containingShadowRoot.
     if (
       numChildren === 0 ||
       hasAnonChildren ||
       isShadowHost(this.rawNode) ||
-      isShadowAnonymous(this.rawNode)
+      this.rawNode.containingShadowRoot
     ) {
       numChildren = this.walker.countChildren(this);
     }
