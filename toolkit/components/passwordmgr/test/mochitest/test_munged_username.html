@@ -63,6 +63,15 @@ async function loadFormIntoIframe(origin, html) {
 
   // Wait for the form to be processed before trying to submit.
   await promiseFormsProcessed();
+
+  await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [html], function(contentHtml) {
+    let doc = this.content.document;
+    for (let field of doc.querySelectorAll("input")) {
+      let actualValue = field.value;
+      field.value = "";
+      SpecialPowers.wrap(field).setUserInput(actualValue);
+    }
+  });
 }
 
 add_task(async function setup() {
@@ -127,20 +136,6 @@ const TESTCASES = [
   },
 ];
 
-/**
- * @return {Promise} resolving when form submission was processed.
- */
-function getSubmitMessage() {
-  info("getSubmitMessage");
-  return new Promise((resolve, reject) => {
-    PWMGR_COMMON_PARENT.addMessageListener("formSubmissionProcessed", function processed(...args) {
-      info("got formSubmissionProcessed");
-      PWMGR_COMMON_PARENT.removeMessageListener("formSubmissionProcessed", processed);
-      resolve(...args);
-    });
-  });
-}
-
 add_task(async function test_new_logins() {
   for (let tc of TESTCASES) {
     info("Starting testcase: " + JSON.stringify(tc));
@@ -193,8 +188,8 @@ add_task(async function test_no_autofill_munged_username_matching_password() {
   await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
     let doc = this.content.document;
     Assert.equal(doc.querySelector("[name='uname']").value, "", "Check username didn't get autofilled");
-    doc.querySelector("[name='uname']").setUserInput("real••••user");
-    doc.querySelector("[name='pword']").setUserInput("pass1");
+    SpecialPowers.wrap(doc.querySelector("[name='uname']")).setUserInput("real••••user");
+    SpecialPowers.wrap(doc.querySelector("[name='pword']")).setUserInput("pass1");
   });
 
   // we shouldn't get the save password doorhanger...

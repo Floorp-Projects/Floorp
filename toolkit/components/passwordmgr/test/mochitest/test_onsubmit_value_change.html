@@ -40,12 +40,15 @@ Login Manager test: input value change right after onsubmit event
 <script>
   /** Test for Login Manager: input value change right after onsubmit event **/
   add_task(async function checkFormValues() {
-    document.getElementById("ufield").value = "testuser";
-    document.getElementById("pfield").value = "testpass";
+    SpecialPowers.wrap(document.getElementById("ufield")).setUserInput("testuser");
+    SpecialPowers.wrap(document.getElementById("pfield")).setUserInput("testpass");
     is($_(1, "uname").value, "testuser", "Checking for filled username");
     is($_(1, "pword").value, "testpass", "Checking for filled password");
 
     document.getElementById("form1").addEventListener("submit", () => {
+      // deliberately assign to .value rather than setUserInput:
+      // the scenario under test here is that script is changing/populating
+      // fields after the user has clicked the submit button
       document.getElementById("ufield").value = "newuser";
       document.getElementById("pfield").value = "newpass";
     }, true);
