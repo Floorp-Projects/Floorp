@@ -549,22 +549,17 @@ class AstBlock : public AstExpr {
 
 class AstBranch : public AstExpr {
   Op op_;
-  AstExpr* cond_;
   AstRef target_;
-  AstExpr* value_;
+  AstExprVector values_;  // Includes the condition, for br_if
 
  public:
   static const AstExprKind Kind = AstExprKind::Branch;
-  explicit AstBranch(Op op, AstExpr* cond, AstRef target, AstExpr* value)
-      : AstExpr(Kind), op_(op), cond_(cond), target_(target), value_(value) {}
+  explicit AstBranch(Op op, AstRef target, AstExprVector&& values)
+      : AstExpr(Kind), op_(op), target_(target), values_(std::move(values)) {}
 
   Op op() const { return op_; }
   AstRef& target() { return target_; }
-  AstExpr& cond() const {
-    MOZ_ASSERT(cond_);
-    return *cond_;
-  }
-  AstExpr* maybeValue() const { return value_; }
+  AstExprVector& values() { return values_; }
 };
 
 class AstCall : public AstExpr {
@@ -1061,24 +1056,21 @@ class AstMemoryGrow final : public AstExpr {
 };
 
 class AstBranchTable : public AstExpr {
-  AstExpr& index_;
   AstRef default_;
   AstRefVector table_;
-  AstExpr* value_;
+  AstExprVector values_;
 
  public:
   static const AstExprKind Kind = AstExprKind::BranchTable;
-  explicit AstBranchTable(AstExpr& index, AstRef def, AstRefVector&& table,
-                          AstExpr* maybeValue)
+  explicit AstBranchTable(AstRef def, AstRefVector&& table,
+                          AstExprVector&& values)
       : AstExpr(Kind),
-        index_(index),
         default_(def),
         table_(std::move(table)),
-        value_(maybeValue) {}
-  AstExpr& index() const { return index_; }
+        values_(std::move(values)) {}
   AstRef& def() { return default_; }
   AstRefVector& table() { return table_; }
-  AstExpr* maybeValue() { return value_; }
+  AstExprVector& values() { return values_; }
 };
 
 class AstFunc : public AstNode {
