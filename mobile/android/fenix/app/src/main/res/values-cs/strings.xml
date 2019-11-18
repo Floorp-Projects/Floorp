@@ -15,7 +15,7 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Zadejte hledání nebo adresu</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header">Nemáte žádné otevřené panely</string>
+    <string name="no_open_tabs_header_2">Žádné otevřené panely</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Tady se zobrazí vaše otevřené panely.</string>
 

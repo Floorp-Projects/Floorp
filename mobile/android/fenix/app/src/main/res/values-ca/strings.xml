@@ -11,8 +11,6 @@
     <string name="content_description_disable_private_browsing_button">Desactiva la navegació privada</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Escriviu una cerca o adreça</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header">No hi ha cap pestanya oberta</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Les pestanyes obertes es mostraran aquí.</string>
 
@@ -87,11 +85,12 @@
     <string name="preferences_category_basics">Bàsics</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Quant a</string>
-    <!-- Preference for settings related to changing the default search engine -->
-    <string name="preferences_search_engine">Motor de cerca</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Ajuda</string>
 
+
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">El Firefox deixarà de sincronitzar-se amb el vostre compte, però les vostres dades de navegació d’aquest dispositiu no s’eliminaran.</string>
 
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Protecció contra el seguiment millorada</string>
@@ -101,5 +100,5 @@
     <string name="etp_cryptominers_title">Miners de criptomonedes</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Generadors d’empremtes digitals</string>
-
+  
     </resources>
