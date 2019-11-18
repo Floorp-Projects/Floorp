@@ -298,6 +298,9 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
       const LayersId& aLayersId, const LayersObserverEpoch& aEpoch,
       const bool& aActive);
 
+  mozilla::ipc::IPCResult RecvCompositorOptionsChanged(
+      const LayersId& aLayersId, const CompositorOptions& aNewOptions);
+
   uint64_t GetNextResourceId();
 
   void ClearSharedFrameMetricsData(LayersId aLayersId);
