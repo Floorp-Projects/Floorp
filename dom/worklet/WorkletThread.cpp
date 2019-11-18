@@ -9,6 +9,7 @@
 #include "nsContentUtils.h"
 #include "nsCycleCollector.h"
 #include "mozilla/dom/AtomList.h"
+#include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/ThreadEventQueue.h"
@@ -388,6 +389,9 @@ void WorkletThread::DeleteCycleCollectedJSContext() {
   if (!ccjscx) {
     return;
   }
+
+  // Release any MessagePort kept alive by its ipc actor.
+  mozilla::ipc::BackgroundChild::CloseForCurrentThread();
 
   WorkletJSContext* workletjscx = ccjscx->GetAsWorkletJSContext();
   MOZ_ASSERT(workletjscx);

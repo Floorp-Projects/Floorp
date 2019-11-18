@@ -2469,7 +2469,9 @@ WorkerPrivate* GetWorkerPrivateFromContext(JSContext* aCx) {
 }
 
 WorkerPrivate* GetCurrentThreadWorkerPrivate() {
-  MOZ_ASSERT(!NS_IsMainThread());
+  if (NS_IsMainThread()) {
+    return nullptr;
+  }
 
   CycleCollectedJSContext* ccjscx = CycleCollectedJSContext::Get();
   if (!ccjscx) {
@@ -2477,7 +2479,7 @@ WorkerPrivate* GetCurrentThreadWorkerPrivate() {
   }
 
   WorkerJSContext* workerjscx = ccjscx->GetAsWorkerJSContext();
-  // Although GetCurrentThreadWorkerPrivate() is called only for worker
+  // Even when GetCurrentThreadWorkerPrivate() is called on worker
   // threads, the ccjscx will no longer be a WorkerJSContext if called from
   // stable state events during ~CycleCollectedJSContext().
   if (!workerjscx) {
@@ -2492,7 +2494,8 @@ bool IsCurrentThreadRunningWorker() {
 }
 
 bool IsCurrentThreadRunningChromeWorker() {
-  return GetCurrentThreadWorkerPrivate()->UsesSystemPrincipal();
+  WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
+  return wp && wp->UsesSystemPrincipal();
 }
 
 JSContext* GetCurrentWorkerThreadJSContext() {

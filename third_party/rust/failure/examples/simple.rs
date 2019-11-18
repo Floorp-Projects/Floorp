@@ -16,7 +16,7 @@ fn bad_function() -> Result<(), WrappingError> {
 }
 
 fn main() {
-    for cause in Fail::iter_causes(&bad_function().unwrap_err()) {
-        println!("{}", cause);
+    for cause in Fail::iter_chain(&bad_function().unwrap_err()) {
+        println!("{}: {}", cause.name().unwrap_or("Error"), cause);
     }
 }

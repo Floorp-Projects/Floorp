@@ -348,6 +348,15 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
     if (FocusMgr()->HasDOMFocus(targetNode)) {
       nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSel =
           targetNode->AsElement()->AsXULMultiSelectControl();
+      if (!multiSel) {
+        // This shouldn't be possible. All XUL trees should have
+        // nsIDOMXULMultiSelectControlElement, and the tree is focused, so it
+        // shouldn't be dying. Nevertheless, this sometimes happens in the wild
+        // (bug 1597043).
+        MOZ_ASSERT_UNREACHABLE(
+            "XUL tree doesn't have nsIDOMXULMultiSelectControlElement");
+        return;
+      }
       nsAutoString selType;
       multiSel->GetSelType(selType);
       if (selType.IsEmpty() || !selType.EqualsLiteral("single")) {

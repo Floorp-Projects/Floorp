@@ -26,9 +26,9 @@ class WorkletNodeEngine final : public AudioNodeEngine {
   }
 
   MOZ_CAN_RUN_SCRIPT
-  void ConstructProcessor(
-      AudioWorkletImpl* aWorkletImpl, const nsAString& aName,
-      NotNull<StructuredCloneHolder*> aOptionsSerialization);
+  void ConstructProcessor(AudioWorkletImpl* aWorkletImpl,
+                          const nsAString& aName,
+                          NotNull<StructuredCloneHolder*> aSerializedOptions);
 
   void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
@@ -118,13 +118,13 @@ void WorkletNodeEngine::SendProcessorError() {
 
 void WorkletNodeEngine::ConstructProcessor(
     AudioWorkletImpl* aWorkletImpl, const nsAString& aName,
-    NotNull<StructuredCloneHolder*> aOptionsSerialization) {
+    NotNull<StructuredCloneHolder*> aSerializedOptions) {
   MOZ_ASSERT(mInputs.mPorts.empty() && mOutputs.mPorts.empty());
   RefPtr<AudioWorkletGlobalScope> global = aWorkletImpl->GetGlobalScope();
   MOZ_ASSERT(global);  // global has already been used to register processor
   JS::RootingContext* cx = RootingCx();
   mProcessor.init(cx);
-  if (!global->ConstructProcessor(aName, aOptionsSerialization, &mProcessor) ||
+  if (!global->ConstructProcessor(aName, aSerializedOptions, &mProcessor) ||
       // mInputs and mOutputs outer arrays are fixed length and so much of the
       // initialization need only be performed once (i.e. here).
       NS_WARN_IF(!mInputs.mPorts.growBy(InputCount())) ||
@@ -370,27 +370,8 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
     const GlobalObject& aGlobal, AudioContext& aAudioContext,
     const nsAString& aName, const AudioWorkletNodeOptions& aOptions,
     ErrorResult& aRv) {
-  if (aOptions.mNumberOfInputs == 0 && aOptions.mNumberOfOutputs == 0) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return nullptr;
-  }
-
-  if (aOptions.mOutputChannelCount.WasPassed()) {
-    if (aOptions.mOutputChannelCount.Value().Length() !=
-        aOptions.mNumberOfOutputs) {
-      aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
-      return nullptr;
-    }
-
-    for (uint32_t channelCount : aOptions.mOutputChannelCount.Value()) {
-      if (channelCount == 0 || channelCount > WebAudioUtils::MaxChannelCount) {
-        aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-        return nullptr;
-      }
-    }
-  }
   /**
-   * 2. If nodeName does not exists as a key in the BaseAudioContext’s node
+   * 1. If nodeName does not exist as a key in the BaseAudioContext’s node
    *    name to parameter descriptor map, throw a NotSupportedError exception
    *    and abort these steps.
    */
@@ -401,6 +382,44 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
     return nullptr;
   }
 
+  // See https://github.com/WebAudio/web-audio-api/issues/2074 for ordering.
+  RefPtr<AudioWorkletNode> audioWorkletNode =
+      new AudioWorkletNode(&aAudioContext, aName, aOptions);
+  audioWorkletNode->Initialize(aOptions, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  /**
+   * 3. Configure input, output and output channels of node with options.
+   */
+  if (aOptions.mNumberOfInputs == 0 && aOptions.mNumberOfOutputs == 0) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
+  if (aOptions.mOutputChannelCount.WasPassed()) {
+    /**
+     * 1. If any value in outputChannelCount is zero or greater than the
+     *    implementation’s maximum number of channels, throw a
+     *    NotSupportedError and abort the remaining steps.
+     */
+    for (uint32_t channelCount : aOptions.mOutputChannelCount.Value()) {
+      if (channelCount == 0 || channelCount > WebAudioUtils::MaxChannelCount) {
+        aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+        return nullptr;
+      }
+    }
+    /**
+     * 2. If the length of outputChannelCount does not equal numberOfOutputs,
+     *    throw an IndexSizeError and abort the remaining steps.
+     */
+    if (aOptions.mOutputChannelCount.Value().Length() !=
+        aOptions.mNumberOfOutputs) {
+      aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+      return nullptr;
+    }
+  }
   // MTG does not support more than UINT16_MAX inputs or outputs.
   if (aOptions.mNumberOfInputs > UINT16_MAX) {
     aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(
@@ -413,16 +432,8 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
     return nullptr;
   }
 
-  RefPtr<AudioWorkletNode> audioWorkletNode =
-      new AudioWorkletNode(&aAudioContext, aName, aOptions);
-
-  audioWorkletNode->Initialize(aOptions, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
   /**
-   * 7. Let optionsSerialization be the result of StructuredSerialize(options).
+   * 8. Convert options dictionary to optionsObject.
    */
   JSContext* cx = aGlobal.Context();
   JS::Rooted<JS::Value> optionsVal(cx);
@@ -430,14 +441,18 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
     aRv.NoteJSContextException(cx);
     return nullptr;
   }
+  /**
+   * 9. Let serializedOptions be the result of
+   *    StructuredSerialize(optionsObject).
+   */
   // StructuredCloneHolder does not have a move constructor.  Instead allocate
   // memory so that the pointer can be passed to the rendering thread.
-  UniquePtr<StructuredCloneHolder> optionsSerialization =
+  UniquePtr<StructuredCloneHolder> serializedOptions =
       MakeUnique<StructuredCloneHolder>(
           StructuredCloneHolder::CloningSupported,
           StructuredCloneHolder::TransferringNotSupported,
           JS::StructuredCloneScope::SameProcessDifferentThread);
-  optionsSerialization->Write(cx, optionsVal, aRv);
+  serializedOptions->Write(cx, optionsVal, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -449,8 +464,10 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
       aAudioContext.Graph());
 
   /**
-   * 10. Queue a control message to create an AudioWorkletProcessor, given
-   *     nodeName, processorPortSerialization, optionsSerialization, and node.
+   * 12. Queue a control message to invoke the constructor of the
+   *     corresponding AudioWorkletProcessor with the processor construction
+   *     data that consists of: nodeName, node, serializedOptions, and
+   *     serializedProcessorPort.
    */
   Worklet* worklet = aAudioContext.GetAudioWorklet(aRv);
   MOZ_ASSERT(worklet, "Worklet already existed and so getter shouldn't fail.");
@@ -461,7 +478,7 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
       // See bug 1535398.
       [track = audioWorkletNode->mTrack,
        workletImpl = RefPtr<AudioWorkletImpl>(workletImpl),
-       name = nsString(aName), options = std::move(optionsSerialization)]()
+       name = nsString(aName), options = std::move(serializedOptions)]()
           MOZ_CAN_RUN_SCRIPT_BOUNDARY {
             auto engine = static_cast<WorkletNodeEngine*>(track->Engine());
             engine->ConstructProcessor(workletImpl, name,

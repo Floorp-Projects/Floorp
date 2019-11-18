@@ -258,6 +258,8 @@ MARKUPMAP(main, New_HyperText, roles::LANDMARK)
 
 MARKUPMAP(map, nullptr, roles::TEXT_CONTAINER)
 
+MARKUPMAP(mark, New_HyperText, roles::MARK, Attr(xmlroles, mark))
+
 MARKUPMAP(math, New_HyperText, roles::MATHML_MATH)
 
 MARKUPMAP(mi_, New_HyperText, roles::MATHML_IDENTIFIER)

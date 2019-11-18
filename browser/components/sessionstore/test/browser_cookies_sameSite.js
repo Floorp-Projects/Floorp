@@ -4,7 +4,7 @@ const TEST_URL = "http://example.com";
 const MAX_EXPIRY = Math.pow(2, 62);
 
 function getSingleCookie() {
-  let cookies = Array.from(Services.cookies.enumerator);
+  let cookies = Array.from(Services.cookies.cookies);
   Assert.equal(cookies.length, 1, "expected one cookie");
   return cookies[0];
 }

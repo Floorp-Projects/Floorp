@@ -23,8 +23,8 @@ function* do_run_test() {
   let profile = do_get_profile();
 
   // Start the cookieservice, to force creation of a database.
-  // Get the sessionEnumerator to join the initialization in cookie thread
-  Services.cookiemgr.sessionEnumerator;
+  // Get the sessionCookies to join the initialization in cookie thread
+  Services.cookiemgr.sessionCookies;
 
   // Close the profile.
   do_close_profile(test_generator);
