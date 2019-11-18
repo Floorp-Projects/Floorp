@@ -1836,6 +1836,20 @@ nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
   FinishReflowChild(aItem.Frame(), aPresContext, childDesiredSize,
                     &aChildReflowInput, 0, 0, flags);
 
+  // If we got an interrupt during or before that measuring reflow, we make a
+  // note that this & other cached measurements are potentially invalid,
+  // because our descendant block frames' reflows may have bailed out early due
+  // to the interrupt.  We'll keep these invalid measurements for the rest of
+  // this reflow (to avoid repeating the same bogus measurement), and purge
+  // them on the next (non-interrupted) reflow.
+  //
+  // TODO(emilio): Can we do this only for the kids that are interrupted? We
+  // probably want to figure out what the right thing to do here is regarding
+  // interrupts, see bug 1495532.
+  if (aPresContext->HasPendingInterrupt()) {
+    AddStateBits(NS_STATE_FLEX_MEASUREMENTS_INTERRUPTED);
+  }
+
   auto result =
       new CachedMeasuringReflowResult(aChildReflowInput, childDesiredSize);
 
@@ -4300,23 +4314,6 @@ void FlexLine::PositionItemsInCrossAxis(
     // Back out to cross-axis edge of the line.
     lineCrossAxisPosnTracker.ResetPosition();
   }
-}
-
-void nsFlexContainerFrame::DidReflow(nsPresContext* aPresContext,
-                                     const ReflowInput* aReflowInput) {
-  // If we got an interrupt, we make a note here that our cached measurements
-  // are potentially invalid, because our descendant block frames' reflows may
-  // have bailed out early due to the interrupt.  We'll keep these invalid
-  // measurements for the rest of this reflow (to avoid repeating the same
-  // bogus measurement), and purge them on the next (non-interrupted) reflow.
-  //
-  // TODO(emilio): Can we do this only for the kids that are interrupted? We
-  // probably want to figure out what the right thing to do here is regarding
-  // interrupts, see bug 1495532.
-  if (aPresContext->HasPendingInterrupt()) {
-    AddStateBits(NS_STATE_FLEX_MEASUREMENTS_INTERRUPTED);
-  }
-  nsContainerFrame::DidReflow(aPresContext, aReflowInput);
 }
 
 void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
