@@ -16,13 +16,16 @@ transforms = TransformSequence()
 @transforms.add
 def handle_keyed_by(config, tasks):
     """Resolve fields that can be keyed by platform, etc."""
-    fields = [
+    default_fields = [
         'worker.push',
         'worker.bump-files',
         'worker-type',
     ]
     for task in tasks:
+        fields = default_fields[:]
+        if task["worker"].get("l10n-bump-info"):
+            fields.append('worker.l10n-bump-info')
         for field in fields:
             resolve_keyed_by(task, field, item_name=task['name'],
-                             project=config.params['project'])
+                             **config.params)
         yield task
