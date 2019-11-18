@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fmt;
 use Fail;
 
-pub struct BoxStd(pub Box<Error + Send + Sync + 'static>);
+pub struct BoxStd(pub Box<dyn Error + Send + Sync + 'static>);
 
 impl fmt::Display for BoxStd {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
