@@ -55,5 +55,5 @@ to the users.
 
 [custom-fail]: ./custom-fail.html
 [use-error]: ./use-error.html
-[err-msg-api]: https://boats.gitlab.io/failure/doc/failure/fn.err_msg.html
-[format-err-api]: https://boats.gitlab.io/failure/doc/failure/macro.format_err.html
+[err-msg-api]: https://docs.rs/failure/latest/failure/fn.err_msg.html
+[format-err-api]: https://docs.rs/failure/latest/failure/macro.format_err.html
