@@ -52,6 +52,7 @@ class ShareViewModelTest {
         every { application.packageManager } returns packageManager
         every { application.getSystemService<ConnectivityManager>() } returns connectivityManager
         every { application.components.backgroundServices.accountManager } returns fxaAccountManager
+        every { connectivityManager.activeNetworkInfo } returns mockk(relaxed = true)
 
         viewModel = ShareViewModel(application)
     }
