@@ -1940,38 +1940,23 @@ nsDocShell::GetCharsetAutodetected(bool* aCharsetAutodetected) {
 }
 
 NS_IMETHODIMP
-nsDocShell::GetDocShellEnumerator(int32_t aItemType,
-                                  DocShellEnumeratorDirection aDirection,
-                                  nsISimpleEnumerator** aResult) {
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = nullptr;
+nsDocShell::GetAllDocShellsInSubtree(int32_t aItemType,
+                                     DocShellEnumeratorDirection aDirection,
+                                     nsTArray<RefPtr<nsIDocShell>>& aResult) {
+  aResult.Clear();
 
-  RefPtr<nsDocShellEnumerator> docShellEnum;
-  if (aDirection == ENUMERATE_FORWARDS) {
-    docShellEnum = new nsDocShellForwardsEnumerator;
-  } else {
-    docShellEnum = new nsDocShellBackwardsEnumerator;
-  }
+  nsDocShellEnumerator docShellEnum(
+      (aDirection == ENUMERATE_FORWARDS)
+          ? nsDocShellEnumerator::EnumerationDirection::Forwards
+          : nsDocShellEnumerator::EnumerationDirection::Backwards,
+      aItemType, *this);
 
-  nsresult rv = docShellEnum->SetEnumDocShellType(aItemType);
+  nsresult rv = docShellEnum.BuildDocShellArray(aResult);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = docShellEnum->SetEnumerationRootItem((nsIDocShellTreeItem*)this);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = docShellEnum->First();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = docShellEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator),
-                                    (void**)aResult);
-
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3205,6 +3190,15 @@ NS_IMETHODIMP
 nsDocShell::GetInProcessChildAt(int32_t aIndex, nsIDocShellTreeItem** aChild) {
   NS_ENSURE_ARG_POINTER(aChild);
 
+  RefPtr<nsDocShell> child = GetInProcessChildAt(aIndex);
+  NS_ENSURE_TRUE(child, NS_ERROR_UNEXPECTED);
+
+  child.forget(aChild);
+
+  return NS_OK;
+}
+
+nsDocShell* nsDocShell::GetInProcessChildAt(int32_t aIndex) {
 #ifdef DEBUG
   if (aIndex < 0) {
     NS_WARNING("Negative index passed to GetChildAt");
@@ -3214,9 +3208,9 @@ nsDocShell::GetInProcessChildAt(int32_t aIndex, nsIDocShellTreeItem** aChild) {
 #endif
 
   nsIDocumentLoader* child = ChildAt(aIndex);
-  NS_ENSURE_TRUE(child, NS_ERROR_UNEXPECTED);
 
-  return CallQueryInterface(child, aChild);
+  // child may be nullptr here.
+  return static_cast<nsDocShell*>(child);
 }
 
 NS_IMETHODIMP

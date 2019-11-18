@@ -32,12 +32,10 @@ void OnPrefChange(const char* aPrefName, void*) {
     }
 
     nsCOMPtr<nsIDocShell> rootDocShell = window->GetDocShell();
-    nsCOMPtr<nsISimpleEnumerator> docShellEnumerator;
-    rootDocShell->GetDocShellEnumerator(nsIDocShell::typeAll,
-                                        nsIDocShell::ENUMERATE_FORWARDS,
-                                        getter_AddRefs(docShellEnumerator));
-    NS_ENSURE_TRUE_VOID(docShellEnumerator);
-    for (auto& docShell : SimpleEnumerator<nsIDocShell>(docShellEnumerator)) {
+    nsTArray<RefPtr<nsIDocShell>> docShells;
+    rootDocShell->GetAllDocShellsInSubtree(
+        nsIDocShell::typeAll, nsIDocShell::ENUMERATE_FORWARDS, docShells);
+    for (auto& docShell : docShells) {
       if (nsCOMPtr<nsPIDOMWindowOuter> win = do_GetInterface(docShell)) {
         if (dom::Document* doc = win->GetExtantDoc()) {
           doc->ResetDocumentDirection();

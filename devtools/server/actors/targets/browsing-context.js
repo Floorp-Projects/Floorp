@@ -94,13 +94,13 @@ function getDocShellChromeEventHandler(docShell) {
 }
 
 function getChildDocShells(parentDocShell) {
-  const docShellsEnum = parentDocShell.getDocShellEnumerator(
+  const allDocShells = parentDocShell.getAllDocShellsInSubtree(
     Ci.nsIDocShellTreeItem.typeAll,
     Ci.nsIDocShell.ENUMERATE_FORWARDS
   );
 
   const docShells = [];
-  for (const docShell of docShellsEnum) {
+  for (const docShell of allDocShells) {
     docShell
       .QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIWebProgress);

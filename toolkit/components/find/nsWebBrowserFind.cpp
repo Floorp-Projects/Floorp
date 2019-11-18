@@ -127,10 +127,9 @@ nsWebBrowserFind::FindNext(bool* aResult) {
   auto enumDirection = mFindBackwards ? nsIDocShell::ENUMERATE_BACKWARDS
                                       : nsIDocShell::ENUMERATE_FORWARDS;
 
-  nsCOMPtr<nsISimpleEnumerator> docShellEnumerator;
-  rv = rootDocShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeAll,
-                                           enumDirection,
-                                           getter_AddRefs(docShellEnumerator));
+  nsTArray<RefPtr<nsIDocShell>> docShells;
+  rv = rootDocShell->GetAllDocShellsInSubtree(nsIDocShellTreeItem::typeAll,
+                                              enumDirection, docShells);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -138,23 +137,10 @@ nsWebBrowserFind::FindNext(bool* aResult) {
   // remember where we started
   nsCOMPtr<nsIDocShellTreeItem> startingItem = searchFrame->GetDocShell();
 
-  nsCOMPtr<nsIDocShellTreeItem> curItem;
-
   // XXX We should avoid searching in frameset documents here.
   // We also need to honour mSearchSubFrames and mSearchParentFrames.
-  bool hasMore, doFind = false;
-  while (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMore)) &&
-         hasMore) {
-    nsCOMPtr<nsISupports> curSupports;
-    rv = docShellEnumerator->GetNext(getter_AddRefs(curSupports));
-    if (NS_FAILED(rv)) {
-      break;
-    }
-    curItem = do_QueryInterface(curSupports, &rv);
-    if (NS_FAILED(rv)) {
-      break;
-    }
-
+  bool doFind = false;
+  for (const auto& curItem : docShells) {
     if (doFind) {
       searchFrame = curItem->GetWindow();
       if (!searchFrame) {
@@ -192,26 +178,13 @@ nsWebBrowserFind::FindNext(bool* aResult) {
 
   // because nsISimpleEnumerator is bad and isn't resettable, I have to
   // make a new one
-  docShellEnumerator = nullptr;
-  rv = rootDocShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeAll,
-                                           enumDirection,
-                                           getter_AddRefs(docShellEnumerator));
+  rv = rootDocShell->GetAllDocShellsInSubtree(nsIDocShellTreeItem::typeAll,
+                                              enumDirection, docShells);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  while (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMore)) &&
-         hasMore) {
-    nsCOMPtr<nsISupports> curSupports;
-    rv = docShellEnumerator->GetNext(getter_AddRefs(curSupports));
-    if (NS_FAILED(rv)) {
-      break;
-    }
-    curItem = do_QueryInterface(curSupports, &rv);
-    if (NS_FAILED(rv)) {
-      break;
-    }
-
+  for (const auto& curItem : docShells) {
     searchFrame = curItem->GetWindow();
     if (!searchFrame) {
       rv = NS_ERROR_FAILURE;

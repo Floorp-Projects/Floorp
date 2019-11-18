@@ -222,7 +222,7 @@ function getDialogDoc() {
   // that has either commonDialog.xul or selectDialog.xul loaded.
   // var enumerator = Services.wm.getEnumerator("navigator:browser");
   for (let { docShell } of Services.wm.getEnumerator(null)) {
-    var containedDocShells = docShell.getDocShellEnumerator(
+    var containedDocShells = docShell.getAllDocShellsInSubtree(
       docShell.typeChrome,
       docShell.ENUMERATE_FORWARDS
     );

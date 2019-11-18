@@ -47,7 +47,6 @@ interface nsIContentSecurityPolicy;
 interface nsIDocShellLoadInfo;
 interface nsIEditor;
 interface nsIEditingSession;
-interface nsISimpleEnumerator;
 interface nsIInputStream;
 interface nsIRequest;
 interface nsISHEntry;
@@ -254,7 +253,7 @@ interface nsIDocShell : nsIDocShellTreeItem
   [infallible] attribute boolean inheritPrivateBrowsingId;
 
   /**
-   * Get an enumerator over this docShell and its children.
+   * Get an array of this docShell and its children.
    *
    * @param aItemType  - Only include docShells of this type, or if typeAll,
    *                     include all child shells.
@@ -267,8 +266,8 @@ interface nsIDocShell : nsIDocShellTreeItem
     ENUMERATE_BACKWARDS = 1
   };
 
-  nsISimpleEnumerator getDocShellEnumerator(in long aItemType,
-                                            in nsIDocShell_DocShellEnumeratorDirection aDirection);
+  Array<nsIDocShell> getAllDocShellsInSubtree(in long aItemType,
+                                              in nsIDocShell_DocShellEnumeratorDirection aDirection);
 
   /**
    * The type of application that created this window.

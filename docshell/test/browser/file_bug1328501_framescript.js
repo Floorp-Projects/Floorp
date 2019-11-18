@@ -31,10 +31,8 @@ addEventListener("unload", e => {
 });
 
 function getChildDocShells() {
-  let docShellsEnum = docShell.getDocShellEnumerator(
+  return docShell.getAllDocShellsInSubtree(
     Ci.nsIDocShellTreeItem.typeAll,
     Ci.nsIDocShell.ENUMERATE_FORWARDS
   );
-
-  return Array.from(docShellsEnum);
 }

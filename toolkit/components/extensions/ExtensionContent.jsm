@@ -1294,12 +1294,12 @@ var ExtensionContent = {
   // Helpers
 
   *enumerateWindows(docShell) {
-    let enum_ = docShell.getDocShellEnumerator(
+    let docShells = docShell.getAllDocShellsInSubtree(
       docShell.typeContent,
       docShell.ENUMERATE_FORWARDS
     );
 
-    for (let docShell of enum_) {
+    for (let docShell of docShells) {
       try {
         yield docShell.domWindow;
       } catch (e) {
