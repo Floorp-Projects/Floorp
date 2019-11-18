@@ -27,7 +27,8 @@ import com.google.android.gms.nearby.connection.Strategy
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
-import java.nio.charset.StandardCharsets.UTF_8
+import java.io.ByteArrayInputStream
+import java.nio.charset.Charset
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -41,6 +42,7 @@ import java.util.concurrent.ConcurrentHashMap
  * @param connectionsClient the underlying client
  * @param name a human-readable name for this device
  */
+@Suppress("TooManyFunctions")
 class NearbyConnection(
     private val connectionsClient: ConnectionsClient,
     private val name: String = Build.MODEL,
@@ -198,15 +200,6 @@ class NearbyConnection(
     private var connectionState: ConnectionState = ConnectionState.Isolated
 
     // Override all 3 register() methods to notify listener of initial state.
-    override fun register(
-        observer: NearbyConnectionObserver,
-        owner: LifecycleOwner,
-        autoPause: Boolean
-    ) {
-        delegate.register(observer, owner, autoPause)
-        observer.onStateUpdated(connectionState)
-    }
-
     override fun register(observer: NearbyConnectionObserver) {
         delegate.register(observer)
         observer.onStateUpdated(connectionState)
@@ -214,6 +207,15 @@ class NearbyConnection(
 
     override fun register(observer: NearbyConnectionObserver, view: View) {
         delegate.register(observer, view)
+        observer.onStateUpdated(connectionState)
+    }
+
+    override fun register(
+        observer: NearbyConnectionObserver,
+        owner: LifecycleOwner,
+        autoPause: Boolean
+    ) {
+        delegate.register(observer, owner, autoPause)
         observer.onStateUpdated(connectionState)
     }
 
@@ -319,13 +321,41 @@ class NearbyConnection(
         }
     }
 
+    @VisibleForTesting
+    internal fun payloadToString(payload: Payload): String? {
+        if (payload.type == Payload.Type.BYTES) {
+            payload.asBytes()?.let { return String(it, PAYLOAD_ENCODING) }
+        } else if (payload.type == Payload.Type.STREAM) {
+            payload.asStream()?.asInputStream()
+                ?.use { return String(it.readBytes(), PAYLOAD_ENCODING) }
+        }
+        reportError("Received payload had illegal type: ${payload.type}")
+        return null
+    }
+
+    @VisibleForTesting
+    internal fun stringToPayload(message: String): Payload {
+        val bytes = message.toByteArray(PAYLOAD_ENCODING)
+        if (bytes.size <= ConnectionsClient.MAX_BYTES_DATA_SIZE) {
+            logger.error("${bytes.size} <= ${ConnectionsClient.MAX_BYTES_DATA_SIZE}")
+            return Payload.fromBytes(bytes)
+        } else {
+            logger.error("${bytes.size} > ${ConnectionsClient.MAX_BYTES_DATA_SIZE}")
+            // Logically, it might make more sense to use Payload.fromFile() since we
+            // know the size of the string, than Payload.fromStream(), but we would
+            // have to create a file locally to use use the former.
+            return Payload.fromStream(ByteArrayInputStream(bytes))
+        }
+    }
+
     private val payloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
-            notifyObservers {
-                onMessageReceived(
-                    endpointId,
-                    endpointIdsToNames[endpointId],
-                    payload.asBytes()?.let { String(it, UTF_8) } ?: "")
+            payloadToString(payload)?.let {
+                notifyObservers {
+                    onMessageReceived(endpointId, endpointIdsToNames[endpointId], it)
+                }
+            } ?: run {
+                reportError("Error interpreting incoming payload")
             }
         }
 
@@ -356,7 +386,7 @@ class NearbyConnection(
     fun sendMessage(message: String): Long? {
         val state = connectionState
         if (state is ConnectionState.ReadyToSend) {
-            val payload: Payload = Payload.fromBytes(message.toByteArray(UTF_8))
+            val payload = stringToPayload(message)
             connectionsClient.sendPayload(state.neighborId, payload)
             updateState(
                 ConnectionState.Sending(
@@ -390,7 +420,11 @@ class NearbyConnection(
         @VisibleForTesting
         internal const val PACKAGE_NAME = "mozilla.components.lib.nearby"
         @VisibleForTesting
+        internal val PAYLOAD_ENCODING: Charset = Charsets.UTF_8
         private val STRATEGY = Strategy.P2P_STAR
+        // The maximum number of bytes to send through Payload.fromBytes();
+        // otherwise, use Payload.getStream().
+        private val MAX_PAYLOAD_BYTES = ConnectionsClient.MAX_BYTES_DATA_SIZE
 
         /**
          * The permissions needed by [NearbyConnection]. It is the client's responsibility
