@@ -8,22 +8,23 @@
 '''
 
 import errno
-import os
-import sys
 import json
+import os
 import socket
+import sys
 import traceback
-import urlparse
+try:
+    import urlparse
+except ImportError:
+    import urllib.urlparse as urlparse
+
+from six import string_types
 
 import mozharness
-from mozharness.base.script import (
-    PostScriptAction,
-    PostScriptRun,
-    PreScriptAction,
-    ScriptMixin,
-)
 from mozharness.base.errors import VirtualenvErrorList
-from mozharness.base.log import WARNING, FATAL
+from mozharness.base.log import FATAL, WARNING
+from mozharness.base.script import (PostScriptAction, PostScriptRun,
+                                    PreScriptAction, ScriptMixin)
 
 external_tools_path = os.path.join(
     os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__))),
@@ -161,11 +162,12 @@ class VirtualenvMixin(object):
             # get the output from `pip freeze`
             pip = self.query_python_path("pip")
             if not pip:
-                self.log("package_versions: Program pip not in path", level=error_level)
+                self.log("package_versions: Program pip not in path",
+                         level=error_level)
                 return {}
             pip_freeze_output = self.get_output_from_command(
                 [pip, "freeze"], silent=True, ignore_errors=True)
-            if not isinstance(pip_freeze_output, basestring):
+            if not isinstance(pip_freeze_output, string_types):
                 self.fatal(
                     "package_versions: Error encountered running `pip freeze`: "
                     + pip_freeze_output)
@@ -180,7 +182,8 @@ class VirtualenvMixin(object):
                 # not a package, probably like '-e http://example.com/path#egg=package-dev'
                 continue
             if '==' not in line:
-                self.fatal("pip_freeze_packages: Unrecognized output line: %s" % line)
+                self.fatal(
+                    "pip_freeze_packages: Unrecognized output line: %s" % line)
             package, version = line.split('==', 1)
             packages[package] = version
 
@@ -241,7 +244,8 @@ class VirtualenvMixin(object):
                 command += ["--global-option", opt]
         elif install_method == 'easy_install':
             if not module:
-                self.fatal("module parameter required with install_method='easy_install'")
+                self.fatal(
+                    "module parameter required with install_method='easy_install'")
             if requirements:
                 # Install pip requirements files separately, since they're
                 # not understood by easy_install.
@@ -446,7 +450,8 @@ class PerfherderResourceOptionsMixin(ScriptMixin):
 
         if 'TASKCLUSTER_INSTANCE_TYPE' in os.environ:
             # Include the instance type so results can be grouped.
-            opts.append('taskcluster-%s' % os.environ['TASKCLUSTER_INSTANCE_TYPE'])
+            opts.append('taskcluster-%s' %
+                        os.environ['TASKCLUSTER_INSTANCE_TYPE'])
         else:
             # We assume !taskcluster => buildbot.
             instance = 'unknown'
@@ -458,7 +463,8 @@ class PerfherderResourceOptionsMixin(ScriptMixin):
                 # This file should exist on Linux in EC2.
                 with open('/etc/instance_metadata.json', 'rb') as fh:
                     im = json.load(fh)
-                    instance = im.get('aws_instance_type', u'unknown').encode('ascii')
+                    instance = im.get('aws_instance_type',
+                                      u'unknown').encode('ascii')
             except IOError as e:
                 if e.errno != errno.ENOENT:
                     raise
@@ -487,6 +493,7 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
     after that package is installed (as part of creating the virtualenv).
     That's just the way things have to be.
     """
+
     def __init__(self, *args, **kwargs):
         super(ResourceMonitoringMixin, self).__init__(*args, **kwargs)
 
@@ -510,7 +517,8 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
         # Resource Monitor requires Python 2.7, however it's currently optional.
         # Remove when all machines have had their Python version updated (bug 711299).
         if sys.version_info[:2] < (2, 7):
-            self.warning('Resource monitoring will not be enabled! Python 2.7+ required.')
+            self.warning(
+                'Resource monitoring will not be enabled! Python 2.7+ required.')
             return
 
         try:
@@ -748,7 +756,7 @@ class Python3Virtualenv(object):
         self.py3_initialized_venv = True
         self.py3_python_path = os.path.abspath(python_path)
         version = self.get_output_from_command(
-                    [self.py3_python_path, '--version'], env=self.query_env()).split()[-1]
+            [self.py3_python_path, '--version'], env=self.query_env()).split()[-1]
         # Using -m venv is only used on 3.5+ versions
         assert version > '3.5.0'
         self.py3_venv_path = os.path.abspath(venv_path)
