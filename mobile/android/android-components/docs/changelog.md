@@ -18,7 +18,7 @@ permalink: /changelog/
   ```Kotlin
   val addOnsProvider by lazy {
     // Keeps addon collection response cached and valid for one day
-    AddOnCollectionProvider(applicationContext, client, maxCacheAgeInMinutes = 24 * 60)      
+    AddOnCollectionProvider(applicationContext, client, maxCacheAgeInMinutes = 24 * 60)
   }
 
   // May return a cached result, if available
@@ -31,9 +31,12 @@ permalink: /changelog/
 * **lib-nearby**
   * 🆕 New component for communicating directly between two devices
   using Google Nearby API.
-  
+
 * **sample-nearby-chat**
   * 🆕 New sample program demonstrating use of `lib-nearby`.
+
+* **feature-customtabs**
+  * ⚠️ `CustomTabWindowFeature` now takes `Activity` instead of `Context`.
 
 # 21.0.0
 
@@ -105,7 +108,7 @@ permalink: /changelog/
 * **concept-engine**
   * Adds support for WebPush abstraction to the Engine.
   * Adds support for WebShare abstraction as a PromptRequest.
-  
+
 * **engine-gecko-nightly**
   * Adds support for WebPush in GeckoEngine.
 
@@ -120,7 +123,7 @@ permalink: /changelog/
 
 * **feature-prompts**
   * Adds support for Web Share API using `ShareDelegate`.
-  
+
 * **experiments**
   * Fixes a crash when the app version or the experiment's version specifiers are not in the expected format.
 
@@ -134,8 +137,8 @@ permalink: /changelog/
         store.dispatch(RemoveTabAction(tab.id))
       }
     }
-  }  
-  ```  
+  }
+  ```
 
 # 19.0.1
 

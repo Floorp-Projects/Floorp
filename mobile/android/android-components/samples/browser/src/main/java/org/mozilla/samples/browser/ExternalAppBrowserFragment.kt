@@ -65,7 +65,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
             view = layout.toolbar)
 
         val windowFeature = CustomTabWindowFeature(
-            requireContext(),
+            requireActivity(),
             components.store,
             sessionId!!
         )

@@ -4,11 +4,13 @@
 
 package mozilla.components.feature.customtabs
 
-import android.content.Context
+import android.app.Activity
 import android.graphics.Color
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
@@ -22,6 +24,7 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -37,11 +40,11 @@ class CustomTabWindowFeatureTest {
 
     private lateinit var store: BrowserStore
     private val sessionId = "session-uuid"
-    private lateinit var context: Context
+    private lateinit var activity: Activity
 
     @Before
     fun setup() {
-        context = mock()
+        activity = mock()
 
         Dispatchers.setMain(testDispatcher)
         store = spy(BrowserStore(BrowserState(
@@ -50,25 +53,32 @@ class CustomTabWindowFeatureTest {
             )
         )))
 
-        whenever(context.packageName).thenReturn("org.mozilla.firefox")
+        whenever(activity.packageName).thenReturn("org.mozilla.firefox")
+    }
+
+    @After
+    @ExperimentalCoroutinesApi
+    fun tearDown() {
+        Dispatchers.resetMain()
+        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test
     fun `handles request to open window`() {
-        val feature = CustomTabWindowFeature(context, store, sessionId)
+        val feature = CustomTabWindowFeature(activity, store, sessionId)
         feature.start()
 
         val windowRequest: WindowRequest = mock()
         whenever(windowRequest.type).thenReturn(WindowRequest.Type.OPEN)
         whenever(windowRequest.url).thenReturn("https://www.firefox.com")
         store.dispatch(ContentAction.UpdateWindowRequestAction(sessionId, windowRequest)).joinBlocking()
-        verify(context).startActivity(any(), any())
+        verify(activity).startActivity(any(), any())
         verify(store).dispatch(ContentAction.ConsumeWindowRequestAction(sessionId))
     }
 
     @Test
     fun `creates intent based on default custom tab config`() {
-        val feature = CustomTabWindowFeature(context, store, sessionId)
+        val feature = CustomTabWindowFeature(activity, store, sessionId)
         val config = CustomTabConfig()
         val intent = feature.configToIntent(config)
 
@@ -79,7 +89,7 @@ class CustomTabWindowFeatureTest {
 
     @Test
     fun `creates intent based on custom tab config`() {
-        val feature = CustomTabWindowFeature(context, store, sessionId)
+        val feature = CustomTabWindowFeature(activity, store, sessionId)
         val config = CustomTabConfig(
             toolbarColor = Color.RED,
             navigationBarColor = Color.BLUE,
@@ -96,7 +106,7 @@ class CustomTabWindowFeatureTest {
 
     @Test
     fun `creates intent with same menu items`() {
-        val feature = CustomTabWindowFeature(context, store, sessionId)
+        val feature = CustomTabWindowFeature(activity, store, sessionId)
         val config = CustomTabConfig(
             actionButtonConfig = CustomTabActionButtonConfig(
                 description = "button",
@@ -118,7 +128,7 @@ class CustomTabWindowFeatureTest {
 
     @Test
     fun `handles no requests when stopped`() {
-        val feature = CustomTabWindowFeature(context, store, sessionId)
+        val feature = CustomTabWindowFeature(activity, store, sessionId)
         feature.start()
         feature.stop()
 
@@ -126,7 +136,7 @@ class CustomTabWindowFeatureTest {
         whenever(windowRequest.type).thenReturn(WindowRequest.Type.OPEN)
         whenever(windowRequest.url).thenReturn("https://www.firefox.com")
         store.dispatch(ContentAction.UpdateWindowRequestAction(sessionId, windowRequest)).joinBlocking()
-        verify(context, never()).startActivity(any(), any())
+        verify(activity, never()).startActivity(any(), any())
         verify(store, never()).dispatch(ContentAction.ConsumeWindowRequestAction(sessionId))
     }
 

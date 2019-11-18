@@ -39,7 +39,7 @@ import mozilla.components.feature.pwa.ext.installableManifest
 
 private val pwaIconMemoryCache = IconMemoryCache()
 
-const val SHORTCUT_CATEGORY = "mozilla.components.pwa.category.SHORTCUT"
+const val SHORTCUT_CATEGORY = mozilla.components.feature.customtabs.SHORTCUT_CATEGORY
 
 /**
  * Helper to manage pinned shortcuts for websites.

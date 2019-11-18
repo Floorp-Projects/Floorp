@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.customtabs
 
-import android.content.Context
+import android.app.Activity
 import androidx.annotation.VisibleForTesting
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.net.toUri
@@ -21,11 +21,13 @@ import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
+const val SHORTCUT_CATEGORY = "mozilla.components.pwa.category.SHORTCUT"
+
 /**
  * Feature implementation for handling window requests by opening custom tabs.
  */
 class CustomTabWindowFeature(
-    private val context: Context,
+    private val activity: Activity,
     private val store: BrowserStore,
     private val sessionId: String
 ) : LifecycleAwareFeature {
@@ -51,7 +53,8 @@ class CustomTabWindowFeature(
             config?.menuItems?.forEach { addMenuItem(it.name, it.pendingIntent) }
         }.build()
 
-        intent.intent.`package` = context.packageName
+        intent.intent.`package` = activity.packageName
+        intent.intent.addCategory(SHORTCUT_CATEGORY)
 
         return intent
     }
@@ -69,7 +72,7 @@ class CustomTabWindowFeature(
                     val windowRequest = state.content.windowRequest
                     if (windowRequest?.type == WindowRequest.Type.OPEN) {
                         val intent = configToIntent(state.config)
-                        intent.launchUrl(context, windowRequest.url.toUri())
+                        intent.launchUrl(activity, windowRequest.url.toUri())
                         store.dispatch(ContentAction.ConsumeWindowRequestAction(sessionId))
                     }
                 }
