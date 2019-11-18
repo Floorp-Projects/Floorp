@@ -1044,6 +1044,12 @@ describe("ASRouter", () => {
         Router.state.messageImpressions
       );
     });
+    it("should have personalizedCfrScores in the message context", () => {
+      assert.property(Router._getMessagesContext(), "scores");
+    });
+    it("should have personalizedCfrThreshold in the message context", () => {
+      assert.property(Router._getMessagesContext(), "scoreThreshold");
+    });
     it("should return all unblocked messages that match the template, trigger if returnAll=true", async () => {
       const message1 = {
         id: "1",

@@ -3,6 +3,7 @@ import {
   ASRouterPreferences as ASRouterPreferencesSingleton,
   TEST_PROVIDERS,
 } from "lib/ASRouterPreferences.jsm";
+import { GlobalOverrider } from "test/unit/utils";
 const FAKE_PROVIDERS = [{ id: "foo" }, { id: "bar" }];
 
 const PROVIDER_PREF_BRANCH =
@@ -354,6 +355,37 @@ describe("ASRouterPreferences", () => {
 
       ASRouterPreferences.observe(null, null, DEVTOOLS_PREF);
       assert.notCalled(callback);
+    });
+  });
+  describe("#personalizedCfr", () => {
+    let globals;
+    let reportError;
+    beforeEach(() => {
+      globals = new GlobalOverrider();
+      reportError = sandbox.stub();
+      globals.set("Cu", { reportError });
+    });
+    afterEach(() => {
+      globals.restore();
+    });
+    it("should report JSON.parse errors", () => {
+      globals.set("personalizedCfrScores", "foo");
+      globals.set("personalizedCfrThreshold", "2.0");
+
+      const result = ASRouterPreferences.personalizedCfr;
+
+      assert.calledOnce(reportError);
+      assert.propertyVal(result, "personalizedCfrThreshold", 2.0);
+    });
+    it("should return an object and a float", () => {
+      globals.set("personalizedCfrScores", '{"foo":true}');
+      globals.set("personalizedCfrThreshold", "2.0");
+
+      const result = ASRouterPreferences.personalizedCfr;
+
+      assert.notCalled(reportError);
+      assert.propertyVal(result, "personalizedCfrThreshold", 2.0);
+      assert.propertyVal(result.personalizedCfrScores, "foo", true);
     });
   });
 });
