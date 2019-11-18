@@ -21,7 +21,7 @@ warning; etc.) or platform or language or whatever.
 
 import re
 
-from mozharness.base.log import DEBUG, WARNING, ERROR, CRITICAL, FATAL
+from mozharness.base.log import CRITICAL, DEBUG, ERROR, FATAL, WARNING
 
 
 # Exceptions
@@ -111,7 +111,8 @@ GitErrorList = BaseErrorList + [
     {'substr': r'''error: failed to push some refs to ''', 'level': ERROR},
     {'substr': r'''remote: error: denying non-fast-forward ''', 'level': ERROR},
     {'substr': r'''! [remote rejected] ''', 'level': ERROR},
-    {'regex': re.compile(r'''remote:.*No such file or directory'''), 'level': ERROR},
+    {'regex': re.compile(
+        r'''remote:.*No such file or directory'''), 'level': ERROR},
 ]
 
 PythonErrorList = BaseErrorList + [
@@ -146,7 +147,8 @@ MakefileErrorList = BaseErrorList + PythonErrorList + RustErrorList + [
     {'regex': re.compile(r'''akefile.*was not found\.'''), 'level': ERROR},
     {'regex': re.compile(r'''Stop\.$'''), 'level': ERROR},
     {'regex': re.compile(r''':\d+: error:'''), 'level': ERROR},
-    {'regex': re.compile(r'''make\[\d+\]: \*\*\* \[.*\] Error \d+'''), 'level': ERROR},
+    {'regex': re.compile(
+        r'''make\[\d+\]: \*\*\* \[.*\] Error \d+'''), 'level': ERROR},
     {'regex': re.compile(r''':\d+: warning:'''), 'level': WARNING},
     {'regex': re.compile(r'''make(?:\[\d+\])?: \*\*\*/'''), 'level': ERROR},
     {'substr': r'''Warning: ''', 'level': WARNING},

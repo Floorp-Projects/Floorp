@@ -26,12 +26,14 @@ TODO:
 
 from __future__ import print_function
 
-from datetime import datetime
 import logging
 import os
 import sys
 import time
 import traceback
+from datetime import datetime
+
+from six import string_types
 
 # Define our own FATAL_LEVEL
 FATAL_LEVEL = logging.CRITICAL + 10
@@ -350,7 +352,7 @@ class OutputParser(LogMixin):
             output (str | list): string or list of string to parse
         """
 
-        if isinstance(output, basestring):
+        if isinstance(output, string_types):
             output = [output]
         for line in output:
             if not line or line.isspace():
@@ -631,7 +633,8 @@ class SimpleFileLogger(BaseLogger):
         """ calls the BaseLogger.new_logger method and adds a file handler to it."""
 
         BaseLogger.new_logger(self)
-        self.log_path = os.path.join(self.abs_log_dir, '%s.log' % self.log_name)
+        self.log_path = os.path.join(
+            self.abs_log_dir, '%s.log' % self.log_name)
         self.log_files['default'] = self.log_path
         self.add_file_handler(self.log_path)
 
@@ -676,7 +679,7 @@ class MultiFileLogger(BaseLogger):
 
         BaseLogger.new_logger(self)
         min_logger_level = self.get_logger_level(self.log_level)
-        for level in self.LEVELS.keys():
+        for level in list(self.LEVELS.keys()):
             if self.get_logger_level(level) >= min_logger_level:
                 self.log_files[level] = '%s_%s.log' % (self.log_name,
                                                        level)
