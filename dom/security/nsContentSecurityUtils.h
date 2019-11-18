@@ -18,11 +18,12 @@ class Document;
 }  // namespace dom
 }  // namespace mozilla
 
-typedef mozilla::Pair<nsCString, mozilla::Maybe<nsString>> FilenameType;
+typedef mozilla::Pair<nsCString, mozilla::Maybe<nsString>>
+    FilenameTypeAndDetails;
 
 class nsContentSecurityUtils {
  public:
-  static FilenameType FilenameToEvalType(const nsString& fileName);
+  static FilenameTypeAndDetails FilenameToEvalType(const nsString& fileName);
   static bool IsEvalAllowed(JSContext* cx, bool aIsSystemPrincipal,
                             const nsAString& aScript);
   static void NotifyEvalUsage(bool aIsSystemPrincipal,
