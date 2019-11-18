@@ -375,128 +375,6 @@ class nsSourceErrorEventRunner : public nsMediaEvent {
   }
 };
 
-class HTMLMediaElement::MediaStreamTrackListener
-    : public DOMMediaStream::TrackListener {
- public:
-  explicit MediaStreamTrackListener(HTMLMediaElement* aElement)
-      : mElement(aElement) {}
-
-  void NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack) override {
-    if (!mElement) {
-      return;
-    }
-    mElement->NotifyMediaStreamTrackAdded(aTrack);
-  }
-
-  void NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack) override {
-    if (!mElement) {
-      return;
-    }
-    mElement->NotifyMediaStreamTrackRemoved(aTrack);
-  }
-
-  void OnActive() {
-    MOZ_ASSERT(mElement);
-
-    // mediacapture-main says:
-    // Note that once ended equals true the HTMLVideoElement will not play media
-    // even if new MediaStreamTracks are added to the MediaStream (causing it to
-    // return to the active state) unless autoplay is true or the web
-    // application restarts the element, e.g., by calling play().
-    //
-    // This is vague on exactly how to go from becoming active to playing, when
-    // autoplaying. However, per the media element spec, to play an autoplaying
-    // media element, we must load the source and reach readyState
-    // HAVE_ENOUGH_DATA [1]. Hence, a MediaStream being assigned to a media
-    // element and becoming active runs the load algorithm, so that it can
-    // eventually be played.
-    //
-    // [1]
-    // https://html.spec.whatwg.org/multipage/media.html#ready-states:event-media-play
-
-    LOG(LogLevel::Debug, ("%p, mSrcStream %p became active, checking if we "
-                          "need to run the load algorithm",
-                          mElement.get(), mElement->mSrcStream.get()));
-    if (!mElement->IsPlaybackEnded()) {
-      return;
-    }
-    if (!mElement->Autoplay()) {
-      return;
-    }
-    LOG(LogLevel::Info, ("%p, mSrcStream %p became active on autoplaying, "
-                         "ended element. Reloading.",
-                         mElement.get(), mElement->mSrcStream.get()));
-    mElement->DoLoad();
-  }
-
-  void NotifyActive() override {
-    if (!mElement) {
-      return;
-    }
-
-    if (!mElement->IsVideo()) {
-      // Audio elements use NotifyAudible().
-      return;
-    }
-
-    OnActive();
-  }
-
-  void NotifyAudible() override {
-    if (!mElement) {
-      return;
-    }
-
-    if (mElement->IsVideo()) {
-      // Video elements use NotifyActive().
-      return;
-    }
-
-    OnActive();
-  }
-
-  void OnInactive() {
-    MOZ_ASSERT(mElement);
-
-    if (mElement->IsPlaybackEnded()) {
-      return;
-    }
-    LOG(LogLevel::Debug, ("%p, mSrcStream %p became inactive", mElement.get(),
-                          mElement->mSrcStream.get()));
-
-    mElement->PlaybackEnded();
-  }
-
-  void NotifyInactive() override {
-    if (!mElement) {
-      return;
-    }
-
-    if (!mElement->IsVideo()) {
-      // Audio elements use NotifyInaudible().
-      return;
-    }
-
-    OnInactive();
-  }
-
-  void NotifyInaudible() override {
-    if (!mElement) {
-      return;
-    }
-
-    if (mElement->IsVideo()) {
-      // Video elements use NotifyInactive().
-      return;
-    }
-
-    OnInactive();
-  }
-
- protected:
-  const WeakPtr<HTMLMediaElement> mElement;
-};
-
 /**
  * This listener observes the first video frame to arrive with a non-empty size,
  * and renders it to its VideoFrameContainer.
@@ -714,7 +592,11 @@ class HTMLMediaElement::MediaStreamRenderer
   void* const mAudioOutputKey;
 
  private:
-  ~MediaStreamRenderer() { Shutdown(); }
+  ~MediaStreamRenderer() {
+    MOZ_DIAGNOSTIC_ASSERT(mAudioTracks.IsEmpty());
+    MOZ_DIAGNOSTIC_ASSERT(!mVideoTrack);
+    MOZ_DIAGNOSTIC_ASSERT(mWatchManager.IsShutdown());
+  }
 
   void EnsureGraphTimeDummy() {
     if (mGraphTimeDummy) {
@@ -1812,21 +1694,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement,
                                                 nsGenericHTMLElement)
   tmp->RemoveMutationObserver(tmp);
   if (tmp->mSrcStream) {
-    // Need to unhook everything that EndSrcMediaStreamPlayback would normally
-    // do, without creating any new strong references.
-    if (tmp->mSelectedVideoStreamTrack) {
-      tmp->mSelectedVideoStreamTrack->RemovePrincipalChangeObserver(tmp);
-    }
-    if (tmp->mFirstFrameListener) {
-      tmp->mSelectedVideoStreamTrack->RemoveVideoOutput(
-          tmp->mFirstFrameListener);
-    }
-    if (tmp->mMediaStreamTrackListener) {
-      tmp->mSrcStream->UnregisterTrackListener(
-          tmp->mMediaStreamTrackListener.get());
-    }
+    // Need to EndMediaStreamPlayback to clear mSrcStream and make sure
+    // everything gets unhooked correctly.
+    tmp->EndSrcMediaStreamPlayback();
   }
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSrcStream)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSrcAttrStream)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMediaSource)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSrcMediaSource)
@@ -4942,6 +4813,128 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder) {
 
   return NS_OK;
 }
+
+class HTMLMediaElement::MediaStreamTrackListener
+    : public DOMMediaStream::TrackListener {
+ public:
+  explicit MediaStreamTrackListener(HTMLMediaElement* aElement)
+      : mElement(aElement) {}
+
+  void NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack) override {
+    if (!mElement) {
+      return;
+    }
+    mElement->NotifyMediaStreamTrackAdded(aTrack);
+  }
+
+  void NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack) override {
+    if (!mElement) {
+      return;
+    }
+    mElement->NotifyMediaStreamTrackRemoved(aTrack);
+  }
+
+  void OnActive() {
+    MOZ_ASSERT(mElement);
+
+    // mediacapture-main says:
+    // Note that once ended equals true the HTMLVideoElement will not play media
+    // even if new MediaStreamTracks are added to the MediaStream (causing it to
+    // return to the active state) unless autoplay is true or the web
+    // application restarts the element, e.g., by calling play().
+    //
+    // This is vague on exactly how to go from becoming active to playing, when
+    // autoplaying. However, per the media element spec, to play an autoplaying
+    // media element, we must load the source and reach readyState
+    // HAVE_ENOUGH_DATA [1]. Hence, a MediaStream being assigned to a media
+    // element and becoming active runs the load algorithm, so that it can
+    // eventually be played.
+    //
+    // [1]
+    // https://html.spec.whatwg.org/multipage/media.html#ready-states:event-media-play
+
+    LOG(LogLevel::Debug, ("%p, mSrcStream %p became active, checking if we "
+                          "need to run the load algorithm",
+                          mElement.get(), mElement->mSrcStream.get()));
+    if (!mElement->IsPlaybackEnded()) {
+      return;
+    }
+    if (!mElement->Autoplay()) {
+      return;
+    }
+    LOG(LogLevel::Info, ("%p, mSrcStream %p became active on autoplaying, "
+                         "ended element. Reloading.",
+                         mElement.get(), mElement->mSrcStream.get()));
+    mElement->DoLoad();
+  }
+
+  void NotifyActive() override {
+    if (!mElement) {
+      return;
+    }
+
+    if (!mElement->IsVideo()) {
+      // Audio elements use NotifyAudible().
+      return;
+    }
+
+    OnActive();
+  }
+
+  void NotifyAudible() override {
+    if (!mElement) {
+      return;
+    }
+
+    if (mElement->IsVideo()) {
+      // Video elements use NotifyActive().
+      return;
+    }
+
+    OnActive();
+  }
+
+  void OnInactive() {
+    MOZ_ASSERT(mElement);
+
+    if (mElement->IsPlaybackEnded()) {
+      return;
+    }
+    LOG(LogLevel::Debug, ("%p, mSrcStream %p became inactive", mElement.get(),
+                          mElement->mSrcStream.get()));
+
+    mElement->PlaybackEnded();
+  }
+
+  void NotifyInactive() override {
+    if (!mElement) {
+      return;
+    }
+
+    if (!mElement->IsVideo()) {
+      // Audio elements use NotifyInaudible().
+      return;
+    }
+
+    OnInactive();
+  }
+
+  void NotifyInaudible() override {
+    if (!mElement) {
+      return;
+    }
+
+    if (mElement->IsVideo()) {
+      // Video elements use NotifyInactive().
+      return;
+    }
+
+    OnInactive();
+  }
+
+ protected:
+  const WeakPtr<HTMLMediaElement> mElement;
+};
 
 void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags) {
   if (!mSrcStream) {
