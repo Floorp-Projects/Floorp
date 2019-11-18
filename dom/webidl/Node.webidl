@@ -111,6 +111,10 @@ interface Node : EventTarget {
   DOMString generateXPath();
   [ChromeOnly, Pure, BinaryName="flattenedTreeParentNodeNonInline"]
   readonly attribute Node? flattenedTreeParentNode;
+  [ChromeOnly, Pure, BinaryName="containingShadow"]
+  readonly attribute ShadowRoot? containingShadowRoot;
+  [ChromeOnly, Pure, BinaryName="isInNativeAnonymousSubtree"]
+  readonly attribute boolean isNativeAnonymous;
 
   // Mozilla devtools-specific stuff
   /**
