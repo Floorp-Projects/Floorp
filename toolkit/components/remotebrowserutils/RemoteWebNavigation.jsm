@@ -29,27 +29,31 @@ class RemoteWebNavigation {
     this._browser = aBrowser;
   }
 
-  goBack() {
-    let cancelContentJSEpoch = this._cancelContentJSEpoch++;
+  maybeCancelContentJSExecution(aNavigationType, aOptions = {}) {
+    const epoch = this._cancelContentJSEpoch++;
     this._browser.frameLoader.remoteTab.maybeCancelContentJSExecution(
-      Ci.nsIRemoteTab.NAVIGATE_BACK,
-      { epoch: cancelContentJSEpoch }
+      aNavigationType,
+      { ...aOptions, epoch }
+    );
+    return epoch;
+  }
+
+  goBack() {
+    let cancelContentJSEpoch = this.maybeCancelContentJSExecution(
+      Ci.nsIRemoteTab.NAVIGATE_BACK
     );
     this._sendMessage("WebNavigation:GoBack", { cancelContentJSEpoch });
   }
   goForward() {
-    let cancelContentJSEpoch = this._cancelContentJSEpoch++;
-    this._browser.frameLoader.remoteTab.maybeCancelContentJSExecution(
-      Ci.nsIRemoteTab.NAVIGATE_FORWARD,
-      { epoch: cancelContentJSEpoch }
+    let cancelContentJSEpoch = this.maybeCancelContentJSExecution(
+      Ci.nsIRemoteTab.NAVIGATE_FORWARD
     );
     this._sendMessage("WebNavigation:GoForward", { cancelContentJSEpoch });
   }
   gotoIndex(aIndex) {
-    let cancelContentJSEpoch = this._cancelContentJSEpoch++;
-    this._browser.frameLoader.remoteTab.maybeCancelContentJSExecution(
+    let cancelContentJSEpoch = this.maybeCancelContentJSExecution(
       Ci.nsIRemoteTab.NAVIGATE_INDEX,
-      { index: aIndex, epoch: cancelContentJSEpoch }
+      { index: aIndex }
     );
     this._sendMessage("WebNavigation:GotoIndex", {
       index: aIndex,
@@ -98,10 +102,9 @@ class RemoteWebNavigation {
       // reason (such as failing to parse the URI), just ignore it.
     }
 
-    let cancelContentJSEpoch = this._cancelContentJSEpoch++;
-    this._browser.frameLoader.remoteTab.maybeCancelContentJSExecution(
+    let cancelContentJSEpoch = this.maybeCancelContentJSExecution(
       Ci.nsIRemoteTab.NAVIGATE_URL,
-      { uri, epoch: cancelContentJSEpoch }
+      { uri }
     );
     this._browser.frameLoader.browsingContext.loadURI(aURI, {
       ...aLoadURIOptions,
