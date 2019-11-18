@@ -54,13 +54,17 @@ function doStep()
   return true;
 }
 
+function startTest() {
+  postMsg('frame loaded', 'http://mochi.test:8888');
+  slaveFrame.location =
+    "http://example.com:80/tests/dom/tests/mochitest/storageevent/frameSessionStorageSlaveNotEqual.html";
+}
+
 </script>
 
 </head>
 
-<body onload="postMsg('frame loaded', 'http://mochi.test:8888');">
-  <iframe src="http://example.com:80/tests/dom/tests/mochitest/storageevent/frameSessionStorageSlaveNotEqual.html"
-          name="slaveFrame">
-  </iframe>
+<body onload="startTest();">
+  <iframe name="slaveFrame"></iframe>
 </body>
 </html>
