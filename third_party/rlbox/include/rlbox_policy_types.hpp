@@ -123,6 +123,14 @@ private:
   }
 
 public:
+  sandbox_callback()
+    : sandbox(nullptr)
+    , callback(nullptr)
+    , callback_interceptor(nullptr)
+    , callback_trampoline(0)
+    , key(nullptr)
+  {}
+
   sandbox_callback(sandbox_callback&& other)
   {
     move_obj(std::forward<sandbox_callback>(other));
