@@ -41,6 +41,11 @@ jobs:
                 - name: project/mobile/fenix/public-tokens
                   key: codecov
                   path: .cc_token
+        worker:
+            artifacts:
+                - name: public/reports/index.html
+                  path: /builds/worker/checkouts/src/app/build/reports/tests/testGeckoNightlyDebugUnitTest/index.html
+                  type: file
     ui:
         attributes:
             build-type: debug
