@@ -207,7 +207,16 @@ test_interpolation({
   {at: 0.25, expect: '0.54 0.8 0.26 94.83deg'},
   {at: 0.75, expect: '0.17 0.78 0.61 118.68deg'},
   {at: 1, expect: '0 0.71 0.71 135deg'},
-  {at: 2, expect: '0.52 -0.29 -0.81 151.04deg'},
+  // The result in Blink is '0.52 -0.29 -0.81 151.04deg', and the result in
+  // Gecko is `-0.52 0.29 0.8 208.96deg`. Both of them can be represented as the
+  // same 3d rotation (but by an opposite direction vector and angle).
+  // The spec only mentions we should use Slerp to do interpolation for rotate
+  // property, but it seems the implementation detail for extrapolation are
+  // different (because this is not in the range of [0, 1]).
+  // For now, we make both results pass because their rendering results are the
+  // same.
+  {at: 2, expect: '0.52 -0.29 -0.81 151.04deg',
+          option: '-0.52 0.29 0.81 208.96deg'},
 ]);
 
 test_interpolation({
