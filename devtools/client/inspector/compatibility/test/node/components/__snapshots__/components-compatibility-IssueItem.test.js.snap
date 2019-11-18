@@ -76,7 +76,7 @@ exports[`IssueItem component renders an unsupported issue of CSS property 1`] = 
   >
     test-property
   </a>
-  <BrowserList
+  <UnsupportedBrowserList
     browsers={
       Array [
         Object {
