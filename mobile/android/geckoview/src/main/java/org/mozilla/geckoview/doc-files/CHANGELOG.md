@@ -40,6 +40,9 @@ exclude: true
 - Added [`GeckoView.setViewBackend`][72.11] to set whether GeckoView should be
   backed by a [`TextureView`][72.12] or a [`SurfaceView`][72.13].
   ([bug 1530402]({{bugzilla}}1530402))
+- Added support for Browser and Page Action from the WebExtension API.
+  See [`WebExtension.Action`][72.14].
+  ([bug 1530402]({{bugzilla}}1530402))
 
 [72.1]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture-
 [72.2]: {{javadoc_uri}}/Autofill.html
@@ -54,6 +57,7 @@ exclude: true
 [72.11]: {{javadoc_uri}}/GeckoView.html#setViewBackend-int-
 [72.12]: https://developer.android.com/reference/android/view/TextureView
 [72.13]: https://developer.android.com/reference/android/view/SurfaceView
+[72.14]: {{javadoc_uri}}/WebExtension.Action.html
 
 ## v71
 - Added a content blocking flag for blocked social cookies to [`ContentBlocking`][70.17].
@@ -451,4 +455,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: cff8d49f3436c4b3b5ae91f96f333b8a5d55ab96
+[api-version]: d4fbf3825322768a22d225f79c659bfd36eebbc6

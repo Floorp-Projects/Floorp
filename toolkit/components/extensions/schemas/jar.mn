@@ -6,6 +6,7 @@ toolkit.jar:
 % content extensions %content/extensions/
     content/extensions/schemas/activity_log.json
     content/extensions/schemas/alarms.json
+    content/extensions/schemas/browser_action.json
     content/extensions/schemas/browser_settings.json
 #ifndef ANDROID
     content/extensions/schemas/captive_portal.json
@@ -34,6 +35,7 @@ toolkit.jar:
     content/extensions/schemas/native_manifest.json
     content/extensions/schemas/network_status.json
     content/extensions/schemas/notifications.json
+    content/extensions/schemas/page_action.json
     content/extensions/schemas/permissions.json
     content/extensions/schemas/proxy.json
     content/extensions/schemas/privacy.json
