@@ -120,8 +120,6 @@ class nsFlexContainerFrame final : public nsContainerFrame {
               const ReflowInput& aReflowInput,
               nsReflowStatus& aStatus) override;
 
-  void DidReflow(nsPresContext*, const ReflowInput*) final;
-
   nscoord GetMinISize(gfxContext* aRenderingContext) override;
   nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
