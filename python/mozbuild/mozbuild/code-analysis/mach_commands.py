@@ -821,11 +821,8 @@ class StaticAnalysis(MachCommandBase):
             return rc
         # which checkers to use, and which folders to exclude
         all_checkers, third_party_path, generated_path = self._get_infer_config()
-        checkers, excludes = self._get_infer_args(
-            checks=checks or all_checkers,
-            third_party_path=third_party_path,
-            generated_path=generated_path
-        )
+        checkers, excludes = self._get_infer_args(checks or all_checkers, third_party_path,
+                                                  generated_path)
         rc = rc or self._gradle(['clean'])  # clean so that we can recompile
         # infer capture command
         capture_cmd = [self._infer_path, 'capture'] + excludes + ['--']
