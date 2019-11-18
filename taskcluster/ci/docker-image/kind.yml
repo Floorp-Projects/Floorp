@@ -200,6 +200,8 @@ jobs:
     android-build:
         symbol: I(agb)
         parent: debian9-base
+        packages:
+            - deb7-valgrind
     fetch:
         symbol: I(fetch)
         parent: debian10-raw
