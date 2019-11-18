@@ -117,7 +117,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "e8a7cae631c5"
+        "revision": "4b561b1491e1"
     },
     "es-AR": {
         "platforms": [
@@ -267,7 +267,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "45f45a141dfc"
+        "revision": "9e6a5cb3c8fd"
     },
     "ja": {
         "platforms": [
