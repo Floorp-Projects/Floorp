@@ -9,7 +9,6 @@ var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
-  LightweightThemeChild: "resource:///actors/LightweightThemeChild.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.jsm",
@@ -38,17 +37,6 @@ function HistorySidebarInit() {
     document.documentElement.setAttribute("uidensity", uidensity);
   }
 
-  /* Listen for sidebar theme changes */
-  let themeListener = new LightweightThemeChild({
-    content: window,
-    chromeOuterWindowID: window.top.windowUtils.outerWindowID,
-    docShell: window.docShell,
-  });
-
-  window.addEventListener("unload", () => {
-    themeListener.cleanup();
-  });
-
   gHistoryTree = document.getElementById("historyTree");
   gSearchBox = document.getElementById("search-box");
 
@@ -69,6 +57,19 @@ function HistorySidebarInit() {
   }
 
   searchHistory("");
+
+  // Needed due to Bug 1596852.
+  // Should be removed once this bug is resolved.
+  window.addEventListener(
+    "pageshow",
+    e => {
+      window
+        .getWindowGlobalChild()
+        .getActor("LightweightTheme")
+        .handleEvent(e);
+    },
+    { once: true }
+  );
 }
 
 function GroupBy(groupingType) {
