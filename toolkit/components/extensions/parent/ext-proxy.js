@@ -173,10 +173,10 @@ this.proxy = class extends ExtensionAPI {
         }).api(),
 
         settings: Object.assign(
-          getSettingsAPI({
-            context,
-            name: "proxy.settings",
-            callback() {
+          getSettingsAPI(
+            extension.id,
+            "proxy.settings",
+            () => {
               let prefValue = Services.prefs.getIntPref("network.proxy.type");
               let proxyConfig = {
                 proxyType: Array.from(PROXY_TYPES_MAP.entries()).find(
@@ -214,14 +214,16 @@ this.proxy = class extends ExtensionAPI {
               return proxyConfig;
             },
             // proxy.settings is unsupported on android.
-            validate() {
+            undefined,
+            false,
+            () => {
               if (AppConstants.platform == "android") {
                 throw new ExtensionError(
                   `proxy.settings is not supported on android.`
                 );
               }
-            },
-          }),
+            }
+          ),
           {
             set: details => {
               if (AppConstants.platform === "android") {
