@@ -532,6 +532,12 @@ class PluginParent extends JSWindowActorParent {
     let permissionString = gPluginHost.getPermissionStringForTag(pluginTag);
     let active = fallbackType == PLUGIN_ACTIVE;
 
+    let { top } = this.browsingContext;
+    if (!top.currentWindowGlobal) {
+      return;
+    }
+    let principal = top.currentWindowGlobal.documentPrincipal;
+
     let options = {
       dismissed: !showNow,
       hideClose: true,
@@ -540,7 +546,7 @@ class PluginParent extends JSWindowActorParent {
       showNow,
       popupIconClass: "plugin-icon",
       extraAttr: active ? "active" : "inactive",
-      principal: this.browsingContext.currentWindowGlobal.documentPrincipal,
+      principal,
     };
 
     let description;
