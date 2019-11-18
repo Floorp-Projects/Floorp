@@ -707,8 +707,7 @@ class PluginChild extends JSWindowActorChild {
   }
 
   onOverlayClick(event) {
-    let document = event.target.ownerDocument;
-    let plugin = document.getBindingParent(event.target);
+    let plugin = event.target.containingShadowRoot.host;
     let overlay = this.getPluginUI(plugin, "main");
     // Have to check that the target is not the link to update the plugin
     if (
