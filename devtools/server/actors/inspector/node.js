@@ -338,10 +338,6 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 
     const rawNode = this.rawNode;
     let numChildren = rawNode.childNodes.length;
-    const hasAnonChildren =
-      rawNode.nodeType === Node.ELEMENT_NODE &&
-      rawNode.ownerDocument.getAnonymousNodes(rawNode);
-
     const hasContentDocument = rawNode.contentDocument;
     const hasSVGDocument = rawNode.getSVGDocument && rawNode.getSVGDocument();
     if (numChildren === 0 && (hasContentDocument || hasSVGDocument)) {
@@ -356,7 +352,6 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     // containingShadowRoot.
     if (
       numChildren === 0 ||
-      hasAnonChildren ||
       isShadowHost(this.rawNode) ||
       this.rawNode.containingShadowRoot
     ) {

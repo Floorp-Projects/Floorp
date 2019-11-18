@@ -377,9 +377,6 @@ partial interface Document {
 
 //  Mozilla extensions of various sorts
 partial interface Document {
-  // XBL support.
-  [Func="IsChromeOrXBL"]
-  NodeList? getAnonymousNodes(Element elt);
   // Creates a new XUL element regardless of the document's default type.
   [CEReactions, NewObject, Throws, Func="IsChromeOrXBL"]
   Element createXULElement(DOMString localName, optional (ElementCreationOptions or DOMString) options = {});
