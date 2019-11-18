@@ -147,7 +147,7 @@ nsString OptimizeFileName(const nsAString& aFileName) {
  */
 
 /* static */
-FilenameType nsContentSecurityUtils::FilenameToEvalType(
+FilenameTypeAndDetails nsContentSecurityUtils::FilenameToEvalType(
     const nsString& fileName) {
   // These are strings because the Telemetry Events API only accepts strings
   static NS_NAMED_LITERAL_CSTRING(kChromeURI, "chromeuri");
@@ -172,15 +172,15 @@ FilenameType nsContentSecurityUtils::FilenameToEvalType(
 
   // resource:// and chrome://
   if (StringBeginsWith(fileName, NS_LITERAL_STRING("chrome://"))) {
-    return FilenameType(kChromeURI, Some(fileName));
+    return FilenameTypeAndDetails(kChromeURI, Some(fileName));
   }
   if (StringBeginsWith(fileName, NS_LITERAL_STRING("resource://"))) {
-    return FilenameType(kResourceURI, Some(fileName));
+    return FilenameTypeAndDetails(kResourceURI, Some(fileName));
   }
 
   if (!NS_IsMainThread()) {
     // We can't do Regex matching off the main thread; so just report.
-    return FilenameType(kOtherWorker, Nothing());
+    return FilenameTypeAndDetails(kOtherWorker, Nothing());
   }
 
   // Extension
@@ -189,7 +189,7 @@ FilenameType nsContentSecurityUtils::FilenameToEvalType(
   nsresult rv = RegexEval(kExtensionRegex, fileName, /* aOnlyMatch = */ false,
                           regexMatch, &regexResults);
   if (NS_FAILED(rv)) {
-    return FilenameType(kRegexFailure, Nothing());
+    return FilenameTypeAndDetails(kRegexFailure, Nothing());
   }
   if (regexMatch) {
     nsCString type =
@@ -198,26 +198,27 @@ FilenameType nsContentSecurityUtils::FilenameToEvalType(
             : kOtherExtension;
     auto& extensionNameAndPath =
         Substring(regexResults[0], ArrayLength("extensions/") - 1);
-    return FilenameType(type, Some(OptimizeFileName(extensionNameAndPath)));
+    return FilenameTypeAndDetails(type,
+                                  Some(OptimizeFileName(extensionNameAndPath)));
   }
 
   // Single File
   rv = RegexEval(kSingleFileRegex, fileName, /* aOnlyMatch = */ true,
                  regexMatch);
   if (NS_FAILED(rv)) {
-    return FilenameType(kRegexFailure, Nothing());
+    return FilenameTypeAndDetails(kRegexFailure, Nothing());
   }
   if (regexMatch) {
-    return FilenameType(kSingleString, Some(fileName));
+    return FilenameTypeAndDetails(kSingleString, Some(fileName));
   }
 
   // Suspected userChromeJS script
   rv = RegexEval(kUCJSRegex, fileName, /* aOnlyMatch = */ true, regexMatch);
   if (NS_FAILED(rv)) {
-    return FilenameType(kRegexFailure, Nothing());
+    return FilenameTypeAndDetails(kRegexFailure, Nothing());
   }
   if (regexMatch) {
-    return FilenameType(kSuspectedUserChromeJS, Nothing());
+    return FilenameTypeAndDetails(kSuspectedUserChromeJS, Nothing());
   }
 
 #if defined(XP_WIN)
@@ -237,14 +238,16 @@ FilenameType nsContentSecurityUtils::FilenameToEvalType(
         sanitizedPathAndScheme.Append(NS_LITERAL_STRING("://.../"));
         sanitizedPathAndScheme.Append(strSanitizedPath);
       }
-      return FilenameType(kSanitizedWindowsURL, Some(sanitizedPathAndScheme));
+      return FilenameTypeAndDetails(kSanitizedWindowsURL,
+                                    Some(sanitizedPathAndScheme));
     } else {
-      return FilenameType(kSanitizedWindowsPath, Some(strSanitizedPath));
+      return FilenameTypeAndDetails(kSanitizedWindowsPath,
+                                    Some(strSanitizedPath));
     }
   }
 #endif
 
-  return FilenameType(kOther, Nothing());
+  return FilenameTypeAndDetails(kOther, Nothing());
 }
 
 class EvalUsageNotificationRunnable final : public Runnable {
@@ -462,12 +465,13 @@ void nsContentSecurityUtils::NotifyEvalUsage(bool aIsSystemPrincipal,
       aIsSystemPrincipal ? Telemetry::EventID::Security_Evalusage_Systemcontext
                          : Telemetry::EventID::Security_Evalusage_Parentprocess;
 
-  FilenameType fileNameType = FilenameToEvalType(aFileNameA);
+  FilenameTypeAndDetails fileNameTypeAndDetails =
+      FilenameToEvalType(aFileNameA);
   mozilla::Maybe<nsTArray<EventExtraEntry>> extra;
-  if (fileNameType.second().isSome()) {
+  if (fileNameTypeAndDetails.second().isSome()) {
     extra = Some<nsTArray<EventExtraEntry>>({EventExtraEntry{
         NS_LITERAL_CSTRING("fileinfo"),
-        NS_ConvertUTF16toUTF8(fileNameType.second().value())}});
+        NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second().value())}});
   } else {
     extra = Nothing();
   }
@@ -475,7 +479,8 @@ void nsContentSecurityUtils::NotifyEvalUsage(bool aIsSystemPrincipal,
     sTelemetryEventEnabled = true;
     Telemetry::SetEventRecordingEnabled(NS_LITERAL_CSTRING("security"), true);
   }
-  Telemetry::RecordEvent(eventType, mozilla::Some(fileNameType.first()), extra);
+  Telemetry::RecordEvent(eventType,
+                         mozilla::Some(fileNameTypeAndDetails.first()), extra);
 
   // Report an error to console
   nsCOMPtr<nsIConsoleService> console(
