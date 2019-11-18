@@ -26,6 +26,9 @@ requestLongerTimeout(2);
 add_task(async function() {
   let browserConsole, webConsole, objInspector;
 
+  // Needed for the execute() function below
+  await pushPref("security.allow_parent_unrestricted_js_loads", true);
+
   // We don't use `pushPref()` because we need to revert the same pref later
   // in the test.
   Services.prefs.setBoolPref("devtools.chrome.enabled", true);
