@@ -1173,11 +1173,17 @@ class ChildAPIManager {
 
     this.id = `${context.extension.id}.${context.contextId}`;
 
-    let global = context.contentWindow.getWindowGlobalChild();
-    this.conduit = global.getActor("Conduits").openConduit(this, {
+    this.conduit = context.openConduit(this, {
       id: this.id,
       send: ["CreateProxyContext", "APICall", "AddListener", "RemoveListener"],
       recv: ["CallResult", "RunListener"],
+    });
+
+    this.conduit.sendCreateProxyContext({
+      childId: this.id,
+      extensionId: context.extension.id,
+      principal: context.principal,
+      ...contextData,
     });
 
     this.listeners = new DefaultMap(() => ({
@@ -1188,15 +1194,6 @@ class ChildAPIManager {
 
     // Map[callId -> Deferred]
     this.callPromises = new Map();
-
-    let params = {
-      childId: this.id,
-      extensionId: context.extension.id,
-      principal: context.principal,
-    };
-    Object.assign(params, contextData);
-
-    this.conduit.sendCreateProxyContext(params);
 
     this.permissionsChangedCallbacks = new Set();
     this.updatePermissions = null;

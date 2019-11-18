@@ -59,7 +59,7 @@ const Hub = {
   /** @type Map<ConduitID, ConduitAddress> Info about all child conduits. */
   remotes: new Map(),
 
-  /** @type Map<ConduitID, BroadcastConduit> All open prent conduits. */
+  /** @type Map<ConduitID, BroadcastConduit> All open parent conduits. */
   conduits: new Map(),
 
   /** @type Map<string, BroadcastConduit> Parent conduits by recvMethod. */
@@ -78,6 +78,10 @@ const Hub = {
   openConduit(conduit) {
     this.conduits.set(conduit.id, conduit);
     for (let name of conduit.address.recv || []) {
+      if (this.byMethod.get(name)) {
+        // For now, we only allow one parent conduit handling each recv method.
+        throw new Error(`Duplicate BroadcastConduit method name recv${name}`);
+      }
       this.byMethod.set(name, conduit);
     }
   },
@@ -111,6 +115,7 @@ const Hub = {
   recvConduitClosed(remote) {
     this.remotes.delete(remote.id);
     this.byActor.get(remote.actor).delete(remote);
+
     remote.actor = null;
     for (let conduit of this.onRemoteClosed.get(remote.id)) {
       conduit.subject.recvConduitClosed(remote);
@@ -125,6 +130,7 @@ const Hub = {
     for (let remote of this.byActor.get(actor)) {
       this.recvConduitClosed(remote);
     }
+    this.byActor.delete(actor);
   },
 };
 
@@ -149,10 +155,10 @@ class BroadcastConduit extends BaseConduit {
    * @param {string} method
    * @param {boolean} query
    * @param {ConduitID} target
-   * @param {any} arg
+   * @param {object?} arg
    * @returns {Promise<any>}
    */
-  _send(method, query, target, arg) {
+  _send(method, query, target, arg = {}) {
     if (!this.open) {
       throw new Error(`send${method} on closed conduit ${this.id}`);
     }
@@ -162,7 +168,7 @@ class BroadcastConduit extends BaseConduit {
   }
 
   /**
-   * Inditate the subject wants to listen for the specifric conduit closing.
+   * Indicate the subject wants to listen for the specific conduit closing.
    * The method `recvConduitClosed(address)` will be called.
    * @param {ConduitID} target
    */
@@ -185,7 +191,7 @@ class ConduitsParent extends JSWindowActorParent {
   }
 
   /**
-   * JSWindowActorParent method, routes the message to the target subject.
+   * JSWindowActor method, routes the message to the target subject.
    * @returns {Promise?}
    */
   receiveMessage({ name, data: { arg, query, sender } }) {
@@ -200,14 +206,22 @@ class ConduitsParent extends JSWindowActorParent {
     if (!conduit) {
       throw new Error(`Parent conduit for recv${name} not found`);
     }
+
     sender = Hub.remotes.get(sender);
     return conduit._recv(name, arg, { actor: this, query, sender });
   }
 
   /**
-   * JSWindowActorPaent method, called when the actor is getting destroyed.
+   * JSWindowActor method, called before actor is destroyed.
    */
   willDestroy() {
     Hub.actorClosed(this);
+  }
+
+  /**
+   * JSWindowActor method, ensure cleanup (see bug 1596187).
+   */
+  didDestroy() {
+    this.willDestroy();
   }
 }

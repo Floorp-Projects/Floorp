@@ -47,7 +47,7 @@ class BaseConduit {
    * @param {string} method
    * @param {boolean} query Flag indicating a response is expected.
    * @param {JSWindowActor} actor
-   * @param {{arg: any, sender: ConduitID}} data
+   * @param {{arg: object, sender: ConduitID}} data
    * @returns {Promise?}
    */
   _send(method, query, actor, data) {
@@ -94,10 +94,10 @@ class PointConduit extends BaseConduit {
    * Internal, sends messages via the actor, used by sendX stubs.
    * @param {string} method
    * @param {boolean} query
-   * @param {object} arg
+   * @param {object?} arg
    * @returns {Promise?}
    */
-  _send(method, query, arg) {
+  _send(method, query, arg = {}) {
     if (!this.actor) {
       throw new Error(`send${method} on closed conduit ${this.id}`);
     }
@@ -106,13 +106,17 @@ class PointConduit extends BaseConduit {
   }
 
   /**
-   * Closes the conduit from further IPC, notifies the parent side.
+   * Closes the conduit from further IPC, notifies the parent side by default.
+   * @param {boolean} silent
    */
-  close() {
-    if (this.actor) {
-      this.actor.conduits.delete(this.id);
-      this.actor.sendAsyncMessage("ConduitClosed", { arg: this.id });
+  close(silent = false) {
+    let { actor } = this;
+    if (actor) {
       this.actor = null;
+      actor.conduits.delete(this.id);
+      if (!silent) {
+        actor.sendAsyncMessage("ConduitClosed", { arg: this.id });
+      }
     }
   }
 }
@@ -139,25 +143,32 @@ class ConduitsChild extends JSWindowActorChild {
   }
 
   /**
-   * JSWindowActorChild method, routes the message to the target subject.
+   * JSWindowActor method, routes the message to the target subject.
    * @returns {Promise?}
    */
   receiveMessage({ name, data: { target, arg, query, sender } }) {
     let conduit = this.conduits.get(target);
     if (!conduit) {
-      throw new Error(`${name} ${arg.path} for closed conduit ${target}`);
+      throw new Error(`${name} for closed conduit ${target}: ${uneval(arg)}`);
     }
     return conduit._recv(name, arg, { sender, query, actor: this });
   }
 
   /**
-   * JSWindowActorChild method, called when the actor is getting destroyed.
-   * Can't IPC from this point, so silently closes all conduits.
+   * JSWindowActor method, called before actor is destroyed.
+   * Parent side will get the same call, so just silently close all conduits.
    */
   willDestroy() {
     for (let conduit of this.conduits.values()) {
-      conduit.actor = null;
+      conduit.close(true);
     }
     this.conduits.clear();
+  }
+
+  /**
+   * JSWindowActor method, ensure cleanup (see bug 1596187).
+   */
+  didDestroy() {
+    this.willDestroy();
   }
 }
