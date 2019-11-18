@@ -9,15 +9,19 @@
 
 import os
 import pprint
-import urllib2
+try:
+    from urllib2 import urlopen
+except ImportError:
+    from urllib.request import urlopen
+
+from mozharness.base.errors import SSHErrorList
+from mozharness.base.log import DEBUG, ERROR
+
 try:
     import simplejson as json
     assert json
 except ImportError:
     import json
-
-from mozharness.base.errors import SSHErrorList
-from mozharness.base.log import DEBUG, ERROR
 
 
 # TransferMixin {{{1
@@ -27,11 +31,12 @@ class TransferMixin(object):
 
     Dependent on BaseScript.
     """
+
     def load_json_from_url(self, url, timeout=30, log_level=DEBUG):
         self.log("Attempting to download %s; timeout=%i" % (url, timeout),
                  level=log_level)
         try:
-            r = urllib2.urlopen(url, timeout=timeout)
+            r = urlopen(url, timeout=timeout)
             j = json.load(r)
             self.log(pprint.pformat(j), level=log_level)
         except BaseException:
@@ -57,7 +62,8 @@ class TransferMixin(object):
               -3: scp fails to copy to the remote directory
         """
         dirs = self.query_abs_dirs()
-        self.info("Uploading the contents of %s to %s:%s" % (local_path, remote_host, remote_path))
+        self.info("Uploading the contents of %s to %s:%s" %
+                  (local_path, remote_host, remote_path))
         ssh = self.query_exe("ssh")
         scp = self.query_exe("scp")
         if scp_options is None:
