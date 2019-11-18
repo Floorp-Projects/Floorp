@@ -55,7 +55,7 @@ case $cmd in
     ;;
 "build")
     # Make sure that everything copied here is kept in sync with
-    # `testing/taskcluster/tasks/branches/base_jobs.yml`!
+    # `taskcluster/ci/spidermonkey/kind.yml`!
 
     if [ -e ${tgtpath}/js/src/Makefile ]; then
         echo "error: found js/src/Makefile. Please clean before packaging." >&2
