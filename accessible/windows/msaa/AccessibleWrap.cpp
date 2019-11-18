@@ -1016,7 +1016,25 @@ STDMETHODIMP
 AccessibleWrap::put_accValue(
     /* [optional][in] */ VARIANT varChild,
     /* [in] */ BSTR szValue) {
-  return E_NOTIMPL;
+  RefPtr<IAccessible> accessible;
+  HRESULT hr = ResolveChild(varChild, getter_AddRefs(accessible));
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  if (accessible) {
+    return accessible->put_accValue(kVarChildIdSelf, szValue);
+  }
+
+  HyperTextAccessible* ht = AsHyperText();
+  if (!ht) {
+    return E_NOTIMPL;
+  }
+
+  uint32_t length = ::SysStringLen(szValue);
+  nsAutoString text(szValue, length);
+  ht->ReplaceText(text);
+  return S_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

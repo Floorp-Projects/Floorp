@@ -914,8 +914,11 @@ AccessibleHandler::put_accName(VARIANT varChild, BSTR szName) {
 
 HRESULT
 AccessibleHandler::put_accValue(VARIANT varChild, BSTR szValue) {
-  // This matches AccessibleWrap
-  return E_NOTIMPL;
+  HRESULT hr = ResolveIA2();
+  if (FAILED(hr)) {
+    return hr;
+  }
+  return mIA2PassThru->put_accValue(varChild, szValue);
 }
 
 /*** IAccessible2 ***/
