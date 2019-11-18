@@ -111,42 +111,35 @@ enum {
   // Whether this node has had any properties set on it
   NODE_HAS_PROPERTIES = NODE_FLAG_BIT(1),
 
-  // Whether this node is the root of an anonymous subtree.  Note that this
-  // need not be a native anonymous subtree.  Any anonymous subtree, including
-  // XBL-generated ones, will do.  This flag is set-once: once a node has it,
-  // it must not be removed.
-  // NOTE: Should only be used on nsIContent nodes
-  NODE_IS_ANONYMOUS_ROOT = NODE_FLAG_BIT(2),
-
   // Whether the node has some ancestor, possibly itself, that is native
   // anonymous.  This includes ancestors crossing XBL scopes, in cases when an
   // XBL binding is attached to an element which has a native anonymous
   // ancestor.  This flag is set-once: once a node has it, it must not be
   // removed.
   // NOTE: Should only be used on nsIContent nodes
-  NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE = NODE_FLAG_BIT(3),
+  NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE = NODE_FLAG_BIT(2),
 
   // Whether this node is the root of a native anonymous (from the perspective
   // of its parent) subtree.  This flag is set-once: once a node has it, it
   // must not be removed.
   // NOTE: Should only be used on nsIContent nodes
-  NODE_IS_NATIVE_ANONYMOUS_ROOT = NODE_FLAG_BIT(4),
+  NODE_IS_NATIVE_ANONYMOUS_ROOT = NODE_FLAG_BIT(3),
 
-  NODE_IS_EDITABLE = NODE_FLAG_BIT(5),
+  NODE_IS_EDITABLE = NODE_FLAG_BIT(4),
 
   // Whether the node participates in a shadow tree.
-  NODE_IS_IN_SHADOW_TREE = NODE_FLAG_BIT(6),
+  NODE_IS_IN_SHADOW_TREE = NODE_FLAG_BIT(5),
 
   // Node has an :empty or :-moz-only-whitespace selector
-  NODE_HAS_EMPTY_SELECTOR = NODE_FLAG_BIT(7),
+  NODE_HAS_EMPTY_SELECTOR = NODE_FLAG_BIT(6),
 
   // A child of the node has a selector such that any insertion,
   // removal, or appending of children requires restyling the parent.
-  NODE_HAS_SLOW_SELECTOR = NODE_FLAG_BIT(8),
+  NODE_HAS_SLOW_SELECTOR = NODE_FLAG_BIT(7),
 
   // A child of the node has a :first-child, :-moz-first-node,
   // :only-child, :last-child or :-moz-last-node selector.
-  NODE_HAS_EDGE_CHILD_SELECTOR = NODE_FLAG_BIT(9),
+  NODE_HAS_EDGE_CHILD_SELECTOR = NODE_FLAG_BIT(8),
 
   // A child of the node has a selector such that any insertion or
   // removal of children requires restyling later siblings of that
@@ -155,7 +148,7 @@ enum {
   // other content tree changes (e.g., the child changes to or from
   // matching :empty due to a grandchild insertion or removal), the
   // child's later siblings must also be restyled.
-  NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS = NODE_FLAG_BIT(10),
+  NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS = NODE_FLAG_BIT(9),
 
   NODE_ALL_SELECTOR_FLAGS = NODE_HAS_EMPTY_SELECTOR | NODE_HAS_SLOW_SELECTOR |
                             NODE_HAS_EDGE_CHILD_SELECTOR |
@@ -163,28 +156,28 @@ enum {
 
   // This node needs to go through frame construction to get a frame (or
   // undisplayed entry).
-  NODE_NEEDS_FRAME = NODE_FLAG_BIT(11),
+  NODE_NEEDS_FRAME = NODE_FLAG_BIT(10),
 
   // At least one descendant in the flattened tree has NODE_NEEDS_FRAME set.
   // This should be set on every node on the flattened tree path between the
   // node(s) with NODE_NEEDS_FRAME and the root content.
-  NODE_DESCENDANTS_NEED_FRAMES = NODE_FLAG_BIT(12),
+  NODE_DESCENDANTS_NEED_FRAMES = NODE_FLAG_BIT(11),
 
   // Set if the node has the accesskey attribute set.
-  NODE_HAS_ACCESSKEY = NODE_FLAG_BIT(13),
+  NODE_HAS_ACCESSKEY = NODE_FLAG_BIT(12),
 
   // Set if the node has right-to-left directionality
-  NODE_HAS_DIRECTION_RTL = NODE_FLAG_BIT(14),
+  NODE_HAS_DIRECTION_RTL = NODE_FLAG_BIT(13),
 
   // Set if the node has left-to-right directionality
-  NODE_HAS_DIRECTION_LTR = NODE_FLAG_BIT(15),
+  NODE_HAS_DIRECTION_LTR = NODE_FLAG_BIT(14),
 
   NODE_ALL_DIRECTION_FLAGS = NODE_HAS_DIRECTION_LTR | NODE_HAS_DIRECTION_RTL,
 
-  NODE_HAS_BEEN_IN_UA_WIDGET = NODE_FLAG_BIT(16),
+  NODE_HAS_BEEN_IN_UA_WIDGET = NODE_FLAG_BIT(15),
 
   // Remaining bits are node type specific.
-  NODE_TYPE_SPECIFIC_BITS_OFFSET = 17
+  NODE_TYPE_SPECIFIC_BITS_OFFSET = 16
 };
 
 // Make sure we have space for our bits
@@ -1212,19 +1205,18 @@ class nsINode : public mozilla::dom::EventTarget {
   void SetFlags(FlagsType aFlagsToSet) {
     NS_ASSERTION(
         !(aFlagsToSet &
-          (NODE_IS_ANONYMOUS_ROOT | NODE_IS_NATIVE_ANONYMOUS_ROOT |
-           NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE | NODE_DESCENDANTS_NEED_FRAMES |
-           NODE_NEEDS_FRAME | NODE_HAS_BEEN_IN_UA_WIDGET)) ||
+          (NODE_IS_NATIVE_ANONYMOUS_ROOT | NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE |
+           NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME |
+           NODE_HAS_BEEN_IN_UA_WIDGET)) ||
             IsContent(),
         "Flag only permitted on nsIContent nodes");
     nsWrapperCache::SetFlags(aFlagsToSet);
   }
 
   void UnsetFlags(FlagsType aFlagsToUnset) {
-    NS_ASSERTION(
-        !(aFlagsToUnset & (NODE_IS_ANONYMOUS_ROOT | NODE_HAS_BEEN_IN_UA_WIDGET |
-                           NODE_IS_NATIVE_ANONYMOUS_ROOT)),
-        "Trying to unset write-only flags");
+    NS_ASSERTION(!(aFlagsToUnset & (NODE_HAS_BEEN_IN_UA_WIDGET |
+                                    NODE_IS_NATIVE_ANONYMOUS_ROOT)),
+                 "Trying to unset write-only flags");
     nsWrapperCache::UnsetFlags(aFlagsToUnset);
   }
 
@@ -1344,10 +1336,9 @@ class nsINode : public mozilla::dom::EventTarget {
    * @return whether this content is anonymous
    */
   bool IsRootOfNativeAnonymousSubtree() const {
-    NS_ASSERTION(!HasFlag(NODE_IS_NATIVE_ANONYMOUS_ROOT) ||
-                     (HasFlag(NODE_IS_ANONYMOUS_ROOT) &&
-                      HasFlag(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE)),
-                 "Some flags seem to be missing!");
+    NS_ASSERTION(
+        !HasFlag(NODE_IS_NATIVE_ANONYMOUS_ROOT) || IsInNativeAnonymousSubtree(),
+        "Some flags seem to be missing!");
     return HasFlag(NODE_IS_NATIVE_ANONYMOUS_ROOT);
   }
 
