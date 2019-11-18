@@ -20,36 +20,6 @@ typedef std::vector<std::string> StringVector;
 
 namespace IPC {
 
-template <typename T>
-struct ParamTraits<std::vector<T>> {
-  typedef std::vector<T> paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    aMsg->WriteUInt32(aParam.size());
-    for (const T& elem : aParam) {
-      WriteParam(aMsg, elem);
-    }
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    uint32_t size;
-    if (!aMsg->ReadUInt32(aIter, &size)) {
-      return false;
-    }
-    while (size--) {
-      // Only works when T is movable. Meh.
-      T elem;
-      if (!ReadParam(aMsg, aIter, &elem)) {
-        return false;
-      }
-      aResult->emplace_back(std::move(elem));
-    }
-
-    return true;
-  }
-};
-
 template <>
 struct ParamTraits<mozilla::dom::OwningStringOrStringSequence> {
   typedef mozilla::dom::OwningStringOrStringSequence paramType;
