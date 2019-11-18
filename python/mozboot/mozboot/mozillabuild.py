@@ -67,7 +67,7 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
         pass
 
     def install_mobile_android_packages(self):
-        pass
+        self.ensure_mobile_android_packages()
 
     def install_mobile_android_artifact_mode_packages(self):
         self.ensure_mobile_android_packages(artifact_mode=True)
@@ -81,7 +81,8 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
         java_path, regtype = _winreg.QueryValueEx(key, 'JavaHome')
         _winreg.CloseKey(key)
         os.environ['PATH'] = \
-            '{}{}{}'.format(os.path.join(java_path, 'bin'), os.pathsep, os.environ['PATH'])
+            '{}{}{}'.format(os.path.join(java_path, 'bin'), os.pathsep,
+                            os.environ['PATH']).encode('mbcs')
         self.ensure_java()
 
         from mozboot import android
