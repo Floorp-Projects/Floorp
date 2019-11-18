@@ -555,6 +555,12 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
     //   - MakeProgress
     //   etc
 
+    function CheckForLivenessOfContentRootElement() {
+        if (contentRootElement && Cu.isDeadWrapper(contentRootElement)) {
+            contentRootElement = null;
+        }
+    }
+
     var setTimeoutCallMakeProgressWhenComplete = false;
 
     var operationInProgress = false;
@@ -631,6 +637,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
             let rects = updateCanvasRects;
             updateCanvasRects = [];
             OperationInProgress();
+            CheckForLivenessOfContentRootElement();
             let promise = SendUpdateCanvasForEvent(forURL, rects, contentRootElement);
             promise.then(function () {
                 OperationCompleted();
@@ -709,6 +716,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
     function RemoveListeners() {
         // OK, we can end the test now.
         removeEventListener("MozAfterPaint", AfterPaintListener, false);
+        CheckForLivenessOfContentRootElement();
         if (contentRootElement) {
             contentRootElement.removeEventListener("DOMAttrModified", AttrModifiedListener);
         }
@@ -781,6 +789,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
             }
 
             state = STATE_WAITING_FOR_REFTEST_WAIT_REMOVAL;
+            CheckForLivenessOfContentRootElement();
             var hasReftestWait = shouldWaitForReftestWaitRemoval(contentRootElement);
             // Notify the test document that now is a good time to test some invalidation
             LogInfo("MakeProgress: dispatching MozReftestInvalidate");
@@ -829,6 +838,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
 
         case STATE_WAITING_FOR_REFTEST_WAIT_REMOVAL:
             LogInfo("MakeProgress: STATE_WAITING_FOR_REFTEST_WAIT_REMOVAL");
+            CheckForLivenessOfContentRootElement();
             if (shouldWaitForReftestWaitRemoval(contentRootElement)) {
                 gFailureReason = "timed out waiting for reftest-wait to be removed";
                 LogInfo("MakeProgress: waiting for reftest-wait to be removed");
@@ -866,6 +876,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
             os.addObserver(flushWaiter, "apz-repaints-flushed");
 
             var willSnapshot = IsSnapshottableTestType();
+            CheckForLivenessOfContentRootElement();
             var noFlush =
                 !(contentRootElement &&
                   contentRootElement.classList.contains("reftest-no-flush"));
@@ -903,6 +914,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
                 }
                 return;
             }
+            CheckForLivenessOfContentRootElement();
             if (contentRootElement) {
               var elements = getNoPaintElements(contentRootElement);
               for (var i = 0; i < elements.length; ++i) {
@@ -944,6 +956,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
             state = STATE_COMPLETED;
             gFailureReason = "timed out while taking snapshot (bug in harness?)";
             RemoveListeners();
+            CheckForLivenessOfContentRootElement();
             CheckForProcessCrashExpectation(contentRootElement);
             setTimeout(RecordResult, 0, forURL);
             return;
@@ -954,6 +967,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
     addEventListener("MozAfterPaint", AfterPaintListener, false);
     // If contentRootElement is null then shouldWaitForReftestWaitRemoval will
     // always return false so we don't need a listener anyway
+    CheckForLivenessOfContentRootElement();
     if (contentRootElement) {
       contentRootElement.addEventListener("DOMAttrModified", AttrModifiedListener);
     }
@@ -1073,6 +1087,10 @@ function OnDocumentLoad(event)
         let painted = await SendInitCanvasWithSnapshot(ourURL);
 
         gExplicitPendingPaintsCompleteHook = null;
+
+        if (contentRootElement && Cu.isDeadWrapper(contentRootElement)) {
+            contentRootElement = null;
+        }
 
         if (paintWaiterFinished || shouldWaitForExplicitPaintWaiters() ||
             (!inPrintMode && doPrintMode(contentRootElement)) ||
