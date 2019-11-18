@@ -111,7 +111,9 @@ def lint(paths, config, fix=None, **lintargs):
 
     config['root'] = lintargs['root']
 
-    skip_files = '--skip=*.dic,{}'.format(','.join(config['exclude']))
+    skip_files = ''
+    if 'exclude' in config:
+        skip_files = '--skip=*.dic,{}'.format(','.join(config['exclude']))
 
     exclude_list = os.path.join(here, 'exclude-list.txt')
     cmd_args = [which('python'),
