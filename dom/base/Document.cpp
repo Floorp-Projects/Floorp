@@ -7801,15 +7801,6 @@ already_AddRefed<nsINode> Document::ImportNode(nsINode& aNode, bool aDeep,
   return nullptr;
 }
 
-// FIXME(bug 1596800): This should be removed, only has a couple of callers.
-Element* Document::GetBindingParent(nsINode& aNode) {
-  if (aNode.IsInNativeAnonymousSubtree()) {
-    return Element::FromNodeOrNull(
-        aNode.GetClosestNativeAnonymousSubtreeRootParent());
-  }
-  return Element::FromNodeOrNull(aNode.GetContainingShadowHost());
-}
-
 nsINodeList* Document::GetAnonymousNodes(Element& aElement) { return nullptr; }
 
 already_AddRefed<nsRange> Document::CreateRange(ErrorResult& rv) {
