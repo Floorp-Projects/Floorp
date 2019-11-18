@@ -2502,7 +2502,8 @@ nsresult CreateSandboxObject(JSContext* cx, JS::MutableHandleValue vp,
 // principal and line number 1 as a fallback.
 nsresult EvalInSandbox(JSContext* cx, JS::HandleObject sandbox,
                        const nsAString& source, const nsACString& filename,
-                       int32_t lineNo, JS::MutableHandleValue rval);
+                       int32_t lineNo, bool enforceFilenameRestrictions,
+                       JS::MutableHandleValue rval);
 
 // Helper for retrieving metadata stored in a reserved slot. The metadata
 // is set during the sandbox creation using the "metadata" option.

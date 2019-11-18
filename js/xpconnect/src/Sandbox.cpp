@@ -1881,7 +1881,8 @@ nsresult nsXPCComponents_utils_Sandbox::CallOrConstruct(
 
 nsresult xpc::EvalInSandbox(JSContext* cx, HandleObject sandboxArg,
                             const nsAString& source, const nsACString& filename,
-                            int32_t lineNo, MutableHandleValue rval) {
+                            int32_t lineNo, bool enforceFilenameRestrictions,
+                            MutableHandleValue rval) {
   JS_AbortIfWrongThread(cx);
   rval.set(UndefinedValue());
 
@@ -1923,6 +1924,7 @@ nsresult xpc::EvalInSandbox(JSContext* cx, HandleObject sandboxArg,
 
     JS::CompileOptions options(sandcx);
     options.setFileAndLine(filenameBuf.get(), lineNo);
+    options.setSkipFilenameValidation(!enforceFilenameRestrictions);
     MOZ_ASSERT(JS_IsGlobalObject(sandbox));
 
     const nsPromiseFlatString& flat = PromiseFlatString(source);
