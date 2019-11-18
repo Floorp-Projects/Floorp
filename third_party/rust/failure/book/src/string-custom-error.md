@@ -20,6 +20,10 @@ pub struct MyError {
 }
 
 impl Fail for MyError {
+    fn name(&self) -> Option<&str> {
+        self.inner.name()
+    }
+
     fn cause(&self) -> Option<&Fail> {
         self.inner.cause()
     }
@@ -105,6 +109,10 @@ pub struct MyError {
 }
 
 impl Fail for MyError {
+    fn name(&self) -> Option<&str> {
+        self.inner.name()
+    }
+
     fn cause(&self) -> Option<&Fail> {
         self.inner.cause()
     }

@@ -60,14 +60,19 @@ impl Error {
     /// }
     /// ```
     #[cfg(feature = "std")]
-    pub fn from_boxed_compat(err: Box<StdError + Sync + Send + 'static>) -> Error {
+    pub fn from_boxed_compat(err: Box<dyn StdError + Sync + Send + 'static>) -> Error {
         Error::from(BoxStd(err))
     }
 
     /// Return a reference to the underlying failure that this `Error`
     /// contains.
-    pub fn as_fail(&self) -> &Fail {
+    pub fn as_fail(&self) -> &dyn Fail {
         self.imp.failure()
+    }
+
+    /// Returns the name of the underlying fail.
+    pub fn name(&self) -> Option<&str> {
+        self.as_fail().name()
     }
 
     /// Returns a reference to the underlying cause of this `Error`. Unlike the
@@ -77,7 +82,7 @@ impl Error {
     /// This method has been deprecated in favor of the [Error::as_fail] method,
     /// which does the same thing.
     #[deprecated(since = "0.1.2", note = "please use 'as_fail()' method instead")]
-    pub fn cause(&self) -> &Fail {
+    pub fn cause(&self) -> &dyn Fail {
         self.as_fail()
     }
 
@@ -128,7 +133,7 @@ impl Error {
 
     /// Returns the "root cause" of this error - the last value in the
     /// cause chain which does not return an underlying `cause`.
-    pub fn find_root_cause(&self) -> &Fail {
+    pub fn find_root_cause(&self) -> &dyn Fail {
         self.as_fail().find_root_cause()
     }
 
@@ -168,7 +173,7 @@ impl Error {
 
     /// Deprecated alias to `find_root_cause`.
     #[deprecated(since = "0.1.2", note = "please use the 'find_root_cause()' method instead")]
-    pub fn root_cause(&self) -> &Fail {
+    pub fn root_cause(&self) -> &dyn Fail {
         ::find_root_cause(self.as_fail())
     }
 
@@ -196,8 +201,8 @@ impl Debug for Error {
     }
 }
 
-impl AsRef<Fail> for Error {
-    fn as_ref(&self) -> &Fail {
+impl AsRef<dyn Fail> for Error {
+    fn as_ref(&self) -> &dyn Fail {
         self.as_fail()
     }
 }

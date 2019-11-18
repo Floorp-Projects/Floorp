@@ -1039,4 +1039,10 @@ interface nsIAccessibleRole : nsISupports
    */
   const unsigned long ROLE_FORM_LANDMARK = 178;
 
+  /**
+   * The html:mark element.
+   * May also be used if WAI-ARIA gets an equivalent role.
+   */
+  const unsigned long ROLE_MARK = 179;
+
 };

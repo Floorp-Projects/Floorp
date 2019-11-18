@@ -12688,23 +12688,6 @@
     "kind": "flag",
     "description": "Tracks situations when the user opts for auto-detecting the language of a page"
   },
-  "PERMISSIONS_REMIGRATION_COMPARISON": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["nika@thelayzells.com"],
-    "expires_in_version": "44",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Reports a comparison between row count of original and re-migration of the v7 permissions DB. 0=New == 0, 1=New < Old, 2=New == Old, 3=New > Old"
-  },
-  "PERMISSIONS_MIGRATION_7_ERROR": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["nika@thelayzells.com"],
-    "expires_in_version": "44",
-    "kind": "boolean",
-    "description": "Was there an error while performing the v7 permissions DB migration?"
-  },
   "VIDEO_EME_REQUEST_SUCCESS_LATENCY_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],

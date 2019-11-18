@@ -287,12 +287,11 @@ AudioParamDescriptorMap AudioWorkletGlobalScope::DescriptorsFromJS(
 }
 
 bool AudioWorkletGlobalScope::ConstructProcessor(
-    const nsAString& aName,
-    NotNull<StructuredCloneHolder*> aOptionsSerialization,
+    const nsAString& aName, NotNull<StructuredCloneHolder*> aSerializedOptions,
     JS::MutableHandle<JSObject*> aRetProcessor) {
   /**
-   * See the second algorithm at
-   * https://webaudio.github.io/web-audio-api/#instantiation-of-AudioWorkletNode-and-AudioWorkletProcessor
+   * See
+   * https://webaudio.github.io/web-audio-api/#AudioWorkletProcessor-instantiation
    */
   AutoJSAPI jsapi;
   if (NS_WARN_IF(!jsapi.Init(this))) {
@@ -301,51 +300,46 @@ bool AudioWorkletGlobalScope::ConstructProcessor(
   JSContext* cx = jsapi.cx();
   ErrorResult rv;
   /** TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1565956
-   * 1. Let processorPort be
-   *    StructuredDeserializeWithTransfer(processorPortSerialization,
-   *                                      the current Realm).
+   * 4. Let deserializedPort be the result of
+   *    StructuredDeserialize(serializedPort, the current Realm).
    */
   /**
-   * 2. Let options be StructuredDeserialize(optionsSerialization,
-   *                                         the current Realm).
+   * 5. Let deserializedOptions be the result of
+   *    StructuredDeserialize(serializedOptions, the current Realm).
    */
-  JS::Rooted<JS::Value> optionsVal(cx);
-  aOptionsSerialization->Read(this, cx, &optionsVal, rv);
+  JS::Rooted<JS::Value> deserializedOptions(cx);
+  aSerializedOptions->Read(this, cx, &deserializedOptions, rv);
   if (rv.MaybeSetPendingException(cx)) {
     return false;
   }
   /**
-   * 3. Let processorConstructor be the result of looking up nodeName on the
+   * 6. Let processorCtor be the result of looking up processorName on the
    *    AudioWorkletGlobalScope's node name to processor definition map.
    */
-  RefPtr<AudioWorkletProcessorConstructor> processorConstructor =
+  RefPtr<AudioWorkletProcessorConstructor> processorCtor =
       mNameToProcessorMap.Get(aName);
   // AudioWorkletNode has already checked the definition exists.
   // See also https://github.com/WebAudio/web-audio-api/issues/1854
-  MOZ_ASSERT(processorConstructor);
+  MOZ_ASSERT(processorCtor);
+  /** TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1565956
+   * 7. Store nodeReference and deserializedPort to node reference and
+   *    transferred port of this AudioWorkletGlobalScope's pending processor
+   *    construction data respectively.
+   */
   /**
-   * 4. Let processor be the result of Construct(processorConstructor,
-   *                                             « options »).
+   * 8. Construct a callback function from processorCtor with the argument
+   *    of deserializedOptions.
    */
   // The options were an object before serialization and so will be an object
   // if deserialization succeeded above.  toObject() asserts.
-  JS::Rooted<JSObject*> options(cx, &optionsVal.toObject());
-  // Using https://heycam.github.io/webidl/#construct-a-callback-function
-  // See
-  // https://github.com/WebAudio/web-audio-api/pull/1843#issuecomment-478590304
-  RefPtr<AudioWorkletProcessor> processor = processorConstructor->Construct(
+  JS::Rooted<JSObject*> options(cx, &deserializedOptions.toObject());
+  RefPtr<AudioWorkletProcessor> processor = processorCtor->Construct(
       options, rv, "AudioWorkletProcessor construction",
       CallbackFunction::eReportExceptions);
   if (rv.Failed()) {
     rv.SuppressException();  // already reported
     return false;
   }
-  /** TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1565956
-   * but see https://github.com/WebAudio/web-audio-api/issues/1973
-   *
-   * 5. Set processor’s port to processorPort.
-   */
-
   JS::Rooted<JS::Value> processorVal(cx);
   if (NS_WARN_IF(!ToJSValue(cx, processor, &processorVal))) {
     return false;

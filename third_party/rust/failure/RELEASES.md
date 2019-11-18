@@ -1,3 +1,21 @@
+# Version 0.1.6
+
+- Update `syn`, `quote`, and `proc_macro2` dependencies to 1.0.
+- Bump MSRV to 1.31.0.
+
+# Version 0.1.5
+
+- Resolve a regression with error conversions (#290)
+- Added `name()` to `Fail` and `Error`
+
+# Version 0.1.4
+
+- Improved error reporting of the derive feature
+- Resolved a potential internal ambiguity when using the backtrace feature
+  that prevented backtrace from improving an upstream API.
+- Changed the bounds on std error compat conversions through the From trait
+  to take Sync and Send into account.
+
 # Version 0.1.3
 
 - Added `Context::map`

@@ -48,7 +48,7 @@ class AudioWorkletGlobalScope final : public WorkletGlobalScope {
   // compartment for the realm of this global.  Returns false on failure.
   MOZ_CAN_RUN_SCRIPT
   bool ConstructProcessor(const nsAString& aName,
-                          NotNull<StructuredCloneHolder*> aOptionsSerialization,
+                          NotNull<StructuredCloneHolder*> aSerializedOptions,
                           JS::MutableHandle<JSObject*> aRetProcessor);
 
  private:

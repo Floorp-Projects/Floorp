@@ -257,7 +257,7 @@ function run_test() {
 function getCookieCount() {
   var count = 0;
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
-  for (let cookie of cm.enumerator) {
+  for (let cookie of cm.cookies) {
     ++count;
   }
   return count;

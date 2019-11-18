@@ -312,3 +312,4 @@ load 1581579.html
 skip-if(release_or_beta) pref(dom.paintWorklet.enabled,true) pref(dom.worklet.enabled,true) load 1593766.html # bug 1581896
 pref(layout.css.motion-path.enabled,true) load 1594949.html
 pref(layout.css.motion-path.enabled,true) pref(layout.css.individual-transform.enabled,true) load 1594960.html
+load 1586444.html

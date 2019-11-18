@@ -46,15 +46,12 @@
 #include "nsTArray.h"
 #include "nsCOMArray.h"
 #include "nsIMutableArray.h"
-#include "nsArrayEnumerator.h"
-#include "nsEnumeratorUtils.h"
 #include "nsAutoPtr.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "prprf.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
-#include "nsISimpleEnumerator.h"
 #include "nsIInputStream.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsNetCID.h"
@@ -2427,7 +2424,7 @@ nsCookieService::RemoveAll() {
 }
 
 NS_IMETHODIMP
-nsCookieService::GetEnumerator(nsISimpleEnumerator** aEnumerator) {
+nsCookieService::GetCookies(nsTArray<RefPtr<nsICookie>>& aCookies) {
   if (!mDBState) {
     NS_WARNING("No DBState! Profile already closed?");
     return NS_ERROR_NOT_AVAILABLE;
@@ -2435,19 +2432,19 @@ nsCookieService::GetEnumerator(nsISimpleEnumerator** aEnumerator) {
 
   EnsureReadComplete(true);
 
-  nsCOMArray<nsICookie> cookieList(mDBState->cookieCount);
+  aCookies.SetCapacity(mDBState->cookieCount);
   for (auto iter = mDBState->hostTable.Iter(); !iter.Done(); iter.Next()) {
     const nsCookieEntry::ArrayType& cookies = iter.Get()->GetCookies();
     for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
-      cookieList.AppendObject(cookies[i]);
+      aCookies.AppendElement(cookies[i]);
     }
   }
 
-  return NS_NewArrayEnumerator(aEnumerator, cookieList, NS_GET_IID(nsICookie));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCookieService::GetSessionEnumerator(nsISimpleEnumerator** aEnumerator) {
+nsCookieService::GetSessionCookies(nsTArray<RefPtr<nsICookie>>& aCookies) {
   if (!mDBState) {
     NS_WARNING("No DBState! Profile already closed?");
     return NS_ERROR_NOT_AVAILABLE;
@@ -2455,19 +2452,19 @@ nsCookieService::GetSessionEnumerator(nsISimpleEnumerator** aEnumerator) {
 
   EnsureReadComplete(true);
 
-  nsCOMArray<nsICookie> cookieList(mDBState->cookieCount);
+  aCookies.SetCapacity(mDBState->cookieCount);
   for (auto iter = mDBState->hostTable.Iter(); !iter.Done(); iter.Next()) {
     const nsCookieEntry::ArrayType& cookies = iter.Get()->GetCookies();
     for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
       nsCookie* cookie = cookies[i];
       // Filter out non-session cookies.
       if (cookie->IsSession()) {
-        cookieList.AppendObject(cookie);
+        aCookies.AppendElement(cookie);
       }
     }
   }
 
-  return NS_NewArrayEnumerator(aEnumerator, cookieList, NS_GET_IID(nsICookie));
+  return NS_OK;
 }
 
 NS_IMETHODIMP

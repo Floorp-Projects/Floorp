@@ -19,7 +19,7 @@ function run_test() {
     const now = Math.floor(new Date().getTime() / 1000);
 
     var found = false;
-    for (let cookie of cm.enumerator) {
+    for (let cookie of cm.cookies) {
       if (
         cookie.host == "example.com" &&
         cookie.path == "/" &&

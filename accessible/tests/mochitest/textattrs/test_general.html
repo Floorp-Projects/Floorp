@@ -546,19 +546,23 @@
        // ////////////////////////////////////////////////////////////////////////
       // area19, "HTML5 mark tag" test
       // text enclosed in mark tag will have a different background color
+      // However, since bug 982125, it is its own accessible.
+      // Therefore, anything other than the default background color is
+      // unexpected.
       ID = "area19";
       defAttrs = buildDefaultTextAttrs(ID, "12pt");
 
       attrs = {};
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 10);
 
-      tempElem = getNode(ID).firstChild.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
-      attrs = { "background-color": gComputedStyle.backgroundColor };
-      testTextAttrs(ID, 11, attrs, defAttrs, 10, 17);
-
+      ID = "area19mark";
+      defMarkAttrs = buildDefaultTextAttrs(ID, "12pt");
       attrs = {};
-      testTextAttrs(ID, 18, attrs, defAttrs, 17, 28);
+      testTextAttrs(ID, 0, attrs, defMarkAttrs, 0, 7);
+
+      ID = "area19";
+      attrs = {};
+      testTextAttrs(ID, 11, attrs, defAttrs, 11, 22);
 
        // ////////////////////////////////////////////////////////////////////////
       // area20, "aOffset as -1 (Mozilla Bug 789621)" test
@@ -724,7 +728,7 @@
   </ul>
 
   <p id="area19">uncolored
-    <mark>colored</mark> uncolored
+    <mark id="area19mark">colored</mark> uncolored
   </p>
 
   <p id="area20" style="font-size: 15pt;">offset test</p>

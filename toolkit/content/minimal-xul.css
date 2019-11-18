@@ -73,6 +73,11 @@ scrollcorner, resizer, scrollbar, scrollbarbutton, slider {
    */
   justify-items: start;
 
+  /* Avoid `object > *` rule in html.css from setting a useless, non-initial
+   * value of vertical-align.
+   */
+  vertical-align: initial !important;
+
   /* Duplicate the rules from the '*' rule above, which were clobbered by the
    * 'all: initial' declaration.
    *
