@@ -1310,11 +1310,16 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
 
     mStartupReason = NS_LITERAL_STRING("argument-profile");
 
-    // If a profile path is specified directly on the command line, then
-    // assume that the temp directory is the same as the given directory.
-    GetProfileByDir(lf, lf, getter_AddRefs(mCurrent));
+    GetProfileByDir(lf, nullptr, getter_AddRefs(mCurrent));
     NS_ADDREF(*aRootDir = lf);
-    lf.forget(aLocalDir);
+    // If the root dir matched a profile then use its local dir, otherwise use
+    // the root dir as the local dir.
+    if (mCurrent) {
+      mCurrent->GetLocalDir(aLocalDir);
+    } else {
+      lf.forget(aLocalDir);
+    }
+
     NS_IF_ADDREF(*aProfile = mCurrent);
     return NS_OK;
   }
@@ -1659,9 +1664,16 @@ void nsToolkitProfileService::GetProfileByDir(nsIFile* aRootDir,
     bool equal;
     nsresult rv = profile->mRootDir->Equals(aRootDir, &equal);
     if (NS_SUCCEEDED(rv) && equal) {
+      if (!aLocalDir) {
+        // If no local directory was given then we will just use the normal
+        // local directory for the profile.
+        profile.forget(aResult);
+        return;
+      }
+
       rv = profile->mLocalDir->Equals(aLocalDir, &equal);
       if (NS_SUCCEEDED(rv) && equal) {
-        NS_ADDREF(*aResult = profile);
+        profile.forget(aResult);
         return;
       }
     }
