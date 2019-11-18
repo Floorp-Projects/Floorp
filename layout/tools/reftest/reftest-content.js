@@ -1028,6 +1028,24 @@ function OnDocumentLoad(event)
         var contentRootElement =
           content.document ? content.document.documentElement : null;
 
+        // "MozPaintWait" events are dispatched using a scriptrunner, so we
+        // receive then after painting has finished but before the main thread
+        // returns from the paint call. Then a "MozPaintWaitFinished" is
+        // dispatched to the main thread event loop.
+        // Before Fission both the FlushRendering and SendInitCanvasWithSnapshot
+        // calls were sync, but with Fission they must be async. So before Fission
+        // we got the MozPaintWait event but not the MozPaintWaitFinished event
+        // here (yet), which made us enter WaitForTestEnd. After Fission we get
+        // both MozPaintWait and MozPaintWaitFinished here. So to make this work
+        // the same way as before we just track if we got either event and go
+        // into reftest-wait mode.
+        var paintWaiterFinished = false;
+
+        gExplicitPendingPaintsCompleteHook = function () {
+            LogInfo("PaintWaiters finished while we were sending initial snapshop in AfterOnLoadScripts");
+            paintWaiterFinished = true;
+        }
+
         // Flush the document in case it got modified in a load event handler.
         await FlushRendering(FlushMode.ALL);
 
@@ -1037,7 +1055,9 @@ function OnDocumentLoad(event)
         // below.
         let painted = await SendInitCanvasWithSnapshot(ourURL);
 
-        if (shouldWaitForExplicitPaintWaiters() ||
+        gExplicitPendingPaintsCompleteHook = null;
+
+        if (paintWaiterFinished || shouldWaitForExplicitPaintWaiters() ||
             (!inPrintMode && doPrintMode(contentRootElement)) ||
             // If we didn't force a paint above, in
             // InitCurrentCanvasWithSnapshot, so we should wait for a
