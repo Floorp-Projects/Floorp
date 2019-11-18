@@ -354,6 +354,14 @@ FRAME_STATE_BIT(FlexContainer, 23, NS_STATE_FLEX_SYNTHESIZE_BASELINE)
 // -webkit-line-ellipsis marker.
 FRAME_STATE_BIT(FlexContainer, 24, NS_STATE_FLEX_HAS_LINE_CLAMP_ELLIPSIS)
 
+// True if the flex container's items' cached measurements are potentially
+// invalid, due to them having been computed during a reflow that was
+// interrupted.  (We may still use those invalid measurements for the rest of
+// the interrupted reflow; but as soon as we need a cached measurement in a
+// non-interrupted reflow, this bit should make us purge our flex items'
+// measurements and remeasure.)
+FRAME_STATE_BIT(FlexContainer, 25, NS_STATE_FLEX_MEASUREMENTS_INTERRUPTED)
+
 // == Frame state bits that apply to grid container frames ====================
 
 FRAME_STATE_GROUP(GridContainer, nsGridContainerFrame)

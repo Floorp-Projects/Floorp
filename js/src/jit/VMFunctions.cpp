@@ -1025,7 +1025,10 @@ bool GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame,
 
   GeneratorResumeKind resumeKind = GeneratorResumeKind(resumeKindArg);
   if (mustReturn) {
-    resumeKind = GeneratorResumeKind::Return;
+    // This function always returns false for the traditional JS control
+    // flow for throw, return and terminate, so we can use the true case to
+    // indicate an explicit return via the debugger.
+    return true;
   }
 
   MOZ_ALWAYS_FALSE(

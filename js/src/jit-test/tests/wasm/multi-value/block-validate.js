@@ -191,3 +191,76 @@ wasmValidateText(`
         (block (result i32 i32)
           (i32.const 32)
           (i32.const 10)))))`);
+
+wasmValidateText(`
+  (module
+    (func (result i32)
+      (block $B (result i32 i32)
+        (br $B (i32.const 1) (i32.const 2))
+        (i32.const 0x1337))
+      (drop)))`);
+
+wasmValidateText(`
+  (module
+    (func (result i32)
+      (block $B (result i32 i32)
+        (i32.const 1)
+        (br $B (i32.const 2))
+        (i32.const 0x1337))
+      (drop)))`);
+
+wasmValidateText(`
+  (module
+    (func (result i32)
+      (block $B (result i32 i32)
+        (i32.const 1)
+        (i32.const 2)
+        (br $B)
+        (i32.const 0x1337))
+      (drop)))`);
+
+wasmValidateText(`
+  (module
+    (func (param $cond i32) (result i32)
+      (block $B (result i32 i32)
+        (br_if $B (i32.const 1) (i32.const 2) (local.get $cond)))
+      (drop)))`);
+
+wasmValidateText(`
+  (module
+    (func (param $cond i32) (result i32)
+      (block $B (result i32 i32)
+        (i32.const 1)
+        (br_if $B (i32.const 2) (local.get $cond)))
+      (drop)))`);
+
+wasmValidateText(`
+  (module
+    (func (param $cond i32) (result i32)
+      (block $B (result i32 i32)
+        (i32.const 1)
+        (i32.const 2)
+        (br_if $B (local.get $cond)))
+      (drop)))`);
+
+wasmValidateText(`
+  (module
+    (func (param $cond i32) (result i32)
+      (block $B (result i32 i32)
+        (i32.const 1)
+        (i32.const 2)
+        (local.get $cond)
+        (br_if $B))
+      (drop)))`);
+
+wasmValidateText(`
+  (module
+    (func (param $index i32) (result i32)
+      (block $OUT (result i32)
+        (block $B1 (result i32 i32)
+          (block $B2 (result i32 i32)
+            (block $B3 (result i32 i32)
+              (br_table $B1 $B2 $B3 (i32.const 1) (i32.const 2) (local.get $index)))
+            (br $OUT (i32.add)))
+          (br $OUT (i32.sub)))
+        (br $OUT (i32.mul)))))`);

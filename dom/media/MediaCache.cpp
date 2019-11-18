@@ -2559,7 +2559,6 @@ nsresult MediaCacheStream::Read(AutoLock& aLock, char* aBuffer, uint32_t aCount,
 
     // No data to read, so block
     aLock.Wait();
-    continue;
   }
 
   uint32_t count = buffer.Elements() - aBuffer;
