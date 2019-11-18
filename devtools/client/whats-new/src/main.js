@@ -16,51 +16,54 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
+const utmParams = new URLSearchParams({
+  utm_source: "devtools",
+  utm_medium: "devtools_whatsnew",
+});
+
 const aside = {
   header: "Instantly Send Tabs to Mobile",
   content: `Test your site on mobile and other devices without having to copy, paste, or leave the browser.`,
   cta: "Learn More About Send Tabs",
-  href:
-    "https://support.mozilla.org/kb/send-tab-firefox-desktop-other-devices?utm_source=devtools_whatsnew",
+  href: `https://support.mozilla.org/kb/send-tab-firefox-desktop-other-devices?${utmParams}`,
 };
 
 const release = {
   title: "What’s New in DevTools (Firefox 70 & 71)",
   linkText: "Read more",
-  linkUrl:
-    "https://developer.mozilla.org/docs/Mozilla/Firefox/Releases/71?utm_source=devtools&utm_medium=devtools_whatsnew",
+  linkUrl: `https://developer.mozilla.org/docs/Mozilla/Firefox/Releases/71?${utmParams}`,
   features: [
     {
       header: `New WebSocket Messages Inspector`,
       description: `The Network panel has a new Messages tab for inspecting WebSocket frames sent and received through the selected connection.`,
       href:
-        "https://hacks.mozilla.org/2019/10/firefoxs-new-websocket-inspector/ ",
+        "https://hacks.mozilla.org/2019/10/firefoxs-new-websocket-inspector/",
     },
     {
       header: `Block URLs in the Network panel`,
       description: `Test how a page loads without specific files, like CSS or JavaScript. Right-click network requests and select “Block URL” or use the new Request Blocking pane.`,
-      href: `https://developer.mozilla.org/docs/Tools/Network_Monitor/request_list?utm_source=devtools&utm_medium=devtools_whatsnew#Block_a_specific_URL`,
+      href: `https://developer.mozilla.org/docs/Tools/Network_Monitor/request_list?${utmParams}#Block_a_specific_URL`,
     },
     {
       header: `New multi-line editor mode in Console`,
       description: `Iterate quickly on JavaScript snippets with the new multi-line editor input. It combines the ease of authoring code in an IDE with the workflow of repeatedly executing code in the context of the page.`,
-      href: `https://developer.mozilla.org/docs/Tools/Web_Console/The_command_line_interpreter?utm_source=devtools&utm_medium=devtools_whatsnew`,
+      href: `https://developer.mozilla.org/docs/Tools/Web_Console/The_command_line_interpreter?${utmParams}`,
       hidden: true,
     },
     {
       header: `Search across all Network Headers and Content`,
       description: `The new Search pane lets you search across all network headers and response bodies in the Network panel.`,
-      href: `https://developer.mozilla.org/docs/Tools/Network_Monitor/request_list?utm_source=devtools&utm_medium=devtools_whatsnew#Search_Requests`,
+      href: `https://developer.mozilla.org/docs/Tools/Network_Monitor/request_list?${utmParams}#Search_Requests`,
     },
     {
       header: `Log on Events`,
       description: `Enabling logging for Event Listener Breakpoints in the Debugger lets you observe which event handlers are being executed without the overhead of pausing.`,
-      href: `https://developer.mozilla.org/docs/Tools/Debugger/Set_event_listener_breakpoints?utm_source=devtools&utm_medium=devtools_whatsnew`,
+      href: `https://developer.mozilla.org/docs/Tools/Debugger/Set_event_listener_breakpoints?${utmParams}`,
     },
     {
       header: `Quick search in Event Listeners Breakpoints`,
       description: `Quickly find the right event category and type with the new filter field in the Debugger’s Event Listener Breakpoints pane. `,
-      href: `https://developer.mozilla.org/docs/Tools/Debugger/Set_event_listener_breakpoints?utm_source=devtools&utm_medium=devtools_whatsnew`,
+      href: `https://developer.mozilla.org/docs/Tools/Debugger/Set_event_listener_breakpoints?${utmParams}`,
     },
     {
       header: `New in 70: Inactive CSS rules indicator in Rules pane`,
@@ -70,31 +73,30 @@ const release = {
     {
       header: `New in 70: Pause on DOM Mutation in Debugger`,
       description: `DOM Mutation Breakpoints (aka DOM Change Breakpoints) let you pause scripts that add, remove, or change specific elements.`,
-      href: `https://developer.mozilla.org/docs/Tools/Debugger/Break_on_DOM_mutation?utm_source=devtools&utm_medium=devtools_whatsnew`,
+      href: `https://developer.mozilla.org/docs/Tools/Debugger/Break_on_DOM_mutation?${utmParams}`,
     },
     {
       header: `New in 70: Color contrast information in the color picker`,
       description: `In the CSS Rules view, you can click foreground colors with the color picker to determine if their contrast with the background color meets accessibility guidelines.`,
-      href: `https://developer.mozilla.org/docs/Tools/Page_Inspector/How_to/Inspect_and_select_colors?utm_source=devtools&utm_medium=devtools_whatsnew`,
+      href: `https://developer.mozilla.org/docs/Tools/Page_Inspector/How_to/Inspect_and_select_colors?${utmParams}`,
     },
     {
       header: `New in 70: Auditing checks in the Accessibility inspector`,
       description: `The Accessibility Inspector’s “Check for issues” tool can now audit for keyboard accessibility in addition to color contrast and text labels.`,
-      href: `https://developer.mozilla.org/docs/Tools/Accessibility_inspector?utm_source=devtools&utm_medium=devtools_whatsnew#Check_for_accessibility_issues`,
+      href: `https://developer.mozilla.org/docs/Tools/Accessibility_inspector?${utmParams}#Check_for_accessibility_issues`,
     },
   ],
 };
 
 const dev = {
   title: "Experimental Features in Firefox Developer Edition",
-  linkUrl:
-    "https://www.mozilla.org/firefox/developer/?utm_medium=devtools_whatsnew&utm_source=devtools",
+  linkUrl: `https://www.mozilla.org/firefox/developer/?${utmParams}`,
   linkText: "Get DevEdition",
   features: [
     {
       header: `Debug Variables with Watchpoints`,
       description: `Debugger’s new Watchpoints feature lets you pause when properties get read or written. Right-click object properties in the Scopes pane when paused to use the new “Break on…” menu.`,
-      href: `https://developer.mozilla.org/docs/Tools/Debugger/How_to/Set_a_watchpoint_on_a_property?utm_source=devtools&utm_medium=devtools_whatsnew`,
+      href: `https://developer.mozilla.org/docs/Tools/Debugger/How_to/Set_a_watchpoint_on_a_property?${utmParams}`,
     },
   ],
 };
