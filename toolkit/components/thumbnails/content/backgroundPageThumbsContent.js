@@ -17,6 +17,8 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["Blob", "FileReader"]);
 // Let the page settle for this amount of milliseconds before capturing to allow
 // for any in-page changes or redirects.
 const SETTLE_WAIT_TIME = 2500;
+// For testing, the above timeout is excessive, and makes our tests overlong.
+const TESTING_SETTLE_WAIT_TIME = 0;
 
 const STATE_LOADING = 1;
 const STATE_CAPTURING = 2;
@@ -140,11 +142,14 @@ const backgroundPageThumbsContent = {
         this._state == STATE_LOADING &&
         (Components.isSuccessCode(status) || status === Cr.NS_BINDING_ABORTED)
       ) {
+        let waitTime = Cu.isInAutomation
+          ? TESTING_SETTLE_WAIT_TIME
+          : SETTLE_WAIT_TIME;
         // The requested page has loaded or stopped/aborted, so capture the page
         // soon but first let it settle in case of in-page redirects
         if (this._captureTimer) {
           // There was additional activity, so restart the wait timer
-          this._captureTimer.delay = SETTLE_WAIT_TIME;
+          this._captureTimer.delay = waitTime;
         } else {
           // Stay in LOADING until we're actually ready to be CAPTURING
           this._captureTimer = Cc["@mozilla.org/timer;1"].createInstance(
@@ -156,7 +161,7 @@ const backgroundPageThumbsContent = {
               this._captureCurrentPage();
               delete this._captureTimer;
             },
-            SETTLE_WAIT_TIME,
+            waitTime,
             Ci.nsITimer.TYPE_ONE_SHOT
           );
         }
@@ -217,9 +222,20 @@ const backgroundPageThumbsContent = {
       });
     };
     let win = docShell.domWindow;
-    win.requestIdleCallback(() =>
-      doCapture().catch(ex => this._failCurrentCapture(ex.message))
-    );
+
+    let runCapture = () => {
+      doCapture().catch(ex => this._failCurrentCapture(ex.message));
+    };
+
+    // When testing, especially on debug builds, this idle callback might
+    // be called too late (or never called at all - see bug 1596781), and
+    // the test will time out. So if we're running in automation, we begin
+    // the capture on the next tick.
+    if (Cu.isInAutomation) {
+      Services.tm.dispatchToMainThread(runCapture);
+    } else {
+      win.requestIdleCallback(runCapture);
+    }
   },
 
   _finishCurrentCapture() {

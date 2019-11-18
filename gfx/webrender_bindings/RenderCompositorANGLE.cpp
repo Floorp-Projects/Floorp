@@ -246,6 +246,7 @@ bool RenderCompositorANGLE::Initialize() {
   // We need this because we don't want DXGI to respond to Alt+Enter.
   dxgiFactory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_WINDOW_CHANGES);
 
+  // SyncObject is used only by D3D11DXVA2Manager
   mSyncObject = layers::SyncObjectHost::CreateSyncObjectHost(mDevice);
   if (!mSyncObject->Init()) {
     // Some errors occur. Clear the mSyncObject here.
@@ -402,13 +403,6 @@ bool RenderCompositorANGLE::BeginFrame() {
     return false;
   }
 
-  if (mSyncObject) {
-    if (!mSyncObject->Synchronize(/* aFallible */ true)) {
-      // It's timeout or other error. Handle the device-reset here.
-      RenderThread::Get()->HandleDeviceReset("SyncObject", /* aNotify */ true);
-      return false;
-    }
-  }
   return true;
 }
 

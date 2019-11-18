@@ -337,6 +337,13 @@ public final class GeckoSessionSettings implements Parcelable {
             new Key<Boolean>("fullAccessibilityTree", /* initOnly */ false, /* values */ null);
 
     /**
+     * Key to specify if this GeckoSession is a Popup or not. Popup sessions can paint over other
+     * sessions and are not exposed to the tabs WebExtension API.
+     */
+    private static final Key<Boolean> IS_POPUP =
+            new Key<Boolean>("isPopup", /* initOnly */ false, /* values */ null);
+
+    /**
      * Internal Gecko key to specify the session context ID.
      * Derived from `UNSAFE_CONTEXT_ID`.
      */
@@ -378,6 +385,7 @@ public final class GeckoSessionSettings implements Parcelable {
         mBundle.putBoolean(SUSPEND_MEDIA_WHEN_INACTIVE.name, false);
         mBundle.putBoolean(ALLOW_JAVASCRIPT.name, true);
         mBundle.putBoolean(FULL_ACCESSIBILITY_TREE.name, false);
+        mBundle.putBoolean(IS_POPUP.name, false);
         mBundle.putInt(USER_AGENT_MODE.name, USER_AGENT_MODE_MOBILE);
         mBundle.putString(USER_AGENT_OVERRIDE.name, null);
         mBundle.putInt(VIEWPORT_MODE.name, VIEWPORT_MODE_MOBILE);
@@ -447,6 +455,10 @@ public final class GeckoSessionSettings implements Parcelable {
      */
     public void setFullAccessibilityTree(final boolean value) {
         setBoolean(FULL_ACCESSIBILITY_TREE, value);
+    }
+
+    /* package */ void setIsPopup(final boolean value) {
+        setBoolean(IS_POPUP, value);
     }
 
     private void setBoolean(final Key<Boolean> key, final boolean value) {
@@ -520,6 +532,10 @@ public final class GeckoSessionSettings implements Parcelable {
      */
     public boolean getFullAccessibilityTree() {
         return getBoolean(FULL_ACCESSIBILITY_TREE);
+    }
+
+    /* package */ boolean getIsPopup() {
+        return getBoolean(IS_POPUP);
     }
 
     private boolean getBoolean(final Key<Boolean> key) {

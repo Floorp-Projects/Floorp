@@ -32,7 +32,9 @@ add_task(async function thumbnails_bg_crash_during_capture() {
     },
   });
 
-  let crashPromise = bgAddPageThumbObserver(waitUrl);
+  let crashPromise = bgAddPageThumbObserver(waitUrl).catch(err => {
+    ok(/page-thumbnail:error/.test(err), "Got the right kind of error");
+  });
   let capturePromise = bgAddPageThumbObserver(goodUrl);
 
   info("Crashing the thumbnail content process.");
@@ -42,7 +44,6 @@ add_task(async function thumbnails_bg_crash_during_capture() {
   );
   ok(crash.CrashTime, "Saw a crash from this test");
 
-  await Assert.rejects(crashPromise, /page-thumbnail:error/);
-
+  await crashPromise;
   await Promise.all([failCapture, goodCapture, capturePromise]);
 });

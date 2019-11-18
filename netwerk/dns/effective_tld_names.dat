@@ -7078,7 +7078,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2019-11-12T17:05:57Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2019-11-15T17:07:54Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -7590,9 +7590,6 @@ careers
 // cars : 2014-11-13 Cars Registry Limited
 cars
 
-// cartier : 2014-06-23 Richemont DNS Inc.
-cartier
-
 // casa : 2013-11-21 Minds + Machines Group Limited
 casa
 
@@ -8060,9 +8057,6 @@ eus
 
 // events : 2013-12-05 Binky Moon, LLC
 events
-
-// everbank : 2014-05-15 EverBank
-everbank
 
 // exchange : 2014-03-06 Binky Moon, LLC
 exchange
@@ -9347,9 +9341,6 @@ photos
 
 // physio : 2014-05-01 PhysBiz Pty Ltd
 physio
-
-// piaget : 2014-10-16 Richemont DNS Inc.
-piaget
 
 // pics : 2013-11-14 Uniregistry, Corp.
 pics
@@ -12661,6 +12652,10 @@ logoip.com
 // schokokeks.org GbR : https://schokokeks.org/
 // Submitted by Hanno Böck <hanno@schokokeks.org>
 schokokeks.net
+
+// Scottish Government: https://www.gov.scot
+// Submitted by Martin Ellis <martin.ellis@gov.scot>
+gov.scot
 
 // Scry Security : http://www.scrysec.com
 // Submitted by Shante Adam <shante@skyhat.io>
