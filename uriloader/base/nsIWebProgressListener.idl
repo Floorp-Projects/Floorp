@@ -268,8 +268,11 @@ interface nsIWebProgressListener : nsISupports
    * STATE_BLOCKED_TRACKING_CONTENT
    *   Tracking content has been blocked from loading.
    *
-   * STATE_LOADED_TRACKING_CONTENT
-   *   Tracking content has been loaded.
+   * STATE_LOADED_LEVEL_1_TRACKING_CONTENT
+   *   Tracking content from the Disconnect Level 1 list has been loaded.
+   *
+   * STATE_LOADED_LEVEL_2_TRACKING_CONTENT
+   *   Tracking content from the Disconnect Level 2 list has been loaded.
    *
    * STATE_BLOCKED_FINGERPRINTING_CONTENT
    *   Fingerprinting content has been blocked from loading.
@@ -330,24 +333,25 @@ interface nsIWebProgressListener : nsISupports
    * STATE_LOADED_SOCIALTRACKING_CONTENT
    *   SocialTracking content has been loaded.
    */
-  const unsigned long STATE_BLOCKED_TRACKING_CONTENT       = 0x00001000;
-  const unsigned long STATE_LOADED_TRACKING_CONTENT        = 0x00002000;
-  const unsigned long STATE_BLOCKED_FINGERPRINTING_CONTENT = 0x00000040;
-  const unsigned long STATE_LOADED_FINGERPRINTING_CONTENT  = 0x00000400;
-  const unsigned long STATE_BLOCKED_CRYPTOMINING_CONTENT   = 0x00000800;
-  const unsigned long STATE_LOADED_CRYPTOMINING_CONTENT    = 0x00200000;
-  const unsigned long STATE_BLOCKED_UNSAFE_CONTENT         = 0x00004000;
-  const unsigned long STATE_COOKIES_LOADED                 = 0x00008000;
-  const unsigned long STATE_COOKIES_LOADED_TRACKER         = 0x00040000;
-  const unsigned long STATE_COOKIES_LOADED_SOCIALTRACKER   = 0x00080000;
-  const unsigned long STATE_COOKIES_BLOCKED_BY_PERMISSION  = 0x10000000;
-  const unsigned long STATE_COOKIES_BLOCKED_TRACKER        = 0x20000000;
-  const unsigned long STATE_COOKIES_BLOCKED_SOCIALTRACKER  = 0x01000000;
-  const unsigned long STATE_COOKIES_BLOCKED_ALL            = 0x40000000;
-  const unsigned long STATE_COOKIES_PARTITIONED_FOREIGN    = 0x80000000;
-  const unsigned long STATE_COOKIES_BLOCKED_FOREIGN        = 0x00000080;
-  const unsigned long STATE_BLOCKED_SOCIALTRACKING_CONTENT = 0x00010000;
-  const unsigned long STATE_LOADED_SOCIALTRACKING_CONTENT  = 0x00020000;
+  const unsigned long STATE_BLOCKED_TRACKING_CONTENT        = 0x00001000;
+  const unsigned long STATE_LOADED_LEVEL_1_TRACKING_CONTENT = 0x00002000;
+  const unsigned long STATE_LOADED_LEVEL_2_TRACKING_CONTENT = 0x00100000;
+  const unsigned long STATE_BLOCKED_FINGERPRINTING_CONTENT  = 0x00000040;
+  const unsigned long STATE_LOADED_FINGERPRINTING_CONTENT   = 0x00000400;
+  const unsigned long STATE_BLOCKED_CRYPTOMINING_CONTENT    = 0x00000800;
+  const unsigned long STATE_LOADED_CRYPTOMINING_CONTENT     = 0x00200000;
+  const unsigned long STATE_BLOCKED_UNSAFE_CONTENT          = 0x00004000;
+  const unsigned long STATE_COOKIES_LOADED                  = 0x00008000;
+  const unsigned long STATE_COOKIES_LOADED_TRACKER          = 0x00040000;
+  const unsigned long STATE_COOKIES_LOADED_SOCIALTRACKER    = 0x00080000;
+  const unsigned long STATE_COOKIES_BLOCKED_BY_PERMISSION   = 0x10000000;
+  const unsigned long STATE_COOKIES_BLOCKED_TRACKER         = 0x20000000;
+  const unsigned long STATE_COOKIES_BLOCKED_SOCIALTRACKER   = 0x01000000;
+  const unsigned long STATE_COOKIES_BLOCKED_ALL             = 0x40000000;
+  const unsigned long STATE_COOKIES_PARTITIONED_FOREIGN     = 0x80000000;
+  const unsigned long STATE_COOKIES_BLOCKED_FOREIGN         = 0x00000080;
+  const unsigned long STATE_BLOCKED_SOCIALTRACKING_CONTENT  = 0x00010000;
+  const unsigned long STATE_LOADED_SOCIALTRACKING_CONTENT   = 0x00020000;
 
   /**
    * Notification indicating the state has changed for one of the requests

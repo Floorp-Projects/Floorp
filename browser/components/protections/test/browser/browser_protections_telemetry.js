@@ -30,7 +30,7 @@ const LOG = {
   "https://6.example.com": [
     [
       Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_ALL |
-        Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT,
+        Ci.nsIWebProgressListener.STATE_LOADED_LEVEL_1_TRACKING_CONTENT,
       true,
       4,
     ],

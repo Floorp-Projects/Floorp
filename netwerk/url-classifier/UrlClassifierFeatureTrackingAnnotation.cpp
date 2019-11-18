@@ -146,8 +146,13 @@ UrlClassifierFeatureTrackingAnnotation::ProcessChannel(
 
   UrlClassifierCommon::SetTrackingInfo(aChannel, aList, aHashes);
 
-  UrlClassifierCommon::AnnotateChannel(
-      aChannel, flags, nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT);
+  uint32_t notification =
+      ((flags & nsIClassifiedChannel::ClassificationFlags::
+                    CLASSIFIED_TRACKING_CONTENT) != 0)
+          ? nsIWebProgressListener::STATE_LOADED_LEVEL_2_TRACKING_CONTENT
+          : nsIWebProgressListener::STATE_LOADED_LEVEL_1_TRACKING_CONTENT;
+
+  UrlClassifierCommon::AnnotateChannel(aChannel, flags, notification);
 
   return NS_OK;
 }

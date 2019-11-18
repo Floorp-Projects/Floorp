@@ -208,7 +208,7 @@ add_task(async function() {
   let expectTrackerFound = item => {
     is(
       item[0],
-      Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT,
+      Ci.nsIWebProgressListener.STATE_LOADED_LEVEL_1_TRACKING_CONTENT,
       "Correct blocking type reported"
     );
     is(item[1], true, "Correct blocking status reported");

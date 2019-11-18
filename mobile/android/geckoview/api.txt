@@ -317,8 +317,9 @@ package org.mozilla.geckoview {
     field public static final int COOKIES_PARTITIONED_FOREIGN = -2147483648;
     field public static final int LOADED_CRYPTOMINING_CONTENT = 2097152;
     field public static final int LOADED_FINGERPRINTING_CONTENT = 1024;
+    field public static final int LOADED_LEVEL_1_TRACKING_CONTENT = 8192;
+    field public static final int LOADED_LEVEL_2_TRACKING_CONTENT = 1048576;
     field public static final int LOADED_SOCIALTRACKING_CONTENT = 131072;
-    field public static final int LOADED_TRACKING_CONTENT = 8192;
   }
 
   @AnyThread public class ContentBlockingController.ExceptionList {

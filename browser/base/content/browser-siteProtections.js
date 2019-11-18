@@ -285,6 +285,8 @@ var TrackingProtection = {
   PREF_ENABLED_IN_PRIVATE_WINDOWS: "privacy.trackingprotection.pbmode.enabled",
   PREF_TRACKING_TABLE: "urlclassifier.trackingTable",
   PREF_TRACKING_ANNOTATION_TABLE: "urlclassifier.trackingAnnotationTable",
+  PREF_ANNOTATIONS_LEVEL_2_ENABLED:
+    "privacy.annotate_channels.strict_list.enabled",
   enabledGlobally: false,
   enabledInPrivateWindows: false,
 
@@ -350,6 +352,12 @@ var TrackingProtection = {
       this.PREF_TRACKING_ANNOTATION_TABLE,
       false
     );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "annotationsLevel2Enabled",
+      this.PREF_ANNOTATIONS_LEVEL_2_ENABLED,
+      false
+    );
   },
 
   uninit() {
@@ -359,6 +367,11 @@ var TrackingProtection = {
 
   observe() {
     this.updateEnabled();
+  },
+
+  get trackingProtectionLevel2Enabled() {
+    const CONTENT_TABLE = "content-track-digest256";
+    return this.trackingTable.includes(CONTENT_TABLE);
   },
 
   get enabled() {
@@ -385,10 +398,24 @@ var TrackingProtection = {
     );
   },
 
-  isAllowing(state) {
+  isAllowingLevel1(state) {
     return (
-      (state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) != 0
+      (state &
+        Ci.nsIWebProgressListener.STATE_LOADED_LEVEL_1_TRACKING_CONTENT) !=
+      0
     );
+  },
+
+  isAllowingLevel2(state) {
+    return (
+      (state &
+        Ci.nsIWebProgressListener.STATE_LOADED_LEVEL_2_TRACKING_CONTENT) !=
+      0
+    );
+  },
+
+  isAllowing(state) {
+    return this.isAllowingLevel1(state) || this.isAllowingLevel2(state);
   },
 
   isDetected(state) {
@@ -453,28 +480,6 @@ var TrackingProtection = {
     }
   },
 
-  // Given a URI from a source that was tracking-annotated, figure out
-  // if it's really on the tracking table or just on the annotation table.
-  _isOnTrackingTable(uri) {
-    if (this.trackingTable == this.trackingAnnotationTable) {
-      return true;
-    }
-
-    let feature = classifierService.getFeatureByName("tracking-protection");
-    if (!feature) {
-      return false;
-    }
-
-    return new Promise(resolve => {
-      classifierService.asyncClassifyLocalWithFeatures(
-        uri,
-        [feature],
-        Ci.nsIUrlClassifierFeature.blacklist,
-        list => resolve(!!list.length)
-      );
-    });
-  },
-
   async _createListItem(origin, actions) {
     // Figure out if this list entry was actually detected by TP or something else.
     let isAllowed = actions.some(([state]) => this.isAllowing(state));
@@ -490,8 +495,16 @@ var TrackingProtection = {
     // Because we might use different lists for annotation vs. blocking, we
     // need to make sure that this is a tracker that we would actually have blocked
     // before showing it to the user.
-    let isTracker = await this._isOnTrackingTable(uri);
-    if (!isTracker) {
+    if (
+      this.annotationsLevel2Enabled &&
+      !this.trackingProtectionLevel2Enabled &&
+      actions.some(
+        ([state]) =>
+          (state &
+            Ci.nsIWebProgressListener.STATE_LOADED_LEVEL_2_TRACKING_CONTENT) !=
+          0
+      )
+    ) {
       return null;
     }
 
