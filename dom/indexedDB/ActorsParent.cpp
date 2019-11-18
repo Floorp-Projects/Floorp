@@ -25731,12 +25731,20 @@ bool Cursor::CursorOpBase::SendFailureResult(nsresult aResultCode) {
     mResponse = ClampResultCode(aResultCode);
 
     // This is an expected race when the transaction is invalidated after
-    // data is retrieved from database. We clear the retrieved files to prevent
-    // the assertion failure in SendResponseInternal when mResponse.type() is
-    // CursorResponse::Tnsresult.
-    if (Transaction()->IsInvalidated() && !mFiles.IsEmpty()) {
-      mFiles.Clear();
-    }
+    // data is retrieved from database.
+    //
+    // TODO: There seem to be other cases when mFiles is non-empty here, which
+    // have been present before adding cursor preloading, but with cursor
+    // preloading they have become more frequent (also during startup). One
+    // possible cause with cursor preloading is to be addressed by Bug 1597191.
+    NS_WARNING_ASSERTION(
+        !mFiles.IsEmpty() && !Transaction()->IsInvalidated(),
+        "Expected empty mFiles when transaction has not been invalidated");
+
+    // SendResponseInternal will assert when mResponse.type() is
+    // CursorResponse::Tnsresult and mFiles is non-empty, so we clear mFiles
+    // here.
+    mFiles.Clear();
 
     mCursor->SendResponseInternal(mResponse, mFiles);
   }
