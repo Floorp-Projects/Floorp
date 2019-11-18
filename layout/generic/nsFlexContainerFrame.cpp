@@ -1794,19 +1794,8 @@ const CachedMeasuringReflowResult&
 nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
     FlexItem& aItem, nsPresContext* aPresContext,
     ReflowInput& aChildReflowInput) {
-  if (HasAnyStateBits(NS_STATE_FLEX_MEASUREMENTS_INTERRUPTED) &&
-      !aPresContext->HasPendingInterrupt()) {
-    // Our measurements are from an earlier reflow which was interrupted.
-    // (and the current reflow is not [yet] interrupted, so we have a chance
-    // to maybe get a more accurate measurement now).
-    // Purge our potentially-invalid item measurements.
-    for (nsIFrame* frame : mFrames) {
-      frame->DeleteProperty(CachedFlexMeasuringReflow());
-    }
-    RemoveStateBits(NS_STATE_FLEX_MEASUREMENTS_INTERRUPTED);
-    FLEX_LOG("[perf] MeasureAscentAndBSizeForFlexItem purged cached values");
-  } else if (const auto* cachedResult =
-                 aItem.Frame()->GetProperty(CachedFlexMeasuringReflow())) {
+  if (const auto* cachedResult =
+          aItem.Frame()->GetProperty(CachedFlexMeasuringReflow())) {
     if (cachedResult->IsValidFor(aChildReflowInput)) {
       return *cachedResult;
     }
@@ -1835,20 +1824,6 @@ nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
   // (Necessary for e.g. GetBaseline() to work below w/out asserting)
   FinishReflowChild(aItem.Frame(), aPresContext, childDesiredSize,
                     &aChildReflowInput, 0, 0, flags);
-
-  // If we got an interrupt during or before that measuring reflow, we make a
-  // note that this & other cached measurements are potentially invalid,
-  // because our descendant block frames' reflows may have bailed out early due
-  // to the interrupt.  We'll keep these invalid measurements for the rest of
-  // this reflow (to avoid repeating the same bogus measurement), and purge
-  // them on the next (non-interrupted) reflow.
-  //
-  // TODO(emilio): Can we do this only for the kids that are interrupted? We
-  // probably want to figure out what the right thing to do here is regarding
-  // interrupts, see bug 1495532.
-  if (aPresContext->HasPendingInterrupt()) {
-    AddStateBits(NS_STATE_FLEX_MEASUREMENTS_INTERRUPTED);
-  }
 
   auto result =
       new CachedMeasuringReflowResult(aChildReflowInput, childDesiredSize);
@@ -5268,6 +5243,8 @@ void nsFlexContainerFrame::ReflowFlexItem(
   ReflowChild(aItem.Frame(), aPresContext, childDesiredSize, childReflowInput,
               outerWM, aFramePos, aContainerSize, ReflowChildFlags::Default,
               childReflowStatus);
+
+  // XXXdholbert Perhaps we should call CheckForInterrupt here; see bug 1495532.
 
   // XXXdholbert Once we do pagination / splitting, we'll need to actually
   // handle incomplete childReflowStatuses. But for now, we give our kids
