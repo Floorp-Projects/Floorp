@@ -7,9 +7,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var EXPORTED_SYMBOLS = ["BlockedSiteChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
 ChromeUtils.defineModuleGetter(
   this,
   "E10SUtils",
@@ -59,13 +56,12 @@ function getSiteBlockedErrorDetails(docShell) {
   return blockedInfo;
 }
 
-class BlockedSiteChild extends ActorChild {
+class BlockedSiteChild extends JSWindowActorChild {
   receiveMessage(msg) {
     if (msg.name == "DeceptiveBlockedDetails") {
-      this.mm.sendAsyncMessage("DeceptiveBlockedDetails:Result", {
-        blockedInfo: getSiteBlockedErrorDetails(this.mm.docShell),
-      });
+      return getSiteBlockedErrorDetails(this.docShell);
     }
+    return null;
   }
 
   handleEvent(event) {
@@ -77,10 +73,9 @@ class BlockedSiteChild extends ActorChild {
   }
 
   onAboutBlockedLoaded(aEvent) {
-    let global = this.mm;
     let content = aEvent.target.ownerGlobal;
 
-    let blockedInfo = getSiteBlockedErrorDetails(global.docShell);
+    let blockedInfo = getSiteBlockedErrorDetails(this.docShell);
     let provider = blockedInfo.provider || "";
 
     let doc = content.document;
@@ -201,12 +196,11 @@ class BlockedSiteChild extends ActorChild {
       reason = "harmful";
     }
 
-    this.mm.sendAsyncMessage("Browser:SiteBlockedError", {
+    this.sendAsyncMessage("Browser:SiteBlockedError", {
       location: ownerDoc.location.href,
       reason,
       elementId: event.target.getAttribute("id"),
-      isTopFrame: ownerDoc.defaultView.parent === ownerDoc.defaultView,
-      blockedInfo: getSiteBlockedErrorDetails(ownerDoc.defaultView.docShell),
+      blockedInfo: getSiteBlockedErrorDetails(this.docShell),
     });
   }
 }

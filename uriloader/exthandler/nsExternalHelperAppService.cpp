@@ -809,8 +809,19 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(
     nsIInterfaceRequestor* aContentContext, bool aForceSave,
     nsIInterfaceRequestor* aWindowContext,
     nsIStreamListener** aStreamListener) {
-  nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(aContentContext);
-  RefPtr<BrowsingContext> bc = window ? window->GetBrowsingContext() : nullptr;
+  // Scripted interface requestors cannot return an instance of the
+  // (non-scriptable) nsPIDOMWindowOuter or nsPIDOMWindowInner interfaces, so
+  // get to the window via `nsIDOMWindow`.  Unfortunately, at that point we
+  // don't know whether the thing we got is an inner or outer window, so have to
+  // work with either one.
+  RefPtr<BrowsingContext> bc;
+  nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface(aContentContext);
+  if (nsCOMPtr<nsPIDOMWindowOuter> outerWindow = do_QueryInterface(domWindow)) {
+    bc = outerWindow->GetBrowsingContext();
+  } else if (nsCOMPtr<nsPIDOMWindowInner> innerWindow =
+                 do_QueryInterface(domWindow)) {
+    bc = innerWindow->GetBrowsingContext();
+  }
 
   if (XRE_IsContentProcess()) {
     return DoContentContentProcessHelper(aMimeContentType, aRequest, bc,

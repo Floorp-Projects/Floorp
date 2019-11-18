@@ -5529,14 +5529,9 @@ void EventStateManager::RemoveNodeFromChainIfNeeded(EventStates aState,
   // These two NS_ASSERTIONS below can fail for Shadow DOM sometimes, and it's
   // not clear how to best handle it, see
   // https://github.com/whatwg/html/issues/4795 and bug 1551621.
-  //
-  // The NODE_IS_ANONYMOUS_ROOT is there because XBL used to remove content
-  // without notifying, but it shouldn't apply to NAC since
-  // NAC notifies (see NativeAnonymousContentRemoved).
-  NS_ASSERTION(nsContentUtils::ContentIsFlattenedTreeDescendantOf(
-                   leaf, aContentRemoved) ||
-               leaf->SubtreeRoot()->HasFlag(NODE_IS_ANONYMOUS_ROOT),
-               "Flat tree and active / hover chain got out of sync");
+  NS_ASSERTION(
+      nsContentUtils::ContentIsFlattenedTreeDescendantOf(leaf, aContentRemoved),
+      "Flat tree and active / hover chain got out of sync");
 
   nsIContent* newLeaf = aContentRemoved->GetFlattenedTreeParent();
   MOZ_ASSERT(!newLeaf || newLeaf->IsElement());

@@ -48,6 +48,7 @@ remote.jar:
   content/domains/content/runtime/ExecutionContext.jsm (domains/content/runtime/ExecutionContext.jsm)
   content/domains/content/Security.jsm (domains/content/Security.jsm)
   content/domains/parent/Browser.jsm (domains/parent/Browser.jsm)
+  content/domains/parent/Emulation.jsm (domains/parent/Emulation.jsm)
   content/domains/parent/Input.jsm (domains/parent/Input.jsm)
   content/domains/parent/Network.jsm (domains/parent/Network.jsm)
   content/domains/parent/network/ChannelEventSink.jsm (domains/parent/network/ChannelEventSink.jsm)

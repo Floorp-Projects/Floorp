@@ -14,6 +14,7 @@ const ParentProcessDomains = {};
 
 XPCOMUtils.defineLazyModuleGetters(ParentProcessDomains, {
   Browser: "chrome://remote/content/domains/parent/Browser.jsm",
+  Emulation: "chrome://remote/content/domains/parent/Emulation.jsm",
   Input: "chrome://remote/content/domains/parent/Input.jsm",
   Network: "chrome://remote/content/domains/parent/Network.jsm",
   Page: "chrome://remote/content/domains/parent/Page.jsm",

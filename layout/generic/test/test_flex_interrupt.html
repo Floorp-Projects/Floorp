@@ -1,0 +1,107 @@
+<!doctype html>
+<title>Test for bug 1579929</title>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<style>
+  .container {
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+  }
+  #outer {
+    width: 500px;
+    height: 300px;
+  }
+</style>
+<div class="container" id="outer">
+  <div class="item" id="firstItem" style="width: 50px">
+    <!--popuplated by script-->
+  </div>
+  <div class="container">
+    <div class="container">
+      <div class="container">
+        <div class="container">
+          <div class="container">
+            <div class="item">Item</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+// Globals/constants:
+
+const gUtils = SpecialPowers.DOMWindowUtils;
+
+// This needs to match/exceed nsPresContext::sInterruptChecksToSkip in order
+// for us to actually be able to trigger the mHasPendingInterrupt=true codepath
+// in this test.  Each of these "dummy" blocks will trigger a call to
+// nsPresContext::CheckForInterrupt, and after 200, we'll actually trigger an
+// interrupt.
+const gInterruptCheckThreshold = 200;
+
+// Expected to match the inline style="width:..." for #firstItem (we slowly
+// increment it to trigger reflows):
+let gFirstItemWidthPX = 50;
+
+function main() {
+  const outer = document.getElementById("outer");
+  const firstItem = document.getElementById("firstItem");
+
+  // Insert a bunch of elements to be sure we actually get interrupted.
+  // (See description of gInterruptCheckThreshold above)
+  for (let i = 0; i < gInterruptCheckThreshold; i++) {
+    let dummyBlock = document.createElement("div");
+    dummyBlock.innerText = "dummy";
+    firstItem.appendChild(dummyBlock);
+  }
+
+  // Flush any pending relayout:
+  outer.offsetHeight;
+
+  // Take control of the refresh driver
+  gUtils.advanceTimeAndRefresh(0);
+
+  // Force reflow and store the "cost" (in num-frames-reflowed)
+  const costOfNormalReflow = forceReflow();
+
+  // Sanity-check: do that again and remeasure cost, to be sure it's stable:
+  const costOfNormalReflow2 = forceReflow();
+  is(costOfNormalReflow, costOfNormalReflow2,
+     "Our forceReflow function is expected to reliably trigger " +
+     "the same set of frames to be reflowed. If this fails, there's a " +
+     "bug in the test, or non-determinism in layout code.");
+
+  // Now, we force the next reflow to get interrupted, and then measure the
+  // cost under those conditions:
+  gUtils.forceReflowInterrupt();
+  const costOfInterruptedReflow = forceReflow();
+
+  // Hopefully the interrupted one was less expensive...
+  ok(costOfInterruptedReflow <= costOfNormalReflow,
+     "num frames reflowed in interrupted reflow (" +
+     costOfInterruptedReflow +
+     ") shouldn't exceed the num frames reflowed in normal reflow (" +
+     costOfNormalReflow + ")");
+
+  gUtils.restoreNormalRefresh();
+  SimpleTest.finish();
+}
+
+// This function dirties firstItem's width, forces a reflow, and
+// returns the number of frames that were reflowed as a result.
+function forceReflow() {
+  gFirstItemWidthPX++;
+  firstItem.style.width = gFirstItemWidthPX + "px";
+
+  const origFramesReflowed = gUtils.framesReflowed;
+  gUtils.advanceTimeAndRefresh(0);
+  return gUtils.framesReflowed - origFramesReflowed;
+}
+
+main();
+</script>

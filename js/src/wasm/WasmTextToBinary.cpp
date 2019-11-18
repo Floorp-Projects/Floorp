@@ -2609,52 +2609,10 @@ static AstBlock* ParseBlock(WasmParseContext& c, Op op, bool inParens) {
   return result;
 }
 
-static AstBranch* ParseBranch(WasmParseContext& c, Op op, bool inParens) {
-  MOZ_ASSERT(op == Op::Br || op == Op::BrIf);
-
-  AstRef target;
-  if (!c.ts.matchRef(&target, c.error)) {
-    return nullptr;
-  }
-
-  AstExpr* value = nullptr;
-  if (inParens) {
-    if (c.ts.getIf(WasmToken::OpenParen)) {
-      value = ParseExprInsideParens(c);
-      if (!value) {
-        return nullptr;
-      }
-      if (!c.ts.match(WasmToken::CloseParen, c.error)) {
-        return nullptr;
-      }
-    }
-  }
-
-  AstExpr* cond = nullptr;
-  if (op == Op::BrIf) {
-    if (inParens && c.ts.getIf(WasmToken::OpenParen)) {
-      cond = ParseExprInsideParens(c);
-      if (!cond) {
-        return nullptr;
-      }
-      if (!c.ts.match(WasmToken::CloseParen, c.error)) {
-        return nullptr;
-      }
-    } else {
-      cond = new (c.lifo) AstPop();
-      if (!cond) {
-        return nullptr;
-      }
-    }
-  }
-
-  return new (c.lifo) AstBranch(op, cond, target, value);
-}
-
-static bool ParseArgs(WasmParseContext& c, AstExprVector* args) {
+static bool ParseExprs(WasmParseContext& c, AstExprVector* exprs) {
   while (c.ts.getIf(WasmToken::OpenParen)) {
-    AstExpr* arg = ParseExprInsideParens(c);
-    if (!arg || !args->append(arg)) {
+    AstExpr* expr = ParseExprInsideParens(c);
+    if (!expr || !exprs->append(expr)) {
       return false;
     }
     if (!c.ts.match(WasmToken::CloseParen, c.error)) {
@@ -2665,6 +2623,24 @@ static bool ParseArgs(WasmParseContext& c, AstExprVector* args) {
   return true;
 }
 
+static AstBranch* ParseBranch(WasmParseContext& c, Op op, bool inParens) {
+  MOZ_ASSERT(op == Op::Br || op == Op::BrIf);
+
+  AstRef target;
+  if (!c.ts.matchRef(&target, c.error)) {
+    return nullptr;
+  }
+
+  AstExprVector values(c.lifo);
+  if (inParens) {
+    if (!ParseExprs(c, &values)) {
+      return nullptr;
+    }
+  }
+
+  return new (c.lifo) AstBranch(op, target, std::move(values));
+}
+
 static AstCall* ParseCall(WasmParseContext& c, bool inParens) {
   AstRef func;
   if (!c.ts.matchRef(&func, c.error)) {
@@ -2673,7 +2649,7 @@ static AstCall* ParseCall(WasmParseContext& c, bool inParens) {
 
   AstExprVector args(c.lifo);
   if (inParens) {
-    if (!ParseArgs(c, &args)) {
+    if (!ParseExprs(c, &args)) {
       return nullptr;
     }
   }
@@ -2703,7 +2679,7 @@ static AstCallIndirect* ParseCallIndirect(WasmParseContext& c, bool inParens) {
   AstExprVector args(c.lifo);
   AstExpr* index;
   if (inParens) {
-    if (!ParseArgs(c, &args)) {
+    if (!ParseExprs(c, &args)) {
       return nullptr;
     }
 
@@ -3731,26 +3707,14 @@ static AstBranchTable* ParseBranchTable(WasmParseContext& c, bool inParens) {
 
   AstRef def = table.popCopy();
 
-  AstExpr* index = ParseExpr(c, inParens);
-  if (!index) {
-    return nullptr;
-  }
-
-  AstExpr* value = nullptr;
+  AstExprVector values(c.lifo);
   if (inParens) {
-    if (c.ts.getIf(WasmToken::OpenParen)) {
-      value = index;
-      index = ParseExprInsideParens(c);
-      if (!index) {
-        return nullptr;
-      }
-      if (!c.ts.match(WasmToken::CloseParen, c.error)) {
-        return nullptr;
-      }
+    if (!ParseExprs(c, &values)) {
+      return nullptr;
     }
   }
 
-  return new (c.lifo) AstBranchTable(*index, def, std::move(table), value);
+  return new (c.lifo) AstBranchTable(def, std::move(table), std::move(values));
 }
 
 static AstMemoryGrow* ParseMemoryGrow(WasmParseContext& c, bool inParens) {
@@ -3991,7 +3955,7 @@ static AstExpr* ParseStructNew(WasmParseContext& c, bool inParens) {
 
   AstExprVector args(c.lifo);
   if (inParens) {
-    if (!ParseArgs(c, &args)) {
+    if (!ParseExprs(c, &args)) {
       return nullptr;
     }
   }
@@ -5618,24 +5582,8 @@ static bool ResolveBranch(Resolver& r, AstBranch& br) {
     return false;
   }
 
-  if (br.maybeValue() && !ResolveExpr(r, *br.maybeValue())) {
+  if (!ResolveExprList(r, br.values())) {
     return false;
-  }
-
-  if (br.op() == Op::BrIf) {
-    if (!ResolveExpr(r, br.cond())) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-static bool ResolveArgs(Resolver& r, const AstExprVector& args) {
-  for (AstExpr* arg : args) {
-    if (!ResolveExpr(r, *arg)) {
-      return false;
-    }
   }
 
   return true;
@@ -5644,7 +5592,7 @@ static bool ResolveArgs(Resolver& r, const AstExprVector& args) {
 static bool ResolveCall(Resolver& r, AstCall& c) {
   MOZ_ASSERT(c.op() == Op::Call);
 
-  if (!ResolveArgs(r, c.args())) {
+  if (!ResolveExprList(r, c.args())) {
     return false;
   }
 
@@ -5656,7 +5604,7 @@ static bool ResolveCall(Resolver& r, AstCall& c) {
 }
 
 static bool ResolveCallIndirect(Resolver& r, AstCallIndirect& c) {
-  if (!ResolveArgs(r, c.args())) {
+  if (!ResolveExprList(r, c.args())) {
     return false;
   }
 
@@ -5798,11 +5746,7 @@ static bool ResolveBranchTable(Resolver& r, AstBranchTable& bt) {
     }
   }
 
-  if (bt.maybeValue() && !ResolveExpr(r, *bt.maybeValue())) {
-    return false;
-  }
-
-  return ResolveExpr(r, bt.index());
+  return ResolveExprList(r, bt.values());
 }
 
 static bool ResolveAtomicCmpXchg(Resolver& r, AstAtomicCmpXchg& s) {
@@ -5877,7 +5821,7 @@ static bool ResolveTableSize(Resolver& r, AstTableSize& s) {
 
 #ifdef ENABLE_WASM_GC
 static bool ResolveStructNew(Resolver& r, AstStructNew& s) {
-  if (!ResolveArgs(r, s.fieldValues())) {
+  if (!ResolveExprList(r, s.fieldValues())) {
     return false;
   }
 
@@ -6328,16 +6272,8 @@ static bool EncodeBlock(Encoder& e, AstBlock& b) {
 static bool EncodeBranch(Encoder& e, AstBranch& br) {
   MOZ_ASSERT(br.op() == Op::Br || br.op() == Op::BrIf);
 
-  if (br.maybeValue()) {
-    if (!EncodeExpr(e, *br.maybeValue())) {
-      return false;
-    }
-  }
-
-  if (br.op() == Op::BrIf) {
-    if (!EncodeExpr(e, br.cond())) {
-      return false;
-    }
+  if (!EncodeExprList(e, br.values())) {
+    return false;
   }
 
   if (!e.writeOp(br.op())) {
@@ -6355,18 +6291,8 @@ static bool EncodeFirst(Encoder& e, AstFirst& f) {
   return EncodeExprList(e, f.exprs());
 }
 
-static bool EncodeArgs(Encoder& e, const AstExprVector& args) {
-  for (AstExpr* arg : args) {
-    if (!EncodeExpr(e, *arg)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 static bool EncodeCall(Encoder& e, AstCall& c) {
-  if (!EncodeArgs(e, c.args())) {
+  if (!EncodeExprList(e, c.args())) {
     return false;
   }
 
@@ -6382,7 +6308,7 @@ static bool EncodeCall(Encoder& e, AstCall& c) {
 }
 
 static bool EncodeCallIndirect(Encoder& e, AstCallIndirect& c) {
-  if (!EncodeArgs(e, c.args())) {
+  if (!EncodeExprList(e, c.args())) {
     return false;
   }
 
@@ -6550,13 +6476,7 @@ static bool EncodeReturn(Encoder& e, AstReturn& r) {
 }
 
 static bool EncodeBranchTable(Encoder& e, AstBranchTable& bt) {
-  if (bt.maybeValue()) {
-    if (!EncodeExpr(e, *bt.maybeValue())) {
-      return false;
-    }
-  }
-
-  if (!EncodeExpr(e, bt.index())) {
+  if (!EncodeExprList(e, bt.values())) {
     return false;
   }
 
@@ -6700,7 +6620,7 @@ static bool EncodeTableSize(Encoder& e, AstTableSize& s) {
 
 #ifdef ENABLE_WASM_GC
 static bool EncodeStructNew(Encoder& e, AstStructNew& s) {
-  if (!EncodeArgs(e, s.fieldValues())) {
+  if (!EncodeExprList(e, s.fieldValues())) {
     return false;
   }
 

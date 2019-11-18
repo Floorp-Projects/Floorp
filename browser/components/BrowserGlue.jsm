@@ -41,6 +41,21 @@ const PREF_PDFJS_ENABLED_CACHE_STATE = "pdfjs.enabledCache.state";
  * available at https://firefox-source-docs.mozilla.org/dom/Fission.html#jswindowactor
  */
 let ACTORS = {
+  BlockedSite: {
+    parent: {
+      moduleURI: "resource:///actors/BlockedSiteParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/BlockedSiteChild.jsm",
+      events: {
+        AboutBlockedLoaded: { wantUntrusted: true },
+        click: {},
+      },
+    },
+    matches: ["about:blocked?*"],
+    allFrames: true,
+  },
+
   BrowserTab: {
     parent: {
       moduleURI: "resource:///actors/BrowserTabParent.jsm",
@@ -297,19 +312,6 @@ let LEGACY_ACTORS = {
         pagehide: { mozSystemGroup: true },
       },
       messages: ["Reader:ToggleReaderMode", "Reader:PushState"],
-    },
-  },
-
-  BlockedSite: {
-    child: {
-      module: "resource:///actors/BlockedSiteChild.jsm",
-      events: {
-        AboutBlockedLoaded: { wantUntrusted: true },
-        click: {},
-      },
-      matches: ["about:blocked?*"],
-      allFrames: true,
-      messages: ["DeceptiveBlockedDetails"],
     },
   },
 

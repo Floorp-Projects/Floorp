@@ -411,7 +411,7 @@ nsresult CharacterData::BindToTree(BindContext& aContext, nsINode& aParent) {
   if (aParent.HasFlag(NODE_HAS_BEEN_IN_UA_WIDGET)) {
     SetFlags(NODE_HAS_BEEN_IN_UA_WIDGET);
   }
-  if (HasFlag(NODE_IS_ANONYMOUS_ROOT)) {
+  if (IsRootOfNativeAnonymousSubtree()) {
     aParent.SetMayHaveAnonymousChildren();
   }
 

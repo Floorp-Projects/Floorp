@@ -1808,7 +1808,6 @@ var gBrowserInit = {
     // message sent between when the frame script is loaded and when
     // the listener is registered.
     LanguageDetectionListener.init();
-    BrowserOnClick.init();
     CaptivePortalWatcher.init();
     ZoomUI.init(window);
 
@@ -2446,8 +2445,6 @@ var gBrowserInit = {
     TabletModeUpdater.uninit();
 
     gTabletModePageCounter.finish();
-
-    BrowserOnClick.uninit();
 
     CaptivePortalWatcher.uninit();
 
@@ -3498,73 +3495,7 @@ const PREF_SSL_IMPACT_ROOTS = ["security.tls.version.", "security.ssl3."];
  * us via async messaging.
  */
 var BrowserOnClick = {
-  init() {
-    let mm = window.messageManager;
-    mm.addMessageListener("Browser:SiteBlockedError", this);
-  },
-
-  uninit() {
-    let mm = window.messageManager;
-    mm.removeMessageListener("Browser:SiteBlockedError", this);
-  },
-
-  receiveMessage(msg) {
-    switch (msg.name) {
-      case "Browser:SiteBlockedError":
-        this.onAboutBlocked(
-          msg.data.elementId,
-          msg.data.reason,
-          msg.data.isTopFrame,
-          msg.data.location,
-          msg.data.blockedInfo
-        );
-        break;
-    }
-  },
-
-  onAboutBlocked(elementId, reason, isTopFrame, location, blockedInfo) {
-    // Depending on what page we are displaying here (malware/phishing/unwanted)
-    // use the right strings and links for each.
-    let bucketName = "";
-    let sendTelemetry = false;
-    if (reason === "malware") {
-      sendTelemetry = true;
-      bucketName = "WARNING_MALWARE_PAGE_";
-    } else if (reason === "phishing") {
-      sendTelemetry = true;
-      bucketName = "WARNING_PHISHING_PAGE_";
-    } else if (reason === "unwanted") {
-      sendTelemetry = true;
-      bucketName = "WARNING_UNWANTED_PAGE_";
-    } else if (reason === "harmful") {
-      sendTelemetry = true;
-      bucketName = "WARNING_HARMFUL_PAGE_";
-    }
-    let secHistogram = Services.telemetry.getHistogramById(
-      "URLCLASSIFIER_UI_EVENTS"
-    );
-    let nsISecTel = Ci.IUrlClassifierUITelemetry;
-    bucketName += isTopFrame ? "TOP_" : "FRAME_";
-
-    switch (elementId) {
-      case "goBackButton":
-        if (sendTelemetry) {
-          secHistogram.add(nsISecTel[bucketName + "GET_ME_OUT_OF_HERE"]);
-        }
-        getMeOutOfHere();
-        break;
-      case "ignore_warning_link":
-        if (Services.prefs.getBoolPref("browser.safebrowsing.allowOverride")) {
-          if (sendTelemetry) {
-            secHistogram.add(nsISecTel[bucketName + "IGNORE_WARNING"]);
-          }
-          this.ignoreWarningLink(reason, blockedInfo);
-        }
-        break;
-    }
-  },
-
-  ignoreWarningLink(reason, blockedInfo) {
+  ignoreWarningLink(reason, blockedInfo, browsingContext) {
     let triggeringPrincipal = E10SUtils.deserializePrincipal(
       blockedInfo.triggeringPrincipal,
       _createNullPrincipalFromTabUserContextId()
@@ -3572,16 +3503,16 @@ var BrowserOnClick = {
     // Allow users to override and continue through to the site,
     // but add a notify bar as a reminder, so that they don't lose
     // track after, e.g., tab switching.
-    gBrowser.loadURI(gBrowser.currentURI.spec, {
+    browsingContext.loadURI(blockedInfo.uri, {
       triggeringPrincipal,
       flags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
     });
 
-    // We can't use gBrowser.contentPrincipal which is principal of about:blocked
+    // We can't use browser.contentPrincipal which is principal of about:blocked
     // Create one from uri with current principal origin attributes
     let principal = Services.scriptSecurityManager.createContentPrincipal(
-      gBrowser.currentURI,
-      gBrowser.contentPrincipal.originAttributes
+      Services.io.newURI(blockedInfo.uri),
+      browsingContext.currentWindowGlobal.documentPrincipal.originAttributes
     );
     Services.perms.addFromPrincipal(
       principal,
@@ -3599,7 +3530,7 @@ var BrowserOnClick = {
           "safebrowsing.getMeOutOfHereButton.accessKey"
         ),
         callback() {
-          getMeOutOfHere();
+          getMeOutOfHere(browsingContext);
         },
       },
     ];
@@ -3662,8 +3593,8 @@ var BrowserOnClick = {
  * button should take the user to the default start page so that even
  * when their own homepage is infected, we can get them somewhere safe.
  */
-function getMeOutOfHere() {
-  gBrowser.loadURI(getDefaultHomePage(), {
+function getMeOutOfHere(browsingContext) {
+  browsingContext.top.loadURI(getDefaultHomePage(), {
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(), // Also needs to load homepage
   });
 }
@@ -8423,36 +8354,41 @@ function checkEmptyPageOrigin(
 }
 
 function ReportFalseDeceptiveSite() {
-  let docURI = gBrowser.selectedBrowser.documentURI;
-  let isPhishingPage =
-    docURI && docURI.spec.startsWith("about:blocked?e=deceptiveBlocked");
+  let contextsToVisit = [gBrowser.selectedBrowser.browsingContext];
+  while (contextsToVisit.length) {
+    let currentContext = contextsToVisit.pop();
+    let global = currentContext.currentWindowGlobal;
 
-  if (isPhishingPage) {
-    let mm = gBrowser.selectedBrowser.messageManager;
-    let onMessage = message => {
-      mm.removeMessageListener("DeceptiveBlockedDetails:Result", onMessage);
-      let reportUrl = gSafeBrowsing.getReportURL(
-        "PhishMistake",
-        message.data.blockedInfo
-      );
-      if (reportUrl) {
-        openTrustedLinkIn(reportUrl, "tab");
-      } else {
-        let bundle = Services.strings.createBundle(
-          "chrome://browser/locale/safebrowsing/safebrowsing.properties"
+    if (!global) {
+      continue;
+    }
+    let docURI = global.documentURI;
+    // Ensure the page is an about:blocked pagae before handling.
+    if (docURI && docURI.spec.startsWith("about:blocked?e=deceptiveBlocked")) {
+      let actor = global.getActor("BlockedSite");
+      actor.sendQuery("DeceptiveBlockedDetails").then(data => {
+        let reportUrl = gSafeBrowsing.getReportURL(
+          "PhishMistake",
+          data.blockedInfo
         );
-        Services.prompt.alert(
-          window,
-          bundle.GetStringFromName("errorReportFalseDeceptiveTitle"),
-          bundle.formatStringFromName("errorReportFalseDeceptiveMessage", [
-            message.data.blockedInfo.provider,
-          ])
-        );
-      }
-    };
-    mm.addMessageListener("DeceptiveBlockedDetails:Result", onMessage);
+        if (reportUrl) {
+          openTrustedLinkIn(reportUrl, "tab");
+        } else {
+          let bundle = Services.strings.createBundle(
+            "chrome://browser/locale/safebrowsing/safebrowsing.properties"
+          );
+          Services.prompt.alert(
+            window,
+            bundle.GetStringFromName("errorReportFalseDeceptiveTitle"),
+            bundle.formatStringFromName("errorReportFalseDeceptiveMessage", [
+              data.blockedInfo.provider,
+            ])
+          );
+        }
+      });
+    }
 
-    mm.sendAsyncMessage("DeceptiveBlockedDetails");
+    contextsToVisit.push(...currentContext.getChildren());
   }
 }
 

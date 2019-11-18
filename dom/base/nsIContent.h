@@ -175,7 +175,7 @@ class nsIContent : public nsINode {
    * @see nsIAnonymousContentCreator
    */
   void SetIsNativeAnonymousRoot() {
-    SetFlags(NODE_IS_ANONYMOUS_ROOT | NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE |
+    SetFlags(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE |
              NODE_IS_NATIVE_ANONYMOUS_ROOT);
   }
 
@@ -188,9 +188,11 @@ class nsIContent : public nsINode {
   /**
    * Returns true if and only if this node has a parent, but is not in
    * its parent's child list.
+   *
+   * FIXME(emilio): Remove along nsINode::IsInAnonymousSubtree.
    */
   bool IsRootOfAnonymousSubtree() const {
-    return HasFlag(NODE_IS_ANONYMOUS_ROOT);
+    return IsRootOfNativeAnonymousSubtree();
   }
 
   /**
