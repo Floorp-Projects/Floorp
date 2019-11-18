@@ -10,16 +10,11 @@ const { SyncedTabs } = ChromeUtils.import(
 const { SyncedTabsDeckComponent } = ChromeUtils.import(
   "resource:///modules/syncedtabs/SyncedTabsDeckComponent.js"
 );
-const { LightweightThemeChild } = ChromeUtils.import(
-  "resource:///actors/LightweightThemeChild.jsm"
-);
 
 var syncedTabsDeckComponent = new SyncedTabsDeckComponent({
   window,
   SyncedTabs,
 });
-
-let themeListener;
 
 let onLoaded = () => {
   window.top.MozXULElement.insertFTLIfNeeded("browser/syncedTabs.ftl");
@@ -30,21 +25,26 @@ let onLoaded = () => {
       el.setAttribute("data-l10n-id", el.getAttribute("data-lazy-l10n-id"));
       el.removeAttribute("data-lazy-l10n-id");
     });
-  themeListener = new LightweightThemeChild({
-    content: window,
-    chromeOuterWindowID: window.top.windowUtils.outerWindowID,
-    docShell: window.docShell,
-  });
   syncedTabsDeckComponent.init();
   document
     .getElementById("template-container")
     .appendChild(syncedTabsDeckComponent.container);
+
+  // Needed due to Bug 1596852.
+  // Should be removed once this bug is resolved.
+  window.addEventListener(
+    "pageshow",
+    e => {
+      window
+        .getWindowGlobalChild()
+        .getActor("LightweightTheme")
+        .handleEvent(e);
+    },
+    { once: true }
+  );
 };
 
 let onUnloaded = () => {
-  if (themeListener) {
-    themeListener.cleanup();
-  }
   removeEventListener("DOMContentLoaded", onLoaded);
   removeEventListener("unload", onUnloaded);
   syncedTabsDeckComponent.uninit();
