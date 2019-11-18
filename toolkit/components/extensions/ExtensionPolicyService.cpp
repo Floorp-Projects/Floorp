@@ -292,12 +292,11 @@ nsresult ExtensionPolicyService::HandleEvent(dom::Event* aEvent) {
 nsresult ForEachDocShell(
     nsIDocShell* aDocShell,
     const std::function<nsresult(nsIDocShell*)>& aCallback) {
-  nsCOMPtr<nsISimpleEnumerator> iter;
-  MOZ_TRY(aDocShell->GetDocShellEnumerator(nsIDocShell::typeContent,
-                                           nsIDocShell::ENUMERATE_FORWARDS,
-                                           getter_AddRefs(iter)));
+  nsTArray<RefPtr<nsIDocShell>> docShells;
+  MOZ_TRY(aDocShell->GetAllDocShellsInSubtree(
+      nsIDocShell::typeContent, nsIDocShell::ENUMERATE_FORWARDS, docShells));
 
-  for (auto& docShell : SimpleEnumerator<nsIDocShell>(iter)) {
+  for (auto& docShell : docShells) {
     MOZ_TRY(aCallback(docShell));
   }
   return NS_OK;

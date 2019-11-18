@@ -163,6 +163,8 @@ class nsDocLoader : public nsIDocumentLoader,
     }
   }
 
+  uint32_t ChildCount() const { return mChildList.Length(); }
+
  protected:
   virtual ~nsDocLoader();
 

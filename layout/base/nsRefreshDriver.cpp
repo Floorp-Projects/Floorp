@@ -1550,23 +1550,17 @@ static void GetProfileTimelineSubDocShells(nsDocShell* aRootDocShell,
     return;
   }
 
-  nsCOMPtr<nsISimpleEnumerator> enumerator;
-  nsresult rv = aRootDocShell->GetDocShellEnumerator(
+  nsTArray<RefPtr<nsIDocShell>> docShells;
+  nsresult rv = aRootDocShell->GetAllDocShellsInSubtree(
       nsIDocShellTreeItem::typeAll, nsIDocShell::ENUMERATE_BACKWARDS,
-      getter_AddRefs(enumerator));
+      docShells);
 
   if (NS_FAILED(rv)) {
     return;
   }
 
-  nsCOMPtr<nsIDocShell> curItem;
-  bool hasMore = false;
-  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> curSupports;
-    enumerator->GetNext(getter_AddRefs(curSupports));
-    curItem = do_QueryInterface(curSupports);
-
-    if (!curItem || !curItem->GetRecordProfileTimelineMarkers()) {
+  for (const auto& curItem : docShells) {
+    if (!curItem->GetRecordProfileTimelineMarkers()) {
       continue;
     }
 

@@ -101,12 +101,12 @@ Timeline.prototype = {
       return [];
     }
 
-    const docShellsEnum = originalDocShell.getDocShellEnumerator(
+    const docShells = originalDocShell.getAllDocShellsInSubtree(
       Ci.nsIDocShellTreeItem.typeAll,
       Ci.nsIDocShell.ENUMERATE_FORWARDS
     );
 
-    return Array.from(docShellsEnum);
+    return docShells;
   },
 
   /**
