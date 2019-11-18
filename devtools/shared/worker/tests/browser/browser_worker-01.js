@@ -20,6 +20,10 @@ const WORKER_DATA = (function() {
 const INTERVAL = 100;
 const DURATION = 1000;
 
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("security.allow_parent_unrestricted_js_loads");
+});
+
 add_task(async function() {
   // Test both CJS and JSM versions
 
@@ -31,6 +35,11 @@ add_task(async function() {
 });
 
 async function testWorker(context, workerFactory) {
+  // Needed for blob:null
+  Services.prefs.setBoolPref(
+    "security.allow_parent_unrestricted_js_loads",
+    true
+  );
   const { DevToolsWorker, workerify } = workerFactory();
   const worker = new DevToolsWorker(WORKER_URL);
   const results = await worker.performTask("plotTimestampsGraph", {
@@ -52,6 +61,10 @@ async function testWorker(context, workerFactory) {
 }
 
 async function testTransfer() {
+  Services.prefs.setBoolPref(
+    "security.allow_parent_unrestricted_js_loads",
+    true
+  );
   const { workerify } = ChromeUtils.import(
     "resource://devtools/shared/worker/worker.js"
   );
