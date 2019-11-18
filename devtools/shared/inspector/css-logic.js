@@ -31,7 +31,6 @@ loader.lazyRequireGetter(
   "devtools/shared/indentation",
   true
 );
-const { getRootBindingParent } = require("devtools/shared/layout/utils");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const styleInspectorL10N = new LocalizationHelper(
   "devtools/shared/locales/styleinspector.properties"
@@ -538,25 +537,6 @@ function hasVisitedState(node) {
 exports.hasVisitedState = hasVisitedState;
 
 /**
- * Return the node's parent shadow root if the node in shadow DOM, null
- * otherwise.
- */
-function getShadowRoot(node) {
-  const doc = node.ownerDocument;
-  if (!doc) {
-    return null;
-  }
-
-  const parent = doc.getBindingParent(node);
-  const shadowRoot = parent && parent.openOrClosedShadowRoot;
-  if (shadowRoot) {
-    return shadowRoot;
-  }
-
-  return null;
-}
-
-/**
  * Find the position of [element] in [nodeList].
  * @returns an index of the match, or -1 if there is no match
  */
@@ -575,7 +555,11 @@ function positionInNodeList(element, nodeList) {
  * container to the node.
  */
 function findNodeAndContainer(node) {
-  const shadowRoot = getShadowRoot(node);
+  const shadowRoot = node.containingShadowRoot;
+  while (node && node.isNativeAnonymous) {
+    node = node.parentNode;
+  }
+
   if (shadowRoot) {
     // If the node is under a shadow root, the shadowRoot contains the node and
     // we can find the node via shadowRoot.querySelector(path).
@@ -587,10 +571,9 @@ function findNodeAndContainer(node) {
 
   // Otherwise, get the root binding parent to get a non anonymous element that
   // will be accessible from the ownerDocument.
-  const bindingParent = getRootBindingParent(node);
   return {
-    containingDocOrShadow: bindingParent.ownerDocument,
-    node: bindingParent,
+    containingDocOrShadow: node.ownerDocument,
+    node,
   };
 }
 
@@ -670,7 +653,7 @@ exports.findCssSelector = findCssSelector;
  * element.
  */
 function getSelectorParent(node) {
-  const shadowRoot = getShadowRoot(node);
+  const shadowRoot = node.containingShadowRoot;
   if (shadowRoot) {
     // The element is in a shadowRoot, return the host component.
     return shadowRoot.host;

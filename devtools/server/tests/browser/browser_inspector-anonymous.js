@@ -114,7 +114,6 @@ async function testPseudoElements(walker) {
 
   const before = children.nodes[0];
   ok(before.isAnonymous, "Child is anonymous");
-  ok(!before._form.isShadowAnonymous, "Child is not shadow anonymous");
   ok(before._form.isNativeAnonymous, "Child is native anonymous");
 
   const span = children.nodes[1];
@@ -122,7 +121,6 @@ async function testPseudoElements(walker) {
 
   const after = children.nodes[2];
   ok(after.isAnonymous, "Child is anonymous");
-  ok(!after._form.isShadowAnonymous, "Child is not shadow anonymous");
   ok(after._form.isNativeAnonymous, "Child is native anonymous");
 }
 
@@ -142,48 +140,60 @@ async function testEmptyWithPseudo(walker) {
 
   const before = children.nodes[0];
   ok(before.isAnonymous, "Child is anonymous");
-  ok(!before._form.isShadowAnonymous, "Child is not shadow anonymous");
   ok(before._form.isNativeAnonymous, "Child is native anonymous");
 }
 
 async function testShadowAnonymous(walker) {
-  if (true) {
-    // FIXME(bug 1465114)
-    return;
-  }
-
   info("Testing shadow DOM content.");
 
-  const shadow = await walker.querySelector(walker.rootNode, "#shadow");
-  const children = await walker.children(shadow);
+  const host = await walker.querySelector(walker.rootNode, "#shadow");
+  const children = await walker.children(host);
 
-  is(shadow.numChildren, 3, "Children of the shadow root are counted");
+  // #shadow-root, ::before, light dom
+  is(host.numChildren, 3, "Children of the shadow root are counted");
   is(children.nodes.length, 3, "Children returned from walker");
 
-  const before = children.nodes[0];
-  ok(before.isAnonymous, "Child is anonymous");
-  ok(!before._form.isShadowAnonymous, "Child is not shadow anonymous");
-  ok(before._form.isNativeAnonymous, "Child is native anonymous");
+  const before = children.nodes[1];
+  is(
+    before._form.nodeName,
+    "_moz_generated_content_before",
+    "Should be the ::before pseudo-element"
+  );
+  ok(before.isAnonymous, "::before is anonymous");
+  ok(before._form.isNativeAnonymous, "::before is native anonymous");
+  info(JSON.stringify(before._form));
+
+  const shadow = children.nodes[0];
+  const shadowChildren = await walker.children(shadow);
+  // <h3>...</h3>, <select multiple></select>
+  is(shadow.numChildren, 2, "Children of the shadow root are counted");
+  is(shadowChildren.nodes.length, 2, "Children returned from walker");
 
   // <h3>Shadow <em>DOM</em></h3>
-  const shadowChild1 = children.nodes[1];
-  ok(shadowChild1.isAnonymous, "Child is anonymous");
-  ok(shadowChild1._form.isShadowAnonymous, "Child is shadow anonymous");
-  ok(!shadowChild1._form.isNativeAnonymous, "Child is not native anonymous");
+  const shadowChild1 = shadowChildren.nodes[0];
+  ok(!shadowChild1.isAnonymous, "Shadow child is not anonymous");
+  ok(
+    !shadowChild1._form.isNativeAnonymous,
+    "Shadow child is not native anonymous"
+  );
 
-  const shadowSubChildren = await walker.children(children.nodes[1]);
+  const shadowSubChildren = await walker.children(shadowChild1);
   is(shadowChild1.numChildren, 2, "Subchildren of the shadow root are counted");
   is(shadowSubChildren.nodes.length, 2, "Subchildren are returned from walker");
 
   // <em>DOM</em>
-  const shadowSubChild = children.nodes[1];
-  ok(shadowSubChild.isAnonymous, "Child is anonymous");
-  ok(shadowSubChild._form.isShadowAnonymous, "Child is shadow anonymous");
-  ok(!shadowSubChild._form.isNativeAnonymous, "Child is not native anonymous");
+  const shadowSubChild = shadowSubChildren.nodes[1];
+  ok(
+    !shadowSubChild.isAnonymous,
+    "Subchildren of shadow root are not anonymous"
+  );
+  ok(
+    !shadowSubChild._form.isNativeAnonymous,
+    "Subchildren of shadow root is not native anonymous"
+  );
 
   // <select multiple></select>
-  const shadowChild2 = children.nodes[2];
-  ok(shadowChild2.isAnonymous, "Child is anonymous");
-  ok(shadowChild2._form.isShadowAnonymous, "Child is shadow anonymous");
+  const shadowChild2 = shadowChildren.nodes[1];
+  ok(!shadowChild2.isAnonymous, "Child is anonymous");
   ok(!shadowChild2._form.isNativeAnonymous, "Child is not native anonymous");
 }
