@@ -60,7 +60,7 @@ const BUILT_IN_SECTIONS = {
     learnMore: {
       link: {
         href: "https://getpocket.com/firefox/new_tab_learn_more",
-        message: { id: "newtab-pocket-how-it-works" },
+        message: { id: "newtab-pocket-whats-pocket" },
       },
     },
     privacyNoticeURL:

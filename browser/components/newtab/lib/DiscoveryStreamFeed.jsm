@@ -1461,7 +1461,7 @@ getHardcodedLayout = basic => {
               header: {
                 title: "Recommended by Pocket",
                 subtitle: "",
-                link_text: "How it works",
+                link_text: "What’s Pocket?",
                 link_url: "https://getpocket.com/firefox/new_tab_learn_more",
                 icon:
                   "resource://activity-stream/data/content/assets/glyph-pocket-16.svg",
@@ -1561,7 +1561,7 @@ getHardcodedLayout = basic => {
             header: {
               title: "Recommended by Pocket",
               subtitle: "",
-              link_text: "How it works",
+              link_text: "What’s Pocket?",
               link_url: "https://getpocket.com/firefox/new_tab_learn_more",
               icon:
                 "resource://activity-stream/data/content/assets/glyph-pocket-16.svg",
