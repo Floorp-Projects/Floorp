@@ -3534,7 +3534,8 @@ impl<'a, T> TextureUploader<'a, T> {
         layer_index: i32,
         stride: Option<i32>,
         format_override: Option<ImageFormat>,
-        data: &[T],
+        data: *const T,
+        len: usize,
     ) -> usize {
         // Textures dimensions may have been clamped by the hardware. Crop the
         // upload region to match.
@@ -3557,7 +3558,7 @@ impl<'a, T> TextureUploader<'a, T> {
             stride as usize
         });
         let src_size = (rect.size.height as usize - 1) * src_stride + width_bytes;
-        assert!(src_size <= data.len() * mem::size_of::<T>());
+        assert!(src_size <= len * mem::size_of::<T>());
 
         // for optimal PBO texture uploads the stride of the data in
         // the buffer may have to be a multiple of a certain value.
@@ -3591,15 +3592,12 @@ impl<'a, T> TextureUploader<'a, T> {
                 if src_stride == dst_stride {
                     // the stride is already optimal, so simply copy
                     // the data as-is in to the buffer
-                    let elem_count = src_size / mem::size_of::<T>();
-                    assert_eq!(elem_count * mem::size_of::<T>(), src_size);
-                    let slice = &data[.. elem_count];
-
-                    gl::buffer_sub_data(
-                        self.target.gl,
+                    assert_eq!(src_size % mem::size_of::<T>(), 0);
+                    self.target.gl.buffer_sub_data_untyped(
                         gl::PIXEL_UNPACK_BUFFER,
-                        buffer.size_used as _,
-                        slice,
+                        buffer.size_used as isize,
+                        src_size as isize,
+                        data as *const _,
                     );
                 } else {
                     // copy the data line-by-line in to the buffer so
@@ -3608,11 +3606,12 @@ impl<'a, T> TextureUploader<'a, T> {
                         gl::PIXEL_UNPACK_BUFFER,
                         buffer.size_used as _,
                         dst_size as _,
-                        gl::MAP_WRITE_BIT | gl::MAP_INVALIDATE_RANGE_BIT);
+                        gl::MAP_WRITE_BIT | gl::MAP_INVALIDATE_RANGE_BIT,
+                    );
 
                     unsafe {
-                        let src: &[u8] = slice::from_raw_parts(data.as_ptr() as *const u8, src_size);
-                        let dst: &mut [u8] = slice::from_raw_parts_mut(ptr as *mut u8, dst_size);
+                        let src: &[mem::MaybeUninit<u8>] = slice::from_raw_parts(data as *const _, src_size);
+                        let dst: &mut [mem::MaybeUninit<u8>] = slice::from_raw_parts_mut(ptr as *mut _, dst_size);
 
                         for y in 0..rect.size.height as usize {
                             let src_start = y * src_stride;
@@ -3641,7 +3640,7 @@ impl<'a, T> TextureUploader<'a, T> {
                     rect,
                     layer_index,
                     stride,
-                    offset: data.as_ptr() as _,
+                    offset: data as _,
                     format_override,
                 });
             }
