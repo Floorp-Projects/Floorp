@@ -951,8 +951,6 @@ class PluginChild extends JSWindowActorChild {
   }
 
   setCrashedNPAPIPluginState({ pluginElement, state, pluginName }) {
-    // Force a layout flush so the binding is attached.
-    pluginElement.clientTop;
     let overlay = this.getPluginUI(pluginElement, "main");
     let statusDiv = this.getPluginUI(pluginElement, "submitStatus");
     let optInCB = this.getPluginUI(pluginElement, "submitURLOptIn");
