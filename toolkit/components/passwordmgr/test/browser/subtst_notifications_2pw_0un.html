@@ -14,7 +14,7 @@
 
 <script>
 function submitForm() {
-  pass.value = "notifyp1";
+  SpecialPowers.wrap(pass).setUserInput("notifyp1");
   form.submit();
 }
 
