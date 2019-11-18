@@ -473,7 +473,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         # The tests directory can be quite large: 5000 files and growing!
         # Sometimes - like on a low-end aws instance running an emulator - the push
         # may exceed the default 5 minute timeout, so we increase it here to 10 minutes.
-        self.initDir(self.remoteScriptsDir)
+        self.device.rm(self.remoteScriptsDir, recursive=True, force=True, timeout=None, root=True)
         self.device.push(self.xpcDir, self.remoteScriptsDir, timeout=600)
         self.device.chmod(self.remoteScriptsDir, recursive=True, root=True)
 
