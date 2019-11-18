@@ -535,8 +535,9 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
             } else {
                 val isLastSession =
                     sessionManager.sessionsOfType(private = session.private).count() == 1
-                sessionManager.remove(session, true)
-                return !isLastSession // Jump to tab overview if last session was removed
+                sessionManager.remove(session, session.hasParentSession)
+                val goToOverview = isLastSession || !session.hasParentSession
+                return !goToOverview
             }
         }
         return false
