@@ -153,7 +153,7 @@ class GridInspector {
    * @return {Array} The list of LayoutActor fronts
    */
   async getLayoutFronts() {
-    const inspectorFronts = await this.inspector.inspectorFront.getAllInspectorFronts();
+    const inspectorFronts = await this.inspector.getAllInspectorFronts();
 
     const layoutFronts = [];
     for (const { walker } of inspectorFronts) {

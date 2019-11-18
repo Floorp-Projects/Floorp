@@ -176,6 +176,8 @@ function Inspector(toolbox) {
   this._handleRejectionIfNotDestroyed = this._handleRejectionIfNotDestroyed.bind(
     this
   );
+  this._onTargetAvailable = this._onTargetAvailable.bind(this);
+  this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
   this._onBeforeNavigate = this._onBeforeNavigate.bind(this);
   this._onMarkupFrameLoad = this._onMarkupFrameLoad.bind(this);
   this._updateSearchResultsLabel = this._updateSearchResultsLabel.bind(this);
@@ -220,17 +222,11 @@ Inspector.prototype = {
       this.currentTarget.threadFront.on("resumed", this.handleThreadResumed);
     }
 
-    await this.initInspectorFront();
-
-    this.currentTarget.on("will-navigate", this._onBeforeNavigate);
-
-    await Promise.all([
-      this._getCssProperties(),
-      this._getPageStyle(),
-      this._getDefaultSelection(),
-      this._getAccessibilityFront(),
-      this._getChangesFront(),
-    ]);
+    await this.toolbox.targetList.watchTargets(
+      [this.toolbox.targetList.TYPES.FRAME],
+      this._onTargetAvailable,
+      this._onTargetDestroyed
+    );
 
     // Store the URL of the target page prior to navigation in order to ensure
     // telemetry counts in the Grid Inspector are not double counted on reload.
@@ -243,14 +239,76 @@ Inspector.prototype = {
     return this._deferredOpen();
   },
 
-  async initInspectorFront() {
-    this.inspectorFront = await this.currentTarget.getFront("inspector");
+  async _onTargetAvailable(type, targetFront, isTopLevel) {
+    // Ignore all targets but the top level one
+    if (!isTopLevel) {
+      return;
+    }
+
+    await this.initInspectorFront(targetFront);
+
+    targetFront.on("will-navigate", this._onBeforeNavigate);
+
+    await Promise.all([
+      this._getCssProperties(),
+      this._getPageStyle(),
+      this._getDefaultSelection(),
+      this._getAccessibilityFront(),
+      this._getChangesFront(),
+    ]);
+    this.reflowTracker = new ReflowTracker(this.currentTarget);
+
+    // When we navigate to another process and switch to a new
+    // target and the inspector is already ready, we want to
+    // update the markup view accordingly. So force a new-root event.
+    // For the initial panel startup, the initial top level target
+    // update the markup view from _deferredOpen.
+    // We might want to followup here in order to share the same
+    // codepath between the initial top level target and the next
+    // one we switch to. i.e. extract from deferredOpen code
+    // which has to be called only once on inspector startup.
+    // Then move the rest to onNewRoot and always call onNewRoot from here.
+    if (this.isReady) {
+      this.onNewRoot();
+    }
+  },
+
+  _onTargetDestroyed(type, targetFront, isTopLevel) {
+    // Ignore all targets but the top level one
+    if (!isTopLevel) {
+      return;
+    }
+    targetFront.off("will-navigate", this._onBeforeNavigate);
+
+    this._defaultNode = null;
+    this.selection.setNodeFront(null);
+
+    this.reflowTracker.destroy();
+    this.reflowTracker = null;
+  },
+
+  async initInspectorFront(targetFront) {
+    this.inspectorFront = await targetFront.getFront("inspector");
     this.highlighter = this.inspectorFront.highlighter;
     this.walker = this.inspectorFront.walker;
   },
 
   get toolbox() {
     return this._toolbox;
+  },
+
+  /**
+   * Get the list of InspectorFront instances that correspond to all of the inspectable
+   * targets in remote frames nested within the document inspected here, as well as the
+   * current InspectorFront instance.
+   *
+   * @return {Array} The list of InspectorFront instances.
+   */
+  async getAllInspectorFronts() {
+    return this.toolbox.targetList.getAllFronts(
+      this.toolbox.targetList.TYPES.FRAME,
+      "inspector"
+    );
   },
 
   get highlighters() {
@@ -503,10 +561,10 @@ Inspector.prototype = {
   },
 
   /**
-   * Target getter.
+   * Top level target front getter.
    */
   get currentTarget() {
-    return this._target;
+    return this.toolbox.targetList.targetFront;
   },
 
   /**
@@ -1418,7 +1476,7 @@ Inspector.prototype = {
 
     this._selectionCssSelectors = {
       selectors: cssSelectors,
-      url: this._target.url,
+      url: this.currentTarget.url,
     };
   },
 
@@ -1429,7 +1487,7 @@ Inspector.prototype = {
   get selectionCssSelectors() {
     if (
       this._selectionCssSelectors &&
-      this._selectionCssSelectors.url === this._target.url
+      this._selectionCssSelectors.url === this.currentTarget.url
     ) {
       return this._selectionCssSelectors.selectors;
     }
@@ -1671,9 +1729,14 @@ Inspector.prototype = {
     this.teardownToolbar();
 
     this.breadcrumbs.destroy();
-    this.reflowTracker.destroy();
     this.styleChangeTracker.destroy();
     this.searchboxShortcuts.destroy();
+
+    this.toolbox.targetList.unwatchTargets(
+      [this.toolbox.targetList.TYPES.FRAME],
+      this._onTargetAvailable,
+      this._onTargetDestroyed
+    );
 
     this._is3PaneModeChromeEnabled = null;
     this._is3PaneModeEnabled = null;

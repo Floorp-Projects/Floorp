@@ -19,7 +19,6 @@ const TELEMETRY_EYEDROPPER_OPENED_MENU =
 const SHOW_ALL_ANONYMOUS_CONTENT_PREF =
   "devtools.inspector.showAllAnonymousContent";
 const SHOW_UA_SHADOW_ROOTS_PREF = "devtools.inspector.showUserAgentShadowRoots";
-const BROWSER_FISSION_ENABLED_PREF = "devtools.browsertoolbox.fission";
 const CONTENT_FISSION_ENABLED_PREF = "devtools.contenttoolbox.fission";
 const USE_NEW_BOX_MODEL_HIGHLIGHTER_PREF =
   "devtools.inspector.use-new-box-model-highlighter";
@@ -50,16 +49,6 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     ]);
   }
 
-  get isBrowserFissionEnabled() {
-    if (this._isBrowserFissionEnabled === undefined) {
-      this._isBrowserFissionEnabled = Services.prefs.getBoolPref(
-        BROWSER_FISSION_ENABLED_PREF
-      );
-    }
-
-    return this._isBrowserFissionEnabled;
-  }
-
   get isContentFissionEnabled() {
     if (this._isContentFissionEnabled === undefined) {
       this._isContentFissionEnabled = Services.prefs.getBoolPref(
@@ -81,6 +70,11 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
       showAllAnonymousContent,
       showUserAgentShadowRoots,
     });
+
+    // We need to reparent the RootNode of remote iframe Walkers
+    // so that their parent is the NodeFront of the <iframe>
+    // element, coming from another process/target/WalkerFront.
+    await this.walker.reparentRemoteFrame();
   }
 
   async _getHighlighter() {
@@ -149,48 +143,6 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     } else {
       telemetry.getHistogramById(TELEMETRY_EYEDROPPER_OPENED).add(true);
     }
-  }
-
-  /**
-   * Get the list of InspectorFront instances that correspond to all of the inspectable
-   * targets in remote frames nested within the document inspected here.
-   *
-   * Note that this only returns a non-empty array if the used from the Browser Toolbox
-   * and with the FISSION_ENABLED pref on.
-   *
-   * @return {Array} The list of InspectorFront instances.
-   */
-  async getChildInspectors() {
-    const childInspectors = [];
-    const target = this.targetFront;
-
-    // this line can be removed when we are ready for fission frames
-    if (this.isBrowserFissionEnabled && target.chrome && !target.isAddon) {
-      const { frames } = await target.listRemoteFrames();
-      // attempt to get targets and filter by targets that could connect
-      for (const descriptor of frames) {
-        const remoteTarget = await descriptor.getTarget();
-        if (remoteTarget) {
-          // get inspector
-          const remoteInspectorFront = await remoteTarget.getFront("inspector");
-          await remoteInspectorFront.walker.reparentRemoteFrame();
-          childInspectors.push(remoteInspectorFront);
-        }
-      }
-    }
-    return childInspectors;
-  }
-
-  /**
-   * Get the list of InspectorFront instances that correspond to all of the inspectable
-   * targets in remote frames nested within the document inspected here, as well as the
-   * current InspectorFront instance.
-   *
-   * @return {Array} The list of InspectorFront instances.
-   */
-  async getAllInspectorFronts() {
-    const remoteInspectors = await this.getChildInspectors();
-    return [this, ...remoteInspectors];
   }
 
   /**

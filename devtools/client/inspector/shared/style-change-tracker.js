@@ -33,7 +33,7 @@ class InspectorStyleChangeTracker {
     try {
       // TODO: Bug 1588868 - Get all the inspector fronts whenever targets changes or
       // are added or removed.
-      this.inspectorFronts = await this.inspector.inspectorFront.getAllInspectorFronts();
+      this.inspectorFronts = await this.inspector.getAllInspectorFronts();
     } catch (e) {
       // This call might fail if called asynchrously after the toolbox is finished
       // closing.
