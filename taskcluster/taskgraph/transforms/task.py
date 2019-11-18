@@ -1244,15 +1244,29 @@ def build_push_addons_payload(config, task, task_def):
     Optional('bump-files'): [basestring],
     Optional('repo-param-prefix'): basestring,
     Optional('dontbuild'): bool,
+    Optional('ignore-closed-tree'): bool,
     Required('force-dry-run', default=True): bool,
-    Required('push', default=False): bool
+    Required('push', default=False): bool,
+    Optional('l10n-bump-info'): {
+        Required('name'): basestring,
+        Required('path'): basestring,
+        Required('version-path'): basestring,
+        Required('revision-url'): basestring,
+        Optional('ignore-config'): object,
+        Required('platform-configs'): [{
+            Required('platforms'): [basestring],
+            Required('path'): basestring,
+            Optional('format'): basestring,
+        }],
+    },
 })
 def build_treescript_payload(config, task, task_def):
     worker = task['worker']
     release_config = get_release_config(config)
 
-    task_def['payload'] = {}
+    task_def['payload'] = {'actions': []}
     task_def.setdefault('scopes', [])
+    actions = task_def['payload']['actions']
     if worker['tags']:
         tag_names = []
         product = task['shipping-product'].upper()
@@ -1271,7 +1285,7 @@ def build_treescript_payload(config, task, task_def):
             'revision': config.params['{}head_rev'.format(worker.get('repo-param-prefix', ''))],
         }
         task_def['payload']['tag_info'] = tag_info
-        task_def['scopes'].append(add_scope_prefix(config, 'treescript:action:tagging'))
+        actions.append('tag')
 
     if worker['bump']:
         if not worker['bump-files']:
@@ -1281,16 +1295,27 @@ def build_treescript_payload(config, task, task_def):
         bump_info['next_version'] = release_config['next_version']
         bump_info['files'] = worker['bump-files']
         task_def['payload']['version_bump_info'] = bump_info
-        task_def['scopes'].append(add_scope_prefix(config, 'treescript:action:version_bump'))
+        actions.append('version_bump')
+
+    if worker.get('l10n-bump-info'):
+        l10n_bump_info = {}
+        for k, v in worker['l10n-bump-info'].items():
+            l10n_bump_info[k.replace('-', '_')] = worker['l10n-bump-info'][k]
+        task_def['payload']['l10n_bump_info'] = [l10n_bump_info]
+        actions.append('l10n_bump')
 
     if worker['push']:
         task_def['scopes'].append(add_scope_prefix(config, 'treescript:action:push'))
+        actions.append('push')
 
     if worker.get('force-dry-run'):
         task_def['payload']['dry_run'] = True
 
     if worker.get('dontbuild'):
         task_def['payload']['dontbuild'] = True
+
+    if worker.get('ignore-closed-tree') is not None:
+        task_def['payload']['ignore_closed_tree'] = worker['ignore-closed-tree']
 
 
 @payload_builder('invalid', schema={
