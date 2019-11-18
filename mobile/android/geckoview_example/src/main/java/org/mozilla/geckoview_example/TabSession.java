@@ -7,10 +7,12 @@ import android.support.annotation.UiThread;
 
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
+import org.mozilla.geckoview.WebExtension;
 
 public class TabSession extends GeckoSession {
     private String mTitle;
     private String mUri;
+    public WebExtension.Action action;
 
     public TabSession() { super(); }
 
