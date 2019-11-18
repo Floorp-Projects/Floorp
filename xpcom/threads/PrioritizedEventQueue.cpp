@@ -155,12 +155,6 @@ EventQueuePriority PrioritizedEventQueue::SelectQueue(
 already_AddRefed<nsIRunnable> PrioritizedEventQueue::GetEvent(
     EventQueuePriority* aPriority, const MutexAutoLock& aProofOfLock,
     mozilla::TimeDuration* aHypotheticalInputEventDelay) {
-#ifndef RELEASE_OR_BETA
-  // Clear mNextIdleDeadline so that it is possible to determine that
-  // we're running an idle runnable in ProcessNextEvent.
-  *mNextIdleDeadline = TimeStamp();
-#endif
-
   EventQueuePriority queue = SelectQueue(true, aProofOfLock);
   auto guard = MakeScopeExit([&] {
     mIdlePeriodState.ForgetPendingTaskGuarantee();
@@ -241,12 +235,6 @@ already_AddRefed<nsIRunnable> PrioritizedEventQueue::GetEvent(
         if (idleEvent) {
           idleEvent->SetDeadline(idleDeadline);
         }
-
-#ifndef RELEASE_OR_BETA
-        // Store the next idle deadline to be able to determine budget use
-        // in ProcessNextEvent.
-        *mNextIdleDeadline = idleDeadline;
-#endif
       }
       break;
   }  // switch (queue)

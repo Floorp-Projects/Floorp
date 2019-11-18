@@ -4,7 +4,6 @@
 
 browser.jar:
     content/browser/schemas/bookmarks.json
-    content/browser/schemas/browser_action.json
     content/browser/schemas/browsing_data.json
     content/browser/schemas/chrome_settings_overrides.json
     content/browser/schemas/commands.json
@@ -18,7 +17,6 @@ browser.jar:
     content/browser/schemas/menus_child.json
     content/browser/schemas/normandyAddonStudy.json
     content/browser/schemas/omnibox.json
-    content/browser/schemas/page_action.json
     content/browser/schemas/pkcs11.json
     content/browser/schemas/search.json
     content/browser/schemas/sessions.json

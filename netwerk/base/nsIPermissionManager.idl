@@ -30,19 +30,8 @@
 
 #include "nsISupports.idl"
 
-interface nsIObserver;
 interface nsIPrincipal;
-interface mozIDOMWindow;
 interface nsIPermission;
-interface nsIRunnable;
-
-%{ C++
-namespace IPC {
-struct Permission;
-}
-#include "nsTArrayForwardDeclare.h"
-%}
-[ref] native IPCPermissionArrayRef(nsTArray<IPC::Permission>);
 
 [scriptable, builtinclass, uuid(4dcb3851-eba2-4e42-b236-82d2596fca22)]
 interface nsIPermissionManager : nsISupports
@@ -153,16 +142,6 @@ interface nsIPermissionManager : nsISupports
                                        in ACString type);
 
   /**
-   * Test whether the principal associated with the window's document has the
-   * permission to perform a given action.  System principals will always
-   * have permissions granted.
-   * This function will perform a pref lookup to permissions.default.<type>
-   * if the specific permission type is part of the whitelist for that functionality.
-   */
-  uint32_t testPermissionFromWindow(in mozIDOMWindow window,
-                                    in ACString type);
-
-  /**
    * See testExactPermission() above.
    * System principals will always have permissions granted.
    * This function will perform a pref lookup to permissions.default.<type>
@@ -210,65 +189,6 @@ interface nsIPermissionManager : nsISupports
   readonly attribute Array<nsIPermission> all;
 
   /**
-   * Remove all permissions that will match the origin pattern.
-   */
-  void removePermissionsWithAttributes(in AString patternAsJSON);
-
-  /**
-   * If the current permission is set to expire, reset the expiration time. If
-   * there is no permission or the current permission does not expire, this
-   * method will silently return.
-   *
-   * @param sessionExpiretime  an integer representation of when this permission
-   *                           should be forgotten (milliseconds since
-   *                           Jan 1 1970 0:00:00), if it is currently
-   *                           EXPIRE_SESSION.
-   * @param sessionExpiretime  an integer representation of when this permission
-   *                           should be forgotten (milliseconds since
-   *                           Jan 1 1970 0:00:00), if it is currently
-   *                           EXPIRE_TIME.
-   */
-  void updateExpireTime(in nsIPrincipal principal,
-                        in ACString type,
-                        in boolean exactHost,
-                        in uint64_t sessionExpireTime,
-                        in uint64_t persistentExpireTime);
-
-  /**
-   * The content process doesn't have access to every permission. Instead, when
-   * LOAD_DOCUMENT_URI channels for http://, https://, and ftp:// URIs are
-   * opened, the permissions for those channels are sent down to the content
-   * process before the OnStartRequest message. Permissions for principals with
-   * other schemes are sent down at process startup.
-   *
-   * Permissions are keyed and grouped by "Permission Key"s.
-   * `nsPermissionManager::GetKeyForPrincipal` provides the mechanism for
-   * determining the permission key for a given principal.
-   *
-   * This method may only be called in the parent process. It fills the nsTArray
-   * argument with the IPC::Permission objects which have a matching permission
-   * key.
-   *
-   * @param permissionKey  The key to use to find the permissions of interest.
-   * @param perms  An array which will be filled with the permissions which
-   *               match the given permission key.
-   */
-  void getPermissionsWithKey(in ACString permissionKey, out IPCPermissionArrayRef perms);
-
-  /**
-   * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
-   * Permission keys.
-   *
-   * `SetPermissionsWithKey` may only be called in the Child process, and
-   * initializes the permission manager with the permissions for a given
-   * Permission key. marking permissions with that key as available.
-   *
-   * @param permissionKey  The key for the permissions which have been sent over.
-   * @param perms  An array with the permissions which match the given key.
-   */
-  void setPermissionsWithKey(in ACString permissionKey, in IPCPermissionArrayRef perms);
-
-  /**
    * Broadcasts permissions for the given principal to all content processes.
    *
    * DO NOT USE THIS METHOD if you can avoid it. It was added in bug XXX to
@@ -278,30 +198,6 @@ interface nsIPermissionManager : nsISupports
    * @param aPrincipal The principal to broadcast permissions for.
    */
   void broadcastPermissionsForPrincipalToAllContentProcesses(in nsIPrincipal aPrincipal);
-
-  /**
-   * Add a callback which should be run when all permissions are available for
-   * the given nsIPrincipal. This method invokes the callback runnable
-   * synchronously when the permissions are already available. Otherwise the
-   * callback will be run asynchronously in SystemGroup when all permissions
-   * are available in the future.
-   *
-   * NOTE: This method will not request the permissions be sent by the parent
-   * process. This should only be used to wait for permissions which may not
-   * have arrived yet in order to ensure they are present.
-   *
-   * @param aPrincipal The principal to wait for permissions to be available for.
-   * @param aRunnable  The runnable to run when permissions are available for the
-   *                   given principal.
-   */
-  void whenPermissionsAvailable(in nsIPrincipal aPrincipal,
-                                in nsIRunnable aRunnable);
-
-  /**
-   * True if any "preload" permissions are present. This is used to avoid making
-   * potentially expensive permissions checks in nsContentBlocker.
-   */
-  [infallible] readonly attribute boolean hasPreloadPermissions;
 };
 
 %{ C++

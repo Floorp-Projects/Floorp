@@ -517,8 +517,6 @@ function BuildConditionSandbox(aURL) {
     sandbox.webrtc = false;
 #endif
 
-    sandbox.xbl = false; // Keep this until all xbl reftests are removed in Bug 1587142.
-
 let retainedDisplayListsEnabled = prefs.getBoolPref("layout.display-list.retain", false);
 sandbox.retainedDisplayLists = retainedDisplayListsEnabled && !g.compareRetainedDisplayLists;
 sandbox.compareRetainedDisplayLists = g.compareRetainedDisplayLists;
