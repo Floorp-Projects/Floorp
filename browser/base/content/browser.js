@@ -1561,6 +1561,13 @@ function _loadURI(browser, uri, params = {}) {
         loadParams.userContextId = userContextId;
       }
 
+      if (browser.webNavigation.maybeCancelContentJSExecution) {
+        let cancelContentJSEpoch = browser.webNavigation.maybeCancelContentJSExecution(
+          Ci.nsIRemoteTab.NAVIGATE_URL,
+          { uri: uriObject }
+        );
+        loadParams.cancelContentJSEpoch = cancelContentJSEpoch;
+      }
       LoadInOtherProcess(browser, loadParams);
     }
   } catch (e) {
