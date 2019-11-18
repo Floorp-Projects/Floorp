@@ -82,7 +82,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "9d0123d36afe"
+        "revision": "30bd68198146"
     },
     "az": {
         "platforms": [
@@ -830,7 +830,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "9e6a5cb3c8fd"
+        "revision": "1878af47a45c"
     },
     "ja": {
         "platforms": [
@@ -1226,7 +1226,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "01cb574078cd"
+        "revision": "e59c2f9816ee"
     },
     "rm": {
         "platforms": [
