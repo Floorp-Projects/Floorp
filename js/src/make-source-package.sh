@@ -92,6 +92,9 @@ case $cmd in
 + /mfbt/**
 + /nsprpub/**
 
+- /intl/icu/source/data
+- /intl/icu/source/test
+- /intl/icu/source/tools
 + /intl/icu/**
 
 + /memory/build/**
