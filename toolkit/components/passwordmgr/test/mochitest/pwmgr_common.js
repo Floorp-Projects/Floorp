@@ -114,6 +114,57 @@ function getIframeBrowsingContext(window, iframeNumber = 0) {
 }
 
 /**
+ * Set input values via setUserInput to emulate user input
+ * and distinguish them from declarative or script-assigned values
+ */
+function setUserInputValues(parentNode, selectorValues) {
+  for (let [selector, newValue] of Object.entries(selectorValues)) {
+    info(`setUserInputValues, selector: ${selector}`);
+    try {
+      let field = SpecialPowers.wrap(parentNode.querySelector(selector));
+      if (field.value == newValue) {
+        // we don't get an input event if the new value == the old
+        field.value += "#";
+      }
+      field.setUserInput(newValue);
+    } catch (ex) {
+      info(ex.message);
+      info(ex.stack);
+      ok(
+        false,
+        `setUserInputValues: Couldn't set value of field: ${ex.message}`
+      );
+    }
+  }
+}
+
+/**
+ * @param {Function} [aFilterFn = undefined] Function to filter out irrelevant submissions.
+ * @return {Promise} resolving when a relevant form submission was processed.
+ */
+function getSubmitMessage(aFilterFn = undefined) {
+  info("getSubmitMessage");
+  return new Promise((resolve, reject) => {
+    PWMGR_COMMON_PARENT.addMessageListener(
+      "formSubmissionProcessed",
+      function processed(...args) {
+        if (aFilterFn && !aFilterFn(...args)) {
+          // This submission isn't the one we're waiting for.
+          return;
+        }
+
+        info("got formSubmissionProcessed");
+        PWMGR_COMMON_PARENT.removeMessageListener(
+          "formSubmissionProcessed",
+          processed
+        );
+        resolve(...args);
+      }
+    );
+  });
+}
+
+/**
  * Check for expected username/password in form.
  * @see `checkForm` below for a similar function.
  */
