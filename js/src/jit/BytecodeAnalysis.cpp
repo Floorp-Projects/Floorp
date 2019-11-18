@@ -260,6 +260,10 @@ IonBytecodeInfo js::jit::AnalyzeBytecodeForIon(JSContext* cx,
         }
         break;
 
+      case JSOP_FINALLY:
+        result.hasTryFinally = true;
+        break;
+
       default:
         break;
     }
