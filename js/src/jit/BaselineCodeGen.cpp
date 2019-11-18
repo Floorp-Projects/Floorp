@@ -173,6 +173,15 @@ bool BaselineInterpreterHandler::recordCallRetAddr(JSContext* cx,
   return true;
 }
 
+bool BaselineInterpreterHandler::addDebugInstrumentationOffset(
+    JSContext* cx, CodeOffset offset) {
+  if (!debugInstrumentationOffsets_.append(offset.offset())) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  return true;
+}
+
 MethodStatus BaselineCompiler::compile() {
   JSScript* script = handler.script();
   JitSpew(JitSpew_BaselineScripts, "Baseline compiling script %s:%u:%u (%p)",
@@ -769,7 +778,7 @@ bool BaselineInterpreterCodeGen::emitIsDebuggeeCheck() {
     restoreInterpreterPCReg();
   }
   masm.bind(&skipCheck);
-  return handler.addDebugInstrumentationOffset(toggleOffset);
+  return handler.addDebugInstrumentationOffset(cx, toggleOffset);
 }
 
 static void MaybeIncrementCodeCoverageCounter(MacroAssembler& masm,
@@ -4941,7 +4950,7 @@ MOZ_MUST_USE bool BaselineInterpreterCodeGen::emitDebugInstrumentation(
   Label isNotDebuggee, done;
 
   CodeOffset toggleOffset = masm.toggledJump(&isNotDebuggee);
-  if (!handler.addDebugInstrumentationOffset(toggleOffset)) {
+  if (!handler.addDebugInstrumentationOffset(cx, toggleOffset)) {
     return false;
   }
 
@@ -5944,7 +5953,7 @@ bool BaselineInterpreterCodeGen::emitAfterYieldDebugInstrumentation(
   // If the current Realm is not a debuggee we're done.
   Label done;
   CodeOffset toggleOffset = masm.toggledJump(&done);
-  if (!handler.addDebugInstrumentationOffset(toggleOffset)) {
+  if (!handler.addDebugInstrumentationOffset(cx, toggleOffset)) {
     return false;
   }
   masm.loadPtr(AbsoluteAddress(cx->addressOfRealm()), scratch);
