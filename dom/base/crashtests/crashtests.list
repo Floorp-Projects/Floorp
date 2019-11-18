@@ -7,7 +7,6 @@ load 231475-1.html
 load 244933-1.html
 load 275912-1.html
 load 293388-1.html
-load chrome://reftest/content/crashtests/dom/base/crashtests/308120-1.xul
 load 325730-1.html
 load 326618-1.html
 load 326646-1.html
@@ -16,7 +15,6 @@ load 327571-1.html
 load 327694.html
 load 327695-1.html
 load 329481-1.xhtml
-load 330925-1.xhtml
 load 336381-1.xhtml
 load 336715-1.xhtml
 load 338391-1.xhtml

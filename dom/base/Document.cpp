@@ -7801,8 +7801,6 @@ already_AddRefed<nsINode> Document::ImportNode(nsINode& aNode, bool aDeep,
   return nullptr;
 }
 
-nsINodeList* Document::GetAnonymousNodes(Element& aElement) { return nullptr; }
-
 already_AddRefed<nsRange> Document::CreateRange(ErrorResult& rv) {
   RefPtr<nsRange> range = new nsRange(this);
   nsresult res = range->CollapseTo(this, 0);

@@ -311,20 +311,6 @@ nsresult nsXULPopupListener::LaunchPopup(MouseEvent* aEvent) {
   RefPtr<Element> popup;
   if (identifier.EqualsLiteral("_child")) {
     popup = GetImmediateChild(mElement, nsGkAtoms::menupopup);
-    if (!popup) {
-      nsINodeList* list = document->GetAnonymousNodes(*mElement);
-      if (list) {
-        uint32_t listLength = list->Length();
-        for (uint32_t ctr = 0; ctr < listLength; ctr++) {
-          nsIContent* childContent = list->Item(ctr);
-          if (childContent->NodeInfo()->Equals(nsGkAtoms::menupopup,
-                                               kNameSpaceID_XUL)) {
-            popup = childContent->AsElement();
-            break;
-          }
-        }
-      }
-    }
   } else if (!mElement->IsInUncomposedDoc() ||
              !(popup = document->GetElementById(identifier))) {
     // XXXsmaug Should we try to use ShadowRoot::GetElementById in case

@@ -15,7 +15,6 @@ load 321056-1.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/322786-1.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/325377.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/326879-1.xhtml
-load chrome://reftest/content/crashtests/layout/xul/crashtests/328135-1.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/329327-1.xhtml
 load 329407-1.xml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/336962-1.xhtml

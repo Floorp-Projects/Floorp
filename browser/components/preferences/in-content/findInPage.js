@@ -394,12 +394,6 @@ var gSearchResultsPane = {
       let runningSize = 0;
 
       let accessKeyTextNodes = [];
-      let anons = document.getAnonymousNodes(nodeObject);
-      if (anons) {
-        for (let anon of anons) {
-          accessKeyTextNodes.push(...this.textNodeDescendants(anon));
-        }
-      }
 
       if (
         nodeObject.tagName == "label" ||
