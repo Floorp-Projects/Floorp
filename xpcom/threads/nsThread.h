@@ -123,10 +123,6 @@ class nsThread : public nsIThreadInternal,
     EventQueue()->ResumeInputEventPrioritization();
   }
 
-#ifndef RELEASE_OR_BETA
-  mozilla::TimeStamp& NextIdleDeadlineRef() { return mNextIdleDeadline; }
-#endif
-
   mozilla::SynchronizedEventQueue* EventQueue() { return mEvents.get(); }
 
   bool ShuttingDown() { return mShutdownContext != nullptr; }
@@ -249,7 +245,6 @@ class nsThread : public nsIThreadInternal,
   // the outmost event started, so the entire recursion chain is considered
   // one event.
   mozilla::TimeStamp mCurrentEventStart;
-  mozilla::TimeStamp mNextIdleDeadline;
 
   // The time the currently running event spent in event queues, and
   // when it started running.  If no event is running, they are
