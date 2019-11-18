@@ -27,7 +27,7 @@ const EXPORTED_SYMBOLS = ["WebNavigationFrames"];
  * @returns {Iterator<nsIDocShell>}
  */
 function iterateDocShellTree(docShell) {
-  return docShell.getDocShellEnumerator(
+  return docShell.getAllDocShellsInSubtree(
     docShell.typeContent,
     docShell.ENUMERATE_FORWARDS
   );

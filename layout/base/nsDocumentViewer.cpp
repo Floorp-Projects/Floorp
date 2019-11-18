@@ -3776,16 +3776,12 @@ static void ResetFocusState(nsIDocShell* aDocShell) {
     return;
   }
 
-  nsCOMPtr<nsISimpleEnumerator> docShellEnumerator;
-  aDocShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeContent,
-                                   nsIDocShell::ENUMERATE_FORWARDS,
-                                   getter_AddRefs(docShellEnumerator));
+  nsTArray<RefPtr<nsIDocShell>> docShells;
+  aDocShell->GetAllDocShellsInSubtree(nsIDocShellTreeItem::typeContent,
+                                      nsIDocShell::ENUMERATE_FORWARDS,
+                                      docShells);
 
-  nsCOMPtr<nsISupports> currentContainer;
-  bool hasMoreDocShells;
-  while (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMoreDocShells)) &&
-         hasMoreDocShells) {
-    docShellEnumerator->GetNext(getter_AddRefs(currentContainer));
+  for (const auto& currentContainer : docShells) {
     nsCOMPtr<nsPIDOMWindowOuter> win = do_GetInterface(currentContainer);
     if (win) {
       fm->ClearFocus(win);
