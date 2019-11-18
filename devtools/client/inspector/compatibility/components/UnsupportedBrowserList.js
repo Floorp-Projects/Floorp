@@ -4,9 +4,16 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const UnsupportedBrowserItem = createFactory(
+  require("./UnsupportedBrowserItem")
+);
 
 const Types = require("../types");
 
@@ -45,7 +52,9 @@ class UnsupportedBrowserList extends PureComponent {
 
     return dom.ul(
       {},
-      [...browsersMap.values()].map(({ name }) => dom.span({ key: name }, name))
+      [...browsersMap.entries()].map(([id, { name, versions }]) =>
+        UnsupportedBrowserItem({ key: id, id, name, versions })
+      )
     );
   }
 }
