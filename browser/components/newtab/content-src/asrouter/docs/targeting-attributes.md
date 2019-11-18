@@ -569,10 +569,10 @@ Return an empty array if no account is found or an error occurs.
 
 ```
 interface OAuthClient {
+  // OAuth client_id of the service
+  // https://docs.telemetry.mozilla.org/datasets/fxa_metrics/attribution.html#service-attribution
   id: string;
-  // FxA service name
-  name: string;
-  lastAccessTime: UnixEpochNumber;
+  lastAccessedDaysAgo: number;
 }
 
 declare const attachedFxAOAuthClients: Promise<OAuthClient[]>
