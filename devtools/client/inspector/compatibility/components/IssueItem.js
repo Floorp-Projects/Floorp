@@ -5,7 +5,10 @@
 "use strict";
 
 const Services = require("Services");
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 loader.lazyRequireGetter(
@@ -13,6 +16,10 @@ loader.lazyRequireGetter(
   "openDocLink",
   "devtools/client/shared/link",
   true
+);
+
+const UnsupportedBrowserList = createFactory(
+  require("./UnsupportedBrowserList")
 );
 
 const Types = require("../types");
@@ -79,6 +86,14 @@ class IssueItem extends PureComponent {
       : null;
   }
 
+  _renderUnsupportedBrowserList() {
+    const { unsupportedBrowsers } = this.props;
+
+    return unsupportedBrowsers.length
+      ? UnsupportedBrowserList({ browsers: unsupportedBrowsers })
+      : null;
+  }
+
   render() {
     const {
       deprecated,
@@ -117,7 +132,8 @@ class IssueItem extends PureComponent {
         },
         property
       ),
-      this._renderCauses()
+      this._renderCauses(),
+      this._renderUnsupportedBrowserList()
     );
   }
 }

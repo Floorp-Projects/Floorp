@@ -76,5 +76,17 @@ exports[`IssueItem component renders an unsupported issue of CSS property 1`] = 
   >
     test-property
   </a>
+  <BrowserList
+    browsers={
+      Array [
+        Object {
+          "id": "firefox",
+          "name": "Firefox",
+          "status": "nightly",
+          "version": "70",
+        },
+      ]
+    }
+  />
 </li>
 `;

@@ -11,6 +11,12 @@ const browser = {
   // e.g. "firefox"
   // https://github.com/mdn/browser-compat-data/tree/master/browsers
   id: PropTypes.string.isRequired,
+  // The browser name.
+  // e.g. "Firefox", "Firefox Android".
+  name: PropTypes.string.isRequired,
+  // The status of the browser.
+  // This should be one of "release", "beta", "nightly", "esr" or undefined.
+  status: PropTypes.string,
   // The version of this browser.
   // e.g. "70.0"
   version: PropTypes.string.isRequired,
@@ -31,4 +37,5 @@ const issue = {
   unsupportedBrowsers: PropTypes.arrayOf(PropTypes.shape(browser)).isRequired,
 };
 
+exports.browser = browser;
 exports.issue = issue;
