@@ -1109,8 +1109,6 @@ static void EnsureSorted(FallibleTArray<T>* aArray) {
       MOZ_ASSERT(iter->Compare(*previous) >= 0);
     }
   }
-
-  return;
 }
 #endif
 
