@@ -3705,7 +3705,6 @@ class Document : public nsINode,
 
   // QuerySelector and QuerySelectorAll already defined on nsINode
   nsINodeList* GetAnonymousNodes(Element& aElement);
-  Element* GetBindingParent(nsINode& aNode);
 
   XPathExpression* CreateExpression(const nsAString& aExpression,
                                     XPathNSResolver* aResolver,

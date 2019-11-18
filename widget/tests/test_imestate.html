@@ -195,11 +195,9 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription) {
       onIMEFocusBlurHandler = null;
 
       var focusedElement = gFM.focusedElement;
-      if (focusedElement) {
-        var bindingParent = document.getBindingParent(focusedElement);
-        if (bindingParent) {
-          focusedElement = bindingParent;
-        }
+      // FIXME(emilio, bug 981248): This is needed just for <input type=number>
+      while (focusedElement && focusedElement.isNativeAnonymous) {
+        focusedElement = focusedElement.parentNode;
       }
       if (aTest.focusable) {
         is(focusedElement, element,
