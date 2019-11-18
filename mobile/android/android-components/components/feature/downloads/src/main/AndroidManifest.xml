@@ -9,4 +9,15 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
+    <application>
+        <provider
+            android:name="mozilla.components.feature.downloads.provider.FileProvider"
+            android:authorities="${applicationId}.feature.downloads.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/feature_downloads_file_paths" />
+        </provider>
+    </application>
 </manifest>

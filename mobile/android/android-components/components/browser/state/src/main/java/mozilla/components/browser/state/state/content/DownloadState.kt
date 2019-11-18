@@ -29,9 +29,10 @@ data class DownloadState(
     val contentLength: Long? = null,
     val userAgent: String? = null,
     val destinationDirectory: String = Environment.DIRECTORY_DOWNLOADS,
-    val filePath: String =
-        Environment.getExternalStoragePublicDirectory(destinationDirectory).path + "/" + fileName,
     val referrerUrl: String? = null,
     val skipConfirmation: Boolean = false,
     val id: Long = Random.nextLong()
-)
+) {
+    val filePath: String get() =
+        Environment.getExternalStoragePublicDirectory(destinationDirectory).path + "/" + fileName
+}

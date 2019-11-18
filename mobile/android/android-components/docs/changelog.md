@@ -12,6 +12,12 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-state**
+  * ⚠️ **This is a breaking change**: `DownloadState` doesn't include the property `filePath` in its constructor anymore, now it is a computed property. As the previous behavior caused some situations where `fileName` was initially null and after assigned a value to produce `filePath` values like "/storage/emulated/0/Download/null" [for more info](https://sentry.prod.mozaws.net/operations/reference-browser/issues/6609701/).
+
+* **feature-prompts** and **feature-downloads**
+  * Fix [issue #6439](https://github.com/mozilla-mobile/fenix/issues/6439) "Crash when downloading Image"
+
 # 22.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v22.0.0...master)
