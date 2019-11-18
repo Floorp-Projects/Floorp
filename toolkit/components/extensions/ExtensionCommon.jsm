@@ -489,6 +489,11 @@ class BaseContext {
     return this.extension.canAccessWindow(window);
   }
 
+  openConduit(subject, address) {
+    let actor = this.contentWindow.getWindowGlobalChild().getActor("Conduits");
+    return actor.openConduit(subject, address);
+  }
+
   setContentWindow(contentWindow) {
     if (!this.canAccessWindow(contentWindow)) {
       throw new Error(
