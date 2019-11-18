@@ -21,6 +21,33 @@ addCommonAbuseReportTestTasks();
  * Test tasks specific to the abuse report opened in its own dialog window.
  */
 
+add_task(async function test_close_icon_button_hidden_when_dialog() {
+  const addonId = "addon-to-report@mochi.test";
+  const extension = await installTestExtension(addonId);
+
+  const reportDialog = await AbuseReporter.openDialog(
+    addonId,
+    "menu",
+    gBrowser.selectedBrowser
+  );
+  await AbuseReportTestUtils.promiseReportDialogRendered();
+
+  const panelEl = await reportDialog.promiseReportPanel;
+
+  let promiseClosedWindow = waitClosedWindow();
+
+  EventUtils.synthesizeKey("VK_RETURN", {}, panelEl.ownerGlobal);
+  AbuseReportTestUtils.triggerSubmit("fake-reason", "fake-message");
+
+  await promiseClosedWindow;
+  ok(
+    await reportDialog.promiseReport,
+    "expect the report to not be cancelled by pressing enter"
+  );
+
+  await extension.unload();
+});
+
 add_task(async function test_report_triggered_when_report_dialog_is_open() {
   const addonId = "addon-to-report@mochi.test";
   const extension = await installTestExtension(addonId);
