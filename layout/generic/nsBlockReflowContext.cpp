@@ -241,10 +241,12 @@ void nsBlockReflowContext::ReflowBlock(
     if (mWritingMode.IsOrthogonalTo(mFrame->GetWritingMode())) {
       if (NS_UNCONSTRAINEDSIZE != aFrameRI.AvailableISize()) {
         aFrameRI.AvailableISize() -= mBStartMargin.get() + aClearance;
+        aFrameRI.AvailableISize() = std::max(0, aFrameRI.AvailableISize());
       }
     } else {
       if (NS_UNCONSTRAINEDSIZE != aFrameRI.AvailableBSize()) {
         aFrameRI.AvailableBSize() -= mBStartMargin.get() + aClearance;
+        aFrameRI.AvailableBSize() = std::max(0, aFrameRI.AvailableBSize());
       }
     }
   } else {

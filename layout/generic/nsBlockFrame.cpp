@@ -3307,6 +3307,12 @@ bool nsBlockFrame::IsEmpty() {
 
 bool nsBlockFrame::ShouldApplyBStartMargin(BlockReflowInput& aState,
                                            nsLineBox* aLine) {
+  if (aLine->mFirstChild->IsPageBreakFrame()) {
+    // A page break frame consumes margins adjacent to it.
+    // https://drafts.csswg.org/css-break/#break-margins
+    return false;
+  }
+
   if (aState.mFlags.mShouldApplyBStartMargin) {
     // Apply short-circuit check to avoid searching the line list
     return true;
