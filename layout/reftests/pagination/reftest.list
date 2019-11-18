@@ -124,6 +124,7 @@ fuzzy-if(cocoaWidget,0-1,0-5000) == 745025-1.html 745025-1-ref.html
 == 1420528-1.html 1420528-1-ref.html
 pref(layout.css.column-span.enabled,true) == 1420528-1.html 1420528-1-ref.html
 == 1468654-1.html 1468654-1-ref.html
+== 1596310.html 1596310-ref.html
 
 == content-url-element.html image.html
 == content-url-pseudo.html content-url-pseudo-ref.html
