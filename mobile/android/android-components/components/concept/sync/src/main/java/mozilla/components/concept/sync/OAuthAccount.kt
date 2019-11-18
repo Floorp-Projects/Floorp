@@ -86,14 +86,14 @@ interface OAuthAccount : AutoCloseable {
      * @param state the state token string
      * @param accessType the accessType method to be used by the returned code, determines whether
      * the code can be exchanged for a refresh token to be used offline or not
-     * @return the authorized auth code string
+     * @return Deferred authorized auth code string, or `null` in case of failure.
      */
-    fun authorizeOAuthCode(
+    fun authorizeOAuthCodeAsync(
         clientId: String,
         scopes: Array<String>,
         state: String,
         accessType: AccessType = AccessType.ONLINE
-    ): String?
+    ): Deferred<String?>
 
     /**
      * Fetches the profile object for the current client either from the existing cached state

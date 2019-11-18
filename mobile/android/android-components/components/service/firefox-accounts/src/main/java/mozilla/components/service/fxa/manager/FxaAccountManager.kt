@@ -16,9 +16,11 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.withContext
 import mozilla.appservices.syncmanager.DeviceSettings
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthException
+import mozilla.components.concept.sync.AuthExceptionType
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.AuthType
@@ -59,17 +61,24 @@ import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
 /**
- * A global registry for propagating [AuthException] errors. Components such as [SyncManager] may
- * encounter authentication problems during their normal operation, and
- * this registry is how they inform [FxaAccountManager] that these errors happened.
- *
- * [FxaAccountManager] monitors this registry, adjusts internal state accordingly, and notifies
- * registered [AccountObserver] that account needs re-authentication.
+ * Exposes an instance of [FxaAccountManager] for internal consumption; populated during initialization of
+ * [FxaAccountManager]. This exists to allow various internal parts without a direct reference to an instance of
+ * [FxaAccountManager] to notify it of encountered auth errors.
  */
-val authErrorRegistry = ObserverRegistry<AuthErrorObserver>()
+internal object GlobalAccountManager {
+    private var instance: WeakReference<FxaAccountManager>? = null
 
-interface AuthErrorObserver {
-    fun onAuthErrorAsync(e: AuthException): Deferred<Unit>
+    internal fun setInstance(am: FxaAccountManager) {
+        instance = WeakReference(am)
+    }
+
+    internal fun close() {
+        instance = null
+    }
+
+    internal suspend fun authError(cause: Exception? = null) {
+        instance?.get()?.encounteredAuthError(cause)
+    }
 }
 
 /**
@@ -147,15 +156,8 @@ open class FxaAccountManager(
         oauthObservers.register(fxaOAuthObserver)
     }
 
-    private class FxaAuthErrorObserver(val manager: FxaAccountManager) : AuthErrorObserver {
-        override fun onAuthErrorAsync(e: AuthException): Deferred<Unit> {
-            return manager.processQueueAsync(Event.AuthenticationError(e))
-        }
-    }
-    private val fxaAuthErrorObserver = FxaAuthErrorObserver(this)
-
     init {
-        authErrorRegistry.register(fxaAuthErrorObserver)
+        GlobalAccountManager.setInstance(this)
     }
 
     private class FxaStatePersistenceCallback(
@@ -507,8 +509,13 @@ open class FxaAccountManager(
     }
 
     override fun close() {
+        GlobalAccountManager.close()
         coroutineContext.cancel()
         account.close()
+    }
+
+    internal suspend fun encounteredAuthError(cause: Exception? = null) = withContext(coroutineContext) {
+        processQueueAsync(Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED, cause))).await()
     }
 
     /**

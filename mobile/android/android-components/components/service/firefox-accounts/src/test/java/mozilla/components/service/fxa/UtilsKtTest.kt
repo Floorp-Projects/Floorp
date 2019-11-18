@@ -4,40 +4,23 @@
 
 package mozilla.components.service.fxa
 
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
-import mozilla.components.concept.sync.AuthException
-import mozilla.components.service.fxa.manager.AuthErrorObserver
-import mozilla.components.service.fxa.manager.authErrorRegistry
+import kotlinx.coroutines.runBlocking
+import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.manager.GlobalAccountManager
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
-import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito.reset
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyZeroInteractions
 
 class UtilsKtTest {
-    private class TestAuthErrorObserver : AuthErrorObserver {
-        var lastError: AuthException? = null
-
-        override fun onAuthErrorAsync(e: AuthException): Deferred<Unit> {
-            lastError = e
-            // unit completable starts off in a non-active state.
-            val done = CompletableDeferred<Unit>()
-            done.complete(Unit)
-            return done
-        }
-    }
-
-    @Before
-    fun cleanup() {
-        authErrorRegistry.unregisterObservers()
-    }
-
     @Test
-    fun `handleFxaExceptions form 1 returns correct data back`() {
+    fun `handleFxaExceptions form 1 returns correct data back`() = runBlocking {
         assertEquals(1, handleFxaExceptions(mock(), "test op", {
             1
         }, { fail() }, { fail() }))
@@ -48,9 +31,9 @@ class UtilsKtTest {
     }
 
     @Test
-    fun `handleFxaExceptions form 1 does not swallow non-panics`() {
-        val authErrorObserver = TestAuthErrorObserver()
-        authErrorRegistry.register(authErrorObserver)
+    fun `handleFxaExceptions form 1 does not swallow non-panics`() = runBlocking {
+        val accountManager: FxaAccountManager = mock()
+        GlobalAccountManager.setInstance(accountManager)
 
         // Network.
         assertEquals("pass!", handleFxaExceptions(mock(), "test op", {
@@ -61,7 +44,7 @@ class UtilsKtTest {
             "pass!"
         }))
 
-        assertNull(authErrorObserver.lastError)
+        verifyZeroInteractions(accountManager)
 
         assertEquals("pass!", handleFxaExceptions(mock(), "test op", {
             throw FxaUnauthorizedException("auth!")
@@ -71,10 +54,13 @@ class UtilsKtTest {
             fail()
         }))
 
-        assertEquals("auth!", (authErrorObserver.lastError as AuthException).cause!!.message)
-        assertTrue((authErrorObserver.lastError as AuthException).cause is FxaUnauthorizedException)
+        val captor = argumentCaptor<FxaException>()
+        verify(accountManager).encounteredAuthError(captor.capture())
 
-        authErrorObserver.lastError = null
+        assertEquals("auth!", captor.value.message)
+        assertTrue(captor.value is FxaUnauthorizedException)
+
+        reset(accountManager)
         assertEquals("pass!", handleFxaExceptions(mock(), "test op", {
             throw FxaUnspecifiedException("dunno")
         }, { "fail" }, { error ->
@@ -82,27 +68,27 @@ class UtilsKtTest {
             assertTrue(error is FxaUnspecifiedException)
             "pass!"
         }))
-        assertNull(authErrorObserver.lastError)
+        verifyZeroInteractions(accountManager)
     }
 
     @Test(expected = IllegalStateException::class)
-    fun `handleFxaExceptions form 1 re-throws non-fxa exceptions`() {
+    fun `handleFxaExceptions form 1 re-throws non-fxa exceptions`() = runBlocking {
         handleFxaExceptions(mock(), "test op", {
             throw IllegalStateException("bad state")
         }, { fail() }, { fail() })
     }
 
     @Test(expected = FxaPanicException::class)
-    fun `handleFxaExceptions form 1 re-throws fxa panic exceptions`() {
+    fun `handleFxaExceptions form 1 re-throws fxa panic exceptions`() = runBlocking {
         handleFxaExceptions(mock(), "test op", {
             throw FxaPanicException("don't panic!")
         }, { fail() }, { fail() })
     }
 
     @Test
-    fun `handleFxaExceptions form 2 works`() {
-        val authErrorObserver = TestAuthErrorObserver()
-        authErrorRegistry.register(authErrorObserver)
+    fun `handleFxaExceptions form 2 works`() = runBlocking {
+        val accountManager: FxaAccountManager = mock()
+        GlobalAccountManager.setInstance(accountManager)
 
         assertTrue(handleFxaExceptions(mock(), "test op") {
             Unit
@@ -112,42 +98,54 @@ class UtilsKtTest {
             throw FxaUnspecifiedException("dunno")
         })
 
-        assertNull(authErrorObserver.lastError)
+        verifyZeroInteractions(accountManager)
 
         assertFalse(handleFxaExceptions(mock(), "test op") {
             throw FxaUnauthorizedException("401")
         })
 
-        assertEquals("401", (authErrorObserver.lastError as AuthException).cause!!.message)
-        assertTrue((authErrorObserver.lastError as AuthException).cause is FxaUnauthorizedException)
+        val captor = argumentCaptor<FxaException>()
+        verify(accountManager).encounteredAuthError(captor.capture())
 
-        authErrorObserver.lastError = null
+        assertEquals("401", captor.value.message)
+        assertTrue(captor.value is FxaUnauthorizedException)
+
+        reset(accountManager)
 
         assertFalse(handleFxaExceptions(mock(), "test op") {
             throw FxaNetworkException("dunno")
         })
 
-        assertNull(authErrorObserver.lastError)
+        verifyZeroInteractions(accountManager)
     }
 
     @Test(expected = IllegalStateException::class)
-    fun `handleFxaExceptions form 2 re-throws non-fxa exceptions`() {
+    fun `handleFxaExceptions form 2 re-throws non-fxa exceptions`() = runBlocking {
+        val accountManager: FxaAccountManager = mock()
+        GlobalAccountManager.setInstance(accountManager)
+
         handleFxaExceptions(mock(), "test op") {
             throw IllegalStateException("bad state")
         }
+        verifyZeroInteractions(accountManager)
     }
 
     @Test(expected = FxaPanicException::class)
-    fun `handleFxaExceptions form 2 re-throws fxa panic exceptions`() {
+    fun `handleFxaExceptions form 2 re-throws fxa panic exceptions`() = runBlocking {
+        val accountManager: FxaAccountManager = mock()
+        GlobalAccountManager.setInstance(accountManager)
+
         handleFxaExceptions(mock(), "test op") {
             throw FxaPanicException("dunno")
         }
+
+        verifyZeroInteractions(accountManager)
     }
 
     @Test
-    fun `handleFxaExceptions form 3 works`() {
-        val authErrorObserver = TestAuthErrorObserver()
-        authErrorRegistry.register(authErrorObserver)
+    fun `handleFxaExceptions form 3 works`() = runBlocking {
+        val accountManager: FxaAccountManager = mock()
+        GlobalAccountManager.setInstance(accountManager)
 
         assertEquals(1, handleFxaExceptions(mock(), "test op", { 2 }) {
             1
@@ -157,35 +155,46 @@ class UtilsKtTest {
             throw FxaUnspecifiedException("dunno")
         })
 
-        assertNull(authErrorObserver.lastError)
+        verifyZeroInteractions(accountManager)
 
         assertEquals(-1, handleFxaExceptions(mock(), "test op", { -1 }) {
             throw FxaUnauthorizedException("401")
         })
 
-        assertEquals("401", (authErrorObserver.lastError as AuthException).cause!!.message)
-        assertTrue((authErrorObserver.lastError as AuthException).cause is FxaUnauthorizedException)
+        val captor = argumentCaptor<FxaException>()
+        verify(accountManager).encounteredAuthError(captor.capture())
 
-        authErrorObserver.lastError = null
+        assertEquals("401", captor.value.message)
+        assertTrue(captor.value is FxaUnauthorizedException)
+
+        reset(accountManager)
 
         assertEquals("bad", handleFxaExceptions(mock(), "test op", { "bad" }) {
             throw FxaNetworkException("dunno")
         })
 
-        assertNull(authErrorObserver.lastError)
+        verifyZeroInteractions(accountManager)
     }
 
     @Test(expected = IllegalStateException::class)
-    fun `handleFxaExceptions form 3 re-throws non-fxa exceptions`() {
+    fun `handleFxaExceptions form 3 re-throws non-fxa exceptions`() = runBlocking {
+        val accountManager: FxaAccountManager = mock()
+        GlobalAccountManager.setInstance(accountManager)
+
         handleFxaExceptions(mock(), "test op", { "nope" }) {
             throw IllegalStateException("bad state")
         }
+        verifyZeroInteractions(accountManager)
     }
 
     @Test(expected = FxaPanicException::class)
-    fun `handleFxaExceptions form 3 re-throws fxa panic exceptions`() {
+    fun `handleFxaExceptions form 3 re-throws fxa panic exceptions`() = runBlocking {
+        val accountManager: FxaAccountManager = mock()
+        GlobalAccountManager.setInstance(accountManager)
+
         handleFxaExceptions(mock(), "test op", { "nope" }) {
             throw FxaPanicException("dunno")
         }
+        verifyZeroInteractions(accountManager)
     }
 }
