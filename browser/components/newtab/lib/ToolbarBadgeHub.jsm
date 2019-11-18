@@ -308,6 +308,9 @@ class _ToolbarBadgeHub {
     // the one set by devtools
     if (options.force) {
       this.removeAllNotifications();
+      // When debugging immediately show the badge
+      this.registerBadgeToAllWindows(message);
+      return;
     }
 
     if (message.content.delay) {
