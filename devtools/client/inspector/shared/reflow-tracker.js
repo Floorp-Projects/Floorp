@@ -24,7 +24,8 @@ function ReflowTracker(target) {
 
 ReflowTracker.prototype = {
   destroy() {
-    if (this.reflowFront) {
+    // Ensure that the front isn't yet destroyed
+    if (this.reflowFront && this.reflowFront.actorID) {
       this.stopTracking();
       this.reflowFront.destroy();
       this.reflowFront = null;
