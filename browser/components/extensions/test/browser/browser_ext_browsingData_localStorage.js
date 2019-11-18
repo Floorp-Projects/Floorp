@@ -134,6 +134,14 @@ add_task(async function test_browserData_on_aboutnewtab_and_file_data() {
 });
 
 add_task(async function test_browserData_should_not_remove_extension_data() {
+  if (!Services.prefs.getBoolPref("dom.storage.next_gen")) {
+    // When LSNG isn't enabled, the browsingData API does still clear
+    // all the extensions localStorage if called without a list of specific
+    // origins to clear.
+    info("Test skipped because LSNG is currently disabled");
+    return;
+  }
+
   let extension = ExtensionTestUtils.loadExtension({
     async background() {
       window.localStorage.setItem("key", "value");
