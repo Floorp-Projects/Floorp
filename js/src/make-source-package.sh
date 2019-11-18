@@ -120,6 +120,7 @@ case $cmd in
 
 + /.cargo/config.in
 
+- /third_party/python/gyp
 + /third_party/python/**
 + /third_party/rust/**
 
