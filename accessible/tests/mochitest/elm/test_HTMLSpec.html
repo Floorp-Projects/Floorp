@@ -1002,13 +1002,15 @@
 
       obj = {
         role: ROLE_PARAGRAPH,
-        textAttrs: {
-          0: { },
-          6: { "background-color": "rgb(255, 255, 0)" },
-        },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF }, // HTML:mark text
+          { role: ROLE_MARK,  // HTML:mark text
+            attributes: { "xml-roles": "mark" },
+            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
+            textAttrs: {
+              0: { },
+            }
+          }
         ],
       };
       testElm("mark_container", obj);

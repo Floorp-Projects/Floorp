@@ -1045,7 +1045,13 @@ enum Role {
    */
   FORM_LANDMARK = 178,
 
-  LAST_ROLE = FORM_LANDMARK
+  /**
+   * The html:mark element.
+   * May also be used if WAI-ARIA gets an equivalent role.
+   */
+  MARK = 179,
+
+  LAST_ROLE = MARK
 };
 
 }  // namespace roles
