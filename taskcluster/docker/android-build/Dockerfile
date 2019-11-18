@@ -34,6 +34,7 @@ RUN apt-get update && \
       tar \
       unzip \
       uuid \
+      valgrind \
       vim \
       wget \
       yasm \
