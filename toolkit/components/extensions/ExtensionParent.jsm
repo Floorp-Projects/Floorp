@@ -902,7 +902,7 @@ ParentAPIManager = {
   proxyContexts: new Map(),
 
   init() {
-    // TODO: remove/replace everything that deals with message managers below.
+    // TODO: Bug 1595186 - remove/replace all usage of MessageManager below.
     Services.obs.addObserver(this, "message-manager-close");
 
     this.conduit = new BroadcastConduit(this, {
@@ -1064,11 +1064,8 @@ ParentAPIManager = {
   },
 
   async recvAPICall(data, { actor }) {
-    return this.call(data, actor.browsingContext.top.embedderElement);
-  },
-
-  async call(data, target) {
     let context = this.getContextById(data.childId);
+    let target = actor.browsingContext.top.embedderElement;
     if (context.parentMessageManager !== target.messageManager) {
       throw new Error("Got message on unexpected message manager");
     }
@@ -1127,12 +1124,9 @@ ParentAPIManager = {
     }
   },
 
-  recvAddListener(data, { actor }) {
-    this.addListener(data, actor.browsingContext.top.embedderElement);
-  },
-
-  async addListener(data, target) {
+  async recvAddListener(data, { actor }) {
     let context = this.getContextById(data.childId);
+    let target = actor.browsingContext.top.embedderElement;
     if (context.parentMessageManager !== target.messageManager) {
       throw new Error("Got message on unexpected message manager");
     }
@@ -1140,8 +1134,8 @@ ParentAPIManager = {
     let { childId } = data;
     let handlingUserInput = false;
 
-    // TODO: conduit.idleRunListener
-    let lowPriority = data.path.startsWith("webRequest."); // eslint-disable-line
+    // TODO: Bug 1587058 - Redesign webRequest event coelescing.
+    // let lowPriority = data.path.startsWith("webRequest.");
 
     let listener = async (...listenerArgs) => {
       let result = await this.conduit.queryRunListener(childId, {
