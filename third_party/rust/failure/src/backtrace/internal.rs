@@ -2,6 +2,7 @@ use std::cell::UnsafeCell;
 use std::env;
 use std::ffi::OsString;
 use std::fmt;
+#[allow(deprecated)] // to allow for older Rust versions (<1.24)
 use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
 use std::sync::Mutex;
 
@@ -24,6 +25,7 @@ unsafe impl Sync for MaybeResolved {}
 
 impl InternalBacktrace {
     pub(super) fn new() -> InternalBacktrace {
+        #[allow(deprecated)] // to allow for older Rust versions (<1.24)
         static ENABLED: AtomicUsize = ATOMIC_USIZE_INIT;
 
         match ENABLED.load(Ordering::SeqCst) {

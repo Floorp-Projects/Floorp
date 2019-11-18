@@ -6,7 +6,7 @@ creating and managing errors in Rust. Additional documentation is found here:
 * [API documentation][api]
 * [failure source code][repo]
 
-[api]: https://boats.gitlab.io/failure/doc/failure
+[api]: https://docs.rs/failure
 [repo]: https://github.com/rust-lang-nursery/failure
 
 ```rust

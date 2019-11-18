@@ -25,17 +25,17 @@ fn malloc_size_of_derive(s: synstructure::Structure) -> proc_macro2::TokenStream
             .ast()
             .attrs
             .iter()
-            .any(|attr| match attr.interpret_meta().unwrap() {
-                syn::Meta::Word(ref ident) | syn::Meta::List(syn::MetaList { ref ident, .. })
-                    if ident == "ignore_malloc_size_of" =>
+            .any(|attr| match attr.parse_meta().unwrap() {
+                syn::Meta::Path(ref path) | syn::Meta::List(syn::MetaList { ref path, .. })
+                    if path.is_ident("ignore_malloc_size_of") =>
                 {
                     panic!(
                         "#[ignore_malloc_size_of] should have an explanation, \
                          e.g. #[ignore_malloc_size_of = \"because reasons\"]"
                     );
                 }
-                syn::Meta::NameValue(syn::MetaNameValue { ref ident, .. })
-                    if ident == "ignore_malloc_size_of" =>
+                syn::Meta::NameValue(syn::MetaNameValue { ref path, .. })
+                    if path.is_ident("ignore_malloc_size_of") =>
                 {
                     true
                 },
