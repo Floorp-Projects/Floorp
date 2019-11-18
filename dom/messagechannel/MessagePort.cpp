@@ -265,11 +265,8 @@ void MessagePort::Initialize(const nsID& aUUID, const nsID& aDestinationUUID,
   // The port has to keep itself alive until it's entangled.
   UpdateMustKeepAlive();
 
-  if (!NS_IsMainThread()) {
+  if (WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate()) {
     RefPtr<MessagePort> self = this;
-
-    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(workerPrivate);
 
     // When the callback is executed, we cannot process messages anymore because
     // we cannot dispatch new runnables. Let's force a Close().

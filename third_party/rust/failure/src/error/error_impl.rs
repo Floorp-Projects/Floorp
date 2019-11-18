@@ -4,7 +4,7 @@ use Fail;
 use backtrace::Backtrace;
 
 pub(crate) struct ErrorImpl {
-    inner: Box<Inner<Fail>>,
+    inner: Box<Inner<dyn Fail>>,
 }
 
 struct Inner<F: ?Sized + Fail> {
@@ -25,11 +25,11 @@ impl<F: Fail> From<F> for ErrorImpl {
 }
 
 impl ErrorImpl {
-    pub(crate) fn failure(&self) -> &Fail {
+    pub(crate) fn failure(&self) -> &dyn Fail {
         &self.inner.failure
     }
 
-    pub(crate) fn failure_mut(&mut self) -> &mut Fail {
+    pub(crate) fn failure_mut(&mut self) -> &mut dyn Fail {
         &mut self.inner.failure
     }
 
