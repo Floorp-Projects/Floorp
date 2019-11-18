@@ -67,12 +67,12 @@ test_interpolation({
   from: 'none',
   to: '7 -8 9 400grad',
 }, [
-  {at: -1, expect: '7 -8 9 -400grad'},
-  {at: 0, expect: '7 -8 9 0deg'},
-  {at: 0.125, expect: '7 -8 9 50grad'},
-  {at: 0.875, expect: '7 -8 9 350grad'},
-  {at: 1, expect: '7 -8 9 400grad'},
-  {at: 2, expect: '7 -8 9 800grad'}
+  {at: -1, expect: '0.5 -0.57 0.65 -400grad'},
+  {at: 0, expect: '0.5 -0.57 0.65 0deg'},
+  {at: 0.125, expect: '0.5 -0.57 0.65 50grad'},
+  {at: 0.875, expect: '0.5 -0.57 0.65 350grad'},
+  {at: 1, expect: '0.5 -0.57 0.65 400grad'},
+  {at: 2, expect: '0.5 -0.57 0.65 800grad'}
 ]);
 
 test_interpolation({
@@ -171,12 +171,12 @@ test_interpolation({
   from: '1 -2.5 3.64 100deg',
   to: '1 -2.5 3.64 -100deg',
 }, [
-  {at: -1, expect: '1 -2.5 3.64 300deg'},
-  {at: 0, expect: '1 -2.5 3.64 100deg'},
-  {at: 0.25, expect: '1 -2.5 3.64 50deg'},
-  {at: 0.75, expect: '1 -2.5 3.64 -50deg'},
-  {at: 1, expect: '1 -2.5 3.64 -100deg'},
-  {at: 2, expect: '1 -2.5 3.64 -300deg'},
+  {at: -1, expect: '0.22 -0.55 0.8 300deg'},
+  {at: 0, expect: '0.22 -0.55 0.8 100deg'},
+  {at: 0.25, expect: '0.22 -0.55 0.8 50deg'},
+  {at: 0.75, expect: '0.22 -0.55 0.8 -50deg'},
+  {at: 1, expect: '0.22 -0.55 0.8 -100deg'},
+  {at: 2, expect: '0.22 -0.55 0.8 -300deg'},
 ]);
 
 // The rotation angle gets interpolated numerically and the rotation vector
