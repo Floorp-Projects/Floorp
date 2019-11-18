@@ -1510,6 +1510,17 @@ function RegisterMessageListenersAndLoadContentScript()
     );
 
     g.browserMessageManager.loadFrameScript("resource://reftest/reftest-content.js", true, true);
+
+    ChromeUtils.registerWindowActor("ReftestFission", {
+        parent: {
+          moduleURI: "resource://reftest/ReftestFissionParent.jsm",
+        },
+        child: {
+          moduleURI: "resource://reftest/ReftestFissionChild.jsm",
+        },
+        allFrames: true,
+        includeChrome: true,
+    });
 }
 
 function RecvAssertionCount(count)
@@ -1573,6 +1584,9 @@ function RecvLog(type, msg)
         TestBuffer(msg);
     } else if (type == "warning") {
         logger.warning(msg);
+    } else if (type == "error") {
+        logger.error("REFTEST TEST-UNEXPECTED-FAIL | " + g.currentURL + " | " + msg + "\n");
+        ++g.testResults.Exception;
     } else {
         logger.error("REFTEST TEST-UNEXPECTED-FAIL | " + g.currentURL + " | unknown log type " + type + "\n");
         ++g.testResults.Exception;
