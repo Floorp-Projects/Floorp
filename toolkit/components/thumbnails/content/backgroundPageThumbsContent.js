@@ -222,9 +222,20 @@ const backgroundPageThumbsContent = {
       });
     };
     let win = docShell.domWindow;
-    win.requestIdleCallback(() =>
-      doCapture().catch(ex => this._failCurrentCapture(ex.message))
-    );
+
+    let runCapture = () => {
+      doCapture().catch(ex => this._failCurrentCapture(ex.message));
+    };
+
+    // When testing, especially on debug builds, this idle callback might
+    // be called too late (or never called at all - see bug 1596781), and
+    // the test will time out. So if we're running in automation, we begin
+    // the capture on the next tick.
+    if (Cu.isInAutomation) {
+      Services.tm.dispatchToMainThread(runCapture);
+    } else {
+      win.requestIdleCallback(runCapture);
+    }
   },
 
   _finishCurrentCapture() {
