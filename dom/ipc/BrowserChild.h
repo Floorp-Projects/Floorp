@@ -278,6 +278,9 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
       const mozilla::layers::CompositorOptions& aCompositorOptions,
       const bool& aLayersConnected);
 
+  mozilla::ipc::IPCResult RecvCompositorOptionsChanged(
+      const mozilla::layers::CompositorOptions& aNewOptions);
+
   mozilla::ipc::IPCResult RecvUpdateDimensions(
       const mozilla::dom::DimensionInfo& aDimensionInfo);
   mozilla::ipc::IPCResult RecvSizeModeChanged(const nsSizeMode& aSizeMode);
