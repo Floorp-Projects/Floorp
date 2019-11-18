@@ -2,7 +2,7 @@
 
 # AddOnCollectionProvider
 
-`class AddOnCollectionProvider : `[`AddOnsProvider`](../../mozilla.components.feature.addons/-add-ons-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/amo/AddOnCollectionProvider.kt#L44)
+`class AddOnCollectionProvider : `[`AddOnsProvider`](../../mozilla.components.feature.addons/-add-ons-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/amo/AddOnCollectionProvider.kt#L46)
 
 Provide access to the collections AMO API.
 https://addons-server.readthedocs.io/en/latest/topics/api/collections.html
@@ -17,6 +17,7 @@ https://addons-server.readthedocs.io/en/latest/topics/api/collections.html
 
 | Name | Summary |
 |---|---|
+| [getAddOnIconBitmap](get-add-on-icon-bitmap.md) | `suspend fun getAddOnIconBitmap(addOn: `[`AddOn`](../../mozilla.components.feature.addons/-add-on/index.md)`): <ERROR CLASS>?`<br>Fetches given AddOn icon from the url and returns a decoded Bitmap |
 | [getAvailableAddOns](get-available-add-ons.md) | `suspend fun getAvailableAddOns(allowCache: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`AddOn`](../../mozilla.components.feature.addons/-add-on/index.md)`>`<br>Interacts with the collections endpoint to provide a list of available add-ons. May return a cached response, if available, not expired (see [maxCacheAgeInMinutes](#)) and allowed (see [allowCache](get-available-add-ons.md#mozilla.components.feature.addons.amo.AddOnCollectionProvider$getAvailableAddOns(kotlin.Boolean)/allowCache)). |
 
 ### Extension Functions

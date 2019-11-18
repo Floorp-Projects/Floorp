@@ -8,12 +8,13 @@
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `LoadRequestMetadata(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, options: `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`LoadRequestOption`](../-load-request-option/index.md)`> = emptyArray())` |
+| [&lt;init&gt;](-init-.md) | `LoadRequestMetadata(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, options: `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`LoadRequestOption`](../-load-request-option/index.md)`> = emptyArray(), allowOrDeny: (`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = {})` |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
+| [allowOrDeny](allow-or-deny.md) | `val allowOrDeny: (`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [url](url.md) | `val url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 
 ### Functions
@@ -21,12 +22,6 @@
 | Name | Summary |
 |---|---|
 | [isSet](is-set.md) | `fun isSet(option: `[`LoadRequestOption`](../-load-request-option/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
-
-### Companion Object Properties
-
-| Name | Summary |
-|---|---|
-| [blank](blank.md) | `val blank: `[`LoadRequestMetadata`](./index.md) |
 
 ### Extension Functions
 
