@@ -128,9 +128,6 @@ case $cmd in
 + /testing/mozbase/**
 + /testing/web-platform/tests/streams/**
 
-+ /taskcluster/moz.build
-+ /taskcluster/taskgraph/test/**
-
 + /toolkit/crashreporter/tools/symbolstore.py
 + /toolkit/mozapps/installer/package-name.mk
 + /toolkit/mozapps/installer/upload-files.mk
