@@ -33,7 +33,13 @@ addEventListener(
       !aEvent.isTrusted ||
       // Check that we haven't been closed (DOM code dispatches this event
       // asynchronously).
-      content.closed ||
+      content.closed
+    ) {
+      return;
+    }
+    // Ensure `docShell.document` (an nsIWebNavigation idl prop) is there:
+    docShell.QueryInterface(Ci.nsIWebNavigation);
+    if (
       // Check that the document whose title changed is the toplevel document,
       // rather than a subframe, and check that it is still the current
       // document in the docshell - we may have started loading another one.
