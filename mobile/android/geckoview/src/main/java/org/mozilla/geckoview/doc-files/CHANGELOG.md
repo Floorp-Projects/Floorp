@@ -43,6 +43,9 @@ exclude: true
 - Added support for Browser and Page Action from the WebExtension API.
   See [`WebExtension.Action`][72.14].
   ([bug 1530402]({{bugzilla}}1530402))
+- ⚠️ Split [`ContentBlockingController.Event.LOADED_TRACKING_CONTENT`][72.15] into
+  [`ContentBlockingController.Event.LOADED_LEVEL_1_TRACKING_CONTENT`][72.16] and
+  [`ContentBlockingController.Event.LOADED_LEVEL_2_TRACKING_CONTENT`][72.17].
 
 [72.1]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture-
 [72.2]: {{javadoc_uri}}/Autofill.html
@@ -58,6 +61,9 @@ exclude: true
 [72.12]: https://developer.android.com/reference/android/view/TextureView
 [72.13]: https://developer.android.com/reference/android/view/SurfaceView
 [72.14]: {{javadoc_uri}}/WebExtension.Action.html
+[72.15]: {{javadoc_uri}}/ContentBlockingController.Event.html#LOADED_TRACKING_CONTENT
+[72.16]: {{javadoc_uri}}/ContentBlockingController.Event.html#LOADED_LEVEL_1_TRACKING_CONTENT
+[72.17]: {{javadoc_uri}}/ContentBlockingController.Event.html#LOADED_LEVEL_2_TRACKING_CONTENT
 
 ## v71
 - Added a content blocking flag for blocked social cookies to [`ContentBlocking`][70.17].

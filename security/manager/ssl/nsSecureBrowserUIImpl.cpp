@@ -185,8 +185,12 @@ void nsSecureBrowserUIImpl::CheckForContentBlockingEvents() {
     mEvent |= STATE_BLOCKED_TRACKING_CONTENT;
   }
 
-  if (doc->GetHasTrackingContentLoaded()) {
-    mEvent |= STATE_LOADED_TRACKING_CONTENT;
+  if (doc->GetHasLevel1TrackingContentLoaded()) {
+    mEvent |= STATE_LOADED_LEVEL_1_TRACKING_CONTENT;
+  }
+
+  if (doc->GetHasLevel2TrackingContentLoaded()) {
+    mEvent |= STATE_LOADED_LEVEL_2_TRACKING_CONTENT;
   }
 
   // Has fingerprinting content been blocked or loaded?

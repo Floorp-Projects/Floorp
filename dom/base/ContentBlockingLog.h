@@ -34,9 +34,12 @@ class ContentBlockingLog final {
   };
 
   struct OriginDataEntry {
-    OriginDataEntry() : mHasTrackingContentLoaded(false) {}
+    OriginDataEntry()
+        : mHasLevel1TrackingContentLoaded(false),
+          mHasLevel2TrackingContentLoaded(false) {}
 
-    bool mHasTrackingContentLoaded;
+    bool mHasLevel1TrackingContentLoaded;
+    bool mHasLevel2TrackingContentLoaded;
     Maybe<bool> mHasCookiesLoaded;
     Maybe<bool> mHasTrackerCookiesLoaded;
     Maybe<bool> mHasSocialTrackerCookiesLoaded;
@@ -142,8 +145,12 @@ class ContentBlockingLog final {
 
     entry->mOrigin = aOrigin;
 
-    if (aType == nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT) {
-      entry->mData->mHasTrackingContentLoaded = aBlocked;
+    if (aType ==
+        nsIWebProgressListener::STATE_LOADED_LEVEL_1_TRACKING_CONTENT) {
+      entry->mData->mHasLevel1TrackingContentLoaded = aBlocked;
+    } else if (aType ==
+               nsIWebProgressListener::STATE_LOADED_LEVEL_2_TRACKING_CONTENT) {
+      entry->mData->mHasLevel2TrackingContentLoaded = aBlocked;
     } else if (aType == nsIWebProgressListener::STATE_COOKIES_LOADED) {
       MOZ_ASSERT(entry->mData->mHasCookiesLoaded.isNothing());
       entry->mData->mHasCookiesLoaded.emplace(aBlocked);
@@ -208,8 +215,14 @@ class ContentBlockingLog final {
         continue;
       }
 
-      if (aType == nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT) {
-        if (entry.mData->mHasTrackingContentLoaded) {
+      if (aType ==
+          nsIWebProgressListener::STATE_LOADED_LEVEL_1_TRACKING_CONTENT) {
+        if (entry.mData->mHasLevel1TrackingContentLoaded) {
+          return true;
+        }
+      } else if (aType == nsIWebProgressListener::
+                              STATE_LOADED_LEVEL_2_TRACKING_CONTENT) {
+        if (entry.mData->mHasLevel2TrackingContentLoaded) {
           return true;
         }
       } else if (aType == nsIWebProgressListener::STATE_COOKIES_LOADED) {
@@ -257,8 +270,14 @@ class ContentBlockingLog final {
  private:
   bool RecordLogEntryInCustomField(uint32_t aType, OriginEntry& aEntry,
                                    bool aBlocked) {
-    if (aType == nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT) {
-      aEntry.mData->mHasTrackingContentLoaded = aBlocked;
+    if (aType ==
+        nsIWebProgressListener::STATE_LOADED_LEVEL_1_TRACKING_CONTENT) {
+      aEntry.mData->mHasLevel1TrackingContentLoaded = aBlocked;
+      return true;
+    }
+    if (aType ==
+        nsIWebProgressListener::STATE_LOADED_LEVEL_2_TRACKING_CONTENT) {
+      aEntry.mData->mHasLevel2TrackingContentLoaded = aBlocked;
       return true;
     }
     if (aType == nsIWebProgressListener::STATE_COOKIES_LOADED) {
@@ -289,11 +308,21 @@ class ContentBlockingLog final {
   }
 
   void StringifyCustomFields(const OriginEntry& aEntry, JSONWriter& aWriter) {
-    if (aEntry.mData->mHasTrackingContentLoaded) {
+    if (aEntry.mData->mHasLevel1TrackingContentLoaded) {
       aWriter.StartArrayElement(aWriter.SingleLineStyle);
       {
         aWriter.IntElement(
-            nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT);
+            nsIWebProgressListener::STATE_LOADED_LEVEL_1_TRACKING_CONTENT);
+        aWriter.BoolElement(true);  // blocked
+        aWriter.IntElement(1);      // repeat count
+      }
+      aWriter.EndArray();
+    }
+    if (aEntry.mData->mHasLevel2TrackingContentLoaded) {
+      aWriter.StartArrayElement(aWriter.SingleLineStyle);
+      {
+        aWriter.IntElement(
+            nsIWebProgressListener::STATE_LOADED_LEVEL_2_TRACKING_CONTENT);
         aWriter.BoolElement(true);  // blocked
         aWriter.IntElement(1);      // repeat count
       }
