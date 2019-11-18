@@ -136,7 +136,8 @@ interface nsIXPCComponents_Utils : nsISupports
     jsval evalInSandbox(in AString source, in jsval sandbox,
                         [optional] in jsval version,
                         [optional] in AUTF8String filename,
-                        [optional] in long lineNo);
+                        [optional] in long lineNo,
+                        [optional] in bool enforceFilenameRestrictions);
 
     /*
      * Get the sandbox for running JS-implemented UA widgets (video controls etc.),
