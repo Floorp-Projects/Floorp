@@ -130,7 +130,6 @@ case $cmd in
 
 + /toolkit/crashreporter/tools/symbolstore.py
 + /toolkit/mozapps/installer/package-name.mk
-+ /toolkit/mozapps/installer/upload-files.mk
 
 # SpiderMonkey itself
 
