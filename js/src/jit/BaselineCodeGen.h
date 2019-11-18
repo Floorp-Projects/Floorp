@@ -654,11 +654,11 @@ class BaselineInterpreterHandler {
 
   // Entry point to start interpreting a bytecode op. No registers are live. PC
   // is loaded from the frame.
-  Label interpretOp_;
+  NonAssertingLabel interpretOp_;
 
   // Like interpretOp_ but at this point the PC is expected to be in
   // InterpreterPCReg.
-  Label interpretOpWithPCReg_;
+  NonAssertingLabel interpretOpWithPCReg_;
 
   // Offsets of toggled jumps for debugger instrumentation.
   using CodeOffsetVector = Vector<uint32_t, 0, SystemAllocPolicy>;
@@ -666,8 +666,8 @@ class BaselineInterpreterHandler {
 
   // Offsets of toggled jumps for code coverage instrumentation.
   CodeOffsetVector codeCoverageOffsets_;
-  Label codeCoverageAtPrologueLabel_;
-  Label codeCoverageAtPCLabel_;
+  NonAssertingLabel codeCoverageAtPrologueLabel_;
+  NonAssertingLabel codeCoverageAtPCLabel_;
 
   // Offsets of IC calls for IsIonInlinableOp ops, for Ion bailouts.
   BaselineInterpreter::ICReturnOffsetVector icReturnOffsets_;
@@ -728,9 +728,8 @@ class BaselineInterpreterHandler {
     return false;
   }
 
-  MOZ_MUST_USE bool addDebugInstrumentationOffset(CodeOffset offset) {
-    return debugInstrumentationOffsets_.append(offset.offset());
-  }
+  MOZ_MUST_USE bool addDebugInstrumentationOffset(JSContext* cx,
+                                                  CodeOffset offset);
 
   const BaselineInterpreter::CallVMOffsets& callVMOffsets() const {
     return callVMOffsets_;
