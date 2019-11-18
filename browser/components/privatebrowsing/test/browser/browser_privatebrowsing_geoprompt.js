@@ -5,6 +5,14 @@
 // This test makes sure that the geolocation prompt does not show a remember
 // control inside the private browsing mode.
 
+// This test leaks intermittently with Fission. Make it behave more like
+// non-Fission e10s tests to try to avoid them.
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.ipc.keepProcessesAlive.webIsolated.perOrigin", 1]],
+  });
+});
+
 add_task(async function test() {
   const testPageURL =
     "https://example.com/browser/" +
