@@ -14,105 +14,82 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1041393
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1041393">ImageCapture tests</a>
 <script type="application/javascript">
 
-let repeat = 100;
-let count;
-
 // Check if the callback returns even no JS reference on it.
-function gcTest(track) {
-  return new Promise(function(resolve, reject) {
-    count = 0;
-    let i;
-    let imageCapture;
-    for(i = 0; i < repeat; i++) {
-      imageCapture = new ImageCapture(track);
-      imageCapture.onphoto = function(blob) {
-        count++;
-        if (count == repeat) {
-          ok(true, "pass gc testing");
-          resolve(track);
-        }
-      };
-      imageCapture.onerror = function(error) {
-        ok(false, "takePhoto failure in gc testing");
-        reject();
-      };
-
-      imageCapture.takePhoto();
-    }
-    info("Call gc ");
-    SpecialPowers.gc();
-  });
+async function gcTest(track) {
+  const repeat = 100;
+  const promises = [];
+  for (let i = 0; i < repeat; ++i) {
+    const imageCapture = new ImageCapture(track);
+    promises.push(new Promise((resolve, reject) => {
+      imageCapture.onphoto = resolve;
+      imageCapture.onerror = () =>
+        reject(new Error(`takePhoto gcTest failure for capture ${i}`));
+    }));
+    imageCapture.takePhoto();
+  }
+  info("Call gc ");
+  SpecialPowers.gc();
+  await Promise.all(promises);
 }
 
 // Continue calling takePhoto() in rapid succession.
-function rapidTest(track) {
-  return new Promise(function(resolve, reject) {
-    let imageCapture = new ImageCapture(track);
-    imageCapture.onphoto = function(blob) {
-      count++;
-      if (count == repeat) {
-        ok(true, "pass raipd takePhoto() testing");
-        resolve(track);
-      }
-    };
-    imageCapture.onerror = function(error) {
-      ok(false, "takePhoto() failure in rapid testing");
-      reject();
-    };
-
-    count = 0;
-    let i;
-    for(i = 0; i < repeat; i++) {
-      imageCapture.takePhoto();
-    }
-  });
+async function rapidTest(track) {
+  const repeat = 100;
+  const imageCapture = new ImageCapture(track);
+  // "error" can fire synchronously in `takePhoto`
+  const errorPromise = new Promise(r => imageCapture.onerror = r);
+  for (let i = 0; i < repeat; ++i) {
+    imageCapture.takePhoto();
+  }
+  for (let i = 0; i < repeat; ++i) {
+    await Promise.race([
+      new Promise(r => imageCapture.onphoto = r),
+      errorPromise.then(() => Promise.reject(new Error("Capture failed"))),
+    ]);
+  }
 }
 
 // Check if the blob is decodable.
-function blobTest(track) {
-  return new Promise(function(resolve, reject) {
-    let imageCapture = new ImageCapture(track);
-    imageCapture.onphoto = function(blob) {
-      let img = new Image();
-      img.onerror = function() {
-        ok(false, "fail to decode blob");
-        reject();
-      };
-      img.onload = function() {
-        ok(true, "decode blob success");
-        resolve(track);
-      };
-      img.src = URL.createObjectURL(blob.data);
-    };
-    imageCapture.onerror = function(error) {
-      ok(false, "fail to capture image");
-    };
+async function blobTest(track) {
+  const imageCapture = new ImageCapture(track);
+  // "error" can fire synchronously in `takePhoto`
+  const errorPromise = new Promise(r => imageCapture.onerror = r);
+  imageCapture.takePhoto();
+  const blob = await Promise.race([
+    new Promise(r => imageCapture.onphoto = r),
+    errorPromise.then(() => Promise.reject(new Error("Capture failed"))),
+  ]);
 
-    imageCapture.takePhoto();
+  const img = new Image();
+  img.src = URL.createObjectURL(blob.data);
+  await new Promise((resolve, reject) => {
+    img.onload = resolve;
+    img.onerror = () => reject(new Error("Decode failed"));
   });
 }
 
 // It should return an error event after disabling video track.
-function trackTest(track) {
-  return new Promise(function(resolve, reject) {
-    let imageCapture = new ImageCapture(track);
-    imageCapture.onphoto = function(blob) {
-      ok(false, "expect error when video track is disable");
-      reject();
-    };
-    imageCapture.onerror = function(error) {
-      ok(error.imageCaptureError.code == error.imageCaptureError.PHOTO_ERROR, "error code is PHOTO_ERROR")
-      track.enabled = true;
-      resolve(track);
-    };
-
-    track.enabled = false;
+async function trackTest(track) {
+  const imageCapture = new ImageCapture(track);
+  track.enabled = false;
+  try {
+    const errorPromise = new Promise(r => imageCapture.onerror = r);
     imageCapture.takePhoto();
-  });
+    const error = await Promise.race([
+      errorPromise,
+      new Promise(r => imageCapture.onphoto = r).then(
+        () => Promise.reject(new Error("Disabled video track should fail"))),
+    ]);
+    is(error.imageCaptureError.code, error.imageCaptureError.PHOTO_ERROR,
+      "Expected error code")
+  } finally {
+    track.enabled = true;
+  }
 }
 
 async function init() {
-  // use loopback camera if available, otherwise fake, MediaTrackGraph will be the backend of ImageCapture.
+  // Use loopback camera if available, otherwise fake.
+  // MediaTrackGraph will be the backend of ImageCapture.
   await setupGetUserMediaTestPrefs();
   let stream = await navigator.mediaDevices.getUserMedia({video: true});
   return stream.getVideoTracks()[0];
@@ -120,13 +97,13 @@ async function init() {
 
 async function start() {
   try {
-    let track = await init();
+    const track = await init();
     info("ImageCapture track disable test.");
-    track = await trackTest(track);
+    await trackTest(track);
     info("ImageCapture blob test.");
-    track = await blobTest(track);
+    await blobTest(track);
     info("ImageCapture rapid takePhoto() test.");
-    track = await rapidTest(track);
+    await rapidTest(track);
     info("ImageCapture multiple instances test.");
     await gcTest(track);
   } catch (e) {
@@ -139,9 +116,12 @@ async function start() {
 SimpleTest.requestCompleteLog();
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv({"set": [["dom.imagecapture.enabled", true],
-                                  ["media.navigator.permission.disabled", true]
-                                  ]}, start);
+SpecialPowers.pushPrefEnv({
+  "set": [
+    ["dom.imagecapture.enabled", true],
+    ["media.navigator.permission.disabled", true],
+  ],
+}, start);
 </script>
 </pre>
 </body>
