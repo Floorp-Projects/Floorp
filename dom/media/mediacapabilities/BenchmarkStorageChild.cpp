@@ -24,4 +24,11 @@ PBenchmarkStorageChild* BenchmarkStorageChild::Instance() {
   return sChild;
 }
 
+BenchmarkStorageChild::~BenchmarkStorageChild() {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (sChild == this) {
+    sChild = nullptr;
+  }
+}
+
 }  // namespace mozilla
