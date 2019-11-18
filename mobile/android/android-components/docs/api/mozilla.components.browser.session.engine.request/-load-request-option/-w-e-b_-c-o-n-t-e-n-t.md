@@ -2,4 +2,4 @@
 
 # WEB_CONTENT
 
-`WEB_CONTENT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/engine/request/LoadRequestMetadata.kt#L35)
+`WEB_CONTENT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/engine/request/LoadRequestMetadata.kt#L32)

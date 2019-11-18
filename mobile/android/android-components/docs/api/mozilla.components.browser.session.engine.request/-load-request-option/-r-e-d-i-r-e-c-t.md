@@ -2,4 +2,4 @@
 
 # REDIRECT
 
-`REDIRECT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/engine/request/LoadRequestMetadata.kt#L34)
+`REDIRECT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/engine/request/LoadRequestMetadata.kt#L31)
