@@ -21,7 +21,7 @@ const aside = {
   content: `Test your site on mobile and other devices without having to copy, paste, or leave the browser.`,
   cta: "Learn More About Send Tabs",
   href:
-    "https://support.mozilla.org/en-US/kb/send-tab-firefox-desktop-other-devices?utm_source=devtools_whatsnew",
+    "https://support.mozilla.org/kb/send-tab-firefox-desktop-other-devices?utm_source=devtools_whatsnew",
 };
 
 const release = {
