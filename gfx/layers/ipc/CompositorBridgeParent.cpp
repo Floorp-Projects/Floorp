@@ -1760,6 +1760,7 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
   RefPtr<APZUpdater> oldApzUpdater;
   APZCTreeManagerParent* parent;
   bool scheduleComposition = false;
+  bool apzEnablementChanged = false;
   RefPtr<ContentCompositorBridgeParent> cpcp;
   RefPtr<WebRenderBridgeParent> childWrBridge;
 
@@ -1794,6 +1795,7 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
               "Moving tab between windows with different APZ enablement. "
               "This is supported on a best-effort basis, but some things may "
               "break.");
+          apzEnablementChanged = true;
           break;
         }
         case CompositorOptionsChangeKind::eSupported: {
@@ -1863,6 +1865,9 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
     }
     mApzUpdater->NotifyLayerTreeAdopted(
         WRRootId(child, gfxUtils::GetContentRenderRoot()), oldApzUpdater);
+  }
+  if (apzEnablementChanged) {
+    Unused << SendCompositorOptionsChanged(child, mOptions);
   }
   return IPC_OK();
 }

@@ -1231,6 +1231,27 @@ mozilla::ipc::IPCResult BrowserChild::RecvInitRendering(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserChild::RecvCompositorOptionsChanged(
+    const CompositorOptions& aNewOptions) {
+  MOZ_ASSERT(mCompositorOptions);
+
+  // The only compositor option we currently support changing is APZ
+  // enablement. Even that is only partially supported for now:
+  //   * Going from APZ to non-APZ is fine - we just flip the stored flag.
+  //     Note that we keep the actors (mApzcTreeManager, and the APZChild
+  //     created in InitAPZState()) around (read on for why).
+  //   * Going from non-APZ to APZ is only supported if we were using
+  //     APZ initially (at InitRendering() time) and we are transitioning
+  //     back. In this case, we just reuse the actors which we kept around.
+  //     Fully supporting a non-APZ to APZ transition (i.e. even in cases
+  //     where we initialized as non-APZ) would require setting up the actors
+  //     here. (In that case, we would also have the options of destroying
+  //     the actors in the APZ --> non-APZ case, and always re-creating them
+  //     during a non-APZ --> APZ transition).
+  mCompositorOptions->SetUseAPZ(aNewOptions.UseAPZ());
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult BrowserChild::RecvUpdateDimensions(
     const DimensionInfo& aDimensionInfo) {
   // When recording/replaying we need to make sure the dimensions are up to

@@ -839,6 +839,18 @@ mozilla::ipc::IPCResult CompositorBridgeChild::RecvObserveLayersUpdate(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult CompositorBridgeChild::RecvCompositorOptionsChanged(
+    const LayersId& aLayersId, const CompositorOptions& aNewOptions) {
+  MOZ_ASSERT(aLayersId.IsValid());
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (RefPtr<dom::BrowserParent> tab =
+          dom::BrowserParent::GetBrowserParentFromLayersId(aLayersId)) {
+    Unused << tab->SendCompositorOptionsChanged(aNewOptions);
+  }
+  return IPC_OK();
+}
+
 void CompositorBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(
     TextureClient* aClient) {
   if (!aClient) {

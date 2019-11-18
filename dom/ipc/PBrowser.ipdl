@@ -736,6 +736,8 @@ child:
                         CompositorOptions compositorOptions,
                         bool layersConnected);
 
+    async CompositorOptionsChanged(CompositorOptions newOptions);
+
     async LoadURL(nsCString uri, ShowInfo info);
 
     async ResumeLoad(uint64_t pendingSwitchID, ShowInfo info);
