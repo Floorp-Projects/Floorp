@@ -555,13 +555,12 @@
           this.mInput.ownerDocument.documentURIObject.schemeIs("chrome")
         ) {
           inputID = this.mInput.id;
-          // Take care of elements with no id that are inside xbl bindings
+          // Take care of elements with no id that are inside shadow DOM
+          // FIXME: Do we really need this?
           if (!inputID) {
-            let bindingParent = this.mInput.ownerDocument.getBindingParent(
-              this.mInput
-            );
-            if (bindingParent) {
-              inputID = bindingParent.id;
+            let shadow = this.mInput.containingShadowRoot;
+            if (shadow) {
+              inputID = shadow.host.id;
             }
           }
         }
