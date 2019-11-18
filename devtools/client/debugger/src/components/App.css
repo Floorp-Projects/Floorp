@@ -88,11 +88,6 @@ button:focus {
   display: none;
 }
 
-/* Enforce minimum sidebar widths for SplitBox */
-.split-box > .controlled {
-  min-width: 250px !important;
-}
-
 /* Launchpad Root */
 
 * {
