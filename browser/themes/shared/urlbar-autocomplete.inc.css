@@ -137,8 +137,12 @@
 .urlbarView:not(.megabar) .urlbarView-row,
 .urlbarView.megabar .urlbarView-row-inner {
   border-radius: 2px;
-  padding-block: 6px;
   padding-inline-start: calc(@urlbarViewItemPaddingStart@);
+}
+
+.urlbarView:not(.megabar) .urlbarView-row:not([type=tip]),
+.urlbarView.megabar .urlbarView-row-inner {
+  padding-block: 6px;
 }
 
 .urlbarView:not(.megabar) .urlbarView-row {
@@ -146,8 +150,18 @@
   padding-inline-end: var(--item-padding-end, 5px);
 }
 
-:root[uidensity=touch] .urlbarView-row {
+:root[uidensity=touch] .urlbarView-row:not([type=tip]) {
   padding-block: 11px;
+}
+
+.urlbarView:not(.megabar) .urlbarView-row[type=tip] {
+  padding-block: 24px;
+}
+
+.urlbarView.megabar .urlbarView-row[type=tip] {
+  padding-block: 18px;
+  /* Compensating for the 4px focus ring on tip buttons. */
+  padding-inline-end: calc(@urlbarViewItemPaddingStart@ + 4px);
 }
 
 .urlbarView-row-inner {
@@ -249,11 +263,6 @@
 .urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-type-icon,
 .urlbarView:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-type-icon {
   background-image: url(chrome://browser/skin/tab.svg);
-}
-
-.urlbarView-row[type=tip] {
-  padding-block: 24px;
-  padding-inline-end: @urlbarViewPaddingInline@;
 }
 
 .urlbarView-row[type=tip]:not(:last-child) {
