@@ -8,27 +8,27 @@ This page shows how you can try out the [`Debugger` API][debugger] yourself
 using Firefox's Scratchpad. We use the API to evaluate an expression in the web
 page whenever it executes a JavaScript `debugger;` statement.
 
-1)  Visit the URL `about:config`, and set the `devtools.chrome.enabled`
+1.  Visit the URL `about:config`, and set the `devtools.chrome.enabled`
     preference to `true`:
 
     ![Setting the 'devtools.chrome.enabled' preference][img-chrome-pref]
 
-2)  Save the following HTML text to a file, and visit the file in your
+2.  Save the following HTML text to a file, and visit the file in your
     browser:
 
-    ```language-html
+    ```html
     <div onclick="var x = 'snoo'; debugger;">Click me!</div>
     ```
 
-3)  Open a developer Scratchpad (Menu button > Developer > Scratchpad), and
+3.  Open a developer Scratchpad (Menu button > Developer > Scratchpad), and
     select "Browser" from the "Environment" menu. (This menu will not be
     present unless you have changed the preference as explained above.)
 
     ![Selecting the 'browser' context in the Scratchpad][img-scratchpad-browser]
 
-4)  Enter the following code in the Scratchpad:
+4.  Enter the following code in the Scratchpad:
 
-    ```language-js
+    ```js
     // This simply defines 'Debugger' in this Scratchpad;
     // it doesn't actually start debugging anything.
     Components.utils.import("resource://gre/modules/jsdebugger.jsm");
@@ -48,10 +48,10 @@ page whenever it executes a JavaScript `debugger;` statement.
     }
     ```
 
-5)  In the Scratchpad, ensure that no text is selected, and press the "Run"
+5.  In the Scratchpad, ensure that no text is selected, and press the "Run"
     button.
 
-6)  Now, click on the text that says "Click me!" in the web page. This runs
+6.  Now, click on the text that says "Click me!" in the web page. This runs
     the `div` element's `onclick` handler. When control reaches the
     `debugger;` statement, `Debugger` calls your callback function, passing
     a `Debugger.Frame` instance. Your callback function evaluates the
@@ -59,7 +59,7 @@ page whenever it executes a JavaScript `debugger;` statement.
 
     ![The Debugger callback displaying an alert][img-example-alert]
 
-7)  Press "Run" in the Scratchpad again. Now, clicking on the "Click me!"
+7.  Press "Run" in the Scratchpad again. Now, clicking on the "Click me!"
     text causes *two* alerts to show---one for each `Debugger`
     instance.
 
@@ -73,7 +73,7 @@ page whenever it executes a JavaScript `debugger;` statement.
     run is not specified, such tools should probably only observe, and not
     influence, the debuggee's behavior.
 
-8)  Close the web page and the Scratchpad.
+8.  Close the web page and the Scratchpad.
 
     Since both the Scratchpad's global object and the debuggee window are
     now gone, the `Debugger` instances will be garbage collected, since
@@ -83,3 +83,10 @@ page whenever it executes a JavaScript `debugger;` statement.
     instance and its referent are not reachable, they will both be
     collected, even while the `Debugger` instance to which the shadow
     belonged continues to exist.
+
+[tut breakpoint]: Tutorial-Breakpoint.md
+[debugger]: Debugger-API.md
+
+[img-chrome-pref]: enable-chrome-devtools.png
+[img-scratchpad-browser]: scratchpad-browser-environment.png
+[img-example-alert]: debugger-alert.png  

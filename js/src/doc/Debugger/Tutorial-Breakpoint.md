@@ -7,7 +7,7 @@ and then evaluate an expression whenever it is hit.
 
 This tutorial was tested against Firefox 58 Beta and Nightly. It does not work in Firefox 57.
 
-1)  Since the `Debugger` API is only available to privileged JavaScript code,
+1.  Since the `Debugger` API is only available to privileged JavaScript code,
     you'll need to use the Browser Content Toolbox to try it out. To do this,
     open the Firefox developer tools, click on the options gear at the upper
     right of the toolbox, and make sure that both “Enable browser chrome and
@@ -16,9 +16,9 @@ This tutorial was tested against Firefox 58 Beta and Nightly. It does not work i
     to see them. Once they're checked, you can close the developer tools.
 
 
-1)  Save the following text to an HTML file:
+2.  Save the following text to an HTML file:
 
-    ```language-html
+    ```html
     <div onclick="report('the best div');">Click me!</div>
     <div onclick="report('another great div');">Or me!</div>
     <script>
@@ -28,22 +28,22 @@ This tutorial was tested against Firefox 58 Beta and Nightly. It does not work i
     </script>
     ```
 
-1)  Visit the HTML file in your browser, and open the Browser Content Toolbox by
+3.  Visit the HTML file in your browser, and open the Browser Content Toolbox by
     opening the Firefox menu, choosing “Web Developer”, and then “Browser
     Content Toolbox”. If that item doesn't appear in the “Web Developer” menu,
     make sure you checked both boxes to enable the Browser Content Toolbox as
     explained in Step 1.
 
-1)  Our example code is long enough that the best way to run it is to use the
+4.  Our example code is long enough that the best way to run it is to use the
     Scratchpad panel, which is not enabled by default. To enable it, click on
     the options gear at the upper right of the Browser Content Toolbox, and make
     sure the “Scratchpad” box in the “Default Developer Tools” section the left
     is checked. The Scratchpad panel should appear at the top of the Toolbox
     alongside the Console, Debugger, and Memory panels.
 
-1)  Click on the Scratchpad panel and enter the following code:
+5.  Click on the Scratchpad panel and enter the following code:
 
-    ```language-js
+    ```js
     Components.utils.import("resource://gre/modules/jsdebugger.jsm");
     Components.utils.import("resource://gre/modules/Console.jsm");
 
@@ -73,7 +73,7 @@ This tutorial was tested against Firefox 58 Beta and Nightly. It does not work i
     console.log('Finished setting breakpoint!');
     ```
 
-1)  In the Scratchpad, ensure that no text is selected, and press the "Run"
+6.  In the Scratchpad, ensure that no text is selected, and press the "Run"
     button.
 
     Now, click on the text that says "Click me!" in the web page.
@@ -98,7 +98,7 @@ This tutorial was tested against Firefox 58 Beta and Nightly. It does not work i
     a single content process, so you may need to use a different element of the
     array as the debuggee.
 
-1) Press "Run" in the Scratchpad again. Now, clicking on "Click me!" causes the
+7. Press "Run" in the Scratchpad again. Now, clicking on "Click me!" causes the
     breakpoint hit to be logged twice---one for each `Debugger` instance.
 
     Multiple `Debugger` instances can observe the same debuggee. Re-running the code
@@ -114,7 +114,7 @@ This tutorial was tested against Firefox 58 Beta and Nightly. It does not work i
     tries to influence the debuggee's behavior, their combined behavior could be
     unpredictable.
 
-1)  Close the web page and the Browser Content Toolbox.
+8.  Close the web page and the Browser Content Toolbox.
 
     Since both the Scratchpad's global object and the debuggee window are
     now gone, the `Debugger` instances will be garbage collected, since
@@ -124,3 +124,6 @@ This tutorial was tested against Firefox 58 Beta and Nightly. It does not work i
     instance and its referent are not reachable, they will both be
     collected, even while the `Debugger` instance to which the shadow
     belonged continues to exist.
+
+[debugger]: Debugger-API.md
+[img-example-console]: console.png

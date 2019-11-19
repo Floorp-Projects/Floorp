@@ -1,26 +1,23 @@
-Tutorial: Show Allocations Per Call Path
-========================================
-
-{{ gecko_minversion_header(\'34\') }}
+# Tutorial: Show Allocations Per Call Path
 
 This page shows how to use the [`Debugger` API][debugger] to show how many
 objects a web page allocates, sorted by the function call path that allocated
 them.
 
-1)  Visit the URL `about:config`, and set the `devtools.chrome.enabled`
+1.  Visit the URL `about:config`, and set the `devtools.chrome.enabled`
     preference to `true`:
 
     ![Setting the 'devtools.chrome.enabled' preference][img-chrome-pref]
 
-2)  Open a developer Scratchpad (Menu button > Developer > Scratchpad), and
+2.  Open a developer Scratchpad (Menu button > Developer > Scratchpad), and
     select "Browser" from the "Environment" menu. (This menu will not be
     present unless you have changed the preference as explained above.)
 
     ![Selecting the 'browser' context in the Scratchpad][img-scratchpad-browser]
 
-3)  Enter the following code in the Scratchpad:
+3.  Enter the following code in the Scratchpad:
 
-    ```language-js
+    ```js
     // This simply defines the 'Debugger' constructor in this
     // Scratchpad; it doesn't actually start debugging anything.
     Components.utils.import('resource://gre/modules/jsdebugger.jsm');
@@ -146,15 +143,15 @@ them.
     })();
     ```
 
-4)  In the Scratchpad, ensure that no text is selected, and press the "Run"
+4.  In the Scratchpad, ensure that no text is selected, and press the "Run"
     button. (If you get an error complaining that `Components.utils` is not
     defined, be sure you've selected `Browser` from the scratchpad's
     `Environment` menu, as described in step 2.)
 
-5)  Save the following HTML text to a file, and visit the file in your browser.
+5.  Save the following HTML text to a file, and visit the file in your browser.
     Make sure the current browser tab is displaying this page.
 
-    ```language-html
+    ```html
     <div onclick="doDivsAndSpans()">
       Click here to make the page do some allocations.
     </div>
@@ -183,14 +180,14 @@ them.
     </script>
     ```
 
-6)  Open the browser console (Menu Button > Developer > Browser Console), and
+6.  Open the browser console (Menu Button > Developer > Browser Console), and
     then evaluate the expression `demoTrackAllocations()` in the browser
     console. This begins logging allocations in the current browser tab.
 
-7)  In the browser tab, click on the text that says "Click here...". The event
+7.  In the browser tab, click on the text that says "Click here...". The event
     handler should add some text to the end of the page.
 
-8)  Back in the browser console, evaluate the expression
+8.  Back in the browser console, evaluate the expression
     `demoPlotAllocations()`. This stops logging allocations, and displays a tree
     of allocations:
 
@@ -220,3 +217,8 @@ them.
     unclear why `spanFactory` allocated thirteen objects, despite being called
     only ten times.)
 
+
+[debugger]: Debugger-API.md
+[img-chrome-pref]: enable-chrome-devtools.png
+[img-scratchpad-browser]: scratchpad-browser-environment.png
+[img-alloc-plot]: alloc-plot-console.png
