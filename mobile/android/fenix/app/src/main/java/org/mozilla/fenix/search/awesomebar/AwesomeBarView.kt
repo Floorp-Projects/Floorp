@@ -188,7 +188,10 @@ class AwesomeBarView(
                         view.hideKeyboard()
                         isKeyboardDismissedProgrammatically = true
                     }
-                    RecyclerView.SCROLL_STATE_IDLE -> isKeyboardDismissedProgrammatically = false
+                    RecyclerView.SCROLL_STATE_IDLE -> {
+                        isKeyboardDismissedProgrammatically = false
+                        view.requestFocus()
+                    }
                 }
             }
         }

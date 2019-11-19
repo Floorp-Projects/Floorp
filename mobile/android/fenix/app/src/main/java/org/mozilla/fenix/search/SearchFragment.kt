@@ -226,20 +226,15 @@ class SearchFragment : Fragment(), BackHandler {
     override fun onPause() {
         super.onPause()
         toolbarView.view.clearFocus()
-        // clearing focus makes keyboard hidden after activity is resumed
-        awesomeBarView.isKeyboardDismissedProgrammatically = true
     }
 
     override fun onBackPressed(): Boolean {
         return when {
             qrFeature.onBackPressed() -> {
                 view?.searchScanButton?.isChecked = false
-                // set to true because keyboard is being dismissed when returning from qr scan
-                awesomeBarView.isKeyboardDismissedProgrammatically = true
                 toolbarView.view.requestFocus()
             }
-            !awesomeBarView.isKeyboardDismissedProgrammatically -> true
-            else -> false
+            else -> awesomeBarView.isKeyboardDismissedProgrammatically
         }
     }
 
