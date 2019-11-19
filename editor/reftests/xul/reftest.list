@@ -1,1 +1,1 @@
-!= chrome://reftest/content/editor/reftests/xul/emptytextbox-4.xul chrome://reftest/content/editor/reftests/xul/emptytextbox-ref.xul
+!= chrome://reftest/content/editor/reftests/xul/emptytextbox-4.xhtml chrome://reftest/content/editor/reftests/xul/emptytextbox-ref.xhtml
