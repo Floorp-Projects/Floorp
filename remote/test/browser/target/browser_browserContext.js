@@ -35,5 +35,5 @@ add_task(async function(_, CDP) {
   await Target.disposeBrowserContext({ browserContextId });
 
   await client.close();
-  ok(true, "The client is closed");
+  info("The client is closed");
 });
