@@ -356,7 +356,8 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    */
 
   FunctionBox* funbox;
-  if (getTreeHolder().isDeferred()) {
+
+  if (parseInfo_.isDeferred()) {
     funbox = alloc_.new_<FunctionBox>(
         cx_, traceListHead_, fcd, toStringStart, inheritedDirectives,
         options().extraWarningsOption, generatorKind, asyncKind);
@@ -1773,7 +1774,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   }
 
   // If we can defer the LazyScript creation, we are now done.
-  if (getTreeHolder().isDeferred()) {
+  if (parseInfo_.isDeferred()) {
     cleanupGuard.release();
     return true;
   }
@@ -2738,7 +2739,6 @@ GeneralParser<ParseHandler, Unit>::templateLiteral(
 AutoPushTree::AutoPushTree(FunctionTreeHolder& holder)
     : holder_(holder), oldParent_(holder_.getCurrentParent()) {
   MOZ_ASSERT(holder_.getCurrentParent());
-  MOZ_ASSERT(!holder_.isEager());
 }
 
 bool AutoPushTree::init(JSContext* cx, FunctionBox* funbox) {
@@ -9632,7 +9632,7 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
   mozilla::Range<const char16_t> range(chars.begin(), chars.length());
   RegExpFlags flags = anyChars.currentToken().regExpFlags();
 
-  if (this->getTreeHolder().isDeferred()) {
+  if (this->parseInfo_.isDeferred()) {
     {
       LifoAllocScope allocScope(&cx_->tempLifoAlloc());
       // Verify that the Regexp will syntax parse when the time comes to
@@ -9706,7 +9706,7 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
   // productions may start with 0[bBoOxX], indicating binary/octal/hex.
   const auto& chars = tokenStream.getCharBuffer();
 
-  if (this->getTreeHolder().isDeferred()) {
+  if (this->parseInfo_.isDeferred()) {
     BigIntCreationData data;
     if (!data.init(this->cx_, chars)) {
       return null();
