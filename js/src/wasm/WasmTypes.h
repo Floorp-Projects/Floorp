@@ -37,6 +37,7 @@
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
+#include "vm/JSFunction.h"
 #include "vm/MallocProvider.h"
 #include "wasm/WasmConstants.h"
 #include "wasm/WasmUtility.h"
@@ -633,6 +634,83 @@ bool BoxAnyRef(JSContext* cx, HandleValue val, MutableHandleAnyRef result);
 
 Value UnboxAnyRef(AnyRef val);
 
+// A FuncRef is a JSFunction* and is hence also an AnyRef, and the remarks above
+// about AnyRef apply also to FuncRef.  When 'funcref' is used as a value type
+// in wasm code, the value that is held is "the canonical function value", which
+// is a function for which IsWasmExportedFunction() is true, and which has the
+// correct identity wrt reference equality of functions.  Notably, if a function
+// is imported then its ref.func value compares === in JS to the function that
+// was passed as an import when the instance was created.
+//
+// These rules ensure that casts from funcref to anyref are non-converting
+// (generate no code), and that no wrapping or unwrapping needs to happen when a
+// funcref or anyref flows across the JS/wasm boundary, and that functions have
+// the necessary identity when observed from JS, and in the future, from wasm.
+//
+// Functions stored in tables, whether wasm tables or internal tables, can be
+// stored in a form that optimizes for eg call speed, however.
+//
+// Reading a funcref from a funcref table, writing a funcref to a funcref table,
+// and generating the value for a ref.func instruction are therefore nontrivial
+// operations that require mapping between the canonical JSFunction and the
+// optimized table representation.  Once we get an instruction to call a
+// ref.func directly it too will require such a mapping.
+
+// In many cases, a FuncRef is exactly the same as AnyRef and we can use AnyRef
+// functionality on funcref values.  The FuncRef class exists mostly to add more
+// checks and to make it clear, when we need to, that we're manipulating funcref
+// values.  FuncRef does not currently subclass AnyRef because there's been no
+// need to, but it probably could.
+
+class FuncRef {
+  JSFunction* value_;
+
+  explicit FuncRef() : value_((JSFunction*)-1) {}
+  explicit FuncRef(JSFunction* p) : value_(p) {
+    MOZ_ASSERT(((uintptr_t)p & 0x03) == 0);
+  }
+
+ public:
+  // Given a void* that comes from compiled wasm code, turn it into AnyRef.
+  static FuncRef fromCompiledCode(void* p) { return FuncRef((JSFunction*)p); }
+
+  // Given a JSFunction* that comes from JS, turn it into FuncRef.
+  static FuncRef fromJSFunction(JSFunction* p) { return FuncRef(p); }
+
+  // Given an AnyRef that represents a possibly-null funcref, turn it into a
+  // FuncRef.
+  static FuncRef fromAnyRefUnchecked(AnyRef p) {
+#ifdef DEBUG
+    Value v = UnboxAnyRef(p);
+    if (v.isNull()) {
+      return FuncRef(nullptr);
+    }
+    if (v.toObject().is<JSFunction>()) {
+      return FuncRef(&v.toObject().as<JSFunction>());
+    }
+    MOZ_CRASH("Bad value");
+#else
+    return FuncRef(&p.asJSObject()->as<JSFunction>());
+#endif
+  }
+
+  AnyRef asAnyRef() { return AnyRef::fromJSObject((JSObject*)value_); }
+
+  void* forCompiledCode() const { return value_; }
+
+  JSFunction* asJSFunction() { return value_; }
+
+  bool isNull() { return value_ == nullptr; }
+};
+
+typedef Rooted<FuncRef> RootedFuncRef;
+typedef Handle<FuncRef> HandleFuncRef;
+typedef MutableHandle<FuncRef> MutableHandleFuncRef;
+
+// Given any FuncRef, unbox it as a JS Value -- always a JSFunction*.
+
+Value UnboxFuncRef(FuncRef val);
+
 // Code can be compiled either with the Baseline compiler or the Ion compiler,
 // and tier-variant data are tagged with the Tier value.
 //
@@ -773,6 +851,10 @@ class MOZ_NON_PARAM Val : public LitVal {
   explicit Val(ValType type, AnyRef val) : LitVal(type, AnyRef::null()) {
     MOZ_ASSERT(type.isReference());
     u.ref_ = val;
+  }
+  explicit Val(ValType type, FuncRef val) : LitVal(type, AnyRef::null()) {
+    MOZ_ASSERT(type == ValType::FuncRef);
+    u.ref_ = val.asAnyRef();
   }
   void trace(JSTracer* trc);
 };
@@ -2177,7 +2259,8 @@ struct TableTls {
 };
 
 // Table element for TableKind::FuncRef which carries both the code pointer and
-// an instance pointer.
+// a tls pointer (and thus anything reachable through the tls, including the
+// instance).
 
 struct FunctionTableElem {
   // The code to call when calling this element. The table ABI is the system
