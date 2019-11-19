@@ -35,6 +35,7 @@ EXPORTS += [
 EXPORTS.mozilla.intl += [
     'LocaleService.h',
     'MozLocale.h',
+    'MozLocaleBindings.h',
     'OSPreferences.h',
     'Quotes.h',
 ]
@@ -80,3 +81,18 @@ for prefix in prefixes:
 
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['tests/gtest']
+
+if CONFIG['COMPILE_ENVIRONMENT']:
+    GENERATED_FILES += [
+        'unic_langid_ffi_generated.h',
+    ]
+
+    EXPORTS.mozilla.intl += [
+        '!unic_langid_ffi_generated.h',
+    ]
+
+    ffi_generated = GENERATED_FILES['unic_langid_ffi_generated.h']
+    ffi_generated.script = '/layout/style/RunCbindgen.py:generate'
+    ffi_generated.inputs = [
+        '/intl/locale/rust/unic-langid-ffi',
+    ]

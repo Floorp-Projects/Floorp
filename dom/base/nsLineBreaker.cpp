@@ -469,7 +469,7 @@ void nsLineBreaker::UpdateCurrentWordLanguage(nsAtom* aHyphenationLanguage) {
       if (loc.GetScript().IsEmpty()) {
         loc.AddLikelySubtags();
       }
-      const nsCString& script = loc.GetScript();
+      const nsDependentCSubstring& script = loc.GetScript();
       mScriptIsChineseOrJapanese =
           script.EqualsLiteral("Hans") || script.EqualsLiteral("Hant") ||
           script.EqualsLiteral("Jpan") || script.EqualsLiteral("Hrkt");
