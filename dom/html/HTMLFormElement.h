@@ -264,6 +264,8 @@ class HTMLFormElement final : public nsGenericHTMLElement,
    *
    * @note Do not call this method if novalidate/formnovalidate is used.
    * @note This method might disappear with bug 592124, hopefuly.
+   * @see
+   * https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#interactively-validate-the-constraints
    */
   bool CheckValidFormSubmission();
 
@@ -476,7 +478,7 @@ class HTMLFormElement final : public nsGenericHTMLElement,
 
   /**
    * Check the form validity following this algorithm:
-   * http://www.whatwg.org/specs/web-apps/current-work/#statically-validate-the-constraints
+   * https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#statically-validate-the-constraints
    *
    * @param aInvalidElements [out] parameter containing the list of unhandled
    * invalid controls.
