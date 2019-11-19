@@ -426,7 +426,12 @@ class TouchBarHelper {
           .canGoBack;
         kBuiltInInputs.Forward.disabled = !TouchBarHelper.window.gBrowser
           .canGoForward;
-        this._updateTouchBarInputs("ReaderView", "Back", "Forward", ...this._inputsNotUpdated);
+        this._updateTouchBarInputs(
+          "ReaderView",
+          "Back",
+          "Forward",
+          ...this._inputsNotUpdated
+        );
         break;
       case "bookmark-icon-updated":
         data == "starred"
