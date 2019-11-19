@@ -10,10 +10,10 @@ Sync completed with an error.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `Error(exception: `[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html)`)`<br>Sync completed with an error. |
+| [&lt;init&gt;](-init-.md) | `Error(exception: `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)`)`<br>Sync completed with an error. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
-| [exception](exception.md) | `val exception: `[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html) |
+| [exception](exception.md) | `val exception: `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html) |

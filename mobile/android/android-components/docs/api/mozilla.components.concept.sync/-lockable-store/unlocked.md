@@ -2,9 +2,9 @@
 
 # unlocked
 
-`abstract suspend fun <T> unlocked(encryptionKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, block: (store: `[`LockableStore`](index.md)`) -> `[`T`](unlocked.md#T)`): `[`T`](unlocked.md#T) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Sync.kt#L56)
+`abstract suspend fun <T> unlocked(encryptionKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, block: suspend (store: `[`LockableStore`](index.md)`) -> `[`T`](unlocked.md#T)`): `[`T`](unlocked.md#T) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Sync.kt#L56)
 
-Executes a [block](unlocked.md#mozilla.components.concept.sync.LockableStore$unlocked(kotlin.String, kotlin.Function1((mozilla.components.concept.sync.LockableStore, mozilla.components.concept.sync.LockableStore.unlocked.T)))/block) while keeping the store in an unlocked state. Store is locked once [block](unlocked.md#mozilla.components.concept.sync.LockableStore$unlocked(kotlin.String, kotlin.Function1((mozilla.components.concept.sync.LockableStore, mozilla.components.concept.sync.LockableStore.unlocked.T)))/block) is finished.
+Executes a [block](unlocked.md#mozilla.components.concept.sync.LockableStore$unlocked(kotlin.String, kotlin.SuspendFunction1((mozilla.components.concept.sync.LockableStore, mozilla.components.concept.sync.LockableStore.unlocked.T)))/block) while keeping the store in an unlocked state. Store is locked once [block](unlocked.md#mozilla.components.concept.sync.LockableStore$unlocked(kotlin.String, kotlin.SuspendFunction1((mozilla.components.concept.sync.LockableStore, mozilla.components.concept.sync.LockableStore.unlocked.T)))/block) is finished.
 
 ### Parameters
 

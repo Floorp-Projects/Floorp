@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`FxaAccountManager(context: <ERROR CLASS>, serverConfig: `[`ServerConfig`](../../mozilla.components.service.fxa/-server-config.md)`, deviceConfig: `[`DeviceConfig`](../../mozilla.components.service.fxa/-device-config/index.md)`, syncConfig: `[`SyncConfig`](../../mozilla.components.service.fxa/-sync-config/index.md)`?, applicationScopes: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`> = emptySet(), coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Executors
+`FxaAccountManager(context: <ERROR CLASS>, serverConfig: `[`ServerConfig`](../../mozilla.components.service.fxa/-server-config.md)`, deviceConfig: `[`DeviceConfig`](../../mozilla.components.service.fxa/-device-config/index.md)`, syncConfig: `[`SyncConfig`](../../mozilla.components.service.fxa/-sync-config/index.md)`?, applicationScopes: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`> = emptySet(), crashReporter: `[`CrashReporter`](../../mozilla.components.lib.crash/-crash-reporter/index.md)`? = null, coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Executors
         .newSingleThreadExecutor().asCoroutineDispatcher() + SupervisorJob())`
 
 An account manager which encapsulates various internal details of an account lifecycle and provides

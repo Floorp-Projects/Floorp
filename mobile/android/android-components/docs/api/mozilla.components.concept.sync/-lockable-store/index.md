@@ -10,7 +10,7 @@ An extension of [SyncableStore](../-syncable-store/index.md) that can be locked/
 
 | Name | Summary |
 |---|---|
-| [unlocked](unlocked.md) | `abstract suspend fun <T> unlocked(encryptionKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, block: (store: `[`LockableStore`](./index.md)`) -> `[`T`](unlocked.md#T)`): `[`T`](unlocked.md#T)<br>Executes a [block](unlocked.md#mozilla.components.concept.sync.LockableStore$unlocked(kotlin.String, kotlin.Function1((mozilla.components.concept.sync.LockableStore, mozilla.components.concept.sync.LockableStore.unlocked.T)))/block) while keeping the store in an unlocked state. Store is locked once [block](unlocked.md#mozilla.components.concept.sync.LockableStore$unlocked(kotlin.String, kotlin.Function1((mozilla.components.concept.sync.LockableStore, mozilla.components.concept.sync.LockableStore.unlocked.T)))/block) is finished. |
+| [unlocked](unlocked.md) | `abstract suspend fun <T> unlocked(encryptionKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, block: suspend (store: `[`LockableStore`](./index.md)`) -> `[`T`](unlocked.md#T)`): `[`T`](unlocked.md#T)<br>Executes a [block](unlocked.md#mozilla.components.concept.sync.LockableStore$unlocked(kotlin.String, kotlin.SuspendFunction1((mozilla.components.concept.sync.LockableStore, mozilla.components.concept.sync.LockableStore.unlocked.T)))/block) while keeping the store in an unlocked state. Store is locked once [block](unlocked.md#mozilla.components.concept.sync.LockableStore$unlocked(kotlin.String, kotlin.SuspendFunction1((mozilla.components.concept.sync.LockableStore, mozilla.components.concept.sync.LockableStore.unlocked.T)))/block) is finished. |
 
 ### Inherited Functions
 

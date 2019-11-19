@@ -2,7 +2,7 @@
 
 # SyncEngine
 
-`sealed class SyncEngine` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L55)
+`sealed class SyncEngine` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L65)
 
 Describes possible sync engines that device can support.
 
