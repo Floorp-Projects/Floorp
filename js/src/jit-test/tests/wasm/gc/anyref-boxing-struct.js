@@ -19,6 +19,7 @@ let VALUES = [null,
               1337,
               13.37,
               "hi",
+              37n,
               Symbol("status"),
               () => 1337];
 
