@@ -233,6 +233,10 @@ open class FxaAccountManager(
     // list, although that's probably an overkill.
     @Volatile private lateinit var account: OAuthAccount
     @Volatile private var profile: Profile? = null
+
+    // We'd like to persist this state, so that we can short-circuit transition to AuthenticationProblem on
+    // initialization, instead of triggering the full state machine knowing in advance we'll hit auth problems.
+    // See https://github.com/mozilla-mobile/android-components/issues/5102
     @Volatile private var state = AccountState.Start
     private val eventQueue = ConcurrentLinkedQueue<Event>()
 

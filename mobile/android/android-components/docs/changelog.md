@@ -18,6 +18,10 @@ permalink: /changelog/
 * **feature-prompts** and **feature-downloads**
   * Fix [issue #6439](https://github.com/mozilla-mobile/fenix/issues/6439) "Crash when downloading Image"
 
+* **service-firefox-accounts**
+  * Account profile cache is now used, removing a network call from most instances of account manager instantiation.
+  * Fixed a bug where account would disappear after restarting an app which hit authentication problems.
+
 # 22.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v22.0.0...master)
