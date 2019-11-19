@@ -1892,3 +1892,14 @@ def new_cert_storage(milestone):
 
 set_config('MOZ_NEW_CERT_STORAGE', True, when=new_cert_storage)
 set_define('MOZ_NEW_CERT_STORAGE', True, when=new_cert_storage)
+
+# FOGotype prototype Glean SDK Integration Crate
+# ==============================================================
+
+@depends(milestone)
+def fogotype(milestone):
+    if milestone.is_nightly:
+        return True
+
+set_config('MOZ_FOGOTYPE', True, when=fogotype)
+set_define('MOZ_FOGOTYPE', True, when=fogotype)

@@ -45,7 +45,7 @@ neqo_glue = { path = "../../../../netwerk/socket/neqo_glue" }
 rlbox_lucet_sandbox = { version = "0.1.0", optional = true }
 wgpu-remote = { path = "../../../../gfx/wgpu/wgpu-remote", optional = true }
 mapped_hyph = { git = "https://github.com/jfkthame/mapped_hyph.git", tag = "v0.3.0" }
-fog = { path = "../../../components/telemetry/fog" }
+fog = { path = "../../../components/telemetry/fog", optional = true }
 
 [build-dependencies]
 rustc_version = "0.2"
@@ -75,6 +75,7 @@ fuzzing_interfaces = []
 webrtc = ["mdns_service"]
 wasm_library_sandboxing = ["rlbox_lucet_sandbox"]
 webgpu = ["wgpu-remote"]
+fogotype = ["fog"]
 
 [lib]
 path = "lib.rs"
