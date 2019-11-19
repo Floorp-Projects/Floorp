@@ -683,14 +683,13 @@ open class FxaAccountManager(
                         // If this is the first time ensuring our capabilities,
                         logger.info("Ensuring device capabilities...")
                         if (account.deviceConstellation().ensureCapabilitiesAsync(deviceConfig.capabilities).await()) {
-                            logger.info("Successfully ensured device capabilities.")
+                            logger.info("Successfully ensured device capabilities. Continuing...")
+                            postAuthenticated(AuthType.Existing)
+                            Event.FetchProfile
                         } else {
-                            logger.warn("Failed to ensure device capabilities.")
+                            logger.warn("Failed to ensure device capabilities. Stopping.")
+                            null
                         }
-
-                        postAuthenticated(AuthType.Existing)
-
-                        Event.FetchProfile
                     }
                     Event.SignedInShareableAccount -> {
                         // Note that we are not registering an account persistence callback here like
