@@ -23,12 +23,15 @@ const {
 class Page extends ContentProcessDomain {
   constructor(session) {
     super(session);
+
     this.enabled = false;
+    this.lifecycleEnabled = false;
 
     this.onFrameNavigated = this.onFrameNavigated.bind(this);
   }
 
   destructor() {
+    this.setLifecycleEventsEnabled({ enabled: false });
     this.disable();
 
     super.destructor();
@@ -121,9 +124,21 @@ class Page extends ContentProcessDomain {
     };
   }
 
-  setLifecycleEventsEnabled() {}
   addScriptToEvaluateOnNewDocument() {}
   createIsolatedWorld() {}
+
+  /**
+   * Controls whether page will emit lifecycle events.
+   *
+   * @param {Object} options
+   * @param {boolean} options.enabled
+   *     If true, starts emitting lifecycle events.
+   */
+  setLifecycleEventsEnabled(options) {
+    const { enabled } = options;
+
+    this.lifecycleEnabled = enabled;
+  }
 
   url() {
     return this.content.location.href;
@@ -158,7 +173,7 @@ class Page extends ContentProcessDomain {
         break;
 
       case "pagehide":
-        // Maybe better to bound to "Network.responseReceived" once implemented
+        // Maybe better to bound to "unload" once we can register for this event
         this.emit("Page.frameStartedLoading", { frameId });
         break;
 
