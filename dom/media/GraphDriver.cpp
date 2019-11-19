@@ -580,7 +580,10 @@ bool AudioCallbackDriver::Init() {
       SpillBuffer<AudioDataValue, WEBAUDIO_BLOCK_SIZE * 2>(mOutputChannels);
 
   output.channels = mOutputChannels;
-  output.layout = CUBEB_LAYOUT_UNDEFINED;
+  AudioConfig::ChannelLayout::ChannelMap channelMap =
+      AudioConfig::ChannelLayout(mOutputChannels).Map();
+
+  output.layout = static_cast<uint32_t>(channelMap);
   output.prefs = CubebUtils::GetDefaultStreamPrefs();
 #if !defined(XP_WIN)
   if (mInputDevicePreference == CUBEB_DEVICE_PREF_VOICE) {
