@@ -978,11 +978,12 @@ class FuncType {
     }
     return false;
   }
-  // For non-inlined JS->wasm entries, AnyRef returns (but not parameters) are
-  // allowed.
+  // For JS->wasm jit entries, AnyRef parameters and returns are allowed.
   bool temporarilyUnsupportedReftypeForEntry() const {
-    if (hasReferenceArg()) {
-      return true;
+    for (ValType arg : args()) {
+      if (arg.isReference() && arg.code() != ValType::AnyRef) {
+        return true;
+      }
     }
     for (ValType result : results()) {
       if (result.isReference() && result.code() != ValType::AnyRef) {
@@ -996,14 +997,19 @@ class FuncType {
   bool temporarilyUnsupportedReftypeForInlineEntry() const {
     return hasReferenceArg() || hasReferenceReturn();
   }
-  // For wasm->JS exits, AnyRef parameters (but not returns) are allowed.
+  // For wasm->JS jit exits, AnyRef parameters and returns are allowed.
   bool temporarilyUnsupportedReftypeForExit() const {
     for (ValType arg : args()) {
       if (arg.isReference() && arg.code() != ValType::AnyRef) {
         return true;
       }
     }
-    return hasReferenceReturn();
+    for (ValType result : results()) {
+      if (result.isReference() && result.code() != ValType::AnyRef) {
+        return true;
+      }
+    }
+    return false;
   }
   bool jitExitRequiresArgCheck() const {
     for (ValType arg : args()) {
@@ -2051,6 +2057,7 @@ enum class SymbolicAddress {
   CoerceInPlace_ToInt32,
   CoerceInPlace_ToNumber,
   CoerceInPlace_JitEntry,
+  BoxValue_Anyref,
   DivI64,
   UDivI64,
   ModI64,
