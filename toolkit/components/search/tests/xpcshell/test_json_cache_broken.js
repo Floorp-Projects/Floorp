@@ -23,7 +23,7 @@ const { getVerificationHash } = ChromeUtils.import(
 var cacheTemplate, appPluginsPath, profPlugins;
 
 const enginesCache = {
-  version: 1,
+  version: gModernConfig ? 2 : 1,
   buildID: "TBD",
   appVersion: "TBD",
   locale: "en-US",
@@ -34,6 +34,17 @@ const enginesCache = {
     "engine-chromeicon",
     "engine-resourceicon",
     "engine-reordered",
+  ],
+  builtInEngineList: [
+    { id: "engine@search.mozilla.org", locale: "default" },
+    { id: "engine-pref@search.mozilla.org", locale: "default" },
+    {
+      id: "engine-rel-searchform-purpose@search.mozilla.org",
+      locale: "default",
+    },
+    { id: "engine-chromeicon@search.mozilla.org", locale: "default" },
+    { id: "engine-resourceicon@search.mozilla.org", locale: "default" },
+    { id: "engine-reordered@search.mozilla.org", locale: "default" },
   ],
   metaData: {
     searchDefault: "Test search engine",
@@ -146,20 +157,35 @@ add_task(async function test_cached_engine_properties() {
 
   const engines = await Services.search.getEngines();
 
+  // Modern config has a slightly different expected order.
+  const expectedEngines = gModernConfig
+    ? [
+        // Default engines
+        "Test search engine",
+        "engine-pref",
+        // Rest of engines in order
+        "engine-resourceicon",
+        "engine-chromeicon",
+        "engine-rel-searchform-purpose",
+        "Test search engine (Reordered)",
+        "A second test engine",
+      ]
+    : [
+        // Default engine
+        "Test search engine",
+        // Two engines listed in searchOrder.
+        "engine-resourceicon",
+        "engine-chromeicon",
+        "A second test engine",
+        // Rest of the engines in order.
+        "engine-pref",
+        "engine-rel-searchform-purpose",
+        "Test search engine (Reordered)",
+      ];
+
   Assert.deepEqual(
     engines.map(e => e.name),
-    [
-      // Default engine
-      "Test search engine",
-      // Two engines listed in searchOrder.
-      "engine-resourceicon",
-      "engine-chromeicon",
-      "A second test engine",
-      // Rest of the engines in order.
-      "engine-pref",
-      "engine-rel-searchform-purpose",
-      "Test search engine (Reordered)",
-    ],
+    expectedEngines,
     "Should have the expected default engines"
   );
 });

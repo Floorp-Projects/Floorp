@@ -23,11 +23,15 @@ const { getVerificationHash } = ChromeUtils.import(
 var cacheTemplate, appPluginsPath, profPlugins;
 
 const enginesCache = {
-  version: 1,
+  version: gModernConfig ? 2 : 1,
   buildID: "TBD",
   appVersion: "TBD",
   locale: "en-US",
   visibleDefaultEngines: ["engine1", "engine2"],
+  builtInEngineList: [
+    { id: "engine1@search.mozilla.org", locale: "default" },
+    { id: "engine2@search.mozilla.org", locale: "default" },
+  ],
   metaData: {
     searchDefault: "Test search engine",
     searchDefaultHash: "TBD",
@@ -55,7 +59,8 @@ const enginesCache = {
       ],
       _metaData: { alias: null },
       _shortName: "engine1",
-      _extensionID: "engine1@search.mozilla.org",
+      extensionID: "engine1@search.mozilla.org",
+      extensionLocale: "default",
       _isBuiltin: true,
       _queryCharset: "UTF-8",
       _name: "engine1",
@@ -85,7 +90,8 @@ const enginesCache = {
       ],
       _metaData: { alias: null },
       _shortName: "engine2",
-      _extensionID: "engine2@search.mozilla.org",
+      extensionID: "engine2@search.mozilla.org",
+      extensionLocale: "default",
       _isBuiltin: true,
       _queryCharset: "UTF-8",
       _name: "engine2",

@@ -71,10 +71,6 @@ const QUIT_APPLICATION_TOPIC = "quit-application";
 // Delay for batching invalidation of the JSON cache (ms)
 const CACHE_INVALIDATION_DELAY = 1000;
 
-// Current cache version. This should be incremented if the format of the cache
-// file is modified.
-const CACHE_VERSION = 1;
-
 const CACHE_FILENAME = "search.json.mozlz4";
 
 // The default engine update interval, in days. This is only used if an engine
@@ -569,6 +565,12 @@ function SearchService() {
 SearchService.prototype = {
   classID: Components.ID("{7319788a-fe93-4db3-9f39-818cf08f4256}"),
 
+  // Current cache version. This should be incremented if the format of the cache
+  // file is modified.
+  get CACHE_VERSION() {
+    return gModernConfig ? 2 : 1;
+  },
+
   // The current status of initialization. Note that it does not determine if
   // initialization is complete, only if an error has been encountered so far.
   _initRV: Cr.NS_OK,
@@ -613,6 +615,7 @@ SearchService.prototype = {
    * in the configuration, then the configuration has changed. The engines
    * are loaded using both the new set, and the user's current set (if they
    * still exist).
+   * @deprecated Unused in the modern configuration.
    */
   _visibleDefaultEngines: [],
 
@@ -1066,7 +1069,7 @@ SearchService.prototype = {
     let appVersion = Services.appinfo.version;
 
     // Allows us to force a cache refresh should the cache format change.
-    cache.version = CACHE_VERSION;
+    cache.version = this.CACHE_VERSION;
     // We don't want to incur the costs of stat()ing each plugin on every
     // startup when the only (supported) time they will change is during
     // app updates (where the buildID is obviously going to change).
@@ -1077,7 +1080,11 @@ SearchService.prototype = {
     cache.appVersion = appVersion;
     cache.locale = locale;
 
-    cache.visibleDefaultEngines = this._visibleDefaultEngines;
+    if (gModernConfig) {
+      cache.builtInEngineList = this._searchOrder;
+    } else {
+      cache.visibleDefaultEngines = this._visibleDefaultEngines;
+    }
     cache.metaData = this._metaData;
     cache.engines = [...this._engines.values()];
 
@@ -1158,29 +1165,59 @@ SearchService.prototype = {
       }
     }
 
-    function notInCacheVisibleEngines(engineName) {
-      return !cache.visibleDefaultEngines.includes(engineName);
-    }
-
     let buildID = Services.appinfo.platformBuildID;
     let rebuildCache =
       gEnvironment.get("RELOAD_ENGINES") ||
       !cache.engines ||
-      cache.version != CACHE_VERSION ||
+      cache.version != this.CACHE_VERSION ||
       cache.locale != Services.locale.requestedLocale ||
-      cache.buildID != buildID ||
-      cache.visibleDefaultEngines.length !=
-        this._visibleDefaultEngines.length ||
-      this._visibleDefaultEngines.some(notInCacheVisibleEngines);
+      cache.buildID != buildID;
 
     let enginesCorrupted = false;
-    if (
-      !rebuildCache &&
-      cache.engines.filter(e => e._isBuiltin).length !=
-        cache.visibleDefaultEngines.length
-    ) {
-      rebuildCache = true;
-      enginesCorrupted = true;
+    if (!rebuildCache) {
+      if (gModernConfig) {
+        const notInCacheEngines = engine => {
+          return !cache.builtInEngineList.find(details => {
+            return (
+              engine.webExtension.id == details.id &&
+              engine.webExtension.locales[0] == details.locale
+            );
+          });
+        };
+
+        rebuildCache =
+          !cache.builtInEngineList ||
+          cache.builtInEngineList.length != engines.length ||
+          engines.some(notInCacheEngines);
+
+        if (
+          !rebuildCache &&
+          cache.engines.filter(e => e._isBuiltin).length !=
+            cache.builtInEngineList.length
+        ) {
+          rebuildCache = true;
+          enginesCorrupted = true;
+        }
+      } else {
+        function notInCacheVisibleEngines(engineName) {
+          return !cache.visibleDefaultEngines.includes(engineName);
+        }
+
+        // Legacy config.
+        rebuildCache =
+          cache.visibleDefaultEngines.length !=
+            this._visibleDefaultEngines.length ||
+          this._visibleDefaultEngines.some(notInCacheVisibleEngines);
+
+        if (
+          !rebuildCache &&
+          cache.engines.filter(e => e._isBuiltin).length !=
+            cache.visibleDefaultEngines.length
+        ) {
+          rebuildCache = true;
+          enginesCorrupted = true;
+        }
+      }
     }
 
     Services.telemetry.scalarSet(
