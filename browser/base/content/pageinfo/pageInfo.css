@@ -18,7 +18,49 @@
   min-width: 1px;
 }
 
-#hostText,
-#security-identity-verifier-value {
-  -moz-box-flex: 1;
+table {
+  border-spacing: 0;
+}
+
+.tableSeparator {
+  height: 6px;
+}
+
+th, td {
+  padding: 0;
+}
+
+th {
+  font: inherit;
+  text-align: start;
+  padding-inline-end: .5em;
+}
+
+/*
+  Make the first column shrink to its min-content, except for #securityTable
+  which has full sentences in its first column.
+*/
+table:not(#securityTable) th {
+  width: 0;
+}
+
+th > label,
+td > input,
+.table-split-column {
+  width: 100%;
+  margin-block: 1px 4px;
+}
+
+.table-split-column {
+  display: flex;
+  align-items: center;
+}
+
+.table-split-column > label,
+.table-split-column > input {
+  flex-grow: 1;
+}
+
+.table-split-column > button {
+  flex-shrink: 0;
 }
