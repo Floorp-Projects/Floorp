@@ -758,7 +758,7 @@ void CompositorOGL::ClearRect(const gfx::Rect& aRect) {
 
 already_AddRefed<CompositingRenderTargetOGL>
 CompositorOGL::RenderTargetForNativeLayer(NativeLayer* aNativeLayer,
-                                          IntRegion& aInvalidRegion) {
+                                          const IntRegion& aInvalidRegion) {
   if (aInvalidRegion.IsEmpty()) {
     return nullptr;
   }
@@ -774,9 +774,6 @@ CompositorOGL::RenderTargetForNativeLayer(NativeLayer* aNativeLayer,
   if (!fbo) {
     return nullptr;
   }
-
-  invalidRelativeToLayer = aNativeLayer->CurrentSurfaceInvalidRegion();
-  aInvalidRegion = invalidRelativeToLayer.MovedBy(layerRect.TopLeft());
 
   RefPtr<CompositingRenderTargetOGL> rt =
       CompositingRenderTargetOGL::CreateForExternallyOwnedFBO(

@@ -91,13 +91,13 @@ class NativeLayer {
   // Returns a DrawTarget. The size of the DrawTarget will be the same as the
   // size of this layer. The caller should draw to that DrawTarget, then drop
   // its reference to the DrawTarget, and then call NotifySurfaceReady(). It can
-  // limit its drawing to CurrentSurfaceInvalidRegion() (which is in the
-  // DrawTarget's device space). After a call to NextSurface*, NextSurface* must
-  // not be called again until after NotifySurfaceReady has been called. Can be
-  // called on any thread. When used from multiple threads, callers need to make
-  // sure that they still only call NextSurface* and NotifySurfaceReady
-  // alternatingly and not in any other order.
-  // aUpdateRegion must not extend beyond the layer size.
+  // limit its drawing to aUpdateRegion (which is in the DrawTarget's device
+  // space). After a call to NextSurface*, NextSurface* must not be called again
+  // until after NotifySurfaceReady has been called. Can be called on any
+  // thread. When used from multiple threads, callers need to make sure that
+  // they still only call NextSurface* and NotifySurfaceReady alternatingly and
+  // not in any other order. aUpdateRegion must not extend beyond the layer
+  // size.
   virtual RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
       const gfx::IntRegion& aUpdateRegion, gfx::BackendType aBackendType) = 0;
 
@@ -115,30 +115,21 @@ class NativeLayer {
   // surface. The size of the framebuffer will be the same as the size of this
   // layer. If aNeedsDepth is true, the framebuffer is created with a depth
   // buffer. The caller should draw to the framebuffer, unbind it, and then call
-  // NotifySurfaceReady(). It can limit its drawing to
-  // CurrentSurfaceInvalidRegion() (which is in the framebuffer's device space,
-  // possibly "upside down" if SurfaceIsFlipped()). The framebuffer will be
-  // created using the GLContext that was set on this layer with a call to
-  // SetGLContext. The NativeLayer will keep a reference to the MozFramebuffer
-  // so that it can reuse the same MozFramebuffer whenever it uses the same
-  // underlying surface. Calling SetGLContext with a different context will
-  // release that reference. After a call to NextSurface*, NextSurface* must not
-  // be called again until after NotifySurfaceReady has been called. Can be
-  // called on any thread. When used from multiple threads, callers need to make
-  // sure that they still only call NextSurface and NotifySurfaceReady
-  // alternatingly and not in any other order.
+  // NotifySurfaceReady(). It can limit its drawing to aUpdateRegion (which is
+  // in the framebuffer's device space, possibly "upside down" if
+  // SurfaceIsFlipped()). The framebuffer will be created using the GLContext
+  // that was set on this layer with a call to SetGLContext. The NativeLayer
+  // will keep a reference to the MozFramebuffer so that it can reuse the same
+  // MozFramebuffer whenever it uses the same underlying surface. Calling
+  // SetGLContext with a different context will release that reference. After a
+  // call to NextSurface*, NextSurface* must not be called again until after
+  // NotifySurfaceReady has been called. Can be called on any thread. When used
+  // from multiple threads, callers need to make sure that they still only call
+  // NextSurface and NotifySurfaceReady alternatingly and not in any other
+  // order.
   // aUpdateRegion must not extend beyond the layer size.
   virtual Maybe<GLuint> NextSurfaceAsFramebuffer(
       const gfx::IntRegion& aUpdateRegion, bool aNeedsDepth) = 0;
-
-  // The invalid region of the surface that has been returned from the most
-  // recent call to NextSurface*. Newly-created surfaces are entirely invalid.
-  // For surfaces that have been used before, the invalid region is the union of
-  // all invalid regions that have been passed to NextSurface* since the last
-  // time that NotifySurfaceReady was called for this surface. Can only be
-  // called between calls to NextSurface* and NotifySurfaceReady. Can be called
-  // on any thread.
-  virtual gfx::IntRegion CurrentSurfaceInvalidRegion() = 0;
 
   // Indicates that the surface which has been returned from the most recent
   // call to NextSurface* is now finished being drawn to and can be displayed on

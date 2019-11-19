@@ -96,7 +96,6 @@ class NativeLayerCA : public NativeLayer {
   gl::GLContext* GetGLContext() override;
   Maybe<GLuint> NextSurfaceAsFramebuffer(const gfx::IntRegion& aUpdateRegion,
                                          bool aNeedsDepth) override;
-  gfx::IntRegion CurrentSurfaceInvalidRegion() override;
   void NotifySurfaceReady() override;
   bool IsOpaque() override;
   void SetClipRect(const Maybe<gfx::IntRect>& aClipRect) override;
