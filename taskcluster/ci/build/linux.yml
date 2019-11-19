@@ -1268,7 +1268,7 @@ linux-gcp/debug:
         platform: linux32/debug
         symbol: Bg
         tier: 3
-    worker-type: gce/gecko-{level}-b-linux
+    worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: debian7-i386-build}
         max-run-time: 5400
@@ -1308,7 +1308,7 @@ linux-gcp/opt:
         platform: linux32/opt
         symbol: Bg
         tier: 3
-    worker-type: gce/gecko-{level}-b-linux
+    worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: debian7-i386-build}
         max-run-time: 7200
@@ -1347,7 +1347,7 @@ linux64-gcp/debug:
         platform: linux64/debug
         symbol: Bg
         tier: 3
-    worker-type: gce/gecko-{level}-b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 5400
         env:
@@ -1386,7 +1386,7 @@ linux64-gcp/opt:
         platform: linux64/opt
         symbol: Bg
         tier: 3
-    worker-type: gce/gecko-{level}-b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 7200
         env:
