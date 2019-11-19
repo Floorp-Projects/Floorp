@@ -904,13 +904,6 @@ already_AddRefed<GLContext> GLContextProviderEGL::CreateForCompositorWidget(
   return GLContextEGLFactory::Create(window, aWebRender);
 }
 
-already_AddRefed<GLContext> GLContextProviderEGL::CreateForWindow(
-    nsIWidget* aWidget, bool aWebRender, bool aForceAccelerated) {
-  MOZ_ASSERT(aWidget);
-  return GLContextEGLFactory::Create(
-      GET_NATIVE_WINDOW_FROM_REAL_WIDGET(aWidget), aWebRender);
-}
-
 #if defined(MOZ_WIDGET_ANDROID)
 EGLSurface GLContextEGL::CreateCompatibleSurface(void* aWindow) {
   if (mConfig == EGL_NO_CONFIG) {
