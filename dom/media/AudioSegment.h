@@ -202,7 +202,7 @@ struct AudioChunk {
     mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
   }
 
-  size_t ChannelCount() const { return mChannelData.Length(); }
+  uint32_t ChannelCount() const { return mChannelData.Length(); }
 
   bool IsMuted() const { return mVolume == 0.0f; }
 
@@ -402,18 +402,17 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
   // aChannelCount channels.
   void Mix(AudioMixer& aMixer, uint32_t aChannelCount, uint32_t aSampleRate);
 
-  int ChannelCount() {
-    NS_WARNING_ASSERTION(
-        !mChunks.IsEmpty(),
-        "Cannot query channel count on a AudioSegment with no chunks.");
+  // Returns the maximum
+  uint32_t MaxChannelCount() {
     // Find the first chunk that has non-zero channels. A chunk that hs zero
     // channels is just silence and we can simply discard it.
+    uint32_t channelCount = 0;
     for (ChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
       if (ci->ChannelCount()) {
-        return ci->ChannelCount();
+        channelCount = std::max(channelCount, ci->ChannelCount());
       }
     }
-    return 0;
+    return channelCount;
   }
 
   static Type StaticType() { return AUDIO; }

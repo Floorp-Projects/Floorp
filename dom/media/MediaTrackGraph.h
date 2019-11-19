@@ -716,7 +716,7 @@ class SourceMediaTrack : public MediaTrack {
     // Resampler if the rate of the input track does not match the
     // MediaTrackGraph's.
     nsAutoRef<SpeexResamplerState> mResampler;
-    int mResamplerChannelCount;
+    uint32_t mResamplerChannelCount;
     // Each time the track updates are flushed to the media graph thread,
     // the segment buffer is emptied.
     UniquePtr<MediaSegment> mData;
