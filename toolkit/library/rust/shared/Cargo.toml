@@ -45,6 +45,7 @@ neqo_glue = { path = "../../../../netwerk/socket/neqo_glue" }
 rlbox_lucet_sandbox = { version = "0.1.0", optional = true }
 wgpu-remote = { path = "../../../../gfx/wgpu/wgpu-remote", optional = true }
 mapped_hyph = { git = "https://github.com/jfkthame/mapped_hyph.git", tag = "v0.3.0" }
+remote = { path = "../../../../remote" }
 
 [build-dependencies]
 rustc_version = "0.2"
