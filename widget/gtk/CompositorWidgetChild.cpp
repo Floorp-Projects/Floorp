@@ -35,11 +35,5 @@ void CompositorWidgetChild::NotifyClientSizeChanged(
   Unused << SendNotifyClientSizeChanged(aClientSize);
 }
 
-#ifdef MOZ_WAYLAND
-void CompositorWidgetChild::RequestsUpdatingEGLSurface() {
-  Unused << SendRequestsUpdatingEGLSurface();
-}
-#endif
-
 }  // namespace widget
 }  // namespace mozilla

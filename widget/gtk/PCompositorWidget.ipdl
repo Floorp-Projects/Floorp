@@ -19,7 +19,6 @@ parent:
   async __delete__();
 
   async NotifyClientSizeChanged(LayoutDeviceIntSize aClientSize);
-  async RequestsUpdatingEGLSurface();
 
 child:
 
