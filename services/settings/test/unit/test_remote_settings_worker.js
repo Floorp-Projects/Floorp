@@ -3,6 +3,10 @@
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
 
 const { RemoteSettingsWorker } = ChromeUtils.import(
   "resource://services-settings/RemoteSettingsWorker.jsm"
@@ -64,4 +68,35 @@ add_task(async function test_throws_error_if_worker_fails() {
     error = e;
   }
   Assert.equal("TypeError: localRecords is null", error.message);
+});
+
+add_task(async function test_stops_worker_after_timeout() {
+  // Change the idle time.
+  Services.prefs.setIntPref(
+    "services.settings.worker_idle_max_milliseconds",
+    1
+  );
+  // Run a task:
+  let serialized = await RemoteSettingsWorker.canonicalStringify([], [], 42);
+  Assert.equal('{"data":[],"last_modified":"42"}', serialized, "API works.");
+  // Check that the worker gets stopped now the task is done:
+  await TestUtils.waitForCondition(() => !RemoteSettingsWorker.worker);
+  // Ensure the worker stays alive for 10 minutes instead:
+  Services.prefs.setIntPref(
+    "services.settings.worker_idle_max_milliseconds",
+    600000
+  );
+  // Run another task:
+  serialized = await RemoteSettingsWorker.canonicalStringify([], [], 42);
+  Assert.equal(
+    '{"data":[],"last_modified":"42"}',
+    serialized,
+    "API still works."
+  );
+  Assert.ok(RemoteSettingsWorker.worker, "Worker should stay alive a bit.");
+
+  // Clear the pref.
+  Services.prefs.clearUserPref(
+    "services.settings.worker_idle_max_milliseconds"
+  );
 });
