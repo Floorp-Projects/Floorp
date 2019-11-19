@@ -137,6 +137,11 @@ bool wasm::BoxAnyRef(JSContext* cx, HandleValue val, MutableHandleAnyRef addr) {
   return true;
 }
 
+JSObject* wasm::BoxBoxableValue(JSContext* cx, HandleValue val) {
+  MOZ_ASSERT(!val.isNull() && !val.isObject());
+  return WasmValueBox::create(cx, val);
+}
+
 Value wasm::UnboxAnyRef(AnyRef val) {
   // If UnboxAnyRef needs to allocate then we need a more complicated API, and
   // we need to root the value in the callers, see comments in callExport().

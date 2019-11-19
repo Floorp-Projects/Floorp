@@ -565,7 +565,7 @@ static inline const char* ToCString(ExprType type) {
 // as all its subtypes (funcref, eqref, (ref T), et al) due to the non-coercive
 // subtyping of the wasm type system.  Its current representation is a plain
 // JSObject*, and the private JSObject subtype WasmValueBox is used to box
-// non-object JS values.
+// non-object non-null JS values.
 //
 // The C++/wasm boundary always uses a 'void*' type to express AnyRef values, to
 // emphasize the pointer-ness of the value.  The C++ code must transform the
@@ -585,7 +585,9 @@ static inline const char* ToCString(ExprType type) {
 // For version 0, we simply equate AnyRef and JSObject* (this means that there
 // are technically no tags at all yet).  We use a simple boxing scheme that
 // wraps a JS value that is not already JSObject in a distinguishable JSObject
-// that holds the value, see WasmTypes.cpp for details.
+// that holds the value, see WasmTypes.cpp for details.  Knowledge of this
+// mapping is embedded in CodeGenerator.cpp (in WasmBoxValue and
+// WasmAnyRefFromJSObject) and in WasmStubs.cpp (in functions Box* and Unbox*).
 
 class AnyRef {
   JSObject* value_;
@@ -639,6 +641,14 @@ typedef MutableHandle<AnyRef> MutableHandleAnyRef;
 // false on OOM.
 
 bool BoxAnyRef(JSContext* cx, HandleValue val, MutableHandleAnyRef result);
+
+// Given a JS value that requires an object box, box it as an AnyRef and return
+// it, returning nullptr on OOM.
+//
+// Currently the values requiring a box are those other than JSObject* or
+// nullptr, but in the future more values will be represented without an
+// allocation.
+JSObject* BoxBoxableValue(JSContext* cx, HandleValue val);
 
 // Given any AnyRef, unbox it as a JS Value.  If it is a reference to a wasm
 // object it will be reflected as a JSObject* representing some TypedObject
@@ -992,10 +1002,20 @@ class FuncType {
     }
     return false;
   }
-  // For inlined JS->wasm jit entries, neither AnyRef parameters or returns are
+  // For inlined JS->wasm jit entries, AnyRef parameters and returns are
   // allowed.
   bool temporarilyUnsupportedReftypeForInlineEntry() const {
-    return hasReferenceArg() || hasReferenceReturn();
+    for (ValType arg : args()) {
+      if (arg.isReference() && arg.code() != ValType::AnyRef) {
+        return true;
+      }
+    }
+    for (ValType result : results()) {
+      if (result.isReference() && result.code() != ValType::AnyRef) {
+        return true;
+      }
+    }
+    return false;
   }
   // For wasm->JS jit exits, AnyRef parameters and returns are allowed.
   bool temporarilyUnsupportedReftypeForExit() const {
