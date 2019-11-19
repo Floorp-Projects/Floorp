@@ -54,7 +54,7 @@ class nsNetworkLinkService : public nsINetworkLinkService,
   void OnIPConfigChanged();
   void OnNetworkIdChanged();
   void OnReachabilityChanged();
-  void SendEvent(const char* aEventID);
+  void NotifyObservers(const char* aTopic, const char* aData);
   static void ReachabilityChanged(SCNetworkReachabilityRef target,
                                   SCNetworkConnectionFlags flags, void* info);
   static void NetworkConfigChanged(SCDynamicStoreRef store,
