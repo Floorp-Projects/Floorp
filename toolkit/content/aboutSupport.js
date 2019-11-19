@@ -865,6 +865,12 @@ var snapshotFormatters = {
     }
 
     function insertEnumerateDatabase() {
+      if (
+        !Services.prefs.getBoolPref("media.mediacapabilities.from-database")
+      ) {
+        $("media-capabilities-tbody").style.display = "none";
+        return;
+      }
       let button = $("enumerate-database-button");
       if (button) {
         button.addEventListener("click", function(event) {
