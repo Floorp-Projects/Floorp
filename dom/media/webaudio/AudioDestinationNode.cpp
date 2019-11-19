@@ -451,6 +451,10 @@ void AudioDestinationNode::SetChannelCount(uint32_t aChannelCount,
     return;
   }
 
+  if (aChannelCount == ChannelCount()) {
+    return;
+  }
+
   AudioNode::SetChannelCount(aChannelCount, aRv);
 }
 
