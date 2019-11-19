@@ -1342,6 +1342,13 @@ class UrlbarView {
         delete result.payload.originalEngine;
       }
       let item = this._rows.children[i];
+      // If a one-off button is the only selection, force the heuristic result
+      // to show its action text, so the engine name is visible.
+      if (result.heuristic && engine && !this.selectedElement) {
+        item.setAttribute("show-action-text", "true");
+      } else {
+        item.removeAttribute("show-action-text");
+      }
       if (!result.payload.inPrivateWindow) {
         let action = item.querySelector(".urlbarView-action");
         action.textContent = UrlbarUtils.strings.formatStringFromName(
