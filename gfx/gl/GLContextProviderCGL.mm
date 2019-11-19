@@ -122,15 +122,6 @@ already_AddRefed<GLContext> GLContextProviderCGL::CreateWrappingExisting(void*, 
   return nullptr;
 }
 
-static const NSOpenGLPixelFormatAttribute kAttribs[] = {NSOpenGLPFAAllowOfflineRenderers, 0};
-
-static const NSOpenGLPixelFormatAttribute kAttribs_accel[] = {NSOpenGLPFAAccelerated,
-                                                              NSOpenGLPFAAllowOfflineRenderers, 0};
-
-static const NSOpenGLPixelFormatAttribute kAttribs_accel_webrender[] = {
-    NSOpenGLPFAAccelerated, NSOpenGLPFAAllowOfflineRenderers, NSOpenGLPFAOpenGLProfile,
-    NSOpenGLProfileVersion3_2Core, 0};
-
 static NSOpenGLContext* CreateWithFormat(const NSOpenGLPixelFormatAttribute* attribs) {
   NSOpenGLPixelFormat* format = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
   if (!format) {
@@ -162,30 +153,15 @@ already_AddRefed<GLContext> GLContextProviderCGL::CreateForCompositorWidget(
   }
 #endif
 
-  const NSOpenGLPixelFormatAttribute* attribs;
-  if (aWebRender) {
-    MOZ_RELEASE_ASSERT(aForceAccelerated,
-                       "At the moment, aForceAccelerated is always true if aWebRender is true. "
-                       "If this changes, please update the code here.");
-    attribs = kAttribs_accel_webrender;
-  } else {
-    attribs = aForceAccelerated ? kAttribs_accel : kAttribs;
+  CreateContextFlags flags = CreateContextFlags::ALLOW_OFFLINE_RENDERER;
+  if (aForceAccelerated) {
+    flags |= CreateContextFlags::FORCE_ENABLE_HARDWARE;
   }
-  NSOpenGLContext* context = CreateWithFormat(attribs);
-  if (!context) {
-    return nullptr;
+  if (!aWebRender) {
+    flags |= CreateContextFlags::REQUIRE_COMPAT_PROFILE;
   }
-
-  RefPtr<GLContextCGL> glContext =
-      new GLContextCGL(CreateContextFlags::NONE, SurfaceCaps::ForRGBA(), context, false);
-
-  if (!glContext->Init()) {
-    glContext = nullptr;
-    [context release];
-    return nullptr;
-  }
-
-  return glContext.forget();
+  nsCString failureUnused;
+  return CreateHeadless(flags, &failureUnused);
 }
 
 static already_AddRefed<GLContextCGL> CreateOffscreenFBOContext(CreateContextFlags flags) {
