@@ -935,9 +935,14 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   // reference equality between a re-exported function and 'ref.func'. The
   // identity of the imported function object is stable across tiers, which is
   // what we want.
+  //
+  // Use the imported function only if it is an exported function, otherwise
+  // fall through to get a (possibly new) exported function.
   if (funcIndex < funcImports.length()) {
     FuncImportTls& import = instance->funcImportTls(funcImports[funcIndex]);
-    return FuncRef::fromJSFunction(import.fun).forCompiledCode();
+    if (IsWasmExportedFunction(import.fun)) {
+      return FuncRef::fromJSFunction(import.fun).forCompiledCode();
+    }
   }
 
   RootedFunction fun(cx);
