@@ -31,6 +31,13 @@
         "description": "Restarts the application.",
         "requireUserInput": true,
         "parameters": []
+      },
+      {
+        "name": "resetBrowser",
+        "type": "function",
+        "async": true,
+        "description": "Opens a confirmation dialogue asking if the user wants to reset their profile.",
+        "parameters": []
       }
     ]
   }
