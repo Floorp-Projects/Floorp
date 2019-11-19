@@ -285,6 +285,8 @@ class DecodedStreamData final {
   const RefPtr<ProcessedMediaTrack> mVideoOutputTrack;
   const RefPtr<MediaInputPort> mAudioPort;
   const RefPtr<MediaInputPort> mVideoPort;
+  const RefPtr<DecodedStream::EndedPromise> mAudioEndedPromise;
+  const RefPtr<DecodedStream::EndedPromise> mVideoEndedPromise;
   const RefPtr<DecodedStreamGraphListener> mListener;
 };
 
@@ -314,6 +316,8 @@ DecodedStreamData::DecodedStreamData(
       mVideoPort((mVideoOutputTrack && mVideoTrack)
                      ? mVideoOutputTrack->AllocateInputPort(mVideoTrack)
                      : nullptr),
+      mAudioEndedPromise(aAudioEndedPromise.Ensure(__func__)),
+      mVideoEndedPromise(aVideoEndedPromise.Ensure(__func__)),
       // DecodedStreamGraphListener will resolve these promises.
       mListener(MakeRefPtr<DecodedStreamGraphListener>(
           mAudioTrack, std::move(aAudioEndedPromise), mVideoTrack,
@@ -411,12 +415,11 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
   ConnectListener();
 
   class R : public Runnable {
-    typedef MozPromiseHolder<MediaSink::EndedPromise> Promise;
-
    public:
     R(PlaybackInfoInit&& aInit,
       nsTArray<RefPtr<ProcessedMediaTrack>> aOutputTracks,
-      Promise&& aAudioEndedPromise, Promise&& aVideoEndedPromise)
+      MozPromiseHolder<MediaSink::EndedPromise>&& aAudioEndedPromise,
+      MozPromiseHolder<MediaSink::EndedPromise>&& aVideoEndedPromise)
         : Runnable("CreateDecodedStreamData"),
           mInit(std::move(aInit)),
           mOutputTracks(std::move(aOutputTracks)),
@@ -460,15 +463,13 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
    private:
     PlaybackInfoInit mInit;
     const nsTArray<RefPtr<ProcessedMediaTrack>> mOutputTracks;
-    Promise mAudioEndedPromise;
-    Promise mVideoEndedPromise;
+    MozPromiseHolder<MediaSink::EndedPromise> mAudioEndedPromise;
+    MozPromiseHolder<MediaSink::EndedPromise> mVideoEndedPromise;
     UniquePtr<DecodedStreamData> mData;
   };
 
   MozPromiseHolder<DecodedStream::EndedPromise> audioEndedHolder;
-  mAudioEndedPromise = audioEndedHolder.Ensure(__func__);
   MozPromiseHolder<DecodedStream::EndedPromise> videoEndedHolder;
-  mVideoEndedPromise = videoEndedHolder.Ensure(__func__);
   PlaybackInfoInit init{aStartTime, aInfo};
   nsCOMPtr<nsIRunnable> r = new R(
       std::move(init), nsTArray<RefPtr<ProcessedMediaTrack>>(mOutputTracks),
@@ -478,6 +479,8 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
   mData = static_cast<R*>(r.get())->ReleaseData();
 
   if (mData) {
+    mAudioEndedPromise = mData->mAudioEndedPromise;
+    mVideoEndedPromise = mData->mVideoEndedPromise;
     mOutputListener = mData->OnOutput().Connect(mOwnerThread, this,
                                                 &DecodedStream::NotifyOutput);
     SendData();
