@@ -91,6 +91,11 @@ class RemoteAgentClass {
 
       this.server._start(port, host);
       dump(`DevTools listening on ${mainTarget.wsDebuggerURL}\n`);
+      Services.obs.notifyObservers(
+        null,
+        "remote-listening",
+        mainTarget.wsDebuggerURL
+      );
     } catch (e) {
       await this.close();
       throw new Error(`Unable to start remote agent: ${e.message}`, e);
