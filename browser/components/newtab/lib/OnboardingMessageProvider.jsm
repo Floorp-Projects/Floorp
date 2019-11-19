@@ -16,6 +16,7 @@ ChromeUtils.defineModuleGetter(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const FIREFOX_VERSION = parseInt(Services.appinfo.version.match(/\d+/), 10);
 const ONE_MINUTE = 60 * 1000;
+const FX_MONITOR_CLIENT_ID = "802d56ef2a9af9fa";
 
 const L10N = new Localization([
   "branding/brand.ftl",
@@ -289,8 +290,9 @@ const ONBOARDING_MESSAGES = () => [
         },
       },
     },
-    targeting:
-      "trailheadTriplet == 'supercharge' || (trailheadTriplet == 'dynamic' && !('Firefox Monitor' in attachedFxAOAuthClients|mapToProperty('name')))",
+    // Use service oauth client_id to identify 'Firefox Monitor' service attached to Firefox Account
+    // https://docs.telemetry.mozilla.org/datasets/fxa_metrics/attribution.html#service-attribution
+    targeting: `trailheadTriplet == 'supercharge' || (trailheadTriplet == 'dynamic' && !("${FX_MONITOR_CLIENT_ID}" in attachedFxAOAuthClients|mapToProperty('id')))`,
     trigger: { id: "showOnboarding" },
   },
   {
