@@ -2102,7 +2102,7 @@ var BrowserTestUtils = {
 
   /**
    * Opens a tab with a given uri and params object. If the params object is not set
-   * or the params parameter does not include a triggeringPricnipal then this function
+   * or the params parameter does not include a triggeringPrincipal then this function
    * provides a params object using the systemPrincipal as the default triggeringPrincipal.
    *
    * @param {xul:tabbrowser} tabbrowser
