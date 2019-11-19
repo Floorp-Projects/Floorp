@@ -181,7 +181,7 @@ void Table::setFuncRef(uint32_t index, void* code, const Instance* instance) {
   }
 }
 
-void Table::fillFuncRef(uint32_t index, uint32_t fillCount, AnyRef ref,
+void Table::fillFuncRef(uint32_t index, uint32_t fillCount, FuncRef ref,
                         JSContext* cx) {
   MOZ_ASSERT(isFunction());
 
@@ -192,7 +192,7 @@ void Table::fillFuncRef(uint32_t index, uint32_t fillCount, AnyRef ref,
     return;
   }
 
-  RootedFunction fun(cx, &ref.asJSObject()->as<JSFunction>());
+  RootedFunction fun(cx, ref.asJSFunction());
   MOZ_RELEASE_ASSERT(IsWasmExportedFunction(fun));
 
   RootedWasmInstanceObject instanceObj(cx,
