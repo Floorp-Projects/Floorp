@@ -358,6 +358,7 @@ add_test(function test_blocklist_trumps_allowlist() {
       referrerInfo: createReferrerInfo(blocklistedURI),
       suggestedFileName: binaryFile,
       fileSize: 12,
+      signatureInfo: [],
     },
     function onComplete(aShouldBlock, aStatus) {
       Assert.equal(Cr.NS_OK, aStatus);
@@ -409,6 +410,7 @@ add_test(function test_redirect_on_blocklist() {
       redirects: badRedirects,
       suggestedFileName: binaryFile,
       fileSize: 12,
+      signatureInfo: [],
     },
     function onComplete(aShouldBlock, aStatus) {
       Assert.equal(Cr.NS_OK, aStatus);
@@ -429,6 +431,7 @@ add_test(function test_whitelisted_source() {
       sourceURI: whitelistedURI,
       suggestedFileName: binaryFile,
       fileSize: 12,
+      signatureInfo: [],
     },
     function onComplete(aShouldBlock, aStatus) {
       Assert.equal(Cr.NS_OK, aStatus);
@@ -552,6 +555,7 @@ add_test(function test_remote_lookup_protocolbuf() {
       sha256Hash,
       redirects,
       fileSize: 12,
+      signatureInfo: [],
     },
     function onComplete(aShouldBlock, aStatus) {
       Assert.equal(Cr.NS_OK, aStatus);
