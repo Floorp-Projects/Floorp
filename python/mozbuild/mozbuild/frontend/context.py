@@ -444,73 +444,76 @@ class LinkFlags(BaseCompileFlags):
         return flags
 
 
-class CompileFlags(BaseCompileFlags):
-    def __init__(self, context):
+class TargetCompileFlags(BaseCompileFlags):
+    """Base class that encapsulates some common logic between CompileFlags and
+    WasmCompileFlags.
+    """
+    def __init__(self, context, prefix='', additionally=()):
+        # `prefix` is a string to be prepended to all dest_var names.
+        # `additionally` is a sequence of (flat, default, dest_vars) to be added
+        # to the flag_variables tuple.
         main_src_dir = mozpath.dirname(context.main_path)
         self._context = context
 
-        self.flag_variables = (
-            ('STL', context.config.substs.get('STL_FLAGS'), ('CXXFLAGS',)),
-            ('VISIBILITY', context.config.substs.get('VISIBILITY_FLAGS'),
-             ('CXXFLAGS', 'CFLAGS')),
-            ('MOZ_HARDENING_CFLAGS',
-             (context.config.substs.get('MOZ_HARDENING_CFLAGS_JS')
-              if _context_under_js_src(context) else
-              context.config.substs.get('MOZ_HARDENING_CFLAGS')),
-             ('CXXFLAGS', 'CFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
-            ('DEFINES', None, ('CXXFLAGS', 'CFLAGS')),
-            ('LIBRARY_DEFINES', None, ('CXXFLAGS', 'CFLAGS')),
-            ('BASE_INCLUDES', ['-I%s' % main_src_dir, '-I%s' % context.objdir],
-             ('CXXFLAGS', 'CFLAGS')),
-            ('LOCAL_INCLUDES', None, ('CXXFLAGS', 'CFLAGS')),
-            ('EXTRA_INCLUDES', ['-I%s/dist/include' % context.config.topobjdir],
-             ('CXXFLAGS', 'CFLAGS')),
-            ('OS_INCLUDES', list(itertools.chain(*(context.config.substs.get(v, []) for v in (
-                'NSPR_CFLAGS', 'NSS_CFLAGS', 'MOZ_JPEG_CFLAGS', 'MOZ_PNG_CFLAGS',
-                'MOZ_ZLIB_CFLAGS', 'MOZ_PIXMAN_CFLAGS')))),
-             ('CXXFLAGS', 'CFLAGS')),
-            ('DSO', context.config.substs.get('DSO_CFLAGS'),
-             ('CXXFLAGS', 'CFLAGS')),
-            ('DSO_PIC', context.config.substs.get('DSO_PIC_CFLAGS'),
-             ('CXXFLAGS', 'CFLAGS')),
-            ('RTL', None, ('CXXFLAGS', 'CFLAGS')),
-            ('OS_COMPILE_CFLAGS', context.config.substs.get('OS_COMPILE_CFLAGS'),
-             ('CFLAGS',)),
-            ('OS_COMPILE_CXXFLAGS', context.config.substs.get('OS_COMPILE_CXXFLAGS'),
-             ('CXXFLAGS',)),
-            ('OS_CPPFLAGS', context.config.substs.get('OS_CPPFLAGS'),
-             ('CXXFLAGS', 'CFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
-            ('OS_CFLAGS', context.config.substs.get('OS_CFLAGS'),
-             ('CFLAGS', 'C_LDFLAGS')),
-            ('OS_CXXFLAGS', context.config.substs.get('OS_CXXFLAGS'),
-             ('CXXFLAGS', 'CXX_LDFLAGS')),
-            ('DEBUG', self._debug_flags(),
-             ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
-            ('CLANG_PLUGIN', context.config.substs.get('CLANG_PLUGIN_FLAGS'),
-             ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
-            ('OPTIMIZE', self._optimize_flags(),
-             ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
-            ('FRAMEPTR', context.config.substs.get('MOZ_FRAMEPTR_FLAGS'),
-             ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
-            ('WARNINGS_AS_ERRORS', self._warnings_as_errors(),
-             ('CXXFLAGS', 'CFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
-            ('WARNINGS_CFLAGS', context.config.substs.get('WARNINGS_CFLAGS'),
-             ('CFLAGS', 'C_LDFLAGS')),
-            ('MOZBUILD_CFLAGS', None, ('CFLAGS',)),
-            ('MOZBUILD_CXXFLAGS', None, ('CXXFLAGS',)),
-            ('COVERAGE', context.config.substs.get('COVERAGE_CFLAGS'), ('CXXFLAGS', 'CFLAGS')),
-        )
+        self.flag_variables = tuple(list(additionally) + [
+            (flag, default, tuple(prefix + dest_var for dest_var in dest_vars))
+            for flag, default, dest_vars in (
+                    ('STL', context.config.substs.get('STL_FLAGS'),
+                     ('CXXFLAGS',)),
+                    ('DEFINES', None, ('CXXFLAGS', 'CFLAGS')),
+                    ('LIBRARY_DEFINES', None, ('CXXFLAGS', 'CFLAGS')),
+                    ('BASE_INCLUDES',
+                     ['-I%s' % main_src_dir, '-I%s' % context.objdir],
+                     ('CXXFLAGS', 'CFLAGS')),
+                    ('LOCAL_INCLUDES', None, ('CXXFLAGS', 'CFLAGS')),
+                    ('EXTRA_INCLUDES',
+                     ['-I%s/dist/include' % context.config.topobjdir],
+                     ('CXXFLAGS', 'CFLAGS')),
+                    ('OS_INCLUDES',
+                     list(itertools.chain(*(
+                         context.config.substs.get(v, []) for v in (
+                             'NSPR_CFLAGS', 'NSS_CFLAGS', 'MOZ_JPEG_CFLAGS',
+                             'MOZ_PNG_CFLAGS', 'MOZ_ZLIB_CFLAGS',
+                             'MOZ_PIXMAN_CFLAGS')))),
+                     ('CXXFLAGS', 'CFLAGS')),
+                    ('DSO', context.config.substs.get('DSO_CFLAGS'),
+                     ('CXXFLAGS', 'CFLAGS')),
+                    ('DSO_PIC', context.config.substs.get('DSO_PIC_CFLAGS'),
+                     ('CXXFLAGS', 'CFLAGS')),
+                    ('RTL', None, ('CXXFLAGS', 'CFLAGS')),
+                    ('DEBUG', self._debug_flags(),
+                     ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+                    ('CLANG_PLUGIN',
+                     context.config.substs.get('CLANG_PLUGIN_FLAGS'),
+                     ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+                    ('OPTIMIZE', self._optimize_flags(),
+                     ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+                    ('FRAMEPTR',
+                     context.config.substs.get('MOZ_FRAMEPTR_FLAGS'),
+                     ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+                    ('WARNINGS_AS_ERRORS', self._warnings_as_errors(),
+                     ('CXXFLAGS', 'CFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+                    ('WARNINGS_CFLAGS',
+                     context.config.substs.get('WARNINGS_CFLAGS'),
+                     ('CFLAGS', 'C_LDFLAGS')),
+                    ('MOZBUILD_CFLAGS', None, ('CFLAGS',)),
+                    ('MOZBUILD_CXXFLAGS', None, ('CXXFLAGS',)),
+                    ('COVERAGE', context.config.substs.get('COVERAGE_CFLAGS'),
+                     ('CXXFLAGS', 'CFLAGS')),
+            )])
 
         BaseCompileFlags.__init__(self, context)
 
     def _debug_flags(self):
         if (self._context.config.substs.get('MOZ_DEBUG') or
             self._context.config.substs.get('MOZ_DEBUG_SYMBOLS')):
-            return self._context.config.substs.get('MOZ_DEBUG_FLAGS', '').split()
+            return (
+                self._context.config.substs.get('MOZ_DEBUG_FLAGS', '').split())
         return []
 
     def _warnings_as_errors(self):
-        warnings_as_errors = self._context.config.substs.get('WARNINGS_AS_ERRORS')
+        warnings_as_errors = self._context.config.substs.get(
+            'WARNINGS_AS_ERRORS')
         if warnings_as_errors:
             return [warnings_as_errors]
 
@@ -519,11 +522,13 @@ class CompileFlags(BaseCompileFlags):
             return []
         optimize_flags = None
         if self._context.config.substs.get('MOZ_PGO'):
-            optimize_flags = self._context.config.substs.get('MOZ_PGO_OPTIMIZE_FLAGS')
+            optimize_flags = self._context.config.substs.get(
+                'MOZ_PGO_OPTIMIZE_FLAGS')
         if not optimize_flags:
-            # If MOZ_PGO_OPTIMIZE_FLAGS is empty we fall back to MOZ_OPTIMIZE_FLAGS.
-            # Presently this occurs on Windows.
-            optimize_flags = self._context.config.substs.get('MOZ_OPTIMIZE_FLAGS')
+            # If MOZ_PGO_OPTIMIZE_FLAGS is empty we fall back to
+            # MOZ_OPTIMIZE_FLAGS. Presently this occurs on Windows.
+            optimize_flags = self._context.config.substs.get(
+                'MOZ_OPTIMIZE_FLAGS')
         return optimize_flags
 
     def __setitem__(self, key, value):
@@ -531,12 +536,47 @@ class CompileFlags(BaseCompileFlags):
             raise ValueError('Invalid value. `%s` is not a compile flags '
                              'category.' % key)
         if key in self and self[key] is None:
-            raise ValueError('`%s` may not be set in COMPILE_FLAGS from moz.build, this '
-                             'value is resolved from the emitter.' % key)
-        if not (isinstance(value, list) and all(isinstance(v, basestring) for v in value)):
-            raise ValueError('A list of strings must be provided as a value for a '
-                             'compile flags category.')
+            raise ValueError(
+                '`%s` may not be set in COMPILE_FLAGS from moz.build, this '
+                'value is resolved from the emitter.' % key)
+        if (not (isinstance(value, list) and
+                 all(isinstance(v, basestring) for v in value))):
+            raise ValueError(
+                'A list of strings must be provided as a value for a compile '
+                'flags category.')
         dict.__setitem__(self, key, value)
+
+
+class CompileFlags(TargetCompileFlags):
+    def __init__(self, context):
+        TargetCompileFlags.__init__(self, context, prefix='', additionally=(
+            ('VISIBILITY', context.config.substs.get('VISIBILITY_FLAGS'),
+             ('CXXFLAGS', 'CFLAGS')),
+            ('MOZ_HARDENING_CFLAGS',
+             (context.config.substs.get('MOZ_HARDENING_CFLAGS_JS')
+              if _context_under_js_src(context) else
+              context.config.substs.get('MOZ_HARDENING_CFLAGS')),
+             ('CXXFLAGS', 'CFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('OS_COMPILE_CFLAGS',
+             context.config.substs.get('OS_COMPILE_CFLAGS'), ('CFLAGS',)),
+            ('OS_COMPILE_CXXFLAGS',
+             context.config.substs.get('OS_COMPILE_CXXFLAGS'),
+             ('CXXFLAGS',)),
+            ('OS_CPPFLAGS', context.config.substs.get('OS_CPPFLAGS'),
+             ('CXXFLAGS', 'CFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('OS_CFLAGS', context.config.substs.get('OS_CFLAGS'),
+             ('CFLAGS', 'C_LDFLAGS')),
+            ('OS_CXXFLAGS', context.config.substs.get('OS_CXXFLAGS'),
+             ('CXXFLAGS', 'CXX_LDFLAGS')),
+        ))
+
+
+class WasmFlags(TargetCompileFlags):
+    def __init__(self, context):
+        TargetCompileFlags.__init__(
+            self, context, prefix='WASM_', additionally=tuple(
+                (name, context.config.substs.get(name), (name,))
+                for name in ('WASM_CFLAGS', 'WASM_CXXFLAGS', 'WASM_LDFLAGS')))
 
 
 class FinalTargetValue(ContextDerivedValue, unicode):
@@ -2129,9 +2169,14 @@ VARIABLES = {
         directly.
         """),
 
+    'WASM_FLAGS': (WasmFlags, dict,
+                   """Recipe for wasm flags for this context. Not to be
+        manipulated directly.
+        """),
+
     'ASM_FLAGS': (AsmFlags, dict,
-                  """Recipe for linker flags for this context. Not to be manipulated
-        directly.
+                  """Recipe for linker flags for this context. Not to be
+        manipulated directly.
         """),
 
     'CFLAGS': (List, list,
@@ -2160,6 +2205,33 @@ VARIABLES = {
     'HOST_DEFINES': (InitializedDefines, dict,
                      """Dictionary of compiler defines to declare for host compilation.
         See ``DEFINES`` for specifics.
+        """),
+
+    'WASM_CFLAGS': (List, list,
+                    """Flags passed to the C-to-wasm compiler for all of the C
+           source files declared in this directory.
+
+           Note that the ordering of flags matters here, these flags will be
+           added to the compiler's command line in the same order as they
+           appear in the moz.build file.
+        """),
+
+    'WASM_CXXFLAGS': (List, list,
+                      """Flags passed to the C++-to-wasm compiler for all of the
+           C++ source files declared in this directory.
+
+           Note that the ordering of flags matters here; these flags will be
+           added to the compiler's command line in the same order as they
+           appear in the moz.build file.
+        """),
+
+    'WASM_LDFLAGS': (List, list,
+                     """Flags passed to the linker when linking wasm modules
+           declared in this directory.
+
+           Note that the ordering of flags matters here; these flags will be
+           added to the compiler's command line in the same order as they
+           appear in the moz.build file.
         """),
 
     'CMFLAGS': (List, list,
