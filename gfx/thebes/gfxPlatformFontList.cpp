@@ -137,6 +137,8 @@ static const char* kObservedPrefs[] = {"font.", "font.name-list.",
 
 static const char kFontSystemWhitelistPref[] = "font.system.whitelist";
 
+static const char kCJKFallbackOrderPref[] = "font.cjk_pref_fallback_order";
+
 // xxx - this can probably be eliminated by reworking pref font handling code
 static const char* gPrefLangNames[] = {
 #define FONT_PREF_LANG(enum_id_, str_, atom_id_) str_
@@ -1713,9 +1715,29 @@ void gfxPlatformFontList::AppendCJKPrefLangs(eFontPrefLang aPrefLangs[],
       }
     }
 
-    // Last resort... try Chinese font prefs before Japanese because they
-    // tend to have more complete character coverage, and therefore less
-    // risk of "ransom-note" effects
+    // Last resort... set up CJK font prefs in the order listed by the user-
+    // configurable ordering pref.
+    gfxFontUtils::GetPrefsFontList(kCJKFallbackOrderPref, list);
+    for (const auto& item : list) {
+      eFontPrefLang fpl = GetFontPrefLangFor(item.get());
+      switch (fpl) {
+        case eFontPrefLang_Japanese:
+        case eFontPrefLang_Korean:
+        case eFontPrefLang_ChineseCN:
+        case eFontPrefLang_ChineseHK:
+        case eFontPrefLang_ChineseTW:
+          AppendPrefLang(tempPrefLangs, tempLen, fpl);
+          break;
+        default:
+          break;
+      }
+    }
+
+    // Truly-last resort... try Chinese font prefs before Japanese because
+    // they tend to have more complete character coverage, and therefore less
+    // risk of "ransom-note" effects.
+    // (If the kCJKFallbackOrderPref was fully populated, as it is by default,
+    // this will do nothing as all these values are already present.)
     AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseCN);
     AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseHK);
     AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseTW);
