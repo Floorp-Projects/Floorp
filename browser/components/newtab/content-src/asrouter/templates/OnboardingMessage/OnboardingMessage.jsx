@@ -18,7 +18,7 @@ export class OnboardingCard extends React.PureComponent {
       id: props.UISurface,
     };
     props.sendUserActionTelemetry(ping);
-    props.onAction(props.content.primary_button.action);
+    props.onAction(props.content.primary_button.action, props.message);
   }
 
   render() {

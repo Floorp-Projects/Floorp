@@ -205,6 +205,7 @@ export class FirstRun extends React.PureComponent {
             flowParams={flowParams}
             onDismiss={this.closeInterrupt}
             fxaEndpoint={fxaEndpoint}
+            onBlockById={props.onBlockById}
           />
         ) : null}
         {hasTriplets ? (
@@ -219,6 +220,7 @@ export class FirstRun extends React.PureComponent {
             UTMTerm={`${UTMTerm}-card`}
             flowParams={flowParams}
             onAction={executeAction}
+            onBlockById={props.onBlockById}
           />
         ) : null}
       </>
