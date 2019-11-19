@@ -39,6 +39,7 @@
 #include "js/Vector.h"
 #include "vm/JSFunction.h"
 #include "vm/MallocProvider.h"
+#include "vm/NativeObject.h"
 #include "wasm/WasmConstants.h"
 #include "wasm/WasmUtility.h"
 
@@ -443,6 +444,12 @@ class ValType {
 
   bool isReference() const { return IsReferenceType(tc_); }
 
+  // Some types are encoded as JS::Value when they escape from Wasm (when passed
+  // as parameters to imports or returned from exports).  For AnyRef the Value
+  // encoding is pretty much a requirement.  For other types it's a choice that
+  // may (temporarily) simplify some code.
+  bool isEncodedAsJSValueOnEscape() const { return code() == Code::AnyRef; }
+
   bool operator==(const ValType& that) const { return tc_ == that.tc_; }
   bool operator!=(const ValType& that) const { return tc_ != that.tc_; }
   bool operator==(Code that) const {
@@ -475,6 +482,11 @@ static inline unsigned SizeOf(ValType vt) {
   }
   MOZ_CRASH("Invalid ValType");
 }
+
+// Note, ToMIRType is only correct within Wasm, where an AnyRef is represented
+// as a pointer.  At the JS/wasm boundary, an AnyRef can be represented as a
+// JS::Value, and the type translation may have to be handled specially and on a
+// case-by-case basis.
 
 static inline jit::MIRType ToMIRType(ValType vt) {
   switch (vt.code()) {
@@ -633,6 +645,20 @@ bool BoxAnyRef(JSContext* cx, HandleValue val, MutableHandleAnyRef result);
 // instance.
 
 Value UnboxAnyRef(AnyRef val);
+
+class WasmValueBox : public NativeObject {
+  static const unsigned VALUE_SLOT = 0;
+
+ public:
+  static const unsigned RESERVED_SLOTS = 1;
+  static const JSClass class_;
+
+  static WasmValueBox* create(JSContext* cx, HandleValue val);
+  Value value() const { return getFixedSlot(VALUE_SLOT); }
+  static size_t offsetOfValue() {
+    return NativeObject::getFixedSlotOffset(VALUE_SLOT);
+  }
+};
 
 // A FuncRef is a JSFunction* and is hence also an AnyRef, and the remarks above
 // about AnyRef apply also to FuncRef.  When 'funcref' is used as a value type
@@ -936,14 +962,52 @@ class FuncType {
     }
     return false;
   }
-  bool temporarilyUnsupportedAnyRef() const {
+  bool hasReferenceArg() const {
     for (ValType arg : args()) {
       if (arg.isReference()) {
         return true;
       }
     }
+    return false;
+  }
+  bool hasReferenceReturn() const {
     for (ValType result : results()) {
       if (result.isReference()) {
+        return true;
+      }
+    }
+    return false;
+  }
+  // For non-inlined JS->wasm entries, AnyRef returns (but not parameters) are
+  // allowed.
+  bool temporarilyUnsupportedReftypeForEntry() const {
+    if (hasReferenceArg()) {
+      return true;
+    }
+    for (ValType result : results()) {
+      if (result.isReference() && result.code() != ValType::AnyRef) {
+        return true;
+      }
+    }
+    return false;
+  }
+  // For inlined JS->wasm jit entries, neither AnyRef parameters or returns are
+  // allowed.
+  bool temporarilyUnsupportedReftypeForInlineEntry() const {
+    return hasReferenceArg() || hasReferenceReturn();
+  }
+  // For wasm->JS exits, AnyRef parameters (but not returns) are allowed.
+  bool temporarilyUnsupportedReftypeForExit() const {
+    for (ValType arg : args()) {
+      if (arg.isReference() && arg.code() != ValType::AnyRef) {
+        return true;
+      }
+    }
+    return hasReferenceReturn();
+  }
+  bool jitExitRequiresArgCheck() const {
+    for (ValType arg : args()) {
+      if (arg.isEncodedAsJSValueOnEscape()) {
         return true;
       }
     }
@@ -2167,6 +2231,9 @@ struct TlsData {
 
   // The containing JSContext.
   JSContext* cx;
+
+  // The class_ of WasmValueBox, this is a per-process value.
+  const JSClass* valueBoxClass;
 
   // Usually equal to cx->stackLimitForJitCode(JS::StackForUntrustedScript),
   // but can be racily set to trigger immediate trap as an opportunity to

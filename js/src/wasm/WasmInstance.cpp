@@ -195,8 +195,9 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
     return true;
   }
 
-  // Functions with anyref in signature don't have a jit exit at the moment.
-  if (fi.funcType().temporarilyUnsupportedAnyRef()) {
+  // Functions with unsupported reference types in signature don't have a jit
+  // exit at the moment.
+  if (fi.funcType().temporarilyUnsupportedReftypeForExit()) {
     return true;
   }
 
@@ -204,30 +205,43 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
 
   size_t numKnownArgs = std::min(importArgs.length(), importFun->nargs());
   for (uint32_t i = 0; i < numKnownArgs; i++) {
-    TypeSet::Type type = TypeSet::UnknownType();
+    StackTypeSet* argTypes = jitScript->argTypes(sweep, script, i);
     switch (importArgs[i].code()) {
       case ValType::I32:
-        type = TypeSet::Int32Type();
+        if (!argTypes->hasType(TypeSet::Int32Type())) {
+          return true;
+        }
         break;
       case ValType::F32:
-        type = TypeSet::DoubleType();
+        if (!argTypes->hasType(TypeSet::DoubleType())) {
+          return true;
+        }
         break;
       case ValType::F64:
-        type = TypeSet::DoubleType();
+        if (!argTypes->hasType(TypeSet::DoubleType())) {
+          return true;
+        }
+        break;
+      case ValType::AnyRef:
+        // We don't know what type the value will be, so we can't really check
+        // whether the callee will accept it.  It doesn't make much sense to see
+        // if the callee accepts all of the types an AnyRef might represent
+        // because most callees will not have been exposed to all those types
+        // and so we'll never pass the test.  Instead, we must use the callee's
+        // arg-type-checking entry point, and not check anything here.  See
+        // FuncType::jitExitRequiresArgCheck().
         break;
       case ValType::Ref:
+        MOZ_CRASH("case guarded above");
       case ValType::FuncRef:
-      case ValType::AnyRef:
+        // TODO: FuncRef can easily be handled as AnyRef, but it can also be
+        // handled as the primitive types above by testing against some object
+        // type.
         MOZ_CRASH("case guarded above");
       case ValType::I64:
         MOZ_CRASH("NYI");
       case ValType::NullRef:
         MOZ_CRASH("NullRef not expressible");
-    }
-
-    StackTypeSet* argTypes = jitScript->argTypes(sweep, script, i);
-    if (!argTypes->hasType(type)) {
-      return true;
     }
   }
 
@@ -1157,6 +1171,7 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
   tlsData()->instance = this;
   tlsData()->realm = realm_;
   tlsData()->cx = cx;
+  tlsData()->valueBoxClass = &WasmValueBox::class_;
   tlsData()->resetInterrupt(cx);
   tlsData()->jumpTable = code_->tieringJumpTable();
   tlsData()->addressOfNeedsIncrementalBarrier =
