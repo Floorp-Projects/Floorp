@@ -13969,8 +13969,10 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
       case wasm::ValType::Ref:
       case wasm::ValType::AnyRef:
       case wasm::ValType::FuncRef:
-        // Don't forget to trace GC type arguments in TraceJitExitFrames
-        // when they're enabled.
+        // Don't forget to trace GC type arguments in TraceJSJitToWasmFrame
+        // and/or TraceJitExitFrame (see the case for DirectWasmJitCall in the
+        // latter) when they're enabled.  (AnyRef might come in as a JS::Value
+        // and might not need anything special.)
         MOZ_CRASH("unexpected argument type when calling from ion to wasm");
       case wasm::ValType::NullRef:
         MOZ_CRASH("NullRef not expressible");
@@ -14031,8 +14033,6 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
       case wasm::ValType::AnyRef:
       case wasm::ValType::FuncRef:
       case wasm::ValType::I64:
-        // Don't forget to trace GC type return value in TraceJitExitFrames
-        // when they're enabled.
         MOZ_CRASH("unexpected return type when calling from ion to wasm");
       case wasm::ValType::NullRef:
         MOZ_CRASH("NullRef not expressible");
