@@ -595,6 +595,7 @@ var PrintUtils = {
         is: "printpreview-toolbar",
       });
       printPreviewTB.setAttribute("fullscreentoolbar", true);
+      printPreviewTB.setAttribute("flex", "1");
       printPreviewTB.id = "print-preview-toolbar";
 
       let navToolbox = this._listener.getNavToolbox();
