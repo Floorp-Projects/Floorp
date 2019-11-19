@@ -6,6 +6,7 @@
 
 include('/media/webrtc/webrtc.mozbuild')
 
+DEFINES['ENABLE_SET_CUBEB_BACKEND'] = True
 
 LOCAL_INCLUDES += [
     '/media/webrtc/signaling/src/common',
