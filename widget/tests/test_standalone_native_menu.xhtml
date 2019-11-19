@@ -2,7 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
-<window title="Native menu system tests"
+<window title="Standalone Native Menu tests"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
@@ -20,7 +20,7 @@
 <![CDATA[
 
 SimpleTest.waitForExplicitFinish();
-window.openDialog("native_menus_window.xul", "NativeMenuWindow", 
+window.openDialog("standalone_native_menu_window.xhtml", "StandaloneNativeMenuWindow", 
                   "chrome,width=600,height=600,noopener", window);
 
 ]]>
