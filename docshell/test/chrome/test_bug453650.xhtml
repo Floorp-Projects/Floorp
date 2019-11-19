@@ -75,13 +75,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=453650
         done();
       },
 
-      QueryInterface: function (iid) {
-        if (Ci.nsIReflowObserver.equals(iid) ||
-            Ci.nsISupportsWeakReference.equals(iid) ||
-            Ci.nsISupports.equals(iid))
-          return this;
-        throw Cr.NS_ERROR_NO_INTERFACE;
-      },
+      QueryInterface: ChromeUtils.generateQI([
+        Ci.nsIReflowObserver,
+        Ci.nsISupportsWeakReference,
+      ]),
     };
 
     docShell.addWeakReflowObserver(observer);
