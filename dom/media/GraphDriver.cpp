@@ -455,10 +455,11 @@ TrackAndPromiseForOperation::TrackAndPromiseForOperation(
       mFlags(aFlags) {}
 
 AudioCallbackDriver::AudioCallbackDriver(MediaTrackGraphImpl* aGraphImpl,
+                                         uint32_t aOutputChannelCount,
                                          uint32_t aInputChannelCount,
                                          AudioInputType aAudioInputType)
     : GraphDriver(aGraphImpl),
-      mOutputChannels(0),
+      mOutputChannels(aOutputChannelCount),
       mSampleRate(0),
       mInputChannelCount(aInputChannelCount),
       mIterationDurationMS(MEDIA_GRAPH_TARGET_PERIOD_MS),
@@ -555,8 +556,6 @@ bool AudioCallbackDriver::Init() {
     output.format = CUBEB_SAMPLE_FLOAT32NE;
   }
 
-  // Query and set the number of channels this AudioCallbackDriver will use.
-  mOutputChannels = GraphImpl()->AudioOutputChannelCount();
   if (!mOutputChannels) {
     LOG(LogLevel::Warning, ("Output number of channels is 0."));
     MonitorAutoLock lock(GraphImpl()->GetMonitor());
