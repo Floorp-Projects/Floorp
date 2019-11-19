@@ -69,6 +69,7 @@ export type FramePacket = {|
   +actor: ActorId,
   +arguments: any[],
   +displayName: string,
+  +environment: any,
   +this: any,
   +depth?: number,
   +oldest?: boolean,
@@ -91,6 +92,7 @@ export type FrameFront = {
   actorID: string,
   displayName: string,
   this: any,
+  environment: any,
 };
 
 /**

@@ -27,7 +27,6 @@ add_task(
           });
         });
       }, threadFront);
-      const environment = await packet.frame.getEnvironment();
       const why = packet.why;
       Assert.equal(why.type, "breakpoint");
       Assert.equal(why.actors.length, 1);
@@ -35,7 +34,7 @@ add_task(
       const where = frame.where;
       Assert.equal(where.line, location.line);
       Assert.equal(where.column, location.column);
-      const variables = environment.bindings.variables;
+      const variables = frame.environment.bindings.variables;
       Assert.equal(variables.a.value, 1);
       Assert.equal(variables.b.value.type, "undefined");
       Assert.equal(variables.c.value.type, "undefined");

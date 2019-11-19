@@ -27,10 +27,6 @@ describe("scopes", () => {
       const scope = makeMockScope("actor1");
       const selectedFrame = makeMockFrame(undefined, undefined, scope);
 
-      if (!selectedFrame.scope) {
-        throw new Error("Frame must include scopes");
-      }
-
       const frameScopes = convertScope(selectedFrame.scope);
       const scopes = getScopes(pauseData, selectedFrame, frameScopes);
       if (!scopes) {
@@ -51,10 +47,6 @@ describe("scopes", () => {
       const selectedFrame = makeMockFrame(undefined, undefined, scope1);
       mockScopeAddVariable(scope0, "foo");
 
-      if (!selectedFrame.scope) {
-        throw new Error("Frame must include scopes");
-      }
-
       const frameScopes = convertScope(selectedFrame.scope);
       const scopes = getScopes(pauseData, selectedFrame, frameScopes);
       if (!scopes) {
@@ -72,10 +64,6 @@ describe("scopes", () => {
       const why = makeWhyNormal("to sender");
       const scope = makeMockScope("actor1");
       const selectedFrame = makeMockFrame(undefined, undefined, scope);
-
-      if (!selectedFrame.scope) {
-        throw new Error("Frame must include scopes");
-      }
 
       const frameScopes = convertScope(selectedFrame.scope);
       const scopes = getScopes(why, selectedFrame, frameScopes);
@@ -106,10 +94,6 @@ describe("scopes", () => {
       const why = makeWhyThrow("a party");
       const scope = makeMockScope("actor1");
       const selectedFrame = makeMockFrame(undefined, undefined, scope);
-
-      if (!selectedFrame.scope) {
-        throw new Error("Frame must include scopes");
-      }
 
       const frameScopes = convertScope(selectedFrame.scope);
       const scopes = getScopes(why, selectedFrame, frameScopes);

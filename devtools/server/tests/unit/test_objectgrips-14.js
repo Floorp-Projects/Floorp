@@ -37,15 +37,13 @@ function evalCode() {
 const testObjectGroup = async function() {
   let packet = await executeOnNextTickAndWaitForPause(evalCode, gThreadFront);
 
-  const environment = await packet.frame.getEnvironment();
-  const ugh = environment.parent.parent.bindings.variables.ugh;
+  const ugh = packet.frame.environment.parent.parent.bindings.variables.ugh;
   const ughClient = await gThreadFront.pauseGrip(ugh.value);
 
   packet = await getPrototypeAndProperties(ughClient);
   packet = await resumeAndWaitForPause(gThreadFront);
 
-  const environment2 = await packet.frame.getEnvironment();
-  const ugh2 = environment2.bindings.variables.ugh;
+  const ugh2 = packet.frame.environment.bindings.variables.ugh;
   const ugh2Client = gThreadFront.pauseGrip(ugh2.value);
 
   packet = await getPrototypeAndProperties(ugh2Client);
