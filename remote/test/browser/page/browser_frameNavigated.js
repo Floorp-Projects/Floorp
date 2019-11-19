@@ -42,11 +42,12 @@ add_task(async function(client) {
   }
   // Record all Page events that we assert in this test
   function recordPromises() {
-    recordPromise("frameStoppedLoading", Page.frameStoppedLoading());
-    recordPromise("navigatedWithinDocument", Page.navigatedWithinDocument());
+    recordPromise("frameStartedLoading", Page.frameStartedLoading());
+    recordPromise("frameNavigated", Page.frameNavigated());
     recordPromise("domContentEventFired", Page.domContentEventFired());
     recordPromise("loadEventFired", Page.loadEventFired());
-    recordPromise("frameNavigated", Page.frameNavigated());
+    recordPromise("navigatedWithinDocument", Page.navigatedWithinDocument());
+    recordPromise("frameStoppedLoading", Page.frameStoppedLoading());
   }
 
   info("Test Page.navigate");
@@ -107,6 +108,7 @@ async function assertNavigationEvents({ url, frameId }) {
 
   // Assert the order in which they resolved
   const expectedResolutions = [
+    "frameStartedLoading",
     "frameNavigated",
     "domContentEventFired",
     "loadEventFired",
@@ -120,6 +122,13 @@ async function assertNavigationEvents({ url, frameId }) {
   );
 
   // Now assert the data exposed by each of these events
+  const frameStartedLoading = resolutions.get("frameStartedLoading");
+  is(
+    frameStartedLoading.frameId,
+    frameId,
+    "frameStartedLoading frameId is the same one"
+  );
+
   const frameNavigated = resolutions.get("frameNavigated");
   ok(
     !frameNavigated.frame.parentId,
