@@ -128,48 +128,55 @@ void nsNetworkLinkService::OnNetworkChanged() {
 
     RefPtr<nsNetworkLinkService> self = this;
     NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "nsNetworkLinkService::OnNetworkChanged",
-        [self]() { self->SendEvent(NS_NETWORK_LINK_DATA_CHANGED); }));
+        "nsNetworkLinkService::OnNetworkChanged", [self]() {
+          self->NotifyObservers(NS_NETWORK_LINK_TOPIC,
+                                NS_NETWORK_LINK_DATA_CHANGED);
+        }));
   }
 }
 
 void nsNetworkLinkService::OnNetworkIDChanged() {
   RefPtr<nsNetworkLinkService> self = this;
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "nsNetworkLinkService::OnNetworkIDChanged",
-      [self]() { self->SendEvent(NS_NETWORK_LINK_DATA_NETWORKID_CHANGED); }));
+      "nsNetworkLinkService::OnNetworkIDChanged", [self]() {
+        self->NotifyObservers(NS_NETWORK_ID_CHANGED_TOPIC, nullptr);
+      }));
 }
 
 void nsNetworkLinkService::OnLinkUp() {
   RefPtr<nsNetworkLinkService> self = this;
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "nsNetworkLinkService::OnLinkUp",
-      [self]() { self->SendEvent(NS_NETWORK_LINK_DATA_UP); }));
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction("nsNetworkLinkService::OnLinkUp", [self]() {
+        self->NotifyObservers(NS_NETWORK_LINK_TOPIC, NS_NETWORK_LINK_DATA_UP);
+      }));
 }
 
 void nsNetworkLinkService::OnLinkDown() {
   RefPtr<nsNetworkLinkService> self = this;
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "nsNetworkLinkService::OnLinkDown",
-      [self]() { self->SendEvent(NS_NETWORK_LINK_DATA_DOWN); }));
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction("nsNetworkLinkService::OnLinkDown", [self]() {
+        self->NotifyObservers(NS_NETWORK_LINK_TOPIC, NS_NETWORK_LINK_DATA_DOWN);
+      }));
 }
 
 void nsNetworkLinkService::OnLinkStatusKnown() { mStatusIsKnown = true; }
 
-/* Sends the given event. Assumes aEventID never goes out of scope (static
+/* Sends the given event. Assumes aTopic/aData never goes out of scope (static
  * strings are ideal).
  */
-void nsNetworkLinkService::SendEvent(const char* aEventID) {
+void nsNetworkLinkService::NotifyObservers(const char* aTopic,
+                                           const char* aData) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  LOG(("SendEvent: %s\n", aEventID));
+  LOG(("nsNetworkLinkService::NotifyObservers: topic:%s data:%s\n", aTopic,
+       aData ? aData : ""));
 
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
 
   if (observerService) {
-    observerService->NotifyObservers(static_cast<nsINetworkLinkService*>(this),
-                                     NS_NETWORK_LINK_TOPIC,
-                                     NS_ConvertASCIItoUTF16(aEventID).get());
+    observerService->NotifyObservers(
+        static_cast<nsINetworkLinkService*>(this), aTopic,
+        aData ? NS_ConvertASCIItoUTF16(aData).get() : nullptr);
   }
 }
