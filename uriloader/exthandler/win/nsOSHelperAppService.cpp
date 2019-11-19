@@ -300,10 +300,16 @@ nsresult nsOSHelperAppService::GetDefaultAppInfo(
   nsCOMPtr<nsILocalFileWin> lf = new nsLocalFile();
   rv = lf->InitWithCommandLine(handlerCommand);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // The "FileDescription" field contains the actual name of the application.
-  lf->GetVersionInfoField("FileDescription", aDefaultDescription);
   lf.forget(aDefaultApplication);
+
+  wchar_t friendlyName[1024];
+  DWORD friendlyNameSize = 1024;
+  HRESULT hr = AssocQueryString(ASSOCF_NONE, ASSOCSTR_FRIENDLYAPPNAME,
+                                PromiseFlatString(aAppInfo).get(), NULL,
+                                friendlyName, &friendlyNameSize);
+  if (SUCCEEDED(hr)) {
+    aDefaultDescription.Assign(friendlyName);
+  }
 
   return NS_OK;
 }
