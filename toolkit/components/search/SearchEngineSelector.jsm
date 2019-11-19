@@ -104,7 +104,11 @@ class SearchEngineSelector {
             engines.push(engine);
           }
         } else {
-          engines.push(baseConfig);
+          const engine = { ...baseConfig };
+          (engine.webExtension = engine.webExtension || {}).locales = [
+            SearchUtils.DEFAULT_TAG,
+          ];
+          engines.push(engine);
         }
       }
     }

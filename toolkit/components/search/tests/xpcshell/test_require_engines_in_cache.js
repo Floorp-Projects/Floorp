@@ -38,35 +38,3 @@ add_task(async function ignore_cache_files_without_engines() {
   Assert.ok(Services.search.isInitialized);
   await reInitPromise;
 });
-
-add_task(async function skip_writing_cache_without_engines() {
-  let unInitPromise = SearchTestUtils.promiseSearchNotification(
-    "uninit-complete"
-  );
-  let reInitPromise = asyncReInit();
-  await unInitPromise;
-
-  // Configure so that no engines will be found.
-  Assert.ok(removeCacheFile());
-  let resProt = Services.io
-    .getProtocolHandler("resource")
-    .QueryInterface(Ci.nsIResProtocolHandler);
-  resProt.setSubstitution(
-    "search-extensions",
-    Services.io.newURI("about:blank")
-  );
-
-  // Let the async-reInit happen.
-  await reInitPromise;
-  Assert.strictEqual(0, (await Services.search.getEngines()).length);
-
-  // Trigger yet another re-init, to flush of any pending cache writing task.
-  unInitPromise = SearchTestUtils.promiseSearchNotification("uninit-complete");
-  reInitPromise = asyncReInit();
-  await unInitPromise;
-
-  // Now check that a cache file doesn't exist.
-  Assert.ok(!removeCacheFile());
-
-  await reInitPromise;
-});
