@@ -3720,11 +3720,6 @@
     mirror: always
 #endif
 
-- name: gl.require-hardware
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: gl.use-tls-is-current
   type: RelaxedAtomicInt32
   value: 0
