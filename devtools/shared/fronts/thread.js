@@ -303,12 +303,14 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
   _beforeResumed() {
     this._state = "attached";
     this._onThreadState(null);
+    this._clearFrameFronts();
   }
 
   _beforeDetached(packet) {
     this._state = "detached";
     this._onThreadState(packet);
     this._clearThreadGrips();
+    this._clearFrameFronts();
   }
 
   /**
@@ -320,7 +322,6 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
     // when it's initialized
     this._lastPausePacket = packet;
     this._clearPauseGrips();
-    this._clearFrameFronts();
   }
 
   getLastPausePacket() {

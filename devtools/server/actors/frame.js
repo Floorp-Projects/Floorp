@@ -91,15 +91,6 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
       form.depth = this.depth;
     }
 
-    // NOTE: ignoreFrameEnvironment lets the client explicitly avoid
-    // populating form environments on pause.
-    if (
-      !this.threadActor._options.ignoreFrameEnvironment &&
-      this.frame.environment
-    ) {
-      form.environment = this.getEnvironment();
-    }
-
     if (this.frame.type != "wasmcall") {
       form.this = createValueGrip(
         this.frame.this,
