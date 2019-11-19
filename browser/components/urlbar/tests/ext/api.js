@@ -11,6 +11,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ProfileAge: "resource://gre/modules/ProfileAge.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  ResetProfile: "resource://gre/modules/ResetProfile.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -144,6 +145,14 @@ this.experiments_urlbar = class extends ExtensionAPI {
                 Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
               );
             }
+          },
+
+          resetBrowser() {
+            if (!ResetProfile.resetSupported()) {
+              return;
+            }
+            let window = BrowserWindowTracker.getTopWindow();
+            ResetProfile.openConfirmationDialog(window);
           },
         },
       },
