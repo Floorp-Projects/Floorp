@@ -30,6 +30,7 @@ linux64/debug:
         - common-tests
         - web-platform-tests
         - marionette-media-tests
+
 linux64/opt:
     build-platform: linux64/opt
     test-sets:
@@ -45,6 +46,7 @@ linux64/opt:
         - browsertime
         - raptor-fetch-firefox
         - marionette-media-tests
+
 linux64-shippable/opt:
     build-platform: linux64-shippable/opt
     test-sets:
@@ -66,6 +68,8 @@ linux64-shippable/opt:
         - raptor-fetch-firefox
         - raptor-profiling
         - raptor-fetch-profiling
+        - talos-profiling
+
 linux64-devedition/opt:
     build-platform: linux64-devedition-nightly/opt
     test-sets:
@@ -239,6 +243,7 @@ windows10-64-shippable/opt:
         - raptor-firefox
         - browsertime
         - raptor-profiling
+        - talos-profiling
 
 windows10-64-devedition/opt:
     build-platform: win64-devedition-nightly/opt
@@ -318,6 +323,7 @@ macosx1014-64-shippable/opt:
         - raptor-profiling
         - marionette-media-tests
         - web-platform-tests-wdspec-headless
+        - talos-profiling
 
 macosx1014-64/debug:
     build-platform: macosx64/debug
