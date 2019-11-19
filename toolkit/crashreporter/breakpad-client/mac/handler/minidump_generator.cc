@@ -1332,7 +1332,8 @@ bool MinidumpGenerator::WriteModuleStream(unsigned int index,
       module->version_info.file_version_lo |= (modVersion & 0xff);
     }
 
-    if (!WriteCVRecord(module, image->GetCPUType(), name.c_str(), false)) {
+    if (!WriteCVRecord(module, image->GetCPUType(), image->GetCPUSubtype(),
+        name.c_str(), false)) {
       return false;
     }
   } else {
@@ -1355,6 +1356,7 @@ bool MinidumpGenerator::WriteModuleStream(unsigned int index,
 #endif
 
     int cpu_type = header->cputype;
+    int cpu_subtype = (header->cpusubtype & ~CPU_SUBTYPE_MASK);
     unsigned long slide = _dyld_get_image_vmaddr_slide(index);
     const char* name = _dyld_get_image_name(index);
     const struct load_command *cmd =
@@ -1382,7 +1384,7 @@ bool MinidumpGenerator::WriteModuleStream(unsigned int index,
 #if TARGET_OS_IPHONE
           in_memory = true;
 #endif
-          if (!WriteCVRecord(module, cpu_type, name, in_memory))
+          if (!WriteCVRecord(module, cpu_type, cpu_subtype, name, in_memory))
             return false;
 
           return true;
@@ -1419,7 +1421,7 @@ int MinidumpGenerator::FindExecutableModule() {
   return 0;
 }
 
-bool MinidumpGenerator::WriteCVRecord(MDRawModule *module, int cpu_type,
+bool MinidumpGenerator::WriteCVRecord(MDRawModule *module, int cpu_type, int cpu_subtype,
                                       const char *module_path, bool in_memory) {
   TypedMDRVA<MDCVInfoPDB70> cv(&writer_);
 
@@ -1452,14 +1454,14 @@ bool MinidumpGenerator::WriteCVRecord(MDRawModule *module, int cpu_type,
     MacFileUtilities::MachoID macho(module_path,
         reinterpret_cast<void *>(module->base_of_image),
         static_cast<size_t>(module->size_of_image));
-    result = macho.UUIDCommand(cpu_type, CPU_SUBTYPE_MULTIPLE, identifier);
+    result = macho.UUIDCommand(cpu_type, cpu_subtype, identifier);
     if (!result)
-      result = macho.MD5(cpu_type, CPU_SUBTYPE_MULTIPLE, identifier);
+      result = macho.MD5(cpu_type, cpu_subtype, identifier);
   }
 
   if (!result) {
      FileID file_id(module_path);
-     result = file_id.MachoIdentifier(cpu_type, CPU_SUBTYPE_MULTIPLE,
+     result = file_id.MachoIdentifier(cpu_type, cpu_subtype,
                                       identifier);
   }
 
