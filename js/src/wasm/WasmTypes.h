@@ -37,9 +37,7 @@
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
-#include "vm/JSFunction.h"
 #include "vm/MallocProvider.h"
-#include "vm/NativeObject.h"
 #include "wasm/WasmConstants.h"
 #include "wasm/WasmUtility.h"
 
@@ -444,14 +442,6 @@ class ValType {
 
   bool isReference() const { return IsReferenceType(tc_); }
 
-  // Some types are encoded as JS::Value when they escape from Wasm (when passed
-  // as parameters to imports or returned from exports).  For AnyRef the Value
-  // encoding is pretty much a requirement.  For other types it's a choice that
-  // may (temporarily) simplify some code.
-  bool isEncodedAsJSValueOnEscape() const {
-    return code() == Code::AnyRef || code() == Code::FuncRef;
-  }
-
   bool operator==(const ValType& that) const { return tc_ == that.tc_; }
   bool operator!=(const ValType& that) const { return tc_ != that.tc_; }
   bool operator==(Code that) const {
@@ -484,11 +474,6 @@ static inline unsigned SizeOf(ValType vt) {
   }
   MOZ_CRASH("Invalid ValType");
 }
-
-// Note, ToMIRType is only correct within Wasm, where an AnyRef is represented
-// as a pointer.  At the JS/wasm boundary, an AnyRef can be represented as a
-// JS::Value, and the type translation may have to be handled specially and on a
-// case-by-case basis.
 
 static inline jit::MIRType ToMIRType(ValType vt) {
   switch (vt.code()) {
@@ -567,7 +552,7 @@ static inline const char* ToCString(ExprType type) {
 // as all its subtypes (funcref, eqref, (ref T), et al) due to the non-coercive
 // subtyping of the wasm type system.  Its current representation is a plain
 // JSObject*, and the private JSObject subtype WasmValueBox is used to box
-// non-object non-null JS values.
+// non-object JS values.
 //
 // The C++/wasm boundary always uses a 'void*' type to express AnyRef values, to
 // emphasize the pointer-ness of the value.  The C++ code must transform the
@@ -587,9 +572,7 @@ static inline const char* ToCString(ExprType type) {
 // For version 0, we simply equate AnyRef and JSObject* (this means that there
 // are technically no tags at all yet).  We use a simple boxing scheme that
 // wraps a JS value that is not already JSObject in a distinguishable JSObject
-// that holds the value, see WasmTypes.cpp for details.  Knowledge of this
-// mapping is embedded in CodeGenerator.cpp (in WasmBoxValue and
-// WasmAnyRefFromJSObject) and in WasmStubs.cpp (in functions Box* and Unbox*).
+// that holds the value, see WasmTypes.cpp for details.
 
 class AnyRef {
   JSObject* value_;
@@ -644,110 +627,11 @@ typedef MutableHandle<AnyRef> MutableHandleAnyRef;
 
 bool BoxAnyRef(JSContext* cx, HandleValue val, MutableHandleAnyRef result);
 
-// Given a JS value that requires an object box, box it as an AnyRef and return
-// it, returning nullptr on OOM.
-//
-// Currently the values requiring a box are those other than JSObject* or
-// nullptr, but in the future more values will be represented without an
-// allocation.
-JSObject* BoxBoxableValue(JSContext* cx, HandleValue val);
-
 // Given any AnyRef, unbox it as a JS Value.  If it is a reference to a wasm
 // object it will be reflected as a JSObject* representing some TypedObject
 // instance.
 
 Value UnboxAnyRef(AnyRef val);
-
-class WasmValueBox : public NativeObject {
-  static const unsigned VALUE_SLOT = 0;
-
- public:
-  static const unsigned RESERVED_SLOTS = 1;
-  static const JSClass class_;
-
-  static WasmValueBox* create(JSContext* cx, HandleValue val);
-  Value value() const { return getFixedSlot(VALUE_SLOT); }
-  static size_t offsetOfValue() {
-    return NativeObject::getFixedSlotOffset(VALUE_SLOT);
-  }
-};
-
-// A FuncRef is a JSFunction* and is hence also an AnyRef, and the remarks above
-// about AnyRef apply also to FuncRef.  When 'funcref' is used as a value type
-// in wasm code, the value that is held is "the canonical function value", which
-// is a function for which IsWasmExportedFunction() is true, and which has the
-// correct identity wrt reference equality of functions.  Notably, if a function
-// is imported then its ref.func value compares === in JS to the function that
-// was passed as an import when the instance was created.
-//
-// These rules ensure that casts from funcref to anyref are non-converting
-// (generate no code), and that no wrapping or unwrapping needs to happen when a
-// funcref or anyref flows across the JS/wasm boundary, and that functions have
-// the necessary identity when observed from JS, and in the future, from wasm.
-//
-// Functions stored in tables, whether wasm tables or internal tables, can be
-// stored in a form that optimizes for eg call speed, however.
-//
-// Reading a funcref from a funcref table, writing a funcref to a funcref table,
-// and generating the value for a ref.func instruction are therefore nontrivial
-// operations that require mapping between the canonical JSFunction and the
-// optimized table representation.  Once we get an instruction to call a
-// ref.func directly it too will require such a mapping.
-
-// In many cases, a FuncRef is exactly the same as AnyRef and we can use AnyRef
-// functionality on funcref values.  The FuncRef class exists mostly to add more
-// checks and to make it clear, when we need to, that we're manipulating funcref
-// values.  FuncRef does not currently subclass AnyRef because there's been no
-// need to, but it probably could.
-
-class FuncRef {
-  JSFunction* value_;
-
-  explicit FuncRef() : value_((JSFunction*)-1) {}
-  explicit FuncRef(JSFunction* p) : value_(p) {
-    MOZ_ASSERT(((uintptr_t)p & 0x03) == 0);
-  }
-
- public:
-  // Given a void* that comes from compiled wasm code, turn it into AnyRef.
-  static FuncRef fromCompiledCode(void* p) { return FuncRef((JSFunction*)p); }
-
-  // Given a JSFunction* that comes from JS, turn it into FuncRef.
-  static FuncRef fromJSFunction(JSFunction* p) { return FuncRef(p); }
-
-  // Given an AnyRef that represents a possibly-null funcref, turn it into a
-  // FuncRef.
-  static FuncRef fromAnyRefUnchecked(AnyRef p) {
-#ifdef DEBUG
-    Value v = UnboxAnyRef(p);
-    if (v.isNull()) {
-      return FuncRef(nullptr);
-    }
-    if (v.toObject().is<JSFunction>()) {
-      return FuncRef(&v.toObject().as<JSFunction>());
-    }
-    MOZ_CRASH("Bad value");
-#else
-    return FuncRef(&p.asJSObject()->as<JSFunction>());
-#endif
-  }
-
-  AnyRef asAnyRef() { return AnyRef::fromJSObject((JSObject*)value_); }
-
-  void* forCompiledCode() const { return value_; }
-
-  JSFunction* asJSFunction() { return value_; }
-
-  bool isNull() { return value_ == nullptr; }
-};
-
-typedef Rooted<FuncRef> RootedFuncRef;
-typedef Handle<FuncRef> HandleFuncRef;
-typedef MutableHandle<FuncRef> MutableHandleFuncRef;
-
-// Given any FuncRef, unbox it as a JS Value -- always a JSFunction*.
-
-Value UnboxFuncRef(FuncRef val);
 
 // Code can be compiled either with the Baseline compiler or the Ion compiler,
 // and tier-variant data are tagged with the Tier value.
@@ -890,10 +774,6 @@ class MOZ_NON_PARAM Val : public LitVal {
     MOZ_ASSERT(type.isReference());
     u.ref_ = val;
   }
-  explicit Val(ValType type, FuncRef val) : LitVal(type, AnyRef::null()) {
-    MOZ_ASSERT(type == ValType::FuncRef);
-    u.ref_ = val.asAnyRef();
-  }
   void trace(JSTracer* trc);
 };
 
@@ -974,57 +854,14 @@ class FuncType {
     }
     return false;
   }
-  // For JS->wasm jit entries, AnyRef parameters and returns are allowed,
-  // as are FuncRef returns.
-  bool temporarilyUnsupportedReftypeForEntry() const {
+  bool temporarilyUnsupportedAnyRef() const {
     for (ValType arg : args()) {
-      if (arg.isReference() && arg.code() != ValType::AnyRef) {
+      if (arg.isReference()) {
         return true;
       }
     }
     for (ValType result : results()) {
-      if (result.isReference() && result.code() != ValType::AnyRef &&
-          result.code() != ValType::FuncRef) {
-        return true;
-      }
-    }
-    return false;
-  }
-  // For inlined JS->wasm jit entries, AnyRef parameters and returns are
-  // allowed, as are FuncRef returns.
-  bool temporarilyUnsupportedReftypeForInlineEntry() const {
-    for (ValType arg : args()) {
-      if (arg.isReference() && arg.code() != ValType::AnyRef) {
-        return true;
-      }
-    }
-    for (ValType result : results()) {
-      if (result.isReference() && result.code() != ValType::AnyRef &&
-          result.code() != ValType::FuncRef) {
-        return true;
-      }
-    }
-    return false;
-  }
-  // For wasm->JS jit exits, AnyRef parameters and returns are allowed, as are
-  // FuncRef parameters.
-  bool temporarilyUnsupportedReftypeForExit() const {
-    for (ValType arg : args()) {
-      if (arg.isReference() && arg.code() != ValType::AnyRef &&
-          arg.code() != ValType::FuncRef) {
-        return true;
-      }
-    }
-    for (ValType result : results()) {
-      if (result.isReference() && result.code() != ValType::AnyRef) {
-        return true;
-      }
-    }
-    return false;
-  }
-  bool jitExitRequiresArgCheck() const {
-    for (ValType arg : args()) {
-      if (arg.isEncodedAsJSValueOnEscape()) {
+      if (result.isReference()) {
         return true;
       }
     }
@@ -2068,7 +1905,6 @@ enum class SymbolicAddress {
   CoerceInPlace_ToInt32,
   CoerceInPlace_ToNumber,
   CoerceInPlace_JitEntry,
-  BoxValue_Anyref,
   DivI64,
   UDivI64,
   ModI64,
@@ -2250,9 +2086,6 @@ struct TlsData {
   // The containing JSContext.
   JSContext* cx;
 
-  // The class_ of WasmValueBox, this is a per-process value.
-  const JSClass* valueBoxClass;
-
   // Usually equal to cx->stackLimitForJitCode(JS::StackForUntrustedScript),
   // but can be racily set to trigger immediate trap as an opportunity to
   // CheckForInterrupt without an additional branch.
@@ -2344,8 +2177,7 @@ struct TableTls {
 };
 
 // Table element for TableKind::FuncRef which carries both the code pointer and
-// a tls pointer (and thus anything reachable through the tls, including the
-// instance).
+// an instance pointer.
 
 struct FunctionTableElem {
   // The code to call when calling this element. The table ABI is the system

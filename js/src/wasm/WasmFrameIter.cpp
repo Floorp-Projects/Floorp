@@ -1265,7 +1265,6 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
     case SymbolicAddress::CallImport_AnyRef:
     case SymbolicAddress::CoerceInPlace_ToInt32:
     case SymbolicAddress::CoerceInPlace_ToNumber:
-    case SymbolicAddress::BoxValue_Anyref:
       MOZ_ASSERT(!NeedsBuiltinThunk(func),
                  "not in sync with NeedsBuiltinThunk");
       break;

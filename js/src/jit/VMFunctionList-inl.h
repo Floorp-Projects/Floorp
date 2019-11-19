@@ -78,7 +78,6 @@ namespace jit {
   _(BitOr, js::BitOr)                                                          \
   _(BitRsh, js::BitRsh)                                                        \
   _(BitXor, js::BitXor)                                                        \
-  _(BoxBoxableValue, js::wasm::BoxBoxableValue)                                \
   _(BoxNonStrictThis, js::BoxNonStrictThis)                                    \
   _(BuiltinProtoOperation, js::BuiltinProtoOperation)                          \
   _(CallNativeGetter, js::jit::CallNativeGetter)                               \

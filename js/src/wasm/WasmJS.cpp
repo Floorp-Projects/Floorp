@@ -208,7 +208,7 @@ static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
       if (!CheckFuncRefValue(cx, v, &fun)) {
         return false;
       }
-      val.set(Val(ValType::FuncRef, FuncRef::fromJSFunction(fun)));
+      val.set(Val(ValType::FuncRef, AnyRef::fromJSObject(fun)));
       return true;
     }
     case ValType::AnyRef: {
@@ -237,7 +237,6 @@ static Value ToJSValue(const Val& val) {
     case ValType::F64:
       return JS::CanonicalizedDoubleValue(val.f64());
     case ValType::FuncRef:
-      return UnboxFuncRef(FuncRef::fromAnyRefUnchecked(val.ref()));
     case ValType::AnyRef:
       return UnboxAnyRef(val.ref());
     case ValType::Ref:
@@ -2245,7 +2244,7 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
       }
       MOZ_ASSERT(index < MaxTableLength);
       static_assert(MaxTableLength < UINT32_MAX, "Invariant");
-      table.fillFuncRef(index, 1, FuncRef::fromJSFunction(fun), cx);
+      table.fillFuncRef(index, 1, AnyRef::fromJSObject(fun), cx);
       break;
     }
     case TableKind::AnyRef: {
@@ -2318,7 +2317,7 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
         if (!CheckFuncRefValue(cx, fillValue, &fun)) {
           return false;
         }
-        table.fillFuncRef(oldLength, delta, FuncRef::fromJSFunction(fun), cx);
+        table.fillFuncRef(oldLength, delta, AnyRef::fromJSObject(fun), cx);
       }
       break;
     }

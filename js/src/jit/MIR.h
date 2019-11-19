@@ -3985,43 +3985,6 @@ class MWasmTruncateToInt32 : public MUnaryInstruction,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
-// Store a JS Value that can't be represented as an AnyRef pointer into an
-// object that holds the value (opaquely) as such a pointer.
-class MWasmBoxValue : public MUnaryInstruction, public BoxInputsPolicy::Data {
-  explicit MWasmBoxValue(MDefinition* def)
-      : MUnaryInstruction(classOpcode, def) {
-    setResultType(MIRType::RefOrNull);
-  }
-
- public:
-  INSTRUCTION_HEADER(WasmBoxValue)
-  TRIVIAL_NEW_WRAPPERS
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
-class MWasmAnyRefFromJSObject : public MUnaryInstruction,
-                                public NoTypePolicy::Data {
-  explicit MWasmAnyRefFromJSObject(MDefinition* def)
-      : MUnaryInstruction(classOpcode, def) {
-    setResultType(MIRType::RefOrNull);
-  }
-
- public:
-  INSTRUCTION_HEADER(WasmAnyRefFromJSObject)
-  TRIVIAL_NEW_WRAPPERS
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
 class MInt64ToFloatingPoint : public MUnaryInstruction,
                               public NoTypePolicy::Data {
   bool isUnsigned_;

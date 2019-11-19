@@ -2211,18 +2211,6 @@ void LIRGenerator::visitWasmTruncateToInt32(MWasmTruncateToInt32* ins) {
   }
 }
 
-void LIRGenerator::visitWasmBoxValue(MWasmBoxValue* ins) {
-  LWasmBoxValue* lir = new (alloc()) LWasmBoxValue(useBox(ins->input()));
-  define(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitWasmAnyRefFromJSObject(MWasmAnyRefFromJSObject* ins) {
-  LWasmAnyRefFromJSObject* lir =
-      new (alloc()) LWasmAnyRefFromJSObject(useRegisterAtStart(ins->input()));
-  define(lir, ins);
-}
-
 void LIRGenerator::visitWrapInt64ToInt32(MWrapInt64ToInt32* ins) {
   define(new (alloc()) LWrapInt64ToInt32(useInt64AtStart(ins->input())), ins);
 }
