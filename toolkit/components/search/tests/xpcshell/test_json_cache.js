@@ -19,7 +19,7 @@ var cacheTemplate, appPluginsPath, profPlugins;
 /**
  * Test reading from search.json.mozlz4
  */
-function run_test() {
+add_task(async function setup() {
   let cacheTemplateFile = do_get_file("data/search.json");
   cacheTemplate = readJSONFile(cacheTemplateFile);
   cacheTemplate.buildID = getAppInfo().platformBuildID;
@@ -55,47 +55,37 @@ function run_test() {
     }
   }
 
-  run_next_test();
-}
-
-add_test(function prepare_test_data() {
-  OS.File.writeAtomic(
-    OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME),
-    new TextEncoder().encode(JSON.stringify(cacheTemplate)),
-    { compression: "lz4" }
-  ).then(run_next_test);
+  await promiseSaveCacheData(cacheTemplate);
 });
 
 /**
  * Start the search service and confirm the engine properties match the expected values.
  */
-add_test(function test_cached_engine_properties() {
+add_task(async function test_cached_engine_properties() {
   info("init search service");
 
-  Services.search.init().then(function initComplete(aResult) {
-    info("init'd search service");
-    Assert.ok(Components.isSuccessCode(aResult));
+  let result = await Services.search.init();
 
-    Services.search.getEngines().then(engines => {
-      let engine = engines[0].QueryInterface(Ci.nsISearchEngine);
-      isSubObjectOf(EXPECTED_ENGINE.engine, engine);
+  info("init'd search service");
+  Assert.ok(Components.isSuccessCode(result));
 
-      let engineFromSS = Services.search.getEngineByName(
-        EXPECTED_ENGINE.engine.name
-      );
-      Assert.ok(!!engineFromSS);
-      isSubObjectOf(EXPECTED_ENGINE.engine, engineFromSS);
+  let engines = await Services.search.getEngines();
+  let engine = engines[0].QueryInterface(Ci.nsISearchEngine);
+  isSubObjectOf(EXPECTED_ENGINE.engine, engine);
 
-      removeCacheFile();
-      run_next_test();
-    });
-  });
+  let engineFromSS = Services.search.getEngineByName(
+    EXPECTED_ENGINE.engine.name
+  );
+  Assert.ok(!!engineFromSS);
+  isSubObjectOf(EXPECTED_ENGINE.engine, engineFromSS);
+
+  removeCacheFile();
 });
 
 /**
  * Test that the JSON cache written in the profile is correct.
  */
-add_test(function test_cache_write() {
+add_task(async function test_cache_write() {
   info("test cache writing");
 
   let cache = do_get_profile().clone();
@@ -103,42 +93,27 @@ add_test(function test_cache_write() {
   Assert.ok(!cache.exists());
 
   info("Next step is forcing flush");
-  do_timeout(0, function forceFlush() {
-    info("Forcing flush");
-    // Force flush
-    // Note: the timeout is needed, to avoid some reentrency
-    // issues in nsSearchService.
+  // Note: the dispatch is needed, to avoid some reentrency
+  // issues in SearchService.
+  let cacheWritePromise = promiseAfterCache();
 
-    let cacheWriteObserver = {
-      observe: function cacheWriteObserver_observe(aEngine, aTopic, aVerb) {
-        if (
-          aTopic != "browser-search-service" ||
-          aVerb != "write-cache-to-disk-complete"
-        ) {
-          return;
-        }
-        Services.obs.removeObserver(
-          cacheWriteObserver,
-          "browser-search-service"
-        );
-        info("Cache write complete");
-        Assert.ok(cache.exists());
-        // Check that the search.json.mozlz4 cache matches the template
-
-        promiseCacheData().then(cacheWritten => {
-          info("Check search.json.mozlz4");
-          isSubObjectOf(cacheTemplate, cacheWritten);
-
-          run_next_test();
-        });
-      },
-    };
-    Services.obs.addObserver(cacheWriteObserver, "browser-search-service");
-
+  Services.tm.dispatchToMainThread(() => {
+    // Call the observe method directly to simulate a remove but not actually
+    // remove anything.
     Services.search
       .QueryInterface(Ci.nsIObserver)
       .observe(null, "browser-search-engine-modified", "engine-removed");
   });
+
+  await cacheWritePromise;
+
+  info("Cache write complete");
+  Assert.ok(cache.exists());
+  // Check that the search.json.mozlz4 cache matches the template
+
+  let cacheData = await promiseCacheData();
+  info("Check search.json.mozlz4");
+  isSubObjectOf(cacheTemplate, cacheData);
 });
 
 var EXPECTED_ENGINE = {
