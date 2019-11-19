@@ -535,16 +535,16 @@ impl FontContext {
         glyph: &GlyphKey,
         scale: f32,
     ) -> FT_BBox {
-        let mut cbox: FT_BBox = unsafe { mem::uninitialized() };
-
         // Get the estimated bounding box from FT (control points).
+        let mut cbox = FT_BBox { xMin: 0, yMin: 0, xMax: 0, yMax: 0 };
+
         unsafe {
             FT_Outline_Get_CBox(&(*slot).outline, &mut cbox);
+        }
 
-            // For spaces and other non-printable characters, early out.
-            if (*slot).outline.n_contours == 0 {
-                return cbox;
-            }
+        // For spaces and other non-printable characters, early out.
+        if unsafe { (*slot).outline.n_contours } == 0 {
+            return cbox;
         }
 
         self.pad_bounding_box(font, &mut cbox);
@@ -718,7 +718,7 @@ impl FontContext {
         // into account the subpixel positioning.
         unsafe {
             let outline = &(*slot).outline;
-            let mut cbox: FT_BBox = mem::uninitialized();
+            let mut cbox = FT_BBox { xMin: 0, yMin: 0, xMax: 0, yMax: 0 };
             FT_Outline_Get_CBox(outline, &mut cbox);
             self.pad_bounding_box(font, &mut cbox);
             FT_Outline_Translate(
