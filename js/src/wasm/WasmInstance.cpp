@@ -231,12 +231,12 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
         // arg-type-checking entry point, and not check anything here.  See
         // FuncType::jitExitRequiresArgCheck().
         break;
-      case ValType::Ref:
-        MOZ_CRASH("case guarded above");
       case ValType::FuncRef:
-        // TODO: FuncRef can easily be handled as AnyRef, but it can also be
-        // handled as the primitive types above by testing against some object
-        // type.
+        // We handle FuncRef as we do AnyRef: by checking the type dynamically
+        // in the callee.  Code in the stubs layer must box up the FuncRef as a
+        // Value.
+        break;
+      case ValType::Ref:
         MOZ_CRASH("case guarded above");
       case ValType::I64:
         MOZ_CRASH("NYI");
