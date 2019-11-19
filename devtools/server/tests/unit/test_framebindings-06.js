@@ -19,7 +19,7 @@ add_task(
 
 function test_banana_environment() {
   gThreadFront.once("paused", async function(packet) {
-    const env = packet.frame.environment;
+    const env = await packet.frame.getEnvironment();
     equal(env.type, "function");
     equal(env.function.name, "banana3");
     let parent = env.parent;

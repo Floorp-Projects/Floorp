@@ -34,11 +34,12 @@ async function testSymbols(threadFront, debuggee) {
   };
 
   const packet = await executeOnNextTickAndWaitForPause(evalCode, threadFront);
+  const environment = await packet.frame.getEnvironment();
   const {
     symbolWithName,
     symbolWithoutName,
     iteratorSymbol,
-  } = packet.frame.environment.bindings.variables;
+  } = environment.bindings.variables;
 
   equal(symbolWithName.value.type, "symbol");
   equal(symbolWithName.value.name, "Chris");
