@@ -411,6 +411,17 @@ module.exports = {
     }
   }, {
     "files": [
+      "editor/composer/test/test_bug434998.xhtml",
+      "editor/libeditor/tests/test_bug607584.xhtml",
+      "editor/libeditor/tests/test_bug616590.xhtml",
+      "editor/libeditor/tests/test_bug780908.xhtml",
+    ],
+    "rules": {
+      "object-shorthand": "off",
+      "no-undef": "off",
+    }
+  }, {
+    "files": [
       "toolkit/components/aboutmemory/tests/test_aboutmemory.xhtml",
       "toolkit/components/aboutmemory/tests/test_aboutmemory2.xhtml",
       "toolkit/components/aboutmemory/tests/test_aboutmemory3.xhtml",
