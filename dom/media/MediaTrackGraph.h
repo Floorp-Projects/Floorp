@@ -6,7 +6,8 @@
 #ifndef MOZILLA_MEDIATRACKGRAPH_H_
 #define MOZILLA_MEDIATRACKGRAPH_H_
 
-#include "AudioStream.h"
+#include "AudioSampleFormat.h"
+#include "CubebUtils.h"
 #include "MainThreadUtils.h"
 #include "MediaSegment.h"
 #include "mozilla/LinkedList.h"
