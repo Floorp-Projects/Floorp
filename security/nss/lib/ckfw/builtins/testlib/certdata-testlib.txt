@@ -27,7 +27,7 @@
 # 3 - err_distrust:
 #   - The server/tls distrust field is set with CK_TRUE. These fields must be
 #     CK_FALSE when no schedule is set. Otherwise, must hold a valid encoded
-      timestamp.
+#     timestamp.
 #   - The email distrust field is set with an incomplete and invalid encoded
 #     timestamp.
 #

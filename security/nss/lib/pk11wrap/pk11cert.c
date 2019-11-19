@@ -245,7 +245,7 @@ pk11_fastCert(PK11SlotInfo *slot, CK_OBJECT_HANDLE certID,
 
     /* Get the cryptoki object from the handle */
     token = PK11Slot_GetNSSToken(slot);
-    if (token->defaultSession) {
+    if (token && token->defaultSession) {
         co = nssCryptokiObject_Create(token, token->defaultSession, certID);
     } else {
         PORT_SetError(SEC_ERROR_NO_TOKEN);
@@ -307,9 +307,15 @@ PK11_MakeCertFromHandle(PK11SlotInfo *slot, CK_OBJECT_HANDLE certID,
     CERTCertificate *cert = NULL;
     CERTCertTrust *trust;
 
+    if (slot == NULL || certID == CK_INVALID_HANDLE) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
+
     cert = pk11_fastCert(slot, certID, privateLabel, &nickname);
-    if (cert == NULL)
+    if (cert == NULL) {
         goto loser;
+    }
 
     if (nickname) {
         if (cert->nickname != NULL) {

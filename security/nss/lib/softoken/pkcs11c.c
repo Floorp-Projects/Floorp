@@ -1343,7 +1343,7 @@ NSC_EncryptUpdate(CK_SESSION_HANDLE hSession,
             }
             /* encrypt the current padded data */
             rv = (*context->update)(context->cipherInfo, pEncryptedPart,
-                                    &padoutlen, context->blockSize, context->padBuf,
+                                    &padoutlen, maxout, context->padBuf,
                                     context->blockSize);
             if (rv != SECSuccess) {
                 return sftk_MapCryptError(PORT_GetError());
