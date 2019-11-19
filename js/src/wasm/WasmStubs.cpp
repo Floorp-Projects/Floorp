@@ -1117,6 +1117,8 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
         masm.boxDouble(ReturnDoubleReg, JSReturnOperand, fpscratch);
         break;
       }
+      case ValType::FuncRef:
+        // For FuncRef use the AnyRef path for now, since that will work.
       case ValType::AnyRef: {
         // Per comment above, the call may have clobbered the Tls register, so
         // reload since unboxing will need it.
@@ -1126,7 +1128,6 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
         break;
       }
       case ValType::Ref:
-      case ValType::FuncRef:
         MOZ_CRASH("returning reference in jitentry NYI");
         break;
       case ValType::I64:
@@ -1391,6 +1392,8 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
         masm.canonicalizeDouble(ReturnDoubleReg);
         GenPrintF64(DebugChannel::Function, masm, ReturnDoubleReg);
         break;
+      case wasm::ValType::FuncRef:
+        // For FuncRef, use the AnyRef path for now, since that will work.
       case wasm::ValType::AnyRef:
         // The call to wasm above preserves the WasmTlsReg, we don't need to
         // reload it here.
@@ -1398,7 +1401,6 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
                                 WasmJitEntryReturnScratch);
         break;
       case wasm::ValType::Ref:
-      case wasm::ValType::FuncRef:
       case wasm::ValType::I64:
         MOZ_CRASH("unexpected return type when calling from ion to wasm");
       case wasm::ValType::NullRef:
@@ -1499,6 +1501,8 @@ static void FillArgumentArrayForExit(MacroAssembler& masm, Register tls,
           }
         } else if (type == MIRType::RefOrNull) {
           if (toValue) {
+            // This works also for FuncRef because it is distinguishable from
+            // a boxed AnyRef.
             masm.movePtr(i->gpr(), scratch2);
             UnboxAnyrefIntoValue(masm, tls, scratch2, dst, scratch);
           } else {
@@ -1563,6 +1567,8 @@ static void FillArgumentArrayForExit(MacroAssembler& masm, Register tls,
             // We can't box int64 into Values (yet).
             masm.breakpoint();
           } else if (type == MIRType::RefOrNull) {
+            // This works also for FuncRef because it is distinguishable from a
+            // boxed AnyRef.
             masm.loadPtr(src, scratch);
             UnboxAnyrefIntoValue(masm, tls, scratch, dst, scratch2);
           } else if (IsFloatingPointType(type)) {
