@@ -448,7 +448,9 @@ class ValType {
   // as parameters to imports or returned from exports).  For AnyRef the Value
   // encoding is pretty much a requirement.  For other types it's a choice that
   // may (temporarily) simplify some code.
-  bool isEncodedAsJSValueOnEscape() const { return code() == Code::AnyRef; }
+  bool isEncodedAsJSValueOnEscape() const {
+    return code() == Code::AnyRef || code() == Code::FuncRef;
+  }
 
   bool operator==(const ValType& that) const { return tc_ == that.tc_; }
   bool operator!=(const ValType& that) const { return tc_ != that.tc_; }
@@ -972,23 +974,8 @@ class FuncType {
     }
     return false;
   }
-  bool hasReferenceArg() const {
-    for (ValType arg : args()) {
-      if (arg.isReference()) {
-        return true;
-      }
-    }
-    return false;
-  }
-  bool hasReferenceReturn() const {
-    for (ValType result : results()) {
-      if (result.isReference()) {
-        return true;
-      }
-    }
-    return false;
-  }
-  // For JS->wasm jit entries, AnyRef parameters and returns are allowed.
+  // For JS->wasm jit entries, AnyRef parameters and returns are allowed,
+  // as are FuncRef returns.
   bool temporarilyUnsupportedReftypeForEntry() const {
     for (ValType arg : args()) {
       if (arg.isReference() && arg.code() != ValType::AnyRef) {
@@ -996,14 +983,15 @@ class FuncType {
       }
     }
     for (ValType result : results()) {
-      if (result.isReference() && result.code() != ValType::AnyRef) {
+      if (result.isReference() && result.code() != ValType::AnyRef &&
+          result.code() != ValType::FuncRef) {
         return true;
       }
     }
     return false;
   }
   // For inlined JS->wasm jit entries, AnyRef parameters and returns are
-  // allowed.
+  // allowed, as are FuncRef returns.
   bool temporarilyUnsupportedReftypeForInlineEntry() const {
     for (ValType arg : args()) {
       if (arg.isReference() && arg.code() != ValType::AnyRef) {
@@ -1011,16 +999,19 @@ class FuncType {
       }
     }
     for (ValType result : results()) {
-      if (result.isReference() && result.code() != ValType::AnyRef) {
+      if (result.isReference() && result.code() != ValType::AnyRef &&
+          result.code() != ValType::FuncRef) {
         return true;
       }
     }
     return false;
   }
-  // For wasm->JS jit exits, AnyRef parameters and returns are allowed.
+  // For wasm->JS jit exits, AnyRef parameters and returns are allowed, as are
+  // FuncRef parameters.
   bool temporarilyUnsupportedReftypeForExit() const {
     for (ValType arg : args()) {
-      if (arg.isReference() && arg.code() != ValType::AnyRef) {
+      if (arg.isReference() && arg.code() != ValType::AnyRef &&
+          arg.code() != ValType::FuncRef) {
         return true;
       }
     }
