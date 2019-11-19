@@ -163,6 +163,14 @@ Value wasm::UnboxAnyRef(AnyRef val) {
   return result;
 }
 
+Value wasm::UnboxFuncRef(FuncRef val) {
+  JSFunction* fn = val.asJSFunction();
+  Value result;
+  MOZ_ASSERT_IF(fn, fn->is<JSFunction>());
+  result.setObjectOrNull(fn);
+  return result;
+}
+
 bool js::IsBoxedWasmAnyRef(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
@@ -721,6 +729,9 @@ bool DebugFrame::updateReturnJSValue() {
       cachedReturnJSValue_ = ObjectOrNullValue((JSObject*)resultRef_);
       break;
     case ValType::FuncRef:
+      cachedReturnJSValue_ =
+          UnboxFuncRef(FuncRef::fromAnyRefUnchecked(resultAnyRef_));
+      break;
     case ValType::AnyRef:
       cachedReturnJSValue_ = UnboxAnyRef(resultAnyRef_);
       break;
