@@ -14027,11 +14027,13 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
         MOZ_ASSERT(ToFloatRegister(lir->output()) == ReturnDoubleReg);
         break;
       case wasm::ValType::AnyRef:
-        // The wasm stubs layer unboxes anything that needs to be unboxed.
+      case wasm::ValType::FuncRef:
+        // The wasm stubs layer unboxes anything that needs to be unboxed and
+        // leaves it in a Value.  A FuncRef we could in principle leave as a raw
+        // object pointer but for now it complicates the API to do so.
         MOZ_ASSERT(lir->mir()->type() == MIRType::Value);
         break;
       case wasm::ValType::Ref:
-      case wasm::ValType::FuncRef:
       case wasm::ValType::I64:
         MOZ_CRASH("unexpected return type when calling from ion to wasm");
       case wasm::ValType::NullRef:
