@@ -35,8 +35,7 @@ async function testSymbols(threadFront, debuggee) {
   };
 
   const packet = await executeOnNextTickAndWaitForPause(evalCode, threadFront);
-  const environment = await packet.frame.getEnvironment();
-  const { sym } = environment.bindings.variables;
+  const { sym } = packet.frame.environment.bindings.variables;
 
   equal(sym.value.type, "symbol");
   equal(sym.value.name, "le troll");

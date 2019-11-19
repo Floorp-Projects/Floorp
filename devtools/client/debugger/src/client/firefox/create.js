@@ -52,6 +52,7 @@ export function createFrame(
     generatedLocation: location,
     this: frame.this,
     source: null,
+    scope: frame.environment,
     index,
   };
 }

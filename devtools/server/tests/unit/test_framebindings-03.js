@@ -24,7 +24,7 @@ add_task(
 
 function test_pause_frame() {
   gThreadFront.once("paused", async function(packet) {
-    const env = await packet.frame.getEnvironment();
+    const env = packet.frame.environment;
     Assert.notEqual(env, undefined);
 
     const parentEnv = env.parent;

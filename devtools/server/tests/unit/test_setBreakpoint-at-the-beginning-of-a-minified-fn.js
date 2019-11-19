@@ -28,8 +28,7 @@ add_task(
       Assert.equal(where.line, location.line);
       Assert.equal(where.column, 56);
 
-      const environment = await packet.frame.getEnvironment();
-      const variables = environment.bindings.variables;
+      const variables = frame.environment.bindings.variables;
       Assert.equal(variables.a.value.type, "undefined");
       Assert.equal(variables.b.value.type, "undefined");
       Assert.equal(variables.c.value.type, "undefined");
