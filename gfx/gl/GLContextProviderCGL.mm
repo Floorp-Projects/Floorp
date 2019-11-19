@@ -21,10 +21,6 @@
 
 #include <OpenGL/OpenGL.h>
 
-// When running inside a VM, creating an accelerated OpenGL context usually
-// fails. Uncomment this line to emulate that behavior.
-// #define EMULATE_VM
-
 namespace mozilla {
 namespace gl {
 
@@ -138,21 +134,6 @@ static NSOpenGLContext* CreateWithFormat(const NSOpenGLPixelFormatAttribute* att
 
 already_AddRefed<GLContext> GLContextProviderCGL::CreateForCompositorWidget(
     CompositorWidget* aCompositorWidget, bool aWebRender, bool aForceAccelerated) {
-  if (!aCompositorWidget) {
-    MOZ_ASSERT(false);
-    return nullptr;
-  }
-
-  if (!sCGLLibrary.EnsureInitialized()) {
-    return nullptr;
-  }
-
-#ifdef EMULATE_VM
-  if (aForceAccelerated) {
-    return nullptr;
-  }
-#endif
-
   CreateContextFlags flags = CreateContextFlags::ALLOW_OFFLINE_RENDERER;
   if (aForceAccelerated) {
     flags |= CreateContextFlags::FORCE_ENABLE_HARDWARE;
