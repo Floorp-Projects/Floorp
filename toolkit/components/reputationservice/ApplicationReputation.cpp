@@ -25,7 +25,6 @@
 #include "nsIUrlClassifierDBService.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
-#include "nsIX509CertList.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BasePrincipal.h"
@@ -707,7 +706,8 @@ class PendingLookup final : public nsIStreamListener,
 
   // Parse the XPCOM certificate lists and stick them into the protocol buffer
   // version.
-  nsresult ParseCertificates(nsIArray* aSigArray);
+  nsresult ParseCertificates(
+      const nsTArray<nsTArray<nsTArray<uint8_t>>>& aSigArray);
 
   // Adds the redirects to mBlocklistSpecs to be looked up.
   nsresult AddRedirects(nsIArray* aRedirects);
@@ -1437,11 +1437,11 @@ nsresult PendingLookup::DoLookupInternal() {
   // We can skip parsing certificate for non-binary files because we only
   // check local block list for them.
   if (mIsBinaryFile) {
-    nsCOMPtr<nsIArray> sigArray;
-    rv = mQuery->GetSignatureInfo(getter_AddRefs(sigArray));
+    nsTArray<nsTArray<nsTArray<uint8_t>>> sigArray;
+    rv = mQuery->GetSignatureInfo(sigArray);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (sigArray) {
+    if (!sigArray.IsEmpty()) {
       rv = ParseCertificates(sigArray);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -1519,58 +1519,20 @@ nsresult PendingLookup::OnComplete(uint32_t aVerdict, Reason aReason,
   return res;
 }
 
-nsresult PendingLookup::ParseCertificates(nsIArray* aSigArray) {
-  // If we haven't been set for any reason, bail.
-  NS_ENSURE_ARG_POINTER(aSigArray);
-
+nsresult PendingLookup::ParseCertificates(
+    const nsTArray<nsTArray<nsTArray<uint8_t>>>& aSigArray) {
   // Binaries may be signed by multiple chains of certificates. If there are no
   // chains, the binary is unsigned (or we were unable to extract signature
   // information on a non-Windows platform)
-  nsCOMPtr<nsISimpleEnumerator> chains;
-  nsresult rv = aSigArray->Enumerate(getter_AddRefs(chains));
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  bool hasMoreChains = false;
-  rv = chains->HasMoreElements(&hasMoreChains);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  while (hasMoreChains) {
-    nsCOMPtr<nsISupports> chainSupports;
-    rv = chains->GetNext(getter_AddRefs(chainSupports));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIX509CertList> certList = do_QueryInterface(chainSupports, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+  // Each chain may have multiple certificates.
+  for (const auto& certList : aSigArray) {
     safe_browsing::ClientDownloadRequest_CertificateChain* certChain =
         mRequest.mutable_signature()->add_certificate_chain();
-    nsCOMPtr<nsISimpleEnumerator> chainElt;
-    rv = certList->GetEnumerator(getter_AddRefs(chainElt));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Each chain may have multiple certificates.
-    bool hasMoreCerts = false;
-    rv = chainElt->HasMoreElements(&hasMoreCerts);
-    while (hasMoreCerts) {
-      nsCOMPtr<nsISupports> certSupports;
-      rv = chainElt->GetNext(getter_AddRefs(certSupports));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsIX509Cert> cert = do_QueryInterface(certSupports, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsTArray<uint8_t> data;
-      rv = cert->GetRawDER(data);
-      NS_ENSURE_SUCCESS(rv, rv);
-
+    for (const auto& cert : certList) {
       // Add this certificate to the protobuf to send remotely.
-      certChain->add_element()->set_certificate(data.Elements(), data.Length());
-
-      rv = chainElt->HasMoreElements(&hasMoreCerts);
-      NS_ENSURE_SUCCESS(rv, rv);
+      certChain->add_element()->set_certificate(cert.Elements(), cert.Length());
     }
-    rv = chains->HasMoreElements(&hasMoreChains);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
   if (mRequest.signature().certificate_chain_size() > 0) {
     mRequest.mutable_signature()->set_trusted(true);

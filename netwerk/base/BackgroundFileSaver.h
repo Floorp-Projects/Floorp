@@ -24,7 +24,6 @@
 
 class nsIAsyncInputStream;
 class nsIThread;
-class nsIX509CertList;
 
 namespace mozilla {
 namespace net {
@@ -203,7 +202,7 @@ class BackgroundFileSaver : public nsIBackgroundFileSaver {
   /**
    * Store the signature info.
    */
-  nsCOMArray<nsIX509CertList> mSignatureInfo;
+  nsTArray<nsTArray<nsTArray<uint8_t>>> mSignatureInfo;
 
   /**
    * Whether or not to extract the signature. Must be set on the main thread

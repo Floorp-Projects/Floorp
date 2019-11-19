@@ -335,11 +335,11 @@ class nsExternalAppHandler final : public nsIStreamListener,
    */
   nsAutoCString mHash;
   /**
-   * Stores the signature information of the downloaded file in an nsIArray of
-   * nsIX509CertList of nsIX509Cert. If the file is unsigned this will be
+   * Stores the signature information of the downloaded file in an nsTArray of
+   * nsTArray of Array of bytes. If the file is unsigned this will be
    * empty.
    */
-  nsCOMPtr<nsIArray> mSignatureInfo;
+  nsTArray<nsTArray<nsTArray<uint8_t>>> mSignatureInfo;
   /**
    * Stores the redirect information associated with the channel.
    */

@@ -16,9 +16,6 @@
 #include "nsIFile.h"
 #include "nsIMutableArray.h"
 #include "nsIPipe.h"
-#include "nsIX509Cert.h"
-#include "nsIX509CertDB.h"
-#include "nsIX509CertList.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "pk11pub.h"
@@ -250,19 +247,17 @@ BackgroundFileSaver::EnableSignatureInfo() {
 }
 
 NS_IMETHODIMP
-BackgroundFileSaver::GetSignatureInfo(nsIArray** aSignatureInfo) {
+BackgroundFileSaver::GetSignatureInfo(
+    nsTArray<nsTArray<nsTArray<uint8_t>>>& aSignatureInfo) {
   MOZ_ASSERT(NS_IsMainThread(), "Can't inspect signature off the main thread");
   // We acquire a lock because mSignatureInfo is written on the worker thread.
   MutexAutoLock lock(mLock);
   if (!mComplete || !mSignatureInfoEnabled) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  nsCOMPtr<nsIMutableArray> sigArray = do_CreateInstance(NS_ARRAY_CONTRACTID);
-  for (int i = 0; i < mSignatureInfo.Count(); ++i) {
-    sigArray->AppendElement(mSignatureInfo[i]);
+  for (const auto& signatureChain : mSignatureInfo) {
+    aSignatureInfo.AppendElement(signatureChain);
   }
-  *aSignatureInfo = sigArray;
-  NS_IF_ADDREF(*aSignatureInfo);
   return NS_OK;
 }
 
@@ -761,9 +756,6 @@ nsresult BackgroundFileSaver::ExtractSignatureInfo(const nsAString& filePath) {
       return NS_OK;
     }
   }
-  nsresult rv;
-  nsCOMPtr<nsIX509CertDB> certDB = do_GetService(NS_X509CERTDB_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
 #ifdef XP_WIN
   // Setup the file to check.
   WINTRUST_FILE_INFO fileToCheck = {0};
@@ -820,11 +812,8 @@ nsresult BackgroundFileSaver::ExtractSignatureInfo(const nsAString& filePath) {
         if (!certSimpleChain) {
           break;
         }
-        nsCOMPtr<nsIX509CertList> nssCertList =
-            do_CreateInstance(NS_X509CERTLIST_CONTRACTID);
-        if (!nssCertList) {
-          break;
-        }
+
+        nsTArray<nsTArray<uint8_t>> certList;
         bool extractionSuccess = true;
         for (DWORD k = 0; k < certSimpleChain->cElement; ++k) {
           CERT_CHAIN_ELEMENT* certChainElement = certSimpleChain->rgpElement[k];
@@ -832,31 +821,13 @@ nsresult BackgroundFileSaver::ExtractSignatureInfo(const nsAString& filePath) {
               X509_ASN_ENCODING) {
             continue;
           }
-          nsCOMPtr<nsIX509Cert> nssCert = nullptr;
-          nsTArray<uint8_t> certByte;
-          certByte.AppendElements(
-              certChainElement->pCertContext->pbCertEncoded,
-              certChainElement->pCertContext->cbCertEncoded);
-
-          rv = certDB->ConstructX509(certByte, getter_AddRefs(nssCert));
-          if (!nssCert) {
-            extractionSuccess = false;
-            LOG(("Couldn't create NSS cert [this = %p]", this));
-            break;
-          }
-          rv = nssCertList->AddCert(nssCert);
-          if (NS_FAILED(rv)) {
-            extractionSuccess = false;
-            LOG(("Couldn't add NSS cert to cert list [this = %p]", this));
-            break;
-          }
-          nsString subjectName;
-          nssCert->GetSubjectName(subjectName);
-          LOG(("Adding cert %s [this = %p]",
-               NS_ConvertUTF16toUTF8(subjectName).get(), this));
+          nsTArray<uint8_t> cert;
+          cert.AppendElements(certChainElement->pCertContext->pbCertEncoded,
+                              certChainElement->pCertContext->cbCertEncoded);
+          certList.AppendElement(cert);
         }
         if (extractionSuccess) {
-          mSignatureInfo.AppendObject(nssCertList);
+          mSignatureInfo.AppendElement(std::move(certList));
         }
       }
     }
