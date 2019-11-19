@@ -763,6 +763,12 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
   }
   template <typename T>
+  void unboxObjectOrNull(const T& src, Register dest) {
+    // Due to Spectre mitigation logic (see Value.h), if the value is an Object
+    // then this yields the object; otherwise it yields zero (null), as desired.
+    unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
+  }
+  template <typename T>
   void unboxDouble(const T& src, FloatRegister dest) {
     loadDouble(Operand(src), dest);
   }
