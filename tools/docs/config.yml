@@ -13,6 +13,7 @@ categories:
         - remote
         - services/common/services
         - uriloader
+        - js
     build_doc:
         - mach
         - tools/try

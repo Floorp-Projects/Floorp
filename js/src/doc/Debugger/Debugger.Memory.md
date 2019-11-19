@@ -14,8 +14,8 @@ in various ways:
   items in various ways, and yielding item counts.
 
 If <i>dbg</i> is a [`Debugger`][debugger-object] instance, then the methods and
-accessor properties of <code><i>dbg</i>.memory</code> control how <i>dbg</i>
-observes its debuggees' memory use. The <code><i>dbg</i>.memory</code> object is
+accessor properties of `dbg.memory` control how <i>dbg</i>
+observes its debuggees' memory use. The `dbg.memory` object is
 an instance of `Debugger.Memory`; its inherited accessors and methods are
 described below.
 
@@ -71,43 +71,43 @@ If <i>dbg</i> is a [`Debugger`][debugger-object] instance, then
 `<i>dbg</i>.memory` is a `Debugger.Memory` instance, which inherits the
 following accessor properties from its prototype:
 
-<code id='trackingallocationsites'>trackingAllocationSites</code>
-:   A boolean value indicating whether this `Debugger.Memory` instance is
-    capturing the JavaScript execution stack when each Object is allocated. This
-    accessor property has both a getter and setter: assigning to it enables or
-    disables the allocation site tracking. Reading the accessor produces `true`
-    if the Debugger is capturing stacks for Object allocations, and `false`
-    otherwise. Allocation site tracking is initially disabled in a new Debugger.
+### `trackingAllocationSites`
+A boolean value indicating whether this `Debugger.Memory` instance is
+capturing the JavaScript execution stack when each Object is allocated. This
+accessor property has both a getter and setter: assigning to it enables or
+disables the allocation site tracking. Reading the accessor produces `true`
+if the Debugger is capturing stacks for Object allocations, and `false`
+otherwise. Allocation site tracking is initially disabled in a new Debugger.
 
-    Assignment is fallible: if the Debugger cannot track allocation sites, it
-    throws an `Error` instance.
+Assignment is fallible: if the Debugger cannot track allocation sites, it
+throws an `Error` instance.
 
-    You can retrieve the allocation site for a given object with the
-    [`Debugger.Object.prototype.allocationSite`][allocation-site] accessor
-    property.
+You can retrieve the allocation site for a given object with the
+[`Debugger.Object.prototype.allocationSite`][allocation-site] accessor
+property.
 
-<code id='alloc-sampling-probability'>allocationSamplingProbability</code>
-:   A number between 0 and 1 that indicates the probability with which each new
-    allocation should be entered into the allocations log. 0 is equivalent to
-    "never", 1 is "always", and .05 would be "one out of twenty".
+### `allocationSamplingProbability`
+A number between 0 and 1 that indicates the probability with which each new
+allocation should be entered into the allocations log. 0 is equivalent to
+"never", 1 is "always", and .05 would be "one out of twenty".
 
-    The default is 1, or logging every allocation.
+The default is 1, or logging every allocation.
 
-    Note that in the presence of multiple <code>Debugger</code> instances
-    observing the same allocations within a global's scope, the maximum
-    <code>allocationSamplingProbability</code> of all the
-    <code>Debugger</code>s is used.
+Note that in the presence of multiple <code>Debugger</code> instances
+observing the same allocations within a global's scope, the maximum
+<code>allocationSamplingProbability</code> of all the
+<code>Debugger</code>s is used.
 
-<code id='max-alloc-log'>maxAllocationsLogLength</code>
-:   The maximum number of allocation sites to accumulate in the allocations log
-    at a time. This accessor can be both fetched and stored to. Its default
-    value is `5000`.
+### `maxAllocationsLogLength`
+The maximum number of allocation sites to accumulate in the allocations log
+at a time. This accessor can be both fetched and stored to. Its default
+value is `5000`.
 
-<code id='allocationsLogOverflowed'>allocationsLogOverflowed</code>
-:   Returns `true` if there have been more than
-    [`maxAllocationsLogLength`][#max-alloc-log] allocations since the last time
-    [`drainAllocationsLog`][#drain-alloc-log] was called and some data has been
-    lost. Returns `false` otherwise.
+### `allocationsLogOverflowed`
+Returns `true` if there have been more than
+[`maxAllocationsLogLength`][#max-alloc-log] allocations since the last time
+[`drainAllocationsLog`][#drain-alloc-log] was called and some data has been
+lost. Returns `false` otherwise.
 
 Debugger.Memory Handler Functions
 ---------------------------------
@@ -130,352 +130,359 @@ Handler functions run in the same thread in which the event occurred.
 They run in the compartment to which they belong, not in a debuggee
 compartment.
 
-<code>onGarbageCollection(<i>statistics</i>)</code>
-:   A garbage collection cycle spanning one or more debuggees has just been
-    completed.
+### `onGarbageCollection(statistics)`
+A garbage collection cycle spanning one or more debuggees has just been
+completed.
 
-    The *statistics* parameter is an object containing information about the GC
-    cycle. It has the following properties:
+The *statistics* parameter is an object containing information about the GC
+cycle. It has the following properties:
 
-    `collections`
-    :   The `collections` property's value is an array. Because SpiderMonkey's
-        collector is incremental, a full collection cycle may consist of
-        multiple discrete collection slices with the JS mutator running
-        interleaved. For each collection slice that occurred, there is an entry
-        in the `collections` array with the following form:
+#### `collections`
+The `collections` property's value is an array. Because SpiderMonkey's
+collector is incremental, a full collection cycle may consist of
+multiple discrete collection slices with the JS mutator running
+interleaved. For each collection slice that occurred, there is an entry
+in the `collections` array with the following form:
 
-        <pre class='language-js'><code>
-        {
-          "startTimestamp": <i>timestamp</i>,
-          "endTimestamp": <i>timestamp</i>,
-        }
-        </code></pre>
+```
+{
+  "startTimestamp": timestamp,
+  "endTimestamp": timestamp,
+}
+```
 
-        Here the *timestamp* values are [timestamps][] of the GC slice's start
-        and end events.
+Here the `timestamp` values are [timestamps][timestamps] of the GC slice's start
+and end events.
 
-    `reason`
-    :   A very short string describing the reason why the collection was
-        triggered. Known values include the following:
+#### `reason`
+A very short string describing the reason why the collection was
+triggered. Known values include the following:
 
-        * "API"
-        * "EAGER_ALLOC_TRIGGER"
-        * "DESTROY_RUNTIME"
-        * "LAST_DITCH"
-        * "TOO_MUCH_MALLOC"
-        * "ALLOC_TRIGGER"
-        * "DEBUG_GC"
-        * "COMPARTMENT_REVIVED"
-        * "RESET"
-        * "OUT_OF_NURSERY"
-        * "EVICT_NURSERY"
-        * "FULL_STORE_BUFFER"
-        * "SHARED_MEMORY_LIMIT"
-        * "PERIODIC_FULL_GC"
-        * "INCREMENTAL_TOO_SLOW"
-        * "DOM_WINDOW_UTILS"
-        * "COMPONENT_UTILS"
-        * "MEM_PRESSURE"
-        * "CC_WAITING"
-        * "CC_FORCED"
-        * "LOAD_END"
-        * "PAGE_HIDE"
-        * "NSJSCONTEXT_DESTROY"
-        * "SET_NEW_DOCUMENT"
-        * "SET_DOC_SHELL"
-        * "DOM_UTILS"
-        * "DOM_IPC"
-        * "DOM_WORKER"
-        * "INTER_SLICE_GC"
-        * "REFRESH_FRAME"
-        * "FULL_GC_TIMER"
-        * "SHUTDOWN_CC"
-        * "USER_INACTIVE"
+* `"API"`
+* `"EAGER_ALLOC_TRIGGER"`
+* `"DESTROY_RUNTIME"`
+* `"LAST_DITCH"`
+* `"TOO_MUCH_MALLOC"`
+* `"ALLOC_TRIGGER"`
+* `"DEBUG_GC"`
+* `"COMPARTMENT_REVIVED"`
+* `"RESET"`
+* `"OUT_OF_NURSERY"`
+* `"EVICT_NURSERY"`
+* `"FULL_STORE_BUFFER"`
+* `"SHARED_MEMORY_LIMIT"`
+* `"PERIODIC_FULL_GC"`
+* `"INCREMENTAL_TOO_SLOW"`
+* `"DOM_WINDOW_UTILS"`
+* `"COMPONENT_UTILS"`
+* `"MEM_PRESSURE"`
+* `"CC_WAITING"`
+* `"CC_FORCED"`
+* `"LOAD_END"`
+* `"PAGE_HIDE"`
+* `"NSJSCONTEXT_DESTROY"`
+* `"SET_NEW_DOCUMENT"`
+* `"SET_DOC_SHELL"`
+* `"DOM_UTILS"`
+* `"DOM_IPC"`
+* `"DOM_WORKER"`
+* `"INTER_SLICE_GC"`
+* `"REFRESH_FRAME"`
+* `"FULL_GC_TIMER"`
+* `"SHUTDOWN_CC"`
+* `"USER_INACTIVE"`
 
-    `nonincrementalReason`
-    :   If SpiderMonkey's collector determined it could not incrementally
-        collect garbage, and had to do a full GC all at once, this is a short
-        string describing the reason it determined the full GC was necessary.
-        Otherwise, `null` is returned. Known values include the following:
+#### `nonincrementalReason`
+If SpiderMonkey's collector determined it could not incrementally
+collect garbage, and had to do a full GC all at once, this is a short
+string describing the reason it determined the full GC was necessary.
+Otherwise, `null` is returned. Known values include the following:
 
-        * "GC mode"
-        * "malloc bytes trigger"
-        * "allocation trigger"
-        * "requested"
+* `"GC mode"`
+* `"malloc bytes trigger"`
+* `"allocation trigger"`
+* `"requested"`
 
-    `gcCycleNumber`
-    :   The GC cycle's "number". Does not correspond to the number
-        of GC cycles that have run, but is guaranteed to be monotonically
-        increasing.
+#### `gcCycleNumber`
+The GC cycle's "number". Does not correspond to the number
+of GC cycles that have run, but is guaranteed to be monotonically
+increasing.
 
 Function Properties of the `Debugger.Memory.prototype` Object
 -------------------------------------------------------------
 
-<code id='drain-alloc-log'>drainAllocationsLog()</code>
-:   When `trackingAllocationSites` is `true`, this method returns an array of
-    recent `Object` allocations within the set of debuggees. *Recent* is
-    defined as the `maxAllocationsLogLength` most recent `Object` allocations
-    since the last call to `drainAllocationsLog`. Therefore, calling this
-    method effectively clears the log.
+### `drainAllocationsLog()`
+When `trackingAllocationSites` is `true`, this method returns an array of
+recent `Object` allocations within the set of debuggees. *Recent* is
+defined as the `maxAllocationsLogLength` most recent `Object` allocations
+since the last call to `drainAllocationsLog`. Therefore, calling this
+method effectively clears the log.
 
-    Objects in the array are of the form:
+Objects in the array are of the form:
 
-    <pre class='language-js'><code>
-    {
-      "timestamp": <i>timestamp</i>,
-      "frame": <i>allocationSite</i>,
-      "class": <i>className</i>,
-      "constructor": <i>constructorName</i>,
-      "size": <i>byteSize</i>,
-      "inNursery": <i>inNursery</i>,
-    }
-    </code></pre>
+```
+{
+  "timestamp": timestamp,
+  "frame": allocationSite,
+  "class": className,
+  "constructor": constructorName,
+  "size": byteSize,
+  "inNursery": inNursery,
+}
+```
 
-    Where
+Where
 
-    * *timestamp* is the [timestamp][timestamps] of the allocation event.
+* `timestamp` is the [timestamp][timestamps] of the allocation event.
 
-    * *allocationSite* is an allocation site (as a
-      [captured stack][saved-frame]). Note that this property can be null if the
-      object was allocated with no JavaScript frames on the stack.
+* `allocationSite` is an allocation site (as a
+  [captured stack][saved-frame]). Note that this property can be null if the
+  object was allocated with no JavaScript frames on the stack.
 
-    * *className* is the string name of the allocated object's internal
-    `[[Class]]` property, for example "Array", "Date", "RegExp", or (most
-    commonly) "Object".
+* `className` is the string name of the allocated object's internal
+`[[Class]]` property, for example "Array", "Date", "RegExp", or (most
+commonly) "Object".
 
-    * *constructorName* is the constructor function's display name for objects
-      created by `new Ctor`. If that data is not available, or the object was
-      not created with a `new` expression, this property is `null`.
+* `constructorName` is the constructor function's display name for objects
+  created by `new Ctor`. If that data is not available, or the object was
+  not created with a `new` expression, this property is `null`.
 
-    * *byteSize* is the size of the object in bytes.
+* `byteSize` is the size of the object in bytes.
 
-    * *inNursery* is true if the allocation happened inside the nursery. False
-      if the allocation skipped the nursery and started in the tenured heap.
+* `inNursery` is true if the allocation happened inside the nursery. False
+  if the allocation skipped the nursery and started in the tenured heap.
 
-    When `trackingAllocationSites` is `false`, `drainAllocationsLog()` throws an
-    `Error`.
+When `trackingAllocationSites` is `false`, `drainAllocationsLog()` throws an
+`Error`.
 
-<code id='take-census'>takeCensus(<i>options</i>)</code>
-:   Carry out a census of the debuggee compartments' contents. A *census* is a
-    complete traversal of the graph of all reachable memory items belonging to a
-    particular `Debugger`'s debuggees. The census produces a count of those
-    items, broken down by various criteria.
+### `takeCensus(options)`
+Carry out a census of the debuggee compartments' contents. A *census* is a
+complete traversal of the graph of all reachable memory items belonging to a
+particular `Debugger`'s debuggees. The census produces a count of those
+items, broken down by various criteria.
 
-    The <i>options</i> argument is an object whose properties specify how the
-    census should be carried out.
+The <i>options</i> argument is an object whose properties specify how the
+census should be carried out.
 
-    If <i>options</i> has a `breakdown` property, that determines how the census
-    categorizes the items it finds, and what data it collects about them. For
-    example, if `dbg` is a `Debugger` instance, the following performs a simple
-    count of debuggee items:
+If <i>options</i> has a `breakdown` property, that determines how the census
+categorizes the items it finds, and what data it collects about them. For
+example, if `dbg` is a `Debugger` instance, the following performs a simple
+count of debuggee items:
 
-        dbg.memory.takeCensus({ breakdown: { by: 'count' } })
+    dbg.memory.takeCensus({ breakdown: { by: 'count' } })
 
-    That might produce a result like:
+That might produce a result like:
 
-        { "count": 1616, "bytes": 93240 }
+    { "count": 1616, "bytes": 93240 }
 
-    Here is a breakdown that groups JavaScript objects by their class name,
-    non-string, non-script items by their C++ type name, and DOM nodes with
-    their node name:
+Here is a breakdown that groups JavaScript objects by their class name,
+non-string, non-script items by their C++ type name, and DOM nodes with
+their node name:
 
-        {
-          by: "coarseType",
-          objects: { by: "objectClass" },
-          other:   { by: "internalType" },
-          domNode: { by: "descriptiveType" }
-        }
-
-    which produces a result like this:
-
-        {
-          "objects": {
-            "Function":         { "count": 404, "bytes": 37328 },
-            "Object":           { "count": 11,  "bytes": 1264 },
-            "Debugger":         { "count": 1,   "bytes": 416 },
-            "ScriptSource":     { "count": 1,   "bytes": 64 },
-            // ... omitted for brevity...
-          },
-          "scripts":            { "count": 1,   "bytes": 0 },
-          "strings":            { "count": 701, "bytes": 49080 },
-          "other": {
-            "js::Shape":        { "count": 450, "bytes": 0 },
-            "js::BaseShape":    { "count": 21,  "bytes": 0 },
-            "js::ObjectGroup":  { "count": 17,  "bytes": 0 }
-          },
-          "domNode": {
-            "#text":            { "count": 1,   "bytes": 12 }
-          }
-        }
-
-    In general, a `breakdown` value has one of the following forms:
-
-    <code>{ by: "count", count:<i>count<i>, bytes:<i>bytes</i> }</code>
-    :   The trivial categorization: none whatsoever. Simply tally up the items
-        visited. If <i>count</i> is true, count the number of items visited; if
-        <i>bytes</i> is true, total the number of bytes the items use directly.
-        Both <i>count</i> and <i>bytes</i> are optional; if omitted, they
-        default to `true`. In the result of the census, this breakdown produces
-        a value of the form:
-
-            { "count":<i>n</b>, "bytes":<i>b</i> }
-
-        where the `count` and `bytes` properties are present as directed by the
-        <i>count</i> and <i>bytes</i> properties on the breakdown.
-
-        Note that the census can produce byte sizes only for the most common
-        types. When the census cannot find the byte size for a given type, it
-        returns zero.
-
-    <code>{ by: "bucket" }</code>
-    :   Do not do any filtering or categorizing. Instead, accumulate a bucket of
-        each node's ID for every node that matches. The resulting report is an
-        array of the IDs.
-
-        For example, to find the ID of all nodes whose internal object
-        `[[class]]` property is named "RegExp", you could use the following code:
-
-            const report = dbg.memory.takeCensus({
-              breakdown: {
-                by: "objectClass",
-                then: { by: "bucket" }
-              }
-            });
-            doStuffWithRegExpIDs(report.RegExp);
-
-    <code>{ by: "allocationStack", then:<i>breakdown</i>, noStack:<i>noStackBreakdown</i> }</code>
-    :   Group items by the full JavaScript stack trace at which they were
-        allocated.
-
-        Further categorize all the items allocated at each distinct stack using
-        <i>breakdown</i>.
-
-        In the result of the census, this breakdown produces a JavaScript `Map`
-        value whose keys are `SavedFrame` values, and whose values are whatever
-        sort of result <i>breakdown</i> produces. Objects allocated on an empty
-        JavaScript stack appear under the key `null`.
-
-        SpiderMonkey only tracks allocation sites for items if requested via the
-        [`trackingAllocationSites`][tracking-allocs] flag; even then, it does
-        not record allocation sites for every kind of item that appears in the
-        heap. Items that lack allocation site information are counted using
-        <i>noStackBreakdown</i>. These appear in the result `Map` under the key
-        string `"noStack"`.
-
-    <code>{ by: "objectClass", then:<i>breakdown</i>, other:<i>otherBreakdown</i> }</code>
-    :   Group JavaScript objects by their ECMAScript `[[Class]]` internal property values.
-
-        Further categorize JavaScript objects in each class using
-        <i>breakdown</i>. Further categorize items that are not JavaScript
-        objects using <i>otherBreakdown</i>.
-
-        In the result of the census, this breakdown produces a JavaScript object
-        with no prototype whose own property names are strings naming classes,
-        and whose values are whatever sort of result <i>breakdown</i> produces.
-        The results for non-object items appear as the value of the property
-        named `"other"`.
-
-    <code>{ by: "coarseType", objects:<i>objects</i>, scripts:<i>scripts</i>, strings:<i>strings</i>, domNode:<i>domNode</i>, other:<i>other</i> }</code>
-    :   Group items by their coarse type.
-
-        Use the breakdown value <i>objects</i> for items that are JavaScript
-        objects.
-
-        Use the breakdown value <i>scripts</i> for items that are
-        representations of JavaScript code. This includes bytecode, compiled
-        machine code, and saved source code.
-
-        Use the breakdown value <i>strings</i> for JavaScript strings.
-
-        Use the breakdown value <i>domNode</i> for DOM nodes.
-
-        Use the breakdown value <i>other</i> for items that don't fit into any of
-        the above categories.
-
-        In the result of the census, this breakdown produces a JavaScript object
-        of the form:
-
-        <pre class='language-js'><code>
-        {
-          "objects": <i>result</i>,
-          "scripts": <i>result</i>,
-          "strings": <i>result</i>,
-          "domNode:" <i>result</i>,
-          "other": <i>result</i>
-        }
-        </code></pre>
-
-        where each <i>result</i> is a value of whatever sort the corresponding
-        breakdown value produces. All breakdown values are optional, and default
-        to `{ type: "count" }`.
-
-    <code>{ by: "internalType", then:<i>breakdown</i> }</code>
-    :   Group items by the names given their types internally by SpiderMonkey.
-        These names are not meaningful to web developers, but this type of
-        breakdown does serve as a catch-all that can be useful to Firefox tool
-        developers.
-
-        For example, a census of a pristine debuggee global broken down by
-        internal type name typically looks like this:
-
-            {
-              "JSString":        { "count": 701, "bytes": 49080 },
-              "js::Shape":       { "count": 450, "bytes": 0 },
-              "JSObject":        { "count": 426, "bytes": 44160 },
-              "js::BaseShape":   { "count": 21,  "bytes": 0 },
-              "js::ObjectGroup": { "count": 17,  "bytes": 0 },
-              "JSScript":        { "count": 1,   "bytes": 0 }
-            }
-
-        In the result of the census, this breakdown produces a JavaScript object
-        with no prototype whose own property names are strings naming types,
-        and whose values are whatever sort of result <i>breakdown</i> produces.
-
-    <code>[ <i>breakdown</i>, ... ]</code>
-    :   Group each item using all the given breakdown values. In the result of
-        the census, this breakdown produces an array of values of the sort
-        produced by each listed breakdown.
-
-    To simplify breakdown values, all `then` and `other` properties are optional.
-    If omitted, they are treated as if they were `{ type: "count" }`.
-
-    If the `options` argument has no `breakdown` property, `takeCensus` defaults
-    to the following:
-
-    <pre class='language-js'><code>
     {
       by: "coarseType",
       objects: { by: "objectClass" },
-      domNode: { by: "descriptiveType" },
-      other:   { by: "internalType" }
+      other:   { by: "internalType" },
+      domNode: { by: "descriptiveType" }
     }
-    </code></pre>
 
-    which produces results of the form:
+which produces a result like this:
 
-    <pre class='language-js'><code>
     {
-      objects: { <i>class</i>: <i>count</i>, ... },
-      scripts: <i>count</i>,
-      strings: <i>count</i>,
-      domNode: { <i>node name</i>: <i>count</i>, ... },
-      other:   { <i>type name</i>: <i>count</i>, ... }
+      "objects": {
+        "Function":         { "count": 404, "bytes": 37328 },
+        "Object":           { "count": 11,  "bytes": 1264 },
+        "Debugger":         { "count": 1,   "bytes": 416 },
+        "ScriptSource":     { "count": 1,   "bytes": 64 },
+        // ... omitted for brevity...
+      },
+      "scripts":            { "count": 1,   "bytes": 0 },
+      "strings":            { "count": 701, "bytes": 49080 },
+      "other": {
+        "js::Shape":        { "count": 450, "bytes": 0 },
+        "js::BaseShape":    { "count": 21,  "bytes": 0 },
+        "js::ObjectGroup":  { "count": 17,  "bytes": 0 }
+      },
+      "domNode": {
+        "#text":            { "count": 1,   "bytes": 12 }
+      }
     }
-    </code></pre>
 
-    where each <i>count</i> has the form:
+In general, a `breakdown` value has one of the following forms:
 
-    <pre class='language-js'><code>
-    { "count": <i>count</i>, bytes:<i>bytes</i> }
-    </code></pre>
+* <code>{ by: "count", count:<i>count<i>, bytes:<i>bytes</i> }</code>
 
-    Because performing a census requires traversing the entire graph of objects
-    in debuggee compartments, it is an expensive operation. On developer
-    hardware in 2014, traversing a memory graph containing roughly 130,000 nodes
-    and 410,000 edges took roughly 100ms. The traversal itself temporarily
-    allocates one hash table entry per node (roughly two address-sized words) in
-    addition to the per-category counts, whose size depends on the number of
-    categories.
+  The trivial categorization: none whatsoever. Simply tally up the items
+  visited. If <i>count</i> is true, count the number of items visited; if
+  <i>bytes</i> is true, total the number of bytes the items use directly.
+  Both <i>count</i> and <i>bytes</i> are optional; if omitted, they
+  default to `true`. In the result of the census, this breakdown produces
+  a value of the form:
+
+      { "count": n, "bytes": b }
+
+  where the `count` and `bytes` properties are present as directed by the
+  <i>count</i> and <i>bytes</i> properties on the breakdown.
+
+  Note that the census can produce byte sizes only for the most common
+  types. When the census cannot find the byte size for a given type, it
+  returns zero.
+
+* <code>{ by: "bucket" }</code>
+
+  Do not do any filtering or categorizing. Instead, accumulate a bucket of
+  each node's ID for every node that matches. The resulting report is an
+  array of the IDs.
+
+  For example, to find the ID of all nodes whose internal object
+  `[[class]]` property is named "RegExp", you could use the following code:
+
+      const report = dbg.memory.takeCensus({
+        breakdown: {
+          by: "objectClass",
+          then: { by: "bucket" }
+        }
+      });
+      doStuffWithRegExpIDs(report.RegExp);
+
+* <code>{ by: "allocationStack", then:<i>breakdown</i>, noStack:<i>noStackBreakdown</i> }</code>
+
+  Group items by the full JavaScript stack trace at which they were
+  allocated.
+
+  Further categorize all the items allocated at each distinct stack using
+  <i>breakdown</i>.
+
+  In the result of the census, this breakdown produces a JavaScript `Map`
+  value whose keys are `SavedFrame` values, and whose values are whatever
+  sort of result <i>breakdown</i> produces. Objects allocated on an empty
+  JavaScript stack appear under the key `null`.
+
+  SpiderMonkey only tracks allocation sites for items if requested via the
+  [`trackingAllocationSites`][tracking-allocs] flag; even then, it does
+  not record allocation sites for every kind of item that appears in the
+  heap. Items that lack allocation site information are counted using
+  <i>noStackBreakdown</i>. These appear in the result `Map` under the key
+  string `"noStack"`.
+
+* <code>{ by: "objectClass", then:<i>breakdown</i>, other:<i>otherBreakdown</i> }</code>
+
+  Group JavaScript objects by their ECMAScript `[[Class]]` internal property values.
+
+  Further categorize JavaScript objects in each class using
+  <i>breakdown</i>. Further categorize items that are not JavaScript
+  objects using <i>otherBreakdown</i>.
+
+  In the result of the census, this breakdown produces a JavaScript object
+  with no prototype whose own property names are strings naming classes,
+  and whose values are whatever sort of result <i>breakdown</i> produces.
+  The results for non-object items appear as the value of the property
+  named `"other"`.
+
+* <code>{ by: "coarseType", objects:<i>objects</i>, scripts:<i>scripts</i>, strings:<i>strings</i>, domNode:<i>domNode</i>, other:<i>other</i> }</code>
+
+  Group items by their coarse type.
+
+  Use the breakdown value <i>objects</i> for items that are JavaScript
+  objects.
+
+  Use the breakdown value <i>scripts</i> for items that are
+  representations of JavaScript code. This includes bytecode, compiled
+  machine code, and saved source code.
+
+  Use the breakdown value <i>strings</i> for JavaScript strings.
+
+  Use the breakdown value <i>domNode</i> for DOM nodes.
+
+  Use the breakdown value <i>other</i> for items that don't fit into any of
+  the above categories.
+
+  In the result of the census, this breakdown produces a JavaScript object
+  of the form:
+
+  ```
+  {
+    "objects": result,
+    "scripts": result,
+    "strings": result,
+    "domNode:" result,
+    "other": result,
+  }
+  ```
+
+  where each <i>result</i> is a value of whatever sort the corresponding
+  breakdown value produces. All breakdown values are optional, and default
+  to `{ type: "count" }`.
+
+* `{ by: "internalType", then: breakdown }`
+
+  Group items by the names given their types internally by SpiderMonkey.
+  These names are not meaningful to web developers, but this type of
+  breakdown does serve as a catch-all that can be useful to Firefox tool
+  developers.
+
+  For example, a census of a pristine debuggee global broken down by
+  internal type name typically looks like this:
+
+      {
+        "JSString":        { "count": 701, "bytes": 49080 },
+        "js::Shape":       { "count": 450, "bytes": 0 },
+        "JSObject":        { "count": 426, "bytes": 44160 },
+        "js::BaseShape":   { "count": 21,  "bytes": 0 },
+        "js::ObjectGroup": { "count": 17,  "bytes": 0 },
+        "JSScript":        { "count": 1,   "bytes": 0 }
+      }
+
+  In the result of the census, this breakdown produces a JavaScript object
+  with no prototype whose own property names are strings naming types,
+  and whose values are whatever sort of result <i>breakdown</i> produces.
+
+* <code>[ <i>breakdown</i>, ... ]</code>
+
+  Group each item using all the given breakdown values. In the result of
+  the census, this breakdown produces an array of values of the sort
+  produced by each listed breakdown.
+
+To simplify breakdown values, all `then` and `other` properties are optional.
+If omitted, they are treated as if they were `{ type: "count" }`.
+
+If the `options` argument has no `breakdown` property, `takeCensus` defaults
+to the following:
+
+```js
+{
+  by: "coarseType",
+  objects: { by: "objectClass" },
+  domNode: { by: "descriptiveType" },
+  other:   { by: "internalType" }
+}
+```
+
+which produces results of the form:
+
+```
+{
+  objects: { class: count, ... },
+  scripts: count,
+  strings: count,
+  domNode: { node name:count, ... },
+  other:   { type name:count, ... }
+}
+```
+
+where each `count` has the form:
+
+```js
+{ "count": count, bytes: bytes }
+```
+
+Because performing a census requires traversing the entire graph of objects
+in debuggee compartments, it is an expensive operation. On developer
+hardware in 2014, traversing a memory graph containing roughly 130,000 nodes
+and 410,000 edges took roughly 100ms. The traversal itself temporarily
+allocates one hash table entry per node (roughly two address-sized words) in
+addition to the per-category counts, whose size depends on the number of
+categories.
 
 
 Memory Use Analysis Exposes Implementation Details
@@ -556,3 +563,17 @@ variables and object properties. This type information can be large.
 
 In a census, all the various forms of JavaScript code are placed in the
 `"script"` category. Type information is accounted to the `"types"` category.
+
+
+[debugger]: Debugger-API.md
+[debugger-object]: Debugger.md
+[tracking-allocs]: #trackingallocationsites
+[bernoulli-trial]: https://en.wikipedia.org/wiki/Bernoulli_trial
+[alloc-sampling-probability]: #allocsamplingprobability
+[object]: Debugger.Object.md
+[allocation-site]: Debugger.Object.html#allocationsite
+[saved-frame]: ../SavedFrame/index
+[drain-alloc-log]: #drainAllocationsLog
+[max-alloc-log]: #maxAllocationsLogLength
+[take-census]: #takecensus-options
+[timestamps]: ./Conventions.html#timestamps

@@ -17,3 +17,5 @@ with Files("src/**"):
 
 with Files("public/**"):
     SCHEDULES.inclusive += ['jittest', 'jsreftest']
+
+SPHINX_TREES["/js"] = "src/doc"

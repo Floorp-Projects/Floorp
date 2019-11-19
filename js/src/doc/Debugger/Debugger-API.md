@@ -115,13 +115,15 @@ features:
 
 - [Showing how many objects different call paths allocate.][tut alloc log]
 
-
-## Gecko-specific features
-
-While the `Debugger` core API deals only with concepts common to any
-JavaScript implementation, it also includes some Gecko-specific features:
-
-- [Global tracking][global] supports debugging all the code running in a
-  Gecko instance at once---the 'chrome debugging' model.
-- [Object wrapper][wrapper] functions help manipulate object references
-  that cross privilege boundaries.
+[object]: Debugger.Object.md
+[protocol]: https://wiki.mozilla.org/Remote_Debugging_Protocol
+[img-shadows]: shadows.svg
+[script]: Debugger.Script.md
+[frame]: Debugger.Frame.md
+[environment]: Debugger.Environment.md
+[debugger-object]: Debugger.md
+[source]: Debugger.Source.md
+[memory]: Debugger.Memory.md
+[conventions]: Conventions.md
+[tut breakpoint]: Tutorial-Breakpoint.md
+[tut alloc log]: Tutorial-Alloc-Log-Tree.md

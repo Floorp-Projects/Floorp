@@ -54,66 +54,66 @@ effect on `Debugger.Environment` instances.
 A `Debugger.Environment` instance inherits the following accessor
 properties from its prototype:
 
-`inspectable`
-:   True if this environment is a debuggee environment, and can therefore
-    be inspected. False otherwise. All other properties and methods of
-    `Debugger.Environment` instances throw if applied to a non-inspectable
-    environment.
+### `inspectable`
+True if this environment is a debuggee environment, and can therefore
+be inspected. False otherwise. All other properties and methods of
+`Debugger.Environment` instances throw if applied to a non-inspectable
+environment.
 
-`type`
-:   The type of this environment object, one of the following values:
+### `type`
+The type of this environment object, one of the following values:
 
-    * "declarative", indicating that the environment is a declarative
-      environment record. Function calls, calls to `eval`, `let` blocks,
-      `catch` blocks, and the like create declarative environment records.
+* "declarative", indicating that the environment is a declarative
+  environment record. Function calls, calls to `eval`, `let` blocks,
+  `catch` blocks, and the like create declarative environment records.
 
-    * "object", indicating that the environment's bindings are the
-      properties of an object. The global object and DOM elements appear in
-      the chain of environments via object environments. (Note that `with`
-      statements have their own environment type.)
+* "object", indicating that the environment's bindings are the
+  properties of an object. The global object and DOM elements appear in
+  the chain of environments via object environments. (Note that `with`
+  statements have their own environment type.)
 
-    * "with", indicating that the environment was introduced by a `with`
-      statement.
+* "with", indicating that the environment was introduced by a `with`
+  statement.
 
-`scopeKind`
-:   If this is a declarative environment, a string describing the kind of scope
-    which this environment is associated with, or `null` for other types of
-    environments.  There is an assortment of possible scope kinds which can be
-    generated, with a selection of possible values below.  Unlike the type
-    accessor, the categorization this performs is specific to SpiderMonkey's
-    implementation, and not derived from distinctions made in the ECMAScript
-    language specification.
+### `scopeKind`
+If this is a declarative environment, a string describing the kind of scope
+which this environment is associated with, or `null` for other types of
+environments.  There is an assortment of possible scope kinds which can be
+generated, with a selection of possible values below.  Unlike the type
+accessor, the categorization this performs is specific to SpiderMonkey's
+implementation, and not derived from distinctions made in the ECMAScript
+language specification.
 
-    * "function", indicating the top level body scope of a function for
-    arguments and 'var' variables.
+* "function", indicating the top level body scope of a function for
+arguments and 'var' variables.
 
-    * "function lexical", indicating the top level lexical scope in a function.
+* "function lexical", indicating the top level lexical scope in a function.
 
-`parent`
-:   The environment that encloses this one (the "outer" environment, in
-    ECMAScript terminology), or `null` if this is the outermost environment.
+### `parent`
+The environment that encloses this one (the "outer" environment, in
+ECMAScript terminology), or `null` if this is the outermost environment.
 
-`object`
-:   A [`Debugger.Object`][object] instance referring to the object whose
-    properties this environment reflects. If this is a declarative
-    environment record, this accessor throws a `TypeError` (since
-    declarative environment records have no such object). Both `"object"`
-    and `"with"` environments have `object` properties that provide the
-    object whose properties they reflect as variable bindings.
+### `object`
+A [`Debugger.Object`][object] instance referring to the object whose
+properties this environment reflects. If this is a declarative
+environment record, this accessor throws a `TypeError` (since
+declarative environment records have no such object). Both `"object"`
+and `"with"` environments have `object` properties that provide the
+object whose properties they reflect as variable bindings.
 
-`callee`
-:   If this environment represents the variable environment (the top-level
-    environment within the function, which receives `var` definitions) for
-    a call to a function <i>f</i>, then this property's value is a
-    [`Debugger.Object`][object] instance referring to <i>f</i>. Otherwise,
-    this property's value is `null`.
+### `callee`
+If this environment represents the variable environment (the top-level
+environment within the function, which receives `var` definitions) for
+a call to a function <i>f</i>, then this property's value is a
+[`Debugger.Object`][object] instance referring to <i>f</i>. Otherwise,
+this property's value is `null`.
 
-`optimizedOut`
-:   True if this environment is optimized out. False otherwise. For example,
-    functions whose locals are never aliased may present optimized-out
-    environments. When true, `getVariable` returns an ordinary JavaScript
-    object whose `optimizedOut` property is true on all bindings, and
-    `setVariable` throws a `ReferenceError`.
+### `optimizedOut`
+True if this environment is optimized out. False otherwise. For example,
+functions whose locals are never aliased may present optimized-out
+environments. When true, `getVariable` returns an ordinary JavaScript
+object whose `optimizedOut` property is true on all bindings, and
+`setVariable` throws a `ReferenceError`.
 
 
 ## Function Properties of the Debugger.Environment Prototype Object
@@ -122,46 +122,53 @@ The methods described below may only be called with a `this` value
 referring to a `Debugger.Environment` instance; they may not be used as
 methods of other kinds of objects.
 
-`names()`
-:   Return an array of strings giving the names of the identifiers bound by
-    this environment. The result does not include the names of identifiers
-    bound by enclosing environments.
+### `names()`
+Return an array of strings giving the names of the identifiers bound by
+this environment. The result does not include the names of identifiers
+bound by enclosing environments.
 
-<code>getVariable(<i>name</i>)</code>
-:   Return the value of the variable bound to <i>name</i> in this
-    environment, or `undefined` if this environment does not bind
-    <i>name</i>. <i>Name</i> must be a string that is a valid ECMAScript
-    identifier name. The result is a debuggee value.
+### `getVariable(name)`
 
-    JavaScript engines often omit variables from environments, to save space
-    and reduce execution time. If the given variable should be in scope, but
-    `getVariable` is unable to produce its value, it returns an ordinary
-    JavaScript object (not a [`Debugger.Object`][object] instance) whose
-    `optimizedOut` property is `true`.
+Return the value of the variable bound to <i>name</i> in this
+environment, or `undefined` if this environment does not bind
+<i>name</i>. <i>Name</i> must be a string that is a valid ECMAScript
+identifier name. The result is a debuggee value.
 
-    This is not an [invocation function][inv fr];
-    if this call would cause debuggee code to run (say, because the
-    environment is a `"with"` environment, and <i>name</i> refers to an
-    accessor property of the `with` statement's operand), this call throws a
-    [`Debugger.DebuggeeWouldRun`][wouldrun]
-    exception.
+JavaScript engines often omit variables from environments, to save space
+and reduce execution time. If the given variable should be in scope, but
+`getVariable` is unable to produce its value, it returns an ordinary
+JavaScript object (not a [`Debugger.Object`][object] instance) whose
+`optimizedOut` property is `true`.
 
-<code>setVariable(<i>name</i>, <i>value</i>)</code>
-:   Store <i>value</i> as the value of the variable bound to <i>name</i> in
-    this environment. <i>Name</i> must be a string that is a valid
-    ECMAScript identifier name; <i>value</i> must be a debuggee value.
+This is not an [invocation function][inv fr];
+if this call would cause debuggee code to run (say, because the
+environment is a `"with"` environment, and <i>name</i> refers to an
+accessor property of the `with` statement's operand), this call throws a
+[`Debugger.DebuggeeWouldRun`][wouldrun]
+exception.
 
-    If this environment binds no variable named <i>name</i>, throw a
-    `ReferenceError`.
+### `setVariable(name, value)`
+Store <i>value</i> as the value of the variable bound to <i>name</i> in
+this environment. <i>Name</i> must be a string that is a valid
+ECMAScript identifier name; <i>value</i> must be a debuggee value.
 
-    This is not an [invocation function][inv fr];
-    if this call would cause debuggee code to run, this call throws a
-    [`Debugger.DebuggeeWouldRun`][wouldrun]
-    exception.
+If this environment binds no variable named <i>name</i>, throw a
+`ReferenceError`.
 
-<code>find(<i>name</i>)</code>
-:   Return a reference to the innermost environment, starting with this
-    environment, that binds <i>name</i>. If <i>name</i> is not in scope in
-    this environment, return `null`. <i>Name</i> must be a string whose
-    value is a valid ECMAScript identifier name.
+This is not an [invocation function][inv fr];
+if this call would cause debuggee code to run, this call throws a
+[`Debugger.DebuggeeWouldRun`][wouldrun]
+exception.
 
+### `find(name)`
+Return a reference to the innermost environment, starting with this
+environment, that binds <i>name</i>. If <i>name</i> is not in scope in
+this environment, return `null`. <i>Name</i> must be a string whose
+value is a valid ECMAScript identifier name.
+
+
+[frame]: Debugger.Frame.md
+[object]: Debugger.Object.md
+[debugger-object]: Debugger.md
+[inv fr]: Debugger.Frame.html#invocation-functions-and-debugger-frames
+[wouldrun]: Conventions.html#the-debugger-debuggeewouldrun-exception

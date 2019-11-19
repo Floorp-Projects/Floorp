@@ -8,10 +8,10 @@ and function calls.
 Optimization information is currently collected for the following operations:
 
 - [BinaryArith](#binaryarith) (`+-/*%`)
-- [GetProperty](#getprop) (`obj.prop`)
-- [SetProperty](#setprop) (`obj.prop = val`)
-- [GetElement](#getelem) (`obj[elemName]`)
-- [SetElement](#setelem) (`obj[elemName] = val`)
+- [GetProperty](#getproperty) (`obj.prop`)
+- [SetProperty](#setproperty) (`obj.prop = val`)
+- [GetElement](#getelement) (`obj[elemName]`)
+- [SetElement](#setelement) (`obj[elemName] = val`)
 - [Call](#call) (`func(...)`)
 
 At each operation site, IonMonkey tries a battery of <i>strategies</i>, from
@@ -25,7 +25,7 @@ speed-up they provide, what kind of program characteristics can prevent them
 from being used, and common ways to enable the engine to utilize that
 optimization.
 
-## <a name="binaryarith"></a>BinaryArith
+## BinaryArith
 
 ### BinaryArith_Concat
 
@@ -48,7 +48,7 @@ Attempts to optimize a binary arithmetic using inline cache.
 Last resort which cannot get specialized at all and takes the slow path to do the arithmetic.
 
 
-## <a name="getprop"></a>GetProperty
+## GetProperty
 
 ### GetProp_ArgumentsLength
 
@@ -282,7 +282,7 @@ Inline caches are an order of magnitude slower than the other optimization
 strategies, and are an indication that the type inference engine has
 failed to collect enough information to guide the optimization process.
 
-## <a name="setprop"></a>SetProperty
+## SetProperty
 
 ### SetProp_CommonSetter
 
@@ -410,7 +410,7 @@ Inline caches are an order of magnitude slower than the other optimization
 strategies, and are an indication that the type inference engine has
 failed to collect enough information to guide the optimization process.
 
-## <a name="getelem"></a>GetElement
+## GetElement
 
 ### GetElem_TypedObject
 
@@ -500,7 +500,7 @@ Inline caches are an order of magnitude slower than the other optimization
 strategies, and are an indication that the type inference engine has
 failed to collect enough information to guide the optimization process.
 
-## <a name="setelem"></a>SetElement
+## SetElement
 
 ### SetElem_TypedObject
 
@@ -562,7 +562,7 @@ Inline caches are an order of magnitude slower than the other optimization
 strategies, and are an indication that the type inference engine has
 failed to collect enough information to guide the optimization process.
 
-## <a name="call"></a>Call
+## Call
 
 ### Call_Inline
 
