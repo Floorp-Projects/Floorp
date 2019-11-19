@@ -115,6 +115,8 @@ class AudioNodeTrack : public ProcessedMediaTrack {
     MOZ_ASSERT(!mAudioParamTrack, "Can only do this once");
     mAudioParamTrack = true;
   }
+  // The value for channelCount on an AudioNode, but on the audio thread side.
+  uint32_t NumberOfChannels() const;
 
   /*
    * Resume track after updating its concept of current time by aAdvance.
