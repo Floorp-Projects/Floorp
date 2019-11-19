@@ -44,25 +44,26 @@ public class WebPushController {
     /**
      * Send a push event for a given subscription.
      *
-     * @param scope The Service Worker scope associated with this subscription.
+     * @param subscription The WebPushSubscription that the event belongs to.
      */
     @UiThread
-    public void onPushEvent(final @NonNull String scope) {
+    public void onPushEvent(final @NonNull WebPushSubscription subscription) {
         ThreadUtils.assertOnUiThread();
-        onPushEvent(scope, null);
+        onPushEvent(subscription, null);
     }
 
     /**
      * Send a push event with a payload for a given subscription.
-     * @param scope The Service Worker scope associated with this subscription.
+     *
+     * @param subscription The WebPushSubscription that the event belongs to.
      * @param data The unencrypted payload.
      */
     @UiThread
-    public void onPushEvent(final @NonNull String scope, final @Nullable byte[] data) {
+    public void onPushEvent(final @NonNull WebPushSubscription subscription, final @Nullable byte[] data) {
         ThreadUtils.assertOnUiThread();
 
         final GeckoBundle msg = new GeckoBundle(2);
-        msg.putString("scope", scope);
+        msg.putBundle("subscription", subscription.toBundle());
         msg.putString("data", Base64Utils.encode(data));
         EventDispatcher.getInstance().dispatch("GeckoView:PushEvent", msg);
     }
