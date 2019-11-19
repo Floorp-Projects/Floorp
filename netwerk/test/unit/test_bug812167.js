@@ -127,6 +127,7 @@ function finish_test() {
 
 function run_test() {
   do_get_profile();
+  Services.prefs.setBoolPref("browser.cache.cache_isolation", false);
 
   httpserver = new HttpServer();
   httpserver.registerPathHandler(randomPath1, redirectHandler_NoStore);
