@@ -70,7 +70,7 @@ const IS_UNIFIED_TELEMETRY = Services.prefs.getBoolPref(
 
 const MS_IN_A_MINUTE = 60 * 1000;
 
-const PING_TYPE_OPTOUT = "optout";
+const PING_TYPE_DELETION_REQUEST = "deletion-request";
 
 // We try to spread "midnight" pings out over this interval.
 const MIDNIGHT_FUZZING_INTERVAL_MS = 60 * MS_IN_A_MINUTE;
@@ -133,12 +133,12 @@ function isV4PingFormat(aPing) {
 }
 
 /**
- * Check if the provided ping is an optout ping.
+ * Check if the provided ping is a deletion-request ping.
  * @param {Object} aPing The ping to check.
- * @return {Boolean} True if the ping is an optout ping, false otherwise.
+ * @return {Boolean} True if the ping is a deletion-request ping, false otherwise.
  */
-function isOptoutPing(aPing) {
-  return isV4PingFormat(aPing) && aPing.type == PING_TYPE_OPTOUT;
+function isDeletionRequestPing(aPing) {
+  return isV4PingFormat(aPing) && aPing.type == PING_TYPE_DELETION_REQUEST;
 }
 
 /**
@@ -239,7 +239,7 @@ var TelemetrySend = {
   /**
    * Check if sending is disabled. If Telemetry is not allowed to upload,
    * pings are not sent to the server.
-   * If trying to send an optout ping, don't block it.
+   * If trying to send a deletion-request ping, don't block it.
    *
    * @param {Object} [ping=null] A ping to be checked.
    * @return {Boolean} True if pings can be send to the servers, false otherwise.
@@ -486,7 +486,7 @@ var SendScheduler = {
       }
 
       // Get a list of pending pings, sorted by last modified, descending.
-      // Filter out all the pings we can't send now. This addresses scenarios like "optout" pings
+      // Filter out all the pings we can't send now. This addresses scenarios like "deletion-request" pings
       // which can be sent even when upload is disabled.
       let pending = TelemetryStorage.getPendingPingList();
       let current = TelemetrySendImpl.getUnpersistedPings();
@@ -499,9 +499,9 @@ var SendScheduler = {
       // Note that the two lists contain different kind of data. |pending| only holds ping
       // info, while |current| holds actual ping data.
       if (!TelemetrySendImpl.sendingEnabled()) {
-        // If sending is disabled, only handle an unpersisted optout ping
+        // If sending is disabled, only handle deletion-request pings
         pending = [];
-        current = current.filter(p => isOptoutPing(p));
+        current = current.filter(p => isDeletionRequestPing(p));
       }
       this._log.trace(
         "_doSendTask - can send - pending: " +
@@ -1083,19 +1083,11 @@ var TelemetrySendImpl = {
         try {
           await this._doPing(ping, ping.id, false);
         } catch (ex) {
-          if (isOptoutPing(ping)) {
-            // Optout pings should only be tried once and then discarded.
-            this._log.info(
-              "sendPings - optout ping " + ping.id + " not sent, discarding",
-              ex
-            );
-          } else {
-            this._log.info(
-              "sendPings - ping " + ping.id + " not sent, saving to disk",
-              ex
-            );
-            await savePing(ping);
-          }
+          this._log.info(
+            "sendPings - ping " + ping.id + " not sent, saving to disk",
+            ex
+          );
+          await savePing(ping);
         } finally {
           this._currentPings.delete(ping.id);
         }
@@ -1458,7 +1450,7 @@ var TelemetrySendImpl = {
   /**
    * Check if sending is disabled. If Telemetry is not allowed to upload,
    * pings are not sent to the server.
-   * If trying to send an optout ping, don't block it.
+   * If trying to send a "deletion-request" ping, don't block it.
    * If unified telemetry is off, don't send pings if Telemetry is disabled.
    *
    * @param {Object} [ping=null] A ping to be checked.
@@ -1477,8 +1469,8 @@ var TelemetrySendImpl = {
     // With unified Telemetry, the FHR upload setting controls whether we can send pings.
     // The Telemetry pref enables sending extended data sets instead.
     if (IS_UNIFIED_TELEMETRY) {
-      // Optout pings are sent once even if the upload is disabled.
-      if (ping && isOptoutPing(ping)) {
+      // "deletion-request" pings are sent once even if the upload is disabled.
+      if (ping && isDeletionRequestPing(ping)) {
         return true;
       }
       return Services.prefs.getBoolPref(
@@ -1523,11 +1515,8 @@ var TelemetrySendImpl = {
   async _persistCurrentPings() {
     for (let [id, ping] of this._currentPings) {
       try {
-        // Never save an optout ping to disk
-        if (!isOptoutPing(ping)) {
-          await savePing(ping);
-          this._log.trace("_persistCurrentPings - saved ping " + id);
-        }
+        await savePing(ping);
+        this._log.trace("_persistCurrentPings - saved ping " + id);
       } catch (ex) {
         this._log.error("_persistCurrentPings - failed to save ping " + id, ex);
       } finally {

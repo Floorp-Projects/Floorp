@@ -25,7 +25,7 @@ const { Preferences } = ChromeUtils.import(
 ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
 
 const PING_FORMAT_VERSION = 4;
-const OPTOUT_PING_TYPE = "optout";
+const DELETION_REQUEST_PING_TYPE = "deletion-request";
 const TEST_PING_TYPE = "test-ping-type";
 
 const PLATFORM_VERSION = "1.9.2";
@@ -159,8 +159,7 @@ add_task(async function test_disableDataUpload() {
   const OPTIN_PROBE = "telemetry.data_upload_optin";
   const isUnified = Preferences.get(TelemetryUtils.Preferences.Unified, false);
   if (!isUnified) {
-    // Skipping the test if unified telemetry is off, as no optout ping will
-    // be generated.
+    // Skipping the test if unified telemetry is off, as no deletion-request ping will be generated.
     return;
   }
 
@@ -184,18 +183,18 @@ add_task(async function test_disableDataUpload() {
     "Client ID should be valid and random"
   );
 
-  // Disable FHR upload: this should trigger a optout ping.
+  // Disable FHR upload: this should trigger a deletion-request ping.
   Preferences.set(TelemetryUtils.Preferences.FhrUploadEnabled, false);
 
   ping = await PingServer.promiseNextPing();
-  checkPingFormat(ping, OPTOUT_PING_TYPE, false, false);
+  checkPingFormat(ping, DELETION_REQUEST_PING_TYPE, true, false);
   // Wait on ping activity to settle.
   await TelemetrySend.testWaitOnOutgoingPings();
 
   snapshot = Telemetry.getSnapshotForScalars("main", false).parent || {};
   Assert.ok(
     !(OPTIN_PROBE in snapshot),
-    "Data optin scalar should not be set after optout"
+    "Data optin scalar should not be set after opt out"
   );
 
   // Restore FHR Upload.
@@ -216,14 +215,24 @@ add_task(async function test_disableDataUpload() {
     "Enabling data upload should set optin probe"
   );
 
-  // Simulate a failure in sending the optout ping by disabling the HTTP server.
+  // The clientId should've been reset when we restored FHR Upload.
+  let secondClientId = TelemetryController.getCurrentPingData().clientId;
+  Assert.notEqual(
+    firstClientId,
+    secondClientId,
+    "The client id must have changed"
+  );
+
+  // Simulate a failure in sending the deletion-request ping by disabling the HTTP server.
   await PingServer.stop();
 
   // Try to send a ping. It will be saved as pending  and get deleted when disabling upload.
   TelemetryController.submitExternalPing(TEST_PING_TYPE, {});
 
-  // Disable FHR upload to send a optout ping again.
+  // Disable FHR upload to send a deletion-request ping again.
   Preferences.set(TelemetryUtils.Preferences.FhrUploadEnabled, false);
+  // Wait for the deletion-request ping to be submitted.
+  await TelemetryController.testPromiseDeletionRequestPingSubmitted();
 
   // Wait on sending activity to settle, as |TelemetryController.testReset()| doesn't do that.
   await TelemetrySend.testWaitOnOutgoingPings();
@@ -237,8 +246,8 @@ add_task(async function test_disableDataUpload() {
   let pendingPings = await TelemetryStorage.loadPendingPingList();
   Assert.equal(
     pendingPings.length,
-    0,
-    "All the pending pings should have been deleted, including the optout ping"
+    1,
+    "All the pending pings should have been deleted, except the deletion-request ping"
   );
 
   // Enable the ping server again.
@@ -261,7 +270,7 @@ add_task(async function test_disableDataUpload() {
   // Send a test ping
   await sendPing(true, false);
 
-  // We should have only received the test ping
+  // We should have received the test ping first.
   ping = await PingServer.promiseNextPing();
   checkPingFormat(ping, TEST_PING_TYPE, true, false);
 
@@ -275,6 +284,15 @@ add_task(async function test_disableDataUpload() {
     firstClientId,
     ping.clientId,
     "Client ID should be different from the previous value"
+  );
+
+  // The "deletion-request" ping should come next, as it was pending.
+  ping = await PingServer.promiseNextPing();
+  checkPingFormat(ping, DELETION_REQUEST_PING_TYPE, true, false);
+  Assert.equal(
+    secondClientId,
+    ping.clientId,
+    "Deletion must be requested for correct client id"
   );
 
   // Wait on ping activity to settle before moving on to the next test. If we were
@@ -404,11 +422,10 @@ add_task(async function test_archivePings() {
     : TelemetryUtils.Preferences.TelemetryEnabled;
   Preferences.set(uploadPref, false);
 
-  // If we're using unified telemetry, disabling ping upload will generate a "optout"
-  // ping. Catch it.
+  // If we're using unified telemetry, disabling ping upload will generate a "deletion-request" ping. Catch it.
   if (isUnified) {
     let ping = await PingServer.promiseNextPing();
-    checkPingFormat(ping, OPTOUT_PING_TYPE, false, false);
+    checkPingFormat(ping, DELETION_REQUEST_PING_TYPE, true, false);
   }
 
   // Register a new Ping Handler that asserts if a ping is received, then send a ping.
