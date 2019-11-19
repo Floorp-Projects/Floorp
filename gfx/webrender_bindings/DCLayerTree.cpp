@@ -329,9 +329,6 @@ bool DCLayer::CreateEGLSurfaceForCompositionSurface(
 
   LayoutDeviceIntRect dirtyRect(aDirtyRect.origin.x, aDirtyRect.origin.y,
                                 aDirtyRect.size.width, aDirtyRect.size.height);
-  // Bind is sometimes called with a dirty rect that extends beyond the layer
-  // (bug 1593845).
-  dirtyRect = dirtyRect.Intersect(LayoutDeviceIntRect({}, mBufferSize));
 
   RECT update_rect;
   update_rect.left = dirtyRect.X();
