@@ -23,8 +23,8 @@ pub struct VariantAttrs {
 fn parse_meta(attrs: &mut VariantAttrs, meta: &Meta) {
     if let Meta::List(value) = meta {
         for meta in &value.nested {
-            if let NestedMeta::Meta(Meta::Word(word)) = meta {
-                if word == "other" {
+            if let NestedMeta::Meta(Meta::Path(path)) = meta {
+                if path.is_ident("other") {
                     attrs.is_default = true;
                 }
             }
@@ -88,7 +88,7 @@ impl Parse for Input {
                     parenthesized!(content in input);
                     content.parse()
                 }
-                let ty = repr_arg.parse2(attr.tts)?;
+                let ty = repr_arg.parse2(attr.tokens)?;
                 repr = Some(ty);
                 break;
             }
