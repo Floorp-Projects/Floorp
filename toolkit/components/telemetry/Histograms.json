@@ -14721,20 +14721,6 @@
     "description": "The number of times an AudioContext is allowed to start after being blocked, or the number of AudioContexts attempting to start which were never blocked or never allowed.",
     "releaseChannelCollection": "opt-out"
   },
-  "AUTOPLAY_SITES_SETTING_CHANGE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": [
-      "alwu@mozilla.com",
-      "cpearce@mozilla.com"
-    ],
-    "expires_in_version": "71",
-    "kind": "categorical",
-    "labels": ["AddAllow", "RemoveAllow", "AddBlock", "RemoveBlock"],
-    "bug_numbers": [1520361],
-    "description": "The number of times the user adds a site to the allow list, removes a site from the allow list, adds a site to the block list and removes a site from the block list.",
-    "releaseChannelCollection": "opt-out"
-  },
   "MEDIA_PLAYED_TIME_AFTER_AUTOPLAY_BLOCKED": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
