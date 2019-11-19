@@ -202,6 +202,82 @@
       ]
     },
     {
+      "name": "keyedScalarAdd",
+      "type": "function",
+      "description": "Adds the value to the given keyed scalar.",
+      "async": true,
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "The scalar name"
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "description": "The key name"
+        },
+        {
+          "name": "value",
+          "type": "integer",
+          "minimum": 1,
+          "description": "The numeric value to add to the scalar. Only unsigned integers supported."
+        }
+      ]
+    },
+    {
+      "name": "keyedScalarSet",
+      "type": "function",
+      "description": "Sets the keyed scalar to the given value. Throws if the value type doesn't match the scalar type.",
+      "async": true,
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "The scalar name."
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "description": "The key name."
+        },
+        {
+          "name": "value",
+          "description": "The value to set the scalar to.",
+          "choices": [
+            { "type": "string" },
+            { "type": "boolean" },
+            { "type": "integer" },
+            { "type": "object", "additionalProperties": { "type": "any" } }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "keyedScalarSetMaximum",
+      "type": "function",
+      "description": "Sets the keyed scalar to the maximum of the current and the passed value",
+      "async": true,
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "The scalar name."
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "description": "The key name."
+        },
+        {
+          "name": "value",
+          "type": "integer",
+          "minimum": 0,
+          "description": "The numeric value to set the scalar to. Only unsigned integers supported."
+        }
+      ]
+    },
+    {
       "name": "recordEvent",
       "type": "function",
       "description": "Record an event in Telemetry. Throws when trying to record an unknown event.",
