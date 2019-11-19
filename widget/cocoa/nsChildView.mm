@@ -1354,9 +1354,7 @@ void nsChildView::PaintWindowInContentLayer() {
     return;
   }
 
-  PaintWindowInDrawTarget(
-      dt, LayoutDeviceIntRegion::FromUnknownRegion(mContentLayer->CurrentSurfaceInvalidRegion()),
-      dt->GetSize());
+  PaintWindowInDrawTarget(dt, mContentLayerInvalidRegion, dt->GetSize());
   mContentLayer->NotifySurfaceReady();
   mContentLayerInvalidRegion.SetEmpty();
 }

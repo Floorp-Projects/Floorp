@@ -221,16 +221,6 @@ Maybe<gfx::IntRect> NativeLayerCA::ClipRect() {
   return mClipRect;
 }
 
-IntRegion NativeLayerCA::CurrentSurfaceInvalidRegion() {
-  MutexAutoLock lock(mMutex);
-
-  MOZ_RELEASE_ASSERT(
-      mInProgressSurface,
-      "Only call currentSurfaceInvalidRegion after a call to NextSurface and before the call "
-      "to notifySurfaceIsReady.");
-  return mInProgressSurface->mInvalidRegion;
-}
-
 void NativeLayerCA::InvalidateRegionThroughoutSwapchain(const MutexAutoLock&,
                                                         const IntRegion& aRegion) {
   IntRegion r = aRegion;

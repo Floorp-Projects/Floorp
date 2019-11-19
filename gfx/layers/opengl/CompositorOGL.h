@@ -145,11 +145,10 @@ class CompositorOGL final : public Compositor {
   }
 
   // Returns a render target for the native layer.
-  // aInvalidRegion will be mutated to include existing invalid areas in the
-  // layer. aInvalidRegion is in window coordinates, i.e. in the same space
-  // as aNativeLayer->GetRect().
+  // aInvalidRegion is in window coordinates, i.e. in the same space as
+  // aNativeLayer->GetPosition().
   already_AddRefed<CompositingRenderTargetOGL> RenderTargetForNativeLayer(
-      NativeLayer* aNativeLayer, gfx::IntRegion& aInvalidRegion);
+      NativeLayer* aNativeLayer, const gfx::IntRegion& aInvalidRegion);
 
   already_AddRefed<CompositingRenderTarget> CreateRenderTarget(
       const gfx::IntRect& aRect, SurfaceInitMode aInit) override;
