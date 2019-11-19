@@ -49,6 +49,7 @@ import org.robolectric.shadows.ShadowToast
 
 @RunWith(AndroidJUnit4::class)
 class DownloadsFeatureTest {
+
     private val testDispatcher = TestCoroutineDispatcher()
 
     private lateinit var store: BrowserStore
