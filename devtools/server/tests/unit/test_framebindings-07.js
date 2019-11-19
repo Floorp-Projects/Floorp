@@ -23,7 +23,7 @@ add_task(
 
 function test_banana_environment() {
   gThreadFront.once("paused", async function(packet) {
-    const environment = await packet.frame.getEnvironment();
+    const environment = packet.frame.environment;
     Assert.equal(environment.type, "function");
 
     const parent = environment.parent;

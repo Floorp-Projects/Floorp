@@ -8,6 +8,7 @@ var Services = require("Services");
 exports.defaultThreadOptions = function() {
   return {
     autoBlackBox: false,
+    ignoreFrameEnvironment: true,
     pauseOnExceptions: Services.prefs.getBoolPref(
       "devtools.debugger.pause-on-exceptions"
     ),

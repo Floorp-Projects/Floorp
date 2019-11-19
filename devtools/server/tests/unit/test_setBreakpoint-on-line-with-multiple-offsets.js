@@ -17,14 +17,13 @@ add_task(
         Cu.evalInSandbox("f()", debuggee);
       }, threadFront);
       let why = packet.why;
-      let environment = await packet.frame.getEnvironment();
       Assert.equal(why.type, "breakpoint");
       Assert.equal(why.actors.length, 1);
       let frame = packet.frame;
       let where = frame.where;
       Assert.equal(where.actor, source.actor);
       Assert.equal(where.line, location.line);
-      let variables = environment.bindings.variables;
+      let variables = frame.environment.bindings.variables;
       Assert.equal(variables.i.value.type, "undefined");
 
       const location2 = { sourceUrl: sourceFront.url, line: 7 };
@@ -34,7 +33,6 @@ add_task(
         () => resume(threadFront),
         threadFront
       );
-      environment = await packet.frame.getEnvironment();
       why = packet.why;
       Assert.equal(why.type, "breakpoint");
       Assert.equal(why.actors.length, 1);
@@ -42,7 +40,7 @@ add_task(
       where = frame.where;
       Assert.equal(where.actor, source.actor);
       Assert.equal(where.line, location2.line);
-      variables = environment.bindings.variables;
+      variables = frame.environment.bindings.variables;
       Assert.equal(variables.i.value, 1);
 
       await resume(threadFront);

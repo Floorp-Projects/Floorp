@@ -27,13 +27,7 @@ add_task(
     while (timesBreakpointHit < 3) {
       await resume(threadFront);
       const packet = await waitForPause(threadFront);
-      await testAssertions(
-        packet,
-        debuggee,
-        source,
-        location,
-        timesBreakpointHit
-      );
+      testAssertions(packet, debuggee, source, location, timesBreakpointHit);
 
       timesBreakpointHit++;
     }
@@ -53,7 +47,7 @@ function evaluateTestCode(debuggee) {
       /* eslint-enable */
 }
 
-async function testAssertions(
+function testAssertions(
   packet,
   debuggee,
   source,
@@ -66,6 +60,8 @@ async function testAssertions(
   Assert.equal(packet.frame.where.column, location.column);
 
   Assert.equal(debuggee.acc, timesBreakpointHit);
-  const environment = await packet.frame.getEnvironment();
-  Assert.equal(environment.bindings.variables.i.value, timesBreakpointHit);
+  Assert.equal(
+    packet.frame.environment.bindings.variables.i.value,
+    timesBreakpointHit
+  );
 }
