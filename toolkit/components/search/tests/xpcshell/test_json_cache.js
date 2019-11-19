@@ -20,6 +20,9 @@ var cacheTemplate, appPluginsPath, profPlugins;
  * Test reading from search.json.mozlz4
  */
 add_task(async function setup() {
+  useTestEngineConfig("resource://test/data1/");
+  await AddonTestUtils.promiseStartupManager();
+
   let cacheTemplateFile = do_get_file("data/search.json");
   cacheTemplate = readJSONFile(cacheTemplateFile);
   cacheTemplate.buildID = getAppInfo().platformBuildID;
@@ -64,14 +67,17 @@ add_task(async function setup() {
 add_task(async function test_cached_engine_properties() {
   info("init search service");
 
+  const cacheFileWritten = promiseAfterCache();
   let result = await Services.search.init();
 
   info("init'd search service");
   Assert.ok(Components.isSuccessCode(result));
 
+  await cacheFileWritten;
+
   let engines = await Services.search.getEngines();
-  let engine = engines[0].QueryInterface(Ci.nsISearchEngine);
-  isSubObjectOf(EXPECTED_ENGINE.engine, engine);
+  // The extra engine is the second in the list.
+  isSubObjectOf(EXPECTED_ENGINE.engine, engines[2]);
 
   let engineFromSS = Services.search.getEngineByName(
     EXPECTED_ENGINE.engine.name
