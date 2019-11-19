@@ -144,7 +144,11 @@ static float GetSampleRateForAudioContext(bool aIsOffline, float aSampleRate) {
   if (aIsOffline || aSampleRate != 0.0) {
     return aSampleRate;
   } else {
-    return static_cast<float>(CubebUtils::PreferredSampleRate());
+    float rate = static_cast<float>(CubebUtils::PreferredSampleRate());
+    if (nsRFPService::IsResistFingerprintingEnabled()) {
+      return 44100.f;
+    }
+    return rate;
   }
 }
 
