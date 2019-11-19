@@ -334,6 +334,12 @@ uint32_t AudioNodeTrack::ComputedNumberOfChannels(uint32_t aInputChannelCount) {
   }
 }
 
+uint32_t AudioNodeTrack::NumberOfChannels() const {
+  MOZ_ASSERT(GraphImpl()->OnGraphThread());
+
+  return mNumberOfInputChannels;
+}
+
 class AudioNodeTrack::AdvanceAndResumeMessage final : public ControlMessage {
  public:
   AdvanceAndResumeMessage(AudioNodeTrack* aTrack, TrackTime aAdvance)
