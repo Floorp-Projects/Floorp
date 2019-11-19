@@ -32,6 +32,7 @@
 #include "util/Poison.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmStubs.h"
+#include "wasm/WasmTypes.h"
 
 #include "debugger/DebugAPI-inl.h"
 #include "vm/Stack-inl.h"
@@ -542,6 +543,16 @@ static int32_t CoerceInPlace_ToNumber(Value* rawVal) {
   return true;
 }
 
+static void* BoxValue_Anyref(Value* rawVal) {
+  JSContext* cx = TlsContext.get();
+  RootedValue val(cx, *rawVal);
+  RootedAnyRef result(cx, AnyRef::null());
+  if (!BoxAnyRef(cx, val, &result)) {
+    return nullptr;
+  }
+  return result.get().forCompiledCode();
+}
+
 static int32_t CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData,
                                       Value* argv) {
   JSContext* cx = CallingActivation()->cx();
@@ -570,6 +581,18 @@ static int32_t CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData,
         // No need to convert double-to-float for f32, it's done inline
         // in the wasm stub later.
         argv[i] = DoubleValue(dbl);
+        break;
+      }
+      case ValType::AnyRef: {
+        // Leave Object and Null alone, we will unbox inline.  All we need to do
+        // is convert other values to an Object representation.
+        if (!arg.isObjectOrNull()) {
+          RootedAnyRef result(cx, AnyRef::null());
+          if (!BoxAnyRef(cx, arg, &result)) {
+            return false;
+          }
+          argv[i].setObject(*result.get().asJSObject());
+        }
         break;
       }
       default: {
@@ -760,6 +783,9 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
     case SymbolicAddress::ToInt32:
       *abiType = Args_Int_Double;
       return FuncCast<int32_t(double)>(JS::ToInt32, *abiType);
+    case SymbolicAddress::BoxValue_Anyref:
+      *abiType = Args_General1;
+      return FuncCast(BoxValue_Anyref, *abiType);
     case SymbolicAddress::DivI64:
       *abiType = Args_General4;
       return FuncCast(DivI64, *abiType);
@@ -1038,6 +1064,7 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::CallImport_AnyRef:
     case SymbolicAddress::CoerceInPlace_ToInt32:  // GenerateImportJitExit
     case SymbolicAddress::CoerceInPlace_ToNumber:
+    case SymbolicAddress::BoxValue_Anyref:
 #if defined(JS_CODEGEN_MIPS32)
     case SymbolicAddress::js_jit_gAtomic64Lock:
 #endif
