@@ -291,6 +291,13 @@ class TouchBarHelper {
       layoutItems.appendElement(input);
     }
 
+    // Every input must be updated at least once so that all assets (titles,
+    // icons) are loaded. We keep track of which inputs haven't updated and
+    // run an update on them after the first location change.
+    this._inputsNotUpdated = new Set(Object.keys(kBuiltInInputs));
+    // This is a temporary workaround until bug 1596723 is resolved.
+    this._inputsNotUpdated.delete("SearchPopover");
+
     return layoutItems;
   }
 
@@ -351,6 +358,9 @@ class TouchBarHelper {
       kBuiltInInputs[inputName].localTitle = result; // Cache result.
       // Checking TouchBarHelper.window since this callback can fire after all windows are closed.
       if (TouchBarHelper.window) {
+        if (this._inputsNotUpdated) {
+          this._inputsNotUpdated.delete(inputName);
+        }
         gTouchBarUpdater.updateTouchBarInputs(TouchBarHelper.baseWindow, [
           item,
         ]);
@@ -362,21 +372,22 @@ class TouchBarHelper {
 
   /**
    * Fetches a specific Touch Bar Input by name and updates it on the Touch Bar.
-   * @param {string} inputName
-   *        A key to a value in the kBuiltInInputs object in this file.
-   * @param {...*} [otherInputs] (optional)
-   *        Additional keys to values in the kBuiltInInputs object in this file.
+   * @param {...*} inputNames
+   *        A key/keys to a value/values in the kBuiltInInputs object in this file.
    */
   _updateTouchBarInputs(...inputNames) {
-    if (!TouchBarHelper.window) {
+    if (!TouchBarHelper.window || !inputNames.length) {
       return;
     }
 
     let inputs = [];
-    for (let inputName of inputNames) {
+    for (let inputName of new Set(inputNames)) {
       let input = this.getTouchBarInput(inputName);
       if (!input) {
         continue;
+      }
+      if (this._inputsNotUpdated) {
+        this._inputsNotUpdated.delete(inputName);
       }
       inputs.push(input);
     }
@@ -414,7 +425,12 @@ class TouchBarHelper {
           .canGoBack;
         kBuiltInInputs.Forward.disabled = !TouchBarHelper.window.gBrowser
           .canGoForward;
-        this._updateTouchBarInputs("ReaderView", "Back", "Forward");
+        this._updateTouchBarInputs(
+          "ReaderView",
+          "Back",
+          "Forward",
+          ...this._inputsNotUpdated
+        );
         break;
       case "bookmark-icon-updated":
         data == "starred"

@@ -44,6 +44,14 @@ nsTouchBarUpdater::UpdateTouchBarInputs(nsIBaseWindow* aWindow,
         continue;
       }
 
+      NSTouchBarItemIdentifier newIdentifier = [TouchBarInput nativeIdentifierWithXPCOM:input];
+      // We don't support updating the Share scrubber since it's a special
+      // Apple-made component that behaves differently from the other inputs.
+      if ([newIdentifier isEqualToString:[TouchBarInput nativeIdentifierWithType:@"scrubber"
+                                                                         withKey:@"share"]]) {
+        continue;
+      }
+
       TouchBarInput* convertedInput = [[TouchBarInput alloc] initWithXPCOM:input];
       [(nsTouchBar*)cocoaWin.touchBar updateItem:convertedInput];
     }
