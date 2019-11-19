@@ -4,6 +4,9 @@
 
 package mozilla.components.concept.engine.prompt
 
+import android.os.Parcelable
+import kotlinx.android.parcel.Parcelize
+
 /**
  * Represents data to share for the Web Share and Web Share Target APIs.
  * https://w3c.github.io/web-share/
@@ -11,8 +14,9 @@ package mozilla.components.concept.engine.prompt
  * @property text Text for the share request.
  * @property url URL for the share request.
  */
+@Parcelize
 data class ShareData(
-    val title: String?,
-    val text: String?,
-    val url: String?
-)
+    val title: String? = null,
+    val text: String? = null,
+    val url: String? = null
+) : Parcelable
