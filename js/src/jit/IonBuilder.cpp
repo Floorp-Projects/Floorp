@@ -18,7 +18,6 @@
 #include "jit/BaselineInspector.h"
 #include "jit/CacheIR.h"
 #include "jit/Ion.h"
-#include "jit/IonControlFlow.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/JitSpewer.h"
 #include "jit/Lowering.h"
