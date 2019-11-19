@@ -38,9 +38,7 @@ let gShutdownResolver = null;
 class Worker {
   constructor(source) {
     if (gShutdown) {
-      Cu.reportError(
-        new Error("Can't create worker once shutdown has started")
-      );
+      Cu.reportError("Can't create worker once shutdown has started");
     }
     this.source = source;
     this.worker = null;
@@ -52,7 +50,7 @@ class Worker {
 
   async _execute(method, args = []) {
     if (gShutdown) {
-      return Promise.reject(new Error("Remote Settings has shut down."));
+      throw new Error("Remote Settings has shut down.");
     }
     // (Re)instantiate the worker if it was terminated.
     if (!this.worker) {
@@ -136,7 +134,7 @@ try {
         !RemoteSettingsWorker.worker ||
         !RemoteSettingsWorker.callbacks.size
       ) {
-        return Promise.resolve();
+        return null;
       }
       // Otherwise, return a promise that the worker will resolve.
       return new Promise(resolve => {
@@ -145,9 +143,7 @@ try {
     },
     {
       fetchState() {
-        return (
-          "Remaining: " + RemoteSettingsWorker.callbacks.size + " callbacks."
-        );
+        return `Remaining: ${RemoteSettingsWorker.callbacks.size} callbacks.`;
       },
     }
   );
