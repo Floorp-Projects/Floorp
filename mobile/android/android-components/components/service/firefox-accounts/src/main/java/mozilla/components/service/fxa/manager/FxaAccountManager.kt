@@ -794,20 +794,9 @@ open class FxaAccountManager(
                                 // we will disconnect users that hit transient network errors during
                                 // an authorization check.
                                 // See https://github.com/mozilla-mobile/android-components/issues/3347
-                                logger.info("Unable to recover from an auth problem, clearing state.")
+                                logger.info("Unable to recover from an auth problem, notifying observers.")
 
-                                // We perform similar actions to what we do on logout, except for destroying
-                                // the device. We don't have valid access tokens at this point to do that!
-
-                                // Clean up resources.
-                                profile = null
-                                account.close()
-                                // Delete persisted state.
-                                getAccountStorage().clear()
-                                // Re-initialize account.
-                                account = createAccount(serverConfig)
-
-                                // Finally, tell our listeners we're in a bad auth state.
+                                // Tell our listeners we're in a bad auth state.
                                 notifyObservers { onAuthenticationProblems() }
                             }
                         }

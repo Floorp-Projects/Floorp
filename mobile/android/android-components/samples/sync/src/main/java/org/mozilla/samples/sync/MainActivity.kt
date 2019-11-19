@@ -42,6 +42,7 @@ import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.toAuthType
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
@@ -88,6 +89,8 @@ class MainActivity :
         const val CLIENT_ID = "3c49430b43dfba77"
         const val REDIRECT_URL = "https://accounts.firefox.com/oauth/success/$CLIENT_ID"
     }
+
+    private val logger = Logger("SampleSync")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -237,6 +240,8 @@ class MainActivity :
         lateinit var lastAuthType: AuthType
 
         override fun onLoggedOut() {
+            logger.info("onLoggedOut")
+
             launch {
                 val txtView: TextView = findViewById(R.id.fxaStatusView)
                 txtView.text = getString(R.string.logged_out)
@@ -262,6 +267,8 @@ class MainActivity :
         }
 
         override fun onAuthenticationProblems() {
+            logger.info("onAuthenticationProblems")
+
             launch {
                 val txtView: TextView = findViewById(R.id.fxaStatusView)
                 txtView.text = getString(R.string.need_reauth)
@@ -271,6 +278,8 @@ class MainActivity :
         }
 
         override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
+            logger.info("onAuthenticated")
+
             launch {
                 lastAuthType = authType
 
@@ -292,6 +301,8 @@ class MainActivity :
         }
 
         override fun onProfileUpdated(profile: Profile) {
+            logger.info("onProfileUpdated")
+
             launch {
                 val txtView: TextView = findViewById(R.id.fxaStatusView)
                 txtView.text = getString(
@@ -305,12 +316,14 @@ class MainActivity :
 
     private val syncObserver = object : SyncStatusObserver {
         override fun onStarted() {
+            logger.info("onSyncStarted")
             CoroutineScope(Dispatchers.Main).launch {
                 syncStatus?.text = getString(R.string.syncing)
             }
         }
 
         override fun onIdle() {
+            logger.info("onSyncIdle")
             CoroutineScope(Dispatchers.Main).launch {
                 syncStatus?.text = getString(R.string.sync_idle)
 
@@ -344,6 +357,7 @@ class MainActivity :
         }
 
         override fun onError(error: Exception?) {
+            logger.error("onSyncError", error)
             CoroutineScope(Dispatchers.Main).launch {
                 syncStatus?.text = getString(R.string.sync_error, error)
             }

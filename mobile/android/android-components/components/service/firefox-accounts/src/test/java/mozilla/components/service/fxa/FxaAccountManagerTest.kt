@@ -1232,7 +1232,9 @@ class FxaAccountManagerTest {
         verify(accountObserver, times(1)).onAuthenticationProblems()
         assertTrue(manager.accountNeedsReauth())
         assertEquals(mockAccount, manager.authenticatedAccount())
-        assertNull(manager.accountProfile())
+
+        // Make sure profile is still available.
+        assertEquals(profile, manager.accountProfile())
 
         // Able to re-authenticate.
         reset(accountObserver)
