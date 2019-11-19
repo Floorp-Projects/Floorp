@@ -27,11 +27,13 @@ describe("<Triplets>", () => {
   let sendTelemetryStub;
   let onAction;
   let onHide;
+  let onBlockById;
 
   async function setup() {
     sandbox = sinon.createSandbox();
     sendTelemetryStub = sandbox.stub();
     onAction = sandbox.stub();
+    onBlockById = sandbox.stub();
     onHide = sandbox.stub();
 
     wrapper = mount(
@@ -42,6 +44,7 @@ describe("<Triplets>", () => {
         hideContainer={onHide}
         onAction={onAction}
         UTMTerm="trailhead-join-card"
+        onBlockById={onBlockById}
         sendUserActionTelemetry={sendTelemetryStub}
       />
     );
@@ -92,5 +95,21 @@ describe("<Triplets>", () => {
       message_id: CARDS[0].id,
       id: "TRAILHEAD",
     });
+  });
+  it("should not call blockById by default when a card button is clicked", () => {
+    wrapper
+      .find(OnboardingCard)
+      .find("button.onboardingButton")
+      .simulate("click");
+    assert.notCalled(onBlockById);
+  });
+  it("should call blockById when blockOnClick on message is true", () => {
+    CARDS[0].blockOnClick = true;
+    wrapper
+      .find(OnboardingCard)
+      .find("button.onboardingButton")
+      .simulate("click");
+    assert.calledOnce(onBlockById);
+    assert.calledWith(onBlockById, CARDS[0].id);
   });
 });

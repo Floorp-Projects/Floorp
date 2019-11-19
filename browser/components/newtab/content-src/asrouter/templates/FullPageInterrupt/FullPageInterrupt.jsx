@@ -66,6 +66,7 @@ export const FxCards = ({ cards, onCardAction, sendUserActionTelemetry }) => (
     {cards.map(card => (
       <OnboardingCard
         key={card.id}
+        message={card}
         className="trailheadCard"
         sendUserActionTelemetry={sendUserActionTelemetry}
         onAction={onCardAction}
@@ -106,7 +107,7 @@ export class FullPageInterrupt extends React.PureComponent {
     document.body.classList.remove("welcome");
   }
 
-  onCardAction(action) {
+  onCardAction(action, message) {
     let actionUpdates = {};
     const { flowParams, UTMTerm } = this.props;
 
@@ -124,6 +125,10 @@ export class FullPageInterrupt extends React.PureComponent {
     }
 
     this.props.onAction({ ...action, ...actionUpdates });
+    // Only block if message is in dynamic triplets experiment
+    if (message.blockOnClick) {
+      this.props.onBlockById(message.id);
+    }
     this.removeOverlay();
   }
 

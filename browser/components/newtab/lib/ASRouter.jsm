@@ -62,6 +62,7 @@ const TRAILHEAD_CONFIG = {
   INTERRUPTS_EXPERIMENT_PREF: "trailhead.firstrun.interruptsExperiment",
   TRIPLETS_ENROLLED_PREF: "trailhead.firstrun.tripletsEnrolled",
   DEFAULT_TRIPLET: "supercharge",
+  DYNAMIC_TRIPLET_BUNDLE_LENGTH: 3,
   BRANCHES: {
     interrupts: [
       ["modal_control"],
@@ -1214,7 +1215,7 @@ class _ASRouter {
     };
   }
 
-  _findAllMessages(candidateMessages, trigger) {
+  _findAllMessages(candidateMessages, trigger, ordered = false) {
     const messages = candidateMessages.filter(m =>
       this.isBelowFrequencyCaps(m)
     );
@@ -1225,6 +1226,7 @@ class _ASRouter {
       trigger,
       context,
       onError: this._handleTargetingError,
+      ordered,
     });
   }
 
@@ -1347,32 +1349,29 @@ class _ASRouter {
         }
       }
     } else {
-      while (bundledMessagesOfSameTemplate.length) {
-        // Find a message that matches the targeting context - or break if there are no matching messages
-        const message = await this._findMessage(
-          bundledMessagesOfSameTemplate,
-          trigger,
-          true
-        );
-        if (!message) {
-          /* istanbul ignore next */ // Code coverage in mochitests
-          break;
-        }
+      // Find all messages that matches the targeting context
+      const allMessages = await this._findAllMessages(
+        bundledMessagesOfSameTemplate,
+        trigger,
+        true
+      );
+
+      if (allMessages && allMessages.length) {
+        // Retrieve enough messages needed to fill a bundle
         // Only copy the content of the message (that's what the UI cares about)
-        // Also delete the message we picked so we don't pick it again
-        result.push({
-          content: message.content,
-          id: message.id,
-          order: message.order || 0,
-        });
-        bundledMessagesOfSameTemplate.splice(
-          bundledMessagesOfSameTemplate.findIndex(msg => msg.id === message.id),
-          1
+        result = result.concat(
+          allMessages.slice(0, bundleLength).map(message => ({
+            content: message.content,
+            id: message.id,
+            order: message.order || 0,
+            // This is used to determine whether to block when action is triggered
+            // Only block for dynamic triplets experiment and when there are more messages available
+            blockOnClick:
+              this.state.trailheadTriplet.startsWith("dynamic") &&
+              allMessages.length >
+                TRAILHEAD_CONFIG.DYNAMIC_TRIPLET_BUNDLE_LENGTH,
+          }))
         );
-        // Stop once we have enough messages to fill a bundle
-        if (result.length === bundleLength) {
-          break;
-        }
       }
     }
 
