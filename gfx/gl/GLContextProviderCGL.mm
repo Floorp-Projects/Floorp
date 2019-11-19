@@ -163,13 +163,11 @@ already_AddRefed<GLContext> GLContextProviderCGL::CreateForCompositorWidget(
 #endif
 
   const NSOpenGLPixelFormatAttribute* attribs;
-  SurfaceCaps caps = SurfaceCaps::ForRGBA();
   if (aWebRender) {
     MOZ_RELEASE_ASSERT(aForceAccelerated,
                        "At the moment, aForceAccelerated is always true if aWebRender is true. "
                        "If this changes, please update the code here.");
     attribs = kAttribs_accel_webrender;
-    caps.depth = true;
   } else {
     attribs = aForceAccelerated ? kAttribs_accel : kAttribs;
   }
@@ -178,7 +176,8 @@ already_AddRefed<GLContext> GLContextProviderCGL::CreateForCompositorWidget(
     return nullptr;
   }
 
-  RefPtr<GLContextCGL> glContext = new GLContextCGL(CreateContextFlags::NONE, caps, context, false);
+  RefPtr<GLContextCGL> glContext =
+      new GLContextCGL(CreateContextFlags::NONE, SurfaceCaps::ForRGBA(), context, false);
 
   if (!glContext->Init()) {
     glContext = nullptr;
