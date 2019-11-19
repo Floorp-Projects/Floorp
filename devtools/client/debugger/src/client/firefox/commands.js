@@ -328,10 +328,6 @@ function getProperties(thread: string, grip: Grip): Promise<*> {
 }
 
 async function getFrameScopes(frame: Frame): Promise<*> {
-  if (frame.scope) {
-    return frame.scope;
-  }
-
   const frameFront = lookupThreadFront(frame.thread).get(frame.id);
   return frameFront.getEnvironment();
 }

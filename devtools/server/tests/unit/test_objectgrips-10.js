@@ -22,7 +22,8 @@ add_task(
 
 function test_object_grip() {
   gThreadFront.once("paused", async function(packet) {
-    const person = packet.frame.environment.bindings.variables.person;
+    const environment = await packet.frame.getEnvironment();
+    const person = environment.bindings.variables.person;
 
     Assert.equal(person.value.class, "Object");
 
