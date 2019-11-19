@@ -1498,8 +1498,8 @@ package org.mozilla.geckoview {
   }
 
   public class WebPushController {
-    method @UiThread public void onPushEvent(@NonNull WebPushSubscription);
-    method @UiThread public void onPushEvent(@NonNull WebPushSubscription, @Nullable byte[]);
+    method @UiThread public void onPushEvent(@NonNull String);
+    method @UiThread public void onPushEvent(@NonNull String, @Nullable byte[]);
     method @UiThread public void onSubscriptionChanged(@NonNull WebPushSubscription);
     method @UiThread public void setDelegate(@Nullable WebPushDelegate);
   }
