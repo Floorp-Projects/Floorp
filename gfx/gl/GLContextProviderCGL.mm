@@ -128,13 +128,8 @@ static const NSOpenGLPixelFormatAttribute kAttribs_accel[] = {NSOpenGLPFAAcceler
                                                               NSOpenGLPFAAllowOfflineRenderers, 0};
 
 static const NSOpenGLPixelFormatAttribute kAttribs_accel_webrender[] = {
-    NSOpenGLPFAAccelerated,
-    NSOpenGLPFAAllowOfflineRenderers,
-    NSOpenGLPFAOpenGLProfile,
-    NSOpenGLProfileVersion3_2Core,
-    NSOpenGLPFADepthSize,
-    24,
-    0};
+    NSOpenGLPFAAccelerated, NSOpenGLPFAAllowOfflineRenderers, NSOpenGLPFAOpenGLProfile,
+    NSOpenGLProfileVersion3_2Core, 0};
 
 static NSOpenGLContext* CreateWithFormat(const NSOpenGLPixelFormatAttribute* attribs) {
   NSOpenGLPixelFormat* format = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
