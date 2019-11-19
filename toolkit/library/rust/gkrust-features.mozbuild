@@ -67,3 +67,6 @@ if CONFIG['FUZZING_INTERFACES']:
 
 if CONFIG['MOZ_WEBRTC']:
     gkrust_features += ['webrtc']
+
+if CONFIG['MOZ_FOGOTYPE']:
+    gkrust_features += ['fogotype']
