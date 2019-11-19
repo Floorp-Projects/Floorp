@@ -174,21 +174,6 @@ function unpinFromURLBar() {
 }
 
 async function startIssueServer() {
-  const BinaryInputStream = Components.Constructor(
-    "@mozilla.org/binaryinputstream;1",
-    "nsIBinaryInputStream",
-    "setInputStream"
-  );
-  function getRequestData(request) {
-    const body = new BinaryInputStream(request.bodyInputStream);
-    const bytes = [];
-    let avail;
-    while ((avail = body.available()) > 0) {
-      Array.prototype.push.apply(bytes, body.readByteArray(avail));
-    }
-    return String.fromCharCode.apply(null, bytes);
-  }
-
   const landingTemplate = await new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", NEW_ISSUE_PAGE);
@@ -211,15 +196,7 @@ async function startIssueServer() {
   server.registerPathHandler("/new", function(request, response) {
     response.setHeader("Content-Type", "text/html", false);
     response.setStatusLine(request.httpVersion, 200, "OK");
-    const postData = JSON.parse(getRequestData(request));
-    const url = postData.url;
-    const details = JSON.stringify(postData.details);
-    const label = JSON.stringify(postData.extra_labels);
-    const output = landingTemplate
-      .replace("$$URL$$", url)
-      .replace("$$DETAILS$$", details)
-      .replace("$$LABEL$$", label);
-    response.write(output);
+    response.write(landingTemplate);
   });
 
   server.start(-1);

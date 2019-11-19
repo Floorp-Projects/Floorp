@@ -10,6 +10,19 @@
 <script>
 "use strict";
 let preview = document.getElementById("screenshot-preview");
+const CONFIG = {
+  url: {
+    element: document.getElementById("url")
+  },
+  details: {
+    element: document.getElementById("details"),
+    toStringify: true
+  },
+  extra_labels: {
+    element: document.getElementById("label"),
+    toStringify: true
+  },
+};
 
 function getBlobAsDataURL(blob) {
   return new Promise((resolve, reject) => {
@@ -40,12 +53,33 @@ function sendReceivedEvent() {
   window.dispatchEvent(new CustomEvent("ScreenshotReceived", {bubbles: true}));
 }
 
+function prepareContent(toStringify, content) {
+  if (toStringify) {
+    return JSON.stringify(content)
+  }
+
+  return content;
+}
+
+function appendMessage(message) {
+  for (const key in CONFIG) {
+    if (key in message) {
+      const field = CONFIG[key];
+      field.element.innerText = prepareContent(field.toStringify, message[key]);
+    }
+  }
+}
+
 // eslint-disable-next-line mozilla/balanced-listeners
 window.addEventListener("message", function(event) {
-  if (event.data instanceof Blob) {
+  if (event.data.screenshot instanceof Blob) {
     preview.innerText = "Pass";
   }
 
-  getBlobAsDataURL(event.data).then(setPreviewBG).then(sendReceivedEvent);
+  if (event.data.message) {
+    appendMessage(event.data.message);
+  }
+
+  getBlobAsDataURL(event.data.screenshot).then(setPreviewBG).then(sendReceivedEvent);
 });
 </script>
