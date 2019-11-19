@@ -3,6 +3,3 @@ error: input must be an enum
   |
 3 | #[derive(Serialize_repr)]
   |          ^^^^^^^^^^^^^^
-
-error: aborting due to previous error
-

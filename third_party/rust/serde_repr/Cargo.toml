@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "serde_repr"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "Derive Serialize and Deserialize that delegates to the underlying repr of a C-like enum."
 documentation = "https://docs.rs/serde_repr"
@@ -24,17 +24,15 @@ repository = "https://github.com/dtolnay/serde-repr"
 [lib]
 proc-macro = true
 [dependencies.proc-macro2]
-version = "0.4"
+version = "1.0"
 
 [dependencies.quote]
-version = "0.6"
+version = "1.0"
 
 [dependencies.syn]
-version = "0.15"
-[dev-dependencies.compiletest]
-version = "0.3"
-features = ["stable"]
-package = "compiletest_rs"
+version = "1.0"
+[dev-dependencies.rustversion]
+version = "0.1"
 
 [dev-dependencies.serde]
 version = "1.0"
@@ -42,5 +40,5 @@ version = "1.0"
 [dev-dependencies.serde_json]
 version = "1.0"
 
-[dev-dependencies.version_check]
-version = "0.1"
+[dev-dependencies.trybuild]
+version = "1.0"

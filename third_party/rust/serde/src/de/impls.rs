@@ -578,6 +578,9 @@ macro_rules! forwarded_impl {
 #[cfg(all(feature = "std", de_boxed_c_str))]
 forwarded_impl!((), Box<CStr>, CString::into_boxed_c_str);
 
+#[cfg(core_reverse)]
+forwarded_impl!((T), Reverse<T>, Reverse);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct OptionVisitor<T> {
@@ -787,7 +790,8 @@ seq_impl!(
     BinaryHeap::clear,
     BinaryHeap::with_capacity(size_hint::cautious(seq.size_hint())),
     BinaryHeap::reserve,
-    BinaryHeap::push);
+    BinaryHeap::push
+);
 
 #[cfg(any(feature = "std", feature = "alloc"))]
 seq_impl!(
@@ -796,7 +800,8 @@ seq_impl!(
     BTreeSet::clear,
     BTreeSet::new(),
     nop_reserve,
-    BTreeSet::insert);
+    BTreeSet::insert
+);
 
 #[cfg(any(feature = "std", feature = "alloc"))]
 seq_impl!(
@@ -962,7 +967,7 @@ impl<'de, T> Deserialize<'de> for [T; 0] {
 }
 
 macro_rules! array_impls {
-    ($($len:expr => ($($n:tt $name:ident)+))+) => {
+    ($($len:expr => ($($n:tt)+))+) => {
         $(
             impl<'de, T> Visitor<'de> for ArrayVisitor<[T; $len]>
             where
@@ -979,14 +984,12 @@ macro_rules! array_impls {
                 where
                     A: SeqAccess<'de>,
                 {
-                    $(
-                        let $name = match try!(seq.next_element()) {
+                    Ok([$(
+                        match try!(seq.next_element()) {
                             Some(val) => val,
                             None => return Err(Error::invalid_length($n, &self)),
-                        };
-                    )+
-
-                    Ok([$($name),+])
+                        }
+                    ),+])
                 }
             }
 
@@ -1042,38 +1045,38 @@ macro_rules! array_impls {
 }
 
 array_impls! {
-    1 => (0 a)
-    2 => (0 a 1 b)
-    3 => (0 a 1 b 2 c)
-    4 => (0 a 1 b 2 c 3 d)
-    5 => (0 a 1 b 2 c 3 d 4 e)
-    6 => (0 a 1 b 2 c 3 d 4 e 5 f)
-    7 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g)
-    8 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h)
-    9 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i)
-    10 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j)
-    11 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k)
-    12 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l)
-    13 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m)
-    14 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n)
-    15 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n 14 o)
-    16 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n 14 o 15 p)
-    17 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n 14 o 15 p 16 q)
-    18 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n 14 o 15 p 16 q 17 r)
-    19 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n 14 o 15 p 16 q 17 r 18 s)
-    20 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n 14 o 15 p 16 q 17 r 18 s 19 t)
-    21 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n 14 o 15 p 16 q 17 r 18 s 19 t 20 u)
-    22 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n 14 o 15 p 16 q 17 r 18 s 19 t 20 u 21 v)
-    23 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n 14 o 15 p 16 q 17 r 18 s 19 t 20 u 21 v 22 w)
-    24 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n 14 o 15 p 16 q 17 r 18 s 19 t 20 u 21 v 22 w 23 x)
-    25 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n 14 o 15 p 16 q 17 r 18 s 19 t 20 u 21 v 22 w 23 x 24 y)
-    26 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n 14 o 15 p 16 q 17 r 18 s 19 t 20 u 21 v 22 w 23 x 24 y 25 z)
-    27 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n 14 o 15 p 16 q 17 r 18 s 19 t 20 u 21 v 22 w 23 x 24 y 25 z 26 aa)
-    28 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n 14 o 15 p 16 q 17 r 18 s 19 t 20 u 21 v 22 w 23 x 24 y 25 z 26 aa 27 ab)
-    29 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n 14 o 15 p 16 q 17 r 18 s 19 t 20 u 21 v 22 w 23 x 24 y 25 z 26 aa 27 ab 28 ac)
-    30 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n 14 o 15 p 16 q 17 r 18 s 19 t 20 u 21 v 22 w 23 x 24 y 25 z 26 aa 27 ab 28 ac 29 ad)
-    31 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n 14 o 15 p 16 q 17 r 18 s 19 t 20 u 21 v 22 w 23 x 24 y 25 z 26 aa 27 ab 28 ac 29 ad 30 ae)
-    32 => (0 a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8 i 9 j 10 k 11 l 12 m 13 n 14 o 15 p 16 q 17 r 18 s 19 t 20 u 21 v 22 w 23 x 24 y 25 z 26 aa 27 ab 28 ac 29 ad 30 ae 31 af)
+    1 => (0)
+    2 => (0 1)
+    3 => (0 1 2)
+    4 => (0 1 2 3)
+    5 => (0 1 2 3 4)
+    6 => (0 1 2 3 4 5)
+    7 => (0 1 2 3 4 5 6)
+    8 => (0 1 2 3 4 5 6 7)
+    9 => (0 1 2 3 4 5 6 7 8)
+    10 => (0 1 2 3 4 5 6 7 8 9)
+    11 => (0 1 2 3 4 5 6 7 8 9 10)
+    12 => (0 1 2 3 4 5 6 7 8 9 10 11)
+    13 => (0 1 2 3 4 5 6 7 8 9 10 11 12)
+    14 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13)
+    15 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14)
+    16 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15)
+    17 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)
+    18 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17)
+    19 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18)
+    20 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19)
+    21 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)
+    22 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21)
+    23 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22)
+    24 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23)
+    25 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24)
+    26 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25)
+    27 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26)
+    28 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27)
+    29 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28)
+    30 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29)
+    31 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30)
+    32 => (0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1577,6 +1580,24 @@ impl<'de> Visitor<'de> for PathBufVisitor {
     {
         Ok(From::from(v))
     }
+
+    fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
+        str::from_utf8(v)
+            .map(From::from)
+            .map_err(|_| Error::invalid_value(Unexpected::Bytes(v), &self))
+    }
+
+    fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
+        String::from_utf8(v)
+            .map(From::from)
+            .map_err(|e| Error::invalid_value(Unexpected::Bytes(&e.into_bytes()), &self))
+    }
 }
 
 #[cfg(feature = "std")]
@@ -1588,6 +1609,9 @@ impl<'de> Deserialize<'de> for PathBuf {
         deserializer.deserialize_string(PathBufVisitor)
     }
 }
+
+#[cfg(all(feature = "std", de_boxed_path))]
+forwarded_impl!((), Box<Path>, PathBuf::into_boxed_path);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2401,7 +2425,6 @@ macro_rules! nonzero_integers {
 }
 
 nonzero_integers! {
-    // Not including signed NonZeroI* since they might be removed
     NonZeroU8,
     NonZeroU16,
     NonZeroU32,
@@ -2409,11 +2432,25 @@ nonzero_integers! {
     NonZeroUsize,
 }
 
+#[cfg(num_nonzero_signed)]
+nonzero_integers! {
+    NonZeroI8,
+    NonZeroI16,
+    NonZeroI32,
+    NonZeroI64,
+    NonZeroIsize,
+}
+
 // Currently 128-bit integers do not work on Emscripten targets so we need an
 // additional `#[cfg]`
 serde_if_integer128! {
     nonzero_integers! {
         NonZeroU128,
+    }
+
+    #[cfg(num_nonzero_signed)]
+    nonzero_integers! {
+        NonZeroI128,
     }
 }
 
@@ -2541,4 +2578,32 @@ where
     {
         Deserialize::deserialize(deserializer).map(Wrapping)
     }
+}
+
+#[cfg(all(feature = "std", std_atomic))]
+macro_rules! atomic_impl {
+    ($($ty:ident)*) => {
+        $(
+            impl<'de> Deserialize<'de> for $ty {
+                fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+                where
+                    D: Deserializer<'de>,
+                {
+                    Deserialize::deserialize(deserializer).map(Self::new)
+                }
+            }
+        )*
+    };
+}
+
+#[cfg(all(feature = "std", std_atomic))]
+atomic_impl! {
+    AtomicBool
+    AtomicI8 AtomicI16 AtomicI32 AtomicIsize
+    AtomicU8 AtomicU16 AtomicU32 AtomicUsize
+}
+
+#[cfg(all(feature = "std", std_atomic64))]
+atomic_impl! {
+    AtomicI64 AtomicU64
 }

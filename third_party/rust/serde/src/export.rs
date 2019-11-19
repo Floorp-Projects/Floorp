@@ -9,7 +9,10 @@ pub use lib::result::Result::{self, Err, Ok};
 pub use self::string::from_utf8_lossy;
 
 #[cfg(any(feature = "alloc", feature = "std"))]
-pub use lib::Vec;
+pub use lib::{ToString, Vec};
+
+#[cfg(core_try_from)]
+pub use lib::convert::TryFrom;
 
 mod string {
     use lib::*;
