@@ -27,16 +27,23 @@ class ParserBase;
 // as well as controls the lifetime of parse nodes and other data
 // by controling the mark and reset of the LifoAlloc.
 struct MOZ_RAII ParseInfo {
+  enum Mode { Eager, Deferred };
+
   UsedNameTracker usedNames;
   LifoAllocScope& allocScope;
   FunctionTreeHolder treeHolder;
+  Mode mode;
 
   ParseInfo(JSContext* cx, LifoAllocScope& alloc)
       : usedNames(cx),
         allocScope(alloc),
-        treeHolder(cx, cx->realm()->behaviors().deferredParserAlloc()
-                           ? FunctionTreeHolder::Mode::Deferred
-                           : FunctionTreeHolder::Mode::Eager) {}
+        treeHolder(cx),
+        mode(cx->realm()->behaviors().deferredParserAlloc()
+                 ? ParseInfo::Mode::Deferred
+                 : ParseInfo::Mode::Eager) {}
+
+  bool isEager() { return mode == Mode::Eager; }
+  bool isDeferred() { return mode == Mode::Deferred; }
 };
 
 }  // namespace frontend
