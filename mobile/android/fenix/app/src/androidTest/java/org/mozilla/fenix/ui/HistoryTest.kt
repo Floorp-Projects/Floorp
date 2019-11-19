@@ -71,8 +71,8 @@ class HistoryTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
-        }.openHomeScreen {
         }.openThreeDotMenu {
+        }.openLibrary {
         }.openHistory {
             verifyHistoryMenuView()
             verifyVisitedTimeTitle()
@@ -88,8 +88,8 @@ class HistoryTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
-        }.openHomeScreen {
         }.openThreeDotMenu {
+        }.openLibrary {
         }.openHistory {
             openOverflowMenu()
             clickThreeDotMenuDelete()
@@ -98,14 +98,13 @@ class HistoryTest {
     }
 
     @Test
-    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun deleteAllHistoryTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
-        }.openHomeScreen {
         }.openThreeDotMenu {
+        }.openLibrary {
         }.openHistory {
             clickDeleteHistoryButton()
             verifyDeleteConfirmationMessage()
@@ -121,8 +120,8 @@ class HistoryTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
-        }.openHomeScreen {
         }.openThreeDotMenu {
+        }.openLibrary {
         }.openHistory {
             longTapSelectItem(firstWebPage.url)
         }
@@ -166,8 +165,8 @@ class HistoryTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
-        }.openHomeScreen {
         }.openThreeDotMenu {
+        }.openLibrary {
         }.openHistory {
             longTapSelectItem(firstWebPage.url)
             openActionBarOverflowOrOptionsMenu(activityTestRule.getActivity())
@@ -181,17 +180,18 @@ class HistoryTest {
     }
 
     @Test
-    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun deleteMultipleSelectionTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
-        }.openNavigationToolbar {
+        }.openHomeScreen {}
+
+        navigationToolbar {
         }.enterURLAndEnterToBrowser(secondWebPage.url) {
-        }.openHomeScreen {
         }.openThreeDotMenu {
+        }.openLibrary {
         }.openHistory {
             longTapSelectItem(firstWebPage.url)
             longTapSelectItem(secondWebPage.url)
@@ -211,8 +211,8 @@ class HistoryTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
-        }.openHomeScreen {
         }.openThreeDotMenu {
+        }.openLibrary {
         }.openHistory {
             longTapSelectItem(firstWebPage.url)
         }
@@ -237,8 +237,8 @@ class HistoryTest {
         }
     }
 
-    @Ignore("Test will be included after back navigation from History Fragment is sorted")
     @Test
+    @Ignore("Test will be included after back navigation from History Fragment is sorted")
     fun verifyCloseMenu() {
         homeScreen {
         }.openThreeDotMenu {

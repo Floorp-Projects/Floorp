@@ -15,10 +15,14 @@ import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
+import org.mozilla.fenix.helpers.ext.waitNotNull
 
 /**
  * Implementation of Robot Pattern for the history menu.
@@ -27,9 +31,25 @@ class HistoryRobot {
 
     fun verifyHistoryMenuView() = assertHistoryMenuView()
 
-    fun verifyEmptyHistoryView() = assertEmptyHistoryView()
+    fun verifyEmptyHistoryView() {
+        mDevice.waitNotNull(
+            Until.findObject(
+                By.text("No history here")
+            ),
+            waitingTime
+        )
+        assertEmptyHistoryView()
+    }
 
-    fun verifyVisitedTimeTitle() = assertVisitedTimeTitle()
+    fun verifyVisitedTimeTitle() {
+        mDevice.waitNotNull(
+            Until.findObject(
+                By.text("Last 24 hours")
+            ),
+            waitingTime
+        )
+        assertVisitedTimeTitle()
+    }
 
     fun verifyFirstTestPageTitle(title: String) = assertTestPageTitle(title)
 
@@ -40,6 +60,12 @@ class HistoryRobot {
     fun verifyHomeScreen() = HomeScreenRobot().verifyHomeScreen()
 
     fun openOverflowMenu() {
+        mDevice.waitNotNull(
+            Until.findObject(
+                By.res("org.mozilla.fenix.debug:id/overflow_menu")
+            ),
+            waitingTime
+        )
         overflowMenu().click()
     }
 
@@ -48,6 +74,7 @@ class HistoryRobot {
     }
 
     fun clickDeleteHistoryButton() {
+        mDevice.waitNotNull(Until.findObject(By.text("Delete history")), waitingTime)
         deleteAllHistoryButton().click()
     }
 
@@ -59,18 +86,18 @@ class HistoryRobot {
     }
 
     class Transition {
-        fun goBack(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
+        fun goBack(interact: HistoryRobot.() -> Unit): Transition {
             goBackButton().click()
 
             HistoryRobot().interact()
-            return HistoryRobot.Transition()
+            return Transition()
         }
 
-        fun closeMenu(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
+        fun closeMenu(interact: HistoryRobot.() -> Unit): Transition {
             closeButton().click()
 
             HistoryRobot().interact()
-            return HistoryRobot.Transition()
+            return Transition()
         }
     }
 }
