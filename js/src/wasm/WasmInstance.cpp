@@ -135,10 +135,11 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
         args[i].set(JS::CanonicalizedDoubleValue(*(double*)&argv[i]));
         break;
       case ValType::FuncRef:
-      case ValType::AnyRef: {
+        args[i].set(UnboxFuncRef(FuncRef::fromCompiledCode(*(void**)&argv[i])));
+        break;
+      case ValType::AnyRef:
         args[i].set(UnboxAnyRef(AnyRef::fromCompiledCode(*(void**)&argv[i])));
         break;
-      }
       case ValType::Ref:
         MOZ_CRASH("temporarily unsupported Ref type in callImport");
       case ValType::I64:
@@ -823,14 +824,12 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return -1;
   }
 
-  AnyRef ref = AnyRef::fromCompiledCode(value);
-
   switch (table.kind()) {
     case TableKind::AnyRef:
-      table.fillAnyRef(start, len, ref);
+      table.fillAnyRef(start, len, AnyRef::fromCompiledCode(value));
       break;
     case TableKind::FuncRef:
-      table.fillFuncRef(start, len, ref, cx);
+      table.fillFuncRef(start, len, FuncRef::fromCompiledCode(value), cx);
       break;
     case TableKind::AsmJS:
       MOZ_CRASH("not asm.js");
@@ -862,7 +861,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return AnyRef::invalid().forCompiledCode();
   }
 
-  return AnyRef::fromJSObject(fun).forCompiledCode();
+  return FuncRef::fromJSFunction(fun).forCompiledCode();
 }
 
 /* static */ uint32_t Instance::tableGrow(Instance* instance, void* initValue,
@@ -880,7 +879,8 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
         table.fillAnyRef(oldSize, delta, ref);
         break;
       case TableKind::FuncRef:
-        table.fillFuncRef(oldSize, delta, ref, TlsContext.get());
+        table.fillFuncRef(oldSize, delta, FuncRef::fromAnyRefUnchecked(ref),
+                          TlsContext.get());
         break;
       case TableKind::AsmJS:
         MOZ_CRASH("not asm.js");
@@ -901,14 +901,13 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return -1;
   }
 
-  AnyRef ref = AnyRef::fromCompiledCode(value);
-
   switch (table.kind()) {
     case TableKind::AnyRef:
-      table.fillAnyRef(index, 1, ref);
+      table.fillAnyRef(index, 1, AnyRef::fromCompiledCode(value));
       break;
     case TableKind::FuncRef:
-      table.fillFuncRef(index, 1, ref, TlsContext.get());
+      table.fillFuncRef(index, 1, FuncRef::fromCompiledCode(value),
+                        TlsContext.get());
       break;
     case TableKind::AsmJS:
       MOZ_CRASH("not asm.js");
@@ -932,13 +931,13 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   const MetadataTier& metadataTier = instance->metadata(tier);
   const FuncImportVector& funcImports = metadataTier.funcImports;
 
-  // If this is an import, we need to recover the original wrapper function to
-  // maintain referential equality between a re-exported function and
-  // 'ref.func'. The imported function object is stable across tiers, which is
+  // If this is an import, we need to recover the original function to maintain
+  // reference equality between a re-exported function and 'ref.func'. The
+  // identity of the imported function object is stable across tiers, which is
   // what we want.
   if (funcIndex < funcImports.length()) {
     FuncImportTls& import = instance->funcImportTls(funcImports[funcIndex]);
-    return AnyRef::fromJSObject(import.fun).forCompiledCode();
+    return FuncRef::fromJSFunction(import.fun).forCompiledCode();
   }
 
   RootedFunction fun(cx);
@@ -951,7 +950,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return AnyRef::invalid().forCompiledCode();
   }
 
-  return AnyRef::fromJSObject(fun).forCompiledCode();
+  return FuncRef::fromJSFunction(fun).forCompiledCode();
 }
 
 /* static */ void Instance::postBarrier(Instance* instance,
@@ -1760,7 +1759,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
     return true;
   }
 
-  // Note that we're not rooting the return value; we depend on UnboxAnyRef()
+  // Note that we're not rooting the return value; we depend on Unbox*Ref()
   // not allocating for this to be safe.  The constraint has been noted in
   // that function.
   void* retAddr = &exportArgs[0];
@@ -1791,6 +1790,10 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
       case ValType::Ref:
         MOZ_CRASH("temporarily unsupported Ref type in callExport");
       case ValType::FuncRef:
+        args.rval().set(
+            UnboxFuncRef(FuncRef::fromCompiledCode(*(void**)retAddr)));
+        DebugCodegen(DebugChannel::Function, "funcptr(%p)", *(void**)retAddr);
+        break;
       case ValType::AnyRef:
         args.rval().set(
             UnboxAnyRef(AnyRef::fromCompiledCode(*(void**)retAddr)));
