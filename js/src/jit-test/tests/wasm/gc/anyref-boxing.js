@@ -17,6 +17,7 @@ let VALUES = [null,
               ["abracadabra"],
               1337,
               13.37,
+              37n,
               "hi",
               Symbol("status"),
               () => 1337];
