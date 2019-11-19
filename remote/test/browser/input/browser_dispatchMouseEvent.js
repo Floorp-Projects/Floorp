@@ -52,5 +52,5 @@ add_task(async function testDispatchMouseEvent(client) {
     return this.clickPromise;
   });
 
-  info("All events detected");
+  ok(true, "All events detected");
 });

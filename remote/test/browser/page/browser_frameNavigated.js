@@ -20,7 +20,7 @@ add_task(async function(client) {
 
   // turn on navigation related events, such as DOMContentLoaded et al.
   await Page.enable();
-  info("Page domain has been enabled");
+  ok(true, "Page domain has been enabled");
 
   const { frameTree } = await Page.getFrameTree();
   ok(!!frameTree.frame, "getFrameTree exposes one frame");
@@ -35,7 +35,7 @@ add_task(async function(client) {
   // Save the given `promise` resolution into the `promises` global Set
   function recordPromise(name, promise) {
     promise.then(event => {
-      info(`Received Page.${name}`);
+      ok(true, `Received Page.${name}`);
       resolutions.set(name, event);
     });
     promises.add(promise);
@@ -54,7 +54,7 @@ add_task(async function(client) {
 
   const url = RANDOM_ID_DOC;
   const { frameId } = await Page.navigate({ url });
-  info("A new page has been loaded");
+  ok(true, "A new page has been loaded");
 
   ok(frameId, "Page.navigate returned a frameId");
   is(
@@ -72,7 +72,7 @@ add_task(async function(client) {
   recordPromises();
 
   await Page.reload();
-  info("The page has been reloaded");
+  ok(true, "The page has been reloaded");
 
   await assertNavigationEvents({ url, frameId });
 
@@ -88,7 +88,7 @@ add_task(async function(client) {
   recordPromises();
 
   await Page.navigate({ url });
-  info("The page has been reloaded");
+  ok(true, "The page has been reloaded");
 
   await assertNavigationEvents({ url, frameId });
 
