@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { prepareMessage } = require("devtools/client/webconsole/utils/messages");
+const {
+  prepareMessage,
+  getArrayTypeNames,
+} = require("devtools/client/webconsole/utils/messages");
 const {
   IdGenerator,
 } = require("devtools/client/webconsole/utils/id-generator");
@@ -119,9 +122,11 @@ function messageGetMatchingElements(id, cssSelectors) {
 function messageGetTableData(id, grip, dataType) {
   return async ({ dispatch, client }) => {
     const needEntries = ["Map", "WeakMap", "Set", "WeakSet"].includes(dataType);
+    const enumIndexedPropertiesOnly = getArrayTypeNames().includes(dataType);
+
     const results = await (needEntries
       ? client.fetchObjectEntries(grip)
-      : client.fetchObjectProperties(grip, dataType === "Array"));
+      : client.fetchObjectProperties(grip, enumIndexedPropertiesOnly));
 
     dispatch(messageUpdatePayload(id, results));
   };

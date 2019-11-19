@@ -170,6 +170,8 @@ const TYPED_ARRAY_CLASSES = [
   "Int32Array",
   "Float32Array",
   "Float64Array",
+  "BigInt64Array",
+  "BigUint64Array",
 ];
 
 /**

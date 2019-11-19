@@ -196,13 +196,13 @@ function transformConsoleAPICallPacket(packet) {
       break;
     case "table":
       const supportedClasses = [
-        "Array",
         "Object",
         "Map",
         "Set",
         "WeakMap",
         "WeakSet",
-      ];
+      ].concat(getArrayTypeNames());
+
       if (
         !Array.isArray(parameters) ||
         parameters.length === 0 ||
@@ -410,20 +410,29 @@ function transformEvaluationResultPacket(packet) {
 
 // Helpers
 function getRepeatId(message) {
-  return JSON.stringify({
-    frame: message.frame,
-    groupId: message.groupId,
-    indent: message.indent,
-    level: message.level,
-    messageText: message.messageText,
-    parameters: message.parameters,
-    source: message.source,
-    type: message.type,
-    userProvidedStyles: message.userProvidedStyles,
-    private: message.private,
-    stacktrace: message.stacktrace,
-    executionPoint: message.executionPoint,
-  });
+  return JSON.stringify(
+    {
+      frame: message.frame,
+      groupId: message.groupId,
+      indent: message.indent,
+      level: message.level,
+      messageText: message.messageText,
+      parameters: message.parameters,
+      source: message.source,
+      type: message.type,
+      userProvidedStyles: message.userProvidedStyles,
+      private: message.private,
+      stacktrace: message.stacktrace,
+      executionPoint: message.executionPoint,
+    },
+    function(_, value) {
+      if (typeof value === "bigint") {
+        return value.toString() + "n";
+      }
+
+      return value;
+    }
+  );
 }
 
 function convertCachedPacket(packet) {
@@ -663,8 +672,26 @@ function isTrackingProtectionMessage(message) {
   return category == "Tracking Protection";
 }
 
+function getArrayTypeNames() {
+  return [
+    "Array",
+    "Int8Array",
+    "Uint8Array",
+    "Int16Array",
+    "Uint16Array",
+    "Int32Array",
+    "Uint32Array",
+    "Float32Array",
+    "Float64Array",
+    "Uint8ClampedArray",
+    "BigInt64Array",
+    "BigUint64Array",
+  ];
+}
+
 module.exports = {
   createWarningGroupMessage,
+  getArrayTypeNames,
   getInitialMessageCountForViewport,
   getParentWarningGroupMessageId,
   getWarningGroupType,
