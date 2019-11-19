@@ -52,8 +52,6 @@ class GLContextCGL : public GLContext {
 
   virtual GLenum GetPreferredARGB32Format() const override;
 
-  virtual bool IsDoubleBuffered() const override;
-
   virtual bool SwapBuffers() override;
 
   virtual void GetWSIInfo(nsCString* const out) const override;

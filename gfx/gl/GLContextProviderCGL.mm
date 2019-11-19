@@ -45,25 +45,14 @@ class CGLLibrary {
       }
     }
 
-    const char* db = PR_GetEnv("MOZ_CGL_DB");
-    if (db) {
-      mUseDoubleBufferedWindows = *db != '0';
-    }
-
     mInitialized = true;
     return true;
-  }
-
-  bool UseDoubleBufferedWindows() const {
-    MOZ_ASSERT(mInitialized);
-    return mUseDoubleBufferedWindows;
   }
 
   const auto& Library() const { return mOGLLibrary; }
 
  private:
   bool mInitialized = false;
-  bool mUseDoubleBufferedWindows = true;
   PRLibrary* mOGLLibrary = nullptr;
 };
 
@@ -111,8 +100,6 @@ bool GLContextCGL::IsCurrentImpl() const { return [NSOpenGLContext currentContex
 
 GLenum GLContextCGL::GetPreferredARGB32Format() const { return LOCAL_GL_BGRA; }
 
-bool GLContextCGL::IsDoubleBuffered() const { return sCGLLibrary.UseDoubleBufferedWindows(); }
-
 bool GLContextCGL::SwapBuffers() {
   AUTO_PROFILER_LABEL("GLContextCGL::SwapBuffers", GRAPHICS);
 
@@ -135,22 +122,14 @@ already_AddRefed<GLContext> GLContextProviderCGL::CreateWrappingExisting(void*, 
   return nullptr;
 }
 
-static const NSOpenGLPixelFormatAttribute kAttribs_singleBuffered[] = {
-    NSOpenGLPFAAllowOfflineRenderers, 0};
+static const NSOpenGLPixelFormatAttribute kAttribs[] = {NSOpenGLPFAAllowOfflineRenderers, 0};
 
-static const NSOpenGLPixelFormatAttribute kAttribs_singleBuffered_accel[] = {
-    NSOpenGLPFAAccelerated, NSOpenGLPFAAllowOfflineRenderers, 0};
+static const NSOpenGLPixelFormatAttribute kAttribs_accel[] = {NSOpenGLPFAAccelerated,
+                                                              NSOpenGLPFAAllowOfflineRenderers, 0};
 
-static const NSOpenGLPixelFormatAttribute kAttribs_doubleBuffered[] = {
-    NSOpenGLPFAAllowOfflineRenderers, NSOpenGLPFADoubleBuffer, 0};
-
-static const NSOpenGLPixelFormatAttribute kAttribs_doubleBuffered_accel[] = {
-    NSOpenGLPFAAccelerated, NSOpenGLPFAAllowOfflineRenderers, NSOpenGLPFADoubleBuffer, 0};
-
-static const NSOpenGLPixelFormatAttribute kAttribs_doubleBuffered_accel_webrender[] = {
+static const NSOpenGLPixelFormatAttribute kAttribs_accel_webrender[] = {
     NSOpenGLPFAAccelerated,
     NSOpenGLPFAAllowOfflineRenderers,
-    NSOpenGLPFADoubleBuffer,
     NSOpenGLPFAOpenGLProfile,
     NSOpenGLProfileVersion3_2Core,
     NSOpenGLPFADepthSize,
@@ -190,18 +169,14 @@ already_AddRefed<GLContext> GLContextProviderCGL::CreateForCompositorWidget(
 
   const NSOpenGLPixelFormatAttribute* attribs;
   SurfaceCaps caps = SurfaceCaps::ForRGBA();
-  if (sCGLLibrary.UseDoubleBufferedWindows()) {
-    if (aWebRender) {
-      MOZ_RELEASE_ASSERT(aForceAccelerated,
-                         "At the moment, aForceAccelerated is always true if aWebRender is true. "
-                         "If this changes, please update the code here.");
-      attribs = kAttribs_doubleBuffered_accel_webrender;
-      caps.depth = true;
-    } else {
-      attribs = aForceAccelerated ? kAttribs_doubleBuffered_accel : kAttribs_doubleBuffered;
-    }
+  if (aWebRender) {
+    MOZ_RELEASE_ASSERT(aForceAccelerated,
+                       "At the moment, aForceAccelerated is always true if aWebRender is true. "
+                       "If this changes, please update the code here.");
+    attribs = kAttribs_accel_webrender;
+    caps.depth = true;
   } else {
-    attribs = aForceAccelerated ? kAttribs_singleBuffered_accel : kAttribs_singleBuffered;
+    attribs = aForceAccelerated ? kAttribs_accel : kAttribs;
   }
   NSOpenGLContext* context = CreateWithFormat(attribs);
   if (!context) {
