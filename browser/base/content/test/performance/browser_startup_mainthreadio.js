@@ -232,11 +232,6 @@ const startupPhases = {
       stat: 1,
     },
     {
-      path: "XCurProcD:blocklist.xml",
-      condition: WIN,
-      stat: 1,
-    },
-    {
       // bug 1534745
       path: "ProfD:cookies.sqlite-journal",
       condition: !LINUX,
