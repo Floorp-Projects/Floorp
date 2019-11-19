@@ -3965,7 +3965,8 @@ class Document : public nsINode,
   FlashClassification DocumentFlashClassification();
 
   // ResizeObserver usage.
-  void AddResizeObserver(ResizeObserver* aResizeObserver);
+  void AddResizeObserver(ResizeObserver&);
+  void RemoveResizeObserver(ResizeObserver&);
   void ScheduleResizeObserversNotification() const;
 
   // Getter for PermissionDelegateHandler. Performs lazy initialization.
