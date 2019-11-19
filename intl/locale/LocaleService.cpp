@@ -382,7 +382,7 @@ void LocaleService::FilterMatches(const nsTArray<nsCString>& aRequested,
       return foundMatch;
     };
 
-    Locale requestedLocale = Locale(requested);
+    Locale requestedLocale(requested);
     if (findRangeMatches(requestedLocale, true, false)) {
       HANDLE_STRATEGY;
     }
