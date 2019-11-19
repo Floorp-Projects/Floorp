@@ -1183,27 +1183,31 @@ class WrappedPtrOperations<JS::Value, Wrapper> {
 template <class Wrapper>
 class MutableWrappedPtrOperations<JS::Value, Wrapper>
     : public WrappedPtrOperations<JS::Value, Wrapper> {
-  JS::Value& value() { return static_cast<Wrapper*>(this)->get(); }
+ protected:
+  void set(const JS::Value& v) {
+    // Call Wrapper::set to trigger any barriers.
+    static_cast<Wrapper*>(this)->set(v);
+  }
 
  public:
-  void setNull() { value().setNull(); }
-  void setUndefined() { value().setUndefined(); }
-  void setInt32(int32_t i) { value().setInt32(i); }
-  void setDouble(double d) { value().setDouble(d); }
+  void setNull() { set(JS::NullValue()); }
+  void setUndefined() { set(JS::UndefinedValue()); }
+  void setInt32(int32_t i) { set(JS::Int32Value(i)); }
+  void setDouble(double d) { set(JS::DoubleValue(d)); }
   void setNaN() { setDouble(JS::GenericNaN()); }
-  void setBoolean(bool b) { value().setBoolean(b); }
-  void setMagic(JSWhyMagic why) { value().setMagic(why); }
-  void setNumber(uint32_t ui) { value().setNumber(ui); }
-  void setNumber(double d) { value().setNumber(d); }
-  void setString(JSString* str) { this->value().setString(str); }
-  void setSymbol(JS::Symbol* sym) { this->value().setSymbol(sym); }
-  void setBigInt(JS::BigInt* bi) { this->value().setBigInt(bi); }
-  void setObject(JSObject& obj) { this->value().setObject(obj); }
-  void setObjectOrNull(JSObject* arg) { this->value().setObjectOrNull(arg); }
-  void setPrivate(void* ptr) { this->value().setPrivate(ptr); }
-  void setPrivateUint32(uint32_t ui) { this->value().setPrivateUint32(ui); }
+  void setBoolean(bool b) { set(JS::BooleanValue(b)); }
+  void setMagic(JSWhyMagic why) { set(JS::MagicValue(why)); }
+  void setNumber(uint32_t ui) { set(JS::NumberValue(ui)); }
+  void setNumber(double d) { set(JS::NumberValue(d)); }
+  void setString(JSString* str) { set(JS::StringValue(str)); }
+  void setSymbol(JS::Symbol* sym) { set(JS::SymbolValue(sym)); }
+  void setBigInt(JS::BigInt* bi) { set(JS::BigIntValue(bi)); }
+  void setObject(JSObject& obj) { set(JS::ObjectValue(obj)); }
+  void setObjectOrNull(JSObject* arg) { set(JS::ObjectOrNullValue(arg)); }
+  void setPrivate(void* ptr) { set(JS::PrivateValue(ptr)); }
+  void setPrivateUint32(uint32_t ui) { set(JS::PrivateUint32Value(ui)); }
   void setPrivateGCThing(js::gc::Cell* cell) {
-    this->value().setPrivateGCThing(cell);
+    set(JS::PrivateGCThingValue(cell));
   }
 };
 
@@ -1213,53 +1217,27 @@ class MutableWrappedPtrOperations<JS::Value, Wrapper>
  */
 template <typename Wrapper>
 class HeapBase<JS::Value, Wrapper>
-    : public WrappedPtrOperations<JS::Value, Wrapper> {
-  void setBarriered(const JS::Value& v) {
-    *static_cast<JS::Heap<JS::Value>*>(this) = v;
-  }
-
+    : public MutableWrappedPtrOperations<JS::Value, Wrapper> {
  public:
-  void setNull() { setBarriered(JS::NullValue()); }
-  void setUndefined() { setBarriered(JS::UndefinedValue()); }
-  void setInt32(int32_t i) { setBarriered(JS::Int32Value(i)); }
-  void setDouble(double d) { setBarriered(JS::DoubleValue(d)); }
-  void setNaN() { setDouble(JS::GenericNaN()); }
-  void setBoolean(bool b) { setBarriered(JS::BooleanValue(b)); }
-  void setMagic(JSWhyMagic why) { setBarriered(JS::MagicValue(why)); }
-  void setString(JSString* str) { setBarriered(JS::StringValue(str)); }
-  void setSymbol(JS::Symbol* sym) { setBarriered(JS::SymbolValue(sym)); }
-  void setBigInt(JS::BigInt* bi) { setBarriered(JS::BigIntValue(bi)); }
-  void setObject(JSObject& obj) { setBarriered(JS::ObjectValue(obj)); }
-  void setPrivateGCThing(js::gc::Cell* cell) {
-    setBarriered(JS::PrivateGCThingValue(cell));
-  }
+  void setMagic(JSWhyMagic why) { this->set(JS::MagicValueUint32(why)); }
 
   void setNumber(uint32_t ui) {
     if (ui > JSVAL_INT_MAX) {
-      setDouble((double)ui);
+      this->setDouble((double)ui);
       return;
     }
 
-    setInt32((int32_t)ui);
+    this->setInt32((int32_t)ui);
   }
 
   void setNumber(double d) {
     int32_t i;
     if (mozilla::NumberIsInt32(d, &i)) {
-      setInt32(i);
+      this->setInt32(i);
       return;
     }
 
-    setDouble(d);
-  }
-
-  void setObjectOrNull(JSObject* arg) {
-    if (arg) {
-      setObject(*arg);
-      return;
-    }
-
-    setNull();
+    this->setDouble(d);
   }
 };
 
