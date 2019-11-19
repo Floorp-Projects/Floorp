@@ -3622,7 +3622,9 @@ Maybe<CSSIntSize> nsGlobalWindowOuter::GetRDMDeviceSize(
   // Bug 1576256: This does not work for cross-process subframes.
   const Document* topInProcessContentDoc =
       aDocument.GetTopLevelContentDocument();
-  BrowsingContext* bc = topInProcessContentDoc ? topInProcessContentDoc->GetBrowsingContext() : nullptr;
+  BrowsingContext* bc = topInProcessContentDoc
+                            ? topInProcessContentDoc->GetBrowsingContext()
+                            : nullptr;
   if (bc && bc->InRDMPane()) {
     nsIDocShell* docShell = topInProcessContentDoc->GetDocShell();
     if (docShell) {
@@ -4584,34 +4586,13 @@ void nsGlobalWindowOuter::MakeScriptDialogTitle(
   // Try to get a host from the running principal -- this will do the
   // right thing for javascript: and data: documents.
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aSubjectPrincipal->GetURI(getter_AddRefs(uri));
-  if (NS_SUCCEEDED(rv) && uri) {
-    // remove user:pass for privacy and spoof prevention
-
-    nsCOMPtr<nsIURIFixup> fixup(components::URIFixup::Service());
-    if (fixup) {
-      nsCOMPtr<nsIURI> fixedURI;
-      rv = fixup->CreateExposableURI(uri, getter_AddRefs(fixedURI));
-      if (NS_SUCCEEDED(rv) && fixedURI) {
-        nsAutoCString host;
-        fixedURI->GetHost(host);
-
-        if (!host.IsEmpty()) {
-          // if this URI has a host we'll show it. For other
-          // schemes (e.g. file:) we fall back to the localized
-          // generic string
-
-          nsAutoCString prepath;
-          fixedURI->GetDisplayPrePath(prepath);
-
-          NS_ConvertUTF8toUTF16 ucsPrePath(prepath);
-          nsContentUtils::FormatLocalizedString(
-              aOutTitle, nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
-              "ScriptDlgHeading", ucsPrePath);
-        }
-      }
-    }
+  nsAutoCString prepath;
+  nsresult rv = aSubjectPrincipal->GetExposablePrePath(prepath);
+  if (NS_SUCCEEDED(rv) && !prepath.IsEmpty()) {
+    NS_ConvertUTF8toUTF16 ucsPrePath(prepath);
+    nsContentUtils::FormatLocalizedString(
+        aOutTitle, nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
+        "ScriptDlgHeading", ucsPrePath);
   }
 
   if (aOutTitle.IsEmpty()) {
@@ -5595,13 +5576,9 @@ bool nsGlobalWindowOuter::SameLoadingURI(Document* aDoc, nsIChannel* aChannel) {
     // return false
     return false;
   }
-  nsCOMPtr<nsIURI> channelLoadingURI;
-  channelLoadingPrincipal->GetURI(getter_AddRefs(channelLoadingURI));
-  if (!channelLoadingURI) {
-    return false;
-  }
   bool equals = false;
-  nsresult rv = docURI->EqualsExceptRef(channelLoadingURI, &equals);
+  nsresult rv = channelLoadingPrincipal->EqualsURI(docURI, &equals);
+
   return NS_SUCCEEDED(rv) && equals;
 }
 
@@ -5879,14 +5856,11 @@ bool nsGlobalWindowOuter::GatherPostMessageData(
     return false;
   }
 
-  nsCOMPtr<nsIURI> callerOuterURI;
-  if (NS_FAILED(callerPrin->GetURI(getter_AddRefs(callerOuterURI)))) {
-    return false;
-  }
-
-  if (callerOuterURI) {
+  if (callerPrin->GetIsContentPrincipal()) {
     // if the principal has a URI, use that to generate the origin
-    nsContentUtils::GetUTFOrigin(callerPrin, aOrigin);
+    nsAutoCString asciiOrigin;
+    callerPrin->GetOrigin(asciiOrigin);
+    aOrigin = NS_ConvertUTF8toUTF16(asciiOrigin);
   } else if (callerInnerWin) {
     if (!*aCallerDocumentURI) {
       return false;
@@ -5963,13 +5937,11 @@ bool nsGlobalWindowOuter::GetPrincipalForPostMessage(
       auto principal = BasePrincipal::Cast(GetPrincipal());
 
       if (attrs != principal->OriginAttributesRef()) {
-        nsCOMPtr<nsIURI> targetURI;
         nsAutoCString targetURL;
         nsAutoCString sourceOrigin;
         nsAutoCString targetOrigin;
 
-        if (NS_FAILED(principal->GetURI(getter_AddRefs(targetURI))) ||
-            NS_FAILED(targetURI->GetAsciiSpec(targetURL)) ||
+        if (NS_FAILED(principal->GetAsciiSpec(targetURL)) ||
             NS_FAILED(principal->GetOrigin(targetOrigin)) ||
             NS_FAILED(aSubjectPrincipal.GetOrigin(sourceOrigin))) {
           NS_WARNING("Failed to get source and target origins");
