@@ -27,6 +27,7 @@
 
 // For manipulation of the X event queue
 #include <X11/Xlib.h>
+#include <poll.h>
 #include <gdk/gdkx.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -151,13 +152,11 @@ bool nsRetrievalContextX11::WaitForX11Content() {
     // to the clipboard widget.  Wait until either the operation completes, or
     // we hit our timeout.  All other X events remain queued.
 
-    int select_result;
+    int poll_result;
 
-    int cnumber = ConnectionNumber(xDisplay);
-    fd_set select_set;
-    FD_ZERO(&select_set);
-    FD_SET(cnumber, &select_set);
-    ++cnumber;
+    struct pollfd pfd;
+    pfd.fd = ConnectionNumber(xDisplay);
+    pfd.events = POLLIN;
     TimeStamp start = TimeStamp::Now();
 
     do {
@@ -176,12 +175,11 @@ bool nsRetrievalContextX11::WaitForX11Content() {
       }
 
       TimeStamp now = TimeStamp::Now();
-      struct timeval tv;
-      tv.tv_sec = 0;
-      tv.tv_usec = std::max<int32_t>(
-          0, kClipboardTimeout - (now - start).ToMicroseconds());
-      select_result = select(cnumber, &select_set, nullptr, nullptr, &tv);
-    } while (select_result == 1 || (select_result == -1 && errno == EINTR));
+      int timeout = std::max<int>(
+          0, kClipboardTimeout / 1000 - (now - start).ToMilliseconds());
+      poll_result = poll(&pfd, 1, timeout);
+    } while ((poll_result == 1 && (pfd.revents & (POLLHUP | POLLERR)) == 0) ||
+             (poll_result == -1 && errno == EINTR));
   }
 #ifdef DEBUG_CLIPBOARD
   printf("exceeded clipboard timeout\n");
