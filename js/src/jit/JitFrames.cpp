@@ -1109,9 +1109,8 @@ static void TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame) {
   }
 
   if (frame.isExitFrameLayout<DirectWasmJitCallFrameLayout>()) {
-    // Nothing needs to be traced here at the moment -- the arguments to the
-    // callee are traced by the callee, and the inlined caller does not push
-    // anything else.
+    // Nothing to do: we can't have object arguments (yet!) and the callee
+    // is traced elsewhere.
     return;
   }
 

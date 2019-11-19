@@ -104,6 +104,17 @@ void AnyRef::trace(JSTracer* trc) {
   }
 }
 
+class WasmValueBox : public NativeObject {
+  static const unsigned VALUE_SLOT = 0;
+
+ public:
+  static const unsigned RESERVED_SLOTS = 1;
+  static const JSClass class_;
+
+  static WasmValueBox* create(JSContext* cx, HandleValue val);
+  Value value() const { return getFixedSlot(VALUE_SLOT); }
+};
+
 const JSClass WasmValueBox::class_ = {
     "WasmValueBox", JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS)};
 
@@ -137,11 +148,6 @@ bool wasm::BoxAnyRef(JSContext* cx, HandleValue val, MutableHandleAnyRef addr) {
   return true;
 }
 
-JSObject* wasm::BoxBoxableValue(JSContext* cx, HandleValue val) {
-  MOZ_ASSERT(!val.isNull() && !val.isObject());
-  return WasmValueBox::create(cx, val);
-}
-
 Value wasm::UnboxAnyRef(AnyRef val) {
   // If UnboxAnyRef needs to allocate then we need a more complicated API, and
   // we need to root the value in the callers, see comments in callExport().
@@ -154,14 +160,6 @@ Value wasm::UnboxAnyRef(AnyRef val) {
   } else {
     result.setObjectOrNull(obj);
   }
-  return result;
-}
-
-Value wasm::UnboxFuncRef(FuncRef val) {
-  JSFunction* fn = val.asJSFunction();
-  Value result;
-  MOZ_ASSERT_IF(fn, fn->is<JSFunction>());
-  result.setObjectOrNull(fn);
   return result;
 }
 
@@ -723,9 +721,6 @@ bool DebugFrame::updateReturnJSValue() {
       cachedReturnJSValue_ = ObjectOrNullValue((JSObject*)resultRef_);
       break;
     case ValType::FuncRef:
-      cachedReturnJSValue_ =
-          UnboxFuncRef(FuncRef::fromAnyRefUnchecked(resultAnyRef_));
-      break;
     case ValType::AnyRef:
       cachedReturnJSValue_ = UnboxAnyRef(resultAnyRef_);
       break;
