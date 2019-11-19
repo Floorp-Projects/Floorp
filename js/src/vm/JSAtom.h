@@ -27,8 +27,7 @@ class PropertyName;
 } /* namespace js */
 
 /* Well-known predefined C strings. */
-#define DECLARE_PROTO_STR(name, init, clasp) \
-  extern const char js_##name##_str[];
+#define DECLARE_PROTO_STR(name, clasp) extern const char js_##name##_str[];
 JS_FOR_EACH_PROTOTYPE(DECLARE_PROTO_STR)
 #undef DECLARE_PROTO_STR
 
