@@ -38,25 +38,12 @@ class nsNotifyAddrListener : public nsINetworkLinkService,
                                    mozilla::SHA1Sum& sha1);
 
  protected:
-  class ChangeEvent : public mozilla::Runnable {
-   public:
-    NS_DECL_NSIRUNNABLE
-    ChangeEvent(nsINetworkLinkService* aService, const char* aEventID)
-        : Runnable("nsNotifyAddrListener::ChangeEvent"),
-          mService(aService),
-          mEventID(aEventID) {}
-
-   private:
-    nsCOMPtr<nsINetworkLinkService> mService;
-    const char* mEventID;
-  };
-
   bool mLinkUp;
   bool mStatusKnown;
   bool mCheckAttempted;
 
   nsresult Shutdown(void);
-  nsresult SendEvent(const char* aEventID);
+  nsresult NotifyObservers(const char* aTopic, const char* aData);
 
   DWORD CheckAdaptersAddresses(void);
 
