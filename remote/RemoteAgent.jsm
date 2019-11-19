@@ -36,7 +36,7 @@ class RemoteAgentClass {
     return !!this.server && !this.server.isStopped();
   }
 
-  async listen(address) {
+  async listen(url) {
     if (!Preferences.get(ENABLED, false)) {
       throw new Error("Remote agent is disabled by preference");
     }
@@ -46,11 +46,11 @@ class RemoteAgentClass {
       );
     }
 
-    if (!(address instanceof Ci.nsIURI)) {
-      throw new TypeError(`Expected nsIURI: ${address}`);
+    if (!(url instanceof Ci.nsIURI)) {
+      url = Services.io.newURI(url);
     }
 
-    let { host, port } = address;
+    let { host, port } = url;
     if (Preferences.get(FORCE_LOCAL) && !LOOPBACKS.includes(host)) {
       throw new Error("Restricted to loopback devices");
     }
