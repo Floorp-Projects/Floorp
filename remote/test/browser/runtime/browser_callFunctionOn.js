@@ -19,7 +19,7 @@ add_task(async function(client) {
 async function testRuntimeEnable({ Runtime }) {
   // Enable watching for new execution context
   await Runtime.enable();
-  ok(true, "Runtime domain has been enabled");
+  info("Runtime domain has been enabled");
 
   // Calling Runtime.enable will emit executionContextCreated for the existing contexts
   const { context } = await Runtime.executionContextCreated();
