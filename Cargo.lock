@@ -1146,6 +1146,10 @@ version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "fog"
+version = "0.1.0"
+
+[[package]]
 name = "foreign-types"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1422,6 +1426,7 @@ dependencies = [
  "cubeb-sys 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "encoding_glue 0.1.0",
  "env_logger 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "fog 0.1.0",
  "geckoservo 0.0.1",
  "gkrust_utils 0.1.0",
  "jsrust_shared 0.1.0",
