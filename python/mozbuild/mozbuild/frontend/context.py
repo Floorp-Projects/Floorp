@@ -310,6 +310,16 @@ class InitializedDefines(ContextDerivedValue, OrderedDict):
 class BaseCompileFlags(ContextDerivedValue, dict):
     def __init__(self, context):
         self._context = context
+
+        klass_name = self.__class__.__name__
+        for k, v, build_vars in self.flag_variables:
+            if not isinstance(k, unicode):
+                raise ValueError('Flag %s for %s is not a string'
+                                 % (k, klass_name))
+            if not isinstance(build_vars, tuple):
+                raise ValueError('Build variables `%s` for %s in %s is not a tuple'
+                                 % (build_vars, k, klass_name))
+
         self._known_keys = set(k for k, v, _ in self.flag_variables)
 
         # Providing defaults here doesn't play well with multiple templates
