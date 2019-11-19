@@ -4,7 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioSegment.h"
-
 #include "AudioMixer.h"
 #include "AudioChannelFormat.h"
 #include <speex/speex_resampler.h>
@@ -31,15 +30,12 @@ void AudioSegment::ApplyVolume(float aVolume) {
   }
 }
 
-void AudioSegment::ResampleChunks(SpeexResamplerState* aResampler,
+void AudioSegment::ResampleChunks(nsAutoRef<SpeexResamplerState>& aResampler,
+                                  uint32_t* aResamplerChannelCount,
                                   uint32_t aInRate, uint32_t aOutRate) {
   if (mChunks.IsEmpty()) {
     return;
   }
-
-  MOZ_ASSERT(
-      aResampler || IsNull(),
-      "We can only be here without a resampler if this segment is null.");
 
   AudioSampleFormat format = AUDIO_FORMAT_SILENCE;
   for (ChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
@@ -54,10 +50,10 @@ void AudioSegment::ResampleChunks(SpeexResamplerState* aResampler,
     // the chunks duration.
     case AUDIO_FORMAT_SILENCE:
     case AUDIO_FORMAT_FLOAT32:
-      Resample<float>(aResampler, aInRate, aOutRate);
+      Resample<float>(aResampler, aResamplerChannelCount, aInRate, aOutRate);
       break;
     case AUDIO_FORMAT_S16:
-      Resample<int16_t>(aResampler, aInRate, aOutRate);
+      Resample<int16_t>(aResampler, aResamplerChannelCount, aInRate, aOutRate);
       break;
     default:
       MOZ_ASSERT(false);
