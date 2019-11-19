@@ -177,12 +177,7 @@ already_AddRefed<GLContext> GLContextProviderCGL::CreateForCompositorWidget(
     MOZ_ASSERT(false);
     return nullptr;
   }
-  return CreateForWindow(aCompositorWidget->RealWidget(), aWebRender, aForceAccelerated);
-}
 
-already_AddRefed<GLContext> GLContextProviderCGL::CreateForWindow(nsIWidget* aWidget,
-                                                                  bool aWebRender,
-                                                                  bool aForceAccelerated) {
   if (!sCGLLibrary.EnsureInitialized()) {
     return nullptr;
   }

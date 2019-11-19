@@ -463,13 +463,6 @@ already_AddRefed<GLContext> GLContextProviderWGL::CreateForCompositorWidget(
       .forget();
 }
 
-already_AddRefed<GLContext> GLContextProviderWGL::CreateForWindow(
-    nsIWidget* aWidget, bool aWebRender, bool aForceAccelerated) {
-  return CreateForWidget((HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW),
-                         aWebRender, aForceAccelerated)
-      .forget();
-}
-
 /*static*/
 already_AddRefed<GLContext> GLContextProviderWGL::CreateHeadless(
     const CreateContextFlags flags, nsACString* const out_failureId) {
