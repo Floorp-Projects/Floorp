@@ -29,6 +29,7 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/SHA1.h"
 #include "mozilla/Base64.h"
+#include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "nsNetworkLinkService.h"
 #include "../../base/IPv6Utils.h"
@@ -1011,35 +1012,37 @@ void nsNetworkLinkService::OnIPConfigChanged() {
   }
   mNetworkChangeTime = TimeStamp::Now();
 
-  SendEvent(NS_NETWORK_LINK_DATA_CHANGED);
+  NotifyObservers(NS_NETWORK_LINK_TOPIC, NS_NETWORK_LINK_DATA_CHANGED);
 }
 
 void nsNetworkLinkService::OnNetworkIdChanged() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  SendEvent(NS_NETWORK_LINK_DATA_NETWORKID_CHANGED);
+  NotifyObservers(NS_NETWORK_ID_CHANGED_TOPIC, nullptr);
 }
 
 void nsNetworkLinkService::OnReachabilityChanged() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mStatusKnown) {
-    SendEvent(NS_NETWORK_LINK_DATA_UNKNOWN);
+    NotifyObservers(NS_NETWORK_LINK_TOPIC, NS_NETWORK_LINK_DATA_UNKNOWN);
     return;
   }
 
-  SendEvent(mLinkUp ? NS_NETWORK_LINK_DATA_UP : NS_NETWORK_LINK_DATA_DOWN);
+  NotifyObservers(NS_NETWORK_LINK_TOPIC,
+                  mLinkUp ? NS_NETWORK_LINK_DATA_UP : NS_NETWORK_LINK_DATA_DOWN);
 }
 
-void nsNetworkLinkService::SendEvent(const char* aEventID) {
+void nsNetworkLinkService::NotifyObservers(const char* aTopic, const char* aData) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  LOG(("SendEvent: network is '%s'\n", aEventID));
+  LOG(("nsNetworkLinkService::NotifyObservers: topic:%s data:%s\n", aTopic, aData ? aData : ""));
 
-  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
+  nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+
   if (observerService) {
-    observerService->NotifyObservers(static_cast<nsINetworkLinkService*>(this),
-                                     NS_NETWORK_LINK_TOPIC, NS_ConvertASCIItoUTF16(aEventID).get());
+    observerService->NotifyObservers(static_cast<nsINetworkLinkService*>(this), aTopic,
+                                     aData ? NS_ConvertASCIItoUTF16(aData).get() : nullptr);
   }
 }
 
