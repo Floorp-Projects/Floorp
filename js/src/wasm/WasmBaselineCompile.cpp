@@ -1804,10 +1804,8 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
                                    uint32_t bytes, Register temp) {
     MOZ_ASSERT(destHeight < srcHeight);
     MOZ_ASSERT(bytes % sizeof(uint32_t) == 0);
-    uint32_t destOffset = stackOffset(destHeight);
-    uint32_t srcOffset = stackOffset(srcHeight);
-    MOZ_ASSERT(destOffset >= bytes);
-    MOZ_ASSERT(srcOffset >= bytes);
+    uint32_t destOffset = stackOffset(destHeight) + bytes;
+    uint32_t srcOffset = stackOffset(srcHeight) + bytes;
     while (bytes >= sizeof(intptr_t)) {
       destOffset -= sizeof(intptr_t);
       srcOffset -= sizeof(intptr_t);
