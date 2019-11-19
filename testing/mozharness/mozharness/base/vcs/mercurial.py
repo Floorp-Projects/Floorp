@@ -7,21 +7,26 @@
 """Mercurial VCS support.
 """
 
+import hashlib
 import os
 import re
 import subprocess
-from collections import namedtuple
-from urlparse import urlsplit
-import hashlib
-
 import sys
-sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.dirname(sys.path[0]))))
+from collections import namedtuple
+try:
+    from urlparse import urlsplit
+except ImportError:
+    from urllib.parse import urlsplit
 
 import mozharness
 from mozharness.base.errors import HgErrorList, VCSException
 from mozharness.base.log import LogMixin, OutputParser
 from mozharness.base.script import ScriptMixin
 from mozharness.base.transfer import TransferMixin
+
+sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.dirname(
+                sys.path[0]))))
+
 
 external_tools_path = os.path.join(
     os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__))),
@@ -48,7 +53,8 @@ class RepositoryUpdateRevisionParser(OutputParser):
         if m:
             self.revision = m.group(1)
 
-        return super(RepositoryUpdateRevisionParser, self).parse_single_line(line)
+        return super(RepositoryUpdateRevisionParser,
+                     self).parse_single_line(line)
 
 
 def make_hg_url(hg_host, repo_path, protocol='http', revision=None,
@@ -67,7 +73,8 @@ def make_hg_url(hg_host, repo_path, protocol='http', revision=None,
             return '/'.join([p.strip('/') for p in [repo, 'rev', revision]])
     else:
         assert revision
-        return '/'.join([p.strip('/') for p in [repo, 'raw-file', revision, filename]])
+        return '/'.join([p.strip('/')
+                         for p in [repo, 'raw-file', revision, filename]])
 
 
 class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
@@ -136,7 +143,7 @@ class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
         """Returns the current version of hg, as a tuple of
         (major, minor, build)"""
         ver_string = self.get_output_from_command(self.hg + ['-q', 'version'])
-        match = re.search("\(version ([0-9.]+)\)", ver_string)
+        match = re.search(r"\(version ([0-9.]+)\)", ver_string)
         if match:
             bits = match.group(1).split(".")
             if len(bits) < 3:
@@ -164,7 +171,9 @@ class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
         if revision is not None:
             cmd = self.hg + ['update', '-C', '-r', revision]
             if self.run_command(cmd, cwd=dest, error_list=HgErrorList):
-                raise VCSException("Unable to update %s to %s!" % (dest, revision))
+                raise VCSException(
+                    "Unable to update %s to %s!" %
+                    (dest, revision))
         else:
             # Check & switch branch
             local_branch = self.get_branch_from_path(dest)
@@ -282,7 +291,9 @@ class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
 
     def out(self, src, remote, **kwargs):
         """Check for outgoing changesets present in a repo"""
-        self.info("Checking for outgoing changesets from %s to %s." % (src, remote))
+        self.info(
+            "Checking for outgoing changesets from %s to %s." %
+            (src, remote))
         cmd = self.hg + ['-q', 'out', '--template', '{node} {branches}\n']
         cmd.extend(self.common_args(**kwargs))
         cmd.append(remote)
@@ -351,14 +362,17 @@ class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
         # step :(
 
         if not rev and not branch:
-            self.warning('did not specify revision or branch; assuming "default"')
+            self.warning(
+                'did not specify revision or branch; assuming "default"')
             branch = 'default'
 
-        share_base = c.get('vcs_share_base') or os.environ.get('HG_SHARE_BASE_DIR')
+        share_base = c.get('vcs_share_base') or os.environ.get(
+            'HG_SHARE_BASE_DIR')
         if share_base and c.get('use_vcs_unique_share'):
             # Bug 1277041 - update migration scripts to support robustcheckout
             # fake a share but don't really share
-            share_base = os.path.join(share_base, hashlib.md5(dest).hexdigest())
+            share_base = os.path.join(
+                share_base, hashlib.md5(dest).hexdigest())
 
         # We require shared storage is configured because it guarantees we
         # only have 1 local copy of logical repo stores.
@@ -367,11 +381,13 @@ class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
                                'refusing to operate sub-optimally')
 
         if not self.robustcheckout_path:
-            raise VCSException('could not find the robustcheckout Mercurial extension')
+            raise VCSException(
+                'could not find the robustcheckout Mercurial extension')
 
         # Log HG version and install info to aid debugging.
         self.run_command(self.hg + ['--version'])
-        self.run_command(self.hg + ['debuginstall', '--config=ui.username=worker'])
+        self.run_command(self.hg +
+                         ['debuginstall', '--config=ui.username=worker'])
 
         args = self.hg + [
             '--config', 'extensions.robustcheckout=%s' % self.robustcheckout_path,
@@ -399,7 +415,9 @@ class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
 
     def cleanOutgoingRevs(self, reponame, remote, username, sshKey):
         # TODO retry
-        self.info("Wiping outgoing local changes from %s to %s." % (reponame, remote))
+        self.info(
+            "Wiping outgoing local changes from %s to %s." %
+            (reponame, remote))
         outgoingRevs = self.out(src=reponame, remote=remote,
                                 ssh_username=username, ssh_key=sshKey)
         for r in reversed(outgoingRevs):
@@ -431,7 +449,7 @@ class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
             #
             # So we grab the first element ("28537" in this case) and then pull
             # out the 'date' field.
-            pushid = contents.iterkeys().next()
+            pushid = next(contents.keys())
             self.info('Pushid is: %s' % pushid)
             pushdate = contents[pushid]['date']
             self.info('Pushdate is: %s' % pushdate)
