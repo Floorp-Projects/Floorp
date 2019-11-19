@@ -482,25 +482,23 @@ class alignas(8) Value {
     MOZ_ASSERT(magicUint32() == payload);
   }
 
-  bool setNumber(uint32_t ui) {
+  void setNumber(uint32_t ui) {
     if (ui > JSVAL_INT_MAX) {
       setDouble((double)ui);
-      return false;
-    } else {
-      setInt32((int32_t)ui);
-      return true;
+      return;
     }
+
+    setInt32((int32_t)ui);
   }
 
-  bool setNumber(double d) {
+  void setNumber(double d) {
     int32_t i;
     if (mozilla::NumberIsInt32(d, &i)) {
       setInt32(i);
-      return true;
+      return;
     }
 
     setDouble(d);
-    return false;
   }
 
   void setObjectOrNull(JSObject* arg) {
@@ -1195,8 +1193,8 @@ class MutableWrappedPtrOperations<JS::Value, Wrapper>
   void setNaN() { setDouble(JS::GenericNaN()); }
   void setBoolean(bool b) { value().setBoolean(b); }
   void setMagic(JSWhyMagic why) { value().setMagic(why); }
-  bool setNumber(uint32_t ui) { return value().setNumber(ui); }
-  bool setNumber(double d) { return value().setNumber(d); }
+  void setNumber(uint32_t ui) { value().setNumber(ui); }
+  void setNumber(double d) { value().setNumber(d); }
   void setString(JSString* str) { this->value().setString(str); }
   void setSymbol(JS::Symbol* sym) { this->value().setSymbol(sym); }
   void setBigInt(JS::BigInt* bi) { this->value().setBigInt(bi); }
@@ -1236,33 +1234,32 @@ class HeapBase<JS::Value, Wrapper>
     setBarriered(JS::PrivateGCThingValue(cell));
   }
 
-  bool setNumber(uint32_t ui) {
+  void setNumber(uint32_t ui) {
     if (ui > JSVAL_INT_MAX) {
       setDouble((double)ui);
-      return false;
-    } else {
-      setInt32((int32_t)ui);
-      return true;
+      return;
     }
+
+    setInt32((int32_t)ui);
   }
 
-  bool setNumber(double d) {
+  void setNumber(double d) {
     int32_t i;
     if (mozilla::NumberIsInt32(d, &i)) {
       setInt32(i);
-      return true;
+      return;
     }
 
     setDouble(d);
-    return false;
   }
 
   void setObjectOrNull(JSObject* arg) {
     if (arg) {
       setObject(*arg);
-    } else {
-      setNull();
+      return;
     }
+
+    setNull();
   }
 };
 
