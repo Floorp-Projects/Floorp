@@ -251,7 +251,7 @@ class nsWindow final : public nsBaseWidget {
   void DispatchContextMenuEventFromMouseEvent(uint16_t domButton,
                                               GdkEventButton* aEvent);
 #ifdef MOZ_WAYLAND
-  void WaylandEGLSurfaceForceRedraw();
+  void MaybeResumeCompositor();
 #endif
 
  public:
@@ -445,7 +445,7 @@ class nsWindow final : public nsBaseWidget {
   // Can we access X?
   bool mIsX11Display;
 #ifdef MOZ_WAYLAND
-  bool mNeedsUpdatingEGLSurface;
+  bool mNeedsCompositorResume;
   bool mCompositorInitiallyPaused;
 #endif
   bool mWindowScaleFactorChanged;
