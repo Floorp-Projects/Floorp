@@ -159,6 +159,7 @@ var ClientIDImpl = {
    * If no Client ID is found, we generate a new one.
    */
   async _doLoadClientID() {
+    this._log.trace(`_doLoadClientID`);
     // If there's a removal in progress, let's wait for it
     await this._removeClientIdTask;
 
@@ -169,6 +170,7 @@ var ClientIDImpl = {
         this._wasCanary = state.wasCanary;
       }
       if (state && this.updateClientID(state.clientID)) {
+        this._log.trace(`_doLoadClientID: Client id loaded from state.`);
         return this._clientID;
       }
     } catch (e) {
@@ -185,6 +187,7 @@ var ClientIDImpl = {
     // result in orphaning.
     await this._saveClientIdTask;
 
+    this._log.trace("_doLoadClientID: New client id loaded and persisted.");
     return this._clientID;
   },
 
@@ -194,6 +197,7 @@ var ClientIDImpl = {
    * @return {Promise} A promise resolved when the client ID is saved to disk.
    */
   async _saveClientID() {
+    this._log.trace(`_saveClientID`);
     let obj = { clientID: this._clientID };
     // We detected a canary client ID when resetting, storing this as a flag
     if (AppConstants.platform == "android" && this._wasCanary) {
@@ -291,6 +295,7 @@ var ClientIDImpl = {
   },
 
   async setClientID(id) {
+    this._log.trace("setClientID");
     if (!this.updateClientID(id)) {
       throw new Error("Invalid client ID: " + id);
     }
@@ -301,6 +306,8 @@ var ClientIDImpl = {
   },
 
   async _doRemoveClientID() {
+    this._log.trace("_doRemoveClientID");
+
     // Reset stored id.
     this._clientID = null;
     this._clientIDHash = null;
@@ -308,11 +315,15 @@ var ClientIDImpl = {
     // Clear the client id from the preference cache.
     Services.prefs.clearUserPref(PREF_CACHED_CLIENTID);
 
+    // If there is a save in progress, wait for it to complete.
+    await this._saveClientIdTask;
+
     // Remove the client id from disk
     await OS.File.remove(gStateFilePath, { ignoreAbsent: true });
   },
 
   async resetClientID() {
+    this._log.trace("resetClientID");
     let oldClientId = this._clientID;
 
     // Wait for the removal.
