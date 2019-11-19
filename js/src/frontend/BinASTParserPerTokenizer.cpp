@@ -92,7 +92,7 @@ BinASTParserPerTokenizer<Tok>::BinASTParserPerTokenizer(
       lazyScript_(cx, lazyScript),
       handler_(cx, parseInfo.allocScope.alloc(), nullptr, SourceKind::Binary),
       variableDeclarationKind_(VariableDeclarationKind::Var),
-      treeHolder_(cx, FunctionTreeHolder::Mode::Eager) {
+      treeHolder_(cx) {
   MOZ_ASSERT_IF(lazyScript_, lazyScript_->isBinAST());
 }
 
