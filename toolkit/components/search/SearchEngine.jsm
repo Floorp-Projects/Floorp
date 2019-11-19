@@ -1681,6 +1681,9 @@ SearchEngine.prototype = {
     if (json.extensionID) {
       this._extensionID = json.extensionID;
     }
+    if (json.extensionLocale) {
+      this._locale = json.extensionLocale;
+    }
     for (let i = 0; i < json._urls.length; ++i) {
       let url = json._urls[i];
       let engineURL = new EngineURL(
@@ -1738,6 +1741,9 @@ SearchEngine.prototype = {
     }
     if (this._extensionID) {
       json.extensionID = this._extensionID;
+    }
+    if (this._locale) {
+      json.extensionLocale = this._locale;
     }
 
     return json;

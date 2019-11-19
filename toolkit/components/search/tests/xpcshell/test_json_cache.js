@@ -39,8 +39,13 @@ add_task(async function setup() {
   let engineTemplateFile = do_get_file("data/engine.xml");
   engineTemplateFile.copyTo(engineFile.parent, "test-search-engine.xml");
 
-  // The list of visibleDefaultEngines needs to match or the cache will be ignored.
-  cacheTemplate.visibleDefaultEngines = getDefaultEngineList(false);
+  if (gModernConfig) {
+    cacheTemplate.version = 2;
+    delete cacheTemplate.visibleDefaultEngines;
+  } else {
+    // The list of visibleDefaultEngines needs to match or the cache will be ignored.
+    cacheTemplate.visibleDefaultEngines = getDefaultEngineList(false);
+  }
 
   // Since the above code is querying directly from list.json,
   // we need to override the values in the esr case.
@@ -119,7 +124,14 @@ add_task(async function test_cache_write() {
 
   let cacheData = await promiseCacheData();
   info("Check search.json.mozlz4");
-  isSubObjectOf(cacheTemplate, cacheData);
+  isSubObjectOf(cacheTemplate, cacheData, (prop, value) => {
+    // Skip items that are to do with icons for extensions, as we can't
+    // control the uuid.
+    if (prop != "_iconURL" && prop != "{}") {
+      return false;
+    }
+    return value.startsWith("moz-extension://");
+  });
 });
 
 var EXPECTED_ENGINE = {
