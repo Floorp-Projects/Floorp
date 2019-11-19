@@ -1,0 +1,34 @@
+[
+  {
+    "input": [["fr_FR"], ["fr-FR"]],
+    "output": ["fr-FR"]
+  },
+  {
+    "input": [["fr_fr"], ["fr-fr"]],
+    "output": ["fr-fr"]
+  },
+  {
+    "input": [["fr_Fr"], ["fr-fR"]],
+    "output": ["fr-fR"]
+  },
+  {
+    "input": [["fr_lAtN_fr"], ["fr-Latn-FR"]],
+    "output": ["fr-Latn-FR"]
+  },
+  {
+    "input": [["fr_FR"], ["fr_FR"]],
+    "output": ["fr_FR"]
+  },
+  {
+    "input": [["fr-FR"], ["fr_FR"]],
+    "output": ["fr_FR"]
+  },
+  {
+    "input": [["fr_Cyrl_FR_macos"], ["fr_Cyrl_fr-macos"]],
+    "output": ["fr_Cyrl_fr-macos"]
+  },
+  {
+    "input": [["fr_Cyrl_FR_mAcOs"], ["fr_Cyrl_fr-MaCoS"]],
+    "output": ["fr_Cyrl_fr-MaCoS"]
+  }
+]

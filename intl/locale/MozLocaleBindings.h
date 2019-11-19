@@ -6,6 +6,7 @@
 #define mozilla_intl_locale_MozLocaleBindings_h
 
 #include "mozilla/intl/unic_langid_ffi_generated.h"
+#include "mozilla/intl/fluent_langneg_ffi_generated.h"
 
 #include "mozilla/UniquePtr.h"
 
