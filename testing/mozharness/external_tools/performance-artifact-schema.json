@@ -40,6 +40,12 @@
                     "title": "Subtest name",
                     "type": "string"
                 },
+                "publicName": {
+                    "title": "Public subtest name",
+                    "description": "Allows renaming test's name, without breaking existing performance data series",
+                    "maxLength": 30,
+                    "type": "string"
+                },
                 "value": {
                     "description": "Summary value for subtest",
                     "title": "Subtest value",
@@ -102,6 +108,12 @@
             "properties": {
                 "name": {
                     "title": "Suite name",
+                    "type": "string"
+                },
+                "publicName": {
+                    "title": "Public suite name",
+                    "description": "Allows renaming suite's name, without breaking existing performance data series",
+                    "maxLength": 30,
                     "type": "string"
                 },
                 "extraOptions": {
