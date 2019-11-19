@@ -33,8 +33,6 @@ extern mozilla::LazyLogModule gAudioChannelLog;
 namespace mozilla {
 namespace dom {
 
-static uint8_t gWebAudioOutputKey;
-
 class OfflineDestinationNodeEngine final : public AudioNodeEngine {
  public:
   explicit OfflineDestinationNodeEngine(AudioDestinationNode* aNode)
@@ -342,7 +340,8 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
 
   mTrack = AudioNodeTrack::Create(aContext, engine, kTrackFlags, graph);
   mTrack->AddMainThreadListener(this);
-  mTrack->AddAudioOutput(&gWebAudioOutputKey);
+  // null key is fine: only one output per mTrack
+  mTrack->AddAudioOutput(nullptr);
 
   if (aAllowedToStart) {
     graph->NotifyWhenGraphStarted(mTrack);
@@ -511,7 +510,7 @@ AudioDestinationNode::WindowVolumeChanged(float aVolume, bool aMuted) {
       this, aVolume, aMuted ? "true" : "false");
 
   float volume = aMuted ? 0.0 : aVolume;
-  mTrack->SetAudioOutputVolume(&gWebAudioOutputKey, volume);
+  mTrack->SetAudioOutputVolume(nullptr, volume);
 
   AudioChannelService::AudibleState audible =
       volume > 0.0 ? AudioChannelService::AudibleState::eAudible
