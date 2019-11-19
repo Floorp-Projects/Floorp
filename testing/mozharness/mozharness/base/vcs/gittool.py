@@ -1,10 +1,13 @@
 import os
 import re
-import urlparse
+try:
+    import urlparse
+except ImportError:
+    import urllib.parse as urlparse
 
-from mozharness.base.script import ScriptMixin
-from mozharness.base.log import LogMixin, OutputParser
 from mozharness.base.errors import GitErrorList, VCSException
+from mozharness.base.log import LogMixin, OutputParser
+from mozharness.base.script import ScriptMixin
 
 
 class GittoolParser(OutputParser):
@@ -59,7 +62,9 @@ class GittoolVCS(ScriptMixin, LogMixin):
         revision = c.get('revision')
         branch = c.get('branch')
         clean = c.get('clean')
-        share_base = c.get('vcs_share_base', os.environ.get("GIT_SHARE_BASE_DIR", None))
+        share_base = c.get(
+            'vcs_share_base', os.environ.get(
+                "GIT_SHARE_BASE_DIR", None))
         env = {'PATH': os.environ.get('PATH')}
         env.update(c.get('env', {}))
         if self._is_windows():
@@ -88,7 +93,11 @@ class GittoolVCS(ScriptMixin, LogMixin):
         cmd.extend([repo, dest])
         parser = GittoolParser(config=self.config, log_obj=self.log_obj,
                                error_list=GitErrorList)
-        retval = self.run_command(cmd, error_list=GitErrorList, env=env, output_parser=parser)
+        retval = self.run_command(
+            cmd,
+            error_list=GitErrorList,
+            env=env,
+            output_parser=parser)
 
         if retval != 0:
             raise VCSException("Unable to checkout")

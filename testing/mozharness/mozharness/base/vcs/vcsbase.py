@@ -7,17 +7,22 @@
 """Generic VCS support.
 """
 
-from copy import deepcopy
 import os
 import sys
-
-sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.dirname(sys.path[0]))))
+from copy import deepcopy
 
 from mozharness.base.errors import VCSException
 from mozharness.base.log import FATAL
 from mozharness.base.script import BaseScript
-from mozharness.base.vcs.mercurial import MercurialVCS
 from mozharness.base.vcs.gittool import GittoolVCS
+from mozharness.base.vcs.mercurial import MercurialVCS
+
+sys.path.insert(
+    1, os.path.dirname(
+        os.path.dirname(
+            os.path.dirname(
+                sys.path[0]))))
+
 
 # Update this with supported VCS name : VCS object
 VCS_DICT = {
@@ -31,6 +36,7 @@ class VCSMixin(object):
     """Basic VCS methods that are vcs-agnostic.
     The vcs_class handles all the vcs-specific tasks.
     """
+
     def query_dest(self, kwargs):
         if 'dest' in kwargs:
             return kwargs['dest']
@@ -50,7 +56,9 @@ class VCSMixin(object):
             raise
 
     def _get_vcs_class(self, vcs):
-        vcs = vcs or self.config.get('default_vcs', getattr(self, 'default_vcs', None))
+        vcs = vcs or self.config.get(
+            'default_vcs', getattr(
+                self, 'default_vcs', None))
         vcs_class = VCS_DICT.get(vcs)
         return vcs_class
 
@@ -66,7 +74,9 @@ class VCSMixin(object):
         if 'dest' not in kwargs:
             kwargs['dest'] = self.query_dest(kwargs)
         if 'vcs_share_base' not in kwargs:
-            kwargs['vcs_share_base'] = c.get('%s_share_base' % vcs, c.get('vcs_share_base'))
+            kwargs['vcs_share_base'] = c.get(
+                '%s_share_base' %
+                vcs, c.get('vcs_share_base'))
         vcs_obj = vcs_class(
             log_obj=self.log_obj,
             config=self.config,
