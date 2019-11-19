@@ -46,13 +46,13 @@ internal sealed class MimeType(
             val intent = Intent(ACTION_IMAGE_CAPTURE).withDeviceSupport(context) ?: return null
 
             val photoFile = try {
-                val filename = SimpleDateFormat("yyyy-MM-dd HH.mm.ss", US).format(Date())
+                val filename = SimpleDateFormat("yyyy-MM-ddHH.mm.ss", US).format(Date())
                 createTempFile(filename, ".jpg", context.cacheDir)
             } catch (e: IOException) {
                 return null
             }
 
-            val photoUri = getUri(context, "${context.packageName}.fileprovider", photoFile)
+            val photoUri = getUri(context, "${context.packageName}.feature.prompts.fileprovider", photoFile)
 
             return intent.apply { putExtra(EXTRA_OUTPUT, photoUri) }.addCaptureHint(request.captureMode)
         }

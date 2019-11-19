@@ -108,7 +108,6 @@ class AbstractFetchDownloadServiceTest {
     fun `verifyDownload sets the download to failed if it is not complete`() = runBlocking {
         val downloadState = DownloadState(
             url = "mozilla.org/mozilla.txt",
-            filePath = "mozilla.txt",
             contentLength = 50L
         )
 
@@ -130,7 +129,6 @@ class AbstractFetchDownloadServiceTest {
     fun `verifyDownload does NOT set the download to failed if it is paused`() = runBlocking {
         val downloadState = DownloadState(
             url = "mozilla.org/mozilla.txt",
-            filePath = "mozilla.txt",
             contentLength = 50L
         )
 
@@ -152,7 +150,6 @@ class AbstractFetchDownloadServiceTest {
     fun `verifyDownload does NOT set the download to failed if it is complete`() = runBlocking {
         val downloadState = DownloadState(
             url = "mozilla.org/mozilla.txt",
-            filePath = "mozilla.txt",
             contentLength = 50L
         )
 
@@ -174,7 +171,6 @@ class AbstractFetchDownloadServiceTest {
     fun `verifyDownload does NOT set the download to failed if it is cancelled`() = runBlocking {
         val downloadState = DownloadState(
             url = "mozilla.org/mozilla.txt",
-            filePath = "mozilla.txt",
             contentLength = 50L
         )
 
@@ -196,7 +192,6 @@ class AbstractFetchDownloadServiceTest {
     fun `verifyDownload does NOT set the download to failed if it is status COMPLETED`() = runBlocking {
         val downloadState = DownloadState(
             url = "mozilla.org/mozilla.txt",
-            filePath = "mozilla.txt",
             contentLength = 50L
         )
 

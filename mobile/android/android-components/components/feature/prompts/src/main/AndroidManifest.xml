@@ -5,13 +5,13 @@
     package="mozilla.components.feature.prompts">
     <application>
         <provider
-            android:authorities="${applicationId}.fileprovider"
-            android:name="androidx.core.content.FileProvider"
+            android:name="mozilla.components.feature.prompts.provider.FileProvider"
+            android:authorities="${applicationId}.feature.prompts.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
+                android:resource="@xml/feature_prompts_file_paths" />
         </provider>
     </application>
 </manifest>
