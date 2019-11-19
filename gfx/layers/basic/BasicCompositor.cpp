@@ -1039,9 +1039,6 @@ Maybe<gfx::IntRect> BasicCompositor::BeginRenderingToNativeLayer(
   if (!dt) {
     return Nothing();
   }
-  invalidRelativeToLayer = aNativeLayer->CurrentSurfaceInvalidRegion();
-  mInvalidRegion = invalidRelativeToLayer.MovedBy(rect.TopLeft());
-  MOZ_RELEASE_ASSERT(!mInvalidRegion.IsEmpty());
   mCurrentNativeLayer = aNativeLayer;
   IntRegion clearRegion;
   clearRegion.Sub(mInvalidRegion, aOpaqueRegion);
