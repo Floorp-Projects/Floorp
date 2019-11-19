@@ -521,7 +521,8 @@ STATIC_ASSERT_ANYREF_IS_JSOBJECT;  // Strings are currently boxed
 // by inverting branches and using fewer registers.
 
 // Unbox an anyref in src (clobbering src in the process) and then re-box it as
-// a Value in *dst.
+// a Value in *dst.  See the definition of AnyRef for a discussion of pointer
+// representation.
 static void UnboxAnyrefIntoValue(MacroAssembler& masm, Register tls,
                                  Register src, const Address& dst,
                                  Register scratch) {
@@ -552,6 +553,7 @@ static void UnboxAnyrefIntoValue(MacroAssembler& masm, Register tls,
 }
 
 // Unbox an anyref in src and then re-box it as a Value in dst.
+// See the definition of AnyRef for a discussion of pointer representation.
 static void UnboxAnyrefIntoValueReg(MacroAssembler& masm, Register tls,
                                     Register src, ValueOperand dst,
                                     Register scratch) {
@@ -588,6 +590,7 @@ static void UnboxAnyrefIntoValueReg(MacroAssembler& masm, Register tls,
 }
 
 // Box the Value in src as an anyref in dest.  src and dest must not overlap.
+// See the definition of AnyRef for a discussion of pointer representation.
 static void BoxValueIntoAnyref(MacroAssembler& masm, ValueOperand src,
                                Register dest, Label* oolConvert) {
   Label nullValue, objectValue, done;
@@ -1222,6 +1225,11 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
 #endif
   }
 
+  // Note, if code here pushes a reference value into the frame for its own
+  // purposes (and not just as an argument to the callee) then the frame must be
+  // traced in TraceJitExitFrame, see the case there for DirectWasmJitCall.  The
+  // callee will trace values that are pushed as arguments, however.
+
   // Push a special frame descriptor that indicates the frame size so we can
   // directly iterate from the current JIT frame without an extra call.
   *callOffset = masm.buildFakeExitFrame(scratch);
@@ -1255,6 +1263,9 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
           break;
         case MIRType::Double:
           GenPrintF64(DebugChannel::Function, masm, iter->fpu());
+          break;
+        case MIRType::RefOrNull:
+          GenPrintPtr(DebugChannel::Function, masm, iter->gpr());
           break;
         default:
           MOZ_CRASH("ion to wasm fast path can only handle i32/f32/f64");
@@ -1310,13 +1321,21 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
             masm.storeFloat32(fpscratch, dst);
             break;
           }
-          case MIRType::Int32:
+          case MIRType::Int32: {
             masm.loadPtr(src, scratch);
             GenPrintIsize(DebugChannel::Function, masm, scratch);
             masm.storePtr(scratch, dst);
             break;
-          default:
+          }
+          case MIRType::RefOrNull: {
+            masm.loadPtr(src, scratch);
+            GenPrintPtr(DebugChannel::Function, masm, scratch);
+            masm.storePtr(scratch, dst);
+            break;
+          }
+          default: {
             MOZ_CRASH("unexpected MIR type for a stack slot in wasm fast call");
+          }
         }
         break;
       }
@@ -1372,9 +1391,14 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
         masm.canonicalizeDouble(ReturnDoubleReg);
         GenPrintF64(DebugChannel::Function, masm, ReturnDoubleReg);
         break;
+      case wasm::ValType::AnyRef:
+        // The call to wasm above preserves the WasmTlsReg, we don't need to
+        // reload it here.
+        UnboxAnyrefIntoValueReg(masm, WasmTlsReg, ReturnReg, JSReturnOperand,
+                                WasmJitEntryReturnScratch);
+        break;
       case wasm::ValType::Ref:
       case wasm::ValType::FuncRef:
-      case wasm::ValType::AnyRef:
       case wasm::ValType::I64:
         MOZ_CRASH("unexpected return type when calling from ion to wasm");
       case wasm::ValType::NullRef:

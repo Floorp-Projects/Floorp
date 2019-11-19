@@ -7216,6 +7216,30 @@ class LIonToWasmCallV : public LIonToWasmCallBase<BOX_PIECES> {
       : LIonToWasmCallBase<BOX_PIECES>(classOpcode, numOperands, temp, fp) {}
 };
 
+class LWasmBoxValue : public LInstructionHelper<1, BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(WasmBoxValue)
+
+  explicit LWasmBoxValue(const LBoxAllocation& input)
+      : LInstructionHelper(classOpcode) {
+    setBoxOperand(Input, input);
+  }
+
+  static const size_t Input = 0;
+};
+
+class LWasmAnyRefFromJSObject : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(WasmAnyRefFromJSObject)
+
+  explicit LWasmAnyRefFromJSObject(const LAllocation& input)
+      : LInstructionHelper(classOpcode) {
+    setOperand(Input, input);
+  }
+
+  static const size_t Input = 0;
+};
+
 }  // namespace jit
 }  // namespace js
 
