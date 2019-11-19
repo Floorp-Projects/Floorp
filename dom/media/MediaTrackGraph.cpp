@@ -2478,23 +2478,9 @@ void SourceMediaTrack::ResampleAudioToGraphSampleRate(MediaSegment* aSegment) {
     return;
   }
   AudioSegment* segment = static_cast<AudioSegment*>(aSegment);
-  int channels = segment->ChannelCount();
-
-  // If this segment is just silence, we delay instanciating the resampler. We
-  // also need to recreate the resampler if the channel count or input rate
-  // changes.
-  if (channels && mUpdateTrack->mResamplerChannelCount != channels) {
-    SpeexResamplerState* state = speex_resampler_init(
-        channels, mUpdateTrack->mInputRate, GraphImpl()->GraphRate(),
-        SPEEX_RESAMPLER_QUALITY_MIN, nullptr);
-    if (!state) {
-      return;
-    }
-    mUpdateTrack->mResampler.own(state);
-    mUpdateTrack->mResamplerChannelCount = channels;
-  }
-  segment->ResampleChunks(mUpdateTrack->mResampler, mUpdateTrack->mInputRate,
-                          GraphImpl()->GraphRate());
+  segment->ResampleChunks(mUpdateTrack->mResampler,
+                          &mUpdateTrack->mResamplerChannelCount,
+                          mUpdateTrack->mInputRate, GraphImpl()->GraphRate());
 }
 
 void SourceMediaTrack::AdvanceTimeVaryingValuesToCurrentTime(
