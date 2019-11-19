@@ -1778,7 +1778,12 @@ describe("ASRouter", () => {
           provider: testMessage1.provider,
           bundle: [
             { content: testMessage1.content, id: testMessage1.id, order: 1 },
-            { content: testMessage2.content, id: testMessage2.id, order: 2 },
+            {
+              content: testMessage2.content,
+              id: testMessage2.id,
+              order: 2,
+              blockOnClick: false,
+            },
           ],
         };
         assert.calledWith(
@@ -1885,13 +1890,14 @@ describe("ASRouter", () => {
     });
 
     describe(".includeBundle", () => {
-      it("should send a message with .includeBundle property with specified length and template", async () => {
+      let msg;
+      beforeEach(async () => {
         let messages = [
           {
             id: "trailhead",
             template: "trailhead",
             includeBundle: {
-              length: 2,
+              length: 3,
               template: "foo",
               trigger: { id: "foo" },
             },
@@ -1901,31 +1907,142 @@ describe("ASRouter", () => {
           {
             id: "foo2",
             template: "foo",
-            bundled: 2,
+            bundled: 3,
+            order: 2,
             trigger: { id: "foo" },
             content: { title: "Foo2", body: "Foo123-2" },
           },
           {
             id: "foo3",
             template: "foo",
-            bundled: 2,
+            bundled: 3,
+            order: 3,
             trigger: { id: "foo" },
             content: { title: "Foo3", body: "Foo123-3" },
           },
+          {
+            id: "foo4",
+            template: "foo",
+            bundled: 3,
+            order: 1,
+            trigger: { id: "foo" },
+            content: { title: "Foo4", body: "Foo123-4" },
+          },
+          {
+            id: "foo5",
+            template: "foo",
+            bundled: 3,
+            order: 4,
+            trigger: { id: "foo" },
+            content: { title: "Foo5", body: "Foo123-5" },
+          },
         ];
+
         sandbox.stub(Router, "_findProvider").returns(null);
         await Router.setState({ messages });
 
-        const msg = fakeAsyncMessage({
+        msg = fakeAsyncMessage({
           type: "TRIGGER",
           data: { trigger: { id: "firstRun" } },
         });
-        await Router.onMessage(msg);
+      });
 
+      it("should send a message with .includeBundle property with specified length and template", async () => {
+        await Router.onMessage(msg);
         const [, resp] = msg.target.sendAsyncMessage.firstCall.args;
         assert.propertyVal(resp, "type", "SET_MESSAGE");
         assert.isArray(resp.data.bundle, "resp.data.bundle");
-        assert.lengthOf(resp.data.bundle, 2, "resp.data.bundle");
+        assert.lengthOf(resp.data.bundle, 3, "resp.data.bundle");
+      });
+
+      it("should set blockOnClick property by default false on returned ordered bundle messages", async () => {
+        const expectedBundle = [
+          {
+            content: { title: "Foo4", body: "Foo123-4" },
+            id: "foo4",
+            order: 1,
+            blockOnClick: false,
+          },
+          {
+            content: { title: "Foo2", body: "Foo123-2" },
+            id: "foo2",
+            order: 2,
+            blockOnClick: false,
+          },
+          {
+            content: { title: "Foo3", body: "Foo123-3" },
+            id: "foo3",
+            order: 3,
+            blockOnClick: false,
+          },
+        ];
+
+        await Router.onMessage(msg);
+        const [, resp] = msg.target.sendAsyncMessage.firstCall.args;
+
+        for (let i = 0; i < 3; i++) {
+          assert.deepEqual(resp.data.bundle[i], expectedBundle[i]);
+        }
+      });
+
+      it("should set blockOnClick property true for dynamic triplet and matching messages more than 3", async () => {
+        await Router.setState({ trailheadTriplet: "dynamic" });
+        await Router.onMessage(msg);
+        const [, resp] = msg.target.sendAsyncMessage.firstCall.args;
+        const expectedBundle = [
+          {
+            content: { title: "Foo4", body: "Foo123-4" },
+            id: "foo4",
+            order: 1,
+            blockOnClick: true,
+          },
+          {
+            content: { title: "Foo2", body: "Foo123-2" },
+            id: "foo2",
+            order: 2,
+            blockOnClick: true,
+          },
+          {
+            content: { title: "Foo3", body: "Foo123-3" },
+            id: "foo3",
+            order: 3,
+            blockOnClick: true,
+          },
+        ];
+
+        for (let i = 0; i < 3; i++) {
+          assert.deepEqual(resp.data.bundle[i], expectedBundle[i]);
+        }
+      });
+
+      it("should set blockOnClick property true for triplet branch name that starts with 'dynamic' and matching messages more than 3", async () => {
+        await Router.setState({ trailheadTriplet: "dynamic_test" });
+        await Router.onMessage(msg);
+        const [, resp] = msg.target.sendAsyncMessage.firstCall.args;
+        const expectedBundle = [
+          {
+            content: { title: "Foo4", body: "Foo123-4" },
+            id: "foo4",
+            order: 1,
+            blockOnClick: true,
+          },
+          {
+            content: { title: "Foo2", body: "Foo123-2" },
+            id: "foo2",
+            order: 2,
+            blockOnClick: true,
+          },
+          {
+            content: { title: "Foo3", body: "Foo123-3" },
+            id: "foo3",
+            order: 3,
+            blockOnClick: true,
+          },
+        ];
+
+        for (let i = 0; i < 3; i++) {
+          assert.deepEqual(resp.data.bundle[i], expectedBundle[i]);
+        }
       });
     });
 
