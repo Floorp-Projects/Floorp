@@ -55,20 +55,29 @@ const Quotes* QuotesForLang(const nsAtom* aLang) {
   // subtags), then see if we can match it with region or script subtags,
   // if present, or just the primary language tag.
   Locale loc(langStr);
-  if (loc.IsWellFormed()) {
-    if (!loc.GetRegion().IsEmpty() &&
-        (entry = sQuotesForLang->GetValue(nsPrintfCString(
-             "%s-%s", loc.GetLanguage().get(), loc.GetRegion().get())))) {
+  if (!loc.IsWellFormed()) {
+    return nullptr;
+  }
+  if (!loc.GetRegion().IsEmpty()) {
+    nsAutoCString langAndRegion;
+    langAndRegion.Append(loc.GetLanguage());
+    langAndRegion.Append('-');
+    langAndRegion.Append(loc.GetRegion());
+    if ((entry = sQuotesForLang->GetValue(langAndRegion))) {
       return entry;
     }
-    if (!loc.GetScript().IsEmpty() &&
-        (entry = sQuotesForLang->GetValue(nsPrintfCString(
-             "%s-%s", loc.GetLanguage().get(), loc.GetScript().get())))) {
+  }
+  if (!loc.GetScript().IsEmpty()) {
+    nsAutoCString langAndScript;
+    langAndScript.Append(loc.GetLanguage());
+    langAndScript.Append('-');
+    langAndScript.Append(loc.GetScript());
+    if ((entry = sQuotesForLang->GetValue(langAndScript))) {
       return entry;
     }
-    if ((entry = sQuotesForLang->GetValue(loc.GetLanguage()))) {
-      return entry;
-    }
+  }
+  if ((entry = sQuotesForLang->GetValue(loc.GetLanguage()))) {
+    return entry;
   }
 
   return nullptr;
