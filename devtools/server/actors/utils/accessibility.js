@@ -92,7 +92,15 @@ function removeSheetForBackgroundCalculation(win) {
  *         True if web render is enabled, false otherwise.
  */
 function isWebRenderEnabled(win) {
-  return win.windowUtils && win.windowUtils.layerManagerType === "WebRender";
+  try {
+    return win.windowUtils && win.windowUtils.layerManagerType === "WebRender";
+  } catch (e) {
+    // Sometimes nsIDOMWindowUtils::layerManagerType fails unexpectedly (see bug
+    // 1596428).
+    console.warn(e);
+  }
+
+  return false;
 }
 
 exports.isDefunct = isDefunct;
