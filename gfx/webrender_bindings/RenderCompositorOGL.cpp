@@ -148,6 +148,14 @@ bool RenderCompositorOGL::ShouldUseNativeCompositor() {
   return mNativeLayerRoot && StaticPrefs::gfx_webrender_compositor_AtStartup();
 }
 
+uint32_t RenderCompositorOGL::GetMaxUpdateRects() {
+  if (ShouldUseNativeCompositor() &&
+      StaticPrefs::gfx_webrender_compositor_max_update_rects_AtStartup() > 0) {
+    return 1;
+  }
+  return 0;
+}
+
 void RenderCompositorOGL::CompositorBeginFrame() {
   mAddedLayers.Clear();
   mAddedPixelCount = 0;
@@ -178,13 +186,9 @@ void RenderCompositorOGL::Bind(wr::NativeSurfaceId aId,
   auto layerCursor = mNativeLayers.find(wr::AsUint64(aId));
   MOZ_RELEASE_ASSERT(layerCursor != mNativeLayers.end());
   RefPtr<layers::NativeLayer> layer = layerCursor->second;
-  gfx::IntRect layerRect = layer->GetRect();
+
   gfx::IntRect dirtyRect(aDirtyRect.origin.x, aDirtyRect.origin.y,
                          aDirtyRect.size.width, aDirtyRect.size.height);
-  MOZ_RELEASE_ASSERT(
-      dirtyRect.IsEqualInterior(layerRect - layerRect.TopLeft()),
-      "We currently do not support partial updates (max_update_rects is set to "
-      "0), so we expect the dirty rect to always cover the entire layer.");
 
   Maybe<GLuint> fbo = layer->NextSurfaceAsFramebuffer(dirtyRect, true);
   MOZ_RELEASE_ASSERT(fbo);  // TODO: make fallible
@@ -193,7 +197,7 @@ void RenderCompositorOGL::Bind(wr::NativeSurfaceId aId,
   *aFboId = *fbo;
   *aOffset = wr::DeviceIntPoint{0, 0};
 
-  mDrawnPixelCount += layerRect.Area();
+  mDrawnPixelCount += dirtyRect.Area();
 }
 
 void RenderCompositorOGL::Unbind() {
