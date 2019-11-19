@@ -63,6 +63,9 @@ var SearchUtils = {
    */
   SETTINGS_IGNORELIST_KEY: "hijack-blocklists",
 
+  // A tag to denote when we are using the "default_locale" of an engine.
+  DEFAULT_TAG: "default",
+
   /**
    * Notifies watchers of SEARCH_ENGINE_TOPIC about changes to an engine or to
    * the state of the search service.
