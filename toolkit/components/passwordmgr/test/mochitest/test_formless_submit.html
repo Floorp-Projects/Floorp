@@ -46,10 +46,7 @@ const DEFAULT_ORIGIN = "http://mochi.test:8888";
 const TESTCASES = [
   {
     // Inputs
-    document: `<input type=password value="">`,
-    selectorValues: {
-      "[type=password]": "pass1",
-    },
+    document: `<input type=password value="pass1">`,
     inputIndexForFormLike: 0,
 
     // Expected outputs similar to PasswordManager:onFormSubmit
@@ -60,12 +57,8 @@ const TESTCASES = [
     oldPasswordFieldValue: null,
   },
   {
-    document: `<input id="u1" value="">
-      <input type=password value="">`,
-    selectorValues: {
-      "#u1": "user1",
-      "[type=password]": "pass1",
-    },
+    document: `<input value="user1">
+      <input type=password value="pass1">`,
     inputIndexForFormLike: 0,
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
@@ -74,12 +67,8 @@ const TESTCASES = [
     oldPasswordFieldValue: null,
   },
   {
-    document: `<input id="u1" value="">
-      <input type=password value="">`,
-    selectorValues: {
-      "#u1": "user1",
-      "[type=password]": "pass1",
-    },
+    document: `<input value="user1">
+      <input type=password value="pass1">`,
     inputIndexForFormLike: 1,
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
@@ -88,14 +77,9 @@ const TESTCASES = [
     oldPasswordFieldValue: null,
   },
   {
-    document: `<input id="u1" value="">
-      <input id="p1" type=password value="">
-      <input id="p2" type=password value="">`,
-    selectorValues: {
-      "#u1": "user1",
-      "#p1": "pass1",
-      "#p2": "pass2",
-    },
+    document: `<input value="user1">
+      <input type=password value="pass1">
+      <input type=password value="pass2">`,
     inputIndexForFormLike: 2,
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
@@ -104,16 +88,10 @@ const TESTCASES = [
     oldPasswordFieldValue: "pass1",
   },
   {
-    document: `<input id="u1" value="">
-      <input id="p1" type=password value="">
-      <input id="p2" type=password value="">
-      <input id="p3" type=password value="">`,
-    selectorValues: {
-      "#u1": "user1",
-      "#p1": "pass1",
-      "#p2": "pass2",
-      "#p3": "pass2",
-    },
+    document: `<input value="user1">
+      <input type=password value="pass1">
+      <input type=password value="pass2">
+      <input type=password value="pass2">`,
     inputIndexForFormLike: 3,
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
@@ -122,20 +100,13 @@ const TESTCASES = [
     oldPasswordFieldValue: "pass1",
   },
   {
-    document: `<input id="u1" value="">
-      <input id="p1" type=password value="" form="form1">
-      <input id="p2" type=password value="">
+    document: `<input value="user1">
+      <input type=password value="user2" form="form1">
+      <input type=password value="pass1">
       <form id="form1">
-        <input id="u2" value="">
-        <input id="p3" type=password value="">
+        <input value="user3">
+        <input type=password value="pass2">
       </form>`,
-    selectorValues: {
-      "#u1": "user1",
-      "#p1": "user2",
-      "#p2": "pass1",
-      "#u2": "user3",
-      "#p3": "pass2",
-    },
     inputIndexForFormLike: 2,
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
@@ -145,16 +116,10 @@ const TESTCASES = [
   },
   {
     document: `<!-- recipe field override -->
-      <input name="recipeuname" value="">
-      <input id="u1" value="">
-      <input id="p1" type=password value="">
-      <input name="recipepword" type=password value="">`,
-    selectorValues: {
-      "[name='recipeuname']": "username from recipe",
-      "#u1": "default field username",
-      "#p1": "pass1",
-      "[name='recipepword']": "pass2",
-    },
+      <input name="recipeuname" value="username from recipe">
+      <input value="default field username">
+      <input type=password value="pass1">
+      <input name="recipepword" type=password value="pass2">`,
     inputIndexForFormLike: 2,
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
@@ -164,30 +129,36 @@ const TESTCASES = [
   },
 ];
 
+function getSubmitMessage() {
+  info("getSubmitMessage");
+  return new Promise((resolve, reject) => {
+    PWMGR_COMMON_PARENT.addMessageListener("formSubmissionProcessed", function processed(...args) {
+      info("got formSubmissionProcessed");
+      PWMGR_COMMON_PARENT.removeMessageListener("formSubmissionProcessed", processed);
+      resolve(...args);
+    });
+  });
+}
+
 add_task(async function test() {
   let count = 0;
   let loginFrame = document.getElementById("loginFrame");
 
   for (let tc of TESTCASES) {
-    let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
+    let frameDoc = loginFrame.contentWindow.document;
     info("Starting testcase: " + JSON.stringify(tc));
 
-    let formProcessed = promiseFormsProcessed();
     // eslint-disable-next-line no-unsanitized/property
     frameDoc.documentElement.innerHTML = tc.document;
-    await formProcessed;
-    // We eliminate no user input as a reason for not capturing by modifying the value
-    setUserInputValues(frameDoc.documentElement, tc.selectorValues);
-
     let inputForFormLike = frameDoc.querySelectorAll("input")[tc.inputIndexForFormLike];
 
     let formLike = LoginFormFactory.createFromField(inputForFormLike);
 
     info("Calling _onFormSubmit with FormLike");
-    let submitProcessed = getSubmitMessage();
+    let processedPromise = getSubmitMessage();
     LoginManagerChild.forWindow(frameDoc.defaultView)._onFormSubmit(formLike);
 
-    let submittedResult = await submitProcessed;
+    let submittedResult = await processedPromise;
 
     // Check data sent via PasswordManager:onFormSubmit
     is(submittedResult.origin, tc.origin, "Check origin");
