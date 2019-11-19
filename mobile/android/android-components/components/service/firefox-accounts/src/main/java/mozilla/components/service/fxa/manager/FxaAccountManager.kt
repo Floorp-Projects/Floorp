@@ -29,6 +29,7 @@ import mozilla.components.concept.sync.DeviceEventsObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.StatePersistenceCallback
+import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.AccountStorage
 import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.FxaDeviceSettingsCache
@@ -36,6 +37,7 @@ import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.FxaException
 import mozilla.components.service.fxa.FxaPanicException
+import mozilla.components.service.fxa.SecureAbove22AccountStorage
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SharedPrefAccountStorage
 import mozilla.components.service.fxa.SyncAuthInfoCache
@@ -125,6 +127,7 @@ open class FxaAccountManager(
     private val deviceConfig: DeviceConfig,
     @Volatile private var syncConfig: SyncConfig?,
     private val applicationScopes: Set<String> = emptySet(),
+    private val crashReporter: CrashReporter? = null,
     // We want a single-threaded execution model for our account-related "actions" (state machine side-effects).
     // That is, we want to ensure a sequential execution flow, but on a background thread.
     private val coroutineContext: CoroutineContext = Executors
@@ -896,13 +899,17 @@ open class FxaAccountManager(
     }
 
     @VisibleForTesting
-    open fun createSyncManager(config: SyncConfig): SyncManager {
+    internal open fun createSyncManager(config: SyncConfig): SyncManager {
         return WorkManagerSyncManager(context, config)
     }
 
     @VisibleForTesting
-    open fun getAccountStorage(): AccountStorage {
-        return SharedPrefAccountStorage(context)
+    internal open fun getAccountStorage(): AccountStorage {
+        return if (deviceConfig.secureStateAtRest) {
+            SecureAbove22AccountStorage(context, crashReporter)
+        } else {
+            SharedPrefAccountStorage(context, crashReporter)
+        }
     }
 
     /**

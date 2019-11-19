@@ -30,6 +30,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
+import org.robolectric.annotation.Config
 
 // Same as the actual account manager, except we get to control how FirefoxAccountShaped instances
 // are created. This is necessary because due to some build issues (native dependencies not available
@@ -57,6 +58,10 @@ class FirefoxAccountsAuthFeatureTest {
         }
     }
 
+    // Note that tests that involve secure storage specify API=21, because of issues testing secure storage on
+    // 23+ API levels. See https://github.com/mozilla-mobile/android-components/issues/4956
+
+    @Config(sdk = [22])
     @Test
     fun `begin authentication`() {
         val manager = prepareAccountManagerForSuccessfulAuthentication()
@@ -75,6 +80,7 @@ class FirefoxAccountsAuthFeatureTest {
         assertEquals("auth://url", authLabmda.url)
     }
 
+    @Config(sdk = [22])
     @Test
     fun `begin pairing authentication`() {
         val manager = prepareAccountManagerForSuccessfulAuthentication()
@@ -93,6 +99,7 @@ class FirefoxAccountsAuthFeatureTest {
         assertEquals("auth://url", authLabmda.url)
     }
 
+    @Config(sdk = [22])
     @Test
     fun `begin authentication with errors`() {
         val manager = prepareAccountManagerForFailedAuthentication()
@@ -112,6 +119,7 @@ class FirefoxAccountsAuthFeatureTest {
         assertEquals("https://accounts.firefox.com/signin", authLambda.url)
     }
 
+    @Config(sdk = [22])
     @Test
     fun `begin pairing authentication with errors`() {
         val manager = prepareAccountManagerForFailedAuthentication()
@@ -203,6 +211,7 @@ class FirefoxAccountsAuthFeatureTest {
         )
     }
 
+    @Config(sdk = [22])
     private fun prepareAccountManagerForSuccessfulAuthentication(): TestableFxaAccountManager {
         val mockAccount: OAuthAccount = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
@@ -227,6 +236,7 @@ class FirefoxAccountsAuthFeatureTest {
         return manager
     }
 
+    @Config(sdk = [22])
     private fun prepareAccountManagerForFailedAuthentication(): TestableFxaAccountManager {
         val mockAccount: OAuthAccount = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")

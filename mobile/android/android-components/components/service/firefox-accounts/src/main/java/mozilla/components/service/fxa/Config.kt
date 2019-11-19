@@ -24,11 +24,21 @@ typealias ServerConfig = mozilla.appservices.fxaclient.Config
  * @property capabilities A set of device capabilities, such as SEND_TAB. This set can be expanded by
  * re-initializing [FxaAccountManager] with a new set (e.g. on app restart).
  * Shrinking a set of capabilities is currently not supported.
+ *
+ * @property secureStateAtRest A flag indicating whether or not to use encrypted storage for the persisted account
+ * state. If set to `true`, [SecureAbove22AccountStorage] will be used as a storage layer. As the name suggests,
+ * account state will only by encrypted on Android API 23+. Otherwise, even if this flag is set to `true`, account state
+ * will be stored in plaintext.
+ *
+ * Default value of `false` configures the plaintext version of account storage to be used, [SharedPrefAccountStorage].
+ *
+ * Switching of this flag's values is supported; account state will be migrated between the underlying storage layers.
  */
 data class DeviceConfig(
     val name: String,
     val type: DeviceType,
-    val capabilities: Set<DeviceCapability>
+    val capabilities: Set<DeviceCapability>,
+    val secureStateAtRest: Boolean = false
 )
 
 /**
