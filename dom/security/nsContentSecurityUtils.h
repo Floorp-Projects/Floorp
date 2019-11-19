@@ -38,6 +38,9 @@ class nsContentSecurityUtils {
 #if defined(DEBUG)
   static void AssertAboutPageHasCSP(mozilla::dom::Document* aDocument);
 #endif
+
+  static bool ValidateScriptFilename(const char* aFilename,
+                                     bool aIsSystemRealm);
 };
 
 #endif /* nsContentSecurityUtils_h___ */

@@ -18,6 +18,7 @@
 #  include <wininet.h>
 #endif
 
+#include "mozilla/Logging.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/StaticPrefs_extensions.h"
 
@@ -676,3 +677,46 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
              "about: page must not contain a CSP including 'unsafe-inline'");
 }
 #endif
+
+/* static */
+bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
+                                                    bool aIsSystemRealm) {
+  // If the pref is permissive, allow everything
+  if (StaticPrefs::security_allow_parent_unrestricted_js_loads()) {
+    return true;
+  }
+
+  // If we're not in the parent process allow everything (presently)
+  if (!XRE_IsE10sParentProcess()) {
+    return true;
+  }
+
+  NS_ConvertUTF8toUTF16 filenameU(aFilename);
+
+  if (StringBeginsWith(filenameU, NS_LITERAL_STRING("chrome://"))) {
+    // If it's a chrome:// url, allow it
+    return true;
+  }
+  if (StringBeginsWith(filenameU, NS_LITERAL_STRING("resource://"))) {
+    // If it's a resource:// url, allow it
+    return true;
+  }
+  if (StringBeginsWith(filenameU, NS_LITERAL_STRING("file://"))) {
+    // We will temporarily allow all file:// URIs through for now
+    return true;
+  }
+  if (StringBeginsWith(filenameU, NS_LITERAL_STRING("jar:file://"))) {
+    // We will temporarily allow all jar URIs through for now
+    return true;
+  }
+
+  // Log to MOZ_LOG
+  MOZ_LOG(sCSMLog, LogLevel::Info,
+          ("ValidateScriptFilename System:%i %s\n", (aIsSystemRealm ? 1 : 0),
+           aFilename));
+
+  // Presently we are not enforcing any restrictions for the script filename,
+  // we're only reporting Telemetry. In the future we will assert in debug
+  // builds and return false to prevent execution in non-debug builds.
+  return true;
+}
