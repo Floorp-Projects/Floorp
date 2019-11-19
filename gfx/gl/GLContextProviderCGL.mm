@@ -213,7 +213,7 @@ static already_AddRefed<GLContextCGL> CreateOffscreenFBOContext(CreateContextFla
     attribs.push_back(NSOpenGLPFAAllowOfflineRenderers);
   }
 
-  if (StaticPrefs::gl_require_hardware()) {
+  if (flags & CreateContextFlags::FORCE_ENABLE_HARDWARE) {
     attribs.push_back(NSOpenGLPFAAccelerated);
   }
 
