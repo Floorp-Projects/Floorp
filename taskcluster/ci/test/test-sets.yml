@@ -77,6 +77,26 @@ talos:
     # - talos-h1 Bug 1487031 - Disabled for not finding actionable regressions
     # - talos-h2 Bug 1487031 - Disabled for not finding actionable regressions
 
+talos-profiling:
+    - talos-bcv-profiling
+    - talos-chrome-profiling
+    # - talos-damp-profiling - Disabled b/c of Bug 1597734
+    - talos-dromaeojs-profiling
+    # - talos-flex-profiling - Disabled b/c of Bug 1597736
+    - talos-g1-profiling
+    - talos-g3-profiling
+    - talos-g4-profiling
+    - talos-g5-profiling
+    - talos-motionmark-profiling
+    - talos-other-profiling
+    - talos-sessionrestore-many-windows-profiling
+    - talos-perf-reftest-profiling
+    - talos-perf-reftest-singletons-profiling
+    - talos-svgr-profiling
+    - talos-tp5o-profiling
+    - talos-tabswitch-profiling
+    - talos-realworld-webextensions-profiling
+
 talos-ref-hw:
     - talos-g4
 
