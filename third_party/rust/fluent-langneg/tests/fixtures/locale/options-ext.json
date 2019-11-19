@@ -1,0 +1,34 @@
+[
+  {
+    "input": {
+      "string": "en",
+      "options": {
+        "hour-cycle": "h12"
+      }
+    },
+    "output": {
+      "language": "en",
+      "extensions": {
+        "unicode": {
+          "hour-cycle": "h12"
+        }
+      }
+    }
+  },
+  {
+    "input": {
+      "string": "en",
+      "options": {
+        "calendar": "gregory"
+      }
+    },
+    "output": {
+      "language": "en",
+      "extensions": {
+        "unicode": {
+          "calendar": "gregory"
+        }
+      }
+    }
+  }
+]

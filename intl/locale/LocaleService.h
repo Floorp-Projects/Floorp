@@ -148,10 +148,6 @@ class LocaleService final : public mozILocaleService,
   bool IsServer();
 
  private:
-  void FilterMatches(const nsTArray<nsCString>& aRequested,
-                     const nsTArray<nsCString>& aAvailable, int32_t aStrategy,
-                     nsTArray<nsCString>& aRetVal);
-
   void NegotiateAppLocales(nsTArray<nsCString>& aRetVal);
 
   void InitPackagedLocales();

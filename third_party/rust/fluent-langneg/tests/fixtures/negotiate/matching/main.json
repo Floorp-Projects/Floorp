@@ -1,0 +1,12 @@
+[
+  {
+    "input": [["fr", "en"], ["en-US", "fr-FR", "en", "fr"]],
+    "strategy": "matching",
+    "output": ["fr", "en"]
+  },
+  {
+    "input": [["und"], ["fr", "de", "it", "ru", "pl"]],
+    "strategy": "matching",
+    "output": []
+  }
+]

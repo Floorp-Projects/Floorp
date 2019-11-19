@@ -1,0 +1,42 @@
+[
+  {
+    "input": [["en"], ["en-GB", "de", "en-US"]],
+    "output": ["en-US", "en-GB"]
+  },
+  {
+    "input": [["en"], ["en-Latn-GB", "de", "en-Latn-US"]],
+    "output": ["en-Latn-US", "en-Latn-GB"]
+  },
+  {
+    "input": [["fr"], ["fr-CA", "fr-FR"]],
+    "output": ["fr-FR", "fr-CA"]
+  },
+  {
+    "input": [["az-IR"], ["az-Latn", "az-Arab"]],
+    "output": ["az-Arab"]
+  },
+  {
+    "input": [["sr-RU"], ["sr-Cyrl", "sr-Latn"]],
+    "output": ["sr-Latn"]
+  },
+  {
+    "input": [["sr"], ["sr-Latn", "sr-Cyrl"]],
+    "output": ["sr-Cyrl"]
+  },
+  {
+    "input": [["zh-GB"], ["zh-Hans", "zh-Hant"]],
+    "output": ["zh-Hant"]
+  },
+  {
+    "input": [["sr", "ru"], ["sr-Latn", "ru"]],
+    "output": ["ru"]
+  },
+  {
+    "input": [["sr-RU"], ["sr-Latn-RO", "sr-Cyrl"]],
+    "output": ["sr-Latn-RO"]
+  },
+  {
+    "input": [["en-CA"], ["en-ZA", "en-GB", "en-US"]],
+    "output": ["en-US", "en-ZA", "en-GB"]
+  }
+]

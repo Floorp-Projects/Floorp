@@ -5,7 +5,6 @@
 
 #include "LocaleService.h"
 
-#include <algorithm>  // find_if()
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Omnijar.h"
@@ -32,6 +31,7 @@
 static const char* kObservedPrefs[] = {REQUESTED_LOCALES_PREF,
                                        WEB_EXPOSED_LOCALES_PREF, nullptr};
 
+using namespace mozilla::intl::ffi;
 using namespace mozilla::intl;
 using namespace mozilla;
 
@@ -269,149 +269,6 @@ void LocaleService::LocalesChanged() {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->NotifyObservers(nullptr, "intl:app-locales-changed", nullptr);
-    }
-  }
-}
-
-// After trying each step of the negotiation algorithm for each requested
-// locale, if a match was found we use this macro to decide whether to return
-// immediately, skip to the next requested locale, or continue searching for
-// additional matches, according to the desired negotiation strategy.
-#define HANDLE_STRATEGY             \
-  switch (aStrategy) {              \
-    case kLangNegStrategyLookup:    \
-      return;                       \
-    case kLangNegStrategyMatching:  \
-      continue;                     \
-    case kLangNegStrategyFiltering: \
-      break;                        \
-  }
-
-/**
- * This is the raw algorithm for language negotiation based roughly
- * on RFC4647 language filtering, with changes from LDML language matching.
- *
- * The exact algorithm is custom, and consists of a 6 level strategy:
- *
- * 1) Attempt to find an exact match for each requested locale in available
- *    locales.
- *    Example: ['en-US'] * ['en-US'] = ['en-US']
- *
- * 2) Attempt to match a requested locale to an available locale treated
- *    as a locale range.
- *    Example: ['en-US'] * ['en'] = ['en']
- *                           ^^
- *                           |-- becomes 'en-*-*-*'
- *
- * 3) Attempt to use the maximized version of the requested locale, to
- *    find the best match in available locales.
- *    Example: ['en'] * ['en-GB', 'en-US'] = ['en-US']
- *               ^^
- *               |-- ICU likelySubtags expands it to 'en-Latn-US'
- *
- * 4) Attempt to look up for a different variant of the same locale.
- *    Example: ['ja-JP-win'] * ['ja-JP-mac'] = ['ja-JP-mac']
- *               ^^^^^^^^^
- *               |----------- replace variant with range: 'ja-JP-*'
- *
- * 5) Attempt to look up for a maximized version of the requested locale,
- *    stripped of the region code.
- *    Example: ['en-CA'] * ['en-ZA', 'en-US'] = ['en-US', 'en-ZA']
- *               ^^^^^
- *               |----------- look for likelySubtag of 'en': 'en-Latn-US'
- *
- *
- * 6) Attempt to look up for a different region of the same locale.
- *    Example: ['en-GB'] * ['en-AU'] = ['en-AU']
- *               ^^^^^
- *               |----- replace region with range: 'en-*'
- *
- * It uses one of the strategies described in LocaleService.h.
- */
-void LocaleService::FilterMatches(const nsTArray<nsCString>& aRequested,
-                                  const nsTArray<nsCString>& aAvailable,
-                                  int32_t aStrategy,
-                                  nsTArray<nsCString>& aRetVal) {
-  // Local copy of the list of available locales, in Locale form for flexible
-  // matching. We will invalidate entries in this list when they are matched
-  // and the corresponding strings from aAvailable added to aRetVal, so that
-  // no available locale will be found more than once.
-  AutoTArray<Locale, 100> availLocales;
-  for (auto& avail : aAvailable) {
-    availLocales.AppendElement(Locale(avail));
-  }
-
-  for (auto& requested : aRequested) {
-    if (requested.IsEmpty()) {
-      continue;
-    }
-
-    // 1) Try to find a simple (case-insensitive) string match for the request.
-    auto matchesExactly = [&](Locale& aLoc) {
-      return requested.Equals(aLoc.AsString(),
-                              nsCaseInsensitiveCStringComparator());
-    };
-    auto match =
-        std::find_if(availLocales.begin(), availLocales.end(), matchesExactly);
-    if (match != availLocales.end()) {
-      aRetVal.AppendElement(aAvailable[match - availLocales.begin()]);
-      match->Invalidate();
-    }
-
-    if (!aRetVal.IsEmpty()) {
-      HANDLE_STRATEGY;
-    }
-
-    // 2) Try to match against the available locales treated as ranges.
-    auto findRangeMatches = [&](Locale& aReq, bool aAvailRange,
-                                bool aReqRange) {
-      auto matchesRange = [&](Locale& aLoc) {
-        return aLoc.Matches(aReq, aAvailRange, aReqRange);
-      };
-      bool foundMatch = false;
-      auto match = availLocales.begin();
-      while ((match = std::find_if(match, availLocales.end(), matchesRange)) !=
-             availLocales.end()) {
-        aRetVal.AppendElement(aAvailable[match - availLocales.begin()]);
-        match->Invalidate();
-        foundMatch = true;
-        if (aStrategy != kLangNegStrategyFiltering) {
-          return true;  // we only want the first match
-        }
-      }
-      return foundMatch;
-    };
-
-    Locale requestedLocale(requested);
-    if (findRangeMatches(requestedLocale, true, false)) {
-      HANDLE_STRATEGY;
-    }
-
-    // 3) Try to match against a maximized version of the requested locale
-    if (requestedLocale.AddLikelySubtags()) {
-      if (findRangeMatches(requestedLocale, true, false)) {
-        HANDLE_STRATEGY;
-      }
-    }
-
-    // 4) Try to match against a variant as a range
-    requestedLocale.ClearVariants();
-    if (findRangeMatches(requestedLocale, true, true)) {
-      HANDLE_STRATEGY;
-    }
-
-    // 5) Try to match against the likely subtag without region
-    requestedLocale.ClearRegion();
-    if (requestedLocale.AddLikelySubtags()) {
-      if (findRangeMatches(requestedLocale, true, false)) {
-        HANDLE_STRATEGY;
-      }
-    }
-
-    // 6) Try to match against a region as a range
-    requestedLocale.ClearRegion();
-    if (findRangeMatches(requestedLocale, true, true)) {
-      HANDLE_STRATEGY;
     }
   }
 }
@@ -696,27 +553,22 @@ LocaleService::NegotiateLanguages(const nsTArray<nsCString>& aRequested,
         "Default locale should be specified when using lookup strategy.");
   }
 
-  FilterMatches(aRequested, aAvailable, aStrategy, aRetVal);
-
-  if (aStrategy == kLangNegStrategyLookup) {
-    // If the strategy is Lookup and Filtering returned no matches, use
-    // the default locale.
-    if (aRetVal.Length() == 0) {
-      // If the default locale is empty, we already issued a warning, so
-      // now we will just pick up the LocaleService's defaultLocale.
-      if (aDefaultLocale.IsEmpty()) {
-        nsAutoCString defaultLocale;
-        GetDefaultLocale(defaultLocale);
-        aRetVal.AppendElement(defaultLocale);
-      } else {
-        aRetVal.AppendElement(aDefaultLocale);
-      }
-    }
-  } else if (!aDefaultLocale.IsEmpty() && !aRetVal.Contains(aDefaultLocale)) {
-    // If it's not a Lookup strategy, add the default locale only if it's
-    // set and it's not in the results already.
-    aRetVal.AppendElement(aDefaultLocale);
+  NegotiationStrategy strategy;
+  switch (aStrategy) {
+    case kLangNegStrategyFiltering:
+      strategy = NegotiationStrategy::Filtering;
+      break;
+    case kLangNegStrategyMatching:
+      strategy = NegotiationStrategy::Matching;
+      break;
+    case kLangNegStrategyLookup:
+      strategy = NegotiationStrategy::Lookup;
+      break;
   }
+
+  fluent_langneg_negotiate_languages(&aRequested, &aAvailable, &aDefaultLocale,
+                                     strategy, &aRetVal);
+
   return NS_OK;
 }
 

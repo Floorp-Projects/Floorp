@@ -36,7 +36,7 @@ TEST(Intl_Locale_LocaleService, UseLSDefaultLocale)
   nsTArray<nsCString> requestedLocales;
   nsTArray<nsCString> availableLocales;
   nsTArray<nsCString> supportedLocales;
-  nsAutoCString defaultLocale("");
+  nsAutoCString defaultLocale("en-US");
   int32_t strategy = LocaleService::kLangNegStrategyLookup;
 
   requestedLocales.AppendElement(NS_LITERAL_CSTRING("sr"));

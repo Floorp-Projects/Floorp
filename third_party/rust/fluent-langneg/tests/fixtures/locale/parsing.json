@@ -1,0 +1,151 @@
+[
+  {
+    "input": {
+      "string": "en"
+    },
+    "output": {
+      "language": "en"
+    }
+  },
+  {
+    "input": {
+      "string": "lij"
+    },
+    "output": {
+      "language": "lij"
+    }
+  },
+  {
+    "input": {
+      "string": "en-Latn"
+    },
+    "output": { 
+      "language": "en",
+      "script": "Latn"
+    }
+  },
+  {
+    "input": {
+      "string": "lij-Arab"
+    },
+    "output": { 
+      "language": "lij",
+      "script": "Arab"
+    }
+  },
+  {
+    "input": {
+      "string": "en-Latn-US"
+    },
+    "output": { 
+      "language": "en",
+      "script": "Latn",
+      "region": "US"
+    }
+  },
+  {
+    "input": {
+      "string": "lij-Arab-FA"
+    },
+    "output": { 
+      "language": "lij",
+      "script": "Arab",
+      "region": "FA"
+    }
+  },
+  {
+    "input": {
+      "string": "en-Latn-US-windows"
+    },
+    "output": { 
+      "language": "en",
+      "script": "Latn",
+      "region": "US",
+      "variants": ["windows"]
+    }
+  },
+  {
+    "input": {
+      "string": "lij-Arab-FA-linux"
+    },
+    "output": { 
+      "language": "lij",
+      "script": "Arab",
+      "region": "FA",
+      "variants": ["linux"]
+    }
+  },
+  {
+    "input": {
+      "string": "lij-Arab-FA-linux-nedis"
+    },
+    "output": { 
+      "language": "lij",
+      "script": "Arab",
+      "region": "FA",
+      "variants": ["linux", "nedis"]
+    }
+  },
+  {
+    "input": {
+      "string": "EN-latn-us"
+    },
+    "output": {
+      "language": "en",
+      "script": "Latn",
+      "region": "US"
+    }
+  },
+  {
+    "input": {
+      "string": "sl-nedis"
+    },
+    "output": {
+      "language": "sl",
+      "variants": ["nedis"]
+    }
+  },
+  {
+    "input": {
+      "string": "de-CH-1996"
+    },
+    "output": {
+      "language": "de",
+      "region": "CH",
+      "variants": ["1996"]
+    }
+  },
+  {
+    "input": {
+      "string": "sr-Latn"
+    },
+    "output": {
+      "language": "sr",
+      "script": "Latn"
+    }
+  },
+  {
+    "input": {
+      "string": "es-419"
+    },
+    "output": {
+      "language": "es",
+      "region": "419"
+    }
+  },
+  {
+    "input": {
+      "string": "und"
+    },
+    "output": {
+    }
+  },
+  {
+    "input": {
+      "string": "und-Latn"
+    },
+    "output": {
+      "script": "Latn"
+    }
+  }
+]

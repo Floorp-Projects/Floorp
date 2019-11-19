@@ -1,0 +1,22 @@
+[
+  {
+    "input": [["fr-FR", "en"], ["en-US", "fr-FR", "en", "fr"], "en-US"],
+    "strategy": "lookup",
+    "output": ["fr-FR"]
+  },
+  {
+    "input": [["fr", "en"], ["en-US", "fr-FR", "en"], "en-US"],
+    "strategy": "lookup",
+    "output": ["fr-FR"]
+  },
+  {
+    "input": [["en", "de"], ["en-GB", "en-US", "de"], "it"],
+    "strategy": "lookup",
+    "output": ["en-US"]
+  },
+  {
+    "input": [["und"], ["en-GB", "en-US", "de"], "it"],
+    "strategy": "lookup",
+    "output": ["it"]
+  }
+]
