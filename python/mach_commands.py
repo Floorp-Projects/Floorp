@@ -18,6 +18,7 @@ from concurrent.futures import (
 )
 
 import mozinfo
+from mozfile import which
 from manifestparser import TestManifest
 from manifestparser import filters as mpf
 
@@ -42,9 +43,13 @@ class MachCommands(MachCommandBase):
                      help='Do not set up a virtualenv')
     @CommandArgument('--exec-file',
                      default=None,
-                     help='Execute this Python file using `execfile`')
+                     help='Execute this Python file using `exec`')
+    @CommandArgument('--ipython',
+                     action='store_true',
+                     default=False,
+                     help='Use ipython instead of the default Python REPL.')
     @CommandArgument('args', nargs=argparse.REMAINDER)
-    def python(self, no_virtualenv, exec_file, args):
+    def python(self, no_virtualenv, exec_file, ipython, args):
         # Avoid logging the command
         self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
 
@@ -63,6 +68,20 @@ class MachCommands(MachCommandBase):
         if exec_file:
             exec(open(exec_file).read())
             return 0
+
+        if ipython:
+            bindir = os.path.dirname(python_path)
+            python_path = which('ipython', path=bindir)
+            if not python_path:
+                if not no_virtualenv:
+                    # Use `_run_pip` directly rather than `install_pip_package` to bypass
+                    # `req.check_if_exists()` which may detect a system installed ipython.
+                    self.virtualenv_manager._run_pip(['install', '--use-wheel', 'ipython'])
+                    python_path = which('ipython', path=bindir)
+
+                if not python_path:
+                    print("error: could not detect or install ipython")
+                    return 1
 
         return self.run_process([python_path] + args,
                                 pass_thru=True,  # Allow user to run Python interactively.
