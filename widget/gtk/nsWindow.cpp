@@ -4573,9 +4573,12 @@ void nsWindow::SetTransparencyMode(nsTransparencyMode aMode) {
 
   mIsTransparent = isTransparent;
 
-  // Need to clean our LayerManager up while still alive because
-  // we don't want to use layers acceleration on shaped windows
-  CleanLayerManagerRecursive();
+  if (!mHasAlphaVisual) {
+    // The choice of layer manager depends on
+    // GtkCompositorWidgetInitData::Shaped(), which will need to change, so
+    // clean out the old layer manager.
+    CleanLayerManagerRecursive();
+  }
 }
 
 nsTransparencyMode nsWindow::GetTransparencyMode() {
