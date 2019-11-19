@@ -195,10 +195,19 @@ void nsNotifyAddrListener::calculateNetworkId(void) {
   }
 
   if (nwGUIDS.empty()) {
-    MutexAutoLock lock(mMutex);
-    mNetworkId.Truncate();
+    bool idChanged = false;
+    {
+      MutexAutoLock lock(mMutex);
+      if (!mNetworkId.IsEmpty()) {
+        idChanged = true;
+      }
+      mNetworkId.Truncate();
+    }
     LOG(("calculateNetworkId: no network ID - no active networks"));
     Telemetry::Accumulate(Telemetry::NETWORK_ID2, 0);
+    if (idChanged) {
+      NotifyObservers(NS_NETWORK_ID_CHANGED_TOPIC, nullptr);
+    }
     return;
   }
 
@@ -224,6 +233,7 @@ void nsNotifyAddrListener::calculateNetworkId(void) {
     mNetworkId = output;
     Telemetry::Accumulate(Telemetry::NETWORK_ID2, 1);
     LOG(("calculateNetworkId: new NetworkID: %s", output.get()));
+    NotifyObservers(NS_NETWORK_ID_CHANGED_TOPIC, nullptr);
   } else {
     Telemetry::Accumulate(Telemetry::NETWORK_ID2, 2);
     LOG(("calculateNetworkId: same NetworkID: %s", output.get()));
@@ -251,7 +261,7 @@ nsNotifyAddrListener::nextCoalesceWaitTime() {
     }
     mNetworkChangeTime = TimeStamp::Now();
 
-    SendEvent(NS_NETWORK_LINK_DATA_CHANGED);
+    NotifyObservers(NS_NETWORK_LINK_TOPIC, NS_NETWORK_LINK_DATA_CHANGED);
     mCoalescingActive = false;
     return INFINITE;  // return default
   } else {
@@ -370,29 +380,29 @@ nsresult nsNotifyAddrListener::NetworkChanged() {
   return NS_OK;
 }
 
-/* Sends the given event.  Assumes aEventID never goes out of scope (static
+/* Sends the given event.  Assumes aTopic/aData never goes out of scope (static
  * strings are ideal).
  */
-nsresult nsNotifyAddrListener::SendEvent(const char* aEventID) {
-  if (!aEventID) return NS_ERROR_NULL_POINTER;
+nsresult nsNotifyAddrListener::NotifyObservers(const char* aTopic,
+                                               const char* aData) {
+  LOG(("NotifyObservers: %s=%s\n", aTopic, aData));
 
-  LOG(("SendEvent: network is '%s'\n", aEventID));
-
-  nsresult rv;
-  nsCOMPtr<nsIRunnable> event = new ChangeEvent(this, aEventID);
-  if (NS_FAILED(rv = NS_DispatchToMainThread(event)))
-    NS_WARNING("Failed to dispatch ChangeEvent");
+  auto runnable = [self = RefPtr<nsNotifyAddrListener>(this), aTopic, aData] {
+    nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+    if (observerService)
+      observerService->NotifyObservers(
+          static_cast<nsINetworkLinkService*>(self.get()), aTopic,
+          !aData ? nullptr : NS_ConvertASCIItoUTF16(aData).get());
+  };
+  nsresult rv = NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "nsNotifyAddrListener::NotifyObservers", runnable));
+  if (NS_FAILED(rv)) {
+    NS_WARNING(
+        "nsNotifyAddrListener::NotifyObservers Failed to dispatch observer "
+        "notification");
+  }
   return rv;
-}
-
-NS_IMETHODIMP
-nsNotifyAddrListener::ChangeEvent::Run() {
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-  if (observerService)
-    observerService->NotifyObservers(mService, NS_NETWORK_LINK_TOPIC,
-                                     NS_ConvertASCIItoUTF16(mEventID).get());
-  return NS_OK;
 }
 
 DWORD
@@ -521,7 +531,7 @@ void nsNotifyAddrListener::CheckLinkStatus(void) {
     }
 
     if (event) {
-      SendEvent(event);
+      NotifyObservers(NS_NETWORK_LINK_TOPIC, event);
     }
   } else {
     ret = CheckAdaptersAddresses();
@@ -541,7 +551,9 @@ void nsNotifyAddrListener::CheckLinkStatus(void) {
     }
     if (prevLinkUp != mLinkUp) {
       // UP/DOWN status changed, send appropriate UP/DOWN event
-      SendEvent(mLinkUp ? NS_NETWORK_LINK_DATA_UP : NS_NETWORK_LINK_DATA_DOWN);
+      NotifyObservers(NS_NETWORK_LINK_TOPIC, mLinkUp
+                                                 ? NS_NETWORK_LINK_DATA_UP
+                                                 : NS_NETWORK_LINK_DATA_DOWN);
     }
   }
 }
