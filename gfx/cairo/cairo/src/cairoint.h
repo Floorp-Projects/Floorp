@@ -219,7 +219,7 @@ be16_to_cpu(uint16_t v)
 static inline uint32_t cairo_const
 cpu_to_be32(uint32_t v)
 {
-    return (cpu_to_be16 (v) << 16) | cpu_to_be16 (v >> 16);
+    return ((uint32_t) cpu_to_be16 (v) << 16) | cpu_to_be16 (v >> 16);
 }
 
 static inline uint32_t cairo_const
