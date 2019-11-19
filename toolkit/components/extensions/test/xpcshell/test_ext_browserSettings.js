@@ -40,20 +40,8 @@ add_task(async function test_browser_settings() {
   };
 
   async function background() {
-    let listeners = new Set([]);
     browser.test.onMessage.addListener(async (msg, apiName, value) => {
       let apiObj = browser.browserSettings[apiName];
-      // Don't add more than one listner per apiName.  We leave the
-      // listener to ensure we do not get more calls than we expect.
-      if (!listeners.has(apiName)) {
-        apiObj.onChange.addListener(details => {
-          browser.test.sendMessage("onChange", {
-            details: details.details,
-            setting: apiName,
-          });
-        });
-        listeners.add(apiName);
-      }
       let result = await apiObj.set({ value });
       if (msg === "set") {
         browser.test.assertTrue(result, "set returns true.");
@@ -91,13 +79,6 @@ add_task(async function test_browser_settings() {
   async function testSetting(setting, value, expected, expectedValue = value) {
     extension.sendMessage("set", setting, value);
     let data = await extension.awaitMessage("settingData");
-    let dataChange = await extension.awaitMessage("onChange");
-    equal(setting, dataChange.setting, "onChange fired");
-    equal(
-      data.value,
-      dataChange.details.value,
-      "onChange fired with correct value"
-    );
     deepEqual(
       data.value,
       expectedValue,
@@ -193,11 +174,11 @@ add_task(async function test_browser_settings() {
     });
   }
 
-  await testSetting("ftpProtocolEnabled", false, {
-    "network.ftp.enabled": false,
-  });
   await testSetting("ftpProtocolEnabled", true, {
     "network.ftp.enabled": true,
+  });
+  await testSetting("ftpProtocolEnabled", false, {
+    "network.ftp.enabled": false,
   });
 
   await testSetting("newTabPosition", "afterCurrent", {
