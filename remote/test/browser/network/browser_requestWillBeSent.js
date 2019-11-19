@@ -14,12 +14,12 @@ add_task(async function(client) {
   const { Page, Network } = client;
 
   await Network.enable();
-  info("Network domain has been enabled");
+  ok(true, "Network domain has been enabled");
 
   let requests = 0;
   const onRequests = new Promise(resolve => {
     Network.requestWillBeSent(event => {
-      info("Received a request");
+      ok(true, "Received a request");
       switch (++requests) {
         case 1:
           is(event.request.url, PAGE_URL, "Got the page request");

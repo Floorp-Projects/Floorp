@@ -15,7 +15,7 @@ add_task(async function(client) {
 async function testRuntimeEnable({ Runtime }) {
   // Enable watching for new execution context
   await Runtime.enable();
-  info("Runtime domain has been enabled");
+  ok(true, "Runtime domain has been enabled");
 
   // Calling Runtime.enable will emit executionContextCreated for the existing contexts
   const { context } = await Runtime.executionContextCreated();
@@ -53,7 +53,7 @@ async function testObjectRelease({ Runtime }, contextId) {
   await Runtime.releaseObject({
     objectId: result.objectId,
   });
-  info("Object is released");
+  ok(true, "Object is released");
 
   try {
     await Runtime.callFunctionOn({

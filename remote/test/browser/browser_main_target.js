@@ -15,7 +15,7 @@ add_task(async function(_client, CDP) {
   const targetURL = mainProcessTarget.wsDebuggerURL;
 
   const client = await CDP({ target: targetURL });
-  info("CDP client has been instantiated");
+  ok(true, "CDP client has been instantiated");
 
   try {
     const { Browser, Target } = client;
