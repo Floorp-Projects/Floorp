@@ -90,6 +90,7 @@ class RemoteAgentClass {
       this.server._start(port, host);
       dump(`DevTools listening on ${mainTarget.wsDebuggerURL}\n`);
     } catch (e) {
+      await this.close();
       throw new Error(`Unable to start remote agent: ${e.message}`, e);
     }
 
@@ -97,20 +98,24 @@ class RemoteAgentClass {
   }
 
   async close() {
-    if (this.listening) {
-      try {
-        // Destroy all the targets first in order to ensure closing all pending
-        // connections first. Otherwise Httpd's stop is not going to resolve.
+    try {
+      Preferences.reset(Object.keys(RecommendedPreferences));
+
+      // destroy targets before stopping server,
+      // otherwise the HTTP will fail to stop
+      if (this.targets) {
         this.targets.destructor();
-
-        await this.server.stop();
-
-        Preferences.reset(Object.keys(RecommendedPreferences));
-      } catch (e) {
-        throw new Error(`Unable to stop agent: ${e.message}`, e);
       }
 
-      log.info("Stopped listening");
+      if (this.listening) {
+        await this.server.stop();
+      }
+    } catch (e) {
+      // this function must never fail
+      log.error("unable to stop listener", e);
+    } finally {
+      this.server = null;
+      this.targets = null;
     }
   }
 
