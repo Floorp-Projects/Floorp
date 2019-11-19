@@ -490,6 +490,16 @@ checkbox:-moz-focusring {
   margin-inline-start: 3px;
 }
 
+.devtools-button.devtools-feature-callout::after {
+  content: url("chrome://browser/skin/badge-blue.svg");
+  width: 14px;
+  height: 14px;
+  display: block;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
 /* Text input */
 
 .devtools-textinput,
