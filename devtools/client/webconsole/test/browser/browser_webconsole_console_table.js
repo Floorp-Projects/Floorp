@@ -123,6 +123,96 @@ add_task(async function() {
       },
     },
     {
+      info: "Testing when data argument is a Int8Array",
+      input: new Int8Array([1, 2, 3, 4]),
+      expected: {
+        columns: ["(index)", "Values"],
+        rows: [["0", "1"], ["1", "2"], ["2", "3"], ["3", "4"]],
+      },
+    },
+    {
+      info: "Testing when data argument is a Uint8Array",
+      input: new Uint8Array([1, 2, 3, 4]),
+      expected: {
+        columns: ["(index)", "Values"],
+        rows: [["0", "1"], ["1", "2"], ["2", "3"], ["3", "4"]],
+      },
+    },
+    {
+      info: "Testing when data argument is a Int16Array",
+      input: new Int16Array([1, 2, 3, 4]),
+      expected: {
+        columns: ["(index)", "Values"],
+        rows: [["0", "1"], ["1", "2"], ["2", "3"], ["3", "4"]],
+      },
+    },
+    {
+      info: "Testing when data argument is a Uint16Array",
+      input: new Uint16Array([1, 2, 3, 4]),
+      expected: {
+        columns: ["(index)", "Values"],
+        rows: [["0", "1"], ["1", "2"], ["2", "3"], ["3", "4"]],
+      },
+    },
+    {
+      info: "Testing when data argument is a Int32Array",
+      input: new Int32Array([1, 2, 3, 4]),
+      expected: {
+        columns: ["(index)", "Values"],
+        rows: [["0", "1"], ["1", "2"], ["2", "3"], ["3", "4"]],
+      },
+    },
+    {
+      info: "Testing when data argument is a Uint32Array",
+      input: new Uint32Array([1, 2, 3, 4]),
+      expected: {
+        columns: ["(index)", "Values"],
+        rows: [["0", "1"], ["1", "2"], ["2", "3"], ["3", "4"]],
+      },
+    },
+    {
+      info: "Testing when data argument is a Float32Array",
+      input: new Float32Array([1, 2, 3, 4]),
+      expected: {
+        columns: ["(index)", "Values"],
+        rows: [["0", "1"], ["1", "2"], ["2", "3"], ["3", "4"]],
+      },
+    },
+    {
+      info: "Testing when data argument is a Float64Array",
+      input: new Float64Array([1, 2, 3, 4]),
+      expected: {
+        columns: ["(index)", "Values"],
+        rows: [["0", "1"], ["1", "2"], ["2", "3"], ["3", "4"]],
+      },
+    },
+    {
+      info: "Testing when data argument is a Uint8ClampedArray",
+      input: new Uint8ClampedArray([1, 2, 3, 4]),
+      expected: {
+        columns: ["(index)", "Values"],
+        rows: [["0", "1"], ["1", "2"], ["2", "3"], ["3", "4"]],
+      },
+    },
+    {
+      info: "Testing when data argument is a BigInt64Array",
+      // eslint-disable-next-line no-undef
+      input: new BigInt64Array([1n, 2n, 3n, 4n]),
+      expected: {
+        columns: ["(index)", "Values"],
+        rows: [["0", "1n"], ["1", "2n"], ["2", "3n"], ["3", "4n"]],
+      },
+    },
+    {
+      info: "Testing when data argument is a BigUint64Array",
+      // eslint-disable-next-line no-undef
+      input: new BigUint64Array([1n, 2n, 3n, 4n]),
+      expected: {
+        columns: ["(index)", "Values"],
+        rows: [["0", "1n"], ["1", "2n"], ["2", "3n"], ["3", "4n"]],
+      },
+    },
+    {
       info: "Testing restricting the columns displayed",
       input: [new Person("Sam", "Wright"), new Person("Elena", "Bartz")],
       headers: ["firstName"],
@@ -163,13 +253,34 @@ add_task(async function() {
         overflow: true,
       },
     },
+    {
+      info: "Testing table with expandable objects",
+      input: [{ a: { b: 34 } }],
+      expected: {
+        columns: ["(index)", "a"],
+        rows: [["0", "Object { … }"]],
+      },
+      additionalTest: async function(node) {
+        info("Check that object in a cell can be expanded");
+        const objectNode = node.querySelector(".tree .node");
+        objectNode.click();
+        await waitFor(() => node.querySelectorAll(".tree .node").length === 3);
+        const nodes = node.querySelectorAll(".tree .node");
+        ok(nodes[1].textContent.includes("b: 34"));
+        ok(nodes[2].textContent.includes("<prototype>"));
+      },
+    },
   ];
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, testCases, function(tests) {
-    tests.forEach(test => {
-      content.wrappedJSObject.doConsoleTable(test.input, test.headers);
-    });
-  });
+  await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    testCases.map(({ input, headers }) => ({ input, headers })),
+    function(tests) {
+      tests.forEach(test => {
+        content.wrappedJSObject.doConsoleTable(test.input, test.headers);
+      });
+    }
+  );
   const nodes = [];
   for (const testCase of testCases) {
     const node = await waitFor(() =>
@@ -185,9 +296,13 @@ add_task(async function() {
     testCases.length,
     "console has the expected number of consoleTable items"
   );
-  testCases.forEach((testCase, index) => testItem(testCase, nodes[index]));
+
+  for (const [index, testCase] of testCases.entries()) {
+    await testItem(testCase, nodes[index]);
+  }
 });
-function testItem(testCase, node) {
+
+async function testItem(testCase, node) {
   info(testCase.info);
 
   const columns = Array.from(node.querySelectorAll("[role=columnheader]"));
@@ -219,6 +334,10 @@ function testItem(testCase, node) {
   if (testCase.expected.overflow) {
     ok(node.scrollHeight > node.clientHeight, "table overflows");
     ok(getComputedStyle(node).overflowY !== "hidden", "table can be scrolled");
+  }
+
+  if (typeof testCase.additionalTest === "function") {
+    await testCase.additionalTest(node);
   }
 }
 
