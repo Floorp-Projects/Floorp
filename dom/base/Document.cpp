@@ -15117,12 +15117,19 @@ FlashClassification Document::DocumentFlashClassification() {
   return mFlashClassification;
 }
 
-void Document::AddResizeObserver(ResizeObserver* aResizeObserver) {
+void Document::AddResizeObserver(ResizeObserver& aObserver) {
   if (!mResizeObserverController) {
     mResizeObserverController = MakeUnique<ResizeObserverController>(this);
   }
+  mResizeObserverController->AddResizeObserver(aObserver);
+}
 
-  mResizeObserverController->AddResizeObserver(aResizeObserver);
+void Document::RemoveResizeObserver(ResizeObserver& aObserver) {
+  MOZ_DIAGNOSTIC_ASSERT(mResizeObserverController, "No controller?");
+  if (MOZ_UNLIKELY(!mResizeObserverController)) {
+    return;
+  }
+  mResizeObserverController->RemoveResizeObserver(aObserver);
 }
 
 PermissionDelegateHandler* Document::GetPermissionDelegateHandler() {

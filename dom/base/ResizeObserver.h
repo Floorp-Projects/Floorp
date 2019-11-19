@@ -89,9 +89,11 @@ class ResizeObserver final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ResizeObserver)
 
   ResizeObserver(already_AddRefed<nsPIDOMWindowInner>&& aOwner,
-                 ResizeObserverCallback& aCb)
-      : mOwner(aOwner), mCallback(&aCb) {
+                 Document* aDocument, ResizeObserverCallback& aCb)
+      : mOwner(aOwner), mDocument(aDocument), mCallback(&aCb) {
     MOZ_ASSERT(mOwner, "Need a non-null owner window");
+    MOZ_ASSERT(mDocument, "Need a non-null doc");
+    MOZ_ASSERT(mDocument == mOwner->GetExtantDoc());
   }
 
   nsISupports* GetParentObject() const { return mOwner; }
@@ -147,6 +149,8 @@ class ResizeObserver final : public nsISupports, public nsWrapperCache {
   ~ResizeObserver() { mObservationList.clear(); }
 
   nsCOMPtr<nsPIDOMWindowInner> mOwner;
+  // The window's document at the time of ResizeObserver creation.
+  RefPtr<Document> mDocument;
   RefPtr<ResizeObserverCallback> mCallback;
   nsTArray<RefPtr<ResizeObservation>> mActiveTargets;
   // The spec uses a list to store the skipped targets. However, it seems what
