@@ -135,3 +135,16 @@ assertErrorMessage(() => new WebAssembly.Module(
                    WebAssembly.CompileError,
                    /declared element segments cannot contain ref.null/);
 
+// Test case for bug 1596026: when taking the ref.func of an imported function,
+// the value obtained should not be the JS function.  This would assert (even in
+// a release build), so the test is merely that the code runs.
+
+var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
+  (module
+    (import $f "m" "f" (func (param i32) (result i32)))
+    (elem declared $f)
+    (table 1 funcref)
+    (func (export "f")
+      (table.set 0 (i32.const 0) (ref.func $f))))`)),
+                                   {m:{f:(x) => 37+x}});
+ins.exports.f();
