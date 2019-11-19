@@ -25814,9 +25814,6 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
 
       if (aInitializeResponse) {
         mResponse = nsTArray<ObjectStoreCursorResponse>();
-      } else {
-        MOZ_ASSERT(mResponse.type() ==
-                   CursorResponse::TArrayOfObjectStoreCursorResponse);
       }
 
       auto& responses = mResponse.get_ArrayOfObjectStoreCursorResponse();
@@ -25831,9 +25828,6 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
     case OpenCursorParams::TObjectStoreOpenKeyCursorParams: {
       if (aInitializeResponse) {
         mResponse = nsTArray<ObjectStoreKeyCursorResponse>();
-      } else {
-        MOZ_ASSERT(mResponse.type() ==
-                   CursorResponse::TArrayOfObjectStoreKeyCursorResponse);
       }
 
       auto& responses = mResponse.get_ArrayOfObjectStoreKeyCursorResponse();
@@ -25868,9 +25862,6 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
 
       if (aInitializeResponse) {
         mResponse = nsTArray<IndexCursorResponse>();
-      } else {
-        MOZ_ASSERT(mResponse.type() ==
-                   CursorResponse::TArrayOfIndexCursorResponse);
       }
 
       auto& responses = mResponse.get_ArrayOfIndexCursorResponse();
@@ -25897,9 +25888,6 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
 
       if (aInitializeResponse) {
         mResponse = nsTArray<IndexKeyCursorResponse>();
-      } else {
-        MOZ_ASSERT(mResponse.type() ==
-                   CursorResponse::TArrayOfIndexKeyCursorResponse);
       }
 
       auto& responses = mResponse.get_ArrayOfIndexKeyCursorResponse();
