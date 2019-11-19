@@ -829,7 +829,7 @@ async function scheduleFuzzing32() {
 
 async function scheduleWindows(name, base, build_script) {
   base = merge(base, {
-    workerType: "nss-win2012r2",
+    workerType: "win2012r2",
     env: {
       PATH: "c:\\mozilla-build\\bin;c:\\mozilla-build\\python;" +
 	    "c:\\mozilla-build\\msys\\local\\bin;c:\\mozilla-build\\7zip;" +
@@ -839,7 +839,9 @@ async function scheduleWindows(name, base, build_script) {
 	    "c:\\mozilla-build\\moztools-x64\\bin;c:\\mozilla-build\\wget",
       DOMSUF: "localdomain",
       HOST: "localhost",
-    }
+    },
+    features: ["taskclusterProxy"],
+    scopes: ["project:releng:services/tooltool/api/download/internal"],
   });
 
   let artifacts_and_kind = {
