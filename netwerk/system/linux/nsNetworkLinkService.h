@@ -37,7 +37,7 @@ class nsNetworkLinkService : public nsINetworkLinkService,
   nsresult Shutdown();
 
   // Sends the network event.
-  void SendEvent(const char* aEventID);
+  void NotifyObservers(const char* aTopic, const char* aData);
 
   mozilla::Atomic<bool, mozilla::Relaxed> mStatusIsKnown;
 
