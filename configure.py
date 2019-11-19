@@ -34,6 +34,12 @@ def main(argv):
 
     sandbox = ConfigureSandbox(config, os.environ, argv)
 
+    clobber_file = 'CLOBBER'
+    if not os.path.exists(clobber_file):
+        # Simply touch the file.
+        with open(clobber_file, 'a'):
+            pass
+
     if os.environ.get('MOZ_CONFIGURE_TRACE'):
         sandbox._logger.setLevel(TRACE)
 

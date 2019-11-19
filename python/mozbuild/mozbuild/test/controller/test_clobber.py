@@ -64,14 +64,13 @@ class TestClobberer(unittest.TestCase):
         c = Clobberer(self.get_topsrcdir(), tmp)
         self.assertFalse(c.clobber_needed())
 
-        # Side-effect is topobjdir is created with CLOBBER file touched.
         required, performed, reason = c.maybe_do_clobber(os.getcwd(), True)
         self.assertFalse(required)
         self.assertFalse(performed)
         self.assertIsNone(reason)
 
-        self.assertTrue(os.path.isdir(tmp))
-        self.assertTrue(os.path.exists(os.path.join(tmp, 'CLOBBER')))
+        self.assertFalse(os.path.isdir(tmp))
+        self.assertFalse(os.path.exists(os.path.join(tmp, 'CLOBBER')))
 
     def test_objdir_no_clobber_file(self):
         """If CLOBBER does not exist in topobjdir, treat as empty."""
@@ -84,7 +83,7 @@ class TestClobberer(unittest.TestCase):
         self.assertFalse(performed)
         self.assertIsNone(reason)
 
-        self.assertTrue(os.path.exists(os.path.join(c.topobjdir, 'CLOBBER')))
+        self.assertFalse(os.path.exists(os.path.join(c.topobjdir, 'CLOBBER')))
 
     def test_objdir_clobber_newer(self):
         """If CLOBBER in topobjdir is newer, do nothing."""
@@ -121,9 +120,7 @@ class TestClobberer(unittest.TestCase):
         self.assertTrue(performed)
 
         self.assertFalse(os.path.exists(dummy_path))
-        self.assertTrue(os.path.exists(c.obj_clobber))
-        self.assertGreaterEqual(os.path.getmtime(c.obj_clobber),
-                                os.path.getmtime(c.src_clobber))
+        self.assertFalse(os.path.exists(c.obj_clobber))
 
     def test_objdir_is_srcdir(self):
         """If topobjdir is the topsrcdir, refuse to clobber."""
