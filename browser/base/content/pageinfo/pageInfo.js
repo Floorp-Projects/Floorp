@@ -1173,10 +1173,10 @@ function getContentTypeFromHeaders(cacheEntryDescriptor) {
 function setItemValue(id, value) {
   var item = document.getElementById(id);
   if (value) {
-    item.parentNode.collapsed = false;
+    item.closest("tr").hidden = false;
     item.value = value;
   } else {
-    item.parentNode.collapsed = true;
+    item.closest("tr").hidden = true;
   }
 }
 
