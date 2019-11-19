@@ -16,27 +16,6 @@ async function clickToReportAndAwaitReportTabLoad() {
     document.getElementById(WC_PAGE_ACTION_PANEL_ID).click();
   });
 
-  // wait for the new tab to switch to its final location
-  await new Promise(resolve => {
-    const progressListener = {
-      onLocationChange(browser) {
-        // Only interested in location changes on our browser.
-        if (browser != tab.linkedBrowser) {
-          return;
-        }
-
-        // Check that new location is the URL we want.
-        if (browser.currentURI.spec === "about:blank") {
-          return;
-        }
-
-        gBrowser.removeTabsProgressListener(progressListener);
-        TestUtils.executeSoon(() => resolve());
-      },
-    };
-    gBrowser.addTabsProgressListener(progressListener);
-  });
-
   // wait for the new tab to acknowledge that it received a screenshot
   await BrowserTestUtils.waitForContentEvent(
     gBrowser.selectedBrowser,
