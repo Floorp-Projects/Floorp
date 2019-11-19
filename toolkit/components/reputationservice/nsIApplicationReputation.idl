@@ -87,10 +87,10 @@ interface nsIApplicationReputationQuery : nsISupports {
   readonly attribute ACString sha256Hash;
 
   /*
-   * The nsIArray of nsIX509CertList of nsIX509Cert that verify for this
+   * The Array of Array of Array of bytes that verify for this
    * binary, if it is signed.
    */
-  readonly attribute nsIArray signatureInfo;
+  readonly attribute Array<Array<Array<uint8_t> > > signatureInfo;
 
   /*
    * The nsIArray of nsIPrincipal of redirects that lead to this download. The

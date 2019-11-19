@@ -53,16 +53,17 @@ interface nsIBackgroundFileSaver : nsISupports
   attribute nsIBackgroundFileSaverObserver observer;
 
   /**
-   * An nsIArray of nsIX509CertList, representing a chain of X.509 signatures on
-   * the downloaded file. Each list may belong to a different signer and contain
-   * certificates all the way up to the root.
+   * An Array of Array of Array of bytes, representing a chain of
+   * X.509 certificates, the last of which signed the downloaded file.
+   * Each list may belong to a different signer and contain certificates
+   * all the way up to the root.
    *
    * @throws NS_ERROR_NOT_AVAILABLE
    *         In case this is called before the onSaveComplete method has been
    *         called to notify success, or enableSignatureInfo has not been
    *         called.
    */
-  readonly attribute nsIArray signatureInfo;
+  readonly attribute Array<Array<Array<uint8_t> > > signatureInfo;
 
   /**
    * The SHA-256 hash, in raw bytes, associated with the data that was saved.

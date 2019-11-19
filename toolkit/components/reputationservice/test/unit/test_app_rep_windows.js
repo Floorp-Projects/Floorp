@@ -392,6 +392,7 @@ add_task(async function test_blocked_binary() {
       sourceURI: createURI("http://evil.com"),
       suggestedFileName: "noop.bat",
       fileSize: 12,
+      signatureInfo: [],
     },
     expected
   );
@@ -411,6 +412,7 @@ add_task(async function test_non_binary() {
       sourceURI: createURI("http://evil.com"),
       suggestedFileName: "noop.txt",
       fileSize: 12,
+      signatureInfo: [],
     },
     expected
   );
@@ -431,6 +433,7 @@ add_task(async function test_good_binary() {
       sourceURI: createURI("http://mozilla.com"),
       suggestedFileName: "noop.bat",
       fileSize: 12,
+      signatureInfo: [],
     },
     expected
   );
@@ -448,6 +451,7 @@ add_task(async function test_disabled() {
   let query = {
     sourceURI: createURI("http://example.com"),
     suggestedFileName: "noop.bat",
+    signatureInfo: [],
     fileSize: 12,
   };
   await new Promise(resolve => {
@@ -474,6 +478,7 @@ add_task(async function test_disabled_through_lists() {
     sourceURI: createURI("http://example.com"),
     suggestedFileName: "noop.bat",
     fileSize: 12,
+    signatureInfo: [],
   };
   await new Promise(resolve => {
     gAppRep.queryReputation(query, function onComplete(aShouldBlock, aStatus) {

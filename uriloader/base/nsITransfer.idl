@@ -71,10 +71,10 @@ interface nsITransfer : nsIWebProgressListener2 {
      * Used to notify the transfer object of the signature of the downloaded
      * file.  Must be called on the main thread, only after the download has
      * finished successfully.
-     * @param aSignatureInfo The nsIArray of nsIX509CertList of nsIX509Cert
+     * @param aSignatureInfo The Array of Array of Array of bytes
      *        certificates of the downloaded file.
      */
-    void setSignatureInfo(in nsIArray aSignatureInfo);
+    void setSignatureInfo(in Array<Array<Array<uint8_t> > > aSignatureInfo);
 
     /*
      * Used to notify the transfer object of the redirects associated with the
