@@ -160,10 +160,12 @@ macro_rules! array_impls {
     }
 }
 
-array_impls!(01 02 03 04 05 06 07 08 09 10
-             11 12 13 14 15 16 17 18 19 20
-             21 22 23 24 25 26 27 28 29 30
-             31 32);
+array_impls! {
+    01 02 03 04 05 06 07 08 09 10
+    11 12 13 14 15 16 17 18 19 20
+    21 22 23 24 25 26 27 28 29 30
+    31 32
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -479,7 +481,6 @@ macro_rules! nonzero_integers {
 }
 
 nonzero_integers! {
-    // Not including signed NonZeroI* since they might be removed
     NonZeroU8,
     NonZeroU16,
     NonZeroU32,
@@ -487,11 +488,25 @@ nonzero_integers! {
     NonZeroUsize,
 }
 
+#[cfg(num_nonzero_signed)]
+nonzero_integers! {
+    NonZeroI8,
+    NonZeroI16,
+    NonZeroI32,
+    NonZeroI64,
+    NonZeroIsize,
+}
+
 // Currently 128-bit integers do not work on Emscripten targets so we need an
 // additional `#[cfg]`
 serde_if_integer128! {
     nonzero_integers! {
         NonZeroU128,
+    }
+
+    #[cfg(num_nonzero_signed)]
+    nonzero_integers! {
+        NonZeroI128,
     }
 }
 
@@ -618,6 +633,7 @@ impl Serialize for SystemTime {
 #[cfg(feature = "std")]
 macro_rules! serialize_display_bounded_length {
     ($value:expr, $max:expr, $serializer:expr) => {{
+        #[allow(deprecated)]
         let mut buffer: [u8; $max] = unsafe { mem::uninitialized() };
         let remaining_len = {
             let mut remaining = &mut buffer[..];
@@ -821,4 +837,48 @@ where
     {
         self.0.serialize(serializer)
     }
+}
+
+#[cfg(core_reverse)]
+impl<T> Serialize for Reverse<T>
+where
+    T: Serialize,
+{
+    #[inline]
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.0.serialize(serializer)
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+#[cfg(all(feature = "std", std_atomic))]
+macro_rules! atomic_impl {
+    ($($ty:ident)*) => {
+        $(
+            impl Serialize for $ty {
+                fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+                where
+                    S: Serializer,
+                {
+                    self.load(Ordering::SeqCst).serialize(serializer)
+                }
+            }
+        )*
+    }
+}
+
+#[cfg(all(feature = "std", std_atomic))]
+atomic_impl! {
+    AtomicBool
+    AtomicI8 AtomicI16 AtomicI32 AtomicIsize
+    AtomicU8 AtomicU16 AtomicU32 AtomicUsize
+}
+
+#[cfg(all(feature = "std", std_atomic64))]
+atomic_impl! {
+    AtomicI64 AtomicU64
 }

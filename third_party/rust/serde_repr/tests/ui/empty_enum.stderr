@@ -3,6 +3,3 @@ error: there must be at least one variant
   |
 3 | #[derive(Serialize_repr)]
   |          ^^^^^^^^^^^^^^
-
-error: aborting due to previous error
-
