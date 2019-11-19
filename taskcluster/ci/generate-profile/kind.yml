@@ -50,6 +50,7 @@ jobs:
         fetches:
             toolchain:
                 - linux64-clang
+                - linux64-minidump-stackwalk
 
     linux64-shippable/opt:
         description: "Linux64 Profile Generation"
@@ -78,6 +79,7 @@ jobs:
         fetches:
             toolchain:
                 - linux64-clang
+                - linux64-minidump-stackwalk
 
     android-api-16/pgo:
         description: "Android 4.0 api-16+ Profile Generation"
@@ -114,6 +116,7 @@ jobs:
         fetches:
             toolchain:
                 - linux64-clang
+                - linux64-minidump-stackwalk
 
     win32-shippable/opt:
         description: "Win32 Profile Generation"
@@ -141,6 +144,7 @@ jobs:
         fetches:
             toolchain:
                 - win64-clang-cl
+                - win32-minidump-stackwalk
 
     win64-shippable/opt:
         description: "Win64 Profile Generation"
@@ -168,3 +172,4 @@ jobs:
         fetches:
             toolchain:
                 - win64-clang-cl
+                - win32-minidump-stackwalk
