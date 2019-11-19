@@ -1141,6 +1141,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "fluent-langneg"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "unic-langid 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "fluent-langneg-ffi"
+version = "0.1.0"
+dependencies = [
+ "fluent-langneg 0.11.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nserror 0.1.0",
+ "nsstring 0.1.0",
+ "thin-vec 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "unic-langid 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "xpcom 0.1.0",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1422,6 +1442,8 @@ dependencies = [
  "cubeb-sys 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "encoding_glue 0.1.0",
  "env_logger 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "fluent-langneg 0.11.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "fluent-langneg-ffi 0.1.0",
  "geckoservo 0.0.1",
  "gkrust_utils 0.1.0",
  "jsrust_shared 0.1.0",
@@ -4613,6 +4635,7 @@ dependencies = [
 "checksum fake-simd 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "e88a8acf291dafb59c2d96e8f59828f3838bb1a70398823ade51a84de6a6deed"
 "checksum filetime_win 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b8c37abd4a58e0cb794bcae4a7dc4f02fff376949d8d1066d4c729e97bfb38ec"
 "checksum flate2 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)" = "2adaffba6388640136149e18ed080b77a78611c1e1d6de75aedcdf78df5d4682"
+"checksum fluent-langneg 0.11.1 (registry+https://github.com/rust-lang/crates.io-index)" = "55e840a3a9938e6dd9a57a6a3be02bef1d51b1d75b883cdfe84810c7e7ca1293"
 "checksum fnv 1.0.6 (registry+https://github.com/rust-lang/crates.io-index)" = "2fad85553e09a6f881f739c29f0b00b0f01357c743266d478b68951ce23285f3"
 "checksum foreign-types 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5ebc04f19019fff1f2d627b5581574ead502f80c48c88900575a46e0840fe5d0"
 "checksum freetype 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b659e75b7a7338fe75afd7f909fc2b71937845cffb6ebe54ba2e50f13d8e903d"

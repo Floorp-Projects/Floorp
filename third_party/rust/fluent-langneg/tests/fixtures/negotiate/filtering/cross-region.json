@@ -1,0 +1,14 @@
+[
+  {
+    "input": [["en"], ["en-US"]],
+    "output": ["en-US"]
+  },
+  {
+    "input": [["en-US"], ["en-GB"]],
+    "output": ["en-GB"]
+  },
+  {
+    "input": [["en-Latn-US"], ["en-Latn-GB"]],
+    "output": ["en-Latn-GB"]
+  }
+]
