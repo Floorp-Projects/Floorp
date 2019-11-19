@@ -209,7 +209,7 @@ function decodeRequestPayload(request) {
   Assert.notEqual(
     TelemetryUtils.knownClientID,
     payload.clientId,
-    "Known clientId should never appear in a ping on the server"
+    `Known clientId shouldn't appear in a "${payload.type}" ping on the server.`
   );
 
   return payload;
