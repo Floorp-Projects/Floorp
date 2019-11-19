@@ -185,85 +185,9 @@ function getInfoFrameScript(messageName) {
 this.tabExtras = class extends ExtensionAPI {
   getAPI(context) {
     const { tabManager } = context.extension;
-    const {
-      Management: {
-        global: { windowTracker },
-      },
-    } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
-
-    const { Services } = ChromeUtils.import(
-      "resource://gre/modules/Services.jsm"
-    );
 
     return {
       tabExtras: {
-        async loadURIWithPostData(
-          tabId,
-          url,
-          postDataString,
-          postDataContentType
-        ) {
-          const tab = tabManager.get(tabId);
-          if (!tab || !tab.browser) {
-            return Promise.reject("Invalid tab");
-          }
-
-          try {
-            new URL(url);
-          } catch (_) {
-            return Promise.reject("Invalid url");
-          }
-
-          if (
-            typeof postDataString !== "string" &&
-            !(postDataString instanceof String)
-          ) {
-            return Promise.reject("postDataString must be a string");
-          }
-
-          const stringStream = Cc[
-            "@mozilla.org/io/string-input-stream;1"
-          ].createInstance(Ci.nsIStringInputStream);
-          stringStream.data = postDataString;
-          const postData = Cc[
-            "@mozilla.org/network/mime-input-stream;1"
-          ].createInstance(Ci.nsIMIMEInputStream);
-          postData.addHeader(
-            "Content-Type",
-            postDataContentType || "application/x-www-form-urlencoded"
-          );
-          postData.setData(stringStream);
-
-          return new Promise(resolve => {
-            const listener = {
-              onLocationChange(
-                browser,
-                webProgress,
-                request,
-                locationURI,
-                flags
-              ) {
-                if (
-                  webProgress.isTopLevel &&
-                  browser === tab.browser &&
-                  locationURI.spec === url
-                ) {
-                  windowTracker.removeListener("progress", listener);
-                  resolve();
-                }
-              },
-            };
-            windowTracker.addListener("progress", listener);
-
-            let loadURIOptions = {
-              triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
-                {}
-              ),
-              postData,
-            };
-            tab.browser.webNavigation.loadURI(url, loadURIOptions);
-          });
-        },
         async getWebcompatInfo(tabId) {
           return new Promise(resolve => {
             const messageName = "WebExtension:GetWebcompatInfo";
