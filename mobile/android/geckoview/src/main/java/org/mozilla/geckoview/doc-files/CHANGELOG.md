@@ -46,6 +46,7 @@ exclude: true
 - ⚠️ Split [`ContentBlockingController.Event.LOADED_TRACKING_CONTENT`][72.15] into
   [`ContentBlockingController.Event.LOADED_LEVEL_1_TRACKING_CONTENT`][72.16] and
   [`ContentBlockingController.Event.LOADED_LEVEL_2_TRACKING_CONTENT`][72.17].
+- Replaced `subscription` argument in [`WebPushDelegate.onPushEvent`][72.18] from a [`WebPushSubscription`][72.19] to the [`String`][72.20] `scope`.
 
 [72.1]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture-
 [72.2]: {{javadoc_uri}}/Autofill.html
@@ -64,6 +65,9 @@ exclude: true
 [72.15]: {{javadoc_uri}}/ContentBlockingController.Event.html#LOADED_TRACKING_CONTENT
 [72.16]: {{javadoc_uri}}/ContentBlockingController.Event.html#LOADED_LEVEL_1_TRACKING_CONTENT
 [72.17]: {{javadoc_uri}}/ContentBlockingController.Event.html#LOADED_LEVEL_2_TRACKING_CONTENT
+[72.18]: {{javadoc_uri}}/WebPushController.html#onPushEvent-org.mozilla.geckoview.WebPushSubscription-byte:A-
+[72.19]: {{javadoc_uri}}/WebPushSubscription.html
+[72.20]: https://developer.android.com/reference/java/lang/String
 
 ## v71
 - Added a content blocking flag for blocked social cookies to [`ContentBlocking`][70.17].
@@ -220,7 +224,7 @@ exclude: true
 [70.28]: {{javadoc_uri}}/GeckoRuntime.html#getContentBlockingController--
 
 ## v69
-- Modified behavior of ['setAutomaticFontSizeAdjustment'][69.1] so that it no 
+- Modified behavior of ['setAutomaticFontSizeAdjustment'][69.1] so that it no
   longer has any effect on ['setFontInflationEnabled'][69.2]
 - Add [GeckoSession.LOAD_FLAGS_FORCE_ALLOW_DATA_URI][69.14]
 - Added [`GeckoResult.accept`][69.3] for consuming a result without
@@ -257,7 +261,7 @@ exclude: true
 - [`RuntimeTelemetry#getSnapshots`][68.10] returns a [`JSONObject`][68.30] now.
 - Removed all `org.mozilla.gecko` references in the API.
 - Added [`ContentBlocking#AT_FINGERPRINTING`][68.11] to block fingerprinting trackers.
-- Added [`HistoryItem`][68.31] and [`HistoryList`][68.32] interfaces and [`onHistoryStateChange`][68.34] to 
+- Added [`HistoryItem`][68.31] and [`HistoryList`][68.32] interfaces and [`onHistoryStateChange`][68.34] to
   [`HistoryDelegate`][68.12] and added [`gotoHistoryIndex`][68.33] to [`GeckoSession`][68.13].
 - [`GeckoView`][70.5] will not create a [`GeckoSession`][65.9] anymore when
   attached to a window without a session.
@@ -451,14 +455,14 @@ exclude: true
 [65.14]: {{javadoc_uri}}/WebRequest.html
 [65.15]: {{javadoc_uri}}/WebResponse.html
 [65.16]: {{javadoc_uri}}/GeckoWebExecutor.html
-[65.17]: {{javadoc_uri}}/GeckoSession.HistoryDelegate.html    
+[65.17]: {{javadoc_uri}}/GeckoSession.HistoryDelegate.html
 [65.18]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onFirstComposite-org.mozilla.geckoview.GeckoSession-
 [65.19]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.LoadRequest.html#isRedirect
-[65.20]: {{javadoc_uri}}/GeckoSession.html#LOAD_FLAGS_BYPASS_CLASSIFIER    
+[65.20]: {{javadoc_uri}}/GeckoSession.html#LOAD_FLAGS_BYPASS_CLASSIFIER
 [65.21]: {{javadoc_uri}}/GeckoSession.ContentDelegate.ContextElement.html
 [65.22]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onContextMenu-org.mozilla.geckoview.GeckoSession-int-int-org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement-
 [65.23]: {{javadoc_uri}}/GeckoSession.FinderResult.html
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: d4fbf3825322768a22d225f79c659bfd36eebbc6
+[api-version]: 4c9f04038d8478206efac05b518920819faeacea
