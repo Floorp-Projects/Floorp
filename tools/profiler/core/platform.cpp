@@ -215,18 +215,6 @@ static uint32_t AvailableFeatures() {
 #if !defined(MOZ_TASK_TRACER)
   ProfilerFeature::ClearTaskTracer(features);
 #endif
-#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
-  if (getenv("XPCOM_MEM_BLOAT_LOG")) {
-    // The memory hooks are available, but the bloat log is enabled, which is
-    // not compatible with the native allocations tracking. See the comment in
-    // enable_native_allocations() (tools/profiler/core/memory_hooks.cpp) for
-    // more information.
-    ProfilerFeature::ClearNativeAllocations(features);
-  }
-#else
-  // The memory hooks are not available.
-  ProfilerFeature::ClearNativeAllocations(features);
-#endif
   if (!JS::TraceLoggerSupported()) {
     ProfilerFeature::ClearJSTracer(features);
   }

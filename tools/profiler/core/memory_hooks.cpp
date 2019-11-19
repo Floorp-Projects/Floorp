@@ -584,7 +584,7 @@ void enable_native_allocations(int aMainThreadId) {
   // with the memory hook machinery, as the bloat log creates its own
   // allocations. This means we can re-enter inside the bloat log machinery. At
   // this time, the bloat log does not know about cannot handle the native
-  // allocation feature.
+  // allocation feature. For now just disable the feature.
   //
   // At the time of this writing, we hit this assertion:
   // IsIdle(oldState) || IsRead(oldState) in Checker::StartReadOp()
@@ -602,13 +602,11 @@ void enable_native_allocations(int aMainThreadId) {
   //    #11: NS_LogCtor
   //    #12: profiler_get_backtrace()
   //    ...
-  MOZ_ASSERT(!PR_GetEnv("XPCOM_MEM_BLOAT_LOG"),
-             "The bloat log feature is not compatible with the native "
-             "allocations instrumentation.");
-
-  EnsureBernoulliIsInstalled();
-  EnsureAllocationTrackerIsInstalled();
-  ThreadIntercept::EnableAllocationFeature(aMainThreadId);
+  if (!PR_GetEnv("XPCOM_MEM_BLOAT_LOG")) {
+    EnsureBernoulliIsInstalled();
+    EnsureAllocationTrackerIsInstalled();
+    ThreadIntercept::EnableAllocationFeature(aMainThreadId);
+  }
 }
 
 // This is safe to call even if native allocations hasn't been enabled.
