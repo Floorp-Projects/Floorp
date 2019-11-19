@@ -94,30 +94,6 @@ this.telemetry = class extends ExtensionAPI {
             throw new ExtensionUtils.ExtensionError(ex);
           }
         },
-        keyedScalarAdd(name, key, value) {
-          desktopCheck();
-          try {
-            Services.telemetry.keyedScalarAdd(name, key, value);
-          } catch (ex) {
-            throw new ExtensionUtils.ExtensionError(ex);
-          }
-        },
-        keyedScalarSet(name, key, value) {
-          desktopCheck();
-          try {
-            Services.telemetry.keyedScalarSet(name, key, value);
-          } catch (ex) {
-            throw new ExtensionUtils.ExtensionError(ex);
-          }
-        },
-        keyedScalarSetMaximum(name, key, value) {
-          desktopCheck();
-          try {
-            Services.telemetry.keyedScalarSetMaximum(name, key, value);
-          } catch (ex) {
-            throw new ExtensionUtils.ExtensionError(ex);
-          }
-        },
         recordEvent(category, method, object, value, extra) {
           desktopCheck();
           try {

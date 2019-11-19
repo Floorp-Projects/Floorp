@@ -15,7 +15,6 @@
 <window id="main-window"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   data-l10n-id="page-info-window"
   data-l10n-attrs="style"
   windowtype="Browser:page-info"
@@ -87,74 +86,61 @@
   <deck id="mainDeck" flex="1">
     <!-- General page information -->
     <vbox id="generalPanel">
-      <table id="generalTable" xmlns="http://www.w3.org/1999/xhtml">
-        <tr id="generalTitle">
-          <th>
-            <xul:label control="titletext" data-l10n-id="general-title"/>
-          </th>
-          <td>
-            <input readonly="readonly" id="titletext" data-l10n-attrs="value"/>
-          </td>
-        </tr>
-        <tr id="generalURLRow">
-          <th>
-            <xul:label control="urltext" data-l10n-id="general-url"/>
-          </th>
-          <td>
-            <input readonly="readonly" id="urltext"/>
-          </td>
-        </tr>
-        <tr class="tableSeparator"/>
-        <tr id="generalTypeRow">
-          <th>
-            <xul:label control="typetext" data-l10n-id="general-type"/>
-          </th>
-          <td>
-            <input readonly="readonly" id="typetext"/>
-          </td>
-        </tr>
-        <tr id="generalModeRow">
-          <th>
-            <xul:label control="modetext" data-l10n-id="general-mode"/>
-          </th>
-          <td>
-            <input readonly="readonly" id="modetext" data-l10n-attrs="value"/>
-          </td>
-        </tr>
-        <tr id="generalEncodingRow">
-          <th>
-            <xul:label control="encodingtext" data-l10n-id="general-encoding"/>
-          </th>
-          <td>
-            <input readonly="readonly" id="encodingtext"/>
-          </td>
-        </tr>
-        <tr id="generalSizeRow">
-          <th>
-            <xul:label control="sizetext" data-l10n-id="general-size"/>
-          </th>
-          <td>
-            <input readonly="readonly" id="sizetext" data-l10n-attrs="value"/>
-          </td>
-        </tr>
-        <tr id="generalReferrerRow">
-          <th>
-            <xul:label control="refertext" data-l10n-id="general-referrer"/>
-          </th>
-          <td>
-            <input readonly="readonly" id="refertext"/>
-          </td>
-        </tr>
-        <tr class="tableSeparator"/>
-        <tr id="generalModifiedRow">
-          <th>
-            <xul:label control="modifiedtext" data-l10n-id="general-modified"/>
-          </th>
-          <td>
-            <input readonly="readonly" id="modifiedtext"/>
-          </td>
-        </tr>
-      </table>
+      <grid id="generalGrid">
+        <columns>
+          <column/>
+          <column class="gridSeparator"/>
+          <column flex="1"/>
+        </columns>
+        <rows id="generalRows">
+          <row id="generalTitle">
+            <label control="titletext" data-l10n-id="general-title"/>
+            <separator/>
+            <html:input readonly="readonly" id="titletext" data-l10n-attrs="value"/>
+          </row>
+          <row id="generalURLRow">
+            <label control="urltext" data-l10n-id="general-url"/>
+            <separator/>
+            <html:input readonly="readonly" id="urltext"/>
+          </row>
+          <row id="generalSeparatorRow1">
+            <separator class="thin"/>
+          </row>
+          <row id="generalTypeRow">
+            <label control="typetext" data-l10n-id="general-type"/>
+            <separator/>
+            <html:input readonly="readonly" id="typetext"/>
+          </row>
+          <row id="generalModeRow">
+            <label control="modetext" data-l10n-id="general-mode"/>
+            <separator/>
+            <html:input readonly="readonly" id="modetext" data-l10n-attrs="value"/>
+          </row>
+          <row id="generalEncodingRow">
+            <label control="encodingtext" data-l10n-id="general-encoding"/>
+            <separator/>
+            <html:input readonly="readonly" id="encodingtext"/>
+          </row>
+          <row id="generalSizeRow">
+            <label control="sizetext" data-l10n-id="general-size"/>
+            <separator/>
+            <html:input readonly="readonly" id="sizetext" data-l10n-attrs="value"/>
+          </row>
+          <row id="generalReferrerRow">
+            <label control="refertext" data-l10n-id="general-referrer"/>
+            <separator/>
+            <html:input readonly="readonly" id="refertext"/>
+          </row>
+          <row id="generalSeparatorRow2">
+            <separator class="thin"/>
+          </row>
+          <row id="generalModifiedRow">
+            <label control="modifiedtext" data-l10n-id="general-modified"/>
+            <separator/>
+            <html:input readonly="readonly" id="modifiedtext"/>
+          </row>
+        </rows>
+      </grid>
       <separator class="thin"/>
       <vbox id="metaTags" flex="1">
         <label control="metatree" id="metaTagsCaption" class="header"/>
@@ -205,56 +191,45 @@
       </tree>
       <splitter orient="vertical" id="mediaSplitter"/>
       <vbox flex="1" id="mediaPreviewBox" collapsed="true">
-        <table id="mediaTable" xmlns="http://www.w3.org/1999/xhtml">
-          <tr id="mediaLocationRow">
-            <th>
-              <xul:label control="imageurltext" data-l10n-id="media-location"/>
-            </th>
-            <td>
-              <input readonly="readonly" id="imageurltext"/>
-            </td>
-          </tr>
-          <tr id="mediaTypeRow">
-            <th>
-              <xul:label control="imagetypetext" data-l10n-id="general-type"/>
-            </th>
-            <td>
-              <input id="imagetypetext" data-l10n-attrs="value"/>
-            </td>
-          </tr>
-          <tr id="mediaSizeRow">
-            <th>
-              <xul:label control="imagesizetext" data-l10n-id="general-size"/>
-            </th>
-            <td>
-              <input readonly="readonly" id="imagesizetext" data-l10n-attrs="value"/>
-            </td>
-          </tr>
-          <tr id="mediaDimensionRow">
-            <th>
-              <xul:label control="imagedimensiontext" data-l10n-id="media-dimension"/>
-            </th>
-            <td>
-              <input readonly="readonly" id="imagedimensiontext" data-l10n-attrs="value"/>
-            </td>
-          </tr>
-          <tr id="mediaTextRow">
-            <th>
-              <xul:label control="imagetext" data-l10n-id="media-text"/>
-            </th>
-            <td>
-              <input readonly="readonly" id="imagetext"/>
-            </td>
-          </tr>
-          <tr id="mediaLongdescRow">
-            <th>
-              <xul:label control="imagelongdesctext" data-l10n-id="media-long-desc"/>
-            </th>
-            <td>
-              <input readonly="readonly" id="imagelongdesctext"/>
-            </td>
-          </tr>
-        </table>
+        <grid id="mediaGrid">
+          <columns>
+            <column id="mediaLabelColumn"/>
+            <column class="gridSeparator"/>
+            <column flex="1"/>
+          </columns>
+          <rows id="mediaRows">
+            <row id="mediaLocationRow">
+              <label control="imageurltext" data-l10n-id="media-location"/>
+              <separator/>
+              <html:input readonly="readonly" id="imageurltext"/>
+            </row>
+            <row id="mediaTypeRow">
+              <label control="imagetypetext" data-l10n-id="general-type"/>
+              <separator/>
+              <html:input id="imagetypetext" data-l10n-attrs="value"/>
+            </row>
+            <row id="mediaSizeRow">
+              <label control="imagesizetext" data-l10n-id="general-size"/>
+              <separator/>
+              <html:input readonly="readonly" id="imagesizetext" data-l10n-attrs="value"/>
+            </row>
+            <row id="mediaDimensionRow">
+              <label control="imagedimensiontext" data-l10n-id="media-dimension"/>
+              <separator/>
+              <html:input readonly="readonly" id="imagedimensiontext" data-l10n-attrs="value"/>
+            </row>
+            <row id="mediaTextRow">
+              <label control="imagetext" data-l10n-id="media-text"/>
+              <separator/>
+              <html:input readonly="readonly" id="imagetext"/>
+            </row>
+            <row id="mediaLongdescRow">
+              <label control="imagelongdesctext" data-l10n-id="media-long-desc"/>
+              <separator/>
+              <html:input readonly="readonly" id="imagelongdesctext"/>
+            </row>
+          </rows>
+        </grid>
         <hbox id="imageSaveBox" align="end">
           <vbox id="blockImageBox">
             <checkbox id="blockImage" hidden="true" oncommand="onBlockImage()"
@@ -307,103 +282,89 @@
       <!-- Identity Section -->
       <groupbox>
         <label class="header" data-l10n-id="security-view-identity"/>
-        <table xmlns="http://www.w3.org/1999/xhtml">
-          <!-- Domain -->
-          <tr>
-            <th>
-              <xul:label data-l10n-id="security-view-identity-domain"
-                         control="security-identity-domain-value"/>
-            </th>
-            <td>
-              <input id="security-identity-domain-value" readonly="readonly"/>
-            </td>
-          </tr>
-          <!-- Owner -->
-          <tr>
-            <th>
-              <xul:label id="security-identity-owner-label"
-                         class="fieldLabel"
-                         data-l10n-id="security-view-identity-owner"
-                         control="security-identity-owner-value"/>
-            </th>
-            <td>
-              <input id="security-identity-owner-value" readonly="readonly" data-l10n-attrs="value"/>
-            </td>
-          </tr>
-          <!-- Verifier -->
-          <tr>
-            <th>
-              <xul:label data-l10n-id="security-view-identity-verifier"
-                         control="security-identity-verifier-value"/>
-            </th>
-            <td>
-              <div class="table-split-column">
-                <input id="security-identity-verifier-value" readonly="readonly"
+        <grid>
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <!-- Domain -->
+            <row>
+              <label data-l10n-id="security-view-identity-domain"
+                     control="security-identity-domain-value"/>
+              <html:input id="security-identity-domain-value" readonly="readonly"/>
+            </row>
+            <!-- Owner -->
+            <row>
+              <label id="security-identity-owner-label"
+                     class="fieldLabel"
+                     data-l10n-id="security-view-identity-owner"
+                     control="security-identity-owner-value"/>
+              <html:input id="security-identity-owner-value" readonly="readonly" data-l10n-attrs="value"/>
+            </row>
+            <!-- Verifier -->
+            <row>
+              <label data-l10n-id="security-view-identity-verifier"
+                     control="security-identity-verifier-value"/>
+              <hbox align="center">
+                <html:input id="security-identity-verifier-value" readonly="readonly"
                             data-l10n-attrs="value"/>
-                <xul:button id="security-view-cert" data-l10n-id="security-view"
-                            collapsed="true"
-                            oncommand="security.viewCert();"/>
-              </div>
-            </td>
-          </tr>
-          <!-- Certificate Validity -->
-          <tr id="security-identity-validity-row">
-            <th>
-              <xul:label data-l10n-id="security-view-identity-validity"
-                         control="security-identity-validity-value"/>
-            </th>
-            <td>
-              <input id="security-identity-validity-value" readonly="readonly"/>
-            </td>
-          </tr>
-        </table>
+                <button id="security-view-cert" data-l10n-id="security-view"
+                        collapsed="true"
+                        oncommand="security.viewCert();"/>
+              </hbox>
+            </row>
+            <!-- Certificate Validity -->
+            <row id="security-identity-validity-row">
+              <label data-l10n-id="security-view-identity-validity"
+                     control="security-identity-validity-value"/>
+              <html:input id="security-identity-validity-value" readonly="readonly"/>
+            </row>
+          </rows>
+        </grid>
       </groupbox>
 
       <!-- Privacy & History section -->
       <groupbox>
         <label class="header" data-l10n-id="security-view-privacy"/>
-        <table id="securityTable" xmlns="http://www.w3.org/1999/xhtml">
-          <!-- History -->
-          <tr>
-            <th>
-              <xul:label control="security-privacy-history-value" data-l10n-id="security-view-privacy-history-value"/>
-            </th>
-            <td>
-              <xul:label id="security-privacy-history-value"
+        <grid>
+          <columns>
+            <column flex="1"/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <!-- History -->
+            <row>
+              <label control="security-privacy-history-value" data-l10n-id="security-view-privacy-history-value"/>
+              <label id="security-privacy-history-value"
                      data-l10n-id="security-view-unknown"/>
-            </td>
-          </tr>
-          <!-- Site Data & Cookies -->
-          <tr id="security-privacy-sitedata-row">
-            <th>
-              <xul:label control="security-privacy-sitedata-value" data-l10n-id="security-view-privacy-sitedata-value"/>
-            </th>
-            <td>
-              <div class="table-split-column">
-                <xul:label id="security-privacy-sitedata-value" data-l10n-id="security-view-unknown"/>
-                <xul:button id="security-clear-sitedata"
-                            disabled="true"
-                            data-l10n-id="security-view-privacy-clearsitedata"
-                            oncommand="security.clearSiteData();"/>
-              </div>
-            </td>
-          </tr>
-          <!-- Passwords -->
-          <tr>
-            <th>
-              <xul:label control="security-privacy-passwords-value" data-l10n-id="security-view-privacy-passwords-value"/>
-            </th>
-            <td>
-              <div class="table-split-column">
-                <xul:label id="security-privacy-passwords-value"
-                           data-l10n-id="security-view-unknown"/>
-                <xul:button id="security-view-password"
-                            data-l10n-id="security-view-privacy-viewpasswords"
-                            oncommand="security.viewPasswords();"/>
-              </div>
-            </td>
-          </tr>
-        </table>
+            </row>
+            <!-- Site Data & Cookies -->
+            <row id="security-privacy-sitedata-row">
+              <label control="security-privacy-sitedata-value" data-l10n-id="security-view-privacy-sitedata-value"/>
+              <hbox id="security-privacy-sitedata-box" align="center">
+                <label id="security-privacy-sitedata-value" data-l10n-id="security-view-unknown"
+                       flex="1"/>
+                <button id="security-clear-sitedata"
+                        disabled="true"
+                        data-l10n-id="security-view-privacy-clearsitedata"
+                        oncommand="security.clearSiteData();"/>
+              </hbox>
+            </row>
+            <!-- Passwords -->
+            <row>
+              <label control="security-privacy-passwords-value" data-l10n-id="security-view-privacy-passwords-value"/>
+              <hbox id="security-privacy-passwords-box" align="center">
+                <label id="security-privacy-passwords-value"
+                       data-l10n-id="security-view-unknown"
+                       flex="1"/>
+                <button id="security-view-password"
+                        data-l10n-id="security-view-privacy-viewpasswords"
+                        oncommand="security.viewPasswords();"/>
+              </hbox>
+            </row>
+          </rows>
+        </grid>
       </groupbox>
 
       <!-- Technical Details section -->

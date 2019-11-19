@@ -21,7 +21,7 @@ export class Triplets extends React.PureComponent {
     this.props.document.body.classList.remove("inline-onboarding");
   }
 
-  onCardAction(action, message) {
+  onCardAction(action) {
     let actionUpdates = {};
     const { flowParams, UTMTerm } = this.props;
 
@@ -39,10 +39,6 @@ export class Triplets extends React.PureComponent {
     }
 
     this.props.onAction({ ...action, ...actionUpdates });
-    // Only block if message is in dynamic triplets experiment
-    if (message.blockOnClick) {
-      this.props.onBlockById(message.id);
-    }
   }
 
   onHideContainer() {
@@ -74,7 +70,6 @@ export class Triplets extends React.PureComponent {
             {cards.map(card => (
               <OnboardingCard
                 key={card.id}
-                message={card}
                 className="trailheadCard"
                 sendUserActionTelemetry={sendUserActionTelemetry}
                 onAction={this.onCardAction}

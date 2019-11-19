@@ -63,10 +63,15 @@ tree {
   margin: .5em;
 }
 
+.gridSeparator {
+  width: .5em;
+}
+
 html|input {
   background: transparent;
   border: none;
   padding: 0;
+  margin-top: 1px;
 }
 
 html|input.header {
@@ -110,8 +115,8 @@ html|input:disabled {
   height: .8em;
 }
 
-#mediaTable {
-  margin-bottom: 2em;
+#mediaGrid {
+  min-height: 9em;
 }
 
 #mediaLabelColumn {
@@ -153,6 +158,10 @@ treechildren::-moz-tree-cell-text(broken) {
 
 /* Security Tab */
 
-#securityPanel table {
+#securityPanel grid {
   margin-bottom: 1em;
+}
+
+#securityPanel row {
+  -moz-box-align: center;
 }

@@ -35,13 +35,8 @@ def get_credentials():
             # We want to remove files which contain the password
             os.remove(CREDENTIALS_PATH)
     else:
-        try:
-            input_method = raw_input
-        except NameError:
-            input_method = input
-
-        https_username = input_method(
-            "Please enter your full LDAP email address: ")
+        https_username = \
+                raw_input("Please enter your full LDAP email address: ")
 
         with open(CREDENTIALS_PATH, "w+") as file_handler:
             file_handler.write("%s\n" % https_username)

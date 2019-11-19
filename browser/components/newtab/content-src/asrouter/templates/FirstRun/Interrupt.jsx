@@ -53,7 +53,6 @@ export class Interrupt extends React.PureComponent {
             sendUserActionTelemetry={sendUserActionTelemetry}
             UTMTerm={UTMTerm}
             flowParams={flowParams}
-            onBlockById={this.props.onBlockById}
           />
         );
       case "trailhead":
