@@ -5,21 +5,13 @@
 package org.mozilla.fenix.library
 
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.components
 
 abstract class LibraryPageFragment<T> : Fragment() {
 
     abstract val selectedItems: Set<T>
-
-    protected fun close() {
-        if (!findNavController().popBackStack(R.id.libraryFragment, true)) {
-            findNavController().popBackStack(R.id.homeFragment, false)
-        }
-    }
 
     protected fun openItemsInNewTab(private: Boolean = false, toUrl: (T) -> String?) {
         context?.components?.useCases?.tabsUseCases?.let { tabsUseCases ->

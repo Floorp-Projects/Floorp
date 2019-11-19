@@ -236,15 +236,4 @@ class HistoryTest {
             verifyHomeScreen()
         }
     }
-
-    @Test
-    @Ignore("Test will be included after back navigation from History Fragment is sorted")
-    fun verifyCloseMenu() {
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openHistory {
-        }.closeMenu {
-            verifyHomeScreen()
-        }
-    }
 }

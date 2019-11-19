@@ -48,17 +48,6 @@ class LibraryMenuTest {
     }
 
     @Test
-    fun closeMenuButtonTest() {
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-        }.openThreeDotMenu {
-        }.openLibrary {
-        }.closeMenu {
-            verifyBrowserScreen()
-        }
-    }
-
-    @Test
     fun backButtonTest() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {

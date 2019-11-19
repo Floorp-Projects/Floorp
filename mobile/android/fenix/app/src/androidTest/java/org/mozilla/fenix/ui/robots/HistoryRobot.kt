@@ -92,13 +92,6 @@ class HistoryRobot {
             HistoryRobot().interact()
             return Transition()
         }
-
-        fun closeMenu(interact: HistoryRobot.() -> Unit): Transition {
-            closeButton().click()
-
-            HistoryRobot().interact()
-            return Transition()
-        }
     }
 }
 
@@ -145,5 +138,3 @@ private fun assertDeleteConfirmationMessage() =
     onView(withText("This will delete all of your browsing data."))
         .inRoot(isDialog())
         .check(matches(isDisplayed()))
-
-private fun closeButton() = onView(withId(R.id.libraryClose))

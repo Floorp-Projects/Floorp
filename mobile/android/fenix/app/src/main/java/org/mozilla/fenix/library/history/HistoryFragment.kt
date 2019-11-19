@@ -157,15 +157,9 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), BackHandler {
             }
             true
         }
-        R.id.libraryClose -> {
-            close()
-            true
-        }
         R.id.delete_history_multi_select -> {
-            val components = context?.components!!
-
             lifecycleScope.launch(Main) {
-                deleteSelectedHistory(historyStore.state.mode.selectedItems, components)
+                deleteSelectedHistory(historyStore.state.mode.selectedItems, requireComponents)
                 viewModel.invalidate()
                 historyStore.dispatch(HistoryFragmentAction.ExitDeletionMode)
             }
