@@ -149,7 +149,7 @@ class WebPushTest : BaseSessionTest() {
         val p = mainSession.evaluatePromiseJS("window.doWaitForPushEvent()")
 
         val testPayload = "The Payload";
-        sessionRule.runtime.webPushController.onPushEvent(delegate!!.storedSubscription!!.scope, testPayload.toByteArray(Charsets.UTF_8))
+        sessionRule.runtime.webPushController.onPushEvent(delegate!!.storedSubscription!!, testPayload.toByteArray(Charsets.UTF_8))
 
         assertThat("Push data should match", p.value as String, equalTo(testPayload))
     }
