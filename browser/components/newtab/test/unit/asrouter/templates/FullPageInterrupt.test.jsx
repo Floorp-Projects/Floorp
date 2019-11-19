@@ -40,6 +40,7 @@ describe("<FullPageInterrupt>", () => {
   let onBlock;
   let sandbox;
   let onAction;
+  let onBlockById;
   let sendTelemetryStub;
 
   beforeEach(async () => {
@@ -47,6 +48,7 @@ describe("<FullPageInterrupt>", () => {
     dispatch = sandbox.stub();
     onBlock = sandbox.stub();
     onAction = sandbox.stub();
+    onBlockById = sandbox.stub();
     sendTelemetryStub = sandbox.stub();
 
     dummyNode = document.createElement("body");
@@ -69,6 +71,7 @@ describe("<FullPageInterrupt>", () => {
         dispatch={dispatch}
         onBlock={onBlock}
         onAction={onAction}
+        onBlockById={onBlockById}
         cards={CARDS}
         document={fakeDocument}
         sendUserActionTelemetry={sendTelemetryStub}
@@ -116,5 +119,21 @@ describe("<FullPageInterrupt>", () => {
       message_id: CARDS[0].id,
       id: "TRAILHEAD",
     });
+  });
+  it("should not call blockById by default when a card button is clicked", () => {
+    wrapper
+      .find(OnboardingCard)
+      .find("button.onboardingButton")
+      .simulate("click");
+    assert.notCalled(onBlockById);
+  });
+  it("should call blockById when blockOnClick on message is true", () => {
+    CARDS[0].blockOnClick = true;
+    wrapper
+      .find(OnboardingCard)
+      .find("button.onboardingButton")
+      .simulate("click");
+    assert.calledOnce(onBlockById);
+    assert.calledWith(onBlockById, CARDS[0].id);
   });
 });
