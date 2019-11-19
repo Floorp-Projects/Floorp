@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define ENABLE_SET_CUBEB_BACKEND 1
+#include "CubebUtils.h"
 #include "GraphDriver.h"
 #include "MediaTrackGraphImpl.h"
 
@@ -29,7 +29,7 @@ RefPtr<MediaTrackGraphImpl> MakeMTGImpl() {
 TEST(TestAudioCallbackDriver, StartStop)
 {
   MockCubeb* mock = new MockCubeb();
-  mozilla::CubebUtils::ForceSetCubebContext(mock->AsCubebContext());
+  CubebUtils::ForceSetCubebContext(mock->AsCubebContext());
 
   RefPtr<MediaTrackGraphImpl> graph = MakeMTGImpl();
   EXPECT_TRUE(!!graph->mDriver) << "AudioCallbackDriver created.";
@@ -55,4 +55,3 @@ TEST(TestAudioCallbackDriver, StartStop)
   // MediaTrackGraphShutDownRunnable
   graph->mDriver = nullptr;
 }
-#undef ENABLE_SET_CUBEB_BACKEND
