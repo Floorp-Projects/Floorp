@@ -278,10 +278,8 @@ already_AddRefed<AudioContext> AudioContext::Constructor(
   }
   sampleRate = aOptions.mSampleRate;
 
-  uint32_t maxChannelCount = std::min<uint32_t>(
-      WebAudioUtils::MaxChannelCount, CubebUtils::MaxNumberOfChannels());
   RefPtr<AudioContext> object =
-      new AudioContext(window, false, maxChannelCount, 0, sampleRate);
+      new AudioContext(window, false, 2, 0, sampleRate);
   aRv = object->Init();
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
