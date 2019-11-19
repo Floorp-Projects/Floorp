@@ -1279,7 +1279,7 @@ class StorageUI {
       event.keyCode == KeyCodes.DOM_VK_DELETE
     ) {
       if (this.table.selectedRow && event.target.localName != "input") {
-        this.onRemoveItem();
+        this.onRemoveItem(event);
         event.stopPropagation();
         event.preventDefault();
       }
@@ -1483,16 +1483,21 @@ class StorageUI {
 
   /**
    * Handles removing an item from the storage
+   *
+   * @param {DOMEvent} event
+   *        The event passed by the command or keypress event.
    */
-  onRemoveItem() {
+  onRemoveItem(event) {
     const [, host, ...path] = this.tree.selectedItem;
     const front = this.getCurrentFront();
     const uniqueId = this.table.uniqueId;
     const rowId =
-      this.table.contextMenuRowId || this.table.selectedRow[uniqueId];
+      event.type == "command"
+        ? this.table.contextMenuRowId
+        : this.table.selectedRow[uniqueId];
     const data = this.table.items.get(rowId);
 
-    let name = data[this.table.uniqueId];
+    let name = data[uniqueId];
     if (path.length > 0) {
       name = JSON.stringify([...path, name]);
     }
