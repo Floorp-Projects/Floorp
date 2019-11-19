@@ -311,7 +311,8 @@ void MediaTrackGraphImpl::UpdateTrackOrder() {
   }
 
   if (audioTrackPresent && mRealtime &&
-      !CurrentDriver()->AsAudioCallbackDriver() && !switching) {
+      !CurrentDriver()->AsAudioCallbackDriver() && !switching &&
+      AudioOutputChannelCount() > 0) {
     MonitorAutoLock mon(mMonitor);
     if (LifecycleStateRef() == LIFECYCLE_RUNNING) {
       AudioCallbackDriver* driver = new AudioCallbackDriver(
