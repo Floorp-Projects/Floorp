@@ -239,6 +239,9 @@ void NativeLayerCA::InvalidateRegionThroughoutSwapchain(const MutexAutoLock&,
   if (mReadySurface) {
     mReadySurface->mInvalidRegion.OrWith(r);
   }
+  if (mFrontSurface) {
+    mFrontSurface->mInvalidRegion.OrWith(r);
+  }
   for (auto& surf : mSurfaces) {
     surf.mInvalidRegion.OrWith(r);
   }
@@ -465,7 +468,13 @@ void NativeLayerCA::ApplyChanges() {
   if (mReadySurface) {
     mContentCALayer.contents = (id)mReadySurface->mSurface.get();
     IOSurfaceDecrementUseCount(mReadySurface->mSurface.get());
-    mSurfaces.push_back(*mReadySurface);
+
+    if (mFrontSurface) {
+      mSurfaces.push_back(*mFrontSurface);
+      mFrontSurface = Nothing();
+    }
+
+    mFrontSurface = Some(*mReadySurface);
     mReadySurface = Nothing();
   }
 }
@@ -476,8 +485,8 @@ std::vector<NativeLayerCA::SurfaceWithInvalidRegion> NativeLayerCA::RemoveExcess
   std::vector<SurfaceWithInvalidRegion> usedSurfaces;
   std::vector<SurfaceWithInvalidRegion> unusedSurfaces;
 
-  // Separate mSurfaces into used and unused surfaces, leaving 2 surfaces behind.
-  while (mSurfaces.size() > 2) {
+  // Separate mSurfaces into used and unused surfaces, leaving 1 surface behind.
+  while (mSurfaces.size() > 1) {
     auto surf = std::move(mSurfaces.front());
     mSurfaces.pop_front();
     if (IOSurfaceIsInUse(surf.mSurface.get())) {

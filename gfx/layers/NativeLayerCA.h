@@ -148,22 +148,25 @@ class NativeLayerCA : public NativeLayer {
   // Each IOSurface is initially created inside NextSurface.
   // The surface stays alive until the recycling mechanism in NextSurface
   // determines it is no longer needed (because the swap chain has grown too
-  // long) or until the layer is destroyed. During the surface's lifetime, it
-  // will continuously move through the fields mInProgressSurface,
-  // mReadySurface, and back to front through the mSurfaces queue:
+  // long) or until the layer is destroyed.
+  // During the surface's lifetime, it will continuously move through the fields
+  // mInProgressSurface, mReadySurface, mFrontSurface, and back to front through
+  // the mSurfaces queue:
   //
   //  mSurfaces.front()
   //  ------[NextSurface()]-----> mInProgressSurface
   //  --[NotifySurfaceReady()]--> mReadySurface
+  //  ----[ApplyChanges()]------> mFrontSurface
   //  ----[ApplyChanges()]------> mSurfaces.back()  --> .... -->
   //  mSurfaces.front()
   //
   // We mark an IOSurface as "in use" as long as it is either in
-  // mInProgressSurface or in mReadySurface. When it is in the mSurfaces queue,
-  // it is not marked as "in use" by us - but it can be "in use" by the window
-  // server. Consequently, IOSurfaceIsInUse on a surface from mSurfaces reflects
-  // whether the window server is still reading from the surface, and we can use
-  // this indicator to decide when to recycle the surface.
+  // mInProgressSurface or in mReadySurface. When it is in mFrontSurface or in
+  // the mSurfaces queue, it is not marked as "in use" by us - but it can be "in
+  // use" by the window server. Consequently, IOSurfaceIsInUse on a surface from
+  // mSurfaces reflects whether the window server is still reading from the
+  // surface, and we can use this indicator to decide when to recycle the
+  // surface.
   //
   // Users of NativeLayerCA normally proceed in this order:
   //  1. Begin a frame by calling NextSurface to get the surface.
@@ -203,9 +206,14 @@ class NativeLayerCA : public NativeLayer {
   // Both mInProgressSurface and mReadySurface can be Some() at the same time.
   Maybe<SurfaceWithInvalidRegion> mReadySurface;
 
-  // The queue of surfaces which make up our "swap chain".
+  // The surface that the most recent call to ApplyChanges set on the CALayer.
+  // Will be Some() after the first sequence of NextSurface, NotifySurfaceReady,
+  // ApplyChanges calls, for the rest of the layer's life time.
+  Maybe<SurfaceWithInvalidRegion> mFrontSurface;
+
+  // The queue of surfaces which make up the rest of our "swap chain".
   // mSurfaces.front() is the next surface we'll attempt to use.
-  // mSurfaces.back() is the one we submitted most recently.
+  // mSurfaces.back() is the one that was used most recently.
   std::deque<SurfaceWithInvalidRegion> mSurfaces;
 
   // Non-null between calls to NextSurfaceAsDrawTarget and NotifySurfaceReady.
