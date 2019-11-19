@@ -23,6 +23,7 @@ add_task(
       packet = await executeOnNextTickAndWaitForPause(function() {
         Cu.evalInSandbox("f()", debuggee);
       }, threadFront);
+      const environment = await packet.frame.getEnvironment();
       Assert.equal(packet.type, "paused");
       const why = packet.why;
       Assert.equal(why.type, "breakpoint");
@@ -32,7 +33,7 @@ add_task(
       const where = frame.where;
       Assert.equal(where.actor, source.actor);
       Assert.equal(where.line, actualLocation.line);
-      const variables = frame.environment.bindings.variables;
+      const variables = environment.bindings.variables;
       Assert.equal(variables.a.value, 1);
       Assert.equal(variables.c.value.type, "undefined");
 

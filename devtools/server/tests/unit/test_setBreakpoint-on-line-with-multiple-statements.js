@@ -19,13 +19,14 @@ add_task(
         Cu.evalInSandbox("f()", debuggee);
       }, threadFront);
       const why = packet.why;
+      const environment = await packet.frame.getEnvironment();
       Assert.equal(why.type, "breakpoint");
       Assert.equal(why.actors.length, 1);
       const frame = packet.frame;
       const where = frame.where;
       Assert.equal(where.actor, source.actor);
       Assert.equal(where.line, location.line);
-      const variables = frame.environment.bindings.variables;
+      const variables = environment.bindings.variables;
       Assert.equal(variables.a.value.type, "undefined");
       Assert.equal(variables.b.value.type, "undefined");
       Assert.equal(variables.c.value.type, "undefined");

@@ -16,7 +16,6 @@ class FrameFront extends FrontClassWithSpec(frameSpec) {
     this.arguments = json.arguments;
     this.type = json.type;
     this.where = json.where;
-    this.environment = json.environment;
     this.this = json.this;
     this.data = json;
   }

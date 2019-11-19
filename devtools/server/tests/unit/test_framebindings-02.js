@@ -23,7 +23,8 @@ add_task(
 
 function test_pause_frame() {
   gThreadFront.once("paused", async function(packet) {
-    let parentEnv = packet.frame.environment.parent;
+    const environment = await packet.frame.getEnvironment();
+    let parentEnv = environment.parent;
     const bindings = parentEnv.bindings;
     const args = bindings.arguments;
     const vars = bindings.variables;

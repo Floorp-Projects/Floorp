@@ -16,7 +16,9 @@ add_task(
       threadFront
     );
 
-    const grip = packet.frame.environment.bindings.variables.p;
+    const environment = await packet.frame.getEnvironment();
+    const grip = environment.bindings.variables.p;
+
     ok(grip.value.preview);
     equal(grip.value.class, "Promise");
     equal(grip.value.promiseState.state, "pending");
