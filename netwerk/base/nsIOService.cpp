@@ -254,6 +254,7 @@ nsresult nsIOService::Init() {
     observerService->AddObserver(this, kProfileDoChange, true);
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
     observerService->AddObserver(this, NS_NETWORK_LINK_TOPIC, true);
+    observerService->AddObserver(this, NS_NETWORK_ID_CHANGED_TOPIC, true);
     observerService->AddObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC, true);
     observerService->AddObserver(this, NS_PREFSERVICE_READ_TOPIC_ID, true);
   } else
@@ -1456,6 +1457,8 @@ nsIOService::Observe(nsISupports* subject, const char* topic,
     DestroySocketProcess();
   } else if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
     OnNetworkLinkEvent(NS_ConvertUTF16toUTF8(data).get());
+  } else if (!strcmp(topic, NS_NETWORK_ID_CHANGED_TOPIC)) {
+    LOG(("nsIOService::OnNetworkLinkEvent Network id changed"));
   } else if (!strcmp(topic, NS_WIDGET_WAKE_OBSERVER_TOPIC)) {
     // coming back alive from sleep
     // this indirection brought to you by:
@@ -1612,8 +1615,6 @@ nsresult nsIOService::OnNetworkLinkEvent(const char* data) {
   } else if (!strcmp(data, NS_NETWORK_LINK_DATA_UNKNOWN)) {
     nsresult rv = mNetworkLinkService->GetIsLinkUp(&isUp);
     NS_ENSURE_SUCCESS(rv, rv);
-  } else if (!strcmp(data, NS_NETWORK_LINK_DATA_NETWORKID_CHANGED)) {
-    LOG(("nsIOService::OnNetworkLinkEvent Network id changed"));
   } else {
     NS_WARNING("Unhandled network event!");
     return NS_OK;
