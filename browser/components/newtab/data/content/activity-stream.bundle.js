@@ -3363,6 +3363,7 @@ const FxCards = ({
   sendUserActionTelemetry
 }) => react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_3___default.a.Fragment, null, cards.map(card => react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_templates_OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_2__["OnboardingCard"], _extends({
   key: card.id,
+  message: card,
   className: "trailheadCard",
   sendUserActionTelemetry: sendUserActionTelemetry,
   onAction: onCardAction,
@@ -3393,7 +3394,7 @@ class FullPageInterrupt extends react__WEBPACK_IMPORTED_MODULE_3___default.a.Pur
     document.body.classList.remove("welcome");
   }
 
-  onCardAction(action) {
+  onCardAction(action, message) {
     let actionUpdates = {};
     const {
       flowParams,
@@ -3419,7 +3420,12 @@ class FullPageInterrupt extends react__WEBPACK_IMPORTED_MODULE_3___default.a.Pur
 
     this.props.onAction({ ...action,
       ...actionUpdates
-    });
+    }); // Only block if message is in dynamic triplets experiment
+
+    if (message.blockOnClick) {
+      this.props.onBlockById(message.id);
+    }
+
     this.removeOverlay();
   }
 
@@ -3507,7 +3513,7 @@ class OnboardingCard extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCo
       id: props.UISurface
     };
     props.sendUserActionTelemetry(ping);
-    props.onAction(props.content.primary_button.action);
+    props.onAction(props.content.primary_button.action, props.message);
   }
 
   render() {
@@ -3572,7 +3578,7 @@ class Triplets extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponen
     this.props.document.body.classList.remove("inline-onboarding");
   }
 
-  onCardAction(action) {
+  onCardAction(action, message) {
     let actionUpdates = {};
     const {
       flowParams,
@@ -3598,7 +3604,11 @@ class Triplets extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponen
 
     this.props.onAction({ ...action,
       ...actionUpdates
-    });
+    }); // Only block if message is in dynamic triplets experiment
+
+    if (message.blockOnClick) {
+      this.props.onBlockById(message.id);
+    }
   }
 
   onHideContainer() {
@@ -3635,6 +3645,7 @@ class Triplets extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponen
       className: `trailheadCardGrid${showContent ? " show" : ""}`
     }, cards.map(card => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_templates_OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_1__["OnboardingCard"], _extends({
       key: card.id,
+      message: card,
       className: "trailheadCard",
       sendUserActionTelemetry: sendUserActionTelemetry,
       onAction: this.onCardAction,
@@ -14650,7 +14661,8 @@ class Interrupt_Interrupt extends external_React_default.a.PureComponent {
           fxaEndpoint: fxaEndpoint,
           sendUserActionTelemetry: sendUserActionTelemetry,
           UTMTerm: UTMTerm,
-          flowParams: flowParams
+          flowParams: flowParams,
+          onBlockById: this.props.onBlockById
         });
 
       case "trailhead":
@@ -14868,7 +14880,8 @@ class FirstRun_FirstRun extends external_React_default.a.PureComponent {
       dispatch: dispatch,
       flowParams: flowParams,
       onDismiss: this.closeInterrupt,
-      fxaEndpoint: fxaEndpoint
+      fxaEndpoint: fxaEndpoint,
+      onBlockById: props.onBlockById
     }) : null, hasTriplets ? external_React_default.a.createElement(Triplets["Triplets"], {
       document: props.document,
       cards: triplets,
@@ -14879,7 +14892,8 @@ class FirstRun_FirstRun extends external_React_default.a.PureComponent {
       sendUserActionTelemetry: sendUserActionTelemetry,
       UTMTerm: `${UTMTerm}-card`,
       flowParams: flowParams,
-      onAction: executeAction
+      onAction: executeAction,
+      onBlockById: props.onBlockById
     }) : null);
   }
 
