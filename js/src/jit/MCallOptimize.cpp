@@ -4253,8 +4253,7 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
   // Check that the function doesn't take or return non-compatible JS
   // argument types before adding nodes to the MIR graph, otherwise they'd be
   // dead code.
-  if (sig.hasI64ArgOrRet() ||
-      sig.temporarilyUnsupportedReftypeForInlineEntry() ||
+  if (sig.hasI64ArgOrRet() || sig.temporarilyUnsupportedAnyRef() ||
       !JitOptions.enableWasmIonFastCalls) {
     return InliningStatus_NotInlined;
   }
@@ -4273,10 +4272,6 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
     return abort(AbortReason::Alloc);
   }
 
-  // An invariant in this loop is that any type conversion operation that has
-  // externally visible effects, such as invoking valueOf on an object argument,
-  // must bailout so that we don't have to worry about replaying effects during
-  // argument conversion.
   Maybe<MDefinition*> undefined;
   for (size_t i = 0; i < sig.args().length(); i++) {
     if (!alloc().ensureBallast()) {
@@ -4301,24 +4296,8 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
       case wasm::ValType::F64:
         conversion = MToDouble::New(alloc(), arg);
         break;
-      case wasm::ValType::AnyRef:
-        // Transform the JS representation into an AnyRef representation.  The
-        // resulting type is MIRType::RefOrNull.  These cases are all
-        // effect-free.
-        switch (arg->type()) {
-          case MIRType::Object:
-          case MIRType::ObjectOrNull:
-            conversion = MWasmAnyRefFromJSObject::New(alloc(), arg);
-            break;
-          case MIRType::Null:
-            conversion = MWasmNullConstant::New(alloc());
-            break;
-          default:
-            conversion = MWasmBoxValue::New(alloc(), arg);
-            break;
-        }
-        break;
       case wasm::ValType::I64:
+      case wasm::ValType::AnyRef:
       case wasm::ValType::FuncRef:
       case wasm::ValType::Ref:
         MOZ_CRASH("impossible per above check");

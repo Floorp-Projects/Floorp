@@ -13963,13 +13963,14 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
       case wasm::ValType::I32:
       case wasm::ValType::F32:
       case wasm::ValType::F64:
-      case wasm::ValType::AnyRef:
-        // AnyRef is boxed on the JS side, so passed as a pointer here.
         argMir = ToMIRType(sig.args()[i]);
         break;
       case wasm::ValType::I64:
       case wasm::ValType::Ref:
+      case wasm::ValType::AnyRef:
       case wasm::ValType::FuncRef:
+        // Don't forget to trace GC type arguments in TraceJitExitFrames
+        // when they're enabled.
         MOZ_CRASH("unexpected argument type when calling from ion to wasm");
       case wasm::ValType::NullRef:
         MOZ_CRASH("NullRef not expressible");
@@ -14026,15 +14027,12 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
         MOZ_ASSERT(lir->mir()->type() == MIRType::Double);
         MOZ_ASSERT(ToFloatRegister(lir->output()) == ReturnDoubleReg);
         break;
+      case wasm::ValType::Ref:
       case wasm::ValType::AnyRef:
       case wasm::ValType::FuncRef:
-        // The wasm stubs layer unboxes anything that needs to be unboxed and
-        // leaves it in a Value.  A FuncRef we could in principle leave as a raw
-        // object pointer but for now it complicates the API to do so.
-        MOZ_ASSERT(lir->mir()->type() == MIRType::Value);
-        break;
-      case wasm::ValType::Ref:
       case wasm::ValType::I64:
+        // Don't forget to trace GC type return value in TraceJitExitFrames
+        // when they're enabled.
         MOZ_CRASH("unexpected return type when calling from ion to wasm");
       case wasm::ValType::NullRef:
         MOZ_CRASH("NullRef not expressible");
@@ -14114,46 +14112,6 @@ void CodeGenerator::visitWasmCompareAndSelect(LWasmCompareAndSelect* ins) {
 void CodeGenerator::visitWasmFence(LWasmFence* lir) {
   MOZ_ASSERT(gen->compilingWasm());
   masm.memoryBarrier(MembarFull);
-}
-
-void CodeGenerator::visitWasmBoxValue(LWasmBoxValue* lir) {
-  ValueOperand input = ToValue(lir, LWasmBoxValue::Input);
-  Register output = ToRegister(lir->output());
-
-  Label nullValue, objectValue, done;
-  {
-    ScratchTagScope tag(masm, input);
-    masm.splitTagForTest(input, tag);
-    masm.branchTestObject(Assembler::Equal, tag, &objectValue);
-    masm.branchTestNull(Assembler::Equal, tag, &nullValue);
-  }
-
-  using Fn = JSObject* (*)(JSContext*, HandleValue);
-  OutOfLineCode* oolBoxValue = oolCallVM<Fn, wasm::BoxBoxableValue>(
-      lir, ArgList(input), StoreRegisterTo(output));
-
-  masm.jump(oolBoxValue->entry());
-
-  masm.bind(&nullValue);
-  // See the definition of AnyRef for a discussion of pointer representation.
-  masm.xorPtr(output, output);
-  masm.jump(&done);
-
-  masm.bind(&objectValue);
-  // See the definition of AnyRef for a discussion of pointer representation.
-  masm.unboxObject(input, output);
-
-  masm.bind(&done);
-  masm.bind(oolBoxValue->rejoin());
-}
-
-void CodeGenerator::visitWasmAnyRefFromJSObject(LWasmAnyRefFromJSObject* lir) {
-  Register input = ToRegister(lir->getOperand(LWasmAnyRefFromJSObject::Input));
-  Register output = ToRegister(lir->output());
-  // See the definition of AnyRef for a discussion of pointer representation.
-  if (input != output) {
-    masm.movePtr(input, output);
-  }
 }
 
 static_assert(!std::is_polymorphic<CodeGenerator>::value,
