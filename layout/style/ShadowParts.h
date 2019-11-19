@@ -21,6 +21,14 @@ class ShadowParts final {
 
   static ShadowParts Parse(const nsAString&);
 
+  nsAtom* Get(nsAtom* aName) const {
+    return mMappings.GetWeak(aName);
+  }
+
+#ifdef DEBUG
+  void Dump() const;
+#endif
+
  private:
   ShadowParts() = default;
 

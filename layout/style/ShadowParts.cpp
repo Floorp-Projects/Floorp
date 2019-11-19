@@ -111,4 +111,19 @@ ShadowParts ShadowParts::Parse(const nsAString& aString) {
   return parts;
 }
 
+#ifdef DEBUG
+void ShadowParts::Dump() const {
+  if (mMappings.IsEmpty()) {
+    printf("  (empty)\n");
+    return;
+  }
+  for (auto& entry : mMappings) {
+    nsAutoCString key;
+    entry.GetKey()->ToUTF8String(key);
+    nsAutoCString value;
+    entry.GetData()->ToUTF8String(value);
+    printf("  %s: %s\n", key.get(), value.get());
+  }
+}
+#endif
 }  // namespace mozilla
