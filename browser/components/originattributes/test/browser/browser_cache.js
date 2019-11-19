@@ -151,6 +151,7 @@ async function doInit(aMode) {
     set: [
       ["network.predictor.enabled", false],
       ["network.predictor.enable-prefetch", false],
+      ["browser.cache.cache_isolation", false],
     ],
   });
   clearAllImageCaches();
