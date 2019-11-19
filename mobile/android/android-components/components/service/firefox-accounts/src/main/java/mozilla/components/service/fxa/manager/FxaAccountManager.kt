@@ -734,7 +734,8 @@ open class FxaAccountManager(
                         // https://github.com/mozilla/application-services/issues/483
                         logger.info("Fetching profile...")
 
-                        profile = account.getProfileAsync(true).await()
+                        // `account` provides us with intelligent profile caching, so make sure to use it.
+                        profile = account.getProfileAsync(ignoreCache = false).await()
                         if (profile == null) {
                             return Event.FailedToFetchProfile
                         }

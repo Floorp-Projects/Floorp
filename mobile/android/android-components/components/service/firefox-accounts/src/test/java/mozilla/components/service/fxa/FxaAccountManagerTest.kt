@@ -917,7 +917,7 @@ class FxaAccountManagerTest {
         val constellation: DeviceConstellation = mock()
         val profile = Profile(
             "testUid", "test@example.com", null, "Test Profile")
-        `when`(mockAccount.getProfileAsync(anyBoolean())).thenReturn(CompletableDeferred(profile))
+        `when`(mockAccount.getProfileAsync(ignoreCache = false)).thenReturn(CompletableDeferred(profile))
         // We have an account at the start.
         `when`(accountStorage.read()).thenReturn(mockAccount)
         `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
@@ -1046,7 +1046,7 @@ class FxaAccountManagerTest {
         val mockAccount: OAuthAccount = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
         val accountStorage = mock<AccountStorage>()
-        `when`(mockAccount.getProfileAsync(anyBoolean())).thenReturn(CompletableDeferred(profile))
+        `when`(mockAccount.getProfileAsync(ignoreCache = false)).thenReturn(CompletableDeferred(profile))
 
         val fxaPanic = CompletableDeferred<AuthFlowUrl>()
         fxaPanic.completeExceptionally(FxaPanicException("panic!"))
@@ -1295,7 +1295,7 @@ class FxaAccountManagerTest {
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
         `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(CompletableDeferred(true))
-        `when`(mockAccount.getProfileAsync(anyBoolean())).thenReturn(CompletableDeferred(value = null))
+        `when`(mockAccount.getProfileAsync(ignoreCache = false)).thenReturn(CompletableDeferred(value = null))
         `when`(mockAccount.beginOAuthFlowAsync(any())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
         `when`(mockAccount.completeOAuthFlowAsync(anyString(), anyString())).thenReturn(CompletableDeferred(true))
         // There's no account at the start.
@@ -1340,7 +1340,7 @@ class FxaAccountManagerTest {
         val profile = Profile(
             uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
 
-        `when`(mockAccount.getProfileAsync(anyBoolean())).thenReturn(CompletableDeferred(profile))
+        `when`(mockAccount.getProfileAsync(ignoreCache = false)).thenReturn(CompletableDeferred(profile))
 
         manager.updateProfileAsync().await()
 
@@ -1376,7 +1376,7 @@ class FxaAccountManagerTest {
             mockAccount
         }
 
-        `when`(mockAccount.getProfileAsync(anyBoolean())).then {
+        `when`(mockAccount.getProfileAsync(ignoreCache = false)).then {
             // Hit an auth error.
             CoroutineScope(coroutineContext).launch { manager.encounteredAuthError() }
             CompletableDeferred(value = null)
@@ -1433,7 +1433,7 @@ class FxaAccountManagerTest {
             mockAccount
         }
 
-        `when`(mockAccount.getProfileAsync(anyBoolean())).then {
+        `when`(mockAccount.getProfileAsync(ignoreCache = false)).then {
             // Hit an auth error.
             CoroutineScope(coroutineContext).launch { manager.encounteredAuthError() }
             CompletableDeferred(value = null)
@@ -1495,7 +1495,7 @@ class FxaAccountManagerTest {
         }
 
         var didFailProfileFetch = false
-        `when`(mockAccount.getProfileAsync(anyBoolean())).then {
+        `when`(mockAccount.getProfileAsync(ignoreCache = false)).then {
             // Hit an auth error, but only once. As we recover from it, we'll attempt to fetch a profile
             // again. At that point, we'd like to succeed.
             if (!didFailProfileFetch) {
@@ -1552,7 +1552,7 @@ class FxaAccountManagerTest {
         `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(CompletableDeferred(true))
-        `when`(mockAccount.getProfileAsync(anyBoolean())).thenReturn(exceptionalProfile)
+        `when`(mockAccount.getProfileAsync(ignoreCache = false)).thenReturn(exceptionalProfile)
         `when`(mockAccount.beginOAuthFlowAsync(any())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
         `when`(mockAccount.completeOAuthFlowAsync(anyString(), anyString())).thenReturn(CompletableDeferred(true))
         // There's no account at the start.
@@ -1630,7 +1630,7 @@ class FxaAccountManagerTest {
         coroutineContext: CoroutineContext
     ): FxaAccountManager {
 
-        `when`(mockAccount.getProfileAsync(anyBoolean())).thenReturn(CompletableDeferred(profile))
+        `when`(mockAccount.getProfileAsync(ignoreCache = false)).thenReturn(CompletableDeferred(profile))
         `when`(mockAccount.beginOAuthFlowAsync(any())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
         `when`(mockAccount.beginPairingFlowAsync(anyString(), any())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
         `when`(mockAccount.completeOAuthFlowAsync(anyString(), anyString())).thenReturn(CompletableDeferred(true))
@@ -1661,7 +1661,7 @@ class FxaAccountManagerTest {
         accountObserver: AccountObserver,
         coroutineContext: CoroutineContext
     ): FxaAccountManager {
-        `when`(mockAccount.getProfileAsync(anyBoolean())).thenReturn(CompletableDeferred(profile))
+        `when`(mockAccount.getProfileAsync(ignoreCache = false)).thenReturn(CompletableDeferred(profile))
 
         `when`(mockAccount.beginOAuthFlowAsync(any())).thenReturn(CompletableDeferred(value = null))
         `when`(mockAccount.beginPairingFlowAsync(anyString(), any())).thenReturn(CompletableDeferred(value = null))
