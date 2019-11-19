@@ -4281,9 +4281,7 @@ impl PicturePrimitive {
 
                 // The picture's local rect is calculated as the union of the
                 // snapped primitive rects, which should result in a snapped
-                // local rect, unless it was inflated. This is also done during
-                // update visibility when calculating the picture's precise
-                // local rect.
+                // local rect, unless it was inflated.
                 let snap_surface_to_raster = SpaceSnapper::new_with_target(
                     surface.raster_spatial_node_index,
                     self.spatial_node_index,
