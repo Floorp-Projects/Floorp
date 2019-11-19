@@ -7,11 +7,7 @@ package mozilla.components.feature.customtabs
 import android.app.Activity
 import android.graphics.Color
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabActionButtonConfig
@@ -23,10 +19,11 @@ import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
@@ -36,7 +33,8 @@ import org.mockito.Mockito.verify
 @RunWith(AndroidJUnit4::class)
 class CustomTabWindowFeatureTest {
 
-    private val testDispatcher = TestCoroutineDispatcher()
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
 
     private lateinit var store: BrowserStore
     private val sessionId = "session-uuid"
@@ -46,7 +44,6 @@ class CustomTabWindowFeatureTest {
     fun setup() {
         activity = mock()
 
-        Dispatchers.setMain(testDispatcher)
         store = spy(BrowserStore(BrowserState(
             customTabs = listOf(
                 createCustomTab(id = sessionId, url = "https://www.mozilla.org")
@@ -54,13 +51,6 @@ class CustomTabWindowFeatureTest {
         )))
 
         whenever(activity.packageName).thenReturn("org.mozilla.firefox")
-    }
-
-    @After
-    @ExperimentalCoroutinesApi
-    fun tearDown() {
-        Dispatchers.resetMain()
-        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test

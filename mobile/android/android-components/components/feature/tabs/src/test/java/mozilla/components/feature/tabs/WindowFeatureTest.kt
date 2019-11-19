@@ -5,11 +5,7 @@
 package mozilla.components.feature.tabs
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
@@ -20,9 +16,10 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
-import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
@@ -34,6 +31,9 @@ class WindowFeatureTest {
 
     private val testDispatcher = TestCoroutineDispatcher()
 
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+
     private lateinit var store: BrowserStore
     private lateinit var tabsUseCases: TabsUseCases
     private lateinit var addTabUseCase: TabsUseCases.AddNewTabUseCase
@@ -44,7 +44,6 @@ class WindowFeatureTest {
 
     @Before
     fun setup() {
-        Dispatchers.setMain(testDispatcher)
         store = spy(BrowserStore(BrowserState(
             tabs = listOf(
                 createTab(id = tabId, url = "https://www.mozilla.org"),
@@ -59,13 +58,6 @@ class WindowFeatureTest {
         whenever(tabsUseCases.addTab).thenReturn(addTabUseCase)
         whenever(tabsUseCases.addPrivateTab).thenReturn(addPrivateTabUseCase)
         whenever(tabsUseCases.removeTab).thenReturn(removeTabUseCase)
-    }
-
-    @After
-    @ExperimentalCoroutinesApi
-    fun tearDown() {
-        Dispatchers.resetMain()
-        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test

@@ -7,19 +7,14 @@ package mozilla.components.service.fxa
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.setMain
 import mozilla.appservices.fxaclient.AccountEvent
 import mozilla.appservices.fxaclient.TabHistoryEntry
 import mozilla.appservices.syncmanager.DeviceSettings
-import mozilla.appservices.syncmanager.DeviceType as RustDeviceType
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceConstellationObserver
@@ -31,36 +26,40 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.TabData
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert
-import mozilla.appservices.fxaclient.FirefoxAccount as NativeFirefoxAccount
-import mozilla.appservices.fxaclient.Device as NativeDevice
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import java.lang.IllegalStateException
-import java.util.concurrent.Executors
+import mozilla.appservices.fxaclient.Device as NativeDevice
+import mozilla.appservices.fxaclient.FirefoxAccount as NativeFirefoxAccount
+import mozilla.appservices.syncmanager.DeviceType as RustDeviceType
 
+@ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class FxaDeviceConstellationTest {
     lateinit var account: NativeFirefoxAccount
     lateinit var constellation: FxaDeviceConstellation
-    lateinit var testDispatcher: CoroutineDispatcher
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Before
     fun setup() {
-        testDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
         account = mock()
-        constellation = FxaDeviceConstellation(account, CoroutineScope(testDispatcher) + SupervisorJob())
+        val scope = CoroutineScope(coroutinesTestRule.testDispatcher) + SupervisorJob()
+        constellation = FxaDeviceConstellation(account, scope)
     }
 
     @Test
-    fun `initializing device`() = runBlocking(testDispatcher) {
+    fun `initializing device`() = runBlocking(coroutinesTestRule.testDispatcher) {
         constellation.initDeviceAsync("test name", DeviceType.TABLET, setOf()).await()
         verify(account).initializeDevice("test name", NativeDevice.Type.TABLET, setOf())
 
@@ -69,7 +68,7 @@ class FxaDeviceConstellationTest {
     }
 
     @Test
-    fun `ensure capabilities`() = runBlocking(testDispatcher) {
+    fun `ensure capabilities`() = runBlocking(coroutinesTestRule.testDispatcher) {
         constellation.ensureCapabilitiesAsync(setOf()).await()
         verify(account).ensureCapabilities(setOf())
 
@@ -79,10 +78,7 @@ class FxaDeviceConstellationTest {
 
     @Test
     @ExperimentalCoroutinesApi
-    fun `updating device name`() = runBlocking(testDispatcher) {
-        // Observers are called on the main thread.
-        Dispatchers.setMain(testDispatcher)
-
+    fun `updating device name`() = runBlocking(coroutinesTestRule.testDispatcher) {
         val currentDevice = testDevice("currentTestDevice", true)
         `when`(account.getDevices()).thenReturn(arrayOf(currentDevice))
 
@@ -123,10 +119,7 @@ class FxaDeviceConstellationTest {
 
     @Test
     @ExperimentalCoroutinesApi
-    fun `set device push subscription`() = runBlocking(testDispatcher) {
-        // Observers are called on the main thread.
-        Dispatchers.setMain(testDispatcher)
-
+    fun `set device push subscription`() = runBlocking(coroutinesTestRule.testDispatcher) {
         val subscription = DevicePushSubscription("http://endpoint.com", "pk", "auth key")
         constellation.setDevicePushSubscriptionAsync(subscription).await()
 
@@ -135,10 +128,7 @@ class FxaDeviceConstellationTest {
 
     @Test
     @ExperimentalCoroutinesApi
-    fun `process raw device event`() = runBlocking(testDispatcher) {
-        // Observers are called on the main thread.
-        Dispatchers.setMain(testDispatcher)
-
+    fun `process raw device event`() = runBlocking(coroutinesTestRule.testDispatcher) {
         // No events, no observer.
         `when`(account.handlePushMessage("raw events payload")).thenReturn(emptyArray())
         assertTrue(constellation.processRawEventAsync("raw events payload").await())
@@ -171,7 +161,7 @@ class FxaDeviceConstellationTest {
     }
 
     @Test
-    fun `send event to device`() = runBlocking(testDispatcher) {
+    fun `send event to device`() = runBlocking(coroutinesTestRule.testDispatcher) {
         assertTrue(constellation.sendEventToDeviceAsync(
             "targetID", DeviceEventOutgoing.SendTab("Mozilla", "https://www.mozilla.org")
         ).await())
@@ -181,10 +171,7 @@ class FxaDeviceConstellationTest {
 
     @Test
     @ExperimentalCoroutinesApi
-    fun `refreshing constellation`() = runBlocking(testDispatcher) {
-        // Observers are called on the main thread.
-        Dispatchers.setMain(testDispatcher)
-
+    fun `refreshing constellation`() = runBlocking(coroutinesTestRule.testDispatcher) {
         // No devices, no observers.
         `when`(account.getDevices()).thenReturn(emptyArray())
 
@@ -242,10 +229,7 @@ class FxaDeviceConstellationTest {
 
     @Test
     @ExperimentalCoroutinesApi
-    fun `polling for events triggers observers`() = runBlocking(testDispatcher) {
-        // Observers are called on the main thread.
-        Dispatchers.setMain(testDispatcher)
-
+    fun `polling for events triggers observers`() = runBlocking(coroutinesTestRule.testDispatcher) {
         // No events, no observers.
         `when`(account.pollDeviceCommands()).thenReturn(emptyArray())
         assertTrue(constellation.pollForEventsAsync().await())
@@ -328,7 +312,7 @@ class FxaDeviceConstellationTest {
         // Failure to poll for events. Panics are re-thrown.
 //        `when`(account.pollDeviceCommands()).thenThrow(FxaPanicException("Don't panic!"))
 //        try {
-//            runBlocking(testDispatcher) {
+//            runBlocking(coroutinesTestRule.testDispatcher) {
 //                constellation.refreshAsync().await()
 //            }
 //            fail()
@@ -336,12 +320,12 @@ class FxaDeviceConstellationTest {
 //
 //        // Network exception are handled.
 //        `when`(account.pollDeviceCommands()).thenThrow(FxaNetworkException("four oh four"))
-//        runBlocking(testDispatcher) {
+//        runBlocking(coroutinesTestRule.testDispatcher) {
 //            Assert.assertFalse(constellation.refreshAsync().await())
 //        }
 //        // Unspecified exception are handled.
 //        `when`(account.pollDeviceCommands()).thenThrow(FxaUnspecifiedException("hmmm..."))
-//        runBlocking(testDispatcher) {
+//        runBlocking(coroutinesTestRule.testDispatcher) {
 //            Assert.assertFalse(constellation.refreshAsync().await())
 //        }
 //        // Unauthorized exception are handled.
@@ -359,7 +343,7 @@ class FxaDeviceConstellationTest {
 //
 //        val authException = FxaUnauthorizedException("oh no you didn't!")
 //        `when`(account.pollDeviceCommands()).thenThrow(authException)
-//        runBlocking(testDispatcher) {
+//        runBlocking(coroutinesTestRule.testDispatcher) {
 //            Assert.assertFalse(constellation.refreshAsync().await())
 //        }
 //        assertEquals(authErrorObserver.latestException!!.cause, authException)

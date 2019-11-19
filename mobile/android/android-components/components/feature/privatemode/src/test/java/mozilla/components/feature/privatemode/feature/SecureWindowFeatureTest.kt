@@ -7,17 +7,15 @@ package mozilla.components.feature.privatemode.feature
 import android.view.Window
 import android.view.WindowManager.LayoutParams.FLAG_SECURE
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.mock
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
@@ -27,21 +25,15 @@ import org.mockito.Mockito.verify
 @ExperimentalCoroutinesApi
 class SecureWindowFeatureTest {
 
-    private val testDispatcher = TestCoroutineDispatcher()
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
 
     private lateinit var window: Window
     private val tabId = "test-tab"
 
     @Before
     fun setup() {
-        Dispatchers.setMain(testDispatcher)
         window = mock()
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test

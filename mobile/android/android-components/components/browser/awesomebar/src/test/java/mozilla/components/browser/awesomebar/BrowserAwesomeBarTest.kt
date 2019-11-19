@@ -15,13 +15,11 @@ import mozilla.components.browser.awesomebar.transform.SuggestionTransformer
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.utils.setupTestCoroutinesDispatcher
-import mozilla.utils.unsetTestCoroutinesDispatcher
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
@@ -37,15 +35,8 @@ import java.util.concurrent.Executor
 @RunWith(AndroidJUnit4::class)
 class BrowserAwesomeBarTest {
 
-    @Before
-    fun setUp() {
-        setupTestCoroutinesDispatcher()
-    }
-
-    @After
-    fun tearDown() {
-        unsetTestCoroutinesDispatcher()
-    }
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Test
     fun `BrowserAwesomeBar forwards input to providers`() {

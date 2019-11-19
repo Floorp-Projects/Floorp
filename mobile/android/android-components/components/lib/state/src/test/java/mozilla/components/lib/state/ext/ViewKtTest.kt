@@ -9,50 +9,34 @@ import android.view.View
 import android.view.WindowManager
 import androidx.lifecycle.Lifecycle
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import mozilla.components.lib.state.Store
 import mozilla.components.lib.state.TestAction
 import mozilla.components.lib.state.TestState
 import mozilla.components.lib.state.reducer
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
 class ViewKtTest {
-    @Before
-    @ExperimentalCoroutinesApi
-    fun setUp() {
-        // We create a separate thread for the main dispatcher so that we do not deadlock our test
-        // thread.
-        Dispatchers.setMain(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
-    }
 
-    @After
     @ExperimentalCoroutinesApi
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Test
     @Synchronized
     @ExperimentalCoroutinesApi // consumeFrom
-    @ObsoleteCoroutinesApi // consumeFrom
     fun `consumeFrom reads states from store`() {
         val owner = MockedLifecycleOwner(Lifecycle.State.INITIALIZED)
 
