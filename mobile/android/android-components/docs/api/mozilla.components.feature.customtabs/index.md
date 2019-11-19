@@ -12,6 +12,12 @@
 | [CustomTabsFacts](-custom-tabs-facts/index.md) | `class CustomTabsFacts`<br>Facts emitted for telemetry related to [CustomTabsToolbarFeature](-custom-tabs-toolbar-feature/index.md) |
 | [CustomTabsToolbarFeature](-custom-tabs-toolbar-feature/index.md) | `class CustomTabsToolbarFeature : `[`LifecycleAwareFeature`](../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`BackHandler`](../mozilla.components.support.base.feature/-back-handler/index.md)<br>Initializes and resets the Toolbar for a Custom Tab based on the CustomTabConfig. |
 
+### Properties
+
+| Name | Summary |
+|---|---|
+| [SHORTCUT_CATEGORY](-s-h-o-r-t-c-u-t_-c-a-t-e-g-o-r-y.md) | `const val SHORTCUT_CATEGORY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+
 ### Functions
 
 | Name | Summary |

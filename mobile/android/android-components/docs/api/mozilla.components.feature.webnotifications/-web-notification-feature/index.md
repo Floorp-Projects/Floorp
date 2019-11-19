@@ -2,7 +2,7 @@
 
 # WebNotificationFeature
 
-`class WebNotificationFeature : `[`WebNotificationDelegate`](../../mozilla.components.concept.engine.webnotifications/-web-notification-delegate/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/webnotifications/src/main/java/mozilla/components/feature/webnotifications/WebNotificationFeature.kt#L43)
+`class WebNotificationFeature : `[`WebNotificationDelegate`](../../mozilla.components.concept.engine.webnotifications/-web-notification-delegate/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/webnotifications/src/main/java/mozilla/components/feature/webnotifications/WebNotificationFeature.kt#L44)
 
 Feature implementation for configuring and displaying web notifications to the user.
 
