@@ -15,6 +15,7 @@ import mozilla.components.feature.session.ThumbnailsFeature
 import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
+import mozilla.components.feature.toolbar.WebExtensionToolbarFeature
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.samples.browser.ext.components
@@ -26,6 +27,7 @@ import org.mozilla.samples.browser.integration.ReaderViewIntegration
 class BrowserFragment : BaseBrowserFragment(), BackHandler {
     private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
     private val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewIntegration>()
+    private val webExtToolbarFeature = ViewBoundFeatureWrapper<WebExtensionToolbarFeature>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val layout = super.onCreateView(inflater, container, savedInstanceState)
@@ -65,6 +67,15 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
 
         thumbnailsFeature.set(
             feature = ThumbnailsFeature(requireContext(), layout.engineView, components.sessionManager),
+            owner = this,
+            view = layout
+        )
+
+        webExtToolbarFeature.set(
+            feature = WebExtensionToolbarFeature(
+                layout.toolbar,
+                components.store
+            ),
             owner = this,
             view = layout
         )
