@@ -77,6 +77,9 @@ typedef struct dyld_all_image_infos32 {
   uint32_t                      infoArray;  // const struct dyld_image_info*
   uint32_t                      notification;
   bool                          processDetachedFromSharedRegion;
+  uint32_t                      padding[15];
+  // Only in version 12 (Mac OS X 10.7, iOS 4.3) and later
+  uint32_t                      sharedCacheSlide;
 } dyld_all_image_infos32;
 
 typedef struct dyld_all_image_infos64 {
@@ -85,6 +88,9 @@ typedef struct dyld_all_image_infos64 {
   uint64_t                      infoArray;  // const struct dyld_image_info*
   uint64_t                      notification;
   bool                          processDetachedFromSharedRegion;
+  uint64_t                      padding[15];
+  // Only in version 12 (Mac OS X 10.7, iOS 4.3) and later
+  uint64_t                      sharedCacheSlide;
 } dyld_all_image_infos64;
 
 // some typedefs to isolate 64/32 bit differences
@@ -114,7 +120,9 @@ class DynamicImage {
                string file_path,
                uintptr_t image_mod_date,
                mach_port_t task,
-               cpu_type_t cpu_type)
+               cpu_type_t cpu_type,
+               cpu_subtype_t cpu_subtype,
+               ptrdiff_t shared_cache_slide)
     : header_(header, header + header_size),
       header_size_(header_size),
       load_address_(load_address),
@@ -125,7 +133,9 @@ class DynamicImage {
       file_path_(file_path),
       file_mod_date_(image_mod_date),
       task_(task),
-      cpu_type_(cpu_type) {
+      cpu_type_(cpu_type),
+      cpu_subtype_(cpu_subtype),
+      shared_cache_slide_(shared_cache_slide) {
     CalculateMemoryAndVersionInfo();
   }
 
@@ -152,8 +162,11 @@ class DynamicImage {
   // Task owning this loaded image
   mach_port_t GetTask() {return task_;}
 
-  // CPU type of the task
+  // CPU type of the task and the image
   cpu_type_t GetCPUType() {return cpu_type_;}
+
+  // CPU subtype of the image
+  cpu_type_t GetCPUSubtype() {return cpu_subtype_;}
 
   // filetype from the Mach-O header.
   uint32_t GetFileType();
@@ -194,7 +207,9 @@ class DynamicImage {
   uintptr_t               file_mod_date_;  // time_t of image file
 
   mach_port_t             task_;
-  cpu_type_t              cpu_type_;        // CPU type of task_
+  cpu_type_t              cpu_type_;        // CPU type of task_ and image
+  cpu_subtype_t           cpu_subtype_;     // CPU subtype of image
+  ptrdiff_t               shared_cache_slide_; // Task's shared cache slide
 };
 
 //==============================================================================
