@@ -635,6 +635,7 @@ const availableLocaleDisplayNames = {
     "tn",
     "to",
     "tr",
+    "trs",
     "ts",
     "tt",
     "tw",
