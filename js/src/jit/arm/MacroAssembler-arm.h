@@ -858,6 +858,17 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   void unboxObject(const BaseIndex& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
   }
+  void unboxObjectOrNull(const ValueOperand& src, Register dest) {
+    // Due to Spectre mitigation logic (see Value.h), if the value is an Object
+    // then this yields the object; otherwise it yields zero (null), as desired.
+    unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
+  }
+  void unboxObjectOrNull(const Address& src, Register dest) {
+    unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
+  }
+  void unboxObjectOrNull(const BaseIndex& src, Register dest) {
+    unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
+  }
   void unboxDouble(const ValueOperand& src, FloatRegister dest);
   void unboxDouble(const Address& src, FloatRegister dest);
   void unboxDouble(const BaseIndex& src, FloatRegister dest);

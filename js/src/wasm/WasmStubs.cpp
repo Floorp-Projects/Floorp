@@ -587,6 +587,28 @@ static void UnboxAnyrefIntoValueReg(MacroAssembler& masm, Register tls,
   masm.bind(&done);
 }
 
+// Box the Value in src as an anyref in dest.  src and dest must not overlap.
+static void BoxValueIntoAnyref(MacroAssembler& masm, ValueOperand src,
+                               Register dest, Label* oolConvert) {
+  Label nullValue, objectValue, done;
+  {
+    ScratchTagScope tag(masm, src);
+    masm.splitTagForTest(src, tag);
+    masm.branchTestObject(Assembler::Equal, tag, &objectValue);
+    masm.branchTestNull(Assembler::Equal, tag, &nullValue);
+    masm.jump(oolConvert);
+  }
+
+  masm.bind(&nullValue);
+  masm.xorPtr(dest, dest);
+  masm.jump(&done);
+
+  masm.bind(&objectValue);
+  masm.unboxObject(src, dest);
+
+  masm.bind(&done);
+}
+
 // Generate a stub that enters wasm from a C++ caller via the native ABI. The
 // signature of the entry point is Module::ExportFuncPtr. The exported wasm
 // function has an ABI derived from its specific signature, so this function
@@ -970,6 +992,17 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
         }
         break;
       }
+      case ValType::AnyRef: {
+        ScratchTagScope tag(masm, scratchV);
+        masm.splitTagForTest(scratchV, tag);
+
+        // For object inputs, we handle object and null inline, everything else
+        // requires an actual box and we go out of line to allocate that.
+        masm.branchTestObject(Assembler::Equal, tag, &next);
+        masm.branchTestNull(Assembler::Equal, tag, &next);
+        masm.jump(&oolCall);
+        break;
+      }
       default: {
         MOZ_CRASH("unexpected argument type when calling from the jit");
       }
@@ -1013,6 +1046,15 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
         GenPrintF64(DebugChannel::Function, masm, target);
         if (isStackArg) {
           masm.storeDouble(target, Address(sp, iter->offsetFromArgBase()));
+        }
+        break;
+      }
+      case MIRType::RefOrNull: {
+        Register target = isStackArg ? ScratchIonEntry : iter->gpr();
+        masm.unboxObjectOrNull(argv, target);
+        GenPrintPtr(DebugChannel::Function, masm, target);
+        if (isStackArg) {
+          masm.storePtr(target, Address(sp, iter->offsetFromArgBase()));
         }
         break;
       }
@@ -1975,10 +2017,13 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
                                   &oolConvert);
         GenPrintF64(DebugChannel::Import, masm, ReturnDoubleReg);
         break;
+      case ValType::AnyRef:
+        BoxValueIntoAnyref(masm, JSReturnOperand, ReturnReg, &oolConvert);
+        GenPrintPtr(DebugChannel::Import, masm, ReturnReg);
+        break;
       case ValType::Ref:
       case ValType::FuncRef:
-      case ValType::AnyRef:
-        MOZ_CRASH("reference returned by import (jit exit) NYI");
+        MOZ_CRASH("typed reference returned by import (jit exit) NYI");
         break;
       case ValType::NullRef:
         MOZ_CRASH("NullRef not expressible");
@@ -2044,6 +2089,9 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
     AssertStackAlignment(masm, ABIStackAlignment);
     const ValTypeVector& results = fi.funcType().results();
     if (results.length() > 0) {
+      // NOTE that once there can be more than one result and we can box some of
+      // the results (as we must for AnyRef), pointer and already-boxed results
+      // must be rooted while subsequent results are boxed.
       MOZ_ASSERT(results.length() == 1, "multi-value return unimplemented");
       switch (results[0].code()) {
         case ValType::I32:
@@ -2061,6 +2109,10 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
           if (results[0].code() == ValType::F32) {
             masm.convertDoubleToFloat32(ReturnDoubleReg, ReturnFloat32Reg);
           }
+          break;
+        case ValType::AnyRef:
+          masm.call(SymbolicAddress::BoxValue_Anyref);
+          masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
           break;
         default:
           MOZ_CRASH("Unsupported convert type");
