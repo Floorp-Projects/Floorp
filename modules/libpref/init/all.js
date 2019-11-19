@@ -75,6 +75,11 @@ pref("security.family_safety.mode", 2);
 
 pref("security.enterprise_roots.enabled", false);
 
+// If true, attempt to load the osclientcerts PKCS#11 module at startup on a
+// background thread. This module allows Firefox to use client certificates
+// stored in OS certificate storage. Currently only available for Windows.
+pref("security.osclientcerts.autoload", false);
+
 // The supported values of this pref are:
 // 0: do not fetch OCSP
 // 1: fetch OCSP for DV and EV certificates
