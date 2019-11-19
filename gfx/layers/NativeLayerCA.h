@@ -110,15 +110,15 @@ class NativeLayerCA : public NativeLayer {
   NativeLayerCA(const gfx::IntSize& aSize, bool aIsOpaque);
   ~NativeLayerCA() override;
 
-  // Returns an IOSurface that can be drawn to. The size of the IOSurface will
-  // be the same as the size of this layer.
-  // The returned surface is guaranteed to be not in use by the window server.
+  // Gets the next surface for drawing from our swap chain and stores it in
+  // mInProgressSurface. Returns whether this was successful.
+  // mInProgressSurface is guaranteed to be not in use by the window server.
   // After a call to NextSurface, NextSurface must not be called again until
   // after NotifySurfaceReady has been called. Can be called on any thread. When
   // used from multiple threads, callers need to make sure that they still only
   // call NextSurface and NotifySurfaceReady alternatingly and not in any other
   // order.
-  CFTypeRefPtr<IOSurfaceRef> NextSurface(const MutexAutoLock&);
+  bool NextSurface(const MutexAutoLock&);
 
   // To be called by NativeLayerRootCA:
   CALayer* UnderlyingCALayer() { return mWrappingCALayer; }
@@ -133,6 +133,16 @@ class NativeLayerCA : public NativeLayer {
   GLuint GetOrCreateFramebufferForSurface(const MutexAutoLock&,
                                           CFTypeRefPtr<IOSurfaceRef> aSurface,
                                           bool aNeedsDepth);
+
+  // Invalidate aUpdateRegion and make sure that mInProgressSurface has valid
+  // content everywhere outside aUpdateRegion, so that only aUpdateRegion needs
+  // to be drawn. If content needs to be copied from a previous surface, aCopyFn
+  // is called to do the copying.
+  // aCopyFn: Fn(CFTypeRefPtr<IOSurfaceRef> aValidSourceIOSurface,
+  //             const gfx::IntRegion& aCopyRegion) -> void
+  template <typename F>
+  void HandlePartialUpdate(const MutexAutoLock&,
+                           const gfx::IntRegion& aUpdateRegion, F&& aCopyFn);
 
   struct SurfaceWithInvalidRegion {
     CFTypeRefPtr<IOSurfaceRef> mSurface;

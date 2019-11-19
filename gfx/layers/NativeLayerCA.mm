@@ -11,6 +11,7 @@
 #include <utility>
 #include <algorithm>
 
+#include "GLBlitHelper.h"
 #include "GLContextCGL.h"
 #include "MozFramebuffer.h"
 #include "ScopedGLHelpers.h"
@@ -247,11 +248,11 @@ void NativeLayerCA::InvalidateRegionThroughoutSwapchain(const MutexAutoLock&,
   }
 }
 
-CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurface(const MutexAutoLock& aLock) {
+bool NativeLayerCA::NextSurface(const MutexAutoLock& aLock) {
   if (mSize.IsEmpty()) {
-    NSLog(@"NextSurface returning nullptr because of invalid mSize (%d, %d).", mSize.width,
+    NSLog(@"NextSurface returning false because of invalid mSize (%d, %d).", mSize.width,
           mSize.height);
-    return nullptr;
+    return false;
   }
 
   MOZ_RELEASE_ASSERT(
@@ -279,8 +280,8 @@ CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurface(const MutexAutoLock& aLock
           (__bridge NSString*)kIOSurfaceBytesPerElement : @(4),
         }));
     if (!newSurf) {
-      NSLog(@"NextSurface returning nullptr because IOSurfaceCreate failed to create the surface.");
-      return nullptr;
+      NSLog(@"NextSurface returning false because IOSurfaceCreate failed to create the surface.");
+      return false;
     }
     surf = Some(SurfaceWithInvalidRegion{newSurf, IntRect({}, mSize)});
   }
@@ -294,23 +295,74 @@ CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurface(const MutexAutoLock& aLock
   MOZ_RELEASE_ASSERT(surf);
   mInProgressSurface = std::move(surf);
   IOSurfaceIncrementUseCount(mInProgressSurface->mSurface.get());
-  return mInProgressSurface->mSurface;
+  return true;
+}
+
+template <typename F>
+void NativeLayerCA::HandlePartialUpdate(const MutexAutoLock& aLock,
+                                        const gfx::IntRegion& aUpdateRegion, F&& aCopyFn) {
+  MOZ_RELEASE_ASSERT(IntRect({}, mSize).Contains(aUpdateRegion.GetBounds()),
+                     "The update region should be within the surface bounds.");
+
+  InvalidateRegionThroughoutSwapchain(aLock, aUpdateRegion);
+
+  gfx::IntRegion copyRegion;
+  copyRegion.Sub(mInProgressSurface->mInvalidRegion, aUpdateRegion);
+  if (!copyRegion.IsEmpty()) {
+    // There are parts in mInProgressSurface which are invalid but which are not included in
+    // aUpdateRegion. We will obtain valid content for those parts by copying from a previous
+    // surface.
+    MOZ_RELEASE_ASSERT(
+        mReadySurface || mFrontSurface,
+        "The first call to NextSurface* must always update the entire layer. If this "
+        "is the second call, mReadySurface or mFrontSurface will be Some().");
+
+    // NotifySurfaceReady marks the entire surface as valid. The valid surface is then stored in
+    // mReadySurface, and later moves to mFrontSurface. Get the surface that NotifySurfaceReady was
+    // called on most recently.
+    SurfaceWithInvalidRegion& copySource = mReadySurface ? *mReadySurface : *mFrontSurface;
+    MOZ_RELEASE_ASSERT(copySource.mInvalidRegion.Intersect(copyRegion).IsEmpty(),
+                       "copySource should have valid content in the entire copy region, because "
+                       "the only invalidation since NotifySurfaceReady was aUpdateRegion, and "
+                       "aUpdateRegion has no overlap with copyRegion.");
+
+    // Now copy the valid content, using a callar-provided copy function.
+    aCopyFn(copySource.mSurface, copyRegion);
+    mInProgressSurface->mInvalidRegion.SubOut(copyRegion);
+  }
+
+  MOZ_RELEASE_ASSERT(mInProgressSurface->mInvalidRegion == aUpdateRegion);
 }
 
 RefPtr<gfx::DrawTarget> NativeLayerCA::NextSurfaceAsDrawTarget(const gfx::IntRegion& aUpdateRegion,
                                                                gfx::BackendType aBackendType) {
   MutexAutoLock lock(mMutex);
-  CFTypeRefPtr<IOSurfaceRef> surface = NextSurface(lock);
-  if (!surface) {
+  if (!NextSurface(lock)) {
     return nullptr;
   }
 
-  MOZ_RELEASE_ASSERT(IntRect({}, mSize).Contains(aUpdateRegion.GetBounds()));
-  InvalidateRegionThroughoutSwapchain(lock, aUpdateRegion);
-
-  mInProgressLockedIOSurface = new MacIOSurface(std::move(surface));
+  mInProgressLockedIOSurface = new MacIOSurface(mInProgressSurface->mSurface);
   mInProgressLockedIOSurface->Lock(false);
-  return mInProgressLockedIOSurface->GetAsDrawTargetLocked(aBackendType);
+  RefPtr<gfx::DrawTarget> dt = mInProgressLockedIOSurface->GetAsDrawTargetLocked(aBackendType);
+
+  HandlePartialUpdate(
+      lock, aUpdateRegion,
+      [&](CFTypeRefPtr<IOSurfaceRef> validSource, const gfx::IntRegion& copyRegion) {
+        RefPtr<MacIOSurface> source = new MacIOSurface(validSource);
+        source->Lock(true);
+        {
+          RefPtr<gfx::DrawTarget> sourceDT = source->GetAsDrawTargetLocked(aBackendType);
+          RefPtr<gfx::SourceSurface> sourceSurface = sourceDT->Snapshot();
+
+          for (auto iter = copyRegion.RectIter(); !iter.Done(); iter.Next()) {
+            const gfx::IntRect& r = iter.Get();
+            dt->CopySurface(sourceSurface, r, r.TopLeft());
+          }
+        }
+        source->Unlock(true);
+      });
+
+  return dt;
 }
 
 void NativeLayerCA::SetGLContext(gl::GLContext* aContext) {
@@ -333,14 +385,30 @@ gl::GLContext* NativeLayerCA::GetGLContext() {
 Maybe<GLuint> NativeLayerCA::NextSurfaceAsFramebuffer(const gfx::IntRegion& aUpdateRegion,
                                                       bool aNeedsDepth) {
   MutexAutoLock lock(mMutex);
-  CFTypeRefPtr<IOSurfaceRef> surface = NextSurface(lock);
-  if (!surface) {
+  if (!NextSurface(lock)) {
     return Nothing();
   }
 
-  MOZ_RELEASE_ASSERT(IntRect({}, mSize).Contains(aUpdateRegion.GetBounds()));
-  InvalidateRegionThroughoutSwapchain(lock, aUpdateRegion);
-  return Some(GetOrCreateFramebufferForSurface(lock, std::move(surface), aNeedsDepth));
+  GLuint fbo = GetOrCreateFramebufferForSurface(lock, mInProgressSurface->mSurface, aNeedsDepth);
+
+  HandlePartialUpdate(
+      lock, aUpdateRegion,
+      [&](CFTypeRefPtr<IOSurfaceRef> validSource, const gfx::IntRegion& copyRegion) {
+        // Copy copyRegion from validSource to fbo.
+        MOZ_RELEASE_ASSERT(mGLContext);
+        mGLContext->MakeCurrent();
+        GLuint sourceFBO = GetOrCreateFramebufferForSurface(lock, validSource, false);
+        for (auto iter = copyRegion.RectIter(); !iter.Done(); iter.Next()) {
+          gfx::IntRect r = iter.Get();
+          if (mSurfaceIsFlipped) {
+            r.y = mSize.height - r.YMost();
+          }
+          mGLContext->BlitHelper()->BlitFramebufferToFramebuffer(sourceFBO, fbo, r, r,
+                                                                 LOCAL_GL_NEAREST);
+        }
+      });
+
+  return Some(fbo);
 }
 
 GLuint NativeLayerCA::GetOrCreateFramebufferForSurface(const MutexAutoLock&,
