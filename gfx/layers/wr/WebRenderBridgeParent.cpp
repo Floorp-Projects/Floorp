@@ -2073,7 +2073,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvCapture() {
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetTransactionLogging(
-  const bool& aValue) {
+    const bool& aValue) {
   if (!mDestroyed) {
     mApis[wr::RenderRoot::Default]->SetTransactionLogging(aValue);
   }
@@ -2644,7 +2644,7 @@ void WebRenderBridgeParent::Pause() {
 
 bool WebRenderBridgeParent::Resume() {
   MOZ_ASSERT(IsRootWebRenderBridgeParent());
-#ifdef MOZ_WIDGET_ANDROID
+
   if (!IsRootWebRenderBridgeParent() || mDestroyed) {
     return false;
   }
@@ -2652,7 +2652,7 @@ bool WebRenderBridgeParent::Resume() {
   if (!mApis[wr::RenderRoot::Default]->Resume()) {
     return false;
   }
-#endif
+
   mPaused = false;
   return true;
 }

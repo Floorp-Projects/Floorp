@@ -431,7 +431,7 @@ nsWindow::nsWindow() {
 #endif /* MOZ_X11 */
 
 #ifdef MOZ_WAYLAND
-  mNeedsUpdatingEGLSurface = false;
+  mNeedsCompositorResume = false;
   mCompositorInitiallyPaused = false;
 #endif
 
@@ -2176,10 +2176,10 @@ static bool ExtractExposeRegion(LayoutDeviceIntRegion& aRegion, cairo_t* cr) {
 }
 
 #ifdef MOZ_WAYLAND
-void nsWindow::WaylandEGLSurfaceForceRedraw() {
+void nsWindow::MaybeResumeCompositor() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  if (mIsDestroyed || !mNeedsUpdatingEGLSurface) {
+  if (mIsDestroyed || !mNeedsCompositorResume) {
     return;
   }
 
@@ -2187,8 +2187,7 @@ void nsWindow::WaylandEGLSurfaceForceRedraw() {
     MOZ_ASSERT(mCompositorWidgetDelegate);
     if (mCompositorWidgetDelegate) {
       mCompositorInitiallyPaused = false;
-      mNeedsUpdatingEGLSurface = false;
-      mCompositorWidgetDelegate->RequestsUpdatingEGLSurface();
+      mNeedsCompositorResume = false;
       remoteRenderer->SendResumeAsync();
     }
     remoteRenderer->SendForcePresent();
@@ -3907,8 +3906,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
         mCompositorInitiallyPaused = true;
         RefPtr<nsWindow> self(this);
         moz_container_set_initial_draw_callback(mContainer, [self]() -> void {
-          self->mNeedsUpdatingEGLSurface = true;
-          self->WaylandEGLSurfaceForceRedraw();
+          self->mNeedsCompositorResume = true;
+          self->MaybeResumeCompositor();
         });
       }
 #endif
@@ -6598,7 +6597,7 @@ void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
                "nsWindow::SetCompositorWidgetDelegate called with a "
                "non-PlatformCompositorWidgetDelegate");
 #ifdef MOZ_WAYLAND
-    WaylandEGLSurfaceForceRedraw();
+    MaybeResumeCompositor();
 #endif
   } else {
     mCompositorWidgetDelegate = nullptr;
