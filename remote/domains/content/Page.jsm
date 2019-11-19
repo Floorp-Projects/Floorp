@@ -44,6 +44,9 @@ class Page extends ContentProcessDomain {
       this.chromeEventHandler.addEventListener("DOMContentLoaded", this, {
         mozSystemGroup: true,
       });
+      this.chromeEventHandler.addEventListener("pagehide", this, {
+        mozSystemGroup: true,
+      });
       this.chromeEventHandler.addEventListener("pageshow", this, {
         mozSystemGroup: true,
       });
@@ -55,6 +58,9 @@ class Page extends ContentProcessDomain {
       this.contextObserver.off("frame-navigated", this.onFrameNavigated);
 
       this.chromeEventHandler.removeEventListener("DOMContentLoaded", this, {
+        mozSystemGroup: true,
+      });
+      this.chromeEventHandler.removeEventListener("pagehide", this, {
         mozSystemGroup: true,
       });
       this.chromeEventHandler.removeEventListener("pageshow", this, {
@@ -149,6 +155,11 @@ class Page extends ContentProcessDomain {
     switch (type) {
       case "DOMContentLoaded":
         this.emit("Page.domContentEventFired", { timestamp });
+        break;
+
+      case "pagehide":
+        // Maybe better to bound to "Network.responseReceived" once implemented
+        this.emit("Page.frameStartedLoading", { frameId });
         break;
 
       case "pageshow":
