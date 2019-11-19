@@ -104,9 +104,6 @@ const MULTI_LOCALE_ENGINES = [
   "multilocale",
 ];
 
-// A tag to denote when we are using the "default_locale" of an engine
-const DEFAULT_TAG = "default";
-
 // A method that tries to determine if this user is in a US geography.
 function isUSTimezone() {
   // Timezone assumptions! We assume that if the system clock's timezone is
@@ -1229,7 +1226,11 @@ SearchService.prototype = {
           " engines reported by AddonManager startup"
       );
       for (let extension of this._startupExtensions) {
-        await this._installExtensionEngine(extension, [DEFAULT_TAG], true);
+        await this._installExtensionEngine(
+          extension,
+          [SearchUtils.DEFAULT_TAG],
+          true
+        );
       }
     }
 
@@ -1266,7 +1267,11 @@ SearchService.prototype = {
    * @param {boolean} [isReload]
    *   is being called from maybeReloadEngines.
    */
-  async ensureBuiltinExtension(id, locales = [DEFAULT_TAG], isReload = false) {
+  async ensureBuiltinExtension(
+    id,
+    locales = [SearchUtils.DEFAULT_TAG],
+    isReload = false
+  ) {
     SearchUtils.log("ensureBuiltinExtension: " + id);
     try {
       let policy = WebExtensionPolicy.getByID(id);
@@ -1327,11 +1332,11 @@ SearchService.prototype = {
     let [name, locale] = engineName.split(/-(.+)/);
 
     if (!MULTI_LOCALE_ENGINES.includes(name)) {
-      return [engineName, DEFAULT_TAG];
+      return [engineName, SearchUtils.DEFAULT_TAG];
     }
 
     if (!locale) {
-      locale = DEFAULT_TAG;
+      locale = SearchUtils.DEFAULT_TAG;
     }
     return [name, locale];
   },
@@ -1791,7 +1796,7 @@ SearchService.prototype = {
       return "webExtension" in engineInfo &&
         "locales" in engineInfo.webExtension
         ? engineInfo.webExtension.locales[0]
-        : DEFAULT_TAG;
+        : SearchUtils.DEFAULT_TAG;
     }
     this._searchDefault = {
       id: defaultEngine.webExtension.id,
@@ -2504,7 +2509,7 @@ SearchService.prototype = {
       this._startupExtensions.add(extension);
       return [];
     }
-    return this._installExtensionEngine(extension, [DEFAULT_TAG]);
+    return this._installExtensionEngine(extension, [SearchUtils.DEFAULT_TAG]);
   },
 
   /**
@@ -2561,7 +2566,7 @@ SearchService.prototype = {
     let locales =
       "locales" in config.webExtension
         ? config.webExtension.locales
-        : [DEFAULT_TAG];
+        : [SearchUtils.DEFAULT_TAG];
 
     let engines = [];
     for (let locale of locales) {
@@ -2600,7 +2605,7 @@ SearchService.prototype = {
 
     let installLocale = async locale => {
       let manifest =
-        locale === DEFAULT_TAG
+        locale == SearchUtils.DEFAULT_TAG
           ? extension.manifest
           : await extension.getLocalizedManifest(locale);
       return this._addEngineForManifest(
@@ -2628,7 +2633,7 @@ SearchService.prototype = {
   async _addEngineForManifest(
     extension,
     manifest,
-    locale = DEFAULT_TAG,
+    locale = SearchUtils.DEFAULT_TAG,
     initEngine = false,
     isReload
   ) {
@@ -2668,7 +2673,7 @@ SearchService.prototype = {
     }
 
     let shortName = extension.id.split("@")[0];
-    if (locale != DEFAULT_TAG) {
+    if (locale != SearchUtils.DEFAULT_TAG) {
       shortName += "-" + locale;
     }
     if ("telemetryId" in engineParams) {
