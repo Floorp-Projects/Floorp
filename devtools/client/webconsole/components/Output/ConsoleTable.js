@@ -9,7 +9,10 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const actions = require("devtools/client/webconsole/actions/messages");
-const { l10n } = require("devtools/client/webconsole/utils/messages");
+const {
+  l10n,
+  getArrayTypeNames,
+} = require("devtools/client/webconsole/utils/messages");
 loader.lazyGetter(this, "MODE", function() {
   return require("devtools/client/shared/components/reps/reps").MODE;
 });
@@ -147,7 +150,9 @@ function getTableItems(data = {}, type, headers = null) {
   const INDEX_NAME = "_index";
   const VALUE_NAME = "_value";
   const namedIndexes = {
-    [INDEX_NAME]: ["Object", "Array"].includes(type)
+    [INDEX_NAME]: getArrayTypeNames()
+      .concat("Object")
+      .includes(type)
       ? l10n.getStr("table.index")
       : l10n.getStr("table.iterationIndex"),
     [VALUE_NAME]: l10n.getStr("table.value"),
