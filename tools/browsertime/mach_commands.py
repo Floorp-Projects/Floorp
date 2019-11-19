@@ -112,7 +112,7 @@ host_fetches = {
             # It's sad that the macOS URLs don't include version numbers.  If
             # ImageMagick is released frequently, we'll need to be more
             # accommodating of multiple versions here.
-            'url': 'https://ftp.icm.edu.pl/packages/ImageMagick/binaries/ImageMagick-x86_64-apple-darwin18.7.0.tar.gz',  # noqa
+            'url': 'https://ftp.icm.edu.pl/packages/ImageMagick/binaries/ImageMagick-x86_64-apple-darwin17.7.0.tar.gz',  # noqa
             # An extension to `fetch` syntax.
             'path': 'ImageMagick-7.0.8',
         },
@@ -210,7 +210,16 @@ class MachBrowsertime(MachCommandBase):
                         'browsertime',
                         {'path': archive},
                         'Unpacking temporary location {path}')
-                    unpack_file(archive)
+
+                    if 'win64' in host_platform() and 'imagemagick' in tool.lower():
+                        # Windows archive does not contain a subfolder
+                        # so we make one for it here
+                        mkdir(fetch.get('path'))
+                        os.chdir(os.path.join(self.state_path, fetch.get('path')))
+                        unpack_file(archive)
+                        os.chdir(self.state_path)
+                    else:
+                        unpack_file(archive)
 
                     # Make sure the expected path exists after extraction
                     path = os.path.join(self.state_path, fetch.get('path'))
@@ -243,7 +252,7 @@ class MachBrowsertime(MachCommandBase):
         if 'GECKODRIVER_BASE_URL' not in os.environ:
             # Use custom `geckodriver` with pre-release Android support.
             url = 'https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/'
-            os.environ['GECKODRIVER_BASE_URL'] = url
+            os.environ[str('GECKODRIVER_BASE_URL')] = str(url)
 
         self.log(
             logging.INFO,
@@ -303,6 +312,12 @@ class MachBrowsertime(MachCommandBase):
         # extension API.
         node_dir = os.path.dirname(node_path())
         path = [node_dir] + path
+
+        # On windows, we need to add the ImageMagick directory to the path
+        # otherwise compare won't be found, and the built-in OS convert
+        # method will be used instead of the ImageMagick one.
+        if 'win64' in host_platform() and path_to_imagemagick:
+            path.insert(0, path_to_imagemagick)
 
         append_env = {
             'PATH': os.pathsep.join(path),
