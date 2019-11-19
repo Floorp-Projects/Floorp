@@ -1836,6 +1836,32 @@ def wasm_cxx_with_flags(wasm_cxx, provided_wasm_cxx, wasi_sysroot):
 set_config('WASM_CXX', wasm_cxx_with_flags, when=requires_wasm_sandboxing)
 
 
+option(env='WASM_CFLAGS', nargs=1, help='Options to pass to WASM_CC',
+       when=requires_wasm_sandboxing)
+@depends('WASM_CFLAGS', when=requires_wasm_sandboxing)
+def wasm_cflags(value):
+    if value:
+        return value
+set_config('WASM_CFLAGS', wasm_cflags, when=requires_wasm_sandboxing)
+
+option(env='WASM_CXXFLAGS', nargs=1, help='Options to pass to WASM_CXX',
+       when=requires_wasm_sandboxing)
+@depends('WASM_CXXFLAGS', when=requires_wasm_sandboxing)
+def wasm_cxxflags(value):
+    if value:
+        return value
+set_config('WASM_CXXFLAGS', wasm_cxxflags, when=requires_wasm_sandboxing)
+
+option(env='WASM_LDFLAGS', nargs=1,
+       help='Options to pass when linking wasm modules',
+       when=requires_wasm_sandboxing)
+@depends('WASM_LDFLAGS', when=requires_wasm_sandboxing)
+def wasm_ldflags(value):
+    if value:
+        return value
+set_config('WASM_LDFLAGS', wasm_ldflags, when=requires_wasm_sandboxing)
+
+
 @depends('--with-wasm-sandboxed-libraries', target)
 def wasm_sandboxing(libraries, target):
     if not libraries:
