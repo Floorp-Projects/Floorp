@@ -44,6 +44,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [platformName](#platformname)
 * [personalizedCfrScores](#personalizedcfrscores)
 * [personalizedCfrThreshold](#personalizedcfrthreshold)
+* [messageImpressions](#messageimpressions)
 
 ## Detailed usage
 
@@ -615,4 +616,23 @@ See more in [CFR Machine Learning Experiment](https://bugzilla.mozilla.org/show_
 
 ```
 declare const personalizedCfrThreshold = float;
+```
+
+### `messageImpressions`
+
+Dictionary that maps message ids to impression timestamps. Timestamps are stored in
+consecutive order. Can be used to detect first impression of a message, number of
+impressions. Can be used in targeting to show a message if another message has been
+seen.
+Impressions are used for frequency capping so we only store them if the message has
+`frequency` configured.
+Impressions for badges might not work as expected: we add a badge for every opened
+window so the number of impressions stored might be higher than expected. Additionally
+not all badges have `frequency` cap so `messageImpressions` might not be defined.
+Badge impressions should not be used for targeting.
+
+#### Definition
+
+```
+declare const messageImpressions: { [key: string]: Array<UnixEpochNumber> };
 ```
