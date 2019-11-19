@@ -60,6 +60,7 @@ class FxaWebChannelFeatureTest {
             eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
             eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_URL),
             eq(true),
+            eq(false),
             onSuccess.capture(),
             onError.capture()
         )
@@ -72,6 +73,7 @@ class FxaWebChannelFeatureTest {
             eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
             eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_URL),
             eq(true),
+            eq(false),
             any(),
             any()
         )

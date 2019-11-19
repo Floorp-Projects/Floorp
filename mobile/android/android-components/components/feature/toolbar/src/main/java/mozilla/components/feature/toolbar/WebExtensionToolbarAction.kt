@@ -4,11 +4,17 @@
 
 package mozilla.components.feature.toolbar
 
+import android.graphics.drawable.BitmapDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.ktx.android.view.setPadding
@@ -25,6 +31,7 @@ open class WebExtensionToolbarAction(
     internal val padding: Padding? = null,
     internal val listener: () -> Unit
 ) : Toolbar.Action {
+    internal var iconJob: Job? = null
 
     override fun createView(parent: ViewGroup): View {
         val rootView = LayoutInflater.from(parent.context)
@@ -38,6 +45,14 @@ open class WebExtensionToolbarAction(
 
         rootView.setBackgroundResource(backgroundResource)
         padding?.let { rootView.setPadding(it) }
+
+        parent.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewDetachedFromWindow(view: View?) {
+                iconJob?.cancel()
+            }
+
+            override fun onViewAttachedToWindow(view: View?) = Unit
+        })
         return rootView
     }
 
@@ -45,9 +60,17 @@ open class WebExtensionToolbarAction(
         val imageView = view.findViewById<ImageView>(R.id.action_image)
         val textView = view.findViewById<TextView>(R.id.badge_text)
 
-        imageView.setImageDrawable(browserAction.icon)
-        imageView.contentDescription = browserAction.title
+        iconJob = CoroutineScope(Dispatchers.IO).launch {
+            val icon = browserAction.loadIcon.invoke(imageView.measuredHeight)
 
+            icon?.let {
+                MainScope().launch {
+                    imageView.setImageDrawable(BitmapDrawable(view.context.resources, it))
+                }
+            }
+        }
+
+        imageView.contentDescription = browserAction.title
         textView.text = browserAction.badgeText
         textView.setTextColor(browserAction.badgeTextColor)
         textView.setBackgroundColor(browserAction.badgeBackgroundColor)

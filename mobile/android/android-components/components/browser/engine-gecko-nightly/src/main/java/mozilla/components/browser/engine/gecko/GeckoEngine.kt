@@ -144,10 +144,11 @@ class GeckoEngine(
         id: String,
         url: String,
         allowContentMessaging: Boolean,
+        supportActions: Boolean,
         onSuccess: ((WebExtension) -> Unit),
         onError: ((String, Throwable) -> Unit)
     ) {
-        GeckoWebExtension(id, url, allowContentMessaging).also { ext ->
+        GeckoWebExtension(id, url, allowContentMessaging, supportActions).also { ext ->
             runtime.registerWebExtension(ext.nativeExtension).then({
                 webExtensionDelegate?.onInstalled(ext)
                 onSuccess(ext)

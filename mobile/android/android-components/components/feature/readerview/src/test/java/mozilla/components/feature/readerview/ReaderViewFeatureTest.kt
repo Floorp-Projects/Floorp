@@ -62,6 +62,7 @@ class ReaderViewFeatureTest {
             eq(ReaderViewFeature.READER_VIEW_EXTENSION_ID),
             eq(ReaderViewFeature.READER_VIEW_EXTENSION_URL),
             eq(true),
+            eq(false),
             onSuccess.capture(),
             onError.capture()
         )
@@ -74,6 +75,7 @@ class ReaderViewFeatureTest {
             eq(ReaderViewFeature.READER_VIEW_EXTENSION_ID),
             eq(ReaderViewFeature.READER_VIEW_EXTENSION_URL),
             eq(true),
+            eq(false),
             any(),
             any()
         )

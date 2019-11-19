@@ -10,7 +10,6 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
-import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
@@ -21,7 +20,6 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
-import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
@@ -191,25 +189,6 @@ class EngineObserverTest {
             TrackingProtectionAction.ToggleExclusionListAction(
                 session.id,
                 true
-            )
-        )
-    }
-
-    @Test
-    fun engineSessionObserverOnBrowserActionChange() {
-        val session = Session("")
-        val store = mock(BrowserStore::class.java)
-        val browserAction = BrowserAction("", true, mock(), "", "", 0, 0) {}
-        val observer = EngineObserver(session, store)
-
-        whenever(store.dispatch(any())).thenReturn(mock())
-        observer.onBrowserActionChange("extensionId", browserAction)
-
-        verify(store).dispatch(
-            WebExtensionAction.UpdateTabBrowserAction(
-                session.id,
-                "extensionId",
-                browserAction
             )
         )
     }

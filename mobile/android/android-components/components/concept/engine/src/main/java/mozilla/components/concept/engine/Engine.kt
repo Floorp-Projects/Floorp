@@ -120,16 +120,20 @@ interface Engine {
      * within the APK file e.g. resource://android/assets/extensions/my_web_ext.
      * @param allowContentMessaging whether or not the web extension is allowed
      * to send messages from content scripts, defaults to true.
+     * @param supportActions whether or not browser and page actions are handled when
+     * received from the web extension, defaults to false.
      * @param onSuccess (optional) callback invoked if the extension was installed successfully,
      * providing access to the [WebExtension] object for bi-directional messaging.
      * @param onError (optional) callback invoked if there was an error installing the extension.
      * This callback is invoked with an [UnsupportedOperationException] in case the engine doesn't
      * have web extension support.
      */
+    @Suppress("LongParameterList")
     fun installWebExtension(
         id: String,
         url: String,
         allowContentMessaging: Boolean = true,
+        supportActions: Boolean = false,
         onSuccess: ((WebExtension) -> Unit) = { },
         onError: ((String, Throwable) -> Unit) = { _, _ -> }
     ): Unit = onError(id, UnsupportedOperationException("Web extension support is not available in this engine"))
