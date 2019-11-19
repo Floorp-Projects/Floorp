@@ -33,10 +33,10 @@ function moveMouseTo(x, y, andThen) {
 
 function openWindows() {
   gLeftWindow = window.docShell.rootTreeItem.domWindow
-                      .open('empty_window.xul', '_blank', 'chrome,screenX=50,screenY=50,width=200,height=200');
+                      .open('empty_window.xhtml', '_blank', 'chrome,screenX=50,screenY=50,width=200,height=200');
   SimpleTest.waitForFocus(function () {
     gRightWindow = window.docShell.rootTreeItem.domWindow
-                         .open('empty_window.xul', '', 'chrome,screenX=300,screenY=50,width=200,height=200');
+                         .open('empty_window.xhtml', '', 'chrome,screenX=300,screenY=50,width=200,height=200');
     SimpleTest.waitForFocus(attachBrowserToLeftWindow, gRightWindow);
   }, gLeftWindow);
 }
