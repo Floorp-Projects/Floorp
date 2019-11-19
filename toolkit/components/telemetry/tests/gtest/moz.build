@@ -26,6 +26,3 @@ if CONFIG['OS_TARGET'] != 'Android':
     ]
 
 FINAL_LIBRARY = 'xul-gtest'
-
-include('/ipc/chromium/chromium-config.mozbuild')
-
