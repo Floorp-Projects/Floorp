@@ -483,6 +483,10 @@ bool WebGLContext::CreateAndInitGL(
     flags |= gl::CreateContextFlags::FORCE_ENABLE_HARDWARE;
   }
 
+  if (StaticPrefs::webgl_cgl_multithreaded()) {
+    flags |= gl::CreateContextFlags::PREFER_MULTITHREADED;
+  }
+
   if (IsWebGL2()) {
     flags |= gl::CreateContextFlags::PREFER_ES3;
   } else {

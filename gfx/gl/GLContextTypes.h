@@ -44,6 +44,7 @@ enum class CreateContextFlags : uint16_t {
   HIGH_POWER = 1 << 6,
   PROVOKING_VERTEX_DONT_CARE = 1 << 7,
   PREFER_EXACT_VERSION = 1 << 8,
+  PREFER_MULTITHREADED = 1 << 9,
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CreateContextFlags)
 

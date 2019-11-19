@@ -237,7 +237,7 @@ static already_AddRefed<GLContextCGL> CreateOffscreenFBOContext(CreateContextFla
 
   RefPtr<GLContextCGL> glContext = new GLContextCGL(flags, SurfaceCaps::Any(), context, true);
 
-  if (StaticPrefs::gl_multithreaded()) {
+  if (flags & CreateContextFlags::PREFER_MULTITHREADED) {
     CGLEnable(glContext->GetCGLContext(), kCGLCEMPEngine);
   }
   return glContext.forget();
