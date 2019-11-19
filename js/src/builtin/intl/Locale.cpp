@@ -1343,19 +1343,16 @@ bool js::intl_ValidateAndCanonicalizeUnicodeExtensionType(JSContext* cx,
                                                           Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
+  MOZ_ASSERT(args[0].isString());
+  MOZ_ASSERT(args[1].isString());
 
   RootedLinearString unicodeType(cx, args[0].toString()->ensureLinear(cx));
   if (!unicodeType) {
     return false;
   }
 
-  RootedLinearString option(cx, args[1].toString()->ensureLinear(cx));
-  if (!option) {
-    return false;
-  }
-
   if (!IsValidUnicodeExtensionValue(unicodeType)) {
-    UniqueChars optionChars = EncodeAscii(cx, option);
+    UniqueChars optionChars = EncodeAscii(cx, args[1].toString());
     if (!optionChars) {
       return false;
     }
