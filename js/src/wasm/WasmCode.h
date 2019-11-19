@@ -238,7 +238,7 @@ class FuncExport {
   }
 
   bool canHaveJitEntry() const {
-    return !funcType_.temporarilyUnsupportedAnyRef() &&
+    return !funcType_.temporarilyUnsupportedReftypeForEntry() &&
            JitOptions.enableWasmJitEntry;
   }
 

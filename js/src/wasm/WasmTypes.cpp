@@ -104,17 +104,6 @@ void AnyRef::trace(JSTracer* trc) {
   }
 }
 
-class WasmValueBox : public NativeObject {
-  static const unsigned VALUE_SLOT = 0;
-
- public:
-  static const unsigned RESERVED_SLOTS = 1;
-  static const JSClass class_;
-
-  static WasmValueBox* create(JSContext* cx, HandleValue val);
-  Value value() const { return getFixedSlot(VALUE_SLOT); }
-};
-
 const JSClass WasmValueBox::class_ = {
     "WasmValueBox", JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS)};
 
