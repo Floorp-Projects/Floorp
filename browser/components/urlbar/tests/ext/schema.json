@@ -2,16 +2,6 @@
   {
     "namespace": "experiments.urlbar",
     "description": "APIs supporting urlbar experiments",
-    "properties": {
-      "engagementTelemetry": {
-        "$ref": "types.Setting",
-        "description": "Enables or disables the engagement telemetry for the current browser session."
-      },
-      "openViewOnFocus": {
-        "$ref": "types.Setting",
-        "description": "Enables or disables the open-view-on-focus mode for the current browser session."
-      }
-    },
     "functions": [
       {
         "name": "isBrowserShowingNotification",

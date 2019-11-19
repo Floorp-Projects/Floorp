@@ -100,6 +100,7 @@ class InactivePropertyHelper {
           "grid-auto-flow",
           "grid-auto-rows",
           "grid-template",
+          "grid-gap",
           "justify-items",
         ],
         when: () => !this.gridContainer,
@@ -141,25 +142,15 @@ class InactivePropertyHelper {
           "place-content",
           "place-items",
           "row-gap",
-          // grid-*-gap are supported legacy shorthands for the corresponding *-gap properties.
-          // See https://drafts.csswg.org/css-align-3/#gap-legacy for more information.
-          "grid-gap",
-          "grid-row-gap",
         ],
         when: () => !this.gridContainer && !this.flexContainer,
         fixId: "inactive-css-not-grid-or-flex-container-fix",
         msgId: "inactive-css-not-grid-or-flex-container",
         numFixProps: 2,
       },
-      // column-gap and shorthands used on non-grid or non-flex or non-multi-col container.
+      // column-gap and shorthand used on non-grid or non-flex or non-multi-col container.
       {
-        invalidProperties: [
-          "column-gap",
-          "gap",
-          // grid-*-gap are supported legacy shorthands for the corresponding *-gap properties.
-          // See https://drafts.csswg.org/css-align-3/#gap-legacy for more information.
-          "grid-column-gap",
-        ],
+        invalidProperties: ["column-gap", "gap"],
         when: () =>
           !this.gridContainer && !this.flexContainer && !this.multiColContainer,
         fixId:
