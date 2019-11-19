@@ -810,11 +810,6 @@ Value GetThisValueOfLexical(JSObject* env);
 
 Value GetThisValueOfWith(JSObject* env);
 
-/* * */
-
-using ClassInitializerOp = JSObject* (*)(JSContext* cx,
-                                         Handle<GlobalObject*> global);
-
 } /* namespace js */
 
 namespace js {
