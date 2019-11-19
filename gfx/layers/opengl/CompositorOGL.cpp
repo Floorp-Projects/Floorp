@@ -589,15 +589,9 @@ void CompositorOGL::PrepareViewport(CompositingRenderTargetOGL* aRenderTarget) {
     // Matrix to transform (0, 0, aWidth, aHeight) to viewport space (-1.0, 1.0,
     // 2, 2) and flip the contents.
     Matrix viewMatrix;
-    if (mGLContext->IsOffscreen() && !gIsGtest) {
-      // In case of rendering via GL Offscreen context, disable Y-Flipping
-      viewMatrix.PreTranslate(-1.0, -1.0);
-      viewMatrix.PreScale(2.0f / float(size.width), 2.0f / float(size.height));
-    } else {
-      viewMatrix.PreTranslate(-1.0, 1.0);
-      viewMatrix.PreScale(2.0f / float(size.width), 2.0f / float(size.height));
-      viewMatrix.PreScale(1.0f, -1.0f);
-    }
+    viewMatrix.PreTranslate(-1.0, 1.0);
+    viewMatrix.PreScale(2.0f / float(size.width), 2.0f / float(size.height));
+    viewMatrix.PreScale(1.0f, -1.0f);
 
     MOZ_ASSERT(mCurrentRenderTarget, "No destination");
     // If we're drawing directly to the window then we want to offset
