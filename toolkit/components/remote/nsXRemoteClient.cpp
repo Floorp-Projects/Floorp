@@ -18,15 +18,15 @@
 #include "mozilla/Logging.h"
 #include "prenv.h"
 #include "prdtoa.h"
+#include <X11/Xatom.h>
+#include <limits.h>
+#include <poll.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <strings.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <limits.h>
-#include <X11/Xatom.h>
 
 #define MOZILLA_VERSION_PROP "_MOZILLA_VERSION"
 #define MOZILLA_LOCK_PROP "_MOZILLA_LOCK"
@@ -321,25 +321,22 @@ nsresult nsXRemoteClient::GetLock(Window aWindow, bool* aDestroyed) {
       waited = True;
       while (true) {
         XEvent event;
-        int select_retval;
-        fd_set select_set;
-        struct timeval delay;
-        delay.tv_sec = 10;
-        delay.tv_usec = 0;
+        int poll_retval;
+        struct pollfd pfd;
 
-        FD_ZERO(&select_set);
-        // add the x event queue to the select set
-        FD_SET(ConnectionNumber(mDisplay), &select_set);
-        select_retval = select(ConnectionNumber(mDisplay) + 1, &select_set,
-                               nullptr, nullptr, &delay);
+        pfd.fd = ConnectionNumber(mDisplay);
+        pfd.events = POLLIN;
+
+        poll_retval = poll(&pfd, 1, 10 * 1000);
         // did we time out?
-        if (select_retval == 0) {
+        if (poll_retval == 0) {
           MOZ_LOG(sRemoteLm, LogLevel::Debug,
                   ("timed out waiting for window\n"));
           rv = NS_ERROR_FAILURE;
           break;
         }
         MOZ_LOG(sRemoteLm, LogLevel::Debug, ("xevent...\n"));
+        // FIXME check the return value from this?
         XNextEvent(mDisplay, &event);
         if (event.xany.type == DestroyNotify &&
             event.xdestroywindow.window == aWindow) {
