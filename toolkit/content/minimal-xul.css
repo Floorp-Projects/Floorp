@@ -38,7 +38,6 @@
 }
 
 /* Rules required for style caching of anonymous content scrollbar parts */
-
 scrollcorner, resizer, scrollbar, scrollbarbutton, slider {
   /* All scrollbar parts must not inherit any properties from the scrollable
    * element (except for visibility and pointer-events), for the anonymous
@@ -90,10 +89,19 @@ scrollcorner, resizer, scrollbar, scrollbarbutton, slider {
   box-sizing: border-box;
 }
 
+scrollbar[orient="vertical"],
+slider[orient="vertical"],
+thumb[orient="vertical"] {
+  -moz-box-orient: vertical;
+}
+
 thumb {
   /* Prevent -moz-user-modify declaration from designmode.css having an
    * effect. */
   -moz-user-modify: initial;
+
+  -moz-box-align: center;
+  -moz-box-pack: center;
 }
 
 /* There are other rules that set direction and cursor on scrollbar,
