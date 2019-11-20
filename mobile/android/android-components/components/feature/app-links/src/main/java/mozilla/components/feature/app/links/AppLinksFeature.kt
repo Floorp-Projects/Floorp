@@ -123,6 +123,11 @@ class AppLinksFeature(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun handleRedirect(redirect: AppLinkRedirect, session: Session): Boolean {
         if (!redirect.hasExternalApp()) {
+            if (redirect.marketplaceIntent != null) {
+                useCases.openMarketplaceIntent(redirect)
+                return true
+            }
+
             return handleFallback(redirect, session)
         }
 
