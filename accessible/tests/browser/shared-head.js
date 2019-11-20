@@ -12,7 +12,7 @@
             addAccessibleTask, findAccessibleChildByID, isDefunct,
             CURRENT_CONTENT_DIR, loadScripts, loadContentScripts, snippetToURL,
             Cc, Cu, arrayFromChildren, forceGC, contentSpawnMutation,
-            FISSION_IFRAME_ID, DEFAULT_FISSION_DOC_BODY_ID, invokeContentTask,
+            DEFAULT_IFRAME_ID, DEFAULT_IFRAME_DOC_BODY_ID, invokeContentTask,
             matchContentDoc, currentContentDoc */
 
 const CURRENT_FILE_DIR = "/browser/accessible/tests/browser/";
@@ -35,13 +35,13 @@ const CURRENT_CONTENT_DIR = `http://example.com${CURRENT_FILE_DIR}`;
 const LOADED_CONTENT_SCRIPTS = new Map();
 
 const DEFAULT_CONTENT_DOC_BODY_ID = "body";
-const FISSION_IFRAME_ID = "fission-iframe";
-const DEFAULT_FISSION_DOC_BODY_ID = "fission-body";
+const DEFAULT_IFRAME_ID = "default-iframe-id";
+const DEFAULT_IFRAME_DOC_BODY_ID = "default-iframe-body-id";
 
 let gIsFission = false;
 
 function currentContentDoc() {
-  return gIsFission ? DEFAULT_FISSION_DOC_BODY_ID : DEFAULT_CONTENT_DOC_BODY_ID;
+  return gIsFission ? DEFAULT_IFRAME_DOC_BODY_ID : DEFAULT_CONTENT_DOC_BODY_ID;
 }
 
 /**
@@ -206,14 +206,14 @@ function invokeFocus(browser, id) {
 function invokeContentTask(browser, args, task) {
   return SpecialPowers.spawn(
     browser,
-    [FISSION_IFRAME_ID, task.toString(), ...args],
-    (fissionFrameId, contentTask, ...contentArgs) => {
+    [DEFAULT_IFRAME_ID, task.toString(), ...args],
+    (iframeId, contentTask, ...contentArgs) => {
       // eslint-disable-next-line no-eval
       const runnableTask = eval(`
       (() => {
         return (${contentTask});
       })();`);
-      const frame = content.document.getElementById(fissionFrameId);
+      const frame = content.document.getElementById(iframeId);
 
       return frame
         ? SpecialPowers.spawn(frame, contentArgs, runnableTask)
@@ -275,16 +275,16 @@ function attrsToString(attrs) {
     .join(" ");
 }
 
-function wrapWithFissionIFrame(doc, options = {}) {
+function wrapWithIFrame(doc, options = {}) {
   const srcURL = new URL(`${CURRENT_CONTENT_DIR}fission_document_builder.sjs`);
-  const { fissionIFrameAttrs = {} } = options;
+  let { iframeAttrs = {} } = options;
   if (doc.endsWith("html")) {
     srcURL.searchParams.append("file", `${CURRENT_FILE_DIR}e10s/${doc}`);
   } else {
-    const { fissionDocBodyAttrs = {} } = options;
+    const { iframeDocBodyAttrs = {} } = options;
     const attrs = {
-      id: DEFAULT_FISSION_DOC_BODY_ID,
-      ...fissionDocBodyAttrs,
+      id: DEFAULT_IFRAME_DOC_BODY_ID,
+      ...iframeDocBodyAttrs,
     };
 
     srcURL.searchParams.append(
@@ -299,10 +299,10 @@ function wrapWithFissionIFrame(doc, options = {}) {
     );
   }
 
-  const iframeAttrs = {
-    id: FISSION_IFRAME_ID,
+  iframeAttrs = {
+    id: DEFAULT_IFRAME_ID,
     src: srcURL.href,
-    ...fissionIFrameAttrs,
+    ...iframeAttrs,
   };
 
   return `<iframe ${attrsToString(iframeAttrs)}/>`;
@@ -321,8 +321,8 @@ function wrapWithFissionIFrame(doc, options = {}) {
  *        - {Object} contentDocBodyAttrs
  *          a set of attributes to be applied to a top level content document
  *          body
- *        - {Object} fissionDocBodyAttrs
- *          a set of attributes to be applied to a fission content document body
+ *        - {Object} iframeDocBodyAttrs
+ *          a set of attributes to be applied to a iframe content document body
  * @return {String}
  *        a base64 encoded data url of the document container the snippet.
  **/
@@ -334,7 +334,7 @@ function snippetToURL(doc, options = {}) {
   };
 
   if (options.fission) {
-    doc = wrapWithFissionIFrame(doc, options);
+    doc = wrapWithIFrame(doc, options);
   }
 
   const encodedDoc = encodeURIComponent(
@@ -372,13 +372,13 @@ function accessibleTask(doc, task, options = {}) {
       DEFAULT_CONTENT_DOC_BODY_ID
     );
 
-    let onFissionDocLoad;
+    let onIframeDocLoad;
     if (options.fission) {
       gIsFission = true;
       if (gFissionBrowser && !options.skipFissionDocLoad) {
-        onFissionDocLoad = waitForEvent(
+        onIframeDocLoad = waitForEvent(
           EVENT_DOCUMENT_LOAD_COMPLETE,
-          DEFAULT_FISSION_DOC_BODY_ID
+          DEFAULT_IFRAME_DOC_BODY_ID
         );
       }
     }
@@ -407,18 +407,18 @@ function accessibleTask(doc, task, options = {}) {
         Logger.log(`Actually remote browser: ${browser.isRemoteBrowser}`);
 
         const { accessible: docAccessible } = await onContentDocLoad;
-        let fissionDocAccessible;
+        let iframeDocAccessible;
         if (options.fission && !options.skipFissionDocLoad) {
-          fissionDocAccessible = gFissionBrowser
-            ? (await onFissionDocLoad).accessible
-            : findAccessibleChildByID(docAccessible, FISSION_IFRAME_ID)
+          iframeDocAccessible = gFissionBrowser
+            ? (await onIframeDocLoad).accessible
+            : findAccessibleChildByID(docAccessible, DEFAULT_IFRAME_ID)
                 .firstChild;
         }
 
         await task(
           browser,
-          fissionDocAccessible || docAccessible,
-          fissionDocAccessible && docAccessible
+          iframeDocAccessible || docAccessible,
+          iframeDocAccessible && docAccessible
         );
       }
     );
@@ -441,12 +441,11 @@ function accessibleTask(doc, task, options = {}) {
  *         - {Boolean} iframe
  *           Flag to run the test with content wrapped in an iframe. Default is
  *           false.
- *         - {Object} fissionIFrameAttrs
- *           A map of attribute/value pairs to be applied to fission IFRAME
- *           element.
+ *         - {Object} iframeAttrs
+ *           A map of attribute/value pairs to be applied to IFRAME element.
  *         - {Boolean} skipFissionDocLoad
- *           If true, the test will wait not for fission document document
- *           loaded event (useful for when fission IFRAME is initially hidden).
+ *           If true, the test will not wait for iframe document document
+ *           loaded event (useful for when IFRAME is initially hidden).
  */
 function addAccessibleTask(doc, task, options = {}) {
   const { topLevel = true, iframe = false } = options;

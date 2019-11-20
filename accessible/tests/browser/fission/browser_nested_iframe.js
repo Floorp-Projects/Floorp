@@ -7,8 +7,8 @@
 /* import-globals-from ../../mochitest/role.js */
 loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
-const NESTED_FISSION_DOC_BODY_ID = "nested-fission-body";
-const NESTED_FISSION_IFRAME_ID = "nested-fission-iframe";
+const NESTED_IFRAME_DOC_BODY_ID = "nested-iframe-body";
+const NESTED_IFRAME_ID = "nested-iframe";
 const nestedURL = new URL(
   `http://example.net${CURRENT_FILE_DIR}fission_document_builder.sjs`
 );
@@ -17,9 +17,9 @@ nestedURL.searchParams.append(
   `<html>
       <head>
         <meta charset="utf-8"/>
-        <title>Accessibility Nested Fission Frame Test</title>
+        <title>Accessibility Nested Iframe Frame Test</title>
       </head>
-      <body id="${NESTED_FISSION_DOC_BODY_ID}">
+      <body id="${NESTED_IFRAME_DOC_BODY_ID}">
         <table id="table">
           <tr>
             <td>cell1</td>
@@ -38,22 +38,22 @@ function getOsPid(browsingContext) {
 }
 
 addAccessibleTask(
-  `<iframe id="${NESTED_FISSION_IFRAME_ID}" src="${nestedURL.href}"/>`,
-  async function(browser, fissionDocAcc, contentDocAcc) {
+  `<iframe id="${NESTED_IFRAME_ID}" src="${nestedURL.href}"/>`,
+  async function(browser, iframeDocAcc, contentDocAcc) {
     let nestedDocAcc = findAccessibleChildByID(
-      fissionDocAcc,
-      NESTED_FISSION_DOC_BODY_ID
+      iframeDocAcc,
+      NESTED_IFRAME_DOC_BODY_ID
     );
 
-    ok(fissionDocAcc, "Fission document accessible is present");
-    ok(nestedDocAcc, "Nested fission document accessible is present");
+    ok(iframeDocAcc, "IFRAME document accessible is present");
+    ok(nestedDocAcc, "Nested IFRAME document accessible is present");
 
     const state = {};
     nestedDocAcc.getState(state, {});
     if (state.value & STATE_BUSY) {
       nestedDocAcc = (await waitForEvent(
         EVENT_DOCUMENT_LOAD_COMPLETE,
-        NESTED_FISSION_DOC_BODY_ID
+        NESTED_IFRAME_DOC_BODY_ID
       )).accessible;
     }
 
@@ -61,28 +61,28 @@ addAccessibleTask(
       isnot(
         getOsPid(browser.browsingContext),
         getOsPid(browser.browsingContext.getChildren()[0]),
-        `Content and fission documents are in separate processes.`
+        `Content and IFRAME documents are in separate processes.`
       );
       isnot(
         getOsPid(browser.browsingContext),
         getOsPid(browser.browsingContext.getChildren()[0].getChildren()[0]),
-        `Content and nested fission documents are in separate processes.`
+        `Content and nested IFRAME documents are in separate processes.`
       );
       isnot(
         getOsPid(browser.browsingContext.getChildren()[0]),
         getOsPid(browser.browsingContext.getChildren()[0].getChildren()[0]),
-        `Fission and nested fission documents are in separate processes.`
+        `IFRAME and nested IFRAME documents are in separate processes.`
       );
     } else {
       is(
         getOsPid(browser.browsingContext),
         getOsPid(browser.browsingContext.getChildren()[0]),
-        `Content and fission documents are in same processes.`
+        `Content and IFRAME documents are in same processes.`
       );
       is(
         getOsPid(browser.browsingContext),
         getOsPid(browser.browsingContext.getChildren()[0].getChildren()[0]),
-        `Content and nested fission documents are in same processes.`
+        `Content and nested IFRAME documents are in same processes.`
       );
     }
 
@@ -125,17 +125,17 @@ addAccessibleTask(
     };
     testAccessibleTree(contentDocAcc, tree);
 
-    const nestedIframeAcc = fissionDocAcc.getChildAt(0);
+    const nestedIframeAcc = iframeDocAcc.getChildAt(0);
     is(
       nestedIframeAcc.getChildAt(0),
       nestedDocAcc,
-      "Nested fission document for nested IFRAME matches."
+      "Document for nested IFRAME matches."
     );
 
     is(
       nestedDocAcc.parent,
       nestedIframeAcc,
-      "Nested fission document's parent matches the nested IFRAME."
+      "Nested IFRAME document's parent matches the nested IFRAME."
     );
   },
   { topLevel: false, iframe: true }
