@@ -409,15 +409,21 @@ nsresult TextEditor::InsertLineBreakAsAction(nsIPrincipal* aPrincipal) {
   return NS_OK;
 }
 
+static bool UseFrameSelectionToExtendSelection(nsIEditor::EDirection aAction,
+                                               const Selection& aSelection) {
+  bool bCollapsed = aSelection.IsCollapsed();
+  return (aAction == nsIEditor::eNextWord ||
+          aAction == nsIEditor::ePreviousWord ||
+          (aAction == nsIEditor::eNext && bCollapsed) ||
+          (aAction == nsIEditor::ePrevious && bCollapsed) ||
+          aAction == nsIEditor::eToBeginningOfLine ||
+          aAction == nsIEditor::eToEndOfLine);
+}
+
 nsresult TextEditor::ExtendSelectionForDelete(nsIEditor::EDirection* aAction) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  bool bCollapsed = SelectionRefPtr()->IsCollapsed();
-
-  if (*aAction == eNextWord || *aAction == ePreviousWord ||
-      (*aAction == eNext && bCollapsed) ||
-      (*aAction == ePrevious && bCollapsed) || *aAction == eToBeginningOfLine ||
-      *aAction == eToEndOfLine) {
+  if (UseFrameSelectionToExtendSelection(*aAction, *SelectionRefPtr())) {
     nsCOMPtr<nsISelectionController> selCont;
     GetSelectionController(getter_AddRefs(selCont));
     NS_ENSURE_TRUE(selCont, NS_ERROR_NO_INTERFACE);
@@ -525,17 +531,6 @@ nsresult TextEditor::DeleteSelectionAsAction(EDirection aDirection,
                "operation "
                "unless mutation event listener nests some operations");
 
-  // Although ExtendSelectionForDelete will use nsFrameSelection, if it
-  // still has dirty frame, nsFrameSelection doesn't extend selection
-  // since we block script.
-  RefPtr<PresShell> presShell = GetPresShell();
-  if (presShell) {
-    presShell->FlushPendingNotifications(FlushType::Layout);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-  }
-
   EditAction editAction = EditAction::eDeleteSelection;
   switch (aDirection) {
     case nsIEditor::ePrevious:
@@ -610,6 +605,19 @@ nsresult TextEditor::DeleteSelectionAsAction(EDirection aDirection,
         break;
       default:
         break;
+    }
+  }
+
+  if (UseFrameSelectionToExtendSelection(aDirection, *SelectionRefPtr())) {
+    // Although ExtendSelectionForDelete will use nsFrameSelection, if it
+    // still has dirty frame, nsFrameSelection doesn't extend selection
+    // since we block script.
+    RefPtr<PresShell> presShell = GetPresShell();
+    if (presShell) {
+      presShell->FlushPendingNotifications(FlushType::Layout);
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
     }
   }
 
