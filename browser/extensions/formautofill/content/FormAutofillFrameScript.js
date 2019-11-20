@@ -2,9 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * Form Autofill frame script.
+ */
+
 "use strict";
 
-var EXPORTED_SYMBOLS = ["FormAutofillChild"];
+/* eslint-env mozilla/frame-script */
 
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(
@@ -36,37 +40,19 @@ ChromeUtils.defineModuleGetter(
 /**
  * Handles content's interactions for the frame.
  */
-class FormAutofillChild extends JSWindowActorChild {
-  constructor() {
-    super();
+var FormAutofillFrameScript = {
+  _nextHandleElement: null,
+  _alreadyDOMContentLoaded: false,
+  _hasDOMContentLoadedHandler: false,
+  _hasPendingTask: false,
 
-    this._nextHandleElement = null;
-    this._alreadyDOMContentLoaded = false;
-    this._hasDOMContentLoadedHandler = false;
-    this._hasPendingTask = false;
-    this.testListener = null;
-
-    AutoCompleteChild.addPopupStateListener(this);
-  }
-
-  willDestroy() {
-    AutoCompleteChild.removePopupStateListener(this);
-  }
-
-  popupStateChanged(messageName, data, target) {
-    let docShell;
-    try {
-      docShell = this.docShell;
-    } catch (ex) {
-      AutoCompleteChild.removePopupStateListener(this);
+  popupStateListener(messageName, data, target) {
+    if (!content || !FormAutofill.isAutofillEnabled) {
       return;
     }
 
-    if (!FormAutofill.isAutofillEnabled) {
-      return;
-    }
-
-    const { chromeEventHandler } = docShell;
+    const doc = target.document;
+    const { chromeEventHandler } = doc.ownerGlobal.docShell;
 
     switch (messageName) {
       case "FormAutoComplete:PopupClosed": {
@@ -90,7 +76,7 @@ class FormAutofillChild extends JSWindowActorChild {
         break;
       }
     }
-  }
+  },
 
   _doIdentifyAutofillFields() {
     if (this._hasPendingTask) {
@@ -102,12 +88,22 @@ class FormAutofillChild extends JSWindowActorChild {
       FormAutofillContent.identifyAutofillFields(this._nextHandleElement);
       this._hasPendingTask = false;
       this._nextHandleElement = null;
-      // This is for testing purpose only which sends a notification to indicate that the
+      // This is for testing purpose only which sends a message to indicate that the
       // form has been identified, and ready to open popup.
-      this.sendAsyncMessage("FormAutofill:FieldsIdentified");
+      sendAsyncMessage("FormAutofill:FieldsIdentified");
       FormAutofillContent.updateActiveInput();
     });
-  }
+  },
+
+  init() {
+    addEventListener("focusin", this);
+    addEventListener("DOMFormBeforeSubmit", this);
+    addEventListener("unload", this, { once: true });
+    addMessageListener("FormAutofill:PreviewProfile", this);
+    addMessageListener("FormAutofill:ClearForm", this);
+
+    AutoCompleteChild.addPopupStateListener(this.popupStateListener);
+  },
 
   handleEvent(evt) {
     if (!evt.isTrusted) {
@@ -127,12 +123,16 @@ class FormAutofillChild extends JSWindowActorChild {
         }
         break;
       }
+      case "unload": {
+        AutoCompleteChild.removePopupStateListener(this.popupStateListener);
+        break;
+      }
 
       default: {
         throw new Error("Unexpected event type");
       }
     }
-  }
+  },
 
   onFocusIn(evt) {
     FormAutofillContent.updateActiveInput();
@@ -160,7 +160,7 @@ class FormAutofillChild extends JSWindowActorChild {
     }
 
     this._doIdentifyAutofillFields();
-  }
+  },
 
   /**
    * Handle the DOMFormBeforeSubmit event.
@@ -174,14 +174,14 @@ class FormAutofillChild extends JSWindowActorChild {
     }
 
     FormAutofillContent.formSubmitted(formElement);
-  }
+  },
 
   receiveMessage(message) {
     if (!FormAutofill.isAutofillEnabled) {
       return;
     }
 
-    const doc = this.document;
+    const doc = content.document;
 
     switch (message.name) {
       case "FormAutofill:PreviewProfile": {
@@ -193,5 +193,7 @@ class FormAutofillChild extends JSWindowActorChild {
         break;
       }
     }
-  }
-}
+  },
+};
+
+FormAutofillFrameScript.init();
