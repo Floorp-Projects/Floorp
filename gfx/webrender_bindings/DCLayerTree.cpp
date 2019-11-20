@@ -56,7 +56,15 @@ DCLayerTree::DCLayerTree(gl::GLContext* aGL, EGLConfig aEGLConfig,
       mDebugCounter(false),
       mDebugVisualRedrawRegions(false) {}
 
-DCLayerTree::~DCLayerTree() {}
+DCLayerTree::~DCLayerTree() {
+  const auto gl = GetGLContext();
+
+  // Delete any cached FBO objects
+  for (auto it = mFrameBuffers.begin(); it != mFrameBuffers.end(); ++it) {
+    gl->fDeleteRenderbuffers(1, &it->depthRboId);
+    gl->fDeleteFramebuffers(1, &it->fboId);
+  }
+}
 
 bool DCLayerTree::Initialize(HWND aHwnd) {
   HRESULT hr;
@@ -165,9 +173,28 @@ bool DCLayerTree::MaybeUpdateDebugVisualRedrawRegions() {
   return true;
 }
 
-void DCLayerTree::CompositorBeginFrame() { mRootVisual->RemoveAllVisuals(); }
+void DCLayerTree::CompositorBeginFrame() {}
 
-void DCLayerTree::CompositorEndFrame() { mCompositionDevice->Commit(); }
+void DCLayerTree::CompositorEndFrame() {
+  bool same = mPrevLayers == mCurrentLayers;
+
+  if (!same) {
+    mRootVisual->RemoveAllVisuals();
+
+    for (auto it = mCurrentLayers.begin(); it != mCurrentLayers.end(); ++it) {
+      auto layer_it = mDCLayers.find(*it);
+      MOZ_ASSERT(layer_it != mDCLayers.end());
+      const auto layer = layer_it->second.get();
+      const auto visual = layer->GetVisual();
+      mRootVisual->AddVisual(visual, FALSE, nullptr);
+    }
+  }
+
+  mPrevLayers.swap(mCurrentLayers);
+  mCurrentLayers.clear();
+
+  mCompositionDevice->Commit();
+}
 
 void DCLayerTree::Bind(wr::NativeSurfaceId aId, wr::DeviceIntPoint* aOffset,
                        uint32_t* aFboId, wr::DeviceIntRect aDirtyRect) {
@@ -179,18 +206,12 @@ void DCLayerTree::Bind(wr::NativeSurfaceId aId, wr::DeviceIntPoint* aOffset,
 
   const auto layer = it->second.get();
 
-  layer->CreateEGLSurfaceForCompositionSurface(aDirtyRect, aOffset);
-  MOZ_ASSERT(layer->GetEGLSurface() != EGL_NO_SURFACE);
-  gl::GLContextEGL::Cast(mGL)->SetEGLSurfaceOverride(layer->GetEGLSurface());
-  mCurrentId = Some(aId);
+  *aFboId = layer->CreateEGLSurfaceForCompositionSurface(aDirtyRect, aOffset);
 
-  *aFboId = 0;
+  mCurrentId = Some(aId);
 }
 
 void DCLayerTree::Unbind() {
-  const auto& gle = gl::GLContextEGL::Cast(mGL);
-  gle->SetEGLSurfaceOverride(EGL_NO_SURFACE);
-
   if (mCurrentId.isNothing()) {
     return;
   }
@@ -244,10 +265,6 @@ void DCLayerTree::AddSurface(wr::NativeSurfaceId aId,
   const auto layer = it->second.get();
   const auto visual = layer->GetVisual();
 
-  // Add this visual as the last element in the visual tree (z-order is
-  // implicit, based on the order tiles are added).
-  mRootVisual->AddVisual(visual, FALSE, nullptr);
-
   // Place the visual - this changes frame to frame based on scroll position
   // of the slice.
   int offset_x = aPosition.x;
@@ -263,10 +280,55 @@ void DCLayerTree::AddSurface(wr::NativeSurfaceId aId,
   clip_rect.right = clip_rect.left + aClipRect.size.width;
   clip_rect.bottom = clip_rect.top + aClipRect.size.height;
   visual->SetClip(clip_rect);
+
+  mCurrentLayers.push_back(wr::AsUint64(aId));
+}
+
+GLuint DCLayerTree::GetOrCreateFbo(int aWidth, int aHeight) {
+  const auto gl = GetGLContext();
+  GLuint fboId = 0;
+
+  // Check if we have a cached FBO with matching dimensions
+  for (auto it = mFrameBuffers.begin(); it != mFrameBuffers.end(); ++it) {
+    if (it->width == aWidth && it->height == aHeight) {
+      fboId = it->fboId;
+      break;
+    }
+  }
+
+  // If not, create a new FBO with attached depth buffer
+  if (fboId == 0) {
+    // Create the depth buffer
+    GLuint depthRboId;
+    gl->fGenRenderbuffers(1, &depthRboId);
+    gl->fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, depthRboId);
+    gl->fRenderbufferStorage(LOCAL_GL_RENDERBUFFER, LOCAL_GL_DEPTH_COMPONENT24,
+                             aWidth, aHeight);
+
+    // Create the framebuffer and attach the depth buffer to it
+    gl->fGenFramebuffers(1, &fboId);
+    gl->fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER, fboId);
+    gl->fFramebufferRenderbuffer(LOCAL_GL_DRAW_FRAMEBUFFER,
+                                 LOCAL_GL_DEPTH_ATTACHMENT,
+                                 LOCAL_GL_RENDERBUFFER, depthRboId);
+
+    // Store this in the cache for future calls.
+    // TODO(gw): Maybe we should periodically scan this list and remove old
+    // entries that
+    //           haven't been used for some time?
+    DCLayerTree::CachedFrameBuffer frame_buffer_info;
+    frame_buffer_info.width = aWidth;
+    frame_buffer_info.height = aHeight;
+    frame_buffer_info.fboId = fboId;
+    frame_buffer_info.depthRboId = depthRboId;
+    mFrameBuffers.push_back(frame_buffer_info);
+  }
+
+  return fboId;
 }
 
 DCLayer::DCLayer(DCLayerTree* aDCLayerTree)
-    : mDCLayerTree(aDCLayerTree), mEGLSurface(EGL_NO_SURFACE) {}
+    : mDCLayerTree(aDCLayerTree), mEGLImage(EGL_NO_IMAGE), mColorRBO(0) {}
 
 DCLayer::~DCLayer() { DestroyEGLSurface(); }
 
@@ -317,13 +379,12 @@ RefPtr<IDCompositionSurface> DCLayer::CreateCompositionSurface(
   return compositionSurface;
 }
 
-bool DCLayer::CreateEGLSurfaceForCompositionSurface(
+GLuint DCLayer::CreateEGLSurfaceForCompositionSurface(
     wr::DeviceIntRect aDirtyRect, wr::DeviceIntPoint* aOffset) {
   MOZ_ASSERT(mCompositionSurface.get());
 
   HRESULT hr;
   const auto gl = mDCLayerTree->GetGLContext();
-  const auto config = mDCLayerTree->GetEGLConfig();
   RefPtr<ID3D11Texture2D> backBuf;
   POINT offset;
 
@@ -359,49 +420,58 @@ bool DCLayer::CreateEGLSurfaceForCompositionSurface(
   D3D11_TEXTURE2D_DESC desc;
   backBuf->GetDesc(&desc);
 
-  const EGLint pbuffer_attribs[]{
-      LOCAL_EGL_WIDTH,
-      static_cast<EGLint>(desc.Width),
-      LOCAL_EGL_HEIGHT,
-      static_cast<EGLint>(desc.Height),
-      LOCAL_EGL_FLEXIBLE_SURFACE_COMPATIBILITY_SUPPORTED_ANGLE,
-      LOCAL_EGL_TRUE,
-      LOCAL_EGL_NONE};
+  const auto& gle = gl::GLContextEGL::Cast(gl);
+  const auto& egl = gle->mEgl;
 
   const auto buffer = reinterpret_cast<EGLClientBuffer>(backBuf.get());
 
-  const auto& gle = gl::GLContextEGL::Cast(gl);
-  const auto& egl = gle->mEgl;
-  const EGLSurface surface = egl->fCreatePbufferFromClientBuffer(
-      egl->Display(), LOCAL_EGL_D3D_TEXTURE_ANGLE, buffer, config,
-      pbuffer_attribs);
+  // Construct an EGLImage wrapper around the D3D texture for ANGLE.
+  const EGLint attribs[] = {LOCAL_EGL_NONE};
+  mEGLImage = egl->fCreateImage(egl->Display(), EGL_NO_CONTEXT,
+                                LOCAL_EGL_D3D11_TEXTURE_ANGLE, buffer, attribs);
 
-  EGLint err = egl->fGetError();
-  if (err != LOCAL_EGL_SUCCESS) {
-    gfxCriticalError() << "Failed to create Pbuffer of back buffer error: "
-                       << gfx::hexa(err) << " Size : " << mBufferSize
-                       << " Actual Size : "
-                       << LayoutDeviceIntSize(desc.Width, desc.Height);
-    return false;
-  }
+  // Get the current FBO and RBO id, so we can restore them later
+  GLint currentFboId, currentRboId;
+  gl->fGetIntegerv(LOCAL_GL_DRAW_FRAMEBUFFER_BINDING, &currentFboId);
+  gl->fGetIntegerv(LOCAL_GL_RENDERBUFFER_BINDING, &currentRboId);
+
+  // Create a render buffer object that is backed by the EGL image.
+  gl->fGenRenderbuffers(1, &mColorRBO);
+  gl->fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mColorRBO);
+  gl->fEGLImageTargetRenderbufferStorage(LOCAL_GL_RENDERBUFFER, mEGLImage);
+
+  // Get or create an FBO for the specified dimensions
+  GLuint fboId = mDCLayerTree->GetOrCreateFbo(desc.Width, desc.Height);
+
+  // Attach the new renderbuffer to the FBO
+  gl->fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER, fboId);
+  gl->fFramebufferRenderbuffer(LOCAL_GL_DRAW_FRAMEBUFFER,
+                               LOCAL_GL_COLOR_ATTACHMENT0,
+                               LOCAL_GL_RENDERBUFFER, mColorRBO);
+
+  // Restore previous FBO and RBO bindings
+  gl->fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER, currentFboId);
+  gl->fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, currentRboId);
 
   aOffset->x = offset.x;
   aOffset->y = offset.y;
 
-  mEGLSurface = surface;
-
-  return true;
+  return fboId;
 }
 
 void DCLayer::DestroyEGLSurface() {
   const auto gl = mDCLayerTree->GetGLContext();
-  // Release EGLSurface of back buffer before calling ResizeBuffers().
-  if (mEGLSurface) {
+
+  if (mColorRBO) {
+    gl->fDeleteRenderbuffers(1, &mColorRBO);
+    mColorRBO = 0;
+  }
+
+  if (mEGLImage) {
     const auto& gle = gl::GLContextEGL::Cast(gl);
     const auto& egl = gle->mEgl;
-    gle->SetEGLSurfaceOverride(EGL_NO_SURFACE);
-    egl->fDestroySurface(egl->Display(), mEGLSurface);
-    mEGLSurface = EGL_NO_SURFACE;
+    egl->fDestroyImage(egl->Display(), mEGLImage);
+    mEGLImage = EGL_NO_IMAGE;
   }
 }
 
