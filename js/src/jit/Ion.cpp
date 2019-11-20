@@ -610,8 +610,7 @@ size_t JitRealm::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
 
 void JitZone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                      JS::CodeSizes* code, size_t* jitZone,
-                                     size_t* baselineStubsOptimized,
-                                     size_t* cachedCFG) const {
+                                     size_t* baselineStubsOptimized) const {
   *jitZone += mallocSizeOf(this);
   *jitZone +=
       baselineCacheIRStubCodes_.shallowSizeOfExcludingThis(mallocSizeOf);
