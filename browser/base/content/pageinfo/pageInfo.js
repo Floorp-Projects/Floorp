@@ -1172,11 +1172,9 @@ function getContentTypeFromHeaders(cacheEntryDescriptor) {
 
 function setItemValue(id, value) {
   var item = document.getElementById(id);
+  item.closest("tr").hidden = !value;
   if (value) {
-    item.closest("tr").hidden = false;
     item.value = value;
-  } else {
-    item.closest("tr").hidden = true;
   }
 }
 
