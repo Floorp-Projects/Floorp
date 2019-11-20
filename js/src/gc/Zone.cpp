@@ -384,10 +384,6 @@ void Zone::discardJitCode(JSFreeOp* fop,
       jitScript->clearIonCompiledOrInlined();
     }
 
-    // Clear the JitScript's control flow graph. The LifoAlloc is purged
-    // below.
-    jitScript->clearControlFlowGraph();
-
     // Finally, reset the active flag.
     jitScript->resetActive();
   }
@@ -404,13 +400,6 @@ void Zone::discardJitCode(JSFreeOp* fop,
     jitZone()->optimizedStubSpace()->freeAllAfterMinorGC(this);
     jitZone()->purgeIonCacheIRStubInfo();
   }
-
-  /*
-   * Free all control flow graphs that are cached on BaselineScripts.
-   * Assuming this happens on the main thread and all control flow
-   * graph reads happen on the main thread, this is safe.
-   */
-  jitZone()->cfgSpace()->lifoAlloc().freeAll();
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
