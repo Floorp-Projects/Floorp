@@ -35,7 +35,7 @@ SimpleTest.waitForFocus(function () {
   }
 
   var win = docShell.rootTreeItem.domWindow.open(
-      "window_bug538242.xul", "_blank", 
+      "window_bug538242.xhtml", "_blank", 
       "chrome,width=400,height=300,left=100,top=100");
   SimpleTest.waitForFocus(function () {
     is(win.screenX, 100, "window should open at 100, 100");
