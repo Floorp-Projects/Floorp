@@ -75,9 +75,7 @@ class CompositorWidgetChild;
 class WidgetRenderingContext {
  public:
 #if defined(XP_MACOSX)
-  WidgetRenderingContext() : mLayerManager(nullptr), mGL(nullptr) {}
-  layers::LayerManagerComposite* mLayerManager;
-  gl::GLContext* mGL;
+  gl::GLContext* mGL = nullptr;
 #endif
 };
 
