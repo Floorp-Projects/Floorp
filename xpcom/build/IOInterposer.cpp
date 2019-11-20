@@ -24,8 +24,6 @@
 #include "PoisonIOInterposer.h"
 #include "prenv.h"
 
-using namespace mozilla;
-
 namespace {
 
 /** Find if a vector contains a specific element */
@@ -64,13 +62,13 @@ struct ObserverLists {
   // These are implemented as vectors since they are allowed to survive gecko,
   // without reporting leaks. This is necessary for the IOInterposer to be used
   // for late-write checks.
-  std::vector<IOInterposeObserver*> mCreateObservers;
-  std::vector<IOInterposeObserver*> mReadObservers;
-  std::vector<IOInterposeObserver*> mWriteObservers;
-  std::vector<IOInterposeObserver*> mFSyncObservers;
-  std::vector<IOInterposeObserver*> mStatObservers;
-  std::vector<IOInterposeObserver*> mCloseObservers;
-  std::vector<IOInterposeObserver*> mStageObservers;
+  std::vector<mozilla::IOInterposeObserver*> mCreateObservers;
+  std::vector<mozilla::IOInterposeObserver*> mReadObservers;
+  std::vector<mozilla::IOInterposeObserver*> mWriteObservers;
+  std::vector<mozilla::IOInterposeObserver*> mFSyncObservers;
+  std::vector<mozilla::IOInterposeObserver*> mStatObservers;
+  std::vector<mozilla::IOInterposeObserver*> mCloseObservers;
+  std::vector<mozilla::IOInterposeObserver*> mStageObservers;
 };
 
 class PerThreadData {
@@ -84,7 +82,7 @@ class PerThreadData {
 
   ~PerThreadData() { MOZ_COUNT_DTOR(PerThreadData); }
 
-  void CallObservers(IOInterposeObserver::Observation& aObservation) {
+  void CallObservers(mozilla::IOInterposeObserver::Observation& aObservation) {
     // Prevent recursive reporting.
     if (mIsHandlingObservation) {
       return;
@@ -92,27 +90,27 @@ class PerThreadData {
 
     mIsHandlingObservation = true;
     // Decide which list of observers to inform
-    std::vector<IOInterposeObserver*>* observers = nullptr;
+    std::vector<mozilla::IOInterposeObserver*>* observers = nullptr;
     switch (aObservation.ObservedOperation()) {
-      case IOInterposeObserver::OpCreateOrOpen:
+      case mozilla::IOInterposeObserver::OpCreateOrOpen:
         observers = &mObserverLists->mCreateObservers;
         break;
-      case IOInterposeObserver::OpRead:
+      case mozilla::IOInterposeObserver::OpRead:
         observers = &mObserverLists->mReadObservers;
         break;
-      case IOInterposeObserver::OpWrite:
+      case mozilla::IOInterposeObserver::OpWrite:
         observers = &mObserverLists->mWriteObservers;
         break;
-      case IOInterposeObserver::OpFSync:
+      case mozilla::IOInterposeObserver::OpFSync:
         observers = &mObserverLists->mFSyncObservers;
         break;
-      case IOInterposeObserver::OpStat:
+      case mozilla::IOInterposeObserver::OpStat:
         observers = &mObserverLists->mStatObservers;
         break;
-      case IOInterposeObserver::OpClose:
+      case mozilla::IOInterposeObserver::OpClose:
         observers = &mObserverLists->mCloseObservers;
         break;
-      case IOInterposeObserver::OpNextStage:
+      case mozilla::IOInterposeObserver::OpNextStage:
         observers = &mObserverLists->mStageObservers;
         break;
       default: {
@@ -159,7 +157,8 @@ class PerThreadData {
 class MasterList {
  public:
   MasterList()
-      : mObservedOperations(IOInterposeObserver::OpNone), mIsEnabled(true) {
+      : mObservedOperations(mozilla::IOInterposeObserver::OpNone),
+        mIsEnabled(true) {
     MOZ_COUNT_CTOR(MasterList);
   }
 
@@ -168,9 +167,9 @@ class MasterList {
   inline void Disable() { mIsEnabled = false; }
   inline void Enable() { mIsEnabled = true; }
 
-  void Register(IOInterposeObserver::Operation aOp,
-                IOInterposeObserver* aObserver) {
-    IOInterposer::AutoLock lock(mLock);
+  void Register(mozilla::IOInterposeObserver::Operation aOp,
+                mozilla::IOInterposeObserver* aObserver) {
+    mozilla::IOInterposer::AutoLock lock(mLock);
 
     ObserverLists* newLists = nullptr;
     if (mObserverLists) {
@@ -180,44 +179,44 @@ class MasterList {
     }
     // You can register to observe multiple types of observations
     // but you'll never be registered twice for the same observations.
-    if (aOp & IOInterposeObserver::OpCreateOrOpen &&
+    if (aOp & mozilla::IOInterposeObserver::OpCreateOrOpen &&
         !VectorContains(newLists->mCreateObservers, aObserver)) {
       newLists->mCreateObservers.push_back(aObserver);
     }
-    if (aOp & IOInterposeObserver::OpRead &&
+    if (aOp & mozilla::IOInterposeObserver::OpRead &&
         !VectorContains(newLists->mReadObservers, aObserver)) {
       newLists->mReadObservers.push_back(aObserver);
     }
-    if (aOp & IOInterposeObserver::OpWrite &&
+    if (aOp & mozilla::IOInterposeObserver::OpWrite &&
         !VectorContains(newLists->mWriteObservers, aObserver)) {
       newLists->mWriteObservers.push_back(aObserver);
     }
-    if (aOp & IOInterposeObserver::OpFSync &&
+    if (aOp & mozilla::IOInterposeObserver::OpFSync &&
         !VectorContains(newLists->mFSyncObservers, aObserver)) {
       newLists->mFSyncObservers.push_back(aObserver);
     }
-    if (aOp & IOInterposeObserver::OpStat &&
+    if (aOp & mozilla::IOInterposeObserver::OpStat &&
         !VectorContains(newLists->mStatObservers, aObserver)) {
       newLists->mStatObservers.push_back(aObserver);
     }
-    if (aOp & IOInterposeObserver::OpClose &&
+    if (aOp & mozilla::IOInterposeObserver::OpClose &&
         !VectorContains(newLists->mCloseObservers, aObserver)) {
       newLists->mCloseObservers.push_back(aObserver);
     }
-    if (aOp & IOInterposeObserver::OpNextStage &&
+    if (aOp & mozilla::IOInterposeObserver::OpNextStage &&
         !VectorContains(newLists->mStageObservers, aObserver)) {
       newLists->mStageObservers.push_back(aObserver);
     }
     mObserverLists = newLists;
     mObservedOperations =
-        (IOInterposeObserver::Operation)(mObservedOperations | aOp);
+        (mozilla::IOInterposeObserver::Operation)(mObservedOperations | aOp);
 
     mCurrentGeneration++;
   }
 
-  void Unregister(IOInterposeObserver::Operation aOp,
-                  IOInterposeObserver* aObserver) {
-    IOInterposer::AutoLock lock(mLock);
+  void Unregister(mozilla::IOInterposeObserver::Operation aOp,
+                  mozilla::IOInterposeObserver* aObserver) {
+    mozilla::IOInterposer::AutoLock lock(mLock);
 
     ObserverLists* newLists = nullptr;
     if (mObserverLists) {
@@ -226,53 +225,54 @@ class MasterList {
       newLists = new ObserverLists();
     }
 
-    if (aOp & IOInterposeObserver::OpCreateOrOpen) {
+    if (aOp & mozilla::IOInterposeObserver::OpCreateOrOpen) {
       VectorRemove(newLists->mCreateObservers, aObserver);
       if (newLists->mCreateObservers.empty()) {
-        mObservedOperations = (IOInterposeObserver::Operation)(
-            mObservedOperations & ~IOInterposeObserver::OpCreateOrOpen);
+        mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
+            mObservedOperations &
+            ~mozilla::IOInterposeObserver::OpCreateOrOpen);
       }
     }
-    if (aOp & IOInterposeObserver::OpRead) {
+    if (aOp & mozilla::IOInterposeObserver::OpRead) {
       VectorRemove(newLists->mReadObservers, aObserver);
       if (newLists->mReadObservers.empty()) {
-        mObservedOperations = (IOInterposeObserver::Operation)(
-            mObservedOperations & ~IOInterposeObserver::OpRead);
+        mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
+            mObservedOperations & ~mozilla::IOInterposeObserver::OpRead);
       }
     }
-    if (aOp & IOInterposeObserver::OpWrite) {
+    if (aOp & mozilla::IOInterposeObserver::OpWrite) {
       VectorRemove(newLists->mWriteObservers, aObserver);
       if (newLists->mWriteObservers.empty()) {
-        mObservedOperations = (IOInterposeObserver::Operation)(
-            mObservedOperations & ~IOInterposeObserver::OpWrite);
+        mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
+            mObservedOperations & ~mozilla::IOInterposeObserver::OpWrite);
       }
     }
-    if (aOp & IOInterposeObserver::OpFSync) {
+    if (aOp & mozilla::IOInterposeObserver::OpFSync) {
       VectorRemove(newLists->mFSyncObservers, aObserver);
       if (newLists->mFSyncObservers.empty()) {
-        mObservedOperations = (IOInterposeObserver::Operation)(
-            mObservedOperations & ~IOInterposeObserver::OpFSync);
+        mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
+            mObservedOperations & ~mozilla::IOInterposeObserver::OpFSync);
       }
     }
-    if (aOp & IOInterposeObserver::OpStat) {
+    if (aOp & mozilla::IOInterposeObserver::OpStat) {
       VectorRemove(newLists->mStatObservers, aObserver);
       if (newLists->mStatObservers.empty()) {
-        mObservedOperations = (IOInterposeObserver::Operation)(
-            mObservedOperations & ~IOInterposeObserver::OpStat);
+        mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
+            mObservedOperations & ~mozilla::IOInterposeObserver::OpStat);
       }
     }
-    if (aOp & IOInterposeObserver::OpClose) {
+    if (aOp & mozilla::IOInterposeObserver::OpClose) {
       VectorRemove(newLists->mCloseObservers, aObserver);
       if (newLists->mCloseObservers.empty()) {
-        mObservedOperations = (IOInterposeObserver::Operation)(
-            mObservedOperations & ~IOInterposeObserver::OpClose);
+        mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
+            mObservedOperations & ~mozilla::IOInterposeObserver::OpClose);
       }
     }
-    if (aOp & IOInterposeObserver::OpNextStage) {
+    if (aOp & mozilla::IOInterposeObserver::OpNextStage) {
       VectorRemove(newLists->mStageObservers, aObserver);
       if (newLists->mStageObservers.empty()) {
-        mObservedOperations = (IOInterposeObserver::Operation)(
-            mObservedOperations & ~IOInterposeObserver::OpNextStage);
+        mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
+            mObservedOperations & ~mozilla::IOInterposeObserver::OpNextStage);
       }
     }
     mObserverLists = newLists;
@@ -285,11 +285,11 @@ class MasterList {
     }
     // If the generation counts don't match then we need to update the current
     // thread's observer list with the new master list.
-    IOInterposer::AutoLock lock(mLock);
+    mozilla::IOInterposer::AutoLock lock(mLock);
     aPtd.SetObserverLists(mCurrentGeneration, mObserverLists);
   }
 
-  inline bool IsObservedOperation(IOInterposeObserver::Operation aOp) {
+  inline bool IsObservedOperation(mozilla::IOInterposeObserver::Operation aOp) {
     // The quick reader may observe that no locks are being employed here,
     // hence the result of the operations is truly undefined. However, most
     // computers will usually return either true or false, which is good enough.
@@ -305,31 +305,34 @@ class MasterList {
   // unregister observers during shutdown an OffTheBooksMutex is not an option
   // either, as its base calls into sDeadlockDetector which may be nullptr
   // during shutdown.
-  IOInterposer::Mutex mLock;
+  mozilla::IOInterposer::Mutex mLock;
   // Flags tracking which operations are being observed
-  IOInterposeObserver::Operation mObservedOperations;
+  mozilla::IOInterposeObserver::Operation mObservedOperations;
   // Used for quickly disabling everything by IOInterposer::Disable()
-  Atomic<bool> mIsEnabled;
+  mozilla::Atomic<bool> mIsEnabled;
   // Used to inform threads that the master observer list has changed
-  Atomic<uint32_t> mCurrentGeneration;
+  mozilla::Atomic<uint32_t> mCurrentGeneration;
 };
 
 // Special observation used by IOInterposer::EnteringNextStage()
-class NextStageObservation : public IOInterposeObserver::Observation {
+class NextStageObservation : public mozilla::IOInterposeObserver::Observation {
  public:
   NextStageObservation()
-      : IOInterposeObserver::Observation(IOInterposeObserver::OpNextStage,
-                                         "IOInterposer", false) {
-    mStart = TimeStamp::Now();
+      : mozilla::IOInterposeObserver::Observation(
+            mozilla::IOInterposeObserver::OpNextStage, "IOInterposer", false) {
+    mStart = mozilla::TimeStamp::Now();
     mEnd = mStart;
   }
 };
 
 // List of observers registered
-static StaticAutoPtr<MasterList> sMasterList;
+static mozilla::StaticAutoPtr<MasterList> sMasterList;
 static MOZ_THREAD_LOCAL(PerThreadData*) sThreadLocalData;
 static bool sThreadLocalDataInitialized;
-}  // namespace
+
+}  // anonymous namespace
+
+namespace mozilla {
 
 IOInterposeObserver::Observation::Observation(Operation aOperation,
                                               const char* aReference,
@@ -522,3 +525,5 @@ void IOInterposer::EnteringNextStage() {
   NextStageObservation observation;
   Report(observation);
 }
+
+}  // namespace mozilla

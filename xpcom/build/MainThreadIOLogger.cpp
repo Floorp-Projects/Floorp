@@ -63,15 +63,15 @@ class MainThreadIOLoggerImpl final : public mozilla::IOInterposeObserver {
   static void sIOThreadFunc(void* aArg);
   void IOThreadFunc();
 
-  TimeStamp mLogStartTime;
+  mozilla::TimeStamp mLogStartTime;
   const char* mFileName;
   PRThread* mIOThread;
-  IOInterposer::Monitor mMonitor;
+  mozilla::IOInterposer::Monitor mMonitor;
   bool mShutdownRequired;
   std::vector<ObservationWithStack> mObservations;
 };
 
-static StaticAutoPtr<MainThreadIOLoggerImpl> sImpl;
+static mozilla::StaticAutoPtr<MainThreadIOLoggerImpl> sImpl;
 
 MainThreadIOLoggerImpl::MainThreadIOLoggerImpl()
     : mFileName(nullptr), mIOThread(nullptr), mShutdownRequired(false) {}
@@ -82,7 +82,7 @@ MainThreadIOLoggerImpl::~MainThreadIOLoggerImpl() {
   }
   {
     // Scope for lock
-    IOInterposer::MonitorAutoLock lock(mMonitor);
+    mozilla::IOInterposer::MonitorAutoLock lock(mMonitor);
     mShutdownRequired = true;
     lock.Notify();
   }
@@ -122,15 +122,15 @@ void MainThreadIOLoggerImpl::IOThreadFunc() {
   PRFileDesc* fd = PR_Open(mFileName, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
                            PR_IRUSR | PR_IWUSR | PR_IRGRP);
   if (!fd) {
-    IOInterposer::MonitorAutoLock lock(mMonitor);
+    mozilla::IOInterposer::MonitorAutoLock lock(mMonitor);
     mShutdownRequired = true;
     std::vector<ObservationWithStack>().swap(mObservations);
     return;
   }
-  mLogStartTime = TimeStamp::Now();
+  mLogStartTime = mozilla::TimeStamp::Now();
   {
     // Scope for lock
-    IOInterposer::MonitorAutoLock lock(mMonitor);
+    mozilla::IOInterposer::MonitorAutoLock lock(mMonitor);
     while (true) {
       while (!mShutdownRequired && mObservations.empty()) {
         lock.Wait();
@@ -143,14 +143,15 @@ void MainThreadIOLoggerImpl::IOThreadFunc() {
       observationsToWrite.swap(mObservations);
 
       // Release the lock so that we're not holding anybody up during I/O
-      IOInterposer::MonitorAutoUnlock unlock(mMonitor);
+      mozilla::IOInterposer::MonitorAutoUnlock unlock(mMonitor);
 
       // Now write the events.
       for (auto i = observationsToWrite.begin(), e = observationsToWrite.end();
            i != e; ++i) {
         if (i->mObservation.ObservedOperation() == OpNextStage) {
-          PR_fprintf(fd, "%f,NEXT-STAGE\n",
-                     (TimeStamp::Now() - mLogStartTime).ToMilliseconds());
+          PR_fprintf(
+              fd, "%f,NEXT-STAGE\n",
+              (mozilla::TimeStamp::Now() - mLogStartTime).ToMilliseconds());
           continue;
         }
         double durationMs = i->mObservation.Duration().ToMilliseconds();
@@ -187,7 +188,7 @@ void MainThreadIOLoggerImpl::Observe(Observation& aObservation) {
   if (!mFileName || !IsMainThread()) {
     return;
   }
-  IOInterposer::MonitorAutoLock lock(mMonitor);
+  mozilla::IOInterposer::MonitorAutoLock lock(mMonitor);
   if (mShutdownRequired) {
     // The writer thread isn't running. Don't enqueue any more data.
     return;
