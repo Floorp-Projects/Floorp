@@ -1,19 +1,22 @@
 Test Runtimes
 =============
 
-These files contain test runtimes for various suites across different platforms. Each JSON file
-corresponds to a single test job in production and has the following format:
+These files contain runtimes for test manifests in the tree. They are of the form:
 
-    { '<test id>': <average runtime> }
+    { '<path to manifest>': <average runtime in seconds> }
 
-These files are being used to normalize chunk durations so all chunks take roughly the same length
-of time. They are still experimental and their format and/or file structure are subject to change
-without notice.
+They are being used to normalize chunk durations so all chunks take roughly
+the same length of time.
 
 Generating a Test Runtime File
 ------------------------------
 
-The writeruntimes.py script can be used to generate a runtime file. You must
-specify the suite for which the runtimes are to be generated, e.g.
+The ``writeruntimes`` script can be used to generate this file:
 
-    writeruntimes.py -s mochitest-media
+    $ ./writeruntimes
+
+It will take awhile. You can optionally specify platforms or suites on the
+command line, but these should only be used for debugging purposes (not for
+committing an update to the data). For more info, see:
+
+    $ ./writeruntimes -- --help
