@@ -18,8 +18,9 @@ VideoStreamTrack::VideoStreamTrack(nsPIDOMWindowInner* aWindow,
                                    mozilla::MediaTrack* aInputTrack,
                                    MediaStreamTrackSource* aSource,
                                    MediaStreamTrackState aReadyState,
+                                   bool aMuted,
                                    const MediaTrackConstraints& aConstraints)
-    : MediaStreamTrack(aWindow, aInputTrack, aSource, aReadyState,
+    : MediaStreamTrack(aWindow, aInputTrack, aSource, aReadyState, aMuted,
                        aConstraints) {}
 
 void VideoStreamTrack::Destroy() {
@@ -82,7 +83,7 @@ void VideoStreamTrack::GetLabel(nsAString& aLabel, CallerType aCallerType) {
 
 already_AddRefed<MediaStreamTrack> VideoStreamTrack::CloneInternal() {
   return do_AddRef(new VideoStreamTrack(mWindow, mInputTrack, mSource,
-                                        ReadyState(), mConstraints));
+                                        ReadyState(), Muted(), mConstraints));
 }
 
 }  // namespace dom
