@@ -54,17 +54,11 @@ function cloneAction(action: any) {
   return action;
 }
 
-function formatFrame(frame) {
-  const { id, location, displayName } = frame;
-  return { id, location, displayName };
-}
-
 function formatPause(pause) {
   return {
     ...pause,
     pauseInfo: { why: pause.why },
     scopes: [],
-    frames: pause.frames.map(formatFrame),
     loadedObjects: [],
   };
 }

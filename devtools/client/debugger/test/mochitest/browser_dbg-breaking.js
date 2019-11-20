@@ -8,7 +8,7 @@ add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html");
   const {
     selectors: { getSelectedSource },
-    getState
+    getState,
   } = dbg;
 
   await selectSource(dbg, "scripts.html");

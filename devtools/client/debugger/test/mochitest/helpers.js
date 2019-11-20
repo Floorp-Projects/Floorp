@@ -489,7 +489,7 @@ function waitForBreakpointRemoved(dbg, url, line) {
  * @static
  */
 async function waitForPaused(dbg, url) {
-  const { getSelectedScope, getCurrentThread } = dbg.selectors;
+  const { getSelectedScope, getCurrentThread, getCurrentThreadFrames } = dbg.selectors;
 
   await waitForState(
     dbg,
@@ -497,6 +497,7 @@ async function waitForPaused(dbg, url) {
     "paused"
   );
 
+  await waitForState(dbg, getCurrentThreadFrames, 'fetched frames');
   await waitForLoadedScopes(dbg);
   await waitForSelectedSource(dbg, url);
 }

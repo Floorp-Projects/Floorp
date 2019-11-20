@@ -8,10 +8,11 @@ import type {
   SourcePacket,
   PausedPacket,
   ThreadFront,
-  Actions,
   Target,
   DebuggerClient,
 } from "./types";
+
+import Actions from "../../actions";
 
 import { createPause, prepareSourcePayload } from "./create";
 import sourceQueue from "../../utils/source-queue";
@@ -23,16 +24,14 @@ const {
   // $FlowIgnore
 } = require("devtools/client/shared/workers-listener.js");
 
-const CALL_STACK_PAGE_SIZE = 1000;
-
 type Dependencies = {
   threadFront: ThreadFront,
   tabTarget: Target,
-  actions: Actions,
+  actions: typeof Actions,
   debuggerClient: DebuggerClient,
 };
 
-let actions: Actions;
+let actions: typeof Actions;
 let isInterrupted: boolean;
 
 function addThreadEventListeners(thread: ThreadFront) {
@@ -77,21 +76,19 @@ async function paused(threadFront: ThreadFront, packet: PausedPacket) {
     return;
   }
 
-  let response;
-  try {
-    // Eagerly fetch the frames
-    response = await threadFront.getFrames(0, CALL_STACK_PAGE_SIZE);
-  } catch (e) {
-    console.log(e);
+  if (why.type == "alreadyPaused") {
     return;
   }
 
-  if (!response || why.type == "alreadyPaused") {
-    return;
-  }
+  // When reloading we might receive a pause event before the
+  // top frame's source has arrived.
+  await actions.ensureSourceActor(
+    threadFront.actorID,
+    packet.frame.where.actor
+  );
 
-  const pause = createPause(threadFront.actor, packet, response.frames);
-  await sourceQueue.flush();
+  const pause = createPause(threadFront.actor, packet);
+
   actions.paused(pause);
   recordEvent("pause", { reason: why.type });
 }

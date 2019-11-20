@@ -28,15 +28,19 @@ const mockCommandClient = {
   }),
   evaluateExpressions: async () => {},
   getFrameScopes: async () => {},
+  getFrames: async () => [],
   getSourceActorBreakpointPositions: async () => ({}),
   getSourceActorBreakableLines: async () => [],
 };
 
 describe("getInScopeLine", () => {
   it("with selected line", async () => {
-    const store = createStore(mockCommandClient);
+    const client = { ...mockCommandClient };
+    const store = createStore(client);
     const { dispatch, getState } = store;
     const source = makeMockSource("scopes.js", "scopes.js");
+    const frame = makeMockFrame("scopes-4", source);
+    client.getFrames = async () => [frame];
 
     await dispatch(actions.newGeneratedSource(makeSource("scopes.js")));
 
@@ -47,13 +51,11 @@ describe("getInScopeLine", () => {
       })
     );
 
-    const frame = makeMockFrame("scopes-4", source);
     await dispatch(
       actions.paused({
         thread: "FakeThread",
         why: { type: "debuggerStatement" },
         frame,
-        frames: [frame],
       })
     );
     await dispatch(actions.setInScopeLines(selectors.getContext(getState())));

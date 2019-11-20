@@ -60,21 +60,11 @@ export function makeSourceId(source: SourcePayload) {
   return source.url ? `sourceURL-${source.url}` : `source-${source.actor}`;
 }
 
-export function createPause(
-  thread: string,
-  packet: PausedPacket,
-  frames: FrameFront[]
-): any {
-  // NOTE: useful when the debugger is already paused
-  const frame = packet.frame || frames[0];
-
+export function createPause(thread: string, packet: PausedPacket): any {
   return {
     ...packet,
     thread,
-    frame: createFrame(thread, frame),
-    frames: frames.map((currentFrame, i) =>
-      createFrame(thread, currentFrame, i)
-    ),
+    frame: createFrame(thread, packet.frame),
   };
 }
 
