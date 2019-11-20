@@ -2213,6 +2213,8 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
   nsIWidgetListener* listener = GetListener();
   if (!listener) return FALSE;
 
+  LOGDRAW(("received expose event [%p] %p 0x%lx (rects follow):\n", this,
+           mGdkWindow, mIsX11Display ? gdk_x11_window_get_xid(mGdkWindow) : 0));
   LayoutDeviceIntRegion exposeRegion;
   if (!ExtractExposeRegion(exposeRegion, cr)) {
     return FALSE;
@@ -2251,10 +2253,6 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
     GetLayerManager()->ScheduleComposite();
     GetLayerManager()->SetNeedsComposite(false);
   }
-
-  LOGDRAW(("sending expose event [%p] %p 0x%lx (rects follow):\n", (void*)this,
-           (void*)mGdkWindow,
-           mIsX11Display ? gdk_x11_window_get_xid(mGdkWindow) : 0));
 
   // Our bounds may have changed after calling WillPaintWindow.  Clip
   // to the new bounds here.  The region is relative to this
