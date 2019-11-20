@@ -65,8 +65,17 @@ add_task(async function() {
     "The expected nodes are displayed"
   );
 
-  const cNode = message.querySelectorAll(".node")[3];
-  info("Ctrl+click on the `c` property node to put it in the sidebar");
+  is(
+    message.querySelectorAll(".node").length,
+    1,
+    "The message in the content panel wasn't expanded"
+  );
+
+  info(
+    "Expand the output message and Ctrl+click on the `c` property node to put it in the sidebar"
+  );
+  message.querySelector(".node").click();
+  const cNode = await waitFor(() => message.querySelectorAll(".node")[3]);
   EventUtils.sendMouseEvent(
     {
       type: "click",
