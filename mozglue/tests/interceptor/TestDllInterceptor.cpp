@@ -782,6 +782,7 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
 
   CredHandle credHandle;
   memset(&credHandle, 0, sizeof(CredHandle));
+  OBJECT_ATTRIBUTES attributes = {};
 
   // NB: These tests should be ordered such that lower-level APIs are tested
   // before higher-level APIs.
@@ -795,7 +796,8 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
       TEST_HOOK("ntdll.dll", NtReadFileScatter, NotEquals, 0) &&
       TEST_HOOK("ntdll.dll", NtWriteFile, NotEquals, 0) &&
       TEST_HOOK("ntdll.dll", NtWriteFileGather, NotEquals, 0) &&
-      TEST_HOOK("ntdll.dll", NtQueryFullAttributesFile, NotEquals, 0) &&
+      TEST_HOOK_PARAMS("ntdll.dll", NtQueryFullAttributesFile, NotEquals, 0,
+                       &attributes, nullptr) &&
       TEST_DETOUR_SKIP_EXEC("ntdll.dll", LdrLoadDll) &&
       TEST_HOOK("ntdll.dll", LdrUnloadDll, NotEquals, 0) &&
       MAYBE_TEST_HOOK_SKIP_EXEC(IsWin8OrLater(), "ntdll.dll",
