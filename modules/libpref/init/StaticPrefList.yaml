@@ -4935,7 +4935,7 @@
 # Is support for motion-path enabled?
 - name: layout.css.motion-path.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Is support for motion-path ray() enabled?
