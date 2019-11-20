@@ -3895,7 +3895,6 @@ pref("signon.generation.available",         false);
 pref("signon.generation.enabled",           false);
 pref("signon.privateBrowsingCapture.enabled", false);
 pref("signon.storeWhenAutocompleteOff",     true);
-pref("signon.userInputRequiredToCapture.enabled", true);
 pref("signon.debug",                        false);
 pref("signon.recipes.path",                 "chrome://passwordmgr/content/recipes.json");
 pref("signon.schemeUpgrades",               false);

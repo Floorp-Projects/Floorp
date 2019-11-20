@@ -94,10 +94,8 @@ add_task(async function test_edit_username() {
           testCase.usernameInPage,
           async function(usernameInPage) {
             let doc = content.document;
-            doc
-              .getElementById("form-basic-username")
-              .setUserInput(usernameInPage);
-            doc.getElementById("form-basic-password").setUserInput("password");
+            doc.getElementById("form-basic-username").value = usernameInPage;
+            doc.getElementById("form-basic-password").value = "password";
             doc.getElementById("form-basic").submit();
           }
         );
@@ -109,9 +107,9 @@ add_task(async function test_edit_username() {
 
         // Modify the username in the dialog if requested.
         if (testCase.usernameChangedTo) {
-          await updateDoorhangerInputValues({
-            username: testCase.usernameChangedTo,
-          });
+          notificationElement.querySelector(
+            "#password-notification-username"
+          ).value = testCase.usernameChangedTo;
         }
 
         // We expect a modifyLogin notification if the final username used by the
@@ -130,13 +128,8 @@ add_task(async function test_edit_username() {
           "passwordmgr-storage-changed",
           (_, data) => data == expectedNotification
         );
-        let promiseHidden = BrowserTestUtils.waitForEvent(
-          PopupNotifications.panel,
-          "popuphidden"
-        );
         notificationElement.button.doCommand();
         let [result] = await promiseLogin;
-        await promiseHidden;
 
         // Check that the values in the database match the expected values.
         let login = expectModifyLogin
