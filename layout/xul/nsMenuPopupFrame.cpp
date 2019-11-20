@@ -453,10 +453,25 @@ bool nsMenuPopupFrame::IsLeafDynamic() const {
                                                nsGkAtoms::sizetopopup));
 }
 
-void nsMenuPopupFrame::UpdateWidgetProperties() {
-  if (nsIWidget* widget = GetWidget()) {
-    widget->SetWindowOpacity(StyleUIReset()->mWindowOpacity);
-    widget->SetWindowTransform(ComputeWidgetTransform());
+void nsMenuPopupFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
+  nsBoxFrame::DidSetComputedStyle(aOldStyle);
+
+  if (!aOldStyle) {
+    return;
+  }
+
+  auto& newUI = *StyleUIReset();
+  auto& oldUI = *aOldStyle->StyleUIReset();
+  if (newUI.mWindowOpacity != oldUI.mWindowOpacity) {
+    if (nsIWidget* widget = GetWidget()) {
+      widget->SetWindowOpacity(newUI.mWindowOpacity);
+    }
+  }
+
+  if (newUI.mMozWindowTransform != oldUI.mMozWindowTransform) {
+    if (nsIWidget* widget = GetWidget()) {
+      widget->SetWindowTransform(ComputeWidgetTransform());
+    }
   }
 }
 

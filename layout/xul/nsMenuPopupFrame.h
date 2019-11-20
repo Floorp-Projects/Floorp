@@ -250,9 +250,9 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   nsresult CreateWidgetForView(nsView* aView);
   uint8_t GetShadowStyle();
 
-  virtual bool IsLeafDynamic() const override;
+  bool IsLeafDynamic() const override;
 
-  virtual void UpdateWidgetProperties() override;
+  void DidSetComputedStyle(ComputedStyle* aOldStyle) override;
 
   // layout, position and display the popup as needed
   MOZ_CAN_RUN_SCRIPT_BOUNDARY

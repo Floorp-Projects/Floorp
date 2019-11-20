@@ -563,7 +563,6 @@ nsCString RestyleManager::ChangeHintToString(nsChangeHint aHint) {
                          "UpdateBackgroundPosition",
                          "AddOrRemoveTransform",
                          "ScrollbarChange",
-                         "UpdateWidgetProperties",
                          "UpdateTableCellSpans",
                          "VisibilityChange"};
   static_assert(nsChangeHint_AllHints ==
@@ -1782,9 +1781,6 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
       if ((hint & nsChangeHint_UpdateCursor) && !didUpdateCursor) {
         presContext->PresShell()->SynthesizeMouseMove(false);
         didUpdateCursor = true;
-      }
-      if (hint & nsChangeHint_UpdateWidgetProperties) {
-        frame->UpdateWidgetProperties();
       }
       if (hint & nsChangeHint_UpdateTableCellSpans) {
         frameConstructor->UpdateTableCellSpans(content);

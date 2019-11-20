@@ -11025,42 +11025,6 @@ gfx::Matrix nsIFrame::ComputeWidgetTransform() {
   return result2d;
 }
 
-static already_AddRefed<nsIWidget> GetWindowWidget(
-    nsPresContext* aPresContext) {
-  // We want to obtain the widget for the window. We can't use any of these
-  // methods: nsPresContext::GetRootWidget, nsPresContext::GetNearestWidget,
-  // nsIFrame::GetNearestWidget because those deal with child widgets and
-  // there is no parent widget connection between child widgets and the
-  // window widget that contains them.
-  nsCOMPtr<nsISupports> container = aPresContext->Document()->GetContainer();
-  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
-  if (!baseWindow) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIWidget> mainWidget;
-  baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
-  return mainWidget.forget();
-}
-
-void nsIFrame::UpdateWidgetProperties() {
-  nsPresContext* presContext = PresContext();
-  if (presContext->IsRoot() || !presContext->IsChrome()) {
-    // Don't do anything for documents that aren't the root chrome document.
-    return;
-  }
-  nsIFrame* rootFrame =
-      presContext->FrameConstructor()->GetRootElementStyleFrame();
-  if (this != rootFrame) {
-    // Only the window's root style frame is relevant for widget properties.
-    return;
-  }
-  if (nsCOMPtr<nsIWidget> widget = GetWindowWidget(presContext)) {
-    widget->SetWindowOpacity(StyleUIReset()->mWindowOpacity);
-    widget->SetWindowTransform(ComputeWidgetTransform());
-  }
-}
-
 void nsIFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoRestyleState& aRestyleState) {
   // As a special case, we check for {ib}-split block frames here, rather
   // than have an nsInlineFrame::AppendDirectlyOwnedAnonBoxes implementation
