@@ -12,8 +12,8 @@ loadScripts(
 
 addAccessibleTask(
   `<input id="textbox" value="hello"/>`,
-  async function(browser, fissionDocAcc, contentDocAcc) {
-    const textbox = findAccessibleChildByID(fissionDocAcc, "textbox");
+  async function(browser, iframeDocAcc, contentDocAcc) {
+    const textbox = findAccessibleChildByID(iframeDocAcc, "textbox");
     testStates(textbox, STATE_FOCUSABLE, 0, STATE_FOCUSED);
 
     let onFocus = waitForEvent(EVENT_FOCUS, textbox);

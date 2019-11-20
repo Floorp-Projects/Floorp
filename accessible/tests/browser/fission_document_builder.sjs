@@ -55,6 +55,6 @@ function handleRequest(request, response) {
     false
   );
   // This is a hack to set the correct id for the content document that is to be
-  // loaded in the fission frame.
-  response.write(doc.replace(`id="body"`, `id="fission-body"`));
+  // loaded in the iframe.
+  response.write(doc.replace(`id="body"`, `id="default-iframe-body-id"`));
 }
