@@ -538,14 +538,28 @@ def resolve_checkout_url(base_repo, head_repo):
 
     The config will be of the form:
         {
-            "us-west-2": {  # value of `TASKCLUSTER_WORKER_GROUP`
+            "aws/us-west-2": {  # key built from `TASKCLUSTER_WORKER_LOCATION` variable
                 "rate": 0.5,
                 "domain": "us-west-2.hgmointernal.net"
             },
-            "us-east-1": {...}
+            "google/us-central1": {...}
         }
     """
-    region = os.getenv('TASKCLUSTER_WORKER_GROUP')
+    worker_location = os.getenv('TASKCLUSTER_WORKER_LOCATION')
+    if not worker_location:
+        print_line(b'vcs', b'TASKCLUSTER_WORKER_LOCATION environment variable not set; '
+                           b'using public hg.mozilla.org service\n')
+        return base_repo, head_repo
+
+    try:
+        worker_location = json.loads(worker_location)
+    except json.JSONDecodeError:
+        print_line(b'vcs', b'Could not decode TASKCLUSTER_WORKER_LOCATION environment variable '
+                           b'as JSON. Content: %s\n' % worker_location)
+        print_line(b'vcs', b'using public hg.mozilla.org service\n')
+        return base_repo, head_repo
+
+    config_key = '%(cloud)s/%(region)s' % worker_location
 
     try:
         print_line(b'vcs', b'fetching hgmointernal config from %s\n' %
@@ -556,17 +570,14 @@ def resolve_checkout_url(base_repo, head_repo):
         hgmointernal_config = json.loads(res.read().decode('utf-8'))['secret']
 
         # Use public hg service if region not yet supported
-        if region not in hgmointernal_config:
-            if region:
-                print_line(b'vcs', b'region %s not yet supported; using public '
-                                   b'hg.mozilla.org service\n' % region.encode('utf-8'))
-            else:
-                print_line(b'vcs', b'unspecified region; using public '
-                                   b'hg.mozilla.org service\n')
+        if config_key not in hgmointernal_config:
+            print_line(b'vcs', b'region %s not yet supported; using public '
+                               b'hg.mozilla.org service\n' % config_key.encode('utf-8'))
+
             return base_repo, head_repo
 
         # Only send a percentage of traffic to the internal mirror
-        rate = float(hgmointernal_config[region]['rate'])
+        rate = float(hgmointernal_config[config_key]['rate'])
 
         if random.random() > rate:
             print_line(b'vcs', b'hgmointernal rate miss; using '
@@ -576,7 +587,7 @@ def resolve_checkout_url(base_repo, head_repo):
         print_line(b'vcs', b'hgmointernal rate hit; cloning from '
                            b'private hgweb mirror\n')
 
-        mirror_domain = hgmointernal_config[region]['domain']
+        mirror_domain = hgmointernal_config[config_key]['domain']
 
         if base_repo and base_repo.startswith('https://hg.mozilla.org'):
             base_repo = base_repo.replace('hg.mozilla.org', mirror_domain, 1)
