@@ -25,7 +25,7 @@ runTest(async () => {
     let stream = await getUserMedia({audio: true, video: true});
     // We need to test with multiple tracks. We add an extra of each kind.
     for (const track of stream.getTracks()) {
-      stream.addTrack(t.clone());
+      stream.addTrack(track.clone());
     }
 
     audioElement = createMediaElement("audio", "gUMAudio");
@@ -99,39 +99,34 @@ runTest(async () => {
     for (const track of videoElement.srcObject.getVideoTracks().reverse()) {
       videoElement.srcObject.removeTrack(track);
     }
-    is(videoCaptureStream.getVideoTracks()
-                         .filter(t => t.readyState == "live").length, 1,
-      "Captured video should have still have one video track captured.");
+    is(videoCaptureStream.getVideoTracks().length, 1,
+      "Captured video should have still have one video track.");
 
     await haveEvent(videoCaptureStream.getVideoTracks()[0], "ended",
       wait(50000, new Error("Timeout")));
+    await haveEvent(videoCaptureStream, "removetrack",
+      wait(50000, new Error("Timeout")));
 
-    is(videoCaptureStream.getVideoTracks()
-                         .filter(t => t.readyState == "live").length, 0,
-      "Captured video stream should have no video tracks captured after removal.");
+    is(videoCaptureStream.getVideoTracks().length, 0,
+      "Captured video stream should have no video tracks after removal.");
 
 
     info("Testing source reset.");
     stream = await getUserMedia({audio: true, video: true});
     videoElement.srcObject = stream;
-    await Promise.all(videoCaptureStream.getTracks()
-        .filter(t => t.readyState == "live")
-        .map(t => haveEvent(t, "ended", wait(50000, new Error("Timeout")))));
+    for (const track of videoCaptureStream.getTracks()) {
+      await Promise.race(videoCaptureStream.getTracks().map(
+        t => haveEvent(t, "ended", wait(50000, new Error("Timeout"))))
+      );
+      await haveEvent(videoCaptureStream, "removetrack", wait(50000, new Error("Timeout")));
+    }
     await haveEventsButNoMore(
       videoCaptureStream, "addtrack", 2, wait(50000, new Error("Timeout")));
-    is(videoCaptureStream.getAudioTracks()
-        .filter(t => t.readyState == "ended").length, 3,
-      "Captured video stream should have three ended audio tracks");
-    is(videoCaptureStream.getAudioTracks()
-        .filter(t => t.readyState == "live").length, 1,
-      "Captured video stream should have one live audio track");
+    is(videoCaptureStream.getAudioTracks().length, 1,
+      "Captured video stream should have one audio track");
 
-    is(videoCaptureStream.getVideoTracks()
-        .filter(t => t.readyState == "ended").length, 1,
-      "Captured video stream should have one ended video tracks");
-    is(videoCaptureStream.getVideoTracks()
-        .filter(t => t.readyState == "live").length, 1,
-      "Captured video stream should have one live video track");
+    is(videoCaptureStream.getVideoTracks().length, 1,
+      "Captured video stream should have one video track");
 
     info("Testing CaptureStreamUntilEnded");
     untilEndedElement =
@@ -152,22 +147,27 @@ runTest(async () => {
       track.stop();
     }
 
-    await Promise.all([
-      haveEvent(untilEndedElement, "ended", wait(50000, new Error("Timeout"))),
-      ...streamUntilEnded.getTracks()
-           .map(t => haveEvent(t, "ended", wait(50000, new Error("Timeout")))),
-    ]);
+    await haveEvent(untilEndedElement, "ended", wait(50000, new Error("Timeout")));
+    for (const track of streamUntilEnded.getTracks()) {
+      await Promise.race(streamUntilEnded.getTracks().map(
+        t => haveEvent(t, "ended", wait(50000, new Error("Timeout"))))
+      );
+      await haveEvent(streamUntilEnded, "removetrack", wait(50000, new Error("Timeout")));
+    }
 
     info("Element and tracks ended. Ensuring that new tracks aren't created.");
     untilEndedElement.srcObject = videoElement.srcObject;
     await haveEventsButNoMore(
       untilEndedElement, "loadedmetadata", 1, wait(50000, new Error("Timeout")));
 
-    is(streamUntilEnded.getTracks().length, 4, "Should still have 4 tracks");
+    is(streamUntilEnded.getTracks().length, 0, "Should have no tracks");
   } catch(e) {
     ok(false, "Test failed: " + e + (e && e.stack ? "\n" + e.stack : ""));
   } finally {
-    for(const track of [...tracks, ...videoElement.srcObject.getTracks()]) {
+    if (videoElement) {
+      tracks.push(...videoElement.srcObject.getTracks());
+    }
+    for(const track of tracks) {
       track.stop();
     }
   }
