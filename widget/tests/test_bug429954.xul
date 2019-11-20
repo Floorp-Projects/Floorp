@@ -3,9 +3,9 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=522217
+https://bugzilla.mozilla.org/show_bug.cgi?id=429954
 -->
-<window title="Mozilla Bug 522217"
+<window title="Mozilla Bug 429954"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
@@ -24,10 +24,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=522217
 SimpleTest.waitForExplicitFinish();
 
 SimpleTest.waitForFocus(function () {
-  window.openDialog("window_bug522217.xhtml", "_blank", 
-                    "chrome,resizable,width=400,height=300,noopener", window);
-});
+  var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+              getService(Ci.nsIWindowMediator);
+  var win = wm.getMostRecentWindow("navigator:browser");
+  win.maximize();
+  var maxX = win.screenX, maxY = win.screenY;
+  var maxWidth = win.outerWidth, maxHeight = win.outerHeight;
+  win.restore();
 
+  window.openDialog("window_bug429954.xul", "_blank", 
+                    "chrome,noopener,resizable,width=" + maxWidth + ",height=" + maxHeight +
+                    ",screenX=" + maxX + "screenY=" + maxY,
+                    window);
+});
 
 ]]>
 </script>

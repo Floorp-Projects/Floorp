@@ -70,7 +70,7 @@ with Files("*673301*"):
 with Files("test_assign_event_data.html"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
-with Files("test_input_events_on_deactive_window.xhtml"):
+with Files("test_input_events_on_deactive_window.xul"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 with Files("*chrome_context_menus_win*"):
@@ -106,7 +106,7 @@ with Files("*plugin*"):
 with Files("*position_on_resize*"):
     BUG_COMPONENT = ("Core", "Widget: Gtk")
 
-with Files("test_sizemode_events.xhtml"):
+with Files("test_sizemode_events.xul"):
     BUG_COMPONENT = ("Core", "Widget: Cocoa")
 
 with Files("*system_status_bar*"):
