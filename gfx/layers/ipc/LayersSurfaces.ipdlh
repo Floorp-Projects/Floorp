@@ -93,16 +93,20 @@ struct SurfaceDescriptorSharedGLTexture {
 };
 
 
-union GPUVideoSubDescriptor {
+union RemoteDecoderVideoSubDescriptor {
   SurfaceDescriptorD3D10;
   SurfaceDescriptorDXGIYCbCr;
   null_t;
 };
 
-struct SurfaceDescriptorGPUVideo {
+struct SurfaceDescriptorRemoteDecoder {
   uint64_t handle;
-  GPUVideoSubDescriptor subdesc;
+  RemoteDecoderVideoSubDescriptor subdesc;
   MaybeVideoBridgeSource source;
+};
+
+union SurfaceDescriptorGPUVideo {
+  SurfaceDescriptorRemoteDecoder;
 };
 
 struct RGBDescriptor {
