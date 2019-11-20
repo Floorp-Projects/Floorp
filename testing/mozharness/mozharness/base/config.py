@@ -26,25 +26,33 @@ TODO:
 
 from __future__ import print_function
 
-from copy import deepcopy
-from optparse import OptionParser, Option, OptionGroup
 import os
-import sys
-import urllib2
 import socket
+import sys
 import time
+from copy import deepcopy
+from optparse import Option, OptionGroup, OptionParser
+
+from mozharness.base.log import CRITICAL, DEBUG, ERROR, FATAL, INFO, WARNING
+
+try:
+    from urllib2 import URLError, urlopen
+except ImportError:
+    from urllib.request import urlopen
+    from urllib.error import URLError
+
+
 try:
     import simplejson as json
 except ImportError:
     import json
-
-from mozharness.base.log import DEBUG, INFO, WARNING, ERROR, CRITICAL, FATAL
 
 
 # optparse {{{1
 class ExtendedOptionParser(OptionParser):
     """OptionParser, but with ExtendOption as the option_class.
     """
+
     def __init__(self, **kwargs):
         kwargs['option_class'] = ExtendOption
         OptionParser.__init__(self, **kwargs)
@@ -95,7 +103,7 @@ class ReadOnlyDict(dict):
         assert not self._lock, "ReadOnlyDict is locked!"
 
     def lock(self):
-        for (k, v) in self.items():
+        for (k, v) in list(self.items()):
             self[k] = make_immutable(v)
         self._lock = True
 
@@ -131,10 +139,10 @@ class ReadOnlyDict(dict):
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
-        for k, v in self.__dict__.items():
+        for k, v in list(self.__dict__.items()):
             setattr(result, k, deepcopy(v, memo))
         result._lock = False
-        for k, v in self.items():
+        for k, v in list(self.items()):
             result[k] = deepcopy(v, memo)
         return result
 
@@ -165,7 +173,15 @@ def parse_config_file(file_name, quiet=False, search_path=None,
     if file_name.endswith('.py'):
         global_dict = {}
         local_dict = {}
-        execfile(file_path, global_dict, local_dict)
+        exec(
+            compile(
+                open(
+                    file_path,
+                    "rb").read(),
+                file_path,
+                'exec'),
+            global_dict,
+            local_dict)
         config = local_dict[config_dict_name]
     elif file_name.endswith('.json'):
         fh = open(file_path)
@@ -175,7 +191,8 @@ def parse_config_file(file_name, quiet=False, search_path=None,
         fh.close()
     else:
         raise RuntimeError(
-            "Unknown config file type %s! (config files must end in .json or .py)" % file_name)
+            "Unknown config file type %s! (config files must end in .json or .py)" %
+            file_name)
     # TODO return file_path
     return config
 
@@ -187,12 +204,14 @@ def download_config_file(url, file_name):
     max_sleeptime = 5 * 60
     while True:
         if n >= attempts:
-            print("Failed to download from url %s after %d attempts, quiting..." % (url, attempts))
+            print(
+                "Failed to download from url %s after %d attempts, quiting..." %
+                (url, attempts))
             raise SystemError(-1)
         try:
-            contents = urllib2.urlopen(url, timeout=30).read()
+            contents = urlopen(url, timeout=30).read()
             break
-        except urllib2.URLError as e:
+        except URLError as e:
             print("Error downloading from url %s: %s" % (url, str(e)))
         except socket.timeout as e:
             print("Time out accessing %s: %s" % (url, str(e)))
@@ -210,7 +229,9 @@ def download_config_file(url, file_name):
         f.write(contents)
         f.close()
     except IOError as e:
-        print("Error writing downloaded contents to file %s: %s" % (file_name, str(e)))
+        print(
+            "Error writing downloaded contents to file %s: %s" %
+            (file_name, str(e)))
         raise SystemError(-1)
 
 
@@ -218,12 +239,19 @@ def download_config_file(url, file_name):
 class BaseConfig(object):
     """Basic config setting/getting.
     """
-    def __init__(self, config=None, initial_config_file=None, config_options=None,
-                 all_actions=None, default_actions=None,
-                 volatile_config=None, option_args=None,
-                 require_config_file=False,
-                 append_env_variables_from_configs=False,
-                 usage="usage: %prog [options]"):
+
+    def __init__(
+            self,
+            config=None,
+            initial_config_file=None,
+            config_options=None,
+            all_actions=None,
+            default_actions=None,
+            volatile_config=None,
+            option_args=None,
+            require_config_file=False,
+            append_env_variables_from_configs=False,
+            usage="usage: %prog [options]"):
         self._config = {}
         self.all_cfg_files_and_dicts = []
         self.actions = []
@@ -267,7 +295,8 @@ class BaseConfig(object):
             # not add anything from the test invocation command line
             # arguments to the mozharness options.
             if option_args is None:
-                option_args = ['dummy_mozharness_script_with_no_command_line_options.py']
+                option_args = [
+                    'dummy_mozharness_script_with_no_command_line_options.py']
         if config_options is None:
             config_options = []
         self._create_config_parser(config_options, usage)
@@ -285,13 +314,18 @@ class BaseConfig(object):
             help="Specify the work_dir (subdir of base_work_dir)"
         )
         self.config_parser.add_option(
-            "--base-work-dir", action="store", dest="base_work_dir",
-            type="string", default=os.getcwd(),
-            help="Specify the absolute path of the parent of the working directory"
-        )
+            "--base-work-dir",
+            action="store",
+            dest="base_work_dir",
+            type="string",
+            default=os.getcwd(),
+            help="Specify the absolute path of the parent of the working directory")
         self.config_parser.add_option(
-            "--extra-config-path", action='extend', dest="config_paths",
-            type="string", help="Specify additional paths to search for config files.",
+            "--extra-config-path",
+            action='extend',
+            dest="config_paths",
+            type="string",
+            help="Specify additional paths to search for config files.",
         )
         self.config_parser.add_option(
             "-c", "--config-file", "--cfg", action="extend",
@@ -299,11 +333,15 @@ class BaseConfig(object):
             help="Specify a config file; can be repeated",
         )
         self.config_parser.add_option(
-            "-C", "--opt-config-file", "--opt-cfg", action="extend",
-            dest="opt_config_files", type="string", default=[],
+            "-C",
+            "--opt-config-file",
+            "--opt-cfg",
+            action="extend",
+            dest="opt_config_files",
+            type="string",
+            default=[],
             help="Specify an optional config file, like --config-file but with no "
-                 "error if the file is missing; can be repeated"
-        )
+            "error if the file is missing; can be repeated")
         self.config_parser.add_option(
             "--dump-config", action="store_true",
             dest="dump_config",
@@ -422,7 +460,8 @@ class BaseConfig(object):
             for i in range(len(indexes)):
                 if indexes[i] != sorted_indexes[i]:
                     print(("Action %s comes in different order in %s\n" +
-                           "than in %s") % (action_list[i], action_list, self.all_actions))
+                           "than in %s") %
+                          (action_list[i], action_list, self.all_actions))
                     raise SystemExit(-1)
         except ValueError as e:
             print("Invalid action found: " + str(e))
@@ -480,7 +519,8 @@ class BaseConfig(object):
 
         if 'EXTRA_MOZHARNESS_CONFIG' in os.environ:
             env_config = json.loads(os.environ['EXTRA_MOZHARNESS_CONFIG'])
-            all_cfg_files_and_dicts.append(("[EXTRA_MOZHARENSS_CONFIG]", env_config))
+            all_cfg_files_and_dicts.append(
+                ("[EXTRA_MOZHARENSS_CONFIG]", env_config))
 
         return all_cfg_files_and_dicts
 
@@ -517,7 +557,7 @@ class BaseConfig(object):
             # We only append values from various configs for the 'env' entry
             # For everything else we follow the standard behaviour
             for i, (c_file, c_dict) in enumerate(self.all_cfg_files_and_dicts):
-                for v in c_dict.keys():
+                for v in list(c_dict.keys()):
                     if v == 'env' and v in config:
                         config[v].update(c_dict[v])
                     else:
@@ -532,7 +572,7 @@ class BaseConfig(object):
         #    this becomes self.config during BaseScript's init
         self.set_config(config)
 
-        for key in defaults.keys():
+        for key in list(defaults.keys()):
             value = getattr(options, key)
             if value is None:
                 continue
@@ -544,7 +584,7 @@ class BaseConfig(object):
         # The idea behind the volatile_config is we don't want to save this
         # info over multiple runs.  This defaults to the action-specific
         # config options, but can be anything.
-        for key in self.volatile_config.keys():
+        for key in list(self.volatile_config.keys()):
             if self._config.get(key) is not None:
                 self.volatile_config[key] = self._config[key]
                 del(self._config[key])
@@ -580,7 +620,8 @@ class BaseConfig(object):
         actions to perform.
         """
         if self._config.get('default_actions'):
-            default_actions = self.verify_actions(self._config['default_actions'])
+            default_actions = self.verify_actions(
+                self._config['default_actions'])
             self.default_actions = default_actions
         self.verify_actions_order(self.default_actions)
         self.actions = self.default_actions[:]
