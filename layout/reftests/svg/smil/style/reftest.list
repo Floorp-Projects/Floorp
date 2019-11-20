@@ -163,3 +163,7 @@ fuzzy-if(skiaContent,0-1,0-170) == anim-css-strokewidth-4-from-by-no-no.svg   an
 
 # check namespaced attribute
 == namespaced-property-1.svg  anim-standard-ref.svg
+
+# 'letter-spacing' and 'word-spacing'
+== anim-css-letterspacing-1.svg anim-css-letterspacing-1-ref.svg
+== anim-css-wordspacing-1.svg anim-css-wordspacing-1-ref.svg

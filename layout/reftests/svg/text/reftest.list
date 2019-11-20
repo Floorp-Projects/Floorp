@@ -203,3 +203,8 @@ fuzzy-if(skiaContent,0-1,0-150) fuzzy-if(webrender&&!geckoview,1-1,35-222) needs
 fuzzy-if(skiaContent,0-1,0-300) fuzzy-if(webrender&&!geckoview,1-1,119-934) needs-focus fuzzy-if(webrender&&winWidget,134-152,432-501) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == multiple-text-selection.svg multiple-text-selection-ref.html # Bug 1392106
 needs-focus == multiple-chunks-selection.svg multiple-chunks-selection-ref.svg
 fuzzy-if(skiaContent,0-1,0-200) needs-focus == textpath-selection.svg textpath-selection-ref.svg
+
+# letter-spacing and word-spacing
+== simple-letter-spacing.svg simple-letter-spacing-ref.svg
+== simple-word-spacing.svg simple-word-spacing-ref.svg
+== multiple-chunks-letter-spacing.svg multiple-chunks-letter-spacing-ref.svg
