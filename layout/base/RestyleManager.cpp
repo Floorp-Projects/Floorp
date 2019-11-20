@@ -1792,6 +1792,7 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
   }
 
   aChangeList.Clear();
+  FlushOverflowChangedTracker();
 }
 
 /* static */
@@ -3121,8 +3122,6 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
   }
 
   doc->ClearServoRestyleRoot();
-
-  FlushOverflowChangedTracker();
 
   ClearSnapshots();
   styleSet->AssertTreeIsClean();
