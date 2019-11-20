@@ -16,7 +16,7 @@ import traceback
 try:
     import urlparse
 except ImportError:
-    import urllib.urlparse as urlparse
+    import urllib.parse as urlparse
 
 from six import string_types
 
