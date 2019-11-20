@@ -52,6 +52,8 @@ const { BaseConduit } = ChromeUtils.import(
   "resource://gre/modules/ConduitsChild.jsm"
 );
 
+const BATCH_TIMEOUT_MS = 250;
+
 /**
  * Internal, keeps track of all parent and remote (child) conduits.
  */
@@ -162,8 +164,13 @@ class BroadcastConduit extends BaseConduit {
     if (!this.open) {
       throw new Error(`send${method} on closed conduit ${this.id}`);
     }
-    let sender = this.address;
+
+    let sender = this.id;
     let { actor } = Hub.remotes.get(target);
+
+    if (method === "RunListener" && arg.path.startsWith("webRequest.")) {
+      return actor.batch(method, { target, arg, query, sender });
+    }
     return super._send(method, query, actor, { target, arg, query, sender });
   }
 
@@ -188,10 +195,38 @@ class BroadcastConduit extends BaseConduit {
 class ConduitsParent extends JSWindowActorParent {
   constructor() {
     super();
+    this.batchData = [];
+    this.batchPromise = null;
+  }
+
+  /**
+   * Group webRequest events to send them as a batch, reducing IPC overhead.
+   * @param {string} name
+   * @param {MessageData} data
+   */
+  async batch(name, data) {
+    let num = this.batchData.length;
+    this.batchData.push(data);
+
+    if (!num) {
+      let resolve;
+      this.batchPromise = new Promise(r => (resolve = r));
+
+      let send = () => {
+        resolve(this.manager && this.sendQuery(name, this.batchData));
+        this.batchData = [];
+      };
+      ChromeUtils.idleDispatch(send, { timeout: BATCH_TIMEOUT_MS });
+    }
+
+    let results = await this.batchPromise;
+    return results && results[num];
   }
 
   /**
    * JSWindowActor method, routes the message to the target subject.
+   * @param {string} name
+   * @param {MessageData} data
    * @returns {Promise?}
    */
   receiveMessage({ name, data: { arg, query, sender } }) {
