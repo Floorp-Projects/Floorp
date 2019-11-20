@@ -103,7 +103,7 @@ enum class ZealMode {
   _(BigIntDigits)                          \
   _(ScopeData)                             \
   _(WeakMapObject)                         \
-  _(ShapeKids)                             \
+  _(ShapeChildren)                         \
   _(ShapeCache)                            \
   _(ModuleBindingMap)                      \
   _(BaselineScript)                        \
