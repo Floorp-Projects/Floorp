@@ -1399,10 +1399,16 @@ class nsLayoutUtils {
   static nsIFrame* GetDisplayListParent(nsIFrame* aFrame);
 
   /**
-   * Get a frame's next-in-flow, or, if it doesn't have one, its
+   * Get a frame's previous continuation, or, if it doesn't have one, its
+   * previous block-in-inline-split sibling.
+   */
+  static nsIFrame* GetPrevContinuationOrIBSplitSibling(const nsIFrame* aFrame);
+
+  /**
+   * Get a frame's next continuation, or, if it doesn't have one, its
    * block-in-inline-split sibling.
    */
-  static nsIFrame* GetNextContinuationOrIBSplitSibling(nsIFrame* aFrame);
+  static nsIFrame* GetNextContinuationOrIBSplitSibling(const nsIFrame* aFrame);
 
   /**
    * Get the first frame in the continuation-plus-ib-split-sibling chain

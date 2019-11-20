@@ -4776,16 +4776,31 @@ nsIFrame* nsLayoutUtils::GetDisplayListParent(nsIFrame* aFrame) {
   return nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(aFrame);
 }
 
-nsIFrame* nsLayoutUtils::GetNextContinuationOrIBSplitSibling(nsIFrame* aFrame) {
-  nsIFrame* result = aFrame->GetNextContinuation();
-  if (result) return result;
+nsIFrame* nsLayoutUtils::GetPrevContinuationOrIBSplitSibling(
+    const nsIFrame* aFrame) {
+  if (nsIFrame* result = aFrame->GetPrevContinuation()) {
+    return result;
+  }
 
-  if ((aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) != 0) {
-    // We only store the ib-split sibling annotation with the first
-    // frame in the continuation chain. Walk back to find that frame now.
-    aFrame = aFrame->FirstContinuation();
+  if (aFrame->HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT)) {
+    // We are the first frame in the continuation chain. Get the ib-split prev
+    // sibling property stored in us.
+    return aFrame->GetProperty(nsIFrame::IBSplitPrevSibling());
+  }
 
-    return aFrame->GetProperty(nsIFrame::IBSplitSibling());
+  return nullptr;
+}
+
+nsIFrame* nsLayoutUtils::GetNextContinuationOrIBSplitSibling(
+    const nsIFrame* aFrame) {
+  if (nsIFrame* result = aFrame->GetNextContinuation()) {
+    return result;
+  }
+
+  if (aFrame->HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT)) {
+    // We only store the ib-split sibling annotation with the first frame in the
+    // continuation chain.
+    return aFrame->FirstContinuation()->GetProperty(nsIFrame::IBSplitSibling());
   }
 
   return nullptr;
