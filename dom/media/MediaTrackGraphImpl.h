@@ -387,7 +387,13 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Queue audio (mix of track audio and silence for blocked intervals)
    * to the audio output track. Returns the number of frames played.
    */
-  TrackTime PlayAudio(MediaTrack* aTrack);
+
+  struct TrackKeyAndVolume {
+    MediaTrack* mTrack;
+    void* mKey;
+    float mVolume;
+  };
+  TrackTime PlayAudio(const TrackKeyAndVolume& aTkv);
   /* Runs off a message on the graph thread when something requests audio from
    * an input audio device of ID aID, and delivers the input audio frames to
    * aListener. */
@@ -407,6 +413,14 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * audio from this audio input device. */
   virtual void CloseAudioInput(Maybe<CubebUtils::AudioDeviceID>& aID,
                                AudioDataListener* aListener) override;
+
+  /* Add or remove an audio output for this track. All tracks that have an
+   * audio output are mixed and written to a single audio output stream. */
+  void RegisterAudioOutput(MediaTrack* aTrack, void* aKey);
+  void UnregisterAudioOutput(MediaTrack* aTrack, void* aKey);
+  void UnregisterAllAudioOutputs(MediaTrack* aTrack);
+  void SetAudioOutputVolume(MediaTrack* aTrack, void* aKey, float aVolume);
+
   /* Called on the graph thread when the input device settings should be
    * reevaluated, for example, if the channel count of the input track should
    * be changed. */
@@ -468,7 +482,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
     mTrackOrderDirty = true;
   }
 
-  uint32_t AudioOutputChannelCount() const { return mOutputChannels; }
+  uint32_t AudioOutputChannelCount() const;
 
   double AudioOutputLatency();
 
@@ -956,11 +970,11 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Track for window audio capture.
    */
   nsTArray<WindowAndTrack> mWindowCaptureTracks;
-
   /**
-   * Number of channels on output.
+   * Tracks that have their audio output mixed and written to an audio output
+   * device.
    */
-  const uint32_t mOutputChannels;
+  nsTArray<TrackKeyAndVolume> mAudioOutputs;
 
   /**
    * Global volume scale. Used when running tests so that the output is not too
