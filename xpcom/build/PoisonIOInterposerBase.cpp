@@ -36,8 +36,6 @@ inline mozilla::Maybe<intptr_t> FileDescriptorToHandle(int aFd) {
 }
 #endif /* if not XP_WIN */
 
-using namespace mozilla;
-
 namespace {
 
 struct DebugFilesAutoLockTraits {
@@ -47,7 +45,7 @@ struct DebugFilesAutoLockTraits {
   static void release(type aL) { PR_Unlock(aL); }
 };
 
-class DebugFilesAutoLock : public Scoped<DebugFilesAutoLockTraits> {
+class DebugFilesAutoLock : public mozilla::Scoped<DebugFilesAutoLockTraits> {
   static PRLock* Lock;
 
  public:
@@ -68,7 +66,7 @@ class DebugFilesAutoLock : public Scoped<DebugFilesAutoLockTraits> {
   }
 
   DebugFilesAutoLock()
-      : Scoped<DebugFilesAutoLockTraits>(getDebugFileIDsLock()) {
+      : mozilla::Scoped<DebugFilesAutoLockTraits>(getDebugFileIDsLock()) {
     PR_Lock(get());
   }
 };
@@ -218,7 +216,7 @@ void MozillaRegisterDebugHandle(intptr_t aHandle) {
 }
 
 void MozillaRegisterDebugFD(int aFd) {
-  Maybe<intptr_t> handle = FileDescriptorToHandle(aFd);
+  mozilla::Maybe<intptr_t> handle = FileDescriptorToHandle(aFd);
   if (!handle.isSome()) {
     return;
   }
@@ -241,7 +239,7 @@ void MozillaUnRegisterDebugHandle(intptr_t aHandle) {
 }
 
 void MozillaUnRegisterDebugFD(int aFd) {
-  Maybe<intptr_t> handle = FileDescriptorToHandle(aFd);
+  mozilla::Maybe<intptr_t> handle = FileDescriptorToHandle(aFd);
   if (!handle.isSome()) {
     return;
   }
@@ -260,11 +258,11 @@ void MozillaUnRegisterDebugFILE(FILE* aFile) {
 }  // extern "C"
 
 #ifdef MOZ_REPLACE_MALLOC
-void DebugFdRegistry::RegisterHandle(intptr_t aHandle) {
+void mozilla::DebugFdRegistry::RegisterHandle(intptr_t aHandle) {
   MozillaRegisterDebugHandle(aHandle);
 }
 
-void DebugFdRegistry::UnRegisterHandle(intptr_t aHandle) {
+void mozilla::DebugFdRegistry::UnRegisterHandle(intptr_t aHandle) {
   MozillaUnRegisterDebugHandle(aHandle);
 }
 #endif

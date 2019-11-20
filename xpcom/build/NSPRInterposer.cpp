@@ -22,8 +22,6 @@
 
 namespace {
 
-using namespace mozilla;
-
 /* Original IO methods */
 PRCloseFN sCloseFn = nullptr;
 PRReadFN sReadFn = nullptr;
@@ -56,13 +54,13 @@ static int32_t GetPathFromFd(int32_t aFd, char* aBuf, size_t aBufSize) {
 
 /**
  * RAII class for timing the duration of an NSPR I/O call and reporting the
- * result to the IOInterposeObserver API.
+ * result to the mozilla::IOInterposeObserver API.
  */
-class NSPRIOAutoObservation : public IOInterposeObserver::Observation {
+class NSPRIOAutoObservation : public mozilla::IOInterposeObserver::Observation {
  public:
-  explicit NSPRIOAutoObservation(IOInterposeObserver::Operation aOp,
+  explicit NSPRIOAutoObservation(mozilla::IOInterposeObserver::Operation aOp,
                                  PRFileDesc* aFd)
-      : IOInterposeObserver::Observation(aOp, "NSPRIOInterposer") {
+      : mozilla::IOInterposeObserver::Observation(aOp, "NSPRIOInterposer") {
     char filename[MAXPATHLEN];
     if (mShouldReport && aFd &&
         GetPathFromFd(PR_FileDesc2NativeHandle(aFd), filename,
@@ -85,7 +83,7 @@ PRStatus PR_CALLBACK interposedClose(PRFileDesc* aFd) {
   // If we don't have a valid original function pointer something is very wrong.
   NS_ASSERTION(sCloseFn, "NSPR IO Interposing: sCloseFn is NULL");
 
-  NSPRIOAutoObservation timer(IOInterposeObserver::OpClose, aFd);
+  NSPRIOAutoObservation timer(mozilla::IOInterposeObserver::OpClose, aFd);
   return sCloseFn(aFd);
 }
 
@@ -93,7 +91,7 @@ int32_t PR_CALLBACK interposedRead(PRFileDesc* aFd, void* aBuf, int32_t aAmt) {
   // If we don't have a valid original function pointer something is very wrong.
   NS_ASSERTION(sReadFn, "NSPR IO Interposing: sReadFn is NULL");
 
-  NSPRIOAutoObservation timer(IOInterposeObserver::OpRead, aFd);
+  NSPRIOAutoObservation timer(mozilla::IOInterposeObserver::OpRead, aFd);
   return sReadFn(aFd, aBuf, aAmt);
 }
 
@@ -102,7 +100,7 @@ int32_t PR_CALLBACK interposedWrite(PRFileDesc* aFd, const void* aBuf,
   // If we don't have a valid original function pointer something is very wrong.
   NS_ASSERTION(sWriteFn, "NSPR IO Interposing: sWriteFn is NULL");
 
-  NSPRIOAutoObservation timer(IOInterposeObserver::OpWrite, aFd);
+  NSPRIOAutoObservation timer(mozilla::IOInterposeObserver::OpWrite, aFd);
   return sWriteFn(aFd, aBuf, aAmt);
 }
 
@@ -110,7 +108,7 @@ PRStatus PR_CALLBACK interposedFSync(PRFileDesc* aFd) {
   // If we don't have a valid original function pointer something is very wrong.
   NS_ASSERTION(sFSyncFn, "NSPR IO Interposing: sFSyncFn is NULL");
 
-  NSPRIOAutoObservation timer(IOInterposeObserver::OpFSync, aFd);
+  NSPRIOAutoObservation timer(mozilla::IOInterposeObserver::OpFSync, aFd);
   return sFSyncFn(aFd);
 }
 
@@ -118,7 +116,7 @@ PRStatus PR_CALLBACK interposedFileInfo(PRFileDesc* aFd, PRFileInfo* aInfo) {
   // If we don't have a valid original function pointer something is very wrong.
   NS_ASSERTION(sFileInfoFn, "NSPR IO Interposing: sFileInfoFn is NULL");
 
-  NSPRIOAutoObservation timer(IOInterposeObserver::OpStat, aFd);
+  NSPRIOAutoObservation timer(mozilla::IOInterposeObserver::OpStat, aFd);
   return sFileInfoFn(aFd, aInfo);
 }
 
@@ -127,7 +125,7 @@ PRStatus PR_CALLBACK interposedFileInfo64(PRFileDesc* aFd,
   // If we don't have a valid original function pointer something is very wrong.
   NS_ASSERTION(sFileInfo64Fn, "NSPR IO Interposing: sFileInfo64Fn is NULL");
 
-  NSPRIOAutoObservation timer(IOInterposeObserver::OpStat, aFd);
+  NSPRIOAutoObservation timer(mozilla::IOInterposeObserver::OpStat, aFd);
   return sFileInfo64Fn(aFd, aInfo);
 }
 
