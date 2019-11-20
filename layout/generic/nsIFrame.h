@@ -4111,11 +4111,6 @@ class nsIFrame : public nsQueryFrame {
   Matrix ComputeWidgetTransform();
 
   /**
-   * Applies the values from the -moz-window-* properties to the widget.
-   */
-  virtual void UpdateWidgetProperties();
-
-  /**
    * @return true iff this frame has one or more associated image requests.
    * @see mozilla::css::ImageLoader.
    */

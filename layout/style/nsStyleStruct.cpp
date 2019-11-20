@@ -3755,12 +3755,9 @@ nsChangeHint nsStyleUIReset::CalcDifference(
     hint |= nsChangeHint_SchedulePaint;
   }
 
-  if (mWindowOpacity != aNewData.mWindowOpacity ||
-      mMozWindowTransform != aNewData.mMozWindowTransform) {
-    hint |= nsChangeHint_UpdateWidgetProperties;
-  }
-
-  if (!hint && mIMEMode != aNewData.mIMEMode) {
+  if (!hint && (mIMEMode != aNewData.mIMEMode ||
+                mWindowOpacity != aNewData.mWindowOpacity ||
+                mMozWindowTransform != aNewData.mMozWindowTransform)) {
     hint |= nsChangeHint_NeutralChange;
   }
 
