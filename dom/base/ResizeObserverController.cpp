@@ -208,5 +208,15 @@ ResizeObserverController::~ResizeObserverController() {
   mResizeObserverNotificationHelper->DetachFromOwner();
 }
 
+void ResizeObserverController::AddSizeOfIncludingThis(
+    nsWindowSizes& aSizes) const {
+  MallocSizeOf mallocSizeOf = aSizes.mState.mMallocSizeOf;
+  size_t size = mallocSizeOf(this);
+  size += mResizeObservers.ShallowSizeOfExcludingThis(mallocSizeOf);
+  // TODO(emilio): Measure the observers individually or something? They aren't
+  // really owned by us.
+  aSizes.mDOMResizeObserverControllerSize += size;
+}
+
 }  // namespace dom
 }  // namespace mozilla
