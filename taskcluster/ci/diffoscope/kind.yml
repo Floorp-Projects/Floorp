@@ -62,6 +62,12 @@ jobs:
             --exclude b/firefox/chrome/toolkit/content/global/buildconfig.html
             --exclude b/firefox/uninstall/helper.exe
 
+    reproducible-linux32:
+        symbol: Linux32
+        new: build-linux-reproduced/opt
+        original: build-linux-shippable/opt
+        fail-on-diff: true
+
 
 # Make a task for each diff we might want. The following are just examples,
 # Both original and new can point to builds from the full set of tasks or
