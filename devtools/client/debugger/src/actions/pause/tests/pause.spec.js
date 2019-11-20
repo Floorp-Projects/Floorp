@@ -16,9 +16,6 @@ import {
 
 import { makeWhyNormal } from "../../../utils/test-mockup";
 
-import { parserWorker } from "../../../test/tests-setup";
-import { features } from "../../../utils/prefs";
-
 const { isStepping } = selectors;
 
 let stepInResolve = null;
@@ -33,6 +30,7 @@ const mockCommandClient = {
   evaluateExpressions: async () => [],
   resume: async () => {},
   getFrameScopes: async frame => frame.scope,
+  getFrames: async () => [],
   setBreakpoint: () => new Promise(_resolve => {}),
   sourceContents: ({ source }) => {
     return new Promise((resolve, reject) => {
@@ -139,62 +137,6 @@ describe("pause", () => {
       expect(isStepping(getState(), "FakeThread")).toBeTruthy();
     });
 
-    it("should step over when paused", async () => {
-      const store = createStore(mockCommandClient);
-      const { dispatch, getState } = store;
-      const mockPauseInfo = createPauseInfo();
-
-      await dispatch(actions.newGeneratedSource(makeSource("foo1")));
-      await dispatch(actions.paused(mockPauseInfo));
-      const cx = selectors.getThreadContext(getState());
-      const getNextStepSpy = jest.spyOn(parserWorker, "getNextStep");
-      dispatch(actions.stepOver(cx));
-      expect(getNextStepSpy).not.toHaveBeenCalled();
-      expect(isStepping(getState(), "FakeThread")).toBeTruthy();
-    });
-
-    it("should step over when paused before an await", async () => {
-      features.asyncStepping = true;
-      const store = createStore(mockCommandClient);
-      const { dispatch, getState } = store;
-      const mockPauseInfo = createPauseInfo({
-        sourceId: "await",
-        line: 2,
-        column: 0,
-      });
-
-      await dispatch(actions.newGeneratedSource(makeSource("await")));
-
-      await dispatch(actions.paused(mockPauseInfo));
-      const cx = selectors.getThreadContext(getState());
-      const getNextStepSpy = jest.spyOn(parserWorker, "getNextStep");
-      dispatch(actions.stepOver(cx));
-      expect(getNextStepSpy).toHaveBeenCalled();
-      getNextStepSpy.mockRestore();
-    });
-
-    it("should step over when paused after an await", async () => {
-      const store = createStore({
-        ...mockCommandClient,
-        getSourceActorBreakpointPositions: async () => ({ [2]: [1] }),
-      });
-      const { dispatch, getState } = store;
-      const mockPauseInfo = createPauseInfo({
-        sourceId: "await",
-        line: 2,
-        column: 6,
-      });
-
-      await dispatch(actions.newGeneratedSource(makeSource("await")));
-
-      await dispatch(actions.paused(mockPauseInfo));
-      const cx = selectors.getThreadContext(getState());
-      const getNextStepSpy = jest.spyOn(parserWorker, "getNextStep");
-      dispatch(actions.stepOver(cx));
-      expect(getNextStepSpy).toHaveBeenCalled();
-      getNextStepSpy.mockRestore();
-    });
-
     it("getting frame scopes with bindings", async () => {
       const generatedLocation = {
         sourceId: "foo",
@@ -202,7 +144,8 @@ describe("pause", () => {
         column: 0,
       };
 
-      const store = createStore(mockCommandClient, {});
+      const client = { ...mockCommandClient };
+      const store = createStore(client, {});
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo(generatedLocation, {
         scope: {
@@ -212,6 +155,9 @@ describe("pause", () => {
           },
         },
       });
+
+      const { frames } = mockPauseInfo;
+      client.getFrames = async () => frames;
 
       const source = await dispatch(
         actions.newGeneratedSource(makeSource("foo"))
@@ -279,9 +225,13 @@ describe("pause", () => {
         getGeneratedLocation: async location => location,
       };
 
-      const store = createStore(mockCommandClient, {}, sourceMapsMock);
+      const client = { ...mockCommandClient };
+      const store = createStore(client, {}, sourceMapsMock);
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo(generatedLocation);
+
+      const { frames } = mockPauseInfo;
+      client.getFrames = async () => frames;
 
       await dispatch(actions.newGeneratedSource(makeSource("foo")));
       await dispatch(actions.newGeneratedSource(makeSource("foo-original")));
@@ -340,9 +290,12 @@ describe("pause", () => {
         getGeneratedRangesForOriginal: async () => [],
       };
 
-      const store = createStore(mockCommandClient, {}, sourceMapsMock);
+      const client = { ...mockCommandClient };
+      const store = createStore(client, {}, sourceMapsMock);
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo(generatedLocation);
+      const { frames } = mockPauseInfo;
+      client.getFrames = async () => frames;
 
       const source = await dispatch(
         actions.newGeneratedSource(

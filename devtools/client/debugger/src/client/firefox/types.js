@@ -16,15 +16,12 @@ import type {
   FrameId,
   ActorId,
   Script,
-  Pause,
   PendingLocation,
   SourceId,
-  QueuedSourceData,
   Range,
 } from "../../types";
 
 import type { EventListenerCategoryList } from "../../actions/types";
-import actions from "../../actions";
 
 type URL = string;
 
@@ -179,21 +176,6 @@ export type TabPayload = {
   title: string,
   url: URL,
   webExtensionInspectedWindowActor: ActorId,
-};
-
-/**
- * Actions
- * @memberof firefox
- * @static
- */
-export type Actions = {
-  paused: Pause => void,
-  resumed: ActorId => void,
-  newQueuedSources: (QueuedSourceData[]) => void,
-  fetchEventListeners: () => void,
-  updateThreads: typeof actions.updateThreads,
-  ensureHasThread: typeof actions.ensureHasThread,
-  setFramePositions: typeof actions.setFramePositions,
 };
 
 type ConsoleClient = {
@@ -360,6 +342,7 @@ export type ObjectFront = {
  * @static
  */
 export type ThreadFront = {
+  actorID: string,
   getFrames: (number, number) => Promise<{| frames: FrameFront[] |}>,
   resume: Function => Promise<*>,
   stepIn: Function => Promise<*>,
@@ -379,6 +362,7 @@ export type ThreadFront = {
   interrupt: () => Promise<*>,
   eventListeners: () => Promise<*>,
   on: (string, Function) => void,
+  off: (string, Function) => void,
   getSources: () => Promise<SourcesPacket>,
   reconfigure: ({ observeAsmJS: boolean }) => Promise<*>,
   getLastPausePacket: () => ?PausedPacket,

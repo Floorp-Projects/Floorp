@@ -12,6 +12,7 @@ CompiledModules(
     'commands.js',
     'continueToHere.js',
     'expandScopes.js',
+    'fetchFrames.js',
     'fetchScopes.js',
     'index.js',
     'inlinePreview.js',

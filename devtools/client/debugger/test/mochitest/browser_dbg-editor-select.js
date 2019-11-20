@@ -18,29 +18,28 @@ add_task(async function() {
   const simple1 = findSource(dbg, "simple1.js");
   const simple2 = findSource(dbg, "simple2.js");
 
-  // Set the initial breakpoint.
+  info("Set the initial breakpoint.");
   await selectSource(dbg, "simple1");
   await addBreakpoint(dbg, simple1, 4);
 
-  // Call the function that we set a breakpoint in.
+  info("Call the function that we set a breakpoint in.");
   invokeInTab("main");
   await waitForPaused(dbg);
   await waitForSelectedSource(dbg, "simple1");
   assertPausedLocation(dbg);
-  // Step through to another file and make sure it's paused in the
-  // right place.
+
+  info("Step into another file.");
   await stepOver(dbg);
   await stepIn(dbg);
   await waitForSelectedSource(dbg, "simple2");
   assertPausedLocation(dbg);
 
-  info("Step back out to the initial file.");
+  info("Step out to the initial file.");
   await stepOut(dbg);
   assertPausedLocation(dbg);
   await resume(dbg);
 
-  // Make sure that we can set a breakpoint on a line out of the
-  // viewport, and that pausing there scrolls the editor to it.
+  info("Make sure that the editor scrolls to the paused location.");
   const longSrc = findSource(dbg, "long.js");
   await selectSource(dbg, "long.js");
   await addBreakpoint(dbg, longSrc, 66);
