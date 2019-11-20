@@ -342,7 +342,7 @@ sccache:
         type: git
         repo: https://github.com/mozilla/sccache
         # 0.2.12 release + a handful of fixes
-        revision: a015edacf0c95c688462a3e60be417ffa66bed2b
+        revision: 2a89cd6922469416d297f3fd9029d4d0a2686e3c
 
 openssl-1.1.0g:
     description: openssl 1.1.0g source code
