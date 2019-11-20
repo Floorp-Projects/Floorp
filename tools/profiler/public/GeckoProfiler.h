@@ -1073,12 +1073,17 @@ class ProfilingStackOwner {
   void Release() const {
     MOZ_ASSERT(int32_t(mRefCnt) > 0);
     if (--mRefCnt == 0) {
+      if (mProfilingStack.stackSize() > 0) {
+        DumpStackAndCrash();
+      }
       delete this;
     }
   }
 
  private:
   ~ProfilingStackOwner() = default;
+
+  MOZ_NORETURN void DumpStackAndCrash() const;
 
   class ProfilingStack mProfilingStack;
 
