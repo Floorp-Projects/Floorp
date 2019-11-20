@@ -369,64 +369,32 @@ void DocumentChannelParent::FinishReplacementChannelSetup(bool aSucceeded) {
   }
 }
 
-void DocumentChannelParent::TriggerCrossProcessSwitch() {
-  MOZ_ASSERT(mRedirectContentProcessIdPromise);
-  MOZ_ASSERT(!mDoingProcessSwitch, "Already in the middle of switching?");
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mDoingProcessSwitch = true;
-
-  RefPtr<DocumentChannelParent> self = this;
-  mRedirectContentProcessIdPromise->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [self, this](uint64_t aCpId) {
-        MOZ_ASSERT(mChannel, "Something went wrong, channel got cancelled");
-        TriggerRedirectToRealChannel(mChannel, Some(aCpId),
-                                     mCrossProcessRedirectIdentifier);
-      },
-      [self](nsresult aStatusCode) {
-        MOZ_ASSERT(NS_FAILED(aStatusCode), "Status should be error");
-        self->RedirectToRealChannelFinished(aStatusCode);
-      });
-}
-
-void DocumentChannelParent::TriggerRedirectToRealChannel(
-    nsIChannel* aChannel, const Maybe<uint64_t>& aDestinationProcess,
-    uint64_t aIdentifier) {
-  // This initiates replacing the current DocumentChannel with a
-  // protocol specific 'real' channel, maybe in a different process than
-  // the current DocumentChannelChild, if aDestinationProces is set.
-  // It registers the current mChannel with the registrar to get an ID
-  // so that the remote end can setup a new IPDL channel and lookup
-  // the same underlying channel.
-  // We expect this process to finish with FinishReplacementChannelSetup
-  // (for both in-process and process switch cases), where we cleanup
-  // the registrar and copy across any needed state to the replacing
-  // IPDL parent object.
-
+void DocumentChannelParent::SerializeRedirectData(
+    RedirectToRealChannelArgs& aArgs, bool aIsCrossProcess,
+    uint32_t aRedirectFlags, uint32_t aLoadFlags) {
   // Use the original URI of the current channel, as this is what
   // we'll use to construct the channel in the content process.
-  nsCOMPtr<nsIURI> uri = mChannelCreationURI;
-  if (!uri) {
-    aChannel->GetOriginalURI(getter_AddRefs(uri));
+  aArgs.uri() = mChannelCreationURI;
+  if (!aArgs.uri()) {
+    mChannel->GetOriginalURI(getter_AddRefs(aArgs.uri()));
   }
 
   // I previously used HttpBaseChannel::CloneLoadInfoForRedirect, but that
   // clears the principal to inherit, which fails tests (probably because this
   // 'redirect' is usually just an implementation detail). It's also http only,
-  // and aChannel can be anything that we redirected to.
+  // and mChannel can be anything that we redirected to.
   nsCOMPtr<nsILoadInfo> channelLoadInfo;
-  aChannel->GetLoadInfo(getter_AddRefs(channelLoadInfo));
+  mChannel->GetLoadInfo(getter_AddRefs(channelLoadInfo));
 
   nsCOMPtr<nsIPrincipal> principalToInherit;
   channelLoadInfo->GetPrincipalToInherit(getter_AddRefs(principalToInherit));
 
-  RefPtr<nsHttpChannel> baseChannel = do_QueryObject(aChannel);
+  RefPtr<nsHttpChannel> baseChannel = do_QueryObject(mChannel);
   nsCOMPtr<nsILoadInfo> redirectLoadInfo;
   if (baseChannel) {
     redirectLoadInfo = baseChannel->CloneLoadInfoForRedirect(
-        uri, nsIChannelEventSink::REDIRECT_INTERNAL);
-    redirectLoadInfo->SetResultPrincipalURI(uri);
+        aArgs.uri(), nsIChannelEventSink::REDIRECT_INTERNAL);
+    redirectLoadInfo->SetResultPrincipalURI(aArgs.uri());
 
     // The clone process clears this, and then we fail tests..
     // docshell/test/mochitest/test_forceinheritprincipal_overrule_owner.html
@@ -439,7 +407,7 @@ void DocumentChannelParent::TriggerRedirectToRealChannel(
 
     nsCOMPtr<nsIPrincipal> uriPrincipal;
     nsIScriptSecurityManager* sm = nsContentUtils::GetSecurityManager();
-    sm->GetChannelURIPrincipal(aChannel, getter_AddRefs(uriPrincipal));
+    sm->GetChannelURIPrincipal(mChannel, getter_AddRefs(uriPrincipal));
 
     nsCOMPtr<nsIRedirectHistoryEntry> entry =
         new nsRedirectHistoryEntry(uriPrincipal, nullptr, EmptyCString());
@@ -447,7 +415,7 @@ void DocumentChannelParent::TriggerRedirectToRealChannel(
     redirectLoadInfo->AppendRedirectHistoryEntry(entry, true);
   }
 
-  if (!aDestinationProcess) {
+  if (!aIsCrossProcess) {
     // When we're switching into a new process, the destination
     // docshell will create a new initial client source which conflicts
     // with this. We should probably use this one, but need to update
@@ -463,35 +431,113 @@ void DocumentChannelParent::TriggerRedirectToRealChannel(
   nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
       RedirectChannelRegistrar::GetOrCreate();
   MOZ_ASSERT(registrar);
-  nsresult rv = registrar->RegisterChannel(aChannel, &mRedirectChannelId);
+  nsresult rv = registrar->RegisterChannel(mChannel, &mRedirectChannelId);
   NS_ENSURE_SUCCESS_VOID(rv);
+  aArgs.registrarId() = mRedirectChannelId;
 
-  Maybe<LoadInfoArgs> loadInfoArgs;
   MOZ_ALWAYS_SUCCEEDS(
-      ipc::LoadInfoToLoadInfoArgs(redirectLoadInfo, &loadInfoArgs));
+      ipc::LoadInfoToLoadInfoArgs(redirectLoadInfo, &aArgs.loadInfo()));
 
-  uint32_t newLoadFlags = nsIRequest::LOAD_NORMAL;
-  MOZ_ALWAYS_SUCCEEDS(aChannel->GetLoadFlags(&newLoadFlags));
-  if (!aDestinationProcess) {
-    newLoadFlags |= nsIChannel::LOAD_REPLACE;
-  }
+  mChannel->GetOriginalURI(getter_AddRefs(aArgs.originalURI()));
 
-  nsCOMPtr<nsIURI> originalURI;
-  aChannel->GetOriginalURI(getter_AddRefs(originalURI));
-
-  uint64_t channelId = 0;
-  // aChannel can be a nsHttpChannel as well as InterceptedHttpChannel so we
+  // mChannel can be a nsHttpChannel as well as InterceptedHttpChannel so we
   // can't use baseChannel here.
-  if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel)) {
-    MOZ_ALWAYS_SUCCEEDS(httpChannel->GetChannelId(&channelId));
+  if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel)) {
+    MOZ_ALWAYS_SUCCEEDS(httpChannel->GetChannelId(&aArgs.channelId()));
   }
 
-  uint32_t redirectMode = nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW;
+  aArgs.redirectMode() = nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW;
   nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
-      do_QueryInterface(aChannel);
+      do_QueryInterface(mChannel);
   if (httpChannelInternal) {
-    MOZ_ALWAYS_SUCCEEDS(httpChannelInternal->GetRedirectMode(&redirectMode));
+    MOZ_ALWAYS_SUCCEEDS(
+        httpChannelInternal->GetRedirectMode(&aArgs.redirectMode()));
   }
+
+  if (baseChannel) {
+    uint32_t loadFlags = 0;
+    if (!aIsCrossProcess) {
+      loadFlags |= nsIChannel::LOAD_REPLACE;
+    }
+
+    aArgs.init() = Some(
+        baseChannel
+            ->CloneReplacementChannelConfig(true, aRedirectFlags, loadFlags)
+            .Serialize());
+  }
+
+  uint32_t contentDispositionTemp;
+  rv = mChannel->GetContentDisposition(&contentDispositionTemp);
+  if (NS_SUCCEEDED(rv)) {
+    aArgs.contentDisposition() = Some(contentDispositionTemp);
+  }
+
+  nsString contentDispositionFilenameTemp;
+  rv = mChannel->GetContentDispositionFilename(contentDispositionFilenameTemp);
+  if (NS_SUCCEEDED(rv)) {
+    aArgs.contentDispositionFilename() = Some(contentDispositionFilenameTemp);
+  }
+
+  aArgs.newLoadFlags() = aLoadFlags;
+  aArgs.redirectFlags() = aRedirectFlags;
+  aArgs.redirects() = mRedirects;
+  aArgs.redirectIdentifier() = mCrossProcessRedirectIdentifier;
+}
+
+void DocumentChannelParent::TriggerCrossProcessSwitch() {
+  MOZ_ASSERT(mRedirectContentProcessIdPromise);
+  MOZ_ASSERT(!mDoingProcessSwitch, "Already in the middle of switching?");
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mDoingProcessSwitch = true;
+
+  RefPtr<DocumentChannelParent> self = this;
+  mRedirectContentProcessIdPromise->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [self, this](uint64_t aCpId) {
+        MOZ_ASSERT(mChannel, "Something went wrong, channel got cancelled");
+        TriggerRedirectToRealChannel(Some(aCpId));
+      },
+      [self](nsresult aStatusCode) {
+        MOZ_ASSERT(NS_FAILED(aStatusCode), "Status should be error");
+        self->RedirectToRealChannelFinished(aStatusCode);
+      });
+}
+
+RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
+DocumentChannelParent::RedirectToRealChannel(
+    uint32_t aRedirectFlags, uint32_t aLoadFlags,
+    const Maybe<uint64_t>& aDestinationProcess) {
+  RedirectToRealChannelArgs args;
+  SerializeRedirectData(args, !!aDestinationProcess, aRedirectFlags,
+                        aLoadFlags);
+
+  if (aDestinationProcess) {
+    dom::ContentParent* cp =
+        dom::ContentProcessManager::GetSingleton()->GetContentProcessById(
+            ContentParentId{*aDestinationProcess});
+    if (!cp) {
+      return PDocumentChannelParent::RedirectToRealChannelPromise::
+          CreateAndReject(ipc::ResponseRejectReason::SendError, __func__);
+    }
+
+    return cp->SendCrossProcessRedirect(args);
+  }
+  return SendRedirectToRealChannel(args);
+}
+
+void DocumentChannelParent::TriggerRedirectToRealChannel(
+    const Maybe<uint64_t>& aDestinationProcess) {
+  // This initiates replacing the current DocumentChannel with a
+  // protocol specific 'real' channel, maybe in a different process than
+  // the current DocumentChannelChild, if aDestinationProces is set.
+  // It registers the current mChannel with the registrar to get an ID
+  // so that the remote end can setup a new IPDL channel and lookup
+  // the same underlying channel.
+  // We expect this process to finish with FinishReplacementChannelSetup
+  // (for both in-process and process switch cases), where we cleanup
+  // the registrar and copy across any needed state to the replacing
+  // IPDL parent object.
 
   // If we didn't have any redirects, then we pass the REDIRECT_INTERNAL flag
   // for this channel switch so that it isn't recorded in session history etc.
@@ -502,103 +548,59 @@ void DocumentChannelParent::TriggerRedirectToRealChannel(
     redirectFlags = nsIChannelEventSink::REDIRECT_INTERNAL;
   }
 
-  Maybe<ReplacementChannelConfigInit> config;
-
-  if (baseChannel) {
-    uint32_t loadFlags = 0;
-    if (!aDestinationProcess) {
-      loadFlags |= nsIChannel::LOAD_REPLACE;
-    }
-
-    config =
-        Some(baseChannel
-                 ->CloneReplacementChannelConfig(true, redirectFlags, loadFlags)
-                 .Serialize());
-  }
-
-  Maybe<uint32_t> contentDisposition;
-  uint32_t contentDispositionTemp;
-  rv = aChannel->GetContentDisposition(&contentDispositionTemp);
-  if (NS_SUCCEEDED(rv)) {
-    contentDisposition = Some(contentDispositionTemp);
-  }
-
-  Maybe<nsString> contentDispositionFilename;
-  nsString contentDispositionFilenameTemp;
-  rv = aChannel->GetContentDispositionFilename(contentDispositionFilenameTemp);
-  if (NS_SUCCEEDED(rv)) {
-    contentDispositionFilename = Some(contentDispositionFilenameTemp);
+  uint32_t newLoadFlags = nsIRequest::LOAD_NORMAL;
+  MOZ_ALWAYS_SUCCEEDS(mChannel->GetLoadFlags(&newLoadFlags));
+  if (!aDestinationProcess) {
+    newLoadFlags |= nsIChannel::LOAD_REPLACE;
   }
 
   RefPtr<DocumentChannelParent> self = this;
-  if (aDestinationProcess) {
-    dom::ContentParent* cp =
-        dom::ContentProcessManager::GetSingleton()->GetContentProcessById(
-            ContentParentId{*aDestinationProcess});
-    if (!cp) {
-      return;
-    }
+  RedirectToRealChannel(redirectFlags, newLoadFlags, aDestinationProcess)
+      ->Then(
+          GetCurrentThreadSerialEventTarget(), __func__,
+          [self](Tuple<nsresult, Maybe<LoadInfoArgs>>&& aResponse) {
+            if (NS_SUCCEEDED(Get<0>(aResponse))) {
+              nsCOMPtr<nsILoadInfo> newLoadInfo;
+              MOZ_ALWAYS_SUCCEEDS(LoadInfoArgsToLoadInfo(
+                  Get<1>(aResponse), getter_AddRefs(newLoadInfo)));
 
-    cp->SendCrossProcessRedirect(mRedirectChannelId, uri, config, loadInfoArgs,
-                                 channelId, originalURI, aIdentifier,
-                                 redirectMode)
-        ->Then(
-            GetCurrentThreadSerialEventTarget(), __func__,
-            [self](Tuple<nsresult, Maybe<LoadInfoArgs>>&& aResponse) {
-              if (NS_SUCCEEDED(Get<0>(aResponse))) {
-                nsCOMPtr<nsILoadInfo> newLoadInfo;
-                MOZ_ALWAYS_SUCCEEDS(LoadInfoArgsToLoadInfo(
-                    Get<1>(aResponse), getter_AddRefs(newLoadInfo)));
+              if (newLoadInfo) {
+                // Since the old reservedClientInfo might be controlled by a
+                // ServiceWorker when opening the channel, we need to update
+                // the controlled ClientInfo in ServiceWorkerManager to make
+                // sure the same origin subresource load can be intercepted by
+                // the ServiceWorker.
+                nsCOMPtr<nsILoadInfo> oldLoadInfo;
+                self->mChannel->GetLoadInfo(getter_AddRefs(oldLoadInfo));
+                MOZ_ASSERT(oldLoadInfo);
+                Maybe<ClientInfo> oldClientInfo =
+                    oldLoadInfo->GetReservedClientInfo();
+                Maybe<ServiceWorkerDescriptor> oldController =
+                    oldLoadInfo->GetController();
+                Maybe<ClientInfo> newClientInfo =
+                    newLoadInfo->GetReservedClientInfo();
+                Maybe<ServiceWorkerDescriptor> newController =
+                    newLoadInfo->GetController();
 
-                if (newLoadInfo) {
-                  // Since the old reservedClientInfo might be controlled by a
-                  // ServiceWorker when opening the channel, we need to update
-                  // the controlled ClientInfo in ServiceWorkerManager to make
-                  // sure the same origin subresource load can be intercepted by
-                  // the ServiceWorker.
-                  nsCOMPtr<nsILoadInfo> oldLoadInfo;
-                  self->mChannel->GetLoadInfo(getter_AddRefs(oldLoadInfo));
-                  MOZ_ASSERT(oldLoadInfo);
-                  Maybe<ClientInfo> oldClientInfo =
-                      oldLoadInfo->GetReservedClientInfo();
-                  Maybe<ServiceWorkerDescriptor> oldController =
-                      oldLoadInfo->GetController();
-                  Maybe<ClientInfo> newClientInfo =
-                      newLoadInfo->GetReservedClientInfo();
-                  Maybe<ServiceWorkerDescriptor> newController =
-                      newLoadInfo->GetController();
-
-                  if (oldClientInfo.isSome() && newClientInfo.isSome() &&
-                      newController.isSome() && oldController.isSome() &&
-                      newController.ref() == oldController.ref()) {
-                    RefPtr<ServiceWorkerManager> swMgr =
-                        ServiceWorkerManager::GetInstance();
-                    MOZ_ASSERT(swMgr);
-                    swMgr->UpdateControlledClient(oldClientInfo.ref(),
-                                                  newClientInfo.ref(),
-                                                  newController.ref());
-                  }
-
-                  self->mChannel->SetLoadInfo(newLoadInfo);
+                if (oldClientInfo.isSome() && newClientInfo.isSome() &&
+                    newController.isSome() && oldController.isSome() &&
+                    newController.ref() == oldController.ref()) {
+                  RefPtr<ServiceWorkerManager> swMgr =
+                      ServiceWorkerManager::GetInstance();
+                  MOZ_ASSERT(swMgr);
+                  swMgr->UpdateControlledClient(oldClientInfo.ref(),
+                                                newClientInfo.ref(),
+                                                newController.ref());
                 }
+
+                self->mChannel->SetLoadInfo(newLoadInfo);
               }
-              self->RedirectToRealChannelFinished(Get<0>(aResponse));
-            },
-            [self](const mozilla::ipc::ResponseRejectReason) {
-              self->RedirectToRealChannelFinished(NS_ERROR_FAILURE);
-            });
-  } else {
-    SendRedirectToRealChannel(mRedirectChannelId, uri, newLoadFlags, config,
-                              loadInfoArgs, mRedirects, channelId, originalURI,
-                              redirectMode, redirectFlags, contentDisposition,
-                              contentDispositionFilename)
-        ->Then(
-            GetCurrentThreadSerialEventTarget(), __func__,
-            [self](nsresult aRv) { self->RedirectToRealChannelFinished(aRv); },
-            [self](const mozilla::ipc::ResponseRejectReason) {
-              self->RedirectToRealChannelFinished(NS_ERROR_FAILURE);
-            });
-  }
+            }
+            self->RedirectToRealChannelFinished(Get<0>(aResponse));
+          },
+          [self](const mozilla::ipc::ResponseRejectReason) {
+            self->RedirectToRealChannelFinished(NS_ERROR_FAILURE);
+          });
 }
 
 NS_IMETHODIMP
@@ -648,7 +650,7 @@ DocumentChannelParent::OnStartRequest(nsIRequest* aRequest) {
     }
   }
 
-  TriggerRedirectToRealChannel(mChannel);
+  TriggerRedirectToRealChannel();
 
   return NS_OK;
 }

@@ -59,14 +59,7 @@ class DocumentChannelChild final : public PDocumentChannelChild,
   mozilla::ipc::IPCResult RecvDeleteSelf();
 
   mozilla::ipc::IPCResult RecvRedirectToRealChannel(
-      const uint32_t& aRegistrarId, nsIURI* aURI, const uint32_t& aNewLoadFlags,
-      const Maybe<ReplacementChannelConfigInit>& aInit,
-      const Maybe<LoadInfoArgs>& aLoadInfo,
-      nsTArray<DocumentChannelRedirect>&& aRedirects,
-      const uint64_t& aChannelId, nsIURI* aOriginalURI,
-      const uint32_t& aRedirectMode, const uint32_t& aRedirectFlags,
-      const Maybe<uint32_t>& aContentDisposition,
-      const Maybe<nsString>& aContentDispositionFilename,
+      const RedirectToRealChannelArgs& aArgs,
       RedirectToRealChannelResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvAttachStreamFilter(

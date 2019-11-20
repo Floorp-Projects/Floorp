@@ -369,6 +369,30 @@ struct DocumentChannelCreationArgs {
   bool hasNonEmptySandboxingFlags;
 };
 
+struct DocumentChannelRedirect {
+  nsIURI uri;
+  uint32_t redirectFlags;
+  uint32_t responseStatus;
+  bool isPost;
+};
+
+struct RedirectToRealChannelArgs {
+  uint32_t registrarId;
+  nsIURI uri;
+  uint32_t newLoadFlags;
+  ReplacementChannelConfigInit? init;
+  LoadInfoArgs? loadInfo;
+  DocumentChannelRedirect[] redirects;
+  uint64_t channelId;
+  nsIURI originalURI;
+  uint32_t redirectMode;
+  uint32_t redirectFlags;
+  uint32_t? contentDisposition;
+  nsString? contentDispositionFilename;
+  uint64_t redirectIdentifier;
+};
+
+
 
 } // namespace ipc
 } // namespace mozilla

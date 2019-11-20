@@ -97,16 +97,40 @@ class DocumentChannelParent : public nsIInterfaceRequestor,
  private:
   virtual ~DocumentChannelParent() = default;
 
+  // Initiates the switch from DocumentChannel to the real protocol-specific
+  // channel, and ensures that RedirectToRealChannelFinished is called when
+  // this is complete.
   void TriggerRedirectToRealChannel(
-      nsIChannel* aChannel,
-      const Maybe<uint64_t>& aDestinationProcess = Nothing(),
-      uint64_t aIdentifier = 0);
+      const Maybe<uint64_t>& aDestinationProcess = Nothing());
 
+  // Called once the content-process side on setting up a replacement
+  // channel is complete. May wait for the new parent channel to
+  // finish, and then calls into FinishReplacementChannelSetup.
   void RedirectToRealChannelFinished(nsresult aRv);
 
+  // Completes the replacement of the new channel.
+  // This redirects the ParentChannelListener to forward any future
+  // messages to the new channel, manually forwards any being held
+  // by us, and resumes the underlying source channel.
   void FinishReplacementChannelSetup(bool aSucceeded);
 
+  // Called when we have a cross-process switch promise. Waits on the
+  // promise, and then call TriggerRedirectToRealChannel with the
+  // provided content process id.
   void TriggerCrossProcessSwitch();
+
+  // A helper for TriggerRedirectToRealChannel that abstracts over
+  // the same-process and cross-process switch cases and returns
+  // a single promise to wait on.
+  RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
+  RedirectToRealChannel(uint32_t aRedirectFlags, uint32_t aLoadFlags,
+                        const Maybe<uint64_t>& aDestinationProcess);
+
+  // Serializes all data needed to setup the new replacement channel
+  // in the content process into the RedirectToRealChannelArgs struct.
+  void SerializeRedirectData(RedirectToRealChannelArgs& aArgs,
+                             bool aIsCrossProcess, uint32_t aRedirectFlags,
+                             uint32_t aLoadFlags);
 
   // This defines a variant that describes all the attribute setters (and their
   // parameters) from nsIParentChannel
