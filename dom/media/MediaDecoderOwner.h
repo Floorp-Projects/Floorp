@@ -179,6 +179,11 @@ class MediaDecoderOwner {
       VideoFrameContainer* aContainer,
       const PrincipalHandle& aNewPrincipalHandle) {}
 
+  // Called after the MediaDecoder has installed the given secondary video
+  // container and render potential frames to it.
+  virtual void OnSecondaryVideoContainerInstalled(
+      const RefPtr<VideoFrameContainer>& aSecondaryContainer) {}
+
   /*
    * Servo only methods go here. Please provide default implementations so they
    * can build in Gecko without any modification.
