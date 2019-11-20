@@ -395,7 +395,7 @@ macosx64-gcp/debug:
         platform: osx-cross/debug
         symbol: Bg
         tier: 3
-    worker-type: gce/gecko-{level}-b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 3600
         env:
@@ -438,7 +438,7 @@ macosx64-gcp/opt:
         platform: osx-cross/opt
         symbol: Bg
         tier: 3
-    worker-type: gce/gecko-{level}-b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 7200
         env:

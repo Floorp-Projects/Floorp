@@ -265,6 +265,11 @@ class _ToolbarBadgeHub {
       toolbarbutton.addEventListener("keypress", this.removeAllNotifications);
       this.state = { notification: { id: message.id } };
 
+      // Impression should be added when the badge becomes visible
+      this._addImpression(message);
+      // Send a telemetry ping when adding the notification badge
+      this.sendUserEventTelemetry("IMPRESSION", message);
+
       return toolbarbutton;
     }
 
@@ -277,11 +282,6 @@ class _ToolbarBadgeHub {
       // No badge to set only an action to execute
       return;
     }
-
-    // Impression should be added when the badge becomes visible
-    this._addImpression(message);
-    // Send a telemetry ping when adding the notification badge
-    this.sendUserEventTelemetry("IMPRESSION", message);
 
     EveryWindow.registerCallback(
       this.id,

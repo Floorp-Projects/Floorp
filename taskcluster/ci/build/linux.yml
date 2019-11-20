@@ -1101,49 +1101,6 @@ linux64-tup/opt:
             - linux64-nasm
             - linux64-node
 
-linux64-ccov/debug:
-    description: "Linux64-CCov Debug"
-    index:
-        product: firefox
-        job-name: linux64-ccov-debug
-    treeherder:
-        platform: linux64-ccov/debug
-        symbol: B
-        tier: 2
-    run-on-projects: ['mozilla-central', 'try']
-    worker-type: b-linux
-    worker:
-        artifacts:
-            - name: public/code-coverage-grcov.zip
-              path: /builds/worker/workspace/build/src/obj-firefox/code-coverage-grcov.zip
-              type: file
-        max-run-time: 7200
-        env:
-            FORCE_GCC: '1'
-            RUSTC_BOOTSTRAP: '1'
-    run:
-        using: mozharness
-        actions: [get-secrets, build]
-        config:
-            - builds/releng_base_firefox.py
-            - builds/releng_base_linux_64_builds.py
-        script: "mozharness/scripts/fx_desktop_build.py"
-        secrets: true
-        custom-build-variant-cfg: code-coverage-debug
-        mozconfig-variant: code-coverage-debug
-        tooltool-downloads: public
-        need-xvfb: true
-    fetches:
-        toolchain:
-            - linux64-clang-9
-            - linux64-rust
-            - linux64-gcc
-            - linux64-grcov
-            - linux64-cbindgen
-            - linux64-sccache
-            - linux64-nasm
-            - linux64-node
-
 linux64-ccov/opt:
     description: "Linux64-CCov Opt"
     index:
@@ -1268,7 +1225,7 @@ linux-gcp/debug:
         platform: linux32/debug
         symbol: Bg
         tier: 3
-    worker-type: gce/gecko-{level}-b-linux
+    worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: debian7-i386-build}
         max-run-time: 5400
@@ -1308,7 +1265,7 @@ linux-gcp/opt:
         platform: linux32/opt
         symbol: Bg
         tier: 3
-    worker-type: gce/gecko-{level}-b-linux
+    worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: debian7-i386-build}
         max-run-time: 7200
@@ -1347,7 +1304,7 @@ linux64-gcp/debug:
         platform: linux64/debug
         symbol: Bg
         tier: 3
-    worker-type: gce/gecko-{level}-b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 5400
         env:
@@ -1386,7 +1343,7 @@ linux64-gcp/opt:
         platform: linux64/opt
         symbol: Bg
         tier: 3
-    worker-type: gce/gecko-{level}-b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 7200
         env:

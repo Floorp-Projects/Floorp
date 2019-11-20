@@ -2051,7 +2051,7 @@ bool NS_IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI) {
   if (loadInfo->GetExternalContentPolicyType() ==
       nsIContentPolicy::TYPE_DOCUMENT) {
     // for loads of TYPE_DOCUMENT we query the hostURI from the
-    // triggeringPricnipal which returns the URI of the document that caused the
+    // triggeringPrincipal which returns the URI of the document that caused the
     // navigation.
     loadInfo->TriggeringPrincipal()->GetURI(getter_AddRefs(uri));
   } else {

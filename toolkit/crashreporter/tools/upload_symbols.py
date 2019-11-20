@@ -113,9 +113,9 @@ def main():
                 # in front of symbols.mozilla.org has a 300 second timeout, so we'll use that.
                 timeout=(10, 300),
                 **zip_arg)
-            # 500 is likely to be a transient failure.
+            # 429 or any 5XX is likely to be a transient failure.
             # Break out for success or other error codes.
-            if r.status_code < 500:
+            if r.ok or (r.status_code < 500 and r.status_code != 429):
                 break
             print_error(r)
         except requests.exceptions.RequestException as e:

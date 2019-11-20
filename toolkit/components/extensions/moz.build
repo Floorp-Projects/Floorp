@@ -9,6 +9,8 @@ with Files('**'):
     BUG_COMPONENT = ('WebExtensions', 'General')
 
 EXTRA_JS_MODULES += [
+    'ConduitsChild.jsm',
+    'ConduitsParent.jsm',
     'Extension.jsm',
     'ExtensionActions.jsm',
     'ExtensionActivityLog.jsm',

@@ -206,13 +206,20 @@ describe("ToolbarBadgeHub", () => {
   describe("addToolbarNotification", () => {
     let target;
     let fakeDocument;
-    beforeEach(() => {
+    beforeEach(async () => {
+      await instance.init(sandbox.stub().resolves(), {
+        addImpression: fakeAddImpression,
+        dispatch: fakeDispatch,
+      });
       fakeDocument = {
         getElementById: sandbox.stub().returns(fakeElement),
         createElement: sandbox.stub().returns(fakeElement),
         l10n: { setAttributes: sandbox.stub() },
       };
       target = { ...fakeWindow, browser: { ownerDocument: fakeDocument } };
+    });
+    afterEach(() => {
+      instance.uninit();
     });
     it("shouldn't do anything if target element is not found", () => {
       fakeDocument.getElementById.returns(null);
@@ -296,6 +303,23 @@ describe("ToolbarBadgeHub", () => {
         whatsnewMessage.content.badgeDescription.string_id
       );
     });
+    it("should add an impression for the message", () => {
+      instance.addToolbarNotification(target, whatsnewMessage);
+
+      assert.calledOnce(instance._addImpression);
+      assert.calledWithExactly(instance._addImpression, whatsnewMessage);
+    });
+    it("should send an impression ping", async () => {
+      sandbox.stub(instance, "sendUserEventTelemetry");
+      instance.addToolbarNotification(target, whatsnewMessage);
+
+      assert.calledOnce(instance.sendUserEventTelemetry);
+      assert.calledWithExactly(
+        instance.sendUserEventTelemetry,
+        "IMPRESSION",
+        whatsnewMessage
+      );
+    });
   });
   describe("registerBadgeNotificationListener", () => {
     let msg_no_delay;
@@ -316,12 +340,6 @@ describe("ToolbarBadgeHub", () => {
     });
     afterEach(() => {
       instance.uninit();
-    });
-    it("should add an impression for the message", () => {
-      instance.registerBadgeNotificationListener(msg_no_delay);
-
-      assert.calledOnce(instance._addImpression);
-      assert.calledWithExactly(instance._addImpression, msg_no_delay);
     });
     it("should register a callback that adds/removes the notification", () => {
       instance.registerBadgeNotificationListener(msg_no_delay);
@@ -355,18 +373,6 @@ describe("ToolbarBadgeHub", () => {
 
       assert.calledOnce(instance.removeToolbarNotification);
       assert.calledWithExactly(instance.removeToolbarNotification, fakeElement);
-    });
-    it("should send an impression", async () => {
-      sandbox.stub(instance, "sendUserEventTelemetry");
-
-      instance.registerBadgeNotificationListener(msg_no_delay);
-
-      assert.calledOnce(instance.sendUserEventTelemetry);
-      assert.calledWithExactly(
-        instance.sendUserEventTelemetry,
-        "IMPRESSION",
-        msg_no_delay
-      );
     });
     it("should unregister notifications when forcing a badge via devtools", () => {
       instance.registerBadgeNotificationListener(msg_no_delay, { force: true });

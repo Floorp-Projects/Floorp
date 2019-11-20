@@ -22,12 +22,10 @@ add_task(async function testExecuteScriptAtOnUpdated() {
     let ignore = false;
     let url;
     browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-      if (
-        url &&
-        changeInfo.status === "loading" &&
-        tab.url === url &&
-        !ignore
-      ) {
+      if (ignore) {
+        return;
+      }
+      if (url && changeInfo.status === "loading" && tab.url === url) {
         ignore = true;
         browser.tabs
           .executeScript(tabId, {
