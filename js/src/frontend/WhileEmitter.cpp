@@ -56,6 +56,7 @@ bool WhileEmitter::emitBody(const Maybe<uint32_t>& whilePos,
   }
 
   loopInfo_.emplace(bce_, StatementKind::WhileLoop);
+  loopInfo_->setContinueTarget(top.offset);
 
   if (!bce_->newSrcNote(SRC_WHILE, &noteIndex_)) {
     return false;
@@ -81,10 +82,6 @@ bool WhileEmitter::emitCond(const Maybe<uint32_t>& condPos) {
   MOZ_ASSERT(state_ == State::Body);
 
   tdzCacheForBody_.reset();
-
-  if (!loopInfo_->emitContinueTarget(bce_)) {
-    return false;
-  }
 
   if (!loopInfo_->emitLoopEntry(bce_, condPos)) {
     return false;

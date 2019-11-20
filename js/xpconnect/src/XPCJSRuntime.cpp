@@ -1487,6 +1487,10 @@ static void ReportZoneStats(const JS::ZoneStats& zStats,
                  zStats.baselineStubsOptimized,
                  "The Baseline JIT's optimized IC stubs (excluding code).");
 
+  ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("jit-cached-cfg"),
+                 zStats.cachedCFG,
+                 "The cached CFG to construct Ion code out of it.");
+
   ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("script-counts-map"),
                  zStats.scriptCountsMap,
                  "Profiling-related information for scripts.");
