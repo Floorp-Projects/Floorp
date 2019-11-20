@@ -778,30 +778,46 @@ class HTMLMediaElement::MediaStreamRenderer
 
 class HTMLMediaElement::MediaElementTrackSource
     : public MediaStreamTrackSource,
-      public MediaStreamTrackSource::Sink {
+      public MediaStreamTrackSource::Sink,
+      public MediaStreamTrackConsumer {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaElementTrackSource,
                                            MediaStreamTrackSource)
 
   /* MediaDecoder track source */
-  MediaElementTrackSource(ProcessedMediaTrack* aTrack, nsIPrincipal* aPrincipal)
-      : MediaStreamTrackSource(aPrincipal, nsString()), mTrack(aTrack) {
+  MediaElementTrackSource(nsISerialEventTarget* aMainThreadEventTarget,
+                          ProcessedMediaTrack* aTrack, nsIPrincipal* aPrincipal,
+                          OutputMuteState aMuteState)
+      : MediaStreamTrackSource(aPrincipal, nsString()),
+        mMainThreadEventTarget(aMainThreadEventTarget),
+        mTrack(aTrack),
+        mIntendedElementMuteState(aMuteState),
+        mElementMuteState(aMuteState) {
     MOZ_ASSERT(mTrack);
   }
 
   /* MediaStream track source */
-  MediaElementTrackSource(MediaStreamTrackSource* aCapturedTrackSource,
-                          ProcessedMediaTrack* aTrack, MediaInputPort* aPort)
+  MediaElementTrackSource(nsISerialEventTarget* aMainThreadEventTarget,
+                          MediaStreamTrack* aCapturedTrack,
+                          MediaStreamTrackSource* aCapturedTrackSource,
+                          ProcessedMediaTrack* aTrack, MediaInputPort* aPort,
+                          OutputMuteState aMuteState)
       : MediaStreamTrackSource(aCapturedTrackSource->GetPrincipal(),
                                nsString()),
+        mMainThreadEventTarget(aMainThreadEventTarget),
+        mCapturedTrack(aCapturedTrack),
         mCapturedTrackSource(aCapturedTrackSource),
         mTrack(aTrack),
-        mPort(aPort) {
+        mPort(aPort),
+        mIntendedElementMuteState(aMuteState),
+        mElementMuteState(aMuteState) {
     MOZ_ASSERT(mTrack);
+    MOZ_ASSERT(mCapturedTrack);
     MOZ_ASSERT(mCapturedTrackSource);
     MOZ_ASSERT(mPort);
 
+    mCapturedTrack->AddConsumer(this);
     mCapturedTrackSource->RegisterSink(this);
   }
 
@@ -818,7 +834,24 @@ class HTMLMediaElement::MediaElementTrackSource
     MediaStreamTrackSource::PrincipalChanged();
   }
 
+  void SetMutedByElement(OutputMuteState aMuteState) {
+    if (mIntendedElementMuteState == aMuteState) {
+      return;
+    }
+    mIntendedElementMuteState = aMuteState;
+    mMainThreadEventTarget->Dispatch(NS_NewRunnableFunction(
+        "MediaElementTrackSource::SetMutedByElement",
+        [self = RefPtr<MediaElementTrackSource>(this), this, aMuteState] {
+          mElementMuteState = aMuteState;
+          MediaStreamTrackSource::MutedChanged(Muted());
+        }));
+  }
+
   void Destroy() override {
+    if (mCapturedTrack) {
+      mCapturedTrack->RemoveConsumer(this);
+      mCapturedTrack = nullptr;
+    }
     if (mCapturedTrackSource) {
       mCapturedTrackSource->UnregisterSink(this);
       mCapturedTrackSource = nullptr;
@@ -867,7 +900,7 @@ class HTMLMediaElement::MediaElementTrackSource
   }
 
   void MutedChanged(bool aNewState) override {
-    MediaStreamTrackSource::MutedChanged(aNewState);
+    MediaStreamTrackSource::MutedChanged(Muted());
   }
 
   void OverrideEnded() override {
@@ -875,14 +908,31 @@ class HTMLMediaElement::MediaElementTrackSource
     MediaStreamTrackSource::OverrideEnded();
   }
 
+  void NotifyEnabledChanged(MediaStreamTrack* aTrack, bool aEnabled) override {
+    MediaStreamTrackSource::MutedChanged(Muted());
+  }
+
+  bool Muted() const {
+    return mElementMuteState == OutputMuteState::Muted ||
+           (mCapturedTrack &&
+            (mCapturedTrack->Muted() || !mCapturedTrack->Enabled()));
+  }
+
   ProcessedMediaTrack* Track() const { return mTrack; }
 
  private:
   virtual ~MediaElementTrackSource() { Destroy(); };
 
+  const RefPtr<nsISerialEventTarget> mMainThreadEventTarget;
+  RefPtr<MediaStreamTrack> mCapturedTrack;
   RefPtr<MediaStreamTrackSource> mCapturedTrackSource;
   const RefPtr<ProcessedMediaTrack> mTrack;
   RefPtr<MediaInputPort> mPort;
+  // The mute state as intended by the media element.
+  OutputMuteState mIntendedElementMuteState;
+  // The mute state as applied to this track source. It is applied async, so
+  // needs to be tracked separately from the intended state.
+  OutputMuteState mElementMuteState;
 };
 
 HTMLMediaElement::OutputMediaStream::OutputMediaStream(
@@ -923,10 +973,12 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLMediaElement::MediaElementTrackSource)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(
     HTMLMediaElement::MediaElementTrackSource, MediaStreamTrackSource)
   tmp->Destroy();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCapturedTrack)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCapturedTrackSource)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
     HTMLMediaElement::MediaElementTrackSource, MediaStreamTrackSource)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCapturedTrack)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCapturedTrackSource)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -3304,6 +3356,17 @@ void HTMLMediaElement::SetCapturedOutputStreamsEnabled(bool aEnabled) {
   }
 }
 
+HTMLMediaElement::OutputMuteState HTMLMediaElement::OutputTracksMuted() {
+  return mPaused || mReadyState <= HAVE_CURRENT_DATA ? OutputMuteState::Muted
+                                                     : OutputMuteState::Unmuted;
+}
+
+void HTMLMediaElement::UpdateOutputTracksMuting() {
+  for (auto& entry : mOutputTrackSources) {
+    entry.GetData()->SetMutedByElement(OutputTracksMuted());
+  }
+}
+
 void HTMLMediaElement::AddOutputTrackSourceToOutputStream(
     MediaElementTrackSource* aSource, OutputMediaStream& aOutputStream,
     AddTrackMode aMode) {
@@ -3322,11 +3385,13 @@ void HTMLMediaElement::AddOutputTrackSourceToOutputStream(
 
   RefPtr<MediaStreamTrack> domTrack;
   if (aSource->Track()->mType == MediaSegment::AUDIO) {
-    domTrack = new AudioStreamTrack(aOutputStream.mStream->GetParentObject(),
-                                    aSource->Track(), aSource);
+    domTrack = new AudioStreamTrack(
+        aOutputStream.mStream->GetParentObject(), aSource->Track(), aSource,
+        MediaStreamTrackState::Live, aSource->Muted());
   } else {
-    domTrack = new VideoStreamTrack(aOutputStream.mStream->GetParentObject(),
-                                    aSource->Track(), aSource);
+    domTrack = new VideoStreamTrack(
+        aOutputStream.mStream->GetParentObject(), aSource->Track(), aSource,
+        MediaStreamTrackState::Live, aSource->Muted());
   }
 
   aOutputStream.mLiveTracks.AppendElement(domTrack);
@@ -3504,7 +3569,8 @@ void HTMLMediaElement::UpdateOutputTrackSources() {
       if (!principal || IsCORSSameOrigin()) {
         principal = NodePrincipal();
       }
-      source = MakeAndAddRef<MediaElementTrackSource>(track, principal);
+      source = MakeAndAddRef<MediaElementTrackSource>(
+          mMainThreadEventTarget, track, principal, OutputTracksMuted());
       mDecoder->AddOutputTrack(track);
     } else if (mSrcStream) {
       MediaStreamTrack* inputTrack;
@@ -3524,8 +3590,9 @@ void HTMLMediaElement::UpdateOutputTrackSources() {
 
       track = inputTrack->Graph()->CreateForwardedInputTrack(type);
       RefPtr<MediaInputPort> port = inputTrack->ForwardTrackContentsTo(track);
-      source = MakeAndAddRef<MediaElementTrackSource>(&inputTrack->GetSource(),
-                                                      track, port);
+      source = MakeAndAddRef<MediaElementTrackSource>(
+          mMainThreadEventTarget, inputTrack, &inputTrack->GetSource(), track,
+          port, OutputTracksMuted());
 
       // Track is muted initially, so we don't leak data if it's added while
       // paused and an MTG iteration passes before the mute comes into effect.
@@ -3956,6 +4023,8 @@ void HTMLMediaElement::Init() {
   DecoderDoctorLogger::LogConstruction(this);
 
   mWatchManager.Watch(mPaused, &HTMLMediaElement::UpdateWakeLock);
+  mWatchManager.Watch(mPaused, &HTMLMediaElement::UpdateOutputTracksMuting);
+  mWatchManager.Watch(mReadyState, &HTMLMediaElement::UpdateOutputTracksMuting);
 
   mWatchManager.Watch(mTracksCaptured,
                       &HTMLMediaElement::UpdateOutputTrackSources);

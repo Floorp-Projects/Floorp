@@ -18,8 +18,9 @@ class AudioStreamTrack : public MediaStreamTrack {
       nsPIDOMWindowInner* aWindow, mozilla::MediaTrack* aInputTrack,
       MediaStreamTrackSource* aSource,
       MediaStreamTrackState aReadyState = MediaStreamTrackState::Live,
+      bool aMuted = false,
       const MediaTrackConstraints& aConstraints = MediaTrackConstraints())
-      : MediaStreamTrack(aWindow, aInputTrack, aSource, aReadyState,
+      : MediaStreamTrack(aWindow, aInputTrack, aSource, aReadyState, aMuted,
                          aConstraints) {}
 
   AudioStreamTrack* AsAudioStreamTrack() override { return this; }

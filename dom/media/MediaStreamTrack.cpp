@@ -186,6 +186,7 @@ MediaStreamTrack::MediaStreamTrack(nsPIDOMWindowInner* aWindow,
                                    mozilla::MediaTrack* aInputTrack,
                                    MediaStreamTrackSource* aSource,
                                    MediaStreamTrackState aReadyState,
+                                   bool aMuted,
                                    const MediaTrackConstraints& aConstraints)
     : mWindow(aWindow),
       mInputTrack(aInputTrack),
@@ -194,7 +195,7 @@ MediaStreamTrack::MediaStreamTrack(nsPIDOMWindowInner* aWindow,
       mPrincipal(aSource->GetPrincipal()),
       mReadyState(aReadyState),
       mEnabled(true),
-      mMuted(false),
+      mMuted(aMuted),
       mConstraints(aConstraints) {
   if (!Ended()) {
     GetSource().RegisterSink(mSink.get());
@@ -297,7 +298,7 @@ void MediaStreamTrack::SetEnabled(bool aEnabled) {
 
   mTrack->SetEnabled(mEnabled ? DisabledTrackMode::ENABLED
                               : DisabledTrackMode::SILENCE_BLACK);
-  GetSource().SinkEnabledStateChanged();
+  NotifyEnabledChanged();
 }
 
 void MediaStreamTrack::Stop() {
@@ -471,6 +472,20 @@ void MediaStreamTrack::NotifyEnded() {
   for (const auto& consumer : consumers) {
     if (consumer) {
       consumer->NotifyEnded(this);
+    } else {
+      MOZ_ASSERT_UNREACHABLE("A consumer was not explicitly removed");
+      mConsumers.RemoveElement(consumer);
+    }
+  }
+}
+
+void MediaStreamTrack::NotifyEnabledChanged() {
+  GetSource().SinkEnabledStateChanged();
+
+  auto consumers(mConsumers);
+  for (const auto& consumer : consumers) {
+    if (consumer) {
+      consumer->NotifyEnabledChanged(this, Enabled());
     } else {
       MOZ_ASSERT_UNREACHABLE("A consumer was not explicitly removed");
       mConsumers.RemoveElement(consumer);
