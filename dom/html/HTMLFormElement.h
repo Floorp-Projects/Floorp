@@ -616,6 +616,8 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   bool mEverTriedInvalidSubmit;
   /** Whether we are constructing entry list */
   bool mIsConstructingEntryList;
+  /** Whether we are firing submission event */
+  bool mIsFiringSubmissionEvents;
 
  private:
   NotNull<const Encoding*> GetSubmitEncoding();
