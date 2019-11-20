@@ -94,15 +94,13 @@ inline void JSObject::finalize(JSFreeOp* fop) {
                  js::MemoryUse::ObjectElements);
     }
   }
-
-  nobj->sweepDictionaryListPointer();
 }
 
 MOZ_ALWAYS_INLINE void js::NativeObject::sweepDictionaryListPointer() {
-  // For dictionary objects (which must be native), it's possible that
-  // unreachable shapes may be marked whose listp points into this object.  In
-  // case this happens, null out the shape's pointer so that a moving GC will
-  // not try to access the dead object.
+  // Dictionary mode shapes can have pointers to nursery-allocated
+  // objects. There's no postbarrier for this pointer so this method is called
+  // to clear it when such an object dies.
+  MOZ_ASSERT(inDictionaryMode());
   if (shape()->dictNext == DictionaryShapeLink(this)) {
     shape()->dictNext.setNone();
   }
