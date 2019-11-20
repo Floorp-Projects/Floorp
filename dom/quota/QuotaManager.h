@@ -595,6 +595,7 @@ class QuotaManager final : public BackgroundThreadObject {
   uint64_t mTemporaryStorageLimit;
   uint64_t mTemporaryStorageUsage;
   int64_t mNextDirectoryLockId;
+  bool mStorageInitializationAttempted;
   bool mTemporaryStorageInitializationAttempted;
   bool mTemporaryStorageInitialized;
   bool mCacheUsable;
