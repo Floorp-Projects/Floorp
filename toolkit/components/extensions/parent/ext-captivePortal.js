@@ -104,14 +104,15 @@ this.captivePortal = class extends ExtensionAPI {
             };
           },
         }).api(),
-        canonicalURL: getSettingsAPI({
-          context,
-          name: "captiveURL",
-          callback() {
+        canonicalURL: getSettingsAPI(
+          context.extension.id,
+          "captiveURL",
+          () => {
             return Services.prefs.getStringPref("captivedetect.canonicalURL");
           },
-          readOnly: true,
-        }),
+          undefined,
+          true
+        ),
       },
     };
   }
