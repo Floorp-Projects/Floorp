@@ -5,6 +5,7 @@
 // Test that adding a new rule is synced to the style editor.
 
 const TESTCASE_URI = TEST_BASE_HTTP + "sync.html";
+const TESTCASE_URI_WITH_CSP = TEST_BASE_HTTP + "sync_with_csp.html";
 
 const expectedText = `
   body {
@@ -19,29 +20,33 @@ const expectedText = `
   `;
 
 add_task(async function() {
-  await addTab(TESTCASE_URI);
-  const { inspector, view } = await openRuleView();
-  await selectNode("#testid", inspector);
+  const URIs = [TESTCASE_URI, TESTCASE_URI_WITH_CSP];
 
-  info("Focusing a new property name in the rule-view");
-  const ruleEditor = getRuleViewRuleEditor(view, 1);
-  const editor = await focusEditableField(view, ruleEditor.closeBrace);
-  is(
-    inplaceEditor(ruleEditor.newPropSpan),
-    editor,
-    "The new property editor has focus"
-  );
+  for (const URI of URIs) {
+    await addTab(URI);
+    const { inspector, view } = await openRuleView();
+    await selectNode("#testid", inspector);
 
-  const input = editor.input;
-  input.value = "/* background-color: yellow; */";
+    info("Focusing a new property name in the rule-view on " + URI);
+    const ruleEditor = getRuleViewRuleEditor(view, 1);
+    const editor = await focusEditableField(view, ruleEditor.closeBrace);
+    is(
+      inplaceEditor(ruleEditor.newPropSpan),
+      editor,
+      "The new property editor has focus"
+    );
 
-  info("Pressing return to commit and focus the new value field");
-  const onModifications = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
-  await onModifications;
+    const input = editor.input;
+    input.value = "/* background-color: yellow; */";
 
-  const { ui } = await openStyleEditor();
-  const sourceEditor = await ui.editors[0].getSourceEditor();
-  const text = sourceEditor.sourceEditor.getText();
-  is(text, expectedText, "selector edits are synced");
+    info("Pressing return to commit and focus the new value field");
+    const onModifications = view.once("ruleview-changed");
+    EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
+    await onModifications;
+
+    const { ui } = await openStyleEditor();
+    const sourceEditor = await ui.editors[0].getSourceEditor();
+    const text = sourceEditor.sourceEditor.getText();
+    is(text, expectedText, "selector edits are synced");
+  }
 });
