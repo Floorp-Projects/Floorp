@@ -2792,16 +2792,14 @@ void BackgroundRequestChild::ActorDestroy(ActorDestroyReason aWhy) {
 
   MaybeCollectGarbageOnIPCMessage();
 
-  for (uint32_t count = mCloneInfos.Length(), index = 0; index < count;
-       index++) {
-    auto& preprocessHelper = mCloneInfos[index].mPreprocessHelper;
+  for (auto& cloneInfo : mCloneInfos) {
+    const auto& preprocessHelper = cloneInfo.mPreprocessHelper;
 
     if (preprocessHelper) {
       preprocessHelper->ClearActor();
-
-      preprocessHelper = nullptr;
     }
   }
+  mCloneInfos.Clear();
 
   if (mTransaction) {
     mTransaction->AssertIsOnOwningThread();
