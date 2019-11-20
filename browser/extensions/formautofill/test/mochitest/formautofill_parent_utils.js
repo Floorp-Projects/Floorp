@@ -27,22 +27,21 @@ const {
 let destroyed = false;
 
 var ParentUtils = {
-  async _getRecords(collectionName) {
-    return new Promise(resolve => {
-      Services.cpmm.addMessageListener(
-        "FormAutofill:Records",
-        function getResult({ data }) {
-          Services.cpmm.removeMessageListener(
-            "FormAutofill:Records",
-            getResult
-          );
-          resolve(data);
-        }
-      );
-      Services.cpmm.sendAsyncMessage("FormAutofill:GetRecords", {
+  getFormAutofillActor() {
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    let selectedBrowser = win.gBrowser.selectedBrowser;
+    return selectedBrowser.browsingContext.currentWindowGlobal.getActor(
+      "FormAutofill"
+    );
+  },
+
+  _getRecords(collectionName) {
+    return this.getFormAutofillActor().receiveMessage({
+      name: "FormAutofill:GetRecords",
+      data: {
         searchString: "",
         collectionName,
-      });
+      },
     });
   },
 
@@ -83,50 +82,53 @@ var ParentUtils = {
   },
 
   async _operateRecord(collectionName, type, msgData) {
-    let times, topic;
+    let msgName, times, topic;
 
     if (collectionName == ADDRESSES_COLLECTION_NAME) {
       switch (type) {
         case "add": {
-          Services.cpmm.sendAsyncMessage("FormAutofill:SaveAddress", msgData);
+          msgName = "FormAutofill:SaveAddress";
           break;
         }
         case "update": {
-          Services.cpmm.sendAsyncMessage("FormAutofill:SaveAddress", msgData);
+          msgName = "FormAutofill:SaveAddress";
           break;
         }
         case "remove": {
+          msgName = "FormAutofill:RemoveAddresses";
           times = msgData.guids.length;
-          Services.cpmm.sendAsyncMessage(
-            "FormAutofill:RemoveAddresses",
-            msgData
-          );
           break;
         }
+        default:
+          return;
       }
     } else {
       switch (type) {
         case "add": {
-          const msgDataCloned = Object.assign({}, msgData);
-
-          Services.cpmm.sendAsyncMessage(
-            "FormAutofill:SaveCreditCard",
-            msgDataCloned
-          );
+          msgData = Object.assign({}, msgData);
+          msgName = "FormAutofill:SaveCreditCard";
           break;
         }
         case "remove": {
+          msgName = "FormAutofill:RemoveCreditCards";
           times = msgData.guids.length;
-          Services.cpmm.sendAsyncMessage(
-            "FormAutofill:RemoveCreditCards",
-            msgData
-          );
           break;
         }
+        default:
+          return;
       }
     }
 
-    await this._storageChangeObserved({ type, times, topic });
+    let storageChangePromise = this._storageChangeObserved({
+      type,
+      times,
+      topic,
+    });
+    this.getFormAutofillActor().receiveMessage({
+      name: msgName,
+      data: msgData,
+    });
+    await storageChangePromise;
   },
 
   async operateAddress(type, msgData) {
