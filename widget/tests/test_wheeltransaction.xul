@@ -19,7 +19,7 @@
 <![CDATA[
 
 SimpleTest.waitForExplicitFinish();
-window.openDialog("window_wheeltransaction.xhtml", "_blank", 
+window.openDialog("window_wheeltransaction.xul", "_blank", 
                   "chrome,width=600,height=600,noopener", window);
 
 ]]>

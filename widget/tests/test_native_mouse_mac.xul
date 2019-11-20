@@ -2,19 +2,15 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=478536
--->
-<window title="Mozilla Bug 478536"
-  xmlns:html="http://www.w3.org/1999/xhtml"
+<window title="Native mouse event tests"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <title>Test for Bug 478536</title>
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 
 <body  xmlns="http://www.w3.org/1999/xhtml">
+<p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 </pre>
@@ -24,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=478536
 <![CDATA[
 
 SimpleTest.waitForExplicitFinish();
-window.openDialog("window_bug478536.xhtml", "_blank", 
+window.openDialog("native_mouse_mac_window.xul", "NativeMouseWindow",
                   "chrome,width=600,height=600,noopener", window);
 
 ]]>

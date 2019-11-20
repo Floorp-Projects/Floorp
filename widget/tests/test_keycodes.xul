@@ -196,7 +196,6 @@ function* runKeyEventTests()
 
   function onKeyEvent(e)
   {
-    /* eslint-disable-next-line no-shadow */
     function removeFlag(e, aFlag)
     {
       if (e.type == "keydown") {
@@ -211,7 +210,6 @@ function* runKeyEventTests()
       return false;
     }
 
-    /* eslint-disable-next-line no-shadow */
     function isStateChangingModifierKeyEvent(e)
     {
       var flags = 0;
@@ -4979,7 +4977,6 @@ function* runXULKeyTests()
       keyElement.setAttribute("command", "expectedCommand");
     }
 
-    /* eslint-disable-next-line no-shadow */
     for (var id in commandElements) {
       commandElements[id].activeCount = 0;
     }
@@ -5197,7 +5194,6 @@ function* runReservedKeyTests()
 
   function finializeKeyElementTest()
   {
-    /* eslint-disable-next-line no-shadow */
     for (var i = 0; i < contents.length; i++) {
       contents[i].removeEventListener("keydown", onKeyInDefaultEventGroup, true);
       contents[i].removeEventListener("keypress", onKeyInDefaultEventGroup, true);
@@ -5269,12 +5265,10 @@ function* runTextInputTests()
     textbox.value = "";
     textbox.focus();
 
-    /* eslint-disable-next-line no-shadow */
     var currentTestName = eventToString(aEvent);
 
     // Check if the text comes with keypress events rather than composition events.
     var keypress = 0;
-    /* eslint-disable-next-line no-shadow */
     function onKeypress(aEvent) {
       keypress++;
       if (keypress == 1 && aExpectText == "") {
