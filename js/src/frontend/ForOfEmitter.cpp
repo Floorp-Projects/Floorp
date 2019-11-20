@@ -225,7 +225,9 @@ bool ForOfEmitter::emitEnd(const Maybe<uint32_t>& iteratedPos) {
     return false;
   }
 
-  loopInfo_->setContinueTarget(bce_->bytecodeSection().offset());
+  if (!loopInfo_->emitContinueTarget(bce_)) {
+    return false;
+  }
 
   // We use the iterated value's position to attribute JSOP_LOOPENTRY,
   // which corresponds to the iteration protocol.

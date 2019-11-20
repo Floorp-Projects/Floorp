@@ -19,8 +19,6 @@ class JS_PUBLIC_API JSScript;
 namespace js {
 namespace jit {
 
-class ControlFlowGraph;
-
 // Describes a single wasm::ImportExit which jumps (via an import with
 // the given index) directly to a JitScript.
 struct DependentWasmImport {
@@ -145,10 +143,6 @@ class alignas(uintptr_t) JitScript final {
     // object and decl env object (linked via the call object's enclosing
     // scope).
     const HeapPtr<EnvironmentObject*> templateEnv = nullptr;
-
-    // Cached control flow graph for IonBuilder. Owned by JitZone::cfgSpace and
-    // can be purged by Zone::discardJitCode.
-    ControlFlowGraph* controlFlowGraph = nullptr;
 
     // The total bytecode length of all scripts we inlined when we Ion-compiled
     // this script. 0 if Ion did not compile this script or if we didn't inline
@@ -473,19 +467,6 @@ class alignas(uintptr_t) JitScript final {
 
   EnvironmentObject* templateEnvironment() const {
     return cachedIonData().templateEnv;
-  }
-
-  const ControlFlowGraph* controlFlowGraph() const {
-    return cachedIonData().controlFlowGraph;
-  }
-  void setControlFlowGraph(ControlFlowGraph* controlFlowGraph) {
-    MOZ_ASSERT(controlFlowGraph);
-    cachedIonData().controlFlowGraph = controlFlowGraph;
-  }
-  void clearControlFlowGraph() {
-    if (hasCachedIonData()) {
-      cachedIonData().controlFlowGraph = nullptr;
-    }
   }
 
   bool modifiesArguments() const {
