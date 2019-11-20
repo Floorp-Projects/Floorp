@@ -1199,7 +1199,7 @@ class CallbackNode {
 
 using PrefsHashTable = HashSet<UniquePtr<Pref>, PrefHasher>;
 
-static PrefsHashTable* gHashTable;
+static PrefsHashTable* gHashTable = nullptr;
 
 #ifdef DEBUG
 // This defines the type used to store our `once` mirrors checker. We can't use
@@ -1226,7 +1226,7 @@ static CallbackNode* gLastPriorityNode = nullptr;
 
 #ifdef ACCESS_COUNTS
 using AccessCountsHashTable = nsDataHashtable<nsCStringHashKey, uint32_t>;
-static AccessCountsHashTable* gAccessCounts;
+static AccessCountsHashTable* gAccessCounts = nullptr;
 
 static void AddAccessCount(const nsACString& aPrefName) {
   // FIXME: Servo reads preferences from background threads in unsafe ways (bug
