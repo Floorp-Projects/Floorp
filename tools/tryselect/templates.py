@@ -385,6 +385,22 @@ class DebianTests(TryConfig):
             }
 
 
+class UbuntuBionicTests(TryConfig):
+
+    arguments = [
+        [['--ubuntu-bionic'],
+         {'action': 'store_true',
+          'help': 'Run linux desktop tests on ubuntu1804 image',
+          }],
+    ]
+
+    def try_config(self, ubuntu_bionic, **kwargs):
+        if ubuntu_bionic:
+            return {
+                'ubuntu-bionic': True,
+            }
+
+
 all_templates = {
     'artifact': Artifact,
     'browsertime': Browsertime,
@@ -396,5 +412,6 @@ all_templates = {
     'pernosco': Pernosco,
     'rebuild': Rebuild,
     'debian-buster': DebianTests,
+    'ubuntu-bionic': UbuntuBionicTests,
     'visual-metrics-jobs': VisualMetricsJobs,
 }
