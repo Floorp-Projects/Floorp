@@ -11,6 +11,27 @@ const telemetry = "QM_FIRST_INITIALIZATION_ATTEMPT";
 
 const testcases = [
   {
+    key: "Storage",
+    testingInitFunction() {
+      return init();
+    },
+    get metadataDir() {
+      return getRelativeFile(
+        "storage/default/https+++example.com/.metadata-v2"
+      );
+    },
+    async settingForForcingInitFailure() {
+      this.metadataDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+    },
+    removeSetting() {
+      this.metadataDir.remove(false);
+    },
+    expectedResult: {
+      initFailure: [1, 0],
+      initFailureThenSuccess: [1, 1, 0],
+    },
+  },
+  {
     key: "TemporaryStorage",
     testingInitFunction() {
       return initTemporaryStorage();
