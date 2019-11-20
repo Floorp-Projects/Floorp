@@ -36,6 +36,7 @@ struct DependentWasmImport {
 struct IonBytecodeInfo {
   bool usesEnvironmentChain = false;
   bool modifiesArguments = false;
+  bool hasTryFinally = false;
 };
 
 // Magic BaselineScript value indicating Baseline compilation has been disabled.
@@ -492,6 +493,9 @@ class alignas(uintptr_t) JitScript final {
   }
   bool usesEnvironmentChain() const {
     return cachedIonData().bytecodeInfo.usesEnvironmentChain;
+  }
+  bool hasTryFinally() const {
+    return cachedIonData().bytecodeInfo.hasTryFinally;
   }
 
   uint8_t maxInliningDepth() const {
