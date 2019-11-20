@@ -18,6 +18,8 @@
 
 | Name | Summary |
 |---|---|
+| [FennecMigratorException](-fennec-migrator-exception/index.md) | `sealed class FennecMigratorException : `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html)<br>Exceptions related to Fennec migrations. |
+| [FennecProfileException](-fennec-profile-exception/index.md) | `sealed class FennecProfileException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)<br>Exceptions related to Fennec profile migrations. |
 | [FxaMigrationException](-fxa-migration-exception/index.md) | `class FxaMigrationException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)<br>Wraps [FxaMigrationResult](-fxa-migration-result/index.md) in an exception so that it can be returned via [Result.Failure](-result/-failure/index.md). |
 
 ### Type Aliases

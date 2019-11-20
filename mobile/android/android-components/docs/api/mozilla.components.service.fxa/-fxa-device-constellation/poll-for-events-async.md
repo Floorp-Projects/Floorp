@@ -2,7 +2,7 @@
 
 # pollForEventsAsync
 
-`fun pollForEventsAsync(): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L121)
+`fun pollForEventsAsync(): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L118)
 
 Overrides [DeviceConstellation.pollForEventsAsync](../../mozilla.components.concept.sync/-device-constellation/poll-for-events-async.md)
 

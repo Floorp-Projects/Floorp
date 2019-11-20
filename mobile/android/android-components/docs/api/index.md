@@ -215,6 +215,7 @@
 | [mozilla.components.support.test.file](mozilla.components.support.test.file/index.md) |  |
 | [mozilla.components.support.test.robolectric](mozilla.components.support.test.robolectric/index.md) |  |
 | [mozilla.components.support.test.robolectric.shadow](mozilla.components.support.test.robolectric.shadow/index.md) |  |
+| [mozilla.components.support.test.rule](mozilla.components.support.test.rule/index.md) |  |
 | [mozilla.components.support.utils](mozilla.components.support.utils/index.md) |  |
 | [mozilla.components.support.webextensions](mozilla.components.support.webextensions/index.md) |  |
 | [mozilla.components.tooling.fetch.tests](mozilla.components.tooling.fetch.tests/index.md) |  |
