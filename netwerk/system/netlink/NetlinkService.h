@@ -101,6 +101,10 @@ class NetlinkService : public nsIRunnable {
   // messages.
   bool mRecalculateNetworkId;
 
+  // Flag indicating that network change event needs to be sent even if
+  // network ID hasn't changed.
+  bool mSendNetworkChangeEvent;
+
   // Time stamp of setting mRecalculateNetworkId to true
   mozilla::TimeStamp mTriggerTime;
 
