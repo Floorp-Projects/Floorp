@@ -476,7 +476,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   MOZ_MUST_USE nsresult SetAcceptLanguages();
   MOZ_MUST_USE nsresult SetAcceptEncodings(const char*, bool mIsSecure);
 
-  bool EnsureConnectionMgr();
   MOZ_MUST_USE nsresult InitConnectionMgr();
 
   void NotifyObservers(nsIChannel* chan, const char* event);
