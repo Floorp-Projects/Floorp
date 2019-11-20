@@ -306,7 +306,6 @@ if CONFIG['MOZ_WAYLAND']:
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.mozilla.layers += [
         'NativeLayerCA.h',
-        'opengl/GLManager.h',
         'TextureSync.h',
     ]
     EXPORTS += [
@@ -315,7 +314,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     ]
     UNIFIED_SOURCES += [
         'NativeLayerCA.mm',
-        'opengl/GLManager.cpp',
         'TextureSync.cpp',
     ]
     SOURCES += [
