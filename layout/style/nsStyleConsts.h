@@ -763,10 +763,12 @@ enum class StyleWhiteSpace : uint8_t {
 #define NS_STYLE_MASK_TYPE_ALPHA 1
 
 // shape-rendering
-#define NS_STYLE_SHAPE_RENDERING_AUTO 0
-#define NS_STYLE_SHAPE_RENDERING_OPTIMIZESPEED 1
-#define NS_STYLE_SHAPE_RENDERING_CRISPEDGES 2
-#define NS_STYLE_SHAPE_RENDERING_GEOMETRICPRECISION 3
+enum class StyleShapeRendering : uint8_t {
+  Auto,
+  Optimizespeed,
+  Crispedges,
+  Geometricprecision,
+};
 
 // stroke-linecap
 #define NS_STYLE_STROKE_LINECAP_BUTT 0

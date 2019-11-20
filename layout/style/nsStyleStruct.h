@@ -2219,7 +2219,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG {
   uint8_t mColorInterpolationFilters;  // NS_STYLE_COLOR_INTERPOLATION_*
   mozilla::StyleFillRule mFillRule;
   mozilla::StyleSVGPaintOrder mPaintOrder;
-  uint8_t mShapeRendering;    // NS_STYLE_SHAPE_RENDERING_*
+  mozilla::StyleShapeRendering mShapeRendering;
   uint8_t mStrokeLinecap;     // NS_STYLE_STROKE_LINECAP_*
   uint8_t mStrokeLinejoin;    // NS_STYLE_STROKE_LINEJOIN_*
   uint8_t mDominantBaseline;  // NS_STYLE_DOMINANT_BASELINE_*

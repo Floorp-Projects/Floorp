@@ -657,8 +657,8 @@ void SVGGeometryFrame::Render(gfxContext* aContext, uint32_t aRenderComponents,
   SVGGeometryElement* element = static_cast<SVGGeometryElement*>(GetContent());
 
   AntialiasMode aaMode =
-      (StyleSVG()->mShapeRendering == NS_STYLE_SHAPE_RENDERING_OPTIMIZESPEED ||
-       StyleSVG()->mShapeRendering == NS_STYLE_SHAPE_RENDERING_CRISPEDGES)
+      (StyleSVG()->mShapeRendering == StyleShapeRendering::Optimizespeed ||
+       StyleSVG()->mShapeRendering == StyleShapeRendering::Crispedges)
           ? AntialiasMode::NONE
           : AntialiasMode::SUBPIXEL;
 
