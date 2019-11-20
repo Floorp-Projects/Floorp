@@ -13979,6 +13979,10 @@ void Document::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const {
         mCSSLoader->SizeOfIncludingThis(aWindowSizes.mState.mMallocSizeOf);
   }
 
+  if (mResizeObserverController) {
+    mResizeObserverController->AddSizeOfIncludingThis(aWindowSizes);
+  }
+
   aWindowSizes.mDOMOtherSize += mAttrStyleSheet
                                     ? mAttrStyleSheet->DOMSizeOfIncludingThis(
                                           aWindowSizes.mState.mMallocSizeOf)

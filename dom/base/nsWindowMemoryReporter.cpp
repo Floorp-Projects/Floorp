@@ -307,6 +307,9 @@ static void CollectWindowReports(nsGlobalWindowInner* aWindow,
               "Memory used by MediaQueryList objects for the window's "
               "document.");
 
+  REPORT_SIZE("/dom/resize-observers", mDOMResizeObserverControllerSize,
+              "Memory used for resize observers.");
+
   REPORT_SIZE("/dom/other", mDOMOtherSize,
               "Memory used by a window's DOM that isn't measured by the "
               "other 'dom/' numbers.");
