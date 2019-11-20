@@ -22,4 +22,8 @@
     <string name="add_on_details">Details</string>
     <string name="add_on_permissions">Permissions</string>
     <string name="add_on_remove">Remove add-on</string>
+    <string name="addon_permissions_dialog_subtitle">It requires your permission to:</string>
+    <string name="addon_permissions_dialog_title">Add %1$s?</string>
+    <string name="addon_permissions_dialog_add">Add</string>
+    <string name="addon_permissions_dialog_cancel">Cancel</string>
 </resources>
