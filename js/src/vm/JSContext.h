@@ -46,8 +46,6 @@ class AutoCheckCanAccessAtomsDuringGC;
 class AutoSuppressNurseryCellAlloc;
 }  // namespace gc
 
-typedef HashSet<Shape*> ShapeSet;
-
 /* Detects cycles when traversing an object graph. */
 class MOZ_RAII AutoCycleDetector {
  public:

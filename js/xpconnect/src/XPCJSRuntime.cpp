@@ -1679,11 +1679,11 @@ static void ReportZoneStats(const JS::ZoneStats& zStats,
         "Property tables of shapes in dictionary mode.");
   }
 
-  if (shapeInfo.shapesMallocHeapTreeKids > 0) {
+  if (shapeInfo.shapesMallocHeapTreeChildren > 0) {
     REPORT_BYTES(
-        pathPrefix + NS_LITERAL_CSTRING("shapes/malloc-heap/tree-kids"),
-        KIND_HEAP, shapeInfo.shapesMallocHeapTreeKids,
-        "Kid hashes of shapes in a property tree.");
+        pathPrefix + NS_LITERAL_CSTRING("shapes/malloc-heap/tree-children"),
+        KIND_HEAP, shapeInfo.shapesMallocHeapTreeChildren,
+        "Sets of shape children in a property tree.");
   }
 
   if (sundriesGCHeap > 0) {

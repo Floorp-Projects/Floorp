@@ -769,7 +769,7 @@ Shape* NativeObject::addEnumerableDataProperty(JSContext* cx,
 
   AutoCheckShapeConsistency check(obj);
 
-  // Fast path for non-dictionary shapes with a single kid.
+  // Fast path for non-dictionary shapes with a single child.
   do {
     AutoCheckCannotGC nogc;
 
@@ -778,31 +778,31 @@ Shape* NativeObject::addEnumerableDataProperty(JSContext* cx,
       break;
     }
 
-    KidsPointer* kidp = &lastProperty->kids;
-    if (!kidp->isShape()) {
+    ShapeChildren* childp = &lastProperty->children;
+    if (!childp->isSingleShape()) {
       break;
     }
 
-    Shape* kid = kidp->toShape();
-    MOZ_ASSERT(!kid->inDictionary());
+    Shape* child = childp->toSingleShape();
+    MOZ_ASSERT(!child->inDictionary());
 
-    if (kid->propidRaw() != id || kid->isAccessorShape() ||
-        kid->attributes() != JSPROP_ENUMERATE ||
-        kid->base()->unowned() != lastProperty->base()->unowned()) {
+    if (child->propidRaw() != id || child->isAccessorShape() ||
+        child->attributes() != JSPROP_ENUMERATE ||
+        child->base()->unowned() != lastProperty->base()->unowned()) {
       break;
     }
 
-    MOZ_ASSERT(kid->isDataProperty());
+    MOZ_ASSERT(child->isDataProperty());
 
-    kid = PropertyTreeReadBarrier(cx, lastProperty, kid);
-    if (!kid) {
+    child = PropertyTreeReadBarrier(cx, lastProperty, child);
+    if (!child) {
       break;
     }
 
-    if (!obj->setLastProperty(cx, kid)) {
+    if (!obj->setLastProperty(cx, child)) {
       return nullptr;
     }
-    return kid;
+    return child;
   } while (0);
 
   AutoKeepShapeCaches keep(cx);
@@ -1743,14 +1743,14 @@ MOZ_ALWAYS_INLINE bool ShapeHasher::match(const Key k, const Lookup& l) {
   return k->matches(l);
 }
 
-static KidsHash* HashChildren(Shape* kid1, Shape* kid2) {
-  auto hash = MakeUnique<KidsHash>();
+static ShapeSet* MakeShapeSet(Shape* child1, Shape* child2) {
+  auto hash = MakeUnique<ShapeSet>();
   if (!hash || !hash->reserve(2)) {
     return nullptr;
   }
 
-  hash->putNewInfallible(StackShape(kid1), kid1);
-  hash->putNewInfallible(StackShape(kid2), kid2);
+  hash->putNewInfallible(StackShape(child1), child1);
+  hash->putNewInfallible(StackShape(child2), child2);
   return hash.release();
 }
 
@@ -1761,31 +1761,31 @@ bool PropertyTree::insertChild(JSContext* cx, Shape* parent, Shape* child) {
   MOZ_ASSERT(child->zone() == parent->zone());
   MOZ_ASSERT(cx->zone() == zone_);
 
-  KidsPointer* kidp = &parent->kids;
+  ShapeChildren* childp = &parent->children;
 
-  if (kidp->isNull()) {
+  if (childp->isNone()) {
     child->setParent(parent);
-    kidp->setShape(child);
+    childp->setSingleShape(child);
     return true;
   }
 
-  if (kidp->isShape()) {
-    Shape* shape = kidp->toShape();
+  if (childp->isSingleShape()) {
+    Shape* shape = childp->toSingleShape();
     MOZ_ASSERT(shape != child);
     MOZ_ASSERT(!shape->matches(child));
 
-    KidsHash* hash = HashChildren(shape, child);
+    ShapeSet* hash = MakeShapeSet(shape, child);
     if (!hash) {
       ReportOutOfMemory(cx);
       return false;
     }
-    kidp->setHash(hash);
-    AddCellMemory(parent, sizeof(KidsHash), MemoryUse::ShapeKids);
+    childp->setShapeSet(hash);
+    AddCellMemory(parent, sizeof(ShapeSet), MemoryUse::ShapeChildren);
     child->setParent(parent);
     return true;
   }
 
-  if (!kidp->toHash()->putNew(StackShape(child), child)) {
+  if (!childp->toShapeSet()->putNew(StackShape(child), child)) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -1798,39 +1798,41 @@ void Shape::removeChild(JSFreeOp* fop, Shape* child) {
   MOZ_ASSERT(!child->inDictionary());
   MOZ_ASSERT(child->parent == this);
 
-  KidsPointer* kidp = &kids;
+  ShapeChildren* childp = &children;
 
-  if (kidp->isShape()) {
-    MOZ_ASSERT(kidp->toShape() == child);
-    kidp->setNull();
+  if (childp->isSingleShape()) {
+    MOZ_ASSERT(childp->toSingleShape() == child);
+    childp->setNone();
     child->parent = nullptr;
     return;
   }
 
-  KidsHash* hash = kidp->toHash();
-  MOZ_ASSERT(hash->count() >= 2); /* otherwise kidp->isShape() should be true */
+  // There must be at least two shapes in a set otherwise
+  // childp->isSingleShape() should be true.
+  ShapeSet* set = childp->toShapeSet();
+  MOZ_ASSERT(set->count() >= 2);
 
 #ifdef DEBUG
-  size_t oldCount = hash->count();
+  size_t oldCount = set->count();
 #endif
 
-  hash->remove(StackShape(child));
+  set->remove(StackShape(child));
   child->parent = nullptr;
 
-  MOZ_ASSERT(hash->count() == oldCount - 1);
+  MOZ_ASSERT(set->count() == oldCount - 1);
 
-  if (hash->count() == 1) {
-    /* Convert from HASH form back to SHAPE form. */
-    KidsHash::Range r = hash->all();
+  if (set->count() == 1) {
+    // Convert from set form back to single shape form.
+    ShapeSet::Range r = set->all();
     Shape* otherChild = r.front();
-    MOZ_ASSERT((r.popFront(), r.empty())); /* No more elements! */
-    kidp->setShape(otherChild);
-    fop->delete_(this, hash, MemoryUse::ShapeKids);
+    MOZ_ASSERT((r.popFront(), r.empty()));  // No more elements!
+    childp->setSingleShape(otherChild);
+    fop->delete_(this, set, MemoryUse::ShapeChildren);
   }
 }
 
 MOZ_ALWAYS_INLINE Shape* PropertyTree::inlinedGetChild(
-    JSContext* cx, Shape* parent, Handle<StackShape> child) {
+    JSContext* cx, Shape* parent, Handle<StackShape> childSpec) {
   MOZ_ASSERT(parent);
 
   Shape* existingShape = nullptr;
@@ -1843,18 +1845,18 @@ MOZ_ALWAYS_INLINE Shape* PropertyTree::inlinedGetChild(
    * |this| can significantly increase fan-out below the property
    * tree root -- see bug 335700 for details.
    */
-  KidsPointer* kidp = &parent->kids;
-  if (kidp->isShape()) {
-    Shape* kid = kidp->toShape();
-    if (kid->matches(child)) {
-      existingShape = kid;
+  ShapeChildren* childp = &parent->children;
+  if (childp->isSingleShape()) {
+    Shape* child = childp->toSingleShape();
+    if (child->matches(childSpec)) {
+      existingShape = child;
     }
-  } else if (kidp->isHash()) {
-    if (KidsHash::Ptr p = kidp->toHash()->lookup(child)) {
+  } else if (childp->isShapeSet()) {
+    if (ShapeSet::Ptr p = childp->toShapeSet()->lookup(childSpec)) {
       existingShape = *p;
     }
   } else {
-    /* If kidp->isNull(), we always insert. */
+    /* If childp->isNone(), we always insert. */
   }
 
   if (existingShape) {
@@ -1865,7 +1867,7 @@ MOZ_ALWAYS_INLINE Shape* PropertyTree::inlinedGetChild(
   }
 
   RootedShape parentRoot(cx, parent);
-  Shape* shape = Shape::new_(cx, child, parentRoot->numFixedSlots());
+  Shape* shape = Shape::new_(cx, childSpec, parentRoot->numFixedSlots());
   if (!shape) {
     return nullptr;
   }
@@ -1904,8 +1906,8 @@ void Shape::sweep(JSFreeOp* fop) {
 }
 
 void Shape::finalize(JSFreeOp* fop) {
-  if (!inDictionary() && kids.isHash()) {
-    fop->delete_(this, kids.toHash(), MemoryUse::ShapeKids);
+  if (!inDictionary() && children.isShapeSet()) {
+    fop->delete_(this, children.toShapeSet(), MemoryUse::ShapeChildren);
   }
 }
 
@@ -1948,20 +1950,20 @@ void Shape::fixupDictionaryShapeAfterMovingGC() {
 }
 
 void Shape::fixupShapeTreeAfterMovingGC() {
-  if (kids.isNull()) {
+  if (children.isNone()) {
     return;
   }
 
-  if (kids.isShape()) {
-    if (gc::IsForwarded(kids.toShape())) {
-      kids.setShape(gc::Forwarded(kids.toShape()));
+  if (children.isSingleShape()) {
+    if (gc::IsForwarded(children.toSingleShape())) {
+      children.setSingleShape(gc::Forwarded(children.toSingleShape()));
     }
     return;
   }
 
-  MOZ_ASSERT(kids.isHash());
-  KidsHash* kh = kids.toHash();
-  for (KidsHash::Enum e(*kh); !e.empty(); e.popFront()) {
+  MOZ_ASSERT(children.isShapeSet());
+  ShapeSet* set = children.toShapeSet();
+  for (ShapeSet::Enum e(*set); !e.empty(); e.popFront()) {
     Shape* key = e.front();
     if (IsForwarded(key)) {
       key = Forwarded(key);
@@ -2032,38 +2034,39 @@ void Shape::fixupGetterSetterForBarrier(JSTracer* trc) {
     return;
   }
 
-  if (parent && !parent->inDictionary() && parent->kids.isHash()) {
-    // Relocating the getterObj or setterObj will have changed our location
-    // in our parent's KidsHash, so take care to update it.  We must do this
-    // before we update the shape itself, since the shape is used to match
-    // the original entry in the hash set.
+  if (parent && !parent->inDictionary() && parent->children.isShapeSet()) {
+    // Relocating the getterObj or setterObj will have changed our location in
+    // our parent's ShapeSet, so take care to update it. We must do this before
+    // we update the shape itself, since the shape is used to match the original
+    // entry in the hash set.
 
     StackShape original(this);
     StackShape updated(this);
     updated.rawGetter = reinterpret_cast<GetterOp>(postGetter);
     updated.rawSetter = reinterpret_cast<SetterOp>(postSetter);
 
-    KidsHash* kh = parent->kids.toHash();
-    MOZ_ALWAYS_TRUE(kh->rekeyAs(original, updated, this));
+    ShapeSet* set = parent->children.toShapeSet();
+    MOZ_ALWAYS_TRUE(set->rekeyAs(original, updated, this));
   }
 
   asAccessorShape().getterObj = postGetter;
   asAccessorShape().setterObj = postSetter;
 
-  MOZ_ASSERT_IF(parent && !parent->inDictionary() && parent->kids.isHash(),
-                parent->kids.toHash()->has(StackShape(this)));
+  MOZ_ASSERT_IF(
+      parent && !parent->inDictionary() && parent->children.isShapeSet(),
+      parent->children.toShapeSet()->has(StackShape(this)));
 }
 
 #ifdef DEBUG
 
-void KidsPointer::checkConsistency(Shape* aKid) const {
-  if (isShape()) {
-    MOZ_ASSERT(toShape() == aKid);
+void ShapeChildren::checkHasChild(Shape* child) const {
+  if (isSingleShape()) {
+    MOZ_ASSERT(toSingleShape() == child);
   } else {
-    MOZ_ASSERT(isHash());
-    KidsHash* hash = toHash();
-    KidsHash::Ptr ptr = hash->lookup(StackShape(aKid));
-    MOZ_ASSERT(*ptr == aKid);
+    MOZ_ASSERT(isShapeSet());
+    ShapeSet* set = toShapeSet();
+    ShapeSet::Ptr ptr = set->lookup(StackShape(child));
+    MOZ_ASSERT(*ptr == child);
   }
 }
 
@@ -2131,20 +2134,20 @@ void Shape::dumpSubtree(int level, js::GenericPrinter& out) const {
     dump(out);
   }
 
-  if (!kids.isNull()) {
+  if (!children.isNone()) {
     ++level;
-    if (kids.isShape()) {
-      Shape* kid = kids.toShape();
-      MOZ_ASSERT(kid->parent == this);
-      kid->dumpSubtree(level, out);
+    if (children.isSingleShape()) {
+      Shape* child = children.toSingleShape();
+      MOZ_ASSERT(child->parent == this);
+      child->dumpSubtree(level, out);
     } else {
-      const KidsHash& hash = *kids.toHash();
-      for (KidsHash::Range range = hash.all(); !range.empty();
+      const ShapeSet& set = *children.toShapeSet();
+      for (ShapeSet::Range range = set.all(); !range.empty();
            range.popFront()) {
-        Shape* kid = range.front();
+        Shape* child = range.front();
 
-        MOZ_ASSERT(kid->parent == this);
-        kid->dumpSubtree(level, out);
+        MOZ_ASSERT(child->parent == this);
+        child->dumpSubtree(level, out);
       }
     }
   }
@@ -2316,8 +2319,9 @@ JS::ubi::Node::Size JS::ubi::Concrete<js::Shape>::size(
     size += table->sizeOfIncludingThis(mallocSizeOf);
   }
 
-  if (!get().inDictionary() && get().kids.isHash()) {
-    size += get().kids.toHash()->shallowSizeOfIncludingThis(mallocSizeOf);
+  if (!get().inDictionary() && get().children.isShapeSet()) {
+    size +=
+        get().children.toShapeSet()->shallowSizeOfIncludingThis(mallocSizeOf);
   }
 
   return size;
