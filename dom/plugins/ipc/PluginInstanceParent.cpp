@@ -905,10 +905,20 @@ nsresult PluginInstanceParent::AsyncSetWindow(NPWindow* aWindow) {
   MaybeCreateChildPopupSurrogate();
 #endif
 
-  if (!SendAsyncSetWindow(
-          gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType(),
-          window))
+#if defined(OS_WIN)
+  // Windows async surfaces must be Win32.  In particular, it is incompatible
+  // with in-memory surface types.
+  gfxSurfaceType surfType = gfxSurfaceType::Win32;
+#else
+  gfxSurfaceType surfType =
+      gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType();
+#endif
+
+  if (surfType == (gfxSurfaceType)-1) {
     return NS_ERROR_FAILURE;
+  }
+
+  if (!SendAsyncSetWindow(surfType, window)) return NS_ERROR_FAILURE;
 
   return NS_OK;
 }
