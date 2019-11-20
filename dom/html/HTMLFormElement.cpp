@@ -218,6 +218,61 @@ void HTMLFormElement::GetMethod(nsAString& aValue) {
   GetEnumAttr(nsGkAtoms::method, kFormDefaultMethod->tag, aValue);
 }
 
+// https://html.spec.whatwg.org/multipage/forms.html#concept-form-submit
+void HTMLFormElement::MaybeSubmit(Element* aSubmitter) {
+#ifdef DEBUG
+  if (aSubmitter) {
+    nsCOMPtr<nsIFormControl> fc = do_QueryInterface(aSubmitter);
+    MOZ_ASSERT(fc);
+    MOZ_ASSERT(fc->IsSubmitControl(), "aSubmitter is not a submit control?");
+  }
+#endif
+
+  // 1-4 of
+  // https://html.spec.whatwg.org/multipage/forms.html#concept-form-submit
+  Document* doc = GetComposedDoc();
+  if (mIsConstructingEntryList || !doc ||
+      (doc->GetSandboxFlags() & SANDBOXED_FORMS)) {
+    return;
+  }
+
+  // 6.3. If the submitter element's no-validate state is false, then
+  //      interactively validate the constraints of form and examine the result.
+  //      If the result is negative (i.e., the constraint validation concluded
+  //      that there were invalid fields and probably informed the user of this)
+  bool noValidateState =
+      HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate) ||
+      (aSubmitter &&
+       aSubmitter->HasAttr(kNameSpaceID_None, nsGkAtoms::formnovalidate));
+  if (!noValidateState && !CheckValidFormSubmission()) {
+    return;
+  }
+
+  // If |PresShell::Destroy| has been called due to handling the event the pres
+  // context will return a null pres shell. See bug 125624. Using presShell to
+  // dispatch the event. It makes sure that event is not handled if the window
+  // is being destroyed.
+  if (RefPtr<PresShell> presShell = doc->GetPresShell()) {
+    InternalFormEvent event(true, eFormSubmit);
+    event.mOriginator = aSubmitter;
+    nsEventStatus status = nsEventStatus_eIgnore;
+    presShell->HandleDOMEventWithTarget(this, &event, &status);
+  }
+}
+
+void HTMLFormElement::MaybeReset(Element* aSubmitter) {
+  // If |PresShell::Destroy| has been called due to handling the event the pres
+  // context will return a null pres shell. See bug 125624. Using presShell to
+  // dispatch the event. It makes sure that event is not handled if the window
+  // is being destroyed.
+  if (RefPtr<PresShell> presShell = OwnerDoc()->GetPresShell()) {
+    InternalFormEvent event(true, eFormReset);
+    event.mOriginator = aSubmitter;
+    nsEventStatus status = nsEventStatus_eIgnore;
+    presShell->HandleDOMEventWithTarget(this, &event, &status);
+  }
+}
+
 void HTMLFormElement::Submit(ErrorResult& aRv) {
   // Send the submit event
   if (mPendingSubmission) {
@@ -1861,38 +1916,6 @@ One should be implemented!");
   }
 
   return result;
-}
-
-bool HTMLFormElement::SubmissionCanProceed(Element* aSubmitter) {
-#ifdef DEBUG
-  if (aSubmitter) {
-    nsCOMPtr<nsIFormControl> fc = do_QueryInterface(aSubmitter);
-    MOZ_ASSERT(fc);
-
-    uint32_t type = fc->ControlType();
-    MOZ_ASSERT(type == NS_FORM_INPUT_SUBMIT || type == NS_FORM_INPUT_IMAGE ||
-                   type == NS_FORM_BUTTON_SUBMIT,
-               "aSubmitter is not a submit control?");
-  }
-#endif
-
-  // Modified step 2 of
-  // https://html.spec.whatwg.org/multipage/forms.html#concept-form-submit --
-  // we're not checking whether the node document is disconnected yet...
-  if (OwnerDoc()->GetSandboxFlags() & SANDBOXED_FORMS) {
-    return false;
-  }
-
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) {
-    return true;
-  }
-
-  if (aSubmitter &&
-      aSubmitter->HasAttr(kNameSpaceID_None, nsGkAtoms::formnovalidate)) {
-    return true;
-  }
-
-  return CheckValidFormSubmission();
 }
 
 void HTMLFormElement::UpdateValidity(bool aElementValidity) {
