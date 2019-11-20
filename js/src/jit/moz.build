@@ -61,7 +61,6 @@ UNIFIED_SOURCES += [
     'IonAnalysis.cpp',
     'IonBuilder.cpp',
     'IonCacheIRCompiler.cpp',
-    'IonControlFlow.cpp',
     'IonIC.cpp',
     'IonOptimizationLevels.cpp',
     'Jit.cpp',
