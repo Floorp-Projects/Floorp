@@ -13,15 +13,15 @@ addAccessibleTask(
   `<input id="textbox" value="hello"/>`,
   async function(browser, contentDocAcc) {
     info(
-      "Check that the IFRAME and the fission document are not accessible initially."
+      "Check that the IFRAME and the IFRAME document are not accessible initially."
     );
-    let iframeAcc = findAccessibleChildByID(contentDocAcc, FISSION_IFRAME_ID);
-    let fissionDocAcc = findAccessibleChildByID(
+    let iframeAcc = findAccessibleChildByID(contentDocAcc, DEFAULT_IFRAME_ID);
+    let iframeDocAcc = findAccessibleChildByID(
       contentDocAcc,
-      DEFAULT_FISSION_DOC_BODY_ID
+      DEFAULT_IFRAME_DOC_BODY_ID
     );
     ok(!iframeAcc, "IFRAME is hidden and should not be accessible");
-    ok(!fissionDocAcc, "fission document is hidden and should be accessible");
+    ok(!iframeDocAcc, "IFRAME document is hidden and should be accessible");
 
     info(
       "Show the IFRAME and check that it's now available in the accessibility tree."
@@ -36,7 +36,7 @@ addAccessibleTask(
           const scEvent = event.QueryInterface(nsIAccessibleStateChangeEvent);
           const id = getAccessibleDOMNodeID(event.accessible);
           return (
-            id === DEFAULT_FISSION_DOC_BODY_ID &&
+            id === DEFAULT_IFRAME_DOC_BODY_ID &&
             scEvent.state === STATE_BUSY &&
             scEvent.isEnabled === false
           );
@@ -44,36 +44,36 @@ addAccessibleTask(
       ]);
     }
     const onEvents = waitForEvents(events);
-    await SpecialPowers.spawn(browser, [FISSION_IFRAME_ID], contentId => {
+    await SpecialPowers.spawn(browser, [DEFAULT_IFRAME_ID], contentId => {
       content.document.getElementById(contentId).style.display = "";
     });
     await onEvents;
 
-    iframeAcc = findAccessibleChildByID(contentDocAcc, FISSION_IFRAME_ID);
-    fissionDocAcc = findAccessibleChildByID(
+    iframeAcc = findAccessibleChildByID(contentDocAcc, DEFAULT_IFRAME_ID);
+    iframeDocAcc = findAccessibleChildByID(
       contentDocAcc,
-      DEFAULT_FISSION_DOC_BODY_ID
+      DEFAULT_IFRAME_DOC_BODY_ID
     );
 
     ok(!isDefunct(iframeAcc), "IFRAME should be accessible");
     is(iframeAcc.childCount, 1, "IFRAME accessible should have a single child");
-    ok(fissionDocAcc, "fission document exists");
-    ok(!isDefunct(fissionDocAcc), "fission document should be accessible");
+    ok(iframeDocAcc, "IFRAME document exists");
+    ok(!isDefunct(iframeDocAcc), "IFRAME document should be accessible");
     is(
       iframeAcc.firstChild,
-      fissionDocAcc,
-      "An accessible for a fission document is the child of the IFRAME accessible"
+      iframeDocAcc,
+      "An accessible for a IFRAME document is the child of the IFRAME accessible"
     );
     is(
-      fissionDocAcc.parent,
+      iframeDocAcc.parent,
       iframeAcc,
-      "Fission document's parent matches the IFRAME."
+      "IFRAME document's parent matches the IFRAME."
     );
   },
   {
     topLevel: false,
     iframe: true,
-    fissionIFrameAttrs: {
+    iframeAttrs: {
       style: "display: none;",
     },
     skipFissionDocLoad: true,

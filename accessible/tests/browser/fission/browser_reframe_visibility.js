@@ -11,19 +11,19 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
 addAccessibleTask(
   `<input id="textbox" value="hello"/>`,
-  async function(browser, fissionDocAcc, contentDocAcc) {
+  async function(browser, iframeDocAcc, contentDocAcc) {
     info(
-      "Check that the IFRAME and the fission document are accessible initially."
+      "Check that the IFRAME and the IFRAME document are accessible initially."
     );
-    let iframeAcc = findAccessibleChildByID(contentDocAcc, FISSION_IFRAME_ID);
+    let iframeAcc = findAccessibleChildByID(contentDocAcc, DEFAULT_IFRAME_ID);
     ok(!isDefunct(iframeAcc), "IFRAME should be accessible");
-    ok(!isDefunct(fissionDocAcc), "fission document should be accessible");
+    ok(!isDefunct(iframeDocAcc), "IFRAME document should be accessible");
 
     info(
-      "Hide the IFRAME and check that it's gone along with the fission document."
+      "Hide the IFRAME and check that it's gone along with the IFRAME document."
     );
     let onEvents = waitForEvent(EVENT_REORDER, contentDocAcc);
-    await SpecialPowers.spawn(browser, [FISSION_IFRAME_ID], contentId => {
+    await SpecialPowers.spawn(browser, [DEFAULT_IFRAME_ID], contentId => {
       content.document.getElementById(contentId).style.display = "none";
     });
     await onEvents;
@@ -34,27 +34,27 @@ addAccessibleTask(
     );
     if (gFissionBrowser) {
       ok(
-        !isDefunct(fissionDocAcc),
+        !isDefunct(iframeDocAcc),
         "IFRAME document's accessible is not defunct when the IFRAME is hidden and fission is enabled."
       );
     } else {
       ok(
-        isDefunct(fissionDocAcc),
+        isDefunct(iframeDocAcc),
         "IFRAME document's accessible is defunct when the IFRAME is hidden and fission is not enabled."
       );
     }
     ok(
-      !findAccessibleChildByID(contentDocAcc, FISSION_IFRAME_ID),
+      !findAccessibleChildByID(contentDocAcc, DEFAULT_IFRAME_ID),
       "No accessible for an IFRAME present."
     );
     ok(
-      !findAccessibleChildByID(contentDocAcc, DEFAULT_FISSION_DOC_BODY_ID),
-      "No accessible for the fission document present."
+      !findAccessibleChildByID(contentDocAcc, DEFAULT_IFRAME_DOC_BODY_ID),
+      "No accessible for the IFRAME document present."
     );
 
     info(
       "Show the IFRAME and check that a new accessible is created for it as " +
-        "well as the fission document."
+        "well as the IFRAME document."
     );
 
     const events = [[EVENT_REORDER, contentDocAcc]];
@@ -65,7 +65,7 @@ addAccessibleTask(
           const scEvent = event.QueryInterface(nsIAccessibleStateChangeEvent);
           const id = getAccessibleDOMNodeID(event.accessible);
           return (
-            id === DEFAULT_FISSION_DOC_BODY_ID &&
+            id === DEFAULT_IFRAME_DOC_BODY_ID &&
             scEvent.state === STATE_BUSY &&
             scEvent.isEnabled === false
           );
@@ -73,43 +73,43 @@ addAccessibleTask(
       ]);
     }
     onEvents = waitForEvents(events);
-    await SpecialPowers.spawn(browser, [FISSION_IFRAME_ID], contentId => {
+    await SpecialPowers.spawn(browser, [DEFAULT_IFRAME_ID], contentId => {
       content.document.getElementById(contentId).style.display = "block";
     });
     await onEvents;
 
-    iframeAcc = findAccessibleChildByID(contentDocAcc, FISSION_IFRAME_ID);
-    const newFissionDocAcc = iframeAcc.firstChild;
+    iframeAcc = findAccessibleChildByID(contentDocAcc, DEFAULT_IFRAME_ID);
+    const newiframeDocAcc = iframeAcc.firstChild;
 
     ok(!isDefunct(iframeAcc), "IFRAME should be accessible");
     is(iframeAcc.childCount, 1, "IFRAME accessible should have a single child");
-    ok(newFissionDocAcc, "fission document exists");
-    ok(!isDefunct(newFissionDocAcc), "fission document should be accessible");
+    ok(newiframeDocAcc, "IFRAME document exists");
+    ok(!isDefunct(newiframeDocAcc), "IFRAME document should be accessible");
     if (gFissionBrowser) {
       ok(
-        !isDefunct(fissionDocAcc),
+        !isDefunct(iframeDocAcc),
         "Original IFRAME document accessible should not be defunct when fission is enabled."
       );
       is(
         iframeAcc.firstChild,
-        fissionDocAcc,
-        "Existing accessible is used for a fission document."
+        iframeDocAcc,
+        "Existing accessible is used for a IFRAME document."
       );
     } else {
       ok(
-        isDefunct(fissionDocAcc),
+        isDefunct(iframeDocAcc),
         "Original IFRAME document accessible should be defunct when fission is not enabled."
       );
       isnot(
         iframeAcc.firstChild,
-        fissionDocAcc,
-        "A new accessible is created for a fission document."
+        iframeDocAcc,
+        "A new accessible is created for a IFRAME document."
       );
     }
     is(
       iframeAcc.firstChild,
-      newFissionDocAcc,
-      "A new accessible for a fission document is the child of the IFRAME accessible"
+      newiframeDocAcc,
+      "A new accessible for a IFRAME document is the child of the IFRAME accessible"
     );
   },
   { topLevel: false, iframe: true }
