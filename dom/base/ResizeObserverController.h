@@ -70,6 +70,8 @@ class ResizeObserverController final {
   void Traverse(nsCycleCollectionTraversalCallback& aCb);
   void Unlink();
 
+  void AddSizeOfIncludingThis(nsWindowSizes&) const;
+
   void ShellDetachedFromDocument();
   void AddResizeObserver(ResizeObserver& aObserver) {
     MOZ_ASSERT(!mResizeObservers.Contains(&aObserver));
