@@ -18,5 +18,5 @@ addAccessibleTask(
       "Accessible document not present."
     );
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

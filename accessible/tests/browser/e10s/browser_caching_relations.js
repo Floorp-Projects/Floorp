@@ -92,5 +92,5 @@ addAccessibleTask(
       await testRelated(browser, accDoc, ...spec);
     }
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

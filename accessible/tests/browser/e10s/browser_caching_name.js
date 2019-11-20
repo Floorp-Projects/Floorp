@@ -41,7 +41,7 @@ const rules = {
   HTMLElm: [...ARIARule, { attr: "title" }],
   HTMLImg: [
     ...ARIARule,
-    { attr: "alt", waitFor: EVENT_REORDER },
+    { attr: "alt", waitFor: EVENT_NAME_CHANGE },
     { attr: "title" },
   ],
   HTMLImgEmptyAlt: [...ARIARule, { attr: "title" }, { attr: "alt" }],
@@ -52,13 +52,13 @@ const rules = {
   ],
   HTMLInputImage: [
     ...HTMLControlHeadRule,
-    { attr: "alt" },
+    { attr: "alt", waitFor: EVENT_NAME_CHANGE },
     { attr: "value" },
     { attr: "title" },
   ],
   HTMLInputImageNoValidSrc: [
     ...HTMLControlHeadRule,
-    { attr: "alt" },
+    { attr: "alt", waitFor: EVENT_NAME_CHANGE },
     { attr: "value" },
   ],
   HTMLInputReset: [
@@ -339,12 +339,14 @@ const markupTests = [
     id: "btn",
     ruleset: "CSSContent",
     markup: `
-    <style>
-      button::before {
-        content: "do not ";
-      }
-    </style>
-    <button id="btn">press me</button>`,
+    <div role="main">
+      <style>
+        button::before {
+          content: "do not ";
+        }
+      </style>
+      <button id="btn">press me</button>
+    </div>`,
     expected: ["do not press me", "press me"],
   },
   {
@@ -532,6 +534,6 @@ markupTests.forEach(({ id, ruleset, markup, expected }) =>
       await testNameRule(browser, target, rules[ruleset], expected);
       Services.obs.removeObserver(observer, "accessible-event");
     },
-    { iframe: true }
+    { iframe: true, remoteIframe: true }
   )
 );

@@ -19,11 +19,11 @@ addAccessibleTask(
   </ul>`,
   async function(browser, iframeDocAcc, contentDocAcc) {
     ok(iframeDocAcc, "IFRAME document accessible is present");
-    (gFissionBrowser ? isnot : is)(
+    (gIsRemoteIframe ? isnot : is)(
       browser.browsingContext.currentWindowGlobal.osPid,
       browser.browsingContext.getChildren()[0].currentWindowGlobal.osPid,
       `Content and IFRAME documents are in ${
-        gFissionBrowser ? "separate processes" : "same process"
+        gIsRemoteIframe ? "separate processes" : "same process"
       }.`
     );
 
@@ -71,5 +71,5 @@ addAccessibleTask(
       "IFRAME document's parent matches the IFRAME."
     );
   },
-  { topLevel: false, iframe: true }
+  { topLevel: false, iframe: true, remoteIframe: true }
 );

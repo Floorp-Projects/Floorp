@@ -22,5 +22,5 @@ addAccessibleTask(
 
     testStates(textbox, STATE_FOCUSABLE | STATE_FOCUSED, 0);
   },
-  { topLevel: false, iframe: true }
+  { topLevel: false, iframe: true, remoteIframe: true }
 );

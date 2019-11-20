@@ -57,7 +57,7 @@ addAccessibleTask(
       )).accessible;
     }
 
-    if (gFissionBrowser) {
+    if (gIsRemoteIframe) {
       isnot(
         getOsPid(browser.browsingContext),
         getOsPid(browser.browsingContext.getChildren()[0]),
@@ -79,11 +79,19 @@ addAccessibleTask(
         getOsPid(browser.browsingContext.getChildren()[0]),
         `Content and IFRAME documents are in same processes.`
       );
-      is(
-        getOsPid(browser.browsingContext),
-        getOsPid(browser.browsingContext.getChildren()[0].getChildren()[0]),
-        `Content and nested IFRAME documents are in same processes.`
-      );
+      if (gFissionBrowser) {
+        isnot(
+          getOsPid(browser.browsingContext.getChildren()[0]),
+          getOsPid(browser.browsingContext.getChildren()[0].getChildren()[0]),
+          `IFRAME and nested IFRAME documents are in separate processes.`
+        );
+      } else {
+        is(
+          getOsPid(browser.browsingContext),
+          getOsPid(browser.browsingContext.getChildren()[0].getChildren()[0]),
+          `Content and nested IFRAME documents are in same processes.`
+        );
+      }
     }
 
     const tree = {
@@ -138,5 +146,5 @@ addAccessibleTask(
       "Nested IFRAME document's parent matches the nested IFRAME."
     );
   },
-  { topLevel: false, iframe: true }
+  { topLevel: false, iframe: true, remoteIframe: true }
 );

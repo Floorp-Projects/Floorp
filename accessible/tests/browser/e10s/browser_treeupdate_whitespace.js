@@ -64,5 +64,5 @@ addAccessibleTask(
     };
     testAccessibleTree(container2Parent, tree);
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

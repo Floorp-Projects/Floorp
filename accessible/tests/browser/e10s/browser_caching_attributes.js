@@ -130,5 +130,5 @@ addAccessibleTask(
       testAbsentAttrs(textbox, unexpected);
     }
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

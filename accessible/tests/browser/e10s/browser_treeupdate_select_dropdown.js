@@ -73,5 +73,5 @@ addAccessibleTask(
     });
     await focused;
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

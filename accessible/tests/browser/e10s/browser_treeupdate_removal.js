@@ -54,5 +54,5 @@ addAccessibleTask(
       "display none things shouldn't be accessible"
     );
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

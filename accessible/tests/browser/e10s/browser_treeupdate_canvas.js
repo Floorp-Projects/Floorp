@@ -24,5 +24,5 @@ addAccessibleTask(
 
     testAccessibleTree(dialog, { DIALOG: [] });
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );
