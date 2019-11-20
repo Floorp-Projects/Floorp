@@ -9,7 +9,7 @@
 add_task(async function() {
   const TEST_URI = "data:text/html;charset=utf8,Web Console CSP violation test";
   const hud = await openNewTabAndConsole(TEST_URI);
-  hud.ui.clearOutput();
+  await clearOutput(hud);
   {
     const TEST_VIOLATION =
       "https://example.com/browser/devtools/client/webconsole/" +
@@ -23,7 +23,7 @@ add_task(async function() {
     await onRepeatedMessage;
     ok(true, "Received expected messages");
   }
-  hud.ui.clearOutput();
+  await clearOutput(hud);
   // Testing CSP Inline Violations
   {
     const TEST_VIOLATION =
@@ -44,7 +44,7 @@ add_task(async function() {
       "Printed the CSP Violation with HTML Context"
     );
     // Triggering the Violation via JS
-    hud.ui.clearOutput();
+    await clearOutput(hud);
     msg = await executeAndWaitForMessage(
       hud,
       "window.violate()",
@@ -57,7 +57,7 @@ add_task(async function() {
       "Printed the CSP Violation with JS Context"
     );
   }
-  hud.ui.clearOutput();
+  await clearOutput(hud);
   // Testing Base URI
   {
     const TEST_VIOLATION =
@@ -69,7 +69,7 @@ add_task(async function() {
     let msg = await waitFor(() => findMessage(hud, CSP_VIOLATION));
     ok(msg, "Base-URI validation was Printed");
     // Triggering the Violation via JS
-    hud.ui.clearOutput();
+    await clearOutput(hud);
     msg = await executeAndWaitForMessage(
       hud,
       "window.violate()",
@@ -82,7 +82,7 @@ add_task(async function() {
       "Base-URI validation was Printed with the Responsible JS Line"
     );
   }
-  hud.ui.clearOutput();
+  await clearOutput(hud);
   // Testing CSP Form Action
   {
     const TEST_VIOLATION =
@@ -100,7 +100,7 @@ add_task(async function() {
       "JS Line which Triggered the CSP-Form Action Violation was Printed"
     );
   }
-  hud.ui.clearOutput();
+  await clearOutput(hud);
   // Testing CSP Frame Ancestors Directive
   {
     const TEST_VIOLATION =

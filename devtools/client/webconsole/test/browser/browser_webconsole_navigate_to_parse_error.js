@@ -17,7 +17,7 @@ const CSP_VIOLATION_MSG =
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  hud.ui.clearOutput();
+  await clearOutput(hud);
 
   const onRepeatedMessage = waitForRepeatedMessage(hud, CSP_VIOLATION_MSG, 2);
   await loadDocument(TEST_VIOLATION);

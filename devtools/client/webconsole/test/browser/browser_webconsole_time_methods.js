@@ -66,7 +66,7 @@ add_task(async function() {
     "No message is printed to " + "the console when the timer starts"
   );
 
-  hud2.ui.clearOutput();
+  await clearOutput(hud2);
 
   // Calling console.time('bTimer') on a page, then navigating to another page
   // and calling console.timeEnd('bTimer') on the new console front-end should

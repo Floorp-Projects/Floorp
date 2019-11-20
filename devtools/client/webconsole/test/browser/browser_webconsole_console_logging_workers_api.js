@@ -22,6 +22,6 @@ add_task(async function() {
   );
 
   const onMessagesCleared = hud.ui.once("messages-cleared");
-  hud.ui.clearOutput(true);
+  await clearOutput(hud);
   await onMessagesCleared;
 });

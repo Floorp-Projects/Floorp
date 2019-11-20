@@ -17,7 +17,7 @@ add_task(async function() {
     }
   };
 
-  hud.ui.clearOutput();
+  await clearOutput(hud);
   execute(hud, "help()");
   execute(hud, "help");
   execute(hud, "?");

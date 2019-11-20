@@ -19,7 +19,7 @@ add_task(async function() {
 
   expectUncaughtExceptionNoE10s();
   let hud = await openNewTabAndConsole(TEST_URI);
-  hud.ui.clearOutput();
+  await clearOutput(hud);
 
   expectUncaughtExceptionNoE10s();
   await refreshTab();

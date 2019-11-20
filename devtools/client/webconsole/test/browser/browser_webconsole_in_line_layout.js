@@ -89,7 +89,7 @@ add_task(async function() {
   setInputValue(hud, "");
   testLayout(appNode);
 
-  ui.clearOutput();
+  await clearOutput(hud);
   testLayout(appNode);
   is(outputNode.offsetHeight, 0, "output node has no height");
   is(

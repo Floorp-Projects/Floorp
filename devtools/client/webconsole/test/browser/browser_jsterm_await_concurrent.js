@@ -13,7 +13,7 @@ add_task(async function() {
   await pushPref("devtools.debugger.features.map-await-expression", true);
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  hud.ui.clearOutput();
+  await clearOutput(hud);
   const delays = [3000, 500, 9000, 6000];
   const inputs = delays.map(
     delay => `await new Promise(

@@ -29,12 +29,12 @@ add_task(async function() {
   info("Picker mode stopped, <h1> selected, now switching to the console");
   const hud = await openConsole();
 
-  hud.ui.clearOutput();
+  await clearOutput(hud);
 
   await executeAndWaitForMessage(hud, "$0", "<h1>", ".result");
   ok(true, "correct output for $0");
 
-  hud.ui.clearOutput();
+  await clearOutput(hud);
 
   const newH1Content = "newH1Content";
   await executeAndWaitForMessage(

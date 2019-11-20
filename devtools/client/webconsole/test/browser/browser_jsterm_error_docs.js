@@ -24,7 +24,8 @@ add_task(async function() {
     const errorUrl = ErrorDocs.GetURL({ errorMessageName });
     const title = errorUrl.split("?")[0];
 
-    hud.ui.clearOutput();
+    await clearOutput(hud);
+
     const { node } = await executeAndWaitForMessage(
       hud,
       expression,
