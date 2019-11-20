@@ -1283,6 +1283,25 @@ MOZ_THREAD_LOCAL(RegisteredThread*) TLSRegisteredThread::sRegisteredThread;
 MOZ_THREAD_LOCAL(ProfilingStackOwner*)
 AutoProfilerLabel::sProfilingStackOwnerTLS;
 
+void ProfilingStackOwner::DumpStackAndCrash() const {
+  fprintf(stderr,
+          "ProfilingStackOwner::DumpStackAndCrash() thread id: %d, size: %u\n",
+          profiler_current_thread_id(), unsigned(mProfilingStack.stackSize()));
+  js::ProfilingStackFrame* allFrames = mProfilingStack.frames;
+  for (uint32_t i = 0; i < mProfilingStack.stackSize(); i++) {
+    js::ProfilingStackFrame& frame = allFrames[i];
+    if (frame.isLabelFrame()) {
+      fprintf(stderr, "%u: label frame, sp=%p, label='%s' (%s)\n", unsigned(i),
+              frame.stackAddress(), frame.label(),
+              frame.dynamicString() ? frame.dynamicString() : "-");
+    } else {
+      fprintf(stderr, "%u: non-label frame\n", unsigned(i));
+    }
+  }
+
+  MOZ_CRASH("Non-empty stack!");
+}
+
 // The name of the main thread.
 static const char* const kMainThreadName = "GeckoMain";
 
