@@ -101,8 +101,12 @@ class PluginInstanceParent : public PPluginInstanceParent {
   mozilla::ipc::IPCResult AnswerNPN_GetValue_SupportsAsyncBitmapSurface(
       bool* value);
 
+  static bool SupportsPluginDirectDXGISurfaceDrawing();
   mozilla::ipc::IPCResult AnswerNPN_GetValue_SupportsAsyncDXGISurface(
-      bool* value);
+      bool* value) {
+    *value = SupportsPluginDirectDXGISurfaceDrawing();
+    return IPC_OK();
+  }
 
   mozilla::ipc::IPCResult AnswerNPN_GetValue_PreferredDXGIAdapter(
       DxgiAdapterDesc* desc);

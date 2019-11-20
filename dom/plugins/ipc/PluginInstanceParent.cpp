@@ -58,6 +58,7 @@
 #  include "nsIWidget.h"
 #  include "nsPluginNativeWindow.h"
 #  include "PluginQuirks.h"
+#  include "mozilla/layers/CompositorBridgeChild.h"
 extern const wchar_t* kFlashFullscreenClass;
 #elif defined(MOZ_WIDGET_GTK)
 #  include "mozilla/dom/ContentChild.h"
@@ -318,17 +319,6 @@ static inline bool AllowDirectBitmapSurfaceDrawing() {
   return gfxPlatform::GetPlatform()->SupportsPluginDirectBitmapDrawing();
 }
 
-static inline bool AllowDirectDXGISurfaceDrawing() {
-  if (!StaticPrefs::dom_ipc_plugins_asyncdrawing_enabled()) {
-    return false;
-  }
-#if defined(XP_WIN)
-  return gfxWindowsPlatform::GetPlatform()->SupportsPluginDirectDXGIDrawing();
-#else
-  return false;
-#endif
-}
-
 mozilla::ipc::IPCResult
 PluginInstanceParent::AnswerNPN_GetValue_SupportsAsyncBitmapSurface(
     bool* value) {
@@ -336,47 +326,29 @@ PluginInstanceParent::AnswerNPN_GetValue_SupportsAsyncBitmapSurface(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-PluginInstanceParent::AnswerNPN_GetValue_SupportsAsyncDXGISurface(bool* value) {
-  if (!StaticPrefs::dom_ipc_plugins_allow_dxgi_surface()) {
-    *value = false;
-  } else {
-    *value = AllowDirectDXGISurfaceDrawing();
+/* static */
+bool PluginInstanceParent::SupportsPluginDirectDXGISurfaceDrawing() {
+  bool value = false;
+#if defined(XP_WIN)
+  if (StaticPrefs::dom_ipc_plugins_allow_dxgi_surface()) {
+    auto cbc = CompositorBridgeChild::Get();
+    if (cbc) {
+      cbc->SendSupportsAsyncDXGISurface(&value);
+    }
   }
-  return IPC_OK();
+#endif
+  return value;
 }
 
 mozilla::ipc::IPCResult
 PluginInstanceParent::AnswerNPN_GetValue_PreferredDXGIAdapter(
     DxgiAdapterDesc* aOutDesc) {
   PodZero(aOutDesc);
-#ifdef XP_WIN
-  if (!AllowDirectDXGISurfaceDrawing()) {
-    return IPC_FAIL_NO_REASON(this);
+#if defined(XP_WIN)
+  auto cbc = CompositorBridgeChild::Get();
+  if (cbc) {
+    cbc->SendPreferredDXGIAdapter(aOutDesc);
   }
-
-  RefPtr<ID3D11Device> device = DeviceManagerDx::Get()->GetContentDevice();
-  if (!device) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  RefPtr<IDXGIDevice> dxgi;
-  if (FAILED(device->QueryInterface(__uuidof(IDXGIDevice),
-                                    getter_AddRefs(dxgi))) ||
-      !dxgi) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  RefPtr<IDXGIAdapter> adapter;
-  if (FAILED(dxgi->GetAdapter(getter_AddRefs(adapter))) || !adapter) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  DXGI_ADAPTER_DESC desc;
-  if (FAILED(adapter->GetDesc(&desc))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  *aOutDesc = DxgiAdapterDesc::From(desc);
 #endif
   return IPC_OK();
 }
@@ -426,7 +398,7 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
       allowed = true;
       break;
     case NPDrawingModelAsyncWindowsDXGISurface:
-      allowed = AllowDirectDXGISurfaceDrawing();
+      allowed = SupportsPluginDirectDXGISurfaceDrawing();
       break;
 #elif defined(MOZ_X11)
     case NPDrawingModelSyncX:
