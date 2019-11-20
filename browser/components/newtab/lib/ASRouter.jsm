@@ -33,6 +33,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   CFRMessageProvider: "resource://activity-stream/lib/CFRMessageProvider.jsm",
   KintoHttpClient: "resource://services-common/kinto-http-client.js",
   Downloader: "resource://services-settings/Attachments.jsm",
+  RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
 });
 const {
   ASRouterActions: ra,
@@ -106,7 +107,7 @@ const STARTPAGE_VERSION = "6";
 const RS_SERVER_PREF = "services.settings.server";
 const RS_MAIN_BUCKET = "main";
 const RS_COLLECTION_L10N = "ms-language-packs"; // "ms" stands for Messaging System
-const RS_PROVIDERS_WITH_L10N = ["cfr", "cfr-fxa"];
+const RS_PROVIDERS_WITH_L10N = ["cfr", "cfr-fxa", "whats-new-panel"];
 const RS_FLUENT_VERSION = "v1";
 const RS_FLUENT_RECORD_PREFIX = `cfr-${RS_FLUENT_VERSION}`;
 const RS_DOWNLOAD_MAX_RETRIES = 2;
@@ -324,6 +325,7 @@ const MessageLoaderUtils = {
             await downloader.download(record.data, {
               retries: RS_DOWNLOAD_MAX_RETRIES,
             });
+            RemoteL10n.reloadL10n();
           } else {
             MessageLoaderUtils._handleRemoteSettingsUndesiredEvent(
               "ASR_RS_NO_MESSAGES",
