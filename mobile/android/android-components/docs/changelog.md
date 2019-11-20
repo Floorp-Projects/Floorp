@@ -96,6 +96,9 @@ permalink: /changelog/
 
     sitePermissions[Permission.LOCATION] //  ALLOWED will be returned
   ```
+* **engine-gecko-nightly**
+  * Adds setDynamicToolbarMaxHeight ApI.
+
 
 * **feature-push**
   * Added `unsubscribeAll` support from the Rust native layer.

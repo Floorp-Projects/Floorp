@@ -654,6 +654,10 @@ class SystemEngineView @JvmOverloads constructor(
         // no-op
     }
 
+    override fun setDynamicToolbarMaxHeight(height: Int) {
+        // no-op
+    }
+
     override fun canScrollVerticallyUp() = session?.webView?.canScrollVertically(-1) ?: false
 
     override fun canScrollVerticallyDown() = session?.webView?.canScrollVertically(1) ?: false

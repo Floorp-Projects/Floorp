@@ -63,6 +63,8 @@ class FakeEngineView(context: Context) : TextView(context), EngineView {
 
     override fun setVerticalClipping(clippingHeight: Int) {}
 
+    override fun setDynamicToolbarMaxHeight(height: Int) {}
+
     override fun release() {}
 }
 

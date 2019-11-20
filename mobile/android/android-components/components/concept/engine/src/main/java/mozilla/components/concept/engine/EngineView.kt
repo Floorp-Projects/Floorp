@@ -95,6 +95,13 @@ interface EngineView {
      * @param clippingHeight The height of the bottom clipped space in screen pixels.
      */
     fun setVerticalClipping(clippingHeight: Int)
+
+    /**
+     * Sets the maximum height of the dynamic toolbar(s).
+     *
+     * @param height The maximum possible height of the toolbar.
+     */
+    fun setDynamicToolbarMaxHeight(height: Int)
 }
 
 /**
