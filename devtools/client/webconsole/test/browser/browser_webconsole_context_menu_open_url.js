@@ -15,7 +15,7 @@ add_task(async function() {
   await pushPref("devtools.webconsole.filter.net", true);
 
   const hud = await openNewTabAndConsole(TEST_URI);
-  hud.ui.clearOutput();
+  await clearOutput(hud);
 
   info("Test Open URL menu item for text log");
 
@@ -32,7 +32,7 @@ add_task(async function() {
   ok(!openUrlItem, "Open URL menu item is not available");
 
   await hideContextMenu(hud);
-  hud.ui.clearOutput();
+  await clearOutput(hud);
 
   info("Test Open URL menu item for network log");
 

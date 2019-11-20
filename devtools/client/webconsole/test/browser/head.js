@@ -1577,8 +1577,14 @@ async function waitForLazyRequests(toolbox) {
   });
 }
 
-async function clearOutput(hud, clearStorage = true) {
+/**
+ * Clear the console output and when for the "messages-cleared" event to be emitted.
+ * @param {WebConsole} hud
+ * @param {Object} An options object with the following properties:
+ *                 - {Boolean} keepStorage: true to prevent clearing the messages storage.
+ */
+async function clearOutput(hud, { keepStorage = false } = {}) {
   const onMessagesCleared = hud.ui.once("messages-cleared");
-  hud.ui.clearOutput(clearStorage);
+  hud.ui.clearOutput(!keepStorage);
   await onMessagesCleared;
 }

@@ -108,7 +108,7 @@ async function openRequestAfterUpdates(target, hud) {
 async function openRequestBeforeUpdates(target, hud, tab) {
   const toolbox = gDevTools.getToolbox(target);
 
-  hud.ui.clearOutput(true);
+  await clearOutput(hud);
 
   const xhrUrl = TEST_PATH + "sjs_slow-response-test-server.sjs";
   const onMessage = waitForMessage(hud, xhrUrl);

@@ -14,7 +14,7 @@ const SAMPLE_MSG = "specified a header that could not be parsed successfully.";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  hud.ui.clearOutput();
+  await clearOutput(hud);
   await loadDocument(TEST_DOC);
 
   await waitFor(() => findMessage(hud, SAMPLE_MSG, ".message.warn"));

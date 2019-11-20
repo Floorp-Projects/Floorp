@@ -12,7 +12,7 @@ const TEST_URI = `data:text/html;charset=utf8,<p>test code completion
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const { jsterm, ui } = hud;
+  const { jsterm } = hud;
   const { autocompletePopup } = jsterm;
 
   // Test typing 'docu'.
@@ -65,7 +65,7 @@ add_task(async function() {
   );
   checkInputCompletionValue(hud, "entById", "'document.getElem' completion");
 
-  ui.clearOutput();
+  await clearOutput(hud);
 
   await setInputValueForAutocompletion(hud, "docu");
   checkInputCompletionValue(hud, "ment", "'docu' completion");
