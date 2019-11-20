@@ -1104,8 +1104,6 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   mozilla::widget::WidgetRenderingContext widgetContext;
 #if defined(XP_MACOSX)
   widgetContext.mLayerManager = this;
-#elif defined(MOZ_WIDGET_ANDROID)
-  widgetContext.mCompositor = GetCompositor();
 #endif
 
   {
