@@ -551,6 +551,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   uint8_t mRedirectionLimit;
 
+  bool mBeConservativeForProxy;
+
   // we'll warn the user if we load an URL containing a userpass field
   // unless its length is less than this threshold.  this warning is
   // intended to protect the user against spoofing attempts that use
