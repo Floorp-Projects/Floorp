@@ -5,7 +5,6 @@
 package mozilla.components.service.fxa
 
 import android.content.Context
-import androidx.annotation.GuardedBy
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -39,12 +38,10 @@ class FxaDeviceConstellation(
 
     private val deviceObserverRegistry = ObserverRegistry<DeviceConstellationObserver>()
 
-    @GuardedBy("this")
+    @Volatile
     private var constellationState: ConstellationState? = null
 
-    override fun state(): ConstellationState? = synchronized(this) {
-        return constellationState
-    }
+    override fun state(): ConstellationState? = constellationState
 
     override fun initDeviceAsync(
         name: String,
@@ -137,37 +134,35 @@ class FxaDeviceConstellation(
         notifyObservers { onEvents(events) }
     }
 
-    override fun refreshDevicesAsync(): Deferred<Boolean> = synchronized(this) {
-        return scope.async {
-            logger.info("Refreshing device list...")
+    override fun refreshDevicesAsync(): Deferred<Boolean> = scope.async {
+        logger.info("Refreshing device list...")
 
-            // Attempt to fetch devices, or bail out on failure.
-            val allDevices = fetchAllDevicesAsync().await() ?: return@async false
+        // Attempt to fetch devices, or bail out on failure.
+        val allDevices = fetchAllDevicesAsync().await() ?: return@async false
 
-            // Find the current device.
-            val currentDevice = allDevices.find { it.isCurrentDevice }
-            // Filter out the current devices.
-            val otherDevices = allDevices.filter { !it.isCurrentDevice }
-
-            val newState = ConstellationState(currentDevice, otherDevices)
-            constellationState = newState
-
-            CoroutineScope(Dispatchers.Main).launch {
-                // NB: at this point, 'constellationState' might have changed.
-                // Notify with an immutable, local 'newState' instead.
-                deviceObserverRegistry.notifyObservers { onDevicesUpdate(newState) }
-            }
-
+        // Find the current device.
+        val currentDevice = allDevices.find { it.isCurrentDevice }?.also {
             // Check if our current device's push subscription needs to be renewed.
-            constellationState?.currentDevice?.let {
-                if (it.subscriptionExpired) {
-                    logger.info("Current device needs push endpoint registration")
-                }
+            if (it.subscriptionExpired) {
+                logger.info("Current device needs push endpoint registration")
             }
-
-            logger.info("Refreshed device list; saw ${allDevices.size} device(s).")
-            true
         }
+
+        // Filter out the current devices.
+        val otherDevices = allDevices.filter { !it.isCurrentDevice }
+
+        val newState = ConstellationState(currentDevice, otherDevices)
+        constellationState = newState
+
+        logger.info("Refreshed device list; saw ${allDevices.size} device(s).")
+
+        CoroutineScope(Dispatchers.Main).launch {
+            // NB: at this point, 'constellationState' might have changed.
+            // Notify with an immutable, local 'newState' instead.
+            deviceObserverRegistry.notifyObservers { onDevicesUpdate(newState) }
+        }
+
+        true
     }
 
     /**

@@ -233,6 +233,10 @@ open class FxaAccountManager(
     // list, although that's probably an overkill.
     @Volatile private lateinit var account: OAuthAccount
     @Volatile private var profile: Profile? = null
+
+    // We'd like to persist this state, so that we can short-circuit transition to AuthenticationProblem on
+    // initialization, instead of triggering the full state machine knowing in advance we'll hit auth problems.
+    // See https://github.com/mozilla-mobile/android-components/issues/5102
     @Volatile private var state = AccountState.Start
     private val eventQueue = ConcurrentLinkedQueue<Event>()
 
@@ -683,14 +687,13 @@ open class FxaAccountManager(
                         // If this is the first time ensuring our capabilities,
                         logger.info("Ensuring device capabilities...")
                         if (account.deviceConstellation().ensureCapabilitiesAsync(deviceConfig.capabilities).await()) {
-                            logger.info("Successfully ensured device capabilities.")
+                            logger.info("Successfully ensured device capabilities. Continuing...")
+                            postAuthenticated(AuthType.Existing)
+                            Event.FetchProfile
                         } else {
-                            logger.warn("Failed to ensure device capabilities.")
+                            logger.warn("Failed to ensure device capabilities. Stopping.")
+                            null
                         }
-
-                        postAuthenticated(AuthType.Existing)
-
-                        Event.FetchProfile
                     }
                     Event.SignedInShareableAccount -> {
                         // Note that we are not registering an account persistence callback here like
@@ -734,7 +737,8 @@ open class FxaAccountManager(
                         // https://github.com/mozilla/application-services/issues/483
                         logger.info("Fetching profile...")
 
-                        profile = account.getProfileAsync(true).await()
+                        // `account` provides us with intelligent profile caching, so make sure to use it.
+                        profile = account.getProfileAsync(ignoreCache = false).await()
                         if (profile == null) {
                             return Event.FailedToFetchProfile
                         }
@@ -793,20 +797,9 @@ open class FxaAccountManager(
                                 // we will disconnect users that hit transient network errors during
                                 // an authorization check.
                                 // See https://github.com/mozilla-mobile/android-components/issues/3347
-                                logger.info("Unable to recover from an auth problem, clearing state.")
+                                logger.info("Unable to recover from an auth problem, notifying observers.")
 
-                                // We perform similar actions to what we do on logout, except for destroying
-                                // the device. We don't have valid access tokens at this point to do that!
-
-                                // Clean up resources.
-                                profile = null
-                                account.close()
-                                // Delete persisted state.
-                                getAccountStorage().clear()
-                                // Re-initialize account.
-                                account = createAccount(serverConfig)
-
-                                // Finally, tell our listeners we're in a bad auth state.
+                                // Tell our listeners we're in a bad auth state.
                                 notifyObservers { onAuthenticationProblems() }
                             }
                         }
