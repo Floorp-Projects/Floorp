@@ -16,8 +16,6 @@ user_pref("browser.contentHandlers.types.5.uri", "http://127.0.0.1/rss?url=%s");
 user_pref("browser.link.open_newwindow", 2);
 user_pref("browser.newtabpage.activity-stream.default.sites", "");
 user_pref("browser.newtabpage.activity-stream.telemetry", false);
-user_pref("browser.ping-centre.production.endpoint", "https://127.0.0.1/pingcentre/dummy/");
-user_pref("browser.ping-centre.staging.endpoint", "https://127.0.0.1/pingcentre/dummy/");
 user_pref("browser.reader.detectedFirstArticle", true);
 user_pref("browser.safebrowsing.blockedURIs.enabled", false);
 user_pref("browser.safebrowsing.downloads.enabled", false);

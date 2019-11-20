@@ -1554,8 +1554,6 @@ pref("toolkit.telemetry.bhrPing.enabled", true);
 // Ping Centre Telemetry settings.
 pref("browser.ping-centre.telemetry", true);
 pref("browser.ping-centre.log", false);
-pref("browser.ping-centre.staging.endpoint", "https://onyx_tiles.stage.mozaws.net/v3/links/ping-centre");
-pref("browser.ping-centre.production.endpoint", "https://tiles.services.mozilla.com/v3/links/ping-centre");
 
 // Enable GMP support in the addon manager.
 pref("media.gmp-provider.enabled", true);
