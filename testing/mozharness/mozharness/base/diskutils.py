@@ -25,9 +25,12 @@
 
 """
 import ctypes
+import logging
 import os
 import sys
-import logging
+
+from six import string_types
+
 from mozharness.base.log import INFO, numeric_log_level
 
 # use mozharness log
@@ -59,13 +62,17 @@ def convert_to(size, from_unit, to_unit):
         sf = sizes[from_unit]
         return size * sf / df
     except KeyError:
-        raise DiskutilsError('conversion error: Invalid source or destination format')
+        raise DiskutilsError(
+            'conversion error: Invalid source or destination format')
     except TypeError:
-        raise DiskutilsError('conversion error: size (%s) is not a number' % size)
+        raise DiskutilsError(
+            'conversion error: size (%s) is not a number' %
+            size)
 
 
 class DiskInfo(object):
     """Stores basic information about the disk"""
+
     def __init__(self):
         self.unit = 'bytes'
         self.free = 0
@@ -84,7 +91,10 @@ class DiskInfo(object):
         to_unit = unit
         self.free = convert_to(self.free, from_unit=from_unit, to_unit=to_unit)
         self.used = convert_to(self.used, from_unit=from_unit, to_unit=to_unit)
-        self.total = convert_to(self.total, from_unit=from_unit, to_unit=to_unit)
+        self.total = convert_to(
+            self.total,
+            from_unit=from_unit,
+            to_unit=to_unit)
         self.unit = unit
 
 
@@ -116,7 +126,7 @@ class DiskSize(object):
         # depending on path format (unicode or not) and python version (2 or 3)
         # we need to call GetDiskFreeSpaceExW or GetDiskFreeSpaceExA
         called_function = ctypes.windll.kernel32.GetDiskFreeSpaceExA
-        if isinstance(path, unicode) or sys.version_info >= (3,):
+        if isinstance(path, string_types) or sys.version_info >= (3,):
             called_function = ctypes.windll.kernel32.GetDiskFreeSpaceExW
         # we're ready for the dll call. On error it returns 0
         if called_function(path,
