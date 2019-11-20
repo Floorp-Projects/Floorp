@@ -174,7 +174,8 @@ nsresult nsHttpConnectionMgr::Init(
     uint16_t maxRequestDelay, bool throttleEnabled, uint32_t throttleVersion,
     uint32_t throttleSuspendFor, uint32_t throttleResumeFor,
     uint32_t throttleReadLimit, uint32_t throttleReadInterval,
-    uint32_t throttleHoldTime, uint32_t throttleMaxTime) {
+    uint32_t throttleHoldTime, uint32_t throttleMaxTime,
+    bool beConservativeForProxy) {
   LOG(("nsHttpConnectionMgr::Init\n"));
 
   {
@@ -194,6 +195,8 @@ nsresult nsHttpConnectionMgr::Init(
     mThrottleReadInterval = throttleReadInterval;
     mThrottleHoldTime = throttleHoldTime;
     mThrottleMaxTime = TimeDuration::FromMilliseconds(throttleMaxTime);
+
+    mBeConservativeForProxy = beConservativeForProxy;
 
     mIsShuttingDown = false;
   }
