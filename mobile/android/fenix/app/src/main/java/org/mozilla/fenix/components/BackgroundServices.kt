@@ -36,6 +36,7 @@ import mozilla.components.service.fxa.manager.SCOPE_SYNC
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.service.sync.logins.SyncableLoginsStore
 import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.Experiments
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
@@ -84,7 +85,12 @@ class BackgroundServices(
         // NB: flipping this flag back and worth is currently not well supported and may need hand-holding.
         // Consult with the android-components peers before changing.
         // See https://github.com/mozilla/application-services/issues/1308
-        capabilities = setOf(DeviceCapability.SEND_TAB)
+        capabilities = setOf(DeviceCapability.SEND_TAB),
+
+        // Enable encryption for account state on supported API levels (23+).
+        // Just on Nightly and local builds for now.
+        // Enabling this for all channels is tracked in https://github.com/mozilla-mobile/fenix/issues/6704
+        secureStateAtRest = Config.channel.isNightlyOrDebug
     )
     // If sync has been turned off on the server then disable syncing.
     @VisibleForTesting(otherwise = PRIVATE)
