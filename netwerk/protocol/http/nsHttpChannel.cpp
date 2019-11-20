@@ -2605,7 +2605,7 @@ void nsHttpChannel::AssertNotDocumentChannel() {
 
   nsCOMPtr<nsIParentChannel> parentChannel;
   NS_QueryNotificationCallbacks(this, parentChannel);
-  RefPtr<DocumentChannelParent> documentChannelParent =
+  RefPtr<DocumentLoadListener> documentChannelParent =
       do_QueryObject(parentChannel);
   if (documentChannelParent) {
     // The load is using document channel.
@@ -6902,7 +6902,7 @@ base::ProcessId nsHttpChannel::ProcessId() {
   if (RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel)) {
     return httpParent->OtherPid();
   }
-  if (RefPtr<DocumentChannelParent> docParent = do_QueryObject(parentChannel)) {
+  if (RefPtr<DocumentLoadListener> docParent = do_QueryObject(parentChannel)) {
     return docParent->OtherPid();
   }
   return base::GetCurrentProcId();
@@ -6917,8 +6917,8 @@ bool nsHttpChannel::AttachStreamFilter(
   if (RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel)) {
     return httpParent->SendAttachStreamFilter(std::move(aEndpoint));
   }
-  if (RefPtr<DocumentChannelParent> docParent = do_QueryObject(parentChannel)) {
-    return docParent->SendAttachStreamFilter(std::move(aEndpoint));
+  if (RefPtr<DocumentLoadListener> docParent = do_QueryObject(parentChannel)) {
+    return docParent->AttachStreamFilter(std::move(aEndpoint));
   }
 
   extensions::StreamFilterParent::Attach(this, std::move(aEndpoint));
@@ -7300,7 +7300,7 @@ NS_IMETHODIMP nsHttpChannel::SwitchProcessTo(
 
   nsCOMPtr<nsIParentChannel> parentChannel;
   NS_QueryNotificationCallbacks(this, parentChannel);
-  RefPtr<DocumentChannelParent> documentChannelParent =
+  RefPtr<DocumentLoadListener> documentChannelParent =
       do_QueryObject(parentChannel);
   // This is a temporary change as the DocumentChannelParent currently must go
   // through the nsHttpChannel to perform a process switch via SessionStore.
