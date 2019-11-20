@@ -47,7 +47,10 @@ const SCRIPTS = {
 const TESTCASES = [
   {
     // Inputs
-    document: `<input type=password value="pass1">`,
+    document: `<input type=password value="">`,
+    selectorValues: {
+      "[type=password]": "pass1",
+    },
 
     // Expected outputs similar to PasswordManager:onFormSubmit
     origin: DEFAULT_ORIGIN,
@@ -57,8 +60,12 @@ const TESTCASES = [
     oldPasswordFieldValue: null,
   },
   {
-    document: `<input value="user1">
-      <input type=password value="pass1">`,
+    document: `<input id="u1" value="">
+      <input type=password value="">`,
+    selectorValues: {
+      "#u1": "user1",
+      "[type=password]": "pass1",
+    },
 
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
@@ -67,9 +74,14 @@ const TESTCASES = [
     oldPasswordFieldValue: null,
   },
   {
-    document: `<input value="user1">
-      <input type=password value="pass1">
-      <input type=password value="pass2">`,
+    document: `<input id="u1" value="">
+      <input id="p1" type=password value="">
+      <input id="p2" type=password value="">`,
+    selectorValues: {
+      "#u1": "user1",
+      "#p1": "pass1",
+      "#p2": "pass2",
+    },
 
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
@@ -78,10 +90,16 @@ const TESTCASES = [
     oldPasswordFieldValue: "pass1",
   },
   {
-    document: `<input value="user1">
-      <input type=password value="pass1">
-      <input type=password value="pass2">
-      <input type=password value="pass2">`,
+    document: `<input id="u1" value="">
+      <input id="p1" type=password value="">
+      <input id="p2" type=password value="">
+      <input id="p3" type=password value="">`,
+    selectorValues: {
+      "#u1": "user1",
+      "#p1": "pass1",
+      "#p2": "pass2",
+      "#p3": "pass2",
+    },
 
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
@@ -94,13 +112,20 @@ const TESTCASES = [
     // one FormLike's password fields with a magic "ignore-form-submission"
     // value so we can just focus on the other form. We then repeat the testcase
     // below with the other FormLike ignored.
-    document: `<input value="user1">
-      <input type=password value="ignore-form-submission" form="form1">
-      <input type=password value="pass1">
+    document: `<input id="u1" value="">
+      <input type=password id="p1" value="" form="form1">
+      <input type=password id="p2" value="">
       <form id="form1">
-        <input value="user3">
-        <input type=password value="ignore-form-submission">
+        <input id="u2" value="">
+        <input id="p3" type=password value="">
       </form>`,
+    selectorValues: {
+      "#u1": "user1",
+      "#p1": "ignore-form-submission",
+      "#p2": "pass1",
+      "#u2": "user3",
+      "#p3": "ignore-form-submission",
+    },
 
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
@@ -109,13 +134,20 @@ const TESTCASES = [
     oldPasswordFieldValue: null,
   },
   { // Same as above but with the other form ignored.
-    document: `<input value="user1">
-      <input type=password value="pass2" form="form1">
-      <input type=password value="ignore-form-submission">
+    document: `<input id="u1" value="">
+      <input id="p1" type=password value="" form="form1">
+      <input id="p2" type=password value="">
       <form id="form1">
-        <input value="user3">
-        <input type=password value="pass2">
+        <input id="u2" value="">
+        <input id="p3" type=password value="">
       </form>`,
+    selectorValues: {
+      "#u1": "user1",
+      "#p1": "pass2",
+      "#p2": "ignore-form-submission",
+      "#u2": "user3",
+      "#p3": "pass2",
+    },
 
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
@@ -125,10 +157,16 @@ const TESTCASES = [
   },
   {
     document: `<!-- recipe field override -->
-      <input name="recipeuname" value="username from recipe">
-      <input value="default field username">
-      <input type=password value="pass1">
-      <input name="recipepword" type=password value="pass2">`,
+      <input name="recipeuname" value="">
+      <input id="u1" value="">
+      <input id="p1" type=password value="">
+      <input name="recipepword" type=password value="">`,
+    selectorValues: {
+      "[name='recipeuname']": "username from recipe",
+      "#u1": "default field username",
+      "#p1": "pass1",
+      "[name='recipepword']": "pass2",
+    },
 
     origin: DEFAULT_ORIGIN,
     formActionOrigin: DEFAULT_ORIGIN,
@@ -137,26 +175,6 @@ const TESTCASES = [
     oldPasswordFieldValue: null,
   },
 ];
-
-/**
- * @param {Function} [aFilterFn = undefined] Function to filter out irrelevant submissions.
- * @return {Promise} resolving when a relevant form submission was processed.
- */
-function getSubmitMessage(aFilterFn = undefined) {
-  info("getSubmitMessage");
-  return new Promise((resolve, reject) => {
-    PWMGR_COMMON_PARENT.addMessageListener("formSubmissionProcessed", function processed(...args) {
-      if (aFilterFn && !aFilterFn(...args)) {
-        // This submission isn't the one we're waiting for.
-        return;
-      }
-
-      info("got formSubmissionProcessed");
-      PWMGR_COMMON_PARENT.removeMessageListener("formSubmissionProcessed", processed);
-      resolve(...args);
-    });
-  });
-}
 
 function filterFormSubmissions(data) {
   return data.newPasswordField.value != "ignore-form-submission";
@@ -189,15 +207,20 @@ add_task(async function test() {
           testDoc = "<form>" + testDoc + "</form>";
         }
 
+        let formProcessed = promiseFormsProcessed();
         // eslint-disable-next-line no-unsanitized/property
         frameDoc.documentElement.innerHTML = testDoc;
-        // Wait for the form to be processed before trying to submit.
-        await promiseFormsProcessed();
-        let processedPromise = getSubmitMessage(filterFormSubmissions);
+        await formProcessed;
+        // We eliminate no user input as a reason for not capturing by modifying the value
+        setUserInputValues(frameDoc.documentElement, tc.selectorValues)
+
+        let submitProcessed = getSubmitMessage(filterFormSubmissions);
         info("Running " + scriptName + " script to cause a submission");
         frameDoc.defaultView.eval(SCRIPTS[scriptName]);
 
-        let submittedResult = await processedPromise;
+        info("Waiting for formSubmissionProcsssed message");
+        let submittedResult = await submitProcessed;
+        info("Got for formSubmissionProcsssed message");
 
         // Check data sent via PasswordManager:onFormSubmit
         is(submittedResult.origin, tc.origin, "Check origin");
