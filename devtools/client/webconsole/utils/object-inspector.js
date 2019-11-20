@@ -60,7 +60,7 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
       : null;
   }
 
-  const roots = createRootsFromGrip(grip);
+  const roots = createRootsFromGrip(grip, override.pathPrefix);
 
   const objectInspectorProps = {
     autoExpandDepth: 0,
@@ -104,10 +104,10 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
   return ObjectInspector({ ...objectInspectorProps, ...override });
 }
 
-function createRootsFromGrip(grip) {
+function createRootsFromGrip(grip, pathPrefix = "") {
   return [
     {
-      path: (grip && grip.actor) || JSON.stringify(grip),
+      path: `${pathPrefix}${(grip && grip.actor) || JSON.stringify(grip)}`,
       contents: { value: grip },
     },
   ];
