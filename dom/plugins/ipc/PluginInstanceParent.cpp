@@ -338,7 +338,11 @@ PluginInstanceParent::AnswerNPN_GetValue_SupportsAsyncBitmapSurface(
 
 mozilla::ipc::IPCResult
 PluginInstanceParent::AnswerNPN_GetValue_SupportsAsyncDXGISurface(bool* value) {
-  *value = AllowDirectDXGISurfaceDrawing();
+  if (!StaticPrefs::dom_ipc_plugins_allow_dxgi_surface()) {
+    *value = false;
+  } else {
+    *value = AllowDirectDXGISurfaceDrawing();
+  }
   return IPC_OK();
 }
 
