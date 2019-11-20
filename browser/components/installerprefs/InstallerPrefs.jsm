@@ -100,7 +100,10 @@ InstallerPrefs.prototype = {
 
   _cleanRegistryKey(regKey) {
     for (let i = regKey.valueCount - 1; i >= 0; --i) {
-      regKey.removeValue(regKey.getValueName(i));
+      const name = regKey.getValueName(i);
+      if (name.startsWith(INSTALLER_PREFS_BRANCH)) {
+        regKey.removeValue(name);
+      }
     }
   },
 
