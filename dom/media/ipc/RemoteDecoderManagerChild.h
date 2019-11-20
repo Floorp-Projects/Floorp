@@ -7,15 +7,18 @@
 #define include_dom_media_ipc_RemoteDecoderManagerChild_h
 #include "mozilla/PRemoteDecoderManagerChild.h"
 #include "mozilla/layers/VideoBridgeUtils.h"
+#include "GPUVideoImage.h"
 
 namespace mozilla {
 
-class RemoteDecoderManagerChild final : public PRemoteDecoderManagerChild,
-                                        public mozilla::ipc::IShmemAllocator {
+class RemoteDecoderManagerChild final
+    : public PRemoteDecoderManagerChild,
+      public mozilla::ipc::IShmemAllocator,
+      public mozilla::layers::IGPUVideoSurfaceManager {
   friend class PRemoteDecoderManagerChild;
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteDecoderManagerChild)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteDecoderManagerChild, override)
 
   // Can only be called from the manager thread
   static RemoteDecoderManagerChild* GetRDDProcessSingleton();
@@ -28,9 +31,9 @@ class RemoteDecoderManagerChild final : public PRemoteDecoderManagerChild,
   // Can be called from any thread, dispatches the request to the IPDL thread
   // internally and will be ignored if the IPDL actor has been destroyed.
   already_AddRefed<gfx::SourceSurface> Readback(
-      const SurfaceDescriptorGPUVideo& aSD);
+      const SurfaceDescriptorGPUVideo& aSD) override;
   void DeallocateSurfaceDescriptor(
-      const SurfaceDescriptorGPUVideo& aSD);
+      const SurfaceDescriptorGPUVideo& aSD) override;
 
   bool AllocShmem(size_t aSize,
                   mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
