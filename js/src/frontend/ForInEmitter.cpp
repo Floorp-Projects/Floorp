@@ -124,15 +124,13 @@ bool ForInEmitter::emitBody() {
 bool ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
   MOZ_ASSERT(state_ == State::Body);
 
+  loopInfo_->setContinueTarget(bce_->bytecodeSection().offset());
+
   if (forPos) {
     // Make sure this code is attributed to the "for".
     if (!bce_->updateSourceCoordNotes(*forPos)) {
       return false;
     }
-  }
-
-  if (!loopInfo_->emitContinueTarget(bce_)) {
-    return false;
   }
 
   if (!loopInfo_->emitLoopEntry(bce_, Nothing())) {

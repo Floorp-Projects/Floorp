@@ -13,10 +13,10 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 
-#include "ds/InlineTable.h"
 #include "jit/BaselineInspector.h"
 #include "jit/BytecodeAnalysis.h"
 #include "jit/IonAnalysis.h"
+#include "jit/IonControlFlow.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
@@ -43,110 +43,6 @@ BaselineFrameInspector* NewBaselineFrameInspector(TempAllocator* temp,
                                                   uint32_t frameSize);
 
 using CallTargets = Vector<JSFunction*, 6, JitAllocPolicy>;
-
-// PendingBlock is used whenever a block is terminated with a forward branch in
-// the bytecode. When IonBuilder reaches the jump target it uses this
-// information to link the block to the jump target's block.
-class PendingBlock {
- public:
-  enum class Kind : uint8_t {
-    // MTest true-successor.
-    TestTrue,
-
-    // MTest false-successor.
-    TestFalse,
-
-    // MGoto successor.
-    Goto,
-
-    // MGotoWithFake second successor.
-    GotoWithFake,
-  };
-
- private:
-  MBasicBlock* block_;
-  Kind kind_;
-  JSOp testOp_ = JSOP_LIMIT;
-
-  PendingBlock(MBasicBlock* block, Kind kind, JSOp testOp = JSOP_LIMIT)
-      : block_(block), kind_(kind), testOp_(testOp) {}
-
- public:
-  static PendingBlock NewTestTrue(MBasicBlock* block, JSOp op) {
-    return PendingBlock(block, Kind::TestTrue, op);
-  }
-  static PendingBlock NewTestFalse(MBasicBlock* block, JSOp op) {
-    return PendingBlock(block, Kind::TestFalse, op);
-  }
-  static PendingBlock NewGoto(MBasicBlock* block) {
-    return PendingBlock(block, Kind::Goto);
-  }
-  static PendingBlock NewGotoWithFake(MBasicBlock* block) {
-    return PendingBlock(block, Kind::GotoWithFake);
-  }
-
-  MBasicBlock* block() const { return block_; }
-  Kind kind() const { return kind_; }
-
-  JSOp testOp() const {
-    MOZ_ASSERT(kind_ == Kind::TestTrue || kind_ == Kind::TestFalse);
-    return testOp_;
-  }
-};
-
-// PendingBlocksMap maps a bytecode instruction to a Vector of PendingBlocks
-// targeting it. We use InlineMap<> for this because most of the time there are
-// only a few pending blocks but there can be many when switch-statements are
-// involved.
-using PendingBlocks = Vector<PendingBlock, 2, SystemAllocPolicy>;
-using PendingBlocksMap =
-    InlineMap<jsbytecode*, PendingBlocks, 8, PointerHasher<jsbytecode*>,
-              SystemAllocPolicy>;
-
-// LoopState stores information about a loop that's being compiled to MIR.
-class LoopState {
- public:
-  enum class State {
-    // Compiling a do-while loop or for-loop without condition. These loops
-    // can be simply compiled from first bytecode op to last so they do not
-    // require state changes.
-    DoWhileLike,
-
-    // Compiling the condition of a while/for-in/for-of/for loop. When the
-    // backedge is reached, the state is changed to WhileLikeBody and the loop
-    // body is compiled.
-    WhileLikeCond,
-
-    // Compiling the body of a while/for-in/for-of/for loop. This includes the
-    // update clause of a for-loop.
-    WhileLikeBody,
-  };
-
- private:
-  State state_;
-  MBasicBlock* header_ = nullptr;
-  jsbytecode* loopEntry_ = nullptr;
-  jsbytecode* loopHead_ = nullptr;
-  jsbytecode* successorStart_ = nullptr;
-
- public:
-  LoopState(State state, MBasicBlock* header, jsbytecode* loopEntry,
-            jsbytecode* loopHead, jsbytecode* successorStart)
-      : state_(state),
-        header_(header),
-        loopEntry_(loopEntry),
-        loopHead_(loopHead),
-        successorStart_(successorStart) {}
-
-  State state() const { return state_; }
-  MBasicBlock* header() const { return header_; }
-  jsbytecode* loopEntry() const { return loopEntry_; }
-  jsbytecode* loopHead() const { return loopHead_; }
-  jsbytecode* successorStart() const { return successorStart_; }
-
-  void setState(State state) { state_ = state; }
-};
-using LoopStateStack = Vector<LoopState, 4, JitAllocPolicy>;
 
 class IonBuilder : public MIRGenerator,
                    public mozilla::LinkedListElement<IonBuilder>,
@@ -180,9 +76,8 @@ class IonBuilder : public MIRGenerator,
 
  private:
   AbortReasonOr<Ok> traverseBytecode();
-  AbortReasonOr<Ok> startTraversingBlock(MBasicBlock* block);
   AbortReasonOr<Ok> processIterators();
-  AbortReasonOr<Ok> inspectOpcode(JSOp op, bool* restarted);
+  AbortReasonOr<Ok> inspectOpcode(JSOp op);
   uint32_t readIndex(jsbytecode* pc);
   JSAtom* readAtom(jsbytecode* pc);
 
@@ -195,10 +90,7 @@ class IonBuilder : public MIRGenerator,
                                        InliningTargets& targets,
                                        uint32_t maxTargets);
 
-  AbortReasonOr<Ok> analyzeNewLoopTypes(MBasicBlock* entry,
-                                        jsbytecode* loopHeadPc, bool isForIn,
-                                        jsbytecode* loopStartPc,
-                                        jsbytecode* loopStopPc);
+  AbortReasonOr<Ok> analyzeNewLoopTypes(const CFGBlock* loopEntryBlock);
 
   AbortReasonOr<MBasicBlock*> newBlock(size_t stackDepth, jsbytecode* pc,
                                        MBasicBlock* maybePredecessor = nullptr);
@@ -222,27 +114,18 @@ class IonBuilder : public MIRGenerator,
     return newBlock(predecessor->stackDepth(), pc, predecessor);
   }
 
-  AbortReasonOr<Ok> addPendingBlock(const PendingBlock& block,
-                                    jsbytecode* target);
-
-  AbortReasonOr<Ok> startLoop(LoopState::State initState,
-                              jsbytecode* beforeLoopEntry,
-                              jsbytecode* loopEntry, jsbytecode* loopHead,
-                              jsbytecode* backjump, bool isForIn,
-                              uint32_t stackPhiCount);
-  AbortReasonOr<Ok> visitDoWhileLoop(jssrcnote* sn);
-  AbortReasonOr<Ok> visitForLoop(jssrcnote* sn);
-  AbortReasonOr<Ok> visitWhileOrForInOrForOfLoop(jssrcnote* sn);
-
-  AbortReasonOr<Ok> visitJumpTarget(JSOp op);
-  AbortReasonOr<Ok> visitTest(JSOp op, bool* restarted);
-  AbortReasonOr<Ok> visitTestBackedge(JSOp op, bool* restarted);
-  AbortReasonOr<Ok> visitReturn(JSOp op);
-  AbortReasonOr<Ok> visitGoto(jsbytecode* target);
-  AbortReasonOr<Ok> visitBackEdge(bool* restarted);
-  AbortReasonOr<Ok> visitTry();
-  AbortReasonOr<Ok> visitThrow();
-  AbortReasonOr<Ok> visitTableSwitch();
+  AbortReasonOr<Ok> visitBlock(const CFGBlock* hblock, MBasicBlock* mblock);
+  AbortReasonOr<Ok> visitControlInstruction(CFGControlInstruction* ins,
+                                            bool* restarted);
+  AbortReasonOr<Ok> visitTest(CFGTest* test);
+  AbortReasonOr<Ok> visitCondSwitchCase(CFGCondSwitchCase* switchCase);
+  AbortReasonOr<Ok> visitLoopEntry(CFGLoopEntry* loopEntry);
+  AbortReasonOr<Ok> visitReturn(CFGControlInstruction* ins);
+  AbortReasonOr<Ok> visitGoto(CFGGoto* ins);
+  AbortReasonOr<Ok> visitBackEdge(CFGBackEdge* ins, bool* restarted);
+  AbortReasonOr<Ok> visitTry(CFGTry* test);
+  AbortReasonOr<Ok> visitThrow(CFGThrow* ins);
+  AbortReasonOr<Ok> visitTableSwitch(CFGTableSwitch* ins);
 
   // We want to make sure that our MTest instructions all check whether the
   // thing being tested might emulate undefined.  So we funnel their creation
@@ -261,7 +144,7 @@ class IonBuilder : public MIRGenerator,
 
   // Restarts processing of a loop if the type information at its header was
   // incomplete.
-  AbortReasonOr<Ok> restartLoop(MBasicBlock* header);
+  AbortReasonOr<Ok> restartLoop(const CFGBlock* header);
 
   // Please see the Big Honkin' Comment about how resume points work in
   // IonBuilder.cpp, near the definition for this function.
@@ -270,6 +153,8 @@ class IonBuilder : public MIRGenerator,
   AbortReasonOr<Ok> resumeAt(MInstruction* ins, jsbytecode* pc);
   AbortReasonOr<Ok> resumeAfter(MInstruction* ins);
   AbortReasonOr<Ok> maybeInsertResume();
+
+  AbortReasonOr<Ok> emitGoto(CFGBlock* successor, size_t popAmount);
 
   void insertRecompileCheck();
 
@@ -709,8 +594,7 @@ class IonBuilder : public MIRGenerator,
   AbortReasonOr<Ok> jsop_label();
   AbortReasonOr<Ok> jsop_andor(JSOp op);
   AbortReasonOr<Ok> jsop_dup2();
-  AbortReasonOr<Ok> jsop_goto(bool* restarted);
-  AbortReasonOr<Ok> jsop_loopentry(bool* restarted);
+  AbortReasonOr<Ok> jsop_loopentry();
   AbortReasonOr<Ok> jsop_loophead(jsbytecode* pc);
   AbortReasonOr<Ok> jsop_compare(JSOp op);
   AbortReasonOr<Ok> jsop_compare(JSOp op, MDefinition* left,
@@ -799,7 +683,6 @@ class IonBuilder : public MIRGenerator,
   AbortReasonOr<Ok> jsop_instrumentation_active();
   AbortReasonOr<Ok> jsop_instrumentation_callback();
   AbortReasonOr<Ok> jsop_instrumentation_scriptid();
-  AbortReasonOr<Ok> jsop_coalesce();
 
   /* Inlining. */
 
@@ -1177,14 +1060,12 @@ class IonBuilder : public MIRGenerator,
   uint32_t typeArrayHint;
   uint32_t* bytecodeTypeMap;
 
-  GSNCache gsn;
   jsbytecode* pc;
-  jsbytecode* nextpc = nullptr;
   MBasicBlock* current;
   uint32_t loopDepth_;
-
-  PendingBlocksMap pendingBlocks_;
-  LoopStateStack loopStack_;
+  Vector<MBasicBlock*, 0, JitAllocPolicy> blockWorklist;
+  const CFGBlock* cfgCurrent;
+  const ControlFlowGraph* cfg;
 
   Vector<BytecodeSite*, 0, JitAllocPolicy> trackedOptimizationSites_;
 
@@ -1231,6 +1112,10 @@ class IonBuilder : public MIRGenerator,
 
   Vector<MDefinition*, 2, JitAllocPolicy> iterators_;
   Vector<LoopHeader, 0, JitAllocPolicy> loopHeaders_;
+  Vector<MBasicBlock*, 0, JitAllocPolicy> loopHeaderStack_;
+#ifdef DEBUG
+  Vector<const CFGBlock*, 0, JitAllocPolicy> cfgLoopHeaderStack_;
+#endif
 
   BaselineInspector* inspector;
 
@@ -1366,8 +1251,6 @@ class IonBuilder : public MIRGenerator,
   void trackInlineSuccessUnchecked(InliningStatus status);
 
  public:
-  const PendingBlocksMap& pendingBlocks() const { return pendingBlocks_; }
-
   // This is only valid for IonBuilders that have moved to background
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
