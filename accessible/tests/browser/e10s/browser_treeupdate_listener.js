@@ -34,5 +34,5 @@ addAccessibleTask(
     let tree = { TEXT: [] };
     testAccessibleTree(findAccessibleChildByID(accDoc, "parent"), tree);
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

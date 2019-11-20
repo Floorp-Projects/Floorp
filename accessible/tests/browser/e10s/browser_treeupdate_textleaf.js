@@ -34,5 +34,5 @@ addAccessibleTask(
     await removeTextData(browser, p, "p", ROLE_PARAGRAPH);
     await removeTextData(browser, pre, "pre", ROLE_TEXT_CONTAINER);
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

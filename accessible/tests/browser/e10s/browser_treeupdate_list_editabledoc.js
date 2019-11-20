@@ -44,5 +44,5 @@ addAccessibleTask(
       ],
     });
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

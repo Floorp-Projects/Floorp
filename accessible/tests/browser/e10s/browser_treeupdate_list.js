@@ -48,5 +48,5 @@ addAccessibleTask(
       accTree
     );
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

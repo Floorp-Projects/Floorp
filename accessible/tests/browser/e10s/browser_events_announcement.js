@@ -26,5 +26,5 @@ addAccessibleTask(
       "priority matches"
     );
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

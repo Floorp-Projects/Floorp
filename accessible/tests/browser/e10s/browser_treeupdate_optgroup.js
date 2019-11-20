@@ -99,5 +99,5 @@ addAccessibleTask(
     };
     testAccessibleTree(select, tree);
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

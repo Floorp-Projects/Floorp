@@ -57,5 +57,5 @@ addAccessibleTask(
       "A new accessible for a IFRAME document has an IFRAME as a parent."
     );
   },
-  { topLevel: false, iframe: true }
+  { topLevel: false, iframe: true, remoteIframe: true }
 );

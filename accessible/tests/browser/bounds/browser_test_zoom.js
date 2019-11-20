@@ -77,5 +77,5 @@ addAccessibleTask(
      usemap="#atoz_map"
      src="http://example.com/a11y/accessible/tests/mochitest/letters.gif">`,
   runTests,
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

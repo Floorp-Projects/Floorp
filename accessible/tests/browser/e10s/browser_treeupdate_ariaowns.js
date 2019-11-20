@@ -290,5 +290,5 @@ addAccessibleTask(
     await rearrangeARIAOwns(browser, accDoc);
     await removeNotARIAOwnedEl(browser, accDoc);
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

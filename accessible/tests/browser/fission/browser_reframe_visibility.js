@@ -32,7 +32,7 @@ addAccessibleTask(
       isDefunct(iframeAcc),
       "IFRAME accessible should be defunct when hidden."
     );
-    if (gFissionBrowser) {
+    if (gIsRemoteIframe) {
       ok(
         !isDefunct(iframeDocAcc),
         "IFRAME document's accessible is not defunct when the IFRAME is hidden and fission is enabled."
@@ -58,7 +58,7 @@ addAccessibleTask(
     );
 
     const events = [[EVENT_REORDER, contentDocAcc]];
-    if (!gFissionBrowser) {
+    if (!gIsRemoteIframe) {
       events.push([
         EVENT_STATE_CHANGE,
         event => {
@@ -85,7 +85,7 @@ addAccessibleTask(
     is(iframeAcc.childCount, 1, "IFRAME accessible should have a single child");
     ok(newiframeDocAcc, "IFRAME document exists");
     ok(!isDefunct(newiframeDocAcc), "IFRAME document should be accessible");
-    if (gFissionBrowser) {
+    if (gIsRemoteIframe) {
       ok(
         !isDefunct(iframeDocAcc),
         "Original IFRAME document accessible should not be defunct when fission is enabled."
@@ -112,5 +112,5 @@ addAccessibleTask(
       "A new accessible for a IFRAME document is the child of the IFRAME accessible"
     );
   },
-  { topLevel: false, iframe: true }
+  { topLevel: false, iframe: true, remoteIframe: true }
 );

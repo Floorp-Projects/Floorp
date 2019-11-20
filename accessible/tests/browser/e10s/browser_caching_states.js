@@ -150,5 +150,5 @@ addAccessibleTask(
     await runStateTests(browser, accDoc, "file", ariaTests);
     await runStateTests(browser, accDoc, "text", extraStateTests);
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );
