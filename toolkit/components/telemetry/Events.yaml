@@ -1706,8 +1706,6 @@ security:
       Expected values are:
         chromeuri - chrome:// file
         resourceuri - resource:// file
-        datauri - a data URI
-        bloburi - a blob URI
         singlestring - A single file or string with no slashes
         mozillaextension - An extension claiming to be from *mozilla.org
         otherextension - Another extension not from Mozilla
@@ -1719,43 +1717,29 @@ security:
                               the value prepared as for sanitizedWindowsPath, or the bare scheme of
                               the original url
         other - Unknown
-        other-on-worker - We cannot do a regex; it is not a chrome, resource, data, or blob uri, but
+        other-on-worker - We cannot do a regex; it is not chromeuri or resourceuri, but
                           could be any other.
         regexfailure - Our Regex Matching code threw an error
       The fileinfo key may contain additional information about the file that caused the eval()
       depending on the above value. Resource, Chrome, and SingleString will contain the full value.
       Extensions will contain the full value; however .xpi! will be shortened to !,
-      shield.mozilla.org! to s! and mozilla.org! to m!.  Data, Blob, UserChromeJS, Other, and
-      Regexfailure should have no value.
+      shield.mozilla.org! to s! and mozilla.org! to m!.  UserChromeJS, Other, and Regexfailure should
+      have no value.
+    expiry_version: "never"
     notification_emails:
       - tom@mozilla.com
       - ckerschb@mozilla.com
     release_channel_collection: opt-out
     products:
       - firefox
+      - fennec
+      - geckoview
     expiry_version: "75"
     record_in_processes:
       - all
     extra_keys:
       fileinfo: Information about the file that triggered eval
-  javascriptLoad:
-    objects: ["parentProcess"]
-    bug_numbers:
-      - 1582512
-    description: >
-      The javascript engine requested to load a filename that was not allowed.
-      Expected values, and fileinfo key, are the same possible values as above in 'evalUsage'
-    notification_emails:
-      - tom@mozilla.com
-      - gijs@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - firefox
-    expiry_version: "77"
-    record_in_processes:
-      - main
-    extra_keys:
-      fileinfo: Information about the filename that was requested to be loaded
+
 
 # This data collection is intended for study-only collection
 # and is not meant to be enabled permanently on opt-in or opt-out.

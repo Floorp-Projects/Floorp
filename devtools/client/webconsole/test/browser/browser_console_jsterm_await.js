@@ -10,8 +10,6 @@ const TEST_URI =
   "data:text/html;charset=utf-8,Top-level await Browser Console test";
 
 add_task(async function() {
-  // Needed for the execute() function below
-  await pushPref("security.allow_parent_unrestricted_js_loads", true);
   // Enable await mapping.
   await pushPref("devtools.debugger.features.map-await-expression", true);
 
