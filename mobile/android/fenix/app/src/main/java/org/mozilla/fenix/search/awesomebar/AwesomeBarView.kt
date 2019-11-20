@@ -329,7 +329,8 @@ class AwesomeBarView(
 
                 searchSuggestionProviderMap.put(
                     engine, SearchSuggestionProvider(
-                        components.search.provider.getDefaultEngine(this),
+                        components.search.provider.installedSearchEngines(this).list.find { it.name == engine.name }
+                            ?: components.search.provider.getDefaultEngine(this),
                         shortcutSearchUseCase,
                         components.core.client,
                         limit = 3,

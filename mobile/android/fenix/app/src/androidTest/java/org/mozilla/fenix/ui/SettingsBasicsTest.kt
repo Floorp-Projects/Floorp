@@ -63,25 +63,26 @@ class SettingsBasicsTest {
             verifyBasicsHeading()
             verifySearchEngineButton()
             // drill down to submenu
-            }.openSearchSubMenu {
-                verifyDefaultSearchEngineHeader()
-                verifySearchEngineList()
-                verifyShowSearchSuggestions()
-                verifyShowClipboardSuggestions()
-                verifySearchBrowsingHistory()
-                verifySearchBookmarks()
-            }.goBack {
-            }.openThemeSubMenu {
-                verifyThemes()
-            }.goBack {
-            }.openAccessibilitySubMenu {
-                verifyAutomaticFontSizing()
-            }.goBack {
+        }.openSearchSubMenu {
+            verifyDefaultSearchEngineHeader()
+            verifySearchEngineList()
+            verifyShowSearchSuggestions()
+            verifyShowSearchShortcuts()
+            verifyShowClipboardSuggestions()
+            verifySearchBrowsingHistory()
+            verifySearchBookmarks()
+        }.goBack {
+        }.openThemeSubMenu {
+            verifyThemes()
+        }.goBack {
+        }.openAccessibilitySubMenu {
+            verifyAutomaticFontSizing()
+        }.goBack {
             // drill down to submenu
-            }.openDefaultBrowserSubMenu {
-                // verify item: set as default browser (duplicates, verify child of recyclerview)
-                // Verify label: Open links in private tab
-            }.goBack {
+        }.openDefaultBrowserSubMenu {
+            // verify item: set as default browser (duplicates, verify child of recyclerview)
+            // Verify label: Open links in private tab
+        }.goBack {
         }
     }
 

@@ -22,6 +22,7 @@ class SettingsSubMenuSearchRobot {
     fun verifyDefaultSearchEngineHeader() = assertDefaultSearchEngineHeader()
     fun verifySearchEngineList() = assertSearchEngineList()
     fun verifyShowSearchSuggestions() = assertShowSearchSuggestions()
+    fun verifyShowSearchShortcuts() = assertShowSearchShortcuts()
     fun verifyShowClipboardSuggestions() = assertShowClipboardSuggestions()
     fun verifySearchBrowsingHistory() = assertSearchBrowsingHistory()
     fun verifySearchBookmarks() = assertSearchBookmarks()
@@ -54,9 +55,14 @@ private fun assertSearchEngineList() {
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     onView(ViewMatchers.withText("Wikipedia"))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    onView(ViewMatchers.withText("Add search engine"))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun assertShowSearchSuggestions() = onView(ViewMatchers.withText("Show search suggestions"))
+    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private fun assertShowSearchShortcuts() = onView(ViewMatchers.withText("Show search shortcuts"))
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 private fun assertShowClipboardSuggestions() = onView(ViewMatchers.withText("Show clipboard suggestions"))
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
