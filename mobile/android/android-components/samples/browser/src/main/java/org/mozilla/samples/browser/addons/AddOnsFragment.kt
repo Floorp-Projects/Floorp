@@ -6,6 +6,7 @@ package org.mozilla.samples.browser.addons
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,6 +23,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.AddOn
 import org.mozilla.samples.browser.R
+import org.mozilla.samples.browser.addons.PermissionsDialogFragment.PromptsStyling
 import org.mozilla.samples.browser.ext.components
 
 /**
@@ -42,6 +44,14 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
     override fun onViewCreated(rootView: View, savedInstanceState: Bundle?) {
         super.onViewCreated(rootView, savedInstanceState)
         bindRecyclerView(rootView)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        findPreviousDialogFragment()?.let { dialog ->
+            dialog.onPositiveButtonClicked = onPositiveButtonClicked
+            dialog.onNegativeButtonClicked = onNegativeButtonClicked
+        }
     }
 
     private fun bindRecyclerView(rootView: View) {
@@ -140,8 +150,8 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
         val context = view.context
         when (view.id) {
             R.id.add_button -> {
-                Toast.makeText(this.requireContext(), "Installing add-on", Toast.LENGTH_SHORT)
-                    .show()
+                val addOn = (((view.parent) as View).tag as AddOn)
+                showPermissionDialog(addOn)
             }
             R.id.add_on_item -> {
                 val intent = Intent(context, InstalledAddOnDetailsActivity::class.java)
@@ -151,5 +161,45 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
             else -> {
             }
         }
+    }
+
+    private fun isAlreadyADialogCreated(): Boolean {
+        return findPreviousDialogFragment() != null
+    }
+
+    private fun findPreviousDialogFragment(): PermissionsDialogFragment? {
+        return fragmentManager?.findFragmentByTag(PERMISSIONS_DIALOG_FRAGMENT_TAG) as? PermissionsDialogFragment
+    }
+
+    private fun showPermissionDialog(addOn: AddOn) {
+
+        val dialog = PermissionsDialogFragment.newInstance(
+            addOnId = addOn.id,
+            title = addOn.translatableName.translate(),
+            permissions = addOn.translatePermissions(),
+            promptsStyling = PromptsStyling(
+                gravity = Gravity.BOTTOM,
+                shouldWidthMatchParent = true
+            ),
+            onPositiveButtonClicked = onPositiveButtonClicked,
+            onNegativeButtonClicked = onNegativeButtonClicked
+        )
+
+        if (!isAlreadyADialogCreated() && fragmentManager != null) {
+            dialog.show(requireFragmentManager(), PERMISSIONS_DIALOG_FRAGMENT_TAG)
+        }
+    }
+
+    private val onPositiveButtonClicked: ((String) -> Unit) = { addonId ->
+        Toast.makeText(this.requireContext(), "Installing add-on $addonId", Toast.LENGTH_SHORT)
+            .show()
+    }
+
+    private val onNegativeButtonClicked = {
+        Toast.makeText(this.requireContext(), "Cancel button clicked", Toast.LENGTH_SHORT)
+            .show()
+    }
+    companion object {
+        private const val PERMISSIONS_DIALOG_FRAGMENT_TAG = "ADDONS_PERMISSIONS_DIALOG_FRAGMENT"
     }
 }
