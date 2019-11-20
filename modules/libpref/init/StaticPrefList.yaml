@@ -4935,8 +4935,15 @@
 # Is support for motion-path enabled?
 - name: layout.css.motion-path.enabled
   type: bool
-  value: @IS_NOT_RELEASE_OR_BETA@
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
+
+# Is support for motion-path ray() enabled?
+- name: layout.css.motion-path-ray.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
 
 # Expose the media query -moz-touch-enabled to web content.
 - name: layout.css.moz-touch-enabled.enabled
