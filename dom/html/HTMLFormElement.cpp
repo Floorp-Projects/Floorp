@@ -119,7 +119,8 @@ HTMLFormElement::HTMLFormElement(
       mNotifiedObservers(false),
       mNotifiedObserversResult(false),
       mEverTriedInvalidSubmit(false),
-      mIsConstructingEntryList(false) {
+      mIsConstructingEntryList(false),
+      mIsFiringSubmissionEvents(false) {
   // We start out valid.
   AddStatesSilently(NS_EVENT_STATE_VALID);
 }
@@ -235,6 +236,15 @@ void HTMLFormElement::MaybeSubmit(Element* aSubmitter) {
       (doc->GetSandboxFlags() & SANDBOXED_FORMS)) {
     return;
   }
+
+  // 6.1. If form's firing submission events is true, then return.
+  if (mIsFiringSubmissionEvents) {
+    return;
+  }
+
+  // 6.2. Set form's firing submission events to true.
+  AutoRestore<bool> resetFiringSubmissionEventsFlag(mIsFiringSubmissionEvents);
+  mIsFiringSubmissionEvents = true;
 
   // 6.3. If the submitter element's no-validate state is false, then
   //      interactively validate the constraints of form and examine the result.
