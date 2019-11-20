@@ -46,7 +46,6 @@ namespace layers {
 class CompositingRenderTarget;
 class CompositingRenderTargetOGL;
 class DataTextureSource;
-class GLManagerCompositor;
 class ShaderProgramOGL;
 class TextureSource;
 class TextureSourceOGL;
@@ -106,7 +105,6 @@ class PerUnitTexturePoolOGL : public CompositorTexturePoolOGL {
 class CompositorOGL final : public Compositor {
   typedef mozilla::gl::GLContext GLContext;
 
-  friend class GLManagerCompositor;
   friend class CompositingRenderTargetOGL;
 
   std::map<ShaderConfigOGL, ShaderProgramOGL*> mPrograms;
