@@ -14,6 +14,7 @@
 
 class nsDNSService;
 class nsIPrefBranch;
+class nsINetworkLinkService;
 
 namespace mozilla {
 namespace net {
@@ -75,6 +76,9 @@ class TRRService : public nsIObserver,
                            const nsACString& aOriginSuffix,
                            bool aPrivateBrowsing);
 
+  void RebuildSuffixList(nsINetworkLinkService* aLinkService);
+  void CheckVPNStatus(nsINetworkLinkService* aLinkService);
+
   bool mInitialized;
   Atomic<uint32_t, Relaxed> mMode;
   Atomic<uint32_t, Relaxed> mTRRBlacklistExpireTime;
@@ -124,6 +128,7 @@ class TRRService : public nsIObserver,
   uint32_t mRetryConfirmInterval;  // milliseconds until retry
   Atomic<uint32_t, Relaxed> mTRRFailures;
   bool mParentalControlEnabled;
+  bool mVPNDetected;
 };
 
 extern TRRService* gTRRService;
