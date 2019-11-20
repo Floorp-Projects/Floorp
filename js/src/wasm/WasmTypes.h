@@ -266,94 +266,6 @@ static inline bool IsReferenceType(PackedTypeCode ptc) {
          tc == TypeCode::FuncRef || tc == TypeCode::NullRef;
 }
 
-// The ExprType represents the type of a WebAssembly expression or return value
-// and may either be a ValType or void.
-//
-// (Soon, expression types will be generalized to a list of ValType and this
-// class will go away, replaced, wherever it is used, by a varU32 + list of
-// ValType.)
-
-class ValType;
-
-class ExprType {
-  PackedTypeCode tc_;
-
-#ifdef DEBUG
-  bool isValidCode() {
-    switch (UnpackTypeCodeType(tc_)) {
-      case TypeCode::I32:
-      case TypeCode::I64:
-      case TypeCode::F32:
-      case TypeCode::F64:
-      case TypeCode::AnyRef:
-      case TypeCode::FuncRef:
-      case TypeCode::NullRef:
-      case TypeCode::Ref:
-      case TypeCode::BlockVoid:
-      case TypeCode::Limit:
-        return true;
-      default:
-        return false;
-    }
-  }
-#endif
-
- public:
-  enum Code {
-    Void = uint8_t(TypeCode::BlockVoid),
-
-    I32 = uint8_t(TypeCode::I32),
-    I64 = uint8_t(TypeCode::I64),
-    F32 = uint8_t(TypeCode::F32),
-    F64 = uint8_t(TypeCode::F64),
-    AnyRef = uint8_t(TypeCode::AnyRef),
-    FuncRef = uint8_t(TypeCode::FuncRef),
-    NullRef = uint8_t(TypeCode::NullRef),
-    Ref = uint8_t(TypeCode::Ref),
-
-    Limit = uint8_t(TypeCode::Limit)
-  };
-
-  ExprType() : tc_() {}
-
-  ExprType(const ExprType& that) : tc_(that.tc_) {}
-
-  MOZ_IMPLICIT ExprType(Code c) : tc_(PackTypeCode(TypeCode(c))) {
-    MOZ_ASSERT(isValidCode());
-  }
-
-  ExprType(Code c, uint32_t refTypeIndex)
-      : tc_(PackTypeCode(TypeCode(c), refTypeIndex)) {
-    MOZ_ASSERT(isValidCode());
-  }
-
-  explicit ExprType(PackedTypeCode ptc) : tc_(ptc) {
-    MOZ_ASSERT(isValidCode());
-  }
-
-  explicit inline ExprType(const ValType& t);
-
-  PackedTypeCode packed() const { return tc_; }
-  PackedTypeCode* packedPtr() { return &tc_; }
-
-  Code code() const { return Code(UnpackTypeCodeType(tc_)); }
-
-  bool isValid() const { return IsValid(tc_); }
-
-  uint32_t refTypeIndex() const { return UnpackTypeCodeIndex(tc_); }
-  bool isRef() const { return UnpackTypeCodeType(tc_) == TypeCode::Ref; }
-
-  bool isReference() const { return IsReferenceType(tc_); }
-
-  bool operator==(const ExprType& that) const { return tc_ == that.tc_; }
-  bool operator!=(const ExprType& that) const { return tc_ != that.tc_; }
-  bool operator==(Code that) const {
-    MOZ_ASSERT(that != Code::Ref);
-    return code() == that;
-  }
-  bool operator!=(Code that) const { return !(*this == that); }
-};
-
 // The ValType represents the storage type of a WebAssembly location, whether
 // parameter, local, or global.
 
@@ -399,10 +311,6 @@ class ValType {
 
   ValType(Code c, uint32_t refTypeIndex)
       : tc_(PackTypeCode(TypeCode(c), refTypeIndex)) {
-    MOZ_ASSERT(isValidCode());
-  }
-
-  explicit ValType(const ExprType& t) : tc_(t.packed()) {
     MOZ_ASSERT(isValidCode());
   }
 
@@ -511,21 +419,6 @@ static inline jit::MIRType ToMIRType(ValType vt) {
 
 static inline bool IsNumberType(ValType vt) { return !vt.isReference(); }
 
-// ExprType utilities
-
-inline ExprType::ExprType(const ValType& t) : tc_(t.packed()) {}
-
-static inline bool IsVoid(ExprType et) { return et == ExprType::Void; }
-
-static inline ValType NonVoidToValType(ExprType et) {
-  MOZ_ASSERT(!IsVoid(et));
-  return ValType(et);
-}
-
-static inline jit::MIRType ToMIRType(ExprType et) {
-  return IsVoid(et) ? jit::MIRType::None : ToMIRType(ValType(et));
-}
-
 static inline jit::MIRType ToMIRType(const Maybe<ValType>& t) {
   return t ? ToMIRType(ValType(t.ref())) : jit::MIRType::None;
 }
@@ -555,10 +448,6 @@ static inline const char* ToCString(ValType type) {
 
 static inline const char* ToCString(const Maybe<ValType>& type) {
   return type ? ToCString(type.ref()) : "void";
-}
-
-static inline const char* ToCString(ExprType type) {
-  return ToCString(type == ExprType::Void ? Nothing() : Some(ValType(type)));
 }
 
 // An AnyRef is a boxed value that can represent any wasm reference type and any

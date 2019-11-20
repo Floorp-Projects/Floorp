@@ -966,31 +966,31 @@ class Type {
     return isVoid() ? Nothing() : Some(canonicalToValType());
   }
 
-  // Convert this type to a wasm::ExprType for use in a wasm
+  // Convert this type to a wasm::TypeCode for use in a wasm
   // block signature. This works for all types, including non-canonical
   // ones. Consequently, the type isn't valid for subsequent asm.js
   // validation; it's only valid for use in producing wasm.
-  ExprType toWasmBlockSignatureType() const {
+  TypeCode toWasmBlockSignatureType() const {
     switch (which()) {
       case Fixnum:
       case Signed:
       case Unsigned:
       case Int:
       case Intish:
-        return ExprType::I32;
+        return TypeCode::I32;
 
       case Float:
       case MaybeFloat:
       case Floatish:
-        return ExprType::F32;
+        return TypeCode::F32;
 
       case DoubleLit:
       case Double:
       case MaybeDouble:
-        return ExprType::F64;
+        return TypeCode::F64;
 
       case Void:
-        return ExprType::Void;
+        return TypeCode::BlockVoid;
     }
     MOZ_CRASH("Invalid Type");
   }
@@ -2439,7 +2439,7 @@ class MOZ_STACK_CLASS FunctionValidatorShared {
  public:
   bool pushBreakableBlock() {
     return encoder().writeOp(Op::Block) &&
-           encoder().writeFixedU8(uint8_t(ExprType::Void)) &&
+           encoder().writeFixedU8(uint8_t(TypeCode::BlockVoid)) &&
            breakableStack_.append(blockDepth_++);
   }
   bool popBreakableBlock() {
@@ -2457,7 +2457,7 @@ class MOZ_STACK_CLASS FunctionValidatorShared {
     }
     blockDepth_++;
     return encoder().writeOp(Op::Block) &&
-           encoder().writeFixedU8(uint8_t(ExprType::Void));
+           encoder().writeFixedU8(uint8_t(TypeCode::BlockVoid));
   }
   bool popUnbreakableBlock(const LabelVector* labels = nullptr) {
     if (labels) {
@@ -2471,7 +2471,7 @@ class MOZ_STACK_CLASS FunctionValidatorShared {
 
   bool pushContinuableBlock() {
     return encoder().writeOp(Op::Block) &&
-           encoder().writeFixedU8(uint8_t(ExprType::Void)) &&
+           encoder().writeFixedU8(uint8_t(TypeCode::BlockVoid)) &&
            continuableStack_.append(blockDepth_++);
   }
   bool popContinuableBlock() {
@@ -2481,9 +2481,9 @@ class MOZ_STACK_CLASS FunctionValidatorShared {
 
   bool pushLoop() {
     return encoder().writeOp(Op::Block) &&
-           encoder().writeFixedU8(uint8_t(ExprType::Void)) &&
+           encoder().writeFixedU8(uint8_t(TypeCode::BlockVoid)) &&
            encoder().writeOp(Op::Loop) &&
-           encoder().writeFixedU8(uint8_t(ExprType::Void)) &&
+           encoder().writeFixedU8(uint8_t(TypeCode::BlockVoid)) &&
            breakableStack_.append(blockDepth_++) &&
            continuableStack_.append(blockDepth_++);
   }
@@ -2501,15 +2501,15 @@ class MOZ_STACK_CLASS FunctionValidatorShared {
     MOZ_ASSERT(blockDepth_ > 0);
     return encoder().writeOp(Op::Else);
   }
-  void setIfType(size_t typeAt, ExprType type) {
-    encoder().patchFixedU7(typeAt, uint8_t(type.code()));
+  void setIfType(size_t typeAt, TypeCode type) {
+    encoder().patchFixedU7(typeAt, uint8_t(type));
   }
   bool popIf() {
     MOZ_ASSERT(blockDepth_ > 0);
     --blockDepth_;
     return encoder().writeOp(Op::End);
   }
-  bool popIf(size_t typeAt, ExprType type) {
+  bool popIf(size_t typeAt, TypeCode type) {
     MOZ_ASSERT(blockDepth_ > 0);
     --blockDepth_;
     if (!encoder().writeOp(Op::End)) {
@@ -4690,8 +4690,7 @@ static bool CheckComma(FunctionValidator<Unit>& f, ParseNode* comma,
     return false;
   }
 
-  f.encoder().patchFixedU7(typeAt,
-                           uint8_t(type->toWasmBlockSignatureType().code()));
+  f.encoder().patchFixedU7(typeAt, uint8_t(type->toWasmBlockSignatureType()));
 
   return f.encoder().writeOp(Op::End);
 }
@@ -5581,7 +5580,7 @@ recurse:
     return false;
   }
 
-  f.setIfType(typeAt, ExprType::Void);
+  f.setIfType(typeAt, TypeCode::BlockVoid);
 
   if (!CheckStatement(f, thenStmt)) {
     return false;
