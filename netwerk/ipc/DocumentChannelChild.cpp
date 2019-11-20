@@ -249,13 +249,7 @@ IPCResult DocumentChannelChild::RecvDeleteSelf() {
 }
 
 IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
-    const uint32_t& aRegistrarId, nsIURI* aURI, const uint32_t& aNewLoadFlags,
-    const Maybe<ReplacementChannelConfigInit>& aInit,
-    const Maybe<LoadInfoArgs>& aLoadInfo,
-    nsTArray<DocumentChannelRedirect>&& aRedirects, const uint64_t& aChannelId,
-    nsIURI* aOriginalURI, const uint32_t& aRedirectMode,
-    const uint32_t& aRedirectFlags, const Maybe<uint32_t>& aContentDisposition,
-    const Maybe<nsString>& aContentDispositionFilename,
+    const RedirectToRealChannelArgs& aArgs,
     RedirectToRealChannelResolver&& aResolve) {
   RefPtr<dom::Document> loadingDocument;
   mLoadInfo->GetLoadingDocument(getter_AddRefs(loadingDocument));
@@ -268,20 +262,20 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
     cspToInheritLoadingDocument = do_QueryReferent(ctx);
   }
   nsCOMPtr<nsILoadInfo> loadInfo;
-  MOZ_ALWAYS_SUCCEEDS(LoadInfoArgsToLoadInfo(aLoadInfo, loadingDocument,
+  MOZ_ALWAYS_SUCCEEDS(LoadInfoArgsToLoadInfo(aArgs.loadInfo(), loadingDocument,
                                              cspToInheritLoadingDocument,
                                              getter_AddRefs(loadInfo)));
 
-  mRedirects = std::move(aRedirects);
+  mRedirects = std::move(aArgs.redirects());
   mRedirectResolver = std::move(aResolve);
 
   nsCOMPtr<nsIChannel> newChannel;
   nsresult rv =
-      NS_NewChannelInternal(getter_AddRefs(newChannel), aURI, loadInfo,
+      NS_NewChannelInternal(getter_AddRefs(newChannel), aArgs.uri(), loadInfo,
                             nullptr,     // PerformanceStorage
                             mLoadGroup,  // aLoadGroup
                             nullptr,     // aCallbacks
-                            aNewLoadFlags);
+                            aArgs.newLoadFlags());
 
   RefPtr<HttpChannelChild> httpChild = do_QueryObject(newChannel);
   RefPtr<nsIChildChannel> childChannel = do_QueryObject(newChannel);
@@ -293,24 +287,26 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
   // This is used to report any errors back to the parent by calling
   // CrossProcessRedirectFinished.
   auto scopeExit = MakeScopeExit([&]() {
-    mRedirectResolver(rv);
+    Maybe<LoadInfoArgs> dummy;
+    mRedirectResolver(
+        Tuple<const nsresult&, const Maybe<LoadInfoArgs>&>(rv, dummy));
     mRedirectResolver = nullptr;
   });
 
   if (httpChild) {
-    rv = httpChild->SetChannelId(aChannelId);
+    rv = httpChild->SetChannelId(aArgs.channelId());
   }
   if (NS_FAILED(rv)) {
     return IPC_OK();
   }
 
-  rv = newChannel->SetOriginalURI(aOriginalURI);
+  rv = newChannel->SetOriginalURI(aArgs.originalURI());
   if (NS_FAILED(rv)) {
     return IPC_OK();
   }
 
   if (httpChild) {
-    rv = httpChild->SetRedirectMode(aRedirectMode);
+    rv = httpChild->SetRedirectMode(aArgs.redirectMode());
   }
   if (NS_FAILED(rv)) {
     return IPC_OK();
@@ -318,19 +314,20 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
 
   newChannel->SetNotificationCallbacks(mCallbacks);
 
-  if (aInit) {
-    HttpBaseChannel::ReplacementChannelConfig config(*aInit);
+  if (aArgs.init()) {
+    HttpBaseChannel::ReplacementChannelConfig config(*aArgs.init());
     HttpBaseChannel::ConfigureReplacementChannel(
         newChannel, config,
         HttpBaseChannel::ConfigureReason::DocumentChannelReplacement);
   }
 
-  if (aContentDisposition) {
-    newChannel->SetContentDisposition(*aContentDisposition);
+  if (aArgs.contentDisposition()) {
+    newChannel->SetContentDisposition(*aArgs.contentDisposition());
   }
 
-  if (aContentDispositionFilename) {
-    newChannel->SetContentDispositionFilename(*aContentDispositionFilename);
+  if (aArgs.contentDispositionFilename()) {
+    newChannel->SetContentDispositionFilename(
+        *aArgs.contentDispositionFilename());
   }
 
   // transfer any properties. This appears to be entirely a content-side
@@ -350,7 +347,8 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
 
   // connect parent.
   if (childChannel) {
-    rv = childChannel->ConnectParent(aRegistrarId);  // creates parent channel
+    rv = childChannel->ConnectParent(
+        aArgs.registrarId());  // creates parent channel
     if (NS_FAILED(rv)) {
       return IPC_OK();
     }
@@ -359,8 +357,8 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
 
   nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
   MOZ_ASSERT(target);
-  rv = gHttpHandler->AsyncOnChannelRedirect(this, newChannel, aRedirectFlags,
-                                            target);
+  rv = gHttpHandler->AsyncOnChannelRedirect(this, newChannel,
+                                            aArgs.redirectFlags(), target);
 
   if (NS_SUCCEEDED(rv)) {
     scopeExit.release();
@@ -379,7 +377,9 @@ DocumentChannelChild::OnRedirectVerifyCallback(nsresult aStatusCode) {
   // we're done.
   if (NS_FAILED(mStatus)) {
     redirectChannel->SetNotificationCallbacks(nullptr);
-    redirectResolver(aStatusCode);
+    Maybe<LoadInfoArgs> dummy;
+    redirectResolver(
+        Tuple<const nsresult&, const Maybe<LoadInfoArgs>&>(aStatusCode, dummy));
     return NS_OK;
   }
 
@@ -395,7 +395,9 @@ DocumentChannelChild::OnRedirectVerifyCallback(nsresult aStatusCode) {
     redirectChannel->SetNotificationCallbacks(nullptr);
   }
 
-  redirectResolver(rv);
+  Maybe<LoadInfoArgs> dummy;
+  redirectResolver(
+      Tuple<const nsresult&, const Maybe<LoadInfoArgs>&>(rv, dummy));
 
   if (NS_FAILED(rv)) {
     ShutdownListeners(rv);
