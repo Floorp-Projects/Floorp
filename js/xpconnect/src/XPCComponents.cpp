@@ -1448,9 +1448,8 @@ nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack,
 NS_IMETHODIMP
 nsXPCComponents_Utils::EvalInSandbox(
     const nsAString& source, HandleValue sandboxVal, HandleValue version,
-    const nsACString& filenameArg, int32_t lineNumber,
-    bool enforceFilenameRestrictions, JSContext* cx, uint8_t optionalArgc,
-    MutableHandleValue retval) {
+    const nsACString& filenameArg, int32_t lineNumber, JSContext* cx,
+    uint8_t optionalArgc, MutableHandleValue retval) {
   RootedObject sandbox(cx);
   if (!JS_ValueToObject(cx, sandboxVal, &sandbox) || !sandbox) {
     return NS_ERROR_INVALID_ARG;
@@ -1473,11 +1472,8 @@ nsXPCComponents_Utils::EvalInSandbox(
       lineNo = frame->GetLineNumber(cx);
     }
   }
-  enforceFilenameRestrictions =
-      (optionalArgc >= 4) ? enforceFilenameRestrictions : true;
 
-  return xpc::EvalInSandbox(cx, sandbox, source, filename, lineNo,
-                            enforceFilenameRestrictions, retval);
+  return xpc::EvalInSandbox(cx, sandbox, source, filename, lineNo, retval);
 }
 
 NS_IMETHODIMP

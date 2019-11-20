@@ -12,7 +12,7 @@
   const { fetch } = require("devtools/shared/DevToolsUtils");
 
   const TEST_URL_ROOT =
-    "chrome://mochitests/content/browser/devtools/client/shared/test/";
+    "http://example.com/browser/devtools/client/shared/test/";
   const ACTOR_URL = TEST_URL_ROOT + "test-actor.js";
 
   // Register a test actor that can operate on the remote document

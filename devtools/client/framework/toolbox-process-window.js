@@ -232,14 +232,7 @@ function evaluateTestScript(script, toolbox) {
   sandbox.window = window;
   sandbox.toolbox = toolbox;
   sandbox.ChromeUtils = ChromeUtils;
-  Cu.evalInSandbox(
-    script,
-    sandbox,
-    /* version */ undefined,
-    /* filename */ undefined,
-    /* lineNo */ 1,
-    /* enforceFilenameRestrictions */ false
-  );
+  Cu.evalInSandbox(script, sandbox);
 }
 
 function installTestingServer(toolbox) {
