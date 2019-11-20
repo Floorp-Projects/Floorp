@@ -20,7 +20,7 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "formAutofillParent",
+  "FormAutofillStatus",
   "resource://formautofill/FormAutofillParent.jsm"
 );
 ChromeUtils.defineModuleGetter(
@@ -170,9 +170,12 @@ this.formautofill = class extends ExtensionAPI {
     // Listen for the autocomplete popup message to lazily append our stylesheet related to the popup.
     AutoCompleteParent.addPopupStateListener(onMaybeOpenPopup);
 
-    formAutofillParent.init().catch(Cu.reportError);
+    FormAutofillStatus.init();
 
     ChromeUtils.registerWindowActor("FormAutofill", {
+      parent: {
+        moduleURI: "resource://formautofill/FormAutofillParent.jsm",
+      },
       child: {
         moduleURI: "resource://formautofill/FormAutofillChild.jsm",
         events: {
