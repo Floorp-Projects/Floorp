@@ -1053,6 +1053,13 @@ void Shape::traceChildren(JSTracer* trc) {
   if (parent) {
     TraceEdge(trc, &parent, "parent");
   }
+  if (dictNext.isObject()) {
+    JSObject* obj = dictNext.toObject();
+    TraceManuallyBarrieredEdge(trc, &obj, "dictNext object");
+    if (obj != dictNext.toObject()) {
+      dictNext.setObject(obj);
+    }
+  }
 
   if (hasGetterObject()) {
     TraceManuallyBarrieredEdge(trc, &asAccessorShape().getterObj, "getter");
@@ -1076,6 +1083,13 @@ inline void js::GCMarker::eagerlyMarkChildren(Shape* shape) {
     }
 
     traverseEdge(shape, shape->propidRef().get());
+
+    // Normally only the last shape in a dictionary list can have a pointer to
+    // an object here, but it's possible that we can see this if we trace
+    // barriers while removing a shape from a dictionary list.
+    if (shape->dictNext.isObject()) {
+      traverseEdge(shape, shape->dictNext.toObject());
+    }
 
     // When triggered between slices on behalf of a barrier, these
     // objects may reside in the nursery, so require an extra check.

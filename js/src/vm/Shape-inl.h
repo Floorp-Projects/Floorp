@@ -206,7 +206,15 @@ inline void Shape::clearDictionaryNextPtr() {
 
 inline void Shape::setDictionaryNextPtr(DictionaryShapeLink next) {
   MOZ_ASSERT(inDictionary());
+  dictNextPreWriteBarrier();
   dictNext = next;
+}
+
+inline void Shape::dictNextPreWriteBarrier() {
+  // Only object pointers are traced, so we only need to barrier those.
+  if (dictNext.isObject()) {
+    JSObject::writeBarrierPre(dictNext.toObject());
+  }
 }
 
 inline GCPtrShape* DictionaryShapeLink::prevPtr() {

@@ -1010,6 +1010,7 @@ class Shape : public gc::TenuredCell {
   void setDictionaryObject(JSObject* obj);
   void setDictionaryNextPtr(DictionaryShapeLink next);
   void clearDictionaryNextPtr();
+  void dictNextPreWriteBarrier();
 
   template <MaybeAdding Adding = MaybeAdding::NotAdding>
   static MOZ_ALWAYS_INLINE Shape* search(JSContext* cx, Shape* start, jsid id);
