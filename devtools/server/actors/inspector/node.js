@@ -530,6 +530,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     return {
       url: customElementDO.script.url,
       line: customElementDO.script.startLine,
+      column: customElementDO.script.startColumn,
     };
   },
 

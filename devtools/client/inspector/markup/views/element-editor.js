@@ -907,8 +907,17 @@ ElementEditor.prototype = {
     }
   },
 
-  onCustomBadgeClick: function() {
-    const { url, line, column } = this.node.customElementLocation;
+  onCustomBadgeClick: async function() {
+    let { url, line, column } = this.node.customElementLocation;
+    const originalLocation = await this.markup.toolbox.sourceMapURLService.originalPositionFor(
+      url,
+      line,
+      column
+    );
+    if (originalLocation) {
+      ({ sourceUrl: url, line, column } = originalLocation);
+    }
+
     this.markup.toolbox.viewSourceInDebugger(
       url,
       line,
