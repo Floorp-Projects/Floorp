@@ -723,8 +723,8 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
     Preferences::GetString("general.config.filename", jsConfigPref);
     if (!jsConfigPref.IsEmpty()) {
       MOZ_LOG(sCSMLog, LogLevel::Debug,
-              ("Allowing a javascript load of %s because of "
-               "general.config.filename",
+              ("Allowing a javascript load of %s because "
+               "general.config.filename is set",
                aFilename));
       return true;
     }
