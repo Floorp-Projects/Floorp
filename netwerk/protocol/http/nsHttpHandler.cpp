@@ -224,6 +224,7 @@ nsHttpHandler::nsHttpHandler()
       mTailDelayMax(6000),
       mTailTotalMax(0),
       mRedirectionLimit(10),
+      mBeConservativeForProxy(true),
       mPhishyUserPassLength(1),
       mQoSBits(0x00),
       mEnforceAssocReq(false),
@@ -597,7 +598,7 @@ nsresult nsHttpHandler::InitConnectionMgr() {
       mMaxPersistentConnectionsPerServer, mMaxPersistentConnectionsPerProxy,
       mMaxRequestDelay, mThrottleEnabled, mThrottleVersion, mThrottleSuspendFor,
       mThrottleResumeFor, mThrottleReadLimit, mThrottleReadInterval,
-      mThrottleHoldTime, mThrottleMaxTime);
+      mThrottleHoldTime, mThrottleMaxTime, mBeConservativeForProxy);
   return rv;
 }
 
@@ -1322,10 +1323,13 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
   if (PREF_CHANGED(HTTP_PREF("proxy.respect-be-conservative"))) {
     rv =
         Preferences::GetBool(HTTP_PREF("proxy.respect-be-conservative"), &cVar);
-    if (NS_SUCCEEDED(rv) && mConnMgr) {
-      Unused << mConnMgr->UpdateParam(
-          nsHttpConnectionMgr::PROXY_BE_CONSERVATIVE,
-          static_cast<int32_t>(cVar));
+    if (NS_SUCCEEDED(rv)) {
+      mBeConservativeForProxy = cVar;
+      if (mConnMgr) {
+        Unused << mConnMgr->UpdateParam(
+            nsHttpConnectionMgr::PROXY_BE_CONSERVATIVE,
+            static_cast<int32_t>(mBeConservativeForProxy));
+      }
     }
   }
 
