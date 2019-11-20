@@ -2,7 +2,7 @@
 
 # FxaDeviceConstellation
 
-`class FxaDeviceConstellation : `[`DeviceConstellation`](../../mozilla.components.concept.sync/-device-constellation/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`DeviceEventsObserver`](../../mozilla.components.concept.sync/-device-events-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L34)
+`class FxaDeviceConstellation : `[`DeviceConstellation`](../../mozilla.components.concept.sync/-device-constellation/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`DeviceEventsObserver`](../../mozilla.components.concept.sync/-device-events-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L33)
 
 Provides an implementation of [DeviceConstellation](../../mozilla.components.concept.sync/-device-constellation/index.md) backed by a [FirefoxAccount](#).
 

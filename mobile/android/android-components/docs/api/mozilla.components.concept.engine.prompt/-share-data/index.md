@@ -2,7 +2,7 @@
 
 # ShareData
 
-`data class ShareData` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/ShareData.kt#L14)
+`data class ShareData` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/ShareData.kt#L18)
 
 Represents data to share for the Web Share and Web Share Target APIs.
 https://w3c.github.io/web-share/
@@ -11,7 +11,7 @@ https://w3c.github.io/web-share/
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `ShareData(title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?, text: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?)`<br>Represents data to share for the Web Share and Web Share Target APIs. https://w3c.github.io/web-share/ |
+| [&lt;init&gt;](-init-.md) | `ShareData(title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, text: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`<br>Represents data to share for the Web Share and Web Share Target APIs. https://w3c.github.io/web-share/ |
 
 ### Properties
 
