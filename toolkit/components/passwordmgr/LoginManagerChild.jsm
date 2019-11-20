@@ -301,12 +301,14 @@ let gAutoCompleteListener = {
 
   init() {
     if (!this.added) {
-      AutoCompleteChild.addPopupStateListener(this);
+      AutoCompleteChild.addPopupStateListener((...args) => {
+        this.popupStateListener(...args);
+      });
       this.added = true;
     }
   },
 
-  popupStateChanged(messageName, data, target) {
+  popupStateListener(messageName, data, target) {
     switch (messageName) {
       case "FormAutoComplete:PopupOpened": {
         let { chromeEventHandler } = target.docShell;
