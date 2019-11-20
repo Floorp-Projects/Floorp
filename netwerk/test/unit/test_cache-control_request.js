@@ -79,7 +79,6 @@ function run_test() {
   do_test_pending();
 
   Services.prefs.setBoolPref("network.http.rcwn.enabled", false);
-  Services.prefs.setBoolPref("browser.cache.cache_isolation", false);
 
   httpserver.registerPathHandler(resource_age_100, resource_age_100_handler);
   httpserver.registerPathHandler(
