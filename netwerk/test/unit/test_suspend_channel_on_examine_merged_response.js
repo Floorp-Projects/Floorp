@@ -55,7 +55,6 @@ var listener = {
 };
 
 function run_test() {
-  Services.prefs.setBoolPref("browser.cache.cache_isolation", false);
   httpserv = new HttpServer();
   httpserv.registerPathHandler("/path/partial", path_partial);
   httpserv.registerPathHandler("/path/cached", path_cached);
