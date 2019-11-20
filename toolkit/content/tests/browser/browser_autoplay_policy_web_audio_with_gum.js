@@ -91,7 +91,7 @@ function resumeWithoutExpectedSuccess() {
   let promise = ac.resume();
   ac.resumePromises.push(promise);
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
+    content.setTimeout(() => {
       if (ac.state == "suspended") {
         ok(true, "audio context is still suspended");
         resolve();

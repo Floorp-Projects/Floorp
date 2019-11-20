@@ -37,7 +37,7 @@ function frameScript() {
     if (docShell.isActive && content.document.hasFocus()) {
       sendAsyncMessage("Test:Activated");
     } else {
-      setTimeout(waitUntilActive, 10);
+      content.setTimeout(waitUntilActive, 10);
     }
   }
   waitUntilActive();
