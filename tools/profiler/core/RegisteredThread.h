@@ -12,7 +12,8 @@
 
 #include "js/TraceLoggerAPI.h"
 #include "jsapi.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/NotNull.h"
+#include "mozilla/RefPtr.h"
 #include "nsIEventTarget.h"
 
 // This class contains the state for a single thread that is accessible without
@@ -23,7 +24,11 @@
 class RacyRegisteredThread final {
  public:
   explicit RacyRegisteredThread(int aThreadId)
-      : mThreadId(aThreadId), mSleep(AWAKE), mIsBeingProfiled(false) {
+      : mProfilingStackOwner(
+            mozilla::MakeNotNull<RefPtr<class ProfilingStackOwner>>()),
+        mThreadId(aThreadId),
+        mSleep(AWAKE),
+        mIsBeingProfiled(false) {
     MOZ_COUNT_CTOR(RacyRegisteredThread);
   }
 
@@ -77,12 +82,18 @@ class RacyRegisteredThread final {
   int ThreadId() const { return mThreadId; }
 
   class ProfilingStack& ProfilingStack() {
-    return mProfilingStack;
+    return mProfilingStackOwner->ProfilingStack();
   }
-  const class ProfilingStack& ProfilingStack() const { return mProfilingStack; }
+  const class ProfilingStack& ProfilingStack() const {
+    return mProfilingStackOwner->ProfilingStack();
+  }
+
+  class ProfilingStackOwner& ProfilingStackOwner() {
+    return *mProfilingStackOwner;
+  }
 
  private:
-  class ProfilingStack mProfilingStack;
+  mozilla::NotNull<RefPtr<class ProfilingStackOwner>> mProfilingStackOwner;
 
   // mThreadId contains the thread ID of the current thread. It is safe to read
   // this from multiple threads concurrently, as it will never be mutated.
