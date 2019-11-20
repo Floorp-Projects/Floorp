@@ -21,10 +21,6 @@
 
 #include <OpenGL/OpenGL.h>
 
-// When running inside a VM, creating an accelerated OpenGL context usually
-// fails. Uncomment this line to emulate that behavior.
-// #define EMULATE_VM
-
 namespace mozilla {
 namespace gl {
 
@@ -45,25 +41,14 @@ class CGLLibrary {
       }
     }
 
-    const char* db = PR_GetEnv("MOZ_CGL_DB");
-    if (db) {
-      mUseDoubleBufferedWindows = *db != '0';
-    }
-
     mInitialized = true;
     return true;
-  }
-
-  bool UseDoubleBufferedWindows() const {
-    MOZ_ASSERT(mInitialized);
-    return mUseDoubleBufferedWindows;
   }
 
   const auto& Library() const { return mOGLLibrary; }
 
  private:
   bool mInitialized = false;
-  bool mUseDoubleBufferedWindows = true;
   PRLibrary* mOGLLibrary = nullptr;
 };
 
@@ -111,8 +96,6 @@ bool GLContextCGL::IsCurrentImpl() const { return [NSOpenGLContext currentContex
 
 GLenum GLContextCGL::GetPreferredARGB32Format() const { return LOCAL_GL_BGRA; }
 
-bool GLContextCGL::IsDoubleBuffered() const { return sCGLLibrary.UseDoubleBufferedWindows(); }
-
 bool GLContextCGL::SwapBuffers() {
   AUTO_PROFILER_LABEL("GLContextCGL::SwapBuffers", GRAPHICS);
 
@@ -135,28 +118,6 @@ already_AddRefed<GLContext> GLContextProviderCGL::CreateWrappingExisting(void*, 
   return nullptr;
 }
 
-static const NSOpenGLPixelFormatAttribute kAttribs_singleBuffered[] = {
-    NSOpenGLPFAAllowOfflineRenderers, 0};
-
-static const NSOpenGLPixelFormatAttribute kAttribs_singleBuffered_accel[] = {
-    NSOpenGLPFAAccelerated, NSOpenGLPFAAllowOfflineRenderers, 0};
-
-static const NSOpenGLPixelFormatAttribute kAttribs_doubleBuffered[] = {
-    NSOpenGLPFAAllowOfflineRenderers, NSOpenGLPFADoubleBuffer, 0};
-
-static const NSOpenGLPixelFormatAttribute kAttribs_doubleBuffered_accel[] = {
-    NSOpenGLPFAAccelerated, NSOpenGLPFAAllowOfflineRenderers, NSOpenGLPFADoubleBuffer, 0};
-
-static const NSOpenGLPixelFormatAttribute kAttribs_doubleBuffered_accel_webrender[] = {
-    NSOpenGLPFAAccelerated,
-    NSOpenGLPFAAllowOfflineRenderers,
-    NSOpenGLPFADoubleBuffer,
-    NSOpenGLPFAOpenGLProfile,
-    NSOpenGLProfileVersion3_2Core,
-    NSOpenGLPFADepthSize,
-    24,
-    0};
-
 static NSOpenGLContext* CreateWithFormat(const NSOpenGLPixelFormatAttribute* attribs) {
   NSOpenGLPixelFormat* format = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
   if (!format) {
@@ -173,55 +134,15 @@ static NSOpenGLContext* CreateWithFormat(const NSOpenGLPixelFormatAttribute* att
 
 already_AddRefed<GLContext> GLContextProviderCGL::CreateForCompositorWidget(
     CompositorWidget* aCompositorWidget, bool aWebRender, bool aForceAccelerated) {
-  if (!aCompositorWidget) {
-    MOZ_ASSERT(false);
-    return nullptr;
-  }
-  return CreateForWindow(aCompositorWidget->RealWidget(), aWebRender, aForceAccelerated);
-}
-
-already_AddRefed<GLContext> GLContextProviderCGL::CreateForWindow(nsIWidget* aWidget,
-                                                                  bool aWebRender,
-                                                                  bool aForceAccelerated) {
-  if (!sCGLLibrary.EnsureInitialized()) {
-    return nullptr;
-  }
-
-#ifdef EMULATE_VM
+  CreateContextFlags flags = CreateContextFlags::ALLOW_OFFLINE_RENDERER;
   if (aForceAccelerated) {
-    return nullptr;
+    flags |= CreateContextFlags::FORCE_ENABLE_HARDWARE;
   }
-#endif
-
-  const NSOpenGLPixelFormatAttribute* attribs;
-  SurfaceCaps caps = SurfaceCaps::ForRGBA();
-  if (sCGLLibrary.UseDoubleBufferedWindows()) {
-    if (aWebRender) {
-      MOZ_RELEASE_ASSERT(aForceAccelerated,
-                         "At the moment, aForceAccelerated is always true if aWebRender is true. "
-                         "If this changes, please update the code here.");
-      attribs = kAttribs_doubleBuffered_accel_webrender;
-      caps.depth = true;
-    } else {
-      attribs = aForceAccelerated ? kAttribs_doubleBuffered_accel : kAttribs_doubleBuffered;
-    }
-  } else {
-    attribs = aForceAccelerated ? kAttribs_singleBuffered_accel : kAttribs_singleBuffered;
+  if (!aWebRender) {
+    flags |= CreateContextFlags::REQUIRE_COMPAT_PROFILE;
   }
-  NSOpenGLContext* context = CreateWithFormat(attribs);
-  if (!context) {
-    return nullptr;
-  }
-
-  RefPtr<GLContextCGL> glContext = new GLContextCGL(CreateContextFlags::NONE, caps, context, false);
-
-  if (!glContext->Init()) {
-    glContext = nullptr;
-    [context release];
-    return nullptr;
-  }
-
-  return glContext.forget();
+  nsCString failureUnused;
+  return CreateHeadless(flags, &failureUnused);
 }
 
 static already_AddRefed<GLContextCGL> CreateOffscreenFBOContext(CreateContextFlags flags) {
@@ -243,7 +164,7 @@ static already_AddRefed<GLContextCGL> CreateOffscreenFBOContext(CreateContextFla
     attribs.push_back(NSOpenGLPFAAllowOfflineRenderers);
   }
 
-  if (StaticPrefs::gl_require_hardware()) {
+  if (flags & CreateContextFlags::FORCE_ENABLE_HARDWARE) {
     attribs.push_back(NSOpenGLPFAAccelerated);
   }
 
@@ -267,7 +188,7 @@ static already_AddRefed<GLContextCGL> CreateOffscreenFBOContext(CreateContextFla
 
   RefPtr<GLContextCGL> glContext = new GLContextCGL(flags, SurfaceCaps::Any(), context, true);
 
-  if (StaticPrefs::gl_multithreaded()) {
+  if (flags & CreateContextFlags::PREFER_MULTITHREADED) {
     CGLEnable(glContext->GetCGLContext(), kCGLCEMPEngine);
   }
   return glContext.forget();

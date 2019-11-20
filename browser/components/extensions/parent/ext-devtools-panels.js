@@ -10,6 +10,12 @@ var { ExtensionParent } = ChromeUtils.import(
   "resource://gre/modules/ExtensionParent.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "BroadcastConduit",
+  "resource://gre/modules/ConduitsParent.jsm"
+);
+
 var { IconDetails, watchExtensionProxyContextLoad } = ExtensionParent;
 
 var { promiseDocumentLoaded } = ExtensionUtils;
@@ -120,6 +126,11 @@ class ParentDevToolsPanel extends BaseDevToolsPanel {
 
     this.context.callOnClose(this);
 
+    this.conduit = new BroadcastConduit(this, {
+      id: `${this.id}-parent`,
+      send: ["PanelHidden", "PanelShown"],
+    });
+
     this.onToolboxPanelSelect = this.onToolboxPanelSelect.bind(this);
     this.onToolboxHostWillChange = this.onToolboxHostWillChange.bind(this);
     this.onToolboxHostChanged = this.onToolboxHostChanged.bind(this);
@@ -201,12 +212,7 @@ class ParentDevToolsPanel extends BaseDevToolsPanel {
       // Fires a panel.onHidden event before destroying the browser element because
       // the toolbox hosts is changing.
       if (this.visible) {
-        this.context.parentMessageManager.sendAsyncMessage(
-          "Extension:DevToolsPanelHidden",
-          {
-            toolboxPanelId: this.id,
-          }
-        );
+        this.conduit.sendPanelHidden(this.id);
       }
 
       this.destroyBrowserElement();
@@ -222,13 +228,7 @@ class ParentDevToolsPanel extends BaseDevToolsPanel {
       // object to the extension page that has created the devtools panel).
       if (this.visible) {
         await this.waitTopLevelContext;
-
-        this.context.parentMessageManager.sendAsyncMessage(
-          "Extension:DevToolsPanelShown",
-          {
-            toolboxPanelId: this.id,
-          }
-        );
+        this.conduit.sendPanelShown(this.id);
       }
     }
   }
@@ -243,16 +243,11 @@ class ParentDevToolsPanel extends BaseDevToolsPanel {
 
     if (!this.visible && id === this.id) {
       this.visible = true;
+      this.conduit.sendPanelShown(this.id);
     } else if (this.visible && id !== this.id) {
       this.visible = false;
+      this.conduit.sendPanelHidden(this.id);
     }
-
-    const extensionMessage = `Extension:DevToolsPanel${
-      this.visible ? "Shown" : "Hidden"
-    }`;
-    this.context.parentMessageManager.sendAsyncMessage(extensionMessage, {
-      toolboxPanelId: this.id,
-    });
   }
 
   close() {
@@ -261,6 +256,8 @@ class ParentDevToolsPanel extends BaseDevToolsPanel {
     if (!toolbox) {
       throw new Error("Unable to destroy a closed devtools panel");
     }
+
+    this.conduit.close();
 
     // Explicitly remove the panel if it is registered and the toolbox is not
     // closing itself.
@@ -360,6 +357,11 @@ class ParentDevToolsInspectorSidebar extends BaseDevToolsPanel {
 
     this.context.callOnClose(this);
 
+    this.conduit = new BroadcastConduit(this, {
+      id: `${this.id}-parent`,
+      send: ["InspectorSidebarHidden", "InspectorSidebarShown"],
+    });
+
     this.onSidebarSelect = this.onSidebarSelect.bind(this);
     this.onSidebarCreated = this.onSidebarCreated.bind(this);
     this.onExtensionPageMount = this.onExtensionPageMount.bind(this);
@@ -392,6 +394,8 @@ class ParentDevToolsInspectorSidebar extends BaseDevToolsPanel {
     if (this.destroyed) {
       throw new Error("Unable to close a destroyed DevToolsSelectionObserver");
     }
+
+    this.conduit.close();
 
     if (this.extensionSidebar) {
       this.extensionSidebar.off(
@@ -476,20 +480,10 @@ class ParentDevToolsInspectorSidebar extends BaseDevToolsPanel {
 
     if (!this.visible && id === this.id) {
       this.visible = true;
-      this.context.parentMessageManager.sendAsyncMessage(
-        "Extension:DevToolsInspectorSidebarShown",
-        {
-          inspectorSidebarId: this.id,
-        }
-      );
+      this.conduit.sendInspectorSidebarShown(this.id);
     } else if (this.visible && id !== this.id) {
       this.visible = false;
-      this.context.parentMessageManager.sendAsyncMessage(
-        "Extension:DevToolsInspectorSidebarHidden",
-        {
-          inspectorSidebarId: this.id,
-        }
-      );
+      this.conduit.sendInspectorSidebarHidden(this.id);
     }
   }
 

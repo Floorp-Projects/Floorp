@@ -15,6 +15,7 @@ import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.ContentBlockingController
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.util.Callbacks
 import org.junit.Assume.assumeThat
 
@@ -146,16 +147,19 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         sessionRule.runtime.contentBlockingController.clearExceptionList()
     }
 
-    @Ignore //Bug 1581657 - ignore test to reduce frequent failures
     @Test
     fun getLog() {
         val category = ContentBlocking.AntiTracking.TEST
         sessionRule.runtime.settings.contentBlocking.setAntiTracking(category)
         sessionRule.session.settings.useTrackingProtection = true
         sessionRule.session.loadTestPath(TRACKERS_PATH)
-
-
-        sessionRule.waitForPageStop()
+        
+        sessionRule.waitUntilCalled(object : Callbacks.ContentBlockingDelegate {
+            @AssertCalled(count = 1)
+            override fun onContentBlocked(session: GeckoSession,
+                                          event: ContentBlocking.BlockEvent) {
+            }
+        })
 
         sessionRule.waitForResult(sessionRule.runtime.contentBlockingController.getLog(sessionRule.session).accept {
             assertThat("Log must not be null", it, Matchers.notNullValue())

@@ -40,17 +40,6 @@ already_AddRefed<GLContext> GLContextProviderWayland::CreateForCompositorWidget(
   }
 }
 
-already_AddRefed<GLContext> GLContextProviderWayland::CreateForWindow(
-    nsIWidget* aWidget, bool aWebRender, bool aForceAccelerated) {
-  if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
-    return sGLContextProviderGLX.CreateForWindow(aWidget, aWebRender,
-                                                 aForceAccelerated);
-  } else {
-    return sGLContextProviderEGL.CreateForWindow(aWidget, aWebRender,
-                                                 aForceAccelerated);
-  }
-}
-
 /*static*/
 already_AddRefed<GLContext> GLContextProviderWayland::CreateHeadless(
     CreateContextFlags flags, nsACString* const out_failureId) {

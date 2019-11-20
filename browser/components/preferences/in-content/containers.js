@@ -65,7 +65,7 @@ let gContainersPane = {
       let containerButtons = document.createXULElement("hbox");
       containerButtons.className = "container-buttons";
       containerButtons.setAttribute("flex", 1);
-      containerButtons.setAttribute("align", "right");
+      containerButtons.setAttribute("align", "end");
       item.appendChild(containerButtons);
 
       let prefsButton = document.createXULElement("button");
