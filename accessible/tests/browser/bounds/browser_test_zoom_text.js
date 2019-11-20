@@ -74,5 +74,5 @@ addAccessibleTask(
   <p id='p2'>ل</p>
   <form><input id='i1' /></form>`,
   runTests,
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

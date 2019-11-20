@@ -18,5 +18,5 @@ addAccessibleTask(
     let caretMovedEvent = event.QueryInterface(nsIAccessibleCaretMoveEvent);
     is(caretMovedEvent.caretOffset, 5, "Correct caret offset.");
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

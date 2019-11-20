@@ -208,5 +208,5 @@ addAccessibleTask(
     await testImageMap(browser, accDoc);
     await testContainer(browser);
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

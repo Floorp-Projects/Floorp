@@ -28,5 +28,5 @@ addAccessibleTask(
     await setHidden(browser);
     testAccessibleTree(container, { SECTION: [{ ENTRY: [] }] });
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

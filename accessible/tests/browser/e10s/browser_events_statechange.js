@@ -67,5 +67,5 @@ addAccessibleTask(
     checkStateChangeEvent(event, EXT_STATE_EDITABLE, true, true);
     testStates(event.accessible, 0, EXT_STATE_EDITABLE);
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

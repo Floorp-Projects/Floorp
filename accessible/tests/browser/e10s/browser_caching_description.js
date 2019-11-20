@@ -210,5 +210,5 @@ addAccessibleTask(
       testDescr(imgAcc, expected);
     }
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

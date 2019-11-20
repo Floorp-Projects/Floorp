@@ -40,5 +40,5 @@ addAccessibleTask(
       "Correct target previous sibling."
     );
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

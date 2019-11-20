@@ -28,7 +28,7 @@ addAccessibleTask(
     );
 
     const events = [[EVENT_REORDER, contentDocAcc]];
-    if (!gFissionBrowser) {
+    if (!gIsRemoteIframe) {
       // Until this event is fired, IFRAME accessible has no children attached.
       events.push([
         EVENT_STATE_CHANGE,
@@ -73,6 +73,7 @@ addAccessibleTask(
   {
     topLevel: false,
     iframe: true,
+    remoteIframe: true,
     iframeAttrs: {
       style: "display: none;",
     },

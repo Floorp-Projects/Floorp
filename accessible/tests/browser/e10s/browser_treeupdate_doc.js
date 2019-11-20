@@ -316,5 +316,5 @@ addAccessibleTask(
     };
     testAccessibleTree(iframe, tree);
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

@@ -83,5 +83,5 @@ addAccessibleTask(
     is(vccEvent.newEndOffset, -1, "New end offset is correct");
     ok(!vccEvent.isFromUserInput, "not user initiated");
   },
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );

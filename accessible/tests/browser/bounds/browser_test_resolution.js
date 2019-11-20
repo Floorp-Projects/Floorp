@@ -63,5 +63,5 @@ addAccessibleTask(
 <button id="b1">Hello</button>
 `,
   runTests,
-  { iframe: true }
+  { iframe: true, remoteIframe: true }
 );
