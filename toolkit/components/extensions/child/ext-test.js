@@ -111,6 +111,13 @@ this.test = class extends ExtensionAPI {
 
     return {
       test: {
+        withHandlingUserInput(callback) {
+          ExtensionCommon.withHandlingUserInput(
+            context.contentWindow,
+            callback
+          );
+        },
+
         sendMessage(...args) {
           extension.emit("test-message", ...args);
         },
