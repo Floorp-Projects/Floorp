@@ -382,9 +382,9 @@ MFBT_API double BaseTimeDurationPlatformUtils::ToSecondsSigDigits(
 MFBT_API int64_t
 BaseTimeDurationPlatformUtils::TicksFromMilliseconds(double aMilliseconds) {
   double result = ms2mt(aMilliseconds);
-  if (result > INT64_MAX) {
+  if (result > double(INT64_MAX)) {
     return INT64_MAX;
-  } else if (result < INT64_MIN) {
+  } else if (result < double(INT64_MIN)) {
     return INT64_MIN;
   }
 
