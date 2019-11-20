@@ -133,7 +133,6 @@
             "name": "onChange",
             "type": "function",
             "description": "Fired after the setting changes.",
-            "unsupported": true,
             "parameters": [
               {
                 "type": "object",

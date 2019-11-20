@@ -161,47 +161,53 @@ this.browserSettings = class extends ExtensionAPI {
     let { extension } = context;
     return {
       browserSettings: {
-        allowPopupsForUserEvents: getSettingsAPI(
-          extension.id,
-          "allowPopupsForUserEvents",
-          () => {
+        allowPopupsForUserEvents: getSettingsAPI({
+          context,
+          name: "allowPopupsForUserEvents",
+          callback() {
             return Services.prefs.getCharPref("dom.popup_allowed_events") != "";
-          }
-        ),
-        cacheEnabled: getSettingsAPI(extension.id, "cacheEnabled", () => {
-          return (
-            Services.prefs.getBoolPref("browser.cache.disk.enable") &&
-            Services.prefs.getBoolPref("browser.cache.memory.enable")
-          );
+          },
         }),
-        closeTabsByDoubleClick: getSettingsAPI(
-          extension.id,
-          "closeTabsByDoubleClick",
-          () => {
+        cacheEnabled: getSettingsAPI({
+          context,
+          name: "cacheEnabled",
+          callback() {
+            return (
+              Services.prefs.getBoolPref("browser.cache.disk.enable") &&
+              Services.prefs.getBoolPref("browser.cache.memory.enable")
+            );
+          },
+        }),
+        closeTabsByDoubleClick: getSettingsAPI({
+          context,
+          name: "closeTabsByDoubleClick",
+          callback() {
             return Services.prefs.getBoolPref(
               "browser.tabs.closeTabByDblclick"
             );
           },
-          undefined,
-          false,
-          () => {
+          validate() {
             if (AppConstants.platform == "android") {
               throw new ExtensionError(
                 `android is not a supported platform for the closeTabsByDoubleClick setting.`
               );
             }
-          }
-        ),
+          },
+        }),
         contextMenuShowEvent: Object.assign(
-          getSettingsAPI(extension.id, "contextMenuShowEvent", () => {
-            if (AppConstants.platform === "win") {
-              return "mouseup";
-            }
-            let prefValue = Services.prefs.getBoolPref(
-              "ui.context_menus.after_mouseup",
-              null
-            );
-            return prefValue ? "mouseup" : "mousedown";
+          getSettingsAPI({
+            context,
+            name: "contextMenuShowEvent",
+            callback() {
+              if (AppConstants.platform === "win") {
+                return "mouseup";
+              }
+              let prefValue = Services.prefs.getBoolPref(
+                "ui.context_menus.after_mouseup",
+                null
+              );
+              return prefValue ? "mouseup" : "mousedown";
+            },
           }),
           {
             set: details => {
@@ -227,94 +233,139 @@ this.browserSettings = class extends ExtensionAPI {
             },
           }
         ),
-        ftpProtocolEnabled: getSettingsAPI(
-          extension.id,
-          "ftpProtocolEnabled",
-          () => {
+        ftpProtocolEnabled: getSettingsAPI({
+          context,
+          name: "ftpProtocolEnabled",
+          callback() {
             return Services.prefs.getBoolPref("network.ftp.enabled");
-          }
-        ),
-        homepageOverride: getSettingsAPI(
-          extension.id,
-          HOMEPAGE_OVERRIDE_SETTING,
-          () => {
+          },
+        }),
+        homepageOverride: getSettingsAPI({
+          context,
+          name: HOMEPAGE_OVERRIDE_SETTING,
+          callback() {
             return Services.prefs.getStringPref(HOMEPAGE_URL_PREF);
           },
-          undefined,
-          true
-        ),
-        imageAnimationBehavior: getSettingsAPI(
-          extension.id,
-          "imageAnimationBehavior",
-          () => {
-            return Services.prefs.getCharPref("image.animation_mode");
-          }
-        ),
-        newTabPosition: getSettingsAPI(extension.id, "newTabPosition", () => {
-          if (Services.prefs.getBoolPref("browser.tabs.insertAfterCurrent")) {
-            return "afterCurrent";
-          }
-          if (
-            Services.prefs.getBoolPref("browser.tabs.insertRelatedAfterCurrent")
-          ) {
-            return "relatedAfterCurrent";
-          }
-          return "atEnd";
+          readOnly: true,
+          onChange: new ExtensionCommon.EventManager({
+            context,
+            name: `${HOMEPAGE_URL_PREF}.onChange`,
+            register: fire => {
+              let listener = () => {
+                fire.async({
+                  details: {
+                    levelOfControl: "not_controllable",
+                    value: Services.prefs.getStringPref(HOMEPAGE_URL_PREF),
+                  },
+                });
+              };
+              Services.prefs.addObserver(HOMEPAGE_URL_PREF, listener);
+              return () => {
+                Services.prefs.removeObserver(HOMEPAGE_URL_PREF, listener);
+              };
+            },
+          }).api(),
         }),
-        newTabPageOverride: getSettingsAPI(
-          extension.id,
-          NEW_TAB_OVERRIDE_SETTING,
-          () => {
+        imageAnimationBehavior: getSettingsAPI({
+          context,
+          name: "imageAnimationBehavior",
+          callback() {
+            return Services.prefs.getCharPref("image.animation_mode");
+          },
+        }),
+        newTabPosition: getSettingsAPI({
+          context,
+          name: "newTabPosition",
+          callback() {
+            if (Services.prefs.getBoolPref("browser.tabs.insertAfterCurrent")) {
+              return "afterCurrent";
+            }
+            if (
+              Services.prefs.getBoolPref(
+                "browser.tabs.insertRelatedAfterCurrent"
+              )
+            ) {
+              return "relatedAfterCurrent";
+            }
+            return "atEnd";
+          },
+        }),
+        newTabPageOverride: getSettingsAPI({
+          context,
+          name: NEW_TAB_OVERRIDE_SETTING,
+          callback() {
             return aboutNewTabService.newTabURL;
           },
-          URL_STORE_TYPE,
-          true
-        ),
-        openBookmarksInNewTabs: getSettingsAPI(
-          extension.id,
-          "openBookmarksInNewTabs",
-          () => {
+          storeType: URL_STORE_TYPE,
+          readOnly: true,
+          onChange: new ExtensionCommon.EventManager({
+            context,
+            name: `${NEW_TAB_OVERRIDE_SETTING}.onChange`,
+            register: fire => {
+              let listener = (text, id) => {
+                fire.async({
+                  details: {
+                    levelOfControl: "not_controllable",
+                    value: aboutNewTabService.newTabURL,
+                  },
+                });
+              };
+              Services.obs.addObserver(listener, "newtab-url-changed");
+              return () => {
+                Services.obs.removeObserver(listener, "newtab-url-changed");
+              };
+            },
+          }).api(),
+        }),
+        openBookmarksInNewTabs: getSettingsAPI({
+          context,
+          name: "openBookmarksInNewTabs",
+          callback() {
             return Services.prefs.getBoolPref(
               "browser.tabs.loadBookmarksInTabs"
             );
-          }
-        ),
-        openSearchResultsInNewTabs: getSettingsAPI(
-          extension.id,
-          "openSearchResultsInNewTabs",
-          () => {
+          },
+        }),
+        openSearchResultsInNewTabs: getSettingsAPI({
+          context,
+          name: "openSearchResultsInNewTabs",
+          callback() {
             return Services.prefs.getBoolPref("browser.search.openintab");
-          }
-        ),
-        openUrlbarResultsInNewTabs: getSettingsAPI(
-          extension.id,
-          "openUrlbarResultsInNewTabs",
-          () => {
+          },
+        }),
+        openUrlbarResultsInNewTabs: getSettingsAPI({
+          context,
+          name: "openUrlbarResultsInNewTabs",
+          callback() {
             return Services.prefs.getBoolPref("browser.urlbar.openintab");
-          }
-        ),
-        webNotificationsDisabled: getSettingsAPI(
-          extension.id,
-          "webNotificationsDisabled",
-          () => {
+          },
+        }),
+        webNotificationsDisabled: getSettingsAPI({
+          context,
+          name: "webNotificationsDisabled",
+          callback() {
             let prefValue = Services.prefs.getIntPref(
               "permissions.default.desktop-notification",
               null
             );
             return prefValue === PERM_DENY_ACTION;
-          }
-        ),
+          },
+        }),
         overrideDocumentColors: Object.assign(
-          getSettingsAPI(extension.id, "overrideDocumentColors", () => {
-            let prefValue = Services.prefs.getIntPref(
-              "browser.display.document_color_use"
-            );
-            if (prefValue === 1) {
-              return "never";
-            } else if (prefValue === 2) {
-              return "always";
-            }
-            return "high-contrast-only";
+          getSettingsAPI({
+            context,
+            name: "overrideDocumentColors",
+            callback() {
+              let prefValue = Services.prefs.getIntPref(
+                "browser.display.document_color_use"
+              );
+              if (prefValue === 1) {
+                return "never";
+              } else if (prefValue === 2) {
+                return "always";
+              }
+              return "high-contrast-only";
+            },
           }),
           {
             set: details => {
@@ -344,12 +395,16 @@ this.browserSettings = class extends ExtensionAPI {
           }
         ),
         useDocumentFonts: Object.assign(
-          getSettingsAPI(extension.id, "useDocumentFonts", () => {
-            return (
-              Services.prefs.getIntPref(
-                "browser.display.use_document_fonts"
-              ) !== 0
-            );
+          getSettingsAPI({
+            context,
+            name: "useDocumentFonts",
+            callback() {
+              return (
+                Services.prefs.getIntPref(
+                  "browser.display.use_document_fonts"
+                ) !== 0
+              );
+            },
           }),
           {
             set: details => {
