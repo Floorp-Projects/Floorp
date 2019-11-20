@@ -127,7 +127,7 @@ button.case-sensitive-btn {
   text-overflow: ellipsis;
   display: block;
   overflow: hidden;
-  min-width: 85px;
+  min-width: 150px;
 }
 
 .search-panel .img.loader {
