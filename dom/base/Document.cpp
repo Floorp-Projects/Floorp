@@ -1196,7 +1196,7 @@ void Document::Shutdown() {
 
 Document::Document(const char* aContentType)
     : nsINode(nullptr),
-      DocumentOrShadowRoot(*this),
+      DocumentOrShadowRoot(this),
       mBlockAllMixedContent(false),
       mBlockAllMixedContentPreloads(false),
       mUpgradeInsecureRequests(false),
