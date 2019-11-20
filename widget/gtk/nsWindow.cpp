@@ -4558,7 +4558,10 @@ void nsWindow::SetTransparencyMode(nsTransparencyMode aMode) {
 
   if (mIsTransparent == isTransparent) {
     return;
-  } else if (mWindowType != eWindowType_popup) {
+  }
+  LOG(("nsWindow::SetTransparencyMode [%p] mode %d\n", this, (int)aMode));
+
+  if (mWindowType != eWindowType_popup) {
     NS_WARNING("Cannot set transparency mode on non-popup windows.");
     return;
   }
