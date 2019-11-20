@@ -29,7 +29,7 @@ class RemoteDecoderManagerChild final : public PRemoteDecoderManagerChild,
   // internally and will be ignored if the IPDL actor has been destroyed.
   already_AddRefed<gfx::SourceSurface> Readback(
       const SurfaceDescriptorGPUVideo& aSD);
-  void DeallocateSurfaceDescriptorGPUVideo(
+  void DeallocateSurfaceDescriptor(
       const SurfaceDescriptorGPUVideo& aSD);
 
   bool AllocShmem(size_t aSize,
