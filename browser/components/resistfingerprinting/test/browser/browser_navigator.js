@@ -74,7 +74,7 @@ async function testUserAgentHeader() {
     TEST_TARGET_URL
   );
 
-  let result = await ContentTask.spawn(tab.linkedBrowser, null, function() {
+  let result = await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     return content.document.body.textContent;
   });
 
@@ -94,7 +94,7 @@ async function testNavigator() {
     TEST_PATH + "file_navigator.html"
   );
 
-  let result = await ContentTask.spawn(tab.linkedBrowser, null, function() {
+  let result = await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     return content.document.getElementById("result").innerHTML;
   });
 
@@ -169,9 +169,9 @@ async function testWorkerNavigator() {
     TEST_PATH + "file_dummy.html"
   );
 
-  let result = await ContentTask.spawn(
+  let result = await SpecialPowers.spawn(
     tab.linkedBrowser,
-    null,
+    [],
     async function() {
       let worker = new content.SharedWorker(
         "file_navigatorWorker.js",
@@ -228,6 +228,20 @@ async function testWorkerNavigator() {
   );
 
   BrowserTestUtils.removeTab(tab);
+
+  // Ensure the content process is shut down entirely before we start the next
+  // test in Fission.
+  if (SpecialPowers.useRemoteSubframes) {
+    await new Promise(resolve => {
+      let observer = (subject, topic, data) => {
+        if (topic === "ipc:content-shutdown") {
+          Services.obs.removeObserver(observer, "ipc:content-shutdown");
+          resolve();
+        }
+      };
+      Services.obs.addObserver(observer, "ipc:content-shutdown");
+    });
+  }
 }
 
 add_task(async function setup() {
