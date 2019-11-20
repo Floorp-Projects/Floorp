@@ -683,7 +683,6 @@ class PageAction {
       "href",
       SUMO_BASE_URL + content.info_icon.sumo_path
     );
-    headerLink.setAttribute(this.window.RTL_UI ? "left" : "right", 0);
     headerImage.setAttribute(
       "tooltiptext",
       await this.getStrings(content.info_icon.label, "tooltiptext")
