@@ -354,4 +354,8 @@
     </style>
 
     <style name="ShareDialogStyle" parent="DialogStyleBase"/>
+
+    <style name="EngineTextField" parent="TextAppearance.AppCompat">
+        <item name="android:textSize">14sp</item>
+    </style>
 </resources>

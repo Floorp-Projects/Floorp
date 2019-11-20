@@ -78,7 +78,7 @@ class SearchFragment : Fragment(), BackHandler {
         val view = inflater.inflate(R.layout.fragment_search, container, false)
         val url = session?.url.orEmpty()
         val currentSearchEngine = SearchEngineSource.Default(
-            requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext())
+            requireComponents.search.provider.getDefaultEngine(requireContext())
         )
 
         searchStore = StoreProvider.get(this) {
@@ -204,10 +204,7 @@ class SearchFragment : Fragment(), BackHandler {
         // The user has the option to go to 'Shortcuts' -> 'Search engine settings' to modify the default search engine.
         // When returning from that settings screen we need to update it to account for any changes.
         val currentDefaultEngine =
-            requireComponents.search.searchEngineManager.getDefaultSearchEngine(
-                requireContext(),
-                requireContext().settings().defaultSearchEngineName
-            )
+            requireComponents.search.provider.getDefaultEngine(requireContext())
 
         if (searchStore.state.defaultEngineSource.searchEngine != currentDefaultEngine) {
             searchStore.dispatch(

@@ -5,6 +5,7 @@
     <string name="pref_key_make_default_browser" translatable="false">pref_key_make_default_browser</string>
     <string name="pref_key_search_settings" translatable="false">pref_key_search_settings</string>
     <string name="pref_key_search_engine" translatable="false">pref_key_search_engine</string>
+    <string name="pref_key_add_search_engine" translatable="false">pref_key_add_Search_engine</string>
     <string name="pref_key_passwords" translatable="false">pref_key_passwords</string>
     <string name="pref_key_credit_cards_addresses" translatable="false">pref_key_credit_cards_addresses</string>
     <string name="pref_key_site_permissions" translatable="false">pref_key_site_permissions</string>
@@ -67,6 +68,7 @@
     <string name="pref_key_search_widget_installed" translatable="false">pref_key_search_widget_installed</string>
 
     <!-- Search Settings -->
+    <string name="pref_key_search_engine_list" translatable="false">pref_key_search_engine_list</string>
     <string name="pref_key_show_search_shortcuts" translatable="false">pref_key_show_search_shortcuts</string>
     <string name="pref_key_show_search_suggestions" translatable="false">pref_key_show_search_suggestions</string>
     <string name="pref_key_show_clipboard_suggestions" translatable="false">pref_key_show_clipboard_suggestions</string>

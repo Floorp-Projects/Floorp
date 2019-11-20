@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+    <ShortName>Startpage.com</ShortName>
+    <Description>Startpage.com Search</Description>
+    <InputEncoding>UTF-8</InputEncoding>
+    <Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAACNAAAAjQHGZvekAAAAhklEQVQ4jWNMLf6fwMDAMIGBgYGfgTTwkYGBoYCJTM0MUD0TmMjUDDeEiQLNYDBqAAMD4807///LSjMwcHKQacD/////owveuvOM4fOXH3D+mfN3sWq+dfsZA2NEfAnYgCdPXzA8efqSdBcoaLpiuIAUMDjSAShXkQs+ggwoINOQjwwMDAUAhucl85AOIvIAAAAASUVORK5CYII=</Image>
+    <Url type="text/html" template="https://www.startpage.com/do/dsearch?query={searchTerms}&amp;cat=web&amp;pl=opensearch&amp;language=english"></Url>
+    <Url type="application/x-suggestions+json" template="https://www.startpage.com/cgi-bin/csuggest?query={searchTerms}&amp;limit=10&amp;lang=english&amp;format=json"/>
+</SearchPlugin>

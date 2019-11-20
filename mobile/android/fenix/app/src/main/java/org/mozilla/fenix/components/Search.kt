@@ -9,8 +9,7 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngineManager
-import mozilla.components.browser.search.provider.AssetsSearchEngineProvider
-import mozilla.components.browser.search.provider.localization.LocaleSearchLocalizationProvider
+import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.test.Mockable
 
@@ -19,15 +18,15 @@ import org.mozilla.fenix.test.Mockable
  */
 @Mockable
 class Search(private val context: Context) {
+    val provider = FenixSearchEngineProvider(context)
 
     /**
      * This component provides access to a centralized registry of search engines.
      */
     val searchEngineManager by lazy {
         SearchEngineManager(
-            coroutineContext = IO, providers = listOf(
-                AssetsSearchEngineProvider(LocaleSearchLocalizationProvider())
-            )
+            coroutineContext = IO,
+            providers = listOf(provider)
         ).apply {
             registerForLocaleUpdates(context)
             GlobalScope.launch {

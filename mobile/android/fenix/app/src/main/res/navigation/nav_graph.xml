@@ -428,7 +428,14 @@
     <fragment
         android:id="@+id/searchEngineFragment"
         android:name="org.mozilla.fenix.settings.search.SearchEngineFragment"
-        android:label="@string/preferences_search" />
+        android:label="@string/preferences_search">
+        <action
+            android:id="@+id/action_searchEngineFragment_to_addSearchEngineFragment"
+            app:destination="@+id/addSearchEngineFragment" />
+        <action
+            android:id="@+id/action_searchEngineFragment_to_editCustomSearchEngineFragment"
+            app:destination="@+id/editCustomSearchEngineFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/turnOnSyncFragment"
@@ -658,5 +665,17 @@
         <argument
             android:name="savedLoginItem"
             app:argType="org.mozilla.fenix.logins.SavedLoginsItem" />
+    </fragment>
+    <fragment
+        android:id="@+id/addSearchEngineFragment"
+        android:name="org.mozilla.fenix.settings.search.AddSearchEngineFragment"
+        android:label="AddSearchEngineFragment" />
+    <fragment
+        android:id="@+id/editCustomSearchEngineFragment"
+        android:name="org.mozilla.fenix.settings.search.EditCustomSearchEngineFragment"
+        android:label="EditCustomSearchEngineFragment">
+        <argument
+            android:name="searchEngineIdentifier"
+            app:argType="string" />
     </fragment>
 </navigation>

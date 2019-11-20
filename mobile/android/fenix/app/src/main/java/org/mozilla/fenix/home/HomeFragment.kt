@@ -233,10 +233,7 @@ class HomeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val iconSize = resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
 
-            val searchEngine = requireComponents.search.searchEngineManager.getDefaultSearchEngineAsync(
-                requireContext(),
-                requireContext().settings().defaultSearchEngineName
-            )
+            val searchEngine = requireComponents.search.provider.getDefaultEngine(requireContext())
             val searchIcon = BitmapDrawable(resources, searchEngine.icon)
             searchIcon.setBounds(0, 0, iconSize, iconSize)
 

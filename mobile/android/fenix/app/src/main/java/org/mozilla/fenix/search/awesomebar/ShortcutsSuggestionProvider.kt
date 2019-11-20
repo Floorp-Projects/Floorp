@@ -7,16 +7,16 @@ package org.mozilla.fenix.search.awesomebar
 import android.content.Context
 import androidx.core.graphics.drawable.toBitmap
 import mozilla.components.browser.search.SearchEngine
-import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.concept.awesomebar.AwesomeBar
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider
 import java.util.UUID
 
 /**
  * A [AwesomeBar.SuggestionProvider] implementation that provides search engine suggestions.
  */
 class ShortcutsSuggestionProvider(
-    private val searchEngineManager: SearchEngineManager,
+    private val searchEngineProvider: FenixSearchEngineProvider,
     private val context: Context,
     private val selectShortcutEngine: (engine: SearchEngine) -> Unit,
     private val selectShortcutEngineSettings: () -> Unit
@@ -33,7 +33,7 @@ class ShortcutsSuggestionProvider(
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
         val suggestions = mutableListOf<AwesomeBar.Suggestion>()
 
-        searchEngineManager.getSearchEngines(context).forEach {
+        searchEngineProvider.installedSearchEngines(context).list.forEach {
             suggestions.add(
                 AwesomeBar.Suggestion(
                     provider = this,

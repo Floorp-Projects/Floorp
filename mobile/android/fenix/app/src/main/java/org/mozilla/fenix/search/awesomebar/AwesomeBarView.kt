@@ -168,7 +168,7 @@ class AwesomeBarView(
 
             shortcutsEnginePickerProvider =
                 ShortcutsSuggestionProvider(
-                    components.search.searchEngineManager,
+                    components.search.provider,
                     this,
                     interactor::onSearchShortcutEngineSelected,
                     interactor::onClickSearchEngineSettings
@@ -329,10 +329,7 @@ class AwesomeBarView(
 
                 searchSuggestionProviderMap.put(
                     engine, SearchSuggestionProvider(
-                        components.search.searchEngineManager.getDefaultSearchEngine(
-                            this,
-                            engine.name
-                        ),
+                        components.search.provider.getDefaultEngine(this),
                         shortcutSearchUseCase,
                         components.core.client,
                         limit = 3,

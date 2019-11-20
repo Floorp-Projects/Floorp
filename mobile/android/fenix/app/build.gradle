@@ -70,14 +70,14 @@ android {
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
             applicationIdSuffix ".firefox"
             manifestPlaceholders = [
-                // This release type is meant to replace Firefox (Release channel) and therefore needs to inherit
-                // its sharedUserId for all eternity. See:
-                // https://searchfox.org/mozilla-central/search?q=moz_android_shared_id&case=false&regexp=false&path=
-                // Shipping an app update without sharedUserId can have
-                // fatal consequences. For example see:
-                //  - https://issuetracker.google.com/issues/36924841
-                //  - https://issuetracker.google.com/issues/36905922
-                "sharedUserId": "org.mozilla.firefox.sharedID"
+                    // This release type is meant to replace Firefox (Release channel) and therefore needs to inherit
+                    // its sharedUserId for all eternity. See:
+                    // https://searchfox.org/mozilla-central/search?q=moz_android_shared_id&case=false&regexp=false&path=
+                    // Shipping an app update without sharedUserId can have
+                    // fatal consequences. For example see:
+                    //  - https://issuetracker.google.com/issues/36924841
+                    //  - https://issuetracker.google.com/issues/36905922
+                    "sharedUserId": "org.mozilla.firefox.sharedID"
             ]
         }
     }
@@ -123,7 +123,7 @@ android {
 
     sourceSets {
         androidTest {
-           resources.srcDirs += ['src/androidTest/resources']
+            resources.srcDirs += ['src/androidTest/resources']
         }
     }
 
@@ -544,22 +544,22 @@ if (project.hasProperty("coverage")) {
 task printVariants {
     doLast {
         def variants = android.applicationVariants.collect {[
-            apks: it.variantData.outputScope.apkDatas.collect {[
-                abi: it.filters.find { it.filterType == 'ABI' }.identifier,
-                fileName: it.outputFileName,
-            ]},
-            build_type: it.buildType.name,
-            engine: it.productFlavors.find { it.dimension == 'engine' }.name,
-            name: it.name,
+                apks: it.variantData.outputScope.apkDatas.collect {[
+                        abi: it.filters.find { it.filterType == 'ABI' }.identifier,
+                        fileName: it.outputFileName,
+                ]},
+                build_type: it.buildType.name,
+                engine: it.productFlavors.find { it.dimension == 'engine' }.name,
+                name: it.name,
         ]}
         println 'variants: ' + groovy.json.JsonOutput.toJson(variants)
     }
 }
 
 def glean_android_components_tag = (
-    Versions.mozilla_android_components.endsWith('-SNAPSHOT') ?
-        'master' :
-        'v' + Versions.mozilla_android_components
+        Versions.mozilla_android_components.endsWith('-SNAPSHOT') ?
+                'master' :
+                'v' + Versions.mozilla_android_components
 )
 
 // Generate markdown docs for the collected metrics.

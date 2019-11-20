@@ -6,6 +6,8 @@ package org.mozilla.fenix.settings.search
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.fragment.findNavController
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
@@ -49,10 +51,26 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
                 isChecked = context.settings().shouldShowClipboardSuggestions
             }
 
+        val searchEngineListPreference =
+            findPreference<SearchEngineListPreference>(getPreferenceKey(R.string.pref_key_search_engine_list))
+
+        searchEngineListPreference?.reload(requireContext())
         searchSuggestionsPreference?.onPreferenceChangeListener = SharedPreferenceUpdater()
         showSearchShortcuts?.onPreferenceChangeListener = SharedPreferenceUpdater()
         showHistorySuggestions?.onPreferenceChangeListener = SharedPreferenceUpdater()
         showBookmarkSuggestions?.onPreferenceChangeListener = SharedPreferenceUpdater()
         showClipboardSuggestions?.onPreferenceChangeListener = SharedPreferenceUpdater()
+    }
+
+    override fun onPreferenceTreeClick(preference: Preference): Boolean {
+        when (preference.key) {
+            getPreferenceKey(R.string.pref_key_add_search_engine) -> {
+                val directions = SearchEngineFragmentDirections
+                    .actionSearchEngineFragmentToAddSearchEngineFragment()
+                findNavController().navigate(directions)
+            }
+        }
+
+        return super.onPreferenceTreeClick(preference)
     }
 }

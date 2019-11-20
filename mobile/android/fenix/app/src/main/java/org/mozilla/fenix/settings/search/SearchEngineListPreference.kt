@@ -14,13 +14,20 @@ import android.view.ViewGroup
 import android.widget.CompoundButton
 import android.widget.RadioGroup
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.isVisible
+import androidx.navigation.Navigation
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import kotlinx.android.synthetic.main.search_engine_radio_button.view.*
+import kotlinx.coroutines.MainScope
 import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.search.provider.SearchEngineList
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.utils.allowUndo
 
 abstract class SearchEngineListPreference @JvmOverloads constructor(
     context: Context,
@@ -28,7 +35,7 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
     defStyleAttr: Int = android.R.attr.preferenceStyle
 ) : Preference(context, attrs, defStyleAttr), CompoundButton.OnCheckedChangeListener {
 
-    protected var searchEngines: List<SearchEngine> = emptyList()
+    protected lateinit var searchEngineList: SearchEngineList
     protected var searchEngineGroup: RadioGroup? = null
 
     protected abstract val itemResId: Int
@@ -40,11 +47,11 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
     override fun onBindViewHolder(holder: PreferenceViewHolder?) {
         super.onBindViewHolder(holder)
         searchEngineGroup = holder!!.itemView.findViewById(R.id.search_engine_group)
-        val context = searchEngineGroup!!.context
+        reload(searchEngineGroup!!.context)
+    }
 
-        searchEngines = context.components.search.searchEngineManager.getSearchEngines(context)
-            .sortedBy { it.name }
-
+    fun reload(context: Context) {
+        searchEngineList = context.components.search.provider.installedSearchEngines(context)
         refreshSearchEngineViews(context)
     }
 
@@ -59,18 +66,10 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
             return
         }
 
-        // To get the default search engine we have to pass in a name that doesn't exist
-        // https://github.com/mozilla-mobile/android-components/issues/3344
-        val defaultSearchEngine = context.components.search.searchEngineManager.getDefaultSearchEngine(
-            context,
-            THIS_IS_A_HACK_FIX_ME
-        )
-
-        val selectedSearchEngine =
-            context.components.search.searchEngineManager.getDefaultSearchEngine(
-                context,
-                context.settings().defaultSearchEngineName
-            ).identifier
+        val defaultEngine = context.components.search.provider.getDefaultEngine(context).identifier
+        val selectedEngine = (searchEngineList.list.find {
+            it.identifier == defaultEngine
+        } ?: searchEngineList.list.first()).identifier
 
         searchEngineGroup!!.removeAllViews()
 
@@ -82,31 +81,57 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
 
         val setupSearchEngineItem: (Int, SearchEngine) -> Unit = { index, engine ->
             val engineId = engine.identifier
-            val engineItem = makeButtonFromSearchEngine(engine, layoutInflater, context.resources)
-            engineItem.id = index
+            val engineItem = makeButtonFromSearchEngine(
+                engine = engine,
+                layoutInflater = layoutInflater,
+                res = context.resources,
+                allowDeletion = searchEngineList.list.size > 1
+            )
+
+            engineItem.id = index + (searchEngineList.default?.let { 1 } ?: 0)
             engineItem.tag = engineId
-            if (engineId == selectedSearchEngine) {
+            if (engineId == selectedEngine) {
                 updateDefaultItem(engineItem.radio_button)
             }
             searchEngineGroup!!.addView(engineItem, layoutParams)
         }
 
-        setupSearchEngineItem(0, defaultSearchEngine)
+        searchEngineList.default?.apply {
+            setupSearchEngineItem(0, this)
+        }
 
-        searchEngines
-            .filter { it.identifier != defaultSearchEngine.identifier }
+        searchEngineList.list
+            .filter { it.identifier != searchEngineList.default?.identifier }
+            .sortedBy { it.name }
             .forEachIndexed(setupSearchEngineItem)
     }
 
     private fun makeButtonFromSearchEngine(
         engine: SearchEngine,
         layoutInflater: LayoutInflater,
-        res: Resources
+        res: Resources,
+        allowDeletion: Boolean
     ): View {
+        val isCustomSearchEngine = CustomSearchEngineStore.isCustomSearchEngine(context, engine.identifier)
+
         val wrapper = layoutInflater.inflate(itemResId, null) as ConstraintLayout
         wrapper.setOnClickListener { wrapper.radio_button.isChecked = true }
         wrapper.radio_button.setOnCheckedChangeListener(this)
         wrapper.engine_text.text = engine.name
+        wrapper.overflow_menu.isVisible = allowDeletion || isCustomSearchEngine
+        wrapper.overflow_menu.setOnClickListener {
+            SearchEngineMenu(
+                context = context,
+                allowDeletion = allowDeletion,
+                isCustomSearchEngine = isCustomSearchEngine,
+                onItemTapped = {
+                    when (it) {
+                        is SearchEngineMenu.Item.Edit -> editCustomSearchEngine(engine)
+                        is SearchEngineMenu.Item.Delete -> deleteSearchEngine(context, engine)
+                    }
+                }
+            ).menuBuilder.build(context).show(wrapper.overflow_menu)
+        }
         val iconSize = res.getDimension(R.dimen.preference_icon_drawable_size).toInt()
         val engineIcon = BitmapDrawable(res, engine.icon)
         engineIcon.setBounds(0, 0, iconSize, iconSize)
@@ -115,7 +140,7 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
     }
 
     override fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
-        searchEngines.forEach { engine ->
+        searchEngineList.list.forEach { engine ->
             val wrapper: ConstraintLayout = searchEngineGroup?.findViewWithTag(engine.identifier) ?: return
 
             when (wrapper.radio_button == buttonView) {
@@ -129,7 +154,55 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
         }
     }
 
-    companion object {
-        private const val THIS_IS_A_HACK_FIX_ME = "."
+    private fun editCustomSearchEngine(engine: SearchEngine) {
+        val directions = SearchEngineFragmentDirections
+            .actionSearchEngineFragmentToEditCustomSearchEngineFragment(engine.identifier)
+        Navigation.findNavController(searchEngineGroup!!).navigate(directions)
+    }
+
+    private fun deleteSearchEngine(context: Context, engine: SearchEngine) {
+        MainScope().allowUndo(
+            view = context.getRootView()!!,
+            message = context
+                .getString(R.string.search_delete_search_engine_success_message, engine.name),
+            undoActionTitle = context.getString(R.string.snackbar_deleted_undo),
+            onCancel = {
+                val defaultEngine = context.components.search.provider.getDefaultEngine(context)
+
+                searchEngineList = searchEngineList.copy(
+                    list = searchEngineList.list + engine,
+                    default = defaultEngine
+                )
+
+                refreshSearchEngineViews(context)
+            },
+            operation = {
+                val defaultEngine = context.components.search.provider.getDefaultEngine(context)
+                context.components.search.provider.uninstallSearchEngine(context, engine)
+
+                if (engine == defaultEngine) {
+                    context.settings().defaultSearchEngineName = context
+                        .components
+                        .search
+                        .provider
+                        .getDefaultEngine(context)
+                        .name
+                }
+                refreshSearchEngineViews(context)
+            }
+        )
+
+        searchEngineList = searchEngineList.copy(
+            list = searchEngineList.list.filter {
+                it.identifier != engine.identifier
+            },
+            default = if (searchEngineList.default?.identifier == engine.identifier) {
+                null
+            } else {
+                searchEngineList.default
+            }
+        )
+
+        refreshSearchEngineViews(context)
     }
 }
