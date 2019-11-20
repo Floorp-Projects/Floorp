@@ -397,6 +397,16 @@ void DOMMediaStream::AddTrackInternal(MediaStreamTrack* aTrack) {
   DispatchTrackEvent(NS_LITERAL_STRING("addtrack"), aTrack);
 }
 
+void DOMMediaStream::RemoveTrackInternal(MediaStreamTrack* aTrack) {
+  LOG(LogLevel::Debug,
+      ("DOMMediaStream %p Removing owned track %p", this, aTrack));
+  if (!HasTrack(*aTrack)) {
+    return;
+  }
+  RemoveTrack(*aTrack);
+  DispatchTrackEvent(NS_LITERAL_STRING("removetrack"), aTrack);
+}
+
 already_AddRefed<nsIPrincipal> DOMMediaStream::GetPrincipal() {
   nsCOMPtr<nsIPrincipal> principal =
       nsGlobalWindowInner::Cast(mWindow)->GetPrincipal();
