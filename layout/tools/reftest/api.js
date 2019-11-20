@@ -100,7 +100,7 @@ this.reftest = class extends ExtensionAPI {
       }
 
       dummy.focus();
-      Services.ww.openWindow(null, "chrome://reftest/content/reftest.xul",
+      Services.ww.openWindow(null, "chrome://reftest/content/reftest.xhtml",
                              "_blank", "chrome,dialog=no,all", {});
     };
   }

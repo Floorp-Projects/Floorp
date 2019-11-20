@@ -407,7 +407,7 @@
               <menuitem id="menu_layout_debugger"
                         data-l10n-id="menu-tools-layout-debugger"
                         oncommand="toOpenWindowByType('mozapp:layoutdebug',
-                                          'chrome://layoutdebug/content/');"/>
+                                          'chrome://layoutdebug/content/layoutdebug.xhtml');"/>
 #endif
 #ifdef XP_MACOSX
 <!-- nsMenuBarX hides these and uses them to build the Application menu. -->

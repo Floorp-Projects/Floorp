@@ -17,7 +17,7 @@ function test() {
       waitForFocus(() => {
         is(
           domWindow.location,
-          "chrome://layoutdebug/content/layoutdebug.xul",
+          "chrome://layoutdebug/content/layoutdebug.xhtml",
           "Window location is correct"
         );
         domWindow.close();

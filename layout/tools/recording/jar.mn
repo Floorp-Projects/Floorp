@@ -1,4 +1,4 @@
 recording.jar:
 % content recording %content/
-  content/recording.xul (recording.xul)
+  content/recording.xhtml (recording.xhtml)
   content/recording.js (recording.js)
