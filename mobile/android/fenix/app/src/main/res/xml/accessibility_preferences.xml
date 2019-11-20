@@ -29,7 +29,6 @@
         android:key="@string/pref_key_accessibility_force_enable_zoom"
         android:summary="@string/preference_accessibility_force_enable_zoom_summary"
         android:title="@string/preference_accessibility_force_enable_zoom"
-        app:isPreferenceVisible="false"
         app:allowDividerAbove="true"
         app:iconSpaceReserved="false" />
 </PreferenceScreen>

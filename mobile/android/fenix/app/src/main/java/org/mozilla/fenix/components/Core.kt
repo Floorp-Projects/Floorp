@@ -69,7 +69,8 @@ class Core(private val context: Context) {
             automaticFontSizeAdjustment = context.settings().shouldUseAutoSize,
             fontInflationEnabled = context.settings().shouldUseAutoSize,
             suspendMediaWhenInactive = !FeatureFlags.mediaIntegration,
-            allowAutoplayMedia = context.settings().isAutoPlayEnabled
+            allowAutoplayMedia = context.settings().isAutoPlayEnabled,
+            forceUserScalableContent = context.settings().forceEnableZoom
         )
 
         GeckoEngine(context, defaultSettings, GeckoProvider.getOrCreateRuntime(context)).also {

@@ -8,7 +8,6 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
@@ -29,18 +28,15 @@ class AccessibilityFragment : PreferenceFragmentCompat() {
         val forceZoomPreference = findPreference<SwitchPreference>(
             getPreferenceKey(R.string.pref_key_accessibility_force_enable_zoom)
         )
-        forceZoomPreference?.isVisible = FeatureFlags.forceZoomPreference
 
-        if (FeatureFlags.forceZoomPreference) {
-            forceZoomPreference?.setOnPreferenceChangeListener<Boolean> { preference, shouldForce ->
-                val settings = preference.context.settings()
-                val components = preference.context.components
+        forceZoomPreference?.setOnPreferenceChangeListener<Boolean> { preference, shouldForce ->
+            val settings = preference.context.settings()
+            val components = preference.context.components
 
-                settings.forceEnableZoom = shouldForce
-                components.core.engine.settings.forceUserScalableContent = shouldForce
+            settings.forceEnableZoom = shouldForce
+            components.core.engine.settings.forceUserScalableContent = shouldForce
 
-                true
-            }
+            true
         }
 
         val textSizePreference = findPreference<TextPercentageSeekBarPreference>(

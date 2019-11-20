@@ -34,8 +34,6 @@ object FeatureFlags {
      */
     val progressiveWebApps = Config.channel.isNightlyOrDebug
 
-    val forceZoomPreference = Config.channel.isNightlyOrDebug
-
     /**
      * Gives option in Settings to see logins and sync logins
      */
