@@ -2906,16 +2906,11 @@ nsresult HTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext) {
     WidgetMouseEvent event(true, eMouseClick, nullptr, WidgetMouseEvent::eReal);
     nsEventStatus status = nsEventStatus_eIgnore;
     presShell->HandleDOMEventWithTarget(submitContent, &event, &status);
-  } else if (!mForm->ImplicitSubmissionIsDisabled() &&
-             mForm->SubmissionCanProceed(nullptr)) {
-    // TODO: removing this code and have the submit event sent by the form,
-    // bug 592124.
+  } else if (!mForm->ImplicitSubmissionIsDisabled()) {
     // If there's only one text control, just submit the form
     // Hold strong ref across the event
-    RefPtr<mozilla::dom::HTMLFormElement> form = mForm;
-    InternalFormEvent event(true, eFormSubmit);
-    nsEventStatus status = nsEventStatus_eIgnore;
-    presShell->HandleDOMEventWithTarget(form, &event, &status);
+    RefPtr<mozilla::dom::HTMLFormElement> form(mForm);
+    form->MaybeSubmit(nullptr);
   }
 
   return NS_OK;
@@ -4155,27 +4150,14 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
           case NS_FORM_INPUT_SUBMIT:
           case NS_FORM_INPUT_IMAGE:
             if (mForm) {
-              InternalFormEvent event(true, (mType == NS_FORM_INPUT_RESET)
-                                                ? eFormReset
-                                                : eFormSubmit);
-              event.mOriginator = this;
-              nsEventStatus status = nsEventStatus_eIgnore;
-
-              RefPtr<PresShell> presShell =
-                  aVisitor.mPresContext->GetPresShell();
-
-              // If |PresShell::Destroy| has been called due to
-              // handling the event the pres context will return a null
-              // pres shell.  See bug 125624.
-              // TODO: removing this code and have the submit event sent by the
-              // form, see bug 592124.
-              if (presShell && (event.mMessage != eFormSubmit ||
-                                mForm->SubmissionCanProceed(this))) {
-                // Hold a strong ref while dispatching
-                RefPtr<mozilla::dom::HTMLFormElement> form(mForm);
-                presShell->HandleDOMEventWithTarget(form, &event, &status);
-                aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+              // Hold a strong ref while dispatching
+              RefPtr<mozilla::dom::HTMLFormElement> form(mForm);
+              if (mType == NS_FORM_INPUT_RESET) {
+                form->MaybeReset(this);
+              } else {
+                form->MaybeSubmit(this);
               }
+              aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
             }
             break;
 
