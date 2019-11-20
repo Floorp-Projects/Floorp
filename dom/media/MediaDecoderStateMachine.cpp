@@ -2592,6 +2592,7 @@ RefPtr<ShutdownPromise> MediaDecoderStateMachine::ShutdownState::Enter() {
   master->mPreservesPitch.DisconnectIfConnected();
   master->mLooping.DisconnectIfConnected();
   master->mSinkDevice.DisconnectIfConnected();
+  master->mSecondaryVideoContainer.DisconnectIfConnected();
   master->mOutputCaptured.DisconnectIfConnected();
   master->mOutputTracks.DisconnectIfConnected();
   master->mOutputPrincipal.DisconnectIfConnected();
@@ -2643,6 +2644,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
       INIT_MIRROR(mPreservesPitch, true),
       INIT_MIRROR(mLooping, false),
       INIT_MIRROR(mSinkDevice, nullptr),
+      INIT_MIRROR(mSecondaryVideoContainer, nullptr),
       INIT_MIRROR(mOutputCaptured, false),
       INIT_MIRROR(mOutputTracks, nsTArray<RefPtr<ProcessedMediaTrack>>()),
       INIT_MIRROR(mOutputPrincipal, PRINCIPAL_HANDLE_NONE),
@@ -2679,6 +2681,8 @@ void MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder) {
   mPreservesPitch.Connect(aDecoder->CanonicalPreservesPitch());
   mLooping.Connect(aDecoder->CanonicalLooping());
   mSinkDevice.Connect(aDecoder->CanonicalSinkDevice());
+  mSecondaryVideoContainer.Connect(
+      aDecoder->CanonicalSecondaryVideoContainer());
   mOutputCaptured.Connect(aDecoder->CanonicalOutputCaptured());
   mOutputTracks.Connect(aDecoder->CanonicalOutputTracks());
   mOutputPrincipal.Connect(aDecoder->CanonicalOutputPrincipal());
@@ -2691,6 +2695,8 @@ void MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder) {
                       &MediaDecoderStateMachine::PreservesPitchChanged);
   mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::PlayStateChanged);
   mWatchManager.Watch(mLooping, &MediaDecoderStateMachine::LoopingChanged);
+  mWatchManager.Watch(mSecondaryVideoContainer,
+                      &MediaDecoderStateMachine::UpdateSecondaryVideoContainer);
   mWatchManager.Watch(mOutputCaptured,
                       &MediaDecoderStateMachine::UpdateOutputCaptured);
   mWatchManager.Watch(mOutputTracks,
@@ -3613,15 +3619,10 @@ RefPtr<GenericPromise> MediaDecoderStateMachine::SetSink(
   return GenericPromise::CreateAndResolve(wasPlaying, __func__);
 }
 
-void MediaDecoderStateMachine::SetSecondaryVideoContainer(
-    const RefPtr<VideoFrameContainer>& aSecondary) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  RefPtr<MediaDecoderStateMachine> self = this;
-  Unused << InvokeAsync(OwnerThread(), __func__, [self, aSecondary]() {
-    self->mMediaSink->SetSecondaryVideoContainer(aSecondary);
-    return GenericPromise::CreateAndResolve(true, __func__);
-  });
+void MediaDecoderStateMachine::UpdateSecondaryVideoContainer() {
+  MOZ_ASSERT(OnTaskQueue());
+  MOZ_DIAGNOSTIC_ASSERT(mMediaSink);
+  mMediaSink->SetSecondaryVideoContainer(mSecondaryVideoContainer.Ref());
 }
 
 TimeUnit MediaDecoderStateMachine::AudioEndTime() const {
