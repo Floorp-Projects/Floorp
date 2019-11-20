@@ -87,7 +87,7 @@ class JSObject : public js::gc::Cell {
   js::GCPtrShape shape_;
 
  private:
-  friend class js::Shape;
+  friend class js::DictionaryShapeLink;
   friend class js::GCMarker;
   friend class js::NewObjectCache;
   friend class js::Nursery;
