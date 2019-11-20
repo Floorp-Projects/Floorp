@@ -19,6 +19,8 @@ class JS_PUBLIC_API JSScript;
 namespace js {
 namespace jit {
 
+class ControlFlowGraph;
+
 // Describes a single wasm::ImportExit which jumps (via an import with
 // the given index) directly to a JitScript.
 struct DependentWasmImport {
@@ -34,7 +36,6 @@ struct DependentWasmImport {
 struct IonBytecodeInfo {
   bool usesEnvironmentChain = false;
   bool modifiesArguments = false;
-  bool hasTryFinally = false;
 };
 
 // Magic BaselineScript value indicating Baseline compilation has been disabled.
@@ -143,6 +144,10 @@ class alignas(uintptr_t) JitScript final {
     // object and decl env object (linked via the call object's enclosing
     // scope).
     const HeapPtr<EnvironmentObject*> templateEnv = nullptr;
+
+    // Cached control flow graph for IonBuilder. Owned by JitZone::cfgSpace and
+    // can be purged by Zone::discardJitCode.
+    ControlFlowGraph* controlFlowGraph = nullptr;
 
     // The total bytecode length of all scripts we inlined when we Ion-compiled
     // this script. 0 if Ion did not compile this script or if we didn't inline
@@ -469,14 +474,24 @@ class alignas(uintptr_t) JitScript final {
     return cachedIonData().templateEnv;
   }
 
+  const ControlFlowGraph* controlFlowGraph() const {
+    return cachedIonData().controlFlowGraph;
+  }
+  void setControlFlowGraph(ControlFlowGraph* controlFlowGraph) {
+    MOZ_ASSERT(controlFlowGraph);
+    cachedIonData().controlFlowGraph = controlFlowGraph;
+  }
+  void clearControlFlowGraph() {
+    if (hasCachedIonData()) {
+      cachedIonData().controlFlowGraph = nullptr;
+    }
+  }
+
   bool modifiesArguments() const {
     return cachedIonData().bytecodeInfo.modifiesArguments;
   }
   bool usesEnvironmentChain() const {
     return cachedIonData().bytecodeInfo.usesEnvironmentChain;
-  }
-  bool hasTryFinally() const {
-    return cachedIonData().bytecodeInfo.hasTryFinally;
   }
 
   uint8_t maxInliningDepth() const {

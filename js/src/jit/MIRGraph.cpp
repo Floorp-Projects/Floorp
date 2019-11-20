@@ -126,9 +126,6 @@ bool MIRGraph::removeSuccessorBlocks(MBasicBlock* start) {
   // Mark all successors.
   Vector<MBasicBlock*, 4, SystemAllocPolicy> blocks;
   for (size_t i = 0; i < start->numSuccessors(); i++) {
-    if (!start->getSuccessor(i)) {
-      continue;
-    }
     if (start->getSuccessor(i)->isMarked()) {
       continue;
     }
@@ -144,9 +141,6 @@ bool MIRGraph::removeSuccessorBlocks(MBasicBlock* start) {
     }
 
     for (size_t j = 0; j < block->numSuccessors(); j++) {
-      if (!block->getSuccessor(j)) {
-        continue;
-      }
       if (block->getSuccessor(j)->isMarked()) {
         continue;
       }
