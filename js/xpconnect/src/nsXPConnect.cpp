@@ -940,17 +940,10 @@ void SetLocationForGlobal(JSObject* global, nsIURI* locationURI) {
 
 }  // namespace xpc
 
-static nsresult WriteScriptOrFunction(nsIObjectOutputStream* stream,
-                                      JSContext* cx, JSScript* scriptArg,
-                                      HandleObject functionObj) {
-  // Exactly one of script or functionObj must be given
-  MOZ_ASSERT(!scriptArg != !functionObj);
-
+NS_IMETHODIMP
+nsXPConnect::WriteScript(nsIObjectOutputStream* stream, JSContext* cx,
+                         JSScript* scriptArg) {
   RootedScript script(cx, scriptArg);
-  if (!script) {
-    RootedFunction fun(cx, JS_GetObjectFunction(functionObj));
-    script.set(JS_GetFunctionScript(cx, fun));
-  }
 
   uint8_t flags = 0;  // We don't have flags anymore.
   nsresult rv = stream->Write8(flags);
@@ -960,13 +953,7 @@ static nsresult WriteScriptOrFunction(nsIObjectOutputStream* stream,
 
   TranscodeBuffer buffer;
   TranscodeResult code;
-  {
-    if (functionObj) {
-      code = EncodeInterpretedFunction(cx, buffer, functionObj);
-    } else {
-      code = EncodeScript(cx, buffer, script);
-    }
-  }
+  code = EncodeScript(cx, buffer, script);
 
   if (code != TranscodeResult_Ok) {
     if ((code & TranscodeResult_Failure) != 0) {
@@ -990,12 +977,9 @@ static nsresult WriteScriptOrFunction(nsIObjectOutputStream* stream,
   return rv;
 }
 
-static nsresult ReadScriptOrFunction(nsIObjectInputStream* stream,
-                                     JSContext* cx, JSScript** scriptp,
-                                     JSObject** functionObjp) {
-  // Exactly one of script or functionObj must be given
-  MOZ_ASSERT(!scriptp != !functionObjp);
-
+NS_IMETHODIMP
+nsXPConnect::ReadScript(nsIObjectInputStream* stream, JSContext* cx,
+                        JSScript** scriptp) {
   uint8_t flags;
   nsresult rv = stream->Read8(&flags);
   if (NS_FAILED(rv)) {
@@ -1029,18 +1013,10 @@ static nsresult ReadScriptOrFunction(nsIObjectInputStream* stream,
 
   {
     TranscodeResult code;
-    if (scriptp) {
-      Rooted<JSScript*> script(cx);
-      code = DecodeScript(cx, buffer, &script);
-      if (code == TranscodeResult_Ok) {
-        *scriptp = script.get();
-      }
-    } else {
-      Rooted<JSFunction*> funobj(cx);
-      code = DecodeInterpretedFunction(cx, buffer, &funobj);
-      if (code == TranscodeResult_Ok) {
-        *functionObjp = JS_GetFunctionObject(funobj.get());
-      }
+    Rooted<JSScript*> script(cx);
+    code = DecodeScript(cx, buffer, &script);
+    if (code == TranscodeResult_Ok) {
+      *scriptp = script.get();
     }
 
     if (code != TranscodeResult_Ok) {
@@ -1054,31 +1030,6 @@ static nsresult ReadScriptOrFunction(nsIObjectInputStream* stream,
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsXPConnect::WriteScript(nsIObjectOutputStream* stream, JSContext* cx,
-                         JSScript* script) {
-  return WriteScriptOrFunction(stream, cx, script, nullptr);
-}
-
-NS_IMETHODIMP
-nsXPConnect::ReadScript(nsIObjectInputStream* stream, JSContext* cx,
-                        JSScript** scriptp) {
-  return ReadScriptOrFunction(stream, cx, scriptp, nullptr);
-}
-
-NS_IMETHODIMP
-nsXPConnect::WriteFunction(nsIObjectOutputStream* stream, JSContext* cx,
-                           JSObject* functionObjArg) {
-  RootedObject functionObj(cx, functionObjArg);
-  return WriteScriptOrFunction(stream, cx, nullptr, functionObj);
-}
-
-NS_IMETHODIMP
-nsXPConnect::ReadFunction(nsIObjectInputStream* stream, JSContext* cx,
-                          JSObject** functionObjp) {
-  return ReadScriptOrFunction(stream, cx, nullptr, functionObjp);
 }
 
 NS_IMETHODIMP
