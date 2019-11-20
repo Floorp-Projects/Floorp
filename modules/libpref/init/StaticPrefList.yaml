@@ -4916,7 +4916,7 @@
 # Is support for CSS individual transform enabled?
 - name: layout.css.individual-transform.enabled
   type: bool
-  value: @IS_NOT_RELEASE_OR_BETA@
+  value: true
   mirror: always
 
 # Is support for CSS initial-letter property enabled?
