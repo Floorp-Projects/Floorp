@@ -2689,24 +2689,24 @@ void BackgroundRequestChild::HandleResponse(
 
     cloneReadInfos.SetCapacity(count);
 
-    IDBDatabase* database = mTransaction->Database();
+    std::transform(
+        aResponse.begin(), aResponse.end(), MakeBackInserter(cloneReadInfos),
+        [database = mTransaction->Database(), this](
+            const SerializedStructuredCloneReadInfo& constSerializedCloneInfo) {
+          // XXX Fix the need for the const_cast somehow...
+          auto& serializedCloneInfo =
+              const_cast<SerializedStructuredCloneReadInfo&>(
+                  constSerializedCloneInfo);
 
-    for (uint32_t index = 0; index < count; index++) {
-      // XXX Fix this somehow...
-      auto& serializedCloneInfo =
-          const_cast<SerializedStructuredCloneReadInfo&>(aResponse[index]);
+          auto cloneReadInfo = DeserializeStructuredCloneReadInfo(
+              std::move(serializedCloneInfo), database);
 
-      StructuredCloneReadInfo* cloneReadInfo = cloneReadInfos.AppendElement();
+          if (cloneReadInfo.mHasPreprocessInfo) {
+            cloneReadInfo.mData = std::move(*GetNextCloneData());
+          }
 
-      // Move relevant data into the cloneReadInfo
-      *cloneReadInfo = DeserializeStructuredCloneReadInfo(
-          std::move(serializedCloneInfo), database);
-
-      if (cloneReadInfo->mHasPreprocessInfo) {
-        UniquePtr<JSStructuredCloneData> cloneData = GetNextCloneData();
-        cloneReadInfo->mData = std::move(*cloneData);
-      }
-    }
+          return cloneReadInfo;
+        });
   }
 
   ResultHelper helper(mRequest, mTransaction, &cloneReadInfos);
