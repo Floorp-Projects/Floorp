@@ -5,9 +5,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.net += [
+    'ADocumentChannelBridge.h',
     'ChannelEventQueue.h',
     'DocumentChannelChild.h',
     'DocumentChannelParent.h',
+    'DocumentLoadListener.h',
     'NeckoChild.h',
     'NeckoCommon.h',
     'NeckoMessageUtils.h',
@@ -25,6 +27,7 @@ UNIFIED_SOURCES += [
     'ChannelEventQueue.cpp',
     'DocumentChannelChild.cpp',
     'DocumentChannelParent.cpp',
+    'DocumentLoadListener.cpp',
     'NeckoChild.cpp',
     'NeckoCommon.cpp',
     'NeckoParent.cpp',
