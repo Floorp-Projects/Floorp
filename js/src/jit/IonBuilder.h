@@ -17,7 +17,6 @@
 #include "jit/BaselineInspector.h"
 #include "jit/BytecodeAnalysis.h"
 #include "jit/IonAnalysis.h"
-#include "jit/IonControlFlow.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
