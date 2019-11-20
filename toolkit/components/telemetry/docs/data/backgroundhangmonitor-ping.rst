@@ -153,3 +153,5 @@ The following annotations are currently present in tree:
 +-----------------+-------------------------------------------------+
 | HangUIDontShow  | "true" if the hang UI was not shown             |
 +-----------------+-------------------------------------------------+
+| Unrecovered     | "true" if the hang persisted until process exit |
++-----------------+-------------------------------------------------+
