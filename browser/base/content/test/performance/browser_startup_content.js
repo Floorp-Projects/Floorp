@@ -66,6 +66,9 @@ const whitelist = {
     // Browser front-end
     "chrome://global/content/browser-content.js",
 
+    // Forms
+    "chrome://formautofill/content/FormAutofillFrameScript.js",
+
     // Extensions
     "resource://gre/modules/addons/Content.js",
   ]),
