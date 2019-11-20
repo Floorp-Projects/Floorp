@@ -103,8 +103,8 @@ MOZ_ALWAYS_INLINE void js::NativeObject::sweepDictionaryListPointer() {
   // unreachable shapes may be marked whose listp points into this object.  In
   // case this happens, null out the shape's pointer so that a moving GC will
   // not try to access the dead object.
-  if (shape()->listp == shapePtr()) {
-    shape()->listp = nullptr;
+  if (shape()->dictNext == DictionaryShapeLink(this)) {
+    shape()->dictNext.setNone();
   }
 }
 
@@ -113,9 +113,9 @@ js::NativeObject::updateDictionaryListPointerAfterMinorGC(NativeObject* old) {
   MOZ_ASSERT(this == Forwarded(old));
 
   // Dictionary objects can be allocated in the nursery and when they are
-  // tenured the shape's pointer into the object needs to be updated.
-  if (shape()->listp == old->shapePtr()) {
-    shape()->listp = shapePtr();
+  // tenured the shape's pointer to the object needs to be updated.
+  if (shape()->dictNext == DictionaryShapeLink(old)) {
+    shape()->dictNext = DictionaryShapeLink(this);
   }
 }
 

@@ -136,10 +136,10 @@ using ShapeSet = HashSet<Shape*, ShapeHasher, SystemAllocPolicy>;
 
 // A tagged pointer to null, a single child, or a many-children data structure.
 class ShapeChildren {
- private:
-  enum { SINGLE_SHAPE = 0, SHAPE_SET = 1, MASK = 1 };
+  // Tag bits must not overlap with DictionaryShapeLink.
+  enum { SINGLE_SHAPE = 0, SHAPE_SET = 1, MASK = 3 };
 
-  uintptr_t bits;
+  uintptr_t bits = 0;
 
  public:
   bool isNone() const { return !bits; }
@@ -172,7 +172,55 @@ class ShapeChildren {
 #ifdef DEBUG
   void checkHasChild(Shape* child) const;
 #endif
-};
+} JS_HAZ_GC_POINTER;
+
+// For dictionary mode shapes, a tagged pointer to the next shape or associated
+// object if this is the last shape.
+class DictionaryShapeLink {
+  // Tag bits must not overlap with ShapeChildren.
+  enum { SHAPE = 2, OBJECT = 3, MASK = 3 };
+
+  uintptr_t bits = 0;
+
+ public:
+  DictionaryShapeLink() {}
+  explicit DictionaryShapeLink(JSObject* obj) { setObject(obj); }
+  explicit DictionaryShapeLink(Shape* shape) { setShape(shape); }
+
+  bool isNone() const { return !bits; }
+  void setNone() { bits = 0; }
+
+  bool isShape() const { return (bits & MASK) == SHAPE; }
+  Shape* toShape() const {
+    MOZ_ASSERT(isShape());
+    return reinterpret_cast<Shape*>(bits & ~uintptr_t(MASK));
+  }
+  void setShape(Shape* shape) {
+    MOZ_ASSERT(shape);
+    MOZ_ASSERT((uintptr_t(shape) & MASK) == 0);
+    bits = uintptr_t(shape) | SHAPE;
+  }
+
+  bool isObject() const { return (bits & MASK) == OBJECT; }
+  JSObject* toObject() const {
+    MOZ_ASSERT(isObject());
+    return reinterpret_cast<JSObject*>(bits & ~uintptr_t(MASK));
+  }
+  void setObject(JSObject* obj) {
+    MOZ_ASSERT(obj);
+    MOZ_ASSERT((uintptr_t(obj) & MASK) == 0);
+    bits = uintptr_t(obj) | OBJECT;
+  }
+
+  bool operator==(const DictionaryShapeLink& other) const {
+    return bits == other.bits;
+  }
+  bool operator!=(const DictionaryShapeLink& other) const {
+    return !((*this) == other);
+  }
+
+  GCPtrShape* prevPtr();
+} JS_HAZ_GC_POINTER;
 
 class PropertyTree {
   friend class ::JSFunction;
@@ -887,6 +935,7 @@ using BaseShapeSet =
 class Shape : public gc::TenuredCell {
   friend class ::JSObject;
   friend class ::JSFunction;
+  friend class GCMarker;
   friend class NativeObject;
   friend class PropertyTree;
   friend class TenuringTracer;
@@ -947,16 +996,20 @@ class Shape : public gc::TenuredCell {
   uint8_t mutableFlags;    /* mutable flags, see below for defines */
 
   GCPtrShape parent; /* parent node, reverse for..in order */
+  friend class DictionaryShapeLink;
 
   union {
     // Valid when !inDictionary().
     ShapeChildren children;
 
-    // Valid when inDictionary(). Dictionary list starting at shape_ has a
-    // double-indirect back pointer, either to the next shape's parent if not
-    // last, else to obj->shape_
-    GCPtrShape* listp;
+    // Valid when inDictionary().
+    DictionaryShapeLink dictNext;
   };
+
+  void setNextDictionaryShape(Shape* shape);
+  void setDictionaryObject(JSObject* obj);
+  void setDictionaryNextPtr(DictionaryShapeLink next);
+  void clearDictionaryNextPtr();
 
   template <MaybeAdding Adding = MaybeAdding::NotAdding>
   static MOZ_ALWAYS_INLINE Shape* search(JSContext* cx, Shape* start, jsid id);
@@ -970,10 +1023,10 @@ class Shape : public gc::TenuredCell {
   static inline Shape* searchNoHashify(Shape* start, jsid id);
 
   void removeFromDictionary(NativeObject* obj);
-  void insertIntoDictionary(GCPtrShape* dictp);
+  void insertIntoDictionaryBefore(DictionaryShapeLink next);
 
   inline void initDictionaryShape(const StackShape& child, uint32_t nfixed,
-                                  GCPtrShape* dictp);
+                                  DictionaryShapeLink next);
 
   // Replace the base shape of the last shape in a non-dictionary lineage with
   // base.
@@ -1674,8 +1727,7 @@ inline Shape::Shape(const StackShape& other, uint32_t nfixed)
       immutableFlags(other.immutableFlags),
       attrs(other.attrs),
       mutableFlags(other.mutableFlags),
-      parent(nullptr),
-      listp(nullptr) {
+      parent(nullptr) {
   setNumFixedSlots(nfixed);
 
 #ifdef DEBUG
@@ -1707,8 +1759,7 @@ inline Shape::Shape(UnownedBaseShape* base, uint32_t nfixed)
       immutableFlags(SHAPE_INVALID_SLOT | (nfixed << FIXED_SLOTS_SHIFT)),
       attrs(0),
       mutableFlags(0),
-      parent(nullptr),
-      listp(nullptr) {
+      parent(nullptr) {
   MOZ_ASSERT(base);
   children.setNone();
 }

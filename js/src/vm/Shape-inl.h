@@ -178,7 +178,7 @@ inline AccessorShape::AccessorShape(const StackShape& other, uint32_t nfixed)
 }
 
 inline void Shape::initDictionaryShape(const StackShape& child, uint32_t nfixed,
-                                       GCPtrShape* dictp) {
+                                       DictionaryShapeLink next) {
   if (child.isAccessorShape()) {
     new (this) AccessorShape(child, nfixed);
   } else {
@@ -186,10 +186,37 @@ inline void Shape::initDictionaryShape(const StackShape& child, uint32_t nfixed,
   }
   this->immutableFlags |= IN_DICTIONARY;
 
-  this->listp = nullptr;
-  if (dictp) {
-    insertIntoDictionary(dictp);
+  MOZ_ASSERT(dictNext.isNone());
+  if (!next.isNone()) {
+    insertIntoDictionaryBefore(next);
   }
+}
+
+inline void Shape::setNextDictionaryShape(Shape* shape) {
+  setDictionaryNextPtr(DictionaryShapeLink(shape));
+}
+
+inline void Shape::setDictionaryObject(JSObject* obj) {
+  setDictionaryNextPtr(DictionaryShapeLink(obj));
+}
+
+inline void Shape::clearDictionaryNextPtr() {
+  setDictionaryNextPtr(DictionaryShapeLink());
+}
+
+inline void Shape::setDictionaryNextPtr(DictionaryShapeLink next) {
+  MOZ_ASSERT(inDictionary());
+  dictNext = next;
+}
+
+inline GCPtrShape* DictionaryShapeLink::prevPtr() {
+  MOZ_ASSERT(!isNone());
+
+  if (isShape()) {
+    return &toShape()->parent;
+  }
+
+  return toObject()->as<NativeObject>().shapePtr();
 }
 
 template <class ObjectSubclass>
