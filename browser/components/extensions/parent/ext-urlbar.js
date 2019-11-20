@@ -225,17 +225,17 @@ this.urlbar = class extends ExtensionAPI {
           },
         }).api(),
 
-        openViewOnFocus: getSettingsAPI({
-          context,
-          name: "openViewOnFocus",
-          callback: () => UrlbarPrefs.get("openViewOnFocus"),
-        }),
+        openViewOnFocus: getSettingsAPI(
+          context.extension.id,
+          "openViewOnFocus",
+          () => UrlbarPrefs.get("openViewOnFocus")
+        ),
 
-        engagementTelemetry: getSettingsAPI({
-          context,
-          name: "engagementTelemetry",
-          callback: () => UrlbarPrefs.get("eventTelemetry.enabled"),
-        }),
+        engagementTelemetry: getSettingsAPI(
+          context.extension.id,
+          "engagementTelemetry",
+          () => UrlbarPrefs.get("eventTelemetry.enabled")
+        ),
 
         contextualTip: {
           /**
