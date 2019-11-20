@@ -867,6 +867,19 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   void SetCapturedOutputStreamsEnabled(bool aEnabled);
 
   /**
+   * Returns true if output tracks should be muted, based on the state of this
+   * media element.
+   */
+  enum class OutputMuteState { Muted, Unmuted };
+  OutputMuteState OutputTracksMuted();
+
+  /**
+   * Sets the muted state of all output track sources. They are muted when we're
+   * paused and unmuted otherwise.
+   */
+  void UpdateOutputTracksMuting();
+
+  /**
    * Create a new MediaStreamTrack for the TrackSource corresponding to aTrack
    * and add it to the DOMMediaStream in aOutputStream. This automatically sets
    * the output track to enabled or disabled depending on our current playing

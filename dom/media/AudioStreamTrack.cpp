@@ -42,7 +42,7 @@ void AudioStreamTrack::GetLabel(nsAString& aLabel, CallerType aCallerType) {
 
 already_AddRefed<MediaStreamTrack> AudioStreamTrack::CloneInternal() {
   return do_AddRef(new AudioStreamTrack(mWindow, mInputTrack, mSource,
-                                        ReadyState(), mConstraints));
+                                        ReadyState(), Muted(), mConstraints));
 }
 
 }  // namespace dom
