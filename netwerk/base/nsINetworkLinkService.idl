@@ -56,11 +56,6 @@ interface nsINetworkLinkService : nsISupports
    * The list of DNS suffixes for the currently active network interfaces.
    */
   readonly attribute Array<ACString> dnsSuffixList;
-
-  /**
-   * Whether a VPN was detected on at least one active network interface.
-   */
-  readonly attribute boolean vpnDetected;
 };
 
 %{C++
