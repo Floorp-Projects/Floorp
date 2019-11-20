@@ -216,51 +216,32 @@ const observer = {
       return;
     }
 
-    let ownerDocument = aEvent.target.ownerDocument;
-    let window = ownerDocument.defaultView;
-    let docState = LoginManagerChild.forWindow(window).stateForDocument(
-      ownerDocument
-    );
+    let window = aEvent.target.ownerDocument.defaultView;
 
     switch (aEvent.type) {
       // Used to mask fields with filled generated passwords when blurred.
       case "blur": {
-        if (docState.generatedPasswordFields.has(aEvent.target)) {
-          let unmask = false;
-          LoginManagerChild.forWindow(window)._togglePasswordFieldMasking(
-            aEvent.target,
-            unmask
-          );
-        }
+        let unmask = false;
+        LoginManagerChild.forWindow(window)._togglePasswordFieldMasking(
+          aEvent.target,
+          unmask
+        );
         break;
       }
 
       // Used to watch for changes to fields filled with generated passwords.
       case "change": {
-        if (docState.generatedPasswordFields.has(aEvent.target)) {
-          LoginManagerChild.forWindow(window)._generatedPasswordFilledOrEdited(
-            aEvent.target
-          );
-        }
+        LoginManagerChild.forWindow(window)._generatedPasswordFilledOrEdited(
+          aEvent.target
+        );
         break;
       }
 
       // Used to watch for changes to fields filled with generated passwords.
       case "input": {
-        let field = aEvent.target;
-        if (docState.generatedPasswordFields.has(field)) {
-          LoginManagerChild.forWindow(
-            window
-          )._maybeStopTreatingAsGeneratedPasswordField(aEvent);
-        }
-        if (
-          field.hasBeenTypePassword ||
-          LoginHelper.isUsernameFieldType(field)
-        ) {
-          // flag this form as user-modified
-          let formLikeRoot = FormLikeFactory.findRootForField(field);
-          docState.fieldModificationsByRootElement.set(formLikeRoot, true);
-        }
+        LoginManagerChild.forWindow(
+          window
+        )._maybeStopTreatingAsGeneratedPasswordField(aEvent);
         break;
       }
 
@@ -277,10 +258,7 @@ const observer = {
       }
 
       case "focus": {
-        if (
-          aEvent.target.type == "password" &&
-          docState.generatedPasswordFields.has(aEvent.target)
-        ) {
+        if (aEvent.target.type == "password") {
           // Used to unmask fields with filled generated passwords when focused.
           let unmask = true;
           LoginManagerChild.forWindow(window)._togglePasswordFieldMasking(
@@ -879,12 +857,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       return;
     }
 
-    // set up input event listeners so we know if the user has interacted with these fields
-    form.rootElement.addEventListener("input", observer, {
-      capture: true,
-      mozSystemGroup: true,
-    });
-
     this._getLoginDataFromParent(form, { showMasterPassword: true })
       .then(this.loginsFound.bind(this))
       .catch(Cu.reportError);
@@ -903,14 +875,9 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
          */
         fillsByRootElement: new WeakMap(),
         /**
-         * Keeps track of fields we've filled with generated passwords
-         */
-        generatedPasswordFields: new WeakSet(),
-        /**
          * Keeps track of logins that were last submitted.
          */
         lastSubmittedValuesByRootElement: new WeakMap(),
-        fieldModificationsByRootElement: new WeakMap(),
         loginFormRootElements: new WeakSet(),
       };
       this._loginFormStateByDocument.set(document, loginFormState);
@@ -1573,17 +1540,9 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       return;
     }
 
-    let docState = this.stateForDocument(doc);
-    let fieldsModified = this._formHasModifiedFields(formLikeRoot);
-    if (!fieldsModified && LoginHelper.userInputRequiredToCapture) {
-      // we know no fields in this form had user modifications, so don't prompt
-      log(
-        "(form submission ignored -- submitting values that are not changed by the user)"
-      );
-      return;
-    }
-
-    let autoFilledLogin = docState.fillsByRootElement.get(form.rootElement);
+    let autoFilledLogin = this.stateForDocument(doc).fillsByRootElement.get(
+      form.rootElement
+    );
 
     let detail = {
       origin,
@@ -1616,10 +1575,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
   _stopTreatingAsGeneratedPasswordField(passwordField) {
     log("_stopTreatingAsGeneratedPasswordField");
 
-    let fields = this.stateForDocument(passwordField.ownerDocument)
-      .generatedPasswordFields;
-    fields.delete(passwordField);
-
     // Remove all the event listeners added in _generatedPasswordFilledOrEdited
     for (let eventType of ["blur", "change", "focus", "input"]) {
       passwordField.removeEventListener(eventType, observer, {
@@ -1648,8 +1603,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
 
     let win = passwordField.ownerGlobal;
     let formLikeRoot = FormLikeFactory.findRootForField(passwordField);
-    let docState = this.stateForDocument(passwordField.ownerDocument);
-    docState.generatedPasswordFields.add(passwordField);
 
     this._highlightFilledField(passwordField);
 
@@ -1840,6 +1793,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
 
     log("_fillForm", form.elements);
+    let usernameField;
     // Will be set to one of AUTOFILL_RESULT in the `try` block.
     let autofillResult = -1;
     const AUTOFILL_RESULT = {
@@ -1857,16 +1811,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       PASSWORD_AUTOCOMPLETE_NEW_PASSWORD: 11,
     };
 
-    // Heuristically determine what the user/pass fields are
-    // We do this before checking to see if logins are stored,
-    // so that the user isn't prompted for a master password
-    // without need.
-    let [usernameField, passwordField] = this._getFormFields(
-      form,
-      false,
-      recipes
-    );
-
     try {
       // Nothing to do if we have no matching (excluding form action
       // checks) logins available, and there isn't a need to show
@@ -1880,6 +1824,17 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         autofillResult = AUTOFILL_RESULT.NO_SAVED_LOGINS;
         return;
       }
+
+      // Heuristically determine what the user/pass fields are
+      // We do this before checking to see if logins are stored,
+      // so that the user isn't prompted for a master password
+      // without need.
+      let passwordField;
+      [usernameField, passwordField] = this._getFormFields(
+        form,
+        false,
+        recipes
+      );
 
       // If we have a password inputElement parameter and it's not
       // the same as the one heuristically found, use the parameter
@@ -2171,14 +2126,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         formid: form.rootElement.id,
       });
     }
-  }
-
-  _formHasModifiedFields(formLikeRoot) {
-    let state = this.stateForDocument(formLikeRoot.ownerDocument);
-    let fieldsModified = state.fieldModificationsByRootElement.get(
-      formLikeRoot
-    );
-    return fieldsModified;
   }
 
   /**
