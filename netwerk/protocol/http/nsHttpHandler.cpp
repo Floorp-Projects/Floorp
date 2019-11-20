@@ -453,6 +453,10 @@ nsresult nsHttpHandler::Init() {
         Preferences::GetBool(HTTP_PREF("active_tab_priority"), true);
   }
 
+  // Make sure we have mConnMgr before we start reading the preferences the
+  // first time to be able to send them down to the socket thread.
+  EnsureConnectionMgr();
+
   // monitor some preference changes
   Preferences::RegisterPrefixCallbacks(nsHttpHandler::PrefsChanged,
                                        gCallbackPrefs, this);
@@ -562,6 +566,12 @@ nsresult nsHttpHandler::Init() {
   if (pc) {
     pc->GetParentalControlsEnabled(&mParentalControlEnabled);
   }
+
+  // Here we check that all the expected parameters have been sent to the
+  // connection manager.
+  MOZ_ASSERT_IF(mConnMgr, mConnMgr->GetParamUpdateCount() ==
+                              ((1 << nsHttpConnectionMgr::PARAM_COUNT) - 1));
+
   return NS_OK;
 }
 
@@ -580,16 +590,24 @@ void nsHttpHandler::MakeNewRequestTokenBucket() {
   }
 }
 
-nsresult nsHttpHandler::InitConnectionMgr() {
-  // Init ConnectionManager only on parent!
+bool nsHttpHandler::EnsureConnectionMgr() {
   if (IsNeckoChild()) {
-    return NS_OK;
+    return false;
   }
-
-  nsresult rv;
 
   if (!mConnMgr) {
     mConnMgr = new nsHttpConnectionMgr();
+  }
+
+  return true;
+}
+
+nsresult nsHttpHandler::InitConnectionMgr() {
+  nsresult rv;
+
+  // Init ConnectionManager only on parent!
+  if (!EnsureConnectionMgr()) {
+    return NS_OK;
   }
 
   rv = mConnMgr->Init(
