@@ -897,6 +897,8 @@ void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                                  HTMLMediaElement::OutputMediaStream& aField,
                                  const char* aName, uint32_t aFlags) {
   ImplCycleCollectionTraverse(aCallback, aField.mStream, "mStream", aFlags);
+  ImplCycleCollectionTraverse(aCallback, aField.mLiveTracks, "mLiveTracks",
+                              aFlags);
   ImplCycleCollectionTraverse(aCallback, aField.mFinishWhenEndedLoadingSrc,
                               "mFinishWhenEndedLoadingSrc", aFlags);
   ImplCycleCollectionTraverse(aCallback, aField.mFinishWhenEndedAttrStream,
@@ -905,6 +907,7 @@ void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
 
 void ImplCycleCollectionUnlink(HTMLMediaElement::OutputMediaStream& aField) {
   ImplCycleCollectionUnlink(aField.mStream);
+  ImplCycleCollectionUnlink(aField.mLiveTracks);
   ImplCycleCollectionUnlink(aField.mFinishWhenEndedLoadingSrc);
   ImplCycleCollectionUnlink(aField.mFinishWhenEndedAttrStream);
 }
@@ -3326,6 +3329,8 @@ void HTMLMediaElement::AddOutputTrackSourceToOutputStream(
                                     aSource->Track(), aSource);
   }
 
+  aOutputStream.mLiveTracks.AppendElement(domTrack);
+
   switch (aMode) {
     case AddTrackMode::ASYNC:
       mMainThreadEventTarget->Dispatch(
@@ -3412,6 +3417,27 @@ void HTMLMediaElement::UpdateOutputTrackSources() {
     mMainThreadEventTarget->Dispatch(
         NewRunnableMethod("MediaElementTrackSource::OverrideEnded", source,
                           &MediaElementTrackSource::OverrideEnded));
+
+    // Remove the track from the MediaStream after it ended.
+    for (OutputMediaStream& ms : mOutputStreams) {
+      if (source->Track()->mType == MediaSegment::VIDEO &&
+          ms.mCapturingAudioOnly) {
+        continue;
+      }
+      DebugOnly<size_t> length = ms.mLiveTracks.Length();
+      ms.mLiveTracks.RemoveElementsBy(
+          [&](const RefPtr<MediaStreamTrack>& aTrack) {
+            if (&aTrack->GetSource() != source) {
+              return false;
+            }
+            mMainThreadEventTarget->Dispatch(
+                NewRunnableMethod<RefPtr<MediaStreamTrack>>(
+                    "DOMMediaStream::RemoveTrackInternal", ms.mStream,
+                    &DOMMediaStream::RemoveTrackInternal, aTrack));
+            return true;
+          });
+      MOZ_ASSERT(ms.mLiveTracks.Length() == length - 1);
+    }
 
     mOutputTrackSources.Remove(id);
   }
