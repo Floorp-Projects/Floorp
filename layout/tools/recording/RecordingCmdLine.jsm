@@ -53,7 +53,7 @@ RecordingCmdLineHandler.prototype = {
     );
     wwatch.openWindow(
       null,
-      "chrome://recording/content/recording.xul",
+      "chrome://recording/content/recording.xhtml",
       "_blank",
       "chrome,dialog=no,all",
       args

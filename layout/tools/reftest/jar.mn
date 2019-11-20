@@ -24,7 +24,7 @@ reftest.jar:
   content/fonts/sil (../../reftests/fonts/sil/*)
   content/toolkit/reftests (../../../toolkit/content/tests/reftests/*)
   content/osx-theme (../../../toolkit/themes/osx/reftests/*)
-  content/reftest.xul (reftest.xul)
+  content/reftest.xhtml (reftest.xhtml)
 
 # Crash tests
   content/crashtests/dom/svg/crashtests (../../../dom/svg/crashtests/*)
