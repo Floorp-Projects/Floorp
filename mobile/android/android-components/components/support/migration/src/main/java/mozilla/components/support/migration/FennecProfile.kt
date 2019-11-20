@@ -5,6 +5,7 @@
 package mozilla.components.support.migration
 
 import android.content.Context
+import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.base.log.logger.Logger
 import java.io.File
 import java.io.IOException
@@ -12,6 +13,16 @@ import java.util.regex.Pattern
 
 private val logger = Logger("FennecProfile")
 private val profilePattern = Pattern.compile("\\[(.+)]")
+
+/**
+ * Exceptions related to Fennec profile migrations.
+ */
+sealed class FennecProfileException : Exception() {
+    /**
+     * IO exception while parsing profiles.
+     */
+    class IOException : FennecProfileException()
+}
 
 /**
  * A profile of "Fennec" (Firefox for Android).
@@ -33,10 +44,11 @@ data class FennecProfile(
          */
         fun findDefault(
             context: Context,
+            crashReporter: CrashReporter,
             mozillaDirectory: File = getMozillaDirectory(context),
             fileName: String = "profiles.ini"
         ): FennecProfile? {
-            return findDefaultProfile(mozillaDirectory, fileName)
+            return findDefaultProfile(crashReporter, mozillaDirectory, fileName)
         }
     }
 }
@@ -47,13 +59,16 @@ private fun getMozillaDirectory(context: Context): File {
 
 @Suppress("ReturnCount")
 private fun findDefaultProfile(
+    crashReporter: CrashReporter,
     mozillaDirectory: File,
     fileName: String
 ): FennecProfile? {
     val profiles = try {
         findProfiles(mozillaDirectory, fileName)
     } catch (e: IOException) {
-        logger.debug("IOException when reading profile")
+        // We want to avoid either logging or exposing PII via the crashReporter, so we synthesize our own exception.
+        crashReporter.submitCaughtException(FennecProfileException.IOException())
+        logger.error("IOException when reading profile")
         return null
     }
 

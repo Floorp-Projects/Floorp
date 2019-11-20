@@ -68,6 +68,37 @@ data class VersionedMigration(val migration: Migration, val version: Int = migra
 }
 
 /**
+ * Exceptions related to Fennec migrations.
+ *
+ * See https://github.com/mozilla-mobile/android-components/issues/5095 for stripping any possible PII from these
+ * exceptions.
+ */
+sealed class FennecMigratorException(cause: Exception) : Exception(cause) {
+    /**
+     * Unexpected exception while migrating history.
+     * @param cause Original exception which caused the problem.
+     */
+    class MigrateHistoryException(cause: Exception) : FennecMigratorException(cause)
+
+    /**
+     * Unexpected exception while migrating bookmarks.
+     * @param cause Original exception which caused the problem.
+     */
+    class MigrateBookmarksException(cause: Exception) : FennecMigratorException(cause)
+
+    /**
+     * Unexpected exception while migrating open tabs.
+     * @param cause Original exception which caused the problem.
+     */
+    class MigrateOpenTabsException(cause: Exception) : FennecMigratorException(cause)
+    /**
+     * Unexpected exception while migrating gecko profile.
+     * @param cause Original exception which caused the problem.
+     */
+    class MigrateGeckoException(cause: Exception) : FennecMigratorException(cause)
+}
+
+/**
  * Entrypoint for Fennec data migration. See [Builder] for public API.
  *
  * @param context Application context used for accessing the file system.
@@ -105,7 +136,7 @@ class FennecMigrator private constructor(
         private var coroutineContext: CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 
         private var fxaState = File("${context.filesDir}", "fxa.account.json")
-        private var fennecProfile = FennecProfile.findDefault(context)
+        private var fennecProfile = FennecProfile.findDefault(context, crashReporter)
         private var browserDbName = "browser.db"
 
         /**
@@ -306,8 +337,12 @@ class FennecMigrator private constructor(
     private fun migrateHistory(): Result<Unit> {
         checkNotNull(historyStorage) { "History storage must be configured to migrate history" }
 
-        if (dbPath == null) {
+        // There's no dbPath without a profile, but if a profile is present we expect dbPath to be also present.
+        if (profile != null && dbPath == null) {
             crashReporter.submitCaughtException(IllegalStateException("Missing DB path during history migration"))
+        }
+
+        if (dbPath == null) {
             return Result.Failure(IllegalStateException("Missing DB path during history migration"))
         }
         return try {
@@ -316,6 +351,7 @@ class FennecMigrator private constructor(
             logger.debug("Migrated history.")
             Result.Success(Unit)
         } catch (e: Exception) {
+            crashReporter.submitCaughtException(FennecMigratorException.MigrateHistoryException(e))
             Result.Failure(e)
         }
     }
@@ -324,8 +360,12 @@ class FennecMigrator private constructor(
     private fun migrateBookmarks(): Result<Unit> {
         checkNotNull(bookmarksStorage) { "Bookmarks storage must be configured to migrate bookmarks" }
 
-        if (dbPath == null) {
+        // There's no dbPath without a profile, but if a profile is present we expect dbPath to be also present.
+        if (profile != null && dbPath == null) {
             crashReporter.submitCaughtException(IllegalStateException("Missing DB path during bookmark migration"))
+        }
+
+        if (dbPath == null) {
             return Result.Failure(IllegalStateException("Missing DB path during bookmark migration"))
         }
         return try {
@@ -334,6 +374,9 @@ class FennecMigrator private constructor(
             logger.debug("Migrated bookmarks.")
             Result.Success(Unit)
         } catch (e: Exception) {
+            crashReporter.submitCaughtException(
+                FennecMigratorException.MigrateBookmarksException(e)
+            )
             Result.Failure(e)
         }
     }
@@ -354,6 +397,9 @@ class FennecMigrator private constructor(
             }
             result
         } catch (e: Exception) {
+            crashReporter.submitCaughtException(
+                FennecMigratorException.MigrateOpenTabsException(e)
+            )
             Result.Failure(e)
         }
     }
@@ -381,7 +427,7 @@ class FennecMigrator private constructor(
         }
 
         val migrationSuccess = result as Result.Success<FxaMigrationResult>
-        return when (migrationSuccess.value as FxaMigrationResult.Success) {
+        return when (val success = migrationSuccess.value as FxaMigrationResult.Success) {
             // The rest are all successful migrations.
             is FxaMigrationResult.Success.NoAccount -> {
                 logger.debug("No Fennec account detected")
@@ -391,7 +437,7 @@ class FennecMigrator private constructor(
                 // Here we have an 'email' and a state label.
                 // "Bad auth state" could be a few things - unverified account, bad credentials detected by Fennec, etc.
                 // We could try using the 'email' address as a starting point in the authentication flow.
-                logger.debug("Detected a Fennec account in a bad authentication state: migrationResult")
+                logger.debug("Detected a Fennec account in a bad authentication state: ${success.stateLabel}")
                 result
             }
             is FxaMigrationResult.Success.SignedInIntoAuthenticatedAccount -> {
@@ -404,7 +450,6 @@ class FennecMigrator private constructor(
     @SuppressWarnings("TooGenericExceptionCaught")
     private fun migrateGecko(): Result<Unit> {
         if (profile == null) {
-            crashReporter.submitCaughtException(IllegalStateException("Missing Profile path"))
             return Result.Failure(IllegalStateException("Missing Profile path"))
         }
 
@@ -414,6 +459,9 @@ class FennecMigrator private constructor(
             logger.debug("Migrated gecko files.")
             result
         } catch (e: Exception) {
+            crashReporter.submitCaughtException(
+                FennecMigratorException.MigrateGeckoException(e)
+            )
             Result.Failure(e)
         }
     }
