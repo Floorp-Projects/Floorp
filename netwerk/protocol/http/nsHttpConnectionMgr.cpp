@@ -136,6 +136,9 @@ nsHttpConnectionMgr::nsHttpConnectionMgr()
       mPruningNoTraffic(false),
       mTimeoutTickArmed(false),
       mTimeoutTickNext(1),
+#ifdef DEBUG
+      mParamUpdateFlags(0),
+#endif
       mCurrentTopLevelOuterContentWindowId(0),
       mThrottlingInhibitsReading(false),
       mActiveTabTransactionsExist(false),
@@ -2968,6 +2971,10 @@ void nsHttpConnectionMgr::OnMsgUpdateParam(int32_t inParam, ARefBase*) {
   uint16_t name = ((param)&0xFFFF0000) >> 16;
   uint16_t value = param & 0x0000FFFF;
 
+  LOG(("nsHttpConnectionMgr::OnMsgUpdateParam param=%" PRIu32 ", name=%" PRIu16
+       ", value=%" PRIu16,
+       param, name, value));
+
   switch (name) {
     case MAX_CONNECTIONS:
       mMaxConns = value;
@@ -3011,6 +3018,11 @@ void nsHttpConnectionMgr::OnMsgUpdateParam(int32_t inParam, ARefBase*) {
     default:
       MOZ_ASSERT_UNREACHABLE("unexpected parameter name");
   }
+
+#ifdef DEBUG
+  // We only use this for a debug-only assertion.  An atomic `or` is expensive.
+  mParamUpdateFlags |= (1 << name);
+#endif
 }
 
 // nsHttpConnectionMgr::nsConnectionEntry
@@ -4022,11 +4034,15 @@ nsHttpConnectionMgr::nsHalfOpenSocket::~nsHalfOpenSocket() {
 
 bool nsHttpConnectionMgr::BeConservativeIfProxied(nsIProxyInfo* proxy) {
   if (mBeConservativeForProxy) {
+    LOG(
+        ("nsHttpConnectionMgr::BeConservativeIfProxied, "
+         "mBeConservativeForProxy == true"));
     // The pref says to be conservative for proxies.
     return true;
   }
 
   if (!proxy) {
+    LOG(("nsHttpConnectionMgr::BeConservativeIfProxied, There is no proxy"));
     // There is no proxy, so be conservative by default.
     return true;
   }
@@ -4035,6 +4051,10 @@ bool nsHttpConnectionMgr::BeConservativeIfProxied(nsIProxyInfo* proxy) {
   // This logic was copied from nsSSLIOLayerAddToSocket.
   nsAutoCString proxyHost;
   proxy->GetHost(proxyHost);
+
+  LOG((
+      "nsHttpConnectionMgr::BeConservativeIfProxied, proxyHost.IsEmpty() == %d",
+      proxyHost.IsEmpty()));
   return proxyHost.IsEmpty();
 }
 
