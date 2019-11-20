@@ -49,7 +49,7 @@ NS_IMPL_RELEASE_INHERITED(ShadowRoot, DocumentFragment)
 ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : DocumentFragment(std::move(aNodeInfo)),
-      DocumentOrShadowRoot(*this),
+      DocumentOrShadowRoot(this),
       mMode(aMode),
       mIsUAWidget(false) {
   SetHost(aElement);
