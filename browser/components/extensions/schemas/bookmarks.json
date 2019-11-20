@@ -256,11 +256,11 @@
         "parameters": [
           {
             "name": "query",
-            "description": "Either a string of words and quoted phrases that are matched against bookmark URLs and titles, or an object. If an object, the properties <code>query</code>, <code>url</code>, and <code>title</code> may be specified and bookmarks matching all specified properties will be produced.",
+            "description": "Either a string of words that are matched against bookmark URLs and titles, or an object. If an object, the properties <code>query</code>, <code>url</code>, and <code>title</code> may be specified and bookmarks matching all specified properties will be produced.",
             "choices": [
               {
                 "type": "string",
-                "description": "A string of words and quoted phrases that are matched against bookmark URLs and titles."
+                "description": "A string of words that are matched against bookmark URLs and titles."
               },
               {
                 "type": "object",
@@ -269,7 +269,7 @@
                   "query": {
                     "type": "string",
                     "optional": true,
-                    "description": "A string of words and quoted phrases that are matched against bookmark URLs and titles."
+                    "description": "A string of words that are matched against bookmark URLs and titles."
                   },
                   "url": {
                     "type": "string",
