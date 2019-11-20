@@ -2134,11 +2134,12 @@ LogicalSize ReflowInput::ComputeContainingBlockRectangle(
       return aSize.ConvertsToPercentage();
     };
     // an element in quirks mode gets a containing block based on looking for a
-    // parent with a non-auto height if the element has a percent height
-    // Note: We don't emulate this quirk for percents in calc() or in
-    // vertical writing modes.
+    // parent with a non-auto height if the element has a percent height.
+    // Note: We don't emulate this quirk for percents in calc(), or in vertical
+    // writing modes, or if the containing block is a flex or grid item.
     if (!wm.IsVertical() && NS_UNCONSTRAINEDSIZE == cbSize.BSize(wm)) {
       if (eCompatibility_NavQuirks == aPresContext->CompatibilityMode() &&
+          !aContainingBlockRI->mFrame->IsFlexOrGridItem() &&
           (IsQuirky(mStylePosition->mHeight) ||
            (mFrame->IsTableWrapperFrame() &&
             IsQuirky(mFrame->PrincipalChildList()
@@ -2275,7 +2276,8 @@ void ReflowInput::InitConstraints(
           // in quirks mode, get the cb height using the special quirk method
           if (!wm.IsVertical() &&
               eCompatibility_NavQuirks == aPresContext->CompatibilityMode()) {
-            if (!cbri->mFrame->IsTableCellFrame()) {
+            if (!cbri->mFrame->IsTableCellFrame() &&
+                !cbri->mFrame->IsFlexOrGridItem()) {
               cbSize.BSize(wm) = CalcQuirkContainingBlockHeight(cbri);
               if (cbSize.BSize(wm) == NS_UNCONSTRAINEDSIZE) {
                 isAutoBSize = true;
