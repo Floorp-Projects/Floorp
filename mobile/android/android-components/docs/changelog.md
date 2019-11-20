@@ -21,6 +21,21 @@ permalink: /changelog/
 * **service-firefox-accounts**
   * Account profile cache is now used, removing a network call from most instances of account manager instantiation.
   * Fixed a bug where account would disappear after restarting an app which hit authentication problems.
+  
+* **service-glean**
+  * Glean was updated to v21.1.1
+    * Two new metrics were added to investigate sending of metrics and baseline pings.
+      See [bug 1597980](https://bugzilla.mozilla.org/show_bug.cgi?id=1597980) for more information.
+    * Glean's two lifecycle observers were refactored to avoid the use of reflection.
+    * Timespans will now not record an error if stopping after setting upload enabled to false.
+    * The `GleanTimerId` can now be accessed in Java and is no longer a `typealias`.
+    * Fixed a bug where the metrics ping was getting scheduled twice on startup.
+    * When constructing a ping, events are now sorted by their timestamp. In practice,
+      it rarely happens that event timestamps are unsorted to begin with, but this
+      guards against a potential race condition and incorrect usage of the lower-level
+      API.
+    * Metrics that can record errors now have a new testing method,
+      `testGetNumRecordedErrors`.
 
 # 22.0.0
 
