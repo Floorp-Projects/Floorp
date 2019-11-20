@@ -212,10 +212,9 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   void addSizeOfIncludingThis(
       mozilla::MallocSizeOf mallocSizeOf, JS::CodeSizes* code, size_t* typePool,
       size_t* regexpZone, size_t* jitZone, size_t* baselineStubsOptimized,
-      size_t* cachedCFG, size_t* uniqueIdMap, size_t* shapeCaches,
-      size_t* atomsMarkBitmaps, size_t* compartmentObjects,
-      size_t* crossCompartmentWrappersTables, size_t* compartmentsPrivateData,
-      size_t* scriptCountsMapArg);
+      size_t* uniqueIdMap, size_t* shapeCaches, size_t* atomsMarkBitmaps,
+      size_t* compartmentObjects, size_t* crossCompartmentWrappersTables,
+      size_t* compartmentsPrivateData, size_t* scriptCountsMapArg);
 
   // Iterate over all cells in the zone. See the definition of ZoneCellIter
   // in gc/GC-inl.h for the possible arguments and documentation.
