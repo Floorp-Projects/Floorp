@@ -15,7 +15,8 @@
   runNetworkTest(async (options) => {
     // [TODO] re-enable HW decoder after bug 1526207 is fixed.
     if (navigator.userAgent.includes("Android")) {
-      await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false]);
+      await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false],
+                      ["media.webrtc.hw.h264.enabled", false]);
     }
 
     const test = new PeerConnectionTest(options);
