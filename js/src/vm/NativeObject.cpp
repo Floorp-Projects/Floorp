@@ -208,9 +208,9 @@ void js::NativeObject::checkShapeConsistency() {
                     shape->slot() < slotSpan());
       if (!prev) {
         MOZ_ASSERT(lastProperty() == shape);
-        MOZ_ASSERT(shape->listp == &shape_);
+        MOZ_ASSERT(shape->dictNext.toObject() == this);
       } else {
-        MOZ_ASSERT(shape->listp == &prev->parent);
+        MOZ_ASSERT(shape->dictNext.toShape() == prev);
       }
       prev = shape;
       shape = shape->parent;

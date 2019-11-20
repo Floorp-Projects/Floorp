@@ -1754,7 +1754,7 @@ void JSObject::fixDictionaryShapeAfterSwap() {
   // Dictionary shapes can point back to their containing objects, so after
   // swapping the guts of those objects fix the pointers up.
   if (isNative() && as<NativeObject>().inDictionaryMode()) {
-    as<NativeObject>().shape()->listp = as<NativeObject>().shapePtr();
+    shape()->dictNext.setObject(this);
   }
 }
 
