@@ -63,7 +63,6 @@ class VideoSink : public MediaSink {
   void Shutdown() override;
 
   void SetSecondaryVideoContainer(VideoFrameContainer* aSecondary) override;
-  void ClearSecondaryVideoContainer() override;
 
   void GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) override;
 
