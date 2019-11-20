@@ -627,7 +627,7 @@ Toolbox.prototype = {
       targetFront.on("frame-update", this._updateFrames);
       targetFront.on("inspect-object", this._onInspectObject);
 
-      targetFront.onFront("inspector", async inspectorFront => {
+      targetFront.watchFronts("inspector", async inspectorFront => {
         registerWalkerListeners(this.store, inspectorFront.walker);
       });
 

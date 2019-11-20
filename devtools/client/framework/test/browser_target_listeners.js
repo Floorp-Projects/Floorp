@@ -8,21 +8,21 @@ add_task(async function() {
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   await target.attach();
 
-  info("Test applying onFront to a front that will be created");
+  info("Test applying watchFronts to a front that will be created");
   const promise = new Promise(resolve => {
-    target.onFront("accessibility", resolve);
+    target.watchFronts("accessibility", resolve);
   });
   const getFrontFront = await target.getFront("accessibility");
-  const onFrontFront = await promise;
+  const watchFrontsFront = await promise;
   is(
     getFrontFront,
-    onFrontFront,
+    watchFrontsFront,
     "got the front instantiated in the future and it's the same"
   );
 
-  info("Test applying onFront to an existing front");
+  info("Test applying watchFronts to an existing front");
   await new Promise(resolve => {
-    target.onFront("accessibility", front => {
+    target.watchFronts("accessibility", front => {
       is(
         front,
         getFrontFront,

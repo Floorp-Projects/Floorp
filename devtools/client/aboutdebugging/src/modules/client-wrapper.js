@@ -69,10 +69,6 @@ class ClientWrapper {
     return this.client.mainRoot.getFront(typeName);
   }
 
-  onFront(typeName, listener) {
-    this.client.mainRoot.onFront(typeName, listener);
-  }
-
   async getDeviceDescription() {
     const deviceFront = await this.getFront("device");
     const description = await deviceFront.getDescription();

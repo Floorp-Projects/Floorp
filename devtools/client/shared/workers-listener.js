@@ -28,20 +28,20 @@ class WorkersListener {
 
     this._listener = listener;
     this.rootFront.on("workerListChanged", this._listener);
-    this.rootFront.onFront("processDescriptor", processFront => {
-      processFront.onFront("contentProcessTarget", front => {
+    this.rootFront.watchFronts("processDescriptor", processFront => {
+      processFront.watchFronts("contentProcessTarget", front => {
         this._contentProcessFronts.push(front);
         front.on("workerListChanged", this._listener);
       });
     });
 
     // Support FF69 and older
-    this.rootFront.onFront("contentProcessTarget", front => {
+    this.rootFront.watchFronts("contentProcessTarget", front => {
       this._contentProcessFronts.push(front);
       front.on("workerListChanged", this._listener);
     });
 
-    this.rootFront.onFront("serviceWorkerRegistration", front => {
+    this.rootFront.watchFronts("serviceWorkerRegistration", front => {
       this._serviceWorkerRegistrationFronts.push(front);
       front.on("push-subscription-modified", this._listener);
       front.on("registration-changed", this._listener);

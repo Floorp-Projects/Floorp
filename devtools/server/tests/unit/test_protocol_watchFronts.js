@@ -4,7 +4,7 @@
 "use strict";
 
 /**
- * Test Front.onFront method.
+ * Test Front.watchFronts method.
  */
 
 const protocol = require("devtools/shared/protocol");
@@ -107,11 +107,11 @@ add_task(async function run_test() {
     equal(
       front.foo,
       "bar",
-      "Front's form is set before onFront listeners are called"
+      "Front's form is set before watchFronts listeners are called"
     );
     fronts.push(front);
   };
-  rootFront.onFront("childActor", listener);
+  rootFront.watchFronts("childActor", listener);
 
   const firstChild = await rootFront.createChild();
   ok(
@@ -123,21 +123,21 @@ add_task(async function run_test() {
   equal(
     fronts.length,
     1,
-    "onFront fires the callback, even if the front is created in the future"
+    "watchFronts fires the callback, even if the front is created in the future"
   );
   equal(
     fronts[0],
     firstChild,
-    "onFront fires the callback with the right front instance"
+    "watchFronts fires the callback with the right front instance"
   );
 
-  const onFrontAfter = await new Promise(resolve => {
-    rootFront.onFront("childActor", resolve);
+  const watchFrontsAfter = await new Promise(resolve => {
+    rootFront.watchFronts("childActor", resolve);
   });
   equal(
-    onFrontAfter,
+    watchFrontsAfter,
     firstChild,
-    "onFront fires the callback, even if the front is already created, " +
+    "watchFronts fires the callback, even if the front is already created, " +
       " with the same front instance"
   );
 
@@ -157,18 +157,18 @@ add_task(async function run_test() {
   equal(fronts[1], secondChild, "And the new front is the right instance");
 
   // Test unregistering a front listener
-  rootFront.offFront("childActor", listener);
+  rootFront.unwatchFronts("childActor", listener);
 
   const thirdChild = await rootFront.createChild();
   equal(
     fronts.length,
     2,
-    "After calling offFront, the listener is no longer called"
+    "After calling unwatchFronts, the listener is no longer called"
   );
 
   // Test front destruction
   const destroyed = [];
-  rootFront.onFrontDestroyed("childActor", front => {
+  rootFront.watchFronts("childActor", null, front => {
     destroyed.push(front);
   });
   await thirdChild.release();
