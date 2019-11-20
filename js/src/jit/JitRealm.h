@@ -500,8 +500,7 @@ class JitZone {
 
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               JS::CodeSizes* code, size_t* jitZone,
-                              size_t* baselineStubsOptimized,
-                              size_t* cachedCFG) const;
+                              size_t* baselineStubsOptimized) const;
 
   OptimizedICStubSpace* optimizedStubSpace() { return &optimizedStubSpace_; }
 
