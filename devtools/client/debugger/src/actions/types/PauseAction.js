@@ -7,7 +7,6 @@
 import type { Command } from "../../reducers/types";
 import type {
   Expression,
-  LoadedObject,
   Frame,
   Scope,
   Why,
@@ -38,9 +37,13 @@ export type PauseAction =
       +thread: string,
       +why: Why,
       +scopes: Scope,
-      +frames: Frame[],
-      +selectedFrameId: string,
-      +loadedObjects: LoadedObject[],
+      +frame: Frame,
+    |}
+  | {|
+      type: "FETCHED_FRAMES",
+      frames: Frame[],
+      cx: ThreadContext,
+      thread: string,
     |}
   | {|
       +type: "PAUSE_ON_EXCEPTIONS",

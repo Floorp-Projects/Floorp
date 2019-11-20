@@ -48,6 +48,7 @@ export const mockCommandClient = {
   removeBreakpoint: (_id: string) => Promise.resolve(),
   threadFront: async () => {},
   getFrameScopes: async () => {},
+  getFrames: async () => [],
   evaluateExpressions: async () => {},
   getSourceActorBreakpointPositions: async () => ({}),
   getSourceActorBreakableLines: async () => [],

@@ -4,7 +4,7 @@
 
 // @flow
 
-import { prepareSourcePayload, createThread } from "./create";
+import { prepareSourcePayload, createThread, createFrame } from "./create";
 import { updateTargets } from "./targets";
 import { clientEvents } from "./events";
 
@@ -47,6 +47,8 @@ let debuggerClient: DebuggerClient;
 let sourceActors: { [ActorId]: SourceId };
 let breakpoints: { [string]: Object };
 let eventBreakpoints: ?EventListenerActiveList;
+
+const CALL_STACK_PAGE_SIZE = 1000;
 
 type Dependencies = {
   threadFront: ThreadFront,
@@ -327,6 +329,14 @@ function getProperties(thread: string, grip: Grip): Promise<*> {
   });
 }
 
+async function getFrames(thread: string) {
+  const threadFront = lookupThreadFront(thread);
+  const response = await threadFront.getFrames(0, CALL_STACK_PAGE_SIZE);
+  return response.frames.map<?Frame>((frame, i) =>
+    createFrame(thread, frame, i)
+  );
+}
+
 async function getFrameScopes(frame: Frame): Promise<*> {
   const frameFront = lookupThreadFront(frame.thread).get(frame.id);
   return frameFront.getEnvironment();
@@ -530,6 +540,23 @@ function fetchAncestorFramePositions(index: number) {
   currentThreadFront.fetchAncestorFramePositions(index);
 }
 
+function waitForSourceActor(
+  thread: string,
+  sourceActor: string
+): Promise<void> {
+  return new Promise(resolve => {
+    const listener = ({ source }) => {
+      if (source.actor == sourceActor) {
+        threadFront.off("newSource", listener);
+        resolve();
+      }
+    };
+
+    const threadFront = lookupThreadFront(thread);
+    threadFront.on("newSource", listener);
+  });
+}
+
 const clientCommands = {
   autocomplete,
   blackBox,
@@ -563,6 +590,7 @@ const clientCommands = {
   reload,
   getProperties,
   getFrameScopes,
+  getFrames,
   pauseOnExceptions,
   toggleEventLogging,
   fetchSources,
@@ -579,6 +607,7 @@ const clientCommands = {
   getFrontByID,
   timeWarp,
   fetchAncestorFramePositions,
+  waitForSourceActor,
 };
 
 export { setupCommands, clientCommands };

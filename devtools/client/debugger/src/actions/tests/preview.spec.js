@@ -27,6 +27,7 @@ function mockThreadFront(overrides) {
   return {
     evaluateInFrame: async () => ({ result: {} }),
     getFrameScopes: async () => {},
+    getFrames: async () => [],
     sourceContents: async () => ({
       source: "",
       contentType: "text/javascript",
@@ -55,19 +56,19 @@ function dispatchSetPreview(dispatch, context, expression, target) {
   );
 }
 
-async function pause({ dispatch, cx }) {
+async function pause({ dispatch, cx }, client) {
   const base = await dispatch(
     actions.newGeneratedSource(makeSource("base.js"))
   );
 
   await dispatch(actions.selectSource(cx, base.id));
   const frames = [makeFrame({ id: "frame1", sourceId: base.id })];
+  client.getFrames = async () => frames;
 
   await dispatch(
     actions.paused({
       thread: "FakeThread",
       frame: frames[0],
-      frames,
       loadedObjects: [],
       why: { type: "debuggerStatement" },
     })
@@ -111,14 +112,13 @@ describe("preview", () => {
     const secondSetPreview = defer();
     const promises = [firstSetPreview, secondSetPreview];
 
-    const store = createStore(
-      mockThreadFront({
-        loadObjectProperties: () => promises.shift().promise,
-      })
-    );
+    const client = mockThreadFront({
+      loadObjectProperties: () => promises.shift().promise,
+    });
+    const store = createStore(client);
 
     const { dispatch, getState } = store;
-    await pause(store);
+    await pause(store, client);
 
     const newCx = selectors.getContext(getState());
     const firstTarget = document.createElement("div");
@@ -155,14 +155,13 @@ describe("preview", () => {
     const secondSetPreview = defer();
     const promises = [firstSetPreview, secondSetPreview];
 
-    const store = createStore(
-      mockThreadFront({
-        loadObjectProperties: () => promises.shift().promise,
-      })
-    );
+    const client = mockThreadFront({
+      loadObjectProperties: () => promises.shift().promise,
+    });
+    const store = createStore(client);
 
     const { dispatch, getState } = store;
-    await pause(store);
+    await pause(store, client);
 
     const newCx = selectors.getContext(getState());
     const firstTarget = document.createElement("div");

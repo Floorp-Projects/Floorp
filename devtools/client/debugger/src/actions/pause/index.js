@@ -19,6 +19,7 @@ export {
   reverseStepOver,
   seekToPosition,
 } from "./commands";
+export { fetchFrames } from "./fetchFrames";
 export { fetchScopes } from "./fetchScopes";
 export { paused } from "./paused";
 export { resumed } from "./resumed";
