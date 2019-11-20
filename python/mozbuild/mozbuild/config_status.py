@@ -108,7 +108,7 @@ def config_status(topobjdir='.', topsrcdir='.', defines=None,
 
     # Without -n, the current directory is meant to be the top object directory
     if not options.not_topobjdir:
-        topobjdir = os.path.normcase(os.path.abspath('.'))
+        topobjdir = os.path.abspath('.')
 
     env = ConfigEnvironment(topsrcdir, topobjdir, defines=defines,
                             non_global_defines=non_global_defines, substs=substs,
