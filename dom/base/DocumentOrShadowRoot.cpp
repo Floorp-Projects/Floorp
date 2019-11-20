@@ -23,12 +23,15 @@
 namespace mozilla {
 namespace dom {
 
-DocumentOrShadowRoot::DocumentOrShadowRoot(
-    mozilla::dom::ShadowRoot& aShadowRoot)
-    : mAsNode(aShadowRoot), mKind(Kind::ShadowRoot) {}
+DocumentOrShadowRoot::DocumentOrShadowRoot(ShadowRoot* aShadowRoot)
+    : mAsNode(aShadowRoot), mKind(Kind::ShadowRoot) {
+  MOZ_ASSERT(mAsNode);
+}
 
-DocumentOrShadowRoot::DocumentOrShadowRoot(Document& aDoc)
-    : mAsNode(aDoc), mKind(Kind::Document) {}
+DocumentOrShadowRoot::DocumentOrShadowRoot(Document* aDoc)
+    : mAsNode(aDoc), mKind(Kind::Document) {
+  MOZ_ASSERT(mAsNode);
+}
 
 void DocumentOrShadowRoot::AddSizeOfOwnedSheetArrayExcludingThis(
     nsWindowSizes& aSizes, const nsTArray<RefPtr<StyleSheet>>& aSheets) const {
@@ -114,7 +117,7 @@ already_AddRefed<nsContentList> DocumentOrShadowRoot::GetElementsByTagNameNS(
 
 already_AddRefed<nsContentList> DocumentOrShadowRoot::GetElementsByTagNameNS(
     const nsAString& aNamespaceURI, const nsAString& aLocalName,
-    mozilla::ErrorResult& aResult) {
+    ErrorResult& aResult) {
   int32_t nameSpaceId = kNameSpaceID_Wildcard;
 
   if (!aNamespaceURI.EqualsLiteral("*")) {
