@@ -69,14 +69,13 @@ def prepare_mozconfig(mozconfig):
         return items
 
 
-@depends('OLD_CONFIGURE', 'MOZILLABUILD', prepare_mozconfig, autoconf, check_build_environment,
+@depends('OLD_CONFIGURE', prepare_mozconfig, autoconf, check_build_environment,
          shell, old_configure_assignments, build_project)
 @imports(_from='__builtin__', _import='open')
 @imports(_from='__builtin__', _import='print')
 @imports(_from='__builtin__', _import='sorted')
 @imports('glob')
 @imports('itertools')
-@imports('os')
 @imports('subprocess')
 # Import getmtime without overwriting the sandbox os.path.
 @imports(_from='os.path', _import='getmtime')
@@ -85,9 +84,8 @@ def prepare_mozconfig(mozconfig):
 @imports(_from='tempfile', _import='NamedTemporaryFile')
 @imports(_from='os', _import='remove')
 @imports(_from='os', _import='rename')
-@imports(_from='subprocess', _import='CalledProcessError')
 @imports(_from='__builtin__', _import='OSError')
-def prepare_configure(old_configure, mozillabuild, mozconfig, autoconf, build_env, shell,
+def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
                       old_configure_assignments, build_project):
     # os.path.abspath in the sandbox will ensure forward slashes on Windows,
     # which is actually necessary because this path actually ends up literally
@@ -117,25 +115,10 @@ def prepare_configure(old_configure, mozillabuild, mozconfig, autoconf, build_en
 
     if refresh:
         log.info('Refreshing %s with %s', old_configure, autoconf)
-
-        try:
-            script = subprocess.check_output([
-                shell, autoconf,
-                '--localdir=%s' % os.path.dirname(old_configure),
-                old_configure + '.in'])
-        except CalledProcessError as exc:
-            # Autoconf on win32 may break due to a bad $PATH.  Let the user know
-            # their $PATH is suspect.
-            if mozillabuild:
-                mozillabuild_path = normsep(mozillabuild[0])
-                sh_path = normsep(find_program('sh'))
-                if mozillabuild_path not in sh_path:
-                    log.warning("The '{}msys/bin' directory is not first in $PATH. "
-                                "This may cause autoconf to fail. ($PATH is currently "
-                                "set to: {})".format(mozillabuild_path, os.environ[
-                        'PATH']))
-            die('autoconf exited with return code {}'.format(exc.returncode))
-
+        script = subprocess.check_output([
+            shell, autoconf,
+            '--localdir=%s' % os.path.dirname(old_configure),
+            old_configure + '.in'])
         if not script:
             die('Generated old-configure is empty! Check that your autoconf 2.13 program works!')
 
