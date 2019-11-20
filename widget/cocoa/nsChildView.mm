@@ -1708,10 +1708,8 @@ bool nsChildView::PreRender(WidgetRenderingContext* aContext) {
   // composition is done, thus keeping the GL context locked forever.
   mViewTearDownLock.Lock();
 
-  UniquePtr<GLManager> manager(GLManager::CreateGLManager(aContext->mLayerManager));
-  gl::GLContext* gl = manager ? manager->gl() : aContext->mGL;
-  if (gl) {
-    GLContextCGL::Cast(gl)->MigrateToActiveGPU();
+  if (aContext->mGL) {
+    GLContextCGL::Cast(aContext->mGL)->MigrateToActiveGPU();
   }
 
   return true;
