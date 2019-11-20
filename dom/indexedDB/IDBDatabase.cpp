@@ -385,17 +385,19 @@ already_AddRefed<IDBObjectStore> IDBDatabase::CreateObjectStore(
     return nullptr;
   }
 
-  nsTArray<ObjectStoreSpec>& objectStores = mSpec->objectStores();
-  for (uint32_t count = objectStores.Length(), index = 0; index < count;
-       index++) {
-    if (aName == objectStores[index].metadata().name()) {
-      aRv.ThrowDOMException(
-          NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR,
-          nsPrintfCString(
-              "Object store named '%s' already exists at index '%u'",
-              NS_ConvertUTF16toUTF8(aName).get(), index));
-      return nullptr;
-    }
+  auto& objectStores = mSpec->objectStores();
+  const auto end = objectStores.cend();
+  const auto foundIt = std::find_if(
+      objectStores.cbegin(), end, [&aName](const auto& objectStore) {
+        return aName == objectStore.metadata().name();
+      });
+  if (foundIt != end) {
+    aRv.ThrowDOMException(
+        NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR,
+        nsPrintfCString("Object store named '%s' already exists at index '%zu'",
+                        NS_ConvertUTF16toUTF8(aName).get(),
+                        foundIt.GetIndex()));
+    return nullptr;
   }
 
   if (!keyPath.IsAllowedForObjectStore(aOptionalParameters.mAutoIncrement)) {
