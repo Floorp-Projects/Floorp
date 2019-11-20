@@ -9,7 +9,7 @@ config = {
          'geckoview-docs',
          '--archive',
          '--upload', 'mozilla/geckoview',
-         '--upload-branch', 'gh-pages'
+         '--upload-branch', 'gh-pages',
          '--javadoc-path', 'javadoc/{project}',
          '--upload-message', 'Update {project} documentation to rev {revision}',
         ],
