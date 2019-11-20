@@ -102,7 +102,6 @@ class ArtifactJob(object):
     candidate_trees = [
         'mozilla-central',
         'integration/autoland',
-        'integration/mozilla-inbound',
         'releases/mozilla-beta',
         'releases/mozilla-release',
     ]
@@ -814,8 +813,8 @@ class TaskCache(CacheManager):
     @cachedmethod(operator.attrgetter('_cache'))
     def artifacts(self, tree, job, artifact_job_class, rev):
         # Grab the second part of the repo name, which is generally how things
-        # are indexed. Eg: 'integration/mozilla-inbound' is indexed as
-        # 'mozilla-inbound'
+        # are indexed. Eg: 'integration/autoland' is indexed as
+        # 'autoland'
         tree = tree.split('/')[1] if '/' in tree else tree
 
         job, tree = artifact_job_class.transform_job(job, tree)
