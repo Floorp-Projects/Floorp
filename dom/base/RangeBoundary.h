@@ -149,7 +149,10 @@ class RangeBoundaryBase {
 
     MOZ_ASSERT(mRef);
     MOZ_ASSERT(mRef->GetParentNode() == mParent);
-    mOffset = mozilla::Some(mParent->ComputeIndexOf(mRef) + 1);
+
+    const int32_t index = mParent->ComputeIndexOf(mRef);
+    MOZ_ASSERT(index >= 0);
+    mOffset.emplace(static_cast<uint32_t>(index + 1));
 
     return mOffset.value();
   }
