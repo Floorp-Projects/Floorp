@@ -48,7 +48,7 @@ import java.util.WeakHashMap
 /**
  * Gecko-based implementation of Engine interface.
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 class GeckoEngine(
     context: Context,
     private val defaultSettings: Settings? = null,
@@ -414,6 +414,48 @@ class GeckoEngine(
             this.forceUserScalableContent = it.forceUserScalableContent
         }
     }
+
+    internal fun ContentBlockingController.LogEntry.BlockingData.getLoadedCategory(): TrackingCategory {
+        return when (category) {
+            Event.LOADED_FINGERPRINTING_CONTENT -> TrackingCategory.FINGERPRINTING
+            Event.LOADED_CRYPTOMINING_CONTENT -> TrackingCategory.CRYPTOMINING
+            Event.LOADED_SOCIALTRACKING_CONTENT -> TrackingCategory.MOZILLA_SOCIAL
+            Event.LOADED_LEVEL_1_TRACKING_CONTENT -> TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
+            Event.LOADED_LEVEL_2_TRACKING_CONTENT -> {
+
+                // We are making sure that we are only showing trackers that our settings are
+                // taking into consideration.
+                val isContentListActive =
+                    settings.trackingProtectionPolicy?.contains(TrackingCategory.CONTENT)
+                        ?: false
+                val isStrictLevelActive =
+                    runtime.settings
+                        .contentBlocking
+                        .getEnhancedTrackingProtectionLevel() == ContentBlocking.EtpLevel.STRICT
+
+                if (isStrictLevelActive && isContentListActive) {
+                    TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
+                } else {
+                    TrackingCategory.NONE
+                }
+            }
+            else -> TrackingCategory.NONE
+        }
+    }
+
+    internal fun ContentBlockingController.LogEntry.toTrackerLog(): TrackerLog {
+        val cookiesHasBeenBlocked = this.blockingData.any { it.hasBlockedCookies() }
+        return TrackerLog(
+            url = origin,
+            loadedCategories = blockingData.map { it.getLoadedCategory() }
+                .filterNot { it == TrackingCategory.NONE }
+                .distinct(),
+            blockedCategories = blockingData.map { it.getBlockedCategory() }
+                .filterNot { it == TrackingCategory.NONE }
+                .distinct(),
+            cookiesHasBeenBlocked = cookiesHasBeenBlocked
+        )
+    }
 }
 
 internal fun ContentBlockingController.LogEntry.BlockingData.hasBlockedCookies(): Boolean {
@@ -432,24 +474,4 @@ internal fun ContentBlockingController.LogEntry.BlockingData.getBlockedCategory(
         Event.BLOCKED_TRACKING_CONTENT -> TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
         else -> TrackingCategory.NONE
     }
-}
-
-internal fun ContentBlockingController.LogEntry.BlockingData.getLoadedCategory(): TrackingCategory {
-    return when (category) {
-        Event.LOADED_FINGERPRINTING_CONTENT -> TrackingCategory.FINGERPRINTING
-        Event.LOADED_CRYPTOMINING_CONTENT -> TrackingCategory.CRYPTOMINING
-        Event.LOADED_SOCIALTRACKING_CONTENT -> TrackingCategory.MOZILLA_SOCIAL
-        Event.LOADED_TRACKING_CONTENT -> TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
-        else -> TrackingCategory.NONE
-    }
-}
-
-internal fun ContentBlockingController.LogEntry.toTrackerLog(): TrackerLog {
-    val cookiesHasBeenBlocked = this.blockingData.any { it.hasBlockedCookies() }
-    return TrackerLog(
-        url = origin,
-        loadedCategories = blockingData.map { it.getLoadedCategory() }.filterNot { it == TrackingCategory.NONE },
-        blockedCategories = blockingData.map { it.getBlockedCategory() }.filterNot { it == TrackingCategory.NONE },
-        cookiesHasBeenBlocked = cookiesHasBeenBlocked
-    )
 }

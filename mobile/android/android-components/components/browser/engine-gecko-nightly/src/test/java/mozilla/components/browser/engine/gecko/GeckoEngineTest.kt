@@ -691,11 +691,18 @@ class GeckoEngineTest {
         var onSuccessCalled = false
         var onErrorCalled = false
         val mockSession = mock<GeckoEngineSession>()
+        val mockGeckoSetting = mock<GeckoRuntimeSettings>()
+        val mockGeckoContentBlockingSetting = mock<ContentBlocking.Settings>()
         var trackersLog: List<TrackerLog>? = null
 
         val mockContentBlockingController = mock<ContentBlockingController>()
         var logEntriesResult = GeckoResult<List<ContentBlockingController.LogEntry>>()
 
+        whenever(runtime.settings).thenReturn(mockGeckoSetting)
+        whenever(mockGeckoSetting.contentBlocking).thenReturn(mockGeckoContentBlockingSetting)
+        whenever(mockGeckoContentBlockingSetting.getEnhancedTrackingProtectionLevel()).thenReturn(
+            ContentBlocking.EtpLevel.STRICT
+        )
         whenever(runtime.contentBlockingController).thenReturn(mockContentBlockingController)
         whenever(mockContentBlockingController.getLog(any())).thenReturn(logEntriesResult)
 
@@ -743,6 +750,50 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `fetch trackers logged of the level 2 list`() {
+        val runtime = mock<GeckoRuntime>()
+        val engine = GeckoEngine(context, runtime = runtime)
+        val mockSession = mock<GeckoEngineSession>()
+        val mockGeckoSetting = mock<GeckoRuntimeSettings>()
+        val mockGeckoContentBlockingSetting = mock<ContentBlocking.Settings>()
+        var trackersLog: List<TrackerLog>? = null
+
+        val mockContentBlockingController = mock<ContentBlockingController>()
+        var logEntriesResult = GeckoResult<List<ContentBlockingController.LogEntry>>()
+
+        whenever(runtime.settings).thenReturn(mockGeckoSetting)
+        whenever(mockGeckoSetting.contentBlocking).thenReturn(mockGeckoContentBlockingSetting)
+        whenever(mockGeckoContentBlockingSetting.getEnhancedTrackingProtectionLevel()).thenReturn(
+            ContentBlocking.EtpLevel.STRICT
+        )
+        whenever(runtime.contentBlockingController).thenReturn(mockContentBlockingController)
+        whenever(mockContentBlockingController.getLog(any())).thenReturn(logEntriesResult)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.select(
+            arrayOf(
+                TrackingCategory.STRICT,
+                TrackingCategory.CONTENT
+            )
+        )
+
+        logEntriesResult = GeckoResult()
+        whenever(runtime.contentBlockingController).thenReturn(mockContentBlockingController)
+        whenever(mockContentBlockingController.getLog(any())).thenReturn(logEntriesResult)
+
+        engine.getTrackersLog(
+            mockSession,
+            onSuccess = {
+                trackersLog = it
+            },
+            onError = { }
+        )
+        logEntriesResult.complete(createDummyLogEntryList())
+
+        val trackerLog = trackersLog!![1]
+        assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES))
+    }
+
+    @Test
     fun `registerWebNotificationDelegate sets delegate`() {
         val runtime = mock<GeckoRuntime>()
         val engine = GeckoEngine(context, runtime = runtime)
@@ -779,14 +830,16 @@ class GeckoEngineTest {
         val blockedCyptominingContent = createBlockingData(Event.BLOCKED_CRYPTOMINING_CONTENT)
         val blockedSocialContent = createBlockingData(Event.BLOCKED_SOCIALTRACKING_CONTENT)
 
-        val loadedTrackingContent = createBlockingData(Event.LOADED_TRACKING_CONTENT)
+        val loadedTrackingLevel1Content = createBlockingData(Event.LOADED_LEVEL_1_TRACKING_CONTENT)
+        val loadedTrackingLevel2Content = createBlockingData(Event.LOADED_LEVEL_2_TRACKING_CONTENT)
         val loadedFingerprintingContent = createBlockingData(Event.LOADED_FINGERPRINTING_CONTENT)
         val loadedCyptominingContent = createBlockingData(Event.LOADED_CRYPTOMINING_CONTENT)
         val loadedSocialContent = createBlockingData(Event.LOADED_SOCIALTRACKING_CONTENT)
 
         val contentBlockingList = listOf(
             blockedTrackingContent,
-            loadedTrackingContent,
+            loadedTrackingLevel1Content,
+            loadedTrackingLevel2Content,
             blockedFingerprintingContent,
             loadedFingerprintingContent,
             blockedCyptominingContent,
@@ -796,9 +849,14 @@ class GeckoEngineTest {
             loadedSocialContent
         )
 
-        ReflectionUtils.setField(addLogEntry, "blockingData", contentBlockingList)
+        val addLogSecondEntry = object : ContentBlockingController.LogEntry() {}
+        ReflectionUtils.setField(addLogSecondEntry, "origin", "www.tracker2.com")
+        val contentBlockingSecondEntryList = listOf(loadedTrackingLevel2Content)
 
-        return listOf(addLogEntry)
+        ReflectionUtils.setField(addLogEntry, "blockingData", contentBlockingList)
+        ReflectionUtils.setField(addLogSecondEntry, "blockingData", contentBlockingSecondEntryList)
+
+        return listOf(addLogEntry, addLogSecondEntry)
     }
 
     private fun createBlockingData(category: Int): ContentBlockingController.LogEntry.BlockingData {
