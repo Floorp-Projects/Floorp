@@ -481,8 +481,6 @@ struct IcStubCodeMapGCPolicy {
 class JitZone {
   // Allocated space for optimized baseline stubs.
   OptimizedICStubSpace optimizedStubSpace_;
-  // Allocated space for cached cfg.
-  CFGSpace cfgSpace_;
 
   // Set of CacheIRStubInfo instances used by Ion stubs in this Zone.
   using IonCacheIRStubInfoSet =
@@ -507,7 +505,6 @@ class JitZone {
                               size_t* cachedCFG) const;
 
   OptimizedICStubSpace* optimizedStubSpace() { return &optimizedStubSpace_; }
-  CFGSpace* cfgSpace() { return &cfgSpace_; }
 
   JitCode* getBaselineCacheIRStubCode(const CacheIRStubKey::Lookup& key,
                                       CacheIRStubInfo** stubInfo) {
