@@ -287,6 +287,7 @@ bool MediaTrackGraphImpl::AudioTrackPresent() {
 void MediaTrackGraphImpl::UpdateTrackOrder() {
   MOZ_ASSERT(OnGraphThread());
   bool audioTrackPresent = AudioTrackPresent();
+  uint32_t graphOutputChannelCount = AudioOutputChannelCount();
 
   // Note that this looks for any audio tracks, input or output, and switches
   // to a SystemClockDriver if there are none.  However, if another is already
@@ -312,11 +313,26 @@ void MediaTrackGraphImpl::UpdateTrackOrder() {
 
   if (audioTrackPresent && mRealtime &&
       !CurrentDriver()->AsAudioCallbackDriver() && !switching &&
-      AudioOutputChannelCount() > 0) {
+      graphOutputChannelCount > 0) {
     MonitorAutoLock mon(mMonitor);
     if (LifecycleStateRef() == LIFECYCLE_RUNNING) {
       AudioCallbackDriver* driver = new AudioCallbackDriver(
-          this, AudioOutputChannelCount(), AudioInputChannelCount(),
+          this, graphOutputChannelCount, AudioInputChannelCount(),
+          AudioInputDevicePreference());
+      CurrentDriver()->SwitchAtNextIteration(driver);
+    }
+  }
+
+  // Check if this graph should switch to a different number of output channels.
+  // Generally, a driver switch is explicitly made by an event (e.g., setting
+  // the AudioDestinationNode channelCount), but if an HTMLMediaElement is
+  // directly playing back via another HTMLMediaElement, the number of channels
+  // of the media determines how many channels to output, and it can change
+  // dynamically.
+  if (CurrentDriver()->AsAudioCallbackDriver() && !switching) {
+    if (graphOutputChannelCount != CurrentDriver()->AsAudioCallbackDriver()->OutputChannelCount()) {
+      AudioCallbackDriver* driver = new AudioCallbackDriver(
+          this, graphOutputChannelCount, AudioInputChannelCount(),
           AudioInputDevicePreference());
       MonitorAutoLock mon(mMonitor);
       CurrentDriver()->SwitchAtNextIteration(driver);
