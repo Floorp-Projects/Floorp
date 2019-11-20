@@ -875,7 +875,9 @@ already_AddRefed<IDBObjectStore> IDBTransaction::ObjectStore(
   AssertIsOnOwningThread();
 
   if (IsCommittingOrDone()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowDOMException(
+        NS_ERROR_DOM_INVALID_STATE_ERR,
+        NS_LITERAL_CSTRING("Transaction is already committing or done."));
     return nullptr;
   }
 
