@@ -47,7 +47,7 @@
     // that the deletion might not be immediate.
     //
     // To avoid intermittents, we only check the file descriptor counts on non-Windows.
-    // test_bug1123480.xhtml will do some basic testing for Windows.
+    // test_bug1123480.xul will do some basic testing for Windows.
     const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
     return AppConstants.platform !== 'win';
   }

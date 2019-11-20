@@ -6,7 +6,7 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-// Note: widget/tests/test_bug1123480.xhtml checks whether nsTransferable behaves
+// Note: widget/tests/test_bug1123480.xul checks whether nsTransferable behaves
 // as expected with regards to private browsing mode and the clipboard cache,
 // i.e. that the clipboard is not cached to the disk when private browsing mode
 // is enabled.

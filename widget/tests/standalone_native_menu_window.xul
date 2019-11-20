@@ -126,7 +126,6 @@
 
         let menuitem = document.createElementNS(XUL_NS, "menuitem");
         menuitem.setAttribute("label", "detached menu item");
-        /* eslint-disable-next-line no-shadow */
         menuitem.addEventListener("command", function (e) {
           itemActivated = true;
         })
