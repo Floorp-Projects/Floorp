@@ -73,6 +73,9 @@ class DCLayerTree {
     return mCompositionDevice;
   }
 
+  // Get or create an FBO with depth buffer suitable for specified dimensions
+  GLuint GetOrCreateFbo(int aWidth, int aHeight);
+
  protected:
   bool Initialize(HWND aHwnd);
   bool MaybeUpdateDebugCounter();
@@ -94,6 +97,25 @@ class DCLayerTree {
   Maybe<wr::NativeSurfaceId> mCurrentId;
 
   std::unordered_map<uint64_t, UniquePtr<DCLayer>> mDCLayers;
+
+  // A list of layer IDs as they are added to the visual tree this frame.
+  std::vector<uint64_t> mCurrentLayers;
+
+  // The previous frame's list of layer IDs in visual order.
+  std::vector<uint64_t> mPrevLayers;
+
+  // Information about a cached FBO that is retained between frames.
+  struct CachedFrameBuffer {
+    int width;
+    int height;
+    GLuint fboId;
+    GLuint depthRboId;
+  };
+
+  // A cache of FBOs, containing a depth buffer allocated to a specific size.
+  // TODO(gw): Might be faster as a hashmap? The length is typically much less
+  // than 10.
+  std::vector<CachedFrameBuffer> mFrameBuffers;
 };
 
 class DCLayer {
@@ -101,14 +123,13 @@ class DCLayer {
   explicit DCLayer(DCLayerTree* aDCLayerTree);
   ~DCLayer();
   bool Initialize(wr::DeviceIntSize aSize, bool aIsOpaque);
-  bool CreateEGLSurfaceForCompositionSurface(wr::DeviceIntRect aDirtyRect,
-                                             wr::DeviceIntPoint* aOffset);
+  GLuint CreateEGLSurfaceForCompositionSurface(wr::DeviceIntRect aDirtyRect,
+                                               wr::DeviceIntPoint* aOffset);
   void EndDraw();
 
   IDCompositionSurface* GetCompositionSurface() const {
     return mCompositionSurface;
   }
-  EGLSurface GetEGLSurface() const { return mEGLSurface; }
   IDCompositionVisual2* GetVisual() const { return mVisual; }
 
  protected:
@@ -121,8 +142,15 @@ class DCLayer {
 
   RefPtr<IDCompositionSurface> mCompositionSurface;
 
+  // The EGL image that is bound to the D3D texture provided by
+  // DirectComposition.
+  EGLImage mEGLImage;
+
+  // The GL render buffer ID that maps the EGLImage to an RBO for attaching to
+  // an FBO.
+  GLuint mColorRBO;
+
   LayoutDeviceIntSize mBufferSize;
-  EGLSurface mEGLSurface;
 
   RefPtr<IDCompositionVisual2> mVisual;
 };
