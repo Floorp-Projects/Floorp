@@ -26,7 +26,7 @@ add_task(async function() {
   const hud = await openConsole();
   const { jsterm } = hud;
 
-  hud.ui.clearOutput();
+  await clearOutput(hud);
 
   const { autocompletePopup } = jsterm;
 

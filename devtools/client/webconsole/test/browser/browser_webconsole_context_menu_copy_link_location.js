@@ -17,7 +17,7 @@ add_task(async function() {
   await pushPref("devtools.webconsole.filter.net", true);
 
   const hud = await openNewTabAndConsole(TEST_URI);
-  hud.ui.clearOutput();
+  await clearOutput(hud);
 
   info("Test Copy URL menu item for text log");
 
@@ -48,7 +48,7 @@ add_task(async function() {
   ok(true, "Expected text was copied to the clipboard.");
 
   await hideContextMenu(hud);
-  hud.ui.clearOutput();
+  await clearOutput(hud);
 
   info("Test Copy URL menu item for network log");
 
@@ -71,7 +71,7 @@ add_task(async function() {
   ok(true, "Expected text was copied to the clipboard.");
 
   await hideContextMenu(hud);
-  hud.ui.clearOutput();
+  await clearOutput(hud);
 
   info("Test Copy URL menu item from [Learn More] link");
 

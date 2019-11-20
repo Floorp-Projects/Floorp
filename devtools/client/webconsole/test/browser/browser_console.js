@@ -43,7 +43,7 @@ add_task(async function() {
 });
 
 async function testMessages(hud) {
-  hud.ui.clearOutput(true);
+  await clearOutput(hud);
 
   executeSoon(() => {
     expectUncaughtException();

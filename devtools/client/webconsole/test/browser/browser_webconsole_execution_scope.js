@@ -11,7 +11,7 @@ const TEST_URI =
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  hud.ui.clearOutput();
+  await clearOutput(hud);
 
   const onInputMessage = waitForMessage(
     hud,

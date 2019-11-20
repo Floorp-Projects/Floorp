@@ -34,7 +34,7 @@ add_task(async function() {
   const { browser } = await loadTab("about:blank", remoteType);
 
   hud = await openConsole();
-  hud.ui.clearOutput();
+  await clearOutput(hud);
 
   const loaded = loadBrowser(browser);
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, uri.spec);

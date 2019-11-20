@@ -52,5 +52,5 @@ add_task(async function() {
     "Confirmed that CSP and CSP-Report-Only log different messages to console"
   );
 
-  hud.ui.clearOutput(true);
+  await clearOutput(hud);
 });

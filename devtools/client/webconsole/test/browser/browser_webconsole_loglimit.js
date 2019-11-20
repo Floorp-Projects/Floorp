@@ -12,7 +12,7 @@ const TEST_URI =
 add_task(async function() {
   await pushPref("devtools.hud.loglimit", 140);
   const hud = await openNewTabAndConsole(TEST_URI);
-  hud.ui.clearOutput();
+  await clearOutput(hud);
 
   let onMessage = waitForMessage(hud, "test message [149]");
   ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {

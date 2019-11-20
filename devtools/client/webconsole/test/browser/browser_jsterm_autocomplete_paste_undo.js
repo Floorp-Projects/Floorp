@@ -15,8 +15,8 @@ const stringToCopy = "foobazbarBug642615";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const { jsterm, ui } = hud;
-  ui.clearOutput();
+  const { jsterm } = hud;
+  await clearOutput(hud);
   ok(!getInputCompletionValue(hud), "no completeNode.value");
 
   setInputValue(hud, "doc");

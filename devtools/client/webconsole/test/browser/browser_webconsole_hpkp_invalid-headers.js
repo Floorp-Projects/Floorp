@@ -136,7 +136,7 @@ add_task(async function() {
 });
 
 async function navigateAndCheckForWarningMessage({ name, text, url }, hud) {
-  hud.ui.clearOutput(true);
+  await clearOutput(hud);
 
   const onMessage = waitForMessage(hud, text, ".message.warn");
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);

@@ -31,7 +31,7 @@ add_task(async function() {
   ok(!findMessage(hud, "Permission denied"), "no permission denied errors");
 
   info("wait for window.location.href after page navigation");
-  hud.ui.clearOutput();
+  await clearOutput(hud);
   await executeAndWaitForMessage(
     hud,
     "window.location.href",

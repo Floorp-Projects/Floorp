@@ -56,12 +56,6 @@ async function checkContentConsoleApiMessages(nonPrimitiveVariablesDisplayed) {
   const hud = await BrowserConsoleManager.toggleBrowserConsole();
   await setFilterState(hud, { text: FILTER_PREFIX });
 
-  // we need to wait for the
-  // if (nonPrimitiveVariablesDisplayed) {
-  //   await waitFor(() => hud.ui.outputNode.querySelector(".new-consoletable"));
-  // }
-  // await clearOutput(hud);
-
   // In non fission world, we don't retrieve cached messages, so we need to reload the
   // tab to see them.
   if (!nonPrimitiveVariablesDisplayed) {

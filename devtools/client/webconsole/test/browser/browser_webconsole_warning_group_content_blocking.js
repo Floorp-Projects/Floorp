@@ -177,7 +177,7 @@ async function testStorageAccessBlockedGrouping(groupLabel) {
   const { hud, win, tab } = await openNewWindowAndConsole(TEST_URI);
   const now = Date.now();
 
-  hud.ui.clearOutput();
+  await clearOutput(hud);
 
   const getWarningMessage = url => groupLabel.replace("<URL>", url);
 
@@ -218,7 +218,7 @@ async function testStorageAccessBlockedGrouping(groupLabel) {
     `| ${getWarningMessage(TRACKER_IMG + "?2&" + now)}`,
   ]);
 
-  hud.ui.clearOutput();
+  await clearOutput(hud);
   await win.close();
 }
 

@@ -77,5 +77,5 @@ async function executeWindowTest(hud, iframeRole) {
   );
 
   // Clear the output so we don't pollute the next assertions.
-  hud.ui.clearOutput();
+  await clearOutput(hud);
 }

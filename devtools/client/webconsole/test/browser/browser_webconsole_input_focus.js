@@ -16,7 +16,7 @@ add_task(async function() {
   info("Focus after console is opened");
   ok(isInputFocused(hud), "input node is focused after console is opened");
 
-  hud.ui.clearOutput();
+  await clearOutput(hud);
   ok(isInputFocused(hud), "input node is focused after output is cleared");
 
   info("Focus during message logging");
