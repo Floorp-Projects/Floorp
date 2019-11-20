@@ -30,6 +30,7 @@
 #include "mozilla/Logging.h"
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
+#include "nsIWindowsRegKey.h"
 #include "nsServiceManagerUtils.h"
 #include "nsNotifyAddrListener.h"
 #include "nsString.h"
@@ -489,6 +490,44 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
   CoUninitialize();
 
   if (StaticPrefs::network_notify_dnsSuffixList()) {
+    // It seems that the only way to retrieve non-connection specific DNS
+    // suffixes is via the Windows registry.
+
+    auto checkRegistry = [&dnsSuffixList] {
+      nsresult rv;
+      nsCOMPtr<nsIWindowsRegKey> regKey =
+          do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
+      if (NS_FAILED(rv)) {
+        LOG(("  creating nsIWindowsRegKey failed\n"));
+        return;
+      }
+      rv = regKey->Open(
+          nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
+          NS_LITERAL_STRING(
+              "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"),
+          nsIWindowsRegKey::ACCESS_READ);
+      if (NS_FAILED(rv)) {
+        LOG(("  opening registry key failed\n"));
+        return;
+      }
+      nsAutoString wideSuffixString;
+      rv = regKey->ReadStringValue(NS_LITERAL_STRING("SearchList"),
+                                   wideSuffixString);
+      if (NS_FAILED(rv)) {
+        LOG(("  reading registry string value failed\n"));
+        return;
+      }
+
+      nsAutoCString list = NS_ConvertUTF16toUTF8(wideSuffixString);
+      for (const nsACString& suffix : list.Split(',')) {
+        LOG(("  appending DNS suffix from registry: %s\n",
+             suffix.BeginReading()));
+        dnsSuffixList.AppendElement(suffix);
+      }
+    };
+
+    checkRegistry();
+
     MutexAutoLock lock(mMutex);
     mDnsSuffixList.SwapElements(dnsSuffixList);
   }
