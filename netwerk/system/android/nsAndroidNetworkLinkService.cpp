@@ -152,6 +152,11 @@ nsAndroidNetworkLinkService::GetDnsSuffixList(
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAndroidNetworkLinkService::GetVpnDetected(bool* aHasVPN) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void nsAndroidNetworkLinkService::OnNetworkChanged() {
   if (mozilla::StaticPrefs::network_notify_changed()) {
     if (!mNetworkChangeTime.IsNull()) {

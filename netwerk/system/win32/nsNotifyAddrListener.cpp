@@ -66,6 +66,7 @@ nsNotifyAddrListener::nsNotifyAddrListener()
       mMutex("nsNotifyAddrListener::mMutex"),
       mCheckEvent(nullptr),
       mShutdown(false),
+      mFoundVPN(false),
       mIPInterfaceChecksum(0),
       mCoalescingActive(false) {}
 
@@ -111,6 +112,12 @@ nsNotifyAddrListener::GetDnsSuffixList(nsTArray<nsCString>& aDnsSuffixList) {
   aDnsSuffixList.Clear();
   MutexAutoLock lock(mMutex);
   aDnsSuffixList.AppendElements(mDnsSuffixList);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNotifyAddrListener::GetVpnDetected(bool* aHasVPN) {
+  *aHasVPN = mFoundVPN;
   return NS_OK;
 }
 
@@ -438,7 +445,7 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
   ULONG sumAll = 0;
 
   nsTArray<nsCString> dnsSuffixList;
-
+  mFoundVPN = false;
   if (ret == ERROR_SUCCESS) {
     bool linkUp = false;
     ULONG sum = 0;
@@ -449,6 +456,11 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
           !adapter->FirstUnicastAddress ||
           adapter->IfType == IF_TYPE_SOFTWARE_LOOPBACK) {
         continue;
+      }
+
+      if (adapter->IfType == IF_TYPE_PPP) {
+        LOG(("VPN connection found"));
+        mFoundVPN = true;
       }
 
       sum <<= 2;
