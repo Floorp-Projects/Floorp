@@ -218,6 +218,11 @@ class InlineTable : private AllocPolicy {
     inlCount_ = 0;
   }
 
+  void clearAndCompact() {
+    clear();
+    table_.clearAndCompact();
+  }
+
   MOZ_ALWAYS_INLINE
   Ptr lookup(const Lookup& l) {
     MOZ_ASSERT(keyNonZero(l));
@@ -475,6 +480,8 @@ class InlineMap {
 
   void clear() { impl_.clear(); }
 
+  void clearAndCompact() { impl_.clearAndCompact(); }
+
   Range all() const { return impl_.all(); }
 
   MOZ_ALWAYS_INLINE
@@ -578,6 +585,8 @@ class InlineSet {
   bool empty() const { return impl_.empty(); }
 
   void clear() { impl_.clear(); }
+
+  void clearAndCompact() { impl_.clearAndCompact(); }
 
   Range all() const { return impl_.all(); }
 
