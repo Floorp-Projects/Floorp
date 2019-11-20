@@ -35,12 +35,7 @@ job-defaults:
         command:
             - /bin/bash
             - -cx
-            - >
-              curl -o scripts.tar.bz2 {config_params[head_repository]}/archive/{config_params[head_rev]}.tar.bz2/taskcluster/docker/firefox-snap/ &&
-              mkdir scripts &&
-              tar xvfj scripts.tar.bz2 -C scripts --strip-components 4 &&
-              cd scripts &&
-              ./runme.sh
+            - ./runme.sh
         env:
             VERSION: "{release_config[version]}"
             BUILD_NUMBER: "{release_config[build_number]}"
