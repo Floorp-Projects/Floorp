@@ -18,11 +18,11 @@
 #include "nsIContent.h"  // for GetContent
 #include "nsStubMutationObserver.h"
 #include "nsSVGContainerFrame.h"
+#include "nsTextFrame.h"
 
 class gfxContext;
 class nsDisplaySVGText;
 class SVGTextFrame;
-class nsTextFrame;
 
 namespace mozilla {
 
