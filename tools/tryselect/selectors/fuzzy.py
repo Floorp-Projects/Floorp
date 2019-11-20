@@ -246,6 +246,7 @@ class FuzzyParser(BaseTryParser):
         'browsertime',
         'chemspill-prio',
         'debian-buster',
+        'ubuntu-bionic',
         'disable-pgo',
         'env',
         'gecko-profile',
