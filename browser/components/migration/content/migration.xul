@@ -62,7 +62,7 @@
               next="importItems">
     <description control="profiles">&selectProfile.label;</description>
 
-    <radiogroup id="profiles" align="left"/>
+    <radiogroup id="profiles" align="start"/>
   </wizardpage>
 
   <wizardpage id="importItems" pageid="importItems" label="&importItems.title;"
@@ -70,20 +70,20 @@
               oncommand="MigrationWizard.onImportItemCommand();">
     <description control="dataSources">&importItems.label;</description>
 
-    <vbox id="dataSources" style="overflow: auto; -moz-appearance: listbox" align="left" flex="1" role="group"/>
+    <vbox id="dataSources" style="overflow: auto; -moz-appearance: listbox" align="start" flex="1" role="group"/>
   </wizardpage>
 
   <wizardpage id="migrating" pageid="migrating" label="&migrating.title;"
               next="done">
     <description control="migratingItems">&migrating.label;</description>
 
-    <vbox id="migratingItems" style="overflow: auto;" align="left" role="group"/>
+    <vbox id="migratingItems" style="overflow: auto;" align="start" role="group"/>
   </wizardpage>
 
   <wizardpage id="done" pageid="done" label="&done.title;">
     <description control="doneItems">&done.label;</description>
 
-    <vbox id="doneItems" style="overflow: auto;" align="left" role="group"/>
+    <vbox id="doneItems" style="overflow: auto;" align="start" role="group"/>
   </wizardpage>
 
 </wizard>

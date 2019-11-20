@@ -9,6 +9,7 @@
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "mozilla/StaticPrefs_gfx.h"
+#include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 
 namespace mozilla {
@@ -17,9 +18,11 @@ namespace wr {
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorOGL::Create(
     RefPtr<widget::CompositorWidget>&& aWidget) {
-  RefPtr<gl::GLContext> gl;
-  gl = gl::GLContextProvider::CreateForCompositorWidget(
-      aWidget, /* aWebRender */ true, /* aForceAccelerated */ true);
+  RefPtr<gl::GLContext> gl = RenderThread::Get()->SharedGL();
+  if (!gl) {
+    gl = gl::GLContextProvider::CreateForCompositorWidget(
+        aWidget, /* aWebRender */ true, /* aForceAccelerated */ true);
+  }
   if (!gl || !gl->MakeCurrent()) {
     gfxCriticalNote << "Failed GL context creation for WebRender: "
                     << gfx::hexa(gl.get());

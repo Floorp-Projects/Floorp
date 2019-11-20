@@ -952,6 +952,16 @@ static already_AddRefed<gl::GLContext> CreateGLContextEGL() {
 }
 #endif
 
+#ifdef XP_MACOSX
+static already_AddRefed<gl::GLContext> CreateGLContextCGL() {
+  nsCString failureUnused;
+  return gl::GLContextProvider::CreateHeadless(
+      gl::CreateContextFlags::ALLOW_OFFLINE_RENDERER |
+          gl::CreateContextFlags::FORCE_ENABLE_HARDWARE,
+      &failureUnused);
+}
+#endif
+
 static already_AddRefed<gl::GLContext> CreateGLContext() {
 #ifdef XP_WIN
   if (gfx::gfxVars::UseWebRenderANGLE()) {
@@ -966,8 +976,11 @@ static already_AddRefed<gl::GLContext> CreateGLContext() {
     return CreateGLContextEGL();
   }
 #endif
-  // We currently only support a shared GLContext
-  // with ANGLE.
+
+#ifdef XP_MACOSX
+  return CreateGLContextCGL();
+#endif
+
   return nullptr;
 }
 

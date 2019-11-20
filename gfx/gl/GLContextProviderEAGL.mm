@@ -170,19 +170,14 @@ already_AddRefed<GLContext> GLContextProviderEAGL::CreateForCompositorWidget(
     MOZ_ASSERT(false);
     return nullptr;
   }
-  return CreateForWindow(aCompositorWidget->RealWidget(), aWebRender, aForceAccelerated);
-}
 
-already_AddRefed<GLContext> GLContextProviderEAGL::CreateForWindow(nsIWidget* aWidget,
-                                                                   bool aWebRender,
-                                                                   bool aForceAccelerated) {
   RefPtr<GLContext> glContext =
       CreateEAGLContext(CreateContextFlags::NONE, false, GetGlobalContextEAGL());
   if (!glContext) {
     return nullptr;
   }
 
-  if (!GLContextEAGL::Cast(glContext)->AttachToWindow(aWidget)) {
+  if (!GLContextEAGL::Cast(glContext)->AttachToWindow(aCompositorWidget->RealWidget())) {
     return nullptr;
   }
 

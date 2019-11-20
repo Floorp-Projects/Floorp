@@ -759,15 +759,6 @@ already_AddRefed<GLContext> GLContextProviderGLX::CreateForCompositorWidget(
                          aWebRender, aForceAccelerated);
 }
 
-already_AddRefed<GLContext> GLContextProviderGLX::CreateForWindow(
-    nsIWidget* aWidget, bool aWebRender, bool aForceAccelerated) {
-  Display* display =
-      (Display*)aWidget->GetNativeData(NS_NATIVE_COMPOSITOR_DISPLAY);
-  Window window = GET_NATIVE_WINDOW(aWidget);
-
-  return CreateForWidget(display, window, aWebRender, aForceAccelerated);
-}
-
 static bool ChooseConfig(GLXLibrary* glx, Display* display, int screen,
                          const SurfaceCaps& minCaps,
                          ScopedXFree<GLXFBConfig>* const out_scopedConfigArr,

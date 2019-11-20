@@ -44,33 +44,6 @@ class GL_CONTEXT_PROVIDER_NAME {
       bool aForceAccelerated);
 
   /**
-   * Create a context that renders to the surface of the widget that is
-   * passed in.  The context is always created with an RGB pixel format,
-   * with no alpha, depth or stencil.  If any of those features are needed,
-   * either use a framebuffer, or use CreateOffscreen.
-   *
-   * This context will attempt to share resources with all other window
-   * contexts.  As such, it's critical that resources allocated that are not
-   * needed by other contexts be deleted before the context is destroyed.
-   *
-   * The GetSharedContext() method will return non-null if sharing
-   * was successful.
-   *
-   * Note: a context created for a widget /must not/ hold a strong
-   * reference to the widget; otherwise a cycle can be created through
-   * a GL layer manager.
-   *
-   * @param aWidget Widget whose surface to create a context for
-   * @param aWebRender If the compositor is a WebRender compositor
-   * @param aForceAccelerated true if only accelerated contexts are allowed
-   *
-   * @return Context to use for the window
-   */
-  static already_AddRefed<GLContext> CreateForWindow(nsIWidget* aWidget,
-                                                     bool aWebRender,
-                                                     bool aForceAccelerated);
-
-  /**
    * Create a context for offscreen rendering.  The target of this
    * context should be treated as opaque -- it might be a FBO, or a
    * pbuffer, or some other construct.  Users of this GLContext

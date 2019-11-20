@@ -18,12 +18,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ExtensionCommon.jsm"
 );
 
-const { PromiseTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PromiseTestUtils.jsm"
-);
-
-PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
-
 add_task(async function test_delete() {
   function background() {
     let historyClearedCount = 0;
@@ -502,7 +496,7 @@ add_task(async function test_add_url() {
 });
 
 add_task(async function test_get_visits() {
-  function background() {
+  async function background() {
     const TEST_DOMAIN = "http://example.com/";
     const FIRST_DATE = Date.now();
     const INITIAL_DETAILS = {
@@ -513,7 +507,7 @@ add_task(async function test_get_visits() {
 
     let visitIds = new Set();
 
-    function checkVisit(visit, expected) {
+    async function checkVisit(visit, expected) {
       visitIds.add(visit.visitId);
       browser.test.assertEq(
         expected.visitTime,
@@ -525,67 +519,52 @@ add_task(async function test_get_visits() {
         visit.transition,
         "visit has the correct transition"
       );
-      browser.history.search({ text: expected.url }).then(results => {
-        // all results will have the same id, so we only need to use the first one
-        browser.test.assertEq(
-          results[0].id,
-          visit.id,
-          "visit has the correct id"
-        );
-      });
+      let results = await browser.history.search({ text: expected.url });
+      // all results will have the same id, so we only need to use the first one
+      browser.test.assertEq(
+        results[0].id,
+        visit.id,
+        "visit has the correct id"
+      );
     }
 
     let details = Object.assign({}, INITIAL_DETAILS);
 
-    browser.history
-      .addUrl(details)
-      .then(() => {
-        return browser.history.getVisits({ url: details.url });
-      })
-      .then(results => {
-        browser.test.assertEq(
-          1,
-          results.length,
-          "the expected number of visits were returned"
-        );
-        checkVisit(results[0], details);
-        details.url = `${TEST_DOMAIN}/1/`;
-        return browser.history.addUrl(details);
-      })
-      .then(() => {
-        return browser.history.getVisits({ url: details.url });
-      })
-      .then(results => {
-        browser.test.assertEq(
-          1,
-          results.length,
-          "the expected number of visits were returned"
-        );
-        checkVisit(results[0], details);
-        details.visitTime = FIRST_DATE - 1000;
-        details.transition = "typed";
-        return browser.history.addUrl(details);
-      })
-      .then(() => {
-        return browser.history.getVisits({ url: details.url });
-      })
-      .then(results => {
-        browser.test.assertEq(
-          2,
-          results.length,
-          "the expected number of visits were returned"
-        );
-        checkVisit(results[0], INITIAL_DETAILS);
-        checkVisit(results[1], details);
-      })
-      .then(() => {
-        browser.test.assertEq(
-          3,
-          visitIds.size,
-          "each visit has a unique visitId"
-        );
-        browser.test.notifyPass("get-visits");
-      });
+    await browser.history.addUrl(details);
+    let results = await browser.history.getVisits({ url: details.url });
+
+    browser.test.assertEq(
+      1,
+      results.length,
+      "the expected number of visits were returned"
+    );
+    await checkVisit(results[0], details);
+
+    details.url = `${TEST_DOMAIN}/1/`;
+    await browser.history.addUrl(details);
+
+    results = await browser.history.getVisits({ url: details.url });
+    browser.test.assertEq(
+      1,
+      results.length,
+      "the expected number of visits were returned"
+    );
+    await checkVisit(results[0], details);
+
+    details.visitTime = FIRST_DATE - 1000;
+    details.transition = "typed";
+    await browser.history.addUrl(details);
+    results = await browser.history.getVisits({ url: details.url });
+
+    browser.test.assertEq(
+      2,
+      results.length,
+      "the expected number of visits were returned"
+    );
+    await checkVisit(results[0], INITIAL_DETAILS);
+    await checkVisit(results[1], details);
+    browser.test.assertEq(3, visitIds.size, "each visit has a unique visitId");
+    await browser.test.notifyPass("get-visits");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
