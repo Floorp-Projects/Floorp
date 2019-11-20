@@ -237,6 +237,7 @@ menupopup::part(drop-indicator) {
   margin: 7px;
   color: inherit;
   cursor: default;
+  justify-self: end;
 }
 
 #cfr-notification-header-image {
