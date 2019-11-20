@@ -71,6 +71,11 @@ class ComputedStyle;
 using Matrix4x4Components = float[16];
 using StyleMatrix4x4Components = Matrix4x4Components;
 
+// This is sound because std::num::NonZeroUsize is repr(transparent).
+//
+// It is just the case that cbindgen doesn't understand it natively.
+using StyleNonZeroUsize = uintptr_t;
+
 struct Keyframe;
 struct PropertyStyleAnimationValuePair;
 
