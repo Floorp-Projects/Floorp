@@ -280,7 +280,7 @@ class TextureData {
   virtual void Forget(LayersIPCChannel* aAllocator) {}
 
   virtual bool Serialize(SurfaceDescriptor& aDescriptor) = 0;
-  virtual void GetSubDescriptor(GPUVideoSubDescriptor* aOutDesc) {}
+  virtual void GetSubDescriptor(RemoteDecoderVideoSubDescriptor* aOutDesc) {}
 
   virtual void OnForwardedToHost() {}
 
@@ -610,7 +610,7 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
   const TextureData* GetInternalData() const { return mData; }
 
   uint64_t GetSerial() const { return mSerial; }
-  void GPUVideoDesc(SurfaceDescriptorGPUVideo* aOutDesc);
+  void GetSurfaceDescriptorRemoteDecoder(SurfaceDescriptorRemoteDecoder* aOutDesc);
 
   void CancelWaitForNotifyNotUsed();
 

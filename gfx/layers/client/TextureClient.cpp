@@ -268,8 +268,7 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
        aLayersBackend == LayersBackend::LAYERS_WR) &&
       (aBackendType == gfx::BackendType::DIRECT2D ||
        aBackendType == gfx::BackendType::DIRECT2D1_1 ||
-       (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT) &&
-        DeviceManagerDx::Get()->GetContentDevice())) &&
+       (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT))) &&
       aSize.width <= aMaxTextureSize && aSize.height <= aMaxTextureSize &&
       !(aAllocFlags & ALLOC_UPDATE_FROM_SURFACE)) {
     return TextureType::D3D11;
@@ -1485,14 +1484,15 @@ void TextureClient::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
 #endif
 }
 
-void TextureClient::GPUVideoDesc(SurfaceDescriptorGPUVideo* const aOutDesc) {
+void TextureClient::GetSurfaceDescriptorRemoteDecoder(
+    SurfaceDescriptorRemoteDecoder* const aOutDesc) {
   const auto handle = GetSerial();
 
-  GPUVideoSubDescriptor subDesc = null_t();
+  RemoteDecoderVideoSubDescriptor subDesc = null_t();
   MOZ_RELEASE_ASSERT(mData);
   mData->GetSubDescriptor(&subDesc);
 
-  *aOutDesc = SurfaceDescriptorGPUVideo(handle, std::move(subDesc), Nothing());
+  *aOutDesc = SurfaceDescriptorRemoteDecoder(handle, std::move(subDesc), Nothing());
 }
 
 class MemoryTextureReadLock : public NonBlockingTextureReadLock {
