@@ -66,7 +66,9 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
     THROTTLING_READ_INTERVAL,
     THROTTLING_HOLD_TIME,
     THROTTLING_MAX_TIME,
-    PROXY_BE_CONSERVATIVE
+    PROXY_BE_CONSERVATIVE,
+
+    PARAM_COUNT  // keep this one last
   };
 
   //-------------------------------------------------------------------------
@@ -259,6 +261,13 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   }
 
   void BlacklistSpdy(const nsHttpConnectionInfo* ci);
+
+#ifdef DEBUG
+  // Read the mParamUpdateFlags counter, callable on any thread.  This is used
+  // to check we have sent all the parameters to connection manager during
+  // startup.
+  uint32_t GetParamUpdateCount() { return mParamUpdateFlags; }
+#endif
 
  private:
   virtual ~nsHttpConnectionMgr();
@@ -721,6 +730,12 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   nsCOMPtr<nsITimer> mTimeoutTick;
   bool mTimeoutTickArmed;
   uint32_t mTimeoutTickNext;
+
+#ifdef DEBUG
+  // Counts the number of calls to OnMsgUpdateParam so we can assert all
+  // parameters have been sent to connection manager.
+  Atomic<uint32_t, ReleaseAcquire> mParamUpdateFlags;
+#endif
 
   //
   // the connection table
