@@ -1686,7 +1686,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
 
     if (this.type === ELEMENT_STYLE) {
       // For element style rules, set the node's style attribute.
-      this.rawNode.setAttribute("style", newText);
+      this.rawNode.setAttributeDevtools("style", newText);
     } else {
       // For stylesheet rules, set the text in the stylesheet.
       const parentStyleSheet = this.pageStyle._sheetRef(this._parentSheet);
