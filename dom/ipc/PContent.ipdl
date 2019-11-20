@@ -814,14 +814,7 @@ child:
     // The returned loadInfo needs to be set on the channel - since the channel
     // moved to a new process it now has different properties.
 
-    async CrossProcessRedirect(uint32_t aRegistrarId,
-                               nsIURI aURI,
-                               ReplacementChannelConfigInit? config,
-                               LoadInfoArgs? aLoadInfo,
-                               uint64_t aChannelId,
-                               nsIURI aOriginalURI,
-                               uint64_t aIdentifier,
-                               uint32_t aRedirectMode)
+    async CrossProcessRedirect(RedirectToRealChannelArgs args)
         returns (nsresult rv, LoadInfoArgs? arg);
 
     /**
