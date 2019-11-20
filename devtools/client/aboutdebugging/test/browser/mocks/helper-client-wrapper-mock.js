@@ -87,8 +87,6 @@ function createClientMock() {
     getMainProcess: () => {},
     // no-op
     getFront: () => {},
-    // no-op
-    onFront: () => {},
     // stores the preference locally (doesn't update about:config)
     setPreference: function(prefName, value) {
       this._preferences[prefName] = value;
