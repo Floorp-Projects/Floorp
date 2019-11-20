@@ -82,7 +82,8 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
        bool throttleEnabled, uint32_t throttleVersion,
        uint32_t throttleSuspendFor, uint32_t throttleResumeFor,
        uint32_t throttleReadLimit, uint32_t throttleReadInterval,
-       uint32_t throttleHoldTime, uint32_t throttleMaxTime);
+       uint32_t throttleHoldTime, uint32_t throttleMaxTime,
+       bool beConservativeForProxy);
   MOZ_MUST_USE nsresult Shutdown();
 
   //-------------------------------------------------------------------------
