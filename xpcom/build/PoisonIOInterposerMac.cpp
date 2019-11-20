@@ -39,8 +39,6 @@
 
 namespace {
 
-using namespace mozilla;
-
 // Bit tracking if poisoned writes are enabled
 static bool sIsEnabled = false;
 
@@ -55,25 +53,27 @@ bool IsIPCWrite(int aFd, const struct stat& aBuf);
 
 /**
  * RAII class for timing the duration of an I/O call and reporting the result
- * to the IOInterposeObserver API.
+ * to the mozilla::IOInterposeObserver API.
  */
-class MacIOAutoObservation : public IOInterposeObserver::Observation {
+class MacIOAutoObservation : public mozilla::IOInterposeObserver::Observation {
  public:
-  MacIOAutoObservation(IOInterposeObserver::Operation aOp, int aFd)
-      : IOInterposeObserver::Observation(aOp, sReference,
-                                         sIsEnabled && !IsDebugFile(aFd)),
+  MacIOAutoObservation(mozilla::IOInterposeObserver::Operation aOp, int aFd)
+      : mozilla::IOInterposeObserver::Observation(
+            aOp, sReference, sIsEnabled && !mozilla::IsDebugFile(aFd)),
         mFd(aFd),
         mHasQueriedFilename(false) {}
 
-  MacIOAutoObservation(IOInterposeObserver::Operation aOp, int aFd,
+  MacIOAutoObservation(mozilla::IOInterposeObserver::Operation aOp, int aFd,
                        const void* aBuf, size_t aCount)
-      : IOInterposeObserver::Observation(
+      : mozilla::IOInterposeObserver::Observation(
             aOp, sReference,
-            sIsEnabled && !IsDebugFile(aFd) && IsValidWrite(aFd, aBuf, aCount)),
+            sIsEnabled && !mozilla::IsDebugFile(aFd) &&
+                IsValidWrite(aFd, aBuf, aCount)),
         mFd(aFd),
         mHasQueriedFilename(false) {}
 
-  // Custom implementation of IOInterposeObserver::Observation::Filename
+  // Custom implementation of
+  // mozilla::IOInterposeObserver::Observation::Filename
   void Filename(nsAString& aFilename) override;
 
   ~MacIOAutoObservation() { Report(); }
@@ -162,7 +162,7 @@ bool IsValidWrite(int aFd, const void* aWbuf, size_t aCount) {
   // content. This is needed because dbm doesn't keep track of dirty bits
   // and can end up writing the same data to disk twice. Once when the
   // user (nss) asks it to sync and once when closing the database.
-  auto wbuf2 = MakeUniqueFallible<char[]>(aCount);
+  auto wbuf2 = mozilla::MakeUniqueFallible<char[]>(aCount);
   if (!wbuf2) {
     return true;
   }
@@ -203,7 +203,8 @@ typedef ssize_t (*aio_write_t)(struct aiocb* aAioCbp);
 ssize_t wrap_aio_write(struct aiocb* aAioCbp);
 FuncData aio_write_data = {0, (void*)wrap_aio_write, (void*)aio_write};
 ssize_t wrap_aio_write(struct aiocb* aAioCbp) {
-  MacIOAutoObservation timer(IOInterposeObserver::OpWrite, aAioCbp->aio_fildes);
+  MacIOAutoObservation timer(mozilla::IOInterposeObserver::OpWrite,
+                             aAioCbp->aio_fildes);
 
   aio_write_t old_write = (aio_write_t)aio_write_data.Buffer;
   return old_write(aAioCbp);
@@ -216,7 +217,7 @@ typedef ssize_t (*pwrite_t)(int aFd, const void* buf, size_t aNumBytes,
 template <FuncData& foo>
 ssize_t wrap_pwrite_temp(int aFd, const void* aBuf, size_t aNumBytes,
                          off_t aOffset) {
-  MacIOAutoObservation timer(IOInterposeObserver::OpWrite, aFd);
+  MacIOAutoObservation timer(mozilla::IOInterposeObserver::OpWrite, aFd);
   pwrite_t old_write = (pwrite_t)foo.Buffer;
   return old_write(aFd, aBuf, aNumBytes, aOffset);
 }
@@ -236,8 +237,8 @@ DEFINE_PWRITE_DATA(pwrite_NOCANCEL, "pwrite$NOCANCEL");
 typedef ssize_t (*writev_t)(int aFd, const struct iovec* aIov, int aIovCount);
 template <FuncData& foo>
 ssize_t wrap_writev_temp(int aFd, const struct iovec* aIov, int aIovCount) {
-  MacIOAutoObservation timer(IOInterposeObserver::OpWrite, aFd, nullptr,
-                             aIovCount);
+  MacIOAutoObservation timer(mozilla::IOInterposeObserver::OpWrite, aFd,
+                             nullptr, aIovCount);
   writev_t old_write = (writev_t)foo.Buffer;
   return old_write(aFd, aIov, aIovCount);
 }
@@ -257,7 +258,8 @@ DEFINE_WRITEV_DATA(writev_NOCANCEL, "writev$NOCANCEL");
 typedef ssize_t (*write_t)(int aFd, const void* aBuf, size_t aCount);
 template <FuncData& foo>
 ssize_t wrap_write_temp(int aFd, const void* aBuf, size_t aCount) {
-  MacIOAutoObservation timer(IOInterposeObserver::OpWrite, aFd, aBuf, aCount);
+  MacIOAutoObservation timer(mozilla::IOInterposeObserver::OpWrite, aFd, aBuf,
+                             aCount);
   write_t old_write = (write_t)foo.Buffer;
   return old_write(aFd, aBuf, aCount);
 }
@@ -285,7 +287,7 @@ FuncData* Functions[] = {&aio_write_data,
                          &writev_data,          &writev_NOCANCEL_UNIX2003_data,
                          &writev_UNIX2003_data, &writev_NOCANCEL_data};
 
-const int NumFunctions = ArrayLength(Functions);
+const int NumFunctions = mozilla::ArrayLength(Functions);
 
 }  // namespace
 
