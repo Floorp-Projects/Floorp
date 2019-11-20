@@ -268,15 +268,6 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   bool CheckValidFormSubmission();
 
   /**
-   * Check whether submission can proceed for this form.  This basically
-   * implements steps 1-4 (more or less) of
-   * <https://html.spec.whatwg.org/multipage/forms.html#concept-form-submit>.
-   * aSubmitter, if not null, is the "submitter" from that algorithm.  Therefore
-   * it must be a valid submit control.
-   */
-  bool SubmissionCanProceed(Element* aSubmitter);
-
-  /**
    * Contruct the entry list to get their data pumped into the FormData and
    * fire a `formdata` event with the entry list in formData attribute.
    * <https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#constructing-form-data-set>
@@ -360,6 +351,15 @@ class HTMLFormElement final : public nsGenericHTMLElement,
 
   int32_t Length();
 
+  /**
+   * Check whether submission can proceed for this form then fire submit event.
+   * This basically implements steps 1-6 (more or less) of
+   * <https://html.spec.whatwg.org/multipage/forms.html#concept-form-submit>.
+   * @param aSubmitter If not null, is the "submitter" from that algorithm.
+   *                   Therefore it must be a valid submit control.
+   */
+  MOZ_CAN_RUN_SCRIPT void MaybeSubmit(Element* aSubmitter);
+  MOZ_CAN_RUN_SCRIPT void MaybeReset(Element* aSubmitter);
   void Submit(ErrorResult& aRv);
   void Reset();
 
