@@ -138,6 +138,10 @@ try_task_config_schema = Schema({
         "debian-tests",
         description="Run linux desktop tests on debian 10 (buster)."
         ): bool,
+    Optional(
+        "ubuntu-bionic",
+        description="Run linux desktop tests on Ubuntu 18.04 (bionic)."
+        ): bool,
 })
 
 

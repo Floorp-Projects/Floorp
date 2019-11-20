@@ -554,6 +554,8 @@ def set_defaults(config, tests):
         test.setdefault('limit-platforms', [])
         if config.params['try_task_config'].get('debian-tests'):
             test.setdefault('docker-image', {'in-tree': 'debian10-test'})
+        elif config.params['try_task_config'].get('ubuntu-bionic'):
+            test.setdefault('docker-image', {'in-tree': 'ubuntu1804-test'})
         else:
             test.setdefault('docker-image', {'in-tree': 'desktop1604-test'})
         test.setdefault('checkout', False)
