@@ -1156,9 +1156,6 @@ AbortReason MBasicBlock::setBackedge(TempAllocator& alloc, MBasicBlock* pred) {
   }
 
   if (hadTypeChange) {
-    for (MPhiIterator phi = phisBegin(); phi != phisEnd(); phi++) {
-      phi->removeOperand(phi->numOperands() - 1);
-    }
     return AbortReason::Disable;
   }
 
@@ -1432,7 +1429,6 @@ bool MBasicBlock::inheritPhisFromBackedge(TempAllocator& alloc,
       return false;
     }
     *hadTypeChange |= typeChange;
-    setSlot(slot, entryDef);
   }
 
   return true;

@@ -2621,6 +2621,19 @@ AbortReasonOr<Ok> IonBuilder::restartLoop(const CFGBlock* cfgHeader) {
 
   MBasicBlock* header = blockWorklist[cfgHeader->id()];
 
+  // Restore slots to entry state.
+  size_t stackDepth = header->entryResumePoint()->stackDepth();
+  for (size_t slot = 0; slot < stackDepth; slot++) {
+    MDefinition* loopDef = header->entryResumePoint()->getOperand(slot);
+    header->setSlot(slot, loopDef);
+  }
+
+  // Remove phi operands.
+  for (MPhiIterator phi = header->phisBegin(); phi != header->phisEnd();
+       phi++) {
+    phi->removeOperand(phi->numOperands() - 1);
+  }
+
   // Discard unreferenced & pre-allocated resume points.
   replaceMaybeFallbackFunctionGetter(nullptr);
 
