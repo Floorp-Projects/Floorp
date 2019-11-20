@@ -4,11 +4,10 @@
 
 #include shared,clip_shared,ellipse
 
+varying vec4 vLocalPos;
 #ifdef WR_FEATURE_FAST_PATH
-varying vec2 vLocalPos;
 flat varying vec3 vClipParams;      // xy = box size, z = radius
 #else
-varying vec4 vLocalPos;
 flat varying vec4 vClipCenter_Radius_TL;
 flat varying vec4 vClipCenter_Radius_TR;
 flat varying vec4 vClipCenter_Radius_BL;
@@ -83,18 +82,16 @@ void main(void) {
     );
 
     vClipMode = clip.rect.mode.x;
+    vLocalPos = vi.local_pos;
 
 #ifdef WR_FEATURE_FAST_PATH
     // If the radii are all uniform, we can use a much simpler 2d
     // signed distance function to get a rounded rect clip.
     vec2 half_size = 0.5 * local_rect.size;
     float radius = clip.top_left.outer_inner_radius.x;
-    vLocalPos = vi.local_pos.xy - half_size - cmi.local_pos;
-    vClipParams.xy = half_size - vec2(radius);
-    vClipParams.z = radius;
+    vLocalPos.xy -= (half_size + cmi.local_pos) * vi.local_pos.w;
+    vClipParams = vec3(half_size - vec2(radius), radius);
 #else
-    vLocalPos = vi.local_pos;
-
     RectWithEndpoint clip_rect = to_rect_with_endpoint(local_rect);
 
     vec2 r_tl = clip.top_left.outer_inner_radius.xy;
@@ -127,22 +124,17 @@ float sdf_rounded_rect(vec2 pos, vec3 clip_params) {
 #endif
 
 void main(void) {
-#ifdef WR_FEATURE_FAST_PATH
-    vec2 local_pos = vLocalPos.xy;
-#else
     vec2 local_pos = vLocalPos.xy / vLocalPos.w;
-#endif
     float aa_range = compute_aa_range(local_pos);
 
 #ifdef WR_FEATURE_FAST_PATH
     float d = sdf_rounded_rect(local_pos, vClipParams);
     float f = distance_aa(aa_range, d);
-    float r = mix(f, 1.0 - f, vClipMode);
-    oFragColor = vec4(r);
+    float final_alpha = mix(f, 1.0 - f, vClipMode);
 #else
-    float alpha = init_transform_fs(local_pos.xy);
+    float alpha = init_transform_fs(local_pos);
 
-    float clip_alpha = rounded_rect(local_pos.xy,
+    float clip_alpha = rounded_rect(local_pos,
                                     vClipCenter_Radius_TL,
                                     vClipCenter_Radius_TR,
                                     vClipCenter_Radius_BR,
@@ -153,9 +145,9 @@ void main(void) {
 
     // Select alpha or inverse alpha depending on clip in/out.
     float final_alpha = mix(combined_alpha, 1.0 - combined_alpha, vClipMode);
-    float final_final_alpha = vLocalPos.w > 0.0 ? final_alpha : 0.0;
-
-    oFragColor = vec4(final_final_alpha, 0.0, 0.0, 1.0);
 #endif
+
+    float final_final_alpha = vLocalPos.w > 0.0 ? final_alpha : 0.0;
+    oFragColor = vec4(final_final_alpha, 0.0, 0.0, 1.0);
 }
 #endif
