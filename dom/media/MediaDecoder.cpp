@@ -378,6 +378,7 @@ void MediaDecoder::Shutdown() {
     mOnWaitingForKey.Disconnect();
     mOnDecodeWarning.Disconnect();
     mOnNextFrameStatus.Disconnect();
+    mOnSecondaryVideoContainerInstalled.Disconnect();
     mOnStoreDecoderBenchmark.Disconnect();
 
     mDecoderStateMachine->BeginShutdown()->Then(
@@ -505,6 +506,12 @@ void MediaDecoder::OnNextFrameStatus(
   }
 }
 
+void MediaDecoder::OnSecondaryVideoContainerInstalled(
+    const RefPtr<VideoFrameContainer>& aSecondaryVideoContainer) {
+  MOZ_ASSERT(NS_IsMainThread());
+  GetOwner()->OnSecondaryVideoContainerInstalled(aSecondaryVideoContainer);
+}
+
 void MediaDecoder::OnStoreDecoderBenchmark(const VideoInfo& aInfo) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -579,6 +586,10 @@ void MediaDecoder::SetStateMachineParameters() {
       mAbstractMainThread, this, &MediaDecoder::OnMediaNotSeekable);
   mOnNextFrameStatus = mDecoderStateMachine->OnNextFrameStatus().Connect(
       mAbstractMainThread, this, &MediaDecoder::OnNextFrameStatus);
+  mOnSecondaryVideoContainerInstalled =
+      mDecoderStateMachine->OnSecondaryVideoContainerInstalled().Connect(
+          mAbstractMainThread, this,
+          &MediaDecoder::OnSecondaryVideoContainerInstalled);
   mOnStoreDecoderBenchmark = mReader->OnStoreDecoderBenchmark().Connect(
       mAbstractMainThread, this, &MediaDecoder::OnStoreDecoderBenchmark);
 

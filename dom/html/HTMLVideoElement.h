@@ -21,6 +21,8 @@ class WakeLock;
 class VideoPlaybackQuality;
 
 class HTMLVideoElement final : public HTMLMediaElement {
+  class SecondaryVideoOutput;
+
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLVideoElement, HTMLMediaElement)
@@ -140,11 +142,15 @@ class HTMLVideoElement final : public HTMLMediaElement {
 
   void SetMozIsOrientationLocked(bool aLock) { mIsOrientationLocked = aLock; }
 
-  void CloneElementVisually(HTMLVideoElement& aTarget, ErrorResult& rv);
+  already_AddRefed<Promise> CloneElementVisually(HTMLVideoElement& aTarget,
+                                                 ErrorResult& rv);
 
   void StopCloningElementVisually();
 
   bool IsCloningElementVisually() const { return !!mVisualCloneTarget; }
+
+  void OnSecondaryVideoContainerInstalled(
+      const RefPtr<VideoFrameContainer>& aSecondaryContainer) override;
 
  protected:
   virtual ~HTMLVideoElement();
@@ -170,8 +176,10 @@ class HTMLVideoElement final : public HTMLMediaElement {
   bool mIsOrientationLocked;
 
  private:
-  bool SetVisualCloneTarget(HTMLVideoElement* aCloneTarget);
-  bool SetVisualCloneSource(HTMLVideoElement* aCloneSource);
+  bool SetVisualCloneTarget(
+      RefPtr<HTMLVideoElement> aVisualCloneTarget,
+      RefPtr<Promise> aVisualCloneTargetPromise = nullptr);
+  bool SetVisualCloneSource(RefPtr<HTMLVideoElement> aVisualCloneSource);
 
   // For video elements, we can clone the frames being played to
   // a secondary video element. If we're doing that, we hold a
@@ -181,6 +189,14 @@ class HTMLVideoElement final : public HTMLMediaElement {
   // Please don't set this to non-nullptr values directly - use
   // SetVisualCloneTarget() instead.
   RefPtr<HTMLVideoElement> mVisualCloneTarget;
+  // Set when mVisualCloneTarget is set, and resolved (and unset) when the
+  // secondary container has been applied to the underlying resource.
+  RefPtr<Promise> mVisualCloneTargetPromise;
+  // Set when mVisualCloneTarget is set and we are playing a MediaStream with a
+  // video track. This is the output wrapping the VideoFrameContainer of
+  // mVisualCloneTarget, so the selected video track can render its frames to
+  // it.
+  RefPtr<SecondaryVideoOutput> mSecondaryVideoOutput;
   // If this video is the clone target of another video element,
   // then mVisualCloneSource points to that originating video
   // element.
