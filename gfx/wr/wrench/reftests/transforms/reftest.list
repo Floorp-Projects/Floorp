@@ -28,7 +28,7 @@ platform(linux,mac) == perspective-clip.yaml perspective-clip.png
 platform(linux,mac) fuzzy(1,2) == perspective-clip-1.yaml perspective-clip-1.png
 platform(linux,mac) fuzzy(1,2) == perspective-shadow.yaml perspective-shadow.png
 # The ref YAML here produces significantly worse quality
-fuzzy(200,4127) == perspective-box-shadow.yaml perspective-box-shadow-ref.yaml
+fuzzy(200,4200) == perspective-box-shadow.yaml perspective-box-shadow-ref.yaml
 == complex-preserve-3d.yaml blank.yaml
 platform(linux,mac) fuzzy(9,348) == perspective-border-radius.yaml perspective-border-radius.png
 fuzzy(1,38) == snapped-preserve-3d.yaml snapped-preserve-3d-ref.yaml
