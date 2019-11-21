@@ -2948,11 +2948,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_STRICTNE() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_JSOP_CONDSWITCH() {
-  return true;
-}
-
-template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_CASE() {
   frame.popRegsAndSync(1);
 
@@ -6932,6 +6927,7 @@ MethodStatus BaselineCompiler::emitBody() {
       case JSOP_FORCEINTERPRETER:
         // Caller must have checked script->hasForceInterpreterOp().
       case JSOP_UNUSED71:
+      case JSOP_UNUSED120:
       case JSOP_UNUSED149:
       case JSOP_LIMIT:
         MOZ_CRASH("Unexpected op");

@@ -2992,32 +2992,19 @@ static bool PCToLine(JSContext* cx, unsigned argc, Value* vp) {
 static void UpdateSwitchTableBounds(JSContext* cx, HandleScript script,
                                     unsigned offset, unsigned* start,
                                     unsigned* end) {
-  jsbytecode* pc;
-  JSOp op;
-  ptrdiff_t jmplen;
-  int32_t low, high, n;
+  jsbytecode* pc = script->offsetToPC(offset);
+  MOZ_ASSERT(JSOp(*pc) == JSOP_TABLESWITCH);
 
-  pc = script->offsetToPC(offset);
-  op = JSOp(*pc);
-  switch (op) {
-    case JSOP_TABLESWITCH:
-      jmplen = JUMP_OFFSET_LEN;
-      pc += jmplen;
-      low = GET_JUMP_OFFSET(pc);
-      pc += JUMP_OFFSET_LEN;
-      high = GET_JUMP_OFFSET(pc);
-      pc += JUMP_OFFSET_LEN;
-      n = high - low + 1;
-      break;
-
-    default:
-      /* [condswitch] switch does not have any jump or lookup tables. */
-      MOZ_ASSERT(op == JSOP_CONDSWITCH);
-      return;
-  }
+  ptrdiff_t jmplen = JUMP_OFFSET_LEN;
+  pc += jmplen;
+  int32_t low = GET_JUMP_OFFSET(pc);
+  pc += JUMP_OFFSET_LEN;
+  int32_t high = GET_JUMP_OFFSET(pc);
+  pc += JUMP_OFFSET_LEN;
+  int32_t n = high - low + 1;
 
   *start = script->pcToOffset(pc);
-  *end = *start + (unsigned)(n * jmplen);
+  *end = *start + unsigned(n * jmplen);
 }
 
 static MOZ_MUST_USE bool SrcNotes(JSContext* cx, HandleScript script,
@@ -3113,24 +3100,6 @@ static MOZ_MUST_USE bool SrcNotes(JSContext* cx, HandleScript script,
                           unsigned(GetSrcNoteOffset(
                               sn, SrcNote::TableSwitch::EndOffset)))) {
           return false;
-        }
-        UpdateSwitchTableBounds(cx, script, offset, &switchTableStart,
-                                &switchTableEnd);
-        break;
-      }
-      case SRC_CONDSWITCH: {
-        mozilla::DebugOnly<JSOp> op = JSOp(script->code()[offset]);
-        MOZ_ASSERT(op == JSOP_CONDSWITCH);
-        if (!sp->jsprintf(" end offset %u",
-                          unsigned(GetSrcNoteOffset(
-                              sn, SrcNote::CondSwitch::EndOffset)))) {
-          return false;
-        }
-        if (unsigned caseOff = unsigned(
-                GetSrcNoteOffset(sn, SrcNote::CondSwitch::FirstCaseOffset))) {
-          if (!sp->jsprintf(" first case offset %u", caseOff)) {
-            return false;
-          }
         }
         UpdateSwitchTableBounds(cx, script, offset, &switchTableStart,
                                 &switchTableEnd);

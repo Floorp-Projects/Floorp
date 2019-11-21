@@ -87,7 +87,6 @@ namespace jit {
   _(JSOP_NE)                        \
   _(JSOP_STRICTEQ)                  \
   _(JSOP_STRICTNE)                  \
-  _(JSOP_CONDSWITCH)                \
   _(JSOP_CASE)                      \
   _(JSOP_DEFAULT)                   \
   _(JSOP_LINENO)                    \
