@@ -5414,7 +5414,7 @@
 
 - name: layout.css.shadow-parts.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
