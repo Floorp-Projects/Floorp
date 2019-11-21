@@ -55,6 +55,10 @@ JSObject* AbstractGeneratorObject::create(JSContext* cx,
   return genObj;
 }
 
+void AbstractGeneratorObject::trace(JSTracer* trc) {
+  DebugAPI::traceGeneratorFrame(trc, this);
+}
+
 bool AbstractGeneratorObject::suspend(JSContext* cx, HandleObject obj,
                                       AbstractFramePtr frame, jsbytecode* pc,
                                       Value* vp, unsigned nvalues) {
@@ -216,7 +220,24 @@ GeneratorObject* GeneratorObject::create(JSContext* cx, HandleFunction fun) {
 }
 
 const JSClass GeneratorObject::class_ = {
-    "Generator", JSCLASS_HAS_RESERVED_SLOTS(GeneratorObject::RESERVED_SLOTS)};
+    "Generator",
+    JSCLASS_HAS_RESERVED_SLOTS(GeneratorObject::RESERVED_SLOTS),
+    &classOps_,
+};
+
+const JSClassOps GeneratorObject::classOps_ = {
+    nullptr,                                  /* addProperty */
+    nullptr,                                  /* delProperty */
+    nullptr,                                  /* enumerate */
+    nullptr,                                  /* newEnumerate */
+    nullptr,                                  /* resolve */
+    nullptr,                                  /* mayResolve */
+    nullptr,                                  /* finalize */
+    nullptr,                                  /* call */
+    nullptr,                                  /* hasInstance */
+    nullptr,                                  /* construct */
+    CallTraceMethod<AbstractGeneratorObject>, /* trace */
+};
 
 static const JSFunctionSpec generator_methods[] = {
     JS_SELF_HOSTED_FN("next", "GeneratorNext", 1, 0),

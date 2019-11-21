@@ -688,16 +688,6 @@ bool Debugger::hasAnyLiveHooks(JSRuntime* rt) const {
     return true;
   }
 
-  // Check for hooks set on suspended generator frames.
-  for (GeneratorWeakMap::Range r = generatorFrames.all(); !r.empty();
-       r.popFront()) {
-    JSObject* key = r.front().key();
-    DebuggerFrame& frameObj = r.front().value()->as<DebuggerFrame>();
-    if (IsMarkedUnbarriered(rt, &key) && frameObj.hasAnyHooks()) {
-      return true;
-    }
-  }
-
   return false;
 }
 
@@ -3678,6 +3668,46 @@ void DebugAPI::traceFramesWithLiveHooks(JSTracer* tracer) {
       MOZ_ASSERT(frameobj->isLiveMaybeForwarded());
       if (frameobj->hasAnyHooks()) {
         TraceEdge(tracer, &frameobj, "Debugger.Frame with live hooks");
+      }
+    }
+  }
+}
+
+void DebugAPI::slowPathTraceGeneratorFrame(JSTracer* tracer,
+                                           AbstractGeneratorObject* generator) {
+  MOZ_ASSERT(generator->realm()->isDebuggee());
+
+  // Ignore callback tracers.
+  //
+  // Generator objects are background finalized, and thus the compacting GC
+  // assumes it can update their pointers in the background as well. Compacting
+  // GC updates pointers by visiting objects with a callback tracer that checks
+  // for forwarding pointers, so helper threads trying to update generator
+  // objects will end up calling this function. However, it is verboten to do
+  // weak map lookups (e.g., in Debugger::generatorFrames) off the main thread,
+  // since MovableCellHasher must consult the Zone to find the key's unique id.
+  //
+  // We can't quite recognize MovingTracers exactly, but MovingTracers are
+  // callback tracers, so we just show them all the door. This means the
+  // generator -> Debugger.Frame edge is going to be invisible to some
+  // traversals. We'll cope with that when it's a problem.
+  if (tracer->isCallbackTracer()) {
+    return;
+  }
+
+  Realm::DebuggerVector& debuggers = generator->realm()->getDebuggers();
+  for (js::WeakHeapPtr<Debugger*>& dbgWeak : debuggers) {
+    Debugger* dbg = dbgWeak.unbarrieredGet();
+
+    if (Debugger::GeneratorWeakMap::Ptr entry =
+            dbg->generatorFrames.lookupUnbarriered(generator)) {
+      HeapPtr<DebuggerFrame*>& frameObj = entry->value();
+      if (frameObj->hasAnyHooks()) {
+        // The AbstractGeneratorObject -> Debugger.Frame edge is recognized by
+        // DebugAPI::edgeIsInDebuggerWeakmap, so reporting this edge from the
+        // debuggee to the debugger compartment is all right.
+        TraceCrossCompartmentEdge(tracer, generator, &frameObj,
+                                  "Debugger.Frame with hooks for generator");
       }
     }
   }
