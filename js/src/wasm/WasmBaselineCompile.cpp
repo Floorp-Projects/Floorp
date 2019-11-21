@@ -514,7 +514,7 @@ class BaseRegAlloc {
   // not allocatable; if s0 and s1 are freed individually then d0 becomes
   // allocatable.
 
-  BaseCompilerInterface& bc;
+  BaseCompilerInterface* bc;
   AllocatableGeneralRegisterSet availGPR;
   AllocatableFloatRegisterSet availFPU;
 #ifdef DEBUG
@@ -639,8 +639,8 @@ class BaseRegAlloc {
   void freeFPU(FloatRegister r) { availFPU.add(r); }
 
  public:
-  explicit BaseRegAlloc(BaseCompilerInterface& bc)
-      : bc(bc),
+  explicit BaseRegAlloc()
+      : bc(nullptr),
         availGPR(GeneralRegisterSet::All()),
         availFPU(FloatRegisterSet::All())
 #ifdef DEBUG
@@ -690,6 +690,8 @@ class BaseRegAlloc {
 #endif
   }
 
+  void init(BaseCompilerInterface* bc) { this->bc = bc; }
+
   enum class ScratchKind { I32 = 1, F32 = 2, F64 = 4 };
 
 #ifdef DEBUG
@@ -731,42 +733,42 @@ class BaseRegAlloc {
 
   MOZ_MUST_USE RegI32 needI32() {
     if (!hasGPR()) {
-      bc.sync();
+      bc->sync();
     }
     return RegI32(allocGPR());
   }
 
   void needI32(RegI32 specific) {
     if (!isAvailableI32(specific)) {
-      bc.sync();
+      bc->sync();
     }
     allocGPR(specific);
   }
 
   MOZ_MUST_USE RegI64 needI64() {
     if (!hasGPR64()) {
-      bc.sync();
+      bc->sync();
     }
     return RegI64(allocInt64());
   }
 
   void needI64(RegI64 specific) {
     if (!isAvailableI64(specific)) {
-      bc.sync();
+      bc->sync();
     }
     allocInt64(specific);
   }
 
   MOZ_MUST_USE RegPtr needPtr() {
     if (!hasGPR()) {
-      bc.sync();
+      bc->sync();
     }
     return RegPtr(allocGPR());
   }
 
   void needPtr(RegPtr specific) {
     if (!isAvailablePtr(specific)) {
-      bc.sync();
+      bc->sync();
     }
     allocGPR(specific);
   }
@@ -779,7 +781,7 @@ class BaseRegAlloc {
       return RegPtr(allocGPR());
     }
     *saved = true;
-    bc.saveTempPtr(fallback);
+    bc->saveTempPtr(fallback);
     MOZ_ASSERT(isAvailablePtr(fallback));
     allocGPR(fallback);
     return RegPtr(fallback);
@@ -787,28 +789,28 @@ class BaseRegAlloc {
 
   MOZ_MUST_USE RegF32 needF32() {
     if (!hasFPU<MIRType::Float32>()) {
-      bc.sync();
+      bc->sync();
     }
     return RegF32(allocFPU<MIRType::Float32>());
   }
 
   void needF32(RegF32 specific) {
     if (!isAvailableF32(specific)) {
-      bc.sync();
+      bc->sync();
     }
     allocFPU(specific);
   }
 
   MOZ_MUST_USE RegF64 needF64() {
     if (!hasFPU<MIRType::Double>()) {
-      bc.sync();
+      bc->sync();
     }
     return RegF64(allocFPU<MIRType::Double>());
   }
 
   void needF64(RegF64 specific) {
     if (!isAvailableF64(specific)) {
-      bc.sync();
+      bc->sync();
     }
     allocFPU(specific);
   }
@@ -826,7 +828,7 @@ class BaseRegAlloc {
   void freeTempPtr(RegPtr r, bool saved) {
     freePtr(r);
     if (saved) {
-      bc.restoreTempPtr(r);
+      bc->restoreTempPtr(r);
       MOZ_ASSERT(!isAvailablePtr(r));
     }
   }
@@ -834,7 +836,7 @@ class BaseRegAlloc {
 #ifdef JS_CODEGEN_ARM
   MOZ_MUST_USE RegI64 needI64Pair() {
     if (!hasGPRPair()) {
-      bc.sync();
+      bc->sync();
     }
     Register low, high;
     allocGPRPair(&low, &high);
@@ -12669,7 +12671,6 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
       latentIntCmp_(Assembler::Equal),
       latentDoubleCmp_(Assembler::DoubleEqual),
       masm(*masm),
-      ra(*this),
       fr(*masm),
       stackMapGenerator_(stackMaps, trapExitLayout, trapExitLayoutNumWords,
                          *masm),
@@ -12696,6 +12697,8 @@ BaseCompiler::~BaseCompiler() {
 }
 
 bool BaseCompiler::init() {
+  ra.init(this);
+
   if (!SigD_.append(ValType::F64)) {
     return false;
   }
