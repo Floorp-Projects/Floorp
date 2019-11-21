@@ -13,9 +13,9 @@
     <string name="content_description_disable_private_browsing_button">Nonaktifkan penjelajahan pribadi</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Cari atau masukkan alamat</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header">Tidak ada tab yang dibuka</string>
 
+    <!-- No Open Tabs Message Header -->
+    <string name="no_open_tabs_header_2">Tidak ada tab terbuka</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Tab terbuka Anda akan ditampilkan di sini.</string>
 
@@ -675,6 +675,10 @@
     <string name="snackbar_private_tabs_deleted">Tab pribadi dihapus</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">URUNGKAN</string>
+    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_undo">Urungkan</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_confirm">Konfirmasi</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Izinkan %1$s untuk membuka %2$s</string>
@@ -1039,4 +1043,49 @@
     <string name="logins_warning_dialog_set_up_now">Atur sekarang</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
     <string name="logins_biometric_prompt_message_pin">Buka perangkat Anda</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Zum di semua situs web</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Aktifkan untuk memungkinkan cubitan dan zum, bahkan di situs web yang mencegah gerakan ini.</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Tambah mesin pencari</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Ubah mesin pencari</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">Tambah</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Simpan</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">Ubah</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">Hapus</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label">Ubahsuai</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">Nama</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">String pencarian untuk digunakan</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">Ganti kueir dengan “%s”. Contoh:\nhttps://www.google.com/search?q=%s</string>
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">Pelajari Lebih Lanjut</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Masukkan nama mesin pencari</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">Mesin pencari dengan nama “%s” sudah ada.</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Masukkan kata pencarian</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Periksa apakah kata pencarian cocok dengan format Contoh</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">Bermasalah ketika menghubungi “%s”</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">%s telah dibuat</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">%s disimpan</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">%s dihapus</string>
 </resources>
