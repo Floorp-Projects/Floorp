@@ -1117,6 +1117,12 @@ class MediaTrackGraph {
    */
   virtual Watchable<GraphTime>& CurrentTime() = 0;
 
+  /**
+   * Graph thread function to return the time at which all processing has been
+   * completed.  Some tracks may have performed processing beyond this time.
+   */
+  GraphTime ProcessedTime() const;
+
  protected:
   explicit MediaTrackGraph(TrackRate aSampleRate) : mSampleRate(aSampleRate) {
     MOZ_COUNT_CTOR(MediaTrackGraph);
