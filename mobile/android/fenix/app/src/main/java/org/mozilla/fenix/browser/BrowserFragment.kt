@@ -5,17 +5,12 @@
 package org.mozilla.fenix.browser
 
 import android.content.Context
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
 import android.widget.Button
-import android.widget.ImageView
-import android.widget.PopupWindow
 import android.widget.RadioButton
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
@@ -24,7 +19,6 @@ import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.android.synthetic.main.fragment_home.*
-import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
@@ -35,21 +29,19 @@ import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import org.jetbrains.anko.dimen
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.getDimenInDip
-import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.mvi.getManagedEmitter
+import org.mozilla.fenix.trackingprotection.TrackingProtectionOverlay
 
 /**
  * Fragment used for browsing the web within the main app.
@@ -127,17 +119,16 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
     override fun onStart() {
         super.onStart()
         subscribeToTabCollections()
-        getSessionById()?.register(toolbarSessionObserver, this, autoPause = true)
-    }
 
-    private val toolbarSessionObserver = object : Session.Observer {
-        override fun onLoadingStateChanged(session: Session, loading: Boolean) {
-            if (!loading &&
-                shouldShowTrackingProtectionOnboarding(session)
-            ) {
-                showTrackingProtectionOnboarding()
-            }
-        }
+        val toolbarSessionObserver = TrackingProtectionOverlay(
+            context = requireContext(),
+            settings = requireContext().settings(),
+            toolbar = browserToolbarView.view,
+            trackingProtectionIcon = browserToolbarView
+                .view
+                .findViewById<AppCompatImageView>(R.id.mozac_browser_toolbar_tracking_protection_indicator)
+        )
+        getSessionById()?.register(toolbarSessionObserver, this, autoPause = true)
     }
 
     override fun onResume() {
@@ -254,54 +245,6 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         }
     }
 
-    private fun showTrackingProtectionOnboarding() {
-        context?.let {
-            val layout = LayoutInflater.from(it)
-                .inflate(R.layout.tracking_protection_onboarding_popup, null)
-            layout.onboarding_message.text =
-                it.getString(R.string.etp_onboarding_message_2, getString(R.string.app_name))
-
-            val trackingOnboarding = PopupWindow(
-                layout,
-                it.dimen(R.dimen.tp_onboarding_width),
-                WindowManager.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-                isOutsideTouchable = true
-                isFocusable = true
-                elevation = view!!.resources.getDimension(R.dimen.mozac_browser_menu_elevation)
-                animationStyle = R.style.Mozac_Browser_Menu_Animation_OverflowMenuBottom
-            }
-
-            val closeButton = layout.findViewById<ImageView>(R.id.close_onboarding)
-            closeButton.increaseTapArea(BUTTON_INCREASE_DPS)
-            closeButton.setOnClickListener {
-                trackingOnboarding.dismiss()
-            }
-
-            val tpIcon =
-                browserToolbarView
-                    .view
-                    .findViewById<AppCompatImageView>(R.id.mozac_browser_toolbar_tracking_protection_indicator)
-
-            // Measure layout view
-            val spec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-            layout.measure(spec, spec)
-
-            val containerHeight = layout.measuredHeight
-            val triangleHeight = it.getDimenInDip(R.dimen.tp_onboarding_triangle_height).toInt()
-
-            val xOffset = it.dimen(R.dimen.tp_onboarding_x_offset)
-
-            // Positioning the popup above the tp anchor.
-            val yOffset =
-                -containerHeight - (browserToolbarView.view.height / THREE * 2) + triangleHeight
-
-            trackingOnboarding.showAsDropDown(tpIcon, xOffset, yOffset)
-            it.settings().incrementTrackingProtectionOnboardingCount()
-        }
-    }
-
     override fun getContextMenuCandidates(
         context: Context,
         view: View
@@ -315,10 +258,6 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
             bottom_bar
         )
     )
-
-    private fun shouldShowTrackingProtectionOnboarding(session: Session) =
-        context?.settings()?.shouldShowTrackingProtectionOnboarding ?: false &&
-                session.trackerBlockingEnabled && session.trackersBlocked.isNotEmpty()
 
     companion object {
         private const val THREE = 3
