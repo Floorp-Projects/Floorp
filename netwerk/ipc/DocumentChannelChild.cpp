@@ -63,9 +63,7 @@ DocumentChannelChild::DocumentChannelChild(
     const nsString* aInitiatorType, nsLoadFlags aLoadFlags, uint32_t aLoadType,
     uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc,
     bool aHasNonEmptySandboxingFlags)
-    : NeckoTargetHolder(nullptr),
-      mEventQueue(new ChannelEventQueue(static_cast<nsIChannel*>(this))),
-      mAsyncOpenTime(TimeStamp::Now()),
+    : mAsyncOpenTime(TimeStamp::Now()),
       mLoadState(aLoadState),
       mInitiatorType(aInitiatorType ? Some(*aInitiatorType) : Nothing()),
       mLoadType(aLoadType),
@@ -201,10 +199,7 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
 
 IPCResult DocumentChannelChild::RecvFailedAsyncOpen(
     const nsresult& aStatusCode) {
-  mEventQueue->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<DocumentChannelChild>(this), aStatusCode]() {
-        self->ShutdownListeners(aStatusCode);
-      }));
+  ShutdownListeners(aStatusCode);
   return IPC_OK();
 }
 
@@ -364,10 +359,8 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
   }
   mRedirectChannel = newChannel;
 
-  nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
-  MOZ_ASSERT(target);
-  rv = gHttpHandler->AsyncOnChannelRedirect(this, newChannel,
-                                            aArgs.redirectFlags(), target);
+  rv = gHttpHandler->AsyncOnChannelRedirect(
+      this, newChannel, aArgs.redirectFlags(), GetMainThreadEventTarget());
 
   if (NS_SUCCEEDED(rv)) {
     scopeExit.release();
