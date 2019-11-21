@@ -13,7 +13,7 @@ RUN apt-get install \
       bzip2 \
       curl \
       enjarify \
-      diffoscope \
+      diffoscope/buster-backports \
       jsbeautifier \
       libc++abi1 \
       locales \
