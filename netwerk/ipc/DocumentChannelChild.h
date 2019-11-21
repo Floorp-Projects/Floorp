@@ -91,29 +91,18 @@ class DocumentChannelChild final : public nsHashPropertyBag,
   const bool mIsTopLevelDoc;
   const bool mHasNonEmptySandboxingFlags;
 
+  nsresult mStatus = NS_OK;
   bool mCanceled = false;
-  uint32_t mSuspendCount = 0;
   bool mIsPending = false;
   bool mWasOpened = false;
   uint64_t mChannelId;
   uint32_t mLoadFlags = LOAD_NORMAL;
   const nsCOMPtr<nsIURI> mURI;
-  nsCOMPtr<nsIURI> mOriginalURI;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsCOMPtr<nsILoadInfo> mLoadInfo;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsIStreamListener> mListener;
-
-  nsCOMPtr<nsIProgressEventSink> mProgressSink;
   nsCOMPtr<nsISupports> mOwner;
-  nsCOMPtr<nsISupports> mSecurityInfo;
-  nsCString mContentType;
-  nsCString mContentCharset;
-  // uint32_t mRedirectFlags = 0;
-  nsresult mStatus = NS_OK;
-  uint32_t mContentDispositionHint = UINT32_MAX;
-  Maybe<nsString> mContentDispositionFilename;
-  int64_t mContentLength = -1;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DocumentChannelChild, DOCUMENT_CHANNEL_CHILD_IID)

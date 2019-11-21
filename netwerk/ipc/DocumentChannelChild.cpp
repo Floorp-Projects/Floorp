@@ -153,7 +153,7 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   }
 
   args.loadInfo() = *maybeArgs;
-  GetLoadFlags(&args.loadFlags());
+  args.loadFlags() = mLoadFlags;
   args.initiatorType() = mInitiatorType;
   args.loadType() = mLoadType;
   args.cacheKey() = mCacheKey;
@@ -450,16 +450,10 @@ IPCResult DocumentChannelChild::RecvConfirmRedirect(
                                              getter_AddRefs(loadInfo)));
 
   nsCOMPtr<nsIURI> originalUri;
-  nsresult rv = GetOriginalURI(getter_AddRefs(originalUri));
-  if (NS_FAILED(rv)) {
-    aResolve(Tuple<const nsresult&, const Maybe<nsresult>&>(NS_BINDING_FAILED,
-                                                            Some(rv)));
-    return IPC_OK();
-  }
-
+  GetOriginalURI(getter_AddRefs(originalUri));
   Maybe<nsresult> cancelCode;
-  rv = CSPService::ConsultCSPForRedirect(originalUri, aNewUri, mLoadInfo,
-                                         cancelCode);
+  nsresult rv = CSPService::ConsultCSPForRedirect(originalUri, aNewUri,
+                                                  mLoadInfo, cancelCode);
   aResolve(Tuple<const nsresult&, const Maybe<nsresult>&>(rv, cancelCode));
   return IPC_OK();
 }
@@ -504,27 +498,14 @@ DocumentChannelChild::Cancel(nsresult aStatusCode) {
 
 NS_IMETHODIMP
 DocumentChannelChild::Suspend() {
-  NS_ENSURE_TRUE(CanSend(), NS_ERROR_NOT_AVAILABLE);
-
-  if (!mSuspendCount++) {
-    SendSuspend();
-  }
-
-  mEventQueue->Suspend();
-  return NS_OK;
+  MOZ_CRASH("If we get here, something is broken");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 DocumentChannelChild::Resume() {
-  NS_ENSURE_TRUE(CanSend(), NS_ERROR_NOT_AVAILABLE);
-
-  MOZ_ASSERT(mSuspendCount);
-  if (!--mSuspendCount) {
-    SendResume();
-  }
-
-  mEventQueue->Resume();
-  return NS_OK;
+  MOZ_CRASH("If we get here, something is broken");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-----------------------------------------------------------------------------
@@ -584,15 +565,15 @@ NS_IMETHODIMP DocumentChannelChild::SetLoadFlags(nsLoadFlags aLoadFlags) {
 }
 
 NS_IMETHODIMP DocumentChannelChild::GetOriginalURI(nsIURI** aOriginalURI) {
-  *aOriginalURI = mOriginalURI;
-  NS_ADDREF(*aOriginalURI);
+  nsCOMPtr<nsIURI> originalURI =
+      mLoadState->OriginalURI() ? mLoadState->OriginalURI() : mLoadState->URI();
+  originalURI.forget(aOriginalURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP DocumentChannelChild::SetOriginalURI(nsIURI* aOriginalURI) {
-  NS_ENSURE_ARG_POINTER(aOriginalURI);
-  mOriginalURI = aOriginalURI;
-  return NS_OK;
+  MOZ_CRASH("If we get here, something is broken");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP DocumentChannelChild::GetURI(nsIURI** aURI) {
@@ -614,94 +595,76 @@ NS_IMETHODIMP DocumentChannelChild::SetOwner(nsISupports* aOwner) {
 
 NS_IMETHODIMP DocumentChannelChild::GetSecurityInfo(
     nsISupports** aSecurityInfo) {
-  nsCOMPtr<nsISupports> securityInfo(mSecurityInfo);
-  securityInfo.forget(aSecurityInfo);
+  *aSecurityInfo = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP DocumentChannelChild::GetContentType(nsACString& aContentType) {
-  aContentType = mContentType;
-  return NS_OK;
+  MOZ_CRASH("If we get here, something is broken");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP DocumentChannelChild::SetContentType(
     const nsACString& aContentType) {
-  // mContentCharset is unchanged if not parsed
-  bool dummy;
-  net_ParseContentType(aContentType, mContentType, mContentCharset, &dummy);
-  return NS_OK;
+  MOZ_CRASH("If we get here, something is broken");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP DocumentChannelChild::GetContentCharset(
     nsACString& aContentCharset) {
-  aContentCharset = mContentCharset;
-  return NS_OK;
+  MOZ_CRASH("If we get here, something is broken");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP DocumentChannelChild::SetContentCharset(
     const nsACString& aContentCharset) {
-  mContentCharset = aContentCharset;
-  return NS_OK;
+  MOZ_CRASH("If we get here, something is broken");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP DocumentChannelChild::GetContentLength(int64_t* aContentLength) {
-  *aContentLength = mContentLength;
-  return NS_OK;
+  MOZ_CRASH("If we get here, something is broken");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP DocumentChannelChild::SetContentLength(int64_t aContentLength) {
-  mContentLength = aContentLength;
-  return NS_OK;
+  MOZ_CRASH("If we get here, something is broken");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP DocumentChannelChild::Open(nsIInputStream** aStream) {
-  nsCOMPtr<nsIStreamListener> listener;
-  nsresult rv =
-      nsContentSecurityManager::doContentSecurityCheck(this, listener);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_INITIALIZED);
-  NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_IN_PROGRESS);
-
-  return NS_ImplementChannelOpen(this, aStream);
+  MOZ_CRASH("If we get here, something is broken");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP DocumentChannelChild::GetContentDisposition(
     uint32_t* aContentDisposition) {
-  // preserve old behavior, fail unless explicitly set.
-  if (mContentDispositionHint == UINT32_MAX) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  *aContentDisposition = mContentDispositionHint;
-  return NS_OK;
+  MOZ_CRASH("If we get here, something is broken");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP DocumentChannelChild::SetContentDisposition(
     uint32_t aContentDisposition) {
-  mContentDispositionHint = aContentDisposition;
-  return NS_OK;
+  MOZ_CRASH("If we get here, something is broken");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP DocumentChannelChild::GetContentDispositionFilename(
     nsAString& aContentDispositionFilename) {
-  if (!mContentDispositionFilename) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  aContentDispositionFilename = *mContentDispositionFilename;
-  return NS_OK;
+  MOZ_CRASH("If we get here, something will be broken");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP DocumentChannelChild::SetContentDispositionFilename(
     const nsAString& aContentDispositionFilename) {
-  mContentDispositionFilename = Some(nsString(aContentDispositionFilename));
-  return NS_OK;
+  MOZ_CRASH("If we get here, something will be broken");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP DocumentChannelChild::GetContentDispositionHeader(
     nsACString& aContentDispositionHeader) {
-  return NS_ERROR_NOT_AVAILABLE;
+  MOZ_CRASH("If we get here, something is broken");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP DocumentChannelChild::GetLoadInfo(nsILoadInfo** aLoadInfo) {
@@ -711,13 +674,8 @@ NS_IMETHODIMP DocumentChannelChild::GetLoadInfo(nsILoadInfo** aLoadInfo) {
 }
 
 NS_IMETHODIMP DocumentChannelChild::SetLoadInfo(nsILoadInfo* aLoadInfo) {
-  MOZ_RELEASE_ASSERT(aLoadInfo, "loadinfo can't be null");
-  mLoadInfo = aLoadInfo;
-
-  mNeckoTarget =
-      nsContentUtils::GetEventTargetByLoadInfo(mLoadInfo, TaskCategory::Other);
-
-  return NS_OK;
+  MOZ_CRASH("If we get here, something is broken");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP DocumentChannelChild::GetIsDocument(bool* aIsDocument) {
