@@ -35,7 +35,13 @@ class GeckoWebExtensionTest {
         val portCaptor = argumentCaptor<Port>()
         val portDelegateCaptor = argumentCaptor<WebExtension.PortDelegate>()
 
-        val extension = GeckoWebExtension("mozacTest", "url", true, nativeGeckoWebExt)
+        val extension = GeckoWebExtension(
+            id = "mozacTest",
+            url = "url",
+            allowContentMessaging = true,
+            supportActions = true,
+            nativeExtension = nativeGeckoWebExt
+        )
         extension.registerBackgroundMessageHandler("mozacTest", messageHandler)
 
         verify(nativeGeckoWebExt).setMessageDelegate(messageDelegateCaptor.capture(), eq("mozacTest"))
@@ -86,7 +92,13 @@ class GeckoWebExtensionTest {
 
         whenever(session.geckoSession).thenReturn(geckoSession)
 
-        val extension = GeckoWebExtension("mozacTest", "url", true, nativeGeckoWebExt)
+        val extension = GeckoWebExtension(
+            id = "mozacTest",
+            url = "url",
+            allowContentMessaging = true,
+            supportActions = true,
+            nativeExtension = nativeGeckoWebExt
+        )
         assertFalse(extension.hasContentMessageHandler(session, "mozacTest"))
         extension.registerContentMessageHandler(session, "mozacTest", messageHandler)
         verify(geckoSession).setMessageDelegate(eq(nativeGeckoWebExt), messageDelegateCaptor.capture(), eq("mozacTest"))
@@ -138,7 +150,13 @@ class GeckoWebExtensionTest {
 
         whenever(session.geckoSession).thenReturn(geckoSession)
 
-        val extension = GeckoWebExtension("mozacTest", "url", true, nativeGeckoWebExt)
+        val extension = GeckoWebExtension(
+            id = "mozacTest",
+            url = "url",
+            allowContentMessaging = true,
+            supportActions = true,
+            nativeExtension = nativeGeckoWebExt
+        )
         extension.registerContentMessageHandler(session, "mozacTest", messageHandler)
         verify(geckoSession).setMessageDelegate(eq(nativeGeckoWebExt), messageDelegateCaptor.capture(), eq("mozacTest"))
 
@@ -158,7 +176,13 @@ class GeckoWebExtensionTest {
         val nativeGeckoWebExt: WebExtension = mock()
         val messageHandler: MessageHandler = mock()
         val messageDelegateCaptor = argumentCaptor<WebExtension.MessageDelegate>()
-        val extension = GeckoWebExtension("mozacTest", "url", true, nativeGeckoWebExt)
+        val extension = GeckoWebExtension(
+            id = "mozacTest",
+            url = "url",
+            allowContentMessaging = true,
+            supportActions = true,
+            nativeExtension = nativeGeckoWebExt
+        )
         extension.registerBackgroundMessageHandler("mozacTest", messageHandler)
 
         verify(nativeGeckoWebExt).setMessageDelegate(messageDelegateCaptor.capture(), eq("mozacTest"))

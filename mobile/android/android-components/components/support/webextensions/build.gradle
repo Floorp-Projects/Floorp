@@ -36,7 +36,10 @@ dependencies {
     implementation project(':concept-engine')
     implementation project(':browser-state')
     implementation project(':support-base')
+    implementation project(':support-ktx')
+    implementation Dependencies.androidx_lifecycle_extensions
     implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
 
     testImplementation project(':support-test')
 

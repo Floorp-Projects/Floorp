@@ -25,7 +25,6 @@ import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.Mockito.verifyZeroInteractions
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
-import mozilla.components.concept.engine.webextension.BrowserAction
 
 class EngineSessionTest {
     private val unknownHitResult = HitResult.UNKNOWN("file://foobar")
@@ -38,7 +37,6 @@ class EngineSessionTest {
         val observer = mock(EngineSession.Observer::class.java)
         val emptyBitmap = spy(Bitmap::class.java)
         val permissionRequest = mock(PermissionRequest::class.java)
-        val browserAction = mock(BrowserAction::class.java)
         val windowRequest = mock(WindowRequest::class.java)
         session.register(observer)
 
@@ -70,7 +68,6 @@ class EngineSessionTest {
         session.notifyInternalObservers { onCrash() }
         session.notifyInternalObservers { onLoadRequest("https://www.mozilla.org", true, true, allowOrDeny) }
         session.notifyInternalObservers { onProcessKilled() }
-        session.notifyInternalObservers { onBrowserActionChange("extensionId", browserAction) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onLocationChange("https://www.firefox.com")
@@ -96,7 +93,6 @@ class EngineSessionTest {
         verify(observer).onCrash()
         verify(observer).onLoadRequest("https://www.mozilla.org", true, true, allowOrDeny)
         verify(observer).onProcessKilled()
-        verify(observer).onBrowserActionChange("extensionId", browserAction)
         verifyNoMoreInteractions(observer)
     }
 
@@ -654,7 +650,6 @@ class EngineSessionTest {
         defaultObserver.onMediaAdded(mock())
         defaultObserver.onMediaRemoved(mock())
         defaultObserver.onCrash()
-        defaultObserver.onBrowserActionChange("", mock())
     }
 
     @Test

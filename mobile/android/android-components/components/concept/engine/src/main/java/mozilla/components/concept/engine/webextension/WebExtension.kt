@@ -14,10 +14,13 @@ import org.json.JSONObject
  * @property id the unique ID of this extension.
  * @property url the url pointing to a resources path for locating the extension
  * within the APK file e.g. resource://android/assets/extensions/my_web_ext.
+ * @property supportActions whether or not browser and page actions are handled when
+ * received from the web extension
  */
 abstract class WebExtension(
     val id: String,
-    val url: String
+    val url: String,
+    val supportActions: Boolean
 ) {
     /**
      * Registers a [MessageHandler] for message events from background scripts.
@@ -81,6 +84,53 @@ abstract class WebExtension(
      * null if port is from a background script.
      */
     abstract fun disconnectPort(name: String, session: EngineSession? = null)
+
+    /**
+     * Registers an [ActionHandler] for this web extension. The handler will
+     * be invoked whenever browser and page action defaults change. To listen
+     * for session-specific overrides see registerActionHandler(
+     * EngineSession, ActionHandler).
+     */
+    abstract fun registerActionHandler(actionHandler: ActionHandler)
+
+    /**
+     * Registers an [ActionHandler] for the provided [EngineSession]. The handler
+     * will be invoked whenever browser and page action overrides are received
+     * for the provided session.
+     *
+     * @param session the [EngineSession] the handler should be registered for.
+     * @param actionHandler the [ActionHandler] to invoked when a browser or
+     * page action is received.
+     */
+    abstract fun registerActionHandler(session: EngineSession, actionHandler: ActionHandler)
+
+    /**
+     * Checks whether there is an existing action handler for the provided
+     * session.
+     *
+     * @param session the session the action handler was registered for.
+     * @return true if an action handler is registered, otherwise false.
+     */
+    abstract fun hasActionHandler(session: EngineSession): Boolean
+}
+
+/**
+ * A handler for web extension (browser and page) actions.
+ *
+ * Page action support will be addressed in:
+ * https://github.com/mozilla-mobile/android-components/issues/4470
+ */
+interface ActionHandler {
+
+    /**
+     * Invoked when a browser action is defined or updated.
+     *
+     * @param webExtension the extension that defined the browser action.
+     * @param session the [EngineSession] if this action is to be updated for a
+     * specific session, or null if this is to set a new default value.
+     * @param action the [BrowserAction]
+     */
+    fun onBrowserAction(webExtension: WebExtension, session: EngineSession?, action: BrowserAction) = Unit
 }
 
 /**

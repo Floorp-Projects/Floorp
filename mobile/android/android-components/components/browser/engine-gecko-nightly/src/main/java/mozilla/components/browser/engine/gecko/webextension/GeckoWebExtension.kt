@@ -5,13 +5,19 @@
 package mozilla.components.browser.engine.gecko.webextension
 
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
+import mozilla.components.browser.engine.gecko.await
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.webextension.ActionHandler
+import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Port
 import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
 import org.mozilla.geckoview.GeckoResult
+import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.WebExtension as GeckoNativeWebExtension
+import org.mozilla.geckoview.WebExtension.Action as GeckoNativeWebExtensionAction
 
 /**
  * Gecko-based implementation of [WebExtension], wrapping the native web
@@ -21,13 +27,16 @@ class GeckoWebExtension(
     id: String,
     url: String,
     allowContentMessaging: Boolean = true,
+    supportActions: Boolean = false,
     val nativeExtension: GeckoNativeWebExtension = GeckoNativeWebExtension(
         url,
         id,
         createWebExtensionFlags(allowContentMessaging)
     ),
     private val connectedPorts: MutableMap<PortId, Port> = mutableMapOf()
-) : WebExtension(id, url) {
+) : WebExtension(id, url, supportActions) {
+
+    private val logger = Logger("GeckoWebExtension")
 
     /**
      * Uniquely identifies a port using its name and the session it
@@ -142,6 +151,64 @@ class GeckoWebExtension(
             connectedPorts.remove(portId)
         }
     }
+
+    /**
+     * See [WebExtension.registerActionHandler].
+     */
+    override fun registerActionHandler(actionHandler: ActionHandler) {
+        if (!supportActions) {
+            logger.error("Attempt to register default action handler but browser and page " +
+                "action support is turned off for this extension: $id")
+            return
+        }
+
+        val actionDelegate = object : GeckoNativeWebExtension.ActionDelegate {
+
+            override fun onBrowserAction(
+                ext: GeckoNativeWebExtension,
+                // Session will always be null here for the global default delegate
+                session: GeckoSession?,
+                action: GeckoNativeWebExtensionAction
+            ) {
+                actionHandler.onBrowserAction(this@GeckoWebExtension, null, action.toBrowserAction())
+            }
+        }
+
+        nativeExtension.setActionDelegate(actionDelegate)
+    }
+
+    /**
+     * See [WebExtension.registerActionHandler].
+     */
+    override fun registerActionHandler(session: EngineSession, actionHandler: ActionHandler) {
+        if (!supportActions) {
+            logger.error("Attempt to register action handler on session but browser and page " +
+                "action support is turned off for this extension: $id")
+            return
+        }
+
+        val actionDelegate = object : GeckoNativeWebExtension.ActionDelegate {
+
+            override fun onBrowserAction(
+                ext: GeckoNativeWebExtension,
+                geckoSession: GeckoSession?,
+                action: GeckoNativeWebExtensionAction
+            ) {
+                actionHandler.onBrowserAction(this@GeckoWebExtension, session, action.toBrowserAction())
+            }
+        }
+
+        val geckoSession = (session as GeckoEngineSession).geckoSession
+        geckoSession.setWebExtensionActionDelegate(nativeExtension, actionDelegate)
+    }
+
+    /**
+     * See [WebExtension.hasActionHandler].
+     */
+    override fun hasActionHandler(session: EngineSession): Boolean {
+        val geckoSession = (session as GeckoEngineSession).geckoSession
+        return geckoSession.getWebExtensionActionDelegate(nativeExtension) != null
+    }
 }
 
 /**
@@ -172,3 +239,14 @@ private fun createWebExtensionFlags(allowContentMessaging: Boolean): Long {
         GeckoNativeWebExtension.Flags.NONE
     }
 }
+
+private fun GeckoNativeWebExtensionAction.toBrowserAction() =
+    BrowserAction(
+        title ?: "",
+        enabled ?: true,
+        { size -> icon?.get(size)?.await() },
+        badgeText ?: "",
+        badgeTextColor ?: 0,
+        badgeBackgroundColor ?: 0,
+        { click() }
+    )

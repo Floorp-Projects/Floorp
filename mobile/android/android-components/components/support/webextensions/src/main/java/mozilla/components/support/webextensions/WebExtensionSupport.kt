@@ -4,6 +4,9 @@
 
 package mozilla.components.support.webextensions
 
+import androidx.annotation.VisibleForTesting
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.state.WebExtensionState
@@ -11,8 +14,12 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.webextension.ActionHandler
+import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
+import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
 
 /**
  * Provides functionality to make sure web extension related events in the
@@ -20,6 +27,22 @@ import mozilla.components.concept.engine.webextension.WebExtensionDelegate
  * corresponding actions to the [BrowserStore].
  */
 object WebExtensionSupport {
+    @VisibleForTesting
+    internal val installedExtensions = mutableSetOf<WebExtension>()
+
+    /**
+     * [ActionHandler] for session-specific overrides. Forwards actions to the
+     * the provided [store].
+     */
+    private class SessionActionHandler(
+        private val store: BrowserStore,
+        private val sessionId: String
+    ) : ActionHandler {
+
+        override fun onBrowserAction(webExtension: WebExtension, session: EngineSession?, action: BrowserAction) {
+            store.dispatch(WebExtensionAction.UpdateTabBrowserAction(sessionId, webExtension.id, action))
+        }
+    }
 
     /**
      * Registers a listener for web extension related events on the provided
@@ -45,6 +68,9 @@ object WebExtensionSupport {
         onNewTabOverride: ((WebExtension?, EngineSession, String) -> Unit)? = null,
         onCloseTabOverride: ((WebExtension?, String) -> Unit)? = null
     ) {
+        // Observe the store and register action handlers for newly added engine sessions
+        registerActionHandlersForNewSessions(store)
+
         engine.registerWebExtensionDelegate(object : WebExtensionDelegate {
             override fun onNewTab(webExtension: WebExtension?, url: String, engineSession: EngineSession) {
                 onNewTabOverride?.invoke(webExtension, engineSession, url)
@@ -63,9 +89,58 @@ object WebExtensionSupport {
             }
 
             override fun onInstalled(webExtension: WebExtension) {
+                installedExtensions.add(webExtension)
                 store.dispatch(WebExtensionAction.InstallWebExtension(webExtension.toState()))
+
+                // Register a global default action handler on the new extension
+                webExtension.registerActionHandler(object : ActionHandler {
+                    override fun onBrowserAction(
+                        webExtension: WebExtension,
+                        session: EngineSession?,
+                        action: BrowserAction
+                    ) {
+                        store.dispatch(WebExtensionAction.UpdateBrowserAction(webExtension.id, action))
+                    }
+                })
+
+                // Register action handler for all existing engine sessions on the new extension
+                store.state.tabs
+                    .forEach {
+                        val session = it.engineState.engineSession
+                        if (session != null) {
+                            registerSessionActionHandler(webExtension, session, SessionActionHandler(store, it.id))
+                        }
+                    }
             }
         })
+    }
+
+    /**
+     * Observes the provided store to register session-specific [ActionHandler]s
+     * for all installed extensions on newly added sessions.
+     */
+    private fun registerActionHandlersForNewSessions(store: BrowserStore) {
+        // We need to observe for the entire lifetime of the application,
+        // as web extension support is not tied to any particular view.
+        store.flowScoped { flow ->
+            flow.mapNotNull { state -> state.tabs }
+                .filterChanged {
+                    it.engineState.engineSession
+                }
+                .collect { state ->
+                    state.engineState.engineSession?.let { session ->
+                        installedExtensions.forEach {
+                            registerSessionActionHandler(it, session, SessionActionHandler(store, state.id))
+                        }
+                    }
+                }
+        }
+    }
+
+    private fun registerSessionActionHandler(ext: WebExtension, session: EngineSession, handler: SessionActionHandler) {
+        if (ext.supportActions && !ext.hasActionHandler(session)) {
+            ext.registerActionHandler(session, handler)
+        }
     }
 
     private fun WebExtension.toState() = WebExtensionState(id, url)

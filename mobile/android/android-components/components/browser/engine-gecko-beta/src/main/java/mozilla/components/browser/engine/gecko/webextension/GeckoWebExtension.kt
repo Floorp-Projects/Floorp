@@ -6,6 +6,7 @@ package mozilla.components.browser.engine.gecko.webextension
 
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Port
 import mozilla.components.concept.engine.webextension.WebExtension
@@ -21,13 +22,14 @@ class GeckoWebExtension(
     id: String,
     url: String,
     allowContentMessaging: Boolean = true,
+    supportActions: Boolean = false,
     val nativeExtension: GeckoNativeWebExtension = GeckoNativeWebExtension(
         url,
         id,
         createWebExtensionFlags(allowContentMessaging)
     ),
     private val connectedPorts: MutableMap<PortId, Port> = mutableMapOf()
-) : WebExtension(id, url) {
+) : WebExtension(id, url, supportActions) {
 
     /**
      * Uniquely identifies a port using its name and the session it
@@ -142,6 +144,11 @@ class GeckoWebExtension(
             connectedPorts.remove(portId)
         }
     }
+
+    // Not yet supported in beta
+    override fun registerActionHandler(actionHandler: ActionHandler) = Unit
+    override fun registerActionHandler(session: EngineSession, actionHandler: ActionHandler) = Unit
+    override fun hasActionHandler(session: EngineSession) = false
 }
 
 /**

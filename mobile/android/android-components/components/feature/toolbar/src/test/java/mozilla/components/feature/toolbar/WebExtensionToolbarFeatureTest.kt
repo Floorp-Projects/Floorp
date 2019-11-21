@@ -50,9 +50,9 @@ class WebExtensionToolbarFeatureTest {
     @Test
     fun `render overridden web extension action from browser state`() {
         val defaultBrowserAction =
-            WebExtensionBrowserAction("default_title", false, mock(), "", "", 0, 0) {}
+            WebExtensionBrowserAction("default_title", false, mock(), "", 0, 0) {}
         val overriddenBrowserAction =
-            WebExtensionBrowserAction("overridden_title", false, mock(), "", "", 0, 0) {}
+            WebExtensionBrowserAction("overridden_title", false, mock(), "", 0, 0) {}
         val toolbar: Toolbar = mock()
         val extensions: Map<String, WebExtensionState> = mapOf(
             "id" to WebExtensionState("id", "url", defaultBrowserAction)
@@ -94,22 +94,20 @@ class WebExtensionToolbarFeatureTest {
 
         val browserAction = BrowserAction(
             title = "title",
-            icon = mock(),
+            loadIcon = { mock() },
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE,
-            uri = "uri"
+            badgeBackgroundColor = Color.BLUE
         ) {}
 
         val browserActionDisabled = BrowserAction(
             title = "title",
-            icon = mock(),
+            loadIcon = { mock() },
             enabled = false,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE,
-            uri = "uri"
+            badgeBackgroundColor = Color.BLUE
         ) {}
 
         // Verify browser extension toolbar rendering

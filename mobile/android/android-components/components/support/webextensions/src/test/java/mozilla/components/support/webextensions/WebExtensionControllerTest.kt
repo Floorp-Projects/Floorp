@@ -44,6 +44,7 @@ class WebExtensionControllerTest {
             eq(extensionId),
             eq(extensionUrl),
             eq(true),
+            eq(false),
             onSuccess.capture(),
             onError.capture()
         )
@@ -57,6 +58,7 @@ class WebExtensionControllerTest {
             eq(extensionId),
             eq(extensionUrl),
             eq(true),
+            eq(false),
             onSuccess.capture(),
             onError.capture()
         )
@@ -86,6 +88,7 @@ class WebExtensionControllerTest {
             eq(extensionId),
             eq(extensionUrl),
             eq(true),
+            eq(false),
             onSuccess.capture(),
             onError.capture()
         )
@@ -144,6 +147,7 @@ class WebExtensionControllerTest {
                 eq(extensionId),
                 eq(extensionUrl),
                 eq(true),
+                eq(false),
                 onSuccess.capture(),
                 onError.capture()
         )

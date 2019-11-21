@@ -4,15 +4,14 @@
 
 package mozilla.components.concept.engine.webextension
 
-import android.graphics.drawable.Drawable
+import android.graphics.Bitmap
 
 /**
  * Value type that represents the state of a browser action within a [WebExtension].
  *
  * @property title The title of the browser action to be visible in the user interface.
  * @property enabled Indicates if the browser action should be enabled or disabled.
- * @property icon The image for this browser icon.
- * @property uri The url to get the HTML document, representing the internal user interface of the extension.
+ * @property loadIcon A suspending function returning the icon in the provided size.
  * @property badgeText The browser action's badge text.
  * @property badgeTextColor The browser action's badge text color.
  * @property badgeBackgroundColor The browser action's badge background color.
@@ -21,8 +20,7 @@ import android.graphics.drawable.Drawable
 data class BrowserAction(
     val title: String,
     val enabled: Boolean,
-    val icon: Drawable,
-    val uri: String,
+    val loadIcon: suspend (Int) -> Bitmap?,
     val badgeText: String,
     val badgeTextColor: Int,
     val badgeBackgroundColor: Int,

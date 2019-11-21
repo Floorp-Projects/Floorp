@@ -13,7 +13,6 @@ import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
-import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
@@ -24,7 +23,6 @@ import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
-import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.base.observer.Consumable
 
@@ -218,16 +216,6 @@ internal class EngineObserver(
             it.remove(media)
         }
         media.unregisterObservers()
-    }
-
-    override fun onBrowserActionChange(webExtensionId: String, action: BrowserAction) {
-        store?.dispatch(
-            WebExtensionAction.UpdateTabBrowserAction(
-                session.id,
-                webExtensionId,
-                action
-            )
-        )
     }
 
     override fun onWebAppManifestLoaded(manifest: WebAppManifest) {
