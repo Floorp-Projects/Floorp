@@ -446,7 +446,7 @@ add_task(async function proxy_too_many_requests_failure() {
     CL_EXPECT_FAILURE
   );
 
-  Assert.equal(status, Cr.NS_ERROR_TOO_MANY_REQUESTS);
+  Assert.equal(status, Cr.NS_ERROR_PROXY_TOO_MANY_REQUESTS);
   Assert.equal(http_code, undefined);
   Assert.equal(
     await proxy_session_counter(),
