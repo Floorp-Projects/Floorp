@@ -30,9 +30,6 @@ refcounted protocol PDocumentChannel
 
 parent:
 
-  async Suspend();
-  async Resume();
-
   async Cancel(nsresult status);
 
   async __delete__();
