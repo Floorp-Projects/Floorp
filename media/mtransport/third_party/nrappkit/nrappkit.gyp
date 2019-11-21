@@ -37,8 +37,8 @@
 
               # libekr
               './src/util/libekr/assoc.h',
-              './src/util/libekr/debug.c',
-              './src/util/libekr/debug.h',
+#              './src/util/libekr/debug.c',
+#              './src/util/libekr/debug.h',
               './src/util/libekr/r_assoc.c',
               './src/util/libekr/r_assoc.h',
 #              './src/util/libekr/r_assoc_test.c',
@@ -51,8 +51,8 @@
               './src/util/libekr/r_errors.c',
               './src/util/libekr/r_errors.h',
               './src/util/libekr/r_includes.h',
-              './src/util/libekr/r_list.c',
-              './src/util/libekr/r_list.h',
+#              './src/util/libekr/r_list.c',
+#              './src/util/libekr/r_list.h',
               './src/util/libekr/r_macros.h',
               './src/util/libekr/r_memory.c',
               './src/util/libekr/r_memory.h',
@@ -61,8 +61,6 @@
               './src/util/libekr/r_time.c',
               './src/util/libekr/r_time.h',
               './src/util/libekr/r_types.h',
-              './src/util/libekr/debug.c',
-              './src/util/libekr/debug.h',
 
               # Utilities
               './src/util/byteorder.c',
