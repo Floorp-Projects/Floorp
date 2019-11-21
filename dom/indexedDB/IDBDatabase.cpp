@@ -344,9 +344,11 @@ already_AddRefed<DOMStringList> IDBDatabase::ObjectStoreNames() const {
     nsTArray<nsString>& listNames = list->StringArray();
     listNames.SetCapacity(objectStores.Length());
 
-    for (uint32_t index = 0; index < objectStores.Length(); index++) {
-      listNames.InsertElementSorted(objectStores[index].metadata().name());
-    }
+    std::transform(
+        objectStores.cbegin(), objectStores.cend(), MakeBackInserter(listNames),
+        [](const auto& objectStore) { return objectStore.metadata().name(); });
+
+    listNames.Sort();
   }
 
   return list.forget();
