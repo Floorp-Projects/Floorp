@@ -95,9 +95,9 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
                                  const MutexAutoLock& aProofOfLock);
 
   UniquePtr<EventQueue> mHighQueue;
-  UniquePtr<EventQueue> mInputQueue;
+  UniquePtr<EventQueueSized<32>> mInputQueue;
   UniquePtr<EventQueue> mMediumHighQueue;
-  UniquePtr<EventQueue> mNormalQueue;
+  UniquePtr<EventQueueSized<64>> mNormalQueue;
   UniquePtr<EventQueue> mDeferredTimersQueue;
   UniquePtr<EventQueue> mIdleQueue;
 

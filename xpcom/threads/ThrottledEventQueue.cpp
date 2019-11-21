@@ -100,7 +100,7 @@ class ThrottledEventQueue::Inner final : public nsISupports {
   //
   // Used from any thread; protected by mMutex. Signals mIdleCondVar when
   // emptied.
-  EventQueue mEventQueue;
+  EventQueueSized<64> mEventQueue;
 
   // The event target we dispatch our events (actually, just our Executor) to.
   //

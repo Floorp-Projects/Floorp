@@ -11,6 +11,9 @@
 
 namespace mozilla {
 
+// define to turn on additional (DEBUG) asserts
+// #define EXTRA_ASSERTS 1
+
 // A queue implements a singly linked list of pages, each of which contains some
 // number of elements. Since the queue needs to store a "next" pointer, the
 // actual number of elements per page won't be quite as many as were requested.
@@ -59,6 +62,9 @@ class Queue {
   }
 
   T& Push(T&& aElement) {
+#if defined(EXTRA_ASSERTS) && DEBUG
+    size_t original_length = Count();
+#endif
     if (!mHead) {
       mHead = NewPage();
       MOZ_ASSERT(mHead);
@@ -103,6 +109,9 @@ class Queue {
     // else we have space to insert into last buffer
     T& eltLocation = mTail->mEvents[mTailLength++];
     eltLocation = std::move(aElement);
+#ifdef EXTRA_ASSERTS
+    MOZ_ASSERT(Count() == original_length + 1);
+#endif
     return eltLocation;
   }
 
@@ -111,6 +120,9 @@ class Queue {
   }
 
   T Pop() {
+#if defined(EXTRA_ASSERTS) && DEBUG
+    size_t original_length = Count();
+#endif
     MOZ_ASSERT(!IsEmpty());
 
     T result = std::move(mHead->mEvents[mOffsetHead]);
@@ -133,28 +145,31 @@ class Queue {
       }
     }
 
+#ifdef EXTRA_ASSERTS
+    MOZ_ASSERT(Count() == original_length - 1);
+#endif
     return result;
   }
 
   T& FirstElement() {
-    FirstElementAssertions();
+    MOZ_ASSERT(!IsEmpty());
     return mHead->mEvents[mOffsetHead];
   }
 
   const T& FirstElement() const {
-    FirstElementAssertions();
+    MOZ_ASSERT(!IsEmpty());
     return mHead->mEvents[mOffsetHead];
   }
 
   T& LastElement() {
-    LastElementAssertions();
+    MOZ_ASSERT(!IsEmpty());
     uint16_t offset =
         mHead == mTail ? mOffsetHead + mHeadLength - 1 : mTailLength - 1;
     return mTail->mEvents[offset];
   }
 
   const T& LastElement() const {
-    LastElementAssertions();
+    MOZ_ASSERT(!IsEmpty());
     uint16_t offset =
         mHead == mTail ? mOffsetHead + mHeadLength - 1 : mTailLength - 1;
     return mTail->mEvents[offset];
@@ -173,7 +188,7 @@ class Queue {
          page = page->mNext) {
       count += ItemsPerPage;
     }
-
+    // add first and last page
     count += mHeadLength + mTailLength;
     MOZ_ASSERT(count >= 0);
 
