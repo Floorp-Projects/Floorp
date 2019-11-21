@@ -1117,7 +1117,7 @@ class nsIWidget : public nsISupports {
    *
    * Ignored on child widgets and on non-Mac platforms.
    */
-  virtual void SetWindowShadowStyle(int32_t aStyle) = 0;
+  virtual void SetWindowShadowStyle(mozilla::StyleWindowShadow aStyle) = 0;
 
   /**
    * Set the opacity of the window.
