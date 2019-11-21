@@ -40,7 +40,7 @@ linux64-clang-tidy:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-gcc-6
+            - linux64-gcc-7
 
 macosx64-clang-tidy:
     index:
@@ -65,7 +65,7 @@ macosx64-clang-tidy:
             - linux64-binutils
             - linux64-cctools-port
             - linux64-clang-9
-            - linux64-gcc-6
+            - linux64-gcc-7
             - linux64-node
 
 win64-clang-tidy:

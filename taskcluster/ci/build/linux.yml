@@ -253,7 +253,7 @@ linux64-base-toolchains/opt:
     fetches:
         toolchain:
             - linux64-clang-5.0
-            - linux64-gcc-6
+            - linux64-gcc-7
             - linux64-rust-1.37
             - linux64-cbindgen
             - linux64-sccache
@@ -290,7 +290,7 @@ linux64-base-toolchains/debug:
     fetches:
         toolchain:
             - linux64-clang-5.0
-            - linux64-gcc-6
+            - linux64-gcc-7
             - linux64-rust-1.37
             - linux64-cbindgen
             - linux64-sccache
