@@ -74,7 +74,7 @@ class LibrarySubMenusMultipleSelectionToolbarRobot {
         fun clickOpenPrivateTab(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
             openInPrivateTabButton().click()
             mDevice.waitNotNull(
-                Until.findObject(By.text("Private session")),
+                Until.findObject(By.text("Private tabs")),
                 waitingTime
             )
 

@@ -7,7 +7,7 @@
         android:id="@+id/private_session_description_wrapper"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="12dp"
+        android:layout_margin="0.5dp"
         android:importantForAccessibility="no"
         android:orientation="vertical">
     <TextView
@@ -16,6 +16,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="none"
             android:padding="4dp"
+            android:lineSpacingExtra="6dp"
             android:gravity="center_vertical"
             android:scrollHorizontally="false"
             tools:text="@string/private_browsing_placeholder_description"
@@ -26,6 +27,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="4dp"
+            android:lineSpacingExtra="6dp"
             android:ellipsize="none"
             android:gravity="center_vertical"
             android:scrollHorizontally="false"

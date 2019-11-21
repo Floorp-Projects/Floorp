@@ -329,7 +329,7 @@ private fun assertStartBrowsingButton() =
 
 // Private mode elements
 private fun assertPrivateSessionHeader() =
-    onView(CoreMatchers.allOf(ViewMatchers.withText("Private session")))
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Private tabs")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 const val PRIVATE_SESSION_MESSAGE = "Firefox Preview clears your search and browsing history " +
