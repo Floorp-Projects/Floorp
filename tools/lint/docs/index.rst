@@ -29,3 +29,13 @@ like mach, phabricator and taskcluster.
   usage
   create
   linters/*
+
+Coding style
+============
+
+.. toctree::
+  :maxdepth: 1
+  :glob:
+
+  coding-style/*
+
