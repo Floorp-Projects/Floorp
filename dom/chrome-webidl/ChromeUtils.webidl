@@ -28,6 +28,12 @@ interface MozQueryInterface {
 [ChromeOnly, Exposed=(Window,Worker)]
 namespace ChromeUtils {
   /**
+   * Get the |NodeId| for the given JS Object.
+   * |NodeId| is the identifier of |JS::ubi::Node|.
+   */
+  NodeId getObjectNodeId(object obj);
+
+  /**
    * Serialize a snapshot of the heap graph, as seen by |JS::ubi::Node| and
    * restricted by |boundaries|, and write it to the provided file path.
    *
