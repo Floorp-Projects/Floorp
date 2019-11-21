@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1573804224556">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1574260409142">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3554,6 +3554,10 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="d39750c3-a305-4487-bc0f-21500c3597dd" id="/^((_1gMembers_@www\.inboxace\.com)|(_39Members_@www\.mapsgalaxy\.com)|(_5zMembers_@www\.couponxplorer\.com)|(_65Members_@download\.fromdoctopdf\.com)|(_flMembers_@free\.myformsfinder\.com))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="28831b71-8a9a-466e-9f34-1f40f2f0e27a" id="/^((\{333d6dd8-43ed-4f01-944d-b7c737a5db72\})|(\{f5712532-777e-4080-b6b9-d548040f7675\})|(\{abf3f8d7-bc95-4dd5-ab96-c390ad5f8756\})|(\{f769002a-608d-4a8c-adc4-05f4857ff3ae\})|(\{1980667f-9bde-4e7e-8d0c-132db12c1b30\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
