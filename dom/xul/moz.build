@@ -58,7 +58,13 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'xul'
 
+EXPORTS.mozilla.dom += [
+    'ChromeObserver.h',
+]
+
+
 UNIFIED_SOURCES += [
+    'ChromeObserver.cpp',
     'nsXULControllers.cpp',
 ]
 
