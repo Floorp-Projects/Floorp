@@ -25,7 +25,7 @@ async function SetParentalControlEnabled(aEnabled) {
   MockRegistrar.unregister(cid);
 }
 
-add_task(function setup() {
+function setup() {
   dump("start!\n");
 
   let env = Cc["@mozilla.org/process/environment;1"].getService(
@@ -70,8 +70,9 @@ add_task(function setup() {
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 
   SetParentalControlEnabled(false);
-});
+}
 
+setup();
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("network.trr.mode");
   Services.prefs.clearUserPref("network.trr.uri");
@@ -1135,4 +1136,49 @@ add_task(async function test_dnsSuffix() {
   Services.prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
   await checkDnsSuffixInMode(3);
   Services.prefs.clearUserPref("network.trr.bootstrapAddress");
+});
+
+add_task(async function test_vpnDetection() {
+  Services.prefs.setIntPref("network.trr.mode", 2);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?responseIP=1.2.3.4&push=true`
+  );
+  dns.clearCache(true);
+  await new DNSListener("example.org", "1.2.3.4");
+  await new DNSListener("push.example.org", "2018::2018");
+
+  let networkLinkService = {
+    vpnDetected: true,
+    QueryInterface: ChromeUtils.generateQI([Ci.nsINetworkLinkService]),
+  };
+
+  Services.obs.notifyObservers(
+    networkLinkService,
+    "network:link-status-changed",
+    "changed"
+  );
+  await new DNSListener("example.org", "127.0.0.1");
+  await new DNSListener("test.com", "127.0.0.1");
+  // Also test that we don't use the pushed entry.
+  await new DNSListener("push.example.org", "127.0.0.1");
+
+  Services.prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  dns.clearCache(true);
+
+  await new DNSListener("example.org", "127.0.0.1");
+  await new DNSListener("test.com", "127.0.0.1");
+  // Also test that we don't use the pushed entry.
+  await new DNSListener("push.example.org", "127.0.0.1");
+
+  Services.prefs.clearUserPref("network.trr.bootstrapAddress");
+
+  // Attempt to clean up, just in case
+  networkLinkService.vpnDetected = false;
+  Services.obs.notifyObservers(
+    networkLinkService,
+    "network:link-status-changed",
+    "changed"
+  );
 });
