@@ -131,7 +131,8 @@ nsHttpTransaction::nsHttpTransaction()
       mDoNotTryEarlyData(false),
       mEarlyDataDisposition(EARLY_NONE),
       mFastOpenStatus(TFO_NOT_TRIED),
-      mTrafficCategory(HttpTrafficCategory::eInvalid) {
+      mTrafficCategory(HttpTrafficCategory::eInvalid),
+      mProxyConnectResponseCode(0) {
   this->mSelfAddr.inet = {};
   this->mPeerAddr.inet = {};
   LOG(("Creating nsHttpTransaction @%p\n", this));
@@ -2474,6 +2475,22 @@ void nsHttpTransaction::SetH2WSTransaction(
   MOZ_ASSERT(OnSocketThread());
 
   mH2WSTransaction = aH2WSTransaction;
+}
+
+void nsHttpTransaction::OnProxyConnectComplete(int32_t aResponseCode) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  MOZ_ASSERT(mConnInfo->UsingConnect());
+
+  LOG(("nsHttpTransaction::OnProxyConnectComplete %p aResponseCode=%d", this,
+       aResponseCode));
+
+  MutexAutoLock lock(mLock);
+  mProxyConnectResponseCode = aResponseCode;
+}
+
+int32_t nsHttpTransaction::GetProxyConnectResponseCode() {
+  MutexAutoLock lock(mLock);
+  return mProxyConnectResponseCode;
 }
 
 }  // namespace net

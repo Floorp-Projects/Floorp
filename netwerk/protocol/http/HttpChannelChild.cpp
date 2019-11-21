@@ -3191,6 +3191,11 @@ HttpChannelChild::ClearClassFlags(uint32_t inFlags) {
 NS_IMETHODIMP
 HttpChannelChild::GetProxyInfo(nsIProxyInfo** aProxyInfo) { DROP_DEAD(); }
 
+NS_IMETHODIMP HttpChannelChild::GetHttpProxyConnectResponseCode(
+    int32_t* aResponseCode) {
+  DROP_DEAD();
+}
+
 //-----------------------------------------------------------------------------
 // HttpChannelChild::nsIApplicationCacheContainer
 //-----------------------------------------------------------------------------

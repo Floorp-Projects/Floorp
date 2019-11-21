@@ -111,6 +111,11 @@ FTPChannelChild::GetEntityID(nsACString& aEntityID) {
 NS_IMETHODIMP
 FTPChannelChild::GetProxyInfo(nsIProxyInfo** aProxyInfo) { DROP_DEAD(); }
 
+NS_IMETHODIMP FTPChannelChild::GetHttpProxyConnectResponseCode(
+    int32_t* aResponseCode) {
+  DROP_DEAD();
+}
+
 NS_IMETHODIMP
 FTPChannelChild::SetUploadStream(nsIInputStream* aStream,
                                  const nsACString& aContentType,
