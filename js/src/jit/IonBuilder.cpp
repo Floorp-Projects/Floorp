@@ -1527,13 +1527,13 @@ AbortReasonOr<Ok> IonBuilder::maybeAddOsrTypeBarriers() {
 // are the only exception to this because there we have to compile the condition
 // before we compile the loop body. The LoopState class tracks this.
 //
-// The PendingBlock class is used to deal with forward branches. See the comment
+// The PendingEdge class is used to deal with forward branches. See the comment
 // on that class for more information.
 AbortReasonOr<Ok> IonBuilder::traverseBytecode() {
-  // IonBuilder's destructor is not called, so make sure pendingBlocks_ and
+  // IonBuilder's destructor is not called, so make sure pendingEdges_ and
   // GSNCache are not holding onto malloc memory when we return.
   auto freeMemory = mozilla::MakeScopeExit([&] {
-    pendingBlocks_.clearAndCompact();
+    pendingEdges_.clearAndCompact();
     gsn.purge();
   });
 
@@ -1714,22 +1714,22 @@ AbortReasonOr<Ok> IonBuilder::jsop_goto(bool* restarted) {
   return visitGoto(target);
 }
 
-AbortReasonOr<Ok> IonBuilder::addPendingBlock(const PendingBlock& block,
-                                              jsbytecode* target) {
-  PendingBlocksMap::AddPtr p = pendingBlocks_.lookupForAdd(target);
+AbortReasonOr<Ok> IonBuilder::addPendingEdge(const PendingEdge& edge,
+                                             jsbytecode* target) {
+  PendingEdgesMap::AddPtr p = pendingEdges_.lookupForAdd(target);
   if (p) {
-    if (!p->value().append(block)) {
+    if (!p->value().append(edge)) {
       return abort(AbortReason::Alloc);
     }
     return Ok();
   }
 
-  PendingBlocks blocks;
-  static_assert(PendingBlocks::InlineLength >= 1,
+  PendingEdges edges;
+  static_assert(PendingEdges::InlineLength >= 1,
                 "Appending one element should be infallible");
-  MOZ_ALWAYS_TRUE(blocks.append(block));
+  MOZ_ALWAYS_TRUE(edges.append(edge));
 
-  if (!pendingBlocks_.add(p, target, std::move(blocks))) {
+  if (!pendingEdges_.add(p, target, std::move(edges))) {
     return abort(AbortReason::Alloc);
   }
   return Ok();
@@ -1737,7 +1737,7 @@ AbortReasonOr<Ok> IonBuilder::addPendingBlock(const PendingBlock& block,
 
 AbortReasonOr<Ok> IonBuilder::visitGoto(jsbytecode* target) {
   current->end(MGoto::New(alloc(), nullptr));
-  MOZ_TRY(addPendingBlock(PendingBlock::NewGoto(current), target));
+  MOZ_TRY(addPendingEdge(PendingEdge::NewGoto(current), target));
   current = nullptr;
   return Ok();
 }
@@ -2766,11 +2766,11 @@ AbortReasonOr<Ok> IonBuilder::restartLoop(MBasicBlock* header) {
   }
 
   // Remove loop header and dead blocks from pendingBlocks.
-  for (PendingBlocksMap::Range r = pendingBlocks_.all(); !r.empty();
+  for (PendingEdgesMap::Range r = pendingEdges_.all(); !r.empty();
        r.popFront()) {
-    PendingBlocks& blocks = r.front().value();
+    PendingEdges& blocks = r.front().value();
     for (size_t i = blocks.length(); i > 0; i--) {
-      PendingBlock& block = blocks[i - 1];
+      PendingEdge& block = blocks[i - 1];
       if (block.block() == header || block.block()->isDead()) {
         blocks.erase(&block);
       }
@@ -3298,7 +3298,7 @@ AbortReasonOr<Ok> IonBuilder::visitTestBackedge(JSOp op, bool* restarted) {
     MOZ_ASSERT(op == JSOP_IFNE);
     current->end(newTest(ins, backedge, nullptr));
     MOZ_TRY(
-        addPendingBlock(PendingBlock::NewTestFalse(current, op), successorPC));
+        addPendingEdge(PendingEdge::NewTestFalse(current, op), successorPC));
 
     MOZ_TRY(startTraversingBlock(backedge));
     return visitBackEdge(restarted);
@@ -3315,11 +3315,10 @@ AbortReasonOr<Ok> IonBuilder::visitTestBackedge(JSOp op, bool* restarted) {
   if (op == JSOP_IFNE) {
     current->end(newTest(ins, loopBody, nullptr));
     MOZ_TRY(
-        addPendingBlock(PendingBlock::NewTestFalse(current, op), successorPC));
+        addPendingEdge(PendingEdge::NewTestFalse(current, op), successorPC));
   } else {
     current->end(newTest(ins, nullptr, loopBody));
-    MOZ_TRY(
-        addPendingBlock(PendingBlock::NewTestTrue(current, op), successorPC));
+    MOZ_TRY(addPendingEdge(PendingEdge::NewTestTrue(current, op), successorPC));
   }
 
   MOZ_TRY(startTraversingBlock(loopBody));
@@ -3356,8 +3355,8 @@ AbortReasonOr<Ok> IonBuilder::visitTest(JSOp op, bool* restarted) {
     mozilla::Swap(target1, target2);
   }
 
-  MOZ_TRY(addPendingBlock(PendingBlock::NewTestTrue(current, op), target1));
-  MOZ_TRY(addPendingBlock(PendingBlock::NewTestFalse(current, op), target2));
+  MOZ_TRY(addPendingEdge(PendingEdge::NewTestTrue(current, op), target1));
+  MOZ_TRY(addPendingEdge(PendingEdge::NewTestFalse(current, op), target2));
 
   current = nullptr;
   return Ok();
@@ -3376,10 +3375,10 @@ AbortReasonOr<Ok> IonBuilder::jsop_coalesce() {
   MTest* mir = newTest(isNullOrUndefined, nullptr, nullptr);
   current->end(mir);
 
-  MOZ_TRY(addPendingBlock(PendingBlock::NewTestTrue(current, JSOP_COALESCE),
-                          target1));
-  MOZ_TRY(addPendingBlock(PendingBlock::NewTestFalse(current, JSOP_COALESCE),
-                          target2));
+  MOZ_TRY(addPendingEdge(PendingEdge::NewTestTrue(current, JSOP_COALESCE),
+                         target1));
+  MOZ_TRY(addPendingEdge(PendingEdge::NewTestFalse(current, JSOP_COALESCE),
+                         target2));
 
   current = nullptr;
   return Ok();
@@ -3438,20 +3437,20 @@ AbortReasonOr<Ok> IonBuilder::visitTry() {
   MOZ_TRY_VAR(tryBlock, newBlock(current, GetNextPc(pc)));
 
   current->end(MGotoWithFake::New(alloc(), tryBlock, nullptr));
-  MOZ_TRY(addPendingBlock(PendingBlock::NewGotoWithFake(current), afterTry));
+  MOZ_TRY(addPendingEdge(PendingEdge::NewGotoWithFake(current), afterTry));
 
   return startTraversingBlock(tryBlock);
 }
 
 AbortReasonOr<Ok> IonBuilder::visitJumpTarget(JSOp op) {
-  PendingBlocksMap::Ptr p = pendingBlocks_.lookup(pc);
+  PendingEdgesMap::Ptr p = pendingEdges_.lookup(pc);
   if (!p) {
     // No (reachable) jumps so this is just a no-op.
     return Ok();
   }
 
-  PendingBlocks blocks(std::move(p->value()));
-  pendingBlocks_.remove(p);
+  PendingEdges edges(std::move(p->value()));
+  pendingEdges_.remove(p);
 
   MBasicBlock* joinBlock = nullptr;
 
@@ -3502,17 +3501,17 @@ AbortReasonOr<Ok> IonBuilder::visitJumpTarget(JSOp op) {
 
   MTest* predecessorTest = nullptr;
 
-  for (const PendingBlock& block : blocks) {
-    MBasicBlock* source = block.block();
+  for (const PendingEdge& edge : edges) {
+    MBasicBlock* source = edge.block();
     MControlInstruction* lastIns = source->lastIns();
-    switch (block.kind()) {
-      case PendingBlock::Kind::TestTrue: {
+    switch (edge.kind()) {
+      case PendingEdge::Kind::TestTrue: {
         MBasicBlock* successorBlock = nullptr;
-        if (block.testOp() == JSOP_OR) {
+        if (edge.testOp() == JSOP_OR) {
           MOZ_TRY_VAR(successorBlock, createBlockForShortCircuit(source));
         } else {
           // JSOP_CASE must pop the value when branching to the true-target.
-          MOZ_TRY(addEdge(source, (block.testOp() == JSOP_CASE) ? 1 : 0));
+          MOZ_TRY(addEdge(source, (edge.testOp() == JSOP_CASE) ? 1 : 0));
           successorBlock = joinBlock;
         }
         predecessorTest = lastIns->toTest();
@@ -3520,9 +3519,9 @@ AbortReasonOr<Ok> IonBuilder::visitJumpTarget(JSOp op) {
         continue;
       }
 
-      case PendingBlock::Kind::TestFalse: {
+      case PendingEdge::Kind::TestFalse: {
         MBasicBlock* successorBlock = nullptr;
-        if (block.testOp() == JSOP_AND || block.testOp() == JSOP_COALESCE) {
+        if (edge.testOp() == JSOP_AND || edge.testOp() == JSOP_COALESCE) {
           MOZ_TRY_VAR(successorBlock, createBlockForShortCircuit(source));
         } else {
           MOZ_TRY(addEdge(source, 0));
@@ -3533,12 +3532,12 @@ AbortReasonOr<Ok> IonBuilder::visitJumpTarget(JSOp op) {
         continue;
       }
 
-      case PendingBlock::Kind::Goto:
+      case PendingEdge::Kind::Goto:
         MOZ_TRY(addEdge(source, 0));
         lastIns->toGoto()->replaceSuccessor(0, joinBlock);
         continue;
 
-      case PendingBlock::Kind::GotoWithFake:
+      case PendingEdge::Kind::GotoWithFake:
         MOZ_TRY(addEdge(source, 0));
         lastIns->toGotoWithFake()->replaceSuccessor(1, joinBlock);
         continue;
@@ -3675,7 +3674,7 @@ AbortReasonOr<Ok> IonBuilder::visitTableSwitch() {
     MOZ_TRY(startTraversingBlock(defaultBlock));
 
     defaultBlock->end(MGoto::New(alloc(), nullptr));
-    MOZ_TRY(addPendingBlock(PendingBlock::NewGoto(defaultBlock), defaultpc));
+    MOZ_TRY(addPendingEdge(PendingEdge::NewGoto(defaultBlock), defaultpc));
   }
 
   // Create blocks for all cases.
@@ -3709,7 +3708,7 @@ AbortReasonOr<Ok> IonBuilder::visitTableSwitch() {
     }
 
     caseBlock->end(MGoto::New(alloc(), nullptr));
-    MOZ_TRY(addPendingBlock(PendingBlock::NewGoto(caseBlock), casepc));
+    MOZ_TRY(addPendingEdge(PendingEdge::NewGoto(caseBlock), casepc));
   }
 
   current = nullptr;
