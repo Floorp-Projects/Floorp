@@ -219,6 +219,8 @@ class nsAHttpTransaction : public nsSupportsWeakReference {
   }
 
   virtual void SetFastOpenStatus(uint8_t aStatus) {}
+
+  virtual void OnProxyConnectComplete(int32_t aResponseCode) {}
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpTransaction, NS_AHTTPTRANSACTION_IID)

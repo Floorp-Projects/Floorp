@@ -106,8 +106,10 @@ function get_response(channel, flags = CL_ALLOW_UNKNOWN_CL) {
           request.QueryInterface(Ci.nsIHttpChannel);
           const status = request.status;
           const http_code = status ? undefined : request.responseStatus;
-
-          resolve({ status, http_code, data });
+          request.QueryInterface(Ci.nsIProxiedChannel);
+          const proxy_connect_response_code =
+            request.httpProxyConnectResponseCode;
+          resolve({ status, http_code, data, proxy_connect_response_code });
         },
         null,
         flags
@@ -339,10 +341,12 @@ add_task(async function proxy_success_one_session() {
   );
 
   Assert.equal(foo.status, Cr.NS_OK);
+  Assert.equal(foo.proxy_connect_response_code, 200);
   Assert.equal(foo.http_code, 200);
   Assert.ok(foo.data.match("random-request-1"));
   Assert.ok(foo.data.match("You Win!"));
   Assert.equal(alt1.status, Cr.NS_OK);
+  Assert.equal(alt1.proxy_connect_response_code, 200);
   Assert.equal(alt1.http_code, 200);
   Assert.ok(alt1.data.match("random-request-2"));
   Assert.ok(alt1.data.match("You Win!"));
@@ -361,9 +365,13 @@ add_task(async function proxy_auth_failure() {
   chan.notificationCallbacks = new AuthRequestor(
     () => new UnxpectedAuthPrompt2(auth_prompt)
   );
-  const { status, http_code } = await get_response(chan, CL_EXPECT_FAILURE);
+  const { status, http_code, proxy_connect_response_code } = await get_response(
+    chan,
+    CL_EXPECT_FAILURE
+  );
 
   Assert.equal(status, Cr.NS_ERROR_PROXY_AUTHENTICATION_FAILED);
+  Assert.equal(proxy_connect_response_code, 407);
   Assert.equal(http_code, undefined);
   Assert.equal(auth_prompt.triggered, false, "Auth prompt didn't trigger");
   Assert.equal(
@@ -376,12 +384,13 @@ add_task(async function proxy_auth_failure() {
 // 502 Bad gateway code returned by the proxy, still one session only, proper different code
 // from the channel.
 add_task(async function proxy_bad_gateway_failure() {
-  const { status, http_code } = await get_response(
+  const { status, http_code, proxy_connect_response_code } = await get_response(
     make_channel(`https://502.example.com/`),
     CL_EXPECT_FAILURE
   );
 
   Assert.equal(status, Cr.NS_ERROR_PROXY_BAD_GATEWAY);
+  Assert.equal(proxy_connect_response_code, 502);
   Assert.equal(http_code, undefined);
   Assert.equal(
     await proxy_session_counter(),
@@ -392,12 +401,13 @@ add_task(async function proxy_bad_gateway_failure() {
 
 // Second 502 Bad gateway code returned by the proxy, still one session only with the proxy.
 add_task(async function proxy_bad_gateway_failure_two() {
-  const { status, http_code } = await get_response(
+  const { status, http_code, proxy_connect_response_code } = await get_response(
     make_channel(`https://502.example.com/`),
     CL_EXPECT_FAILURE
   );
 
   Assert.equal(status, Cr.NS_ERROR_PROXY_BAD_GATEWAY);
+  Assert.equal(proxy_connect_response_code, 502);
   Assert.equal(http_code, undefined);
   Assert.equal(
     await proxy_session_counter(),
@@ -409,12 +419,13 @@ add_task(async function proxy_bad_gateway_failure_two() {
 // 504 Gateway timeout code returned by the proxy, still one session only, proper different code
 // from the channel.
 add_task(async function proxy_gateway_timeout_failure() {
-  const { status, http_code } = await get_response(
+  const { status, http_code, proxy_connect_response_code } = await get_response(
     make_channel(`https://504.example.com/`),
     CL_EXPECT_FAILURE
   );
 
   Assert.equal(status, Cr.NS_ERROR_PROXY_GATEWAY_TIMEOUT);
+  Assert.equal(proxy_connect_response_code, 504);
   Assert.equal(http_code, undefined);
   Assert.equal(
     await proxy_session_counter(),
@@ -426,12 +437,13 @@ add_task(async function proxy_gateway_timeout_failure() {
 // 404 Not Found means the proxy could not resolve the host.  As for other error responses
 // we still expect this not to close the existing session.
 add_task(async function proxy_host_not_found_failure() {
-  const { status, http_code } = await get_response(
+  const { status, http_code, proxy_connect_response_code } = await get_response(
     make_channel(`https://404.example.com/`),
     CL_EXPECT_FAILURE
   );
 
   Assert.equal(status, Cr.NS_ERROR_UNKNOWN_HOST);
+  Assert.equal(proxy_connect_response_code, 404);
   Assert.equal(http_code, undefined);
   Assert.equal(
     await proxy_session_counter(),
@@ -441,12 +453,13 @@ add_task(async function proxy_host_not_found_failure() {
 });
 
 add_task(async function proxy_too_many_requests_failure() {
-  const { status, http_code } = await get_response(
+  const { status, http_code, proxy_connect_response_code } = await get_response(
     make_channel(`https://429.example.com/`),
     CL_EXPECT_FAILURE
   );
 
   Assert.equal(status, Cr.NS_ERROR_PROXY_TOO_MANY_REQUESTS);
+  Assert.equal(proxy_connect_response_code, 429);
   Assert.equal(http_code, undefined);
   Assert.equal(
     await proxy_session_counter(),
@@ -466,8 +479,10 @@ add_task(async function proxy_success_still_one_session() {
 
   Assert.equal(foo.status, Cr.NS_OK);
   Assert.equal(foo.http_code, 200);
+  Assert.equal(foo.proxy_connect_response_code, 200);
   Assert.ok(foo.data.match("random-request-1"));
   Assert.equal(alt1.status, Cr.NS_OK);
+  Assert.equal(alt1.proxy_connect_response_code, 200);
   Assert.equal(alt1.http_code, 200);
   Assert.ok(alt1.data.match("random-request-2"));
   Assert.equal(
@@ -494,14 +509,17 @@ add_task(async function proxy_success_isolated_session() {
   );
 
   Assert.equal(foo.status, Cr.NS_OK);
+  Assert.equal(foo.proxy_connect_response_code, 200);
   Assert.equal(foo.http_code, 200);
   Assert.ok(foo.data.match("random-request-1"));
   Assert.ok(foo.data.match("You Win!"));
   Assert.equal(alt1.status, Cr.NS_OK);
+  Assert.equal(alt1.proxy_connect_response_code, 200);
   Assert.equal(alt1.http_code, 200);
   Assert.ok(alt1.data.match("random-request-2"));
   Assert.ok(alt1.data.match("You Win!"));
   Assert.equal(lh.status, Cr.NS_OK);
+  Assert.equal(lh.proxy_connect_response_code, 200);
   Assert.equal(lh.http_code, 200);
   Assert.ok(lh.data.match("random-request-3"));
   Assert.ok(lh.data.match("You Win!"));
@@ -524,8 +542,10 @@ add_task(async function proxy_bad_gateway_failure_isolated() {
   );
 
   Assert.equal(failure1.status, Cr.NS_ERROR_PROXY_BAD_GATEWAY);
+  Assert.equal(failure1.proxy_connect_response_code, 502);
   Assert.equal(failure1.http_code, undefined);
   Assert.equal(failure2.status, Cr.NS_ERROR_PROXY_BAD_GATEWAY);
+  Assert.equal(failure2.proxy_connect_response_code, 502);
   Assert.equal(failure2.http_code, undefined);
   Assert.equal(
     await proxy_session_counter(),

@@ -128,6 +128,7 @@ class HttpTransactionShell : public nsISupports {
   virtual void SetPushedStream(Http2PushedStreamWrapper* push) = 0;
 
   virtual bool ProxyConnectFailed() = 0;
+  virtual int32_t GetProxyConnectResponseCode() = 0;
   virtual bool ResolvedByTRR() = 0;
 
   virtual nsHttpTransaction* AsHttpTransaction() = 0;
@@ -176,6 +177,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual void SetRequestContext(nsIRequestContext* aRequestContext) override; \
   virtual void SetPushedStream(Http2PushedStreamWrapper* push) override;       \
   virtual bool ProxyConnectFailed() override;                                  \
+  virtual int32_t GetProxyConnectResponseCode() override;                      \
   virtual bool ResolvedByTRR() override;                                       \
   virtual nsHttpTransaction* AsHttpTransaction() override;
 }  // namespace net

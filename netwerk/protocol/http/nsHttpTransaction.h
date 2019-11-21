@@ -137,6 +137,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   bool IsWebsocketUpgrade();
   void SetH2WSTransaction(SpdyConnectTransaction*);
 
+  void OnProxyConnectComplete(int32_t aResponseCode) override;
+
  private:
   friend class DeleteHttpTransaction;
   virtual ~nsHttpTransaction();
@@ -408,6 +410,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   HttpTrafficCategory mTrafficCategory;
   bool mThroughCaptivePortal;
+  int32_t mProxyConnectResponseCode;
 };
 
 }  // namespace net

@@ -144,11 +144,18 @@ XPC_MSG_DEF(NS_ERROR_FIRST_HEADER_FIELD_COMPONENT_EMPTY, "Couldn't extract first
 XPC_MSG_DEF(NS_ERROR_ALREADY_CONNECTED              , "The connection is already established")
 XPC_MSG_DEF(NS_ERROR_NOT_CONNECTED                  , "The connection does not exist")
 XPC_MSG_DEF(NS_ERROR_CONNECTION_REFUSED             , "The connection was refused")
-XPC_MSG_DEF(NS_ERROR_PROXY_CONNECTION_REFUSED       , "The connection to the proxy server was refused")
-XPC_MSG_DEF(NS_ERROR_PROXY_AUTHENTICATION_FAILED    , "The proxy requires authentication")
-XPC_MSG_DEF(NS_ERROR_PROXY_BAD_GATEWAY              , "The request failed on the proxy")
-XPC_MSG_DEF(NS_ERROR_PROXY_GATEWAY_TIMEOUT          , "The request timed out on the proxy")
-XPC_MSG_DEF(NS_ERROR_PROXY_TOO_MANY_REQUESTS        , "Sending too many requests to a proxy")
+
+/* Error codes return from the proxy */
+XPC_MSG_DEF(NS_ERROR_PROXY_CONNECTION_REFUSED           , "The connection to the proxy server was refused")
+XPC_MSG_DEF(NS_ERROR_PROXY_AUTHENTICATION_FAILED        , "The proxy requires authentication")
+XPC_MSG_DEF(NS_ERROR_PROXY_BAD_GATEWAY                  , "The request failed on the proxy")
+XPC_MSG_DEF(NS_ERROR_PROXY_GATEWAY_TIMEOUT              , "The request timed out on the proxy")
+XPC_MSG_DEF(NS_ERROR_PROXY_TOO_MANY_REQUESTS            , "Sending too many requests to a proxy")
+XPC_MSG_DEF(NS_ERROR_PROXY_VERSION_NOT_SUPPORTED        , "The proxy does not support the version of the HTTP request")
+XPC_MSG_DEF(NS_ERROR_PROXY_FORBIDDEN                    , "The user is banned from the proxy")
+XPC_MSG_DEF(NS_ERROR_PROXY_SERVICE_UNAVAILABLE          , "The proxy is not available")
+XPC_MSG_DEF(NS_ERROR_PROXY_UNAVAILABLE_FOR_LEGAL_REASONS, "The desired destination is unavailable for legal reasons")
+
 XPC_MSG_DEF(NS_ERROR_NET_TIMEOUT                    , "The connection has timed out")
 XPC_MSG_DEF(NS_ERROR_OFFLINE                        , "The requested action could not be completed in the offline state")
 XPC_MSG_DEF(NS_ERROR_PORT_ACCESS_NOT_ALLOWED        , "Establishing a connection to an unsafe or otherwise banned port was prohibited")

@@ -1208,6 +1208,7 @@ void SpdyConnectTransaction::MapStreamToHttpConnection(
       gHttpHandler->ConnMgr()->MakeConnectionHandle(mTunneledConn);
   mDrivingTransaction->SetConnection(wrappedConn);
   mDrivingTransaction->MakeSticky();
+  mDrivingTransaction->OnProxyConnectComplete(httpResponseCode);
 
   if (!mIsWebsocket) {
     // jump the priority and start the dispatcher
