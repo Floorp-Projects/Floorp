@@ -495,6 +495,7 @@ pref("media.videocontrols.picture-in-picture.video-toggle.always-show", false);
   #else
     pref("media.peerconnection.ice.obfuscate_host_addresses", true);
   #endif
+  pref("media.peerconnection.ice.obfuscate_host_addresses.whitelist", "");
   pref("media.peerconnection.ice.proxy_only_if_behind_proxy", false);
   pref("media.peerconnection.ice.proxy_only", false);
   pref("media.peerconnection.turn.disable", false);
