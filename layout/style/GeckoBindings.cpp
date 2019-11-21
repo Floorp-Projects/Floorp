@@ -1935,20 +1935,18 @@ void Gecko_PrintfStderr(const nsCString* aStr) {
   printf_stderr("%s", aStr->get());
 }
 
-nsAtom* Gecko_Element_ImportedPart(const mozilla::dom::Element* aElement,
+nsAtom* Gecko_Element_ImportedPart(const nsAttrValue* aValue,
                                    nsAtom* aPartName) {
-  const nsAttrValue* v = aElement->GetParsedAttr(nsGkAtoms::exportparts);
-  if (!v || v->Type() != nsAttrValue::eShadowParts) {
+  if (aValue->Type() != nsAttrValue::eShadowParts) {
     return nullptr;
   }
-  return v->GetShadowPartsValue().GetReverse(aPartName);
+  return aValue->GetShadowPartsValue().GetReverse(aPartName);
 }
 
-nsAtom* Gecko_Element_ExportedPart(const mozilla::dom::Element* aElement,
+nsAtom* Gecko_Element_ExportedPart(const nsAttrValue* aValue,
                                    nsAtom* aPartName) {
-  const nsAttrValue* v = aElement->GetParsedAttr(nsGkAtoms::exportparts);
-  if (!v || v->Type() != nsAttrValue::eShadowParts) {
+  if (aValue->Type() != nsAttrValue::eShadowParts) {
     return nullptr;
   }
-  return v->GetShadowPartsValue().Get(aPartName);
+  return aValue->GetShadowPartsValue().Get(aPartName);
 }
