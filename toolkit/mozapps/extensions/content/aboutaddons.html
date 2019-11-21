@@ -119,17 +119,17 @@
                  data-l10n-id="addon-badge-private-browsing-allowed2"
                  hidden>
               </a>
+              <div class="spacer"></div>
+              <button class="theme-enable-button" action="toggle-disabled" hidden></button>
+              <button
+                class="more-options-button"
+                action="more-options"
+                data-l10n-id="addon-options-button"
+                aria-haspopup="menu"
+                aria-expanded="false"></button>
             </div>
             <!-- This ends up in the tab order when the ellipsis happens, but it isn't necessary. -->
             <span class="addon-description" tabindex="-1"></span>
-          </div>
-          <div class="more-options-menu">
-            <button
-              class="more-options-button ghost-button"
-              action="more-options"
-              data-l10n-id="addon-options-button"
-              aria-haspopup="menu"
-              aria-expanded="false"></button>
           </div>
         </div>
         <message-bar class="addon-card-message" align="center" hidden>

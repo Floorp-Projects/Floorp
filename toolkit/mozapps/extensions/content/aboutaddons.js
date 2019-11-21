@@ -1639,12 +1639,18 @@ class AddonOptions extends HTMLElement {
       case "report":
         el.hidden = !isAbuseReportSupported(addon);
         break;
-      case "toggle-disabled": {
-        let toggleDisabledAction = addon.userDisabled ? "enable" : "disable";
-        document.l10n.setAttributes(el, `${toggleDisabledAction}-addon-button`);
-        el.hidden = !hasPermission(addon, toggleDisabledAction);
+      case "toggle-disabled":
+        if (addon.type == "theme") {
+          el.remove();
+        } else {
+          let toggleDisabledAction = addon.userDisabled ? "enable" : "disable";
+          document.l10n.setAttributes(
+            el,
+            `${toggleDisabledAction}-addon-button`
+          );
+          el.hidden = !hasPermission(addon, toggleDisabledAction);
+        }
         break;
-      }
       case "install-update":
         el.hidden = !updateInstall;
         break;
@@ -2731,6 +2737,19 @@ class AddonCard extends HTMLElement {
     }
     name.title = `${addon.name} ${addon.version}`;
 
+    let toggleDisabledAction = addon.userDisabled ? "enable" : "disable";
+    let canToggleDisabled = hasPermission(addon, toggleDisabledAction);
+    let toggleDisabledButton = card.querySelector('[action="toggle-disabled"]');
+    if (toggleDisabledButton) {
+      toggleDisabledButton.hidden = !canToggleDisabled;
+      if (addon.type === "theme") {
+        document.l10n.setAttributes(
+          toggleDisabledButton,
+          `${toggleDisabledAction}-addon-button`
+        );
+      }
+    }
+
     // Set the items in the more options menu.
     this.options.update(this, addon, this.updateInstall);
 
@@ -2824,6 +2843,11 @@ class AddonCard extends HTMLElement {
 
     this.card = importTemplate("card").firstElementChild;
 
+    // Remove the toggle-disabled button(s) based on type.
+    if (addon.type != "theme") {
+      this.card.querySelector(".theme-enable-button").remove();
+    }
+
     let nameContainer = this.card.querySelector(".addon-name-container");
     let headingLevel = this.expanded ? "h1" : "h3";
     let nameHeading = document.createElement(headingLevel);
@@ -2842,7 +2866,7 @@ class AddonCard extends HTMLElement {
     let panelType = addon.type == "plugin" ? "plugin-options" : "addon-options";
     this.options = document.createElement(panelType);
     this.options.render();
-    this.card.querySelector(".more-options-menu").appendChild(this.options);
+    this.card.appendChild(this.options);
     this.optionsButton = this.card.querySelector(".more-options-button");
 
     // Set the contents.
@@ -2915,7 +2939,6 @@ class RecommendedAddonCard extends HTMLElement {
     let heading = card.querySelector(".addon-name-container");
     heading.textContent = "";
     heading.append(importTemplate("addon-name-container-in-disco-card"));
-    card.querySelector(".more-options-menu").remove();
 
     this.setCardContent(card, addon);
     if (addon.type != "theme") {
