@@ -2046,6 +2046,12 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
   }
 
   clearMessage(id) {
+    // Request new set of dynamic triplet cards when click on a card CTA clear
+    // message and 'id' matches one of the cards in message bundle
+    if (this.state.message && this.state.message.bundle && this.state.message.bundle.find(card => card.id === id)) {
+      this.requestMessage();
+    }
+
     if (id === this.state.message.id) {
       this.setState({
         message: {}
@@ -2096,19 +2102,8 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
     }
   }
 
-  componentWillMount() {
-    const endpoint = ASRouterUtils.getPreviewEndpoint();
-
-    if (endpoint && endpoint.theme === "dark") {
-      global.window.dispatchEvent(new CustomEvent("LightweightTheme:Set", {
-        detail: {
-          data: content_src_lib_constants__WEBPACK_IMPORTED_MODULE_5__["NEWTAB_DARK_THEME"]
-        }
-      }));
-    }
-
-    ASRouterUtils.addListener(this.onMessageFromParent); // If we are loading about:welcome we want to trigger the onboarding messages
-
+  requestMessage(endpoint) {
+    // If we are loading about:welcome we want to trigger the onboarding messages
     if (this.props.document && this.props.document.location.href === "about:welcome") {
       ASRouterUtils.sendMessage({
         type: "TRIGGER",
@@ -2126,6 +2121,21 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
         }
       });
     }
+  }
+
+  componentWillMount() {
+    const endpoint = ASRouterUtils.getPreviewEndpoint();
+
+    if (endpoint && endpoint.theme === "dark") {
+      global.window.dispatchEvent(new CustomEvent("LightweightTheme:Set", {
+        detail: {
+          data: content_src_lib_constants__WEBPACK_IMPORTED_MODULE_5__["NEWTAB_DARK_THEME"]
+        }
+      }));
+    }
+
+    ASRouterUtils.addListener(this.onMessageFromParent);
+    this.requestMessage(endpoint);
   }
 
   componentWillUnmount() {
@@ -14762,8 +14772,9 @@ class FirstRun_FirstRun extends external_React_default.a.PureComponent {
       message,
       interruptCleared
     } = props;
+    const cardIds = message && message.bundle && message.bundle.map(card => card.id).join(",");
 
-    if (interruptCleared !== state.prevInterruptCleared || message && message.id !== state.prevMessageId) {
+    if (interruptCleared !== state.prevInterruptCleared || message && message.id !== state.prevMessageId || cardIds !== state.prevCardIds) {
       const {
         hasTriplets,
         hasInterrupt,
@@ -14775,6 +14786,7 @@ class FirstRun_FirstRun extends external_React_default.a.PureComponent {
       return {
         prevMessageId: message.id,
         prevInterruptCleared: interruptCleared,
+        prevCardIds: cardIds,
         hasInterrupt,
         hasTriplets,
         interrupt,
