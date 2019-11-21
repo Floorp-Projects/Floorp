@@ -73,12 +73,15 @@ class TestManifestBackend(PartialBackend):
         t['flavor'] = flavor
 
         path = mozpath.normpath(t['path'])
+        manifest = mozpath.normpath(t['manifest'])
         assert mozpath.basedir(path, [topsrcdir])
+        assert mozpath.basedir(manifest, [topsrcdir])
 
         key = path[len(topsrcdir)+1:]
         t['file_relpath'] = key
         t['dir_relpath'] = mozpath.dirname(key)
         t['srcdir_relpath'] = key
+        t['manifest_relpath'] = manifest[len(topsrcdir)+1:]
 
         self.tests_by_path[key].append(t)
 
