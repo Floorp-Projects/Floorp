@@ -491,6 +491,30 @@ void MobileViewportManager::UpdateVisualViewportSize(
   mContext->SetVisualViewportSize(compSize);
 }
 
+CSSToScreenScale MobileViewportManager::GetZoom() const {
+  CSSToLayoutDeviceScale cssToDev = mContext->CSSToDevPixelScale();
+  LayoutDeviceToLayerScale res(mContext->GetResolution());
+  return ResolutionToZoom(res, cssToDev);
+}
+
+void MobileViewportManager::UpdateVisualViewportSizeByDynamicToolbar(
+    ScreenIntCoord aToolbarHeight) {
+  if (!mContext) {
+    return;
+  }
+
+  ScreenIntSize displaySize = ViewAs<ScreenPixel>(
+      mDisplaySize, PixelCastJustification::LayoutDeviceIsScreenForBounds);
+  displaySize.height += aToolbarHeight;
+  CSSSize compSize = ScreenSize(GetCompositionSize(displaySize)) / GetZoom();
+
+  mVisualViewportSizeUpdatedByDynamicToolbar =
+      nsSize(nsPresContext::CSSPixelsToAppUnits(compSize.width),
+             nsPresContext::CSSPixelsToAppUnits(compSize.height));
+
+  mContext->PostVisualViewportResizeEventByDynamicToolbar();
+}
+
 void MobileViewportManager::UpdateDisplayPortMargins() {
   if (!mContext) {
     return;
@@ -509,13 +533,7 @@ void MobileViewportManager::RefreshVisualViewportSize() {
   ScreenIntSize displaySize = ViewAs<ScreenPixel>(
       mDisplaySize, PixelCastJustification::LayoutDeviceIsScreenForBounds);
 
-  CSSToLayoutDeviceScale cssToDev = mContext->CSSToDevPixelScale();
-  LayoutDeviceToLayerScale res(mContext->GetResolution());
-  CSSToScreenScale zoom = ViewTargetAs<ScreenPixel>(
-      cssToDev * res / ParentLayerToLayerScale(1),
-      PixelCastJustification::ScreenIsParentLayerForRoot);
-
-  UpdateVisualViewportSize(displaySize, zoom);
+  UpdateVisualViewportSize(displaySize, GetZoom());
 }
 
 void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {

@@ -38,6 +38,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/AppUnits.h"
 #include "mozilla/MediaEmulationData.h"
+#include "mozilla/PresShellForwards.h"
 #include "prclist.h"
 #include "nsThreadUtils.h"
 #include "nsIMessageManager.h"
@@ -396,6 +397,15 @@ class nsPresContext : public nsISupports,
    * |aOffset| must be offset from the bottom edge of the ICB and it's negative.
    */
   void UpdateDynamicToolbarOffset(mozilla::ScreenIntCoord aOffset);
+  mozilla::ScreenIntCoord GetDynamicToolbarHeight() const {
+    MOZ_ASSERT(IsRootContentDocumentCrossProcess());
+    return mDynamicToolbarHeight;
+  }
+
+  /**
+   * Returns the state of the dynamic toolbar.
+   */
+  mozilla::DynamicToolbarState GetDynamicToolbarState() const;
 
   /**
    * Return true if this presentation context is a paginated
@@ -1195,6 +1205,7 @@ class nsPresContext : public nsISupports,
   nsSize mSizeForViewportUnits;
   // The maximum height of the dynamic toolbar on mobile.
   mozilla::ScreenIntCoord mDynamicToolbarMaxHeight;
+  mozilla::ScreenIntCoord mDynamicToolbarHeight;
   nsSize mPageSize;
   float mPageScale;
   float mPPScale;

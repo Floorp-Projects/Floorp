@@ -60,6 +60,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val COLORS_HTML_PATH = "/assets/www/colors.html"
         const val FIXED_BOTTOM = "/assets/www/fixedbottom.html"
         const val FIXED_VH = "/assets/www/fixedvh.html"
+        const val FIXED_PERCENT = "/assets/www/fixedpercent.html"
         const val STORAGE_TITLE_HTML_PATH = "/assets/www/reflect_local_storage_into_title.html"
         const val HUNG_SCRIPT = "/assets/www/hungScript.html"
         const val PUSH_HTML_PATH = "/assets/www/push/push.html"
