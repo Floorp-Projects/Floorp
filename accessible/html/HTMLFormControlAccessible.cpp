@@ -373,7 +373,14 @@ void HTMLTextFieldAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
 bool HTMLTextFieldAccessible::DoAction(uint8_t aIndex) const {
   if (aIndex != 0) return false;
 
-  TakeFocus();
+  if (FocusMgr()->IsFocused(this)) {
+    // This already has focus, so TakeFocus()will do nothing. However, the user
+    // might be activating this element because they dismissed a touch keyboard
+    // and want to bring it back.
+    DoCommand();
+  } else {
+    TakeFocus();
+  }
   return true;
 }
 
