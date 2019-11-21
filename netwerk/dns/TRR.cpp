@@ -443,6 +443,10 @@ nsresult TRR::ReceivePush(nsIHttpChannel* pushed, nsHostRecord* pushedRec) {
     return NS_ERROR_UNEXPECTED;
   }
 
+  if (gTRRService->IsExcludedFromTRR(mHost)) {
+    return NS_ERROR_FAILURE;
+  }
+
   RefPtr<nsHostRecord> hostRecord;
   nsresult rv;
   rv = mHostResolver->GetHostRecord(

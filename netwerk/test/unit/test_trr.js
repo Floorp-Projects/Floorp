@@ -117,7 +117,10 @@ class DNSListener {
   }
 
   onLookupComplete(inRequest, inRecord, inStatus) {
-    Assert.ok(inRequest == this.request);
+    Assert.ok(
+      inRequest == this.request,
+      "Checking that this is the correct callback"
+    );
 
     // If we don't expect success here, just resolve and the caller will
     // decide what to do with the results.
@@ -126,9 +129,13 @@ class DNSListener {
       return;
     }
 
-    Assert.equal(inStatus, Cr.NS_OK);
+    Assert.equal(inStatus, Cr.NS_OK, "Checking status");
     let answer = inRecord.getNextAddrAsString();
-    Assert.equal(answer, this.expectedAnswer);
+    Assert.equal(
+      answer,
+      this.expectedAnswer,
+      `Checking result for ${this.name}`
+    );
     this.resolve([inRequest, inRecord, inStatus]);
   }
 
@@ -1099,6 +1106,7 @@ add_task(async function test_dnsSuffix() {
     );
     await new DNSListener("example.org", "1.2.3.4");
     await new DNSListener("push.example.org", "2018::2018");
+    await new DNSListener("test.com", "1.2.3.4");
 
     let networkLinkService = {
       dnsSuffixList: ["example.org"],
@@ -1109,6 +1117,7 @@ add_task(async function test_dnsSuffix() {
       "network:link-status-changed",
       "changed"
     );
+    await new DNSListener("test.com", "1.2.3.4");
     await new DNSListener("example.org", "127.0.0.1");
     // Also test that we don't use the pushed entry.
     await new DNSListener("push.example.org", "127.0.0.1");
