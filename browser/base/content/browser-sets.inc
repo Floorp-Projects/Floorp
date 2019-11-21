@@ -110,7 +110,7 @@
 #endif
   </commandset>
 
-#include ../../components/places/content/placesCommands.inc.xul
+#include ../../components/places/content/placesCommands.inc.xhtml
 
   <keyset id="mainKeyset">
     <key id="key_newNavigator"
