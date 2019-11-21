@@ -2157,8 +2157,6 @@ var gBrowserInit = {
     if (BrowserHandler.kiosk) {
       // We don't modify popup windows for kiosk mode
       if (!gURLBar.readOnly) {
-        // Don't show status tooltips in kiosk mode
-        document.getElementById("statuspanel").hidden = true;
         window.fullScreen = true;
       }
     }
