@@ -82,9 +82,6 @@ this.LoginHelper = {
     this.storeWhenAutocompleteOff = Services.prefs.getBoolPref(
       "signon.storeWhenAutocompleteOff"
     );
-    this.userInputRequiredToCapture = Services.prefs.getBoolPref(
-      "signon.userInputRequiredToCapture.enabled"
-    );
   },
 
   createLogger(aLogPrefix) {

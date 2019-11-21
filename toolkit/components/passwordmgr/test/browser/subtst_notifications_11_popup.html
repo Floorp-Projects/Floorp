@@ -16,8 +16,8 @@
 function submitForm() {
   // Get the password from the query string (exclude '?').
   let [username, password] = window.location.search.substring(1).split("|");
-  SpecialPowers.wrap(userField).setUserInput(username);
-  SpecialPowers.wrap(passField).setUserInput(password);
+  userField.value = username;
+  passField.value = password;
   form.submit();
   window.opener.formSubmitted();
 }
