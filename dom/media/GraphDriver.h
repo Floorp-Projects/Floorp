@@ -130,7 +130,7 @@ class GraphDriver {
    * before being started again. */
   virtual void Start() = 0;
   /* Shutdown GraphDriver (synchronously) */
-  virtual void Shutdown() = 0;
+  MOZ_CAN_RUN_SCRIPT virtual void Shutdown() = 0;
   /* Rate at which the GraphDriver runs, in ms. This can either be user
    * controlled (because we are using a {System,Offline}ClockDriver, and decide
    * how often we want to wakeup/how much we want to process per iteration), or
@@ -232,7 +232,7 @@ class ThreadedDriver : public GraphDriver {
   void WaitForNextIteration() override;
   void WakeUp() override;
   void Start() override;
-  void Shutdown() override;
+  MOZ_CAN_RUN_SCRIPT void Shutdown() override;
   /**
    * Runs main control loop on the graph thread. Normally a single invocation
    * of this runs for the entire lifetime of the graph thread.
@@ -360,7 +360,7 @@ class AudioCallbackDriver : public GraphDriver,
   void Start() override;
   void WaitForNextIteration() override;
   void WakeUp() override;
-  void Shutdown() override;
+  MOZ_CAN_RUN_SCRIPT void Shutdown() override;
 #if defined(XP_WIN)
   void ResetDefaultDevice() override;
 #endif
