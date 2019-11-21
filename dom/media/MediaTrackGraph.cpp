@@ -1347,12 +1347,6 @@ bool MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateEnd) {
   // Process graph message from the main thread for this iteration.
   RunMessagesInQueue();
 
-  // Process MessagePort events.
-  // These require a single thread, which has an nsThread with an event queue.
-  if (mGraphRunner || !mRealtime) {
-    NS_ProcessPendingEvents(nullptr);
-  }
-
   GraphTime stateEnd = std::min(aStateEnd, GraphTime(mEndTime));
   UpdateGraph(stateEnd);
 
@@ -1477,9 +1471,7 @@ class MediaTrackGraphShutDownRunnable : public Runnable {
  public:
   explicit MediaTrackGraphShutDownRunnable(MediaTrackGraphImpl* aGraph)
       : Runnable("MediaTrackGraphShutDownRunnable"), mGraph(aGraph) {}
-  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.
-  // See bug 1535398.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
+  NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mGraph->mDetectedNotRunning && mGraph->mDriver,
                "We should know the graph thread control loop isn't running!");
@@ -1498,12 +1490,12 @@ class MediaTrackGraphShutDownRunnable : public Runnable {
 #endif
 
     if (mGraph->mGraphRunner) {
-      RefPtr<GraphRunner>(mGraph->mGraphRunner)->Shutdown();
+      mGraph->mGraphRunner->Shutdown();
     }
 
-    // This will wait until it's shutdown since
-    // we'll start tearing down the graph after this
-    RefPtr<GraphDriver>(mGraph->mDriver)->Shutdown();
+    mGraph->mDriver
+        ->Shutdown();  // This will wait until it's shutdown since
+                       // we'll start tearing down the graph after this
 
     // Release the driver now so that an AudioCallbackDriver will release its
     // SharedThreadPool reference.  Each SharedThreadPool reference must be
@@ -2842,9 +2834,8 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(GraphDriverType aDriverRequested,
                                          uint32_t aChannelCount,
                                          AbstractThread* aMainThread)
     : MediaTrackGraph(aSampleRate),
-      mGraphRunner(aRunTypeRequested == SINGLE_THREAD
-                       ? GraphRunner::Create(this)
-                       : already_AddRefed<GraphRunner>(nullptr)),
+      mGraphRunner(aRunTypeRequested == SINGLE_THREAD ? new GraphRunner(this)
+                                                      : nullptr),
       mFirstCycleBreaker(0)
       // An offline graph is not initially processing.
       ,
@@ -2872,15 +2863,6 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(GraphDriverType aDriverRequested,
       ,
       mMainThreadGraphTime(0, "MediaTrackGraphImpl::mMainThreadGraphTime"),
       mAudioOutputLatency(0.0) {
-  if (aRunTypeRequested == SINGLE_THREAD && !mGraphRunner) {
-    // Failed to create thread.  Jump to the last phase of the lifecycle.
-    mDetectedNotRunning = true;
-    mLifecycleState = LIFECYCLE_WAITING_FOR_TRACK_DESTRUCTION;
-#ifdef DEBUG
-    mCanRunMessagesSynchronously = true;
-#endif
-    return;
-  }
   if (mRealtime) {
     if (aDriverRequested == AUDIO_THREAD_DRIVER) {
       // Always start with zero input channels, and no particular preferences
@@ -2899,10 +2881,6 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(GraphDriverType aDriverRequested,
   StartAudioCallbackTracing();
 
   RegisterWeakAsyncMemoryReporter(this);
-
-  if (!IsNonRealtime()) {
-    AddShutdownBlocker();
-  }
 }
 
 AbstractThread* MediaTrackGraph::AbstractMainThread() {
@@ -2984,6 +2962,10 @@ MediaTrackGraph* MediaTrackGraph::GetInstance(
         std::min<uint32_t>(8, CubebUtils::MaxNumberOfChannels());
     graph = new MediaTrackGraphImpl(aGraphDriverRequested, runType, sampleRate,
                                     channelCount, mainThread);
+
+    if (!graph->IsNonRealtime()) {
+      graph->AddShutdownBlocker();
+    }
 
     uint32_t hashkey = WindowToHash(aWindow, sampleRate);
     gGraphs.Put(hashkey, graph);
