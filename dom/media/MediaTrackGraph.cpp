@@ -3629,4 +3629,9 @@ Watchable<mozilla::GraphTime>& MediaTrackGraphImpl::CurrentTime() {
   return mMainThreadGraphTime;
 }
 
+GraphTime MediaTrackGraph::ProcessedTime() const {
+  AssertOnGraphThreadOrNotRunning();
+  return static_cast<const MediaTrackGraphImpl*>(this)->mProcessedTime;
+}
+
 }  // namespace mozilla
