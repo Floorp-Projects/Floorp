@@ -46,6 +46,11 @@ scripts:
     copy: cpx "{{,.}*,!(node_modules)/**/{,.}*}" $npm_package_config_mc_dir/browser/components/newtab/ -w
     copyFluent: =>buildmc:fluentExport -- -w
     copyPingCentre: =>buildmc:copyPingCentre -- -w
+    watch: =>watchmc
+    
+# watchmc: same as startmc, without the copy behavior which is not needed when working directly from mozilla-central
+  watchmc: 
+    _parallel: true
     webpack: =>bundle:webpack -- --env.development -w
     css: =>bundle:css && =>bundle:css -- --source-map-embed --source-map-contents -w
 
