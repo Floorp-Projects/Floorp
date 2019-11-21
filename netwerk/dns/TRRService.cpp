@@ -306,6 +306,7 @@ nsresult TRRService::ReadPrefs(const char* name) {
   if (!name || !strcmp(name, TRR_PREF("excluded-domains")) ||
       !strcmp(name, TRR_PREF("builtin-excluded-domains")) ||
       !strcmp(name, kCaptivedetectCanonicalURL)) {
+    MutexAutoLock lock(mLock);
     mExcludedDomains.Clear();
 
     auto parseExcludedDomains = [this](const char* aPrefName) {
@@ -532,18 +533,19 @@ bool TRRService::IsDomainBlacklisted(const nsACString& aHost,
                                      const nsACString& aOriginSuffix,
                                      bool aPrivateBrowsing) {
   // Only use the Storage API on the main thread
-  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
-
-  if (mExcludedDomains.GetEntry(aHost)) {
-    LOG(("Host [%s] is TRR blacklisted via pref\n", aHost.BeginReading()));
-    return true;
-  }
-  if (mDNSSuffixDomains.GetEntry(aHost)) {
-    LOG(("Host [%s] is TRR blacklisted dns suffix\n", aHost.BeginReading()));
-    return true;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread(), "wrong thread");
 
   if (!Enabled()) {
+    return true;
+  }
+
+  // It's OK to call this method here because it only happens on the main
+  // thread, and we only change the excluded domains/dns suffix list
+  // on the main thread in response to observer notifications.
+  // Calling the locking version of this method would cause us to grab
+  // the mutex for every label of the hostname, which would be very
+  // inefficient.
+  if (IsExcludedFromTRR_unlocked(aHost)) {
     return true;
   }
 
@@ -591,11 +593,6 @@ bool TRRService::IsTRRBlacklisted(const nsACString& aHost,
   }
 
   LOG(("Checking if host [%s] is blacklisted", aHost.BeginReading()));
-  // hardcode these so as to not worry about expiration
-  if (StringEndsWith(aHost, NS_LITERAL_CSTRING(".local")) ||
-      aHost.Equals(NS_LITERAL_CSTRING("localhost"))) {
-    return true;
-  }
 
   int32_t dot = aHost.FindChar('.');
   if ((dot == kNotFound) && aParentsToo) {
@@ -624,6 +621,19 @@ bool TRRService::IsTRRBlacklisted(const nsACString& aHost,
 }
 
 bool TRRService::IsExcludedFromTRR(const nsACString& aHost) {
+  // This method may be called off the main thread. We need to lock so
+  // mExcludedDomains and mDNSSuffixDomains don't change while this code
+  // is running.
+  MutexAutoLock lock(mLock);
+
+  return IsExcludedFromTRR_unlocked(aHost);
+}
+
+bool TRRService::IsExcludedFromTRR_unlocked(const nsACString& aHost) {
+  if (!NS_IsMainThread()) {
+    mLock.AssertCurrentThreadOwns();
+  }
+
   int32_t dot = 0;
   // iteratively check the sub-domain of |aHost|
   while (dot < static_cast<int32_t>(aHost.Length())) {
