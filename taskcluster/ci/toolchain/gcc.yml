@@ -11,28 +11,13 @@ job-defaults:
             - 'build/unix/build-gcc/build-gcc.sh'
         toolchain-artifact: public/build/gcc.tar.xz
 
-linux64-gcc-6:
-    description: "GCC 6 toolchain build"
-    treeherder:
-        symbol: TL(gcc6)
-    run:
-        script: build-gcc-linux.sh
-        toolchain-alias: linux64-gcc
-    fetches:
-        fetch:
-            - binutils-2.31.1
-            - gcc-6.4.0
-            - gmp-5.1.3
-            - isl-0.15
-            - mpc-0.8.2
-            - mpfr-3.1.5
-
 linux64-gcc-7:
     description: "GCC 7 toolchain build"
     treeherder:
         symbol: TL(gcc7)
     run:
         script: build-gcc-linux.sh
+        toolchain-alias: linux64-gcc
     fetches:
         fetch:
             - binutils-2.31.1

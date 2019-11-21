@@ -1015,9 +1015,9 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
             if host_or_target.os == 'Android':
                 raise FatalCheckError('GCC is not supported on Android.\n'
                                       'Please use clang from the Android NDK instead.')
-            if info.version < '6.1.0':
+            if info.version < '7.1.0':
                 raise FatalCheckError(
-                    'Only GCC 6.1 or newer is supported (found version %s).'
+                    'Only GCC 7.1 or newer is supported (found version %s).'
                     % info.version)
 
         if info.type == 'clang-cl':
