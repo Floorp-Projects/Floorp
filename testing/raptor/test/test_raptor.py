@@ -1,6 +1,5 @@
 from __future__ import absolute_import, unicode_literals
 from six import reraise
-from mock import MagicMock
 
 import os
 import sys
@@ -21,6 +20,9 @@ from raptor.raptor import (BrowsertimeDesktop,
                            RaptorDesktopFirefox,
                            RaptorDesktopChrome,
                            RaptorAndroid)
+
+
+DEFAULT_TIMEOUT = 125
 
 
 class TestBrowserThread(threading.Thread):
@@ -212,8 +214,6 @@ def test_start_browser(get_binary, app):
 
 # Browsertime tests
 def test_cmd_arguments(ConcreteBrowsertime, browsertime_options, mock_test):
-    dummy_process = MagicMock()
-    timeout = 125
     expected_cmd = {
         browsertime_options['browsertime_node'],
         browsertime_options['browsertime_browsertimejs'],
@@ -223,50 +223,72 @@ def test_cmd_arguments(ConcreteBrowsertime, browsertime_options, mock_test):
         '--browsertime.url', mock_test['test_url'],
         '--browsertime.page_cycle_delay', '1000',
         '--browsertime.foreground_delay', '5000',
-        '--browsertime.post_startup_delay', str(timeout),
+        '--browsertime.post_startup_delay', str(DEFAULT_TIMEOUT),
         '--firefox.profileTemplate',
         '--skipHar',
         '--video', 'true',
         '--visualMetrics', 'false',
-        '--timeouts.pageLoad', str(timeout),
-        '--timeouts.script', str(timeout),
+        '--timeouts.pageLoad', str(DEFAULT_TIMEOUT),
+        '--timeouts.script', str(DEFAULT_TIMEOUT),
         '-vv',
         '--resultDir',
         '-n', '1',
     }
     browsertime = ConcreteBrowsertime(
-        post_startup_delay=timeout,
-        process_handler=dummy_process,
+        post_startup_delay=DEFAULT_TIMEOUT,
         **browsertime_options
     )
+    browsertime.run_test_setup(mock_test)
+    cmd = browsertime._compose_cmd(mock_test, DEFAULT_TIMEOUT)
 
-    browsertime.run_test(mock_test, timeout)
-
-    # cmd is the first argument passed to the process_handler
-    assert expected_cmd.issubset(set(*dummy_process.call_args[0]))
+    assert expected_cmd.issubset(set(cmd))
 
 
-@pytest.mark.parametrize('arg, expected, page_cycles', [
-    ['-n', 1, None],
-    ['-n', 123, 123],
+def extract_arg_value(cmd, arg):
+    param_index = cmd.index(arg) + 1
+    return cmd[param_index]
+
+
+@pytest.mark.parametrize('arg_to_test, expected, test_patch, options_patch', [
+    ['-n', '1', {}, {'browser_cycles': None}],
+    ['-n', '123', {'browser_cycles': 123}, {}],
+    ['--video', 'false', {}, {'browsertime_video': None}],
+    ['--video', 'true', {}, {'browsertime_video': 'dummy_value'}],
+    ['--timeouts.script', str(DEFAULT_TIMEOUT), {}, {'page_cycles': None}],
+    ['--timeouts.script', str(123*DEFAULT_TIMEOUT), {'page_cycles': 123}, {}],
+    ['--browsertime.page_cycles', '1', {}, {'page_cycles': None}],
+    ['--browsertime.page_cycles', '123', {'page_cycles': 123}, {}],
 ])
-def test_browsertime_iterations(ConcreteBrowsertime, browsertime_options,
-                                mock_test, arg, expected, page_cycles):
-    dummy_process = MagicMock()
-    if page_cycles is not None:
-        mock_test['browser_cycles'] = page_cycles
+def test_browsertime_arguments(ConcreteBrowsertime, browsertime_options,
+                               mock_test, arg_to_test, expected, test_patch, options_patch):
+    mock_test.update(test_patch)
+    browsertime_options.update(options_patch)
     browsertime = ConcreteBrowsertime(
-        post_startup_delay=expected,
-        process_handler=dummy_process,
+        post_startup_delay=DEFAULT_TIMEOUT,
         **browsertime_options
     )
-    browsertime.run_test(mock_test, expected)
+    browsertime.run_test_setup(mock_test)
+    cmd = browsertime._compose_cmd(mock_test, DEFAULT_TIMEOUT)
 
-    # cmd is the first argument passed to the process_handler
-    unpacked_cmds = list(*dummy_process.call_args[0])
-    param_index = unpacked_cmds.index(arg) + 1
-    param_value = int(unpacked_cmds[param_index])
+    param_value = extract_arg_value(cmd, arg_to_test)
     assert expected == param_value
+
+
+@pytest.mark.parametrize('timeout, expected_timeout, test_patch, options_patch', [
+    [0, 20, {}, {}],
+    [0, 20, {}, {'gecko_profile': False}],
+    [1000, 321, {}, {'gecko_profile': True}],
+])
+def test_compute_process_timeout(ConcreteBrowsertime, browsertime_options,
+                                 mock_test, timeout, expected_timeout, test_patch, options_patch):
+    mock_test.update(test_patch)
+    browsertime_options.update(options_patch)
+    browsertime = ConcreteBrowsertime(
+        post_startup_delay=DEFAULT_TIMEOUT,
+        **browsertime_options
+    )
+    bt_timeout = browsertime._compute_process_timeout(mock_test, timeout)
+    assert bt_timeout == expected_timeout
 
 
 if __name__ == '__main__':

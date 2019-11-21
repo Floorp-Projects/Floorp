@@ -665,9 +665,7 @@ class Browsertime(Perftest):
     def clean_up(self):
         super(Browsertime, self).clean_up()
 
-    def run_test(self, test, timeout):
-        self.run_test_setup(test)
-
+    def _compose_cmd(self, test, timeout):
         browsertime_script = [os.path.join(os.path.dirname(__file__), "..",
                               "browsertime", "browsertime_pageload.js")]
 
@@ -677,9 +675,38 @@ class Browsertime(Perftest):
 
         browsertime_script.extend(btime_args)
 
-        # timeout is a single page-load timeout value (ms) from the test INI
-        # this will be used for btime --timeouts.pageLoad
+        # pass a few extra options to the browsertime script
+        # XXX maybe these should be in the browsertime_args() func
+        browsertime_script.extend(["--browsertime.page_cycles",
+                                   str(test.get("page_cycles", 1))])
+        browsertime_script.extend(["--browsertime.url", test["test_url"]])
 
+        # Raptor's `pageCycleDelay` delay (ms) between pageload cycles
+        browsertime_script.extend(["--browsertime.page_cycle_delay", "1000"])
+        # Raptor's `foregroundDelay` delay (ms) for foregrounding app
+        browsertime_script.extend(["--browsertime.foreground_delay", "5000"])
+
+        # Raptor's `post startup delay` is settle time after the browser has started
+        browsertime_script.extend(["--browsertime.post_startup_delay",
+                                   str(self.post_startup_delay)])
+
+        return ([self.browsertime_node, self.browsertime_browsertimejs] +
+                self.driver_paths +
+                browsertime_script +
+                ['--firefox.profileTemplate', str(self.profile.profile),
+                 '--skipHar',
+                 '--video', self.browsertime_video and 'true' or 'false',
+                 '--visualMetrics', 'false',
+                 # url load timeout (milliseconds)
+                 '--timeouts.pageLoad', str(timeout),
+                 # running browser scripts timeout (milliseconds)
+                 '--timeouts.script', str(timeout * int(test.get("page_cycles", 1))),
+                 '-vv',
+                 '--resultDir', self.results_handler.result_dir_for_test(test),
+                 # -n option for the browsertime to restart the browser
+                 '-n', str(test.get('browser_cycles', 1))])
+
+    def _compute_process_timeout(self, test, timeout):
         # bt_timeout will be the overall browsertime cmd/session timeout (seconds)
         # browsertime deals with page cycles internally, so we need to give it a timeout
         # value that includes all page cycles
@@ -701,39 +728,13 @@ class Browsertime(Perftest):
         # if geckoProfile enabled, give browser more time for profiling
         if self.config['gecko_profile'] is True:
             bt_timeout += 5 * 60
+        return bt_timeout
 
-        # pass a few extra options to the browsertime script
-        # XXX maybe these should be in the browsertime_args() func
-        browsertime_script.extend(["--browsertime.page_cycles",
-                                  str(test.get("page_cycles", 1))])
-        browsertime_script.extend(["--browsertime.url", test["test_url"]])
-
-        # Raptor's `pageCycleDelay` delay (ms) between pageload cycles
-        browsertime_script.extend(["--browsertime.page_cycle_delay", "1000"])
-        # Raptor's `foregroundDelay` delay (ms) for foregrounding app
-        browsertime_script.extend(["--browsertime.foreground_delay", "5000"])
-
-        # Raptor's `post startup delay` is settle time after the browser has started
-        browsertime_script.extend(["--browsertime.post_startup_delay",
-                                  str(self.post_startup_delay)])
-
-        # the browser time script cannot restart the browser itself,
-        # so we have to keep -n option here.
-
-        cmd = ([self.browsertime_node, self.browsertime_browsertimejs] +
-               self.driver_paths +
-               browsertime_script +
-               ['--firefox.profileTemplate', str(self.profile.profile),
-                '--skipHar',
-                '--video', self.browsertime_video and 'true' or 'false',
-                '--visualMetrics', 'false',
-                # Timeout when waiting for url to load, in milliseconds
-                '--timeouts.pageLoad', str(timeout),
-                # Timeout when running browser scripts, in milliseconds
-                '--timeouts.script', str(timeout * int(test.get("page_cycles", 1))),
-                '-vv',
-                '--resultDir', self.results_handler.result_dir_for_test(test),
-                '-n', str(test.get('browser_cycles', 1))])
+    def run_test(self, test, timeout):
+        self.run_test_setup(test)
+        # timeout is a single page-load timeout value (ms) from the test INI
+        # this will be used for btime --timeouts.pageLoad
+        cmd = self._compose_cmd(test, timeout)
 
         if test.get('type') == "benchmark":
             cmd.extend(['--script',
@@ -763,7 +764,7 @@ class Browsertime(Perftest):
 
         try:
             proc = self.process_handler(cmd, env=env)
-            proc.run(timeout=bt_timeout,
+            proc.run(timeout=self._compute_process_timeout(test, timeout),
                      outputTimeout=2*60)
             proc.wait()
 
