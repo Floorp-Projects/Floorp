@@ -182,7 +182,23 @@ JSObject* js::AsyncFunctionResolve(
 
 const JSClass AsyncFunctionGeneratorObject::class_ = {
     "AsyncFunctionGenerator",
-    JSCLASS_HAS_RESERVED_SLOTS(AsyncFunctionGeneratorObject::RESERVED_SLOTS)};
+    JSCLASS_HAS_RESERVED_SLOTS(AsyncFunctionGeneratorObject::RESERVED_SLOTS),
+    &classOps_,
+};
+
+const JSClassOps AsyncFunctionGeneratorObject::classOps_ = {
+    nullptr,                                  /* addProperty */
+    nullptr,                                  /* delProperty */
+    nullptr,                                  /* enumerate */
+    nullptr,                                  /* newEnumerate */
+    nullptr,                                  /* resolve */
+    nullptr,                                  /* mayResolve */
+    nullptr,                                  /* finalize */
+    nullptr,                                  /* call */
+    nullptr,                                  /* hasInstance */
+    nullptr,                                  /* construct */
+    CallTraceMethod<AbstractGeneratorObject>, /* trace */
+};
 
 AsyncFunctionGeneratorObject* AsyncFunctionGeneratorObject::create(
     JSContext* cx, HandleFunction fun) {

@@ -150,7 +150,24 @@ static bool AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 const JSClass AsyncGeneratorObject::class_ = {
-    "AsyncGenerator", JSCLASS_HAS_RESERVED_SLOTS(AsyncGeneratorObject::Slots)};
+    "AsyncGenerator",
+    JSCLASS_HAS_RESERVED_SLOTS(AsyncGeneratorObject::Slots),
+    &classOps_,
+};
+
+const JSClassOps AsyncGeneratorObject::classOps_ = {
+    nullptr,                                  /* addProperty */
+    nullptr,                                  /* delProperty */
+    nullptr,                                  /* enumerate */
+    nullptr,                                  /* newEnumerate */
+    nullptr,                                  /* resolve */
+    nullptr,                                  /* mayResolve */
+    nullptr,                                  /* finalize */
+    nullptr,                                  /* call */
+    nullptr,                                  /* hasInstance */
+    nullptr,                                  /* construct */
+    CallTraceMethod<AbstractGeneratorObject>, /* trace */
+};
 
 // ES 2017 draft 9.1.13.
 // OrdinaryCreateFromConstructor specialized for AsyncGeneratorObjects.
