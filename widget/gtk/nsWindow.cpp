@@ -1295,13 +1295,12 @@ static void NativeMoveResizeWaylandPopupCallback(
     GdkWindow* window, const GdkRectangle* flipped_rect,
     const GdkRectangle* final_rect, gboolean flipped_x, gboolean flipped_y,
     void* aWindow) {
-  LOG(("%s [%p] flipped_x %d flipped_y %d\n", __FUNCTION__, aWindow, flipped_x,
-       flipped_y));
+  LOG(("NativeMoveResizeWaylandPopupCallback [%p] flipped_x %d flipped_y %d\n",
+       aWindow, flipped_x, flipped_y));
 
-  LOG(("%s [%p] flipped %d %d w:%d h:%d\n", __FUNCTION__, aWindow,
-       flipped_rect->x, flipped_rect->y, flipped_rect->width,
-       flipped_rect->height));
-  LOG(("%s [%p] final %d %d w:%d h:%d\n", __FUNCTION__, aWindow, final_rect->x,
+  LOG(("  flipped_rect x: %d y: %d width: %d height: %d\n", flipped_rect->x,
+       flipped_rect->y, flipped_rect->width, flipped_rect->height));
+  LOG(("  final_rect x: %d y: %d width: %d height: %d\n", final_rect->x,
        final_rect->y, final_rect->width, final_rect->height));
 }
 #endif
@@ -1312,12 +1311,13 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   static auto sGdkWindowMoveToRect = (void (*)(
       GdkWindow*, const GdkRectangle*, GdkGravity, GdkGravity, GdkAnchorHints,
       gint, gint))dlsym(RTLD_DEFAULT, "gdk_window_move_to_rect");
+  LOG(("nsWindow::NativeMoveResizeWaylandPopup [%p]\n", (void*)this));
 
   // Compositor may be confused by windows with width/height = 0
   // and positioning such windows leads to Bug 1555866.
   if (!AreBoundsSane()) {
-    LOG(("nsWindow::NativeMoveResizeWaylandPopup [%p] Bounds are not sane\n",
-         (void*)this));
+    LOG(("  Bounds are not sane (width: %d height: %d)\n", mBounds.width,
+         mBounds.height));
     return;
   }
 
@@ -1331,15 +1331,14 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   // - gdk_window_move_to_rect() is not available
   // - the widget doesn't have a valid GdkWindow
   if (!sGdkWindowMoveToRect || !gdkWindow) {
-    LOG(("nsWindow::NativeMoveResizeWaylandPopup [%p] use gtk_window_move()\n",
-         (void*)this));
+    LOG(("  use gtk_window_move(%d, %d)\n", aPosition->x, aPosition->y));
     gtk_window_move(GTK_WINDOW(mShell), aPosition->x, aPosition->y);
     return;
   }
 
   GtkWidget* parentWindow = ConfigureWaylandPopupWindows();
-  LOG(("nsWindow::NativeMoveResizeWaylandPopup [%p] Set popup parent %p\n",
-       (void*)this, parentWindow));
+  LOG(("nsWindow::NativeMoveResizeWaylandPopup: Set popup parent %p\n",
+       parentWindow));
 
   int x_parent, y_parent;
   gdk_window_get_origin(gtk_widget_get_window(GTK_WIDGET(parentWindow)),
@@ -1351,12 +1350,6 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
     rect.height = aSize->height;
   }
 
-  LOG(("%s [%p] request position %d,%d\n", __FUNCTION__, (void*)this,
-       aPosition->x, aPosition->y));
-  if (aSize) {
-    LOG(("  request size %d,%d\n", aSize->width, aSize->height));
-  }
-  LOG(("  request result %d %d\n", rect.x, rect.y));
 #ifdef DEBUG
   if (!g_signal_handler_find(
           gdkWindow, G_SIGNAL_MATCH_FUNC, 0, 0, nullptr,
@@ -1389,10 +1382,8 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
     HideWaylandWindow();
   }
 
-  LOG(
-      ("nsWindow::NativeMoveResizeWaylandPopup [%p]: requested rect: x%d y%d "
-       "w%d h%d\n",
-       this, rect.x, rect.y, rect.width, rect.height));
+  LOG(("  requested rect: x: %d y: %d width: %d height: %d\n", rect.x, rect.y,
+       rect.width, rect.height));
   if (aSize) {
     LOG(("  aSize: x%d y%d w%d h%d\n", aSize->x, aSize->y, aSize->width,
          aSize->height));
@@ -7348,8 +7339,9 @@ nsresult nsWindow::GetScreenRect(LayoutDeviceIntRect* aRect) {
   if (monitor) {
     GdkRectangle workArea;
     s_gdk_monitor_get_workarea(monitor, &workArea);
-    aRect->x = workArea.x;
-    aRect->y = workArea.y;
+    // The monitor offset won't help us in Wayland, because we can't get the
+    // absolute position of our window.
+    aRect->x = aRect->y = 0;
     aRect->width = workArea.width;
     aRect->height = workArea.height;
     LOG(("  workarea for [%p], monitor %p: x%d y%d w%d h%d\n", this, monitor,
