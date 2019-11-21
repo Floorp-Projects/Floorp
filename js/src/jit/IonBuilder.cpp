@@ -153,7 +153,6 @@ IonBuilder::IonBuilder(JSContext* analysisContext, CompileRealm* realm,
       typeArray(nullptr),
       typeArrayHint(0),
       bytecodeTypeMap(nullptr),
-      current(nullptr),
       loopDepth_(loopDepth),
       loopStack_(*temp),
       trackedOptimizationSites_(*temp),
@@ -1645,7 +1644,7 @@ AbortReasonOr<Ok> IonBuilder::traverseBytecode() {
     // we get to the next jump target. Note that JSOP_LOOPENTRY is a jump target
     // op, but we always skip it here because it means the whole loop is
     // unreachable.
-    if (!current) {
+    if (hasTerminatedBlock()) {
       while (!BytecodeIsJumpTarget(JSOp(*pc)) || *pc == JSOP_LOOPENTRY) {
         pc = GetNextPc(pc);
         if (pc == codeEnd) {
@@ -1696,7 +1695,7 @@ AbortReasonOr<Ok> IonBuilder::traverseBytecode() {
     pc = nextpc;
     MOZ_ASSERT(script()->containsPC(pc));
 
-    if (current) {
+    if (!hasTerminatedBlock()) {
       current->updateTrackedSite(bytecodeSite(pc));
     }
   }
@@ -1774,7 +1773,7 @@ AbortReasonOr<Ok> IonBuilder::addPendingEdge(const PendingEdge& edge,
 AbortReasonOr<Ok> IonBuilder::visitGoto(jsbytecode* target) {
   current->end(MGoto::New(alloc(), nullptr));
   MOZ_TRY(addPendingEdge(PendingEdge::NewGoto(current), target));
-  current = nullptr;
+  setTerminatedBlock();
   return Ok();
 }
 
@@ -1843,7 +1842,7 @@ AbortReasonOr<Ok> IonBuilder::visitDoWhileLoop(jssrcnote* sn) {
   jsbytecode* loopEntry = GetNextPc(pc);
   MOZ_ASSERT(JSOp(*loopEntry) == JSOP_LOOPENTRY);
 
-  if (!current) {
+  if (hasTerminatedBlock()) {
     // The whole loop is unreachable, just skip it.
     nextpc = GetNextPc(backjump);
     return Ok();
@@ -1979,7 +1978,7 @@ AbortReasonOr<Ok> IonBuilder::visitBackEdge(bool* restarted) {
   switch (r) {
     case AbortReason::NoAbort:
       loopStack_.popBack();
-      current = nullptr;
+      setTerminatedBlock();
       return Ok();
 
     case AbortReason::Disable:
@@ -3393,8 +3392,8 @@ AbortReasonOr<Ok> IonBuilder::visitTest(JSOp op, bool* restarted) {
 
   MOZ_TRY(addPendingEdge(PendingEdge::NewTestTrue(current, op), target1));
   MOZ_TRY(addPendingEdge(PendingEdge::NewTestFalse(current, op), target2));
+  setTerminatedBlock();
 
-  current = nullptr;
   return Ok();
 }
 
@@ -3415,8 +3414,8 @@ AbortReasonOr<Ok> IonBuilder::jsop_coalesce() {
                          target1));
   MOZ_TRY(addPendingEdge(PendingEdge::NewTestFalse(current, JSOP_COALESCE),
                          target2));
+  setTerminatedBlock();
 
-  current = nullptr;
   return Ok();
 }
 
@@ -3494,12 +3493,12 @@ AbortReasonOr<Ok> IonBuilder::visitJumpTarget(JSOp op) {
     MOZ_ASSERT(!joinBlock);
     MOZ_TRY_VAR(joinBlock, newBlock(current, pc));
     current->end(MGoto::New(alloc(), joinBlock));
-    current = nullptr;
+    setTerminatedBlock();
     return Ok();
   };
 
   auto addEdge = [&](MBasicBlock* pred, size_t popped) -> AbortReasonOr<Ok> {
-    if (!joinBlock && current) {
+    if (!joinBlock && !hasTerminatedBlock()) {
       MOZ_TRY(createFallthroughJoinBlock());
     }
     if (joinBlock) {
@@ -3519,7 +3518,7 @@ AbortReasonOr<Ok> IonBuilder::visitJumpTarget(JSOp op) {
   auto createBlockForShortCircuit =
       [&](MBasicBlock* pred) -> AbortReasonOr<MBasicBlock*> {
     if (!joinBlock) {
-      MOZ_ASSERT(current);
+      MOZ_ASSERT(!hasTerminatedBlock());
       MOZ_TRY(createFallthroughJoinBlock());
     }
 
@@ -3634,8 +3633,8 @@ AbortReasonOr<Ok> IonBuilder::visitReturn(JSOp op) {
     return abort(AbortReason::Alloc);
   }
 
-  // Make sure no one tries to use this block now.
-  setCurrent(nullptr);
+  setTerminatedBlock();
+
   return Ok();
 }
 
@@ -3678,7 +3677,8 @@ AbortReasonOr<Ok> IonBuilder::visitThrow() {
   MThrow* ins = MThrow::New(alloc(), def);
   current->end(ins);
 
-  current = nullptr;
+  setTerminatedBlock();
+
   return Ok();
 }
 
@@ -3747,7 +3747,8 @@ AbortReasonOr<Ok> IonBuilder::visitTableSwitch() {
     MOZ_TRY(addPendingEdge(PendingEdge::NewGoto(caseBlock), casepc));
   }
 
-  current = nullptr;
+  setTerminatedBlock();
+
   return Ok();
 }
 
@@ -4535,10 +4536,11 @@ IonBuilder::InliningResult IonBuilder::inlineScriptedCall(CallInfo& callInfo,
       case AbortReason::Disable:
         calleeScript->setUninlineable();
         if (!JitOptions.disableInlineBacktracking) {
-          current = backup.restore();
-          if (!current) {
+          MBasicBlock* block = backup.restore();
+          if (!block) {
             return abort(AbortReason::Alloc);
           }
+          setCurrent(block);
           return InliningStatus_NotInlined;
         }
         return abort(AbortReason::Inlining);
@@ -4568,10 +4570,11 @@ IonBuilder::InliningResult IonBuilder::inlineScriptedCall(CallInfo& callInfo,
     // Inlining of functions that have no exit is not supported.
     calleeScript->setUninlineable();
     if (!JitOptions.disableInlineBacktracking) {
-      current = backup.restore();
-      if (!current) {
+      MBasicBlock* block = backup.restore();
+      if (!block) {
         return abort(AbortReason::Alloc);
       }
+      setCurrent(block);
       return InliningStatus_NotInlined;
     }
     return abort(AbortReason::Inlining);
