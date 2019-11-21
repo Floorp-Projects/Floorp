@@ -26,7 +26,7 @@
         {
           "name": "channel",
           "condition": "pref",
-          "pref": "__MSG_channel_pref__"
+          "pref": "__MSG_channelPref__"
         }
       ],
       "search_url_get_params": "__MSG_searchUrlGetParams__"
