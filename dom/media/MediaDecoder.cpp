@@ -301,6 +301,7 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
       mIsElementInTree(false),
       mForcedHidden(false),
       mHasSuspendTaint(aInit.mHasSuspendTaint),
+      mIsCloningVisually(false),
       mPlaybackRate(aInit.mPlaybackRate),
       mLogicallySeeking(false, "MediaDecoder::mLogicallySeeking"),
       INIT_MIRROR(mBuffered, TimeIntervals()),
@@ -311,7 +312,6 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
       INIT_CANONICAL(mPreservesPitch, aInit.mPreservesPitch),
       INIT_CANONICAL(mLooping, aInit.mLooping),
       INIT_CANONICAL(mSinkDevice, nullptr),
-      INIT_CANONICAL(mSecondaryVideoContainer, nullptr),
       INIT_CANONICAL(mOutputCaptured, false),
       INIT_CANONICAL(mOutputTracks, nsTArray<RefPtr<ProcessedMediaTrack>>()),
       INIT_CANONICAL(mOutputPrincipal, PRINCIPAL_HANDLE_NONE),
@@ -378,7 +378,6 @@ void MediaDecoder::Shutdown() {
     mOnWaitingForKey.Disconnect();
     mOnDecodeWarning.Disconnect();
     mOnNextFrameStatus.Disconnect();
-    mOnSecondaryVideoContainerInstalled.Disconnect();
     mOnStoreDecoderBenchmark.Disconnect();
 
     mDecoderStateMachine->BeginShutdown()->Then(
@@ -388,8 +387,11 @@ void MediaDecoder::Shutdown() {
     // Ensure we always unregister asynchronously in order not to disrupt
     // the hashtable iterating in MediaShutdownManager::Shutdown().
     RefPtr<MediaDecoder> self = this;
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-        "MediaDecoder::Shutdown", [self]() { self->ShutdownInternal(); });
+    nsCOMPtr<nsIRunnable> r =
+        NS_NewRunnableFunction("MediaDecoder::Shutdown", [self]() {
+          self->mVideoFrameContainer = nullptr;
+          self->ShutdownInternal();
+        });
     mAbstractMainThread->Dispatch(r.forget());
   }
 
@@ -506,12 +508,6 @@ void MediaDecoder::OnNextFrameStatus(
   }
 }
 
-void MediaDecoder::OnSecondaryVideoContainerInstalled(
-    const RefPtr<VideoFrameContainer>& aSecondaryVideoContainer) {
-  MOZ_ASSERT(NS_IsMainThread());
-  GetOwner()->OnSecondaryVideoContainerInstalled(aSecondaryVideoContainer);
-}
-
 void MediaDecoder::OnStoreDecoderBenchmark(const VideoInfo& aInfo) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -537,14 +533,13 @@ void MediaDecoder::OnStoreDecoderBenchmark(const VideoInfo& aInfo) {
 
 void MediaDecoder::ShutdownInternal() {
   MOZ_ASSERT(NS_IsMainThread());
-  mVideoFrameContainer = nullptr;
-  mSecondaryVideoContainer = nullptr;
   MediaShutdownManager::Instance().Unregister(this);
 }
 
 void MediaDecoder::FinishShutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   SetStateMachine(nullptr);
+  mVideoFrameContainer = nullptr;
   ShutdownInternal();
 }
 
@@ -586,10 +581,6 @@ void MediaDecoder::SetStateMachineParameters() {
       mAbstractMainThread, this, &MediaDecoder::OnMediaNotSeekable);
   mOnNextFrameStatus = mDecoderStateMachine->OnNextFrameStatus().Connect(
       mAbstractMainThread, this, &MediaDecoder::OnNextFrameStatus);
-  mOnSecondaryVideoContainerInstalled =
-      mDecoderStateMachine->OnSecondaryVideoContainerInstalled().Connect(
-          mAbstractMainThread, this,
-          &MediaDecoder::OnSecondaryVideoContainerInstalled);
   mOnStoreDecoderBenchmark = mReader->OnStoreDecoderBenchmark().Connect(
       mAbstractMainThread, this, &MediaDecoder::OnStoreDecoderBenchmark);
 
@@ -1015,8 +1006,8 @@ void MediaDecoder::UpdateVideoDecodeMode() {
     return;
   }
 
-  // If mSecondaryVideoContainer is set, never suspend the video decoder.
-  if (mSecondaryVideoContainer.Ref()) {
+  // If mIsCloningVisually is set, never suspend the video decoder.
+  if (mIsCloningVisually) {
     LOG("UpdateVideoDecodeMode(), set Normal because the element is cloning "
         "itself visually to another video container.");
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
@@ -1081,15 +1072,11 @@ bool MediaDecoder::HasSuspendTaint() const {
   return mHasSuspendTaint;
 }
 
-void MediaDecoder::SetSecondaryVideoContainer(
-    RefPtr<VideoFrameContainer> aSecondaryVideoContainer) {
-  MOZ_ASSERT(NS_IsMainThread());
-  AbstractThread::AutoEnter context(AbstractMainThread());
-  if (mSecondaryVideoContainer.Ref() == aSecondaryVideoContainer) {
-    return;
+void MediaDecoder::SetCloningVisually(bool aIsCloningVisually) {
+  if (mIsCloningVisually != aIsCloningVisually) {
+    mIsCloningVisually = aIsCloningVisually;
+    UpdateVideoDecodeMode();
   }
-  mSecondaryVideoContainer = std::move(aSecondaryVideoContainer);
-  UpdateVideoDecodeMode();
 }
 
 bool MediaDecoder::IsMediaSeekable() {

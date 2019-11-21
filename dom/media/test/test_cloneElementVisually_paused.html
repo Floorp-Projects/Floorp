@@ -32,7 +32,7 @@ add_task(async () => {
 
   let originalVideo = document.getElementById("original");
   await withNewClone(originalVideo, async clone => {
-    await SpecialPowers.wrap(originalVideo).cloneElementVisually(clone);
+    SpecialPowers.wrap(originalVideo).cloneElementVisually(clone);
 
     ok(await assertVideosMatch(originalVideo, clone),
        "Initial paused frame should match.");

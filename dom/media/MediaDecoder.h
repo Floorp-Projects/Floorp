@@ -308,10 +308,9 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // Returns true if the decoder can't participate in suspend-video-decoder.
   bool HasSuspendTaint() const;
 
-  void UpdateVideoDecodeMode();
+  void SetCloningVisually(bool aIsCloningVisually);
 
-  void SetSecondaryVideoContainer(
-      RefPtr<VideoFrameContainer> aSecondaryVideoContainer);
+  void UpdateVideoDecodeMode();
 
   void SetIsBackgroundVideoDecodingAllowed(bool aAllowed);
 
@@ -483,9 +482,6 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   void OnNextFrameStatus(MediaDecoderOwner::NextFrameStatus);
 
-  void OnSecondaryVideoContainerInstalled(
-      const RefPtr<VideoFrameContainer>& aSecondaryContainer);
-
   void OnStoreDecoderBenchmark(const VideoInfo& aInfo);
 
   void FinishShutdown();
@@ -571,6 +567,10 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // disabled.
   bool mHasSuspendTaint;
 
+  // True if the decoder is sending video to a secondary container, and should
+  // not suspend the decoder.
+  bool mIsCloningVisually;
+
   MediaDecoderOwner::NextFrameStatus mNextFrameStatus =
       MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
 
@@ -588,7 +588,6 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   MediaEventListener mOnWaitingForKey;
   MediaEventListener mOnDecodeWarning;
   MediaEventListener mOnNextFrameStatus;
-  MediaEventListener mOnSecondaryVideoContainerInstalled;
   MediaEventListener mOnStoreDecoderBenchmark;
 
   // True if we have suspended video decoding.
@@ -623,10 +622,6 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // The device used with SetSink, or nullptr if no explicit device has been
   // set.
   Canonical<RefPtr<AudioDeviceInfo>> mSinkDevice;
-
-  // Set if the decoder is sending video to a secondary container. While set we
-  // should not suspend the decoder.
-  Canonical<RefPtr<VideoFrameContainer>> mSecondaryVideoContainer;
 
   // Whether this MediaDecoder's output is captured. When captured, all decoded
   // data must be played out through mOutputTracks.
@@ -672,10 +667,6 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   AbstractCanonical<bool>* CanonicalLooping() { return &mLooping; }
   AbstractCanonical<RefPtr<AudioDeviceInfo>>* CanonicalSinkDevice() {
     return &mSinkDevice;
-  }
-  AbstractCanonical<RefPtr<VideoFrameContainer>>*
-  CanonicalSecondaryVideoContainer() {
-    return &mSecondaryVideoContainer;
   }
   AbstractCanonical<bool>* CanonicalOutputCaptured() {
     return &mOutputCaptured;
