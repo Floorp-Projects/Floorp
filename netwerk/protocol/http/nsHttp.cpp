@@ -841,5 +841,141 @@ void LogHeaders(const char* lineStart) {
   }
 }
 
+nsresult HttpProxyResponseToErrorCode(uint32_t aStatusCode) {
+  MOZ_ASSERT(aStatusCode >= 300,
+             "Call HttpProxyResponseToErrorCode with successful status code!");
+
+  nsresult rv;
+  switch (aStatusCode) {
+    case 300:
+    case 301:
+    case 302:
+    case 303:
+    case 307:
+    case 308:
+      // Bad redirect: not top-level, or it's a POST, bad/missing Location,
+      // or ProcessRedirect() failed for some other reason.  Legal
+      // redirects that fail because site not available, etc., are handled
+      // elsewhere, in the regular codepath.
+      rv = NS_ERROR_CONNECTION_REFUSED;
+      break;
+    // Squid sends 404 if DNS fails (regular 404 from target is tunneled)
+    case 404:  // HTTP/1.1: "Not Found"
+               // RFC 2616: "some deployed proxies are known to return 400 or
+               // 500 when DNS lookups time out."  (Squid uses 500 if it runs
+               // out of sockets: so we have a conflict here).
+    case 400:  // HTTP/1.1 "Bad Request"
+    case 500:  // HTTP/1.1: "Internal Server Error"
+      rv = NS_ERROR_UNKNOWN_HOST;
+      break;
+    case 401:
+      rv = NS_ERROR_PROXY_UNAUTHORIZED;
+      break;
+    case 402:
+      rv = NS_ERROR_PROXY_PAYMENT_REQUIRED;
+      break;
+    case 403:
+      rv = NS_ERROR_PROXY_FORBIDDEN;
+      break;
+    case 405:
+      rv = NS_ERROR_PROXY_METHOD_NOT_ALLOWED;
+      break;
+    case 406:
+      rv = NS_ERROR_PROXY_NOT_ACCEPTABLE;
+      break;
+    case 407: // ProcessAuthentication() failed (e.g. no header)
+      rv = NS_ERROR_PROXY_AUTHENTICATION_FAILED;
+      break;
+    case 408:
+      rv = NS_ERROR_PROXY_REQUEST_TIMEOUT;
+      break;
+    case 409:
+      rv = NS_ERROR_PROXY_CONFLICT;
+      break;
+    case 410:
+      rv = NS_ERROR_PROXY_GONE;
+      break;
+    case 411:
+      rv = NS_ERROR_PROXY_LENGTH_REQUIRED;
+      break;
+    case 412:
+      rv = NS_ERROR_PROXY_PRECONDITION_FAILED;
+      break;
+    case 413:
+      rv = NS_ERROR_PROXY_REQUEST_ENTITY_TOO_LARGE;
+      break;
+    case 414:
+      rv = NS_ERROR_PROXY_REQUEST_URI_TOO_LONG;
+      break;
+    case 415:
+      rv = NS_ERROR_PROXY_UNSUPPORTED_MEDIA_TYPE;
+      break;
+    case 416:
+      rv = NS_ERROR_PROXY_REQUESTED_RANGE_NOT_SATISFIABLE;
+      break;
+    case 417:
+      rv = NS_ERROR_PROXY_EXPECTATION_FAILED;
+      break;
+    case 421:
+      rv = NS_ERROR_PROXY_MISDIRECTED_REQUEST;
+      break;
+    case 425:
+      rv = NS_ERROR_PROXY_TOO_EARLY;
+      break;
+    case 426:
+      rv = NS_ERROR_PROXY_UPGRADE_REQUIRED;
+      break;
+    case 428:
+      rv = NS_ERROR_PROXY_PRECONDITION_REQUIRED;
+      break;
+    case 429:
+      rv = NS_ERROR_PROXY_TOO_MANY_REQUESTS;
+      break;
+    case 431:
+      rv = NS_ERROR_PROXY_REQUEST_HEADER_FIELDS_TOO_LARGE;
+      break;
+    case 451:
+      rv = NS_ERROR_PROXY_UNAVAILABLE_FOR_LEGAL_REASONS;
+      break;
+    case 501:
+      rv = NS_ERROR_PROXY_NOT_IMPLEMENTED;
+      break;
+    case 502:
+      rv = NS_ERROR_PROXY_BAD_GATEWAY;
+      break;
+    case 503:
+      // Squid returns 503 if target request fails for anything but DNS.
+      /* User sees: "Failed to Connect:
+       *  Firefox can't establish a connection to the server at
+       *  www.foo.com.  Though the site seems valid, the browser
+       *  was unable to establish a connection."
+       */
+      rv = NS_ERROR_CONNECTION_REFUSED;
+      break;
+    // RFC 2616 uses 504 for both DNS and target timeout, so not clear what to
+    // do here: picking target timeout, as DNS covered by 400/404/500
+    case 504:
+      rv = NS_ERROR_PROXY_GATEWAY_TIMEOUT;
+      break;
+    case 505:
+      rv = NS_ERROR_PROXY_VERSION_NOT_SUPPORTED;
+      break;
+    case 506:
+      rv = NS_ERROR_PROXY_VARIANT_ALSO_NEGOTIATES;
+      break;
+    case 510:
+      rv = NS_ERROR_PROXY_NOT_EXTENDED;
+      break;
+    case 511:
+      rv = NS_ERROR_PROXY_NETWORK_AUTHENTICATION_REQUIRED;
+      break;
+    default:
+      rv = NS_ERROR_PROXY_CONNECTION_REFUSED;
+      break;
+  }
+
+  return rv;
+}
+
 }  // namespace net
 }  // namespace mozilla

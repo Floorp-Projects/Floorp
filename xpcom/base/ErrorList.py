@@ -330,14 +330,6 @@ with modules["NETWORK"]:
     errors["NS_ERROR_NET_INTERRUPT"] = FAILURE(71)
     # The connection attempt to a proxy failed.
     errors["NS_ERROR_PROXY_CONNECTION_REFUSED"] = FAILURE(72)
-    # The proxy requires authentication; used when we can't easily propagate 407s.
-    errors["NS_ERROR_PROXY_AUTHENTICATION_FAILED"] = FAILURE(407)
-    # Indicates that we have sent too many requests in a given amount of time.
-    errors["NS_ERROR_TOO_MANY_REQUESTS"] = FAILURE(429)
-    # The proxy failed to connect the remote server.
-    errors["NS_ERROR_PROXY_BAD_GATEWAY"] = FAILURE(502)
-    # The proxy did get any response from the remote server in time.
-    errors["NS_ERROR_PROXY_GATEWAY_TIMEOUT"] = FAILURE(504)
     # A transfer was only partially done when it completed.
     errors["NS_ERROR_NET_PARTIAL_TRANSFER"] = FAILURE(76)
     # HTTP/2 detected invalid TLS configuration
@@ -460,6 +452,61 @@ with modules["NETWORK"]:
     # Generic error for non-specific failures during service worker interception
     errors["NS_ERROR_INTERCEPTION_FAILED"] = FAILURE(100)
 
+    # All Http proxy CONNECT response codes
+    errors["NS_ERROR_PROXY_CODE_BASE"] = FAILURE(1000)
+    # Redirection 3xx
+    errors["NS_ERROR_PROXY_MULTIPLE_CHOICES"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 300
+    errors["NS_ERROR_PROXY_MOVED_PERMANENTLY"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 301
+    errors["NS_ERROR_PROXY_FOUND"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 302
+    errors["NS_ERROR_PROXY_SEE_OTHER"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 303
+    errors["NS_ERROR_PROXY_NOT_MODIFIED"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 304
+    errors["NS_ERROR_PROXY_TEMPORARY_REDIRECT"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 307
+    errors["NS_ERROR_PROXY_PERMANENT_REDIRECT"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 308
+
+    # Client error 4xx
+    errors["NS_ERROR_PROXY_BAD_REQUEST"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 400
+    errors["NS_ERROR_PROXY_UNAUTHORIZED"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 401
+    errors["NS_ERROR_PROXY_PAYMENT_REQUIRED"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 402
+    errors["NS_ERROR_PROXY_FORBIDDEN"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 403
+    errors["NS_ERROR_PROXY_NOT_FOUND"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 404
+    errors["NS_ERROR_PROXY_METHOD_NOT_ALLOWED"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 405
+    errors["NS_ERROR_PROXY_NOT_ACCEPTABLE"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 406
+    # The proxy requires authentication; used when we can't easily propagate 407s.
+    errors["NS_ERROR_PROXY_AUTHENTICATION_FAILED"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 407
+    errors["NS_ERROR_PROXY_REQUEST_TIMEOUT"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 408
+    errors["NS_ERROR_PROXY_CONFLICT"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 409
+    errors["NS_ERROR_PROXY_GONE"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 410
+    errors["NS_ERROR_PROXY_LENGTH_REQUIRED"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 411
+    errors["NS_ERROR_PROXY_PRECONDITION_FAILED"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 412
+    errors["NS_ERROR_PROXY_REQUEST_ENTITY_TOO_LARGE"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 413
+    errors["NS_ERROR_PROXY_REQUEST_URI_TOO_LONG"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 414
+    errors["NS_ERROR_PROXY_UNSUPPORTED_MEDIA_TYPE"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 415
+    errors["NS_ERROR_PROXY_REQUESTED_RANGE_NOT_SATISFIABLE"] = \
+        errors["NS_ERROR_PROXY_CODE_BASE"] + 416
+    errors["NS_ERROR_PROXY_EXPECTATION_FAILED"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 417
+    errors["NS_ERROR_PROXY_MISDIRECTED_REQUEST"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 421
+    errors["NS_ERROR_PROXY_TOO_EARLY"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 425
+    errors["NS_ERROR_PROXY_UPGRADE_REQUIRED"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 426
+    errors["NS_ERROR_PROXY_PRECONDITION_REQUIRED"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 428
+    # Indicates that we have sent too many requests in a given amount of time.
+    errors["NS_ERROR_PROXY_TOO_MANY_REQUESTS"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 429
+    errors["NS_ERROR_PROXY_REQUEST_HEADER_FIELDS_TOO_LARGE"] = \
+        errors["NS_ERROR_PROXY_CODE_BASE"] + 431
+    errors["NS_ERROR_PROXY_UNAVAILABLE_FOR_LEGAL_REASONS"] = \
+        errors["NS_ERROR_PROXY_CODE_BASE"] + 451
+
+    # Server error 5xx
+    errors["NS_ERROR_PROXY_INTERNAL_SERVER_ERROR"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 500
+    errors["NS_ERROR_PROXY_NOT_IMPLEMENTED"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 501
+    errors["NS_ERROR_PROXY_BAD_GATEWAY"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 502
+    errors["NS_ERROR_PROXY_SERVICE_UNAVAILABLE"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 503
+    # The proxy did get any response from the remote server in time.
+    errors["NS_ERROR_PROXY_GATEWAY_TIMEOUT"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 504
+    errors["NS_ERROR_PROXY_VERSION_NOT_SUPPORTED"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 505
+    errors["NS_ERROR_PROXY_VARIANT_ALSO_NEGOTIATES"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 506
+    errors["NS_ERROR_PROXY_NOT_EXTENDED"] = errors["NS_ERROR_PROXY_CODE_BASE"] + 510
+    errors["NS_ERROR_PROXY_NETWORK_AUTHENTICATION_REQUIRED"] = \
+        errors["NS_ERROR_PROXY_CODE_BASE"] + 511
 
 # =======================================================================
 # 7: NS_ERROR_MODULE_PLUGINS

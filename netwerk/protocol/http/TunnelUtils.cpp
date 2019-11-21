@@ -1168,24 +1168,11 @@ void SpdyConnectTransaction::MapStreamToHttpConnection(
   mTunnelStreamOut = new OutputStreamShim(this, mIsWebsocket);
   mTunneledConn = new nsHttpConnection();
 
-  switch (httpResponseCode) {
-    case 404:
-      CreateShimError(NS_ERROR_UNKNOWN_HOST);
-      break;
-    case 407:
-      CreateShimError(NS_ERROR_PROXY_AUTHENTICATION_FAILED);
-      break;
-    case 429:
-      CreateShimError(NS_ERROR_TOO_MANY_REQUESTS);
-      break;
-    case 502:
-      CreateShimError(NS_ERROR_PROXY_BAD_GATEWAY);
-      break;
-    case 504:
-      CreateShimError(NS_ERROR_PROXY_GATEWAY_TIMEOUT);
-      break;
-    default:
-      break;
+  if (httpResponseCode != 200) {
+    nsresult err = HttpProxyResponseToErrorCode(httpResponseCode);
+    if (NS_FAILED(err)) {
+      CreateShimError(err);
+    }
   }
 
   // this new http connection has a specific hashkey (i.e. to a particular

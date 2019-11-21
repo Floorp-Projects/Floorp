@@ -336,6 +336,11 @@ class ParsedHeaderValueListList {
 
 void LogHeaders(const char* lineStart);
 
+// Convert HTTP response codes returned by a proxy to nsresult.
+// This function should be only used when we get a failed response to the
+// CONNECT method.
+nsresult HttpProxyResponseToErrorCode(uint32_t aStatusCode);
+
 }  // namespace net
 }  // namespace mozilla
 
