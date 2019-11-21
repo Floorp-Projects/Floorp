@@ -218,6 +218,15 @@ enum class RenderingStateFlags : uint8_t {
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(RenderingStateFlags)
 
+// The state of the dynamic toolbar on Mobile.
+enum class DynamicToolbarState {
+  None,          // No dynamic toolbar, i.e. the toolbar is static or there is
+                 // no available toolbar.
+  Expanded,      // The dynamic toolbar is expanded to the maximum height.
+  InTransition,  // The dynamic toolbar is being shown/hidden.
+  Collapsed,     // The dynamic toolbar is collapsed to zero height.
+};
+
 #ifdef DEBUG
 
 enum class VerifyReflowFlags {

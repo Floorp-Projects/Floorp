@@ -16,6 +16,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
+import org.hamcrest.Matchers.closeTo
 import org.hamcrest.Matchers.equalTo
 
 private const val SCREEN_WIDTH = 100
@@ -131,6 +132,75 @@ class DynamicToolbarTest : BaseSessionTest() {
         sessionRule.display?.let {
             assertScreenshotResult(it.capturePixels(), reference)
         }
+    }
+
+    @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
+    @Test
+    fun visualViewportEvents() {
+        val dynamicToolbarMaxHeight = SCREEN_HEIGHT / 2
+        sessionRule.display?.run { setDynamicToolbarMaxHeight(dynamicToolbarMaxHeight) }
+
+        // Set active since setVerticalClipping call affects only for forground tab.
+        mainSession.setActive(true)
+
+        mainSession.loadTestPath(BaseSessionTest.FIXED_VH)
+        mainSession.waitForPageStop()
+
+        val pixelRatio = sessionRule.session.evaluateJS("window.devicePixelRatio") as Double
+        val scale = sessionRule.session.evaluateJS("window.visualViewport.scale") as Double
+
+        for (i in 1..dynamicToolbarMaxHeight) {
+          // Simulate the dynamic toolbar is going to be hidden.
+          sessionRule.display?.run { setVerticalClipping(-i) }
+
+          val expectedViewportHeight = (SCREEN_HEIGHT - dynamicToolbarMaxHeight + i) / scale / pixelRatio
+          val promise = sessionRule.session.evaluatePromiseJS("""
+             new Promise(resolve => {
+               window.visualViewport.addEventListener('resize', resolve(window.visualViewport.height));
+             });
+          """.trimIndent())
+
+          assertThat("The visual viewport height should be changed in response to the dynamc toolbar transition",
+                     promise.value as Double, closeTo(expectedViewportHeight, .01))
+        }
+    }
+
+    @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
+    @Test
+    fun percentBaseValueOnPositionFixedElement() {
+        val dynamicToolbarMaxHeight = SCREEN_HEIGHT / 2
+        sessionRule.display?.run { setDynamicToolbarMaxHeight(dynamicToolbarMaxHeight) }
+
+        // Set active since setVerticalClipping call affects only for forground tab.
+        mainSession.setActive(true)
+
+        mainSession.loadTestPath(BaseSessionTest.FIXED_PERCENT)
+        mainSession.waitForPageStop()
+
+        val originalHeight = mainSession.evaluateJS("""
+            getComputedStyle(document.querySelector('#fixed-element')).height
+        """.trimIndent()) as String
+
+        // Set the vertical clipping value to the middle of toolbar transition.
+        sessionRule.display?.run { setVerticalClipping(-dynamicToolbarMaxHeight / 2) }
+
+        var height = mainSession.evaluateJS("""
+            getComputedStyle(document.querySelector('#fixed-element')).height
+        """.trimIndent()) as String
+
+        assertThat("The %-based height should be the static in the middle of toolbar tansition",
+                   height, equalTo(originalHeight))
+
+        // Set the vertical clipping value to hide the toolbar completely.
+        sessionRule.display?.run { setVerticalClipping(-dynamicToolbarMaxHeight) }
+        height = mainSession.evaluateJS("""
+            getComputedStyle(document.querySelector('#fixed-element')).height
+        """.trimIndent()) as String
+
+        val scale = sessionRule.session.evaluateJS("window.visualViewport.scale") as Double
+        val expectedHeight = (SCREEN_HEIGHT / scale).toInt()
+        assertThat("The %-based height should be now recomputed based on the screen height",
+                   height, equalTo(expectedHeight.toString() + "px"))
     }
 
 }

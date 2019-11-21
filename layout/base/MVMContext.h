@@ -57,6 +57,7 @@ class MVMContext {
   virtual void SetResolutionAndScaleTo(float aResolution,
                                        ResolutionChangeOrigin aOrigin) = 0;
   virtual void SetVisualViewportSize(const CSSSize& aSize) = 0;
+  virtual void PostVisualViewportResizeEventByDynamicToolbar() = 0;
   virtual void UpdateDisplayPortMargins() = 0;
 
   virtual void Reflow(const CSSSize& aNewSize) = 0;
