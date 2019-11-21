@@ -293,6 +293,9 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvDynamicToolbarMaxHeightChanged(
       const mozilla::ScreenIntCoord& aHeight);
 
+  mozilla::ipc::IPCResult RecvDynamicToolbarOffsetChanged(
+      const mozilla::ScreenIntCoord& aOffset);
+
   mozilla::ipc::IPCResult RecvActivate();
 
   mozilla::ipc::IPCResult RecvDeactivate();

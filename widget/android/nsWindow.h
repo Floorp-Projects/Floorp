@@ -330,6 +330,8 @@ class nsWindow final : public nsBaseWidget {
   nsresult SetPrefersReducedMotionOverrideForTest(bool aValue) override;
   nsresult ResetPrefersReducedMotionOverrideForTest() override;
 
+  void UpdateDynamicToolbarOffset(mozilla::ScreenIntCoord aOffset);
+
  protected:
   void BringToFront();
   nsWindow* FindTopLevel();

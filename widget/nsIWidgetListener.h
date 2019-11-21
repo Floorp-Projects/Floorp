@@ -87,6 +87,7 @@ class nsIWidgetListener {
 
 #if defined(MOZ_WIDGET_ANDROID)
   virtual void DynamicToolbarMaxHeightChanged(mozilla::ScreenIntCoord aHeight);
+  virtual void DynamicToolbarOffsetChanged(mozilla::ScreenIntCoord aOffset);
 #endif
 
   /**

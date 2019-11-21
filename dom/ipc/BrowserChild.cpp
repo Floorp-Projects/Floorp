@@ -1349,6 +1349,21 @@ mozilla::ipc::IPCResult BrowserChild::RecvDynamicToolbarMaxHeightChanged(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserChild::RecvDynamicToolbarOffsetChanged(
+    const ScreenIntCoord& aOffset) {
+#if defined(MOZ_WIDGET_ANDROID)
+  RefPtr<Document> document = GetTopLevelDocument();
+  if (!document) {
+    return IPC_OK();
+  }
+
+  if (nsPresContext* presContext = document->GetPresContext()) {
+    presContext->UpdateDynamicToolbarOffset(aOffset);
+  }
+#endif
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult BrowserChild::RecvSuppressDisplayport(
     const bool& aEnabled) {
   if (RefPtr<PresShell> presShell = GetTopLevelPresShell()) {
