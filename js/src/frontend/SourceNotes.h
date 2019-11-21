@@ -46,9 +46,6 @@ class SrcNote {
       // The offset of the condition expression ops from JSOP_NOP.
       CondOffset,
 
-      // The offset of the update expression ops from JSOP_NOP.
-      UpdateOffset,
-
       // The offset of JSOP_GOTO/JSOP_IFNE at the end of the loop from
       // JSOP_NOP.
       BackJumpOffset,
@@ -69,9 +66,6 @@ class SrcNote {
   class DoWhile {
    public:
     enum Fields {
-      // The offset of the condition ops from JSOP_LOOPHEAD.
-      CondOffset,
-
       // The offset of JSOP_IFNE at the end of the loop from
       // JSOP_LOOPHEAD.
       BackJumpOffset,
