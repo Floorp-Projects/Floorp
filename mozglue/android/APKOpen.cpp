@@ -31,7 +31,7 @@
 #include "sqlite3.h"
 #include "SQLiteBridge.h"
 #include "NSSBridge.h"
-#include "ElfLoader.h"
+#include "Linker.h"
 #include "application.ini.h"
 
 #include "mozilla/arm.h"
@@ -99,7 +99,7 @@ JavaVM* sJavaVM;
 
 void abortThroughJava(const char* msg) {
   struct sigaction sigact = {};
-  if (SEGVHandler::__wrap_sigaction(SIGSEGV, nullptr, &sigact)) {
+  if (__wrap_sigaction(SIGSEGV, nullptr, &sigact)) {
     return;  // sigaction call failed.
   }
 
@@ -373,9 +373,13 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv* jenv, jclass jc,
       return;
     }
 
+#ifdef MOZ_LINKER
     ElfLoader::Singleton.ExpectShutdown(false);
+#endif
     gBootstrap->GeckoStart(jenv, argv, argc, sAppData);
+#ifdef MOZ_LINKER
     ElfLoader::Singleton.ExpectShutdown(true);
+#endif
   } else {
     gBootstrap->XRE_SetAndroidChildFds(
         jenv, {prefsFd, prefMapFd, ipcFd, crashFd, crashAnnotationFd});
