@@ -424,7 +424,7 @@ void jit::FreeIonBuilder(IonBuilder* builder) {
   // destroy the builder and all other data accumulated during compilation,
   // except any final codegen (which includes an assembler and needs to be
   // explicitly destroyed).
-  MOZ_ASSERT(builder->pendingBlocks().empty(), "Should not leak malloc memory");
+  MOZ_ASSERT(builder->pendingEdges().empty(), "Should not leak malloc memory");
   js_delete(builder->backgroundCodegen());
   js_delete(builder->alloc().lifoAlloc());
 }
