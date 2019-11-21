@@ -401,8 +401,6 @@ class nsWindow final : public nsBaseWidget {
 #ifdef MOZ_WAYLAND
   virtual nsresult GetScreenRect(LayoutDeviceIntRect* aRect) override;
 #endif
-  bool IsRemoteContent() { return HasRemoteContent(); }
-  static void HideWaylandOpenedPopups();
 
  protected:
   virtual ~nsWindow();

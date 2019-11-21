@@ -1165,14 +1165,6 @@ void nsWindow::HideWaylandTooltips() {
   }
 }
 
-void nsWindow::HideWaylandOpenedPopups() {
-  while (gVisibleWaylandPopupWindows) {
-    nsWindow* window =
-        static_cast<nsWindow*>(gVisibleWaylandPopupWindows->data);
-    window->HideWaylandWindow();
-  }
-}
-
 // Hide popup nsWindows which are no longer in the nsXULPopupManager widget
 // chain list.
 void nsWindow::CleanupWaylandPopups() {
@@ -1226,10 +1218,7 @@ bool nsWindow::IsMainMenuWindow() {
 // popup needs to have an unique parent.
 GtkWidget* nsWindow::ConfigureWaylandPopupWindows() {
   MOZ_ASSERT(this->mWindowType == eWindowType_popup);
-  LOG(
-      ("nsWindow::ConfigureWaylandPopupWindows [%p], frame %p hasRemoteContent "
-       "%d\n",
-       (void*)this, this->GetFrame(), this->HasRemoteContent()));
+  LOG(("nsWindow::ConfigureWaylandPopupWindows [%p]\n", (void*)this));
 #if DEBUG
   if (this->GetFrame() && this->GetFrame()->GetContent()->GetID()) {
     nsCString nodeId;
@@ -1256,14 +1245,14 @@ GtkWidget* nsWindow::ConfigureWaylandPopupWindows() {
     // gVisibleWaylandPopupWindows which were not yet been hidden.
     CleanupWaylandPopups();
     // Since the popups are shown by unknown order it can happen that child
-    // popup is shown before parent popup.
+    // popup is shown before parent popup. The
     // We look for the current window parent in nsXULPopupManager since it
     // always has correct popup hierarchy while gVisibleWaylandPopupWindows may
     // not.
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     AutoTArray<nsIWidget*, 5> widgetChain;
     pm->GetSubmenuWidgetChain(&widgetChain);
-    for (unsigned long i = 0; i < widgetChain.Length() - 1; i++) {
+    for (unsigned long i = 0; i < widgetChain.Length(); i++) {
       unsigned long parentIndex = i + 1;
       if (widgetChain.Length() > parentIndex && widgetChain[i] == this) {
         nsWindow* parentWindow =
@@ -1275,29 +1264,6 @@ GtkWidget* nsWindow::ConfigureWaylandPopupWindows() {
       }
     }
   } else {
-    // Panels usually ends there
-    if (gVisibleWaylandPopupWindows && HasRemoteContent()) {
-      // If the new panel is remote content, we need to close all other popups
-      // before to keep the correct hierarchy because the remote content popup
-      // can replace the overflow-widget panel.
-      HideWaylandOpenedPopups();
-    } else if (gVisibleWaylandPopupWindows) {
-      // If there is any remote content panel currently opened, close all
-      // opened popups to keep the correct hierarchy.
-      GList* popupList = gVisibleWaylandPopupWindows;
-      while (popupList) {
-        nsWindow* waylandWnd = static_cast<nsWindow*>(popupList->data);
-        LOG(("  Checking [%p] IsRemoteContent %d\n", popupList->data,
-             waylandWnd->IsRemoteContent()));
-        if (waylandWnd->IsRemoteContent()) {
-          // close all popups including remote content before showing our panel
-          // Most likely returning from addon panel to overflow-widget.
-          HideWaylandOpenedPopups();
-          break;
-        }
-        popupList = popupList->next;
-      }
-    }
     // For popups in panels use the last opened popup window as parent,
     // panels are not stored in nsXULPopupManager.
     if (gVisibleWaylandPopupWindows) {
@@ -1324,7 +1290,7 @@ GtkWidget* nsWindow::ConfigureWaylandPopupWindows() {
   return GTK_WIDGET(parentGtkWindow);
 }
 
-#ifdef MOZ_LOGGING
+#ifdef DEBUG
 static void NativeMoveResizeWaylandPopupCallback(
     GdkWindow* window, const GdkRectangle* flipped_rect,
     const GdkRectangle* final_rect, gboolean flipped_x, gboolean flipped_y,
@@ -4403,7 +4369,6 @@ void nsWindow::NativeMoveResize() {
 void nsWindow::HideWaylandWindow() {
 #ifdef MOZ_WAYLAND
   if (mWindowType == eWindowType_popup) {
-    LOG(("nsWindow::HideWaylandWindow: popup [%p]\n", this));
     GList* foundWindow = g_list_find(gVisibleWaylandPopupWindows, this);
     if (foundWindow) {
       gVisibleWaylandPopupWindows =
