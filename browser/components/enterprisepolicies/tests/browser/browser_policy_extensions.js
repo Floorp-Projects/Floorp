@@ -12,9 +12,7 @@ async function isExtensionLocked(win, addonID) {
     await win.htmlBrowserLoaded;
     return doc.querySelector(`addon-card[addon-id="${addonID}"]`);
   }, `Get addon-card for "${addonID}"`);
-  let disableBtn = addonCard.querySelector(
-    'panel-item[action="toggle-disabled"]'
-  );
+  let disableBtn = addonCard.querySelector('[action="toggle-disabled"]');
   let removeBtn = addonCard.querySelector('panel-item[action="remove"]');
   ok(removeBtn.disabled, "Remove button should be disabled");
   ok(disableBtn.hidden, "Disable button should be hidden");
