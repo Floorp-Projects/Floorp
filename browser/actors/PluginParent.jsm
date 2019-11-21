@@ -131,7 +131,6 @@ const PluginManager = {
     let uglyPluginName = propertyBag.getPropertyAsAString("pluginName");
     let pluginName = BrowserUtils.makeNicePluginName(uglyPluginName);
     let pluginDumpID = propertyBag.getPropertyAsAString("pluginDumpID");
-    let browserDumpID = propertyBag.getPropertyAsAString("browserDumpID");
 
     let state;
     let crashReporter = Services.appinfo.QueryInterface(Ci.nsICrashReporter);
@@ -149,7 +148,7 @@ const PluginManager = {
       state = "please";
     }
 
-    let crashInfo = { runID, state, pluginName, pluginDumpID, browserDumpID };
+    let crashInfo = { runID, state, pluginName, pluginDumpID };
     this.crashReports.set(runID, crashInfo);
     let listeners = this._pendingCrashQueries.get(runID) || [];
     for (let listener of listeners) {
@@ -216,15 +215,11 @@ const PluginManager = {
       return;
     }
 
-    let { pluginDumpID, browserDumpID } = report;
+    let { pluginDumpID } = report;
     let submissionPromise = CrashSubmit.submit(pluginDumpID, {
       recordSubmission: true,
       extraExtraKeyVals: keyVals,
     });
-
-    if (browserDumpID) {
-      CrashSubmit.submit(browserDumpID).catch(Cu.reportError);
-    }
 
     this.broadcastState(pluginCrashID, "submitting");
 

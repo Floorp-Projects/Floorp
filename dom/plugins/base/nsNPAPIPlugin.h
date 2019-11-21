@@ -40,11 +40,9 @@ class nsNPAPIPlugin final {
 #endif
 
   // The IPC mechanism notifies the nsNPAPIPlugin if the plugin
-  // crashes and is no longer usable. pluginDumpID/browserDumpID are
-  // the IDs of respective minidumps that were written, or empty if no
-  // minidump was written.
-  void PluginCrashed(const nsAString& pluginDumpID,
-                     const nsAString& browserDumpID);
+  // crashes and is no longer usable. pluginDumpID is the ID of the minidump
+  // that was written, or empty if no minidump was written.
+  void PluginCrashed(const nsAString& pluginDumpID);
 
   nsresult Shutdown();
 
