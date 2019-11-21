@@ -84,6 +84,21 @@ XPCOMUtils.defineLazyPreferenceGetter(
 const PLUGIN_ICON_URL = "chrome://global/skin/plugins/pluginGeneric.svg";
 const EXTENSION_ICON_URL =
   "chrome://mozapps/skin/extensions/extensionGeneric.svg";
+const BUILTIN_THEME_PREVIEWS = new Map([
+  [
+    "default-theme@mozilla.org",
+    "chrome://mozapps/content/extensions/default-theme.svg",
+  ],
+  [
+    "firefox-compact-light@mozilla.org",
+    "chrome://mozapps/content/extensions/firefox-compact-light.svg",
+  ],
+  [
+    "firefox-compact-dark@mozilla.org",
+    "chrome://mozapps/content/extensions/firefox-compact-dark.svg",
+  ],
+]);
+
 const PERMISSION_MASKS = {
   "ask-to-activate": AddonManager.PERM_CAN_ASK_TO_ACTIVATE,
   enable: AddonManager.PERM_CAN_ENABLE,
@@ -419,6 +434,10 @@ function nl2br(text) {
  *          The URL of the best fitting screenshot, if any.
  */
 function getScreenshotUrlForAddon(addon) {
+  if (BUILTIN_THEME_PREVIEWS.has(addon.id)) {
+    return BUILTIN_THEME_PREVIEWS.get(addon.id);
+  }
+
   let { screenshots } = addon;
   if (!screenshots || !screenshots.length) {
     return null;
@@ -2678,25 +2697,25 @@ class AddonCard extends HTMLElement {
 
     card.setAttribute("active", addon.isActive);
 
-    // Update the icon.
-    let icon;
-    if (addon.type == "plugin") {
-      icon = PLUGIN_ICON_URL;
-    } else {
-      icon =
-        AddonManager.getPreferredIconURL(addon, 32, window) ||
-        EXTENSION_ICON_URL;
-    }
-    card.querySelector(".addon-icon").src = icon;
-
-    // Update the theme preview.
+    // Set the icon or theme preview.
+    let iconEl = card.querySelector(".addon-icon");
     let preview = card.querySelector(".card-heading-image");
-    preview.hidden = true;
     if (addon.type == "theme") {
+      iconEl.hidden = true;
       let screenshotUrl = getScreenshotUrlForAddon(addon);
       if (screenshotUrl) {
         preview.src = screenshotUrl;
-        preview.hidden = false;
+      }
+      preview.hidden = !screenshotUrl;
+    } else {
+      preview.hidden = true;
+      iconEl.hidden = false;
+      if (addon.type == "plugin") {
+        iconEl.src = PLUGIN_ICON_URL;
+      } else {
+        iconEl.src =
+          AddonManager.getPreferredIconURL(addon, 32, window) ||
+          EXTENSION_ICON_URL;
       }
     }
 
@@ -2935,13 +2954,14 @@ class RecommendedAddonCard extends HTMLElement {
 
     // Set the theme preview.
     let preview = card.querySelector(".card-heading-image");
-    preview.hidden = true;
     if (addon.type == "theme") {
       let screenshotUrl = getScreenshotUrlForAddon(addon);
       if (screenshotUrl) {
         preview.src = screenshotUrl;
         preview.hidden = false;
       }
+    } else {
+      preview.hidden = true;
     }
 
     // Set the name.

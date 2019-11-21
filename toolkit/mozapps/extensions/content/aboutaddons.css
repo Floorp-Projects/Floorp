@@ -176,6 +176,7 @@ addon-card[expanded] .addon-card-message {
   /* Adjust height so that the image preserves the aspect ratio from AMO.
    * For details, see https://bugzilla.mozilla.org/show_bug.cgi?id=1546123 */
   height: calc(var(--section-width) * 92 / 680);
+  object-fit: cover;
 }
 
 .card-heading-icon {
