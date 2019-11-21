@@ -9,6 +9,26 @@
 namespace mozilla {
 namespace layers {
 
+const char* GetLayersBackendName(LayersBackend aBackend) {
+  switch (aBackend) {
+    case LayersBackend::LAYERS_NONE:
+      return "none";
+    case LayersBackend::LAYERS_OPENGL:
+      return "opengl";
+    case LayersBackend::LAYERS_D3D11:
+      return "d3d11";
+    case LayersBackend::LAYERS_CLIENT:
+      return "client";
+    case LayersBackend::LAYERS_WR:
+      return "webrender";
+    case LayersBackend::LAYERS_BASIC:
+      return "basic";
+    default:
+      MOZ_ASSERT_UNREACHABLE("unknown layers backend");
+      return "unknown";
+  }
+}
+
 EventRegions::EventRegions(const nsIntRegion& aHitRegion,
                            const nsIntRegion& aMaybeHitRegion,
                            const nsIntRegion& aDispatchToContentRegion,

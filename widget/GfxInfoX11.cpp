@@ -132,8 +132,10 @@ void GfxInfo::GetData() {
   // Available if using a DRI-based libGL stack.
   nsCString driDriver;
   nsCString screenInfo;
+  nsCString adapterRam;
 
   nsCString* stringToFill = nullptr;
+
   char* bufptr = buf;
   if (!error) {
     while (true) {
@@ -157,7 +159,7 @@ void GfxInfo::GetData() {
       else if (!strcmp(line, "MESA_ACCELERATED"))
         stringToFill = &mesaAccelerated;
       else if (!strcmp(line, "MESA_VRAM"))
-        stringToFill = &mAdapterRAM;
+        stringToFill = &adapterRam;
       else if (!strcmp(line, "DRI_DRIVER"))
         stringToFill = &driDriver;
       else if (!strcmp(line, "SCREEN_INFO"))
@@ -297,14 +299,22 @@ void GfxInfo::GetData() {
     PRInt32 start = 0;
     PRInt32 loc = screenInfo.Find(";", PR_FALSE, start);
     while (loc != kNotFound) {
+      int isDefault = 0;
       nsCString line(screenInfo.get() + start, loc - start);
-      nsString value;
-      CopyASCIItoUTF16(line, value);
+      ScreenInfo info;
+      if (sscanf(line.get(), "%ux%u:%u", &info.mWidth, &info.mHeight,
+                 &isDefault) == 3) {
+        info.mIsDefault = isDefault != 0;
+        mScreenInfo.AppendElement(info);
+      }
 
-      mScreenInfo.AppendElement(value);
       start = loc + 1;
       loc = screenInfo.Find(";", PR_FALSE, start);
     }
+  }
+
+  if (!adapterRam.IsEmpty()) {
+    mAdapterRAM = (uint32_t)atoi(adapterRam.get());
   }
 
   // Fallback to GL_VENDOR and GL_RENDERER.
@@ -512,14 +522,14 @@ GfxInfo::GetAdapterDescription2(nsAString& aAdapterDescription) {
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterRAM(nsAString& aAdapterRAM) {
+GfxInfo::GetAdapterRAM(uint32_t* aAdapterRAM) {
   GetData();
-  CopyUTF8toUTF16(mAdapterRAM, aAdapterRAM);
+  *aAdapterRAM = mAdapterRAM;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterRAM2(nsAString& aAdapterRAM) { return NS_ERROR_FAILURE; }
+GfxInfo::GetAdapterRAM2(uint32_t* aAdapterRAM) { return NS_ERROR_FAILURE; }
 
 NS_IMETHODIMP
 GfxInfo::GetAdapterDriver(nsAString& aAdapterDriver) {
@@ -604,12 +614,31 @@ GfxInfo::GetAdapterSubsysID2(nsAString& aAdapterSubsysID) {
 NS_IMETHODIMP
 GfxInfo::GetDisplayInfo(nsTArray<nsString>& aDisplayInfo) {
   GetData();
-  if (!mScreenInfo.IsEmpty()) {
-    aDisplayInfo = mScreenInfo;
 
-    return NS_OK;
+  for (auto screenInfo : mScreenInfo) {
+    nsString infoString;
+    infoString.AppendPrintf("%dx%d %s", screenInfo.mWidth, screenInfo.mHeight,
+                            screenInfo.mIsDefault ? "default" : "");
+    aDisplayInfo.AppendElement(infoString);
   }
-  return NS_ERROR_FAILURE;
+
+  return aDisplayInfo.IsEmpty() ? NS_ERROR_FAILURE : NS_OK;
+}
+
+NS_IMETHODIMP
+GfxInfo::GetDisplayWidth(nsTArray<uint32_t>& aDisplayWidth) {
+  for (auto screenInfo : mScreenInfo) {
+    aDisplayWidth.AppendElement((uint32_t)screenInfo.mWidth);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GfxInfo::GetDisplayHeight(nsTArray<uint32_t>& aDisplayHeight) {
+  for (auto screenInfo : mScreenInfo) {
+    aDisplayHeight.AppendElement((uint32_t)screenInfo.mHeight);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
