@@ -50,14 +50,18 @@ class EventQueue final : public AbstractEventQueue {
 
   size_t SizeOfExcludingThis(
       mozilla::MallocSizeOf aMallocSizeOf) const override {
-    return mQueue.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    size_t size = mQueue.ShallowSizeOfExcludingThis(aMallocSizeOf);
+#ifdef MOZ_GECKO_PROFILER
+    size += mDispatchTimes.ShallowSizeOfExcludingThis(aMallocSizeOf);
+#endif
+    return size;
   }
 
  private:
-  mozilla::Queue<nsCOMPtr<nsIRunnable>> mQueue;
+  mozilla::Queue<nsCOMPtr<nsIRunnable>, 16> mQueue;
 #ifdef MOZ_GECKO_PROFILER
   // This queue is only populated when the profiler is turned on.
-  mozilla::Queue<mozilla::TimeStamp> mDispatchTimes;
+  mozilla::Queue<mozilla::TimeStamp, 16> mDispatchTimes;
   TimeDuration mLastEventDelay;
 #endif
 };
