@@ -392,6 +392,11 @@ class nsPresContext : public nsISupports,
     return mDynamicToolbarMaxHeight > 0;
   }
 
+  /*
+   * |aOffset| must be offset from the bottom edge of the ICB and it's negative.
+   */
+  void UpdateDynamicToolbarOffset(mozilla::ScreenIntCoord aOffset);
+
   /**
    * Return true if this presentation context is a paginated
    * context.

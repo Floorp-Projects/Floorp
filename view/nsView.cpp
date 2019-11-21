@@ -999,6 +999,43 @@ void nsView::DynamicToolbarMaxHeightChanged(ScreenIntCoord aHeight) {
   nsContentUtils::CallOnAllRemoteChildren(
       window, NotifyDynamicToolbarMaxHeightChanged, &aHeight);
 }
+
+static bool NotifyDynamicToolbarOffsetChanged(
+    dom::BrowserParent* aBrowserParent, void* aArg) {
+  // Skip background tabs.
+  if (!aBrowserParent->GetDocShellIsActive()) {
+    return false;
+  }
+
+  ScreenIntCoord* offset = static_cast<ScreenIntCoord*>(aArg);
+  aBrowserParent->DynamicToolbarOffsetChanged(*offset);
+  return true;
+}
+
+void nsView::DynamicToolbarOffsetChanged(ScreenIntCoord aOffset) {
+  MOZ_ASSERT(XRE_IsParentProcess(),
+             "Should be only called for the browser parent process");
+  MOZ_ASSERT(this == mViewManager->GetRootView(),
+             "Should be called for the root view");
+
+  PresShell* presShell = mViewManager->GetPresShell();
+  if (!presShell) {
+    return;
+  }
+
+  dom::Document* document = presShell->GetDocument();
+  if (!document) {
+    return;
+  }
+
+  nsPIDOMWindowOuter* window = document->GetWindow();
+  if (!window) {
+    return;
+  }
+
+  nsContentUtils::CallOnAllRemoteChildren(
+      window, NotifyDynamicToolbarOffsetChanged, &aOffset);
+}
 #endif
 
 bool nsView::RequestWindowClose(nsIWidget* aWidget) {

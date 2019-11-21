@@ -452,6 +452,8 @@ class nsView final : public nsIWidgetListener {
 #if defined(MOZ_WIDGET_ANDROID)
   virtual void DynamicToolbarMaxHeightChanged(
       mozilla::ScreenIntCoord aHeight) override;
+  virtual void DynamicToolbarOffsetChanged(
+      mozilla::ScreenIntCoord aOffset) override;
 #endif
   virtual bool RequestWindowClose(nsIWidget* aWidget) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY

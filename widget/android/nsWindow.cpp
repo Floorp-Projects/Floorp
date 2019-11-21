@@ -1090,11 +1090,18 @@ class nsWindow::LayerViewSupport final
   }
 
   void SetFixedBottomOffset(int32_t aOffset) {
-    MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
+    if (mWindow) {
+      mWindow->UpdateDynamicToolbarOffset(ScreenIntCoord(aOffset));
+    }
 
-    if (RefPtr<UiCompositorControllerChild> child =
-            GetUiCompositorControllerChild()) {
-      child->SetFixedBottomOffset(aOffset);
+    if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
+      uiThread->Dispatch(NS_NewRunnableFunction(
+          "LayerViewSupport::SetFixedBottomOffset", [this, offset = aOffset] {
+            if (RefPtr<UiCompositorControllerChild> child =
+                    GetUiCompositorControllerChild()) {
+              child->SetFixedBottomOffset(offset);
+            }
+          }));
     }
   }
 
@@ -2323,6 +2330,16 @@ void nsWindow::UpdateDynamicToolbarMaxHeight(ScreenIntCoord aHeight) {
 
   if (mAttachedWidgetListener) {
     mAttachedWidgetListener->DynamicToolbarMaxHeightChanged(aHeight);
+  }
+}
+
+void nsWindow::UpdateDynamicToolbarOffset(ScreenIntCoord aOffset) {
+  if (mWidgetListener) {
+    mWidgetListener->DynamicToolbarOffsetChanged(aOffset);
+  }
+
+  if (mAttachedWidgetListener) {
+    mAttachedWidgetListener->DynamicToolbarOffsetChanged(aOffset);
   }
 }
 
