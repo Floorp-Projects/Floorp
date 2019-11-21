@@ -8,8 +8,6 @@
 #ifndef mozilla_net_DocumentChannelChild_h
 #define mozilla_net_DocumentChannelChild_h
 
-#include "mozilla/net/ChannelEventQueue.h"
-#include "mozilla/net/NeckoTargetHolder.h"
 #include "mozilla/net/PDocumentChannelChild.h"
 #include "nsHashPropertyBag.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
@@ -31,8 +29,7 @@ class DocumentChannelChild final : public nsHashPropertyBag,
                                    public PDocumentChannelChild,
                                    public nsIIdentChannel,
                                    public nsIAsyncVerifyRedirectCallback,
-                                   public nsITraceableChannel,
-                                   public mozilla::net::NeckoTargetHolder {
+                                   public nsITraceableChannel {
  public:
   DocumentChannelChild(nsDocShellLoadState* aLoadState,
                        class LoadInfo* aLoadInfo,
@@ -71,12 +68,10 @@ class DocumentChannelChild final : public nsHashPropertyBag,
   }
 
  private:
-  friend class NeckoTargetChannelFunctionEvent;
   void ShutdownListeners(nsresult aStatusCode);
 
   ~DocumentChannelChild() = default;
 
-  const RefPtr<ChannelEventQueue> mEventQueue;
   nsCOMPtr<nsIChannel> mRedirectChannel;
   nsTArray<DocumentChannelRedirect> mRedirects;
 
