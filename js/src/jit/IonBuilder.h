@@ -1084,16 +1084,21 @@ class IonBuilder : public MIRGenerator,
   // where the block cannot have phis whose type needs to be computed.
 
   AbortReasonOr<Ok> setCurrentAndSpecializePhis(MBasicBlock* block) {
-    if (block) {
-      if (!block->specializePhis(alloc())) {
-        return abort(AbortReason::Alloc);
-      }
+    MOZ_ASSERT(block);
+    if (!block->specializePhis(alloc())) {
+      return abort(AbortReason::Alloc);
     }
     setCurrent(block);
     return Ok();
   }
 
-  void setCurrent(MBasicBlock* block) { current = block; }
+  void setCurrent(MBasicBlock* block) {
+    MOZ_ASSERT(block);
+    current = block;
+  }
+
+  bool hasTerminatedBlock() const { return current == nullptr; }
+  void setTerminatedBlock() { current = nullptr; }
 
   // A builder is inextricably tied to a particular script.
   JSScript* script_;
@@ -1179,7 +1184,11 @@ class IonBuilder : public MIRGenerator,
   GSNCache gsn;
   jsbytecode* pc;
   jsbytecode* nextpc = nullptr;
-  MBasicBlock* current;
+
+  // The current MIR block. This can be nullptr after a block has been
+  // terminated, for example right after a 'return' or 'break' statement.
+  MBasicBlock* current = nullptr;
+
   uint32_t loopDepth_;
 
   PendingEdgesMap pendingEdges_;
