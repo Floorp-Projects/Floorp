@@ -293,7 +293,7 @@ add_task(async function testDetailOperations() {
   let panel = card.querySelector("panel-list");
 
   // Check button visibility.
-  let disableButton = panel.querySelector('[action="toggle-disabled"]');
+  let disableButton = card.querySelector('[action="toggle-disabled"]');
   ok(!disableButton.hidden, "The disable button is visible");
 
   let removeButton = panel.querySelector('[action="remove"]');
