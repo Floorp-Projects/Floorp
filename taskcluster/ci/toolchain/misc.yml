@@ -35,7 +35,7 @@ linux64-llvm-dsymutil:
         fetch:
             - llvm-for-dsymutil
         toolchain:
-            - linux64-gcc-6
+            - linux64-gcc-7
 
 linux64-binutils:
     description: "Binutils toolchain build"
@@ -116,7 +116,7 @@ linux64-tup:
         fetch:
             - tup
         toolchain:
-            - linux64-gcc-6
+            - linux64-gcc-7
 
 linux64-upx:
     description: "UPX build"

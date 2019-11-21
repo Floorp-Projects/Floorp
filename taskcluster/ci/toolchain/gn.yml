@@ -25,7 +25,7 @@ linux64-gn:
         script: build-gn-linux.sh
     fetches:
         toolchain:
-            - linux64-gcc-6
+            - linux64-gcc-7
 
 macosx64-gn:
     treeherder:
