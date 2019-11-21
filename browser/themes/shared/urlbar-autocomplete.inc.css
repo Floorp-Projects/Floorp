@@ -9,8 +9,7 @@
 %define urlbarViewIconMarginEnd (@identityBoxPaddingInline@ + @identityBoxMarginInlineEnd@)
 %define urlbarViewFaviconOffset (@urlbarViewPadding@ + 16px /* type icon width */ + @urlbarViewIconMarginEnd@)
 %define urlbarViewMarginInline 7px
-%define urlbarViewPaddingInline 30px
-%define urlbarViewItemPaddingStart (@urlbarViewPaddingInline@ - (/* type icon: */ 16px + @urlbarViewIconMarginEnd@))
+%define urlbarViewItemInlinePadding 6px
 
 :root {
   --autocomplete-popup-background: var(--arrowpanel-background);
@@ -80,8 +79,7 @@
   display: flex;
   padding-top: 24px;
   padding-bottom: 24px;
-  padding-inline-start: calc(@urlbarViewItemPaddingStart@);
-  padding-inline-end: @urlbarViewPaddingInline@;
+  padding-inline: @urlbarViewItemInlinePadding@;
 }
 
 .urlbarView:not(.megabar) #urlbar-contextual-tip {
@@ -137,7 +135,7 @@
 .urlbarView:not(.megabar) .urlbarView-row,
 .urlbarView.megabar .urlbarView-row-inner {
   border-radius: 2px;
-  padding-inline-start: calc(@urlbarViewItemPaddingStart@);
+  padding-inline-start: @urlbarViewItemInlinePadding@;
 }
 
 .urlbarView:not(.megabar) .urlbarView-row:not([type=tip]),
@@ -161,7 +159,7 @@
 .urlbarView.megabar .urlbarView-row[type=tip] {
   padding-block: 18px;
   /* Compensating for the 4px focus ring on tip buttons. */
-  padding-inline-end: calc(@urlbarViewItemPaddingStart@ + 4px);
+  padding-inline-end: calc(@urlbarViewItemInlinePadding@ + 4px);
 }
 
 .urlbarView-row-inner {
@@ -201,17 +199,33 @@
 .urlbarView-favicon {
   min-width: 16px;
   height: 16px;
-  margin-inline-end: calc(@urlbarViewIconMarginEnd@);
   background-repeat: no-repeat;
   background-size: contain;
   -moz-context-properties: fill, fill-opacity;
 }
 
+.urlbarView:not(.megabar) .urlbarView-type-icon,
+.urlbarView-favicon {
+  margin-inline-end: calc(@urlbarViewIconMarginEnd@);
+}
+
+.urlbarView.megabar .urlbarView-type-icon {
+  position: absolute;
+  min-width: 12px;
+  height: 12px;
+  margin-bottom: -4px;
+  margin-inline-start: 8px;
+  -moz-context-properties: fill, stroke;
+}
+
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-favicon {
   min-width: 24px;
   height: 24px;
-  margin-inline-start: calc(12px + @urlbarViewIconMarginEnd@);
   margin-inline-end: 12px;
+}
+
+.urlbarView:not(.megabar) .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-favicon {
+  margin-inline-start: calc(12px + @urlbarViewIconMarginEnd@);
 }
 
 /* The help icon is a standard Photon ghost button. */
@@ -254,6 +268,30 @@
   #urlbar-contextual-tip-icon {
       transform: translateY(-1.5px);
   }
+}
+
+.urlbarView.megabar .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-type-icon {
+  background-image: url(chrome://browser/skin/bookmark-12.svg);
+  color: #0060df; /* Blue-60 */
+  stroke: #fff;
+}
+
+.urlbarView.megabar .urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-type-icon,
+.urlbarView.megabar:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-type-icon {
+  background-image: url(chrome://browser/skin/tab-12.svg);
+  color: #008eaf; /* Teal-70 */
+  stroke: #fff;
+}
+
+:root[lwt-toolbar-field-brighttext] .urlbarView.megabar .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-type-icon {
+  color: #0a84ff; /* Blue-50 */
+  stroke: #38383d; /* Grey-70 */
+}
+
+:root[lwt-toolbar-field-brighttext] .urlbarView.megabar .urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-type-icon,
+:root[lwt-toolbar-field-brighttext] .urlbarView.megabar:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-type-icon {
+  color: #00c8d7; /* Teal-60 */
+  stroke: #38383d; /* Grey-70 */
 }
 
 .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-type-icon {
