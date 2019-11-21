@@ -3380,42 +3380,36 @@ int NS_main(int argc, NS_tchar** argv) {
 
       // Note: The PostUpdate process is launched by the elevated updater which
       // is running in the current user's session when the update is successful
-      // and doesn't need to be performed by the unelevated updater as is done
-      // when the maintenance service launches the updater.
+      // and doesn't need to be launched here by the unelevated updater as is
+      // done when the maintenance service launches the updater code above.
 
+      CloseHandle(elevatedFileHandle);
+
+      if (updateLockFileHandle != INVALID_HANDLE_VALUE) {
+        CloseHandle(updateLockFileHandle);
+      }
+
+      if (!useService && noServiceFallback) {
+        // When the service command was not launched at all.
+        // We should only reach this code path because we had write access
+        // all along to the directory and a fallback key existed, and we
+        // have fallback disabled (MOZ_NO_SERVICE_FALLBACK env var exists).
+        // We only currently use this env var from XPCShell tests.
+        gCopyOutputFiles = false;
+        WriteStatusFile(lastFallbackError);
+      }
+
+      // The logging output needs to be finished before launching the callback
+      // application so the update status file contains the value from the
+      // secure directory used by the maintenance service and the elevated
+      // updater.
+      output_finish();
       if (argc > callbackIndex) {
         LaunchCallbackApp(argv[5], argc - callbackIndex, argv + callbackIndex,
                           sUsingService);
       }
+      return 0;
 
-      CloseHandle(elevatedFileHandle);
-
-      if (!useService && !noServiceFallback &&
-          INVALID_HANDLE_VALUE == updateLockFileHandle) {
-        // We didn't use the service and we did run the elevated updater.exe.
-        // The elevated updater.exe is responsible for writing out the
-        // update.status file.
-        output_finish();
-        return 0;
-      } else if (useService) {
-        // The service command was launched. The service is responsible for
-        // writing out the update.status file.
-        if (updateLockFileHandle != INVALID_HANDLE_VALUE) {
-          CloseHandle(updateLockFileHandle);
-        }
-        output_finish();
-        return 0;
-      } else {
-        // Otherwise the service command was not launched at all.
-        // We are only reaching this code path because we had write access
-        // all along to the directory and a fallback key existed, and we
-        // have fallback disabled (MOZ_NO_SERVICE_FALLBACK env var exists).
-        // We only currently use this env var from XPCShell tests.
-        CloseHandle(updateLockFileHandle);
-        WriteStatusFile(lastFallbackError);
-        output_finish();
-        return 0;
-      }
       // This is the end of the code block for launching another instance of the
       // updater using either the maintenance service or with the 'runas' verb
       // when the updater doesn't have write access to the installation
