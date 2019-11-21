@@ -452,32 +452,26 @@ void IDBDatabase::DeleteObjectStore(const nsAString& aName, ErrorResult& aRv) {
     return;
   }
 
-  nsTArray<ObjectStoreSpec>& specArray = mSpec->objectStores();
+  auto& specArray = mSpec->objectStores();
+  const auto end = specArray.end();
+  const auto foundIt =
+      std::find_if(specArray.begin(), end, [&aName](const auto& objectStore) {
+        const ObjectStoreMetadata& metadata = objectStore.metadata();
+        MOZ_ASSERT(metadata.id());
 
-  int64_t objectStoreId = 0;
+        return aName == metadata.name();
+      });
 
-  for (uint32_t specCount = specArray.Length(), specIndex = 0;
-       specIndex < specCount; specIndex++) {
-    const ObjectStoreMetadata& metadata = specArray[specIndex].metadata();
-    MOZ_ASSERT(metadata.id());
-
-    if (aName == metadata.name()) {
-      objectStoreId = metadata.id();
-
-      // Must do this before altering the metadata array!
-      transaction->DeleteObjectStore(objectStoreId);
-
-      specArray.RemoveElementAt(specIndex);
-
-      RefreshSpec(/* aMayDelete */ false);
-      break;
-    }
-  }
-
-  if (!objectStoreId) {
+  if (foundIt == end) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR);
     return;
   }
+
+  // Must do this before altering the metadata array!
+  transaction->DeleteObjectStore(foundIt->metadata().id());
+
+  specArray.RemoveElementAt(foundIt);
+  RefreshSpec(/* aMayDelete */ false);
 
   // Don't do this in the macro because we always need to increment the serial
   // number to keep in sync with the parent.
