@@ -4731,7 +4731,13 @@ pref("services.common.log.logger.tokenserverclient", "Debug");
   pref("services.sync.engine.addons", true);
   pref("services.sync.engine.addresses", false);
   pref("services.sync.engine.bookmarks", true);
-  pref("services.sync.engine.bookmarks.buffer", true);
+  #ifdef EARLY_BETA_OR_EARLIER
+    // Enable the new bookmark sync engine through early Beta, but not release
+    // candidates or Release.
+    pref("services.sync.engine.bookmarks.buffer", true);
+  #else
+    pref("services.sync.engine.bookmarks.buffer", false);
+  #endif
   pref("services.sync.engine.creditcards", false);
   pref("services.sync.engine.history", true);
   pref("services.sync.engine.passwords", true);
