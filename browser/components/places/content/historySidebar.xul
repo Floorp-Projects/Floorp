@@ -32,7 +32,7 @@
   <script src="chrome://browser/content/places/places-tree.js"/>
   <script src="chrome://global/content/editMenuOverlay.js"/>
 
-#include placesCommands.inc.xul
+#include placesCommands.inc.xhtml
 
 #include ../../../../toolkit/content/editMenuKeys.inc.xul
 #ifdef XP_MACOSX
@@ -41,8 +41,8 @@
   </keyset>
 #endif
 
-#include placesContextMenu.inc.xul
-#include bookmarksHistoryTooltip.inc.xul
+#include placesContextMenu.inc.xhtml
+#include bookmarksHistoryTooltip.inc.xhtml
 
   <hbox id="sidebar-search-container">
     <search-textbox id="search-box" flex="1"

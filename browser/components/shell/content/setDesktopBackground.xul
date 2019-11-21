@@ -30,7 +30,7 @@
         style="width: 30em;">
 
 #ifdef XP_MACOSX
-#include ../../../base/content/macWindow.inc.xul
+#include ../../../base/content/macWindow.inc.xhtml
 #endif
 
     <stringbundle id="backgroundBundle"

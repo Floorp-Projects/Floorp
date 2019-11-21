@@ -343,9 +343,9 @@
   box-shadow: var(--focus-ring-box-shadow);
 }
 
-/* The following elements come from editBookmarkPanel.inc.xul. Styling that's
+/* The following elements come from editBookmarkPanel.inc.xhtml. Styling that's
    specific to the editBookmarkPanel should be in browser.css. Styling that
-   should be shared by all editBookmarkPanel.inc.xul consumers should be in
+   should be shared by all editBookmarkPanel.inc.xhtml consumers should be in
    editBookmark.css. */
 
 #editBMPanel_newFolderBox {

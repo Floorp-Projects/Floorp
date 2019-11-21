@@ -29,7 +29,7 @@
     <html:link rel="localization" href="browser/pageInfo.ftl"/>
   </linkset>
   #ifdef XP_MACOSX
-  #include ../macWindow.inc.xul
+  #include ../macWindow.inc.xhtml
   #else
   <script src="chrome://global/content/globalOverlay.js"/>
   <script src="chrome://global/content/editMenuOverlay.js"/>
