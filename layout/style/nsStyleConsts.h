@@ -771,9 +771,11 @@ enum class StyleShapeRendering : uint8_t {
 };
 
 // stroke-linecap
-#define NS_STYLE_STROKE_LINECAP_BUTT 0
-#define NS_STYLE_STROKE_LINECAP_ROUND 1
-#define NS_STYLE_STROKE_LINECAP_SQUARE 2
+enum class StyleStrokeLinecap : uint8_t {
+  Butt,
+  Round,
+  Square,
+};
 
 // stroke-linejoin
 #define NS_STYLE_STROKE_LINEJOIN_MITER 0

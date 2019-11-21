@@ -125,6 +125,7 @@ rusty-enums = [
     "mozilla::StyleTextRendering",
     "mozilla::StyleColorAdjust",
     "mozilla::StyleFlexDirection",
+    "mozilla::StyleStrokeLinecap",
     "mozilla::StyleFlexWrap",
     "mozilla::StyleTextDecorationSkipInk",
     "mozilla::StyleTextDecorationLength",
