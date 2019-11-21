@@ -1,0 +1,227 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Don't send onFormSubmit message on navigation if the user did not interact
+    with the login fields</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/AddTask.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <iframe id="loginFrame">
+  </iframe>
+</div>
+
+<pre id="test"></pre>
+<script>
+const { TestUtils } = SpecialPowers.Cu.import("resource://testing-common/TestUtils.jsm");
+SimpleTest.requestFlakyTimeout("Giving a chance for the unexpected popup to show");
+let iframe = document.getElementById("loginFrame");
+
+function waitForLoad() {
+  return new Promise(resolve => {
+    function handleLoad() {
+      iframe.removeEventListener("load", handleLoad);
+      resolve();
+    }
+    iframe.addEventListener("load", handleLoad);
+  });
+}
+
+ async function setup(pageUrl) {
+  let loadPromise = waitForLoad();
+  let processedFormPromise = promiseFormsProcessed();
+  iframe.src = pageUrl || "https://example.org/tests/toolkit/components/passwordmgr/test/mochitest/formless_basic.html";
+
+  await processedFormPromise;
+  info("initial form processed");
+  await loadPromise;
+  await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+    let doc = this.content.document;
+    let link = doc.createElement("a");
+    link.setAttribute("href", "http://mochi.test:8888");
+    doc.body.appendChild(link);
+  });
+}
+
+async function setFieldValues() {
+  await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+    // assign to .value directly, we deliberately don't emulate user input
+    let doc = this.content.document;
+    doc.getElementById("form-basic-username").value = "user";
+    doc.getElementById("form-basic-password").value = "pass";
+  });
+}
+
+async function clickLink() {
+  let loadPromise = waitForLoad();
+  await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+    let doc = this.content.document;
+    doc.querySelector("a[href]").click();
+  });
+  await loadPromise;
+}
+
+async function userInput(selector, value) {
+  await SpecialPowers.spawn(getIframeBrowsingContext(window), [selector, value], function(sel, val) {
+    this.content.document.querySelector(sel).setUserInput(val);
+  });
+}
+
+add_task(async function test_init() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["signon.userInputRequiredToCapture.enabled", true],
+  ]});
+});
+
+add_task(async function test_no_message_on_navigation() {
+  // If login field values were set by the website, we don't message to save the
+  // login values if the user did not interact with the fields before submiting.
+  await setup();
+  await setFieldValues();
+
+  let submitMessageSent = false;
+  getSubmitMessage().then(value => {
+    submitMessageSent = true;
+  });
+  await clickLink();
+
+  // allow time to pass before concluding no onFormSubmit message was sent
+  await new Promise(res => setTimeout(res, 1000));
+  ok(!submitMessageSent, "onFormSubmit message is not sent on navigation since the login fields were not modified");
+});
+
+add_task(async function test_prefd_off_message_on_navigation() {
+  // Confirm the pref controls capture behavior with non-user-set field values.
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["signon.userInputRequiredToCapture.enabled", false],
+  ]});
+  await setup();
+  await setFieldValues();
+
+  let promiseSubmitMessage = getSubmitMessage();
+  await clickLink();
+  await promiseSubmitMessage;
+  info("onFormSubmit message was sent as expected after navigation");
+
+  SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_message_with_user_interaction_on_navigation() {
+  await setup();
+  await setFieldValues();
+  await userInput("#form-basic-username", "foo");
+
+  let promiseSubmitMessage = getSubmitMessage();
+  await clickLink();
+  await promiseSubmitMessage;
+  info("onFormSubmit message was sent as expected after user interaction");
+});
+
+add_task(async function test_empty_form_with_input_handler() {
+  await setup();
+  await userInput("#form-basic-username", "user");
+  await userInput("#form-basic-password", "pass");
+
+  let promiseSubmitMessage = getSubmitMessage();
+  await clickLink();
+  await promiseSubmitMessage;
+  info("onFormSubmit message was sent as expected after user interaction");
+});
+
+add_task(async function test_message_on_autofill_without_user_interaction() {
+  runInParent(function addLogin() {
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    let login = Cc["@mozilla.org/login-manager/loginInfo;1"]
+                        .createInstance(Ci.nsILoginInfo);
+    login.init("https://example.org", "https://example.org", null,
+               "user1", "pass1", "", "");
+
+    Services.logins.addLogin(login);
+  });
+
+  await setup();
+  // Check for autofilled values.
+  await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0),
+                                   "form-basic-username", "user1",
+                                   "form-basic-password", "pass1");
+
+  let promiseSubmitMessage = getSubmitMessage();
+  await clickLink();
+
+  let messageData = await promiseSubmitMessage;
+  ok(messageData.autoFilledLoginGuid, "Message was sent with autoFilledLoginGuid");
+});
+
+add_task(async function test_message_on_autofill_with_user_interaction() {
+  runInParent(function addLogin() {
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    let login = Cc["@mozilla.org/login-manager/loginInfo;1"]
+                        .createInstance(Ci.nsILoginInfo);
+    login.init("https://example.org", "https://example.org", null,
+               "user1", "pass1", "", "");
+
+    Services.logins.addLogin(login);
+  });
+
+  await setup();
+  // Check for autofilled values.
+  await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0),
+                                   "form-basic-username", "user1",
+                                   "form-basic-password", "pass1");
+
+  userInput("#form-basic-username", "newuser");
+  let promiseSubmitMessage = getSubmitMessage();
+  await clickLink();
+
+  let messageData = await promiseSubmitMessage;
+  ok(messageData.autoFilledLoginGuid, "Message was sent with autoFilledLoginGuid");
+  is(messageData.usernameField.value, "newuser", "Message was sent with correct usernameField.value");
+  info("Message was sent as expected after user interaction");
+});
+
+add_task(async function test_no_message_on_user_input_from_other_form() {
+  // ensure input into unrelated fields on the page don't change login form modified-ness
+  await setup("http://example.com/tests/toolkit/components/passwordmgr/test/mochitest/form_basic.html");
+
+  // Add a form which will not be submitted and an input associated with that form
+  await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+    let doc = this.content.document;
+    let loginForm = doc.querySelector("form");
+    let fragment = doc.createDocumentFragment();
+    let otherForm = doc.createElement("form");
+    otherForm.id ="otherForm";
+    fragment.appendChild(otherForm);
+
+    let alienField = doc.createElement("input");
+    alienField.id = "alienField";
+    alienField.type = "text"; // not a password field
+    alienField.setAttribute("form", "otherForm");
+    // new field is child of the login, but a member of different non-login form via its .form property
+    loginForm.appendChild(alienField);
+    doc.body.appendChild(fragment);
+  });
+  await userInput("#alienField", "something");
+
+  let submitMessageSent = false;
+  getSubmitMessage().then(data => {
+    info("submit mesage data: " + JSON.stringify(data));
+    submitMessageSent = true;
+  });
+
+  info("submitting the form");
+  await clickLink();
+
+  // allow time to pass before concluding no onFormSubmit message was sent
+  await new Promise(res => setTimeout(res, 1000));
+  ok(!submitMessageSent, "onFormSubmit message is not sent on navigation since no login fields were modified");
+});
+
+</script>
+</body>
+</html>
