@@ -724,7 +724,7 @@ var E10SUtils = {
   },
 
   shouldLoadURI(aDocShell, aURI, aHasPostData) {
-    let remoteSubframes = aDocShell.useRemoteSubframes;
+    let { useRemoteSubframes } = aDocShell;
 
     // Inner frames should always load in the current process
     // XXX(nika): Handle shouldLoadURI-triggered process switches for remote
@@ -756,7 +756,7 @@ var E10SUtils = {
     // We should never be sending a POST request from the parent process to a
     // http(s) uri, so make sure we switch if we're currently in that process.
     if (
-      useHttpResponseProcessSelection &&
+      (useRemoteSubframes || useHttpResponseProcessSelection) &&
       (aURI.scheme == "http" || aURI.scheme == "https") &&
       Services.appinfo.remoteType != NOT_REMOTE
     ) {
@@ -797,7 +797,7 @@ var E10SUtils = {
         this.getRemoteTypeForURIObject(
           aURI,
           true,
-          remoteSubframes,
+          useRemoteSubframes,
           remoteType,
           webNav.currentURI
         )
@@ -805,7 +805,7 @@ var E10SUtils = {
     }
 
     // If the URI can be loaded in the current process then continue
-    return this.shouldLoadURIInThisProcess(aURI, remoteSubframes);
+    return this.shouldLoadURIInThisProcess(aURI, useRemoteSubframes);
   },
 
   redirectLoad(
