@@ -71,3 +71,57 @@ add_task(async function test_searchConfig_google() {
   await test.run(false);
   await test.run(true);
 });
+
+add_task(async function test_searchConfig_google_with_mozparam() {
+  // Test a couple of configurations with a MozParam set up.
+  const TEST_DATA = [
+    {
+      locale: "en-US",
+      region: "US",
+      pref: "google_channel_us",
+      expected: "us_param",
+    },
+    {
+      locale: "en-US",
+      region: "GB",
+      pref: "google_channel_row",
+      expected: "row_param",
+    },
+  ];
+
+  const defaultBranch = Services.prefs.getDefaultBranch(
+    SearchUtils.BROWSER_SEARCH_PREF
+  );
+  for (const testData of TEST_DATA) {
+    defaultBranch.setCharPref("param." + testData.pref, testData.expected);
+  }
+
+  // TODO: Bug 1598270 will add the true option here, to test for the selector,
+  // aka modern configuration.
+  for (const useSelector of [false]) {
+    info("Using " + (useSelector ? "Selector" : "Legacy Configuration"));
+    for (const testData of TEST_DATA) {
+      info(`Checking region ${testData.region}, locale ${testData.locale}`);
+      await test._reinit(testData.region, testData.locale);
+      const engines = await test._getEngines(
+        useSelector,
+        testData.region,
+        testData.locale
+      );
+
+      Assert.ok(
+        engines[0].identifier.startsWith("google"),
+        "Should have the correct engine"
+      );
+      console.log(engines[0]);
+
+      const submission = engines[0].getSubmission("test", URLTYPE_SEARCH_HTML);
+      Assert.ok(
+        submission.uri.query
+          .split("&")
+          .includes("channel=" + testData.expected),
+        "Should be including the correct MozParam parameter for the engine"
+      );
+    }
+  }
+});
