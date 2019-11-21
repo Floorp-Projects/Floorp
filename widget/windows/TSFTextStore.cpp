@@ -906,6 +906,11 @@ class GetInputScopeString : public nsAutoCString {
         case IS_XML:
           AppendLiteral("IS_XML");
           break;
+#ifndef __MINGW32__
+        case IS_PRIVATE:
+          AppendLiteral("IS_PRIVATE");
+          break;
+#endif
         default:
           AppendPrintf("Unknown Value(%d)", inputScope);
           break;
@@ -1913,7 +1918,8 @@ bool TSFTextStore::Init(nsWindowBase* aWidget, const InputContext& aContext) {
     return false;
   }
 
-  SetInputScope(aContext.mHTMLInputType, aContext.mHTMLInputInputmode);
+  SetInputScope(aContext.mHTMLInputType, aContext.mHTMLInputInputmode,
+                aContext.mInPrivateBrowsing);
 
   // Create document manager
   RefPtr<ITfThreadMgr> threadMgr = sThreadMgr;
@@ -3958,8 +3964,17 @@ bool TSFTextStore::ShouldSetInputScopeOfURLBarToDefault() {
 }
 
 void TSFTextStore::SetInputScope(const nsString& aHTMLInputType,
-                                 const nsString& aHTMLInputInputMode) {
+                                 const nsString& aHTMLInputInputMode,
+                                 bool aInPrivateBrowsing) {
   mInputScopes.Clear();
+
+#ifndef __MINGW32__
+  // MinGW build environment doesn't have IS_PRIVATE yet.
+  if (aInPrivateBrowsing) {
+    mInputScopes.AppendElement(IS_PRIVATE);
+  }
+#endif
+
   if (aHTMLInputType.IsEmpty() || aHTMLInputType.EqualsLiteral("text")) {
     if (aHTMLInputInputMode.EqualsLiteral("url")) {
       mInputScopes.AppendElement(IS_URL);
@@ -6718,7 +6733,8 @@ void TSFTextStore::SetInputContext(nsWindowBase* aWidget,
     if (sEnabledTextStore) {
       RefPtr<TSFTextStore> textStore(sEnabledTextStore);
       textStore->SetInputScope(aContext.mHTMLInputType,
-                               aContext.mHTMLInputInputmode);
+                               aContext.mHTMLInputInputmode,
+                               aContext.mInPrivateBrowsing);
     }
     return;
   }

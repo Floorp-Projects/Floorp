@@ -452,7 +452,7 @@ void IMEHandler::OnDestroyWindow(nsWindow* aWindow) {
   if (!sIsInTSFMode) {
     // MSDN says we need to set IS_DEFAULT to avoid memory leak when we use
     // SetInputScopes API. Use an empty string to do this.
-    SetInputScopeForIMM32(aWindow, EmptyString(), EmptyString());
+    SetInputScopeForIMM32(aWindow, EmptyString(), EmptyString(), false);
   }
 #endif  // #ifdef NS_ENABLE_TSF
   AssociateIMEContext(aWindow, true);
@@ -513,7 +513,8 @@ void IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
   } else {
     // Set at least InputScope even when TextStore is not available.
     SetInputScopeForIMM32(aWindow, aInputContext.mHTMLInputType,
-                          aInputContext.mHTMLInputInputmode);
+                          aInputContext.mHTMLInputInputmode,
+                          aInputContext.mInPrivateBrowsing);
   }
 #endif  // #ifdef NS_ENABLE_TSF
 
@@ -635,11 +636,18 @@ void IMEHandler::OnKeyboardLayoutChanged() {
 // static
 void IMEHandler::SetInputScopeForIMM32(nsWindow* aWindow,
                                        const nsAString& aHTMLInputType,
-                                       const nsAString& aHTMLInputInputmode) {
+                                       const nsAString& aHTMLInputInputmode,
+                                       bool aInPrivateBrowsing) {
   if (sIsInTSFMode || !sSetInputScopes || aWindow->Destroyed()) {
     return;
   }
   AutoTArray<InputScope, 3> scopes;
+
+#ifndef __MINGW32__
+  if (aInPrivateBrowsing) {
+    scopes.AppendElement(IS_PRIVATE);
+  }
+#endif
 
   // http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html
   if (aHTMLInputType.IsEmpty() || aHTMLInputType.EqualsLiteral("text")) {
