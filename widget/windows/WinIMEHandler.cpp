@@ -452,7 +452,7 @@ void IMEHandler::OnDestroyWindow(nsWindow* aWindow) {
   if (!sIsInTSFMode) {
     // MSDN says we need to set IS_DEFAULT to avoid memory leak when we use
     // SetInputScopes API. Use an empty string to do this.
-    SetInputScopeForIMM32(aWindow, EmptyString(), EmptyString(), false);
+    SetInputScopeForIMM32(aWindow, EmptyString(), EmptyString());
   }
 #endif  // #ifdef NS_ENABLE_TSF
   AssociateIMEContext(aWindow, true);
@@ -513,8 +513,7 @@ void IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
   } else {
     // Set at least InputScope even when TextStore is not available.
     SetInputScopeForIMM32(aWindow, aInputContext.mHTMLInputType,
-                          aInputContext.mHTMLInputInputmode,
-                          aInputContext.mInPrivateBrowsing);
+                          aInputContext.mHTMLInputInputmode);
   }
 #endif  // #ifdef NS_ENABLE_TSF
 
@@ -636,21 +635,18 @@ void IMEHandler::OnKeyboardLayoutChanged() {
 // static
 void IMEHandler::SetInputScopeForIMM32(nsWindow* aWindow,
                                        const nsAString& aHTMLInputType,
-                                       const nsAString& aHTMLInputInputmode,
-                                       bool aInPrivateBrowsing) {
+                                       const nsAString& aHTMLInputInputmode) {
   if (sIsInTSFMode || !sSetInputScopes || aWindow->Destroyed()) {
     return;
   }
-  AutoTArray<InputScope, 3> scopes;
-
-  if (aInPrivateBrowsing) {
-    scopes.AppendElement(IS_PRIVATE);
-  }
-
+  UINT arraySize = 0;
+  const InputScope* scopes = nullptr;
   // http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html
   if (aHTMLInputType.IsEmpty() || aHTMLInputType.EqualsLiteral("text")) {
     if (aHTMLInputInputmode.EqualsLiteral("url")) {
-      scopes.AppendElement(IS_URL);
+      static const InputScope inputScopes[] = {IS_URL};
+      scopes = &inputScopes[0];
+      arraySize = ArrayLength(inputScopes);
     } else if (aHTMLInputInputmode.EqualsLiteral("mozAwesomebar")) {
       // Even if Awesomebar has focus, user may not input URL directly.
       // However, on-screen keyboard for URL should be shown because it has
@@ -669,47 +665,77 @@ void IMEHandler::SetInputScopeForIMM32(nsWindow* aWindow,
       //      been updated yet even after the OS is upgraded to Win8 or later,
       //      it's installed as IMM-IME.
       if (TSFTextStore::ShouldSetInputScopeOfURLBarToDefault()) {
-        scopes.AppendElement(IS_DEFAULT);
+        static const InputScope inputScopes[] = {IS_DEFAULT};
+        scopes = &inputScopes[0];
+        arraySize = ArrayLength(inputScopes);
       } else {
-        scopes.AppendElement(IS_URL);
+        static const InputScope inputScopes[] = {IS_URL};
+        scopes = &inputScopes[0];
+        arraySize = ArrayLength(inputScopes);
       }
     } else if (aHTMLInputInputmode.EqualsLiteral("email")) {
-      scopes.AppendElement(IS_EMAIL_SMTPEMAILADDRESS);
+      static const InputScope inputScopes[] = {IS_EMAIL_SMTPEMAILADDRESS};
+      scopes = &inputScopes[0];
+      arraySize = ArrayLength(inputScopes);
     } else if (aHTMLInputInputmode.EqualsLiteral("tel")) {
-      scopes.AppendElement(IS_TELEPHONE_LOCALNUMBER);
-      scopes.AppendElement(IS_TELEPHONE_FULLTELEPHONENUMBER);
+      static const InputScope inputScopes[] = {
+          IS_TELEPHONE_LOCALNUMBER, IS_TELEPHONE_FULLTELEPHONENUMBER};
+      scopes = &inputScopes[0];
+      arraySize = ArrayLength(inputScopes);
     } else if (aHTMLInputInputmode.EqualsLiteral("numeric")) {
-      scopes.AppendElement(IS_NUMBER);
+      static const InputScope inputScopes[] = {IS_NUMBER};
+      scopes = &inputScopes[0];
+      arraySize = ArrayLength(inputScopes);
     } else {
-      scopes.AppendElement(IS_DEFAULT);
+      static const InputScope inputScopes[] = {IS_DEFAULT};
+      scopes = &inputScopes[0];
+      arraySize = ArrayLength(inputScopes);
     }
   } else if (aHTMLInputType.EqualsLiteral("url")) {
-    scopes.AppendElement(IS_URL);
+    static const InputScope inputScopes[] = {IS_URL};
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
   } else if (aHTMLInputType.EqualsLiteral("search")) {
-    scopes.AppendElement(IS_SEARCH);
+    static const InputScope inputScopes[] = {IS_SEARCH};
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
   } else if (aHTMLInputType.EqualsLiteral("email")) {
-    scopes.AppendElement(IS_EMAIL_SMTPEMAILADDRESS);
+    static const InputScope inputScopes[] = {IS_EMAIL_SMTPEMAILADDRESS};
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
   } else if (aHTMLInputType.EqualsLiteral("password")) {
-    scopes.AppendElement(IS_PASSWORD);
+    static const InputScope inputScopes[] = {IS_PASSWORD};
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
   } else if (aHTMLInputType.EqualsLiteral("datetime") ||
              aHTMLInputType.EqualsLiteral("datetime-local")) {
-    scopes.AppendElement(IS_DATE_FULLDATE);
-    scopes.AppendElement(IS_TIME_FULLTIME);
+    static const InputScope inputScopes[] = {IS_DATE_FULLDATE,
+                                             IS_TIME_FULLTIME};
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
   } else if (aHTMLInputType.EqualsLiteral("date") ||
              aHTMLInputType.EqualsLiteral("month") ||
              aHTMLInputType.EqualsLiteral("week")) {
-    scopes.AppendElement(IS_DATE_FULLDATE);
+    static const InputScope inputScopes[] = {IS_DATE_FULLDATE};
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
   } else if (aHTMLInputType.EqualsLiteral("time")) {
-    scopes.AppendElement(IS_TIME_FULLTIME);
+    static const InputScope inputScopes[] = {IS_TIME_FULLTIME};
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
   } else if (aHTMLInputType.EqualsLiteral("tel")) {
-    scopes.AppendElement(IS_TELEPHONE_FULLTELEPHONENUMBER);
-    scopes.AppendElement(IS_TELEPHONE_LOCALNUMBER);
+    static const InputScope inputScopes[] = {IS_TELEPHONE_FULLTELEPHONENUMBER,
+                                             IS_TELEPHONE_LOCALNUMBER};
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
   } else if (aHTMLInputType.EqualsLiteral("number")) {
-    scopes.AppendElement(IS_NUMBER);
+    static const InputScope inputScopes[] = {IS_NUMBER};
+    scopes = &inputScopes[0];
+    arraySize = ArrayLength(inputScopes);
   }
-  if (!scopes.IsEmpty()) {
-    sSetInputScopes(aWindow->GetWindowHandle(), scopes.Elements(),
-                    scopes.Length(), nullptr, 0, nullptr, nullptr);
+  if (scopes && arraySize > 0) {
+    sSetInputScopes(aWindow->GetWindowHandle(), scopes, arraySize, nullptr, 0,
+                    nullptr, nullptr);
   }
 }
 
