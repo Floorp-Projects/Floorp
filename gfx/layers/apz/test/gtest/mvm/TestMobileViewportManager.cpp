@@ -39,6 +39,7 @@ class MockMVMContext : public MVMContext {
   MOCK_METHOD0(Destroy, void());
 
   MOCK_METHOD1(SetVisualViewportSize, void(const CSSSize& aSize));
+  MOCK_METHOD0(PostVisualViewportResizeEventByDynamicToolbar, void());
   MOCK_METHOD0(UpdateDisplayPortMargins, void());
 
   void SetMVM(MobileViewportManager* aMVM) { mMVM = aMVM; }

@@ -9033,6 +9033,21 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
         viewport.SizeTo(nsLayoutUtils::ExpandHeightForViewportUnits(
             presContext, viewport.Size()));
         metrics.SetLayoutViewport(viewport);
+
+        // We need to set 'fixed margins' to adjust 'fixed margins' value on the
+        // composiutor in the case where the dynamic toolbar is completely
+        // hidden because the margin value on the compositor is offset from the
+        // position where the dynamic toolbar is completely VISIBLE but now the
+        // toolbar is completely HIDDEN we need to adjust the difference on the
+        // compositor.
+        if (presContext->GetDynamicToolbarState() ==
+            DynamicToolbarState::Collapsed) {
+          metrics.SetFixedLayerMargins(
+              ScreenMargin(0, 0,
+                           presContext->GetDynamicToolbarHeight() -
+                               presContext->GetDynamicToolbarMaxHeight(),
+                           0));
+        }
       }
     }
 

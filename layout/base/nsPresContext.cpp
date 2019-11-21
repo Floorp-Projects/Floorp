@@ -169,6 +169,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mCurAppUnitsPerDevPixel(0),
       mAutoQualityMinFontSizePixelsPref(0),
       mDynamicToolbarMaxHeight(0),
+      mDynamicToolbarHeight(0),
       mPageSize(-1, -1),
       mPageScale(0.0),
       mPPScale(1.0f),
@@ -675,6 +676,7 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
     if (BrowserChild* browserChild =
             BrowserChild::GetFrom(mDocument->GetDocShell())) {
       mDynamicToolbarMaxHeight = browserChild->GetDynamicToolbarMaxHeight();
+      mDynamicToolbarHeight = mDynamicToolbarMaxHeight;
     }
   }
 #endif
@@ -2546,6 +2548,37 @@ void nsPresContext::UpdateDynamicToolbarOffset(ScreenIntCoord aOffset) {
   }
 
   MOZ_ASSERT(-mDynamicToolbarMaxHeight <= aOffset && aOffset <= 0);
+  if (mDynamicToolbarHeight == mDynamicToolbarMaxHeight + aOffset) {
+    return;
+  }
+
+  // Forcibly flush position:fixed elements in the case where the dynamic
+  // toolbar is going to be completely hidden or starts to be visible so that
+  // %-based style values will be recomputed with the visual viewport size which
+  // is including the area covered by the dynamic toolbar.
+  if (mDynamicToolbarHeight == 0 || aOffset == -mDynamicToolbarMaxHeight) {
+    mPresShell->MarkFixedFramesForReflow(IntrinsicDirty::Resize);
+  }
+
+  mDynamicToolbarHeight = mDynamicToolbarMaxHeight + aOffset;
+
+  if (RefPtr<MobileViewportManager> mvm =
+          mPresShell->GetMobileViewportManager()) {
+    mvm->UpdateVisualViewportSizeByDynamicToolbar(-aOffset);
+  }
+}
+
+DynamicToolbarState nsPresContext::GetDynamicToolbarState() const {
+  if (!IsRootContentDocumentCrossProcess() || !HasDynamicToolbar()) {
+    return DynamicToolbarState::None;
+  }
+
+  if (mDynamicToolbarMaxHeight == mDynamicToolbarHeight) {
+    return DynamicToolbarState::Expanded;
+  } else if (mDynamicToolbarHeight == 0) {
+    return DynamicToolbarState::Collapsed;
+  }
+  return DynamicToolbarState::InTransition;
 }
 
 #ifdef DEBUG

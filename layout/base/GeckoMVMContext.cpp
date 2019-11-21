@@ -150,6 +150,17 @@ void GeckoMVMContext::SetVisualViewportSize(const CSSSize& aSize) {
   nsLayoutUtils::SetVisualViewportSize(mPresShell, aSize);
 }
 
+void GeckoMVMContext::PostVisualViewportResizeEventByDynamicToolbar() {
+  MOZ_ASSERT(mDocument);
+
+  // We only fire visual viewport events and don't want to cause any explicit
+  // reflows here since in general we don't use the up-to-date visual viewport
+  // size for layout.
+  if (auto* window = nsGlobalWindowInner::Cast(mDocument->GetInnerWindow())) {
+    window->VisualViewport()->PostResizeEvent();
+  }
+}
+
 void GeckoMVMContext::UpdateDisplayPortMargins() {
   MOZ_ASSERT(mPresShell);
   if (nsIFrame* root = mPresShell->GetRootScrollFrame()) {
