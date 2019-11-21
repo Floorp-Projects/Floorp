@@ -2591,25 +2591,29 @@ void BackgroundRequestChild::MaybeSendContinue() {
 void BackgroundRequestChild::OnPreprocessFinished(
     uint32_t aCloneDataIndex, UniquePtr<JSStructuredCloneData> aCloneData) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aCloneDataIndex < mPreprocessHelpers.Length());
+  MOZ_ASSERT(aCloneDataIndex < mCloneInfos.Length());
   MOZ_ASSERT(aCloneData);
-  MOZ_ASSERT(mPreprocessHelpers[aCloneDataIndex]);
-  MOZ_ASSERT(!mCloneDatas[aCloneDataIndex]);
 
-  mCloneDatas[aCloneDataIndex] = std::move(aCloneData);
+  auto& cloneInfo = mCloneInfos[aCloneDataIndex];
+  MOZ_ASSERT(cloneInfo.mPreprocessHelper);
+  MOZ_ASSERT(!cloneInfo.mCloneData);
+
+  cloneInfo.mCloneData = std::move(aCloneData);
 
   MaybeSendContinue();
 
-  mPreprocessHelpers[aCloneDataIndex] = nullptr;
+  cloneInfo.mPreprocessHelper = nullptr;
 }
 
 void BackgroundRequestChild::OnPreprocessFailed(uint32_t aCloneDataIndex,
                                                 nsresult aErrorCode) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aCloneDataIndex < mPreprocessHelpers.Length());
+  MOZ_ASSERT(aCloneDataIndex < mCloneInfos.Length());
   MOZ_ASSERT(NS_FAILED(aErrorCode));
-  MOZ_ASSERT(mPreprocessHelpers[aCloneDataIndex]);
-  MOZ_ASSERT(!mCloneDatas[aCloneDataIndex]);
+
+  auto& cloneInfo = mCloneInfos[aCloneDataIndex];
+  MOZ_ASSERT(cloneInfo.mPreprocessHelper);
+  MOZ_ASSERT(!cloneInfo.mCloneData);
 
   if (NS_SUCCEEDED(mPreprocessResultCode)) {
     mPreprocessResultCode = aErrorCode;
@@ -2617,18 +2621,15 @@ void BackgroundRequestChild::OnPreprocessFailed(uint32_t aCloneDataIndex,
 
   MaybeSendContinue();
 
-  mPreprocessHelpers[aCloneDataIndex] = nullptr;
+  cloneInfo.mPreprocessHelper = nullptr;
 }
 
 UniquePtr<JSStructuredCloneData> BackgroundRequestChild::GetNextCloneData() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mCurrentCloneDataIndex < mCloneDatas.Length());
-  MOZ_ASSERT(mCloneDatas[mCurrentCloneDataIndex]);
+  MOZ_ASSERT(mCurrentCloneDataIndex < mCloneInfos.Length());
+  MOZ_ASSERT(mCloneInfos[mCurrentCloneDataIndex].mCloneData);
 
-  UniquePtr<JSStructuredCloneData> cloneData;
-  mCloneDatas[mCurrentCloneDataIndex++].swap(cloneData);
-
-  return cloneData;
+  return std::move(mCloneInfos[mCurrentCloneDataIndex++].mCloneData);
 }
 
 void BackgroundRequestChild::HandleResponse(nsresult aResponse) {
@@ -2751,9 +2752,9 @@ nsresult BackgroundRequestChild::HandlePreprocessInternal(
 
   IDBDatabase* database = mTransaction->Database();
 
-  uint32_t count = aPreprocessInfos.Length();
+  const uint32_t count = aPreprocessInfos.Length();
 
-  mPreprocessHelpers.SetLength(count);
+  mCloneInfos.SetLength(count);
 
   // TODO: Since we use the stream transport service, this can spawn 25 threads
   //       and has the potential to cause some annoying browser hiccups.
@@ -2767,8 +2768,8 @@ nsresult BackgroundRequestChild::HandlePreprocessInternal(
 
     MOZ_ASSERT(files.Length() == 1);
 
-    RefPtr<PreprocessHelper>& preprocessHelper = mPreprocessHelpers[index];
-    preprocessHelper = new PreprocessHelper(index, this);
+    auto& preprocessHelper = mCloneInfos[index].mPreprocessHelper;
+    preprocessHelper = MakeRefPtr<PreprocessHelper>(index, this);
 
     nsresult rv = preprocessHelper->Init(files[0]);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2783,8 +2784,6 @@ nsresult BackgroundRequestChild::HandlePreprocessInternal(
     mRunningPreprocessHelpers++;
   }
 
-  mCloneDatas.SetLength(count);
-
   return NS_OK;
 }
 
@@ -2793,9 +2792,9 @@ void BackgroundRequestChild::ActorDestroy(ActorDestroyReason aWhy) {
 
   MaybeCollectGarbageOnIPCMessage();
 
-  for (uint32_t count = mPreprocessHelpers.Length(), index = 0; index < count;
+  for (uint32_t count = mCloneInfos.Length(), index = 0; index < count;
        index++) {
-    RefPtr<PreprocessHelper>& preprocessHelper = mPreprocessHelpers[index];
+    auto& preprocessHelper = mCloneInfos[index].mPreprocessHelper;
 
     if (preprocessHelper) {
       preprocessHelper->ClearActor();
