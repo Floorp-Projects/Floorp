@@ -118,6 +118,9 @@ nsNetworkLinkService::GetNetworkID(nsACString& aNetworkID) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNetworkLinkService::GetVpnDetected(bool* aHasVPN) { return NS_ERROR_NOT_IMPLEMENTED; }
+
 // Note that this function is copied from xpcom/io/nsLocalFileUnix.cpp.
 static nsresult CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutStr) {
   // first see if the conversion would succeed and find the length of the result
