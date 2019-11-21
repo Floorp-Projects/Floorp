@@ -101,6 +101,8 @@ class APZSampler {
 
   ScrollableLayerGuid GetGuid(const LayerMetricsWrapper& aLayer);
 
+  const ScreenMargin& GetGeckoFixedLayerMargins() const;
+
   /**
    * This can be used to assert that the current thread is the
    * sampler thread (which samples the async transform).

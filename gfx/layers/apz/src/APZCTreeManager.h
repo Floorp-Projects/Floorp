@@ -618,6 +618,10 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   already_AddRefed<AsyncPanZoomController> FindZoomableApzc(
       AsyncPanZoomController* aStart) const;
 
+  const ScreenMargin& GetGeckoFixedLayerMargins() const {
+    return mGeckoFixedLayerMargins;
+  }
+
  private:
   typedef bool (*GuidComparator)(const ScrollableLayerGuid&,
                                  const ScrollableLayerGuid&);
@@ -895,7 +899,13 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * RCD-RSF, to account for the dynamic toolbar.
    * Acquire mTreeLock before accessing this.
    */
-  ScreenMargin mFixedLayerMargins;
+  ScreenMargin mCompositorFixedLayerMargins;
+  /* Similar to above |mCompositorFixedLayerMargins|. But this value is the
+   * margins on the main-thread at the last time position:fixed elements were
+   * updated during the dynamic toolbar transitions.
+   * Acquire mTreeLock before accessing this.
+   */
+  ScreenMargin mGeckoFixedLayerMargins;
   /* For logging the APZC tree for debugging (enabled by the apz.printtree
    * pref). */
   gfx::TreeLog<gfx::LOG_DEFAULT> mApzcTreeLog;

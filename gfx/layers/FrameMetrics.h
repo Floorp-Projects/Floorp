@@ -145,7 +145,8 @@ struct FrameMetrics {
            mIsRootContent == aOther.mIsRootContent &&
            mIsRelative == aOther.mIsRelative &&
            mDoSmoothScroll == aOther.mDoSmoothScroll &&
-           mIsScrollInfoLayer == aOther.mIsScrollInfoLayer;
+           mIsScrollInfoLayer == aOther.mIsScrollInfoLayer &&
+           mFixedLayerMargins == aOther.mFixedLayerMargins;
   }
 
   bool operator!=(const FrameMetrics& aOther) const {
@@ -510,6 +511,13 @@ struct FrameMetrics {
   // This is a no-op if mIsRootContent is false.
   void RecalculateLayoutViewportOffset();
 
+  void SetFixedLayerMargins(const ScreenMargin& aFixedLayerMargins) {
+    mFixedLayerMargins = aFixedLayerMargins;
+  }
+  const ScreenMargin& GetFixedLayerMargins() const {
+    return mFixedLayerMargins;
+  }
+
   // Helper function for RecalculateViewportOffset(). Exposed so that
   // APZC can perform the operation on other copies of the layout
   // and visual viewport rects (e.g. the "effective" ones used to implement
@@ -678,6 +686,10 @@ struct FrameMetrics {
   //       existing to consistently use the two fields for those two purposes.
   CSSPoint mVisualViewportOffset;
   ScrollOffsetUpdateType mVisualScrollUpdateType;
+
+  // 'fixed layer margins' on the main-thread. This is only used for the
+  // root-content scroll frame.
+  ScreenMargin mFixedLayerMargins;
 
   // Whether or not this is the root scroll frame for the root content document.
   bool mIsRootContent : 1;
