@@ -39,6 +39,9 @@ class ChromeUtils {
 
  public:
   // Implemented in devtools/shared/heapsnapshot/HeapSnapshot.cpp
+  static uint64_t GetObjectNodeId(GlobalObject& global, JS::HandleObject aVal);
+
+  // Implemented in devtools/shared/heapsnapshot/HeapSnapshot.cpp
   static void SaveHeapSnapshot(GlobalObject& global,
                                const HeapSnapshotBoundaries& boundaries,
                                nsAString& filePath, ErrorResult& rv);
