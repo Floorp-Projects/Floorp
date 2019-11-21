@@ -495,28 +495,14 @@ void js::TraceManuallyBarrieredCrossCompartmentEdge(JSTracer* trc,
     TraceEdgeInternal(trc, dst, name);
   }
 }
+template void js::TraceManuallyBarrieredCrossCompartmentEdge<Value>(
+    JSTracer*, JSObject*, Value*, const char*);
 template void js::TraceManuallyBarrieredCrossCompartmentEdge<JSObject*>(
     JSTracer*, JSObject*, JSObject**, const char*);
 template void js::TraceManuallyBarrieredCrossCompartmentEdge<JSScript*>(
     JSTracer*, JSObject*, JSScript**, const char*);
 template void js::TraceManuallyBarrieredCrossCompartmentEdge<LazyScript*>(
     JSTracer*, JSObject*, LazyScript**, const char*);
-
-template <typename T>
-void js::TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src,
-                                   const WriteBarriered<T>* dst,
-                                   const char* name) {
-  if (ShouldTraceCrossCompartment(trc, src, dst->get())) {
-    TraceEdgeInternal(trc, dst->unsafeUnbarrieredForTracing(), name);
-  }
-}
-
-template void js::TraceCrossCompartmentEdge<Value>(
-    JSTracer* trc, JSObject* src, const WriteBarriered<Value>* dst,
-    const char* name);
-template void js::TraceCrossCompartmentEdge<JSScript*>(
-    JSTracer* trc, JSObject* src, const WriteBarriered<JSScript*>* dst,
-    const char* name);
 
 template <typename T>
 void js::TraceProcessGlobalRoot(JSTracer* trc, T* thing, const char* name) {
