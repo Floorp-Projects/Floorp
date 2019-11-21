@@ -105,7 +105,9 @@ ShadowParts ShadowParts::Parse(const nsAString& aString) {
       MOZ_ASSERT(!mapping.second);
       continue;
     }
+    nsAtom* second = mapping.second.get();
     parts.mMappings.GetOrInsert(mapping.first) = std::move(mapping.second);
+    parts.mReverseMappings.GetOrInsert(second) = std::move(mapping.first);
   }
 
   return parts;

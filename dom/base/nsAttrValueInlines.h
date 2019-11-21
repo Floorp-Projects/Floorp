@@ -253,4 +253,9 @@ inline void nsAttrValue::ToString(mozilla::dom::DOMString& aResult) const {
   }
 }
 
+inline const mozilla::ShadowParts& nsAttrValue::GetShadowPartsValue() const {
+  MOZ_ASSERT(Type() == eShadowParts);
+  return *GetMiscContainer()->mValue.mShadowParts;
+}
+
 #endif
