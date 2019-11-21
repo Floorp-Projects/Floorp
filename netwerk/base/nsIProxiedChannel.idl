@@ -22,6 +22,15 @@ interface nsIProxiedChannel : nsISupports
    * The returned proxy info must not be modified.
    */
   readonly attribute nsIProxyInfo proxyInfo;
+
+  /**
+   * The HTTP response code returned from the proxy to the CONNECT method.
+   * The response code is only available when we get the response from
+   * the proxy server, so this value is known in and after OnStartRequest.
+   *
+   * If CONNECT method is not used, httpProxyConnectResponseCode is always -1.
+   * After OnStartRequest, httpProxyConnectResponseCode is the real HTTP
+   * response code or 0 if we can't reach to the proxy.
+   */
+  readonly attribute int32_t httpProxyConnectResponseCode;
 };
-
-

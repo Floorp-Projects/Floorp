@@ -91,8 +91,10 @@ function get_response(channel, flags = CL_ALLOW_UNKNOWN_CL) {
           request.QueryInterface(Ci.nsIHttpChannel);
           const status = request.status;
           const http_code = status ? undefined : request.responseStatus;
-
-          resolve({ status, http_code, data });
+          request.QueryInterface(Ci.nsIProxiedChannel);
+          const proxy_connect_response_code =
+            request.httpProxyConnectResponseCode;
+          resolve({ status, http_code, data, proxy_connect_response_code });
         },
         null,
         flags
@@ -159,54 +161,62 @@ add_task(async function proxy_auth_failure() {
   chan.notificationCallbacks = new AuthRequestor(
     () => new UnxpectedAuthPrompt2(auth_prompt)
   );
-  const { status, http_code } = await get_response(chan, CL_EXPECT_FAILURE);
+  const { status, http_code, proxy_connect_response_code } = await get_response(
+    chan,
+    CL_EXPECT_FAILURE
+  );
 
   Assert.equal(status, Cr.NS_ERROR_PROXY_AUTHENTICATION_FAILED);
+  Assert.equal(proxy_connect_response_code, 407);
   Assert.equal(http_code, undefined);
   Assert.equal(auth_prompt.triggered, false, "Auth prompt didn't trigger");
 });
 
 // 502 Bad gateway code returned by the proxy.
 add_task(async function proxy_bad_gateway_failure() {
-  const { status, http_code } = await get_response(
+  const { status, http_code, proxy_connect_response_code } = await get_response(
     make_channel(`https://502.example.com/`),
     CL_EXPECT_FAILURE
   );
 
   Assert.equal(status, Cr.NS_ERROR_PROXY_BAD_GATEWAY);
+  Assert.equal(proxy_connect_response_code, 502);
   Assert.equal(http_code, undefined);
 });
 
 // 504 Gateway timeout code returned by the proxy.
 add_task(async function proxy_gateway_timeout_failure() {
-  const { status, http_code } = await get_response(
+  const { status, http_code, proxy_connect_response_code } = await get_response(
     make_channel(`https://504.example.com/`),
     CL_EXPECT_FAILURE
   );
 
   Assert.equal(status, Cr.NS_ERROR_PROXY_GATEWAY_TIMEOUT);
+  Assert.equal(proxy_connect_response_code, 504);
   Assert.equal(http_code, undefined);
 });
 
 // 404 Not Found means the proxy could not resolve the host.
 add_task(async function proxy_host_not_found_failure() {
-  const { status, http_code } = await get_response(
+  const { status, http_code, proxy_connect_response_code } = await get_response(
     make_channel(`https://404.example.com/`),
     CL_EXPECT_FAILURE
   );
 
   Assert.equal(status, Cr.NS_ERROR_UNKNOWN_HOST);
+  Assert.equal(proxy_connect_response_code, 404);
   Assert.equal(http_code, undefined);
 });
 
 // 429 Too Many Requests means we sent too many requests.
 add_task(async function proxy_too_many_requests_failure() {
-  const { status, http_code } = await get_response(
+  const { status, http_code, proxy_connect_response_code } = await get_response(
     make_channel(`https://429.example.com/`),
     CL_EXPECT_FAILURE
   );
 
   Assert.equal(status, Cr.NS_ERROR_PROXY_TOO_MANY_REQUESTS);
+  Assert.equal(proxy_connect_response_code, 429);
   Assert.equal(http_code, undefined);
 });
 

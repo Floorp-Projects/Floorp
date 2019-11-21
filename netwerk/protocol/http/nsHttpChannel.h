@@ -827,6 +827,10 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   TimeStamp mNavigationStartTimeStamp;
 
+  // We update the value of mProxyConnectResponseCode when OnStartRequest is
+  // called and reset the value when we switch to another failover proxy.
+  int32_t mProxyConnectResponseCode;
+
  protected:
   virtual void DoNotifyListenerCleanup() override;
 

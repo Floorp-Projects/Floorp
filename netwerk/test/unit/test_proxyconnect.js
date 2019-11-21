@@ -66,6 +66,7 @@ var accepted = false;
 var acceptedSocket;
 var state = STATE_NONE;
 var transportAvailable = false;
+var proxiedChannel;
 var listener = {
   expectedCode: -1, // uninitialized
 
@@ -79,7 +80,7 @@ var listener = {
     if (state === STATE_COMPLETED) {
       Assert.equal(transportAvailable, false, "transport available not called");
       Assert.equal(status, 0x80004005, "error code matches");
-
+      Assert.equal(proxiedChannel.httpProxyConnectResponseCode, 200);
       nextTest();
       return;
     }
@@ -290,6 +291,7 @@ function test_connectonly() {
   Services.prefs.setIntPref("network.proxy.type", 1);
 
   var chan = makeChan();
+  proxiedChannel = chan.QueryInterface(Ci.nsIProxiedChannel);
   chan.asyncOpen(listener);
 
   do_test_pending();
