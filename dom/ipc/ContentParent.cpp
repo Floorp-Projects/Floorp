@@ -5792,7 +5792,7 @@ mozilla::ipc::IPCResult ContentParent::RecvBHRThreadHang(
     // XXX: We should be able to avoid this potentially expensive copy here by
     // moving our deserialized argument.
     nsCOMPtr<nsIHangDetails> hangDetails =
-        new nsHangDetails(HangDetails(aDetails));
+        new nsHangDetails(HangDetails(aDetails), PersistedToDisk::No);
     obs->NotifyObservers(hangDetails, "bhr-thread-hang", nullptr);
   }
   return IPC_OK();

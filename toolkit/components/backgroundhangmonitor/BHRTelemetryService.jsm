@@ -6,6 +6,7 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
   this,
   "TelemetryController",
@@ -35,6 +36,7 @@ BHRTelemetryService.prototype = Object.freeze({
       modules: [],
       hangs: [],
     };
+    this.clearPermahangFile = false;
   },
 
   recordHang({
@@ -46,6 +48,7 @@ BHRTelemetryService.prototype = Object.freeze({
     remoteType,
     modules,
     annotations,
+    wasPersisted,
   }) {
     if (!Services.telemetry.canRecordExtended) {
       return;
@@ -99,6 +102,10 @@ BHRTelemetryService.prototype = Object.freeze({
       stack,
     });
 
+    if (wasPersisted) {
+      this.clearPermahangFile = true;
+    }
+
     // If we have collected enough hangs, we can submit the hangs we have
     // collected to telemetry.
     if (this.payload.hangs.length > this.TRANSMIT_HANG_COUNT) {
@@ -107,6 +114,13 @@ BHRTelemetryService.prototype = Object.freeze({
   },
 
   submit() {
+    if (this.clearPermahangFile) {
+      OS.File.remove(
+        OS.Path.join(OS.Constants.Path.profileDir, "last_permahang.bin"),
+        { ignoreAbsent: true }
+      );
+    }
+
     if (!Services.telemetry.canRecordExtended) {
       return;
     }
