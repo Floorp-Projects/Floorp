@@ -239,6 +239,12 @@ void main(void) {
             linear_gradient_brush_vs(BRUSH_VS_PARAMS);
             break;
         #endif
+
+        #ifdef WR_FEATURE_RADIAL_GRADIENT_BRUSH
+        case BRUSH_KIND_RADIAL_GRADIENT:
+            radial_gradient_brush_vs(BRUSH_VS_PARAMS);
+            break;
+        #endif
     }
 
 #else
@@ -303,6 +309,12 @@ void main(void) {
 #ifdef WR_FEATURE_LINEAR_GRADIENT_BRUSH
         case BRUSH_KIND_LINEAR_GRADIENT: {
             frag = linear_gradient_brush_fs();
+            break;
+        }
+#endif
+#ifdef WR_FEATURE_RADIAL_GRADIENT_BRUSH
+        case BRUSH_KIND_RADIAL_GRADIENT: {
+            frag = radial_gradient_brush_fs();
             break;
         }
 #endif

@@ -44,6 +44,14 @@ int vecs_per_brush(int brush_kind);
 #include brush_linear_gradient
 #endif
 
+#undef VECS_PER_SPECIFIC_BRUSH
+#undef WR_BRUSH_VS_FUNCTION
+#undef WR_BRUSH_FS_FUNCTION
+
+#ifdef WR_FEATURE_RADIAL_GRADIENT_BRUSH
+#include brush_radial_gradient
+#endif
+
 int vecs_per_brush(int brush_kind) {
     int result;
     switch (brush_kind) {
@@ -74,6 +82,12 @@ int vecs_per_brush(int brush_kind) {
         #ifdef WR_FEATURE_LINEAR_GRADIENT_BRUSH
         case BRUSH_KIND_LINEAR_GRADIENT:
             result = VECS_PER_LINEAR_GRADIENT_BRUSH;
+            break;
+        #endif
+
+        #ifdef WR_FEATURE_RADIAL_GRADIENT_BRUSH
+        case BRUSH_KIND_RADIAL_GRADIENT:
+            result = VECS_PER_RADIAL_GRADIENT_BRUSH;
             break;
         #endif
     }
