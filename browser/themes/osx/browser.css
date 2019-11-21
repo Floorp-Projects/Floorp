@@ -300,6 +300,16 @@
   font-size: 14px;
 }
 
+@supports -moz-bool-pref("browser.urlbar.megabar.expandTextOnFocus") {
+  .urlbarView {
+    font-size: inherit;
+  }
+
+  #urlbar[breakout-extend] {
+    font-size: 1.36em;
+  }
+}
+
 #BMB_bookmarksPopup[side="top"],
 #BMB_bookmarksPopup[side="bottom"] {
   margin-left: -26px;
