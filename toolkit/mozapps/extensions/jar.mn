@@ -33,4 +33,5 @@ toolkit.jar:
   content/mozapps/extensions/rating-star.css                    (content/rating-star.css)
   content/mozapps/extensions/shortcuts.css                      (content/shortcuts.css)
   content/mozapps/extensions/shortcuts.js                       (content/shortcuts.js)
+  content/mozapps/extensions/toggle-button.css                  (content/toggle-button.css)
 #endif
