@@ -70,7 +70,7 @@ Instance decode_instance_attributes() {
     instance.segment_index = aData.z & 0xffff;
     instance.flags = aData.z & 0xffff0000;
     instance.resource_address = aData.w & 0xffffff;
-    instance.brush_kind = aData.w & 0xff000000;
+    instance.brush_kind = aData.w >> 24;
 
     return instance;
 }
