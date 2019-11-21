@@ -31,6 +31,34 @@ import java.io.ByteArrayInputStream
 import java.nio.charset.Charset
 import java.util.concurrent.ConcurrentHashMap
 
+@VisibleForTesting
+internal fun Payload.toString(errorReporter: (String) -> Unit = { _: String -> Unit }): String? =
+    when (type) {
+        Payload.Type.BYTES -> {
+            asBytes()?.toString(NearbyConnection.PAYLOAD_ENCODING)
+        }
+        Payload.Type.STREAM -> {
+            asStream()?.asInputStream()?.readBytes()?.toString(NearbyConnection.PAYLOAD_ENCODING)
+        }
+        else -> {
+            errorReporter("Received payload had illegal type: $type")
+            null
+        }
+    }
+
+@VisibleForTesting
+internal fun String.toPayload(): Payload {
+    val bytes = toByteArray(NearbyConnection.PAYLOAD_ENCODING)
+    if (bytes.size <= ConnectionsClient.MAX_BYTES_DATA_SIZE) {
+        return Payload.fromBytes(bytes)
+    } else {
+        // Logically, it might make more sense to use Payload.fromFile() since we
+        // know the size of the string, than Payload.fromStream(), but we would
+        // have to create a file locally to use use the former.
+        return Payload.fromStream(ByteArrayInputStream(bytes))
+    }
+}
+
 /**
  * A class that can be run on two devices to allow them to connect. This supports sending a single
  * message at a time in each direction. It contains internal synchronization and may be accessed
@@ -321,41 +349,12 @@ class NearbyConnection(
         }
     }
 
-    @VisibleForTesting
-    internal fun payloadToString(payload: Payload): String? {
-        if (payload.type == Payload.Type.BYTES) {
-            payload.asBytes()?.let { return String(it, PAYLOAD_ENCODING) }
-        } else if (payload.type == Payload.Type.STREAM) {
-            payload.asStream()?.asInputStream()
-                ?.use { return String(it.readBytes(), PAYLOAD_ENCODING) }
-        }
-        reportError("Received payload had illegal type: ${payload.type}")
-        return null
-    }
-
-    @VisibleForTesting
-    internal fun stringToPayload(message: String): Payload {
-        val bytes = message.toByteArray(PAYLOAD_ENCODING)
-        if (bytes.size <= ConnectionsClient.MAX_BYTES_DATA_SIZE) {
-            logger.error("${bytes.size} <= ${ConnectionsClient.MAX_BYTES_DATA_SIZE}")
-            return Payload.fromBytes(bytes)
-        } else {
-            logger.error("${bytes.size} > ${ConnectionsClient.MAX_BYTES_DATA_SIZE}")
-            // Logically, it might make more sense to use Payload.fromFile() since we
-            // know the size of the string, than Payload.fromStream(), but we would
-            // have to create a file locally to use use the former.
-            return Payload.fromStream(ByteArrayInputStream(bytes))
-        }
-    }
-
     private val payloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
-            payloadToString(payload)?.let {
+            payload.toString(::reportError)?.let {
                 notifyObservers {
                     onMessageReceived(endpointId, endpointIdsToNames[endpointId], it)
                 }
-            } ?: run {
-                reportError("Error interpreting incoming payload")
             }
         }
 
@@ -386,7 +385,7 @@ class NearbyConnection(
     fun sendMessage(message: String): Long? {
         val state = connectionState
         if (state is ConnectionState.ReadyToSend) {
-            val payload = stringToPayload(message)
+            val payload = message.toPayload()
             connectionsClient.sendPayload(state.neighborId, payload)
             updateState(
                 ConnectionState.Sending(
@@ -422,9 +421,6 @@ class NearbyConnection(
         @VisibleForTesting
         internal val PAYLOAD_ENCODING: Charset = Charsets.UTF_8
         private val STRATEGY = Strategy.P2P_STAR
-        // The maximum number of bytes to send through Payload.fromBytes();
-        // otherwise, use Payload.getStream().
-        private val MAX_PAYLOAD_BYTES = ConnectionsClient.MAX_BYTES_DATA_SIZE
 
         /**
          * The permissions needed by [NearbyConnection]. It is the client's responsibility

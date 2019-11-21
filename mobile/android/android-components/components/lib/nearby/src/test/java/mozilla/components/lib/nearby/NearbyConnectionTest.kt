@@ -53,9 +53,16 @@ class NearbyConnectionTest {
     private lateinit var stateWatchingObserver: NearbyConnectionObserver
     private var state: ConnectionState? = null // mutated by stateWatchingObserver
 
+    private lateinit var errors: MutableList<String>
+    private fun logError(s: String) {
+        errors.add(s)
+    }
+
     @Before
     fun setup() {
+        // Clear state.
         state = null
+        errors = mutableListOf<String>()
 
         // Initialize mocks.
         mockConnectionsClient = mock<ConnectionsClient>()
@@ -362,9 +369,9 @@ class NearbyConnectionTest {
 
     @Test
     fun `Should encode and decode short message as bytes`() {
-        val payload = nearbyConnection.stringToPayload(OUTGOING_MESSAGE)
+        val payload = OUTGOING_MESSAGE.toPayload()
         assertTrue(payload.type == Payload.Type.BYTES)
-        assertEquals(OUTGOING_MESSAGE, nearbyConnection.payloadToString(payload))
+        assertEquals(OUTGOING_MESSAGE, payload.toString(::logError))
     }
 
     @Test
@@ -372,17 +379,27 @@ class NearbyConnectionTest {
         // This tests the case where the message length is exactly equal to the bytes limit.
         val bytes = ByteArray(ConnectionsClient.MAX_BYTES_DATA_SIZE, { _ -> 0 })
         val message = String(bytes, NearbyConnection.PAYLOAD_ENCODING)
-        val payload = nearbyConnection.stringToPayload(message)
+        val payload = message.toPayload()
         assertTrue(payload.type == Payload.Type.BYTES)
-        assertEquals(message, nearbyConnection.payloadToString(payload))
+        assertEquals(message, payload.toString(::logError))
+        assertEquals(0, errors.count())
     }
 
     fun `Should encode and decode long message as stream`() {
         // This tests the case where the message length is one more than the bytes limit.
         val bytes = ByteArray(ConnectionsClient.MAX_BYTES_DATA_SIZE, { _ -> 0 })
         val message = String(bytes, NearbyConnection.PAYLOAD_ENCODING)
-        val payload = nearbyConnection.stringToPayload(message)
+        val payload = message.toPayload()
         assertEquals(Payload.Type.STREAM, payload.type)
-        assertEquals(message, nearbyConnection.payloadToString(payload))
+        assertEquals(message, payload.toString(::logError))
+        assertEquals(0, errors.count())
+    }
+
+    fun `Should report error and return null when decoding invalid payload of type FILE`() {
+        val mockPayload = mock<Payload>()
+        whenever(mockPayload.type).thenReturn(Payload.Type.FILE)
+        val message = mockPayload.toString(::logError)
+        assertNull(message)
+        assertEquals(1, errors.count()) // message content may vary
     }
 }
