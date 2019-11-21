@@ -746,10 +746,8 @@ ifdef MOZ_CRASHREPORTER
 endif
 endef
 
-ifndef MOZ_PROFILE_GENERATE
 ifneq (,$(filter $(DIST)/bin%,$(FINAL_TARGET)))
 DUMP_SYMS_TARGETS := $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS)
-endif
 endif
 
 ifdef MOZ_AUTOMATION
