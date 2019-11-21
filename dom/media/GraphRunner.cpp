@@ -17,35 +17,29 @@
 
 namespace mozilla {
 
-GraphRunner::GraphRunner(MediaTrackGraphImpl* aGraph,
-                         already_AddRefed<nsIThread> aThread)
-    : Runnable("GraphRunner"),
-      mMonitor("GraphRunner::mMonitor"),
+static void Start(void* aArg) {
+  NS_SetCurrentThreadName("GraphRunner");
+  GraphRunner* th = static_cast<GraphRunner*>(aArg);
+  th->Run();
+}
+
+GraphRunner::GraphRunner(MediaTrackGraphImpl* aGraph)
+    : mMonitor("GraphRunner::mMonitor"),
       mGraph(aGraph),
       mStateEnd(0),
       mStillProcessing(true),
       mThreadState(ThreadState::Wait),
-      mThread(aThread) {
-  mThread->Dispatch(do_AddRef(this));
+      // Note that mThread needs to be initialized last, as it may pre-empt the
+      // thread running this ctor and enter Run() with uninitialized members.
+      mThread(PR_CreateThread(PR_SYSTEM_THREAD, &Start, this,
+                              PR_PRIORITY_URGENT, PR_GLOBAL_THREAD,
+                              PR_JOINABLE_THREAD, 0)) {
+  MOZ_COUNT_CTOR(GraphRunner);
 }
 
 GraphRunner::~GraphRunner() {
+  MOZ_COUNT_DTOR(GraphRunner);
   MOZ_ASSERT(mThreadState == ThreadState::Shutdown);
-}
-
-/* static */
-already_AddRefed<GraphRunner> GraphRunner::Create(MediaTrackGraphImpl* aGraph) {
-  nsCOMPtr<nsIThread> thread;
-  if (NS_WARN_IF(NS_FAILED(
-          NS_NewNamedThread("GraphRunner", getter_AddRefs(thread))))) {
-    return nullptr;
-  }
-  nsCOMPtr<nsISupportsPriority> supportsPriority = do_QueryInterface(thread);
-  MOZ_ASSERT(supportsPriority);
-  MOZ_ALWAYS_SUCCEEDS(
-      supportsPriority->SetPriority(nsISupportsPriority::PRIORITY_HIGHEST));
-
-  return do_AddRef(new GraphRunner(aGraph, thread.forget()));
 }
 
 void GraphRunner::Shutdown() {
@@ -55,7 +49,12 @@ void GraphRunner::Shutdown() {
     mThreadState = ThreadState::Shutdown;
     mMonitor.Notify();
   }
-  mThread->Shutdown();
+  // We need to wait for runner thread shutdown here for the sake of the
+  // xpcomWillShutdown case, so that the main thread is not shut down before
+  // cleanup messages are sent for objects destroyed in
+  // CycleCollectedJSContext shutdown.
+  PR_JoinThread(mThread);
+  mThread = nullptr;
 }
 
 bool GraphRunner::OneIteration(GraphTime aStateEnd) {
@@ -91,7 +90,9 @@ bool GraphRunner::OneIteration(GraphTime aStateEnd) {
   return mStillProcessing;
 }
 
-NS_IMETHODIMP GraphRunner::Run() {
+void GraphRunner::Run() {
+  PR_SetCurrentThreadName("GraphRunner");
+
   atp_handle* handle =
       atp_promote_current_thread_to_real_time(0, mGraph->GraphRate());
 
@@ -115,13 +116,9 @@ NS_IMETHODIMP GraphRunner::Run() {
   }
 
   dom::WorkletThread::DeleteCycleCollectedJSContext();
-
-  return NS_OK;
 }
 
-bool GraphRunner::OnThread() {
-  return mThread->EventTarget()->IsOnCurrentThread();
-}
+bool GraphRunner::OnThread() { return PR_GetCurrentThread() == mThread; }
 
 #ifdef DEBUG
 bool GraphRunner::RunByGraphDriver(GraphDriver* aDriver) {
