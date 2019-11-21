@@ -207,8 +207,8 @@ function update(
       };
       return updateThreadState({
         isWaitingOnBreak: false,
-        selectedFrameId: frame.id,
-        frames: [frame],
+        selectedFrameId: frame ? frame.id : undefined,
+        frames: frame ? [frame] : undefined,
         framesLoading: true,
         frameScopes: { ...resumedPauseState.frameScopes },
         why,

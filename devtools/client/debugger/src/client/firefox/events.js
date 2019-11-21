@@ -80,12 +80,14 @@ async function paused(threadFront: ThreadFront, packet: PausedPacket) {
     return;
   }
 
-  // When reloading we might receive a pause event before the
-  // top frame's source has arrived.
-  await actions.ensureSourceActor(
-    threadFront.actorID,
-    packet.frame.where.actor
-  );
+  if (packet.frame) {
+    // When reloading we might receive a pause event before the
+    // top frame's source has arrived.
+    await actions.ensureSourceActor(
+      threadFront.actorID,
+      packet.frame.where.actor
+    );
+  }
 
   const pause = createPause(threadFront.actor, packet);
 
