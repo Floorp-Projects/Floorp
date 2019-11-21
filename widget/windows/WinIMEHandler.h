@@ -199,7 +199,8 @@ class IMEHandler final {
   static decltype(SetInputScopes)* sSetInputScopes;
   static void SetInputScopeForIMM32(nsWindow* aWindow,
                                     const nsAString& aHTMLInputType,
-                                    const nsAString& aHTMLInputInputmode);
+                                    const nsAString& aHTMLInputInputmode,
+                                    bool aInPrivateBrowsing);
   static bool sIsInTSFMode;
   // If sIMMEnabled is false, any IME messages are not handled in TSF mode.
   // Additionally, IME context is always disassociated from focused window.
