@@ -258,7 +258,7 @@ already_AddRefed<Path> SVGPathElement::BuildPath(PathBuilder* aBuilder) {
   // also our stroke width. See the comment for
   // ApproximateZeroLengthSubpathSquareCaps for more info.
 
-  uint8_t strokeLineCap = NS_STYLE_STROKE_LINECAP_BUTT;
+  auto strokeLineCap = StyleStrokeLinecap::Butt;
   Float strokeWidth = 0;
 
   SVGGeometryProperty::DoForComputedStyle(this, [&](const ComputedStyle* s) {
@@ -267,7 +267,7 @@ already_AddRefed<Path> SVGPathElement::BuildPath(PathBuilder* aBuilder) {
     // exposes hit-testing of strokes that are not actually painted. For that
     // reason we do not check for eStyleSVGPaintType_None or check the stroke
     // opacity here.
-    if (style->mStrokeLinecap != NS_STYLE_STROKE_LINECAP_BUTT) {
+    if (style->mStrokeLinecap != StyleStrokeLinecap::Butt) {
       strokeLineCap = style->mStrokeLinecap;
       strokeWidth = SVGContentUtils::GetStrokeWidth(this, s, nullptr);
     }
