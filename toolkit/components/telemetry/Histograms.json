@@ -15271,6 +15271,17 @@
     "alert_emails": ["ttung@mozilla.com"],
     "description": "Time (ms) for the QuotaManager to initialize repositories."
   },
+  "QM_FIRST_INITIALIZATION_ATTEMPT": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "expires_in_version": "never",
+    "bug_numbers": [1592934],
+    "kind": "boolean",
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["ttung@mozilla.com", "storage-telemetry@mozilla.com"],
+    "description": "True if the first initialization attempt succeeded, keyed by the initialization type."
+  },
   "GV_PAGE_LOAD_PROGRESS_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
