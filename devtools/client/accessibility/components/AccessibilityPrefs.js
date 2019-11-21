@@ -37,7 +37,7 @@ const { updatePref } = require("../actions/ui");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { PREFS } = require("../constants");
 
-class AccessibilityTreeFilter extends Component {
+class AccessibilityPrefs extends Component {
   static get propTypes() {
     return {
       dispatch: PropTypes.func.isRequired,
@@ -97,4 +97,4 @@ const mapStateToProps = ({ ui }) => ({
 });
 
 // Exports from this module
-module.exports = connect(mapStateToProps)(AccessibilityTreeFilter);
+module.exports = connect(mapStateToProps)(AccessibilityPrefs);
