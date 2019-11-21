@@ -475,9 +475,10 @@ add_task(async function test_panel_data_matches_extension_with_no_pages_open() {
 
   const host = await extension.awaitMessage("extension-origin");
 
+  extension.sendMessage("storage-local-fireOnChanged");
   extension.sendMessage("storage-local-set", { a: 123 });
   await extension.awaitMessage("storage-local-set:done");
-
+  await extension.awaitMessage("storage-local-onChanged");
   await contentPage.close();
 
   const { target, extensionStorage } = await openAddonStoragePanel(
@@ -744,9 +745,10 @@ add_task(async function test_panel_live_reload_for_extension_without_bg_page() {
   const host = await extension.awaitMessage("extension-origin");
 
   info("Waiting for extension page in a tab to add storage item");
+  extension.sendMessage("storage-local-fireOnChanged");
   extension.sendMessage("storage-local-set", { a: 123 });
   await extension.awaitMessage("storage-local-set:done");
-
+  await extension.awaitMessage("storage-local-onChanged");
   await contentPage.close();
 
   info("Opening storage panel");
