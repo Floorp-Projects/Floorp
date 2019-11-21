@@ -6,6 +6,7 @@
     "orderHint",
     "telemetryId",
     "params",
+    "extraParams",
     "appliesTo"
   ]
 }
