@@ -50,6 +50,12 @@ esac
 # care about the builds being 100% identical).
 POST=true
 
+fail() {
+	set +x
+	echo "TEST-UNEXPECTED-FAIL | Builds differ. See the diff.html or diff.txt artifact"
+	exit 1
+}
+
 for option; do
 	case "$option" in
 	--unpack)
@@ -61,7 +67,7 @@ for option; do
 		done
 		;;
 	--fail)
-		POST="exit 1"
+		POST="fail"
 		;;
 	*)
 		echo "Unsupported option: $option" >&2
