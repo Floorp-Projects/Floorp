@@ -1639,18 +1639,6 @@ class AddonOptions extends HTMLElement {
       case "report":
         el.hidden = !isAbuseReportSupported(addon);
         break;
-      case "toggle-disabled":
-        if (addon.type == "theme") {
-          el.remove();
-        } else {
-          let toggleDisabledAction = addon.userDisabled ? "enable" : "disable";
-          document.l10n.setAttributes(
-            el,
-            `${toggleDisabledAction}-addon-button`
-          );
-          el.hidden = !hasPermission(addon, toggleDisabledAction);
-        }
-        break;
       case "install-update":
         el.hidden = !updateInstall;
         break;
@@ -2452,8 +2440,8 @@ class AddonCard extends HTMLElement {
             await addon.disable();
           }
           if (e.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
-            // Refocus the open menu button so it's clear where the focus is.
-            this.querySelector('[action="more-options"]').focus();
+            // Refocus the button, since the card might've moved and lost focus.
+            e.target.focus();
           }
           break;
         case "ask-to-activate":
@@ -2747,6 +2735,12 @@ class AddonCard extends HTMLElement {
           toggleDisabledButton,
           `${toggleDisabledAction}-addon-button`
         );
+      } else if (addon.type === "extension") {
+        toggleDisabledButton.checked = !addon.userDisabled;
+        document.l10n.setAttributes(
+          toggleDisabledButton,
+          `${toggleDisabledAction}-addon-button-label`
+        );
       }
     }
 
@@ -2846,6 +2840,9 @@ class AddonCard extends HTMLElement {
     // Remove the toggle-disabled button(s) based on type.
     if (addon.type != "theme") {
       this.card.querySelector(".theme-enable-button").remove();
+    }
+    if (addon.type != "extension") {
+      this.card.querySelector(".extension-enable-button").remove();
     }
 
     let nameContainer = this.card.querySelector(".addon-name-container");

@@ -106,15 +106,18 @@ add_task(async function testExtensionList() {
   ok(icon.src.endsWith("/test-icon.png"), "The icon is set");
 
   // Disable the extension.
-  let disableButton = card.querySelector('[action="toggle-disabled"]');
+  let disableToggle = card.querySelector('[action="toggle-disabled"]');
+  ok(disableToggle.checked, "The disable toggle is checked");
   is(
-    doc.l10n.getAttributes(disableButton).id,
-    "disable-addon-button",
-    "The button has the disable label"
+    doc.l10n.getAttributes(disableToggle).id,
+    "disable-addon-button-label",
+    "The toggle has the disable label"
   );
+  ok(disableToggle.getAttribute("aria-label"), "There's an aria-label");
+  ok(!disableToggle.hidden, "The toggle is visible");
 
   let disabled = BrowserTestUtils.waitForEvent(list, "move");
-  disableButton.click();
+  disableToggle.click();
   await disabled;
   is(
     card.parentNode,
@@ -123,11 +126,13 @@ add_task(async function testExtensionList() {
   );
 
   // The disable button is now enable.
+  ok(!disableToggle.checked, "The disable toggle is unchecked");
   is(
-    doc.l10n.getAttributes(disableButton).id,
-    "enable-addon-button",
+    doc.l10n.getAttributes(disableToggle).id,
+    "enable-addon-button-label",
     "The button has the enable label"
   );
+  ok(disableToggle.getAttribute("aria-label"), "There's an aria-label");
 
   // Remove the add-on.
   let removeButton = card.querySelector('[action="remove"]');
@@ -395,63 +400,47 @@ add_task(async function testKeyboardSupport() {
   // Test opening and closing the menu.
   let moreOptionsMenu = card.querySelector("panel-list");
   let expandButton = moreOptionsMenu.querySelector('[action="expand"]');
-  let toggleDisableButton = card.querySelector('[action="toggle-disabled"]');
+  let removeButton = card.querySelector('[action="remove"]');
   is(moreOptionsMenu.open, false, "The menu is closed");
   let shown = BrowserTestUtils.waitForEvent(moreOptionsMenu, "shown");
   space();
   await shown;
   is(moreOptionsMenu.open, true, "The menu is open");
-  isFocused(toggleDisableButton, "The disable button is now focused");
-  EventUtils.synthesizeKey("Escape", {});
-  is(moreOptionsMenu.open, false, "The menu is closed");
-  isFocused(moreOptionsButton, "The more options button is focused");
-
-  // Test tabbing out of the menu.
-  space();
-  shown = BrowserTestUtils.waitForEvent(moreOptionsMenu, "shown");
-  is(moreOptionsMenu.open, true, "The menu is open");
-  await shown;
+  isFocused(removeButton, "The remove button is now focused");
   tab({ shiftKey: true });
   is(moreOptionsMenu.open, true, "The menu stays open");
   isFocused(expandButton, "The focus has looped to the bottom");
   tab();
   is(moreOptionsMenu.open, true, "The menu stays open");
-  isFocused(toggleDisableButton, "The focus has looped to the top");
+  isFocused(removeButton, "The focus has looped to the top");
 
   let hidden = BrowserTestUtils.waitForEvent(moreOptionsMenu, "hidden");
   EventUtils.synthesizeKey("Escape", {});
   await hidden;
   isFocused(moreOptionsButton, "Escape closed the menu");
 
-  // Open the menu to test contents.
-  shown = BrowserTestUtils.waitForEvent(moreOptionsMenu, "shown");
-  space();
-  is(moreOptionsMenu.open, true, "The menu is open");
-  // Wait for the panel to be shown.
-  await shown;
-
   // Disable the add-on.
-  isFocused(toggleDisableButton, "The disable button is focused");
+  let disableButton = card.querySelector('[action="toggle-disabled"]');
+  tab({ shiftKey: true });
+  isFocused(disableButton, "The disable toggle is focused");
   is(card.parentNode, enabledSection, "The card is in the enabled section");
   let disabled = BrowserTestUtils.waitForEvent(list, "move");
   space();
   await disabled;
-  is(moreOptionsMenu.open, false, "The menu is closed");
   is(
     card.parentNode,
     disabledSection,
     "The card is now in the disabled section"
   );
-
-  // Open the menu again.
-  shown = BrowserTestUtils.waitForEvent(moreOptionsMenu, "shown");
-  isFocused(moreOptionsButton, "The more options button is focused");
-  space();
-  await shown;
+  isFocused(disableButton, "The disable button is still focused");
 
   // Remove the add-on.
   tab();
-  let removeButton = card.querySelector('[action="remove"]');
+  isFocused(moreOptionsButton, "The more options button is focused again");
+  shown = BrowserTestUtils.waitForEvent(moreOptionsMenu, "shown");
+  space();
+  is(moreOptionsMenu.open, true, "The menu is open");
+  await shown;
   isFocused(removeButton, "The remove button is focused");
   let removed = BrowserTestUtils.waitForEvent(list, "remove");
   space();
@@ -763,8 +752,9 @@ add_task(async function testSideloadRemoveButton() {
   let card = getCardByAddonId(doc, id);
 
   let moreOptionsPanel = card.querySelector("panel-list");
+  let moreOptionsButton = card.querySelector('[action="more-options"]');
   let panelOpened = BrowserTestUtils.waitForEvent(moreOptionsPanel, "shown");
-  moreOptionsPanel.show();
+  EventUtils.synthesizeMouseAtCenter(moreOptionsButton, {}, win);
   await panelOpened;
 
   // Verify the remove button is visible with a SUMO link.
