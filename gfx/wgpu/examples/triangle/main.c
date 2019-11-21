@@ -36,9 +36,8 @@
 #define RENDER_PASS_ATTACHMENTS_LENGTH (1)
 #define BIND_GROUP_LAYOUTS_LENGTH (1)
 
-void request_adapter_callback(WGPUAdapterId const *received, void *userdata) {
-    WGPUAdapterId *id = (WGPUAdapterId*) userdata;
-    *id = *received;
+void request_adapter_callback(WGPUAdapterId received, void *userdata) {
+    *(WGPUAdapterId*)userdata = received;
 }
 
 int main() {
@@ -46,8 +45,8 @@ int main() {
     wgpu_request_adapter_async(
         &(WGPURequestAdapterOptions){
             .power_preference = WGPUPowerPreference_LowPower,
-            .backends = 2 | 4 | 8,
         },
+        2 | 4 | 8,
         request_adapter_callback,
         (void *) &adapter
     );
