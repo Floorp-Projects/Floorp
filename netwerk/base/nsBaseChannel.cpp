@@ -431,7 +431,8 @@ nsBaseChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
 
 NS_IMETHODIMP
 nsBaseChannel::GetLoadGroup(nsILoadGroup** aLoadGroup) {
-  NS_IF_ADDREF(*aLoadGroup = mLoadGroup);
+  nsCOMPtr<nsILoadGroup> loadGroup(mLoadGroup);
+  loadGroup.forget(aLoadGroup);
   return NS_OK;
 }
 
@@ -466,13 +467,15 @@ nsBaseChannel::SetOriginalURI(nsIURI* aURI) {
 
 NS_IMETHODIMP
 nsBaseChannel::GetURI(nsIURI** aURI) {
-  NS_IF_ADDREF(*aURI = mURI);
+  nsCOMPtr<nsIURI> uri(mURI);
+  uri.forget(aURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBaseChannel::GetOwner(nsISupports** aOwner) {
-  NS_IF_ADDREF(*aOwner = mOwner);
+  nsCOMPtr<nsISupports> owner(mOwner);
+  owner.forget(aOwner);
   return NS_OK;
 }
 
@@ -494,7 +497,8 @@ nsBaseChannel::SetLoadInfo(nsILoadInfo* aLoadInfo) {
 
 NS_IMETHODIMP
 nsBaseChannel::GetLoadInfo(nsILoadInfo** aLoadInfo) {
-  NS_IF_ADDREF(*aLoadInfo = mLoadInfo);
+  nsCOMPtr<nsILoadInfo> loadInfo(mLoadInfo);
+  loadInfo.forget(aLoadInfo);
   return NS_OK;
 }
 
@@ -505,7 +509,8 @@ nsBaseChannel::GetIsDocument(bool* aIsDocument) {
 
 NS_IMETHODIMP
 nsBaseChannel::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks) {
-  NS_IF_ADDREF(*aCallbacks = mCallbacks);
+  nsCOMPtr<nsIInterfaceRequestor> callbacks(mCallbacks);
+  callbacks.forget(aCallbacks);
   return NS_OK;
 }
 
@@ -523,7 +528,8 @@ nsBaseChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks) {
 
 NS_IMETHODIMP
 nsBaseChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
-  NS_IF_ADDREF(*aSecurityInfo = mSecurityInfo);
+  nsCOMPtr<nsISupports> securityInfo(mSecurityInfo);
+  securityInfo.forget(aSecurityInfo);
   return NS_OK;
 }
 
