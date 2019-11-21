@@ -187,7 +187,7 @@ class ChangesView {
    *        (Default) False if invoked from the button.
    */
   async copyRule(ruleId, usingContextMenu = false) {
-    const inspectorFronts = await this.inspector.inspectorFront.getAllInspectorFronts();
+    const inspectorFronts = await this.inspector.getAllInspectorFronts();
 
     for (const inspectorFront of inspectorFronts) {
       const rule = await inspectorFront.pageStyle.getRule(ruleId);
