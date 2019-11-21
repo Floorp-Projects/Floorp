@@ -64,3 +64,8 @@ td > input,
 .table-split-column > button {
   flex-shrink: 0;
 }
+
+#hostText {
+  -moz-box-flex: 1;
+  margin-top: 1px; /* same margin as adjacent label */
+}
