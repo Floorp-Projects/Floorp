@@ -22,7 +22,7 @@ _ALL_CATEGORIES = (
 
 
 def _infer_option_category(define_depth):
-    stack_frame = inspect.stack()[3 + define_depth]
+    stack_frame = inspect.stack(0)[3 + define_depth]
     try:
         path = os.path.relpath(stack_frame[0].f_code.co_filename)
     except ValueError:
