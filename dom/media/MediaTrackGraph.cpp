@@ -525,7 +525,8 @@ void MediaTrackGraphImpl::UpdateTrackOrder() {
   MOZ_ASSERT(orderedTrackCount == mFirstCycleBreaker);
 }
 
-TrackTime MediaTrackGraphImpl::PlayAudio(const TrackKeyAndVolume& aTkv) {
+TrackTime MediaTrackGraphImpl::PlayAudio(const TrackKeyAndVolume& aTkv,
+                                         GraphTime aPlayedTime) {
   MOZ_ASSERT(OnGraphThread());
   MOZ_ASSERT(mRealtime, "Should only attempt to play audio in realtime mode");
 
@@ -536,14 +537,14 @@ TrackTime MediaTrackGraphImpl::PlayAudio(const TrackKeyAndVolume& aTkv) {
   AudioSegment* audio = track->GetData<AudioSegment>();
   AudioSegment output;
 
-  TrackTime offset = track->GraphTimeToTrackTime(mProcessedTime);
+  TrackTime offset = track->GraphTimeToTrackTime(aPlayedTime);
 
   // We don't update Track->mTracksStartTime here to account for time spent
   // blocked. Instead, we'll update it in UpdateCurrentTimeForTracks after
   // the blocked period has completed. But we do need to make sure we play
   // from the right offsets in the track buffer, even if we've already
   // written silence for some amount of blocked time after the current time.
-  GraphTime t = mProcessedTime;
+  GraphTime t = aPlayedTime;
   while (t < mStateComputedTime) {
     bool blocked = t >= track->mStartBlocking;
     GraphTime end = blocked ? mStateComputedTime : track->mStartBlocking;
@@ -1217,6 +1218,7 @@ void MediaTrackGraphImpl::Process() {
   bool allBlockedForever = true;
   // True when we've done ProcessInput for all processed tracks.
   bool doneAllProducing = false;
+  const GraphTime oldProcessedTime = mProcessedTime;
 
   mMixer.StartMixing();
 
@@ -1254,7 +1256,7 @@ void MediaTrackGraphImpl::Process() {
         }
       }
     }
-    if (track->mStartBlocking > mProcessedTime) {
+    if (track->mStartBlocking > oldProcessedTime) {
       allBlockedForever = false;
     }
   }
@@ -1266,7 +1268,7 @@ void MediaTrackGraphImpl::Process() {
   if (mRealtime) {
     if (CurrentDriver()->AsAudioCallbackDriver()) {
       for (auto& t : mAudioOutputs) {
-        TrackTime ticksPlayedForThisTrack = PlayAudio(t);
+        TrackTime ticksPlayedForThisTrack = PlayAudio(t, oldProcessedTime);
         if (ticksPlayed == 0) {
           ticksPlayed = ticksPlayedForThisTrack;
         } else {
@@ -1285,7 +1287,7 @@ void MediaTrackGraphImpl::Process() {
       // been processed. (bug 1406027)
       mMixer.Mix(nullptr,
                  CurrentDriver()->AsAudioCallbackDriver()->OutputChannelCount(),
-                 mStateComputedTime - mProcessedTime, mSampleRate);
+                 mStateComputedTime - oldProcessedTime, mSampleRate);
     }
     mMixer.FinishMixing();
   }
