@@ -80,9 +80,9 @@ class GeckoEngineViewTest {
         val engineView = GeckoEngineView(context)
         engineView.currentGeckoView = mock()
 
-        engineView.setVerticalClipping(42)
+        engineView.setVerticalClipping(-42)
 
-        verify(engineView.currentGeckoView).setVerticalClipping(42)
+        verify(engineView.currentGeckoView).setVerticalClipping(-42)
     }
 
     @Test
