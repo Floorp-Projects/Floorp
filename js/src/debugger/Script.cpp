@@ -1514,7 +1514,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOP_TRY:
     case JSOP_THROW:
     case JSOP_GOTO:
-    case JSOP_CONDSWITCH:
     case JSOP_TABLESWITCH:
     case JSOP_CASE:
     case JSOP_DEFAULT:
@@ -1707,6 +1706,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOP_THROWMSG:
     case JSOP_FORCEINTERPRETER:
     case JSOP_UNUSED71:
+    case JSOP_UNUSED120:
     case JSOP_UNUSED149:
     case JSOP_LIMIT:
       return false;
