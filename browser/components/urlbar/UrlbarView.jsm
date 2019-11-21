@@ -981,6 +981,12 @@ class UrlbarView {
     }
     item._elements.get("action").textContent = action;
 
+    if (!title.hasAttribute("isurl")) {
+      title.setAttribute("dir", "auto");
+    } else {
+      title.removeAttribute("dir");
+    }
+
     item._elements.get("titleSeparator").hidden = !action && !setURL;
   }
 
