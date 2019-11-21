@@ -12,6 +12,11 @@
           "q": "{searchTerms}"
         }
       },
+      "extraParams": [{
+        "name": "channel",
+        "condition": "pref",
+        "pref": "google_channel_row"
+      }],
       "telemetryId": "google-b-d",
       "appliesTo": [{
         "included": { "everywhere": true },
@@ -90,6 +95,11 @@
             "q": "{searchTerms}"
           }
         },
+        "extraParams": [{
+          "name": "channel",
+          "condition": "pref",
+          "pref": "google_channel_us"
+        }],
         "telemetryId": "google-b-1-d"
       },  {
         "included": { "regions": ["us"] },
@@ -102,6 +112,11 @@
             "q": "{searchTerms}"
           }
         },
+        "extraParams": [{
+          "name": "channel",
+          "condition": "pref",
+          "pref": "google_channel_us"
+        }],
         "telemetryId": "google-b-1-e"
       }]
     },
