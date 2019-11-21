@@ -3073,9 +3073,8 @@ static MOZ_MUST_USE bool SrcNotes(JSContext* cx, HandleScript script,
 
       case SRC_FOR:
         if (!sp->jsprintf(
-                " cond %u update %u backjump %u",
+                " cond %u backjump %u",
                 unsigned(GetSrcNoteOffset(sn, SrcNote::For::CondOffset)),
-                unsigned(GetSrcNoteOffset(sn, SrcNote::For::UpdateOffset)),
                 unsigned(GetSrcNoteOffset(sn, SrcNote::For::BackJumpOffset)))) {
           return false;
         }
@@ -3100,11 +3099,9 @@ static MOZ_MUST_USE bool SrcNotes(JSContext* cx, HandleScript script,
         break;
 
       case SRC_DO_WHILE:
-        if (!sp->jsprintf(
-                " cond %u backjump %u",
-                unsigned(GetSrcNoteOffset(sn, SrcNote::DoWhile::CondOffset)),
-                unsigned(
-                    GetSrcNoteOffset(sn, SrcNote::DoWhile::BackJumpOffset)))) {
+        if (!sp->jsprintf(" backjump %u",
+                          unsigned(GetSrcNoteOffset(
+                              sn, SrcNote::DoWhile::BackJumpOffset)))) {
           return false;
         }
         break;
