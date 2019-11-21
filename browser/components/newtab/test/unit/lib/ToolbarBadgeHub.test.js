@@ -33,9 +33,28 @@ describe("ToolbarBadgeHub", () => {
     isBrowserPrivateStub = sandbox.stub();
     const onboardingMsgs = await OnboardingMessageProvider.getUntranslatedMessages();
     fxaMessage = onboardingMsgs.find(({ id }) => id === "FXA_ACCOUNTS_BADGE");
-    whatsnewMessage = onboardingMsgs.find(({ id }) =>
-      id.includes("WHATS_NEW_BADGE_")
-    );
+    whatsnewMessage = {
+      id: `WHATS_NEW_BADGE_71`,
+      template: "toolbar_badge",
+      content: {
+        delay: 1000,
+        target: "whats-new-menu-button",
+        action: { id: "show-whatsnew-button" },
+        badgeDescription: { string_id: "cfr-badge-reader-label-newfeature" },
+      },
+      priority: 1,
+      trigger: { id: "toolbarBadgeUpdate" },
+      frequency: {
+        // Makes it so that we track impressions for this message while at the
+        // same time it can have unlimited impressions
+        lifetime: Infinity,
+      },
+      // Never saw this message or saw it in the past 4 days or more recent
+      targeting: `isWhatsNewPanelEnabled &&
+      (!messageImpressions['WHATS_NEW_BADGE_71'] ||
+        (messageImpressions['WHATS_NEW_BADGE_71']|length >= 1 &&
+          currentDate|date - messageImpressions['WHATS_NEW_BADGE_71'][0] <= 4 * 24 * 3600 * 1000))`,
+    };
     fakeElement = {
       classList: {
         add: sandbox.stub(),
