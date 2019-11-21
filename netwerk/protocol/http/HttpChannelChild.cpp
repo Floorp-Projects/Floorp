@@ -581,8 +581,8 @@ void HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest,
 
   LOG(("HttpChannelChild::DoOnStartRequest [this=%p]\n", this));
 
-  // In theory mListener should not be null, but in practice sometimes it is.
-  MOZ_ASSERT(mListener);
+  // mListener could be null if the redirect setup is not completed.
+  MOZ_ASSERT(mListener || mOnStartRequestCalled);
   if (!mListener) {
     Cancel(NS_ERROR_FAILURE);
     return;
@@ -1091,10 +1091,15 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
   };
   checkForBlockedContent();
 
+  // See bug 1587686. If the redirect setup is not completed, the post-redirect
+  // channel will be not opened and mListener will be null.
+  MOZ_ASSERT(mListener || !mWasOpened);
+  if (!mListener) {
+    return;
+  }
+
   MOZ_ASSERT(!mOnStopRequestCalled, "We should not call OnStopRequest twice");
 
-  // In theory mListener should not be null, but in practice sometimes it is.
-  MOZ_ASSERT(mListener);
   if (mListener) {
     nsCOMPtr<nsIStreamListener> listener(mListener);
     mOnStopRequestCalled = true;
@@ -1620,8 +1625,40 @@ void HttpChannelChild::OverrideSecurityInfoForNonIPCRedirect(
 
 mozilla::ipc::IPCResult HttpChannelChild::RecvRedirect3Complete() {
   LOG(("HttpChannelChild::RecvRedirect3Complete [this=%p]\n", this));
+  nsCOMPtr<nsIChannel> redirectChannel =
+      do_QueryInterface(mRedirectChannelChild);
+  MOZ_ASSERT(redirectChannel);
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpChannelChild>(this)]() {
+      this, [self = UnsafePtr<HttpChannelChild>(this), redirectChannel]() {
+        nsresult rv = NS_OK;
+        Unused << self->GetStatus(&rv);
+        if (NS_FAILED(rv)) {
+          // Pre-redirect channel was canceled. Call |HandleAsyncAbort|, so
+          // mListener's OnStart/StopRequest can be called. Nothing else will
+          // trigger these notification after this point.
+          // We do this before |CompleteRedirectSetup|, so post-redirect channel
+          // stays unopened and we also make sure that OnStart/StopRequest won't
+          // be called twice.
+          self->HandleAsyncAbort();
+
+          nsCOMPtr<nsIHttpChannelChild> chan =
+              do_QueryInterface(redirectChannel);
+          RefPtr<HttpChannelChild> httpChannelChild =
+              static_cast<HttpChannelChild*>(chan.get());
+          if (httpChannelChild) {
+            // For sending an IPC message to parent channel so that the loading
+            // can be cancelled.
+            Unused << httpChannelChild->Cancel(rv);
+
+            // The post-redirect channel could still get OnStart/StopRequest IPC
+            // messages from parent, but the mListener is still null. So, we
+            // call |DoNotifyListener| to pretend that OnStart/StopRequest are
+            // already called.
+            httpChannelChild->DoNotifyListener();
+          }
+          return;
+        }
+
         self->Redirect3Complete(nullptr);
       }));
   return IPC_OK();
