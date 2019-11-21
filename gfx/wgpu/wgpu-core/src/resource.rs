@@ -3,26 +3,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::{
+    id::{DeviceId, SwapChainId, TextureId},
+    track::DUMMY_SELECTOR,
     BufferAddress,
-    BufferMapReadCallback,
-    BufferMapWriteCallback,
-    DeviceId,
     Extent3d,
     LifeGuard,
     RefCount,
     Stored,
-    SwapChainId,
-    TextureId,
 };
 
-use bitflags::bitflags;
 use hal;
 use rendy_memory::MemoryBlock;
 use smallvec::SmallVec;
 
-use std::borrow::Borrow;
+use std::{borrow::Borrow, fmt};
 
-bitflags! {
+bitflags::bitflags! {
     #[repr(transparent)]
     pub struct BufferUsage: u32 {
         const MAP_READ = 1;
@@ -65,25 +61,35 @@ pub enum BufferMapAsyncStatus {
     ContextLost,
 }
 
-#[derive(Clone, Debug)]
 pub enum BufferMapOperation {
-    Read(std::ops::Range<u64>, BufferMapReadCallback, *mut u8),
-    Write(std::ops::Range<u64>, BufferMapWriteCallback, *mut u8),
+    Read(std::ops::Range<u64>, Box<dyn FnOnce(BufferMapAsyncStatus, *const u8)>),
+    Write(std::ops::Range<u64>, Box<dyn FnOnce(BufferMapAsyncStatus, *mut u8)>),
 }
 
+//TODO: clarify if/why this is needed here
 unsafe impl Send for BufferMapOperation {}
 unsafe impl Sync for BufferMapOperation {}
+
+impl fmt::Debug for BufferMapOperation {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let (op, range) = match *self {
+            BufferMapOperation::Read(ref range, _) => ("read", range),
+            BufferMapOperation::Write(ref range, _) => ("write", range),
+        };
+        write!(fmt, "BufferMapOperation <{}> of range {:?}", op, range)
+    }
+}
 
 impl BufferMapOperation {
     pub(crate) fn call_error(self) {
         match self {
-            BufferMapOperation::Read(_, callback, userdata) => {
+            BufferMapOperation::Read(_, callback) => {
                 log::error!("wgpu_buffer_map_read_async failed: buffer mapping is pending");
-                callback(BufferMapAsyncStatus::Error, std::ptr::null_mut(), userdata);
+                callback(BufferMapAsyncStatus::Error, std::ptr::null());
             }
-            BufferMapOperation::Write(_, callback, userdata) => {
+            BufferMapOperation::Write(_, callback) => {
                 log::error!("wgpu_buffer_map_write_async failed: buffer mapping is pending");
-                callback(BufferMapAsyncStatus::Error, std::ptr::null_mut(), userdata);
+                callback(BufferMapAsyncStatus::Error, std::ptr::null_mut());
             }
         }
     }
@@ -96,6 +102,7 @@ pub struct Buffer<B: hal::Backend> {
     pub(crate) usage: BufferUsage,
     pub(crate) memory: MemoryBlock<B>,
     pub(crate) size: BufferAddress,
+    pub(crate) full_range: (),
     pub(crate) mapped_write_ranges: Vec<std::ops::Range<u64>>,
     pub(crate) pending_map_operation: Option<BufferMapOperation>,
     pub(crate) life_guard: LifeGuard,
@@ -104,6 +111,12 @@ pub struct Buffer<B: hal::Backend> {
 impl<B: hal::Backend> Borrow<RefCount> for Buffer<B> {
     fn borrow(&self) -> &RefCount {
         &self.life_guard.ref_count
+    }
+}
+
+impl<B: hal::Backend> Borrow<()> for Buffer<B> {
+    fn borrow(&self) -> &() {
+        &DUMMY_SELECTOR
     }
 }
 
@@ -178,7 +191,7 @@ pub enum TextureFormat {
     Depth24PlusStencil8 = 43,
 }
 
-bitflags! {
+bitflags::bitflags! {
     #[repr(transparent)]
     pub struct TextureUsage: u32 {
         const COPY_SRC = 1;
@@ -226,6 +239,12 @@ pub struct Texture<B: hal::Backend> {
 impl<B: hal::Backend> Borrow<RefCount> for Texture<B> {
     fn borrow(&self) -> &RefCount {
         &self.life_guard.ref_count
+    }
+}
+
+impl<B: hal::Backend> Borrow<hal::image::SubresourceRange> for Texture<B> {
+    fn borrow(&self) -> &hal::image::SubresourceRange {
+        &self.full_range
     }
 }
 
@@ -293,6 +312,12 @@ pub struct TextureView<B: hal::Backend> {
 impl<B: hal::Backend> Borrow<RefCount> for TextureView<B> {
     fn borrow(&self) -> &RefCount {
         &self.life_guard.ref_count
+    }
+}
+
+impl<B: hal::Backend> Borrow<()> for TextureView<B> {
+    fn borrow(&self) -> &() {
+        &DUMMY_SELECTOR
     }
 }
 
@@ -369,5 +394,11 @@ pub struct Sampler<B: hal::Backend> {
 impl<B: hal::Backend> Borrow<RefCount> for Sampler<B> {
     fn borrow(&self) -> &RefCount {
         &self.life_guard.ref_count
+    }
+}
+
+impl<B: hal::Backend> Borrow<()> for Sampler<B> {
+    fn borrow(&self) -> &() {
+        &DUMMY_SELECTOR
     }
 }

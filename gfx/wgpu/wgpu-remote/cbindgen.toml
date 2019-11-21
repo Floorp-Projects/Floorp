@@ -9,6 +9,7 @@ autogen_warning = """/* DO NOT MODIFY THIS MANUALLY! This file was generated usi
  */
 
 typedef void WGPUEmpty;
+typedef struct WGPUGlobal WGPUGlobal;
 """
 include_version = true
 braces = "SameLine"
@@ -22,7 +23,7 @@ exclude = ["BufferMapResult"]
 
 [parse]
 parse_deps = true
-include = ["wgpu-native"]
+include = ["wgpu-core"]
 
 [fn]
 prefix = "WGPU_INLINE"

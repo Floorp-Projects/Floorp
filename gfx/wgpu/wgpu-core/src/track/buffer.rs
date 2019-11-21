@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::{PendingTransition, ResourceState, Stitch, Unit};
-use crate::{conv, resource::BufferUsage, BufferId};
+use crate::{conv, id::BufferId, resource::BufferUsage};
 use std::ops::Range;
 
 //TODO: store `hal::buffer::State` here to avoid extra conversions
@@ -16,19 +16,17 @@ impl PendingTransition<BufferState> {
     }
 }
 
-impl Default for BufferState {
-    fn default() -> Self {
+impl ResourceState for BufferState {
+    type Id = BufferId;
+    type Selector = ();
+    type Usage = BufferUsage;
+
+    fn new(_full_selector: &Self::Selector) -> Self {
         BufferState {
             init: BufferUsage::empty(),
             last: BufferUsage::empty(),
         }
     }
-}
-
-impl ResourceState for BufferState {
-    type Id = BufferId;
-    type Selector = ();
-    type Usage = BufferUsage;
 
     fn query(&self, _selector: Self::Selector) -> Option<Self::Usage> {
         Some(self.last)
@@ -106,7 +104,7 @@ impl ResourceState for BufferState {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{Backend, TypedId};
+    use crate::{id::TypedId, Backend};
 
     #[test]
     fn change() {
