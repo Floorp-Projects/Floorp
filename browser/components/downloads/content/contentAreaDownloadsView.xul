@@ -48,7 +48,7 @@
                  value="&downloadsListEmpty.label;"
                  mousethrough="always"/>
   </stack>
-#include downloadsCommands.inc.xul
-#include downloadsStrings.inc.xul
-#include downloadsContextMenu.inc.xul
+#include downloadsCommands.inc.xhtml
+#include downloadsStrings.inc.xhtml
+#include downloadsContextMenu.inc.xhtml
 </window>

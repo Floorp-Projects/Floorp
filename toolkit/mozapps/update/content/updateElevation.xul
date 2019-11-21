@@ -36,7 +36,7 @@
   <script src="chrome://global/content/editMenuOverlay.js"/>
 
 #if defined(XP_MACOSX) && MOZ_BUILD_APP == browser
-#include ../../../../browser/base/content/macWindow.inc.xul
+#include ../../../../browser/base/content/macWindow.inc.xhtml
 #endif
 
   <stringbundleset id="updateSet">

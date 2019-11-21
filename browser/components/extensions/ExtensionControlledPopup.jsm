@@ -86,7 +86,7 @@ class ExtensionControlledPopup {
    *                 then it will anchor to a browser action or the app menu.
    * @param {string} opts.popupnotificationId
    *                 The id for the popupnotification element in the markup. This
-   *                 element should be defined in panelUI.inc.xul.
+   *                 element should be defined in panelUI.inc.xhtml.
    * @param {string} opts.settingType
    *                 The setting type to check in ExtensionSettingsStore to retrieve
    *                 the controlling extension.

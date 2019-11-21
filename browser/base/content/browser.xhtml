@@ -83,7 +83,7 @@
 
 # All JS files which are needed by browser.xhtml and other top level windows to
 # support MacOS specific features *must* go into the global-scripts.inc file so
-# that they can be shared with macWindow.inc.xul.
+# that they can be shared with macWindow.inc.xhtml.
 #include global-scripts.inc
 
 <script>
@@ -125,7 +125,7 @@
 <html:body xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 # All sets except for popupsets (commands, keys, and stringbundles)
 # *must* go into the browser-sets.inc file so that they can be shared with other
-# top level windows in macWindow.inc.xul.
+# top level windows in macWindow.inc.xhtml.
 #include browser-sets.inc
   <popupset id="mainPopupSet">
     <menupopup id="tabContextMenu"
@@ -283,7 +283,7 @@
         </html:div>
         <html:div id="editBookmarkPanelImage"></html:div>
       </html:div>
-#include ../../components/places/content/editBookmarkPanel.inc.xul
+#include ../../components/places/content/editBookmarkPanel.inc.xhtml
       <vbox id="editBookmarkPanelBottomContent"
             flex="1">
         <checkbox id="editBookmarkPanel_showForNewBookmarks"
@@ -513,7 +513,7 @@
                 oncommand="PictureInPicture.hideToggle();" />
     </menupopup>
 
-#include ../../components/places/content/placesContextMenu.inc.xul
+#include ../../components/places/content/placesContextMenu.inc.xhtml
 
     <panel id="ctrlTab-panel" hidden="true" norestorefocus="true" level="top">
       <hbox id="ctrlTab-previews"/>
@@ -585,7 +585,7 @@
                 data-l10n-id="page-action-manage-extension"/>
     </menupopup>
 
-#include ../../components/places/content/bookmarksHistoryTooltip.inc.xul
+#include ../../components/places/content/bookmarksHistoryTooltip.inc.xhtml
 
     <tooltip id="tabbrowser-tab-tooltip" onpopupshowing="gBrowser.createTooltip(event);"/>
 
@@ -609,11 +609,11 @@
 
 #include popup-notifications.inc
 
-#include ../../components/customizableui/content/panelUI.inc.xul
-#include ../../components/controlcenter/content/identityPanel.inc.xul
-#include ../../components/controlcenter/content/protectionsPanel.inc.xul
-#include ../../components/downloads/content/downloadsPanel.inc.xul
-#include browser-allTabsMenu.inc.xul
+#include ../../components/customizableui/content/panelUI.inc.xhtml
+#include ../../components/controlcenter/content/identityPanel.inc.xhtml
+#include ../../components/controlcenter/content/protectionsPanel.inc.xhtml
+#include ../../components/downloads/content/downloadsPanel.inc.xhtml
+#include browser-allTabsMenu.inc.xhtml
 
     <hbox id="downloads-animation-container" mousethrough="always">
       <vbox id="downloads-notification-anchor" hidden="true">
@@ -705,7 +705,7 @@
                context="toolbar-context-menu">
         <toolbaritem id="menubar-items" align="center">
 # The entire main menubar is placed into browser-menubar.inc, so that it can be
-# shared with other top level windows in macWindow.inc.xul.
+# shared with other top level windows in macWindow.inc.xhtml.
 #include browser-menubar.inc
         </toolbaritem>
         <spacer flex="1" skipintoolbarset="true" ordinal="1000"/>
@@ -1408,7 +1408,7 @@
   </hbox>
 
   <box id="customization-container" flex="1" renderroot="content" hidden="true"><![CDATA[
-#include ../../components/customizableui/content/customizeMode.inc.xul
+#include ../../components/customizableui/content/customizeMode.inc.xhtml
   ]]></box>
 
 # Everything that needs to straddle the line between chrome and content, without being
