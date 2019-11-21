@@ -452,6 +452,7 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
     switch (sysno) {
         // Timekeeping
       case __NR_clock_nanosleep:
+      case __NR_clock_getres:
       case __NR_clock_gettime: {
         // clockid_t can encode a pid or tid to monitor another
         // process or thread's CPU usage (see CPUCLOCK_PID and related
@@ -1175,7 +1176,6 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
         return Allow();
 
       CASES_FOR_getrlimit:
-      case __NR_clock_getres:
       CASES_FOR_getresuid:
       CASES_FOR_getresgid:
         return Allow();
