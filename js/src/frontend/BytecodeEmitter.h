@@ -451,8 +451,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   mozilla::Maybe<uint32_t> getOffsetForLoop(ParseNode* nextpn);
 
+  enum class GotoKind { Break, Continue };
   MOZ_MUST_USE bool emitGoto(NestableControl* target, JumpList* jumplist,
-                             SrcNoteType noteType = SRC_NULL);
+                             GotoKind kind);
 
   MOZ_MUST_USE bool emitIndex32(JSOp op, uint32_t index);
   MOZ_MUST_USE bool emitIndexOp(JSOp op, uint32_t index);

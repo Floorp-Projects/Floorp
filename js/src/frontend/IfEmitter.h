@@ -69,7 +69,7 @@ class MOZ_STACK_CLASS BranchEmitterBase {
  protected:
   BranchEmitterBase(BytecodeEmitter* bce, Kind kind);
 
-  MOZ_MUST_USE bool emitThenInternal(SrcNoteType type);
+  MOZ_MUST_USE bool emitThenInternal();
   void calculateOrCheckPushed();
   MOZ_MUST_USE bool emitElseInternal();
   MOZ_MUST_USE bool emitEndInternal();
