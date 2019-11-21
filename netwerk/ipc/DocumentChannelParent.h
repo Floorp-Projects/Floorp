@@ -36,14 +36,6 @@ class DocumentChannelParent final : public ADocumentChannelBridge,
     mParent->Cancel(aStatus);
     return true;
   }
-  bool RecvSuspend() {
-    mParent->Suspend();
-    return true;
-  }
-  bool RecvResume() {
-    mParent->Resume();
-    return true;
-  }
   void ActorDestroy(ActorDestroyReason aWhy) override {
     mParent->DocumentChannelBridgeDisconnected();
     mParent = nullptr;
