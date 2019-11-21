@@ -226,20 +226,6 @@ bool SwitchEmitter::emitCaseOrDefaultJump(uint32_t caseIndex, bool isDefault) {
     return true;
   }
 
-  if (caseIndex > 0) {
-    // Link the last JSOP_CASE's SRC_NEXTCASE to current JSOP_CASE for the
-    // benefit of IonBuilder.
-    if (!bce_->setSrcNoteOffset(
-            caseNoteIndex_, SrcNote::NextCase::NextCaseOffset,
-            bce_->bytecodeSection().offset() - lastCaseOffset_)) {
-      return false;
-    }
-  }
-
-  if (!bce_->newSrcNote2(SRC_NEXTCASE, 0, &caseNoteIndex_)) {
-    return false;
-  }
-
   JumpList caseJump;
   if (!bce_->emitJump(JSOP_CASE, &caseJump)) {
     return false;
@@ -249,14 +235,8 @@ bool SwitchEmitter::emitCaseOrDefaultJump(uint32_t caseIndex, bool isDefault) {
 
   if (caseIndex == 0) {
     // Switch note's second offset is to first JSOP_CASE.
-    unsigned noteCount = bce_->bytecodeSection().notes().length();
     if (!bce_->setSrcNoteOffset(noteIndex_, 1, lastCaseOffset_ - top_)) {
       return false;
-    }
-    unsigned noteCountDelta =
-        bce_->bytecodeSection().notes().length() - noteCount;
-    if (noteCountDelta != 0) {
-      caseNoteIndex_ += noteCountDelta;
     }
   }
 
