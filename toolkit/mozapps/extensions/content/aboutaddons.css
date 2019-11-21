@@ -195,10 +195,6 @@ addon-card[expanded] .addon-card-message {
   flex-direction: column;
 }
 
-.card-actions {
-  flex-shrink: 0;
-}
-
 .addon-name-container {
   /* Subtract the top line-height so the text and icon align at the top. */
   margin-top: -3px;
@@ -244,6 +240,15 @@ addon-card[expanded] .addon-card-message {
   -moz-context-properties: fill;
 }
 
+.theme-enable-button {
+  min-width: auto;
+  height: auto;
+  font-size: 13px;
+  min-height: auto;
+  height: 24px;
+  margin: 0;
+}
+
 .addon-description {
   font-size: 14px;
   line-height: 20px;
@@ -274,12 +279,6 @@ addon-card:not([expanded]) .addon-description {
   background-image: url("chrome://mozapps/skin/extensions/utilities.svg");
   width: 32px;
   height: 32px;
-}
-
-.more-options-menu {
-  /* Add some negative margin to account for the button's padding */
-  margin-top: -10px;
-  margin-inline-end: -8px;
 }
 
 /* Recommended add-ons on list views */
@@ -438,6 +437,7 @@ addon-details {
   width: 24px;
   height: 24px;
   margin: 0;
+  margin-inline-start: 8px;
   -moz-context-properties: fill;
   fill: currentColor;
   background-image: url("chrome://global/skin/icons/more.svg");
