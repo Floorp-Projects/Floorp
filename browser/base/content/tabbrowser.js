@@ -6034,6 +6034,9 @@ var StatusPanel = {
   },
 
   update() {
+    if (BrowserHandler.kiosk) {
+      return;
+    }
     let text;
     let type;
     let types = ["overLink"];
