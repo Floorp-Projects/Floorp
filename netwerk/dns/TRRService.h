@@ -74,6 +74,7 @@ class TRRService : public nsIObserver,
   bool IsDomainBlacklisted(const nsACString& aHost,
                            const nsACString& aOriginSuffix,
                            bool aPrivateBrowsing);
+  bool IsExcludedFromTRR_unlocked(const nsACString& aHost);
 
   bool mInitialized;
   Atomic<uint32_t, Relaxed> mMode;
