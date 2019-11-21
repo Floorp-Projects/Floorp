@@ -66,7 +66,7 @@ You can test that everything is working by running these commands:
 
 If the ``target_task_set`` file exists, you are good to go. If not you can look at the ``watchman``
 log to see if there were any errors. This typically lives somewhere like
-``/usr/local/var/run/watchman/<user>-state/log``. In this case please file a bug under ``Firefox
+``/usr/local/var/run/watchman/$USER-state/log``. In this case please file a bug under ``Firefox
 Build System :: Try`` and include the relevant portion of the log.
 
 
@@ -79,19 +79,45 @@ service won't be running and you'll need to start the service each time by invok
 binary (e.g by running ``watchman version``).
 
 If you'd like this to happen automatically, you can use your favourite platform specific way of
-running commands at startup (``crontab``, ``rc.local``, etc.). But the easiest way is likely just to
-add ``watchman version > /dev/null 2>&1`` to your ``.bash_profile`` or equivalent.
+running commands at startup (``crontab``, ``rc.local``, etc.). Watchman stores separate state for
+each user, so be sure you run the command as the user that set up the triggers.
 
-For more control, you can also take a look at `this hint`_ on how to setup
-``watchman`` as a ``systemd`` service.
+Setting up a systemd Service
+++++++++++++++++++++++++++++
+
+If ``systemd`` is an option you can create a service:
+
+.. code-block:: ini
+
+    [Unit]
+    Description=Watchman for %i
+    After=network.target
+
+    [Service]
+    Type=simple
+    User=%i
+    ExecStart=/usr/local/bin/watchman --log-level 1 watch-list -f
+    ExecStop=/usr/local/bin/watchman shutdown-server
+
+    [Install]
+    WantedBy=multi-user.target
+
+Save this to a file called ``/etc/systemd/system/watchman@.service``. Then run:
+
+.. code-block:: shell
+
+    $ sudo systemctl enable watchman@$USER.service
+    $ sudo systemctl start watchman@$USER.service
+
+The next time you reboot, the watchman service should start automatically.
 
 
 Managing Triggers
 ~~~~~~~~~~~~~~~~~
 
 When adding a trigger watchman writes it to disk. Typically it'll be a path similar to
-``/usr/local/var/run/<user>-state/state``. While editing that file by hand would work, the watchman
-binary provides an interface for managing your triggers.
+``/usr/local/var/run/watchman/$USER-state/state``. While editing that file by hand would work, the
+watchman binary provides an interface for managing your triggers.
 
 To see all directories you are currently watching:
 
