@@ -103,6 +103,12 @@ CODE_COVERAGE_GCC=1
 endif
 endif
 
+ifneq (,$(MOZ_ASAN)$(MOZ_TSAN)$(MOZ_UBSAN))
+ifndef CROSS_COMPILE
+NATIVE_SANITIZERS=1
+endif # CROSS_COMPILE
+endif
+
 # We start with host variables because the rust host and the rust target might be the same,
 # in which case we want the latter to take priority.
 
@@ -120,7 +126,7 @@ rust_cc_env_name := $(subst -,_,$(RUST_TARGET))
 export CC_$(rust_cc_env_name)=$(CC)
 export CXX_$(rust_cc_env_name)=$(CXX)
 export AR_$(rust_cc_env_name)=$(AR)
-ifeq (,$(MOZ_ASAN)$(MOZ_TSAN)$(MOZ_UBSAN)$(CODE_COVERAGE_GCC)$(FUZZING_INTERFACES))
+ifeq (,$(NATIVE_SANITIZERS)$(CODE_COVERAGE_GCC))
 # -DMOZILLA_CONFIG_H is added to prevent mozilla-config.h from injecting anything
 # in C/C++ compiles from rust. That's not needed in the other branch because the
 # base flags don't force-include mozilla-config.h.
@@ -133,10 +139,9 @@ else
 # scripts/procedural macros vs. those happening for the rust target,
 # we can't blindly pass all our flags down for cc-rs to use them, because of the
 # side effects they can have on what otherwise should be host builds.
-# So for sanitizer, fuzzing and coverage builds, we only pass the base compiler
-# flags.
-# This means C code built by rust is not going to be covered by sanitizer,
-# fuzzing and coverage. But at least we control what compiler is being used,
+# So for sanitizer and coverage builds, we only pass the base compiler flags.
+# This means C code built by rust is not going to be covered by sanitizer
+# and coverage. But at least we control what compiler is being used,
 # rather than relying on cc-rs guesses, which, sometimes fail us.
 export CFLAGS_$(rust_host_cc_env_name)=$(HOST_CC_BASE_FLAGS)
 export CXXFLAGS_$(rust_host_cc_env_name)=$(HOST_CXX_BASE_FLAGS)
@@ -211,10 +216,8 @@ cargo_linker_env_var := CARGO_TARGET_$(call cargo_env,$(RUST_TARGET))_LINKER
 
 # Defining all of this for ASan/TSan builds results in crashes while running
 # some crates's build scripts (!), so disable it for now.
-ifndef MOZ_ASAN
-ifndef MOZ_TSAN
-ifndef MOZ_UBSAN
-ifndef FUZZING_INTERFACES
+# See https://github.com/rust-lang/cargo/issues/5754
+ifndef NATIVE_SANITIZERS
 # Cargo needs the same linker flags as the C/C++ compiler,
 # but not the final libraries. Filter those out because they
 # cause problems on macOS 10.7; see bug 1365993 for details.
@@ -260,10 +263,7 @@ $(HOST_RECIPES): MOZ_CARGO_WRAP_LD:=$(HOST_LINKER)
 $(TARGET_RECIPES) $(HOST_RECIPES): MOZ_CARGO_WRAP_HOST_LD:=$(HOST_LINKER)
 endif
 
-endif # FUZZING_INTERFACES
-endif # MOZ_UBSAN
-endif # MOZ_TSAN
-endif # MOZ_ASAN
+endif # NATIVE_SANITIZERS
 
 ifdef RUST_LIBRARY_FILE
 
