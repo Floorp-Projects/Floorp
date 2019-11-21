@@ -1505,6 +1505,15 @@ void ChromeUtils::SaveHeapSnapshotShared(
 }
 
 /* static */
+uint64_t ChromeUtils::GetObjectNodeId(GlobalObject& global,
+                                      JS::HandleObject val) {
+  JS::RootedObject obj(global.Context(), val);
+
+  JS::ubi::Node node(obj);
+  return node.identifier();
+}
+
+/* static */
 void ChromeUtils::SaveHeapSnapshot(GlobalObject& global,
                                    const HeapSnapshotBoundaries& boundaries,
                                    nsAString& outFilePath, ErrorResult& rv) {
