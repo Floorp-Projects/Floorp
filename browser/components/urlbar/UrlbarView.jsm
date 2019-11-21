@@ -761,12 +761,19 @@ class UrlbarView {
   _createRowContent(item) {
     let typeIcon = this._createElement("span");
     typeIcon.className = "urlbarView-type-icon";
-    item._content.appendChild(typeIcon);
+
+    if (!this.input.megabar) {
+      item._content.appendChild(typeIcon);
+    }
 
     let favicon = this._createElement("img");
     favicon.className = "urlbarView-favicon";
     item._content.appendChild(favicon);
     item._elements.set("favicon", favicon);
+
+    if (this.input.megabar) {
+      item._content.appendChild(typeIcon);
+    }
 
     let title = this._createElement("span");
     title.className = "urlbarView-title";
