@@ -121,16 +121,6 @@ class SrcNote {
       Count
     };
   };
-  // SRC_NEXTCASE: Source note for JSOP_CASE in a JSOP_CONDSWITCH.
-  class NextCase {
-   public:
-    enum Fields {
-      // Offset of the next JSOP_CASE from this JSOP_CASE.  This field is
-      // 0 if this is the last JSOP_CASE.
-      NextCaseOffset,
-      Count
-    };
-  };
   // SRC_TRY: Source note for JSOP_TRY.
   class Try {
    public:
@@ -165,21 +155,13 @@ class SrcNote {
 // clang-format off
 #define FOR_EACH_SRC_NOTE_TYPE(M)                                                                  \
     M(SRC_NULL,         "null",        0)  /* Terminates a note vector. */                         \
-    M(SRC_IF,           "if",          0)  /* JSOP_IFEQ bytecode is from an if-then. */            \
-    M(SRC_IF_ELSE,      "if-else",     0)  /* JSOP_IFEQ bytecode is from an if-then-else. */       \
-    M(SRC_COND,         "cond",        0)  /* JSOP_IFEQ is from conditional ?: operator. */        \
     M(SRC_FOR,          "for",         SrcNote::For::Count) \
     M(SRC_WHILE,        "while",       SrcNote::While::Count) \
     M(SRC_DO_WHILE,     "do-while",    SrcNote::DoWhile::Count) \
     M(SRC_FOR_IN,       "for-in",      SrcNote::ForIn::Count) \
     M(SRC_FOR_OF,       "for-of",      SrcNote::ForOf::Count) \
-    M(SRC_CONTINUE,     "continue",    0)  /* JSOP_GOTO is a continue. */                          \
-    M(SRC_BREAK,        "break",       0)  /* JSOP_GOTO is a break. */                             \
-    M(SRC_BREAK2LABEL,  "break2label", 0)  /* JSOP_GOTO for 'break label'. */                      \
-    M(SRC_SWITCHBREAK,  "switchbreak", 0)  /* JSOP_GOTO is a break in a switch. */                 \
     M(SRC_TABLESWITCH,  "tableswitch", SrcNote::TableSwitch::Count) \
     M(SRC_CONDSWITCH,   "condswitch",  SrcNote::CondSwitch::Count) \
-    M(SRC_NEXTCASE,     "nextcase",    SrcNote::NextCase::Count) \
     M(SRC_ASSIGNOP,     "assignop",    0)  /* += or another assign-op follows. */                  \
     M(SRC_CLASS_SPAN,   "class",       2)  /* The starting and ending offsets for the class, used  \
                                               for toString correctness for default ctors. */       \
@@ -190,6 +172,14 @@ class SrcNote {
     M(SRC_SETLINE,      "setline",     SrcNote::SetLine::Count) \
     M(SRC_BREAKPOINT,   "breakpoint",  0)  /* Bytecode is a recommended breakpoint. */             \
     M(SRC_STEP_SEP,     "step-sep",    0)  /* Bytecode is the first in a new steppable area. */    \
+    M(SRC_UNUSED16,     "unused",      0) \
+    M(SRC_UNUSED17,     "unused",      0) \
+    M(SRC_UNUSED18,     "unused",      0) \
+    M(SRC_UNUSED19,     "unused",      0) \
+    M(SRC_UNUSED20,     "unused",      0) \
+    M(SRC_UNUSED21,     "unused",      0) \
+    M(SRC_UNUSED22,     "unused",      0) \
+    M(SRC_UNUSED23,     "unused",      0) \
     M(SRC_XDELTA,       "xdelta",      0)  /* 24-31 are for extended delta notes. */
 // clang-format on
 

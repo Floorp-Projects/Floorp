@@ -85,9 +85,6 @@ bool LoopControl::emitSpecialBreakForDone(BytecodeEmitter* bce) {
   MOZ_ASSERT(bce->bytecodeSection().stackDepth() == stackDepth_);
   MOZ_ASSERT(bce->innermostNestableControl == this);
 
-  if (!bce->newSrcNote(SRC_BREAK)) {
-    return false;
-  }
   if (!bce->emitJump(JSOP_GOTO, &breaks)) {
     return false;
   }
