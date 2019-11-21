@@ -6,11 +6,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DocumentChannelChild.h"
+
 #include "SerializedLoadContext.h"
 #include "mozIThirdPartyUtil.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/nsCSPContext.h"
+#include "mozilla/extensions/StreamFilterParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/HttpChannelChild.h"
@@ -21,16 +24,21 @@
 #include "nsHttpHandler.h"
 #include "nsQueryObject.h"
 #include "nsSerializationHelper.h"
-#include "nsStringStream.h"
-#include "mozilla/dom/nsCSPContext.h"
 #include "nsStreamListenerWrapper.h"
-#include "mozilla/extensions/StreamFilterParent.h"
+#include "nsStringStream.h"
+#include "nsURLHelper.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace net {
+
+//-----------------------------------------------------------------------------
+// DocumentChannelChild::nsISupports
+
+NS_IMPL_ADDREF(DocumentChannelChild)
+NS_IMPL_RELEASE(DocumentChannelChild)
 
 NS_INTERFACE_MAP_BEGIN(DocumentChannelChild)
   if (mWasOpened && aIID == NS_GET_IID(nsIHttpChannel)) {
@@ -43,34 +51,35 @@ NS_INTERFACE_MAP_BEGIN(DocumentChannelChild)
         "Trying to request nsIHttpChannel from DocumentChannelChild, this is "
         "likely broken");
   }
+  NS_INTERFACE_MAP_ENTRY(nsIRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIChannel)
   NS_INTERFACE_MAP_ENTRY(nsITraceableChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectCallback)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(DocumentChannelChild)
-NS_INTERFACE_MAP_END_INHERITING(nsBaseChannel)
-
-NS_IMPL_ADDREF_INHERITED(DocumentChannelChild, nsBaseChannel)
-NS_IMPL_RELEASE_INHERITED(DocumentChannelChild, nsBaseChannel)
+NS_INTERFACE_MAP_END_INHERITING(nsHashPropertyBag)
 
 DocumentChannelChild::DocumentChannelChild(
     nsDocShellLoadState* aLoadState, net::LoadInfo* aLoadInfo,
     const nsString* aInitiatorType, nsLoadFlags aLoadFlags, uint32_t aLoadType,
     uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc,
     bool aHasNonEmptySandboxingFlags)
-    : mLoadState(aLoadState),
+    : NeckoTargetHolder(nullptr),
+      mEventQueue(new ChannelEventQueue(static_cast<nsIChannel*>(this))),
+      mAsyncOpenTime(TimeStamp::Now()),
+      mLoadState(aLoadState),
       mInitiatorType(aInitiatorType ? Some(*aInitiatorType) : Nothing()),
       mLoadType(aLoadType),
       mCacheKey(aCacheKey),
       mIsActive(aIsActive),
       mIsTopLevelDoc(aIsTopLevelDoc),
-      mHasNonEmptySandboxingFlags(aHasNonEmptySandboxingFlags) {
-  mEventQueue = new ChannelEventQueue(static_cast<nsIChannel*>(this));
-  SetURI(aLoadState->URI());
-  SetLoadInfo(aLoadInfo);
-  SetLoadFlags(aLoadFlags);
+      mHasNonEmptySandboxingFlags(aHasNonEmptySandboxingFlags),
+      mLoadFlags(aLoadFlags),
+      mURI(aLoadState->URI()),
+      mLoadInfo(aLoadInfo) {
   RefPtr<nsHttpHandler> handler = nsHttpHandler::GetInstance();
   uint64_t channelId;
   Unused << handler->NewChannelId(channelId);
-  mChannelId.emplace(channelId);
-  mAsyncOpenTime = TimeStamp::Now();
+  mChannelId = channelId;
 }
 
 NS_IMETHODIMP
@@ -88,9 +97,7 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
 
   // Port checked in parent, but duplicate here so we can return with error
   // immediately, as we've done since before e10s.
-  rv = NS_CheckPortSafety(nsBaseChannel::URI());  // Need to disambiguate,
-                                                  // because in the child ipdl,
-                                                  // a typedef URI is defined...
+  rv = NS_CheckPortSafety(mURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> topWindowURI;
@@ -153,7 +160,7 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   args.isActive() = mIsActive;
   args.isTopLevelDoc() = mIsTopLevelDoc;
   args.hasNonEmptySandboxingFlags() = mHasNonEmptySandboxingFlags;
-  args.channelId() = *mChannelId;
+  args.channelId() = mChannelId;
   args.asyncOpenTime() = mAsyncOpenTime;
 
   nsCOMPtr<nsILoadContext> loadContext;
@@ -171,7 +178,9 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   }
 
   nsCOMPtr<nsIBrowserChild> iBrowserChild;
-  GetCallback(iBrowserChild);
+  NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup,
+                                NS_GET_TEMPLATE_IID(nsIBrowserChild),
+                                getter_AddRefs(iBrowserChild));
   BrowserChild* browserChild = static_cast<BrowserChild*>(iBrowserChild.get());
   if (MissingRequiredBrowserChild(browserChild, "ftp")) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -515,6 +524,219 @@ DocumentChannelChild::Resume() {
   }
 
   mEventQueue->Resume();
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// Remainder of nsIRequest/nsIChannel.
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP DocumentChannelChild::GetNotificationCallbacks(
+    nsIInterfaceRequestor** aCallbacks) {
+  nsCOMPtr<nsIInterfaceRequestor> callbacks(mCallbacks);
+  callbacks.forget(aCallbacks);
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::SetNotificationCallbacks(
+    nsIInterfaceRequestor* aNotificationCallbacks) {
+  mCallbacks = aNotificationCallbacks;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::GetLoadGroup(nsILoadGroup** aLoadGroup) {
+  nsCOMPtr<nsILoadGroup> loadGroup(mLoadGroup);
+  loadGroup.forget(aLoadGroup);
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::SetLoadGroup(nsILoadGroup* aLoadGroup) {
+  mLoadGroup = aLoadGroup;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::GetStatus(nsresult* aStatus) {
+  *aStatus = mStatus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::GetName(nsACString& aResult) {
+  if (!mURI) {
+    aResult.Truncate();
+    return NS_OK;
+  }
+  return mURI->GetSpec(aResult);
+}
+
+NS_IMETHODIMP DocumentChannelChild::IsPending(bool* aResult) {
+  *aResult = mIsPending;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::GetLoadFlags(nsLoadFlags* aLoadFlags) {
+  *aLoadFlags = mLoadFlags;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::SetLoadFlags(nsLoadFlags aLoadFlags) {
+  mLoadFlags = aLoadFlags;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::GetOriginalURI(nsIURI** aOriginalURI) {
+  *aOriginalURI = mOriginalURI;
+  NS_ADDREF(*aOriginalURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::SetOriginalURI(nsIURI* aOriginalURI) {
+  NS_ENSURE_ARG_POINTER(aOriginalURI);
+  mOriginalURI = aOriginalURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::GetURI(nsIURI** aURI) {
+  nsCOMPtr<nsIURI> uri(mURI);
+  uri.forget(aURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::GetOwner(nsISupports** aOwner) {
+  nsCOMPtr<nsISupports> owner(mOwner);
+  owner.forget(aOwner);
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::SetOwner(nsISupports* aOwner) {
+  mOwner = aOwner;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::GetSecurityInfo(
+    nsISupports** aSecurityInfo) {
+  nsCOMPtr<nsISupports> securityInfo(mSecurityInfo);
+  securityInfo.forget(aSecurityInfo);
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::GetContentType(nsACString& aContentType) {
+  aContentType = mContentType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::SetContentType(
+    const nsACString& aContentType) {
+  // mContentCharset is unchanged if not parsed
+  bool dummy;
+  net_ParseContentType(aContentType, mContentType, mContentCharset, &dummy);
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::GetContentCharset(
+    nsACString& aContentCharset) {
+  aContentCharset = mContentCharset;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::SetContentCharset(
+    const nsACString& aContentCharset) {
+  mContentCharset = aContentCharset;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::GetContentLength(int64_t* aContentLength) {
+  *aContentLength = mContentLength;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::SetContentLength(int64_t aContentLength) {
+  mContentLength = aContentLength;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::Open(nsIInputStream** aStream) {
+  nsCOMPtr<nsIStreamListener> listener;
+  nsresult rv =
+      nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_IN_PROGRESS);
+
+  return NS_ImplementChannelOpen(this, aStream);
+}
+
+NS_IMETHODIMP DocumentChannelChild::GetContentDisposition(
+    uint32_t* aContentDisposition) {
+  // preserve old behavior, fail unless explicitly set.
+  if (mContentDispositionHint == UINT32_MAX) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *aContentDisposition = mContentDispositionHint;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::SetContentDisposition(
+    uint32_t aContentDisposition) {
+  mContentDispositionHint = aContentDisposition;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::GetContentDispositionFilename(
+    nsAString& aContentDispositionFilename) {
+  if (!mContentDispositionFilename) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  aContentDispositionFilename = *mContentDispositionFilename;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::SetContentDispositionFilename(
+    const nsAString& aContentDispositionFilename) {
+  mContentDispositionFilename = Some(nsString(aContentDispositionFilename));
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::GetContentDispositionHeader(
+    nsACString& aContentDispositionHeader) {
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP DocumentChannelChild::GetLoadInfo(nsILoadInfo** aLoadInfo) {
+  nsCOMPtr<nsILoadInfo> loadInfo(mLoadInfo);
+  loadInfo.forget(aLoadInfo);
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::SetLoadInfo(nsILoadInfo* aLoadInfo) {
+  MOZ_RELEASE_ASSERT(aLoadInfo, "loadinfo can't be null");
+  mLoadInfo = aLoadInfo;
+
+  mNeckoTarget =
+      nsContentUtils::GetEventTargetByLoadInfo(mLoadInfo, TaskCategory::Other);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentChannelChild::GetIsDocument(bool* aIsDocument) {
+  return NS_GetIsDocumentChannel(this, aIsDocument);
+}
+
+//-----------------------------------------------------------------------------
+// nsIIdentChannel
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+DocumentChannelChild::GetChannelId(uint64_t* aChannelId) {
+  *aChannelId = mChannelId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocumentChannelChild::SetChannelId(uint64_t aChannelId) {
+  mChannelId = aChannelId;
   return NS_OK;
 }
 
