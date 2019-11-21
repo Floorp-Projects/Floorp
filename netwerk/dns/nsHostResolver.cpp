@@ -866,6 +866,10 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost, uint16_t type,
       nsAutoCString originSuffix;
       aOriginAttributes.CreateSuffix(originSuffix);
 
+      if (gTRRService && gTRRService->IsExcludedFromTRR(host)) {
+        flags |= RES_DISABLE_TRR;
+      }
+
       nsHostKey key(host, type, flags, af,
                     (aOriginAttributes.mPrivateBrowsingId > 0), originSuffix);
       RefPtr<nsHostRecord>& entry = mRecordDB.GetOrInsert(key);
