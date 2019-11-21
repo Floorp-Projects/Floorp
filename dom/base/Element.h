@@ -1058,6 +1058,11 @@ class Element : public FragmentOrElement {
                     ErrorResult& aError) {
     SetAttribute(aName, aValue, nullptr, aError);
   }
+  void SetAttributeDevtools(const nsAString& aName, const nsAString& aValue,
+                            ErrorResult& aError);
+  void SetAttributeDevtoolsNS(const nsAString& aNamespaceURI,
+                              const nsAString& aLocalName,
+                              const nsAString& aValue, ErrorResult& aError);
 
   void RemoveAttribute(const nsAString& aName, ErrorResult& aError);
   void RemoveAttributeNS(const nsAString& aNamespaceURI,

@@ -76,7 +76,7 @@ interface Element : Node {
   HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
   [Pure]
   HTMLCollection getElementsByClassName(DOMString classNames);
- 
+
   [CEReactions, Throws, Pure]
   Element? insertAdjacentElement(DOMString where, Element element); // historical
 
@@ -320,7 +320,7 @@ partial interface Element {
    */
   [ChromeOnly, Pure]
   sequence<Grid> getGridFragments();
-  
+
   /**
    * Returns a sequence of all the descendent elements of this element
    * that have display:grid or display:inline-grid style and generate
@@ -328,6 +328,16 @@ partial interface Element {
    */
   [ChromeOnly, Pure]
   sequence<Element> getElementsWithGrid();
+
+  /**
+   * Set attribute on the Element with a customized Content-Security-Policy
+   * appropriate to devtools, which includes:
+   * style-src 'unsafe-inline'
+   */
+  [ChromeOnly, CEReactions, Throws]
+  void setAttributeDevtools(DOMString name, DOMString value);
+  [ChromeOnly, CEReactions, Throws]
+  void setAttributeDevtoolsNS(DOMString? namespace, DOMString name, DOMString value);
 };
 
 // These variables are used in vtt.js, they are used for positioning vtt cues.
