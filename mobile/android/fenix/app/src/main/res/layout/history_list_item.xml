@@ -33,8 +33,9 @@
             android:visibility="gone" />
 
     <org.mozilla.fenix.library.LibrarySiteItemView
-            android:id="@+id/history_layout"
-            android:layout_width="match_parent"
-            android:layout_height="56dp" />
+        android:id="@+id/history_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/library_item_height" />
 </LinearLayout>
 

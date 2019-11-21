@@ -138,7 +138,7 @@ private fun assertTestPageTitle(title: String) = testPageTitle()
     .check(matches(withText(title)))
 
 private fun assertPageUrl(expectedUrl: Uri) = pageUrl()
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(ViewMatchers.isCompletelyDisplayed()))
     .check(matches(withText(Matchers.containsString(expectedUrl.toString()))))
 
 private fun assertDeleteConfirmationMessage() =
