@@ -535,6 +535,7 @@ class BrowserParent final : public PBrowserParent,
 
 #if defined(MOZ_WIDGET_ANDROID)
   void DynamicToolbarMaxHeightChanged(ScreenIntCoord aHeight);
+  void DynamicToolbarOffsetChanged(ScreenIntCoord aOffset);
 #endif
 
   void Activate();

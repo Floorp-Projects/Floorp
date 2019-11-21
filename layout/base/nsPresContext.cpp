@@ -2535,6 +2535,19 @@ void nsPresContext::AdjustSizeForViewportUnits() {
       NSIntPixelsToAppUnits(mDynamicToolbarMaxHeight, mCurAppUnitsPerDevPixel);
 }
 
+void nsPresContext::UpdateDynamicToolbarOffset(ScreenIntCoord aOffset) {
+  MOZ_ASSERT(IsRootContentDocumentCrossProcess());
+  if (!mPresShell) {
+    return;
+  }
+
+  if (!HasDynamicToolbar()) {
+    return;
+  }
+
+  MOZ_ASSERT(-mDynamicToolbarMaxHeight <= aOffset && aOffset <= 0);
+}
+
 #ifdef DEBUG
 
 void nsPresContext::ValidatePresShellAndDocumentReleation() const {

@@ -1097,6 +1097,12 @@ void BrowserParent::DynamicToolbarMaxHeightChanged(ScreenIntCoord aHeight) {
     Unused << SendDynamicToolbarMaxHeightChanged(aHeight);
   }
 }
+
+void BrowserParent::DynamicToolbarOffsetChanged(ScreenIntCoord aOffset) {
+  if (!mIsDestroyed) {
+    Unused << SendDynamicToolbarOffsetChanged(aOffset);
+  }
+}
 #endif
 
 void BrowserParent::HandleAccessKey(const WidgetKeyboardEvent& aEvent,
