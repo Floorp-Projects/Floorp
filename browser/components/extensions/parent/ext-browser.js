@@ -978,10 +978,14 @@ class Window extends WindowBase {
   }
 
   setTitlePreface(titlePreface) {
-    this.window.document.documentElement.setAttribute(
-      "titlepreface",
-      titlePreface
-    );
+    if (!titlePreface) {
+      this.window.document.documentElement.removeAttribute("titlepreface");
+    } else {
+      this.window.document.documentElement.setAttribute(
+        "titlepreface",
+        titlePreface
+      );
+    }
   }
 
   get focused() {
