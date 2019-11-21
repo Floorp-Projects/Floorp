@@ -49,6 +49,7 @@ TRRService::TRRService()
       mUseGET(false),
       mDisableECS(true),
       mDisableAfterFails(5),
+      mVPNDetected(false),
       mClearTRRBLStorage(false),
       mConfirmationState(CONFIRM_INIT),
       mRetryConfirmInterval(1000),
@@ -452,22 +453,39 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
       mTRRBLStorage->Clear();
     }
   } else if (!strcmp(aTopic, NS_NETWORK_LINK_TOPIC)) {
-    mDNSSuffixDomains.Clear();
-    nsAutoCString data = NS_ConvertUTF16toUTF8(aData);
-    if (data.EqualsLiteral(NS_NETWORK_LINK_DATA_CHANGED)) {
-      nsCOMPtr<nsINetworkLinkService> link = do_QueryInterface(aSubject);
-      // The network link service notification normally passes itself as the
-      // subject, but some unit tests will sometimes pass a null subject.
-      if (link) {
-        nsTArray<nsCString> suffixList;
-        link->GetDnsSuffixList(suffixList);
-        for (const auto& item : suffixList) {
-          mDNSSuffixDomains.PutEntry(item);
-        }
-      }
-    }
+    LOG(("TRRService link-event"));
+    nsCOMPtr<nsINetworkLinkService> link = do_QueryInterface(aSubject);
+    RebuildSuffixList(link);
+    CheckVPNStatus(link);
   }
   return NS_OK;
+}
+
+void TRRService::RebuildSuffixList(nsINetworkLinkService* aLinkService) {
+  mDNSSuffixDomains.Clear();
+  // The network link service notification normally passes itself as the
+  // subject, but some unit tests will sometimes pass a null subject.
+  if (!aLinkService) {
+    return;
+  }
+
+  nsTArray<nsCString> suffixList;
+  aLinkService->GetDnsSuffixList(suffixList);
+  for (const auto& item : suffixList) {
+    LOG(("TRRService adding %s to suffix list", item.get()));
+    mDNSSuffixDomains.PutEntry(item);
+  }
+}
+
+void TRRService::CheckVPNStatus(nsINetworkLinkService* aLinkService) {
+  if (!aLinkService) {
+    return;
+  }
+
+  bool vpnDetected = false;
+  aLinkService->GetVpnDetected(&vpnDetected);
+  mVPNDetected = vpnDetected;
+  LOG(("TRRService vpnDetected=%d", vpnDetected));
 }
 
 void TRRService::MaybeConfirm() {
@@ -630,6 +648,10 @@ bool TRRService::IsExcludedFromTRR(const nsACString& aHost) {
 }
 
 bool TRRService::IsExcludedFromTRR_unlocked(const nsACString& aHost) {
+  if (mVPNDetected && !StaticPrefs::network_trr_enable_when_vpn_detected()) {
+    LOG(("%s is excluded from TRR because of VPN", aHost.BeginReading()));
+    return true;
+  }
   if (!NS_IsMainThread()) {
     mLock.AssertCurrentThreadOwns();
   }
