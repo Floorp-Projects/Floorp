@@ -6,19 +6,35 @@
 
 "use strict";
 
-var { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+var { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  Preferences: "resource://gre/modules/Preferences.jsm",
-  Sanitizer: "resource:///modules/Sanitizer.jsm",
-  Services: "resource://gre/modules/Services.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
-  ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "Preferences",
+  "resource://gre/modules/Preferences.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Sanitizer",
+  "resource:///modules/Sanitizer.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "setTimeout",
+  "resource://gre/modules/Timer.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ServiceWorkerCleanUp",
+  "resource://gre/modules/ServiceWorkerCleanUp.jsm"
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -215,17 +231,24 @@ const clearLocalStorage = async function(options) {
 };
 
 const clearPasswords = async function(options) {
+  let loginManager = Services.logins;
   let yieldCounter = 0;
 
-  // Iterate through the logins and delete any updated after our cutoff.
-  for (let login of await LoginHelper.getAllUserFacingLogins()) {
-    login.QueryInterface(Ci.nsILoginMetaInfo);
-    if (!options.since || login.timePasswordChanged >= options.since) {
-      Services.logins.removeLogin(login);
-      if (++yieldCounter % YIELD_PERIOD == 0) {
-        await new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long.
+  if (options.since) {
+    // Iterate through the logins and delete any updated after our cutoff.
+    let logins = loginManager.getAllLogins();
+    for (let login of logins) {
+      login.QueryInterface(Ci.nsILoginMetaInfo);
+      if (login.timePasswordChanged >= options.since) {
+        loginManager.removeLogin(login);
+        if (++yieldCounter % YIELD_PERIOD == 0) {
+          await new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long.
+        }
       }
     }
+  } else {
+    // Remove everything.
+    loginManager.removeAllLogins();
   }
 };
 
