@@ -353,7 +353,6 @@ NS_IMPL_RELEASE(nsBaseChannel)
 NS_INTERFACE_MAP_BEGIN(nsBaseChannel)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
   NS_INTERFACE_MAP_ENTRY(nsIChannel)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIdentChannel, mChannelId.isSome())
   NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableRequest)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
@@ -705,27 +704,6 @@ nsBaseChannel::AsyncOpen(nsIStreamListener* aListener) {
 
   ClassifyURI();
 
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// nsBaseChannel::nsIIdentChannel
-
-NS_IMETHODIMP
-nsBaseChannel::GetChannelId(uint64_t* aChannelId) {
-  if (!mChannelId) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  *aChannelId = *mChannelId;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBaseChannel::SetChannelId(uint64_t aChannelId) {
-  if (!mChannelId) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  *mChannelId = aChannelId;
   return NS_OK;
 }
 
