@@ -1067,25 +1067,24 @@ void MediaTrackGraphImpl::ProduceDataForTracksBlockByBlock(
   MOZ_ASSERT(OnGraphThread());
   MOZ_ASSERT(aTrackIndex <= mFirstCycleBreaker,
              "Cycle breaker is not AudioNodeTrack?");
-  GraphTime t = mProcessedTime;
-  while (t < mStateComputedTime) {
-    GraphTime next = RoundUpToNextAudioBlock(t);
+  while (mProcessedTime < mStateComputedTime) {
+    GraphTime next = RoundUpToNextAudioBlock(mProcessedTime);
     for (uint32_t i = mFirstCycleBreaker; i < mTracks.Length(); ++i) {
       auto nt = static_cast<AudioNodeTrack*>(mTracks[i]);
       MOZ_ASSERT(nt->AsAudioNodeTrack());
-      nt->ProduceOutputBeforeInput(t);
+      nt->ProduceOutputBeforeInput(mProcessedTime);
     }
     for (uint32_t i = aTrackIndex; i < mTracks.Length(); ++i) {
       ProcessedMediaTrack* pt = mTracks[i]->AsProcessedTrack();
       if (pt) {
         pt->ProcessInput(
-            t, next,
+            mProcessedTime, next,
             (next == mStateComputedTime) ? ProcessedMediaTrack::ALLOW_END : 0);
       }
     }
-    t = next;
+    mProcessedTime = next;
   }
-  NS_ASSERTION(t == mStateComputedTime,
+  NS_ASSERTION(mProcessedTime == mStateComputedTime,
                "Something went wrong with rounding to block boundaries");
 }
 
@@ -1260,6 +1259,7 @@ void MediaTrackGraphImpl::Process() {
       allBlockedForever = false;
     }
   }
+  mProcessedTime = mStateComputedTime;
 
   // This is the number of frames that are written to the output buffer, for
   // this iteration.
@@ -1354,10 +1354,9 @@ bool MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateEnd) {
 
   mStateComputedTime = stateEnd;
 
-  Process();
-
   GraphTime oldProcessedTime = mProcessedTime;
-  mProcessedTime = stateEnd;
+  Process();
+  MOZ_ASSERT(mProcessedTime == stateEnd);
 
   UpdateCurrentTimeForTracks(oldProcessedTime);
 
