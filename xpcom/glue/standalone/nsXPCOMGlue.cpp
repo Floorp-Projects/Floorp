@@ -99,7 +99,7 @@ static NSFuncPtr GetSymbol(LibHandleType aLibHandle, const char* aSymbol) {
   return (NSFuncPtr)dlsym(aLibHandle, aSymbol);
 }
 
-#  ifndef MOZ_LINKER
+#  if !defined(MOZ_LINKER) && !defined(__ANDROID__)
 static void CloseLibHandle(LibHandleType aLibHandle) { dlclose(aLibHandle); }
 #  endif
 #endif
@@ -125,7 +125,7 @@ static void AppendDependentLib(LibHandleType aLibHandle) {
 
 static bool ReadDependentCB(pathstr_t aDependentLib,
                             LibLoadingStrategy aLibLoadingStrategy) {
-#ifndef MOZ_LINKER
+#if !defined(MOZ_LINKER) && !defined(__ANDROID__)
   // Don't bother doing a ReadAhead if we're not in the parent process.
   // What we need from the library should already be in the system file
   // cache.
@@ -173,7 +173,7 @@ struct ScopedCloseFileTraits {
 };
 typedef Scoped<ScopedCloseFileTraits> ScopedCloseFile;
 
-#ifndef MOZ_LINKER
+#if !defined(MOZ_LINKER) && !defined(__ANDROID__)
 static void XPCOMGlueUnload() {
   while (sTop) {
     CloseLibHandle(sTop->libHandle);
@@ -206,7 +206,7 @@ static const char* ns_strrpbrk(const char* string, const char* strCharSet) {
 
 static nsresult XPCOMGlueLoad(const char* aXPCOMFile,
                               LibLoadingStrategy aLibLoadingStrategy) {
-#ifdef MOZ_LINKER
+#if defined(MOZ_LINKER) || defined(__ANDROID__)
   if (!ReadDependentCB(aXPCOMFile, aLibLoadingStrategy)) {
     return NS_ERROR_FAILURE;
   }

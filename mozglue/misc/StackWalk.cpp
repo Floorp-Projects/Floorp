@@ -15,7 +15,7 @@
 #include <string.h>
 
 #if defined(ANDROID) && defined(MOZ_LINKER)
-#  include "ElfLoader.h"
+#  include "Linker.h"
 #  include <android/log.h>
 #endif
 

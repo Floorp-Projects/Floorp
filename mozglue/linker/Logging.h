@@ -5,6 +5,7 @@
 #ifndef Logging_h
 #define Logging_h
 
+#include <cstdlib>
 #include "mozilla/Likely.h"
 #include "mozilla/MacroArgs.h"
 
