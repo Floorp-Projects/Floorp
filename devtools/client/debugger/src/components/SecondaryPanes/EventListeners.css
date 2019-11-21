@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
- .event-listeners-content {
-  padding-top: 4px;
-  padding-bottom: 4px;
+.event-listeners-content {
+  padding-block: 4px;
 }
 
 .event-listeners-content ul {
@@ -38,7 +37,7 @@
 }
 
 .event-listener-group input[type="checkbox"] {
-  margin: 0px;
+  margin: 0;
   margin-inline-end: 4px;
 }
 
@@ -49,7 +48,7 @@
 }
 
 .event-listener-category {
-  padding: 3px 0px;
+  padding: 3px 0;
   line-height: 14px;
 }
 
@@ -57,18 +56,17 @@
   margin-inline-end: 0;
 }
 
-html[dir="ltr"] .event-listeners-content .arrow.expanded {
+.event-listeners-content .arrow.expanded {
   transform: rotate(0deg);
 }
 
-html[dir="rtl"] .event-listeners-content .arrow.expanded {
+.event-listeners-content .arrow.expanded:dir(rtl) {
   transform: rotate(90deg);
 }
 
 .event-listeners-list {
-  border-top: 1px;
-  padding-inline-start: 18px;
-  padding-inline-end: 20px;
+  border-block-start: 1px;
+  padding-inline: 18px 20px;
 }
 
 .event-listener-event {
@@ -81,26 +79,23 @@ html[dir="rtl"] .event-listeners-content .arrow.expanded {
 }
 
 .event-search-results-list .event-listener-event {
-  padding-inline-start: 20px;
-  padding-inline-end: 20px;
+  padding-inline: 20px;
 }
 
 .event-listener-name {
   line-height: 14px;
-  padding: 3px 0px;
+  padding: 3px 0;
 }
 
 .event-listener-event input {
-  margin-inline-end: 4px;
-  margin-inline-start: 0px;
-  margin-top: 0px;
-  margin-bottom: 0px;
+  margin-inline: 0 4px;
+  margin-block: 0;
 }
 
 .event-search-container {
   display: flex;
   border: 1px solid transparent;
-  border-bottom: 1px solid var(--theme-splitter-color);
+  border-block-end: 1px solid var(--theme-splitter-color);
 }
 
 .event-search-form {
@@ -113,13 +108,10 @@ html[dir="rtl"] .event-listeners-content .arrow.expanded {
   margin: 0;
   font-size: inherit;
   background-color: var(--theme-sidebar-background);
-  border: 0px;
-  outline: 0px;
+  border: 0;
+  outline: 0;
   line-height: 16px;
-  padding-top: 2px;
-  padding-bottom: 2px;
-  padding-inline-start: 19px;
-  padding-inline-end: 12px;
+  padding-block: 2px;
   color: var(--theme-body-color);
   background-image: url("chrome://devtools/skin/images/filter-small.svg");
   background-position-x: 4px;
@@ -128,6 +120,21 @@ html[dir="rtl"] .event-listeners-content .arrow.expanded {
   background-size: 12px;
   -moz-context-properties: fill;
   fill: var(--theme-icon-dimmed-color);
+  text-align: match-parent;
+}
+
+:root:dir(ltr) .event-search-input {
+  /* Be explicit about left/right direction to prevent the text/placeholder
+   * from overlapping the background image when the user changes the text
+   * direction manually (e.g. via Ctrl+Shift). */
+  padding-left: 19px;
+  padding-right: 12px;
+}
+
+:root:dir(rtl) .event-search-input {
+  background-position-x: right 4px;
+  padding-right: 19px;
+  padding-left: 12px;
 }
 
 .category-label {
