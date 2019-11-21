@@ -27,7 +27,7 @@ RefPtr<MediaTrackGraphImpl> MakeMTGImpl() {
 }
 
 TEST(TestAudioCallbackDriver, StartStop)
-{
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
   MockCubeb* mock = new MockCubeb();
   CubebUtils::ForceSetCubebContext(mock->AsCubebContext());
 
@@ -45,7 +45,7 @@ TEST(TestAudioCallbackDriver, StartStop)
   EXPECT_TRUE(driver->IsStarted()) << "Verify thread is started";
 
   // This will block untill all events have been executed.
-  driver->AsAudioCallbackDriver()->Shutdown();
+  MOZ_KnownLive(driver->AsAudioCallbackDriver())->Shutdown();
   EXPECT_FALSE(driver->ThreadRunning()) << "Verify thread is not running";
   EXPECT_FALSE(driver->IsStarted()) << "Verify thread is not started";
 
