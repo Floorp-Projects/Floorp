@@ -743,7 +743,7 @@ nsStyleSVG::nsStyleSVG(const Document& aDocument)
       mFillRule(StyleFillRule::Nonzero),
       mPaintOrder(0),
       mShapeRendering(StyleShapeRendering::Auto),
-      mStrokeLinecap(NS_STYLE_STROKE_LINECAP_BUTT),
+      mStrokeLinecap(StyleStrokeLinecap::Butt),
       mStrokeLinejoin(NS_STYLE_STROKE_LINEJOIN_MITER),
       mDominantBaseline(NS_STYLE_DOMINANT_BASELINE_AUTO),
       mTextAnchor(NS_STYLE_TEXT_ANCHOR_START),

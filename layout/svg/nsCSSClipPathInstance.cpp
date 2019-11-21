@@ -229,6 +229,6 @@ already_AddRefed<Path> nsCSSClipPathInstance::CreateClipPathPath(
                                                 : FillRule::FILL_EVEN_ODD);
   float scale = float(AppUnitsPerCSSPixel()) /
                 mTargetFrame->PresContext()->AppUnitsPerDevPixel();
-  return SVGPathData::BuildPath(path.Path(), builder,
-                                NS_STYLE_STROKE_LINECAP_BUTT, 0.0, scale);
+  return SVGPathData::BuildPath(path.Path(), builder, StyleStrokeLinecap::Butt,
+                                0.0, scale);
 }

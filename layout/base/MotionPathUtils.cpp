@@ -620,8 +620,8 @@ already_AddRefed<gfx::Path> MotionPathUtils::BuildPath(
   }
 
   const Span<const StylePathCommand>& path = aPath._0.AsSpan();
-  return SVGPathData::BuildPath(path, aPathBuilder,
-                                NS_STYLE_STROKE_LINECAP_BUTT, 0.0);
+  return SVGPathData::BuildPath(path, aPathBuilder, StyleStrokeLinecap::Butt,
+                                0.0);
 }
 
 /* static */
