@@ -224,16 +224,19 @@ void TraceRootRange(JSTracer* trc, size_t len, T* vec, const char* name) {
   gc::TraceRangeInternal(trc, len, gc::ConvertToBase(vec), name);
 }
 
+// As below but with manual barriers.
+template <typename T>
+void TraceManuallyBarrieredCrossCompartmentEdge(JSTracer* trc, JSObject* src,
+                                                T* dst, const char* name);
+
 // Trace an edge that crosses compartment boundaries. If the compartment of the
 // destination thing is not being GC'd, then the edge will not be traced.
 template <typename T>
 void TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src,
-                               const WriteBarriered<T>* dst, const char* name);
-
-// As above but with manual barriers.
-template <typename T>
-void TraceManuallyBarrieredCrossCompartmentEdge(JSTracer* trc, JSObject* src,
-                                                T* dst, const char* name);
+                               const WriteBarriered<T>* dst, const char* name) {
+  TraceManuallyBarrieredCrossCompartmentEdge(
+      trc, src, gc::ConvertToBase(dst->unsafeUnbarrieredForTracing()), name);
+}
 
 // Permanent atoms and well-known symbols are shared between runtimes and must
 // use a separate marking path so that we can filter them out of normal heap
