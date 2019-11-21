@@ -4446,13 +4446,13 @@ enum TextAnchorSide { eAnchorLeft, eAnchorMiddle, eAnchorRight };
  * Converts a logical text-anchor value to its physical value, based on whether
  * it is for an RTL frame.
  */
-static TextAnchorSide ConvertLogicalTextAnchorToPhysical(uint8_t aTextAnchor,
-                                                         bool aIsRightToLeft) {
-  NS_ASSERTION(aTextAnchor <= 3, "unexpected value for aTextAnchor");
+static TextAnchorSide ConvertLogicalTextAnchorToPhysical(
+    StyleTextAnchor aTextAnchor, bool aIsRightToLeft) {
+  NS_ASSERTION(uint8_t(aTextAnchor) <= 3, "unexpected value for aTextAnchor");
   if (!aIsRightToLeft) {
-    return TextAnchorSide(aTextAnchor);
+    return TextAnchorSide(uint8_t(aTextAnchor));
   }
-  return TextAnchorSide(2 - aTextAnchor);
+  return TextAnchorSide(2 - uint8_t(aTextAnchor));
 }
 
 /**

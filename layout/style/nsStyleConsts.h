@@ -783,9 +783,11 @@ enum class StyleStrokeLinecap : uint8_t {
 #define NS_STYLE_STROKE_LINEJOIN_BEVEL 2
 
 // text-anchor
-#define NS_STYLE_TEXT_ANCHOR_START 0
-#define NS_STYLE_TEXT_ANCHOR_MIDDLE 1
-#define NS_STYLE_TEXT_ANCHOR_END 2
+enum class StyleTextAnchor : uint8_t {
+  Start,
+  Middle,
+  End,
+};
 
 // text-emphasis-position
 #define NS_STYLE_TEXT_EMPHASIS_POSITION_OVER (1 << 0)
