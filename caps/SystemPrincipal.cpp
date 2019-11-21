@@ -52,6 +52,12 @@ SystemPrincipal::GetURI(nsIURI** aURI) {
 }
 
 NS_IMETHODIMP
+SystemPrincipal::GetIsOriginPotentiallyTrustworthy(bool* aResult) {
+  *aResult = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 SystemPrincipal::GetDomain(nsIURI** aDomain) {
   *aDomain = nullptr;
   return NS_OK;
