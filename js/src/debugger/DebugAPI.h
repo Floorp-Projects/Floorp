@@ -94,6 +94,18 @@ class DebugAPI {
   static void traceFramesWithLiveHooks(JSTracer* tracer);
 
   /*
+   * Trace (inferred) owning edges from generator objects to Debugger.Frames.
+   *
+   * Even if a Debugger.Frame for a live suspended generator object is entirely
+   * unreachable from JS, if it has onStep or onPop hooks set, then collecting
+   * it would have observable side effects - namely, the hooks would fail to run
+   * if the generator is resumed. The effect is the same as if the generator
+   * object held an owning edge to its Debugger.Frame.
+   */
+  static inline void traceGeneratorFrame(JSTracer* tracer,
+                                         AbstractGeneratorObject* generator);
+
+  /*
    * A Debugger object is live if:
    *   * the Debugger JSObject is live (Debugger::trace handles this case); OR
    *   * it is in the middle of dispatching an event (the event dispatching
@@ -398,6 +410,8 @@ class DebugAPI {
   static void slowPathOnPromiseSettled(JSContext* cx,
                                        Handle<PromiseObject*> promise);
   static bool inFrameMaps(AbstractFramePtr frame);
+  static void slowPathTraceGeneratorFrame(JSTracer* tracer,
+                                          AbstractGeneratorObject* generator);
 };
 
 // Suppresses all debuggee NX checks, i.e., allow all execution. Used to allow

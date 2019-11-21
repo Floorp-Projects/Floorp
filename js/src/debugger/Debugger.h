@@ -336,6 +336,7 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<Referent*>, HeapPtr<Wrapper*>> {
   using Base::has;
   using Base::lookup;
   using Base::lookupForAdd;
+  using Base::lookupUnbarriered;
   using Base::remove;
   using Base::trace;
   using Base::zone;

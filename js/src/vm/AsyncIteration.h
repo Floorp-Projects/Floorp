@@ -189,6 +189,7 @@ class AsyncGeneratorObject : public AbstractGeneratorObject {
 
  public:
   static const JSClass class_;
+  static const JSClassOps classOps_;
 
   static AsyncGeneratorObject* create(JSContext* cx, HandleFunction asyncGen);
 

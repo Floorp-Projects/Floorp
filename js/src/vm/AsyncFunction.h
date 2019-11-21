@@ -48,6 +48,7 @@ class AsyncFunctionGeneratorObject : public AbstractGeneratorObject {
   };
 
   static const JSClass class_;
+  static const JSClassOps classOps_;
 
   static AsyncFunctionGeneratorObject* create(JSContext* cx,
                                               HandleFunction asyncGen);
