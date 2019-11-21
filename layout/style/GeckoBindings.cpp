@@ -56,6 +56,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ServoElementSnapshot.h"
+#include "mozilla/ShadowParts.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/SizeOfState.h"
@@ -1932,4 +1933,22 @@ void Gecko_LoadData_DeregisterLoad(const StyleLoadData* aData) {
 
 void Gecko_PrintfStderr(const nsCString* aStr) {
   printf_stderr("%s", aStr->get());
+}
+
+nsAtom* Gecko_Element_ImportedPart(const mozilla::dom::Element* aElement,
+                                   nsAtom* aPartName) {
+  const nsAttrValue* v = aElement->GetParsedAttr(nsGkAtoms::exportparts);
+  if (!v || v->Type() != nsAttrValue::eShadowParts) {
+    return nullptr;
+  }
+  return v->GetShadowPartsValue().GetReverse(aPartName);
+}
+
+nsAtom* Gecko_Element_ExportedPart(const mozilla::dom::Element* aElement,
+                                   nsAtom* aPartName) {
+  const nsAttrValue* v = aElement->GetParsedAttr(nsGkAtoms::exportparts);
+  if (!v || v->Type() != nsAttrValue::eShadowParts) {
+    return nullptr;
+  }
+  return v->GetShadowPartsValue().Get(aPartName);
 }
