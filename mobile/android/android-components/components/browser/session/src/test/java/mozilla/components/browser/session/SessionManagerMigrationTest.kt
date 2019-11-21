@@ -875,4 +875,31 @@ class SessionManagerMigrationTest {
         assertTrue(session.findResults.isEmpty())
         assertTrue(store.state.findTab("session")!!.content.findResults.isEmpty())
     }
+
+    @Test
+    fun `Updating reader state`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
+        manager.add(session)
+
+        assertFalse(session.readerable)
+        assertFalse(session.readerMode)
+        assertFalse(store.state.findTab("session")!!.readerState.active)
+        assertFalse(store.state.findTab("session")!!.readerState.readerable)
+
+        session.readerable = true
+        assertTrue(store.state.findTab("session")!!.readerState.readerable)
+        assertFalse(store.state.findTab("session")!!.readerState.active)
+
+        session.readerMode = true
+        assertTrue(store.state.findTab("session")!!.readerState.active)
+        assertTrue(store.state.findTab("session")!!.readerState.readerable)
+
+        session.readerable = false
+        session.readerMode = false
+        assertFalse(store.state.findTab("session")!!.readerState.active)
+        assertFalse(store.state.findTab("session")!!.readerState.readerable)
+    }
 }

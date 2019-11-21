@@ -9,6 +9,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.EngineState
+import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
@@ -312,4 +313,20 @@ sealed class EngineAction : BrowserAction() {
         val sessionId: String,
         val engineSessionState: EngineSessionState
     ) : EngineAction()
+}
+
+/**
+ * [BrowserAction] implementations related to updating the [ReaderState] of a single [TabSessionState] inside
+ * [BrowserState].
+ */
+sealed class ReaderAction : BrowserAction() {
+    /**
+     * Updates the [ReaderState.readerable] flag.
+     */
+    data class UpdateReaderableAction(val tabId: String, val readerable: Boolean) : ReaderAction()
+
+    /**
+     * Updates the [ReaderState.active] flag.
+     */
+    data class UpdateReaderActiveAction(val tabId: String, val active: Boolean) : ReaderAction()
 }
