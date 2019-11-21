@@ -19,6 +19,32 @@ namespace mozilla {
 // zeroes. The class also fails to call the destructor on items. However, it
 // will only destroy items after it has moved out their contents. The queue is
 // required to be empty when it is destroyed.
+//
+// Each page consists of N entries.  We use the head buffer as a circular buffer
+// if it's the only buffer; if we have more than one buffer when the head is
+// empty we release it.  This avoids occasional freeing and reallocating buffers
+// every N entries.  We'll still allocate and free every N if the normal queue
+// depth is greated than N.  A fancier solution would be to move an empty Head
+// buffer to be an empty tail buffer, freeing if we have multiple empty tails,
+// but that probably isn't worth it.
+//
+// Cases:
+//   a) single buffer, circular
+//      Push: if not full:
+//              Add to tail, bump tail and reset to 0 if at end
+//            full:
+//              Add new page, insert there and set tail to 1
+//      Pop:
+//            take entry and bump head, reset to 0 if at end
+//   b) multiple buffers:
+//      Push: if not full:
+//              Add to tail, bump tail
+//            full:
+//              Add new page, insert there and set tail to 1
+//      Pop:
+//            take entry and bump head, reset to 0 if at end
+//            if buffer is empty, free head buffer and promote next to head
+//
 template <class T, size_t RequestedItemsPerPage = 256>
 class Queue {
  public:
@@ -38,52 +64,76 @@ class Queue {
       MOZ_ASSERT(mHead);
 
       mTail = mHead;
+      T& eltLocation = mTail->mEvents[0];
+      eltLocation = std::move(aElement);
       mOffsetHead = 0;
-      mOffsetTail = 0;
-    } else if (mOffsetTail == ItemsPerPage) {
+      mHeadLength = 1;
+#ifdef EXTRA_ASSERTS
+      MOZ_ASSERT(Count() == original_length + 1);
+#endif
+      return eltLocation;
+    }
+    if ((mHead == mTail && mHeadLength == ItemsPerPage) ||
+        (mHead != mTail && mTailLength == ItemsPerPage)) {
+      // either we have one (circular) buffer and it's full, or
+      // we have multiple buffers and the last buffer is full
       Page* page = NewPage();
       MOZ_ASSERT(page);
 
       mTail->mNext = page;
       mTail = page;
-      mOffsetTail = 0;
+      T& eltLocation = page->mEvents[0];
+      eltLocation = std::move(aElement);
+      mTailLength = 1;
+#ifdef EXTRA_ASSERTS
+      MOZ_ASSERT(Count() == original_length + 1);
+#endif
+      return eltLocation;
     }
-
-    T& eltLocation = mTail->mEvents[mOffsetTail];
+    if (mHead == mTail) {
+      // we have space in the (single) head buffer
+      uint16_t offset = (mOffsetHead + mHeadLength++) % ItemsPerPage;
+      T& eltLocation = mTail->mEvents[offset];
+      eltLocation = std::move(aElement);
+#ifdef EXTRA_ASSERTS
+      MOZ_ASSERT(Count() == original_length + 1);
+#endif
+      return eltLocation;
+    }
+    // else we have space to insert into last buffer
+    T& eltLocation = mTail->mEvents[mTailLength++];
     eltLocation = std::move(aElement);
-    ++mOffsetTail;
-
     return eltLocation;
   }
 
   bool IsEmpty() const {
-    return !mHead || (mHead == mTail && mOffsetHead == mOffsetTail);
+    return !mHead || (mHead == mTail && mHeadLength == 0);
   }
 
   T Pop() {
     MOZ_ASSERT(!IsEmpty());
 
-    MOZ_ASSERT(mOffsetHead < ItemsPerPage);
-    MOZ_ASSERT_IF(mHead == mTail, mOffsetHead <= mOffsetTail);
-    T result = std::move(mHead->mEvents[mOffsetHead++]);
+    T result = std::move(mHead->mEvents[mOffsetHead]);
+    mOffsetHead = (mOffsetHead + 1) % ItemsPerPage;
+    mHeadLength -= 1;
 
-    MOZ_ASSERT(mOffsetHead <= ItemsPerPage);
-
-    // Check if mHead points to empty Page
-    if (mOffsetHead == ItemsPerPage) {
+    // Check if mHead points to empty (circular) Page and we have more
+    // pages
+    if (mHead != mTail && mHeadLength == 0) {
       Page* dead = mHead;
       mHead = mHead->mNext;
       free(dead);
       mOffsetHead = 0;
+      // if there are still >1 pages, the new head is full.
+      if (mHead != mTail) {
+        mHeadLength = ItemsPerPage;
+      } else {
+        mHeadLength = mTailLength;
+        mTailLength = 0;
+      }
     }
 
     return result;
-  }
-
-  void FirstElementAssertions() const {
-    MOZ_ASSERT(!IsEmpty());
-    MOZ_ASSERT(mOffsetHead < ItemsPerPage);
-    MOZ_ASSERT_IF(mHead == mTail, mOffsetHead <= mOffsetTail);
   }
 
   T& FirstElement() {
@@ -96,21 +146,18 @@ class Queue {
     return mHead->mEvents[mOffsetHead];
   }
 
-  void LastElementAssertions() const {
-    MOZ_ASSERT(!IsEmpty());
-    MOZ_ASSERT(mOffsetTail > 0);
-    MOZ_ASSERT(mOffsetTail <= ItemsPerPage);
-    MOZ_ASSERT_IF(mHead == mTail, mOffsetHead <= mOffsetTail);
-  }
-
   T& LastElement() {
     LastElementAssertions();
-    return mTail->mEvents[mOffsetTail - 1];
+    uint16_t offset =
+        mHead == mTail ? mOffsetHead + mHeadLength - 1 : mTailLength - 1;
+    return mTail->mEvents[offset];
   }
 
   const T& LastElement() const {
     LastElementAssertions();
-    return mTail->mEvents[mOffsetTail - 1];
+    uint16_t offset =
+        mHead == mTail ? mOffsetHead + mHeadLength - 1 : mTailLength - 1;
+    return mTail->mEvents[offset];
   }
 
   size_t Count() const {
@@ -119,28 +166,15 @@ class Queue {
       return 0;
     }
 
-    /* How we count the number of events in the queue:
-     * 1. Let pageCount(x, y) denote the number of pages excluding the tail page
-     *    where x is the index of head page and y is the index of the tail page.
-     * 2. Then we have pageCount(x, y) = y - x.
-     *
-     * Ex: pageCount(0, 0) = 0 where both head and tail pages point to page 0.
-     *     pageCount(0, 1) = 1 where head points to page 0 and tail points
-     *     page 1.
-     *
-     * 3. number of events = (ItemsPerPage * pageCount(x, y))
-     *      - (empty slots in head page) + (non-empty slots in tail page)
-     *      = (ItemsPerPage * pageCount(x, y)) - mOffsetHead + mOffsetTail
-     */
-
-    int count = -mOffsetHead;
-
-    // Compute (ItemsPerPage * pageCount(x, y))
-    for (Page* page = mHead; page != mTail; page = page->mNext) {
+    // Compute full (intermediate) pages; Doesn't count first or last page
+    int count = 0;
+    // 1 buffer will have mHead == mTail; 2 will have mHead->mNext == mTail
+    for (Page* page = mHead; page != mTail && page->mNext != mTail;
+         page = page->mNext) {
       count += ItemsPerPage;
     }
 
-    count += mOffsetTail;
+    count += mHeadLength + mTailLength;
     MOZ_ASSERT(count >= 0);
 
     return count;
@@ -183,8 +217,9 @@ class Queue {
   Page* mHead = nullptr;
   Page* mTail = nullptr;
 
-  uint16_t mOffsetHead = 0;  // offset into mHead where next item is removed
-  uint16_t mOffsetTail = 0;  // offset into mTail where next item is added
+  uint16_t mOffsetHead = 0;  // Read position in head page
+  uint16_t mHeadLength = 0;  // Number of items in the head page
+  uint16_t mTailLength = 0;  // Number of items in the tail page
 };
 
 }  // namespace mozilla
