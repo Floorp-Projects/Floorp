@@ -6,12 +6,10 @@
 
 async function fillTestPage(aBrowser) {
   await ContentTask.spawn(aBrowser, null, async function() {
-    content.document
-      .getElementById("form-basic-username")
-      .setUserInput("my_username");
-    content.document
-      .getElementById("form-basic-password")
-      .setUserInput("my_password");
+    content.document.getElementById("form-basic-username").value =
+      "my_username";
+    content.document.getElementById("form-basic-password").value =
+      "my_password";
   });
   info("fields filled");
 }
