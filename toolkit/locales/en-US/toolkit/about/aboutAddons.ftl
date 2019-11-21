@@ -367,6 +367,10 @@ remove-addon-button = Remove
 remove-addon-disabled-button = Can’t Be Removed <a data-l10n-name="link">Why?</a>
 disable-addon-button = Disable
 enable-addon-button = Enable
+disable-addon-button-label =
+    .aria-label = Disable
+enable-addon-button-label =
+    .aria-label = Enable
 preferences-addon-button =
     { PLATFORM() ->
         [windows] Options
