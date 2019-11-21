@@ -139,7 +139,7 @@ nsCocoaWindow::nsCocoaWindow()
       mSheetWindowParent(nil),
       mPopupContentView(nil),
       mFullscreenTransitionAnimation(nil),
-      mShadowStyle(StyleWindowShadow::Default),
+      mShadowStyle(NS_STYLE_WINDOW_SHADOW_DEFAULT),
       mBackingScaleFactor(0.0),
       mAnimationType(nsIWidget::eGenericWindowAnimation),
       mWindowMadeHere(false),
@@ -999,7 +999,8 @@ void nsCocoaWindow::SetWindowBackgroundBlur() {
   if (!mWindow || ![mWindow isVisible] || [mWindow windowNumber] == -1) return;
 
   // Only blur the background of menus and fake sheets.
-  if (mShadowStyle != StyleWindowShadow::Menu && mShadowStyle != StyleWindowShadow::Sheet) return;
+  if (mShadowStyle != NS_STYLE_WINDOW_SHADOW_MENU && mShadowStyle != NS_STYLE_WINDOW_SHADOW_SHEET)
+    return;
 
   CGSConnection cid = _CGSDefaultConnection();
   CGSSetWindowBackgroundBlurRadius(cid, [mWindow windowNumber], kWindowBackgroundBlurRadius);
@@ -1991,7 +1992,7 @@ nsresult nsCocoaWindow::GetAttention(int32_t aCycleCount) {
 
 bool nsCocoaWindow::HasPendingInputEvent() { return nsChildView::DoHasPendingInputEvent(); }
 
-void nsCocoaWindow::SetWindowShadowStyle(StyleWindowShadow aStyle) {
+void nsCocoaWindow::SetWindowShadowStyle(int32_t aStyle) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!mWindow) return;
@@ -2000,10 +2001,10 @@ void nsCocoaWindow::SetWindowShadowStyle(StyleWindowShadow aStyle) {
 
   // Shadowless windows are only supported on popups.
   if (mWindowType == eWindowType_popup) {
-    [mWindow setHasShadow:aStyle != StyleWindowShadow::None];
+    [mWindow setHasShadow:aStyle != NS_STYLE_WINDOW_SHADOW_NONE];
   }
 
-  [mWindow setUseMenuStyle:(aStyle == StyleWindowShadow::Menu)];
+  [mWindow setUseMenuStyle:(aStyle == NS_STYLE_WINDOW_SHADOW_MENU)];
   AdjustWindowShadow();
   SetWindowBackgroundBlur();
 
