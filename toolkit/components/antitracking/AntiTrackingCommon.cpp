@@ -912,6 +912,31 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
     const AntiTrackingCommon::PerformFinalChecks& aPerformFinalChecks) {
   MOZ_ASSERT(aParentWindow);
 
+  switch (aReason) {
+    case eOpener:
+      if (!StaticPrefs::
+              privacy_restrict3rdpartystorage_heuristic_window_open()) {
+        LOG(
+            ("Bailing out early because the "
+             "privacy.restrict3rdpartystorage.heuristic.window_open preference "
+             "has been disabled"));
+        return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+      }
+      break;
+    case eOpenerAfterUserInteraction:
+      if (!StaticPrefs::
+              privacy_restrict3rdpartystorage_heuristic_opened_window_after_interaction()) {
+        LOG(
+            ("Bailing out early because the "
+             "privacy.restrict3rdpartystorage.heuristic.opened_window_after_"
+             "interaction preference has been disabled"));
+        return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+      }
+      break;
+    default:
+      break;
+  }
+
   nsCOMPtr<nsIURI> uri;
   aPrincipal->GetURI(getter_AddRefs(uri));
   if (NS_WARN_IF(!uri)) {

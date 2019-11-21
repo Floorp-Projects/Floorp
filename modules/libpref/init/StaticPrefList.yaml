@@ -7181,6 +7181,18 @@
   value: true
   mirror: always
 
+# Enable the heuristic to allow storage access for windows opened using window.open() after user interaction
+- name: privacy.restrict3rdpartystorage.heuristic.opened_window_after_interaction
+  type: bool
+  value: true
+  mirror: always
+
+# Enable the heuristic to allow storage access for windows opened using window.open()
+- name: privacy.restrict3rdpartystorage.heuristic.window_open
+  type: bool
+  value: true
+  mirror: always
+
 # Anti-tracking user-interaction expiration.
 - name: privacy.userInteraction.expiration
   type: uint32_t
