@@ -23,10 +23,6 @@ void EventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
       mDispatchTimes.Push(TimeStamp());
     }
     mDispatchTimes.Push(aDelay ? TimeStamp::Now() - *aDelay : TimeStamp::Now());
-  } else {
-    // XXX clear queues when profiler is turned off without adding (much)
-    // overhead instead of doing this
-    mDispatchTimes.Push(TimeStamp());
   }
 #endif
 
@@ -49,21 +45,26 @@ already_AddRefed<nsIRunnable> EventQueue::GetEvent(
   }
 
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_is_active()) {
-    // check to see if the profiler has been enabled since the last PutEvent
-    while (mDispatchTimes.Count() < mQueue.Count()) {
-      mDispatchTimes.Push(TimeStamp());
-    }
+  // We always want to clear the dispatch times, even if the profiler is turned
+  // off, because we want to empty the (previously-collected) dispatch times, if
+  // any, from when the profiler was turned on.  We only want to do something
+  // interesting with the dispatch times if the profiler is turned on, though.
+  if (!mDispatchTimes.IsEmpty()) {
     TimeStamp dispatch_time = mDispatchTimes.Pop();
-    if (!dispatch_time.IsNull()) {
-      if (aLastEventDelay) {
-        *aLastEventDelay = TimeStamp::Now() - dispatch_time;
+    if (profiler_is_active()) {
+      if (!dispatch_time.IsNull()) {
+        if (aLastEventDelay) {
+          *aLastEventDelay = TimeStamp::Now() - dispatch_time;
+        }
       }
     }
-  } else {
-    (void)mDispatchTimes.Pop();
+  } else if (profiler_is_active()) {
+    if (aLastEventDelay) {
+      // if we just turned on the profiler, we don't have dispatch
+      // times for events already in the queue.
+      *aLastEventDelay = TimeDuration();
+    }
   }
-  // XXX clear queues when profiler is turned off without adding (much) overhead
 #endif
 
   nsCOMPtr<nsIRunnable> result = mQueue.Pop();
