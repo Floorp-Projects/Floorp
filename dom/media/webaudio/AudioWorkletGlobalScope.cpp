@@ -31,7 +31,7 @@ NS_IMPL_ADDREF_INHERITED(AudioWorkletGlobalScope, WorkletGlobalScope)
 NS_IMPL_RELEASE_INHERITED(AudioWorkletGlobalScope, WorkletGlobalScope)
 
 AudioWorkletGlobalScope::AudioWorkletGlobalScope(AudioWorkletImpl* aImpl)
-    : mImpl(aImpl), mCurrentFrame(0), mCurrentTime(0), mSampleRate(0.0) {}
+    : mImpl(aImpl) {}
 
 bool AudioWorkletGlobalScope::WrapGlobalObject(
     JSContext* aCx, JS::MutableHandle<JSObject*> aReflector) {
@@ -202,11 +202,19 @@ void AudioWorkletGlobalScope::RegisterProcessor(
 
 WorkletImpl* AudioWorkletGlobalScope::Impl() const { return mImpl; }
 
-uint64_t AudioWorkletGlobalScope::CurrentFrame() const { return mCurrentFrame; }
+uint64_t AudioWorkletGlobalScope::CurrentFrame() const {
+  AudioNodeTrack* destinationTrack = mImpl->DestinationTrack();
+  GraphTime processedTime = destinationTrack->Graph()->ProcessedTime();
+  return destinationTrack->GraphTimeToTrackTime(processedTime);
+}
 
-double AudioWorkletGlobalScope::CurrentTime() const { return mCurrentTime; }
+double AudioWorkletGlobalScope::CurrentTime() const {
+  return static_cast<double>(CurrentFrame()) * SampleRate();
+}
 
-float AudioWorkletGlobalScope::SampleRate() const { return mSampleRate; }
+float AudioWorkletGlobalScope::SampleRate() const {
+  return static_cast<float>(mImpl->DestinationTrack()->mSampleRate);
+}
 
 AudioParamDescriptorMap AudioWorkletGlobalScope::DescriptorsFromJS(
     JSContext* aCx, const JS::Rooted<JS::Value>& aDescriptors,

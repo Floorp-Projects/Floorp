@@ -63,10 +63,6 @@ class AudioWorkletGlobalScope final : public WorkletGlobalScope {
 
   const RefPtr<AudioWorkletImpl> mImpl;
 
-  uint64_t mCurrentFrame;
-  double mCurrentTime;
-  float mSampleRate;
-
   typedef nsRefPtrHashtable<nsStringHashKey, AudioWorkletProcessorConstructor>
       NodeNameToProcessorDefinitionMap;
   NodeNameToProcessorDefinitionMap mNameToProcessorMap;
