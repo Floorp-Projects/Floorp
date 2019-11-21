@@ -1163,19 +1163,23 @@ nsresult IDBDatabase::RenameObjectStore(int64_t aObjectStoreId,
   MOZ_ASSERT(mSpec);
 
   nsTArray<ObjectStoreSpec>& objectStores = mSpec->objectStores();
-
   ObjectStoreSpec* foundObjectStoreSpec = nullptr;
+
   // Find the matched object store spec and check if 'aName' is already used by
   // another object store.
-  for (uint32_t objCount = objectStores.Length(), objIndex = 0;
-       objIndex < objCount; objIndex++) {
-    const ObjectStoreSpec& objSpec = objectStores[objIndex];
-    if (objSpec.metadata().id() == aObjectStoreId) {
+
+  for (const auto& objSpec : objectStores) {
+    const bool idIsCurrent = objSpec.metadata().id() == aObjectStoreId;
+
+    if (idIsCurrent) {
       MOZ_ASSERT(!foundObjectStoreSpec);
-      foundObjectStoreSpec = &objectStores[objIndex];
-      continue;
+      foundObjectStoreSpec = const_cast<ObjectStoreSpec*>(&objSpec);
     }
-    if (aName == objSpec.metadata().name()) {
+
+    if (objSpec.metadata().name() == aName) {
+      if (idIsCurrent) {
+        return NS_OK;
+      }
       return NS_ERROR_DOM_INDEXEDDB_RENAME_OBJECT_STORE_ERR;
     }
   }
@@ -1183,7 +1187,7 @@ nsresult IDBDatabase::RenameObjectStore(int64_t aObjectStoreId,
   MOZ_ASSERT(foundObjectStoreSpec);
 
   // Update the name of the matched object store.
-  foundObjectStoreSpec->metadata().name() = nsString(aName);
+  foundObjectStoreSpec->metadata().name().Assign(aName);
 
   return NS_OK;
 }
