@@ -1146,33 +1146,28 @@ add_task(async function testEmptyMoreOptionsMenu() {
   await loaded;
 
   card = getAddonCard(doc, DEFAULT_THEME_ID);
+  let toggleDisabledButton = card.querySelector('[action="toggle-disabled"]');
   enabledItems = card.options.visibleItems;
   is(enabledItems.length, 0, "There are no enabled items");
   moreOptionsButton = card.querySelector(".more-options-button");
   ok(moreOptionsButton.hidden, "The more options button is now hidden");
+  ok(toggleDisabledButton.hidden, "The disable button is hidden");
 
-  // Switch themes, this should show the menu again.
+  // Switch themes, the menu should be hidden, but enable button should appear.
   let darkTheme = await AddonManager.getAddonByID(DARK_THEME_ID);
   let updated = BrowserTestUtils.waitForEvent(card, "update");
   await darkTheme.enable();
   await updated;
 
-  enabledItems = card.options.visibleItems;
-  is(enabledItems.length, 1, "There is one item visible");
-  is(
-    enabledItems[0].getAttribute("action"),
-    "toggle-disabled",
-    "Enable is the item"
-  );
-  ok(!moreOptionsButton.hidden, "The more options button is now visible");
+  ok(moreOptionsButton.hidden, "The more options button is still hidden");
+  ok(!toggleDisabledButton.hidden, "The enable button is visible");
 
   updated = BrowserTestUtils.waitForEvent(card, "update");
-  await enabledItems[0].click();
+  await toggleDisabledButton.click();
   await updated;
 
-  enabledItems = card.options.visibleItems;
-  is(enabledItems.length, 0, "There are no items visible");
-  ok(moreOptionsButton.hidden, "The more options button is hidden again");
+  ok(moreOptionsButton.hidden, "The more options button is hidden");
+  ok(toggleDisabledButton.hidden, "The disable button is hidden");
 
   await closeView(win);
 });
