@@ -4,12 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+if CONFIG['MOZ_LINKER']:
+    SOURCES += [
+        'BaseElf.cpp',
+        'CustomElf.cpp',
+        'ElfLoader.cpp',
+        'Mappable.cpp',
+        'XZStream.cpp',
+    ]
+
+# When the linker is disabled, we still need Zip for mozglue/android.
+# Logging is a required dependency.
 SOURCES += [
-    'BaseElf.cpp',
-    'CustomElf.cpp',
-    'ElfLoader.cpp',
-    'Mappable.cpp',
-    'XZStream.cpp',
+    'Logging.cpp',
     'Zip.cpp',
 ]
 
