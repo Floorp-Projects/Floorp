@@ -164,9 +164,9 @@ jobs:
         symbol: I(deb10-raw)
         definition: debian-raw
         args:
-            BASE_IMAGE: debian:buster-20190708
+            BASE_IMAGE: debian:buster-20191014
             DIST: buster
-            SNAPSHOT: '20190708T222404Z'
+            SNAPSHOT: '20191014T205056Z'
     debian10-packages:
         symbol: I(deb10-pkg)
         definition: debian-packages
