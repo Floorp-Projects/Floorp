@@ -9,21 +9,15 @@ import itertools
 import hashlib
 import os
 import unittest
-import shutil
 import string
 import sys
-import tempfile
 import textwrap
 
 from mozfile.mozfile import NamedTemporaryFile
-from mozunit import (
-    main,
-    MockedOpen,
-)
+from mozunit import main
 
 from mozbuild.util import (
     expand_variables,
-    FileAvoidWrite,
     group_unified_files,
     hash_file,
     indented_repr,
@@ -81,86 +75,6 @@ class TestHashing(unittest.TestCase):
         actual = hash_file(temp.name)
 
         self.assertEqual(actual, expected)
-
-
-class TestFileAvoidWrite(unittest.TestCase):
-    def test_file_avoid_write(self):
-        with MockedOpen({'file': 'content'}):
-            # Overwriting an existing file replaces its content
-            faw = FileAvoidWrite('file')
-            faw.write('bazqux')
-            self.assertEqual(faw.close(), (True, True))
-            self.assertEqual(open('file', 'r').read(), 'bazqux')
-
-            # Creating a new file (obviously) stores its content
-            faw = FileAvoidWrite('file2')
-            faw.write('content')
-            self.assertEqual(faw.close(), (False, True))
-            self.assertEqual(open('file2').read(), 'content')
-
-        with MockedOpen({'file': 'content'}):
-            with FileAvoidWrite('file') as file:
-                file.write('foobar')
-
-            self.assertEqual(open('file', 'r').read(), 'foobar')
-
-        class MyMockedOpen(MockedOpen):
-            '''MockedOpen extension to raise an exception if something
-            attempts to write in an opened file.
-            '''
-
-            def __call__(self, name, mode):
-                if 'w' in mode:
-                    raise Exception('Unexpected open with write mode')
-                return MockedOpen.__call__(self, name, mode)
-
-        with MyMockedOpen({'file': 'content'}):
-            # Validate that MyMockedOpen works as intended
-            file = FileAvoidWrite('file')
-            file.write('foobar')
-            self.assertRaises(Exception, file.close)
-
-            # Check that no write actually happens when writing the
-            # same content as what already is in the file
-            faw = FileAvoidWrite('file')
-            faw.write('content')
-            self.assertEqual(faw.close(), (True, False))
-
-    def test_diff_not_default(self):
-        """Diffs are not produced by default."""
-
-        with MockedOpen({'file': 'old'}):
-            faw = FileAvoidWrite('file')
-            faw.write('dummy')
-            faw.close()
-            self.assertIsNone(faw.diff)
-
-    def test_diff_update(self):
-        """Diffs are produced on file update."""
-
-        with MockedOpen({'file': 'old'}):
-            faw = FileAvoidWrite('file', capture_diff=True)
-            faw.write('new')
-            faw.close()
-
-            diff = '\n'.join(faw.diff)
-            self.assertIn('-old', diff)
-            self.assertIn('+new', diff)
-
-    def test_diff_create(self):
-        """Diffs are produced when files are created."""
-
-        tmpdir = tempfile.mkdtemp()
-        try:
-            path = os.path.join(tmpdir, 'file')
-            faw = FileAvoidWrite(path, capture_diff=True)
-            faw.write('new')
-            faw.close()
-
-            diff = '\n'.join(faw.diff)
-            self.assertIn('+new', diff)
-        finally:
-            shutil.rmtree(tmpdir)
 
 
 class TestResolveTargetToMake(unittest.TestCase):
