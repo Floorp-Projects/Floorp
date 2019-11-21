@@ -19,6 +19,11 @@
     <dimen name="mozac_browser_menu_item_divider_height">1dp</dimen>
     <!--BrowserMenuDivider -->
 
+    <!--BrowserMenuHighlightableItem -->
+    <dimen name="mozac_browser_menu_highlightable_notification_translate_x">4dp</dimen>
+    <dimen name="mozac_browser_menu_highlightable_notification_translate_y">-4dp</dimen>
+    <!--BrowserMenuHighlightableItem -->
+
     <!-- BrowserMenuCategory -->
     <dimen name="mozac_browser_menu_category_text_size">14sp</dimen>
     <dimen name="mozac_browser_menu_category_layout_height">40dp</dimen>

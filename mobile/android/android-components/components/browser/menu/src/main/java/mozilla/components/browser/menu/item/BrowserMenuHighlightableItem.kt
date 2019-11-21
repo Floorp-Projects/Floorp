@@ -4,38 +4,37 @@
 
 package mozilla.components.browser.menu.item
 
+import android.content.res.ColorStateList
 import android.view.View
+import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageView
 import mozilla.components.browser.menu.BrowserMenu
+import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.browser.menu.R
-import mozilla.components.support.ktx.android.content.res.resolveAttribute
 
+@Suppress("Deprecation")
 private val defaultHighlight = BrowserMenuHighlightableItem.Highlight(0, 0, 0, 0)
 
 /**
  * A menu item for displaying text with an image icon and a highlight state which sets the
  * background of the menu item and a second image icon to the right of the text.
  *
- * @param label The visible label of this menu item.
+ * @param label The default visible label of this menu item.
  * @param startImageResource ID of a drawable resource to be shown as a leftmost icon.
  * @param iconTintColorResource Optional ID of color resource to tint the icon.
  * @param textColorResource Optional ID of color resource to tint the text.
- * @param highlight Highlight object storing the background drawable and additional icon
+ * @param highlight Highlight object representing how the menu item will be displayed when highlighted.
  * @param isHighlighted Whether or not to display the highlight
  * @param listener Callback to be invoked when this menu item is clicked.
  */
 class BrowserMenuHighlightableItem(
     private val label: String,
-    @DrawableRes
-    private val startImageResource: Int,
-    @DrawableRes
-    @ColorRes
-    private val iconTintColorResource: Int = NO_ID,
-    @ColorRes
-    private val textColorResource: Int = NO_ID,
-    val highlight: Highlight,
+    @DrawableRes private val startImageResource: Int,
+    @ColorRes private val iconTintColorResource: Int = NO_ID,
+    @ColorRes private val textColorResource: Int = NO_ID,
+    val highlight: BrowserMenuHighlight,
     val isHighlighted: () -> Boolean = { true },
     private val listener: () -> Unit = {}
 ) : BrowserMenuImageText(
@@ -46,14 +45,12 @@ class BrowserMenuHighlightableItem(
     listener
 ) {
 
-    /**
-     * @deprecated Use the new constructor
-     */
+    @Deprecated("Use the new constructor")
+    @Suppress("Deprecation") // Constructor uses old highlight type
     constructor(
         label: String,
         @DrawableRes
         imageResource: Int,
-        @DrawableRes
         @ColorRes
         iconTintColorResource: Int = NO_ID,
         @ColorRes
@@ -76,11 +73,15 @@ class BrowserMenuHighlightableItem(
 
     override fun bind(menu: BrowserMenu, view: View) {
         super.bind(menu, view)
+
+        val endImageView = view.findViewById<AppCompatImageView>(R.id.end_image)
+        endImageView.setTintResource(iconTintColorResource)
+
+        val highlightedTextView = view.findViewById<TextView>(R.id.highlight_text)
+        highlightedTextView.text = highlight.label ?: label
+
         wasHighlighted = isHighlighted()
         updateHighlight(view, wasHighlighted)
-
-        val highlightImageView = view.findViewById<AppCompatImageView>(R.id.end_image)
-        highlightImageView.setTintResource(iconTintColorResource)
     }
 
     override fun invalidate(view: View) {
@@ -94,40 +95,64 @@ class BrowserMenuHighlightableItem(
     private fun updateHighlight(view: View, isHighlighted: Boolean) {
         val startImageView = view.findViewById<AppCompatImageView>(R.id.image)
         val endImageView = view.findViewById<AppCompatImageView>(R.id.end_image)
+        val notificationDotView = view.findViewById<AppCompatImageView>(R.id.notification_dot)
+        val textView = view.findViewById<TextView>(R.id.text)
+        val highlightedTextView = view.findViewById<TextView>(R.id.highlight_text)
 
         if (isHighlighted) {
-            view.setBackgroundResource(highlight.backgroundResource)
-            with(startImageView) {
-                if (highlight.startImageResource != NO_ID) {
-                    setImageResource(highlight.startImageResource)
+            @Suppress("Deprecation")
+            when (highlight) {
+                is BrowserMenuHighlight.HighPriority -> {
+                    textView.visibility = View.INVISIBLE
+                    highlightedTextView.visibility = View.VISIBLE
+                    view.setBackgroundColor(highlight.backgroundTint)
+                    if (highlight.endImageResource != NO_ID) {
+                        endImageView.setImageResource(highlight.endImageResource)
+                    }
+                    endImageView.visibility = View.VISIBLE
                 }
-            }
-            with(endImageView) {
-                if (highlight.endImageResource != NO_ID) {
-                    setImageResource(highlight.endImageResource)
-                    visibility = View.VISIBLE
+                is BrowserMenuHighlight.LowPriority -> {
+                    textView.visibility = View.INVISIBLE
+                    highlightedTextView.visibility = View.VISIBLE
+                    notificationDotView.imageTintList = ColorStateList.valueOf(highlight.notificationTint)
+                    notificationDotView.visibility = View.VISIBLE
+                }
+                is BrowserMenuHighlight.ClassicHighlight -> {
+                    view.setBackgroundResource(highlight.backgroundResource)
+                    if (highlight.startImageResource != NO_ID) {
+                        startImageView.setImageResource(highlight.startImageResource)
+                    }
+                    if (highlight.endImageResource != NO_ID) {
+                        endImageView.setImageResource(highlight.endImageResource)
+                    }
+                    endImageView.visibility = View.VISIBLE
                 }
             }
         } else {
-            val selectableItemBackground =
-                view.context.theme.resolveAttribute(android.R.attr.selectableItemBackground)
-
-            view.setBackgroundResource(selectableItemBackground)
-            with(endImageView) {
-                setImageResource(0)
-                visibility = View.GONE
-            }
+            textView.visibility = View.VISIBLE
+            highlightedTextView.visibility = View.INVISIBLE
+            view.background = null
+            endImageView.setImageDrawable(null)
+            endImageView.visibility = View.GONE
+            notificationDotView.visibility = View.GONE
         }
     }
 
+    /**
+     * Described how to display a [BrowserMenuHighlightableItem] when it is highlighted.
+     * Replaced by [BrowserMenuHighlight] which lets a priority be specified.
+     */
+    @Deprecated("Replace with BrowserMenuHighlight.LowPriority or BrowserMenuHighlight.HighPriority")
+    @Suppress("Deprecation")
     class Highlight(
-        @DrawableRes
-        val startImageResource: Int = NO_ID,
-        @DrawableRes
-        val endImageResource: Int = NO_ID,
-        @DrawableRes
-        val backgroundResource: Int,
-        @ColorRes
-        val colorResource: Int
+        @DrawableRes startImageResource: Int = NO_ID,
+        @DrawableRes endImageResource: Int = NO_ID,
+        @DrawableRes backgroundResource: Int,
+        @ColorRes colorResource: Int
+    ) : BrowserMenuHighlight.ClassicHighlight(
+        startImageResource,
+        endImageResource,
+        backgroundResource,
+        colorResource
     )
 }

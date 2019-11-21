@@ -26,7 +26,7 @@ permalink: /changelog/
   * Account profile cache is now used, removing a network call from most instances of account manager instantiation.
   * Fixed a bug where account would disappear after restarting an app which hit authentication problems.
   * Deprecated the `StorageSync` class. Please use the `SyncManager` class instead.
-  
+
 * **service-glean**
   * Glean was updated to v21.2.0
     * Two new metrics were added to investigate sending of metrics and baseline pings.
@@ -46,6 +46,10 @@ permalink: /changelog/
     * String list items were being truncated to 20, rather than 50, bytes when using
       `.set()` (rather than `.add()`). This has been corrected, but it may result
       in changes in the sent data if using string list items longer than 20 bytes.
+
+* **browser-menu**
+  * Replaced `BrowserMenuHighlightableItem.Highlight` with `BrowserMenuHighlight.HighPriority` to highlight a menu item with some background color. `Highlight` has been deprecated.
+  * Added `BrowserMenuHighlight.LowPriority` to highlight a menu item with a dot over the icon.
 
 # 22.0.0
 

@@ -11,17 +11,18 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.annotation.ColorInt
+import androidx.annotation.DrawableRes
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
+import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.toolbar.R
 import mozilla.components.browser.toolbar.facts.emitOpenMenuFact
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 
-@Suppress("ViewConstructor") // This view is only instantiated in code
 internal class MenuButton @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -30,18 +31,12 @@ internal class MenuButton @JvmOverloads constructor(
 
     @VisibleForTesting internal var menu: BrowserMenu? = null
 
-    internal val menuIcon = AppCompatImageView(context).apply {
-        setImageResource(R.drawable.mozac_ic_menu)
-        scaleType = ImageView.ScaleType.CENTER
-        contentDescription = context.getString(R.string.mozac_browser_toolbar_menu_button)
-    }
-
-    internal val highlightView = AppCompatImageView(context).apply {
-        setImageResource(R.drawable.mozac_menu_indicator)
-        scaleType = ImageView.ScaleType.CENTER
-        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-        visibility = View.GONE
-    }
+    private val menuIcon =
+        createImageView(R.drawable.mozac_ic_menu, context.getString(R.string.mozac_browser_toolbar_menu_button))
+    private val highlightView =
+        createImageView(R.drawable.mozac_menu_indicator)
+    private val notificationIconView =
+        createImageView(R.drawable.mozac_menu_notification)
 
     init {
         setBackgroundResource(context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless))
@@ -68,6 +63,7 @@ internal class MenuButton @JvmOverloads constructor(
 
         addView(highlightView)
         addView(menuIcon)
+        addView(notificationIconView)
     }
 
     var menuBuilder: BrowserMenuBuilder? = null
@@ -85,24 +81,46 @@ internal class MenuButton @JvmOverloads constructor(
     /**
      * Declare that the menu items should be updated if needed.
      */
+    @Suppress("Deprecation")
     fun invalidateMenu() {
         menu?.invalidate()
-        val highlightColorResource: Int? = menuBuilder?.items?.let { items ->
-            items.forEach { item ->
-                if (item is BrowserMenuHighlightableItem && item.isHighlighted()) {
-                    return@let item.highlight.colorResource
+
+        val highlight = menuBuilder?.items.orEmpty()
+            .asSequence()
+            .mapNotNull { it as? BrowserMenuHighlightableItem }
+            .filter { it.isHighlighted() }
+            .map { it.highlight }
+            .maxBy {
+                // Select the highlight with the highest priority
+                when (it) {
+                    is BrowserMenuHighlight.HighPriority -> 2
+                    is BrowserMenuHighlight.LowPriority -> 1
+                    is BrowserMenuHighlight.ClassicHighlight -> 0
                 }
             }
-            null
-        }
 
-        // If a highlighted item is found, show the indicator.
-        if (highlightColorResource != null) {
-            val color = ContextCompat.getColor(context, highlightColorResource)
-            highlightView.imageTintList = ColorStateList.valueOf(color)
-            highlightView.visibility = View.VISIBLE
-        } else {
-            highlightView.visibility = View.GONE
+        // If a highlighted item is found, show the indicator
+        when (highlight) {
+            is BrowserMenuHighlight.HighPriority -> {
+                highlightView.imageTintList = ColorStateList.valueOf(highlight.backgroundTint)
+                highlightView.visibility = View.VISIBLE
+                notificationIconView.visibility = View.GONE
+            }
+            is BrowserMenuHighlight.LowPriority -> {
+                notificationIconView.setColorFilter(highlight.notificationTint)
+                highlightView.visibility = View.GONE
+                notificationIconView.visibility = View.VISIBLE
+            }
+            is BrowserMenuHighlight.ClassicHighlight -> {
+                val color = ContextCompat.getColor(context, highlight.colorResource)
+                highlightView.imageTintList = ColorStateList.valueOf(color)
+                highlightView.visibility = View.VISIBLE
+                notificationIconView.visibility = View.GONE
+            }
+            null -> {
+                highlightView.visibility = View.GONE
+                notificationIconView.visibility = View.GONE
+            }
         }
     }
 
@@ -113,4 +131,16 @@ internal class MenuButton @JvmOverloads constructor(
     fun setColorFilter(@ColorInt color: Int) {
         menuIcon.setColorFilter(color)
     }
+
+    private fun createImageView(@DrawableRes image: Int, description: String? = null) =
+        AppCompatImageView(context).apply {
+            setImageResource(image)
+            scaleType = ImageView.ScaleType.CENTER
+            if (description != null) {
+                contentDescription = description
+            } else {
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                visibility = View.GONE
+            }
+        }
 }
