@@ -227,6 +227,16 @@ export class ASRouterUISurface extends React.PureComponent {
   }
 
   clearMessage(id) {
+    // Request new set of dynamic triplet cards when click on a card CTA clear
+    // message and 'id' matches one of the cards in message bundle
+    if (
+      this.state.message &&
+      this.state.message.bundle &&
+      this.state.message.bundle.find(card => card.id === id)
+    ) {
+      this.requestMessage();
+    }
+
     if (id === this.state.message.id) {
       this.setState({ message: {} });
       // Remove any styles related to the RTAMO message
@@ -259,17 +269,7 @@ export class ASRouterUISurface extends React.PureComponent {
     }
   }
 
-  componentWillMount() {
-    const endpoint = ASRouterUtils.getPreviewEndpoint();
-    if (endpoint && endpoint.theme === "dark") {
-      global.window.dispatchEvent(
-        new CustomEvent("LightweightTheme:Set", {
-          detail: { data: NEWTAB_DARK_THEME },
-        })
-      );
-    }
-    ASRouterUtils.addListener(this.onMessageFromParent);
-
+  requestMessage(endpoint) {
     // If we are loading about:welcome we want to trigger the onboarding messages
     if (
       this.props.document &&
@@ -285,6 +285,19 @@ export class ASRouterUISurface extends React.PureComponent {
         data: { endpoint },
       });
     }
+  }
+
+  componentWillMount() {
+    const endpoint = ASRouterUtils.getPreviewEndpoint();
+    if (endpoint && endpoint.theme === "dark") {
+      global.window.dispatchEvent(
+        new CustomEvent("LightweightTheme:Set", {
+          detail: { data: NEWTAB_DARK_THEME },
+        })
+      );
+    }
+    ASRouterUtils.addListener(this.onMessageFromParent);
+    this.requestMessage(endpoint);
   }
 
   componentWillUnmount() {
