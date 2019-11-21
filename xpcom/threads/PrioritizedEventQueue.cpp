@@ -18,9 +18,9 @@ using namespace mozilla;
 PrioritizedEventQueue::PrioritizedEventQueue(
     already_AddRefed<nsIIdlePeriod>&& aIdlePeriod)
     : mHighQueue(MakeUnique<EventQueue>(EventQueuePriority::High)),
-      mInputQueue(MakeUnique<EventQueue>(EventQueuePriority::Input)),
+      mInputQueue(MakeUnique<EventQueueSized<32>>(EventQueuePriority::Input)),
       mMediumHighQueue(MakeUnique<EventQueue>(EventQueuePriority::MediumHigh)),
-      mNormalQueue(MakeUnique<EventQueue>(EventQueuePriority::Normal)),
+      mNormalQueue(MakeUnique<EventQueueSized<64>>(EventQueuePriority::Normal)),
       mDeferredTimersQueue(
           MakeUnique<EventQueue>(EventQueuePriority::DeferredTimers)),
       mIdleQueue(MakeUnique<EventQueue>(EventQueuePriority::Idle)),

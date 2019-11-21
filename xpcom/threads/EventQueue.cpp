@@ -8,13 +8,16 @@
 #include "nsIRunnable.h"
 
 using namespace mozilla;
+using namespace mozilla::detail;
 
-EventQueue::EventQueue(EventQueuePriority aPriority) {}
+template <size_t ItemsPerPage>
+EventQueueInternal<ItemsPerPage>::EventQueueInternal(
+    EventQueuePriority aPriority) {}
 
-void EventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
-                          EventQueuePriority aPriority,
-                          const MutexAutoLock& aProofOfLock,
-                          mozilla::TimeDuration* aDelay) {
+template <size_t ItemsPerPage>
+void EventQueueInternal<ItemsPerPage>::PutEvent(
+    already_AddRefed<nsIRunnable>&& aEvent, EventQueuePriority aPriority,
+    const MutexAutoLock& aProofOfLock, mozilla::TimeDuration* aDelay) {
 #ifdef MOZ_GECKO_PROFILER
   // Sigh, this doesn't check if this thread is being profiled
   if (profiler_is_active()) {
@@ -30,7 +33,8 @@ void EventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
   mQueue.Push(std::move(event));
 }
 
-already_AddRefed<nsIRunnable> EventQueue::GetEvent(
+template <size_t ItemsPerPage>
+already_AddRefed<nsIRunnable> EventQueueInternal<ItemsPerPage>::GetEvent(
     EventQueuePriority* aPriority, const MutexAutoLock& aProofOfLock,
     mozilla::TimeDuration* aLastEventDelay) {
   if (mQueue.IsEmpty()) {
@@ -71,24 +75,20 @@ already_AddRefed<nsIRunnable> EventQueue::GetEvent(
   return result.forget();
 }
 
-bool EventQueue::IsEmpty(const MutexAutoLock& aProofOfLock) {
+template <size_t ItemsPerPage>
+bool EventQueueInternal<ItemsPerPage>::IsEmpty(
+    const MutexAutoLock& aProofOfLock) {
   return mQueue.IsEmpty();
 }
 
-bool EventQueue::HasReadyEvent(const MutexAutoLock& aProofOfLock) {
+template <size_t ItemsPerPage>
+bool EventQueueInternal<ItemsPerPage>::HasReadyEvent(
+    const MutexAutoLock& aProofOfLock) {
   return !IsEmpty(aProofOfLock);
 }
 
-already_AddRefed<nsIRunnable> EventQueue::PeekEvent(
-    const MutexAutoLock& aProofOfLock) {
-  if (mQueue.IsEmpty()) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIRunnable> result = mQueue.FirstElement();
-  return result.forget();
-}
-
-size_t EventQueue::Count(const MutexAutoLock& aProofOfLock) const {
+template <size_t ItemsPerPage>
+size_t EventQueueInternal<ItemsPerPage>::Count(
+    const MutexAutoLock& aProofOfLock) const {
   return mQueue.Count();
 }
