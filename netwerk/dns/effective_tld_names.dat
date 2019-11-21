@@ -7078,7 +7078,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2019-11-15T17:07:54Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2019-11-20T17:10:44Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -7668,9 +7668,6 @@ christmas
 // chrome : 2014-07-24 Charleston Road Registry Inc.
 chrome
 
-// chrysler : 2015-07-30 FCA US LLC.
-chrysler
-
 // church : 2014-02-06 Binky Moon, LLC
 church
 
@@ -7949,9 +7946,6 @@ docs
 
 // doctor : 2016-06-02 Binky Moon, LLC
 doctor
-
-// dodge : 2015-07-30 FCA US LLC.
-dodge
 
 // dog : 2014-12-04 Binky Moon, LLC
 dog
@@ -8742,9 +8736,6 @@ kyoto
 // lacaixa : 2014-01-09 Fundación Bancaria Caixa d’Estalvis i Pensions de Barcelona, “la Caixa”
 lacaixa
 
-// ladbrokes : 2015-08-06 LADBROKES INTERNATIONAL PLC
-ladbrokes
-
 // lamborghini : 2015-06-04 Automobili Lamborghini S.p.A.
 lamborghini
 
@@ -9056,9 +9047,6 @@ money
 
 // monster : 2015-09-11 XYZ.COM LLC
 monster
-
-// mopar : 2015-07-30 FCA US LLC.
-mopar
 
 // mormon : 2013-12-05 IRI Domain Management, LLC ("Applicant")
 mormon
@@ -9852,9 +9840,6 @@ spreadbetting
 // srl : 2015-05-07 InterNetX, Corp
 srl
 
-// srt : 2015-07-30 FCA US LLC.
-srt
-
 // stada : 2014-11-13 STADA Arzneimittel AG
 stada
 
@@ -10116,9 +10101,6 @@ ubank
 // ubs : 2014-12-11 UBS AG
 ubs
 
-// uconnect : 2015-07-30 FCA US LLC.
-uconnect
-
 // unicom : 2015-10-15 China United Network Communications Corporation Limited
 unicom
 
@@ -10238,9 +10220,6 @@ wang
 
 // wanggou : 2014-12-18 Amazon Registry Services, Inc.
 wanggou
-
-// warman : 2015-06-18 Weir Group IP Limited
-warman
 
 // watch : 2013-11-14 Binky Moon, LLC
 watch
