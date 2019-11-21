@@ -3,28 +3,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::{
+    id::{BindGroupLayoutId, BufferId, DeviceId, SamplerId, TextureViewId},
     resource::TextureViewDimension,
-    track::TrackerSet,
-    BindGroupLayoutId,
+    track::{DUMMY_SELECTOR, TrackerSet},
     BufferAddress,
-    BufferId,
-    DeviceId,
     LifeGuard,
     RefCount,
-    SamplerId,
     Stored,
-    TextureViewId,
 };
 
 use arrayvec::ArrayVec;
-use bitflags::bitflags;
 use rendy_descriptor::{DescriptorRanges, DescriptorSet};
 
 use std::borrow::Borrow;
 
 pub const MAX_BIND_GROUPS: usize = 4;
 
-bitflags! {
+bitflags::bitflags! {
     #[repr(transparent)]
     pub struct ShaderStage: u32 {
         const NONE = 0;
@@ -128,5 +123,11 @@ pub struct BindGroup<B: hal::Backend> {
 impl<B: hal::Backend> Borrow<RefCount> for BindGroup<B> {
     fn borrow(&self) -> &RefCount {
         &self.life_guard.ref_count
+    }
+}
+
+impl<B: hal::Backend> Borrow<()> for BindGroup<B> {
+    fn borrow(&self) -> &() {
+        &DUMMY_SELECTOR
     }
 }
