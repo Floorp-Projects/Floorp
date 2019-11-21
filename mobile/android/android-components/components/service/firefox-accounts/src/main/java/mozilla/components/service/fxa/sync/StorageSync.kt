@@ -20,6 +20,7 @@ import mozilla.components.support.base.observer.ObserverRegistry
 /**
  * Orchestrates data synchronization of a set of [SyncableStore]-s.
  */
+@Deprecated("Use SyncManager instead.")
 class StorageSync(
     private val syncableStores: Map<String, SyncableStore>
 ) : Observable<SyncStatusObserver> by ObserverRegistry() {

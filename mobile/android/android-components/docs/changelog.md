@@ -21,6 +21,7 @@ permalink: /changelog/
 * **service-firefox-accounts**
   * Account profile cache is now used, removing a network call from most instances of account manager instantiation.
   * Fixed a bug where account would disappear after restarting an app which hit authentication problems.
+  * Deprecated the `StorageSync` class. Please use the `SyncManager` class instead.
   
 * **service-glean**
   * Glean was updated to v21.1.1
