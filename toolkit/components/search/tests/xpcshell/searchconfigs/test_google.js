@@ -98,7 +98,7 @@ add_task(async function test_searchConfig_google_with_mozparam() {
 
   // TODO: Bug 1598270 will add the true option here, to test for the selector,
   // aka modern configuration.
-  for (const useSelector of [false]) {
+  for (const useSelector of [false, true]) {
     info("Using " + (useSelector ? "Selector" : "Legacy Configuration"));
     for (const testData of TEST_DATA) {
       info(`Checking region ${testData.region}, locale ${testData.locale}`);
