@@ -308,20 +308,17 @@ class nsPluginCrashedEvent : public Runnable {
  public:
   nsCOMPtr<nsIContent> mContent;
   nsString mPluginDumpID;
-  nsString mBrowserDumpID;
   nsString mPluginName;
   nsString mPluginFilename;
   bool mSubmittedCrashReport;
 
   nsPluginCrashedEvent(nsIContent* aContent, const nsAString& aPluginDumpID,
-                       const nsAString& aBrowserDumpID,
                        const nsAString& aPluginName,
                        const nsAString& aPluginFilename,
                        bool submittedCrashReport)
       : Runnable("nsPluginCrashedEvent"),
         mContent(aContent),
         mPluginDumpID(aPluginDumpID),
-        mBrowserDumpID(aBrowserDumpID),
         mPluginName(aPluginName),
         mPluginFilename(aPluginFilename),
         mSubmittedCrashReport(submittedCrashReport) {}
@@ -343,7 +340,6 @@ nsPluginCrashedEvent::Run() {
 
   PluginCrashedEventInit init;
   init.mPluginDumpID = mPluginDumpID;
-  init.mBrowserDumpID = mBrowserDumpID;
   init.mPluginName = mPluginName;
   init.mPluginFilename = mPluginFilename;
   init.mSubmittedCrashReport = mSubmittedCrashReport;
@@ -2570,7 +2566,6 @@ nsObjectLoadingContent::PluginDestroyed() {
 NS_IMETHODIMP
 nsObjectLoadingContent::PluginCrashed(nsIPluginTag* aPluginTag,
                                       const nsAString& pluginDumpID,
-                                      const nsAString& browserDumpID,
                                       bool submittedCrashReport) {
   LOG(("OBJLC [%p]: Plugin Crashed, queuing crash event", this));
   NS_ASSERTION(mType == eType_Plugin, "PluginCrashed at non-plugin type");
@@ -2597,9 +2592,8 @@ nsObjectLoadingContent::PluginCrashed(nsIPluginTag* aPluginTag,
   aPluginTag->GetFilename(pluginFilename);
 
   nsCOMPtr<nsIRunnable> ev = new nsPluginCrashedEvent(
-      thisContent, pluginDumpID, browserDumpID,
-      NS_ConvertUTF8toUTF16(pluginName), NS_ConvertUTF8toUTF16(pluginFilename),
-      submittedCrashReport);
+      thisContent, pluginDumpID, NS_ConvertUTF8toUTF16(pluginName),
+      NS_ConvertUTF8toUTF16(pluginFilename), submittedCrashReport);
   nsresult rv = NS_DispatchToCurrentThread(ev);
   if (NS_FAILED(rv)) {
     NS_WARNING("failed to dispatch nsPluginCrashedEvent");

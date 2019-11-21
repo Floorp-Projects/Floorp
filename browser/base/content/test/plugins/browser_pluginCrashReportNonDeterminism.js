@@ -184,7 +184,6 @@ add_task(async function testChromeHearsPluginCrashFirst() {
     let event = new content.PluginCrashedEvent("PluginCrashed", {
       pluginName: "",
       pluginDumpID: "",
-      browserDumpID: "",
       submittedCrashReport: false,
       bubbles: true,
       cancelable: true,
@@ -260,7 +259,6 @@ add_task(async function testContentHearsCrashFirst() {
     let event = new content.PluginCrashedEvent("PluginCrashed", {
       pluginName: "",
       pluginDumpID: "",
-      browserDumpID: "",
       submittedCrashReport: false,
       bubbles: true,
       cancelable: true,
