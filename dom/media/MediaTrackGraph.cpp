@@ -1350,6 +1350,12 @@ bool MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateEnd) {
   // Process graph message from the main thread for this iteration.
   RunMessagesInQueue();
 
+  // Process MessagePort events.
+  // These require a single thread, which has an nsThread with an event queue.
+  if (mGraphRunner || !mRealtime) {
+    NS_ProcessPendingEvents(nullptr);
+  }
+
   GraphTime stateEnd = std::min(aStateEnd, GraphTime(mEndTime));
   UpdateGraph(stateEnd);
 
