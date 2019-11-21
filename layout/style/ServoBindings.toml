@@ -108,7 +108,6 @@ rusty-enums = [
     "mozilla::StyleBorderCollapse",
     "mozilla::StyleBorderImageRepeat",
     "mozilla::StyleBoxPack",
-    "mozilla::StyleWindowShadow",
     "mozilla::StyleBoxOrient",
     "mozilla::StyleBoxAlign",
     "mozilla::StyleUserFocus",
