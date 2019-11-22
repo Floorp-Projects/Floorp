@@ -35,7 +35,7 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
     private val applicationContext: Context,
     private val service: KClass<T>,
     private val broadcastManager: LocalBroadcastManager = LocalBroadcastManager.getInstance(applicationContext),
-    override var onDownloadCompleted: OnDownloadCompleted = noop
+    override var onDownloadStopped: onDownloadStopped = noop
 ) : BroadcastReceiver(), DownloadManager {
 
     private val queuedDownloads = LongSparseArray<DownloadState>()
@@ -104,7 +104,7 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
     }
 
     /**
-     * Invoked when a download is complete. Calls [onDownloadCompleted] and unregisters the
+     * Invoked when a download is complete. Calls [onDownloadStopped] and unregisters the
      * broadcast receiver if there are no more queued downloads.
      */
     override fun onReceive(context: Context, intent: Intent) {
@@ -114,7 +114,7 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
         val download = queuedDownloads[downloadID]
 
         if (download != null) {
-            onDownloadCompleted(download, downloadID, downloadStatus)
+            onDownloadStopped(download, downloadID, downloadStatus)
         }
     }
 }

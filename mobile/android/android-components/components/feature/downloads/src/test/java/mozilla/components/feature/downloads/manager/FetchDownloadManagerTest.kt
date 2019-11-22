@@ -62,7 +62,7 @@ class FetchDownloadManagerTest {
         downloadManager = FetchDownloadManager(context, MockDownloadService::class, broadcastManager)
         var downloadCompleted = false
 
-        downloadManager.onDownloadCompleted = { _, _, _ -> downloadCompleted = true }
+        downloadManager.onDownloadStopped = { _, _, _ -> downloadCompleted = true }
 
         grantPermissions()
 
@@ -81,7 +81,7 @@ class FetchDownloadManagerTest {
         downloadManager = FetchDownloadManager(context, MockDownloadService::class, broadcastManager)
         var downloadCompleted = false
 
-        downloadManager.onDownloadCompleted = { _, _, _ -> downloadCompleted = true }
+        downloadManager.onDownloadStopped = { _, _, _ -> downloadCompleted = true }
 
         grantPermissions()
 
@@ -113,14 +113,14 @@ class FetchDownloadManagerTest {
     }
 
     @Test
-    fun `sendBroadcast with valid downloadID must call onDownloadCompleted after download`() {
+    fun `sendBroadcast with valid downloadID must call onDownloadStopped after download`() {
         var downloadCompleted = false
         var downloadStatus: DownloadJobStatus? = null
         val downloadWithFileName = download.copy(fileName = "5MB.zip")
 
         grantPermissions()
 
-        downloadManager.onDownloadCompleted = { _, _, status ->
+        downloadManager.onDownloadStopped = { _, _, status ->
             downloadStatus = status
             downloadCompleted = true
         }

@@ -36,7 +36,7 @@ typealias SystemRequest = android.app.DownloadManager.Request
  */
 class AndroidDownloadManager(
     private val applicationContext: Context,
-    override var onDownloadCompleted: OnDownloadCompleted = noop
+    override var onDownloadStopped: onDownloadStopped = noop
 ) : BroadcastReceiver(), DownloadManager {
 
     private val queuedDownloads = LongSparseArray<DownloadStateWithRequest>()
@@ -111,7 +111,7 @@ class AndroidDownloadManager(
     }
 
     /**
-     * Invoked when a download is complete. Calls [onDownloadCompleted] and unregisters the
+     * Invoked when a download is complete. Calls [onDownloadStopped] and unregisters the
      * broadcast receiver if there are no more queued downloads.
      */
     override fun onReceive(context: Context, intent: Intent) {
@@ -121,7 +121,7 @@ class AndroidDownloadManager(
             as AbstractFetchDownloadService.DownloadJobStatus
 
         if (download != null) {
-            onDownloadCompleted(download.state, downloadID, downloadStatus)
+            onDownloadStopped(download.state, downloadID, downloadStatus)
         }
     }
 }
