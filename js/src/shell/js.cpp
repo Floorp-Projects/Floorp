@@ -911,7 +911,8 @@ static MOZ_MUST_USE bool RunFile(JSContext* cx, const char* filename,
 #if defined(JS_BUILD_BINAST)
 
 static MOZ_MUST_USE bool RunBinAST(JSContext* cx, const char* filename,
-                                   FILE* file, bool compileOnly) {
+                                   FILE* file, bool compileOnly,
+                                   JS::BinASTFormat format) {
   RootedScript script(cx);
 
   {
@@ -920,7 +921,7 @@ static MOZ_MUST_USE bool RunBinAST(JSContext* cx, const char* filename,
         .setIsRunOnce(true)
         .setNoScriptRval(true);
 
-    script = JS::DecodeBinAST(cx, options, file, JS::BinASTFormat::Multipart);
+    script = JS::DecodeBinAST(cx, options, file, format);
     if (!script) {
       return false;
     }
@@ -1467,7 +1468,8 @@ enum FileKind {
   FileScript,       // UTF-8, directly parsed as such
   FileScriptUtf16,  // FileScript, but inflate to UTF-16 before parsing
   FileModule,
-  FileBinAST
+  FileBinASTMultipart,
+  FileBinASTContext,
 };
 
 static void ReportCantOpenErrorUnknownEncoding(JSContext* cx,
@@ -1521,8 +1523,15 @@ static MOZ_MUST_USE bool Process(JSContext* cx, const char* filename,
         }
         break;
 #if defined(JS_BUILD_BINAST)
-      case FileBinAST:
-        if (!RunBinAST(cx, filename, file, compileOnly)) {
+      case FileBinASTMultipart:
+        if (!RunBinAST(cx, filename, file, compileOnly,
+                       JS::BinASTFormat::Multipart)) {
+          return false;
+        }
+        break;
+      case FileBinASTContext:
+        if (!RunBinAST(cx, filename, file, compileOnly,
+                       JS::BinASTFormat::Context)) {
           return false;
         }
         break;
@@ -10117,8 +10126,18 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
   MultiStringRange codeChunks = op->getMultiStringOption('e');
   MultiStringRange modulePaths = op->getMultiStringOption('m');
   MultiStringRange binASTPaths(nullptr, nullptr);
+  FileKind binASTFileKind = FileBinASTMultipart;
 #if defined(JS_BUILD_BINAST)
   binASTPaths = op->getMultiStringOption('B');
+  if (const char* str = op->getStringOption("binast-format")) {
+    if (strcmp(str, "multipart") == 0) {
+      binASTFileKind = FileBinASTMultipart;
+    } else if (strcmp(str, "context") == 0) {
+      binASTFileKind = FileBinASTContext;
+    } else {
+      return OptionFailure("binast-format", str);
+    }
+  }
 #endif  // JS_BUILD_BINAST
 
   if (filePaths.empty() && utf16FilePaths.empty() && codeChunks.empty() &&
@@ -10210,7 +10229,7 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
     if (baArgno < fpArgno && baArgno < ufpArgno && baArgno < ccArgno &&
         baArgno < mpArgno) {
       char* path = binASTPaths.front();
-      if (!Process(cx, path, false, FileBinAST)) {
+      if (!Process(cx, path, false, binASTFileKind)) {
         return false;
       }
 
@@ -10990,8 +11009,11 @@ int main(int argc, char** argv, char** envp) {
       !op.addMultiStringOption('m', "module", "PATH", "Module path to run") ||
 #if defined(JS_BUILD_BINAST)
       !op.addMultiStringOption('B', "binast", "PATH", "BinAST path to run") ||
+      !op.addStringOption('\0', "binast-format", "[format]",
+                          "Format of BinAST file (multipart/context)") ||
 #else
       !op.addMultiStringOption('B', "binast", "", "No-op") ||
+      !op.addStringOption('\0', "binast-format", "No-op") ||
 #endif  // JS_BUILD_BINAST
       !op.addMultiStringOption('e', "execute", "CODE", "Inline code to run") ||
       !op.addBoolOption('i', "shell", "Enter prompt after running code") ||
