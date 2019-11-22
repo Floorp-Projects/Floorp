@@ -41,6 +41,10 @@ add_task(async function checkReturnToAboutHome() {
     if (useFrame) {
       bc = bc.getChildren()[0];
     }
+    let locationChangePromise = BrowserTestUtils.waitForLocationChange(
+      gBrowser,
+      "about:home"
+    );
     await SpecialPowers.spawn(bc, [useFrame], async function(subFrame) {
       let returnButton = content.document.getElementById("returnButton");
       if (!subFrame) {
@@ -56,7 +60,7 @@ add_task(async function checkReturnToAboutHome() {
       returnButton.click();
     });
 
-    await BrowserTestUtils.waitForLocationChange(gBrowser, "about:home");
+    await locationChangePromise;
 
     is(browser.webNavigation.canGoBack, true, "webNavigation.canGoBack");
     is(
