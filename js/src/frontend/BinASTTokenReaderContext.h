@@ -211,6 +211,8 @@ class alignas(8) BinASTSymbol {
 
  private:
   size_t toAtomIndexNoCheck() const { return size_t(asBits_); }
+
+  friend class ::js::ScriptSource;
 };
 
 // An entry in a Huffman table.
@@ -305,6 +307,7 @@ class SingleEntryHuffmanTable {
   BinASTSymbol value_;
 
   friend class HuffmanPreludeReader;
+  friend class ::js::ScriptSource;
 };
 
 // An implementation of Huffman Tables for two-entry table.
@@ -365,6 +368,7 @@ class TwoEntriesHuffmanTable {
                              BinASTSymbol::fromBool(false)};
 
   friend class HuffmanPreludeReader;
+  friend class ::js::ScriptSource;
 };
 
 // An implementation of Huffman Tables as a vector designed to allow
@@ -546,6 +550,7 @@ class SingleLookupHuffmanTable {
 #endif  // DEBUG
 
   friend class HuffmanPreludeReader;
+  friend class ::js::ScriptSource;
 };
 
 /// A table designed to support fast lookup in large sets of data.
@@ -780,6 +785,7 @@ class MultiLookupHuffmanTable {
   uint8_t largestBitLength_;
 
   friend class HuffmanPreludeReader;
+  friend class ::js::ScriptSource;
 };
 
 /// A Huffman table suitable for max bit lengths in [8, 14]
@@ -883,6 +889,7 @@ struct GenericHuffmanTable {
       implementation_;
 
   friend class HuffmanDictionaryForMetadata;
+  friend class ::js::ScriptSource;
 };
 
 // Temporary space to allocate `T` typed items with less alloc/free calls,
@@ -1119,6 +1126,18 @@ class HuffmanDictionaryForMetadata {
   static HuffmanDictionaryForMetadata* createFrom(
       HuffmanDictionary* dictionary, TemporaryStorage* tempStorage);
 
+  static HuffmanDictionaryForMetadata* create(size_t numTables,
+                                              size_t numHuffmanEntries,
+                                              size_t numInternalIndices,
+                                              size_t numSingleTables,
+                                              size_t numTwoTables);
+
+  void clearFromIncompleteInitialization(size_t numInitializedTables,
+                                         size_t numInitializedSingleTables,
+                                         size_t numInitializedTwoTables);
+
+  friend class ::js::ScriptSource;
+
  private:
   // Returns the total required size of HuffmanDictionaryForMetadata with
   // extra payload to store items, in bytes.
@@ -1168,6 +1187,99 @@ class HuffmanDictionaryForMetadata {
   const GenericHuffmanTable& tableAtIndex(size_t i) const {
     return tablesBase()[i];
   }
+
+ public:
+  size_t numTables() const { return numTables_; }
+  size_t numHuffmanEntries() const { return numHuffmanEntries_; }
+  size_t numInternalIndices() const { return numInternalIndices_; }
+  size_t numSingleTables() const { return numSingleTables_; }
+  size_t numTwoTables() const { return numTwoTables_; }
+
+  size_t huffmanEntryIndexOf(HuffmanEntry* entry) {
+    MOZ_ASSERT(huffmanEntriesBase().get() <= entry &&
+               entry < huffmanEntriesBase().get() + numHuffmanEntries());
+    return entry - huffmanEntriesBase().get();
+  }
+
+  size_t internalIndexIndexOf(InternalIndex* index) {
+    MOZ_ASSERT(internalIndicesBase().get() <= index &&
+               index < internalIndicesBase().get() + numInternalIndices());
+    return index - internalIndicesBase().get();
+  }
+
+  size_t singleTableIndexOf(SingleLookupHuffmanTable* table) {
+    MOZ_ASSERT(singleTablesBase().get() <= table &&
+               table < singleTablesBase().get() + numSingleTables());
+    return table - singleTablesBase().get();
+  }
+
+  size_t twoTableIndexOf(TwoLookupsHuffmanTable* table) {
+    MOZ_ASSERT(twoTablesBase().get() <= table &&
+               table < twoTablesBase().get() + numTwoTables());
+    return table - twoTablesBase().get();
+  }
+};
+
+// When creating HuffmanDictionaryForMetadata with
+// HuffmanDictionaryForMetadata::create while decoding XDR,
+// it can fail and in that case the newly created HuffmanDictionaryForMetadata
+// instance is left with partially initialized payload, and then
+// HuffmanDictionaryForMetadata destructor can call destructor for
+// uninitialized memory.
+//
+// This class prevents it by calling destructors on already-initialized tables
+// and resetting HuffmanDictionaryForMetadata instances fields so that it
+// doesn't call destructors inside its destructor.
+//
+// Usage:
+//   UniquePtr<frontend::HuffmanDictionaryForMetadata> newDict;
+//   AutoClearHuffmanDictionaryForMetadata autoClear;
+//
+//   auto dict = HuffmanDictionaryForMetadata::create(...);
+//   if (!dict) { ... }
+//
+//   autoClear.set(dict);
+//   newDict.reset(dict);
+//
+//   // When initializing table, call one of:
+//   autoClear.addInitializedTable();
+//   autoClear.addInitializedSingleTable();
+//   autoClear.addInitializedTwoTable();
+//
+//   // Do any fallible operation, and return on failure.
+//   ...
+//
+//   // When initialization finished.
+//   autoClear.reset();
+//
+//   return dict;
+class MOZ_STACK_CLASS AutoClearHuffmanDictionaryForMetadata {
+  frontend::HuffmanDictionaryForMetadata* dictionary_;
+
+  size_t numInitializedTables_ = 0;
+  size_t numInitializedSingleTables_ = 0;
+  size_t numInitializedTwoTables_ = 0;
+
+ public:
+  AutoClearHuffmanDictionaryForMetadata() : dictionary_(nullptr) {}
+
+  ~AutoClearHuffmanDictionaryForMetadata() {
+    if (dictionary_) {
+      dictionary_->clearFromIncompleteInitialization(
+          numInitializedTables_, numInitializedSingleTables_,
+          numInitializedTwoTables_);
+    }
+  }
+
+  void set(frontend::HuffmanDictionaryForMetadata* dictionary) {
+    dictionary_ = dictionary;
+  }
+
+  void reset() { dictionary_ = nullptr; }
+
+  void addInitializedTable() { numInitializedTables_++; }
+  void addInitializedSingleTable() { numInitializedSingleTables_++; }
+  void addInitializedTwoTable() { numInitializedTwoTables_++; }
 };
 
 // A Huffman dictionary for the current file, used while reading the dictionary.
