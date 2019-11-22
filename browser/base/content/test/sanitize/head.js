@@ -69,7 +69,7 @@ function createDomainCookie(host, originAttributes) {
 }
 
 function checkCookie(host, originAttributes) {
-  for (let cookie of Services.cookies.cookies) {
+  for (let cookie of Services.cookies.enumerator) {
     if (
       ChromeUtils.isOriginAttributesEqual(
         originAttributes,

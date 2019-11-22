@@ -194,7 +194,7 @@ var SessionCookiesInternal = {
       return;
     }
 
-    for (let cookie of Services.cookies.sessionCookies) {
+    for (let cookie of Services.cookies.sessionEnumerator) {
       this._addCookie(cookie);
     }
   },

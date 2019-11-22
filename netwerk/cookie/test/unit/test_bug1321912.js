@@ -58,8 +58,8 @@ conn.executeSimpleSQL(
 );
 
 // Now start the cookie service, and then check the fields in the table.
-// Get sessionCookies to wait for the initialization in cookie thread
-const cookies = Services.cookies.sessionCookies;
+// Get sessionEnumerator to wait for the initialization in cookie thread
+const enumerator = Services.cookies.sessionEnumerator;
 
 Assert.equal(conn.schemaVersion, 10);
 let stmt = conn.createStatement(

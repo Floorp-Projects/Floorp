@@ -68,7 +68,7 @@ obs.prototype = {
 
 function getCookieCount(cs) {
   let count = 0;
-  for (let cookie of cs.cookies) {
+  for (let cookie of cs.enumerator) {
     info("cookie: " + cookie);
     info(
       "cookie host " +

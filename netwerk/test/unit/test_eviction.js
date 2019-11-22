@@ -235,7 +235,7 @@ function get_creationTime(i) {
 // + 10% are exceeded.
 function check_remaining_cookies(aNumberTotal, aNumberOld, aNumberToExpect) {
   let i = 0;
-  for (let cookie of Services.cookiemgr.cookies) {
+  for (let cookie of Services.cookiemgr.enumerator) {
     ++i;
 
     if (aNumberTotal != aNumberToExpect) {
