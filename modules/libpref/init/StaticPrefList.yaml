@@ -5811,6 +5811,8 @@
   value: true
 #elif defined(XP_MACOSX)
   value: true
+#elif defined(XP_WIN) && !defined(_ARM64_)
+  value: true
 #else
   value: false
 #endif
