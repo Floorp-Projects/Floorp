@@ -79,6 +79,8 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
   void SuspendInputEventPrioritization(const MutexAutoLock& aProofOfLock) final;
   void ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock) final;
 
+  IdlePeriodState* GetIdlePeriodState() { return &mIdlePeriodState; }
+
   size_t SizeOfExcludingThis(
       mozilla::MallocSizeOf aMallocSizeOf) const override {
     size_t n = 0;

@@ -15,6 +15,8 @@ class nsIRunnable;
 
 namespace mozilla {
 
+class IdlePeriodState;
+
 namespace detail {
 
 template <size_t ItemsPerPage>
@@ -66,6 +68,8 @@ class EventQueueInternal : public AbstractEventQueue {
       const MutexAutoLock& aProofOfLock) final {}
   void ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {
   }
+
+  IdlePeriodState* GetIdlePeriodState() const { return nullptr; }
 
   size_t SizeOfExcludingThis(
       mozilla::MallocSizeOf aMallocSizeOf) const override {
