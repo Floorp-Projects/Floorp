@@ -6,6 +6,8 @@
 
 #include "signaling/src/sdp/Sdp.h"
 #include "signaling/src/sdp/ParsingResultComparer.h"
+#include "signaling/src/sdp/SipccSdpParser.h"
+#include "signaling/src/sdp/RsdparsaSdpParser.h"
 
 #include <string>
 #include <ostream>
@@ -302,6 +304,7 @@ bool ParsingResultComparer::CompareAttrLists(
   return result;
 }
 
+// TODO Track a tuple of failures?
 void ParsingResultComparer::TrackRustParsingFailed(
     size_t sipccErrorCount) const {
   if (sipccErrorCount) {
@@ -311,6 +314,19 @@ void ParsingResultComparer::TrackRustParsingFailed(
   } else {
     Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF,
                          NS_LITERAL_STRING("rsdparsa_failed__sipcc_succeeded"),
+                         1);
+  }
+}
+
+void ParsingResultComparer::TrackSipccParsingFailed(
+    size_t webrtcSdpErrorCount) const {
+  if (webrtcSdpErrorCount) {
+    Telemetry::ScalarAdd(
+        Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF,
+        NS_LITERAL_STRING("sipcc_failed__webrtcsdp_has_errors"), 1);
+  } else {
+    Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF,
+                         NS_LITERAL_STRING("sipcc_failed__webrtcsdp_succeeded"),
                          1);
   }
 }
