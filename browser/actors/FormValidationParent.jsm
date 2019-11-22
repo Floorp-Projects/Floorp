@@ -117,10 +117,10 @@ class FormValidationParent extends JSWindowActorParent {
 
     let tabBrowser = aWindow.gBrowser;
     this._anchor = tabBrowser.selectedBrowser.popupAnchor;
-    this._anchor.left = aPanelData.contentRect.left;
-    this._anchor.top = aPanelData.contentRect.top;
-    this._anchor.width = aPanelData.contentRect.width;
-    this._anchor.height = aPanelData.contentRect.height;
+    this._anchor.style.left = aPanelData.contentRect.left + "px";
+    this._anchor.style.top = aPanelData.contentRect.top + "px";
+    this._anchor.style.width = aPanelData.contentRect.width + "px";
+    this._anchor.style.height = aPanelData.contentRect.height + "px";
     this._anchor.hidden = false;
 
     // Display the panel if it isn't already visible.
