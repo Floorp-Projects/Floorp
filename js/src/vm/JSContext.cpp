@@ -1403,13 +1403,9 @@ void JSContext::setPendingException(HandleValue v, HandleSavedFrame stack) {
   check(v);
 }
 
-static const size_t MAX_REPORTED_STACK_DEPTH = 1u << 7;
-
 void JSContext::setPendingExceptionAndCaptureStack(HandleValue value) {
   RootedObject stack(this);
-  if (!CaptureCurrentStack(
-          this, &stack,
-          JS::StackCapture(JS::MaxFrames(MAX_REPORTED_STACK_DEPTH)))) {
+  if (!CaptureStack(this, &stack)) {
     clearPendingException();
   }
 
