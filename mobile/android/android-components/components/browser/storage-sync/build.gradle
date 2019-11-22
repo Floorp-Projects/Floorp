@@ -43,6 +43,7 @@ configurations {
 dependencies {
     // These dependencies are part of this module's public API.
     api Dependencies.mozilla_places
+    api Dependencies.mozilla_remote_tabs
     api project(':concept-storage')
     api project(':concept-sync')
 
@@ -62,6 +63,7 @@ dependencies {
     testImplementation files(configurations.jnaForTest.copyRecursive().files)
 
     testImplementation Dependencies.mozilla_places
+    testImplementation Dependencies.mozilla_remote_tabs
     testImplementation Dependencies.testing_mockwebserver
 
     testImplementation Dependencies.mozilla_full_megazord_forUnitTests
