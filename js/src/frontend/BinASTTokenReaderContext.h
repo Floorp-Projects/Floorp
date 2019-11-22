@@ -12,13 +12,13 @@
 #include "mozilla/Attributes.h"    // MOZ_MUST_USE, MOZ_STACK_CLASS
 #include "mozilla/IntegerRange.h"  // mozilla::IntegerRange
 #include "mozilla/Maybe.h"         // mozilla::Maybe
+#include "mozilla/Span.h"          // mozilla::Span
 #include "mozilla/Variant.h"       // mozilla::Variant
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint8_t, uint32_t
 
 #include "jstypes.h"                        // JS_PUBLIC_API
-#include "ds/FixedLengthVector.h"           // FixedLengthVector
 #include "frontend/BinASTRuntimeSupport.h"  // CharSlice, BinASTSourceMetadata
 #include "frontend/BinASTToken.h"  // BinASTVariant, BinASTKind, BinASTField
 #include "frontend/BinASTTokenReaderBase.h"  // BinASTTokenReaderBase, SkippableSubTree
@@ -267,6 +267,8 @@ enum class Nullable {
   NonNull,
 };
 
+class TemporaryStorage;
+
 // An implementation of Huffman Tables for single-entry table.
 class SingleEntryHuffmanTable {
  public:
@@ -314,10 +316,10 @@ class TwoEntriesHuffmanTable {
   // Symbols must be added with `addSymbol`.
   // If you initialize with `initStart`, you MUST call `initComplete()`
   // at the end of initialization.
-  JS::Result<Ok> initStart(JSContext* cx, size_t numberOfSymbols,
-                           uint8_t maxBitLength);
+  JS::Result<Ok> initStart(JSContext* cx, TemporaryStorage* tempStorage,
+                           size_t numberOfSymbols, uint8_t maxBitLength);
 
-  JS::Result<Ok> initComplete(JSContext* cx);
+  JS::Result<Ok> initComplete(JSContext* cx, TemporaryStorage* tempStorage);
 
   // Add a symbol to a value.
   // The symbol is the `index`-th item in this table.
@@ -472,10 +474,10 @@ class SingleLookupHuffmanTable {
   // Symbols must be added with `addSymbol`.
   // If you initialize with `initStart`, you MUST call `initComplete()`
   // at the end of initialization.
-  JS::Result<Ok> initStart(JSContext* cx, size_t numberOfSymbols,
-                           uint8_t maxBitLength);
+  JS::Result<Ok> initStart(JSContext* cx, TemporaryStorage* tempStorage,
+                           size_t numberOfSymbols, uint8_t maxBitLength);
 
-  JS::Result<Ok> initComplete(JSContext* cx);
+  JS::Result<Ok> initComplete(JSContext* cx, TemporaryStorage* tempStorage);
 
   // Add a `(bit, bitLength) => value` mapping.
   // The symbol is the `index`-th item in this table.
@@ -498,7 +500,7 @@ class SingleLookupHuffmanTable {
   HuffmanLookupResult lookup(HuffmanLookup key) const;
 
   // The number of values in the table.
-  size_t length() const { return values_.length(); }
+  size_t length() const { return values_.size(); }
 
   // Iterating in the order of insertion.
   struct Iterator {
@@ -512,8 +514,8 @@ class SingleLookupHuffmanTable {
    private:
     const HuffmanEntry* position_;
   };
-  Iterator begin() const { return Iterator(values_.begin()); }
-  Iterator end() const { return Iterator(values_.end()); }
+  Iterator begin() const { return Iterator(&values_[0]); }
+  Iterator end() const { return Iterator(&values_[0] + values_.size()); }
 
  private:
   // The entries in this Huffman Table, sorted in the order of insertion.
@@ -521,14 +523,14 @@ class SingleLookupHuffmanTable {
   // Invariant (once `init*` has been called):
   // - Length is the number of values inserted in the table.
   // - for all i, `values_[i].bitLength_ <= largestBitLength_`.
-  FixedLengthVector<HuffmanEntry> values_;
+  mozilla::Span<HuffmanEntry> values_;
 
   // The entries in this Huffman table, prepared for lookup.
   //
   // Invariant (once `init*` has been called):
   // - Length is `1 << largestBitLength_`.
-  // - for all i, `saturated_[i] < values_.length()`
-  FixedLengthVector<InternalIndex> saturated_;
+  // - for all i, `saturated_[i] < values_.size()`
+  mozilla::Span<InternalIndex> saturated_;
 
   // The maximal bitlength of a value in this table.
   //
@@ -693,10 +695,10 @@ class MultiLookupHuffmanTable {
   // Symbols must be added with `addSymbol`.
   // If you initialize with `initStart`, you MUST call `initComplete()`
   // at the end of initialization.
-  JS::Result<Ok> initStart(JSContext* cx, size_t numberOfSymbols,
-                           uint8_t largestBitLength);
+  JS::Result<Ok> initStart(JSContext* cx, TemporaryStorage* tempStorage,
+                           size_t numberOfSymbols, uint8_t largestBitLength);
 
-  JS::Result<Ok> initComplete(JSContext* cx);
+  JS::Result<Ok> initComplete(JSContext* cx, TemporaryStorage* tempStorage);
 
   // Add a `(bit, bitLength) => value` mapping.
   // The symbol is the `index`-th item in this table.
@@ -719,7 +721,7 @@ class MultiLookupHuffmanTable {
   HuffmanLookupResult lookup(HuffmanLookup key) const;
 
   // The number of values in the table.
-  size_t length() const { return values_.length(); }
+  size_t length() const { return values_.size(); }
 
   // Iterating in the order of insertion.
   struct Iterator {
@@ -733,8 +735,8 @@ class MultiLookupHuffmanTable {
    private:
     const HuffmanEntry* position_;
   };
-  Iterator begin() const { return Iterator(values_.begin()); }
-  Iterator end() const { return Iterator(values_.end()); }
+  Iterator begin() const { return Iterator(&values_[0]); }
+  Iterator end() const { return Iterator(&values_[0] + values_.size()); }
 
  public:
   // An index into table `values_`.
@@ -755,7 +757,7 @@ class MultiLookupHuffmanTable {
   //
   // FIXME: In a ThreeLookupsHuffmanTable, we currently store each value
   // three times. We could at least get down to twice.
-  FixedLengthVector<HuffmanEntry> values_;
+  mozilla::Span<HuffmanEntry> values_;
 
   // A mapping from 0..2^prefixBitLen such that index `i`
   // maps to a subtable that holds all values associated
@@ -764,7 +766,7 @@ class MultiLookupHuffmanTable {
   // Note that, to allow the use of smaller tables, keys
   // inside the subtables have been stripped
   // from the prefix `HuffmanKey(i, prefixBitLen)`.
-  FixedLengthVector<Subtable> suffixTables_;
+  mozilla::Span<Subtable> suffixTables_;
 
   // The maximal bitlength of a value in this table.
   //
@@ -800,15 +802,15 @@ struct GenericHuffmanTable {
   // Symbols must be added with `addSymbol`.
   // If you initialize with `initStart`, you MUST call `initComplete()`
   // at the end of initialization.
-  JS::Result<Ok> initStart(JSContext* cx, size_t numberOfSymbols,
-                           uint8_t maxBitLength);
+  JS::Result<Ok> initStart(JSContext* cx, TemporaryStorage* tempStorage,
+                           size_t numberOfSymbols, uint8_t maxBitLength);
 
   // Add a `(bit, bitLength) => value` mapping.
   // The symbol is the `index`-th item in this table.
   JS::Result<Ok> addSymbol(size_t index, uint32_t bits, uint8_t bitLength,
                            const BinASTSymbol& value);
 
-  JS::Result<Ok> initComplete(JSContext* cx);
+  JS::Result<Ok> initComplete(JSContext* cx, TemporaryStorage* tempStorage);
 
   // The number of values in the table.
   size_t length() const;
@@ -874,6 +876,83 @@ struct GenericHuffmanTable {
                    SingleLookupHuffmanTable, TwoLookupsHuffmanTable,
                    ThreeLookupsHuffmanTable, TableImplementationUninitialized>
       implementation_;
+};
+
+// Temporary space to allocate `T` typed items with less alloc/free calls,
+// to reduce mutex call inside allocator.
+//
+// Items are preallocated in `alloc` call, with at least `Chunk::DefaultSize`
+// items at once, and freed in the TemporaryStorageItem destructor all at once.
+//
+// This class is used inside TemporaryStorage.
+template <typename T>
+class TemporaryStorageItem {
+  class Chunk {
+   public:
+    // The number of `T` items per single chunk.
+    static const size_t DefaultSize = 1024;
+
+    // The next (older) chunk in the linked list.
+    Chunk* next_ = nullptr;
+
+    // The number of already-used items in this chunk.
+    size_t used_ = 0;
+
+    // The total number of allocated items in this chunk.
+    // This is usually `DefaultSize`, but becomes larger if the consumer
+    // tries to allocate more than `DefaultSize` items at once.
+    size_t size_ = 0;
+
+    // Start of the entries.
+    // The actual size is defined in TemporaryStorage::alloc.
+    T entries_[1];
+
+    Chunk() {}
+  };
+
+  // The total number of used items in this storage.
+  size_t total_ = 0;
+
+  // The first (latest) chunk in the linked list.
+  Chunk* head_ = nullptr;
+
+ public:
+  TemporaryStorageItem() {}
+
+  ~TemporaryStorageItem() {
+    Chunk* chunk = head_;
+    while (chunk) {
+      Chunk* next = chunk->next_;
+      js_free(chunk);
+      chunk = next;
+    }
+  }
+
+  // Allocate `count` number of `T` items and returns the pointer to the
+  // first item.
+  T* alloc(JSContext* cx, size_t count);
+};
+
+// Temporary storage used for dynamic allocations while reading the Huffman
+// prelude. Once reading is complete, we move them to metadata.
+//
+// Each items are allocated with `TemporaryStorageItem`, with less alloc/free
+// calls (See `TemporaryStorageItem` doc for more details).
+class TemporaryStorage {
+  using InternalIndex = uint8_t;
+
+  TemporaryStorageItem<HuffmanEntry> huffmanEntries_;
+  TemporaryStorageItem<InternalIndex> internalIndices_;
+  TemporaryStorageItem<SingleLookupHuffmanTable> singleTables_;
+  TemporaryStorageItem<TwoLookupsHuffmanTable> twoTables_;
+
+ public:
+  TemporaryStorage() {}
+
+  // Allocate `count` number of `T` items and returns the span to point the
+  // allocated items.
+  template <typename T>
+  JS::Result<mozilla::Span<T>> alloc(JSContext* cx, size_t count);
 };
 
 // A Huffman dictionary for the current file.
@@ -1354,6 +1433,10 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   BinASTSourceMetadataContext* metadata_;
 
   class HuffmanDictionary dictionary_;
+
+  // Temporary storage for items allocated while reading huffman prelude.
+  // All items are freed when this class is destructed.
+  TemporaryStorage tempStorage_;
 
   const uint8_t* posBeforeTree_;
 
