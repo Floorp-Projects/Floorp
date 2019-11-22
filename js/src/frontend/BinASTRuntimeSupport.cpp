@@ -82,6 +82,13 @@ void BinASTSourceMetadataContext::trace(JSTracer* tracer) {
   }
 }
 
+void BinASTSourceMetadataContext::release() {
+  if (dictionary_) {
+    js_free(dictionary_);
+    dictionary_ = nullptr;
+  }
+}
+
 }  // namespace frontend
 
 }  // namespace js
