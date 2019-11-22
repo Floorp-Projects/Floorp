@@ -105,6 +105,9 @@ let crashObserver = (subject, topic, data) => {
 
   let propBag = subject.QueryInterface(Ci.nsIPropertyBag2);
   let minidumpID = propBag.getPropertyAsAString("pluginDumpID");
+  let additionalMinidumps = propBag.getPropertyAsACString(
+    "additionalMinidumps"
+  );
 
   Services.crashmanager.ensureCrashIsPresent(minidumpID).then(() => {
     let minidumpDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
@@ -121,6 +124,16 @@ let crashObserver = (subject, topic, data) => {
 
     pluginDumpFile.remove(false);
     extraFile.remove(false);
+
+    if (additionalMinidumps.length) {
+      const names = additionalMinidumps.split(",");
+      for (const name of names) {
+        let additionalDumpFile = minidumpDir.clone();
+        additionalDumpFile.append(minidumpID + "-" + name + ".dmp");
+        additionalDumpFile.remove(false);
+      }
+    }
+
     crashDeferred.resolve();
   });
 };

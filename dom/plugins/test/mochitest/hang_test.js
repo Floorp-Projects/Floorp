@@ -20,6 +20,9 @@ var testObserver = {
     var pluginId = subject.getPropertyAsAString("pluginDumpID");
     isnot(pluginId, "", "got a non-empty plugin crash id");
 
+    var additionalDumps = subject.getPropertyAsACString("additionalMinidumps");
+    isnot(additionalDumps, "", "got a non-empty additionalDumps field");
+
     // check plugin dump and extra files
     let profD = Services.dirsvc.get("ProfD", Ci.nsIFile);
     profD.append("minidumps");
@@ -39,10 +42,15 @@ var testObserver = {
       "additional_minidumps" in extraData,
       "got field for additional minidumps"
     );
-    let additionalDumps = extraData.additional_minidumps.split(",");
-    ok(additionalDumps.includes("browser"), "browser in additional_minidumps");
+    is(
+      additionalDumps,
+      extraData.additional_minidumps,
+      "the annotation matches the propbag entry"
+    );
+    let dumpNames = extraData.additional_minidumps.split(",");
+    ok(dumpNames.includes("browser"), "browser in additional_minidumps");
 
-    for (let name of additionalDumps) {
+    for (let name of dumpNames) {
       let file = profD.clone();
       file.append(pluginId + "-" + name + ".dmp");
       ok(file.exists(), "additional dump '" + name + "' exists");

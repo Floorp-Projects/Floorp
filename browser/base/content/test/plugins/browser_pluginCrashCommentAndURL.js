@@ -167,6 +167,7 @@ add_task(async function() {
 
     let propBag = subject.QueryInterface(Ci.nsIPropertyBag2);
     let minidumpID = propBag.getPropertyAsAString("pluginDumpID");
+    let additionalDumps = propBag.getPropertyAsACString("additionalMinidumps");
 
     Services.crashmanager.ensureCrashIsPresent(minidumpID).then(() => {
       let minidumpDir = Services.dirsvc.get("UAppData", Ci.nsIFile);
@@ -181,6 +182,16 @@ add_task(async function() {
 
       pluginDumpFile.remove(false);
       extraFile.remove(false);
+
+      if (additionalDumps.length) {
+        const names = additionalDumps.split(",");
+        for (const name of names) {
+          let additionalDumpFile = minidumpDir.clone();
+          additionalDumpFile.append(minidumpID + "-" + name + ".dmp");
+          additionalDumpFile.remove(false);
+        }
+      }
+
       crashDeferred.resolve();
     });
   };

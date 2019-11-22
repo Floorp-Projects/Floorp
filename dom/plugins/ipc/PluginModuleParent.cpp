@@ -1422,12 +1422,14 @@ void PluginModuleParent::NotifyPluginCrashed() {
   }
 
   nsString dumpID;
+  nsCString additionalMinidumps;
 
   if (mCrashReporter && mCrashReporter->HasMinidump()) {
     dumpID = mCrashReporter->MinidumpID();
+    additionalMinidumps = mCrashReporter->AdditionalMinidumps();
   }
 
-  mPlugin->PluginCrashed(dumpID);
+  mPlugin->PluginCrashed(dumpID, additionalMinidumps);
 }
 
 PPluginInstanceParent* PluginModuleParent::AllocPPluginInstanceParent(
