@@ -73,9 +73,9 @@ const CookieCleaner = {
   },
 
   deleteByRange(aFrom, aTo) {
-    let cookies = Services.cookies.cookies;
+    let enumerator = Services.cookies.enumerator;
     return this._deleteInternal(
-      cookies,
+      enumerator,
       aCookie => aCookie.creationTime > aFrom
     );
   },
@@ -87,13 +87,13 @@ const CookieCleaner = {
     });
   },
 
-  _deleteInternal(aCookies, aCb) {
+  _deleteInternal(aEnumerator, aCb) {
     // A number of iterations after which to yield time back to the system.
     const YIELD_PERIOD = 10;
 
     return new Promise((aResolve, aReject) => {
       let count = 0;
-      for (let cookie of aCookies) {
+      for (let cookie of aEnumerator) {
         if (aCb(cookie)) {
           Services.cookies.remove(
             cookie.host,
@@ -104,7 +104,7 @@ const CookieCleaner = {
           // We don't want to block the main-thread.
           if (++count % YIELD_PERIOD == 0) {
             setTimeout(() => {
-              this._deleteInternal(aCookies, aCb).then(aResolve, aReject);
+              this._deleteInternal(aEnumerator, aCb).then(aResolve, aReject);
             }, 0);
             return;
           }

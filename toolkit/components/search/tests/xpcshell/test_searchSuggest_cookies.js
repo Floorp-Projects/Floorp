@@ -46,9 +46,9 @@ function countCacheEntries() {
 
 function countCookieEntries() {
   info("Enumerating cookies");
-  let cookies = Services.cookies.cookies;
+  let enumerator = Services.cookies.enumerator;
   let cookieCount = 0;
-  for (let cookie of cookies) {
+  for (let cookie of enumerator) {
     info(
       "Cookie:" + cookie.rawHost + " " + JSON.stringify(cookie.originAttributes)
     );

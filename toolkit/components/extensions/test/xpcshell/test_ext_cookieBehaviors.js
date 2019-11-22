@@ -54,7 +54,7 @@ server.registerPathHandler("/sw.js", (request, response) => {
 
 function assertCookiesForHost(url, cookiesCount, message) {
   const { host } = new URL(url);
-  const cookies = Services.cookies.cookies.filter(
+  const cookies = Array.from(Services.cookies.enumerator).filter(
     cookie => cookie.host === host
   );
   equal(cookies.length, cookiesCount, message);
@@ -279,7 +279,7 @@ add_task(async function test_ext_page_3rdparty_cookies() {
 
   function clearAllCookies() {
     Services.cookies.removeAll();
-    let cookies = Services.cookies.cookies;
+    let cookies = Array.from(Services.cookies.enumerator);
     equal(cookies.length, 0, "There shouldn't be any cookies after clearing");
   }
 

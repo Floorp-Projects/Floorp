@@ -149,8 +149,17 @@ function do_set_cookies(uri, channel, session, expected) {
   Assert.equal(Services.cookiemgr.countCookiesFromHost(uri.host), expected[3]);
 }
 
+function do_count_enumerator(enumerator) {
+  let i = 0;
+  for (let cookie of enumerator) {
+    void cookie;
+    ++i;
+  }
+  return i;
+}
+
 function do_count_cookies() {
-  return Services.cookiemgr.cookies.length;
+  return do_count_enumerator(Services.cookiemgr.enumerator);
 }
 
 // Helper object to store cookie data.
