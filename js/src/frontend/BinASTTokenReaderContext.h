@@ -882,7 +882,20 @@ struct GenericHuffmanTable {
 // to predict field values and a second (contiguous) set of Huffman tables
 // to predict list lengths.
 class HuffmanDictionary {
- private:
+ public:
+  HuffmanDictionary() {}
+  ~HuffmanDictionary();
+
+  // While reading the Huffman prelude, whenever we first encounter a
+  // table with `Unreachable` status, we set its status with a `Initializing`
+  // to mark that we should not attempt to read/initialize it again.
+  // Once the table is initialized, it becomes `Ready`.
+  enum class TableStatus : uint8_t {
+    Unreachable,
+    Initializing,
+    Ready,
+  };
+
   // Handles the mapping from NormalizedInterfaceAndField and BinASTList to
   // the index inside the list of huffman tables.
   class TableIdentity {
@@ -902,25 +915,9 @@ class HuffmanDictionary {
     size_t toIndex() const { return index_; }
   };
 
- public:
-  HuffmanDictionary() {}
-  ~HuffmanDictionary();
+  TableStatus& status(TableIdentity i) { return status(i.toIndex()); }
 
-  // While reading the Huffman prelude, whenever we first encounter a
-  // table with `Unreachable` status, we set its status with a `Initializing`
-  // to mark that we should not attempt to read/initialize it again.
-  // Once the table is initialized, it becomes `Ready`.
-  enum class TableStatus : uint8_t {
-    Unreachable,
-    Initializing,
-    Ready,
-  };
-
-  TableStatus& fieldStatus(NormalizedInterfaceAndField index);
-  GenericHuffmanTable& tableForField(NormalizedInterfaceAndField index);
-
-  TableStatus& listLengthStatus(BinASTList list);
-  GenericHuffmanTable& tableForListLength(BinASTList list);
+  GenericHuffmanTable& table(TableIdentity i) { return table(i.toIndex()); }
 
  private:
   // For the following purpose, tables are stored as an array of status
@@ -935,8 +932,6 @@ class HuffmanDictionary {
   //
   // Tables with `Ready` status are destructed in HuffmanDictionary destructor.
   TableStatus status_[TableIdentity::Limit] = {TableStatus::Unreachable};
-
-  TableStatus& status(TableIdentity i) { return status(i.toIndex()); }
 
   TableStatus& status(size_t i) { return status_[i]; }
 
@@ -954,8 +949,6 @@ class HuffmanDictionary {
   // but items are constructed lazily.
   alignas(GenericHuffmanTable) char tables_[sizeof(GenericHuffmanTable) *
                                             TableIdentity::Limit];
-
-  GenericHuffmanTable& table(TableIdentity i) { return table(i.toIndex()); }
 
   GenericHuffmanTable& table(size_t i) {
     return (reinterpret_cast<GenericHuffmanTable*>(tables_))[i];

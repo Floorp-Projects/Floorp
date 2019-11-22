@@ -469,14 +469,14 @@ class HuffmanPreludeReader {
   // Enqueue an entry to the stack.
   MOZ_MUST_USE JS::Result<Ok> pushValue(NormalizedInterfaceAndField identity,
                                         const List& list) {
-    auto index = list.contents_;
-    auto& status = dictionary_.listLengthStatus(index);
+    const auto tableId = HuffmanDictionary::TableIdentity(list.contents_);
+    auto& status = dictionary_.status(tableId);
     if (status == HuffmanDictionary::TableStatus::Unreachable) {
       // Spec:
       // 2. Add the field to the set of visited fields
       status = HuffmanDictionary::TableStatus::Initializing;
 
-      auto& table = dictionary_.tableForListLength(index);
+      auto& table = dictionary_.table(tableId);
 
       // Read the lengths immediately.
       MOZ_TRY((readTable<List>(table, status, list)));
@@ -486,7 +486,7 @@ class HuffmanPreludeReader {
     // 3. If the field has a FrozenArray type
     //   a. Determine if the array type is always empty
     //   b. If so, stop
-    auto& table = dictionary_.tableForListLength(index);
+    auto& table = dictionary_.table(tableId);
     bool empty = true;
     for (auto iter : table) {
       if (iter->toListLength() > 0) {
@@ -523,10 +523,11 @@ class HuffmanPreludeReader {
 
   MOZ_MUST_USE JS::Result<Ok> pushValue(NormalizedInterfaceAndField identity,
                                         const Interface& interface) {
-    auto& status = dictionary_.fieldStatus(identity);
+    const auto tableId = HuffmanDictionary::TableIdentity(identity);
+    auto& status = dictionary_.status(tableId);
     if (status == HuffmanDictionary::TableStatus::Unreachable) {
       // Effectively, an `Interface` is a sum with a single entry.
-      auto& table = dictionary_.tableForField(identity);
+      auto& table = dictionary_.table(tableId);
 
       status = HuffmanDictionary::TableStatus::Ready;
       new (mozilla::KnownNotNull, &table) GenericHuffmanTable();
@@ -547,7 +548,8 @@ class HuffmanPreludeReader {
                                         const Entry& entry) {
     // Spec:
     // 1. If the field is in the set of visited contexts, stop.
-    auto& status = dictionary_.fieldStatus(identity);
+    const auto tableId = HuffmanDictionary::TableIdentity(identity);
+    auto& status = dictionary_.status(tableId);
     if (status != HuffmanDictionary::TableStatus::Unreachable) {
       // Entry already initialized/initializing.
       return Ok();
@@ -819,25 +821,25 @@ class HuffmanPreludeReader {
     return Ok();
   }
 
-  // Single-argument version: lookup the table using `dictionary_.tableForField`
+  // Single-argument version: lookup the table using `dictionary_.table`
   // then proceed as three-arguments version.
   template <typename Entry>
   MOZ_MUST_USE JS::Result<Ok> readTable(Entry entry) {
-    auto index = entry.identity_;
-    auto& status = dictionary_.fieldStatus(index);
+    const auto tableId = HuffmanDictionary::TableIdentity(entry.identity_);
+    auto& status = dictionary_.status(tableId);
     if (MOZ_UNLIKELY(status != HuffmanDictionary::TableStatus::Initializing)) {
       // We're attempting to re-read a table that has already been read.
       // FIXME: Shouldn't this be a MOZ_CRASH?
-      return raiseDuplicateTableError(index);
+      return raiseDuplicateTableError(entry.identity_);
     }
 
-    auto& table = dictionary_.tableForField(index);
+    auto& table = dictionary_.table(tableId);
     return readTable<Entry>(table, status, entry);
   }
 
   // Three-arguments version: pass table explicitly. Generally called from
   // single-argument version, but may be called manually, e.g. for list
-  // lengths, as their tables don't appear in `dictionary_.tableForField`.
+  // lengths.
   template <typename Entry>
   MOZ_MUST_USE JS::Result<Ok> readTable(GenericHuffmanTable& table,
                                         HuffmanDictionary::TableStatus& status,
@@ -921,13 +923,13 @@ class HuffmanPreludeReader {
       // interface.
       // FIXME: readTable could return a reference to the table, eliminating an
       // array lookup.
-      auto index = entry.identity_;
-      auto& status = owner.dictionary_.fieldStatus(index);
+      const auto tableId = HuffmanDictionary::TableIdentity(entry.identity_);
+      auto& status = owner.dictionary_.status(tableId);
       if (status == HuffmanDictionary::TableStatus::Unreachable) {
         return Ok();
       }
 
-      const auto& table = owner.dictionary_.tableForField(index);
+      const auto& table = owner.dictionary_.table(tableId);
       if (!table.isMaybeInterfaceAlwaysNull()) {
         MOZ_TRY(owner.pushFields(entry.kind_));
       }
@@ -944,13 +946,14 @@ class HuffmanPreludeReader {
       // FIXME: readTable could return a reference to the table, eliminating an
       // array lookup.
 
-      auto index = entry.identity_;
-      auto& status = owner.dictionary_.fieldStatus(index);
+      const auto tableId = HuffmanDictionary::TableIdentity(entry.identity_);
+      auto& status = owner.dictionary_.status(tableId);
       if (status == HuffmanDictionary::TableStatus::Initializing) {
         return Ok();
       }
 
-      const auto& table = owner.dictionary_.tableForField(index);
+      auto index = entry.identity_;
+      const auto& table = owner.dictionary_.table(tableId);
       for (auto iter : table) {
         MOZ_TRY(owner.pushValue(index, Interface(index, iter->toKind())));
       }
@@ -967,13 +970,14 @@ class HuffmanPreludeReader {
       // Now, walk the table to enqueue each value if necessary.
       // FIXME: readTable could return a reference to the table, eliminating an
       // array lookup.
-      auto index = entry.identity_;
-      auto& status = owner.dictionary_.fieldStatus(index);
+      const auto tableId = HuffmanDictionary::TableIdentity(entry.identity_);
+      auto& status = owner.dictionary_.status(tableId);
       if (status == HuffmanDictionary::TableStatus::Unreachable) {
         return Ok();
       }
 
-      const auto& table = owner.dictionary_.tableForField(index);
+      auto index = entry.identity_;
+      const auto& table = owner.dictionary_.table(tableId);
       for (auto iter : table) {
         MOZ_TRY(owner.pushValue(index, Interface(index, iter->toKind())));
       }
@@ -1335,8 +1339,9 @@ struct ExtractBinASTInterfaceAndFieldMatcher {
 JS::Result<BinASTKind> BinASTTokenReaderContext::readTagFromTable(
     const BinASTInterfaceAndField& identity) {
   // Extract the table.
-  auto index = NormalizedInterfaceAndField(identity);
-  const auto& table = dictionary_.tableForField(index);
+  const auto tableId =
+      HuffmanDictionary::TableIdentity(NormalizedInterfaceAndField(identity));
+  const auto& table = dictionary_.table(tableId);
   BINJS_MOZ_TRY_DECL(bits_,
                      (bitBuffer.getHuffmanLookup<Compression::No>(*this)));
 
@@ -1351,14 +1356,14 @@ JS::Result<BinASTKind> BinASTTokenReaderContext::readTagFromTable(
 
 JS::Result<BinASTSymbol> BinASTTokenReaderContext::readFieldFromTable(
     const BinASTInterfaceAndField& identity) {
-  auto index = NormalizedInterfaceAndField(identity);
-
-  auto& status = dictionary_.fieldStatus(index);
+  const auto tableId =
+      HuffmanDictionary::TableIdentity(NormalizedInterfaceAndField(identity));
+  auto& status = dictionary_.status(tableId);
   if (status != HuffmanDictionary::TableStatus::Ready) {
     return raiseNotInPrelude();
   }
 
-  const auto& table = dictionary_.tableForField(index);
+  const auto& table = dictionary_.table(tableId);
   BINJS_MOZ_TRY_DECL(bits_, bitBuffer.getHuffmanLookup<Compression::No>(*this));
 
   const auto result = table.lookup(bits_);
@@ -1497,8 +1502,8 @@ JS::Result<Ok> BinASTTokenReaderContext::enterSum(BinASTKind& tag,
 
 JS::Result<Ok> BinASTTokenReaderContext::enterList(uint32_t& items,
                                                    const ListContext& context) {
-  const auto identity = context.content_;
-  const auto& table = dictionary_.tableForListLength(identity);
+  const auto tableId = HuffmanDictionary::TableIdentity(context.content_);
+  const auto& table = dictionary_.table(tableId);
   BINJS_MOZ_TRY_DECL(bits_, bitBuffer.getHuffmanLookup<Compression::No>(*this));
   const auto result = table.lookup(bits_);
   if (MOZ_UNLIKELY(!result.isFound())) {
@@ -2804,25 +2809,6 @@ HuffmanDictionary::~HuffmanDictionary() {
       table(i).~GenericHuffmanTable();
     }
   }
-}
-
-HuffmanDictionary::TableStatus& HuffmanDictionary::fieldStatus(
-    NormalizedInterfaceAndField index) {
-  return status(TableIdentity(index));
-}
-
-GenericHuffmanTable& HuffmanDictionary::tableForField(
-    NormalizedInterfaceAndField index) {
-  return table(TableIdentity(index));
-}
-
-HuffmanDictionary::TableStatus& HuffmanDictionary::listLengthStatus(
-    BinASTList list) {
-  return status(TableIdentity(list));
-}
-
-GenericHuffmanTable& HuffmanDictionary::tableForListLength(BinASTList list) {
-  return table(TableIdentity(list));
 }
 
 uint32_t HuffmanLookup::leadingBits(const uint8_t aBitLength) const {
