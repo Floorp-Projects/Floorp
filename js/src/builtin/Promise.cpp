@@ -136,14 +136,6 @@ enum BuiltinThenableJobSlots {
   BuiltinThenableJobSlot_Thenable,
 };
 
-enum PromiseAllDataHolderSlots {
-  PromiseAllDataHolderSlot_Promise = 0,
-  PromiseAllDataHolderSlot_RemainingElements,
-  PromiseAllDataHolderSlot_ValuesArray,
-  PromiseAllDataHolderSlot_ResolveFunction,
-  PromiseAllDataHolderSlots,
-};
-
 struct PromiseCapability {
   JSObject* promise = nullptr;
   JSObject* resolve = nullptr;
@@ -205,64 +197,65 @@ class MutableWrappedPtrOperations<PromiseCapability, Wrapper>
 
 }  // namespace js
 
-class PromiseAllDataHolder : public NativeObject {
+class PromiseCombinatorDataHolder : public NativeObject {
+  enum {
+    Slot_Promise = 0,
+    Slot_RemainingElements,
+    Slot_ValuesArray,
+    Slot_ResolveOrRejectFunction,
+    SlotsCount,
+  };
+
  public:
   static const JSClass class_;
-  JSObject* promiseObj() {
-    return &getFixedSlot(PromiseAllDataHolderSlot_Promise).toObject();
+  JSObject* promiseObj() { return &getFixedSlot(Slot_Promise).toObject(); }
+  JSObject* resolveOrRejectObj() {
+    return &getFixedSlot(Slot_ResolveOrRejectFunction).toObject();
   }
-  JSObject* resolveObj() {
-    return &getFixedSlot(PromiseAllDataHolderSlot_ResolveFunction).toObject();
-  }
-  Value valuesArray() {
-    return getFixedSlot(PromiseAllDataHolderSlot_ValuesArray);
-  }
+  Value valuesArray() { return getFixedSlot(Slot_ValuesArray); }
   int32_t remainingCount() {
-    return getFixedSlot(PromiseAllDataHolderSlot_RemainingElements).toInt32();
+    return getFixedSlot(Slot_RemainingElements).toInt32();
   }
   int32_t increaseRemainingCount() {
-    int32_t remainingCount =
-        getFixedSlot(PromiseAllDataHolderSlot_RemainingElements).toInt32();
+    int32_t remainingCount = getFixedSlot(Slot_RemainingElements).toInt32();
     remainingCount++;
-    setFixedSlot(PromiseAllDataHolderSlot_RemainingElements,
-                 Int32Value(remainingCount));
+    setFixedSlot(Slot_RemainingElements, Int32Value(remainingCount));
     return remainingCount;
   }
   int32_t decreaseRemainingCount() {
-    int32_t remainingCount =
-        getFixedSlot(PromiseAllDataHolderSlot_RemainingElements).toInt32();
+    int32_t remainingCount = getFixedSlot(Slot_RemainingElements).toInt32();
     remainingCount--;
-    setFixedSlot(PromiseAllDataHolderSlot_RemainingElements,
-                 Int32Value(remainingCount));
+    MOZ_ASSERT(remainingCount >= 0, "unpaired calls to decreaseRemainingCount");
+    setFixedSlot(Slot_RemainingElements, Int32Value(remainingCount));
     return remainingCount;
   }
+
+  static PromiseCombinatorDataHolder* New(JSContext* cx,
+                                          HandleObject resultPromise,
+                                          HandleValue valuesArray,
+                                          HandleObject resolveOrReject);
 };
 
-const JSClass PromiseAllDataHolder::class_ = {
-    "PromiseAllDataHolder",
-    JSCLASS_HAS_RESERVED_SLOTS(PromiseAllDataHolderSlots)};
+const JSClass PromiseCombinatorDataHolder::class_ = {
+    "PromiseCombinatorDataHolder", JSCLASS_HAS_RESERVED_SLOTS(SlotsCount)};
 
-static PromiseAllDataHolder* NewPromiseAllDataHolder(JSContext* cx,
-                                                     HandleObject resultPromise,
-                                                     HandleValue valuesArray,
-                                                     HandleObject resolve) {
-  PromiseAllDataHolder* dataHolder =
-      NewBuiltinClassInstance<PromiseAllDataHolder>(cx);
+PromiseCombinatorDataHolder* PromiseCombinatorDataHolder::New(
+    JSContext* cx, HandleObject resultPromise, HandleValue valuesArray,
+    HandleObject resolveOrReject) {
+  auto* dataHolder = NewBuiltinClassInstance<PromiseCombinatorDataHolder>(cx);
   if (!dataHolder) {
     return nullptr;
   }
 
   cx->check(resultPromise);
   cx->check(valuesArray);
-  cx->check(resolve);
+  cx->check(resolveOrReject);
 
-  dataHolder->setFixedSlot(PromiseAllDataHolderSlot_Promise,
-                           ObjectValue(*resultPromise));
-  dataHolder->setFixedSlot(PromiseAllDataHolderSlot_RemainingElements,
-                           Int32Value(1));
-  dataHolder->setFixedSlot(PromiseAllDataHolderSlot_ValuesArray, valuesArray);
-  dataHolder->setFixedSlot(PromiseAllDataHolderSlot_ResolveFunction,
-                           ObjectValue(*resolve));
+  dataHolder->setFixedSlot(Slot_Promise, ObjectValue(*resultPromise));
+  dataHolder->setFixedSlot(Slot_RemainingElements, Int32Value(1));
+  dataHolder->setFixedSlot(Slot_ValuesArray, valuesArray);
+  dataHolder->setFixedSlot(Slot_ResolveOrRejectFunction,
+                           ObjectValue(*resolveOrReject));
   return dataHolder;
 }
 
@@ -2282,7 +2275,7 @@ static MOZ_MUST_USE bool PerformPromiseRace(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     Handle<PromiseCapability> resultCapability, bool* done);
 
-enum class IterationMode { All, AllSettled, Race };
+enum class CombinatorKind { All, AllSettled, Race };
 
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 //
@@ -2294,22 +2287,22 @@ enum class IterationMode { All, AllSettled, Race };
 // https://tc39.github.io/proposal-promise-allSettled/
 //
 // Promise.allSettled ( iterable )
-static MOZ_MUST_USE bool CommonStaticAllRace(JSContext* cx, CallArgs& args,
-                                             IterationMode mode) {
+static MOZ_MUST_USE bool CommonPromiseCombinator(JSContext* cx, CallArgs& args,
+                                                 CombinatorKind kind) {
   HandleValue iterable = args.get(0);
 
   // Step 2 (moved from NewPromiseCapability, step 1).
   HandleValue CVal = args.thisv();
   if (!CVal.isObject()) {
     const char* message;
-    switch (mode) {
-      case IterationMode::All:
+    switch (kind) {
+      case CombinatorKind::All:
         message = "Receiver of Promise.all call";
         break;
-      case IterationMode::AllSettled:
+      case CombinatorKind::AllSettled:
         message = "Receiver of Promise.allSettled call";
         break;
-      case IterationMode::Race:
+      case CombinatorKind::Race:
         message = "Receiver of Promise.race call";
         break;
     }
@@ -2335,14 +2328,14 @@ static MOZ_MUST_USE bool CommonStaticAllRace(JSContext* cx, CallArgs& args,
 
   if (!iter.valueIsIterable()) {
     const char* message;
-    switch (mode) {
-      case IterationMode::All:
+    switch (kind) {
+      case CombinatorKind::All:
         message = "Argument of Promise.all";
         break;
-      case IterationMode::AllSettled:
+      case CombinatorKind::AllSettled:
         message = "Argument of Promise.allSettled";
         break;
-      case IterationMode::Race:
+      case CombinatorKind::Race:
         message = "Argument of Promise.race";
         break;
     }
@@ -2353,14 +2346,14 @@ static MOZ_MUST_USE bool CommonStaticAllRace(JSContext* cx, CallArgs& args,
 
   // Step 5.
   bool done, result;
-  switch (mode) {
-    case IterationMode::All:
+  switch (kind) {
+    case CombinatorKind::All:
       result = PerformPromiseAll(cx, iter, C, promiseCapability, &done);
       break;
-    case IterationMode::AllSettled:
+    case CombinatorKind::AllSettled:
       result = PerformPromiseAllSettled(cx, iter, C, promiseCapability, &done);
       break;
-    case IterationMode::Race:
+    case CombinatorKind::Race:
       result = PerformPromiseRace(cx, iter, C, promiseCapability, &done);
       break;
   }
@@ -2385,7 +2378,7 @@ static MOZ_MUST_USE bool CommonStaticAllRace(JSContext* cx, CallArgs& args,
 // 25.6.4.1 Promise.all ( iterable )
 static bool Promise_static_all(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CommonStaticAllRace(cx, args, IterationMode::All);
+  return CommonPromiseCombinator(cx, args, CombinatorKind::All);
 }
 
 static MOZ_MUST_USE bool PerformPromiseThen(
@@ -2449,10 +2442,11 @@ MOZ_MUST_USE JSObject* js::GetWaitForAllPromise(
     // remainingElementsCount (as an integer reserved slot), the array of
     // values, and the resolve function from our PromiseCapability.
     RootedValue valuesArrayVal(cx, ObjectValue(*valuesArray));
-    Rooted<PromiseAllDataHolder*> dataHolder(cx);
-    dataHolder =
-        NewPromiseAllDataHolder(cx, resultCapability.promise(), valuesArrayVal,
-                                resultCapability.resolve());
+    Rooted<PromiseCombinatorDataHolder*> dataHolder(cx);
+    dataHolder = PromiseCombinatorDataHolder::New(cx,
+                                                  resultCapability.promise(),
+                                                  valuesArrayVal,
+                                                  resultCapability.resolve());
     if (!dataHolder) {
       return nullptr;
     }
@@ -2606,7 +2600,7 @@ static bool IsPromiseSpecies(JSContext* cx, JSFunction* species);
 // https://tc39.github.io/proposal-promise-allSettled/
 // Runtime Semantics: PerformPromiseAllSettled, steps 5-6 and step 8.
 template <typename T>
-static MOZ_MUST_USE bool CommonPerformPromiseAllRace(
+static MOZ_MUST_USE bool CommonPerformPromiseCombinator(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     HandleObject resultPromise, bool* done, bool resolveReturnsUndefined,
     T getResolveAndReject) {
@@ -2969,10 +2963,10 @@ static MOZ_MUST_USE bool PerformPromiseAll(
   // every step of the iterator.  In particular, this holds the
   // remainingElementsCount (as an integer reserved slot), the array of
   // values, and the resolve function from our PromiseCapability.
-  Rooted<PromiseAllDataHolder*> dataHolder(cx);
-  dataHolder =
-      NewPromiseAllDataHolder(cx, resultCapability.promise(), valuesArrayVal,
-                              resultCapability.resolve());
+  Rooted<PromiseCombinatorDataHolder*> dataHolder(cx);
+  dataHolder = PromiseCombinatorDataHolder::New(cx, resultCapability.promise(),
+                                                valuesArrayVal,
+                                                resultCapability.resolve());
   if (!dataHolder) {
     return false;
   }
@@ -3023,8 +3017,9 @@ static MOZ_MUST_USE bool PerformPromiseAll(
   };
 
   // Steps 5-6 and 8.
-  if (!CommonPerformPromiseAllRace(cx, iterator, C, resultCapability.promise(),
-                                   done, true, getResolveAndReject)) {
+  if (!CommonPerformPromiseCombinator(cx, iterator, C,
+                                      resultCapability.promise(), done, true,
+                                      getResolveAndReject)) {
     return false;
   }
 
@@ -3061,8 +3056,8 @@ static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
     return true;
   }
 
-  Rooted<PromiseAllDataHolder*> data(
-      cx, &dataVal.toObject().as<PromiseAllDataHolder>());
+  Rooted<PromiseCombinatorDataHolder*> data(
+      cx, &dataVal.toObject().as<PromiseCombinatorDataHolder>());
 
   // Step 3.
   resolve->setExtendedSlot(PromiseAllResolveElementFunctionSlot_Data,
@@ -3107,11 +3102,11 @@ static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
 
   // Step 10.
   if (remainingCount == 0) {
-    // Step 10.a. (Omitted, happened in PerformPromiseAll.)
-    // Step 10.b.
+    // Step 11.a. (Omitted, happened in PerformPromiseAll.)
+    // Step 11.b.
 
-    // Step 6 (Adapted to work with PromiseAllDataHolder's layout).
-    RootedObject resolveAllFun(cx, data->resolveObj());
+    // Step 7 (Adapted to work with PromiseCombinatorDataHolder's layout).
+    RootedObject resolveAllFun(cx, data->resolveOrRejectObj());
     RootedObject promiseObj(cx, data->promiseObj());
     if (!RunResolutionFunction(cx, resolveAllFun, valuesVal, ResolveMode,
                                promiseObj)) {
@@ -3128,7 +3123,7 @@ static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
 // 25.6.4.3 Promise.race ( iterable )
 static bool Promise_static_race(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CommonStaticAllRace(cx, args, IterationMode::Race);
+  return CommonPromiseCombinator(cx, args, CombinatorKind::Race);
 }
 
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
@@ -3158,9 +3153,9 @@ static MOZ_MUST_USE bool PerformPromiseRace(
   };
 
   // Steps 3-5.
-  return CommonPerformPromiseAllRace(cx, iterator, C,
-                                     resultCapability.promise(), done,
-                                     isDefaultResolveFn, getResolveAndReject);
+  return CommonPerformPromiseCombinator(
+      cx, iterator, C, resultCapability.promise(), done, isDefaultResolveFn,
+      getResolveAndReject);
 }
 
 enum class PromiseAllSettledElementFunctionKind { Resolve, Reject };
@@ -3180,7 +3175,7 @@ static bool PromiseAllSettledElementFunction(JSContext* cx, unsigned argc,
 // Promise.allSettled ( iterable )
 static bool Promise_static_allSettled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CommonStaticAllRace(cx, args, IterationMode::AllSettled);
+  return CommonPromiseCombinator(cx, args, CombinatorKind::AllSettled);
 }
 
 // Promise.allSettled (Stage 4 proposal)
@@ -3233,10 +3228,10 @@ static MOZ_MUST_USE bool PerformPromiseAllSettled(
   // of the iterator. In particular, this holds the remainingElementsCount
   // (as an integer reserved slot), the array of values, and the resolve
   // function from our PromiseCapability.
-  Rooted<PromiseAllDataHolder*> dataHolder(cx);
-  dataHolder =
-      NewPromiseAllDataHolder(cx, resultCapability.promise(), valuesArrayVal,
-                              resultCapability.resolve());
+  Rooted<PromiseCombinatorDataHolder*> dataHolder(cx);
+  dataHolder = PromiseCombinatorDataHolder::New(cx, resultCapability.promise(),
+                                                valuesArrayVal,
+                                                resultCapability.resolve());
   if (!dataHolder) {
     return false;
   }
@@ -3310,8 +3305,9 @@ static MOZ_MUST_USE bool PerformPromiseAllSettled(
   };
 
   // Steps 5-6 and 8.
-  if (!CommonPerformPromiseAllRace(cx, iterator, C, resultCapability.promise(),
-                                   done, true, getResolveAndReject)) {
+  if (!CommonPerformPromiseCombinator(cx, iterator, C,
+                                      resultCapability.promise(), done, true,
+                                      getResolveAndReject)) {
     return false;
   }
 
@@ -3340,10 +3336,10 @@ static bool PromiseAllSettledElementFunction(JSContext* cx, unsigned argc,
 
   // Step 1.
   JSFunction* resolve = &args.callee().as<JSFunction>();
-  Rooted<PromiseAllDataHolder*> data(
+  Rooted<PromiseCombinatorDataHolder*> data(
       cx, &resolve->getExtendedSlot(PromiseAllSettledElementFunctionSlot_Data)
                .toObject()
-               .as<PromiseAllDataHolder>());
+               .as<PromiseCombinatorDataHolder>());
 
   // Steps 2-4 (moved below).
 
@@ -3428,8 +3424,8 @@ static bool PromiseAllSettledElementFunction(JSContext* cx, unsigned argc,
     // Step 14.a. (Omitted, happened in PerformPromiseAllSettled.)
     // Step 14.b.
 
-    // Step 7 (Adapted to work with PromiseAllDataHolder's layout).
-    RootedObject resolveAllFun(cx, data->resolveObj());
+    // Step 7 (Adapted to work with PromiseCombinatorDataHolder's layout).
+    RootedObject resolveAllFun(cx, data->resolveOrRejectObj());
     RootedObject promiseObj(cx, data->promiseObj());
     if (!RunResolutionFunction(cx, resolveAllFun, valuesVal, ResolveMode,
                                promiseObj)) {
