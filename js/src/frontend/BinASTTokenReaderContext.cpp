@@ -787,7 +787,8 @@ class HuffmanPreludeReader {
 
     // Append a terminator.
     // Already reserved sufficient space above.
-    auxStorageLength_.infallibleEmplaceBack(MAX_CODE_BIT_LENGTH, numberOfSymbols);
+    auxStorageLength_.infallibleEmplaceBack(MAX_CODE_BIT_LENGTH,
+                                            numberOfSymbols);
 
     // Now read the symbols and assign bits.
     uint32_t code = 0;
@@ -1122,13 +1123,8 @@ JS::Result<Ok> BinASTTokenReaderContext::readStringPrelude() {
     return raiseError("Too many entries in strings dictionary");
   }
 
-  // FIXME: We don't use the global table like multipart format, but
-  //        (interface, field)-local dictionary.
-  //        Metadata should be fixed to store that.
-  Vector<BinASTKind> binASTKinds(cx_);
-
   BinASTSourceMetadata* metadata =
-      BinASTSourceMetadata::Create(binASTKinds, stringsNumberOfEntries);
+      BinASTSourceMetadata::Create(stringsNumberOfEntries);
   if (MOZ_UNLIKELY(!metadata)) {
     return raiseOOM();
   }
@@ -1743,7 +1739,8 @@ typename GenericHuffmanTable::Iterator GenericHuffmanTable::begin() const {
           -> GenericHuffmanTable::Iterator {
         return Iterator(implementation.begin());
       },
-      [](const TableImplementationUninitialized&) -> GenericHuffmanTable::Iterator {
+      [](const TableImplementationUninitialized&)
+          -> GenericHuffmanTable::Iterator {
         MOZ_CRASH("GenericHuffmanTable is unitialized!");
       });
 }
@@ -1770,7 +1767,8 @@ typename GenericHuffmanTable::Iterator GenericHuffmanTable::end() const {
           -> GenericHuffmanTable::Iterator {
         return Iterator(implementation.end());
       },
-      [](const TableImplementationUninitialized&) -> GenericHuffmanTable::Iterator {
+      [](const TableImplementationUninitialized&)
+          -> GenericHuffmanTable::Iterator {
         MOZ_CRASH("GenericHuffmanTable is unitialized!");
       });
 }
@@ -1779,7 +1777,8 @@ JS::Result<Ok> GenericHuffmanTable::initWithSingleValue(
     JSContext* cx, const BinASTSymbol& value) {
   // Only one value: use HuffmanImplementationSaturated
   MOZ_ASSERT(implementation_.template is<
-             TableImplementationUninitialized>());  // Make sure that we're initializing.
+             TableImplementationUninitialized>());  // Make sure that we're
+                                                    // initializing.
 
   implementation_ = {mozilla::VariantType<SingleEntryHuffmanTable>{}, value};
   return Ok();
