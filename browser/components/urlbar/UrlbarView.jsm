@@ -759,44 +759,50 @@ class UrlbarView {
   }
 
   _createRowContent(item) {
+    // The url is the only element that can wrap, thus all the other elements
+    // are child of noWrap.
+    let noWrap = this._createElement("span");
+    noWrap.className = "urlbarView-no-wrap";
+    item._content.appendChild(noWrap);
+
     let typeIcon = this._createElement("span");
     typeIcon.className = "urlbarView-type-icon";
 
     if (!this.input.megabar) {
-      item._content.appendChild(typeIcon);
+      noWrap.appendChild(typeIcon);
     }
 
     let favicon = this._createElement("img");
     favicon.className = "urlbarView-favicon";
-    item._content.appendChild(favicon);
+    noWrap.appendChild(favicon);
     item._elements.set("favicon", favicon);
 
     if (this.input.megabar) {
-      item._content.appendChild(typeIcon);
+      noWrap.appendChild(typeIcon);
     }
 
     let title = this._createElement("span");
     title.className = "urlbarView-title";
-    item._content.appendChild(title);
+    noWrap.appendChild(title);
     item._elements.set("title", title);
 
     let tagsContainer = this._createElement("span");
     tagsContainer.className = "urlbarView-tags";
-    item._content.appendChild(tagsContainer);
+    noWrap.appendChild(tagsContainer);
     item._elements.set("tagsContainer", tagsContainer);
 
     let titleSeparator = this._createElement("span");
     titleSeparator.className = "urlbarView-title-separator";
-    item._content.appendChild(titleSeparator);
+    noWrap.appendChild(titleSeparator);
     item._elements.set("titleSeparator", titleSeparator);
 
     let action = this._createElement("span");
-    action.className = "urlbarView-secondary urlbarView-action";
-    item._content.appendChild(action);
+    action.className = "urlbarView-action";
+    noWrap.appendChild(action);
     item._elements.set("action", action);
 
     let url = this._createElement("span");
-    url.className = "urlbarView-secondary urlbarView-url";
+    url.className = "urlbarView-url";
     item._content.appendChild(url);
     item._elements.set("url", url);
   }
@@ -966,6 +972,7 @@ class UrlbarView {
 
     let url = item._elements.get("url");
     if (setURL) {
+      item.setAttribute("has-url", "true");
       this._addTextContentWithHighlights(
         url,
         result.payload.displayUrl,
@@ -973,6 +980,7 @@ class UrlbarView {
       );
       url._tooltip = result.payload.displayUrl;
     } else {
+      item.removeAttribute("has-url");
       url.textContent = "";
       url._tooltip = "";
     }

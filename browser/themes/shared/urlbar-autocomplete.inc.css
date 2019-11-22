@@ -162,11 +162,44 @@
   padding-inline-end: calc(@urlbarViewItemInlinePadding@ + 4px);
 }
 
-.urlbarView-row-inner {
+.urlbarView-row-inner,
+.urlbarView-no-wrap {
   display: flex;
   flex-wrap: nowrap;
   align-items: end;
   justify-content: start;
+}
+
+.urlbarView[actionoverride] .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-no-wrap,
+.urlbarView-row[has-url]:not([type$=tab]) > .urlbarView-row-inner > .urlbarView-no-wrap,
+.urlbarView-row[has-url][type=remotetab][selected] > .urlbarView-row-inner > .urlbarView-no-wrap,
+.urlbarView-row[has-url][type=remotetab]:hover > .urlbarView-row-inner > .urlbarView-no-wrap {
+  /* We prioritize icons + title + action over the url, so they can grow freely,
+     but the url should never disappear when it's visible */
+  flex-shrink: 0;
+  max-width: calc(70% - 2 * (16px + (6px + 2px)));
+}
+
+/* Wrap the url to a second line when the window is small */
+@media screen and (max-width: 800px) and (min-height: 600px) {
+  .urlbarView.megabar .urlbarView-row-inner {
+    flex-wrap: wrap;
+  }
+  .urlbarView.megabar .urlbarView-no-wrap {
+    max-width: 100% !important;
+    flex-basis: 100%;
+  }
+  .urlbarView.megabar .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-url {
+    margin-top: 2px;
+    padding-inline-start: calc(@urlbarViewItemInlinePadding@ + @identityBoxMarginInlineEnd@ + /* favicon */ 16px);
+  }
+  /* Note: switchtab entries show the url only in override mode,
+     remotetab only when selected or :hover */
+  .urlbarView.megabar[actionoverride] .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
+  .urlbarView.megabar .urlbarView-row[has-url]:not([type$=tab]) > .urlbarView-row-inner > .urlbarView-no-wrap >.urlbarView-title-separator,
+  .urlbarView.megabar .urlbarView-row[type=remotetab]:not([selected]):not(:hover) {
+    display: none;
+  }
 }
 
 .urlbarView-title[overflow],
@@ -270,36 +303,36 @@
   }
 }
 
-.urlbarView.megabar .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-type-icon {
+.urlbarView.megabar .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
   background-image: url(chrome://browser/skin/bookmark-12.svg);
   color: #0060df; /* Blue-60 */
   stroke: #fff;
 }
 
-.urlbarView.megabar .urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-type-icon,
+.urlbarView.megabar .urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon,
 .urlbarView.megabar:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-type-icon {
   background-image: url(chrome://browser/skin/tab-12.svg);
   color: #008eaf; /* Teal-70 */
   stroke: #fff;
 }
 
-:root[lwt-toolbar-field-brighttext] .urlbarView.megabar .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-type-icon {
+:root[lwt-toolbar-field-brighttext] .urlbarView.megabar .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
   color: #0a84ff; /* Blue-50 */
   stroke: #38383d; /* Grey-70 */
 }
 
-:root[lwt-toolbar-field-brighttext] .urlbarView.megabar .urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-type-icon,
-:root[lwt-toolbar-field-brighttext] .urlbarView.megabar:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-type-icon {
+:root[lwt-toolbar-field-brighttext] .urlbarView.megabar .urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon,
+:root[lwt-toolbar-field-brighttext] .urlbarView.megabar:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
   color: #00c8d7; /* Teal-60 */
   stroke: #38383d; /* Grey-70 */
 }
 
-.urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-type-icon {
+.urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
   background-image: url(chrome://browser/skin/bookmark.svg);
 }
 
-.urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-type-icon,
-.urlbarView:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-type-icon {
+.urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon,
+.urlbarView:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
   background-image: url(chrome://browser/skin/tab.svg);
 }
 
@@ -358,10 +391,6 @@
 .urlbarView-title {
   overflow: hidden;
   white-space: nowrap;
-  /* We prioritize the title over the url, so it can grow freely, but it should
-     never crop the url completely */
-  flex-shrink: 0;
-  max-width: calc(70% - 2 * (16px + @urlbarViewIconMarginEnd@));
 }
 
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-title {
@@ -380,7 +409,8 @@
 }
 
 .urlbarView-tags,
-.urlbarView-title:not(:empty) ~ .urlbarView-secondary {
+.urlbarView-url,
+.urlbarView-title:not(:empty) ~ .urlbarView-action {
   font-size: .85em;
 }
 
@@ -391,34 +421,35 @@
   font-weight: 600;
 }
 
-.urlbarView-title:not(:empty) ~ .urlbarView-secondary {
+.urlbarView-title:not(:empty) ~ .urlbarView-action {
   color: var(--urlbar-popup-action-color);
 }
 
 .urlbarView-url {
   overflow: hidden;
-}
-
-.urlbarView-title:not(:empty) ~ .urlbarView-url {
   color: var(--urlbar-popup-url-color);
 }
 
-.urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-title-separator::before,
-.urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-secondary {
+.urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator::before,
+.urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-no-wrap >.urlbarView-action,
+.urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-url {
   color: inherit;
 }
 
-.urlbarView-row[type=remotetab][selected] > .urlbarView-row-inner > .urlbarView-action,
-.urlbarView-row[type=remotetab]:hover > .urlbarView-row-inner > .urlbarView-action,
 .urlbarView-row[type=remotetab]:not([selected]):not(:hover) > .urlbarView-row-inner > .urlbarView-url,
-.urlbarView-row[type=search]:not([selected]):not(:hover):not([show-action-text]) > .urlbarView-row-inner > .urlbarView-title:not(:empty) ~ .urlbarView-action,
-.urlbarView-row[type=search]:not([selected]):not(:hover):not([show-action-text]) > .urlbarView-row-inner > .urlbarView-title-separator,
-.urlbarView[actionoverride] .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-action,
+.urlbarView-row[type=search]:not([selected]):not(:hover):not([show-action-text]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
 .urlbarView:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-url {
   /* Use visibility:collapse instead of display:none since the latter can
      confuse the overflow state of title and url elements when their content
      changes while they're hidden. */
   visibility: collapse;
+}
+
+.urlbarView-row[type=remotetab][selected] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
+.urlbarView-row[type=remotetab]:hover > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
+.urlbarView-row[type=search]:not([selected]):not(:hover):not([show-action-text]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
+.urlbarView[actionoverride] .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
+  display: none;
 }
 
 .urlbarView-tags {
@@ -433,7 +464,7 @@
   margin-inline-start: .4em;
 }
 
-.urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-tags > .urlbarView-tag {
+.urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-tags > .urlbarView-tag {
   background-color: var(--autocomplete-popup-highlight-color);
   color: var(--autocomplete-popup-highlight-background);
 }
