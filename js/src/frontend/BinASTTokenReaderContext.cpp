@@ -2789,10 +2789,8 @@ HuffmanPreludeReader::readSingleValueTable<UnsignedLong>(
 }
 
 HuffmanDictionary::~HuffmanDictionary() {
-  for (size_t i = 0; i < TableIdentity::Limit; i++) {
-    if (status_[i] == TableStatus::Ready) {
-      table(i).~GenericHuffmanTable();
-    }
+  for (size_t i = 0; i < nextIndex_; i++) {
+    tableAtIndex(i).~GenericHuffmanTable();
   }
 }
 
