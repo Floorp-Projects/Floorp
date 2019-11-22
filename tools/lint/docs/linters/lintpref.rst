@@ -27,5 +27,5 @@ should be added to ``IGNORE_PREFS`` in ``tools/lint/libpref/__init__.py``.
 Sources
 -------
 
-* `Configuration <https://searchfox.org/mozilla-central/source/tools/lint/lintpref.yml>`_
+* `Configuration (YAML) <https://searchfox.org/mozilla-central/source/tools/lint/lintpref.yml>`_
 * `Source <https://searchfox.org/mozilla-central/source/tools/lint/libpref/__init__.py>`_

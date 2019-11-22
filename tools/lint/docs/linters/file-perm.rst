@@ -34,5 +34,5 @@ This linter provides a ``--fix`` option. The python script is doing the change i
 Sources
 -------
 
-* `Configuration <https://searchfox.org/mozilla-central/source/tools/lint/file-perm.yml>`_
+* `Configuration (YAML) <https://searchfox.org/mozilla-central/source/tools/lint/file-perm.yml>`_
 * `Source <https://searchfox.org/mozilla-central/source/tools/lint/file-perm/__init__.py>`_
