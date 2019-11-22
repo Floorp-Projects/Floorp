@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"    // MOZ_MUST_USE, MOZ_STACK_CLASS
 #include "mozilla/IntegerRange.h"  // mozilla::IntegerRange
 #include "mozilla/Maybe.h"         // mozilla::Maybe
+#include "mozilla/RangedPtr.h"     // mozilla::RangedPtr
 #include "mozilla/Span.h"          // mozilla::Span
 #include "mozilla/Variant.h"       // mozilla::Variant
 
@@ -532,6 +533,8 @@ class SingleLookupHuffmanTable {
   // - for all i, `saturated_[i] < values_.size()`
   mozilla::Span<InternalIndex> saturated_;
 
+  friend class HuffmanDictionaryForMetadata;
+
   // The maximal bitlength of a value in this table.
   //
   // Invariant (once `init*` has been called):
@@ -768,6 +771,8 @@ class MultiLookupHuffmanTable {
   // from the prefix `HuffmanKey(i, prefixBitLen)`.
   mozilla::Span<Subtable> suffixTables_;
 
+  friend class HuffmanDictionaryForMetadata;
+
   // The maximal bitlength of a value in this table.
   //
   // Invariant (once `init*` has been called):
@@ -876,6 +881,8 @@ struct GenericHuffmanTable {
                    SingleLookupHuffmanTable, TwoLookupsHuffmanTable,
                    ThreeLookupsHuffmanTable, TableImplementationUninitialized>
       implementation_;
+
+  friend class HuffmanDictionaryForMetadata;
 };
 
 // Temporary space to allocate `T` typed items with less alloc/free calls,
@@ -931,6 +938,9 @@ class TemporaryStorageItem {
   // Allocate `count` number of `T` items and returns the pointer to the
   // first item.
   T* alloc(JSContext* cx, size_t count);
+
+  // The total number of used items in this storage.
+  size_t total() const { return total_; }
 };
 
 // Temporary storage used for dynamic allocations while reading the Huffman
@@ -939,7 +949,11 @@ class TemporaryStorageItem {
 // Each items are allocated with `TemporaryStorageItem`, with less alloc/free
 // calls (See `TemporaryStorageItem` doc for more details).
 class TemporaryStorage {
-  using InternalIndex = uint8_t;
+  using InternalIndex = SingleLookupHuffmanTable::InternalIndex;
+
+  static_assert(sizeof(SingleLookupHuffmanTable::InternalIndex) ==
+                    sizeof(TwoLookupsHuffmanTable::InternalIndex),
+                "InternalIndex should be same between tables");
 
   TemporaryStorageItem<HuffmanEntry> huffmanEntries_;
   TemporaryStorageItem<InternalIndex> internalIndices_;
@@ -953,6 +967,12 @@ class TemporaryStorage {
   // allocated items.
   template <typename T>
   JS::Result<mozilla::Span<T>> alloc(JSContext* cx, size_t count);
+
+  // The total number of used items in this storage.
+  size_t numHuffmanEntries() const { return huffmanEntries_.total(); }
+  size_t numInternalIndices() const { return internalIndices_.total(); }
+  size_t numSingleTables() const { return singleTables_.total(); }
+  size_t numTwoTables() const { return twoTables_.total(); }
 };
 
 // Handles the mapping from NormalizedInterfaceAndField and BinASTList to
@@ -977,11 +997,188 @@ class TableIdentity {
   size_t toIndex() const { return index_; }
 };
 
-// A Huffman dictionary for the current file.
+class HuffmanDictionary;
+
+// A Huffman dictionary for the current file, used after reading the dictionary.
 //
 // A Huffman dictionary consists in a (contiguous) set of Huffman tables
-// to predict field values and a second (contiguous) set of Huffman tables
-// to predict list lengths.
+// to predict field values and list lengths, and (contiguous) sets of
+// items pointed by each tables.
+class HuffmanDictionaryForMetadata {
+  static const uint16_t UnreachableIndex = uint16_t(-1);
+
+  using InternalIndex = uint8_t;
+
+  HuffmanDictionaryForMetadata(size_t numTables, size_t numHuffmanEntries,
+                               size_t numInternalIndices,
+                               size_t numSingleTables, size_t numTwoTables)
+      : numTables_(numTables),
+        numHuffmanEntries_(numHuffmanEntries),
+        numInternalIndices_(numInternalIndices),
+        numSingleTables_(numSingleTables),
+        numTwoTables_(numTwoTables) {}
+
+  // This class is allocated with extra payload for storing tables and items.
+  // The full layout is the following:
+  //
+  //   HuffmanDictionaryForMetadata
+  //   GenericHuffmanTable[numTables_]
+  //   HuffmanEntry[numHuffmanEntries_]
+  //   InternalIndex[numInternalIndices_]
+  //   SingleLookupHuffmanTable[numSingleTables_]
+  //   TwoLookupsHuffmanTable[numTwoTables_]
+
+  // Accessors for the above payload.
+  // Each accessor returns the pointer to the first element of each array.
+  mozilla::RangedPtr<GenericHuffmanTable> tablesBase() {
+    auto p = reinterpret_cast<GenericHuffmanTable*>(
+        reinterpret_cast<uintptr_t>(this + 1));
+    return mozilla::RangedPtr<GenericHuffmanTable>(p, p, p + numTables_);
+  }
+  const mozilla::RangedPtr<GenericHuffmanTable> tablesBase() const {
+    auto p = reinterpret_cast<GenericHuffmanTable*>(
+        reinterpret_cast<uintptr_t>(this + 1));
+    return mozilla::RangedPtr<GenericHuffmanTable>(p, p, p + numTables_);
+  }
+
+  mozilla::RangedPtr<HuffmanEntry> huffmanEntriesBase() {
+    auto p = reinterpret_cast<HuffmanEntry*>(
+        reinterpret_cast<uintptr_t>(this + 1) +
+        sizeof(GenericHuffmanTable) * numTables_);
+    return mozilla::RangedPtr<HuffmanEntry>(p, p, p + numHuffmanEntries_);
+  }
+  const mozilla::RangedPtr<HuffmanEntry> huffmanEntriesBase() const {
+    auto p = reinterpret_cast<HuffmanEntry*>(
+        reinterpret_cast<uintptr_t>(this + 1) +
+        sizeof(GenericHuffmanTable) * numTables_);
+    return mozilla::RangedPtr<HuffmanEntry>(p, p, p + numHuffmanEntries_);
+  }
+
+  mozilla::RangedPtr<InternalIndex> internalIndicesBase() {
+    auto p = reinterpret_cast<InternalIndex*>(
+        reinterpret_cast<uintptr_t>(this + 1) +
+        sizeof(GenericHuffmanTable) * numTables_ +
+        sizeof(HuffmanEntry) * numHuffmanEntries_);
+    return mozilla::RangedPtr<InternalIndex>(p, p, p + numInternalIndices_);
+  }
+  const mozilla::RangedPtr<InternalIndex> internalIndicesBase() const {
+    auto p = reinterpret_cast<InternalIndex*>(
+        reinterpret_cast<uintptr_t>(this + 1) +
+        sizeof(GenericHuffmanTable) * numTables_ +
+        sizeof(HuffmanEntry) * numHuffmanEntries_);
+    return mozilla::RangedPtr<InternalIndex>(p, p, p + numInternalIndices_);
+  }
+
+  mozilla::RangedPtr<SingleLookupHuffmanTable> singleTablesBase() {
+    auto p = reinterpret_cast<SingleLookupHuffmanTable*>(
+        reinterpret_cast<uintptr_t>(this + 1) +
+        sizeof(GenericHuffmanTable) * numTables_ +
+        sizeof(HuffmanEntry) * numHuffmanEntries_ +
+        sizeof(InternalIndex) * numInternalIndices_);
+    return mozilla::RangedPtr<SingleLookupHuffmanTable>(p, p,
+                                                        p + numSingleTables_);
+  }
+  const mozilla::RangedPtr<SingleLookupHuffmanTable> singleTablesBase() const {
+    auto p = reinterpret_cast<SingleLookupHuffmanTable*>(
+        reinterpret_cast<uintptr_t>(this + 1) +
+        sizeof(GenericHuffmanTable) * numTables_ +
+        sizeof(HuffmanEntry) * numHuffmanEntries_ +
+        sizeof(InternalIndex) * numInternalIndices_);
+    return mozilla::RangedPtr<SingleLookupHuffmanTable>(p, p,
+                                                        p + numSingleTables_);
+  }
+
+  mozilla::RangedPtr<TwoLookupsHuffmanTable> twoTablesBase() {
+    auto p = reinterpret_cast<TwoLookupsHuffmanTable*>(
+        reinterpret_cast<uintptr_t>(this + 1) +
+        sizeof(GenericHuffmanTable) * numTables_ +
+        sizeof(HuffmanEntry) * numHuffmanEntries_ +
+        sizeof(InternalIndex) * numInternalIndices_ +
+        sizeof(SingleLookupHuffmanTable) * numSingleTables_);
+    return mozilla::RangedPtr<TwoLookupsHuffmanTable>(p, p, p + numTwoTables_);
+  }
+  const mozilla::RangedPtr<TwoLookupsHuffmanTable> twoTablesBase() const {
+    auto p = reinterpret_cast<TwoLookupsHuffmanTable*>(
+        reinterpret_cast<uintptr_t>(this + 1) +
+        sizeof(GenericHuffmanTable) * numTables_ +
+        sizeof(HuffmanEntry) * numHuffmanEntries_ +
+        sizeof(InternalIndex) * numInternalIndices_ +
+        sizeof(SingleLookupHuffmanTable) * numSingleTables_);
+    return mozilla::RangedPtr<TwoLookupsHuffmanTable>(p, p, p + numTwoTables_);
+  }
+
+ public:
+  HuffmanDictionaryForMetadata() = delete;
+  ~HuffmanDictionaryForMetadata();
+
+  // Create HuffmanDictionaryForMetadata by moving data from
+  // HuffmanDictionary and items allocated in TemporaryStorage.
+  //
+  // After calling this, consumers shouldn't use `dictionary` and
+  // `tempStorage`.
+  static HuffmanDictionaryForMetadata* createFrom(
+      HuffmanDictionary* dictionary, TemporaryStorage* tempStorage);
+
+ private:
+  // Returns the total required size of HuffmanDictionaryForMetadata with
+  // extra payload to store items, in bytes.
+  static size_t totalSize(size_t numTables, size_t numHuffmanEntries,
+                          size_t numInternalIndices, size_t numSingleTables,
+                          size_t numTwoTables);
+
+  // After allocating HuffmanDictionaryForMetadata with extra payload,
+  // move data from HuffmanDictionary and items allocated in TemporaryStorage.
+  //
+  // Called by createFrom.
+  void moveFrom(HuffmanDictionary* dictionary, TemporaryStorage* tempStorage);
+
+ public:
+  bool isUnreachable(TableIdentity i) const {
+    return tableIndices_[i.toIndex()] == UnreachableIndex;
+  }
+
+  bool isReady(TableIdentity i) const {
+    return tableIndices_[i.toIndex()] != UnreachableIndex;
+  }
+
+  const GenericHuffmanTable& getTable(TableIdentity i) const {
+    MOZ_ASSERT(isReady(i));
+    return table(i);
+  }
+
+ private:
+  size_t numTables_ = 0;
+  size_t numHuffmanEntries_ = 0;
+  size_t numInternalIndices_ = 0;
+  size_t numSingleTables_ = 0;
+  size_t numTwoTables_ = 0;
+
+  uint16_t tableIndices_[TableIdentity::Limit] = {UnreachableIndex};
+
+  GenericHuffmanTable& table(TableIdentity i) {
+    return tableAtIndex(tableIndices_[i.toIndex()]);
+  }
+
+  const GenericHuffmanTable& table(TableIdentity i) const {
+    return tableAtIndex(tableIndices_[i.toIndex()]);
+  }
+
+  GenericHuffmanTable& tableAtIndex(size_t i) { return tablesBase()[i]; }
+
+  const GenericHuffmanTable& tableAtIndex(size_t i) const {
+    return tablesBase()[i];
+  }
+};
+
+// A Huffman dictionary for the current file, used while reading the dictionary.
+// When finished reading the dictionary, all data is moved to
+// `HuffmanDictionaryForMetadata`.
+//
+// A Huffman dictionary consists in a (contiguous) set of Huffman tables
+// to predict field values and list lengths.
+//
+// Each table can contain pointers to items allocated inside
+// `TemporaryStorageItem`.
 class HuffmanDictionary {
   // While reading the Huffman prelude, whenever we first encounter a
   // table with `Unreachable` status, we set its status with a `Initializing`
@@ -1035,6 +1232,8 @@ class HuffmanDictionary {
     return table(i);
   }
 
+  size_t numTables() const { return nextIndex_; }
+
  private:
   // For the following purpose, tables are stored as an array of status
   // and a uninitialized buffer to store an array of tables.
@@ -1083,6 +1282,8 @@ class HuffmanDictionary {
   const GenericHuffmanTable& tableAtIndex(size_t i) const {
     return (reinterpret_cast<const GenericHuffmanTable*>(tables_))[i];
   }
+
+  friend class HuffmanDictionaryForMetadata;
 };
 
 /**
