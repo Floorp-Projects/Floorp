@@ -684,11 +684,6 @@ void VideoSink::SetSecondaryVideoContainer(VideoFrameContainer* aSecondary) {
   }
 }
 
-void VideoSink::ClearSecondaryVideoContainer() {
-  AssertOwnerThread();
-  mSecondaryContainer = nullptr;
-}
-
 void VideoSink::GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {
   AssertOwnerThread();
   aInfo.mVideoSink.mIsStarted = IsStarted();
