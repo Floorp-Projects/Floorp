@@ -31,7 +31,7 @@
         aria-describedby="version distribution distributionId communityDesc contributeDesc trademark"
         >
 #ifdef XP_MACOSX
-#include macWindow.inc.xul
+#include macWindow.inc.xhtml
 #endif
 
   <linkset>

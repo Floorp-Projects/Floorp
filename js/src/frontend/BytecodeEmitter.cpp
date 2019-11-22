@@ -861,19 +861,13 @@ bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
 }  // anonymous namespace
 
 bool BytecodeEmitter::emitGoto(NestableControl* target, JumpList* jumplist,
-                               SrcNoteType noteType) {
-  NonLocalExitControl nle(this, noteType == SRC_CONTINUE
+                               GotoKind kind) {
+  NonLocalExitControl nle(this, kind == GotoKind::Continue
                                     ? NonLocalExitControl::Continue
                                     : NonLocalExitControl::Break);
 
   if (!nle.prepareForNonLocalJump(target)) {
     return false;
-  }
-
-  if (noteType != SRC_NULL) {
-    if (!newSrcNote(noteType)) {
-      return false;
-    }
   }
 
   return emitJump(JSOP_GOTO, jumplist);
@@ -5867,24 +5861,20 @@ bool BytecodeEmitter::emitWhile(BinaryNode* whileNode) {
 
 bool BytecodeEmitter::emitBreak(PropertyName* label) {
   BreakableControl* target;
-  SrcNoteType noteType;
   if (label) {
     // Any statement with the matching label may be the break target.
     auto hasSameLabel = [label](LabelControl* labelControl) {
       return labelControl->label() == label;
     };
     target = findInnermostNestableControl<LabelControl>(hasSameLabel);
-    noteType = SRC_BREAK2LABEL;
   } else {
     auto isNotLabel = [](BreakableControl* control) {
       return !control->is<LabelControl>();
     };
     target = findInnermostNestableControl<BreakableControl>(isNotLabel);
-    noteType =
-        (target->kind() == StatementKind::Switch) ? SRC_SWITCHBREAK : SRC_BREAK;
   }
 
-  return emitGoto(target, &target->breaks, noteType);
+  return emitGoto(target, &target->breaks, GotoKind::Break);
 }
 
 bool BytecodeEmitter::emitContinue(PropertyName* label) {
@@ -5902,7 +5892,7 @@ bool BytecodeEmitter::emitContinue(PropertyName* label) {
   } else {
     target = findInnermostNestableControl<LoopControl>();
   }
-  return emitGoto(target, &target->continues, SRC_CONTINUE);
+  return emitGoto(target, &target->continues, GotoKind::Continue);
 }
 
 bool BytecodeEmitter::emitGetFunctionThis(NameNode* thisName) {

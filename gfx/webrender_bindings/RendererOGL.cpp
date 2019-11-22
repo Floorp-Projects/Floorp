@@ -116,9 +116,6 @@ RenderedFrameId RendererOGL::UpdateAndRender(
 
 #if defined(XP_MACOSX)
   widgetContext.mGL = mCompositor->gl();
-// TODO: we don't have a notion of compositor here.
-//#elif defined(MOZ_WIDGET_ANDROID)
-//  widgetContext.mCompositor = mCompositor;
 #endif
 
   if (!mCompositor->GetWidget()->PreRender(&widgetContext)) {

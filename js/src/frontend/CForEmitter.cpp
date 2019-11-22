@@ -209,10 +209,6 @@ bool CForEmitter::emitEnd() {
                               condOffset_ - biasedTop_)) {
     return false;
   }
-  if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::For::UpdateOffset,
-                              loopInfo_->continueTargetOffset() - biasedTop_)) {
-    return false;
-  }
 
   // If no loop condition, just emit a loop-closing jump.
   if (!loopInfo_->emitLoopEnd(bce_,

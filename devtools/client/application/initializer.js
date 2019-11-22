@@ -28,12 +28,6 @@ const actions = require("./src/actions/index");
 
 const { WorkersListener } = require("devtools/client/shared/workers-listener");
 
-const {
-  addDebugServiceWorkersListener,
-  canDebugServiceWorkers,
-  removeDebugServiceWorkersListener,
-} = require("devtools/shared/service-workers-debug-helper");
-
 const { services } = require("./src/modules/services");
 
 const App = createFactory(require("./src/components/App"));
@@ -59,14 +53,22 @@ window.Application = {
 
     services.init(this.toolbox);
 
+    this.deviceFront = await this.client.mainRoot.getFront("device");
+
     this.workersListener = new WorkersListener(this.client.mainRoot);
     this.workersListener.addListener(this.updateWorkers);
     this.toolbox.target.on("navigate", this.handleOnNavigate);
-    addDebugServiceWorkersListener(this.updateCanDebugWorkers);
+
+    if (this.deviceFront) {
+      this.canDebugWorkersListener = this.deviceFront.on(
+        "can-debug-sw-updated",
+        this.updateCanDebugWorkers
+      );
+    }
 
     // start up updates for the initial state
     this.updateDomain();
-    this.updateCanDebugWorkers();
+    await this.updateCanDebugWorkers();
     await this.updateWorkers();
 
     await l10n.init(["devtools/application.ftl"]);
@@ -97,15 +99,20 @@ window.Application = {
     this.actions.updateDomain(this.toolbox.target.url);
   },
 
-  updateCanDebugWorkers() {
-    const canDebugWorkers = canDebugServiceWorkers();
+  async updateCanDebugWorkers() {
+    const canDebugWorkers = this.deviceFront
+      ? (await this.deviceFront.getDescription()).canDebugServiceWorkers
+      : false;
+
     this.actions.updateCanDebugWorkers(canDebugWorkers);
   },
 
   destroy() {
     this.workersListener.removeListener();
+    if (this.deviceFront) {
+      this.deviceFront.off("can-debug-sw-updated", this.updateCanDebugWorkers);
+    }
     this.toolbox.target.off("navigate", this.updateDomain);
-    removeDebugServiceWorkersListener(this.updateCanDebugWorkers);
 
     unmountComponentAtNode(this.mount);
     this.mount = null;

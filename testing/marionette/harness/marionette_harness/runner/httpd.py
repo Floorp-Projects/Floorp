@@ -16,7 +16,6 @@ import os
 import select
 import sys
 import time
-import urlparse
 
 from wptserve import (
     handlers,
@@ -24,6 +23,8 @@ from wptserve import (
     routes as default_routes,
     server
 )
+
+from six.moves.urllib import parse as urlparse
 
 
 root = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))

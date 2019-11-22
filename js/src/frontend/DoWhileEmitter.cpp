@@ -35,7 +35,7 @@ bool DoWhileEmitter::emitBody(const Maybe<uint32_t>& doPos,
   }
 
   // Emit an annotated nop so IonBuilder can recognize the 'do' loop.
-  if (!bce_->newSrcNote3(SRC_DO_WHILE, 0, 0, &noteIndex_)) {
+  if (!bce_->newSrcNote(SRC_DO_WHILE, &noteIndex_)) {
     return false;
   }
 
@@ -81,12 +81,7 @@ bool DoWhileEmitter::emitEnd() {
     return false;
   }
 
-  // Update the annotations with the update and back edge positions, for
-  // IonBuilder.
-  if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::DoWhile::CondOffset,
-                              loopInfo_->continueTargetOffsetFromLoopHead())) {
-    return false;
-  }
+  // Update the annotation with the back edge position, for IonBuilder.
   if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::DoWhile::BackJumpOffset,
                               loopInfo_->loopEndOffsetFromLoopHead())) {
     return false;

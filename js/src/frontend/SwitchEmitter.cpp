@@ -44,7 +44,7 @@ bool SwitchEmitter::TableGenerator::addNumber(int32_t caseValue) {
   low_ = std::min(low_, caseValue);
   high_ = std::max(high_, caseValue);
 
-  // Check for duplicates, which require a JSOP_CONDSWITCH.
+  // Check for duplicates, which are not supported in a table switch.
   // We bias caseValue by 65536 if it's negative, and hope that's a rare case
   // (because it requires a malloc'd bitmap).
   if (caseValue < 0) {
@@ -84,8 +84,8 @@ void SwitchEmitter::TableGenerator::finish(uint32_t caseCount) {
     return;
   }
 
-  // Compute table length and select condswitch instead if overlarge
-  // or more than half-sparse.
+  // Compute table length. Don't use table switch if overlarge or more than
+  // half-sparse.
   tableLength_ = uint32_t(high_ - low_ + 1);
   if (tableLength_ >= Bit(16) || tableLength_ > 2 * caseCount) {
     setInvalid();
@@ -163,16 +163,7 @@ bool SwitchEmitter::emitCond() {
     return false;
   }
 
-  // The note has two offsets: first tells total switch code length;
-  // second tells offset to first JSOP_CASE.
-  if (!bce_->newSrcNote3(SRC_CONDSWITCH, 0, 0, &noteIndex_)) {
-    return false;
-  }
-
   MOZ_ASSERT(top_ == bce_->bytecodeSection().offset());
-  if (!bce_->emitN(JSOP_CONDSWITCH, 0)) {
-    return false;
-  }
 
   tdzCacheCaseAndBody_.emplace(bce_);
 
@@ -189,7 +180,7 @@ bool SwitchEmitter::emitTable(const TableGenerator& tableGen) {
   top_ = bce_->bytecodeSection().offset();
 
   // The note has one offset that tells total switch code length.
-  if (!bce_->newSrcNote2(SRC_TABLESWITCH, 0, &noteIndex_)) {
+  if (!bce_->newSrcNote2(SRC_TABLESWITCH, 0, &tableSwitchNoteIndex_)) {
     return false;
   }
 
@@ -226,39 +217,12 @@ bool SwitchEmitter::emitCaseOrDefaultJump(uint32_t caseIndex, bool isDefault) {
     return true;
   }
 
-  if (caseIndex > 0) {
-    // Link the last JSOP_CASE's SRC_NEXTCASE to current JSOP_CASE for the
-    // benefit of IonBuilder.
-    if (!bce_->setSrcNoteOffset(
-            caseNoteIndex_, SrcNote::NextCase::NextCaseOffset,
-            bce_->bytecodeSection().offset() - lastCaseOffset_)) {
-      return false;
-    }
-  }
-
-  if (!bce_->newSrcNote2(SRC_NEXTCASE, 0, &caseNoteIndex_)) {
-    return false;
-  }
-
   JumpList caseJump;
   if (!bce_->emitJump(JSOP_CASE, &caseJump)) {
     return false;
   }
   caseOffsets_[caseIndex] = caseJump.offset;
   lastCaseOffset_ = caseJump.offset;
-
-  if (caseIndex == 0) {
-    // Switch note's second offset is to first JSOP_CASE.
-    unsigned noteCount = bce_->bytecodeSection().notes().length();
-    if (!bce_->setSrcNoteOffset(noteIndex_, 1, lastCaseOffset_ - top_)) {
-      return false;
-    }
-    unsigned noteCountDelta =
-        bce_->bytecodeSection().notes().length() - noteCount;
-    if (noteCountDelta != 0) {
-      caseNoteIndex_ += noteCountDelta;
-    }
-  }
 
   return true;
 }
@@ -410,18 +374,14 @@ bool SwitchEmitter::emitEnd() {
     pc += JUMP_OFFSET_LEN;
   }
 
-  // Set the SRC_SWITCH note's offset operand to tell end of switch.
-  // This code is shared between table switch and cond switch.
-  static_assert(unsigned(SrcNote::TableSwitch::EndOffset) ==
-                    unsigned(SrcNote::CondSwitch::EndOffset),
-                "{TableSwitch,CondSwitch}::EndOffset should be same");
-  if (!bce_->setSrcNoteOffset(
-          noteIndex_, SrcNote::TableSwitch::EndOffset,
-          bce_->bytecodeSection().lastNonJumpTargetOffset() - top_)) {
-    return false;
-  }
-
   if (kind_ == Kind::Table) {
+    // Set the SRC_TABLESWITCH note's offset operand to tell end of switch.
+    if (!bce_->setSrcNoteOffset(
+            tableSwitchNoteIndex_, SrcNote::TableSwitch::EndOffset,
+            bce_->bytecodeSection().lastNonJumpTargetOffset() - top_)) {
+      return false;
+    }
+
     // Skip over the already-initialized switch bounds.
     pc += 2 * JUMP_OFFSET_LEN;
 

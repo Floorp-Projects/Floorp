@@ -28,7 +28,7 @@ add_task(async function testCDP(client) {
 
   // receive console.log messages and print them
   Log.enable();
-  ok(true, "Log domain has been enabled");
+  info("Log domain has been enabled");
 
   Log.entryAdded(({ entry }) => {
     const { timestamp, level, text, args } = entry;
@@ -38,7 +38,7 @@ add_task(async function testCDP(client) {
 
   // turn on navigation related events, such as DOMContentLoaded et al.
   await Page.enable();
-  ok(true, "Page domain has been enabled");
+  info("Page domain has been enabled");
 
   const frameStoppedLoading = Page.frameStoppedLoading();
   const navigatedWithinDocument = Page.navigatedWithinDocument();
@@ -46,14 +46,14 @@ add_task(async function testCDP(client) {
   await Page.navigate({
     url: toDataURL(`<script>console.log("foo")</script>`),
   });
-  ok(true, "A new page has been loaded");
+  info("A new page has been loaded");
 
   await loadEventFired;
-  ok(true, "`Page.loadEventFired` fired");
+  info("`Page.loadEventFired` fired");
 
   await frameStoppedLoading;
-  ok(true, "`Page.frameStoppedLoading` fired");
+  info("`Page.frameStoppedLoading` fired");
 
   await navigatedWithinDocument;
-  ok(true, "`Page.navigatedWithinDocument` fired");
+  info("`Page.navigatedWithinDocument` fired");
 });

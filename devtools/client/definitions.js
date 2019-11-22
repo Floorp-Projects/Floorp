@@ -469,7 +469,7 @@ Tools.application = {
   hiddenInOptions: true,
 
   isTargetSupported: function(target) {
-    return target.isLocalTab;
+    return target.hasActor("manifest");
   },
 
   build: function(iframeWindow, toolbox) {

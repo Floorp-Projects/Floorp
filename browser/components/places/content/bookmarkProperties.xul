@@ -36,6 +36,6 @@
   <script src="chrome://browser/content/utilityOverlay.js"/>
   <script src="chrome://browser/content/places/places-tree.js"/>
 
-#include editBookmarkPanel.inc.xul
+#include editBookmarkPanel.inc.xhtml
 
 </dialog>
