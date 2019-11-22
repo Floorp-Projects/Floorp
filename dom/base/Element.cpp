@@ -3742,7 +3742,7 @@ void Element::UnlinkIntersectionObservers() {
 
 bool Element::UpdateIntersectionObservation(DOMIntersectionObserver* aObserver,
                                             int32_t aThreshold) {
-  IntersectionObserverList* observers = static_cast<IntersectionObserverList*>(
+  auto* observers = static_cast<IntersectionObserverList*>(
       GetProperty(nsGkAtoms::intersectionobserverlist));
   if (!observers) {
     return false;
