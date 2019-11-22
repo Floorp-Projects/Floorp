@@ -135,11 +135,7 @@ def fix_me(filename):
             if i == 2 or (i == 1 and test):
                 # Last line, we end by -->
                 end = " -->"
-            license.append(start + l.strip() + end)
-            if ext != '.svg' or end == "":
-                # When dealing with an svg, we should not have a space between
-                # the license and the content
-                license.append("\n")
+            license.append(start + l.strip() + end + "\n")
         add_header(filename, license)
         return
 
