@@ -4,13 +4,14 @@ import {
 } from "content-src/components/DiscoveryStreamComponents/Navigation/Navigation";
 import React from "react";
 import { SafeAnchor } from "content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
-import { shallow } from "enzyme";
+import { FluentOrText } from "content-src/components/FluentOrText/FluentOrText";
+import { shallow, mount } from "enzyme";
 
 describe("<Navigation>", () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(<Navigation header={{}} />);
+    wrapper = mount(<Navigation header={{}} />);
   });
 
   it("should render", () => {
@@ -21,6 +22,19 @@ describe("<Navigation>", () => {
     wrapper.setProps({ header: { title: "Foo" } });
 
     assert.equal(wrapper.find(".ds-header").text(), "Foo");
+  });
+
+  it("should render a FluentOrText", () => {
+    wrapper.setProps({ header: { title: "Foo" } });
+
+    assert.equal(
+      wrapper
+        .find(".ds-navigation")
+        .children()
+        .at(0)
+        .type(),
+      FluentOrText
+    );
   });
 
   it("should render 2 Topics", () => {

@@ -55,11 +55,11 @@ export class ImpressionStats extends React.PureComponent {
     const { props } = this;
     const cards = props.rows;
 
-    if (this.props.campaignId) {
+    if (this.props.flightId) {
       this.props.dispatch(
         ac.OnlyToMain({
           type: at.DISCOVERY_STREAM_SPOC_IMPRESSION,
-          data: { campaignId: this.props.campaignId },
+          data: { flightId: this.props.flightId },
         })
       );
     }

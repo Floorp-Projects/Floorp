@@ -1,13 +1,14 @@
 import { DSMessage } from "content-src/components/DiscoveryStreamComponents/DSMessage/DSMessage";
 import React from "react";
 import { SafeAnchor } from "content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
-import { shallow } from "enzyme";
+import { FluentOrText } from "content-src/components/FluentOrText/FluentOrText";
+import { mount } from "enzyme";
 
 describe("<DSMessage>", () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(<DSMessage />);
+    wrapper = mount(<DSMessage />);
   });
 
   it("should render", () => {
@@ -43,6 +44,32 @@ describe("<DSMessage>", () => {
         .at(0)
         .type(),
       SafeAnchor
+    );
+  });
+
+  it("should render a FluentOrText", () => {
+    wrapper.setProps({
+      link_text: "link_text",
+      title: "title",
+      link_url: "https://link_url.com",
+    });
+
+    assert.equal(
+      wrapper
+        .find(".title-text")
+        .children()
+        .at(0)
+        .type(),
+      FluentOrText
+    );
+
+    assert.equal(
+      wrapper
+        .find(".link a")
+        .children()
+        .at(0)
+        .type(),
+      FluentOrText
     );
   });
 });

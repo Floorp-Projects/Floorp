@@ -271,7 +271,7 @@ export class TopSiteLink extends React.PureComponent {
           {children}
           {link.type === SPOC_TYPE ? (
             <ImpressionStats
-              campaignId={link.campaignId}
+              flightId={link.flightId}
               rows={[
                 {
                   id: link.id,
