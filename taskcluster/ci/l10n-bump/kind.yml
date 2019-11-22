@@ -1,0 +1,127 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.release_version_bump:transforms
+    - taskgraph.transforms.task:transforms
+
+
+job-defaults:
+    worker-type:
+        by-project:
+            mozilla-(beta|central|esr.*): scriptworker-k8s/gecko-3-tree
+            default: scriptworker-k8s/gecko-1-tree
+    worker:
+        implementation: treescript
+        tags: []
+        bump: false
+        dontbuild: true
+        ignore-closed-tree: false
+        push:
+            by-project:
+                mozilla-(central|beta|esr.*): true
+                default: false
+        source-repo:
+            by-release-type:
+                esr68: https://hg.mozilla.org/releases/mozilla-esr68
+                beta: https://hg.mozilla.org/releases/mozilla-beta
+                default: https://hg.mozilla.org/mozilla-central
+        l10n-bump-info:
+            by-release-type:
+                esr.*:
+                    name: Fennec l10n changesets
+                    path: mobile/locales/l10n-changesets.json
+                    version-path: mobile/android/config/version-files/release/version.txt
+                    revision-url: "https://l10n.mozilla.org/shipping/l10n-changesets?av=fennec%(COMBINED_MAJOR_VERSION)s"
+                    platform-configs: [{
+                        "platforms": ["android-multilocale"],
+                        "path": "mobile/android/locales/maemo-locales",
+                    }]
+                beta:
+                    name: Firefox l10n changesets
+                    path: browser/locales/l10n-changesets.json
+                    version-path: browser/config/version.txt
+                    revision-url: "https://l10n.mozilla.org/shipping/l10n-changesets?av=fx%(MAJOR_VERSION)s"
+                    ignore-config:
+                        ja:
+                            - macosx64
+                            - macosx64-devedition
+                        ja-JP-mac:
+                            - linux
+                            - linux-devedition
+                            - linux64
+                            - linux64-devedition
+                            - win32
+                            - win32-devedition
+                            - win64
+                            - win64-devedition
+                            - win64-aarch64
+                            - win64-aarch64-devedition
+                    platform-configs: [{
+                        "platforms": [
+                            "linux",
+                            "linux-devedition",
+                            "linux64",
+                            "linux64-devedition",
+                            "macosx64",
+                            "macosx64-devedition",
+                            "win32",
+                            "win32-devedition",
+                            "win64",
+                            "win64-devedition",
+                            "win64-aarch64",
+                            "win64-aarch64-devedition",
+                        ],
+                        "path": "browser/locales/shipped-locales",
+                        "format": "shipped-locales",
+                    }]
+                default:
+                    name: Firefox l10n changesets
+                    path: browser/locales/l10n-changesets.json
+                    version-path: browser/config/version.txt
+                    ignore-config:
+                        ja:
+                            - macosx64
+                            - macosx64-devedition
+                        ja-JP-mac:
+                            - linux
+                            - linux-devedition
+                            - linux64
+                            - linux64-devedition
+                            - win32
+                            - win32-devedition
+                            - win64
+                            - win64-devedition
+                            - win64-aarch64
+                            - win64-aarch64-devedition
+                    platform-configs: [{
+                        "platforms": [
+                            "linux",
+                            "linux-devedition",
+                            "linux64",
+                            "linux64-devedition",
+                            "macosx64",
+                            "macosx64-devedition",
+                            "win32",
+                            "win32-devedition",
+                            "win64",
+                            "win64-devedition",
+                            "win64-aarch64",
+                            "win64-aarch64-devedition",
+                        ],
+                        "path": "browser/locales/all-locales",
+                    }]
+
+jobs:
+    l10n-bumper:
+        name: l10n_bumper
+        description: l10n changesets bumper
+        run-on-projects: []
+        treeherder:
+            kind: build
+            platform: linux64/opt
+            symbol: l10n-bump(lb)
+            tier: 1
