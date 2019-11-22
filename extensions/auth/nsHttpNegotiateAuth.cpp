@@ -492,8 +492,11 @@ nsHttpNegotiateAuth::GenerateCredentials(
     while (*challenge == ' ') challenge++;
     len = strlen(challenge);
 
+    if (!len)
+      return NS_ERROR_UNEXPECTED;
+
     // strip off any padding (see bug 230351)
-    while (challenge[len - 1] == '=') len--;
+    while (len && challenge[len - 1] == '=') len--;
 
     //
     // Decode the response that followed the "Negotiate" token
