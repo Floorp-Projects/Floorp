@@ -42,7 +42,6 @@ XPIDL_SOURCES += [
     'nsITokenPasswordDialogs.idl',
     'nsIX509Cert.idl',
     'nsIX509CertDB.idl',
-    'nsIX509CertList.idl',
     'nsIX509CertValidity.idl',
 ]
 

@@ -455,51 +455,6 @@ nsresult TransportSecurityInfo::ReadCertificatesFromStream(
   return NS_OK;
 }
 
-nsresult TransportSecurityInfo::ConvertCertArrayToCertList(
-    const nsTArray<RefPtr<nsIX509Cert>>& aCertArray,
-    nsIX509CertList** aCertList) {
-  NS_ENSURE_ARG_POINTER(aCertList);
-  *aCertList = nullptr;
-
-  // aCertList will be null if aCertArray is empty, this also matches
-  // the original certList behaviour
-  if (aCertArray.IsEmpty()) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIX509CertList> certList = new nsNSSCertList();
-  for (const auto& cert : aCertArray) {
-    nsresult rv = certList->AddCert(cert);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
-  certList.forget(aCertList);
-
-  return NS_OK;
-}
-
-nsresult TransportSecurityInfo::ConvertCertListToCertArray(
-    const nsCOMPtr<nsIX509CertList>& aCertList,
-    nsTArray<RefPtr<nsIX509Cert>>& aCertArray) {
-  MOZ_ASSERT(aCertList);
-  if (!aCertList) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  aCertArray.Clear();
-  RefPtr<nsNSSCertList> certList = aCertList->GetCertList();
-
-  return certList->ForEachCertificateInChain(
-      [&aCertArray](nsCOMPtr<nsIX509Cert>& aCert, bool aHasMore,
-                    bool& aContinue) {
-        RefPtr<nsIX509Cert> cert(aCert.get());
-        aCertArray.AppendElement(cert);
-        return NS_OK;
-      });
-}
-
 // NB: Any updates (except disk-only fields) must be kept in sync with
 //     |DeserializeFromIPC|.
 NS_IMETHODIMP

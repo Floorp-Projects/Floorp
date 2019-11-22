@@ -12,8 +12,6 @@
 #define PSM_COMPONENT_CONTRACTID "@mozilla.org/psm;1"
 %}
 
-interface nsIX509CertList;
-
 [ptr] native CERTCertificatePtr(CERTCertificate);
 [ptr] native SharedCertVerifierPtr(mozilla::psm::SharedCertVerifier);
 
