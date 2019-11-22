@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 from argparse import ArgumentParser
 
-from .templates import all_templates
+from .task_config import all_task_configs
 
 
 COMMON_ARGUMENT_GROUPS = {
@@ -78,7 +78,7 @@ class BaseTryParser(ArgumentParser):
     name = 'try'
     common_groups = ['push', 'preset']
     arguments = []
-    templates = []
+    task_configs = []
 
     def __init__(self, *args, **kwargs):
         ArgumentParser.__init__(self, *args, **kwargs)
@@ -98,10 +98,10 @@ class BaseTryParser(ArgumentParser):
             for cli, kwargs in arguments:
                 group.add_argument(*cli, **kwargs)
 
-        group = self.add_argument_group("template arguments")
-        self.templates = {t: all_templates[t]() for t in self.templates}
-        for template in self.templates.values():
-            template.add_arguments(group)
+        group = self.add_argument_group("task configuration arguments")
+        self.task_configs = {c: all_task_configs[c]() for c in self.task_configs}
+        for cfg in self.task_configs.values():
+            cfg.add_arguments(group)
 
     def validate(self, args):
         if hasattr(args, 'message'):

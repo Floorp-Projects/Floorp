@@ -66,15 +66,15 @@ def run_mach():
 
 
 def pytest_generate_tests(metafunc):
-    if all(fixture in metafunc.fixturenames for fixture in ('template', 'args', 'expected')):
+    if all(fixture in metafunc.fixturenames for fixture in ('task_config', 'args', 'expected')):
         def load_tests():
-            for template, tests in metafunc.module.TEMPLATE_TESTS.items():
+            for task_config, tests in metafunc.module.TASK_CONFIG_TESTS.items():
                 for args, expected in tests:
-                    yield (template, args, expected)
+                    yield (task_config, args, expected)
 
         tests = list(load_tests())
         ids = ['{} {}'.format(t[0], ' '.join(t[1])).strip() for t in tests]
-        metafunc.parametrize('template,args,expected', tests, ids=ids)
+        metafunc.parametrize('task_config,args,expected', tests, ids=ids)
 
     elif all(fixture in metafunc.fixturenames for fixture in ('shared_name', 'shared_preset')):
         preset_path = os.path.join(push.build.topsrcdir, 'tools', 'tryselect', 'try_presets.yml')
