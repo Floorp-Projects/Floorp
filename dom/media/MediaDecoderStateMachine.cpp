@@ -2746,6 +2746,9 @@ already_AddRefed<MediaSink> MediaDecoderStateMachine::CreateMediaSink() {
   RefPtr<MediaSink> mediaSink =
       new VideoSink(mTaskQueue, audioSink, mVideoQueue, mVideoFrameContainer,
                     *mFrameStats, sVideoQueueSendToCompositorSize);
+  if (mSecondaryVideoContainer.Ref()) {
+    mediaSink->SetSecondaryVideoContainer(mSecondaryVideoContainer.Ref());
+  }
   return mediaSink.forget();
 }
 
