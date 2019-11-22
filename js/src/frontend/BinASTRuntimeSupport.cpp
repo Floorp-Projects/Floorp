@@ -36,9 +36,11 @@ BinASTSourceMetadataMultipart* BinASTSourceMetadataMultipart::create(
     const Vector<BinASTKind>& binASTKinds, uint32_t numStrings) {
   uint32_t numBinASTKinds = binASTKinds.length();
 
+  // Given we can perform GC before filling all `JSAtom*` items
+  // in the payload, use js_calloc to initialize them with nullptr.
   BinASTSourceMetadataMultipart* data =
       static_cast<BinASTSourceMetadataMultipart*>(
-          js_malloc(BinASTSourceMetadataMultipart::totalSize(numBinASTKinds,
+          js_calloc(BinASTSourceMetadataMultipart::totalSize(numBinASTKinds,
                                                              numStrings)));
   if (MOZ_UNLIKELY(!data)) {
     return nullptr;
@@ -62,8 +64,10 @@ void BinASTSourceMetadataMultipart::trace(JSTracer* tracer) {
 
 BinASTSourceMetadataContext* BinASTSourceMetadataContext::create(
     uint32_t numStrings) {
+  // Given we can perform GC before filling all `JSAtom*` items
+  // in the payload, use js_calloc to initialize them with nullptr.
   BinASTSourceMetadataContext* data = static_cast<BinASTSourceMetadataContext*>(
-      js_malloc(BinASTSourceMetadataContext::totalSize(numStrings)));
+      js_calloc(BinASTSourceMetadataContext::totalSize(numStrings)));
   if (MOZ_UNLIKELY(!data)) {
     return nullptr;
   }
