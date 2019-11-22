@@ -7,16 +7,25 @@
 #ifndef frontend_BinASTSupport_h
 #define frontend_BinASTSupport_h
 
-#include "mozilla/HashFunctions.h"
+#include "mozilla/Assertions.h"     // MOZ_ASSERT
+#include "mozilla/HashFunctions.h"  // mozilla::HashString
+#include "mozilla/Likely.h"         // MOZ_UNLIKELY
 
-#include "frontend/BinASTToken.h"
-#include "gc/DeletePolicy.h"
+#include <stdint.h>  // uint8_t, uint32_t
+#include <string.h>  // strncmp
 
-#include "js/AllocPolicy.h"
-#include "js/HashTable.h"
-#include "js/Result.h"
-#include "js/UniquePtr.h"
-#include "js/Vector.h"
+#include "frontend/BinASTToken.h"  // BinASTVariant, BinASTField, BinASTKind
+#include "gc/DeletePolicy.h"       // GCManagedDeletePolicy
+
+#include "js/AllocPolicy.h"  // SystemAllocPolicy
+#include "js/HashTable.h"    // HashMap, HashNumber
+#include "js/Result.h"       // JS::Result
+#include "js/TracingAPI.h"   // JSTracer
+#include "js/UniquePtr.h"    // UniquePtr
+#include "js/Vector.h"       // Vector
+
+class JSAtom;
+struct JSContext;
 
 namespace js {
 
@@ -91,7 +100,38 @@ struct BinaryASTSupport {
 
 namespace frontend {
 
+class BinASTSourceMetadataMultipart;
+class BinASTSourceMetadataContext;
+
 class BinASTSourceMetadata {
+ public:
+  enum class Type : uint8_t {
+    Multipart = 0,
+    Context = 1,
+  };
+
+ private:
+  Type type_;
+
+ public:
+  BinASTSourceMetadata() = delete;
+  explicit BinASTSourceMetadata(Type type) : type_(type) {}
+  ~BinASTSourceMetadata();
+
+  Type type() const { return type_; }
+
+  void setType(Type type) { type_ = type; }
+
+  bool isMultipart() const { return type_ == Type::Multipart; }
+  bool isContext() const { return type_ == Type::Context; }
+
+  inline BinASTSourceMetadataMultipart* asMultipart();
+  inline BinASTSourceMetadataContext* asContext();
+
+  void trace(JSTracer* tracer);
+};
+
+class BinASTSourceMetadataMultipart : public BinASTSourceMetadata {
   using CharSlice = BinaryASTSupport::CharSlice;
 
   const uint32_t numStrings_;
@@ -113,22 +153,25 @@ class BinASTSourceMetadata {
   }
 
   static inline size_t totalSize(uint32_t numBinASTKinds, uint32_t numStrings) {
-    return sizeof(BinASTSourceMetadata) + numStrings * sizeof(JSAtom*) +
-           numStrings * sizeof(CharSlice) + numBinASTKinds * sizeof(BinASTKind);
+    return sizeof(BinASTSourceMetadataMultipart) +
+           numStrings * sizeof(JSAtom*) + numStrings * sizeof(CharSlice) +
+           numBinASTKinds * sizeof(BinASTKind);
   }
 
-  BinASTSourceMetadata(uint32_t numBinASTKinds, uint32_t numStrings)
-      : numStrings_(numStrings), numBinASTKinds_(numBinASTKinds) {}
+  BinASTSourceMetadataMultipart(uint32_t numBinASTKinds, uint32_t numStrings)
+      : BinASTSourceMetadata(Type::Multipart),
+        numStrings_(numStrings),
+        numBinASTKinds_(numBinASTKinds) {}
 
-  BinASTSourceMetadata(uint32_t numStrings)
-      : numStrings_(numStrings), numBinASTKinds_(0) {}
+  void release() {}
+
+  friend class BinASTSourceMetadata;
 
   friend class js::ScriptSource;
 
  public:
-  static BinASTSourceMetadata* Create(const Vector<BinASTKind>& binASTKinds,
-                                      uint32_t numStrings);
-  static BinASTSourceMetadata* Create(uint32_t numStrings);
+  static BinASTSourceMetadataMultipart* create(
+      const Vector<BinASTKind>& binASTKinds, uint32_t numStrings);
 
   inline uint32_t numBinASTKinds() { return numBinASTKinds_; }
 
@@ -152,11 +195,55 @@ class BinASTSourceMetadata {
   void trace(JSTracer* tracer);
 };
 
+class BinASTSourceMetadataContext : public BinASTSourceMetadata {
+  const uint32_t numStrings_;
+
+  // The data lives inline in the allocation, after this class.
+  inline JSAtom** atomsBase() {
+    return reinterpret_cast<JSAtom**>(reinterpret_cast<uintptr_t>(this + 1));
+  }
+
+  static inline size_t totalSize(uint32_t numStrings) {
+    return sizeof(BinASTSourceMetadataContext) + numStrings * sizeof(JSAtom*);
+  }
+
+  explicit BinASTSourceMetadataContext(uint32_t numStrings)
+      : BinASTSourceMetadata(Type::Context), numStrings_(numStrings) {}
+
+  void release() {}
+
+  friend class BinASTSourceMetadata;
+
+  friend class js::ScriptSource;
+
+ public:
+  static BinASTSourceMetadataContext* create(uint32_t numStrings);
+
+  inline uint32_t numStrings() { return numStrings_; }
+
+  inline JSAtom*& getAtom(uint32_t index) {
+    MOZ_ASSERT(index < numStrings_);
+    return atomsBase()[index];
+  }
+
+  void trace(JSTracer* tracer);
+};
+
+BinASTSourceMetadataMultipart* BinASTSourceMetadata::asMultipart() {
+  MOZ_ASSERT(isMultipart());
+  return reinterpret_cast<BinASTSourceMetadataMultipart*>(this);
+}
+
+BinASTSourceMetadataContext* BinASTSourceMetadata::asContext() {
+  MOZ_ASSERT(isContext());
+  return reinterpret_cast<BinASTSourceMetadataContext*>(this);
+}
+
 }  // namespace frontend
 
-typedef UniquePtr<frontend::BinASTSourceMetadata,
-                  GCManagedDeletePolicy<frontend::BinASTSourceMetadata>>
-    UniqueBinASTSourceMetadataPtr;
+using UniqueBinASTSourceMetadataPtr =
+    UniquePtr<frontend::BinASTSourceMetadata,
+              GCManagedDeletePolicy<frontend::BinASTSourceMetadata>>;
 
 }  // namespace js
 

@@ -17,10 +17,10 @@
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint8_t, uint32_t
 
-#include "jstypes.h"               // JS_PUBLIC_API
-#include "ds/FixedLengthVector.h"  // FixedLengthVector
-#include "frontend/BinASTRuntimeSupport.h"  // CharSlice, BinASTVariant, BinASTKind, BinASTField, BinASTSourceMetadata
-#include "frontend/BinASTToken.h"
+#include "jstypes.h"                        // JS_PUBLIC_API
+#include "ds/FixedLengthVector.h"           // FixedLengthVector
+#include "frontend/BinASTRuntimeSupport.h"  // CharSlice, BinASTSourceMetadata
+#include "frontend/BinASTToken.h"  // BinASTVariant, BinASTKind, BinASTField
 #include "frontend/BinASTTokenReaderBase.h"  // BinASTTokenReaderBase, SkippableSubTree
 #include "js/AllocPolicy.h"                  // SystemAllocPolicy
 #include "js/HashTable.h"                    // HashMap, DefaultHasher
@@ -1351,7 +1351,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
  private:
   enum class MetadataOwnership { Owned, Unowned };
   MetadataOwnership metadataOwned_ = MetadataOwnership::Owned;
-  BinASTSourceMetadata* metadata_;
+  BinASTSourceMetadataContext* metadata_;
 
   class HuffmanDictionary dictionary_;
 
