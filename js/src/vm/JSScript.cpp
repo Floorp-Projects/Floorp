@@ -3120,17 +3120,12 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
       MOZ_TRY(xdr->codeUint32(&numStrings));
 
       if (mode == XDR_DECODE) {
-        // Use calloc, since we're storing this immediately, and filling it
-        // might GC, to avoid marking bogus atoms.
-        void* mem =
-            js_calloc(frontend::BinASTSourceMetadataMultipart::totalSize(
-                numBinASTKinds, numStrings));
-        if (!mem) {
+        metadata = frontend::BinASTSourceMetadataMultipart::create(
+            numBinASTKinds, numStrings);
+        if (!metadata) {
           return xdr->fail(JS::TranscodeResult_Throw);
         }
 
-        metadata = new (mem)
-            frontend::BinASTSourceMetadataMultipart(numBinASTKinds, numStrings);
         binASTMetadata.reset(metadata);
       }
 
