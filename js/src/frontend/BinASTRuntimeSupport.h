@@ -170,8 +170,21 @@ class BinASTSourceMetadataMultipart : public BinASTSourceMetadata {
   friend class js::ScriptSource;
 
  public:
+  // Create the BinASTSourceMetadataMultipart instance, with copying
+  // `binASTKinds`, and allocating `numStrings` atoms/slices.
+  //
+  // Use this when the list of BinASTKind is known at the point of allocating
+  // metadata, like when parsing .binjs file.
   static BinASTSourceMetadataMultipart* create(
       const Vector<BinASTKind>& binASTKinds, uint32_t numStrings);
+
+  // Create the BinASTSourceMetadataMultipart instance, with allocating
+  // `numBinASTKinds` BinASTKinds and `numStrings` atoms/slices.
+  //
+  // Use this when the list of BinASTKind is unknown at the point of allocating
+  // metadata, like when performing XDR decode.
+  static BinASTSourceMetadataMultipart* create(uint32_t numBinASTKinds,
+                                               uint32_t numStrings);
 
   inline uint32_t numBinASTKinds() { return numBinASTKinds_; }
 
@@ -222,6 +235,8 @@ class BinASTSourceMetadataContext : public BinASTSourceMetadata {
   friend class js::ScriptSource;
 
  public:
+  // Create the BinASTSourceMetadataContext instance, with allocating
+  // `numStrings` atoms.
   static BinASTSourceMetadataContext* create(uint32_t numStrings);
 
   HuffmanDictionaryForMetadata* dictionary() { return dictionary_; }
