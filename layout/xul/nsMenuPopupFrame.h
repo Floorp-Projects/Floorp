@@ -248,7 +248,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   void EnsureWidget(bool aRecreate = false);
 
   nsresult CreateWidgetForView(nsView* aView);
-  mozilla::StyleWindowShadow GetShadowStyle();
+  uint8_t GetShadowStyle();
 
   bool IsLeafDynamic() const override;
 
