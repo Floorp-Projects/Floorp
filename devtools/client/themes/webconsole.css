@@ -179,12 +179,12 @@ a {
 }
 
 .message.paused:not(.paused-before) {
-  border-bottom-color: var(--purple-50);
+  border-top-color: var(--purple-50);
   /* always show the border, even for the last child */
-  border-bottom-width: 1px;
+  border-top-width: 1px;
 }
 
-.message.paused ~ .message:not(.command):not(.result) .message-body-wrapper,
+.message.paused ~ .message .message-body-wrapper,
 .message.paused.paused-before .message-body-wrapper {
   opacity: 0.5;
 }
