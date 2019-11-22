@@ -67,7 +67,7 @@ class BytecodeLocation {
 
   // Return true if this bytecode location is valid for the given script.
   // This includes the location 1-past the end of the bytecode.
-  bool isValid(const JSScript* script) const;
+  JS_PUBLIC_API bool isValid(const JSScript* script) const;
 
   // Return true if this bytecode location is within the bounds of the
   // bytecode for a given script.
