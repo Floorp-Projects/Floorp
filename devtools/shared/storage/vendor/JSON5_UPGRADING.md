@@ -17,7 +17,7 @@ git checkout v2.1.0 # checkout the right version tag
 ```bash
 npm install
 npm run build
-cp dist/index.js <gecko-dev>/devtools/client/shared/vendor/json5.js
+cp dist/index.js <gecko-dev>/devtools/shared/storage/vendor/json5.js
 ```
 
 ## Patching json5
