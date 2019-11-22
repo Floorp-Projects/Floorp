@@ -3054,7 +3054,7 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
   MOZ_TRY(xdr->codeUint32(&binASTLength));
 
   // XDR the BinAST data.
-  Maybe<SharedImmutableString> binASTData;
+  mozilla::Maybe<SharedImmutableString> binASTData;
   if (mode == XDR_DECODE) {
     auto bytes = xdr->cx()->template make_pod_array<char>(
         std::max<size_t>(binASTLength, 1));
@@ -3095,74 +3095,96 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
         mode == XDR_DECODE ? freshMetadata.get()
                            : ss->data.as<BinAST>().metadata;
 
-    uint32_t numBinASTKinds;
-    uint32_t numStrings;
+    frontend::BinASTSourceMetadata::Type metadataType;
+    uint8_t metadataTypeAsInt;
     if (mode == XDR_ENCODE) {
-      numBinASTKinds = binASTMetadata->numBinASTKinds();
-      numStrings = binASTMetadata->numStrings();
+      metadataType = binASTMetadata->type();
+      metadataTypeAsInt = static_cast<uint8_t>(metadataType);
     }
-    MOZ_TRY(xdr->codeUint32(&numBinASTKinds));
-    MOZ_TRY(xdr->codeUint32(&numStrings));
-
+    MOZ_TRY(xdr->codeUint8(&metadataTypeAsInt));
     if (mode == XDR_DECODE) {
-      // Use calloc, since we're storing this immediately, and filling it
-      // might GC, to avoid marking bogus atoms.
-      void* mem = js_calloc(frontend::BinASTSourceMetadata::totalSize(
-          numBinASTKinds, numStrings));
-      if (!mem) {
-        return xdr->fail(JS::TranscodeResult_Throw);
-      }
-
-      auto metadata =
-          new (mem) frontend::BinASTSourceMetadata(numBinASTKinds, numStrings);
-      binASTMetadata.reset(metadata);
+      metadataType =
+          static_cast<frontend::BinASTSourceMetadata::Type>(metadataTypeAsInt);
     }
 
-    MOZ_ASSERT(binASTMetadata != nullptr);
+    if (metadataType == frontend::BinASTSourceMetadata::Type::Multipart) {
+      auto metadata = binASTMetadata->asMultipart();
 
-    frontend::BinASTKind* binASTKindBase = binASTMetadata->binASTKindBase();
-    for (uint32_t i = 0; i < numBinASTKinds; i++) {
-      MOZ_TRY(xdr->codeEnum32(&binASTKindBase[i]));
-    }
-
-    RootedAtom atom(xdr->cx());
-    JSAtom** atomsBase = binASTMetadata->atomsBase();
-    auto slices = binASTMetadata->sliceBase();
-    const char* sourceBase =
-        (mode == XDR_ENCODE ? ss->data.as<BinAST>().string : *binASTData)
-            .chars();
-
-    for (uint32_t i = 0; i < numStrings; i++) {
-      uint8_t isNull;
+      uint32_t numBinASTKinds;
+      uint32_t numStrings;
       if (mode == XDR_ENCODE) {
-        atom = binASTMetadata->getAtom(i);
-        isNull = !atom;
+        numBinASTKinds = metadata->numBinASTKinds();
+        numStrings = metadata->numStrings();
       }
-      MOZ_TRY(xdr->codeUint8(&isNull));
-      if (isNull) {
-        atom = nullptr;
-      } else {
-        MOZ_TRY(XDRAtom(xdr, &atom));
-      }
-      if (mode == XDR_DECODE) {
-        atomsBase[i] = atom;
-      }
-
-      uint64_t sliceOffset;
-      uint32_t sliceLen;
-      if (mode == XDR_ENCODE) {
-        auto& slice = binASTMetadata->getSlice(i);
-        sliceOffset = slice.begin() - sourceBase;
-        sliceLen = slice.byteLen_;
-      }
-
-      MOZ_TRY(xdr->codeUint64(&sliceOffset));
-      MOZ_TRY(xdr->codeUint32(&sliceLen));
+      MOZ_TRY(xdr->codeUint32(&numBinASTKinds));
+      MOZ_TRY(xdr->codeUint32(&numStrings));
 
       if (mode == XDR_DECODE) {
-        new (&slices[i]) frontend::BinASTSourceMetadata::CharSlice(
-            sourceBase + sliceOffset, sliceLen);
+        // Use calloc, since we're storing this immediately, and filling it
+        // might GC, to avoid marking bogus atoms.
+        void* mem =
+            js_calloc(frontend::BinASTSourceMetadataMultipart::totalSize(
+                numBinASTKinds, numStrings));
+        if (!mem) {
+          return xdr->fail(JS::TranscodeResult_Throw);
+        }
+
+        metadata = new (mem)
+            frontend::BinASTSourceMetadataMultipart(numBinASTKinds, numStrings);
+        binASTMetadata.reset(metadata);
       }
+
+      MOZ_ASSERT(binASTMetadata != nullptr);
+
+      frontend::BinASTKind* binASTKindBase = metadata->binASTKindBase();
+      for (uint32_t i = 0; i < numBinASTKinds; i++) {
+        MOZ_TRY(xdr->codeEnum32(&binASTKindBase[i]));
+      }
+
+      Rooted<JSAtom*> atom(xdr->cx());
+      JSAtom** atomsBase = metadata->atomsBase();
+      auto slices = metadata->sliceBase();
+      const char* sourceBase =
+          (mode == XDR_ENCODE ? ss->data.as<BinAST>().string : *binASTData)
+              .chars();
+
+      for (uint32_t i = 0; i < numStrings; i++) {
+        uint8_t isNull;
+        if (mode == XDR_ENCODE) {
+          atom = metadata->getAtom(i);
+          isNull = !atom;
+        }
+        MOZ_TRY(xdr->codeUint8(&isNull));
+        if (isNull) {
+          atom = nullptr;
+        } else {
+          MOZ_TRY(XDRAtom(xdr, &atom));
+        }
+        if (mode == XDR_DECODE) {
+          atomsBase[i] = atom;
+        }
+
+        uint64_t sliceOffset;
+        uint32_t sliceLen;
+        if (mode == XDR_ENCODE) {
+          auto& slice = metadata->getSlice(i);
+          sliceOffset = slice.begin() - sourceBase;
+          sliceLen = slice.byteLen_;
+        }
+
+        MOZ_TRY(xdr->codeUint64(&sliceOffset));
+        MOZ_TRY(xdr->codeUint32(&sliceLen));
+
+        if (mode == XDR_DECODE) {
+          new (&slices[i]) frontend::BinASTSourceMetadataMultipart::CharSlice(
+              sourceBase + sliceOffset, sliceLen);
+        }
+      }
+    } else {
+      MOZ_ASSERT(metadataType == frontend::BinASTSourceMetadata::Type::Context);
+
+      // FIXMEarai
+      MOZ_CRASH("NYI");
     }
   }
 

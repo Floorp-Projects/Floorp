@@ -69,7 +69,7 @@ BinASTSourceMetadata* BinASTTokenReaderMultipart::takeMetadata() {
 
 JS::Result<Ok> BinASTTokenReaderMultipart::initFromScriptSource(
     ScriptSource* scriptSource) {
-  metadata_ = scriptSource->binASTSourceMetadata();
+  metadata_ = scriptSource->binASTSourceMetadata()->asMultipart();
   metadataOwned_ = MetadataOwnership::Unowned;
 
   return Ok();
@@ -155,8 +155,9 @@ JS::Result<Ok> BinASTTokenReaderMultipart::readHeader() {
     return raiseError("Too many entries in strings table");
   }
 
-  BinASTSourceMetadata* metadata =
-      BinASTSourceMetadata::Create(grammarTable_, stringsNumberOfEntries);
+  BinASTSourceMetadataMultipart* metadata =
+      BinASTSourceMetadataMultipart::create(grammarTable_,
+                                            stringsNumberOfEntries);
   if (!metadata) {
     return raiseOOM();
   }
