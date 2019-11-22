@@ -17,6 +17,7 @@ SOURCES += [
 
 UNIFIED_SOURCES += [
     'tests/test-asmjs.cpp',
+    'tests/test-ExecutableAllocator.cpp',
     'tests/test-GCCellPtr.cpp',
     'tests/test-Interpreter.cpp',
     'tests/test-jsid.cpp',
