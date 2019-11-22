@@ -47,7 +47,8 @@ class Output(object):
                 suite = {
                     'name': test.name(),
                     'extraOptions': self.results.extra_options or [],
-                    'subtests': subtests
+                    'subtests': subtests,
+                    'shouldAlert': test.test_config.get('suite_should_alert')
                 }
 
                 suites.append(suite)
@@ -182,7 +183,8 @@ class Output(object):
             if counter_subtests:
                 suites.append({'name': test.name(),
                                'extraOptions': self.results.extra_options or [],
-                               'subtests': counter_subtests})
+                               'subtests': counter_subtests,
+                               'shouldAlert': test.test_config.get('suite_should_alert')})
         return test_results
 
     def output(self, results, results_url):
