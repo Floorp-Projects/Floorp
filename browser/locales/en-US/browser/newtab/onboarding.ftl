@@ -110,7 +110,7 @@ onboarding-data-sync-button2 = Sign in to { -sync-brand-short-name }
 
 onboarding-firefox-monitor-title = Stay Alert to Data Breaches
 onboarding-firefox-monitor-text2 = { -monitor-brand-name } monitors if your email has appeared in a known data breach and alerts you if it appears in a new breach.
-onboarding-firefox-monitor-button = Sign up for Alerts
+onboarding-firefox-monitor-button = Sign Up for Alerts
 
 onboarding-browse-privately-title = Browse Privately
 onboarding-browse-privately-text = Private Browsing clears your search and browsing history to keep it secret from anyone who uses your computer.
@@ -129,16 +129,16 @@ onboarding-mobile-phone-button = Download Mobile Browser
 onboarding-send-tabs-title = Instantly Send Yourself Tabs
 # "Send Tabs" refers to "Send Tab to Device" feature that appears when opening a
 # tab's context menu.
-onboarding-send-tabs-text = Send Tabs instantly shares pages between your devices without having to copy, paste, or leave the browser.
+onboarding-send-tabs-text2 = Easily share pages between your devices without having to copy links or leave the browser.
 onboarding-send-tabs-button = Start Using Send Tabs
 
 onboarding-pocket-anywhere-title = Read and Listen Anywhere
 onboarding-pocket-anywhere-text2 = Save your favorite content offline with the { -pocket-brand-name } App and read, listen, and watch whenever it’s convenient for you.
 onboarding-pocket-anywhere-button = Try { -pocket-brand-name }
 
-onboarding-lockwise-passwords-title = Take Your Passwords Everywhere
-onboarding-lockwise-passwords-text2 = Keep the passwords you save secure and easily log in to your accounts with { -lockwise-brand-name }.
-onboarding-lockwise-passwords-button2 = Get the App
+onboarding-lockwise-strong-passwords-title = Create and Store Strong Passwords
+onboarding-lockwise-strong-passwords-text = { -lockwise-brand-name } creates strong passwords on the spot and saves all of them in one place.
+onboarding-lockwise-strong-passwords-button = Manage Your Logins
 
 onboarding-facebook-container-title = Set Boundaries with Facebook
 onboarding-facebook-container-text2 = { -facebook-container-brand-name } keeps your profile separate from everything else, making it harder for Facebook to target you with ads.

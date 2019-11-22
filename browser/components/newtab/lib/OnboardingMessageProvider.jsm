@@ -361,7 +361,7 @@ const ONBOARDING_MESSAGES = () => [
     order: 4,
     content: {
       title: { string_id: "onboarding-send-tabs-title" },
-      text: { string_id: "onboarding-send-tabs-text" },
+      text: { string_id: "onboarding-send-tabs-text2" },
       icon: "sendtab",
       primary_button: {
         label: { string_id: "onboarding-send-tabs-button" },
@@ -407,14 +407,14 @@ const ONBOARDING_MESSAGES = () => [
     bundled: 3,
     order: 7,
     content: {
-      title: { string_id: "onboarding-lockwise-passwords-title" },
-      text: { string_id: "onboarding-lockwise-passwords-text2" },
+      title: { string_id: "onboarding-lockwise-strong-passwords-title" },
+      text: { string_id: "onboarding-lockwise-strong-passwords-text" },
       icon: "lockwise",
       primary_button: {
-        label: { string_id: "onboarding-lockwise-passwords-button2" },
+        label: { string_id: "onboarding-lockwise-strong-passwords-button" },
         action: {
-          type: "OPEN_URL",
-          data: { args: "https://lockwise.firefox.com/", where: "tabshifted" },
+          type: "OPEN_ABOUT_PAGE",
+          data: { args: "logins", where: "tabshifted" },
         },
       },
     },
