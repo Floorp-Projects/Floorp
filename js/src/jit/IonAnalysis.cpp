@@ -4887,6 +4887,10 @@ bool jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg) {
 
   bool argumentsContentsObserved = false;
 
+  if (argumentsValue->isImplicitlyUsed()) {
+    return true;
+  }
+
   for (MUseDefIterator uses(argumentsValue); uses; uses++) {
     MDefinition* use = uses.def();
 
