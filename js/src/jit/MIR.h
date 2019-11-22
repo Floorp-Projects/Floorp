@@ -1696,6 +1696,11 @@ class MControlInstruction : public MInstruction {
   virtual MBasicBlock* getSuccessor(size_t i) const = 0;
   virtual void replaceSuccessor(size_t i, MBasicBlock* successor) = 0;
 
+  void initSuccessor(size_t i, MBasicBlock* successor) {
+    MOZ_ASSERT(!getSuccessor(i));
+    replaceSuccessor(i, successor);
+  }
+
   bool isControlInstruction() const override { return true; }
 
 #ifdef JS_JITSPEW
