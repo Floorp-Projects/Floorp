@@ -979,35 +979,6 @@ nsIFrame::ReflowChildFlags nsMenuPopupFrame::GetXULLayoutFlags() {
          ReflowChildFlags::NoVisibility;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// GetRootViewForPopup
-//   Retrieves the view for the popup widget that contains the given frame.
-//   If the given frame is not contained by a popup widget, return the
-//   root view of the root viewmanager.
-nsView* nsMenuPopupFrame::GetRootViewForPopup(nsIFrame* aStartFrame) {
-  nsView* view = aStartFrame->GetClosestView();
-  NS_ASSERTION(view, "frame must have a closest view!");
-  while (view) {
-    // Walk up the view hierarchy looking for a view whose widget has a
-    // window type of eWindowType_popup - in other words a popup window
-    // widget. If we find one, this is the view we want.
-    nsIWidget* widget = view->GetWidget();
-    if (widget && widget->WindowType() == eWindowType_popup) {
-      return view;
-    }
-
-    nsView* temp = view->GetParent();
-    if (!temp) {
-      // Otherwise, we've walked all the way up to the root view and not
-      // found a view for a popup window widget. Just return the root view.
-      return view;
-    }
-    view = temp;
-  }
-
-  return nullptr;
-}
-
 nsPoint nsMenuPopupFrame::AdjustPositionForAnchorAlign(nsRect& anchorRect,
                                                        FlipStyle& aHFlip,
                                                        FlipStyle& aVFlip) {
@@ -2183,10 +2154,9 @@ void nsMenuPopupFrame::LockMenuUntilClosed(bool aLock) {
 }
 
 nsIWidget* nsMenuPopupFrame::GetWidget() {
-  nsView* view = GetRootViewForPopup(this);
-  if (!view) return nullptr;
+  if (!mView) return nullptr;
 
-  return view->GetWidget();
+  return mView->GetWidget();
 }
 
 // helpers /////////////////////////////////////////////////////////////
