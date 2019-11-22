@@ -459,7 +459,7 @@ class SSLServerCertVerificationJob : public Runnable {
                             const void* fdForLogging,
                             TransportSecurityInfo* infoObject,
                             const UniqueCERTCertificate& serverCert,
-                            const UniqueCERTCertList& peerCertChain,
+                            UniqueCERTCertList& peerCertChain,
                             Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
                             Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
                             Maybe<DelegatedCredentialInfo>& dcInfo,
@@ -1150,7 +1150,7 @@ Result AuthCertificate(CertVerifier& certVerifier,
 SECStatus SSLServerCertVerificationJob::Dispatch(
     const RefPtr<SharedCertVerifier>& certVerifier, const void* fdForLogging,
     TransportSecurityInfo* infoObject, const UniqueCERTCertificate& serverCert,
-    const UniqueCERTCertList& peerCertChain,
+    UniqueCERTCertList& peerCertChain,
     Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
     Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
     Maybe<DelegatedCredentialInfo>& dcInfo, uint32_t providerFlags, Time time,
@@ -1167,14 +1167,7 @@ SECStatus SSLServerCertVerificationJob::Dispatch(
     return SECFailure;
   }
 
-  // Copy the certificate list so the runnable can take ownership of it in the
-  // constructor.
-  UniqueCERTCertList peerCertChainCopy =
-      nsNSSCertList::DupCertList(peerCertChain);
-  if (!peerCertChainCopy) {
-    PR_SetError(SEC_ERROR_NO_MEMORY, 0);
-    return SECFailure;
-  }
+  UniqueCERTCertList peerCertChainCopy = std::move(peerCertChain);
 
   RefPtr<SSLServerCertVerificationJob> job(new SSLServerCertVerificationJob(
       certVerifier, fdForLogging, infoObject, serverCert,

@@ -9,7 +9,6 @@
 #include "nsISimpleEnumerator.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsIX509Cert.h"
-#include "nsIX509CertList.h"
 #include "nsSerializationHelper.h"
 #include "nsString.h"
 
