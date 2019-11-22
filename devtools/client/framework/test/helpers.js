@@ -35,7 +35,7 @@ const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 async function initBrowserToolboxTask({ enableBrowserToolboxFission } = {}) {
   await pushPref("devtools.chrome.enabled", true);
   await pushPref("devtools.debugger.remote-enabled", true);
-  await pushPref("devtools.browser-toolbox.allow-unsafe-script", true);
+  await pushPref("devtools.browsertoolbox.enable-test-server", true);
   await pushPref("devtools.debugger.prompt-connection", false);
 
   // This rejection seems to affect all tests using the browser toolbox.
