@@ -16,6 +16,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
+#include "mozilla/StaticPrefs_extensions.h"
 
 // Possible behavior pref values
 // Those map to the nsIPermissionManager values where possible
@@ -86,6 +87,10 @@ nsContentBlocker::nsContentBlocker() {
 }
 
 nsresult nsContentBlocker::Init() {
+  if (!StaticPrefs::extensions_contentblocker_enabled_AtStartup()) {
+    return NS_OK;
+  }
+
   mPermissionManager = nsPermissionManager::GetInstance();
   if (!mPermissionManager) {
     return NS_ERROR_NULL_POINTER;
@@ -156,6 +161,10 @@ void nsContentBlocker::PrefChanged(nsIPrefBranch* aPrefBranch,
 NS_IMETHODIMP
 nsContentBlocker::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
                              const nsACString& aMimeGuess, int16_t* aDecision) {
+  if (!StaticPrefs::extensions_contentblocker_enabled_AtStartup()) {
+    *aDecision = nsIContentPolicy::ACCEPT;
+    return NS_OK;
+  }
   uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->LoadingPrincipal();
   nsCOMPtr<nsIURI> requestingLocation;
@@ -213,6 +222,10 @@ nsContentBlocker::ShouldProcess(nsIURI* aContentLocation,
                                 nsILoadInfo* aLoadInfo,
                                 const nsACString& aMimeGuess,
                                 int16_t* aDecision) {
+  if (!StaticPrefs::extensions_contentblocker_enabled_AtStartup()) {
+    *aDecision = nsIContentPolicy::ACCEPT;
+    return NS_OK;
+  }
   uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
   nsCOMPtr<nsISupports> requestingContext = aLoadInfo->GetLoadingContext();
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->LoadingPrincipal();
