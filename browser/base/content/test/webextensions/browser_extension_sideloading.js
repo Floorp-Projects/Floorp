@@ -53,7 +53,7 @@ function assertDisabledSideloadedAddonElement(managerWindow, addonElement) {
   const enableBtn = addonElement.querySelector('[action="toggle-disabled"]');
   is(
     doc.l10n.getAttributes(enableBtn).id,
-    "enable-addon-button-label",
+    "enable-addon-button",
     "The button has the enable label"
   );
 }

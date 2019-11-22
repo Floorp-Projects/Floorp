@@ -14,7 +14,6 @@
 
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://mozapps/content/extensions/aboutaddons.css">
-    <link rel="stylesheet" href="chrome://mozapps/content/extensions/toggle-button.css">
     <link rel="stylesheet" href="chrome://mozapps/content/extensions/shortcuts.css">
 
     <link rel="localization" href="branding/brand.ftl">
@@ -78,6 +77,7 @@
 
     <template name="addon-options">
       <panel-list>
+        <panel-item action="toggle-disabled"></panel-item>
         <panel-item data-l10n-id="remove-addon-button" action="remove"></panel-item>
         <panel-item data-l10n-id="install-update-button" action="install-update" badged></panel-item>
         <panel-item data-l10n-id="preferences-addon-button" action="preferences"></panel-item>
@@ -119,18 +119,17 @@
                  data-l10n-id="addon-badge-private-browsing-allowed2"
                  hidden>
               </a>
-              <div class="spacer"></div>
-              <button class="theme-enable-button" action="toggle-disabled" hidden></button>
-              <input type="checkbox" class="toggle-button extension-enable-button" action="toggle-disabled" hidden>
-              <button
-                class="more-options-button"
-                action="more-options"
-                data-l10n-id="addon-options-button"
-                aria-haspopup="menu"
-                aria-expanded="false"></button>
             </div>
             <!-- This ends up in the tab order when the ellipsis happens, but it isn't necessary. -->
             <span class="addon-description" tabindex="-1"></span>
+          </div>
+          <div class="more-options-menu">
+            <button
+              class="more-options-button ghost-button"
+              action="more-options"
+              data-l10n-id="addon-options-button"
+              aria-haspopup="menu"
+              aria-expanded="false"></button>
           </div>
         </div>
         <message-bar class="addon-card-message" align="center" hidden>

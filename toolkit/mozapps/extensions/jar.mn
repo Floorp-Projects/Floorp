@@ -22,9 +22,6 @@ toolkit.jar:
   content/mozapps/extensions/abuse-report-frame.js              (content/abuse-report-frame.js)
   content/mozapps/extensions/abuse-report-panel.css             (content/abuse-report-panel.css)
   content/mozapps/extensions/abuse-report-panel.js              (content/abuse-report-panel.js)
-  content/mozapps/extensions/default-theme.svg                  (content/default-theme.svg)
-  content/mozapps/extensions/firefox-compact-dark.svg           (content/firefox-compact-dark.svg)
-  content/mozapps/extensions/firefox-compact-light.svg          (content/firefox-compact-light.svg)
   content/mozapps/extensions/message-bar.css                    (content/message-bar.css)
   content/mozapps/extensions/message-bar.js                     (content/message-bar.js)
   content/mozapps/extensions/named-deck.js                      (content/named-deck.js)
@@ -33,5 +30,4 @@ toolkit.jar:
   content/mozapps/extensions/rating-star.css                    (content/rating-star.css)
   content/mozapps/extensions/shortcuts.css                      (content/shortcuts.css)
   content/mozapps/extensions/shortcuts.js                       (content/shortcuts.js)
-  content/mozapps/extensions/toggle-button.css                  (content/toggle-button.css)
 #endif

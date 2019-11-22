@@ -15,6 +15,9 @@ var GMPScope = ChromeUtils.import(
 
 const TEST_DATE = new Date(2013, 0, 1, 12);
 
+var gManagerWindow;
+var gCategoryUtilities;
+
 var gMockAddons = [];
 
 for (let plugin of GMPScope.GMP_PLUGINS) {
@@ -50,19 +53,34 @@ MockGMPInstallManager.prototype = {
   },
 };
 
-function openDetailsView(win, id) {
-  let item = getAddonCard(win, id);
+function openDetailsView(aId) {
+  let view = get_current_view(gManagerWindow);
+  Assert.equal(
+    view.id,
+    "html-view",
+    "Should be in the list view to use this function"
+  );
+
+  let item = get_addon_element(gManagerWindow, aId);
   Assert.ok(item, "Should have got add-on element.");
   is_element_visible(item, "Add-on element should be visible.");
 
-  let loaded = waitForViewLoad(win);
-  EventUtils.synthesizeMouseAtCenter(item, {}, item.ownerGlobal);
-  return loaded;
+  item.scrollIntoView();
+  EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, item.ownerGlobal);
+  EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, item.ownerGlobal);
+
+  return new Promise(resolve => {
+    wait_for_view_load(gManagerWindow, resolve);
+  });
 }
 
-add_task(async function initializeState() {
+async function initializeState() {
   gPrefs.setBoolPref(GMPScope.GMPPrefs.KEY_LOGGING_DUMP, true);
   gPrefs.setIntPref(GMPScope.GMPPrefs.KEY_LOGGING_LEVEL, 0);
+
+  gManagerWindow = await open_manager();
+
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
   registerCleanupFunction(async function() {
     for (let addon of gMockAddons) {
@@ -124,16 +142,14 @@ add_task(async function initializeState() {
   }
   await GMPScope.GMPProvider.shutdown();
   GMPScope.GMPProvider.startup();
-});
+}
 
-add_task(async function testNotInstalledDisabled() {
-  let win = await loadInitialView("extension");
-
-  Assert.ok(isCategoryVisible(win, "plugin"), "Plugin tab visible.");
-  await switchView(win, "plugin");
+async function testNotInstalledDisabled() {
+  Assert.ok(gCategoryUtilities.isTypeVisible("plugin"), "Plugin tab visible.");
+  await gCategoryUtilities.openType("plugin");
 
   for (let addon of gMockAddons) {
-    let addonCard = getAddonCard(win, addon.id);
+    let addonCard = get_addon_element(gManagerWindow, addon.id);
     Assert.ok(addonCard, "Got add-on element:" + addon.id);
 
     is(
@@ -145,20 +161,18 @@ add_task(async function testNotInstalledDisabled() {
     let cardMessage = addonCard.querySelector("message-bar.addon-card-message");
     is_element_hidden(cardMessage, "Warning notification is hidden");
   }
+}
 
-  await closeView(win);
-});
-
-add_task(async function testNotInstalledDisabledDetails() {
-  let win = await loadInitialView("plugin");
-
+async function testNotInstalledDisabledDetails() {
   for (let addon of gMockAddons) {
-    await openDetailsView(win, addon.id);
-    let addonCard = getAddonCard(win, addon.id);
+    await openDetailsView(addon.id);
+    let doc = gManagerWindow.document;
+
+    let addonCard = get_addon_element(gManagerWindow, addon.id);
     ok(addonCard, "Got add-on element: " + addon.id);
 
     is(
-      win.document.l10n.getAttributes(addonCard.addonNameEl).id,
+      doc.l10n.getAttributes(addonCard.addonNameEl).id,
       "addon-name-disabled",
       "The addon name should include a disabled postfix"
     );
@@ -168,21 +182,17 @@ add_task(async function testNotInstalledDisabledDetails() {
     let cardMessage = addonCard.querySelector("message-bar.addon-card-message");
     is_element_hidden(cardMessage, "Warning notification is hidden");
 
-    await switchView(win, "plugin");
+    await gCategoryUtilities.openType("plugin");
   }
+}
 
-  await closeView(win);
-});
-
-add_task(async function testNotInstalled() {
-  let win = await loadInitialView("plugin");
-
+async function testNotInstalled() {
   for (let addon of gMockAddons) {
     gPrefs.setBoolPref(
       getKey(GMPScope.GMPPrefs.KEY_PLUGIN_ENABLED, addon.id),
       true
     );
-    let item = getAddonCard(win, addon.id);
+    let item = get_addon_element(gManagerWindow, addon.id);
     Assert.ok(item, "Got add-on element:" + addon.id);
 
     let warningMessageBar = await BrowserTestUtils.waitForCondition(() => {
@@ -204,17 +214,13 @@ add_task(async function testNotInstalled() {
     );
     pluginOptions.querySelector("panel-list").open = false;
   }
+}
 
-  await closeView(win);
-});
-
-add_task(async function testNotInstalledDetails() {
-  let win = await loadInitialView("plugin");
-
+async function testNotInstalledDetails() {
   for (let addon of gMockAddons) {
-    await openDetailsView(win, addon.id);
+    await openDetailsView(addon.id);
 
-    const addonCard = getAddonCard(win, addon.id);
+    const addonCard = get_addon_element(gManagerWindow, addon.id);
     let el = addonCard.querySelector("[action=update-check]");
     is_element_visible(el, "Check for Updates action is visible");
 
@@ -225,15 +231,11 @@ add_task(async function testNotInstalledDetails() {
     }, "Wait for the addon card message to be updated");
     is_element_visible(warningMessageBar, "Warning notification is visible");
 
-    await switchView(win, "plugin");
+    await gCategoryUtilities.openType("plugin");
   }
+}
 
-  await closeView(win);
-});
-
-add_task(async function testInstalled() {
-  let win = await loadInitialView("plugin");
-
+async function testInstalled() {
   for (let addon of gMockAddons) {
     gPrefs.setIntPref(
       getKey(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, addon.id),
@@ -248,7 +250,7 @@ add_task(async function testInstalled() {
       "1.2.3.4"
     );
 
-    let item = getAddonCard(win, addon.id);
+    let item = get_addon_element(gManagerWindow, addon.id);
     Assert.ok(item, "Got add-on element.");
 
     is(item.parentNode.getAttribute("section"), "0", "Should be enabled");
@@ -264,17 +266,13 @@ add_task(async function testInstalled() {
     );
     pluginOptions.querySelector("panel-list").open = false;
   }
+}
 
-  await closeView(win);
-});
-
-add_task(async function testInstalledDetails() {
-  let win = await loadInitialView("plugin");
-
+async function testInstalledDetails() {
   for (let addon of gMockAddons) {
-    await openDetailsView(win, addon.id);
+    await openDetailsView(addon.id);
 
-    let card = getAddonCard(win, addon.id);
+    let card = get_addon_element(gManagerWindow, addon.id);
     ok(card, "Got add-on element:" + addon.id);
 
     is_element_visible(
@@ -282,18 +280,14 @@ add_task(async function testInstalledDetails() {
       "Find updates link is visible"
     );
 
-    await switchView(win, "plugin");
+    await gCategoryUtilities.openType("plugin");
   }
+}
 
-  await closeView(win);
-});
-
-add_task(async function testInstalledGlobalEmeDisabled() {
-  let win = await loadInitialView("plugin");
+async function testInstalledGlobalEmeDisabled() {
   gPrefs.setBoolPref(GMPScope.GMPPrefs.KEY_EME_ENABLED, false);
-
   for (let addon of gMockAddons) {
-    let item = getAddonCard(win, addon.id);
+    let item = get_addon_element(gManagerWindow, addon.id);
     if (addon.isEME) {
       is(item.parentNode.getAttribute("section"), "1", "Should be disabled");
       // Open the options menu (needed to check the disabled buttons).
@@ -311,12 +305,10 @@ add_task(async function testInstalledGlobalEmeDisabled() {
       Assert.ok(item, "Got add-on element.");
     }
   }
-
   gPrefs.setBoolPref(GMPScope.GMPPrefs.KEY_EME_ENABLED, true);
-  await closeView(win);
-});
+}
 
-add_task(async function testPreferencesButton() {
+async function testPreferencesButton() {
   let prefValues = [
     { enabled: false, version: "" },
     { enabled: false, version: "1.2.3.4" },
@@ -325,12 +317,15 @@ add_task(async function testPreferencesButton() {
   ];
 
   for (let preferences of prefValues) {
-    info(
+    dump(
       "Testing preferences button with pref settings: " +
-        JSON.stringify(preferences)
+        JSON.stringify(preferences) +
+        "\n"
     );
     for (let addon of gMockAddons) {
-      let win = await loadInitialView("plugin");
+      await close_manager(gManagerWindow);
+      gManagerWindow = await open_manager();
+      gCategoryUtilities = new CategoryUtilities(gManagerWindow);
       gPrefs.setCharPref(
         getKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id),
         preferences.version
@@ -340,7 +335,8 @@ add_task(async function testPreferencesButton() {
         preferences.enabled
       );
 
-      let item = getAddonCard(win, addon.id);
+      await gCategoryUtilities.openType("plugin");
+      let item = get_addon_element(gManagerWindow, addon.id);
 
       // Open the options menu (needed to check the more options action is enabled).
       const pluginOptions = item.querySelector("plugin-options");
@@ -354,17 +350,12 @@ add_task(async function testPreferencesButton() {
       );
       moreOptions.click();
 
-      await waitForViewLoad(win);
-
-      item = getAddonCard(win, addon.id);
-      ok(item, "The right view is loaded");
-
-      await closeView(win);
+      await wait_for_view_load(gManagerWindow);
     }
   }
-});
+}
 
-add_task(async function testUpdateButton() {
+async function testUpdateButton() {
   gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK);
 
   let originalInstallManager = GMPScope.GMPInstallManager;
@@ -375,24 +366,20 @@ add_task(async function testUpdateButton() {
     configurable: true,
   });
 
-  let win = await loadInitialView("plugin");
-
   for (let addon of gMockAddons) {
-    let item = getAddonCard(win, addon.id);
+    await gCategoryUtilities.openType("plugin");
+    let item = get_addon_element(gManagerWindow, addon.id);
 
     gInstalledAddonId = "";
     gInstallDeferred = Promise.defer();
 
-    let loaded = waitForViewLoad(win);
     item.querySelector("[action=expand]").click();
-    await loaded;
-    let detail = getAddonCard(win, addon.id);
+    await wait_for_view_load(gManagerWindow);
+    let detail = get_addon_element(gManagerWindow, addon.id);
     detail.querySelector("[action=update-check]").click();
 
     await gInstallDeferred.promise;
     Assert.equal(gInstalledAddonId, addon.id);
-
-    await switchView(win, "plugin");
   }
   Object.defineProperty(GMPScope, "GMPInstallManager", {
     value: originalInstallManager,
@@ -400,11 +387,9 @@ add_task(async function testUpdateButton() {
     enumerable: true,
     configurable: true,
   });
+}
 
-  await closeView(win);
-});
-
-add_task(async function testEmeSupport() {
+async function testEmeSupport() {
   for (let addon of gMockAddons) {
     gPrefs.clearUserPref(
       getKey(GMPScope.GMPPrefs.KEY_PLUGIN_FORCE_SUPPORTED, addon.id)
@@ -413,10 +398,9 @@ add_task(async function testEmeSupport() {
   await GMPScope.GMPProvider.shutdown();
   GMPScope.GMPProvider.startup();
 
-  let win = await loadInitialView("plugin");
-
   for (let addon of gMockAddons) {
-    let item = getAddonCard(win, addon.id);
+    await gCategoryUtilities.openType("plugin");
+    let item = get_addon_element(gManagerWindow, addon.id);
     if (addon.id == GMPScope.EME_ADOBE_ID) {
       if (AppConstants.isPlatformAndVersionAtLeast("win", "6")) {
         Assert.ok(item, "Adobe EME supported, found add-on element.");
@@ -444,8 +428,6 @@ add_task(async function testEmeSupport() {
     }
   }
 
-  await closeView(win);
-
   for (let addon of gMockAddons) {
     gPrefs.setBoolPref(
       getKey(GMPScope.GMPPrefs.KEY_PLUGIN_VISIBLE, addon.id),
@@ -458,4 +440,27 @@ add_task(async function testEmeSupport() {
   }
   await GMPScope.GMPProvider.shutdown();
   GMPScope.GMPProvider.startup();
+}
+
+async function testCleanupState() {
+  await SpecialPowers.popPrefEnv();
+  await close_manager(gManagerWindow);
+}
+
+// This function run the sequence of all the gmpProvider tests
+// under the same initializeStateOptions (which will enable or disable
+// the HTML about:addons views).
+add_task(async function test_gmpProvider(initializeStateOptions) {
+  await initializeState();
+  await testNotInstalledDisabled();
+  await testNotInstalledDisabledDetails();
+  await testNotInstalled();
+  await testNotInstalledDetails();
+  await testInstalled();
+  await testInstalledDetails();
+  await testInstalledGlobalEmeDisabled();
+  await testPreferencesButton();
+  await testUpdateButton();
+  await testEmeSupport();
+  await testCleanupState();
 });
