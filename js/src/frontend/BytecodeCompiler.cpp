@@ -741,7 +741,7 @@ ScriptSourceObject* frontend::CreateScriptSourceObject(
 
 JSScript* frontend::CompileGlobalBinASTScript(
     JSContext* cx, const ReadOnlyCompileOptions& options, const uint8_t* src,
-    size_t len, ScriptSourceObject** sourceObjectOut) {
+    size_t len, JS::BinASTFormat format, ScriptSourceObject** sourceObjectOut) {
   AutoAssertReportedException assertException(cx);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
@@ -767,6 +767,8 @@ JSScript* frontend::CompileGlobalBinASTScript(
   Directives directives(options.forceStrictMode());
   GlobalSharedContext globalsc(cx, ScopeKind::Global, directives,
                                options.extraWarningsOption);
+
+  MOZ_ASSERT(format == JS::BinASTFormat::Multipart);
 
   frontend::BinASTParser<BinASTTokenReaderMultipart> parser(cx, parseInfo,
                                                             options, sourceObj);

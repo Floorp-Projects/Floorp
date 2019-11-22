@@ -920,7 +920,7 @@ static MOZ_MUST_USE bool RunBinAST(JSContext* cx, const char* filename,
         .setIsRunOnce(true)
         .setNoScriptRval(true);
 
-    script = JS::DecodeBinAST(cx, options, file);
+    script = JS::DecodeBinAST(cx, options, file, JS::BinASTFormat::Multipart);
     if (!script) {
       return false;
     }

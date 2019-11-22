@@ -2114,7 +2114,7 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
     MOZ_ASSERT(aRequest->IsSource());
     if (!JS::DecodeBinASTOffThread(
             cx, options, aRequest->ScriptBinASTData().begin(),
-            aRequest->ScriptBinASTData().length(),
+            aRequest->ScriptBinASTData().length(), JS::BinASTFormat::Multipart,
             OffThreadScriptLoaderCallback, static_cast<void*>(runnable))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

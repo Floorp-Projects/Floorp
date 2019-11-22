@@ -14,6 +14,7 @@
 #include "nsJSUtils.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/BinASTFormat.h"  // JS::BinASTFormat
 #include "js/CompilationAndEvaluation.h"
 #include "js/Modules.h"  // JS::CompileModule{,DontInflate}, JS::GetModuleScript, JS::Module{Instantiate,Evaluate}
 #include "js/OffThreadScriptCompilation.h"
@@ -371,7 +372,8 @@ nsresult nsJSUtils::ExecutionContext::DecodeBinAST(
   mWantsReturnValue = !aCompileOptions.noScriptRval;
 #  endif
 
-  mScript.set(JS::DecodeBinAST(mCx, aCompileOptions, aBuf, aLength));
+  mScript.set(JS::DecodeBinAST(mCx, aCompileOptions, aBuf, aLength,
+                               JS::BinASTFormat::Multipart));
 
   if (!mScript) {
     mSkip = true;

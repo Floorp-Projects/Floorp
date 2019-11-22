@@ -124,6 +124,7 @@ EXPORTS.js += [
     '../public/AllocationRecording.h',
     '../public/AllocPolicy.h',
     '../public/ArrayBuffer.h',
+    '../public/BinASTFormat.h',
     '../public/BuildId.h',
     '../public/CallArgs.h',
     '../public/CallNonGenericMethod.h',
