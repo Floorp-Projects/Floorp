@@ -71,6 +71,10 @@ class EventQueueInternal : public AbstractEventQueue {
 
   IdlePeriodState* GetIdlePeriodState() const { return nullptr; }
 
+  bool HasIdleRunnables(const MutexAutoLock& aProofOfLock) const {
+    return false;
+  }
+
   size_t SizeOfExcludingThis(
       mozilla::MallocSizeOf aMallocSizeOf) const override {
     size_t size = mQueue.ShallowSizeOfExcludingThis(aMallocSizeOf);
