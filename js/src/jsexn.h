@@ -11,11 +11,18 @@
 #ifndef jsexn_h
 #define jsexn_h
 
+#include "mozilla/Assertions.h"
+
 #include "jsapi.h"
+#include "jspubtd.h"
+#include "jstypes.h"
 #include "NamespaceImports.h"
 
+#include "js/ErrorReport.h"
+#include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
-#include "vm/JSContext.h"
+#include "js/Utility.h"
 
 namespace js {
 class ErrorObject;
