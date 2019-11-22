@@ -248,8 +248,12 @@ bool FinalizationGroupObject::construct(JSContext* cx, unsigned argc,
 /* static */
 void FinalizationGroupObject::trace(JSTracer* trc, JSObject* obj) {
   auto group = &obj->as<FinalizationGroupObject>();
-  group->holdingsToBeCleanedUp()->trace(trc);
-  group->registrations()->trace(trc);
+  if (HoldingsVector* holdings = group->holdingsToBeCleanedUp()) {
+    holdings->trace(trc);
+  }
+  if (ObjectWeakMap* registrations = group->registrations()) {
+    registrations->trace(trc);
+  }
 }
 
 /* static */
@@ -270,14 +274,20 @@ inline JSObject* FinalizationGroupObject::cleanupCallback() const {
 }
 
 ObjectWeakMap* FinalizationGroupObject::registrations() const {
-  return static_cast<ObjectWeakMap*>(
-      getReservedSlot(RegistrationsSlot).toPrivate());
+  Value value = getReservedSlot(RegistrationsSlot);
+  if (value.isUndefined()) {
+    return nullptr;
+  }
+  return static_cast<ObjectWeakMap*>(value.toPrivate());
 }
 
 FinalizationGroupObject::HoldingsVector*
 FinalizationGroupObject::holdingsToBeCleanedUp() const {
-  return static_cast<HoldingsVector*>(
-      getReservedSlot(HoldingsToBeCleanedUpSlot).toPrivate());
+  Value value = getReservedSlot(HoldingsToBeCleanedUpSlot);
+  if (value.isUndefined()) {
+    return nullptr;
+  }
+  return static_cast<HoldingsVector*>(value.toPrivate());
 }
 
 bool FinalizationGroupObject::isQueuedForCleanup() const {
