@@ -88,9 +88,6 @@
             android:icon="@drawable/ic_data_collection"
             android:key="@string/pref_key_data_choices"
             android:title="@string/preferences_data_collection" />
-        <androidx.preference.Preference
-            android:key="@string/pref_key_privacy_link"
-            android:title="@string/preferences_privacy_link" />
         <androidx.preference.SwitchPreference
             android:defaultValue="false"
             android:icon="@drawable/ic_info"
@@ -112,10 +109,6 @@
     <androidx.preference.PreferenceCategory
         android:title="@string/preferences_category_about"
         app:iconSpaceReserved="false">
-        <androidx.preference.Preference
-            android:icon="@drawable/ic_help"
-            android:key="@string/pref_key_help"
-            android:title="@string/preferences_help" />
         <androidx.preference.Preference
             android:icon="@drawable/ic_bookmark_outline"
             android:key="@string/pref_key_rate"

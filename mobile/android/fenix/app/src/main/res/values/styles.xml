@@ -355,7 +355,24 @@
 
     <style name="ShareDialogStyle" parent="DialogStyleBase"/>
 
+    <style name="AboutItemText" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textColor">?accentBright</item>
+        <item name="android:textSize">@dimen/about_items_text_size</item>
+        <item name="android:paddingStart">@dimen/about_list_item_text_padding</item>
+        <item name="android:paddingEnd">@dimen/about_list_item_text_padding</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:minLines">1</item>
+        <item name="fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="AboutHeaderContentText" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:textColor">@color/about_content_text_normal_theme</item>
+        <item name="android:lineSpacingExtra">@dimen/about_header_text_line_spacing_extra</item>
+    </style>
+
     <style name="EngineTextField" parent="TextAppearance.AppCompat">
         <item name="android:textSize">14sp</item>
     </style>
+
 </resources>

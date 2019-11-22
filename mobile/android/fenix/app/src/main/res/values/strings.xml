@@ -941,6 +941,17 @@
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS Libraries</string>
 
+    <!-- About page link text to open support link -->
+    <string name="about_support">Support</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Privacy notice</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Know your rights</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Licensing information</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Libraries that we use</string>
+
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 tab</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->

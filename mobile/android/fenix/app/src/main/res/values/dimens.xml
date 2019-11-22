@@ -79,6 +79,18 @@
     <dimen name="search_fragment_shortcuts_label_text_size">12sp</dimen>
     <dimen name="search_fragment_clipboard_title_text_size">15sp</dimen>
 
-
+    <!-- About Fragment -->
+    <dimen name="about_list_item_height">56dp</dimen>
+    <dimen name="about_list_item_text_padding">8dp</dimen>
+    <dimen name="about_header_fenix_logo_height">80dp</dimen>
+    <dimen name="about_header_icon_margin_top">36dp</dimen>
+    <dimen name="about_header_icon_margin_start_end">84dp</dimen>
+    <dimen name="about_header_title_margin_top">16dp</dimen>
+    <dimen name="about_header_title_padding_start_end">84dp</dimen>
+    <dimen name="about_header_build_info_margin_top">24dp</dimen>
+    <dimen name="about_header_build_date_margin_top">24dp</dimen>
+    <dimen name="about_list_margin_top">36dp</dimen>
+    <dimen name="about_items_text_size">16sp</dimen>
+    <dimen name="about_header_text_line_spacing_extra">4dp</dimen>
 
 </resources>

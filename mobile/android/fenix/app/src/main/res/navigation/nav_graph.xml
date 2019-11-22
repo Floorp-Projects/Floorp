@@ -456,7 +456,7 @@
 
     <fragment
         android:id="@+id/aboutFragment"
-        android:name="org.mozilla.fenix.settings.AboutFragment"
+        android:name="org.mozilla.fenix.settings.about.AboutFragment"
         android:label="AboutFragment">
         <action
             android:id="@+id/action_aboutFragment_to_browserFragment"

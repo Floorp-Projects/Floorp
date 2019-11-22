@@ -31,6 +31,7 @@
     <color name="toolbar_divider_color_normal_theme">@color/toolbar_divider_color_dark_theme</color>
     <color name="fill_link_from_clipboard_normal_theme">@color/accent_on_dark_background_normal_theme</color>
     <color name="menu_category_normal_theme">@color/primary_text_normal_theme</color>
+    <color name="about_content_text_normal_theme">@color/about_content_text_dark_theme</color>
 
 
     <!-- Collection icons-->
