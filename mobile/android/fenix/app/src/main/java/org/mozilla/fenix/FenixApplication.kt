@@ -9,6 +9,7 @@ import android.app.Application
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.StrictMode
+import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.getSystemService
 import io.reactivex.plugins.RxJavaPlugins
@@ -51,17 +52,7 @@ open class FenixApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        setupApplication()
-    }
-
-    open fun setupApplication() {
-        setupCrashReporting()
-        setDayNightTheme()
-
-        setupMegazord()
-        setupLogging()
-        registerRxExceptionHandling()
-        enableStrictMode()
+        setupInAllProcesses()
 
         if (!isMainProcess()) {
             // If this is not the main process then do not continue with the initialization here. Everything that
@@ -70,6 +61,30 @@ open class FenixApplication : Application() {
             // situation where we create a GeckoRuntime from the Gecko child process.
             return
         }
+
+        setupInMainProcessOnly()
+    }
+
+    @CallSuper
+    open fun setupInAllProcesses() {
+        setupCrashReporting()
+
+        // We want the log messages of all builds to go to Android logcat
+        Log.addSink(AndroidLogSink())
+    }
+
+    @CallSuper
+    open fun setupInMainProcessOnly() {
+        setupMegazord()
+
+        // We want rust logging to go through the log sinks.
+        // This has to happen after initializing the megazord.
+        RustLog.enable()
+
+        setDayNightTheme()
+
+        registerRxExceptionHandling()
+        enableStrictMode()
 
         // Make sure the engine is initialized and ready to use.
         components.core.engine.warmUp()
@@ -136,14 +151,6 @@ open class FenixApplication : Application() {
 
     open fun updateLeakCanaryState(isEnabled: Boolean) {
         // no-op, LeakCanary is disabled by default
-    }
-
-    private fun setupLogging() {
-        // We want the log messages of all builds to go to Android logcat
-        Log.addSink(AndroidLogSink())
-        // We want rust logging to go through the log sinks.
-        // This has to happen after initializing the megazord.
-        RustLog.enable()
     }
 
     private fun loadExperiments(): Deferred<Boolean> {

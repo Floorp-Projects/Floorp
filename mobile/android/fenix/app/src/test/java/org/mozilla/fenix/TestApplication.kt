@@ -10,6 +10,7 @@ class TestApplication : FenixApplication() {
 
     override val components = TestComponents(this)
 
-    override fun setupApplication() {
-    }
+    override fun setupInAllProcesses() = Unit
+
+    override fun setupInMainProcessOnly() = Unit
 }
