@@ -106,6 +106,7 @@ devtools/shared/node-properties/
 devtools/shared/pretty-fast/
 devtools/shared/sourcemap/
 devtools/shared/sprintfjs/
+devtools/shared/storage/vendor/*
 devtools/shared/qrcode/decoder/
 devtools/shared/qrcode/encoder/
 devtools/client/inspector/markup/test/lib_*

@@ -170,6 +170,8 @@ createStorageSpec({
 types.addDictType("extensionobject", {
   name: "nullable:string",
   value: "nullable:longstring",
+  area: "string",
+  isValueEditable: "boolean",
 });
 
 types.addDictType("extensionstoreobject", {
@@ -181,7 +183,15 @@ types.addDictType("extensionstoreobject", {
 createStorageSpec({
   typeName: "extensionStorage",
   storeObjectType: "extensionstoreobject",
-  methods: {},
+  // Same as storageMethods except for addItem
+  methods: Object.assign({}, editRemoveMethods, {
+    removeAll: {
+      request: {
+        host: Arg(0, "string"),
+      },
+      response: {},
+    },
+  }),
 });
 
 types.addDictType("cacheobject", {

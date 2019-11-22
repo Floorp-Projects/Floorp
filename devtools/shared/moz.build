@@ -29,6 +29,7 @@ DIRS += [
     'security',
     'sprintfjs',
     'specs',
+    'storage',
     'transport',
     'webconsole',
     'worker',

@@ -7,6 +7,7 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 const { LocalizationHelper, ELLIPSIS } = require("devtools/shared/l10n");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
+const { parseItemValue } = require("devtools/shared/storage/utils");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 const { getUnicodeHostname } = require("devtools/client/shared/unicode-url");
 
@@ -33,12 +34,6 @@ loader.lazyImporter(
   "VariablesView",
   "resource://devtools/client/shared/widgets/VariablesView.jsm"
 );
-loader.lazyRequireGetter(
-  this,
-  "validator",
-  "devtools/client/shared/vendor/stringvalidator/validator"
-);
-loader.lazyRequireGetter(this, "JSON5", "devtools/client/shared/vendor/json5");
 
 /**
  * Localization convenience methods.
@@ -76,7 +71,6 @@ const COOKIE_KEY_MAP = {
 };
 
 const SAFE_HOSTS_PREFIXES_REGEX = /^(about:|https?:|file:|moz-extension:)/;
-const MATH_REGEX = /(?:(?:^|[-+_*/])(?:\s*-?\d+(\.\d+)?(?:[eE][+-]?\d+)?\s*))+$/;
 
 // Maximum length of item name to show in context menu label - will be
 // trimmed with ellipsis if it's longer.
@@ -834,6 +828,7 @@ class StorageUI {
    * Populates the selected entry from the table in the sidebar for a more
    * detailed view.
    */
+  /* eslint-disable-next-line */
   async updateObjectSidebar() {
     const item = this.table.selectedRow;
     let value;
@@ -872,7 +867,10 @@ class StorageUI {
       itemVar.setGrip(value);
 
       // May be the item value is a json or a key value pair itself
-      this.parseItemValue(item.name, value);
+      const obj = parseItemValue(value);
+      if (typeof obj === "object") {
+        this.populateSidebar(item.name, obj);
+      }
 
       // By default the item name and value are shown. If this is the only
       // information available, then nothing else is to be displayed.
@@ -906,7 +904,10 @@ class StorageUI {
         }
 
         mainScope.addItem(key, {}, true).setGrip(item[key]);
-        this.parseItemValue(key, item[key]);
+        const obj = parseItemValue(item[key]);
+        if (typeof obj === "object") {
+          this.populateSidebar(item.name, obj);
+        }
       }
     }
 
@@ -943,48 +944,12 @@ class StorageUI {
   }
 
   /**
-   * Tries to parse a string value into either a json or a key-value separated
-   * object and populates the sidebar with the parsed value. The value can also
-   * be a key separated array.
+   * Populates the sidebar with a parsed object.
    *
-   * @param {string} name
-   *        The key corresponding to the `value` string in the object
-   * @param {string} originalValue
-   *        The string to be parsed into an object
+   * @param {object} obj - Either a json or a key-value separated object or a
+   * key separated array
    */
-  parseItemValue(name, originalValue) {
-    // Find if value is URLEncoded ie
-    let decodedValue = "";
-    try {
-      decodedValue = decodeURIComponent(originalValue);
-    } catch (e) {
-      // Unable to decode, nothing to do
-    }
-    const value =
-      decodedValue && decodedValue !== originalValue
-        ? decodedValue
-        : originalValue;
-
-    if (!this._shouldParse(value)) {
-      return;
-    }
-
-    let obj = null;
-    try {
-      obj = JSON5.parse(value);
-    } catch (ex) {
-      obj = null;
-    }
-
-    if (!obj && value) {
-      obj = this._extractKeyValPairs(value);
-    }
-
-    // return if obj is null, or same as value, or just a string.
-    if (!obj || obj === value || typeof obj === "string") {
-      return;
-    }
-
+  populateSidebar(name, obj) {
     const jsonObject = Object.create(null);
     const view = this.view;
     jsonObject[name] = obj;
@@ -998,101 +963,6 @@ class StorageUI {
     jsonVar.expanded = true;
     jsonVar.twisty = true;
     jsonVar.populate(jsonObject, { expanded: true });
-  }
-
-  /**
-   * Tries to parse a string into an object on the basis of key-value pairs,
-   * separated by various separators. If failed, tries to parse for single
-   * separator separated values to form an array.
-   *
-   * @param {string} value
-   *        The string to be parsed into an object or array
-   */
-  _extractKeyValPairs(value) {
-    const makeObject = (keySep, pairSep) => {
-      const object = {};
-      for (const pair of value.split(pairSep)) {
-        const [key, val] = pair.split(keySep);
-        object[key] = val;
-      }
-      return object;
-    };
-
-    // Possible separators.
-    const separators = ["=", ":", "~", "#", "&", "\\*", ",", "\\."];
-    // Testing for object
-    for (let i = 0; i < separators.length; i++) {
-      const kv = separators[i];
-      for (let j = 0; j < separators.length; j++) {
-        if (i == j) {
-          continue;
-        }
-        const p = separators[j];
-        const word = `[^${kv}${p}]*`;
-        const keyValue = `${word}${kv}${word}`;
-        const keyValueList = `${keyValue}(${p}${keyValue})*`;
-        const regex = new RegExp(`^${keyValueList}$`);
-        if (
-          value.match &&
-          value.match(regex) &&
-          value.includes(kv) &&
-          (value.includes(p) || value.split(kv).length == 2)
-        ) {
-          return makeObject(kv, p);
-        }
-      }
-    }
-    // Testing for array
-    for (const p of separators) {
-      const word = `[^${p}]*`;
-      const wordList = `(${word}${p})+${word}`;
-      const regex = new RegExp(`^${wordList}$`);
-
-      if (regex.test(value)) {
-        const pNoBackslash = p.replace(/\\*/g, "");
-        return value.split(pNoBackslash);
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Check whether the value string represents something that should be
-   * displayed as text. If so then it shouldn't be parsed into a tree.
-   *
-   * @param  {String} value
-   *         The value to be parsed.
-   */
-  _shouldParse(value) {
-    const validators = [
-      "isBase64",
-      "isBoolean",
-      "isCurrency",
-      "isDataURI",
-      "isEmail",
-      "isFQDN",
-      "isHexColor",
-      "isIP",
-      "isISO8601",
-      "isMACAddress",
-      "isSemVer",
-      "isURL",
-    ];
-
-    // Check for minus calculations e.g. 8-3 because otherwise 5 will be displayed.
-    if (MATH_REGEX.test(value)) {
-      return false;
-    }
-
-    // Check for any other types that shouldn't be parsed.
-    for (const test of validators) {
-      if (validator[test](value)) {
-        return false;
-      }
-    }
-
-    // Seems like this is data that should be parsed.
-    return true;
   }
 
   /**

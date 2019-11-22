@@ -6,7 +6,7 @@
 
  "use strict";
 
-var assert = require('devtools/client/shared/vendor/stringvalidator/util/assert').assert;
+var assert = require('devtools/shared/storage/vendor/stringvalidator/util/assert').assert;
 
 function test(options) {
   var args = options.args || [];
