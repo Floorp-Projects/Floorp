@@ -314,9 +314,8 @@ nsresult nsCocoaWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mWindowType == eWindowType_popup) {
-    if (aInitData->mMouseTransparent) {
-      [mWindow setIgnoresMouseEvents:YES];
-    }
+    SetWindowMouseTransparent(aInitData->mMouseTransparent);
+
     // now we can convert newBounds to device pixels for the window we created,
     // as the child view expects a rect expressed in the dev pix of its parent
     LayoutDeviceIntRect devRect = RoundedToInt(newBounds * GetDesktopToDeviceScale());
@@ -2098,6 +2097,15 @@ void nsCocoaWindow::SetWindowTransform(const gfx::Matrix& aTransform) {
   mWindowTransformIsIdentity = isIdentity;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void nsCocoaWindow::SetWindowMouseTransparent(bool aIsTransparent) {
+  MOZ_ASSERT(mWindowType == eWindowType_popup, "This should only be called on popup windows.");
+  if (aIsTransparent) {
+    [mWindow setIgnoresMouseEvents:YES];
+  } else {
+    [mWindow setIgnoresMouseEvents:NO];
+  }
 }
 
 void nsCocoaWindow::SetShowsToolbarButton(bool aShow) {
