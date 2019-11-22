@@ -31,6 +31,14 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/tracking-db-service;1",
   "nsITrackingDBService"
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "milestones",
+  "browser.contentblocking.cfr-milestone.milestones",
+  "[]",
+  null,
+  JSON.parse
+);
 
 const POPUP_NOTIFICATION_ID = "contextual-feature-recommendation";
 const ANIMATION_BUTTON_ID = "cfr-notification-footer-animation-button";
@@ -524,7 +532,7 @@ class PageAction {
     }
   }
 
-  async _renderMilestonePopup(message, browser, cfrMilestonePref) {
+  async _renderMilestonePopup(message, browser) {
     let { content } = message;
     let { primary } = content.buttons;
 
@@ -542,13 +550,20 @@ class PageAction {
     let headerLabel = this.window.document.getElementById(
       "cfr-notification-header-label"
     );
+    let reachedMilestone = null;
+    let totalSaved = await TrackingDBService.sumAllEvents();
+    for (let milestone of milestones) {
+      if (totalSaved >= milestone) {
+        reachedMilestone = milestone;
+      }
+    }
     if (typeof message.content.heading_text === "string") {
       // This is a test environment.
       panelTitle = message.content.heading_text;
       headerLabel.value = panelTitle;
     } else {
       this._l10n.setAttributes(headerLabel, content.heading_text.string_id, {
-        blockedCount: cfrMilestonePref,
+        blockedCount: reachedMilestone,
         date: monthName,
       });
       await this._l10n.translateElements([headerLabel]);
@@ -615,7 +630,10 @@ class PageAction {
         eventCallback: manageClass,
       }
     );
-
+    Services.prefs.setIntPref(
+      "browser.contentblocking.cfr-milestone.milestone-achieved",
+      reachedMilestone
+    );
     Services.prefs.setStringPref(
       "browser.contentblocking.cfr-milestone.milestone-shown-time",
       Date.now().toString()
@@ -889,7 +907,7 @@ class PageAction {
     await this._renderPopup(message, browser);
   }
 
-  async showMilestonePopup(cfrMilestonePref) {
+  async showMilestonePopup() {
     const browser = this.window.gBrowser.selectedBrowser;
     const message = RecommendationMap.get(browser);
     const { content } = message;
@@ -899,7 +917,7 @@ class PageAction {
     browser.cfrpopupnotificationanchor =
       this.window.document.getElementById(content.anchor_id) || this.container;
 
-    await this._renderMilestonePopup(message, browser, cfrMilestonePref);
+    await this._renderMilestonePopup(message, browser);
     return true;
   }
 }
@@ -988,10 +1006,6 @@ const CFRPageActions = {
   async showMilestone(browser, message, dispatchToASRouter, options = {}) {
     let win = null;
     const { id, content } = message;
-    let cfrMilestonePref = Services.prefs.getIntPref(
-      "browser.contentblocking.cfr-milestone.milestone-achieved",
-      0
-    );
 
     // If we are forcing via the Admin page, the browser comes in a different format
     if (options.force) {
@@ -1000,23 +1014,16 @@ const CFRPageActions = {
     } else {
       win = browser.ownerGlobal;
       RecommendationMap.set(browser, { id, retain: true, content });
-      if (!cfrMilestonePref) {
-        return false;
-      }
     }
 
     if (!PageActionMap.has(win)) {
       PageActionMap.set(win, new PageAction(win, dispatchToASRouter));
     }
 
-    let successfullyShown = await PageActionMap.get(win).showMilestonePopup(
-      cfrMilestonePref
-    );
-    if (successfullyShown) {
-      PageActionMap.get(win).addImpression(message);
-    }
+    await PageActionMap.get(win).showMilestonePopup();
+    PageActionMap.get(win).addImpression(message);
 
-    return successfullyShown;
+    return true;
   },
 
   /**

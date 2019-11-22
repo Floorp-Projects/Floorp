@@ -9,6 +9,9 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -408,5 +411,61 @@ add_task(async function test_getEarliestRecordedDate() {
 
   await TrackingDBService.clearAll();
   await db.close();
+  Services.prefs.clearUserPref("browser.contentblocking.database.enabled");
+});
+
+// This tests that a message to CFR is sent when the amount of saved trackers meets a milestone
+add_task(async function test_sendMilestoneNotification() {
+  Services.prefs.setBoolPref("browser.contentblocking.database.enabled", true);
+  Services.prefs.setBoolPref(
+    "browser.contentblocking.cfr-milestone.enabled",
+    true
+  );
+  Services.prefs.setIntPref(
+    "browser.contentblocking.cfr-milestone.update-interval",
+    0
+  );
+  Services.prefs.setStringPref(
+    "browser.contentblocking.cfr-milestone.milestones",
+    "[1000, 5000, 10000, 25000, 100000, 500000]"
+  );
+  let milestones = JSON.parse(
+    Services.prefs.getStringPref(
+      "browser.contentblocking.cfr-milestone.milestones"
+    )
+  );
+  // This creates the schema.
+  await TrackingDBService.saveEvents(JSON.stringify({}));
+  let db = await Sqlite.openConnection({ path: DB_PATH });
+  // save number of trackers equal to the first milestone
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.CRYPTOMINERS_ID,
+    count: milestones[0],
+    timestamp: new Date().toISOString(),
+  });
+
+  let awaitNotification = TestUtils.topicObserved(
+    "SiteProtection:ContentBlockingMilestone"
+  );
+
+  // trigger a "save" event to compare the trackers with the milestone.
+  await TrackingDBService.saveEvents(
+    JSON.stringify({
+      "https://1.example.com": [
+        [Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT, true, 1],
+      ],
+    })
+  );
+  await awaitNotification;
+
+  await TrackingDBService.clearAll();
+  await db.close();
+  Services.prefs.clearUserPref("browser.contentblocking.cfr-milestone.enabled");
+  Services.prefs.clearUserPref(
+    "browser.contentblocking.cfr-milestone.update-interval"
+  );
+  Services.prefs.clearUserPref(
+    "browser.contentblocking.cfr-milestone.milestones"
+  );
   Services.prefs.clearUserPref("browser.contentblocking.database.enabled");
 });

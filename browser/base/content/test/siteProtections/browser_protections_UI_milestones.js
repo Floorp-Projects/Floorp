@@ -22,7 +22,6 @@ add_task(async function doTest() {
       "browser.contentblocking.cfr-milestone.milestones"
     )
   );
-  let totalTrackerCount = 0;
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -30,12 +29,11 @@ add_task(async function doTest() {
   );
 
   for (let milestone of milestones) {
-    let trackerCount = milestone - totalTrackerCount;
-    await addTrackerDataIntoDB(trackerCount);
-    totalTrackerCount += trackerCount;
-
     // Trigger the milestone feature.
-    await TrackingDBService.saveEvents("{}");
+    Services.prefs.setIntPref(
+      "browser.contentblocking.cfr-milestone.milestone-achieved",
+      milestone
+    );
 
     await TestUtils.waitForCondition(
       () => gProtectionsHandler._milestoneTextSet
