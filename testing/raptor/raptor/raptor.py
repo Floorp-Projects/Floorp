@@ -690,6 +690,9 @@ class Browsertime(Perftest):
         browsertime_script.extend(["--browsertime.post_startup_delay",
                                    str(self.post_startup_delay)])
 
+        if self.config['with_conditioned_profile']:
+            self.profile.profile = self.conditioned_profile_dir
+
         return ([self.browsertime_node, self.browsertime_browsertimejs] +
                 self.driver_paths +
                 browsertime_script +
