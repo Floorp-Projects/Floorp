@@ -13,6 +13,7 @@ describe("CFRPageActions", () => {
   let containerElem;
   let elements;
   let announceStub;
+  let remoteL10n;
 
   const elementIDs = [
     "urlbar",
@@ -55,9 +56,14 @@ describe("CFRPageActions", () => {
     };
     dispatchStub = sandbox.stub();
 
+    remoteL10n = {
+      l10n: {},
+      reloadL10n: sandbox.stub(),
+    };
+
     globals = new GlobalOverrider();
     globals.set({
-      DOMLocalization: class {},
+      RemoteL10n: remoteL10n,
       promiseDocumentFlushed: sandbox
         .stub()
         .callsFake(fn => Promise.resolve(fn())),
@@ -361,7 +367,7 @@ describe("CFRPageActions", () => {
           .stub()
           .withArgs({ id: "hello_world" })
           .resolves(localeStrings);
-        global.DOMLocalization.prototype.formatMessages = formatMessagesStub;
+        global.RemoteL10n.l10n.formatMessages = formatMessagesStub;
       });
 
       it("should return the argument if a string_id is not defined", async () => {
@@ -475,8 +481,8 @@ describe("CFRPageActions", () => {
 
         translateElementsStub = sandbox.stub().resolves();
         setAttributesStub = sandbox.stub();
-        global.DOMLocalization.prototype.setAttributes = setAttributesStub;
-        global.DOMLocalization.prototype.translateElements = translateElementsStub;
+        global.RemoteL10n.l10n.setAttributes = setAttributesStub;
+        global.RemoteL10n.l10n.translateElements = translateElementsStub;
       });
 
       it("should call `.hideAddressBarNotifier` and do nothing if there is no recommendation for the selected browser", async () => {
@@ -748,46 +754,6 @@ describe("CFRPageActions", () => {
           "event",
           "PIN"
         );
-      });
-    });
-
-    describe("#_createDOML10n", () => {
-      let domL10nStub;
-      beforeEach(() => {
-        domL10nStub = sandbox.stub();
-
-        globals.set("DOMLocalization", domL10nStub);
-      });
-      it("should load the remote Fluent file if USE_REMOTE_L10N_PREF is true", () => {
-        sandbox.stub(global.Services.prefs, "getBoolPref").returns(true);
-        pageAction._createDOML10n();
-
-        assert.calledOnce(domL10nStub);
-        const { args } = domL10nStub.firstCall;
-        // The first arg is the resource array, and the second one is the bundle generator.
-        assert.equal(args.length, 2);
-        assert.deepEqual(args[0], [
-          "browser/newtab/asrouter.ftl",
-          "browser/branding/brandings.ftl",
-          "browser/branding/sync-brand.ftl",
-          "branding/brand.ftl",
-        ]);
-        assert.isFunction(args[1]);
-      });
-      it("should load the local Fluent file if USE_REMOTE_L10N_PREF is false", () => {
-        sandbox.stub(global.Services.prefs, "getBoolPref").returns(false);
-        pageAction._createDOML10n();
-
-        const { args } = domL10nStub.firstCall;
-        // The first arg is the resource array, and the second one should be null.
-        assert.equal(args.length, 2);
-        assert.deepEqual(args[0], [
-          "browser/newtab/asrouter.ftl",
-          "browser/branding/brandings.ftl",
-          "browser/branding/sync-brand.ftl",
-          "branding/brand.ftl",
-        ]);
-        assert.isUndefined(args[1]);
       });
     });
   });
