@@ -60,6 +60,7 @@
   REAL(RegExp, OCLASP(RegExp))                                                \
   REAL(Error, ERROR_CLASP(JSEXN_ERR))                                         \
   REAL(InternalError, ERROR_CLASP(JSEXN_INTERNALERR))                         \
+  REAL(AggregateError, ERROR_CLASP(JSEXN_AGGREGATEERR))                       \
   REAL(EvalError, ERROR_CLASP(JSEXN_EVALERR))                                 \
   REAL(RangeError, ERROR_CLASP(JSEXN_RANGEERR))                               \
   REAL(ReferenceError, ERROR_CLASP(JSEXN_REFERENCEERR))                       \
