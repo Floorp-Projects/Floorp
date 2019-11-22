@@ -210,17 +210,24 @@ void VideoFrameContainer::ClearCurrentFrame() {
   mImageContainer->ClearCachedResources();
 }
 
-void VideoFrameContainer::ClearFutureFrames() {
+void VideoFrameContainer::ClearFutureFrames(TimeStamp aNow) {
   MutexAutoLock lock(mMutex);
 
   // See comment in SetCurrentFrame for the reasoning behind
   // using a kungFuDeathGrip here.
-  nsTArray<ImageContainer::OwningImage> kungFuDeathGrip;
+  AutoTArray<ImageContainer::OwningImage, 10> kungFuDeathGrip;
   mImageContainer->GetCurrentImages(&kungFuDeathGrip);
 
   if (!kungFuDeathGrip.IsEmpty()) {
-    nsTArray<ImageContainer::NonOwningImage> currentFrame;
-    const ImageContainer::OwningImage& img = kungFuDeathGrip[0];
+    AutoTArray<ImageContainer::NonOwningImage, 1> currentFrame;
+    ImageContainer::OwningImage& img = kungFuDeathGrip[0];
+    // Find the current image in case there are several.
+    for (const auto& image : kungFuDeathGrip) {
+      if (image.mTimeStamp > aNow) {
+        break;
+      }
+      img = image;
+    }
     currentFrame.AppendElement(ImageContainer::NonOwningImage(
         img.mImage, img.mTimeStamp, img.mFrameID, img.mProducerID));
     mImageContainer->SetCurrentImages(currentFrame);

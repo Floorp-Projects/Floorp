@@ -65,7 +65,7 @@ class VideoFrameContainer {
   void ClearCurrentFrame();
   // Make the current frame the only frame in the container, i.e. discard
   // all future frames.
-  void ClearFutureFrames();
+  void ClearFutureFrames(TimeStamp aNow = TimeStamp::Now());
   // Time in seconds by which the last painted video frame was late by.
   // E.g. if the last painted frame should have been painted at time t,
   // but was actually painted at t+n, this returns n in seconds. Threadsafe.
