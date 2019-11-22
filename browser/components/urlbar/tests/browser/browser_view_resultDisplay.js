@@ -111,6 +111,26 @@ add_task(async function test_url_result() {
   );
 });
 
+add_task(async function test_url_result_no_path() {
+  await testResult(
+    {
+      query: "ample",
+      title: "The Title",
+      url: "https://example.com/",
+    },
+    {
+      displayedUrl:
+        (UrlbarPrefs.get("view.stripHttps") ? "" : "https://") + "example.com",
+      highlightedTitle: [["The Title", false]],
+      highlightedUrl: [
+        [(UrlbarPrefs.get("view.stripHttps") ? "" : "https://") + "ex", false],
+        ["ample", true],
+        [".com", false],
+      ],
+    }
+  );
+});
+
 add_task(async function test_url_result_no_trimming() {
   Services.prefs.setBoolPref("browser.urlbar.trimURLs", false);
 

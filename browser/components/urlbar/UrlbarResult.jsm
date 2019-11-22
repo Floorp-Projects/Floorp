@@ -202,6 +202,7 @@ class UrlbarResult {
       let url = payloadInfo.displayUrl[0];
       if (url && UrlbarPrefs.get("trimURLs")) {
         if (UrlbarPrefs.get("view.stripHttps")) {
+          url = BrowserUtils.removeSingleTrailingSlashFromURL(url);
           if (url.startsWith("https://")) {
             url = url.substring(8);
           }
