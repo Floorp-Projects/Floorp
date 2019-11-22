@@ -88,9 +88,6 @@ function verifyLogins(expectedLogins = []) {
           "Check timePasswordChanged"
         );
       }
-      if (typeof expected.timeCreated !== "undefined") {
-        is(login.timeCreated, expected.timeCreated, "Check timeCreated");
-      }
     }
   }
   return allLogins;
@@ -111,11 +108,7 @@ async function submitFormAndGetResults(
   selectorValues,
   responseSelectors
 ) {
-  async function contentSubmitForm([contentFormAction, contentSelectorValues]) {
-    const { WrapPrivileged } = ChromeUtils.import(
-      "resource://specialpowers/WrapPrivileged.jsm",
-      this
-    );
+  function contentSubmitForm([contentFormAction, contentSelectorValues]) {
     let doc = content.document;
     let form = doc.querySelector("form");
     if (contentFormAction) {
@@ -123,20 +116,9 @@ async function submitFormAndGetResults(
     }
     for (let [sel, value] of Object.entries(contentSelectorValues)) {
       try {
-        let field = doc.querySelector(sel);
-        let gotInput = ContentTaskUtils.waitForEvent(
-          field,
-          "input",
-          "Got input event on " + sel
-        );
-        // we don't get an input event if the new value == the old
-        field.value = "###";
-        WrapPrivileged.wrap(field).setUserInput(value);
-        await gotInput;
+        doc.querySelector(sel).setUserInput(value);
       } catch (ex) {
-        throw new Error(
-          `submitForm: Couldn't set value of field at: ${sel}: ${ex.message}`
-        );
+        throw new Error(`submitForm: Couldn't set value of field at: ${sel}`);
       }
     }
     form.submit();
