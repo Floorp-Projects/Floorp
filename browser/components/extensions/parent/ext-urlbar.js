@@ -214,7 +214,6 @@ this.urlbar = class extends ExtensionAPI {
         onResultPicked: new EventManager({
           context,
           name: "urlbar.onResultPicked",
-          inputHandling: true,
           register: (fire, providerName) => {
             let provider = UrlbarProviderExtension.getOrCreate(providerName);
             provider.setEventListener("resultPicked", async resultPayload => {
