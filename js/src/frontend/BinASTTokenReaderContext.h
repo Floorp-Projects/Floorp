@@ -1633,12 +1633,6 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   MetadataOwnership metadataOwned_ = MetadataOwnership::Owned;
   BinASTSourceMetadataContext* metadata_;
 
-  class HuffmanDictionary dictionary_;
-
-  // Temporary storage for items allocated while reading huffman prelude.
-  // All items are freed when this class is destructed.
-  TemporaryStorage tempStorage_;
-
   const uint8_t* posBeforeTree_;
 
  public:
