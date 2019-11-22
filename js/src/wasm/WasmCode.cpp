@@ -23,6 +23,8 @@
 
 #include <algorithm>
 
+#include "jsnum.h"
+
 #include "jit/ExecutableAllocator.h"
 #ifdef JS_ION_PERF
 #  include "jit/PerfSpewer.h"

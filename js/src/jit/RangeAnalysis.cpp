@@ -11,6 +11,8 @@
 
 #include <algorithm>
 
+#include "jsnum.h"
+
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
 #include "jit/JitSpewer.h"
