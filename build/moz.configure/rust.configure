@@ -262,9 +262,11 @@ def rust_triple_alias(host_or_target, host_or_target_c_compiler):
                 elif narrowed:
                     candidates = narrowed
 
-                vendor_aliases = {'pc': 'w64'}
+                vendor_aliases = {'pc': ('w64', 'windows')}
                 narrowed = [c for c in candidates
-                            if vendor_aliases.get(c.target.vendor) == host_or_target.vendor]
+                            if c.target.vendor in vendor_aliases and
+                            host_or_target.vendor in vendor_aliases[c.target.vendor]]
+
                 if len(narrowed) == 1:
                     return narrowed[0].rust_target
 
