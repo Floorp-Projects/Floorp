@@ -9,6 +9,10 @@ from setuptools import setup
 PACKAGE_NAME = "manifestparser"
 PACKAGE_VERSION = '1.2'
 
+DEPS = [
+    'mozlog >= 5.0',
+    'six >= 1.10.0',
+]
 setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,
       description="Library to create and manage test manifests",
@@ -23,7 +27,7 @@ setup(name=PACKAGE_NAME,
       license='MPL',
       zip_safe=False,
       packages=['manifestparser'],
-      install_requires=['six >= 1.10.0'],
+      install_requires=DEPS,
       entry_points="""
       [console_scripts]
       manifestparser = manifestparser.cli:main
