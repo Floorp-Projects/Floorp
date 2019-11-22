@@ -46,8 +46,6 @@ extern crate storage;
 #[cfg(feature = "moz_places")]
 extern crate bookmark_sync;
 extern crate shift_or_euc_c;
-#[cfg(feature = "fogotype")]
-extern crate fog;
 
 extern crate audio_thread_priority;
 
