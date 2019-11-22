@@ -161,12 +161,10 @@ class BrowserRunner {
       usePipe,
       timeout,
       slowMo,
-      preferredRevision,
-      use_stdout,
+      preferredRevision
     } = options;
     if (!usePipe) {
-      const browserWSEndpoint = await waitForWSEndpoint(
-        this.proc, timeout, preferredRevision, use_stdout);
+      const browserWSEndpoint = await waitForWSEndpoint(this.proc, timeout, preferredRevision);
       const transport = await WebSocketTransport.create(browserWSEndpoint);
       this.connection = new Connection(browserWSEndpoint, transport, slowMo);
     } else {
@@ -241,7 +239,7 @@ class ChromeLauncher {
     runner.start({handleSIGHUP, handleSIGTERM, handleSIGINT, dumpio, env, pipe: usePipe});
 
     try {
-      const connection = await runner.setupConnection({usePipe, timeout, slowMo, preferredRevision: this._preferredRevision, use_stdout: false});
+      const connection = await runner.setupConnection({usePipe, timeout, slowMo, preferredRevision: this._preferredRevision});
       const browser = await Browser.create(connection, [], ignoreHTTPSErrors, defaultViewport, runner.proc, runner.close.bind(runner));
       await browser.waitForTarget(t => t.type() === 'page');
       return browser;
@@ -409,7 +407,7 @@ class FirefoxLauncher {
     runner.start({handleSIGHUP, handleSIGTERM, handleSIGINT, dumpio, env, pipe});
 
     try {
-      const connection = await runner.setupConnection({usePipe: pipe, timeout, slowMo, preferredRevision: this._preferredRevision, use_stdout: true});
+      const connection = await runner.setupConnection({usePipe: pipe, timeout, slowMo, preferredRevision: this._preferredRevision});
       const browser = await Browser.create(connection, [], ignoreHTTPSErrors, defaultViewport, runner.proc, runner.close.bind(runner));
       await browser.waitForTarget(t => t.type() === 'page');
       return browser;
@@ -520,13 +518,11 @@ class FirefoxLauncher {
  * @param {!Puppeteer.ChildProcess} browserProcess
  * @param {number} timeout
  * @param {string} preferredRevision
- * @param {boolean} use_stdout
  * @return {!Promise<string>}
  */
-function waitForWSEndpoint(browserProcess, timeout, preferredRevision, use_stdout) {
+function waitForWSEndpoint(browserProcess, timeout, preferredRevision) {
   return new Promise((resolve, reject) => {
-    const input = use_stdout ? browserProcess.stdout : browserProcess.stderr;
-    const rl = readline.createInterface({ input });
+    const rl = readline.createInterface({ input: browserProcess.stderr});
     let stderr = '';
     const listeners = [
       helper.addEventListener(rl, 'line', onLine),
