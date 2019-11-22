@@ -41,16 +41,14 @@ class IdlePeriodState {
   // Notification that whoever we are tracking idle state for has found a
   // non-idle task to process.
   //
-  // aMutexToUnlock is the mutex to unlock if we do anything that might lock
-  // other mutexes.
-  void FlagNotIdle(Mutex& aMutexToUnlock);
+  // Must not be called while holding any locks.
+  void FlagNotIdle();
 
   // Notification that whoever we are tracking idle state for has no more
   // tasks (idle or not) to process.
   //
-  // aMutexToUnlock is the mutex to unlock if we do anything that might lock
-  // other mutexes.
-  void RanOutOfTasks(Mutex& aMutexToUnlock);
+  // aProofOfUnlock is the proof that our caller unlocked its mutex.
+  void RanOutOfTasks(const MutexAutoUnlock& aProofOfUnlock);
 
   // Notification that whoever we are tracking idle state has idle tasks that
   // they are considering ready to run and that we should keep claiming they are
@@ -67,17 +65,17 @@ class IdlePeriodState {
     mHasPendingEventsPromisedIdleEvent = false;
   }
 
-  // Get our current idle deadline so we can run an idle task with that
-  // deadline.  This can return a null timestamp (which means we are not idle
-  // right now), and it can also queue up queries to our parent process, if
-  // we're a content process, to find out whether we're idle.  This should only
-  // be called when there is an actual idle task that might run.
-  //
-  // aMutexToUnlock is the mutex to unlock if we do anything that might lock
-  // other mutexes.
-  TimeStamp GetDeadlineForIdleTask(Mutex& aMutexToUnlock) {
-    return GetIdleDeadlineInternal(false, aMutexToUnlock);
+  // Update our cached idle deadline so consumers can use it while holding
+  // locks. Consumers must ClearCachedIdleDeadline() once they are done.
+  void UpdateCachedIdleDeadline(const MutexAutoUnlock& aProofOfUnlock) {
+    mCachedIdleDeadline = GetIdleDeadlineInternal(false, aProofOfUnlock);
   }
+
+  // Reset our cached idle deadline, so we stop allowing idle runnables to run.
+  void ClearCachedIdleDeadline() { mCachedIdleDeadline = TimeStamp(); }
+
+  // Get the current cached idle deadline.  This may return a null timestamp.
+  TimeStamp GetCachedIdleDeadline() { return mCachedIdleDeadline; }
 
   // Peek our current idle deadline.  This can return a null timestamp (which
   // means we are not idle right now).  This method does not have any
@@ -85,10 +83,9 @@ class IdlePeriodState {
   // non-null then GetDeadlineForIdleTask will return non-null until
   // ForgetPendingTaskGuarantee() is called.
   //
-  // aMutexToUnlock is the mutex to unlock if we do anything that might lock
-  // other mutexes.
-  TimeStamp PeekIdleDeadline(Mutex& aMutexToUnlock) {
-    return GetIdleDeadlineInternal(true, aMutexToUnlock);
+  // aProofOfUnlock is the proof that our caller unlocked its mutex.
+  TimeStamp PeekIdleDeadline(const MutexAutoUnlock& aProofOfUnlock) {
+    return GetIdleDeadlineInternal(true, aProofOfUnlock);
   }
 
   void SetIdleToken(uint64_t aId, TimeDuration aDuration);
@@ -102,28 +99,32 @@ class IdlePeriodState {
     }
   }
 
-  void EnsureIsPaused(Mutex& aMutexToUnlock) {
+  void EnsureIsPaused(const MutexAutoUnlock& aProofOfUnlock) {
     if (mActive) {
-      SetPaused(aMutexToUnlock);
+      SetPaused(aProofOfUnlock);
     }
   }
 
   // Returns a null TimeStamp if we're not in the idle period.
-  TimeStamp GetLocalIdleDeadline(bool& aShuttingDown, Mutex& aMutexToUnlock);
+  TimeStamp GetLocalIdleDeadline(bool& aShuttingDown,
+                                 const MutexAutoUnlock& aProofOfUnlock);
 
   // Gets the idle token, which is the end time of the idle period.
   //
-  // aMutexToUnlock is the mutex to unlock if we do anything that might lock
-  // other mutexes.
-  TimeStamp GetIdleToken(TimeStamp aLocalIdlePeriodHint, Mutex& aMutexToUnlock);
+  // aProofOfUnlock is the proof that our caller unlocked its mutex.
+  TimeStamp GetIdleToken(TimeStamp aLocalIdlePeriodHint,
+                         const MutexAutoUnlock& aProofOfUnlock);
 
   // In case of child processes, requests idle time from the cross-process
   // idle scheduler.
   void RequestIdleToken(TimeStamp aLocalIdlePeriodHint);
 
   // Mark that we don't have idle time to use, nor are expecting to get an idle
-  // token from the idle scheduler.
-  void ClearIdleToken(Mutex& aMutexToUnlock);
+  // token from the idle scheduler.  This must be called while not holding any
+  // locks, but some of the callers aren't holding locks to start with, so
+  // consumers just need to make sure they are not holding locks when they call
+  // this.
+  void ClearIdleToken();
 
   // SetActive should be called when the event queue is running any type of
   // tasks.
@@ -131,17 +132,16 @@ class IdlePeriodState {
   // SetPaused should be called once the event queue doesn't have more
   // tasks to process, or is waiting for the idle token.
   //
-  // aMutexToUnlock is the mutex to unlock if we do anything that might lock
-  // other mutexes.
-  void SetPaused(Mutex& aMutexToUnlock);
+  // aProofOfUnlock is the proof that our caller unlocked its mutex.
+  void SetPaused(const MutexAutoUnlock& aProofOfUnlock);
 
   // Get or peek our idle deadline.  When peeking, we generally don't change any
   // of our internal state.  When getting, we may request an idle token as
   // needed.
   //
-  // aMutexToUnlock is the mutex to unlock if we do anything that might lock
-  // other mutexes.
-  TimeStamp GetIdleDeadlineInternal(bool aIsPeek, Mutex& aMutexToUnlock);
+  // aProofOfUnlock is the proof that our caller unlocked its mutex.
+  TimeStamp GetIdleDeadlineInternal(bool aIsPeek,
+                                    const MutexAutoUnlock& aProofOfUnlock);
 
   // Set to true if we have claimed we have a ready-to-run idle task when asked.
   // In that case, we will ensure that we allow at least one task to run when
@@ -167,6 +167,11 @@ class IdlePeriodState {
   // If we're in a content process, we use mIdleScheduler to communicate with
   // the parent process for purposes of cross-process idle tracking.
   RefPtr<ipc::IdleSchedulerChild> mIdleScheduler;
+
+  // Our cached idle deadline.  This is set by UpdateCachedIdleDeadline() and
+  // cleared by ClearCachedIdleDeadline().  Consumers should do the former while
+  // not holding any locks, but may do the latter while holding locks.
+  TimeStamp mCachedIdleDeadline;
 
   // mIdleSchedulerInitialized is true if our mIdleScheduler has been
   // initialized.  It may be null even after initialiazation, in various

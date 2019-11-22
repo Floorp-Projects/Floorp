@@ -40,36 +40,36 @@ size_t IdlePeriodState::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   return n;
 }
 
-void IdlePeriodState::FlagNotIdle(Mutex& aMutexToUnlock) {
+void IdlePeriodState::FlagNotIdle() {
   MOZ_ASSERT(NS_IsMainThread(),
              "Why are we touching idle state off the main thread?");
 
   EnsureIsActive();
   if (mIdleToken && mIdleToken < TimeStamp::Now()) {
-    ClearIdleToken(aMutexToUnlock);
+    ClearIdleToken();
   }
 }
 
-void IdlePeriodState::RanOutOfTasks(Mutex& aMutexToUnlock) {
+void IdlePeriodState::RanOutOfTasks(const MutexAutoUnlock& aProofOfUnlock) {
   MOZ_ASSERT(NS_IsMainThread(),
              "Why are we touching idle state off the main thread?");
   MOZ_ASSERT(!mHasPendingEventsPromisedIdleEvent);
-  EnsureIsPaused(aMutexToUnlock);
-  ClearIdleToken(aMutexToUnlock);
+  EnsureIsPaused(aProofOfUnlock);
+  ClearIdleToken();
 }
 
-TimeStamp IdlePeriodState::GetIdleDeadlineInternal(bool aIsPeek,
-                                                   Mutex& aMutexToUnlock) {
+TimeStamp IdlePeriodState::GetIdleDeadlineInternal(
+    bool aIsPeek, const MutexAutoUnlock& aProofOfUnlock) {
   MOZ_ASSERT(NS_IsMainThread(),
              "Why are we touching idle state off the main thread?");
 
   bool shuttingDown;
   TimeStamp localIdleDeadline =
-      GetLocalIdleDeadline(shuttingDown, aMutexToUnlock);
+      GetLocalIdleDeadline(shuttingDown, aProofOfUnlock);
   if (!localIdleDeadline) {
     if (!aIsPeek) {
-      EnsureIsPaused(aMutexToUnlock);
-      ClearIdleToken(aMutexToUnlock);
+      EnsureIsPaused(aProofOfUnlock);
+      ClearIdleToken();
     }
     return TimeStamp();
   }
@@ -77,15 +77,17 @@ TimeStamp IdlePeriodState::GetIdleDeadlineInternal(bool aIsPeek,
   TimeStamp idleDeadline =
       mHasPendingEventsPromisedIdleEvent || shuttingDown
           ? localIdleDeadline
-          : GetIdleToken(localIdleDeadline, aMutexToUnlock);
+          : GetIdleToken(localIdleDeadline, aProofOfUnlock);
   if (!idleDeadline) {
     if (!aIsPeek) {
-      EnsureIsPaused(aMutexToUnlock);
+      EnsureIsPaused(aProofOfUnlock);
 
       // Don't call ClearIdleToken() here, since we may have a pending
       // request already.
-      // RequestIdleToken can do all sorts of IPC stuff that might take mutexes.
-      MutexAutoUnlock unlock(aMutexToUnlock);
+      //
+      // RequestIdleToken can do all sorts of IPC stuff that might
+      // take mutexes.  This is one reason why we need the
+      // MutexAutoUnlock reference!
       RequestIdleToken(localIdleDeadline);
     }
     return TimeStamp();
@@ -97,8 +99,8 @@ TimeStamp IdlePeriodState::GetIdleDeadlineInternal(bool aIsPeek,
   return idleDeadline;
 }
 
-TimeStamp IdlePeriodState::GetLocalIdleDeadline(bool& aShuttingDown,
-                                                Mutex& aMutexToUnlock) {
+TimeStamp IdlePeriodState::GetLocalIdleDeadline(
+    bool& aShuttingDown, const MutexAutoUnlock& aProofOfUnlock) {
   MOZ_ASSERT(NS_IsMainThread(),
              "Why are we touching idle state off the main thread?");
   // If we are shutting down, we won't honor the idle period, and we will
@@ -114,14 +116,8 @@ TimeStamp IdlePeriodState::GetLocalIdleDeadline(bool& aShuttingDown,
 
   aShuttingDown = false;
   TimeStamp idleDeadline;
-  {
-    // Releasing the lock temporarily since getting the idle period
-    // might need to lock the timer thread. Unlocking here might make
-    // us receive an event on the main queue, but we've committed to
-    // run an idle event anyhow.
-    MutexAutoUnlock unlock(aMutexToUnlock);
-    mIdlePeriod->GetIdlePeriodHint(&idleDeadline);
-  }
+  // This GetIdlePeriodHint() call is the reason we need a MutexAutoUnlock here.
+  mIdlePeriod->GetIdlePeriodHint(&idleDeadline);
 
   // If HasPendingEvents() has been called and it has returned true because of
   // pending idle events, there is a risk that we may decide here that we aren't
@@ -148,7 +144,7 @@ TimeStamp IdlePeriodState::GetLocalIdleDeadline(bool& aShuttingDown,
 }
 
 TimeStamp IdlePeriodState::GetIdleToken(TimeStamp aLocalIdlePeriodHint,
-                                        Mutex& aMutexToUnlock) {
+                                        const MutexAutoUnlock& aProofOfUnlock) {
   MOZ_ASSERT(NS_IsMainThread(),
              "Why are we touching idle state off the main thread?");
 
@@ -158,7 +154,7 @@ TimeStamp IdlePeriodState::GetIdleToken(TimeStamp aLocalIdlePeriodHint,
   if (mIdleToken) {
     TimeStamp now = TimeStamp::Now();
     if (mIdleToken < now) {
-      ClearIdleToken(aMutexToUnlock);
+      ClearIdleToken();
       return mIdleToken;
     }
     return mIdleToken < aLocalIdlePeriodHint ? mIdleToken
@@ -218,32 +214,32 @@ void IdlePeriodState::SetActive() {
   mActive = true;
 }
 
-void IdlePeriodState::SetPaused(Mutex& aMutexToUnlock) {
+void IdlePeriodState::SetPaused(const MutexAutoUnlock& aProofOfUnlock) {
   MOZ_ASSERT(NS_IsMainThread(),
              "Why are we touching idle state off the main thread?");
   MOZ_ASSERT(mActive);
   if (mIdleScheduler && mIdleScheduler->SetPaused()) {
-    MutexAutoUnlock unlock(aMutexToUnlock);
     // We may have gotten a free cpu core for running idle tasks.
     // We don't try to catch the case when there are prioritized processes
     // running.
 
-    // This SendSchedule call is why we need to MutexAutoUnlock here, because
+    // This SendSchedule call is why we need the MutexAutoUnlock here, because
     // IPC can do weird things with mutexes.
     mIdleScheduler->SendSchedule();
   }
   mActive = false;
 }
 
-void IdlePeriodState::ClearIdleToken(Mutex& aMutexToUnlock) {
+void IdlePeriodState::ClearIdleToken() {
   MOZ_ASSERT(NS_IsMainThread(),
              "Why are we touching idle state off the main thread?");
 
   if (mIdleRequestId) {
     if (mIdleScheduler) {
-      // This SendIdleTimeUsed call is why we need to MutexAutoUnlock here,
-      // because IPC can do weird things with mutexes.
-      MutexAutoUnlock unlock(aMutexToUnlock);
+      // This SendIdleTimeUsed call is why we need to not be holding
+      // any locks here, because IPC can do weird things with mutexes.
+      // Ideally we'd have a MutexAutoUnlock& reference here, but some
+      // callers end up here while just not holding any locks at all.
       mIdleScheduler->SendIdleTimeUsed(mIdleRequestId);
     }
     mIdleRequestId = 0;
