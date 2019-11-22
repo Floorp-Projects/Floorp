@@ -301,8 +301,9 @@ bool SendCrashPing(StringTable& strings, const string& aHash, string& pingUuid,
                                     name, version, channel, buildId);
 
   // Write out the result to the pending pings directory
-  Json::FastWriter writer;
-  string ping = writer.write(root);
+  Json::StreamWriterBuilder builder;
+  builder["indentation"] = "";
+  string ping = Json::writeString(builder, root);
   string pingPath = pingDir + UI_DIR_SEPARATOR + uuid + ".json";
 
   if (!WritePing(pingPath, ping)) {

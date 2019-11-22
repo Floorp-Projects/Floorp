@@ -225,11 +225,13 @@ bool CVRPathRegistry_Public::BLoadFromFile()
 	}
 
 	Json::Value root;
-	Json::Reader reader;
+	Json::CharReaderBuilder builder;
+	std::istringstream istream(sRegistryContents);
+	std::string errors;
 
-	if( !reader.parse( sRegistryContents, root ) )
+	if( !parseFromStream( builder, istream, &root, &errors ) )
 	{
-		VRLog( "Unable to parse %s: %s\n", sRegPath.c_str(), reader.getFormattedErrorMessages().c_str() );
+		VRLog( "Unable to parse %s: %s\n", sRegPath.c_str(), errors.c_str() );
 		return false;
 	}
 
@@ -267,8 +269,8 @@ bool CVRPathRegistry_Public::BSaveToFile() const
 	StringListToJson( m_vecLogPath, root, "log" );
 	StringListToJson( m_vecExternalDrivers, root, "external_drivers" );
 
-	Json::StyledWriter writer;
-	std::string sRegistryContents = writer.write( root );
+	Json::StreamWriterBuilder builder;
+	std::string sRegistryContents = Json::writeString( builder, root );
 
 	// make sure the directory we're writing into actually exists
 	std::string sRegDirectory = Path_StripFilename( sRegPath );
