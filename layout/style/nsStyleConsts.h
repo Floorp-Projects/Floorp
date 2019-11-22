@@ -722,13 +722,11 @@ enum class StyleWhiteSpace : uint8_t {
 #define NS_STYLE_PAGE_BREAK_RIGHT 4
 
 // See nsStyleUIReset
-enum class StyleImeMode : uint8_t {
-  Auto,
-  Normal,
-  Active,
-  Disabled,
-  Inactive,
-};
+#define NS_STYLE_IME_MODE_AUTO 0
+#define NS_STYLE_IME_MODE_NORMAL 1
+#define NS_STYLE_IME_MODE_ACTIVE 2
+#define NS_STYLE_IME_MODE_DISABLED 3
+#define NS_STYLE_IME_MODE_INACTIVE 4
 
 // See nsStyleSVG
 
