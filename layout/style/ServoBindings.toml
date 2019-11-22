@@ -119,7 +119,6 @@ rusty-enums = [
     "mozilla::StyleRuleInclusion",
     "mozilla::StyleGridTrackBreadth",
     "mozilla::StyleOverscrollBehavior",
-    "mozilla::StyleImeMode",
     "mozilla::StyleOverflowAnchor",
     "mozilla::StyleScrollbarWidth",
     "mozilla::StyleWhiteSpace",
