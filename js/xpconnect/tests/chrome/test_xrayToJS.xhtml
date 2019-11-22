@@ -32,11 +32,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     }
   }
 
+  var {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+  var isNightlyBuild = AppConstants.NIGHTLY_BUILD;
+  var isReleaseOrBeta = AppConstants.RELEASE_OR_BETA;
+
   typedArrayClasses = ['Uint8Array', 'Int8Array', 'Uint16Array', 'Int16Array',
                        'Uint32Array', 'Int32Array', 'Float32Array', 'Float64Array',
                        'Uint8ClampedArray'];
   errorObjectClasses = ['Error', 'InternalError', 'EvalError', 'RangeError', 'ReferenceError',
                         'SyntaxError', 'TypeError', 'URIError'];
+  if (isNightlyBuild) {
+    errorObjectClasses.push('AggregateError');
+  }
 
   // A simpleConstructors entry can either be the name of a constructor as a
   // string, or an object containing the properties `name`, and `args`.
@@ -44,8 +51,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   // latter case, it is invoked with `args` as the arguments list.
   simpleConstructors = ['Object', 'Function', 'Array', 'Boolean', 'Date', 'Number',
                         'String', 'RegExp', 'ArrayBuffer', 'WeakMap', 'WeakSet', 'Map', 'Set',
-                        {name: 'Promise', args: [function(){}]}].concat(typedArrayClasses)
-                                                                .concat(errorObjectClasses);
+                        {name: 'Promise', args: [function(){}]}];
+
+  // All TypedArray constructors can be called with zero arguments.
+  simpleConstructors = simpleConstructors.concat(typedArrayClasses);
+
+  // All Error constructors except AggregateError can be called with zero arguments.
+  simpleConstructors = simpleConstructors.concat(errorObjectClasses.filter(name => {
+    return name !== 'AggregateError';
+  }));
 
   function go() {
     window.iwin = document.getElementById('ifr').contentWindow;
@@ -123,6 +137,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     is(global(forwardingProxy), iwin, "proxy global correct");
     is(Cu.waiveXrays(forwardingProxy).foo, 9, "forwards correctly");
 
+    // Test AggregateError.
+    if (isNightlyBuild) {
+      // AggregateError throws when called without an iterable object as its first argument.
+      let args = [new iwin.Array()];
+
+      ok(iwin.AggregateError, "AggregateError constructor is present");
+      is(iwin.AggregateError, Cu.unwaiveXrays(iwin.wrappedJSObject.AggregateError),
+         "we end up with the appropriate AggregateError constructor");
+      is(Cu.unwaiveXrays(Cu.waiveXrays(new iwin.AggregateError(...args)).constructor), iwin.AggregateError,
+         "AggregateError constructor property is set up right");
+      let expectedProto = /Opaque/.test(new iwin.AggregateError(...args)) ? iwin['Object'].prototype
+                                                                          : iwin.AggregateError.prototype;
+      is(Object.getPrototypeOf(new iwin.AggregateError(...args)), expectedProto,
+         "AggregateError prototype is correct");
+      is(global(new iwin.AggregateError(...args)), iwin, "Got the right global for AggregateError");
+    }
+
     // Test eval.
     var toEval = "({a: 2, b: {foo: 'bar'}, f: function() { return window; }})";
     is(global(iwin.eval(toEval)), iwin, "eval creates objects in the correct global");
@@ -167,9 +198,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   // Xray-safe.
   //
   // DO NOT CHANGE WTIHOUT REVIEW FROM AN XPCONNECT PEER.
-  var {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
-  var isNightlyBuild = AppConstants.NIGHTLY_BUILD;
-  var isReleaseOrBeta = AppConstants.RELEASE_OR_BETA;
   var gPrototypeProperties = {};
   var gConstructorProperties = {};
   function constructorProps(arr) {
@@ -224,6 +252,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
       gPrototypeProperties[c] = ["constructor", "name", "message", "stack"];
       gConstructorProperties[c] = constructorProps([]);
   }
+  if (gPrototypeProperties['AggregateError']) {
+      gPrototypeProperties['AggregateError'].push("errors");
+  }
   // toString and toSource only live on the parent proto (Error.prototype).
   gPrototypeProperties['Error'].push('toString');
   gPrototypeProperties['Error'].push('toSource');
@@ -247,6 +278,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     ["constructor", "catch", "then", "finally", Symbol.toStringTag];
   gConstructorProperties['Promise'] =
     constructorProps(["resolve", "reject", "all", "allSettled", "race", Symbol.species]);
+  if (isNightlyBuild) {
+    gConstructorProperties['Promise'].push("any");
+  }
 
   gPrototypeProperties['ArrayBuffer'] =
     ["constructor", "byteLength", "slice", Symbol.toStringTag];
@@ -816,7 +850,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
     // Make sure that the dependent classes have their prototypes set up correctly.
     for (let c of errorObjectClasses.filter(x => x != "Error")) {
-      var e = new iwin[c]('some message');
+      var args = ['some message'];
+      if (c === 'AggregateError') {
+        // AggregateError's first argument is the list of aggregated errors.
+        args.unshift(new iwin.Array('error 1', 'error 2'));
+      }
+      var e = new iwin[c](...args);
       is(Object.getPrototypeOf(e).name, c, "Prototype has correct name");
       is(Object.getPrototypeOf(Object.getPrototypeOf(e)), iwin.Error.prototype, "Dependent prototype set up correctly");
       is(e.name, c, "Exception name inherited correctly");
@@ -832,6 +871,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
       testProperty('fileName', x => x == '', 'otherFilename.html', new iwin.Object());
       testProperty('columnNumber', x => x == 1, 99, 99.5);
       testProperty('lineNumber', x => x == 0, 50, 'foo');
+
+      if (c === 'AggregateError') {
+        let {errors} = e;
+        is(errors.length, 2, "errors property has the correct length");
+        is(errors[0], 'error 1', "errors[0] has the correct value");
+        is(errors[1], 'error 2', "errors[1] has the correct value");
+
+        Object.defineProperty(e.wrappedJSObject, 'errors', {value: 42});
+        is(e.wrappedJSObject.errors, 42, "Set tricky expando");
+        is(e.errors.length, 2, "errors accessor works over Xrays");
+      }
 
       // Note - an Exception newed via Xrays is going to have an empty stack given the
       // current semantics and implementation. This tests the current behavior, but that
