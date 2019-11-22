@@ -65,7 +65,7 @@ impl webrender::Compositor for DirectCompositeInterface {
         id: webrender::NativeSurfaceId,
         dirty_rect: DeviceIntRect,
     ) -> webrender::NativeSurfaceInfo {
-        let (fbo_id, x, y) = compositor::bind_surface(
+        let (x, y) = compositor::bind_surface(
             self.window,
             id.0,
             dirty_rect.origin.x,
@@ -76,7 +76,7 @@ impl webrender::Compositor for DirectCompositeInterface {
 
         webrender::NativeSurfaceInfo {
             origin: DeviceIntPoint::new(x, y),
-            fbo_id,
+            fbo_id: 0,
         }
     }
 
