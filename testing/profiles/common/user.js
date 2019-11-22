@@ -65,3 +65,5 @@ user_pref("media.allowed-to-play.enabled", true);
 // Ensure media can always play without delay
 user_pref("media.block-autoplay-until-in-foreground", false);
 user_pref("toolkit.telemetry.coverage.endpoint.base", "http://localhost");
+// Don't ask for a request in testing unless explicitly set this as true.
+user_pref("media.geckoview.autoplay.request", false);
