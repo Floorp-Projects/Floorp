@@ -25,6 +25,7 @@
 
 #include "ds/Fifo.h"
 #include "jit/Ion.h"
+#include "js/BinASTFormat.h"  // JS::BinASTFormat
 #include "js/CompileOptions.h"
 #include "js/SourceText.h"
 #include "js/TypeDecls.h"
@@ -635,6 +636,7 @@ bool StartOffThreadDecodeScript(JSContext* cx,
 bool StartOffThreadDecodeBinAST(JSContext* cx,
                                 const JS::ReadOnlyCompileOptions& options,
                                 const uint8_t* buf, size_t length,
+                                JS::BinASTFormat format,
                                 JS::OffThreadCompileCallback callback,
                                 void* callbackData);
 
@@ -777,8 +779,10 @@ struct ScriptDecodeTask : public ParseTask {
 
 struct BinASTDecodeTask : public ParseTask {
   mozilla::Range<const uint8_t> data;
+  JS::BinASTFormat format;
 
   BinASTDecodeTask(JSContext* cx, const uint8_t* buf, size_t length,
+                   JS::BinASTFormat format,
                    JS::OffThreadCompileCallback callback, void* callbackData);
   void parse(JSContext* cx) override;
 };

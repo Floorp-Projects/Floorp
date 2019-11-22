@@ -27,6 +27,7 @@
 #include "jspubtd.h"
 
 #include "js/AllocPolicy.h"
+#include "js/BinASTFormat.h"  // JS::BinASTFormat
 #include "js/CallArgs.h"
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
@@ -1950,11 +1951,12 @@ extern JS_PUBLIC_API void SetScriptPrivateReferenceHooks(
 namespace JS {
 
 extern JS_PUBLIC_API JSScript* DecodeBinAST(
-    JSContext* cx, const ReadOnlyCompileOptions& options, FILE* file);
+    JSContext* cx, const ReadOnlyCompileOptions& options, FILE* file,
+    JS::BinASTFormat format);
 
 extern JS_PUBLIC_API JSScript* DecodeBinAST(
     JSContext* cx, const ReadOnlyCompileOptions& options, const uint8_t* buf,
-    size_t length);
+    size_t length, JS::BinASTFormat format);
 
 } /* namespace JS */
 

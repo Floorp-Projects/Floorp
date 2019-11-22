@@ -12,6 +12,7 @@
 
 #include "NamespaceImports.h"
 
+#include "js/BinASTFormat.h"  // JS::BinASTFormat
 #include "js/CompileOptions.h"
 #include "js/SourceText.h"
 #include "vm/Scope.h"
@@ -112,7 +113,7 @@ class ParseNode;
 
 JSScript* CompileGlobalBinASTScript(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-    const uint8_t* src, size_t len,
+    const uint8_t* src, size_t len, JS::BinASTFormat format,
     ScriptSourceObject** sourceObjectOut = nullptr);
 
 MOZ_MUST_USE bool CompileLazyBinASTFunction(JSContext* cx,
