@@ -18,7 +18,7 @@
 ]>
 
 <!-- @CSP: We have to whitelist the 'oncommand' handler for all the cmd_* fields within
-   - editMenuOverlay.js until Bug 371900 is fixed using 
+   - editMenuOverlay.js until Bug 371900 is fixed using
    -    sha512-4o5Uf4E4EG+90Mb820FH2YFDf4IuX4bfUwQC7reK1ZhgcXWJBKMK2330XIELaFJJ8HiPffS9mP60MPjuXMIrHA==
    -->
 <window id="contentAreaDownloadsView"
@@ -45,8 +45,7 @@
                  id="downloadsRichListBox"
                  context="downloadsContextMenu"/>
     <description id="downloadsListEmptyDescription"
-                 value="&downloadsListEmpty.label;"
-                 mousethrough="always"/>
+                 value="&downloadsListEmpty.label;"/>
   </stack>
 #include downloadsCommands.inc.xhtml
 #include downloadsStrings.inc.xhtml

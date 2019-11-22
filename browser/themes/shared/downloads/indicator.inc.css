@@ -163,6 +163,7 @@
   position: relative;
   /* The selected tab may overlap #downloads-indicator-notification */
   z-index: 5;
+  pointer-events: none;
 }
 
 /* download start animation */

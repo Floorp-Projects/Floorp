@@ -37,7 +37,7 @@
       <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
       <hbox flex="1" part="innerbox">
         <vbox part="drop-indicator-bar" hidden="true">
-          <image part="drop-indicator" mousethrough="always"></image>
+          <image part="drop-indicator"/>
         </vbox>
         <arrowscrollbox class="popup-internal-box" flex="1" orient="vertical"
                         smoothscroll="false" part="popupbox">
@@ -604,7 +604,7 @@
         </box>
         <box class="panel-arrowcontent" part="arrowcontent" flex="1">
           <vbox part="drop-indicator-bar" hidden="true">
-            <image part="drop-indicator" mousethrough="always"/>
+            <image part="drop-indicator"/>
           </vbox>
           <arrowscrollbox class="popup-internal-box" flex="1"
                           orient="vertical" smoothscroll="false"

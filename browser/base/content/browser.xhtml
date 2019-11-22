@@ -335,8 +335,7 @@
            noautofocus="true"
            noautohide="true"
            flip="none"
-           consumeoutsideclicks="false"
-           mousethrough="always">
+           consumeoutsideclicks="false">
       <box id="UITourHighlight"></box>
     </panel>
 
@@ -603,7 +602,7 @@
 #include ../../components/downloads/content/downloadsPanel.inc.xhtml
 #include browser-allTabsMenu.inc.xhtml
 
-    <hbox id="downloads-animation-container" mousethrough="always">
+    <hbox id="downloads-animation-container">
       <vbox id="downloads-notification-anchor" hidden="true">
         <vbox id="downloads-indicator-notification"/>
       </vbox>
@@ -888,7 +887,7 @@
                        onclick="PageProxyClickHandler(event);"/>
                 <image id="permissions-granted-icon"
                        tooltiptext="&urlbar.permissionsGranted.tooltip;"/>
-                <box mousethrough="always">
+                <box style="pointer-events: none;">
                     <image class="sharing-icon" id="webrtc-sharing-icon"/>
                     <image class="sharing-icon geo-icon" id="geo-sharing-icon"/>
                 </box>
@@ -1199,7 +1198,6 @@
           <hbox flex="1">
             <hbox id="PlacesToolbarDropIndicatorHolder" align="center" collapsed="true">
               <image id="PlacesToolbarDropIndicator"
-                     mousethrough="always"
                      collapsed="true"/>
             </hbox>
             <scrollbox orient="horizontal"
@@ -1208,7 +1206,6 @@
             <toolbarbutton type="menu"
                            id="PlacesChevron"
                            class="toolbarbutton-1"
-                           mousethrough="never"
                            collapsed="true"
                            tooltiptext="&bookmarksToolbarChevron.tooltip;"
                            onpopupshowing="document.getElementById('PlacesToolbar')
