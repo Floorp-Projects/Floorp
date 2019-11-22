@@ -16,8 +16,7 @@ async function getUpdateButton(item) {
   let button = item.querySelector('[action="install-update"]');
   let panel = button.closest("panel-list");
   let shown = BrowserTestUtils.waitForEvent(panel, "shown");
-  let moreOptionsButton = item.querySelector('[action="more-options"]');
-  EventUtils.synthesizeMouseAtCenter(moreOptionsButton, {}, item.ownerGlobal);
+  panel.show();
   await shown;
   return button;
 }
