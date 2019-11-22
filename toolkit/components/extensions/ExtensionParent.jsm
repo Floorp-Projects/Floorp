@@ -1134,9 +1134,6 @@ ParentAPIManager = {
     let { childId } = data;
     let handlingUserInput = false;
 
-    // TODO: Bug 1587058 - Redesign webRequest event coelescing.
-    // let lowPriority = data.path.startsWith("webRequest.");
-
     let listener = async (...listenerArgs) => {
       let result = await this.conduit.queryRunListener(childId, {
         childId,

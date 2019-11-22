@@ -40,6 +40,7 @@ codespell:
         - toolkit/docs/
         - toolkit/locales/en-US/
         - toolkit/components/search/docs/
+        - tools/docs/
         - tools/lint/
         - tools/tryselect/
     # List of extensions coming from:

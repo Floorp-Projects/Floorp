@@ -30,6 +30,7 @@ fuzzing_interfaces = ["gkrust-shared/fuzzing_interfaces"]
 webrtc = ["gkrust-shared/webrtc"]
 wasm_library_sandboxing = ["gkrust-shared/wasm_library_sandboxing"]
 webgpu = ["gkrust-shared/webgpu"]
+remote_agent = ["gkrust-shared/remote"]
 
 [dependencies]
 gkrust-shared = { path = "shared" }
