@@ -5566,8 +5566,8 @@ class TransactionDatabaseOperationBase : public DatabaseOperationBase {
   };
 
   RefPtr<TransactionBase> mTransaction;
-  InternalState mInternalState;
-  bool mWaitingForContinue;
+  InternalState mInternalState = InternalState::Initial;
+  bool mWaitingForContinue = false;
   const bool mTransactionIsAborted;
 
  protected:
@@ -5580,7 +5580,7 @@ class TransactionDatabaseOperationBase : public DatabaseOperationBase {
   // StartTransactionOp failed on the connection thread and the next write
   // operation (e.g. ObjectstoreAddOrPutRequestOp) doesn't have enough time to
   // catch up the failure information.
-  bool mAssumingPreviousOperationFail;
+  bool mAssumingPreviousOperationFail = false;
 #endif
 
  public:
@@ -21938,15 +21938,8 @@ TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
     : DatabaseOperationBase(aTransaction->GetLoggingInfo()->Id(),
                             aTransaction->GetLoggingInfo()->NextRequestSN()),
       mTransaction(aTransaction),
-      mInternalState(InternalState::Initial),
-      mWaitingForContinue(false),
       mTransactionIsAborted(aTransaction->IsAborted()),
-      mTransactionLoggingSerialNumber(aTransaction->LoggingSerialNumber())
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-      ,
-      mAssumingPreviousOperationFail(false)
-#endif
-{
+      mTransactionLoggingSerialNumber(aTransaction->LoggingSerialNumber()) {
   MOZ_ASSERT(aTransaction);
   MOZ_ASSERT(LoggingSerialNumber());
 }
@@ -21956,15 +21949,8 @@ TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
     : DatabaseOperationBase(aTransaction->GetLoggingInfo()->Id(),
                             aLoggingSerialNumber),
       mTransaction(aTransaction),
-      mInternalState(InternalState::Initial),
-      mWaitingForContinue(false),
       mTransactionIsAborted(aTransaction->IsAborted()),
-      mTransactionLoggingSerialNumber(aTransaction->LoggingSerialNumber())
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-      ,
-      mAssumingPreviousOperationFail(false)
-#endif
-{
+      mTransactionLoggingSerialNumber(aTransaction->LoggingSerialNumber()) {
   MOZ_ASSERT(aTransaction);
 }
 
