@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+import buildconfig
+
+
 services = []
 
 
@@ -56,6 +59,10 @@ service('Bits', 'nsIBits',
 service('AppInfoService', 'nsIXULRuntime',
         "@mozilla.org/xre/app-info;1")
 
+if buildconfig.substs.get('ENABLE_REMOTE_AGENT'):
+    service('RemoteAgent', 'nsIRemoteAgent',
+            "@mozilla.org/remote/agent;1")
+
 # The definition file needs access to the definitions of the particular
 # interfaces. If you add a new interface here, make sure the necessary includes
 # are also listed in the following code snippet.
@@ -90,6 +97,10 @@ CPP_INCLUDES = """
 #include "nsIBits.h"
 #include "nsIXULRuntime.h"
 """
+
+if buildconfig.substs.get('ENABLE_REMOTE_AGENT'):
+    CPP_INCLUDES += '#include "nsIRemoteAgent.h"'
+
 
 #####
 # Codegen Logic
