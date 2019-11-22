@@ -31,6 +31,14 @@ class EventQueueInternal : public AbstractEventQueue {
   already_AddRefed<nsIRunnable> GetEvent(
       EventQueuePriority* aPriority, const MutexAutoLock& aProofOfLock,
       mozilla::TimeDuration* aLastEventDelay = nullptr) final;
+  already_AddRefed<nsIRunnable> GetEvent(EventQueuePriority* aPriority,
+                                         const MutexAutoLock& aProofOfLock,
+                                         TimeDuration* aLastEventDelay,
+                                         bool* aIsIdleEvent) {
+    *aIsIdleEvent = false;
+    return GetEvent(aPriority, aProofOfLock, aLastEventDelay);
+  }
+
   void DidRunEvent(const MutexAutoLock& aProofOfLock) {}
 
   bool IsEmpty(const MutexAutoLock& aProofOfLock) final;

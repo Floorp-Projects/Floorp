@@ -136,14 +136,17 @@ already_AddRefed<nsIRunnable> ThreadEventQueue<InnerQueueT>::GetEvent(
   MutexAutoLock lock(mLock);
 
   nsCOMPtr<nsIRunnable> event;
+  bool eventIsIdleRunnable = false;
   for (;;) {
     if (mNestedQueues.IsEmpty()) {
-      event = mBaseQueue->GetEvent(aPriority, lock, aLastEventDelay);
+      event = mBaseQueue->GetEvent(aPriority, lock, aLastEventDelay,
+                                   &eventIsIdleRunnable);
     } else {
       // We always get events from the topmost queue when there are nested
       // queues.
-      event = mNestedQueues.LastElement().mQueue->GetEvent(aPriority, lock,
-                                                           aLastEventDelay);
+      event = mNestedQueues.LastElement().mQueue->GetEvent(
+          aPriority, lock, aLastEventDelay, &eventIsIdleRunnable);
+      MOZ_ASSERT(!eventIsIdleRunnable);
     }
 
     if (event || !aMayWait) {
