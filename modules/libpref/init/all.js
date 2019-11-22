@@ -431,10 +431,10 @@ pref("media.videocontrols.picture-in-picture.video-toggle.always-show", false);
   pref("media.navigator.video.red_ulpfec_enabled", false);
 
   #ifdef NIGHTLY_BUILD
-    pref("media.peerconnection.sdp.parser", "legacy");
+    pref("media.peerconnection.sdp.parser", "sipcc");
     pref("media.peerconnection.sdp.alternate_parse_mode", "parallel");
   #else
-    pref("media.peerconnection.sdp.parser", "legacy");
+    pref("media.peerconnection.sdp.parser", "sipcc");
     pref("media.peerconnection.sdp.alternate_parse_mode", "failover");
   #endif
 
