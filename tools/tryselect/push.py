@@ -81,10 +81,7 @@ def check_working_directory(push=True):
 
 def generate_try_task_config(method, labels, try_config=None):
     try_task_config = try_config or {}
-
-    templates = try_task_config.setdefault('templates', {})
-    templates.setdefault('env', {}).update({'TRY_SELECTOR': method})
-
+    try_task_config.setdefault('env', {})['TRY_SELECTOR'] = method
     try_task_config.update({
         'version': 1,
         'tasks': sorted(labels),

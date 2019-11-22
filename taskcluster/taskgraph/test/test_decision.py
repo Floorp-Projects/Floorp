@@ -105,7 +105,7 @@ class TestGetDecisionParameters(unittest.TestCase):
     def test_try_task_config(self, mock_get_hg_commit_message, mock_get_hg_revision_branch):
         mock_get_hg_commit_message.return_value = 'Fuzzy query=foo'
         mock_get_hg_revision_branch.return_value = 'default'
-        ttc = {'tasks': ['a', 'b'], 'templates': {}}
+        ttc = {'tasks': ['a', 'b']}
         self.options['project'] = 'try'
         with MockedOpen({self.ttc_file: json.dumps(ttc)}):
             params = decision.get_decision_parameters(FAKE_GRAPH_CONFIG, self.options)

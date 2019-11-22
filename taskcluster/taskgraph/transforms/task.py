@@ -1750,6 +1750,29 @@ def add_index_routes(config, tasks):
 
 
 @transforms.add
+def try_task_config_env(config, tasks):
+    """Set environment variables in the task."""
+    env = config.params['try_task_config'].get('env')
+    # Find all implementations that have an 'env' key.
+    implementations = {name for name, builder in payload_builders.items()
+                       if 'env' in builder.schema.schema}
+    for task in tasks:
+        if env and task['worker']['implementation'] in implementations:
+            task['worker']['env'].update(env)
+        yield task
+
+
+@transforms.add
+def try_task_config_chemspill_prio(config, tasks):
+    """Increase the priority from lowest and very-low -> low, but leave others unchanged."""
+    chemspill_prio = config.params['try_task_config'].get('chemspill-prio')
+    for task in tasks:
+        if chemspill_prio and task['priority'] in ('lowest', 'very-low'):
+            task['priority'] = 'low'
+        yield task
+
+
+@transforms.add
 def build_task(config, tasks):
     for task in tasks:
         level = str(config.params['level'])

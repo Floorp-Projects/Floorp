@@ -45,9 +45,7 @@ def test_try_again(monkeypatch):
 
     try_task_config = kwargs.pop("try_task_config")
     assert sorted(try_task_config.get("tasks")) == sorted(["foo", "bar"])
-    assert try_task_config.get("templates") == {
-        "env": {"TRY_SELECTOR": "fuzzy"},
-    }
+    assert try_task_config.get("env") == {"TRY_SELECTOR": "fuzzy"}
     assert try_task_config.get('use-artifact-builds')
 
     with open(push.history_path, "r") as fh:
