@@ -12,15 +12,13 @@ Test custom commit messages with fuzzy selector
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
+      "env": {
+          "TRY_SELECTOR": "fuzzy"
+      },
       "tasks": [
           "test/foo-debug",
           "test/foo-opt"
       ],
-      "templates": {
-          "env": {
-              "TRY_SELECTOR": "fuzzy"
-          }
-      },
       "version": 1
   }
   
@@ -31,15 +29,13 @@ Test custom commit messages with fuzzy selector
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
+      "env": {
+          "TRY_SELECTOR": "fuzzy"
+      },
       "tasks": [
           "test/foo-debug",
           "test/foo-opt"
       ],
-      "templates": {
-          "env": {
-              "TRY_SELECTOR": "fuzzy"
-          }
-      },
       "version": 1
   }
   

@@ -10,15 +10,13 @@ Test fuzzy selector
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
+      "env": {
+          "TRY_SELECTOR": "fuzzy"
+      },
       "tasks": [
           "test/foo-debug",
           "test/foo-opt"
       ],
-      "templates": {
-          "env": {
-              "TRY_SELECTOR": "fuzzy"
-          }
-      },
       "version": 1
   }
   
@@ -31,15 +29,13 @@ Test fuzzy selector
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
+      "env": {
+          "TRY_SELECTOR": "fuzzy"
+      },
       "tasks": [
           "test/bar-debug",
           "test/bar-opt"
       ],
-      "templates": {
-          "env": {
-              "TRY_SELECTOR": "fuzzy"
-          }
-      },
       "version": 1
   }
   
@@ -53,17 +49,15 @@ Test multiple selectors
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
+      "env": {
+          "TRY_SELECTOR": "fuzzy"
+      },
       "tasks": [
           "test/bar-debug",
           "test/bar-opt",
           "test/foo-debug",
           "test/foo-opt"
       ],
-      "templates": {
-          "env": {
-              "TRY_SELECTOR": "fuzzy"
-          }
-      },
       "version": 1
   }
   
@@ -77,14 +71,12 @@ Test query intersection
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
+      "env": {
+          "TRY_SELECTOR": "fuzzy"
+      },
       "tasks": [
           "test/foo-opt"
       ],
-      "templates": {
-          "env": {
-              "TRY_SELECTOR": "fuzzy"
-          }
-      },
       "version": 1
   }
   
@@ -101,15 +93,13 @@ Test intersection with preset containing multiple queries
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
+      "env": {
+          "TRY_SELECTOR": "fuzzy"
+      },
       "tasks": [
           "test/foo-debug",
           "test/foo-opt"
       ],
-      "templates": {
-          "env": {
-              "TRY_SELECTOR": "fuzzy"
-          }
-      },
       "version": 1
   }
   
@@ -120,15 +110,13 @@ Test intersection with preset containing multiple queries
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
+      "env": {
+          "TRY_SELECTOR": "fuzzy"
+      },
       "tasks": [
           "test/foo-debug",
           "test/foo-opt"
       ],
-      "templates": {
-          "env": {
-              "TRY_SELECTOR": "fuzzy"
-          }
-      },
       "version": 1
   }
   
@@ -142,15 +130,13 @@ Test exact match
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
+      "env": {
+          "TRY_SELECTOR": "fuzzy"
+      },
       "tasks": [
           "test/foo-debug",
           "test/foo-opt"
       ],
-      "templates": {
-          "env": {
-              "TRY_SELECTOR": "fuzzy"
-          }
-      },
       "version": 1
   }
   
@@ -161,15 +147,13 @@ Test exact match
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
+      "env": {
+          "TRY_SELECTOR": "fuzzy"
+      },
       "tasks": [
           "test/bar-debug",
           "test/bar-opt"
       ],
-      "templates": {
-          "env": {
-              "TRY_SELECTOR": "fuzzy"
-          }
-      },
       "version": 1
   }
   
@@ -184,15 +168,13 @@ Test templates
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
+      "env": {
+          "TRY_SELECTOR": "fuzzy"
+      },
       "tasks": [
           "test/foo-debug",
           "test/foo-opt"
       ],
-      "templates": {
-          "env": {
-              "TRY_SELECTOR": "fuzzy"
-          }
-      },
       "use-artifact-builds": true,
       "version": 1
   }
@@ -204,17 +186,15 @@ Test templates
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
+      "env": {
+          "BAR": "baz",
+          "FOO": "1",
+          "TRY_SELECTOR": "fuzzy"
+      },
       "tasks": [
           "test/foo-debug",
           "test/foo-opt"
       ],
-      "templates": {
-          "env": {
-              "BAR": "baz",
-              "FOO": "1",
-              "TRY_SELECTOR": "fuzzy"
-          }
-      },
       "version": 1
   }
   

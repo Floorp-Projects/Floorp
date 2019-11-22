@@ -131,16 +131,14 @@ Test preset with fuzzy subcommand
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
+      "env": {
+          "TRY_SELECTOR": "fuzzy"
+      },
+      "rebuild": 5,
       "tasks": [
           "test/foo-debug",
           "test/foo-opt"
       ],
-      "templates": {
-          "env": {
-              "TRY_SELECTOR": "fuzzy"
-          },
-          "rebuild": 5
-      },
       "version": 1
   }
   
@@ -152,16 +150,14 @@ Test preset with fuzzy subcommand
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
+      "env": {
+          "TRY_SELECTOR": "fuzzy"
+      },
+      "rebuild": 5,
       "tasks": [
           "test/foo-debug",
           "test/foo-opt"
       ],
-      "templates": {
-          "env": {
-              "TRY_SELECTOR": "fuzzy"
-          },
-          "rebuild": 5
-      },
       "version": 1
   }
   
@@ -175,17 +171,15 @@ Queries can be appended to presets
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
+      "env": {
+          "TRY_SELECTOR": "fuzzy"
+      },
+      "rebuild": 5,
       "tasks": [
           "build-baz",
           "test/foo-debug",
           "test/foo-opt"
       ],
-      "templates": {
-          "env": {
-              "TRY_SELECTOR": "fuzzy"
-          },
-          "rebuild": 5
-      },
       "version": 1
   }
   
@@ -197,15 +191,13 @@ Queries can be appended to presets
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
+      "env": {
+          "TRY_SELECTOR": "fuzzy"
+      },
+      "rebuild": 5,
       "tasks": [
           "test/foo-opt"
       ],
-      "templates": {
-          "env": {
-              "TRY_SELECTOR": "fuzzy"
-          },
-          "rebuild": 5
-      },
       "version": 1
   }
   

@@ -56,19 +56,18 @@ def test_templates(template_patch_resolver, template, args, expected):
     t = all_templates[template]()
     t.add_arguments(parser)
 
-    fn = getattr(t, 'context', t.try_config)
     if inspect.isclass(expected) and issubclass(expected, BaseException):
         with pytest.raises(expected):
             args = parser.parse_args(args)
             if template == 'path':
                 template_patch_resolver(**vars(args))
 
-            fn(**vars(args))
+            t.try_config(**vars(args))
     else:
         args = parser.parse_args(args)
         if template == 'path':
             template_patch_resolver(**vars(args))
-        assert fn(**vars(args)) == expected
+        assert t.try_config(**vars(args)) == expected
 
 
 if __name__ == '__main__':

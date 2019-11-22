@@ -88,45 +88,25 @@ obtained with:
 Modifying Tasks in a Try Push
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
-It's possible to alter the definition of a task with templates. Templates are
-`JSON-e`_ files that live in the `taskgraph module`_. Templates can be specified
-from the ``try_task_config.json`` like this:
+It's possible to alter the definition of a task by defining additional
+configuration in ``try_task_config.json``. For example, to set an environment
+variable in all tasks, you can add:
 
 .. parsed-literal::
 
     {
       "version": 1,
       "tasks": [...],
-      "templates": {
-        env: {"FOO": "bar"}
+      "env": {
+        "FOO": "bar"
       }
     }
 
-Each key in the templates object denotes a new template to apply, and the value
-denotes extra context to use while rendering. When specified, a template will
-be applied to every task no matter what. If the template should only be applied
-to certain kinds of tasks, this needs to be specified in the template itself
-using JSON-e `condition statements`_.
-
-The context available to the JSON-e render contains attributes from the
-:py:class:`taskgraph.task.Task` class. It looks like this:
-
-.. parsed-literal::
-
-    {
-      "attributes": task.attributes,
-      "kind": task.kind,
-      "label": task.label,
-      "target_tasks": [<tasks from try_task_config.json>],
-      "task": task.task,
-      "taskId": task.task_id,
-      "input": ...
-    }
-
-The ``input`` context can be any arbitrary value or object. What it contains
-depends on each specific template. Templates must return objects that have have
-either ``attributes`` or ``task`` as a top level key. All other top level keys
-will be ignored. See the `existing templates`_ for examples.
+The allowed configs are defined in :py:obj:`taskgraph.decision.try_task_config_schema`.
+The values will be available to all transforms, so how each config applies will
+vary wildly from one context to the next. Some (such as ``env``) will affect
+all tasks in the graph. Others might only affect certain kinds of task. The
+``use-artifact-builds`` config only applies to build tasks for instance.
 
 Empty Try
 :::::::::
@@ -170,10 +150,4 @@ config.
        }
    }
 
-.. _JSON-e: https://taskcluster.github.io/json-e/
-.. _taskgraph module: https://dxr.mozilla.org/mozilla-central/source/taskcluster/taskgraph/templates
-.. _condition statements: https://taskcluster.github.io/json-e/#%60$if%60%20-%20%60then%60%20-%20%60else%60
-.. _existing templates: https://dxr.mozilla.org/mozilla-central/source/taskcluster/taskgraph/templates
 .. _SCM Level: https://www.mozilla.org/en-US/about/governance/policies/commit/access-policy/
-
-

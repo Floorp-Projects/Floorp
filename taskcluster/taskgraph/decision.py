@@ -128,10 +128,12 @@ visual_metrics_jobs_schema = Schema({
 
 try_task_config_schema = Schema({
     Required('tasks'): [basestring],
-    Optional('templates'): {basestring: object},
-    Optional('disable-pgo'): bool,
     Optional('browsertime'): bool,
+    Optional('chemspill-prio'): bool,
+    Optional('disable-pgo'): bool,
+    Optional('env'): {basestring: basestring},
     Optional('gecko-profile'): bool,
+    Optional('rebuild'): int,
     Optional('use-artifact-builds'): bool,
     # Keep in sync with JOB_SCHEMA in taskcluster/docker/visual-metrics/run-visual-metrics.py.
     Optional('visual-metrics-jobs'): visual_metrics_jobs_schema,
@@ -144,7 +146,9 @@ try_task_config_schema = Schema({
         description="Run linux desktop tests on Ubuntu 18.04 (bionic)."
         ): bool,
 })
-
+"""
+Schema for try_task_config.json files.
+"""
 
 try_task_config_schema_v2 = Schema({
     Optional('parameters'): {basestring: object},

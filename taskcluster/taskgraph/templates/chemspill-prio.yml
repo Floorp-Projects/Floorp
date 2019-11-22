@@ -1,9 +1,0 @@
----
-task:
-    $mergeDeep:
-        - $eval: task
-        # increase the priority from lowest and very-low -> low, but leave others unchanged
-        - priority:
-              $if: task.priority == 'lowest' || task.priority == 'very-low'
-              then: low
-              else: {$eval: task.priority}
