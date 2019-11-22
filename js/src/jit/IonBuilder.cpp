@@ -1617,13 +1617,10 @@ class MOZ_RAII PoppedValueUseChecker {
 };
 #endif
 
-// Try to traverse the bytecode from first to last instruction. While-like loops
-// are the only exception to this because there we have to compile the condition
-// before we compile the loop body. The LoopState class tracks this.
-//
-// The PendingEdge class is used to deal with forward branches. See the comment
-// on that class for more information.
 AbortReasonOr<Ok> IonBuilder::traverseBytecode() {
+  // See the "Control Flow handling in IonBuilder" comment in IonBuilder.h for
+  // more information.
+
   // IonBuilder's destructor is not called, so make sure pendingEdges_ and
   // GSNCache are not holding onto malloc memory when we return.
   auto freeMemory = mozilla::MakeScopeExit([&] {

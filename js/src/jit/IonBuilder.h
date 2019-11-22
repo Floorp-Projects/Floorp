@@ -44,6 +44,70 @@ BaselineFrameInspector* NewBaselineFrameInspector(TempAllocator* temp,
 
 using CallTargets = Vector<JSFunction*, 6, JitAllocPolicy>;
 
+// [SMDOC] Control Flow handling in IonBuilder
+//
+// IonBuilder traverses the script's bytecode and compiles each instruction to
+// corresponding MIR instructions. Handling control flow bytecode ops requires
+// some special machinery:
+//
+// Forward branches
+// ----------------
+// Most branches in the bytecode are forward branches to a JSOP_JUMPTARGET
+// instruction that we have not inspected yet. We compile them in two phases:
+//
+// 1) When compiling the source instruction: the MBasicBlock is terminated
+//    with a control instruction that has a nullptr successor block. We also add
+//    a PendingEdge instance to the PendingEdges list for the target bytecode
+//    location.
+//
+// 2) When finally compiling the JSOP_JUMPTARGET: IonBuilder::visitJumpTarget
+//    creates the target block and uses the list of PendingEdges to 'link' the
+//    blocks.
+//
+// Loops
+// -----
+// Loops complicate this a bit:
+//
+// * In the bytecode, most loops currently start with a jump to the loop
+//   condition because the condition is emitted after the loop body. This is the
+//   only case where IonBuilder follows a forward branch immediately and later
+//   'jumps back' to compile the loop body. The LoopState class is used to track
+//   this.
+//
+//   Bug 1598548 aims to change the bytecode for these loops so that all loops
+//   can be compiled in order.
+//
+// * Because of IonBuilder's single pass design, we sometimes have to 'restart'
+//   a loop when we find new types for locals, arguments, or stack slots while
+//   compiling the loop body. When this happens the loop has to be recompiled
+//   from the beginning.
+//
+// * Loops may be nested within other loops, so we track loop states in a stack
+//   per IonBuilder.
+//
+// Unreachable/dead code
+// ---------------------
+// Some bytecode instructions never fall through to the next instruction, for
+// example JSOP_RETURN, JSOP_GOTO, or JSOP_THROW. Code after such instructions
+// is guaranteed to be dead so IonBuilder skips it until it gets to a jump
+// target instruction with pending edges.
+//
+// Note: The frontend may generate unnecessary JSOP_JUMPTARGET instructions we
+// can ignore when they have no incoming pending edges.
+//
+// Try-catch
+// ---------
+// IonBuilder supports scripts with try-catch by only compiling the try-block
+// and bailing out (to the Baseline Interpreter) from the exception handler
+// whenever we need to execute the catch-block.
+//
+// Because we don't compile the catch-block and the code after the try-catch may
+// only be reachable via the catch-block, MGotoWithFake is used to ensure the
+// code after the try-catch is always compiled and is part of the graph.
+// See IonBuilder::visitTry for more information.
+//
+// Finally-blocks are currently not supported by Ion.
+
 // PendingEdge is used whenever a block is terminated with a forward branch in
 // the bytecode. When IonBuilder reaches the jump target it uses this
 // information to link the block to the jump target's block.
