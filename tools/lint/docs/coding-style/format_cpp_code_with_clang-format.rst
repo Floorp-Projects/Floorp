@@ -1,5 +1,3 @@
-.. _format_cpp_code_with_clang-format:
-
 =====================================
 Formatting C++ Code With clang-format
 =====================================
@@ -16,8 +14,6 @@ If the options are changed in clang upstream, this might cause some
 changes in the Firefox tree. For this reason, it is best to use the
 mozilla-provided binaries.
 
-.. _Manual_formatting:
-
 Manual formatting
 -----------------
 
@@ -29,7 +25,6 @@ If clang-format isn’t installed, the binaries will be automatically
 downloaded from taskcluster and installed into ~/.mozbuild. We build our
 own clang-format binaries.
 
-.. _Formatting_local_changes:
 
 Formatting local changes
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -42,7 +37,6 @@ When run without arguments, it will run on a local diff. This could miss
 some reformatting (for example, when blocks are touched).
 (`dxr <https://dxr.mozilla.org/mozilla-central/source/python/mozbuild/mozbuild/mach_commands.py#2167%20%0A>`__)
 
-.. _Formatting_specific_paths:
 
 Formatting specific paths
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -57,7 +51,6 @@ directory or file, and a ``-s`` flag to show the changes instead of
 applying them to the working directory
 (`dxr <https://dxr.mozilla.org/mozilla-central/rev/237e4c0633fda8e227b2ab3ab57e417c980a2811/python/mozbuild/mozbuild/mach_commands.py#2329>`__)
 
-.. _Formatting_specific_commits_revisions:
 
 Formatting specific commits / revisions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -71,7 +64,6 @@ Formatting specific commits / revisions
 The command accepts a ``-c`` argument that takes a revision number or
 commit range, and will format the lines modified by those commits.
 
-.. _Scripting_Clang-Format:
 
 Scripting Clang-Format
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -81,7 +73,6 @@ on-disk. If this is not the case, for example when formatting a
 temporary file, the "real" path must be specified. This can be done with
 the ``--assume-filename <path>`` argument.
 
-.. _Configuring_the_clang-format_commit_hook:
 
 Configuring the clang-format commit hook
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -107,7 +98,6 @@ You'll likely need to install the ``python-hglib`` package for your OS,
 or else you may get errors like ``abort: No module named hglib.client!``
 when you try to commit.
 
-.. _Editor_integration:
 
 Editor integration
 ------------------
@@ -116,7 +106,6 @@ It is possible to configure many editors to support running
 ``clang-format`` automatically on save, or when run from within the
 editor.
 
-.. _Editor_plugins:
 
 Editor plugins
 ~~~~~~~~~~~~~~
@@ -167,7 +156,6 @@ Editor plugins
 
    -  `clang-format-diff.py <https://raw.githubusercontent.com/llvm-mirror/clang/master/tools/clang-format/clang-format-diff.py>`__
 
-.. _Configuration:
 
 Configuration
 ~~~~~~~~~~~~~
@@ -185,17 +173,11 @@ include the list of ignored files and directories (provided by
 .clang-format-ignore which is a feature provided by the mach command
 wrapper).
 
-.. _Configuration_2:
-
-Configuration
--------------
-
 Coding style configuration is done within clang-format itself. When we
 change the configuration (incorrect configuration, new feature in clang,
 etc), we use `local
 overrides <https://dxr.mozilla.org/mozilla-central/source/.clang-format>`__.
 
-.. _Ignored_files_directories:
 
 Ignored files & directories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -205,7 +187,6 @@ files <https://dxr.mozilla.org/mozilla-central/source/.clang-format-ignore>`__,
 which is used by ``./mach clang-format``. This is generally only used
 for code broken by clang-format, and third-party code.
 
-.. _Ignored_code_hunks:
 
 Ignored code hunks
 ~~~~~~~~~~~~~~~~~~
@@ -223,7 +204,6 @@ reformat:
 You can find an `example of code not
 formatted <https://dxr.mozilla.org/mozilla-central/source/xpcom/io/nsEscape.cpp?q=xpcom%2Fio%2FnsEscape.cpp&redirect_type=direct#21>`__.
 
-.. _Merging_formatted_and_unformatted_code:
 
 Merging formatted and unformatted code
 --------------------------------------
@@ -232,7 +212,6 @@ During the transition to using chromium style enforced by clang-format
 for all code in tree, it will often be necessary to rebase non-formatted
 code onto a formatted tree.
 
-.. _Mercurial:
 
 Mercurial
 ~~~~~~~~~
@@ -246,7 +225,6 @@ this
 The parent changeset of the reformat has been tagged as
 ``PRE_TREEWIDE_CLANG_FORMAT``.
 
-.. _Git:
 
 Git
 ~~~
@@ -262,7 +240,6 @@ driver, ``clang-format-merge``, has been written:
 The wrapper should clean up after itself, and the clone may be deleted
 after the rebase is complete.
 
-.. _Ignore_lists:
 
 Ignore lists
 ------------
@@ -271,15 +248,13 @@ To make sure that the blame/annotate features of Mercurial or git aren't
 affected. Two files are maintained to keep track of the reformatting
 commits.
 
-.. _Mercurial_2:
 
-Mercurial
-~~~~~~~~~
+With Mercurial
+~~~~~~~~~~~~~~
 
 | The list is stored in
   `https://searchfox.org/mozilla-central/source/.hg-annotate-ignore-revs </en-US/docs/>`__
-| Commit messages should also contain the string *#
-  ignore-this-changeset*
+| Commit messages should also contain the string ``# ignore-this-changeset``
 
 The syntax in this file is generated using the following syntax:
 
@@ -287,8 +262,8 @@ The syntax in this file is generated using the following syntax:
 
    $ hg log --template '{node} - {author|person} - {desc|strip|firstline}\n'
 
-git
-~~~
+With git
+~~~~~~~~
 
 The list is stored in
 `https://searchfox.org/mozilla-central/source/.git-blame-ignore-revs </en-US/docs/>`__
