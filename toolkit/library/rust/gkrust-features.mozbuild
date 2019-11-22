@@ -70,3 +70,6 @@ if CONFIG['MOZ_WEBRTC']:
 
 if CONFIG['ENABLE_REMOTE_AGENT']:
     gkrust_features += ['remote_agent']
+
+if CONFIG['MOZ_FOGOTYPE']:
+    gkrust_features += ['fogotype']
