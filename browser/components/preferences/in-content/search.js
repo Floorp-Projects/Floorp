@@ -66,7 +66,6 @@ var gSearchPane = {
     window.addEventListener("dragstart", this);
     window.addEventListener("keypress", this);
     window.addEventListener("select", this);
-    window.addEventListener("blur", this, true);
 
     Services.obs.addObserver(this, "browser-search-engine-modified");
     window.addEventListener("unload", () => {
@@ -387,11 +386,6 @@ var gSearchPane = {
           gSearchPane.onTreeSelect();
         }
         break;
-      case "blur":
-        if (aEvent.target.id == "engineList") {
-          gSearchPane.onInputBlur(aEvent);
-        }
-        break;
     }
   },
 
@@ -406,7 +400,13 @@ var gSearchPane = {
           break;
         case "engine-changed":
           gEngineView._engineStore.reloadIcons();
-          gEngineView.invalidate();
+          // Only bother invalidating if the tree is valid. It might not be
+          // if we're here because we saved an engine keyword change when
+          // the input got blurred as a result of changing categories, which
+          // destroys the tree.
+          if (gEngineView.tree) {
+            gEngineView.invalidate();
+          }
           break;
         case "engine-removed":
           gSearchPane.remove(aEngine);
@@ -441,17 +441,6 @@ var gSearchPane = {
         }
       }
     }
-  },
-
-  onInputBlur(aEvent) {
-    let tree = document.getElementById("engineList");
-    if (!tree.hasAttribute("editing")) {
-      return;
-    }
-
-    // Accept input unless discarded.
-    let accept = aEvent.charCode != KeyEvent.DOM_VK_ESCAPE;
-    tree.stopEditing(accept);
   },
 
   onTreeSelect() {
