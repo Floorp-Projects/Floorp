@@ -137,6 +137,7 @@ sealed class Event {
     object OpenOneLogin : Event()
     object CopyLogin : Event()
     object ViewLoginPassword : Event()
+    object PrivateBrowsingShowSearchSuggestions : Event()
 
     // Interaction events with extras
 
@@ -153,7 +154,8 @@ sealed class Event {
             context.getString(R.string.pref_key_open_links_in_a_private_tab),
             context.getString(R.string.pref_key_sync_logins),
             context.getString(R.string.pref_key_sync_bookmarks),
-            context.getString(R.string.pref_key_sync_history)
+            context.getString(R.string.pref_key_sync_history),
+            context.getString(R.string.pref_key_show_search_suggestions_in_private)
         )
 
         override val extras: Map<Events.preferenceToggledKeys, String>?

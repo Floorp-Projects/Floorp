@@ -6,8 +6,8 @@ package org.mozilla.fenix.components.metrics
 
 import android.content.Context
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.MainScope
 import mozilla.components.service.glean.BuildConfig
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
@@ -36,6 +36,7 @@ import org.mozilla.fenix.GleanMetrics.QrScanner
 import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
+import org.mozilla.fenix.GleanMetrics.SearchSuggestions
 import org.mozilla.fenix.GleanMetrics.SearchWidget
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncAuth
@@ -445,6 +446,9 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.ViewLoginPassword -> EventWrapper<NoExtraKeys>(
             { Logins.viewPasswordLogin.record(it) }
+        )
+        is Event.PrivateBrowsingShowSearchSuggestions -> EventWrapper<NoExtraKeys>(
+            { SearchSuggestions.enableInPrivate.record(it) }
         )
         is Event.ToolbarPositionChanged -> EventWrapper(
             { ToolbarSettings.changedPosition.record(it) },

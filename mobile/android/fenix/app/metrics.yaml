@@ -114,7 +114,8 @@ events:
         description: "The preference key for the boolean (true/false) preference the user toggled. We currently track:
           show_search_suggestions, remote_debugging, telemetry, tracking_protection, search_bookmarks,
           search_browsing_history, show_clipboard_suggestions, show_search_shortcuts, open_links_in_a_private_tab,
-          pref_key_sync_logins, pref_key_sync_bookmarks and pref_key_sync_history"
+          pref_key_sync_logins, pref_key_sync_bookmarks, pref_key_sync_history
+          and pref_key_show_search_suggestions_in_private"
       enabled:
         description: "Whether or not the preference is *now* enabled"
     bugs:
@@ -123,6 +124,7 @@ events:
     - https://github.com/mozilla-mobile/fenix/issues/5737
     - https://github.com/mozilla-mobile/fenix/issues/5586
     - https://github.com/mozilla-mobile/fenix/issues/6396
+    - https://github.com/mozilla-mobile/fenix/issues/6070
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1896
     - https://github.com/mozilla-mobile/fenix/pull/5704
@@ -130,6 +132,7 @@ events:
     - https://github.com/mozilla-mobile/fenix/pull/5975
     - https://github.com/mozilla-mobile/fenix/pull/6352
     - https://github.com/mozilla-mobile/fenix/pull/6601
+    - https://github.com/mozilla-mobile/fenix/pull/6746
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-03-01"
@@ -1653,4 +1656,17 @@ download_notification:
       - https://github.com/mozilla-mobile/fenix/pull/6554
     notification_emails:
       - fenix-core@mozilla.com
+    expires: "2020-03-01"
+
+search_suggestions:
+  enable_in_private:
+    type: event
+    description: >
+      A user enabled receiving search suggestions in private sessions
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/6070
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/6746
+    notification_emails:
+     - fenix-core@mozilla.com
     expires: "2020-03-01"

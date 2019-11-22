@@ -211,6 +211,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
                 inflated.visibility = View.GONE
                 context?.settings()?.shouldShowSearchSuggestionsInPrivate = true
                 context?.settings()?.showSearchSuggestionsInPrivateOnboardingFinished = true
+                requireComponents.analytics.metrics.track(Event.PrivateBrowsingShowSearchSuggestions)
             }
 
             inflated.dismiss.setOnClickListener {
