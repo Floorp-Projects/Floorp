@@ -263,7 +263,7 @@ add_task(async function testLongOID() {
  */
 function displayCertificate(certificate) {
   let win = window.openDialog(
-    "chrome://pippki/content/certViewer.xul",
+    "chrome://pippki/content/certViewer.xhtml",
     "",
     "",
     certificate
