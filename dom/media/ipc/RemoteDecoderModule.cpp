@@ -44,9 +44,17 @@ bool RemoteDecoderModule::SupportsMimeType(
     supports |= AOMDecoder::IsAV1(aMimeType);
   }
 #endif
+#if !defined(__MINGW32__)
+  // We can't let RDD handle the decision to support Vorbis decoding on
+  // MinGW builds because of Bug 1597408 (Vorbis decoding on RDD causing
+  // sandboxing failure on MinGW-clang).  Typically this would be dealt
+  // with using defines in StaticPrefList.yaml, but we must handle it
+  // here because of Bug 1598426 (the __MINGW32__ define isn't supported
+  // in StaticPrefList.yaml).
   if (StaticPrefs::media_rdd_vorbis_enabled()) {
     supports |= VorbisDataDecoder::IsVorbis(aMimeType);
   }
+#endif
   if (StaticPrefs::media_rdd_wav_enabled()) {
     supports |= WaveDataDecoder::IsWave(aMimeType);
   }

@@ -24,11 +24,22 @@ bool AgnosticDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
   bool supports =
       VPXDecoder::IsVPX(aMimeType) || TheoraDecoder::IsTheora(aMimeType);
+#if defined(__MINGW32__)
+  // If this is a MinGW build we need to force AgnosticDecoderModule to
+  // handle the decision to support Vorbis decoding (instead of
+  // RDD/RemoteDecoderModule) because of Bug 1597408 (Vorbis decoding on
+  // RDD causing sandboxing failure on MinGW-clang).  Typically this
+  // would be dealt with using defines in StaticPrefList.yaml, but we
+  // must handle it here because of Bug 1598426 (the __MINGW32__ define
+  // isn't supported in StaticPrefList.yaml).
+  supports |= VorbisDataDecoder::IsVorbis(aMimeType);
+#else
   if (!StaticPrefs::media_rdd_vorbis_enabled() ||
       !StaticPrefs::media_rdd_process_enabled() ||
       !BrowserTabsRemoteAutostart()) {
     supports |= VorbisDataDecoder::IsVorbis(aMimeType);
   }
+#endif
   if (!StaticPrefs::media_rdd_wav_enabled() ||
       !StaticPrefs::media_rdd_process_enabled() ||
       !BrowserTabsRemoteAutostart()) {
