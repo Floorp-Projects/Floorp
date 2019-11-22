@@ -259,8 +259,6 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   void LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
                    bool aSizedToPopup);
 
-  nsView* GetRootViewForPopup(nsIFrame* aStartFrame);
-
   // Set the position of the popup either relative to the anchor aAnchorFrame
   // (or the frame for mAnchorContent if aAnchorFrame is null), anchored at a
   // rectangle, or at a specific point if a screen position is set. The popup
