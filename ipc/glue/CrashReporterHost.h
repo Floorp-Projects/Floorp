@@ -90,6 +90,9 @@ class CrashReporterHost {
     MOZ_ASSERT(HasMinidump());
     return mDumpID;
   }
+  const nsCString& AdditionalMinidumps() const {
+    return mExtraAnnotations[CrashReporter::Annotation::additional_minidumps];
+  }
 
  private:
   static void AsyncAddCrash(int32_t aProcessType, int32_t aCrashType,

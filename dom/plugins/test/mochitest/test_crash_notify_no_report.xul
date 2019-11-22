@@ -34,6 +34,7 @@ var testObserver = {
 
     var id = subject.getPropertyAsAString("pluginDumpID");
     isnot(id, "", "got a non-empty crash id");
+    ok(subject.hasKey("additionalMinidumps"), "the additionalMinidumps key is present");
     let directoryService =
       Cc["@mozilla.org/file/directory_service;1"].
       getService(Ci.nsIProperties);

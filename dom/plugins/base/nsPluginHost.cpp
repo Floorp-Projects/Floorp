@@ -2753,7 +2753,8 @@ static void CheckForDisabledWindows() {
 #endif
 
 void nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin,
-                                 const nsAString& pluginDumpID) {
+                                 const nsAString& aPluginDumpID,
+                                 const nsACString& aAdditionalMinidumps) {
   nsPluginTag* crashedPluginTag = TagForPlugin(aPlugin);
   MOZ_ASSERT(crashedPluginTag);
 
@@ -2778,7 +2779,9 @@ void nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin,
     propbag->SetPropertyAsAString(NS_LITERAL_STRING("pluginName"),
                                   NS_ConvertUTF8toUTF16(pluginName));
     propbag->SetPropertyAsAString(NS_LITERAL_STRING("pluginDumpID"),
-                                  pluginDumpID);
+                                  aPluginDumpID);
+    propbag->SetPropertyAsACString(NS_LITERAL_STRING("additionalMinidumps"),
+                                   aAdditionalMinidumps);
     propbag->SetPropertyAsBool(NS_LITERAL_STRING("submittedCrashReport"),
                                submittedCrashReport);
     obsService->NotifyObservers(propbag, "plugin-crashed", nullptr);
@@ -2799,7 +2802,7 @@ void nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin,
       nsCOMPtr<nsIObjectLoadingContent> objectContent(
           do_QueryInterface(domElement));
       if (objectContent) {
-        objectContent->PluginCrashed(crashedPluginTag, pluginDumpID,
+        objectContent->PluginCrashed(crashedPluginTag, aPluginDumpID,
                                      submittedCrashReport);
       }
 
