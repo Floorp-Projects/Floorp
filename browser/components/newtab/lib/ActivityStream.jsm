@@ -657,6 +657,25 @@ this.ActivityStream = class ActivityStream {
       this._updateDynamicPrefs();
       this._defaultPrefs.init();
 
+      // Look for outdated user pref values that might have been accidentally
+      // persisted when restoring the original pref value at the end of an
+      // experiment across versions with a different default value.
+      const DS_CONFIG =
+        "browser.newtabpage.activity-stream.discoverystream.config";
+      if (
+        Services.prefs.prefHasUserValue(DS_CONFIG) &&
+        [
+          // Firefox 66
+          `{"api_key_pref":"extensions.pocket.oAuthConsumerKey","enabled":false,"show_spocs":true,"layout_endpoint":"https://getpocket.com/v3/newtab/layout?version=1&consumer_key=$apiKey&layout_variant=basic"}`,
+          // Firefox 67
+          `{"api_key_pref":"extensions.pocket.oAuthConsumerKey","enabled":false,"show_spocs":true,"layout_endpoint":"https://getpocket.cdn.mozilla.net/v3/newtab/layout?version=1&consumer_key=$apiKey&layout_variant=basic"}`,
+          // Firefox 68
+          `{"api_key_pref":"extensions.pocket.oAuthConsumerKey","collapsible":true,"enabled":false,"show_spocs":true,"hardcoded_layout":true,"personalized":false,"layout_endpoint":"https://getpocket.cdn.mozilla.net/v3/newtab/layout?version=1&consumer_key=$apiKey&layout_variant=basic"}`,
+        ].includes(Services.prefs.getStringPref(DS_CONFIG))
+      ) {
+        Services.prefs.clearUserPref(DS_CONFIG);
+      }
+
       // Hook up the store and let all feeds and pages initialize
       this.store.init(
         this.feeds,
