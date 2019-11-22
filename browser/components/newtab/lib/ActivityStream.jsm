@@ -314,13 +314,6 @@ const PREFS_CONFIG = new Map([
     },
   ],
   [
-    "telemetry.ping.endpoint",
-    {
-      title: "Telemetry server endpoint",
-      value: "https://tiles.services.mozilla.com/v4/links/activity-stream",
-    },
-  ],
-  [
     "section.highlights.includeVisited",
     {
       title:
@@ -463,9 +456,9 @@ const PREFS_CONFIG = new Map([
   ],
   // See browser/app/profile/firefox.js for other ASR preferences. They must be defined there to enable roll-outs.
   [
-    "discoverystream.campaign.blocks",
+    "discoverystream.flight.blocks",
     {
-      title: "Track campaign blocks",
+      title: "Track flight blocks",
       skipBroadcast: true,
       value: "{}",
     },
@@ -476,10 +469,11 @@ const PREFS_CONFIG = new Map([
       title: "Configuration for the new pocket new tab",
       getValue: ({ geo, locale }) => {
         // PLEASE NOTE:
-        // hardcoded_layout in `lib/DiscoveryStreamFeed.jsm` only works for en-* and requires refactoring for non english locales
+        // hardcoded_layout in `lib/DiscoveryStreamFeed.jsm` only works for en-* and DE and requires refactoring for other locales
         const dsEnablementMatrix = {
           US: ["en-CA", "en-GB", "en-US"],
           CA: ["en-CA", "en-GB", "en-US"],
+          DE: ["de", "de-DE", "de-AT", "de-CH"],
         };
 
         // Verify that the current geo & locale combination is enabled

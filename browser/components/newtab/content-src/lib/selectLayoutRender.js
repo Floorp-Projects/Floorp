@@ -2,7 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-export const selectLayoutRender = (state, prefs, rickRollCache) => {
+export const selectLayoutRender = ({
+  state = {},
+  prefs = {},
+  rollCache = [],
+  lang = "",
+}) => {
   const { layout, feeds, spocs } = state;
   let spocIndexMap = {};
   let bufferRollCache = [];
@@ -23,11 +28,11 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
 
       // Cache random number for a position
       let rickRoll;
-      if (!rickRollCache.length) {
+      if (!rollCache.length) {
         rickRoll = Math.random();
         bufferRollCache.push(rickRoll);
       } else {
-        rickRoll = rickRollCache.shift();
+        rickRoll = rollCache.shift();
         bufferRollCache.push(rickRoll);
       }
 
@@ -61,6 +66,10 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
 
   if (!prefs["feeds.topsites"]) {
     filterArray.push("TopSites");
+  }
+
+  if (!lang.startsWith("en-")) {
+    filterArray.push("Navigation");
   }
 
   if (!prefs["feeds.section.topstories"]) {
@@ -213,9 +222,9 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
 
   const layoutRender = renderLayout();
 
-  // If empty, fill rickRollCache with random probability values from bufferRollCache
-  if (!rickRollCache.length) {
-    rickRollCache.push(...bufferRollCache);
+  // If empty, fill rollCache with random probability values from bufferRollCache
+  if (!rollCache.length) {
+    rollCache.push(...bufferRollCache);
   }
 
   // Generate the payload for the SPOCS Fill ping. Note that a SPOC could be rejected
