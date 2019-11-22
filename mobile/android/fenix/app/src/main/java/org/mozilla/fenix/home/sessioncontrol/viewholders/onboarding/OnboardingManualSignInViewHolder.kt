@@ -6,6 +6,7 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.ContextCompat
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_manual_signin.view.*
@@ -25,6 +26,7 @@ class OnboardingManualSignInViewHolder(private val view: View) : RecyclerView.Vi
         val appName = view.context.getString(R.string.app_name)
         view.header_text.text = view.context.getString(R.string.onboarding_firefox_account_header, appName)
         val icon = AppCompatResources.getDrawable(view.context, R.drawable.ic_onboarding_firefox_accounts)
+        icon?.setTint(ContextCompat.getColor(view.context, R.color.white_color))
         view.header_text.putCompoundDrawablesRelativeWithIntrinsicBounds(start = icon)
     }
 

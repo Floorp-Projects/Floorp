@@ -17,8 +17,9 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="14dp"
         android:drawablePadding="12dp"
+        android:drawableTint="@color/white_color"
         android:textAppearance="@style/Header16TextStyle"
-        android:textColor="@color/onboarding_card_primary_text_dark"
+        android:textColor="@color/neutral_text"
         tools:text="@string/onboarding_firefox_account_header" />
 
     <Button
@@ -33,8 +34,8 @@
         android:padding="10dp"
         android:text="@string/onboarding_firefox_account_sign_in"
         android:textAllCaps="false"
-        android:textColor="?neutral"
+        android:textColor="@color/button_text_color"
         android:textSize="14sp"
         android:textStyle="bold"
-        app:backgroundTint="@color/onboarding_card_button_background_dark" />
+        app:backgroundTint="@color/foundation_light_theme" />
 </LinearLayout>
