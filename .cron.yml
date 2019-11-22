@@ -218,3 +218,15 @@ jobs:
           - mozilla-central
       when:
           - {hour: 16, minute: 00}
+
+    - name: l10n-bumper
+      job:
+          type: decision-task
+          treeherder-symbol: l10n-bump
+          target-tasks-method: l10n_bump
+      run-on-projects:
+          - mozilla-central
+          - mozilla-beta
+          - mozilla-esr68
+      when:
+          - {minute: 45}

@@ -616,3 +616,7 @@ by another task that produces a jobs.json artifact
 iris
 ----
 Iris testing suite
+
+l10n-bump
+---------
+Cron-driven tasks that bump l10n-changesets files in-tree, using data from the l10n dashboard.
