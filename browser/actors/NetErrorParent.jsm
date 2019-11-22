@@ -343,7 +343,9 @@ class NetErrorParent extends JSWindowActorParent {
               let certsStringURL = certs.map(elem => `cert=${elem}`);
               certsStringURL = certsStringURL.join("&");
               let url = `about:certificate?${certsStringURL}`;
-              window.switchToTabHavingURI(url, true, {});
+              if (window.openTrustedLinkIn) {
+                window.openTrustedLinkIn(url, "tab");
+              }
             } else {
               Services.ww.openWindow(
                 window,

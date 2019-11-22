@@ -39,7 +39,7 @@ var security = {
       let certsStringURL = certs.map(elem => `cert=${elem}`);
       certsStringURL = certsStringURL.join("&");
       let url = `about:certificate?${certsStringURL}`;
-      window.switchToTabHavingURI(url, true, {});
+      openTrustedLinkIn(url, "tab");
     } else {
       Services.ww.openWindow(
         window,
