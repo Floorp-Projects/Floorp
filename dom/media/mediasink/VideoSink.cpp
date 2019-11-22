@@ -664,21 +664,15 @@ void VideoSink::SetSecondaryVideoContainer(VideoFrameContainer* aSecondary) {
     MOZ_DIAGNOSTIC_ASSERT(mainImageContainer);
     MOZ_DIAGNOSTIC_ASSERT(secondaryImageContainer);
 
-    // If the video isn't currently playing, get the most recently
-    // decoded frame and display that in the secondary container as
-    // well.
-    nsTArray<ImageContainer::OwningImage> oldImages;
-    mainImageContainer->GetCurrentImages(&oldImages);
-    if (oldImages.Length()) {
-      ImageContainer::OwningImage& old = oldImages.LastElement();
-
-      nsTArray<ImageContainer::NonOwningImage> currentFrame;
-      // We hardcode this first frame to 0 so that we ensure that subsequent
-      // frames always have a greater frameID, which is an ImageContainer
-      // invariant.
+    // If the video isn't currently playing, get the current frame and display
+    // that in the secondary container as well.
+    AutoLockImage lockImage(mainImageContainer);
+    TimeStamp now = TimeStamp::Now();
+    if (RefPtr<Image> image = lockImage.GetImage(now)) {
+      AutoTArray<ImageContainer::NonOwningImage, 1> currentFrame;
       currentFrame.AppendElement(ImageContainer::NonOwningImage(
-          old.mImage, old.mTimeStamp, /* frameID */ 0, old.mProducerID));
-
+          image, now, /* frameID */ 1,
+          /* producerId */ ImageContainer::AllocateProducerID()));
       secondaryImageContainer->SetCurrentImages(currentFrame);
     }
   }
