@@ -62,7 +62,7 @@ export class Hero extends React.PureComponent {
           <PlaceholderDSCard key={`dscard-${index}`} />
         ) : (
           <DSCard
-            campaignId={rec.campaign_id}
+            flightId={rec.flight_id}
             key={`dscard-${rec.id}`}
             image_src={rec.image_src}
             raw_image_src={rec.raw_image_src}
@@ -117,7 +117,7 @@ export class Hero extends React.PureComponent {
               />
             </div>
             <ImpressionStats
-              campaignId={heroRec.campaign_id}
+              flightId={heroRec.flight_id}
               rows={[
                 {
                   id: heroRec.id,
@@ -142,7 +142,7 @@ export class Hero extends React.PureComponent {
             pocket_id={heroRec.pocket_id}
             shim={heroRec.shim}
             bookmarkGuid={heroRec.bookmarkGuid}
-            campaignId={heroRec.campaign_id}
+            flightId={heroRec.flight_id}
           />
         </div>
       );

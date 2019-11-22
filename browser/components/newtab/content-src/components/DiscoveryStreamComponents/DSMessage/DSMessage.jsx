@@ -4,6 +4,7 @@
 
 import React from "react";
 import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
+import { FluentOrText } from "content-src/components/FluentOrText/FluentOrText";
 
 export class DSMessage extends React.PureComponent {
   render() {
@@ -17,11 +18,13 @@ export class DSMessage extends React.PureComponent {
             />
           )}
           {this.props.title && (
-            <span className="title-text">{this.props.title}</span>
+            <span className="title-text">
+              <FluentOrText message={this.props.title} />
+            </span>
           )}
           {this.props.link_text && this.props.link_url && (
             <SafeAnchor className="link" url={this.props.link_url}>
-              {this.props.link_text}
+              <FluentOrText message={this.props.link_text} />
             </SafeAnchor>
           )}
         </header>

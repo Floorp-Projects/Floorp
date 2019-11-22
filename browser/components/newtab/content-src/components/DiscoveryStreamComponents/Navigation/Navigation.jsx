@@ -4,6 +4,7 @@
 
 import React from "react";
 import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
+import { FluentOrText } from "content-src/components/FluentOrText/FluentOrText";
 
 export class Topic extends React.PureComponent {
   render() {
@@ -25,7 +26,11 @@ export class Navigation extends React.PureComponent {
     const header = this.props.header || {};
     return (
       <div className={`ds-navigation ds-navigation-${alignment}`}>
-        {header.title ? <div className="ds-header">{header.title}</div> : null}
+        {header.title ? (
+          <FluentOrText message={header.title}>
+            <div className="ds-header" />
+          </FluentOrText>
+        ) : null}
         <div>
           <ul>
             {links &&
