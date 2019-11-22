@@ -161,7 +161,7 @@ class TrySelect(MachCommandBase):
     def handle_try_config(self, **kwargs):
         from tryselect.util.dicttools import merge
         kwargs.setdefault('try_config', {})
-        for cls in self.parser.templates.itervalues():
+        for cls in self.parser.task_configs.itervalues():
             try_config = cls.try_config(**kwargs)
             if try_config is not None:
                 kwargs['try_config'] = merge(kwargs['try_config'], try_config)
@@ -175,7 +175,7 @@ class TrySelect(MachCommandBase):
         if 'preset' in self.parser.common_groups:
             kwargs = self.handle_presets(**kwargs)
 
-        if self.parser.templates:
+        if self.parser.task_configs:
             kwargs = self.handle_try_config(**kwargs)
 
         mod = importlib.import_module('tryselect.selectors.{}'.format(self.subcommand))
