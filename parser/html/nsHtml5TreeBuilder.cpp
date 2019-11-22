@@ -52,6 +52,7 @@
 #include "nsHtml5Highlighter.h"
 #include "nsHtml5PlainTextUtils.h"
 #include "nsHtml5ViewSourceUtils.h"
+#include "mozilla/ImportScanner.h"
 #include "mozilla/Likely.h"
 #include "nsIContentHandle.h"
 #include "nsHtml5OplessBuilder.h"
