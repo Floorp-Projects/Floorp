@@ -9,6 +9,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/RecordReplay.h"
 
 #include <utility>
@@ -20,6 +21,7 @@
 #include "jspubtd.h"
 #include "NamespaceImports.h"
 
+#include "builtin/Array.h"
 #include "gc/AllocKind.h"
 #include "gc/FreeOp.h"
 #include "gc/Rooting.h"
@@ -29,6 +31,7 @@
 #include "js/Class.h"
 #include "js/Conversions.h"
 #include "js/ErrorReport.h"
+#include "js/ForOfIterator.h"
 #include "js/PropertySpec.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
@@ -49,6 +52,7 @@
 #include "vm/Stack.h"
 #include "vm/StringType.h"
 
+#include "vm/ArrayObject-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -69,6 +73,7 @@ const JSClass ErrorObject::protoClasses[JSEXN_ERROR_LIMIT] = {
     IMPLEMENT_ERROR_PROTO_CLASS(Error),
 
     IMPLEMENT_ERROR_PROTO_CLASS(InternalError),
+    IMPLEMENT_ERROR_PROTO_CLASS(AggregateError),
     IMPLEMENT_ERROR_PROTO_CLASS(EvalError),
     IMPLEMENT_ERROR_PROTO_CLASS(RangeError),
     IMPLEMENT_ERROR_PROTO_CLASS(ReferenceError),
@@ -87,42 +92,49 @@ static const JSFunctionSpec error_methods[] = {
     JS_FN(js_toSource_str, exn_toSource, 0, 0),
     JS_SELF_HOSTED_FN(js_toString_str, "ErrorToString", 0, 0), JS_FS_END};
 
+// Error.prototype and NativeError.prototype have own .message and .name
+// properties.
+#define COMMON_ERROR_PROPERTIES(name) \
+  JS_STRING_PS("message", "", 0), JS_STRING_PS("name", #name, 0)
+
 static const JSPropertySpec error_properties[] = {
-    JS_STRING_PS("message", "", 0), JS_STRING_PS("name", "Error", 0),
+    COMMON_ERROR_PROPERTIES(Error),
     // Only Error.prototype has .stack!
     JS_PSGS("stack", ErrorObject::getStack, ErrorObject::setStack, 0),
     JS_PS_END};
 
-#define IMPLEMENT_ERROR_PROPERTIES(name) \
-  { JS_STRING_PS("message", "", 0), JS_STRING_PS("name", #name, 0), JS_PS_END }
+static const JSPropertySpec AggregateError_properties[] = {
+    COMMON_ERROR_PROPERTIES(AggregateError),
+    // Only AggregateError.prototype has .errors!
+    JS_PSG("errors", AggregateErrorObject::getErrors, 0), JS_PS_END};
 
-static const JSPropertySpec other_error_properties[JSEXN_ERROR_LIMIT - 1][3] = {
-    IMPLEMENT_ERROR_PROPERTIES(InternalError),
-    IMPLEMENT_ERROR_PROPERTIES(EvalError),
-    IMPLEMENT_ERROR_PROPERTIES(RangeError),
-    IMPLEMENT_ERROR_PROPERTIES(ReferenceError),
-    IMPLEMENT_ERROR_PROPERTIES(SyntaxError),
-    IMPLEMENT_ERROR_PROPERTIES(TypeError),
-    IMPLEMENT_ERROR_PROPERTIES(URIError),
-    IMPLEMENT_ERROR_PROPERTIES(DebuggeeWouldRun),
-    IMPLEMENT_ERROR_PROPERTIES(CompileError),
-    IMPLEMENT_ERROR_PROPERTIES(LinkError),
-    IMPLEMENT_ERROR_PROPERTIES(RuntimeError)};
+#define IMPLEMENT_NATIVE_ERROR_PROPERTIES(name)       \
+  static const JSPropertySpec name##_properties[] = { \
+      COMMON_ERROR_PROPERTIES(name), JS_PS_END};
 
-#define IMPLEMENT_NATIVE_ERROR_SPEC(name)                                    \
-  {                                                                          \
-    ErrorObject::createConstructor, ErrorObject::createProto, nullptr,       \
-        nullptr, nullptr,                                                    \
-        other_error_properties[JSProto_##name - JSProto_Error - 1], nullptr, \
-        JSProto_Error                                                        \
+IMPLEMENT_NATIVE_ERROR_PROPERTIES(InternalError)
+IMPLEMENT_NATIVE_ERROR_PROPERTIES(EvalError)
+IMPLEMENT_NATIVE_ERROR_PROPERTIES(RangeError)
+IMPLEMENT_NATIVE_ERROR_PROPERTIES(ReferenceError)
+IMPLEMENT_NATIVE_ERROR_PROPERTIES(SyntaxError)
+IMPLEMENT_NATIVE_ERROR_PROPERTIES(TypeError)
+IMPLEMENT_NATIVE_ERROR_PROPERTIES(URIError)
+IMPLEMENT_NATIVE_ERROR_PROPERTIES(DebuggeeWouldRun)
+IMPLEMENT_NATIVE_ERROR_PROPERTIES(CompileError)
+IMPLEMENT_NATIVE_ERROR_PROPERTIES(LinkError)
+IMPLEMENT_NATIVE_ERROR_PROPERTIES(RuntimeError)
+
+#define IMPLEMENT_NATIVE_ERROR_SPEC(name)                              \
+  {                                                                    \
+    ErrorObject::createConstructor, ErrorObject::createProto, nullptr, \
+        nullptr, nullptr, name##_properties, nullptr, JSProto_Error    \
   }
 
-#define IMPLEMENT_NONGLOBAL_ERROR_SPEC(name)                                 \
-  {                                                                          \
-    ErrorObject::createConstructor, ErrorObject::createProto, nullptr,       \
-        nullptr, nullptr,                                                    \
-        other_error_properties[JSProto_##name - JSProto_Error - 1], nullptr, \
-        JSProto_Error | ClassSpec::DontDefineConstructor                     \
+#define IMPLEMENT_NONGLOBAL_ERROR_SPEC(name)                           \
+  {                                                                    \
+    ErrorObject::createConstructor, ErrorObject::createProto, nullptr, \
+        nullptr, nullptr, name##_properties, nullptr,                  \
+        JSProto_Error | ClassSpec::DontDefineConstructor               \
   }
 
 const ClassSpec ErrorObject::classSpecs[JSEXN_ERROR_LIMIT] = {
@@ -130,6 +142,7 @@ const ClassSpec ErrorObject::classSpecs[JSEXN_ERROR_LIMIT] = {
      error_methods, error_properties},
 
     IMPLEMENT_NATIVE_ERROR_SPEC(InternalError),
+    IMPLEMENT_NATIVE_ERROR_SPEC(AggregateError),
     IMPLEMENT_NATIVE_ERROR_SPEC(EvalError),
     IMPLEMENT_NATIVE_ERROR_SPEC(RangeError),
     IMPLEMENT_NATIVE_ERROR_SPEC(ReferenceError),
@@ -142,15 +155,18 @@ const ClassSpec ErrorObject::classSpecs[JSEXN_ERROR_LIMIT] = {
     IMPLEMENT_NONGLOBAL_ERROR_SPEC(LinkError),
     IMPLEMENT_NONGLOBAL_ERROR_SPEC(RuntimeError)};
 
-#define IMPLEMENT_ERROR_CLASS(name)                                   \
-  {                                                                   \
-    js_Error_str, /* yes, really */                                   \
-        JSCLASS_HAS_CACHED_PROTO(JSProto_##name) |                    \
-            JSCLASS_HAS_RESERVED_SLOTS(ErrorObject::RESERVED_SLOTS) | \
-            JSCLASS_BACKGROUND_FINALIZE,                              \
-        &ErrorObjectClassOps,                                         \
-        &ErrorObject::classSpecs[JSProto_##name - JSProto_Error]      \
+#define IMPLEMENT_ERROR_CLASS_FROM(clazz, name)                  \
+  {                                                              \
+    js_Error_str, /* yes, really */                              \
+        JSCLASS_HAS_CACHED_PROTO(JSProto_##name) |               \
+            JSCLASS_HAS_RESERVED_SLOTS(clazz::RESERVED_SLOTS) |  \
+            JSCLASS_BACKGROUND_FINALIZE,                         \
+        &ErrorObjectClassOps,                                    \
+        &ErrorObject::classSpecs[JSProto_##name - JSProto_Error] \
   }
+
+#define IMPLEMENT_ERROR_CLASS(name) \
+  IMPLEMENT_ERROR_CLASS_FROM(ErrorObject, name)
 
 static void exn_finalize(JSFreeOp* fop, JSObject* obj);
 
@@ -169,6 +185,7 @@ static const JSClassOps ErrorObjectClassOps = {
 
 const JSClass ErrorObject::classes[JSEXN_ERROR_LIMIT] = {
     IMPLEMENT_ERROR_CLASS(Error), IMPLEMENT_ERROR_CLASS(InternalError),
+    IMPLEMENT_ERROR_CLASS_FROM(AggregateErrorObject, AggregateError),
     IMPLEMENT_ERROR_CLASS(EvalError), IMPLEMENT_ERROR_CLASS(RangeError),
     IMPLEMENT_ERROR_CLASS(ReferenceError), IMPLEMENT_ERROR_CLASS(SyntaxError),
     IMPLEMENT_ERROR_CLASS(TypeError), IMPLEMENT_ERROR_CLASS(URIError),
@@ -185,31 +202,15 @@ static void exn_finalize(JSFreeOp* fop, JSObject* obj) {
   }
 }
 
-static bool Error(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  // ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
-  // called as functions, without operator new.  But as we do not give
-  // each constructor a distinct JSClass, we must get the exception type
-  // ourselves.
-  JSExnType exnType =
-      JSExnType(args.callee().as<JSFunction>().getExtendedSlot(0).toInt32());
-
-  JSProtoKey protoKey =
-      JSCLASS_CACHED_PROTO_KEY(&ErrorObject::classes[exnType]);
-
-  // ES6 19.5.1.1 mandates the .prototype lookup happens before the toString
-  RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, protoKey, &proto)) {
-    return false;
-  }
-
+static ErrorObject* CreateErrorObject(JSContext* cx, const CallArgs& args,
+                                      unsigned messageArg, JSExnType exnType,
+                                      HandleObject proto) {
   // Compute the error message, if any.
   RootedString message(cx, nullptr);
-  if (args.hasDefined(0)) {
-    message = ToString<CanGC>(cx, args[0]);
+  if (args.hasDefined(messageArg)) {
+    message = ToString<CanGC>(cx, args[messageArg]);
     if (!message) {
-      return false;
+      return nullptr;
     }
   }
 
@@ -218,8 +219,8 @@ static bool Error(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedString fileName(cx);
   uint32_t sourceId = 0;
-  if (args.length() > 1) {
-    fileName = ToString<CanGC>(cx, args[1]);
+  if (args.length() > messageArg + 1) {
+    fileName = ToString<CanGC>(cx, args[messageArg + 1]);
   } else {
     fileName = cx->runtime()->emptyString;
     if (!iter.done()) {
@@ -232,13 +233,13 @@ static bool Error(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
   if (!fileName) {
-    return false;
+    return nullptr;
   }
 
   uint32_t lineNumber, columnNumber = 0;
-  if (args.length() > 2) {
-    if (!ToUint32(cx, args[2], &lineNumber)) {
-      return false;
+  if (args.length() > messageArg + 2) {
+    if (!ToUint32(cx, args[messageArg + 2], &lineNumber)) {
+      return nullptr;
     }
   } else {
     lineNumber = iter.done() ? 0 : iter.computeLine(&columnNumber);
@@ -247,16 +248,106 @@ static bool Error(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedObject stack(cx);
   if (!CaptureStack(cx, &stack)) {
+    return nullptr;
+  }
+
+  return ErrorObject::create(cx, exnType, stack, fileName, sourceId, lineNumber,
+                             columnNumber, nullptr, message, proto);
+}
+
+static bool Error(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
+  // called as functions, without operator new.  But as we do not give
+  // each constructor a distinct JSClass, we must get the exception type
+  // ourselves.
+  JSExnType exnType =
+      JSExnType(args.callee().as<JSFunction>().getExtendedSlot(0).toInt32());
+
+  MOZ_ASSERT(exnType != JSEXN_AGGREGATEERR,
+             "AggregateError has its own constructor function");
+
+  JSProtoKey protoKey =
+      JSCLASS_CACHED_PROTO_KEY(&ErrorObject::classes[exnType]);
+
+  // ES6 19.5.1.1 mandates the .prototype lookup happens before the toString
+  RootedObject proto(cx);
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, protoKey, &proto)) {
     return false;
   }
 
-  RootedObject obj(cx, ErrorObject::create(cx, exnType, stack, fileName,
-                                           sourceId, lineNumber, columnNumber,
-                                           nullptr, message, proto));
+  auto* obj = CreateErrorObject(cx, args, 0, exnType, proto);
   if (!obj) {
     return false;
   }
 
+  args.rval().setObject(*obj);
+  return true;
+}
+
+static ArrayObject* IterableToArray(JSContext* cx, HandleValue iterable) {
+  JS::ForOfIterator iterator(cx);
+  if (!iterator.init(iterable, JS::ForOfIterator::ThrowOnNonIterable)) {
+    return nullptr;
+  }
+
+  RootedArrayObject array(cx, NewDenseEmptyArray(cx));
+
+  RootedValue nextValue(cx);
+  while (true) {
+    bool done;
+    if (!iterator.next(&nextValue, &done)) {
+      return nullptr;
+    }
+    if (done) {
+      return array;
+    }
+
+    if (!NewbornArrayPush(cx, array, nextValue)) {
+      return nullptr;
+    }
+  }
+}
+
+// AggregateError ( errors, message )
+static bool AggregateError(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  mozilla::DebugOnly<JSExnType> exnType =
+      JSExnType(args.callee().as<JSFunction>().getExtendedSlot(0).toInt32());
+
+  MOZ_ASSERT(exnType == JSEXN_AGGREGATEERR);
+
+  // Steps 1-2. (9.1.13 OrdinaryCreateFromConstructor, steps 1-2).
+  RootedObject proto(cx);
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_AggregateError,
+                                          &proto)) {
+    return false;
+  }
+
+  // Step 3 (Inlined IterableToList).
+
+  if (!args.requireAtLeast(cx, "AggregateError", 1)) {
+    return false;
+  }
+
+  RootedArrayObject errorsList(cx, IterableToArray(cx, args.get(0)));
+  if (!errorsList) {
+    return false;
+  }
+
+  // 9.1.13 OrdinaryCreateFromConstructor, step 3.
+  // Step 5.
+  auto* obj = CreateErrorObject(cx, args, 1, JSEXN_AGGREGATEERR, proto);
+  if (!obj) {
+    return false;
+  }
+
+  // Step 4.
+  obj->as<AggregateErrorObject>().setAggregateErrors(errorsList);
+
+  // Step 6.
   args.rval().setObject(*obj);
   return true;
 }
@@ -295,9 +386,20 @@ JSObject* ErrorObject::createConstructor(JSContext* cx, JSProtoKey key) {
       return nullptr;
     }
 
-    ctor = NewFunctionWithProto(
-        cx, Error, 1, FunctionFlags::NATIVE_CTOR, nullptr, ClassName(key, cx),
-        proto, gc::AllocKind::FUNCTION_EXTENDED, SingletonObject);
+    Native native;
+    unsigned nargs;
+    if (type == JSEXN_AGGREGATEERR) {
+      native = AggregateError;
+      nargs = 2;
+    } else {
+      native = Error;
+      nargs = 1;
+    }
+
+    ctor =
+        NewFunctionWithProto(cx, native, nargs, FunctionFlags::NATIVE_CTOR,
+                             nullptr, ClassName(key, cx), proto,
+                             gc::AllocKind::FUNCTION_EXTENDED, SingletonObject);
   }
 
   if (!ctor) {
@@ -677,5 +779,73 @@ static bool exn_toSource(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
   args.rval().setString(str);
+  return true;
+}
+
+ArrayObject* js::AggregateErrorObject::aggregateErrors() const {
+  const Value& val = getReservedSlot(AGGREGATE_ERRORS_SLOT);
+  if (val.isUndefined()) {
+    return nullptr;
+  }
+  return &val.toObject().as<ArrayObject>();
+}
+
+void js::AggregateErrorObject::setAggregateErrors(ArrayObject* errors) {
+  MOZ_ASSERT(!aggregateErrors(),
+             "aggregated errors mustn't be modified once set");
+  setReservedSlot(AGGREGATE_ERRORS_SLOT, ObjectValue(*errors));
+}
+
+static inline bool IsAggregateError(HandleValue v) {
+  return v.isObject() && v.toObject().is<AggregateErrorObject>();
+}
+
+// get AggregateError.prototype.errors
+bool js::AggregateErrorObject::getErrors(JSContext* cx, unsigned argc,
+                                         Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Steps 1-4.
+  return CallNonGenericMethod<IsAggregateError, getErrors_impl>(cx, args);
+}
+
+// get AggregateError.prototype.errors
+bool js::AggregateErrorObject::getErrors_impl(JSContext* cx,
+                                              const CallArgs& args) {
+  MOZ_ASSERT(IsAggregateError(args.thisv()));
+
+  auto* obj = &args.thisv().toObject().as<AggregateErrorObject>();
+
+  // Step 5.
+  // Create a copy of the [[AggregateErrors]] list.
+
+  RootedArrayObject errorsList(cx, obj->aggregateErrors());
+
+  // [[AggregateErrors]] may be absent when this error was created through
+  // JS_ReportError.
+  if (!errorsList) {
+    ArrayObject* result = NewDenseEmptyArray(cx);
+    if (!result) {
+      return false;
+    }
+
+    args.rval().setObject(*result);
+    return true;
+  }
+
+  uint32_t length = errorsList->length();
+
+  ArrayObject* result = NewDenseFullyAllocatedArray(cx, length);
+  if (!result) {
+    return false;
+  }
+
+  result->setLength(cx, length);
+
+  if (length > 0) {
+    result->initDenseElements(errorsList, 0, length);
+  }
+
+  args.rval().setObject(*result);
   return true;
 }

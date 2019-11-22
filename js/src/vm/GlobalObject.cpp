@@ -129,6 +129,11 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_FinalizationGroup:
       return !cx->realm()->creationOptions().getWeakRefsEnabled();
 
+#ifndef NIGHTLY_BUILD
+    case JSProto_AggregateError:
+      return true;
+#endif
+
     default:
       return false;
   }
