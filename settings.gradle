@@ -40,7 +40,7 @@ if (json.substs.MOZ_BUILD_APP != 'mobile/android') {
 // but it's hard to automatically arrange better.
 System.setProperty('android.home', json.substs.ANDROID_SDK_ROOT)
 
-include ':annotations'
+include ':annotations', ':messaging_example', ':port_messaging_example'
 include ':geckoview'
 include ':geckoview_example'
 include ':omnijar'
@@ -67,3 +67,5 @@ gradle.ext.mozconfig = json
 // based on the changed environment variables.
 def orig = slurper.parse(new File(json.topobjdir, '.mozconfig.json'))
 gradle.ext.mozconfig.orig_mozconfig = orig.mozconfig
+project(':messaging_example').projectDir = new File('mobile/android/examples/messaging_example/app')
+project(':port_messaging_example').projectDir = new File('mobile/android/examples/port_messaging_example/app')
