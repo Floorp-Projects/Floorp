@@ -1100,7 +1100,9 @@ function makePreview(row) {
       }
     }
 
-    makeBlockImage(url);
+    if (Services.prefs.getBoolPref("extensions.contentblocker.enabled")) {
+      makeBlockImage(url);
+    }
 
     imageContainer.removeChild(oldImage);
     imageContainer.appendChild(newImage);
