@@ -1666,6 +1666,22 @@ DebuggerProgressListener.prototype = {
       this._knownWindowIDs.delete(innerID);
       this._targetActor._windowDestroyed(window, innerID);
     }
+
+    // Bug 1598364: when debugging browser.xhtml from the Browser Toolbox
+    // the DOMWindowCreated/pageshow/pagehide event listeners have to be
+    // re-registered against the next document when we reload browser.html
+    // (or navigate to another doc).
+    // That's because we registered the listener on docShell.domWindow as
+    // top level windows don't have a chromeEventHandler.
+    if (
+      this._watchedDocShells.has(window) &&
+      !window.docShell.chromeEventHandler
+    ) {
+      // First cleanup all the existing listeners
+      this.unwatch(window.docShell);
+      // Re-register new ones. The docShell is already referencing the new document.
+      this.watch(window.docShell);
+    }
   }, "DebuggerProgressListener.prototype.observe"),
 
   onStateChange: DevToolsUtils.makeInfallible(function(
