@@ -9,25 +9,30 @@ const { BrowserToolboxProcess } = ChromeUtils.import(
 );
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
-// Open up a browser toolbox and return a ToolboxTask object for interacting
-// with it. ToolboxTask has the following methods:
-//
-// importFunctions(object)
-//
-//   The object contains functions from this process which should be defined in
-//   the global evaluation scope of the toolbox. The toolbox cannot load testing
-//   files directly.
-//
-// spawn(arg, function)
-//
-//   Invoke the given function and argument within the global evaluation scope
-//   of the toolbox. The evaluation scope predefines the name "gToolbox" for the
-//   toolbox itself.
-//
-// destroy()
-//
-//   Destroy the browser toolbox and make sure it exits cleanly.
-async function initBrowserToolboxTask() {
+/**
+ * Open up a browser toolbox and return a ToolboxTask object for interacting
+ * with it. ToolboxTask has the following methods:
+ *
+ * importFunctions(object)
+ *
+ *   The object contains functions from this process which should be defined in
+ *   the global evaluation scope of the toolbox. The toolbox cannot load testing
+ *   files directly.
+ *
+ * spawn(arg, function)
+ *
+ *   Invoke the given function and argument within the global evaluation scope
+ *   of the toolbox. The evaluation scope predefines the name "gToolbox" for the
+ *   toolbox itself.
+ *
+ * destroy()
+ *
+ *   Destroy the browser toolbox and make sure it exits cleanly.
+ *
+ * @param {Object}:
+ *        - {Boolean} enableBrowserToolboxFission: pass true to enable the OBT.
+ */
+async function initBrowserToolboxTask({ enableBrowserToolboxFission } = {}) {
   await pushPref("devtools.chrome.enabled", true);
   await pushPref("devtools.debugger.remote-enabled", true);
   await pushPref("devtools.browser-toolbox.allow-unsafe-script", true);
@@ -71,10 +76,15 @@ async function initBrowserToolboxTask() {
   ok(true, "Connected");
 
   const target = await client.mainRoot.getMainProcess();
-  const console = await target.getFront("console");
+  const consoleFront = await target.getFront("console");
+  const preferenceFront = await client.mainRoot.getFront("preference");
+
+  if (enableBrowserToolboxFission) {
+    await preferenceFront.setBoolPref("devtools.browsertoolbox.fission", true);
+  }
 
   async function spawn(arg, fn) {
-    const rv = await console.evaluateJSAsync(`(${fn})(${arg})`, {
+    const rv = await consoleFront.evaluateJSAsync(`(${fn})(${arg})`, {
       mapped: { await: true },
     });
     if (rv.exception) {
@@ -87,13 +97,17 @@ async function initBrowserToolboxTask() {
 
   async function importFunctions(functions) {
     for (const [key, fn] of Object.entries(functions)) {
-      await console.evaluateJSAsync(`this.${key} = ${fn}`);
+      await consoleFront.evaluateJSAsync(`this.${key} = ${fn}`);
     }
+  }
+
+  async function importScript(script) {
+    await consoleFront.evaluateJSAsync(script);
   }
 
   async function destroy() {
     const closePromise = process._dbgProcess.wait();
-    console.evaluateJSAsync("gToolbox.destroy()");
+    consoleFront.evaluateJSAsync("gToolbox.destroy()");
 
     const { exitCode } = await closePromise;
     ok(true, "Browser toolbox process closed");
@@ -111,6 +125,7 @@ async function initBrowserToolboxTask() {
 
   return {
     importFunctions,
+    importScript,
     spawn,
     destroy,
   };
