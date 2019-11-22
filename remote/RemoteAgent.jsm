@@ -64,6 +64,8 @@ class RemoteAgentClass {
       return;
     }
 
+    Preferences.set(RecommendedPreferences);
+
     this.server = new HttpServer();
     this.server.registerPrefixHandler("/json/", new JSONHandler(this));
 
@@ -93,8 +95,6 @@ class RemoteAgentClass {
       await this.close();
       throw new Error(`Unable to start remote agent: ${e.message}`, e);
     }
-
-    Preferences.set(RecommendedPreferences);
   }
 
   async close() {
