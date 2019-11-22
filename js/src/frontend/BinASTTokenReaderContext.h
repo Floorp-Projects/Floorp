@@ -940,7 +940,9 @@ class HuffmanDictionary {
 
     setReady(i);
 
-    auto& t = table(i.toIndex());
+    tableIndices_[i.toIndex()] = nextIndex_++;
+
+    auto& t = table(i);
     new (mozilla::KnownNotNull, &t) GenericHuffmanTable();
 
     return t;
@@ -948,7 +950,7 @@ class HuffmanDictionary {
 
   const GenericHuffmanTable& getTable(TableIdentity i) const {
     MOZ_ASSERT(isReady(i));
-    return table(i.toIndex());
+    return table(i);
   }
 
  private:
@@ -962,29 +964,44 @@ class HuffmanDictionary {
   //     less time if they're stored in contiguous memory, instead of
   //     placed before each table (using `Variant` or `Maybe`)
   //
-  // Tables with `Ready` status are destructed in HuffmanDictionary destructor.
+  // Some tables may be left Unreachable if they represent `(Interface, Field)`
+  // pairs or lists that actually do not show up in the file.
   TableStatus status_[TableIdentity::Limit] = {TableStatus::Unreachable};
+
+  // Mapping from TableIdentity to the index into tables_.
+  //
+  // The mapping from `(Interface, Field) -> index` and `List -> index` is
+  // extracted statically from the webidl specs.
+  uint16_t tableIndices_[TableIdentity::Limit] = {0};
+
+  // The next uninitialized table's index in tables_.
+  uint16_t nextIndex_ = 0;
 
   // Huffman tables for either:
   //   * `(Interface, Field)` pairs, used to decode the value of
   //     `Interface::Field`.
   //   * list lengths
-  // Some entries may be uninitialized if they represent `(Interface, Field)`
-  // pairs or lists that actually do not show up in the file.
   //
-  // The mapping from `(Interface, Field) -> index` and `List -> index` is
-  // extracted statically from the webidl specs.
+  // Tables in [0..nextIndex_] range are initialized.
   //
   // Semantically this is `GenericHuffmanTable tables_[TableIdentity::Limit]`,
   // but items are constructed lazily.
   alignas(GenericHuffmanTable) char tables_[sizeof(GenericHuffmanTable) *
                                             TableIdentity::Limit];
 
-  GenericHuffmanTable& table(size_t i) {
+  GenericHuffmanTable& table(TableIdentity i) {
+    return tableAtIndex(tableIndices_[i.toIndex()]);
+  }
+
+  const GenericHuffmanTable& table(TableIdentity i) const {
+    return tableAtIndex(tableIndices_[i.toIndex()]);
+  }
+
+  GenericHuffmanTable& tableAtIndex(size_t i) {
     return (reinterpret_cast<GenericHuffmanTable*>(tables_))[i];
   }
 
-  const GenericHuffmanTable& table(size_t i) const {
+  const GenericHuffmanTable& tableAtIndex(size_t i) const {
     return (reinterpret_cast<const GenericHuffmanTable*>(tables_))[i];
   }
 };
