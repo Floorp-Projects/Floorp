@@ -1,5 +1,3 @@
-.. _coding_style:
-
 ============
 Coding style
 ============
@@ -20,8 +18,6 @@ conforms to recommendations.
    Firefox code base uses the `Google Coding style for C++
    code <https://google.github.io/styleguide/cppguide.html>`__
 
-.. _Article_navigation:
-
 Article navigation
 ------------------
 
@@ -40,7 +36,6 @@ Article navigation
 #. `Usage of PR_(MAX|MIN|ABS|ROUNDUP) macro
    calls <#Usage_of_PR_(MAXMINABSROUNDUP)_macro_calls>`__
 
-.. _Naming_and_Formatting_code:
 
 Naming and formatting code
 --------------------------
@@ -48,8 +43,6 @@ Naming and formatting code
 *The following norms should be followed for new code. For existing code,
 use the prevailing style in a file or module, ask the owner if you are
 in another team's codebase or it's not clear what style to use.*
-
-.. _Whitespace:
 
 Whitespace
 ~~~~~~~~~~
@@ -60,8 +53,6 @@ Unix-style linebreaks ('\n'), not Windows-style ('\r\n'). You can
 convert patches, with DOS newlines to Unix via the 'dos2unix' utility,
 or your favorite text editor.
 
-.. _Line_Length:
-
 Line length
 ~~~~~~~~~~~
 
@@ -71,7 +62,6 @@ tiling; also for Bonsai / hgweb and hardcopy printing).
 Following the Google coding style, we are using 100 characters line for
 Objective-C/C++.
 
-.. _Indentation:
 
 Indentation
 ~~~~~~~~~~~
@@ -81,12 +71,11 @@ Two spaces per logic level, or four spaces in Python code.
 Note that class visibility and ``goto`` labels do not consume a logic
 level, but ``switch`` ``case`` labels do. See examples below.
 
-.. _Control_Structures:
 
 Control structures
 ~~~~~~~~~~~~~~~~~~
 
-Use \ `K&R bracing
+Use `K&R bracing
 style <https://en.wikipedia.org/wiki/Indentation_style#K&R>`__: left
 brace at end of first line, 'cuddled' else on both sides.
 
@@ -144,18 +133,17 @@ by setting the "case-label" offset:
 | ``else`` should only ever be followed by ``{`` or ``if``; i.e., other
   control keywords are not allowed and should be placed inside braces.
 
-.. _Namespaces:
 
 C++ namespaces
 ~~~~~~~~~~~~~~
 
 Mozilla project C++ declarations should be in the "``mozilla``"
-namespace.  Modules should avoid adding nested namespaces under
+namespace. Modules should avoid adding nested namespaces under
 "``mozilla``", unless they are meant to contain names which have a high
 probability of colliding with other names in the code base. For example,
-``Point``, ``Path``, etc.   Such symbols can be put under
+``Point``, ``Path``, etc. Such symbols can be put under
 module-specific namespaces, under "``mozilla``", with short
-all-lowercase names.  Other global namespaces besides "``mozilla``" are
+all-lowercase names. Other global namespaces besides "``mozilla``" are
 not allowed.
 
 No "using" statements are allowed in header files, except inside class
@@ -164,19 +152,18 @@ compilation units that use the header file.)
 
 ``using namespace ...;`` is only allowed in ``.cpp`` files after all
 ``#include``\ s. Prefer to wrap code in ``namespace ... { ... };``
-instead. if possible.  ``using namespace ...;``\ should always specify
-the fully qualified namespace.  That is, to use ``Foo::Bar`` do not
+instead. if possible. ``using namespace ...;``\ should always specify
+the fully qualified namespace. That is, to use ``Foo::Bar`` do not
 write ``using namespace Foo;``\ ``using namespace Bar;``, write
 ``using namespace Foo::Bar;``
 
-Don't indent code inside ``namespace ... { ... }``.  You can prevent
+Don't indent code inside ``namespace ... { ... }``. You can prevent
 this, inside emacs, by setting the "innamespace" offset:
 
 ::
 
    (c-set-offset 'innamespace 0)
 
-.. _Anonymous_namespaces:
 
 Anonymous namespaces
 ~~~~~~~~~~~~~~~~~~~~
@@ -188,9 +175,8 @@ use anonymous namespaces for things that can't be hidden with 'static',
 such as types, or certain objects which need to be passed to template
 functions.
 
-.. _Classes:
 
-C++ classes 
+C++ classes
 ~~~~~~~~~~~~
 
 .. code:: brush:
@@ -259,17 +245,15 @@ to collapse the definition to one line, as shown for ``TinyFunction``
 above. For larger ones, use something similar to method declarations,
 below.
 
-.. _Methods:
 
 Methods and functions
 ~~~~~~~~~~~~~~~~~~~~~
 
-.. _CC:
 
 C/C++
 ^^^^^
 
-In C/C++, method names should be capitalized and use camelCase. 
+In C/C++, method names should be capitalized and use camelCase.
 Typenames, and the names of arguments, should be separated with a single
 space character.
 
@@ -298,23 +282,22 @@ value, via a ``Foo** aResult`` outparam (typical for an XPCOM getter),
 or as an ``already_AddRefed<Foo>`` (typical for a WebIDL getter,
 possibly with an ``ErrorResult& rv`` parameter), or occasionally as a
 ``Foo*`` (typical for an internal getter for an object with a known
-lifetime). See {{bug(223255)}} for more information.
+lifetime). See `the bug 223255 <https://bugzilla.mozilla.org/show_bug.cgi?id=223255>`_
+for more information.
 
 XPCOM getters always return primitive values via an outparam, while
 other getters normally use a return value.
 
 Method declarations must use, at most, one of the following keywords:
-``virtual``, ``override``, or ``final``.  Use ``virtual`` to declare
+``virtual``, ``override``, or ``final``. Use ``virtual`` to declare
 virtual methods, which do not override a base class method with the same
-signature.  Use ``override`` to declare virtual methods which do
+signature. Use ``override`` to declare virtual methods which do
 override a base class method, with the same signature, but can be
-further overridden in derived classes.  Use ``final`` to declare virtual
+further overridden in derived classes. Use ``final`` to declare virtual
 methods which do override a base class method, with the same signature,
-but can NOT be further overridden in the derived classes.  This should
+but can NOT be further overridden in the derived classes. This should
 help the person reading the code fully understand what the declaration
 is doing, without needing to further examine base classes.
-
-.. _JavaScript:
 
 JavaScript
 ^^^^^^^^^^
@@ -325,7 +308,7 @@ syntax, because our tools understand method names:
 
 .. code:: brush:
 
-   doSomething: function (aFoo, aBar) {
+   doSomething: function (aFoo, aBar) {
      ...
    }
 
@@ -336,7 +319,6 @@ or semicolons:
 
    function valueObject(aValue) { return { value: aValue }; }
 
-.. _JavaScript_objects:
 
 JavaScript objects
 ~~~~~~~~~~~~~~~~~~
@@ -348,7 +330,7 @@ JavaScript objects
    var bar = {
      prop1: "value1",
      prop2: "value2"
-   }; 
+   };
 
 Constructors for objects should be capitalized and use Pascal Case:
 
@@ -358,7 +340,6 @@ Constructors for objects should be capitalized and use Pascal Case:
      this.foo = "bar";
    }
 
-.. _Mode_Line:
 
 Mode line
 ~~~~~~~~~
@@ -379,8 +360,6 @@ Be sure to use the correct "Mode" in the first line, don't use "C++" in
 JavaScript files. The exception to this is in Python code, in which we
 use four spaces for indentations.
 
-.. _Declarations:
-
 Declarations
 ~~~~~~~~~~~~
 
@@ -394,18 +373,17 @@ In general, snuggle pointer stars with the type, not the variable name:
 
 Some existing modules still use the ``T *p`` style.
 
-.. _Operators:
 
 Operators
 ~~~~~~~~~
 
 In C++, when breaking lines containing overlong expressions, binary
 operators must be left on their original lines if the line break happens
-around the operator.  The second line should start in the same column as
+around the operator. The second line should start in the same column as
 the start of the expression in the first line.
 
-In JavaScript, overlong expressions not joined by ``&&`` and
-``||`` should break so the operator starts on the second line and
+In JavaScript, overlong expressions not joined by ``&&`` and
+``||`` should break so the operator starts on the second line and
 starting in the same column as the beginning of the expression in the
 first line. This applies to ``?:``, binary arithmetic operators
 including ``+``, and member-of operators. Rationale: an operator at the
@@ -420,34 +398,30 @@ In JavaScript, ``==`` is preferred to ``===``.
 Unary keyword operators, such as ``typeof`` and ``sizeof``, should have
 their operand parenthesized; e.g. ``typeof("foo") == "string"``.
 
-.. _Literals:
 
 Literals
 ~~~~~~~~
 
-Double-quoted strings (e.g. ``"foo"``) are preferred to single-quoted
+Double-quoted strings (e.g. ``"foo"``) are preferred to single-quoted
 strings (e.g. ``'foo'``), in JavaScript, except to avoid escaping
 embedded double quotes, or when assigning inline event handlers.
 
-Use ```\uXXXX`` unicode
-escapes </en/JavaScript/Guide/Obsolete_Pages/Unicode>`__ for non-ASCII
-characters. The character set for XUL, DTD, script, and properties files
-is UTF-8, which is not easily readable.
+Use ``\uXXXX`` unicode escapes for non-ASCII characters. The character
+set for XUL, DTD, script, and properties files is UTF-8, which is not easily
+readable.
 
-.. _Prefixes:
 
 Prefixes
 ~~~~~~~~
 
 Follow these naming prefix conventions:
 
-.. _Variable_prefixes:
 
 Variable prefixes
 ^^^^^^^^^^^^^^^^^
 
 -  k=constant (e.g. ``kNC_child``). Not all code uses this style; some
-   uses ``ALL_CAPS`` for constants.
+   uses ``ALL_CAPS`` for constants.
 -  g=global (e.g. ``gPrefService``)
 -  a=argument (e.g. ``aCount``)
 -  C++ Specific Prefixes
@@ -472,7 +446,6 @@ Variable prefixes
          const nsISupports = Components.interfaces.nsISupports;
          const nsIWBN = Components.interfaces.nsIWebBrowserNavigation;
 
-.. _Global_functions.2Fmacros.2Fetc:
 
 Global functions/macros/etc
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -484,7 +457,6 @@ Global functions/macros/etc
    which is part of a set of related macros still using the old ``NS_``
    prefix. Then you should be consistent with the existing macros.
 
-.. _Error_Variables:
 
 Error Variables
 ^^^^^^^^^^^^^^^
@@ -493,7 +465,6 @@ Error Variables
    used for bool or other result types.
 -  local bool result codes should be \`ok\`
 
-.. _General_C.2FC.2B.2B_Practices:
 
 General practices
 -----------------
@@ -513,7 +484,6 @@ General practices
    boilerplate <https://www.mozilla.org/MPL/headers/>`__, per our
    `license policy <https://www.mozilla.org/MPL/license-policy.html>`__.
 
-.. _CC_practices:
 
 C/C++ practices
 ---------------
@@ -524,7 +494,7 @@ C/C++ practices
    or ``0`` is allowed.
 -  Don't use ``PRBool`` and ``PRPackedBool`` in C++, use ``bool``
    instead.
--  For checking if a ``std`` container has no items, don't use
+-  For checking if a ``std`` container has no items, don't use
    ``size()``, instead use ``empty()``.
 -  When testing a pointer, use ``(``\ ``!myPtr``\ ``)`` or ``(myPtr)``;
    don't use ``myPtr != nullptr`` or ``myPtr == nullptr``.
@@ -539,13 +509,13 @@ C/C++ practices
 
 -  To avoid warnings created by variables used only in debug builds, use
    the
-   ```DebugOnly<T>`` </en-US/docs/Mozilla/Debugging/DebugOnly%3CT%3E>`__
+   ```DebugOnly<T>`` <https://developer.mozilla.org/docs/Mozilla/Debugging/DebugOnly%3CT%3E>`__
    helper when declaring them.
 -  You should `use the static preference
-   API </en/Mozilla/Preferences/Using_preferences_from_application_code>`__ for
+   API <https://developer.mozilla.org/docs/Mozilla/Preferences/Using_preferences_from_application_code>`__ for
    working with preferences.
 -  One-argument constructors, that are not copy or move constructors,
-   should generally be marked explicit.  Exceptions should be annotated
+   should generally be marked explicit. Exceptions should be annotated
    with MOZ_IMPLICIT.
 -  Use ``char32_t`` as the return type or argument type of a method that
    returns or takes as argument a single Unicode scalar value. (Don't
@@ -568,13 +538,12 @@ C/C++ practices
    include a leading ``MOZ_`` or ``MOZILLA_``. For example
    ``dom/media/foo.h`` would use the guard ``DOM_MEDIA_FOO_H_``.
 
-.. _JavaScript_practices:
 
 JavaScript practices
 --------------------
 
 -  Make sure you are aware of the `JavaScript
-   Tips </en/JavaScript_Tips>`__.
+   Tips <https://developer.mozilla.org/docs/Mozilla/JavaScript_Tips>`__.
 -  Do not compare ``x == true`` or ``x == false``. Use ``(x)`` or
    ``(!x)`` instead. ``x == true``, is certainly different from if
    ``(x)``! Compare objects to ``null``, numbers to ``0`` or strings to
@@ -617,7 +586,6 @@ JavaScript practices
    {{JSxRef("String.slice", "aString.slice(-1)")}} returns the last
    letter in ``aString``, or the empty string if ``aString`` is empty.
 
-.. _Java_practices:
 
 Java practices
 --------------
@@ -642,7 +610,7 @@ Java practices
    .. code:: brush:
 
       public void func(int arg) {
-          if (arg != 0) {
+          if (arg != 0) {
               while (arg > 0) {
                   arg--;
               }
@@ -687,7 +655,6 @@ Java practices
    Style <https://source.android.com/source/code-style.html>`__ has some
    useful guidelines too.
 
-.. _Makefile_moz.build_practices:
 
 Makefile/moz.build practices
 ----------------------------
@@ -708,7 +675,7 @@ Makefile/moz.build practices
       endif #}
 
 -  moz.build are python and follow normal Python style.
--  List assignments should be written with one element per line.  Align
+-  List assignments should be written with one element per line. Align
    closing square brace with start of variable assignment. If ordering
    is not important, variables should be in alphabetical order.
 
@@ -719,10 +686,8 @@ Makefile/moz.build practices
           'bar'
       ]
 
--  Use CONFIG['CPU_ARCH'] {=arm} to test for generic classes of
-   architecture rather than CONFIG['OS_TEST'] {=armv7} (re: bug 886689).
-
-.. _Python_Practices:
+-  Use ``CONFIG['CPU_ARCH'] {=arm}`` to test for generic classes of
+   architecture rather than ``CONFIG['OS_TEST'] {=armv7}`` (re: bug 886689).
 
 Python practices
 ----------------
@@ -735,28 +700,24 @@ Python practices
 -  Do not place statements on the same line as ``if/elif/else``
    conditionals to form a one-liner.
 -  Global vars, please avoid them at all cost.
--  Exclude outer parenthesis from conditionals.  Use
+-  Exclude outer parenthesis from conditionals.Use
    ``if x > 5:,``\ rather than ``if (x > 5):``
--  Use string formatters, rather than var + str(val). 
-   ``var = 'Type %s value is %d' % ('int', 5).``
+-  Use string formatters, rather than var + str(val).
+   ``var = 'Type %s value is %d'% ('int', 5).``
 -  Utilize tools like
-   ```pylint`` <https://pypi.python.org/pypi/pylint>`__ or
-   ```pychecker`` <http://pychecker.sourceforge.net>`__ to screen
+   `pylint <https://pypi.python.org/pypi/pylint>`__ or
+   `pychecker <http://pychecker.sourceforge.net>`__ to screen
    sources for common problems.
 -  Testing/Unit tests, please write them.
--  See `David Goodger, Code Like a Pythonista: Idiomatic
-   Python <https://python.net/%7Egoodger/projects/pycon/2007/idiomatic/handout.html>`__.
 
-.. _SVG_practices:
 
 SVG practices
 -------------
 
 Check `SVG
-Guidelines </en-US/docs/Mozilla/Developer_guide/SVG_Guidelines>`__ for
+Guidelines <https://developer.mozilla.org/docs/Mozilla/Developer_guide/SVG_Guidelines>`__ for
 more details.
 
-.. _COM_and_pointers:
 
 COM, pointers and strings
 -------------------------
@@ -768,10 +729,10 @@ COM, pointers and strings
    "Should I be using ``nsCOMPtr`` here?". Generally the only valid use
    of ``NS_RELEASE``, are when you are storing refcounted pointers in a
    long-lived datastructure.
--  Declare new XPCOM interfaces using `XPIDL </en/XPIDL>`__, so they
+-  Declare new XPCOM interfaces using `XPIDL <https://developer.mozilla.org/docs/Mozilla/Tech/XPIDL>`__, so they
    will be scriptable.
--  Use `nsCOMPtr </en/nsCOMPtr>`__ for strong references, and
-   `nsWeakPtr </en/Weak_reference>`__ for weak references.
+-  Use `nsCOMPtr <https://developer.mozilla.org/docs/Mozilla/Tech/XPCOM/Reference/Glue_classes/nsCOMPtr>`__ for strong references, and
+   `nsWeakPtr <https://developer.mozilla.org/docs/Mozilla/Tech/XPCOM/Weak_reference>`__ for weak references.
 -  String arguments to functions should be declared as ``nsAString``.
 -  Use ``EmptyString()`` and ``EmptyCString()`` instead of
    ``NS_LITERAL_STRING("")`` or ``nsAutoString empty``;.
@@ -792,12 +753,10 @@ COM, pointers and strings
 -  Use pointers, instead of references for function out parameters, even
    for primitive types.
 
-.. _IDL:
 
 IDL
 ---
 
-.. _Use_leading-lowercase.2C_or_.22interCaps.22:
 
 Use leading-lowercase, or "interCaps"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -809,7 +768,6 @@ lowercase, and each following word should be capitalized. For example:
 
    long updateStatusBar();
 
-.. _Use_attributes_wherever_possible:
 
 Use attributes wherever possible
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -823,7 +781,7 @@ This example has too many methods:
 
 .. code:: brush:
 
-   interface nsIFoo : nsISupports
+   interface nsIFoo : nsISupports
    {
        long getLength();
        void setLength(in long length);
@@ -835,13 +793,12 @@ script-friendly.
 
 .. code:: brush:
 
-   interface nsIFoo : nsISupports
+   interface nsIFoo : nsISupports
    {
        attribute long length;
        readonly attribute long color;
    };
 
-.. _Use_java-style_constants:
 
 Use Java-style constants
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -853,21 +810,18 @@ uppercase, with underscores between words:
 
    const long ERROR_UNDEFINED_VARIABLE = 1;
 
-.. _See_also:
 
 See also
 ~~~~~~~~
 
 For details on interface development, as well as more detailed style
 guides, see the `Interface development
-guide </en-US/docs/Developer_Guide/Interface_development_guide>`__.
+guide <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Interface_development_guide>`__.
 
-.. _Error_handling:
 
 Error handling
 --------------
 
-.. _Check_for_errors_early_and_often:
 
 Check for errors early and often
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -915,7 +869,6 @@ There is also a static analysis attribute MOZ_MUST_USE_TYPE, which can
 be added to class declarations, to ensure that those declarations are
 always used when they are returned.
 
-.. _Use_the_nice_macros:
 
 Use the NS_WARN_IF macro when errors are unexpected.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -939,10 +892,9 @@ please either use NS_WARNING directly, or use the new NS_WARN_IF macro.
 
 Previously, the ``NS_ENSURE_*`` macros were used for this purpose, but
 those macros hide return statements, and should not be used in new code.
-(This coding style rule isn't generally agreed, so use of NS_ENSURE_\*
+(This coding style rule isn't generally agreed, so use of NS_ENSURE_*
 can be valid.)
 
-.. _Return_from_errors_immediately:
 
 Return from errors immediately
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -954,10 +906,10 @@ current function, when an error condition occurs. Don't do this:
 
    rv = foo->Call1();
    if (NS_SUCCEEDED(rv)) {
-     rv = foo->Call2();
-     if (NS_SUCCEEDED(rv)) {
-       rv = foo->Call3();
-     }
+     rv = foo->Call2();
+     if (NS_SUCCEEDED(rv)) {
+       rv = foo->Call3();
+     }
    }
    return rv;
 
@@ -1048,15 +1000,13 @@ found.
        return rv;
      }
    }
-       
+
    // continue normally whether or not the service exists.
 
-.. _Strings:
 
 C++ strings
 -----------
 
-.. _Use_the_Auto_form_of_strings_for_local_values:
 
 Use the ``Auto`` form of strings for local values
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1085,7 +1035,6 @@ instead:
      ..
    }
 
-.. _Be_wary_of_leaking_values_from_non-XPCOM_functions_that_return_char.2A_or_PRUnichar.2A:
 
 Be wary of leaking values from non-XPCOM functions that return char\* or PRUnichar\*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1144,7 +1093,6 @@ Free the string manually:
      WarnUser(warning);
      nsMemory::Free(warning);
 
-.. _Use_NS_LITERAL_STRING.28.29_to_avoid_runtime_string_conversion:
 
 Use MOZ_UTF16() or NS_LITERAL_STRING() to avoid runtime string conversion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1186,7 +1134,6 @@ Correct:
 
    Note: Named literal strings cannot yet be static.
 
-.. _Usage_of_PR_MAXMINABSROUNDUP_macro_calls:
 
 Usage of PR_(MAX|MIN|ABS|ROUNDUP) macro calls
 ---------------------------------------------
