@@ -5,7 +5,7 @@
 "use strict";
 
 /**
- * @file Implements the functionality of downloadcert.xul: a dialog that allows
+ * @file Implements the functionality of downloadcert.xhtml: a dialog that allows
  *       a user to confirm whether to import a certificate, and if so what trust
  *       to give it.
  * @argument {nsISupports} window.arguments[0]

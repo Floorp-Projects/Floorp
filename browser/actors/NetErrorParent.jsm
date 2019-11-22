@@ -349,7 +349,7 @@ class NetErrorParent extends JSWindowActorParent {
             } else {
               Services.ww.openWindow(
                 window,
-                "chrome://pippki/content/certViewer.xul",
+                "chrome://pippki/content/certViewer.xhtml",
                 "_blank",
                 "centerscreen,chrome",
                 cert

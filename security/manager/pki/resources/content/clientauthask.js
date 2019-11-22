@@ -7,7 +7,7 @@
 "use strict";
 
 /**
- * @file Implements the functionality of clientauthask.xul: a dialog that allows
+ * @file Implements the functionality of clientauthask.xhtml: a dialog that allows
  *       a user pick a client certificate for TLS client authentication.
  * @argument {String} window.arguments[0]
  *           The hostname of the server requesting client authentication.
