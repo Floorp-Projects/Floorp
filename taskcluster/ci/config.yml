@@ -34,6 +34,7 @@ treeherder:
         'Fxfn-r': 'Firefox functional tests (remote)'
         'Fxfn-r-1proc': 'Firefox functional tests (remote) without e10s'
         'iris': 'Iris testing suite'
+        'l10n-bump': 'L10n Bumper'
         'M': 'Mochitests'
         'M-1proc': 'Mochitests without e10s'
         'M-fis': 'Mochitests with fission enabled'
