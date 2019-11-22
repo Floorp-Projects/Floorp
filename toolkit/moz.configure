@@ -924,15 +924,27 @@ add_old_configure_assignment('FT2_CFLAGS',
                              ft2_info.cflags)
 
 
-# Remote agent (part of CDP based remote protocol)
+# Remote agent
+# (partial implementation of Chromium Remote Debugging Protocol)
 # ==============================================================
 #
 # See https://firefox-source-docs.mozilla.org/remote/ for more.
 # The source code lives under ../remote.
 
-@depends(target, milestone)
-def remote_default(target, milestone):
-    return target.os != 'Android' and milestone.is_nightly
+@depends(target, build_project, milestone)
+def remote_default(target, project, milestone):
+    # no support for Android
+    if target.os == 'Android':
+        return False
+
+    # winapi 0.2.8 does not work on AArch64
+    # TODO(ato): https://bugzil.la/1598286
+    if target.os == 'WINNT' and target.cpu == 'aarch64':
+        return False
+
+    # enable on Firefox Nightly channel only
+    # TODO(ato): https://bugzil.la/1544393
+    return project == 'browser' and milestone.is_nightly
 
 option('--disable-cdp', default=remote_default,
        help='{Enable|Disable} remote agent')
