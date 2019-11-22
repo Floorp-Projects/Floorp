@@ -149,6 +149,16 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
       switch (front.type) {
         case Ci.nsIWorkerDebugger.TYPE_SERVICE:
           const registration = result.service.find(r => {
+            // If registrationFront is missing, it means this entry is actually
+            // a workerFront that has been augmented and pushed to
+            // result.service in an earlier iteration.
+            // This should no longer happen after Bug 1595964 is resolved.
+            if (!r.registrationFront) {
+              // We can safely return false here since `r` is not a full
+              // service worker registration, but merely a worker.
+              return false;
+            }
+
             /**
              * Older servers will not define `ServiceWorkerFront.id` (the value
              * of `r.newestWorkerId`), and a `ServiceWorkerFront`'s ID will only
@@ -175,12 +185,19 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
             }
             registration.workerTargetFront = front;
           } else {
-            worker.fetch = front.fetch;
+            // If we are missing the registration, augment the worker front with
+            // fields expected on service worker registration fronts so that it
+            // can be displayed in UIs handling on service worker registrations.
 
-            // If a service worker registration could not be found, this means we are in
-            // e10s, and registrations are not forwarded to other processes until they
-            // reach the activated state. Augment the worker as a registration worker to
-            // display it in aboutdebugging.
+            // When does this happen:
+            // A - If parent intercept is disabled:
+            //   If a service worker registration could not be found, this means we are in
+            //   e10s, and registrations are not forwarded to other processes until they
+            //   reach the activated state.
+            // B - If parent intercept is enabled:
+            //   This can apparently happen when the registration is currently
+            //   in evaluating state. Cleanup is tracked in Bug 1595964.
+            worker.fetch = front.fetch;
             worker.scope = front.scope;
             worker.active = false;
             result.service.push(worker);
