@@ -17,8 +17,6 @@ function _getSupportsFile(path) {
 async function enableExtensionDebugging() {
   // Disable security prompt
   await pushPref("devtools.debugger.prompt-connection", false);
-  // Enable Browser toolbox test script execution via env variable
-  await pushPref("devtools.browser-toolbox.allow-unsafe-script", true);
 }
 /* exported enableExtensionDebugging */
 
