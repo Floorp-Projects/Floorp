@@ -116,6 +116,17 @@
                     "maxLength": 30,
                     "type": "string"
                 },
+                "tags": {
+                    "type": "array",
+                    "title": "Free form tags, which ease the grouping & searching of performance tests",
+                    "description": "Similar to extraOptions, except it does not break existing performance data series",
+                    "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9]{1,24}$"
+                    },
+                    "uniqueItems": true,
+                    "maxItems": 14
+                },
                 "extraOptions": {
                     "type": "array",
                     "title": "Extra options used in running suite",
