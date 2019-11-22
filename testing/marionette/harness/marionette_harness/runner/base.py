@@ -29,7 +29,7 @@ from marionette_driver.marionette import Marionette
 from moztest.adapters.unit import StructuredTestResult, StructuredTestRunner
 from moztest.results import TestResult, TestResultCollection, relevant_line
 
-from six import reraise
+from six import reraise, MAXSIZE
 
 from . import serve
 
@@ -329,7 +329,7 @@ class BaseMarionetteArguments(ArgumentParser):
                           help='run tests in a random order')
         self.add_argument('--shuffle-seed',
                           type=int,
-                          default=random.randint(0, sys.maxint),
+                          default=random.randint(0, MAXSIZE),
                           help='Use given seed to shuffle tests')
         self.add_argument('--total-chunks',
                           type=int,
@@ -524,7 +524,7 @@ class BaseMarionetteTestRunner(object):
                  run_until_failure=None,
                  testvars=None,
                  symbols_path=None,
-                 shuffle=False, shuffle_seed=random.randint(0, sys.maxint), this_chunk=1,
+                 shuffle=False, shuffle_seed=random.randint(0, MAXSIZE), this_chunk=1,
                  total_chunks=1,
                  server_root=None, gecko_log=None, result_callbacks=None,
                  prefs=None, test_tags=None,
