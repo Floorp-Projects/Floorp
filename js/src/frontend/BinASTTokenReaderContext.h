@@ -190,12 +190,8 @@ class alignas(8) BinASTSymbol {
   static BinASTSymbol fromVariant(BinASTVariant v) {
     return fromRawBits(uint64_t(v));
   }
-  static BinASTSymbol fromAtomIndex(size_t i) {
-    return fromRawBits(i);
-  }
-  static BinASTSymbol nullAtom() {
-    return fromRawBits(NullAtomIndex);
-  }
+  static BinASTSymbol fromAtomIndex(size_t i) { return fromRawBits(i); }
+  static BinASTSymbol nullAtom() { return fromRawBits(NullAtomIndex); }
 
   uint32_t toUnsignedLong() const { return uint32_t(asBits_); }
   uint32_t toListLength() const { return uint32_t(asBits_); }
@@ -210,14 +206,10 @@ class alignas(8) BinASTSymbol {
     return toAtomIndexNoCheck();
   }
 
-  bool isNullAtom() const {
-    return toAtomIndexNoCheck() == NullAtomIndex;
-  }
+  bool isNullAtom() const { return toAtomIndexNoCheck() == NullAtomIndex; }
 
-  private:
-  size_t toAtomIndexNoCheck() const {
-    return size_t(asBits_);
-  }
+ private:
+  size_t toAtomIndexNoCheck() const { return size_t(asBits_); }
 };
 
 // An entry in a Huffman table.
@@ -890,10 +882,6 @@ struct GenericHuffmanTable {
 // to predict field values and a second (contiguous) set of Huffman tables
 // to predict list lengths.
 class HuffmanDictionary {
- public:
-  HuffmanDictionary() {}
-  ~HuffmanDictionary();
-
   // While reading the Huffman prelude, whenever we first encounter a
   // table with `Unreachable` status, we set its status with a `Initializing`
   // to mark that we should not attempt to read/initialize it again.
@@ -903,6 +891,10 @@ class HuffmanDictionary {
     Initializing,
     Ready,
   };
+
+ public:
+  HuffmanDictionary() {}
+  ~HuffmanDictionary();
 
   // Handles the mapping from NormalizedInterfaceAndField and BinASTList to
   // the index inside the list of huffman tables.
@@ -920,16 +912,42 @@ class HuffmanDictionary {
     explicit TableIdentity(BinASTList list)
         : index_(static_cast<size_t>(list) + ListIdentityBase) {}
 
-    size_t toIndex() const {
-      return index_;
-    }
+    size_t toIndex() const { return index_; }
   };
 
-  TableStatus& status(TableIdentity i) {
-    return status(i.toIndex());
+  bool isUnreachable(TableIdentity i) const {
+    return status_[i.toIndex()] == TableStatus::Unreachable;
   }
 
-  GenericHuffmanTable& table(TableIdentity i) {
+  bool isInitializing(TableIdentity i) const {
+    return status_[i.toIndex()] == TableStatus::Initializing;
+  }
+
+  bool isReady(TableIdentity i) const {
+    return status_[i.toIndex()] == TableStatus::Ready;
+  }
+
+  void setInitializing(TableIdentity i) {
+    status_[i.toIndex()] = TableStatus::Initializing;
+  }
+
+ private:
+  void setReady(TableIdentity i) { status_[i.toIndex()] = TableStatus::Ready; }
+
+ public:
+  GenericHuffmanTable& createTable(TableIdentity i) {
+    MOZ_ASSERT(isUnreachable(i) || isInitializing(i));
+
+    setReady(i);
+
+    auto& t = table(i.toIndex());
+    new (mozilla::KnownNotNull, &t) GenericHuffmanTable();
+
+    return t;
+  }
+
+  const GenericHuffmanTable& getTable(TableIdentity i) const {
+    MOZ_ASSERT(isReady(i));
     return table(i.toIndex());
   }
 
@@ -945,12 +963,7 @@ class HuffmanDictionary {
   //     placed before each table (using `Variant` or `Maybe`)
   //
   // Tables with `Ready` status are destructed in HuffmanDictionary destructor.
-  TableStatus status_[TableIdentity::Limit] = {
-      TableStatus::Unreachable};
-
-  TableStatus& status(size_t i) {
-    return status_[i];
-  }
+  TableStatus status_[TableIdentity::Limit] = {TableStatus::Unreachable};
 
   // Huffman tables for either:
   //   * `(Interface, Field)` pairs, used to decode the value of
@@ -969,6 +982,10 @@ class HuffmanDictionary {
 
   GenericHuffmanTable& table(size_t i) {
     return (reinterpret_cast<GenericHuffmanTable*>(tables_))[i];
+  }
+
+  const GenericHuffmanTable& table(size_t i) const {
+    return (reinterpret_cast<const GenericHuffmanTable*>(tables_))[i];
   }
 };
 
