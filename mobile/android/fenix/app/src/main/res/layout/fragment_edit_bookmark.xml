@@ -14,12 +14,13 @@
         android:id="@+id/bookmark_name_label"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
         android:layout_marginTop="16dp"
+        android:labelFor="@id/bookmarkNameEdit"
         android:text="@string/bookmark_name_label"
         android:textAllCaps="true"
         android:textColor="?primaryText"
-        android:textSize="12sp"
-        android:labelFor="@id/bookmarkNameEdit" />
+        android:textSize="12sp" />
 
     <org.mozilla.fenix.utils.ClearableEditText
         android:id="@+id/bookmarkNameEdit"
@@ -39,12 +40,13 @@
         android:id="@+id/bookmarkUrlLabel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
         android:layout_marginTop="8dp"
+        android:labelFor="@id/bookmarkUrlEdit"
         android:text="@string/bookmark_url_label"
-        android:textColor="?primaryText"
-        android:textSize="12sp"
         android:textAllCaps="true"
-        android:labelFor="@id/bookmarkUrlEdit" />
+        android:textColor="?primaryText"
+        android:textSize="12sp" />
 
     <org.mozilla.fenix.utils.ClearableEditText
         android:id="@+id/bookmarkUrlEdit"
@@ -64,17 +66,19 @@
         android:id="@+id/bookmark_folder_label"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
         android:layout_marginTop="8dp"
+        android:labelFor="@id/bookmarkParentFolderSelector"
         android:text="@string/bookmark_folder_label"
-        android:textColor="?primaryText"
-        android:textSize="12sp"
         android:textAllCaps="true"
-        android:labelFor="@id/bookmarkParentFolderSelector" />
+        android:textColor="?primaryText"
+        android:textSize="12sp" />
 
     <TextView
         android:id="@+id/bookmarkParentFolderSelector"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
         android:layout_marginTop="8dp"
         android:drawableStart="@drawable/ic_folder_icon"
         android:drawablePadding="10dp"
