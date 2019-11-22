@@ -118,7 +118,6 @@ class MediaSink {
   virtual void Shutdown() {}
 
   virtual void SetSecondaryVideoContainer(VideoFrameContainer* aSecondary) {}
-  virtual void ClearSecondaryVideoContainer() {}
 
   virtual void GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {}
 
