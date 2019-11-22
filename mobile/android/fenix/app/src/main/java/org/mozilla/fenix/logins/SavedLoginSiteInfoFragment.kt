@@ -44,6 +44,7 @@ class SavedLoginSiteInfoFragment : Fragment(R.layout.fragment_saved_login_site_i
             val clipboard = view.context.components.clipboardHandler
             clipboard.text = savedLoginItem.url
             showCopiedSnackbar(getString(R.string.logins_site_copied))
+            context?.components?.analytics?.metrics?.track(Event.CopyLogin)
         }
 
         usernameInfoText.text = savedLoginItem.userName
@@ -51,6 +52,7 @@ class SavedLoginSiteInfoFragment : Fragment(R.layout.fragment_saved_login_site_i
             val clipboard = view.context.components.clipboardHandler
             clipboard.text = savedLoginItem.userName
             showCopiedSnackbar(getString(R.string.logins_username_copied))
+            context?.components?.analytics?.metrics?.track(Event.CopyLogin)
         }
 
         passwordInfoText.inputType =
