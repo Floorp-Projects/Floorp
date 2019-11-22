@@ -113,7 +113,10 @@ class HuffmanPreludeReader {
  public:
   // Construct a prelude reader.
   HuffmanPreludeReader(JSContext* cx, BinASTTokenReaderContext& reader)
-      : cx_(cx), reader_(reader), dictionary_(nullptr), stack_(cx_),
+      : cx_(cx),
+        reader_(reader),
+        dictionary_(nullptr),
+        stack_(cx_),
         auxStorageLength_(cx_) {}
 
   // Start reading the prelude.
@@ -2505,9 +2508,8 @@ HuffmanPreludeReader::run(size_t initialCapacity) {
     MOZ_TRY(entry.match(ReadPoppedEntryMatcher(*this)));
   }
 
-  auto dictForMetadata =
-      HuffmanDictionaryForMetadata::createFrom(dictionary_.get(),
-                                               &tempStorage_);
+  auto dictForMetadata = HuffmanDictionaryForMetadata::createFrom(
+      dictionary_.get(), &tempStorage_);
   if (!dictForMetadata) {
     ReportOutOfMemory(cx_);
     return cx_->alreadyReportedError();
@@ -2892,6 +2894,8 @@ HuffmanPreludeReader::readSingleValueTable<UnsignedLong>(
 }
 
 HuffmanDictionaryForMetadata::~HuffmanDictionaryForMetadata() {
+  // WARNING: If you change the code of this destructor,
+  //          `clearFromIncompleteInitialization` needs to be synchronized.
   for (size_t i = 0; i < numTables_; i++) {
     tablesBase()[i].~GenericHuffmanTable();
   }
@@ -2929,6 +2933,49 @@ HuffmanDictionaryForMetadata* HuffmanDictionaryForMetadata::createFrom(
 
   data->moveFrom(dictionary, tempStorage);
   return data;
+}
+
+/* static */
+HuffmanDictionaryForMetadata* HuffmanDictionaryForMetadata::create(
+    size_t numTables, size_t numHuffmanEntries, size_t numInternalIndices,
+    size_t numSingleTables, size_t numTwoTables) {
+  HuffmanDictionaryForMetadata* data =
+      static_cast<HuffmanDictionaryForMetadata*>(
+          js_malloc(totalSize(numTables, numHuffmanEntries, numInternalIndices,
+                              numSingleTables, numTwoTables)));
+  if (MOZ_UNLIKELY(!data)) {
+    return nullptr;
+  }
+
+  new (mozilla::KnownNotNull, data) HuffmanDictionaryForMetadata(
+      numTables, numHuffmanEntries, numInternalIndices, numSingleTables,
+      numTwoTables);
+
+  return data;
+}
+
+void HuffmanDictionaryForMetadata::clearFromIncompleteInitialization(
+    size_t numInitializedTables, size_t numInitializedSingleTables,
+    size_t numInitializedTwoTables) {
+  // This is supposed to be called from AutoClearHuffmanDictionaryForMetadata.
+  // See AutoClearHuffmanDictionaryForMetadata class comment for more details.
+
+  // Call destructors for already-initialized tables.
+  for (size_t i = 0; i < numInitializedTables; i++) {
+    tablesBase()[i].~GenericHuffmanTable();
+  }
+  for (size_t i = 0; i < numInitializedSingleTables; i++) {
+    singleTablesBase()[i].~SingleLookupHuffmanTable();
+  }
+  for (size_t i = 0; i < numInitializedTwoTables; i++) {
+    twoTablesBase()[i].~TwoLookupsHuffmanTable();
+  }
+
+  // Set the following fields to 0 so that destructor doesn't call tables'
+  // destructor.
+  numTables_ = 0;
+  numSingleTables_ = 0;
+  numTwoTables_ = 0;
 }
 
 void HuffmanDictionaryForMetadata::moveFrom(HuffmanDictionary* dictionary,
