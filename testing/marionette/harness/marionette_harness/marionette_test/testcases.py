@@ -14,7 +14,11 @@ import unittest
 import warnings
 import weakref
 
-from unittest.case import SkipTest
+from unittest.case import (
+    _ExpectedFailure,
+    _UnexpectedSuccess,
+    SkipTest,
+)
 
 from marionette_driver.errors import (
     TimeoutException,
@@ -30,24 +34,6 @@ def _wraps_parameterized(func, func_suffix, args, kwargs):
     wrapper.__name__ = func.__name__ + '_' + str(func_suffix)
     wrapper.__doc__ = '[{0}] {1}'.format(func_suffix, func.__doc__)
     return wrapper
-
-
-class ExpectedFailure(Exception):
-    """
-    Raise this when a test is expected to fail.
-
-    This is an implementation detail.
-    """
-
-    def __init__(self, exc_info):
-        super(ExpectedFailure, self).__init__()
-        self.exc_info = exc_info
-
-
-class UnexpectedSuccess(Exception):
-    """
-    The test was supposed to fail, but it didn't!
-    """
 
 
 class MetaParameterized(type):
@@ -149,14 +135,14 @@ class CommonTestCase(unittest.TestCase):
                     try:
                         self.setUp()
                     except Exception:
-                        raise ExpectedFailure(sys.exc_info())
+                        raise _ExpectedFailure(sys.exc_info())
                 else:
                     self.setUp()
             except SkipTest as e:
                 self._addSkip(result, str(e))
             except (KeyboardInterrupt, UnresponsiveInstanceException):
                 raise
-            except ExpectedFailure as e:
+            except _ExpectedFailure as e:
                 expected_failure(result, e.exc_info)
             except Exception:
                 self._enter_pm()
@@ -167,8 +153,8 @@ class CommonTestCase(unittest.TestCase):
                         try:
                             testMethod()
                         except Exception:
-                            raise ExpectedFailure(sys.exc_info())
-                        raise UnexpectedSuccess
+                            raise _ExpectedFailure(sys.exc_info())
+                        raise _UnexpectedSuccess
                     else:
                         testMethod()
                 except self.failureException:
@@ -176,9 +162,9 @@ class CommonTestCase(unittest.TestCase):
                     result.addFailure(self, sys.exc_info())
                 except (KeyboardInterrupt, UnresponsiveInstanceException):
                     raise
-                except ExpectedFailure as e:
+                except _ExpectedFailure as e:
                     expected_failure(result, e.exc_info)
-                except UnexpectedSuccess:
+                except _UnexpectedSuccess:
                     addUnexpectedSuccess = getattr(result, 'addUnexpectedSuccess', None)
                     if addUnexpectedSuccess is not None:
                         addUnexpectedSuccess(self)
@@ -199,12 +185,12 @@ class CommonTestCase(unittest.TestCase):
                         try:
                             self.tearDown()
                         except Exception:
-                            raise ExpectedFailure(sys.exc_info())
+                            raise _ExpectedFailure(sys.exc_info())
                     else:
                         self.tearDown()
                 except (KeyboardInterrupt, UnresponsiveInstanceException):
                     raise
-                except ExpectedFailure as e:
+                except _ExpectedFailure as e:
                     expected_failure(result, e.exc_info)
                 except Exception:
                     self._enter_pm()
