@@ -1135,6 +1135,13 @@ class nsIWidget : public nsISupports {
    */
   virtual void SetWindowTransform(const mozilla::gfx::Matrix& aTransform) {}
 
+  /**
+   * Set whether the window should ignore mouse events or not.
+   *
+   * This is only used on popup windows.
+   */
+  virtual void SetWindowMouseTransparent(bool aIsTransparent) {}
+
   /*
    * On Mac OS X, this method shows or hides the pill button in the titlebar
    * that's used to collapse the toolbar.

@@ -475,6 +475,18 @@ void nsMenuPopupFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
       widget->SetWindowTransform(ComputeWidgetTransform());
     }
   }
+
+  bool newMouseTransparent = StyleUI()->GetEffectivePointerEvents(this) ==
+                             NS_STYLE_POINTER_EVENTS_NONE;
+  bool oldMouseTransparent = aOldStyle->StyleUI()->GetEffectivePointerEvents(
+                                 this) == NS_STYLE_POINTER_EVENTS_NONE;
+
+  if (newMouseTransparent != oldMouseTransparent) {
+    if (nsIWidget* widget = GetWidget()) {
+      widget->SetWindowMouseTransparent(newMouseTransparent);
+      mMouseTransparent = newMouseTransparent;
+    }
+  }
 }
 
 void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,

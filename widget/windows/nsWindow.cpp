@@ -1684,6 +1684,25 @@ void nsWindow::LockAspectRatio(bool aShouldLock) {
 
 /**************************************************************
  *
+ * SECTION: nsIWidget::SetWindowMouseTransparent
+ *
+ * Sets whether the window should ignore mouse events.
+ *
+ **************************************************************/
+void nsWindow::SetWindowMouseTransparent(bool aIsTransparent) {
+  if (!mWnd) {
+    return;
+  }
+
+  LONG_PTR oldStyle = ::GetWindowLongPtrW(mWnd, GWL_EXSTYLE);
+  LONG_PTR newStyle = aIsTransparent ? (oldStyle | WS_EX_TRANSPARENT)
+                                     : (oldStyle & ~WS_EX_TRANSPARENT);
+  ::SetWindowLongPtrW(mWnd, GWL_EXSTYLE, newStyle);
+  mMouseTransparent = aIsTransparent;
+}
+
+/**************************************************************
+ *
  * SECTION: nsIWidget::Move, nsIWidget::Resize,
  * nsIWidget::Size, nsIWidget::BeginResizeDrag
  *
