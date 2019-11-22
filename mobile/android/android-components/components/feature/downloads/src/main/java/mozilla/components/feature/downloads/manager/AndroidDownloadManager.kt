@@ -141,7 +141,7 @@ private fun DownloadState.toAndroidRequest(cookie: String): SystemRequest {
     }
 
     val fileName = if (fileName.isNullOrBlank()) {
-        DownloadUtils.guessFileName(null, url, contentType)
+        DownloadUtils.guessFileName(null, destinationDirectory, url, contentType)
     } else {
         fileName
     }

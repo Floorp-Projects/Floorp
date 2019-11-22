@@ -33,7 +33,7 @@ abstract class DownloadDialogFragment : AppCompatDialogFragment() {
     fun setDownload(download: DownloadState) {
         val args = arguments ?: Bundle()
         args.putString(KEY_FILE_NAME, download.fileName
-            ?: DownloadUtils.guessFileName(null, download.url, download.contentType))
+            ?: DownloadUtils.guessFileName(null, download.destinationDirectory, download.url, download.contentType))
         args.putString(KEY_URL, download.url)
         args.putLong(KEY_CONTENT_LENGTH, download.contentLength ?: 0)
         arguments = args

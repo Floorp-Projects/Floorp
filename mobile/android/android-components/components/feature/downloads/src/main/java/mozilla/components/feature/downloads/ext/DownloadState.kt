@@ -37,7 +37,7 @@ internal fun DownloadState.withResponse(headers: Headers, stream: InputStream?):
 
     return copy(
         fileName = if (fileName.isNullOrBlank()) {
-            DownloadUtils.guessFileName(contentDisposition, url, contentType)
+            DownloadUtils.guessFileName(contentDisposition, destinationDirectory, url, contentType)
         } else {
             fileName
         },
