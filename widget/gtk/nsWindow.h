@@ -311,6 +311,7 @@ class nsWindow final : public nsBaseWidget {
 
   virtual void SetTransparencyMode(nsTransparencyMode aMode) override;
   virtual nsTransparencyMode GetTransparencyMode() override;
+  virtual void SetWindowMouseTransparent(bool aIsTransparent) override;
   virtual void UpdateOpaqueRegion(
       const LayoutDeviceIntRegion& aOpaqueRegion) override;
   virtual nsresult ConfigureChildren(
