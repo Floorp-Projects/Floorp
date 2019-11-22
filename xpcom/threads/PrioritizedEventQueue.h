@@ -81,6 +81,8 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
 
   IdlePeriodState* GetIdlePeriodState() { return &mIdlePeriodState; }
 
+  bool HasIdleRunnables(const MutexAutoLock& aProofOfLock) const;
+
   size_t SizeOfExcludingThis(
       mozilla::MallocSizeOf aMallocSizeOf) const override {
     size_t n = 0;

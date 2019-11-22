@@ -346,3 +346,9 @@ void PrioritizedEventQueue::ResumeInputEventPrioritization(
   MOZ_ASSERT(mInputQueueState == STATE_SUSPEND);
   mInputQueueState = STATE_ENABLED;
 }
+
+bool PrioritizedEventQueue::HasIdleRunnables(
+    const MutexAutoLock& aProofOfLock) {
+  return !mIdleQueue->IsEmpty(aProofOfLock) ||
+         !mDeferredTimersQueue->IsEmpty(aProofOfLock);
+}
