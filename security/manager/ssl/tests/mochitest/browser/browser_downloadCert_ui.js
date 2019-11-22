@@ -49,7 +49,7 @@ function openCertDownloadDialog(cert) {
     Ci.nsIWritablePropertyBag2
   );
   let win = window.openDialog(
-    "chrome://pippki/content/downloadcert.xul",
+    "chrome://pippki/content/downloadcert.xhtml",
     "",
     "",
     cert,
