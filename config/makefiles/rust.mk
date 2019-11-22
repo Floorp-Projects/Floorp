@@ -41,6 +41,12 @@ cargo_build_flags += --color=always
 endif
 endif
 
+# Without -j > 1, make will not pass jobserver info down to cargo. Force
+# one job when requested as a special case.
+ifeq (1,$(MOZ_PARALLEL_BUILD))
+cargo_build_flags += -j1
+endif
+
 rustflags_lto = -Clto
 # Disable LTO when linking gkrust_gtest.
 ifneq (,$(findstring gkrust_gtest,$(RUST_LIBRARY_FILE)))
