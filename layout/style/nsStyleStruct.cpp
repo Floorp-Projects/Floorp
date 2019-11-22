@@ -3703,7 +3703,7 @@ nsStyleUIReset::nsStyleUIReset(const Document& aDocument)
     : mUserSelect(StyleUserSelect::Auto),
       mScrollbarWidth(StyleScrollbarWidth::Auto),
       mForceBrokenImageIcon(0),
-      mIMEMode(StyleImeMode::Auto),
+      mIMEMode(NS_STYLE_IME_MODE_AUTO),
       mWindowDragging(StyleWindowDragging::Default),
       mWindowShadow(NS_STYLE_WINDOW_SHADOW_DEFAULT),
       mWindowOpacity(1.0),
