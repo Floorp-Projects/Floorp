@@ -791,3 +791,11 @@ bool js::GetTypeError(JSContext* cx, unsigned errorNumber,
   return CallSelfHostedFunction(cx, cx->names().GetTypeError, NullHandleValue,
                                 args, error);
 }
+
+bool js::GetAggregateError(JSContext* cx, unsigned errorNumber,
+                           MutableHandleValue error) {
+  FixedInvokeArgs<1> args(cx);
+  args[0].set(Int32Value(errorNumber));
+  return CallSelfHostedFunction(cx, cx->names().GetAggregateError,
+                                NullHandleValue, args, error);
+}
