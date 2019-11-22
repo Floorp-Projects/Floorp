@@ -165,19 +165,6 @@ static bool IsEnableBlockingWebAudioByUserGesturePolicy() {
          StaticPrefs::media_autoplay_enabled_user_gestures_needed();
 }
 
-/* static */
-bool AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(
-    const HTMLMediaElement& aElement) {
-  return IsMediaElementInaudible(aElement) ||
-         IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow());
-}
-
-/* static */
-bool AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(
-    const AudioContext& aContext) {
-  return IsAudioContextAllowedToPlay(aContext);
-}
-
 static bool IsAllowedToPlayByBlockingModel(const HTMLMediaElement& aElement) {
   if (!StaticPrefs::media_autoplay_enabled_user_gestures_needed()) {
     // If element is blessed, it would always be allowed to play().
@@ -290,6 +277,19 @@ DocumentAutoplayPolicy AutoplayPolicy::IsAllowedToPlay(
   }
 
   return DocumentAutoplayPolicy::Disallowed;
+}
+
+/* static */
+bool AutoplayPolicyTelemetryUtils::WouldBeAllowedToPlayIfAutoplayDisabled(
+    const HTMLMediaElement& aElement) {
+  return IsMediaElementInaudible(aElement) ||
+         IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow());
+}
+
+/* static */
+bool AutoplayPolicyTelemetryUtils::WouldBeAllowedToPlayIfAutoplayDisabled(
+    const AudioContext& aContext) {
+  return IsAudioContextAllowedToPlay(aContext);
 }
 
 }  // namespace dom
