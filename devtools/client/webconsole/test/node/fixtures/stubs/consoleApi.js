@@ -458,14 +458,26 @@ stubPackets.set(`console.table(['red', 'green', 'blue']);`, {
         "extensible": true,
         "frozen": false,
         "sealed": false,
-        "preview": {
-          "kind": "ArrayLike",
-          "length": 3,
-          "items": [
-            "red",
-            "green",
-            "blue"
-          ]
+        "preview": null,
+        "ownProperties": {
+          "0": {
+            "configurable": true,
+            "enumerable": true,
+            "writable": true,
+            "value": "red"
+          },
+          "1": {
+            "configurable": true,
+            "enumerable": true,
+            "writable": true,
+            "value": "green"
+          },
+          "2": {
+            "configurable": true,
+            "enumerable": true,
+            "writable": true,
+            "value": "blue"
+          }
         }
       }
     ],
@@ -1150,14 +1162,26 @@ stubPackets.set(`console.table(['a', 'b', 'c'])`, {
         "extensible": true,
         "frozen": false,
         "sealed": false,
-        "preview": {
-          "kind": "ArrayLike",
-          "length": 3,
-          "items": [
-            "a",
-            "b",
-            "c"
-          ]
+        "preview": null,
+        "ownProperties": {
+          "0": {
+            "configurable": true,
+            "enumerable": true,
+            "writable": true,
+            "value": "a"
+          },
+          "1": {
+            "configurable": true,
+            "enumerable": true,
+            "writable": true,
+            "value": "b"
+          },
+          "2": {
+            "configurable": true,
+            "enumerable": true,
+            "writable": true,
+            "value": "c"
+          }
         }
       }
     ],

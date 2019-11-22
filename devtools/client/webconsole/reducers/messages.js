@@ -49,6 +49,12 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "getDescriptorValue",
+  "devtools/client/webconsole/utils/messages",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "getParentWarningGroupMessageId",
   "devtools/client/webconsole/utils/messages",
   true
@@ -1361,6 +1367,18 @@ function isTextInParameter(text, regex, parameter) {
   for (const item of previewItems) {
     if (isTextInParameter(text, regex, item)) {
       return true;
+    }
+  }
+
+  if (parameter && parameter.ownProperties) {
+    for (const [key, desc] of Object.entries(parameter.ownProperties)) {
+      if (matchStr(key)) {
+        return true;
+      }
+
+      if (isTextInParameter(text, regex, getDescriptorValue(desc))) {
+        return true;
+      }
     }
   }
 

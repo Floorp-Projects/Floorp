@@ -17,6 +17,7 @@ const { ObjectActor } = require("devtools/server/actors/object");
 const { LongStringActor } = require("devtools/server/actors/string");
 const {
   createValueGrip,
+  isArray,
   stringIsLong,
 } = require("devtools/server/actors/object/utils");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
@@ -2020,7 +2021,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     const result = WebConsoleUtils.cloneObject(message);
 
     result.workerType = WebConsoleUtils.getWorkerType(result) || "none";
-
     result.sourceId = this.getActorIdForInternalSourceId(result.sourceId);
 
     delete result.wrappedJSObject;
@@ -2046,10 +2046,92 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       return this.createValueGrip(string);
     });
 
+    if (result.level === "table") {
+      const tableItems = this._getConsoleTableMessageItems(result);
+      if (tableItems) {
+        result.arguments[0].ownProperties = tableItems;
+        result.arguments[0].preview = null;
+      }
+
+      // Only return the 2 first params.
+      result.arguments = result.arguments.slice(0, 2);
+    }
+
     result.category = message.category || "webdev";
     result.innerWindowID = message.innerID;
 
     return result;
+  },
+
+  /**
+   * Return the properties needed to display the appropriate table for a given
+   * console.table call.
+   * This function does a little more than creating an ObjectActor for the first
+   * parameter of the message. When layout out the console table in the output, we want
+   * to be able to look into sub-properties so the table can have a different layout (
+   * for arrays of arrays, objects with objects properties, arrays of objects, …).
+   * So here we need to retrieve the properties of the first parameter, and also all the
+   * sub-properties we might need.
+   *
+   * @param {Object} result: The console.table message.
+   * @returns {Object} An object containing the properties of the first argument of the
+   *                   console.table call.
+   */
+  _getConsoleTableMessageItems: function(result) {
+    if (
+      !result ||
+      !Array.isArray(result.arguments) ||
+      result.arguments.length == 0
+    ) {
+      return null;
+    }
+
+    const [tableItemGrip] = result.arguments;
+    const dataType = tableItemGrip.class;
+    const needEntries = ["Map", "WeakMap", "Set", "WeakSet"].includes(dataType);
+    const ignoreNonIndexedProperties = isArray(tableItemGrip);
+
+    const tableItemActor = this.getActorByID(tableItemGrip.actor);
+    if (!tableItemActor) {
+      return null;
+    }
+
+    // Retrieve the properties (or entries for Set/Map) of the console table first arg.
+    const iterator = needEntries
+      ? tableItemActor.enumEntries()
+      : tableItemActor.enumProperties({
+          ignoreNonIndexedProperties,
+        });
+    const { ownProperties } = iterator.all();
+
+    // The iterator returns a descriptor for each property, wherein the value could be
+    // in one of those sub-property.
+    const descriptorKeys = ["safeGetterValues", "getterValue", "value"];
+
+    Object.values(ownProperties).forEach(desc => {
+      if (typeof desc !== "undefined") {
+        descriptorKeys.forEach(key => {
+          if (desc && desc.hasOwnProperty(key)) {
+            const grip = desc[key];
+
+            // We need to load sub-properties as well to render the table in a nice way.
+            const actor = grip && this.getActorByID(grip.actor);
+            if (actor) {
+              const res = actor
+                .enumProperties({
+                  ignoreNonIndexedProperties: isArray(grip),
+                })
+                .all();
+              if (res && res.ownProperties) {
+                desc[key].ownProperties = res.ownProperties;
+              }
+            }
+          }
+        });
+      }
+    });
+
+    return ownProperties;
   },
 
   /**

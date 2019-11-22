@@ -258,7 +258,7 @@ add_task(async function() {
       input: [{ a: { b: 34 } }],
       expected: {
         columns: ["(index)", "a"],
-        rows: [["0", "Object { … }"]],
+        rows: [["0", "Object { b: 34 }"]],
       },
       additionalTest: async function(node) {
         info("Check that object in a cell can be expanded");
@@ -312,7 +312,7 @@ async function testItem(testCase, node) {
   is(
     JSON.stringify(testCase.expected.columns),
     JSON.stringify(columns.map(column => column.textContent)),
-    "table has the expected columns"
+    `${testCase.info} | table has the expected columns`
   );
 
   // We don't really have rows since we are using a CSS grid in order to have a sticky
@@ -321,14 +321,18 @@ async function testItem(testCase, node) {
   is(
     testCase.expected.rows.length,
     cells.length / columnsNumber,
-    "table has the expected number of rows"
+    `${testCase.info} | table has the expected number of rows`
   );
 
   testCase.expected.rows.forEach((expectedRow, rowIndex) => {
     const startIndex = rowIndex * columnsNumber;
     // Slicing the cells array so we can get the current "row".
     const rowCells = cells.slice(startIndex, startIndex + columnsNumber);
-    is(rowCells.map(x => x.textContent).join(" | "), expectedRow.join(" | "));
+    is(
+      rowCells.map(x => x.textContent).join(" | "),
+      expectedRow.join(" | "),
+      `${testCase.info} | row has the expected content`
+    );
   });
 
   if (testCase.expected.overflow) {
