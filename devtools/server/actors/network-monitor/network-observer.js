@@ -635,6 +635,14 @@ NetworkObserver.prototype = {
       };
     }
 
+    const trackingProtectionLevel2Enabled = Services.prefs
+      .getStringPref("urlclassifier.trackingTable")
+      .includes("content-track-digest256");
+    const tpFlagsMask = trackingProtectionLevel2Enabled
+      ? ~Ci.nsIClassifiedChannel.CLASSIFIED_ANY_BASIC_TRACKING &
+        ~Ci.nsIClassifiedChannel.CLASSIFIED_ANY_STRICT_TRACKING
+      : ~Ci.nsIClassifiedChannel.CLASSIFIED_ANY_BASIC_TRACKING &
+        Ci.nsIClassifiedChannel.CLASSIFIED_ANY_STRICT_TRACKING;
     const event = {};
     event.method = channel.requestMethod;
     event.channelId = channel.channelId;
@@ -647,7 +655,13 @@ NetworkObserver.prototype = {
     ).toISOString();
     event.fromCache = fromCache;
     event.fromServiceWorker = fromServiceWorker;
-    event.isThirdPartyTrackingResource = channel.isThirdPartyTrackingResource();
+    // Only consider channels classified as level-1 to be trackers if our preferences
+    // would not cause such channels to be blocked in strict content blocking mode.
+    // Make sure the value produced here is a boolean.
+    event.isThirdPartyTrackingResource = !!(
+      channel.isThirdPartyTrackingResource() &&
+      (channel.thirdPartyClassificationFlags & tpFlagsMask) == 0
+    );
     const referrerInfo = channel.referrerInfo;
     event.referrerPolicy = referrerInfo
       ? referrerInfo.getReferrerPolicyString()

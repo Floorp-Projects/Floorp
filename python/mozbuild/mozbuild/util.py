@@ -5,7 +5,7 @@
 # This file contains miscellaneous utility functions that don't belong anywhere
 # in particular.
 
-from __future__ import absolute_import, unicode_literals, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import collections
@@ -17,19 +17,15 @@ import hashlib
 import itertools
 import os
 import re
-import six
 import stat
 import sys
 import time
-
 from collections import (
     OrderedDict,
 )
-from io import (
-    StringIO,
-    BytesIO,
-)
+from io import (BytesIO, StringIO)
 
+import six
 
 if sys.platform == 'win32':
     _kernel32 = ctypes.windll.kernel32
@@ -226,6 +222,7 @@ class FileAvoidWrite(BytesIO):
         self._write_to_file = not dry_run
         self.diff = None
         self.mode = readmode
+        self._binary_mode = 'b' in readmode
 
     def write(self, buf):
         if isinstance(buf, six.text_type):
@@ -246,7 +243,17 @@ class FileAvoidWrite(BytesIO):
         underlying file was changed, ``.diff`` will be populated with the diff
         of the result.
         """
-        buf = self.getvalue()
+        if self._binary_mode or six.PY2:
+            # Use binary data under Python 2 because it can be written to files
+            # opened with either open(mode='w') or open(mode='wb') without raising
+            # unicode errors. Also use binary data if the caller explicitly asked for
+            # it.
+            buf = self.getvalue()
+        else:
+            # Use strings in Python 3 unless the caller explicitly asked for binary
+            # data.
+            buf = self.getvalue().decode('utf-8')
+
         BytesIO.close(self)
         existed = False
         old_content = None
@@ -271,28 +278,55 @@ class FileAvoidWrite(BytesIO):
             # Maintain 'b' if specified.  'U' only applies to modes starting with
             # 'r', so it is dropped.
             writemode = 'w'
-            if 'b' in self.mode:
+            if self._binary_mode:
                 writemode += 'b'
             with open(self.name, writemode) as file:
                 file.write(buf)
 
-        if self._capture_diff:
-            try:
-                old_lines = old_content.splitlines() if existed else None
-                new_lines = buf.splitlines()
-
-                self.diff = simple_diff(self.name, old_lines, new_lines)
-            # FileAvoidWrite isn't unicode/bytes safe. So, files with non-ascii
-            # content or opened and written in different modes may involve
-            # implicit conversion and this will make Python unhappy. Since
-            # diffing isn't a critical feature, we just ignore the failure.
-            # This can go away once FileAvoidWrite uses io.BytesIO and
-            # io.StringIO. But that will require a lot of work.
-            except (UnicodeDecodeError, UnicodeEncodeError):
-                self.diff = ['Binary or non-ascii file changed: %s' %
-                             self.name]
+        self._generate_diff(buf, old_content)
 
         return existed, True
+
+    def _generate_diff(self, new_content, old_content):
+        """Generate a diff for the changed contents if `capture_diff` is True.
+
+        If the changed contents could not be decoded as utf-8 then generate a
+        placeholder message instead of a diff.
+
+        Args:
+            new_content: Str or bytes holding the new file contents.
+            old_content: Str or bytes holding the original file contents. Should be
+                None if no old content is being overwritten.
+        """
+        if not self._capture_diff:
+            return
+
+        try:
+            if old_content is None:
+                old_lines = None
+            else:
+                if self._binary_mode:
+                    # difflib doesn't work with bytes.
+                    old_content = old_content.decode('utf-8')
+
+                old_lines = old_content.splitlines()
+
+            if self._binary_mode:
+                # difflib doesn't work with bytes.
+                new_content = new_content.decode('utf-8')
+
+            new_lines = new_content.splitlines()
+
+            self.diff = simple_diff(self.name, old_lines, new_lines)
+        # FileAvoidWrite isn't unicode/bytes safe. So, files with non-ascii
+        # content or opened and written in different modes may involve
+        # implicit conversion and this will make Python unhappy. Since
+        # diffing isn't a critical feature, we just ignore the failure.
+        # This can go away once FileAvoidWrite uses io.BytesIO and
+        # io.StringIO. But that will require a lot of work.
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            self.diff = ['Binary or non-ascii file changed: %s' %
+                         self.name]
 
     def __enter__(self):
         return self

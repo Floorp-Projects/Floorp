@@ -53,6 +53,8 @@
 #include "ProfilerHelpers.h"
 #include "ReportInternalError.h"
 
+#include <numeric>
+
 // Include this last to avoid path problems on Windows.
 #include "ActorsChild.h"
 
@@ -1531,11 +1533,12 @@ already_AddRefed<IDBRequest> IDBObjectStore::AddOrPut(
   MOZ_ASSERT(maximalSizeFromPref > kMaxIDBMsgOverhead);
   const size_t kMaxMessageSize = maximalSizeFromPref - kMaxIDBMsgOverhead;
 
-  size_t indexUpdateInfoSize = 0;
-  for (size_t i = 0; i < updateInfo.Length(); i++) {
-    indexUpdateInfoSize += updateInfo[i].value().GetBuffer().Length();
-    indexUpdateInfoSize += updateInfo[i].localizedValue().GetBuffer().Length();
-  }
+  const size_t indexUpdateInfoSize =
+      std::accumulate(updateInfo.cbegin(), updateInfo.cend(), 0u,
+                      [](size_t old, const IndexUpdateInfo& updateInfo) {
+                        return old + updateInfo.value().GetBuffer().Length() +
+                               updateInfo.localizedValue().GetBuffer().Length();
+                      });
 
   const size_t messageSize = cloneWriteInfo.mCloneBuffer.data().Size() +
                              key.GetBuffer().Length() + indexUpdateInfoSize;

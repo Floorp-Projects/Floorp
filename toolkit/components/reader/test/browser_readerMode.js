@@ -226,23 +226,24 @@ add_task(async function test_reader_view_element_attribute_transform() {
     }
   });
 
-  function observeAttribute(element, attribute, triggerFn, checkFn) {
+  function observeAttribute(element, attributes, triggerFn, checkFn) {
     return new Promise(resolve => {
       let observer = new MutationObserver(mutations => {
-        mutations.forEach(mu => {
-          if (element.getAttribute(attribute) !== mu.oldValue) {
+        for (let mu of mutations) {
+          if (element.getAttribute(mu.attributeName) !== mu.oldValue) {
             if (checkFn()) {
               resolve();
               observer.disconnect();
+              return;
             }
           }
-        });
+        }
       });
 
       observer.observe(element, {
         attributes: true,
         attributeOldValue: true,
-        attributeFilter: [attribute],
+        attributeFilter: Array.isArray(attributes) ? attributes : [attributes],
       });
 
       triggerFn();
@@ -340,16 +341,24 @@ add_task(async function test_reader_view_element_attribute_transform() {
   waitForPageshow = waitForNonBlankPage();
   await observeAttribute(
     readerButton,
-    "readeractive",
+    ["readeractive", "hidden"],
     () => {
       readerButton.click();
     },
-    () => !readerButton.getAttribute("readeractive")
+    () => {
+      info(
+        `active: ${readerButton.getAttribute("readeractive")}; hidden: ${
+          menuitem.hidden
+        }`
+      );
+      return !readerButton.getAttribute("readeractive") && !menuitem.hidden;
+    }
   );
   ok(
     !readerButton.getAttribute("readeractive"),
     "readerButton's readeractive attribute should be empty when reader mode is exited"
   );
+  ok(!menuitem.hidden, "menuitem should not be hidden.");
   await waitForPageshow;
 
   info("Navigate a non-reader-able page");

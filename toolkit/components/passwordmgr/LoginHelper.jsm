@@ -1102,7 +1102,7 @@ this.LoginHelper = {
   },
 
   isUserFacingLogin(login) {
-    return !login.origin.startsWith("chrome://");
+    return login.origin != "chrome://FirefoxAccounts"; // FXA_PWDMGR_HOST
   },
 
   async getAllUserFacingLogins() {

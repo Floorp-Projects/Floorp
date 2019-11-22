@@ -45,9 +45,9 @@
   <script src="chrome://browser/content/places/places.js"/>
   <script src="chrome://global/content/editMenuOverlay.js"/>
 #ifndef XP_MACOSX
-  <!-- On Mac, this is included via macWindow.inc.xul -> global-scripts.inc -> browser.js -> defineLazyScriptGetter -->
+  <!-- On Mac, this is included via macWindow.inc.xhtml -> global-scripts.inc -> browser.js -> defineLazyScriptGetter -->
   <script src="chrome://browser/content/places/editBookmark.js"/>
-  <!-- On Mac, thes are included via macWindow.inc.xul -> global-scripts.inc -->
+  <!-- On Mac, thes are included via macWindow.inc.xhtml -> global-scripts.inc -->
   <script src="chrome://global/content/globalOverlay.js"/>
   <script src="chrome://browser/content/utilityOverlay.js"/>
 #endif
@@ -57,12 +57,12 @@
   </stringbundleset>
 
 #ifdef XP_MACOSX
-#include ../../../base/content/macWindow.inc.xul
+#include ../../../base/content/macWindow.inc.xhtml
 #else
-#include placesCommands.inc.xul
+#include placesCommands.inc.xhtml
 #endif
 
-  <!-- This must be included after macWindow.inc.xul to override DownloadsView -->
+  <!-- This must be included after macWindow.inc.xhtml to override DownloadsView -->
   <script src="chrome://browser/content/downloads/allDownloadsView.js"/>
   <script src="chrome://global/content/contentAreaUtils.js"/>
   <script src="chrome://browser/content/places/places-tree.js"/>
@@ -89,8 +89,8 @@
     <command id="OrganizerCommand:Forward"
              oncommand="PlacesOrganizer.forward();"/>
   </commandset>
-#include ../../downloads/content/downloadsCommands.inc.xul
-#include ../../downloads/content/downloadsStrings.inc.xul
+#include ../../downloads/content/downloadsCommands.inc.xhtml
+#include ../../downloads/content/downloadsStrings.inc.xhtml
 
   <keyset id="placesOrganizerKeyset">
     <!-- Instantiation Keys -->
@@ -143,11 +143,11 @@
 #endif
 
   <popupset id="placesPopupset">
-#include placesContextMenu.inc.xul
+#include placesContextMenu.inc.xhtml
     <menupopup id="placesColumnsContext"
                onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', null);"
                oncommand="ViewMenu.showHideColumn(event.target); event.stopPropagation();"/>
-#include ../../downloads/content/downloadsContextMenu.inc.xul
+#include ../../downloads/content/downloadsContextMenu.inc.xhtml
   </popupset>
 
   <toolbox id="placesToolbox">
@@ -420,7 +420,7 @@
           <spacer flex="3"/>
         </vbox>
         <vbox id="infoBox">
-#include editBookmarkPanel.inc.xul
+#include editBookmarkPanel.inc.xhtml
         </vbox>
       </deck>
     </vbox>

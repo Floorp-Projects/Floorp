@@ -28,5 +28,8 @@ def run_profile_data(config, jobs):
             artifact = 'target.zip'
         else:
             artifact = 'target.tar.bz2'
-        job.setdefault('fetches', {})[instr] = [artifact]
+        job.setdefault('fetches', {})[instr] = [
+            artifact,
+            'target.crashreporter-symbols.zip',
+        ]
         yield job

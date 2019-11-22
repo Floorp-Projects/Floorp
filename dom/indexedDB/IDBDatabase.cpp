@@ -344,9 +344,11 @@ already_AddRefed<DOMStringList> IDBDatabase::ObjectStoreNames() const {
     nsTArray<nsString>& listNames = list->StringArray();
     listNames.SetCapacity(objectStores.Length());
 
-    for (uint32_t index = 0; index < objectStores.Length(); index++) {
-      listNames.InsertElementSorted(objectStores[index].metadata().name());
-    }
+    std::transform(
+        objectStores.cbegin(), objectStores.cend(), MakeBackInserter(listNames),
+        [](const auto& objectStore) { return objectStore.metadata().name(); });
+
+    listNames.Sort();
   }
 
   return list.forget();
@@ -383,17 +385,19 @@ already_AddRefed<IDBObjectStore> IDBDatabase::CreateObjectStore(
     return nullptr;
   }
 
-  nsTArray<ObjectStoreSpec>& objectStores = mSpec->objectStores();
-  for (uint32_t count = objectStores.Length(), index = 0; index < count;
-       index++) {
-    if (aName == objectStores[index].metadata().name()) {
-      aRv.ThrowDOMException(
-          NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR,
-          nsPrintfCString(
-              "Object store named '%s' already exists at index '%u'",
-              NS_ConvertUTF16toUTF8(aName).get(), index));
-      return nullptr;
-    }
+  auto& objectStores = mSpec->objectStores();
+  const auto end = objectStores.cend();
+  const auto foundIt = std::find_if(
+      objectStores.cbegin(), end, [&aName](const auto& objectStore) {
+        return aName == objectStore.metadata().name();
+      });
+  if (foundIt != end) {
+    aRv.ThrowDOMException(
+        NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR,
+        nsPrintfCString("Object store named '%s' already exists at index '%zu'",
+                        NS_ConvertUTF16toUTF8(aName).get(),
+                        foundIt.GetIndex()));
+    return nullptr;
   }
 
   if (!keyPath.IsAllowedForObjectStore(aOptionalParameters.mAutoIncrement)) {
@@ -448,32 +452,26 @@ void IDBDatabase::DeleteObjectStore(const nsAString& aName, ErrorResult& aRv) {
     return;
   }
 
-  nsTArray<ObjectStoreSpec>& specArray = mSpec->objectStores();
+  auto& specArray = mSpec->objectStores();
+  const auto end = specArray.end();
+  const auto foundIt =
+      std::find_if(specArray.begin(), end, [&aName](const auto& objectStore) {
+        const ObjectStoreMetadata& metadata = objectStore.metadata();
+        MOZ_ASSERT(metadata.id());
 
-  int64_t objectStoreId = 0;
+        return aName == metadata.name();
+      });
 
-  for (uint32_t specCount = specArray.Length(), specIndex = 0;
-       specIndex < specCount; specIndex++) {
-    const ObjectStoreMetadata& metadata = specArray[specIndex].metadata();
-    MOZ_ASSERT(metadata.id());
-
-    if (aName == metadata.name()) {
-      objectStoreId = metadata.id();
-
-      // Must do this before altering the metadata array!
-      transaction->DeleteObjectStore(objectStoreId);
-
-      specArray.RemoveElementAt(specIndex);
-
-      RefreshSpec(/* aMayDelete */ false);
-      break;
-    }
-  }
-
-  if (!objectStoreId) {
+  if (foundIt == end) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR);
     return;
   }
+
+  // Must do this before altering the metadata array!
+  transaction->DeleteObjectStore(foundIt->metadata().id());
+
+  specArray.RemoveElementAt(foundIt);
+  RefreshSpec(/* aMayDelete */ false);
 
   // Don't do this in the macro because we always need to increment the serial
   // number to keep in sync with the parent.
@@ -558,33 +556,26 @@ nsresult IDBDatabase::Transaction(JSContext* aCx,
   nsTArray<nsString> sortedStoreNames;
   sortedStoreNames.SetCapacity(nameCount);
 
-  // Check to make sure the object store names we collected actually exist.
-  for (uint32_t nameIndex = 0; nameIndex < nameCount; nameIndex++) {
-    const nsString& name = storeNames[nameIndex];
-
-    bool found = false;
-
-    for (uint32_t objCount = objectStores.Length(), objIndex = 0;
-         objIndex < objCount; objIndex++) {
-      if (objectStores[objIndex].metadata().name() == name) {
-        found = true;
-        break;
-      }
-    }
-
-    if (!found) {
+  // While collecting object store names, check if the corresponding object
+  // stores actually exist.
+  const auto begin = objectStores.cbegin();
+  const auto end = objectStores.cend();
+  for (const auto& name : storeNames) {
+    const auto foundIt =
+        std::find_if(begin, end, [&name](const auto& objectStore) {
+          return objectStore.metadata().name() == name;
+        });
+    if (foundIt == end) {
       return NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR;
     }
 
-    sortedStoreNames.InsertElementSorted(name);
+    sortedStoreNames.EmplaceBack(name);
   }
+  sortedStoreNames.Sort();
 
   // Remove any duplicates.
-  for (uint32_t nameIndex = nameCount - 1; nameIndex > 0; nameIndex--) {
-    if (sortedStoreNames[nameIndex] == sortedStoreNames[nameIndex - 1]) {
-      sortedStoreNames.RemoveElementAt(nameIndex);
-    }
-  }
+  sortedStoreNames.SetLength(
+      std::unique(sortedStoreNames.begin(), sortedStoreNames.end()).GetIndex());
 
   IDBTransaction::Mode mode;
   switch (aMode) {

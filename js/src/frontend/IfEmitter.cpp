@@ -7,7 +7,6 @@
 #include "frontend/IfEmitter.h"
 
 #include "frontend/BytecodeEmitter.h"
-#include "frontend/SourceNotes.h"
 #include "vm/Opcodes.h"
 
 using namespace js;
@@ -24,29 +23,20 @@ IfEmitter::IfEmitter(BytecodeEmitter* bce, Kind kind)
 IfEmitter::IfEmitter(BytecodeEmitter* bce)
     : IfEmitter(bce, Kind::MayContainLexicalAccessInBranch) {}
 
-bool BranchEmitterBase::emitThenInternal(SrcNoteType type) {
+bool BranchEmitterBase::emitThenInternal() {
   // The end of TDZCheckCache for cond for else-if.
   if (kind_ == Kind::MayContainLexicalAccessInBranch) {
     tdzCache_.reset();
   }
 
-  // Emit an annotated branch-if-false around the then part.
-  if (!bce_->newSrcNote(type)) {
-    return false;
-  }
+  // Emit a branch-if-false around the then part.
   if (!bce_->emitJump(JSOP_IFEQ, &jumpAroundThen_)) {
     return false;
   }
 
-  // To restore stack depth in else part, save depth of the then part.
-#ifdef DEBUG
-  // If DEBUG, this is also necessary to calculate |pushed_|.
+  // To restore stack depth in else part (if present), save depth of the then
+  // part.
   thenDepth_ = bce_->bytecodeSection().stackDepth();
-#else
-  if (type == SRC_COND || type == SRC_IF_ELSE) {
-    thenDepth_ = bce_->bytecodeSection().stackDepth();
-  }
-#endif
 
   // Enclose then-branch with TDZCheckCache.
   if (kind_ == Kind::MayContainLexicalAccessInBranch) {
@@ -149,7 +139,7 @@ bool IfEmitter::emitThen() {
   MOZ_ASSERT_IF(state_ == State::ElseIf, tdzCache_.isSome());
   MOZ_ASSERT_IF(state_ != State::ElseIf, tdzCache_.isNothing());
 
-  if (!emitThenInternal(SRC_IF)) {
+  if (!emitThenInternal()) {
     return false;
   }
 
@@ -164,7 +154,7 @@ bool IfEmitter::emitThenElse() {
   MOZ_ASSERT_IF(state_ == State::ElseIf, tdzCache_.isSome());
   MOZ_ASSERT_IF(state_ != State::ElseIf, tdzCache_.isNothing());
 
-  if (!emitThenInternal(SRC_IF_ELSE)) {
+  if (!emitThenInternal()) {
     return false;
   }
 
@@ -246,7 +236,7 @@ bool CondEmitter::emitCond() {
 
 bool CondEmitter::emitThenElse() {
   MOZ_ASSERT(state_ == State::Cond);
-  if (!emitThenInternal(SRC_COND)) {
+  if (!emitThenInternal()) {
     return false;
   }
 

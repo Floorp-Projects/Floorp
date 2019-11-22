@@ -55,6 +55,17 @@ class Key;
 class PermissionRequestChild;
 class PermissionRequestParent;
 class SerializedStructuredCloneReadInfo;
+struct CloneInfo;
+
+}  // namespace indexedDB
+}  // namespace dom
+}  // namespace mozilla
+
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::indexedDB::CloneInfo)
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
 
 class ThreadLocal {
   friend class nsAutoPtr<ThreadLocal>;
@@ -556,13 +567,13 @@ class BackgroundRequestChild final : public BackgroundRequestChildBase,
                                      public PBackgroundIDBRequestChild {
   friend class BackgroundTransactionChild;
   friend class BackgroundVersionChangeTransactionChild;
+  friend struct CloneInfo;
   friend IDBTransaction;
 
   class PreprocessHelper;
 
   RefPtr<IDBTransaction> mTransaction;
-  nsTArray<RefPtr<PreprocessHelper>> mPreprocessHelpers;
-  nsTArray<UniquePtr<JSStructuredCloneData>> mCloneDatas;
+  nsTArray<CloneInfo> mCloneInfos;
   uint32_t mRunningPreprocessHelpers;
   uint32_t mCurrentCloneDataIndex;
   nsresult mPreprocessResultCode;
@@ -615,6 +626,11 @@ class BackgroundRequestChild final : public BackgroundRequestChildBase,
 
   mozilla::ipc::IPCResult RecvPreprocess(
       const PreprocessParams& aParams) override;
+};
+
+struct CloneInfo {
+  RefPtr<BackgroundRequestChild::PreprocessHelper> mPreprocessHelper;
+  UniquePtr<JSStructuredCloneData> mCloneData;
 };
 
 // TODO: Consider defining different subclasses for the different cursor types,

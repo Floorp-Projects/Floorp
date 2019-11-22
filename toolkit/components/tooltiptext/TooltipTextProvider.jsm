@@ -110,7 +110,9 @@ TooltipTextProvider.prototype = {
     ) {
       if (tipElement.nodeType == defView.Node.ELEMENT_NODE) {
         if (tipElement.namespaceURI == XULNS) {
-          XULtooltiptextText = tipElement.getAttribute("tooltiptext");
+          XULtooltiptextText = tipElement.hasAttribute("tooltiptext")
+            ? tipElement.getAttribute("tooltiptext")
+            : null;
         } else if (!(tipElement instanceof defView.SVGElement)) {
           titleText = tipElement.getAttribute("title");
         }
