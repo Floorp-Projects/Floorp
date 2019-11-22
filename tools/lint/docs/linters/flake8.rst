@@ -52,7 +52,7 @@ Please note that autopep8 does NOT fix all issues reported by flake8.
 Sources
 -------
 
-* `Configuration <https://searchfox.org/mozilla-central/source/tools/lint/flake8.yml>`_
+* `Configuration (YAML) <https://searchfox.org/mozilla-central/source/tools/lint/flake8.yml>`_
 * `Source <https://searchfox.org/mozilla-central/source/tools/lint/python/flake8.py>`_
 
 

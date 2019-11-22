@@ -35,5 +35,5 @@ or a XML file ``<?xml>``).
 Sources
 -------
 
-* `Configuration <https://searchfox.org/mozilla-central/source/tools/lint/license.yml>`_
+* `Configuration (YAML) <https://searchfox.org/mozilla-central/source/tools/lint/license.yml>`_
 * `Source <https://searchfox.org/mozilla-central/source/tools/lint/license/__init__.py>`_
