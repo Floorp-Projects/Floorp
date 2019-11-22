@@ -206,33 +206,16 @@ async function onNewToolbox(toolbox) {
   bindToolboxHandlers();
   raise();
 
-  // Enable some testing features if a testing-only pref is set.
-  const prefName = "devtools.browser-toolbox.allow-unsafe-script";
+  // Enable some testing features if the browser toolbox test pref is set.
   if (
-    Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
-    Services.prefs.getBoolPref(prefName) === true
+    Services.prefs.getBoolPref(
+      "devtools.browsertoolbox.enable-test-server",
+      false
+    )
   ) {
-    // Execute any test script provided by an environment variable.
-    const env = Cc["@mozilla.org/process/environment;1"].getService(
-      Ci.nsIEnvironment
-    );
-    const testScript = env.get("MOZ_TOOLBOX_TEST_SCRIPT");
-    if (testScript) {
-      evaluateTestScript(testScript, toolbox);
-    } else {
-      // If there is no testing script, setup a server so that the test can
-      // evaluate messages in this process.
-      installTestingServer(toolbox);
-    }
+    // setup a server so that the test can evaluate messages in this process.
+    installTestingServer(toolbox);
   }
-}
-
-function evaluateTestScript(script, toolbox) {
-  const sandbox = Cu.Sandbox(window);
-  sandbox.window = window;
-  sandbox.toolbox = toolbox;
-  sandbox.ChromeUtils = ChromeUtils;
-  Cu.evalInSandbox(script, sandbox);
 }
 
 function installTestingServer(toolbox) {
