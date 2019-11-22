@@ -36,8 +36,7 @@ add_task(async () => {
   await ended;
 
   await withNewClone(originalVideo, async clone => {
-    SpecialPowers.wrap(originalVideo).cloneElementVisually(clone);
-
+    await SpecialPowers.wrap(originalVideo).cloneElementVisually(clone);
     ok(await assertVideosMatch(originalVideo, clone),
        "Visual clone should display final frame.");
   });
