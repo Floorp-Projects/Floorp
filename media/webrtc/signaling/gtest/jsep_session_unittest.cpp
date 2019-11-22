@@ -11,6 +11,7 @@
 #include "nss.h"
 #include "ssl.h"
 
+#include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Tuple.h"
 
@@ -57,6 +58,9 @@ class JsepSessionTest : public JsepSessionTestBase,
                         public ::testing::WithParamInterface<std::string> {
  public:
   JsepSessionTest() : mSdpHelper(&mLastError) {
+    Preferences::SetCString("media.peerconnection.sdp.parser", "legacy");
+    Preferences::SetCString("media.peerconnection.sdp.alternate_parse_mode",
+                            "never");
     mSessionOff =
         MakeUnique<JsepSessionImpl>("Offerer", MakeUnique<FakeUuidGenerator>());
     mSessionAns = MakeUnique<JsepSessionImpl>("Answerer",
