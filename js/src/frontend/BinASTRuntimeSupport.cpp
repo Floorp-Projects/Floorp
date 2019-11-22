@@ -31,6 +31,18 @@ BinASTSourceMetadata* BinASTSourceMetadata::Create(
   return data;
 }
 
+BinASTSourceMetadata* BinASTSourceMetadata::Create(uint32_t numStrings) {
+  BinASTSourceMetadata* data = static_cast<BinASTSourceMetadata*>(
+      js_malloc(BinASTSourceMetadata::totalSize(0, numStrings)));
+  if (MOZ_UNLIKELY(!data)) {
+    return nullptr;
+  }
+
+  new (data) BinASTSourceMetadata(numStrings);
+
+  return data;
+}
+
 void BinASTSourceMetadata::trace(JSTracer* tracer) {
   JSAtom** base = atomsBase();
   for (uint32_t i = 0; i < numStrings_; i++) {
