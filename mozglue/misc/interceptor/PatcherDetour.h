@@ -669,10 +669,17 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
       ReadOnlyTargetFunction<MMPolicyT>& aOriginalFn, intptr_t aDest,
       void** aOutTramp) {
 #if defined(_M_X64)
+    // Variation 1:
     // 48 b8 imm64  mov rax, imm64
     // ff e0        jmp rax
+    //
+    // Variation 2:
+    // 48 b8 imm64  mov rax, imm64
+    // 50           push rax
+    // c3           ret
     if ((aOriginalFn[0] == 0x48) && (aOriginalFn[1] == 0xB8) &&
-        (aOriginalFn[10] == 0xFF) && (aOriginalFn[11] == 0xE0)) {
+        ((aOriginalFn[10] == 0xFF && aOriginalFn[11] == 0xE0) ||
+         (aOriginalFn[10] == 0x50 && aOriginalFn[11] == 0xC3))) {
       uintptr_t originalTarget =
           (aOriginalFn + 2).template ChasePointer<uintptr_t>();
 
