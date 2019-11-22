@@ -1624,16 +1624,26 @@ function RecvUpdateWholeCanvasForInvalidation()
 
 function OnProcessCrashed(subject, topic, data)
 {
-    var id;
-    subject = subject.QueryInterface(Ci.nsIPropertyBag2);
+    let id;
+    let additionalDumps;
+    let propbag = subject.QueryInterface(Ci.nsIPropertyBag2);
+
     if (topic == "plugin-crashed") {
-        id = subject.get("pluginDumpID");
+        id = propbag.get("pluginDumpID");
+        additionalDumps = propbag.getPropertyAsACString("additionalMinidumps");
     } else if (topic == "ipc:content-shutdown") {
-        id = subject.get("dumpID");
+        id = propbag.get("dumpID");
     }
+
     if (id) {
         g.expectedCrashDumpFiles.push(id + ".dmp");
         g.expectedCrashDumpFiles.push(id + ".extra");
+    }
+
+    if (additionalDumps && additionalDumps.length != 0) {
+      for (const name of additionalDumps.split(',')) {
+        g.expectedCrashDumpFiles.push(id + "-" + name + ".dmp");
+      }
     }
 }
 
