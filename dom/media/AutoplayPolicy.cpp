@@ -160,8 +160,7 @@ static bool IsAudioContextAllowedToPlay(const AudioContext& aContext) {
 }
 
 static bool IsEnableBlockingWebAudioByUserGesturePolicy() {
-  return DefaultAutoplayBehaviour() != nsIAutoplay::ALLOWED &&
-         Preferences::GetBool("media.autoplay.block-webaudio", false) &&
+  return Preferences::GetBool("media.autoplay.block-webaudio", false) &&
          StaticPrefs::media_autoplay_enabled_user_gestures_needed();
 }
 
@@ -225,15 +224,21 @@ bool AutoplayPolicy::IsAllowedToPlay(const HTMLMediaElement& aElement) {
 /* static */
 bool AutoplayPolicy::IsAllowedToPlay(const AudioContext& aContext) {
   /**
-   * The autoplay checking has 4 different phases,
+   * The autoplay checking has 5 different phases,
    * 1. check whether audio context itself meets the autoplay condition
-   * 2. check whethr the site is in the autoplay whitelist
-   * 3. check global autoplay setting and check wether the site is in the
+   * 2. check if we enable blocking web audio or not
+   *    (only support blocking when using user-gesture-activation model)
+   * 3. check whether the site is in the autoplay whitelist
+   * 4. check global autoplay setting and check wether the site is in the
    *    autoplay blacklist.
-   * 4. check whether media is allowed under current blocking model
-   *    (only support user-gesture-activation)
+   * 5. check whether media is allowed under current blocking model
+   *    (only support user-gesture-activation model)
    */
   if (aContext.IsOffline()) {
+    return true;
+  }
+
+  if (!IsEnableBlockingWebAudioByUserGesturePolicy()) {
     return true;
   }
 
@@ -258,9 +263,6 @@ bool AutoplayPolicy::IsAllowedToPlay(const AudioContext& aContext) {
     return true;
   }
 
-  if (!IsEnableBlockingWebAudioByUserGesturePolicy()) {
-    return true;
-  }
   return IsWindowAllowedToPlay(window);
 }
 
