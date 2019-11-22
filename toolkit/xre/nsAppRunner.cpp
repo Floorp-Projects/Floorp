@@ -1202,7 +1202,7 @@ class ScopedXPCOMStartup {
   ScopedXPCOMStartup() : mServiceManager(nullptr) {}
   ~ScopedXPCOMStartup();
 
-  nsresult Initialize();
+  nsresult Initialize(bool aInitJSContext = true);
   nsresult SetWindowCreator(nsINativeAppSupport* native);
 
  private:
@@ -1259,13 +1259,13 @@ static const mozilla::Module::ContractIDEntry kXREContracts[] = {
 extern const mozilla::Module kXREModule = {mozilla::Module::kVersion, kXRECIDs,
                                            kXREContracts};
 
-nsresult ScopedXPCOMStartup::Initialize() {
+nsresult ScopedXPCOMStartup::Initialize(bool aInitJSContext) {
   NS_ASSERTION(gDirServiceProvider, "Should not get here!");
 
   nsresult rv;
 
   rv = NS_InitXPCOM(&mServiceManager, gDirServiceProvider->GetAppDir(),
-                    gDirServiceProvider);
+                    gDirServiceProvider, aInitJSContext);
   if (NS_FAILED(rv)) {
     NS_ERROR("Couldn't start xpcom!");
     mServiceManager = nullptr;
@@ -4344,10 +4344,21 @@ nsresult XREMain::XRE_mainRun() {
     }
   }
 
+  // We'd like to initialize the JSContext *after* reading the user prefs.
+  // Unfortunately that's not possible if we have to do profile migration
+  // because that requires us to execute JS before reading user prefs.
+  // Restarting the browser after profile migration would fix this. See
+  // bug 1592523.
+  bool initializedJSContext = false;
+
   {
     // Profile Migration
     if (mAppData->flags & NS_XRE_ENABLE_PROFILE_MIGRATOR && gDoMigration) {
       gDoMigration = false;
+
+      xpc::InitializeJSContext();
+      initializedJSContext = true;
+
       nsCOMPtr<nsIProfileMigrator> pm(
           do_CreateInstance(NS_PROFILEMIGRATOR_CONTRACTID));
       if (pm) {
@@ -4388,6 +4399,18 @@ nsresult XREMain::XRE_mainRun() {
   // Initialize user preferences before notifying startup observers so they're
   // ready in time for early consumers, such as the component loader.
   mDirProvider.InitializeUserPrefs();
+
+  // Now that all (user) prefs have been loaded we can initialize the main
+  // thread's JSContext.
+  if (!initializedJSContext) {
+    xpc::InitializeJSContext();
+  }
+
+  // Finally, now that JS has been initialized, we can finish pref loading. This
+  // needs to happen after JS and XPConnect initialization because AutoConfig
+  // files require JS execution. Note that this means AutoConfig files can't
+  // override JS engine start-up prefs.
+  mDirProvider.FinishInitializingUserPrefs();
 
   nsAppStartupNotifier::NotifyObservers(APPSTARTUP_CATEGORY);
 
@@ -4710,11 +4733,13 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
 
   bool appInitiatedRestart = false;
 
-  // Start the real application
+  // Start the real application. We use |aInitJSContext = false| because
+  // XRE_mainRun wants to initialize the JSContext after reading user prefs.
+
   mScopedXPCOM = MakeUnique<ScopedXPCOMStartup>();
   if (!mScopedXPCOM) return 1;
 
-  rv = mScopedXPCOM->Initialize();
+  rv = mScopedXPCOM->Initialize(/* aInitJSContext = */ false);
   NS_ENSURE_SUCCESS(rv, 1);
 
   // run!

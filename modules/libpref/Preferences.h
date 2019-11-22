@@ -108,6 +108,7 @@ class Preferences final : public nsIPrefService,
 
   // Initialize user prefs from prefs.js/user.js
   static void InitializeUserPrefs();
+  static void FinishInitializingUserPrefs();
 
   // Returns the singleton instance which is addreffed.
   static already_AddRefed<Preferences> GetInstanceForService();

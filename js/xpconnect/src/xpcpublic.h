@@ -683,6 +683,8 @@ inline bool IsInAutomation() {
   return sAutomationPrefIsSet && AreNonLocalConnectionsDisabled();
 }
 
+void InitializeJSContext();
+
 /**
  * Extract the native nsID object from a JS ID, IfaceID, ClassID, or ContractID
  * value.

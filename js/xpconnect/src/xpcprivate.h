@@ -246,6 +246,8 @@ class nsXPConnect final : public nsIXPConnect {
   // Called by module code on dll shutdown.
   static void ReleaseXPConnectSingleton();
 
+  static void InitJSContext();
+
   void RecordTraversal(void* p, nsISupports* s);
 
  protected:
@@ -258,7 +260,7 @@ class nsXPConnect final : public nsIXPConnect {
   static nsXPConnect* gSelf;
   static bool gOnceAliveNowDead;
 
-  XPCJSRuntime* mRuntime;
+  XPCJSRuntime* mRuntime = nullptr;
   bool mShuttingDown;
 
   friend class nsIXPConnect;
