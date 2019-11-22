@@ -3660,22 +3660,24 @@ CompileOptions& CompileOptions::setIntroductionInfoToCaller(
 #if defined(JS_BUILD_BINAST)
 
 JSScript* JS::DecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& options,
-                           const uint8_t* buf, size_t length) {
+                           const uint8_t* buf, size_t length,
+                           JS::BinASTFormat format) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  return frontend::CompileGlobalBinASTScript(cx, options, buf, length);
+  return frontend::CompileGlobalBinASTScript(cx, options, buf, length, format);
 }
 
 JSScript* JS::DecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& options,
-                           FILE* file) {
+                           FILE* file, JS::BinASTFormat format) {
   FileContents fileContents(cx);
   if (!ReadCompleteFile(cx, file, fileContents)) {
     return nullptr;
   }
 
-  return DecodeBinAST(cx, options, fileContents.begin(), fileContents.length());
+  return DecodeBinAST(cx, options, fileContents.begin(), fileContents.length(),
+                      format);
 }
 
 #endif
@@ -4581,7 +4583,7 @@ JS_PUBLIC_API bool JS_EncodeStringToBuffer(JSContext* cx, JSString* str,
   return true;
 }
 
-JS_PUBLIC_API mozilla::Maybe<mozilla::Tuple<size_t, size_t> >
+JS_PUBLIC_API mozilla::Maybe<mozilla::Tuple<size_t, size_t>>
 JS_EncodeStringToUTF8BufferPartial(JSContext* cx, JSString* str,
                                    mozilla::Span<char> buffer) {
   AssertHeapIsIdle();

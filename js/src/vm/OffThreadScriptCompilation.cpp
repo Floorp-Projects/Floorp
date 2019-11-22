@@ -212,8 +212,9 @@ JS_PUBLIC_API bool JS::CanDecodeBinASTOffThread(
 
 JS_PUBLIC_API bool JS::DecodeBinASTOffThread(
     JSContext* cx, const ReadOnlyCompileOptions& options, const uint8_t* buf,
-    size_t length, OffThreadCompileCallback callback, void* callbackData) {
-  return StartOffThreadDecodeBinAST(cx, options, buf, length, callback,
+    size_t length, JS::BinASTFormat format, OffThreadCompileCallback callback,
+    void* callbackData) {
+  return StartOffThreadDecodeBinAST(cx, options, buf, length, format, callback,
                                     callbackData);
 }
 
