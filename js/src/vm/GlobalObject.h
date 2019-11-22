@@ -7,23 +7,52 @@
 #ifndef vm_GlobalObject_h
 #define vm_GlobalObject_h
 
-#include "jsexn.h"
-#include "jsnum.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/DebugOnly.h"
 
-#include "builtin/Array.h"
-#include "builtin/Boolean.h"
-#include "js/Vector.h"
-#include "vm/ArrayBufferObject.h"
-#include "vm/ErrorObject.h"
+#include <stdint.h>
+#include <type_traits>
+
+#include "jsapi.h"
+#include "jsexn.h"
+#include "jsfriendapi.h"
+#include "jspubtd.h"
+#include "jstypes.h"
+#include "NamespaceImports.h"
+
+#include "gc/AllocKind.h"
+#include "gc/Rooting.h"
+#include "js/CallArgs.h"
+#include "js/Class.h"
+#include "js/ErrorReport.h"
+#include "js/PropertyDescriptor.h"
+#include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
+#include "js/Value.h"
+#include "vm/JSContext.h"
 #include "vm/JSFunction.h"
+#include "vm/JSObject.h"
+#include "vm/NativeObject.h"
 #include "vm/Realm.h"
 #include "vm/Runtime.h"
+#include "vm/Shape.h"
+#include "vm/StringType.h"
+
+struct JSFunctionSpec;
+struct JSPrincipals;
+struct JSPropertySpec;
+
+namespace JS {
+class JS_PUBLIC_API RealmOptions;
+};
 
 namespace js {
 
-class TypedObjectModuleObject;
+class GlobalScope;
 class LexicalEnvironmentObject;
 class RegExpStatics;
+class TypeDescr;
+class TypedObjectModuleObject;
 
 enum class ReferenceType;
 
@@ -924,9 +953,6 @@ extern bool LinkConstructorAndPrototype(
 extern bool DefinePropertiesAndFunctions(JSContext* cx, HandleObject obj,
                                          const JSPropertySpec* ps,
                                          const JSFunctionSpec* fs);
-
-typedef HashSet<GlobalObject*, DefaultHasher<GlobalObject*>, SystemAllocPolicy>
-    GlobalObjectSet;
 
 extern bool DefineToStringTag(JSContext* cx, HandleObject obj, JSAtom* tag);
 
