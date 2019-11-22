@@ -32,5 +32,5 @@ Codespell provides a ``--fix`` option. It is based on the ``-w`` option provided
 Sources
 -------
 
-* `Configuration <https://searchfox.org/mozilla-central/source/tools/lint/codespell.yml>`_
+* `Configuration (YAML) <https://searchfox.org/mozilla-central/source/tools/lint/codespell.yml>`_
 * `Source <https://searchfox.org/mozilla-central/source/tools/lint/spell/__init__.py>`_

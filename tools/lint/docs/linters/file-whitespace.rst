@@ -28,5 +28,5 @@ This linter provides a ``--fix`` option. The python script is doing the change i
 Sources
 -------
 
-* `Configuration <https://searchfox.org/mozilla-central/source/tools/lint/file-whitespace.yml>`_
+* `Configuration (YAML) <https://searchfox.org/mozilla-central/source/tools/lint/file-whitespace.yml>`_
 * `Source <https://searchfox.org/mozilla-central/source/tools/lint/file-whitespace/__init__.py>`_

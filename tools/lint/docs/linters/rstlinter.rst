@@ -28,5 +28,5 @@ directive.
 Sources
 -------
 
-* `Configuration <https://searchfox.org/mozilla-central/source/tools/lint/rst.yml>`_
+* `Configuration (YAML) <https://searchfox.org/mozilla-central/source/tools/lint/rst.yml>`_
 * `Source <https://searchfox.org/mozilla-central/source/tools/lint/rst/__init__.py>`_
