@@ -166,6 +166,8 @@ struct HuffmanKey {
 // The consumer MUST use the correct `from*`/`to*` pair.
 class alignas(8) BinASTSymbol {
  private:
+  static const size_t NullAtomIndex = size_t(-1);
+
   uint64_t asBits_;
 
   explicit BinASTSymbol(uint64_t asBits) : asBits_(asBits) {}
@@ -188,9 +190,8 @@ class alignas(8) BinASTSymbol {
   static BinASTSymbol fromVariant(BinASTVariant v) {
     return fromRawBits(uint64_t(v));
   }
-  static BinASTSymbol fromAtom(JSAtom* v) {
-    return fromRawBits(reinterpret_cast<uint64_t>(v));
-  }
+  static BinASTSymbol fromAtomIndex(size_t i) { return fromRawBits(i); }
+  static BinASTSymbol nullAtom() { return fromRawBits(NullAtomIndex); }
 
   uint32_t toUnsignedLong() const { return uint32_t(asBits_); }
   uint32_t toListLength() const { return uint32_t(asBits_); }
@@ -199,7 +200,16 @@ class alignas(8) BinASTSymbol {
   double toDouble() const { return mozilla::BitwiseCast<double>(asBits_); }
   BinASTKind toKind() const { return BinASTKind(asBits_); }
   BinASTVariant toVariant() const { return BinASTVariant(asBits_); }
-  JSAtom* toAtom() const { return reinterpret_cast<JSAtom*>(asBits_); }
+
+  size_t toAtomIndex() const {
+    MOZ_ASSERT(!isNullAtom());
+    return toAtomIndexNoCheck();
+  }
+
+  bool isNullAtom() const { return toAtomIndexNoCheck() == NullAtomIndex; }
+
+ private:
+  size_t toAtomIndexNoCheck() const { return size_t(asBits_); }
 };
 
 // An entry in a Huffman table.
@@ -909,13 +919,9 @@ class HuffmanDictionary {
   TableStatus listLengthStatus_[BINAST_NUMBER_OF_LIST_TYPES] = {
       TableStatus::Unreachable};
 
-  TableStatus& fieldStatus(size_t i) {
-    return fieldStatus_[i];
-  }
+  TableStatus& fieldStatus(size_t i) { return fieldStatus_[i]; }
 
-  TableStatus& listLengthStatus(size_t i) {
-    return listLengthStatus_[i];
-  }
+  TableStatus& listLengthStatus(size_t i) { return listLengthStatus_[i]; }
 
   // Huffman tables for `(Interface, Field)` pairs, used to decode the value of
   // `Interface::Field`. Some tables may be `HuffmanTableUnreacheable`
