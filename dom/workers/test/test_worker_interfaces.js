@@ -28,6 +28,7 @@
 // IMPORTANT: Do not change this list without review from
 //            a JavaScript Engine peer!
 var ecmaGlobals = [
+  { name: "AggregateError", insecureContext: true, nightly: true },
   { name: "Array", insecureContext: true },
   { name: "ArrayBuffer", insecureContext: true },
   { name: "Atomics", insecureContext: true, disabled: true },

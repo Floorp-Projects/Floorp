@@ -22,6 +22,7 @@
 // IMPORTANT: Do not change this list without review from
 //            a JavaScript Engine peer!
 var ecmaGlobals = [
+  { name: "AggregateError", nightly: true },
   "Array",
   "ArrayBuffer",
   { name: "Atomics", disabled: true },
