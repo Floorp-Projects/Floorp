@@ -10,38 +10,47 @@
 
 #include "jsexn.h"
 
+#include "mozilla/Assertions.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Sprintf.h"
 
+#include <new>
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <utility>
 
 #include "jsapi.h"
-#include "jsnum.h"
+#include "jsfriendapi.h"
 #include "jstypes.h"
 
-#include "gc/FreeOp.h"
-#include "gc/Marking.h"
+#include "gc/Rooting.h"
 #include "js/CharacterEncoding.h"
-#include "js/PropertySpec.h"
+#include "js/Class.h"
+#include "js/Conversions.h"
 #include "js/UniquePtr.h"
+#include "js/Value.h"
 #include "js/Warnings.h"  // JS::{,Set}WarningReporter
 #include "js/Wrapper.h"
 #include "util/Memory.h"
 #include "util/StringBuffer.h"
+#include "vm/Compartment.h"
 #include "vm/ErrorObject.h"
 #include "vm/FrameIter.h"  // js::NonBuiltinFrameIter
-#include "vm/GlobalObject.h"
+#include "vm/JSAtom.h"
 #include "vm/JSContext.h"
-#include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
+#include "vm/Realm.h"
+#include "vm/SavedFrame.h"
 #include "vm/SavedStacks.h"
 #include "vm/SelfHosting.h"
+#include "vm/Stack.h"
 #include "vm/StringType.h"
+#include "vm/SymbolType.h"
 
 #include "vm/ErrorObject-inl.h"
-#include "vm/JSObject-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/SavedStacks-inl.h"
 
 using namespace js;
