@@ -689,9 +689,25 @@ function getArrayTypeNames() {
   ];
 }
 
+function getDescriptorValue(descriptor) {
+  if (!descriptor) {
+    return descriptor;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(descriptor, "safeGetterValues")) {
+    return descriptor.safeGetterValues;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(descriptor, "value")) {
+    return descriptor.value;
+  }
+  return descriptor;
+}
+
 module.exports = {
   createWarningGroupMessage,
   getArrayTypeNames,
+  getDescriptorValue,
   getInitialMessageCountForViewport,
   getParentWarningGroupMessageId,
   getWarningGroupType,
