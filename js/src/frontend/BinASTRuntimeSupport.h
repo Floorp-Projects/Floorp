@@ -195,8 +195,11 @@ class BinASTSourceMetadataMultipart : public BinASTSourceMetadata {
   void trace(JSTracer* tracer);
 };
 
+class HuffmanDictionaryForMetadata;
+
 class BinASTSourceMetadataContext : public BinASTSourceMetadata {
   const uint32_t numStrings_;
+  HuffmanDictionaryForMetadata* dictionary_;
 
   // The data lives inline in the allocation, after this class.
   inline JSAtom** atomsBase() {
@@ -208,9 +211,11 @@ class BinASTSourceMetadataContext : public BinASTSourceMetadata {
   }
 
   explicit BinASTSourceMetadataContext(uint32_t numStrings)
-      : BinASTSourceMetadata(Type::Context), numStrings_(numStrings) {}
+      : BinASTSourceMetadata(Type::Context),
+        numStrings_(numStrings),
+        dictionary_(nullptr) {}
 
-  void release() {}
+  void release();
 
   friend class BinASTSourceMetadata;
 
@@ -218,6 +223,14 @@ class BinASTSourceMetadataContext : public BinASTSourceMetadata {
 
  public:
   static BinASTSourceMetadataContext* create(uint32_t numStrings);
+
+  HuffmanDictionaryForMetadata* dictionary() { return dictionary_; }
+  void setDictionary(HuffmanDictionaryForMetadata* dictionary) {
+    MOZ_ASSERT(!dictionary_);
+    MOZ_ASSERT(dictionary);
+
+    dictionary_ = dictionary;
+  }
 
   inline uint32_t numStrings() { return numStrings_; }
 
