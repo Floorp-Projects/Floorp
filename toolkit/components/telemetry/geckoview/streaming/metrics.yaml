@@ -10,6 +10,22 @@
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 
 geckoview:
+  page_load_progress_time:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: GV_PAGE_LOAD_PROGRESS_MS
+    description: >
+      Time between page load progress starts (0) and completion (100).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1499418
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - geckoview-team@mozilla.com
+      - esawin@mozilla.com
+    expires: never
+
   page_load_time:
     type: timing_distribution
     time_unit: millisecond
@@ -26,6 +42,24 @@ geckoview:
     notification_emails:
       - geckoview-team@mozilla.com
       - esawin@mozilla.com
+    expires: never
+
+  page_reload_time:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: GV_PAGE_RELOAD_MS
+    description: >
+      Time taken to reload a page. This includes all static contents, no dynamic content.
+      Loading of about: pages is not counted.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1549519
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - geckoview-team@mozilla.com
+      - sefeng@mozilla.com
+      - perfteam@mozilla.com
     expires: never
 
   startup_runtime:
@@ -391,4 +425,312 @@ gfx.webrender:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - kgupta@mozilla.com
+    expires: never
+
+network:
+  cache_hit_time:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: NETWORK_CACHE_V2_HIT_TIME_MS
+    description: >
+      Time to open existing cache entry file.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - hbambas@mozilla.com
+      - mnovotny@mozilla.com
+    expires: never
+
+  tls_handshake:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: HTTP_PAGE_TLS_HANDSHAKE
+    description: >
+      In the HTTP page channel, time from after the TCP SYN packet is received to the
+      secure connection is established and ready for HTTP.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=772589
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - necko@mozilla.com
+      - ddamjanovic@mozilla.com
+    expires: never
+
+  tcp_connection:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: HTTP_PAGE_TCP_CONNECTION_2
+    description: >
+      In the HTTP page channel, time from the TCP SYN packet is received to the connection
+      is established and ready for HTTP.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=772589
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - necko@mozilla.com
+      - ddamjanovic@mozilla.com
+    expires: never
+
+  dns_start:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: HTTP_PAGE_DNS_ISSUE_TIME
+    description: >
+      In the HTTP page channel, time from connection open to the DNS request being issued.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - necko@mozilla.com
+      - vogosu@mozilla.com
+    expires: never
+
+  dns_end:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: HTTP_PAGE_DNS_LOOKUP_TIME
+    description: >
+      In the HTTP page channel, time from the DNS request being issued to the response.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - necko@mozilla.com
+      - vogosu@mozilla.com
+    expires: never
+
+  font_download_end:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: WEBFONT_DOWNLOAD_TIME_AFTER_START
+    description: >
+      Time after navigationStart that all webfont downloads are completed.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - necko@mozilla.com
+      - bdekoz@mozilla.com
+    expires: never
+
+  first_from_cache:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: HTTP_PAGE_OPEN_TO_FIRST_FROM_CACHE_V2
+    description: >
+      In the HTTP page channel, time from connection open to cache read start.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - necko@mozilla.com
+      - mnovotny@mozilla.com
+    expires: never
+
+performance.time:
+  response_start:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: TIME_TO_RESPONSE_START_MS
+    description: >
+      Time from navigationStart to responseStart as per the W3C Performance Timing API.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1344893
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - hkirschner@mozilla.com
+      - vchin@mozilla.com
+      - sphilp@mozilla.com
+    expires: never
+
+  dom_interactive:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: TIME_TO_DOM_INTERACTIVE_MS
+    description: >
+      Time from navigationStart to domInteractive as per the W3C Performance Timing API.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?1344893
+      - https://bugzilla.mozilla.org/show_bug.cgi?1489524
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - hbambas@mozilla.com
+      - vgosu@mozilla.com
+    expires: never
+
+  dom_content_loaded_start:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: TIME_TO_DOM_CONTENT_LOADED_START_MS
+    description: >
+      Time from navigationStart to domContentLoadedEventStart as per the W3C Performance
+      Timing API.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1344893
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - bdekoz@mozilla.com
+    expires: never
+
+  dom_content_loaded_end:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: TIME_TO_DOM_CONTENT_LOADED_END_MS
+    description: >
+      Time from navigationStart to domContentLoadedEventEnd as per the W3C Performance
+      Timing API.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1344893
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - hkirschner@mozilla.com
+      - vchin@mozilla.com
+      - sphilp@mozilla.com
+    expires: never
+
+  dom_complete:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: TIME_TO_DOM_COMPLETE_MS
+    description: >
+      Time from navigationStart to domComplete as per the W3C Performance Timing API.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1344893
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - hbambas@mozilla.com
+      - vgosu@mozilla.com
+    expires: never
+
+  load_event_start:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: TIME_TO_LOAD_EVENT_START_MS
+    description: >
+      Time from navigationStart to loadEventStart as per the W3C Performance Timing API.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1344893
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - bdekoz@mozilla.com
+    expires: never
+
+  load_event_end:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: TIME_TO_LOAD_EVENT_END_MS
+    description: >
+      Time from navigationStart to loadEventEnd as per the W3C Performance Timing API.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1344893
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - hkirschner@mozilla.com
+      - vchin@mozilla.com
+      - sphilp@mozilla.com
+    expires: never
+
+performance.page:
+  non_blank_paint:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: TIME_TO_NON_BLANK_PAINT_MS
+    description: >
+      The time between navigationStart and the first non-blank paint of a foreground root
+      content document, in milliseconds. This only records documents that were in an
+      active docshell throughout the whole time between navigation start and non-blank
+      paint. The non-blank paint timestamp is taken during display list building and does
+      not include rasterization or compositing of that paint.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1307242
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1489524
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - hkirschner@mozilla.com
+      - vchin@mozilla.com
+      - sphilp@mozilla.com
+    expires: never
+
+  total_content_page_load:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: TOTAL_CONTENT_PAGE_LOAD_TIME
+    description: >
+      Time to load all of a page's resources and render.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - bdekoz@mozilla.com
+    expires: never
+
+performance.interaction:
+  keypress_present_latency:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: KEYPRESS_PRESENT_LATENCY
+    description: >
+      Time between receiving a keypress event in the event loop and compositing its
+      result onto the screen.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1506537
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - vchin@mozilla.com
+    expires: never
+
+  tab_switch_composite:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: FX_TAB_SWITCH_COMPOSITE_E10S_MS
+    description: >
+      Time between tab selection and first composite of the tab content onto the screen.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1481704
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1529352
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
+    notification_emails:
+      - mconley@mozilla.com
+      - dolske@mozilla.com
     expires: never
