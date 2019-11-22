@@ -60,6 +60,8 @@ html|textarea {
   background-repeat: no-repeat;
   -moz-appearance: none;
   -moz-window-shadow: none;
+  /* Set pointer-events: none; so that mousemove events can be handled by browser-content.js. */
+  pointer-events: none;
 }
 
 .autoscroller[scrolldir="NS"] {

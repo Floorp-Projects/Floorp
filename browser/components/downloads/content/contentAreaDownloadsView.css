@@ -4,6 +4,7 @@
 
 #downloadsListEmptyDescription {
   display: none;
+  pointer-events: none;
 }
 
 #downloadsRichListBox:empty + #downloadsListEmptyDescription {

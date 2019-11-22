@@ -184,6 +184,10 @@ menulist {
   -moz-window-dragging: no-drag;
 }
 
+titlebar {
+  pointer-events: auto !important;
+}
+
 /******* toolbar *******/
 
 toolbox {
