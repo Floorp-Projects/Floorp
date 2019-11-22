@@ -209,11 +209,16 @@ class FirefoxConnector {
       }
     }
 
-    // Resume is done automatically on page reload/navigation.
     if (this.actions && this.getState) {
       const state = this.getState();
+      // Resume is done automatically on page reload/navigation.
       if (!state.requests.recording) {
         this.actions.toggleRecording();
+      }
+
+      // Stop any ongoing search.
+      if (state.search.ongoingSearch) {
+        this.actions.stopOngoingSearch();
       }
     }
   }
