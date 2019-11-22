@@ -673,6 +673,12 @@ Toolbox.prototype = {
   },
 
   _stopThreadFrontListeners: function(threadFront) {
+    // Only cleanup thread listeners if it has been attached.
+    // We may have closed the toolbox before it attached, or
+    // we may not have attached to the target at all.
+    if (!threadFront) {
+      return;
+    }
     threadFront.off("paused", this._onPausedState);
     threadFront.off("resumed", this._onResumedState);
   },
