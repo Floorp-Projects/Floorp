@@ -1,6 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from helpers.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/framework/test/helpers.js",
+  this
+);
+
 // There are shutdown issues for which multiple rejections are left uncaught.
 // See bug 1018184 for resolving these issues.
 const { PromiseTestUtils } = ChromeUtils.import(
@@ -13,82 +19,17 @@ requestLongerTimeout(4);
 
 // Test that DevTools panels are rendered in "rtl" (right-to-left) in the Browser Toolbox.
 add_task(async function() {
-  await setupPreferencesForBrowserToolbox();
+  await pushPref("intl.uidirection", 1);
 
-  // Wait for a notification sent by a script evaluated in the webconsole
-  // of the browser toolbox.
-  const onCustomMessage = new Promise(resolve => {
-    Services.obs.addObserver(function listener(target, aTop, data) {
-      Services.obs.removeObserver(listener, "browser-toolbox-inspector-dir");
-      resolve(data);
-    }, "browser-toolbox-inspector-dir");
+  const ToolboxTask = await initBrowserToolboxTask();
+  await ToolboxTask.importFunctions({});
+
+  const dir = await ToolboxTask.spawn(null, async () => {
+    /* global gToolbox */
+    const inspector = await gToolbox.selectTool("inspector");
+    return inspector.panelDoc.dir;
   });
+  is(dir, "rtl", "Inspector panel has the expected direction");
 
-  const env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-  env.set(
-    "MOZ_TOOLBOX_TEST_SCRIPT",
-    "new function() {(" + testScript + ")();}"
-  );
-  registerCleanupFunction(() => env.set("MOZ_TOOLBOX_TEST_SCRIPT", ""));
-
-  const { BrowserToolboxProcess } = ChromeUtils.import(
-    "resource://devtools/client/framework/ToolboxProcess.jsm"
-  );
-
-  let closePromise;
-  await new Promise(onRun => {
-    closePromise = new Promise(onClose => {
-      info("Opening the browser toolbox");
-      BrowserToolboxProcess.init(onClose, onRun);
-    });
-  });
-  info("Browser toolbox started");
-
-  const inspectorPanelDirection = await onCustomMessage;
-  info("Received the custom message");
-  is(
-    inspectorPanelDirection,
-    "rtl",
-    "Inspector panel has the expected direction"
-  );
-
-  await closePromise;
-  info("Browser toolbox process just closed");
-  is(
-    BrowserToolboxProcess.getBrowserToolboxSessionState(),
-    false,
-    "No session state after closing"
-  );
+  await ToolboxTask.destroy();
 });
-
-// Be careful, this JS function is going to be executed in the addon toolbox,
-// which lives in another process. So do not try to use any scope variable!
-async function testScript() {
-  /* global toolbox */
-  // Get the current direction of the inspector panel.
-  const inspector = await toolbox.selectTool("inspector");
-  const dir = inspector.panelDoc.dir;
-
-  // Switch to the webconsole to send the result to the main test.
-  const webconsole = await toolbox.selectTool("webconsole");
-  const js = `Services.obs.notifyObservers(null, "browser-toolbox-inspector-dir", "${dir}");`;
-
-  const onResult = new Promise(resolve => {
-    const onNewMessages = messages => {
-      for (const message of messages) {
-        if (message.node.classList.contains("result")) {
-          webconsole.hud.ui.off("new-messages", onNewMessages);
-          resolve();
-        }
-      }
-    };
-    webconsole.hud.ui.on("new-messages", onNewMessages);
-  });
-  webconsole.hud.ui.wrapper.dispatchEvaluateExpression(js);
-  await onResult;
-
-  // Destroy the toolbox.
-  await toolbox.destroy();
-}
