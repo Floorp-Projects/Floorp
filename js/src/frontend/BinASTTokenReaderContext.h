@@ -1484,6 +1484,12 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
     template <Compression Compression>
     void advanceBitBuffer(const uint8_t bitLength);
 
+    // Returns the number of buffered but unused bytes.
+    size_t numUnusedBytes() const { return bitLength_ / 8; }
+
+    // Release all buffer.
+    void flush() { bitLength_ = 0; }
+
    private:
     // The contents of the buffer.
     //
@@ -1540,6 +1546,18 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
    */
   MOZ_MUST_USE JS::Result<Ok> readHeader();
 
+  /**
+   * Read the footer of the tree, that contains lazy functions.
+   */
+  MOZ_MUST_USE JS::Result<Ok> readTreeFooter();
+
+ private:
+  /**
+   * Stop reading bit stream and unget unused buffer.
+   */
+  void flushBitStream();
+
+ public:
   /**
    * Read the string dictionary from the header of the file.
    */
@@ -1611,6 +1629,11 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
    */
   MOZ_MUST_USE JS::Result<SkippableSubTree> readSkippableSubTree(
       const FieldContext&);
+
+  /**
+   * Register LazyScript for later modification.
+   */
+  MOZ_MUST_USE JS::Result<Ok> registerLazyScript(LazyScript* lazy);
 
   // --- Composite values.
   //
@@ -1746,6 +1769,10 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   BinASTSourceMetadataContext* metadata_;
 
   const uint8_t* posBeforeTree_;
+
+  // LazyScript created while reading the tree.
+  // After reading tree, the start/end offset are set to correct value.
+  Rooted<GCVector<LazyScript*>> lazyScripts_;
 
  public:
   BinASTTokenReaderContext(const BinASTTokenReaderContext&) = delete;

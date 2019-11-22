@@ -137,6 +137,8 @@ JS::Result<ParseNode*> BinASTParserPerTokenizer<Tok>::parseAux(
   const auto topContext = RootContext();
   MOZ_TRY_VAR(result, asFinalParser()->parseProgram(topContext));
 
+  MOZ_TRY(tokenizer_->readTreeFooter());
+
   mozilla::Maybe<GlobalScope::Data*> bindings =
       NewGlobalScopeData(cx_, varScope, alloc_, pc_);
   if (MOZ_UNLIKELY(!bindings)) {
@@ -375,6 +377,8 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::finishLazyFunction(
   }
   MOZ_ASSERT(lazy->isBinAST());
   funbox->initLazyScript(lazy);
+
+  MOZ_TRY(tokenizer_->registerLazyScript(lazy));
 
   return Ok();
 }

@@ -1031,7 +1031,8 @@ BinASTTokenReaderContext::BinASTTokenReaderContext(JSContext* cx,
                                                    const size_t length)
     : BinASTTokenReaderBase(cx, er, start, length),
       metadata_(nullptr),
-      posBeforeTree_(nullptr) {
+      posBeforeTree_(nullptr),
+      lazyScripts_(cx) {
   MOZ_ASSERT(er);
 }
 
@@ -1105,6 +1106,38 @@ JS::Result<Ok> BinASTTokenReaderContext::readHeader() {
   MOZ_TRY(readHuffmanPrelude());
 
   return Ok();
+}
+
+JS::Result<Ok> BinASTTokenReaderContext::readTreeFooter() {
+  flushBitStream();
+
+  BINJS_MOZ_TRY_DECL(numLazy, readVarU32<Compression::No>());
+  if (numLazy != lazyScripts_.length()) {
+    return raiseError("The number of lazy functions does not match");
+  }
+
+  for (size_t i = 0; i < numLazy; i++) {
+    BINJS_MOZ_TRY_DECL(len, readVarU32<Compression::No>());
+    // Use sourceEnd as temporary space to store length of each script.
+    lazyScripts_[i]->setPositions(0, len, 0, len);
+  }
+
+  for (size_t i = 0; i < numLazy; i++) {
+    uint32_t begin = offset();
+    uint32_t len = lazyScripts_[i]->sourceEnd();
+
+    current_ += len;
+
+    lazyScripts_[0]->setPositions(begin, begin + len, begin, begin + len);
+    lazyScripts_[0]->setColumn(begin);
+  }
+
+  return Ok();
+}
+
+void BinASTTokenReaderContext::flushBitStream() {
+  current_ -= bitBuffer.numUnusedBytes();
+  bitBuffer.flush();
 }
 
 JS::Result<Ok> BinASTTokenReaderContext::readStringPrelude() {
@@ -1428,7 +1461,13 @@ JS::Result<uint32_t> BinASTTokenReaderContext::readUnsignedLong(
 
 JS::Result<BinASTTokenReaderBase::SkippableSubTree>
 BinASTTokenReaderContext::readSkippableSubTree(const FieldContext&) {
-  return raiseError("Not Yet Implemented");
+  // Postions are set when reading lazy functions after the tree.
+  return SkippableSubTree(0, 0);
+}
+
+JS::Result<Ok> BinASTTokenReaderContext::registerLazyScript(LazyScript* lazy) {
+  BINJS_TRY(lazyScripts_.append(lazy));
+  return Ok();
 }
 
 JS::Result<Ok> BinASTTokenReaderContext::enterSum(

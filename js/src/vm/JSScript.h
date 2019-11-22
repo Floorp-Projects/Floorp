@@ -1673,6 +1673,29 @@ class BaseScript : public gc::TenuredCell {
   uint32_t toStringStart() const { return toStringStart_; }
   uint32_t toStringEnd() const { return toStringEnd_; }
 
+#if defined(JS_BUILD_BINAST)
+  // Set the position of the function in the source code.
+  //
+  // BinAST file format can put lazy functions after the entire tree,
+  // and in that case LazyScript::Create will be called with
+  // dummy values for those positions, and then once it reaches to the lazy
+  // function part, this function is called to set those positions to
+  // correct value.
+  void setPositions(uint32_t sourceStart, uint32_t sourceEnd,
+                    uint32_t toStringStart, uint32_t toStringEnd) {
+    MOZ_ASSERT(toStringStart <= sourceStart);
+    MOZ_ASSERT(sourceStart <= sourceEnd);
+    MOZ_ASSERT(sourceEnd <= toStringEnd);
+
+    sourceStart_ = sourceStart;
+    sourceEnd_ = sourceEnd;
+    toStringStart_ = toStringStart;
+    toStringEnd_ = toStringEnd;
+  }
+
+  void setColumn(uint32_t column) { column_ = column; }
+#endif
+
   void setToStringEnd(uint32_t toStringEnd) {
     MOZ_ASSERT(toStringStart_ <= toStringEnd);
     MOZ_ASSERT(toStringEnd_ >= sourceEnd_);

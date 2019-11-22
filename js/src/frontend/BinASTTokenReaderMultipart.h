@@ -68,6 +68,11 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
    */
   MOZ_MUST_USE JS::Result<Ok> readHeader();
 
+  /**
+   * Read the footer of the tree, that multipart format doesn't have.
+   */
+  MOZ_MUST_USE JS::Result<Ok> readTreeFooter() { return Ok(); }
+
   // --- Primitive values.
   //
   // Note that the underlying format allows for a `null` value for primitive
@@ -139,6 +144,14 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
    */
   MOZ_MUST_USE JS::Result<SkippableSubTree> readSkippableSubTree(
       const FieldContext&);
+
+  /**
+   * Register LazyScript for later modification.
+   * Not used in multipart format.
+   */
+  MOZ_MUST_USE JS::Result<Ok> registerLazyScript(LazyScript* lazy) {
+    return Ok();
+  }
 
   // --- Composite values.
   //
