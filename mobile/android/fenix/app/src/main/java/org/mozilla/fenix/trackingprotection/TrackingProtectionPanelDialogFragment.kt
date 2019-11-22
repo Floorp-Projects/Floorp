@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.whenStarted
+import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.android.synthetic.main.fragment_tracking_protection.view.*
@@ -39,28 +40,7 @@ import org.mozilla.fenix.ext.requireComponents
 
 class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), BackHandler {
 
-    private val safeArguments get() = requireNotNull(arguments)
-
-    private val sessionId: String by lazy {
-        TrackingProtectionPanelDialogFragmentArgs.fromBundle(
-            safeArguments
-        ).sessionId
-    }
-
-    private val url: String by lazy {
-        TrackingProtectionPanelDialogFragmentArgs.fromBundle(safeArguments).url
-    }
-
-    private val trackingProtectionEnabled: Boolean by lazy {
-        TrackingProtectionPanelDialogFragmentArgs.fromBundle(safeArguments)
-            .trackingProtectionEnabled
-    }
-
-    private val promptGravity: Int by lazy {
-        TrackingProtectionPanelDialogFragmentArgs.fromBundle(
-            safeArguments
-        ).gravity
-    }
+    private val args by navArgs<TrackingProtectionPanelDialogFragmentArgs>()
 
     private fun inflateRootView(container: ViewGroup? = null): View {
         val contextThemeWrapper = ContextThemeWrapper(
@@ -84,16 +64,16 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), BackHan
         savedInstanceState: Bundle?
     ): View? {
         val view = inflateRootView(container)
-        val session = requireComponents.core.sessionManager.findSessionById(sessionId)
+        val session = requireComponents.core.sessionManager.findSessionById(args.sessionId)
         session?.register(sessionObserver, view = view)
         trackingProtectionStore = StoreProvider.get(this) {
             TrackingProtectionStore(
                 TrackingProtectionState(
                     session,
-                    url,
-                    trackingProtectionEnabled,
-                    listOf(),
-                    TrackingProtectionState.Mode.Normal
+                    args.url,
+                    args.trackingProtectionEnabled,
+                    listTrackers = listOf(),
+                    mode = TrackingProtectionState.Mode.Normal
                 )
             )
         }
@@ -127,7 +107,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), BackHan
     private fun updateTrackers() {
         context?.let { context ->
             val session =
-                context.components.core.sessionManager.findSessionById(sessionId) ?: return
+                context.components.core.sessionManager.findSessionById(args.sessionId) ?: return
             val useCase = TrackingProtectionUseCases(
                 sessionManager = context.components.core.sessionManager,
                 engine = context.components.core.engine
@@ -174,7 +154,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), BackHan
                 sessionManager = context.components.core.sessionManager,
                 engine = context.components.core.engine
             )
-            val session = context.components.core.sessionManager.findSessionById(sessionId)
+            val session = context.components.core.sessionManager.findSessionById(args.sessionId)
             session?.let {
                 if (isEnabled) {
                     useCase.removeException(it)
@@ -192,7 +172,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), BackHan
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        return if (promptGravity == Gravity.BOTTOM) {
+        return if (args.gravity == Gravity.BOTTOM) {
             object : BottomSheetDialog(requireContext(), this.theme) {
                 override fun onBackPressed() {
                     this@TrackingProtectionPanelDialogFragment.onBackPressed()
@@ -224,7 +204,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), BackHan
         )
 
         window?.apply {
-            setGravity(promptGravity)
+            setGravity(args.gravity)
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             // This must be called after addContentView, or it won't fully fill to the edge.
             setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)

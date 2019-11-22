@@ -313,8 +313,8 @@ class CollectionCreationView(
         }
     }
 
-    fun onKey(keyCode: Int, event: KeyEvent?): Boolean {
-        return if (event?.action == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
+    fun onKey(keyCode: Int, event: KeyEvent): Boolean {
+        return if (event.action == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
             interactor.onBackPressed(step)
             true
         } else {

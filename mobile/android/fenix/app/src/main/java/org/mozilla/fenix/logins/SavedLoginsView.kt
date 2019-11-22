@@ -5,7 +5,6 @@
 package org.mozilla.fenix.logins
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.view.isVisible
@@ -29,26 +28,25 @@ interface SavedLoginsViewInteractor {
  * View that contains and configures the Saved Logins List
  */
 class SavedLoginsView(
-    private val container: ViewGroup,
+    override val containerView: ViewGroup,
     val interactor: SavedLoginsInteractor
 ) : LayoutContainer {
 
-    val view: FrameLayout = LayoutInflater.from(container.context)
-        .inflate(R.layout.component_saved_logins, container, true)
+    val view: FrameLayout = LayoutInflater.from(containerView.context)
+        .inflate(R.layout.component_saved_logins, containerView, true)
         .findViewById(R.id.saved_logins_wrapper)
 
-    override val containerView: View?
-        get() = container
+    private val loginsAdapter = SavedLoginsAdapter(interactor)
 
     init {
         view.saved_logins_list.apply {
-            adapter = SavedLoginsAdapter(interactor)
-            layoutManager = LinearLayoutManager(container.context)
+            adapter = loginsAdapter
+            layoutManager = LinearLayoutManager(containerView.context)
         }
     }
 
     fun update(state: SavedLoginsFragmentState) {
         view.saved_logins_list.isVisible = state.items.isNotEmpty()
-        (view.saved_logins_list.adapter as SavedLoginsAdapter).updateData(state.items)
+        loginsAdapter.submitList(state.items)
     }
 }

@@ -22,6 +22,10 @@ import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.settings.SupportUtils
 
+/**
+ * Displays a list of sites that are exempted from Tracking Protection,
+ * along with controls to remove the exception.
+ */
 class ExceptionsFragment : Fragment() {
     private lateinit var exceptionsStore: ExceptionsFragmentStore
     private lateinit var exceptionsView: ExceptionsView
@@ -89,11 +93,8 @@ class ExceptionsFragment : Fragment() {
 
     private fun reloadExceptions() {
         trackingProtectionUseCases.fetchExceptions { resultList ->
-            exceptionsStore.dispatch(ExceptionsFragmentAction.Change(resultList.map {
-                ExceptionsItem(
-                    it
-                )
-            }))
+            val exceptionsList = resultList.map { ExceptionsItem(it) }
+            exceptionsStore.dispatch(ExceptionsFragmentAction.Change(exceptionsList))
         }
     }
 }

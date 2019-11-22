@@ -13,6 +13,9 @@ import org.mozilla.fenix.exceptions.ExceptionsItem
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
 
+/**
+ * View holder for a single website that is exempted from Tracking Protection.
+ */
 class ExceptionsListItemViewHolder(
     view: View,
     private val interactor: ExceptionsInteractor

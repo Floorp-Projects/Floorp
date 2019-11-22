@@ -6,49 +6,43 @@ package org.mozilla.fenix.exceptions
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsDeleteButtonViewHolder
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsHeaderViewHolder
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsListItemViewHolder
 
-private sealed class AdapterItem {
+sealed class AdapterItem {
     object DeleteButton : AdapterItem()
     object Header : AdapterItem()
     data class Item(val item: ExceptionsItem) : AdapterItem()
 }
 
-private class ExceptionsList(val exceptions: List<ExceptionsItem>) {
-    val items: List<AdapterItem>
-
-    init {
-        val items = mutableListOf<AdapterItem>()
-        items.add(AdapterItem.Header)
-        for (exception in exceptions) {
-            items.add(AdapterItem.Item(exception))
-        }
-        items.add(AdapterItem.DeleteButton)
-        this.items = items
-    }
-}
-
+/**
+ * Adapter for a list of sites that are exempted from Tracking Protection,
+ * along with controls to remove the exception.
+ */
 class ExceptionsAdapter(
     private val interactor: ExceptionsInteractor
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-    private var exceptionsList: ExceptionsList = ExceptionsList(emptyList())
+) : ListAdapter<AdapterItem, RecyclerView.ViewHolder>(DiffCallback) {
 
-    fun updateData(items: List<ExceptionsItem>) {
-        this.exceptionsList = ExceptionsList(items)
-        notifyDataSetChanged()
+    /**
+     * Change the list of items that are displayed.
+     * Header and footer items are added to the list as well.
+     */
+    fun updateData(exceptions: List<ExceptionsItem>) {
+        val adapterItems = mutableListOf<AdapterItem>()
+        adapterItems.add(AdapterItem.Header)
+        exceptions.mapTo(adapterItems) { AdapterItem.Item(it) }
+        adapterItems.add(AdapterItem.DeleteButton)
+        submitList(adapterItems)
     }
 
-    override fun getItemCount(): Int = exceptionsList.items.size
-
-    override fun getItemViewType(position: Int): Int {
-        return when (exceptionsList.items[position]) {
-            is AdapterItem.DeleteButton -> ExceptionsDeleteButtonViewHolder.LAYOUT_ID
-            is AdapterItem.Header -> ExceptionsHeaderViewHolder.LAYOUT_ID
-            is AdapterItem.Item -> ExceptionsListItemViewHolder.LAYOUT_ID
-        }
+    override fun getItemViewType(position: Int) = when (getItem(position)) {
+        AdapterItem.DeleteButton -> ExceptionsDeleteButtonViewHolder.LAYOUT_ID
+        AdapterItem.Header -> ExceptionsHeaderViewHolder.LAYOUT_ID
+        is AdapterItem.Item -> ExceptionsListItemViewHolder.LAYOUT_ID
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -66,10 +60,18 @@ class ExceptionsAdapter(
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when (holder) {
-            is ExceptionsListItemViewHolder -> (exceptionsList.items[position] as AdapterItem.Item).also {
-                holder.bind(it.item)
-            }
+        if (holder is ExceptionsListItemViewHolder) {
+            val adapterItem = getItem(position) as AdapterItem.Item
+            holder.bind(adapterItem.item)
         }
+    }
+
+    private object DiffCallback : DiffUtil.ItemCallback<AdapterItem>() {
+        override fun areItemsTheSame(oldItem: AdapterItem, newItem: AdapterItem) =
+            areContentsTheSame(oldItem, newItem)
+
+        @Suppress("DiffUtilEquals")
+        override fun areContentsTheSame(oldItem: AdapterItem, newItem: AdapterItem) =
+            oldItem == newItem
     }
 }

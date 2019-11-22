@@ -5,9 +5,6 @@
 package org.mozilla.fenix.trackingprotection
 
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory.CRYPTOMINING
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory.FINGERPRINTING
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory.MOZILLA_SOCIAL
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import org.mozilla.fenix.ext.tryGetHostFromUrl
@@ -27,7 +24,7 @@ class TrackerBuckets {
 
     private var trackers = emptyList<TrackerLog>()
 
-    data class BucketedTrackerLog(var blockedBucketMap: BucketMap, var loadedBucketMap: BucketMap)
+    data class BucketedTrackerLog(val blockedBucketMap: BucketMap, val loadedBucketMap: BucketMap)
 
     var buckets: BucketedTrackerLog = BucketedTrackerLog(emptyMap(), emptyMap())
         private set
@@ -60,78 +57,63 @@ class TrackerBuckets {
         if (blocked) buckets.blockedBucketMap[key].orEmpty() else buckets.loadedBucketMap[key].orEmpty()
 
     companion object {
-        @Suppress("ComplexMethod")
+
         private fun putTrackersInBuckets(
             list: List<TrackerLog>
         ): BucketedTrackerLog {
-            val blockedMap =
-                EnumMap<TrackingProtectionCategory, List<String>>(TrackingProtectionCategory::class.java)
-            val loadedMap =
-                EnumMap<TrackingProtectionCategory, List<String>>(TrackingProtectionCategory::class.java)
+            val blockedMap = createMap()
+            val loadedMap = createMap()
             for (item in list) {
-
                 if (item.cookiesHasBeenBlocked) {
-                    blockedMap[CROSS_SITE_TRACKING_COOKIES] =
-                        blockedMap[CROSS_SITE_TRACKING_COOKIES].orEmpty() + item.url.tryGetHostFromUrl()
+                    blockedMap.addTrackerHost(CROSS_SITE_TRACKING_COOKIES, item)
                 }
 
                 // Blocked categories
-                bucketBlockedCategories(item, blockedMap)
+                for (category in item.blockedCategories) {
+                    blockedMap.addTrackerHost(category, item)
+                }
 
                 // Loaded categories
-                bucketLoadedCategories(item, loadedMap)
+                for (category in item.loadedCategories) {
+                    loadedMap.addTrackerHost(category, item)
+                }
             }
             return BucketedTrackerLog(blockedMap, loadedMap)
         }
 
-        private fun bucketLoadedCategories(
-            item: TrackerLog,
-            loadedMap: EnumMap<TrackingProtectionCategory, List<String>>
+        /**
+         * Create an empty mutable map of [TrackingProtectionCategory] to hostnames.
+         */
+        private fun createMap() =
+            EnumMap<TrackingProtectionCategory, MutableList<String>>(TrackingProtectionCategory::class.java)
+
+        /**
+         * Add the hostname of the [TrackerLog.url] into the map for the given category
+         * from Android Components. The category is transformed into a corresponding Fenix bucket,
+         * and the item is discarded if the category doesn't have a match.
+         */
+        private fun MutableMap<TrackingProtectionCategory, MutableList<String>>.addTrackerHost(
+            category: TrackingCategory,
+            tracker: TrackerLog
         ) {
-            item.loadedCategories.forEach { category ->
-                if (CRYPTOMINING == category) {
-                    loadedMap[CRYPTOMINERS] = loadedMap[CRYPTOMINERS].orEmpty() +
-                            item.url.tryGetHostFromUrl()
-                }
-                if (FINGERPRINTING == category) {
-                    loadedMap[FINGERPRINTERS] = loadedMap[FINGERPRINTERS].orEmpty() +
-                            item.url.tryGetHostFromUrl()
-                }
-                if (MOZILLA_SOCIAL == category) {
-                    loadedMap[SOCIAL_MEDIA_TRACKERS] =
-                        loadedMap[SOCIAL_MEDIA_TRACKERS].orEmpty() +
-                                item.url.tryGetHostFromUrl()
-                }
-                if (TrackingCategory.SCRIPTS_AND_SUB_RESOURCES == category) {
-                    loadedMap[TRACKING_CONTENT] = loadedMap[TRACKING_CONTENT].orEmpty() +
-                            item.url.tryGetHostFromUrl()
-                }
+            val key = when (category) {
+                TrackingCategory.CRYPTOMINING -> CRYPTOMINERS
+                TrackingCategory.FINGERPRINTING -> FINGERPRINTERS
+                TrackingCategory.MOZILLA_SOCIAL -> SOCIAL_MEDIA_TRACKERS
+                TrackingCategory.SCRIPTS_AND_SUB_RESOURCES -> TRACKING_CONTENT
+                else -> return
             }
+            addTrackerHost(key, tracker)
         }
 
-        private fun bucketBlockedCategories(
-            item: TrackerLog,
-            blockedMap: EnumMap<TrackingProtectionCategory, List<String>>
+        /**
+         * Add the hostname of the [TrackerLog.url] into the map for the given [TrackingProtectionCategory].
+         */
+        private fun MutableMap<TrackingProtectionCategory, MutableList<String>>.addTrackerHost(
+            key: TrackingProtectionCategory,
+            tracker: TrackerLog
         ) {
-            item.blockedCategories.forEach { category ->
-                if (CRYPTOMINING == category) {
-                    blockedMap[CRYPTOMINERS] = blockedMap[CRYPTOMINERS].orEmpty() +
-                            item.url.tryGetHostFromUrl()
-                }
-                if (FINGERPRINTING == category) {
-                    blockedMap[FINGERPRINTERS] = blockedMap[FINGERPRINTERS].orEmpty() +
-                            item.url.tryGetHostFromUrl()
-                }
-                if (MOZILLA_SOCIAL == category) {
-                    blockedMap[SOCIAL_MEDIA_TRACKERS] =
-                        blockedMap[SOCIAL_MEDIA_TRACKERS].orEmpty() +
-                                item.url.tryGetHostFromUrl()
-                }
-                if (TrackingCategory.SCRIPTS_AND_SUB_RESOURCES == category) {
-                    blockedMap[TRACKING_CONTENT] = blockedMap[TRACKING_CONTENT].orEmpty() +
-                            item.url.tryGetHostFromUrl()
-                }
-            }
+            getOrPut(key) { mutableListOf() }.add(tracker.url.tryGetHostFromUrl())
         }
     }
 }
