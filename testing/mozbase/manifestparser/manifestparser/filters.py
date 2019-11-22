@@ -294,15 +294,14 @@ class chunk_by_manifest(InstanceFilter):
             tests_by_manifest.append(mtests)
         tests_by_manifest.sort(reverse=True, key=lambda x: len(x))
 
-        tests_by_chunk = [[0, []] for i in range(self.total_chunks)]
-        for key, batch in tests_by_manifest:
+        tests_by_chunk = [[] for i in range(self.total_chunks)]
+        for batch in tests_by_manifest:
             # Sort to guarantee the chunk with the lowest score will always
             # get the next batch of tests.
             tests_by_chunk.sort(key=lambda x: len(x))
-            tests_by_chunk[0][0] += key
-            tests_by_chunk[0][1].extend(batch)
+            tests_by_chunk[0].extend(batch)
 
-        return (t for t in tests_by_chunk[self.this_chunk - 1][1])
+        return (t for t in tests_by_chunk[self.this_chunk - 1])
 
 
 class chunk_by_runtime(InstanceFilter):
