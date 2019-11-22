@@ -280,7 +280,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
 
   enum class MetadataOwnership { Owned, Unowned };
   MetadataOwnership metadataOwned_ = MetadataOwnership::Owned;
-  BinASTSourceMetadata* metadata_;
+  BinASTSourceMetadataMultipart* metadata_;
 
   const uint8_t* posBeforeTree_;
 

@@ -1078,7 +1078,7 @@ BinASTSourceMetadata* BinASTTokenReaderContext::takeMetadata() {
 
 JS::Result<Ok> BinASTTokenReaderContext::initFromScriptSource(
     ScriptSource* scriptSource) {
-  metadata_ = scriptSource->binASTSourceMetadata();
+  metadata_ = scriptSource->binASTSourceMetadata()->asContext();
   metadataOwned_ = MetadataOwnership::Unowned;
 
   return Ok();
@@ -1113,8 +1113,8 @@ JS::Result<Ok> BinASTTokenReaderContext::readStringPrelude() {
     return raiseError("Too many entries in strings dictionary");
   }
 
-  BinASTSourceMetadata* metadata =
-      BinASTSourceMetadata::Create(stringsNumberOfEntries);
+  BinASTSourceMetadataContext* metadata =
+      BinASTSourceMetadataContext::create(stringsNumberOfEntries);
   if (MOZ_UNLIKELY(!metadata)) {
     return raiseOOM();
   }
@@ -1145,9 +1145,6 @@ JS::Result<Ok> BinASTTokenReaderContext::readStringPrelude() {
 
     const char* start = reinterpret_cast<const char*>(current_);
     BINJS_TRY_VAR(atom, AtomizeWTF8Chars(cx_, start, end - current_));
-
-    // FIXME: We don't populate `slicesTable_` given we won't use it.
-    //        Update BinASTSourceMetadata to reflect this.
 
     metadata->getAtom(stringIndex) = atom;
 
