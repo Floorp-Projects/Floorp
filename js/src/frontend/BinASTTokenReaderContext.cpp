@@ -1385,13 +1385,17 @@ JS::Result<double> BinASTTokenReaderContext::readDouble(
 JS::Result<JSAtom*> BinASTTokenReaderContext::readMaybeAtom(
     const FieldContext& context) {
   BINJS_MOZ_TRY_DECL(result, readFieldFromTable(context.position_));
-  return result.toAtom();
+  if (result.isNullAtom()) {
+    return nullptr;
+  }
+  return metadata_->getAtom(result.toAtomIndex());
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderContext::readAtom(
     const FieldContext& context) {
   BINJS_MOZ_TRY_DECL(result, readFieldFromTable(context.position_));
-  return result.toAtom();
+  MOZ_ASSERT(!result.isNullAtom());
+  return metadata_->getAtom(result.toAtomIndex());
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderContext::readMaybeIdentifierName(
@@ -2662,7 +2666,7 @@ MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
   if (MOZ_UNLIKELY(index > reader_.metadata_->numStrings())) {
     return raiseInvalidTableData(entry.identity_);
   }
-  return BinASTSymbol::fromAtom(reader_.metadata_->getAtom(index));
+  return BinASTSymbol::fromAtomIndex(index);
 }
 
 // Reading a single-value table of string indices.
@@ -2673,8 +2677,7 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<String>(
   if (MOZ_UNLIKELY(index > reader_.metadata_->numStrings())) {
     return raiseInvalidTableData(entry.identity_);
   }
-  JSAtom* value = reader_.metadata_->getAtom(index);
-  MOZ_TRY(table.initWithSingleValue(cx_, BinASTSymbol::fromAtom(value)));
+  MOZ_TRY(table.initWithSingleValue(cx_, BinASTSymbol::fromAtomIndex(index)));
   return Ok();
 }
 
@@ -2699,13 +2702,15 @@ template <>
 MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
     const MaybeString& entry, size_t) {
   BINJS_MOZ_TRY_DECL(index, reader_.readVarU32<Compression::No>());
+  // (index == 0) is specified as `null` value and
+  // (index > 0) maps to (index - 1)-th atom.
   if (index == 0) {
-    return BinASTSymbol::fromAtom(nullptr);
+    return BinASTSymbol::nullAtom();
   }
   if (MOZ_UNLIKELY(index > reader_.metadata_->numStrings() + 1)) {
     return raiseInvalidTableData(entry.identity_);
   }
-  return BinASTSymbol::fromAtom(reader_.metadata_->getAtom(index - 1));
+  return BinASTSymbol::fromAtomIndex(index - 1);
 }
 
 // Reading a single-value table of string indices.
@@ -2717,8 +2722,14 @@ HuffmanPreludeReader::readSingleValueTable<MaybeString>(
   if (MOZ_UNLIKELY(index > reader_.metadata_->numStrings() + 1)) {
     return raiseInvalidTableData(entry.identity_);
   }
-  JSAtom* symbol = index == 0 ? nullptr : reader_.metadata_->getAtom(index - 1);
-  MOZ_TRY(table.initWithSingleValue(cx_, BinASTSymbol::fromAtom(symbol)));
+  // (index == 0) is specified as `null` value and
+  // (index > 0) maps to (index - 1)-th atom.
+  if (index == 0) {
+    MOZ_TRY(table.initWithSingleValue(cx_, BinASTSymbol::nullAtom()));
+  } else {
+    MOZ_TRY(
+        table.initWithSingleValue(cx_, BinASTSymbol::fromAtomIndex(index - 1)));
+  }
   return Ok();
 }
 
