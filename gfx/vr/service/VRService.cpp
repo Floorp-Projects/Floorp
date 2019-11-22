@@ -157,7 +157,8 @@ void VRService::ServiceInitialize() {
   }
 
   mShutdownRequested = false;
-  memset(&mBrowserState, 0, sizeof(mBrowserState));
+  // Get initial state from the browser
+  PullState(mBrowserState);
 
   // Try to start a VRSession
   UniquePtr<VRSession> session;
@@ -166,7 +167,7 @@ void VRService::ServiceInitialize() {
     // When the VR Puppet is enabled, we don't want
     // to enumerate any real devices
     session = MakeUnique<PuppetSession>();
-    if (!session->Initialize(mSystemState)) {
+    if (!session->Initialize(mSystemState, mBrowserState.detectRuntimesOnly)) {
       session = nullptr;
     }
   } else {
@@ -177,7 +178,8 @@ void VRService::ServiceInitialize() {
     // Try Oculus
     if (!session) {
       session = MakeUnique<OculusSession>();
-      if (!session->Initialize(mSystemState)) {
+      if (!session->Initialize(mSystemState,
+                               mBrowserState.detectRuntimesOnly)) {
         session = nullptr;
       }
     }
@@ -188,7 +190,8 @@ void VRService::ServiceInitialize() {
     // Try OpenVR
     if (!session) {
       session = MakeUnique<OpenVRSession>();
-      if (!session->Initialize(mSystemState)) {
+      if (!session->Initialize(mSystemState,
+                               mBrowserState.detectRuntimesOnly)) {
         session = nullptr;
       }
     }
@@ -197,7 +200,8 @@ void VRService::ServiceInitialize() {
     // Try OSVR
     if (!session) {
       session = MakeUnique<OSVRSession>();
-      if (!session->Initialize(mSystemState)) {
+      if (!session->Initialize(mSystemState,
+                               mBrowserState.detectRuntimesOnly)) {
         session = nullptr;
       }
     }
@@ -222,10 +226,17 @@ void VRService::ServiceInitialize() {
     // later and resolve WebVR promises.  A failure or shutdown is
     // indicated by enumerationCompleted being set to true, with all
     // other fields remaining zeroed out.
+    VRDisplayCapabilityFlags capFlags =
+        mSystemState.displayState.capabilityFlags;
     memset(&mSystemState, 0, sizeof(mSystemState));
     mSystemState.enumerationCompleted = true;
-    mSystemState.displayState.minRestartInterval =
-        StaticPrefs::dom_vr_external_notdetected_timeout();
+
+    if (mBrowserState.detectRuntimesOnly) {
+      mSystemState.displayState.capabilityFlags = capFlags;
+    } else {
+      mSystemState.displayState.minRestartInterval =
+          StaticPrefs::dom_vr_external_notdetected_timeout();
+    }
     mSystemState.displayState.shutdown = true;
     PushState(mSystemState);
   }

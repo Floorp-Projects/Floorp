@@ -30,7 +30,8 @@ class OculusSession : public VRSession {
   OculusSession();
   virtual ~OculusSession();
 
-  bool Initialize(mozilla::gfx::VRSystemState& aSystemState) override;
+  bool Initialize(mozilla::gfx::VRSystemState& aSystemState,
+                  bool aDetectRuntimesOnly) override;
   void Shutdown() override;
   void ProcessEvents(mozilla::gfx::VRSystemState& aSystemState) override;
   void StartFrame(mozilla::gfx::VRSystemState& aSystemState) override;
