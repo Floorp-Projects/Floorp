@@ -632,18 +632,19 @@ void VideoSink::MaybeResolveEndPromise() {
       }
     }
 
+    TimeStamp nowTime;
+    const auto clockTime = mAudioSink->GetPosition(&nowTime);
+
     // Clear future frames from the compositor, in case the playback position
     // unexpectedly jumped to the end, and all frames between the previous
     // playback position and the end were discarded. Old frames based on the
     // previous playback position might still be queued in the compositor. See
     // bug 1598143 for when this can happen.
-    mContainer->ClearFutureFrames();
+    mContainer->ClearFutureFrames(nowTime);
     if (mSecondaryContainer) {
-      mSecondaryContainer->ClearFutureFrames();
+      mSecondaryContainer->ClearFutureFrames(nowTime);
     }
 
-    TimeStamp nowTime;
-    const auto clockTime = mAudioSink->GetPosition(&nowTime);
     if (clockTime < mVideoFrameEndTime) {
       VSINK_LOG_V(
           "Not reach video end time yet, reschedule timer to resolve "
