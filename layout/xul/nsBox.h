@@ -84,8 +84,6 @@ class nsBox : public nsIFrame {
 
   static bool gGotTheme;
   static mozilla::StaticRefPtr<nsITheme> gTheme;
-
-  enum eMouseThrough { unset, never, always };
 };
 
 #endif

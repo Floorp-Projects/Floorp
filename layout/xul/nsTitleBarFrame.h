@@ -34,10 +34,6 @@ class nsTitleBarFrame : public nsBoxFrame {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual void MouseClicked(mozilla::WidgetMouseEvent* aEvent);
 
-  void UpdateMouseThrough() override {
-    AddStateBits(NS_FRAME_MOUSE_THROUGH_NEVER);
-  }
-
  protected:
   bool mTrackingMouseMove;
   mozilla::LayoutDeviceIntPoint mLastPoint;
