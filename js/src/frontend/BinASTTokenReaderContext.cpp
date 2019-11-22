@@ -2799,35 +2799,30 @@ HuffmanPreludeReader::readSingleValueTable<UnsignedLong>(
 }
 
 HuffmanDictionary::~HuffmanDictionary() {
-  for (size_t i = 0; i < BINAST_INTERFACE_AND_FIELD_LIMIT; i++) {
-    if (fieldStatus(i) == TableStatus::Ready) {
-      tableForField(i).~GenericHuffmanTable();
-    }
-  }
-  for (size_t i = 0; i < BINAST_NUMBER_OF_LIST_TYPES; i++) {
-    if (listLengthStatus(i) == TableStatus::Ready) {
-      tableForListLength(i).~GenericHuffmanTable();
+  for (size_t i = 0; i < TableIdentity::Limit; i++) {
+    if (status(i) == TableStatus::Ready) {
+      table(i).~GenericHuffmanTable();
     }
   }
 }
 
 HuffmanDictionary::TableStatus& HuffmanDictionary::fieldStatus(
     NormalizedInterfaceAndField index) {
-  return fieldStatus(static_cast<size_t>(index.identity_));
+  return status(TableIdentity(index));
 }
 
 GenericHuffmanTable& HuffmanDictionary::tableForField(
     NormalizedInterfaceAndField index) {
-  return tableForField(static_cast<size_t>(index.identity_));
+  return table(TableIdentity(index));
 }
 
 HuffmanDictionary::TableStatus& HuffmanDictionary::listLengthStatus(
     BinASTList list) {
-  return listLengthStatus(static_cast<size_t>(list));
+  return status(TableIdentity(list));
 }
 
 GenericHuffmanTable& HuffmanDictionary::tableForListLength(BinASTList list) {
-  return tableForListLength(static_cast<size_t>(list));
+  return table(TableIdentity(list));
 }
 
 uint32_t HuffmanLookup::leadingBits(const uint8_t aBitLength) const {
