@@ -315,8 +315,6 @@ TrackingDBService.prototype = {
       if (totalSaved >= milestone) {
         reachedMilestone = milestone;
         nextMilestone = milestones[index + 1];
-      } else {
-        break;
       }
     }
 
@@ -327,10 +325,6 @@ TrackingDBService.prototype = {
       (!nextMilestone || nextMilestone - totalSaved > 3000) &&
       (!oldMilestone || oldMilestone < reachedMilestone)
     ) {
-      Services.prefs.setIntPref(
-        "browser.contentblocking.cfr-milestone.milestone-achieved",
-        reachedMilestone
-      );
       Services.obs.notifyObservers(
         {
           wrappedJSObject: {
