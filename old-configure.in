@@ -581,7 +581,7 @@ case "$target" in
     ;;
 
 *-android*|*-linuxandroid*)
-    if test "$COMPILE_ENVIRONMENT"; then
+    if test "$COMPILE_ENVIRONMENT" -a -n "$MOZ_MEMORY"; then
         MOZ_LINKER=1
     fi
 
