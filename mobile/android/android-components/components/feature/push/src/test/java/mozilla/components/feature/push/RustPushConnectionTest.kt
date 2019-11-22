@@ -14,6 +14,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Ignore
 import org.junit.Test
+import org.mockito.ArgumentMatchers.nullable
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.verify
 
@@ -65,7 +66,7 @@ class RustPushConnectionTest {
             connection.subscribe("123", "")
         }
 
-        verify(api).subscribe(anyString(), anyString())
+        verify(api).subscribe(anyString(), anyString(), nullable(String::class.java))
     }
 
     @Test(expected = IllegalStateException::class)

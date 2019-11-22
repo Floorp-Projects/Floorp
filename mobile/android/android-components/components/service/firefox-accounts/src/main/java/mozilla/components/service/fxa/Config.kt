@@ -85,6 +85,11 @@ sealed class SyncEngine(val nativeName: String) {
     object Passwords : SyncEngine("passwords")
 
     /**
+     * A remote tabs engine.
+     */
+    object Tabs : SyncEngine("tabs")
+
+    /**
      * An engine that's none of the above, described by [name].
      */
     data class Other(val name: String) : SyncEngine(name)

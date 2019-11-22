@@ -31,6 +31,7 @@ internal fun String.toSyncEngine(): SyncEngine {
         "history" -> SyncEngine.History
         "bookmarks" -> SyncEngine.Bookmarks
         "passwords" -> SyncEngine.Passwords
+        "tabs" -> SyncEngine.Tabs
         // This handles a case of engines that we don't yet model in SyncEngine.
         else -> SyncEngine.Other(this)
     }
