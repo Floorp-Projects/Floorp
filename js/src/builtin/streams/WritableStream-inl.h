@@ -14,8 +14,6 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
-#include "jstypes.h"  // JS_PUBLIC_API
-
 #include "builtin/Promise.h"                              // js::PromiseObject
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::WritableStreamDefaultWriter
 #include "js/RootingAPI.h"                                // JS::Handle
@@ -23,7 +21,7 @@
 
 #include "vm/Compartment-inl.h"  // js::UnwrapInternalSlot
 
-struct JS_PUBLIC_API JSContext;
+struct JSContext;
 
 namespace js {
 

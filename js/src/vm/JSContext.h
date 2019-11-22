@@ -11,8 +11,6 @@
 
 #include "mozilla/MemoryReporting.h"
 
-#include "jstypes.h"  // JS_PUBLIC_API
-
 #include "ds/TraceableFifo.h"
 #include "gc/Memory.h"
 #include "js/CharacterEncoding.h"
@@ -28,8 +26,6 @@
 #include "vm/ErrorReporting.h"
 #include "vm/MallocProvider.h"
 #include "vm/Runtime.h"
-
-struct JS_PUBLIC_API JSContext;
 
 struct DtoaState;
 
@@ -151,8 +147,8 @@ enum class InterruptReason : uint32_t {
  * A JSContext encapsulates the thread local state used when using the JS
  * runtime.
  */
-struct JS_PUBLIC_API JSContext : public JS::RootingContext,
-                                 public js::MallocProvider<JSContext> {
+struct JSContext : public JS::RootingContext,
+                   public js::MallocProvider<JSContext> {
   JSContext(JSRuntime* runtime, const JS::ContextOptions& options);
   ~JSContext();
 
