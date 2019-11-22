@@ -27,6 +27,10 @@
 
 #define LOG(args) MOZ_LOG(mLog, mozilla::LogLevel::Debug, args)
 
+#ifdef __MINGW32__
+#  define ASSOCF_NONE 0x0
+#endif
+
 // helper methods: forward declarations...
 static nsresult GetExtensionFromWindowsMimeDatabase(const nsACString& aMimeType,
                                                     nsString& aFileExtension);
@@ -300,10 +304,16 @@ nsresult nsOSHelperAppService::GetDefaultAppInfo(
   nsCOMPtr<nsILocalFileWin> lf = new nsLocalFile();
   rv = lf->InitWithCommandLine(handlerCommand);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // The "FileDescription" field contains the actual name of the application.
-  lf->GetVersionInfoField("FileDescription", aDefaultDescription);
   lf.forget(aDefaultApplication);
+
+  wchar_t friendlyName[1024];
+  DWORD friendlyNameSize = 1024;
+  HRESULT hr = AssocQueryString(ASSOCF_NONE, ASSOCSTR_FRIENDLYAPPNAME,
+                                PromiseFlatString(aAppInfo).get(), NULL,
+                                friendlyName, &friendlyNameSize);
+  if (SUCCEEDED(hr) && friendlyNameSize > 1) {
+    aDefaultDescription.Assign(friendlyName, friendlyNameSize - 1);
+  }
 
   return NS_OK;
 }
