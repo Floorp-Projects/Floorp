@@ -533,6 +533,9 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     # the future.
                     new_result['extra_options'] = []
 
+                    if self.with_conditioned_profile:
+                        new_result['extra_options'].append('condprof')
+
                     return new_result
 
                 def _new_benchmark_result(new_result):

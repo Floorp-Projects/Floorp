@@ -1037,6 +1037,7 @@ browsertime-tp6-1:
     treeherder-symbol: Btime(tp6-1)
     max-run-time: 4000
     tier: 3
+    condprof: True
     run-visual-metrics:
         by-app:
             chrome: false

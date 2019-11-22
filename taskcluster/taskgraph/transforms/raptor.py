@@ -174,6 +174,9 @@ def build_condprof_tests(config, tests):
         if not test.pop('condprof', False):
             yield test
             continue
+        if 'chrome' in test['test-name'] or 'chromium' in test['test-name']:
+            yield test
+            continue
 
         # Make condprof test
         condprof_test = deepcopy(test)
