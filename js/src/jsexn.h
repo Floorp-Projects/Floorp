@@ -119,6 +119,8 @@ bool GetInternalError(JSContext* cx, unsigned errorNumber,
                       MutableHandleValue error);
 bool GetTypeError(JSContext* cx, unsigned errorNumber,
                   MutableHandleValue error);
+bool GetAggregateError(JSContext* cx, unsigned errorNumber,
+                       MutableHandleValue error);
 
 }  // namespace js
 
