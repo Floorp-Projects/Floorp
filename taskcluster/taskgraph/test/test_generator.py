@@ -106,6 +106,7 @@ class TestGenerator(unittest.TestCase):
             '_kinds': kinds,
             'target_tasks_method': 'test_method',
             'try_mode': None,
+            'try_task_config': {},
         })
         parameters.update(params)
 

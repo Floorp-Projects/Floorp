@@ -23,12 +23,10 @@ import logging
 import os
 import re
 
-import jsone
 from slugid import nice as slugid
 from .task import Task
 from .graph import Graph
 from .taskgraph import TaskGraph
-from .util.yaml import load_yaml
 
 here = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
@@ -164,42 +162,17 @@ def add_index_tasks(taskgraph, label_to_taskid):
     return taskgraph, label_to_taskid
 
 
-class apply_jsone_templates(object):
-    """Apply a set of JSON-e templates to each task's `task` attribute.
+class add_try_task_duplicates():
 
-    :param templates: A dict with the template name as the key, and extra context
-                      to use (in addition to task.to_json()) as the value.
-    """
-    template_dir = os.path.join(here, 'templates')
-
-    def __init__(self, try_task_config):
-        self.templates = try_task_config.get('templates')
-        self.target_tasks = try_task_config.get('tasks')
+    def __init__(self, try_config):
+        self.try_config = try_config
 
     def __call__(self, taskgraph, label_to_taskid):
-        if not self.templates:
-            return taskgraph, label_to_taskid
-
-        for task in taskgraph.tasks.itervalues():
-            for template in sorted(self.templates):
-                context = {
-                    'task': task.task,
-                    'taskGroup': None,
-                    'taskId': task.task_id,
-                    'kind': task.kind,
-                    'input': self.templates[template],
-                    # The following context differs from action tasks
-                    'attributes': task.attributes,
-                    'label': task.label,
-                    'target_tasks': self.target_tasks,
-                }
-
-                template = load_yaml(self.template_dir, template + '.yml')
-                result = jsone.render(template, context) or {}
-                for attr in ('task', 'attributes'):
-                    if attr in result:
-                        setattr(task, attr, result[attr])
-
+        rebuild = self.try_config.get('rebuild')
+        if rebuild:
+            for task in taskgraph.tasks.itervalues():
+                if task.label in self.try_config.get('tasks', []):
+                    task.attributes['task_duplicates'] = rebuild
         return taskgraph, label_to_taskid
 
 
@@ -207,9 +180,8 @@ def morph(taskgraph, label_to_taskid, parameters):
     """Apply all morphs"""
     morphs = [
         add_index_tasks,
+        add_try_task_duplicates(parameters['try_task_config']),
     ]
-    if parameters['try_mode'] == 'try_task_config':
-        morphs.append(apply_jsone_templates(parameters['try_task_config']))
 
     for m in morphs:
         taskgraph, label_to_taskid = m(taskgraph, label_to_taskid)

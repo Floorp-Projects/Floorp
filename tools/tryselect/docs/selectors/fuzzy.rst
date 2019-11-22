@@ -319,10 +319,8 @@ Would produce the following ``try_task_config.json``:
 .. code-block:: json
 
     {
-      "templates":{
-        "env":{
-          "MOZHARNESS_TEST_PATHS":"{\"reftest\":\"layout/reftests/reftest-sanity\"}"
-        }
+      "env":{
+        "MOZHARNESS_TEST_PATHS":"{\"reftest\":\"layout/reftests/reftest-sanity\"}"
       },
       "tasks":[
         "test-linux64-qr/debug-reftest-e10s-1",
