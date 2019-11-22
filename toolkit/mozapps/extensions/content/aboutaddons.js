@@ -122,6 +122,13 @@ const PRIVATE_BROWSING_PERMS = {
   origins: [],
 };
 
+function shouldSkipAnimations() {
+  return (
+    document.body.hasAttribute("skip-animations") ||
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
 const AddonCardListenerHandler = {
   ADDON_EVENTS: new Set([
     "onDisabled",
@@ -2430,6 +2437,8 @@ class AddonCard extends HTMLElement {
       switch (action) {
         case "toggle-disabled":
           this.recordActionEvent(addon.userDisabled ? "enable" : "disable");
+          // Keep the checked state the same until the add-on's state changes.
+          e.target.checked = !addon.userDisabled;
           if (addon.userDisabled) {
             if (shouldShowPermissionsPrompt(addon)) {
               await showPermissionsPrompt(addon);
@@ -2438,10 +2447,6 @@ class AddonCard extends HTMLElement {
             }
           } else {
             await addon.disable();
-          }
-          if (e.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
-            // Refocus the button, since the card might've moved and lost focus.
-            e.target.focus();
           }
           break;
         case "ask-to-activate":
@@ -3129,6 +3134,8 @@ class AddonList extends HTMLElement {
     super();
     this.sections = [];
     this.pendingUninstallAddons = new Set();
+    this._addonsToUpdate = new Set();
+    this._userFocusListenersAdded = false;
   }
 
   async connectedCallback() {
@@ -3321,9 +3328,7 @@ class AddonList extends HTMLElement {
       return;
     }
 
-    let insertSection = this.sections.findIndex(({ filterFn }) =>
-      filterFn(addon)
-    );
+    let insertSection = this._addonSectionIndex(addon);
 
     // Don't add the add-on if it doesn't go in a section.
     if (insertSection == -1) {
@@ -3352,24 +3357,144 @@ class AddonList extends HTMLElement {
   }
 
   updateAddon(addon) {
+    if (!this.getCard(addon)) {
+      // Try to add the add-on right away.
+      this.addAddon(addon);
+    } else if (this._addonSectionIndex(addon) == -1) {
+      // Try to remove the add-on right away.
+      this._updateAddon(addon);
+    } else if (this.isUserFocused) {
+      // Queue up a change for when the focus is cleared.
+      this.updateLater(addon);
+    } else {
+      // Not currently focused, make the change now.
+      this.withCardAnimation(() => this._updateAddon(addon));
+    }
+  }
+
+  updateLater(addon) {
+    this._addonsToUpdate.add(addon);
+    this._addUserFocusListeners();
+  }
+
+  _addUserFocusListeners() {
+    if (this._userFocusListenersAdded) {
+      return;
+    }
+
+    this._userFocusListenersAdded = true;
+    this.addEventListener("mouseleave", this);
+    this.addEventListener("hidden", this, true);
+    this.addEventListener("focusout", this);
+  }
+
+  _removeUserFocusListeners() {
+    if (!this._userFocusListenersAdded) {
+      return;
+    }
+
+    this.removeEventListener("mouseleave", this);
+    this.removeEventListener("hidden", this, true);
+    this.removeEventListener("focusout", this);
+    this._userFocusListenersAdded = false;
+  }
+
+  get hasMenuOpen() {
+    return !!this.querySelector("panel-list[open]");
+  }
+
+  get isUserFocused() {
+    return this.matches(":hover, :focus-within") || this.hasMenuOpen;
+  }
+
+  update() {
+    if (this._addonsToUpdate.size) {
+      this.withCardAnimation(() => {
+        for (let addon of this._addonsToUpdate) {
+          this._updateAddon(addon);
+        }
+        this._addonsToUpdate = new Set();
+      });
+    }
+  }
+
+  _getChildCoords() {
+    let results = new Map();
+    for (let child of this.querySelectorAll("addon-card")) {
+      results.set(child, child.getBoundingClientRect());
+    }
+    return results;
+  }
+
+  withCardAnimation(changeFn) {
+    if (shouldSkipAnimations()) {
+      changeFn();
+      return;
+    }
+
+    let origChildCoords = this._getChildCoords();
+
+    changeFn();
+
+    let newChildCoords = this._getChildCoords();
+    let cards = this.querySelectorAll("addon-card");
+    let transitionCards = [];
+    for (let card of cards) {
+      let orig = origChildCoords.get(card);
+      let moved = newChildCoords.get(card);
+      let changeY = moved.y - (orig || moved).y;
+      let cardEl = card.firstElementChild;
+
+      if (changeY != 0) {
+        cardEl.style.transform = `translateY(${changeY * -1}px)`;
+        transitionCards.push(card);
+      }
+    }
+    requestAnimationFrame(() => {
+      for (let card of transitionCards) {
+        card.firstElementChild.style.transition = "transform 125ms";
+      }
+
+      requestAnimationFrame(() => {
+        for (let card of transitionCards) {
+          let cardEl = card.firstElementChild;
+          cardEl.style.transform = "";
+          cardEl.addEventListener("transitionend", function handler(e) {
+            if (e.target == cardEl && e.propertyName == "transform") {
+              cardEl.style.transition = "";
+              cardEl.removeEventListener("transitionend", handler);
+            }
+          });
+        }
+      });
+    });
+  }
+
+  _addonSectionIndex(addon) {
+    return this.sections.findIndex(s => s.filterFn(addon));
+  }
+
+  _updateAddon(addon) {
     let card = this.getCard(addon);
     if (card) {
-      let sectionIndex = this.sections.findIndex(s => s.filterFn(addon));
+      let sectionIndex = this._addonSectionIndex(addon);
       if (sectionIndex != -1) {
         // Move the card, if needed. This will allow an animation between
         // page sections and provides clearer events for testing.
         if (card.parentNode.getAttribute("section") != sectionIndex) {
+          let { activeElement } = document;
+          let refocus = card.contains(activeElement);
           let oldSection = card.parentNode;
           this.insertCardInto(card, sectionIndex);
           this.updateSectionIfEmpty(oldSection);
+          if (refocus) {
+            activeElement.focus();
+          }
           this.sendEvent("move", { id: addon.id });
         }
       } else {
         this.removeAddon(addon);
       }
-    } else {
-      // Add the add-on, this will do nothing if it shouldn't be in the list.
-      this.addAddon(addon);
     }
   }
 
@@ -3467,6 +3592,13 @@ class AddonList extends HTMLElement {
     this.pendingUninstallAddons.delete(addon);
     this.removePendingUninstallBar(addon);
     this.removeAddon(addon);
+  }
+
+  handleEvent(e) {
+    if (!this.isUserFocused || (e.type == "mouseleave" && !this.hasMenuOpen)) {
+      this._removeUserFocusListeners();
+      this.update();
+    }
   }
 }
 customElements.define("addon-list", AddonList);
