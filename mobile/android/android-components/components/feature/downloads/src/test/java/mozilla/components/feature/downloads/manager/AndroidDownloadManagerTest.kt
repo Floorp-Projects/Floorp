@@ -51,7 +51,7 @@ class AndroidDownloadManagerTest {
     fun `calling download must download the file`() {
         var downloadCompleted = false
 
-        downloadManager.onDownloadCompleted = { _, _, _ -> downloadCompleted = true }
+        downloadManager.onDownloadStopped = { _, _, _ -> downloadCompleted = true }
 
         grantPermissions()
 
@@ -66,7 +66,7 @@ class AndroidDownloadManagerTest {
     fun `calling tryAgain starts the download again`() {
         var downloadCompleted = false
 
-        downloadManager.onDownloadCompleted = { _, _, _ -> downloadCompleted = true }
+        downloadManager.onDownloadStopped = { _, _, _ -> downloadCompleted = true }
 
         grantPermissions()
 
@@ -97,7 +97,7 @@ class AndroidDownloadManagerTest {
     }
 
     @Test
-    fun `sendBroadcast with valid downloadID must call onDownloadCompleted after download`() {
+    fun `sendBroadcast with valid downloadID must call onDownloadStopped after download`() {
         var downloadCompleted = false
         var downloadStatus: DownloadJobStatus? = null
         val downloadWithFileName = download.copy(fileName = "5MB.zip")
@@ -109,7 +109,7 @@ class AndroidDownloadManagerTest {
             cookie = "yummy_cookie=choco"
         )!!
 
-        downloadManager.onDownloadCompleted = { _, _, status ->
+        downloadManager.onDownloadStopped = { _, _, status ->
             downloadStatus = status
             downloadCompleted = true
         }

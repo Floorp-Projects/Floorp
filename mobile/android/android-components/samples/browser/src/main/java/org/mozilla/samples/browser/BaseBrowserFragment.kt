@@ -109,7 +109,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
                 store = components.store,
                 useCases = components.downloadsUseCases,
                 fragmentManager = childFragmentManager,
-                onDownloadCompleted = { download, id, status ->
+                onDownloadStopped = { download, id, status ->
                     Logger.debug("Download done. ID#$id $download with status $status")
                 },
                 downloadManager = FetchDownloadManager(

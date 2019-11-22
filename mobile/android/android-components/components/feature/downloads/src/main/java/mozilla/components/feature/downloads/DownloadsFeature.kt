@@ -22,8 +22,8 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.downloads.DownloadDialogFragment.Companion.FRAGMENT_TAG
 import mozilla.components.feature.downloads.manager.AndroidDownloadManager
 import mozilla.components.feature.downloads.manager.DownloadManager
-import mozilla.components.feature.downloads.manager.OnDownloadCompleted
 import mozilla.components.feature.downloads.manager.noop
+import mozilla.components.feature.downloads.manager.onDownloadStopped
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
@@ -42,7 +42,7 @@ import java.io.File
  * @property onNeedToRequestPermissions a callback invoked when permissions
  * need to be requested before a download can be performed. Once the request
  * is completed, [onPermissionsResult] needs to be invoked.
- * @property onDownloadCompleted a callback invoked when a download is completed.
+ * @property onDownloadStopped a callback invoked when a download is paused or completed.
  * @property downloadManager a reference to the [DownloadManager] which is
  * responsible for performing the downloads.
  * @property store a reference to the application's [BrowserStore].
@@ -59,7 +59,7 @@ class DownloadsFeature(
     private val store: BrowserStore,
     private val useCases: DownloadsUseCases,
     override var onNeedToRequestPermissions: OnNeedToRequestPermissions = { },
-    onDownloadCompleted: OnDownloadCompleted = noop,
+    onDownloadStopped: onDownloadStopped = noop,
     private val downloadManager: DownloadManager = AndroidDownloadManager(applicationContext),
     private val customTabId: String? = null,
     private val fragmentManager: FragmentManager? = null,
@@ -70,12 +70,12 @@ class DownloadsFeature(
     )
 ) : LifecycleAwareFeature, PermissionsFeature {
 
-    var onDownloadCompleted: OnDownloadCompleted
-        get() = downloadManager.onDownloadCompleted
-        set(value) { downloadManager.onDownloadCompleted = value }
+    var onDownloadStopped: onDownloadStopped
+        get() = downloadManager.onDownloadStopped
+        set(value) { downloadManager.onDownloadStopped = value }
 
     init {
-        this.onDownloadCompleted = onDownloadCompleted
+        this.onDownloadStopped = onDownloadStopped
     }
 
     private var scope: CoroutineScope? = null
