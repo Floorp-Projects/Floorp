@@ -54,6 +54,21 @@
             "optional": true
           }
         }
+      }
+    ]
+  },
+  {
+    "namespace": "pageAction",
+    "description": "Use the <code>browser.pageAction</code> API to put icons inside the address bar. Page actions represent actions that can be taken on the current page, but that aren't applicable to all pages.",
+    "permissions": ["manifest:page_action"],
+    "types": [
+      {
+        "id": "ImageDataType",
+        "type": "object",
+        "isInstanceOf": "ImageData",
+        "additionalProperties": { "type": "any" },
+        "postprocess": "convertImageDataToURL",
+        "description": "Pixel data for an image. Must be an ImageData object (for example, from a <code>canvas</code> element)."
       },
       {
         "id": "OnClickData",
@@ -74,21 +89,6 @@
             "description": "An integer value of button by which menu item was clicked."
           }
         }
-      }
-    ]
-  },
-  {
-    "namespace": "pageAction",
-    "description": "Use the <code>browser.pageAction</code> API to put icons inside the address bar. Page actions represent actions that can be taken on the current page, but that aren't applicable to all pages.",
-    "permissions": ["manifest:page_action"],
-    "types": [
-      {
-        "id": "ImageDataType",
-        "type": "object",
-        "isInstanceOf": "ImageData",
-        "additionalProperties": { "type": "any" },
-        "postprocess": "convertImageDataToURL",
-        "description": "Pixel data for an image. Must be an ImageData object (for example, from a <code>canvas</code> element)."
       }
     ],
     "functions": [
