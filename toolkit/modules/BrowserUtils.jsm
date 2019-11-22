@@ -781,6 +781,11 @@ var BrowserUtils = {
     });
   },
 
+  removeSingleTrailingSlashFromURL(aURL) {
+    // remove single trailing slash for http/https/ftp URLs
+    return aURL.replace(/^((?:http|https|ftp):\/\/[^/]+)\/$/, "$1");
+  },
+
   /**
    * Returns a URL which has been trimmed by removing 'http://' and any
    * trailing slash (in http/https/ftp urls).
@@ -792,8 +797,7 @@ var BrowserUtils = {
     // This function must not modify the given URL such that calling
     // nsIURIFixup::createFixupURI with the result will produce a different URI.
 
-    // remove single trailing slash for http/https/ftp URLs
-    let url = aURL.replace(/^((?:http|https|ftp):\/\/[^/]+)\/$/, "$1");
+    let url = this.removeSingleTrailingSlashFromURL(aURL);
 
     // remove http://
     if (!url.startsWith("http://")) {
