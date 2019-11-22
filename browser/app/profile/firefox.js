@@ -2264,7 +2264,14 @@ pref("devtools.responsive.reloadNotification.enabled", true);
 pref("devtools.responsive.touchSimulation.enabled", false);
 // Whether or not meta viewport is enabled, if and only if touchSimulation
 // is also enabled.
-pref("devtools.responsive.metaViewport.enabled", false);
+// For now this is only available in nightly, dev-edition and early betas. It is planned
+// to be gradually rolled out with release 72. Starting with 73, this pref needs to be set
+// to true on all channels.
+#if defined(EARLY_BETA_OR_EARLIER) || defined(MOZ_DEV_EDITION)
+  pref("devtools.responsive.metaViewport.enabled", true);
+#else
+  pref("devtools.responsive.metaViewport.enabled", false);
+#endif
 // The user agent of the viewport.
 pref("devtools.responsive.userAgent", "");
 // Whether or not the RDM UI is embedded in the browser.
