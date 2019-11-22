@@ -163,29 +163,8 @@ void nsBoxFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
   CacheAttributes();
 
-  UpdateMouseThrough();
-
   // register access key
   RegUnregAccessKey(true);
-}
-
-void nsBoxFrame::UpdateMouseThrough() {
-  static Element::AttrValuesArray strings[] = {nsGkAtoms::never,
-                                               nsGkAtoms::always, nullptr};
-  switch (mContent->AsElement()->FindAttrValueIn(
-      kNameSpaceID_None, nsGkAtoms::mousethrough, strings, eCaseMatters)) {
-    case 0:
-      AddStateBits(NS_FRAME_MOUSE_THROUGH_NEVER);
-      break;
-    case 1:
-      AddStateBits(NS_FRAME_MOUSE_THROUGH_ALWAYS);
-      break;
-    case 2: {
-      RemoveStateBits(NS_FRAME_MOUSE_THROUGH_ALWAYS);
-      RemoveStateBits(NS_FRAME_MOUSE_THROUGH_NEVER);
-      break;
-    }
-  }
 }
 
 void nsBoxFrame::CacheAttributes() {
@@ -863,8 +842,7 @@ nsresult nsBoxFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
       aAttribute == nsGkAtoms::minheight ||
       aAttribute == nsGkAtoms::maxheight || aAttribute == nsGkAtoms::flex ||
       aAttribute == nsGkAtoms::orient || aAttribute == nsGkAtoms::pack ||
-      aAttribute == nsGkAtoms::dir || aAttribute == nsGkAtoms::mousethrough ||
-      aAttribute == nsGkAtoms::equalsize) {
+      aAttribute == nsGkAtoms::dir || aAttribute == nsGkAtoms::equalsize) {
     if (aAttribute == nsGkAtoms::align || aAttribute == nsGkAtoms::valign ||
         aAttribute == nsGkAtoms::orient || aAttribute == nsGkAtoms::pack ||
         aAttribute == nsGkAtoms::dir) {
@@ -906,8 +884,6 @@ nsresult nsBoxFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                aAttribute == nsGkAtoms::bottom ||
                aAttribute == nsGkAtoms::start || aAttribute == nsGkAtoms::end) {
       RemoveStateBits(NS_STATE_STACK_NOT_POSITIONED);
-    } else if (aAttribute == nsGkAtoms::mousethrough) {
-      UpdateMouseThrough();
     }
 
     PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,

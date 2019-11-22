@@ -195,8 +195,6 @@ class nsBoxFrame : public nsContainerFrame {
   void CheckBoxOrder();
 
  private:
-  virtual void UpdateMouseThrough();
-
   void CacheAttributes();
 
   // instance variables.

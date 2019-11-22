@@ -3341,24 +3341,6 @@ void nsDisplayList::DeleteAll(nsDisplayListBuilder* aBuilder) {
   }
 }
 
-static bool GetMouseThrough(const nsIFrame* aFrame) {
-  if (!aFrame->IsXULBoxFrame()) {
-    return false;
-  }
-
-  const nsIFrame* frame = aFrame;
-  while (frame) {
-    if (frame->GetStateBits() & NS_FRAME_MOUSE_THROUGH_ALWAYS) {
-      return true;
-    }
-    if (frame->GetStateBits() & NS_FRAME_MOUSE_THROUGH_NEVER) {
-      return false;
-    }
-    frame = nsBox::GetParentXULBox(frame);
-  }
-  return false;
-}
-
 static bool IsFrameReceivingPointerEvents(nsIFrame* aFrame) {
   return NS_STYLE_POINTER_EVENTS_NONE !=
          aFrame->StyleUI()->GetEffectivePointerEvents(aFrame);
@@ -3493,7 +3475,7 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
         // For pointer tests, only pass through frames that are styled
         // to receive pointer events.
         if (aBuilder->HitTestIsForVisibility() ||
-            (!GetMouseThrough(f) && IsFrameReceivingPointerEvents(f))) {
+            IsFrameReceivingPointerEvents(f)) {
           writeFrames->AppendElement(f);
         }
       }

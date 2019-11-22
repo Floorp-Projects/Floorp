@@ -60,9 +60,7 @@ nsButtonBoxFrame::nsButtonBoxFrame(ComputedStyle* aStyle,
                                    nsPresContext* aPresContext, ClassID aID)
     : nsBoxFrame(aStyle, aPresContext, aID, false),
       mButtonBoxListener(nullptr),
-      mIsHandlingKeyEvent(false) {
-  UpdateMouseThrough();
-}
+      mIsHandlingKeyEvent(false) {}
 
 void nsButtonBoxFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                             nsIFrame* aPrevInFlow) {
