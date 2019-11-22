@@ -260,7 +260,7 @@ class HomeFragment : Fragment() {
             view.resources.getDimensionPixelSize(R.dimen.search_bar_search_engine_icon_padding)
         view.toolbar_wrapper.setOnClickListener {
             invokePendingDeleteJobs()
-            onboarding.finish()
+            hideOnboardingIfNeeded()
             val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(
                 sessionId = null
             )
@@ -274,7 +274,7 @@ class HomeFragment : Fragment() {
 
         view.add_tab_button.setOnClickListener {
             invokePendingDeleteJobs()
-            onboarding.finish()
+            hideOnboardingIfNeeded()
             val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(
                 sessionId = null
             )
