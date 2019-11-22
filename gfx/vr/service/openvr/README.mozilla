@@ -21,7 +21,11 @@ We only use some files from the SDK:
   files to configure the library.
 
 - The "src/jsoncpp.cpp" file and the "src/json" directory can be skipped. OpenVR
-  uses the jsoncpp library, which we have already imported elsewhere.
+  uses the jsoncpp library, which we have already imported elsewhere. If
+  warnings about using deprecated jsoncpp classes show up during compilation
+  you might need to reapply the patch in bug 1598288. It replaces uses of the
+  `Json::Reader` and `Json::StyledWriter` classes with the more modern
+  `Json::CharReaderBuilder` and `Json::StreamWriterBuilder`.
 
 
 Steps to update the library:
