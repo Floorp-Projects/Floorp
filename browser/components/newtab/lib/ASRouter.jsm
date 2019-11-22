@@ -34,6 +34,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   KintoHttpClient: "resource://services-common/kinto-http-client.js",
   Downloader: "resource://services-settings/Attachments.jsm",
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
+  MigrationUtils: "resource:///modules/MigrationUtils.jsm",
 });
 const {
   ASRouterActions: ra,
@@ -1904,6 +1905,11 @@ class _ASRouter {
 
   async handleUserAction({ data: action, target }) {
     switch (action.type) {
+      case ra.SHOW_MIGRATION_WIZARD:
+        MigrationUtils.showMigrationWizard(target.browser.ownerGlobal, [
+          MigrationUtils.MIGRATION_ENTRYPOINT_NEWTAB,
+        ]);
+        break;
       case ra.OPEN_PRIVATE_BROWSER_WINDOW:
         // Forcefully open about:privatebrowsing
         target.browser.ownerGlobal.OpenBrowserWindow({ private: true });
