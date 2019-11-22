@@ -178,7 +178,7 @@ var SiteDataManager = {
   },
 
   _getAllCookies() {
-    for (let cookie of Services.cookies.cookies) {
+    for (let cookie of Services.cookies.enumerator) {
       let site = this._getOrInsertSite(cookie.rawHost);
       site.cookies.push(cookie);
       if (site.lastAccessed < cookie.lastAccessed) {

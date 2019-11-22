@@ -2,7 +2,7 @@ addMessageListener("getCookieFromManager", ({ host, path }) => {
   let cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
   let values = [];
   path = path.substring(0, path.lastIndexOf("/"));
-  for (let cookie of cm.cookies) {
+  for (let cookie of cm.enumerator) {
     if (!cookie) {
       break;
     }

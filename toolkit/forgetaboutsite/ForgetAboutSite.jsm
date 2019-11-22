@@ -24,9 +24,9 @@ var ForgetAboutSite = {
     try {
       let baseDomain = Services.eTLD.getBaseDomainFromHost(aDomain);
 
-      let cookies = Services.cookies.cookies;
+      let enumerator = Services.cookies.enumerator;
       let hosts = new Set();
-      for (let cookie of cookies) {
+      for (let cookie of enumerator) {
         if (Services.eTLD.hasRootDomain(cookie.rawHost, baseDomain)) {
           hosts.add(cookie.rawHost);
         }

@@ -810,9 +810,9 @@ class PrincipalsCollector {
 
     // Let's take the list of unique hosts+OA from cookies.
     progress.step = "principals-cookies";
-    let cookies = Services.cookies.cookies;
+    let enumerator = Services.cookies.enumerator;
     let hosts = new Set();
-    for (let cookie of cookies) {
+    for (let cookie of enumerator) {
       hosts.add(
         cookie.rawHost +
           ChromeUtils.originAttributesToSuffix(cookie.originAttributes)

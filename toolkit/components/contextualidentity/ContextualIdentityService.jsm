@@ -606,7 +606,7 @@ _ContextualIdentityService.prototype = {
     // Collect the userContextIds currently used by any stored cookie.
     let cookiesUserContextIds = new Set();
 
-    for (let cookie of Services.cookies.cookies) {
+    for (let cookie of Services.cookies.enumerator) {
       // Skip any userContextIds that should not be cleared.
       if (
         cookie.originAttributes.userContextId >= minUserContextId &&
