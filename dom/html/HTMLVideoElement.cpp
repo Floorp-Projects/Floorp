@@ -502,12 +502,10 @@ void HTMLVideoElement::MaybeBeginCloningVisually() {
   }
 
   if (mDecoder) {
-    MediaDecoderStateMachine* mdsm = mDecoder->GetStateMachine();
     VideoFrameContainer* container =
         mVisualCloneTarget->GetVideoFrameContainer();
-    if (mdsm && container) {
-      mdsm->SetSecondaryVideoContainer(container);
-      mDecoder->SetCloningVisually(true);
+    if (container) {
+      mDecoder->SetSecondaryVideoContainer(container);
     }
   } else if (mSrcStream) {
     VideoFrameContainer* container =
@@ -522,11 +520,7 @@ void HTMLVideoElement::EndCloningVisually() {
   MOZ_ASSERT(mVisualCloneTarget);
 
   if (mDecoder) {
-    MediaDecoderStateMachine* mdsm = mDecoder->GetStateMachine();
-    if (mdsm) {
-      mdsm->SetSecondaryVideoContainer(nullptr);
-      mDecoder->SetCloningVisually(false);
-    }
+    mDecoder->SetSecondaryVideoContainer(nullptr);
   } else if (mSrcStream) {
     VideoFrameContainer* container =
         mVisualCloneTarget->GetVideoFrameContainer();
