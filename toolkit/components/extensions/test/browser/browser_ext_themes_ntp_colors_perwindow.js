@@ -107,11 +107,14 @@ add_task(async function test_per_window_ntp_theme() {
           let listener = removedWinId => {
             if (removedWinId == winId) {
               browser.windows.onRemoved.removeListener(listener);
+              dump(`DEBUG_1584391: onRemoved ${winId}\n`);
               resolve();
             }
           };
           browser.windows.onRemoved.addListener(listener);
-          browser.windows.remove(winId);
+          browser.windows.remove(winId).then(() => {
+            dump(`DEBUG_1584391: remove() = ${winId}\n`);
+          });
         });
       }
 
@@ -161,6 +164,9 @@ add_task(async function test_per_window_ntp_theme() {
       await checkWindow(null, false, winId);
       await checkWindow(brightTextTheme, true, secondWinId);
 
+      // Not strictly necessary, but added to avoid error from bug 1579943.
+      await browser.theme.reset(secondWinId);
+
       await removeWindow(secondWinId);
       await checkWindow(null, false, winId);
       browser.test.notifyPass("perwindow-ntp-theme");
@@ -174,6 +180,14 @@ add_task(async function test_per_window_ntp_theme() {
       win.NewTabPagePreloading.removePreloadedBrowser(win);
       for (let url of ["about:newtab", "about:home", "about:welcome"]) {
         info("Opening url: " + url);
+        if (AppConstants.DEBUG) {
+          dump(`DEBUG_1584391: skipping tabs and checks in DEBUG build\n`);
+          // Opening a tab usually takes some time, which may have side effects.
+          // To make sure that the bug is not coincidentally fixed by a shorter
+          // test runtime, an artificial delay is used instead.
+          await new Promise(resolve => win.setTimeout(resolve, 100));
+          continue;
+        }
         await BrowserTestUtils.withNewTab(
           { gBrowser: win.gBrowser, url },
           async browser => {
@@ -191,7 +205,7 @@ add_task(async function test_per_window_ntp_theme() {
 
   // BrowserTestUtils.withNewTab waits for about:newtab to load
   // so we disable preloading before running the test.
-  SpecialPowers.setBoolPref("browser.newtab.preload", false);
+  await SpecialPowers.setBoolPref("browser.newtab.preload", false);
   registerCleanupFunction(() => {
     SpecialPowers.clearUserPref("browser.newtab.preload");
   });

@@ -121,8 +121,8 @@ function startTest() {
   is(win.getSelection().focusNode, ed.firstChild, "Correct element selected");
   is(win.getSelection().focusOffset, ed.textContent.length, "Selection should be moved to the end");
 
-  win.close();
   cwu.restoreNormalRefresh();
+  win.close();
 
   SimpleTest.finish();
 }

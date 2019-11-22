@@ -12,10 +12,9 @@ XPCOMUtils.defineLazyServiceGetter(
 const REFERENCE_DATE = Date.now();
 const LOGIN_USERNAME = "username";
 const LOGIN_PASSWORD = "password";
-const LOGIN_USERNAME_FIELD = "username_field";
-const LOGIN_PASSWORD_FIELD = "password_field";
 const OLD_HOST = "http://mozilla.org";
 const NEW_HOST = "http://mozilla.com";
+const FXA_HOST = "chrome://FirefoxAccounts";
 
 function checkLoginExists(host, shouldExist) {
   let logins = loginManager.findLogins(host, "", null);
@@ -31,15 +30,7 @@ function addLogin(host, timestamp) {
   let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
     Ci.nsILoginInfo
   );
-  login.init(
-    host,
-    "",
-    null,
-    LOGIN_USERNAME,
-    LOGIN_PASSWORD,
-    LOGIN_USERNAME_FIELD,
-    LOGIN_PASSWORD_FIELD
-  );
+  login.init(host, "", null, LOGIN_USERNAME, LOGIN_PASSWORD);
   login.QueryInterface(Ci.nsILoginMetaInfo);
   login.timePasswordChanged = timestamp;
   loginManager.addLogin(login);
@@ -48,6 +39,7 @@ function addLogin(host, timestamp) {
 
 async function setupPasswords() {
   loginManager.removeAllLogins();
+  addLogin(FXA_HOST, REFERENCE_DATE);
   addLogin(NEW_HOST, REFERENCE_DATE);
   addLogin(OLD_HOST, REFERENCE_DATE - 10000);
 }
@@ -79,6 +71,7 @@ add_task(async function testPasswords() {
 
     checkLoginExists(OLD_HOST, false);
     checkLoginExists(NEW_HOST, false);
+    checkLoginExists(FXA_HOST, true);
 
     // Clear passwords with recent since value.
     await setupPasswords();
@@ -87,6 +80,7 @@ add_task(async function testPasswords() {
 
     checkLoginExists(OLD_HOST, true);
     checkLoginExists(NEW_HOST, false);
+    checkLoginExists(FXA_HOST, true);
 
     // Clear passwords with old since value.
     await setupPasswords();
@@ -95,6 +89,7 @@ add_task(async function testPasswords() {
 
     checkLoginExists(OLD_HOST, false);
     checkLoginExists(NEW_HOST, false);
+    checkLoginExists(FXA_HOST, true);
   }
 
   await extension.startup();

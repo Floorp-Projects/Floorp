@@ -151,7 +151,7 @@ with Files("contentSearch*"):
 with Files("hiddenWindowMac.xhtml"):
     BUG_COMPONENT = ("Firefox", "Site Permissions")
 
-with Files("macWindow.inc.xul"):
+with Files("macWindow.inc.xhtml"):
     BUG_COMPONENT = ("Firefox", "Shell Integration")
 
 with Files("tabbrowser*"):

@@ -33,11 +33,11 @@ add_task(async function testCDP(client) {
 
   // turn on navigation related events, such as DOMContentLoaded et al.
   await Page.enable();
-  ok(true, "Page domain has been enabled");
+  info("Page domain has been enabled");
 
   const onExecutionContextCreated = Runtime.executionContextCreated();
   await Runtime.enable();
-  ok(true, "Runtime domain has been enabled");
+  info("Runtime domain has been enabled");
 
   // Runtime.enable will dispatch `executionContextCreated` for the existing document
   let { context } = await onExecutionContextCreated;
@@ -66,7 +66,7 @@ add_task(async function testCDP(client) {
   const onExecutionContextCreated2 = Runtime.executionContextCreated();
   const url = toDataURL("test-page");
   const { frameId } = await Page.navigate({ url });
-  ok(true, "A new page has been loaded");
+  info("A new page has been loaded");
   ok(frameId, "Page.navigate returned a frameId");
   is(
     frameId,

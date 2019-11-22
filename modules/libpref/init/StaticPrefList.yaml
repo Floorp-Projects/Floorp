@@ -4916,7 +4916,7 @@
 # Is support for CSS individual transform enabled?
 - name: layout.css.individual-transform.enabled
   type: bool
-  value: @IS_NOT_RELEASE_OR_BETA@
+  value: true
   mirror: always
 
 # Is support for CSS initial-letter property enabled?
@@ -4935,8 +4935,15 @@
 # Is support for motion-path enabled?
 - name: layout.css.motion-path.enabled
   type: bool
-  value: @IS_NOT_RELEASE_OR_BETA@
+  value: true
   mirror: always
+
+# Is support for motion-path ray() enabled?
+- name: layout.css.motion-path-ray.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
 
 # Expose the media query -moz-touch-enabled to web content.
 - name: layout.css.moz-touch-enabled.enabled
@@ -7177,6 +7184,18 @@
 
 # Report Anti-tracking warnings to console lazily
 - name: privacy.restrict3rdpartystorage.console.lazy
+  type: bool
+  value: true
+  mirror: always
+
+# Enable the heuristic to allow storage access for windows opened using window.open() after user interaction
+- name: privacy.restrict3rdpartystorage.heuristic.opened_window_after_interaction
+  type: bool
+  value: true
+  mirror: always
+
+# Enable the heuristic to allow storage access for windows opened using window.open()
+- name: privacy.restrict3rdpartystorage.heuristic.window_open
   type: bool
   value: true
   mirror: always

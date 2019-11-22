@@ -110,6 +110,10 @@ const RS_PROVIDERS_WITH_L10N = ["cfr", "cfr-fxa"];
 const RS_FLUENT_VERSION = "v1";
 const RS_FLUENT_RECORD_PREFIX = `cfr-${RS_FLUENT_VERSION}`;
 const RS_DOWNLOAD_MAX_RETRIES = 2;
+// This is the list of providers for which we want to cache the targeting
+// expression result and reuse between calls. Cache duration is defined in
+// ASRouterTargeting where evaluation takes place.
+const JEXL_PROVIDER_CACHE = new Set(["snippets"]);
 
 // To observe the app locale change notification.
 const TOPIC_INTL_LOCALE_CHANGED = "intl:app-locales-changed";
@@ -1215,7 +1219,11 @@ class _ASRouter {
     };
   }
 
-  _findAllMessages(candidateMessages, trigger, ordered = false) {
+  _findAllMessages(
+    candidateMessages,
+    trigger,
+    { ordered = false, shouldCache = false } = {}
+  ) {
     const messages = candidateMessages.filter(m =>
       this.isBelowFrequencyCaps(m)
     );
@@ -1227,10 +1235,15 @@ class _ASRouter {
       context,
       onError: this._handleTargetingError,
       ordered,
+      shouldCache,
     });
   }
 
-  _findMessage(candidateMessages, trigger, ordered = false) {
+  _findMessage(
+    candidateMessages,
+    trigger,
+    { ordered = false, shouldCache = false } = {}
+  ) {
     const messages = candidateMessages.filter(m =>
       this.isBelowFrequencyCaps(m)
     );
@@ -1244,6 +1257,7 @@ class _ASRouter {
       context,
       onError: this._handleTargetingError,
       ordered,
+      shouldCache,
     });
   }
 
@@ -1353,7 +1367,7 @@ class _ASRouter {
       const allMessages = await this._findAllMessages(
         bundledMessagesOfSameTemplate,
         trigger,
-        true
+        { ordered: true }
       );
 
       if (allMessages && allMessages.length) {
@@ -1648,6 +1662,8 @@ class _ASRouter {
       return true;
     });
 
+    const shouldCache = msgs.every(m => JEXL_PROVIDER_CACHE.has(m.provider));
+
     if (returnAll) {
       return this._findAllMessages(
         msgs,
@@ -1655,7 +1671,8 @@ class _ASRouter {
           id: triggerId,
           param: triggerParam,
           context: triggerContext,
-        }
+        },
+        { shouldCache }
       );
     }
 
@@ -1665,7 +1682,8 @@ class _ASRouter {
         id: triggerId,
         param: triggerParam,
         context: triggerContext,
-      }
+      },
+      { shouldCache }
     );
   }
 

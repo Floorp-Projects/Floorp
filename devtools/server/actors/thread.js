@@ -114,6 +114,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     this._options = {
       autoBlackBox: false,
+      skipBreakpoints: false,
     };
 
     this.breakpointActorMap = new BreakpointActorMap(this);
@@ -353,7 +354,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     this._debuggerSourcesSeen = new WeakSet();
 
-    Object.assign(this._options, options || {});
+    this._options = { ...this._options, ...options };
     this.sources.setOptions(this._options);
     this.sources.on("newSource", this.onNewSourceEvent);
 
@@ -685,7 +686,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       }
     }
 
-    Object.assign(this._options, options);
+    this._options = { ...this._options, ...options };
 
     // Update the global source store
     this.sources.setOptions(options);
@@ -1867,7 +1868,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   onPauseOnExceptions: function({ pauseOnExceptions, ignoreCaughtExceptions }) {
-    Object.assign(this._options, { pauseOnExceptions, ignoreCaughtExceptions });
+    this._options = {
+      ...this._options,
+      pauseOnExceptions,
+      ignoreCaughtExceptions,
+    };
     this.maybePauseOnExceptions();
     return {};
   },

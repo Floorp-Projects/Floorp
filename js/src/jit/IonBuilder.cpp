@@ -1994,7 +1994,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOP_TRY_DESTRUCTURING:
     case JSOP_LINENO:
     case JSOP_LABEL:
-    case JSOP_CONDSWITCH:
       return Ok();
 
     case JSOP_NOP: {
@@ -2694,6 +2693,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       break;
 
     case JSOP_UNUSED71:
+    case JSOP_UNUSED120:
     case JSOP_UNUSED149:
     case JSOP_LIMIT:
       break;

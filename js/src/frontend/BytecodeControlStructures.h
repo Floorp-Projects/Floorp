@@ -163,12 +163,6 @@ class LoopControl : public BreakableControl {
     return loopEndOffset_ - head_.offset;
   }
 
-  // The offset of the continue target from the loop's top, in case there was
-  // no entry jump.
-  BytecodeOffsetDiff continueTargetOffsetFromLoopHead() const {
-    return continueTarget_.offset - head_.offset;
-  }
-
   // A continue target can be specified by the following 2 ways:
   //   * Use the existing JUMPTARGET by calling `setContinueTarget` with
   //     the offset of the JUMPTARGET

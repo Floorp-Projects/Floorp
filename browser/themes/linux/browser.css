@@ -281,6 +281,16 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   font-size: 1.05em;
 }
 
+@supports -moz-bool-pref("browser.urlbar.megabar.expandTextOnFocus") {
+  .urlbarView {
+    font-size: inherit;
+  }
+
+  #urlbar[breakout-extend] {
+    font-size: 1.14em;
+  }
+}
+
 /* Bookmarking panel */
 
 %include ../shared/places/editBookmarkPanel.inc.css

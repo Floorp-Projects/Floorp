@@ -87,10 +87,10 @@ class DateTimePickerParent extends JSWindowActorParent {
       );
     }
 
-    this._anchor.left = rect.left;
-    this._anchor.top = rect.top;
-    this._anchor.width = rect.width;
-    this._anchor.height = rect.height;
+    this._anchor.style.left = rect.left + "px";
+    this._anchor.style.top = rect.top + "px";
+    this._anchor.style.width = rect.width + "px";
+    this._anchor.style.height = rect.height + "px";
     this._anchor.hidden = false;
 
     debug("Opening picker with details: " + JSON.stringify(detail));

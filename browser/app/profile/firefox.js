@@ -326,6 +326,8 @@ pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
 
 // Whether the quantum bar displays the major design update.
 pref("browser.urlbar.megabar", false);
+// Whether we expand the font size when the megabar is focused.
+pref("browser.urlbar.megabar.expandTextOnFocus", false);
 // Whether the megabar displays the permanent search icon.
 pref("browser.urlbar.searchIcon", false);
 pref("browser.urlbar.view.stripHttps", false);

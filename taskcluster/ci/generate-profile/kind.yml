@@ -39,18 +39,9 @@ jobs:
             max-run-time: 1200
             docker-image: {in-tree: desktop1604-test}
             artifacts:
-                - type: file
-                  name: public/build/profdata.tar.xz
-                  path: /builds/worker/artifacts/profdata.tar.xz
-                - type: file
-                  name: public/build/xvfb.log
-                  path: /builds/worker/artifacts/xvfb/xvfb.log
-                - type: file
-                  name: public/build/profile-run-1.log
-                  path: /builds/worker/artifacts/profile-run-1.log
-                - type: file
-                  name: public/build/profile-run-2.log
-                  path: /builds/worker/artifacts/profile-run-2.log
+                - type: directory
+                  name: public/build
+                  path: /builds/worker/artifacts/
         run:
             using: run-task
             cwd: '{checkout}'
@@ -59,6 +50,7 @@ jobs:
         fetches:
             toolchain:
                 - linux64-clang
+                - linux64-minidump-stackwalk
 
     linux64-shippable/opt:
         description: "Linux64 Profile Generation"
@@ -76,18 +68,9 @@ jobs:
             max-run-time: 1200
             docker-image: {in-tree: debian9-amd64-build}
             artifacts:
-                - type: file
-                  name: public/build/profdata.tar.xz
-                  path: /builds/worker/artifacts/profdata.tar.xz
-                - type: file
-                  name: public/build/xvfb.log
-                  path: /builds/worker/artifacts/xvfb/xvfb.log
-                - type: file
-                  name: public/build/profile-run-1.log
-                  path: /builds/worker/artifacts/profile-run-1.log
-                - type: file
-                  name: public/build/profile-run-2.log
-                  path: /builds/worker/artifacts/profile-run-2.log
+                - type: directory
+                  name: public/build
+                  path: /builds/worker/artifacts/
         run:
             using: run-task
             cwd: '{checkout}'
@@ -96,6 +79,7 @@ jobs:
         fetches:
             toolchain:
                 - linux64-clang
+                - linux64-minidump-stackwalk
 
     android-api-16/pgo:
         description: "Android 4.0 api-16+ Profile Generation"
@@ -115,12 +99,9 @@ jobs:
                 WORKING_DIR: "/builds/worker"
                 MOZHARNESS_PATH: "/builds/worker/workspace/build/src/testing/mozharness"
             artifacts:
-                - type: file
-                  name: public/build/profdata.tar.xz
-                  path: /builds/worker/artifacts/profdata.tar.xz
                 - type: directory
                   name: public/build
-                  path: /builds/worker/artifacts/blobber_upload_dir
+                  path: /builds/worker/artifacts/
         run:
             using: mozharness
             need-xvfb: true
@@ -135,6 +116,7 @@ jobs:
         fetches:
             toolchain:
                 - linux64-clang
+                - linux64-minidump-stackwalk
 
     win32-shippable/opt:
         description: "Win32 Profile Generation"
@@ -151,15 +133,9 @@ jobs:
             env:
                 UPLOAD_PATH: "artifacts"
             artifacts:
-                - type: file
-                  name: public/build/profdata.tar.xz
-                  path: build/src/artifacts/profdata.tar.xz
-                - type: file
-                  name: public/build/profile-run-1.log
-                  path: build/src/artifacts/profile-run-1.log
-                - type: file
-                  name: public/build/profile-run-2.log
-                  path: build/src/artifacts/profile-run-2.log
+                - type: directory
+                  name: public/build
+                  path: build/src/artifacts/
         run:
             using: run-task
             sparse-profile: profile-generate
@@ -168,6 +144,7 @@ jobs:
         fetches:
             toolchain:
                 - win64-clang-cl
+                - win32-minidump-stackwalk
 
     win64-shippable/opt:
         description: "Win64 Profile Generation"
@@ -184,15 +161,9 @@ jobs:
             env:
                 UPLOAD_PATH: "artifacts"
             artifacts:
-                - type: file
-                  name: public/build/profdata.tar.xz
-                  path: build/src/artifacts/profdata.tar.xz
-                - type: file
-                  name: public/build/profile-run-1.log
-                  path: build/src/artifacts/profile-run-1.log
-                - type: file
-                  name: public/build/profile-run-2.log
-                  path: build/src/artifacts/profile-run-2.log
+                - type: directory
+                  name: public/build
+                  path: build/src/artifacts/
         run:
             using: run-task
             sparse-profile: profile-generate
@@ -201,3 +172,4 @@ jobs:
         fetches:
             toolchain:
                 - win64-clang-cl
+                - win32-minidump-stackwalk

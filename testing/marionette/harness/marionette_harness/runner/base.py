@@ -362,6 +362,11 @@ class BaseMarionetteArguments(ArgumentParser):
                           dest='e10s',
                           default=True,
                           help='Disable e10s when running marionette tests.')
+        self.add_argument('--enable-fission',
+                          action='store_true',
+                          dest='enable_fission',
+                          default=False,
+                          help='Enable Fission (site isolation) in Gecko.')
         self.add_argument('--enable-webrender',
                           action='store_true',
                           dest='enable_webrender',
@@ -527,7 +532,7 @@ class BaseMarionetteTestRunner(object):
                  startup_timeout=None,
                  addons=None, workspace=None,
                  verbose=0, e10s=True, emulator=False, headless=False,
-                 enable_webrender=False, **kwargs):
+                 enable_webrender=False, enable_fission=False, **kwargs):
         self._appName = None
         self._capabilities = None
         self._filename_pattern = None
@@ -570,6 +575,12 @@ class BaseMarionetteTestRunner(object):
         self.verbose = verbose
         self.headless = headless
         self.enable_webrender = enable_webrender
+
+        self.enable_fission = enable_fission
+        if self.enable_fission:
+            self.prefs.update({
+                'fission.autostart': True,
+            })
 
         # self.e10s stores the desired configuration, whereas
         # self._e10s_from_browser is the cached value from querying e10s

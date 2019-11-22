@@ -944,6 +944,7 @@ menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
   /* should occupy space but not be visible */
   opacity: 0;
   pointer-events: none;
+  position: absolute;
 }
 
 browser[tabmodalPromptShowing] {
