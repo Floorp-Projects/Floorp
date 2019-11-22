@@ -154,7 +154,16 @@ EventQueuePriority PrioritizedEventQueue::SelectQueue(
 // TimeDuration() for those cases.
 already_AddRefed<nsIRunnable> PrioritizedEventQueue::GetEvent(
     EventQueuePriority* aPriority, const MutexAutoLock& aProofOfLock,
-    mozilla::TimeDuration* aHypotheticalInputEventDelay) {
+    TimeDuration* aHypotheticalInputEventDelay) {
+  MOZ_ASSERT_UNREACHABLE("Who is managing to call this?");
+  bool ignored;
+  return GetEvent(aPriority, aProofOfLock, aHypotheticalInputEventDelay,
+                  &ignored);
+}
+
+already_AddRefed<nsIRunnable> PrioritizedEventQueue::GetEvent(
+    EventQueuePriority* aPriority, const MutexAutoLock& aProofOfLock,
+    TimeDuration* aHypotheticalInputEventDelay, bool* aIsIdleEvent) {
   EventQueuePriority queue = SelectQueue(true, aProofOfLock);
   auto guard = MakeScopeExit([&] {
     mIdlePeriodState.ForgetPendingTaskGuarantee();
@@ -167,6 +176,7 @@ already_AddRefed<nsIRunnable> PrioritizedEventQueue::GetEvent(
   if (aPriority) {
     *aPriority = queue;
   }
+  *aIsIdleEvent = false;
 
   // Since Input events will only be delayed behind Input or High events,
   // the amount of time a lower-priority event spent in the queue is
@@ -231,6 +241,7 @@ already_AddRefed<nsIRunnable> PrioritizedEventQueue::GetEvent(
         event = mIdleQueue->GetEvent(aPriority, aProofOfLock);
       }
       if (event) {
+        *aIsIdleEvent = true;
         nsCOMPtr<nsIIdleRunnable> idleEvent = do_QueryInterface(event);
         if (idleEvent) {
           idleEvent->SetDeadline(idleDeadline);

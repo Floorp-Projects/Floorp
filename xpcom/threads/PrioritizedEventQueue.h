@@ -55,7 +55,12 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
   // aHypotheticalInputEventDelay
   already_AddRefed<nsIRunnable> GetEvent(
       EventQueuePriority* aPriority, const MutexAutoLock& aProofOfLock,
-      mozilla::TimeDuration* aHypotheticalInputEventDelay = nullptr) final;
+      TimeDuration* aHypotheticalInputEventDelay = nullptr) final;
+  // *aIsIdleEvent will be set to true when we are returning a non-null runnable
+  // which came from one of our idle queues, and will be false otherwise.
+  already_AddRefed<nsIRunnable> GetEvent(
+      EventQueuePriority* aPriority, const MutexAutoLock& aProofOfLock,
+      TimeDuration* aHypotheticalInputEventDelay, bool* aIsIdleEvent);
   void DidRunEvent(const MutexAutoLock& aProofOfLock);
 
   bool IsEmpty(const MutexAutoLock& aProofOfLock) final;
