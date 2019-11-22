@@ -9,7 +9,6 @@
 #include "nsISimpleEnumerator.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
-#include "nsIX509CertList.h"
 #include "nsNSSCertificate.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
@@ -135,61 +134,43 @@ class psm_CertList : public ::testing::Test {
   }
 };
 
-static nsresult AddCertFromStringToList(const char* aPem,
-                                        nsIX509CertList* aCertList) {
-  if (!aCertList) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsCOMPtr<nsIX509Cert> cert;
+static nsresult AddCertFromStringToList(
+    const char* aPem, nsTArray<RefPtr<nsIX509Cert>>& aCertList) {
+  RefPtr<nsIX509Cert> cert;
   cert =
       nsNSSCertificate::ConstructFromDER(const_cast<char*>(aPem), strlen(aPem));
   if (!cert) {
     return NS_ERROR_FAILURE;
   }
 
-  return aCertList->AddCert(cert);
-}
-
-static int CountCertsInList(nsCOMPtr<nsIX509CertList>& aCertList) {
-  int counter = 0;
-  RefPtr<nsNSSCertList> certList = aCertList->GetCertList();
-  certList->ForEachCertificateInChain(
-      [&counter](nsCOMPtr<nsIX509Cert> aCert, bool aHasMore, bool& aContinue) {
-        counter++;
-        return NS_OK;
-      });
-
-  return counter;
+  aCertList.AppendElement(cert);
+  return NS_OK;
 }
 
 TEST_F(psm_CertList, TestInvalidSegmenting) {
-  RefPtr<nsNSSCertList> certList = new nsNSSCertList();
+  nsTArray<RefPtr<nsIX509Cert>> certList;
 
   nsCOMPtr<nsIX509Cert> rootCert;
-  nsCOMPtr<nsIX509CertList> intCerts;
+  nsTArray<RefPtr<nsIX509Cert>> intCerts;
   nsCOMPtr<nsIX509Cert> eeCert;
-  nsresult rv = certList->SegmentCertificateChain(rootCert, intCerts, eeCert);
+  nsresult rv = nsNSSCertificate::SegmentCertificateChain(certList, rootCert,
+                                                          intCerts, eeCert);
   ASSERT_EQ(rv, NS_ERROR_INVALID_ARG) << "Empty lists can't be segmented";
 
   rv = AddCertFromStringToList(kCaPem, certList);
   ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
 
-  // We should need to clear out the in-vars, but let's make sure behavior is OK
-  rv = certList->SegmentCertificateChain(rootCert, intCerts, eeCert);
-  ASSERT_EQ(rv, NS_ERROR_UNEXPECTED)
-      << "Don't permit already-filled-in arguments";
-
-  intCerts = nullptr;
+  intCerts.Clear();
   rootCert = nullptr;
   eeCert = nullptr;
 
-  rv = certList->SegmentCertificateChain(rootCert, intCerts, eeCert);
+  rv = nsNSSCertificate::SegmentCertificateChain(certList, rootCert, intCerts,
+                                                 eeCert);
   ASSERT_EQ(rv, NS_ERROR_INVALID_ARG) << "Lists of one can't be segmented";
 }
 
 TEST_F(psm_CertList, TestValidSegmenting) {
-  RefPtr<nsNSSCertList> certList = new nsNSSCertList();
+  nsTArray<RefPtr<nsIX509Cert>> certList;
 
   nsresult rv = AddCertFromStringToList(kEePem, certList);
   ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
@@ -197,16 +178,17 @@ TEST_F(psm_CertList, TestValidSegmenting) {
   ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
 
   nsCOMPtr<nsIX509Cert> rootCert;
-  nsCOMPtr<nsIX509CertList> intCerts;
+  nsTArray<RefPtr<nsIX509Cert>> intCerts;
   nsCOMPtr<nsIX509Cert> eeCert;
 
-  rv = certList->SegmentCertificateChain(rootCert, intCerts, eeCert);
+  rv = nsNSSCertificate::SegmentCertificateChain(certList, rootCert, intCerts,
+                                                 eeCert);
   ASSERT_EQ(rv, NS_OK) << "Should have segmented OK";
   ASSERT_TRUE(rootCert)
   << "Root cert should be filled in";
   ASSERT_TRUE(eeCert)
   << "End entity cert should be filled in";
-  ASSERT_EQ(CountCertsInList(intCerts), 0)
+  ASSERT_EQ(intCerts.Length(), static_cast<size_t>(0))
       << "There should be no intermediates";
 
   bool selfSigned;
@@ -224,33 +206,35 @@ TEST_F(psm_CertList, TestValidSegmenting) {
   rv = AddCertFromStringToList(kCaIntermediatePem, certList);
   ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
 
-  intCerts = nullptr;
+  intCerts.Clear();
   rootCert = nullptr;
   eeCert = nullptr;
-  rv = certList->SegmentCertificateChain(rootCert, intCerts, eeCert);
+  rv = nsNSSCertificate::SegmentCertificateChain(certList, rootCert, intCerts,
+                                                 eeCert);
   ASSERT_EQ(rv, NS_OK) << "Should have segmented OK";
 
   ASSERT_TRUE(rootCert)
   << "Root cert should be filled in";
   ASSERT_TRUE(eeCert)
   << "End entity cert should be filled in";
-  ASSERT_EQ(CountCertsInList(intCerts), 1)
+  ASSERT_EQ(intCerts.Length(), static_cast<size_t>(1))
       << "There should be one intermediate";
 
   rv = AddCertFromStringToList(kCaPem, certList);
   ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
 
-  intCerts = nullptr;
+  intCerts.Clear();
   rootCert = nullptr;
   eeCert = nullptr;
-  rv = certList->SegmentCertificateChain(rootCert, intCerts, eeCert);
+  rv = nsNSSCertificate::SegmentCertificateChain(certList, rootCert, intCerts,
+                                                 eeCert);
   ASSERT_EQ(rv, NS_OK) << "Should have segmented OK";
 
   ASSERT_TRUE(rootCert)
   << "Root cert should be filled in";
   ASSERT_TRUE(eeCert)
   << "End entity cert should be filled in";
-  ASSERT_EQ(CountCertsInList(intCerts), 2)
+  ASSERT_EQ(intCerts.Length(), static_cast<size_t>(2))
       << "There should be two intermediates";
 
   ASSERT_TRUE(NS_SUCCEEDED(rootCert->GetIsSelfSigned(&selfSigned)))
@@ -269,153 +253,32 @@ TEST_F(psm_CertList, TestValidSegmenting) {
   ASSERT_TRUE(eeCn.EqualsLiteral("ee"))
   << "EE CN should match";
 
-  rv = intCerts->GetCertList()->ForEachCertificateInChain(
-      [](nsCOMPtr<nsIX509Cert> aCert, bool aHasMore, bool& aContinue) {
-        nsAutoString cn;
-        nsresult rv = aCert->GetCommonName(cn);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
+  for (size_t i = 0; i < intCerts.Length(); ++i) {
+    nsAutoString cn;
+    const auto& cert = intCerts[i];
+    rv = cert->GetCommonName(cn);
+    if (NS_FAILED(rv)) {
+      break;
+    }
 
-        if (aHasMore) {
-          if (!cn.EqualsLiteral("ca-second-intermediate")) {
-            return NS_ERROR_FAILURE;
-          }
-        } else {
-          if (!cn.EqualsLiteral("ca-intermediate")) {
-            return NS_ERROR_FAILURE;
-          }
-        }
-        return NS_OK;
-      });
+    if (i < intCerts.Length() - 1) {
+      if (!cn.EqualsLiteral("ca-second-intermediate")) {
+        rv = NS_ERROR_FAILURE;
+        break;
+      }
+    } else {
+      if (!cn.EqualsLiteral("ca-intermediate")) {
+        rv = NS_ERROR_FAILURE;
+        break;
+      }
+    }
+  }
+
   ASSERT_EQ(rv, NS_OK) << "Should have looped OK.";
 }
 
-TEST_F(psm_CertList, TestForEach) {
-  RefPtr<nsNSSCertList> certList = new nsNSSCertList();
-
-  bool called = false;
-  nsresult rv = certList->ForEachCertificateInChain(
-      [&called](nsCOMPtr<nsIX509Cert> aCert, bool aHasMore, bool& aContinue) {
-        called = true;
-        return NS_OK;
-      });
-  ASSERT_EQ(rv, NS_OK) << "Should have iterated OK";
-  ASSERT_FALSE(called)
-  << "There are no certificates in this chain, it shouldn't be called";
-
-  // Add two certificates
-  rv = AddCertFromStringToList(kCaPem, certList);
-  ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
-  rv = AddCertFromStringToList(kCaIntermediatePem, certList);
-  ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
-
-  int counter = 0;
-  rv = certList->ForEachCertificateInChain(
-      [&counter](nsCOMPtr<nsIX509Cert> aCert, bool aHasMore,
-                 bool& aContinue) -> nsresult {
-        if (!aCert) {
-          GTEST_NONFATAL_FAILURE_("Unexpected arguments");
-          return NS_ERROR_FAILURE;
-        }
-
-        nsAutoString cn;
-        nsresult rv = aCert->GetCommonName(cn);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-
-        switch (counter) {
-          case 0:
-            if (!aHasMore) {
-              return NS_ERROR_FAILURE;
-            }
-
-            if (!cn.EqualsLiteral("ca")) {
-              return NS_ERROR_FAILURE;
-            }
-            break;
-          case 1:
-            if (aHasMore) {
-              return NS_ERROR_FAILURE;
-            }
-
-            if (!cn.EqualsLiteral("ca-intermediate")) {
-              return NS_ERROR_FAILURE;
-            }
-            break;
-          default:
-            GTEST_NONFATAL_FAILURE_("Unexpected count");
-            return NS_ERROR_UNEXPECTED;
-        }
-        counter++;
-        return NS_OK;
-      });
-  ASSERT_EQ(rv, NS_OK) << "Should have iterated OK";
-}
-
-TEST_F(psm_CertList, TestForEachContinueSafety) {
-  RefPtr<nsNSSCertList> certList = new nsNSSCertList();
-
-  // Add two certificates
-  nsresult rv = AddCertFromStringToList(kCaSecondIntermediatePem, certList);
-  ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
-  rv = AddCertFromStringToList(kEePem, certList);
-  ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
-
-  int counter = 0;
-  rv = certList->ForEachCertificateInChain(
-      [&counter](nsCOMPtr<nsIX509Cert> aCert, bool aHasMore, bool& aContinue) {
-        counter++;
-        aContinue = true;  // Try to keep it going
-        return NS_OK;
-      });
-  ASSERT_EQ(counter, 2)
-      << "There should have been only two iterations regardless!";
-  ASSERT_EQ(rv, NS_OK) << "Should complete OK.";
-}
-
-TEST_F(psm_CertList, TestForEachStopEarly) {
-  RefPtr<nsNSSCertList> certList = new nsNSSCertList();
-
-  // Add two certificates
-  nsresult rv = AddCertFromStringToList(kCaSecondIntermediatePem, certList);
-  ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
-  rv = AddCertFromStringToList(kEePem, certList);
-  ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
-
-  int counter = 0;
-  rv = certList->ForEachCertificateInChain(
-      [&counter](nsCOMPtr<nsIX509Cert> aCert, bool aHasMore, bool& aContinue) {
-        counter++;
-        aContinue = false;
-        return NS_OK;
-      });
-  ASSERT_EQ(counter, 1) << "There should have been only the one call";
-  ASSERT_EQ(rv, NS_OK) << "Should complete OK.";
-}
-
-TEST_F(psm_CertList, TestForEachStopOnError) {
-  RefPtr<nsNSSCertList> certList = new nsNSSCertList();
-
-  // Add two certificates
-  nsresult rv = AddCertFromStringToList(kCaSecondIntermediatePem, certList);
-  ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
-  rv = AddCertFromStringToList(kEePem, certList);
-  ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
-
-  int counter = 0;
-  rv = certList->ForEachCertificateInChain(
-      [&counter](nsCOMPtr<nsIX509Cert> aCert, bool aHasMore, bool& aContinue) {
-        counter++;
-        return NS_ERROR_FAILURE;
-      });
-  ASSERT_EQ(counter, 1) << "There should have been only the one call";
-  ASSERT_EQ(rv, NS_ERROR_FAILURE) << "Should propagate the error.";
-}
-
 TEST_F(psm_CertList, TestGetRootCertificateChainTwo) {
-  RefPtr<nsNSSCertList> certList = new nsNSSCertList();
+  nsTArray<RefPtr<nsIX509Cert>> certList;
 
   nsresult rv = AddCertFromStringToList(kCaIntermediatePem, certList);
   ASSERT_EQ(NS_OK, rv) << "Should have loaded OK";
@@ -423,7 +286,7 @@ TEST_F(psm_CertList, TestGetRootCertificateChainTwo) {
   ASSERT_EQ(NS_OK, rv) << "Should have loaded OK";
 
   nsCOMPtr<nsIX509Cert> rootCert;
-  rv = certList->GetRootCertificate(rootCert);
+  rv = nsNSSCertificate::GetRootCertificate(certList, rootCert);
   EXPECT_EQ(NS_OK, rv) << "Should have fetched the root OK";
   ASSERT_TRUE(rootCert)
   << "Root cert should be filled in";
@@ -440,7 +303,7 @@ TEST_F(psm_CertList, TestGetRootCertificateChainTwo) {
 
   // Re-fetch and ensure we get the same certificate.
   nsCOMPtr<nsIX509Cert> rootCertRepeat;
-  rv = certList->GetRootCertificate(rootCertRepeat);
+  rv = nsNSSCertificate::GetRootCertificate(certList, rootCertRepeat);
   EXPECT_EQ(NS_OK, rv) << "Should have fetched the root OK the second time";
   ASSERT_TRUE(rootCertRepeat)
   << "Root cert should still be filled in";
@@ -452,7 +315,7 @@ TEST_F(psm_CertList, TestGetRootCertificateChainTwo) {
 }
 
 TEST_F(psm_CertList, TestGetRootCertificateChainFour) {
-  RefPtr<nsNSSCertList> certList = new nsNSSCertList();
+  nsTArray<RefPtr<nsIX509Cert>> certList;
 
   nsresult rv = AddCertFromStringToList(kEePem, certList);
   ASSERT_EQ(NS_OK, rv) << "Should have loaded OK";
@@ -464,7 +327,7 @@ TEST_F(psm_CertList, TestGetRootCertificateChainFour) {
   ASSERT_EQ(NS_OK, rv) << "Should have loaded OK";
 
   nsCOMPtr<nsIX509Cert> rootCert;
-  rv = certList->GetRootCertificate(rootCert);
+  rv = nsNSSCertificate::GetRootCertificate(certList, rootCert);
   EXPECT_EQ(NS_OK, rv) << "Should have again fetched the root OK";
   ASSERT_TRUE(rootCert)
   << "Root cert should be filled in";
@@ -481,10 +344,11 @@ TEST_F(psm_CertList, TestGetRootCertificateChainFour) {
 }
 
 TEST_F(psm_CertList, TestGetRootCertificateChainEmpty) {
-  RefPtr<nsNSSCertList> certList = new nsNSSCertList();
+  nsTArray<RefPtr<nsIX509Cert>> certList;
 
   nsCOMPtr<nsIX509Cert> rootCert;
-  nsresult rv = certList->GetRootCertificate(rootCert);
-  EXPECT_EQ(NS_OK, rv) << "Should have again fetched the root OK";
+  nsresult rv = nsNSSCertificate::GetRootCertificate(certList, rootCert);
+  EXPECT_EQ(NS_ERROR_FAILURE, rv)
+      << "Should have returned NS_ERROR_FAILURE because certList was empty";
   EXPECT_FALSE(rootCert) << "Root cert should be empty";
 }

@@ -1940,7 +1940,7 @@ this.DownloadCopySaver.prototype = {
   _sha256Hash: null,
 
   /**
-   * Save the signature info as an nsIArray of nsIX509CertList of nsIX509Cert
+   * Save the signature info as an Array of Array of raw bytes of nsIX509Cert
    * if the file is signed. This is empty if the file is unsigned, and null
    * unless BackgroundFileSaver has successfully completed saving the file.
    */
@@ -2470,7 +2470,7 @@ this.DownloadLegacySaver.prototype = {
   _sha256Hash: null,
 
   /**
-   * Save the signature info as an nsIArray of nsIX509CertList of nsIX509Cert
+   * Save the signature info as an Array of Array of raw bytes of nsIX509Cert
    * if the file is signed. This is empty if the file is unsigned, and null
    * unless BackgroundFileSaver has successfully completed saving the file.
    */

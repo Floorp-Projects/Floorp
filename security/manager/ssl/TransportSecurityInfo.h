@@ -110,10 +110,6 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   /* mHaveCertErrrorBits is relied on to determine whether or not a SPDY
      connection is eligible for joining in nsNSSSocketInfo::JoinConnection() */
   bool mHaveCertErrorBits;
-
-  static nsresult ConvertCertArrayToCertList(
-      const nsTArray<RefPtr<nsIX509Cert>>& aCertArray,
-      nsIX509CertList** aCertList);
  private:
   // True if SetCanceled has been called (or if this was deserialized with a
   // non-zero mErrorCode, which can only be the case if SetCanceled was called
@@ -141,9 +137,6 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   nsTArray<RefPtr<nsIX509Cert>> mFailedCertChain;
 
   nsresult ReadSSLStatus(nsIObjectInputStream* aStream);
-  static nsresult ConvertCertListToCertArray(
-      const nsCOMPtr<nsIX509CertList>& aCertList,
-      nsTArray<RefPtr<nsIX509Cert>>& aCertArray);
 
   // This function is used to read the binary that are serialized
   // by using nsIX509CertList
