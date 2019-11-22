@@ -2210,6 +2210,27 @@ describe("ASRouter", () => {
           "tab"
         );
       });
+      it("should call MigrationUtils.showMigrationWizard on SHOW_MIGRATION_WIZARD", async () => {
+        let [testMessage] = Router.state.messages;
+        testMessage.button_action = {
+          type: "SHOW_MIGRATION_WIZARD",
+        };
+        const msg = fakeExecuteUserAction(testMessage.button_action);
+        globals.set("MigrationUtils", {
+          showMigrationWizard: sandbox
+            .stub()
+            .withArgs(msg.target.browser.ownerGlobal, ["test"]),
+          MIGRATION_ENTRYPOINT_NEWTAB: "test",
+        });
+        await Router.onMessage(msg);
+
+        assert.calledOnce(MigrationUtils.showMigrationWizard);
+        assert.calledWith(
+          MigrationUtils.showMigrationWizard,
+          msg.target.browser.ownerGlobal,
+          [MigrationUtils.MIGRATION_ENTRYPOINT_NEWTAB]
+        );
+      });
     });
 
     describe("#onMessage: SHOW_FIREFOX_ACCOUNTS", () => {

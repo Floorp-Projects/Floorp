@@ -3871,7 +3871,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     content: none; }
 
 .onboardingMessageImage {
-  height: 100px;
+  height: 112px;
   width: 120px;
   background-size: 120px;
   background-position: center center;
@@ -3883,6 +3883,10 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       height: 75px;
       min-width: 80px;
       background-size: 80px; } }
+  @media (min-width: 1122px) {
+    .onboardingMessageImage {
+      width: 250px;
+      background-size: auto 112px; } }
   .onboardingMessageImage.addons {
     background-image: url("../data/content/assets/illustration-addons@2x.png"); }
   .onboardingMessageImage.privatebrowsing {
@@ -3897,6 +3901,8 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     background-image: url("../data/content/assets/trailhead/card-illo-devices.png"); }
   .onboardingMessageImage.fbcont {
     background-image: url("../data/content/assets/trailhead/card-illo-fbcont.png"); }
+  .onboardingMessageImage.import {
+    background-image: url("../data/content/assets/trailhead/card-illo-import.svg"); }
   .onboardingMessageImage.ffmonitor {
     background-image: url("../data/content/assets/trailhead/card-illo-ffmonitor.png"); }
   .onboardingMessageImage.ffsend {
@@ -4208,8 +4214,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   padding: 20px; }
   @media (min-width: 1122px) {
     .trailheadCard {
-      font-size: 15px;
-      padding: 40px; } }
+      font-size: 15px; } }
   .trailheadCard .onboardingTitle {
     font-weight: normal;
     color: var(--newtab-text-primary-color);

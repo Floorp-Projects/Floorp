@@ -268,7 +268,7 @@ const ONBOARDING_MESSAGES = () => [
       },
     },
     targeting:
-      "trailheadTriplet == 'supercharge' || (trailheadTriplet == 'dynamic' && usesFirefoxSync == false)",
+      "trailheadTriplet == 'supercharge' || ( 'dynamic' in trailheadTriplet && usesFirefoxSync == false)",
     trigger: { id: "showOnboarding" },
   },
   {
@@ -290,7 +290,7 @@ const ONBOARDING_MESSAGES = () => [
     },
     // Use service oauth client_id to identify 'Firefox Monitor' service attached to Firefox Account
     // https://docs.telemetry.mozilla.org/datasets/fxa_metrics/attribution.html#service-attribution
-    targeting: `trailheadTriplet == 'supercharge' || (trailheadTriplet == 'dynamic' && !("${FX_MONITOR_CLIENT_ID}" in attachedFxAOAuthClients|mapToProperty('id')))`,
+    targeting: `trailheadTriplet == 'supercharge' || ('dynamic' in trailheadTriplet && !("${FX_MONITOR_CLIENT_ID}" in attachedFxAOAuthClients|mapToProperty('id')))`,
     trigger: { id: "showOnboarding" },
   },
   {
@@ -307,7 +307,7 @@ const ONBOARDING_MESSAGES = () => [
         action: { type: "OPEN_PRIVATE_BROWSER_WINDOW" },
       },
     },
-    targeting: "trailheadTriplet == 'dynamic'",
+    targeting: "'dynamic' in trailheadTriplet",
     trigger: { id: "showOnboarding" },
   },
   {
@@ -351,7 +351,7 @@ const ONBOARDING_MESSAGES = () => [
       },
     },
     targeting:
-      "trailheadTriplet == 'supercharge' || (trailheadTriplet == 'dynamic' && sync.mobileDevices < 1)",
+      "trailheadTriplet == 'supercharge' || ('dynamic' in trailheadTriplet && sync.mobileDevices < 1)",
     trigger: { id: "showOnboarding" },
   },
   {
@@ -375,7 +375,7 @@ const ONBOARDING_MESSAGES = () => [
         },
       },
     },
-    targeting: "trailheadTriplet == 'dynamic'",
+    targeting: "'dynamic' in trailheadTriplet",
     trigger: { id: "showOnboarding" },
   },
   {
@@ -418,7 +418,7 @@ const ONBOARDING_MESSAGES = () => [
         },
       },
     },
-    targeting: "trailheadTriplet == 'dynamic'",
+    targeting: "'dynamic' in trailheadTriplet",
     trigger: { id: "showOnboarding" },
   },
   {
@@ -443,6 +443,23 @@ const ONBOARDING_MESSAGES = () => [
       },
     },
     targeting: "trailheadTriplet == 'payoff'",
+    trigger: { id: "showOnboarding" },
+  },
+  {
+    id: "TRAILHEAD_CARD_11",
+    template: "onboarding",
+    bundled: 3,
+    order: 0,
+    content: {
+      title: { string_id: "onboarding-import-browser-settings-title" },
+      text: { string_id: "onboarding-import-browser-settings-text" },
+      icon: "import",
+      primary_button: {
+        label: { string_id: "onboarding-import-browser-settings-button" },
+        action: { type: "SHOW_MIGRATION_WIZARD" },
+      },
+    },
+    targeting: "trailheadTriplet == 'dynamic_chrome'",
     trigger: { id: "showOnboarding" },
   },
   {

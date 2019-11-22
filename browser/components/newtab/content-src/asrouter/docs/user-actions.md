@@ -79,6 +79,12 @@ Example:
 
 Opens Firefox accounts sign-up page. Encodes some information that the origin was from snippets by default.
 
+### `SHOW_MIGRATION_WIZARD`
+
+* args: (none)
+
+Opens import wizard to bring in settings and data from another browser.
+
 ### `PIN_CURRENT_TAB`
 
 * args: (none)

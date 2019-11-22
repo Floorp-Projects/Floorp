@@ -114,7 +114,7 @@
 
 // Also used for Trailhead
 .onboardingMessageImage {
-  height: 100px;
+  height: 112px;
   width: 120px;
   background-size: 120px;
   background-position: center center;
@@ -127,6 +127,11 @@
     height: 75px;
     min-width: 80px;
     background-size: 80px;
+  }
+
+  @media (min-width: $break-point-widest) {
+    width: 250px;
+    background-size: auto 112px;
   }
 
   &.addons {
@@ -155,6 +160,10 @@
 
   &.fbcont {
     background-image: url('#{$image-path}trailhead/card-illo-fbcont.png');
+  }
+
+  &.import {
+    background-image: url('#{$image-path}trailhead/card-illo-import.svg');
   }
 
   &.ffmonitor {

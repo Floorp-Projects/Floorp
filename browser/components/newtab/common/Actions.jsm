@@ -168,6 +168,7 @@ for (const type of [
   "OPEN_PROTECTION_PANEL",
   "OPEN_PROTECTION_REPORT",
   "DISABLE_STP_DOORHANGERS",
+  "SHOW_MIGRATION_WIZARD",
 ]) {
   ASRouterActions[type] = type;
 }
