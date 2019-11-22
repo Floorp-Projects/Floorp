@@ -39,6 +39,7 @@
 #include "nsIScreenManager.h"
 #include "nsIServiceManager.h"
 #include "nsStyleConsts.h"
+#include "nsStyleStructInlines.h"
 #include "nsTransitionManager.h"
 #include "nsDisplayList.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
@@ -281,9 +282,10 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
       widgetData.mIsDragPopup = true;
     }
 
-    // If mousethrough="always" is set directly on the popup, then the widget
-    // should ignore mouse events, passing them through to the content behind.
-    mMouseTransparent = GetStateBits() & NS_FRAME_MOUSE_THROUGH_ALWAYS;
+    // If pointer-events: none; is set on the popup, then the widget should
+    // ignore mouse events, passing them through to the content behind.
+    mMouseTransparent = StyleUI()->GetEffectivePointerEvents(this) ==
+                        NS_STYLE_POINTER_EVENTS_NONE;
     widgetData.mMouseTransparent = mMouseTransparent;
   }
 
