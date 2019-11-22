@@ -58,7 +58,7 @@ class Template(TryConfig):
         pass
 
 
-class Artifact(Template):
+class Artifact(TryConfig):
 
     arguments = [
         [['--artifact'],
@@ -82,10 +82,10 @@ class Artifact(Template):
         except BuildEnvironmentNotFoundException:
             return False
 
-    def context(self, artifact, no_artifact, **kwargs):
+    def try_config(self, artifact, no_artifact, **kwargs):
         if artifact:
             return {
-                'artifact': {'enabled': '1'}
+                'use-artifact-builds': True
             }
 
         if no_artifact:
@@ -94,7 +94,7 @@ class Artifact(Template):
         if self.is_artifact_build():
             print("Artifact builds enabled, pass --no-artifact to disable")
             return {
-                'artifact': {'enabled': '1'}
+                'use-artifact-builds': True
             }
 
 

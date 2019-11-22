@@ -17,7 +17,7 @@ from tryselect.templates import all_templates
 TEMPLATE_TESTS = {
     'artifact': [
         (['--no-artifact'], None),
-        (['--artifact'], {'artifact': {'enabled': '1'}}),
+        (['--artifact'], {'use-artifact-builds': True}),
     ],
     'chemspill-prio': [
         ([], None),
@@ -56,17 +56,19 @@ def test_templates(template_patch_resolver, template, args, expected):
     t = all_templates[template]()
     t.add_arguments(parser)
 
+    fn = getattr(t, 'context', t.try_config)
     if inspect.isclass(expected) and issubclass(expected, BaseException):
         with pytest.raises(expected):
             args = parser.parse_args(args)
             if template == 'path':
                 template_patch_resolver(**vars(args))
-            t.context(**vars(args))
+
+            fn(**vars(args))
     else:
         args = parser.parse_args(args)
         if template == 'path':
             template_patch_resolver(**vars(args))
-        assert t.context(**vars(args)) == expected
+        assert fn(**vars(args)) == expected
 
 
 if __name__ == '__main__':

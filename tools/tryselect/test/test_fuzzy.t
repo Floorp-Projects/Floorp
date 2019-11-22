@@ -189,13 +189,11 @@ Test templates
           "test/foo-opt"
       ],
       "templates": {
-          "artifact": {
-              "enabled": "1"
-          },
           "env": {
               "TRY_SELECTOR": "fuzzy"
           }
       },
+      "use-artifact-builds": true,
       "version": 1
   }
   

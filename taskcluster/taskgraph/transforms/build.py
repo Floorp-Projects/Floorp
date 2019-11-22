@@ -173,7 +173,7 @@ def enable_full_crashsymbols(config, jobs):
 def use_artifact(config, jobs):
     if config.params['try_mode'] == 'try_task_config':
         use_artifact = config.params['try_task_config'] \
-            .get('templates', {}).get('artifact', {}).get('enabled')
+            .get('use-artifact-builds', False)
     elif config.params['try_mode'] == 'try_option_syntax':
         use_artifact = config.params['try_options'].get('artifact')
     else:
