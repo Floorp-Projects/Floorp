@@ -299,4 +299,5 @@ module.exports = {
   setTargetSearchResult,
   toggleCaseSensitiveSearch,
   clearSearchResultAndCancel,
+  stopOngoingSearch,
 };
