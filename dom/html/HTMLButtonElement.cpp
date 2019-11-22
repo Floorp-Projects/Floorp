@@ -255,10 +255,13 @@ nsresult HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
         RefPtr<mozilla::dom::HTMLFormElement> form(mForm);
         if (mType == NS_FORM_BUTTON_RESET) {
           form->MaybeReset(this);
+          aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
         } else if (mType == NS_FORM_BUTTON_SUBMIT) {
           form->MaybeSubmit(this);
+          aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
         }
-        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+        // https://html.spec.whatwg.org/multipage/form-elements.html#attr-button-type-button-state
+        // NS_FORM_BUTTON_BUTTON do nothing.
       }
     }
   } else if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK) && mForm) {
