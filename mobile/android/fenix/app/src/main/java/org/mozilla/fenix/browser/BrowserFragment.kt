@@ -18,7 +18,6 @@ import androidx.lifecycle.Observer
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_browser.view.*
-import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
@@ -255,7 +254,7 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         view,
         FenixSnackbarDelegate(
             view,
-            bottom_bar
+            browserToolbarView.view
         )
     )
 
