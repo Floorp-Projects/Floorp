@@ -366,10 +366,11 @@ add_task(async function testMouseSupport() {
 });
 
 add_task(async function testKeyboardSupport() {
+  let id = "test@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test extension",
-      applications: { gecko: { id: "test@mochi.test" } },
+      applications: { gecko: { id } },
     },
     useAddonManager: "temporary",
   });
@@ -424,19 +425,32 @@ add_task(async function testKeyboardSupport() {
   tab({ shiftKey: true });
   isFocused(disableButton, "The disable toggle is focused");
   is(card.parentNode, enabledSection, "The card is in the enabled section");
-  let disabled = BrowserTestUtils.waitForEvent(list, "move");
   space();
-  await disabled;
+  // Wait for the add-on state to change.
+  let [disabledAddon] = await AddonTestUtils.promiseAddonEvent("onDisabled");
+  is(disabledAddon.id, id, "The right add-on was disabled");
+  is(
+    card.parentNode,
+    enabledSection,
+    "The card is still in the enabled section"
+  );
+  isFocused(disableButton, "The disable button is still focused");
+  let moved = BrowserTestUtils.waitForEvent(list, "move");
+  // Click outside the list to clear any focus.
+  EventUtils.synthesizeMouseAtCenter(
+    doc.querySelector(".header-name"),
+    {},
+    win
+  );
+  await moved;
   is(
     card.parentNode,
     disabledSection,
-    "The card is now in the disabled section"
+    "The card moved when keyboard focus left the list"
   );
-  isFocused(disableButton, "The disable button is still focused");
 
   // Remove the add-on.
-  tab();
-  isFocused(moreOptionsButton, "The more options button is focused again");
+  moreOptionsButton.focus();
   shown = BrowserTestUtils.waitForEvent(moreOptionsMenu, "shown");
   space();
   is(moreOptionsMenu.open, true, "The menu is open");
@@ -928,6 +942,10 @@ add_task(async function testDisabledDimming() {
 
   let win = await loadInitialView("extension");
   let doc = win.document;
+  let pageHeader = doc.querySelector("addon-page-header");
+
+  // Ensure there's no focus on the list.
+  EventUtils.synthesizeMouseAtCenter(pageHeader, {}, win);
 
   const checkOpacity = (card, expected, msg) => {
     let { opacity } = card.ownerGlobal.getComputedStyle(card.firstElementChild);
@@ -944,18 +962,25 @@ add_task(async function testDisabledDimming() {
   checkOpacity(card, "1", "The opacity is 1 when enabled");
 
   // Disable the add-on, check again.
+  let list = doc.querySelector("addon-list");
+  let moved = BrowserTestUtils.waitForEvent(list, "move");
   await addon.disable();
+  await moved;
+
+  let disabledSection = getSection(doc, "disabled");
+  is(card.parentNode, disabledSection, "The card is in the disabled section");
   checkOpacity(card, "0.6", "The opacity is dimmed when disabled");
 
   // Click on the menu button, this should un-dim the card.
   let transitionEnded = waitForTransition(card);
-  card.panel.open = true;
+  let moreOptionsButton = card.querySelector(".more-options-button");
+  EventUtils.synthesizeMouseAtCenter(moreOptionsButton, {}, win);
   await transitionEnded;
   checkOpacity(card, "1", "The opacity is 1 when the menu is open");
 
   // Close the menu, opacity should return.
   transitionEnded = waitForTransition(card);
-  card.panel.open = false;
+  EventUtils.synthesizeMouseAtCenter(pageHeader, {}, win);
   await transitionEnded;
   checkOpacity(card, "0.6", "The card is dimmed again");
 
