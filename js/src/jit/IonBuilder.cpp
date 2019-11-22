@@ -3547,7 +3547,7 @@ AbortReasonOr<Ok> IonBuilder::visitJumpTarget(JSOp op) {
           successorBlock = joinBlock;
         }
         predecessorTest = lastIns->toTest();
-        predecessorTest->replaceSuccessor(0, successorBlock);
+        predecessorTest->initSuccessor(0, successorBlock);
         continue;
       }
 
@@ -3560,18 +3560,18 @@ AbortReasonOr<Ok> IonBuilder::visitJumpTarget(JSOp op) {
           successorBlock = joinBlock;
         }
         predecessorTest = lastIns->toTest();
-        predecessorTest->replaceSuccessor(1, successorBlock);
+        predecessorTest->initSuccessor(1, successorBlock);
         continue;
       }
 
       case PendingEdge::Kind::Goto:
         MOZ_TRY(addEdge(source, 0));
-        lastIns->toGoto()->replaceSuccessor(0, joinBlock);
+        lastIns->toGoto()->initSuccessor(0, joinBlock);
         continue;
 
       case PendingEdge::Kind::GotoWithFake:
         MOZ_TRY(addEdge(source, 0));
-        lastIns->toGotoWithFake()->replaceSuccessor(1, joinBlock);
+        lastIns->toGotoWithFake()->initSuccessor(1, joinBlock);
         continue;
     }
     MOZ_CRASH("Invalid kind");
