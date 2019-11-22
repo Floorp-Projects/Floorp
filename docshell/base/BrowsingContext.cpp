@@ -43,6 +43,7 @@
 #include "xpcprivate.h"
 
 #include "AutoplayPolicy.h"
+#include "GVAutoplayRequestStatusIPC.h"
 
 extern mozilla::LazyLogModule gAutoplayPermissionLog;
 
@@ -1227,6 +1228,26 @@ void BrowsingContext::StartDelayedAutoplayMediaComponents() {
   AUTOPLAY_LOG("%s : StartDelayedAutoplayMediaComponents for bc 0x%08" PRIx64,
                XRE_IsParentProcess() ? "Parent" : "Child", Id());
   mDocShell->StartDelayedAutoplayMediaComponents();
+}
+
+void BrowsingContext::ResetGVAutoplayRequestStatus() {
+  MOZ_ASSERT(!GetParent(),
+             "Should only set GVAudibleAutoplayRequestStatus in the top-level "
+             "browsing context");
+  SetGVAudibleAutoplayRequestStatus(GVAutoplayRequestStatus::eUNKNOWN);
+  SetGVInaudibleAutoplayRequestStatus(GVAutoplayRequestStatus::eUNKNOWN);
+}
+
+void BrowsingContext::DidSetGVAudibleAutoplayRequestStatus() {
+  MOZ_ASSERT(!GetParent(),
+             "Should only set GVAudibleAutoplayRequestStatus in the top-level "
+             "browsing context");
+}
+
+void BrowsingContext::DidSetGVInaudibleAutoplayRequestStatus() {
+  MOZ_ASSERT(!GetParent(),
+             "Should only set GVAudibleAutoplayRequestStatus in the top-level "
+             "browsing context");
 }
 
 void BrowsingContext::DidSetUserActivationState() {
