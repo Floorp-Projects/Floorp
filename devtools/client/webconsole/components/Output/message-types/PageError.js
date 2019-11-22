@@ -44,6 +44,7 @@ function PageError(props) {
     isPaused,
     maybeScrollToBottom,
     inWarningGroup,
+    pausedExecutionPoint,
   } = props;
   const {
     id: messageId,
@@ -92,6 +93,7 @@ function PageError(props) {
     timestampsVisible,
     maybeScrollToBottom,
     message,
+    pausedExecutionPoint,
   });
 }
 
