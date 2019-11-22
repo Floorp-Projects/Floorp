@@ -34,10 +34,7 @@ function viewCertHelper(parent, cert, openingOption = "tab") {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     let derb64 = encodeURIComponent(cert.getBase64DERString());
     let url = `about:certificate?cert=${derb64}`;
-    let opened = win.switchToTabHavingURI(url, false, {});
-    if (!opened) {
-      win.openTrustedLinkIn(url, openingOption);
-    }
+    win.openTrustedLinkIn(url, openingOption);
   } else {
     Services.ww.openWindow(
       parent && parent.docShell.rootTreeItem.domWindow,
