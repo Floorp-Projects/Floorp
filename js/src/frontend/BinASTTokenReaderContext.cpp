@@ -2881,6 +2881,234 @@ HuffmanPreludeReader::readSingleValueTable<UnsignedLong>(
   return Ok();
 }
 
+HuffmanDictionaryForMetadata::~HuffmanDictionaryForMetadata() {
+  for (size_t i = 0; i < numTables_; i++) {
+    tablesBase()[i].~GenericHuffmanTable();
+  }
+  for (size_t i = 0; i < numSingleTables_; i++) {
+    singleTablesBase()[i].~SingleLookupHuffmanTable();
+  }
+  for (size_t i = 0; i < numTwoTables_; i++) {
+    twoTablesBase()[i].~TwoLookupsHuffmanTable();
+  }
+}
+
+/* static */
+HuffmanDictionaryForMetadata* HuffmanDictionaryForMetadata::createFrom(
+    HuffmanDictionary* dictionary, TemporaryStorage* tempStorage) {
+  size_t numTables = dictionary->numTables();
+  size_t numHuffmanEntries = tempStorage->numHuffmanEntries();
+  size_t numInternalIndices = tempStorage->numInternalIndices();
+  while (numInternalIndices * sizeof(InternalIndex) % sizeof(uintptr_t) != 0) {
+    numInternalIndices++;
+  }
+  size_t numSingleTables = tempStorage->numSingleTables();
+  size_t numTwoTables = tempStorage->numTwoTables();
+
+  HuffmanDictionaryForMetadata* data =
+      static_cast<HuffmanDictionaryForMetadata*>(
+          js_malloc(totalSize(numTables, numHuffmanEntries, numInternalIndices,
+                              numSingleTables, numTwoTables)));
+  if (MOZ_UNLIKELY(!data)) {
+    return nullptr;
+  }
+
+  new (mozilla::KnownNotNull, data) HuffmanDictionaryForMetadata(
+      numTables, numHuffmanEntries, numInternalIndices, numSingleTables,
+      numTwoTables);
+
+  data->moveFrom(dictionary, tempStorage);
+  return data;
+}
+
+void HuffmanDictionaryForMetadata::moveFrom(HuffmanDictionary* dictionary,
+                                            TemporaryStorage* tempStorage) {
+  // Move tableIndices_ from HuffmanDictionary to the payload of
+  // HuffmanDictionaryForMetadata.
+  for (size_t i = 0; i < TableIdentity::Limit; i++) {
+    // HuffmanDictionaryForMetadata.tableIndices_ is initialized to
+    // UnreachableIndex, and we don't have to move if
+    // dictionary->status_[i] == HuffmanDictionary::TableStatus::Unreachable.
+    if (dictionary->status_[i] == HuffmanDictionary::TableStatus::Ready) {
+      tableIndices_[i] = dictionary->tableIndices_[i];
+    }
+  }
+
+  // Fill items of each array from the beginning.
+  auto tablePtr = tablesBase();
+  auto huffmanEntryPtr = huffmanEntriesBase();
+  auto internalIndexPtr = internalIndicesBase();
+  auto singleTablePtr = singleTablesBase();
+  auto twoTablePtr = twoTablesBase();
+
+  // Move the content of SingleLookupHuffmanTable from
+  // TemporaryStorage to the payload of HuffmanDictionaryForMetadata.
+  //
+  // SingleLookupHuffmanTable itself should already be moved to
+  // HuffmanDictionaryForMetadata.
+  auto moveSingleTableContent =
+      [&huffmanEntryPtr, &internalIndexPtr](SingleLookupHuffmanTable& table) {
+        // table.{values_,saturated_} points the spans in TemporaryStorage.
+        // Move those items to the payload and then update
+        // table.{values_,saturated_} to point that range.
+
+        {
+          size_t size = table.values_.size();
+          memmove(huffmanEntryPtr.get(), table.values_.data(),
+                  sizeof(HuffmanEntry) * size);
+          table.values_ = mozilla::MakeSpan(huffmanEntryPtr.get(), size);
+          huffmanEntryPtr += size;
+        }
+
+        {
+          size_t size = table.saturated_.size();
+          memmove(internalIndexPtr.get(), table.saturated_.data(),
+                  sizeof(InternalIndex) * size);
+          table.saturated_ = mozilla::MakeSpan(internalIndexPtr.get(), size);
+          internalIndexPtr += size;
+        }
+      };
+
+  // Move the content of TwoLookupsHuffmanTable from
+  // TemporaryStorage to the payload of HuffmanDictionaryForMetadata.
+  auto moveTwoTableContent =
+      [&huffmanEntryPtr, &singleTablePtr,
+       moveSingleTableContent](TwoLookupsHuffmanTable& table) {
+        // table.shortKeys_ instance itself is already moved.
+        // Move the contents to the payload.
+        moveSingleTableContent(table.shortKeys_);
+
+        // table.{values_,suffixTables_} points the spans in TemporaryStorage.
+        // Move those items to the payload and then update
+        // table.{values_,suffixTables_} to point that range.
+        // Also recursively move the content of suffixTables_.
+
+        {
+          size_t size = table.values_.size();
+          memmove(huffmanEntryPtr.get(), table.values_.data(),
+                  sizeof(HuffmanEntry) * size);
+          table.values_ = mozilla::MakeSpan(huffmanEntryPtr.get(), size);
+          huffmanEntryPtr += size;
+        }
+
+        {
+          size_t size = table.suffixTables_.size();
+          auto head = singleTablePtr.get();
+          for (auto& fromSubTable : table.suffixTables_) {
+            memmove(singleTablePtr.get(), &fromSubTable,
+                    sizeof(SingleLookupHuffmanTable));
+            auto& toSubTable = *singleTablePtr;
+            singleTablePtr++;
+
+            moveSingleTableContent(toSubTable);
+          }
+          table.suffixTables_ = mozilla::MakeSpan(head, size);
+        }
+      };
+
+  // Move the content of ThreeLookupsHuffmanTable from
+  // TemporaryStorage to the payload of HuffmanDictionaryForMetadata.
+  auto moveThreeTableContent =
+      [&huffmanEntryPtr, &twoTablePtr, moveSingleTableContent,
+       moveTwoTableContent](ThreeLookupsHuffmanTable& table) {
+        // table.shortKeys_ instance itself is already moved.
+        // Move the contents to the payload.
+        moveSingleTableContent(table.shortKeys_);
+
+        // table.{values_,suffixTables_} points the spans in TemporaryStorage.
+        // Move those items to the payload and then update
+        // table.{values_,suffixTables_} to point that range.
+        // Also recursively move the content of suffixTables_.
+
+        {
+          size_t size = table.values_.size();
+          memmove(huffmanEntryPtr.get(), table.values_.data(),
+                  sizeof(HuffmanEntry) * size);
+          table.values_ = mozilla::MakeSpan(huffmanEntryPtr.get(), size);
+          huffmanEntryPtr += size;
+        }
+
+        {
+          size_t size = table.suffixTables_.size();
+          auto head = twoTablePtr.get();
+          for (auto& fromSubTable : table.suffixTables_) {
+            memmove(twoTablePtr.get(), &fromSubTable,
+                    sizeof(TwoLookupsHuffmanTable));
+            auto& toSubTable = *twoTablePtr;
+            twoTablePtr++;
+
+            moveTwoTableContent(toSubTable);
+          }
+          table.suffixTables_ = mozilla::MakeSpan(head, size);
+        }
+      };
+
+  // Move tables from HuffmanDictionary to the payload of
+  // HuffmanDictionaryForMetadata, and then move contents of those tables
+  // to the payload of HuffmanDictionaryForMetadata.
+  for (size_t i = 0; i < numTables_; i++) {
+    auto& fromTable = dictionary->tableAtIndex(i);
+
+    if (fromTable.implementation_.is<SingleEntryHuffmanTable>() ||
+        fromTable.implementation_.is<TwoEntriesHuffmanTable>()) {
+      memmove(tablePtr.get(), &fromTable, sizeof(GenericHuffmanTable));
+      tablePtr++;
+    } else if (fromTable.implementation_.is<SingleLookupHuffmanTable>()) {
+      memmove(tablePtr.get(), &fromTable, sizeof(GenericHuffmanTable));
+      auto& specialized =
+          tablePtr->implementation_.as<SingleLookupHuffmanTable>();
+      tablePtr++;
+
+      moveSingleTableContent(specialized);
+    } else if (fromTable.implementation_.is<TwoLookupsHuffmanTable>()) {
+      memmove(tablePtr.get(), &fromTable, sizeof(GenericHuffmanTable));
+      auto& specialized =
+          tablePtr->implementation_.as<TwoLookupsHuffmanTable>();
+      tablePtr++;
+
+      moveTwoTableContent(specialized);
+    } else {
+      MOZ_ASSERT(fromTable.implementation_.is<ThreeLookupsHuffmanTable>());
+
+      memmove(tablePtr.get(), &fromTable, sizeof(GenericHuffmanTable));
+      auto& specialized =
+          tablePtr->implementation_.as<ThreeLookupsHuffmanTable>();
+      tablePtr++;
+
+      moveThreeTableContent(specialized);
+    }
+  }
+}
+
+/* static */
+size_t HuffmanDictionaryForMetadata::totalSize(size_t numTables,
+                                               size_t numHuffmanEntries,
+                                               size_t numInternalIndices,
+                                               size_t numSingleTables,
+                                               size_t numTwoTables) {
+  static_assert(alignof(GenericHuffmanTable) % sizeof(uintptr_t) == 0,
+                "should be aligned to pointer size");
+  static_assert(alignof(HuffmanEntry) % sizeof(uintptr_t) == 0,
+                "should be aligned to pointer size");
+  static_assert(alignof(SingleLookupHuffmanTable) % sizeof(uintptr_t) == 0,
+                "should be aligned to pointer size");
+  static_assert(alignof(TwoLookupsHuffmanTable) % sizeof(uintptr_t) == 0,
+                "should be aligned to pointer size");
+
+  // InternalIndex is known not to aligned to pointer size.
+  // Make sure `numInternalIndices` meets the requirement that
+  // the entire block size is aligned to pointer size.
+  MOZ_ASSERT(numInternalIndices * sizeof(InternalIndex) % sizeof(uintptr_t) ==
+             0);
+
+  return sizeof(HuffmanDictionaryForMetadata) +
+         numTables * sizeof(GenericHuffmanTable) +
+         numHuffmanEntries * sizeof(HuffmanEntry) +
+         numInternalIndices * sizeof(InternalIndex) +
+         numSingleTables * sizeof(SingleLookupHuffmanTable) +
+         numTwoTables * sizeof(TwoLookupsHuffmanTable);
+}
+
 HuffmanDictionary::~HuffmanDictionary() {
   for (size_t i = 0; i < nextIndex_; i++) {
     tableAtIndex(i).~GenericHuffmanTable();
