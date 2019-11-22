@@ -1,3 +1,0 @@
-# This file is empty to keep mach try fuzzy happy until it doesn't use
-# {"templates": {"artifact": {"enabled": "1"}}} to enable artifact builds.
----
