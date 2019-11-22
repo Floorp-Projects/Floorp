@@ -9,6 +9,9 @@ DIRS += [
 XPCOM_MANIFESTS += ["components.conf"]
 JAR_MANIFESTS += ["jar.mn"]
 
+XPIDL_MODULE = "remote"
+XPIDL_SOURCES += ["nsIRemoteAgent.idl"]
+
 with Files("**"):
     BUG_COMPONENT = ("Remote Protocol", "Agent")
 with Files("domains/**/Emulation.jsm"):
