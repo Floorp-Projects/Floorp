@@ -1168,7 +1168,9 @@ class JSTerm extends Component {
     }
 
     return dom.button({
-      className: "devtools-button webconsole-input-openEditorButton",
+      className:
+        "devtools-button webconsole-input-openEditorButton" +
+        (this.props.showEditorOnboarding ? " devtools-feature-callout" : ""),
       title: l10n.getFormatStr("webconsole.input.openEditorButton.tooltip2", [
         isMacOS ? "Cmd + B" : "Ctrl + B",
       ]),
@@ -1228,6 +1230,7 @@ class JSTerm extends Component {
         className: "jsterm-input-container devtools-input devtools-monospace",
         key: "jsterm-container",
         "aria-live": "off",
+        tabindex: -1,
         onContextMenu: this.onContextMenu,
         ref: node => {
           this.node = node;
