@@ -19,6 +19,12 @@ const PublicSuffixList = {
   CLIENT: RemoteSettings("public-suffix-list"),
 
   init() {
+    // Only initialize once.
+    if (this._initialized) {
+      return;
+    }
+    this._initialized = true;
+
     this.CLIENT.on("sync", this.onUpdate.bind(this));
     /* We have a single record for this collection. Let's see if we already have it locally.
      * Note that on startup, we don't need to synchronize immediately on new profiles.
@@ -26,6 +32,7 @@ const PublicSuffixList = {
     this.CLIENT.get({ syncIfEmpty: false, filters: { id: RECORD_ID } })
       .then(async records => {
         if (records.length == 1) {
+          // Get the downloaded file URI (most likely to be a no-op here, since file will exist).
           const fileURI = await this.CLIENT.attachments.download(records[0]);
           // Send a signal so that the C++ code loads the updated list on startup.
           this.notifyUpdate(fileURI);
@@ -78,7 +85,13 @@ const PublicSuffixList = {
       return;
     }
     // Download the updated file.
-    const fileURI = await this.CLIENT.attachments.download(changed[0]);
+    let fileURI;
+    try {
+      fileURI = await this.CLIENT.attachments.download(changed[0]);
+    } catch (err) {
+      Cu.reportError(err);
+      return;
+    }
     // Notify the C++ part to reload it from disk.
     this.notifyUpdate(fileURI);
   },
