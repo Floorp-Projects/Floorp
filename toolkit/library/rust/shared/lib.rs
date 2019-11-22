@@ -64,6 +64,9 @@ extern crate unic_langid_ffi;
 extern crate fluent_langneg;
 extern crate fluent_langneg_ffi;
 
+#[cfg(feature = "remote")]
+extern crate remote;
+
 use std::boxed::Box;
 use std::env;
 use std::ffi::{CStr, CString};

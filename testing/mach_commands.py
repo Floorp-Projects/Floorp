@@ -799,8 +799,9 @@ class TestInfoCommand(MachCommandBase):
             self.full_test_name = self.test_name
 
         # search for full_test_name in test manifests
-        from moztest.resolve import TestResolver
-        resolver = self._spawn(TestResolver)
+        from moztest.resolve import TestResolver, TestManifestLoader
+        here = os.path.abspath(os.path.dirname(__file__))
+        resolver = TestResolver.from_environment(cwd=here, loader_cls=TestManifestLoader)
         relpath = self._wrap_path_argument(self.full_test_name).relpath()
         tests = list(resolver.resolve_tests(paths=[relpath]))
         if len(tests) == 1:
@@ -1216,7 +1217,7 @@ class TestInfoCommand(MachCommandBase):
         import mozpack.path as mozpath
         import re
         from mozbuild.build_commands import Build
-        from moztest.resolve import TestResolver
+        from moztest.resolve import TestResolver, TestManifestLoader
 
         def matches_filters(test):
             '''
@@ -1259,7 +1260,8 @@ class TestInfoCommand(MachCommandBase):
             builder.configure()
 
         print("Finding tests...")
-        resolver = self._spawn(TestResolver)
+        here = os.path.abspath(os.path.dirname(__file__))
+        resolver = TestResolver.from_environment(cwd=here, loader_cls=TestManifestLoader)
         tests = list(resolver.resolve_tests(paths=paths, flavor=flavor,
                                             subsuite=subsuite))
 

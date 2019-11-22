@@ -7,6 +7,12 @@
  * This @file implements the child side of Conduits, an abstraction over
  * Fission IPC for extension API subject.  See {@link ConduitsParent.jsm}
  * for more details about the overall design.
+ *
+ * @typedef {object} MessageData
+ * @prop {ConduitID} [target]
+ * @prop {ConduitID} [sender]
+ * @prop {boolean} query
+ * @prop {object} arg
  */
 
 const EXPORTED_SYMBOLS = ["BaseConduit", "ConduitsChild"];
@@ -47,7 +53,7 @@ class BaseConduit {
    * @param {string} method
    * @param {boolean} query Flag indicating a response is expected.
    * @param {JSWindowActor} actor
-   * @param {{arg: object, sender: ConduitID}} data
+   * @param {MessageData} data
    * @returns {Promise?}
    */
   _send(method, query, actor, data) {
@@ -144,9 +150,18 @@ class ConduitsChild extends JSWindowActorChild {
 
   /**
    * JSWindowActor method, routes the message to the target subject.
+   * @param {string} name
+   * @param {MessageData|MessageData[]} data
    * @returns {Promise?}
    */
-  receiveMessage({ name, data: { target, arg, query, sender } }) {
+  receiveMessage({ name, data }) {
+    // Batch of webRequest events, run each and return results, ignoring errors.
+    if (Array.isArray(data)) {
+      let run = data => this.receiveMessage({ name, data });
+      return Promise.all(data.map(data => run(data).catch(Cu.reportError)));
+    }
+
+    let { target, arg, query, sender } = data;
     let conduit = this.conduits.get(target);
     if (!conduit) {
       throw new Error(`${name} for closed conduit ${target}: ${uneval(arg)}`);

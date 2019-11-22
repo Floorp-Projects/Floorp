@@ -1460,6 +1460,7 @@ dependencies = [
  "nsstring 0.1.0",
  "prefs_parser 0.0.1",
  "profiler_helper 0.1.0",
+ "remote 0.1.0",
  "rlbox_lucet_sandbox 0.1.0 (git+https://github.com/PLSysSec/rlbox_lucet_sandbox/?rev=997c648eb0eaeaaa7a00a9eee20431f750b4e190)",
  "rsdparsa_capi 0.1.0",
  "rustc_version 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3050,6 +3051,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cfg-if 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "remote"
+version = "0.1.0"
+dependencies = [
+ "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "http 0.1.17 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.59 (registry+https://github.com/rust-lang/crates.io-index)",
+ "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nserror 0.1.0",
+ "nsstring 0.1.0",
+ "xpcom 0.1.0",
 ]
 
 [[package]]

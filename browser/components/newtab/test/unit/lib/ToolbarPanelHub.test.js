@@ -42,9 +42,6 @@ describe("ToolbarPanelHub", () => {
       removeChild: sandbox.stub(),
     };
     fakeDocument = {
-      l10n: {
-        setAttributes: sandbox.stub(),
-      },
       getElementById: sandbox.stub().returns(fakeElementById),
       querySelector: sandbox.stub().returns({}),
       createElementNS: (ns, tagName) => {
@@ -92,29 +89,38 @@ describe("ToolbarPanelHub", () => {
     setBoolPrefStub = sandbox.stub();
     fakeDispatch = sandbox.stub();
     isBrowserPrivateStub = sandbox.stub();
-    globals.set("EveryWindow", everyWindowStub);
-    globals.set("Services", {
-      ...Services,
-      prefs: {
-        addObserver: addObserverStub,
-        removeObserver: removeObserverStub,
-        getBoolPref: getBoolPrefStub,
-        setBoolPref: setBoolPrefStub,
+    getEarliestRecordedDateStub = sandbox.stub().returns(
+      // A random date that's not the current timestamp
+      new Date() - 500
+    );
+    getEventsByDateRangeStub = sandbox.stub().returns([]);
+    handleUserActionStub = sandbox.stub();
+    globals.set({
+      EveryWindow: everyWindowStub,
+      Services: {
+        ...Services,
+        prefs: {
+          addObserver: addObserverStub,
+          removeObserver: removeObserverStub,
+          getBoolPref: getBoolPrefStub,
+          setBoolPref: setBoolPrefStub,
+        },
+      },
+      PrivateBrowsingUtils: {
+        isBrowserPrivate: isBrowserPrivateStub,
+      },
+      TrackingDBService: {
+        getEarliestRecordedDate: getEarliestRecordedDateStub,
+        getEventsByDateRange: getEventsByDateRangeStub,
+      },
+      RemoteL10n: {
+        l10n: {
+          translateElements: sandbox.stub(),
+          translateFragment: sandbox.stub(),
+          formatMessages: sandbox.stub().resolves([{}]),
+        },
       },
     });
-    globals.set("PrivateBrowsingUtils", {
-      isBrowserPrivate: isBrowserPrivateStub,
-    });
-    getEarliestRecordedDateStub = sandbox.stub();
-    getEventsByDateRangeStub = sandbox.stub();
-    globals.set("TrackingDBService", {
-      getEarliestRecordedDate: getEarliestRecordedDateStub.returns(
-        // A random date that's not the current timestamp
-        new Date() - 500
-      ),
-      getEventsByDateRange: getEventsByDateRangeStub.returns([]),
-    });
-    handleUserActionStub = sandbox.stub();
   });
   afterEach(() => {
     instance.uninit();
@@ -240,16 +246,18 @@ describe("ToolbarPanelHub", () => {
       assert.notCalled(everyWindowStub.registerCallback);
     });
   });
-  it("should unhide appmenu button on _showAppmenuButton()", () => {
-    instance._showAppmenuButton(fakeWindow);
+  it("should unhide appmenu button on _showAppmenuButton()", async () => {
+    await instance._showAppmenuButton(fakeWindow);
+
     assert.calledWith(fakeElementById.removeAttribute, "hidden");
   });
   it("should hide appmenu button on _hideAppmenuButton()", () => {
     instance._hideAppmenuButton(fakeWindow);
     assert.calledWith(fakeElementById.setAttribute, "hidden", true);
   });
-  it("should unhide toolbar button on _showToolbarButton()", () => {
-    instance._showToolbarButton(fakeWindow);
+  it("should unhide toolbar button on _showToolbarButton()", async () => {
+    await instance._showToolbarButton(fakeWindow);
+
     assert.calledWith(fakeElementById.removeAttribute, "hidden");
   });
   it("should hide toolbar button on _hideToolbarButton()", () => {
@@ -352,8 +360,27 @@ describe("ToolbarPanelHub", () => {
 
       await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
 
-      const imageEl = createdElements.find(el => el.tagName === "img");
-      assert.calledWithExactly(fakeDocument.l10n.setAttributes, imageEl, "foo");
+      assert.calledWithExactly(global.RemoteL10n.l10n.formatMessages, [
+        {
+          id: "foo",
+          args: instance.state.contentArguments,
+        },
+      ]);
+    });
+    it("handle fluent attributes", async () => {
+      const messages = (await PanelTestProvider.getMessages()).filter(
+        m => m.id === "WHATS_NEW_70_1"
+      );
+      messages[0].content.icon_alt = { string_id: "foo" };
+      getMessagesStub.returns(messages);
+      global.RemoteL10n.l10n.formatMessages
+        .withArgs([{ id: "foo", args: sinon.match.object }])
+        .resolves([{ attributes: [{ name: "alt", value: "bar" }] }]);
+
+      await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
+      const imgEl = createdElements.find(e => e.tagName === "img");
+
+      assert.calledWithExactly(imgEl.setAttribute, "alt", "bar");
     });
     it("should accept fluent ids for elements attributes", async () => {
       const [message] = (await PanelTestProvider.getMessages()).filter(
@@ -366,13 +393,12 @@ describe("ToolbarPanelHub", () => {
 
       await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
 
-      const subtitle = createdElements.find(el => el.tagName === "h4");
-      assert.calledWithExactly(
-        fakeDocument.l10n.setAttributes,
-        subtitle,
-        message.content.subtitle.string_id,
-        instance.state.contentArguments
-      );
+      assert.calledWithExactly(global.RemoteL10n.l10n.formatMessages, [
+        {
+          id: message.content.subtitle.string_id,
+          args: instance.state.contentArguments,
+        },
+      ]);
     });
     it("should correctly compute blocker trackers and date", async () => {
       const messages = (await PanelTestProvider.getMessages()).filter(
@@ -386,12 +412,15 @@ describe("ToolbarPanelHub", () => {
 
       await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
 
-      assert.calledWithExactly(
-        fakeDocument.l10n.setAttributes,
-        sinon.match.object,
-        sinon.match.string,
-        { blockedCount: "5", earliestDate: getEarliestRecordedDateStub() }
-      );
+      assert.calledWithExactly(global.RemoteL10n.l10n.formatMessages, [
+        {
+          id: sinon.match.string,
+          args: {
+            blockedCount: "5",
+            earliestDate: getEarliestRecordedDateStub(),
+          },
+        },
+      ]);
     });
     it("should only render unique dates (no duplicates)", async () => {
       const messages = (await PanelTestProvider.getMessages()).filter(

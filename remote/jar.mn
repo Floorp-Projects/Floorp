@@ -10,7 +10,6 @@ remote.jar:
   content/Error.jsm (Error.jsm)
   content/JSONHandler.jsm (JSONHandler.jsm)
   content/Log.jsm (Log.jsm)
-  content/Observer.jsm (Observer.jsm)
   content/Protocol.jsm (Protocol.jsm)
   content/RecommendedPreferences.jsm (RecommendedPreferences.jsm)
   content/Sync.jsm (Sync.jsm)
