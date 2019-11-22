@@ -25,11 +25,18 @@ UNIFIED_SOURCES += [
     'tests/test-JSString.cpp',
     'tests/test-JSSymbol.cpp',
     'tests/test-jsval.cpp',
-    'tests/test-prettyprinters.cpp',
     'tests/test-Root.cpp',
     'tests/test-unwind.cpp',
     'tests/typedef-printers.cpp',
 ]
+
+SOURCES += [
+    'tests/test-prettyprinters.cpp'
+]
+
+# Test expects to see pre-typedef names of base classes, but the compiler will
+# normally omit those from the debuginfo.
+SOURCES['tests/test-prettyprinters.cpp'].flags += ['-fno-eliminate-unused-debug-types']
 
 DEFINES['EXPORT_JS_API'] = True
 
