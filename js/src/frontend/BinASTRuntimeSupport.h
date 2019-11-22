@@ -120,11 +120,15 @@ class BinASTSourceMetadata {
   BinASTSourceMetadata(uint32_t numBinASTKinds, uint32_t numStrings)
       : numStrings_(numStrings), numBinASTKinds_(numBinASTKinds) {}
 
+  BinASTSourceMetadata(uint32_t numStrings)
+      : numStrings_(numStrings), numBinASTKinds_(0) {}
+
   friend class js::ScriptSource;
 
  public:
   static BinASTSourceMetadata* Create(const Vector<BinASTKind>& binASTKinds,
                                       uint32_t numStrings);
+  static BinASTSourceMetadata* Create(uint32_t numStrings);
 
   inline uint32_t numBinASTKinds() { return numBinASTKinds_; }
 
