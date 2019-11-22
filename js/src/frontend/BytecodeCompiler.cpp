@@ -739,7 +739,8 @@ ScriptSourceObject* frontend::CreateScriptSourceObject(
 
 #if defined(JS_BUILD_BINAST)
 
-JSScript* frontend::CompileGlobalBinASTScript(
+template <class ParserT>
+static JSScript* CompileGlobalBinASTScriptImpl(
     JSContext* cx, const ReadOnlyCompileOptions& options, const uint8_t* src,
     size_t len, JS::BinASTFormat format, ScriptSourceObject** sourceObjectOut) {
   AutoAssertReportedException assertException(cx);
@@ -768,10 +769,7 @@ JSScript* frontend::CompileGlobalBinASTScript(
   GlobalSharedContext globalsc(cx, ScopeKind::Global, directives,
                                options.extraWarningsOption);
 
-  MOZ_ASSERT(format == JS::BinASTFormat::Multipart);
-
-  frontend::BinASTParser<BinASTTokenReaderMultipart> parser(cx, parseInfo,
-                                                            options, sourceObj);
+  frontend::BinASTParser<ParserT> parser(cx, parseInfo, options, sourceObj);
 
   // Metadata stores internal pointers, so we must use the same buffer every
   // time, including for lazy parses
@@ -804,6 +802,19 @@ JSScript* frontend::CompileGlobalBinASTScript(
 
   assertException.reset();
   return script;
+}
+
+JSScript* frontend::CompileGlobalBinASTScript(
+    JSContext* cx, const ReadOnlyCompileOptions& options, const uint8_t* src,
+    size_t len, JS::BinASTFormat format, ScriptSourceObject** sourceObjectOut) {
+  if (format == JS::BinASTFormat::Multipart) {
+    return CompileGlobalBinASTScriptImpl<BinASTTokenReaderMultipart>(
+        cx, options, src, len, format, sourceObjectOut);
+  }
+
+  MOZ_ASSERT(format == JS::BinASTFormat::Context);
+  return CompileGlobalBinASTScriptImpl<BinASTTokenReaderContext>(
+      cx, options, src, len, format, sourceObjectOut);
 }
 
 #endif  // JS_BUILD_BINAST
