@@ -1015,6 +1015,7 @@ bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
   }
 #endif
 
+  // |self| initially manages this vector.
   FunctionDeclarationVector* funDecls = self->functionDeclarations();
   if (!funDecls) {
     JS_ReportErrorASCII(
@@ -1040,8 +1041,10 @@ bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
     }
   }
 
-  js_delete(funDecls);
+  // Transfer ownership of the vector from |self|, then free the vector, once
+  // its contents are no longer needed.
   self->setReservedSlot(FunctionDeclarationsSlot, UndefinedValue());
+  js_delete(funDecls);
   return true;
 }
 
