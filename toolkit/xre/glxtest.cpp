@@ -366,8 +366,8 @@ void glxtest() {
       int current_width = scrn->width;
 
       length +=
-          snprintf(buf + length, bufsize - length, "%dx%d:%d%s", current_width,
-                   current_height, idx == defaultScreen ? 1 : 0,
+          snprintf(buf + length, bufsize - length, "%dx%d%s%s", current_width,
+                   current_height, idx == defaultScreen ? " default" : "",
                    idx == screenCount - 1 ? ";\n" : ";");
       if (length >= bufsize)
         fatal_error("Screen Info strings length too large for buffer size");
