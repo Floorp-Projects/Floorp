@@ -26,8 +26,14 @@ PuppetSession::PuppetSession() : VRSession() {}
 
 PuppetSession::~PuppetSession() { Shutdown(); }
 
-bool PuppetSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
+bool PuppetSession::Initialize(mozilla::gfx::VRSystemState& aSystemState,
+                               bool aDetectRuntimesOnly) {
   if (!StaticPrefs::dom_vr_enabled() || !StaticPrefs::dom_vr_puppet_enabled()) {
+    return false;
+  }
+  if (aDetectRuntimesOnly) {
+    aSystemState.displayState.capabilityFlags |=
+        VRDisplayCapabilityFlags::Cap_ImmersiveVR;
     return false;
   }
   VRPuppetCommandBuffer::Get().Run(aSystemState);

@@ -208,7 +208,8 @@ OSVRSession::OSVRSession()
       m_display(nullptr) {}
 OSVRSession::~OSVRSession() { Shutdown(); }
 
-bool OSVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
+bool OSVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState,
+                             bool aDetectRuntimesOnly) {
   if (!StaticPrefs::dom_vr_enabled() ||
       !StaticPrefs::dom_vr_osvr_enabled_AtStartup()) {
     return false;
@@ -220,6 +221,13 @@ bool OSVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
     return false;
   }
   mRuntimeLoaded = true;
+
+  if (aDetectRuntimesOnly) {
+    aSystemState.displayState.capabilityFlags |=
+        VRDisplayCapabilityFlags::Cap_ImmersiveVR;
+    return false;
+  }
+
   // initialize client context
   InitializeClientContext();
   // try to initialize interface

@@ -34,7 +34,23 @@ class VRSession {
   virtual ~VRSession() = default;
 #endif
 
-  virtual bool Initialize(mozilla::gfx::VRSystemState& aSystemState) = 0;
+  /**
+   * In order to support WebXR's navigator.xr.IsSessionSupported call without
+   * displaying any permission dialogue, it is necessary to have a safe way to
+   * detect the capability of running a VR or AR session without activating XR
+   * runtimes or powering on hardware.
+   *
+   * API's such as OpenVR make no guarantee that hardware and software won't be
+   * left activated after enumerating devices, so each backend in gfx/vr/service
+   * must allow for more granular detection of capabilities.
+   *
+   * By passing true to bDetectRuntimesOnly, the initialization exits early
+   * after reporting the presence of XR runtime software. The Initialize method
+   * will only enumerate hardware and possibly return true when
+   * aDetectRuntimesOnly is false.
+   */
+  virtual bool Initialize(mozilla::gfx::VRSystemState& aSystemState,
+                          bool aDetectRuntimesOnly) = 0;
   virtual void Shutdown() = 0;
   virtual void ProcessEvents(mozilla::gfx::VRSystemState& aSystemState) = 0;
   virtual void StartFrame(mozilla::gfx::VRSystemState& aSystemState) = 0;

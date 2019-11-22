@@ -251,7 +251,8 @@ OpenVRSession::~OpenVRSession() {
   Shutdown();
 }
 
-bool OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
+bool OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState,
+                               bool aDetectRuntimesOnly) {
   if (!StaticPrefs::dom_vr_enabled() ||
       !StaticPrefs::dom_vr_openvr_enabled_AtStartup()) {
     return false;
@@ -261,6 +262,11 @@ bool OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
     return true;
   }
   if (!::vr::VR_IsRuntimeInstalled()) {
+    return false;
+  }
+  if (aDetectRuntimesOnly) {
+    aSystemState.displayState.capabilityFlags |=
+        VRDisplayCapabilityFlags::Cap_ImmersiveVR;
     return false;
   }
   if (!::vr::VR_IsHmdPresent()) {
