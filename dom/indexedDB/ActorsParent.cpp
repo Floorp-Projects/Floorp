@@ -21957,6 +21957,7 @@ TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
                             aLoggingSerialNumber),
       mTransaction(aTransaction),
       mInternalState(InternalState::Initial),
+      mWaitingForContinue(false),
       mTransactionIsAborted(aTransaction->IsAborted()),
       mTransactionLoggingSerialNumber(aTransaction->LoggingSerialNumber())
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
