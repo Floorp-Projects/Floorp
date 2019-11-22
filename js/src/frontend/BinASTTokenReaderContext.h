@@ -955,6 +955,28 @@ class TemporaryStorage {
   JS::Result<mozilla::Span<T>> alloc(JSContext* cx, size_t count);
 };
 
+// Handles the mapping from NormalizedInterfaceAndField and BinASTList to
+// the index inside the list of huffman tables.
+//
+// The mapping from `(Interface, Field) -> index` and `List -> index` is
+// extracted statically from the webidl specs.
+class TableIdentity {
+  size_t index_;
+
+  static const size_t ListIdentityBase = BINAST_INTERFACE_AND_FIELD_LIMIT;
+
+ public:
+  // The maximum number of tables.
+  static const size_t Limit = ListIdentityBase + BINAST_NUMBER_OF_LIST_TYPES;
+
+  explicit TableIdentity(NormalizedInterfaceAndField index)
+      : index_(static_cast<size_t>(index.identity_)) {}
+  explicit TableIdentity(BinASTList list)
+      : index_(static_cast<size_t>(list) + ListIdentityBase) {}
+
+  size_t toIndex() const { return index_; }
+};
+
 // A Huffman dictionary for the current file.
 //
 // A Huffman dictionary consists in a (contiguous) set of Huffman tables
@@ -974,25 +996,6 @@ class HuffmanDictionary {
  public:
   HuffmanDictionary() {}
   ~HuffmanDictionary();
-
-  // Handles the mapping from NormalizedInterfaceAndField and BinASTList to
-  // the index inside the list of huffman tables.
-  class TableIdentity {
-    size_t index_;
-
-    static const size_t ListIdentityBase = BINAST_INTERFACE_AND_FIELD_LIMIT;
-
-   public:
-    // The maximum number of tables.
-    static const size_t Limit = ListIdentityBase + BINAST_NUMBER_OF_LIST_TYPES;
-
-    explicit TableIdentity(NormalizedInterfaceAndField index)
-        : index_(static_cast<size_t>(index.identity_)) {}
-    explicit TableIdentity(BinASTList list)
-        : index_(static_cast<size_t>(list) + ListIdentityBase) {}
-
-    size_t toIndex() const { return index_; }
-  };
 
   bool isUnreachable(TableIdentity i) const {
     return status_[i.toIndex()] == TableStatus::Unreachable;
@@ -1048,9 +1051,6 @@ class HuffmanDictionary {
   TableStatus status_[TableIdentity::Limit] = {TableStatus::Unreachable};
 
   // Mapping from TableIdentity to the index into tables_.
-  //
-  // The mapping from `(Interface, Field) -> index` and `List -> index` is
-  // extracted statically from the webidl specs.
   uint16_t tableIndices_[TableIdentity::Limit] = {0};
 
   // The next uninitialized table's index in tables_.
