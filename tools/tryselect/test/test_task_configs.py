@@ -10,11 +10,11 @@ from argparse import ArgumentParser
 import mozunit
 import pytest
 
-from tryselect.templates import all_templates
+from tryselect.task_config import all_task_configs
 
 
-# templates have a list of tests of the form (input, expected)
-TEMPLATE_TESTS = {
+# task configs have a list of tests of the form (input, expected)
+TASK_CONFIG_TESTS = {
     'artifact': [
         (['--no-artifact'], None),
         (['--artifact'], {'use-artifact-builds': True}),
@@ -44,30 +44,30 @@ TEMPLATE_TESTS = {
 
 
 @pytest.fixture
-def template_patch_resolver(patch_resolver):
+def config_patch_resolver(patch_resolver):
     def inner(paths):
         patch_resolver([], [{'flavor': 'xpcshell', 'srcdir_relpath': path} for path in paths])
     return inner
 
 
-def test_templates(template_patch_resolver, template, args, expected):
+def test_task_configs(config_patch_resolver, task_config, args, expected):
     parser = ArgumentParser()
 
-    t = all_templates[template]()
-    t.add_arguments(parser)
+    cfg = all_task_configs[task_config]()
+    cfg.add_arguments(parser)
 
     if inspect.isclass(expected) and issubclass(expected, BaseException):
         with pytest.raises(expected):
             args = parser.parse_args(args)
-            if template == 'path':
-                template_patch_resolver(**vars(args))
+            if task_config == 'path':
+                config_patch_resolver(**vars(args))
 
-            t.try_config(**vars(args))
+            cfg.try_config(**vars(args))
     else:
         args = parser.parse_args(args)
-        if template == 'path':
-            template_patch_resolver(**vars(args))
-        assert t.try_config(**vars(args)) == expected
+        if task_config == 'path':
+            config_patch_resolver(**vars(args))
+        assert cfg.try_config(**vars(args)) == expected
 
 
 if __name__ == '__main__':

@@ -159,7 +159,7 @@ Test exact match
   
 
 
-Test templates
+Test task config 
 
   $ ./mach try fuzzy --no-push --artifact -q "'foo"
   Commit message:

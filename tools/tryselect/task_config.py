@@ -399,7 +399,7 @@ class UbuntuBionicTests(TryConfig):
             }
 
 
-all_templates = {
+all_task_configs = {
     'artifact': Artifact,
     'browsertime': Browsertime,
     'chemspill-prio': ChemspillPrio,

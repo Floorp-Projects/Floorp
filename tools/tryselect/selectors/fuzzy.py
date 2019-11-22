@@ -241,7 +241,7 @@ class FuzzyParser(BaseTryParser):
 
     ]
     common_groups = ['push', 'task', 'preset']
-    templates = [
+    task_configs = [
         'artifact',
         'browsertime',
         'chemspill-prio',

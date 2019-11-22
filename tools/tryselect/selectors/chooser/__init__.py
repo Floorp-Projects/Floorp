@@ -19,7 +19,7 @@ class ChooserParser(BaseTryParser):
     name = 'chooser'
     arguments = []
     common_groups = ['push', 'task']
-    templates = [
+    task_configs = [
         'artifact',
         'browsertime',
         'chemspill-prio',
