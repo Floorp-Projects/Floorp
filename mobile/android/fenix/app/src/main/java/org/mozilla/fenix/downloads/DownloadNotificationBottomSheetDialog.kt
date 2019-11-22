@@ -24,7 +24,8 @@ class DownloadNotificationBottomSheetDialog(
     context: Context,
     private val download: DownloadState,
     private val didFail: Boolean,
-    private val tryAgain: (Long) -> Unit
+    private val tryAgain: (Long) -> Unit,
+    private val onCannotOpenFile: () -> Unit
     // We must pass in the BottomSheetDialog theme for the transparent window background to apply properly
 ) : BottomSheetDialog(context, R.style.Theme_MaterialComponents_BottomSheetDialog) {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,11 +65,16 @@ class DownloadNotificationBottomSheetDialog(
                     mozilla.components.feature.downloads.R.string.mozac_feature_downloads_button_open
                 )
                 setOnClickListener {
-                    AbstractFetchDownloadService.openFile(
+                    val fileWasOpened = AbstractFetchDownloadService.openFile(
                         context = context,
                         contentType = download.contentType,
                         filePath = download.filePath
                     )
+
+                    if (!fileWasOpened) {
+                        onCannotOpenFile()
+                    }
+
                     context.metrics.track(Event.InAppNotificationDownloadOpen)
                     dismiss()
                 }
@@ -83,7 +89,6 @@ class DownloadNotificationBottomSheetDialog(
 
         setOnShowListener {
             window?.apply {
-                // setBackgroundDrawableResource(android.R.color.transparent)
                 setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
                 setLayout(
                     ViewGroup.LayoutParams.MATCH_PARENT,

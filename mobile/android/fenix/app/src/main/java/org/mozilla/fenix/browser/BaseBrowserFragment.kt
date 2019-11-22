@@ -271,7 +271,14 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                         context = context,
                         didFail = downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED,
                         download = download,
-                        tryAgain = downloadFeature::tryAgain
+                        tryAgain = downloadFeature::tryAgain,
+                        onCannotOpenFile = {
+                            FenixSnackbar.make(view, Snackbar.LENGTH_SHORT)
+                                .setText(context.getString(R.string.mozac_feature_downloads_could_not_open_file))
+                                .setAnchorView(browserToolbarView.view)
+                                .show()
+                        }
+
                     )
                     dialog.show()
                 }
