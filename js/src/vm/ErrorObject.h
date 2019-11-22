@@ -8,10 +8,22 @@
 #define vm_ErrorObject_h_
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Assertions.h"
 
+#include <stdint.h>
+
+#include "jspubtd.h"
+#include "NamespaceImports.h"
+
+#include "gc/Barrier.h"
+#include "js/Class.h"
+#include "js/ErrorReport.h"
+#include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
+#include "js/Value.h"
+#include "vm/JSObject.h"
 #include "vm/NativeObject.h"
-#include "vm/SavedStacks.h"
 #include "vm/Shape.h"
 
 namespace js {
