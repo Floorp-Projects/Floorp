@@ -59,6 +59,7 @@ class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
   nsresult SetProfile(nsIFile* aProfileDir, nsIFile* aProfileLocalDir);
 
   void InitializeUserPrefs();
+  void FinishInitializingUserPrefs();
 
   void DoShutdown();
 

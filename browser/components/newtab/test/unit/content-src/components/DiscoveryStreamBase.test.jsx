@@ -109,6 +109,9 @@ describe("<DiscoveryStreamBase>", () => {
             "feeds.topsites": true,
           },
         }}
+        document={{
+          documentElement: { lang: "en-US" },
+        }}
         Sections={[
           {
             id: "topstories",

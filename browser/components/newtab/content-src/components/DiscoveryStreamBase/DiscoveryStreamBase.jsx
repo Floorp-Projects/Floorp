@@ -26,7 +26,7 @@ const ALLOWED_CSS_URL_PREFIXES = [
   "https://img-getpocket.cdn.mozilla.net/",
 ];
 const DUMMY_CSS_SELECTOR = "DUMMY#CSS.SELECTOR";
-let rickRollCache = []; // Cache of random probability values for a spoc position
+let rollCache = []; // Cache of random probability values for a spoc position
 
 /**
  * Validate a CSS declaration. The values are assumed to be normalized by CSSOM.
@@ -154,7 +154,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
           url,
           context,
           cta,
-          campaign_id,
+          flight_id,
           id,
           shim,
         } = spoc;
@@ -179,7 +179,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
               cta_text={cta}
               cta_url={url}
               subtitle={context}
-              campaignId={campaign_id}
+              flightId={flight_id}
               id={id}
               pos={0}
               shim={shim}
@@ -264,17 +264,18 @@ export class _DiscoveryStreamBase extends React.PureComponent {
 
   componentWillReceiveProps(oldProps) {
     if (this.props.DiscoveryStream.layout !== oldProps.DiscoveryStream.layout) {
-      rickRollCache = [];
+      rollCache = [];
     }
   }
 
   render() {
     // Select layout render data by adding spocs and position to recommendations
-    const { layoutRender, spocsFill } = selectLayoutRender(
-      this.props.DiscoveryStream,
-      this.props.Prefs.values,
-      rickRollCache
-    );
+    const { layoutRender, spocsFill } = selectLayoutRender({
+      state: this.props.DiscoveryStream,
+      prefs: this.props.Prefs.values,
+      rollCache,
+      lang: this.props.document.documentElement.lang,
+    });
     const { config, spocs, feeds } = this.props.DiscoveryStream;
 
     // Send SPOCS Fill if any. Note that it should not send it again if the same
@@ -412,4 +413,5 @@ export const DiscoveryStreamBase = connect(state => ({
   DiscoveryStream: state.DiscoveryStream,
   Prefs: state.Prefs,
   Sections: state.Sections,
+  document: global.document,
 }))(_DiscoveryStreamBase);

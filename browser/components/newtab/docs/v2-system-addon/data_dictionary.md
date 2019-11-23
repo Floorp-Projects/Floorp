@@ -178,7 +178,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
     {"id": 10000, displayed: 0, reason: "frequency_cap", full_recalc: 1},
     {"id": 10001, displayed: 0, reason: "blocked_by_user", full_recalc: 1},
     {"id": 10002, displayed: 0, reason: "below_min_score", full_recalc: 1},
-    {"id": 10003, displayed: 0, reason: "campaign_duplicate", full_recalc: 1},
+    {"id": 10003, displayed: 0, reason: "flight_duplicate", full_recalc: 1},
     {"id": 10004, displayed: 0, reason: "probability_selection", full_recalc: 0},
     {"id": 10004, displayed: 0, reason: "out_of_position", full_recalc: 0},
     {"id": 10005, displayed: 1, reason: "n/a", full_recalc: 0}
@@ -264,7 +264,7 @@ and losing focus. | :one:
 | `message_id` | [required] A string identifier of the message in Activity Stream Router. | :one:
 | `has_flow_params` | [required] One of [true, false]. A boolean identifier that indicates if Firefox Accounts flow parameters are set or unset. | :one:
 | `displayed` | [required] 1: a SPOC is displayed; 0: non-displayed | :one:
-| `reason` | [required] The reason if a SPOC is not displayed, "n/a" for the displayed, one of ("frequency_cap", "blocked_by_user", "campaign_duplicate", "probability_selection", "below_min_score", "out_of_position", "n/a") | :one:
+| `reason` | [required] The reason if a SPOC is not displayed, "n/a" for the displayed, one of ("frequency_cap", "blocked_by_user", "flight_duplicate", "probability_selection", "below_min_score", "out_of_position", "n/a") | :one:
 | `full_recalc` | [required] Is it a full SPOCS recalculation: 0: false; 1: true. Recalculation case: 1). fetch SPOCS from Pocket endpoint. Non-recalculation cases: 1). An impression updates the SPOCS; 2). Any action that triggers the `selectLayoutRender ` | :one:
 
 **Where:**

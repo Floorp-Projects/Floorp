@@ -213,7 +213,7 @@ export class DSCard extends React.PureComponent {
             />
           )}
           <ImpressionStats
-            campaignId={this.props.campaignId}
+            flightId={this.props.flightId}
             rows={[
               {
                 id: this.props.id,
@@ -238,7 +238,7 @@ export class DSCard extends React.PureComponent {
           pocket_id={this.props.pocket_id}
           shim={this.props.shim}
           bookmarkGuid={this.props.bookmarkGuid}
-          campaignId={this.props.campaignId}
+          flightId={this.props.flightId}
         />
       </div>
     );

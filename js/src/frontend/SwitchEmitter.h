@@ -298,9 +298,6 @@ class MOZ_STACK_CLASS SwitchEmitter {
   // True if there's explicit default case.
   bool hasDefault_ = false;
 
-  // The source note index for SRC_TABLESWITCH.
-  unsigned tableSwitchNoteIndex_ = 0;
-
   // The number of cases in the switch statement, excluding the default case.
   uint32_t caseCount_ = 0;
 

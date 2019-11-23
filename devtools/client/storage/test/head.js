@@ -131,12 +131,16 @@ async function openTabAndSetupStorage(url, options = {}) {
  *
  * @param cb {Function} Optional callback, if you don't want to use the returned
  *                      promise
+ * @param target {Object} Optional, the target for the toolbox; defaults to a tab target
+ * @param hostType {Toolbox.HostType} Optional, type of host that will host the toolbox
  *
  * @return {Promise} a promise that resolves when the storage inspector is ready
  */
-var openStoragePanel = async function(cb) {
+var openStoragePanel = async function(cb, target, hostType) {
   info("Opening the storage inspector");
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  if (!target) {
+    target = await TargetFactory.forTab(gBrowser.selectedTab);
+  }
 
   let storage, toolbox;
 
@@ -163,7 +167,7 @@ var openStoragePanel = async function(cb) {
   }
 
   info("Opening the toolbox");
-  toolbox = await gDevTools.showToolbox(target, "storage");
+  toolbox = await gDevTools.showToolbox(target, "storage", hostType);
   storage = toolbox.getPanel("storage");
   gPanelWindow = storage.panelWindow;
   gUI = storage.UI;
@@ -815,6 +819,28 @@ function checkCell(id, column, expected) {
 }
 
 /**
+ * Check that a cell is not in edit mode.
+ *
+ * @param {String} id
+ *        The uniqueId of the row.
+ * @param {String} column
+ *        The id of the column
+ */
+function checkCellUneditable(id, column) {
+  const row = getRowCells(id, true);
+  const cell = row[column];
+
+  const editableFieldsEngine = gUI.table._editableFieldsEngine;
+  const textbox = editableFieldsEngine.textbox;
+
+  // When a field is being edited, the cell is hidden, and the textbox is made visible.
+  ok(
+    !cell.hidden && textbox.hidden,
+    `The cell located in column ${column} and row ${id} is not editable.`
+  );
+}
+
+/**
  * Show or hide a column.
  *
  * @param  {String} id
@@ -884,10 +910,10 @@ async function typeWithTerminator(str, terminator, validate = true) {
   }
 
   info("Typing " + str);
-  EventUtils.sendString(str);
+  EventUtils.sendString(str, gPanelWindow);
 
   info("Pressing " + terminator);
-  EventUtils.synthesizeKey(terminator);
+  EventUtils.synthesizeKey(terminator, null, gPanelWindow);
 
   if (validate) {
     info("Validating results... waiting for ROW_EDIT event.");

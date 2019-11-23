@@ -51,6 +51,9 @@ class nsScriptSecurityManager final : public nsIScriptSecurityManager {
   // Invoked exactly once, by XPConnect.
   static void InitStatics();
 
+  void InitJSCallbacks(JSContext* aCx);
+  void ClearJSCallbacks(JSContext* aCx);
+
   static already_AddRefed<mozilla::SystemPrincipal>
   SystemPrincipalSingletonConstructor();
 
@@ -121,7 +124,6 @@ class nsScriptSecurityManager final : public nsIScriptSecurityManager {
 
   static nsIIOService* sIOService;
   static nsIStringBundle* sStrBundle;
-  static JSContext* sContext;
 };
 
 #endif  // nsScriptSecurityManager_h__

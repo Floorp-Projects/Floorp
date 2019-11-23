@@ -974,16 +974,53 @@ describe("TelemetryFeed", () => {
       assert.propertyVal(ping, "event_context", "foo");
     });
   });
-  describe("#sendEvent", () => {
-    it("should call PingCentre", async () => {
-      FakePrefs.prototype.prefs.telemetry = true;
-      const event = {};
+  describe("#sendEventPing", () => {
+    it("should call sendStructuredIngestionEvent", async () => {
+      const data = {
+        action: "activity_stream_user_event",
+        event: "CLICK",
+      };
       instance = new TelemetryFeed();
-      sandbox.stub(instance.pingCentre, "sendPing");
+      sandbox.spy(instance, "sendStructuredIngestionEvent");
 
-      await instance.sendEvent(event);
+      await instance.sendEventPing(data);
 
-      assert.calledWith(instance.pingCentre.sendPing, event);
+      const expectedPayload = {
+        client_id: FAKE_TELEMETRY_ID,
+        event: "CLICK",
+      };
+      assert.calledWith(instance.sendStructuredIngestionEvent, expectedPayload);
+    });
+    it("should stringify value if it is an Object", async () => {
+      const data = {
+        action: "activity_stream_user_event",
+        event: "CLICK",
+        value: { foo: "bar" },
+      };
+      instance = new TelemetryFeed();
+      sandbox.spy(instance, "sendStructuredIngestionEvent");
+
+      await instance.sendEventPing(data);
+
+      const expectedPayload = {
+        client_id: FAKE_TELEMETRY_ID,
+        event: "CLICK",
+        value: JSON.stringify({ foo: "bar" }),
+      };
+      assert.calledWith(instance.sendStructuredIngestionEvent, expectedPayload);
+    });
+  });
+  describe("#sendEvent", () => {
+    it("should call sendEventPing on activity_stream_user_event", () => {
+      FakePrefs.prototype.prefs.telemetry = true;
+      FakePrefs.prototype.prefs[STRUCTURED_INGESTION_TELEMETRY_PREF] = true;
+      const event = { action: "activity_stream_user_event" };
+      instance = new TelemetryFeed();
+      sandbox.spy(instance, "sendEventPing");
+
+      instance.sendEvent(event);
+
+      assert.calledOnce(instance.sendEventPing);
     });
   });
   describe("#sendUTEvent", () => {
@@ -1255,7 +1292,7 @@ describe("TelemetryFeed", () => {
       assert.calledWith(sendEvent, eventCreator.returnValue);
     });
     it("should send an event on a TELEMETRY_IMPRESSION_STATS action", () => {
-      const sendEvent = sandbox.stub(instance, "sendEvent");
+      const sendEvent = sandbox.stub(instance, "sendStructuredIngestionEvent");
       const eventCreator = sandbox.stub(instance, "createImpressionStats");
       const tiles = [{ id: 10001 }, { id: 10002 }, { id: 10003 }];
       const action = ac.ImpressionStats({ source: "POCKET", tiles });
@@ -1438,7 +1475,7 @@ describe("TelemetryFeed", () => {
       assert.notCalled(spy);
     });
     it("should send impression pings if there is impression data", () => {
-      const spy = sandbox.spy(instance, "sendEvent");
+      const spy = sandbox.spy(instance, "sendStructuredIngestionEvent");
       const session = {
         impressionSets: {
           source_foo: [{ id: 1, pos: 0 }, { id: 2, pos: 1 }],
@@ -1459,7 +1496,7 @@ describe("TelemetryFeed", () => {
       assert.notCalled(spy);
     });
     it("should send loaded content pings if there is loaded content data", () => {
-      const spy = sandbox.spy(instance, "sendEvent");
+      const spy = sandbox.spy(instance, "sendStructuredIngestionEvent");
       const session = {
         loadedContentSets: {
           source_foo: [{ id: 1, pos: 0 }, { id: 2, pos: 1 }],

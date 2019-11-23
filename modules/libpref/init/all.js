@@ -571,7 +571,7 @@ pref("media.cubeb.logging_level", "");
   pref("media.audioipc.stack_size", 262144);
 #endif
 
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
   pref("media.cubeb.backend", "audiounit-rust");
 #endif
 
