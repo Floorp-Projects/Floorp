@@ -630,10 +630,7 @@ class EditorBase : public nsIEditor,
     //     styles because inline style can be specified with "style" attribute
     //     and/or CSS in <style> elements or CSS files.  So, we need to look
     //     for better implementation about this.
-    // FYI: Initialization cost of AutoStyleCacheArray is expensive and it is
-    //      not used by TextEditor so that we should construct it only when
-    //      we're an HTMLEditor.
-    Maybe<AutoStyleCacheArray> mCachedInlineStyles;
+    AutoStyleCacheArray mCachedInlineStyles;
 
     // If we tried to delete selection, set to true.
     bool mDidDeleteSelection;
@@ -701,9 +698,7 @@ class EditorBase : public nsIEditor,
       mNewBlockElement = nullptr;
       mSelectedRange->Clear();
       mChangedRange->Reset();
-      if (mCachedInlineStyles.isSome()) {
-        mCachedInlineStyles->Clear();
-      }
+      mCachedInlineStyles.Clear();
       mDidDeleteSelection = false;
       mDidDeleteNonCollapsedRange = false;
       mDidDeleteEmptyParentBlocks = false;
