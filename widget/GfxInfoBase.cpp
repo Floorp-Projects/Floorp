@@ -1245,26 +1245,6 @@ GfxInfoBase::GetMonitors(JSContext* aCx, JS::MutableHandleValue aResult) {
   return NS_OK;
 }
 
-static const char* GetLayersBackendName(layers::LayersBackend aBackend) {
-  switch (aBackend) {
-    case layers::LayersBackend::LAYERS_NONE:
-      return "none";
-    case layers::LayersBackend::LAYERS_OPENGL:
-      return "opengl";
-    case layers::LayersBackend::LAYERS_D3D11:
-      return "d3d11";
-    case layers::LayersBackend::LAYERS_CLIENT:
-      return "client";
-    case layers::LayersBackend::LAYERS_WR:
-      return "webrender";
-    case layers::LayersBackend::LAYERS_BASIC:
-      return "basic";
-    default:
-      MOZ_ASSERT_UNREACHABLE("unknown layers backend");
-      return "unknown";
-  }
-}
-
 static inline bool SetJSPropertyString(JSContext* aCx,
                                        JS::Handle<JSObject*> aObj,
                                        const char* aProp, const char* aString) {
@@ -1299,7 +1279,7 @@ nsresult GfxInfoBase::GetFeatures(JSContext* aCx,
       gfxPlatform::Initialized()
           ? gfxPlatform::GetPlatform()->GetCompositorBackend()
           : layers::LayersBackend::LAYERS_NONE;
-  const char* backendName = GetLayersBackendName(backend);
+  const char* backendName = layers::GetLayersBackendName(backend);
   SetJSPropertyString(aCx, obj, "compositor", backendName);
 
   // If graphics isn't initialized yet, just stop now.
