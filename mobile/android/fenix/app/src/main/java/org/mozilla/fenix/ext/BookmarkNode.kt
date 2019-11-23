@@ -15,5 +15,9 @@ val Context.bookmarkStorage: PlacesBookmarksStorage
  * Removes [children] from [BookmarkNode.children] and returns the new modified [BookmarkNode].
  */
 operator fun BookmarkNode.minus(children: Set<BookmarkNode>): BookmarkNode {
-    return this.copy(children = this.children?.filter { it !in children })
+    return this.copy(children = this.children?.filter { filtered ->
+        children.none {
+            it.guid == filtered.guid
+        }
+    })
 }
