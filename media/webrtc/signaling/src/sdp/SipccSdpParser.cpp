@@ -14,26 +14,23 @@ extern "C" {
 
 namespace mozilla {
 
-static const std::string SIPCC_NAME = "SIPCC";
-
 extern "C" {
 
-void sipcc_sdp_parser_results_handler(void* context, uint32_t line,
-                                      const char* message) {
-  auto* results = static_cast<UniquePtr<InternalResults>*>(context);
+void sipcc_sdp_parser_error_handler(void* context, uint32_t line,
+                                    const char* message) {
+  SdpErrorHolder* errorHolder = static_cast<SdpErrorHolder*>(context);
   std::string err(message);
-  (*results)->AddParseError(line, err);
+  errorHolder->AddParseError(line, err);
 }
 
 }  // extern "C"
 
-const std::string& SipccSdpParser::Name() const { return SIPCC_NAME; }
+UniquePtr<Sdp> SipccSdpParser::Parse(const std::string& sdpText) {
+  ClearParseErrors();
 
-UniquePtr<SdpParser::Results> SipccSdpParser::Parse(const std::string& aText) {
-  UniquePtr<InternalResults> results(new InternalResults(Name()));
   sdp_conf_options_t* sipcc_config = sdp_init_config();
   if (!sipcc_config) {
-    return UniquePtr<SdpParser::Results>();
+    return UniquePtr<Sdp>();
   }
 
   sdp_nettype_supported(sipcc_config, SDP_NT_INTERNET, true);
@@ -52,36 +49,32 @@ UniquePtr<SdpParser::Results> SipccSdpParser::Parse(const std::string& aText) {
   sdp_transport_supported(sipcc_config, SDP_TRANSPORT_TCPDTLSSCTP, true);
   sdp_require_session_name(sipcc_config, false);
 
-  sdp_config_set_error_handler(sipcc_config, &sipcc_sdp_parser_results_handler,
-                               &results);
+  sdp_config_set_error_handler(sipcc_config, &sipcc_sdp_parser_error_handler,
+                               this);
 
   // Takes ownership of |sipcc_config| iff it succeeds
   sdp_t* sdp = sdp_init_description(sipcc_config);
   if (!sdp) {
     sdp_free_config(sipcc_config);
-    return results;
+    return UniquePtr<Sdp>();
   }
 
-  const char* rawString = aText.c_str();
-  sdp_result_e sdpres = sdp_parse(sdp, rawString, aText.length());
+  const char* rawString = sdpText.c_str();
+  sdp_result_e sdpres = sdp_parse(sdp, rawString, sdpText.length());
   if (sdpres != SDP_SUCCESS) {
     sdp_free_description(sdp);
-    return results;
+    return UniquePtr<Sdp>();
   }
 
   UniquePtr<SipccSdp> sipccSdp(new SipccSdp);
 
-  bool success = sipccSdp->Load(sdp, *results);
+  bool success = sipccSdp->Load(sdp, *this);
   sdp_free_description(sdp);
-  if (success) {
-    results->SetSdp(UniquePtr<mozilla::Sdp>(std::move(sipccSdp)));
+  if (!success) {
+    return UniquePtr<Sdp>();
   }
 
-  return results;
-}
-
-bool SipccSdpParser::IsNamed(const std::string& aName) {
-  return aName == SIPCC_NAME;
+  return UniquePtr<Sdp>(std::move(sipccSdp));
 }
 
 }  // namespace mozilla

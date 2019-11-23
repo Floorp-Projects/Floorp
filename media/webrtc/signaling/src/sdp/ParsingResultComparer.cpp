@@ -1,13 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "signaling/src/sdp/Sdp.h"
 #include "signaling/src/sdp/ParsingResultComparer.h"
-#include "signaling/src/sdp/SipccSdpParser.h"
-#include "signaling/src/sdp/RsdparsaSdpParser.h"
 
 #include <string>
 #include <ostream>
@@ -43,29 +39,6 @@ std::string ToString(const T& serializable) {
 
   os << serializable;
   return os.str();
-}
-bool ParsingResultComparer::Compare(const Results& aResA, const Results& aResB,
-                                    const std::string& aOriginalSdp,
-                                    const SdpPref::AlternateParseModes& aMode) {
-  MOZ_ASSERT(aResA, "aResA must not be a nullptr");
-  MOZ_ASSERT(aResB, "aResB must not be a nullptr");
-  MOZ_ASSERT(aResA->ParserName() != aResB->ParserName(),
-             "aResA and aResB must be from different parsers");
-  SdpTelemetry::RecordCompare(aResA, aResB, aMode);
-
-  ParsingResultComparer comparer;
-  if (!aResA->Sdp() || !aResB->Sdp()) {
-    return !aResA->Sdp() && !aResB->Sdp();
-  }
-  if (SipccSdpParser::IsNamed(aResA->ParserName())) {
-    MOZ_ASSERT(RsdparsaSdpParser::IsNamed(aResB->ParserName()));
-    return comparer.Compare(*aResB->Sdp(), *aResA->Sdp(), aOriginalSdp,
-                            SdpComparisonResult::Equal);
-  }
-  MOZ_ASSERT(SipccSdpParser::IsNamed(aResB->ParserName()));
-  MOZ_ASSERT(RsdparsaSdpParser::IsNamed(aResA->ParserName()));
-  return comparer.Compare(*aResA->Sdp(), *aResB->Sdp(), aOriginalSdp,
-                          SdpComparisonResult::Equal);
 }
 
 bool ParsingResultComparer::Compare(const Sdp& rsdparsaSdp, const Sdp& sipccSdp,
@@ -289,6 +262,19 @@ bool ParsingResultComparer::CompareAttrLists(
   }
 
   return result;
+}
+
+void ParsingResultComparer::TrackRustParsingFailed(
+    size_t sipccErrorCount) const {
+  if (sipccErrorCount) {
+    Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF,
+                         NS_LITERAL_STRING("rsdparsa_failed__sipcc_has_errors"),
+                         1);
+  } else {
+    Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF,
+                         NS_LITERAL_STRING("rsdparsa_failed__sipcc_succeeded"),
+                         1);
+  }
 }
 
 std::vector<std::string> SplitLines(const std::string& sdp) {
