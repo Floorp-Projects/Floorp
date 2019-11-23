@@ -101,17 +101,16 @@ class SearchTelemetryChild extends ActorChild {
   /**
    * Checks to see if the page is a partner and has an ad link within it. If so,
    * it will notify SearchTelemetry.
-   *
-   * @param {object} doc The document object to check.
    */
-  _checkForAdLink(doc) {
-    let providerInfo = this._getProviderInfoForUrl(doc.documentURI);
+  _checkForAdLink() {
+    let doc = this.content.document;
+    let url = doc.documentURI;
+    let providerInfo = this._getProviderInfoForUrl(url);
     if (!providerInfo) {
       return;
     }
 
     let regexps = providerInfo[1].extraAdServersRegexps;
-
     let anchors = doc.getElementsByTagName("a");
     let hasAds = false;
     for (let anchor of anchors) {
@@ -131,7 +130,7 @@ class SearchTelemetryChild extends ActorChild {
     if (hasAds) {
       this.sendAsyncMessage("SearchTelemetry:PageInfo", {
         hasAds: true,
-        url: doc.documentURI,
+        url,
       });
     }
   }
@@ -147,6 +146,19 @@ class SearchTelemetryChild extends ActorChild {
       return;
     }
 
+    const cancelCheck = () => {
+      if (this._waitForContentTimeout && this.content) {
+        this.content.clearTimeout(this._waitForContentTimeout);
+      }
+    };
+
+    const check = () => {
+      cancelCheck();
+      this._waitForContentTimeout = this.content.setTimeout(() => {
+        this._checkForAdLink();
+      }, 1000);
+    };
+
     switch (event.type) {
       case "pageshow": {
         // If a page is loaded from the bfcache, we won't get a "DOMContentLoaded"
@@ -154,12 +166,16 @@ class SearchTelemetryChild extends ActorChild {
         // so that we remain consistent with the *.in-content:sap* count for the
         // SEARCH_COUNTS histogram.
         if (event.persisted) {
-          this._checkForAdLink(this.content.document);
+          check();
         }
         break;
       }
       case "DOMContentLoaded": {
-        this._checkForAdLink(this.content.document);
+        check();
+        break;
+      }
+      case "unload": {
+        cancelCheck();
         break;
       }
     }
