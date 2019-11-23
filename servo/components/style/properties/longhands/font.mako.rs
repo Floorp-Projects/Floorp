@@ -171,7 +171,7 @@ ${helpers.predefined_type(
     engines="gecko",
     initial_value="computed::FontFeatureSettings::normal()",
     initial_specified_value="specified::FontFeatureSettings::normal()",
-    extra_prefixes="moz:layout.css.prefixes.font-features webkit",
+    extra_prefixes="moz:layout.css.prefixes.font-features",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-fonts/#propdef-font-feature-settings",
 )}
