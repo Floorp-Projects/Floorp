@@ -2,7 +2,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!-- Values for changepassword.xhtml -->
+<!-- Values for changepassword.xul -->
 <!ENTITY setPassword.title  "Change Master Password">
 <!ENTITY setPassword.tokenName.label "Security Device">
 <!ENTITY setPassword.oldPassword.label "Current password:">
@@ -10,7 +10,7 @@
 <!ENTITY setPassword.reenterPassword.label "New password (again):">
 <!ENTITY setPassword.meter.label "Password quality meter">
 
-<!-- Values for resetpassword.xhtml -->
+<!-- Values for resetpassword.xul -->
 <!ENTITY resetPasswordButtonLabel "Reset">
 <!ENTITY resetPassword.title  "Reset Master Password">
 <!ENTITY resetPassword.text  "If you reset your master password, all your stored web and e-mail passwords, form data, personal certificates, and private keys will be forgotten. Are you sure you want to reset your master password?">

@@ -4,7 +4,7 @@
 "use strict";
 
 /**
- * @file Implements the functionality of setp12password.xhtml: a dialog that lets
+ * @file Implements the functionality of setp12password.xul: a dialog that lets
  *       the user confirm the password to set on a PKCS #12 file.
  * @argument {nsISupports} window.arguments[0]
  *           Object to set the return values of calling the dialog on, queryable

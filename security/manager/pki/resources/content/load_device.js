@@ -7,7 +7,7 @@
 document.addEventListener("dialogaccept", onDialogAccept);
 
 /**
- * @file Implements the functionality of load_device.xhtml: a dialog that allows
+ * @file Implements the functionality of load_device.xul: a dialog that allows
  *       a PKCS #11 module to be loaded into Firefox.
  */
 
