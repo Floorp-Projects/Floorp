@@ -2998,24 +2998,6 @@ static bool PCToLine(JSContext* cx, unsigned argc, Value* vp) {
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
-static void UpdateSwitchTableBounds(JSContext* cx, HandleScript script,
-                                    unsigned offset, unsigned* start,
-                                    unsigned* end) {
-  jsbytecode* pc = script->offsetToPC(offset);
-  MOZ_ASSERT(JSOp(*pc) == JSOP_TABLESWITCH);
-
-  ptrdiff_t jmplen = JUMP_OFFSET_LEN;
-  pc += jmplen;
-  int32_t low = GET_JUMP_OFFSET(pc);
-  pc += JUMP_OFFSET_LEN;
-  int32_t high = GET_JUMP_OFFSET(pc);
-  pc += JUMP_OFFSET_LEN;
-  int32_t n = high - low + 1;
-
-  *start = script->pcToOffset(pc);
-  *end = *start + unsigned(n * jmplen);
-}
-
 static MOZ_MUST_USE bool SrcNotes(JSContext* cx, HandleScript script,
                                   Sprinter* sp) {
   if (!sp->put("\nSource notes:\n") ||
@@ -3029,7 +3011,6 @@ static MOZ_MUST_USE bool SrcNotes(JSContext* cx, HandleScript script,
   unsigned colspan = 0;
   unsigned lineno = script->lineno();
   jssrcnote* notes = script->notes();
-  unsigned switchTableEnd = 0, switchTableStart = 0;
   for (jssrcnote* sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
     unsigned delta = SN_DELTA(sn);
     offset += delta;
@@ -3101,19 +3082,6 @@ static MOZ_MUST_USE bool SrcNotes(JSContext* cx, HandleScript script,
           return false;
         }
         break;
-
-      case SRC_TABLESWITCH: {
-        mozilla::DebugOnly<JSOp> op = JSOp(script->code()[offset]);
-        MOZ_ASSERT(op == JSOP_TABLESWITCH);
-        if (!sp->jsprintf(" end offset %u",
-                          unsigned(GetSrcNoteOffset(
-                              sn, SrcNote::TableSwitch::EndOffset)))) {
-          return false;
-        }
-        UpdateSwitchTableBounds(cx, script, offset, &switchTableStart,
-                                &switchTableEnd);
-        break;
-      }
 
       case SRC_TRY:
         MOZ_ASSERT(JSOp(script->code()[offset]) == JSOP_TRY);
