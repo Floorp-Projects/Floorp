@@ -195,6 +195,20 @@ add_task(async function testAltReturn() {
   );
 });
 
+add_task(async function testAltGrReturn() {
+  await prepareTest();
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+    EventUtils.synthesizeKey("KEY_Enter", { altGraphKey: true });
+  });
+
+  is(gBrowser.tabs.length, preTabNo + 1, "AltGr+Return key added new tab");
+  is(
+    gBrowser.currentURI.spec,
+    expectedURL(searchBar.value),
+    "testAltGrReturn opened correct search page"
+  );
+});
+
 // Shift key has no effect for now, so skip it
 add_task(async function testShiftAltReturn() {
   /*
