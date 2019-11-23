@@ -47,7 +47,7 @@ export class DSLinkMenu extends React.PureComponent {
       "OpenInPrivateWindow",
       "Separator",
       "BlockUrl",
-      ...(this.props.campaignId ? ["ShowPrivacyInfo"] : []),
+      ...(this.props.flightId ? ["ShowPrivacyInfo"] : []),
     ];
     const type = this.props.type || "DISCOVERY_STREAM";
     const title = this.props.title || this.props.source;
@@ -76,7 +76,7 @@ export class DSLinkMenu extends React.PureComponent {
               pocket_id: this.props.pocket_id,
               shim: this.props.shim,
               bookmarkGuid: this.props.bookmarkGuid,
-              campaign_id: this.props.campaignId,
+              flight_id: this.props.flightId,
             }}
           />
         </ContextMenuButton>

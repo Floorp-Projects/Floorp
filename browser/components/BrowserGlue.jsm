@@ -241,20 +241,6 @@ let ACTORS = {
     allFrames: true,
   },
 
-  RFPHelper: {
-    parent: {
-      moduleURI: "resource:///actors/RFPHelperParent.jsm",
-    },
-    child: {
-      moduleURI: "resource:///actors/RFPHelperChild.jsm",
-      events: {
-        resize: {},
-      },
-    },
-
-    allFrames: true,
-  },
-
   ShieldFrame: {
     parent: {
       moduleURI: "resource://normandy-content/ShieldFrameParent.jsm",

@@ -7673,9 +7673,9 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitLabeledStatement(
     const LabeledStatement* labeledStmt) {
   RootedAtom name(cx, labeledStmt->label());
   LabelEmitter label(this);
-  if (!label.emitLabel(name)) {
-    return false;
-  }
+
+  label.emitLabel(name);
+
   if (!emitTree(labeledStmt->statement())) {
     return false;
   }

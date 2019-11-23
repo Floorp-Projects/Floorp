@@ -15,7 +15,6 @@
 
 #include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
 #include "frontend/SharedContext.h"    // StatementKind
-#include "frontend/SourceNotes.h"      // SrcNote, SRC_*
 #include "js/TypeDecls.h"              // jsbytecode
 #include "util/BitArray.h"
 #include "vm/BytecodeUtil.h"  // SET_JUMP_OFFSET, JUMP_OFFSET_LEN, SET_RESUMEINDEX
@@ -178,11 +177,6 @@ bool SwitchEmitter::emitTable(const TableGenerator& tableGen) {
   // After entering the scope if necessary, push the switch control.
   controlInfo_.emplace(bce_, StatementKind::Switch);
   top_ = bce_->bytecodeSection().offset();
-
-  // The note has one offset that tells total switch code length.
-  if (!bce_->newSrcNote2(SRC_TABLESWITCH, 0, &tableSwitchNoteIndex_)) {
-    return false;
-  }
 
   if (!caseOffsets_.resize(tableGen.tableLength())) {
     ReportOutOfMemory(bce_->cx);
@@ -375,13 +369,6 @@ bool SwitchEmitter::emitEnd() {
   }
 
   if (kind_ == Kind::Table) {
-    // Set the SRC_TABLESWITCH note's offset operand to tell end of switch.
-    if (!bce_->setSrcNoteOffset(
-            tableSwitchNoteIndex_, SrcNote::TableSwitch::EndOffset,
-            bce_->bytecodeSection().lastNonJumpTargetOffset() - top_)) {
-      return false;
-    }
-
     // Skip over the already-initialized switch bounds.
     pc += 2 * JUMP_OFFSET_LEN;
 

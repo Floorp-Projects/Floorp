@@ -132,12 +132,12 @@ describe("<ImpressionStats>", () => {
       { id: 3, pos: 2 },
     ]);
   });
-  it("should send a DISCOVERY_STREAM_SPOC_IMPRESSION when the wrapped item has a campaignId", () => {
+  it("should send a DISCOVERY_STREAM_SPOC_IMPRESSION when the wrapped item has a flightId", () => {
     const dispatch = sinon.spy();
-    const campaignId = "a_campaign_id";
+    const flightId = "a_flight_id";
     const props = {
       dispatch,
-      campaignId,
+      flightId,
       IntersectionObserver: buildIntersectionObserver(FullIntersectEntries),
     };
     renderImpressionStats(props);
@@ -147,7 +147,7 @@ describe("<ImpressionStats>", () => {
 
     const [action] = dispatch.secondCall.args;
     assert.equal(action.type, at.DISCOVERY_STREAM_SPOC_IMPRESSION);
-    assert.deepEqual(action.data, { campaignId });
+    assert.deepEqual(action.data, { flightId });
   });
   it("should send an impression when the wrapped item transiting from invisible to visible", () => {
     const dispatch = sinon.spy();

@@ -29,20 +29,18 @@ describe("selectLayoutRender", () => {
   });
 
   it("should return an empty array given initial state", () => {
-    const { layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
+    const { layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+      prefs: {},
+      rollCache: [],
+    });
     assert.deepEqual(layoutRender, []);
   });
 
   it("should return an empty SPOCS fill array given initial state", () => {
-    const { spocsFill } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
+    const { spocsFill } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+    });
     assert.deepEqual(spocsFill, []);
   });
 
@@ -57,11 +55,9 @@ describe("selectLayoutRender", () => {
     });
     store.dispatch({ type: at.DISCOVERY_STREAM_FEEDS_UPDATE });
 
-    const { layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
+    const { layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+    });
 
     assert.lengthOf(layoutRender, 1);
     assert.propertyVal(layoutRender[0], "width", 3);
@@ -80,11 +76,9 @@ describe("selectLayoutRender", () => {
     });
     store.dispatch({ type: at.DISCOVERY_STREAM_FEEDS_UPDATE });
 
-    const { layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
+    const { layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+    });
 
     assert.lengthOf(layoutRender, 1);
     assert.propertyVal(layoutRender[0], "width", 3);
@@ -107,11 +101,9 @@ describe("selectLayoutRender", () => {
     });
     store.dispatch({ type: at.DISCOVERY_STREAM_FEEDS_UPDATE });
 
-    const { layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
+    const { layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+    });
 
     assert.lengthOf(layoutRender, 1);
     assert.propertyVal(layoutRender[0], "width", 3);
@@ -137,11 +129,9 @@ describe("selectLayoutRender", () => {
       data: { lastUpdated: 0, spocs: { spocs: [1, 2, 3] } },
     });
 
-    const { layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
+    const { layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+    });
 
     assert.lengthOf(layoutRender, 1);
     assert.propertyVal(layoutRender[0], "width", 3);
@@ -167,11 +157,9 @@ describe("selectLayoutRender", () => {
     });
     store.dispatch({ type: at.DISCOVERY_STREAM_FEEDS_UPDATE });
 
-    const { layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
+    const { layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+    });
 
     assert.deepEqual(layoutRender[0].components[0].data, {
       recommendations: [{ id: "bar" }],
@@ -211,11 +199,9 @@ describe("selectLayoutRender", () => {
     });
     const randomStub = globals.sandbox.stub(global.Math, "random").returns(0.1);
 
-    const { spocsFill, layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
+    const { spocsFill, layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+    });
 
     assert.calledTwice(randomStub);
     assert.lengthOf(layoutRender, 1);
@@ -273,11 +259,9 @@ describe("selectLayoutRender", () => {
     });
     const randomStub = globals.sandbox.stub(global.Math, "random").returns(0.1);
 
-    const { spocsFill, layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
+    const { spocsFill, layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+    });
 
     assert.calledTwice(randomStub);
     assert.lengthOf(layoutRender, 1);
@@ -335,11 +319,10 @@ describe("selectLayoutRender", () => {
     });
     const randomStub = globals.sandbox.stub(global.Math, "random");
 
-    const { spocsFill, layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      [0.7, 0.3, 0.8]
-    );
+    const { spocsFill, layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+      rollCache: [0.7, 0.3, 0.8],
+    });
 
     assert.notCalled(randomStub);
     assert.lengthOf(layoutRender, 1);
@@ -404,11 +387,9 @@ describe("selectLayoutRender", () => {
     });
     const randomStub = globals.sandbox.stub(global.Math, "random").returns(0.6);
 
-    const { spocsFill, layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
+    const { spocsFill, layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+    });
 
     assert.calledTwice(randomStub);
     assert.lengthOf(layoutRender, 1);
@@ -468,11 +449,10 @@ describe("selectLayoutRender", () => {
     });
     const randomStub = globals.sandbox.stub(global.Math, "random");
 
-    const { spocsFill, layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      [0.4, 0.3]
-    );
+    const { spocsFill, layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+      rollCache: [0.4, 0.3],
+    });
 
     assert.notCalled(randomStub);
     assert.lengthOf(layoutRender, 1);
@@ -530,11 +510,10 @@ describe("selectLayoutRender", () => {
     });
     const randomStub = globals.sandbox.stub(global.Math, "random");
 
-    const { spocsFill, layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      [0.6, 0.7]
-    );
+    const { spocsFill, layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+      rollCache: [0.6, 0.7],
+    });
 
     assert.notCalled(randomStub);
     assert.lengthOf(layoutRender, 1);
@@ -594,11 +573,10 @@ describe("selectLayoutRender", () => {
     });
     const randomStub = globals.sandbox.stub(global.Math, "random");
 
-    const { spocsFill, layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      [0.7, 0.2]
-    );
+    const { spocsFill, layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+      rollCache: [0.7, 0.2],
+    });
 
     assert.notCalled(randomStub);
     assert.lengthOf(layoutRender, 1);
@@ -652,11 +630,9 @@ describe("selectLayoutRender", () => {
     });
     store.dispatch({ type: at.DISCOVERY_STREAM_FEEDS_UPDATE });
 
-    const { spocsFill, layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
+    const { spocsFill, layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+    });
 
     const { recommendations } = layoutRender[0].components[0].data;
     assert.equal(recommendations.length, 4);
@@ -689,11 +665,9 @@ describe("selectLayoutRender", () => {
       data: { feed: { data: { recommendations: [] } }, url: "foo2.com" },
     });
 
-    const { layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
+    const { layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+    });
 
     assert.equal(layoutRender[0].components[0].type, "foo1");
     assert.equal(layoutRender[0].components[1].type, "foo2");
@@ -733,11 +707,9 @@ describe("selectLayoutRender", () => {
       data: { feed: { data: { recommendations: [] } }, url: "foo4.com" },
     });
 
-    const { layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
+    const { layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+    });
 
     assert.equal(layoutRender[0].components[0].type, "foo1");
     assert.equal(layoutRender[0].components[1].type, "foo2");
@@ -780,11 +752,9 @@ describe("selectLayoutRender", () => {
       data: { feed: { data: { recommendations: [] } }, url: "foo4.com" },
     });
 
-    const { layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
+    const { layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+    });
 
     assert.equal(layoutRender[0].components[0].type, "foo1");
     assert.equal(layoutRender[0].components[1].type, "foo2");
@@ -837,11 +807,9 @@ describe("selectLayoutRender", () => {
       data: fakeSpocsData,
     });
 
-    const { layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
+    const { layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+    });
 
     assert.deepEqual(layoutRender[0].components[2].data.recommendations[0], {
       name: "rec",
@@ -864,11 +832,10 @@ describe("selectLayoutRender", () => {
       data: { layout: fakeLayout },
     });
 
-    const { layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      { "feeds.topsites": true },
-      []
-    );
+    const { layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+      prefs: { "feeds.topsites": true },
+    });
 
     assert.equal(layoutRender[0].components[0].type, "TopSites");
     assert.equal(layoutRender[1], undefined);
@@ -885,14 +852,41 @@ describe("selectLayoutRender", () => {
       data: { layout: fakeLayout },
     });
 
-    const { layoutRender } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      { "feeds.topsites": true },
-      []
-    );
+    const { layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+      prefs: { "feeds.topsites": true },
+    });
 
     assert.equal(layoutRender[0].components[0].type, "TopSites");
     assert.equal(layoutRender[0].components[1], undefined);
+  });
+  it("should not render a Navigation if not en-*", () => {
+    const fakeLayout = [
+      {
+        width: 3,
+        components: [
+          { type: "Navigation" },
+          { type: "Message" },
+          { type: "TopSites" },
+        ],
+      },
+    ];
+    store.dispatch({
+      type: at.DISCOVERY_STREAM_LAYOUT_UPDATE,
+      data: { layout: fakeLayout },
+    });
+
+    const { layoutRender } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+      prefs: {
+        "feeds.topsites": true,
+        "feeds.section.topstories": true,
+      },
+    });
+
+    assert.equal(layoutRender[0].components[0].type, "Message");
+    assert.equal(layoutRender[0].components[1].type, "TopSites");
+    assert.equal(layoutRender[0].components[2], undefined);
   });
   it("should skip rendering a spoc in position if that spoc is blocked for that session", () => {
     const fakeLayout = [
@@ -930,22 +924,18 @@ describe("selectLayoutRender", () => {
       data: fakeSpocsData,
     });
 
-    const { layoutRender: layout1 } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
+    const { layoutRender: layout1 } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+    });
 
     store.dispatch({
       type: at.DISCOVERY_STREAM_SPOC_BLOCKED,
       data: { url: "https://foo.com" },
     });
 
-    const { layoutRender: layout2 } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
+    const { layoutRender: layout2 } = selectLayoutRender({
+      state: store.getState().DiscoveryStream,
+    });
 
     assert.deepEqual(layout1[0].components[0].data.recommendations[0], {
       name: "spoc",

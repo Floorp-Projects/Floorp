@@ -9,12 +9,6 @@ var EXPORTED_SYMBOLS = ["BlockedSiteChild"];
 
 ChromeUtils.defineModuleGetter(
   this,
-  "E10SUtils",
-  "resource://gre/modules/E10SUtils.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
   "SafeBrowsing",
   "resource://gre/modules/SafeBrowsing.jsm"
 );
@@ -41,9 +35,7 @@ function getSiteBlockedErrorDetails(docShell) {
       }
 
       let triggeringPrincipal = docShell.failedChannel.loadInfo
-        ? E10SUtils.serializePrincipal(
-            docShell.failedChannel.loadInfo.triggeringPrincipal
-          )
+        ? docShell.failedChannel.loadInfo.triggeringPrincipal
         : null;
       blockedInfo = {
         list: classifiedChannel.matchedList,

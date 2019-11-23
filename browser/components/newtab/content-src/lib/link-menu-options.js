@@ -62,9 +62,9 @@ export const LinkMenuOptions = {
     userEvent: "OPEN_NEW_WINDOW",
   }),
   // This blocks the url for regular stories,
-  // but also sends a message to DiscoveryStream with campaign_id.
-  // If DiscoveryStream sees this message for a campaign_id
-  // it also blocks it on the campaign_id.
+  // but also sends a message to DiscoveryStream with flight_id.
+  // If DiscoveryStream sees this message for a flight_id
+  // it also blocks it on the flight_id.
   BlockUrl: (site, index, eventSource) => ({
     id: "newtab-menu-dismiss",
     icon: "dismiss",
@@ -73,7 +73,7 @@ export const LinkMenuOptions = {
       data: {
         url: site.open_url || site.url,
         pocket_id: site.pocket_id,
-        ...(site.campaign_id ? { campaign_id: site.campaign_id } : {}),
+        ...(site.flight_id ? { flight_id: site.flight_id } : {}),
       },
     }),
     impression: ac.ImpressionStats({

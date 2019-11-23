@@ -84,7 +84,7 @@ export class _TopSites extends React.PureComponent {
       label: topSiteSpoc.sponsor,
       title: topSiteSpoc.sponsor,
       url: topSiteSpoc.url,
-      campaignId: topSiteSpoc.campaign_id,
+      flightId: topSiteSpoc.flight_id,
       id: topSiteSpoc.id,
       guid: topSiteSpoc.id,
       shim: topSiteSpoc.shim,

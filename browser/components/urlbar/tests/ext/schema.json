@@ -35,6 +35,14 @@
         "parameters": []
       },
       {
+        "name": "openClearHistoryDialog",
+        "type": "function",
+        "async": true,
+        "description": "Shows the 'Clear Recent History' dialog unless the user is in Private Browsing Mode.",
+        "parameters": [],
+        "requireUserInput": true
+      },
+      {
         "name": "restartBrowser",
         "type": "function",
         "async": true,

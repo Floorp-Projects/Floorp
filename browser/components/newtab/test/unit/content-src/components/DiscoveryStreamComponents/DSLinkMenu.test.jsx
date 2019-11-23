@@ -146,7 +146,7 @@ describe("<DSLinkMenu>", () => {
 
     it("should pass through the correct menu options to LinkMenu for spocs", () => {
       wrapper = shallow(
-        <DSLinkMenu {...ValidDSLinkMenuProps} campaignId="1234" />
+        <DSLinkMenu {...ValidDSLinkMenuProps} flightId="1234" />
       );
       wrapper
         .find(ContextMenuButton)
