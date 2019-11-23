@@ -303,7 +303,9 @@
       } else {
         let newTabPref = Services.prefs.getBoolPref("browser.search.openintab");
         if (
-          (aEvent instanceof KeyboardEvent && aEvent.altKey) ^ newTabPref &&
+          (aEvent instanceof KeyboardEvent &&
+            (aEvent.altKey || aEvent.getModifierState("AltGraph"))) ^
+            newTabPref &&
           !gBrowser.selectedTab.isEmpty
         ) {
           where = "tab";
