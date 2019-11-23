@@ -425,7 +425,7 @@
               options = { is: "autocomplete-creditcard-insecure-field" };
               break;
             case "generatedPassword":
-              options = { is: "autocomplete-two-line-richlistitem" };
+              options = { is: "autocomplete-generated-password-richlistitem" };
               break;
             case "insecureWarning":
               options = { is: "autocomplete-richlistitem-insecure-warning" };

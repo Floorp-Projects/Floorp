@@ -142,42 +142,16 @@ this.LoginManagerContextMenu = {
     }
   },
 
-  async fillGeneratedPassword(inputElementIdentifier, documentURI, browser) {
+  /**
+   * Show the password autocomplete UI with the generation option forced to appear.
+   */
+  async useGeneratedPassword(inputElementIdentifier, documentURI, browser) {
     let browsingContextId = inputElementIdentifier.browsingContextId;
     let browsingContext = BrowsingContext.get(browsingContextId);
-    if (!browsingContext) {
-      return;
-    }
-
     let actor = browsingContext.currentWindowGlobal.getActor("LoginManager");
-    if (!actor) {
-      return;
-    }
 
-    let password = actor.getGeneratedPassword();
-    let origin = LoginHelper.getLoginOrigin(documentURI.spec);
-    log.debug("fillGeneratedPassword into:", inputElementIdentifier, origin);
-
-    let recipes = [];
-    let formHost;
-    try {
-      formHost = documentURI.hostPort;
-      let recipeManager = await LoginManagerParent.recipeParentPromise;
-      recipes = recipeManager.getRecipesForHost(formHost);
-    } catch (ex) {
-      // Some schemes e.g. chrome aren't supported by URL
-      log.debug("Couldnt get recipes for formHost:", formHost, ex);
-    }
-
-    let browserURI = browser.browsingContext.currentWindowGlobal.documentURI;
-    let originMatches = LoginHelper.getLoginOrigin(browserURI) == origin;
-
-    actor.sendAsyncMessage("PasswordManager:fillGeneratedPassword", {
-      password,
-      origin,
-      originMatches,
+    actor.sendAsyncMessage("PasswordManager:useGeneratedPassword", {
       inputElementIdentifier,
-      recipes,
     });
   },
 

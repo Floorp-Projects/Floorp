@@ -719,6 +719,36 @@
     }
   }
 
+  class MozAutocompleteGeneratedPasswordRichlistitem extends MozAutocompleteTwoLineRichlistitem {
+    constructor() {
+      super();
+
+      this.line3 = document.createElement("div");
+      this.line3.className = "label-row generated-password-autosave";
+      this.line3.textContent = this._autoSaveString;
+    }
+
+    get _autoSaveString() {
+      if (!this.__autoSaveString) {
+        let brandShorterName = Services.strings
+          .createBundle("chrome://branding/locale/brand.properties")
+          .GetStringFromName("brandShorterName");
+        this.__autoSaveString = Services.strings
+          .createBundle("chrome://passwordmgr/locale/passwordmgr.properties")
+          .formatStringFromName("generatedPasswordWillBeSaved", [
+            brandShorterName,
+          ]);
+      }
+      return this.__autoSaveString;
+    }
+
+    _adjustAcItem() {
+      this.querySelector(".labels-wrapper").append(this.line3);
+
+      super._adjustAcItem();
+    }
+  }
+
   customElements.define(
     "autocomplete-richlistitem",
     MozElements.MozAutocompleteRichlistitem,
@@ -754,6 +784,14 @@
   customElements.define(
     "autocomplete-login-richlistitem",
     MozAutocompleteLoginRichlistitem,
+    {
+      extends: "richlistitem",
+    }
+  );
+
+  customElements.define(
+    "autocomplete-generated-password-richlistitem",
+    MozAutocompleteGeneratedPasswordRichlistitem,
     {
       extends: "richlistitem",
     }
