@@ -641,7 +641,7 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      TopLevelEditSubActionDataRef().mCachedInlineStyles.Clear();
+      TopLevelEditSubActionDataRef().mCachedInlineStyles->Clear();
     }
   }
 
@@ -1292,7 +1292,7 @@ nsresult HTMLEditor::PrepareInlineStylesForCaret() {
   // For most actions we want to clear the cached styles, but there are
   // exceptions
   if (!IsStyleCachePreservingSubAction(GetTopLevelEditSubAction())) {
-    TopLevelEditSubActionDataRef().mCachedInlineStyles.Clear();
+    TopLevelEditSubActionDataRef().mCachedInlineStyles->Clear();
   }
   return NS_OK;
 }
@@ -8153,7 +8153,7 @@ nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(Element& aHeader,
       sibling = GetNextHTMLSibling(aHeader.GetNextSibling());
     }
     if (!sibling || !sibling->IsHTMLElement(nsGkAtoms::br)) {
-      TopLevelEditSubActionDataRef().mCachedInlineStyles.Clear();
+      TopLevelEditSubActionDataRef().mCachedInlineStyles->Clear();
       mTypeInState->ClearAllProps();
 
       // Create a paragraph
@@ -9367,7 +9367,7 @@ nsresult HTMLEditor::CacheInlineStyles(nsINode& aNode) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
   nsresult rv = GetInlineStyles(
-      aNode, TopLevelEditSubActionDataRef().mCachedInlineStyles);
+      aNode, *TopLevelEditSubActionDataRef().mCachedInlineStyles);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "GetInlineStyles() failed");
   return rv;
 }
@@ -9446,7 +9446,7 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
   for (size_t i = 0; i < styleCacheArrayAtInsertionPoint.Length(); ++i) {
     StyleCache& styleCacheAtInsertionPoint = styleCacheArrayAtInsertionPoint[i];
     StyleCache& styleCacheBeforeEdit =
-        TopLevelEditSubActionDataRef().mCachedInlineStyles[i];
+        TopLevelEditSubActionDataRef().mCachedInlineStyles->ElementAt(i);
     if (styleCacheBeforeEdit.mPresent) {
       bool bFirst, bAny, bAll;
       bFirst = bAny = bAll = false;
