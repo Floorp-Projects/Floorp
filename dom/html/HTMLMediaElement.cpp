@@ -19,7 +19,6 @@
 #include "DecoderTraits.h"
 #include "FrameStatistics.h"
 #include "GMPCrashHelper.h"
-#include "GVAutoplayPermissionRequest.h"
 #ifdef MOZ_ANDROID_HLS_SUPPORT
 #  include "HLSDecoder.h"
 #endif
@@ -4052,11 +4051,6 @@ void HTMLMediaElement::Init() {
   // in JS)
   MediaShutdownManager::InitStatics();
 
-#if defined(MOZ_WIDGET_ANDROID)
-  GVAutoplayPermissionRequestor::AskForPermissionIfNeeded(
-      OwnerDoc()->GetInnerWindow());
-#endif
-
   mShutdownObserver->Subscribe(this);
   mInitialized = true;
 }
@@ -4149,8 +4143,7 @@ void HTMLMediaElement::UpdateHadAudibleAutoplayState() {
   if ((Volume() > 0.0 && !Muted()) &&
       (!OwnerDoc()->HasBeenUserGestureActivated() || Autoplay())) {
     OwnerDoc()->SetDocTreeHadAudibleMedia();
-    if (AutoplayPolicyTelemetryUtils::WouldBeAllowedToPlayIfAutoplayDisabled(
-            *this)) {
+    if (AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(*this)) {
       ScalarAdd(Telemetry::ScalarID::MEDIA_AUTOPLAY_WOULD_BE_ALLOWED_COUNT, 1);
     } else {
       ScalarAdd(Telemetry::ScalarID::MEDIA_AUTOPLAY_WOULD_NOT_BE_ALLOWED_COUNT,

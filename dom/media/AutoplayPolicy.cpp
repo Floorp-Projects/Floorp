@@ -160,8 +160,22 @@ static bool IsAudioContextAllowedToPlay(const AudioContext& aContext) {
 }
 
 static bool IsEnableBlockingWebAudioByUserGesturePolicy() {
-  return Preferences::GetBool("media.autoplay.block-webaudio", false) &&
+  return DefaultAutoplayBehaviour() != nsIAutoplay::ALLOWED &&
+         Preferences::GetBool("media.autoplay.block-webaudio", false) &&
          StaticPrefs::media_autoplay_enabled_user_gestures_needed();
+}
+
+/* static */
+bool AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(
+    const HTMLMediaElement& aElement) {
+  return IsMediaElementInaudible(aElement) ||
+         IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow());
+}
+
+/* static */
+bool AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(
+    const AudioContext& aContext) {
+  return IsAudioContextAllowedToPlay(aContext);
 }
 
 static bool IsAllowedToPlayByBlockingModel(const HTMLMediaElement& aElement) {
@@ -172,51 +186,7 @@ static bool IsAllowedToPlayByBlockingModel(const HTMLMediaElement& aElement) {
   return IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow());
 }
 
-// On GeckoView, we don't store any site's permission in permission manager, we
-// would check the GV request status to know if the site can be allowed to play.
-// But on other platforms, we would store the site's permission in permission
-// manager.
-#if defined(MOZ_WIDGET_ANDROID)
-using RType = GVAutoplayRequestType;
-
-static bool IsGVAutoplayRequestAllowed(nsPIDOMWindowInner* aWindow,
-                                       RType aType) {
-  if (!aWindow) {
-    return false;
-  }
-
-  RefPtr<BrowsingContext> context = aWindow->GetBrowsingContext()->Top();
-  GVAutoplayRequestStatus status =
-      aType == RType::eAUDIBLE ? context->GetGVAudibleAutoplayRequestStatus()
-                               : context->GetGVInaudibleAutoplayRequestStatus();
-  return status == GVAutoplayRequestStatus::eALLOWED;
-}
-
-static bool IsGVAutoplayRequestAllowed(const HTMLMediaElement& aElement) {
-  // On GV, blocking model is the first thing we would check inside Gecko, and
-  // if the media is not allowed by that, then we would check the response from
-  // the embedding app to decide the final result.
-  if (IsAllowedToPlayByBlockingModel(aElement)) {
-    return true;
-  }
-
-  RefPtr<nsPIDOMWindowInner> window = aElement.OwnerDoc()->GetInnerWindow();
-  if (!window) {
-    return false;
-  }
-
-  const RType type =
-      IsMediaElementInaudible(aElement) ? RType::eINAUDIBLE : RType::eAUDIBLE;
-  return IsGVAutoplayRequestAllowed(window, type);
-}
-#endif
-
 static bool IsAllowedToPlayInternal(const HTMLMediaElement& aElement) {
-#if defined(MOZ_WIDGET_ANDROID)
-  if (StaticPrefs::media_geckoview_autoplay_request()) {
-    return IsGVAutoplayRequestAllowed(aElement);
-  }
-#endif
   Document* approver = ApproverDocOf(*aElement.OwnerDoc());
 
   bool isInaudible = IsMediaElementInaudible(aElement);
@@ -268,21 +238,15 @@ bool AutoplayPolicy::IsAllowedToPlay(const HTMLMediaElement& aElement) {
 /* static */
 bool AutoplayPolicy::IsAllowedToPlay(const AudioContext& aContext) {
   /**
-   * The autoplay checking has 5 different phases,
+   * The autoplay checking has 4 different phases,
    * 1. check whether audio context itself meets the autoplay condition
-   * 2. check if we enable blocking web audio or not
-   *    (only support blocking when using user-gesture-activation model)
-   * 3. check whether the site is in the autoplay whitelist
-   * 4. check global autoplay setting and check wether the site is in the
+   * 2. check whethr the site is in the autoplay whitelist
+   * 3. check global autoplay setting and check wether the site is in the
    *    autoplay blacklist.
-   * 5. check whether media is allowed under current blocking model
-   *    (only support user-gesture-activation model)
+   * 4. check whether media is allowed under current blocking model
+   *    (only support user-gesture-activation)
    */
   if (aContext.IsOffline()) {
-    return true;
-  }
-
-  if (!IsEnableBlockingWebAudioByUserGesturePolicy()) {
     return true;
   }
 
@@ -307,26 +271,15 @@ bool AutoplayPolicy::IsAllowedToPlay(const AudioContext& aContext) {
     return true;
   }
 
+  if (!IsEnableBlockingWebAudioByUserGesturePolicy()) {
+    return true;
+  }
   return IsWindowAllowedToPlay(window);
 }
 
 /* static */
 DocumentAutoplayPolicy AutoplayPolicy::IsAllowedToPlay(
     const Document& aDocument) {
-#if defined(MOZ_WIDGET_ANDROID)
-  if (StaticPrefs::media_geckoview_autoplay_request()) {
-    nsPIDOMWindowInner* window = aDocument.GetInnerWindow();
-    if (IsGVAutoplayRequestAllowed(window, RType::eAUDIBLE)) {
-      return DocumentAutoplayPolicy::Allowed;
-    }
-
-    if (IsGVAutoplayRequestAllowed(window, RType::eINAUDIBLE)) {
-      return DocumentAutoplayPolicy::Allowed_muted;
-    }
-
-    return DocumentAutoplayPolicy::Disallowed;
-  }
-#endif
   if (DefaultAutoplayBehaviour() == nsIAutoplay::ALLOWED ||
       IsWindowAllowedToPlay(aDocument.GetInnerWindow())) {
     return DocumentAutoplayPolicy::Allowed;
@@ -337,19 +290,6 @@ DocumentAutoplayPolicy AutoplayPolicy::IsAllowedToPlay(
   }
 
   return DocumentAutoplayPolicy::Disallowed;
-}
-
-/* static */
-bool AutoplayPolicyTelemetryUtils::WouldBeAllowedToPlayIfAutoplayDisabled(
-    const HTMLMediaElement& aElement) {
-  return IsMediaElementInaudible(aElement) ||
-         IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow());
-}
-
-/* static */
-bool AutoplayPolicyTelemetryUtils::WouldBeAllowedToPlayIfAutoplayDisabled(
-    const AudioContext& aContext) {
-  return IsAudioContextAllowedToPlay(aContext);
 }
 
 }  // namespace dom
