@@ -11,11 +11,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
-import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
-import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
-import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withParent
-import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.hamcrest.Matchers.allOf
@@ -57,6 +53,12 @@ class BookmarksRobot {
 
     fun verifyKeyboardVisible() = assertKeyboardVisibility(isExpectedToBeVisible = true)
 
+    fun createFolder(name: String) {
+        clickAddFolderButton()
+        addNewFolderName(name)
+        saveNewFolder()
+    }
+
     fun clickAddFolderButton() {
         addFolderButton().click()
     }
@@ -88,6 +90,13 @@ class BookmarksRobot {
             ThreeDotMenuBookmarksRobot().interact()
             return ThreeDotMenuBookmarksRobot.Transition()
         }
+
+        fun openThreeDotMenu(bookmarkTitle: String, interact: ThreeDotMenuBookmarksRobot.() -> Unit): ThreeDotMenuBookmarksRobot.Transition {
+            threeDotMenu(bookmarkTitle).click()
+
+            ThreeDotMenuBookmarksRobot().interact()
+            return ThreeDotMenuBookmarksRobot.Transition()
+        }
     }
 }
 
@@ -109,6 +118,13 @@ private fun addFolderButton() = onView(withId(R.id.add_bookmark_folder))
 private fun addFolderTitleField() = onView(withId(R.id.bookmarkNameEdit))
 
 private fun saveFolderButton() = onView(withId(R.id.confirm_add_folder_button))
+
+private fun threeDotMenu(folderName: String) = onView(
+    allOf(
+        withId(R.id.overflow_menu),
+        withParent(withChild(allOf(withId(R.id.title), withText(folderName))))
+    )
+)
 
 private fun threeDotMenu() = onView(withId(R.id.overflow_menu))
 

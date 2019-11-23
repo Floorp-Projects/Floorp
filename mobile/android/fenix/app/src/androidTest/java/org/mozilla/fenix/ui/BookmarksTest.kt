@@ -198,4 +198,27 @@ class BookmarksTest {
             verifyDeleteSnackBarText()
         }
     }
+
+    @Test
+    fun multipleBookmarkDeletions() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openBookmarks {
+            createFolder("1")
+            createFolder("2")
+            createFolder("3")
+        }.openThreeDotMenu("1") {
+        }.clickDelete {
+        }.openThreeDotMenu("2") {
+        }.clickDelete {
+            verifyFolderTitle("3")
+        }.goBack {
+        }
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openBookmarks {
+            verifyFolderTitle("3")
+        }
+    }
 }
