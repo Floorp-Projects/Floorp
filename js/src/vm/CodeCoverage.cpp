@@ -153,7 +153,6 @@ void LCovSource::writeScript(JSScript* script, const char* scriptName) {
   size_t lineno = script->lineno();
   jsbytecode* end = script->codeEnd();
   size_t branchId = 0;
-  size_t tableswitchExitOffset = 0;
   bool firstLineHasBeenWritten = false;
   for (jsbytecode* pc = script->code(); pc != end; pc = GetNextPc(pc)) {
     MOZ_ASSERT(script->code() <= pc && pc < end);
@@ -180,9 +179,6 @@ void LCovSource::writeScript(JSScript* script, const char* scriptName) {
           lineno = size_t(GetSrcNoteOffset(sn, SrcNote::SetLine::Line));
         } else if (type == SRC_NEWLINE) {
           lineno++;
-        } else if (type == SRC_TABLESWITCH) {
-          tableswitchExitOffset =
-              GetSrcNoteOffset(sn, SrcNote::TableSwitch::EndOffset);
         }
 
         sn = SN_NEXT(sn);
@@ -261,14 +257,10 @@ void LCovSource::writeScript(JSScript* script, const char* scriptName) {
     // If the current pc corresponds to a pre-computed switch case, then
     // reports branch hits for each case statement.
     if (jump && op == JSOP_TABLESWITCH) {
-      MOZ_ASSERT(tableswitchExitOffset != 0);
-
-      // Get the default and exit pc
-      jsbytecode* exitpc = pc + tableswitchExitOffset;
+      // Get the default pc.
       jsbytecode* defaultpc = pc + GET_JUMP_OFFSET(pc);
-      MOZ_ASSERT(script->code() <= exitpc && exitpc <= end);
       MOZ_ASSERT(script->code() <= defaultpc && defaultpc < end);
-      MOZ_ASSERT(defaultpc > pc && defaultpc <= exitpc);
+      MOZ_ASSERT(defaultpc > pc);
 
       // Get the low and high from the tableswitch
       int32_t low = GET_JUMP_OFFSET(pc + JUMP_OFFSET_LEN * 1);
@@ -276,12 +268,20 @@ void LCovSource::writeScript(JSScript* script, const char* scriptName) {
       MOZ_ASSERT(high - low + 1 >= 0);
       size_t numCases = high - low + 1;
 
-      jsbytecode* firstcasepc = exitpc;
-      for (size_t j = 0; j < numCases; j++) {
-        jsbytecode* testpc = script->tableSwitchCasePC(pc, j);
+      auto getCaseOrDefaultPc = [&](size_t index) {
+        if (index < numCases) {
+          return script->tableSwitchCasePC(pc, index);
+        }
+        MOZ_ASSERT(index == numCases);
+        return defaultpc;
+      };
+
+      jsbytecode* firstCaseOrDefaultPc = end;
+      for (size_t j = 0; j < numCases + 1; j++) {
+        jsbytecode* testpc = getCaseOrDefaultPc(j);
         MOZ_ASSERT(script->code() <= testpc && testpc < end);
-        if (testpc < firstcasepc) {
-          firstcasepc = testpc;
+        if (testpc < firstCaseOrDefaultPc) {
+          firstCaseOrDefaultPc = testpc;
         }
       }
 
@@ -292,139 +292,76 @@ void LCovSource::writeScript(JSScript* script, const char* scriptName) {
       // Count the number of hits of the previous case entry.
       uint64_t fallsThroughHits = 0;
 
-      // Record branches for each cases.
+      // Record branches for each case and default.
       size_t caseId = 0;
-      bool tableJumpsToDefault = false;
-      for (size_t i = 0; i < numCases; i++) {
-        jsbytecode* casepc = script->tableSwitchCasePC(pc, i);
-        MOZ_ASSERT(script->code() <= casepc && casepc < end);
-        if (casepc == defaultpc) {
-          tableJumpsToDefault = true;
-        }
+      for (size_t i = 0; i < numCases + 1; i++) {
+        jsbytecode* caseOrDefaultPc = getCaseOrDefaultPc(i);
+        MOZ_ASSERT(script->code() <= caseOrDefaultPc && caseOrDefaultPc < end);
 
         // PCs might not be in increasing order of case indexes.
-        jsbytecode* lastcasepc = firstcasepc - 1;
-        bool foundLastCase = false;
-        for (size_t j = 0; j < numCases; j++) {
-          jsbytecode* testpc = script->tableSwitchCasePC(pc, j);
+        jsbytecode* lastCaseOrDefaultPc = firstCaseOrDefaultPc - 1;
+        bool foundLastCaseOrDefault = false;
+        for (size_t j = 0; j < numCases + 1; j++) {
+          jsbytecode* testpc = getCaseOrDefaultPc(j);
           MOZ_ASSERT(script->code() <= testpc && testpc < end);
-          if (lastcasepc < testpc &&
-              (testpc < casepc || (j < i && testpc == casepc))) {
-            lastcasepc = testpc;
-            foundLastCase = true;
+          if (lastCaseOrDefaultPc < testpc &&
+              (testpc < caseOrDefaultPc ||
+               (j < i && testpc == caseOrDefaultPc))) {
+            lastCaseOrDefaultPc = testpc;
+            foundLastCaseOrDefault = true;
           }
         }
 
         // If multiple case instruction have the same code block, only
         // register the code coverage the first time we hit this case.
-        if (!foundLastCase || casepc != lastcasepc) {
-          // Case (i + low)
-          uint64_t caseHits = 0;
+        if (!foundLastCaseOrDefault || caseOrDefaultPc != lastCaseOrDefaultPc) {
+          uint64_t caseOrDefaultHits = 0;
           if (sc) {
-            const PCCounts* counts =
-                sc->maybeGetPCCounts(script->pcToOffset(casepc));
-            if (counts) {
-              caseHits = counts->numExec();
-            }
-
-            // Remove fallthrough.
-            fallsThroughHits = 0;
-            if (foundLastCase) {
-              // Walk from the previous case to the current one to
-              // check if it fallthrough into the current block.
-              MOZ_ASSERT(lastcasepc != firstcasepc - 1);
-              jsbytecode* endpc = lastcasepc;
-              while (GetNextPc(endpc) < casepc) {
-                endpc = GetNextPc(endpc);
-                MOZ_ASSERT(script->code() <= endpc && endpc < end);
+            if (i < numCases) {
+              // Case (i + low)
+              const PCCounts* counts =
+                  sc->maybeGetPCCounts(script->pcToOffset(caseOrDefaultPc));
+              if (counts) {
+                caseOrDefaultHits = counts->numExec();
               }
 
-              if (BytecodeFallsThrough(JSOp(*endpc))) {
-                fallsThroughHits = script->getHitCount(endpc);
-              }
-            }
+              // Remove fallthrough.
+              fallsThroughHits = 0;
+              if (foundLastCaseOrDefault) {
+                // Walk from the previous case to the current one to
+                // check if it fallthrough into the current block.
+                MOZ_ASSERT(lastCaseOrDefaultPc != firstCaseOrDefaultPc - 1);
+                jsbytecode* endpc = lastCaseOrDefaultPc;
+                while (GetNextPc(endpc) < caseOrDefaultPc) {
+                  endpc = GetNextPc(endpc);
+                  MOZ_ASSERT(script->code() <= endpc && endpc < end);
+                }
 
-            caseHits -= fallsThroughHits;
+                if (BytecodeFallsThrough(JSOp(*endpc))) {
+                  fallsThroughHits = script->getHitCount(endpc);
+                }
+              }
+              caseOrDefaultHits -= fallsThroughHits;
+            } else {
+              caseOrDefaultHits = defaultHits;
+            }
           }
 
           outBRDA_.printf("BRDA:%zu,%zu,%zu,", lineno, branchId, caseId);
           if (hits) {
-            outBRDA_.printf("%" PRIu64 "\n", caseHits);
+            outBRDA_.printf("%" PRIu64 "\n", caseOrDefaultHits);
           } else {
             outBRDA_.put("-\n", 2);
           }
 
           numBranchesFound_++;
-          numBranchesHit_ += !!caseHits;
-          defaultHits -= caseHits;
+          numBranchesHit_ += !!caseOrDefaultHits;
+          if (i < numCases) {
+            defaultHits -= caseOrDefaultHits;
+          }
           caseId++;
         }
       }
-
-      // Compute the number of hits of the default branch, if it has its
-      // own case clause.
-      bool defaultHasOwnClause = true;
-      if (tableJumpsToDefault) {
-        // The previous loop already encoded the coverage information
-        // for the 'default' block.
-        defaultHasOwnClause = false;
-      } else if (defaultpc != exitpc) {
-        defaultHits = 0;
-
-        // Look for the last case entry before the default pc.
-        jsbytecode* lastcasepc = firstcasepc - 1;
-        bool foundLastCase = false;
-        for (size_t j = 0; j < numCases; j++) {
-          jsbytecode* testpc = script->tableSwitchCasePC(pc, j);
-          MOZ_ASSERT(script->code() <= testpc && testpc < end);
-          if (lastcasepc < testpc && testpc < defaultpc) {
-            lastcasepc = testpc;
-            foundLastCase = true;
-          }
-        }
-
-        // Look if the last case entry fallthrough to the default case,
-        // in which case we have to remove the number of fallthrough
-        // hits out of the default case hits.
-        if (sc && foundLastCase) {
-          // Walk from the previous case to the current one to check
-          // if it fallthrough into the default block.
-          MOZ_ASSERT(lastcasepc != firstcasepc - 1);
-          jsbytecode* endpc = lastcasepc;
-          while (GetNextPc(endpc) < defaultpc) {
-            endpc = GetNextPc(endpc);
-            MOZ_ASSERT(script->code() <= endpc && endpc < end);
-          }
-
-          if (BytecodeFallsThrough(JSOp(*endpc))) {
-            fallsThroughHits = script->getHitCount(endpc);
-          }
-        }
-
-        if (sc) {
-          const PCCounts* counts =
-              sc->maybeGetPCCounts(script->pcToOffset(defaultpc));
-          if (counts) {
-            defaultHits = counts->numExec();
-          }
-        }
-        defaultHits -= fallsThroughHits;
-      }
-
-      if (defaultHasOwnClause) {
-        outBRDA_.printf("BRDA:%zu,%zu,%zu,", lineno, branchId, caseId);
-        if (hits) {
-          outBRDA_.printf("%" PRIu64 "\n", defaultHits);
-        } else {
-          outBRDA_.put("-\n", 2);
-        }
-        numBranchesFound_++;
-        numBranchesHit_ += !!defaultHits;
-      }
-
-      // Increment the branch identifier, and go to the next instruction.
-      branchId++;
-      tableswitchExitOffset = 0;
     }
   }
 
