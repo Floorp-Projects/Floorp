@@ -43,7 +43,7 @@ var security = {
     } else {
       Services.ww.openWindow(
         window,
-        "chrome://pippki/content/certViewer.xhtml",
+        "chrome://pippki/content/certViewer.xul",
         "_blank",
         "centerscreen,chrome",
         this.securityInfo.cert

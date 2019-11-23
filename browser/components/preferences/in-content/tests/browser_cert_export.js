@@ -47,7 +47,7 @@ async function setupTest() {
   );
   certButton.scrollIntoView();
   let certDialogLoaded = promiseLoadSubDialog(
-    "chrome://pippki/content/certManager.xhtml"
+    "chrome://pippki/content/certManager.xul"
   );
   certButton.click();
   dialogWin = await certDialogLoaded;

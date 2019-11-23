@@ -78,7 +78,7 @@ nsNSSDialogs::SetPassword(nsIInterfaceRequestor* ctx, nsIPK11Token* token,
   }
 
   rv = nsNSSDialogHelper::openDialog(
-      parent, "chrome://pippki/content/changepassword.xhtml", block);
+      parent, "chrome://pippki/content/changepassword.xul", block);
 
   if (NS_FAILED(rv)) return rv;
 
@@ -121,7 +121,7 @@ nsNSSDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor* ctx,
   // Get the parent window for the dialog
   nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(ctx);
   rv = nsNSSDialogHelper::openDialog(
-      parent, "chrome://pippki/content/downloadcert.xhtml", argArray);
+      parent, "chrome://pippki/content/downloadcert.xul", argArray);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -228,7 +228,7 @@ nsNSSDialogs::ChooseCertificate(const nsACString& hostname, int32_t port,
   }
 
   rv = nsNSSDialogHelper::openDialog(
-      nullptr, "chrome://pippki/content/clientauthask.xhtml", argArray);
+      nullptr, "chrome://pippki/content/clientauthask.xul", argArray);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -266,7 +266,7 @@ nsNSSDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor* ctx,
   nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(ctx);
   nsCOMPtr<nsIWritablePropertyBag2> retVals = new nsHashPropertyBag();
   nsresult rv = nsNSSDialogHelper::openDialog(
-      parent, "chrome://pippki/content/setp12password.xhtml", retVals);
+      parent, "chrome://pippki/content/setp12password.xul", retVals);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -343,7 +343,7 @@ nsNSSDialogs::DisplayProtectedAuth(nsIInterfaceRequestor* aCtx,
 
   nsCOMPtr<mozIDOMWindowProxy> newWindow;
   rv = windowWatcher->OpenWindow(
-      parent, "chrome://pippki/content/protectedAuth.xhtml", "_blank",
+      parent, "chrome://pippki/content/protectedAuth.xul", "_blank",
       "centerscreen,chrome,modal,titlebar,close=no", runnable,
       getter_AddRefs(newWindow));
 

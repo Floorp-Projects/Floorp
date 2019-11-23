@@ -49,7 +49,7 @@ function openCertDownloadDialog(cert) {
     Ci.nsIWritablePropertyBag2
   );
   let win = window.openDialog(
-    "chrome://pippki/content/downloadcert.xhtml",
+    "chrome://pippki/content/downloadcert.xul",
     "",
     "",
     cert,
@@ -336,7 +336,7 @@ add_task(async function testPreferencesCert() {
     checkAndClickButton(browser.contentDocument, "viewCertificatesButton");
 
     let certDialogLoaded = promiseLoadSubDialog(
-      "chrome://pippki/content/certManager.xhtml"
+      "chrome://pippki/content/certManager.xul"
     );
     let dialogWin = await certDialogLoaded;
     let doc = dialogWin.document;

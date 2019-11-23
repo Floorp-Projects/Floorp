@@ -67,7 +67,7 @@ function openSetP12PasswordDialog() {
     Ci.nsIWritablePropertyBag2
   );
   let win = window.openDialog(
-    "chrome://pippki/content/setp12password.xhtml",
+    "chrome://pippki/content/setp12password.xul",
     "",
     "",
     returnVals

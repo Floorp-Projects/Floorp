@@ -72,7 +72,7 @@ var whitelist = [
   { file: "chrome://pdf.js/locale/viewer.properties" },
 
   // security/manager/pki/resources/content/device_manager.js
-  { file: "chrome://pippki/content/load_device.xhtml" },
+  { file: "chrome://pippki/content/load_device.xul" },
 
   // The l10n build system can't package string files only for some platforms.
   // See bug 1339424 for why this is hard to fix.
@@ -187,7 +187,7 @@ var whitelist = [
     platforms: ["linux", "win"],
   },
   // Bug 1348559
-  { file: "chrome://pippki/content/resetpassword.xhtml" },
+  { file: "chrome://pippki/content/resetpassword.xul" },
   // Bug 1337345
   { file: "resource://gre/modules/Manifest.jsm" },
   // Bug 1356045

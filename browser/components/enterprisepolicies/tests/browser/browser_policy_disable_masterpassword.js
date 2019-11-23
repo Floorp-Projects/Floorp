@@ -10,7 +10,7 @@ const mpToken = Cc["@mozilla.org/security/pk11tokendb;1"]
 
 async function checkDeviceManager({ buttonIsDisabled }) {
   let deviceManagerWindow = window.openDialog(
-    "chrome://pippki/content/device_manager.xhtml",
+    "chrome://pippki/content/device_manager.xul",
     "",
     ""
   );
