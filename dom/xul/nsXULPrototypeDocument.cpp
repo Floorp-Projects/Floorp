@@ -5,7 +5,6 @@
 
 #include "nsXULPrototypeDocument.h"
 
-#include "nsXULElement.h"
 #include "nsAString.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
