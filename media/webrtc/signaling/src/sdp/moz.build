@@ -30,14 +30,10 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    'HybridSdpParser.cpp',
     'ParsingResultComparer.cpp',
     'SdpAttribute.cpp',
     'SdpHelper.cpp',
-    'SdpLog.cpp',
     'SdpMediaSection.cpp',
-    'SdpPref.cpp',
-    'SdpTelemetry.cpp',
     'SipccSdp.cpp',
     'SipccSdpAttributeList.cpp',
     'SipccSdpMediaSection.cpp',
