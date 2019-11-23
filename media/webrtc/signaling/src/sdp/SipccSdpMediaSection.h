@@ -21,13 +21,11 @@ extern "C" {
 namespace mozilla {
 
 class SipccSdp;
-class SdpParser;
-
-using InternalResults = SdpParser::InternalResults;
+class SdpErrorHolder;
 
 class SipccSdpBandwidths final : public std::map<std::string, uint32_t> {
  public:
-  bool Load(sdp_t* sdp, uint16_t level, InternalResults& results);
+  bool Load(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
   void Serialize(std::ostream& os) const;
 };
 
@@ -70,16 +68,16 @@ class SipccSdpMediaSection final : public SdpMediaSection {
         mProtocol(static_cast<Protocol>(0)),
         mAttributeList(sessionLevel) {}
 
-  bool Load(sdp_t* sdp, uint16_t level, InternalResults& results);
-  bool LoadConnection(sdp_t* sdp, uint16_t level, InternalResults& results);
-  bool LoadProtocol(sdp_t* sdp, uint16_t level, InternalResults& results);
-  bool LoadFormats(sdp_t* sdp, uint16_t level, InternalResults& results);
+  bool Load(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
+  bool LoadConnection(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
+  bool LoadProtocol(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
+  bool LoadFormats(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
   bool ValidateSimulcast(sdp_t* sdp, uint16_t level,
-                         InternalResults& results) const;
+                         SdpErrorHolder& errorHolder) const;
   bool ValidateSimulcastVersions(
       sdp_t* sdp, uint16_t level,
       const SdpSimulcastAttribute::Versions& versions, sdp::Direction direction,
-      InternalResults& results) const;
+      SdpErrorHolder& errorHolder) const;
 
   // the following values are cached on first get
   MediaType mMediaType;

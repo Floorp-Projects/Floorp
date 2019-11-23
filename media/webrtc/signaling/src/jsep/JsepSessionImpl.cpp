@@ -25,11 +25,12 @@
 
 #include "signaling/src/jsep/JsepTrack.h"
 #include "signaling/src/jsep/JsepTransport.h"
-
-#include "signaling/src/sdp/HybridSdpParser.h"
+#include "signaling/src/sdp/RsdparsaSdpParser.h"
+#include "signaling/src/sdp/Sdp.h"
 #include "signaling/src/sdp/SipccSdp.h"
-
+#include "signaling/src/sdp/SipccSdpParser.h"
 #include "mozilla/net/DataChannelProtocol.h"
+#include "signaling/src/sdp/ParsingResultComparer.h"
 
 namespace mozilla {
 
@@ -81,6 +82,11 @@ nsresult JsepSessionImpl::Init() {
 
   SetupDefaultCodecs();
   SetupDefaultRtpExtensions();
+
+  mRunRustParser =
+      Preferences::GetBool("media.peerconnection.sdp.rust.enabled", false);
+  mRunSdpComparer =
+      Preferences::GetBool("media.peerconnection.sdp.rust.compare", false);
 
   mEncodeTrackId =
       Preferences::GetBool("media.peerconnection.sdp.encode_track_id", true);
@@ -1188,15 +1194,26 @@ nsresult JsepSessionImpl::CopyPreviousTransportParams(
 
 nsresult JsepSessionImpl::ParseSdp(const std::string& sdp,
                                    UniquePtr<Sdp>* parsedp) {
-  auto results = mParser->Parse(sdp);
-  auto parsed = std::move(results->Sdp());
-  auto errors = results->Errors();
+  UniquePtr<Sdp> parsed = mSipccParser.Parse(sdp);
   if (!parsed) {
     std::string error = "Failed to parse SDP: ";
-    mSdpHelper.appendSdpParseErrors(errors, &error);
+    mSdpHelper.appendSdpParseErrors(mSipccParser.GetParseErrors(), &error);
     JSEP_SET_ERROR(error);
     return NS_ERROR_INVALID_ARG;
   }
+
+  if (mRunRustParser) {
+    UniquePtr<Sdp> rustParsed = mRsdparsaParser.Parse(sdp);
+    if (mRunSdpComparer) {
+      ParsingResultComparer comparer;
+      if (rustParsed) {
+        comparer.Compare(*rustParsed, *parsed, sdp);
+      } else {
+        comparer.TrackRustParsingFailed(mSipccParser.GetParseErrors().size());
+      }
+    }
+  }
+
   // Verify that the JSEP rules for all SDP are followed
   for (size_t i = 0; i < parsed->GetMediaSectionCount(); ++i) {
     if (mSdpHelper.MsectionIsDisabled(parsed->GetMediaSection(i))) {
