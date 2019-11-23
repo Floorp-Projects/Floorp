@@ -113,5 +113,9 @@ RUN chown -R worker:worker /builds/worker
 # "Operation not permitted". Luckily it doesn't actually require the capability.
 RUN setcap -r /usr/bin/gnome-keyring-daemon
 
+COPY dbus.sh /usr/local/bin/dbus.sh
+RUN chmod +x /usr/local/bin/dbus.sh
+ENTRYPOINT ["/usr/local/bin/dbus.sh"]
+
 # Set a default command useful for debugging
 CMD ["/bin/bash", "--login"]
