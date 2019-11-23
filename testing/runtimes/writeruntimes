@@ -1,4 +1,17 @@
-#!/usr/bin/env python
+#!/bin/sh
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# The beginning of this script is both valid shell and valid python,
+# such that the script starts with the shell and is reexecuted python
+''':'
+which mach > /dev/null 2>&1 && exec mach python "$0" "$@" ||
+echo "mach not found, either add it to your \$PATH or run this script via ./mach python testing/runtimes/writeruntimes"; exit  # noqa
+'''
 
 from __future__ import absolute_import, print_function
 
