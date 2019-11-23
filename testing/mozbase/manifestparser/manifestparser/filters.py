@@ -12,7 +12,6 @@ from __future__ import absolute_import
 
 import itertools
 import os
-from abc import ABCMeta, abstractmethod
 from collections import defaultdict, MutableSequence
 
 from six import string_types
@@ -21,6 +20,18 @@ from .expression import (
     parse,
     ParseError,
 )
+from .util import normsep
+
+logger = None
+
+
+def log(msg, level='info'):
+    from mozlog import get_default_logger
+    global logger
+    if not logger:
+        logger = get_default_logger(component='manifestparser')
+    if logger:
+        getattr(logger, level)(msg)
 
 
 # built-in filters
@@ -260,20 +271,18 @@ class chunk_by_dir(InstanceFilter):
                 yield disabled_test
 
 
-class ManifestChunk(InstanceFilter):
+class chunk_by_manifest(InstanceFilter):
     """
-    Base class for chunking tests by manifest using a numerical key.
-    """
-    __metaclass__ = ABCMeta
+    Chunking algorithm that tries to evenly distribute tests while ensuring
+    tests in the same manifest stay together.
 
+    :param this_chunk: the current chunk, 1 <= this_chunk <= total_chunks
+    :param total_chunks: the total number of chunks
+    """
     def __init__(self, this_chunk, total_chunks, *args, **kwargs):
         InstanceFilter.__init__(self, this_chunk, total_chunks, *args, **kwargs)
         self.this_chunk = this_chunk
         self.total_chunks = total_chunks
-
-    @abstractmethod
-    def key(self, tests):
-        pass
 
     def __call__(self, tests, values):
         tests = list(tests)
@@ -282,34 +291,21 @@ class ManifestChunk(InstanceFilter):
         tests_by_manifest = []
         for manifest in manifests:
             mtests = [t for t in tests if t['manifest'] == manifest]
-            tests_by_manifest.append((self.key(mtests), mtests))
-        tests_by_manifest.sort(reverse=True)
+            tests_by_manifest.append(mtests)
+        tests_by_manifest.sort(reverse=True, key=lambda x: len(x))
 
         tests_by_chunk = [[0, []] for i in range(self.total_chunks)]
         for key, batch in tests_by_manifest:
-            # sort first by key, then by number of tests in case of a tie.
-            # This guarantees the chunk with the lowest key will always
+            # Sort to guarantee the chunk with the lowest score will always
             # get the next batch of tests.
-            tests_by_chunk.sort(key=lambda x: (x[0], len(x[1])))
+            tests_by_chunk.sort(key=lambda x: len(x))
             tests_by_chunk[0][0] += key
             tests_by_chunk[0][1].extend(batch)
 
         return (t for t in tests_by_chunk[self.this_chunk - 1][1])
 
 
-class chunk_by_manifest(ManifestChunk):
-    """
-    Chunking algorithm that tries to evenly distribute tests while ensuring
-    tests in the same manifest stay together.
-
-    :param this_chunk: the current chunk, 1 <= this_chunk <= total_chunks
-    :param total_chunks: the total number of chunks
-    """
-    def key(self, tests):
-        return len(tests)
-
-
-class chunk_by_runtime(ManifestChunk):
+class chunk_by_runtime(InstanceFilter):
     """
     Chunking algorithm that attempts to group tests into chunks based on their
     average runtimes. It keeps manifests of tests together and pairs slow
@@ -317,24 +313,49 @@ class chunk_by_runtime(ManifestChunk):
 
     :param this_chunk: the current chunk, 1 <= this_chunk <= total_chunks
     :param total_chunks: the total number of chunks
-    :param runtimes: dictionary of test runtime data, of the form
-                     {<test path>: <average runtime>}
-    :param default_runtime: value in seconds to assign tests that don't exist
-                            in the runtimes file
+    :param runtimes: dictionary of manifest runtime data, of the form
+                     {<manifest path>: <average runtime>}
     """
 
-    def __init__(self, this_chunk, total_chunks, runtimes, default_runtime=0):
-        ManifestChunk.__init__(self, this_chunk, total_chunks, runtimes,
-                               default_runtime=default_runtime)
-        # defaultdict(lambda:<int>) assigns all non-existent keys the value of
-        # <int>. This means all tests we encounter that don't exist in the
-        # runtimes file will be assigned `default_runtime`.
-        self.runtimes = defaultdict(lambda: default_runtime)
-        self.runtimes.update(runtimes)
+    def __init__(self, this_chunk, total_chunks, runtimes):
+        InstanceFilter.__init__(self, this_chunk, total_chunks, runtimes)
+        self.this_chunk = this_chunk
+        self.total_chunks = total_chunks
+        self.runtimes = {normsep(m): r for m, r in runtimes.items()}
 
-    def key(self, tests):
-        return sum(self.runtimes[t['relpath']] for t in tests
-                   if 'disabled' not in t)
+    def __call__(self, tests, values):
+        tests = list(tests)
+
+        # Find runtimes for all relevant manifests.
+        manifests = set(normsep(t['manifest_relpath']) for t in tests)
+        runtimes = [(self.runtimes[m], m) for m in manifests if m in self.runtimes]
+
+        # Compute the average to use as a default for manifests that don't exist.
+        times = [r[0] for r in runtimes]
+        avg = round(sum(times) / len(times), 2) if times else 0
+        missing = sorted([m for m in manifests if m not in self.runtimes])
+        log("Applying average runtime of {}s to the following missing manifests:\n{}".format(
+            avg, '  ' + '\n  '.join(missing)))
+        runtimes.extend([(avg, m) for m in missing])
+
+        # Each chunk is of the form [<runtime>, <manifests>].
+        chunks = [[0, []] for i in range(self.total_chunks)]
+
+        # Sort runtimes from slowest -> fastest.
+        for runtime, manifest in sorted(runtimes, reverse=True):
+            # Sort chunks from fastest -> slowest. This guarantees the fastest
+            # chunk will be assigned the slowest remaining manifest.
+            chunks.sort(key=lambda x: (x[0], len(x[1])))
+            chunks[0][0] += runtime
+            chunks[0][1].append(manifest)
+
+        # Sort one last time so we typically get chunks ordered from fastest to
+        # slowest.
+        chunks.sort(key=lambda x: (x[0], len(x[1])))
+        runtime, this_manifests = chunks[self.this_chunk - 1]
+        log("Cumulative test runtime is around {} minutes (average is {} minutes)".format(
+            round(runtime / 60), round(sum([c[0] for c in chunks]) / (60 * len(chunks)))))
+        return (t for t in tests if normsep(t['manifest_relpath']) in this_manifests)
 
 
 class tags(InstanceFilter):
