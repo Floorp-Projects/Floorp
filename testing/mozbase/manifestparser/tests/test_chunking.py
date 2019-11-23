@@ -2,11 +2,10 @@
 
 from __future__ import absolute_import
 
-import os
-import random
-from collections import defaultdict
 from itertools import chain
 from unittest import TestCase
+import os
+import random
 
 import mozunit
 from six.moves import range
@@ -186,26 +185,25 @@ class ChunkByRuntime(TestCase):
             for j in range(num):
                 i += 1
                 name = 'test%i' % i
-                manifest = os.path.join(d, 'manifest.ini')
-                test = {
-                    'name': name,
-                    'relpath': os.path.join(d, name),
-                    'manifest': manifest,
-                    'manifest_relpath': manifest,
-                }
+                test = {'name': name,
+                        'relpath': os.path.join(d, name),
+                        'manifest': os.path.join(d, 'manifest.ini')}
                 yield test
 
     def get_runtimes(self, tests):
-        runtimes = defaultdict(int)
+        runtimes = {}
         for test in tests:
-            runtimes[test['manifest_relpath']] += random.randint(0, 100)
+            runtimes[test['relpath']] = random.randint(0, 100)
         return runtimes
 
-    def chunk_by_round_robin(self, tests, total, runtimes):
+    def chunk_by_round_robin(self, tests, runtimes):
+        manifests = set(t['manifest'] for t in tests)
         tests_by_manifest = []
-        for manifest, runtime in runtimes.items():
-            mtests = [t for t in tests if t['manifest_relpath'] == manifest]
-            tests_by_manifest.append((runtime, mtests))
+        for manifest in manifests:
+            mtests = [t for t in tests if t['manifest'] == manifest]
+            total = sum(runtimes[t['relpath']] for t in mtests
+                        if 'disabled' not in t)
+            tests_by_manifest.append((total, mtests))
         tests_by_manifest.sort()
 
         chunks = [[] for i in range(total)]
@@ -225,6 +223,7 @@ class ChunkByRuntime(TestCase):
         self.assertEqual(len(all_chunks), len(tests))
         for t in tests:
             self.assertIn(t, all_chunks)
+
         return chunks
 
     def run_all_combos(self, dirs):
@@ -249,20 +248,15 @@ class ChunkByRuntime(TestCase):
             def runtime_delta(chunks):
                 totals = []
                 for chunk in chunks:
-                    manifests = set([t['manifest_relpath'] for t in chunk])
-                    total = sum(runtimes[m] for m in manifests)
+                    total = sum(runtimes[t['relpath']] for t in chunk
+                                if 'disabled' not in t)
                     totals.append(total)
                 return max(totals) - min(totals)
             delta = runtime_delta(chunks)
 
             # redo the chunking a second time using a round robin style
             # algorithm
-            chunks = self.chunk_by_round_robin(tests, total, runtimes)
-            # sanity check the round robin algorithm
-            all_chunks = list(chain.from_iterable(chunks))
-            self.assertEqual(len(all_chunks), len(tests))
-            for t in tests:
-                self.assertIn(t, all_chunks)
+            chunks = self.chunk_by_round_robin(tests, runtimes)
 
             # since chunks will never have exactly equal runtimes, it's hard
             # to tell if they were chunked optimally. Make sure it at least
