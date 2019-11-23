@@ -33,9 +33,6 @@ struct BytecodeEmitter;
 class MOZ_STACK_CLASS LabelEmitter {
   BytecodeEmitter* bce_;
 
-  // The offset of the JSOP_LABEL.
-  BytecodeOffset top_;
-
   mozilla::Maybe<LabelControl> controlInfo_;
 
 #ifdef DEBUG
@@ -60,7 +57,7 @@ class MOZ_STACK_CLASS LabelEmitter {
  public:
   explicit LabelEmitter(BytecodeEmitter* bce) : bce_(bce) {}
 
-  MOZ_MUST_USE bool emitLabel(HandleAtom name);
+  void emitLabel(HandleAtom name);
   MOZ_MUST_USE bool emitEnd();
 };
 
