@@ -4,7 +4,7 @@ set -x -e
 
 echo "running as" $(id)
 
-# Detect release version.
+# Detect distribution
 . /etc/os-release
 if [ "${ID}" == "ubuntu" ]; then
     DISTRIBUTION="Ubuntu"
@@ -12,6 +12,15 @@ elif [ "${ID}" == "debian" ]; then
     DISTRIBUTION="Debian"
 else
     DISTRIBUTION="Unknown"
+fi
+
+# Detect release version if supported
+FILE="/etc/lsb-release"
+if [ -e $FILE ] ; then
+    . /etc/lsb-release
+    RELEASE="${DISTRIB_RELEASE}"
+else
+    RELEASE="unknown"
 fi
 
 ####
@@ -137,7 +146,15 @@ fi
 
 if $NEED_WINDOW_MANAGER; then
     # This is read by xsession to select the window manager
-    echo DESKTOP_SESSION=ubuntu > $HOME/.xsessionrc
+    . /etc/lsb-release
+    if [ $DISTRIBUTION == "Ubuntu" ] && [ $RELEASE == "16.04" ]; then
+        echo DESKTOP_SESSION=ubuntu > $HOME/.xsessionrc
+    elif [ $DISTRIBUTION == "Ubuntu" ] && [ $RELEASE == "18.04" ]; then
+        echo export DESKTOP_SESSION=gnome > $HOME/.xsessionrc
+        echo export XDG_SESSION_TYPE=x11 >> $HOME/.xsessionrc
+    else
+        :
+    fi
 
     # DISPLAY has already been set above
     # XXX: it would be ideal to add a semaphore logic to make sure that the
@@ -163,9 +180,7 @@ if $NEED_WINDOW_MANAGER; then
 fi
 
 if $NEED_COMPIZ; then
-    if [ $DISTRIBUTION == "Ubuntu" ]; then
-        compiz 2>&1 &
-    fi
+    compiz 2>&1 &
 fi
 
 maybe_start_pulse
