@@ -63,27 +63,27 @@ struct MOZ_STACK_CLASS StyleCache final {
 class MOZ_STACK_CLASS AutoStyleCacheArray final
     : public AutoTArray<StyleCache, 19> {
  public:
-  AutoStyleCacheArray() {
-    AppendElement(StyleCache(nsGkAtoms::b, nullptr));
-    AppendElement(StyleCache(nsGkAtoms::i, nullptr));
-    AppendElement(StyleCache(nsGkAtoms::u, nullptr));
-    AppendElement(StyleCache(nsGkAtoms::font, nsGkAtoms::face));
-    AppendElement(StyleCache(nsGkAtoms::font, nsGkAtoms::size));
-    AppendElement(StyleCache(nsGkAtoms::font, nsGkAtoms::color));
-    AppendElement(StyleCache(nsGkAtoms::tt, nullptr));
-    AppendElement(StyleCache(nsGkAtoms::em, nullptr));
-    AppendElement(StyleCache(nsGkAtoms::strong, nullptr));
-    AppendElement(StyleCache(nsGkAtoms::dfn, nullptr));
-    AppendElement(StyleCache(nsGkAtoms::code, nullptr));
-    AppendElement(StyleCache(nsGkAtoms::samp, nullptr));
-    AppendElement(StyleCache(nsGkAtoms::var, nullptr));
-    AppendElement(StyleCache(nsGkAtoms::cite, nullptr));
-    AppendElement(StyleCache(nsGkAtoms::abbr, nullptr));
-    AppendElement(StyleCache(nsGkAtoms::acronym, nullptr));
-    AppendElement(StyleCache(nsGkAtoms::backgroundColor, nullptr));
-    AppendElement(StyleCache(nsGkAtoms::sub, nullptr));
-    AppendElement(StyleCache(nsGkAtoms::sup, nullptr));
-  }
+  AutoStyleCacheArray()
+      : AutoTArray<StyleCache, 19>(
+            {StyleCache(nsGkAtoms::b, nullptr),
+             StyleCache(nsGkAtoms::i, nullptr),
+             StyleCache(nsGkAtoms::u, nullptr),
+             StyleCache(nsGkAtoms::font, nsGkAtoms::face),
+             StyleCache(nsGkAtoms::font, nsGkAtoms::size),
+             StyleCache(nsGkAtoms::font, nsGkAtoms::color),
+             StyleCache(nsGkAtoms::tt, nullptr),
+             StyleCache(nsGkAtoms::em, nullptr),
+             StyleCache(nsGkAtoms::strong, nullptr),
+             StyleCache(nsGkAtoms::dfn, nullptr),
+             StyleCache(nsGkAtoms::code, nullptr),
+             StyleCache(nsGkAtoms::samp, nullptr),
+             StyleCache(nsGkAtoms::var, nullptr),
+             StyleCache(nsGkAtoms::cite, nullptr),
+             StyleCache(nsGkAtoms::abbr, nullptr),
+             StyleCache(nsGkAtoms::acronym, nullptr),
+             StyleCache(nsGkAtoms::backgroundColor, nullptr),
+             StyleCache(nsGkAtoms::sub, nullptr),
+             StyleCache(nsGkAtoms::sup, nullptr)}) {}
 
   void Clear() {
     for (auto& styleCache : *this) {
