@@ -7,6 +7,7 @@
 #ifndef _PARSINGRESULTCOMPARER_H_
 #define _PARSINGRESULTCOMPARER_H_
 
+#include "signaling/src/sdp/SdpParser.h"
 #include <string>
 
 namespace mozilla {
@@ -24,6 +25,9 @@ class ParsingResultComparer {
  public:
   ParsingResultComparer() = default;
 
+  static bool Compare(const UniquePtr<SdpParser::Results>& aResA,
+                      const UniquePtr<SdpParser::Results>& aResB,
+                      const std::string& orignalSdp);
   bool Compare(const Sdp& rsdparsaSdp, const Sdp& sipccSdp,
                const std::string& originalSdp,
                const SdpComparisonResult expect = SdpComparisonResult::Equal);
@@ -36,6 +40,7 @@ class ParsingResultComparer {
       const SdpAttributeList& sipccAttrlist, int level,
       const SdpComparisonResult expect = SdpComparisonResult::Equal) const;
   void TrackRustParsingFailed(size_t sipccErrorCount) const;
+  void TrackSipccParsingFailed(size_t rustErrorCount) const;
 
  private:
   std::string mOriginalSdp;
