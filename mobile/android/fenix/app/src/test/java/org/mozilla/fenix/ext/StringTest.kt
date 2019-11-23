@@ -25,24 +25,9 @@ class StringTest {
     private val publicSuffixList = testContext.components.publicSuffixList
 
     @Test
-    fun replace() {
-        val chars = mapOf("Mozilla Corporation" to "moco", "Mozilla Foundation" to "mofo")
-        val sentence = "Mozilla Corporation and Mozilla Foundation are committed to the future of the internet"
-        val new = sentence.replace(chars)
-        assertEquals(new, "moco and mofo are committed to the future of the internet")
-    }
-
-    @Test
-    fun `Try Get Host From Url`() {
-        val urlTest = "http://www.example.com:1080/docs/resource1.html"
-        val new = urlTest.tryGetHostFromUrl()
-        assertEquals(new, "www.example.com")
-    }
-
-    @Test
     fun `Url To Trimmed Host`() {
         val urlTest = "http://www.example.com:1080/docs/resource1.html"
-        val new = urlTest.urlToTrimmedHost(testContext.components.publicSuffixList)
+        val new = urlTest.urlToTrimmedHost(testContext)
         assertEquals(new, "example")
     }
 

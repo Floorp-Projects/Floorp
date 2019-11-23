@@ -4,39 +4,20 @@
 
 package org.mozilla.fenix.ext
 
+import android.content.Context
 import android.net.Uri
 import android.util.Patterns
 import android.webkit.URLUtil
 import androidx.core.net.toUri
 import kotlinx.coroutines.runBlocking
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
+import mozilla.components.lib.publicsuffixlist.ext.urlToTrimmedHost
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import java.net.IDN
-import java.net.MalformedURLException
-import java.net.URL
 import java.util.Locale
 
 const val FILE_PREFIX = "file://"
 const val MAX_VALID_PORT = 65_535
-
-/**
- * Replaces the keys with the values with the map provided.
- */
-fun String.replace(pairs: Map<String, String>): String {
-    var result = this
-    pairs.forEach { (l, r) -> result = result.replace(l, r) }
-    return result
-}
-
-/**
- * Tries to parse and get host part if this [String] is valid URL.
- * Otherwise returns the string.
- */
-fun String.tryGetHostFromUrl(): String = try {
-    URL(this).host
-} catch (e: MalformedURLException) {
-    this
-}
 
 /**
  * Shortens URLs to be more user friendly.
@@ -110,15 +91,8 @@ private fun Uri.isIpv6(): Boolean {
 /**
  * Trim a host's prefix and suffix
  */
-fun String.urlToTrimmedHost(publicSuffixList: PublicSuffixList): String {
-    return try {
-        val host = toUri().hostWithoutCommonPrefixes ?: return this
-        runBlocking {
-            publicSuffixList.stripPublicSuffix(host).await()
-        }
-    } catch (e: MalformedURLException) {
-        this
-    }
+fun String.urlToTrimmedHost(context: Context): String = runBlocking {
+    urlToTrimmedHost(context.components.publicSuffixList).await()
 }
 
 /**

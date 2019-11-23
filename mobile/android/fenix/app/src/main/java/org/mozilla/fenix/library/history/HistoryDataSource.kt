@@ -6,8 +6,8 @@ package org.mozilla.fenix.library.history
 
 import androidx.paging.ItemKeyedDataSource
 import mozilla.components.concept.storage.VisitInfo
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.components.history.PagedHistoryProvider
-import org.mozilla.fenix.ext.tryGetHostFromUrl
 
 class HistoryDataSource(
     private val historyProvider: PagedHistoryProvider
