@@ -127,3 +127,32 @@ add_task(async function stripSpaces() {
     );
   }
 });
+
+add_task(async function clearURLs() {
+  const tests = [
+    {
+      loadUrl: "https://example.com",
+      token: UrlbarTokenizer.RESTRICT.HISTORY,
+      expected: "^ ",
+    },
+    {
+      loadUrl: "about:blank",
+      token: UrlbarTokenizer.RESTRICT.BOOKMARK,
+      expected: "* ",
+    },
+  ];
+  let win = BrowserWindowTracker.getTopWindow();
+  for (let { loadUrl, token, expected } of tests) {
+    let loadedPromise = BrowserTestUtils.browserLoaded(
+      gBrowser.selectedBrowser
+    );
+    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, loadUrl);
+    await loadedPromise;
+    TouchBarHelper.insertRestrictionInUrlbar(token);
+    Assert.equal(
+      win.gURLBar.value,
+      expected,
+      "The search restriction token should have cleared out the URL."
+    );
+  }
+});
