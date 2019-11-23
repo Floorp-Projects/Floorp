@@ -755,6 +755,57 @@ describe("ToolbarPanelHub", () => {
         },
       });
     });
+    it("should format the url", async () => {
+      const stub = sandbox
+        .stub(global.Services.urlFormatter, "formatURL")
+        .returns("formattedURL");
+      const onboardingMsgs = await OnboardingMessageProvider.getUntranslatedMessages();
+      const msg = onboardingMsgs.find(m => m.template === "protections_panel");
+
+      await fakeInsert();
+
+      eventListeners.mouseup();
+
+      assert.calledOnce(stub);
+      assert.calledWithExactly(stub, msg.content.cta_url);
+      assert.calledOnce(handleUserActionStub);
+      assert.calledWithExactly(handleUserActionStub, {
+        target: fakeWindow,
+        data: {
+          type: "OPEN_URL",
+          data: {
+            args: "formattedURL",
+            where: "tabshifted",
+          },
+        },
+      });
+    });
+    it("should report format url errors", async () => {
+      const stub = sandbox
+        .stub(global.Services.urlFormatter, "formatURL")
+        .throws();
+      const onboardingMsgs = await OnboardingMessageProvider.getUntranslatedMessages();
+      const msg = onboardingMsgs.find(m => m.template === "protections_panel");
+      sandbox.spy(global.Cu, "reportError");
+
+      await fakeInsert();
+
+      eventListeners.mouseup();
+
+      assert.calledOnce(stub);
+      assert.calledOnce(global.Cu.reportError);
+      assert.calledOnce(handleUserActionStub);
+      assert.calledWithExactly(handleUserActionStub, {
+        target: fakeWindow,
+        data: {
+          type: "OPEN_URL",
+          data: {
+            args: msg.content.cta_url,
+            where: "tabshifted",
+          },
+        },
+      });
+    });
     it("should open link on click (directly attached to the message)", async () => {
       const onboardingMsgs = await OnboardingMessageProvider.getUntranslatedMessages();
       const msg = onboardingMsgs.find(m => m.template === "protections_panel");
