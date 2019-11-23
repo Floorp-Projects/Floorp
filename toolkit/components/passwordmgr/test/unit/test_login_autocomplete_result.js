@@ -1023,13 +1023,28 @@ add_task(async function test_all_patterns() {
       ],
     },
     {
+      description:
+        "If a generated password is passed then show it even if there is a search string. This handles when forcing the generation option from the context menu of a non-empty field",
       generatedPassword: "9ljgfd4shyktb45",
       insecureFieldWarningEnabled: true,
       isSecure: true,
       isPasswordField: true,
       matchingLogins: [],
       searchString: "9ljgfd4shyktb45",
-      items: [],
+      items: [
+        {
+          value: "9ljgfd4shyktb45",
+          label: "Use a Securely Generated Password",
+          style: "generatedPassword",
+          comment: "9ljgfd4shyktb45",
+        },
+        {
+          value: "",
+          label: "View Saved Logins",
+          style: "loginsFooter",
+          comment: "mochi.test",
+        },
+      ],
     },
     {
       description: "secure username field on sub.mochi.test",

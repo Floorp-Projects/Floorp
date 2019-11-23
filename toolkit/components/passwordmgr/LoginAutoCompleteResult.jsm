@@ -227,7 +227,7 @@ function LoginAutoCompleteResult(
 
     // Don't show the footer on non-empty password fields as it's not providing
     // value and only adding noise since a password was already filled.
-    if (isPasswordField && aSearchString) {
+    if (isPasswordField && aSearchString && !generatedPassword) {
       log.debug("Hiding footer: non-empty password field");
       return false;
     }
@@ -409,6 +409,7 @@ LoginAutoComplete.prototype = {
       // Don't show autocomplete results for about: pages.
       return;
     }
+
     // Show the insecure login warning in the passwords field on null principal documents.
     let isSecure = !isNullPrincipal;
     // Avoid loading InsecurePasswordUtils.jsm in a sandboxed document (e.g. an ad. frame) if we
@@ -470,8 +471,13 @@ LoginAutoComplete.prototype = {
       return;
     }
 
-    if (isPasswordField && aSearchString) {
-      // Return empty result on password fields with password already filled.
+    if (
+      isPasswordField &&
+      aSearchString &&
+      !loginManagerActor.isPasswordGenerationForcedOn(aElement)
+    ) {
+      // Return empty result on password fields with password already filled,
+      // unless password generation was forced.
       let acLookupPromise = (this._autoCompleteLookupPromise = Promise.resolve({
         logins: [],
       }));

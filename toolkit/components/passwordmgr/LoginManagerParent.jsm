@@ -381,6 +381,7 @@ class LoginManagerParent extends JSWindowActorParent {
     actionOrigin,
     searchString,
     previousResult,
+    forcePasswordGeneration,
     isSecure,
     isPasswordField,
   }) {
@@ -446,14 +447,12 @@ class LoginManagerParent extends JSWindowActorParent {
       return match && match.toLowerCase().startsWith(searchStringLower);
     });
 
-    let browser = this.getRootBrowser();
-
     let generatedPassword = null;
     if (
-      isPasswordField &&
-      autocompleteInfo.fieldName == "new-password" &&
-      Services.logins.getLoginSavingEnabled(formOrigin) &&
-      (!browser || !PrivateBrowsingUtils.isWindowPrivate(browser.ownerGlobal))
+      forcePasswordGeneration ||
+      (isPasswordField &&
+        autocompleteInfo.fieldName == "new-password" &&
+        Services.logins.getLoginSavingEnabled(formOrigin))
     ) {
       generatedPassword = this.getGeneratedPassword();
     }

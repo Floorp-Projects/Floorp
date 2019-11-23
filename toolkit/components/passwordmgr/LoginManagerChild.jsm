@@ -393,6 +393,12 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
      * frames, to the current state used by the Login Manager.
      */
     this._loginFormStateByDocument = new WeakMap();
+
+    /**
+     * Set of fields where the user specifically requested password generation
+     * (from the context menu) even if we wouldn't offer it on this field by default.
+     */
+    this._fieldsWithPasswordGenerationForcedOn = new WeakSet();
   }
 
   static forWindow(window) {
@@ -457,33 +463,26 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         break;
       }
 
-      case "PasswordManager:fillGeneratedPassword": {
-        // make a login for the password
-        let generatedLogin = Cc[
-          "@mozilla.org/login-manager/loginInfo;1"
-        ].createInstance(Ci.nsILoginInfo);
-        generatedLogin.init(
-          msg.data.origin,
-          "", // empty formActionOrigin
-          null, // no realm
-          "", // empty username
-          msg.data.password
-        );
-        this.fillForm({
-          loginFormOrigin: msg.data.origin,
-          loginsFound: [generatedLogin],
-          recipes: msg.data.recipes,
-          inputElementIdentifier: msg.data.inputElementIdentifier,
-          originMatches: msg.data.originMatches,
-        });
+      case "PasswordManager:useGeneratedPassword": {
         let inputElement = ContentDOMReference.resolve(
           msg.data.inputElementIdentifier
         );
-        if (inputElement) {
-          this._generatedPasswordFilledOrEdited(inputElement);
-        } else {
+        if (!inputElement) {
           log("Could not resolve inputElementIdentifier to a living element.");
+          break;
         }
+
+        if (inputElement != gFormFillService.focusedInput) {
+          log("Could not open popup on input that's no longer focused");
+          break;
+        }
+
+        this._fieldsWithPasswordGenerationForcedOn.add(inputElement);
+        // Clear the cache of previous autocomplete results so that the
+        // generation option appears.
+        gFormFillService.QueryInterface(Ci.nsIAutoCompleteInput);
+        gFormFillService.controller.resetInternalState();
+        gFormFillService.showPopup();
         break;
       }
 
@@ -603,14 +602,21 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         }
       : null;
 
+    let isPasswordField = aElement.type == "password";
+    let forcePasswordGeneration = false;
+    if (isPasswordField) {
+      forcePasswordGeneration = this.isPasswordGenerationForcedOn(aElement);
+    }
+
     let messageData = {
       autocompleteInfo,
       formOrigin,
       actionOrigin,
       searchString: aSearchString,
       previousResult,
+      forcePasswordGeneration,
       isSecure: InsecurePasswordUtils.isFormSecure(form),
-      isPasswordField: aElement.type == "password",
+      isPasswordField,
     };
 
     if (LoginHelper.showAutoCompleteFooter) {
@@ -860,6 +866,10 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     this._getLoginDataFromParent(form, { showMasterPassword: true })
       .then(this.loginsFound.bind(this))
       .catch(Cu.reportError);
+  }
+
+  isPasswordGenerationForcedOn(passwordField) {
+    return this._fieldsWithPasswordGenerationForcedOn.has(passwordField);
   }
 
   /**
@@ -1617,12 +1627,10 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     // Unmask the password field
     this._togglePasswordFieldMasking(passwordField, true);
 
-    if (PrivateBrowsingUtils.isContentWindowPrivate(win)) {
-      log(
-        "_generatedPasswordFilledOrEdited: not automatically saving the password in private browsing mode"
-      );
-      return;
-    }
+    // Once the generated password was filled we no longer want to autocomplete
+    // saved logins into a non-empty password field (see LoginAutoComplete.startSearch)
+    // because it is confusing.
+    this._fieldsWithPasswordGenerationForcedOn.delete(passwordField);
 
     let loginForm = LoginFormFactory.createFromField(passwordField);
     let formActionOrigin = LoginHelper.getFormActionOrigin(loginForm);

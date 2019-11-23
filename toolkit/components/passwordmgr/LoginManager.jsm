@@ -469,15 +469,6 @@ LoginManager.prototype = {
       if (!matchData.hasKey("origin")) {
         log.warn("searchLogins: An `origin` is recommended");
       }
-
-      if (
-        !matchData.hasKey("formActionOrigin") &&
-        !matchData.hasKey("httpRealm")
-      ) {
-        log.warn(
-          "searchLogins: `formActionOrigin` or `httpRealm` is recommended"
-        );
-      }
     }
 
     return this._storage.searchLogins(matchData);

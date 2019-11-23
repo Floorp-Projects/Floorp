@@ -994,12 +994,6 @@ class nsContextMenu {
     this.showItem("fill-login-generated-password", canFillGeneratedPassword);
     this.showItem("generated-password-separator", canFillGeneratedPassword);
 
-    this.setItemAttr(
-      "fill-login-generated-password",
-      "disabled",
-      PrivateBrowsingUtils.isWindowPrivate(window)
-    );
-
     if (!fragment) {
       return;
     }
@@ -1019,8 +1013,8 @@ class nsContextMenu {
     });
   }
 
-  fillGeneratedPassword() {
-    nsContextMenu.LoginManagerContextMenu.fillGeneratedPassword(
+  useGeneratedPassword() {
+    nsContextMenu.LoginManagerContextMenu.useGeneratedPassword(
       this.targetIdentifier,
       this.contentData.documentURIObject,
       this.browser

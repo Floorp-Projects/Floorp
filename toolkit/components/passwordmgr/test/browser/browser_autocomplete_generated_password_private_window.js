@@ -4,7 +4,7 @@ const FORM_PAGE_PATH =
   "/browser/toolkit/components/passwordmgr/test/browser/form_basic.html";
 const passwordInputSelector = "#form-basic-password";
 
-add_task(async function test_autocomplete_popup_item_hidden() {
+add_task(async function test_autocomplete_new_password_popup_item_visible() {
   await LoginTestUtils.addLogin({ username: "username", password: "pass1" });
   const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   const doc = win.document;
@@ -15,12 +15,20 @@ add_task(async function test_autocomplete_popup_item_hidden() {
     },
     async function(browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
+      await ContentTask.spawn(
+        browser,
+        [passwordInputSelector],
+        function openAutocomplete(sel) {
+          content.document.querySelector(sel).autocomplete = "new-password";
+        }
+      );
+
       let popup = doc.getElementById("PopupAutoComplete");
       ok(popup, "Got popup");
       await openACPopup(popup, browser, passwordInputSelector);
 
       let item = popup.querySelector(`[originaltype="generatedPassword"]`);
-      ok(!item, "Should not get 'Generate password' richlistitem");
+      ok(item, "Should get 'Generate password' richlistitem");
 
       let onPopupClosed = BrowserTestUtils.waitForCondition(
         () => !popup.popupOpen,
@@ -35,7 +43,7 @@ add_task(async function test_autocomplete_popup_item_hidden() {
   await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(async function test_autocomplete_menu_item_disabled() {
+add_task(async function test_autocomplete_menu_item_enabled() {
   const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   const doc = win.document;
   await BrowserTestUtils.withNewTab(
@@ -50,9 +58,9 @@ add_task(async function test_autocomplete_menu_item_disabled() {
         "fill-login-generated-password"
       );
       is(
-        generatedPasswordItem.getAttribute("disabled"),
-        "true",
-        "Generate password context menu item should be disabled in PB mode"
+        generatedPasswordItem.hasAttribute("disabled"),
+        false,
+        "Generate password context menu item should be enabled in PB mode"
       );
       await closePopup(document.getElementById("contentAreaContextMenu"));
     }
