@@ -42,10 +42,10 @@ GfxInfo::GetAdapterDescription2(nsAString& aAdapterDescription) {
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterRAM(nsAString& aAdapterRAM) { return NS_ERROR_FAILURE; }
+GfxInfo::GetAdapterRAM(uint32_t* aAdapterRAM) { return NS_ERROR_FAILURE; }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterRAM2(nsAString& aAdapterRAM) { return NS_ERROR_FAILURE; }
+GfxInfo::GetAdapterRAM2(uint32_t* aAdapterRAM) { return NS_ERROR_FAILURE; }
 
 NS_IMETHODIMP
 GfxInfo::GetAdapterDriver(nsAString& aAdapterDriver) {
