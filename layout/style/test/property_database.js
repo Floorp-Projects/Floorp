@@ -11160,6 +11160,18 @@ var gCSSProperties = {
     alias_for: "box-sizing",
     subproperties: ["box-sizing"],
   },
+  "-webkit-font-feature-settings": {
+    domProp: "webkitFontFeatureSettings",
+    inherited: true,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    applies_to_marker: true,
+    applies_to_placeholder: true,
+    applies_to_cue: true,
+    alias_for: "font-feature-settings",
+    subproperties: ["font-feature-settings"],
+  },
   "-webkit-box-flex": {
     domProp: "webkitBoxFlex",
     inherited: false,
