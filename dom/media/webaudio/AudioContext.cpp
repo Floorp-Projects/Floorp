@@ -1072,8 +1072,7 @@ void AudioContext::ResumeInternal(AudioContextOperationFlags aFlags) {
 }
 
 void AudioContext::UpdateAutoplayAssumptionStatus() {
-  if (AutoplayPolicyTelemetryUtils::WouldBeAllowedToPlayIfAutoplayDisabled(
-          *this)) {
+  if (AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(*this)) {
     mWasEverAllowedToStart |= true;
     mWouldBeAllowedToStart = true;
   } else {
@@ -1088,8 +1087,7 @@ void AudioContext::MaybeUpdateAutoplayTelemetry() {
     return;
   }
 
-  if (AutoplayPolicyTelemetryUtils::WouldBeAllowedToPlayIfAutoplayDisabled(
-          *this) &&
+  if (AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(*this) &&
       !mWouldBeAllowedToStart) {
     AccumulateCategorical(
         mozilla::Telemetry::LABELS_WEB_AUDIO_AUTOPLAY::AllowedAfterBlocked);

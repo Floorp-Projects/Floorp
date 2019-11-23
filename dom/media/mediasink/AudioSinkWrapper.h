@@ -89,7 +89,7 @@ class AudioSinkWrapper : public MediaSink {
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   }
 
-  media::TimeUnit GetVideoPosition(TimeStamp aNow) const;
+  TimeUnit GetVideoPosition(TimeStamp aNow) const;
 
   void OnAudioEnded();
 
@@ -105,7 +105,7 @@ class AudioSinkWrapper : public MediaSink {
   PlaybackParams mParams;
 
   TimeStamp mPlayStartTime;
-  media::TimeUnit mPlayDuration;
+  TimeUnit mPlayDuration;
 
   bool mAudioEnded;
   MozPromiseRequestHolder<EndedPromise> mAudioSinkEndedPromise;
