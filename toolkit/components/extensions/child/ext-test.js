@@ -4,6 +4,13 @@
 
 "use strict";
 
+XPCOMUtils.defineLazyGetter(this, "isXpcshell", function() {
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  return env.exists("XPCSHELL_TEST_PROFILE_DIR");
+});
+
 /**
  * Checks whether the given error matches the given expectations.
  *
@@ -109,8 +116,19 @@ this.test = class extends ExtensionAPI {
       }
     }
 
+    if (!Cu.isInAutomation && !isXpcshell) {
+      return { test: {} };
+    }
+
     return {
       test: {
+        withHandlingUserInput(callback) {
+          ExtensionCommon.withHandlingUserInput(
+            context.contentWindow,
+            callback
+          );
+        },
+
         sendMessage(...args) {
           extension.emit("test-message", ...args);
         },

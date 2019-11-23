@@ -10,6 +10,14 @@
     "description": "none",
     "functions": [
       {
+        "name": "withHandlingUserInput",
+        "type": "function",
+        "description": "Calls the callback function wrapped with user input set.  This is only used for internal unit testing.",
+        "parameters": [
+          {"type": "function", "name": "callback"}
+        ]
+      },
+      {
         "name": "notifyFail",
         "type": "function",
         "description": "Notifies the browser process that test code running in the extension failed.  This is only used for internal unit testing.",

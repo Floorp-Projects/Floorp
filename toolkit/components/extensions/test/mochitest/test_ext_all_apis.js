@@ -38,7 +38,8 @@ let expectedCommonApis = [
   "runtime.onConnect",
   "runtime.onMessage",
   "runtime.sendMessage",
-  // If you want to add a new powerful test API, please see bug 1287233.
+  // browser.test is only available in xpcshell or when
+  // Cu.isInAutomation is true.
   "test.assertEq",
   "test.assertFalse",
   "test.assertRejects",
@@ -51,6 +52,7 @@ let expectedCommonApis = [
   "test.onMessage",
   "test.sendMessage",
   "test.succeed",
+  "test.withHandlingUserInput",
 ];
 
 let expectedContentApis = [
