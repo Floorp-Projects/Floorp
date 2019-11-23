@@ -12,7 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.RadioButton
-import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.transition.TransitionInflater
@@ -121,12 +120,10 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
 
         val toolbarSessionObserver = TrackingProtectionOverlay(
             context = requireContext(),
-            settings = requireContext().settings(),
-            toolbar = browserToolbarView.view,
-            trackingProtectionIcon = browserToolbarView
-                .view
-                .findViewById<AppCompatImageView>(R.id.mozac_browser_toolbar_tracking_protection_indicator)
-        )
+            settings = requireContext().settings()
+        ) {
+            browserToolbarView.view
+        }
         getSessionById()?.register(toolbarSessionObserver, this, autoPause = true)
     }
 

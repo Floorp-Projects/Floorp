@@ -15,6 +15,7 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.R
 import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
@@ -39,7 +40,8 @@ class TrackingProtectionOverlayTest {
         icon = mockk(relaxed = true)
         session = mockk(relaxed = true)
 
-        overlay = TrackingProtectionOverlay(context, settings, toolbar, icon)
+        overlay = TrackingProtectionOverlay(context, settings) { toolbar }
+        every { toolbar.findViewById<View>(R.id.mozac_browser_toolbar_tracking_protection_indicator) } returns icon
     }
 
     @Test

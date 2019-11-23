@@ -27,8 +27,7 @@ import org.mozilla.fenix.utils.Settings
 class TrackingProtectionOverlay(
     private val context: Context,
     private val settings: Settings,
-    private val toolbar: View,
-    private val trackingProtectionIcon: View
+    private val getToolbar: () -> View
 ) : Session.Observer {
 
     override fun onLoadingStateChanged(session: Session, loading: Boolean) {
@@ -73,6 +72,10 @@ class TrackingProtectionOverlay(
 
         val containerHeight = layout.measuredHeight
         val triangleHeight = context.getDimenInDip(R.dimen.tp_onboarding_triangle_height).toInt()
+
+        val toolbar = getToolbar()
+        val trackingProtectionIcon: View =
+            toolbar.findViewById(R.id.mozac_browser_toolbar_tracking_protection_indicator)
 
         val xOffset = context.resources.getDimensionPixelSize(R.dimen.tp_onboarding_x_offset)
 
