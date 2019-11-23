@@ -1450,32 +1450,30 @@ toolbar#nav-bar {
 
             # Add chunking filters if specified
             if options.totalChunks:
-                if options.chunkByRuntime:
-                    runtime_file = self.resolve_runtime_file(options)
-                    if not os.path.exists(runtime_file):
-                        self.log.warning("runtime file %s not found; defaulting to chunk-by-dir" %
-                                         runtime_file)
-                        options.chunkByRuntime = None
-                        if options.flavor == 'browser':
-                            # these values match current mozharness configs
-                            options.chunkbyDir = 5
-                        else:
-                            options.chunkByDir = 4
-
                 if options.chunkByDir:
                     filters.append(chunk_by_dir(options.thisChunk,
                                                 options.totalChunks,
                                                 options.chunkByDir))
                 elif options.chunkByRuntime:
+                    if mozinfo.info['os'] == 'android':
+                        platkey = 'android'
+                    elif mozinfo.isWin:
+                        platkey = 'windows'
+                    else:
+                        platkey = 'unix'
+
+                    runtime_file = os.path.join(SCRIPT_DIR, 'runtimes',
+                                                'manifest-runtimes-{}.json'.format(platkey))
+                    if not os.path.exists(runtime_file):
+                        self.log.error("runtime file %s not found!" % runtime_file)
+                        sys.exit(1)
+
                     with open(runtime_file, 'r') as f:
-                        runtime_data = json.loads(f.read())
-                    runtimes = runtime_data['runtimes']
-                    default = runtime_data['excluded_test_average']
+                        runtimes = json.loads(f.read())
                     filters.append(
                         chunk_by_runtime(options.thisChunk,
                                          options.totalChunks,
-                                         runtimes,
-                                         default_runtime=default))
+                                         runtimes))
                 else:
                     filters.append(chunk_by_slice(options.thisChunk,
                                                   options.totalChunks))
@@ -2379,30 +2377,6 @@ toolbar#nav-bar {
         self.result.clear()
         options.manifestFile = None
         options.profilePath = None
-
-    def resolve_runtime_file(self, options):
-        """
-        Return a path to the runtimes file for a given flavor and
-        subsuite.
-        """
-        template = "mochitest-{suite_slug}{e10s}.runtimes.json"
-        data_dir = os.path.join(SCRIPT_DIR, 'runtimes')
-
-        # Determine the suite slug in the runtimes file name
-        slug = self.normflavor(options.flavor)
-        if slug == 'browser-chrome' and options.subsuite == 'devtools':
-            slug = 'devtools-chrome'
-        elif slug == 'mochitest':
-            slug = 'plain'
-            if options.subsuite:
-                slug = options.subsuite
-
-        e10s = ''
-        if options.e10s:
-            e10s = '-e10s'
-
-        return os.path.join(data_dir, template.format(
-            e10s=e10s, suite_slug=slug))
 
     def normalize_paths(self, paths):
         # Normalize test paths so they are relative to test root
