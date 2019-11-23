@@ -13,11 +13,12 @@ import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.getSystemService
 import io.reactivex.plugins.RxJavaPlugins
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import mozilla.appservices.Megazord
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.service.experiments.Experiments
@@ -75,19 +76,24 @@ open class FenixApplication : Application() {
 
     @CallSuper
     open fun setupInMainProcessOnly() {
-        setupMegazord()
+        run {
+            // Attention: Do not invoke any code from a-s in this scope.
+            val megazordSetup = setupMegazord()
 
-        // We want rust logging to go through the log sinks.
-        // This has to happen after initializing the megazord.
-        RustLog.enable()
+            setDayNightTheme()
+            registerRxExceptionHandling()
+            enableStrictMode()
 
-        setDayNightTheme()
+            // Make sure the engine is initialized and ready to use.
+            components.core.engine.warmUp()
 
-        registerRxExceptionHandling()
-        enableStrictMode()
-
-        // Make sure the engine is initialized and ready to use.
-        components.core.engine.warmUp()
+            // Just to make sure it is impossible for any application-services pieces
+            // to invoke parts of itself that require complete megazord initialization
+            // before that process completes, we wait here, if necessary.
+            if (!megazordSetup.isCompleted) {
+                runBlocking { megazordSetup.await(); }
+            }
+        }
 
         // We want to call this function as early as possible, but only once and
         // on the main process, as it uses Gecko to fetch experiments from the server.
@@ -205,11 +211,15 @@ open class FenixApplication : Application() {
      * - https://github.com/mozilla/application-services/blob/master/docs/design/megazords.md
      * - https://mozilla.github.io/application-services/docs/applications/consuming-megazord-libraries.html
      */
-    private fun setupMegazord() {
-        // Note: This must be called as soon as possible
+    private fun setupMegazord(): Deferred<Unit> {
+        // Note: Megazord.init() must be called as soon as possible ...
         Megazord.init()
-        // This (and enabling RustLog) may be delayed if needed for performance reasons
-        RustHttpConfig.setClient(lazy { components.core.client })
+
+        return GlobalScope.async(Dispatchers.IO) {
+            // ... but RustHttpConfig.setClient() and RustLog.enable() can be called later.
+            RustHttpConfig.setClient(lazy { components.core.client })
+            RustLog.enable()
+        }
     }
 
     override fun onTrimMemory(level: Int) {
