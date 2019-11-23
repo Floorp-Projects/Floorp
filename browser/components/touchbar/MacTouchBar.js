@@ -411,14 +411,9 @@ class TouchBarHelper {
     if (!TouchBarHelper.window) {
       return;
     }
-    let searchString = "";
-    if (
-      TouchBarHelper.window.gURLBar.getAttribute("pageproxystate") != "valid"
-    ) {
-      searchString = TouchBarHelper.window.gURLBar.lastSearchString.trimStart();
-      if (Object.values(UrlbarTokenizer.RESTRICT).includes(searchString[0])) {
-        searchString = searchString.substring(1).trimStart();
-      }
+    let searchString = TouchBarHelper.window.gURLBar.lastSearchString.trimStart();
+    if (Object.values(UrlbarTokenizer.RESTRICT).includes(searchString[0])) {
+      searchString = searchString.substring(1).trimStart();
     }
 
     TouchBarHelper.window.gURLBar.search(`${restrictionToken} ${searchString}`);
