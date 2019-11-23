@@ -92,16 +92,6 @@ class SrcNote {
       Count,
     };
   };
-  // SRC_TABLESWITCH: Source note for JSOP_TABLESWITCH.
-  class TableSwitch {
-   public:
-    enum Fields {
-      // The offset of the end of switch (the first non-JumpTarget op
-      // after switch) from JSOP_TABLESWITCH.
-      EndOffset,
-      Count
-    };
-  };
   // SRC_TRY: Source note for JSOP_TRY.
   class Try {
    public:
@@ -141,7 +131,6 @@ class SrcNote {
     M(SRC_DO_WHILE,     "do-while",    SrcNote::DoWhile::Count) \
     M(SRC_FOR_IN,       "for-in",      SrcNote::ForIn::Count) \
     M(SRC_FOR_OF,       "for-of",      SrcNote::ForOf::Count) \
-    M(SRC_TABLESWITCH,  "tableswitch", SrcNote::TableSwitch::Count) \
     M(SRC_ASSIGNOP,     "assignop",    0)  /* += or another assign-op follows. */                  \
     M(SRC_CLASS_SPAN,   "class",       2)  /* The starting and ending offsets for the class, used  \
                                               for toString correctness for default ctors. */       \
@@ -152,6 +141,7 @@ class SrcNote {
     M(SRC_SETLINE,      "setline",     SrcNote::SetLine::Count) \
     M(SRC_BREAKPOINT,   "breakpoint",  0)  /* Bytecode is a recommended breakpoint. */             \
     M(SRC_STEP_SEP,     "step-sep",    0)  /* Bytecode is the first in a new steppable area. */    \
+    M(SRC_UNUSED14,     "unused",      0) \
     M(SRC_UNUSED15,     "unused",      0) \
     M(SRC_UNUSED16,     "unused",      0) \
     M(SRC_UNUSED17,     "unused",      0) \
