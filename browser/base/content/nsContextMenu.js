@@ -36,26 +36,6 @@ function openContextMenu(aMessage, aBrowser, aActor) {
     linkReferrerInfo = E10SUtils.deserializeReferrerInfo(linkReferrerInfo);
   }
 
-  // For now, JS Window Actors don't deserialize Principals automatically, so we
-  // have to do it ourselves. See bug 1557852.
-  if (principal) {
-    principal = E10SUtils.deserializePrincipal(principal);
-  }
-  if (storagePrincipal) {
-    storagePrincipal = E10SUtils.deserializePrincipal(storagePrincipal);
-  }
-
-  if (data.context.principal) {
-    data.context.principal = E10SUtils.deserializePrincipal(
-      data.context.principal
-    );
-  }
-  if (data.context.storagePrincipal) {
-    data.context.storagePrincipal = E10SUtils.deserializePrincipal(
-      data.context.storagePrincipal
-    );
-  }
-
   nsContextMenu.contentData = {
     context: data.context,
     browser,
