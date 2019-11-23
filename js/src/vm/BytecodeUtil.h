@@ -59,10 +59,9 @@ enum {
   JOF_REGEXP = 16,      /* uint32_t regexp index */
   JOF_DOUBLE = 17,      /* inline DoubleValue */
   JOF_SCOPE = 18,       /* uint32_t scope index */
-  JOF_CODE_OFFSET = 19, /* int32_t bytecode offset */
-  JOF_ICINDEX = 20,     /* uint32_t IC index */
-  JOF_LOOPENTRY = 21,   /* JSOP_LOOPENTRY, combines JOF_ICINDEX and JOF_UINT8 */
-  JOF_BIGINT = 22,      /* uint32_t index for BigInt value */
+  JOF_ICINDEX = 19,     /* uint32_t IC index */
+  JOF_LOOPENTRY = 20,   /* JSOP_LOOPENTRY, combines JOF_ICINDEX and JOF_UINT8 */
+  JOF_BIGINT = 21,      /* uint32_t index for BigInt value */
   JOF_TYPEMASK = 0x001f, /* mask for above immediate types */
 
   JOF_NAME = 1 << 5,     /* name operation */
@@ -188,14 +187,6 @@ static MOZ_ALWAYS_INLINE int32_t GET_JUMP_OFFSET(jsbytecode* pc) {
 }
 
 static MOZ_ALWAYS_INLINE void SET_JUMP_OFFSET(jsbytecode* pc, int32_t off) {
-  SET_INT32(pc, off);
-}
-
-static MOZ_ALWAYS_INLINE int32_t GET_CODE_OFFSET(jsbytecode* pc) {
-  return GET_INT32(pc);
-}
-
-static MOZ_ALWAYS_INLINE void SET_CODE_OFFSET(jsbytecode* pc, int32_t off) {
   SET_INT32(pc, off);
 }
 
