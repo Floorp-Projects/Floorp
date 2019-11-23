@@ -431,11 +431,11 @@ pref("media.videocontrols.picture-in-picture.video-toggle.always-show", false);
   pref("media.navigator.video.red_ulpfec_enabled", false);
 
   #ifdef NIGHTLY_BUILD
-    pref("media.peerconnection.sdp.rust.enabled", true);
-    pref("media.peerconnection.sdp.rust.compare", true);
+    pref("media.peerconnection.sdp.parser", "legacy");
+    pref("media.peerconnection.sdp.alternate_parse_mode", "parallel");
   #else
-    pref("media.peerconnection.sdp.rust.enabled", false);
-    pref("media.peerconnection.sdp.rust.compare", false);
+    pref("media.peerconnection.sdp.parser", "legacy");
+    pref("media.peerconnection.sdp.alternate_parse_mode", "failover");
   #endif
 
   pref("media.webrtc.debug.trace_mask", 0);
