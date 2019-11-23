@@ -263,7 +263,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                 }
             )
 
-            downloadFeature.onDownloadCompleted = { download, _, downloadJobStatus ->
+            downloadFeature.onDownloadStopped = { download, _, downloadJobStatus ->
                 // If the download is just paused, don't show any in-app notification
                 if (downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.COMPLETED ||
                     downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED) {
