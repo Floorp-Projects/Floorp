@@ -83,8 +83,8 @@ class SdpMediaSection;
  */
 class Sdp {
  public:
-  Sdp(){};
-  virtual ~Sdp(){};
+  Sdp() = default;
+  virtual ~Sdp() = default;
 
   virtual const SdpOrigin& GetOrigin() const = 0;
   // Note: connection information is always retrieved from media sections
