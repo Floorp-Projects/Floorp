@@ -1727,11 +1727,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_TRY_DESTRUCTURING() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_JSOP_LABEL() {
-  return true;
-}
-
-template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_POP() {
   frame.pop();
   return true;
@@ -6927,6 +6922,7 @@ MethodStatus BaselineCompiler::emitBody() {
       case JSOP_FORCEINTERPRETER:
         // Caller must have checked script->hasForceInterpreterOp().
       case JSOP_UNUSED71:
+      case JSOP_UNUSED106:
       case JSOP_UNUSED120:
       case JSOP_UNUSED149:
       case JSOP_LIMIT:

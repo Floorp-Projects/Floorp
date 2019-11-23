@@ -75,7 +75,7 @@ describe("Discovery Stream <TopSites>", () => {
       url: "foo",
       sponsor: "bar",
       image_src: "foobar",
-      campaign_id: "1234",
+      flight_id: "1234",
       id: "5678",
       shim: { impression: "1011" },
     };
@@ -86,7 +86,7 @@ describe("Discovery Stream <TopSites>", () => {
       label: "bar",
       title: "bar",
       url: "foo",
-      campaignId: "1234",
+      flightId: "1234",
       id: "5678",
       guid: "5678",
       shim: {
@@ -100,7 +100,7 @@ describe("Discovery Stream <TopSites>", () => {
       label: "bar",
       title: "bar",
       url: "foo",
-      campaignId: "1234",
+      flightId: "1234",
       id: "5678",
       guid: "5678",
       shim: {
@@ -142,7 +142,7 @@ describe("Discovery Stream <TopSites>", () => {
             url: "foo2",
             sponsor: "bar2",
             image_src: "foobar2",
-            campaign_id: "1234",
+            flight_id: "1234",
             id: "5678",
             shim: { impression: "1011" },
           },
@@ -161,7 +161,7 @@ describe("Discovery Stream <TopSites>", () => {
         label: "bar2",
         title: "bar2",
         url: "foo2",
-        campaignId: "1234",
+        flightId: "1234",
         id: "5678",
         guid: "5678",
         shim: {

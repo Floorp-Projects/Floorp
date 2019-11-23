@@ -704,16 +704,10 @@ class ContextMenuChild extends JSWindowActorChild {
       "on-prepare-contextmenu"
     );
 
-    // For now, JS Window Actors don't serialize Principals automatically, so we
-    // have to do it ourselves. See bug 1557852.
-    data.principal = E10SUtils.serializePrincipal(doc.nodePrincipal);
-    data.context.principal = E10SUtils.serializePrincipal(context.principal);
-    data.storagePrincipal = E10SUtils.serializePrincipal(
-      doc.effectiveStoragePrincipal
-    );
-    data.context.storagePrincipal = E10SUtils.serializePrincipal(
-      context.storagePrincipal
-    );
+    data.principal = doc.nodePrincipal;
+    data.context.principal = context.principal;
+    data.storagePrincipal = doc.effectiveStoragePrincipal;
+    data.context.storagePrincipal = context.storagePrincipal;
 
     // In the event that the content is running in the parent process, we don't
     // actually want the contextmenu events to reach the parent - we'll dispatch

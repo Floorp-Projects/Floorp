@@ -65,7 +65,7 @@ export class DSTextPromo extends React.PureComponent {
           <p className="subtitle">{this.props.subtitle}</p>
         </div>
         <ImpressionStats
-          campaignId={this.props.campaignId}
+          flightId={this.props.flightId}
           rows={[
             {
               id: this.props.id,

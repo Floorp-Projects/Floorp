@@ -26,6 +26,7 @@
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/ScriptPreloader.h"
 
 #include "nsDOMMutationObserver.h"
 #include "nsICycleCollectorListener.h"
@@ -71,17 +72,35 @@ nsXPConnect::nsXPConnect() : mShuttingDown(false) {
   JS::SetProfilingThreadCallbacks(profiler_register_thread,
                                   profiler_unregister_thread);
 #endif
+}
+
+// static
+void nsXPConnect::InitJSContext() {
+  MOZ_ASSERT(!gContext);
 
   XPCJSContext* xpccx = XPCJSContext::NewXPCJSContext();
   if (!xpccx) {
     MOZ_CRASH("Couldn't create XPCJSContext.");
   }
   gContext = xpccx;
-  mRuntime = xpccx->Runtime();
+  gSelf->mRuntime = xpccx->Runtime();
+
+  // Initialize our singleton scopes.
+  gSelf->mRuntime->InitSingletonScopes();
+
+  mozJSComponentLoader::InitStatics();
+
+  // Initialize the script preloader cache.
+  Unused << mozilla::ScriptPreloader::GetSingleton();
+
+  nsJSContext::EnsureStatics();
 }
+
+void xpc::InitializeJSContext() { nsXPConnect::InitJSContext(); }
 
 nsXPConnect::~nsXPConnect() {
   MOZ_ASSERT(XPCJSContext::Get() == gContext);
+  MOZ_ASSERT(mRuntime);
 
   mRuntime->DeleteSingletonScopes();
 
@@ -136,19 +155,6 @@ void nsXPConnect::InitStatics() {
   gScriptSecurityManager = nsScriptSecurityManager::GetScriptSecurityManager();
   gScriptSecurityManager->GetSystemPrincipal(&gSystemPrincipal);
   MOZ_RELEASE_ASSERT(gSystemPrincipal);
-
-  JSContext* cx = XPCJSContext::Get()->Context();
-  if (!JS::InitSelfHostedCode(cx)) {
-    MOZ_CRASH("InitSelfHostedCode failed");
-  }
-  if (!gSelf->mRuntime->InitializeStrings(cx)) {
-    MOZ_CRASH("InitializeStrings failed");
-  }
-
-  // Initialize our singleton scopes.
-  gSelf->mRuntime->InitSingletonScopes();
-
-  mozJSComponentLoader::InitStatics();
 }
 
 // static

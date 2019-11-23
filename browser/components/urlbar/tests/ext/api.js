@@ -13,6 +13,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ProfileAge: "resource://gre/modules/ProfileAge.jsm",
   Services: "resource://gre/modules/Services.jsm",
   ResetProfile: "resource://gre/modules/ResetProfile.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  Sanitizer: "resource:///modules/Sanitizer.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -137,6 +139,16 @@ this.experiments_urlbar = class extends ExtensionAPI {
           openViewOnFocus: this._getDefaultSettingsAPI(
             "browser.urlbar.openViewOnFocus"
           ),
+
+          openClearHistoryDialog() {
+            let window = BrowserWindowTracker.getTopWindow();
+            // The behaviour of the Clear Recent History dialog in PBM does
+            // not have the expected effect (bug 463607).
+            if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+              return;
+            }
+            Sanitizer.showUI(window);
+          },
 
           restartBrowser() {
             // Notify all windows that an application quit has been requested.

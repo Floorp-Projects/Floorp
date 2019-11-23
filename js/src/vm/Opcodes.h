@@ -1076,17 +1076,8 @@
      */ \
     MACRO(JSOP_STRICTSETPROP_SUPER, 105, "strictsetprop-super", NULL, 5, 3, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT) \
     /*
-     * This opcode precedes every labeled statement. It's a no-op.
-     *
-     * 'offset' is the offset to the next instruction after this statement, the
-     * one 'break LABEL;' would jump to. IonMonkey uses this.
-     *
-     *   Category: Statements
-     *   Type: Jumps
-     *   Operands: int32_t offset
-     *   Stack: =>
      */ \
-    MACRO(JSOP_LABEL, 106, "label", NULL, 5, 0, 0, JOF_CODE_OFFSET) \
+    MACRO(JSOP_UNUSED106, 106, "unused", NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Pops the top three values on the stack as 'val', 'obj' and 'receiver',
      * and performs 'obj.prop = val', pushing 'val' back onto the stack.

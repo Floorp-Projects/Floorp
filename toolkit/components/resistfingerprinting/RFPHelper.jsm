@@ -310,11 +310,32 @@ class _RFPHelper {
   _handleLetterboxingPrefChanged() {
     if (Services.prefs.getBoolPref(kPrefLetterboxing, false)) {
       Services.ww.registerNotification(this);
+      this._registerActor();
       this._attachAllWindows();
     } else {
+      this._unregisterActor();
       this._detachAllWindows();
       Services.ww.unregisterNotification(this);
     }
+  }
+
+  _registerActor() {
+    ChromeUtils.registerWindowActor("RFPHelper", {
+      parent: {
+        moduleURI: "resource:///actors/RFPHelperParent.jsm",
+      },
+      child: {
+        moduleURI: "resource:///actors/RFPHelperChild.jsm",
+        events: {
+          resize: {},
+        },
+      },
+      allFrames: true,
+    });
+  }
+
+  _unregisterActor() {
+    ChromeUtils.unregisterWindowActor("RFPHelper");
   }
 
   // The function to parse the dimension set from the pref value. The pref value

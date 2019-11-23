@@ -80,30 +80,6 @@ using namespace mozilla;
 #  define DRIVE_REMOTE 4
 #endif
 
-static HWND GetMostRecentNavigatorHWND() {
-  nsresult rv;
-  nsCOMPtr<nsIWindowMediator> winMediator(
-      do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  nsCOMPtr<mozIDOMWindowProxy> navWin;
-  rv = winMediator->GetMostRecentWindow(u"navigator:browser",
-                                        getter_AddRefs(navWin));
-  if (NS_FAILED(rv) || !navWin) {
-    return nullptr;
-  }
-
-  nsPIDOMWindowOuter* win = nsPIDOMWindowOuter::From(navWin);
-  nsCOMPtr<nsIWidget> widget = widget::WidgetUtils::DOMWindowToWidget(win);
-  if (!widget) {
-    return nullptr;
-  }
-
-  return reinterpret_cast<HWND>(widget->GetNativeData(NS_NATIVE_WINDOW));
-}
-
 /**
  * A runnable to dispatch back to the main thread when
  * AsyncRevealOperation completes.
@@ -3045,7 +3021,9 @@ nsLocalFile::Launch() {
   _bstr_t execPath(mResolvedPath.get());
 
   _variant_t args;
-  _variant_t verb(L"open");
+  // Pass VT_ERROR/DISP_E_PARAMNOTFOUND to omit an optional RPC parameter
+  // to execute a file with the default verb.
+  _variant_t verbDefault(DISP_E_PARAMNOTFOUND, VT_ERROR);
   _variant_t workingDir;
   _variant_t showCmd(SW_SHOWNORMAL);
 
@@ -3064,61 +3042,11 @@ nsLocalFile::Launch() {
   // Skype for Business do not start correctly when inheriting our process's
   // migitation policies.
   mozilla::LauncherVoidResult shellExecuteOk = mozilla::ShellExecuteByExplorer(
-      execPath, args, verb, workingDir, showCmd);
-  if (shellExecuteOk.isOk()) {
-    return NS_OK;
+      execPath, args, verbDefault, workingDir, showCmd);
+  if (shellExecuteOk.isErr()) {
+    return NS_ERROR_FILE_EXECUTION_FAILED;
   }
-  DWORD r = shellExecuteOk.inspectErr().AsWin32Error().value();
-  // if the file has no association, we launch windows'
-  // "what do you want to do" dialog
-  if (r == SE_ERR_NOASSOC) {
-    SHELLEXECUTEINFOW seinfo;
-    memset(&seinfo, 0, sizeof(seinfo));
-    seinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
-    seinfo.fMask = SEE_MASK_ASYNCOK;
-    seinfo.hwnd = GetMostRecentNavigatorHWND();
-    seinfo.lpVerb = nullptr;
-    seinfo.lpDirectory = workingDirectory;
-    seinfo.nShow = SW_SHOWNORMAL;
 
-    nsAutoString shellArg;
-    shellArg.AssignLiteral(u"shell32.dll,OpenAs_RunDLL ");
-    shellArg.Append(mResolvedPath);
-    seinfo.lpFile = L"RUNDLL32.EXE";
-    seinfo.lpParameters = shellArg.get();
-    if (ShellExecuteExW(&seinfo)) {
-      return NS_OK;
-    }
-    r = GetLastError();
-  }
-  if (r < 32) {
-    switch (r) {
-      case 0:
-      case SE_ERR_OOM:
-        return NS_ERROR_OUT_OF_MEMORY;
-      case ERROR_FILE_NOT_FOUND:
-        return NS_ERROR_FILE_NOT_FOUND;
-      case ERROR_PATH_NOT_FOUND:
-        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-      case ERROR_BAD_FORMAT:
-        return NS_ERROR_FILE_CORRUPTED;
-      case SE_ERR_ACCESSDENIED:
-        return NS_ERROR_FILE_ACCESS_DENIED;
-      case SE_ERR_ASSOCINCOMPLETE:
-      case SE_ERR_NOASSOC:
-        return NS_ERROR_UNEXPECTED;
-      case SE_ERR_DDEBUSY:
-      case SE_ERR_DDEFAIL:
-      case SE_ERR_DDETIMEOUT:
-        return NS_ERROR_NOT_AVAILABLE;
-      case SE_ERR_DLLNOTFOUND:
-        return NS_ERROR_FAILURE;
-      case SE_ERR_SHARE:
-        return NS_ERROR_FILE_IS_LOCKED;
-      default:
-        return NS_ERROR_FILE_EXECUTION_FAILED;
-    }
-  }
   return NS_OK;
 }
 
