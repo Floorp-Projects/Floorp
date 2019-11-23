@@ -444,10 +444,10 @@
                     hidden="true"/>
           <menuseparator id="generated-password-separator"/>
           <menuitem id="fill-login-generated-password"
-                    label="&fillGeneratedPassword.label;"
-                    accesskey="&fillGeneratedPassword.accesskey;"
+                    label="&useGeneratedPassword.label;"
+                    accesskey="&useGeneratedPassword.accesskey;"
                     hidden="true"
-                    oncommand="gContextMenu.fillGeneratedPassword();"/>
+                    oncommand="gContextMenu.useGeneratedPassword();"/>
           <menuseparator id="saved-logins-separator"/>
           <menuitem id="fill-login-saved-passwords"
                     label="&viewSavedLogins.label;"

@@ -39,30 +39,7 @@ async function fillGeneratedPasswordFromACPopup(
   let popup = document.getElementById("PopupAutoComplete");
   ok(popup, "Got popup");
   await openACPopup(popup, browser, passwordInputSelector);
-
-  let item = popup.querySelector(`[originaltype="generatedPassword"]`);
-  ok(item, "Got generated password richlistitem");
-
-  await TestUtils.waitForCondition(() => {
-    return !EventUtils.isHidden(item);
-  }, "Waiting for item to become visible");
-
-  let inputEventPromise = ContentTask.spawn(
-    browser,
-    [passwordInputSelector],
-    async function waitForInput(inputSelector) {
-      let passwordInput = content.document.querySelector(inputSelector);
-      await ContentTaskUtils.waitForEvent(
-        passwordInput,
-        "input",
-        "Password input value changed"
-      );
-    }
-  );
-  info("Clicking the generated password AC item");
-  EventUtils.synthesizeMouseAtCenter(item, {});
-  info("Waiting for the content input value to change");
-  await inputEventPromise;
+  await fillGeneratedPasswordFromOpenACPopup(browser, passwordInputSelector);
 }
 
 async function checkPromptContents(
