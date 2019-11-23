@@ -8,14 +8,13 @@
 
 #include <ostream>
 #include "mozilla/Assertions.h"
+#include "signaling/src/sdp/SdpErrorHolder.h"
 
 extern "C" {
 #include "signaling/src/sdp/sipcc/sdp_private.h"
 }
 
 namespace mozilla {
-
-using InternalResults = SdpParser::InternalResults;
 
 /* static */
 const std::string SipccSdpAttributeList::kEmptyString = "";
@@ -83,12 +82,12 @@ void SipccSdpAttributeList::SetAttribute(SdpAttribute* attr) {
 void SipccSdpAttributeList::LoadSimpleString(sdp_t* sdp, uint16_t level,
                                              sdp_attr_e attr,
                                              AttributeType targetType,
-                                             InternalResults& results) {
+                                             SdpErrorHolder& errorHolder) {
   const char* value = sdp_attr_get_simple_string(sdp, attr, level, 0, 1);
   if (value) {
     if (!IsAllowedHere(targetType)) {
       uint32_t lineNumber = sdp_attr_line_number(sdp, attr, level, 0, 1);
-      WarnAboutMisplacedAttribute(targetType, lineNumber, results);
+      WarnAboutMisplacedAttribute(targetType, lineNumber, errorHolder);
     } else {
       SetAttribute(new SdpStringAttribute(targetType, std::string(value)));
     }
@@ -96,21 +95,21 @@ void SipccSdpAttributeList::LoadSimpleString(sdp_t* sdp, uint16_t level,
 }
 
 void SipccSdpAttributeList::LoadSimpleStrings(sdp_t* sdp, uint16_t level,
-                                              InternalResults& results) {
+                                              SdpErrorHolder& errorHolder) {
   LoadSimpleString(sdp, level, SDP_ATTR_MID, SdpAttribute::kMidAttribute,
-                   results);
+                   errorHolder);
   LoadSimpleString(sdp, level, SDP_ATTR_LABEL, SdpAttribute::kLabelAttribute,
-                   results);
+                   errorHolder);
 }
 
 void SipccSdpAttributeList::LoadSimpleNumber(sdp_t* sdp, uint16_t level,
                                              sdp_attr_e attr,
                                              AttributeType targetType,
-                                             InternalResults& results) {
+                                             SdpErrorHolder& errorHolder) {
   if (sdp_attr_valid(sdp, attr, level, 0, 1)) {
     if (!IsAllowedHere(targetType)) {
       uint32_t lineNumber = sdp_attr_line_number(sdp, attr, level, 0, 1);
-      WarnAboutMisplacedAttribute(targetType, lineNumber, results);
+      WarnAboutMisplacedAttribute(targetType, lineNumber, errorHolder);
     } else {
       uint32_t value = sdp_attr_get_simple_u32(sdp, attr, level, 0, 1);
       SetAttribute(new SdpNumberAttribute(targetType, value));
@@ -119,15 +118,15 @@ void SipccSdpAttributeList::LoadSimpleNumber(sdp_t* sdp, uint16_t level,
 }
 
 void SipccSdpAttributeList::LoadSimpleNumbers(sdp_t* sdp, uint16_t level,
-                                              InternalResults& results) {
+                                              SdpErrorHolder& errorHolder) {
   LoadSimpleNumber(sdp, level, SDP_ATTR_PTIME, SdpAttribute::kPtimeAttribute,
-                   results);
+                   errorHolder);
   LoadSimpleNumber(sdp, level, SDP_ATTR_MAXPTIME,
-                   SdpAttribute::kMaxptimeAttribute, results);
+                   SdpAttribute::kMaxptimeAttribute, errorHolder);
   LoadSimpleNumber(sdp, level, SDP_ATTR_SCTPPORT,
-                   SdpAttribute::kSctpPortAttribute, results);
+                   SdpAttribute::kSctpPortAttribute, errorHolder);
   LoadSimpleNumber(sdp, level, SDP_ATTR_MAXMESSAGESIZE,
-                   SdpAttribute::kMaxMessageSizeAttribute, results);
+                   SdpAttribute::kMaxMessageSizeAttribute, errorHolder);
 }
 
 void SipccSdpAttributeList::LoadFlags(sdp_t* sdp, uint16_t level) {
@@ -174,7 +173,7 @@ static void ConvertDirection(sdp_direction_e sipcc_direction,
 }
 
 void SipccSdpAttributeList::LoadDirection(sdp_t* sdp, uint16_t level,
-                                          InternalResults& results) {
+                                          SdpErrorHolder& errorHolder) {
   SdpDirectionAttribute::Direction dir;
   ConvertDirection(sdp_get_media_direction(sdp, level, 0), &dir);
   SetAttribute(new SdpDirectionAttribute(dir));
@@ -206,7 +205,7 @@ void SipccSdpAttributeList::LoadIceAttributes(sdp_t* sdp, uint16_t level) {
 }
 
 bool SipccSdpAttributeList::LoadFingerprint(sdp_t* sdp, uint16_t level,
-                                            InternalResults& results) {
+                                            SdpErrorHolder& errorHolder) {
   char* value;
   UniquePtr<SdpFingerprintAttributeList> fingerprintAttrs;
 
@@ -225,15 +224,15 @@ bool SipccSdpAttributeList::LoadFingerprint(sdp_t* sdp, uint16_t level,
     // sipcc does not expose parse code for this
     size_t start = fingerprintAttr.find_first_not_of(" \t");
     if (start == std::string::npos) {
-      results.AddParseError(lineNumber, "Empty fingerprint attribute");
+      errorHolder.AddParseError(lineNumber, "Empty fingerprint attribute");
       return false;
     }
 
     size_t end = fingerprintAttr.find_first_of(" \t", start);
     if (end == std::string::npos) {
       // One token, no trailing ws
-      results.AddParseError(lineNumber,
-                            "Only one token in fingerprint attribute");
+      errorHolder.AddParseError(lineNumber,
+                                "Only one token in fingerprint attribute");
       return false;
     }
 
@@ -242,8 +241,8 @@ bool SipccSdpAttributeList::LoadFingerprint(sdp_t* sdp, uint16_t level,
     start = fingerprintAttr.find_first_not_of(" \t", end);
     if (start == std::string::npos) {
       // One token, trailing ws
-      results.AddParseError(lineNumber,
-                            "Only one token in fingerprint attribute");
+      errorHolder.AddParseError(lineNumber,
+                                "Only one token in fingerprint attribute");
       return false;
     }
 
@@ -252,7 +251,7 @@ bool SipccSdpAttributeList::LoadFingerprint(sdp_t* sdp, uint16_t level,
     std::vector<uint8_t> fingerprint =
         SdpFingerprintAttributeList::ParseFingerprint(fingerprintToken);
     if (fingerprint.empty()) {
-      results.AddParseError(lineNumber, "Malformed fingerprint token");
+      errorHolder.AddParseError(lineNumber, "Malformed fingerprint token");
       return false;
     }
 
@@ -293,7 +292,7 @@ void SipccSdpAttributeList::LoadCandidate(sdp_t* sdp, uint16_t level) {
 }
 
 bool SipccSdpAttributeList::LoadSctpmap(sdp_t* sdp, uint16_t level,
-                                        InternalResults& results) {
+                                        SdpErrorHolder& errorHolder) {
   auto sctpmap = MakeUnique<SdpSctpmapAttributeList>();
   for (uint16_t i = 0; i < UINT16_MAX; ++i) {
     sdp_attr_t* attr = sdp_find_attr(sdp, level, 0, SDP_ATTR_SCTPMAP, i + 1);
@@ -368,15 +367,15 @@ SdpRtpmapAttributeList::CodecType SipccSdpAttributeList::GetCodecType(
 }
 
 bool SipccSdpAttributeList::LoadRtpmap(sdp_t* sdp, uint16_t level,
-                                       InternalResults& results) {
+                                       SdpErrorHolder& errorHolder) {
   auto rtpmap = MakeUnique<SdpRtpmapAttributeList>();
   uint16_t count;
   sdp_result_e result =
       sdp_attr_num_instances(sdp, level, 0, SDP_ATTR_RTPMAP, &count);
   if (result != SDP_SUCCESS) {
     MOZ_ASSERT(false, "Unable to get rtpmap size");
-    results.AddParseError(sdp_get_media_line_number(sdp, level),
-                          "Unable to get rtpmap size");
+    errorHolder.AddParseError(sdp_get_media_line_number(sdp, level),
+                              "Unable to get rtpmap size");
     return false;
   }
   for (uint16_t i = 0; i < count; ++i) {
@@ -385,8 +384,8 @@ bool SipccSdpAttributeList::LoadRtpmap(sdp_t* sdp, uint16_t level,
 
     if (!ccName) {
       // Probably no rtpmap attribute for a pt in an m-line
-      results.AddParseError(sdp_get_media_line_number(sdp, level),
-                            "No rtpmap attribute for payload type");
+      errorHolder.AddParseError(sdp_get_media_line_number(sdp, level),
+                                "No rtpmap attribute for payload type");
       continue;
     }
 
@@ -468,7 +467,7 @@ void SipccSdpAttributeList::LoadSsrc(sdp_t* sdp, uint16_t level) {
 }
 
 bool SipccSdpAttributeList::LoadImageattr(sdp_t* sdp, uint16_t level,
-                                          InternalResults& results) {
+                                          SdpErrorHolder& errorHolder) {
   UniquePtr<SdpImageattrAttributeList> imageattrs(
       new SdpImageattrAttributeList);
 
@@ -484,7 +483,7 @@ bool SipccSdpAttributeList::LoadImageattr(sdp_t* sdp, uint16_t level,
     if (!imageattrs->PushEntry(imageattrRaw, &error, &errorPos)) {
       std::ostringstream fullError;
       fullError << error << " at column " << errorPos;
-      results.AddParseError(
+      errorHolder.AddParseError(
           sdp_attr_line_number(sdp, SDP_ATTR_IMAGEATTR, level, 0, i),
           fullError.str());
       return false;
@@ -498,7 +497,7 @@ bool SipccSdpAttributeList::LoadImageattr(sdp_t* sdp, uint16_t level,
 }
 
 bool SipccSdpAttributeList::LoadSimulcast(sdp_t* sdp, uint16_t level,
-                                          InternalResults& results) {
+                                          SdpErrorHolder& errorHolder) {
   const char* simulcastRaw =
       sdp_attr_get_simple_string(sdp, SDP_ATTR_SIMULCAST, level, 0, 1);
   if (!simulcastRaw) {
@@ -512,7 +511,7 @@ bool SipccSdpAttributeList::LoadSimulcast(sdp_t* sdp, uint16_t level,
   if (!simulcast->Parse(is, &error)) {
     std::ostringstream fullError;
     fullError << error << " at column " << is.tellg();
-    results.AddParseError(
+    errorHolder.AddParseError(
         sdp_attr_line_number(sdp, SDP_ATTR_SIMULCAST, level, 0, 1),
         fullError.str());
     return false;
@@ -523,12 +522,12 @@ bool SipccSdpAttributeList::LoadSimulcast(sdp_t* sdp, uint16_t level,
 }
 
 bool SipccSdpAttributeList::LoadGroups(sdp_t* sdp, uint16_t level,
-                                       InternalResults& results) {
+                                       SdpErrorHolder& errorHolder) {
   uint16_t attrCount = 0;
   if (sdp_attr_num_instances(sdp, level, 0, SDP_ATTR_GROUP, &attrCount) !=
       SDP_SUCCESS) {
     MOZ_ASSERT(false, "Could not get count of group attributes");
-    results.AddParseError(0, "Could not get count of group attributes");
+    errorHolder.AddParseError(0, "Could not get count of group attributes");
     return false;
   }
 
@@ -560,7 +559,7 @@ bool SipccSdpAttributeList::LoadGroups(sdp_t* sdp, uint16_t level,
       if (!idStr) {
         std::ostringstream os;
         os << "bad a=group identifier at " << (attr - 1) << ", " << (id - 1);
-        results.AddParseError(0, os.str());
+        errorHolder.AddParseError(0, os.str());
         return false;
       }
       tags.push_back(std::string(idStr));
@@ -576,7 +575,7 @@ bool SipccSdpAttributeList::LoadGroups(sdp_t* sdp, uint16_t level,
 }
 
 bool SipccSdpAttributeList::LoadMsidSemantics(sdp_t* sdp, uint16_t level,
-                                              InternalResults& results) {
+                                              SdpErrorHolder& errorHolder) {
   auto msidSemantics = MakeUnique<SdpMsidSemanticAttributeList>();
 
   for (uint16_t i = 1; i < UINT16_MAX; ++i) {
@@ -729,12 +728,12 @@ void SipccSdpAttributeList::LoadFmtp(sdp_t* sdp, uint16_t level) {
 }
 
 void SipccSdpAttributeList::LoadMsids(sdp_t* sdp, uint16_t level,
-                                      InternalResults& results) {
+                                      SdpErrorHolder& errorHolder) {
   uint16_t attrCount = 0;
   if (sdp_attr_num_instances(sdp, level, 0, SDP_ATTR_MSID, &attrCount) !=
       SDP_SUCCESS) {
     MOZ_ASSERT(false, "Unable to get count of msid attributes");
-    results.AddParseError(0, "Unable to get count of msid attributes");
+    errorHolder.AddParseError(0, "Unable to get count of msid attributes");
     return;
   }
   auto msids = MakeUnique<SdpMsidAttributeList>();
@@ -743,13 +742,13 @@ void SipccSdpAttributeList::LoadMsids(sdp_t* sdp, uint16_t level,
 
     const char* identifier = sdp_attr_get_msid_identifier(sdp, level, 0, i);
     if (!identifier) {
-      results.AddParseError(lineNumber, "msid attribute with bad identity");
+      errorHolder.AddParseError(lineNumber, "msid attribute with bad identity");
       continue;
     }
 
     const char* appdata = sdp_attr_get_msid_appdata(sdp, level, 0, i);
     if (!appdata) {
-      results.AddParseError(lineNumber, "msid attribute with bad appdata");
+      errorHolder.AddParseError(lineNumber, "msid attribute with bad appdata");
       continue;
     }
 
@@ -762,7 +761,7 @@ void SipccSdpAttributeList::LoadMsids(sdp_t* sdp, uint16_t level,
 }
 
 bool SipccSdpAttributeList::LoadRid(sdp_t* sdp, uint16_t level,
-                                    InternalResults& results) {
+                                    SdpErrorHolder& errorHolder) {
   UniquePtr<SdpRidAttributeList> rids(new SdpRidAttributeList);
 
   for (uint16_t i = 1; i < UINT16_MAX; ++i) {
@@ -777,7 +776,7 @@ bool SipccSdpAttributeList::LoadRid(sdp_t* sdp, uint16_t level,
     if (!rids->PushEntry(ridRaw, &error, &errorPos)) {
       std::ostringstream fullError;
       fullError << error << " at column " << errorPos;
-      results.AddParseError(
+      errorHolder.AddParseError(
           sdp_attr_line_number(sdp, SDP_ATTR_RID, level, 0, i),
           fullError.str());
       return false;
@@ -791,7 +790,7 @@ bool SipccSdpAttributeList::LoadRid(sdp_t* sdp, uint16_t level,
 }
 
 void SipccSdpAttributeList::LoadExtmap(sdp_t* sdp, uint16_t level,
-                                       InternalResults& results) {
+                                       SdpErrorHolder& errorHolder) {
   auto extmaps = MakeUnique<SdpExtmapAttributeList>();
 
   for (uint16_t i = 1; i < UINT16_MAX; ++i) {
@@ -818,7 +817,7 @@ void SipccSdpAttributeList::LoadExtmap(sdp_t* sdp, uint16_t level,
         mSessionLevel->HasAttribute(SdpAttribute::kExtmapAttribute)) {
       uint32_t lineNumber =
           sdp_attr_line_number(sdp, SDP_ATTR_EXTMAP, level, 0, 1);
-      results.AddParseError(
+      errorHolder.AddParseError(
           lineNumber, "extmap attributes in both session and media level");
     }
     SetAttribute(extmaps.release());
@@ -826,7 +825,7 @@ void SipccSdpAttributeList::LoadExtmap(sdp_t* sdp, uint16_t level,
 }
 
 void SipccSdpAttributeList::LoadRtcpFb(sdp_t* sdp, uint16_t level,
-                                       InternalResults& results) {
+                                       SdpErrorHolder& errorHolder) {
   auto rtcpfbs = MakeUnique<SdpRtcpFbAttributeList>();
 
   for (uint16_t i = 1; i < UINT16_MAX; ++i) {
@@ -934,7 +933,7 @@ void SipccSdpAttributeList::LoadRtcpFb(sdp_t* sdp, uint16_t level,
 }
 
 void SipccSdpAttributeList::LoadRtcp(sdp_t* sdp, uint16_t level,
-                                     InternalResults& results) {
+                                     SdpErrorHolder& errorHolder) {
   sdp_attr_t* attr = sdp_find_attr(sdp, level, 0, SDP_ATTR_RTCP, 1);
 
   if (!attr) {
@@ -961,18 +960,18 @@ void SipccSdpAttributeList::LoadRtcp(sdp_t* sdp, uint16_t level,
 }
 
 bool SipccSdpAttributeList::Load(sdp_t* sdp, uint16_t level,
-                                 InternalResults& results) {
-  LoadSimpleStrings(sdp, level, results);
-  LoadSimpleNumbers(sdp, level, results);
+                                 SdpErrorHolder& errorHolder) {
+  LoadSimpleStrings(sdp, level, errorHolder);
+  LoadSimpleNumbers(sdp, level, errorHolder);
   LoadFlags(sdp, level);
-  LoadDirection(sdp, level, results);
+  LoadDirection(sdp, level, errorHolder);
 
   if (AtSessionLevel()) {
-    if (!LoadGroups(sdp, level, results)) {
+    if (!LoadGroups(sdp, level, errorHolder)) {
       return false;
     }
 
-    if (!LoadMsidSemantics(sdp, level, results)) {
+    if (!LoadMsidSemantics(sdp, level, errorHolder)) {
       return false;
     }
 
@@ -981,35 +980,35 @@ bool SipccSdpAttributeList::Load(sdp_t* sdp, uint16_t level,
   } else {
     sdp_media_e mtype = sdp_get_media_type(sdp, level);
     if (mtype == SDP_MEDIA_APPLICATION) {
-      LoadSctpmap(sdp, level, results);
+      LoadSctpmap(sdp, level, errorHolder);
     } else {
-      if (!LoadRtpmap(sdp, level, results)) {
+      if (!LoadRtpmap(sdp, level, errorHolder)) {
         return false;
       }
     }
     LoadCandidate(sdp, level);
     LoadFmtp(sdp, level);
-    LoadMsids(sdp, level, results);
-    LoadRtcpFb(sdp, level, results);
-    LoadRtcp(sdp, level, results);
+    LoadMsids(sdp, level, errorHolder);
+    LoadRtcpFb(sdp, level, errorHolder);
+    LoadRtcp(sdp, level, errorHolder);
     LoadSsrc(sdp, level);
-    if (!LoadImageattr(sdp, level, results)) {
+    if (!LoadImageattr(sdp, level, errorHolder)) {
       return false;
     }
-    if (!LoadSimulcast(sdp, level, results)) {
+    if (!LoadSimulcast(sdp, level, errorHolder)) {
       return false;
     }
-    if (!LoadRid(sdp, level, results)) {
+    if (!LoadRid(sdp, level, errorHolder)) {
       return false;
     }
   }
 
   LoadIceAttributes(sdp, level);
-  if (!LoadFingerprint(sdp, level, results)) {
+  if (!LoadFingerprint(sdp, level, errorHolder)) {
     return false;
   }
   LoadSetup(sdp, level);
-  LoadExtmap(sdp, level, results);
+  LoadExtmap(sdp, level, errorHolder);
 
   return true;
 }
@@ -1029,11 +1028,11 @@ bool SipccSdpAttributeList::IsAllowedHere(
 
 void SipccSdpAttributeList::WarnAboutMisplacedAttribute(
     SdpAttribute::AttributeType type, uint32_t lineNumber,
-    InternalResults& results) {
+    SdpErrorHolder& errorHolder) {
   std::string warning = SdpAttribute::GetAttributeTypeString(type) +
                         (AtSessionLevel() ? " at session level. Ignoring."
                                           : " at media level. Ignoring.");
-  results.AddParseError(lineNumber, warning);
+  errorHolder.AddParseError(lineNumber, warning);
 }
 
 const std::vector<std::string>& SipccSdpAttributeList::GetCandidate() const {
