@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -110,6 +110,7 @@ OUTDIR = os.path.join(OBJDIR, "out")
 POBJDIR = posixpath.join(PDIR.source, args.objdir)
 MAKE = env.get('MAKE', 'make')
 MAKEFLAGS = env.get('MAKEFLAGS', '-j6' + ('' if AUTOMATION else ' -s'))
+PYTHON = sys.executable
 
 for d in ('scripts', 'js_src', 'source', 'tooltool', 'fetches'):
     info("DIR.{name} = {dir}".format(name=d, dir=getattr(DIR, d)))
@@ -434,12 +435,16 @@ def run_test_command(command, **kwargs):
     return status
 
 
-test_suites = set(['jstests', 'jittest', 'jsapitests', 'checks'])
+default_test_suites = frozenset(['jstests', 'jittest', 'jsapitests', 'checks'])
+nondefault_test_suites = frozenset(['gdb'])
+all_test_suites = default_test_suites | nondefault_test_suites
+
+test_suites = set(default_test_suites)
 
 
 def normalize_tests(tests):
     if 'all' in tests:
-        return test_suites
+        return default_test_suites
     return tests
 
 
@@ -509,6 +514,11 @@ if 'jsapitests' in test_suites:
     results.append(st)
 if 'jstests' in test_suites:
     results.append(run_test_command([MAKE, 'check-jstests']))
+if 'gdb' in test_suites:
+    test_script = os.path.join(DIR.js_src, "gdb", "run-tests.py")
+    auto_args = ["-s", "-o", "--no-progress"] if AUTOMATION else []
+    extra_args = env.get('GDBTEST_EXTRA_ARGS', '').split(' ')
+    results.append(run_test_command([PYTHON, test_script, *auto_args, *extra_args, OBJDIR]))
 
 # FIXME bug 1291449: This would be unnecessary if we could run msan with -mllvm
 # -msan-keep-going, but in clang 3.8 it causes a hang during compilation.
