@@ -7,6 +7,7 @@
 #ifndef _SIPCCSDPATTRIBUTELIST_H_
 #define _SIPCCSDPATTRIBUTELIST_H_
 
+#include "signaling/src/sdp/SdpParser.h"
 #include "signaling/src/sdp/SdpAttributeList.h"
 
 extern "C" {
@@ -17,7 +18,6 @@ namespace mozilla {
 
 class SipccSdp;
 class SipccSdpMediaSection;
-class SdpErrorHolder;
 
 class SipccSdpAttributeList : public SdpAttributeList {
   friend class SipccSdpMediaSection;
@@ -88,44 +88,43 @@ class SipccSdpAttributeList : public SdpAttributeList {
   // otherwise pass nullptr
   explicit SipccSdpAttributeList(const SipccSdpAttributeList* sessionLevel);
 
-  bool Load(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
-  void LoadSimpleStrings(sdp_t* sdp, uint16_t level,
-                         SdpErrorHolder& errorHolder);
+  using InternalResults = SdpParser::InternalResults;
+
+  bool Load(sdp_t* sdp, uint16_t level, InternalResults& results);
+  void LoadSimpleStrings(sdp_t* sdp, uint16_t level, InternalResults& results);
   void LoadSimpleString(sdp_t* sdp, uint16_t level, sdp_attr_e attr,
-                        AttributeType targetType, SdpErrorHolder& errorHolder);
-  void LoadSimpleNumbers(sdp_t* sdp, uint16_t level,
-                         SdpErrorHolder& errorHolder);
+                        AttributeType targetType, InternalResults& results);
+  void LoadSimpleNumbers(sdp_t* sdp, uint16_t level, InternalResults& results);
   void LoadSimpleNumber(sdp_t* sdp, uint16_t level, sdp_attr_e attr,
-                        AttributeType targetType, SdpErrorHolder& errorHolder);
+                        AttributeType targetType, InternalResults& results);
   void LoadFlags(sdp_t* sdp, uint16_t level);
-  void LoadDirection(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
-  bool LoadRtpmap(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
-  bool LoadSctpmap(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
+  void LoadDirection(sdp_t* sdp, uint16_t level, InternalResults& results);
+  bool LoadRtpmap(sdp_t* sdp, uint16_t level, InternalResults& results);
+  bool LoadSctpmap(sdp_t* sdp, uint16_t level, InternalResults& results);
   void LoadIceAttributes(sdp_t* sdp, uint16_t level);
-  bool LoadFingerprint(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
+  bool LoadFingerprint(sdp_t* sdp, uint16_t level, InternalResults& results);
   void LoadCandidate(sdp_t* sdp, uint16_t level);
   void LoadSetup(sdp_t* sdp, uint16_t level);
   void LoadSsrc(sdp_t* sdp, uint16_t level);
-  bool LoadImageattr(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
-  bool LoadSimulcast(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
-  bool LoadGroups(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
-  bool LoadMsidSemantics(sdp_t* sdp, uint16_t level,
-                         SdpErrorHolder& errorHolder);
+  bool LoadImageattr(sdp_t* sdp, uint16_t level, InternalResults& results);
+  bool LoadSimulcast(sdp_t* sdp, uint16_t level, InternalResults& results);
+  bool LoadGroups(sdp_t* sdp, uint16_t level, InternalResults& results);
+  bool LoadMsidSemantics(sdp_t* sdp, uint16_t level, InternalResults& results);
   void LoadIdentity(sdp_t* sdp, uint16_t level);
   void LoadDtlsMessage(sdp_t* sdp, uint16_t level);
   void LoadFmtp(sdp_t* sdp, uint16_t level);
-  void LoadMsids(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
-  bool LoadRid(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
-  void LoadExtmap(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
-  void LoadRtcpFb(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
-  void LoadRtcp(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
+  void LoadMsids(sdp_t* sdp, uint16_t level, InternalResults& results);
+  bool LoadRid(sdp_t* sdp, uint16_t level, InternalResults& results);
+  void LoadExtmap(sdp_t* sdp, uint16_t level, InternalResults& results);
+  void LoadRtcpFb(sdp_t* sdp, uint16_t level, InternalResults& results);
+  void LoadRtcp(sdp_t* sdp, uint16_t level, InternalResults& results);
   static SdpRtpmapAttributeList::CodecType GetCodecType(rtp_ptype type);
 
   bool AtSessionLevel() const { return !mSessionLevel; }
   bool IsAllowedHere(SdpAttribute::AttributeType type) const;
   void WarnAboutMisplacedAttribute(SdpAttribute::AttributeType type,
                                    uint32_t lineNumber,
-                                   SdpErrorHolder& errorHolder);
+                                   InternalResults& results);
 
   const SipccSdpAttributeList* mSessionLevel;
 

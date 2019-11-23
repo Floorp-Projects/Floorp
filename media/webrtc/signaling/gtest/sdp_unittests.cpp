@@ -1562,14 +1562,14 @@ class NewSdpTest
     : public ::testing::Test,
       public ::testing::WithParamInterface< ::testing::tuple<bool, bool> > {
  public:
-  NewSdpTest() : mSdpErrorHolder(nullptr) {}
+  NewSdpTest() : mSdpParser(nullptr) {}
 
   void ParseSdp(const std::string& sdp, bool expectSuccess = true) {
     if (::testing::get<1>(GetParam())) {
-      mSdpErrorHolder = &mSipccParser;
+      mSdpParser = &mSipccParser;
       mSdp = mSipccParser.Parse(sdp);
     } else {
-      mSdpErrorHolder = &mRustParser;
+      mSdpParser = &mRustParser;
       mSdp = mRustParser.Parse(sdp);
     }
 
@@ -1609,7 +1609,7 @@ class NewSdpTest
     if (expectSuccess) {
       ASSERT_TRUE(!!mSdp)
       << "Parse failed: " << GetParseErrors();
-      ASSERT_EQ(0U, mSdpErrorHolder->GetParseErrors().size())
+      ASSERT_EQ(0U, mSdpParser->GetParseErrors().size())
           << "Got unexpected parse errors/warnings: " << GetParseErrors();
     }
   }
@@ -1617,7 +1617,7 @@ class NewSdpTest
   // For streaming parse errors
   std::string GetParseErrors() const {
     std::stringstream output;
-    for (auto e : mSdpErrorHolder->GetParseErrors()) {
+    for (auto e : mSdpParser->GetParseErrors()) {
       output << e.first << ": " << e.second << std::endl;
     }
     return output.str();
@@ -1625,7 +1625,7 @@ class NewSdpTest
 
   std::string GetParseWarnings() const {
     std::stringstream output;
-    for (auto e : mSdpErrorHolder->GetParseWarnings()) {
+    for (auto e : mSdpParser->GetParseWarnings()) {
       output << e.first << ": " << e.second << std::endl;
     }
     return output.str();
@@ -1693,7 +1693,7 @@ class NewSdpTest
     return ::testing::get<1>(GetParam());
   }
 
-  SdpErrorHolder* mSdpErrorHolder;
+  SdpParser* mSdpParser;
   SipccSdpParser mSipccParser;
   RsdparsaSdpParser mRustParser;
   mozilla::UniquePtr<Sdp> mSdp;
@@ -1704,7 +1704,7 @@ TEST_P(NewSdpTest, CreateDestroy) {}
 TEST_P(NewSdpTest, ParseEmpty) {
   ParseSdp("", false);
   ASSERT_FALSE(mSdp);
-  ASSERT_NE(0U, mSdpErrorHolder->GetParseErrors().size())
+  ASSERT_NE(0U, mSdpParser->GetParseErrors().size())
       << "Expected at least one parse error.";
 }
 
@@ -1713,24 +1713,24 @@ const std::string kBadSdp = "This is SDPARTA!!!!";
 TEST_P(NewSdpTest, ParseGarbage) {
   ParseSdp(kBadSdp, false);
   ASSERT_FALSE(mSdp);
-  ASSERT_NE(0U, mSdpErrorHolder->GetParseErrors().size())
+  ASSERT_NE(0U, mSdpParser->GetParseErrors().size())
       << "Expected at least one parse error.";
 }
 
 TEST_P(NewSdpTest, ParseGarbageTwice) {
   ParseSdp(kBadSdp, false);
   ASSERT_FALSE(mSdp);
-  size_t errorCount = mSdpErrorHolder->GetParseErrors().size();
+  size_t errorCount = mSdpParser->GetParseErrors().size();
   ASSERT_NE(0U, errorCount) << "Expected at least one parse error.";
   ParseSdp(kBadSdp, false);
   ASSERT_FALSE(mSdp);
-  ASSERT_EQ(errorCount, mSdpErrorHolder->GetParseErrors().size())
+  ASSERT_EQ(errorCount, mSdpParser->GetParseErrors().size())
       << "Expected same error count for same SDP.";
 }
 
 TEST_P(NewSdpTest, ParseMinimal) {
   ParseSdp(kVideoSdp);
-  ASSERT_EQ(0U, mSdpErrorHolder->GetParseErrors().size())
+  ASSERT_EQ(0U, mSdpParser->GetParseErrors().size())
       << "Got parse errors: " << GetParseErrors();
 }
 
@@ -3093,7 +3093,7 @@ const std::string kBasicAudioVideoDataOffer =
 
 TEST_P(NewSdpTest, BasicAudioVideoDataSdpParse) {
   ParseSdp(kBasicAudioVideoDataOffer);
-  ASSERT_EQ(0U, mSdpErrorHolder->GetParseErrors().size())
+  ASSERT_EQ(0U, mSdpParser->GetParseErrors().size())
       << "Got parse errors: " << GetParseErrors();
 }
 
@@ -4014,7 +4014,7 @@ TEST(NewSdpTestNoFixture, CheckParsingResultComparer)
   auto check_comparison = [](const std::string sdp_string) {
     SipccSdpParser sipccParser;
     RsdparsaSdpParser rustParser;
-    auto print_errors = [](const SdpErrorHolder& holder, const char* name) {
+    auto print_errors = [](const SdpParser& holder, const char* name) {
       for (const auto& e : holder.GetParseErrors()) {
         std::cerr << name << " Line " << e.first << ": " << e.second;
       }
