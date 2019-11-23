@@ -8,6 +8,7 @@
 #define _HYBRIDSDPPARSER_H_
 
 #include "signaling/src/sdp/SdpParser.h"
+#include "signaling/src/sdp/SdpTelemetry.h"
 
 namespace mozilla {
 
