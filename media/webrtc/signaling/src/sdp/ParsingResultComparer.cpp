@@ -44,40 +44,27 @@ std::string ToString(const T& serializable) {
   os << serializable;
   return os.str();
 }
-
-// TODO from JsepSessionImpl
-// if (mRunRustParser) {
-//   auto results = mRsdparsaParser.Parse(sdp);
-//   auto rustParsed = std::move(results->Sdp());
-//   auto errors = results->Errors();
-//   if (mRunSdpComparer) {
-//     ParsingResultComparer comparer;
-//     if (rustParsed) {
-//       comparer.Compare(*rustParsed, *parsed, sdp);
-//     } else {
-//       comparer.TrackRustParsingFailed(errors.size());
-//     }
-//   }
-// }
-bool ParsingResultComparer::Compare(const UniquePtr<SdpParser::Results>& aResA,
-                                    const UniquePtr<SdpParser::Results>& aResB,
-                                    const std::string& originalSdp) {
+bool ParsingResultComparer::Compare(const Results& aResA, const Results& aResB,
+                                    const std::string& aOriginalSdp,
+                                    const SdpPref::AlternateParseModes& aMode) {
   MOZ_ASSERT(aResA, "aResA must not be a nullptr");
   MOZ_ASSERT(aResB, "aResB must not be a nullptr");
   MOZ_ASSERT(aResA->ParserName() != aResB->ParserName(),
              "aResA and aResB must be from different parsers");
+  SdpTelemetry::RecordCompare(aResA, aResB, aMode);
+
   ParsingResultComparer comparer;
   if (!aResA->Sdp() || !aResB->Sdp()) {
-    return !aResA->Sdp() && !aResB->Sdp();  // TODO handle telemetery for this
+    return !aResA->Sdp() && !aResB->Sdp();
   }
   if (SipccSdpParser::IsNamed(aResA->ParserName())) {
     MOZ_ASSERT(RsdparsaSdpParser::IsNamed(aResB->ParserName()));
-    return comparer.Compare(*aResB->Sdp(), *aResA->Sdp(), originalSdp,
+    return comparer.Compare(*aResB->Sdp(), *aResA->Sdp(), aOriginalSdp,
                             SdpComparisonResult::Equal);
   }
   MOZ_ASSERT(SipccSdpParser::IsNamed(aResB->ParserName()));
   MOZ_ASSERT(RsdparsaSdpParser::IsNamed(aResA->ParserName()));
-  return comparer.Compare(*aResA->Sdp(), *aResB->Sdp(), originalSdp,
+  return comparer.Compare(*aResA->Sdp(), *aResB->Sdp(), aOriginalSdp,
                           SdpComparisonResult::Equal);
 }
 
@@ -302,33 +289,6 @@ bool ParsingResultComparer::CompareAttrLists(
   }
 
   return result;
-}
-
-// TODO Track a tuple of failures?
-void ParsingResultComparer::TrackRustParsingFailed(
-    size_t sipccErrorCount) const {
-  if (sipccErrorCount) {
-    Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF,
-                         NS_LITERAL_STRING("rsdparsa_failed__sipcc_has_errors"),
-                         1);
-  } else {
-    Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF,
-                         NS_LITERAL_STRING("rsdparsa_failed__sipcc_succeeded"),
-                         1);
-  }
-}
-
-void ParsingResultComparer::TrackSipccParsingFailed(
-    size_t webrtcSdpErrorCount) const {
-  if (webrtcSdpErrorCount) {
-    Telemetry::ScalarAdd(
-        Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF,
-        NS_LITERAL_STRING("sipcc_failed__webrtcsdp_has_errors"), 1);
-  } else {
-    Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_SDP_PARSER_DIFF,
-                         NS_LITERAL_STRING("sipcc_failed__webrtcsdp_succeeded"),
-                         1);
-  }
 }
 
 std::vector<std::string> SplitLines(const std::string& sdp) {

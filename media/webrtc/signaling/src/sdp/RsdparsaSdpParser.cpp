@@ -17,7 +17,7 @@
 
 namespace mozilla {
 
-static const std::string& WEBRTC_SDP_NAME = "WEBRTC_SDP_NAME";
+static const std::string& WEBRTC_SDP_NAME = "WEBRTCSDP";
 
 const std::string& RsdparsaSdpParser::Name() const { return WEBRTC_SDP_NAME; }
 
