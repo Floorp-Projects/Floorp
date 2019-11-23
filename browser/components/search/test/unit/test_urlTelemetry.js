@@ -63,19 +63,6 @@ const TESTS = [
     title: "Bing search access point",
     trackingUrl: "https://www.bing.com/search?q=test&pc=MOZI&form=MOZLBR",
     expectedSearchCountEntry: "bing.in-content:sap:MOZI",
-    expectedAdKey: "bing",
-    adUrls: [
-      "https://www.bing.com/aclick?ld=foo",
-      "https://www.bing.com/fd/ls/GLinkPingPost.aspx?IG=bar&url=https%3A%2F%2Fwww.bing.com%2Faclick",
-      "https://www.bing.com/aclk?ld=foo",
-      "https://www.bing.com/fd/ls/GLinkPingPost.aspx?IG=bar&url=https%3A%2F%2Fwww.bing.com%2Faclk",
-    ],
-    nonAdUrls: [
-      "https://www.bing.com/fd/ls/ls.gif?IG=foo",
-      "https://www.bing.com/fd/ls/l?IG=bar",
-      "https://www.bing.com/aclook?",
-      "https://www.bing.com/fd/ls/GLinkPingPost.aspx?IG=baz&url=%2Fvideos%2Fsearch%3Fq%3Dfoo",
-    ],
   },
   {
     setUp() {
@@ -111,15 +98,6 @@ const TESTS = [
     title: "DuckDuckGo search access point",
     trackingUrl: "https://duckduckgo.com/?q=test&t=ffab",
     expectedSearchCountEntry: "duckduckgo.in-content:sap:ffab",
-    expectedAdKey: "duckduckgo",
-    adUrls: [
-      "https://duckduckgo.com/y.js?foo",
-      "https://www.amazon.co.uk/foo?tag=duckduckgo-ffab-uk-32-xk",
-    ],
-    nonAdUrls: [
-      "https://duckduckgo.com/?q=foo&t=ffab&ia=images&iax=images",
-      "https://improving.duckduckgo.com/t/bar",
-    ],
   },
   {
     title: "DuckDuckGo organic",
