@@ -11,7 +11,7 @@
 #include "signaling/src/sdp/RsdparsaSdpInc.h"
 
 #include <ostream>
-#include "signaling/src/sdp/SdpParser.h"
+#include "signaling/src/sdp/SdpErrorHolder.h"
 
 #ifdef CRLF
 #  undef CRLF

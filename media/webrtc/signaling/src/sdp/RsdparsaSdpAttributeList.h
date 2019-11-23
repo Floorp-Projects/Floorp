@@ -15,7 +15,7 @@ namespace mozilla {
 
 class RsdparsaSdp;
 class RsdparsaSdpMediaSection;
-class SdpParser;
+class SdpErrorHolder;
 
 class RsdparsaSdpAttributeList : public SdpAttributeList {
   friend class RsdparsaSdpMediaSection;
@@ -141,7 +141,8 @@ class RsdparsaSdpAttributeList : public SdpAttributeList {
   void LoadCandidate(RustAttributeList* attributeList);
 
   void WarnAboutMisplacedAttribute(SdpAttribute::AttributeType type,
-                                   uint32_t lineNumber, SdpParser& errorHolder);
+                                   uint32_t lineNumber,
+                                   SdpErrorHolder& errorHolder);
 
   SdpAttribute* mAttributes[kNumAttributeTypes];
 
