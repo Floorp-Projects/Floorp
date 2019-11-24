@@ -1334,7 +1334,8 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
  * mozilla::TextControlState
  *****************************************************************************/
 
-TextControlState* TextControlState::sReleasedInstance = nullptr;
+AutoTArray<TextControlState*, TextControlState::kMaxCountOfCacheToReuse>*
+    TextControlState::sReleasedInstances = nullptr;
 bool TextControlState::sHasShutDown = false;
 
 TextControlState::TextControlState(nsITextControlElement* aOwningElement)
@@ -1357,10 +1358,9 @@ TextControlState::TextControlState(nsITextControlElement* aOwningElement)
 
 TextControlState* TextControlState::Construct(
     nsITextControlElement* aOwningElement) {
-  if (sReleasedInstance) {
-    MOZ_ASSERT(!sReleasedInstance->IsBusy());
-    TextControlState* state = sReleasedInstance;
-    sReleasedInstance = nullptr;
+  if (sReleasedInstances && !sReleasedInstances->IsEmpty()) {
+    TextControlState* state = sReleasedInstances->LastElement();
+    sReleasedInstances->RemoveLastElement();
     state->mTextCtrlElement = aOwningElement;
     state->mBoundFrame = nullptr;
     state->mSelectionProperties = SelectionProperties();
@@ -1387,9 +1387,11 @@ TextControlState::~TextControlState() {
 
 void TextControlState::Shutdown() {
   sHasShutDown = true;
-  if (sReleasedInstance) {
-    sReleasedInstance->DeleteOrCacheForReuse();
-    sReleasedInstance = nullptr;
+  if (sReleasedInstances) {
+    for (TextControlState* textControlState : *sReleasedInstances) {
+      textControlState->DeleteOrCacheForReuse();
+    }
+    delete sReleasedInstances;
   }
 }
 
@@ -1406,9 +1408,14 @@ void TextControlState::DeleteOrCacheForReuse() {
   MOZ_ASSERT(!IsBusy());
 
   // If we can cache this instance, we should do it instead of deleting it.
-  if (!sHasShutDown && !sReleasedInstance) {
-    sReleasedInstance = this;
-    sReleasedInstance->PrepareForReuse();
+  if (!sHasShutDown && (!sReleasedInstances || sReleasedInstances->Length() <
+                                                   kMaxCountOfCacheToReuse)) {
+    PrepareForReuse();
+    if (!sReleasedInstances) {
+      sReleasedInstances =
+          new AutoTArray<TextControlState*, kMaxCountOfCacheToReuse>;
+    }
+    sReleasedInstances->AppendElement(this);
     return;
   }
   delete this;
