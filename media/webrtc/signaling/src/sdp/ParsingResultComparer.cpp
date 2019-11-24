@@ -43,6 +43,42 @@ std::string ToString(const T& serializable) {
   return os.str();
 }
 
+// TODO from JsepSessionImpl
+// if (mRunRustParser) {
+//   auto results = mRsdparsaParser.Parse(sdp);
+//   auto rustParsed = std::move(results->Sdp());
+//   auto errors = results->Errors();
+//   if (mRunSdpComparer) {
+//     ParsingResultComparer comparer;
+//     if (rustParsed) {
+//       comparer.Compare(*rustParsed, *parsed, sdp);
+//     } else {
+//       comparer.TrackRustParsingFailed(errors.size());
+//     }
+//   }
+// }
+bool ParsingResultComparer::Compare(const UniquePtr<SdpParser::Results>& aResA,
+                                    const UniquePtr<SdpParser::Results>& aResB,
+                                    const std::string& originalSdp) {
+  MOZ_ASSERT(aResA, "aResA must not be a nullptr");
+  MOZ_ASSERT(aResB, "aResB must not be a nullptr");
+  MOZ_ASSERT(aResA->ParserName() != aResB->ParserName(),
+             "aResA and aResB must be from different parsers");
+  ParsingResultComparer comparer;
+  if (!aResA->Sdp() || !aResB->Sdp()) {
+    return !aResA->Sdp() && !aResB->Sdp();  // TODO handle telemetery for this
+  }
+  if (SipccSdpParser::IsNamed(aResA->ParserName())) {
+    MOZ_ASSERT(RsdparsaSdpParser::IsNamed(aResB->ParserName()));
+    return comparer.Compare(*aResB->Sdp(), *aResA->Sdp(), originalSdp,
+                            SdpComparisonResult::Equal);
+  }
+  MOZ_ASSERT(SipccSdpParser::IsNamed(aResB->ParserName()));
+  MOZ_ASSERT(RsdparsaSdpParser::IsNamed(aResA->ParserName()));
+  return comparer.Compare(*aResA->Sdp(), *aResB->Sdp(), originalSdp,
+                          SdpComparisonResult::Equal);
+}
+
 bool ParsingResultComparer::Compare(const Sdp& rsdparsaSdp, const Sdp& sipccSdp,
                                     const std::string& originalSdp,
                                     const SdpComparisonResult expect) {
