@@ -8,20 +8,22 @@
 #define mozilla_TextControlState_h
 
 #include "mozilla/Assertions.h"
+#include "nsString.h"
+#include "nsITextControlElement.h"
+#include "nsITextControlFrame.h"
+#include "nsCycleCollectionParticipant.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/TextControlElement.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/WeakPtr.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLInputElementBinding.h"
 #include "mozilla/dom/Nullable.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsITextControlFrame.h"
 
 class nsTextControlFrame;
 class nsISelectionController;
 class nsFrameSelection;
+class nsITextControlElement;
 class nsFrame;
 
 namespace mozilla {
@@ -48,7 +50,7 @@ class HTMLInputElement;
  *
  * This class is held as a member of HTMLInputElement and HTMLTextAreaElement.
  * The public functions in this class include the public APIs which dom/
- * uses. Layout code uses the TextControlElement interface to invoke
+ * uses. Layout code uses the nsITextControlElement interface to invoke
  * functions on this class.
  *
  * The design motivation behind this class is maintaining all of the things
@@ -139,7 +141,7 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(TextControlState)
 
-  static TextControlState* Construct(TextControlElement* aOwningElement);
+  static TextControlState* Construct(nsITextControlElement* aOwningElement);
 
   static void Shutdown();
 
@@ -208,15 +210,6 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
     // it.
     eSetValue_MoveCursorToBeginSetSelectionDirectionForward = 1 << 6,
   };
-  /**
-   * SetValue() sets the value to aValue with replacing \r\n and \r with \n.
-   *
-   * @param aValue      The new value.  Can contain \r.
-   * @param aOldValue   Optional.  If you have already know current value,
-   *                    set this to it.  However, this must not contain \r
-   *                    for the performance.
-   * @param aFlags      See SetValueFlags.
-   */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE bool SetValue(const nsAString& aValue,
                                                 const nsAString* aOldValue,
                                                 uint32_t aFlags);
@@ -224,17 +217,7 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
                                                 uint32_t aFlags) {
     return SetValue(aValue, nullptr, aFlags);
   }
-  /**
-   * GetValue() returns current value either with or without TextEditor.
-   * The result never includes \r.
-   */
   void GetValue(nsAString& aValue, bool aIgnoreWrap) const;
-  /**
-   * ValueEquals() is designed for internal use so that aValue shouldn't
-   * include \r character.  It should be handled before calling this with
-   * nsContentUtils::PlatformToDOMLineBreaks().
-   */
-  bool ValueEquals(const nsAString& aValue) const;
   bool HasNonEmptyValue();
   // The following methods are for textarea element to use whether default
   // value or not.
@@ -400,7 +383,7 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   }
 
  private:
-  explicit TextControlState(TextControlElement* aOwningElement);
+  explicit TextControlState(nsITextControlElement* aOwningElement);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY ~TextControlState();
 
   /**
@@ -461,7 +444,7 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   // The text control element owns this object, and ensures that this object
   // has a smaller lifetime except the owner releases the instance while it
   // does something with this.
-  TextControlElement* MOZ_NON_OWNING_REF mTextCtrlElement;
+  nsITextControlElement* MOZ_NON_OWNING_REF mTextCtrlElement;
   RefPtr<TextInputSelectionController> mSelCon;
   RefPtr<RestoreSelectionState> mRestoringSelection;
   RefPtr<TextEditor> mTextEditor;
@@ -482,14 +465,11 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   /**
    * For avoiding allocation cost of the instance, we should reuse instances
    * as far as possible.
-   *
-   * FYI: `25` is just a magic number considered without enough investigation,
-   *      but at least, this value must not make damage for footprint.
-   *      Feel free to change it if you find better number.
+   * TODO: Maybe, we should cache more instances with array.  Then, it must
+   *       be faster to load pages which have a lot of `<input type="text">`
+   *       elements.
    */
-  static const size_t kMaxCountOfCacheToReuse = 25;
-  static AutoTArray<TextControlState*, kMaxCountOfCacheToReuse>*
-      sReleasedInstances;
+  static TextControlState* sReleasedInstance;
   static bool sHasShutDown;
 
   friend class AutoTextControlHandlingState;

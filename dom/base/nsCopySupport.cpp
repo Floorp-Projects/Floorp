@@ -876,7 +876,7 @@ bool nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
     // there is unmasked range but it's collapsed or it'll be masked
     // automatically, the selected password shouldn't be copied into the
     // clipboard.
-    if (RefPtr<HTMLInputElement> inputElement =
+    if (HTMLInputElement* inputElement =
             HTMLInputElement::FromNodeOrNull(sourceContent)) {
       if (TextEditor* textEditor = inputElement->GetTextEditor()) {
         if (textEditor->IsPasswordEditor() &&

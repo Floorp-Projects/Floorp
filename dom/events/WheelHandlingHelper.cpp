@@ -15,7 +15,6 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_mousewheel.h"
 #include "mozilla/StaticPrefs_test.h"
-#include "mozilla/TextControlElement.h"
 #include "mozilla/dom/WheelEventBinding.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
@@ -24,6 +23,7 @@
 #include "mozilla/dom/Document.h"
 #include "DocumentInlines.h"  // for Document and HTMLBodyElement
 #include "nsIScrollableFrame.h"
+#include "nsITextControlElement.h"
 #include "nsITimer.h"
 #include "nsPluginFrame.h"
 #include "nsPresContext.h"
@@ -87,11 +87,11 @@ WheelHandlingUtils::GetDisregardedWheelScrollDirection(const nsIFrame* aFrame) {
   if (!content) {
     return Nothing();
   }
-  TextControlElement* textControlElement = TextControlElement::FromNodeOrNull(
+  nsCOMPtr<nsITextControlElement> ctrl = do_QueryInterface(
       content->IsInNativeAnonymousSubtree()
           ? content->GetClosestNativeAnonymousSubtreeRootParent()
           : content);
-  if (!textControlElement || !textControlElement->IsSingleLineTextControl()) {
+  if (!ctrl || !ctrl->IsSingleLineTextControl()) {
     return Nothing();
   }
   // Disregard scroll in the block-flow direction by mouse wheel on a
