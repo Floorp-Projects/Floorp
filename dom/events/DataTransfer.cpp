@@ -735,7 +735,6 @@ void DataTransfer::GetExternalTransferableFormats(
       aResult->AppendElement(nsCString(format));
     }
   }
-  return;
 }
 
 nsresult DataTransfer::SetDataAtInternal(const nsAString& aFormat,
