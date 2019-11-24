@@ -465,11 +465,14 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   /**
    * For avoiding allocation cost of the instance, we should reuse instances
    * as far as possible.
-   * TODO: Maybe, we should cache more instances with array.  Then, it must
-   *       be faster to load pages which have a lot of `<input type="text">`
-   *       elements.
+   *
+   * FYI: `25` is just a magic number considered without enough investigation,
+   *      but at least, this value must not make damage for footprint.
+   *      Feel free to change it if you find better number.
    */
-  static TextControlState* sReleasedInstance;
+  static const size_t kMaxCountOfCacheToReuse = 25;
+  static AutoTArray<TextControlState*, kMaxCountOfCacheToReuse>*
+      sReleasedInstances;
   static bool sHasShutDown;
 
   friend class AutoTextControlHandlingState;
