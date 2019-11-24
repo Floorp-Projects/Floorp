@@ -176,6 +176,12 @@
     "minbytes": 0,
     "maxbytes": 87040
   },
+  "c:\\windows\\system32\\windows.globalization.dll": {
+    "mincount": 0,
+    "maxcount": 8,
+    "minbytes": 0,
+    "maxbytes": 126976
+  },
   "c:\\windows\\system32\\spool\\drivers\\color": {
     "mincount": 0,
     "maxcount": 2,
