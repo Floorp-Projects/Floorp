@@ -542,31 +542,31 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
     checkRegistry();
   }
 
+  auto registryChildCount = [](const nsAString& aRegPath) -> uint32_t {
+    nsresult rv;
+    nsCOMPtr<nsIWindowsRegKey> regKey =
+        do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
+    if (NS_FAILED(rv)) {
+      LOG(("  creating nsIWindowsRegKey failed\n"));
+      return 0;
+    }
+    rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE, aRegPath,
+                      nsIWindowsRegKey::ACCESS_READ);
+    if (NS_FAILED(rv)) {
+      LOG(("  opening registry key failed\n"));
+      return 0;
+    }
+
+    uint32_t count = 0;
+    rv = regKey->GetChildCount(&count);
+    if (NS_FAILED(rv)) {
+      return 0;
+    }
+
+    return count;
+  };
+
   if (StaticPrefs::network_notify_checkForProxies()) {
-    auto registryChildCount = [](const nsAString& aRegPath) -> uint32_t {
-      nsresult rv;
-      nsCOMPtr<nsIWindowsRegKey> regKey =
-          do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
-      if (NS_FAILED(rv)) {
-        LOG(("  creating nsIWindowsRegKey failed\n"));
-        return 0;
-      }
-      rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE, aRegPath,
-                        nsIWindowsRegKey::ACCESS_READ);
-      if (NS_FAILED(rv)) {
-        LOG(("  opening registry key failed\n"));
-        return 0;
-      }
-
-      uint32_t count = 0;
-      rv = regKey->GetChildCount(&count);
-      if (NS_FAILED(rv)) {
-        return 0;
-      }
-
-      return count;
-    };
-
     if (registryChildCount(
             NS_LITERAL_STRING("SYSTEM\\CurrentControlSet\\Services\\Dnscache\\"
                               "Parameters\\DnsConnections")) > 0 ||
@@ -574,6 +574,17 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
             NS_LITERAL_STRING("SYSTEM\\CurrentControlSet\\Services\\Dnscache\\"
                               "Parameters\\DnsConnectionsProxies")) > 0) {
       platformDNSIndications |= PROXY_DETECTED;
+    }
+  }
+
+  if (StaticPrefs::network_notify_checkForNRPT()) {
+    if (registryChildCount(
+            NS_LITERAL_STRING("SYSTEM\\CurrentControlSet\\Services\\Dnscache\\"
+                              "Parameters\\DnsPolicyConfig")) > 0 ||
+        registryChildCount(
+            NS_LITERAL_STRING("SOFTWARE\\Policies\\Microsoft\\Windows NT\\"
+                              "DNSClient\\DnsPolicyConfig")) > 0) {
+      platformDNSIndications |= NRPT_DETECTED;
     }
   }
 
