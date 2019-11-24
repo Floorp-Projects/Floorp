@@ -14,8 +14,7 @@
 #include "signaling/src/jsep/JsepTrack.h"
 #include "signaling/src/jsep/JsepTransceiver.h"
 #include "signaling/src/jsep/SsrcGenerator.h"
-#include "signaling/src/sdp/RsdparsaSdpParser.h"
-#include "signaling/src/sdp/SipccSdpParser.h"
+#include "signaling/src/sdp/HybridSdpParser.h"
 #include "signaling/src/sdp/SdpHelper.h"
 
 namespace mozilla {
@@ -41,8 +40,7 @@ class JsepSessionImpl : public JsepSession {
         mTransportIdCounter(0),
         mUuidGen(std::move(uuidgen)),
         mSdpHelper(&mLastError),
-        mRunRustParser(false),
-        mRunSdpComparer(false),
+        mParser(new HybridSdpParser()),
         mEncodeTrackId(true) {}
 
   // Implement JsepSession methods.
@@ -260,13 +258,10 @@ class JsepSessionImpl : public JsepSession {
   UniquePtr<Sdp> mPendingRemoteDescription;
   std::vector<UniquePtr<JsepCodecDescription>> mSupportedCodecs;
   std::string mLastError;
-  SipccSdpParser mSipccParser;
   SdpHelper mSdpHelper;
+  UniquePtr<SdpParser> mParser;
   SsrcGenerator mSsrcGenerator;
-  bool mRunRustParser;
-  bool mRunSdpComparer;
   bool mEncodeTrackId;
-  RsdparsaSdpParser mRsdparsaParser;
 };
 
 }  // namespace mozilla
