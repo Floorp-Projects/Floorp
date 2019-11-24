@@ -153,7 +153,8 @@ nsAndroidNetworkLinkService::GetDnsSuffixList(
 }
 
 NS_IMETHODIMP
-nsAndroidNetworkLinkService::GetVpnDetected(bool* aHasVPN) {
+nsAndroidNetworkLinkService::GetPlatformDNSIndications(
+    uint32_t* aPlatformDNSIndications) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

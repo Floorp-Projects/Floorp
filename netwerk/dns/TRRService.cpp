@@ -49,7 +49,7 @@ TRRService::TRRService()
       mUseGET(false),
       mDisableECS(true),
       mDisableAfterFails(5),
-      mVPNDetected(false),
+      mPlatformDisabledTRR(false),
       mClearTRRBLStorage(false),
       mConfirmationState(CONFIRM_INIT),
       mRetryConfirmInterval(1000),
@@ -456,13 +456,12 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
     LOG(("TRRService link-event"));
     nsCOMPtr<nsINetworkLinkService> link = do_QueryInterface(aSubject);
     RebuildSuffixList(link);
-    CheckVPNStatus(link);
+    CheckPlatformDNSStatus(link);
   }
   return NS_OK;
 }
 
 void TRRService::RebuildSuffixList(nsINetworkLinkService* aLinkService) {
-  mDNSSuffixDomains.Clear();
   // The network link service notification normally passes itself as the
   // subject, but some unit tests will sometimes pass a null subject.
   if (!aLinkService) {
@@ -471,21 +470,28 @@ void TRRService::RebuildSuffixList(nsINetworkLinkService* aLinkService) {
 
   nsTArray<nsCString> suffixList;
   aLinkService->GetDnsSuffixList(suffixList);
+
+  MutexAutoLock lock(mLock);
+  mDNSSuffixDomains.Clear();
   for (const auto& item : suffixList) {
     LOG(("TRRService adding %s to suffix list", item.get()));
     mDNSSuffixDomains.PutEntry(item);
   }
 }
 
-void TRRService::CheckVPNStatus(nsINetworkLinkService* aLinkService) {
+void TRRService::CheckPlatformDNSStatus(nsINetworkLinkService* aLinkService) {
   if (!aLinkService) {
     return;
   }
 
-  bool vpnDetected = false;
-  aLinkService->GetVpnDetected(&vpnDetected);
-  mVPNDetected = vpnDetected;
-  LOG(("TRRService vpnDetected=%d", vpnDetected));
+  uint32_t platformIndications = nsINetworkLinkService::NONE_DETECTED;
+  aLinkService->GetPlatformDNSIndications(&platformIndications);
+  LOG(("TRRService platformIndications=%u", platformIndications));
+  mPlatformDisabledTRR =
+      (!StaticPrefs::network_trr_enable_when_vpn_detected() &&
+       (platformIndications & nsINetworkLinkService::VPN_DETECTED)) ||
+      (!StaticPrefs::network_trr_enable_when_proxy_detected() &&
+       (platformIndications & nsINetworkLinkService::PROXY_DETECTED));
 }
 
 void TRRService::MaybeConfirm() {
@@ -648,12 +654,14 @@ bool TRRService::IsExcludedFromTRR(const nsACString& aHost) {
 }
 
 bool TRRService::IsExcludedFromTRR_unlocked(const nsACString& aHost) {
-  if (mVPNDetected && !StaticPrefs::network_trr_enable_when_vpn_detected()) {
-    LOG(("%s is excluded from TRR because of VPN", aHost.BeginReading()));
-    return true;
-  }
   if (!NS_IsMainThread()) {
     mLock.AssertCurrentThreadOwns();
+  }
+
+  if (mPlatformDisabledTRR) {
+    LOG(("%s is excluded from TRR because of platform indications",
+         aHost.BeginReading()));
+    return true;
   }
 
   int32_t dot = 0;

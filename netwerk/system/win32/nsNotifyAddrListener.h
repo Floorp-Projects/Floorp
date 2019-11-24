@@ -72,8 +72,9 @@ class nsNotifyAddrListener : public nsINetworkLinkService,
   // set true when mCheckEvent means shutdown
   bool mShutdown;
 
-  // If a VPN was detected on at least one active network interface.
-  mozilla::Atomic<bool, mozilla::MemoryOrdering::Relaxed> mFoundVPN;
+  // Contains a set of flags that codify the reasons for which
+  // the platform indicates DNS should be used instead of TRR.
+  mozilla::Atomic<uint32_t, mozilla::Relaxed> mPlatformDNSIndications;
 
   // This is a checksum of various meta data for all network interfaces
   // considered UP at last check.
