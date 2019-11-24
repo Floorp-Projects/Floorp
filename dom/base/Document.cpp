@@ -39,6 +39,7 @@
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/StorageAccess.h"
+#include "mozilla/TextControlElement.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/URLDecorationStripper.h"
 #include "mozilla/URLExtraData.h"
@@ -283,7 +284,6 @@
 #include "nsDOMCaretPosition.h"
 #include "nsViewportInfo.h"
 #include "mozilla/StaticPtr.h"
-#include "nsITextControlElement.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsISecurityConsoleMessage.h"
 #include "nsCharSeparatedTokenizer.h"
@@ -5009,14 +5009,12 @@ nsresult Document::TurnEditingOff() {
 
   // Editor resets selection since it is being destroyed.  But if focus is
   // still into editable control, we have to initialize selection again.
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm) {
-    Element* element = fm->GetFocusedElement();
-    nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(element);
-    if (txtCtrl) {
-      RefPtr<TextEditor> textEditor = txtCtrl->GetTextEditor();
+  if (nsFocusManager* fm = nsFocusManager::GetFocusManager()) {
+    if (RefPtr<TextControlElement> textControlElement =
+            TextControlElement::FromNodeOrNull(fm->GetFocusedElement())) {
+      RefPtr<TextEditor> textEditor = textControlElement->GetTextEditor();
       if (textEditor) {
-        textEditor->ReinitializeSelection(*element);
+        textEditor->ReinitializeSelection(*textControlElement);
       }
     }
   }

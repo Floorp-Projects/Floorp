@@ -79,7 +79,7 @@ SimpleTest.waitForFocus(function() {
     let transactionManager = editor.transactionManager;
     is(transactionManager.numberOfUndoItems, 2,
        editableElement.tagName + ": Initially, there should be 2 undo items");
-    // Defined as nsITextControlElement::DEFAULT_UNDO_CAP
+    // Defined as TextControlElement::DEFAULT_UNDO_CAP
     is(transactionManager.maxTransactionCount, 1000,
        editableElement.tagName + ": Initially, transaction manager should be able to have 1,000 undo items");
 
