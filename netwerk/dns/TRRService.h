@@ -78,7 +78,7 @@ class TRRService : public nsIObserver,
   bool IsExcludedFromTRR_unlocked(const nsACString& aHost);
 
   void RebuildSuffixList(nsINetworkLinkService* aLinkService);
-  void CheckVPNStatus(nsINetworkLinkService* aLinkService);
+  void CheckPlatformDNSStatus(nsINetworkLinkService* aLinkService);
 
   bool mInitialized;
   Atomic<uint32_t, Relaxed> mMode;
@@ -105,7 +105,7 @@ class TRRService : public nsIObserver,
   Atomic<bool, Relaxed> mDisableECS;  // disable EDNS Client Subnet in requests
   Atomic<uint32_t, Relaxed>
       mDisableAfterFails;  // this many fails in a row means failed TRR service
-  Atomic<bool, Relaxed> mVPNDetected;
+  Atomic<bool, Relaxed> mPlatformDisabledTRR;
 
   // TRR Blacklist storage
   // mTRRBLStorage is only modified on the main thread, but we query whether it

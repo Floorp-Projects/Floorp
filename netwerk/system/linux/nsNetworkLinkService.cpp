@@ -69,7 +69,8 @@ nsNetworkLinkService::GetDnsSuffixList(nsTArray<nsCString>& aDnsSuffixList) {
 }
 
 NS_IMETHODIMP
-nsNetworkLinkService::GetVpnDetected(bool* aHasVPN) {
+nsNetworkLinkService::GetPlatformDNSIndications(
+    uint32_t* aPlatformDNSIndications) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

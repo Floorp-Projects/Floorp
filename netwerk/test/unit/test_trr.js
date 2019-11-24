@@ -1149,7 +1149,7 @@ add_task(async function test_vpnDetection() {
   await new DNSListener("push.example.org", "2018::2018");
 
   let networkLinkService = {
-    vpnDetected: true,
+    platformDNSIndications: Ci.nsINetworkLinkService.VPN_DETECTED,
     QueryInterface: ChromeUtils.generateQI([Ci.nsINetworkLinkService]),
   };
 
@@ -1175,7 +1175,8 @@ add_task(async function test_vpnDetection() {
   Services.prefs.clearUserPref("network.trr.bootstrapAddress");
 
   // Attempt to clean up, just in case
-  networkLinkService.vpnDetected = false;
+  networkLinkService.platformDNSIndications =
+    Ci.nsINetworkLinkService.NONE_DETECTED;
   Services.obs.notifyObservers(
     networkLinkService,
     "network:link-status-changed",

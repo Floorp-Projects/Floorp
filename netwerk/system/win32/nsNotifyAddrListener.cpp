@@ -66,7 +66,7 @@ nsNotifyAddrListener::nsNotifyAddrListener()
       mMutex("nsNotifyAddrListener::mMutex"),
       mCheckEvent(nullptr),
       mShutdown(false),
-      mFoundVPN(false),
+      mPlatformDNSIndications(NONE_DETECTED),
       mIPInterfaceChecksum(0),
       mCoalescingActive(false) {}
 
@@ -116,8 +116,9 @@ nsNotifyAddrListener::GetDnsSuffixList(nsTArray<nsCString>& aDnsSuffixList) {
 }
 
 NS_IMETHODIMP
-nsNotifyAddrListener::GetVpnDetected(bool* aHasVPN) {
-  *aHasVPN = mFoundVPN;
+nsNotifyAddrListener::GetPlatformDNSIndications(
+    uint32_t* aPlatformDNSIndications) {
+  *aPlatformDNSIndications = mPlatformDNSIndications;
   return NS_OK;
 }
 
@@ -445,7 +446,7 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
   ULONG sumAll = 0;
 
   nsTArray<nsCString> dnsSuffixList;
-  mFoundVPN = false;
+  uint32_t platformDNSIndications = NONE_DETECTED;
   if (ret == ERROR_SUCCESS) {
     bool linkUp = false;
     ULONG sum = 0;
@@ -460,7 +461,7 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
 
       if (adapter->IfType == IF_TYPE_PPP) {
         LOG(("VPN connection found"));
-        mFoundVPN = true;
+        platformDNSIndications |= VPN_DETECTED;
       }
 
       sum <<= 2;
@@ -539,9 +540,47 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
     };
 
     checkRegistry();
+  }
 
+  if (StaticPrefs::network_notify_checkForProxies()) {
+    auto registryChildCount = [](const nsAString& aRegPath) -> uint32_t {
+      nsresult rv;
+      nsCOMPtr<nsIWindowsRegKey> regKey =
+          do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
+      if (NS_FAILED(rv)) {
+        LOG(("  creating nsIWindowsRegKey failed\n"));
+        return 0;
+      }
+      rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE, aRegPath,
+                        nsIWindowsRegKey::ACCESS_READ);
+      if (NS_FAILED(rv)) {
+        LOG(("  opening registry key failed\n"));
+        return 0;
+      }
+
+      uint32_t count = 0;
+      rv = regKey->GetChildCount(&count);
+      if (NS_FAILED(rv)) {
+        return 0;
+      }
+
+      return count;
+    };
+
+    if (registryChildCount(
+            NS_LITERAL_STRING("SYSTEM\\CurrentControlSet\\Services\\Dnscache\\"
+                              "Parameters\\DnsConnections")) > 0 ||
+        registryChildCount(
+            NS_LITERAL_STRING("SYSTEM\\CurrentControlSet\\Services\\Dnscache\\"
+                              "Parameters\\DnsConnectionsProxies")) > 0) {
+      platformDNSIndications |= PROXY_DETECTED;
+    }
+  }
+
+  {
     MutexAutoLock lock(mMutex);
     mDnsSuffixList.SwapElements(dnsSuffixList);
+    mPlatformDNSIndications = platformDNSIndications;
   }
 
   calculateNetworkId();
