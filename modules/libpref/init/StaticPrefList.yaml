@@ -4151,6 +4151,12 @@
   value: false
   mirror: always
 
+# Whether we allow advanced layers with fission
+- name: layers.advanced.fission.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Whether we allow AMD switchable graphics.
 - name: layers.amd-switchable-gfx.enabled
   type: bool
