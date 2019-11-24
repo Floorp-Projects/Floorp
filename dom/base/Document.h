@@ -1892,7 +1892,7 @@ class Document : public nsINode,
   /* Midas implementation */
   nsCommandManager* GetMidasCommandManager();
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult TurnEditingOff();
+  nsresult TurnEditingOff();
 
   // MOZ_CAN_RUN_SCRIPT_BOUNDARY because this is called from all sorts
   // of places, and I'm pretty sure the exact ExecCommand call it
