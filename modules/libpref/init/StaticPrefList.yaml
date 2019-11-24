@@ -5823,7 +5823,7 @@
 #if defined(XP_LINUX) && !defined(ANDROID)
   value: true
 #elif defined(XP_WIN) && !defined(_ARM64_)
-  value: false
+  value: true
 #elif defined(XP_MACOSX)
   value: true
 #else
@@ -5836,7 +5836,7 @@
 #if defined(XP_LINUX) && !defined(ANDROID)
   value: true
 #elif defined(XP_WIN) && !defined(_ARM64_)
-  value: false
+  value: true
 #elif defined(XP_MACOSX)
   value: true
 #else
