@@ -208,6 +208,15 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
     // it.
     eSetValue_MoveCursorToBeginSetSelectionDirectionForward = 1 << 6,
   };
+  /**
+   * SetValue() sets the value to aValue with replacing \r\n and \r with \n.
+   *
+   * @param aValue      The new value.  Can contain \r.
+   * @param aOldValue   Optional.  If you have already know current value,
+   *                    set this to it.  However, this must not contain \r
+   *                    for the performance.
+   * @param aFlags      See SetValueFlags.
+   */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE bool SetValue(const nsAString& aValue,
                                                 const nsAString* aOldValue,
                                                 uint32_t aFlags);
@@ -215,7 +224,17 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
                                                 uint32_t aFlags) {
     return SetValue(aValue, nullptr, aFlags);
   }
+  /**
+   * GetValue() returns current value either with or without TextEditor.
+   * The result never includes \r.
+   */
   void GetValue(nsAString& aValue, bool aIgnoreWrap) const;
+  /**
+   * ValueEquals() is designed for internal use so that aValue shouldn't
+   * include \r character.  It should be handled before calling this with
+   * nsContentUtils::PlatformToDOMLineBreaks().
+   */
+  bool ValueEquals(const nsAString& aValue) const;
   bool HasNonEmptyValue();
   // The following methods are for textarea element to use whether default
   // value or not.

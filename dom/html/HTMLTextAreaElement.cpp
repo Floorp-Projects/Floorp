@@ -201,19 +201,19 @@ void HTMLTextAreaElement::GetType(nsAString& aType) {
 }
 
 void HTMLTextAreaElement::GetValue(nsAString& aValue) {
-  nsAutoString value;
-  GetValueInternal(value, true);
-
-  // Normalize CRLF and CR to LF
-  nsContentUtils::PlatformToDOMLineBreaks(value);
-
-  aValue = value;
+  GetValueInternal(aValue, true);
+  MOZ_ASSERT(aValue.FindChar(static_cast<char16_t>('\r')) == -1);
 }
 
 void HTMLTextAreaElement::GetValueInternal(nsAString& aValue,
                                            bool aIgnoreWrap) const {
   MOZ_ASSERT(mState);
   mState->GetValue(aValue, aIgnoreWrap);
+}
+
+bool HTMLTextAreaElement::ValueEquals(const nsAString& aValue) const {
+  MOZ_ASSERT(mState);
+  return mState->ValueEquals(aValue);
 }
 
 TextEditor* HTMLTextAreaElement::GetTextEditor() {
