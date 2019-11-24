@@ -2,7 +2,7 @@
 
 # DownloadsFeature
 
-`class DownloadsFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`PermissionsFeature`](../../mozilla.components.support.base.feature/-permissions-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadsFeature.kt#L57)
+`class DownloadsFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`PermissionsFeature`](../../mozilla.components.support.base.feature/-permissions-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadsFeature.kt#L55)
 
 Feature implementation to provide download functionality for the selected
 session. The feature will subscribe to the selected session and listen
@@ -18,7 +18,7 @@ for downloads.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `DownloadsFeature(applicationContext: <ERROR CLASS>, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, useCases: `[`DownloadsUseCases`](../-downloads-use-cases/index.md)`, onNeedToRequestPermissions: `[`OnNeedToRequestPermissions`](../../mozilla.components.support.base.feature/-on-need-to-request-permissions.md)` = { }, onDownloadCompleted: `[`OnDownloadCompleted`](../../mozilla.components.feature.downloads.manager/-on-download-completed.md)` = noop, downloadManager: `[`DownloadManager`](../../mozilla.components.feature.downloads.manager/-download-manager/index.md)` = AndroidDownloadManager(applicationContext), customTabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, fragmentManager: FragmentManager? = null, promptsStyling: `[`PromptsStyling`](-prompts-styling/index.md)`? = null, dialog: `[`DownloadDialogFragment`](../-download-dialog-fragment/index.md)` = SimpleDownloadDialogFragment.newInstance(
+| [&lt;init&gt;](-init-.md) | `DownloadsFeature(applicationContext: <ERROR CLASS>, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, useCases: `[`DownloadsUseCases`](../-downloads-use-cases/index.md)`, onNeedToRequestPermissions: `[`OnNeedToRequestPermissions`](../../mozilla.components.support.base.feature/-on-need-to-request-permissions.md)` = { }, onDownloadStopped: `[`onDownloadStopped`](../../mozilla.components.feature.downloads.manager/on-download-stopped.md)` = noop, downloadManager: `[`DownloadManager`](../../mozilla.components.feature.downloads.manager/-download-manager/index.md)` = AndroidDownloadManager(applicationContext), customTabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, fragmentManager: FragmentManager? = null, promptsStyling: `[`PromptsStyling`](-prompts-styling/index.md)`? = null, dialog: `[`DownloadDialogFragment`](../-download-dialog-fragment/index.md)` = SimpleDownloadDialogFragment.newInstance(
         promptsStyling = promptsStyling
     ))`<br>Feature implementation to provide download functionality for the selected session. The feature will subscribe to the selected session and listen for downloads. |
 
@@ -26,7 +26,7 @@ for downloads.
 
 | Name | Summary |
 |---|---|
-| [onDownloadCompleted](on-download-completed.md) | `var onDownloadCompleted: `[`OnDownloadCompleted`](../../mozilla.components.feature.downloads.manager/-on-download-completed.md)<br>a callback invoked when a download is completed. |
+| [onDownloadStopped](on-download-stopped.md) | `var onDownloadStopped: `[`onDownloadStopped`](../../mozilla.components.feature.downloads.manager/on-download-stopped.md)<br>a callback invoked when a download is paused or completed. |
 | [onNeedToRequestPermissions](on-need-to-request-permissions.md) | `var onNeedToRequestPermissions: `[`OnNeedToRequestPermissions`](../../mozilla.components.support.base.feature/-on-need-to-request-permissions.md)<br>a callback invoked when permissions need to be requested before a download can be performed. Once the request is completed, [onPermissionsResult](on-permissions-result.md) needs to be invoked. |
 
 ### Functions

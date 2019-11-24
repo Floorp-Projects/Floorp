@@ -2,7 +2,7 @@
 
 # TrackingCategory
 
-`enum class TrackingCategory` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L199)
+`enum class TrackingCategory` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L192)
 
 ### Enum Values
 

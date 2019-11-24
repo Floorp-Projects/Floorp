@@ -2,7 +2,7 @@
 
 # Authenticating
 
-`class Authenticating : `[`ConnectionState`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L113)
+`class Authenticating : `[`ConnectionState`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L143)
 
 This device is in the process of authenticating with a neighboring device. If both
 devices accept the token, the next state will be [Connecting](../-connecting/index.md).

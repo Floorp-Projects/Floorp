@@ -8,7 +8,7 @@
 
 | Name | Summary |
 |---|---|
-| [onDownloadCompleted](on-download-completed.md) | `abstract var onDownloadCompleted: `[`OnDownloadCompleted`](../-on-download-completed.md) |
+| [onDownloadStopped](on-download-stopped.md) | `abstract var onDownloadStopped: `[`onDownloadStopped`](../on-download-stopped.md) |
 | [permissions](permissions.md) | `abstract val permissions: `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>` |
 
 ### Functions

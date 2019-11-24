@@ -2,7 +2,7 @@
 
 # Initiating
 
-`class Initiating : `[`ConnectionState`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L97)
+`class Initiating : `[`ConnectionState`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L127)
 
 This device has discovered a neighboring device and is initiating a connection.
 If all goes well, the next state will be [Authenticating](../-authenticating/index.md).

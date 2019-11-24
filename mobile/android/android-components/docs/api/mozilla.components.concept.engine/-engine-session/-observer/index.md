@@ -2,7 +2,7 @@
 
 # Observer
 
-`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L35)
+`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L34)
 
 Interface to be implemented by classes that want to observe this engine session.
 
@@ -11,7 +11,6 @@ Interface to be implemented by classes that want to observe this engine session.
 | Name | Summary |
 |---|---|
 | [onAppPermissionRequest](on-app-permission-request.md) | `open fun onAppPermissionRequest(permissionRequest: `[`PermissionRequest`](../../../mozilla.components.concept.engine.permission/-permission-request/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onBrowserActionChange](on-browser-action-change.md) | `open fun onBrowserActionChange(webExtensionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, action: `[`BrowserAction`](../../../mozilla.components.concept.engine.webextension/-browser-action/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Event to notify that a web extension browser action has changed. |
 | [onCancelContentPermissionRequest](on-cancel-content-permission-request.md) | `open fun onCancelContentPermissionRequest(permissionRequest: `[`PermissionRequest`](../../../mozilla.components.concept.engine.permission/-permission-request/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onContentPermissionRequest](on-content-permission-request.md) | `open fun onContentPermissionRequest(permissionRequest: `[`PermissionRequest`](../../../mozilla.components.concept.engine.permission/-permission-request/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onCrash](on-crash.md) | `open fun onCrash(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

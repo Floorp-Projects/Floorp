@@ -2,7 +2,7 @@
 
 # Isolated
 
-`object Isolated : `[`ConnectionState`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L79)
+`object Isolated : `[`ConnectionState`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L109)
 
 There is no connection to another device and no attempt to connect.
 
