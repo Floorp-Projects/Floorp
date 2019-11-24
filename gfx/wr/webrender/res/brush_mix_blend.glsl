@@ -2,21 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_MIX_BLEND_BRUSH 3
-#define VECS_PER_SPECIFIC_BRUSH VECS_PER_MIX_BLEND_BRUSH
-
-#define WR_BRUSH_VS_FUNCTION mix_blend_brush_vs
-#define WR_BRUSH_FS_FUNCTION mix_blend_brush_fs
+#define VECS_PER_SPECIFIC_BRUSH 3
 
 #include shared,prim_shared,brush
 
-#define V_SRC_UV            varying_vec4_0.xy
-#define V_SRC_LAYER         varying_vec4_0.w
-
-#define V_BACKDROP_UV       varying_vec4_1.xy
-#define V_BACKDROP_LAYER    varying_vec4_1.w
-
-#define V_OP                flat_varying_ivec4_0.x
+varying vec3 vSrcUv;
+varying vec3 vBackdropUv;
+flat varying int vOp;
 
 #ifdef WR_VERTEX_SHADER
 
@@ -25,7 +17,7 @@ vec2 snap_device_pos(VertexInfo vi, float device_pixel_scale) {
     return vi.world_pos.xy * device_pixel_scale / max(0.0, vi.world_pos.w) + vi.snap_offset;
 }
 
-void mix_blend_brush_vs(
+void brush_vs(
     VertexInfo vi,
     int prim_address,
     RectWithSize local_rect,
@@ -39,21 +31,19 @@ void mix_blend_brush_vs(
 ) {
     vec2 snapped_device_pos = snap_device_pos(vi, pic_task.device_pixel_scale);
     vec2 texture_size = vec2(textureSize(sPrevPassColor, 0));
-    V_OP = prim_user_data.x;
+    vOp = prim_user_data.x;
 
     PictureTask src_task = fetch_picture_task(prim_user_data.z);
     vec2 src_uv = snapped_device_pos +
                   src_task.common_data.task_rect.p0 -
                   src_task.content_origin;
-    V_SRC_UV = src_uv / texture_size;
-    V_SRC_LAYER = src_task.common_data.texture_layer_index;
+    vSrcUv = vec3(src_uv / texture_size, src_task.common_data.texture_layer_index);
 
     RenderTaskCommonData backdrop_task = fetch_render_task_common_data(prim_user_data.y);
     vec2 backdrop_uv = snapped_device_pos +
                        backdrop_task.task_rect.p0 -
                        src_task.content_origin;
-    V_BACKDROP_UV = backdrop_uv / texture_size;
-    V_BACKDROP_LAYER = backdrop_task.texture_layer_index;
+    vBackdropUv = vec3(backdrop_uv / texture_size, backdrop_task.texture_layer_index);
 }
 #endif
 
@@ -215,9 +205,9 @@ const int MixBlendMode_Saturation  = 13;
 const int MixBlendMode_Color       = 14;
 const int MixBlendMode_Luminosity  = 15;
 
-Fragment mix_blend_brush_fs() {
-    vec4 Cb = textureLod(sPrevPassColor, vec3(V_BACKDROP_UV, V_BACKDROP_LAYER), 0.0);
-    vec4 Cs = textureLod(sPrevPassColor, vec3(V_SRC_UV, V_SRC_LAYER), 0.0);
+Fragment brush_fs() {
+    vec4 Cb = textureLod(sPrevPassColor, vBackdropUv, 0.0);
+    vec4 Cs = textureLod(sPrevPassColor, vSrcUv, 0.0);
 
     // The mix-blend-mode functions assume no premultiplied alpha
     if (Cb.a != 0.0) {
@@ -231,7 +221,7 @@ Fragment mix_blend_brush_fs() {
     // Return yellow if none of the branches match (shouldn't happen).
     vec4 result = vec4(1.0, 1.0, 0.0, 1.0);
 
-    switch (V_OP) {
+    switch (vOp) {
         case MixBlendMode_Multiply:
             result.rgb = Multiply(Cb.rgb, Cs.rgb);
             break;
@@ -295,10 +285,3 @@ Fragment mix_blend_brush_fs() {
     return Fragment(result);
 }
 #endif
-
-// Undef macro names that could be re-defined by other shaders.
-#undef V_SRC_UV
-#undef V_SRC_LAYER
-#undef V_BACKDROP_UV
-#undef V_BACKDROP_LAYER
-#undef V_OP
