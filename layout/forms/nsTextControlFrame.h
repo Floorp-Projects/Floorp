@@ -163,6 +163,13 @@ class nsTextControlFrame final : public nsContainerFrame,
 
   void GetText(nsString& aText);
 
+  /**
+   * TextEquals() is designed for internal use so that aValue shouldn't
+   * include \r character.  It should be handled before calling this with
+   * nsContentUtils::PlatformToDOMLineBreaks().
+   */
+  bool TextEquals(const nsAString& aText) const;
+
   virtual nsresult PeekOffset(nsPeekOffsetStruct* aPos) override;
 
   NS_DECL_QUERYFRAME
