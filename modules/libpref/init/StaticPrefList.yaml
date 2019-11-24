@@ -6861,6 +6861,12 @@
   value: false
   mirror: always
 
+# This pref controls if TRR will still be enabled when NRPT rules are detected
+- name: network.trr.enable_when_nrpt_detected
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Allow the network changed event to get sent when a network topology or setup
 # change is noticed while running.
 - name: network.notify.changed
@@ -6887,6 +6893,13 @@
 # Whether to check the registry for proxies on network changes that indicate
 # that TRR should not be used.
 - name: network.notify.checkForProxies
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# Whether to check the registry for NRPT rules on network changes that
+# indicate that TRR should not be used.
+- name: network.notify.checkForNRPT
   type: RelaxedAtomicBool
   value: true
   mirror: always
