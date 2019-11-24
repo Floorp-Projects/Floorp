@@ -33,6 +33,7 @@ UNIFIED_SOURCES += [
     'ParsingResultComparer.cpp',
     'SdpAttribute.cpp',
     'SdpHelper.cpp',
+    'SdpLog.cpp',
     'SdpMediaSection.cpp',
     'SipccSdp.cpp',
     'SipccSdpAttributeList.cpp',
