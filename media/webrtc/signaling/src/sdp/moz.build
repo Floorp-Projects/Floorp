@@ -30,6 +30,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
+    'HybridSdpParser.cpp',
     'ParsingResultComparer.cpp',
     'SdpAttribute.cpp',
     'SdpHelper.cpp',
