@@ -57,10 +57,15 @@ interface nsINetworkLinkService : nsISupports
    */
   readonly attribute Array<ACString> dnsSuffixList;
 
+  const unsigned long NONE_DETECTED = 0;
+  const unsigned long VPN_DETECTED = 1 << 0;
+  const unsigned long PROXY_DETECTED = 1 << 1;
+
   /**
-   * Whether a VPN was detected on at least one active network interface.
+   * A bitfield that encodes the platform attributes we detected which
+   * indicate that we should only use DNS, not TRR.
    */
-  readonly attribute boolean vpnDetected;
+  readonly attribute unsigned long platformDNSIndications;
 };
 
 %{C++
