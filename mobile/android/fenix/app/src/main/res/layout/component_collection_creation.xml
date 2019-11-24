@@ -68,28 +68,6 @@
         app:layout_constraintTop_toBottomOf="@id/back_button"
         tools:listitem="@layout/collections_list_item" />
 
-    <EditText
-        android:id="@+id/name_collection_edittext"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center"
-        android:autofillHints="false"
-        android:background="?foundation"
-        android:focusedByDefault="true"
-        android:imeOptions="actionDone"
-        android:importantForAutofill="no"
-        android:inputType="textCapSentences"
-        android:paddingStart="20dp"
-        android:paddingTop="12dp"
-        android:paddingEnd="20dp"
-        android:paddingBottom="12dp"
-        android:text="@string/create_collection_default_name"
-        android:textColor="?primaryText"
-        android:textSize="16sp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        tools:targetApi="o" />
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/tab_list"
         android:layout_width="0dp"
@@ -122,6 +100,28 @@
         android:background="@drawable/simple_dark_grey_gradient"
         app:layout_constraintBottom_toBottomOf="parent"
         android:focusable="false"/>
+
+    <EditText
+        android:id="@+id/name_collection_edittext"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center"
+        android:autofillHints="false"
+        android:background="?foundation"
+        android:focusedByDefault="true"
+        android:imeOptions="actionDone"
+        android:importantForAutofill="no"
+        android:inputType="textCapSentences"
+        android:paddingStart="20dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="12dp"
+        android:text="@string/create_collection_default_name"
+        android:textColor="?primaryText"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:targetApi="o" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/bottom_button_bar_layout"
