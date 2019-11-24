@@ -119,7 +119,7 @@ var grid_template_test_cases = [
 grid_test_cases = grid_template_test_cases.concat([
     {
         gridAutoFlow: "row",
-        shorthand: "none / none",
+        shorthand: "none",
     },
     {
         gridAutoRows: "40px",
@@ -160,18 +160,14 @@ grid_test_cases = grid_template_test_cases.concat([
         gridTemplateColumns: "100px",
         shorthand: "auto-flow 40px / 100px",
     },
-    {
-        gridAutoFlow: "row",
-        shorthand: "none / none",
-    },
     // Test that grid-gap properties don't affect serialization.
     {
         gridRowGap: "1px",
-        shorthand: "none / none",
+        shorthand: "none",
     },
     {
         gridColumnGap: "1px",
-        shorthand: "none / none",
+        shorthand: "none",
     },
 ]);
 

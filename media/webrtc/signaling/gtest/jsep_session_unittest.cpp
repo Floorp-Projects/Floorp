@@ -11,6 +11,7 @@
 #include "nss.h"
 #include "ssl.h"
 
+#include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Tuple.h"
 
@@ -57,6 +58,9 @@ class JsepSessionTest : public JsepSessionTestBase,
                         public ::testing::WithParamInterface<std::string> {
  public:
   JsepSessionTest() : mSdpHelper(&mLastError) {
+    Preferences::SetCString("media.peerconnection.sdp.parser", "legacy");
+    Preferences::SetCString("media.peerconnection.sdp.alternate_parse_mode",
+                            "never");
     mSessionOff =
         MakeUnique<JsepSessionImpl>("Offerer", MakeUnique<FakeUuidGenerator>());
     mSessionAns = MakeUnique<JsepSessionImpl>("Answerer",
@@ -1151,11 +1155,12 @@ class JsepSessionTest : public JsepSessionTestBase,
   };
 
   // For streaming parse errors
-  std::string GetParseErrors(const SipccSdpParser& parser) const {
+  std::string GetParseErrors(
+      const UniquePtr<SdpParser::Results>& results) const {
     std::stringstream output;
-    for (auto e = parser.GetParseErrors().begin();
-         e != parser.GetParseErrors().end(); ++e) {
-      output << e->first << ": " << e->second << std::endl;
+    auto errors = std::move(results->Errors());
+    for (auto error : errors) {
+      output << error.first << ": " << error.second << std::endl;
     }
     return output.str();
   }
@@ -1349,9 +1354,10 @@ class JsepSessionTest : public JsepSessionTestBase,
 
   UniquePtr<Sdp> Parse(const std::string& sdp) const {
     SipccSdpParser parser;
-    UniquePtr<Sdp> parsed = parser.Parse(sdp);
+    auto results = parser.Parse(sdp);
+    UniquePtr<Sdp> parsed = std::move(results->Sdp());
     EXPECT_TRUE(parsed.get()) << "Should have valid SDP" << std::endl
-                              << "Errors were: " << GetParseErrors(parser);
+                              << "Errors were: " << GetParseErrors(results);
     return parsed;
   }
 
@@ -4850,8 +4856,8 @@ TEST_P(JsepSessionTest, TestBalancedBundle) {
   mSessionOff->SetBundlePolicy(kBundleBalanced);
 
   std::string offer = CreateOffer();
-  SipccSdpParser parser;
-  UniquePtr<Sdp> parsedOffer = parser.Parse(offer);
+  UniquePtr<Sdp> parsedOffer = std::move(SipccSdpParser().Parse(offer)->Sdp());
+
   ASSERT_TRUE(parsedOffer.get());
 
   std::map<SdpMediaSection::MediaType, SdpMediaSection*> firstByType;
@@ -4886,8 +4892,7 @@ TEST_P(JsepSessionTest, TestMaxBundle) {
   OfferAnswer();
 
   std::string offer = mSessionOff->GetLocalDescription(kJsepDescriptionCurrent);
-  SipccSdpParser parser;
-  UniquePtr<Sdp> parsedOffer = parser.Parse(offer);
+  UniquePtr<Sdp> parsedOffer = std::move(SipccSdpParser().Parse(offer)->Sdp());
   ASSERT_TRUE(parsedOffer.get());
 
   ASSERT_FALSE(parsedOffer->GetMediaSection(0).GetAttributeList().HasAttribute(

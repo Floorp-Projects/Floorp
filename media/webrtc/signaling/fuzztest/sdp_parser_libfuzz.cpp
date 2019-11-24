@@ -14,7 +14,7 @@
 
 using namespace mozilla;
 
-static mozilla::UniquePtr<Sdp> sdpPtr;
+static mozilla::UniquePtr<SdpParser::Results> sdpPtr;
 static SipccSdpParser mParser;
 
 int FuzzingInitSdpParser(int* argc, char*** argv) { return 0; }
