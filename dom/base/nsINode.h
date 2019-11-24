@@ -488,6 +488,8 @@ class nsINode : public mozilla::dom::EventTarget {
    */
   bool IsElement() const { return GetBoolFlag(NodeIsElement); }
 
+  virtual bool IsTextControlElement() const { return false; }
+
   /**
    * Return this node as an Element.  Should only be used for nodes
    * for which IsElement() is true.  This is defined inline in Element.h.

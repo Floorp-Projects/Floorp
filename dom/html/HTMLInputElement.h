@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Decimal.h"
+#include "mozilla/TextControlElement.h"
 #include "mozilla/TextControlState.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Variant.h"
@@ -19,7 +20,6 @@
 #include "mozilla/dom/UnionTypes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsImageLoadingContent.h"
-#include "nsITextControlElement.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
 #include "nsIConstraintValidation.h"
@@ -117,9 +117,8 @@ class UploadLastDir final : public nsIObserver, public nsSupportsWeakReference {
   };
 };
 
-class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
+class HTMLInputElement final : public TextControlElement,
                                public nsImageLoadingContent,
-                               public nsITextControlElement,
                                public nsIConstraintValidation {
   friend class AfterSetFilesOrDirectoriesCallback;
   friend class DispatchChangeEventCallback;
@@ -214,43 +213,42 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
   virtual void RemoveStates(EventStates aStates) override;
 
  public:
-  // nsITextControlElement
-  NS_IMETHOD SetValueChanged(bool aValueChanged) override;
-  NS_IMETHOD_(bool) IsSingleLineTextControl() const override;
-  NS_IMETHOD_(bool) IsTextArea() const override;
-  NS_IMETHOD_(bool) IsPasswordTextControl() const override;
-  NS_IMETHOD_(int32_t) GetCols() override;
-  NS_IMETHOD_(int32_t) GetWrapCols() override;
-  NS_IMETHOD_(int32_t) GetRows() override;
-  NS_IMETHOD_(void) GetDefaultValueFromContent(nsAString& aValue) override;
-  NS_IMETHOD_(bool) ValueChanged() const override;
-  NS_IMETHOD_(void)
-  GetTextEditorValue(nsAString& aValue, bool aIgnoreWrap) const override;
-  NS_IMETHOD_(TextEditor*) GetTextEditor() override;
-  NS_IMETHOD_(TextEditor*) GetTextEditorWithoutCreation() override;
-  NS_IMETHOD_(nsISelectionController*) GetSelectionController() override;
-  NS_IMETHOD_(nsFrameSelection*) GetConstFrameSelection() override;
-  NS_IMETHOD_(TextControlState*) GetTextControlState() const override {
+  // TextControlElement
+  virtual nsresult SetValueChanged(bool aValueChanged) override;
+  virtual bool IsSingleLineTextControl() const override;
+  virtual bool IsTextArea() const override;
+  virtual bool IsPasswordTextControl() const override;
+  virtual int32_t GetCols() override;
+  virtual int32_t GetWrapCols() override;
+  virtual int32_t GetRows() override;
+  virtual void GetDefaultValueFromContent(nsAString& aValue) override;
+  virtual bool ValueChanged() const override;
+  virtual void GetTextEditorValue(nsAString& aValue,
+                                  bool aIgnoreWrap) const override;
+  MOZ_CAN_RUN_SCRIPT TextEditor* GetTextEditor() override;
+  virtual TextEditor* GetTextEditorWithoutCreation() override;
+  virtual nsISelectionController* GetSelectionController() override;
+  virtual nsFrameSelection* GetConstFrameSelection() override;
+  virtual TextControlState* GetTextControlState() const override {
     return GetEditorState();
   }
-  NS_IMETHOD BindToFrame(nsTextControlFrame* aFrame) override;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  NS_IMETHOD_(void) UnbindFromFrame(nsTextControlFrame* aFrame) override;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  NS_IMETHOD CreateEditor() override;
-  NS_IMETHOD_(void) UpdateOverlayTextVisibility(bool aNotify) override;
-  NS_IMETHOD_(void) SetPreviewValue(const nsAString& aValue) override;
-  NS_IMETHOD_(void) GetPreviewValue(nsAString& aValue) override;
-  NS_IMETHOD_(void) EnablePreview() override;
-  NS_IMETHOD_(bool) IsPreviewEnabled() override;
-  NS_IMETHOD_(bool) GetPlaceholderVisibility() override;
-  NS_IMETHOD_(bool) GetPreviewVisibility() override;
-  NS_IMETHOD_(void) InitializeKeyboardEventListeners() override;
-  NS_IMETHOD_(void) OnValueChanged(bool aNotify, ValueChangeKind) override;
+  virtual nsresult BindToFrame(nsTextControlFrame* aFrame) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void UnbindFromFrame(
+      nsTextControlFrame* aFrame) override;
+  MOZ_CAN_RUN_SCRIPT virtual nsresult CreateEditor() override;
+  virtual void UpdateOverlayTextVisibility(bool aNotify) override;
+  virtual void SetPreviewValue(const nsAString& aValue) override;
+  virtual void GetPreviewValue(nsAString& aValue) override;
+  virtual void EnablePreview() override;
+  virtual bool IsPreviewEnabled() override;
+  virtual bool GetPlaceholderVisibility() override;
+  virtual bool GetPreviewVisibility() override;
+  virtual void InitializeKeyboardEventListeners() override;
+  virtual void OnValueChanged(bool aNotify, ValueChangeKind) override;
   virtual void GetValueFromSetRangeText(nsAString& aValue) override;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual nsresult SetValueFromSetRangeText(const nsAString& aValue) override;
-  NS_IMETHOD_(bool) HasCachedSelection() override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual nsresult SetValueFromSetRangeText(
+      const nsAString& aValue) override;
+  virtual bool HasCachedSelection() override;
 
   // Methods for nsFormFillController so it can do selection operations on input
   // types the HTML spec doesn't support them on, like "email".
@@ -291,8 +289,7 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLInputElement,
-                                           nsGenericHTMLFormElementWithState)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLInputElement, TextControlElement)
 
   static UploadLastDir* gUploadLastDir;
   // create and destroy the static UploadLastDir object for remembering
@@ -871,7 +868,7 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
                              JS::Handle<JSObject*> aGivenProto) override;
 
   // Pull IsSingleLineTextControl into our scope, otherwise it'd be hidden
-  // by the nsITextControlElement version.
+  // by the TextControlElement version.
   using nsGenericHTMLFormElementWithState::IsSingleLineTextControl;
 
   /**
