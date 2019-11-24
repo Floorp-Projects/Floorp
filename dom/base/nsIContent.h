@@ -21,6 +21,7 @@ class nsAttrValue;
 class nsAttrName;
 class nsTextFragment;
 class nsIFrame;
+class nsITextControlElement;
 
 namespace mozilla {
 class EventChainPreVisitor;

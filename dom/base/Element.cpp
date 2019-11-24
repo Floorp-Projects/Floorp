@@ -77,7 +77,6 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/SizeOfState.h"
-#include "mozilla/TextControlElement.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/DirectionalityUtils.h"
@@ -134,6 +133,7 @@
 #include "mozilla/dom/NodeListBinding.h"
 
 #include "nsStyledElement.h"
+#include "nsITextControlElement.h"
 #include "nsITextControlFrame.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/dom/CSSPseudoElement.h"
@@ -3568,9 +3568,8 @@ void Element::InsertAdjacentText(const nsAString& aWhere,
 }
 
 TextEditor* Element::GetTextEditorInternal() {
-  TextControlElement* textControlElement = TextControlElement::FromNode(this);
-  return textControlElement ? MOZ_KnownLive(textControlElement)->GetTextEditor()
-                            : nullptr;
+  nsCOMPtr<nsITextControlElement> textCtrl = do_QueryInterface(this);
+  return textCtrl ? textCtrl->GetTextEditor() : nullptr;
 }
 
 nsresult Element::SetBoolAttr(nsAtom* aAttr, bool aValue) {

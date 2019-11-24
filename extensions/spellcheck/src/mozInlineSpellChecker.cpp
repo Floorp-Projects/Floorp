@@ -64,6 +64,7 @@
 #include "nsRange.h"
 #include "nsContentUtils.h"
 #include "nsIObserverService.h"
+#include "nsITextControlElement.h"
 #include "prtime.h"
 
 using namespace mozilla;
@@ -1087,7 +1088,8 @@ bool mozInlineSpellChecker::ShouldSpellCheckNode(TextEditor* aTextEditor,
       while (node && node->IsInNativeAnonymousSubtree()) {
         node = node->GetParent();
       }
-      if (node && node->IsTextControlElement()) {
+      nsCOMPtr<nsITextControlElement> textControl = do_QueryInterface(node);
+      if (textControl) {
         return true;
       }
     }
