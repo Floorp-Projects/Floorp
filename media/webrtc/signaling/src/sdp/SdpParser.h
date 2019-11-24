@@ -11,6 +11,8 @@
 #include <string>
 #include "signaling/src/sdp/Sdp.h"
 
+#include "mozilla/Telemetry.h"
+
 namespace mozilla {
 
 class SdpParser {
