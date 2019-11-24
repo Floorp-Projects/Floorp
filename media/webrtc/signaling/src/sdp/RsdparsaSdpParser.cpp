@@ -17,25 +17,31 @@
 
 namespace mozilla {
 
-UniquePtr<Sdp> RsdparsaSdpParser::Parse(const std::string& sdpText) {
-  ClearParseErrors();
+static const std::string& WEBRTC_SDP_NAME = "WEBRTCSDP";
+
+const std::string& RsdparsaSdpParser::Name() const { return WEBRTC_SDP_NAME; }
+
+UniquePtr<SdpParser::Results> RsdparsaSdpParser::Parse(
+    const std::string& aText) {
+  UniquePtr<SdpParser::InternalResults> results(
+      new SdpParser::InternalResults(Name()));
   RustSdpSession* result = nullptr;
   RustSdpError* err = nullptr;
-  StringView sdpTextView{sdpText.c_str(), sdpText.length()};
+  StringView sdpTextView{aText.c_str(), aText.length()};
   nsresult rv = parse_sdp(sdpTextView, false, &result, &err);
   if (rv != NS_OK) {
     size_t line = sdp_get_error_line_num(err);
     std::string errMsg = convertStringView(sdp_get_error_message(err));
     sdp_free_error(err);
-    AddParseError(line, errMsg);
-    return nullptr;
+    results->AddParseError(line, errMsg);
+    return results;
   }
 
   if (err) {
     size_t line = sdp_get_error_line_num(err);
     std::string warningMsg = convertStringView(sdp_get_error_message(err));
     sdp_free_error(err);
-    AddParseWarnings(line, warningMsg);
+    results->AddParseWarning(line, warningMsg);
   }
 
   RsdparsaSessionHandle uniqueResult(result);
@@ -44,7 +50,12 @@ UniquePtr<Sdp> RsdparsaSdpParser::Parse(const std::string& sdpText) {
   SdpOrigin origin(convertStringView(rustOrigin.username), rustOrigin.sessionId,
                    rustOrigin.sessionVersion, address.first, address.second);
 
-  return MakeUnique<RsdparsaSdp>(std::move(uniqueResult), origin);
+  results->SetSdp(MakeUnique<RsdparsaSdp>(std::move(uniqueResult), origin));
+  return results;
+}
+
+bool RsdparsaSdpParser::IsNamed(const std::string& aName) {
+  return aName == WEBRTC_SDP_NAME;
 }
 
 }  // namespace mozilla

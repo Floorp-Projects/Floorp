@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,7 +9,7 @@
 #include <cstdlib>
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Assertions.h"
-#include "signaling/src/sdp/SdpErrorHolder.h"
+#include "signaling/src/sdp/SdpParser.h"
 
 #ifdef CRLF
 #  undef CRLF
@@ -59,14 +61,14 @@ SdpMediaSection& SipccSdp::AddMediaSection(SdpMediaSection::MediaType mediaType,
   return *media;
 }
 
-bool SipccSdp::LoadOrigin(sdp_t* sdp, SdpErrorHolder& errorHolder) {
+bool SipccSdp::LoadOrigin(sdp_t* sdp, InternalResults& results) {
   std::string username = sdp_get_owner_username(sdp);
   uint64_t sessId = strtoull(sdp_get_owner_sessionid(sdp), nullptr, 10);
   uint64_t sessVer = strtoull(sdp_get_owner_version(sdp), nullptr, 10);
 
   sdp_nettype_e type = sdp_get_owner_network_type(sdp);
   if (type != SDP_NT_INTERNET) {
-    errorHolder.AddParseError(2, "Unsupported network type");
+    results.AddParseError(2, "Unsupported network type");
     return false;
   }
 
@@ -79,7 +81,7 @@ bool SipccSdp::LoadOrigin(sdp_t* sdp, SdpErrorHolder& errorHolder) {
       addrType = sdp::kIPv6;
       break;
     default:
-      errorHolder.AddParseError(2, "Unsupported address type");
+      results.AddParseError(2, "Unsupported address type");
       return false;
   }
 
@@ -88,17 +90,17 @@ bool SipccSdp::LoadOrigin(sdp_t* sdp, SdpErrorHolder& errorHolder) {
   return true;
 }
 
-bool SipccSdp::Load(sdp_t* sdp, SdpErrorHolder& errorHolder) {
+bool SipccSdp::Load(sdp_t* sdp, InternalResults& results) {
   // Believe it or not, SDP_SESSION_LEVEL is 0xFFFF
-  if (!mAttributeList.Load(sdp, SDP_SESSION_LEVEL, errorHolder)) {
+  if (!mAttributeList.Load(sdp, SDP_SESSION_LEVEL, results)) {
     return false;
   }
 
-  if (!LoadOrigin(sdp, errorHolder)) {
+  if (!LoadOrigin(sdp, results)) {
     return false;
   }
 
-  if (!mBandwidths.Load(sdp, SDP_SESSION_LEVEL, errorHolder)) {
+  if (!mBandwidths.Load(sdp, SDP_SESSION_LEVEL, results)) {
     return false;
   }
 
@@ -107,7 +109,7 @@ bool SipccSdp::Load(sdp_t* sdp, SdpErrorHolder& errorHolder) {
     // sipcc counts media sections from 1, using 0xFFFF as the "session"
     UniquePtr<SipccSdpMediaSection> section(
         new SipccSdpMediaSection(i, &mAttributeList));
-    if (!section->Load(sdp, i + 1, errorHolder)) {
+    if (!section->Load(sdp, i + 1, results)) {
       return false;
     }
     mMediaSections.push_back(std::move(section));
@@ -136,7 +138,7 @@ void SipccSdp::Serialize(std::ostream& os) const {
 }
 
 bool SipccSdpBandwidths::Load(sdp_t* sdp, uint16_t level,
-                              SdpErrorHolder& errorHolder) {
+                              InternalResults& results) {
   size_t count = sdp_get_num_bw_lines(sdp, level);
   for (size_t i = 1; i <= count; ++i) {
     sdp_bw_modifier_e bwtype = sdp_get_bw_modifier(sdp, level, i);

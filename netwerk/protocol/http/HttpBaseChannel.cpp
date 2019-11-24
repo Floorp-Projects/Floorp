@@ -3569,7 +3569,12 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
     rv = httpInternal->SetTlsFlags(mTlsFlags);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-    RefPtr<nsHttpChannel> realChannel;
+    // Ensure the type of realChannel involves all types it may redirect to.
+    // Such as nsHttpChannel and InterceptedChannel.
+    // Even thought InterceptedChannel itself doesn't require these information,
+    // it may still be necessary for the following redirections.
+    // E.g. nsHttpChannel -> InterceptedChannel -> nsHttpChannel
+    RefPtr<HttpBaseChannel> realChannel;
     CallQueryInterface(newChannel, realChannel.StartAssignment());
     if (realChannel) {
       realChannel->SetContentBlockingAllowListPrincipal(
