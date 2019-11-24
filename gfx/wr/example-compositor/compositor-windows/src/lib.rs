@@ -50,7 +50,7 @@ extern {
         dirty_y0: i32,
         dirty_width: i32,
         dirty_height: i32,
-    );
+    ) -> u32;
     fn com_dc_unbind_surface(window: *mut Window);
 
     fn com_dc_begin_transaction(window: *mut Window);
@@ -130,12 +130,12 @@ pub fn bind_surface(
     dirty_y0: i32,
     dirty_width: i32,
     dirty_height: i32,
-) -> (i32, i32) {
+) -> (u32, i32, i32) {
     unsafe {
         let mut x_offset = 0;
         let mut y_offset = 0;
 
-        com_dc_bind_surface(
+        let fbo_id = com_dc_bind_surface(
             window,
             id,
             &mut x_offset,
@@ -146,7 +146,7 @@ pub fn bind_surface(
             dirty_height,
         );
 
-        (x_offset, y_offset)
+        (fbo_id, x_offset, y_offset)
     }
 }
 
