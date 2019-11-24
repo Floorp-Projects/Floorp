@@ -491,7 +491,9 @@ void TRRService::CheckPlatformDNSStatus(nsINetworkLinkService* aLinkService) {
       (!StaticPrefs::network_trr_enable_when_vpn_detected() &&
        (platformIndications & nsINetworkLinkService::VPN_DETECTED)) ||
       (!StaticPrefs::network_trr_enable_when_proxy_detected() &&
-       (platformIndications & nsINetworkLinkService::PROXY_DETECTED));
+       (platformIndications & nsINetworkLinkService::PROXY_DETECTED)) ||
+      (!StaticPrefs::network_trr_enable_when_nrpt_detected() &&
+       (platformIndications & nsINetworkLinkService::NRPT_DETECTED));
 }
 
 void TRRService::MaybeConfirm() {

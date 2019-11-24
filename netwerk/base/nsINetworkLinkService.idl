@@ -60,6 +60,7 @@ interface nsINetworkLinkService : nsISupports
   const unsigned long NONE_DETECTED = 0;
   const unsigned long VPN_DETECTED = 1 << 0;
   const unsigned long PROXY_DETECTED = 1 << 1;
+  const unsigned long NRPT_DETECTED = 1 << 2;
 
   /**
    * A bitfield that encodes the platform attributes we detected which
