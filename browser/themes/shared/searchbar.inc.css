@@ -49,17 +49,8 @@
   padding-inline-start: 6px;
 }
 
-.search-panel-tree[collapsed=true] + .search-one-offs > .search-panel-header,
-.search-panel-tree[collapsed=true] + .search-one-offs > .search-panel-one-offs,
-.search-panel-tree[collapsed=true] + .search-one-offs > vbox > .addengine-item:first-of-type {
+.search-panel-tree[collapsed=true] + .search-one-offs {
   border-top: none;
-}
-
-.search-panel-tree[collapsed=true] + .search-one-offs > .searchbar-engine-one-off-item,
-.search-panel-tree[collapsed=true] + .search-one-offs > .search-panel-current-input,
-.search-panel-tree[collapsed=true] + .search-one-offs > .search-panel-one-offs,
-.search-panel-tree[collapsed=true] + .search-one-offs > vbox > .addengine-item:last-of-type {
-  border-bottom: 1px solid var(--panel-separator-color);
 }
 
 .search-panel-one-offs,
@@ -74,6 +65,8 @@
   /* Bug 1108841: prevent font-size from affecting the layout */
   line-height: 0;
   flex-wrap: wrap;
+  /* Show at least 3 buttons */
+  min-width: calc(48px * 3);
 }
 
 .searchbar-engine-one-off-item {
