@@ -1501,7 +1501,7 @@ class Element : public FragmentOrElement {
   /**
    * Locate a TextEditor rooted at this content node, if there is one.
    */
-  mozilla::TextEditor* GetTextEditorInternal();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::TextEditor* GetTextEditorInternal();
 
   /**
    * Gets value of boolean attribute. Only works for attributes in null

@@ -53,7 +53,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsIFrame.h"
 #include "nsFrameLoaderOwner.h"
-#include "nsITextControlElement.h"
 #include "nsIWidget.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
