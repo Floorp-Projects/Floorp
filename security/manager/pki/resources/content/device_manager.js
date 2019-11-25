@@ -327,7 +327,7 @@ function doLogout() {
 // load a new device
 function doLoad() {
   window.docShell.rootTreeItem.domWindow.open(
-    "load_device.xul",
+    "load_device.xhtml",
     "loaddevice",
     "chrome,centerscreen,modal"
   );
@@ -366,7 +366,7 @@ function changePassword() {
   objects.appendElement(selected_slot.getToken());
   params.objects = objects;
   window.docShell.rootTreeItem.domWindow.openDialog(
-    "changepassword.xul",
+    "changepassword.xhtml",
     "",
     "chrome,centerscreen,modal",
     params
