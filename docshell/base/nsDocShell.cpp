@@ -6333,12 +6333,7 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     RefreshURIFromQueue();
 
   // Test whether this is the top frame or a subframe
-  bool isTopFrame = true;
-  nsCOMPtr<nsIDocShellTreeItem> targetParentTreeItem;
-  rv = GetInProcessSameTypeParent(getter_AddRefs(targetParentTreeItem));
-  if (NS_SUCCEEDED(rv) && targetParentTreeItem) {
-    isTopFrame = false;
-  }
+  bool isTopFrame = !mBrowsingContext->GetParent();
 
   //
   // If the page load failed, then deal with the error condition...
