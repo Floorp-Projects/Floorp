@@ -60,13 +60,6 @@ CONFIG_PER_BOUNCER_PRODUCT = {
             'default': '{product}-{version}.complete.mar',
         },
     },
-    'complete-mar-bz2': {
-        'name_postfix': '-Complete-bz2',
-        'path_template': RELEASES_PATH_TEMPLATE,
-        'file_names': {
-            'default': '{product}-{version}.bz2.complete.mar',
-        },
-    },
     'installer': {
         'path_template': RELEASES_PATH_TEMPLATE,
         'file_names': {
