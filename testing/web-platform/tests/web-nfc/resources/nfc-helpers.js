@@ -103,12 +103,14 @@ function createTextRecord(data, encoding, lang) {
   return createRecord('text', 'text/plain', data, encoding, lang);
 }
 
-function createJsonRecord(json) {
-  return createRecord('json', 'application/json', json);
+function createMimeRecordFromJson(json) {
+  return createRecord(
+      'mime', 'application/json',
+      new TextEncoder('utf-8').encode(JSON.stringify(json)));
 }
 
-function createOpaqueRecord(buffer) {
-  return createRecord('opaque', 'application/octet-stream', buffer);
+function createMimeRecord(buffer) {
+  return createRecord('mime', 'application/octet-stream', buffer);
 }
 
 function createUnknownRecord(buffer) {
@@ -136,7 +138,7 @@ function assertNDEFMessagesEqual(providedMessage, receivedMessage) {
   let provided = providedMessage;
   if (providedMessage instanceof ArrayBuffer ||
       ArrayBuffer.isView(providedMessage))
-    provided = createMessage([createOpaqueRecord(providedMessage)]);
+    provided = createMessage([createMimeRecord(providedMessage)]);
   else if (typeof providedMessage === 'string')
     provided = createMessage([createTextRecord(providedMessage)]);
 
