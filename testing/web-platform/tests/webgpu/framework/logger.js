@@ -9,6 +9,34 @@ import { makeQueryString } from './url_query.js';
 import { extractPublicParams } from './url_query.js';
 import { getStackTrace, now } from './util/index.js';
 import { version } from './version.js';
+
+class LogMessageWithStack extends Error {
+  constructor(name, ex) {
+    super(ex.message);
+    this.name = name;
+    this.stack = ex.stack;
+  }
+
+  toJSON() {
+    let m = this.name;
+
+    if (this.message) {
+      m += ': ' + this.message;
+    }
+
+    m += '\n' + getStackTrace(this);
+    return m;
+  }
+
+}
+
+class LogMessageWithoutStack extends LogMessageWithStack {
+  toJSON() {
+    return this.message;
+  }
+
+}
+
 export class Logger {
   constructor() {
     _defineProperty(this, "results", []);
@@ -94,46 +122,27 @@ export class TestCaseRecorder {
     this.debugging = false;
   }
 
-  debug(msg) {
+  debug(ex) {
     if (!this.debugging) {
       return;
     }
 
-    this.log('DEBUG: ' + msg);
+    this.logs.push(new LogMessageWithoutStack('DEBUG', ex));
   }
 
-  log(msg) {
-    this.logs.push(msg);
-  }
-
-  warn(msg) {
+  warn(ex) {
     this.setState(PassState.warn);
-    let m = 'WARN';
-
-    if (msg) {
-      m += ': ' + msg;
-    }
-
-    m += ' ' + getStackTrace(new Error());
-    this.log(m);
+    this.logs.push(new LogMessageWithStack('WARN', ex));
   }
 
-  fail(msg) {
+  fail(ex) {
     this.setState(PassState.fail);
-    let m = 'FAIL';
-
-    if (msg) {
-      m += ': ' + msg;
-    }
-
-    m += '\n' + getStackTrace(new Error());
-    this.log(m);
+    this.logs.push(new LogMessageWithStack('FAIL', ex));
   }
 
   skipped(ex) {
     this.setState(PassState.skip);
-    const m = 'SKIPPED: ' + getStackTrace(ex);
-    this.log(m);
+    this.logs.push(new LogMessageWithStack('SKIP', ex));
   }
 
   threw(ex) {
@@ -143,7 +152,7 @@ export class TestCaseRecorder {
     }
 
     this.setState(PassState.fail);
-    this.log('EXCEPTION: ' + ex.name + ':\n' + ex.message + '\n' + getStackTrace(ex));
+    this.logs.push(new LogMessageWithStack('EXCEPTION', ex));
   }
 
   setState(state) {
