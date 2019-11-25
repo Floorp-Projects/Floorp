@@ -401,6 +401,14 @@ bool ReferrerInfo::ShouldSetNullOriginHeader(net::HttpBaseChannel* aChannel,
   MOZ_ASSERT(aChannel);
   MOZ_ASSERT(aOriginURI);
 
+  if (StaticPrefs::network_http_referer_hideOnionSource()) {
+    nsAutoCString host;
+    if (NS_SUCCEEDED(aOriginURI->GetAsciiHost(host)) &&
+        StringEndsWith(host, NS_LITERAL_CSTRING(".onion"))) {
+      return ReferrerInfo::IsCrossOriginRequest(aChannel);
+    }
+  }
+
   // When we're dealing with CORS (mode is "cors"), we shouldn't take the
   // Referrer-Policy into account
   uint32_t corsMode = CORS_NONE;
