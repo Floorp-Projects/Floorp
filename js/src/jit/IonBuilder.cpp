@@ -2889,81 +2889,6 @@ AbortReasonOr<Ok> IonBuilder::replaceTypeSet(MDefinition* subject,
   return Ok();
 }
 
-bool IonBuilder::detectAndOrStructure(MPhi* ins, bool* branchIsAnd) {
-  // Look for a triangle pattern:
-  //
-  //       initialBlock
-  //         /     |
-  // branchBlock   |
-  //         \     |
-  //        testBlock
-  //
-  // Where ins is a phi from testBlock which combines two values
-  // pushed onto the stack by initialBlock and branchBlock.
-
-  if (ins->numOperands() != 2) {
-    return false;
-  }
-
-  MBasicBlock* testBlock = ins->block();
-  MOZ_ASSERT(testBlock->numPredecessors() == 2);
-
-  MBasicBlock* initialBlock;
-  MBasicBlock* branchBlock;
-  if (testBlock->getPredecessor(0)->lastIns()->isTest()) {
-    initialBlock = testBlock->getPredecessor(0);
-    branchBlock = testBlock->getPredecessor(1);
-  } else if (testBlock->getPredecessor(1)->lastIns()->isTest()) {
-    initialBlock = testBlock->getPredecessor(1);
-    branchBlock = testBlock->getPredecessor(0);
-  } else {
-    return false;
-  }
-
-  if (branchBlock->numSuccessors() != 1) {
-    return false;
-  }
-
-  if (branchBlock->numPredecessors() != 1 ||
-      branchBlock->getPredecessor(0) != initialBlock) {
-    return false;
-  }
-
-  if (initialBlock->numSuccessors() != 2) {
-    return false;
-  }
-
-  MDefinition* branchResult =
-      ins->getOperand(testBlock->indexForPredecessor(branchBlock));
-  MDefinition* initialResult =
-      ins->getOperand(testBlock->indexForPredecessor(initialBlock));
-
-  if (branchBlock->stackDepth() != initialBlock->stackDepth()) {
-    return false;
-  }
-  if (branchBlock->stackDepth() != testBlock->stackDepth() + 1) {
-    return false;
-  }
-  if (branchResult != branchBlock->peek(-1) ||
-      initialResult != initialBlock->peek(-1)) {
-    return false;
-  }
-
-  MTest* initialTest = initialBlock->lastIns()->toTest();
-  bool branchIsTrue = branchBlock == initialTest->ifTrue();
-  if (initialTest->input() == ins->getOperand(0)) {
-    *branchIsAnd =
-        branchIsTrue != (testBlock->getPredecessor(0) == branchBlock);
-  } else if (initialTest->input() == ins->getOperand(1)) {
-    *branchIsAnd =
-        branchIsTrue != (testBlock->getPredecessor(1) == branchBlock);
-  } else {
-    return false;
-  }
-
-  return true;
-}
-
 AbortReasonOr<Ok> IonBuilder::improveTypesAtCompare(MCompare* ins,
                                                     bool trueBranch,
                                                     MTest* test) {
@@ -3209,43 +3134,6 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtTest(MDefinition* ins,
       }
 
       return replaceTypeSet(subject, type, test);
-    }
-    case MDefinition::Opcode::Phi: {
-      bool branchIsAnd = true;
-      if (!detectAndOrStructure(ins->toPhi(), &branchIsAnd)) {
-        // Just fall through to the default behavior.
-        break;
-      }
-
-      // Now we have detected the triangular structure and determined if it
-      // was an AND or an OR.
-      if (branchIsAnd) {
-        if (trueBranch) {
-          MOZ_TRY(improveTypesAtTest(ins->toPhi()->getOperand(0), true, test));
-          MOZ_TRY(improveTypesAtTest(ins->toPhi()->getOperand(1), true, test));
-        }
-      } else {
-        /*
-         * if (a || b) {
-         *    ...
-         * } else {
-         *    ...
-         * }
-         *
-         * If we have a statements like the one described above,
-         * And we are in the else branch of it. It amounts to:
-         * if (!(a || b)) and being in the true branch.
-         *
-         * Simplifying, we have (!a && !b)
-         * In this case we can use the same logic we use for branchIsAnd
-         *
-         */
-        if (!trueBranch) {
-          MOZ_TRY(improveTypesAtTest(ins->toPhi()->getOperand(0), false, test));
-          MOZ_TRY(improveTypesAtTest(ins->toPhi()->getOperand(1), false, test));
-        }
-      }
-      return Ok();
     }
 
     case MDefinition::Opcode::Compare:
