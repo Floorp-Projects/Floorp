@@ -16,3 +16,5 @@ plugins:
   - jekyll-seo-tag
 
 search_enabled: true
+
+source: ./geckoview
