@@ -1,5 +1,7 @@
 <!doctype html>
-<title>Navigating to a text fragment anchor</title>
+<title>Navigating to a text fragment directive</title>
+<meta charset=utf-8>
+<link rel="help" href="https://wicg.github.io/ScrollToTextFragment/">
 <meta name="timeout" content="long">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
@@ -31,15 +33,79 @@ for (const test_case of test_cases) {
   promise_test(t => new Promise(resolve => {
     let channel = new BroadcastChannel('scroll-to-text-fragment');
     channel.addEventListener("message", e => {
-      resolve(e.data.scrollPosition);
+      resolve(e.data);
     }, {once: true});
 
-    test_driver.bless('Open a URL with a text fragment anchor', () => {
+    test_driver.bless('Open a URL with a text fragment directive', () => {
       window.open('scroll-to-text-fragment-target.html' + test_case.fragment, '_blank', 'noopener');
     });
-  }).then(scrollPosition => {
-    assert_equals(scrollPosition, test_case.expect_position,
+  }).then(data => {
+    assert_equals(data.href.indexOf(':~:'), -1, 'Expected fragment directive to be stripped from the URL.');
+    assert_equals(data.scrollPosition, test_case.expect_position,
                   'Expected ' + test_case.fragment + ' to scroll to ' + test_case.expect_position);
-  }), 'Test navigation with text fragment anchor ' + test_case.fragment);
+  }), 'Test navigation with text fragment directive ' + test_case.fragment);
 }
+
+promise_test(t => new Promise(resolve => {
+  let channel = new BroadcastChannel('scroll-to-text-fragment');
+  channel.addEventListener("message", e => {
+    assert_equals(e.data.href.indexOf(':~:'), -1, 'Expected fragment directive to be stripped from the URL.');
+
+    // The first navigation has no user activation.
+    assert_equals(e.data.scrollPosition, 'top', 'Expected window.open() with no user activation to not activate text fragment directive.');
+
+    // Now ensure that a navigation with a user activation does activate the text fragment directive.
+    test_driver.bless('Open a URL with a text fragment directive', () => {
+      window.open('scroll-to-text-fragment-target.html#:~:text=test', '_blank', 'noopener');
+    });
+    channel.addEventListener("message", e => {
+      resolve(e.data.scrollPosition);
+    }, {once: true});
+  }, {once: true});
+
+  window.open('scroll-to-text-fragment-target.html#:~:text=test', '_blank', 'noopener');
+}).then(scrollPosition => {
+  assert_equals(scrollPosition, 'text', 'Expected window.open() with a user activation to scroll to text.');
+}), 'Test that a text fragment directive is not activated without a user activation');
+
+promise_test(t => new Promise(resolve => {
+  let channel = new BroadcastChannel('scroll-to-text-fragment');
+  channel.addEventListener("message", e => {
+    assert_equals(e.data.href.indexOf(':~:'), -1, 'Expected fragment directive to be stripped from the URL.');
+
+    // The first navigation has an opener.
+    assert_equals(e.data.scrollPosition, 'top', 'Expected window.open() with opener to not activate text fragment directive.');
+
+    // Now ensure that a navigation with noopener does activate the text fragment directive.
+    test_driver.bless('Open a URL with a text fragment directive', () => {
+      window.open('scroll-to-text-fragment-target.html#:~:text=test', '_blank', 'noopener');
+    });
+    channel.addEventListener("message", e => {
+      resolve(e.data.scrollPosition);
+    }, {once: true});
+  }, {once: true});
+
+  test_driver.bless('Open a URL with a text fragment directive', () => {
+    window.open('scroll-to-text-fragment-target.html#:~:text=test', '_blank');
+  });
+}).then(scrollPosition => {
+  assert_equals(scrollPosition, 'text', 'Expected window.open() with noopener to scroll to text.');
+}), 'Test that a text fragment directive is not activated when there is a window opener.');
+
+promise_test(t => new Promise(resolve => {
+  let channel = new BroadcastChannel('scroll-to-text-fragment');
+  channel.addEventListener("message", e => {
+    resolve(e.data);
+  }, {once: true});
+
+  let frame = document.createElement('iframe');
+  document.body.appendChild(frame);
+
+  test_driver.bless('Navigate the iframe with a text fragment directive', () => {
+    frame.src = 'scroll-to-text-fragment-target.html#:~:text=test';
+  });
+}).then(data => {
+  assert_equals(data.href.indexOf(':~:'), -1, 'Expected fragment directive to be stripped from the URL.');
+  assert_equals(data.scrollPosition, 'top', 'Expected iframe navigation to not activate text fragment directive.');
+}), 'Test that a text fragment directive is not activated within an iframe.');
 </script>
