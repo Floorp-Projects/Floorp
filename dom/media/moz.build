@@ -133,6 +133,7 @@ EXPORTS += [
     'ForwardedInputTrack.h',
     'FrameStatistics.h',
     'GVAutoplayPermissionRequest.h',
+    'GVAutoplayRequestStatusIPC.h',
     'GVAutoplayRequestUtils.h',
     'ImageToI420.h',
     'Intervals.h',

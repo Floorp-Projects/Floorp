@@ -46,4 +46,10 @@ MOZ_BC_FIELD(HistoryID, nsID)
 
 MOZ_BC_FIELD(InRDMPane, bool)
 
+// These field are used to store the states of autoplay media request on
+// GeckoView only, and it would only be modified on the top level browsing
+// context.
+MOZ_BC_FIELD(GVAudibleAutoplayRequestStatus, GVAutoplayRequestStatus)
+MOZ_BC_FIELD(GVInaudibleAutoplayRequestStatus, GVAutoplayRequestStatus)
+
 #undef MOZ_BC_FIELD
