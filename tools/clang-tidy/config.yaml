@@ -82,6 +82,8 @@ clang_checkers:
     reliability: medium
   - name: clang-analyzer-core.uninitialized.Branch
     reliability: medium
+  - name: clang-analyzer-cplusplus.Move
+    reliability: high
   - name: clang-analyzer-cplusplus.NewDelete
     reliability: medium
   - name: clang-analyzer-cplusplus.NewDeleteLeaks
