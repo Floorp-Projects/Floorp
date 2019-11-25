@@ -46,17 +46,6 @@
 ///   other brush types don't use it.
 ///
 
-
-// These constants must match the BrushShaderKind enum in gpu_types.rs.
-#define BRUSH_KIND_SOLID            0x1000000
-#define BRUSH_KIND_IMAGE            0x2000000
-#define BRUSH_KIND_TEXT             0x3000000
-#define BRUSH_KIND_LINEAR_GRADIENT  0x4000000
-#define BRUSH_KIND_RADIAL_GRADIENT  0x5000000
-#define BRUSH_KIND_BLEND            0x6000000
-#define BRUSH_KIND_MIX_BLEND        0x7000000
-#define BRUSH_KIND_YV               0x8000000
-
 #ifdef WR_FEATURE_MULTI_BRUSH
 flat varying int v_brush_kind;
 #endif
@@ -102,6 +91,19 @@ FWD_DECLARE_VS_FUNCTION(linear_gradient_brush_vs)
 FWD_DECLARE_VS_FUNCTION(radial_gradient_brush_vs)
 FWD_DECLARE_VS_FUNCTION(yuv_brush_vs)
 
+void multi_brush_vs(
+    VertexInfo vi,
+    int prim_address,
+    RectWithSize local_rect,
+    RectWithSize segment_rect,
+    ivec4 prim_user_data,
+    int specific_resource_address,
+    mat4 transform,
+    PictureTask pic_task,
+    int brush_flags,
+    vec4 texel_rect,
+    int brush_kind
+);
 
 #define VECS_PER_SEGMENT                    2
 
@@ -199,56 +201,34 @@ void main(void) {
 #endif
 
     // Run the specific brush VS code to write interpolators.
-
-#define BRUSH_VS_PARAMS vi, ph.specific_prim_address, ph.local_rect,    \
-    segment_rect, ph.user_data, instance.resource_address, transform.m, \
-    pic_task, brush_flags, segment_data
-
-    // If this shader supports multiple brushes, select the right one
-    // for this instance instance.
 #ifdef WR_FEATURE_MULTI_BRUSH
     v_brush_kind = instance.brush_kind;
-
-    switch (instance.brush_kind) {
-        #ifdef WR_FEATURE_IMAGE_BRUSH
-        case BRUSH_KIND_IMAGE:
-            image_brush_vs(BRUSH_VS_PARAMS);
-            break;
-        #endif
-
-        #ifdef WR_FEATURE_SOLID_BRUSH
-        case BRUSH_KIND_SOLID:
-            solid_brush_vs(BRUSH_VS_PARAMS);
-            break;
-        #endif
-
-        #ifdef WR_FEATURE_BLEND_BRUSH
-        case BRUSH_KIND_BLEND:
-            blend_brush_vs(BRUSH_VS_PARAMS);
-            break;
-        #endif
-
-        #ifdef WR_FEATURE_MIX_BLEND_BRUSH
-        case BRUSH_KIND_MIX_BLEND:
-            mix_blend_brush_vs(BRUSH_VS_PARAMS);
-            break;
-        #endif
-
-        #ifdef WR_FEATURE_LINEAR_GRADIENT_BRUSH
-        case BRUSH_KIND_LINEAR_GRADIENT:
-            linear_gradient_brush_vs(BRUSH_VS_PARAMS);
-            break;
-        #endif
-
-        #ifdef WR_FEATURE_RADIAL_GRADIENT_BRUSH
-        case BRUSH_KIND_RADIAL_GRADIENT:
-            radial_gradient_brush_vs(BRUSH_VS_PARAMS);
-            break;
-        #endif
-    }
-
+    multi_brush_vs(
+        vi,
+        ph.specific_prim_address,
+        ph.local_rect,
+        segment_rect,
+        ph.user_data,
+        instance.resource_address,
+        transform.m,
+        pic_task,
+        brush_flags,
+        segment_data,
+        instance.brush_kind
+    );
 #else
-    WR_BRUSH_VS_FUNCTION(BRUSH_VS_PARAMS);
+    WR_BRUSH_VS_FUNCTION(
+        vi,
+        ph.specific_prim_address,
+        ph.local_rect,
+        segment_rect,
+        ph.user_data,
+        instance.resource_address,
+        transform.m,
+        pic_task,
+        brush_flags,
+        segment_data
+    );
 #endif
 
 }
@@ -272,55 +252,18 @@ Fragment mix_blend_brush_fs();
 Fragment linear_gradient_brush_fs();
 Fragment radial_gradient_brush_fs();
 Fragment yuv_brush_fs();
+Fragment multi_brush_fs(int brush_kind);
 
 void main(void) {
 #ifdef WR_FEATURE_DEBUG_OVERDRAW
     oFragColor = WR_DEBUG_OVERDRAW_COLOR;
 #else
 
-    Fragment frag;
     // Run the specific brush FS code to output the color.
 #ifdef WR_FEATURE_MULTI_BRUSH
-    switch (v_brush_kind) {
-#ifdef WR_FEATURE_IMAGE_BRUSH
-        case BRUSH_KIND_IMAGE: {
-            frag = image_brush_fs();
-            break;
-        }
-#endif
-#ifdef WR_FEATURE_SOLID_BRUSH
-        case BRUSH_KIND_SOLID: {
-            frag = solid_brush_fs();
-            break;
-        }
-#endif
-#ifdef WR_FEATURE_BLEND_BRUSH
-        case BRUSH_KIND_BLEND: {
-            frag = blend_brush_fs();
-            break;
-        }
-#endif
-#ifdef WR_FEATURE_MIX_BLEND_BRUSH
-        case BRUSH_KIND_MIX_BLEND: {
-            frag = mix_blend_brush_fs();
-            break;
-        }
-#endif
-#ifdef WR_FEATURE_LINEAR_GRADIENT_BRUSH
-        case BRUSH_KIND_LINEAR_GRADIENT: {
-            frag = linear_gradient_brush_fs();
-            break;
-        }
-#endif
-#ifdef WR_FEATURE_RADIAL_GRADIENT_BRUSH
-        case BRUSH_KIND_RADIAL_GRADIENT: {
-            frag = radial_gradient_brush_fs();
-            break;
-        }
-#endif
-    }
+    Fragment frag = multi_brush_fs(v_brush_kind);
 #else
-    frag = WR_BRUSH_FS_FUNCTION();
+    Fragment frag = WR_BRUSH_FS_FUNCTION();
 #endif
 
 

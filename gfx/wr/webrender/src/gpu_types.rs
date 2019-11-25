@@ -68,7 +68,7 @@ impl ZBufferIdGenerator {
 /// Not all brush kinds need to be present in this enum, only those we want to support in the generic
 /// brush shader.
 /// Do not use the 24 lowest bits. This will be packed with other information in the vertex attributes.
-/// The constants must match the corresponding defines in brush.glsl.
+/// The constants must match the corresponding defines in brush_multi.glsl.
 #[repr(i32)]
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum BrushShaderKind {
