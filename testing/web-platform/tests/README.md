@@ -227,11 +227,9 @@ Contributing
 
 Save the Web, Write Some Tests!
 
-Absolutely everyone is welcome (and even encouraged) to contribute to
-test development, so long as you fulfill the contribution requirements
-detailed in the [Contributing Guidelines][contributing]. No test is
-too small or too simple, especially if it corresponds to something for
-which you've noted an interoperability bug in a browser.
+Absolutely everyone is welcome to contribute to test development. No
+test is too small or too simple, especially if it corresponds to
+something for which you've noted an interoperability bug in a browser.
 
 The way to contribute is just as usual:
 
@@ -242,7 +240,7 @@ The way to contribute is just as usual:
 * Make your changes.
 * Run `./wpt lint` as described above.
 * Commit locally and push that to your repo.
-* Send in a pull request based on the above.
+* Create a pull request based on the above.
 
 Issues with web-platform-tests
 ------------------------------
