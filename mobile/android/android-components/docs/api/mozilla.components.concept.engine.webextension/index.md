@@ -6,6 +6,7 @@
 
 | Name | Summary |
 |---|---|
+| [ActionHandler](-action-handler/index.md) | `interface ActionHandler`<br>A handler for web extension (browser and page) actions. |
 | [BrowserAction](-browser-action/index.md) | `data class BrowserAction`<br>Value type that represents the state of a browser action within a [WebExtension](-web-extension/index.md). |
 | [MessageHandler](-message-handler/index.md) | `interface MessageHandler`<br>A handler for all messaging related events, usable for both content and background scripts. |
 | [Port](-port/index.md) | `abstract class Port`<br>Represents a port for exchanging messages: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/Port |

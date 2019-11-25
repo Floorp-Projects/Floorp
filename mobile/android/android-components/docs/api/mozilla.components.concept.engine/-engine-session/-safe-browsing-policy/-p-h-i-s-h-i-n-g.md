@@ -2,7 +2,7 @@
 
 # PHISHING
 
-`PHISHING` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L140)
+`PHISHING` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L133)
 
 Blocks phishing sites.
 

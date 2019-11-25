@@ -2,7 +2,7 @@
 
 # startDiscovering
 
-`fun startDiscovering(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L255)
+`fun startDiscovering(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L285)
 
 Starts trying to discover nearby advertising devices. After calling this, the state will
 be updated to [ConnectionState.Discovering](-connection-state/-discovering.md) or [ConnectionState.Failure](-connection-state/-failure/index.md). If all goes well,

@@ -2,7 +2,7 @@
 
 # NONE
 
-`NONE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L120)
+`NONE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L113)
 
 ### Inherited Properties
 
