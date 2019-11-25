@@ -15,7 +15,6 @@
 #include "nsGkAtoms.h"
 #include "nsIContentInlines.h"
 #include "nsITableCellLayout.h"  // for MAX_COLSPAN / MAX_ROWSPAN
-#include "nsLayoutStylesheetCache.h"
 #include "nsCSSValue.h"
 #include "nsMappedAttributes.h"
 #include "nsStyleConsts.h"

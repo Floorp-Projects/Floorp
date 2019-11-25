@@ -183,7 +183,7 @@
 #include "mozilla/gfx/2D.h"
 #include "nsSubDocumentFrame.h"
 #include "nsQueryObject.h"
-#include "nsLayoutStylesheetCache.h"
+#include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
@@ -1452,7 +1452,7 @@ void PresShell::UpdatePreferenceStyles() {
   }
 
   PreferenceSheet::EnsureInitialized();
-  auto cache = nsLayoutStylesheetCache::Singleton();
+  auto* cache = GlobalStyleSheetCache::Singleton();
 
   RefPtr<StyleSheet> newPrefSheet =
       PreferenceSheet::ShouldUseChromePrefs(*mDocument)

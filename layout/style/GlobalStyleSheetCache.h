@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsLayoutStylesheetCache_h__
-#define nsLayoutStylesheetCache_h__
+#ifndef mozilla_GlobalStyleSheetCache_h__
+#define mozilla_GlobalStyleSheetCache_h__
 
 #include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
@@ -31,16 +31,15 @@ namespace css {
 enum FailureAction { eCrash = 0, eLogToConsole };
 
 }  // namespace css
-}  // namespace mozilla
 
-class nsLayoutStylesheetCache final : public nsIObserver,
-                                      public nsIMemoryReporter {
+class GlobalStyleSheetCache final : public nsIObserver,
+                                    public nsIMemoryReporter {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIMEMORYREPORTER
 
-  static nsLayoutStylesheetCache* Singleton();
+  static GlobalStyleSheetCache* Singleton();
 
 #define STYLE_SHEET(identifier_, url_, shared_) \
   mozilla::NotNull<mozilla::StyleSheet*> identifier_##Sheet();
@@ -62,7 +61,7 @@ class nsLayoutStylesheetCache final : public nsIObserver,
 
   // Set the shared memory segment to load the shared UA sheets from.
   // Called early on in a content process' life from
-  // ContentChild::InitSharedUASheets, before the nsLayoutStylesheetCache
+  // ContentChild::InitSharedUASheets, before the GlobalStyleSheetCache
   // singleton has been created.
   static void SetSharedMemory(const base::SharedMemoryHandle& aHandle,
                               uintptr_t aAddress);
@@ -95,8 +94,8 @@ class nsLayoutStylesheetCache final : public nsIObserver,
     uint8_t mBuffer[1];
   };
 
-  nsLayoutStylesheetCache();
-  ~nsLayoutStylesheetCache();
+  GlobalStyleSheetCache();
+  ~GlobalStyleSheetCache();
 
   void InitFromProfile();
   void InitSharedSheetsInParent();
@@ -111,12 +110,12 @@ class nsLayoutStylesheetCache final : public nsIObserver,
       mozilla::css::FailureAction aFailureAction);
   void LoadSheetFromSharedMemory(const char* aURL,
                                  RefPtr<mozilla::StyleSheet>* aSheet,
-                                 mozilla::css::SheetParsingMode,
-                                 Header*, mozilla::UserAgentStyleSheetID);
+                                 mozilla::css::SheetParsingMode, Header*,
+                                 mozilla::UserAgentStyleSheetID);
   void BuildPreferenceSheet(RefPtr<mozilla::StyleSheet>* aSheet,
                             const mozilla::PreferenceSheet::Prefs&);
 
-  static mozilla::StaticRefPtr<nsLayoutStylesheetCache> gStyleCache;
+  static mozilla::StaticRefPtr<GlobalStyleSheetCache> gStyleCache;
   static mozilla::StaticRefPtr<mozilla::css::Loader> gCSSLoader;
   static mozilla::StaticRefPtr<nsIURI> gUserContentSheetURL;
 
@@ -137,5 +136,7 @@ class nsLayoutStylesheetCache final : public nsIObserver,
   // reporting in the parent process.
   static size_t sUsedSharedMemory;
 };
+
+}  // namespace mozilla
 
 #endif
