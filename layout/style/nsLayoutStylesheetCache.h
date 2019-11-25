@@ -36,8 +36,6 @@ enum FailureAction { eCrash = 0, eLogToConsole };
 class nsLayoutStylesheetCache final : public nsIObserver,
                                       public nsIMemoryReporter {
  public:
-  using Shm = nsLayoutStylesheetCacheShm;
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIMEMORYREPORTER
@@ -102,7 +100,6 @@ class nsLayoutStylesheetCache final : public nsIObserver,
 
   void InitFromProfile();
   void InitSharedSheetsInParent();
-  void InitSharedSheetsInChild(already_AddRefed<Shm> aSharedMemory);
   void InitMemoryReporter();
   RefPtr<mozilla::StyleSheet> LoadSheetURL(
       const char* aURL, mozilla::css::SheetParsingMode aParsingMode,
