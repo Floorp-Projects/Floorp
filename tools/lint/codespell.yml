@@ -5,6 +5,9 @@ codespell:
         - browser/base/content/docs/
         - browser/branding/
         - browser/components/newtab/docs/
+        - browser/components/newtab/content-src/asrouter/docs/
+        - browser/components/touchbar/docs/
+        - browser/components/urlbar/docs/
         - browser/extensions/formautofill/locales/en-US/
         - browser/extensions/report-site-issue/locales/en-US/
         - browser/installer/windows/docs/
@@ -14,6 +17,7 @@ codespell:
         - devtools/docs/
         - devtools/shared/locales/en-US/
         - devtools/startup/locales/en-US/
+        - dom/docs/
         - dom/locales/en-US/
         - gfx/docs/
         - intl/docs/
@@ -29,17 +33,22 @@ codespell:
         - python/mach/docs/
         - python/mozlint/
         - python/safety/
+        - remote/doc/
         - security/manager/locales/en-US/
         - services/sync/locales/en-US/
         - taskcluster/docs/
+        - testing/geckodriver/doc/
+        - testing/marionette/doc/
         - testing/mozbase/docs/
+        - testing/mozharness/external_tools/virtualenv/docs/
         - toolkit/components/extensions/docs/
         - toolkit/components/normandy/docs/
+        - toolkit/components/search/docs/
         - toolkit/components/telemetry/docs/
         - toolkit/crashreporter/docs/
         - toolkit/docs/
         - toolkit/locales/en-US/
-        - toolkit/components/search/docs/
+        - toolkit/modules/docs/
         - tools/docs/
         - tools/lint/
         - tools/tryselect/
