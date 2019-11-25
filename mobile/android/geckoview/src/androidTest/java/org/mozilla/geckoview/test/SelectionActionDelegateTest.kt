@@ -77,7 +77,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
                 testThat(selectedContent, {}, hasShowActionRequest(
                         FLAG_IS_EDITABLE, arrayOf(ACTION_COLLAPSE_TO_START, ACTION_COLLAPSE_TO_END,
                                                   ACTION_COPY, ACTION_CUT, ACTION_DELETE,
-                                                  ACTION_HIDE, ACTION_PASTE, ACTION_SELECT_ALL)))
+                                                  ACTION_HIDE, ACTION_PASTE)))
             }
         } else {
             testThat(selectedContent, {}, hasShowActionRequest(
