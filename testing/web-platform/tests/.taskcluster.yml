@@ -75,9 +75,9 @@ tasks:
                   of ${chunk[2]}), run in the ${browser.channel} release of
                   ${browser.name}.
                 owner:
-                  $if: 'event.sender.login'
-                  then: ${event.sender.login}@users.noreply.github.com
-                  else: web-platform-tests@users.noreply.github.com
+                  $if: '"epochs/" in event.ref'
+                  then: web-platform-tests@users.noreply.github.com
+                  else: ${event.pusher.email}
                 source: ${event.repository.url}
               payload:
                 image:
