@@ -6,8 +6,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 import { getGPU } from '../../framework/gpu/implementation.js';
 import { Fixture } from '../../framework/index.js';
-let glslangInstance; // TODO: Should this gain some functionality currently only in UnitTest?
-
+let glslangInstance;
 export class GPUTest extends Fixture {
   constructor(...args) {
     super(...args);
@@ -15,6 +14,10 @@ export class GPUTest extends Fixture {
     _defineProperty(this, "device", undefined);
 
     _defineProperty(this, "queue", undefined);
+
+    _defineProperty(this, "initialized", false);
+
+    _defineProperty(this, "supportsSPIRV", true);
   }
 
   async init() {
@@ -23,31 +26,53 @@ export class GPUTest extends Fixture {
     const adapter = await gpu.requestAdapter();
     this.device = await adapter.requestDevice();
     this.queue = this.device.getQueue();
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+    if (isSafari) {
+      this.supportsSPIRV = false;
+    }
+
+    try {
+      await this.device.popErrorScope();
+      throw new Error('There was an error scope on the stack at the beginning of the test');
+    } catch (ex) {}
+
     this.device.pushErrorScope('out-of-memory');
     this.device.pushErrorScope('validation');
+    this.initialized = true;
   }
 
   async finalize() {
     super.finalize();
-    const gpuValidationError = await this.device.popErrorScope();
 
-    if (gpuValidationError !== null) {
-      if (!(gpuValidationError instanceof GPUValidationError)) throw new Error();
-      this.fail(`Unexpected validation error occurred: ${gpuValidationError.message}`);
-    }
+    if (this.initialized) {
+      const gpuValidationError = await this.device.popErrorScope();
 
-    const gpuOutOfMemoryError = await this.device.popErrorScope();
+      if (gpuValidationError !== null) {
+        if (!(gpuValidationError instanceof GPUValidationError)) throw new Error();
+        this.fail(`Unexpected validation error occurred: ${gpuValidationError.message}`);
+      }
 
-    if (gpuOutOfMemoryError !== null) {
-      if (!(gpuOutOfMemoryError instanceof GPUOutOfMemoryError)) throw new Error();
-      this.fail('Unexpected out-of-memory error occurred');
+      const gpuOutOfMemoryError = await this.device.popErrorScope();
+
+      if (gpuOutOfMemoryError !== null) {
+        if (!(gpuOutOfMemoryError instanceof GPUOutOfMemoryError)) throw new Error();
+        this.fail('Unexpected out-of-memory error occurred');
+      }
     }
   }
 
   async initGLSL() {
     if (!glslangInstance) {
       const glslangPath = '../../glslang.js';
-      const glslangModule = (await import(glslangPath)).default;
+      let glslangModule;
+
+      try {
+        glslangModule = (await import(glslangPath)).default;
+      } catch (ex) {
+        this.skip('glslang is not available');
+      }
+
       await new Promise(resolve => {
         glslangModule().then(glslang => {
           glslangInstance = glslang;
@@ -57,12 +82,20 @@ export class GPUTest extends Fixture {
     }
   }
 
-  makeShaderModule(stage, source) {
-    if (!glslangInstance) {
-      throw new Error('GLSL is not instantiated. Run `await t.initGLSL()` first');
+  createShaderModule(desc) {
+    if (!this.supportsSPIRV) {
+      this.skip('SPIR-V not available');
     }
 
-    const code = glslangInstance.compileGLSL(source, stage, false);
+    return this.device.createShaderModule(desc);
+  }
+
+  makeShaderModuleFromGLSL(stage, glsl) {
+    if (!glslangInstance) {
+      throw new Error('GLSL compiler is not instantiated. Run `await t.initGLSL()` first');
+    }
+
+    const code = glslangInstance.compileGLSL(glsl, stage, false);
     return this.device.createShaderModule({
       code
     });

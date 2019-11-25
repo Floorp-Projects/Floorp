@@ -4,9 +4,10 @@
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-// A Fixture is a class used to instantiate each test case at run time.
+export class SkipTestCase extends Error {} // A Fixture is a class used to instantiate each test case at run time.
 // A new instance of the Fixture is created for every single test case
 // (i.e. every time the test function is run).
+
 export class Fixture {
   constructor(rec, params) {
     _defineProperty(this, "params", void 0);
@@ -31,6 +32,10 @@ export class Fixture {
 
   log(msg) {
     this.rec.log(msg);
+  }
+
+  skip(msg) {
+    throw new SkipTestCase(msg);
   }
 
   async finalize() {
@@ -64,14 +69,14 @@ export class Fixture {
 
   expectErrorValue(expectedName, ex, m) {
     if (!(ex instanceof Error)) {
-      this.fail('THREW NON-ERROR');
+      this.fail('THREW non-error value, of type ' + typeof ex);
       return;
     }
 
     const actualName = ex.name;
 
     if (actualName !== expectedName) {
-      this.fail(`THREW ${actualName} INSTEAD OF ${expectedName}${m}`);
+      this.fail(`THREW ${actualName}, instead of ${expectedName}${m}`);
     } else {
       this.debug(`OK: threw ${actualName}${m}`);
     }
