@@ -11,24 +11,27 @@
 #include shared,prim_shared,brush
 
 #ifdef WR_FEATURE_ALPHA_PASS
-varying vec2 vLocalPos;
+#define V_LOCAL_POS         varying_vec4_0.xy
 #endif
 
 // Interpolated UV coordinates to sample.
-varying vec2 vUv;
-// X = layer index to sample, Y = flag to allow perspective interpolation of UV.
-flat varying vec2 vLayerAndPerspective;
-// Normalized bounds of the source image in the texture.
-flat varying vec4 vUvBounds;
-// Normalized bounds of the source image in the texture, adjusted to avoid
-// sampling artifacts.
-flat varying vec4 vUvSampleBounds;
+#define V_UV                varying_vec4_0.zw
 
 #ifdef WR_FEATURE_ALPHA_PASS
-flat varying vec4 vColor;
-flat varying vec2 vMaskSwizzle;
-flat varying vec2 vTileRepeat;
+#define V_COLOR             flat_varying_vec4_0
+#define V_MASK_SWIZZLE      flat_varying_vec4_1.xy
+#define V_TILE_REPEAT       flat_varying_vec4_1.zw
 #endif
+
+// Normalized bounds of the source image in the texture.
+#define V_UV_BOUNDS         flat_varying_vec4_2
+// Normalized bounds of the source image in the texture, adjusted to avoid
+// sampling artifacts.
+#define V_UV_SAMPLE_BOUNDS  flat_varying_vec4_3
+// Layer index to sample.
+#define V_LAYER             flat_varying_vec4_4.x
+// Flag to allow perspective interpolation of UV.
+#define V_PERSPECTIVE       flat_varying_vec4_4.y
 
 #ifdef WR_VERTEX_SHADER
 
@@ -112,14 +115,15 @@ void image_brush_vs(
     }
 
     float perspective_interpolate = (brush_flags & BRUSH_FLAG_PERSPECTIVE_INTERPOLATION) != 0 ? 1.0 : 0.0;
-    vLayerAndPerspective = vec2(res.layer, perspective_interpolate);
+    V_LAYER = res.layer;
+    V_PERSPECTIVE = perspective_interpolate;
 
     // Handle case where the UV coords are inverted (e.g. from an
     // external image).
     vec2 min_uv = min(uv0, uv1);
     vec2 max_uv = max(uv0, uv1);
 
-    vUvSampleBounds = vec4(
+    V_UV_SAMPLE_BOUNDS = vec4(
         min_uv + vec2(0.5),
         max_uv - vec2(0.5)
     ) / texture_size.xyxy;
@@ -151,23 +155,23 @@ void image_brush_vs(
     }
 #endif
 
-    // Offset and scale vUv here to avoid doing it in the fragment shader.
+    // Offset and scale V_UV here to avoid doing it in the fragment shader.
     vec2 repeat = local_rect.size / stretch_size;
-    vUv = mix(uv0, uv1, f) - min_uv;
-    vUv /= texture_size;
-    vUv *= repeat.xy;
+    V_UV = mix(uv0, uv1, f) - min_uv;
+    V_UV /= texture_size;
+    V_UV *= repeat.xy;
     if (perspective_interpolate == 0.0) {
-        vUv *= vi.world_pos.w;
+        V_UV *= vi.world_pos.w;
     }
 
 #ifdef WR_FEATURE_TEXTURE_RECT
-    vUvBounds = vec4(0.0, 0.0, vec2(textureSize(sColor0)));
+    V_UV_BOUNDS = vec4(0.0, 0.0, vec2(textureSize(sColor0)));
 #else
-    vUvBounds = vec4(min_uv, max_uv) / texture_size.xyxy;
+    V_UV_BOUNDS = vec4(min_uv, max_uv) / texture_size.xyxy;
 #endif
 
 #ifdef WR_FEATURE_ALPHA_PASS
-    vTileRepeat = repeat.xy;
+    V_TILE_REPEAT = repeat.xy;
 
     float opacity = float(prim_user_data.z) / 65535.0;
     switch (blend_mode) {
@@ -183,31 +187,31 @@ void image_brush_vs(
     switch (color_mode) {
         case COLOR_MODE_ALPHA:
         case COLOR_MODE_BITMAP:
-            vMaskSwizzle = vec2(0.0, 1.0);
-            vColor = image_data.color;
+            V_MASK_SWIZZLE = vec2(0.0, 1.0);
+            V_COLOR = image_data.color;
             break;
         case COLOR_MODE_SUBPX_BG_PASS2:
         case COLOR_MODE_SUBPX_DUAL_SOURCE:
         case COLOR_MODE_IMAGE:
-            vMaskSwizzle = vec2(1.0, 0.0);
-            vColor = image_data.color;
+            V_MASK_SWIZZLE = vec2(1.0, 0.0);
+            V_COLOR = image_data.color;
             break;
         case COLOR_MODE_SUBPX_CONST_COLOR:
         case COLOR_MODE_SUBPX_BG_PASS0:
         case COLOR_MODE_COLOR_BITMAP:
-            vMaskSwizzle = vec2(1.0, 0.0);
-            vColor = vec4(image_data.color.a);
+            V_MASK_SWIZZLE = vec2(1.0, 0.0);
+            V_COLOR = vec4(image_data.color.a);
             break;
         case COLOR_MODE_SUBPX_BG_PASS1:
-            vMaskSwizzle = vec2(-1.0, 1.0);
-            vColor = vec4(image_data.color.a) * image_data.background_color;
+            V_MASK_SWIZZLE = vec2(-1.0, 1.0);
+            V_COLOR = vec4(image_data.color.a) * image_data.background_color;
             break;
         default:
-            vMaskSwizzle = vec2(0.0);
-            vColor = vec4(1.0);
+            V_MASK_SWIZZLE = vec2(0.0);
+            V_COLOR = vec4(1.0);
     }
 
-    vLocalPos = vi.local_pos;
+    V_LOCAL_POS = vi.local_pos;
 #endif
 }
 #endif
@@ -215,62 +219,62 @@ void image_brush_vs(
 #ifdef WR_FRAGMENT_SHADER
 
 vec2 compute_repeated_uvs(float perspective_divisor) {
-    vec2 uv_size = vUvBounds.zw - vUvBounds.xy;
+    vec2 uv_size = V_UV_BOUNDS.zw - V_UV_BOUNDS.xy;
 
 #ifdef WR_FEATURE_ALPHA_PASS
     // This prevents the uv on the top and left parts of the primitive that was inflated
     // for anti-aliasing purposes from going beyound the range covered by the regular
     // (non-inflated) primitive.
-    vec2 local_uv = max(vUv * perspective_divisor, vec2(0.0));
+    vec2 local_uv = max(V_UV * perspective_divisor, vec2(0.0));
 
     // Handle horizontal and vertical repetitions.
-    vec2 repeated_uv = mod(local_uv, uv_size) + vUvBounds.xy;
+    vec2 repeated_uv = mod(local_uv, uv_size) + V_UV_BOUNDS.xy;
 
     // This takes care of the bottom and right inflated parts.
     // We do it after the modulo because the latter wraps around the values exactly on
     // the right and bottom edges, which we do not want.
-    if (local_uv.x >= vTileRepeat.x * uv_size.x) {
-        repeated_uv.x = vUvBounds.z;
+    if (local_uv.x >= V_TILE_REPEAT.x * uv_size.x) {
+        repeated_uv.x = V_UV_BOUNDS.z;
     }
-    if (local_uv.y >= vTileRepeat.y * uv_size.y) {
-        repeated_uv.y = vUvBounds.w;
+    if (local_uv.y >= V_TILE_REPEAT.y * uv_size.y) {
+        repeated_uv.y = V_UV_BOUNDS.w;
     }
 #else
-    vec2 repeated_uv = mod(vUv * perspective_divisor, uv_size) + vUvBounds.xy;
+    vec2 repeated_uv = mod(V_UV * perspective_divisor, uv_size) + V_UV_BOUNDS.xy;
 #endif
 
     return repeated_uv;
 }
 
 Fragment image_brush_fs() {
-    float perspective_divisor = mix(gl_FragCoord.w, 1.0, vLayerAndPerspective.y);
+    float perspective_divisor = mix(gl_FragCoord.w, 1.0, V_PERSPECTIVE);
 
 #ifdef WR_FEATURE_REPETITION
     vec2 repeated_uv = compute_repeated_uvs(perspective_divisor);
 #else
-    vec2 repeated_uv = vUv * perspective_divisor + vUvBounds.xy;
+    vec2 repeated_uv = V_UV * perspective_divisor + V_UV_BOUNDS.xy;
 #endif
 
     // Clamp the uvs to avoid sampling artifacts.
-    vec2 uv = clamp(repeated_uv, vUvSampleBounds.xy, vUvSampleBounds.zw);
+    vec2 uv = clamp(repeated_uv, V_UV_SAMPLE_BOUNDS.xy, V_UV_SAMPLE_BOUNDS.zw);
 
-    vec4 texel = TEX_SAMPLE(sColor0, vec3(uv, vLayerAndPerspective.x));
+    vec4 texel = TEX_SAMPLE(sColor0, vec3(uv, V_LAYER));
 
     Fragment frag;
 
 #ifdef WR_FEATURE_ALPHA_PASS
     #ifdef WR_FEATURE_ANTIALIASING
-        float alpha = init_transform_fs(vLocalPos);
+        float alpha = init_transform_fs(V_LOCAL_POS);
     #else
         float alpha = 1.0;
     #endif
-    texel.rgb = texel.rgb * vMaskSwizzle.x + texel.aaa * vMaskSwizzle.y;
+    texel.rgb = texel.rgb * V_MASK_SWIZZLE.x + texel.aaa * V_MASK_SWIZZLE.y;
 
     vec4 alpha_mask = texel * alpha;
-    frag.color = vColor * alpha_mask;
+    frag.color = V_COLOR * alpha_mask;
 
     #ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
-        frag.blend = alpha_mask * vColor.a;
+        frag.blend = alpha_mask * V_COLOR.a;
     #endif
 #else
     frag.color = texel;
@@ -279,3 +283,14 @@ Fragment image_brush_fs() {
     return frag;
 }
 #endif
+
+// Undef macro names that could be re-defined by other shaders.
+#undef V_LOCAL_POS
+#undef V_UV
+#undef V_COLOR
+#undef V_MASK_SWIZZLE
+#undef V_TILE_REPEAT
+#undef V_UV_BOUNDS
+#undef V_UV_SAMPLE_BOUNDS
+#undef V_LAYER
+#undef V_PERSPECTIVE
