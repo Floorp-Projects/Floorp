@@ -3045,7 +3045,9 @@ nsLocalFile::Launch() {
   _bstr_t execPath(mResolvedPath.get());
 
   _variant_t args;
-  _variant_t verb(L"open");
+  // Pass VT_ERROR/DISP_E_PARAMNOTFOUND to omit an optional RPC parameter
+  // to execute a file with the default verb.
+  _variant_t verbDefault(DISP_E_PARAMNOTFOUND, VT_ERROR);
   _variant_t workingDir;
   _variant_t showCmd(SW_SHOWNORMAL);
 
@@ -3064,7 +3066,7 @@ nsLocalFile::Launch() {
   // Skype for Business do not start correctly when inheriting our process's
   // migitation policies.
   mozilla::LauncherVoidResult shellExecuteOk = mozilla::ShellExecuteByExplorer(
-      execPath, args, verb, workingDir, showCmd);
+      execPath, args, verbDefault, workingDir, showCmd);
   if (shellExecuteOk.isOk()) {
     return NS_OK;
   }
