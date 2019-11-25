@@ -200,6 +200,11 @@ function MockFxAccounts(credentials = null) {
     device: {
       _registerOrUpdateDevice() {},
     },
+    profile: {
+      getProfile() {
+        return null;
+      },
+    },
   });
   // and for convenience so we don't have to touch as many lines in this test
   // when we refactored FxAccounts.jsm :)
