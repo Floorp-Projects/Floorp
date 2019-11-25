@@ -1,5 +1,4 @@
-
-# Summary
+# Devtools
 
 * [Getting started](getting-started/README.md)
   * [Get a Bugzilla account](getting-started/bugzilla.md)
