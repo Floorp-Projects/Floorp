@@ -178,7 +178,6 @@ void main(void) {
     int glyph_index = instance.segment_index;
     int subpx_dir = (instance.flags >> 24) & 0xff;
     int color_mode = (instance.flags >> 16) & 0xff;
-    int resource_address = instance.user_data;
 
     PrimitiveHeader ph = fetch_prim_header(instance.prim_header_address);
     Transform transform = fetch_transform(ph.transform_id);
@@ -195,7 +194,7 @@ void main(void) {
     Glyph glyph = fetch_glyph(ph.specific_prim_address, glyph_index);
     glyph.offset += ph.local_rect.p0 - text_offset;
 
-    GlyphResource res = fetch_glyph_resource(resource_address);
+    GlyphResource res = fetch_glyph_resource(instance.resource_address);
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
     // Transform from local space to glyph space.
