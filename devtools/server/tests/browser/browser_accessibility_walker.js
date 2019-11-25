@@ -96,18 +96,6 @@ add_task(async function() {
   docChildren = await a11yDoc.children();
   is(docChildren.length, 5, "Root doc should have correct number of children");
 
-  // Ensure destory event is emitted by walker when cached accessible's raw
-  // accessible gets destroyed.
-  await emitA11yEvent(
-    a11yWalker,
-    "accessible-destroy",
-    destroyedFront => checkA11yFront(destroyedFront, {}, accessibleFront),
-    () =>
-      ContentTask.spawn(browser, null, () =>
-        content.document.getElementById("button").remove()
-      )
-  );
-
   let shown = await a11yWalker.highlightAccessible(docChildren[0]);
   ok(shown, "AccessibleHighlighter highlighted the node");
 

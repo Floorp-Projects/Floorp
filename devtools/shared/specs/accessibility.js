@@ -134,10 +134,6 @@ const accessibleWalkerSpec = generateActorSpec({
   typeName: "accessiblewalker",
 
   events: {
-    "accessible-destroy": {
-      type: "accessibleDestroy",
-      accessible: Arg(0, "accessible"),
-    },
     "document-ready": {
       type: "documentReady",
     },
