@@ -6,7 +6,7 @@
 async function CreateTestEnvironment(origins) {
   let request;
   for (let origin of origins) {
-    request = initOrigin(getPrincipal(origin.origin), "default");
+    request = initStorageAndOrigin(getPrincipal(origin.origin), "default");
     await requestFinished(request);
   }
 

@@ -336,18 +336,31 @@ class QuotaManager final : public BackgroundThreadObject {
 
   nsresult EnsureStorageIsInitialized();
 
-  nsresult EnsureOriginIsInitialized(PersistenceType aPersistenceType,
-                                     const nsACString& aSuffix,
-                                     const nsACString& aGroup,
-                                     const nsACString& aOrigin,
-                                     nsIFile** aDirectory);
+  nsresult EnsureStorageAndOriginIsInitialized(PersistenceType aPersistenceType,
+                                               const nsACString& aSuffix,
+                                               const nsACString& aGroup,
+                                               const nsACString& aOrigin,
+                                               Client::Type aClientType,
+                                               nsIFile** aDirectory);
 
-  nsresult EnsureOriginIsInitializedInternal(PersistenceType aPersistenceType,
-                                             const nsACString& aSuffix,
-                                             const nsACString& aGroup,
-                                             const nsACString& aOrigin,
-                                             nsIFile** aDirectory,
-                                             bool* aCreated);
+  nsresult EnsureStorageAndOriginIsInitializedInternal(
+      PersistenceType aPersistenceType, const nsACString& aSuffix,
+      const nsACString& aGroup, const nsACString& aOrigin,
+      const Nullable<Client::Type>& aClientType, nsIFile** aDirectory,
+      bool* aCreated = nullptr);
+
+  nsresult EnsurePersistentOriginIsInitialized(const nsACString& aSuffix,
+                                               const nsACString& aGroup,
+                                               const nsACString& aOrigin,
+                                               nsIFile** aDirectory,
+                                               bool* aCreated);
+
+  nsresult EnsureTemporaryOriginIsInitialized(PersistenceType aPersistenceType,
+                                              const nsACString& aSuffix,
+                                              const nsACString& aGroup,
+                                              const nsACString& aOrigin,
+                                              nsIFile** aDirectory,
+                                              bool* aCreated);
 
   nsresult EnsureTemporaryStorageIsInitialized();
 

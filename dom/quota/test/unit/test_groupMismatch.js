@@ -55,7 +55,7 @@ async function testSteps() {
 
   info("Initializing origin");
 
-  request = initOrigin(principal, "default");
+  request = initStorageAndOrigin(principal, "default");
   await requestFinished(request);
 
   info("Reading out contents of metadata file");

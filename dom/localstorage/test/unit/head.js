@@ -113,8 +113,8 @@ function init() {
   return request;
 }
 
-function initOrigin(principal, persistence) {
-  let request = Services.qms.initStoragesForPrincipal(principal, persistence);
+function initStorageAndOrigin(principal, persistence) {
+  let request = Services.qms.initStorageAndOrigin(principal, persistence, "ls");
 
   return request;
 }

@@ -252,11 +252,11 @@ function setTimeout(fun, timeout) {
   return timer;
 }
 
-function initChromeOrigin(persistence) {
+function initStorageAndChromeOrigin(persistence) {
   let principal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
     Ci.nsIPrincipal
   );
-  return Services.qms.initStoragesForPrincipal(principal, persistence);
+  return Services.qms.initStorageAndOrigin(principal, persistence, "idb");
 }
 
 function resetOrClearAllDatabases(callback, clear) {

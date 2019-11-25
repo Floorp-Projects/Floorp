@@ -58,7 +58,7 @@ async function testSteps() {
 
   createTestingEnvironment();
 
-  let request = initChromeOrigin("persistent");
+  let request = initStorageAndChromeOrigin("persistent");
   await requestFinished(request);
 
   let testingFiles = getTestingFiles();
