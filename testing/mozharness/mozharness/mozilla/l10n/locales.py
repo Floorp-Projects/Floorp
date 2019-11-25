@@ -49,7 +49,9 @@ class LocalesMixin(object):
         # Command line or config
         if not locales and c.get("locales", []):
             locales = c["locales"]
-            self.debug("Using locales from config/CLI: %s" % ", ".join(locales))
+            self.debug(
+                "Using locales from config/CLI: %s" %
+                ", ".join(locales))
 
         # parse locale:revision if set
         if locales:
@@ -111,7 +113,10 @@ class LocalesMixin(object):
                 locales.append(locale)
         else:
             locales = self.read_from_file(locales_file).split()
-        self.info("self.l10n_revisions: %s" % pprint.pformat(self.l10n_revisions))
+        self.info(
+            "self.l10n_revisions: %s" %
+            pprint.pformat(
+                self.l10n_revisions))
         self.info("locales: %s" % locales)
         return locales
 
@@ -142,7 +147,7 @@ class LocalesMixin(object):
             dirs['abs_locales_dir'] = os.path.join(dirs['abs_objdir'],
                                                    c['locales_dir'])
 
-        for key in dirs.keys():
+        for key in list(dirs.keys()):
             if key not in abs_dirs:
                 abs_dirs[key] = dirs[key]
         self.abs_dirs = abs_dirs
