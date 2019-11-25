@@ -39,6 +39,17 @@
     width: 100%;
     height: 15em;
 }
+
+/* Test Name column */
+#results > tbody > tr > td:nth-child(2) {
+    word-break: break-word;
+}
+
+/* Message column */
+#results > tbody > tr > td:nth-child(3) {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
 </style>
 
 <textarea id=results></textarea>
@@ -74,4 +85,4 @@
 <meta name=variant content='?q=cts:validation/setStencilReference:'>
 <meta name=variant content='?q=cts:validation/setVertexBuffer:'>
 <meta name=variant content='?q=cts:validation/setViewport:'>
-<meta name=variant content='?q=cts:validation/vertex_input:'>
+<meta name=variant content='?q=cts:validation/vertex_state:'>
