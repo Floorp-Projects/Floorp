@@ -206,7 +206,6 @@ async function removeWatchpoint(object: Grip, property: string) {
   if (currentTarget.traits.watchpoints) {
     const objectFront = createObjectFront(object);
     await objectFront.removeWatchpoint(property);
-    objectFront.release().catch(() => {});
   }
 }
 
