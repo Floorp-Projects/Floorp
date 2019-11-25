@@ -1102,6 +1102,12 @@ ssl3_NegotiateVersion(sslSocket *ss, SSL3ProtocolVersion peerVersion,
 {
     SSL3ProtocolVersion negotiated;
 
+    /* Prevent negotiating to a lower version in response to a TLS 1.3 HRR. */
+    if (ss->ssl3.hs.helloRetry) {
+        PORT_SetError(SSL_ERROR_UNSUPPORTED_VERSION);
+        return SECFailure;
+    }
+
     if (SSL_ALL_VERSIONS_DISABLED(&ss->vrange)) {
         PORT_SetError(SSL_ERROR_SSL_DISABLED);
         return SECFailure;
@@ -8672,15 +8678,8 @@ ssl3_HandleClientHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
             goto alert_loser;
         }
     }
-
-    if (ss->firstHsDone && ss->version >= SSL_LIBRARY_VERSION_TLS_1_3) {
-        desc = unexpected_message;
-        errCode = SSL_ERROR_RENEGOTIATION_NOT_ALLOWED;
-        goto alert_loser;
-    }
-
-    isTLS13 = ss->version >= SSL_LIBRARY_VERSION_TLS_1_3;
     ss->ssl3.hs.preliminaryInfo |= ssl_preinfo_version;
+
     /* Update the write spec to match the selected version. */
     if (!ss->firstHsDone) {
         ssl_GetSpecWriteLock(ss);
@@ -8688,28 +8687,58 @@ ssl3_HandleClientHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
         ssl_ReleaseSpecWriteLock(ss);
     }
 
-    if (isTLS13 && sidBytes.len > 0 && !IS_DTLS(ss)) {
-        SECITEM_FreeItem(&ss->ssl3.hs.fakeSid, PR_FALSE);
-        rv = SECITEM_CopyItem(NULL, &ss->ssl3.hs.fakeSid, &sidBytes);
-        if (rv != SECSuccess) {
-            desc = internal_error;
-            errCode = PORT_GetError();
+    isTLS13 = ss->version >= SSL_LIBRARY_VERSION_TLS_1_3;
+    if (isTLS13) {
+        if (ss->firstHsDone) {
+            desc = unexpected_message;
+            errCode = SSL_ERROR_RENEGOTIATION_NOT_ALLOWED;
             goto alert_loser;
         }
-    }
 
-    /* If there is a cookie, then this is a second ClientHello (TLS 1.3). */
-    if (ssl3_FindExtension(ss, ssl_tls13_cookie_xtn)) {
-        ss->ssl3.hs.helloRetry = PR_TRUE;
-    }
+        if (sidBytes.len > 0 && !IS_DTLS(ss)) {
+            SECITEM_FreeItem(&ss->ssl3.hs.fakeSid, PR_FALSE);
+            rv = SECITEM_CopyItem(NULL, &ss->ssl3.hs.fakeSid, &sidBytes);
+            if (rv != SECSuccess) {
+                desc = internal_error;
+                errCode = PORT_GetError();
+                goto alert_loser;
+            }
+        }
 
-    if (ss->ssl3.hs.receivedCcs) {
-        /* This is only valid if we sent HelloRetryRequest, so we should have
-         * negotiated TLS 1.3 and there should be a cookie extension. */
-        if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3 ||
-            !ss->ssl3.hs.helloRetry) {
+        /* TLS 1.3 requires that compression include only null. */
+        if (comps.len != 1 || comps.data[0] != ssl_compression_null) {
+            goto alert_loser;
+        }
+
+        /* If there is a cookie, then this is a second ClientHello (TLS 1.3). */
+        if (ssl3_FindExtension(ss, ssl_tls13_cookie_xtn)) {
+            ss->ssl3.hs.helloRetry = PR_TRUE;
+        }
+
+        /* receivedCcs is only valid if we sent an HRR. */
+        if (ss->ssl3.hs.receivedCcs && !ss->ssl3.hs.helloRetry) {
             desc = unexpected_message;
             errCode = SSL_ERROR_RX_UNEXPECTED_CHANGE_CIPHER;
+            goto alert_loser;
+        }
+    } else {
+        /* HRR is TLS1.3-only. We ignore the Cookie extension here. */
+        if (ss->ssl3.hs.helloRetry) {
+            desc = protocol_version;
+            errCode = SSL_ERROR_UNSUPPORTED_VERSION;
+            goto alert_loser;
+        }
+
+        /* receivedCcs is only valid if we sent an HRR. */
+        if (ss->ssl3.hs.receivedCcs) {
+            desc = unexpected_message;
+            errCode = SSL_ERROR_RX_UNEXPECTED_CHANGE_CIPHER;
+            goto alert_loser;
+        }
+
+        /* TLS versions prior to 1.3 must include null somewhere. */
+        if (comps.len < 1 ||
+            !memchr(comps.data, ssl_compression_null, comps.len)) {
             goto alert_loser;
         }
     }
@@ -8737,19 +8766,6 @@ ssl3_HandleClientHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
         }
     }
 
-    /* TLS 1.3 requires that compression only include null. */
-    if (isTLS13) {
-        if (comps.len != 1 || comps.data[0] != ssl_compression_null) {
-            goto alert_loser;
-        }
-    } else {
-        /* Other versions need to include null somewhere. */
-        if (comps.len < 1 ||
-            !memchr(comps.data, ssl_compression_null, comps.len)) {
-            goto alert_loser;
-        }
-    }
-
     if (!ssl3_ExtensionNegotiated(ss, ssl_renegotiation_info_xtn)) {
         /* If we didn't receive an RI extension, look for the SCSV,
          * and if found, treat it just like an empty RI extension
@@ -8767,7 +8783,7 @@ ssl3_HandleClientHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
     }
 
     /* The check for renegotiation in TLS 1.3 is earlier. */
-    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+    if (!isTLS13) {
         if (ss->firstHsDone &&
             (ss->opt.enableRenegotiation == SSL_RENEGOTIATE_REQUIRES_XTN ||
              ss->opt.enableRenegotiation == SSL_RENEGOTIATE_TRANSITIONAL) &&
@@ -8792,7 +8808,7 @@ ssl3_HandleClientHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
      * (2) the client support the session ticket extension, but sent an
      * empty ticket.
      */
-    if ((ss->version < SSL_LIBRARY_VERSION_TLS_1_3) &&
+    if (!isTLS13 &&
         (!ssl3_ExtensionNegotiated(ss, ssl_session_ticket_xtn) ||
          ss->xtnData.emptySessionTicket)) {
         if (sidBytes.len > 0 && !ss->opt.noCache) {
@@ -8859,7 +8875,7 @@ ssl3_HandleClientHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
         dtls_ReceivedFirstMessageInFlight(ss);
     }
 
-    if (ss->version >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    if (isTLS13) {
         rv = tls13_HandleClientHelloPart2(ss, &suites, sid, savedMsg, savedLen);
     } else {
         rv = ssl3_HandleClientHelloPart2(ss, &suites, sid,

@@ -2004,111 +2004,42 @@ sftk_HMACCmp(CK_ULONG *copyLen, unsigned char *sig, unsigned int sigLen,
 }
 
 /*
- * common HMAC initalization routine
+ * common HMAC + CMAC initialization routine
  */
 static CK_RV
-sftk_doHMACInit(SFTKSessionContext *context, HASH_HashType hash,
-                SFTKObject *key, CK_ULONG mac_size)
+sftk_doMACInit(CK_MECHANISM_TYPE mech, SFTKSessionContext *session,
+               SFTKObject *key, CK_ULONG mac_size)
 {
-    SFTKAttribute *keyval;
-    HMACContext *HMACcontext;
+    CK_RV crv;
+    sftk_MACCtx *context;
     CK_ULONG *intpointer;
-    const SECHashObject *hashObj = HASH_GetRawHashObject(hash);
     PRBool isFIPS = (key->slot->slotID == FIPS_SLOT_ID);
 
-    /* required by FIPS 198 Section 4 */
-    if (isFIPS && (mac_size < 4 || mac_size < hashObj->length / 2)) {
+    /* Set up the initial context. */
+    crv = sftk_MAC_Create(mech, key, &context);
+    if (crv != CKR_OK) {
+        return crv;
+    }
+
+    session->hashInfo = context;
+    session->multi = PR_TRUE;
+
+    /* Required by FIPS 198 Section 4. Delay this check until after the MAC
+     * has been initialized to steal the output size of the MAC. */
+    if (isFIPS && (mac_size < 4 || mac_size < context->mac_size / 2)) {
+        sftk_MAC_Destroy(context, PR_TRUE);
         return CKR_BUFFER_TOO_SMALL;
     }
 
-    keyval = sftk_FindAttribute(key, CKA_VALUE);
-    if (keyval == NULL)
-        return CKR_KEY_SIZE_RANGE;
-
-    HMACcontext = HMAC_Create(hashObj,
-                              (const unsigned char *)keyval->attrib.pValue,
-                              keyval->attrib.ulValueLen, isFIPS);
-    context->hashInfo = HMACcontext;
-    context->multi = PR_TRUE;
-    sftk_FreeAttribute(keyval);
-    if (context->hashInfo == NULL) {
-        if (PORT_GetError() == SEC_ERROR_INVALID_ARGS) {
-            return CKR_KEY_SIZE_RANGE;
-        }
-        return CKR_HOST_MEMORY;
-    }
-    context->hashUpdate = (SFTKHash)HMAC_Update;
-    context->end = (SFTKEnd)HMAC_Finish;
-
-    context->hashdestroy = (SFTKDestroy)HMAC_Destroy;
-    intpointer = PORT_New(CK_ULONG);
-    if (intpointer == NULL) {
-        return CKR_HOST_MEMORY;
-    }
-    *intpointer = mac_size;
-    context->cipherInfo = intpointer;
-    context->destroy = (SFTKDestroy)sftk_Space;
-    context->update = (SFTKCipher)sftk_SignCopy;
-    context->verify = (SFTKVerify)sftk_HMACCmp;
-    context->maxLen = hashObj->length;
-    HMAC_Begin(HMACcontext);
-    return CKR_OK;
-}
-
-/*
- * common CMAC initialization routine
- */
-static CK_RV
-sftk_doCMACInit(SFTKSessionContext *session, CMACCipher type,
-                SFTKObject *key, CK_ULONG mac_size)
-{
-    SFTKAttribute *keyval;
-    CMACContext *cmacContext;
-    CK_ULONG *intpointer;
-
-    /* Unlike HMAC, CMAC doesn't need to check key sizes as the underlying
-     * block cipher does this for us: block ciphers support only a single
-     * key size per variant.
-     *
-     * To introduce support for a CMAC based on a new block cipher, first add
-     * support for the relevant block cipher to CMAC in the freebl layer. Then
-     * update the switch statement at the end of this function. Also remember
-     * to update the switch statement in NSC_SignInit with the PKCS#11
-     * mechanism constants.
-     */
-
-    keyval = sftk_FindAttribute(key, CKA_VALUE);
-    if (keyval == NULL) {
-        return CKR_KEY_SIZE_RANGE;
-    }
-
-    /* Create the underlying CMACContext and associate it with the
-     * SFTKSessionContext's hashInfo field */
-    cmacContext = CMAC_Create(type,
-                              (const unsigned char *)keyval->attrib.pValue,
-                              keyval->attrib.ulValueLen);
-    sftk_FreeAttribute(keyval);
-
-    if (cmacContext == NULL) {
-        if (PORT_GetError() == SEC_ERROR_INVALID_ARGS) {
-            return CKR_KEY_SIZE_RANGE;
-        }
-
-        return CKR_HOST_MEMORY;
-    }
-    session->hashInfo = cmacContext;
-
-    /* MACs all behave roughly the same. However, CMAC can fail because
-     * the underlying cipher can fail. In practice, this shouldn't occur
-     * because we're not using any chaining modes, letting us safely ignore
-     * the return value. */
-    session->multi = PR_TRUE;
-    session->hashUpdate = (SFTKHash)CMAC_Update;
-    session->end = (SFTKEnd)CMAC_Finish;
-    session->hashdestroy = (SFTKDestroy)CMAC_Destroy;
+    /* Configure our helper functions appropriately. Note that these casts
+     * ignore the return values. */
+    session->hashUpdate = (SFTKHash)sftk_MAC_Update;
+    session->end = (SFTKEnd)sftk_MAC_Finish;
+    session->hashdestroy = (SFTKDestroy)sftk_MAC_Destroy;
 
     intpointer = PORT_New(CK_ULONG);
     if (intpointer == NULL) {
+        sftk_MAC_Destroy(context, PR_TRUE);
         return CKR_HOST_MEMORY;
     }
     *intpointer = mac_size;
@@ -2120,15 +2051,7 @@ sftk_doCMACInit(SFTKSessionContext *session, CMACCipher type,
     session->verify = (SFTKVerify)sftk_HMACCmp;
     session->destroy = (SFTKDestroy)sftk_Space;
 
-    /* Will need to be updated for additional block ciphers in the future. */
-    switch (type) {
-        case CMAC_AES:
-            session->maxLen = AES_BLOCK_SIZE;
-            break;
-        default:
-            PORT_Assert(0);
-            return CKR_KEY_SIZE_RANGE;
-    }
+    session->maxLen = context->mac_size;
 
     return CKR_OK;
 }
@@ -2879,18 +2802,19 @@ NSC_SignInit(CK_SESSION_HANDLE hSession,
 
             break;
 
-#define INIT_HMAC_MECH(mmm)                                               \
-    case CKM_##mmm##_HMAC_GENERAL:                                        \
-        PORT_Assert(pMechanism->pParameter);                              \
-        if (!pMechanism->pParameter) {                                    \
-            crv = CKR_MECHANISM_PARAM_INVALID;                            \
-            break;                                                        \
-        }                                                                 \
-        crv = sftk_doHMACInit(context, HASH_Alg##mmm, key,                \
-                              *(CK_ULONG *)pMechanism->pParameter);       \
-        break;                                                            \
-    case CKM_##mmm##_HMAC:                                                \
-        crv = sftk_doHMACInit(context, HASH_Alg##mmm, key, mmm##_LENGTH); \
+#define INIT_HMAC_MECH(mmm)                                        \
+    case CKM_##mmm##_HMAC_GENERAL:                                 \
+        PORT_Assert(pMechanism->pParameter);                       \
+        if (!pMechanism->pParameter) {                             \
+            crv = CKR_MECHANISM_PARAM_INVALID;                     \
+            break;                                                 \
+        }                                                          \
+        crv = sftk_doMACInit(pMechanism->mechanism, context, key,  \
+                             *(CK_ULONG *)pMechanism->pParameter); \
+        break;                                                     \
+    case CKM_##mmm##_HMAC:                                         \
+        crv = sftk_doMACInit(pMechanism->mechanism, context, key,  \
+                             mmm##_LENGTH);                        \
         break;
 
             INIT_HMAC_MECH(MD2)
@@ -2906,11 +2830,11 @@ NSC_SignInit(CK_SESSION_HANDLE hSession,
                 crv = CKR_MECHANISM_PARAM_INVALID;
                 break;
             }
-            crv = sftk_doHMACInit(context, HASH_AlgSHA1, key,
-                                  *(CK_ULONG *)pMechanism->pParameter);
+            crv = sftk_doMACInit(pMechanism->mechanism, context, key,
+                                 *(CK_ULONG *)pMechanism->pParameter);
             break;
         case CKM_SHA_1_HMAC:
-            crv = sftk_doHMACInit(context, HASH_AlgSHA1, key, SHA1_LENGTH);
+            crv = sftk_doMACInit(pMechanism->mechanism, context, key, SHA1_LENGTH);
             break;
         case CKM_AES_CMAC_GENERAL:
             PORT_Assert(pMechanism->pParameter);
@@ -2918,10 +2842,10 @@ NSC_SignInit(CK_SESSION_HANDLE hSession,
                 crv = CKR_MECHANISM_PARAM_INVALID;
                 break;
             }
-            crv = sftk_doCMACInit(context, CMAC_AES, key, *(CK_ULONG *)pMechanism->pParameter);
+            crv = sftk_doMACInit(pMechanism->mechanism, context, key, *(CK_ULONG *)pMechanism->pParameter);
             break;
         case CKM_AES_CMAC:
-            crv = sftk_doCMACInit(context, CMAC_AES, key, AES_BLOCK_SIZE);
+            crv = sftk_doMACInit(pMechanism->mechanism, context, key, AES_BLOCK_SIZE);
             break;
         case CKM_SSL3_MD5_MAC:
             PORT_Assert(pMechanism->pParameter);
@@ -3596,11 +3520,11 @@ NSC_VerifyInit(CK_SESSION_HANDLE hSession,
                 crv = CKR_MECHANISM_PARAM_INVALID;
                 break;
             }
-            crv = sftk_doHMACInit(context, HASH_AlgSHA1, key,
-                                  *(CK_ULONG *)pMechanism->pParameter);
+            crv = sftk_doMACInit(pMechanism->mechanism, context, key,
+                                 *(CK_ULONG *)pMechanism->pParameter);
             break;
         case CKM_SHA_1_HMAC:
-            crv = sftk_doHMACInit(context, HASH_AlgSHA1, key, SHA1_LENGTH);
+            crv = sftk_doMACInit(pMechanism->mechanism, context, key, SHA1_LENGTH);
             break;
 
         case CKM_SSL3_MD5_MAC:
