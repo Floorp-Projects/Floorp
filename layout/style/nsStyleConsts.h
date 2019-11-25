@@ -588,11 +588,13 @@ enum class StyleGridTrackBreadth : uint8_t {
 #define NS_STYLE_ISOLATION_ISOLATE 1
 
 // See nsStylePosition.mObjectFit
-#define NS_STYLE_OBJECT_FIT_FILL 0
-#define NS_STYLE_OBJECT_FIT_CONTAIN 1
-#define NS_STYLE_OBJECT_FIT_COVER 2
-#define NS_STYLE_OBJECT_FIT_NONE 3
-#define NS_STYLE_OBJECT_FIT_SCALE_DOWN 4
+enum class StyleObjectFit : uint8_t {
+  Fill,
+  Contain,
+  Cover,
+  None,
+  ScaleDown,
+};
 
 // See nsStyleText
 #define NS_STYLE_TEXT_ALIGN_START 0
