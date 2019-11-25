@@ -16,6 +16,7 @@ class nsFieldSetFrame final : public nsContainerFrame {
 
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsFieldSetFrame)
+  NS_DECL_QUERYFRAME
 
   explicit nsFieldSetFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
 
@@ -81,13 +82,14 @@ class nsFieldSetFrame final : public nsContainerFrame {
 #endif
 
   /**
-   * Return the anonymous frame that contains all descendants except
-   * the legend frame.  This is currently always a block frame with
-   * pseudo nsCSSAnonBoxes::fieldsetContent() -- this may change in the
-   * future when we add support for CSS overflow for <fieldset>.  This really
-   * can't return null, though callers seem to feel that it can.
+   * Return the anonymous frame that contains all descendants except the legend
+   * frame.  This can be a block/grid/flex/scroll frame.  It always has
+   * the pseudo type nsCSSAnonBoxes::fieldsetContent.  If it's a scroll frame,
+   * the scrolled frame can be a block/grid/flex frame.
+   * This may return null, for example for a fieldset that is a true overflow
+   * container.
    */
-  nsIFrame* GetInner() const;
+  nsContainerFrame* GetInner() const;
 
   /**
    * Return the frame that represents the legend if any.  This may be
@@ -96,8 +98,21 @@ class nsFieldSetFrame final : public nsContainerFrame {
    */
   nsIFrame* GetLegend() const;
 
+  /** @see mLegendSpace below */
+  nscoord LegendSpace() const { return mLegendSpace; }
+
  protected:
+  /**
+   * Convenience method to create a continuation for aChild after we've
+   * reflowed it and got the reflow status aStatus.
+   */
+  void EnsureChildContinuation(nsIFrame* aChild, const nsReflowStatus& aStatus);
+
   mozilla::LogicalRect mLegendRect;
+
+  // This is how much to subtract from our inner frame's content-box block-size
+  // to account for a protruding legend.  It's zero if there's no legend or
+  // the legend fits entirely inside our start border.
   nscoord mLegendSpace;
 };
 
