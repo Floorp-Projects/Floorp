@@ -10,13 +10,18 @@
 #include <d3d11.h>
 #include <assert.h>
 #include <map>
+#include <vector>
 
 #define EGL_EGL_PROTOTYPES 1
 #define EGL_EGLEXT_PROTOTYPES 1
+#define GL_GLEXT_PROTOTYPES 1
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
 #include "EGL/eglext_angle.h"
 #include "GL/gl.h"
+#include "GLES/gl.h"
+#include "GLES/glext.h"
+#include "GLES3/gl3.h"
 
 // The OS compositor representation of a picture cache tile.
 struct Tile {
@@ -24,6 +29,13 @@ struct Tile {
     IDCompositionSurface *pSurface;
     // Represents the node in the visual tree that defines the properties of this tile (clip, position etc).
     IDCompositionVisual2 *pVisual;
+};
+
+struct CachedFrameBuffer {
+    int width;
+    int height;
+    GLuint fboId;
+    GLuint depthRboId;
 };
 
 struct Window {
@@ -50,8 +62,9 @@ struct Window {
     EGLSurface fb_surface;
 
     // The currently bound surface, valid during bind() and unbind()
-    EGLSurface current_surface;
     IDCompositionSurface *pCurrentSurface;
+    EGLImage mEGLImage;
+    GLuint mColorRBO;
 
     // The root of the DC visual tree. Nothing is drawn on this, but
     // all child tiles are parented to here.
@@ -59,9 +72,49 @@ struct Window {
     IDCompositionVisualDebug *pVisualDebug;
     // Maps the WR surface IDs to the DC representation of each tile.
     std::map<uint64_t, Tile> tiles;
+    std::vector<CachedFrameBuffer> mFrameBuffers;
 };
 
 static const wchar_t *CLASS_NAME = L"WR DirectComposite";
+
+static GLuint GetOrCreateFbo(Window *window, int aWidth, int aHeight) {
+    GLuint fboId = 0;
+
+    // Check if we have a cached FBO with matching dimensions
+    for (auto it = window->mFrameBuffers.begin(); it != window->mFrameBuffers.end(); ++it) {
+        if (it->width == aWidth && it->height == aHeight) {
+            fboId = it->fboId;
+            break;
+        }
+    }
+
+    // If not, create a new FBO with attached depth buffer
+    if (fboId == 0) {
+        // Create the depth buffer
+        GLuint depthRboId;
+        glGenRenderbuffers(1, &depthRboId);
+        glBindRenderbuffer(GL_RENDERBUFFER, depthRboId);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24,
+                              aWidth, aHeight);
+
+        // Create the framebuffer and attach the depth buffer to it
+        glGenFramebuffers(1, &fboId);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboId);
+        glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER,
+                                  GL_DEPTH_ATTACHMENT,
+                                  GL_RENDERBUFFER, depthRboId);
+
+        // Store this in the cache for future calls.
+        CachedFrameBuffer frame_buffer_info;
+        frame_buffer_info.width = aWidth;
+        frame_buffer_info.height = aHeight;
+        frame_buffer_info.fboId = fboId;
+        frame_buffer_info.depthRboId = depthRboId;
+        window->mFrameBuffers.push_back(frame_buffer_info);
+    }
+
+    return fboId;
+}
 
 static LRESULT CALLBACK WndProc(
     HWND hwnd,
@@ -86,6 +139,7 @@ extern "C" {
         window->width = width;
         window->height = height;
         window->enable_compositor = enable_compositor;
+        window->mEGLImage = EGL_NO_IMAGE;
 
         WNDCLASSEX wcex = { sizeof(WNDCLASSEX) };
         wcex.style = CS_HREDRAW | CS_VREDRAW;
@@ -284,7 +338,7 @@ extern "C" {
         delete window;
     }
 
-    bool com_dc_tick(Window *window) {
+    bool com_dc_tick(Window *) {
         // Check and dispatch the windows event loop
         MSG msg;
         while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -356,7 +410,7 @@ extern "C" {
     }
 
     // Bind a DC surface to allow issuing GL commands to it
-    void com_dc_bind_surface(
+    GLuint com_dc_bind_surface(
         Window *window,
         uint64_t id,
         int *x_offset,
@@ -395,35 +449,44 @@ extern "C" {
         offset.y -= dirty_y0;
         assert(SUCCEEDED(hr));
         pTexture->GetDesc(&desc);
-
-        // Construct an EGL off-screen surface that is bound to the DC surface
-        EGLint buffer_attribs[] = {
-            EGL_WIDTH, desc.Width,
-            EGL_HEIGHT, desc.Height,
-            EGL_FLEXIBLE_SURFACE_COMPATIBILITY_SUPPORTED_ANGLE, EGL_TRUE,
-            EGL_NONE
-        };
-
-        window->current_surface = eglCreatePbufferFromClientBuffer(
-            window->EGLDisplay,
-            EGL_D3D_TEXTURE_ANGLE,
-            pTexture,
-            window->config,
-            buffer_attribs
-        );
-        assert(window->current_surface != EGL_NO_SURFACE);
-
-        // Make EGL current on the DC surface
-        EGLBoolean ok = eglMakeCurrent(
-            window->EGLDisplay,
-            window->current_surface,
-            window->current_surface,
-            window->EGLContext
-        );
-        assert(ok);
-
         *x_offset = offset.x;
         *y_offset = offset.y;
+
+        // Construct an EGLImage wrapper around the D3D texture for ANGLE.
+        const EGLAttrib attribs[] = { EGL_NONE };
+        window->mEGLImage = eglCreateImage(
+            window->EGLDisplay,
+            EGL_NO_CONTEXT,
+            EGL_D3D11_TEXTURE_ANGLE,
+            static_cast<EGLClientBuffer>(pTexture),
+            attribs
+        );
+
+        // Get the current FBO and RBO id, so we can restore them later
+        GLint currentFboId, currentRboId;
+        glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &currentFboId);
+        glGetIntegerv(GL_RENDERBUFFER_BINDING, &currentRboId);
+
+        // Create a render buffer object that is backed by the EGL image.
+        glGenRenderbuffers(1, &window->mColorRBO);
+        glBindRenderbuffer(GL_RENDERBUFFER, window->mColorRBO);
+        glEGLImageTargetRenderbufferStorageOES(GL_RENDERBUFFER, window->mEGLImage);
+
+        // Get or create an FBO for the specified dimensions
+        GLuint fboId = GetOrCreateFbo(window, desc.Width, desc.Height);
+
+        // Attach the new renderbuffer to the FBO
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboId);
+        glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER,
+                                  GL_COLOR_ATTACHMENT0,
+                                  GL_RENDERBUFFER,
+                                  window->mColorRBO);
+
+        // Restore previous FBO and RBO bindings
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, currentFboId);
+        glBindRenderbuffer(GL_RENDERBUFFER, currentRboId);
+
+        return fboId;
     }
 
     // Unbind a currently bound DC surface
@@ -431,7 +494,11 @@ extern "C" {
         HRESULT hr = window->pCurrentSurface->EndDraw();
         assert(SUCCEEDED(hr));
 
-        eglDestroySurface(window->EGLDisplay, window->current_surface);
+        glDeleteRenderbuffers(1, &window->mColorRBO);
+        window->mColorRBO = 0;
+
+        eglDestroyImage(window->EGLDisplay, window->mEGLImage);
+        window->mEGLImage = EGL_NO_IMAGE;
     }
 
     // At the start of a transaction, remove all visuals from the tree.
@@ -467,8 +534,8 @@ extern "C" {
 
         // Place the visual - this changes frame to frame based on scroll position
         // of the slice.
-        int offset_x = x + window->client_rect.left;
-        int offset_y = y + window->client_rect.top;
+        float offset_x = (float) (x + window->client_rect.left);
+        float offset_y = (float) (y + window->client_rect.top);
         tile.pVisual->SetOffsetX(offset_x);
         tile.pVisual->SetOffsetY(offset_y);
 

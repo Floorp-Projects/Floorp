@@ -76,11 +76,12 @@ test_valid_value("grid-row", "2 i / auto", "2 i");
 test_valid_value("grid-row", "1 / auto", "1");
 test_valid_value("grid-column", "2 j / span 3 k");
 
-
 // https://github.com/w3c/csswg-drafts/issues/2858
-// '\\31 st' in Blink, Firefox, '1st' in Edge, '"1st"' in Safari.
-test_valid_value("grid-column-end",  "\\31st", ["\\31 st", "1st", '"1st"']);
-test_valid_value("grid-column-end",  "\\31 st", ["\\31 st", "1st", '"1st"']);
+// '\\31 st' in Blink, Firefox, EdgeHTML and Safari serialize invalid values.
+test_valid_value("grid-column-end", "\\31st", ["\\31 st", "\\31st"]);
+test_valid_value("grid-column-end", "\\31 st", ["\\31 st", "\\31st"]);
+test_valid_value("grid-column", "\\31st / \\31 st", ["\\31 st", "\\31st"]);
+
 </script>
 </body>
 </html>

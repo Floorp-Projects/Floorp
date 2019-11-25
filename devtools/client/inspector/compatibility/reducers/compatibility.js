@@ -11,7 +11,8 @@ loader.lazyGetter(this, "mdnCompatibility", () => {
 });
 
 const {
-  COMPATIBILITY_UPDATE_SELECTED_NODE,
+  COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS,
+  COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE,
   COMPATIBILITY_UPDATE_TARGET_BROWSERS,
 } = require("../actions/index");
 
@@ -22,8 +23,15 @@ const INITIAL_STATE = {
 };
 
 const reducers = {
-  [COMPATIBILITY_UPDATE_SELECTED_NODE](state, data) {
+  [COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS](state, data) {
     return updateSelectedNodeIssues(state, data);
+  },
+  [COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE](state, { error }) {
+    console.error(
+      `[COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE] ${error.message}`
+    );
+    console.error(error.stack);
+    return state;
   },
   [COMPATIBILITY_UPDATE_TARGET_BROWSERS](state, data) {
     return updateSelectedNodeIssues(state, data);
