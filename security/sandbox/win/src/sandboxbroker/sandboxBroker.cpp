@@ -258,7 +258,7 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
                                        &last_warning, &last_error, &targetInfo);
   if (sandbox::SBOX_ALL_OK != result) {
     nsAutoCString key;
-    key.AppendASCII(XRE_ChildProcessTypeToString(aProcessType));
+    key.AppendASCII(XRE_GeckoProcessTypeToString(aProcessType));
     key.AppendLiteral("/0x");
     key.AppendInt(static_cast<uint32_t>(last_error), 16);
 

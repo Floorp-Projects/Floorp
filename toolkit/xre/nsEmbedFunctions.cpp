@@ -224,7 +224,7 @@ void XRE_TermEmbedding() {
   delete gDirServiceProvider;
 }
 
-const char* XRE_ChildProcessTypeToString(GeckoProcessType aProcessType) {
+const char* XRE_GeckoProcessTypeToString(GeckoProcessType aProcessType) {
   return (aProcessType < GeckoProcessType_End)
              ? kGeckoProcessTypeString[aProcessType]
              : "invalid";
@@ -241,7 +241,7 @@ const char* XRE_ChildProcessTypeToAnnotation(GeckoProcessType aProcessType) {
     case GeckoProcessType_Content:
       return "content";
     default:
-      return XRE_ChildProcessTypeToString(aProcessType);
+      return XRE_GeckoProcessTypeToString(aProcessType);
   }
 }
 
@@ -582,7 +582,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
 #  endif
     printf_stderr(
         "\n\nCHILDCHILDCHILDCHILD (process type %s)\n  debug me @ %d\n\n",
-        XRE_ChildProcessTypeToString(XRE_GetProcessType()),
+        XRE_GeckoProcessTypeToString(XRE_GetProcessType()),
         base::GetCurrentProcId());
     sleep(GetDebugChildPauseTime());
   }
@@ -594,7 +594,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
   } else if (PR_GetEnv("MOZ_DEBUG_CHILD_PAUSE")) {
     printf_stderr(
         "\n\nCHILDCHILDCHILDCHILD (process type %s)\n  debug me @ %d\n\n",
-        XRE_ChildProcessTypeToString(XRE_GetProcessType()),
+        XRE_GeckoProcessTypeToString(XRE_GetProcessType()),
         base::GetCurrentProcId());
     ::Sleep(GetDebugChildPauseTime());
   }
