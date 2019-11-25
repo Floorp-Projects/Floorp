@@ -28,6 +28,10 @@ function toMojoNDEFRecord(record) {
   nfcRecord.recordType = record.recordType;
   nfcRecord.mediaType = record.mediaType;
   nfcRecord.data = toByteArray(record.data);
+  if (record.data != null && record.data.records !== undefined) {
+    // |record.data| may be an NDEFMessageInit, i.e. the payload is a message.
+    nfcRecord.payloadMessage = toMojoNDEFMessage(record.data);
+  }
   return nfcRecord;
 }
 
