@@ -702,11 +702,8 @@ class JSFunction : public js::NativeObject {
   // original function allocated by the frontend). Note that lazy self-hosted
   // builtins don't have a lazy script so in that case we also return nullptr.
   JSFunction* maybeCanonicalFunction() const {
-    if (hasScript()) {
-      return nonLazyScript()->function();
-    }
-    if (hasLazyScript()) {
-      return lazyScript()->function();
+    if (hasBaseScript()) {
+      return baseScript()->function();
     }
     return nullptr;
   }
