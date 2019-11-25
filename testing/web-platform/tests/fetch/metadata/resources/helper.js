@@ -33,6 +33,22 @@ function assert_header_equals(value, expected, tag) {
 }
 
 /**
+ * @param {object} value
+ * @param {string} tag
+ **/
+function assert_no_headers(value, tag) {
+  if (typeof(value) === "string"){
+    if (value == "No header has been recorded") return;
+    value = JSON.parse(value);
+  }
+
+  assert_equals(value.mode, "", wrap_by_tag(tag, "mode"));
+  assert_equals(value.site, "", wrap_by_tag(tag, "site"));
+  if (expected.hasOwnProperty("user"))
+    assert_equals(value.user, "", wrap_by_tag(tag, "user"));
+}
+
+/**
  * @param {string} header
  * @param {object} value
  * @param {string} expected
@@ -67,7 +83,7 @@ function assert_header_dest_equals(value, expected, tag) {
 function fetch_record_header(key, expected, assert) {
   return fetch("/fetch/metadata/resources/record-header.py?retrieve=true&file=" + key)
       .then(response => response.text())
-      .then(text => assert(text, expected))
+      .then(text => assert(text, expected));
 }
 
 /**

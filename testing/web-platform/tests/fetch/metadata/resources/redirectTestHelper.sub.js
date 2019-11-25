@@ -50,7 +50,7 @@ function RunCommonRedirectTests(testNamePrefix, urlHelperMethod, expectedResults
       }
       let expectation = { ...expectedResults };
       if (expectation['mode'] != '')
-        expectation['mode'] = 'nested-navigate';
+        expectation['mode'] = 'navigate';
       assert_header_equals(e.data, expectation);
       t.done();
     }));
