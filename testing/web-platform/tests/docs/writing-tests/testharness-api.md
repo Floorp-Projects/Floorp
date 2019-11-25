@@ -279,12 +279,6 @@ In order for a test to be interpreted as a single page test, it should set the
 
 The test title for single page tests is always taken from `document.title`.
 
-(Prior to October 2019, this behavior would be enabled implicitly for any test
-that did not call `test()` or `async_test()` anywhere on the page and that
-eventually called the `done()` function. [This behavior was found to be prone
-to errors and is in the process of being
-removed.](https://github.com/web-platform-tests/rfcs/blob/master/rfcs/single_test.md))
-
 ## Making assertions ##
 
 Functions for making assertions start `assert_`. The full list of
