@@ -33,19 +33,24 @@ inline void NoteIntentionalCrash(const char* aProcessType) {
 
   fprintf(stderr, "XPCOM_MEM_BLOAT_LOG: %s\n", f);
 
-  std::string bloatLog(f);
-
-  bool hasExt = false;
-  if (bloatLog.size() >= 4 &&
-      bloatLog.compare(bloatLog.size() - 4, 4, ".log", 4) == 0) {
-    hasExt = true;
-    bloatLog.erase(bloatLog.size() - 4, 4);
-  }
-
   std::ostringstream bloatName;
-  bloatName << bloatLog << "_" << aProcessType << "_pid" << getpid();
-  if (hasExt) {
-    bloatName << ".log";
+  std::string processType(aProcessType);
+  if (!processType.compare("default")) {
+    bloatName << f;
+  } else {
+    std::string bloatLog(f);
+
+    bool hasExt = false;
+    if (bloatLog.size() >= 4 &&
+        bloatLog.compare(bloatLog.size() - 4, 4, ".log", 4) == 0) {
+      hasExt = true;
+      bloatLog.erase(bloatLog.size() - 4, 4);
+    }
+
+    bloatName << bloatLog << "_" << processType << "_pid" << getpid();
+    if (hasExt) {
+      bloatName << ".log";
+    }
   }
 
   fprintf(stderr, "Writing to log: %s\n", bloatName.str().c_str());
