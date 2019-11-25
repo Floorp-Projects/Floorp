@@ -35,7 +35,6 @@ py2commands="
     doc
     doctor
     empty-makefiles
-    environment
     file-info
     firefox-ui-functional
     fluent-migration-test

@@ -1120,7 +1120,7 @@ class MachDebug(MachCommandBase):
     @Command('environment', category='build-dev',
              description='Show info about the mach and build environment.')
     @CommandArgument('--format', default='pretty',
-                     choices=['pretty', 'configure', 'json'],
+                     choices=['pretty', 'json'],
                      help='Print data in the given format.')
     @CommandArgument('--output', '-o', type=str,
                      help='Output to the given file.')
