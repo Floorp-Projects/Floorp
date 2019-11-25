@@ -263,7 +263,7 @@ that are only set on nightly), for example:
         if release_or_beta: FAIL
 
 Note that in general the automatic metadata update will work better if
-the nonstandard configuration is used explictly in the conditional,
+the nonstandard configuration is used explicitly in the conditional,
 and placed at the top of the set of conditions, i.e. the following
 would cause problems later:
 

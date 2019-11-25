@@ -15,7 +15,7 @@ switch out as the user switches contexts. The same naming convention is used in
 this document.
 
 In this document and in the code, the word "input" is used to refer to
-an interactive element in the Touch Bar. It is often interchangable with
+an interactive element in the Touch Bar. It is often interchangeable with
 "button", but "input" can also refer to any element displayed in the Touch Bar.
 
 The Touch Bar should never offer functionality unavailable to Firefox users

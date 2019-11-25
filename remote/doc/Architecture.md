@@ -48,7 +48,7 @@ To do that this component glue together three main high level components:
 Connecting to Websocket endpoints
 ---------------------------------
 
-Each target's websocket URL will be registered as a HTTP enpoint via `server/HTTPD:registerPathHandler`.
+Each target's websocket URL will be registered as a HTTP endpoint via `server/HTTPD:registerPathHandler`.
 (This registration is done from `RemoteAgent:init`)
 Once a HTTP request happens, `server/HTTPD` will call the `handle` method on the object passed to `registerPathHandler`.
 For static endpoints registered by `JSONHandler`, this will call `JSONHandler:handle` and return a JSON string as http body.
@@ -107,7 +107,7 @@ In both cases, `Target.attachToTarget()` is special as it will spawn `session/Ta
 This is the codepath creating non-default session. The default session is related to the target you originally connected to,
 so that you don't need any ID for this one. When you want to debug more than one target over a single connection
 you need additional sessions, which will have a unique ID.
-`Target.attachToTarget` will compute this ID and instanciate a new session bound to the given target.
+`Target.attachToTarget` will compute this ID and instantiate a new session bound to the given target.
 This additional session will be managed by the `Connection` class, which will then redirect CDP packets to the
 right session when you are using flatten session.
 

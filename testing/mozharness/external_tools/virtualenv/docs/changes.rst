@@ -165,7 +165,7 @@ Release History
 13.0.0 (2015-05-21)
 -------------------
 
-* Automatically install wheel when creating a new virutalenv. This can be
+* Automatically install wheel when creating a new virtualenv. This can be
   disabled by using the ``--no-wheel`` option.
 
 * Don't trust the current directory as a location to discover files to install

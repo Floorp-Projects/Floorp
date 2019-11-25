@@ -355,7 +355,7 @@ How to start porting parent-process browser code to use JSWindowActors
 
 The :ref:`fission.message-manager-actors` work made it much easier to migrate away from framescripts towards something that is similar to ``JSWindowActors``. It did not, however, substantially change how the parent process interacted with those framescripts.
 
-So when porting code to work with ``JSWindowActors``, we find that this is often where the time goes - refactoring the parent process browser code to accomodate the new ``JSWindowActor`` model.
+So when porting code to work with ``JSWindowActors``, we find that this is often where the time goes - refactoring the parent process browser code to accommodate the new ``JSWindowActor`` model.
 
 Usually, the first thing to do is to find a reasonable name for your actor pair, and get them registered (see :ref:`fission.registering-a-new-jswindowactor`), even if the actors implementations themselves are nothing but unmodified subclasses of ``JSWindowActorParent`` and ``JSWindowActorChild``.
 

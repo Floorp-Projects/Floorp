@@ -47,7 +47,7 @@ List of phases
 
 ``FirstStartup.NOT_STARTED``
 
-  The ``FirstStartup`` module has not been initalized (the ``init()``
+  The ``FirstStartup`` module has not been initialized (the ``init()``
   function has not been called). This is the default state.
 
 ``FirstStartup.IN_PROGRESS``

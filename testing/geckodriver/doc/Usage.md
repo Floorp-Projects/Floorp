@@ -32,7 +32,7 @@ Or by passing it as a flag to the [java(1)] launcher:
 
 	% java -Dwebdriver.gecko.driver=/home/user/bin YourApplication
 
-Your milage with this approach may vary based on which programming
+Your mileage with this approach may vary based on which programming
 language bindings you are using.  It is in any case generally the case
 that geckodriver will be picked up if it is available on the system path.
 In a bash compatible shell, you can make other programs aware of its
