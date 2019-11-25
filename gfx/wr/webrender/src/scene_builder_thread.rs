@@ -477,6 +477,8 @@ impl SceneBuilderThread {
             }
         }
 
+        let scene_build_end_time = precise_time_ns();
+
         let is_low_priority = false;
         txn.rasterize_blobs(is_low_priority);
 
@@ -503,7 +505,7 @@ impl SceneBuilderThread {
             notifications: replace(&mut txn.notifications, Vec::new()),
             interner_updates,
             scene_build_start_time,
-            scene_build_end_time: precise_time_ns(),
+            scene_build_end_time,
         })
     }
 
