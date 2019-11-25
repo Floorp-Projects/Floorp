@@ -4,13 +4,30 @@
 
 #include shared,prim_shared
 
-flat varying vec4 vColor;
-varying vec3 vUv;
-flat varying vec4 vUvBorder;
-flat varying vec2 vMaskSwizzle;
+// A few varying slots for the brushes to use.
+// Using these instead of adding dedicated varyings avoids using a high
+// number of varyings in the multi-brush shader.
+//
+// TODO: This is duplicated from the brush shader code and will be merged
+//       back once text runs use the brush infrastructure.
+flat varying vec4 flat_varying_vec4_0;
+flat varying vec4 flat_varying_vec4_1;
+flat varying vec4 flat_varying_vec4_2;
+varying vec4 varying_vec4_0;
+varying vec4 varying_vec4_1;
+
+#define V_COLOR             flat_varying_vec4_0
+#define V_MASK_SWIZZLE      flat_varying_vec4_1.xy
+// Normalized bounds of the source image in the texture.
+#define V_UV_BOUNDS         flat_varying_vec4_2
+
+// Interpolated UV coordinates to sample.
+#define V_UV                varying_vec4_0.xy
+#define V_LAYER             varying_vec4_0.z
+
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
-varying vec4 vUvClip;
+#define V_UV_CLIP           varying_vec4_1
 #endif
 
 #ifdef WR_VERTEX_SHADER
@@ -256,7 +273,7 @@ void main(void) {
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
     vec2 f = (glyph_transform * vi.local_pos - glyph_rect.p0) / glyph_rect.size;
-    vUvClip = vec4(f, 1.0 - f);
+    V_UV_CLIP = vec4(f, 1.0 - f);
 #else
     vec2 f = (vi.local_pos - glyph_rect.p0) / glyph_rect.size;
 #endif
@@ -266,57 +283,58 @@ void main(void) {
     switch (color_mode) {
         case COLOR_MODE_ALPHA:
         case COLOR_MODE_BITMAP:
-            vMaskSwizzle = vec2(0.0, 1.0);
-            vColor = text.color;
+            V_MASK_SWIZZLE = vec2(0.0, 1.0);
+            V_COLOR = text.color;
             break;
         case COLOR_MODE_SUBPX_BG_PASS2:
         case COLOR_MODE_SUBPX_DUAL_SOURCE:
-            vMaskSwizzle = vec2(1.0, 0.0);
-            vColor = text.color;
+            V_MASK_SWIZZLE = vec2(1.0, 0.0);
+            V_COLOR = text.color;
             break;
         case COLOR_MODE_SUBPX_CONST_COLOR:
         case COLOR_MODE_SUBPX_BG_PASS0:
         case COLOR_MODE_COLOR_BITMAP:
-            vMaskSwizzle = vec2(1.0, 0.0);
-            vColor = vec4(text.color.a);
+            V_MASK_SWIZZLE = vec2(1.0, 0.0);
+            V_COLOR = vec4(text.color.a);
             break;
         case COLOR_MODE_SUBPX_BG_PASS1:
-            vMaskSwizzle = vec2(-1.0, 1.0);
-            vColor = vec4(text.color.a) * text.bg_color;
+            V_MASK_SWIZZLE = vec2(-1.0, 1.0);
+            V_COLOR = vec4(text.color.a) * text.bg_color;
             break;
         default:
-            vMaskSwizzle = vec2(0.0);
-            vColor = vec4(1.0);
+            V_MASK_SWIZZLE = vec2(0.0);
+            V_COLOR = vec4(1.0);
     }
 
     vec2 texture_size = vec2(textureSize(sColor0, 0));
     vec2 st0 = res.uv_rect.xy / texture_size;
     vec2 st1 = res.uv_rect.zw / texture_size;
 
-    vUv = vec3(mix(st0, st1, f), res.layer);
-    vUvBorder = (res.uv_rect + vec4(0.5, 0.5, -0.5, -0.5)) / texture_size.xyxy;
+    V_UV = mix(st0, st1, f);
+    V_LAYER = res.layer;
+    V_UV_BOUNDS = (res.uv_rect + vec4(0.5, 0.5, -0.5, -0.5)) / texture_size.xyxy;
 }
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
-    vec3 tc = vec3(clamp(vUv.xy, vUvBorder.xy, vUvBorder.zw), vUv.z);
+    vec3 tc = vec3(clamp(V_UV, V_UV_BOUNDS.xy, V_UV_BOUNDS.zw), V_LAYER);
     vec4 mask = texture(sColor0, tc);
-    mask.rgb = mask.rgb * vMaskSwizzle.x + mask.aaa * vMaskSwizzle.y;
+    mask.rgb = mask.rgb * V_MASK_SWIZZLE.x + mask.aaa * V_MASK_SWIZZLE.y;
 
     float alpha = do_clip();
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
-    alpha *= float(all(greaterThanEqual(vUvClip, vec4(0.0))));
+    alpha *= float(all(greaterThanEqual(V_UV_CLIP, vec4(0.0))));
 #endif
 
 #if defined(WR_FEATURE_DEBUG_OVERDRAW)
     oFragColor = WR_DEBUG_OVERDRAW_COLOR;
 #elif defined(WR_FEATURE_DUAL_SOURCE_BLENDING)
     vec4 alpha_mask = mask * alpha;
-    oFragColor = vColor * alpha_mask;
-    oFragBlend = alpha_mask * vColor.a;
+    oFragColor = V_COLOR * alpha_mask;
+    oFragBlend = alpha_mask * V_COLOR.a;
 #else
-    write_output(vColor * mask * alpha);
+    write_output(V_COLOR * mask * alpha);
 #endif
 }
 #endif
