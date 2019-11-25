@@ -1,5 +1,5 @@
 /**
- * @fileoverview Utilities for mixed-content in Web Platform Tests.
+ * @fileoverview Utilities for mixed-content in web-platform-tests.
  * @author burnik@google.com (Kristijan Burnik)
  * Disclaimer: Some methods of other authors are annotated in the corresponding
  *     method's JSDoc.
