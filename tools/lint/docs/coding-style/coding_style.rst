@@ -91,7 +91,7 @@ else bugs, so it's safer at scale than fine-tuning.
 
 Examples:
 
-.. code:: brush:
+.. code-block:: cpp
 
    if (...) {
    } else if (...) {
@@ -179,7 +179,7 @@ functions.
 C++ classes
 ~~~~~~~~~~~~
 
-.. code:: brush:
+.. code-block:: cpp
 
    namespace mozilla {
 
@@ -257,7 +257,7 @@ In C/C++, method names should be capitalized and use camelCase.
 Typenames, and the names of arguments, should be separated with a single
 space character.
 
-.. code:: brush:
+.. code-block:: cpp
 
    template<typename T>  // Templates on own line.
    static int            // Return type on own line for top-level functions.
@@ -306,7 +306,7 @@ In JavaScript, functions should use camelCase, but should not capitalize
 the first letter. Methods should not use the named function expression
 syntax, because our tools understand method names:
 
-.. code:: brush:
+.. code-block:: cpp
 
    doSomething: function (aFoo, aBar) {
      ...
@@ -315,7 +315,7 @@ syntax, because our tools understand method names:
 In-line functions should have spaces around braces, except before commas
 or semicolons:
 
-.. code:: brush:
+.. code-block:: cpp
 
    function valueObject(aValue) { return { value: aValue }; }
 
@@ -323,7 +323,7 @@ or semicolons:
 JavaScript objects
 ~~~~~~~~~~~~~~~~~~
 
-.. code:: brush:
+.. code-block:: cpp
 
    var foo = { prop1: "value1" };
 
@@ -334,7 +334,7 @@ JavaScript objects
 
 Constructors for objects should be capitalized and use Pascal Case:
 
-.. code:: brush:
+.. code-block:: cpp
 
    function ObjectConstructor() {
      this.foo = "bar";
@@ -348,7 +348,7 @@ Files should have Emacs and vim mode line comments as the first two
 lines of the file, which should set indent-tabs-mode to nil. For new
 files, use the following, specifying two-space indentation:
 
-.. code:: brush:
+.. code-block:: cpp
 
    /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
    /* vim: set ts=8 sts=2 et sw=2 tw=80: */
@@ -365,7 +365,7 @@ Declarations
 
 In general, snuggle pointer stars with the type, not the variable name:
 
-.. code:: brush:
+.. code-block:: cpp
 
    T* p; // GOOD
    T *p; // BAD
@@ -441,7 +441,7 @@ Variable prefixes
    -  Convenience constants for interface names should be prefixed with
       ``nsI``:
 
-      .. code:: brush:
+      .. code-block:: javascript
 
          const nsISupports = Components.interfaces.nsISupports;
          const nsIWBN = Components.interfaces.nsIWebBrowserNavigation;
@@ -598,7 +598,7 @@ Java practices
    -  camelCase for method and variable names.
    -  One declaration per line:
 
-      .. code:: brush:
+      .. code-block:: java
 
          int x, y; // this is BAD!
          int a;    // split it over
@@ -607,7 +607,7 @@ Java practices
 -  Braces should be placed like so (generally, opening braces on same
    line, closing braces on a new line):
 
-   .. code:: brush:
+   .. code-block:: java
 
       public void func(int arg) {
           if (arg != 0) {
@@ -679,7 +679,7 @@ Makefile/moz.build practices
    closing square brace with start of variable assignment. If ordering
    is not important, variables should be in alphabetical order.
 
-   .. code:: brush:
+   .. code-block:: python
 
       var += [
           'foo',
@@ -764,7 +764,7 @@ Use leading-lowercase, or "interCaps"
 When defining a method or attribute in IDL, the first letter should be
 lowercase, and each following word should be capitalized. For example:
 
-.. code:: brush:
+.. code-block:: cpp
 
    long updateStatusBar();
 
@@ -779,7 +779,7 @@ setting of a value, and makes scripted code look cleaner.
 
 This example has too many methods:
 
-.. code:: brush:
+.. code-block:: cpp
 
    interface nsIFoo : nsISupports
    {
@@ -791,7 +791,7 @@ This example has too many methods:
 The code below will generate the exact same C++ signature, but is more
 script-friendly.
 
-.. code:: brush:
+.. code-block:: cpp
 
    interface nsIFoo : nsISupports
    {
@@ -806,7 +806,7 @@ Use Java-style constants
 When defining scriptable constants in IDL, the name should be all
 uppercase, with underscores between words:
 
-.. code:: brush:
+.. code-block:: cpp
 
    const long ERROR_UNDEFINED_VARIABLE = 1;
 
@@ -856,7 +856,7 @@ There are some exceptions:
 -  IPC method implementation (For example, bool RecvSomeMessage()).
 -  Most callers will check the output parameter, see below.
 
-.. code:: brush:
+.. code-block:: cpp
 
    nsresult
    SomeMap::GetValue(const nsString& key, nsString& value);
@@ -880,7 +880,7 @@ is unexpected and cannot be caused by normal web content.
 If you are writing code which wants to issue warnings when methods fail,
 please either use NS_WARNING directly, or use the new NS_WARN_IF macro.
 
-.. code:: brush:
+.. code-block:: cpp
 
    if (NS_WARN_IF(somethingthatshouldbefalse)) {
      return NS_ERROR_INVALID_ARG;
@@ -902,7 +902,7 @@ Return from errors immediately
 In most cases, your knee-jerk reaction should be to return from the
 current function, when an error condition occurs. Don't do this:
 
-.. code:: brush:
+.. code-block:: cpp
 
    rv = foo->Call1();
    if (NS_SUCCEEDED(rv)) {
@@ -915,7 +915,7 @@ current function, when an error condition occurs. Don't do this:
 
 Instead, do this:
 
-.. code:: brush:
+.. code-block:: cpp
 
    rv = foo->Call1();
    if (NS_FAILED(rv)) {
@@ -939,7 +939,7 @@ obscured the most likely behavior of the code.
 
 Consider a more complicated example to hide a bug:
 
-.. code:: brush:
+.. code-block:: cpp
 
    bool val;
    rv = foo->GetBooleanValue(&val);
@@ -955,7 +955,7 @@ called, when foo->GetBooleanValue(&val) fails. This may, or may not,
 have been the author's intent. It is not clear from this code. Here is
 an updated version:
 
-.. code:: brush:
+.. code-block:: cpp
 
    bool val;
    rv = foo->GetBooleanValue(&val);
@@ -975,7 +975,7 @@ avoids both calls to foo->Call1() and foo->Call2();
 instance, if you are notifying a series of observers that an event has
 fired, it might be trivial that one of these notifications failed:
 
-.. code:: brush:
+.. code-block:: cpp
 
    for (size_t i = 0; i < length; ++i) {
      // we don't care if any individual observer fails
@@ -986,7 +986,7 @@ Another possibility, is you are not sure if a component exists or is
 installed, and you wish to continue normally, if the component is not
 found.
 
-.. code:: brush:
+.. code-block:: cpp
 
    nsCOMPtr<nsIMyService> service = do_CreateInstance(NS_MYSERVICE_CID, &rv);
    // if the service is installed, then we'll use it.
@@ -1015,7 +1015,7 @@ When declaring a local, short-lived ``nsString`` class, always use
 ``nsAutoString`` or ``nsAutoCString``. These pre-allocate a 64-byte
 buffer on the stack, and avoid fragmenting the heap. Don't do this:
 
-.. code:: brush:
+.. code-block:: cpp
 
    nsresult
    foo()
@@ -1026,7 +1026,7 @@ buffer on the stack, and avoid fragmenting the heap. Don't do this:
 
 instead:
 
-.. code:: brush:
+.. code-block:: cpp
 
    nsresult
    foo()
@@ -1043,7 +1043,7 @@ It is an easy trap to return an allocated string, from an internal
 helper function, and then using that function inline in your code,
 without freeing the value. Consider this code:
 
-.. code:: brush:
+.. code-block:: cpp
 
    static char*
    GetStringValue()
@@ -1063,7 +1063,7 @@ scope, or make sure that your string is freed.
 
 Automatic cleanup:
 
-.. code:: brush:
+.. code-block:: cpp
 
    static void
    GetStringValue(nsAWritableCString& aResult)
@@ -1079,7 +1079,7 @@ Automatic cleanup:
 
 Free the string manually:
 
-.. code:: brush:
+.. code-block:: cpp
 
    static char*
    GetStringValue()
@@ -1105,7 +1105,7 @@ raw unicode string, and assign it directly.
 
 Incorrect:
 
-.. code:: brush:
+.. code-block:: cpp
 
    nsAutoString warning;
    warning.AssignLiteral("danger will robinson!");
@@ -1116,7 +1116,7 @@ Incorrect:
 
 Correct:
 
-.. code:: brush:
+.. code-block:: cpp
 
    NS_NAMED_LITERAL_STRING(warning, "danger will robinson!");
    ...
