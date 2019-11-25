@@ -3,6 +3,9 @@
 <title>InputEvent have correct data/order when typing on textarea and contenteditable</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
+<script src="/resources/testdriver-actions.js"></script>
 <p>To manually run this test, please follow the steps below:<br/>
 1. Focus the first box and press key 'a' and then Shift-'b'.<br/>
 2. Focus the second box and press key 'c' and then Shift-'d'.<br/>
@@ -56,5 +59,24 @@ async_test(t => {
             }));
         }
     }
-});
-</script>
+    document.getElementById('plain').focus();
+    new test_driver.Actions()
+       .keyDown('a')
+       .keyUp('a')
+       .keyDown('\uE008') // Shift
+       .keyDown('B')
+       .keyUp('B')
+       .keyUp('\uE008')
+       .send()
+       .then(() => {
+           document.getElementById('rich').focus();
+           new test_driver.Actions()
+               .keyDown('c')
+               .keyUp('c')
+               .keyDown('\uE008') // Shift
+               .keyDown('D')
+               .keyUp('D')
+               .keyUp('\uE008')
+               .send();
+       });
+});</script>
