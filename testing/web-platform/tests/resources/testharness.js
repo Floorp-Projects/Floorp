@@ -815,6 +815,12 @@ policies and contribution forms [3].
                 });
     }
 
+    /*
+     * Register a function as a DOM event listener to the given object for the
+     * event bubbling phase.
+     *
+     * This function was deprecated in November of 2019.
+     */
     function on_event(object, event, callback)
     {
         object.addEventListener(event, callback, false);

@@ -820,7 +820,15 @@ asserts that one `assert_func(actual, expected_array_N, extra_arg1, ..., extra_a
   allows multiple behaviours. Test authors should not use this method simply to hide
   UA bugs.
 
-## Formatting ##
+## Utility functions ##
+
+### **DEPRECATED** `on_event(object, event, callback)`
+
+Register a function as a DOM event listener to the given object for the event
+bubbling phase. New tests should not use this function. Instead, they should
+invoke the `addEventListener` method of the `object` value.
+
+### `format_value(value)`
 
 When many JavaScript Object values are coerced to a String, the resulting value
 will be `"[object Object]"`. This obscures helpful information, making the
