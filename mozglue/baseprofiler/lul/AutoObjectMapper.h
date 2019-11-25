@@ -61,7 +61,7 @@ class MOZ_STACK_CLASS AutoObjectMapperPOSIX {
   void operator delete[](void*);
 };
 
-#if defined(GP_OS_android)
+#if defined(MOZ_LINKER)
 // This is a variant of AutoObjectMapperPOSIX suitable for use in
 // conjunction with faulty.lib on Android.  How it behaves depends on
 // the name of the file to be mapped.  There are three possible cases:
@@ -109,6 +109,6 @@ class MOZ_STACK_CLASS AutoObjectMapperFaultyLib : public AutoObjectMapperPOSIX {
   void operator delete[](void*);
 };
 
-#endif  // defined(GP_OS_android)
+#endif  // defined(MOZ_LINKER)
 
 #endif  // AutoObjectMapper_h
