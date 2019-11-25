@@ -222,6 +222,14 @@ var whitelist = [
   { file: "chrome://browser/content/aboutlogins/aboutLoginsUtils.js" },
 ];
 
+if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {
+  // This path is refereneced in nsFxrCommandLineHandler.cpp, which is only
+  // compiled in Windows. Whitelisted this path so that non-Windows builds
+  // can access the FxR UI via --chrome rather than --fxr (which includes VR-
+  // specific functionality)
+  whitelist.push({ file: "chrome://fxr/content/fxrui.html" });
+}
+
 whitelist = new Set(
   whitelist
     .filter(
