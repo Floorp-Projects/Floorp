@@ -144,6 +144,118 @@ impl RenderNotifier for Notifier {
     }
 }
 
+fn push_rotated_rect(
+    builder: &mut DisplayListBuilder,
+    rect: LayoutRect,
+    color: ColorF,
+    spatial_id: SpatialId,
+    root_pipeline_id: PipelineId,
+    angle: f32,
+    time: f32,
+) {
+    let color = color.scale_rgb(time);
+    let rotation = LayoutTransform::create_rotation(
+        0.0,
+        0.0,
+        1.0,
+        Angle::radians(2.0 * std::f32::consts::PI * angle),
+    );
+    let transform_origin = LayoutVector3D::new(
+        rect.origin.x + rect.size.width * 0.5,
+        rect.origin.y + rect.size.height * 0.5,
+        0.0,
+    );
+    let transform = rotation
+        .pre_translate(-transform_origin)
+        .post_translate(transform_origin);
+    let spatial_id = builder.push_reference_frame(
+        LayoutPoint::zero(),
+        spatial_id,
+        TransformStyle::Flat,
+        PropertyBinding::Value(transform),
+        ReferenceFrameKind::Transform,
+    );
+    builder.push_rect(
+        &CommonItemProperties::new(
+            rect,
+            SpaceAndClipInfo {
+                spatial_id,
+                clip_id: ClipId::root(root_pipeline_id),
+            },
+        ),
+        color,
+    );
+}
+
+fn build_display_list(
+    builder: &mut DisplayListBuilder,
+    root_pipeline_id: PipelineId,
+    layout_size: LayoutSize,
+    time: f32,
+) {
+    let fixed_space_info = SpaceAndClipInfo {
+        spatial_id: SpatialId::root_scroll_node(root_pipeline_id),
+        clip_id: ClipId::root(root_pipeline_id),
+    };
+
+    let scroll_space_info = builder.define_scroll_frame(
+        &fixed_space_info,
+        None,
+        LayoutRect::new(LayoutPoint::zero(), layout_size),
+        LayoutRect::new(LayoutPoint::zero(), layout_size),
+        Vec::new(),
+        None,
+        ScrollSensitivity::Script,
+        LayoutVector2D::zero(),
+    );
+
+    builder.push_rect(
+        &CommonItemProperties::new(
+            LayoutRect::new(LayoutPoint::zero(), layout_size).inflate(-10.0, -10.0),
+            fixed_space_info,
+        ),
+        ColorF::new(0.8, 0.8, 0.8, 1.0),
+    );
+
+    push_rotated_rect(
+        builder,
+        LayoutRect::new(
+            LayoutPoint::new(100.0, 100.0),
+            LayoutSize::new(400.0, 400.0),
+        ),
+        ColorF::new(1.0, 0.0, 0.0, 1.0),
+        scroll_space_info.spatial_id,
+        root_pipeline_id,
+        0.0,
+        time,
+    );
+
+    push_rotated_rect(
+        builder,
+        LayoutRect::new(
+            LayoutPoint::new(800.0, 100.0),
+            LayoutSize::new(100.0, 600.0),
+        ),
+        ColorF::new(0.0, 1.0, 0.0, 1.0),
+        fixed_space_info.spatial_id,
+        root_pipeline_id,
+        0.2,
+        time,
+    );
+
+    push_rotated_rect(
+        builder,
+        LayoutRect::new(
+            LayoutPoint::new(700.0, 200.0),
+            LayoutSize::new(300.0, 300.0),
+        ),
+        ColorF::new(0.0, 0.0, 1.0, 1.0),
+        scroll_space_info.spatial_id,
+        root_pipeline_id,
+        0.1,
+        time,
+    );
+}
 
 fn main() {
     // If true, use DirectComposition. If false, this will fall back to normal
@@ -152,7 +264,7 @@ fn main() {
     let enable_compositor = true;
 
     // Load GL, construct WR and the native compositor interface.
-    let device_size = DeviceIntSize::new(1024, 1024);
+    let device_size = DeviceIntSize::new(1600, 800);
     let window = compositor::create_window(
         device_size.width,
         device_size.height,
@@ -205,7 +317,7 @@ fn main() {
     txn.set_root_pipeline(root_pipeline_id);
     txn.generate_frame();
     api.send_transaction(document_id, txn);
-    let mut rotation_angle = 0.0;
+    let mut time = 0.0;
 
     // Tick the compositor (in this sample, we don't block on UI events)
     while compositor::tick(window) {
@@ -221,44 +333,14 @@ fn main() {
             let layout_size = device_size.to_f32() / euclid::Scale::new(device_pixel_ratio);
             let mut txn = Transaction::new();
             let mut root_builder = DisplayListBuilder::new(root_pipeline_id, layout_size);
-            let bg_rect = LayoutRect::new(LayoutPoint::new(100.0, 100.0), LayoutSize::new(800.0, 600.0));
-            root_builder.push_rect(
-                &CommonItemProperties::new(
-                    bg_rect,
-                    SpaceAndClipInfo {
-                        spatial_id: SpatialId::root_scroll_node(root_pipeline_id),
-                        clip_id: ClipId::root(root_pipeline_id),
-                    },
-                ),
-                ColorF::new(0.3, 0.3, 0.3, 1.0),
+
+            build_display_list(
+                &mut root_builder,
+                root_pipeline_id,
+                layout_size,
+                time,
             );
-            let rotation = LayoutTransform::create_rotation(0.0, 0.0, 1.0, Angle::degrees(rotation_angle));
-            rotation_angle += 1.0;
-            if rotation_angle > 360.0 {
-                rotation_angle = 0.0;
-            }
-            let transform_origin = LayoutVector3D::new(400.0, 400.0, 0.0);
-            let transform = rotation.pre_translate(-transform_origin).post_translate(transform_origin);
-            let spatial_id = root_builder.push_reference_frame(
-                LayoutPoint::zero(),
-                SpatialId::root_scroll_node(root_pipeline_id),
-                TransformStyle::Flat,
-                PropertyBinding::Value(transform),
-                ReferenceFrameKind::Transform,
-            );
-            root_builder.push_rect(
-                &CommonItemProperties::new(
-                    LayoutRect::new(
-                        LayoutPoint::new(300.0, 300.0),
-                        LayoutSize::new(200.0, 200.0),
-                    ),
-                    SpaceAndClipInfo {
-                        spatial_id,
-                        clip_id: ClipId::root(root_pipeline_id),
-                    },
-                ),
-                ColorF::new(1.0, 0.0, 0.0, 1.0),
-            );
+
             txn.set_display_list(
                 current_epoch,
                 None,
@@ -269,6 +351,10 @@ fn main() {
             txn.generate_frame();
             api.send_transaction(document_id, txn);
             current_epoch.0 += 1;
+            time += 0.001;
+            if time > 1.0 {
+                time = 0.0;
+            }
 
             // This does nothing when native compositor is enabled
             compositor::swap_buffers(window);
