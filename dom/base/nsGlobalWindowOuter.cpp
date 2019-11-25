@@ -99,6 +99,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/ThrottledEventQueue.h"
 #include "AudioChannelService.h"
 #include "nsAboutProtocolUtils.h"
@@ -3622,7 +3623,9 @@ Maybe<CSSIntSize> nsGlobalWindowOuter::GetRDMDeviceSize(
   // Bug 1576256: This does not work for cross-process subframes.
   const Document* topInProcessContentDoc =
       aDocument.GetTopLevelContentDocument();
-  BrowsingContext* bc = topInProcessContentDoc ? topInProcessContentDoc->GetBrowsingContext() : nullptr;
+  BrowsingContext* bc = topInProcessContentDoc
+                            ? topInProcessContentDoc->GetBrowsingContext()
+                            : nullptr;
   if (bc && bc->InRDMPane()) {
     nsIDocShell* docShell = topInProcessContentDoc->GetDocShell();
     if (docShell) {
@@ -7751,8 +7754,14 @@ mozilla::dom::TabGroup* nsGlobalWindowOuter::TabGroupOuter() {
       RefPtr<BrowsingContext> openerBC = GetBrowsingContext()->GetOpener();
       nsPIDOMWindowOuter* opener =
           openerBC ? openerBC->GetDOMWindow() : nullptr;
-      MOZ_ASSERT_IF(opener && Cast(opener) != this,
-                    opener->TabGroup() == mTabGroup);
+      // For the case that a page A (foo.com) contains an iframe B (bar.com) and
+      // B contains an iframe C (foo.com), it can not guarantee that A and C are
+      // in same tabgroup in Fission mode. And if C reference back to A via
+      // window.open, we hit this assertion. Ignore this assertion in Fission
+      // given that tabgroup eventually will be removed after bug 1561715.
+      MOZ_ASSERT_IF(
+          !StaticPrefs::fission_autostart() && opener && Cast(opener) != this,
+          opener->TabGroup() == mTabGroup);
     }
     mIsValidatingTabGroup = false;
   }
