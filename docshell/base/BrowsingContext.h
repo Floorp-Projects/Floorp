@@ -221,7 +221,10 @@ class BrowsingContext : public nsISupports,
 
   uint64_t Id() const { return mBrowsingContextId; }
 
-  BrowsingContext* GetParent() const { return mParent; }
+  BrowsingContext* GetParent() const {
+    MOZ_ASSERT_IF(mParent, mParent->mType == mType);
+    return mParent;
+  }
 
   BrowsingContext* Top();
 
