@@ -131,29 +131,3 @@ pref(layout.css.column-span.enabled,true) == 1420528-1.html 1420528-1-ref.html
 
 == quirks.html quirks-ref.html
 != quirks.html quirks-notref.html
-
-== fieldset-001.html fieldset-001-ref.html
-== fieldset-001-grid.html fieldset-001-ref.html
-== fieldset-002.html fieldset-002-ref.html
-== fieldset-003.html fieldset-003-ref.html
-== fieldset-004.html fieldset-004-ref.html
-== fieldset-005.html fieldset-005-ref.html
-== fieldset-006.html fieldset-006-ref.html
-== fieldset-007.html fieldset-007-ref.html
-== fieldset-008.html fieldset-008-ref.html
-== fieldset-009.html fieldset-009-ref.html
-== fieldset-00A.html fieldset-00A-ref.html
-== fieldset-00B.html fieldset-00B-ref.html
-== fieldset-00C.html fieldset-00C-ref.html
-== fieldset-00D.html fieldset-00D-ref.html
-== fieldset-00E.html fieldset-00E-ref.html
-== fieldset-00F.html fieldset-00F-ref.html
-== fieldset-00G.html fieldset-00G-ref.html
-== fieldset-00H.html fieldset-00H-ref.html
-== fieldset-00H-grid.html fieldset-00H-ref.html
-== fieldset-00I.html fieldset-00I-ref.html
-== fieldset-00I-grid.html fieldset-00I-ref.html
-== fieldset-00J.html fieldset-00J-ref.html
-== fieldset-00J-grid.html fieldset-00J-ref.html
-== fieldset-00K.html fieldset-00K-ref.html
-== fieldset-00L.html fieldset-00L-ref.html
