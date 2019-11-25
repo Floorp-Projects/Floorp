@@ -626,6 +626,19 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
     return NS_OK;
   }
 
+  // Generally we want to switch to a real channel even if the request failed,
+  // since the listener might want to access protocol-specific data (like http
+  // response headers) in its error handling.
+  // An exception to this is when nsExtProtocolChannel handled the request and
+  // returned NS_ERROR_NO_CONTENT, since creating a real one in the content
+  // process will attempt to handle the URI a second time.
+  nsresult status = NS_OK;
+  aRequest->GetStatus(&status);
+  if (status == NS_ERROR_NO_CONTENT) {
+    mDocumentChannelBridge->DisconnectChildListeners(NS_ERROR_NO_CONTENT);
+    return NS_OK;
+  }
+
   mChannel->Suspend();
   mSuspendedChannel = true;
 
