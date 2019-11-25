@@ -656,6 +656,26 @@ pwmgr:
     release_channel_collection: opt-out
     expiry_version: never
 
+fxa:
+  connect:
+    objects: ["account"]
+    methods: ["connect", "disconnect"]
+    description: >
+      Records when a Firefox Account, or a Firefox Account service, is explicitly
+      connected or disconnected from the browser via an intentional user action.
+    extra_keys:
+      fxa: Whether the account itself was connected or disconnected.
+      sync: Whether sync was connected or disconnected.
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
+    record_in_processes: ["main"]
+    bug_numbers: [1595954]
+    notification_emails: ["sync-dev@mozilla.org"]
+    release_channel_collection: opt-out
+    expiry_version: never
+
 fxa_avatar_menu:
   click:
     objects: [
