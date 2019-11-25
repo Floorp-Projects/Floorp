@@ -95,7 +95,7 @@ always easy to parse the results.
 
     $ ./mach test dom/serviceworkers
 
-`More information < https://developer.mozilla.org/docs/Mozilla/QA/Automated_testing>`__
+`More information <https://developer.mozilla.org/docs/Mozilla/QA/Automated_testing>`__
 
 To test a change remotely
 -------------------------
@@ -114,9 +114,9 @@ To select jobs running a fuzzy search:
 
     $ ./mach try fuzzy
 
-`More information <https://firefox-source-docs.mozilla.org/tools/try/index.html>`__
-
 Note that it requires `level 1 permissions <https://www.mozilla.org/about/governance/policies/commit/access-policy/>`__.
+
+`More information <https://firefox-source-docs.mozilla.org/tools/try/index.html>`__
 
 
 To submit a patch

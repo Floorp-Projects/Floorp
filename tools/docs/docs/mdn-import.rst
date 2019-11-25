@@ -13,3 +13,7 @@ to the firefox source docs.
 
 3. Run pandoc the following way:
    ``pandoc -t rst https://wiki.developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Simple_Firefox_build/Linux_and_MacOS_build_preparation\?raw\=1  > my-file.rst``
+
+4. Verify the rst syntax using `./mach lint -l rst`_
+
+.. _./mach lint -l rst: /tools/lint/linters/rstlinter.html

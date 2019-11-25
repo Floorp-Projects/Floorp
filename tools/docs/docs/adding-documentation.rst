@@ -25,3 +25,6 @@ for it:
    ``SPHINX_PYTHON_PACKAGE_DIRS += ['mozpackage']``.
 5. In ``tools/docs/config.yml``, defines in which category the doc
    should go.
+6. Verify the rst syntax using `./mach lint -l rst`_
+
+.. _./mach lint -l rst: /tools/lint/linters/rstlinter.html
