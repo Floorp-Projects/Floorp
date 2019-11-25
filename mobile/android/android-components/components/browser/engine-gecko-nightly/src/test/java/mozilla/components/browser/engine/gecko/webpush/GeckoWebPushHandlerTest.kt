@@ -39,7 +39,7 @@ class GeckoWebPushHandlerTest {
             ByteArray(16)
         )
 
-        handler.onPushMessage(subscription, null)
+        handler.onPushMessage("", null)
 
         verify(controller).onPushEvent(any(), isNull())
 

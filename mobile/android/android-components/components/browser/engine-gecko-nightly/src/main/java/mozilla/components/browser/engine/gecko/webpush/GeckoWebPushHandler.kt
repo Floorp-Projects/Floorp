@@ -19,8 +19,8 @@ internal class GeckoWebPushHandler(
     /**
      * See [WebPushHandler].
      */
-    override fun onPushMessage(subscription: WebPushSubscription, message: ByteArray?) {
-        runtime.webPushController.onPushEvent(subscription.toGeckoSubscription(), message)
+    override fun onPushMessage(scope: String, message: ByteArray?) {
+        runtime.webPushController.onPushEvent(scope, message)
     }
 
     /**
