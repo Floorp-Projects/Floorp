@@ -75,6 +75,11 @@ impl BatchKind {
         match self {
             BatchKind::Brush(BrushBatchKind::Solid) => BrushShaderKind::Solid,
             BatchKind::Brush(BrushBatchKind::Image(..)) => BrushShaderKind::Image,
+            BatchKind::Brush(BrushBatchKind::LinearGradient) => BrushShaderKind::LinearGradient,
+            BatchKind::Brush(BrushBatchKind::RadialGradient) => BrushShaderKind::RadialGradient,
+            BatchKind::Brush(BrushBatchKind::Blend) => BrushShaderKind::Blend,
+            BatchKind::Brush(BrushBatchKind::MixBlend { .. }) => BrushShaderKind::MixBlend,
+            BatchKind::Brush(BrushBatchKind::YuvImage(..)) => BrushShaderKind::Yuv,
             BatchKind::TextRun(..) => BrushShaderKind::Text,
             _ => BrushShaderKind::None,
         }

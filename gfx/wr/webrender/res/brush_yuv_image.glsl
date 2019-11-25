@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_SPECIFIC_BRUSH 1
+#define VECS_PER_YUV_BRUSH 1
+#define VECS_PER_SPECIFIC_BRUSH VECS_PER_YUV_BRUSH
+
+#define WR_BRUSH_VS_FUNCTION yuv_brush_vs
+#define WR_BRUSH_FS_FUNCTION yuv_brush_fs
 
 #include shared,prim_shared,brush
 
@@ -120,7 +124,7 @@ YuvPrimitive fetch_yuv_primitive(int address) {
     return YuvPrimitive(data.x, int(data.y), int(data.z));
 }
 
-void brush_vs(
+void yuv_brush_vs(
     VertexInfo vi,
     int prim_address,
     RectWithSize local_rect,
@@ -165,7 +169,7 @@ void brush_vs(
 
 #ifdef WR_FRAGMENT_SHADER
 
-Fragment brush_fs() {
+Fragment yuv_brush_fs() {
     vec3 yuv_value;
 
     if (vFormat == YUV_FORMAT_PLANAR) {
