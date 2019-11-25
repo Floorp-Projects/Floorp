@@ -469,6 +469,11 @@
   min-width: max-content;
 }
 
+.statusIcon[type="pictureInPicture"]:dir(rtl),
+.pictureInPictureToggleIcon:dir(rtl) {
+  transform: scaleX(-1);
+}
+
 .pictureInPictureToggleLabel {
   margin-inline-start: var(--pip-toggle-padding);
 }
