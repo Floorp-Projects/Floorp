@@ -7,7 +7,6 @@ build/pymake
 devtools/client/debugger/flow-typed/npm/
 devtools/client/shared/build/babel.js
 devtools/client/shared/sourceeditor/codemirror/
-devtools/client/shared/sourceeditor/tern/
 devtools/client/shared/vendor/
 devtools/shared/acorn/
 devtools/shared/heapsnapshot/CoreDump.pb.cc
@@ -51,7 +50,6 @@ gfx/skia/
 gfx/vr/service/openvr/
 gfx/wr/
 gfx/ycbcr/
-intl/hyphenation/hyphen/
 intl/icu/
 ipc/chromium/src/third_party/
 js/src/ctypes/libffi/
