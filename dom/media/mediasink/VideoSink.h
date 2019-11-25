@@ -34,9 +34,9 @@ class VideoSink : public MediaSink {
 
   RefPtr<EndedPromise> OnEnded(TrackType aType) override;
 
-  TimeUnit GetEndTime(TrackType aType) const override;
+  media::TimeUnit GetEndTime(TrackType aType) const override;
 
-  TimeUnit GetPosition(TimeStamp* aTimeStamp = nullptr) const override;
+  media::TimeUnit GetPosition(TimeStamp* aTimeStamp = nullptr) const override;
 
   bool HasUnplayedFrames(TrackType aType) const override;
 
@@ -52,7 +52,8 @@ class VideoSink : public MediaSink {
 
   void Redraw(const VideoInfo& aInfo) override;
 
-  nsresult Start(const TimeUnit& aStartTime, const MediaInfo& aInfo) override;
+  nsresult Start(const media::TimeUnit& aStartTime,
+                 const MediaInfo& aInfo) override;
 
   void Stop() override;
 
@@ -123,7 +124,7 @@ class VideoSink : public MediaSink {
   MozPromiseRequestHolder<EndedPromise> mVideoSinkEndRequest;
 
   // The presentation end time of the last video frame which has been displayed.
-  TimeUnit mVideoFrameEndTime;
+  media::TimeUnit mVideoFrameEndTime;
 
   uint32_t mOldCompositorDroppedCount;
   uint32_t mPendingDroppedCount;

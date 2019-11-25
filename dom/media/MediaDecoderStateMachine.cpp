@@ -217,7 +217,7 @@ class MediaDecoderStateMachine::StateObject {
   virtual void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) {}
 
   virtual void GetDebugInfo(
-      MediaDecoderStateMachineDecodingStateDebugInfo& aInfo) {}
+      dom::MediaDecoderStateMachineDecodingStateDebugInfo& aInfo) {}
 
   virtual void HandleLoopingChanged() {}
 
@@ -640,7 +640,7 @@ class MediaDecoderStateMachine::DecodingState
   }
 
   void GetDebugInfo(
-      MediaDecoderStateMachineDecodingStateDebugInfo& aInfo) override {
+      dom::MediaDecoderStateMachineDecodingStateDebugInfo& aInfo) override {
     aInfo.mIsPrerolling = mIsPrerolling;
   }
 
