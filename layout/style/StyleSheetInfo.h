@@ -15,7 +15,6 @@
 #include "nsIReferrerInfo.h"
 
 class nsIPrincipal;
-struct nsLayoutStylesheetCacheShm;
 
 namespace mozilla {
 class StyleSheet;
