@@ -19,6 +19,7 @@
      borders we don't leak out the corners for hit-testing purposes. */
   border-radius: inherit;
   padding: inherit;
+  box-decoration-break: inherit;
   block-size: 100%; /* Need this so percentage block-sizes of kids work right */
   /* Please keep the Multicol/Flex/Grid/Align sections below in sync with
      ::-moz-scrolled-content in ua.css and ::-moz-button-content below. */
