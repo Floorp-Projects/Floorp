@@ -1,7 +1,7 @@
 # How to run experiments with ASRouter
 
 This guide will tell you how to run an experiment with ASRouter messages.
-Note that the actual experiment proccess and infrastructure is handled by
+Note that the actual experiment process and infrastructure is handled by
 the experiments team (#ask-experimenter).
 
 ## Why run an experiment

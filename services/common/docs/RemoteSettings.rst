@@ -317,7 +317,7 @@ For example, the local data of the ``"key"`` collection can be accessed in the `
 Unit Tests
 ==========
 
-As a foreword, we would like to underline the fact that your tests should not test Remote Settings itself. Your tests should assume Remote Settings works, and should only run assertions on the integration part. For example, if you see yourself mocking the server responses, your tests may go over their responsability.
+As a foreword, we would like to underline the fact that your tests should not test Remote Settings itself. Your tests should assume Remote Settings works, and should only run assertions on the integration part. For example, if you see yourself mocking the server responses, your tests may go over their responsibility.
 
 If your code relies on the ``"sync"`` event, you are likely to be interested in faking this event and make sure your code runs as expected. If it relies on ``.get()``, you will probably want to insert some fake local data.
 

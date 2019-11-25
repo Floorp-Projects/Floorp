@@ -179,7 +179,7 @@ with this particular release that we intend to release a fix for soon.
 
 - Introduces `strictFileInteractability` capability
 
-  The new capabilitiy indicates if strict interactability checks
+  The new capability indicates if strict interactability checks
   should be applied to `<input type=file>` elements.  As strict
   interactability checks are off by default, there is a change
   in behaviour when using [Element Send Keys] with hidden file
@@ -731,7 +731,7 @@ and greater.
 
 - Disable Flash and the plugin container in Firefox by
   default, which should help mitigate the “Plugin Container
-  for Firefox has stopped wroking” problems [many users were
+  for Firefox has stopped working” problems [many users were
   reporting](https://github.com/mozilla/geckodriver/issues/225) when
   deleting a session
 
@@ -740,7 +740,7 @@ and greater.
   [Marc Fisher](https://github.com/DrMarcII))
   - The exceptions are the `marionette.port` and `marionette.log.level`
     preferences and their fallbacks, which are set unconditionally and
-    cannot be overriden
+    cannot be overridden
 
 - Remove default preference that disables unsafe CPOW checks
 
@@ -749,7 +749,7 @@ and greater.
 ### Fixed
 
 - Fix for the “corrupt deflate stream” exception that
-  sometimes occured when trying to write an empty profile by
+  sometimes occurred when trying to write an empty profile by
   [@kirhgoph](https://github.com/kirhgoph)
 
 - Recognise `sslProxy` and `sslProxyPort` entries in the proxy
@@ -793,7 +793,7 @@ and greater.
 - Now uses about:blank as the new tab document; this was previously
   disabled due to [bug 1333736](https://bugzil.la/1333736) in Marionette
 
-- WebDriver libary updated to 0.23.0
+- WebDriver library updated to 0.23.0
 
 ### Fixed
 
@@ -902,7 +902,7 @@ and greater.
 
 ### Added
 
-- Introduced continous integration builds for Linux- and Windows 32-bit
+- Introduced continuous integration builds for Linux- and Windows 32-bit
   binaries
 
 - Added commands for setting- and getting the window position
@@ -1200,7 +1200,7 @@ and greater.
 - Make failing to communicate with Firefox a fatal error that closes
   the session
 
-- Shut down session only when loosing connection
+- Shut down session only when losing connection
 
 - Better handling of missing command line flags
 

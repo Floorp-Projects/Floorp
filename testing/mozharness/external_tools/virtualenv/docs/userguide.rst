@@ -80,7 +80,7 @@ below.
 
     If using Powershell, the ``activate`` script is subject to the
     `execution policies`_ on the system. By default on Windows 7, the system's
-    excution policy is set to ``Restricted``, meaning no scripts like the
+    execution policy is set to ``Restricted``, meaning no scripts like the
     ``activate`` script are allowed to be executed. But that can't stop us
     from changing that slightly to allow it to be executed.
 

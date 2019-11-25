@@ -30,12 +30,12 @@ Schematic flow of messages:
 
 The protocol consists of a [command] message and the corresponding
 [response] message.  A [response] message must always be sent in
-reply to a [commmand] message.
+reply to a [command] message.
 
 This means that the server implementation does not need to send
 the reply precisely in the order of the received commands: if it
 receives multiple messages, the server may even reply in random order.
-It is therefore strongly adviced that clients take this into account
+It is therefore strongly advised that clients take this into account
 when imlpementing the client end of this wire protocol.
 
 This is required for pipelining messages.  On the server side,

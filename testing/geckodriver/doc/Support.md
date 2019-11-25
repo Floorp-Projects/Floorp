@@ -120,7 +120,7 @@ supported release from Mozilla.
 
 To run tests on Android specific capabilities under `moz:firefoxOptions`
 have to be set when requesting a new session. See the Android section under
-[Firefox Capabilties](Capabilities.html#android) for more details.
+[Firefox Capabilities](Capabilities.html#android) for more details.
 
 [geckodriver releases]: https://github.com/mozilla/geckodriver/releases
 [Selenium]: https://github.com/seleniumhq/selenium

@@ -225,7 +225,7 @@ Version history
 ### 0.0.6 (2013-07-19) ###
 
 * `Connection` and `Endpoint` classes are usable, but not yet ready
-* Addition of an exmaple server and client
+* Addition of an example server and client
 * Using [istanbul](https://github.com/gotwarlost/istanbul) for measuring code coverage
 * [Blog post](http://gabor.molnar.es/blog/2013/07/19/gsoc-week-number-5/)
 * [Tarball](https://github.com/molnarg/node-http2/archive/node-http2-0.0.6.tar.gz)

@@ -3,7 +3,7 @@ Selenium atoms
 
 Marionette uses a small list of [Selenium atoms] to interact with
 web elements.  Initially those have been added to ensure a better
-reliablity due to a wider usage inside the Selenium project. But
+reliability due to a wider usage inside the Selenium project. But
 by adding full support for the [WebDriver specification] they will
 be removed step by step.
 
@@ -62,7 +62,7 @@ code including dependencies for the atom wrapped into a single function.
 ### Update atom.js
 
 To update the atoms for Marionette the `atoms.js` file has to be edited. For
-each atom to be updated the steps as layed out below have to be performed:
+each atom to be updated the steps as laid out below have to be performed:
 
 1. Open the Javascript file of the exported atom. See above for
    its location.
