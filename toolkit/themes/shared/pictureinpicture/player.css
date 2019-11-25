@@ -133,3 +133,7 @@ browser {
   background-repeat: no-repeat;
   background-size: 80%;
 }
+
+#unpip:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
