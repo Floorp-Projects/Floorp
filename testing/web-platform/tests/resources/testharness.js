@@ -792,8 +792,14 @@ policies and contribution forms [3].
 
     function done() {
         if (tests.tests.length === 0) {
-            tests.status.status = tests.status.ERROR;
-            tests.status.message = "done() was called without first defining any tests";
+            // `done` is invoked after handling uncaught exceptions, so if the
+            // harness status is already set, the corresponding message is more
+            // descriptive than the generic message defined here.
+            if (tests.status.status === null) {
+                tests.status.status = tests.status.ERROR;
+                tests.status.message = "done() was called without first defining any tests";
+            }
+
             tests.complete();
             return;
         }
