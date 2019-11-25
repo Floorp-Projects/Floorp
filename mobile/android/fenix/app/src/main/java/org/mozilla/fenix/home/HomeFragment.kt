@@ -37,7 +37,6 @@ import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
@@ -47,6 +46,7 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
@@ -95,7 +95,6 @@ import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
-import org.mozilla.fenix.share.ShareTab
 import org.mozilla.fenix.utils.FragmentPreDrawManager
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.whatsnew.WhatsNew
@@ -230,14 +229,14 @@ class HomeFragment : Fragment() {
 
         setupHomeMenu()
 
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val iconSize = resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
+        viewLifecycleOwner.lifecycleScope.launch(IO) {
+            val iconSize = resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
 
             val searchEngine = requireComponents.search.provider.getDefaultEngine(requireContext())
             val searchIcon = BitmapDrawable(resources, searchEngine.icon)
             searchIcon.setBounds(0, 0, iconSize, iconSize)
 
-            withContext(Dispatchers.Main) {
+            withContext(Main) {
                 search_engine_icon?.setImageDrawable(searchIcon)
             }
         }
@@ -409,7 +408,7 @@ class HomeFragment : Fragment() {
             is TabAction.Share -> {
                 invokePendingDeleteJobs()
                 sessionManager.findSessionById(action.sessionId)?.let { session ->
-                    share(session.url)
+                    share(listOf(ShareData(url = session.url)))
                 }
             }
             is TabAction.PauseMedia -> {
@@ -449,11 +448,11 @@ class HomeFragment : Fragment() {
 
             is TabAction.ShareTabs -> {
                 invokePendingDeleteJobs()
-                val shareTabs = sessionManager
+                val shareData = sessionManager
                     .sessionsOfType(private = browsingModeManager.mode.isPrivate)
-                    .map { ShareTab(it.url, it.title) }
+                    .map { ShareData(url = it.url, title = it.title) }
                     .toList()
-                share(tabs = shareTabs)
+                share(shareData)
             }
         }
     }
@@ -583,8 +582,7 @@ class HomeFragment : Fragment() {
                 components.analytics.metrics.track(Event.CollectionAllTabsRestored)
             }
             is CollectionAction.ShareTabs -> {
-                val shareTabs = action.collection.tabs.map { ShareTab(it.url, it.title) }
-                share(tabs = shareTabs)
+                share(action.collection.tabs.map { ShareData(url = it.url, title = it.title) })
                 requireComponents.analytics.metrics.track(Event.CollectionShared)
             }
             is CollectionAction.RemoveTab -> {
@@ -853,12 +851,10 @@ class HomeFragment : Fragment() {
         showCollectionCreationFragment(step, selectedTabId?.let { arrayOf(it) })
     }
 
-    private fun share(url: String? = null, tabs: List<ShareTab>? = null) {
-        val directions =
-            HomeFragmentDirections.actionHomeFragmentToShareFragment(
-                url = url,
-                tabs = tabs?.toTypedArray()
-            )
+    private fun share(data: List<ShareData>) {
+        val directions = HomeFragmentDirections.actionHomeFragmentToShareFragment(
+            data = data.toTypedArray()
+        )
         nav(R.id.homeFragment, directions)
     }
 

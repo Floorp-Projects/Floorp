@@ -11,6 +11,7 @@ import android.content.res.Resources
 import androidx.core.content.getSystemService
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
+import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -21,7 +22,6 @@ import org.mozilla.fenix.components.Services
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.share.ShareTab
 
 /**
  * [BookmarkFragment] controller.
@@ -84,9 +84,7 @@ class DefaultBookmarkController(
     override fun handleBookmarkSharing(item: BookmarkNode) {
         navigate(
             BookmarkFragmentDirections.actionBookmarkFragmentToShareFragment(
-                url = item.url!!,
-                title = item.title,
-                tabs = arrayOf(ShareTab(item.url!!, item.title!!))
+                data = arrayOf(ShareData(url = item.url, title = item.title))
             )
         )
     }

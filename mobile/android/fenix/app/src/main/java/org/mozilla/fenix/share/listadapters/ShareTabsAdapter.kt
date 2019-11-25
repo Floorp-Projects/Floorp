@@ -11,16 +11,16 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.share_tab_item.view.*
+import mozilla.components.concept.engine.prompt.ShareData
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
-import org.mozilla.fenix.share.ShareTab
 
 /**
  * Adapter for a list of tabs to be shared.
  */
 class ShareTabsAdapter :
-    ListAdapter<ShareTab, ShareTabsAdapter.ShareTabViewHolder>(ShareTabDiffCallback) {
+    ListAdapter<ShareData, ShareTabsAdapter.ShareTabViewHolder>(ShareTabDiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ShareTabViewHolder(
         LayoutInflater.from(parent.context)
@@ -32,18 +32,18 @@ class ShareTabsAdapter :
 
     class ShareTabViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        fun bind(item: ShareTab) = with(itemView) {
-            context.components.core.icons.loadIntoView(itemView.share_tab_favicon, item.url)
+        fun bind(item: ShareData) = with(itemView) {
+            context.components.core.icons.loadIntoView(itemView.share_tab_favicon, item.url.orEmpty())
             itemView.share_tab_title.text = item.title
             itemView.share_tab_url.text = item.url
         }
     }
 
-    private object ShareTabDiffCallback : DiffUtil.ItemCallback<ShareTab>() {
-        override fun areItemsTheSame(oldItem: ShareTab, newItem: ShareTab) =
+    private object ShareTabDiffCallback : DiffUtil.ItemCallback<ShareData>() {
+        override fun areItemsTheSame(oldItem: ShareData, newItem: ShareData) =
             oldItem.url == newItem.url
 
-        override fun areContentsTheSame(oldItem: ShareTab, newItem: ShareTab) =
+        override fun areContentsTheSame(oldItem: ShareData, newItem: ShareData) =
             oldItem == newItem
     }
 }

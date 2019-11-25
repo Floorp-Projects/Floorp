@@ -10,7 +10,6 @@ import android.content.Intent
 import androidx.navigation.NavController
 import assertk.assertAll
 import assertk.assertThat
-import assertk.assertions.isDataClassEqualTo
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotEqualTo
 import assertk.assertions.isSameAs
@@ -25,6 +24,7 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.TabData
@@ -50,22 +50,22 @@ class ShareControllerTest {
     // Need a valid context to retrieve Strings for example, but we also need it to return our "metrics"
     private val context: Context = spyk(testContext)
     private val metrics: MetricController = mockk(relaxed = true)
-    private val shareTabs = listOf(
-        ShareTab("url0", "title0"),
-        ShareTab("url1", "title1")
+    private val shareData = listOf(
+        ShareData(url = "url0", title = "title0"),
+        ShareData(url = "url1", title = "title1")
     )
     // Navigation between app fragments uses ShareTab as arguments. SendTabUseCases uses TabData.
     private val tabsData = listOf(
         TabData("title0", "url0"),
         TabData("title1", "url1")
     )
-    private val textToShare = "${shareTabs[0].url}\n${shareTabs[1].url}"
+    private val textToShare = "${shareData[0].url}\n${shareData[1].url}"
     private val sendTabUseCases = mockk<SendTabUseCases>(relaxed = true)
     private val snackbarPresenter = mockk<FenixSnackbarPresenter>(relaxed = true)
     private val navController = mockk<NavController>(relaxed = true)
     private val dismiss = mockk<() -> Unit>(relaxed = true)
     private val controller = DefaultShareController(
-        context, shareTabs, sendTabUseCases, snackbarPresenter, navController, dismiss
+        context, shareData, sendTabUseCases, snackbarPresenter, navController, dismiss
     )
 
     @Before
@@ -90,7 +90,7 @@ class ShareControllerTest {
         // needed for capturing the actual Intent used the `slot` one doesn't have this flag so we
         // need to use an Activity Context.
         val activityContext: Context = mockk<Activity>()
-        val testController = DefaultShareController(activityContext, shareTabs, mockk(), mockk(), mockk(), dismiss)
+        val testController = DefaultShareController(activityContext, shareData, mockk(), mockk(), mockk(), dismiss)
         every { activityContext.startActivity(capture(shareIntent)) } just Runs
 
         testController.handleShareToApp(appShareOption)
@@ -245,7 +245,7 @@ class ShareControllerTest {
     @Test
     fun `getSuccessMessage should return different strings depending on the number of shared tabs`() {
         val controllerWithOneSharedTab = DefaultShareController(
-            context, listOf(ShareTab("url0", "title0")), mockk(), mockk(), mockk(), mockk()
+            context, listOf(ShareData(url = "url0", title = "title0")), mockk(), mockk(), mockk(), mockk()
         )
         val controllerWithMoreSharedTabs = controller
         val expectedTabSharedMessage = context.getString(R.string.sync_sent_tab_snackbar)
@@ -267,22 +267,11 @@ class ShareControllerTest {
     }
 
     @Test
-    fun `ShareTab#toTabData maps a ShareTab to a TabData`() {
-        var tabData: TabData
-
-        with(controller) {
-            tabData = shareTabs[0].toTabData()
-        }
-
-        assertThat(tabData).isDataClassEqualTo(tabsData[0])
-    }
-
-    @Test
     fun `ShareTab#toTabData maps a list of ShareTab to a TabData list`() {
         var tabData: List<TabData>
 
         with(controller) {
-            tabData = shareTabs.toTabData()
+            tabData = shareData.toTabData()
         }
 
         assertThat(tabData).isEqualTo(tabsData)

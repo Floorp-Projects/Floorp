@@ -29,6 +29,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.concept.sync.AccountObserver
@@ -46,7 +47,6 @@ import org.mozilla.fenix.ext.minus
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.library.LibraryPageFragment
-import org.mozilla.fenix.share.ShareTab
 import org.mozilla.fenix.utils.allowUndo
 
 @Suppress("TooManyFunctions", "LargeClass")
@@ -196,9 +196,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler {
                 val bookmark = bookmarkStore.state.mode.selectedItems.first()
                 navigate(
                     BookmarkFragmentDirections.actionBookmarkFragmentToShareFragment(
-                        url = bookmark.url,
-                        title = bookmark.title,
-                        tabs = arrayOf(ShareTab(bookmark.url.orEmpty(), bookmark.title.orEmpty()))
+                        data = arrayOf(ShareData(url = bookmark.url, title = bookmark.title))
                     )
                 )
                 true

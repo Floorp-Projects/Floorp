@@ -16,6 +16,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.TabData
 import mozilla.components.feature.sendtab.SendTabUseCases
@@ -47,7 +48,7 @@ interface ShareController {
  * Default behavior of [ShareController]. Other implementations are possible.
  *
  * @param context [Context] used for various Android interactions.
- * @param sharedTabs the list of [ShareTab]s that can be shared.
+ * @param shareData the list of [ShareData]s that can be shared.
  * @param sendTabUseCases instance of [SendTabUseCases] which allows sending tabs to account devices.
  * @param snackbarPresenter - instance of [FenixSnackbarPresenter] for displaying styled snackbars
  * @param navController - [NavController] used for navigation.
@@ -56,12 +57,13 @@ interface ShareController {
 @Suppress("TooManyFunctions")
 class DefaultShareController(
     private val context: Context,
-    private val sharedTabs: List<ShareTab>,
+    private val shareData: List<ShareData>,
     private val sendTabUseCases: SendTabUseCases,
     private val snackbarPresenter: FenixSnackbarPresenter,
     private val navController: NavController,
     private val dismiss: () -> Unit
 ) : ShareController {
+
     override fun handleReauth() {
         val directions = ShareFragmentDirections.actionShareFragmentToAccountProblemFragment()
         navController.nav(R.id.shareFragment, directions)
@@ -99,11 +101,11 @@ class DefaultShareController(
 
     override fun handleShareToDevice(device: Device) {
         context.metrics.track(Event.SendTab)
-        shareToDevicesWithRetry { sendTabUseCases.sendToDeviceAsync(device.id, sharedTabs.toTabData()) }
+        shareToDevicesWithRetry { sendTabUseCases.sendToDeviceAsync(device.id, shareData.toTabData()) }
     }
 
     override fun handleShareToAllDevices(devices: List<Device>) {
-        shareToDevicesWithRetry { sendTabUseCases.sendToAllAsync(sharedTabs.toTabData()) }
+        shareToDevicesWithRetry { sendTabUseCases.sendToAllAsync(shareData.toTabData()) }
     }
 
     override fun handleSignIn() {
@@ -146,19 +148,20 @@ class DefaultShareController(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun getSuccessMessage(): String = with(context) {
-        when (sharedTabs.size) {
+        when (shareData.size) {
             1 -> getString(R.string.sync_sent_tab_snackbar)
             else -> getString(R.string.sync_sent_tabs_snackbar)
         }
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    fun getShareText() = sharedTabs.joinToString("\n") { tab -> tab.url }
+    @VisibleForTesting
+    fun getShareText() = shareData.joinToString("\n") { data ->
+        listOfNotNull(data.url, data.text).joinToString(" ")
+    }
 
     // Navigation between app fragments uses ShareTab as arguments. SendTabUseCases uses TabData.
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    fun ShareTab.toTabData() = TabData(title, url)
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    fun List<ShareTab>.toTabData() = map { it.toTabData() }
+    @VisibleForTesting
+    fun List<ShareData>.toTabData() = map { data ->
+        TabData(data.title.orEmpty(), data.url.orEmpty())
+    }
 }

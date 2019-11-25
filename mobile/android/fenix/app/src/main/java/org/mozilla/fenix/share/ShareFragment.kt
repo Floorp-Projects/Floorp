@@ -6,7 +6,6 @@ package org.mozilla.fenix.share
 
 import android.content.Context
 import android.os.Bundle
-import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,7 +15,6 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory
 import androidx.lifecycle.observe
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.fragment_share.view.*
 import mozilla.components.feature.sendtab.SendTabUseCases
 import org.mozilla.fenix.R
@@ -51,15 +49,14 @@ class ShareFragment : AppCompatDialogFragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_share, container, false)
         val args by navArgs<ShareFragmentArgs>()
-        check(!(args.url == null && args.tabs.isNullOrEmpty())) { "URL and tabs cannot both be null." }
+        val shareData = args.data.toList()
 
-        val tabs = args.tabs?.toList() ?: listOf(ShareTab(args.url!!, args.title.orEmpty()))
         val accountManager = requireComponents.backgroundServices.accountManager
 
         shareInteractor = ShareInteractor(
             DefaultShareController(
                 context = requireContext(),
-                sharedTabs = tabs,
+                shareData = shareData,
                 snackbarPresenter = FenixSnackbarPresenter(activity!!.getRootView()!!),
                 navController = findNavController(),
                 sendTabUseCases = SendTabUseCases(accountManager),
@@ -71,17 +68,16 @@ class ShareFragment : AppCompatDialogFragment() {
         shareToAccountDevicesView =
             ShareToAccountDevicesView(view.devicesShareLayout, shareInteractor)
 
-        if (args.url != null && args.tabs == null) {
-            // If sharing one tab from the browser fragment, show it.
-            // If URL is set and tabs is null, we assume the browser is visible, since navigation
-            // does not tell us the back stack state.
+        if (args.showPage) {
+            // Show the previous fragment underneath the share background scrim
+            // by making it translucent.
             view.closeSharingScrim.alpha = SHOW_PAGE_ALPHA
             view.shareWrapper.setOnClickListener { shareInteractor.onShareClosed() }
         } else {
             // Otherwise, show a list of tabs to share.
             view.closeSharingScrim.alpha = 1.0f
             shareCloseView = ShareCloseView(view.closeSharingContent, shareInteractor)
-            shareCloseView.setTabs(tabs)
+            shareCloseView.setTabs(shareData)
         }
         shareToAppsView = ShareToAppsView(view.appsShareLayout, shareInteractor)
 
@@ -102,6 +98,3 @@ class ShareFragment : AppCompatDialogFragment() {
         const val SHOW_PAGE_ALPHA = 0.6f
     }
 }
-
-@Parcelize
-data class ShareTab(val url: String, val title: String) : Parcelable

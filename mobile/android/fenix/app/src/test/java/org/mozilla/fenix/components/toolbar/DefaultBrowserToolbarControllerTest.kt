@@ -34,7 +34,6 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
@@ -306,12 +305,11 @@ class DefaultBrowserToolbarControllerTest {
         val item = ToolbarMenu.Item.Share
 
         every { currentSession.url } returns "https://mozilla.org"
-        val directions = NavGraphDirections.actionGlobalShareFragment(currentSession.url)
 
         controller.handleToolbarItemInteraction(item)
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.SHARE)) }
-        verify { navController.navigate(directions) }
+        verify { navController.navigate(any<NavDirections>()) }
     }
 
     @Test

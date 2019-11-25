@@ -542,20 +542,12 @@
         android:name="org.mozilla.fenix.share.ShareFragment"
         tools:layout="@layout/fragment_share">
         <argument
-            android:name="url"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
+            android:name="data"
+            app:argType="mozilla.components.concept.engine.prompt.ShareData[]" />
         <argument
-            android:name="title"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-        <argument
-            android:name="tabs"
-            android:defaultValue="@null"
-            app:argType="org.mozilla.fenix.share.ShareTab[]"
-            app:nullable="true" />
+            android:name="showPage"
+            app:argType="boolean"
+            android:defaultValue="false" />
         <action
             android:id="@+id/action_shareFragment_to_turnOnSyncFragment"
             app:destination="@+id/turnOnSyncFragment"

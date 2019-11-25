@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
@@ -32,8 +33,8 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.collections.SaveCollectionStep
-import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -144,11 +145,11 @@ class DefaultBrowserToolbarController(
                 }
             }
             ToolbarMenu.Item.Share -> {
-                val currentUrl = currentSession?.url
-                currentUrl?.apply {
-                    val directions = NavGraphDirections.actionGlobalShareFragment(this)
-                    navController.navigate(directions)
-                }
+                val directions = NavGraphDirections.actionGlobalShareFragment(
+                    data = arrayOf(ShareData(url = currentSession?.url, title = currentSession?.title)),
+                    showPage = true
+                )
+                navController.navigate(directions)
             }
             ToolbarMenu.Item.NewTab -> {
                 val directions = BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
