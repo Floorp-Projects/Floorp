@@ -4,12 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsITextControlElement_h___
-#define nsITextControlElement_h___
+#ifndef mozilla_TextControlElement_h
+#define mozilla_TextControlElement_h
 
-#include "nsISupports.h"
-#include "nsCOMPtr.h"
-#include "nsStringFwd.h"
+#include "mozilla/dom/FromParser.h"
+#include "mozilla/dom/NodeInfo.h"
+#include "nsGenericHTMLElement.h"
+
 class nsIContent;
 class nsISelectionController;
 class nsFrameSelection;
@@ -21,76 +22,74 @@ class ErrorResult;
 class TextControlState;
 class TextEditor;
 
-namespace dom {
-class Element;
-}  // namespace dom
-}  // namespace mozilla
-
-// IID for the nsITextControl interface
-#define NS_ITEXTCONTROLELEMENT_IID                   \
-  {                                                  \
-    0x3df7db6d, 0xa548, 0x4e20, {                    \
-      0x97, 0xfd, 0x75, 0xa3, 0x31, 0xa2, 0xf3, 0xd4 \
-    }                                                \
-  }
-
 /**
- * This interface is used for the text control frame to get the editor and
+ * This abstract class is used for the text control frame to get the editor and
  * selection controller objects, and some helper properties.
  */
-class nsITextControlElement : public nsISupports {
+class TextControlElement : public nsGenericHTMLFormElementWithState {
  public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITEXTCONTROLELEMENT_IID)
+  TextControlElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo,
+                     dom::FromParser aFromParser, uint8_t aType)
+      : nsGenericHTMLFormElementWithState(std::move(aNodeInfo), aFromParser,
+                                          aType){};
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TextControlElement,
+                                           nsGenericHTMLFormElementWithState)
+
+  bool IsTextControlElement() const final { return true; }
+
+  NS_IMPL_FROMNODE_HELPER(TextControlElement, IsTextControlElement())
 
   /**
    * Tell the control that value has been deliberately changed (or not).
    */
-  NS_IMETHOD SetValueChanged(bool changed) = 0;
+  virtual nsresult SetValueChanged(bool changed) = 0;
 
   /**
    * Find out whether this is a single line text control.  (text or password)
    * @return whether this is a single line text control
    */
-  NS_IMETHOD_(bool) IsSingleLineTextControl() const = 0;
+  virtual bool IsSingleLineTextControl() const = 0;
 
   /**
    * Find out whether this control is a textarea.
    * @return whether this is a textarea text control
    */
-  NS_IMETHOD_(bool) IsTextArea() const = 0;
+  virtual bool IsTextArea() const = 0;
 
   /**
    * Find out whether this is a password control (input type=password)
    * @return whether this is a password ontrol
    */
-  NS_IMETHOD_(bool) IsPasswordTextControl() const = 0;
+  virtual bool IsPasswordTextControl() const = 0;
 
   /**
    * Get the cols attribute (if textarea) or a default
    * @return the number of columns to use
    */
-  NS_IMETHOD_(int32_t) GetCols() = 0;
+  virtual int32_t GetCols() = 0;
 
   /**
    * Get the column index to wrap at, or -1 if we shouldn't wrap
    */
-  NS_IMETHOD_(int32_t) GetWrapCols() = 0;
+  virtual int32_t GetWrapCols() = 0;
 
   /**
    * Get the rows attribute (if textarea) or a default
    * @return the number of rows to use
    */
-  NS_IMETHOD_(int32_t) GetRows() = 0;
+  virtual int32_t GetRows() = 0;
 
   /**
    * Get the default value of the text control
    */
-  NS_IMETHOD_(void) GetDefaultValueFromContent(nsAString& aValue) = 0;
+  virtual void GetDefaultValueFromContent(nsAString& aValue) = 0;
 
   /**
    * Return true if the value of the control has been changed.
    */
-  NS_IMETHOD_(bool) ValueChanged() const = 0;
+  virtual bool ValueChanged() const = 0;
 
   /**
    * Get the current value of the text editor.
@@ -99,8 +98,8 @@ class nsITextControlElement : public nsISupports {
    * @param aIgnoreWrap whether to ignore the text wrapping behavior specified
    * for the element.
    */
-  NS_IMETHOD_(void)
-  GetTextEditorValue(nsAString& aValue, bool aIgnoreWrap) const = 0;
+  virtual void GetTextEditorValue(nsAString& aValue,
+                                  bool aIgnoreWrap) const = 0;
 
   /**
    * Get the editor object associated with the text editor.
@@ -110,79 +109,80 @@ class nsITextControlElement : public nsISupports {
    * If you need editor only when the editor is there, you should use
    * GetTextEditorWithoutCreation().
    */
-  NS_IMETHOD_(mozilla::TextEditor*) GetTextEditor() = 0;
-  NS_IMETHOD_(mozilla::TextEditor*) GetTextEditorWithoutCreation() = 0;
+  MOZ_CAN_RUN_SCRIPT virtual TextEditor* GetTextEditor() = 0;
+  virtual TextEditor* GetTextEditorWithoutCreation() = 0;
 
   /**
    * Get the selection controller object associated with the text editor.
    * The return value is null if the control does not support an editor
    * (for example, if it is a checkbox.)
    */
-  NS_IMETHOD_(nsISelectionController*) GetSelectionController() = 0;
+  virtual nsISelectionController* GetSelectionController() = 0;
 
-  NS_IMETHOD_(nsFrameSelection*) GetConstFrameSelection() = 0;
+  virtual nsFrameSelection* GetConstFrameSelection() = 0;
 
-  NS_IMETHOD_(mozilla::TextControlState*) GetTextControlState() const = 0;
+  virtual TextControlState* GetTextControlState() const = 0;
 
   /**
    * Binds a frame to the text control.  This is performed when a frame
    * is created for the content node.
    */
-  NS_IMETHOD BindToFrame(nsTextControlFrame* aFrame) = 0;
+  virtual nsresult BindToFrame(nsTextControlFrame* aFrame) = 0;
 
   /**
    * Unbinds a frame from the text control.  This is performed when a frame
    * belonging to a content node is destroyed.
    */
-  NS_IMETHOD_(void) UnbindFromFrame(nsTextControlFrame* aFrame) = 0;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void UnbindFromFrame(
+      nsTextControlFrame* aFrame) = 0;
 
   /**
    * Creates an editor for the text control.  This should happen when
    * a frame has been created for the text control element, but the created
    * editor may outlive the frame itself.
    */
-  NS_IMETHOD CreateEditor() = 0;
+  MOZ_CAN_RUN_SCRIPT virtual nsresult CreateEditor() = 0;
 
   /**
    * Update preview value for the text control.
    */
-  NS_IMETHOD_(void) SetPreviewValue(const nsAString& aValue) = 0;
+  virtual void SetPreviewValue(const nsAString& aValue) = 0;
 
   /**
    * Get the current preview value for text control.
    */
-  NS_IMETHOD_(void) GetPreviewValue(nsAString& aValue) = 0;
+  virtual void GetPreviewValue(nsAString& aValue) = 0;
 
   /**
    * Enable preview for text control.
    */
-  NS_IMETHOD_(void) EnablePreview() = 0;
+  virtual void EnablePreview() = 0;
 
   /**
    * Find out whether this control enables preview for form autofoll.
    */
-  NS_IMETHOD_(bool) IsPreviewEnabled() = 0;
+  virtual bool IsPreviewEnabled() = 0;
 
   /**
    * Initialize the keyboard event listeners.
    */
-  NS_IMETHOD_(void) InitializeKeyboardEventListeners() = 0;
+  virtual void InitializeKeyboardEventListeners() = 0;
 
   /**
    * Update the visibility of both the placholder and preview text based on the
    * element's state.
    */
-  NS_IMETHOD_(void) UpdateOverlayTextVisibility(bool aNotify) = 0;
+  virtual void UpdateOverlayTextVisibility(bool aNotify) = 0;
 
   /**
    * Returns the current expected placeholder visibility state.
    */
-  NS_IMETHOD_(bool) GetPlaceholderVisibility() = 0;
+  virtual bool GetPlaceholderVisibility() = 0;
 
   /**
    * Returns the current expected preview visibility state.
    */
-  NS_IMETHOD_(bool) GetPreviewVisibility() = 0;
+  virtual bool GetPreviewVisibility() = 0;
 
   enum class ValueChangeKind {
     Internal,
@@ -193,8 +193,7 @@ class nsITextControlElement : public nsISupports {
   /**
    * Callback called whenever the value is changed.
    */
-  NS_IMETHOD_(void)
-  OnValueChanged(bool aNotify, ValueChangeKind) = 0;
+  virtual void OnValueChanged(bool aNotify, ValueChangeKind) = 0;
 
   /**
    * Helpers for value manipulation from SetRangeText.
@@ -223,12 +222,15 @@ class nsITextControlElement : public nsISupports {
    * Note that this function has the side effect of making the editor for input
    * elements be initialized eagerly.
    */
-  NS_IMETHOD_(bool) HasCachedSelection() = 0;
+  virtual bool HasCachedSelection() = 0;
 
-  static already_AddRefed<nsITextControlElement>
+  static already_AddRefed<TextControlElement>
   GetTextControlElementFromEditingHost(nsIContent* aHost);
+
+ protected:
+  virtual ~TextControlElement() = default;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsITextControlElement, NS_ITEXTCONTROLELEMENT_IID)
+}  // namespace mozilla
 
-#endif  // nsITextControlElement_h___
+#endif  // mozilla_TextControlElement_h

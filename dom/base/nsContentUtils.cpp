@@ -4087,9 +4087,7 @@ nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement,
   }
 #ifdef DEBUG
   else {
-    nsCOMPtr<nsITextControlElement> textControlElement =
-        do_QueryInterface(aEventTargetElement);
-    MOZ_ASSERT(!textControlElement,
+    MOZ_ASSERT(!aEventTargetElement->IsTextControlElement(),
                "The event target may have editor, but we've not known it yet.");
   }
 #endif  // #ifdef DEBUG

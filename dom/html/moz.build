@@ -40,10 +40,10 @@ EXPORTS += [
     'nsIHTMLCollection.h',
     'nsIRadioGroupContainer.h',
     'nsIRadioVisitor.h',
-    'nsITextControlElement.h',
 ]
 
 EXPORTS.mozilla += [
+    'TextControlElement.h',
     'TextControlState.h',
     'TextInputListener.h',
 ]

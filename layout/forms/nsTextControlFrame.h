@@ -8,12 +8,12 @@
 #define nsTextControlFrame_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/TextControlElement.h"
 #include "mozilla/dom/Element.h"
 #include "nsContainerFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIContent.h"
 #include "nsITextControlFrame.h"
-#include "nsITextControlElement.h"
 #include "nsIStatefulFrame.h"
 
 class nsISelectionController;
@@ -130,7 +130,8 @@ class nsTextControlFrame final : public nsContainerFrame,
 
   //==== NSITEXTCONTROLFRAME
 
-  NS_IMETHOD_(already_AddRefed<mozilla::TextEditor>) GetTextEditor() override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD_(already_AddRefed<mozilla::TextEditor>)
+      GetTextEditor() override;
   NS_IMETHOD SetSelectionRange(uint32_t aSelectionStart, uint32_t aSelectionEnd,
                                SelectionDirection aDirection = eNone) override;
   NS_IMETHOD GetOwnedSelectionController(
@@ -142,7 +143,8 @@ class nsTextControlFrame final : public nsContainerFrame,
    * @throws NS_ERROR_NOT_INITIALIZED if mEditor has not been created
    * @throws various and sundry other things
    */
-  virtual nsresult EnsureEditorInitialized() override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual nsresult EnsureEditorInitialized()
+      override;
 
   //==== END NSITEXTCONTROLFRAME
 
@@ -185,11 +187,11 @@ class nsTextControlFrame final : public nsContainerFrame,
   nsresult MaybeBeginSecureKeyboardInput();
   void MaybeEndSecureKeyboardInput();
 
-#define DEFINE_TEXTCTRL_CONST_FORWARDER(type, name)                            \
-  type name() const {                                                          \
-    nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent()); \
-    NS_ASSERTION(txtCtrl, "Content not a text control element");               \
-    return txtCtrl->name();                                                    \
+#define DEFINE_TEXTCTRL_CONST_FORWARDER(type, name)          \
+  type name() const {                                        \
+    mozilla::TextControlElement* textControlElement =        \
+        mozilla::TextControlElement::FromNode(GetContent()); \
+    return textControlElement->name();                       \
   }
 
   DEFINE_TEXTCTRL_CONST_FORWARDER(bool, IsSingleLineTextControl)
