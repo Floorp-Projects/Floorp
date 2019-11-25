@@ -26,6 +26,8 @@ import mozilla.components.concept.engine.content.blocking.TrackingProtectionExce
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.utils.EngineVersion
+import mozilla.components.concept.engine.webextension.ActionHandler
+import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate
@@ -148,16 +150,46 @@ class GeckoEngine(
         onSuccess: ((WebExtension) -> Unit),
         onError: ((String, Throwable) -> Unit)
     ) {
-        GeckoWebExtension(id, url, allowContentMessaging, supportActions).also { ext ->
-            runtime.registerWebExtension(ext.nativeExtension).then({
-                webExtensionDelegate?.onInstalled(ext)
-                onSuccess(ext)
-                GeckoResult<Void>()
-            }, {
-                throwable -> onError(id, throwable)
-                GeckoResult<Void>()
+        val ext = GeckoWebExtension(id, url, allowContentMessaging, supportActions)
+        installWebExtension(ext, onSuccess, onError)
+    }
+
+    internal fun installWebExtension(
+        ext: GeckoWebExtension,
+        onSuccess: ((WebExtension) -> Unit) = { },
+        onError: ((String, Throwable) -> Unit) = { _, _ -> }
+    ) {
+        if (ext.supportActions) {
+            // We currently have to install the global action handler before we
+            // install the extension which is why this is done here directly.
+            // This code can be removed from the engine once the new GV addon
+            // management API lands. Then the global handlers will be invoked
+            // with the latest state whenever they are registered:
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1599897
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1582185
+            ext.registerActionHandler(object : ActionHandler {
+                override fun onBrowserAction(extension: WebExtension, session: EngineSession?, action: BrowserAction) {
+                    webExtensionDelegate?.onBrowserActionDefined(extension, action)
+                }
+
+                override fun onToggleBrowserActionPopup(
+                    extension: WebExtension,
+                    action: BrowserAction
+                ): EngineSession? {
+                    val session = GeckoEngineSession(runtime)
+                    return webExtensionDelegate?.onToggleBrowserActionPopup(extension, session, action)
+                }
             })
         }
+
+        runtime.registerWebExtension(ext.nativeExtension).then({
+            webExtensionDelegate?.onInstalled(ext)
+            onSuccess(ext)
+            GeckoResult<Void>()
+        }, {
+            throwable -> onError(ext.id, throwable)
+            GeckoResult<Void>()
+        })
     }
 
     /**

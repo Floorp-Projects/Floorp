@@ -10,8 +10,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -29,15 +29,16 @@ import mozilla.components.support.ktx.android.content.res.resolveAttribute
 open class WebExtensionToolbarAction(
     internal var browserAction: WebExtensionBrowserAction,
     internal val padding: Padding? = null,
+    internal val iconJobDispatcher: CoroutineDispatcher,
     internal val listener: () -> Unit
 ) : Toolbar.Action {
     internal var iconJob: Job? = null
 
     override fun createView(parent: ViewGroup): View {
         val rootView = LayoutInflater.from(parent.context)
-            .inflate(R.layout.mozac_feature_toolbar_web_extension_action_layout, parent)
+            .inflate(R.layout.mozac_feature_toolbar_web_extension_action_layout, parent, false)
 
-        rootView.isEnabled = browserAction.enabled
+        rootView.isEnabled = browserAction.enabled ?: true
         rootView.setOnClickListener { listener.invoke() }
 
         val backgroundResource =
@@ -60,9 +61,8 @@ open class WebExtensionToolbarAction(
         val imageView = view.findViewById<ImageView>(R.id.action_image)
         val textView = view.findViewById<TextView>(R.id.badge_text)
 
-        iconJob = CoroutineScope(Dispatchers.IO).launch {
-            val icon = browserAction.loadIcon.invoke(imageView.measuredHeight)
-
+        iconJob = CoroutineScope(iconJobDispatcher).launch {
+            val icon = browserAction.loadIcon?.invoke(imageView.measuredHeight)
             icon?.let {
                 MainScope().launch {
                     imageView.setImageDrawable(BitmapDrawable(view.context.resources, it))
@@ -70,9 +70,9 @@ open class WebExtensionToolbarAction(
             }
         }
 
-        imageView.contentDescription = browserAction.title
-        textView.text = browserAction.badgeText
-        textView.setTextColor(browserAction.badgeTextColor)
-        textView.setBackgroundColor(browserAction.badgeBackgroundColor)
+        browserAction.title?.let { imageView.contentDescription = it }
+        browserAction.badgeText?.let { textView.text = it }
+        browserAction.badgeTextColor?.let { textView.setTextColor(it) }
+        browserAction.badgeBackgroundColor?.let { textView.setBackgroundColor(it) }
     }
 }

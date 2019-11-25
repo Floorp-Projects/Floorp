@@ -18,13 +18,19 @@ internal object WebExtensionReducer {
     fun reduce(state: BrowserState, action: WebExtensionAction): BrowserState {
         return when (action) {
             is WebExtensionAction.InstallWebExtension -> {
-                state.copy(
-                    extensions = state.extensions + (action.extension.id to action.extension)
-                )
+                val existingExtension = state.extensions[action.extension.id]
+                if (existingExtension == null) {
+                    state.copy(
+                        extensions = state.extensions + (action.extension.id to action.extension)
+                    )
+                } else {
+                    state
+                }
             }
             is WebExtensionAction.UpdateBrowserAction -> {
                 val newExtension = action.extensionId to WebExtensionState(
-                    id = action.extensionId, browserAction = action.browserAction
+                    id = action.extensionId,
+                    browserAction = action.browserAction
                 )
 
                 val updatedExtensions = state.extensions - action.extensionId
@@ -32,6 +38,23 @@ internal object WebExtensionReducer {
                 state.copy(
                     extensions = updatedExtensions + newExtension
                 )
+            }
+            is WebExtensionAction.UpdateBrowserActionPopupSession -> {
+                val existingExtension = state.extensions[action.extensionId]
+
+                if (existingExtension == null) {
+                    state
+                } else {
+                    val newExtension = action.extensionId to existingExtension.copy(
+                        browserActionPopupSession = action.popupSessionId
+                    )
+
+                    val updatedExtensions = state.extensions - action.extensionId
+
+                    state.copy(
+                        extensions = updatedExtensions + newExtension
+                    )
+                }
             }
 
             is WebExtensionAction.UpdateTabBrowserAction -> {

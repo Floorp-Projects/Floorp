@@ -19,6 +19,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.ActionHandler
+import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.support.test.any
@@ -29,6 +30,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -75,9 +77,10 @@ class WebExtensionSupportTest {
         verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
 
         delegateCaptor.value.onNewTab(ext, "https://mozilla.org", engineSession)
-        val actionCaptor = argumentCaptor<TabListAction.AddTabAction>()
-        verify(store).dispatch(actionCaptor.capture())
-        assertEquals("https://mozilla.org", actionCaptor.value.tab.content.url)
+        val actionCaptor = argumentCaptor<mozilla.components.browser.state.action.BrowserAction>()
+        verify(store, times(2)).dispatch(actionCaptor.capture())
+        assertEquals("https://mozilla.org", (actionCaptor.allValues.first() as TabListAction.AddTabAction).tab.content.url)
+        assertEquals(engineSession, (actionCaptor.allValues.last() as EngineAction.LinkEngineSessionAction).engineSession)
     }
 
     @Test
@@ -89,7 +92,10 @@ class WebExtensionSupportTest {
         var onNewTabCalled = false
 
         val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
-        WebExtensionSupport.initialize(engine, store, onNewTabOverride = { _, _, _ -> onNewTabCalled = true })
+        WebExtensionSupport.initialize(engine, store, onNewTabOverride = { _, _, _ ->
+            onNewTabCalled = true
+            "123"
+        })
         verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
 
         delegateCaptor.value.onNewTab(ext, "https://mozilla.org", engineSession)
@@ -168,18 +174,13 @@ class WebExtensionSupportTest {
         verify(store).dispatch(WebExtensionAction.InstallWebExtension(WebExtensionState(ext.id, ext.url)))
         assertTrue(WebExtensionSupport.installedExtensions.contains(ext))
 
-        // Verify that we register a global default action handler on the extension
+        // Verify that we register an action handler for all existing sessions on the extension
         val actionHandlerCaptor = argumentCaptor<ActionHandler>()
         val actionCaptor = argumentCaptor<WebExtensionAction>()
-        verify(ext).registerActionHandler(actionHandlerCaptor.capture())
-        actionHandlerCaptor.value.onBrowserAction(ext, null, mock())
-        verify(store, times(3)).dispatch(actionCaptor.capture())
-        assertEquals(ext.id, (actionCaptor.allValues.last() as WebExtensionAction.UpdateBrowserAction).extensionId)
 
-        // Verify that we register an action handler for all existing sessions on the extension
         verify(ext).registerActionHandler(eq(engineSession), actionHandlerCaptor.capture())
         actionHandlerCaptor.value.onBrowserAction(ext, engineSession, mock())
-        verify(store, times(4)).dispatch(actionCaptor.capture())
+        verify(store, times(3)).dispatch(actionCaptor.capture())
         assertEquals(ext.id, (actionCaptor.allValues.last() as WebExtensionAction.UpdateTabBrowserAction).extensionId)
     }
 
@@ -209,5 +210,73 @@ class WebExtensionSupportTest {
         verify(ext, never()).registerActionHandler(any(), any())
         store.dispatch(EngineAction.LinkEngineSessionAction("1", engineSession)).joinBlocking()
         verify(ext).registerActionHandler(eq(engineSession), actionHandlerCaptor.capture())
+    }
+
+    @Test
+    fun `reacts to browser action being defined by dispatching to the store`() {
+        val store = spy(BrowserStore())
+        val engine: Engine = mock()
+        val ext: WebExtension = mock()
+        val browserAction: BrowserAction = mock()
+        whenever(ext.id).thenReturn("test")
+
+        val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
+        WebExtensionSupport.initialize(engine, store)
+        verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
+
+        delegateCaptor.value.onBrowserActionDefined(ext, browserAction)
+        val actionCaptor = argumentCaptor<WebExtensionAction.UpdateBrowserAction>()
+        verify(store).dispatch(actionCaptor.capture())
+        assertEquals("test", actionCaptor.value.extensionId)
+        assertEquals(browserAction, actionCaptor.value.browserAction)
+    }
+
+    @Test
+    fun `reacts to browser action popup being toggled by opening and closing tab`() {
+        val engine: Engine = mock()
+        val ext: WebExtension = mock()
+        val engineSession: EngineSession = mock()
+        val browserAction: BrowserAction = mock()
+        whenever(ext.id).thenReturn("test")
+        val store = spy(BrowserStore(BrowserState(
+            extensions = mapOf(ext.id to WebExtensionState(ext.id))
+        )))
+
+        val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
+        WebExtensionSupport.initialize(engine, store)
+        verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
+
+        // Toggling should open tab
+        delegateCaptor.value.onToggleBrowserActionPopup(ext, engineSession, browserAction)
+        var actionCaptor = argumentCaptor<mozilla.components.browser.state.action.BrowserAction>()
+        verify(store, times(3)).dispatch(actionCaptor.capture())
+        var values = actionCaptor.allValues
+        assertEquals("", (values[0] as TabListAction.AddTabAction).tab.content.url)
+        assertEquals(engineSession, (values[1] as EngineAction.LinkEngineSessionAction).engineSession)
+        assertEquals("test", (values[2] as WebExtensionAction.UpdateBrowserActionPopupSession).extensionId)
+
+        // Update store
+        store.dispatch(WebExtensionAction.UpdateBrowserActionPopupSession(
+            "test",
+            (values[2] as WebExtensionAction.UpdateBrowserActionPopupSession).popupSessionId)
+        ).joinBlocking()
+
+        val popupSessionId = store.state.extensions["test"]?.browserActionPopupSession
+        assertNotNull(popupSessionId)
+
+        // Select different tab
+        store.dispatch(TabListAction.SelectTabAction("otherTab"))
+
+        // Toggling again should select popup tab
+        delegateCaptor.value.onToggleBrowserActionPopup(ext, engineSession, browserAction)
+        actionCaptor = argumentCaptor()
+        verify(store, times(6)).dispatch(actionCaptor.capture())
+        assertEquals(popupSessionId, (actionCaptor.value as TabListAction.SelectTabAction).tabId)
+
+        // Toggling again should close tab
+        delegateCaptor.value.onToggleBrowserActionPopup(ext, engineSession, browserAction)
+        actionCaptor = argumentCaptor()
+        verify(store, times(7)).dispatch(actionCaptor.capture())
+        assertEquals(popupSessionId, (actionCaptor.value as TabListAction.RemoveTabAction).tabId)
     }
 }

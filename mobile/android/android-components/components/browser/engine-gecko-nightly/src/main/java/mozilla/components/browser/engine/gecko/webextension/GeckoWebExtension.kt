@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.gecko.webextension
 
+import android.graphics.Bitmap
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.browser.engine.gecko.await
 import mozilla.components.concept.engine.EngineSession
@@ -172,6 +173,14 @@ class GeckoWebExtension(
             ) {
                 actionHandler.onBrowserAction(this@GeckoWebExtension, null, action.toBrowserAction())
             }
+
+            override fun onTogglePopup(
+                ext: GeckoNativeWebExtension,
+                action: GeckoNativeWebExtensionAction
+            ): GeckoResult<GeckoSession>? {
+                val session = actionHandler.onToggleBrowserActionPopup(this@GeckoWebExtension, action.toBrowserAction())
+                return session?.let { GeckoResult.fromValue((session as GeckoEngineSession).geckoSession) }
+            }
         }
 
         nativeExtension.setActionDelegate(actionDelegate)
@@ -240,13 +249,20 @@ private fun createWebExtensionFlags(allowContentMessaging: Boolean): Long {
     }
 }
 
-private fun GeckoNativeWebExtensionAction.toBrowserAction() =
-    BrowserAction(
-        title ?: "",
-        enabled ?: true,
-        { size -> icon?.get(size)?.await() },
-        badgeText ?: "",
-        badgeTextColor ?: 0,
-        badgeBackgroundColor ?: 0,
-        { click() }
+private fun GeckoNativeWebExtensionAction.toBrowserAction(): BrowserAction {
+    val loadIcon: (suspend (Int) -> Bitmap?)? = icon?.let {
+        { size -> icon?.get(size)?.await() }
+    }
+
+    val onClick = { click() }
+
+    return BrowserAction(
+        title,
+        enabled,
+        loadIcon,
+        badgeText,
+        badgeTextColor,
+        badgeBackgroundColor,
+        onClick
     )
+}

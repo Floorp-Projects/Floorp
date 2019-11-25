@@ -43,10 +43,18 @@ class SampleApplication : Application() {
                 components.engine,
                 components.store,
                 onNewTabOverride = {
-                    _, engineSession, url -> components.sessionManager.add(Session(url), true, engineSession)
+                    _, engineSession, url ->
+                        val session = Session(url)
+                        components.sessionManager.add(session, true, engineSession)
+                        session.id
                 },
                 onCloseTabOverride = {
                     _, sessionId -> components.tabsUseCases.removeTab(sessionId)
+                },
+                onSelectTabOverride = {
+                    _, sessionId ->
+                        val selected = components.sessionManager.findSessionById(sessionId)
+                        selected?.let { components.tabsUseCases.selectTab(it) }
                 }
             )
         } catch (e: UnsupportedOperationException) {

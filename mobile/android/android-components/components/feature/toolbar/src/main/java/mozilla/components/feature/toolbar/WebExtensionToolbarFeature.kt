@@ -4,8 +4,13 @@
 
 package mozilla.components.feature.toolbar
 
+import android.os.Handler
+import android.os.HandlerThread
 import androidx.annotation.VisibleForTesting
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import mozilla.components.browser.state.selector.selectedTab
@@ -34,45 +39,70 @@ class WebExtensionToolbarFeature(
 
     private var scope: CoroutineScope? = null
 
+    internal val iconThread = HandlerThread("IconThread")
+    internal val iconHandler by lazy {
+        iconThread.start()
+        Handler(iconThread.looper)
+    }
+
+    internal var iconJobDispatcher: CoroutineDispatcher = Dispatchers.Main
+
+    init {
+        renderWebExtensionActions(store.state)
+    }
+
     /**
      * Starts observing for the state of web extensions changes
      */
     override fun start() {
+        iconJobDispatcher = iconHandler.asCoroutineDispatcher("WebExtensionIconDispatcher")
+
         scope = store.flowScoped { flow ->
             flow.ifAnyChanged { arrayOf(it.selectedTab, it.extensions) }
                 .collect { state ->
-                    state.selectedTab?.let { tab ->
-                        renderWebExtensionActions(state, tab)
-                    }
+                    renderWebExtensionActions(state, state.selectedTab)
                 }
         }
     }
 
     override fun stop() {
+        iconJobDispatcher.cancel()
         scope?.cancel()
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun renderWebExtensionActions(state: BrowserState, tab: SessionState) {
-        val extensionsMap = state.extensions.toMutableMap()
-        extensionsMap.putAll(tab.extensionState)
-
-        val extensions = extensionsMap.values.toList()
-
+    internal fun renderWebExtensionActions(state: BrowserState, tab: SessionState? = null) {
+        val extensions = state.extensions.values.toList()
         extensions.forEach { extension ->
-            extension.browserAction?.let { extensionAction ->
-                val existingBrowserAction = webExtensionBrowserActions[extension.id]
-
-                if (existingBrowserAction != null) {
-                    existingBrowserAction.browserAction = extensionAction
-                } else {
+            extension.browserAction?.let { browserAction ->
+                // Add the global browser action if it doesn't exist
+                val toolbarAction = webExtensionBrowserActions.getOrPut(extension.id) {
                     val toolbarAction = WebExtensionToolbarAction(
-                            browserAction = extensionAction,
-                            listener = extensionAction.onClick)
+                        browserAction = browserAction,
+                        listener = browserAction.onClick,
+                        iconJobDispatcher = iconJobDispatcher
+                    )
                     toolbar.addBrowserAction(toolbarAction)
-                    webExtensionBrowserActions[extension.id] = toolbarAction
+                    toolbar.invalidateActions()
+                    toolbarAction
                 }
-                toolbar.invalidateActions()
+
+                // Check if we have a tab-specific override and apply it.
+                // Note that tab-specific actions only contain the values that
+                // should be overridden. All other values will be null and should
+                // therefore *not* be applied / overridden.
+                tab?.extensionState?.get(extension.id)?.browserAction?.let {
+                    toolbarAction.browserAction = BrowserAction(
+                        title = it.title ?: browserAction.title,
+                        enabled = it.enabled ?: browserAction.enabled,
+                        badgeText = it.badgeText ?: browserAction.badgeText,
+                        badgeBackgroundColor = it.badgeBackgroundColor ?: browserAction.badgeBackgroundColor,
+                        badgeTextColor = it.badgeTextColor ?: browserAction.badgeTextColor,
+                        loadIcon = it.loadIcon ?: browserAction.loadIcon,
+                        onClick = it.onClick
+                    )
+                    toolbar.invalidateActions()
+                }
             }
         }
     }

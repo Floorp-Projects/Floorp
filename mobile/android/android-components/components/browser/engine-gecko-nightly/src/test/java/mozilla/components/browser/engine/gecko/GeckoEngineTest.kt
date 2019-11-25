@@ -18,6 +18,8 @@ import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
+import mozilla.components.concept.engine.webextension.ActionHandler
+import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.support.test.any
@@ -30,6 +32,7 @@ import mozilla.components.test.ReflectionUtils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -38,6 +41,7 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyFloat
 import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.ContentBlocking
@@ -561,6 +565,41 @@ class GeckoEngineTest {
         verify(webExtensionsDelegate).onInstalled(extCaptor.capture())
         assertEquals("test-webext", extCaptor.value.id)
         assertEquals("resource://android/assets/extensions/test", extCaptor.value.url)
+    }
+
+    @Test
+    fun `web extension delegate notified of browser actions`() {
+        val runtime: GeckoRuntime = mock()
+        val webExtensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
+
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val result = GeckoResult<Void>()
+        whenever(runtime.registerWebExtension(any())).thenReturn(result)
+
+        val extension = spy(mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
+            "test-webext",
+            "resource://android/assets/extensions/test",
+            true,
+            true
+        ))
+        engine.installWebExtension(extension)
+        result.complete(null)
+
+        val actionHandlerCaptor = argumentCaptor<ActionHandler>()
+        verify(extension).registerActionHandler(actionHandlerCaptor.capture())
+
+        val browserAction: BrowserAction = mock()
+        actionHandlerCaptor.value.onBrowserAction(extension, null, browserAction)
+        verify(webExtensionsDelegate).onBrowserActionDefined(eq(extension), eq(browserAction))
+        assertNull(actionHandlerCaptor.value.onToggleBrowserActionPopup(extension, browserAction))
+        verify(webExtensionsDelegate).onToggleBrowserActionPopup(eq(extension), any(), eq(browserAction))
+
+        whenever(webExtensionsDelegate.onToggleBrowserActionPopup(any(), any(), any())).thenReturn(mock())
+        assertNotNull(actionHandlerCaptor.value.onToggleBrowserActionPopup(extension, browserAction))
     }
 
     @Test(expected = RuntimeException::class)
