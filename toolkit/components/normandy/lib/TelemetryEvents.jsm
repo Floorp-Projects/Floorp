@@ -10,6 +10,8 @@ var EXPORTED_SYMBOLS = ["TelemetryEvents"];
 const TELEMETRY_CATEGORY = "normandy";
 
 const TelemetryEvents = {
+  NO_ENROLLMENT_ID_MARKER: "__NO_ENROLLMENT_ID__",
+
   init() {
     Services.telemetry.setEventRecordingEnabled(TELEMETRY_CATEGORY, true);
   },
