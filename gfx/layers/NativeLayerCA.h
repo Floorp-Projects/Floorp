@@ -241,8 +241,9 @@ class NativeLayerCA : public NativeLayer {
   // layer that applies mClipRect (if set), and mContentCALayer is the layer
   // that hosts the IOSurface. We do not share clip layers between consecutive
   // NativeLayerCA objects with the same clip rect.
-  CALayer* mWrappingCALayer = nullptr;  // strong
-  CALayer* mContentCALayer = nullptr;   // strong
+  CALayer* mWrappingCALayer = nullptr;      // strong
+  CALayer* mContentCALayer = nullptr;       // strong
+  CALayer* mOpaquenessTintLayer = nullptr;  // strong
 
   float mBackingScale = 1.0f;
   bool mSurfaceIsFlipped = false;

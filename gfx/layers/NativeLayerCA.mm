@@ -7,6 +7,7 @@
 
 #import <QuartzCore/QuartzCore.h>
 #import <CoreVideo/CVPixelBuffer.h>
+#import <AppKit/NSColor.h>
 
 #include <utility>
 #include <algorithm>
@@ -152,6 +153,7 @@ NativeLayerCA::~NativeLayerCA() {
   }
 
   [mContentCALayer release];
+  [mOpaquenessTintLayer release];
   [mWrappingCALayer release];
 }
 
@@ -472,6 +474,27 @@ void NativeLayerCA::ApplyChanges() {
     [mWrappingCALayer addSublayer:mContentCALayer];
   }
 
+  bool shouldTintOpaqueness = StaticPrefs::gfx_core_animation_tint_opaque();
+  if (shouldTintOpaqueness && !mOpaquenessTintLayer) {
+    mOpaquenessTintLayer = [[CALayer layer] retain];
+    mOpaquenessTintLayer.position = mContentCALayer.position;
+    mOpaquenessTintLayer.bounds = mContentCALayer.bounds;
+    mOpaquenessTintLayer.anchorPoint = NSZeroPoint;
+    mOpaquenessTintLayer.contentsGravity = kCAGravityTopLeft;
+    if (mIsOpaque) {
+      mOpaquenessTintLayer.backgroundColor =
+          [[[NSColor greenColor] colorWithAlphaComponent:0.5] CGColor];
+    } else {
+      mOpaquenessTintLayer.backgroundColor =
+          [[[NSColor redColor] colorWithAlphaComponent:0.5] CGColor];
+    }
+    [mWrappingCALayer addSublayer:mOpaquenessTintLayer];
+  } else if (!shouldTintOpaqueness && mOpaquenessTintLayer) {
+    [mOpaquenessTintLayer removeFromSuperlayer];
+    [mOpaquenessTintLayer release];
+    mOpaquenessTintLayer = nullptr;
+  }
+
   // CALayers have a position and a size, specified through the position and the bounds properties.
   // layer.bounds.origin must always be (0, 0).
   // A layer's position affects the layer's entire layer subtree. In other words, each layer's
@@ -489,6 +512,9 @@ void NativeLayerCA::ApplyChanges() {
   if (mMutatedBackingScale) {
     mContentCALayer.bounds =
         CGRectMake(0, 0, mSize.width / mBackingScale, mSize.height / mBackingScale);
+    if (mOpaquenessTintLayer) {
+      mOpaquenessTintLayer.bounds = mContentCALayer.bounds;
+    }
     mContentCALayer.contentsScale = mBackingScale;
   }
 
@@ -507,6 +533,9 @@ void NativeLayerCA::ApplyChanges() {
   if (mMutatedBackingScale || mMutatedPosition || mMutatedClipRect) {
     mContentCALayer.position =
         CGPointMake(clipToLayerOffset.x / mBackingScale, clipToLayerOffset.y / mBackingScale);
+    if (mOpaquenessTintLayer) {
+      mOpaquenessTintLayer.position = mContentCALayer.position;
+    }
   }
 
   if (mMutatedBackingScale || mMutatedSurfaceIsFlipped) {
