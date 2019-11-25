@@ -9,7 +9,10 @@ const { createEnum } = require("devtools/client/shared/enum");
 createEnum(
   [
     // Updates the selected node.
-    "COMPATIBILITY_UPDATE_SELECTED_NODE",
+    "COMPATIBILITY_UPDATE_SELECTED_NODE_START",
+    "COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS",
+    "COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE",
+    "COMPATIBILITY_UPDATE_SELECTED_NODE_COMPLETE",
 
     // Updates the target browsers.
     "COMPATIBILITY_UPDATE_TARGET_BROWSERS",
