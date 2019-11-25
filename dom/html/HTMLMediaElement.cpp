@@ -19,6 +19,7 @@
 #include "DecoderTraits.h"
 #include "FrameStatistics.h"
 #include "GMPCrashHelper.h"
+#include "GVAutoplayPermissionRequest.h"
 #ifdef MOZ_ANDROID_HLS_SUPPORT
 #  include "HLSDecoder.h"
 #endif
@@ -4050,6 +4051,11 @@ void HTMLMediaElement::Init() {
   // (MediaShutdownManager make use of nsIAsyncShutdownClient which is written
   // in JS)
   MediaShutdownManager::InitStatics();
+
+#if defined(MOZ_WIDGET_ANDROID)
+  GVAutoplayPermissionRequestor::AskForPermissionIfNeeded(
+      OwnerDoc()->GetInnerWindow());
+#endif
 
   mShutdownObserver->Subscribe(this);
   mInitialized = true;
