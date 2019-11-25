@@ -59,6 +59,14 @@ type State = {
   showOriginal: boolean,
 };
 
+type Node = {
+  contents: ?{
+    watchpoint: ?"get" | "set",
+  },
+  name: string,
+  path: string,
+};
+
 class Scopes extends PureComponent<Props, State> {
   constructor(props: Props) {
     const {
@@ -167,6 +175,28 @@ class Scopes extends PureComponent<Props, State> {
     showMenu(event, menuItems);
   };
 
+  renderWatchpointButton = (item: Node) => {
+    const { removeWatchpoint } = this.props;
+
+    if (
+      !item ||
+      !item.contents ||
+      !item.contents.watchpoint ||
+      typeof L10N === "undefined"
+    ) {
+      return null;
+    }
+
+    const watchpoint = item.contents.watchpoint;
+    return (
+      <button
+        className={`remove-${watchpoint}-watchpoint`}
+        title={L10N.getStr("watchpoints.removeWatchpointTooltip")}
+        onClick={() => removeWatchpoint(item)}
+      />
+    );
+  };
+
   renderScopesList() {
     const {
       cx,
@@ -206,6 +236,7 @@ class Scopes extends PureComponent<Props, State> {
             onContextMenu={this.onContextMenu}
             setExpanded={(path, expand) => setExpandedScope(cx, path, expand)}
             initiallyExpanded={initiallyExpanded}
+            renderItemActions={this.renderWatchpointButton}
           />
         </div>
       );
