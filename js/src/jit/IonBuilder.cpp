@@ -1623,8 +1623,9 @@ AbortReasonOr<Ok> IonBuilder::traverseBytecode() {
 
   // IonBuilder's destructor is not called, so make sure pendingEdges_ and
   // GSNCache are not holding onto malloc memory when we return.
+  pendingEdges_.emplace();
   auto freeMemory = mozilla::MakeScopeExit([&] {
-    pendingEdges_.clearAndCompact();
+    pendingEdges_.reset();
     gsn.purge();
   });
 
@@ -1748,7 +1749,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_goto(bool* restarted) {
 
 AbortReasonOr<Ok> IonBuilder::addPendingEdge(const PendingEdge& edge,
                                              jsbytecode* target) {
-  PendingEdgesMap::AddPtr p = pendingEdges_.lookupForAdd(target);
+  PendingEdgesMap::AddPtr p = pendingEdges_->lookupForAdd(target);
   if (p) {
     if (!p->value().append(edge)) {
       return abort(AbortReason::Alloc);
@@ -1761,7 +1762,7 @@ AbortReasonOr<Ok> IonBuilder::addPendingEdge(const PendingEdge& edge,
                 "Appending one element should be infallible");
   MOZ_ALWAYS_TRUE(edges.append(edge));
 
-  if (!pendingEdges_.add(p, target, std::move(edges))) {
+  if (!pendingEdges_->add(p, target, std::move(edges))) {
     return abort(AbortReason::Alloc);
   }
   return Ok();
@@ -2798,7 +2799,7 @@ AbortReasonOr<Ok> IonBuilder::restartLoop(MBasicBlock* header) {
   }
 
   // Remove loop header and dead blocks from pendingBlocks.
-  for (PendingEdgesMap::Range r = pendingEdges_.all(); !r.empty();
+  for (PendingEdgesMap::Range r = pendingEdges_->all(); !r.empty();
        r.popFront()) {
     PendingEdges& blocks = r.front().value();
     for (size_t i = blocks.length(); i > 0; i--) {
@@ -3475,14 +3476,14 @@ AbortReasonOr<Ok> IonBuilder::visitTry() {
 }
 
 AbortReasonOr<Ok> IonBuilder::visitJumpTarget(JSOp op) {
-  PendingEdgesMap::Ptr p = pendingEdges_.lookup(pc);
+  PendingEdgesMap::Ptr p = pendingEdges_->lookup(pc);
   if (!p) {
     // No (reachable) jumps so this is just a no-op.
     return Ok();
   }
 
   PendingEdges edges(std::move(p->value()));
-  pendingEdges_.remove(p);
+  pendingEdges_->remove(p);
 
   MBasicBlock* joinBlock = nullptr;
 
