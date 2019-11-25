@@ -360,8 +360,18 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.env["HOME"] = self.profileDir
         self.env["XPCSHELL_TEST_TEMP_DIR"] = self.remoteTmpDir
         self.env["XPCSHELL_MINIDUMP_DIR"] = self.remoteMinidumpDir
-        self.env["MOZ_ANDROID_CPU_ABI"] = self.device.get_prop("ro.product.cpu.abi")
         self.env["MOZ_ANDROID_DATA_DIR"] = self.remoteBinDir
+
+        # Guard against intermittent failures to retrieve abi property;
+        # without an abi, xpcshell cannot find greprefs.js and crashes.
+        abi = None
+        retries = 0
+        while ((not abi) or len(abi) == 0) and retries < 3:
+            abi = self.device.get_prop("ro.product.cpu.abi")
+            retries += 1
+        if ((not abi) or len(abi) == 0):
+            raise Exception("failed to get ro.product.cpu.abi from device")
+        self.env["MOZ_ANDROID_CPU_ABI"] = abi
 
         if self.options['setup']:
             self.pushWrapper()
