@@ -60,7 +60,7 @@ class Downloader {
   async download(record, options = {}) {
     const { retries = 3 } = options;
     const {
-      attachment: { location, filename, hash, size },
+      attachment: { filename, size, hash },
     } = record;
     const localFilePath = OS.Path.join(
       OS.Constants.Path.localProfileDir,
@@ -72,7 +72,6 @@ class Downloader {
       ...this.folders,
       filename,
     ].join("/")}`;
-    const remoteFileUrl = (await this._baseAttachmentsURL()) + location;
 
     await this._makeDirs();
 
@@ -86,7 +85,54 @@ class Downloader {
         throw new Downloader.BadContentError(localFilePath);
       }
       try {
-        await this._fetchAttachment(remoteFileUrl, localFilePath);
+        // Download and write on disk.
+        const buffer = await this.downloadAsBytes(record, {
+          checkHash: false, // Hash will be checked on file.
+          retries: 0, // Already in a retry loop.
+        });
+        await OS.File.writeAtomic(localFilePath, buffer, {
+          tmpPath: `${localFilePath}.tmp`,
+        });
+      } catch (e) {
+        if (retried >= retries) {
+          throw e;
+        }
+      }
+      retried++;
+    }
+  }
+
+  /**
+   * Download the record attachment and return its content as bytes.
+   *
+   * @param {Object} record A Remote Settings entry with attachment.
+   * @param {Object} options Some download options.
+   * @param {Number} options.retries Number of times download should be retried (default: `3`)
+   * @param {Number} options.checkHash Check content integrity (default: `true`)
+   * @throws {Downloader.DownloadError} if the file could not be fetched.
+   * @throws {Downloader.BadContentError} if the downloaded content integrity is not valid.
+   * @returns {ArrayBuffer} the file content.
+   */
+  async downloadAsBytes(record, options = {}) {
+    const {
+      attachment: { location, hash, size },
+    } = record;
+
+    const remoteFileUrl = (await this._baseAttachmentsURL()) + location;
+
+    const { retries = 3, checkHash = true } = options;
+    let retried = 0;
+    while (true) {
+      try {
+        const buffer = await this._fetchAttachment(remoteFileUrl);
+        if (!checkHash) {
+          return buffer;
+        }
+        if (await RemoteSettingsWorker.checkContentHash(buffer, size, hash)) {
+          return buffer;
+        }
+        // Content is corrupted.
+        throw new Downloader.BadContentError(location);
       } catch (e) {
         if (retried >= retries) {
           throw e;
@@ -131,17 +177,14 @@ class Downloader {
     return this._cdnURL;
   }
 
-  async _fetchAttachment(url, destination) {
+  async _fetchAttachment(url) {
     const headers = new Headers();
     headers.set("Accept-Encoding", "gzip");
     const resp = await fetch(url, { headers });
     if (!resp.ok) {
       throw new Downloader.DownloadError(url, resp);
     }
-    const buffer = await resp.arrayBuffer();
-    await OS.File.writeAtomic(destination, buffer, {
-      tmpPath: `${destination}.tmp`,
-    });
+    return resp.arrayBuffer();
   }
 
   async _makeDirs() {

@@ -115,6 +115,10 @@ class Worker {
   async checkFileHash(filepath, size, hash) {
     return this._execute("checkFileHash", [filepath, size, hash]);
   }
+
+  async checkContentHash(buffer, size, hash) {
+    return this._execute("checkContentHash", [buffer, size, hash]);
+  }
 }
 
 // Now, first add a shutdown blocker. If that fails, we must have
