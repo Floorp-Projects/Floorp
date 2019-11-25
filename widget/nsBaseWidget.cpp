@@ -54,6 +54,7 @@
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/Unused.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/VsyncDispatcher.h"
@@ -72,7 +73,6 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/Move.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsRefPtrHashtable.h"
 #include "TouchEvents.h"
@@ -172,6 +172,7 @@ nsBaseWidget::nsBaseWidget()
       mPopupLevel(ePopupLevelTop),
       mPopupType(ePopupTypeAny),
       mHasRemoteContent(false),
+      mFissionWindow(false),
       mUpdateCursor(true),
       mUseAttachedEvents(false),
       mIMEHasFocus(false),
@@ -391,6 +392,7 @@ void nsBaseWidget::BaseCreate(nsIWidget* aParent, nsWidgetInitData* aInitData) {
     mPopupLevel = aInitData->mPopupLevel;
     mPopupType = aInitData->mPopupHint;
     mHasRemoteContent = aInitData->mHasRemoteContent;
+    mFissionWindow = aInitData->mFissionWindow;
   }
 
   if (aParent) {
@@ -1213,7 +1215,11 @@ already_AddRefed<LayerManager> nsBaseWidget::CreateCompositorSession(
     bool enableAPZ = UseAPZ();
     CompositorOptions options(enableAPZ, enableWR);
 
-    bool enableAL = gfx::gfxConfig::IsEnabled(gfx::Feature::ADVANCED_LAYERS);
+    // Bug 1588484 - Advanced Layers is currently disabled for fission windows,
+    // since it doesn't properly support nested RefLayers.
+    bool enableAL =
+        gfx::gfxConfig::IsEnabled(gfx::Feature::ADVANCED_LAYERS) &&
+        (!mFissionWindow || StaticPrefs::layers_advanced_fission_enabled());
     options.SetUseAdvancedLayers(enableAL);
 
 #ifdef MOZ_WIDGET_ANDROID

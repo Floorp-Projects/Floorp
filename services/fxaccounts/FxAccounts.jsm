@@ -874,7 +874,7 @@ FxAccountsInternal.prototype = {
   _telemetry: null,
   get telemetry() {
     if (!this._telemetry) {
-      this._telemetry = new FxAccountsTelemetry();
+      this._telemetry = new FxAccountsTelemetry(this);
     }
     return this._telemetry;
   },
