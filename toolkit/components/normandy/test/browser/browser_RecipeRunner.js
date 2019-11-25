@@ -60,6 +60,11 @@ add_task(async function getFilterContext() {
     recipe.id,
     "environment.recipe is the recipe passed to getFilterContext"
   );
+  is(
+    ClientEnvironment.recipe,
+    undefined,
+    "ClientEnvironment has not been mutated"
+  );
   delete recipe.unrelated;
   Assert.deepEqual(
     context.env.recipe,
