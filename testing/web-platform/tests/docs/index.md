@@ -11,6 +11,7 @@ platform to deliver on the promise of working across browsers and devices
 without needing extra layers of abstraction to paper over the gaps left by
 specification editors and implementors.
 
+
 The most important sources of information and activity are:
 
 - [github.com/web-platform-tests/wpt](https://github.com/web-platform-tests/wpt):
@@ -35,11 +36,18 @@ The most important sources of information and activity are:
 **If you'd like clarification about anything**, don't hesitate to ask in the
 chat room or on the mailing list.
 
-## Watch a Talk
+## Video Introduction ([transcript](intro-video-transcript))
 
-If you prefer watching a video, here is a talk introducing web-platform-tests:
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/zuK1uyXPZS0"
+  frameborder="0"
+  allow="autoplay; encrypted-media"
+  allowfullscreen></iframe>
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/XnfE3MfH5hQ" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+See also [this lecture from Web Engines Hackfest 2018 (30
+minutes)](https://www.youtube.com/watch?v=XnfE3MfH5hQ)
 
 ## GitHub
 
@@ -64,6 +72,7 @@ free to add yourself to the META.yml file!
    :maxdepth: 2
 
    test-suite-design
+   intro-video-transcript
    running-tests/index
    writing-tests/index
    reviewing-tests/index
