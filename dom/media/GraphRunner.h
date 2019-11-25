@@ -19,15 +19,14 @@ namespace mozilla {
 class GraphDriver;
 class MediaTrackGraphImpl;
 
-class GraphRunner {
+class GraphRunner final : public Runnable {
  public:
-  explicit GraphRunner(MediaTrackGraphImpl* aGraph);
-  ~GraphRunner();
+  static already_AddRefed<GraphRunner> Create(MediaTrackGraphImpl* aGraph);
 
   /**
    * Marks us as shut down and signals mThread, so that it runs until the end.
    */
-  void Shutdown();
+  MOZ_CAN_RUN_SCRIPT void Shutdown();
 
   /**
    * Signals one iteration of mGraph. Hands aStateEnd over to mThread and runs
@@ -38,7 +37,7 @@ class GraphRunner {
   /**
    * Runs mGraph until it shuts down.
    */
-  void Run();
+  NS_IMETHOD Run();
 
   /**
    * Returns true if called on mThread.
@@ -54,6 +53,10 @@ class GraphRunner {
 #endif
 
  private:
+  explicit GraphRunner(MediaTrackGraphImpl* aGraph,
+                       already_AddRefed<nsIThread> aThread);
+  ~GraphRunner();
+
   // Monitor used for yielding mThread through Wait(), and scheduling mThread
   // through Signal() from a GraphDriver.
   Monitor mMonitor;
@@ -80,7 +83,7 @@ class GraphRunner {
 
   // The thread running mGraph.  Set on construction, after other members are
   // initialized.  Cleared at the end of Shutdown().
-  PRThread* mThread;
+  const nsCOMPtr<nsIThread> mThread;
 
 #ifdef DEBUG
   // Set to mGraph's audio callback driver's thread id, if run by an
