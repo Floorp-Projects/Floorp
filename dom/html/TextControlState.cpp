@@ -2491,6 +2491,7 @@ void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap) const {
   if (mHandlingState &&
       mHandlingState->IsHandling(TextControlAction::CommitComposition)) {
     aValue = mHandlingState->GetSettingValue();
+    MOZ_ASSERT(aValue.FindChar(static_cast<char16_t>('\r')) == -1);
     return;
   }
 
@@ -2498,6 +2499,7 @@ void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap) const {
       (mEditorInitialized || !IsSingleLineTextControl())) {
     if (aIgnoreWrap && !mBoundFrame->CachedValue().IsVoid()) {
       aValue = mBoundFrame->CachedValue();
+      MOZ_ASSERT(aValue.FindChar(static_cast<char16_t>('\r')) == -1);
       return;
     }
 
@@ -2532,6 +2534,7 @@ void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap) const {
       AutoNoJSAPI nojsapi;
 
       DebugOnly<nsresult> rv = mTextEditor->ComputeTextValue(flags, aValue);
+      MOZ_ASSERT(aValue.FindChar(static_cast<char16_t>('\r')) == -1);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to get value");
     }
     // Only when the result doesn't include line breaks caused by hard-wrap,
@@ -2543,11 +2546,25 @@ void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap) const {
     }
   } else {
     if (!mTextCtrlElement->ValueChanged() || !mValue) {
-      mTextCtrlElement->GetDefaultValueFromContent(aValue);
+      // Use nsString to avoid copying string buffer at setting aValue.
+      nsString value;
+      mTextCtrlElement->GetDefaultValueFromContent(value);
+      // TODO: We should make default value not include \r.
+      nsContentUtils::PlatformToDOMLineBreaks(value);
+      aValue = value;
     } else {
       aValue = *mValue;
+      MOZ_ASSERT(aValue.FindChar(static_cast<char16_t>('\r')) == -1);
     }
   }
+}
+
+bool TextControlState::ValueEquals(const nsAString& aValue) const {
+  // We can avoid copying string buffer in many cases.  Therefore, we should
+  // use nsString rather than nsAutoString here.
+  nsString value;
+  GetValue(value, true);
+  return aValue.Equals(value);
 }
 
 #ifdef DEBUG
@@ -2596,17 +2613,12 @@ bool TextControlState::SetValue(const nsAString& aValue,
       } else {
         // If setting value won't change current value, we shouldn't commit
         // composition for compatibility with the other browsers.
-        nsAutoString currentValue;
-        if (aOldValue) {
-#ifdef DEBUG
-          mBoundFrame->GetText(currentValue);
-          MOZ_ASSERT(currentValue.Equals(*aOldValue));
-#endif
-          currentValue.Assign(*aOldValue);
-        } else {
-          mBoundFrame->GetText(currentValue);
-        }
-        if (handlingSetValue.GetSettingValue() == currentValue) {
+        MOZ_ASSERT(!aOldValue || mBoundFrame->TextEquals(*aOldValue));
+        bool isSameAsCurrentValue =
+            aOldValue
+                ? aOldValue->Equals(handlingSetValue.GetSettingValue())
+                : mBoundFrame->TextEquals(handlingSetValue.GetSettingValue());
+        if (isSameAsCurrentValue) {
           // Note that in this case, we shouldn't fire any events with setting
           // value because event handlers may try to set value recursively but
           // we cannot commit composition at that time due to unsafe to run
@@ -2691,19 +2703,16 @@ bool TextControlState::SetValueWithTextEditor(
   }
 #endif
 
-  nsAutoString currentValue;
-  if (aHandlingSetValue.GetOldValue()) {
-#ifdef DEBUG
-    mBoundFrame->GetText(currentValue);
-    MOZ_ASSERT(currentValue.Equals(*aHandlingSetValue.GetOldValue()));
-#endif
-    currentValue.Assign(*aHandlingSetValue.GetOldValue());
-  } else {
-    mBoundFrame->GetText(currentValue);
-  }
+  MOZ_ASSERT(!aHandlingSetValue.GetOldValue() ||
+             mBoundFrame->TextEquals(*aHandlingSetValue.GetOldValue()));
+  bool isSameAsCurrentValue =
+      aHandlingSetValue.GetOldValue()
+          ? aHandlingSetValue.GetOldValue()->Equals(
+                aHandlingSetValue.GetSettingValue())
+          : mBoundFrame->TextEquals(aHandlingSetValue.GetSettingValue());
 
   // this is necessary to avoid infinite recursion
-  if (currentValue == aHandlingSetValue.GetSettingValue()) {
+  if (isSameAsCurrentValue) {
     return true;
   }
 
@@ -2763,6 +2772,13 @@ bool TextControlState::SetValueWithTextEditor(
     //       }
     //     However, this path won't be used in web content anymore.
     nsCOMPtr<nsISelectionController> kungFuDeathGrip = mSelCon.get();
+    // Use nsString to avoid copying string buffer in most cases.
+    nsString currentValue;
+    if (aHandlingSetValue.GetOldValue()) {
+      currentValue.Assign(*aHandlingSetValue.GetOldValue());
+    } else {
+      mBoundFrame->GetText(currentValue);
+    }
     uint32_t currentLength = currentValue.Length();
     uint32_t newlength = aHandlingSetValue.GetSettingValue().Length();
     if (!currentLength ||
