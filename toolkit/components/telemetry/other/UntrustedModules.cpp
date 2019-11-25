@@ -302,7 +302,7 @@ static nsresult GetPerProcObject(JSContext* aCx, const IndexMap& aModuleIndices,
   if (aData.mProcessType == GeckoProcessType_Default) {
     strProcType.Rebind(NS_LITERAL_CSTRING("browser"), 0);
   } else {
-    strProcType.Rebind(XRE_ChildProcessTypeToString(aData.mProcessType));
+    strProcType.Rebind(XRE_GeckoProcessTypeToString(aData.mProcessType));
   }
 
   JS::RootedValue jsProcType(aCx);
