@@ -431,8 +431,8 @@ class MachCommands(MachCommandBase):
         utility_path = self.bindir
 
         if conditions.is_android(self):
-            from mozrunner.devices.android_device import verify_android_device
-            verify_android_device(self, install=False)
+            from mozrunner.devices.android_device import (verify_android_device, InstallIntent)
+            verify_android_device(self, install=InstallIntent.NO)
             return self.run_android_test(tests, symbols_path, manifest_path, log)
 
         return self.run_desktop_test(tests, symbols_path, manifest_path,
