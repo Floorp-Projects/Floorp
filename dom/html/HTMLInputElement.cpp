@@ -6756,6 +6756,11 @@ void HTMLInputElement::GetTextEditorValue(nsAString& aValue,
   }
 }
 
+bool HTMLInputElement::TextEditorValueEquals(const nsAString& aValue) const {
+  TextControlState* state = GetEditorState();
+  return state ? state->ValueEquals(aValue) : aValue.IsEmpty();
+}
+
 void HTMLInputElement::InitializeKeyboardEventListeners() {
   TextControlState* state = GetEditorState();
   if (state) {
