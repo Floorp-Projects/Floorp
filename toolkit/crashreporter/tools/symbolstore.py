@@ -524,21 +524,9 @@ class Dumper:
         try:
             cmd = self.dump_syms_cmdline(file, arch, dsymbundle=dsymbundle)
             print(' '.join(cmd), file=sys.stderr)
-            # We're interested in `stderr` in the case that something goes
-            # wrong with dump_syms, but we don't want to use
-            # `stderr=subprocess.PIPE` here, as that can land us in a
-            # deadlock when we try to read only from `stdout`, below.  The
-            # Python documentation recommends using `communicate()` in such
-            # cases, but `stderr` can be rather large, and we don't want to
-            # waste time accumulating all of it in the non-error case.  So we
-            # completely ignore `stderr` here and capture it separately,
-            # below.
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                     stderr=open(os.devnull, 'wb'))
-            try:
-                module_line = proc.stdout.next()
-            except StopIteration:
-                module_line = ''
+            module_line = proc.stdout.next()
             if module_line.startswith("MODULE"):
                 # MODULE os cpu guid debug_file
                 (guid, debug_file) = (module_line.split())[3:5]
@@ -618,22 +606,8 @@ class Dumper:
                 if self.copy_debug and arch_num == 0:
                     self.CopyDebug(file, debug_file, guid,
                                    code_file, code_id)
-            else:
-                # For some reason, we didn't see the MODULE line as the first
-                # line of output.  It's very possible that the interesting error
-                # message(s) are on stderr, so let's re-execute the process and
-                # capture the entirety of stderr.
-                proc = subprocess.Popen(cmd, stdout=open(os.devnull, 'wb'),
-                                        stderr=subprocess.PIPE)
-                (_, dumperr) = proc.communicate()
-                retcode = proc.returncode
-                message = [
-                    "dump_syms failed to produce the expected output",
-                    "return code: %d" % retcode,
-                    "first line of output: %s" % module_line,
-                    "stderr: %s" % dumperr
-                ]
-                raise RuntimeError('\n----------\n'.join(message))
+        except StopIteration:
+            pass
         except Exception as e:
             print("Unexpected error: %s" % str(e), file=sys.stderr)
             raise
