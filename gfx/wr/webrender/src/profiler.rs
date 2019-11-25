@@ -44,6 +44,7 @@ pub mod expected {
     pub const GPU_CACHE_BLOCKS_SAVED: Range<u64> =  0..50_000;
     pub const DISPLAY_LIST_BUILD_TIME: Range<f64> = 0.0..3.0;
     pub const DISPLAY_LIST_CONSUME_TIME: Range<f64> = 0.0..2.0;
+    pub const MAX_SCENE_BUILD_TIME: Range<f64> = 0.0..3.0;
     pub const DISPLAY_LIST_SEND_TIME: Range<f64> =  0.0..1.0;
     pub const DISPLAY_LIST_TOTAL_TIME: Range<f64> = 0.0..4.0;
     pub const NUM_FONT_TEMPLATES: Range<usize> =    0..50;
@@ -672,6 +673,7 @@ impl GpuCacheProfileCounters {
 #[derive(Clone)]
 pub struct BackendProfileCounters {
     pub total_time: TimeProfileCounter,
+    pub scene_build_time: TimeProfileCounter,
     pub resources: ResourceProfileCounters,
     pub ipc: IpcProfileCounters,
     pub intern: InternProfileCounters,
@@ -755,6 +757,10 @@ impl BackendProfileCounters {
             total_time: TimeProfileCounter::new(
                 "Backend CPU Time", false,
                 Some(expected::MAX_BACKEND_CPU_TIME),
+            ),
+            scene_build_time: TimeProfileCounter::new(
+                "Scene build time", false,
+                Some(expected::MAX_SCENE_BUILD_TIME),
             ),
             resources: ResourceProfileCounters {
                 font_templates: ResourceProfileCounter::new(
@@ -1199,6 +1205,7 @@ pub struct Profiler {
     renderer_graph: ProfileGraph,
     gpu_graph: ProfileGraph,
     ipc_graph: ProfileGraph,
+    scene_build_graph: ProfileGraph,
     blob_raster_graph: ProfileGraph,
     backend_time: AverageTimeProfileCounter,
     renderer_time: AverageTimeProfileCounter,
@@ -1222,6 +1229,7 @@ impl Profiler {
             renderer_graph: ProfileGraph::new(600, to_ms_scale, "Renderer:", "ms"),
             gpu_graph: ProfileGraph::new(600, to_ms_scale, "GPU:", "ms"),
             ipc_graph: ProfileGraph::new(600, to_ms_scale, "IPC:", "ms"),
+            scene_build_graph: ProfileGraph::new(600, to_ms_scale, "Scene build:", "ms"),
             blob_raster_graph: ProfileGraph::new(600, 1.0, "Rasterized blob pixels:", "px"),
             gpu_frames: GpuFrameCollection::new(),
             backend_time: AverageTimeProfileCounter::new(
@@ -1643,6 +1651,11 @@ impl Profiler {
             self.ipc_graph
                 .draw_graph(self.draw_state.x_right, self.draw_state.y_right, "DisplayList IPC", debug_renderer);
         self.draw_state.y_right += rect.size.height + PROFILE_PADDING;
+
+        let rect = self.scene_build_graph
+            .draw_graph(self.draw_state.x_right, self.draw_state.y_right, "Scene build", debug_renderer);
+        self.draw_state.y_right += rect.size.height + PROFILE_PADDING;
+
         let rect = self.gpu_graph
             .draw_graph(self.draw_state.x_right, self.draw_state.y_right, "GPU", debug_renderer);
         self.draw_state.y_right += rect.size.height + PROFILE_PADDING;
@@ -1751,6 +1764,8 @@ impl Profiler {
         self.renderer_time.set(renderer_timers.cpu_time.nanoseconds);
         self.ipc_graph
             .push(backend_profile.ipc.total_time.nanoseconds);
+        self.scene_build_graph
+            .push(backend_profile.scene_build_time.nanoseconds);
         self.blob_raster_graph
             .push(backend_profile.resources.texture_cache.rasterized_blob_pixels.size as u64);
         self.ipc_time.set(backend_profile.ipc.total_time.nanoseconds);
