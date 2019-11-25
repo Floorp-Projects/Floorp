@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import, print_function, unicode_literals
-from distutils.file_util import copy_file
 
 import argparse
 import logging
@@ -254,26 +253,22 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""")
         # Copy over user documentation.
         import mozfile
 
-        docs_path = mozpath.join(self.topsrcdir, 'mobile', 'android', 'docs')
+        # Remove existing geckoview docs and replace with the local copy.
+        # Keep all the files that are git specific and not part of the GV documentation.
+        keep_files = [".git", ".gitignore", "_site", "CODE_OF_CONDUCT.md",
+                     "Gemfile.lock", "README.md"]
+        for filename in os.listdir(repo_path):
+            if filename not in git_files:
+                filepath = mozpath.join(repo_path, filename)
+                mozfile.remove(filepath)
 
-        # Some files need to be in the GH repo root folder and should be
-        # copied over directly
-        root_docs = ["_config.yml", "Gemfile"]
-        for filename in root_docs:
-            src_filepath = mozpath.join(docs_path, filename)
-            dst_filepath = mozpath.join(repo_path, filename)
-            copy_file(src_filepath, dst_filepath, update=1)
-
-        # Remove existing geckoview docs and replace with the local copy
-        src_path = mozpath.join(docs_path, 'geckoview')
-        docs_path = mozpath.join(repo_path, 'geckoview')
-        mozfile.remove(docs_path)
-        os.system("rsync -aruz {} {}".format(src_path, repo_path))
+        src_path = mozpath.join(self.topsrcdir, 'mobile', 'android', 'docs', 'geckoview')
+        os.system("rsync -aruz {}/ {}/".format(src_path, repo_path))
 
         # Extract new javadoc to specified directory inside repo.
         src_tar = mozpath.join(self.topobjdir, 'gradle', 'build', 'mobile', 'android',
                                'geckoview', 'libs', 'geckoview-javadoc.jar')
-        dst_path = mozpath.join(docs_path, javadoc_path)
+        dst_path = mozpath.join(repo_path, javadoc_path)
         mozfile.remove(dst_path)
         mozfile.extract_zip(src_tar, dst_path)
 
