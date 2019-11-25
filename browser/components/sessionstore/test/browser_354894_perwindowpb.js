@@ -281,7 +281,7 @@ add_task(async function test_open_close_private_browsing() {
     is(
       newWin.gBrowser.browsers.length,
       1,
-      "Did not restore in private browing mode"
+      "Did not restore in private browsing mode"
     );
 
     closed = await closeWindowForRestoration(newWin);
