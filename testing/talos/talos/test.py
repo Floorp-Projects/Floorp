@@ -270,7 +270,6 @@ class PageloaderTest(Test):
     tpcycles = 1  # number of time to run each page
     cycles = None
     timeout = None
-    suite_should_alert = True
 
     keys = ['tpmanifest', 'tpcycles', 'tppagecycles', 'tprender', 'tpchrome',
             'tpmozafterpaint', 'fnbpaint', 'tphero', 'tploadnocache', 'firstpaint',
@@ -281,8 +280,7 @@ class PageloaderTest(Test):
             'profile_path', 'xperf_providers', 'xperf_user_providers', 'xperf_stackwalk',
             'format_pagename', 'filters', 'preferences', 'extensions', 'setup', 'cleanup',
             'lower_is_better', 'alert_threshold', 'unit', 'webextensions', 'profile',
-            'suite_should_alert', 'subtest_alerts', 'perfherder_framework', 'pdfpaint',
-            'webextensions_folder']
+            'subtest_alerts', 'perfherder_framework', 'pdfpaint', 'webextensions_folder']
 
 
 class QuantumPageloadTest(PageloaderTest):
@@ -935,7 +933,6 @@ class perf_reftest_singletons(PageloaderTest):
     lower_is_better = True
     alert_threshold = 5.0
     subtest_alerts = True
-    suite_should_alert = False
 
 
 @register_test()
