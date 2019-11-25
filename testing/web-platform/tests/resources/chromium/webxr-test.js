@@ -163,6 +163,10 @@ class MockVRService {
     });
   }
 
+  exitPresent() {
+    return Promise.resolve();
+  }
+
   supportsSession(sessionOptions) {
     let requests = [];
     // Check supports on all the runtimes.
