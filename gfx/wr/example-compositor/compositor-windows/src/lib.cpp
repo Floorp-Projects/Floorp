@@ -42,8 +42,6 @@ struct Window {
     // Win32 window details
     HWND hWnd;
     HINSTANCE hInstance;
-    int width;
-    int height;
     bool enable_compositor;
     RECT client_rect;
 
@@ -73,6 +71,10 @@ struct Window {
     // Maps the WR surface IDs to the DC representation of each tile.
     std::map<uint64_t, Tile> tiles;
     std::vector<CachedFrameBuffer> mFrameBuffers;
+
+    // Maintain list of layer state between frames to avoid visual tree rebuild.
+    std::vector<uint64_t> mCurrentLayers;
+    std::vector<uint64_t> mPrevLayers;
 };
 
 static const wchar_t *CLASS_NAME = L"WR DirectComposite";
@@ -136,8 +138,6 @@ extern "C" {
         // Create a simple Win32 window
         Window *window = new Window;
         window->hInstance = GetModuleHandle(NULL);
-        window->width = width;
-        window->height = height;
         window->enable_compositor = enable_compositor;
         window->mEGLImage = EGL_NO_IMAGE;
 
@@ -162,14 +162,19 @@ extern "C" {
             ReleaseDC(NULL, hdc);
         }
 
+        RECT window_rect = { 0, 0, width, height };
+        AdjustWindowRect(&window_rect, WS_OVERLAPPEDWINDOW, FALSE);
+        UINT window_width = static_cast<UINT>(ceil(float(window_rect.right - window_rect.left) * dpiX / 96.f));
+        UINT window_height = static_cast<UINT>(ceil(float(window_rect.bottom - window_rect.top) * dpiY / 96.f));
+
         window->hWnd = CreateWindow(
             CLASS_NAME,
             L"DirectComposition Demo Application",
             WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT,
             CW_USEDEFAULT,
-            static_cast<UINT>(ceil(float(width) * dpiX / 96.f)),
-            static_cast<UINT>(ceil(float(height) * dpiY / 96.f)),
+            window_width,
+            window_height,
             NULL,
             NULL,
             window->hInstance,
@@ -299,7 +304,7 @@ extern "C" {
         assert(SUCCEEDED(hr));
 
         // Uncomment this to see redraw regions during composite
-        //window->pVisualDebug->EnableRedrawRegions();
+        // window->pVisualDebug->EnableRedrawRegions();
 
         EGLBoolean ok = eglMakeCurrent(
             window->EGLDisplay,
@@ -356,6 +361,7 @@ extern "C" {
     void com_dc_swap_buffers(Window *window) {
         // If not using DC mode, then do a normal EGL swap buffers.
         if (window->fb_surface != EGL_NO_SURFACE) {
+            eglSwapInterval(window->EGLDisplay, 0);
             eglSwapBuffers(window->EGLDisplay, window->fb_surface);
         }
     }
@@ -501,13 +507,7 @@ extern "C" {
         window->mEGLImage = EGL_NO_IMAGE;
     }
 
-    // At the start of a transaction, remove all visuals from the tree.
-    // TODO(gw): This is super simple, maybe it has performance implications
-    //           and we should mutate the visual tree instead of rebuilding
-    //           it each composition?
-    void com_dc_begin_transaction(Window *window) {
-        HRESULT hr = window->pRoot->RemoveAllVisuals();
-        assert(SUCCEEDED(hr));
+    void com_dc_begin_transaction(Window *) {
     }
 
     // Add a DC surface to the visual tree. Called per-frame to build the composition.
@@ -523,14 +523,7 @@ extern "C" {
     ) {
         Tile &tile = window->tiles[id];
 
-        // Add this visual as the last element in the visual tree (z-order is implicit,
-        // based on the order tiles are added).
-        HRESULT hr = window->pRoot->AddVisual(
-            tile.pVisual,
-            FALSE,
-            NULL
-        );
-        assert(SUCCEEDED(hr));
+        window->mCurrentLayers.push_back(id);
 
         // Place the visual - this changes frame to frame based on scroll position
         // of the slice.
@@ -551,6 +544,29 @@ extern "C" {
 
     // Finish the composition transaction, telling DC to composite
     void com_dc_end_transaction(Window *window) {
+        bool same = window->mPrevLayers == window->mCurrentLayers;
+
+        if (!same) {
+            HRESULT hr = window->pRoot->RemoveAllVisuals();
+            assert(SUCCEEDED(hr));
+
+            for (auto it = window->mCurrentLayers.begin(); it != window->mCurrentLayers.end(); ++it) {
+                Tile &tile = window->tiles[*it];
+
+                // Add this visual as the last element in the visual tree (z-order is implicit,
+                // based on the order tiles are added).
+                HRESULT hr = window->pRoot->AddVisual(
+                    tile.pVisual,
+                    FALSE,
+                    NULL
+                );
+                assert(SUCCEEDED(hr));
+            }
+        }
+
+        window->mPrevLayers.swap(window->mCurrentLayers);
+        window->mCurrentLayers.clear();
+
         HRESULT hr = window->pDCompDevice->Commit();
         assert(SUCCEEDED(hr));
     }
