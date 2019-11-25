@@ -103,7 +103,7 @@ namespace mozilla {
 //   process falls back to parsing and allocating its own copy of the UA sheets.
 
 using namespace mozilla;
-using namespace mozilla::css;
+using namespace css;
 
 #define PREF_LEGACY_STYLESHEET_CUSTOMIZATION \
   "toolkit.legacyUserProfileCustomizations.stylesheets"
@@ -201,7 +201,7 @@ GlobalStyleSheetCache::CollectReports(nsIHandleReportCallback* aHandleReport,
 }
 
 size_t GlobalStyleSheetCache::SizeOfIncludingThis(
-    mozilla::MallocSizeOf aMallocSizeOf) const {
+    MallocSizeOf aMallocSizeOf) const {
   size_t n = aMallocSizeOf(this);
 
 #define MEASURE(s) n += s ? s->SizeOfIncludingThis(aMallocSizeOf) : 0;
@@ -223,7 +223,7 @@ size_t GlobalStyleSheetCache::SizeOfIncludingThis(
 }
 
 GlobalStyleSheetCache::GlobalStyleSheetCache() {
-  nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
   NS_ASSERTION(obsSvc, "No global observer service?");
 
   if (obsSvc) {
@@ -420,7 +420,7 @@ void GlobalStyleSheetCache::InitSharedSheetsInParent() {
   // TODO(heycam): This won't be true on Windows unless we allow creating the
   // shared memory with SEC_RESERVE so that the pages are reserved but not
   // committed.
-  size_t pageSize = mozilla::ipc::SharedMemory::SystemPageSize();
+  size_t pageSize = ipc::SharedMemory::SystemPageSize();
   sUsedSharedMemory =
       (Servo_SharedMemoryBuilder_GetLength(builder.get()) + pageSize - 1) &
       ~(pageSize - 1);
@@ -429,11 +429,11 @@ void GlobalStyleSheetCache::InitSharedSheetsInParent() {
 }
 
 GlobalStyleSheetCache::~GlobalStyleSheetCache() {
-  mozilla::UnregisterWeakMemoryReporter(this);
+  UnregisterWeakMemoryReporter(this);
 }
 
 void GlobalStyleSheetCache::InitMemoryReporter() {
-  mozilla::RegisterWeakMemoryReporter(this);
+  RegisterWeakMemoryReporter(this);
 }
 
 /* static */
