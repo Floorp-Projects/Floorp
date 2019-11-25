@@ -51,8 +51,7 @@ namespace dom {
 HTMLTextAreaElement::HTMLTextAreaElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     FromParser aFromParser)
-    : nsGenericHTMLFormElementWithState(std::move(aNodeInfo), aFromParser,
-                                        NS_FORM_TEXTAREA),
+    : TextControlElement(std::move(aNodeInfo), aFromParser, NS_FORM_TEXTAREA),
       mValueChanged(false),
       mLastValueChangeWasInteractive(false),
       mHandlingSelect(false),
@@ -82,8 +81,8 @@ HTMLTextAreaElement::~HTMLTextAreaElement() {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLTextAreaElement)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
-    HTMLTextAreaElement, nsGenericHTMLFormElementWithState)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLTextAreaElement,
+                                                  TextControlElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mValidity)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mControllers)
   if (tmp->mState) {
@@ -91,8 +90,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(
-    HTMLTextAreaElement, nsGenericHTMLFormElementWithState)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLTextAreaElement,
+                                                TextControlElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mValidity)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mControllers)
   if (tmp->mState) {
@@ -101,8 +100,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLTextAreaElement,
-                                             nsGenericHTMLFormElementWithState,
-                                             nsITextControlElement,
+                                             TextControlElement,
                                              nsIMutationObserver,
                                              nsIConstraintValidation)
 
@@ -218,76 +216,64 @@ void HTMLTextAreaElement::GetValueInternal(nsAString& aValue,
   mState->GetValue(aValue, aIgnoreWrap);
 }
 
-NS_IMETHODIMP_(TextEditor*)
-HTMLTextAreaElement::GetTextEditor() {
+TextEditor* HTMLTextAreaElement::GetTextEditor() {
   MOZ_ASSERT(mState);
   return mState->GetTextEditor();
 }
 
-NS_IMETHODIMP_(TextEditor*)
-HTMLTextAreaElement::GetTextEditorWithoutCreation() {
+TextEditor* HTMLTextAreaElement::GetTextEditorWithoutCreation() {
   MOZ_ASSERT(mState);
   return mState->GetTextEditorWithoutCreation();
 }
 
-NS_IMETHODIMP_(nsISelectionController*)
-HTMLTextAreaElement::GetSelectionController() {
+nsISelectionController* HTMLTextAreaElement::GetSelectionController() {
   MOZ_ASSERT(mState);
   return mState->GetSelectionController();
 }
 
-NS_IMETHODIMP_(nsFrameSelection*)
-HTMLTextAreaElement::GetConstFrameSelection() {
+nsFrameSelection* HTMLTextAreaElement::GetConstFrameSelection() {
   MOZ_ASSERT(mState);
   return mState->GetConstFrameSelection();
 }
 
-NS_IMETHODIMP
-HTMLTextAreaElement::BindToFrame(nsTextControlFrame* aFrame) {
+nsresult HTMLTextAreaElement::BindToFrame(nsTextControlFrame* aFrame) {
   MOZ_ASSERT(mState);
   return mState->BindToFrame(aFrame);
 }
 
-NS_IMETHODIMP_(void)
-HTMLTextAreaElement::UnbindFromFrame(nsTextControlFrame* aFrame) {
+void HTMLTextAreaElement::UnbindFromFrame(nsTextControlFrame* aFrame) {
   MOZ_ASSERT(mState);
   if (aFrame) {
     mState->UnbindFromFrame(aFrame);
   }
 }
 
-NS_IMETHODIMP
-HTMLTextAreaElement::CreateEditor() {
+nsresult HTMLTextAreaElement::CreateEditor() {
   MOZ_ASSERT(mState);
   return mState->PrepareEditor();
 }
 
-NS_IMETHODIMP_(void)
-HTMLTextAreaElement::UpdateOverlayTextVisibility(bool aNotify) {
+void HTMLTextAreaElement::UpdateOverlayTextVisibility(bool aNotify) {
   MOZ_ASSERT(mState);
   mState->UpdateOverlayTextVisibility(aNotify);
 }
 
-NS_IMETHODIMP_(bool)
-HTMLTextAreaElement::GetPlaceholderVisibility() {
+bool HTMLTextAreaElement::GetPlaceholderVisibility() {
   MOZ_ASSERT(mState);
   return mState->GetPlaceholderVisibility();
 }
 
-NS_IMETHODIMP_(void)
-HTMLTextAreaElement::SetPreviewValue(const nsAString& aValue) {
+void HTMLTextAreaElement::SetPreviewValue(const nsAString& aValue) {
   MOZ_ASSERT(mState);
   mState->SetPreviewText(aValue, true);
 }
 
-NS_IMETHODIMP_(void)
-HTMLTextAreaElement::GetPreviewValue(nsAString& aValue) {
+void HTMLTextAreaElement::GetPreviewValue(nsAString& aValue) {
   MOZ_ASSERT(mState);
   mState->GetPreviewText(aValue);
 }
 
-NS_IMETHODIMP_(void)
-HTMLTextAreaElement::EnablePreview() {
+void HTMLTextAreaElement::EnablePreview() {
   if (mIsPreviewEnabled) {
     return;
   }
@@ -298,11 +284,9 @@ HTMLTextAreaElement::EnablePreview() {
                                   nsChangeHint_ReconstructFrame);
 }
 
-NS_IMETHODIMP_(bool)
-HTMLTextAreaElement::IsPreviewEnabled() { return mIsPreviewEnabled; }
+bool HTMLTextAreaElement::IsPreviewEnabled() { return mIsPreviewEnabled; }
 
-NS_IMETHODIMP_(bool)
-HTMLTextAreaElement::GetPreviewVisibility() {
+bool HTMLTextAreaElement::GetPreviewVisibility() {
   MOZ_ASSERT(mState);
   return mState->GetPreviewVisibility();
 }
@@ -360,8 +344,7 @@ void HTMLTextAreaElement::SetUserInput(const nsAString& aValue,
                   TextControlState::eSetValue_MoveCursorToEndIfValueChanged);
 }
 
-NS_IMETHODIMP
-HTMLTextAreaElement::SetValueChanged(bool aValueChanged) {
+nsresult HTMLTextAreaElement::SetValueChanged(bool aValueChanged) {
   MOZ_ASSERT(mState);
 
   bool previousValue = mValueChanged;
@@ -1083,23 +1066,18 @@ nsresult HTMLTextAreaElement::GetValidationMessage(
   return rv;
 }
 
-NS_IMETHODIMP_(bool)
-HTMLTextAreaElement::IsSingleLineTextControl() const { return false; }
+bool HTMLTextAreaElement::IsSingleLineTextControl() const { return false; }
 
-NS_IMETHODIMP_(bool)
-HTMLTextAreaElement::IsTextArea() const { return true; }
+bool HTMLTextAreaElement::IsTextArea() const { return true; }
 
-NS_IMETHODIMP_(bool)
-HTMLTextAreaElement::IsPasswordTextControl() const { return false; }
+bool HTMLTextAreaElement::IsPasswordTextControl() const { return false; }
 
-NS_IMETHODIMP_(int32_t)
-HTMLTextAreaElement::GetCols() { return Cols(); }
+int32_t HTMLTextAreaElement::GetCols() { return Cols(); }
 
-NS_IMETHODIMP_(int32_t)
-HTMLTextAreaElement::GetWrapCols() {
+int32_t HTMLTextAreaElement::GetWrapCols() {
   nsHTMLTextWrap wrapProp;
-  nsITextControlElement::GetWrapPropertyEnum(this, wrapProp);
-  if (wrapProp == nsITextControlElement::eHTMLTextWrap_Off) {
+  TextControlElement::GetWrapPropertyEnum(this, wrapProp);
+  if (wrapProp == TextControlElement::eHTMLTextWrap_Off) {
     // do not wrap when wrap=off
     return 0;
   }
@@ -1108,8 +1086,7 @@ HTMLTextAreaElement::GetWrapCols() {
   return GetCols();
 }
 
-NS_IMETHODIMP_(int32_t)
-HTMLTextAreaElement::GetRows() {
+int32_t HTMLTextAreaElement::GetRows() {
   const nsAttrValue* attr = GetParsedAttr(nsGkAtoms::rows);
   if (attr && attr->Type() == nsAttrValue::eInteger) {
     int32_t rows = attr->GetIntegerValue();
@@ -1119,29 +1096,24 @@ HTMLTextAreaElement::GetRows() {
   return DEFAULT_ROWS_TEXTAREA;
 }
 
-NS_IMETHODIMP_(void)
-HTMLTextAreaElement::GetDefaultValueFromContent(nsAString& aValue) {
+void HTMLTextAreaElement::GetDefaultValueFromContent(nsAString& aValue) {
   GetDefaultValue(aValue, IgnoreErrors());
 }
 
-NS_IMETHODIMP_(bool)
-HTMLTextAreaElement::ValueChanged() const { return mValueChanged; }
+bool HTMLTextAreaElement::ValueChanged() const { return mValueChanged; }
 
-NS_IMETHODIMP_(void)
-HTMLTextAreaElement::GetTextEditorValue(nsAString& aValue,
-                                        bool aIgnoreWrap) const {
+void HTMLTextAreaElement::GetTextEditorValue(nsAString& aValue,
+                                             bool aIgnoreWrap) const {
   MOZ_ASSERT(mState);
   mState->GetValue(aValue, aIgnoreWrap);
 }
 
-NS_IMETHODIMP_(void)
-HTMLTextAreaElement::InitializeKeyboardEventListeners() {
+void HTMLTextAreaElement::InitializeKeyboardEventListeners() {
   MOZ_ASSERT(mState);
   mState->InitializeKeyboardEventListeners();
 }
 
-NS_IMETHODIMP_(void)
-HTMLTextAreaElement::OnValueChanged(bool aNotify, ValueChangeKind aKind) {
+void HTMLTextAreaElement::OnValueChanged(bool aNotify, ValueChangeKind aKind) {
   if (aKind != ValueChangeKind::Internal) {
     mLastValueChangeWasInteractive = aKind == ValueChangeKind::UserInteraction;
   }
@@ -1158,8 +1130,7 @@ HTMLTextAreaElement::OnValueChanged(bool aNotify, ValueChangeKind aKind) {
   }
 }
 
-NS_IMETHODIMP_(bool)
-HTMLTextAreaElement::HasCachedSelection() {
+bool HTMLTextAreaElement::HasCachedSelection() {
   MOZ_ASSERT(mState);
   return mState->IsSelectionCached();
 }

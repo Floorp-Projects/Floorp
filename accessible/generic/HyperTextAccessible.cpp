@@ -28,7 +28,6 @@
 #include "nsPersistentProperties.h"
 #include "nsIScrollableFrame.h"
 #include "nsIServiceManager.h"
-#include "nsITextControlElement.h"
 #include "nsIMathMLFrame.h"
 #include "nsRange.h"
 #include "nsTextFragment.h"

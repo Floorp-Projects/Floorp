@@ -8,22 +8,20 @@
 #define mozilla_TextControlState_h
 
 #include "mozilla/Assertions.h"
-#include "nsString.h"
-#include "nsITextControlElement.h"
-#include "nsITextControlFrame.h"
-#include "nsCycleCollectionParticipant.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/TextControlElement.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLInputElementBinding.h"
 #include "mozilla/dom/Nullable.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsITextControlFrame.h"
 
 class nsTextControlFrame;
 class nsISelectionController;
 class nsFrameSelection;
-class nsITextControlElement;
 class nsFrame;
 
 namespace mozilla {
@@ -50,7 +48,7 @@ class HTMLInputElement;
  *
  * This class is held as a member of HTMLInputElement and HTMLTextAreaElement.
  * The public functions in this class include the public APIs which dom/
- * uses. Layout code uses the nsITextControlElement interface to invoke
+ * uses. Layout code uses the TextControlElement interface to invoke
  * functions on this class.
  *
  * The design motivation behind this class is maintaining all of the things
@@ -141,7 +139,7 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(TextControlState)
 
-  static TextControlState* Construct(nsITextControlElement* aOwningElement);
+  static TextControlState* Construct(TextControlElement* aOwningElement);
 
   static void Shutdown();
 
@@ -383,7 +381,7 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   }
 
  private:
-  explicit TextControlState(nsITextControlElement* aOwningElement);
+  explicit TextControlState(TextControlElement* aOwningElement);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY ~TextControlState();
 
   /**
@@ -444,7 +442,7 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   // The text control element owns this object, and ensures that this object
   // has a smaller lifetime except the owner releases the instance while it
   // does something with this.
-  nsITextControlElement* MOZ_NON_OWNING_REF mTextCtrlElement;
+  TextControlElement* MOZ_NON_OWNING_REF mTextCtrlElement;
   RefPtr<TextInputSelectionController> mSelCon;
   RefPtr<RestoreSelectionState> mRestoringSelection;
   RefPtr<TextEditor> mTextEditor;
