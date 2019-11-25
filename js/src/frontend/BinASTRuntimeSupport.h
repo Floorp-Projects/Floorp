@@ -116,7 +116,13 @@ class BinASTSourceMetadata {
  public:
   BinASTSourceMetadata() = delete;
   explicit BinASTSourceMetadata(Type type) : type_(type) {}
+#ifdef JS_BUILD_BINAST
   ~BinASTSourceMetadata();
+#else
+  // If JS_BUILD_BINAST isn't defined, BinASTRuntimeSupport.cpp isn't built,
+  // but still the destructor is referred from ScriptSource::BinAST.
+  ~BinASTSourceMetadata() {}
+#endif  // JS_BUILD_BINAST
 
   Type type() const { return type_; }
 
