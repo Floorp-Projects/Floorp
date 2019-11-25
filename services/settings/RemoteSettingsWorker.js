@@ -86,14 +86,25 @@ const Agent = {
       // File does not exist.
       return false;
     }
+    const buffer = await resp.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    return this.checkContentHash(bytes, size, hash);
+  },
+
+  /**
+   * Check that the specified content matches the expected size and SHA-256 hash.
+   * @param {ArrayBuffer} buffer binary content
+   * @param {Number} size expected file size
+   * @param {String} size expected file SHA-256 as hex string
+   * @returns {boolean}
+   */
+  async checkContentHash(buffer, size, hash) {
+    const bytes = new Uint8Array(buffer);
     // Has expected size? (saves computing hash)
-    const fileSize = parseInt(resp.headers.get("Content-Length"), 10);
-    if (fileSize !== size) {
+    if (bytes.length !== size) {
       return false;
     }
     // Has expected content?
-    const buffer = await resp.arrayBuffer();
-    const bytes = new Uint8Array(buffer);
     const hashBuffer = await crypto.subtle.digest("SHA-256", bytes);
     const hashBytes = new Uint8Array(hashBuffer);
     const toHex = b => b.toString(16).padStart(2, "0");
