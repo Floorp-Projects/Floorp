@@ -7736,7 +7736,11 @@
 
 - name: webgl.dxgl.enabled
   type: RelaxedAtomicBool
+#ifdef XP_WIN
+  value: true
+#else
   value: false
+#endif
   mirror: always
 
 - name: webgl.dxgl.needs-finish
