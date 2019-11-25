@@ -6,12 +6,14 @@ package org.mozilla.fenix.settings.about
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.annotation.VisibleForTesting
 import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.settings.about.viewholders.AboutItemViewHolder
 
 class AboutPageAdapter(private val listener: AboutPageListener) : RecyclerView.Adapter<AboutItemViewHolder>() {
 
-    private var aboutList: List<AboutPageItem>? = null
+    @VisibleForTesting
+    var aboutList: List<AboutPageItem>? = null
 
     fun updateData(items: List<AboutPageItem>) {
         this.aboutList = items
