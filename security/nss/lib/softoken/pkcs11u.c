@@ -141,7 +141,7 @@ sftk_DestroyAttribute(SFTKAttribute *attribute)
 void
 sftk_FreeAttribute(SFTKAttribute *attribute)
 {
-    if (attribute->freeAttr) {
+    if (attribute && attribute->freeAttr) {
         sftk_DestroyAttribute(attribute);
         return;
     }
