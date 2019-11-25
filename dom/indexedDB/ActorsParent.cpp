@@ -11422,7 +11422,13 @@ bool ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
         // We need a thread right now so force all idle processing to stop by
         // posting a dummy runnable to each thread that might be doing idle
         // maintenance.
-        nsCOMPtr<nsIRunnable> runnable = new Runnable("IndexedDBDummyRunnable");
+        //
+        // This is copied for each database inside the loop below, it is
+        // deliberately const to prevent the attempt to wrongly optimize the
+        // refcounting by passing runnable.forget() to the Dispatch method, see
+        // bug 1598559.
+        const nsCOMPtr<nsIRunnable> runnable =
+            new Runnable("IndexedDBDummyRunnable");
 
         for (uint32_t index = mDatabasesPerformingIdleMaintenance.Length();
              index > 0; index--) {
@@ -11431,7 +11437,7 @@ bool ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
           MOZ_ASSERT(dbInfo->mThreadInfo.mThread);
 
           MOZ_ALWAYS_SUCCEEDS(dbInfo->mThreadInfo.mThread->Dispatch(
-              runnable.forget(), NS_DISPATCH_NORMAL));
+              runnable, NS_DISPATCH_NORMAL));
         }
       }
 
