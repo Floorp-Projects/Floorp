@@ -8,6 +8,8 @@ import argparse
 import os
 import sys
 
+from six import iteritems
+
 from mach.decorators import (
     CommandProvider,
     Command,
@@ -44,7 +46,7 @@ def run_marionette(tests, binary=None, topsrcdir=None, **kwargs):
     args.binary = binary
     args.logger = kwargs.pop('log', None)
 
-    for k, v in kwargs.iteritems():
+    for k, v in iteritems(kwargs):
         setattr(args, k, v)
 
     parser.verify_usage(args)
