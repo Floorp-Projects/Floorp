@@ -196,26 +196,40 @@ def mozconfig(mozconfig, old_configure, build_env,
 set_config('MOZCONFIG', depends(mozconfig)(lambda m: m['path']))
 
 
-option(env='PYTHON', nargs=1, help='Python interpreter')
+# Python 2
+# ========
 
-# Setup python virtualenv
-# ==============================================================
+option(env='PYTHON', nargs=1, help='Python 2.7 interpreter')
 
 
 @depends('PYTHON', check_build_environment, mozconfig, '--help')
 @imports('os')
 @imports('sys')
 @imports('subprocess')
+@imports('distutils.sysconfig')
 @imports(_from='mozbuild.configure.util', _import='LineIO')
 @imports(_from='mozbuild.virtualenv', _import='VirtualenvManager')
 @imports(_from='mozbuild.virtualenv', _import='verify_python_version')
-@imports('distutils.sysconfig')
-def virtualenv_python(env_python, build_env, mozconfig, help):
+@imports(_from='mozbuild.virtualenv', _import='PY2')
+def virtualenv_python2(env_python, build_env, mozconfig, help):
     if help:
         return
 
+    # NOTE: We cannot assume the Python we are calling this code with is the
+    # Python we want to set up a virtualenv for.
+    #
+    # We also cannot assume that the Python the caller is configuring meets our
+    # build requirements.
+    #
+    # Because of this the code is written to re-execute itself with the correct
+    # interpreter if required.
+
+    log.debug("python2: running with pid %r" % os.getpid())
+    log.debug("python2: sys.executable: %r" % sys.executable)
+
     python = env_python[0] if env_python else None
 
+    # Did our python come from mozconfig? Overrides environment setting.
     # Ideally we'd rely on the mozconfig injection from mozconfig_options,
     # but we'd rather avoid the verbosity when we need to reexecute with
     # a different python.
@@ -228,6 +242,8 @@ def virtualenv_python(env_python, build_env, mozconfig, help):
             python = mozconfig['vars']['added']['PYTHON']
         elif 'PYTHON' in mozconfig['vars']['modified']:
             python = mozconfig['vars']['modified']['PYTHON'][1]
+
+    log.debug("python2: executable from configuration: %r" % python)
 
     with LineIO(lambda l: log.error(l)) as out:
         verify_python_version(out)
@@ -256,29 +272,42 @@ def virtualenv_python(env_python, build_env, mozconfig, help):
     else:
         python = sys.executable
 
+    log.debug("python2: found executable: %r" % python)
+
     if not manager.up_to_date(python):
-        log.info('Creating Python environment')
+        log.info('Creating Python 2 environment')
         manager.build(python)
+    else:
+        log.debug("python2: venv is up to date")
 
     python = normsep(manager.python_path)
 
-    if not normsep(sys.executable).startswith(normsep(virtualenvs_root)):
-        log.info('Reexecuting in the virtualenv')
-        if env_python:
-            del os.environ['PYTHON']
-        # One would prefer to use os.execl, but that's completely borked on
-        # Windows.
-        sys.exit(subprocess.call([python] + sys.argv))
+    # The currently running interpreter could be Python 2 or Python 3. We make the
+    # part of the code that re-executes everything with the virtualenv's Python
+    # conditional on running the same major version as the current interpreter. If we
+    # don't do this then the configure code for the Py 2 and Py 3 virtualenvs could
+    # activate each other from inside the other's virtualenv.  We can't guarantee
+    # how the virtualenvs would interact if that happens.
+    if PY2:
+        if not normsep(sys.executable).startswith(normsep(virtualenvs_root)):
+            log.debug("python2: executing as %s, should be running as %s" % (
+                sys.executable, manager.python_path))
+            log.info('Reexecuting in the virtualenv')
+            if env_python:
+                del os.environ['PYTHON']
+            # One would prefer to use os.execl, but that's completely borked on
+            # Windows.
+            sys.exit(subprocess.call([python] + sys.argv))
 
-    # We are now in the virtualenv
-    if not distutils.sysconfig.get_python_lib():
-        die('Could not determine python site packages directory')
+        # We are now in the virtualenv
+        if not distutils.sysconfig.get_python_lib():
+            die('Could not determine python site packages directory')
 
     return python
 
 
-set_config('PYTHON', virtualenv_python)
-add_old_configure_assignment('PYTHON', virtualenv_python)
+set_config('PYTHON', virtualenv_python2)
+add_old_configure_assignment('PYTHON', virtualenv_python2)
 
 # Inject mozconfig options
 # ==============================================================
@@ -386,16 +415,71 @@ shell = help_shell | shell
 option(env='PYTHON3', nargs=1, help='Python 3 interpreter (3.5 or later)')
 
 
-@depends('PYTHON3', 'MOZILLABUILD')
+@depends(
+    'PYTHON3', check_build_environment, 'MOZILLABUILD', mozconfig, '--help')
 @checking('for Python 3',
           callback=lambda x: '%s (%s)' % (x.path, x.str_version) if x else 'no')
 @imports(_from='__builtin__', _import='Exception')
+@imports('os')
+@imports('sys')
+@imports('subprocess')
+@imports('distutils.sysconfig')
+@imports(_from='mozbuild.configure.util', _import='LineIO')
+@imports(_from='mozbuild.virtualenv', _import='VirtualenvManager')
+@imports(_from='mozbuild.virtualenv', _import='verify_python_version')
+@imports(_from='mozbuild.virtualenv', _import='PY3')
 @imports(_from='mozbuild.pythonutil', _import='find_python3_executable')
 @imports(_from='mozbuild.pythonutil', _import='python_executable_version')
-def python3(env_python, mozillabuild):
+def virtualenv_python3(env_python, build_env, mozillabuild, mozconfig, help):
+    if help:
+        return
+
+    # NOTE: We cannot assume the Python we are calling this code with is the
+    # Python we want to set up a virtualenv for.
+    #
+    # We also cannot assume that the Python the caller is configuring meets our
+    # build requirements.
+    #
+    # Because of this the code is written to re-execute itself with the correct
+    # interpreter if required.
+
+    log.debug("python3: running with pid %r" % os.getpid())
+    log.debug("python3: sys.executable: %r" % sys.executable)
+
+    # Verify that the Python version we executed this code with is the minimum
+    # required version to handle all project code.
+    with LineIO(lambda l: log.error(l)) as out:
+        verify_python_version(out)
+
     python = env_python[0] if env_python else None
 
-    # If Python given by environment variable, it must work.
+    # Ideally we'd rely on the mozconfig injection from mozconfig_options,
+    # but we'd rather avoid the verbosity when we need to reexecute with
+    # a different python.
+    if mozconfig['path']:
+        if 'PYTHON3' in mozconfig['env']['added']:
+            python = mozconfig['env']['added']['PYTHON3']
+        elif 'PYTHON3' in mozconfig['env']['modified']:
+            python = mozconfig['env']['modified']['PYTHON3'][1]
+        elif 'PYTHON3' in mozconfig['vars']['added']:
+            python = mozconfig['vars']['added']['PYTHON3']
+        elif 'PYTHON3' in mozconfig['vars']['modified']:
+            python = mozconfig['vars']['modified']['PYTHON3'][1]
+
+    log.debug("python3: executable from configuration: %r" % python)
+
+    # If this is a mozilla-central build, we'll find the virtualenv in the top
+    # source directory. If this is a SpiderMonkey build, we assume we're at
+    # js/src and try to find the virtualenv from the mozilla-central root.
+    # See mozilla-central changeset d2cce982a7c809815d86d5daecefe2e7a563ecca
+    # Bug 784841
+    topsrcdir, topobjdir = build_env.topsrcdir, build_env.topobjdir
+    if topobjdir.endswith('/js/src'):
+        topobjdir = topobjdir[:-7]
+
+    # If we know the Python executable the caller is asking for then verify its
+    # version. If the caller did not ask for a specific executable then find
+    # a reasonable default.
     if python:
         try:
             version = python_executable_version(python).version
@@ -430,15 +514,60 @@ def python3(env_python, mozillabuild):
                               '%s is Python %d.%d' % (python, version[0],
                                                       version[1]))
 
+    log.debug("python3: found executable: %r" % python)
+
+    virtualenvs_root = os.path.join(topobjdir, '_virtualenvs')
+    with LineIO(lambda l: log.info(l), 'replace') as out:
+        manager = VirtualenvManager(
+            topsrcdir, topobjdir,
+            os.path.join(virtualenvs_root, 'init_py3'), out,
+            os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
+
+    log.debug("python3: using venv: %r" % manager.virtualenv_root)
+
+    if not manager.up_to_date(python):
+        log.info('Creating Python 3 environment')
+        manager.build(python)
+    else:
+        log.debug("python3: venv is up to date")
+
+    python = normsep(manager.python_path)
+
+    # The currently running interpreter could be Python 2 or Python 3. We make the
+    # part of the code that re-executes everything with the virtualenv's Python
+    # conditional on running the same major version as the current interpreter. If we
+    # don't do this then the configure code for the Py 2 and Py 3 virtualenvs could
+    # activate each other from inside the other's virtualenv.  We can't guarantee
+    # how the virtualenvs would interact if that happens.
+    if PY3:
+        if not normsep(sys.executable).startswith(normsep(virtualenvs_root)):
+            log.debug("python3: executing as %s, should be running as %s" % (
+                sys.executable, manager.python_path))
+            log.info('Re-executing in the virtualenv')
+            if env_python:
+                del os.environ['PYTHON3']
+            # One would prefer to use os.execl, but that's completely borked on
+            # Windows.
+            sys.exit(subprocess.call([python] + sys.argv))
+
+        # We are now in the virtualenv
+        if not distutils.sysconfig.get_python_lib():
+            die('Could not determine python site packages directory')
+
+    str_version = '.'.join(str(v) for v in version)
+
     return namespace(
         path=python,
         version=version,
-        str_version='.'.join(str(v) for v in version),
+        str_version=str_version,
     )
 
 
-set_config('PYTHON3', depends_if(python3)(lambda p: p.path))
-set_config('PYTHON3_VERSION', depends_if(python3)(lambda p: p.str_version))
+set_config('PYTHON3', depends(virtualenv_python3)(lambda p: p.path))
+set_config(
+    'PYTHON3_VERSION',
+    depends(virtualenv_python3)(lambda p: p.str_version))
+
 
 # Source checkout and version control integration.
 # ================================================
