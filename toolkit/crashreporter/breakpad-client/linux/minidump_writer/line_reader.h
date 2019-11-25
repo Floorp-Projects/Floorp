@@ -50,7 +50,7 @@ class LineReader {
   }
 
   // The maximum length of a line.
-  static const size_t kMaxLineLen = 512;
+  static const size_t kMaxLineLen = 1024;
 
   // Return the next line from the file.
   //   line: (output) a pointer to the start of the line. The line is NUL
