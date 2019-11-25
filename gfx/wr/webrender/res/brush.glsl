@@ -61,6 +61,17 @@
 flat varying int v_brush_kind;
 #endif
 
+// A few varying slots for the brushes to use.
+// Using these instead of adding dedicated varyings avoids using a high
+// number of varyings in the multi-brush shader.
+flat varying vec4 flat_varying_vec4_0;
+flat varying vec4 flat_varying_vec4_1;
+flat varying vec4 flat_varying_vec4_2;
+flat varying vec4 flat_varying_vec4_3;
+flat varying vec4 flat_varying_vec4_4;
+varying vec4 varying_vec4_0;
+varying vec4 varying_vec4_1;
+
 #ifdef WR_VERTEX_SHADER
 
 #define FWD_DECLARE_VS_FUNCTION(name)   \
