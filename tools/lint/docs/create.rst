@@ -213,6 +213,13 @@ As an example, the `Flake8 test <https://searchfox.org/mozilla-central/source/to
 
 As always with tests, please make sure that enough positive and negative cases are covered.
 
+To run the tests:
+
+.. code-block:: shell
+
+    $ ./mach python-test --python 3 --subsuite mozlint
+
+
 More tests can be `found in-tree <https://searchfox.org/mozilla-central/source/tools/lint/test>`_.
 
 
