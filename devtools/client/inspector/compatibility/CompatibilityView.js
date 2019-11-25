@@ -80,16 +80,18 @@ class CompatibilityView {
     );
   }
 
-  _isVisible() {
+  _isAvailable() {
     return (
       this.inspector &&
       this.inspector.sidebar &&
-      this.inspector.sidebar.getCurrentTabID() === "compatibilityview"
+      this.inspector.sidebar.getCurrentTabID() === "compatibilityview" &&
+      this.inspector.selection &&
+      this.inspector.selection.isConnected()
     );
   }
 
   _onNewNode() {
-    if (!this._isVisible()) {
+    if (!this._isAvailable()) {
       return;
     }
 
