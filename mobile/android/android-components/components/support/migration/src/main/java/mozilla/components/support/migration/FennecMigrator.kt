@@ -5,12 +5,15 @@
 package mozilla.components.support.migration
 
 import android.content.Context
+import android.content.Intent
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
@@ -236,18 +239,7 @@ class FennecMigrator private constructor(
      * @return A deferred [MigrationResults], describing which migrations were performed and if they succeeded.
      */
     fun migrateAsync(): Deferred<MigrationResults> = synchronized(migrationLock) {
-        val migrationRecord = MigrationResultsStore(context)
-        val migrationHistory = migrationRecord.getCached()
-
-        // Either didn't run before, or ran with an older version than current migration's version.
-        val migrationsToRun = migrations.filter { versionedMigration ->
-            val pastVersion = migrationHistory?.get(versionedMigration.migration)?.version
-            if (pastVersion == null) {
-                true
-            } else {
-                versionedMigration.version > pastVersion
-            }
-        }
+        val migrationsToRun = getMigrationsToRun()
 
         // Short-circuit if there's nothing to do.
         if (migrationsToRun.isEmpty()) {
@@ -258,6 +250,41 @@ class FennecMigrator private constructor(
         }
 
         return runMigrationsAsync(migrationsToRun)
+    }
+
+    /**
+     * Returns true if there are migrations to run for this installation.
+     */
+    private fun hasMigrationsToRun(): Boolean {
+        return getMigrationsToRun().isNotEmpty()
+    }
+
+    /**
+     * Starts the provided [AbstractMigrationService] implementation if there are migrations to be
+     * run for this installation.
+     */
+    fun <T> startMigrationServiceIfNeeded(service: Class<T>) where T : AbstractMigrationService {
+        if (hasMigrationsToRun()) {
+            logger.debug("Has migrations to run. Starting service.")
+            context.startService(Intent(context, service))
+        } else {
+            logger.debug("No migrations to run. Not starting service.")
+        }
+    }
+
+    private fun getMigrationsToRun(): List<VersionedMigration> {
+        val migrationRecord = MigrationResultsStore(context)
+        val migrationHistory = migrationRecord.getCached()
+
+        // Either didn't run before, or ran with an older version than current migration's version.
+        return migrations.filter { versionedMigration ->
+            val pastVersion = migrationHistory?.get(versionedMigration.migration)?.version
+            if (pastVersion == null) {
+                true
+            } else {
+                versionedMigration.version > pastVersion
+            }
+        }
     }
 
     private fun runMigrationsAsync(
@@ -339,7 +366,7 @@ class FennecMigrator private constructor(
     }
 
     @SuppressWarnings("TooGenericExceptionCaught")
-    private fun migrateOpenTabs(): Result<SessionManager.Snapshot> {
+    private suspend fun migrateOpenTabs(): Result<SessionManager.Snapshot> {
         if (profile == null) {
             crashReporter.submitCaughtException(IllegalStateException("Missing Profile path"))
             return Result.Failure(IllegalStateException("Missing Profile path"))
@@ -350,7 +377,9 @@ class FennecMigrator private constructor(
             val result = FennecSessionMigration.migrate(File(profile.path))
             if (result is Result.Success<*>) {
                 logger.debug("Loading migrated session snapshot...")
-                sessionManager!!.restore(result.value as SessionManager.Snapshot)
+                withContext(Dispatchers.Main) {
+                    sessionManager!!.restore(result.value as SessionManager.Snapshot)
+                }
             }
             result
         } catch (e: Exception) {
