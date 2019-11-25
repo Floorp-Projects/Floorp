@@ -107,14 +107,11 @@ add_task(async function test_per_window_ntp_theme() {
           let listener = removedWinId => {
             if (removedWinId == winId) {
               browser.windows.onRemoved.removeListener(listener);
-              dump(`DEBUG_1584391: onRemoved ${winId}\n`);
               resolve();
             }
           };
           browser.windows.onRemoved.addListener(listener);
-          browser.windows.remove(winId).then(() => {
-            dump(`DEBUG_1584391: remove() = ${winId}\n`);
-          });
+          browser.windows.remove(winId);
         });
       }
 
@@ -180,14 +177,6 @@ add_task(async function test_per_window_ntp_theme() {
       win.NewTabPagePreloading.removePreloadedBrowser(win);
       for (let url of ["about:newtab", "about:home", "about:welcome"]) {
         info("Opening url: " + url);
-        if (AppConstants.DEBUG) {
-          dump(`DEBUG_1584391: skipping tabs and checks in DEBUG build\n`);
-          // Opening a tab usually takes some time, which may have side effects.
-          // To make sure that the bug is not coincidentally fixed by a shorter
-          // test runtime, an artificial delay is used instead.
-          await new Promise(resolve => win.setTimeout(resolve, 100));
-          continue;
-        }
         await BrowserTestUtils.withNewTab(
           { gBrowser: win.gBrowser, url },
           async browser => {
