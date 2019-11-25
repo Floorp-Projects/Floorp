@@ -43,7 +43,7 @@ void MMPrinter::PrintImpl(char const* aLocation, const nsAString& aMsg,
 
   MOZ_LOG(MMPrinter::sMMLog, LogLevel::Debug,
           ("%s Message: %s in process type: %s", aLocation, charMsg.get(),
-           XRE_GeckoProcessTypeToString(XRE_GetProcessType())));
+           XRE_ChildProcessTypeToString(XRE_GetProcessType())));
 
   if (!MOZ_LOG_TEST(sMMLog, LogLevel::Verbose)) {
     return;
