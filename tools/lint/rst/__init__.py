@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import re
 import subprocess
 
 from mozlint import result
@@ -34,6 +35,8 @@ Try to install it manually with:
     $ pip install -U --require-hashes -r {}
 """.strip().format(rstcheck_requirements_file)
 
+RSTCHECK_FORMAT_REGEX = re.compile(r'(.*):(.*): \(.*/([0-9]*)\) (.*)$')
+
 
 def setup(root, **lintargs):
     if not pip.reinstall_program(rstcheck_requirements_file):
@@ -54,19 +57,13 @@ def get_rstcheck_binary():
 
 
 def parse_with_split(errors):
-
-    filtered_output = errors.split(":")
-    filename = filtered_output[0]
-    lineno = filtered_output[1]
-    idx = filtered_output[2].index(") ")
-    level = filtered_output[2][0:idx].split("/")[1]
-    message = filtered_output[2][idx+2:].split("\n")[0]
+    match = RSTCHECK_FORMAT_REGEX.match(errors)
+    filename, lineno, level, message = match.groups()
 
     return filename, lineno, level, message
 
 
 def lint(files, config, **lintargs):
-
     log = lintargs['log']
     config['root'] = lintargs['root']
     paths = expand_exclusions(files, config, config['root'])
