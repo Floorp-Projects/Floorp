@@ -47,3 +47,5 @@ with Files('docs/tools/http-inspector.md'):
 
 with Files('docs/tools/inspector-panel.md'):
     BUG_COMPONENT = ('DevTools', 'Inspector')
+
+SPHINX_TREES['/devtools'] = 'docs'

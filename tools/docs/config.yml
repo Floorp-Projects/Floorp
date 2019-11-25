@@ -7,13 +7,14 @@ categories:
         - browser
         - dom
         - gfx
+        - devtools
         - toolkit
+        - js
         - dom/bindings/webidl
         - modules/libpref
         - remote
         - services/common/services
         - uriloader
-        - js
     build_doc:
         - mach
         - tools/try
