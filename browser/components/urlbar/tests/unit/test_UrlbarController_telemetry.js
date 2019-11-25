@@ -84,13 +84,7 @@ function getHistogramReportsCount(results) {
 }
 
 add_task(function setup() {
-  controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  controller = UrlbarTestUtils.newMockController();
 
   firstHistogram = Services.telemetry.getHistogramById(TELEMETRY_1ST_RESULT);
   sixthHistogram = Services.telemetry.getHistogramById(
