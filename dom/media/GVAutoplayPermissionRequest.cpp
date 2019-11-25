@@ -5,6 +5,7 @@
 #include "GVAutoplayPermissionRequest.h"
 
 #include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {
 namespace dom {
@@ -20,6 +21,18 @@ static RStatus GetRequestStatus(BrowsingContext* aContext, RType aType) {
              : aContext->GetGVInaudibleAutoplayRequestStatus();
 }
 
+// This is copied from the value of `media.geckoview.autoplay.request.testing`.
+enum class TestRequest : uint32_t {
+  ePromptAsNormal = 0,
+  eAllowAll = 1,
+  eDenyAll = 2,
+  eAllowAudible = 3,
+  eDenyAudible = 4,
+  eAllowInAudible = 5,
+  eDenyInAudible = 6,
+  eLeaveAllPending = 7,
+};
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(GVAutoplayPermissionRequest,
                                    ContentPermissionRequestBase)
 
@@ -33,9 +46,27 @@ void GVAutoplayPermissionRequest::CreateRequest(nsGlobalWindowInner* aWindow,
   RefPtr<GVAutoplayPermissionRequest> request =
       new GVAutoplayPermissionRequest(aWindow, aContext, aType);
   request->SetRequestStatus(RStatus::ePENDING);
-  request->RequestDelayedTask(
-      aWindow->EventTargetFor(TaskCategory::Other),
-      GVAutoplayPermissionRequest::DelayedTaskType::Request);
+  const TestRequest testingPref = static_cast<TestRequest>(
+      StaticPrefs::media_geckoview_autoplay_request_testing());
+  if (testingPref != TestRequest::ePromptAsNormal) {
+    if (testingPref == TestRequest::eAllowAll ||
+        (testingPref == TestRequest::eAllowAudible &&
+         aType == RType::eAUDIBLE) ||
+        (testingPref == TestRequest::eAllowInAudible &&
+         aType == RType::eINAUDIBLE)) {
+      request->Allow(JS::UndefinedHandleValue);
+    } else if (testingPref == TestRequest::eDenyAll ||
+               (testingPref == TestRequest::eDenyAudible &&
+                aType == RType::eAUDIBLE) ||
+               (testingPref == TestRequest::eDenyInAudible &&
+                aType == RType::eINAUDIBLE)) {
+      request->Cancel();
+    }
+  } else {
+    request->RequestDelayedTask(
+        aWindow->EventTargetFor(TaskCategory::Other),
+        GVAutoplayPermissionRequest::DelayedTaskType::Request);
+  }
 }
 
 GVAutoplayPermissionRequest::GVAutoplayPermissionRequest(
@@ -112,6 +143,10 @@ void GVAutoplayPermissionRequestor::AskForPermissionIfNeeded(
   // The request is used for content permission, so it's no need to create a
   // content request in parent process.
   if (XRE_IsParentProcess()) {
+    return;
+  }
+
+  if (!StaticPrefs::media_geckoview_autoplay_request()) {
     return;
   }
 

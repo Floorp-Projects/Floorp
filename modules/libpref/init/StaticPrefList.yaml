@@ -6453,6 +6453,24 @@
   value: false
   mirror: always
 
+ # If true, then we require explicit approval from the embedding app (ex. Fenix)
+ # on GeckoView to know if we can allow audible, inaudible media or both kinds
+ # of media to autoplay.
+- name: media.geckoview.autoplay.request
+  type: bool
+  value: false
+  mirror: always
+
+ # This is used in testing only, in order to skip the prompting process. This
+ # pref works only when enabling the pref `media.geckoview.autoplay.request`.
+ # 0=prompt as normal, 1=allow all, 2=deny all, 3=allow audible request,
+ # 4=deny audible request, 5=allow inaudible request, 6=deny inaudible request.
+ # 7=leave all requests pending.
+- name: media.geckoview.autoplay.request.testing
+  type: uint32_t
+  value: 0
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "mousewheel."
 #---------------------------------------------------------------------------
