@@ -90,6 +90,10 @@ function Startup() {
   document.l10n.setAttributes(signonsIntro, "logins-description-all");
   document.l10n.setAttributes(removeAllButton, "remove-all");
 
+  if (Services.policies && !Services.policies.isAllowed("passwordReveal")) {
+    togglePasswordsButton.hidden = true;
+  }
+
   document
     .getElementsByTagName("treecols")[0]
     .addEventListener("click", event => {
