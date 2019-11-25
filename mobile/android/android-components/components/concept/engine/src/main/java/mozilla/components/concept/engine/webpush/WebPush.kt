@@ -16,10 +16,10 @@ interface WebPushHandler {
     /**
      * Invoked when a push message has been delivered.
      *
-     * @param subscription A [WebPushSubscription] for the messaged delivered.
+     * @param scope The subscription identifier which usually represents the website's URI.
      * @param message A [ByteArray] message.
      */
-    fun onPushMessage(subscription: WebPushSubscription, message: ByteArray?)
+    fun onPushMessage(scope: String, message: ByteArray?)
 
     /**
      * Invoked when a subscription has now changed/expired.
