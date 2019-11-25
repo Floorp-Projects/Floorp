@@ -7,7 +7,7 @@
  *   We show that we can separate the safebrowsing cookie by creating a custom
  *   OriginAttributes using a unique safebrowsing first-party domain. Setting this
  *   custom OriginAttributes on the loadInfo of the channel allows us to query the
- *   first-party domain and therefore separate the safebrowing cookie in its own
+ *   first-party domain and therefore separate the safebrowsing cookie in its own
  *   cookie-jar. For testing safebrowsing update we do >> NOT << emulate a response
  *   in the body, rather we only set the cookies in the header of the response
  *   and confirm that cookies are separated in their own cookie-jar.

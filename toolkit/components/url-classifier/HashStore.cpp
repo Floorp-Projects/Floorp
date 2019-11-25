@@ -282,7 +282,7 @@ nsresult HashStore::CheckChecksum(uint32_t aFileSize) {
   compareHash.SetLength(hash.Length());
 
   if (hash.Length() > aFileSize) {
-    NS_WARNING("SafeBrowing file not long enough to store its hash");
+    NS_WARNING("SafeBrowsing file not long enough to store its hash");
     return NS_ERROR_FAILURE;
   }
   nsCOMPtr<nsISeekableStream> seekIn = do_QueryInterface(mInputStream);
@@ -294,7 +294,7 @@ nsresult HashStore::CheckChecksum(uint32_t aFileSize) {
   NS_ASSERTION(read == hash.Length(), "Could not read hash bytes");
 
   if (!hash.Equals(compareHash)) {
-    NS_WARNING("Safebrowing file failed checksum.");
+    NS_WARNING("SafeBrowsing file failed checksum.");
     return NS_ERROR_FAILURE;
   }
 
