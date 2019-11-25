@@ -3677,12 +3677,6 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
   nsCOMPtr<nsIChannel> newChannel;
   rv = NS_NewChannelInternal(getter_AddRefs(newChannel), aArgs.uri(), loadInfo);
 
-  RefPtr<nsIChildChannel> childChannel = do_QueryObject(newChannel);
-  if (NS_FAILED(rv) || !childChannel) {
-    MOZ_DIAGNOSTIC_ASSERT(false, "NS_NewChannelInternal failed");
-    return IPC_OK();
-  }
-
   // This is used to report any errors back to the parent by calling
   // CrossProcessRedirectFinished.
   RefPtr<HttpChannelChild> httpChild = do_QueryObject(newChannel);
@@ -3690,14 +3684,26 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
     if (httpChild) {
       rv = httpChild->CrossProcessRedirectFinished(rv);
     }
-    nsCOMPtr<nsILoadInfo> loadInfo;
-    MOZ_ALWAYS_SUCCEEDS(newChannel->GetLoadInfo(getter_AddRefs(loadInfo)));
     Maybe<LoadInfoArgs> loadInfoArgs;
-    MOZ_ALWAYS_SUCCEEDS(
-        mozilla::ipc::LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
+    if (newChannel && NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsILoadInfo> loadInfo;
+      MOZ_ALWAYS_SUCCEEDS(newChannel->GetLoadInfo(getter_AddRefs(loadInfo)));
+      MOZ_ALWAYS_SUCCEEDS(
+          mozilla::ipc::LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
+    }
     aResolve(
         Tuple<const nsresult&, const Maybe<LoadInfoArgs>&>(rv, loadInfoArgs));
   });
+
+  if (NS_FAILED(rv)) {
+    return IPC_OK();
+  }
+
+  RefPtr<nsIChildChannel> childChannel = do_QueryObject(newChannel);
+  if (!childChannel) {
+    rv = NS_ERROR_UNEXPECTED;
+    return IPC_OK();
+  }
 
   if (httpChild) {
     rv = httpChild->SetChannelId(aArgs.channelId());
