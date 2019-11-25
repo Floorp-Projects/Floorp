@@ -77,7 +77,7 @@
 #include "mozilla/Preferences.h"
 #include "gfxTextRun.h"
 #include "nsFontFaceUtils.h"
-#include "nsLayoutStylesheetCache.h"
+#include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_zoom.h"
@@ -532,7 +532,7 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
   //
   // The first pres context that has its pref changed runnable called will
   // be the one to cause the reconstruction of the pref style sheet.
-  nsLayoutStylesheetCache::InvalidatePreferenceSheets();
+  GlobalStyleSheetCache::InvalidatePreferenceSheets();
   PreferenceSheet::Refresh();
   DispatchPrefChangedRunnableIfNeeded();
 

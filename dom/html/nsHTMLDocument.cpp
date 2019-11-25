@@ -105,7 +105,6 @@
 #include "nsIFrame.h"
 #include "nsIContent.h"
 #include "nsIStructuredCloneContainer.h"
-#include "nsLayoutStylesheetCache.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/Unused.h"
