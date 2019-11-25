@@ -92,6 +92,14 @@ add_task(async function test_download_writes_file_in_profile() {
 });
 add_task(clear_state);
 
+add_task(async function test_download_as_bytes() {
+  const bytes = await downloader.downloadAsBytes(RECORD);
+
+  // See *.pem file in tests data.
+  Assert.ok(bytes.byteLength > 1500, `Wrong bytes size: ${bytes.byteLength}`);
+});
+add_task(clear_state);
+
 add_task(async function test_file_is_redownloaded_if_size_does_not_match() {
   const fileURL = await downloader.download(RECORD);
   const localFilePath = pathFromURL(fileURL);
@@ -134,9 +142,9 @@ add_task(async function test_download_is_retried_3_times_if_download_fails() {
 
   let called = 0;
   const _fetchAttachment = downloader._fetchAttachment;
-  downloader._fetchAttachment = (url, destination) => {
+  downloader._fetchAttachment = async url => {
     called++;
-    return _fetchAttachment(url, destination);
+    return _fetchAttachment(url);
   };
 
   let error;
@@ -159,7 +167,10 @@ add_task(async function test_download_is_retried_3_times_if_content_fails() {
     },
   };
   let called = 0;
-  downloader._fetchAttachment = () => called++;
+  downloader._fetchAttachment = async () => {
+    called++;
+    return new ArrayBuffer();
+  };
 
   let error;
   try {
