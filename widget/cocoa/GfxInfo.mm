@@ -30,7 +30,7 @@ using namespace mozilla::widget;
 NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
 #endif
 
-GfxInfo::GfxInfo() : mOSXVersion{0} {}
+GfxInfo::GfxInfo() : mAdapterRAM(0), mOSXVersion{0} {}
 
 static OperatingSystem OSXVersionToOperatingSystem(uint32_t aOSXVersion) {
   if (nsCocoaFeatures::ExtractMajorVersion(aOSXVersion) == 10) {
@@ -139,14 +139,14 @@ GfxInfo::GetAdapterDescription2(nsAString& aAdapterDescription) { return NS_ERRO
 
 /* readonly attribute DOMString adapterRAM; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterRAM(nsAString& aAdapterRAM) {
-  aAdapterRAM = mAdapterRAMString;
+GfxInfo::GetAdapterRAM(uint32_t* aAdapterRAM) {
+  *aAdapterRAM = mAdapterRAM;
   return NS_OK;
 }
 
 /* readonly attribute DOMString adapterRAM2; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterRAM2(nsAString& aAdapterRAM) { return NS_ERROR_FAILURE; }
+GfxInfo::GetAdapterRAM2(uint32_t* aAdapterRAM) { return NS_ERROR_FAILURE; }
 
 /* readonly attribute DOMString adapterDriver; */
 NS_IMETHODIMP
@@ -233,6 +233,24 @@ GfxInfo::GetDisplayInfo(nsTArray<nsString>& aDisplayInfo) {
     aDisplayInfo.AppendElement(desc);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GfxInfo::GetDisplayWidth(nsTArray<uint32_t>& aDisplayWidth) {
+  for (NSScreen* screen in [NSScreen screens]) {
+    NSRect rect = [screen frame];
+    aDisplayWidth.AppendElement((uint32_t)rect.size.width);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GfxInfo::GetDisplayHeight(nsTArray<uint32_t>& aDisplayHeight) {
+  for (NSScreen* screen in [NSScreen screens]) {
+    NSRect rect = [screen frame];
+    aDisplayHeight.AppendElement((uint32_t)rect.size.height);
+  }
   return NS_OK;
 }
 

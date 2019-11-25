@@ -339,7 +339,7 @@ const SNAPSHOT_SCHEMA = {
           type: "string",
         },
         adapterRAM: {
-          type: "string",
+          type: "number",
         },
         adapterDrivers: {
           type: "string",
