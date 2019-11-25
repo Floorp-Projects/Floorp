@@ -179,7 +179,7 @@ void RunWatchdog(void* arg) {
       continue;
     }
 
-    NoteIntentionalCrash(XRE_GeckoProcessTypeToString(XRE_GetProcessType()));
+    NoteIntentionalCrash(XRE_ChildProcessTypeToString(XRE_GetProcessType()));
 
     // The shutdown steps are not completed yet. Let's report the last one.
     if (!sShutdownNotified) {
