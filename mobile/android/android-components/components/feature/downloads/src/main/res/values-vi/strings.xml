@@ -19,6 +19,9 @@
     <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
     <string name="mozac_feature_downloads_file_not_supported2">%1$s không thể tải xuống loại tập tin này</string>
 
+    <!-- Message that appears when the downloaded file could not be opened-->
+    <string name="mozac_feature_downloads_could_not_open_file">Không thể mở tập tin</string>
+
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">Tạm dừng</string>
     <!-- Button that resumes the download when pressed -->

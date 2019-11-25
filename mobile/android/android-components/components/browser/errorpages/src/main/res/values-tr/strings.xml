@@ -30,6 +30,15 @@
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Bağlantı kesintiye uğradı</string>
 
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>Tarayıcı başarıyla bağlandı ama bilgi aktarılırken bağlantı kesildi. Lütfen tekrar deneyin.</p>
+      <ul>
+        <li>Site geçici olarak kullanılamıyor veya çok meşgul olabilir. Birkaç dakika sonra tekrar deneyin.</li>
+        <li>Hiçbir sayfa açılmıyorsa cihazınızın mobil internet veya Wi-Fi bağlantısını kontrol edin.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Bağlantı zaman aşımına uğradı</string>
 
@@ -103,11 +112,19 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">İçerik kodlama hatası</string>
 
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>Görüntülemeye çalıştığınız sayfa geçersiz veya desteklenmeyen bir sıkıştırma biçimi kullandığından dolayı gösterilemiyor.</p>
+      <ul>
+        <li>Bu sorunu bildirmek için lütfen web sitesi sahipleriyle iletişime geçin.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Adres bulunamadı</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Geçersiz adres</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Girilen adres tanınan bir biçimde değil. Konum çubuğuna bakıp olası hataları giderdikten sonra yeniden deneyin.</p>]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Adres geçersiz</string>
 
@@ -138,8 +155,12 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Vekil sunucu bağlantıyı reddetti</string>
 
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Tarayıcı vekil sunucu kullanmak üzere yapılandırılmış, ancak vekil sunucu bağlantı isteğini geri çevirdi.</p><ul><li>Vekil sunucu ayarları düzgün yapılmamış olabilir. Ayarlarınızı gözden geçirip yeniden deneyin.</li><li>Belirtilen vekil sunucu ağınız üzerinden kurulan bağlantılara izin vermiyor olabilir.</li><li>Hâlâ sorun yaşıyorsanız ağ yöneticinize ya da internet servis sağlayıcınıza başvurun.</li></ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Vekil sunucu bulunamadı</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Tarayıcı vekil sunucu kullanmak üzere yapılandırılmış, ancak vekil sunucu bulunamadı.</p><ul><li>Vekil sunucu ayarları düzgün yapılmamış olabilir. Ayarlarınızı gözden geçirip yeniden deneyin.</li><li>Bilgisayarınız etkin bir ağ bağlantısına sahip olmayabilir.</li><li>Hâlâ sorun yaşıyorsanız ağ yöneticinize ya da internet servis sağlayıcınıza başvurun.</li></ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Kötü amaçlı yazılım sitesi sorunu</string>
@@ -151,6 +172,11 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">İstenmeyen site sorunu</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>%1$s konumundaki sitenin istenmeyen yazılım dağıttığı bildirildi ve güvenlik tercihlerinize dayanılarak site engellendi.</p>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">Zararlı site sorunu</string>
