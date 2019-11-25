@@ -1255,7 +1255,7 @@ class IonBuilder : public MIRGenerator,
 
   uint32_t loopDepth_;
 
-  PendingEdgesMap pendingEdges_;
+  mozilla::Maybe<PendingEdgesMap> pendingEdges_;
   LoopStateStack loopStack_;
 
   Vector<BytecodeSite*, 0, JitAllocPolicy> trackedOptimizationSites_;
@@ -1438,7 +1438,7 @@ class IonBuilder : public MIRGenerator,
   void trackInlineSuccessUnchecked(InliningStatus status);
 
  public:
-  const PendingEdgesMap& pendingEdges() const { return pendingEdges_; }
+  bool hasPendingEdgesMap() const { return pendingEdges_.isSome(); }
 
   // This is only valid for IonBuilders that have moved to background
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
