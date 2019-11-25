@@ -982,7 +982,6 @@ class PictureInPictureChild extends JSWindowActorChild {
       this.untrackOriginatingVideo(video);
     }
     this.sendAsyncMessage("PictureInPicture:Close", {
-      browingContextId: this.docShell.browsingContext.id,
       reason,
     });
 
