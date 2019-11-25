@@ -13,8 +13,7 @@ import traceback
 from textwrap import dedent
 
 from mozpack import path as mozpath
-from mozbuild.util import system_encoding
-
+from mozbuild.util import system_encoding, ensure_subprocess_env
 
 MOZ_MYCONFIG_ERROR = '''
 The MOZ_MYCONFIG environment variable to define the location of mozconfigs
@@ -238,8 +237,6 @@ class MozconfigLoader(object):
         result['make_extra'] = []
         result['make_flags'] = []
 
-        env = dict(os.environ)
-
         # Since mozconfig_loader is a shell script, running it "normally"
         # actually leads to two shell executions on Windows. Avoid this by
         # directly calling sh mozconfig_loader.
@@ -258,7 +255,8 @@ class MozconfigLoader(object):
             # We need to capture stderr because that's where the shell sends
             # errors if execution fails.
             output = subprocess.check_output(command, stderr=subprocess.STDOUT,
-                                             cwd=self.topsrcdir, env=env)
+                                             cwd=self.topsrcdir,
+                                             env=ensure_subprocess_env(os.environ))
         except subprocess.CalledProcessError as e:
             lines = e.output.splitlines()
 
