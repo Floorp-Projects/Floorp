@@ -104,8 +104,7 @@ function assertNDEFReaderOptionsEqual(provided, received) {
     assert_equals(received.mediaType, '');
 
   if (provided.recordType !== undefined) {
-    assert_equals(!+received.record_filter, true);
-    assert_equals(provided.recordType, received.recordFilter.recordType);
+    assert_equals(provided.recordType, received.recordType);
   }
 }
 
@@ -115,8 +114,8 @@ function matchesWatchOptions(message, options) {
   if (!matchesWebNfcId(message.url, options.url)) return false;
 
   // Matches any record / media type.
-  if ((options.mediaType == null || options.mediaType === "")
-      && options.recordFilter == null) {
+  if ((options.mediaType == null || options.mediaType === '') &&
+      options.recordType == null) {
     return true;
   }
 
@@ -126,8 +125,8 @@ function matchesWatchOptions(message, options) {
         && options.mediaType !== record.mediaType) {
       return false;
     }
-    if (options.recordFilter != null &&
-        options.recordFilter.recordType !== record.recordType) {
+    if (options.recordType != null &&
+        options.recordType !== record.recordType) {
       return false;
     }
   }
