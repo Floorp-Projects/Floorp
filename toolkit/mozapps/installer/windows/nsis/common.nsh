@@ -5780,19 +5780,6 @@ end:
 
       StrCmp "$R0" "" continue +1
 
-      ; Update this user's shortcuts with the latest app user model id.
-      ClearErrors
-      ${GetOptions} "$R0" "/UpdateShortcutAppUserModelIds" $R2
-      IfErrors hideshortcuts +1
-      StrCpy $R2 ""
-!ifmacrodef InitHashAppModelId
-      ${If} "$AppUserModelID" != ""
-        ${UpdateShortcutAppModelIDs}  "$INSTDIR\${FileMainEXE}" "$AppUserModelID" $R2
-      ${EndIf}
-!endif
-      StrCmp "$R2" "false" +1 finish ; true indicates that shortcuts have been updated
-      Quit ; Nothing initialized so no need to call OnEndCommon
-
       ; Require elevation if the user can elevate
       hideshortcuts:
       ClearErrors
