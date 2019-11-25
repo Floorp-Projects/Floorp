@@ -240,7 +240,7 @@ The way to contribute is just as usual:
 * Create a branch for your changes:
   `git checkout -b topic`.
 * Make your changes.
-* Run the lint script described below.
+* Run `./wpt lint` as described above.
 * Commit locally and push that to your repo.
 * Send in a pull request based on the above.
 
