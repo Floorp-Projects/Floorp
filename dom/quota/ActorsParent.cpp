@@ -1516,19 +1516,19 @@ class InitTemporaryStorageOp final : public QuotaRequestBase {
   void GetResponse(RequestResponse& aResponse) override;
 };
 
-class InitOriginOp final : public QuotaRequestBase {
-  const InitOriginParams mParams;
+class InitStorageAndOriginOp final : public QuotaRequestBase {
+  const InitStorageAndOriginParams mParams;
   nsCString mSuffix;
   nsCString mGroup;
   bool mCreated;
 
  public:
-  explicit InitOriginOp(const RequestParams& aParams);
+  explicit InitStorageAndOriginOp(const RequestParams& aParams);
 
   bool Init(Quota* aQuota) override;
 
  private:
-  ~InitOriginOp() {}
+  ~InitStorageAndOriginOp() {}
 
   nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
@@ -4270,11 +4270,12 @@ nsresult QuotaManager::LoadQuota() {
       }
 
       // We don't need to update the .metadata-v2 file on disk here,
-      // EnsureOriginIsInitialized is responsible for doing that. We just need
-      // to use correct group before initializing quota for the given origin.
-      // (Note that calling GetDirectoryMetadata2WithRestore below might update
-      // the group in the metadata file, but only as a side-effect. The actual
-      // place we ensure consistency is in EnsureOriginIsInitialized.)
+      // EnsureStorageAndOriginIsInitialized is responsible for doing that. We
+      // just need to use correct group before initializing quota for the given
+      // origin. (Note that calling GetDirectoryMetadata2WithRestore below
+      // might update the group in the metadata file, but only as a side-effect.
+      // The actual place we ensure consistency is in
+      // EnsureStorageAndOriginIsInitialized.)
 
       nsCString clientUsagesText;
       rv = stmt->GetUTF8String(3, clientUsagesText);
@@ -4342,7 +4343,7 @@ nsresult QuotaManager::LoadQuota() {
 
         // Calling GetDirectoryMetadata2WithRestore might update the group in
         // the metadata file, but only as a side-effect. The actual place we
-        // ensure consistency is in EnsureOriginIsInitialized.
+        // ensure consistency is in EnsureStorageAndOriginIsInitialized.
 
         int64_t metadataLastAccessTime;
         bool metadataPersisted;
@@ -6776,17 +6777,18 @@ void QuotaManager::OpenDirectoryInternal(
   }
 }
 
-nsresult QuotaManager::EnsureOriginIsInitialized(
+nsresult QuotaManager::EnsureStorageAndOriginIsInitialized(
     PersistenceType aPersistenceType, const nsACString& aSuffix,
-    const nsACString& aGroup, const nsACString& aOrigin, nsIFile** aDirectory) {
+    const nsACString& aGroup, const nsACString& aOrigin,
+    Client::Type aClientType, nsIFile** aDirectory) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
 
   nsCOMPtr<nsIFile> directory;
   bool created;
-  nsresult rv = EnsureOriginIsInitializedInternal(
-      aPersistenceType, aSuffix, aGroup, aOrigin, getter_AddRefs(directory),
-      &created);
+  nsresult rv = EnsureStorageAndOriginIsInitializedInternal(
+      aPersistenceType, aSuffix, aGroup, aOrigin,
+      Nullable<Client::Type>(aClientType), getter_AddRefs(directory), &created);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -6795,34 +6797,66 @@ nsresult QuotaManager::EnsureOriginIsInitialized(
   return NS_OK;
 }
 
-nsresult QuotaManager::EnsureOriginIsInitializedInternal(
+nsresult QuotaManager::EnsureStorageAndOriginIsInitializedInternal(
     PersistenceType aPersistenceType, const nsACString& aSuffix,
-    const nsACString& aGroup, const nsACString& aOrigin, nsIFile** aDirectory,
+    const nsACString& aGroup, const nsACString& aOrigin,
+    const Nullable<Client::Type>& aClientType, nsIFile** aDirectory,
     bool* aCreated) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
-  MOZ_ASSERT(aCreated);
+
+  Unused << aClientType;
 
   nsresult rv = EnsureStorageIsInitialized();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  // Get directory for this origin and persistence type.
   nsCOMPtr<nsIFile> directory;
-  rv = GetDirectoryForOrigin(aPersistenceType, aOrigin,
-                             getter_AddRefs(directory));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  bool created;
   if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
-    if (mInitializedOrigins.Contains(aOrigin)) {
-      directory.forget(aDirectory);
-      *aCreated = false;
-      return NS_OK;
-    }
+    rv = EnsurePersistentOriginIsInitialized(
+        aSuffix, aGroup, aOrigin, getter_AddRefs(directory), &created);
   } else {
     rv = EnsureTemporaryStorageIsInitialized();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    rv = EnsureTemporaryOriginIsInitialized(aPersistenceType, aSuffix, aGroup,
+                                            aOrigin, getter_AddRefs(directory),
+                                            &created);
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  directory.forget(aDirectory);
+  if (aCreated) {
+    *aCreated = created;
+  }
+  return NS_OK;
+}
+
+nsresult QuotaManager::EnsurePersistentOriginIsInitialized(
+    const nsACString& aSuffix, const nsACString& aGroup,
+    const nsACString& aOrigin, nsIFile** aDirectory, bool* aCreated) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aDirectory);
+  MOZ_ASSERT(aCreated);
+  MOZ_ASSERT(mStorageConnection);
+
+  nsCOMPtr<nsIFile> directory;
+  nsresult rv = GetDirectoryForOrigin(PERSISTENCE_TYPE_PERSISTENT, aOrigin,
+                                      getter_AddRefs(directory));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (mInitializedOrigins.Contains(aOrigin)) {
+    directory.forget(aDirectory);
+    *aCreated = false;
+    return NS_OK;
   }
 
   bool created;
@@ -6832,34 +6866,67 @@ nsresult QuotaManager::EnsureOriginIsInitializedInternal(
   }
 
   int64_t timestamp;
-  if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
-    if (created) {
-      timestamp = PR_Now();
+  if (created) {
+    timestamp = PR_Now();
 
-      // Only creating .metadata-v2 to reduce IO.
-      rv = CreateDirectoryMetadata2(directory, timestamp,
-                                    /* aPersisted */ true, aSuffix, aGroup,
-                                    aOrigin);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    } else {
-      rv = GetDirectoryMetadata2WithRestore(directory,
-                                            /* aPersistent */ true, &timestamp,
-                                            /* aPersisted */ nullptr);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      MOZ_ASSERT(timestamp <= PR_Now());
+    // Only creating .metadata-v2 to reduce IO.
+    rv = CreateDirectoryMetadata2(directory, timestamp,
+                                  /* aPersisted */ true, aSuffix, aGroup,
+                                  aOrigin);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    rv = GetDirectoryMetadata2WithRestore(directory,
+                                          /* aPersistent */ true, &timestamp,
+                                          /* aPersisted */ nullptr);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
 
-    rv = InitializeOrigin(aPersistenceType, aGroup, aOrigin, timestamp,
-                          /* aPersisted */ true, directory);
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ASSERT(timestamp <= PR_Now());
+  }
 
-    mInitializedOrigins.AppendElement(aOrigin);
-  } else if (created) {
+  rv = InitializeOrigin(PERSISTENCE_TYPE_PERSISTENT, aGroup, aOrigin, timestamp,
+                        /* aPersisted */ true, directory);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mInitializedOrigins.AppendElement(aOrigin);
+
+  directory.forget(aDirectory);
+  *aCreated = created;
+  return NS_OK;
+}
+
+nsresult QuotaManager::EnsureTemporaryOriginIsInitialized(
+    PersistenceType aPersistenceType, const nsACString& aSuffix,
+    const nsACString& aGroup, const nsACString& aOrigin, nsIFile** aDirectory,
+    bool* aCreated) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
+  MOZ_ASSERT(aDirectory);
+  MOZ_ASSERT(aCreated);
+  MOZ_ASSERT(mStorageConnection);
+  MOZ_ASSERT(mTemporaryStorageInitialized);
+
+  // Get directory for this origin and persistence type.
+  nsCOMPtr<nsIFile> directory;
+  nsresult rv = GetDirectoryForOrigin(aPersistenceType, aOrigin,
+                                      getter_AddRefs(directory));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool created;
+  rv = EnsureOriginDirectory(directory, &created);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (created) {
+    int64_t timestamp;
     NoteOriginDirectoryCreated(aPersistenceType, aGroup, aOrigin,
                                /* aPersisted */ false, timestamp);
 
@@ -8484,8 +8551,9 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
     case RequestParams::TInitTemporaryStorageParams:
       break;
 
-    case RequestParams::TInitOriginParams: {
-      const InitOriginParams& params = aParams.get_InitOriginParams();
+    case RequestParams::TInitStorageAndOriginParams: {
+      const InitStorageAndOriginParams& params =
+          aParams.get_InitStorageAndOriginParams();
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
@@ -8679,8 +8747,8 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
       actor = new InitTemporaryStorageOp();
       break;
 
-    case RequestParams::TInitOriginParams:
-      actor = new InitOriginOp(aParams);
+    case RequestParams::TInitStorageAndOriginParams:
+      actor = new InitStorageAndOriginOp(aParams);
       break;
 
     case RequestParams::TClearOriginParams:
@@ -9331,15 +9399,15 @@ void InitTemporaryStorageOp::GetResponse(RequestResponse& aResponse) {
   aResponse = InitTemporaryStorageResponse();
 }
 
-InitOriginOp::InitOriginOp(const RequestParams& aParams)
+InitStorageAndOriginOp::InitStorageAndOriginOp(const RequestParams& aParams)
     : QuotaRequestBase(/* aExclusive */ false),
-      mParams(aParams.get_InitOriginParams()),
+      mParams(aParams.get_InitStorageAndOriginParams()),
       mCreated(false) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aParams.type() == RequestParams::TInitOriginParams);
+  MOZ_ASSERT(aParams.type() == RequestParams::TInitStorageAndOriginParams);
 }
 
-bool InitOriginOp::Init(Quota* aQuota) {
+bool InitStorageAndOriginOp::Init(Quota* aQuota) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aQuota);
 
@@ -9351,6 +9419,12 @@ bool InitOriginOp::Init(Quota* aQuota) {
 
   mPersistenceType.SetValue(mParams.persistenceType());
 
+  if (mParams.clientTypeIsExplicit()) {
+    MOZ_ASSERT(mParams.clientType() != Client::TYPE_MAX);
+
+    mClientType.SetValue(mParams.clientType());
+  }
+
   // Figure out which origin we're dealing with.
   nsCString origin;
   QuotaManager::GetInfoFromValidatedPrincipalInfo(mParams.principalInfo(),
@@ -9361,17 +9435,17 @@ bool InitOriginOp::Init(Quota* aQuota) {
   return true;
 }
 
-nsresult InitOriginOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
+nsresult InitStorageAndOriginOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
   AssertIsOnIOThread();
   MOZ_ASSERT(!mPersistenceType.IsNull());
 
-  AUTO_PROFILER_LABEL("InitOriginOp::DoDirectoryWork", OTHER);
+  AUTO_PROFILER_LABEL("InitStorageAndOriginOp::DoDirectoryWork", OTHER);
 
   nsCOMPtr<nsIFile> directory;
   bool created;
-  nsresult rv = aQuotaManager->EnsureOriginIsInitializedInternal(
+  nsresult rv = aQuotaManager->EnsureStorageAndOriginIsInitializedInternal(
       mPersistenceType.Value(), mSuffix, mGroup, mOriginScope.GetOrigin(),
-      getter_AddRefs(directory), &created);
+      mClientType, getter_AddRefs(directory), &created);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9381,10 +9455,10 @@ nsresult InitOriginOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
   return NS_OK;
 }
 
-void InitOriginOp::GetResponse(RequestResponse& aResponse) {
+void InitStorageAndOriginOp::GetResponse(RequestResponse& aResponse) {
   AssertIsOnOwningThread();
 
-  InitOriginResponse response;
+  InitStorageAndOriginResponse response;
 
   response.created() = mCreated;
 

@@ -35,7 +35,10 @@ async function testSteps() {
 
     info("Initializing an origin");
 
-    let request = initOrigin(getPrincipal("http://example.com"), "default");
+    let request = initStorageAndOrigin(
+      getPrincipal("http://example.com"),
+      "default"
+    );
     await requestFinished(request);
 
     info("Resetting");

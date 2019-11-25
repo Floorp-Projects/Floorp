@@ -1151,9 +1151,9 @@ nsresult OpenOp::DatabaseWork() {
   MOZ_ASSERT(quotaManager);
 
   nsCOMPtr<nsIFile> dbDirectory;
-  nsresult rv = quotaManager->EnsureOriginIsInitialized(
+  nsresult rv = quotaManager->EnsureStorageAndOriginIsInitialized(
       PERSISTENCE_TYPE_DEFAULT, mSuffix, mGroup, mOrigin,
-      getter_AddRefs(dbDirectory));
+      mozilla::dom::quota::Client::SDB, getter_AddRefs(dbDirectory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

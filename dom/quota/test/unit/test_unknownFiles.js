@@ -86,7 +86,7 @@ function* testSteps() {
   info("Initializing origin");
 
   let principal = getPrincipal(exampleUrl);
-  request = initOrigin(principal, "default", continueToNextStepSync);
+  request = initStorageAndOrigin(principal, "default", continueToNextStepSync);
   yield undefined;
 
   ok(
@@ -124,7 +124,7 @@ function* testSteps() {
 
   info("Initializing origin");
 
-  request = initChromeOrigin("persistent", continueToNextStepSync);
+  request = initStorageAndChromeOrigin("persistent", continueToNextStepSync);
   yield undefined;
 
   ok(
@@ -159,7 +159,7 @@ function* testSteps() {
 
   info("Initializing origin");
 
-  request = initChromeOrigin("persistent", continueToNextStepSync);
+  request = initStorageAndChromeOrigin("persistent", continueToNextStepSync);
   yield undefined;
 
   ok(request.resultCode == NS_ERROR_UNEXPECTED, "Initialization failed");
@@ -191,7 +191,7 @@ function* testSteps() {
 
   info("Initializing origin");
 
-  request = initChromeOrigin("persistent", continueToNextStepSync);
+  request = initStorageAndChromeOrigin("persistent", continueToNextStepSync);
   yield undefined;
 
   ok(request.resultCode == NS_OK, "Initialization succeeded");

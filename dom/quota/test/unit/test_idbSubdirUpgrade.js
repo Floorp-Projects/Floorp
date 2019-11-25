@@ -112,7 +112,7 @@ function* testSteps() {
         info("Initializing origin");
 
         let principal = getPrincipal(origin.url);
-        request = initOrigin(
+        request = initStorageAndOrigin(
           principal,
           origin.persistence,
           continueToNextStepSync

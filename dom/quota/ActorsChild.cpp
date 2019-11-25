@@ -325,8 +325,8 @@ mozilla::ipc::IPCResult QuotaRequestChild::Recv__delete__(
       HandleResponse();
       break;
 
-    case RequestResponse::TInitOriginResponse:
-      HandleResponse(aResponse.get_InitOriginResponse().created());
+    case RequestResponse::TInitStorageAndOriginResponse:
+      HandleResponse(aResponse.get_InitStorageAndOriginResponse().created());
       break;
 
     case RequestResponse::TPersistedResponse:

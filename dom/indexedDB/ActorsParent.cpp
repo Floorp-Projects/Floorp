@@ -17454,8 +17454,9 @@ nsresult Maintenance::DirectoryWork() {
         // Idle maintenance may occur before origin is initailized.
         // Ensure origin is initialized first. It will initialize all origins
         // for temporary storage including IDB origins.
-        rv = quotaManager->EnsureOriginIsInitialized(
-            persistenceType, suffix, group, origin, getter_AddRefs(directory));
+        rv = quotaManager->EnsureStorageAndOriginIsInitialized(
+            persistenceType, suffix, group, origin, Client::IDB,
+            getter_AddRefs(directory));
 
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
@@ -20271,8 +20272,9 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
 
   nsCOMPtr<nsIFile> dbDirectory;
 
-  nsresult rv = quotaManager->EnsureOriginIsInitialized(
-      persistenceType, mSuffix, mGroup, mOrigin, getter_AddRefs(dbDirectory));
+  nsresult rv = quotaManager->EnsureStorageAndOriginIsInitialized(
+      persistenceType, mSuffix, mGroup, mOrigin, Client::IDB,
+      getter_AddRefs(dbDirectory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
