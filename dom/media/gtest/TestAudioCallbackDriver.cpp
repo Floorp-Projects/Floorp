@@ -54,4 +54,6 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
   // block for ever if it is not cleared. The same logic exists in
   // MediaTrackGraphShutDownRunnable
   graph->mDriver = nullptr;
+
+  graph->RemoveShutdownBlocker();
 }

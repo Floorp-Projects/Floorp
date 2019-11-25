@@ -676,7 +676,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * If set, the GraphRunner class handles handing over data from audio
    * callbacks to a common single thread, shared across GraphDrivers.
    */
-  const UniquePtr<GraphRunner> mGraphRunner;
+  const RefPtr<GraphRunner> mGraphRunner;
 
   /**
    * Main-thread view of the number of tracks in this graph, for lifetime
