@@ -55,7 +55,9 @@ static nsresult ShellExecuteWithIFile(const nsCOMPtr<nsIFile>& aExecutable,
   }
 
   _bstr_t execPathBStr(execPath.get());
-  _variant_t verb(L"open");
+  // Pass VT_ERROR/DISP_E_PARAMNOTFOUND to omit an optional RPC parameter
+  // to execute a file with the default verb.
+  _variant_t verbDefault(DISP_E_PARAMNOTFOUND, VT_ERROR);
   _variant_t workingDir;
   _variant_t showCmd(SW_SHOWNORMAL);
 
@@ -63,7 +65,7 @@ static nsresult ShellExecuteWithIFile(const nsCOMPtr<nsIFile>& aExecutable,
   // Skype for Business do not start correctly when inheriting our process's
   // migitation policies.
   mozilla::LauncherVoidResult shellExecuteOk = mozilla::ShellExecuteByExplorer(
-      execPathBStr, aArgs, verb, workingDir, showCmd);
+      execPathBStr, aArgs, verbDefault, workingDir, showCmd);
   if (shellExecuteOk.isErr()) {
     return NS_ERROR_FILE_EXECUTION_FAILED;
   }
