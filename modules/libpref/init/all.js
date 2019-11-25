@@ -2312,7 +2312,7 @@ pref("extensions.abuseReport.enabled", true);
 // Allow AMO to handoff reports to the Firefox integrated dialog.
 pref("extensions.abuseReport.amWebAPI.enabled", true);
 // Opened as a sub-frame of the about:addons page when set to false.
-pref("extensions.abuseReport.openDialog", false);
+pref("extensions.abuseReport.openDialog", true);
 pref("extensions.abuseReport.url", "https://services.addons.mozilla.org/api/v4/abuse/report/addon/");
 pref("extensions.abuseReport.amoDetailsURL", "https://services.addons.mozilla.org/api/v4/addons/addon/");
 
