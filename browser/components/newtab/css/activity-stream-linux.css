@@ -3898,29 +3898,29 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   .onboardingMessageImage.sync {
     background-image: url("../data/content/assets/illustration-sync@2x.png"); }
   .onboardingMessageImage.devices {
-    background-image: url("../data/content/assets/trailhead/card-illo-devices.png"); }
+    background-image: url("../data/content/assets/trailhead/card-illo-devices.svg"); }
   .onboardingMessageImage.fbcont {
-    background-image: url("../data/content/assets/trailhead/card-illo-fbcont.png"); }
+    background-image: url("../data/content/assets/trailhead/card-illo-fbcont.svg"); }
   .onboardingMessageImage.import {
     background-image: url("../data/content/assets/trailhead/card-illo-import.svg"); }
   .onboardingMessageImage.ffmonitor {
-    background-image: url("../data/content/assets/trailhead/card-illo-ffmonitor.png"); }
+    background-image: url("../data/content/assets/trailhead/card-illo-ffmonitor.svg"); }
   .onboardingMessageImage.ffsend {
-    background-image: url("../data/content/assets/trailhead/card-illo-ffsend.png"); }
+    background-image: url("../data/content/assets/trailhead/card-illo-ffsend.svg"); }
   .onboardingMessageImage.lockwise {
-    background-image: url("../data/content/assets/trailhead/card-illo-lockwise.png"); }
+    background-image: url("../data/content/assets/trailhead/card-illo-lockwise.svg"); }
   .onboardingMessageImage.mobile {
-    background-image: url("../data/content/assets/trailhead/card-illo-mobile.png"); }
+    background-image: url("../data/content/assets/trailhead/card-illo-mobile.svg"); }
   .onboardingMessageImage.pledge {
-    background-image: url("../data/content/assets/trailhead/card-illo-pledge.png"); }
+    background-image: url("../data/content/assets/trailhead/card-illo-pledge.svg"); }
   .onboardingMessageImage.pocket {
-    background-image: url("../data/content/assets/trailhead/card-illo-pocket.png"); }
+    background-image: url("../data/content/assets/trailhead/card-illo-pocket.svg"); }
   .onboardingMessageImage.private {
-    background-image: url("../data/content/assets/trailhead/card-illo-private.png"); }
+    background-image: url("../data/content/assets/trailhead/card-illo-private.svg"); }
   .onboardingMessageImage.sendtab {
-    background-image: url("../data/content/assets/trailhead/card-illo-sendtab.png"); }
+    background-image: url("../data/content/assets/trailhead/card-illo-sendtab.svg"); }
   .onboardingMessageImage.tracking {
-    background-image: url("../data/content/assets/trailhead/card-illo-tracking.png"); }
+    background-image: url("../data/content/assets/trailhead/card-illo-tracking.svg"); }
 
 .EOYSnippetForm {
   margin: 10px 0 8px;
