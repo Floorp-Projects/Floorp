@@ -364,8 +364,6 @@ class IonBuilder : public MIRGenerator,
   AbortReasonOr<Ok> improveTypesAtTypeOfCompare(MCompare* ins, bool trueBranch,
                                                 MTest* test);
 
-  // Used to detect triangular structure at test.
-  bool detectAndOrStructure(MPhi* ins, bool* branchIsTrue);
   AbortReasonOr<Ok> replaceTypeSet(MDefinition* subject, TemporaryTypeSet* type,
                                    MTest* test);
 
