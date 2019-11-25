@@ -123,6 +123,15 @@ this.test = class extends ExtensionAPI {
     return {
       test: {
         withHandlingUserInput(callback) {
+          // TODO(Bug 1598804): remove this once we don't expose anymore the
+          // entire test API namespace based on an environment variable.
+          if (!Cu.isInAutomation) {
+            // This dangerous method should only be available if the
+            // automation pref is set, which is the case in browser tests.
+            throw new ExtensionUtils.ExtensionError(
+              "withHandlingUserInput can only be called in automation"
+            );
+          }
           ExtensionCommon.withHandlingUserInput(
             context.contentWindow,
             callback
