@@ -87,7 +87,7 @@ It shares the same security model as DevTools and Marionette, in
 that there is no other mechanism for enabling the remote agent than
 by passing a command-line flag.
 
-It is our assumption that if an attacker has shell acccess to the
+It is our assumption that if an attacker has shell access to the
 user account, there is little we can do to prevent secrets from
 being accessed or leaked.
 

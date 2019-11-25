@@ -126,10 +126,10 @@ Rationale
    Optimally, test names should be structured hierarchically to allow
    easy selection of groups of tests for execution. However, gtest has some
    restrictions that do not allow that completely. The guidelines try to
-   accomodate for these as far as possible. Note that gtest recommends not to
+   accommodate for these as far as possible. Note that gtest recommends not to
    use underscores in test names in general, because this may lead to reserved
    names and naming conflicts, but the rules stated here should avoid that.
-   In case of any problems arising, we can evolve the rules to accomodate
+   In case of any problems arising, we can evolve the rules to accommodate
    for that.
 
 Specifying types

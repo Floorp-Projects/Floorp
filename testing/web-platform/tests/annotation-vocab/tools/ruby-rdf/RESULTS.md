@@ -1102,7 +1102,7 @@ a {
 
   Debug:</pre></div>
         <div class="backtrace"><pre>./annotation-vocab_spec.rb:83:in `block (4 levels) in &lt;top (required)&gt;&#39;</pre></div>
-    <pre class="ruby"><code><span class="linenum">81</span>        # XXX Normalize whitespace in literals to ease comparision
+    <pre class="ruby"><code><span class="linenum">81</span>        # XXX Normalize whitespace in literals to ease comparison
 <span class="linenum">82</span>        fg.each_object {|o| o.squish! if o.literal?}
 <span class="offending"><span class="linenum">83</span>        expect(fg).to be_equivalent_graph(vocab_graph)</span>
 <span class="linenum">84</span>      end
@@ -2073,7 +2073,7 @@ a {
 
   Debug:</pre></div>
         <div class="backtrace"><pre>./annotation-vocab_spec.rb:83:in `block (4 levels) in &lt;top (required)&gt;&#39;</pre></div>
-    <pre class="ruby"><code><span class="linenum">81</span>        # XXX Normalize whitespace in literals to ease comparision
+    <pre class="ruby"><code><span class="linenum">81</span>        # XXX Normalize whitespace in literals to ease comparison
 <span class="linenum">82</span>        fg.each_object {|o| o.squish! if o.literal?}
 <span class="offending"><span class="linenum">83</span>        expect(fg).to be_equivalent_graph(vocab_graph)</span>
 <span class="linenum">84</span>      end

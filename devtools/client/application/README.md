@@ -289,7 +289,7 @@ For instance, if we have the following HTML markup and we have to choose a class
 
 Sometimes we have a component that should change its style depending on its state, or we have some rules that allow us to customize further how something looks. For instance, we could have a generic rule for buttons, and then some extra rules for primary buttons, or for tiny ones.
 
-In BEM, style variants are created with a double hypen `--`. For example:
+In BEM, style variants are created with a double hyphen `--`. For example:
 
 ```css
 .ui-button { /* styles for buttons */ }

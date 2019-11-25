@@ -154,7 +154,7 @@ While decently effective, there are currently two downsides to this approach:
 
 * The "live" behavior of imports is often implemented using accessor
   properties, which as of the time of this writing, cannot be evaluated to
-  retreive their real value.
+  retrieve their real value.
 * The "live" behavior of imports is sometimes implemented with function calls,
   which also also cannot be evaluated, causing their value to be
   unknown.

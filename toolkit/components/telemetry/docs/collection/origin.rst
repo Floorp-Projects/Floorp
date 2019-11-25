@@ -116,9 +116,9 @@ Example
 
 Firefox Content Blocking blocks web content from certain origins present on a list.
 Users can exempt certain origins from being blocked.
-To improve Content Blocking's effectiveness we need to know these two "whats" of information about that list of "wheres".
+To improve Content Blocking's effectiveness we need to know these two "what's" of information about that list of "wheres".
 
-This means we need two metrics ``contentblocking.blocked`` and ``contentblocking.exempt`` (the "whats"), and a list of origins (the "wheres").
+This means we need two metrics ``contentblocking.blocked`` and ``contentblocking.exempt`` (the "what's"), and a list of origins (the "wheres").
 
 Say "example.net" was blocked and "example.com" was exempted from blocking.
 Content Blocking calls ``Telemetry::RecordOrigin(OriginMetricID::ContentBlocking_Blocked, NS_LITERAL_CSTRING("example.net"))`` and ``Telemetry::RecordOrigin(OriginMetricID::ContentBlocking_Exempt, NS_LITERAL_CSTRING("example.com"))``.

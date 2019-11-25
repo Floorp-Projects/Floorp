@@ -357,7 +357,7 @@ Add-on experiments
   Mozilla extensions.
 
   An add-on experiment can collect additional telemetry that's not collected in
-  the product by using the priveleged ``browser.telemetry`` WebExtensions API,
+  the product by using the privileged ``browser.telemetry`` WebExtensions API,
   and of course the product will continue to collect all the telemetry it
   usually does. The telemetry pings from users running the experiment will be
   correlated with the experiment with no extra work on our part.

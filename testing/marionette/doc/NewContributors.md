@@ -61,7 +61,7 @@ Work on bugs and get code review
 
 Once you are familiar with the code of the test harnesses, and the tests you might
 want to start with your first contribution. The necessary steps to submit and verify
-your patches are layed out in [Patches.md](Patches.html).
+your patches are laid out in [Patches.md](Patches.html).
 
 
 Resources

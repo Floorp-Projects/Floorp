@@ -36,7 +36,7 @@ central by using relative paths:
 Because we need to export the geckodriver source code to the old
 GitHub repository when we release, we first need to publish these
 crates if they have had any changes in the interim since the last
-release.  If they have receieved no changes, you can skip them:
+release.  If they have received no changes, you can skip them:
 
   - `testing/mozbase/rust/mozprofile`
   - `testing/mozbase/rust/mozrunner`
@@ -69,7 +69,7 @@ is implemented there.
 
 We follow the writing style of the existing change log, with
 one section per version (with a release date), with subsections
-‘Added’, ‘Changed’, and ‘Removed’.  If the targetted
+‘Added’, ‘Changed’, and ‘Removed’.  If the targeted
 Firefox or Selenium versions have changed, it is good to make a
 mention of this.  Lines are optimally formatted at roughly 72 columns
 to make the file readable in a text editor as well as rendered HTML.
@@ -102,7 +102,7 @@ Bump the version number and update the support page
 
 Bump the version number in [Cargo.toml] to the next version.
 geckodriver follows [semantic versioning] so it’s a good idea to
-familiarise yourself wih that before deciding on the version number.
+familiarise yourself with that before deciding on the version number.
 
 After you’ve changed the version number, run
 

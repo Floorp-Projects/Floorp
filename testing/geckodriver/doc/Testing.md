@@ -25,7 +25,7 @@ make sure you have built Firefox:
 	% ./mach wpt testing/web-platform/tests/webdriver
 
 As these are functional integration tests and pop up Firefox windows
-sporadically, a helpful tip is to surpress the window whilst you
+sporadically, a helpful tip is to suppress the window whilst you
 are running them by using Firefox’ [headless mode]:
 
 	% ./mach wpt --headless testing/web-platform/tests/webdriver
