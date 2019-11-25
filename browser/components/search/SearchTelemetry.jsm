@@ -74,6 +74,10 @@ const SEARCH_PROVIDER_INFO = {
     queryParam: "q",
     codeParam: "t",
     codePrefixes: ["ff"],
+    extraAdServersRegexps: [
+      /^https:\/\/duckduckgo.com\/y\.js/,
+      /^https:\/\/www\.amazon\.(?:[a-z.]{2,24}).*(?:tag=duckduckgo-)/,
+    ],
   },
   yahoo: {
     regexp: /^https:\/\/(?:.*)search\.yahoo\.com\/search/,
@@ -101,6 +105,10 @@ const SEARCH_PROVIDER_INFO = {
         codePrefixes: ["MOZ", "MZ"],
       },
     ],
+    extraAdServersRegexps: [
+      /^https:\/\/www\.bing\.com\/acli?c?k/,
+      /^https:\/\/www\.bing\.com\/fd\/ls\/GLinkPingPost\.aspx.*acli?c?k/,
+    ],
   },
 };
 
@@ -121,7 +129,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
  */
 class TelemetryHandler {
   constructor() {
-    // _browserInfoByUrl is a map of tracked search urls to objects containing:
+    // _browserInfoByURL is a map of tracked search urls to objects containing:
     // * {object} info
     //   the search provider information associated with the url.
     // * {WeakSet} browsers
@@ -134,12 +142,13 @@ class TelemetryHandler {
     // The manual count is because WeakSet doesn't give us size/length
     // information, but we want to know when we can clean up our associated
     // entry.
-    this._browserInfoByUrl = new Map();
+    this._browserInfoByURL = new Map();
     this._initialized = false;
     this.__searchProviderInfo = null;
     this._contentHandler = new ContentHandler({
-      browserInfoByUrl: this._browserInfoByUrl,
-      getProviderInfoForUrl: this._getProviderInfoForUrl.bind(this),
+      browserInfoByURL: this._browserInfoByURL,
+      findBrowserItemForURL: (...args) => this._findBrowserItemForURL(...args),
+      getProviderInfoForURL: (...args) => this._getProviderInfoForURL(...args),
     });
   }
 
@@ -234,12 +243,12 @@ class TelemetryHandler {
 
     // If we have a code, then we also track this for potential ad clicks.
     if (info.code) {
-      let item = this._browserInfoByUrl.get(url);
+      let item = this._browserInfoByURL.get(url);
       if (item) {
         item.browsers.add(browser);
         item.count++;
       } else {
-        this._browserInfoByUrl.set(url, {
+        this._browserInfoByURL.set(url, {
           browsers: new WeakSet([browser]),
           info,
           count: 1,
@@ -255,16 +264,97 @@ class TelemetryHandler {
    *                         tracked.
    */
   stopTrackingBrowser(browser) {
-    for (let [url, item] of this._browserInfoByUrl) {
+    for (let [url, item] of this._browserInfoByURL) {
       if (item.browsers.has(browser)) {
         item.browsers.delete(browser);
         item.count--;
       }
 
       if (!item.count) {
-        this._browserInfoByUrl.delete(url);
+        this._browserInfoByURL.delete(url);
       }
     }
+  }
+
+  /**
+   * Parts of the URL, like search params and hashes, may be mutated by scripts
+   * on a page we're tracking. Since we don't want to keep track of that
+   * ourselves in order to keep the list of browser objects a weak-referenced
+   * set, we do optional fuzzy matching of URLs to fetch the most relevant item
+   * that contains tracking information.
+   *
+   * @param {string} url URL to fetch the tracking data for.
+   * @returns {object} Map containing the following members:
+   *   - {WeakSet} browsers
+   *     Set of browser elements that belong to `url`.
+   *   - {object} info
+   *     Info dictionary as returned by `_checkURLForSerpMatch`.
+   *   - {number} count
+   *     The number of browser element we can most accurately tell we're
+   *     tracking, since they're inside a WeakSet.
+   */
+  _findBrowserItemForURL(url) {
+    try {
+      url = new URL(url);
+    } catch (ex) {
+      return null;
+    }
+
+    const compareURLs = (url1, url2) => {
+      // In case of an exact match, well, that's an obvious winner.
+      if (url1.href == url2.href) {
+        return Infinity;
+      }
+
+      // Each step we get closer to the two URLs being the same, we increase the
+      // score. The consumer of this method will use these scores to see which
+      // of the URLs is the best match.
+      let score = 0;
+      if (url1.hostname == url2.hostname) {
+        ++score;
+        if (url1.pathname == url2.pathname) {
+          ++score;
+          for (let [key1, value1] of url1.searchParams) {
+            // Let's not fuss about the ordering of search params, since the
+            // score effect will solve that.
+            if (url2.searchParams.has(key1)) {
+              ++score;
+              if (url2.searchParams.get(key1) == value1) {
+                ++score;
+              }
+            }
+          }
+          if (url1.hash == url2.hash) {
+            ++score;
+          }
+        }
+      }
+      return score;
+    };
+
+    let item;
+    let currentBestMatch = 0;
+    for (let [trackingURL, candidateItem] of this._browserInfoByURL) {
+      if (currentBestMatch === Infinity) {
+        break;
+      }
+      try {
+        // Make sure to cache the parsed URL object, since there's no reason to
+        // do it twice.
+        trackingURL =
+          candidateItem._trackingURL ||
+          (candidateItem._trackingURL = new URL(trackingURL));
+      } catch (ex) {
+        continue;
+      }
+      let score = compareURLs(url, trackingURL);
+      if (score > currentBestMatch) {
+        item = candidateItem;
+        currentBestMatch = score;
+      }
+    }
+
+    return item;
   }
 
   // nsIWindowMediatorListener
@@ -345,7 +435,7 @@ class TelemetryHandler {
    *   ad server regexp to match instead of the main regexp.
    * @returns {array|null} Returns an array of provider name and the provider information.
    */
-  _getProviderInfoForUrl(url, useOnlyExtraAdServers = false) {
+  _getProviderInfoForURL(url, useOnlyExtraAdServers = false) {
     if (useOnlyExtraAdServers) {
       return Object.entries(this._searchProviderInfo).find(([_, info]) => {
         if (info.extraAdServersRegexps) {
@@ -373,7 +463,7 @@ class TelemetryHandler {
    *   returns an object of strings for provider, code and type.
    */
   _checkURLForSerpMatch(url) {
-    let info = this._getProviderInfoForUrl(url);
+    let info = this._getProviderInfoForURL(url);
     if (!info) {
       return null;
     }
@@ -485,13 +575,14 @@ class ContentHandler {
    * Constructor.
    *
    * @param {object} options
-   * @param {Map} options.browserInfoByUrl The  map of urls from TelemetryHandler.
-   * @param {function} options.getProviderInfoForUrl A function that obtains
+   * @param {Map} options.browserInfoByURL The  map of urls from TelemetryHandler.
+   * @param {function} options.getProviderInfoForURL A function that obtains
    *   the provider information for a url.
    */
   constructor(options) {
-    this._browserInfoByUrl = options.browserInfoByUrl;
-    this._getProviderInfoForUrl = options.getProviderInfoForUrl;
+    this._browserInfoByURL = options.browserInfoByURL;
+    this._findBrowserItemForURL = options.findBrowserItemForURL;
+    this._getProviderInfoForURL = options.getProviderInfoForURL;
   }
 
   /**
@@ -561,7 +652,7 @@ class ContentHandler {
   ) {
     // NOTE: the channel handling code here is inspired by WebRequest.jsm.
     if (
-      !this._browserInfoByUrl.size ||
+      !this._browserInfoByURL.size ||
       activityType !=
         Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION ||
       activitySubtype !=
@@ -594,12 +685,13 @@ class ContentHandler {
       }
 
       let originURL = channel.originURI && channel.originURI.spec;
-      if (!originURL || !this._browserInfoByUrl.has(originURL)) {
+      let info = this._findBrowserItemForURL(originURL);
+      if (!originURL || !info) {
         return;
       }
 
       let URL = channel.finalURL;
-      let info = this._getProviderInfoForUrl(URL, true);
+      info = this._getProviderInfoForURL(URL, true);
       if (!info) {
         return;
       }
@@ -642,9 +734,13 @@ class ContentHandler {
    * @param {string} info.url The url of the page.
    */
   _reportPageWithAds(info) {
-    let item = this._browserInfoByUrl.get(info.url);
+    let item = this._findBrowserItemForURL(info.url);
     if (!item) {
-      LOG("Expected to report URI with ads but couldn't find the information");
+      LOG(
+        `Expected to report URI for ${
+          info.url
+        } with ads but couldn't find the information`
+      );
       return;
     }
 
