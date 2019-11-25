@@ -484,7 +484,7 @@
 
 #urlbar .search-panel-one-offs-container {
   /* Make sure horizontally we can fit four buttons, empty space, settings. */
-  min-width: calc(4 * /* one-off */ 32px + 3 * /* one-off end margin */ 8px + /* empty space */ 32px + /* settings icon with end padding */ 24px);
+  min-width: calc(4 * /* one-off with end margin */ 40px + /* settings with start margin */ 56px);
 }
 
 #urlbar .search-panel-header {

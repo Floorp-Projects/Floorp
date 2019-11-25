@@ -4,11 +4,6 @@
 
 %include ../shared/searchbar.inc.css
 
-.searchbar-popup {
-  margin-top: 4px;
-  margin-inline-start: 3px;
-}
-
 #PopupSearchAutoComplete {
   border-radius: 4px;
 }

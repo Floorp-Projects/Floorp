@@ -18,7 +18,7 @@ class SearchOneOffs {
     this.container.appendChild(
       MozXULElement.parseXULToFragment(
         `
-      <hbox class="search-panel-one-offs-header search-panel-header search-panel-current-input">
+      <hbox class="search-panel-one-offs-header search-panel-header">
         <label class="search-panel-one-offs-header-label" data-l10n-id="search-one-offs-with-title"/>
       </hbox>
       <box class="search-panel-one-offs-container">
