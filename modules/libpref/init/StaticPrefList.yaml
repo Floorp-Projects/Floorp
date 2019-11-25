@@ -3271,6 +3271,11 @@
   value: false
   mirror: always
 
+- name: gfx.core-animation.tint-opaque
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #if defined(MOZ_WIDGET_ANDROID)
   # Overrides the glClear color used when the surface origin is not (0, 0)
   # Used for drawing a border around the content.
