@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#if defined(NIGHTLY_BUILD) && defined(XP_WIN) 
+#if defined(NIGHTLY_BUILD)
 browser.jar:
 %  content fxr %content/browser/fxr/
    content/browser/fxr/common.css               (content/common.css)
