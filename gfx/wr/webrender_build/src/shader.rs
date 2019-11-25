@@ -12,6 +12,7 @@ use std::borrow::Cow;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
+use std::collections::HashSet;
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone, Default)]
 #[cfg_attr(feature = "serialize_program", derive(Deserialize, Serialize))]
@@ -36,25 +37,42 @@ impl From<Sha256> for ProgramSourceDigest {
 
 const SHADER_IMPORT: &str = "#include ";
 
-/// Parses a shader string for imports. Imports are recursively processed, and
-/// prepended to the output stream.
-pub fn parse_shader_source<F: FnMut(&str), G: Fn(&str) -> Cow<'static, str>>(
-    source: Cow<'static, str>,
-    get_source: &G,
-    output: &mut F,
-) {
-    for line in source.lines() {
-        if line.starts_with(SHADER_IMPORT) {
-            let imports = line[SHADER_IMPORT.len() ..].split(',');
+pub struct ShaderSourceParser {
+    included: HashSet<String>,
+}
 
-            // For each import, get the source, and recurse.
-            for import in imports {
-                let include = get_source(import);
-                parse_shader_source(include, get_source, output);
+impl ShaderSourceParser {
+    pub fn new() -> Self {
+        ShaderSourceParser {
+            included: HashSet::new(),
+        }
+    }
+
+    /// Parses a shader string for imports. Imports are recursively processed, and
+    /// prepended to the output stream.
+    pub fn parse<F: FnMut(&str), G: Fn(&str) -> Cow<'static, str>>(
+        &mut self,
+        source: Cow<'static, str>,
+        get_source: &G,
+        output: &mut F,
+    ) {
+        for line in source.lines() {
+            if line.starts_with(SHADER_IMPORT) {
+                let imports = line[SHADER_IMPORT.len() ..].split(',');
+
+                // For each import, get the source, and recurse.
+                for import in imports {
+                    if self.included.insert(import.into()) {
+                        let include = get_source(import);
+                        self.parse(include, get_source, output);
+                    } else {
+                        output(&format!("// {} is already included\n", import));
+                    }
+                }
+            } else {
+                output(line);
+                output("\n");
             }
-        } else {
-            output(line);
-            output("\n");
         }
     }
 }
