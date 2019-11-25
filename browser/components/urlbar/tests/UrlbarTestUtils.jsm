@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   BrowserTestUtils: "resource://testing-common/BrowserTestUtils.jsm",
+  UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -349,5 +351,29 @@ var UrlbarTestUtils = {
       data: win.gURLBar.value[win.gURLBar.value.length - 1] || null,
     });
     win.gURLBar.inputField.dispatchEvent(event);
+  },
+
+  /**
+   * Returns a new mock controller.  This is useful for xpcshell tests.
+   * @param {object} options Additional options to pass to the UrlbarController
+   *        constructor.
+   * @returns {UrlbarController} A new controller.
+   */
+  newMockController(options = {}) {
+    return new UrlbarController(
+      Object.assign(
+        {
+          input: {
+            isPrivate: false,
+            window: {
+              location: {
+                href: AppConstants.BROWSER_CHROME_URL,
+              },
+            },
+          },
+        },
+        options
+      )
+    );
   },
 };

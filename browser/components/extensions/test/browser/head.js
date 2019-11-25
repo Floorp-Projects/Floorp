@@ -695,6 +695,12 @@ async function getPageActionButton(extension, win = window) {
   // tests.
   SetPageProxyState("valid");
 
+  // If the current tab is blank and the previously selected tab was an internal
+  // page, the urlbar will now be showing the internal identity box due to the
+  // SetPageProxyState call above.  The page action button is hidden in that
+  // case, so make sure we're not showing the internal identity box.
+  gIdentityHandler._identityBox.classList.remove("chromeUI");
+
   await promiseAnimationFrame(win);
 
   let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(

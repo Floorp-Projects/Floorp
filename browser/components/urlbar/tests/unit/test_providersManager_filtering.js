@@ -3,21 +3,6 @@
 
 "use strict";
 
-/**
- * A test controller.
- */
-class TestUrlbarController extends UrlbarController {
-  constructor() {
-    super({
-      browserWindow: {
-        location: {
-          href: AppConstants.BROWSER_CHROME_URL,
-        },
-      },
-    });
-  }
-}
-
 add_task(async function test_filtering_disable_only_source() {
   let match = new UrlbarResult(
     UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
@@ -26,7 +11,7 @@ add_task(async function test_filtering_disable_only_source() {
   );
   let providerName = registerBasicTestProvider([match]);
   let context = createContext(undefined, { providers: [providerName] });
-  let controller = new TestUrlbarController();
+  let controller = UrlbarTestUtils.newMockController();
 
   info("Disable the only available source, should get no matches");
   Services.prefs.setBoolPref("browser.urlbar.suggest.openpage", false);
@@ -55,7 +40,7 @@ add_task(async function test_filtering_disable_one_source() {
   ];
   let providerName = registerBasicTestProvider(matches);
   let context = createContext(undefined, { providers: [providerName] });
-  let controller = new TestUrlbarController();
+  let controller = UrlbarTestUtils.newMockController();
 
   info("Disable one of the sources, should get a single match");
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
@@ -87,7 +72,7 @@ add_task(async function test_filtering_restriction_token() {
   let context = createContext(`foo ${UrlbarTokenizer.RESTRICT.OPENPAGE}`, {
     providers: [providerName],
   });
-  let controller = new TestUrlbarController();
+  let controller = UrlbarTestUtils.newMockController();
 
   info("Use a restriction character, should get a single match");
   let promise = Promise.all([
@@ -113,7 +98,7 @@ add_task(async function test_filter_javascript() {
   );
   let providerName = registerBasicTestProvider([match, jsMatch]);
   let context = createContext(undefined, { providers: [providerName] });
-  let controller = new TestUrlbarController();
+  let controller = UrlbarTestUtils.newMockController();
 
   info("By default javascript should be filtered out");
   let promise = promiseControllerNotification(controller, "onQueryResults");
@@ -197,7 +182,7 @@ add_task(async function test_filter_isActive() {
     sources: [UrlbarUtils.RESULT_SOURCE.TABS],
     providers: [providerName, "BadProvider"],
   });
-  let controller = new TestUrlbarController();
+  let controller = UrlbarTestUtils.newMockController();
 
   info("Only tabs should be returned");
   let promise = promiseControllerNotification(controller, "onQueryResults");
@@ -243,7 +228,7 @@ add_task(async function test_filter_queryContext() {
   let context = createContext(undefined, {
     providers: [providerName],
   });
-  let controller = new TestUrlbarController();
+  let controller = UrlbarTestUtils.newMockController();
 
   await controller.startQuery(context, controller);
   UrlbarProvidersManager.unregisterProvider({ name: providerName });
@@ -277,7 +262,7 @@ add_task(async function test_nofilter_immediate() {
     sources: [UrlbarUtils.RESULT_SOURCE.SEARCH],
     providers: [providerName],
   });
-  let controller = new TestUrlbarController();
+  let controller = UrlbarTestUtils.newMockController();
 
   // Disable search matches through prefs.
   Services.prefs.setBoolPref("browser.urlbar.suggest.openpage", false);
@@ -368,7 +353,7 @@ add_task(async function test_nofilter_restrict() {
     let context = createContext(token + " foo", {
       providers: ["MyProvider"],
     });
-    let controller = new TestUrlbarController();
+    let controller = UrlbarTestUtils.newMockController();
     // Disable the corresponding pref.
     const pref = "browser.urlbar.suggest." + properties.pref;
     info("Disabling " + pref);
@@ -437,7 +422,7 @@ add_task(async function test_filter_isRestricting() {
   let context = createContext(undefined, {
     providers: ["GoodProvider", "BadProvider"],
   });
-  let controller = new TestUrlbarController();
+  let controller = UrlbarTestUtils.newMockController();
 
   await controller.startQuery(context, controller);
   UrlbarProvidersManager.unregisterProvider({ name: "GoodProvider" });

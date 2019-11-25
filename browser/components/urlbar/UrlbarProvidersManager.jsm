@@ -221,6 +221,20 @@ class ProvidersManager {
       this.interruptLevel--;
     }
   }
+
+  /**
+   * Notifies all providers when the user starts and ends an engagement with the
+   * urlbar.
+   *
+   * @param {boolean} isPrivate True if the engagement is in a private context.
+   * @param {string} state The state of the engagement, one of: start,
+   *        engagement, abandonment, discard.
+   */
+  notifyEngagementChange(isPrivate, state) {
+    for (let provider of this.providers) {
+      provider.onEngagement(isPrivate, state);
+    }
+  }
 }
 
 var UrlbarProvidersManager = new ProvidersManager();
