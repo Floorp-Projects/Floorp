@@ -158,15 +158,6 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
 }
 
 class AccessibleWalkerFront extends FrontClassWithSpec(accessibleWalkerSpec) {
-  constructor(client, targetFront, parentFront) {
-    super(client, targetFront, parentFront);
-    this.before("accessible-destroy", this.accessibleDestroy.bind(this));
-  }
-
-  accessibleDestroy(accessible) {
-    accessible.destroy();
-  }
-
   form(json) {
     this.actorID = json.actor;
   }
