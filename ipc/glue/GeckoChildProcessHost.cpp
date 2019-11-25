@@ -179,7 +179,7 @@ class BaseProcessLauncher {
   void GetChildLogName(const char* origLogName, nsACString& buffer);
 
   const char* ChildProcessType() {
-    return XRE_GeckoProcessTypeToString(mProcessType);
+    return XRE_ChildProcessTypeToString(mProcessType);
   }
 
   nsCOMPtr<nsISerialEventTarget> mLaunchThread;
@@ -680,10 +680,10 @@ bool GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts) {
             // If something failed let's set the error state and notify.
             CHROMIUM_LOG(ERROR)
                 << "Failed to launch "
-                << XRE_GeckoProcessTypeToString(mProcessType) << " subprocess";
+                << XRE_ChildProcessTypeToString(mProcessType) << " subprocess";
             Telemetry::Accumulate(
                 Telemetry::SUBPROCESS_LAUNCH_FAILURE,
-                nsDependentCString(XRE_GeckoProcessTypeToString(mProcessType)));
+                nsDependentCString(XRE_ChildProcessTypeToString(mProcessType)));
             {
               MonitorAutoLock lock(mMonitor);
               mProcessState = PROCESS_ERROR;

@@ -94,7 +94,7 @@ void VRChild::ActorDestroy(ActorDestroyReason aWhy) {
 
     Telemetry::Accumulate(
         Telemetry::SUBPROCESS_ABNORMAL_ABORT,
-        nsDependentCString(XRE_GeckoProcessTypeToString(GeckoProcessType_VR)),
+        nsDependentCString(XRE_ChildProcessTypeToString(GeckoProcessType_VR)),
         1);
   }
   gfxVars::RemoveReceiver(this);

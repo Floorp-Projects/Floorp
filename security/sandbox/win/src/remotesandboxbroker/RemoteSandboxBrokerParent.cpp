@@ -60,7 +60,7 @@ bool RemoteSandboxBrokerParent::DuplicateFromLauncher(HANDLE aLauncherHandle,
 void RemoteSandboxBrokerParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (AbnormalShutdown == aWhy) {
     Telemetry::Accumulate(Telemetry::SUBPROCESS_ABNORMAL_ABORT,
-                          nsDependentCString(XRE_GeckoProcessTypeToString(
+                          nsDependentCString(XRE_ChildProcessTypeToString(
                               GeckoProcessType_RemoteSandboxBroker)),
                           1);
     GenerateCrashReport(OtherPid());
