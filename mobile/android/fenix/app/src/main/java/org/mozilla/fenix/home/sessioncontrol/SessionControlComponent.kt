@@ -141,7 +141,7 @@ class SessionControlViewModel(
             when (change) {
                 is SessionControlChange.CollectionsChange -> state.copy(collections = change.collections)
                 is SessionControlChange.TabsChange -> state.copy(tabs = change.tabs)
-                is SessionControlChange.ModeChange -> state.copy(mode = change.mode)
+                is SessionControlChange.ModeChange -> state.copy(mode = change.mode, tabs = emptyList())
                 is SessionControlChange.ExpansionChange -> {
                     val newExpandedCollection = state.expandedCollections.toMutableSet()
 
