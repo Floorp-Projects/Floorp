@@ -5,7 +5,6 @@
 package org.mozilla.fenix.settings.sitepermissions
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.Navigation
 import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
@@ -14,6 +13,7 @@ import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.PhoneFeature
 
 @SuppressWarnings("TooManyFunctions")
@@ -21,8 +21,7 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        (activity as AppCompatActivity).title = getString(R.string.preferences_site_permissions)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getString(R.string.preferences_site_permissions))
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {

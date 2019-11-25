@@ -19,7 +19,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.RadioButton
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
@@ -27,6 +26,7 @@ import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BL
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.initBlockedByAndroidView
 import org.mozilla.fenix.settings.setStartCheckedIndicator
@@ -45,8 +45,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
             .fromBundle(requireArguments())
             .permission.toPhoneFeature()
 
-        (activity as AppCompatActivity).title = phoneFeature.getLabel(requireContext())
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(phoneFeature.getLabel(requireContext()))
         settings = requireContext().settings()
     }
 

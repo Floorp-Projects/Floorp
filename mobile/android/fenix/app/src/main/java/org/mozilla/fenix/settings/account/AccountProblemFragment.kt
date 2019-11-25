@@ -5,7 +5,6 @@
 package org.mozilla.fenix.settings.account
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
@@ -19,6 +18,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.showToolbar
 
 class AccountProblemFragment : PreferenceFragmentCompat(), AccountObserver {
 
@@ -42,8 +42,7 @@ class AccountProblemFragment : PreferenceFragmentCompat(), AccountObserver {
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).title = getString(R.string.sync_reconnect)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getString(R.string.sync_reconnect))
 
         val accountManager = requireComponents.backgroundServices.accountManager
         accountManager.register(this, owner = this)

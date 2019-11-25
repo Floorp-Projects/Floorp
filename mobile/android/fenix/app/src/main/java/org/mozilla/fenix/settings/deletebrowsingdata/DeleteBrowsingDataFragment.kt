@@ -8,7 +8,6 @@ import android.content.DialogInterface
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
@@ -24,6 +23,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.showToolbar
 
 @SuppressWarnings("TooManyFunctions")
 class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_data) {
@@ -71,10 +71,7 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).apply {
-            title = getString(R.string.preferences_delete_browsing_data)
-            supportActionBar?.show()
-        }
+        showToolbar(getString(R.string.preferences_delete_browsing_data))
 
         getCheckboxes().forEach {
             it.visibility = View.VISIBLE

@@ -10,7 +10,6 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.View.GONE
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
@@ -28,6 +27,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 
 /**
@@ -55,9 +55,7 @@ class AddBookmarkFolderFragment : Fragment(R.layout.fragment_edit_bookmark) {
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).title =
-            getString(R.string.bookmark_add_folder_fragment_label)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getString(R.string.bookmark_add_folder_fragment_label))
 
         lifecycleScope.launch(Main) {
             sharedViewModel.selectedFolder = withContext(IO) {

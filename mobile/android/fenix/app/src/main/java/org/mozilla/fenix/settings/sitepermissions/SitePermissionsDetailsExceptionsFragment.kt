@@ -7,7 +7,6 @@ package org.mozilla.fenix.settings.sitepermissions
 import android.content.DialogInterface
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import androidx.preference.Preference
@@ -19,13 +18,13 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.PhoneFeature.CAMERA
 import org.mozilla.fenix.settings.PhoneFeature.LOCATION
 import org.mozilla.fenix.settings.PhoneFeature.MICROPHONE
 import org.mozilla.fenix.settings.PhoneFeature.NOTIFICATION
 
-@SuppressWarnings("TooManyFunctions")
 class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
     private lateinit var sitePermissions: SitePermissions
 
@@ -43,10 +42,7 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).apply {
-            title = sitePermissions.origin
-            supportActionBar?.show()
-        }
+        showToolbar(sitePermissions.origin)
         lifecycleScope.launch(IO) {
             val context = requireContext()
             sitePermissions =

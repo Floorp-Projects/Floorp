@@ -6,6 +6,7 @@ package org.mozilla.fenix.ext
 
 import androidx.annotation.IdRes
 import androidx.annotation.StringRes
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
@@ -32,3 +33,20 @@ fun Fragment.nav(@IdRes id: Int?, directions: NavDirections, options: NavOptions
 }
 
 fun Fragment.getPreferenceKey(@StringRes resourceId: Int): String = getString(resourceId)
+
+/**
+ * Displays the activity toolbar with the given [title].
+ * Throws if the fragment is not attached to an [AppCompatActivity].
+ */
+fun Fragment.showToolbar(title: String) {
+    (requireActivity() as AppCompatActivity).title = title
+    (requireActivity() as AppCompatActivity).supportActionBar?.show()
+}
+
+/**
+ * Hides the activity toolbar.
+ * Throws if the fragment is not attached to an [AppCompatActivity].
+ */
+fun Fragment.hideToolbar() {
+    (requireActivity() as AppCompatActivity).supportActionBar?.hide()
+}

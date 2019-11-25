@@ -6,13 +6,13 @@ package org.mozilla.fenix.crashes
 
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_crash_reporter.*
 import mozilla.components.lib.crash.Crash
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 
@@ -47,6 +47,6 @@ class CrashReporterFragment : Fragment(R.layout.fragment_crash_reporter) {
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).supportActionBar?.hide()
+        hideToolbar()
     }
 }

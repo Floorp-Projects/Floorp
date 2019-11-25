@@ -14,7 +14,6 @@ import android.text.InputFilter
 import android.text.format.DateUtils
 import android.view.View
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.preference.CheckBoxPreference
@@ -43,6 +42,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.showToolbar
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class AccountSettingsFragment : PreferenceFragmentCompat() {
@@ -73,8 +73,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).title = getString(R.string.preferences_account_settings)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getString(R.string.preferences_account_settings))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -15,7 +15,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.CallSuper
-import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
@@ -79,6 +78,7 @@ import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.enterToImmersiveMode
 import org.mozilla.fenix.ext.getRootView
+import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
@@ -461,7 +461,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
             components.core.engine.settings.preferredColorScheme = preferredColorScheme
             components.useCases.sessionUseCases.reload()
         }
-        (activity as AppCompatActivity).supportActionBar?.hide()
+        hideToolbar()
 
         assignSitePermissionsRules()
     }

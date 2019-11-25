@@ -5,7 +5,6 @@
 package org.mozilla.fenix.settings.deletebrowsingdata
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.CheckBoxPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -13,6 +12,7 @@ import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
 
 class DeleteBrowsingDataOnQuitFragment : PreferenceFragmentCompat() {
@@ -36,8 +36,7 @@ class DeleteBrowsingDataOnQuitFragment : PreferenceFragmentCompat() {
     @Suppress("ComplexMethod")
     override fun onResume() {
         super.onResume()
-        activity?.title = getString(R.string.preferences_delete_browsing_data_on_quit)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getString(R.string.preferences_delete_browsing_data_on_quit))
 
         // Delete Browsing Data on Quit Switch
         val deleteOnQuitPref = findPreference<SwitchPreference>(

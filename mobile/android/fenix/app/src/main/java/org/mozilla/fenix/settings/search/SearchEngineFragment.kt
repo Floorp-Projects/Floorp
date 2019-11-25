@@ -5,7 +5,6 @@
 package org.mozilla.fenix.settings.search
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.CheckBoxPreference
@@ -14,6 +13,7 @@ import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
 
 class SearchEngineFragment : PreferenceFragmentCompat() {
@@ -24,8 +24,7 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).title = getString(R.string.preferences_search)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getString(R.string.preferences_search))
 
         val searchSuggestionsPreference =
             findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_show_search_suggestions))?.apply {

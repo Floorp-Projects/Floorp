@@ -9,7 +9,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_exceptions.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,6 +19,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SupportUtils
 
 /**
@@ -34,8 +34,7 @@ class ExceptionsFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        activity?.title = getString(R.string.preference_exceptions)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getString(R.string.preference_exceptions))
     }
 
     override fun onCreateView(

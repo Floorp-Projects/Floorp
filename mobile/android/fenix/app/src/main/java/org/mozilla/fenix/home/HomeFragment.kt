@@ -18,7 +18,6 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -72,6 +71,7 @@ import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
@@ -329,7 +329,7 @@ class HomeFragment : Fragment() {
             )
         )
 
-        (activity as AppCompatActivity).supportActionBar?.hide()
+        hideToolbar()
 
         requireComponents.backgroundServices.accountManager.register(currentMode, owner = this)
         requireComponents.backgroundServices.accountManager.register(object : AccountObserver {

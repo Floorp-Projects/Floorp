@@ -11,7 +11,6 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
@@ -30,6 +29,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 import org.mozilla.fenix.library.bookmarks.DesktopFolders
 import org.mozilla.fenix.library.bookmarks.SignInView
@@ -57,8 +57,7 @@ class SelectBookmarkFolderFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        activity?.title = getString(R.string.bookmark_select_folder_fragment_label)
-        (activity as? AppCompatActivity)?.supportActionBar?.show()
+        showToolbar(getString(R.string.bookmark_select_folder_fragment_label))
 
         val accountManager = requireComponents.backgroundServices.accountManager
         sharedViewModel.observeAccountManager(accountManager, owner = this)

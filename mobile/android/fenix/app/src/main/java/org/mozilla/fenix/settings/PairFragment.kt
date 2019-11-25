@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.getSystemService
 import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
@@ -21,6 +20,7 @@ import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.showToolbar
 
 class PairFragment : Fragment(R.layout.fragment_pair), BackHandler {
 
@@ -74,8 +74,7 @@ class PairFragment : Fragment(R.layout.fragment_pair), BackHandler {
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).title = getString(R.string.sync_scan_code)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getString(R.string.sync_scan_code))
     }
 
     override fun onBackPressed(): Boolean {

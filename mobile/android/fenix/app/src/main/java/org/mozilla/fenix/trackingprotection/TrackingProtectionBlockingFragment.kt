@@ -6,12 +6,12 @@ package org.mozilla.fenix.trackingprotection
 
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_tracking_protection_blocking.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.showToolbar
 
 class TrackingProtectionBlockingFragment :
     Fragment(R.layout.fragment_tracking_protection_blocking) {
@@ -26,8 +26,7 @@ class TrackingProtectionBlockingFragment :
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).title = getTitle()
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getTitle())
     }
 
     private fun getTitle(): String {

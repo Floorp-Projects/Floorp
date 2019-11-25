@@ -10,7 +10,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
@@ -59,6 +58,7 @@ import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.account.AccountAuthErrorPreference
 import org.mozilla.fenix.settings.account.AccountPreference
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
@@ -112,8 +112,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
     override fun onResume() {
         super.onResume()
 
-        (activity as AppCompatActivity).title = getString(R.string.settings_title)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getString(R.string.settings_title))
 
         val trackingProtectionPreference =
             findPreference<Preference>(getPreferenceKey(pref_key_tracking_protection_settings))

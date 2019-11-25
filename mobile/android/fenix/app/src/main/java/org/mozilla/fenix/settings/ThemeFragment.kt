@@ -8,12 +8,12 @@ import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.showToolbar
 
 class ThemeFragment : PreferenceFragmentCompat() {
     private lateinit var radioLightTheme: RadioButtonPreference
@@ -27,8 +27,7 @@ class ThemeFragment : PreferenceFragmentCompat() {
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).title = getString(R.string.preferences_theme)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getString(R.string.preferences_theme))
         setupPreferences()
     }
 

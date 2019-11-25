@@ -14,7 +14,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.MenuRes
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import kotlinx.android.synthetic.main.fragment_history.view.*
@@ -35,6 +34,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.library.LibraryPageFragment
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
@@ -122,10 +122,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), BackHandler {
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).apply {
-            title = getString(R.string.library_history)
-            supportActionBar?.show()
-        }
+        showToolbar(getString(R.string.library_history))
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

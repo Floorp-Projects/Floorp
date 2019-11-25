@@ -10,7 +10,6 @@ import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS
-import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.CheckBoxPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -21,6 +20,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.showToolbar
 
 /**
  * Lets the user control their default browser preferences
@@ -61,9 +61,7 @@ class DefaultBrowserSettingsFragment : PreferenceFragmentCompat() {
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).title =
-            getString(R.string.preferences_set_as_default_browser)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getString(R.string.preferences_set_as_default_browser))
 
         updatePreferences()
     }

@@ -5,13 +5,13 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.showToolbar
 
 /**
  * Displays font size controls for accessibility.
@@ -22,8 +22,7 @@ import org.mozilla.fenix.ext.settings
 class AccessibilityFragment : PreferenceFragmentCompat() {
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).title = getString(R.string.preferences_accessibility)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getString(R.string.preferences_accessibility))
 
         val forceZoomPreference = findPreference<SwitchPreference>(
             getPreferenceKey(R.string.pref_key_accessibility_force_enable_zoom)

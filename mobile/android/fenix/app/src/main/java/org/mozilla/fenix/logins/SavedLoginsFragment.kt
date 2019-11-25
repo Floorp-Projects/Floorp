@@ -9,7 +9,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -25,6 +24,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.showToolbar
 
 class SavedLoginsFragment : Fragment() {
     private lateinit var savedLoginsStore: SavedLoginsFragmentStore
@@ -37,8 +37,7 @@ class SavedLoginsFragment : Fragment() {
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
         )
-        activity?.title = getString(R.string.preferences_passwords_saved_logins)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getString(R.string.preferences_passwords_saved_logins))
     }
 
     override fun onCreateView(

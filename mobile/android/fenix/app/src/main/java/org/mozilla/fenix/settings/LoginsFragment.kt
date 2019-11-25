@@ -14,7 +14,6 @@ import android.os.Build
 import android.os.Build.VERSION_CODES.M
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.lifecycle.lifecycleScope
@@ -34,6 +33,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.showToolbar
 import java.util.concurrent.Executors
 
 @Suppress("TooManyFunctions")
@@ -85,8 +85,7 @@ class LoginsFragment : PreferenceFragmentCompat(), AccountObserver {
 
     override fun onResume() {
         super.onResume()
-        activity?.title = getString(R.string.preferences_passwords_logins_and_passwords)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getString(R.string.preferences_passwords_logins_and_passwords))
 
         val savedLoginsKey = getPreferenceKey(R.string.pref_key_saved_logins)
         findPreference<Preference>(savedLoginsKey)?.setOnPreferenceClickListener {

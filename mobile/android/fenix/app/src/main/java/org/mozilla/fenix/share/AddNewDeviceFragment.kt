@@ -7,10 +7,10 @@ package org.mozilla.fenix.share
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_add_new_device.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SupportUtils
 
 /**
@@ -20,8 +20,7 @@ class AddNewDeviceFragment : Fragment(R.layout.fragment_add_new_device) {
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).title = getString(R.string.sync_add_new_device_title)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getString(R.string.sync_add_new_device_title))
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

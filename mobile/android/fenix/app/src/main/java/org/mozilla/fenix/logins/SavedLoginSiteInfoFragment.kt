@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.text.InputType
 import android.view.View
 import android.view.WindowManager
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
@@ -17,6 +16,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.showToolbar
 
 class SavedLoginSiteInfoFragment : Fragment(R.layout.fragment_saved_login_site_info) {
     private val safeArguments get() = requireNotNull(arguments)
@@ -97,7 +97,6 @@ class SavedLoginSiteInfoFragment : Fragment(R.layout.fragment_saved_login_site_i
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
         )
-        activity?.title = savedLoginItem.url
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(savedLoginItem.url)
     }
 }

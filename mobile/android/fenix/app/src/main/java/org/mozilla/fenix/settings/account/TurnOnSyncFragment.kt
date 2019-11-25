@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
@@ -21,6 +20,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.showToolbar
 
 @SuppressWarnings("TooManyFunctions")
 class TurnOnSyncFragment : Fragment(), AccountObserver {
@@ -58,8 +58,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
         }
 
         requireComponents.backgroundServices.accountManager.register(this, owner = this)
-        (activity as AppCompatActivity).title = getString(R.string.preferences_sync)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        showToolbar(getString(R.string.preferences_sync))
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {

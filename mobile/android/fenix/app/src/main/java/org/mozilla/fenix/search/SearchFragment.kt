@@ -16,7 +16,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStub
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -38,6 +37,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getSpannable
+import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.search.awesomebar.AwesomeBarView
 import org.mozilla.fenix.search.toolbar.ToolbarView
@@ -261,7 +261,7 @@ class SearchFragment : Fragment(), BackHandler {
         updateClipboardSuggestion(searchStore.state, requireContext().components.clipboardHandler.url)
 
         permissionDidUpdate = false
-        (activity as AppCompatActivity).supportActionBar?.hide()
+        hideToolbar()
     }
 
     override fun onPause() {
