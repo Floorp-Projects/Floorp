@@ -134,7 +134,7 @@ void nsSVGOuterSVGFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
           bool dependsOnIntrinsicSize = DependsOnIntrinsicSize(embeddingFrame);
           if (dependsOnIntrinsicSize ||
               embeddingFrame->StylePosition()->mObjectFit !=
-                  NS_STYLE_OBJECT_FIT_FILL) {
+                  StyleObjectFit::Fill) {
             // Looks like this document is loading after the embedding element
             // has had its first reflow, and it cares about our intrinsic size
             // (either for determining its own size, or for sizing/positioning
@@ -708,7 +708,7 @@ nsresult nsSVGOuterSVGFrame::AttributeChanged(int32_t aNameSpaceID,
         bool dependsOnIntrinsicSize = DependsOnIntrinsicSize(embeddingFrame);
         if (dependsOnIntrinsicSize ||
             embeddingFrame->StylePosition()->mObjectFit !=
-                NS_STYLE_OBJECT_FIT_FILL) {
+                StyleObjectFit::Fill) {
           // Tell embeddingFrame's presShell it needs to be reflowed (which
           // takes care of reflowing us too). And if it depends on our
           // intrinsic size, then we need to invalidate its intrinsic sizes

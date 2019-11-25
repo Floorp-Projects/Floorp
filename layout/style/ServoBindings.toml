@@ -132,6 +132,7 @@ rusty-enums = [
     "mozilla::StyleTextDecorationLength",
     "mozilla::StyleShapeRendering",
     "mozilla::StyleTextAnchor",
+    "mozilla::StyleObjectFit",
     "nsStyleImageType",
     "nsINode_BooleanFlag",
     "mozilla::PseudoStyleType",

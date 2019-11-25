@@ -279,8 +279,7 @@ bool nsStyleUtil::ObjectPropsMightCauseOverflow(
 
   // "object-fit: cover" & "object-fit: none" can give us a render rect that's
   // larger than our container element's content-box.
-  if (objectFit == NS_STYLE_OBJECT_FIT_COVER ||
-      objectFit == NS_STYLE_OBJECT_FIT_NONE) {
+  if (objectFit == StyleObjectFit::Cover || objectFit == StyleObjectFit::None) {
     return true;
   }
   // (All other object-fit values produce a concrete object size that's no
