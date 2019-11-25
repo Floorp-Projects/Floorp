@@ -438,7 +438,7 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
 }
 
 static void Abort(const char* aMsg) {
-  NoteIntentionalCrash(XRE_ChildProcessTypeToString(XRE_GetProcessType()));
+  NoteIntentionalCrash(XRE_GeckoProcessTypeToString(XRE_GetProcessType()));
   mozalloc_abort(aMsg);
 }
 

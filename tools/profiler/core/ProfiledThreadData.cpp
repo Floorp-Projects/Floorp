@@ -207,7 +207,7 @@ void StreamSamplesAndMarkers(const char* aName, int aThreadId,
                              const mozilla::TimeStamp& aUnregisterTime,
                              double aSinceTime, UniqueStacks& aUniqueStacks) {
   aWriter.StringProperty("processType",
-                         XRE_ChildProcessTypeToString(XRE_GetProcessType()));
+                         XRE_GeckoProcessTypeToString(XRE_GetProcessType()));
 
   aWriter.StringProperty("name", aName);
 
