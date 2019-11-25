@@ -132,6 +132,9 @@ skip-if(!xulRuntime.shell) script test262/language/eval-code/indirect/var-env-va
 skip-if(!xulRuntime.shell) script test262/language/global-code/decl-func.js
 skip-if(!xulRuntime.shell) script test262/language/global-code/decl-var.js
 
+# Atomics tests (Atomics/notify, Atomics/wait) are disabled because our $.agent implementation needs getSharedArrayBuffer, setSharedArrayBuffer and evalInWorker: https://bugzilla.mozilla.org/show_bug.cgi?id=1598612
+skip-if(!xulRuntime.shell) include test262/built-ins/Atomics/notify/jstests.list
+skip-if(!xulRuntime.shell) include test262/built-ins/Atomics/wait/jstests.list
 
 ##################################################
 # Test262 tests skipped due to SpiderMonkey bugs #
