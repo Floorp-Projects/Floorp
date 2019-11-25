@@ -476,8 +476,9 @@ impl MDNSService {
                         }
                     }
                     Err(err) => {
-                        if err.kind() != io::ErrorKind::WouldBlock
+                        if err.kind() != io::ErrorKind::Interrupted
                             && err.kind() != io::ErrorKind::TimedOut
+                            && err.kind() != io::ErrorKind::WouldBlock
                         {
                             error!("Socket error: {}", err);
                             break;
