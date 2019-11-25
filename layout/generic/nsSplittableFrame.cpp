@@ -11,7 +11,6 @@
 
 #include "nsSplittableFrame.h"
 #include "nsContainerFrame.h"
-#include "nsFieldSetFrame.h"
 #include "nsIFrameInlines.h"
 
 using namespace mozilla;
@@ -205,18 +204,6 @@ nscoord nsSplittableFrame::GetEffectiveComputedBSize(
   }
 
   bSize -= aConsumedBSize;
-
-  // nsFieldSetFrame's inner frames are special since some of their content-box
-  // BSize may be consumed by positioning it below the legend.  So we always
-  // report zero for true overflow containers here.
-  // XXXmats: hmm, can we fix this so that the sizes actually adds up instead?
-  if (IS_TRUE_OVERFLOW_CONTAINER(this) &&
-      Style()->GetPseudoType() == PseudoStyleType::fieldsetContent) {
-    for (nsFieldSetFrame* fieldset = do_QueryFrame(GetParent()); fieldset;
-         fieldset = static_cast<nsFieldSetFrame*>(fieldset->GetPrevInFlow())) {
-      bSize -= fieldset->LegendSpace();
-    }
-  }
 
   // We may have stretched the frame beyond its computed height. Oh well.
   return std::max(0, bSize);

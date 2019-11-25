@@ -14,7 +14,6 @@
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
-#include "nsFieldSetFrame.h"
 #include "nsPageContentFrame.h"
 #include "nsDisplayList.h"
 #include "nsPageSequenceFrame.h"  // for nsSharedPageData
@@ -678,31 +677,11 @@ void nsPageBreakFrame::Reflow(nsPresContext* aPresContext,
   // Override reflow, since we don't want to deal with what our
   // computed values are.
   WritingMode wm = aReflowInput.GetWritingMode();
-  nscoord bSize = aReflowInput.AvailableBSize();
-  if (aReflowInput.AvailableBSize() == NS_UNCONSTRAINEDSIZE) {
-    bSize = nscoord(0);
-  } else if (GetContent()->IsHTMLElement(nsGkAtoms::legend)) {
-    // If this is a page break frame for a _rendered legend_ then it should be
-    // ignored since these frames are inserted inside the fieldset's inner
-    // frame and thus "misplaced".  nsFieldSetFrame::Reflow deals with these
-    // forced breaks explicitly instead.
-    nsContainerFrame* parent = GetParent();
-    if (parent &&
-        parent->Style()->GetPseudoType() == PseudoStyleType::fieldsetContent) {
-      while ((parent = parent->GetParent())) {
-        if (nsFieldSetFrame* fieldset = do_QueryFrame(parent)) {
-          auto* legend = fieldset->GetLegend();
-          if (legend && legend->GetContent() == GetContent()) {
-            bSize = nscoord(0);
-          }
-          break;
-        }
-      }
-    }
-  }
-  LogicalSize finalSize(wm, GetIntrinsicISize(), bSize);
+  LogicalSize finalSize(wm, GetIntrinsicISize(),
+                        aReflowInput.AvailableBSize() == NS_UNCONSTRAINEDSIZE
+                            ? 0
+                            : aReflowInput.AvailableBSize());
   // round the height down to the nearest pixel
-  // XXX(mats) why???
   finalSize.BSize(wm) -=
       finalSize.BSize(wm) % nsPresContext::CSSPixelsToAppUnits(1);
   aDesiredSize.SetSize(wm, finalSize);

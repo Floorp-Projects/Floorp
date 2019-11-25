@@ -308,6 +308,17 @@ static void AssertAnonymousFlexOrGridItemParent(const nsIFrame* aChild,
 #  define AssertAnonymousFlexOrGridItemParent(x, y) PR_BEGIN_MACRO PR_END_MACRO
 #endif
 
+static inline nsContainerFrame* GetFieldSetBlockFrame(
+    nsIFrame* aFieldsetFrame) {
+  // Depends on the fieldset child frame order - see ConstructFieldSetFrame()
+  // below.
+  nsIFrame* firstChild = aFieldsetFrame->PrincipalChildList().FirstChild();
+  nsIFrame* inner = firstChild && firstChild->GetNextSibling()
+                        ? firstChild->GetNextSibling()
+                        : firstChild;
+  return inner ? inner->GetContentInsertionFrame() : nullptr;
+}
+
 #define FCDATA_DECL(_flags, _func) \
   { _flags, {(FrameCreationFunc)_func}, nullptr, PseudoStyleType::NotPseudo }
 #define FCDATA_WITH_WRAPPING_BLOCK(_flags, _func, _anon_box) \
@@ -6190,14 +6201,12 @@ static nsContainerFrame* GetAdjustedParentFrame(nsContainerFrame* aParentFrame,
   MOZ_ASSERT(!aParentFrame->IsTableWrapperFrame(), "Shouldn't be happening!");
 
   nsContainerFrame* newParent = nullptr;
+
   if (aParentFrame->IsFieldSetFrame()) {
     // If the parent is a fieldSet, use the fieldSet's area frame as the
     // parent unless the new content is a legend.
     if (!aChildContent->IsHTMLElement(nsGkAtoms::legend)) {
-      newParent = static_cast<nsFieldSetFrame*>(aParentFrame)->GetInner();
-      if (newParent) {
-        newParent = newParent->GetContentInsertionFrame();
-      }
+      newParent = GetFieldSetBlockFrame(aParentFrame);
     }
   }
   return newParent ? newParent : aParentFrame;
@@ -8071,8 +8080,23 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
     newFrame = NS_NewImageControlFrame(presShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::FieldSet == frameType) {
-    newFrame = NS_NewFieldSetFrame(presShell, computedStyle);
-    newFrame->Init(content, aParentFrame, aFrame);
+    nsContainerFrame* fieldset = NS_NewFieldSetFrame(presShell, computedStyle);
+
+    fieldset->Init(content, aParentFrame, aFrame);
+
+    // Create a continuing area frame
+    // XXXbz we really shouldn't have to do this by hand!
+    nsContainerFrame* blockFrame = GetFieldSetBlockFrame(aFrame);
+    if (blockFrame) {
+      nsIFrame* continuingBlockFrame =
+          CreateContinuingFrame(aPresContext, blockFrame, fieldset);
+      // Set the fieldset's initial child list
+      SetInitialSingleChild(fieldset, continuingBlockFrame);
+    } else {
+      MOZ_ASSERT(aFrame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER,
+                 "FieldSet block may only be null for overflow containers");
+    }
+    newFrame = fieldset;
   } else if (LayoutFrameType::Legend == frameType) {
     newFrame = NS_NewLegendFrame(presShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
