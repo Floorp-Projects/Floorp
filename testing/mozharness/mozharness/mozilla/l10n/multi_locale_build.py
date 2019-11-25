@@ -12,11 +12,11 @@ This should be a mostly generic multilocale build script.
 import os
 import sys
 
-sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
-
 from mozharness.base.errors import MakefileErrorList
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.l10n.locales import LocalesMixin
+
+sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 
 
 # MultiLocaleBuild {{{1
