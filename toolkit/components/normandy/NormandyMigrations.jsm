@@ -21,6 +21,16 @@ ChromeUtils.defineModuleGetter(
   "RecipeRunner",
   "resource://normandy/lib/RecipeRunner.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonRollouts",
+  "resource://normandy/lib/AddonRollouts.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PreferenceRollouts",
+  "resource://normandy/lib/PreferenceRollouts.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["NormandyMigrations"];
 
@@ -52,20 +62,29 @@ const NormandyMigrations = {
   },
 
   async applyOne(id) {
-    const migration = this.migrations[id];
-    log.debug(`Running Normandy migration ${migration.name}`);
+    const migration = this.migrations[id]();
+    log.debug(`Running Normandy migration #${id} - ${migration.name}`);
     await migration();
   },
 
   migrations: [
-    migrateShieldPrefs,
-    migrateStudiesEnabledWithoutHealthReporting,
-    AddonStudies.migrateAddonStudyFieldsToSlugAndUserFacingFields,
-    PreferenceExperiments.migrations.migration01MoveExperiments,
-    PreferenceExperiments.migrations.migration02MultiPreference,
-    PreferenceExperiments.migrations.migration03AddActionName,
-    PreferenceExperiments.migrations.migration04RenameNameToSlug,
-    RecipeRunner.migrations.migration01RemoveOldRecipesCollection,
+    // Each of these are functions that return the migration function. This way
+    // the lazy importers won't be triggered until we actually need to run the
+    // migration. This saves startup time in the common case that all migrations
+    // are already run.
+    () => migrateShieldPrefs,
+    () => migrateStudiesEnabledWithoutHealthReporting,
+    () =>
+      AddonStudies.migrations.migration01StudyFieldsToSlugAndUserFacingFields,
+    () => PreferenceExperiments.migrations.migration01MoveExperiments,
+    () => PreferenceExperiments.migrations.migration02MultiPreference,
+    () => PreferenceExperiments.migrations.migration03AddActionName,
+    () => PreferenceExperiments.migrations.migration04RenameNameToSlug,
+    () => RecipeRunner.migrations.migration01RemoveOldRecipesCollection,
+    () => PreferenceExperiments.migrations.migration05AddFillerEnrollmentId,
+    () => AddonStudies.migrations.migration02AddFillerEnrollmentId,
+    () => AddonRollouts.migrations.migration01AddFillerEnrollmentId,
+    () => PreferenceRollouts.migrations.migration01AddFillerEnrollmentId,
   ],
 };
 
