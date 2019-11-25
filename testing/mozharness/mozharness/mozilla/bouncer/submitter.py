@@ -1,13 +1,23 @@
 import base64
-import httplib
 import socket
 import sys
 import traceback
-import urllib
-import urllib2
 from xml.dom.minidom import parseString
 
 from mozharness.base.log import FATAL
+
+try:
+    import httplib
+except ImportError:
+    import http.client as httplib
+try:
+    from urllib import urlencode, quote
+except ImportError:
+    from urllib.parse import urlencode, quote
+try:
+    from urllib2 import HTTPError, URLError, Request, urlopen
+except ImportError:
+    from urllib.request import HTTPError, URLError, Request, urlopen
 
 
 class BouncerSubmitterMixin(object):
@@ -16,7 +26,10 @@ class BouncerSubmitterMixin(object):
             return self.credentials
         global_dict = {}
         local_dict = {}
-        execfile(self.config["credentials_file"], global_dict, local_dict)
+        exec(compile(
+            open(self.config["credentials_file"], "rb").read(),
+            self.config["credentials_file"],
+            'exec'), global_dict, local_dict)
         self.credentials = (local_dict["tuxedoUsername"],
                             local_dict["tuxedoPassword"])
         return self.credentials
@@ -24,7 +37,7 @@ class BouncerSubmitterMixin(object):
     def api_call(self, route, data, error_level=FATAL, retry_config=None):
         retry_args = dict(
             failure_status=None,
-            retry_exceptions=(urllib2.HTTPError, urllib2.URLError,
+            retry_exceptions=(HTTPError, URLError,
                               httplib.BadStatusLine,
                               socket.timeout, socket.error),
             error_message="call to %s failed" % (route),
@@ -43,9 +56,9 @@ class BouncerSubmitterMixin(object):
     def _api_call(self, route, data):
         api_prefix = self.config["bouncer-api-prefix"]
         api_url = "%s/%s" % (api_prefix, route)
-        request = urllib2.Request(api_url)
+        request = Request(api_url)
         if data:
-            post_data = urllib.urlencode(data, doseq=True)
+            post_data = urlencode(data, doseq=True)
             request.add_data(post_data)
             self.info("POST data: %s" % post_data)
         credentials = self.query_credentials()
@@ -54,17 +67,17 @@ class BouncerSubmitterMixin(object):
             request.add_header("Authorization", "Basic %s" % auth.strip())
         try:
             self.info("Submitting to %s" % api_url)
-            res = urllib2.urlopen(request, timeout=60).read()
+            res = urlopen(request, timeout=60).read()
             self.info("Server response")
             self.info(res)
             return res
-        except urllib2.HTTPError as e:
+        except HTTPError as e:
             self.warning("Cannot access %s" % api_url)
             traceback.print_exc(file=sys.stdout)
             self.warning("Returned page source:")
             self.warning(e.read())
             raise
-        except urllib2.URLError:
+        except URLError:
             traceback.print_exc(file=sys.stdout)
             self.warning("Cannot access %s" % api_url)
             raise
@@ -81,7 +94,7 @@ class BouncerSubmitterMixin(object):
     def product_exists(self, product_name):
         self.info("Checking if %s already exists" % product_name)
         res = self.api_call("product_show?product=%s" %
-                            urllib.quote(product_name), data=None)
+                            quote(product_name), data=None)
         try:
             xml = parseString(res)
             # API returns <products/> if the product doesn't exist
