@@ -5,13 +5,57 @@
 #include "GVAutoplayPermissionRequest.h"
 
 #include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_media.h"
+
+mozilla::LazyLogModule gGVAutoplayRequestLog("GVAutoplay");
 
 namespace mozilla {
 namespace dom {
 
 using RType = GVAutoplayRequestType;
 using RStatus = GVAutoplayRequestStatus;
+
+const char* ToGVRequestTypeStr(RType aType) {
+  switch (aType) {
+    case RType::eINAUDIBLE:
+      return "inaudible";
+    case RType::eAUDIBLE:
+      return "audible";
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid request type.");
+      return "invalid";
+  }
+}
+
+const char* ToGVRequestStatusStr(RStatus aStatus) {
+  switch (aStatus) {
+    case RStatus::eUNKNOWN:
+      return "Unknown";
+    case RStatus::eALLOWED:
+      return "Allowed";
+    case RStatus::eDENIED:
+      return "Denied";
+    case RStatus::ePENDING:
+      return "Pending";
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid status.");
+      return "Invalid";
+  }
+}
+
+// avoid redefined macro in unified build
+#undef REQUEST_LOG
+#define REQUEST_LOG(msg, ...)                                          \
+  if (MOZ_LOG_TEST(gGVAutoplayRequestLog, mozilla::LogLevel::Debug)) { \
+    MOZ_LOG(gGVAutoplayRequestLog, LogLevel::Debug,                    \
+            ("Request=%p, Type=%s, " msg, this,                        \
+             ToGVRequestTypeStr(this->mType), ##__VA_ARGS__));         \
+  }
+
+#undef LOG
+#define LOG(msg, ...) \
+  MOZ_LOG(gGVAutoplayRequestLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
 static RStatus GetRequestStatus(BrowsingContext* aContext, RType aType) {
   MOZ_ASSERT(aContext);
@@ -49,6 +93,8 @@ void GVAutoplayPermissionRequest::CreateRequest(nsGlobalWindowInner* aWindow,
   const TestRequest testingPref = static_cast<TestRequest>(
       StaticPrefs::media_geckoview_autoplay_request_testing());
   if (testingPref != TestRequest::ePromptAsNormal) {
+    LOG("Create testing request, tesing value=%u",
+        static_cast<uint32_t>(testingPref));
     if (testingPref == TestRequest::eAllowAll ||
         (testingPref == TestRequest::eAllowAudible &&
          aType == RType::eAUDIBLE) ||
@@ -63,6 +109,7 @@ void GVAutoplayPermissionRequest::CreateRequest(nsGlobalWindowInner* aWindow,
       request->Cancel();
     }
   } else {
+    LOG("Dispatch async request");
     request->RequestDelayedTask(
         aWindow->EventTargetFor(TaskCategory::Other),
         GVAutoplayPermissionRequest::DelayedTaskType::Request);
@@ -80,9 +127,11 @@ GVAutoplayPermissionRequest::GVAutoplayPermissionRequest(
       mType(aType),
       mContext(aContext) {
   MOZ_ASSERT(mContext);
+  REQUEST_LOG("Request created");
 }
 
 GVAutoplayPermissionRequest::~GVAutoplayPermissionRequest() {
+  REQUEST_LOG("Request destroyed");
   // If user doesn't response to the request before it gets destroyed (ex.
   // request dismissed, tab closed, naviagation to a new page), then we should
   // treat it as a denial.
@@ -92,6 +141,7 @@ GVAutoplayPermissionRequest::~GVAutoplayPermissionRequest() {
 }
 
 void GVAutoplayPermissionRequest::SetRequestStatus(RStatus aStatus) {
+  REQUEST_LOG("SetRequestStatus, new status=%s", ToGVRequestStatusStr(aStatus));
   MOZ_ASSERT(mContext);
   AssertIsOnMainThread();
   if (mType == RType::eAUDIBLE) {
@@ -109,6 +159,7 @@ GVAutoplayPermissionRequest::Cancel() {
   // Ex. if the page got closed or naviagated immediately after user replied to
   // the request. Therefore, the status should be either `pending` or `unknown`.
   const RStatus status = GetRequestStatus(mContext, mType);
+  REQUEST_LOG("Cancel, current status=%s", ToGVRequestStatusStr(status));
   MOZ_ASSERT(status == RStatus::ePENDING || status == RStatus::eUNKNOWN);
   if (status == RStatus::ePENDING) {
     SetRequestStatus(RStatus::eDENIED);
@@ -125,6 +176,7 @@ GVAutoplayPermissionRequest::Allow(JS::HandleValue aChoices) {
   // Ex. if the page got closed or naviagated immediately after user replied to
   // the request. Therefore, the status should be either `pending` or `unknown`.
   const RStatus status = GetRequestStatus(mContext, mType);
+  REQUEST_LOG("Allow, current status=%s", ToGVRequestStatusStr(status));
   MOZ_ASSERT(status == RStatus::ePENDING || status == RStatus::eUNKNOWN);
   if (status == RStatus::ePENDING) {
     SetRequestStatus(RStatus::eALLOWED);
@@ -136,6 +188,7 @@ GVAutoplayPermissionRequest::Allow(JS::HandleValue aChoices) {
 /* static */
 void GVAutoplayPermissionRequestor::AskForPermissionIfNeeded(
     nsPIDOMWindowInner* aWindow) {
+  LOG("Requestor, AskForPermissionIfNeeded");
   if (!aWindow) {
     return;
   }
@@ -150,6 +203,7 @@ void GVAutoplayPermissionRequestor::AskForPermissionIfNeeded(
     return;
   }
 
+  LOG("Requestor, check status to decide if we need to create the new request");
   // The request status is stored in top-level browsing context only.
   RefPtr<BrowsingContext> context = aWindow->GetBrowsingContext()->Top();
   if (!HasEverAskForRequest(context, RType::eAUDIBLE)) {
