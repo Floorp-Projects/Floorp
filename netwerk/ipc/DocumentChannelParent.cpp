@@ -7,12 +7,29 @@
 
 #include "DocumentChannelParent.h"
 
+extern mozilla::LazyLogModule gDocumentChannelLog;
+#define LOG(fmt) MOZ_LOG(gDocumentChannelLog, mozilla::LogLevel::Verbose, fmt)
+
 namespace mozilla {
 namespace net {
+
+DocumentChannelParent::DocumentChannelParent(
+    const dom::PBrowserOrId& aIframeEmbedding, nsILoadContext* aLoadContext,
+    PBOverrideStatus aOverrideStatus) {
+  LOG(("DocumentChannelParent ctor [this=%p]", this));
+  mParent = new DocumentLoadListener(aIframeEmbedding, aLoadContext,
+                                     aOverrideStatus, this);
+}
+
+DocumentChannelParent::~DocumentChannelParent() {
+  LOG(("DocumentChannelParent dtor [this=%p]", this));
+}
 
 bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
   RefPtr<nsDocShellLoadState> loadState =
       new nsDocShellLoadState(aArgs.loadState());
+  LOG(("DocumentChannelParent Init [this=%p, uri=%s]", this,
+       loadState->URI()->GetSpecOrDefault().get()));
 
   RefPtr<class LoadInfo> loadInfo;
   nsresult rv = mozilla::ipc::LoadInfoArgsToLoadInfo(Some(aArgs.loadInfo()),
@@ -43,3 +60,5 @@ DocumentChannelParent::RedirectToRealChannel(uint32_t aRedirectFlags,
 
 }  // namespace net
 }  // namespace mozilla
+
+#undef LOG
