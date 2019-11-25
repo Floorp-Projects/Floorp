@@ -70,7 +70,7 @@ function* testSteps() {
 
   info("Persisting an already initialized origin");
 
-  initOrigin(principal, origin.persistence, continueToNextStepSync);
+  initStorageAndOrigin(principal, origin.persistence, continueToNextStepSync);
   yield undefined;
 
   info("Reading out contents of metadata file");

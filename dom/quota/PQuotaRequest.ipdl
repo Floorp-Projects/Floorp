@@ -16,7 +16,7 @@ struct InitTemporaryStorageResponse
 {
 };
 
-struct InitOriginResponse
+struct InitStorageAndOriginResponse
 {
   bool created;
 };
@@ -66,7 +66,7 @@ union RequestResponse
   nsresult;
   InitResponse;
   InitTemporaryStorageResponse;
-  InitOriginResponse;
+  InitStorageAndOriginResponse;
   ClearOriginResponse;
   ResetOriginResponse;
   ClearDataResponse;

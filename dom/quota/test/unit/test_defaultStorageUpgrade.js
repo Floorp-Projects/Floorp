@@ -308,11 +308,14 @@ function* testSteps() {
       info("Initializing origin");
 
       if (origin.chrome) {
-        request = initChromeOrigin(origin.persistence, continueToNextStepSync);
+        request = initStorageAndChromeOrigin(
+          origin.persistence,
+          continueToNextStepSync
+        );
         yield undefined;
       } else {
         let principal = getPrincipal(origin.url);
-        request = initOrigin(
+        request = initStorageAndOrigin(
           principal,
           origin.persistence,
           continueToNextStepSync

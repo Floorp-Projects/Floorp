@@ -120,7 +120,11 @@ function* testSteps() {
     info("Initializing origin");
 
     let principal = getPrincipal(origin.url);
-    request = initOrigin(principal, origin.persistence, continueToNextStepSync);
+    request = initStorageAndOrigin(
+      principal,
+      origin.persistence,
+      continueToNextStepSync
+    );
     yield undefined;
 
     ok(request.resultCode == NS_OK, "Initialization succeeded");

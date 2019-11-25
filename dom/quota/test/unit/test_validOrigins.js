@@ -25,7 +25,7 @@ async function testSteps() {
   for (let testingURL of testingURLs) {
     info("Testing " + testingURL);
     try {
-      let request = initOrigin(getPrincipal(testingURL), "default");
+      let request = initStorageAndOrigin(getPrincipal(testingURL), "default");
       await requestFinished(request);
 
       ok(true, "Should not have thrown");

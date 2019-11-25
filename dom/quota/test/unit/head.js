@@ -118,8 +118,8 @@ function initTemporaryStorage(callback) {
   return request;
 }
 
-function initOrigin(principal, persistence, callback) {
-  let request = SpecialPowers._getQuotaManager().initStoragesForPrincipal(
+function initStorageAndOrigin(principal, persistence, callback) {
+  let request = SpecialPowers._getQuotaManager().initStorageAndOrigin(
     principal,
     persistence
   );
@@ -128,11 +128,11 @@ function initOrigin(principal, persistence, callback) {
   return request;
 }
 
-function initChromeOrigin(persistence, callback) {
+function initStorageAndChromeOrigin(persistence, callback) {
   let principal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
     Ci.nsIPrincipal
   );
-  let request = SpecialPowers._getQuotaManager().initStoragesForPrincipal(
+  let request = SpecialPowers._getQuotaManager().initStorageAndOrigin(
     principal,
     persistence
   );

@@ -29,7 +29,10 @@ async function testSteps() {
     let result;
 
     try {
-      let request = initOrigin(getPrincipal(origin.url), origin.persistence);
+      let request = initStorageAndOrigin(
+        getPrincipal(origin.url),
+        origin.persistence
+      );
       result = await requestFinished(request);
 
       ok(true, "Should not have thrown");

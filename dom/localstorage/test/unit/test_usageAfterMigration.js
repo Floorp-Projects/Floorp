@@ -41,7 +41,7 @@ async function testSteps() {
       info("Initializing origin");
 
       // Origin must be initialized before the usage dir is created.
-      request = initOrigin(principal, "default");
+      request = initStorageAndOrigin(principal, "default");
       await requestFinished(request);
 
       info("Creating usage as a directory");

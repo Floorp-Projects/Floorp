@@ -81,7 +81,7 @@ function* testSteps() {
 
   info("Initializing origin");
 
-  request = initChromeOrigin("persistent", continueToNextStepSync);
+  request = initStorageAndChromeOrigin("persistent", continueToNextStepSync);
   yield undefined;
 
   ok(request.resultCode == NS_OK, "Initialization succeeded");
