@@ -20,6 +20,7 @@
 | [mozilla.components.service.fxa.manager.AccountState](../mozilla.components.service.fxa.manager/-account-state/index.md) | States of the [FxaAccountManager](../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md). |
 | [mozilla.components.lib.state.Action](../mozilla.components.lib.state/-action.md) | Generic interface for actions to be dispatched on a [Store](../mozilla.components.lib.state/-store/index.md). |
 | [mozilla.components.support.base.facts.Action](../mozilla.components.support.base.facts/-action/index.md) | A user or system action that causes [Fact](../mozilla.components.support.base.facts/-fact/index.md) instances to be emitted. |
+| [mozilla.components.concept.engine.webextension.ActionHandler](../mozilla.components.concept.engine.webextension/-action-handler/index.md) | A handler for web extension (browser and page) actions. |
 | [mozilla.components.browser.icons.processor.AdaptiveIconProcessor](../mozilla.components.browser.icons.processor/-adaptive-icon-processor/index.md) | [IconProcessor](../mozilla.components.browser.icons.processor/-icon-processor/index.md) implementation that builds maskable icons. |
 | [mozilla.components.feature.addons.AddOn](../mozilla.components.feature.addons/-add-on/index.md) | Represents an add-on based on the AMO store: https://addons.mozilla.org/en-US/firefox/ |
 | [mozilla.components.feature.addons.amo.AddOnCollectionProvider](../mozilla.components.feature.addons.amo/-add-on-collection-provider/index.md) | Provide access to the collections AMO API. https://addons-server.readthedocs.io/en/latest/topics/api/collections.html |
@@ -404,7 +405,6 @@
 | [mozilla.components.lib.fetch.okhttp.OkHttpClient](../mozilla.components.lib.fetch.okhttp/-ok-http-client/index.md) | [Client](../mozilla.components.concept.fetch/-client/index.md) implementation using OkHttp. |
 | [mozilla.components.ui.autocomplete.OnCommitListener](../mozilla.components.ui.autocomplete/-on-commit-listener.md) |  |
 | [mozilla.components.ui.autocomplete.OnDispatchKeyEventPreImeListener](../mozilla.components.ui.autocomplete/-on-dispatch-key-event-pre-ime-listener.md) |  |
-| [mozilla.components.feature.downloads.manager.OnDownloadCompleted](../mozilla.components.feature.downloads.manager/-on-download-completed.md) |  |
 | [mozilla.components.ui.autocomplete.OnFilterListener](../mozilla.components.ui.autocomplete/-on-filter-listener.md) |  |
 | [mozilla.components.ui.autocomplete.OnKeyPreImeListener](../mozilla.components.ui.autocomplete/-on-key-pre-ime-listener.md) |  |
 | [mozilla.components.support.base.feature.OnNeedToRequestPermissions](../mozilla.components.support.base.feature/-on-need-to-request-permissions.md) |  |
@@ -704,3 +704,4 @@
 | [mozilla.components.service.fxa.sync.WorkManagerSyncDispatcher](../mozilla.components.service.fxa.sync/-work-manager-sync-dispatcher/index.md) |  |
 | [mozilla.components.service.fretboard.scheduler.workmanager.WorkManagerSyncScheduler](../mozilla.components.service.fretboard.scheduler.workmanager/-work-manager-sync-scheduler/index.md) | Class used to schedule sync of experiment configuration from the server using WorkManager |
 | [mozilla.components.service.fxa.sync.WorkManagerSyncWorker](../mozilla.components.service.fxa.sync/-work-manager-sync-worker/index.md) |  |
+| [mozilla.components.feature.downloads.manager.onDownloadStopped](../mozilla.components.feature.downloads.manager/on-download-stopped.md) |  |

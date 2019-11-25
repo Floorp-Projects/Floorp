@@ -7,7 +7,7 @@
 | Name | Summary |
 |---|---|
 | [GlobalSyncableStoreProvider](-global-syncable-store-provider/index.md) | `object GlobalSyncableStoreProvider`<br>A singleton registry of [SyncableStore](../mozilla.components.concept.sync/-syncable-store/index.md) objects. [WorkManagerSyncDispatcher](-work-manager-sync-dispatcher/index.md) will use this to access configured [SyncableStore](../mozilla.components.concept.sync/-syncable-store/index.md) instances. |
-| [StorageSync](-storage-sync/index.md) | `class StorageSync : `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`SyncStatusObserver`](-sync-status-observer/index.md)`>`<br>Orchestrates data synchronization of a set of [SyncableStore](../mozilla.components.concept.sync/-syncable-store/index.md)-s. |
+| [StorageSync](-storage-sync/index.md) | `class ~~StorageSync~~ : `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`SyncStatusObserver`](-sync-status-observer/index.md)`>`<br>Orchestrates data synchronization of a set of [SyncableStore](../mozilla.components.concept.sync/-syncable-store/index.md)-s. |
 | [SyncManager](-sync-manager/index.md) | `abstract class SyncManager`<br>A base sync manager implementation. |
 | [SyncReason](-sync-reason/index.md) | `sealed class SyncReason`<br>A collection of objects describing a reason for running a sync. |
 | [SyncStatusObserver](-sync-status-observer/index.md) | `interface SyncStatusObserver`<br>An interface for consumers that wish to observer "sync lifecycle" events. |

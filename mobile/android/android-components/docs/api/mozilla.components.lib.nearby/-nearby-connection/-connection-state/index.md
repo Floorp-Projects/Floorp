@@ -2,7 +2,7 @@
 
 # ConnectionState
 
-`sealed class ConnectionState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L69)
+`sealed class ConnectionState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L99)
 
 The state of the connection. Changes in state are communicated to the client through
 [NearbyConnectionObserver.onStateUpdated](../../-nearby-connection-observer/on-state-updated.md).

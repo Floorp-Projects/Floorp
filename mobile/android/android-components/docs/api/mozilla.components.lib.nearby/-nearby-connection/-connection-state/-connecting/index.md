@@ -2,7 +2,7 @@
 
 # Connecting
 
-`class Connecting : `[`ConnectionState`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L165)
+`class Connecting : `[`ConnectionState`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L195)
 
 The connection has been successfully authenticated.
 Unless an error occurs, the next state will be [ReadyToSend](../-ready-to-send/index.md).

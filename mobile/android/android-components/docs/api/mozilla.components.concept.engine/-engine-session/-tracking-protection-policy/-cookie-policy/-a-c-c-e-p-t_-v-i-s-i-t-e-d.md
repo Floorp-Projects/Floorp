@@ -2,7 +2,7 @@
 
 # ACCEPT_VISITED
 
-`ACCEPT_VISITED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L188)
+`ACCEPT_VISITED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L181)
 
 Accept first-party and third-party cookies and site data only from
 sites previously visited in a first-party context.

@@ -2,7 +2,7 @@
 
 # ReadyToSend
 
-`class ReadyToSend : `[`ConnectionState`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L174)
+`class ReadyToSend : `[`ConnectionState`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L204)
 
 A connection has been made to a neighbor and this device may send a message.
 This state is followed by [Sending](../-sending/index.md) or [Failure](../-failure/index.md).
