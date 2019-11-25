@@ -9,12 +9,14 @@ run talos tests in a virtualenv
 """
 
 import argparse
+import io
 import os
 import sys
 import pprint
 import copy
 import re
 import shutil
+import string
 import subprocess
 import json
 
@@ -250,6 +252,72 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
         self.info(pprint.pformat(self.talos_json_config))
         return self.talos_json_config
 
+    def make_talos_domain(self, host):
+        return host + "-talos"
+
+    def split_path(self, path):
+        result = []
+        while True:
+            path, folder = os.path.split(path)
+            if folder:
+                result.append(folder)
+                continue
+            elif path:
+                result.append(path)
+            break
+
+        result.reverse()
+        return result
+
+    def merge_paths(self, lhs, rhs):
+        backtracks = 0
+        for subdir in rhs:
+            if subdir == '..':
+                backtracks += 1
+            else:
+                break
+        return lhs[:-backtracks] + rhs[backtracks:]
+
+    def replace_relative_iframe_paths(self, directory, filename):
+        """This will find iframes with relative paths and replace them with
+        absolute paths containing domains derived from the original source's
+        domain. This helps us better simulate real-world cases for fission
+        """
+        if not filename.endswith('.html'):
+            return
+
+        directory_pieces = self.split_path(directory)
+        while directory_pieces and directory_pieces[0] != 'fis':
+            directory_pieces = directory_pieces[1:]
+        path = os.path.join(directory, filename)
+
+        # XXX: ugh, is there a better way to account for multiple encodings than just
+        # trying each of them?
+        encodings = ['utf-8', 'latin-1']
+        iframe_pattern = re.compile(r'(iframe.*")(\.\./.*\.html)"')
+        for encoding in encodings:
+            try:
+                with io.open(path, 'r', encoding=encoding) as f:
+                    content = f.read()
+
+                def replace_iframe_src(match):
+                    src = match.group(2)
+                    split = self.split_path(src)
+                    merged = self.merge_paths(directory_pieces, split)
+                    host = merged[3]
+                    site_origin_hash = self.make_talos_domain(host)
+                    new_url = 'http://%s/%s"' % (site_origin_hash, string.join(merged, '/'))
+                    self.info("Replacing %s with %s in iframe inside %s" %
+                              (match.group(2), new_url, path))
+                    return (match.group(1) + new_url)
+
+                content = re.sub(iframe_pattern, replace_iframe_src, content)
+                with io.open(path, 'w', encoding=encoding) as f:
+                    f.write(content)
+                break
+            except UnicodeDecodeError:
+                pass
+
     def query_pagesets_name(self):
         """Certain suites require external pagesets to be downloaded and
         extracted.
@@ -389,12 +457,24 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
 
         tooltool_artifacts = []
         src_talos_pageset_dest = os.path.join(self.talos_path, 'talos', 'tests')
+        # unfortunately this path has to be short and can't be descriptive, because
+        # on Windows we tend to already push the boundaries of the max path length
+        # constraint. This will contain the tp5 pageset, but adjusted to have
+        # absolute URLs on iframes for the purposes of better modeling things for
+        # fission.
+        src_talos_pageset_multidomain_dest = os.path.join(self.talos_path,
+                                                          'talos',
+                                                          'fis')
         webextension_dest = os.path.join(self.talos_path, 'talos', 'webextensions')
 
         if self.query_pagesets_name():
             tooltool_artifacts.append({'name': self.pagesets_name,
                                        'manifest': self.pagesets_name_manifest,
                                        'dest': src_talos_pageset_dest})
+            tooltool_artifacts.append({'name': self.pagesets_name,
+                                       'manifest': self.pagesets_name_manifest,
+                                       'dest': src_talos_pageset_multidomain_dest,
+                                       'postprocess': self.replace_relative_iframe_paths})
 
         if self.query_benchmark_zip():
             tooltool_artifacts.append({'name': self.benchmark_zip,
@@ -412,19 +492,26 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             if '--no-download' not in self.config.get('talos_extra_options', []):
                 self.info("Downloading %s with tooltool..." % artifact)
 
-                if not os.path.exists(os.path.join(artifact['dest'], artifact['name'])):
+                archive = os.path.join(artifact['dest'], artifact['name'])
+                output_dir_path = re.sub(r'\.zip$', '', archive)
+                if not os.path.exists(archive):
                     manifest_file = os.path.join(self.talos_path, artifact['manifest'])
                     self.tooltool_fetch(
                         manifest_file,
                         output_dir=artifact['dest'],
                         cache=self.config.get('tooltool_cache')
                     )
-                    archive = os.path.join(artifact['dest'], artifact['name'])
                     unzip = self.query_exe('unzip')
                     unzip_cmd = [unzip, '-q', '-o', archive, '-d', artifact['dest']]
                     self.run_command(unzip_cmd, halt_on_failure=True)
+
+                    if 'postprocess' in artifact:
+                        for subdir, dirs, files in os.walk(output_dir_path):
+                            for file in files:
+                                artifact['postprocess'](subdir, file)
                 else:
                     self.info("%s already available" % artifact)
+
             else:
                 self.info("Not downloading %s because the no-download option was specified" %
                           artifact)
