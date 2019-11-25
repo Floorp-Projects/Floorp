@@ -259,6 +259,12 @@ class TouchBarHelper {
     // We cache our search popover since otherwise it is frequently
     // created/destroyed for the urlbar-focus/blur events.
     this._searchPopover = this.getTouchBarInput("SearchPopover");
+
+    // The test machines do not have Touch Bars, so _inputsNotUpdated is never
+    // initialized. This causes problems in the tests.
+    if (Cu.isInAutomation) {
+      this._inputsNotUpdated = new Set();
+    }
   }
 
   destructor() {
@@ -411,9 +417,14 @@ class TouchBarHelper {
     if (!TouchBarHelper.window) {
       return;
     }
-    let searchString = TouchBarHelper.window.gURLBar.lastSearchString.trimStart();
-    if (Object.values(UrlbarTokenizer.RESTRICT).includes(searchString[0])) {
-      searchString = searchString.substring(1).trimStart();
+    let searchString = "";
+    if (
+      TouchBarHelper.window.gURLBar.getAttribute("pageproxystate") != "valid"
+    ) {
+      searchString = TouchBarHelper.window.gURLBar.lastSearchString.trimStart();
+      if (Object.values(UrlbarTokenizer.RESTRICT).includes(searchString[0])) {
+        searchString = searchString.substring(1).trimStart();
+      }
     }
 
     TouchBarHelper.window.gURLBar.search(`${restrictionToken} ${searchString}`);
