@@ -3020,6 +3020,11 @@ inline RefPtr<T> StrongOrRawPtr(already_AddRefed<S>&& aPtr) {
   return std::move(aPtr);
 }
 
+template <class T, class S>
+inline RefPtr<T> StrongOrRawPtr(RefPtr<S>&& aPtr) {
+  return std::move(aPtr);
+}
+
 template <class T, class ReturnType = typename Conditional<
                        IsRefcounted<T>::value, T*, nsAutoPtr<T>>::Type>
 inline ReturnType StrongOrRawPtr(T* aPtr) {
