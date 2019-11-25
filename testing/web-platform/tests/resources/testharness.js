@@ -792,7 +792,10 @@ policies and contribution forms [3].
 
     function done() {
         if (tests.tests.length === 0) {
-            tests.set_file_is_test();
+            tests.status.status = tests.status.ERROR;
+            tests.status.message = "done() was called without first defining any tests";
+            tests.complete();
+            return;
         }
         if (tests.file_is_test) {
             // file is test files never have asynchronous cleanup logic,
@@ -3379,9 +3382,6 @@ policies and contribution forms [3].
      */
     function assert(expected_true, function_name, description, error, substitutions)
     {
-        if (tests.tests.length === 0) {
-            tests.set_file_is_test();
-        }
         if (expected_true !== true) {
             var msg = make_message(function_name, description,
                                    error, substitutions);
@@ -3672,10 +3672,6 @@ policies and contribution forms [3].
 
     if (global_scope.addEventListener) {
         var error_handler = function(message, stack) {
-            if (tests.tests.length === 0 && !tests.allow_uncaught_exception) {
-                tests.set_file_is_test();
-            }
-
             if (tests.file_is_test) {
                 var test = tests.tests[0];
                 if (test.phase >= test.phases.HAS_RESULT) {
