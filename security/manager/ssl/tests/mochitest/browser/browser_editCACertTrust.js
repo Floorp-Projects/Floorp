@@ -25,7 +25,7 @@ var gCert;
  */
 function openEditCertTrustDialog() {
   let win = window.openDialog(
-    "chrome://pippki/content/editcacert.xul",
+    "chrome://pippki/content/editcacert.xhtml",
     "",
     "",
     gCert

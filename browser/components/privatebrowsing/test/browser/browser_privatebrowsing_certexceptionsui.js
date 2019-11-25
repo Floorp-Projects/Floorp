@@ -7,7 +7,7 @@
 // window or from the SSL error page (see bug 461627).
 
 function test() {
-  const EXCEPTIONS_DLG_URL = "chrome://pippki/content/exceptionDialog.xul";
+  const EXCEPTIONS_DLG_URL = "chrome://pippki/content/exceptionDialog.xhtml";
   const EXCEPTIONS_DLG_FEATURES = "chrome,centerscreen";
   const INVALID_CERT_LOCATION = "https://nocert.example.com/";
   waitForExplicitFinish();

@@ -38,7 +38,7 @@ function openClientAuthDialog(cert) {
     Ci.nsIWritablePropertyBag2
   );
   let win = window.openDialog(
-    "chrome://pippki/content/clientauthask.xul",
+    "chrome://pippki/content/clientauthask.xhtml",
     "",
     "",
     TEST_HOSTNAME,

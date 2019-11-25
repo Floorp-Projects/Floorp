@@ -6,7 +6,7 @@
 "use strict";
 
 /**
- * @file Implements functionality for certViewer.xul and its general and details
+ * @file Implements functionality for certViewer.xhtml and its general and details
  *       tabs.
  * @argument {nsISupports} window.arguments[0]
  *           The cert to view, queryable to nsIX509Cert.
