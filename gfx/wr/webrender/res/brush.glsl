@@ -225,6 +225,12 @@ void main(void) {
             blend_brush_vs(BRUSH_VS_PARAMS);
             break;
         #endif
+
+        #ifdef WR_FEATURE_MIX_BLEND_BRUSH
+        case BRUSH_KIND_MIX_BLEND:
+            mix_blend_brush_vs(BRUSH_VS_PARAMS);
+            break;
+        #endif
     }
 
 #else
@@ -277,6 +283,12 @@ void main(void) {
 #ifdef WR_FEATURE_BLEND_BRUSH
         case BRUSH_KIND_BLEND: {
             frag = blend_brush_fs();
+            break;
+        }
+#endif
+#ifdef WR_FEATURE_MIX_BLEND_BRUSH
+        case BRUSH_KIND_MIX_BLEND: {
+            frag = mix_blend_brush_fs();
             break;
         }
 #endif
