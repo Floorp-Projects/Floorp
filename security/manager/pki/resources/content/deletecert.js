@@ -5,10 +5,10 @@
 "use strict";
 
 /**
- * @file Implements the functionality of deletecert.xul: a dialog that allows a
+ * @file Implements the functionality of deletecert.xhtml: a dialog that allows a
  *       user to confirm whether to delete certain certificates.
  * @argument {String} window.arguments[0]
- *           One of the tab IDs listed in certManager.xul.
+ *           One of the tab IDs listed in certManager.xhtml.
  * @argument {nsICertTreeItem[]} window.arguments[1]
  *           An array of cert tree items representing the certs to delete.
  * @argument {DeleteCertReturnValues} window.arguments[2]

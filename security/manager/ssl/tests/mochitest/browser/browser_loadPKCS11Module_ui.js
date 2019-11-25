@@ -127,7 +127,7 @@ function resetCallCounts() {
  */
 function openLoadModuleDialog() {
   let win = window.openDialog(
-    "chrome://pippki/content/load_device.xul",
+    "chrome://pippki/content/load_device.xhtml",
     "",
     ""
   );
