@@ -281,13 +281,6 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
                             nullptr,     // aCallbacks
                             aArgs.newLoadFlags());
 
-  RefPtr<HttpChannelChild> httpChild = do_QueryObject(newChannel);
-  RefPtr<nsIChildChannel> childChannel = do_QueryObject(newChannel);
-  if (NS_FAILED(rv)) {
-    MOZ_DIAGNOSTIC_ASSERT(false, "NS_NewChannelInternal failed");
-    return IPC_OK();
-  }
-
   // This is used to report any errors back to the parent by calling
   // CrossProcessRedirectFinished.
   auto scopeExit = MakeScopeExit([&]() {
@@ -297,6 +290,11 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
     mRedirectResolver = nullptr;
   });
 
+  if (NS_FAILED(rv)) {
+    return IPC_OK();
+  }
+
+  RefPtr<HttpChannelChild> httpChild = do_QueryObject(newChannel);
   if (httpChild) {
     rv = httpChild->SetChannelId(aArgs.channelId());
   }
@@ -350,6 +348,7 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
   }
 
   // connect parent.
+  nsCOMPtr<nsIChildChannel> childChannel = do_QueryInterface(newChannel);
   if (childChannel) {
     rv = childChannel->ConnectParent(
         aArgs.registrarId());  // creates parent channel
