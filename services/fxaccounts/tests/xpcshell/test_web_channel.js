@@ -396,6 +396,9 @@ add_task(async function test_helpers_login_without_customize_sync() {
           });
         },
       },
+      telemetry: {
+        recordConnection: sinon.spy(),
+      },
     },
     weaveXPCOM: {
       whenLoaded() {},
@@ -415,6 +418,9 @@ add_task(async function test_helpers_login_without_customize_sync() {
     verifiedCanLinkAccount: true,
     customizeSync: false,
   });
+  Assert.ok(
+    helpers._fxAccounts.telemetry.recordConnection.calledWith([], "webchannel")
+  );
 });
 
 add_task(async function test_helpers_login_with_customize_sync() {
@@ -433,6 +439,9 @@ add_task(async function test_helpers_login_with_customize_sync() {
           });
         },
       },
+      telemetry: {
+        recordConnection: sinon.spy(),
+      },
     },
     weaveXPCOM: {
       whenLoaded() {},
@@ -449,6 +458,9 @@ add_task(async function test_helpers_login_with_customize_sync() {
     verifiedCanLinkAccount: true,
     customizeSync: true,
   });
+  Assert.ok(
+    helpers._fxAccounts.telemetry.recordConnection.calledWith([], "webchannel")
+  );
 });
 
 add_task(
@@ -468,6 +480,9 @@ add_task(
               resolve();
             });
           },
+        },
+        telemetry: {
+          recordConnection: sinon.spy(),
         },
       },
       weaveXPCOM: {
@@ -542,6 +557,12 @@ add_task(
     );
     Assert.equal(Services.prefs.getBoolPref("services.sync.engine.tabs"), true);
     Assert.ok(configured, "sync was configured");
+    Assert.ok(
+      helpers._fxAccounts.telemetry.recordConnection.calledWith(
+        ["sync"],
+        "webchannel"
+      )
+    );
   }
 );
 
@@ -555,6 +576,9 @@ add_task(async function test_helpers_login_with_offered_sync_engines() {
           async setSignedInUser(accountData) {
             resolve(accountData);
           },
+        },
+        telemetry: {
+          recordConnection() {},
         },
       },
       weaveXPCOM: {
@@ -609,6 +633,9 @@ add_task(async function test_helpers_login_nothing_offered() {
           async setSignedInUser(accountData) {
             resolve(accountData);
           },
+        },
+        telemetry: {
+          recordConnection() {},
         },
       },
       weaveXPCOM: {

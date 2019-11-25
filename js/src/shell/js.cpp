@@ -10981,7 +10981,7 @@ int main(int argc, char** argv, char** envp) {
                           "Format of BinAST file (multipart/context)") ||
 #else
       !op.addMultiStringOption('B', "binast", "", "No-op") ||
-      !op.addStringOption('\0', "binast-format", "No-op") ||
+      !op.addStringOption('\0', "binast-format", "[format]", "No-op") ||
 #endif  // JS_BUILD_BINAST
       !op.addMultiStringOption('e', "execute", "CODE", "Inline code to run") ||
       !op.addBoolOption('i', "shell", "Enter prompt after running code") ||
