@@ -504,7 +504,7 @@ void BackgroundHangThread::ReportHang(TimeDuration aHangTime,
 
   HangDetails hangDetails(
       aHangTime,
-      nsDependentCString(XRE_ChildProcessTypeToString(XRE_GetProcessType())),
+      nsDependentCString(XRE_GeckoProcessTypeToString(XRE_GetProcessType())),
       VoidString(), mThreadName, mRunnableName, std::move(mHangStack),
       std::move(mAnnotations));
 
