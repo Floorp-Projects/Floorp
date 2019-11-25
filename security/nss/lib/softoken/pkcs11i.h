@@ -17,6 +17,9 @@
 #include "chacha20poly1305.h"
 #include "hasht.h"
 
+#include "alghmac.h"
+#include "cmac.h"
+
 /*
  * Configuration Defines
  *
@@ -595,6 +598,73 @@ typedef struct sftk_parametersStr {
 #define CERT_DB_FMT "%scert%s.db"
 #define KEY_DB_FMT "%skey%s.db"
 
+struct sftk_MACConstantTimeCtxStr {
+    const SECHashObject *hash;
+    unsigned char mac[64];
+    unsigned char secret[64];
+    unsigned int headerLength;
+    unsigned int secretLength;
+    unsigned int totalLength;
+    unsigned char header[75];
+};
+typedef struct sftk_MACConstantTimeCtxStr sftk_MACConstantTimeCtx;
+
+struct sftk_MACCtxStr {
+    /* This is a common MAC context that supports both HMAC and CMAC
+     * operations. This also presents a unified set of semantics:
+     *
+     *  - Everything except Destroy returns a CK_RV, indicating success
+     *    or failure. (This handles the difference between HMAC's and CMAC's
+     *    interfaces, since the underlying AES _might_ fail with CMAC).
+     *
+     *  - The underlying MAC is started on Init(...), so Update(...) can
+     *    called right away. (This handles the difference between HMAC and
+     *    CMAC in their *_Init(...) functions).
+     *
+     *  - Calling semantics:
+     *
+     *      - One of sftk_MAC_{Create,Init,InitRaw}(...) to set up the MAC
+     *        context, checking the return code.
+     *      - sftk_MAC_Update(...) as many times as necessary to process
+     *        input data, checking the return code.
+     *      - sftk_MAC_Finish(...) to get the output of the MAC; result_len
+     *        may be NULL if the caller knows the expected output length,
+     *        checking the return code. If result_len is NULL, this will
+     *        PR_ASSERT(...) that the actual returned length was equal to
+     *        max_result_len.
+     *
+     *        Note: unlike HMAC_Finish(...), this allows the caller to specify
+     *        a return value less than return length, to align with
+     *        CMAC_Finish(...)'s semantics. This will force an additional
+     *        stack allocation of size SFTK_MAX_MAC_LENGTH.
+     *      - sftk_MAC_Reset(...) if the caller wishes to compute a new MAC
+     *        with the same key, checking the return code.
+     *      - sftk_MAC_Destroy(...) when the caller frees its associated
+     *        memory, passing PR_TRUE if sftk_MAC_Create(...) was called,
+     *        and PR_FALSE otherwise.
+     */
+
+    CK_MECHANISM_TYPE mech;
+    unsigned int mac_size;
+
+    union {
+        HMACContext *hmac;
+        CMACContext *cmac;
+
+        /* Functions to update when adding a new MAC or a new hash:
+         *
+         *  - sftk_MAC_Init
+         *  - sftk_MAC_Update
+         *  - sftk_MAC_Finish
+         *  - sftk_MAC_Reset
+         */
+        void *raw;
+    } mac;
+
+    void (*destroy_func)(void *ctx, PRBool free_it);
+};
+typedef struct sftk_MACCtxStr sftk_MACCtx;
+
 SEC_BEGIN_PROTOS
 
 /* shared functions between pkcs11.c and fipstokn.c */
@@ -766,17 +836,6 @@ extern CK_RV jpake_Final(HASH_HashType hashType,
                          SFTKObject *sourceKey, SFTKObject *key);
 
 /* Constant time MAC functions (hmacct.c) */
-
-struct sftk_MACConstantTimeCtxStr {
-    const SECHashObject *hash;
-    unsigned char mac[64];
-    unsigned char secret[64];
-    unsigned int headerLength;
-    unsigned int secretLength;
-    unsigned int totalLength;
-    unsigned char header[75];
-};
-typedef struct sftk_MACConstantTimeCtxStr sftk_MACConstantTimeCtx;
 sftk_MACConstantTimeCtx *sftk_HMACConstantTime_New(
     CK_MECHANISM_PTR mech, SFTKObject *key);
 sftk_MACConstantTimeCtx *sftk_SSLv3MACConstantTime_New(
@@ -797,6 +856,16 @@ sftk_TLSPRFInit(SFTKSessionContext *context,
                 CK_KEY_TYPE key_type,
                 HASH_HashType hash_alg,
                 unsigned int out_len);
+
+/* PKCS#11 MAC implementation. See sftk_MACCtxStr declaration above for
+ * calling semantics for these functions. */
+CK_RV sftk_MAC_Create(CK_MECHANISM_TYPE mech, SFTKObject *key, sftk_MACCtx **ret_ctx);
+CK_RV sftk_MAC_Init(sftk_MACCtx *ctx, CK_MECHANISM_TYPE mech, SFTKObject *key);
+CK_RV sftk_MAC_InitRaw(sftk_MACCtx *ctx, CK_MECHANISM_TYPE mech, const unsigned char *key, unsigned int key_len, PRBool isFIPS);
+CK_RV sftk_MAC_Update(sftk_MACCtx *ctx, CK_BYTE_PTR data, unsigned int data_len);
+CK_RV sftk_MAC_Finish(sftk_MACCtx *ctx, CK_BYTE_PTR result, unsigned int *result_len, unsigned int max_result_len);
+CK_RV sftk_MAC_Reset(sftk_MACCtx *ctx);
+void sftk_MAC_Destroy(sftk_MACCtx *ctx, PRBool free_it);
 
 SEC_END_PROTOS
 

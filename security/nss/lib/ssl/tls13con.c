@@ -5832,6 +5832,15 @@ tls13_NegotiateVersion(sslSocket *ss, const TLSExtension *supportedVersions)
         return SECFailure;
     }
     for (version = ss->vrange.max; version >= ss->vrange.min; --version) {
+        if (ss->ssl3.hs.helloRetry && version < SSL_LIBRARY_VERSION_TLS_1_3) {
+            /* Prevent negotiating to a lower version in response to a TLS 1.3 HRR.
+             * Since we check in descending (local) order, this will only fail if
+             * our vrange has changed or the client didn't offer 1.3 in response. */
+            PORT_SetError(SSL_ERROR_UNSUPPORTED_VERSION);
+            FATAL_ERROR(ss, SSL_ERROR_UNSUPPORTED_VERSION, protocol_version);
+            return SECFailure;
+        }
+
         PRUint16 wire = tls13_EncodeDraftVersion(version, ss->protocolVariant);
         unsigned long offset;
 
