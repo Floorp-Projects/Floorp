@@ -73,7 +73,7 @@ g.test('fullscreen quad', async t => {
       alphaBlend: {},
       colorBlend: {}
     }],
-    vertexInput: {
+    vertexState: {
       indexFormat: 'uint16',
       vertexBuffers: []
     }

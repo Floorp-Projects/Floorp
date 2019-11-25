@@ -29,11 +29,12 @@ class F extends ValidationTest {
       colorStates: [{
         format: 'rgba8unorm'
       }],
-      vertexInput: {
+      vertexState: {
         vertexBuffers: [{
-          stride: 3 * 4,
-          attributeSet: range(bufferCount, i => ({
+          arrayStride: 3 * 4,
+          attributes: range(bufferCount, i => ({
             format: 'float3',
+            offset: 0,
             shaderLocation: i
           }))
         }]
