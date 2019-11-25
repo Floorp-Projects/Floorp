@@ -65,12 +65,11 @@ bool OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList) {
           }
         }
       }
-
-      // Only close the runtime if we successfully initialized it above,
-      // otherwise we assume it was already in use and should be left as is.
-      if (SUCCEEDED(inited)) {
-        RoUninitialize();
-      }
+    }
+    // Only close the runtime if we successfully initialized it above,
+    // otherwise we assume it was already in use and should be left as is.
+    if (SUCCEEDED(inited)) {
+      RoUninitialize();
     }
   }
 #endif
