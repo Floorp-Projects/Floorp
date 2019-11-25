@@ -1,3 +1,4 @@
-Accept-CH: device-memory, DPR
+Accept-CH: DPR
 Accept-CH-Lifetime: 1
 Access-Control-Allow-Origin: *
+
