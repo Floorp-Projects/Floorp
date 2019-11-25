@@ -31,6 +31,9 @@
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
+extern mozilla::LazyLogModule gDocumentChannelLog;
+#define LOG(fmt) MOZ_LOG(gDocumentChannelLog, mozilla::LogLevel::Verbose, fmt)
+
 namespace mozilla {
 namespace net {
 
@@ -74,10 +77,16 @@ DocumentChannelChild::DocumentChannelChild(
       mLoadFlags(aLoadFlags),
       mURI(aLoadState->URI()),
       mLoadInfo(aLoadInfo) {
+  LOG(("DocumentChannelChild ctor [this=%p, uri=%s]", this,
+       aLoadState->URI()->GetSpecOrDefault().get()));
   RefPtr<nsHttpHandler> handler = nsHttpHandler::GetInstance();
   uint64_t channelId;
   Unused << handler->NewChannelId(channelId);
   mChannelId = channelId;
+}
+
+DocumentChannelChild::~DocumentChannelChild() {
+  LOG(("DocumentChannelChild dtor [this=%p]", this));
 }
 
 NS_IMETHODIMP
@@ -204,6 +213,8 @@ IPCResult DocumentChannelChild::RecvFailedAsyncOpen(
 }
 
 void DocumentChannelChild::ShutdownListeners(nsresult aStatusCode) {
+  LOG(("DocumentChannelChild ShutdownListeners [this=%p, status=%" PRIx32 "]",
+       this, static_cast<uint32_t>(aStatusCode)));
   mStatus = aStatusCode;
 
   nsCOMPtr<nsIStreamListener> l = mListener;
@@ -255,6 +266,9 @@ IPCResult DocumentChannelChild::RecvDeleteSelf() {
 IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
     const RedirectToRealChannelArgs& aArgs,
     RedirectToRealChannelResolver&& aResolve) {
+  LOG(("DocumentChannelChild RecvRedirectToRealChannel [this=%p, uri=%s]", this,
+       aArgs.uri()->GetSpecOrDefault().get()));
+
   RefPtr<dom::Document> loadingDocument;
   mLoadInfo->GetLoadingDocument(getter_AddRefs(loadingDocument));
 
@@ -692,3 +706,5 @@ DocumentChannelChild::SetChannelId(uint64_t aChannelId) {
 
 }  // namespace net
 }  // namespace mozilla
+
+#undef LOG
