@@ -12,6 +12,10 @@ Services.scriptloader.loadSubScript(
 );
 
 const {
+  COMPATIBILITY_UPDATE_SELECTED_NODE_COMPLETE,
+} = require("devtools/client/inspector/compatibility/actions/index");
+
+const {
   toCamelCase,
 } = require("devtools/client/inspector/compatibility/utils/cases");
 
@@ -20,6 +24,7 @@ async function openCompatibilityView() {
   await pushPref("devtools.inspector.compatibility.enabled", true);
 
   const { inspector } = await openInspectorSidebarTab("compatibilityview");
+  await waitForUpdateSelectedNodeAction(inspector.store);
   const panel = inspector.panelDoc.querySelector(
     "#compatibilityview-panel .inspector-tabpanel"
   );
@@ -65,4 +70,33 @@ async function assertIssueList(panel, expectedIssues) {
       );
     }
   }
+}
+
+/**
+ * Return a promise which waits for COMPATIBILITY_UPDATE_SELECTED_NODE_COMPLETE action.
+ *
+ * @param {Object} store
+ * @return {Promise}
+ */
+function waitForUpdateSelectedNodeAction(store) {
+  return waitForDispatch(store, COMPATIBILITY_UPDATE_SELECTED_NODE_COMPLETE);
+}
+
+/**
+ * Return a promise which waits for given action type.
+ *
+ * @param {Object} store
+ * @param {Object} type
+ * @return {Promise}
+ */
+function waitForDispatch(store, type) {
+  return new Promise(resolve => {
+    store.dispatch({
+      type: "@@service/waitUntil",
+      predicate: action => action.type === type,
+      run: (dispatch, getState, action) => {
+        resolve(action);
+      },
+    });
+  });
 }
