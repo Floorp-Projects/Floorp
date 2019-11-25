@@ -3705,7 +3705,7 @@ nsStyleUIReset::nsStyleUIReset(const Document& aDocument)
       mForceBrokenImageIcon(0),
       mIMEMode(StyleImeMode::Auto),
       mWindowDragging(StyleWindowDragging::Default),
-      mWindowShadow(NS_STYLE_WINDOW_SHADOW_DEFAULT),
+      mWindowShadow(StyleWindowShadow::Default),
       mWindowOpacity(1.0),
       mWindowTransformOrigin{LengthPercentage::FromPercentage(0.5),
                              LengthPercentage::FromPercentage(0.5),

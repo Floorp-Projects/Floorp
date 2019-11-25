@@ -356,17 +356,17 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
   return NS_OK;
 }
 
-uint8_t nsMenuPopupFrame::GetShadowStyle() {
-  uint8_t shadow = StyleUIReset()->mWindowShadow;
-  if (shadow != NS_STYLE_WINDOW_SHADOW_DEFAULT) return shadow;
+StyleWindowShadow nsMenuPopupFrame::GetShadowStyle() {
+  StyleWindowShadow shadow = StyleUIReset()->mWindowShadow;
+  if (shadow != StyleWindowShadow::Default) return shadow;
 
   switch (StyleDisplay()->mAppearance) {
     case StyleAppearance::Tooltip:
-      return NS_STYLE_WINDOW_SHADOW_TOOLTIP;
+      return StyleWindowShadow::Tooltip;
     case StyleAppearance::Menupopup:
-      return NS_STYLE_WINDOW_SHADOW_MENU;
+      return StyleWindowShadow::Menu;
     default:
-      return NS_STYLE_WINDOW_SHADOW_DEFAULT;
+      return StyleWindowShadow::Default;
   }
 }
 

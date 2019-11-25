@@ -179,7 +179,8 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   virtual nsTransparencyMode GetTransparencyMode() override;
   virtual void GetWindowClipRegion(
       nsTArray<LayoutDeviceIntRect>* aRects) override;
-  virtual void SetWindowShadowStyle(int32_t aStyle) override {}
+  virtual void SetWindowShadowStyle(
+      mozilla::StyleWindowShadow aStyle) override {}
   virtual void SetShowsToolbarButton(bool aShow) override {}
   virtual void SetShowsFullScreenButton(bool aShow) override {}
   virtual void SetWindowAnimationType(WindowAnimationType aType) override {}
