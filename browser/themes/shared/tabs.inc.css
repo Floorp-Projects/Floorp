@@ -406,6 +406,10 @@
   height: 14px;
 }
 
+.tab-icon-sound[pictureinpicture]:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
 :root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-darktext[pictureinpicture],
 :root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-darktext[soundplaying],
 :root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-darktext[muted],
