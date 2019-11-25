@@ -452,7 +452,11 @@ mozilla::ipc::IPCResult ImageBridgeParent::RecvMakeAsyncPluginSurfaces(
 
   RefPtr<ID3D11Device> d3dDevice =
       DeviceManagerDx::Get()->GetCompositorDevice();
-  MOZ_ASSERT(d3dDevice);
+  if (!d3dDevice) {
+    NS_WARNING("Failed to get D3D11 device for plugin display");
+    return IPC_OK();
+  }
+
   auto pluginSurf = WrapUnique(D3D11TextureData::Create(
       aSize, aFormat, ALLOC_FOR_OUT_OF_BAND_CONTENT, d3dDevice));
   if (!pluginSurf) {
@@ -521,6 +525,11 @@ mozilla::ipc::IPCResult ImageBridgeParent::RecvUpdateAsyncPluginSurface(
   }
 
   RefPtr<ID3D11Device> device = DeviceManagerDx::Get()->GetCompositorDevice();
+  if (!device) {
+    NS_WARNING("Failed to get D3D11 device for plugin display");
+    return IPC_OK();
+  }
+
   RefPtr<ID3D11DeviceContext> context;
   device->GetImmediateContext(getter_AddRefs(context));
   if (!context) {
