@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsLayoutStylesheetCache.h"
+#include "GlobalStyleSheetCache.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "mozilla/MemoryReporting.h"
@@ -31,11 +31,13 @@
 
 #include <mozilla/ServoBindings.h>
 
-// The nsLayoutStylesheetCache is responsible for sharing user agent style sheet
+namespace mozilla {
+
+// The GlobalStyleSheetCache is responsible for sharing user agent style sheet
 // contents across processes using shared memory.  Here is a high level view of
 // how that works:
 //
-// * In the parent process, in the nsLayoutStylesheetCache constructor (which is
+// * In the parent process, in the GlobalStyleSheetCache constructor (which is
 //   called early on in a process' lifetime), we parse all UA style sheets into
 //   Gecko StyleSheet objects.
 //
@@ -91,7 +93,7 @@
 // * In the child process, as early as possible (in
 //   ContentChild::InitSharedUASheets), we try to map the shared memory at that
 //   same address, then pass the shared memory buffer to
-//   nsLayoutStylesheetCache::SetSharedMemory.  Since we map at the same
+//   GlobalStyleSheetCache::SetSharedMemory.  Since we map at the same
 //   address, this means any internal pointers in the UA sheets back into the
 //   shared memory buffer that were written by the parent process are valid in
 //   the child process too.
@@ -106,11 +108,11 @@ using namespace mozilla::css;
 #define PREF_LEGACY_STYLESHEET_CUSTOMIZATION \
   "toolkit.legacyUserProfileCustomizations.stylesheets"
 
-NS_IMPL_ISUPPORTS(nsLayoutStylesheetCache, nsIObserver, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(GlobalStyleSheetCache, nsIObserver, nsIMemoryReporter)
 
-nsresult nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
-                                          const char* aTopic,
-                                          const char16_t* aData) {
+nsresult GlobalStyleSheetCache::Observe(nsISupports* aSubject,
+                                        const char* aTopic,
+                                        const char16_t* aData) {
   if (!strcmp(aTopic, "profile-before-change")) {
     mUserContentSheet = nullptr;
     mUserChromeSheet = nullptr;
@@ -123,7 +125,7 @@ nsresult nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
 }
 
 #define STYLE_SHEET(identifier_, url_, shared_)                                \
-  NotNull<StyleSheet*> nsLayoutStylesheetCache::identifier_##Sheet() {         \
+  NotNull<StyleSheet*> GlobalStyleSheetCache::identifier_##Sheet() {           \
     if (!m##identifier_##Sheet) {                                              \
       m##identifier_##Sheet = LoadSheetURL(url_, eAgentSheetFeatures, eCrash); \
     }                                                                          \
@@ -132,15 +134,15 @@ nsresult nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
 #include "mozilla/UserAgentStyleSheetList.h"
 #undef STYLE_SHEET
 
-StyleSheet* nsLayoutStylesheetCache::GetUserContentSheet() {
+StyleSheet* GlobalStyleSheetCache::GetUserContentSheet() {
   return mUserContentSheet;
 }
 
-StyleSheet* nsLayoutStylesheetCache::GetUserChromeSheet() {
+StyleSheet* GlobalStyleSheetCache::GetUserChromeSheet() {
   return mUserChromeSheet;
 }
 
-StyleSheet* nsLayoutStylesheetCache::ChromePreferenceSheet() {
+StyleSheet* GlobalStyleSheetCache::ChromePreferenceSheet() {
   if (!mChromePreferenceSheet) {
     BuildPreferenceSheet(&mChromePreferenceSheet,
                          PreferenceSheet::ChromePrefs());
@@ -149,7 +151,7 @@ StyleSheet* nsLayoutStylesheetCache::ChromePreferenceSheet() {
   return mChromePreferenceSheet;
 }
 
-StyleSheet* nsLayoutStylesheetCache::ContentPreferenceSheet() {
+StyleSheet* GlobalStyleSheetCache::ContentPreferenceSheet() {
   if (!mContentPreferenceSheet) {
     BuildPreferenceSheet(&mContentPreferenceSheet,
                          PreferenceSheet::ContentPrefs());
@@ -158,7 +160,7 @@ StyleSheet* nsLayoutStylesheetCache::ContentPreferenceSheet() {
   return mContentPreferenceSheet;
 }
 
-void nsLayoutStylesheetCache::Shutdown() {
+void GlobalStyleSheetCache::Shutdown() {
   gCSSLoader = nullptr;
   NS_WARNING_ASSERTION(!gStyleCache || !gUserContentSheetURL,
                        "Got the URL but never used?");
@@ -171,7 +173,7 @@ void nsLayoutStylesheetCache::Shutdown() {
   // potential DOM references and such that chrome code may have created.
 }
 
-void nsLayoutStylesheetCache::SetUserContentCSSURL(nsIURI* aURI) {
+void GlobalStyleSheetCache::SetUserContentCSSURL(nsIURI* aURI) {
   MOZ_ASSERT(XRE_IsContentProcess(), "Only used in content processes.");
   gUserContentSheetURL = aURI;
 }
@@ -179,8 +181,8 @@ void nsLayoutStylesheetCache::SetUserContentCSSURL(nsIURI* aURI) {
 MOZ_DEFINE_MALLOC_SIZE_OF(LayoutStylesheetCacheMallocSizeOf)
 
 NS_IMETHODIMP
-nsLayoutStylesheetCache::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                        nsISupports* aData, bool aAnonymize) {
+GlobalStyleSheetCache::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                      nsISupports* aData, bool aAnonymize) {
   MOZ_COLLECT_REPORT("explicit/layout/style-sheet-cache/unshared", KIND_HEAP,
                      UNITS_BYTES,
                      SizeOfIncludingThis(LayoutStylesheetCacheMallocSizeOf),
@@ -198,7 +200,7 @@ nsLayoutStylesheetCache::CollectReports(nsIHandleReportCallback* aHandleReport,
   return NS_OK;
 }
 
-size_t nsLayoutStylesheetCache::SizeOfIncludingThis(
+size_t GlobalStyleSheetCache::SizeOfIncludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) const {
   size_t n = aMallocSizeOf(this);
 
@@ -220,7 +222,7 @@ size_t nsLayoutStylesheetCache::SizeOfIncludingThis(
   return n;
 }
 
-nsLayoutStylesheetCache::nsLayoutStylesheetCache() {
+GlobalStyleSheetCache::GlobalStyleSheetCache() {
   nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
   NS_ASSERTION(obsSvc, "No global observer service?");
 
@@ -259,7 +261,7 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache() {
       // Use the shared memory handle that was given to us by a SetSharedMemory
       // call under ContentChild::InitXPCOM.
       MOZ_ASSERT(sSharedMemory->memory(),
-                 "nsLayoutStylesheetCache::SetSharedMemory should have mapped "
+                 "GlobalStyleSheetCache::SetSharedMemory should have mapped "
                  "the shared memory");
     }
   }
@@ -281,11 +283,11 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache() {
     if (auto header = static_cast<Header*>(sSharedMemory->memory())) {
       MOZ_RELEASE_ASSERT(header->mMagic == Header::kMagic);
 
-#define STYLE_SHEET(identifier_, url_, shared_)                           \
-  if (shared_) {                                                          \
-    LoadSheetFromSharedMemory(url_, &m##identifier_##Sheet,               \
-                              eAgentSheetFeatures, header, \
-                              UserAgentStyleSheetID::identifier_);        \
+#define STYLE_SHEET(identifier_, url_, shared_)                    \
+  if (shared_) {                                                   \
+    LoadSheetFromSharedMemory(url_, &m##identifier_##Sheet,        \
+                              eAgentSheetFeatures, header,         \
+                              UserAgentStyleSheetID::identifier_); \
   }
 #include "mozilla/UserAgentStyleSheetList.h"
 #undef STYLE_SHEET
@@ -293,7 +295,7 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache() {
   }
 }
 
-void nsLayoutStylesheetCache::LoadSheetFromSharedMemory(
+void GlobalStyleSheetCache::LoadSheetFromSharedMemory(
     const char* aURL, RefPtr<StyleSheet>* aSheet, SheetParsingMode aParsingMode,
     Header* aHeader, UserAgentStyleSheetID aSheetID) {
   auto i = size_t(aSheetID);
@@ -317,7 +319,7 @@ void nsLayoutStylesheetCache::LoadSheetFromSharedMemory(
   *aSheet = sheet.forget();
 }
 
-void nsLayoutStylesheetCache::InitSharedSheetsInParent() {
+void GlobalStyleSheetCache::InitSharedSheetsInParent() {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_RELEASE_ASSERT(!sSharedMemory);
 
@@ -426,20 +428,20 @@ void nsLayoutStylesheetCache::InitSharedSheetsInParent() {
   sSharedMemory = shm.release();
 }
 
-nsLayoutStylesheetCache::~nsLayoutStylesheetCache() {
+GlobalStyleSheetCache::~GlobalStyleSheetCache() {
   mozilla::UnregisterWeakMemoryReporter(this);
 }
 
-void nsLayoutStylesheetCache::InitMemoryReporter() {
+void GlobalStyleSheetCache::InitMemoryReporter() {
   mozilla::RegisterWeakMemoryReporter(this);
 }
 
 /* static */
-nsLayoutStylesheetCache* nsLayoutStylesheetCache::Singleton() {
+GlobalStyleSheetCache* GlobalStyleSheetCache::Singleton() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!gStyleCache) {
-    gStyleCache = new nsLayoutStylesheetCache;
+    gStyleCache = new GlobalStyleSheetCache;
     gStyleCache->InitMemoryReporter();
 
     // For each pref that controls a CSS feature that a UA style sheet depends
@@ -453,7 +455,7 @@ nsLayoutStylesheetCache* nsLayoutStylesheetCache::Singleton() {
   return gStyleCache;
 }
 
-void nsLayoutStylesheetCache::InitFromProfile() {
+void GlobalStyleSheetCache::InitFromProfile() {
   if (!Preferences::GetBool(PREF_LEGACY_STYLESHEET_CUSTOMIZATION)) {
     return;
   }
@@ -484,7 +486,7 @@ void nsLayoutStylesheetCache::InitFromProfile() {
   mUserChromeSheet = LoadSheetFile(chromeFile, eUserSheetFeatures);
 }
 
-RefPtr<StyleSheet> nsLayoutStylesheetCache::LoadSheetURL(
+RefPtr<StyleSheet> GlobalStyleSheetCache::LoadSheetURL(
     const char* aURL, SheetParsingMode aParsingMode,
     FailureAction aFailureAction) {
   nsCOMPtr<nsIURI> uri;
@@ -492,7 +494,7 @@ RefPtr<StyleSheet> nsLayoutStylesheetCache::LoadSheetURL(
   return LoadSheet(uri, aParsingMode, aFailureAction);
 }
 
-RefPtr<StyleSheet> nsLayoutStylesheetCache::LoadSheetFile(
+RefPtr<StyleSheet> GlobalStyleSheetCache::LoadSheetFile(
     nsIFile* aFile, SheetParsingMode aParsingMode) {
   bool exists = false;
   aFile->Exists(&exists);
@@ -521,7 +523,7 @@ static void ErrorLoadingSheet(nsIURI* aURI, const char* aMsg,
   MOZ_CRASH_UNSAFE(errorMessage.get());
 }
 
-RefPtr<StyleSheet> nsLayoutStylesheetCache::LoadSheet(
+RefPtr<StyleSheet> GlobalStyleSheetCache::LoadSheet(
     nsIURI* aURI, SheetParsingMode aParsingMode, FailureAction aFailureAction) {
   if (!aURI) {
     ErrorLoadingSheet(aURI, "null URI", eCrash);
@@ -555,14 +557,14 @@ RefPtr<StyleSheet> nsLayoutStylesheetCache::LoadSheet(
 }
 
 /* static */
-void nsLayoutStylesheetCache::InvalidatePreferenceSheets() {
+void GlobalStyleSheetCache::InvalidatePreferenceSheets() {
   if (gStyleCache) {
     gStyleCache->mContentPreferenceSheet = nullptr;
     gStyleCache->mChromePreferenceSheet = nullptr;
   }
 }
 
-void nsLayoutStylesheetCache::BuildPreferenceSheet(
+void GlobalStyleSheetCache::BuildPreferenceSheet(
     RefPtr<StyleSheet>* aSheet, const PreferenceSheet::Prefs& aPrefs) {
   *aSheet = new StyleSheet(eAgentSheetFeatures, CORS_NONE, dom::SRIMetadata());
 
@@ -662,11 +664,10 @@ void nsLayoutStylesheetCache::BuildPreferenceSheet(
 #undef NS_GET_R_G_B
 }
 
-/* static */ void nsLayoutStylesheetCache::SetSharedMemory(
+/* static */ void GlobalStyleSheetCache::SetSharedMemory(
     const base::SharedMemoryHandle& aHandle, uintptr_t aAddress) {
   MOZ_ASSERT(!XRE_IsParentProcess());
-  MOZ_ASSERT(!gStyleCache,
-             "Too late, nsLayoutStylesheetCache already created!");
+  MOZ_ASSERT(!gStyleCache, "Too late, GlobalStyleSheetCache already created!");
   MOZ_ASSERT(!sSharedMemory, "Shouldn't call this more than once");
 
   auto shm = MakeUnique<base::SharedMemory>();
@@ -683,18 +684,17 @@ void nsLayoutStylesheetCache::BuildPreferenceSheet(
   }
 }
 
-bool nsLayoutStylesheetCache::ShareToProcess(
-    base::ProcessId aProcessId, base::SharedMemoryHandle* aHandle) {
+bool GlobalStyleSheetCache::ShareToProcess(base::ProcessId aProcessId,
+                                           base::SharedMemoryHandle* aHandle) {
   MOZ_ASSERT(XRE_IsParentProcess());
   return sSharedMemory && sSharedMemory->ShareToProcess(aProcessId, aHandle);
 }
 
-mozilla::StaticRefPtr<nsLayoutStylesheetCache>
-    nsLayoutStylesheetCache::gStyleCache;
+StaticRefPtr<GlobalStyleSheetCache> GlobalStyleSheetCache::gStyleCache;
+StaticRefPtr<css::Loader> GlobalStyleSheetCache::gCSSLoader;
+StaticRefPtr<nsIURI> GlobalStyleSheetCache::gUserContentSheetURL;
 
-mozilla::StaticRefPtr<mozilla::css::Loader> nsLayoutStylesheetCache::gCSSLoader;
+StaticAutoPtr<base::SharedMemory> GlobalStyleSheetCache::sSharedMemory;
+size_t GlobalStyleSheetCache::sUsedSharedMemory;
 
-mozilla::StaticRefPtr<nsIURI> nsLayoutStylesheetCache::gUserContentSheetURL;
-
-StaticAutoPtr<base::SharedMemory> nsLayoutStylesheetCache::sSharedMemory;
-size_t nsLayoutStylesheetCache::sUsedSharedMemory;
+}  // namespace mozilla
