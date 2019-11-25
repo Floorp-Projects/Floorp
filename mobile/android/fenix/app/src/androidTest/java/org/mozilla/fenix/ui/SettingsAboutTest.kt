@@ -52,7 +52,6 @@ class SettingsAboutTest {
         }.openSettings {
             // ABOUT
             verifyAboutHeading()
-            verifyHelp()
             verifyRateOnGooglePlay()
             verifyAboutFirefoxPreview()
         }

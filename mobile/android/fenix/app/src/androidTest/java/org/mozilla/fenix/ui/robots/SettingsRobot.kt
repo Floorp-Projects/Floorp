@@ -47,7 +47,6 @@ class SettingsRobot {
     fun verifyDeleteBrowsingDataButton() = assertDeleteBrowsingDataButton()
     fun verifyDeleteBrowsingDataOnQuitButton() = assertDeleteBrowsingDataOnQuitButton()
     fun verifyDataCollectionButton() = assertDataCollectionButton()
-    fun verifyPrivacyNoticeButton() = assertPrivacyNoticeButton()
     fun verifyLeakCanaryButton() = assertLeakCanaryButton()
     fun verifySettingsView() = assertSettingsView()
 
@@ -59,7 +58,6 @@ class SettingsRobot {
     // ABOUT SECTION
     fun verifyAboutHeading() = assertAboutHeading()
 
-    fun verifyHelp() = assertHelp()
     fun verifyRateOnGooglePlay() = assertRateOnGooglePlay()
     fun verifyAboutFirefoxPreview() = assertAboutFirefoxPreview()
 
@@ -191,9 +189,6 @@ private fun assertDeleteBrowsingDataOnQuitButton() {
 private fun assertDataCollectionButton() = onView(ViewMatchers.withText("Data collection"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun assertPrivacyNoticeButton() = onView(ViewMatchers.withText("Privacy notice"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
 private fun assertLeakCanaryButton() = onView(ViewMatchers.withText("LeakCanary"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
@@ -211,12 +206,6 @@ private fun assertRemoteDebug() = onView(ViewMatchers.withText("Remote debugging
 private fun assertAboutHeading() {
     TestHelper.scrollToElementByText("About")
     onView(ViewMatchers.withText("About"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
-
-private fun assertHelp() {
-    TestHelper.scrollToElementByText("About Firefox Preview")
-    onView(ViewMatchers.withText("Help"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
