@@ -1,19 +1,22 @@
 WEBVTT
 NOTE
-The first five selectors should apply. The rest should not apply because they do
+The first six selectors should apply. The rest should not apply because they do
 not apply to a hypothetical document with a single empty element with no explicit
 name, no namespace, no attribute, no classes, no IDs, and unknown primary language
 that acts as the originating element for the cue pseudo-elements.
 STYLE
 @namespace html url(http://www.w3.org/1999/xhtml);
+:not(video)::cue {
+    background: lime;
+}
 *|*::cue(b) {
     background: green;
 }
 |*::cue(i) {
-    color: lime;
+    color: green;
 }
 ::cue(i) {
-    background: lime;
+    background: green;
 }
 *::cue(b) {
     color: green;
@@ -22,6 +25,9 @@ STYLE
     font-size: 11px;
 }
 video::cue {
+    background: red;
+}
+:not(|*)::cue {
     background: red;
 }
 i {

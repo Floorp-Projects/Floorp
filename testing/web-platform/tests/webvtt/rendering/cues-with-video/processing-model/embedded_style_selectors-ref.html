@@ -2,16 +2,17 @@
 <html class="reftest-wait">
 <title>Reference for Embedded Style: Selectors</title>
 <style>
+::cue {
+    font-size: 11px;
+    background: lime;
+}
 ::cue(b) {
     background: green;
     color: green;
 }
 ::cue(i) {
-    background: lime;
-    color: lime;
-}
-::cue {
-    font-size: 11px;
+    background: green;
+    color: green;
 }
 </style>
 <script src="/common/reftest-wait.js"></script>
