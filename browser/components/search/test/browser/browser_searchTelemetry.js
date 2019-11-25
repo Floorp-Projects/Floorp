@@ -10,6 +10,9 @@
 const { SearchTelemetry } = ChromeUtils.import(
   "resource:///modules/SearchTelemetry.jsm"
 );
+const { ADLINK_CHECK_TIMEOUT_MS } = ChromeUtils.import(
+  "resource:///actors/SearchTelemetryChild.jsm"
+);
 
 const TEST_PROVIDER_INFO = {
   example: {
@@ -255,6 +258,8 @@ add_task(async function test_track_ad_click() {
     content.document.getElementById("ad1").click();
   });
   await pageLoadPromise;
+  /* eslint-disable-next-line mozilla/no-arbitrary-setTimeout */
+  await new Promise(resolve => setTimeout(resolve, ADLINK_CHECK_TIMEOUT_MS));
 
   await assertTelemetry(
     { "example.in-content:sap:ff": 1 },
@@ -268,6 +273,8 @@ add_task(async function test_track_ad_click() {
   pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   gBrowser.goBack();
   await pageLoadPromise;
+  /* eslint-disable-next-line mozilla/no-arbitrary-setTimeout */
+  await new Promise(resolve => setTimeout(resolve, ADLINK_CHECK_TIMEOUT_MS));
 
   // We've gone back, so we register an extra display & if it is with ads or not.
   await assertTelemetry(
@@ -283,6 +290,8 @@ add_task(async function test_track_ad_click() {
     content.document.getElementById("ad1").click();
   });
   await pageLoadPromise;
+  /* eslint-disable-next-line mozilla/no-arbitrary-setTimeout */
+  await new Promise(resolve => setTimeout(resolve, ADLINK_CHECK_TIMEOUT_MS));
 
   await assertTelemetry(
     { "example.in-content:sap:ff": 2 },
