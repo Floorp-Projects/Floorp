@@ -27,7 +27,6 @@ SIGNING_FORMATS = {
     },
     'default': {
         'target.complete.mar': ['autograph_hash_only_mar384'],
-        'target.bz2.complete.mar': ['mar'],
     },
 }
 

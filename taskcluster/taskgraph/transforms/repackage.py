@@ -96,18 +96,6 @@ PACKAGE_FORMATS = {
         },
         'output': "target.complete.mar",
     },
-    'mar-bz2': {
-        'args': [
-            'mar', "--format", "bz2",
-            '--arch', '{architecture}',
-            '--mar-channel-id', '{mar-channel-id}',
-        ],
-        'inputs': {
-            'input': 'target{archive_format}',
-            'mar': 'mar',
-        },
-        'output': "target.bz2.complete.mar",
-    },
     'msi': {
         'args': ['msi', '--wsx', '{wsx-stub}',
                  '--version', '{version_display}',
