@@ -41,6 +41,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Types.h"
 #include "mozilla/PeerIdentity.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
@@ -1314,7 +1315,8 @@ class GetUserMediaStreamRunnable : public Runnable {
       // deviceIds to persistent, in case they're not already. Fire'n'forget.
       media::GetPrincipalKey(mPrincipalInfo, true)
           ->Then(GetCurrentThreadSerialEventTarget(), __func__,
-                 [](const PrincipalKeyPromise::ResolveOrRejectValue& aValue) {
+                 [](const media::PrincipalKeyPromise::ResolveOrRejectValue&
+                        aValue) {
                    if (aValue.IsReject()) {
                      LOG("Failed get Principal key. Persisting of deviceIds "
                          "will be broken");

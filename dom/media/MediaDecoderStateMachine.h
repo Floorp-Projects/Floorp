@@ -82,6 +82,7 @@ hardware (via AudioStream).
 #if !defined(MediaDecoderStateMachine_h__)
 #  define MediaDecoderStateMachine_h__
 
+#  include "AudioDeviceInfo.h"
 #  include "ImageContainer.h"
 #  include "MediaDecoder.h"
 #  include "MediaDecoderOwner.h"
