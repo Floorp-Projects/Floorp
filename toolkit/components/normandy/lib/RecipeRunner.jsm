@@ -77,6 +77,13 @@ function cacheProxy(target) {
       }
       return cache.get(prop);
     },
+    set(target, prop, value, receiver) {
+      cache.set(prop, value);
+      return true;
+    },
+    has(target, prop) {
+      return cache.has(prop) || prop in target;
+    },
   });
 }
 
