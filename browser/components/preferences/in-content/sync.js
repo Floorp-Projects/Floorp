@@ -302,7 +302,14 @@ var gSyncPane = {
         if (!isAlreadySyncing && event.detail.button == "accept") {
           // We weren't syncing but the user has accepted the dialog - so we
           // want to start!
-          Weave.Service.configure();
+          fxAccounts.telemetry
+            .recordConnection(["sync"], "ui")
+            .then(() => {
+              return Weave.Service.configure();
+            })
+            .catch(err => {
+              console.error("Failed to enable sync", err);
+            });
         }
       }
     );

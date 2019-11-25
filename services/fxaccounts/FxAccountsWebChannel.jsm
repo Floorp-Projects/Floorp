@@ -434,6 +434,11 @@ this.FxAccountsWebChannelHelpers.prototype = {
     // Remember who it was so we can log out next time.
     this.setPreviousAccountNameHashPref(accountData.email);
 
+    await this._fxAccounts.telemetry.recordConnection(
+      Object.keys(requestedServices || {}),
+      "webchannel"
+    );
+
     // A sync-specific hack - we want to ensure sync has been initialized
     // before we set the signed-in user.
     // XXX - probably not true any more, especially now we have observerPreloads
@@ -479,17 +484,15 @@ this.FxAccountsWebChannelHelpers.prototype = {
    *
    * @param the uid of the account which have been logged out
    */
-  logout(uid) {
-    return this._fxAccounts._internal
-      .getUserAccountData(["uid"])
-      .then(userData => {
-        if (userData && userData.uid === uid) {
-          // true argument is `localOnly`, because server-side stuff
-          // has already been taken care of by the content server
-          return fxAccounts.signOut(true);
-        }
-        return null;
-      });
+  async logout(uid) {
+    let fxa = this._fxAccounts;
+    let userData = await fxa._internal.getUserAccountData(["uid"]);
+    if (userData && userData.uid === uid) {
+      await fxa.telemetry.recordDisconnection(null, "webchannel");
+      // true argument is `localOnly`, because server-side stuff
+      // has already been taken care of by the content server
+      await fxa.signOut(true);
+    }
   },
 
   /**
