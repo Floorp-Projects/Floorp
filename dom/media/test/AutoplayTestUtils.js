@@ -7,13 +7,18 @@ function playAndPostResult(muted, parent_window) {
   element.src = "short.mp4";
   element.id = "video";
   document.body.appendChild(element);
-  let allowedToPlay = element.allowedToPlay;
   element.play().then(
     () => {
-      parent_window.postMessage({ played: true, allowedToPlay }, "*");
+      parent_window.postMessage(
+        { played: true, allowedToPlay: element.allowedToPlay },
+        "*"
+      );
     },
     () => {
-      parent_window.postMessage({ played: false, allowedToPlay }, "*");
+      parent_window.postMessage(
+        { played: false, allowedToPlay: element.allowedToPlay },
+        "*"
+      );
     }
   );
 }
