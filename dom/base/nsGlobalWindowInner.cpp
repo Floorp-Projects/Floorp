@@ -1577,6 +1577,16 @@ void nsGlobalWindowInner::InnerSetNewDocument(JSContext* aCx,
     GetBrowsingContext()->NotifyResetUserGestureActivation();
   }
 
+#if defined(MOZ_WIDGET_ANDROID)
+  // When we insert the new document to the window in the top-level browsing
+  // context, we should reset the status of the request which is used for the
+  // previous document.
+  if (mWindowGlobalChild && GetBrowsingContext() &&
+      !GetBrowsingContext()->GetParent()) {
+    GetBrowsingContext()->ResetGVAutoplayRequestStatus();
+  }
+#endif
+
 #ifdef DEBUG
   mLastOpenedURI = aDocument->GetDocumentURI();
 #endif
