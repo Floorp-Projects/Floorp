@@ -6,11 +6,11 @@
 <script src="/service-workers/service-worker/resources/test-helpers.sub.js"></script>
 <script>
 let frame;
-const kScope = 'resources/dummy.html?dest=iframe';
+const kScope = 'resources/dummy.html?dest=frame';
 
 // Set up the service worker and the frame.
 promise_test(t => {
-    const kScript = 'resources/fetch-destination-worker-iframe.js';
+    const kScript = 'resources/fetch-destination-worker-frame.js';
     return service_worker_unregister_and_register(t, kScript, kScope)
       .then(registration => {
           add_completion_callback(() => {
@@ -39,13 +39,13 @@ var waitOnMessageFromSW = async t => {
 // Document destination
 ///////////////////////
 promise_test(async t => {
-    var f = document.createElement('iframe');
+    var f = document.createElement('frame');
     frame = f;
-    f.className = 'test-iframe';
+    f.className = 'test-frame';
     f.src = kScope;
     document.body.appendChild(f);
     await waitOnMessageFromSW(t);
     add_completion_callback(() => { f.remove(); });
-}, 'iframe fetches with a "iframe" Request.destination');
+}, 'frame fetches with a "frame" Request.destination');
 
 </script>
