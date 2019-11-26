@@ -1047,7 +1047,7 @@ ProfilingStack* AutoProfilerLabel::GetProfilingStack() {
 MOZ_THREAD_LOCAL(ProfilingStack*) AutoProfilerLabel::sProfilingStack;
 
 // The name of the main thread.
-static const char* const kMainThreadName = "GeckoMain";
+static const char* const kMainThreadName = "Main Thread (Base Profiler)";
 
 ////////////////////////////////////////////////////////////////////////
 // BEGIN sampling/unwinding code
