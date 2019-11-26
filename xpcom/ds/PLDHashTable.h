@@ -24,7 +24,7 @@ using PLDHashNumber = mozilla::HashNumber;
 static const uint32_t kPLDHashNumberBits = mozilla::kHashNumberBits;
 
 #if defined(DEBUG) || defined(FUZZING)
-#define MOZ_HASH_TABLE_CHECKS_ENABLED 1
+#  define MOZ_HASH_TABLE_CHECKS_ENABLED 1
 #endif
 
 class PLDHashTable;
@@ -419,11 +419,7 @@ class PLDHashTable {
   PLDHashTable(PLDHashTable&& aOther)
       // Initialize fields which are checked by the move assignment operator
       // and the destructor (which the move assignment operator calls).
-      : mOps(nullptr),
-        mEntryStore(),
-        mGeneration(0),
-        mEntrySize(0)
-  {
+      : mOps(nullptr), mEntryStore(), mGeneration(0), mEntrySize(0) {
     *this = std::move(aOther);
   }
 

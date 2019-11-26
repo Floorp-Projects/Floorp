@@ -8,25 +8,25 @@
 #define vm_JitActivation_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Atomics.h"  // mozilla::Atomic, mozilla::Relaxed
-#include "mozilla/Maybe.h"  // mozilla::Maybe
+#include "mozilla/Atomics.h"     // mozilla::Atomic, mozilla::Relaxed
+#include "mozilla/Maybe.h"       // mozilla::Maybe
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint8_t, uint32_t, uintptr_t
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "jit/IonTypes.h"  // CHECK_OSIPOINT_REGISTERS
+#include "jit/IonTypes.h"        // CHECK_OSIPOINT_REGISTERS
 #include "jit/JSJitFrameIter.h"  // js::jit::{JSJitFrameIter,RInstructionResults}
 #ifdef CHECK_OSIPOINT_REGISTERS
 #  include "jit/Registers.h"  // js::jit::RegisterDump
 #endif
 #include "jit/RematerializedFrame.h"  // js::jit::RematerializedFrame
-#include "js/GCVector.h"  // JS::GCVector
-#include "js/HashTable.h"  // js::HashMap
-#include "js/UniquePtr.h"  // js::UniquePtr
-#include "vm/Activation.h"  // js::Activation
-#include "wasm/WasmConstants.h"  // js::wasm::Trap
+#include "js/GCVector.h"              // JS::GCVector
+#include "js/HashTable.h"             // js::HashMap
+#include "js/UniquePtr.h"             // js::UniquePtr
+#include "vm/Activation.h"            // js::Activation
+#include "wasm/WasmConstants.h"       // js::wasm::Trap
 #include "wasm/WasmFrameIter.h"  // js::wasm::{ExitReason,RegisterState,WasmFrameIter}
 #include "wasm/WasmTypes.h"  // js::wasm::{Frame,TrapData}
 

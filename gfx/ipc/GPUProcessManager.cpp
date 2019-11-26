@@ -968,7 +968,8 @@ void GPUProcessManager::CreateContentRemoteDecoderManager(
   *aOutEndpoint = std::move(childPipe);
 }
 
-void GPUProcessManager::InitVideoBridge(ipc::Endpoint<PVideoBridgeParent>&& aVideoBridge) {
+void GPUProcessManager::InitVideoBridge(
+    ipc::Endpoint<PVideoBridgeParent>&& aVideoBridge) {
   if (EnsureGPUReady()) {
     mGPUChild->SendInitVideoBridge(std::move(aVideoBridge));
   }

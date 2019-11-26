@@ -671,7 +671,9 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
   }
 
   void store64(Register64 src, Address address) { storePtr(src.reg, address); }
-  void store64(Register64 src, const BaseIndex& address) { storePtr(src.reg, address); }
+  void store64(Register64 src, const BaseIndex& address) {
+    storePtr(src.reg, address);
+  }
 
   template <typename T>
   void storePtr(ImmWord imm, T address);

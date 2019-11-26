@@ -371,13 +371,13 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
     const bool& aIsFromCache, const bool& aIsRacing,
     const bool& aCacheEntryAvailable, const uint64_t& aCacheEntryId,
     const int32_t& aCacheFetchCount, const uint32_t& aCacheExpirationTime,
-    const nsCString& aCachedCharset, const nsCString& aSecurityInfoSerialization,
-    const NetAddr& aSelfAddr, const NetAddr& aPeerAddr,
-    const int16_t& aRedirectCount, const uint32_t& aCacheKey,
-    const nsCString& aAltDataType, const int64_t& aAltDataLen,
-    const bool& aDeliveringAltData, const bool& aApplyConversion,
-    const bool& aIsResolvedByTRR, const ResourceTimingStruct& aTiming,
-    const bool& aAllRedirectsSameOrigin) {
+    const nsCString& aCachedCharset,
+    const nsCString& aSecurityInfoSerialization, const NetAddr& aSelfAddr,
+    const NetAddr& aPeerAddr, const int16_t& aRedirectCount,
+    const uint32_t& aCacheKey, const nsCString& aAltDataType,
+    const int64_t& aAltDataLen, const bool& aDeliveringAltData,
+    const bool& aApplyConversion, const bool& aIsResolvedByTRR,
+    const ResourceTimingStruct& aTiming, const bool& aAllRedirectsSameOrigin) {
   AUTO_PROFILER_LABEL("HttpChannelChild::RecvOnStartRequest", NETWORK);
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -438,8 +438,9 @@ void HttpChannelChild::OnStartRequest(
     const bool& aIsFromCache, const bool& aIsRacing,
     const bool& aCacheEntryAvailable, const uint64_t& aCacheEntryId,
     const int32_t& aCacheFetchCount, const uint32_t& aCacheExpirationTime,
-    const nsCString& aCachedCharset, const nsCString& aSecurityInfoSerialization,
-    const NetAddr& aSelfAddr, const NetAddr& aPeerAddr, const uint32_t& aCacheKey,
+    const nsCString& aCachedCharset,
+    const nsCString& aSecurityInfoSerialization, const NetAddr& aSelfAddr,
+    const NetAddr& aPeerAddr, const uint32_t& aCacheKey,
     const nsCString& aAltDataType, const int64_t& aAltDataLen,
     const bool& aDeliveringAltData, const bool& aApplyConversion,
     const bool& aIsResolvedByTRR, const ResourceTimingStruct& aTiming,
@@ -643,15 +644,15 @@ void HttpChannelChild::ProcessOnTransportAndData(
   MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
                      "Should not be receiving any more callbacks from parent!");
   mEventQ->RunOrEnqueue(
-      new ChannelFunctionEvent([self = UnsafePtr<HttpChannelChild>(
-                                    this)]() { return self->GetODATarget(); },
-                               [self = UnsafePtr<HttpChannelChild>(this),
-                                aChannelStatus, aTransportStatus, aOffset,
-                                aCount, aData]() {
-                                 self->OnTransportAndData(
-                                     aChannelStatus, aTransportStatus, aOffset,
+      new ChannelFunctionEvent(
+          [self = UnsafePtr<HttpChannelChild>(this)]() {
+            return self->GetODATarget();
+          },
+          [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus,
+           aTransportStatus, aOffset, aCount, aData]() {
+            self->OnTransportAndData(aChannelStatus, aTransportStatus, aOffset,
                                      aCount, aData);
-                               }),
+          }),
       mDivertingToParent);
 }
 

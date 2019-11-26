@@ -6477,7 +6477,8 @@ nscolor nsTextFrame::GetCaretColorAt(int32_t aOffset) {
   return result;
 }
 
-static gfxTextRun::Range ComputeTransformedRange(nsTextFrame::PropertyProvider& aProvider) {
+static gfxTextRun::Range ComputeTransformedRange(
+    nsTextFrame::PropertyProvider& aProvider) {
   gfxSkipCharsIterator iter(aProvider.GetStart());
   uint32_t start = iter.GetSkippedOffset();
   iter.AdvanceOriginal(aProvider.GetOriginalLength());
@@ -8161,9 +8162,9 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
 }
 
 static uint32_t FindStartAfterSkippingWhitespace(
-    nsTextFrame::PropertyProvider* aProvider, nsIFrame::InlineIntrinsicISizeData* aData,
-    const nsStyleText* aTextStyle, gfxSkipCharsIterator* aIterator,
-    uint32_t aFlowEndInTextRun) {
+    nsTextFrame::PropertyProvider* aProvider,
+    nsIFrame::InlineIntrinsicISizeData* aData, const nsStyleText* aTextStyle,
+    gfxSkipCharsIterator* aIterator, uint32_t aFlowEndInTextRun) {
   if (aData->mSkipWhitespace) {
     while (aIterator->GetSkippedOffset() < aFlowEndInTextRun &&
            IsTrimmableSpace(aProvider->GetFragment(),

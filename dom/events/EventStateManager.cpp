@@ -1019,7 +1019,8 @@ bool EventStateManager::LookForAccessKeyAndExecute(
   if (nsIContent* focusedContent = GetFocusedContent()) {
     start = mAccessKeys.IndexOf(focusedContent);
     if (start == -1 && focusedContent->IsInNativeAnonymousSubtree()) {
-      start = mAccessKeys.IndexOf(focusedContent->GetClosestNativeAnonymousSubtreeRootParent());
+      start = mAccessKeys.IndexOf(
+          focusedContent->GetClosestNativeAnonymousSubtreeRootParent());
     }
   }
   RefPtr<Element> element;

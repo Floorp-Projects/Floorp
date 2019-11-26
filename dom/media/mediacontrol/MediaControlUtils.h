@@ -15,7 +15,7 @@ extern mozilla::LazyLogModule gMediaControlLog;
 namespace mozilla {
 namespace dom {
 
-inline const char* ToMediaControlActionsStr(MediaControlActions aAction){
+inline const char* ToMediaControlActionsStr(MediaControlActions aAction) {
   switch (aAction) {
     case MediaControlActions::ePlay:
       return "Play";

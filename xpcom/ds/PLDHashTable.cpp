@@ -186,8 +186,7 @@ PLDHashTable::PLDHashTable(const PLDHashTableOps* aOps, uint32_t aEntrySize,
       mHashShift(HashShift(aEntrySize, aLength)),
       mEntrySize(aEntrySize),
       mEntryCount(0),
-      mRemovedCount(0)
-{
+      mRemovedCount(0) {
   // An entry size greater than 0xff is unlikely, but let's check anyway. If
   // you hit this, your hashtable would waste lots of space for unused entries
   // and you should change your hash table's entries to pointers.

@@ -14,7 +14,8 @@
 
 namespace js {
 
-inline JS_PUBLIC_API bool BytecodeLocation::isValid(const JSScript* script) const {
+inline JS_PUBLIC_API bool BytecodeLocation::isValid(
+    const JSScript* script) const {
   // Note: Don't create a new BytecodeLocation during the implementation of
   // this, as it is used in the constructor, and will recurse forever.
   return script->contains(*this) || toRawBytecode() == script->codeEnd();

@@ -76,7 +76,7 @@ NS_INTERFACE_MAP_BEGIN(DocumentChannelChild)
           "DocumentChannelChild, this will be broken");
     }
   }
-  if (false) // So we fallback properly in the final macro
+  if (false)  // So we fallback properly in the final macro
 NS_INTERFACE_MAP_END
 
 DocumentChannelChild::DocumentChannelChild(

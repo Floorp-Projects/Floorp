@@ -604,8 +604,8 @@ static inline wr::BorderRadius ToBorderRadius(
 static inline wr::ComplexClipRegion ToComplexClipRegion(
     const nsRect& aRect, const nscoord* aRadii, int32_t aAppUnitsPerDevPixel) {
   wr::ComplexClipRegion ret;
-  ret.rect = ToLayoutRect(
-      LayoutDeviceRect::FromAppUnits(aRect, aAppUnitsPerDevPixel));
+  ret.rect =
+      ToLayoutRect(LayoutDeviceRect::FromAppUnits(aRect, aAppUnitsPerDevPixel));
   ret.radii = ToBorderRadius(
       LayoutDeviceSize::FromAppUnits(
           nsSize(aRadii[eCornerTopLeftX], aRadii[eCornerTopLeftY]),

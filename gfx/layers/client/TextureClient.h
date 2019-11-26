@@ -610,7 +610,8 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
   const TextureData* GetInternalData() const { return mData; }
 
   uint64_t GetSerial() const { return mSerial; }
-  void GetSurfaceDescriptorRemoteDecoder(SurfaceDescriptorRemoteDecoder* aOutDesc);
+  void GetSurfaceDescriptorRemoteDecoder(
+      SurfaceDescriptorRemoteDecoder* aOutDesc);
 
   void CancelWaitForNotifyNotUsed();
 

@@ -64,9 +64,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(ScriptTimeoutHandler)
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(ScriptTimeoutHandler, tmp->mRefCnt.get())
   }
 
-  // If we need to make TimeoutHandler CCed, don't call its Traverse method here,
-  // otherwise we ends up report same object twice if logging is on.
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1588208.
+  // If we need to make TimeoutHandler CCed, don't call its Traverse method
+  // here, otherwise we ends up report same object twice if logging is on. See
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1588208.
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -135,9 +135,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(CallbackTimeoutHandler)
                                       tmp->mRefCnt.get())
   }
 
-  // If we need to make TimeoutHandler CCed, don't call its Traverse method here,
-  // otherwise we ends up report same object twice if logging is on.
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1588208.
+  // If we need to make TimeoutHandler CCed, don't call its Traverse method
+  // here, otherwise we ends up report same object twice if logging is on. See
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1588208.
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFunction)

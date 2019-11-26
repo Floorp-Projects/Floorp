@@ -1097,8 +1097,7 @@ nsresult nsFtpState::S_retr() {
 FTP_STATE
 nsFtpState::R_retr() {
   if (mResponseCode / 100 == 2) {
-    if (!mRretr1xxReceived)
-      return FTP_ERROR;
+    if (!mRretr1xxReceived) return FTP_ERROR;
 
     //(DONE)
     mNextState = FTP_COMPLETE;

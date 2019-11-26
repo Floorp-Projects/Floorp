@@ -34,7 +34,7 @@
 #include "vm/Runtime.h"      // JSAtomState
 #include "vm/SavedFrame.h"   // js::SavedFrame
 
-#include "builtin/streams/HandlerFunction-inl.h"  // js::NewHandler
+#include "builtin/streams/HandlerFunction-inl.h"          // js::NewHandler
 #include "builtin/streams/MiscellaneousOperations-inl.h"  // js::PromiseCall
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap, js::UnwrapCalleeSlot
 #include "vm/JSContext-inl.h"    // JSContext::check

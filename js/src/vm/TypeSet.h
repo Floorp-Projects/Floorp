@@ -21,11 +21,11 @@
 #include "jit/IonTypes.h"      // jit::MIRType
 #include "js/GCAnnotations.h"  // JS_HAZ_GC_POINTER
 #include "js/Id.h"
-#include "js/TracingAPI.h"   // JSTracer
-#include "js/TypeDecls.h"    // IF_BIGINT
-#include "js/Utility.h"      // UniqueChars
-#include "js/Value.h"        // JSVAL_TYPE_*
-#include "js/Vector.h"       // js::Vector
+#include "js/TracingAPI.h"  // JSTracer
+#include "js/TypeDecls.h"   // IF_BIGINT
+#include "js/Utility.h"     // UniqueChars
+#include "js/Value.h"       // JSVAL_TYPE_*
+#include "js/Vector.h"      // js::Vector
 #include "util/DiagnosticAssertions.h"
 #include "vm/TaggedProto.h"  // js::TaggedProto
 

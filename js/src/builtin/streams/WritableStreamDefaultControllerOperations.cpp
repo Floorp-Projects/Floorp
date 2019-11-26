@@ -19,23 +19,23 @@
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStream{CloseQueuedOrInFlight,DealWithRejection,{Start,Finish}Erroring,UpdateBackpressure,Mark{Close,FirstWrite}RequestInFlight}
-#include "js/CallArgs.h"    // JS::CallArgs{,FromVp}
+#include "js/CallArgs.h"                               // JS::CallArgs{,FromVp}
 #include "js/Promise.h"     // JS::AddPromiseReactions
 #include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
 #include "js/Value.h"  // JS::{,Int32,Magic,Object}Value, JS::UndefinedHandleValue, JS_WRITABLESTREAM_CLOSE_RECORD
 #include "vm/Compartment.h"  // JS::Compartment
-#include "vm/JSContext.h"   // JSContext
-#include "vm/JSObject.h"    // JSObject
-#include "vm/List.h"        // js::ListObject
-#include "vm/Runtime.h"     // JSAtomState
+#include "vm/JSContext.h"    // JSContext
+#include "vm/JSObject.h"     // JSObject
+#include "vm/List.h"         // js::ListObject
+#include "vm/Runtime.h"      // JSAtomState
 
 #include "builtin/streams/HandlerFunction-inl.h"  // js::TargetFromHandler
 #include "builtin/streams/MiscellaneousOperations-inl.h"  // js::PromiseCall
 #include "builtin/streams/QueueWithSizes-inl.h"           // js::PeekQueueValue
-#include "vm/Compartment-inl.h"                   // JS::Compartment::wrap
-#include "vm/JSContext-inl.h"                     // JSContext::check
+#include "vm/Compartment-inl.h"  // JS::Compartment::wrap
+#include "vm/JSContext-inl.h"    // JSContext::check
 #include "vm/JSObject-inl.h"  // js::IsCallable, js::NewBuiltinClassInstance, js::NewObjectWithClassProto
-#include "vm/Realm-inl.h"     // js::AutoRealm
+#include "vm/Realm-inl.h"  // js::AutoRealm
 
 using JS::CallArgs;
 using JS::CallArgsFromVp;

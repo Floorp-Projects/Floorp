@@ -18,10 +18,10 @@
 #include "builtin/Promise.h"                           // js::PromiseObject
 #include "builtin/streams/ReadableStreamController.h"  // js::ReadableStreamController{,CancelSteps}
 #include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStream{,Default}Reader, js::ForAuthorCodeBool
-#include "gc/AllocKind.h"  // js::gc::AllocKind
-#include "js/CallArgs.h"   // JS::CallArgs{,FromVp}
-#include "js/GCAPI.h"      // JS::AutoSuppressGCAnalysis
-#include "js/Promise.h"    // JS::CallOriginalPromiseThen, JS::ResolvePromise
+#include "gc/AllocKind.h"   // js::gc::AllocKind
+#include "js/CallArgs.h"    // JS::CallArgs{,FromVp}
+#include "js/GCAPI.h"       // JS::AutoSuppressGCAnalysis
+#include "js/Promise.h"     // JS::CallOriginalPromiseThen, JS::ResolvePromise
 #include "js/Result.h"      // JS_TRY_VAR_OR_RETURN_NULL
 #include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
 #include "js/Stream.h"  // JS::ReadableStreamUnderlyingSource, JS::ReadableStreamMode

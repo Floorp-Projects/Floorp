@@ -5008,7 +5008,8 @@ bool nsContentUtils::IsInSameAnonymousTree(const nsINode* aNode,
   MOZ_ASSERT(aNode, "Must have a node to work with");
   MOZ_ASSERT(aContent, "Must have a content to work with");
 
-  if (aNode->IsInNativeAnonymousSubtree() != aContent->IsInNativeAnonymousSubtree()) {
+  if (aNode->IsInNativeAnonymousSubtree() !=
+      aContent->IsInNativeAnonymousSubtree()) {
     return false;
   }
 

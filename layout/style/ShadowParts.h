@@ -21,9 +21,7 @@ class ShadowParts final {
 
   static ShadowParts Parse(const nsAString&);
 
-  nsAtom* Get(nsAtom* aName) const {
-    return mMappings.GetWeak(aName);
-  }
+  nsAtom* Get(nsAtom* aName) const { return mMappings.GetWeak(aName); }
 
   nsAtom* GetReverse(nsAtom* aName) const {
     return mReverseMappings.GetWeak(aName);
