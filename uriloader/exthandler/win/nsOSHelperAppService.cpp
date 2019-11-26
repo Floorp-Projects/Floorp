@@ -18,6 +18,7 @@
 #include "nsNativeCharsetUtils.h"
 #include "nsLocalFile.h"
 #include "nsIWindowsRegKey.h"
+#include "nsXULAppAPI.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WindowsVersion.h"
 
@@ -155,6 +156,38 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(
 NS_IMETHODIMP nsOSHelperAppService::IsCurrentAppOSDefaultForProtocol(
     const nsACString& aScheme, bool* _retval) {
   *_retval = false;
+
+  NS_ENSURE_TRUE(mAppAssoc, NS_ERROR_NOT_AVAILABLE);
+
+  NS_ConvertASCIItoUTF16 buf(aScheme);
+
+  // Find the progID
+  wchar_t* pResult = nullptr;
+  HRESULT hr = mAppAssoc->QueryCurrentDefault(buf.get(), AT_URLPROTOCOL,
+                                              AL_EFFECTIVE, &pResult);
+  if (FAILED(hr)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsAutoString progID(pResult);
+  // We are responsible for freeing returned strings.
+  CoTaskMemFree(pResult);
+
+  // Find the default executable.
+  nsAutoString description;
+  nsCOMPtr<nsIFile> appFile;
+  nsresult rv = GetDefaultAppInfo(progID, description, getter_AddRefs(appFile));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  // Determine if the default executable is our executable.
+  nsCOMPtr<nsIFile> ourBinary;
+  XRE_GetBinaryPath(getter_AddRefs(ourBinary));
+  bool isSame = false;
+  rv = appFile->Equals(ourBinary, &isSame);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  *_retval = isSame;
   return NS_OK;
 }
 
