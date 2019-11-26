@@ -123,4 +123,11 @@ interface nsIExternalProtocolService : nsISupports
    *        possible to get a description for it.
    */
   AString getApplicationDescription(in AUTF8String aScheme);
+
+  /**
+   * Check if this app is registered as the OS default for a given scheme.
+   *
+   * @param aScheme The scheme to look up. For example, "mms".
+   */
+  bool isCurrentAppOSDefaultForProtocol(in AUTF8String aScheme);
 };

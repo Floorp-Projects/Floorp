@@ -24,6 +24,8 @@ class nsOSHelperAppService final : public nsExternalHelperAppService {
   // override nsIExternalProtocolService methods
   NS_IMETHOD GetApplicationDescription(const nsACString& aScheme,
                                        nsAString& _retval);
+  NS_IMETHOD IsCurrentAppOSDefaultForProtocol(const nsACString& aScheme,
+                                              bool* _retval);
 
   // method overrides --> used to hook the mime service into internet config....
   NS_IMETHOD GetFromTypeAndExtension(const nsACString& aType,
