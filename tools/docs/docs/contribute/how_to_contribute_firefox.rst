@@ -114,6 +114,10 @@ To select jobs running a fuzzy search:
 
     $ ./mach try fuzzy
 
+From Treeherder, it is also possible to attach new jobs. As every review has
+a try CI run associated, it makes this work easier. See :ref:`attach-job-review` for
+more information.
+
 Note that it requires `level 1 permissions <https://www.mozilla.org/about/governance/policies/commit/access-policy/>`__.
 
 `More information <https://firefox-source-docs.mozilla.org/tools/try/index.html>`__
