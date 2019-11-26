@@ -274,7 +274,7 @@ def download_job(log, job):
         return job, False
 
     try:
-        with job.json_path.open("r") as f:
+        with job.json_path.open("r", encoding="utf-8") as f:
             browsertime_json = json.load(f)
     except OSError as e:
         log.error("Could not read browsertime.json: %s" % e)
