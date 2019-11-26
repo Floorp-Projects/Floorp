@@ -202,9 +202,9 @@ load 1326194-2.html
 load 1332939.html
 load 1341693.html
 load 1352453.html
-load chrome://reftest/content/crashtests/dom/base/crashtests/1353529.xhtml
+load chrome://reftest/content/crashtests/dom/base/crashtests/1353529.xul
 load 1368327.html
-load chrome://reftest/content/crashtests/dom/base/crashtests/1369363.xhtml
+load chrome://reftest/content/crashtests/dom/base/crashtests/1369363.xul
 load 1370072.html
 pref(clipboard.autocopy,true) load 1370737.html
 load 1370968.html
