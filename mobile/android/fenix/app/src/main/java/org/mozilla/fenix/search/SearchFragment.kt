@@ -31,6 +31,7 @@ import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.hasCamera
 import mozilla.components.support.ktx.android.content.isPermissionGranted
+import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -128,6 +129,10 @@ class SearchFragment : Fragment(), BackHandler {
             historyStorageProvider(),
             (activity as HomeActivity).browsingModeManager.mode.isPrivate
         )
+
+        val urlView = toolbarView.view
+            .findViewById<InlineAutocompleteEditText>(R.id.mozac_browser_toolbar_edit_url_view)
+        urlView?.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
 
         startPostponedEnterTransition()
         return view
