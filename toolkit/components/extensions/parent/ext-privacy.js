@@ -15,6 +15,7 @@ ChromeUtils.defineModuleGetter(
 var { ExtensionPreferencesManager } = ChromeUtils.import(
   "resource://gre/modules/ExtensionPreferencesManager.jsm"
 );
+var { ExtensionError } = ExtensionUtils;
 var { getSettingsAPI } = ExtensionPreferencesManager;
 
 const cookieSvc = Ci.nsICookieService;
@@ -26,6 +27,13 @@ const cookieBehaviorValues = new Map([
   ["allow_visited", cookieSvc.BEHAVIOR_LIMIT_FOREIGN],
   ["reject_trackers", cookieSvc.BEHAVIOR_REJECT_TRACKER],
 ]);
+
+const TLS_VERSIONS = [
+  [1, "TLSv1"],
+  [2, "TLSv1.1"],
+  [3, "TLSv1.2"],
+  [4, "TLSv1.3"],
+];
 
 // Add settings objects for supported APIs to the preferences manager.
 ExtensionPreferencesManager.addSetting("network.networkPredictionEnabled", {
@@ -178,6 +186,34 @@ ExtensionPreferencesManager.addSetting("websites.trackingProtectionMode", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("network.tlsVersionRestriction", {
+  prefNames: ["security.tls.version.min", "security.tls.version.max"],
+
+  setCallback(value) {
+    function tlsStringToVersion(string) {
+      const version = TLS_VERSIONS.find(a => a[1] === string);
+      if (version) {
+        return version[0];
+      }
+      return 0;
+    }
+
+    const prefs = [];
+
+    const minimum = tlsStringToVersion(value.minimum);
+    if (minimum) {
+      prefs["security.tls.version.min"] = minimum;
+    }
+
+    const maximum = tlsStringToVersion(value.maximum);
+    if (maximum) {
+      prefs["security.tls.version.max"] = maximum;
+    }
+
+    return prefs;
+  },
+});
+
 this.privacy = class extends ExtensionAPI {
   getAPI(context) {
     return {
@@ -232,6 +268,32 @@ this.privacy = class extends ExtensionAPI {
               }
 
               return "default";
+            },
+          }),
+          tlsVersionRestriction: getSettingsAPI({
+            context,
+            name: "network.tlsVersionRestriction",
+            callback() {
+              function tlsVersionToString(pref) {
+                const value = Services.prefs.getIntPref(pref);
+                const version = TLS_VERSIONS.find(a => a[0] === value);
+                if (version) {
+                  return version[1];
+                }
+                return "unknown";
+              }
+
+              return {
+                minimum: tlsVersionToString("security.tls.version.min"),
+                maximum: tlsVersionToString("security.tls.version.max"),
+              };
+            },
+            validate() {
+              if (!context.extension.isPrivileged) {
+                throw new ExtensionError(
+                  "tlsVersionRestriction can be set by privileged extensions only."
+                );
+              }
             },
           }),
         },
