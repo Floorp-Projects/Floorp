@@ -63,6 +63,9 @@ license:
         - .c
         - .cc
         - .cpp
+        - .css
+        - .dtd
+        - .ftl
         - .h
         - .html
         - .js
@@ -70,8 +73,10 @@ license:
         - .jsx
         - .m
         - .mm
+        - .properties
         - .py
         - .rs
+        - .svg
         - .xhtml
         - .xml
         - .xul
