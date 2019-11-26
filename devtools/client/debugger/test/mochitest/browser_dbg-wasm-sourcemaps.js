@@ -20,6 +20,7 @@ add_task(async function() {
 
   info("Set breakpoint and reload the page.");
   ok(true, "Original sources exist");
+  await waitForSources(dbg, "fib.c");
   await selectSource(dbg, "fib.c");
   await addBreakpoint(dbg, "fib.c", 10);
 
