@@ -1057,7 +1057,12 @@
       "label": "Hongkong_Post_Root_CA_3",
       "binNumber": 210,
       "sha256Fingerprint": "Wi/APwyDsJC7+kBgSwmIRGx2Nhg9+YRuFxAaRH+479Y="
+    },
+    {
+      "label": "Entrust_Root_Certification_Authority___G4",
+      "binNumber": 211,
+      "sha256Fingerprint": "2zUX0fZzKi1auXxTPscHee4ycKYvtKxCODckYObwHog="
     }
   ],
-  "maxBin": 210
+  "maxBin": 211
 }
