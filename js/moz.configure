@@ -491,8 +491,8 @@ js_option('--enable-typed-objects',
           default=default_typed_objects,
           help='{Enable|Disable} typed objects')
 
-set_config('ENABLE_TYPED_OBJECTS', depends_if('--enable-typed-objects')(lambda x: True))
-set_define('ENABLE_TYPED_OBJECTS', depends_if('--enable-typed-objects')(lambda x: True))
+set_config('JS_HAS_TYPED_OBJECTS', depends_if('--enable-typed-objects')(lambda x: True))
+set_define('JS_HAS_TYPED_OBJECTS', depends_if('--enable-typed-objects')(lambda x: True))
 
 
 # Support for WebAssembly bulk memory operations.

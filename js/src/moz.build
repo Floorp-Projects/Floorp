@@ -380,7 +380,7 @@ SOURCES += [
     'vm/ProfilingStack.cpp',
 ]
 
-if CONFIG['ENABLE_INTL_API']:
+if CONFIG['JS_HAS_INTL_API']:
     UNIFIED_SOURCES += [
         'builtin/intl/Collator.cpp',
         'builtin/intl/CommonFunctions.cpp',
@@ -493,7 +493,7 @@ selfhosted_inputs = [
     'builtin/intl/NumberFormat.js',
     'builtin/intl/PluralRules.js',
     'builtin/intl/RelativeTimeFormat.js',
-] if CONFIG['ENABLE_INTL_API'] else [])
+] if CONFIG['JS_HAS_INTL_API'] else [])
 
 # Prepare self-hosted JS code for embedding
 GeneratedFile('selfhosted.out.h', 'selfhosted.js',
