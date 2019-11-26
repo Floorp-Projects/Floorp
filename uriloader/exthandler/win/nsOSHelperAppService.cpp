@@ -390,83 +390,109 @@ NS_IMETHODIMP
 nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
                                         const nsACString& aFileExt,
                                         bool* aFound, nsIMIMEInfo** aMIMEInfo) {
-  *aFound = true;
+  *aFound = false;
 
   const nsCString& flatType = PromiseFlatCString(aMIMEType);
-  const nsCString& flatExt = PromiseFlatCString(aFileExt);
-
   nsAutoString fileExtension;
-  /* XXX The Equals is a gross hack to wallpaper over the most common Win32
-   * extension issues caused by the fix for bug 116938.  See bug
+  CopyUTF8toUTF16(aFileExt, fileExtension);
+
+  /* XXX The octet-stream check is a gross hack to wallpaper over the most
+   * common Win32 extension issues caused by the fix for bug 116938.  See bug
    * 120327, comment 271 for why this is needed.  Not even sure we
    * want to remove this once we have fixed all this stuff to work
    * right; any info we get from the OS on this type is pretty much
    * useless....
-   * We'll do extension-based lookup for this type later in this function.
    */
-  if (!aMIMEType.IsEmpty() &&
-      !aMIMEType.LowerCaseEqualsLiteral(APPLICATION_OCTET_STREAM)) {
-    // try to use the windows mime database to see if there is a mapping to a
-    // file extension
-    GetExtensionFromWindowsMimeDatabase(aMIMEType, fileExtension);
-    LOG(("Windows mime database: extension '%s'\n", fileExtension.get()));
-  }
-  // If we found an extension for the type, do the lookup
-  RefPtr<nsMIMEInfoWin> mi;
-  if (!fileExtension.IsEmpty())
-    mi = GetByExtension(fileExtension, flatType.get());
-  LOG(("Extension lookup on '%s' found: 0x%p\n", fileExtension.get(),
-       mi.get()));
+  bool haveMeaningfulMimeType =
+      !aMIMEType.IsEmpty() &&
+      !aMIMEType.LowerCaseEqualsLiteral(APPLICATION_OCTET_STREAM);
+  LOG(("Extension lookup on '%s' with mimetype '%s'%s\n", fileExtension.get(),
+       flatType.get(),
+       haveMeaningfulMimeType ? " (treated as meaningful)" : ""));
 
-  bool hasDefault = false;
-  if (mi) {
-    mi->GetHasDefaultHandler(&hasDefault);
-    // OK. We might have the case that |aFileExt| is a valid extension for the
-    // mimetype we were given. In that case, we do want to append aFileExt
-    // to the mimeinfo that we have. (E.g.: We are asked for video/mpeg and
-    // .mpg, but the primary extension for video/mpeg is .mpeg. But because
-    // .mpg is an extension for video/mpeg content, we want to append it)
-    if (!aFileExt.IsEmpty() &&
-        typeFromExtEquals(NS_ConvertUTF8toUTF16(flatExt).get(),
-                          flatType.get())) {
-      LOG(
-          ("Appending extension '%s' to mimeinfo, because its mimetype is "
-           "'%s'\n",
-           flatExt.get(), flatType.get()));
-      bool extExist = false;
-      mi->ExtensionExists(aFileExt, &extExist);
-      if (!extExist) mi->AppendExtension(aFileExt);
-    }
+  RefPtr<nsMIMEInfoWin> mi;
+
+  // We should have *something* to go on here.
+  if (fileExtension.IsEmpty() && !haveMeaningfulMimeType) {
+    mi = new nsMIMEInfoWin(flatType.get());
+    mi.forget(aMIMEInfo);
+    return NS_OK;
   }
-  if (!mi || !hasDefault) {
-    RefPtr<nsMIMEInfoWin> miByExt =
-        GetByExtension(NS_ConvertUTF8toUTF16(aFileExt), flatType.get());
-    LOG(("Ext. lookup for '%s' found 0x%p\n", flatExt.get(), miByExt.get()));
-    if (!miByExt && mi) {
-      mi.forget(aMIMEInfo);
-      return NS_OK;
-    }
-    if (miByExt && !mi) {
-      miByExt.forget(aMIMEInfo);
-      return NS_OK;
-    }
-    if (!miByExt && !mi) {
-      *aFound = false;
-      mi = new nsMIMEInfoWin(flatType);
+
+  nsAutoString extensionFromMimeType;
+  if (haveMeaningfulMimeType) {
+    GetExtensionFromWindowsMimeDatabase(aMIMEType, extensionFromMimeType);
+    if (extensionFromMimeType.IsEmpty()) {
+      // We can't verify the mime type and file extension make sense.
+      mi = new nsMIMEInfoWin(flatType.get());
       if (!aFileExt.IsEmpty()) {
         mi->AppendExtension(aFileExt);
       }
-
       mi.forget(aMIMEInfo);
       return NS_OK;
     }
+  }
+  // Either fileExtension or extensionFromMimeType must now be non-empty.
 
-    // if we get here, mi has no default app. copy from extension lookup.
-    nsCOMPtr<nsIFile> defaultApp;
-    nsAutoString desc;
-    miByExt->GetDefaultDescription(desc);
+  *aFound = true;
 
-    mi->SetDefaultDescription(desc);
+  // On Windows, we prefer the file extension for lookups over the mimetype,
+  // because that's how windows does things.
+  // If we have no file extension or it doesn't match the mimetype, use the
+  // mime type's default file extension instead.
+  bool usedMimeTypeExtensionForLookup = false;
+  if (fileExtension.IsEmpty() ||
+      (haveMeaningfulMimeType &&
+       !typeFromExtEquals(fileExtension.get(), flatType.get()))) {
+    usedMimeTypeExtensionForLookup = true;
+    fileExtension = extensionFromMimeType;
+    LOG(("Now using '%s' mimetype's default file extension '%s' for lookup\n",
+         flatType.get(), fileExtension.get()));
+  }
+
+  // If we have an extension, use it for lookup:
+  mi = GetByExtension(fileExtension, flatType.get());
+  LOG(("Extension lookup on '%s' found: 0x%p\n", fileExtension.get(),
+       mi.get()));
+
+  if (mi) {
+    bool hasDefault = false;
+    mi->GetHasDefaultHandler(&hasDefault);
+    // If we don't find a default handler description, see if we can find one
+    // using the mimetype.
+    if (!hasDefault && !usedMimeTypeExtensionForLookup) {
+      RefPtr<nsMIMEInfoWin> miFromMimeType =
+          GetByExtension(extensionFromMimeType, flatType.get());
+      LOG(("Mime-based ext. lookup for '%s' found 0x%p\n",
+           extensionFromMimeType.get(), miFromMimeType.get()));
+      if (miFromMimeType) {
+        nsAutoString desc;
+        miFromMimeType->GetDefaultDescription(desc);
+        mi->SetDefaultDescription(desc);
+      }
+    }
+    mi.forget(aMIMEInfo);
+    return NS_OK;
+  }
+
+  // The extension didn't work. Try the extension from the mimetype if
+  // different:
+  if (!extensionFromMimeType.IsEmpty() && !usedMimeTypeExtensionForLookup) {
+    mi = GetByExtension(extensionFromMimeType, flatType.get());
+    LOG(("Mime-based ext. lookup for '%s' found 0x%p\n",
+         extensionFromMimeType.get(), mi.get()));
+  }
+  if (mi) {
+    mi.forget(aMIMEInfo);
+    return NS_OK;
+  }
+  // This didn't work either, so just return an empty dummy mimeinfo.
+  *aFound = false;
+  mi = new nsMIMEInfoWin(flatType.get());
+  // If we didn't resort to the mime type's extension, we must have had a
+  // valid extension, so stick it on the mime info.
+  if (!usedMimeTypeExtensionForLookup) {
+    mi->AppendExtension(aFileExt);
   }
   mi.forget(aMIMEInfo);
   return NS_OK;
