@@ -930,20 +930,19 @@ void nsRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
            aRootNode == RangeUtils::ComputeRootNode(aEndBoundary.Container())),
       "Wrong root");
 
-  MOZ_ASSERT(
-      !aRootNode || (!aStartBoundary.IsSet() && !aEndBoundary.IsSet()) ||
-          (aStartBoundary.Container()->IsContent() &&
-           aEndBoundary.Container()->IsContent() &&
-           aRootNode ==
-               RangeUtils::ComputeRootNode(aStartBoundary.Container()) &&
-           aRootNode ==
-               RangeUtils::ComputeRootNode(aEndBoundary.Container())) ||
-          (!aRootNode->GetParentNode() &&
-           (aRootNode->IsDocument() || aRootNode->IsAttr() ||
-            aRootNode->IsDocumentFragment() ||
-            /*For backward compatibility*/
-            aRootNode->IsContent())),
-      "Bad root");
+  MOZ_ASSERT(!aRootNode || (!aStartBoundary.IsSet() && !aEndBoundary.IsSet()) ||
+                 (aStartBoundary.Container()->IsContent() &&
+                  aEndBoundary.Container()->IsContent() &&
+                  aRootNode ==
+                      RangeUtils::ComputeRootNode(aStartBoundary.Container()) &&
+                  aRootNode ==
+                      RangeUtils::ComputeRootNode(aEndBoundary.Container())) ||
+                 (!aRootNode->GetParentNode() &&
+                  (aRootNode->IsDocument() || aRootNode->IsAttr() ||
+                   aRootNode->IsDocumentFragment() ||
+                   /*For backward compatibility*/
+                   aRootNode->IsContent())),
+             "Bad root");
 
   if (mRoot != aRootNode) {
     if (mRoot) {

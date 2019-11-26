@@ -151,8 +151,7 @@ already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateAudioDecoder(
     return nullptr;
   }
 
-  RefPtr<RemoteMediaDataDecoder> object = new RemoteMediaDataDecoder(
-      child);
+  RefPtr<RemoteMediaDataDecoder> object = new RemoteMediaDataDecoder(child);
 
   return object.forget();
 }
@@ -196,8 +195,7 @@ already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateVideoDecoder(
     return nullptr;
   }
 
-  RefPtr<RemoteMediaDataDecoder> object = new RemoteMediaDataDecoder(
-      child);
+  RefPtr<RemoteMediaDataDecoder> object = new RemoteMediaDataDecoder(child);
 
   return object.forget();
 }

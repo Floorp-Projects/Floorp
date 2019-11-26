@@ -341,8 +341,8 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
         uint32_t outFrames = outSize;
 
         const T* in = static_cast<const T*>(c.mChannelData[i]);
-        dom::WebAudioUtils::SpeexResamplerProcess(aResampler.get(), i, in, &inFrames, out,
-                                                  &outFrames);
+        dom::WebAudioUtils::SpeexResamplerProcess(aResampler.get(), i, in,
+                                                  &inFrames, out, &outFrames);
         MOZ_ASSERT(inFrames == c.mDuration);
 
         bufferPtrs[i] = out;

@@ -90,7 +90,7 @@ class Http3Session final : public nsAHttpTransaction,
 
   const static uint32_t kDefaultReadAmount = 2048;
 
-  void CloseStream(Http3Stream* aStream,  nsresult aResult);
+  void CloseStream(Http3Stream* aStream, nsresult aResult);
 
   void SetCleanShutdown(bool aCleanShutdown) {
     mCleanShutdown = aCleanShutdown;
@@ -172,4 +172,4 @@ NS_DEFINE_STATIC_IID_ACCESSOR(Http3Session, NS_HTTP3SESSION_IID);
 }  // namespace net
 }  // namespace mozilla
 
-#endif // Http3Session_H__
+#endif  // Http3Session_H__

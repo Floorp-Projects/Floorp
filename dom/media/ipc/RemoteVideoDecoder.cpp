@@ -156,7 +156,7 @@ MediaResult RemoteVideoDecoderChild::ProcessOutput(
       // of the SurfaceDescriptor, and is responsible for making sure that
       // it gets deallocated.
       SurfaceDescriptorRemoteDecoder remoteSD =
-        static_cast<const SurfaceDescriptorGPUVideo&>(data.sd());
+          static_cast<const SurfaceDescriptorGPUVideo&>(data.sd());
       remoteSD.source() = Some(GetManager()->GetSource());
       image = new GPUVideoImage(GetManager(), remoteSD, data.frameSize());
     }

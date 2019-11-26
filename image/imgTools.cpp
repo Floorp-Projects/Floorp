@@ -57,14 +57,16 @@ static nsresult sniff_mimetype_callback(nsIInputStream* in, void* data,
 }
 
 // Provides WeakPtr for imgINotificationObserver
-class NotificationObserverWrapper : public imgINotificationObserver,
-                                    public mozilla::SupportsWeakPtr<NotificationObserverWrapper> {
+class NotificationObserverWrapper
+    : public imgINotificationObserver,
+      public mozilla::SupportsWeakPtr<NotificationObserverWrapper> {
  public:
   NS_DECL_ISUPPORTS
   NS_FORWARD_IMGINOTIFICATIONOBSERVER(mObserver->)
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsGeolocationRequest)
 
-  explicit NotificationObserverWrapper(imgINotificationObserver* observer) : mObserver(observer) {}
+  explicit NotificationObserverWrapper(imgINotificationObserver* observer)
+      : mObserver(observer) {}
 
  private:
   virtual ~NotificationObserverWrapper() = default;
@@ -98,10 +100,11 @@ class ImageDecoderListener final : public nsIStreamListener,
       channel->GetContentType(mimeType);
 
       if (aInputStream) {
-        // Look at the first few bytes and see if we can tell what the data is from
-        // that since servers tend to lie. :(
+        // Look at the first few bytes and see if we can tell what the data is
+        // from that since servers tend to lie. :(
         uint32_t unused;
-        aInputStream->ReadSegments(sniff_mimetype_callback, &mimeType, aCount, &unused);
+        aInputStream->ReadSegments(sniff_mimetype_callback, &mimeType, aCount,
+                                   &unused);
       }
 
       RefPtr<ProgressTracker> tracker = new ProgressTracker();
@@ -122,14 +125,12 @@ class ImageDecoderListener final : public nsIStreamListener,
   }
 
   NS_IMETHOD
-  OnStartRequest(nsIRequest* aRequest) override {
-    return NS_OK;
-  }
+  OnStartRequest(nsIRequest* aRequest) override { return NS_OK; }
 
   NS_IMETHOD
   OnStopRequest(nsIRequest* aRequest, nsresult aStatus) override {
-    // Depending on the error, we might not have received any data yet, in which case we would not
-    // have an |mImage|
+    // Depending on the error, we might not have received any data yet, in which
+    // case we would not have an |mImage|
     if (mImage) {
       mImage->OnImageDataComplete(aRequest, nullptr, aStatus, true);
     }

@@ -15,8 +15,7 @@ static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
     {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
-    {nsShellService_ContractID, &knsShellService_CID},
-    {nullptr}};
+    {nsShellService_ContractID, &knsShellService_CID}, {nullptr}};
 
 extern const mozilla::Module kBrowserModule = {mozilla::Module::kVersion,
                                                kBrowserCIDs, kBrowserContracts};

@@ -13,21 +13,21 @@
 #include <stdint.h>  // uint8_t, uint32_t
 #include <stdlib.h>  // getenv
 
-#include "jit/BaselineFrame.h"  // js::jit::BaselineFrame
+#include "jit/BaselineFrame.h"   // js::jit::BaselineFrame
 #include "jit/JSJitFrameIter.h"  // js::jit::{FrameType,InlineFrameIterator,JSJitFrameIter,MaybeReadFallback,SnapshotIterator}
-#include "js/GCAPI.h"  // JS::AutoSuppressGCAnalysis
-#include "js/Principals.h"  // JSSubsumesOp
-#include "js/RootingAPI.h"  // JS::Rooted
-#include "vm/Activation.h"  // js::Activation{,Iterator}
+#include "js/GCAPI.h"            // JS::AutoSuppressGCAnalysis
+#include "js/Principals.h"       // JSSubsumesOp
+#include "js/RootingAPI.h"       // JS::Rooted
+#include "vm/Activation.h"       // js::Activation{,Iterator}
 #include "vm/EnvironmentObject.h"  // js::CallObject
-#include "vm/JitActivation.h"  // js::jit::JitActivation
-#include "vm/JSContext.h"  // JSContext
+#include "vm/JitActivation.h"      // js::jit::JitActivation
+#include "vm/JSContext.h"          // JSContext
 #include "vm/JSFunction.h"  // js::CanReuseScriptForClone, js::FunctionFlags, JSFunction
 #include "vm/JSScript.h"  // js::PCToLineNumber, JSScript, js::ScriptSource
-#include "vm/Runtime.h"  // JSRuntime
+#include "vm/Runtime.h"   // JSRuntime
 #include "vm/Stack.h"  // js::{AbstractFramePtr,InterpreterFrame,MaybeCheckAliasing}
 #include "wasm/WasmFrameIter.h"  // js::wasm::WasmFrameIter
-#include "wasm/WasmInstance.h"  // js::wasm::Instance
+#include "wasm/WasmInstance.h"   // js::wasm::Instance
 
 #include "jit/JSJitFrameIter-inl.h"  // js::jit::JSJitFrameIter::baselineFrame{,NumValueSlots}
 #include "vm/Stack-inl.h"  // js::AbstractFramePtr::*
@@ -49,11 +49,11 @@ using js::ArgumentsObject;
 using js::CallObject;
 using js::FrameIter;
 using js::JitFrameIter;
-using js::jit::JSJitFrameIter;
 using js::NonBuiltinFrameIter;
 using js::NonBuiltinScriptFrameIter;
 using js::OnlyJSJitFrameIter;
 using js::ScriptSource;
+using js::jit::JSJitFrameIter;
 
 JitFrameIter::JitFrameIter(const JitFrameIter& another) { *this = another; }
 

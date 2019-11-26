@@ -80,8 +80,8 @@ class Http3Stream final : public nsAHttpSegmentReader,
    *      After SENDING_BODY, the state transfers to READING_HEADERS.
    *  - EARLY_RESPONSE:
    *      The server may send STOP_SENDING frame with error HTTP_EARLY_RESPONSE.
-   *      That error means that the server is not interested in the request body.
-   *      In this state the server will just ignore the request body.
+   *      That error means that the server is not interested in the request
+   *      body. In this state the server will just ignore the request body.
    *  After sending a request, the transaction reads data:
    *  - READING_HEADERS:
    *      In this state Http3Session::ReadResponseHeaders will be called to read

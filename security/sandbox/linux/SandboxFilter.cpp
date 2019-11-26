@@ -559,7 +559,7 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
       case __NR_membarrier:
         return Allow();
 
-      // Signal handling
+        // Signal handling
 #if defined(ANDROID) || defined(MOZ_ASAN)
       case __NR_sigaltstack:
 #endif

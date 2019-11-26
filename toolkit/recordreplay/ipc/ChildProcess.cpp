@@ -319,9 +319,8 @@ void ChildProcessInfo::MaybePing() {
   if (mSentTerminateMessage || mMightRewind) {
     size_t TerminateSeconds = PingIntervalSeconds * MaxStalledPings;
     if (now >= mLastPingTime + TimeDuration::FromSeconds(TerminateSeconds)) {
-      OnCrash(mMightRewind
-              ? "Rewinding child process non-responsive"
-              : "Child process non-responsive");
+      OnCrash(mMightRewind ? "Rewinding child process non-responsive"
+                           : "Child process non-responsive");
     }
     return;
   }
@@ -376,7 +375,8 @@ void ChildProcessInfo::WaitUntilPaused() {
       // If the child crashed but we recovered, we don't have to keep waiting.
       break;
     } else {
-      TimeStamp deadline = TimeStamp::Now() + TimeDuration::FromSeconds(PingIntervalSeconds);
+      TimeStamp deadline =
+          TimeStamp::Now() + TimeDuration::FromSeconds(PingIntervalSeconds);
       gMonitor->WaitUntil(deadline);
     }
   }

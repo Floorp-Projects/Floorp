@@ -75,8 +75,7 @@ bool IsStructurallyValidScriptTag(mozilla::Span<const CharT> script) {
          std::all_of(str, str + length, mozilla::IsAsciiAlpha<CharT>);
 }
 
-template bool IsStructurallyValidScriptTag(
-    mozilla::Span<const char> script);
+template bool IsStructurallyValidScriptTag(mozilla::Span<const char> script);
 template bool IsStructurallyValidScriptTag(
     mozilla::Span<const Latin1Char> script);
 template bool IsStructurallyValidScriptTag(
@@ -96,8 +95,7 @@ bool IsStructurallyValidRegionTag(mozilla::Span<const CharT> region) {
           std::all_of(str, str + length, mozilla::IsAsciiDigit<CharT>));
 }
 
-template bool IsStructurallyValidRegionTag(
-    mozilla::Span<const char> region);
+template bool IsStructurallyValidRegionTag(mozilla::Span<const char> region);
 template bool IsStructurallyValidRegionTag(
     mozilla::Span<const Latin1Char> region);
 template bool IsStructurallyValidRegionTag(
@@ -1361,8 +1359,8 @@ bool LanguageTagParser::parseBaseName(JSContext* cx,
   if (ok) {
     return true;
   }
-  if (UniqueChars localeChars = DuplicateString(cx, locale.data(),
-                                                locale.size())) {
+  if (UniqueChars localeChars =
+          DuplicateString(cx, locale.data(), locale.size())) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INVALID_LANGUAGE_TAG, localeChars.get());
   }

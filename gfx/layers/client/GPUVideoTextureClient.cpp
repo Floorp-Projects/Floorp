@@ -16,9 +16,7 @@ using namespace gfx;
 GPUVideoTextureData::GPUVideoTextureData(IGPUVideoSurfaceManager* aManager,
                                          const SurfaceDescriptorGPUVideo& aSD,
                                          const gfx::IntSize& aSize)
-    : mManager(aManager),
-      mSD(aSD), mSize(aSize)
-{}
+    : mManager(aManager), mSD(aSD), mSize(aSize) {}
 
 GPUVideoTextureData::~GPUVideoTextureData() {}
 

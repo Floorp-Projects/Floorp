@@ -1054,7 +1054,8 @@ bool TextureClient::InitIPDLActor(CompositableForwarder* aForwarder) {
         }
       }
       mActor->mCompositableForwarder = aForwarder;
-      mActor->mUsesImageBridge = aForwarder->GetTextureForwarder()->UsesImageBridge();
+      mActor->mUsesImageBridge =
+          aForwarder->GetTextureForwarder()->UsesImageBridge();
     }
     return true;
   }
@@ -1492,7 +1493,8 @@ void TextureClient::GetSurfaceDescriptorRemoteDecoder(
   MOZ_RELEASE_ASSERT(mData);
   mData->GetSubDescriptor(&subDesc);
 
-  *aOutDesc = SurfaceDescriptorRemoteDecoder(handle, std::move(subDesc), Nothing());
+  *aOutDesc =
+      SurfaceDescriptorRemoteDecoder(handle, std::move(subDesc), Nothing());
 }
 
 class MemoryTextureReadLock : public NonBlockingTextureReadLock {

@@ -7,18 +7,18 @@
 #include "vm/Stack-inl.h"
 
 #include "mozilla/ArrayUtils.h"  // mozilla::ArrayLength
-#include "mozilla/Maybe.h"  // mozilla::Maybe
+#include "mozilla/Maybe.h"       // mozilla::Maybe
 
 #include <algorithm>  // std::max
-#include <stddef.h>  // size_t
-#include <stdint.h>  // uint8_t, uint32_t
-#include <utility>  // std::move
+#include <stddef.h>   // size_t
+#include <stdint.h>   // uint8_t, uint32_t
+#include <utility>    // std::move
 
 #include "debugger/DebugAPI.h"
 #include "gc/Marking.h"
 #include "gc/Tracer.h"  // js::TraceRoot
 #include "jit/JitcodeMap.h"
-#include "js/Value.h"  // JS::Value
+#include "js/Value.h"      // JS::Value
 #include "vm/FrameIter.h"  // js::FrameIter
 #include "vm/JSContext.h"
 #include "vm/Opcodes.h"

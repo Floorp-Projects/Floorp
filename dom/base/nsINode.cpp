@@ -354,7 +354,8 @@ static nsIContent* GetRootForContentSubtree(nsIContent* aContent) {
   if (ShadowRoot* containingShadow = aContent->GetContainingShadow()) {
     return containingShadow;
   }
-  if (nsIContent* nativeAnonRoot = aContent->GetClosestNativeAnonymousSubtreeRoot()) {
+  if (nsIContent* nativeAnonRoot =
+          aContent->GetClosestNativeAnonymousSubtreeRoot()) {
     return nativeAnonRoot;
   }
   if (Document* doc = aContent->GetUncomposedDoc()) {
@@ -530,12 +531,10 @@ void nsINode::LastRelease() {
     UnsetFlags(NODE_HAS_LISTENERMANAGER);
   }
 
-
   ReleaseWrapper(this);
 
   FragmentOrElement::RemoveBlackMarkedNode(this);
 }
-
 
 std::ostream& operator<<(std::ostream& aStream, const nsINode& aNode) {
   nsAutoString elemDesc;

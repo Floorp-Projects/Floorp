@@ -312,9 +312,7 @@ StyleSheetInfo::StyleSheetInfo(StyleSheetInfo& aCopy, StyleSheet* aPrimarySheet)
   MOZ_COUNT_CTOR(StyleSheetInfo);
 }
 
-StyleSheetInfo::~StyleSheetInfo() {
-  MOZ_COUNT_DTOR(StyleSheetInfo);
-}
+StyleSheetInfo::~StyleSheetInfo() { MOZ_COUNT_DTOR(StyleSheetInfo); }
 
 StyleSheetInfo* StyleSheetInfo::CloneFor(StyleSheet* aPrimarySheet) {
   return new StyleSheetInfo(*this, aPrimarySheet);

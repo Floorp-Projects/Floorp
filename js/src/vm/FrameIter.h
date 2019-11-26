@@ -8,9 +8,9 @@
 #define vm_FrameIter_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Atomics.h"  // mozilla::Atomic, mozilla::Relaxed
+#include "mozilla/Atomics.h"     // mozilla::Atomic, mozilla::Relaxed
 #include "mozilla/Attributes.h"  // MOZ_IMPLICIT, MOZ_RAII
-#include "mozilla/Maybe.h"  // mozilla::Maybe
+#include "mozilla/Maybe.h"       // mozilla::Maybe
 #include "mozilla/MaybeOneOf.h"  // mozilla::MaybeOneOf
 
 #include <stddef.h>  // size_t
@@ -19,12 +19,12 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "jit/JSJitFrameIter.h"  // js::jit::{InlineFrameIterator,JSJitFrameIter}
-#include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
-#include "js/TypeDecls.h"  // jsbytecode
-#include "js/UniquePtr.h"  // js::UniquePtr
-#include "js/Value.h"  // JS::Value
-#include "vm/Activation.h"  // js::InterpreterActivation
-#include "vm/Stack.h"  // js::{AbstractFramePtr,MaybeCheckAliasing}
+#include "js/RootingAPI.h"       // JS::Handle, JS::Rooted
+#include "js/TypeDecls.h"        // jsbytecode
+#include "js/UniquePtr.h"        // js::UniquePtr
+#include "js/Value.h"            // JS::Value
+#include "vm/Activation.h"       // js::InterpreterActivation
+#include "vm/Stack.h"            // js::{AbstractFramePtr,MaybeCheckAliasing}
 #include "wasm/WasmConstants.h"  // js::wasm::Trap
 #include "wasm/WasmFrameIter.h"  // js::wasm::{ExitReason,RegisterState,WasmFrameIter}
 #include "wasm/WasmTypes.h"  // js::wasm::{Frame,TrapData}

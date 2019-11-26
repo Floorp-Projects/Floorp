@@ -10,21 +10,21 @@
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint8_t, uint32_t
-#include <utility>  // std::move
+#include <utility>   // std::move
 
-#include "debugger/DebugAPI.h"  // js::DebugAPI
+#include "debugger/DebugAPI.h"        // js::DebugAPI
 #include "jit/RematerializedFrame.h"  // js::jit::RematerializedFrame
-#include "js/AllocPolicy.h"  // js::ReportOutOfMemory
-#include "vm/EnvironmentObject.h"  // js::DebugEnvironments
-#include "vm/FrameIter.h"  // js::jit::InlineFrameIterator
-#include "vm/JSContext.h"  // JSContext
-#include "vm/Realm.h"  // js::AutoRealmUnchecked
-#include "wasm/WasmCode.h"  // js::wasm::Code
-#include "wasm/WasmConstants.h"  // js::wasm::Trap
+#include "js/AllocPolicy.h"           // js::ReportOutOfMemory
+#include "vm/EnvironmentObject.h"     // js::DebugEnvironments
+#include "vm/FrameIter.h"             // js::jit::InlineFrameIterator
+#include "vm/JSContext.h"             // JSContext
+#include "vm/Realm.h"                 // js::AutoRealmUnchecked
+#include "wasm/WasmCode.h"            // js::wasm::Code
+#include "wasm/WasmConstants.h"       // js::wasm::Trap
 #include "wasm/WasmFrameIter.h"  // js::wasm::{RegisterState,StartUnwinding,UnwindState}
 #include "wasm/WasmInstance.h"  // js::wasm::Instance
-#include "wasm/WasmProcess.h"  // js::wasm::LookupCode
-#include "wasm/WasmTypes.h"  // js::wasm::TlsData
+#include "wasm/WasmProcess.h"   // js::wasm::LookupCode
+#include "wasm/WasmTypes.h"     // js::wasm::TlsData
 
 #include "vm/Realm-inl.h"  // js::~AutoRealm
 
@@ -63,7 +63,8 @@ js::jit::JitActivation::~JitActivation() {
   clearRematerializedFrames();
 }
 
-void js::jit::JitActivation::setBailoutData(jit::BailoutFrameInfo* bailoutData) {
+void js::jit::JitActivation::setBailoutData(
+    jit::BailoutFrameInfo* bailoutData) {
   MOZ_ASSERT(!bailoutData_);
   bailoutData_ = bailoutData;
 }
@@ -154,8 +155,8 @@ js::jit::RematerializedFrame* js::jit::JitActivation::lookupRematerializedFrame(
   return nullptr;
 }
 
-void js::jit::JitActivation::removeRematerializedFramesFromDebugger(JSContext* cx,
-                                                                uint8_t* top) {
+void js::jit::JitActivation::removeRematerializedFramesFromDebugger(
+    JSContext* cx, uint8_t* top) {
   // Ion bailout can fail due to overrecursion and OOM. In such cases we
   // cannot honor any further Debugger hooks on the frame, and need to
   // ensure that its Debugger.Frame entry is cleaned up.
@@ -219,8 +220,9 @@ void js::jit::JitActivation::traceIonRecovery(JSTracer* trc) {
   }
 }
 
-void js::jit::JitActivation::startWasmTrap(wasm::Trap trap, uint32_t bytecodeOffset,
-                                       const wasm::RegisterState& state) {
+void js::jit::JitActivation::startWasmTrap(wasm::Trap trap,
+                                           uint32_t bytecodeOffset,
+                                           const wasm::RegisterState& state) {
   MOZ_ASSERT(!isWasmTrapping());
 
   bool unwound;

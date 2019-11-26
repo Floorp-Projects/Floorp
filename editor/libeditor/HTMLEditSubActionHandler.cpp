@@ -5012,9 +5012,8 @@ nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
             previousEditableSibling->NodeInfo()->NameAtom() &&
         aCurPoint.GetContainer()->NodeInfo()->NamespaceID() ==
             previousEditableSibling->NodeInfo()->NamespaceID()) {
-      nsresult rv =
-          MoveNodeToEndWithTransaction(MOZ_KnownLive(*aCurNode->AsContent()),
-                                       *previousEditableSibling);
+      nsresult rv = MoveNodeToEndWithTransaction(
+          MOZ_KnownLive(*aCurNode->AsContent()), *previousEditableSibling);
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -5030,8 +5029,7 @@ nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
       *aCurList ? GetPriorHTMLSibling(aCurNode, SkipWhitespace::Yes) : nullptr;
   if (!*aCurList ||
       (previousEditableSibling && previousEditableSibling != *aCurList)) {
-    nsAtom* containerName =
-        aCurPoint.GetContainer()->NodeInfo()->NameAtom();
+    nsAtom* containerName = aCurPoint.GetContainer()->NodeInfo()->NameAtom();
     // Create a new nested list of correct type.
     SplitNodeResult splitNodeResult =
         MaybeSplitAncestorsForInsertWithTransaction(
@@ -5053,9 +5051,8 @@ nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
   }
   // tuck the node into the end of the active list
   RefPtr<nsINode> container = *aCurList;
-  nsresult rv =
-      MoveNodeToEndWithTransaction(MOZ_KnownLive(*aCurNode->AsContent()),
-                                   *container);
+  nsresult rv = MoveNodeToEndWithTransaction(
+      MOZ_KnownLive(*aCurNode->AsContent()), *container);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }

@@ -22,7 +22,7 @@
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::WritableStreamDefaultWriter
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStream{Abort,CloseQueuedOrInFlight}
 #include "js/Promise.h"                                // JS::PromiseState
-#include "js/Value.h"  // JS::Value, JS::{Int32,Null}Value
+#include "js/Value.h"        // JS::Value, JS::{Int32,Null}Value
 #include "vm/Compartment.h"  // JS::Compartment
 #include "vm/Interpreter.h"  // js::GetAndClearException
 #include "vm/JSContext.h"    // JSContext

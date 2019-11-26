@@ -8,7 +8,7 @@
 
 #include "mozilla/ArrayUtils.h"  // mozilla::ArrayLength
 #include "mozilla/Assertions.h"  // MOZ_CRASH
-#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
+#include "mozilla/Utf8.h"        // mozilla::Utf8Unit
 
 #include <stdio.h>  // fflush, fprintf, fputs
 
@@ -19,8 +19,8 @@
 #include "js/CompilationAndEvaluation.h"  // JS::Evaluate
 #include "js/CompileOptions.h"            // JS::CompileOptions
 #include "js/RootingAPI.h"                // JS::Rooted
-#include "js/SourceText.h"  // JS::Source{Ownership,Text}
-#include "js/Value.h"       // JS::Value
+#include "js/SourceText.h"                // JS::Source{Ownership,Text}
+#include "js/Value.h"                     // JS::Value
 #include "shell/jsshell.h"  // js::shell::{reportWarnings,PrintStackTrace,sArg{c,v}}
 #include "vm/Interpreter.h"
 #include "vm/JSContext.h"  // js::PrintError

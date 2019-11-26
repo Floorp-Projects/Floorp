@@ -1300,10 +1300,10 @@ static inline void pages_decommit(void* aAddr, size_t aSize) {
         "[unhandlable oom] Failed to mmap, likely no more mappings "
         "available " __FILE__ " : " MOZ_STRINGIFY(__LINE__);
     if (errno == ENOMEM) {
-#ifndef ANDROID
+#  ifndef ANDROID
       fputs(out_of_mappings, stderr);
       fflush(stderr);
-#endif
+#  endif
       MOZ_CRASH_ANNOTATE(out_of_mappings);
     }
     MOZ_REALLY_CRASH(__LINE__);

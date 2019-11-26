@@ -17,16 +17,16 @@
 #include "builtin/Promise.h"                 // js::PromiseObject
 #include "builtin/streams/ClassSpecMacro.h"  // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::ReturnPromiseRejectedWithPendingError
-#include "builtin/streams/WritableStream.h"           // js::WritableStream
+#include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStreamCloseQueuedOrInFlight
 #include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriter{Abort,GetDesiredSize,Release,Write}
-#include "js/CallArgs.h"                              // JS::CallArgs{,FromVp}
-#include "js/Class.h"                        // js::ClassSpec, JS_NULL_CLASS_OPS
+#include "js/CallArgs.h"  // JS::CallArgs{,FromVp}
+#include "js/Class.h"     // js::ClassSpec, JS_NULL_CLASS_OPS
 #include "js/PropertySpec.h"  // JS{Function,Property}Spec, JS_{FS,PS}_END, JS_{FN,PSG}
-#include "js/RootingAPI.h"    // JS::Handle
-#include "js/Value.h"         // JS::Value
-#include "vm/Compartment.h"   // JS::Compartment
-#include "vm/JSContext.h"     // JSContext
+#include "js/RootingAPI.h"   // JS::Handle
+#include "js/Value.h"        // JS::Value
+#include "vm/Compartment.h"  // JS::Compartment
+#include "vm/JSContext.h"    // JSContext
 
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap, js::UnwrapAndTypeCheck{Argument,This}
 #include "vm/JSObject-inl.h"      // js::NewObjectWithClassProto
