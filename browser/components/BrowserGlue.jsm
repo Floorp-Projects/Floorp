@@ -2182,6 +2182,14 @@ BrowserGlue.prototype = {
       }
     });
 
+    // request startup of Chromium remote debugging protocol
+    // (observer will only be notified when --remote-debugger is passed)
+    if (AppConstants.ENABLE_REMOTE_AGENT) {
+      Services.tm.idleDispatchToMainThread(() => {
+        Services.obs.notifyObservers(null, "remote-startup-requested");
+      });
+    }
+
     // Marionette needs to be initialized as very last step
     Services.tm.idleDispatchToMainThread(() => {
       Services.obs.notifyObservers(null, "marionette-startup-requested");
