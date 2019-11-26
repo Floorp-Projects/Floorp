@@ -34,8 +34,9 @@ We will refer to the release that is going out as the *current* release.
 - [ ] Merge any remaining [automated L10N string PRs](https://github.com/mozilla-mobile/fenix/pull/6156).
 - [ ] Create a branch off of master (DO NOT PUSH YET) for the *current* milestone of format `releases/v2.3` (where 2.3 is the *current* milestone). After that, anything landing in master will be part of the next milestone.
 - [ ] On the Release branch, pin the AC version to the stable version ([example](https://github.com/mozilla-mobile/fenix/commit/e413da29f6a7a7d4a765817a9cd5687abbf27619)) with commit message "Issue #`<this releng issue>`: Pin to stable AC `<version>` for release v2.3" (replacing 2.3 with the version)
-- [ ] Go through the list of issues closed during this sprint and make sure they all have the correct milestone.
-- [ ] Add `eng:qa:needed` flags on each issue that still needs it.
+- For each issue closed since the last release (run `kotlinc -script automation/releasetools/PrintMentionedIssuesAndPrs.kts` to get a list [see script for details]):
+  - [ ] Ensure it has the correct milestone.
+  - [ ] Add `eng:qa:needed` flags on each issue that still needs it.
 - Note: You will need code review to make changes to the release branch after this point, because it is a protected branch.
     - [ ] Push the branch.
 
