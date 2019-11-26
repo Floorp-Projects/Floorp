@@ -21,6 +21,7 @@ using RequestHeaderTuples from "mozilla/net/PHttpChannelParams.h";
 using struct nsHttpAtom from "nsHttp.h";
 using class mozilla::net::nsHttpResponseHead from "nsHttpResponseHead.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
+using refcounted class nsIPropertyBag2 from "mozilla/dom/PropertyBagUtils.h";
 
 namespace mozilla {
 namespace net {
@@ -390,6 +391,7 @@ struct RedirectToRealChannelArgs {
   uint32_t? contentDisposition;
   nsString? contentDispositionFilename;
   uint64_t redirectIdentifier;
+  nsIPropertyBag2 properties;
 };
 
 
