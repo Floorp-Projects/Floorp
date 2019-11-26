@@ -67,6 +67,7 @@ shouldBe(1 * null ?? 3, 0);
 shouldBe(1 / null ?? 3, Infinity);
 shouldBe(isNaN(1 % null ?? 3), true);
 shouldBe(1 ** null ?? 3, 1);
+shouldBe((void 0) ?? 3, 3);
 
 const obj = {
       count: 0,
