@@ -24,6 +24,7 @@ categories:
     testing_doc:
         - testing/marionette
         - testing/geckodriver
+        - web-platform
     code_quality_doc:
         - tools/lint
     l10n_doc:
