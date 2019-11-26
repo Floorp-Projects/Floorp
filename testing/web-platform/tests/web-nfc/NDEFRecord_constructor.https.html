@@ -203,17 +203,33 @@
   }, 'NDEFRecord constructor with unknown record type');
 
   test(() => {
+    assert_throws(new TypeError, () => new NDEFRecord(
+        createRecord('foo.eXamPle.coM:bAr*-', "A string is not a BufferSource or NDEFMessage")),
+        'Only BufferSource and NDEFMessage are allowed to be the record data.');
+
     let buffer = new ArrayBuffer(4);
-    let buffer_view = new Uint8Array(buffer);
-    let original_data = new Uint8Array([1, 2, 3, 4]);
-    buffer_view.set(original_data);
-    const record = new NDEFRecord(createRecord('foo.eXamPle.coM:bAr*-', buffer));
-    assert_equals(record.recordType, 'foo.example.com:bAr*-', 'recordType');
-    assert_equals(record.mediaType, null, 'mediaType');
-    assert_array_equals(new Uint8Array(record.data.buffer), original_data,
-        'data has the same content with the original buffer');
-    assert_equals(record.toRecords(), null,
-        'toRecords() returns null if the payload is not an NDEF message.');
+    new Uint8Array(buffer).set([1, 2, 3, 4]);
+    // Feed ArrayBuffer.
+    {
+      const record = new NDEFRecord(createRecord('foo.eXamPle.coM:bAr*-', buffer));
+      assert_equals(record.recordType, 'foo.example.com:bAr*-', 'recordType');
+      assert_equals(record.mediaType, null, 'mediaType');
+      assert_array_equals(new Uint8Array(record.data.buffer), [1, 2, 3, 4],
+          'data has the same content with the original buffer');
+      assert_equals(record.toRecords(), null,
+          'toRecords() returns null if the payload is not an NDEF message.');
+    }
+    // Feed ArrayBufferView.
+    {
+      let buffer_view = new Uint8Array(buffer, 1);
+      const record = new NDEFRecord(createRecord('foo.eXamPle.coM:bAr*-', buffer_view));
+      assert_equals(record.recordType, 'foo.example.com:bAr*-', 'recordType');
+      assert_equals(record.mediaType, null, 'mediaType');
+      assert_array_equals(new Uint8Array(record.data.buffer), [2, 3, 4],
+          'data has the same content with the original buffer view');
+      assert_equals(record.toRecords(), null,
+          'toRecords() returns null if the payload is not an NDEF message.');
+    }
   }, 'NDEFRecord constructor with external record type');
 
   test(() => {
