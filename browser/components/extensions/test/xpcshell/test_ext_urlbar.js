@@ -5,11 +5,11 @@ const { AddonTestUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProviderExtension: "resource:///modules/UrlbarProviderExtension.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarQueryContext: "resource:///modules/UrlbarUtils.jsm",
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -130,13 +130,7 @@ add_task(async function test_registerProvider() {
     maxResults: 10,
     searchString: "*",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
   await controller.startQuery(queryContext);
 
   // Check the providers behavior has been setup properly.
@@ -248,13 +242,7 @@ add_task(async function test_onProviderResultsRequested() {
     maxResults: 10,
     searchString: "test",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
   await controller.startQuery(context);
 
   // Check isActive and isRestricting.
@@ -477,13 +465,7 @@ add_task(async function test_onProviderResultsRequested_searchEngines() {
     maxResults: 10,
     searchString: "test",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
   await controller.startQuery(context);
 
   // Check the results.  The first several are valid and should include "Test
@@ -589,13 +571,7 @@ add_task(async function test_activeAndInactiveProviders() {
     maxResults: 10,
     searchString: "test",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
   await controller.startQuery(context);
 
   // Check isActive and isRestricting.
@@ -659,13 +635,7 @@ add_task(async function test_threeActiveProviders() {
     maxResults: 10,
     searchString: "test",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
   await controller.startQuery(context);
 
   // Check isActive and isRestricting.
@@ -723,13 +693,7 @@ add_task(async function test_threeInactiveProviders() {
     maxResults: 10,
     searchString: "test",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
   await controller.startQuery(context);
 
   // Check isActive and isRestricting.
@@ -796,13 +760,7 @@ add_task(async function test_activeInactiveAndRestrictingProviders() {
     maxResults: 10,
     searchString: "test",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
   await controller.startQuery(context);
 
   // Check isActive and isRestricting.
@@ -861,13 +819,7 @@ add_task(async function test_heuristicRestricting() {
     maxResults: 10,
     searchString: "test",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
   await controller.startQuery(context);
 
   // Check the results.
@@ -919,13 +871,7 @@ add_task(async function test_heuristicNonRestricting() {
     maxResults: 10,
     searchString: "test",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
   await controller.startQuery(context);
 
   // Check the results.  The first result should be UnifiedComplete's heuristic.
@@ -971,13 +917,7 @@ add_task(async function test_onResultsRequestedNotImplemented() {
     maxResults: 10,
     searchString: "test",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
   await controller.startQuery(context);
 
   // Check isActive and isRestricting.
@@ -1036,13 +976,7 @@ add_task(async function test_badPayload() {
     maxResults: 10,
     searchString: "test",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
   await controller.startQuery(context);
 
   // Check the results.
@@ -1083,13 +1017,7 @@ add_task(async function test_onQueryCanceled() {
     maxResults: 10,
     searchString: "test",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
 
   let startPromise = controller.startQuery(context);
   controller.cancelQuery();
@@ -1135,13 +1063,7 @@ add_task(async function test_onBehaviorRequestedTimeout() {
     maxResults: 10,
     searchString: "test",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
 
   let currentTimeout = UrlbarProviderExtension.notificationTimeout;
   UrlbarProviderExtension.notificationTimeout = 0;
@@ -1201,13 +1123,7 @@ add_task(async function test_onResultsRequestedTimeout() {
     maxResults: 10,
     searchString: "test",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
 
   // Set the notification timeout.  In test_onBehaviorRequestedTimeout above, we
   // could set it to 0 because we were testing onBehaviorRequested, which is
@@ -1265,13 +1181,7 @@ add_task(async function test_privateBrowsing_not_allowed() {
     maxResults: 10,
     searchString: "*",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
   await controller.startQuery(queryContext);
   // Check the providers behavior has been setup properly.
   let provider = UrlbarProvidersManager.getProvider("Test-private");
@@ -1314,13 +1224,7 @@ add_task(async function test_privateBrowsing_not_allowed_onQueryCanceled() {
     maxResults: 10,
     searchString: "*",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
 
   let startPromise = controller.startQuery(context);
   controller.cancelQuery();
@@ -1370,13 +1274,7 @@ add_task(async function test_privateBrowsing_allowed() {
     maxResults: 10,
     searchString: "*",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
   await controller.startQuery(context);
 
   // Check isActive and isRestricting.
@@ -1428,13 +1326,7 @@ add_task(async function test_privateBrowsing_allowed_onQueryCanceled() {
     maxResults: 10,
     searchString: "*",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
 
   let startPromise = controller.startQuery(context);
   controller.cancelQuery();
@@ -1494,13 +1386,7 @@ add_task(async function test_nonPrivateBrowsing() {
     maxResults: 10,
     searchString: "test",
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
   await controller.startQuery(context);
 
   // Check isActive and isRestricting.

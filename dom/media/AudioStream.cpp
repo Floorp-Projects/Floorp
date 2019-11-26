@@ -25,6 +25,10 @@
 #endif
 #include "Tracing.h"
 
+// Use abort() instead of exception in SoundTouch.
+#define ST_NO_EXCEPTION_HANDLING 1
+#include "soundtouch/SoundTouchFactory.h"
+
 namespace mozilla {
 
 #undef LOG

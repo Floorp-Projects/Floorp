@@ -96,14 +96,14 @@ async function submitSomeCrossSiteFrames(locationMode) {
 
   await SpecialPowers.spawn(outerFrameBC, [], () => {
     let doc = content.document;
-    doc.getElementById("outer-username").value = "outer";
-    doc.getElementById("outer-password").value = "outerpass";
+    doc.getElementById("outer-username").setUserInput("outer");
+    doc.getElementById("outer-password").setUserInput("outerpass");
   });
 
   await SpecialPowers.spawn(innerFrameBC, [locationMode], doClick => {
     let doc = content.document;
-    doc.getElementById("inner-username").value = "inner";
-    doc.getElementById("inner-password").value = "innerpass";
+    doc.getElementById("inner-username").setUserInput("inner");
+    doc.getElementById("inner-password").setUserInput("innerpass");
     if (doClick) {
       doc.getElementById("inner-gobutton").click();
     } else {
@@ -138,8 +138,8 @@ async function submitSomeCrossSiteFrames(locationMode) {
 
   await SpecialPowers.spawn(outerFrameBC2, [locationMode], doClick => {
     let doc = content.document;
-    doc.getElementById("outer-username").value = "outer2";
-    doc.getElementById("outer-password").value = "outerpass2";
+    doc.getElementById("outer-username").setUserInput("outer2");
+    doc.getElementById("outer-password").setUserInput("outerpass2");
     if (doClick) {
       doc.getElementById("outer-gobutton").click();
     } else {

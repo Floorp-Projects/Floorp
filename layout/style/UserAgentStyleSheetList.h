@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* list of user agent style sheets that nsLayoutStylesheetCache manages */
+/* list of user agent style sheets that GlobalStyleSheetCache manages */
 
 /*
  * STYLE_SHEET(identifier_, url_, shared_)

@@ -6119,7 +6119,7 @@ void nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
   if (RefPtr<DocumentChannelChild> docChannel = do_QueryObject(aOldChannel)) {
     nsCOMPtr<nsIURI> previousURI;
     uint32_t previousFlags = 0;
-    ExtractLastVisit(aOldChannel, getter_AddRefs(previousURI), &previousFlags);
+    docChannel->GetLastVisit(getter_AddRefs(previousURI), &previousFlags);
 
     for (auto redirect : docChannel->GetRedirectChain()) {
       if (!redirect.isPost()) {
@@ -6144,7 +6144,7 @@ void nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
     ExtractLastVisit(aOldChannel, getter_AddRefs(previousURI), &previousFlags);
 
     if (aRedirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL ||
-        ChannelIsPost(aOldChannel)) {
+        net::ChannelIsPost(aOldChannel)) {
       // 1. Internal redirects are ignored because they are specific to the
       //    channel implementation.
       // 2. POSTs are not saved by global history.
@@ -9701,6 +9701,23 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
     }
   }
 
+  if (nsCOMPtr<nsIWritablePropertyBag2> props = do_QueryInterface(channel)) {
+    nsCOMPtr<nsIURI> referrer;
+    nsIReferrerInfo* referrerInfo = aLoadState->GetReferrerInfo();
+    if (referrerInfo) {
+      referrerInfo->GetOriginalReferrer(getter_AddRefs(referrer));
+    }
+    // save true referrer for those who need it (e.g. xpinstall whitelisting)
+    // Currently only http and ftp channels support this.
+    props->SetPropertyAsInterface(
+        NS_LITERAL_STRING("docshell.internalReferrer"), referrer);
+
+    if (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FIRST_LOAD)) {
+      props->SetPropertyAsBool(NS_LITERAL_STRING("docshell.newWindowTarget"),
+                               true);
+    }
+  }
+
   channel.forget(aChannel);
   return true;
 }
@@ -9709,20 +9726,6 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
     nsIChannel* aChannel, nsDocShellLoadState* aLoadState,
     const nsString* aInitiatorType, uint32_t aLoadType, uint32_t aCacheKey,
     bool aHasNonEmptySandboxingFlags) {
-  nsCOMPtr<nsIWritablePropertyBag2> props(do_QueryInterface(aChannel));
-  if (props) {
-    nsCOMPtr<nsIURI> referrer;
-    nsIReferrerInfo* referrerInfo = aLoadState->GetReferrerInfo();
-    if (referrerInfo) {
-      referrerInfo->GetOriginalReferrer(getter_AddRefs(referrer));
-    }
-
-    // save true referrer for those who need it (e.g. xpinstall whitelisting)
-    // Currently only http and ftp channels support this.
-    props->SetPropertyAsInterface(
-        NS_LITERAL_STRING("docshell.internalReferrer"), referrer);
-  }
-
   nsCOMPtr<nsILoadInfo> loadInfo;
   MOZ_ALWAYS_SUCCEEDS(aChannel->GetLoadInfo(getter_AddRefs(loadInfo)));
 
@@ -9811,14 +9814,6 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
   if (scriptChannel) {
     // Allow execution against our context if the principals match
     scriptChannel->SetExecutionPolicy(nsIScriptChannel::EXECUTE_NORMAL);
-  }
-
-  if (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FIRST_LOAD)) {
-    nsCOMPtr<nsIWritablePropertyBag2> props = do_QueryInterface(aChannel);
-    if (props) {
-      props->SetPropertyAsBool(NS_LITERAL_STRING("docshell.newWindowTarget"),
-                               true);
-    }
   }
 
   // TODO: What should we do with this?
@@ -10788,7 +10783,7 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
 
   // If this is a POST request, we do not want to include this in global
   // history.
-  if (updateGHistory && aAddToGlobalHistory && !ChannelIsPost(aChannel)) {
+  if (updateGHistory && aAddToGlobalHistory && !net::ChannelIsPost(aChannel)) {
     nsCOMPtr<nsIURI> previousURI;
     uint32_t previousFlags = 0;
 
@@ -11758,19 +11753,8 @@ nsDocShell::MakeEditable(bool aInWaitForUriLoad) {
   return mEditorData->MakeEditable(aInWaitForUriLoad);
 }
 
-bool nsDocShell::ChannelIsPost(nsIChannel* aChannel) {
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
-  if (!httpChannel) {
-    return false;
-  }
-
-  nsAutoCString method;
-  Unused << httpChannel->GetRequestMethod(method);
-  return method.EqualsLiteral("POST");
-}
-
-void nsDocShell::ExtractLastVisit(nsIChannel* aChannel, nsIURI** aURI,
-                                  uint32_t* aChannelRedirectFlags) {
+/* static */ void nsDocShell::ExtractLastVisit(
+    nsIChannel* aChannel, nsIURI** aURI, uint32_t* aChannelRedirectFlags) {
   nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(aChannel));
   if (!props) {
     return;

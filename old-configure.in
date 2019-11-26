@@ -581,7 +581,7 @@ case "$target" in
     ;;
 
 *-android*|*-linuxandroid*)
-    if test "$COMPILE_ENVIRONMENT"; then
+    if test "$COMPILE_ENVIRONMENT" -a -n "$MOZ_MEMORY"; then
         MOZ_LINKER=1
     fi
 
@@ -2556,7 +2556,7 @@ dnl ========================================================
 MOZ_ARG_HEADER(Static build options)
 
 if test -z "$MOZ_SYSTEM_ZLIB"; then
-if test -n "$JS_SHARED_LIBRARY" -o -n "$MOZ_LINKER"; then
+if test -n "$JS_SHARED_LIBRARY" -o -n "$MOZ_LINKER" -o "$MOZ_WIDGET_TOOLKIT" = android; then
   ZLIB_IN_MOZGLUE=1
   AC_DEFINE(ZLIB_IN_MOZGLUE)
 fi

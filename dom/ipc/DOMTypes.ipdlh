@@ -34,6 +34,7 @@ using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
 using refcounted class nsIContentSecurityPolicy from "mozilla/dom/CSPMessageUtils.h";
 using refcounted class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
 using refcounted class nsIReferrerInfo from "mozilla/dom/ReferrerInfoUtils.h";
+using refcounted class nsIVariant from "mozilla/dom/PropertyBagUtils.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using refcounted class nsISHEntry from "nsISHEntry.h";
 
@@ -250,7 +251,7 @@ struct DocShellLoadStateInit
   nsIInputStream PostDataStream;
   nsIInputStream HeadersStream;
 
-  nsString SrcdocData; // useless without sourcedocshell 
+  nsString SrcdocData; // useless without sourcedocshell
 
   // Fields missing due to lack of need or serialization
   // nsCOMPtr<nsISHEntry> mSHEntry;
@@ -295,6 +296,35 @@ struct ReplacementChannelConfigInit
   bool uploadStreamHasHeaders;
   nsCString? contentType;
   nsCString? contentLength;
+};
+
+union IPDLVariantValue
+{
+  bool;
+  uint8_t;   // In practice, uint8_t and uint16_t are likely unneeded,
+  int16_t;   // as signed->unsigned->signed has universal behavior.
+  uint16_t;  // but those conversions are only guaranteed in C++20.
+  int32_t;
+  uint32_t;
+  float;
+  double;
+  nsID;
+  nsString;
+  nsCString;
+  nsIURI;
+};
+
+struct IDPLVariant
+{
+  uint32_t type;  // We explicitly store the original nsIVariant type so that
+                  // the conversion back into a nsVariant later is lossless.
+  IPDLVariantValue data;
+};
+
+struct IPDLProperty
+{
+  nsString name;
+  nsIVariant value;
 };
 
 } // namespace dom

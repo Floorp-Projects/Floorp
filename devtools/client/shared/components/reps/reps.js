@@ -8218,7 +8218,8 @@ const {
 class ObjectInspectorItem extends Component {
   static get defaultProps() {
     return {
-      onContextMenu: () => {}
+      onContextMenu: () => {},
+      renderItemActions: () => null,
     };
   } // eslint-disable-next-line complexity
 
@@ -8416,37 +8417,14 @@ class ObjectInspectorItem extends Component {
     }, label);
   }
 
-  renderWatchpointButton() {
-    const {
-      item,
-      removeWatchpoint
-    } = this.props;
-
-    if (!item || !item.contents || !item.contents.watchpoint || typeof L10N === "undefined") {
-      return;
-    }
-
-    const watchpoint = item.contents.watchpoint;
-    return dom.button({
-      className: `remove-${watchpoint}-watchpoint`,
-      title: L10N.getStr("watchpoints.removeWatchpointTooltip"),
-      onClick: () => removeWatchpoint(item)
-    });
-  }
-
   render() {
-    const {
-      arrow
-    } = this.props;
-    const {
-      label,
-      value
-    } = this.getLabelAndValue();
+    const { arrow, renderItemActions, item } = this.props;
+    const { label, value } = this.getLabelAndValue();
     const labelElement = this.renderLabel(label);
     const delimiter = value && labelElement ? dom.span({
       className: "object-delimiter"
     }, ": ") : null;
-    return dom.div(this.getTreeItemProps(), arrow, labelElement, delimiter, value, this.renderWatchpointButton());
+    return dom.div(this.getTreeItemProps(), arrow, labelElement, delimiter, value, renderItemActions(item));
   }
 
 }

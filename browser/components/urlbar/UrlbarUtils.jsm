@@ -697,6 +697,15 @@ class UrlbarProvider {
   pickResult(result) {
     throw new Error("Trying to access the base class, must be overridden");
   }
+
+  /**
+   * Called when the user starts and ends an engagement with the urlbar.
+   *
+   * @param {boolean} isPrivate True if the engagement is in a private context.
+   * @param {string} state The state of the engagement, one of: start,
+   *        engagement, abandonment, discard.
+   */
+  onEngagement(isPrivate, state) {}
 }
 
 /**

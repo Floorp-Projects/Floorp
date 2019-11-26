@@ -174,6 +174,26 @@ this.urlbar = class extends ExtensionAPI {
           },
         }).api(),
 
+        onEngagement: new EventManager({
+          context,
+          name: "urlbar.onEngagement",
+          register: (fire, providerName) => {
+            let provider = UrlbarProviderExtension.getOrCreate(providerName);
+            provider.setEventListener(
+              "engagement",
+              async (isPrivate, state) => {
+                if (isPrivate && !context.privateBrowsingAllowed) {
+                  return;
+                }
+                return fire.async(state).catch(error => {
+                  throw context.normalizeError(error);
+                });
+              }
+            );
+            return () => provider.setEventListener("engagement", null);
+          },
+        }).api(),
+
         onQueryCanceled: new EventManager({
           context,
           name: "urlbar.onQueryCanceled",

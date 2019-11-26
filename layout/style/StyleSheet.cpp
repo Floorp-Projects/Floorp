@@ -23,7 +23,6 @@
 #include "mozilla/StyleSheetInlines.h"
 
 #include "mozAutoDocUpdate.h"
-#include "nsLayoutStylesheetCache.h"
 #include "SheetLoadData.h"
 #include "nsIReferrerInfo.h"
 

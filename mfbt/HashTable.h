@@ -998,18 +998,23 @@ class HashTableEntry {
   // Finally, the static_asserts here guarantee that the entries themselves
   // don't need to be any more aligned than the alignment of the entry store
   // itself.
-#ifdef HAVE_64BIT_BUILD
-  static_assert(alignof(NonConstT) <= alignof(void*),
-                "cannot use over-aligned entries in mozilla::HashTable");
-#else
+  //
   // This assertion is safe for 32-bit builds because on both Windows and Linux
   // (including Android), the minimum alignment for allocations larger than 8
   // bytes is 8 bytes, and the actual data for entries in our entry store is
   // guaranteed to have that alignment as well, thanks to the power-of-two
   // number of cached hash values stored prior to the entry data.
-  static_assert(alignof(NonConstT) <= 2 * alignof(void*),
-                "cannot use over-aligned entries in mozilla::HashTable");
-#endif
+
+  // The allocation policy must allocate a table with at least this much
+  // alignment.
+  static constexpr size_t kMinimumAlignment = 8;
+
+  static_assert(alignof(HashNumber) <= kMinimumAlignment,
+                "[N*2 hashes, N*2 T values] allocation's alignment must be "
+                "enough to align each hash");
+  static_assert(alignof(NonConstT) <= 2 * sizeof(HashNumber),
+                "subsequent N*2 T values must not require more than an even "
+                "number of HashNumbers provides");
 
   static const HashNumber sFreeKey = 0;
   static const HashNumber sRemovedKey = 1;
@@ -1633,6 +1638,10 @@ class HashTable : private AllocPolicy {
         aReportFailure
             ? aAllocPolicy.template pod_malloc<FakeSlot>(aCapacity)
             : aAllocPolicy.template maybe_pod_malloc<FakeSlot>(aCapacity);
+
+    MOZ_ASSERT((reinterpret_cast<uintptr_t>(fake) % Entry::kMinimumAlignment) ==
+               0);
+
     char* table = reinterpret_cast<char*>(fake);
     if (table) {
       forEachSlot(table, aCapacity, [&](Slot& slot) {

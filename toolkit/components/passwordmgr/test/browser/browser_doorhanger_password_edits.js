@@ -14,12 +14,14 @@
 add_task(async function test_edit_password() {
   let testCases = [
     {
+      description: "No saved logins, update password in doorhanger",
       usernameInPage: "username",
       passwordInPage: "password",
       passwordChangedTo: "newPassword",
       timesUsed: 1,
     },
     {
+      description: "Login is saved, update password in doorhanger",
       usernameInPage: "username",
       usernameInPageExists: true,
       passwordInPage: "password",
@@ -28,6 +30,8 @@ add_task(async function test_edit_password() {
       timesUsed: 2,
     },
     {
+      description:
+        "Change username in doorhanger to match saved login, update password in doorhanger",
       usernameInPage: "username",
       usernameChangedTo: "newUsername",
       usernameChangedToExists: true,
@@ -36,6 +40,8 @@ add_task(async function test_edit_password() {
       timesUsed: 2,
     },
     {
+      description:
+        "Change username in doorhanger to match saved login, dont update password in doorhanger",
       usernameInPage: "username",
       usernameChangedTo: "newUsername",
       usernameChangedToExists: true,
@@ -45,6 +51,8 @@ add_task(async function test_edit_password() {
       checkPasswordNotUpdated: true,
     },
     {
+      description:
+        "Change username and password in doorhanger to match saved empty-username login",
       usernameInPage: "newUsername",
       usernameChangedTo: "",
       usernameChangedToExists: true,
@@ -99,31 +107,22 @@ add_task(async function test_edit_password() {
           contentTestCase
         ) {
           let doc = content.document;
-          doc.getElementById("form-basic-username").value =
-            contentTestCase.usernameInPage;
-          doc.getElementById("form-basic-password").value =
-            contentTestCase.passwordInPage;
+          doc
+            .getElementById("form-basic-username")
+            .setUserInput(contentTestCase.usernameInPage);
+          doc
+            .getElementById("form-basic-password")
+            .setUserInput(contentTestCase.passwordInPage);
           doc.getElementById("form-basic").submit();
         });
         await promiseShown;
         let notificationElement = PopupNotifications.panel.childNodes[0];
-        // Style flush to make sure binding is attached
-        notificationElement.querySelector("#password-notification-password")
-          .clientTop;
 
-        // Modify the username in the dialog if requested.
-        if (testCase.usernameChangedTo) {
-          notificationElement.querySelector(
-            "#password-notification-username"
-          ).value = testCase.usernameChangedTo;
-        }
-
-        // Modify the password in the dialog if requested.
-        if (testCase.passwordChangedTo) {
-          notificationElement.querySelector(
-            "#password-notification-password"
-          ).value = testCase.passwordChangedTo;
-        }
+        // Modify the username & password in the dialog if requested.
+        await updateDoorhangerInputValues({
+          username: testCase.usernameChangedTo,
+          password: testCase.passwordChangedTo,
+        });
 
         // We expect a modifyLogin notification if the final username used by the
         // dialog exists in the logins database, otherwise an addLogin one.
@@ -142,8 +141,15 @@ add_task(async function test_edit_password() {
           "passwordmgr-storage-changed",
           (_, data) => data == expectedNotification
         );
+
+        let promiseHidden = BrowserTestUtils.waitForEvent(
+          PopupNotifications.panel,
+          "popuphidden"
+        );
         notificationElement.button.doCommand();
+
         let [result] = await promiseLogin;
+        await promiseHidden;
 
         // Check that the values in the database match the expected values.
         let login = expectModifyLogin
@@ -151,24 +157,27 @@ add_task(async function test_edit_password() {
               .QueryInterface(Ci.nsIArray)
               .queryElementAt(1, Ci.nsILoginInfo)
           : result.QueryInterface(Ci.nsILoginInfo);
-
-        Assert.equal(
-          login.username,
-          testCase.usernameChangedTo || testCase.usernameInPage
-        );
-        Assert.equal(
-          login.password,
-          testCase.passwordChangedTo || testCase.passwordInPage
-        );
-
         let meta = login.QueryInterface(Ci.nsILoginMetaInfo);
-        Assert.equal(meta.timesUsed, testCase.timesUsed);
 
+        let expectedLogin = {
+          username:
+            "usernameChangedTo" in testCase
+              ? testCase.usernameChangedTo
+              : testCase.usernameInPage,
+          password:
+            "passwordChangedTo" in testCase
+              ? testCase.passwordChangedTo
+              : testCase.passwordInPage,
+          timesUsed: testCase.timesUsed,
+        };
         // Check that the password was not updated if the user is empty
         if (testCase.checkPasswordNotUpdated) {
-          Assert.ok(meta.timeLastUsed > meta.timeCreated);
-          Assert.ok(meta.timeCreated == meta.timePasswordChanged);
+          expectedLogin.usedSince = meta.timeCreated;
+          expectedLogin.timeCreated = meta.timePasswordChanged;
         }
+        verifyLogins([expectedLogin]);
+
+        await cleanupDoorhanger();
       }
     );
 

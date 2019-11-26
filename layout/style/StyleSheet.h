@@ -24,7 +24,6 @@
 
 class nsINode;
 class nsIPrincipal;
-struct nsLayoutStylesheetCacheShm;
 struct RawServoSharedMemoryBuilder;
 class nsIReferrerInfo;
 

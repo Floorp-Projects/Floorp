@@ -2177,10 +2177,6 @@ PK11_GetAllTokens(CK_MECHANISM_TYPE type, PRBool needRW, PRBool loadCerts,
     SECMODModuleList *modules;
     SECMODListLock *moduleLock;
     int i;
-#if defined(XP_WIN32)
-    int j = 0;
-    PRInt32 waste[16];
-#endif
 
     moduleLock = SECMOD_GetDefaultModuleListLock();
     if (!moduleLock) {
@@ -2205,18 +2201,6 @@ PK11_GetAllTokens(CK_MECHANISM_TYPE type, PRBool needRW, PRBool loadCerts,
 
     modules = SECMOD_GetDefaultModuleList();
     for (mlp = modules; mlp != NULL; mlp = mlp->next) {
-
-#if defined(XP_WIN32)
-        /* This is works around some horrible cache/page thrashing problems
-        ** on Win32.  Without this, this loop can take up to 6 seconds at
-        ** 100% CPU on a Pentium-Pro 200.  The thing this changes is to
-        ** increase the size of the stack frame and modify it.
-        ** Moving the loop code itself seems to have no effect.
-        ** Dunno why this combination makes a difference, but it does.
-        */
-        waste[j & 0xf] = j++;
-#endif
-
         for (i = 0; i < mlp->module->slotCount; i++) {
             PK11SlotInfo *slot = mlp->module->slots[i];
 

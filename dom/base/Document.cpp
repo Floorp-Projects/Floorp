@@ -65,7 +65,7 @@
 #include "nsIObserver.h"
 #include "nsIBaseWindow.h"
 #include "nsILayoutHistoryState.h"
-#include "nsLayoutStylesheetCache.h"
+#include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/css/ImageLoader.h"
 #include "nsDocShell.h"
@@ -2616,7 +2616,7 @@ void Document::FillStyleSetUserAndUASheets() {
   // ordering.
 
   // The document will fill in the document sheets when we create the presshell
-  auto cache = nsLayoutStylesheetCache::Singleton();
+  auto* cache = GlobalStyleSheetCache::Singleton();
 
   nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
   MOZ_ASSERT(sheetService,
@@ -2691,7 +2691,7 @@ void Document::FillStyleSet() {
 void Document::RemoveContentEditableStyleSheets() {
   MOZ_ASSERT(IsHTMLOrXHTML());
 
-  auto* cache = nsLayoutStylesheetCache::Singleton();
+  auto* cache = GlobalStyleSheetCache::Singleton();
   bool changed = false;
   if (mDesignModeSheetAdded) {
     mStyleSet->RemoveStyleSheet(StyleOrigin::UserAgent,
@@ -2716,7 +2716,7 @@ void Document::AddContentEditableStyleSheetsToStyleSet(bool aDesignMode) {
   MOZ_DIAGNOSTIC_ASSERT(mStyleSetFilled,
                         "Caller should ensure we're being rendered");
 
-  auto* cache = nsLayoutStylesheetCache::Singleton();
+  auto* cache = GlobalStyleSheetCache::Singleton();
   bool changed = false;
   if (!mContentEditableSheetAdded) {
     mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent,
@@ -2779,7 +2779,7 @@ void Document::CompatibilityModeChanged() {
   if (mQuirkSheetAdded == NeedsQuirksSheet()) {
     return;
   }
-  auto cache = nsLayoutStylesheetCache::Singleton();
+  auto* cache = GlobalStyleSheetCache::Singleton();
   StyleSheet* sheet = cache->QuirkSheet();
   if (mQuirkSheetAdded) {
     mStyleSet->RemoveStyleSheet(StyleOrigin::UserAgent, sheet);

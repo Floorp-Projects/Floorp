@@ -445,3 +445,123 @@ add_task(async function closeView() {
   await UrlbarTestUtils.promisePopupClose(window, () => ext.startup());
   await ext.unload();
 });
+
+// Tests the onEngagement events.
+add_task(async function onEngagement() {
+  // Enable engagement telemetry.
+  Services.prefs.setBoolPref("browser.urlbar.eventTelemetry.enabled", true);
+
+  let ext = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["urlbar"],
+    },
+    isPrivileged: true,
+    incognitoOverride: "spanning",
+    useAddonManager: "temporary",
+    background() {
+      browser.urlbar.onEngagement.addListener(state => {
+        browser.test.sendMessage("onEngagement", state);
+      }, "test");
+      browser.urlbar.onBehaviorRequested.addListener(query => {
+        return "restricting";
+      }, "test");
+      browser.urlbar.onResultsRequested.addListener(query => {
+        return [
+          {
+            type: "tip",
+            source: "local",
+            heuristic: true,
+            payload: {
+              text: "Test",
+              buttonText: "OK",
+            },
+          },
+        ];
+      }, "test");
+      browser.urlbar.search("");
+    },
+  });
+  await ext.startup();
+
+  // Start an engagement.
+  let messagePromise = ext.awaitMessage("onEngagement");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: "test",
+    fireInputEvent: true,
+  });
+  let state = await messagePromise;
+  Assert.equal(state, "start");
+
+  // Abandon the engagement.
+  messagePromise = ext.awaitMessage("onEngagement");
+  gURLBar.blur();
+  state = await messagePromise;
+  Assert.equal(state, "abandonment");
+
+  // Start an engagement.
+  messagePromise = ext.awaitMessage("onEngagement");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: "test",
+    fireInputEvent: true,
+  });
+  state = await messagePromise;
+  Assert.equal(state, "start");
+
+  // End the engagement by pressing enter on the extension's tip result.
+  messagePromise = ext.awaitMessage("onEngagement");
+  EventUtils.synthesizeKey("KEY_Enter");
+  state = await messagePromise;
+  Assert.equal(state, "engagement");
+
+  // We'll open about:preferences next.  Since it won't open in a new tab if the
+  // current tab is blank, open a new tab now.
+  await BrowserTestUtils.withNewTab("about:blank", async () => {
+    // Start an engagement.
+    messagePromise = ext.awaitMessage("onEngagement");
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      waitForFocus,
+      value: "test",
+      fireInputEvent: true,
+    });
+    state = await messagePromise;
+    Assert.equal(state, "start");
+
+    // Press up and enter to pick the search settings button.
+    messagePromise = ext.awaitMessage("onEngagement");
+    EventUtils.synthesizeKey("KEY_ArrowUp");
+    EventUtils.synthesizeKey("KEY_Enter");
+    await BrowserTestUtils.browserLoaded(
+      gBrowser.selectedBrowser,
+      false,
+      "about:preferences#search"
+    );
+    state = await messagePromise;
+    Assert.equal(state, "discard");
+  });
+
+  // Start a final engagement to make sure the previous discard didn't mess
+  // anything up.
+  messagePromise = ext.awaitMessage("onEngagement");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: "test",
+    fireInputEvent: true,
+  });
+  state = await messagePromise;
+  Assert.equal(state, "start");
+
+  // End the engagement by pressing enter on the extension's tip result.
+  messagePromise = ext.awaitMessage("onEngagement");
+  EventUtils.synthesizeKey("KEY_Enter");
+  state = await messagePromise;
+  Assert.equal(state, "engagement");
+
+  await ext.unload();
+  Services.prefs.clearUserPref("browser.urlbar.eventTelemetry.enabled");
+});

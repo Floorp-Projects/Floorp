@@ -55,6 +55,7 @@ class UrlbarInput {
     this.textbox = options.textbox;
 
     this.window = this.textbox.ownerGlobal;
+    this.isPrivate = PrivateBrowsingUtils.isWindowPrivate(this.window);
     this.document = this.window.document;
     this.window.addEventListener("unload", this);
 
@@ -92,13 +93,11 @@ class UrlbarInput {
     }
 
     this.controller = new UrlbarController({
-      browserWindow: this.window,
+      input: this,
       eventTelemetryCategory: options.eventTelemetryCategory,
     });
-    this.controller.setInput(this);
     this.view = new UrlbarView(this);
     this.valueIsTyped = false;
-    this.isPrivate = PrivateBrowsingUtils.isWindowPrivate(this.window);
     this.lastQueryContextPromise = Promise.resolve();
     this._actionOverrideKeyCount = 0;
     this._autofillPlaceholder = "";
