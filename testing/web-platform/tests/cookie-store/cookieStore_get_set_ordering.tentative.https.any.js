@@ -1,6 +1,9 @@
+// META: title=Cookie Store API: Cookie ordering
+// META: global=!default,serviceworker,window
+
 'use strict';
 
-cookie_test(async t => {
+promise_test(async t => {
   await cookieStore.set('ordered-1', 'cookie-value1');
   await cookieStore.set('ordered-2', 'cookie-value2');
   await cookieStore.set('ordered-3', 'cookie-value3');
@@ -16,7 +19,7 @@ cookie_test(async t => {
 }, 'Set three simple origin session cookies sequentially and ensure ' +
             'they all end up in the cookie jar in order.');
 
-cookie_test(async t => {
+promise_test(async t => {
   await Promise.all([
     cookieStore.set('ordered-unordered1', 'unordered-cookie-value1'),
     cookieStore.set('ordered-unordered2', 'unordered-cookie-value2'),
