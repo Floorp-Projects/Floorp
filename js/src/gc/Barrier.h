@@ -415,6 +415,8 @@ class MOZ_NON_MEMMOVABLE BarrieredBase {
   T value;
 
  public:
+  using ElementType = T;
+
   // Note: this is public because C++ cannot friend to a specific template
   // instantiation. Friending to the generic template leads to a number of
   // unintended consequences, including template resolution ambiguity and a
@@ -433,8 +435,6 @@ class WriteBarriered : public BarrieredBase<T>,
   explicit WriteBarriered(const T& v) : BarrieredBase<T>(v) {}
 
  public:
-  using ElementType = T;
-
   DECLARE_POINTER_CONSTREF_OPS(T);
 
   // Use this if the automatic coercion to T isn't working.
@@ -676,7 +676,6 @@ class ReadBarriered : public BarrieredBase<T> {
   // ReadBarriered is not directly instantiable.
   explicit ReadBarriered(const T& v) : BarrieredBase<T>(v) {}
 
- protected:
   void read() const { InternalBarrierMethods<T>::readBarrier(this->value); }
   void post(const T& prev, const T& next) {
     InternalBarrierMethods<T>::postBarrier(&this->value, prev, next);
