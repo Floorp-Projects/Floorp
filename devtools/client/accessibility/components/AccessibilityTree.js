@@ -94,12 +94,12 @@ class AccessibilityTree extends Component {
    * Handle accessible reorder event. If the accessible is cached and rendered
    * within the accessibility tree, re-fetch its children and re-render the
    * corresponding subtree.
-   * @param {Object} accessible accessible object that had its subtree
-   *                            reordered.
+   * @param {Object} accessibleFront
+   *        accessible front that had its subtree reordered.
    */
-  onReorder(accessible) {
-    if (this.props.accessibles.has(accessible.actorID)) {
-      this.props.dispatch(fetchChildren(accessible));
+  onReorder(accessibleFront) {
+    if (this.props.accessibles.has(accessibleFront.actorID)) {
+      this.props.dispatch(fetchChildren(accessibleFront));
     }
   }
 
@@ -107,22 +107,23 @@ class AccessibilityTree extends Component {
    * Handle accessible name change event. If the name of an accessible changes
    * and that accessible is cached and rendered within the accessibility tree,
    * re-fetch its parent's children and re-render the corresponding subtree.
-   * @param {Object} accessible accessible object that had its name changed.
-   * @param {Object} parent     optional parent accessible object. Note: if it
-   *                            parent is not present, we assume that the top
-   *                            level document's name has changed and use
-   *                            accessible walker as a parent.
+   * @param {Object} accessibleFront
+   *        accessible front that had its name changed.
+   * @param {Object} parentFront
+   *        optional parent accessible front. Note: if it parent is not
+   *        present, we assume that the top level document's name has changed
+   *        and use accessible walker as a parent.
    */
-  onNameChange(accessible, parent) {
+  onNameChange(accessibleFront, parentFront) {
     const { accessibles, dispatch } = this.props;
-    const accessibilityWalkerFront = accessible.parent();
-    parent = parent || accessibilityWalkerFront;
+    const accessibilityWalkerFront = accessibleFront.parent();
+    parentFront = parentFront || accessibilityWalkerFront;
 
     if (
-      accessibles.has(accessible.actorID) ||
-      accessibles.has(parent.actorID)
+      accessibles.has(accessibleFront.actorID) ||
+      accessibles.has(parentFront.actorID)
     ) {
-      dispatch(fetchChildren(parent));
+      dispatch(fetchChildren(parentFront));
     }
   }
 
@@ -131,13 +132,13 @@ class AccessibilityTree extends Component {
    * an accessible changes and that accessible is cached and rendered within the
    * accessibility tree, re-fetch its children and re-render the corresponding
    * subtree.
-   * @param  {Object} accessible  accessible object that had its child text
-   *                              changed.
+   * @param  {Object} accessibleFront
+   *         accessible front that had its child text changed.
    */
-  onTextChange(accessible) {
+  onTextChange(accessibleFront) {
     const { accessibles, dispatch } = this.props;
-    if (accessibles.has(accessible.actorID)) {
-      dispatch(fetchChildren(accessible));
+    if (accessibles.has(accessibleFront.actorID)) {
+      dispatch(fetchChildren(accessibleFront));
     }
   }
 
@@ -180,7 +181,6 @@ class AccessibilityTree extends Component {
       const highlighted = object === highlightedItem;
       return AccessibilityRow(
         Object.assign({}, rowProps, {
-          accessibilityWalker,
           hasContextMenu,
           highlighted,
           decorator: {
