@@ -9,7 +9,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
-import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
@@ -28,7 +28,7 @@ class ToolbarFeature(
     searchUseCase: SearchUseCase? = null,
     customTabId: String? = null,
     urlRenderConfiguration: UrlRenderConfiguration? = null
-) : LifecycleAwareFeature, BackHandler {
+) : LifecycleAwareFeature, UserInteractionHandler {
     private val presenter = ToolbarPresenter(toolbar, store, customTabId, urlRenderConfiguration)
     private val interactor = ToolbarInteractor(toolbar, loadUrlUseCase, searchUseCase)
 

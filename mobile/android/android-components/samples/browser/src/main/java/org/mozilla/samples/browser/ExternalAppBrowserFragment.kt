@@ -23,7 +23,7 @@ import mozilla.components.feature.pwa.feature.WebAppActivityFeature
 import mozilla.components.feature.pwa.feature.WebAppHideToolbarFeature
 import mozilla.components.feature.pwa.feature.WebAppSiteControlsFeature
 import mozilla.components.lib.state.ext.consumeFrom
-import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import org.mozilla.samples.browser.ext.components
@@ -31,7 +31,7 @@ import org.mozilla.samples.browser.ext.components
 /**
  * Fragment used for browsing within an external app, such as for custom tabs and PWAs.
  */
-class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
+class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private val customTabsToolbarFeature = ViewBoundFeatureWrapper<CustomTabsToolbarFeature>()
     private val hideToolbarFeature = ViewBoundFeatureWrapper<WebAppHideToolbarFeature>()
 
@@ -123,7 +123,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
 
     /**
      * Calls [onBackPressed] for features in the base class first,
-     * before trying to call the external app [BackHandler].
+     * before trying to call the external app [UserInteractionHandler].
      */
     override fun onBackPressed(): Boolean =
         super.onBackPressed() || customTabsToolbarFeature.onBackPressed()

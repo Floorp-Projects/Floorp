@@ -11,7 +11,7 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.findinpage.internal.FindInPageInteractor
 import mozilla.components.feature.findinpage.internal.FindInPagePresenter
 import mozilla.components.feature.findinpage.view.FindInPageView
-import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
@@ -22,7 +22,7 @@ class FindInPageFeature(
     view: FindInPageView,
     engineView: EngineView,
     private val onClose: (() -> Unit)? = null
-) : LifecycleAwareFeature, BackHandler {
+) : LifecycleAwareFeature, UserInteractionHandler {
     @VisibleForTesting internal var presenter = FindInPagePresenter(store, view)
     @VisibleForTesting internal var interactor = FindInPageInteractor(this, view, engineView)
 
