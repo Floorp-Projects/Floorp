@@ -50,11 +50,14 @@ void UIDirectionManager::Initialize() {
   DebugOnly<nsresult> rv =
       Preferences::RegisterCallback(OnPrefChange, "intl.uidirection");
   MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed to observe \"intl.uidirection\"");
+  rv = Preferences::RegisterCallback(OnPrefChange, "intl.l10n.pseudo");
+  MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed to observe \"intl.l10n.pseudo\"");
 }
 
 /* static */
 void UIDirectionManager::Shutdown() {
   Preferences::UnregisterCallback(OnPrefChange, "intl.uidirection");
+  Preferences::UnregisterCallback(OnPrefChange, "intl.l10n.pseudo");
 }
 
 }  // namespace dom

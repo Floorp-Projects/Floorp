@@ -138,7 +138,18 @@ class LocaleService final : public mozILocaleService,
   void WebExposedLocalesChanged();
 
   /**
+   * Returns whether the locale is RTL.
+   *
+   * This method respects the `intl.uidirection` pref override.
+   */
+  static bool IsLocaleRTL(const nsACString& aLocale);
+
+  /**
    * Returns whether the current app locale is RTL.
+   *
+   * This method respects two overrides:
+   *  - `intl.l10n.pseudo`
+   *  - `intl.uidirection`
    */
   bool IsAppLocaleRTL();
 

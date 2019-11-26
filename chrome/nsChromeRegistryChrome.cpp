@@ -26,7 +26,6 @@
 
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Unused.h"
-#include "mozilla/intl/LocaleService.h"
 
 #include "nsIAppStartup.h"
 #include "nsIObserverService.h"
@@ -137,7 +136,7 @@ nsChromeRegistryChrome::IsLocaleRTL(const nsACString& package, bool* aResult) {
   GetSelectedLocale(package, false, locale);
   if (locale.Length() < 2) return NS_OK;
 
-  *aResult = GetDirectionForLocale(locale);
+  *aResult = LocaleService::IsLocaleRTL(locale);
   return NS_OK;
 }
 
