@@ -32,7 +32,7 @@ exclude =
     testing/condprofile/condprof/desktop.py,
     testing/condprofile/condprof/runner.py,
     testing/condprofile/condprof/scenarii/heavy.py,
-    testing/condprofile/condprof/scenarii/cold.py,
+    testing/condprofile/condprof/scenarii/settled.py,
     testing/condprofile/condprof/helpers.py,
     testing/jsshell/benchmark.py,
     testing/marionette/mach_commands.py,

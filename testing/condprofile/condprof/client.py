@@ -117,7 +117,7 @@ def main():
     older_change = read_changelog("win64").history()[0]
     task_id = older_change["TASK_ID"]
     target_dir = tempfile.mkdtemp()
-    filename = get_profile(target_dir, "win64", "cold", "default", task_id)
+    filename = get_profile(target_dir, "win64", "settled", "default", task_id)
     print("Profile downloaded and extracted at %s" % filename)
 
 
