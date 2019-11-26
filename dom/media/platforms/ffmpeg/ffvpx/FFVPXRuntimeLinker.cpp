@@ -17,6 +17,8 @@
 
 // We use a known symbol located in lgpllibs to determine its location.
 // soundtouch happens to be always included in lgpllibs
+// Use abort() instead of exception in SoundTouch.
+#define ST_NO_EXCEPTION_HANDLING 1
 #include "soundtouch/SoundTouch.h"
 
 namespace mozilla {
