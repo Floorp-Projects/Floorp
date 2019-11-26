@@ -520,8 +520,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
                             HasHeritage hasHeritage);
 
   inline bool isLazyFunctionWithoutEnclosingScope() const {
-    return isInterpretedLazy() &&
-           !function()->lazyScript()->hasEnclosingScope();
+    return isInterpretedLazy() && !function()->enclosingScope();
   }
   void setEnclosingScopeForInnerLazyFunction(Scope* enclosingScope);
   void finish();
@@ -560,9 +559,8 @@ class FunctionBox : public ObjectBox, public SharedContext {
     // being delazified.  In that case the enclosingScope_ field is copied
     // from the lazy function at the beginning of delazification and should
     // keep pointing the same scope.
-    MOZ_ASSERT_IF(
-        isInterpretedLazy() && function()->lazyScript()->hasEnclosingScope(),
-        enclosingScope_ == function()->lazyScript()->enclosingScope());
+    MOZ_ASSERT_IF(isInterpretedLazy() && function()->enclosingScope(),
+                  enclosingScope_ == function()->enclosingScope());
 
     // If this FunctionBox is a lazy child of the function we're actually
     // compiling, then it is not the outermost SharedContext, so this

@@ -747,6 +747,24 @@ class JSFunction : public js::NativeObject {
   static bool getLength(JSContext* cx, js::HandleFunction fun,
                         uint16_t* length);
 
+  js::Scope* enclosingScope() const {
+    if (hasScript()) {
+      return nonLazyScript()->enclosingScope();
+    }
+    if (hasLazyScript() && lazyScript()->hasEnclosingScope()) {
+      return lazyScript()->enclosingScope();
+    }
+    return nullptr;
+  }
+
+  void setEnclosingScope(js::Scope* enclosingScope) {
+    lazyScript()->setEnclosingScope(enclosingScope);
+  }
+
+  void setEnclosingLazyScript(js::LazyScript* enclosingScript) {
+    lazyScript()->setEnclosingLazyScript(enclosingScript);
+  }
+
   js::GeneratorKind generatorKind() const {
     if (hasBaseScript()) {
       return baseScript()->generatorKind();

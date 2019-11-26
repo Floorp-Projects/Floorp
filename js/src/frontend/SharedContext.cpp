@@ -210,11 +210,7 @@ void FunctionBox::initFromLazyFunction(JSFunction* fun) {
   if (lazy->needsHomeObject()) {
     setNeedsHomeObject();
   }
-  if (lazy->hasEnclosingScope()) {
-    enclosingScope_ = lazy->enclosingScope();
-  } else {
-    enclosingScope_ = nullptr;
-  }
+  enclosingScope_ = fun->enclosingScope();
   initWithEnclosingScope(enclosingScope_, fun);
 }
 
@@ -320,7 +316,7 @@ void FunctionBox::finish() {
     return;
   }
   MOZ_ASSERT(enclosingScope_);
-  function()->lazyScript()->setEnclosingScope(enclosingScope_);
+  function()->setEnclosingScope(enclosingScope_);
 }
 
 ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
