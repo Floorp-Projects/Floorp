@@ -5,14 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsHashPropertyBag.h"
-#include "nsArray.h"
-#include "nsArrayEnumerator.h"
-#include "nsIVariant.h"
-#include "nsIProperty.h"
-#include "nsThreadUtils.h"
-#include "nsVariant.h"
+
 #include "mozilla/Attributes.h"
 #include "mozilla/Move.h"
+#include "mozilla/SimpleEnumerator.h"
+#include "nsArray.h"
+#include "nsArrayEnumerator.h"
+#include "nsIProperty.h"
+#include "nsIVariant.h"
+#include "nsThreadUtils.h"
+#include "nsVariant.h"
 
 extern "C" {
 
@@ -226,6 +228,37 @@ nsHashPropertyBagBase::SetPropertyAsInterface(const nsAString& aProp,
   nsCOMPtr<nsIWritableVariant> var = new nsVariant();
   var->SetAsISupports(aValue);
   return SetProperty(aProp, var);
+}
+
+void nsHashPropertyBagBase::CopyFrom(const nsHashPropertyBagBase* aOther) {
+  for (auto iter = aOther->mPropertyHash.ConstIter(); !iter.Done();
+       iter.Next()) {
+    SetProperty(iter.Key(), iter.UserData());
+  }
+}
+
+void nsHashPropertyBagBase::CopyFrom(nsIPropertyBag* aOther) {
+  CopyFrom(this, aOther);
+}
+
+/* static */ void nsHashPropertyBagBase::CopyFrom(nsIWritablePropertyBag* aTo,
+                                                  nsIPropertyBag* aFrom) {
+  if (aTo && aFrom) {
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    if (NS_SUCCEEDED(aFrom->GetEnumerator(getter_AddRefs(enumerator)))) {
+      for (auto& property : SimpleEnumerator<nsIProperty>(enumerator)) {
+        nsString name;
+        nsCOMPtr<nsIVariant> value;
+        Unused << NS_WARN_IF(NS_FAILED(property->GetName(name)));
+        Unused << NS_WARN_IF(
+            NS_FAILED(property->GetValue(getter_AddRefs(value))));
+        Unused << NS_WARN_IF(
+            NS_FAILED(aTo->SetProperty(std::move(name), value)));
+      }
+    } else {
+      NS_WARNING("Unable to copy nsIPropertyBag");
+    }
+  }
 }
 
 /*
