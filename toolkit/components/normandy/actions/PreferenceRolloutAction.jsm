@@ -81,7 +81,9 @@ class PreferenceRolloutAction extends BaseAction {
         await PreferenceRollouts.update(newRollout);
         TelemetryEvents.sendEvent("update", "preference_rollout", args.slug, {
           previousState: existingRollout.state,
-          enrollmentId: existingRollout.enrollmentId,
+          enrollmentId:
+            existingRollout.enrollmentId ||
+            TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
         });
 
         switch (existingRollout.state) {
@@ -143,10 +145,10 @@ class PreferenceRolloutAction extends BaseAction {
       this.log.debug(`Enrolled in preference rollout ${args.slug}`);
       TelemetryEnvironment.setExperimentActive(args.slug, newRollout.state, {
         type: "normandy-prefrollout",
-        enrollmentId,
+        enrollmentId: enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       });
       TelemetryEvents.sendEvent("enroll", "preference_rollout", args.slug, {
-        enrollmentId,
+        enrollmentId: enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       });
     }
   }

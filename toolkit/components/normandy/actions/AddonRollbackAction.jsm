@@ -51,7 +51,12 @@ class AddonRollbackAction extends BaseAction {
               "unenrollFailed",
               "addon_rollback",
               rolloutSlug,
-              { reason: "uninstall-failed", enrollmentId: rollout.enrollmentId }
+              {
+                reason: "uninstall-failed",
+                enrollmentId:
+                  rollout.enrollmentId ||
+                  TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+              }
             );
             throw err;
           }
@@ -65,7 +70,8 @@ class AddonRollbackAction extends BaseAction {
 
         TelemetryEvents.sendEvent("unenroll", "addon_rollback", rolloutSlug, {
           reason: "rollback",
-          enrollmentId: rollout.enrollmentId,
+          enrollmentId:
+            rollout.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
         });
         TelemetryEnvironment.setExperimentInactive(rolloutSlug);
         break;
