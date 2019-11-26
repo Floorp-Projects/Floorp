@@ -38,6 +38,8 @@ jobs:
         run:
             config:
                 by-release-type:
+                    nightly:
+                        - releases/bouncer_firefox_nightly.py
                     beta:
                         - releases/bouncer_firefox_beta.py
                     release:
@@ -48,6 +50,7 @@ jobs:
                         - releases/bouncer_firefox_beta.py
             product-field:
                 by-project:
+                    mozilla-central: FIREFOX_NIGHTLY
                     mozilla-beta: LATEST_FIREFOX_RELEASED_DEVEL_VERSION
                     mozilla-release: LATEST_FIREFOX_VERSION
                     mozilla-esr68: FIREFOX_ESR
