@@ -180,6 +180,54 @@ var AddonStudies = {
   },
 
   /**
+   * Change from "name" and "description" to "slug", "userFacingName",
+   * and "userFacingDescription".
+   *
+   * This is called as needed by NormandyMigrations.jsm, which handles tracking
+   * if this migration has already been run.
+   */
+  async migrateAddonStudyFieldsToSlugAndUserFacingFields() {
+    const db = await getDatabase();
+    const studies = await db.objectStore(STORE_NAME, "readonly").getAll();
+
+    // If there are no studies, stop here to avoid opening the DB again.
+    if (studies.length === 0) {
+      return;
+    }
+
+    // Object stores expire after `await`, so this method accumulates a bunch of
+    // promises, and then awaits them at the end.
+    const writePromises = [];
+    const objectStore = db.objectStore(STORE_NAME, "readwrite");
+
+    for (const study of studies) {
+      // use existing name as slug
+      if (!study.slug) {
+        study.slug = study.name;
+      }
+
+      // Rename `name` and `description` as `userFacingName` and `userFacingDescription`
+      if (study.name && !study.userFacingName) {
+        study.userFacingName = study.name;
+      }
+      delete study.name;
+      if (study.description && !study.userFacingDescription) {
+        study.userFacingDescription = study.description;
+      }
+      delete study.description;
+
+      // Specify that existing recipes don't have branches
+      if (!study.branch) {
+        study.branch = AddonStudies.NO_BRANCHES_MARKER;
+      }
+
+      writePromises.push(objectStore.put(study));
+    }
+
+    await Promise.all(writePromises);
+  },
+
+  /**
    * If a study add-on is uninstalled, mark the study as having ended.
    * @param {Addon} addon
    */
@@ -270,42 +318,6 @@ var AddonStudies = {
   async update(study) {
     const db = await getDatabase();
     return getStore(db, "readwrite").put(study);
-  },
-
-  /**
-   * Update many existing studies. More efficient than calling `update` many
-   * times in a row.
-   * @param {Array<AddonStudy>} studies
-   * @throws If any of the passed studies have a slug that doesn't exist in the database already.
-   */
-  async updateMany(studies) {
-    // Don't touch the database if there is nothing to do
-    if (!studies.length) {
-      return;
-    }
-
-    // Both of the below operations use .map() instead of a normal loop becaues
-    // once we get the object store, we can't let it expire by spinning the
-    // event loop. This approach queues up all the interactions with the store
-    // immediately, preventing it from expiring too soon.
-
-    const db = await getDatabase();
-    let store = await getStore(db, "readonly");
-    await Promise.all(
-      studies.map(async ({ recipeId }) => {
-        let existingStudy = await store.get(recipeId);
-        if (!existingStudy) {
-          throw new Error(
-            `Tried to update addon study ${recipeId}, but it doesn't exist.`
-          );
-        }
-      })
-    );
-
-    // awaiting spun the event loop, so the store is now invalid. Get a new
-    // store. This is also a chance to get it in readwrite mode.
-    store = await getStore(db, "readwrite");
-    await Promise.all(studies.map(study => store.put(study)));
   },
 
   /**
@@ -406,56 +418,6 @@ var AddonStudies = {
     // Wait for all the promises to be settled. This won't throw even if some of
     // the listeners fail.
     await Promise.all(promises);
-  },
-
-  migrations: {
-    /**
-     * Change from "name" and "description" to "slug", "userFacingName",
-     * and "userFacingDescription".
-     *
-     * This is called as needed by NormandyMigrations.jsm, which handles tracking
-     * if this migration has already been run.
-     */
-    async migration01StudyFieldsToSlugAndUserFacingFields() {
-      // If there are no studies, stop here to avoid opening the DB again.
-      const studies = await AddonStudies.getAll();
-
-      for (const study of studies) {
-        // use existing name as slug
-        if (!study.slug) {
-          study.slug = study.name;
-        }
-
-        // Rename `name` and `description` as `userFacingName` and `userFacingDescription`
-        if (study.name && !study.userFacingName) {
-          study.userFacingName = study.name;
-        }
-        delete study.name;
-        if (study.description && !study.userFacingDescription) {
-          study.userFacingDescription = study.description;
-        }
-        delete study.description;
-
-        // Specify that existing recipes don't have branches
-        if (!study.branch) {
-          study.branch = AddonStudies.NO_BRANCHES_MARKER;
-        }
-      }
-
-      await AddonStudies.updateMany(studies);
-    },
-
-    async migration02AddFillerEnrollmentId() {
-      const studies = await AddonStudies.getAll();
-      const studiesToUpdate = [];
-      for (const study of studies) {
-        if (typeof study.enrollmentId != "string") {
-          study.enrollmentId = TelemetryEvents.NO_ENROLLMENT_ID_MARKER;
-          studiesToUpdate.push(study);
-        }
-      }
-      await AddonStudies.updateMany(studiesToUpdate);
-    },
   },
 };
 
