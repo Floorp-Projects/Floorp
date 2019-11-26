@@ -583,9 +583,9 @@ public class WebExtension {
     }
 
     /**
-     * Represents the Icon for a {@link Action}.
+     * Represents an icon, e.g. the browser action icon or the extension icon.
      */
-    public static class ActionIcon {
+    public static class Icon {
         private Map<Integer, String> mIconUris;
 
         /**
@@ -618,7 +618,7 @@ public class WebExtension {
             return ImageDecoder.instance().decode(uri, pixelSize);
         }
 
-        /* package */ ActionIcon(final GeckoBundle bundle) {
+        /* package */ Icon(final GeckoBundle bundle) {
             mIconUris = new HashMap<>();
 
             for (final String key: bundle.keys()) {
@@ -635,7 +635,7 @@ public class WebExtension {
         }
 
         /** Override for tests. */
-        protected ActionIcon() {
+        protected Icon() {
             mIconUris = null;
         }
 
@@ -645,11 +645,11 @@ public class WebExtension {
                 return true;
             }
 
-            if (!(o instanceof ActionIcon)) {
+            if (!(o instanceof Icon)) {
                 return false;
             }
 
-            return mIconUris.equals(((ActionIcon) o).mIconUris);
+            return mIconUris.equals(((Icon) o).mIconUris);
         }
 
         @Override
@@ -704,7 +704,7 @@ public class WebExtension {
          * <a target=_blank href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/browserAction/setIcon">
          *     browserAction/setIcon</a>
          */
-        final public @Nullable ActionIcon icon;
+        final public @Nullable Icon icon;
         /**
          * URI of the Popup to display when the user taps on the icon for this
          * Action.
@@ -788,7 +788,7 @@ public class WebExtension {
                     bundle.getDoubleArray("badgeTextColor"));
 
             if (bundle.containsKey("icon")) {
-                icon = new ActionIcon(bundle.getBundle("icon"));
+                icon = new Icon(bundle.getBundle("icon"));
             } else {
                 icon = null;
             }

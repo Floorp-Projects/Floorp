@@ -47,6 +47,7 @@ exclude: true
   [`ContentBlockingController.Event.LOADED_LEVEL_1_TRACKING_CONTENT`][72.16] and
   [`ContentBlockingController.Event.LOADED_LEVEL_2_TRACKING_CONTENT`][72.17].
 - Replaced `subscription` argument in [`WebPushDelegate.onPushEvent`][72.18] from a [`WebPushSubscription`][72.19] to the [`String`][72.20] `scope`.
+- ⚠️ Renamed `WebExtension.ActionIcon` to [`Icon`][72.21].
 
 [72.1]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture-
 [72.2]: {{javadoc_uri}}/Autofill.html
@@ -68,6 +69,7 @@ exclude: true
 [72.18]: {{javadoc_uri}}/WebPushController.html#onPushEvent-org.mozilla.geckoview.WebPushSubscription-byte:A-
 [72.19]: {{javadoc_uri}}/WebPushSubscription.html
 [72.20]: https://developer.android.com/reference/java/lang/String
+[72.21]: {{javadoc_uri}}/WebExtension.Icon.html
 
 ## v71
 - Added a content blocking flag for blocked social cookies to [`ContentBlocking`][70.17].
@@ -465,4 +467,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: f7f3675072cd2a0e4d65010942c8f02b4e4266f1
+[api-version]: 5cdf99a7eb0c22b4d5dd0058d8f9bf3b326b3655
