@@ -1,3 +1,6 @@
+// META: title=Cookie Store API: Observing 'change' events in document when modifications API is called multiple times with a blank name
+// META: script=resources/cookie-test-helpers.js
+
 'use strict';
 
 cookie_test(async t => {
