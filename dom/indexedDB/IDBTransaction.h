@@ -59,7 +59,7 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
     MODE_INVALID
   };
 
-  enum ReadyState { INITIAL = 0, LOADING, COMMITTING, DONE };
+  enum ReadyState { INITIAL = 0, LOADING, INACTIVE, COMMITTING, DONE };
 
  private:
   // TODO: Only non-const because of Bug 1575173.
@@ -186,6 +186,36 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
   bool IsAborted() const {
     AssertIsOnOwningThread();
     return NS_FAILED(mAbortCode);
+  }
+
+  auto TemporarilyProceedToInactive() {
+    AssertIsOnOwningThread();
+    MOZ_ASSERT(mReadyState == INITIAL || mReadyState == LOADING);
+    const auto savedReadyState = mReadyState;
+    mReadyState = INACTIVE;
+
+    struct AutoRestoreState {
+      IDBTransaction& mOwner;
+      ReadyState mSavedReadyState;
+#ifdef DEBUG
+      uint32_t mSavedPendingRequestCount;
+#endif
+
+      ~AutoRestoreState() {
+        mOwner.AssertIsOnOwningThread();
+        MOZ_ASSERT(mOwner.mReadyState == INACTIVE);
+        MOZ_ASSERT(mOwner.mPendingRequestCount == mSavedPendingRequestCount);
+
+        mOwner.mReadyState = mSavedReadyState;
+      }
+    };
+
+    return AutoRestoreState{*this, savedReadyState
+#ifdef DEBUG
+                            ,
+                            mPendingRequestCount
+#endif
+    };
   }
 
   nsresult AbortCode() const {
