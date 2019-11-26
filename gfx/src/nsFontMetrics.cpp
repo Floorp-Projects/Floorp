@@ -58,13 +58,13 @@ class AutoTextRun {
     }
     if (aMetrics->GetVertical()) {
       switch (aMetrics->GetTextOrientation()) {
-        case NS_STYLE_TEXT_ORIENTATION_MIXED:
+        case StyleTextOrientation::Mixed:
           flags |= gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_MIXED;
           break;
-        case NS_STYLE_TEXT_ORIENTATION_UPRIGHT:
+        case StyleTextOrientation::Upright:
           flags |= gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT;
           break;
-        case NS_STYLE_TEXT_ORIENTATION_SIDEWAYS:
+        case StyleTextOrientation::Sideways:
           flags |= gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
           break;
       }
@@ -116,7 +116,7 @@ nsFontMetrics::nsFontMetrics(const nsFont& aFont, const Params& aParams,
       mOrientation(aParams.orientation),
       mTextRunRTL(false),
       mVertical(false),
-      mTextOrientation(0) {
+      mTextOrientation(mozilla::StyleTextOrientation::Mixed) {
   gfxFontStyle style(
       aFont.style, aFont.weight, aFont.stretch, gfxFloat(aFont.size) / mP2A,
       aParams.language, aParams.explicitLanguage, aFont.sizeAdjust,
@@ -251,10 +251,10 @@ nscoord nsFontMetrics::SpaceWidth() {
   // width of a horizontal space (even if we're using vertical line-spacing
   // metrics, as with "writing-mode:vertical-*;text-orientation:mixed").
   return CEIL_TO_TWIPS(
-      GetMetrics(this, mVertical && mTextOrientation ==
-                                        NS_STYLE_TEXT_ORIENTATION_UPRIGHT
-                           ? eVertical
-                           : eHorizontal)
+      GetMetrics(this,
+                 mVertical && mTextOrientation == StyleTextOrientation::Upright
+                     ? eVertical
+                     : eHorizontal)
           .spaceWidth);
 }
 

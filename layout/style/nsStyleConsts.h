@@ -667,9 +667,11 @@ enum class StyleWhiteSpace : uint8_t {
 #define NS_STYLE_TEXT_SIZE_ADJUST_AUTO 1
 
 // See nsStyleText
-#define NS_STYLE_TEXT_ORIENTATION_MIXED 0
-#define NS_STYLE_TEXT_ORIENTATION_UPRIGHT 1
-#define NS_STYLE_TEXT_ORIENTATION_SIDEWAYS 2
+enum class StyleTextOrientation : uint8_t {
+  Mixed,
+  Upright,
+  Sideways,
+};
 
 // See nsStyleText
 #define NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE 0
