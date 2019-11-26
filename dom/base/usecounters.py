@@ -43,9 +43,14 @@ def read_conf(conf_filename):
 
     return parse_counters(stream)
 
-def generate_histograms(filename):
+def generate_histograms(filename, is_for_worker=False):
     # The mapping for use counters to telemetry histograms depends on the
     # ordering of items in the dictionary.
+
+    # The ordering of the ending for workers depends on the WorkerType defined
+    # in WorkerPrivate.h.
+    endings = ["DEDICATED_WORKER", "SHARED_WORKER", "SERVICE_WORKER"] if is_for_worker else ["DOCUMENT", "PAGE"]
+
     items = collections.OrderedDict()
     for counter in read_conf(filename):
         def append_counter(name, desc):
@@ -54,8 +59,9 @@ def generate_histograms(filename):
                             'description': desc }
 
         def append_counters(name, desc):
-            append_counter('USE_COUNTER2_%s_DOCUMENT' % name, 'Whether a document %s' % desc)
-            append_counter('USE_COUNTER2_%s_PAGE' % name, 'Whether a page %s' % desc)
+            for ending in endings:
+                append_counter('USE_COUNTER2_%s_%s' % (name, ending),
+                               'Whether a %s %s' % (ending.replace('_', ' ').lower(), desc))
 
         if counter['type'] == 'method':
             method = '%s.%s' % (counter['interface_name'], counter['method_name'])

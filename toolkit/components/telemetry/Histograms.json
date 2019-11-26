@@ -11987,6 +11987,16 @@
     "description": "Time (in ms) measured between when the fetch handler finished executing and when we reset the network channel."
   },
 
+  "SERVICE_WORKER_DESTROYED": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1202706],
+    "alert_emails": ["tdsmith@mozilla.com", "compatibility@lists.mozilla.org"],
+    "description": "Number of service workers destroyed; used in conjunction with use counter histograms"
+  },
   "ONBEFOREUNLOAD_PROMPT_ACTION" : {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -12542,6 +12552,16 @@
     "kind": "count",
     "description": "Tracking whether a SharedWorker spawn gets queued due to hitting max workers per domain limit. File bugs in Core::DOM in case of a Telemetry regression."
   },
+  "SHARED_WORKER_DESTROYED": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1202706],
+    "alert_emails": ["tdsmith@mozilla.com", "compatibility@lists.mozilla.org"],
+    "description": "Number of shared workers destroyed; used in conjunction with use counter histograms"
+  },
   "DEDICATED_WORKER_SPAWN_GETS_QUEUED": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -12550,6 +12570,16 @@
     "expires_in_version": "never",
     "kind": "count",
     "description": "Tracking whether a DedicatedWorker spawn gets queued due to hitting max workers per domain limit. File bugs in Core::DOM in case of a Telemetry regression."
+  },
+  "DEDICATED_WORKER_DESTROYED": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1202706],
+    "alert_emails": ["tdsmith@mozilla.com", "compatibility@lists.mozilla.org"],
+    "description": "Number of dedicated workers destroyed; used in conjunction with use counter histograms"
   },
   "SERVICE_WORKER_REGISTRATIONS": {
     "record_in_processes": ["main", "content"],
