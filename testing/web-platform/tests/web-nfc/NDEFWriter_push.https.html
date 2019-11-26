@@ -83,7 +83,7 @@ const invalid_type_messages =
       createMessage([createRecord('w3.org:xyz', test_number_data)]),
       createMessage([createRecord('w3.org:xyz', test_json_data)]),
 
-      // https://w3c.github.io/web-nfc/#the-ndefrecordtype-string
+      // https://w3c.github.io/web-nfc/#ndef-record-types
       // The record type is neither a known type ('text', 'mime' etc.) nor a
       // valid custom type for an external type record.
       createMessage([createRecord('unmatched_type', test_buffer_data)])
