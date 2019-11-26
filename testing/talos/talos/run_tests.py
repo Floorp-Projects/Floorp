@@ -13,9 +13,10 @@ import time
 import traceback
 import urllib
 
-import mozhttpd
 import mozinfo
 import mozversion
+from wptserve import server
+from wptserve.handlers import handler
 
 from talos import utils
 from mozlog import get_proxy_logger
@@ -79,11 +80,22 @@ def set_tp_preferences(test, browser_config):
 
 
 def setup_webserver(webserver):
-    """use mozhttpd to setup a webserver"""
+    """Set up a new web server with wptserve."""
     LOG.info("starting webserver on %r" % webserver)
 
+    @handler
+    def tracemonkey_pdf_handler(request, response):
+        """Handler for the talos pdfpaint test."""
+        headers = [("Content-Type", "application/pdf")]
+        with open("%s/tests/pdfpaint/tracemonkey.pdf" % here, "rb") as file:
+            content = file.read()
+        return headers, content
+
     host, port = webserver.split(':')
-    return mozhttpd.MozHttpd(host=host, port=int(port), docroot=here)
+    httpd = server.WebTestHttpd(host=host, port=int(port), doc_root=here)
+    httpd.router.register(
+        "GET", "tests/pdfpaint/tracemonkey.pdf", tracemonkey_pdf_handler)
+    return httpd
 
 
 def run_tests(config, browser_config):
