@@ -19,7 +19,7 @@ function onUnload() {
     window.focus();
     finish();
   } else {
-    gBugWindow = window.openDialog(gTestRoot + "bug839193.xhtml");
+    gBugWindow = window.openDialog(gTestRoot + "bug839193.xul");
     gIterations--;
   }
 }
@@ -40,5 +40,5 @@ function test() {
   Services.obs.addObserver(onLoad, "bug839193-loaded");
   Services.obs.addObserver(onUnload, "bug839193-unloaded");
 
-  gBugWindow = window.openDialog(gTestRoot + "bug839193.xhtml");
+  gBugWindow = window.openDialog(gTestRoot + "bug839193.xul");
 }
