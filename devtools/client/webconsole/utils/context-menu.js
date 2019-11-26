@@ -271,6 +271,18 @@ function createContextMenu(event, message, webConsoleWrapper) {
   if (url) {
     menu.append(
       new MenuItem({
+        id: "console-menu-open-url",
+        label: l10n.getStr("webconsole.menu.openURL.label"),
+        accesskey: l10n.getStr("webconsole.menu.openURL.accesskey"),
+        click: () =>
+          openContentLink(url, {
+            inBackground: true,
+            relatedToCurrent: true,
+          }),
+      })
+    );
+    menu.append(
+      new MenuItem({
         id: "console-menu-copy-url",
         label: l10n.getStr("webconsole.menu.copyURL.label"),
         accesskey: l10n.getStr("webconsole.menu.copyURL.accesskey"),
