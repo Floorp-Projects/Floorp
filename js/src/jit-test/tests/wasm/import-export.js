@@ -1,4 +1,8 @@
-const { Module, Instance, Memory, Table, LinkError, RuntimeError } = WebAssembly;
+const Module = WebAssembly.Module;
+const Instance = WebAssembly.Instance;
+const Memory = WebAssembly.Memory;
+const Table = WebAssembly.Table;
+const LinkError = WebAssembly.LinkError;
 
 const mem1Page = new Memory({initial:1});
 const mem1PageMax1 = new Memory({initial:1, maximum: 1});
@@ -14,14 +18,6 @@ const tab1Elem = new Table({initial:1, element:"funcref"});
 const tab2Elem = new Table({initial:2, element:"funcref"});
 const tab3Elem = new Table({initial:3, element:"funcref"});
 const tab4Elem = new Table({initial:4, element:"funcref"});
-
-function assertSegmentFitError(f) {
-    if (wasmBulkMemSupported()) {
-        assertErrorMessage(f, RuntimeError, /out of bounds/);
-    } else {
-        assertErrorMessage(f, LinkError, /segment does not fit/);
-    }
-}
 
 // Memory size consistency and internal limits.
 assertErrorMessage(() => new Memory({initial:2, maximum:1}), RangeError, /bad Memory maximum size/);
@@ -495,15 +491,15 @@ var m = new Module(wasmTextToBinary(`
 `));
 assertEq(new Instance(m, {glob:{a:0}}) instanceof Instance, true);
 assertEq(new Instance(m, {glob:{a:(64*1024 - 2)}}) instanceof Instance, true);
-assertSegmentFitError(() => new Instance(m, {glob:{a:(64*1024 - 1)}}));
-assertSegmentFitError(() => new Instance(m, {glob:{a:64*1024}}));
+assertErrorMessage(() => new Instance(m, {glob:{a:(64*1024 - 1)}}), LinkError, /data segment does not fit/);
+assertErrorMessage(() => new Instance(m, {glob:{a:64*1024}}), LinkError, /data segment does not fit/);
 
 var m = new Module(wasmTextToBinary(`
     (module
         (memory 1)
         (data (i32.const 0x10001) "\\0a\\0b"))
 `));
-assertSegmentFitError(() => new Instance(m));
+assertErrorMessage(() => new Instance(m), LinkError, /data segment does not fit/);
 
 var m = new Module(wasmTextToBinary(`
     (module
@@ -548,7 +544,9 @@ var mem = new Memory({initial:npages});
 var mem8 = new Uint8Array(mem.buffer);
 var tbl = new Table({initial:2, element:"funcref"});
 
-assertSegmentFitError(() => new Instance(m, {a:{mem, tbl, memOff:1, tblOff:2}}));
+assertErrorMessage(() => new Instance(m, {a:{mem, tbl, memOff:1, tblOff:2}}),
+                   LinkError,
+                   /elem segment does not fit/);
 if (wasmBulkMemSupported()) {
     // The first active element segment is applied, but the second active
     // element segment is completely OOB.
@@ -564,7 +562,9 @@ assertEq(mem8[1], 0);
 tbl.set(0, null);
 tbl.set(1, null);
 
-assertSegmentFitError(() => new Instance(m, {a:{mem, tbl, memOff:npages*64*1024, tblOff:1}}));
+assertErrorMessage(() => new Instance(m, {a:{mem, tbl, memOff:npages*64*1024, tblOff:1}}),
+                   LinkError,
+                   /data segment does not fit/);
 if (wasmBulkMemSupported()) {
     // The first and second active element segments are applied fully.  The
     // first active data segment applies, but the second one is completely OOB.
@@ -605,7 +605,9 @@ if (wasmBulkMemSupported()) {
            (func $h))`));
     let mem = new Memory({initial:1});
     let tbl = new Table({initial:3, element:"funcref"});
-    assertSegmentFitError(() => new Instance(m, {"":{mem, tbl}}));
+    assertErrorMessage(() => new Instance(m, {"":{mem, tbl}}),
+                       LinkError,
+                       /elem segment does not fit/);
     assertEq(tbl.get(0), null);
     assertEq(tbl.get(1), null);
     assertEq(tbl.get(2), null);
@@ -624,7 +626,9 @@ if (wasmBulkMemSupported()) {
            (data (i32.const 0) "\\04")             ;; is not applied
          )`));
     let mem = new Memory({initial:1});
-    assertSegmentFitError(() => new Instance(m, {"":{mem}}));
+    assertErrorMessage(() => new Instance(m, {"":{mem}}),
+                       LinkError,
+                       /data segment does not fit/);
     let v = new Uint8Array(mem.buffer);
     assertEq(v[65534], 0);
     assertEq(v[65535], 0);
