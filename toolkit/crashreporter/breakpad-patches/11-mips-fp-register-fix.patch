@@ -1,0 +1,33 @@
+From 49cd55867052a5126459fbcd5687dbf8e43a7b74 Mon Sep 17 00:00:00 2001
+From: qiaopengcheng <qiaopengcheng-hf@loongson.cn>
+Date: Thu, 28 Sep 2017 20:06:20 +0800
+Subject: Bug 1403893 - toolkit crashreport misses the fpu register $f1 on mips
+ platform.
+
+
+diff --git a/src/common/dwarf_cfi_to_module.cc b/src/common/dwarf_cfi_to_module.cc
+index 1bf1d96..5e66beb 100644
+--- a/src/common/dwarf_cfi_to_module.cc
++++ b/src/common/dwarf_cfi_to_module.cc
+@@ -126,17 +126,17 @@ vector<string> DwarfCFIToModule::RegisterNames::ARM64() {
+ }
+ 
+ vector<string> DwarfCFIToModule::RegisterNames::MIPS() {
+   static const char* const kRegisterNames[] = {
+     "$zero", "$at",  "$v0",  "$v1",  "$a0",   "$a1",  "$a2",  "$a3",
+     "$t0",   "$t1",  "$t2",  "$t3",  "$t4",   "$t5",  "$t6",  "$t7",
+     "$s0",   "$s1",  "$s2",  "$s3",  "$s4",   "$s5",  "$s6",  "$s7",
+     "$t8",   "$t9",  "$k0",  "$k1",  "$gp",   "$sp",  "$fp",  "$ra",
+-    "$lo",   "$hi",  "$pc",  "$f0",  "$f2",   "$f3",  "$f4",  "$f5",
++    "$lo",   "$hi",  "$pc",  "$f0",  "$f1",   "$f2",  "$f3",  "$f4",  "$f5",
+     "$f6",   "$f7",  "$f8",  "$f9",  "$f10",  "$f11", "$f12", "$f13",
+     "$f14",  "$f15", "$f16", "$f17", "$f18",  "$f19", "$f20",
+     "$f21",  "$f22", "$f23", "$f24", "$f25",  "$f26", "$f27",
+     "$f28",  "$f29", "$f30", "$f31", "$fcsr", "$fir"
+   };
+ 
+   return MakeVector(kRegisterNames,
+                     sizeof(kRegisterNames) / sizeof(kRegisterNames[0]));
+-- 
+2.1.0
+
