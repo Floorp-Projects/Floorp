@@ -694,13 +694,7 @@ NS_IMETHODIMP nsExternalHelperAppService::CreateListener(
 
     // Check if we have a POST request, in which case we don't want to use
     // the url's extension
-    bool allowURLExt = true;
-    nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(channel);
-    if (httpChan) {
-      nsAutoCString requestMethod;
-      Unused << httpChan->GetRequestMethod(requestMethod);
-      allowURLExt = !requestMethod.EqualsLiteral("POST");
-    }
+    bool allowURLExt = !net::ChannelIsPost(channel);
 
     // Check if we had a query string - we don't want to check the URL
     // extension if a query is present in the URI
