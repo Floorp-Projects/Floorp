@@ -4,12 +4,12 @@
  */
 onmessage = function(event) {
   let chromeURL = event.data.replace(
-    "test_chromeWorkerJSM.xul",
+    "test_chromeWorkerJSM.xhtml",
     "WorkerTest_badworker.js"
   );
 
   let mochitestURL = event.data
-    .replace("test_chromeWorkerJSM.xul", "WorkerTest_badworker.js")
+    .replace("test_chromeWorkerJSM.xhtml", "WorkerTest_badworker.js")
     .replace(
       "chrome://mochitests/content/chrome",
       "http://mochi.test:8888/tests"
