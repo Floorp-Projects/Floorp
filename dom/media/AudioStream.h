@@ -16,12 +16,15 @@
 #  include "nsAutoPtr.h"
 #  include "nsCOMPtr.h"
 #  include "nsThreadUtils.h"
-#  include "soundtouch/SoundTouchFactory.h"
 #  include "WavDumper.h"
 
 #  if defined(XP_WIN)
 #    include "mozilla/audio/AudioNotificationReceiver.h"
 #  endif
+
+namespace soundtouch {
+class MOZ_EXPORT SoundTouch;
+}
 
 namespace mozilla {
 
