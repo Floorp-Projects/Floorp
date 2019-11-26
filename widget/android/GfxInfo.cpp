@@ -226,14 +226,14 @@ GfxInfo::GetAdapterDescription2(nsAString& aAdapterDescription) {
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterRAM(uint32_t* aAdapterRAM) {
+GfxInfo::GetAdapterRAM(nsAString& aAdapterRAM) {
   EnsureInitialized();
-  *aAdapterRAM = 0;
+  aAdapterRAM.Truncate();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterRAM2(uint32_t* aAdapterRAM) {
+GfxInfo::GetAdapterRAM2(nsAString& aAdapterRAM) {
   EnsureInitialized();
   return NS_ERROR_FAILURE;
 }
@@ -342,18 +342,6 @@ GfxInfo::GetDisplayInfo(nsTArray<nsString>& aDisplayInfo) {
                            (int32_t)mScreenInfo.mScreenDimensions.width,
                            (int32_t)mScreenInfo.mScreenDimensions.height);
   aDisplayInfo.AppendElement(displayInfo);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetDisplayWidth(nsTArray<uint32_t>& aDisplayWidth) {
-  aDisplayWidth.AppendElement((uint32_t)mScreenInfo.mScreenDimensions.width);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetDisplayHeight(nsTArray<uint32_t>& aDisplayHeight) {
-  aDisplayHeight.AppendElement((uint32_t)mScreenInfo.mScreenDimensions.height);
   return NS_OK;
 }
 
