@@ -114,19 +114,21 @@ void js::ShutDownMallocAllocator() {
   // moz_dispose_arena(ArrayBufferContentsArena);
 }
 
+#ifdef MOZ_DEBUG
 extern void js::AssertJSStringBufferInCorrectArena(const void* ptr) {
 //  `jemalloc_ptr_info()` only exists if MOZ_MEMORY is defined, and it only
 //  returns an arenaId if MOZ_DEBUG is defined. Otherwise, this function is
 //  a no-op.
-#if defined(MOZ_MEMORY) && defined(MOZ_DEBUG)
+#  if defined(MOZ_MEMORY) && defined(MOZ_DEBUG)
   if (ptr) {
     jemalloc_ptr_info_t ptrInfo{};
     jemalloc_ptr_info(ptr, &ptrInfo);
     MOZ_ASSERT(ptrInfo.tag != TagUnknown);
     MOZ_ASSERT(ptrInfo.arenaId == js::StringBufferArena);
   }
-#endif
+#  endif
 }
+#endif
 
 JS_PUBLIC_API void JS_Assert(const char* s, const char* file, int ln) {
   MOZ_ReportAssertionFailure(s, file, ln);
