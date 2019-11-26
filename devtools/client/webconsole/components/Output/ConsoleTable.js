@@ -29,7 +29,8 @@ loader.lazyRequireGetter(
 );
 
 const TABLE_ROW_MAX_ITEMS = 1000;
-const TABLE_COLUMN_MAX_ITEMS = 10;
+// Match Chrome max column number.
+const TABLE_COLUMN_MAX_ITEMS = 21;
 
 class ConsoleTable extends Component {
   static get propTypes() {
@@ -78,6 +79,7 @@ class ConsoleTable extends Component {
             className: "new-consoletable-header",
             role: "columnheader",
             key,
+            title: value,
           },
           value
         )
@@ -91,21 +93,29 @@ class ConsoleTable extends Component {
 
     return items.map((item, index) => {
       const cells = [];
+      const className = index % 2 ? "odd" : "even";
+
       columns.forEach((value, key) => {
+        const cellValue = item[key];
+        const cellContent =
+          typeof cellValue === "undefined"
+            ? ""
+            : GripMessageBody({
+                grip: cellValue,
+                mode: MODE.SHORT,
+                useQuotes: false,
+                serviceContainer,
+                dispatch,
+              });
+
         cells.push(
           dom.div(
             {
               role: "gridcell",
-              className: index % 2 ? "odd" : "even",
+              className,
               key,
             },
-            GripMessageBody({
-              grip: item[key],
-              mode: MODE.SHORT,
-              useQuotes: false,
-              serviceContainer,
-              dispatch,
-            })
+            cellContent
           )
         );
       });
@@ -142,7 +152,9 @@ class ConsoleTable extends Component {
         className: "new-consoletable",
         role: "grid",
         style: {
-          gridTemplateColumns: `repeat(${columns.size}, auto)`,
+          gridTemplateColumns: `repeat(${columns.size}, calc(100% / ${
+            columns.size
+          }))`,
         },
       },
       this.getHeaders(columns),
