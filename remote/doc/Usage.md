@@ -49,7 +49,7 @@ Other examples of address specs include:
 The use of `localhost` in the first example above will, depending
 on whether the system supports IPv6, bind to both IP layers and
 accept incoming connections from either IPv4 or IPv6.  The second
-(`127.0.0.1`) and third (`[::1]`) examples will, respecitvely,
+(`127.0.0.1`) and third (`[::1]`) examples will, respectively,
 force the HTTP to listen on IPv4 or IPv6.
 
 The fourth example will use the default hostname, `localhost`, to
