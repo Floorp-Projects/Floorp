@@ -48,7 +48,7 @@ class AccessibilityRowValue extends Component {
       audit &&
         AuditController(
           {
-            accessible: member.object,
+            accessibleFront: member.object,
           },
           Badges()
         )

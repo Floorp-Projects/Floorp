@@ -10,7 +10,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 class AuditController extends React.Component {
   static get propTypes() {
     return {
-      accessible: PropTypes.object.isRequired,
+      accessibleFront: PropTypes.object.isRequired,
       children: PropTypes.any,
     };
   }
@@ -19,7 +19,7 @@ class AuditController extends React.Component {
     super(props);
 
     const {
-      accessible: { checks },
+      accessibleFront: { checks },
     } = props;
     this.state = {
       checks,
@@ -29,8 +29,8 @@ class AuditController extends React.Component {
   }
 
   componentWillMount() {
-    const { accessible } = this.props;
-    accessible.on("audited", this.onAudited);
+    const { accessibleFront } = this.props;
+    accessibleFront.on("audited", this.onAudited);
   }
 
   componentDidMount() {
@@ -42,36 +42,36 @@ class AuditController extends React.Component {
   }
 
   componentWillUnmount() {
-    const { accessible } = this.props;
-    accessible.off("audited", this.onAudited);
+    const { accessibleFront } = this.props;
+    accessibleFront.off("audited", this.onAudited);
   }
 
   onAudited() {
-    const { accessible } = this.props;
-    if (!accessible.actorID) {
-      // Accessible is being removed, stop listening for 'audited' events.
-      accessible.off("audited", this.onAudited);
+    const { accessibleFront } = this.props;
+    if (!accessibleFront.actorID) {
+      // Accessible front is being removed, stop listening for 'audited' events.
+      accessibleFront.off("audited", this.onAudited);
       return;
     }
 
-    this.setState({ checks: accessible.checks });
+    this.setState({ checks: accessibleFront.checks });
   }
 
   maybeRequestAudit() {
-    const { accessible } = this.props;
-    if (!accessible.actorID) {
-      // Accessible is being removed, stop listening for 'audited' events.
-      accessible.off("audited", this.onAudited);
+    const { accessibleFront } = this.props;
+    if (!accessibleFront.actorID) {
+      // Accessible front is being removed, stop listening for 'audited' events.
+      accessibleFront.off("audited", this.onAudited);
       return;
     }
 
-    if (accessible.checks) {
+    if (accessibleFront.checks) {
       return;
     }
 
-    accessible.audit().catch(error => {
+    accessibleFront.audit().catch(error => {
       // Accessible actor was destroyed, connection closed.
-      if (accessible.actorID) {
+      if (accessibleFront.actorID) {
         console.warn(error);
       }
     });

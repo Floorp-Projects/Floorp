@@ -58,19 +58,22 @@ const TREE_DEPTH_PADDING_INCREMENT = 20;
 class AccessiblePropertyClass extends Component {
   static get propTypes() {
     return {
-      accessible: PropTypes.string,
+      accessibleFrontActorID: PropTypes.string,
       object: PropTypes.any,
       focused: PropTypes.bool,
       children: PropTypes.func,
     };
   }
 
-  componentDidUpdate({ object: prevObject, accessible: prevAccessible }) {
-    const { accessible, object, focused } = this.props;
+  componentDidUpdate({
+    object: prevObject,
+    accessibleFrontActorID: prevAccessibleFrontActorID,
+  }) {
+    const { accessibleFrontActorID, object, focused } = this.props;
     // Fast check if row is focused or if the value did not update.
     if (
       focused ||
-      accessible !== prevAccessible ||
+      accessibleFrontActorID !== prevAccessibleFrontActorID ||
       prevObject === object ||
       (object && prevObject && typeof object === "object")
     ) {
@@ -102,15 +105,14 @@ const AccessibleProperty = createFactory(AccessiblePropertyClass);
 class Accessible extends Component {
   static get propTypes() {
     return {
-      accessible: PropTypes.object,
+      accessibleFront: PropTypes.object,
       dispatch: PropTypes.func.isRequired,
-      DOMNode: PropTypes.object,
+      nodeFront: PropTypes.object,
       items: PropTypes.array,
       labelledby: PropTypes.string.isRequired,
       parents: PropTypes.object,
       relations: PropTypes.object,
       supports: PropTypes.object,
-      accessibilityWalker: PropTypes.object.isRequired,
     };
   }
 
@@ -135,18 +137,25 @@ class Accessible extends Component {
     );
   }
 
-  componentWillReceiveProps({ accessible }) {
-    const oldAccessible = this.props.accessible;
+  componentWillReceiveProps({ accessibleFront }) {
+    const oldAccessibleFront = this.props.accessibleFront;
 
-    if (oldAccessible) {
-      if (accessible && accessible.actorID === oldAccessible.actorID) {
+    if (oldAccessibleFront) {
+      if (
+        accessibleFront &&
+        accessibleFront.actorID === oldAccessibleFront.actorID
+      ) {
         return;
       }
-      ACCESSIBLE_EVENTS.forEach(event => oldAccessible.off(event, this.update));
+      ACCESSIBLE_EVENTS.forEach(event =>
+        oldAccessibleFront.off(event, this.update)
+      );
     }
 
-    if (accessible) {
-      ACCESSIBLE_EVENTS.forEach(event => accessible.on(event, this.update));
+    if (accessibleFront) {
+      ACCESSIBLE_EVENTS.forEach(event =>
+        accessibleFront.on(event, this.update)
+      );
     }
   }
 
@@ -156,9 +165,11 @@ class Accessible extends Component {
       this.onAccessibleInspected
     );
 
-    const { accessible } = this.props;
-    if (accessible) {
-      ACCESSIBLE_EVENTS.forEach(event => accessible.off(event, this.update));
+    const { accessibleFront } = this.props;
+    if (accessibleFront) {
+      ACCESSIBLE_EVENTS.forEach(event =>
+        accessibleFront.off(event, this.update)
+      );
     }
   }
 
@@ -170,15 +181,15 @@ class Accessible extends Component {
   }
 
   async update() {
-    const { dispatch, accessible, supports } = this.props;
-    if (!accessible.actorID) {
+    const { dispatch, accessibleFront, supports } = this.props;
+    if (!accessibleFront.actorID) {
       return;
     }
 
-    const domWalker = (await accessible.targetFront.getFront("inspector"))
+    const domWalker = (await accessibleFront.targetFront.getFront("inspector"))
       .walker;
 
-    dispatch(updateDetails(domWalker, accessible, supports));
+    dispatch(updateDetails(domWalker, accessibleFront, supports));
   }
 
   setExpanded(item, isExpanded) {
@@ -211,34 +222,42 @@ class Accessible extends Component {
     await highlighterFront.unhighlight();
   }
 
-  showAccessibleHighlighter(accessible) {
-    const { accessibilityWalker, dispatch } = this.props;
-    dispatch(unhighlight());
-
-    if (!accessible || !accessibilityWalker) {
+  showAccessibleHighlighter(accessibleFront) {
+    this.props.dispatch(unhighlight());
+    if (!accessibleFront) {
       return;
     }
 
-    accessibilityWalker.highlightAccessible(accessible).catch(error => {
-      // Only report an error where there's still a toolbox. Ignore cases where toolbox is
-      // already destroyed.
-      if (gToolbox) {
-        console.error(error);
-      }
-    });
+    const accessibilityWalkerFront = accessibleFront.parent();
+    if (!accessibilityWalkerFront) {
+      return;
+    }
+
+    accessibilityWalkerFront
+      .highlightAccessible(accessibleFront)
+      .catch(error => {
+        // Only report an error where there's still a toolbox. Ignore cases
+        // where toolbox is already destroyed.
+        if (gToolbox) {
+          console.error(error);
+        }
+      });
   }
 
-  hideAccessibleHighlighter() {
-    const { accessibilityWalker, dispatch } = this.props;
-    dispatch(unhighlight());
-
-    if (!accessibilityWalker) {
+  hideAccessibleHighlighter(accessibleFront) {
+    this.props.dispatch(unhighlight());
+    if (!accessibleFront) {
       return;
     }
 
-    accessibilityWalker.unhighlight().catch(error => {
-      // Only report an error where there's still a toolbox. Ignore cases where toolbox is
-      // already destroyed.
+    const accessibilityWalkerFront = accessibleFront.parent();
+    if (!accessibilityWalkerFront) {
+      return;
+    }
+
+    accessibilityWalkerFront.unhighlight().catch(error => {
+      // Only report an error where there's still a toolbox. Ignore cases where
+      // toolbox is already destroyed.
       if (gToolbox) {
         console.error(error);
       }
@@ -259,13 +278,19 @@ class Accessible extends Component {
       .then(() => gToolbox.selection.setNodeFront(nodeFront, reason));
   }
 
-  async selectAccessible(accessible) {
-    const { accessibilityWalker, dispatch } = this.props;
-    if (!accessibilityWalker) {
+  async selectAccessible(accessibleFront) {
+    if (!accessibleFront) {
       return;
     }
 
-    await dispatch(select(accessibilityWalker, accessible));
+    const accessibilityWalkerFront = accessibleFront.parent();
+    if (!accessibilityWalkerFront) {
+      return;
+    }
+
+    await this.props.dispatch(
+      select(accessibilityWalkerFront, accessibleFront)
+    );
 
     const { props } = this.refs;
     if (props) {
@@ -289,17 +314,19 @@ class Accessible extends Component {
       openLink: this.openLink,
     };
 
-    if (isNode(object)) {
+    if (isNodeFront(object)) {
       valueProps.defaultRep = ElementNode;
       valueProps.onDOMNodeMouseOut = () =>
-        this.hideHighlighter(this.props.DOMNode);
+        this.hideHighlighter(this.props.nodeFront);
       valueProps.onDOMNodeMouseOver = () =>
-        this.showHighlighter(this.props.DOMNode);
-      valueProps.onInspectIconClick = () => this.selectNode(this.props.DOMNode);
-    } else if (isAccessible(object)) {
+        this.showHighlighter(this.props.nodeFront);
+      valueProps.onInspectIconClick = () =>
+        this.selectNode(this.props.nodeFront);
+    } else if (isAccessibleFront(object)) {
       const target = findAccessibleTarget(this.props.relations, object.actor);
       valueProps.defaultRep = AccessibleRep;
-      valueProps.onAccessibleMouseOut = () => this.hideAccessibleHighlighter();
+      valueProps.onAccessibleMouseOut = () =>
+        this.hideAccessibleHighlighter(target);
       valueProps.onAccessibleMouseOver = () =>
         this.showAccessibleHighlighter(target);
       valueProps.onInspectIconClick = (obj, e) => {
@@ -321,7 +348,11 @@ class Accessible extends Component {
     const depthPadding = depth * TREE_DEPTH_PADDING_INCREMENT;
 
     return AccessibleProperty(
-      { object, focused, accessible: this.props.accessible.actorID },
+      {
+        object,
+        focused,
+        accessibleFrontActorID: this.props.accessibleFront.actorID,
+      },
       () =>
         div(
           {
@@ -346,9 +377,9 @@ class Accessible extends Component {
 
   render() {
     const { expanded, active, focused } = this.state;
-    const { items, parents, accessible, labelledby } = this.props;
+    const { items, parents, accessibleFront, labelledby } = this.props;
 
-    if (accessible) {
+    if (accessibleFront) {
       return Tree({
         ref: "props",
         key: "accessible-properties",
@@ -430,18 +461,18 @@ const findByPath = (path, items) => {
 };
 
 /**
- * Check if a given property is a DOMNode actor.
+ * Check if a given property is a DOMNode front.
  * @param  {Object?} value A property to check for being a DOMNode.
  * @return {Boolean}       A flag that indicates whether a property is a DOMNode.
  */
-const isNode = value => value && value.typeName === "domnode";
+const isNodeFront = value => value && value.typeName === "domnode";
 
 /**
- * Check if a given property is an Accessible actor.
+ * Check if a given property is an Accessible front.
  * @param  {Object?} value A property to check for being an Accessible.
  * @return {Boolean}       A flag that indicates whether a property is an Accessible.
  */
-const isAccessible = value => value && value.typeName === "accessible";
+const isAccessibleFront = value => value && value.typeName === "accessible";
 
 /**
  * While waiting for a reps fix in https://github.com/firefox-devtools/reps/issues/92,
@@ -481,9 +512,9 @@ const makeItemsForDetails = (props, parentPath) =>
     let contents = props[name];
 
     if (contents) {
-      if (isNode(contents)) {
+      if (isNodeFront(contents)) {
         contents = translateNodeFrontToGripWrapper(contents);
-      } else if (isAccessible(contents)) {
+      } else if (isAccessibleFront(contents)) {
         contents = translateAccessibleFrontToGrip(contents);
       } else if (Array.isArray(contents) || typeof contents === "object") {
         children = makeItemsForDetails(contents, path);
@@ -510,22 +541,26 @@ const makeParentMap = items => {
 };
 
 const mapStateToProps = ({ details, ui }) => {
-  const { accessible, DOMNode, relations } = details;
+  const {
+    accessible: accessibleFront,
+    DOMNode: nodeFront,
+    relations,
+  } = details;
   const { supports } = ui;
-  if (!accessible || !DOMNode) {
+  if (!accessibleFront || !nodeFront) {
     return {};
   }
 
   const items = makeItemsForDetails(
     ORDERED_PROPS.reduce((props, key) => {
       if (key === "DOMNode") {
-        props.DOMNode = DOMNode;
+        props.nodeFront = nodeFront;
       } else if (key === "relations") {
         if (supports.relations) {
           props.relations = relations;
         }
       } else {
-        props[key] = accessible[key];
+        props[key] = accessibleFront[key];
       }
 
       return props;
@@ -534,7 +569,7 @@ const mapStateToProps = ({ details, ui }) => {
   );
   const parents = makeParentMap(items);
 
-  return { accessible, DOMNode, items, parents, relations, supports };
+  return { accessibleFront, nodeFront, items, parents, relations, supports };
 };
 
 module.exports = connect(mapStateToProps)(Accessible);
