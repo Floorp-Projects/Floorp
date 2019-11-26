@@ -7,4 +7,4 @@ This covers how files requested for display are loaded.
    :maxdepth: 2
 
    uriloader
-   exthandler/docs/index
+   exthandler/index
