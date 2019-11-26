@@ -185,8 +185,22 @@ abstract class AbstractFetchDownloadService : Service() {
         return super.onStartCommand(intent, flags, startId)
     }
 
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        // If the task gets removed (app gets swiped away in the task switcher) our process and this
+        // servies gets killed. In this situation we remove the notification since the download will
+        // stop and cannot be controlled via the notification anymore (until we persist enough data
+        // to resume downloads from a new process).
+
+        val notificationManager = NotificationManagerCompat.from(this)
+
+        downloadJobs.values.forEach { state ->
+            notificationManager.cancel(state.foregroundServiceId)
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+
         downloadJobs.values.forEach {
             it.job?.cancel()
         }
