@@ -456,8 +456,6 @@ add_task(async function onEngagement() {
       permissions: ["urlbar"],
     },
     isPrivileged: true,
-    incognitoOverride: "spanning",
-    useAddonManager: "temporary",
     background() {
       browser.urlbar.onEngagement.addListener(state => {
         browser.test.sendMessage("onEngagement", state);
