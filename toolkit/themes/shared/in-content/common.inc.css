@@ -994,6 +994,10 @@ input[type="text"][warning]:enabled:not(:focus) {
   margin: -16px -16px 16px;
 }
 
+.card-heading-image:dir(rtl) {
+  transform: scaleX(-1);
+}
+
 .sidebar-footer-button {
   padding: 1px; /* Adding padding around help label in order to make entire keyboard focusing outline visible */
 }
