@@ -378,16 +378,6 @@ nsChromeRegistry::MustLoadURLRemotely(nsIURI* aURI, bool* aResult) {
   return NS_OK;
 }
 
-bool nsChromeRegistry::GetDirectionForLocale(const nsACString& aLocale) {
-  int pref = mozilla::Preferences::GetInt("intl.uidirection", -1);
-  if (pref >= 0) {
-    return (pref > 0);
-  }
-  nsAutoCString locale(aLocale);
-  SanitizeForBCP47(locale);
-  return uloc_isRightToLeft(locale.get());
-}
-
 already_AddRefed<nsChromeRegistry> nsChromeRegistry::GetSingleton() {
   if (gChromeRegistry) {
     RefPtr<nsChromeRegistry> registry = gChromeRegistry;
