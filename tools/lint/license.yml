@@ -8,19 +8,34 @@ license:
         - build/pgo/js-input
         - build/workspace-hack/src/lib.rs
         - browser/app/blocklist.xml
+        # License not super clear
+        - browser/branding/
+        # Trademark
+        - browser/components/newtab/data/content/assets/firefox-wordmark.svg
         - browser/components/pocket/content/panels/
         - browser/components/shell/ScreenshotChild.jsm
+        - browser/extensions/pdfjs/content/web/images/
         - browser/extensions/webcompat/about-compat/aboutCompat.html
-        - browser/extensions/webcompat/injections/js
+        # We probably want a specific license
+        - browser/extensions/webcompat/injections/
+        # Different license
+        - build/pgo/blueprint/print.css
+        # Different license
+        - build/pgo/blueprint/screen.css
         - config/external/ffi/preprocess_libffi_asm.py
         - config/external/ffi/subst_header.py
         - config/external/nspr/_pl_bld.h
         - config/external/nspr/_pr_bld.h
         - config/system_header_util.py
+        - dom/docs/Fission-IPC-Diagram.svg
         # Unknown origin
         - gfx/2d/MMIHelpers.h
         # Generated code
         - gfx/2d/ShadersD2D1.h
+        # might not work with license
+        - gradle.properties
+        # might not work with license
+        - gradle/wrapper/gradle-wrapper.properties
         - intl/l10n/L10nRegistry.jsm
         - ipc/ipdl/ipdl/cxx/code.py
         - media/libdav1d/vcs_version.h
@@ -29,6 +44,10 @@ license:
         - mobile/android/geckoview/src/main/AndroidManifest.xml
         - mobile/android/geckoview/src/main/res/drawable/ic_generic_file.xml
         - mobile/android/geckoview_example/src/main
+        # might not work with license
+        - mobile/android/gradle/dotgradle-offline/gradle.properties
+        # might not work with license
+        - mobile/android/gradle/dotgradle-online/gradle.properties
         # Almost empty file
         - modules/libpref/greprefs.js
         - mozglue/android/NativeCrypto.h
