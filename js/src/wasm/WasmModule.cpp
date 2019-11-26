@@ -531,8 +531,7 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
 
   if (eagerBoundsCheck) {
     // Perform all error checks up front so that this function does not perform
-    // partial initialization if an error is reported. In addition, we need to
-    // to report OOBs as a link error when bulk-memory is disabled.
+    // partial initialization if an error is reported.
 
     for (const ElemSegment* seg : elemSegments_) {
       if (!seg->active()) {
@@ -587,7 +586,7 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
         uint32_t tableLength = tables[seg->tableIndex]->length();
         if (offset > tableLength || tableLength - offset < count) {
           JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                   JSMSG_WASM_OUT_OF_BOUNDS);
+                                   JSMSG_WASM_BAD_FIT, "elem", "table");
           return false;
         }
       }
@@ -622,7 +621,7 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
       if (!eagerBoundsCheck) {
         if (offset > memoryLength || memoryLength - offset < count) {
           JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                   JSMSG_WASM_OUT_OF_BOUNDS);
+                                   JSMSG_WASM_BAD_FIT, "data", "memory");
           return false;
         }
       }
