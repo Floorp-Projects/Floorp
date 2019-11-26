@@ -279,6 +279,17 @@ if (AppConstants.MOZ_CRASHREPORTER) {
   );
 }
 
+if (AppConstants.ENABLE_REMOTE_AGENT) {
+  XPCOMUtils.defineLazyServiceGetter(
+    this,
+    "RemoteAgent",
+    "@mozilla.org/remote/agent;1",
+    "nsIRemoteAgent"
+  );
+} else {
+  this.RemoteAgent = { listening: false };
+}
+
 XPCOMUtils.defineLazyGetter(this, "RTL_UI", () => {
   return Services.locale.isAppLocaleRTL;
 });
@@ -1867,7 +1878,7 @@ var gBrowserInit = {
       ToolbarKeyboardNavigator.init();
     }
 
-    gRemoteControl.updateVisualCue(Marionette.running);
+    gRemoteControl.updateVisualCue(Marionette.running || RemoteAgent.listening);
 
     // If we are given a tab to swap in, take care of it before first paint to
     // avoid an about:blank flash.
@@ -8412,8 +8423,13 @@ function formatURL(aFormat, aIsPref) {
 }
 
 /**
- * Fired on the "marionette-remote-control" system notification,
- * indicating if the browser session is under remote control.
+ * When the browser is being controlled from out-of-process,
+ * e.g. when Marionette or the remote debugging protocol is used,
+ * we add a visual hint to the browser UI to indicate to the user
+ * that the browser session is under remote control.
+ *
+ * This is called when the content browser initialises (from gBrowserInit.onLoad())
+ * and when the "remote-listening" system notification fires.
  */
 const gRemoteControl = {
   observe(subject, topic, data) {

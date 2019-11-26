@@ -615,7 +615,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 
 /*
- * Display visual cue that browser is under remote control by Marionette.
+ * Display visual cue that browser is under remote control.
  * This is to help users visually distinguish a user agent session that
  * is under remote control from those used for normal browsing sessions.
  *
