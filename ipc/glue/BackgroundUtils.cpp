@@ -95,7 +95,11 @@ already_AddRefed<nsIPrincipal> PrincipalInfoToPrincipal(
       rv = principal->GetOriginNoSuffix(originNoSuffix);
       if (NS_WARN_IF(NS_FAILED(rv)) ||
           !info.originNoSuffix().Equals(originNoSuffix)) {
+#ifdef FUZZING
+        return nullptr;
+#else
         MOZ_CRASH("Origin must be available when deserialized");
+#endif /* FUZZING */
       }
 
       if (info.domain()) {
@@ -116,7 +120,11 @@ already_AddRefed<nsIPrincipal> PrincipalInfoToPrincipal(
         rv = principal->GetBaseDomain(baseDomain);
         if (NS_WARN_IF(NS_FAILED(rv)) ||
             !info.baseDomain().Equals(baseDomain)) {
+#ifdef FUZZING
+          return nullptr;
+#else
           MOZ_CRASH("Base domain must be available when deserialized");
+#endif /* FUZZING */
         }
       }
 
