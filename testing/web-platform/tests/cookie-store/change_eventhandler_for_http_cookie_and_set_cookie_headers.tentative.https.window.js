@@ -1,3 +1,6 @@
+// META: title=Cookie Store API: Observing 'change' events in document when cookies set via Set-Cookie header
+// META: script=resources/cookie-test-helpers.js
+
 'use strict';
 
 cookie_test(async t => {
