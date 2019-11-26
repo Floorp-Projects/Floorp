@@ -18,18 +18,17 @@ add_task(async function test_toggle_password() {
     async function(browser) {
       // Submit the form in the content page with the credentials from the test
       // case. This will cause the doorhanger notification to be displayed.
-      let promiseShown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown",
-        event => event.target == PopupNotifications.panel
-      );
       await ContentTask.spawn(browser, null, async function() {
         let doc = content.document;
-        doc.getElementById("form-basic-username").value = "username";
-        doc.getElementById("form-basic-password").value = "pw";
+        doc.getElementById("form-basic-username").setUserInput("username");
+        doc.getElementById("form-basic-password").setUserInput("pw");
         doc.getElementById("form-basic").submit();
       });
-      await promiseShown;
+      let notif = await getCaptureDoorhangerThatMayOpen("password-save");
+      ok(notif, "got notification popup");
+
+      // Check the actual content of the popup notification.
+      await checkDoorhangerUsernamePassword("username", "pw");
 
       let notificationElement = PopupNotifications.panel.childNodes[0];
       let passwordTextbox = notificationElement.querySelector(
@@ -40,7 +39,7 @@ add_task(async function test_toggle_password() {
       );
 
       await EventUtils.synthesizeMouseAtCenter(toggleCheckbox, {});
-      Assert.ok(toggleCheckbox.checked);
+      Assert.ok(toggleCheckbox.checked, "Toggle is checked");
       Assert.equal(
         passwordTextbox.type,
         "text",
@@ -54,6 +53,7 @@ add_task(async function test_toggle_password() {
         "password",
         "Password textbox changed to * text"
       );
+      await cleanupDoorhanger(notif);
     }
   );
 });
@@ -72,21 +72,19 @@ add_task(async function test_checkbox_disabled_if_has_master_password() {
     async function(browser) {
       // Submit the form in the content page with the credentials from the test
       // case. This will cause the doorhanger notification to be displayed.
-      let promiseShown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown",
-        event => event.target == PopupNotifications.panel
-      );
-
       LoginTestUtils.masterPassword.enable();
 
       await ContentTask.spawn(browser, null, async function() {
         let doc = content.document;
-        doc.getElementById("form-basic-username").value = "username";
-        doc.getElementById("form-basic-password").value = "pass";
+        doc.getElementById("form-basic-username").setUserInput("username");
+        doc.getElementById("form-basic-password").setUserInput("pass");
         doc.getElementById("form-basic").submit();
       });
-      await promiseShown;
+      let notif = await getCaptureDoorhangerThatMayOpen("password-save");
+      ok(notif, "got notification popup");
+
+      // Check the actual content of the popup notification.
+      await checkDoorhangerUsernamePassword("username", "pass");
 
       let notificationElement = PopupNotifications.panel.childNodes[0];
       let passwordTextbox = notificationElement.querySelector(
@@ -105,6 +103,7 @@ add_task(async function test_checkbox_disabled_if_has_master_password() {
         toggleCheckbox.getAttribute("hidden"),
         "checkbox is hidden when master password is set"
       );
+      await cleanupDoorhanger(notif);
     }
   );
 

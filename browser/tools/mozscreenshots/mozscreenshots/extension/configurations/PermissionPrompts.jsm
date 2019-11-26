@@ -81,7 +81,15 @@ var PermissionPrompts = {
       selectors: ["#notification-popup", "#identity-box"],
       async applyConfig() {
         await closeLastTab();
-        await clickOn("#login-capture");
+        // we need to emulate user input in the form for the save-password prompt to be shown
+        await clickOn("#login-capture", function beforeContentFn() {
+          E10SUtils.wrapHandlingUserInput(content, true, function() {
+            let element = content.document.querySelector(
+              "input[type=password]"
+            );
+            element.setUserInput("123456");
+          });
+        });
       },
     },
 
@@ -140,7 +148,7 @@ async function closeLastTab() {
   lastTab = null;
 }
 
-async function clickOn(selector) {
+async function clickOn(selector, beforeContentFn) {
   let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
 
   // Save the tab so we can close it later.
@@ -148,6 +156,10 @@ async function clickOn(selector) {
     browserWindow.gBrowser,
     URL
   );
+
+  if (beforeContentFn) {
+    await ContentTask.spawn(lastTab.linkedBrowser, null, beforeContentFn);
+  }
 
   await ContentTask.spawn(lastTab.linkedBrowser, selector, async function(arg) {
     E10SUtils.wrapHandlingUserInput(content, true, function() {

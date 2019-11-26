@@ -93,55 +93,48 @@ add_task(async function test_save_change() {
       async function(browser) {
         // Submit the form in the content page with the credentials from the test
         // case. This will cause the doorhanger notification to be displayed.
-        let promiseShown = BrowserTestUtils.waitForEvent(
-          PopupNotifications.panel,
-          "popupshown",
-          event => event.target == PopupNotifications.panel
-        );
         await ContentTask.spawn(browser, [username, password], async function([
           contentUsername,
           contentPassword,
         ]) {
           let doc = content.document;
-          doc.getElementById("form-basic-username").value = contentUsername;
-          doc.getElementById("form-basic-password").value = contentPassword;
+          doc
+            .getElementById("form-basic-username")
+            .setUserInput(contentUsername);
+          doc
+            .getElementById("form-basic-password")
+            .setUserInput(contentPassword);
           doc.getElementById("form-basic").submit();
         });
-        await promiseShown;
-        let notif = PopupNotifications.getNotification("password", browser);
-        let notificationElement = PopupNotifications.panel.childNodes[0];
-        // Style flush to make sure binding is attached
-        notificationElement.querySelector("#password-notification-password")
-          .clientTop;
-
-        // Check the actual content of the popup notification.
-        Assert.equal(
-          notificationElement.querySelector("#password-notification-username")
-            .value,
-          username
-        );
-        Assert.equal(
-          notificationElement.querySelector("#password-notification-password")
-            .value,
-          password
-        );
 
         // Simulate the action on the notification to request the login to be
         // saved, and wait for the data to be updated or saved based on the type
         // of operation we expect.
-        let expectedNotification;
+        let expectedNotification, expectedDoorhanger;
         if (oldPassword !== undefined && oldUsername !== undefined) {
           expectedNotification = "addLogin";
+          expectedDoorhanger = "password-save";
         } else if (oldPassword !== undefined) {
           expectedNotification = "modifyLogin";
+          expectedDoorhanger = "password-change";
         } else {
           expectedNotification = "addLogin";
+          expectedDoorhanger = "password-save";
         }
+
+        let notif = getCaptureDoorhanger(
+          expectedDoorhanger,
+          PopupNotifications,
+          browser
+        );
+        // Check the actual content of the popup notification.
+        await checkDoorhangerUsernamePassword(username, password);
+
         let promiseLogin = TestUtils.topicObserved(
           "passwordmgr-storage-changed",
           (_, data) => data == expectedNotification
         );
-        notificationElement.button.doCommand();
+        await clickDoorhangerButton(notif, REMEMBER_BUTTON);
         await promiseLogin;
         await cleanupDoorhanger(notif); // clean slate for the next test
 
