@@ -98,6 +98,7 @@ import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 import org.mozilla.fenix.utils.FragmentPreDrawManager
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.whatsnew.WhatsNew
+import kotlin.math.min
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class HomeFragment : Fragment() {
@@ -612,10 +613,13 @@ class HomeFragment : Fragment() {
         context?.let {
             val layout = LayoutInflater.from(it)
                 .inflate(R.layout.pbm_shortcut_popup, null)
-            val trackingOnboarding =
+            val privateBrowsingRecommend =
                 PopupWindow(
                     layout,
-                    (resources.displayMetrics.widthPixels / CFR_WIDTH_DIVIDER).toInt(),
+                    min(
+                        (resources.displayMetrics.widthPixels / CFR_WIDTH_DIVIDER).toInt(),
+                        (resources.displayMetrics.heightPixels / CFR_WIDTH_DIVIDER).toInt()
+                    ),
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     true
                 )
@@ -623,19 +627,20 @@ class HomeFragment : Fragment() {
                 setOnClickListener {
                     context.metrics.track(Event.PrivateBrowsingAddShortcutCFR)
                     PrivateShortcutCreateManager.createPrivateShortcut(context)
-                    trackingOnboarding.dismiss()
+                    privateBrowsingRecommend.dismiss()
                 }
             }
             layout.findViewById<Button>(R.id.cfr_neg_button).apply {
                 setOnClickListener {
                     context.metrics.track(Event.PrivateBrowsingCancelCFR)
-                    trackingOnboarding.dismiss()
+                    privateBrowsingRecommend.dismiss()
                 }
             }
             // We want to show the popup only after privateBrowsingButton is available.
             // Otherwise, we will encounter an activity token error.
             privateBrowsingButton.post {
-                trackingOnboarding.showAsDropDown(privateBrowsingButton, 0, CFR_Y_OFFSET, Gravity.TOP or Gravity.END)
+                privateBrowsingRecommend.showAsDropDown(
+                    privateBrowsingButton, 0, CFR_Y_OFFSET, Gravity.TOP or Gravity.END)
             }
         }
     }
