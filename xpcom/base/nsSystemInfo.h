@@ -35,15 +35,6 @@ struct OSInfo {
 struct ProcessInfo {
   bool isWow64;
   bool isWowARM64;
-  uint32_t cpuCount;
-  uint32_t cpuCores;
-  nsCString cpuVendor;
-  uint32_t cpuFamily;
-  uint32_t cpuModel;
-  uint32_t cpuStepping;
-  uint32_t l2cacheKB;
-  uint32_t l3cacheKB;
-  uint32_t cpuSpeed;
 };
 
 typedef mozilla::MozPromise<DiskInfo, nsresult, /* IsExclusive */ false>
