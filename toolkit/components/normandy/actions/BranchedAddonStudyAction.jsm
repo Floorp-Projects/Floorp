@@ -353,7 +353,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
         addonId: AddonStudies.NO_ADDON_MARKER,
         addonVersion: AddonStudies.NO_ADDON_MARKER,
         branch: branch.slug,
-        enrollmentId,
+        enrollmentId: enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       });
     } else {
       const extensionDetails = await NormandyApi.fetchExtensionDetails(
@@ -435,13 +435,13 @@ class BranchedAddonStudyAction extends BaseStudyAction {
         addonId: installedId,
         addonVersion: installedVersion,
         branch: branch.slug,
-        enrollmentId,
+        enrollmentId: enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       });
     }
 
     TelemetryEnvironment.setExperimentActive(slug, branch.slug, {
       type: "normandy-addonstudy",
-      enrollmentId,
+      enrollmentId: enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
     });
   }
 
@@ -474,7 +474,8 @@ class BranchedAddonStudyAction extends BaseStudyAction {
       error = new AddonStudyUpdateError(slug, {
         branch: branch.slug,
         reason: "addon-id-mismatch",
-        enrollmentId: study.enrollmentId,
+        enrollmentId:
+          study.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       });
     }
 
@@ -486,7 +487,8 @@ class BranchedAddonStudyAction extends BaseStudyAction {
       error = new AddonStudyUpdateError(slug, {
         branch: branch.slug,
         reason: "no-downgrade",
-        enrollmentId: study.enrollmentId,
+        enrollmentId:
+          study.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       });
     } else if (versionCompare === 0) {
       return; // Unchanged, do nothing
@@ -507,7 +509,8 @@ class BranchedAddonStudyAction extends BaseStudyAction {
           new AddonStudyUpdateError(slug, {
             branch: branch.slug,
             reason: "addon-does-not-exist",
-            enrollmentId: study.enrollmentId,
+            enrollmentId:
+              study.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
           })
         );
         return false; // cancel the installation, must upgrade an existing add-on
@@ -516,7 +519,8 @@ class BranchedAddonStudyAction extends BaseStudyAction {
           new AddonStudyUpdateError(slug, {
             branch: branch.slug,
             reason: "metadata-mismatch",
-            enrollmentId: study.enrollmentId,
+            enrollmentId:
+              study.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
           })
         );
         return false; // cancel the installation, server metadata do not match downloaded add-on
@@ -556,7 +560,10 @@ class BranchedAddonStudyAction extends BaseStudyAction {
       onFailedInstall,
       errorClass: AddonStudyUpdateError,
       reportError: this.reportUpdateError,
-      errorExtra: { enrollmentId: study.enrollmentId },
+      errorExtra: {
+        enrollmentId:
+          study.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+      },
     });
 
     // All done, report success to Telemetry
@@ -564,7 +571,8 @@ class BranchedAddonStudyAction extends BaseStudyAction {
       addonId: installedId,
       addonVersion: installedVersion,
       branch: branch.slug,
-      enrollmentId: study.enrollmentId,
+      enrollmentId:
+        study.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
     });
   }
 

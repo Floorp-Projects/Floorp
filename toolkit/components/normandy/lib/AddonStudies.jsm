@@ -352,7 +352,8 @@ var AddonStudies = {
       addonVersion: study.addonVersion || AddonStudies.NO_ADDON_MARKER,
       reason,
       branch: study.branch,
-      enrollmentId: study.enrollmentId,
+      enrollmentId:
+        study.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
     });
     TelemetryEnvironment.setExperimentInactive(study.slug);
 
