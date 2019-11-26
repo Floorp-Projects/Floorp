@@ -38,12 +38,12 @@ add_task(async function() {
       expected: {
         columns: ["(index)", "Values"],
         rows: [
-          ["0", "undefined"],
+          ["0", ""],
           ["1", "apples"],
-          ["2", "undefined"],
+          ["2", ""],
           ["3", "oranges"],
-          ["4", "undefined"],
-          ["5", "undefined"],
+          ["4", ""],
+          ["5", ""],
           ["6", "bananas"],
         ],
       },
@@ -54,7 +54,7 @@ add_task(async function() {
       input: [[1, , 2]],
       expected: {
         columns: ["(index)", "0", "1", "2"],
-        rows: [["0", "1", "undefined", "2"]],
+        rows: [["0", "1", "", "2"]],
       },
     },
     {
@@ -230,8 +230,8 @@ add_task(async function() {
       expected: {
         columns: ["(index)", "a", "b", "c", "d", "e"],
         rows: [
-          ["0", "null", "false", "undefined", "0", "undefined"],
-          ["1", "undefined", "null", "false", "undefined", "0"],
+          ["0", "null", "false", "undefined", "0", ""],
+          ["1", "", "null", "false", "undefined", "0"],
         ],
       },
     },
@@ -268,6 +268,25 @@ add_task(async function() {
         const nodes = node.querySelectorAll(".tree .node");
         ok(nodes[1].textContent.includes("b: 34"));
         ok(nodes[2].textContent.includes("<prototype>"));
+      },
+    },
+    {
+      info: "Testing max columns",
+      input: [
+        Array.from({ length: 30 }).reduce((acc, _, i) => {
+          return {
+            ...acc,
+            ["item" + i]: i,
+          };
+        }, {}),
+      ],
+      expected: {
+        // We show 21 columns at most
+        columns: [
+          "(index)",
+          ...Array.from({ length: 20 }, (_, i) => `item${i}`),
+        ],
+        rows: [[0, ...Array.from({ length: 20 }, (_, i) => i)]],
       },
     },
   ];
