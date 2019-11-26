@@ -145,14 +145,11 @@ class FlattenedChildIterator : public ExplicitChildIterator {
         mXBLInvolved(aOther.mXBLInvolved) {}
 
   // TODO(emilio): Rename to use shadow dom terminology.
-  bool XBLInvolved() {
-    return mXBLInvolved;
-  }
+  bool XBLInvolved() { return mXBLInvolved; }
 
   const nsIContent* Parent() const { return mOriginalContent; }
 
  private:
-
   void Init(bool aIgnoreXBL);
 
  protected:

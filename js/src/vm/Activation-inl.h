@@ -10,15 +10,15 @@
 #include "vm/Activation.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT{,_IF}, MOZ_CRASH
-#include "mozilla/Likely.h"  // MOZ_UNLIKELY
-#include "mozilla/Maybe.h"  // mozilla::Maybe
+#include "mozilla/Likely.h"      // MOZ_UNLIKELY
+#include "mozilla/Maybe.h"       // mozilla::Maybe
 
-#include "jit/BaselineFrame.h"  // js::jit::BaselineFrame
+#include "jit/BaselineFrame.h"   // js::jit::BaselineFrame
 #include "jit/JSJitFrameIter.h"  // js::jit::CalleeToken
-#include "vm/FrameIter.h"  // js::FrameIter
-#include "vm/JitActivation.h"  // js::jit::JitActivation
-#include "vm/JSContext.h"  // JSContext
-#include "vm/Stack.h"  // js::AbstractFramePtr
+#include "vm/FrameIter.h"        // js::FrameIter
+#include "vm/JitActivation.h"    // js::jit::JitActivation
+#include "vm/JSContext.h"        // JSContext
+#include "vm/Stack.h"            // js::AbstractFramePtr
 
 namespace js {
 

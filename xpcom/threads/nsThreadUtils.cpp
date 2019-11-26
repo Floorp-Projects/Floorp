@@ -519,14 +519,14 @@ nsCString nsThreadPoolNaming::GetNextThreadName(const nsACString& aPoolName) {
 }
 
 nsresult NS_DispatchBackgroundTask(already_AddRefed<nsIRunnable> aEvent,
-                                       uint32_t aDispatchFlags) {
+                                   uint32_t aDispatchFlags) {
   nsCOMPtr<nsIRunnable> event(aEvent);
   return nsThreadManager::get().DispatchToBackgroundThread(event,
                                                            aDispatchFlags);
 }
 
 nsresult NS_DispatchBackgroundTask(nsIRunnable* aEvent,
-                                       uint32_t aDispatchFlags) {
+                                   uint32_t aDispatchFlags) {
   return nsThreadManager::get().DispatchToBackgroundThread(aEvent,
                                                            aDispatchFlags);
 }

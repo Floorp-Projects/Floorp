@@ -1814,7 +1814,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   bool isPresentingInVR = false;
 #if defined(MOZ_WIDGET_ANDROID)
   isPresentingInVR = gfx::VRManagerChild::IsPresenting();
-#endif // defined(MOZ_WIDGET_ANDROID)
+#endif  // defined(MOZ_WIDGET_ANDROID)
 
   if (!isPresentingInVR && IsWaitingForPaint(aNowTime)) {
     // In immersive VR mode, we do not get notifications when frames are

@@ -142,7 +142,7 @@ __attribute__((weak)) thread::_State::~_State() = default;
 namespace std {
 /* Instantiate this template to avoid GLIBCXX_3.4.21 symbol versions
  * depending on optimization level */
-template basic_ios<char, char_traits<char> >::operator bool() const;
+template basic_ios<char, char_traits<char>>::operator bool() const;
 }  // namespace std
 #endif
 
@@ -150,6 +150,7 @@ template basic_ios<char, char_traits<char> >::operator bool() const;
 namespace std {
 /* Instantiate this template to avoid GLIBCXX_3.4.23 symbol versions
  * depending on optimization level */
-template basic_string<char, char_traits<char>, allocator<char>>::basic_string(const basic_string&, size_t, const allocator<char>&);
-} // namespace std
+template basic_string<char, char_traits<char>, allocator<char>>::basic_string(
+    const basic_string&, size_t, const allocator<char>&);
+}  // namespace std
 #endif

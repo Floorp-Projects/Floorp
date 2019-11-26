@@ -132,9 +132,8 @@ nsresult Http3Session::Init(const nsACString& aOrigin,
       ("Http3Session::Init origin=%s, alpn=%s, selfAddr=%s, peerAddr=%s,"
        " qpack table size=%u, max blocked streams=%u [this=%p]",
        PromiseFlatCString(aOrigin).get(),
-       PromiseFlatCString(kHttp3Version).get(),
-       selfAddrStr.get(), peerAddrStr.get(),
-       gHttpHandler->DefaultQpackTableSize(),
+       PromiseFlatCString(kHttp3Version).get(), selfAddrStr.get(),
+       peerAddrStr.get(), gHttpHandler->DefaultQpackTableSize(),
        gHttpHandler->DefaultHttp3MaxBlockedStreams(), this));
 
   return NeqoHttp3Conn::Init(aOrigin, kHttp3Version, selfAddrStr, peerAddrStr,
@@ -233,7 +232,8 @@ nsresult Http3Session::ProcessEvents(uint32_t count, uint32_t* countWritten,
           // This is an old event. This may happen because we store events in
           // neqo_glue.
           // TODO: maybe change neqo interface to return only one event.
-          LOG(("Http3Session::ProcessEvents - stream not found "
+          LOG(
+              ("Http3Session::ProcessEvents - stream not found "
                "stream_id=0x%" PRIx64 " [this=%p].",
                id, this));
           event = mHttp3Connection->GetEvent();
@@ -593,15 +593,17 @@ nsresult Http3Session::TryActivating(
     return NS_BASE_STREAM_WOULD_BLOCK;
   }
 
-  nsresult rv =  mHttp3Connection->Fetch(aMethod, aScheme, aAuthorityHeader,
-                                         aPath, aHeaders, aStreamId);
+  nsresult rv = mHttp3Connection->Fetch(aMethod, aScheme, aAuthorityHeader,
+                                        aPath, aHeaders, aStreamId);
   if (NS_FAILED(rv)) {
     LOG(("Http3Session::TryActivating returns error=0x%" PRIx32 "[stream=%p, "
          "this=%p]",
          static_cast<uint32_t>(rv), aStream, this));
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-      LOG3(("Http3Session::TryActivating %p stream=%p no room for more "
-            "concurrent streams\n", this, aStream));
+      LOG3(
+          ("Http3Session::TryActivating %p stream=%p no room for more "
+           "concurrent streams\n",
+           this, aStream));
       QueueStream(aStream);
     }
     return rv;
@@ -712,13 +714,15 @@ nsresult Http3Session::ReadSegmentsAgain(nsAHttpSegmentReader* reader,
 
   Http3Stream* stream = static_cast<Http3Stream*>(mReadyForWrite.PopFront());
   if (!stream) {
-    LOG(("Http3Session::ReadSegmentsAgain we do not have a stream ready to "
+    LOG(
+        ("Http3Session::ReadSegmentsAgain we do not have a stream ready to "
          "write."));
     ProcessOutput();
     return NS_BASE_STREAM_WOULD_BLOCK;
   }
 
-  LOG(("Http3Session::ReadSegmentsAgain call ReadSegments from stream=%p "
+  LOG(
+      ("Http3Session::ReadSegmentsAgain call ReadSegments from stream=%p "
        "[this=%p]",
        stream, this));
   nsresult rv = stream->ReadSegments(this, count, countRead);
@@ -924,7 +928,7 @@ void Http3Session::CloseTransaction(nsAHttpTransaction* aTransaction,
   Unused << mConnection->ResumeSend();
 }
 
-void Http3Session::CloseStream(Http3Stream *aStream, nsresult aResult) {
+void Http3Session::CloseStream(Http3Stream* aStream, nsresult aResult) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   if (!aStream->RecvdFin() && !aStream->RecvdReset() &&
       (aStream->HasStreamId())) {

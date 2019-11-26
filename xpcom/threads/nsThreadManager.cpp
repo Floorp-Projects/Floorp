@@ -140,8 +140,7 @@ BackgroundEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable> aRunnable,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult
-BackgroundEventTarget::Shutdown() {
+nsresult BackgroundEventTarget::Shutdown() {
   mPool->Shutdown();
   mIOPool->Shutdown();
   return NS_OK;

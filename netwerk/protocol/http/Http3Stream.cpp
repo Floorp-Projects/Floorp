@@ -78,7 +78,8 @@ void Http3Stream::FindRequestContentLength() {
   }
 
   // We have Content-Length header, find the end of it.
-  int32_t crlfIndex = mFlatHttpRequestHeaders.Find("\r\n", false, contentLengthStart);
+  int32_t crlfIndex =
+      mFlatHttpRequestHeaders.Find("\r\n", false, contentLengthStart);
   if (crlfIndex == -1) {
     MOZ_ASSERT(false, "We must have \\r\\n at the end of the headers string.");
     return;
@@ -187,8 +188,10 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
         rv = NS_ERROR_UNEXPECTED;
       }
       if (NS_FAILED(rv)) {
-        LOG3(("Http3Stream::OnReadSegment %p sending body returns "
-              "error=0x%" PRIx32 ".", this, static_cast<uint32_t>(rv)));
+        LOG3(
+            ("Http3Stream::OnReadSegment %p sending body returns "
+             "error=0x%" PRIx32 ".",
+             this, static_cast<uint32_t>(rv)));
         return rv;
       }
 
@@ -248,12 +251,12 @@ nsresult Http3Stream::OnWriteSegment(char* buf, uint32_t count,
         mState = mFin ? RECEIVED_FIN : READING_DATA;
       }
 
-      if (*countWritten == 0 ) {
+      if (*countWritten == 0) {
         rv = NS_BASE_STREAM_WOULD_BLOCK;
       } else {
         mTotalRead += *countWritten;
-        mTransaction->OnTransportStatus(mSocketTransport,
-            NS_NET_STATUS_RECEIVING_FROM, mTotalRead);
+        mTransaction->OnTransportStatus(
+            mSocketTransport, NS_NET_STATUS_RECEIVING_FROM, mTotalRead);
       }
     } break;
     case READING_DATA: {

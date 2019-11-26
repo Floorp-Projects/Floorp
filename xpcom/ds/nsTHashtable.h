@@ -511,9 +511,9 @@ class nsTHashtable<nsPtrHashKey<T>>
   using Base::GetGeneration;
   using Base::IsEmpty;
 
+  using Base::MarkImmutable;
   using Base::ShallowSizeOfExcludingThis;
   using Base::ShallowSizeOfIncludingThis;
-  using Base::MarkImmutable;
 
   /* Wrapper functions */
   EntryType* GetEntry(T* aKey) const {

@@ -116,7 +116,7 @@ struct FakeString {
     // Reset mDataInitialized because we're explicitly reinitializing
     // it via the SetLength call.
     mDataInitialized = false;
-#endif // DEBUG
+#endif  // DEBUG
     // SetLength will make sure we have our own buffer to work with.  Note that
     // we may be transitioning from having a (short) readonly stringbuffer to
     // our inline storage or whatnot.  That's all fine; SetLength is responsible
@@ -177,7 +177,7 @@ struct FakeString {
   nsString::char_type mInlineStorage[sInlineCapacity];
 #ifdef DEBUG
   bool mDataInitialized = false;
-#endif // DEBUG
+#endif  // DEBUG
 
   FakeString(const FakeString& other) = delete;
   void operator=(const FakeString& other) = delete;
@@ -189,7 +189,7 @@ struct FakeString {
     mLength = aLength;
 #ifdef DEBUG
     mDataInitialized = true;
-#endif // DEBUG
+#endif  // DEBUG
   }
 
   bool IsMutable() {

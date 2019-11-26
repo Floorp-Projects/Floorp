@@ -152,8 +152,7 @@ struct Message {
     return mType == MessageType::CreateCheckpoint ||
            mType == MessageType::SetDebuggerRunsInMiddleman ||
            mType == MessageType::MiddlemanCallResponse ||
-           mType == MessageType::Ping ||
-           mType == MessageType::Terminate ||
+           mType == MessageType::Ping || mType == MessageType::Terminate ||
            mType == MessageType::Introduction;
   }
 
@@ -307,8 +306,7 @@ struct PingMessage : public Message {
   uint32_t mId;
 
   explicit PingMessage(uint32_t aId)
-      : Message(MessageType::Ping, sizeof(*this)),
-        mId(aId) {}
+      : Message(MessageType::Ping, sizeof(*this)), mId(aId) {}
 };
 
 struct PingResponseMessage : public Message {
@@ -317,7 +315,8 @@ struct PingResponseMessage : public Message {
 
   PingResponseMessage(uint32_t aId, uint64_t aProgress)
       : Message(MessageType::PingResponse, sizeof(*this)),
-        mId(aId), mProgress(aProgress) {}
+        mId(aId),
+        mProgress(aProgress) {}
 };
 
 class Channel {

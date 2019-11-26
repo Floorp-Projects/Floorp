@@ -249,7 +249,8 @@ static bool Middleman_SendManifest(JSContext* aCx, unsigned aArgc, Value* aVp) {
 static bool Middleman_MaybePing(JSContext* aCx, unsigned aArgc, Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
-  parent::ChildProcessInfo* child = GetChildById(aCx, args.get(0), /* aAllowUnpaused */ true);
+  parent::ChildProcessInfo* child =
+      GetChildById(aCx, args.get(0), /* aAllowUnpaused */ true);
   if (!child) {
     return false;
   }
@@ -467,8 +468,7 @@ static ProgressCounter gProgressCounter;
 
 extern "C" {
 
-MOZ_EXPORT ProgressCounter* RecordReplayInterface_ExecutionProgressCounter()
-{
+MOZ_EXPORT ProgressCounter* RecordReplayInterface_ExecutionProgressCounter() {
   return &gProgressCounter;
 }
 
@@ -680,7 +680,7 @@ static bool RecordReplay_ProgressCounter(JSContext* aCx, unsigned aArgc,
 }
 
 static bool RecordReplay_SetProgressCounter(JSContext* aCx, unsigned aArgc,
-                                                Value* aVp) {
+                                            Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   if (!args.get(0).isNumber()) {
@@ -1300,7 +1300,8 @@ static bool RecordReplay_FindChangeFrames(JSContext* aCx, unsigned aArgc,
                                           Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
-  if (!args.get(0).isNumber() || !args.get(1).isNumber() || !args.get(2).isObject()) {
+  if (!args.get(0).isNumber() || !args.get(1).isNumber() ||
+      !args.get(2).isObject()) {
     JS_ReportErrorASCII(aCx, "Bad parameters");
     return false;
   }

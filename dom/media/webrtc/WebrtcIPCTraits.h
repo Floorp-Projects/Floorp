@@ -73,7 +73,6 @@ template <>
 struct ParamTraits<mozilla::dom::RTCIceTransportPolicy>
     : public WebidlEnumSerializer<mozilla::dom::RTCIceTransportPolicy> {};
 
-
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCIceServer, mCredential,
                                   mCredentialType, mUrl, mUrls, mUsername)
 

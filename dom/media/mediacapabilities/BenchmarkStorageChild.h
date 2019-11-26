@@ -18,6 +18,7 @@ class BenchmarkStorageChild : public PBenchmarkStorageChild {
   static PBenchmarkStorageChild* Instance();
 
   ~BenchmarkStorageChild();
+
  private:
   BenchmarkStorageChild() = default;
 };

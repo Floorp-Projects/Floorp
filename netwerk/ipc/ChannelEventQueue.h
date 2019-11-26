@@ -282,8 +282,7 @@ inline void ChannelEventQueue::EndForcedQueueing() {
   }
 }
 
-inline void ChannelEventQueue::PrependEvent(
-    UniquePtr<ChannelEvent>&& aEvent) {
+inline void ChannelEventQueue::PrependEvent(UniquePtr<ChannelEvent>&& aEvent) {
   MutexAutoLock lock(mMutex);
 
   // Prepending event while no queue flush foreseen might cause the following

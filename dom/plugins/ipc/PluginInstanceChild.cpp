@@ -292,7 +292,8 @@ NPError PluginInstanceChild::InternalGetNPObjectForValue(NPNVariable aValue,
       if (!(actor = mCachedElementActor)) {
         result = NPERR_GENERIC_ERROR;
         PPluginScriptableObjectChild* actorProtocol;
-        if (CallNPN_GetValue_NPNVPluginElementNPObject(&actorProtocol, &result) &&
+        if (CallNPN_GetValue_NPNVPluginElementNPObject(&actorProtocol,
+                                                       &result) &&
             (result == NPERR_NO_ERROR)) {
           actor = mCachedElementActor =
               static_cast<PluginScriptableObjectChild*>(actorProtocol);
@@ -814,10 +815,9 @@ NPError PluginInstanceChild::AudioDeviceStateChanged(
 void SetMouseEventWParam(NPEvent* aEvent) {
   // Fill in potentially missing key state info.  See
   // nsPluginInstanceOwner::ProcessEvent for circumstances where this happens.
-  const auto kMouseMessages =
-      mozilla::Array<int,9>(WM_LBUTTONDOWN, WM_MBUTTONDOWN, WM_RBUTTONDOWN,
-                            WM_LBUTTONUP, WM_MBUTTONUP, WM_RBUTTONUP,
-                            WM_MOUSEMOVE, WM_MOUSEWHEEL, WM_MOUSEHWHEEL);
+  const auto kMouseMessages = mozilla::Array<int, 9>(
+      WM_LBUTTONDOWN, WM_MBUTTONDOWN, WM_RBUTTONDOWN, WM_LBUTTONUP,
+      WM_MBUTTONUP, WM_RBUTTONUP, WM_MOUSEMOVE, WM_MOUSEWHEEL, WM_MOUSEHWHEEL);
 
   bool isInvalidWParam =
       (aEvent->wParam == NPAPI_INVALID_WPARAM) &&

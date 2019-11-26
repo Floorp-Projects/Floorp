@@ -254,7 +254,6 @@ class BrowserParent final : public PBrowserParent,
     mBrowserDOMWindow = aBrowserDOMWindow;
   }
 
-
   void SwapFrameScriptsFrom(nsTArray<FrameScriptInfo>& aFrameScripts) {
     aFrameScripts.SwapElements(mDelayedFrameScripts);
   }

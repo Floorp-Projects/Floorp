@@ -330,7 +330,8 @@ void MediaTrackGraphImpl::UpdateTrackOrder() {
   // of the media determines how many channels to output, and it can change
   // dynamically.
   if (CurrentDriver()->AsAudioCallbackDriver() && !switching) {
-    if (graphOutputChannelCount != CurrentDriver()->AsAudioCallbackDriver()->OutputChannelCount()) {
+    if (graphOutputChannelCount !=
+        CurrentDriver()->AsAudioCallbackDriver()->OutputChannelCount()) {
       AudioCallbackDriver* driver = new AudioCallbackDriver(
           this, graphOutputChannelCount, AudioInputChannelCount(),
           AudioInputDevicePreference());

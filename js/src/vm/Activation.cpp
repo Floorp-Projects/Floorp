@@ -12,12 +12,12 @@
 #include <stdint.h>  // uint8_t, uint32_t
 
 #include "debugger/DebugAPI.h"  // js::DebugAPI
-#include "gc/GC.h"  // js::gc::AutoSuppressGC
+#include "gc/GC.h"              // js::gc::AutoSuppressGC
 #include "jit/JitFrames.h"  // js::jit::CalleeToken{IsFunction,To{Function,Script}}
 #include "js/RootingAPI.h"  // JS::Rooted
-#include "js/Value.h"  // JS::Value
-#include "vm/JSContext.h"  // JSContext, js::TlsContext
-#include "vm/Stack.h"  // js::InterpreterFrame
+#include "js/Value.h"       // JS::Value
+#include "vm/JSContext.h"   // JSContext, js::TlsContext
+#include "vm/Stack.h"       // js::InterpreterFrame
 
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap
 

@@ -48,9 +48,7 @@ bool nsPIDOMWindowInner::IsHandlingResizeEvent() const {
   return mIsHandlingResizeEvent;
 }
 
-bool nsPIDOMWindowInner::HasActiveDocument() {
-  return IsCurrentInnerWindow();
-}
+bool nsPIDOMWindowInner::HasActiveDocument() { return IsCurrentInnerWindow(); }
 
 bool nsPIDOMWindowInner::IsTopInnerWindow() const {
   return mTopInnerWindow == this;

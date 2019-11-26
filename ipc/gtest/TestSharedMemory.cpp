@@ -12,7 +12,7 @@
 #include "mozilla/ipc/SharedMemory.h"
 
 #ifdef XP_WIN
-#include <windows.h>
+#  include <windows.h>
 #endif
 
 namespace mozilla {
@@ -136,10 +136,9 @@ TEST(IPCSharedMemory, WinUnfreeze)
   ASSERT_FALSE(shm.IsValid());
 
   // Unfreeze.
-  bool unfroze = ::DuplicateHandle(GetCurrentProcess(), handle,
-                                   GetCurrentProcess(), &handle,
-                                   FILE_MAP_ALL_ACCESS, false,
-                                   DUPLICATE_CLOSE_SOURCE);
+  bool unfroze = ::DuplicateHandle(
+      GetCurrentProcess(), handle, GetCurrentProcess(), &handle,
+      FILE_MAP_ALL_ACCESS, false, DUPLICATE_CLOSE_SOURCE);
   ASSERT_FALSE(unfroze);
 }
 #endif

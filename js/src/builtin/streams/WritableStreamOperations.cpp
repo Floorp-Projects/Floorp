@@ -13,18 +13,18 @@
 
 #include <stdint.h>  // uint32_t
 
-#include "jsapi.h"  // JS_ReportErrorASCII, JS_SetPrivate
+#include "jsapi.h"        // JS_ReportErrorASCII, JS_SetPrivate
 #include "jsfriendapi.h"  // js::GetErrorMessage, JSMSG_*
 
-#include "builtin/Promise.h"                 // js::PromiseObject
+#include "builtin/Promise.h"                          // js::PromiseObject
 #include "builtin/streams/MiscellaneousOperations.h"  // js::PromiseRejectedWithPendingError
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController{,Close}, js::WritableStream::controller
 #include "builtin/streams/WritableStreamDefaultControllerOperations.h"  // js::WritableStreamControllerErrorSteps
 #include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriterEnsureReadyPromiseRejected
-#include "js/CallArgs.h"     // JS::CallArgs{,FromVp}
-#include "js/Promise.h"      // JS::{Reject,Resolve}Promise
-#include "js/RootingAPI.h"   // JS::Handle, JS::Rooted
+#include "js/CallArgs.h"    // JS::CallArgs{,FromVp}
+#include "js/Promise.h"     // JS::{Reject,Resolve}Promise
+#include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
 #include "js/Value.h"  // JS::Value, JS::ObjecValue, JS::UndefinedHandleValue
 #include "vm/Compartment.h"  // JS::Compartment
 #include "vm/JSContext.h"    // JSContext
@@ -35,10 +35,10 @@
 #include "builtin/streams/WritableStream-inl.h"  // js::UnwrapWriterFromStream
 #include "builtin/streams/WritableStreamDefaultWriter-inl.h"  // js::WritableStreamDefaultWriter::closedPromise
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap, js::UnwrapAndDowncastObject
-#include "vm/JSContext-inl.h"    // JSContext::check
-#include "vm/JSObject-inl.h"     // js::NewObjectWithClassProto
-#include "vm/List-inl.h"         // js::{AppendTo,StoreNew}ListInFixedSlot
-#include "vm/Realm-inl.h"        // js::AutoRealm
+#include "vm/JSContext-inl.h"  // JSContext::check
+#include "vm/JSObject-inl.h"   // js::NewObjectWithClassProto
+#include "vm/List-inl.h"       // js::{AppendTo,StoreNew}ListInFixedSlot
+#include "vm/Realm-inl.h"      // js::AutoRealm
 
 using js::ExtraFromHandler;
 using js::PromiseObject;
