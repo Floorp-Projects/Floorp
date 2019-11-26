@@ -42,8 +42,6 @@ def get_parser():
                         'the latest available development release. For WebDriver installs, '
                         'we attempt to select an appropriate, compatible, version for the '
                         'latest browser release on the selected channel.')
-    parser.add_argument('--download-only', action="store_true",
-                        help="Download the selected component but don't install it")
     parser.add_argument('-d', '--destination',
                         help='filesystem directory to place the component')
     return parser
@@ -75,22 +73,21 @@ def run(venv, **kwargs):
             raise argparse.ArgumentError(None,
                                          "No --destination argument, and no default for the environment")
 
-    install(browser, kwargs["component"], destination, channel,
-            download_only=kwargs["download_only"])
+    install(browser, kwargs["component"], destination, channel)
 
 
-def install(name, component, destination, channel="nightly", logger=None, download_only=False):
+def install(name, component, destination, channel="nightly", logger=None):
     if logger is None:
         import logging
         logger = logging.getLogger("install")
 
-    prefix = "download" if download_only else "install"
-    suffix = "_webdriver" if component == 'webdriver' else ""
-
-    method = prefix + suffix
+    if component == 'webdriver':
+        method = 'install_webdriver'
+    else:
+        method = 'install'
 
     subclass = getattr(browser, name.title())
     sys.stdout.write('Now installing %s %s...\n' % (name, component))
     path = getattr(subclass(logger), method)(dest=destination, channel=channel)
     if path:
-        sys.stdout.write('Binary %s as %s\n' % ("downloaded" if download_only else "installed", path,))
+        sys.stdout.write('Binary installed as %s\n' % (path,))
