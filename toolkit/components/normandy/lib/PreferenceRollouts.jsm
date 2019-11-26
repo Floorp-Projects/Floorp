@@ -156,7 +156,8 @@ var PreferenceRollouts = {
           "preference_rollout",
           rollout.slug,
           {
-            enrollmentId: rollout.enrollmentId,
+            enrollmentId:
+              rollout.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
           }
         );
       }
@@ -172,7 +173,8 @@ var PreferenceRollouts = {
     for (const rollout of await this.getAllActive()) {
       TelemetryEnvironment.setExperimentActive(rollout.slug, rollout.state, {
         type: "normandy-prefrollout",
-        enrollmentId: rollout.enrollmentId,
+        enrollmentId:
+          rollout.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       });
     }
   },
