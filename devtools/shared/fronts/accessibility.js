@@ -91,12 +91,13 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
     Object.assign(this._form, form);
   }
 
-  nameChange(name, parent, walker) {
+  nameChange(name, parent) {
     this._form.name = name;
     // Name change event affects the tree rendering, we fire this event on
     // accessibility walker as the point of interaction for UI.
-    if (walker) {
-      events.emit(walker, "name-change", this, parent);
+    const accessibilityWalkerFront = this.parent();
+    if (accessibilityWalkerFront) {
+      events.emit(accessibilityWalkerFront, "name-change", this, parent);
     }
   }
 
@@ -112,20 +113,22 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
     this._form.keyboardShortcut = keyboardShortcut;
   }
 
-  reorder(childCount, walker) {
+  reorder(childCount) {
     this._form.childCount = childCount;
     // Reorder event affects the tree rendering, we fire this event on
     // accessibility walker as the point of interaction for UI.
-    if (walker) {
-      events.emit(walker, "reorder", this);
+    const accessibilityWalkerFront = this.parent();
+    if (accessibilityWalkerFront) {
+      events.emit(accessibilityWalkerFront, "reorder", this);
     }
   }
 
-  textChange(walker) {
+  textChange() {
     // Text event affects the tree rendering, we fire this event on
     // accessibility walker as the point of interaction for UI.
-    if (walker) {
-      events.emit(walker, "text-change", this);
+    const accessibilityWalkerFront = this.parent();
+    if (accessibilityWalkerFront) {
+      events.emit(accessibilityWalkerFront, "text-change", this);
     }
   }
 
