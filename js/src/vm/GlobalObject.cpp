@@ -15,7 +15,7 @@
 #include "builtin/BigInt.h"
 #include "builtin/DataViewObject.h"
 #include "builtin/Eval.h"
-#ifdef JS_HAS_INTL_API
+#ifdef ENABLE_INTL_API
 #  include "builtin/intl/Collator.h"
 #  include "builtin/intl/DateTimeFormat.h"
 #  include "builtin/intl/ListFormat.h"

@@ -854,7 +854,7 @@ function ArrayToLocaleString(locales, options) {
     if (firstElement === undefined || firstElement === null) {
         R = "";
     } else {
-#if JS_HAS_INTL_API
+#if ENABLE_INTL_API
         R = ToString(callContentFunction(firstElement.toLocaleString, firstElement, locales, options));
 #else
         R = ToString(callContentFunction(firstElement.toLocaleString, firstElement));
@@ -873,7 +873,7 @@ function ArrayToLocaleString(locales, options) {
         // Steps 9.a, 9.c-e.
         R += separator;
         if (!(nextElement === undefined || nextElement === null)) {
-#if JS_HAS_INTL_API
+#if ENABLE_INTL_API
             R += ToString(callContentFunction(nextElement.toLocaleString, nextElement, locales, options));
 #else
             R += ToString(callContentFunction(nextElement.toLocaleString, nextElement));

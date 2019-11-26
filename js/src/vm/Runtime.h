@@ -22,7 +22,7 @@
 #include <setjmp.h>
 
 #include "builtin/AtomicsObject.h"
-#ifdef JS_HAS_INTL_API
+#ifdef ENABLE_INTL_API
 #  include "builtin/intl/SharedIntlData.h"
 #endif
 #include "builtin/Promise.h"
@@ -684,7 +684,7 @@ struct JSRuntime {
     return defaultFreeOp_;
   }
 
-#if !JS_HAS_INTL_API
+#if !ENABLE_INTL_API
   /* Number localization, used by jsnum.cpp. */
   js::WriteOnceData<const char*> thousandsSeparator;
   js::WriteOnceData<const char*> decimalSeparator;
@@ -804,7 +804,7 @@ struct JSRuntime {
   // these are shared with the parentRuntime, if any.
   js::WriteOnceData<js::WellKnownSymbols*> wellKnownSymbols;
 
-#ifdef JS_HAS_INTL_API
+#ifdef ENABLE_INTL_API
   /* Shared Intl data for this runtime. */
   js::MainThreadData<js::intl::SharedIntlData> sharedIntlData;
 

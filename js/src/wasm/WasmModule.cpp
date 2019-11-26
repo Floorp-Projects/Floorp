@@ -1196,7 +1196,7 @@ bool Module::makeStructTypeDescrs(
   MOZ_CRASH("Should not have seen any struct types");
 #else
 
-#  ifndef JS_HAS_TYPED_OBJECTS
+#  ifndef ENABLE_TYPED_OBJECTS
 #    error "GC types require TypedObject"
 #  endif
 

@@ -132,19 +132,20 @@ extern JS_PUBLIC_API bool FinishMultiOffThreadScriptsDecoder(
 extern JS_PUBLIC_API void CancelMultiOffThreadScriptsDecoder(
     JSContext* cx, OffThreadToken* token);
 
-// This returns false if built without JS_BUILD_BINAST.
+#if defined(JS_BUILD_BINAST)
+
 extern JS_PUBLIC_API bool CanDecodeBinASTOffThread(
     JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);
 
-// This throws an exception if built without JS_BUILD_BINAST.
 extern JS_PUBLIC_API bool DecodeBinASTOffThread(
     JSContext* cx, const ReadOnlyCompileOptions& options, const uint8_t* buf,
     size_t length, JS::BinASTFormat format, OffThreadCompileCallback callback,
     void* callbackData);
 
-// This throws an exception if built without JS_BUILD_BINAST.
 extern JS_PUBLIC_API JSScript* FinishOffThreadBinASTDecode(
     JSContext* cx, OffThreadToken* token);
+
+#endif  // defined(JS_BUILD_BINAST)
 
 }  // namespace JS
 

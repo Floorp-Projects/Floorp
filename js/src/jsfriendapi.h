@@ -254,13 +254,13 @@ JS_FRIEND_API void RemoveRawValueRoot(JSContext* cx, JS::Value* vp);
 
 JS_FRIEND_API JSAtom* GetPropertyNameFromPC(JSScript* script, jsbytecode* pc);
 
+#if defined(DEBUG) || defined(JS_JITSPEW)
+
 /*
  * Routines to print out values during debugging. These are FRIEND_API to help
  * the debugger find them and to support temporarily hacking js::Dump* calls
  * into other code. Note that there are overloads that do not require the FILE*
  * parameter, which will default to stderr.
- *
- * These functions are no-ops unless built with DEBUG or JS_JITSPEW.
  */
 
 extern JS_FRIEND_API void DumpString(JSString* str, FILE* fp);
@@ -296,8 +296,7 @@ extern JS_FRIEND_API void DumpInterpreterFrame(
 extern JS_FRIEND_API bool DumpPC(JSContext* cx);
 extern JS_FRIEND_API bool DumpScript(JSContext* cx, JSScript* scriptArg);
 
-// DumpBacktrace(), unlike the other dump functions, always dumps a backtrace --
-// regardless of DEBUG or JS_JITSPEW.
+#endif
 
 extern JS_FRIEND_API void DumpBacktrace(JSContext* cx, FILE* fp);
 
@@ -2487,7 +2486,7 @@ extern JS_FRIEND_API JSObject* GetJSMEnvironmentOfScriptedCaller(JSContext* cx);
 extern JS_FRIEND_API bool IsJSMEnvironment(JSObject* obj);
 
 // Matches the condition in js/src/jit/ProcessExecutableMemory.cpp
-#if defined(XP_WIN)
+#if defined(XP_WIN) && defined(HAVE_64BIT_BUILD)
 // Parameters use void* types to avoid #including windows.h. The return value of
 // this function is returned from the exception handler.
 typedef long (*JitExceptionHandler)(void* exceptionRecord,  // PEXECTION_RECORD
@@ -2593,10 +2592,9 @@ MOZ_ALWAYS_INLINE JSObject* ToWindowProxyIfWindow(JSObject* obj) {
  */
 extern JS_FRIEND_API JSObject* ToWindowIfWindowProxy(JSObject* obj);
 
+#if ENABLE_INTL_API
 // Create and add the Intl.MozDateTimeFormat constructor function to the
 // provided object.
-// If JS was built without JS_HAS_INTL_API, this function will throw an
-// exception.
 //
 // This custom date/time formatter constructor gives users the ability
 // to specify a custom format pattern. This pattern is passed *directly*
@@ -2611,15 +2609,12 @@ extern bool AddMozDateTimeFormatConstructor(JSContext* cx,
                                             JS::Handle<JSObject*> intl);
 
 // Create and add the Intl.Locale constructor function to the provided object.
-// If JS was built without JS_HAS_INTL_API, this function will throw an
-// exception.
 extern bool AddLocaleConstructor(JSContext* cx, JS::Handle<JSObject*> intl);
 
 // Create and add the Intl.ListFormat constructor function to the provided
 // object.
-// If JS was built without JS_HAS_INTL_API, this function will throw an
-// exception.
 extern bool AddListFormatConstructor(JSContext* cx, JS::Handle<JSObject*> intl);
+#endif  // ENABLE_INTL_API
 
 class MOZ_STACK_CLASS JS_FRIEND_API AutoAssertNoContentJS {
  public:

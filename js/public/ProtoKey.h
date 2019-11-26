@@ -34,13 +34,13 @@
 #define TYPED_ARRAY_CLASP(TYPE) (&TypedArrayObject::classes[Scalar::TYPE])
 #define ERROR_CLASP(TYPE) (&ErrorObject::classes[TYPE])
 
-#ifdef JS_HAS_INTL_API
+#ifdef ENABLE_INTL_API
 #  define IF_INTL(REAL, IMAGINARY) REAL
 #else
 #  define IF_INTL(REAL, IMAGINARY) IMAGINARY
 #endif
 
-#ifdef JS_HAS_TYPED_OBJECTS
+#ifdef ENABLE_TYPED_OBJECTS
 #  define IF_TYPEDOBJ(REAL, IMAGINARY) REAL
 #else
 #  define IF_TYPEDOBJ(REAL, IMAGINARY) IMAGINARY

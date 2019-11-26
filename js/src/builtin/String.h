@@ -56,7 +56,7 @@ extern bool str_charCodeAt(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool str_endsWith(JSContext* cx, unsigned argc, Value* vp);
 
-#if JS_HAS_INTL_API
+#if ENABLE_INTL_API
 /**
  * Returns the input string converted to lower case based on the language
  * specific case mappings for the input locale.
