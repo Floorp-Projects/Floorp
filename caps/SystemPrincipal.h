@@ -44,7 +44,6 @@ class SystemPrincipal final : public BasePrincipal {
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
-  NS_IMETHOD GetIsOriginPotentiallyTrustworthy(bool* aResult) override;
 
   virtual nsresult GetScriptLocation(nsACString& aStr) override;
 
