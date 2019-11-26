@@ -10703,7 +10703,7 @@ bool BaseCompiler::emitMemCopy() {
 
   int32_t signedLength;
   if (MacroAssembler::SupportsFastUnalignedAccesses() &&
-      peekConstI32(&signedLength) &&
+      peekConstI32(&signedLength) && signedLength != 0 &&
       uint32_t(signedLength) <= MaxInlineMemoryCopyLength) {
     return emitMemCopyInline();
   }
@@ -10728,16 +10728,10 @@ bool BaseCompiler::emitMemCopyInline() {
   int32_t signedLength;
   MOZ_ALWAYS_TRUE(popConstI32(&signedLength));
   uint32_t length = signedLength;
+  MOZ_ASSERT(length != 0 && length <= MaxInlineMemoryCopyLength);
 
   RegI32 src = popI32();
   RegI32 dest = popI32();
-
-  // A zero length copy is a no-op and cannot trap
-  if (length == 0) {
-    freeI32(src);
-    freeI32(dest);
-    return true;
-  }
 
   // Compute the number of copies of each width we will need to do
   size_t remainder = length;
@@ -10980,7 +10974,7 @@ bool BaseCompiler::emitMemFill() {
   int32_t signedLength;
   int32_t signedValue;
   if (MacroAssembler::SupportsFastUnalignedAccesses() &&
-      peek2xI32(&signedLength, &signedValue) &&
+      peek2xI32(&signedLength, &signedValue) && signedLength != 0 &&
       uint32_t(signedLength) <= MaxInlineMemoryFillLength) {
     return emitMemFillInline();
   }
@@ -11003,14 +10997,9 @@ bool BaseCompiler::emitMemFillInline() {
   MOZ_ALWAYS_TRUE(popConstI32(&signedValue));
   uint32_t length = uint32_t(signedLength);
   uint32_t value = uint32_t(signedValue);
+  MOZ_ASSERT(length != 0 && length <= MaxInlineMemoryFillLength);
 
   RegI32 dest = popI32();
-
-  // A zero length copy is a no-op and cannot trap
-  if (length == 0) {
-    freeI32(dest);
-    return true;
-  }
 
   // Compute the number of copies of each width we will need to do
   size_t remainder = length;

@@ -57,7 +57,7 @@ function testTableFill(tbl_type, val_type, obj) {
 
   // Partly outside the table
   assertErrorMessage(() => ins.exports.fill1(8, obj[5], 3),
-                     RangeError, /table index out of bounds/);
+                     WebAssembly.RuntimeError, /index out of bounds/);
 
   assertEq(ins.exports.get1(7), null);
   assertEq(ins.exports.get1(8), null);
@@ -106,25 +106,26 @@ function testTableFill(tbl_type, val_type, obj) {
 
   // Length-one fill1 at the edge of the table fails
   assertErrorMessage(() => ins.exports.fill1(10, null, 1),
-                     RangeError, /table index out of bounds/);
+                     WebAssembly.RuntimeError, /index out of bounds/);
 
   // Length-more-than-one fill1 at the edge of the table fails
   assertErrorMessage(() => ins.exports.fill1(10, null, 2),
-                     RangeError, /table index out of bounds/);
+                     WebAssembly.RuntimeError, /index out of bounds/);
 
 
   // Boundary tests on table 1: beyond the edge of the table:
 
-  // Length-zero fill1 beyond the edge of the table must succeed
-  assertEq(ins.exports.fill1(11, null, 0), undefined);
+  // Length-zero fill1 beyond the edge of the table fails
+  assertErrorMessage(() => ins.exports.fill1(11, null, 0),
+                     WebAssembly.RuntimeError, /index out of bounds/);
 
   // Length-one fill1 beyond the edge of the table fails
   assertErrorMessage(() => ins.exports.fill1(11, null, 1),
-                     RangeError, /table index out of bounds/);
+                     WebAssembly.RuntimeError, /index out of bounds/);
 
   // Length-more-than-one fill1 beyond the edge of the table fails
   assertErrorMessage(() => ins.exports.fill1(11, null, 2),
-                     RangeError, /table index out of bounds/);
+                     WebAssembly.RuntimeError, /index out of bounds/);
 
   // Following all the above tests on table 1, check table 0 hasn't changed.
   check_table0();

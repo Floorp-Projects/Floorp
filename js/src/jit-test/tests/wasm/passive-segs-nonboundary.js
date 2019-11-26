@@ -572,7 +572,8 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
        )
      )`
     );
-    inst.exports.testfn();
+    assertErrorMessage(() => inst.exports.testfn(),
+                       WebAssembly.RuntimeError, /index out of bounds/);
 }
 
 // Very large range
@@ -752,7 +753,8 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
        )
      )`
     );
-    inst.exports.testfn();
+    assertErrorMessage(() => inst.exports.testfn(),
+                       WebAssembly.RuntimeError, /index out of bounds/);
 }
 
 // Zero len with src offset out-of-bounds at the edge of memory
@@ -778,7 +780,8 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
        )
      )`
     );
-    inst.exports.testfn();
+    assertErrorMessage(() => inst.exports.testfn(),
+                       WebAssembly.RuntimeError, /index out of bounds/);
 }
 
 // 100 random fills followed by 100 random copies, in a single-page buffer,
