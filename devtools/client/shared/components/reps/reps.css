@@ -142,6 +142,10 @@ html[dir="rtl"] .tree-node button:not(.expanded) {
   color: var(--string-color);
 }
 
+.objectBox-empty-string {
+  font-style: italic;
+}
+
 .objectBox-string a,
 .objectBox-string a:visited {
   color: currentColor;

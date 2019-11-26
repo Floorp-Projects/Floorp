@@ -4929,9 +4929,23 @@ function StringRep(props) {
     member,
     openLink,
     title,
-    isInContentPage
+    isInContentPage,
+    transformEmptyString = false
   } = props;
   let text = object;
+  const config = getElementConfig({
+    className,
+    style,
+    actor: object.actor,
+    title
+  });
+
+  if (text == "" && transformEmptyString && !useQuotes) {
+    return span({ ...config,
+      className: `${config.className} objectBox-empty-string`
+    }, "<empty string>");
+  }
+
   const isLong = isLongString(object);
   const isOpen = member && member.open;
   const shouldCrop = !isOpen && cropLimit && text.length > cropLimit;
@@ -4954,12 +4968,6 @@ function StringRep(props) {
     useQuotes,
     escapeWhitespace
   }, text);
-  const config = getElementConfig({
-    className,
-    style,
-    actor: object.actor,
-    title
-  });
 
   if (!isLong) {
     if (containsURL(text)) {

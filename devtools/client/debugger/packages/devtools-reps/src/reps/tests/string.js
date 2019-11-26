@@ -119,6 +119,42 @@ const testCases = [
     },
     result: '"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"',
   },
+  {
+    name: "testEmptyStringWithoutQuotes",
+    props: {
+      object: "",
+      transformEmptyString: true,
+      useQuotes: false,
+    },
+    result: "<empty string>",
+  },
+  {
+    name: "testEmptyStringWithoutQuotesAndNoTransform",
+    props: {
+      object: "",
+      useQuotes: false,
+      transformEmptyString: false,
+    },
+    result: "",
+  },
+  {
+    name: "testEmptyStringWithQuotes",
+    props: {
+      object: "",
+      useQuotes: true,
+      transformEmptyString: true,
+    },
+    result: `""`,
+  },
+  {
+    name: "testEmptyStringWithQuotesAndNoTransforms",
+    props: {
+      object: "",
+      useQuotes: true,
+      transformEmptyString: false,
+    },
+    result: `""`,
+  },
 ];
 
 describe("test String", () => {
