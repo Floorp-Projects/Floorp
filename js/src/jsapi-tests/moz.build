@@ -53,7 +53,7 @@ UNIFIED_SOURCES += [
     'testGCExactRooting.cpp',
     'testGCFinalizeCallback.cpp',
     'testGCGrayMarking.cpp',
-    'testGCHeapPostBarriers.cpp',
+    'testGCHeapBarriers.cpp',
     'testGCHooks.cpp',
     'testGCMarking.cpp',
     'testGCOutOfMemory.cpp',

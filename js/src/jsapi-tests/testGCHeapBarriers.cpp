@@ -213,22 +213,19 @@ bool TestHeapPostBarrierInitFailure() {
 
 END_TEST(testGCHeapPostBarriers)
 
-BEGIN_TEST(testUnbarrieredEquality) {
+// Check that equality comparisons on external heap wrapper types do not trigger
+// the read barrier. This applies to Heap<T> and TenuredHeap<T>; internal
+// wrappers types do not have this barrier.
+BEGIN_TEST(testGCHeapBarrierComparisons) {
 #ifdef JS_GC_ZEAL
   AutoLeaveZeal nozeal(cx);
 #endif /* JS_GC_ZEAL */
 
   // Use ArrayBuffers because they have finalizers, which allows using them in
   // TenuredHeap<> without awkward conversations about nursery allocatability.
-  JS::RootedObject robj(cx, JS::NewArrayBuffer(cx, 20));
-  JS::RootedObject robj2(cx, JS::NewArrayBuffer(cx, 30));
+  JS::RootedObject obj(cx, JS::NewArrayBuffer(cx, 20));
+  JS::RootedObject obj2(cx, JS::NewArrayBuffer(cx, 30));
   cx->runtime()->gc.evictNursery();  // Need tenured objects
-
-  // Need some bare pointers to compare against.
-  JSObject* obj = robj;
-  JSObject* obj2 = robj2;
-  const JSObject* constobj = robj;
-  const JSObject* constobj2 = robj2;
 
   // Make them gray. We will make sure they stay gray. (For most reads, the
   // barrier will unmark gray.)
@@ -240,26 +237,15 @@ BEGIN_TEST(testUnbarrieredEquality) {
   MOZ_ASSERT(cell->isMarkedGray());
   MOZ_ASSERT(cell2->isMarkedGray());
 
+  CHECK((TestWrapperType<JS::Heap<JSObject*>, JSObject*>(obj, obj2)));
+  CHECK((TestWrapperType<JS::TenuredHeap<JSObject*>, JSObject*>(obj, obj2)));
+
+  // Sanity check that the read barrier normally marks gray things black.
   {
     JS::Heap<JSObject*> heap(obj);
-    JS::Heap<JSObject*> heap2(obj2);
-    CHECK(TestWrapper(obj, obj2, heap, heap2));
-    CHECK(TestWrapper(constobj, constobj2, heap, heap2));
-  }
-
-  {
-    JS::TenuredHeap<JSObject*> heap(obj);
     JS::TenuredHeap<JSObject*> heap2(obj2);
-    CHECK(TestWrapper(obj, obj2, heap, heap2));
-    CHECK(TestWrapper(constobj, constobj2, heap, heap2));
-  }
-
-  // Sanity check that the barriers normally mark things black.
-  {
-    JS::Heap<JSObject*> heap(obj);
-    JS::Heap<JSObject*> heap2(obj2);
     heap.get();
-    heap2.get();
+    heap2.getPtr();
     CHECK(cell->isMarkedBlack());
     CHECK(cell2->isMarkedBlack());
   }
@@ -267,49 +253,55 @@ BEGIN_TEST(testUnbarrieredEquality) {
   return true;
 }
 
-template <typename ObjectT, typename WrapperT>
+template <typename WrapperT, typename ObjectT>
+bool TestWrapperType(ObjectT obj, ObjectT obj2) {
+  WrapperT wrapper(obj);
+  WrapperT wrapper2(obj2);
+  const ObjectT constobj = obj;
+  const ObjectT constobj2 = obj2;
+  CHECK(TestWrapper(obj, obj2, wrapper, wrapper2));
+  CHECK(TestWrapper(constobj, constobj2, wrapper, wrapper2));
+  return true;
+}
+
+template <typename WrapperT, typename ObjectT>
 bool TestWrapper(ObjectT obj, ObjectT obj2, WrapperT& wrapper,
                  WrapperT& wrapper2) {
-  using namespace js::gc;
-
-  const TenuredCell& cell = obj->asTenured();
-  const TenuredCell& cell2 = obj2->asTenured();
-
   int x = 0;
 
-  CHECK(cell.isMarkedGray());
-  CHECK(cell2.isMarkedGray());
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
   x += obj == obj2;
-  CHECK(cell.isMarkedGray());
-  CHECK(cell2.isMarkedGray());
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
   x += obj == wrapper2;
-  CHECK(cell.isMarkedGray());
-  CHECK(cell2.isMarkedGray());
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
   x += wrapper == obj2;
-  CHECK(cell.isMarkedGray());
-  CHECK(cell2.isMarkedGray());
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
   x += wrapper == wrapper2;
-  CHECK(cell.isMarkedGray());
-  CHECK(cell2.isMarkedGray());
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
 
   CHECK(x == 0);
 
   x += obj != obj2;
-  CHECK(cell.isMarkedGray());
-  CHECK(cell2.isMarkedGray());
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
   x += obj != wrapper2;
-  CHECK(cell.isMarkedGray());
-  CHECK(cell2.isMarkedGray());
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
   x += wrapper != obj2;
-  CHECK(cell.isMarkedGray());
-  CHECK(cell2.isMarkedGray());
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
   x += wrapper != wrapper2;
-  CHECK(cell.isMarkedGray());
-  CHECK(cell2.isMarkedGray());
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
 
   CHECK(x == 4);
 
   return true;
 }
 
-END_TEST(testUnbarrieredEquality)
+END_TEST(testGCHeapBarrierComparisons)
