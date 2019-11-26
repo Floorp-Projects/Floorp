@@ -386,11 +386,18 @@ var WebNFCTest = (() => {
       if (testInternal.initialized)
         throw new Error('Call reset() before initialize().');
 
+      if (window.testRunner) {
+        // Grant nfc permissions for Chromium testrunner.
+        window.testRunner.setPermission('nfc', 'granted',
+                                        location.origin, location.origin);
+      }
+
       if (testInternal.mockNFC == null) {
         testInternal.mockNFC = new MockNFC();
       }
       testInternal.initialized = true;
     }
+
     // Reuses the nfc mock but resets its state between test runs.
     async reset() {
       if (!testInternal.initialized)
