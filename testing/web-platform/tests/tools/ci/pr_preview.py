@@ -44,7 +44,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def gh_request(method_name, url, body=None, media_type=None):
-    github_token = os.environ.get('GITHUB_TOKEN')
+    github_token = os.environ['DEPLOY_TOKEN']
 
     kwargs = {
         'headers': {
@@ -200,7 +200,7 @@ class Remote(object):
         # The repository in the GitHub Actions environment is configured with
         # a remote whose URL uses unauthenticated HTTPS, making it unsuitable
         # for pushing changes.
-        self._token = os.environ.get('GITHUB_TOKEN')
+        self._token = os.environ['DEPLOY_TOKEN']
 
     def get_revision(self, refspec):
         output = subprocess.check_output([
