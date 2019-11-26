@@ -168,9 +168,10 @@ wasi-sysroot:
         toolchain-artifact: public/build/wasi-sysroot.tar.xz
     fetches:
         fetch:
-            - wasi-libc
+            - wasi-sdk
         toolchain:
-            - linux64-clang
+            - linux64-binutils
+            - linux64-gcc-7
 
 wrench-deps:
     description: "Downloads all the crates needed for building wrench"

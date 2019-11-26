@@ -1,18 +1,11 @@
 #!/bin/bash
 set -x -e -v
 
-# This script is for building libc-wasi.
-
-cd $GECKO_PATH
-
-# gets a bit too verbose here
-
-cd $MOZ_FETCHES_DIR/wasi-libc
-make WASM_CC=$MOZ_FETCHES_DIR/clang/bin/clang \
-     WASM_AR=$MOZ_FETCHES_DIR/clang/bin/llvm-ar \
-     WASM_NM=$MOZ_FETCHES_DIR/clang/bin/llvm-nm \
-     SYSROOT=$(pwd)/wasi-sysroot
-
+export PATH="$MOZ_FETCHES_DIR/gcc/bin:$MOZ_FETCHES_DIR/binutils/bin:$PATH"
+export LD_LIBRARY_PATH="$MOZ_FETCHES_DIR/gcc/lib64/:$LD_LIBRARY_PATH"
+cd $MOZ_FETCHES_DIR/wasi-sdk
+PREFIX=$MOZ_FETCHES_DIR/wasi-sdk/wasi-sysroot
+make PREFIX=$PREFIX
 # Put a tarball in the artifacts dir
 mkdir -p $UPLOAD_DIR
-tar caf $UPLOAD_DIR/wasi-sysroot.tar.xz wasi-sysroot
+tar -C $MOZ_FETCHES_DIR/wasi-sdk/ -caf $UPLOAD_DIR/wasi-sysroot.tar.xz wasi-sysroot
