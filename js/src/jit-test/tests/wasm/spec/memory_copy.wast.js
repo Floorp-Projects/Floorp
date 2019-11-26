@@ -12624,7 +12624,7 @@ run(() => call($27, "test", []));
 let $28 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x84\x80\x80\x80\x00\x01\x01\x01\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0a\x96\x80\x80\x80\x00\x01\x90\x80\x80\x80\x00\x00\x41\x80\x80\x08\x41\x80\xe0\x01\x41\x00\xfc\x0a\x00\x00\x0b");
 
 // memory_copy.wast:4872
-run(() => call($28, "test", []));
+assert_trap(() => call($28, "test", []));
 
 // memory_copy.wast:4874
 let $29 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x84\x80\x80\x80\x00\x01\x01\x01\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0a\x96\x80\x80\x80\x00\x01\x90\x80\x80\x80\x00\x00\x41\x80\xa0\x02\x41\x80\x80\x04\x41\x00\xfc\x0a\x00\x00\x0b");
@@ -12636,7 +12636,7 @@ run(() => call($29, "test", []));
 let $30 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x84\x80\x80\x80\x00\x01\x01\x01\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0a\x96\x80\x80\x80\x00\x01\x90\x80\x80\x80\x00\x00\x41\x80\xa0\x02\x41\x80\x80\x08\x41\x00\xfc\x0a\x00\x00\x0b");
 
 // memory_copy.wast:4884
-run(() => call($30, "test", []));
+assert_trap(() => call($30, "test", []));
 
 // memory_copy.wast:4886
 let $31 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x84\x80\x80\x80\x00\x01\x01\x01\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0a\x96\x80\x80\x80\x00\x01\x90\x80\x80\x80\x00\x00\x41\x80\x80\x04\x41\x80\x80\x04\x41\x00\xfc\x0a\x00\x00\x0b");
@@ -12645,700 +12645,706 @@ let $31 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01
 run(() => call($31, "test", []));
 
 // memory_copy.wast:4892
-let $32 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8b\x80\x80\x80\x00\x02\x60\x00\x00\x60\x03\x7f\x7f\x7f\x01\x7f\x03\x83\x80\x80\x80\x00\x02\x00\x01\x05\x84\x80\x80\x80\x00\x01\x01\x01\x01\x07\x95\x80\x80\x80\x00\x02\x04\x74\x65\x73\x74\x00\x00\x0a\x63\x68\x65\x63\x6b\x52\x61\x6e\x67\x65\x00\x01\x0a\xbe\x95\x80\x80\x00\x02\x8c\x95\x80\x80\x00\x00\x41\xe7\x8a\x01\x41\x01\x41\xc0\x0a\xfc\x0b\x00\x41\xe9\xb0\x02\x41\x02\x41\x9f\x08\xfc\x0b\x00\x41\xd1\xb8\x03\x41\x03\x41\xdc\x07\xfc\x0b\x00\x41\xca\xa8\x02\x41\x04\x41\xc2\x02\xfc\x0b\x00\x41\xa9\x3e\x41\x05\x41\xca\x0f\xfc\x0b\x00\x41\xba\xb1\x01\x41\x06\x41\xdc\x17\xfc\x0b\x00\x41\xf2\x83\x01\x41\x07\x41\xc4\x12\xfc\x0b\x00\x41\xe3\xd3\x02\x41\x08\x41\xc3\x06\xfc\x0b\x00\x41\xfc\x00\x41\x09\x41\xf1\x0a\xfc\x0b\x00\x41\xd4\x10\x41\x0a\x41\xc6\x15\xfc\x0b\x00\x41\x9b\xc6\x00\x41\x0b\x41\x9a\x18\xfc\x0b\x00\x41\xe7\x9b\x03\x41\x0c\x41\xe5\x05\xfc\x0b\x00\x41\xf6\x1e\x41\x0d\x41\x87\x16\xfc\x0b\x00\x41\xb3\x84\x03\x41\x0e\x41\x80\x0a\xfc\x0b\x00\x41\xc9\x89\x03\x41\x0f\x41\xba\x0b\xfc\x0b\x00\x41\x8d\xa0\x01\x41\x10\x41\xd6\x18\xfc\x0b\x00\x41\xb1\xf4\x02\x41\x11\x41\xa0\x04\xfc\x0b\x00\x41\xa3\xe1\x00\x41\x12\x41\xed\x14\xfc\x0b\x00\x41\xa5\xc2\x01\x41\x13\x41\xdb\x14\xfc\x0b\x00\x41\x85\xe2\x02\x41\x14\x41\xa2\x0c\xfc\x0b\x00\x41\xd8\xd0\x02\x41\x15\x41\x9b\x0d\xfc\x0b\x00\x41\xde\x88\x02\x41\x16\x41\x86\x05\xfc\x0b\x00\x41\xab\xfb\x02\x41\x17\x41\xc2\x0e\xfc\x0b\x00\x41\xcd\xa1\x03\x41\x18\x41\xe1\x14\xfc\x0b\x00\x41\x9b\xed\x01\x41\x19\x41\xd5\x07\xfc\x0b\x00\x41\xd4\xc8\x00\x41\x1a\x41\x8f\x0e\xfc\x0b\x00\x41\x8e\x88\x03\x41\x1b\x41\xe7\x03\xfc\x0b\x00\x41\xa1\xea\x03\x41\x1c\x41\x92\x04\xfc\x0b\x00\x41\xdc\x9b\x02\x41\x1d\x41\xaf\x07\xfc\x0b\x00\x41\xf0\x34\x41\x1e\x41\xfd\x02\xfc\x0b\x00\x41\xbe\x90\x03\x41\x1f\x41\x91\x18\xfc\x0b\x00\x41\xc1\x84\x03\x41\x20\x41\x92\x05\xfc\x0b\x00\x41\xfc\xdb\x02\x41\x21\x41\xa6\x0d\xfc\x0b\x00\x41\xbe\x84\x02\x41\x22\x41\xc4\x08\xfc\x0b\x00\x41\xfe\x8c\x03\x41\x23\x41\x82\x0b\xfc\x0b\x00\x41\xea\xf3\x02\x41\x24\x41\x9c\x11\xfc\x0b\x00\x41\xeb\xa6\x03\x41\x25\x41\xda\x12\xfc\x0b\x00\x41\x8f\xaf\x03\x41\x26\x41\xfa\x01\xfc\x0b\x00\x41\xdc\xb0\x01\x41\x27\x41\xb1\x10\xfc\x0b\x00\x41\xec\x85\x01\x41\x28\x41\xc0\x19\xfc\x0b\x00\x41\xbb\xa8\x03\x41\x29\x41\xe3\x19\xfc\x0b\x00\x41\xb2\xb4\x02\x41\x2a\x41\xec\x15\xfc\x0b\x00\x41\xbc\x9a\x02\x41\x2b\x41\x96\x10\xfc\x0b\x00\x41\xec\x93\x02\x41\x2c\x41\xcb\x15\xfc\x0b\x00\x41\xdb\xff\x01\x41\x2d\x41\xb8\x02\xfc\x0b\x00\x41\x82\xf2\x03\x41\x2e\x41\xc0\x01\xfc\x0b\x00\x41\xfe\xf1\x01\x41\x2f\x41\xd4\x04\xfc\x0b\x00\x41\xfb\x81\x01\x41\x30\x41\xf5\x03\xfc\x0b\x00\x41\xaa\xbd\x03\x41\x31\x41\xae\x05\xfc\x0b\x00\x41\xfb\x8b\x02\x41\x32\x41\x81\x03\xfc\x0b\x00\x41\xd1\xdb\x03\x41\x33\x41\x87\x07\xfc\x0b\x00\x41\x85\xe0\x03\x41\x34\x41\xd6\x12\xfc\x0b\x00\x41\xfc\xee\x02\x41\x35\x41\xa1\x0b\xfc\x0b\x00\x41\xf5\xca\x01\x41\x36\x41\xda\x18\xfc\x0b\x00\x41\xbe\x2b\x41\x37\x41\xd7\x10\xfc\x0b\x00\x41\x89\x99\x02\x41\x38\x41\x87\x04\xfc\x0b\x00\x41\xdc\xde\x02\x41\x39\x41\xd0\x19\xfc\x0b\x00\x41\xa8\xed\x02\x41\x3a\x41\x8e\x0d\xfc\x0b\x00\x41\x8f\xec\x02\x41\x3b\x41\xe0\x18\xfc\x0b\x00\x41\xb1\xaf\x01\x41\x3c\x41\xa1\x0b\xfc\x0b\x00\x41\xf1\xc9\x03\x41\x3d\x41\x97\x05\xfc\x0b\x00\x41\x85\xfc\x01\x41\x3e\x41\x87\x0d\xfc\x0b\x00\x41\xf7\x17\x41\x3f\x41\xd1\x05\xfc\x0b\x00\x41\xe9\x89\x02\x41\xc0\x00\x41\xd4\x00\xfc\x0b\x00\x41\xba\x84\x02\x41\xc1\x00\x41\xed\x0f\xfc\x0b\x00\x41\xca\x9f\x02\x41\xc2\x00\x41\x1d\xfc\x0b\x00\x41\xcb\x95\x01\x41\xc3\x00\x41\xda\x17\xfc\x0b\x00\x41\xc8\xe2\x00\x41\xc4\x00\x41\x93\x08\xfc\x0b\x00\x41\xe4\x8e\x01\x41\xc5\x00\x41\xfc\x19\xfc\x0b\x00\x41\x9f\x24\x41\xc6\x00\x41\xc3\x08\xfc\x0b\x00\x41\x9e\xfe\x00\x41\xc7\x00\x41\xcd\x0f\xfc\x0b\x00\x41\x9c\x8e\x01\x41\xc8\x00\x41\xd3\x11\xfc\x0b\x00\x41\xe4\x8a\x03\x41\xc9\x00\x41\xf5\x18\xfc\x0b\x00\x41\x94\xd6\x00\x41\xca\x00\x41\xb0\x0f\xfc\x0b\x00\x41\xda\xfc\x00\x41\xcb\x00\x41\xaf\x0b\xfc\x0b\x00\x41\xde\xe2\x02\x41\xcc\x00\x41\x99\x09\xfc\x0b\x00\x41\xf9\xa6\x03\x41\xcd\x00\x41\xa0\x0c\xfc\x0b\x00\x41\xbb\x82\x02\x41\xce\x00\x41\xea\x0c\xfc\x0b\x00\x41\xe4\xdc\x03\x41\xcf\x00\x41\xd4\x19\xfc\x0b\x00\x41\x91\x94\x03\x41\xd0\x00\x41\xdf\x01\xfc\x0b\x00\x41\x89\x22\x41\xd1\x00\x41\xfb\x10\xfc\x0b\x00\x41\xaa\xc1\x03\x41\xd2\x00\x41\xaa\x0a\xfc\x0b\x00\x41\xac\xb3\x03\x41\xd3\x00\x41\xd8\x14\xfc\x0b\x00\x41\x9b\xbc\x01\x41\xd4\x00\x41\x95\x08\xfc\x0b\x00\x41\xaf\xd1\x02\x41\xd5\x00\x41\x99\x18\xfc\x0b\x00\x41\xb3\xfc\x01\x41\xd6\x00\x41\xec\x15\xfc\x0b\x00\x41\xe3\x1d\x41\xd7\x00\x41\xda\x0f\xfc\x0b\x00\x41\xc8\xac\x03\x41\xd8\x00\x41\x00\xfc\x0b\x00\x41\x95\x86\x03\x41\xd9\x00\x41\x95\x10\xfc\x0b\x00\x41\xbb\x9f\x01\x41\xda\x00\x41\xd0\x16\xfc\x0b\x00\x41\xa2\x88\x02\x41\xdb\x00\x41\xc0\x01\xfc\x0b\x00\x41\xba\xc9\x00\x41\xdc\x00\x41\x93\x11\xfc\x0b\x00\x41\xfd\xe0\x00\x41\xdd\x00\x41\x18\xfc\x0b\x00\x41\x8b\xee\x00\x41\xde\x00\x41\xc1\x04\xfc\x0b\x00\x41\x9a\xd8\x02\x41\xdf\x00\x41\xa9\x10\xfc\x0b\x00\x41\xff\x9e\x02\x41\xe0\x00\x41\xec\x1a\xfc\x0b\x00\x41\xf8\xb5\x01\x41\xe1\x00\x41\xcd\x15\xfc\x0b\x00\x41\xf8\x31\x41\xe2\x00\x41\xbe\x06\xfc\x0b\x00\x41\x9b\x84\x02\x41\xe3\x00\x41\x92\x0f\xfc\x0b\x00\x41\xb5\xab\x01\x41\xe4\x00\x41\xbe\x15\xfc\x0b\x00\x41\xce\xce\x03\x41\xe8\xa7\x03\x41\xb2\x10\xfc\x0a\x00\x00\x41\xb2\xec\x03\x41\xb8\xb2\x02\x41\xe6\x01\xfc\x0a\x00\x00\x41\xf9\x94\x03\x41\xcd\xb8\x01\x41\xfc\x11\xfc\x0a\x00\x00\x41\xb4\x34\x41\xbc\xbb\x01\x41\xff\x04\xfc\x0a\x00\x00\x41\xce\x36\x41\xf7\x84\x02\x41\xc9\x08\xfc\x0a\x00\x00\x41\xcb\x97\x01\x41\xec\xd0\x00\x41\xfd\x18\xfc\x0a\x00\x00\x41\xac\xd5\x01\x41\x86\xa9\x03\x41\xe4\x00\xfc\x0a\x00\x00\x41\xd5\xd4\x01\x41\xa2\xd5\x02\x41\xb5\x0d\xfc\x0a\x00\x00\x41\xf0\xd8\x03\x41\xb5\xc3\x00\x41\xf7\x00\xfc\x0a\x00\x00\x41\xbb\x2e\x41\x84\x12\x41\x92\x05\xfc\x0a\x00\x00\x41\xb3\x25\x41\xaf\x93\x03\x41\xdd\x11\xfc\x0a\x00\x00\x41\xc9\xe2\x00\x41\xfd\x95\x01\x41\xc1\x06\xfc\x0a\x00\x00\x41\xce\xdc\x00\x41\xa9\xeb\x02\x41\xe4\x19\xfc\x0a\x00\x00\x41\xf0\xd8\x00\x41\xd4\xdf\x02\x41\xe9\x11\xfc\x0a\x00\x00\x41\x8a\x8b\x02\x41\xa9\x34\x41\x8c\x14\xfc\x0a\x00\x00\x41\xc8\x26\x41\x9a\x0d\x41\xb0\x0a\xfc\x0a\x00\x00\x41\xbc\xed\x03\x41\xd5\x3b\x41\x86\x0d\xfc\x0a\x00\x00\x41\x98\xdc\x02\x41\xa8\x8f\x01\x41\x21\xfc\x0a\x00\x00\x41\x8e\xd7\x02\x41\xcc\xae\x01\x41\x93\x0b\xfc\x0a\x00\x00\x41\xad\xec\x02\x41\x9b\x85\x03\x41\x9a\x0b\xfc\x0a\x00\x00\x41\xc4\xf1\x03\x41\xb3\xc4\x00\x41\xc2\x06\xfc\x0a\x00\x00\x41\xcd\x85\x02\x41\xa3\x9d\x01\x41\xf5\x19\xfc\x0a\x00\x00\x41\xff\xbc\x02\x41\xad\xa8\x03\x41\x81\x19\xfc\x0a\x00\x00\x41\xd4\xc9\x01\x41\xf6\xce\x03\x41\x94\x13\xfc\x0a\x00\x00\x41\xde\x99\x01\x41\xb2\xbc\x03\x41\xda\x02\xfc\x0a\x00\x00\x41\xec\xfb\x00\x41\xca\x98\x02\x41\xfe\x12\xfc\x0a\x00\x00\x41\xb0\xdc\x00\x41\xf6\x95\x02\x41\xac\x02\xfc\x0a\x00\x00\x41\xa3\xd0\x03\x41\x85\xed\x00\x41\xd1\x18\xfc\x0a\x00\x00\x41\xfb\x8b\x02\x41\xb2\xd9\x03\x41\x81\x0a\xfc\x0a\x00\x00\x41\x84\xc6\x00\x41\xf4\xdf\x00\x41\xaf\x07\xfc\x0a\x00\x00\x41\x8b\x16\x41\xb9\xd1\x00\x41\xdf\x0e\xfc\x0a\x00\x00\x41\xba\xd1\x02\x41\x86\xd7\x02\x41\xe2\x05\xfc\x0a\x00\x00\x41\xbe\xec\x03\x41\x85\x94\x01\x41\xfa\x00\xfc\x0a\x00\x00\x41\xec\xbb\x01\x41\xd9\xdd\x02\x41\xdb\x0d\xfc\x0a\x00\x00\x41\xd0\xb0\x01\x41\xa3\xf3\x00\x41\xbe\x05\xfc\x0a\x00\x00\x41\x94\xd8\x00\x41\xd3\xcf\x01\x41\xa6\x0e\xfc\x0a\x00\x00\x41\xb4\xb4\x01\x41\xf7\x9f\x01\x41\xa8\x08\xfc\x0a\x00\x00\x41\xa0\xbf\x03\x41\xf2\xab\x03\x41\xc7\x14\xfc\x0a\x00\x00\x41\x94\xc7\x01\x41\x81\x08\x41\xa9\x18\xfc\x0a\x00\x00\x41\xb4\x83\x03\x41\xbc\xd9\x02\x41\xcf\x07\xfc\x0a\x00\x00\x41\xf8\xdc\x01\x41\xfa\xc5\x02\x41\xa0\x12\xfc\x0a\x00\x00\x41\xe9\xde\x03\x41\xe6\x01\x41\xb8\x16\xfc\x0a\x00\x00\x41\xd0\xaf\x01\x41\x9a\x9a\x03\x41\x95\x11\xfc\x0a\x00\x00\x41\xe9\xbc\x02\x41\xea\xca\x00\x41\xa6\x0f\xfc\x0a\x00\x00\x41\xcc\xe2\x01\x41\xfe\xa2\x01\x41\x8a\x11\xfc\x0a\x00\x00\x41\xa5\x9e\x03\x41\xb3\xd7\x02\x41\x8d\x08\xfc\x0a\x00\x00\x41\x84\xc7\x01\x41\xd3\x96\x02\x41\xf2\x0c\xfc\x0a\x00\x00\x41\x94\xc9\x03\x41\xfb\xe5\x02\x41\xc2\x0f\xfc\x0a\x00\x00\x41\x99\xab\x02\x41\x90\x2d\x41\xa3\x0f\xfc\x0a\x00\x00\x41\xd7\xde\x01\x41\xc4\xb0\x03\x41\xc0\x12\xfc\x0a\x00\x00\x41\x9b\xe9\x03\x41\xbc\x8d\x01\x41\xcc\x0a\xfc\x0a\x00\x00\x41\xe5\x87\x03\x41\xa5\xec\x00\x41\xfe\x02\xfc\x0a\x00\x00\x41\x88\x84\x01\x41\xf5\x9b\x02\x41\xec\x0e\xfc\x0a\x00\x00\x41\xe2\xf7\x02\x41\xde\xd8\x00\x41\xf7\x15\xfc\x0a\x00\x00\x41\xe0\xde\x01\x41\xaa\xbb\x02\x41\xc3\x02\xfc\x0a\x00\x00\x41\xb2\x95\x02\x41\xd0\xd9\x01\x41\x86\x0d\xfc\x0a\x00\x00\x41\xfa\xeb\x03\x41\xd4\xa0\x03\x41\xbd\x0a\xfc\x0a\x00\x00\x41\xb5\xee\x00\x41\xe8\xe9\x02\x41\x84\x05\xfc\x0a\x00\x00\x41\xe6\xe2\x01\x41\x82\x95\x01\x41\xf0\x03\xfc\x0a\x00\x00\x41\x98\xdf\x02\x41\xd9\xf3\x02\x41\xe0\x15\xfc\x0a\x00\x00\x41\x87\xb5\x02\x41\xf5\xdc\x02\x41\xc6\x0a\xfc\x0a\x00\x00\x41\xf0\xd0\x00\x41\xda\xe4\x01\x41\xc3\x0b\xfc\x0a\x00\x00\x41\xbf\xee\x02\x41\xe2\xe8\x02\x41\xbb\x0b\xfc\x0a\x00\x00\x41\xa9\x26\x41\xc4\xe0\x01\x41\xe7\x0e\xfc\x0a\x00\x00\x41\xfc\xa8\x02\x41\xa5\xbf\x03\x41\xd7\x0d\xfc\x0a\x00\x00\x41\xce\xce\x01\x41\xd7\xd4\x01\x41\xe7\x08\xfc\x0a\x00\x00\x41\xd3\xcb\x03\x41\xd1\xc0\x01\x41\xa7\x08\xfc\x0a\x00\x00\x41\xac\xdf\x03\x41\x86\xaf\x02\x41\xfe\x05\xfc\x0a\x00\x00\x41\x80\xd9\x02\x41\xec\x11\x41\xf0\x0b\xfc\x0a\x00\x00\x41\xe4\xff\x01\x41\x85\xf1\x02\x41\xc6\x17\xfc\x0a\x00\x00\x41\x8c\xd7\x00\x41\x8c\xa6\x01\x41\xf3\x07\xfc\x0a\x00\x00\x41\xf1\x3b\x41\xfc\xf6\x01\x41\xda\x17\xfc\x0a\x00\x00\x41\xfc\x8c\x01\x41\xbb\xe5\x00\x41\xf8\x19\xfc\x0a\x00\x00\x41\xda\xbf\x03\x41\xe1\xb4\x03\x41\xb4\x02\xfc\x0a\x00\x00\x41\xe3\xc0\x01\x41\xaf\x83\x01\x41\x83\x09\xfc\x0a\x00\x00\x41\xbc\x9b\x01\x41\x83\xcf\x00\x41\xd2\x05\xfc\x0a\x00\x00\x41\xe9\x16\x41\xaf\x2e\x41\xc2\x12\xfc\x0a\x00\x00\x41\xff\xfb\x01\x41\xaf\x87\x03\x41\xee\x16\xfc\x0a\x00\x00\x41\x96\xf6\x00\x41\x93\x87\x01\x41\xaf\x14\xfc\x0a\x00\x00\x41\x87\xe4\x02\x41\x9f\xde\x01\x41\xfd\x0f\xfc\x0a\x00\x00\x41\xed\xae\x03\x41\x91\x9a\x02\x41\xa4\x14\xfc\x0a\x00\x00\x41\xad\xde\x01\x41\x8d\xa7\x03\x41\x90\x09\xfc\x0a\x00\x00\x41\xcf\xf6\x02\x41\x89\xa1\x03\x41\xc1\x18\xfc\x0a\x00\x00\x41\xb6\xef\x01\x41\xe3\xe0\x02\x41\xd9\x14\xfc\x0a\x00\x00\x41\xc1\x27\x41\xc7\x21\x41\x34\xfc\x0a\x00\x00\x41\xa4\x34\x41\x83\xbd\x01\x41\xb9\x03\xfc\x0a\x00\x00\x41\xd8\x81\x02\x41\xed\xd3\x01\x41\xf5\x1a\xfc\x0a\x00\x00\x41\x92\xfe\x01\x41\xec\xcf\x03\x41\xe1\x15\xfc\x0a\x00\x00\x41\xb9\x8c\x02\x41\x82\xc6\x00\x41\xe6\x12\xfc\x0a\x00\x00\x41\xe5\x8b\x01\x41\x8a\xaa\x03\x41\xb5\x1a\xfc\x0a\x00\x00\x41\x9d\xb1\x01\x41\xf7\xd8\x02\x41\x88\x01\xfc\x0a\x00\x00\x41\xd1\xcd\x03\x41\xa5\x37\x41\x95\x08\xfc\x0a\x00\x00\x41\xc1\xcf\x02\x41\xf4\xad\x03\x41\xd5\x12\xfc\x0a\x00\x00\x41\x95\xdd\x02\x41\xaa\x9d\x01\x41\xed\x06\xfc\x0a\x00\x00\x41\xca\x9f\x02\x41\xec\xc4\x01\x41\xf7\x1a\xfc\x0a\x00\x00\x41\xae\xe5\x02\x41\x90\xf9\x01\x41\xd6\x06\xfc\x0a\x00\x00\x41\xac\xbd\x01\x41\xfa\xf8\x01\x41\xe1\x0a\xfc\x0a\x00\x00\x41\xf2\x87\x02\x41\xb4\x05\x41\xba\x0c\xfc\x0a\x00\x00\x41\xca\xd9\x03\x41\x99\x91\x01\x41\xab\x17\xfc\x0a\x00\x00\x41\xc2\x89\x03\x41\xb7\xc2\x02\x41\xfe\x0a\xfc\x0a\x00\x00\x0b\xa7\x80\x80\x80\x00\x00\x03\x40\x20\x00\x20\x01\x46\x04\x40\x41\x7f\x0f\x0b\x20\x00\x2d\x00\x00\x20\x02\x46\x04\x40\x20\x00\x41\x01\x6a\x21\x00\x0c\x01\x0b\x0b\x20\x00\x0f\x0b");
+let $32 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x84\x80\x80\x80\x00\x01\x01\x01\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0a\x96\x80\x80\x80\x00\x01\x90\x80\x80\x80\x00\x00\x41\x80\x80\x08\x41\x80\x80\x08\x41\x00\xfc\x0a\x00\x00\x0b");
 
-// memory_copy.wast:5108
-run(() => call($32, "test", []));
+// memory_copy.wast:4896
+assert_trap(() => call($32, "test", []));
 
-// memory_copy.wast:5110
-assert_return(() => call($32, "checkRange", [0, 124, 0]), -1);
-
-// memory_copy.wast:5112
-assert_return(() => call($32, "checkRange", [124, 1_517, 9]), -1);
+// memory_copy.wast:4898
+let $33 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8b\x80\x80\x80\x00\x02\x60\x00\x00\x60\x03\x7f\x7f\x7f\x01\x7f\x03\x83\x80\x80\x80\x00\x02\x00\x01\x05\x84\x80\x80\x80\x00\x01\x01\x01\x01\x07\x95\x80\x80\x80\x00\x02\x04\x74\x65\x73\x74\x00\x00\x0a\x63\x68\x65\x63\x6b\x52\x61\x6e\x67\x65\x00\x01\x0a\xbe\x95\x80\x80\x00\x02\x8c\x95\x80\x80\x00\x00\x41\xe7\x8a\x01\x41\x01\x41\xc0\x0a\xfc\x0b\x00\x41\xe9\xb0\x02\x41\x02\x41\x9f\x08\xfc\x0b\x00\x41\xd1\xb8\x03\x41\x03\x41\xdc\x07\xfc\x0b\x00\x41\xca\xa8\x02\x41\x04\x41\xc2\x02\xfc\x0b\x00\x41\xa9\x3e\x41\x05\x41\xca\x0f\xfc\x0b\x00\x41\xba\xb1\x01\x41\x06\x41\xdc\x17\xfc\x0b\x00\x41\xf2\x83\x01\x41\x07\x41\xc4\x12\xfc\x0b\x00\x41\xe3\xd3\x02\x41\x08\x41\xc3\x06\xfc\x0b\x00\x41\xfc\x00\x41\x09\x41\xf1\x0a\xfc\x0b\x00\x41\xd4\x10\x41\x0a\x41\xc6\x15\xfc\x0b\x00\x41\x9b\xc6\x00\x41\x0b\x41\x9a\x18\xfc\x0b\x00\x41\xe7\x9b\x03\x41\x0c\x41\xe5\x05\xfc\x0b\x00\x41\xf6\x1e\x41\x0d\x41\x87\x16\xfc\x0b\x00\x41\xb3\x84\x03\x41\x0e\x41\x80\x0a\xfc\x0b\x00\x41\xc9\x89\x03\x41\x0f\x41\xba\x0b\xfc\x0b\x00\x41\x8d\xa0\x01\x41\x10\x41\xd6\x18\xfc\x0b\x00\x41\xb1\xf4\x02\x41\x11\x41\xa0\x04\xfc\x0b\x00\x41\xa3\xe1\x00\x41\x12\x41\xed\x14\xfc\x0b\x00\x41\xa5\xc2\x01\x41\x13\x41\xdb\x14\xfc\x0b\x00\x41\x85\xe2\x02\x41\x14\x41\xa2\x0c\xfc\x0b\x00\x41\xd8\xd0\x02\x41\x15\x41\x9b\x0d\xfc\x0b\x00\x41\xde\x88\x02\x41\x16\x41\x86\x05\xfc\x0b\x00\x41\xab\xfb\x02\x41\x17\x41\xc2\x0e\xfc\x0b\x00\x41\xcd\xa1\x03\x41\x18\x41\xe1\x14\xfc\x0b\x00\x41\x9b\xed\x01\x41\x19\x41\xd5\x07\xfc\x0b\x00\x41\xd4\xc8\x00\x41\x1a\x41\x8f\x0e\xfc\x0b\x00\x41\x8e\x88\x03\x41\x1b\x41\xe7\x03\xfc\x0b\x00\x41\xa1\xea\x03\x41\x1c\x41\x92\x04\xfc\x0b\x00\x41\xdc\x9b\x02\x41\x1d\x41\xaf\x07\xfc\x0b\x00\x41\xf0\x34\x41\x1e\x41\xfd\x02\xfc\x0b\x00\x41\xbe\x90\x03\x41\x1f\x41\x91\x18\xfc\x0b\x00\x41\xc1\x84\x03\x41\x20\x41\x92\x05\xfc\x0b\x00\x41\xfc\xdb\x02\x41\x21\x41\xa6\x0d\xfc\x0b\x00\x41\xbe\x84\x02\x41\x22\x41\xc4\x08\xfc\x0b\x00\x41\xfe\x8c\x03\x41\x23\x41\x82\x0b\xfc\x0b\x00\x41\xea\xf3\x02\x41\x24\x41\x9c\x11\xfc\x0b\x00\x41\xeb\xa6\x03\x41\x25\x41\xda\x12\xfc\x0b\x00\x41\x8f\xaf\x03\x41\x26\x41\xfa\x01\xfc\x0b\x00\x41\xdc\xb0\x01\x41\x27\x41\xb1\x10\xfc\x0b\x00\x41\xec\x85\x01\x41\x28\x41\xc0\x19\xfc\x0b\x00\x41\xbb\xa8\x03\x41\x29\x41\xe3\x19\xfc\x0b\x00\x41\xb2\xb4\x02\x41\x2a\x41\xec\x15\xfc\x0b\x00\x41\xbc\x9a\x02\x41\x2b\x41\x96\x10\xfc\x0b\x00\x41\xec\x93\x02\x41\x2c\x41\xcb\x15\xfc\x0b\x00\x41\xdb\xff\x01\x41\x2d\x41\xb8\x02\xfc\x0b\x00\x41\x82\xf2\x03\x41\x2e\x41\xc0\x01\xfc\x0b\x00\x41\xfe\xf1\x01\x41\x2f\x41\xd4\x04\xfc\x0b\x00\x41\xfb\x81\x01\x41\x30\x41\xf5\x03\xfc\x0b\x00\x41\xaa\xbd\x03\x41\x31\x41\xae\x05\xfc\x0b\x00\x41\xfb\x8b\x02\x41\x32\x41\x81\x03\xfc\x0b\x00\x41\xd1\xdb\x03\x41\x33\x41\x87\x07\xfc\x0b\x00\x41\x85\xe0\x03\x41\x34\x41\xd6\x12\xfc\x0b\x00\x41\xfc\xee\x02\x41\x35\x41\xa1\x0b\xfc\x0b\x00\x41\xf5\xca\x01\x41\x36\x41\xda\x18\xfc\x0b\x00\x41\xbe\x2b\x41\x37\x41\xd7\x10\xfc\x0b\x00\x41\x89\x99\x02\x41\x38\x41\x87\x04\xfc\x0b\x00\x41\xdc\xde\x02\x41\x39\x41\xd0\x19\xfc\x0b\x00\x41\xa8\xed\x02\x41\x3a\x41\x8e\x0d\xfc\x0b\x00\x41\x8f\xec\x02\x41\x3b\x41\xe0\x18\xfc\x0b\x00\x41\xb1\xaf\x01\x41\x3c\x41\xa1\x0b\xfc\x0b\x00\x41\xf1\xc9\x03\x41\x3d\x41\x97\x05\xfc\x0b\x00\x41\x85\xfc\x01\x41\x3e\x41\x87\x0d\xfc\x0b\x00\x41\xf7\x17\x41\x3f\x41\xd1\x05\xfc\x0b\x00\x41\xe9\x89\x02\x41\xc0\x00\x41\xd4\x00\xfc\x0b\x00\x41\xba\x84\x02\x41\xc1\x00\x41\xed\x0f\xfc\x0b\x00\x41\xca\x9f\x02\x41\xc2\x00\x41\x1d\xfc\x0b\x00\x41\xcb\x95\x01\x41\xc3\x00\x41\xda\x17\xfc\x0b\x00\x41\xc8\xe2\x00\x41\xc4\x00\x41\x93\x08\xfc\x0b\x00\x41\xe4\x8e\x01\x41\xc5\x00\x41\xfc\x19\xfc\x0b\x00\x41\x9f\x24\x41\xc6\x00\x41\xc3\x08\xfc\x0b\x00\x41\x9e\xfe\x00\x41\xc7\x00\x41\xcd\x0f\xfc\x0b\x00\x41\x9c\x8e\x01\x41\xc8\x00\x41\xd3\x11\xfc\x0b\x00\x41\xe4\x8a\x03\x41\xc9\x00\x41\xf5\x18\xfc\x0b\x00\x41\x94\xd6\x00\x41\xca\x00\x41\xb0\x0f\xfc\x0b\x00\x41\xda\xfc\x00\x41\xcb\x00\x41\xaf\x0b\xfc\x0b\x00\x41\xde\xe2\x02\x41\xcc\x00\x41\x99\x09\xfc\x0b\x00\x41\xf9\xa6\x03\x41\xcd\x00\x41\xa0\x0c\xfc\x0b\x00\x41\xbb\x82\x02\x41\xce\x00\x41\xea\x0c\xfc\x0b\x00\x41\xe4\xdc\x03\x41\xcf\x00\x41\xd4\x19\xfc\x0b\x00\x41\x91\x94\x03\x41\xd0\x00\x41\xdf\x01\xfc\x0b\x00\x41\x89\x22\x41\xd1\x00\x41\xfb\x10\xfc\x0b\x00\x41\xaa\xc1\x03\x41\xd2\x00\x41\xaa\x0a\xfc\x0b\x00\x41\xac\xb3\x03\x41\xd3\x00\x41\xd8\x14\xfc\x0b\x00\x41\x9b\xbc\x01\x41\xd4\x00\x41\x95\x08\xfc\x0b\x00\x41\xaf\xd1\x02\x41\xd5\x00\x41\x99\x18\xfc\x0b\x00\x41\xb3\xfc\x01\x41\xd6\x00\x41\xec\x15\xfc\x0b\x00\x41\xe3\x1d\x41\xd7\x00\x41\xda\x0f\xfc\x0b\x00\x41\xc8\xac\x03\x41\xd8\x00\x41\x00\xfc\x0b\x00\x41\x95\x86\x03\x41\xd9\x00\x41\x95\x10\xfc\x0b\x00\x41\xbb\x9f\x01\x41\xda\x00\x41\xd0\x16\xfc\x0b\x00\x41\xa2\x88\x02\x41\xdb\x00\x41\xc0\x01\xfc\x0b\x00\x41\xba\xc9\x00\x41\xdc\x00\x41\x93\x11\xfc\x0b\x00\x41\xfd\xe0\x00\x41\xdd\x00\x41\x18\xfc\x0b\x00\x41\x8b\xee\x00\x41\xde\x00\x41\xc1\x04\xfc\x0b\x00\x41\x9a\xd8\x02\x41\xdf\x00\x41\xa9\x10\xfc\x0b\x00\x41\xff\x9e\x02\x41\xe0\x00\x41\xec\x1a\xfc\x0b\x00\x41\xf8\xb5\x01\x41\xe1\x00\x41\xcd\x15\xfc\x0b\x00\x41\xf8\x31\x41\xe2\x00\x41\xbe\x06\xfc\x0b\x00\x41\x9b\x84\x02\x41\xe3\x00\x41\x92\x0f\xfc\x0b\x00\x41\xb5\xab\x01\x41\xe4\x00\x41\xbe\x15\xfc\x0b\x00\x41\xce\xce\x03\x41\xe8\xa7\x03\x41\xb2\x10\xfc\x0a\x00\x00\x41\xb2\xec\x03\x41\xb8\xb2\x02\x41\xe6\x01\xfc\x0a\x00\x00\x41\xf9\x94\x03\x41\xcd\xb8\x01\x41\xfc\x11\xfc\x0a\x00\x00\x41\xb4\x34\x41\xbc\xbb\x01\x41\xff\x04\xfc\x0a\x00\x00\x41\xce\x36\x41\xf7\x84\x02\x41\xc9\x08\xfc\x0a\x00\x00\x41\xcb\x97\x01\x41\xec\xd0\x00\x41\xfd\x18\xfc\x0a\x00\x00\x41\xac\xd5\x01\x41\x86\xa9\x03\x41\xe4\x00\xfc\x0a\x00\x00\x41\xd5\xd4\x01\x41\xa2\xd5\x02\x41\xb5\x0d\xfc\x0a\x00\x00\x41\xf0\xd8\x03\x41\xb5\xc3\x00\x41\xf7\x00\xfc\x0a\x00\x00\x41\xbb\x2e\x41\x84\x12\x41\x92\x05\xfc\x0a\x00\x00\x41\xb3\x25\x41\xaf\x93\x03\x41\xdd\x11\xfc\x0a\x00\x00\x41\xc9\xe2\x00\x41\xfd\x95\x01\x41\xc1\x06\xfc\x0a\x00\x00\x41\xce\xdc\x00\x41\xa9\xeb\x02\x41\xe4\x19\xfc\x0a\x00\x00\x41\xf0\xd8\x00\x41\xd4\xdf\x02\x41\xe9\x11\xfc\x0a\x00\x00\x41\x8a\x8b\x02\x41\xa9\x34\x41\x8c\x14\xfc\x0a\x00\x00\x41\xc8\x26\x41\x9a\x0d\x41\xb0\x0a\xfc\x0a\x00\x00\x41\xbc\xed\x03\x41\xd5\x3b\x41\x86\x0d\xfc\x0a\x00\x00\x41\x98\xdc\x02\x41\xa8\x8f\x01\x41\x21\xfc\x0a\x00\x00\x41\x8e\xd7\x02\x41\xcc\xae\x01\x41\x93\x0b\xfc\x0a\x00\x00\x41\xad\xec\x02\x41\x9b\x85\x03\x41\x9a\x0b\xfc\x0a\x00\x00\x41\xc4\xf1\x03\x41\xb3\xc4\x00\x41\xc2\x06\xfc\x0a\x00\x00\x41\xcd\x85\x02\x41\xa3\x9d\x01\x41\xf5\x19\xfc\x0a\x00\x00\x41\xff\xbc\x02\x41\xad\xa8\x03\x41\x81\x19\xfc\x0a\x00\x00\x41\xd4\xc9\x01\x41\xf6\xce\x03\x41\x94\x13\xfc\x0a\x00\x00\x41\xde\x99\x01\x41\xb2\xbc\x03\x41\xda\x02\xfc\x0a\x00\x00\x41\xec\xfb\x00\x41\xca\x98\x02\x41\xfe\x12\xfc\x0a\x00\x00\x41\xb0\xdc\x00\x41\xf6\x95\x02\x41\xac\x02\xfc\x0a\x00\x00\x41\xa3\xd0\x03\x41\x85\xed\x00\x41\xd1\x18\xfc\x0a\x00\x00\x41\xfb\x8b\x02\x41\xb2\xd9\x03\x41\x81\x0a\xfc\x0a\x00\x00\x41\x84\xc6\x00\x41\xf4\xdf\x00\x41\xaf\x07\xfc\x0a\x00\x00\x41\x8b\x16\x41\xb9\xd1\x00\x41\xdf\x0e\xfc\x0a\x00\x00\x41\xba\xd1\x02\x41\x86\xd7\x02\x41\xe2\x05\xfc\x0a\x00\x00\x41\xbe\xec\x03\x41\x85\x94\x01\x41\xfa\x00\xfc\x0a\x00\x00\x41\xec\xbb\x01\x41\xd9\xdd\x02\x41\xdb\x0d\xfc\x0a\x00\x00\x41\xd0\xb0\x01\x41\xa3\xf3\x00\x41\xbe\x05\xfc\x0a\x00\x00\x41\x94\xd8\x00\x41\xd3\xcf\x01\x41\xa6\x0e\xfc\x0a\x00\x00\x41\xb4\xb4\x01\x41\xf7\x9f\x01\x41\xa8\x08\xfc\x0a\x00\x00\x41\xa0\xbf\x03\x41\xf2\xab\x03\x41\xc7\x14\xfc\x0a\x00\x00\x41\x94\xc7\x01\x41\x81\x08\x41\xa9\x18\xfc\x0a\x00\x00\x41\xb4\x83\x03\x41\xbc\xd9\x02\x41\xcf\x07\xfc\x0a\x00\x00\x41\xf8\xdc\x01\x41\xfa\xc5\x02\x41\xa0\x12\xfc\x0a\x00\x00\x41\xe9\xde\x03\x41\xe6\x01\x41\xb8\x16\xfc\x0a\x00\x00\x41\xd0\xaf\x01\x41\x9a\x9a\x03\x41\x95\x11\xfc\x0a\x00\x00\x41\xe9\xbc\x02\x41\xea\xca\x00\x41\xa6\x0f\xfc\x0a\x00\x00\x41\xcc\xe2\x01\x41\xfe\xa2\x01\x41\x8a\x11\xfc\x0a\x00\x00\x41\xa5\x9e\x03\x41\xb3\xd7\x02\x41\x8d\x08\xfc\x0a\x00\x00\x41\x84\xc7\x01\x41\xd3\x96\x02\x41\xf2\x0c\xfc\x0a\x00\x00\x41\x94\xc9\x03\x41\xfb\xe5\x02\x41\xc2\x0f\xfc\x0a\x00\x00\x41\x99\xab\x02\x41\x90\x2d\x41\xa3\x0f\xfc\x0a\x00\x00\x41\xd7\xde\x01\x41\xc4\xb0\x03\x41\xc0\x12\xfc\x0a\x00\x00\x41\x9b\xe9\x03\x41\xbc\x8d\x01\x41\xcc\x0a\xfc\x0a\x00\x00\x41\xe5\x87\x03\x41\xa5\xec\x00\x41\xfe\x02\xfc\x0a\x00\x00\x41\x88\x84\x01\x41\xf5\x9b\x02\x41\xec\x0e\xfc\x0a\x00\x00\x41\xe2\xf7\x02\x41\xde\xd8\x00\x41\xf7\x15\xfc\x0a\x00\x00\x41\xe0\xde\x01\x41\xaa\xbb\x02\x41\xc3\x02\xfc\x0a\x00\x00\x41\xb2\x95\x02\x41\xd0\xd9\x01\x41\x86\x0d\xfc\x0a\x00\x00\x41\xfa\xeb\x03\x41\xd4\xa0\x03\x41\xbd\x0a\xfc\x0a\x00\x00\x41\xb5\xee\x00\x41\xe8\xe9\x02\x41\x84\x05\xfc\x0a\x00\x00\x41\xe6\xe2\x01\x41\x82\x95\x01\x41\xf0\x03\xfc\x0a\x00\x00\x41\x98\xdf\x02\x41\xd9\xf3\x02\x41\xe0\x15\xfc\x0a\x00\x00\x41\x87\xb5\x02\x41\xf5\xdc\x02\x41\xc6\x0a\xfc\x0a\x00\x00\x41\xf0\xd0\x00\x41\xda\xe4\x01\x41\xc3\x0b\xfc\x0a\x00\x00\x41\xbf\xee\x02\x41\xe2\xe8\x02\x41\xbb\x0b\xfc\x0a\x00\x00\x41\xa9\x26\x41\xc4\xe0\x01\x41\xe7\x0e\xfc\x0a\x00\x00\x41\xfc\xa8\x02\x41\xa5\xbf\x03\x41\xd7\x0d\xfc\x0a\x00\x00\x41\xce\xce\x01\x41\xd7\xd4\x01\x41\xe7\x08\xfc\x0a\x00\x00\x41\xd3\xcb\x03\x41\xd1\xc0\x01\x41\xa7\x08\xfc\x0a\x00\x00\x41\xac\xdf\x03\x41\x86\xaf\x02\x41\xfe\x05\xfc\x0a\x00\x00\x41\x80\xd9\x02\x41\xec\x11\x41\xf0\x0b\xfc\x0a\x00\x00\x41\xe4\xff\x01\x41\x85\xf1\x02\x41\xc6\x17\xfc\x0a\x00\x00\x41\x8c\xd7\x00\x41\x8c\xa6\x01\x41\xf3\x07\xfc\x0a\x00\x00\x41\xf1\x3b\x41\xfc\xf6\x01\x41\xda\x17\xfc\x0a\x00\x00\x41\xfc\x8c\x01\x41\xbb\xe5\x00\x41\xf8\x19\xfc\x0a\x00\x00\x41\xda\xbf\x03\x41\xe1\xb4\x03\x41\xb4\x02\xfc\x0a\x00\x00\x41\xe3\xc0\x01\x41\xaf\x83\x01\x41\x83\x09\xfc\x0a\x00\x00\x41\xbc\x9b\x01\x41\x83\xcf\x00\x41\xd2\x05\xfc\x0a\x00\x00\x41\xe9\x16\x41\xaf\x2e\x41\xc2\x12\xfc\x0a\x00\x00\x41\xff\xfb\x01\x41\xaf\x87\x03\x41\xee\x16\xfc\x0a\x00\x00\x41\x96\xf6\x00\x41\x93\x87\x01\x41\xaf\x14\xfc\x0a\x00\x00\x41\x87\xe4\x02\x41\x9f\xde\x01\x41\xfd\x0f\xfc\x0a\x00\x00\x41\xed\xae\x03\x41\x91\x9a\x02\x41\xa4\x14\xfc\x0a\x00\x00\x41\xad\xde\x01\x41\x8d\xa7\x03\x41\x90\x09\xfc\x0a\x00\x00\x41\xcf\xf6\x02\x41\x89\xa1\x03\x41\xc1\x18\xfc\x0a\x00\x00\x41\xb6\xef\x01\x41\xe3\xe0\x02\x41\xd9\x14\xfc\x0a\x00\x00\x41\xc1\x27\x41\xc7\x21\x41\x34\xfc\x0a\x00\x00\x41\xa4\x34\x41\x83\xbd\x01\x41\xb9\x03\xfc\x0a\x00\x00\x41\xd8\x81\x02\x41\xed\xd3\x01\x41\xf5\x1a\xfc\x0a\x00\x00\x41\x92\xfe\x01\x41\xec\xcf\x03\x41\xe1\x15\xfc\x0a\x00\x00\x41\xb9\x8c\x02\x41\x82\xc6\x00\x41\xe6\x12\xfc\x0a\x00\x00\x41\xe5\x8b\x01\x41\x8a\xaa\x03\x41\xb5\x1a\xfc\x0a\x00\x00\x41\x9d\xb1\x01\x41\xf7\xd8\x02\x41\x88\x01\xfc\x0a\x00\x00\x41\xd1\xcd\x03\x41\xa5\x37\x41\x95\x08\xfc\x0a\x00\x00\x41\xc1\xcf\x02\x41\xf4\xad\x03\x41\xd5\x12\xfc\x0a\x00\x00\x41\x95\xdd\x02\x41\xaa\x9d\x01\x41\xed\x06\xfc\x0a\x00\x00\x41\xca\x9f\x02\x41\xec\xc4\x01\x41\xf7\x1a\xfc\x0a\x00\x00\x41\xae\xe5\x02\x41\x90\xf9\x01\x41\xd6\x06\xfc\x0a\x00\x00\x41\xac\xbd\x01\x41\xfa\xf8\x01\x41\xe1\x0a\xfc\x0a\x00\x00\x41\xf2\x87\x02\x41\xb4\x05\x41\xba\x0c\xfc\x0a\x00\x00\x41\xca\xd9\x03\x41\x99\x91\x01\x41\xab\x17\xfc\x0a\x00\x00\x41\xc2\x89\x03\x41\xb7\xc2\x02\x41\xfe\x0a\xfc\x0a\x00\x00\x0b\xa7\x80\x80\x80\x00\x00\x03\x40\x20\x00\x20\x01\x46\x04\x40\x41\x7f\x0f\x0b\x20\x00\x2d\x00\x00\x20\x02\x46\x04\x40\x20\x00\x41\x01\x6a\x21\x00\x0c\x01\x0b\x0b\x20\x00\x0f\x0b");
 
 // memory_copy.wast:5114
-assert_return(() => call($32, "checkRange", [1_517, 2_132, 0]), -1);
+run(() => call($33, "test", []));
 
 // memory_copy.wast:5116
-assert_return(() => call($32, "checkRange", [2_132, 2_827, 10]), -1);
+assert_return(() => call($33, "checkRange", [0, 124, 0]), -1);
 
 // memory_copy.wast:5118
-assert_return(() => call($32, "checkRange", [2_827, 2_921, 92]), -1);
+assert_return(() => call($33, "checkRange", [124, 1_517, 9]), -1);
 
 // memory_copy.wast:5120
-assert_return(() => call($32, "checkRange", [2_921, 3_538, 83]), -1);
+assert_return(() => call($33, "checkRange", [1_517, 2_132, 0]), -1);
 
 // memory_copy.wast:5122
-assert_return(() => call($32, "checkRange", [3_538, 3_786, 77]), -1);
+assert_return(() => call($33, "checkRange", [2_132, 2_827, 10]), -1);
 
 // memory_copy.wast:5124
-assert_return(() => call($32, "checkRange", [3_786, 4_042, 97]), -1);
+assert_return(() => call($33, "checkRange", [2_827, 2_921, 92]), -1);
 
 // memory_copy.wast:5126
-assert_return(() => call($32, "checkRange", [4_042, 4_651, 99]), -1);
+assert_return(() => call($33, "checkRange", [2_921, 3_538, 83]), -1);
 
 // memory_copy.wast:5128
-assert_return(() => call($32, "checkRange", [4_651, 5_057, 0]), -1);
+assert_return(() => call($33, "checkRange", [3_538, 3_786, 77]), -1);
 
 // memory_copy.wast:5130
-assert_return(() => call($32, "checkRange", [5_057, 5_109, 99]), -1);
+assert_return(() => call($33, "checkRange", [3_786, 4_042, 97]), -1);
 
 // memory_copy.wast:5132
-assert_return(() => call($32, "checkRange", [5_109, 5_291, 0]), -1);
+assert_return(() => call($33, "checkRange", [4_042, 4_651, 99]), -1);
 
 // memory_copy.wast:5134
-assert_return(() => call($32, "checkRange", [5_291, 5_524, 72]), -1);
+assert_return(() => call($33, "checkRange", [4_651, 5_057, 0]), -1);
 
 // memory_copy.wast:5136
-assert_return(() => call($32, "checkRange", [5_524, 5_691, 92]), -1);
+assert_return(() => call($33, "checkRange", [5_057, 5_109, 99]), -1);
 
 // memory_copy.wast:5138
-assert_return(() => call($32, "checkRange", [5_691, 6_552, 83]), -1);
+assert_return(() => call($33, "checkRange", [5_109, 5_291, 0]), -1);
 
 // memory_copy.wast:5140
-assert_return(() => call($32, "checkRange", [6_552, 7_133, 77]), -1);
+assert_return(() => call($33, "checkRange", [5_291, 5_524, 72]), -1);
 
 // memory_copy.wast:5142
-assert_return(() => call($32, "checkRange", [7_133, 7_665, 99]), -1);
+assert_return(() => call($33, "checkRange", [5_524, 5_691, 92]), -1);
 
 // memory_copy.wast:5144
-assert_return(() => call($32, "checkRange", [7_665, 8_314, 0]), -1);
+assert_return(() => call($33, "checkRange", [5_691, 6_552, 83]), -1);
 
 // memory_copy.wast:5146
-assert_return(() => call($32, "checkRange", [8_314, 8_360, 62]), -1);
+assert_return(() => call($33, "checkRange", [6_552, 7_133, 77]), -1);
 
 // memory_copy.wast:5148
-assert_return(() => call($32, "checkRange", [8_360, 8_793, 86]), -1);
+assert_return(() => call($33, "checkRange", [7_133, 7_665, 99]), -1);
 
 // memory_copy.wast:5150
-assert_return(() => call($32, "checkRange", [8_793, 8_979, 83]), -1);
+assert_return(() => call($33, "checkRange", [7_665, 8_314, 0]), -1);
 
 // memory_copy.wast:5152
-assert_return(() => call($32, "checkRange", [8_979, 9_373, 79]), -1);
+assert_return(() => call($33, "checkRange", [8_314, 8_360, 62]), -1);
 
 // memory_copy.wast:5154
-assert_return(() => call($32, "checkRange", [9_373, 9_518, 95]), -1);
+assert_return(() => call($33, "checkRange", [8_360, 8_793, 86]), -1);
 
 // memory_copy.wast:5156
-assert_return(() => call($32, "checkRange", [9_518, 9_934, 59]), -1);
+assert_return(() => call($33, "checkRange", [8_793, 8_979, 83]), -1);
 
 // memory_copy.wast:5158
-assert_return(() => call($32, "checkRange", [9_934, 10_087, 77]), -1);
+assert_return(() => call($33, "checkRange", [8_979, 9_373, 79]), -1);
 
 // memory_copy.wast:5160
-assert_return(() => call($32, "checkRange", [10_087, 10_206, 5]), -1);
+assert_return(() => call($33, "checkRange", [9_373, 9_518, 95]), -1);
 
 // memory_copy.wast:5162
-assert_return(() => call($32, "checkRange", [10_206, 10_230, 77]), -1);
+assert_return(() => call($33, "checkRange", [9_518, 9_934, 59]), -1);
 
 // memory_copy.wast:5164
-assert_return(() => call($32, "checkRange", [10_230, 10_249, 41]), -1);
+assert_return(() => call($33, "checkRange", [9_934, 10_087, 77]), -1);
 
 // memory_copy.wast:5166
-assert_return(() => call($32, "checkRange", [10_249, 11_148, 83]), -1);
+assert_return(() => call($33, "checkRange", [10_087, 10_206, 5]), -1);
 
 // memory_copy.wast:5168
-assert_return(() => call($32, "checkRange", [11_148, 11_356, 74]), -1);
+assert_return(() => call($33, "checkRange", [10_206, 10_230, 77]), -1);
 
 // memory_copy.wast:5170
-assert_return(() => call($32, "checkRange", [11_356, 11_380, 93]), -1);
+assert_return(() => call($33, "checkRange", [10_230, 10_249, 41]), -1);
 
 // memory_copy.wast:5172
-assert_return(() => call($32, "checkRange", [11_380, 11_939, 74]), -1);
+assert_return(() => call($33, "checkRange", [10_249, 11_148, 83]), -1);
 
 // memory_copy.wast:5174
-assert_return(() => call($32, "checkRange", [11_939, 12_159, 68]), -1);
+assert_return(() => call($33, "checkRange", [11_148, 11_356, 74]), -1);
 
 // memory_copy.wast:5176
-assert_return(() => call($32, "checkRange", [12_159, 12_575, 83]), -1);
+assert_return(() => call($33, "checkRange", [11_356, 11_380, 93]), -1);
 
 // memory_copy.wast:5178
-assert_return(() => call($32, "checkRange", [12_575, 12_969, 79]), -1);
+assert_return(() => call($33, "checkRange", [11_380, 11_939, 74]), -1);
 
 // memory_copy.wast:5180
-assert_return(() => call($32, "checkRange", [12_969, 13_114, 95]), -1);
+assert_return(() => call($33, "checkRange", [11_939, 12_159, 68]), -1);
 
 // memory_copy.wast:5182
-assert_return(() => call($32, "checkRange", [13_114, 14_133, 59]), -1);
+assert_return(() => call($33, "checkRange", [12_159, 12_575, 83]), -1);
 
 // memory_copy.wast:5184
-assert_return(() => call($32, "checkRange", [14_133, 14_404, 76]), -1);
+assert_return(() => call($33, "checkRange", [12_575, 12_969, 79]), -1);
 
 // memory_copy.wast:5186
-assert_return(() => call($32, "checkRange", [14_404, 14_428, 57]), -1);
+assert_return(() => call($33, "checkRange", [12_969, 13_114, 95]), -1);
 
 // memory_copy.wast:5188
-assert_return(() => call($32, "checkRange", [14_428, 14_458, 59]), -1);
+assert_return(() => call($33, "checkRange", [13_114, 14_133, 59]), -1);
 
 // memory_copy.wast:5190
-assert_return(() => call($32, "checkRange", [14_458, 14_580, 32]), -1);
+assert_return(() => call($33, "checkRange", [14_133, 14_404, 76]), -1);
 
 // memory_copy.wast:5192
-assert_return(() => call($32, "checkRange", [14_580, 14_777, 89]), -1);
+assert_return(() => call($33, "checkRange", [14_404, 14_428, 57]), -1);
 
 // memory_copy.wast:5194
-assert_return(() => call($32, "checkRange", [14_777, 15_124, 59]), -1);
+assert_return(() => call($33, "checkRange", [14_428, 14_458, 59]), -1);
 
 // memory_copy.wast:5196
-assert_return(() => call($32, "checkRange", [15_124, 15_126, 36]), -1);
+assert_return(() => call($33, "checkRange", [14_458, 14_580, 32]), -1);
 
 // memory_copy.wast:5198
-assert_return(() => call($32, "checkRange", [15_126, 15_192, 100]), -1);
+assert_return(() => call($33, "checkRange", [14_580, 14_777, 89]), -1);
 
 // memory_copy.wast:5200
-assert_return(() => call($32, "checkRange", [15_192, 15_871, 96]), -1);
+assert_return(() => call($33, "checkRange", [14_777, 15_124, 59]), -1);
 
 // memory_copy.wast:5202
-assert_return(() => call($32, "checkRange", [15_871, 15_998, 95]), -1);
+assert_return(() => call($33, "checkRange", [15_124, 15_126, 36]), -1);
 
 // memory_copy.wast:5204
-assert_return(() => call($32, "checkRange", [15_998, 17_017, 59]), -1);
+assert_return(() => call($33, "checkRange", [15_126, 15_192, 100]), -1);
 
 // memory_copy.wast:5206
-assert_return(() => call($32, "checkRange", [17_017, 17_288, 76]), -1);
+assert_return(() => call($33, "checkRange", [15_192, 15_871, 96]), -1);
 
 // memory_copy.wast:5208
-assert_return(() => call($32, "checkRange", [17_288, 17_312, 57]), -1);
+assert_return(() => call($33, "checkRange", [15_871, 15_998, 95]), -1);
 
 // memory_copy.wast:5210
-assert_return(() => call($32, "checkRange", [17_312, 17_342, 59]), -1);
+assert_return(() => call($33, "checkRange", [15_998, 17_017, 59]), -1);
 
 // memory_copy.wast:5212
-assert_return(() => call($32, "checkRange", [17_342, 17_464, 32]), -1);
+assert_return(() => call($33, "checkRange", [17_017, 17_288, 76]), -1);
 
 // memory_copy.wast:5214
-assert_return(() => call($32, "checkRange", [17_464, 17_661, 89]), -1);
+assert_return(() => call($33, "checkRange", [17_288, 17_312, 57]), -1);
 
 // memory_copy.wast:5216
-assert_return(() => call($32, "checkRange", [17_661, 17_727, 59]), -1);
+assert_return(() => call($33, "checkRange", [17_312, 17_342, 59]), -1);
 
 // memory_copy.wast:5218
-assert_return(() => call($32, "checkRange", [17_727, 17_733, 5]), -1);
+assert_return(() => call($33, "checkRange", [17_342, 17_464, 32]), -1);
 
 // memory_copy.wast:5220
-assert_return(() => call($32, "checkRange", [17_733, 17_893, 96]), -1);
+assert_return(() => call($33, "checkRange", [17_464, 17_661, 89]), -1);
 
 // memory_copy.wast:5222
-assert_return(() => call($32, "checkRange", [17_893, 18_553, 77]), -1);
+assert_return(() => call($33, "checkRange", [17_661, 17_727, 59]), -1);
 
 // memory_copy.wast:5224
-assert_return(() => call($32, "checkRange", [18_553, 18_744, 42]), -1);
+assert_return(() => call($33, "checkRange", [17_727, 17_733, 5]), -1);
 
 // memory_copy.wast:5226
-assert_return(() => call($32, "checkRange", [18_744, 18_801, 76]), -1);
+assert_return(() => call($33, "checkRange", [17_733, 17_893, 96]), -1);
 
 // memory_copy.wast:5228
-assert_return(() => call($32, "checkRange", [18_801, 18_825, 57]), -1);
+assert_return(() => call($33, "checkRange", [17_893, 18_553, 77]), -1);
 
 // memory_copy.wast:5230
-assert_return(() => call($32, "checkRange", [18_825, 18_876, 59]), -1);
+assert_return(() => call($33, "checkRange", [18_553, 18_744, 42]), -1);
 
 // memory_copy.wast:5232
-assert_return(() => call($32, "checkRange", [18_876, 18_885, 77]), -1);
+assert_return(() => call($33, "checkRange", [18_744, 18_801, 76]), -1);
 
 // memory_copy.wast:5234
-assert_return(() => call($32, "checkRange", [18_885, 18_904, 41]), -1);
+assert_return(() => call($33, "checkRange", [18_801, 18_825, 57]), -1);
 
 // memory_copy.wast:5236
-assert_return(() => call($32, "checkRange", [18_904, 19_567, 83]), -1);
+assert_return(() => call($33, "checkRange", [18_825, 18_876, 59]), -1);
 
 // memory_copy.wast:5238
-assert_return(() => call($32, "checkRange", [19_567, 20_403, 96]), -1);
+assert_return(() => call($33, "checkRange", [18_876, 18_885, 77]), -1);
 
 // memory_copy.wast:5240
-assert_return(() => call($32, "checkRange", [20_403, 21_274, 77]), -1);
+assert_return(() => call($33, "checkRange", [18_885, 18_904, 41]), -1);
 
 // memory_copy.wast:5242
-assert_return(() => call($32, "checkRange", [21_274, 21_364, 100]), -1);
+assert_return(() => call($33, "checkRange", [18_904, 19_567, 83]), -1);
 
 // memory_copy.wast:5244
-assert_return(() => call($32, "checkRange", [21_364, 21_468, 74]), -1);
+assert_return(() => call($33, "checkRange", [19_567, 20_403, 96]), -1);
 
 // memory_copy.wast:5246
-assert_return(() => call($32, "checkRange", [21_468, 21_492, 93]), -1);
+assert_return(() => call($33, "checkRange", [20_403, 21_274, 77]), -1);
 
 // memory_copy.wast:5248
-assert_return(() => call($32, "checkRange", [21_492, 22_051, 74]), -1);
+assert_return(() => call($33, "checkRange", [21_274, 21_364, 100]), -1);
 
 // memory_copy.wast:5250
-assert_return(() => call($32, "checkRange", [22_051, 22_480, 68]), -1);
+assert_return(() => call($33, "checkRange", [21_364, 21_468, 74]), -1);
 
 // memory_copy.wast:5252
-assert_return(() => call($32, "checkRange", [22_480, 22_685, 100]), -1);
+assert_return(() => call($33, "checkRange", [21_468, 21_492, 93]), -1);
 
 // memory_copy.wast:5254
-assert_return(() => call($32, "checkRange", [22_685, 22_694, 68]), -1);
+assert_return(() => call($33, "checkRange", [21_492, 22_051, 74]), -1);
 
 // memory_copy.wast:5256
-assert_return(() => call($32, "checkRange", [22_694, 22_821, 10]), -1);
+assert_return(() => call($33, "checkRange", [22_051, 22_480, 68]), -1);
 
 // memory_copy.wast:5258
-assert_return(() => call($32, "checkRange", [22_821, 22_869, 100]), -1);
+assert_return(() => call($33, "checkRange", [22_480, 22_685, 100]), -1);
 
 // memory_copy.wast:5260
-assert_return(() => call($32, "checkRange", [22_869, 24_107, 97]), -1);
+assert_return(() => call($33, "checkRange", [22_685, 22_694, 68]), -1);
 
 // memory_copy.wast:5262
-assert_return(() => call($32, "checkRange", [24_107, 24_111, 37]), -1);
+assert_return(() => call($33, "checkRange", [22_694, 22_821, 10]), -1);
 
 // memory_copy.wast:5264
-assert_return(() => call($32, "checkRange", [24_111, 24_236, 77]), -1);
+assert_return(() => call($33, "checkRange", [22_821, 22_869, 100]), -1);
 
 // memory_copy.wast:5266
-assert_return(() => call($32, "checkRange", [24_236, 24_348, 72]), -1);
+assert_return(() => call($33, "checkRange", [22_869, 24_107, 97]), -1);
 
 // memory_copy.wast:5268
-assert_return(() => call($32, "checkRange", [24_348, 24_515, 92]), -1);
+assert_return(() => call($33, "checkRange", [24_107, 24_111, 37]), -1);
 
 // memory_copy.wast:5270
-assert_return(() => call($32, "checkRange", [24_515, 24_900, 83]), -1);
+assert_return(() => call($33, "checkRange", [24_111, 24_236, 77]), -1);
 
 // memory_copy.wast:5272
-assert_return(() => call($32, "checkRange", [24_900, 25_136, 95]), -1);
+assert_return(() => call($33, "checkRange", [24_236, 24_348, 72]), -1);
 
 // memory_copy.wast:5274
-assert_return(() => call($32, "checkRange", [25_136, 25_182, 85]), -1);
+assert_return(() => call($33, "checkRange", [24_348, 24_515, 92]), -1);
 
 // memory_copy.wast:5276
-assert_return(() => call($32, "checkRange", [25_182, 25_426, 68]), -1);
+assert_return(() => call($33, "checkRange", [24_515, 24_900, 83]), -1);
 
 // memory_copy.wast:5278
-assert_return(() => call($32, "checkRange", [25_426, 25_613, 89]), -1);
+assert_return(() => call($33, "checkRange", [24_900, 25_136, 95]), -1);
 
 // memory_copy.wast:5280
-assert_return(() => call($32, "checkRange", [25_613, 25_830, 96]), -1);
+assert_return(() => call($33, "checkRange", [25_136, 25_182, 85]), -1);
 
 // memory_copy.wast:5282
-assert_return(() => call($32, "checkRange", [25_830, 26_446, 100]), -1);
+assert_return(() => call($33, "checkRange", [25_182, 25_426, 68]), -1);
 
 // memory_copy.wast:5284
-assert_return(() => call($32, "checkRange", [26_446, 26_517, 10]), -1);
+assert_return(() => call($33, "checkRange", [25_426, 25_613, 89]), -1);
 
 // memory_copy.wast:5286
-assert_return(() => call($32, "checkRange", [26_517, 27_468, 92]), -1);
+assert_return(() => call($33, "checkRange", [25_613, 25_830, 96]), -1);
 
 // memory_copy.wast:5288
-assert_return(() => call($32, "checkRange", [27_468, 27_503, 95]), -1);
+assert_return(() => call($33, "checkRange", [25_830, 26_446, 100]), -1);
 
 // memory_copy.wast:5290
-assert_return(() => call($32, "checkRange", [27_503, 27_573, 77]), -1);
+assert_return(() => call($33, "checkRange", [26_446, 26_517, 10]), -1);
 
 // memory_copy.wast:5292
-assert_return(() => call($32, "checkRange", [27_573, 28_245, 92]), -1);
+assert_return(() => call($33, "checkRange", [26_517, 27_468, 92]), -1);
 
 // memory_copy.wast:5294
-assert_return(() => call($32, "checkRange", [28_245, 28_280, 95]), -1);
+assert_return(() => call($33, "checkRange", [27_468, 27_503, 95]), -1);
 
 // memory_copy.wast:5296
-assert_return(() => call($32, "checkRange", [28_280, 29_502, 77]), -1);
+assert_return(() => call($33, "checkRange", [27_503, 27_573, 77]), -1);
 
 // memory_copy.wast:5298
-assert_return(() => call($32, "checkRange", [29_502, 29_629, 42]), -1);
+assert_return(() => call($33, "checkRange", [27_573, 28_245, 92]), -1);
 
 // memory_copy.wast:5300
-assert_return(() => call($32, "checkRange", [29_629, 30_387, 83]), -1);
+assert_return(() => call($33, "checkRange", [28_245, 28_280, 95]), -1);
 
 // memory_copy.wast:5302
-assert_return(() => call($32, "checkRange", [30_387, 30_646, 77]), -1);
+assert_return(() => call($33, "checkRange", [28_280, 29_502, 77]), -1);
 
 // memory_copy.wast:5304
-assert_return(() => call($32, "checkRange", [30_646, 31_066, 92]), -1);
+assert_return(() => call($33, "checkRange", [29_502, 29_629, 42]), -1);
 
 // memory_copy.wast:5306
-assert_return(() => call($32, "checkRange", [31_066, 31_131, 77]), -1);
+assert_return(() => call($33, "checkRange", [29_629, 30_387, 83]), -1);
 
 // memory_copy.wast:5308
-assert_return(() => call($32, "checkRange", [31_131, 31_322, 42]), -1);
+assert_return(() => call($33, "checkRange", [30_387, 30_646, 77]), -1);
 
 // memory_copy.wast:5310
-assert_return(() => call($32, "checkRange", [31_322, 31_379, 76]), -1);
+assert_return(() => call($33, "checkRange", [30_646, 31_066, 92]), -1);
 
 // memory_copy.wast:5312
-assert_return(() => call($32, "checkRange", [31_379, 31_403, 57]), -1);
+assert_return(() => call($33, "checkRange", [31_066, 31_131, 77]), -1);
 
 // memory_copy.wast:5314
-assert_return(() => call($32, "checkRange", [31_403, 31_454, 59]), -1);
+assert_return(() => call($33, "checkRange", [31_131, 31_322, 42]), -1);
 
 // memory_copy.wast:5316
-assert_return(() => call($32, "checkRange", [31_454, 31_463, 77]), -1);
+assert_return(() => call($33, "checkRange", [31_322, 31_379, 76]), -1);
 
 // memory_copy.wast:5318
-assert_return(() => call($32, "checkRange", [31_463, 31_482, 41]), -1);
+assert_return(() => call($33, "checkRange", [31_379, 31_403, 57]), -1);
 
 // memory_copy.wast:5320
-assert_return(() => call($32, "checkRange", [31_482, 31_649, 83]), -1);
+assert_return(() => call($33, "checkRange", [31_403, 31_454, 59]), -1);
 
 // memory_copy.wast:5322
-assert_return(() => call($32, "checkRange", [31_649, 31_978, 72]), -1);
+assert_return(() => call($33, "checkRange", [31_454, 31_463, 77]), -1);
 
 // memory_copy.wast:5324
-assert_return(() => call($32, "checkRange", [31_978, 32_145, 92]), -1);
+assert_return(() => call($33, "checkRange", [31_463, 31_482, 41]), -1);
 
 // memory_copy.wast:5326
-assert_return(() => call($32, "checkRange", [32_145, 32_530, 83]), -1);
+assert_return(() => call($33, "checkRange", [31_482, 31_649, 83]), -1);
 
 // memory_copy.wast:5328
-assert_return(() => call($32, "checkRange", [32_530, 32_766, 95]), -1);
+assert_return(() => call($33, "checkRange", [31_649, 31_978, 72]), -1);
 
 // memory_copy.wast:5330
-assert_return(() => call($32, "checkRange", [32_766, 32_812, 85]), -1);
+assert_return(() => call($33, "checkRange", [31_978, 32_145, 92]), -1);
 
 // memory_copy.wast:5332
-assert_return(() => call($32, "checkRange", [32_812, 33_056, 68]), -1);
+assert_return(() => call($33, "checkRange", [32_145, 32_530, 83]), -1);
 
 // memory_copy.wast:5334
-assert_return(() => call($32, "checkRange", [33_056, 33_660, 89]), -1);
+assert_return(() => call($33, "checkRange", [32_530, 32_766, 95]), -1);
 
 // memory_copy.wast:5336
-assert_return(() => call($32, "checkRange", [33_660, 33_752, 59]), -1);
+assert_return(() => call($33, "checkRange", [32_766, 32_812, 85]), -1);
 
 // memory_copy.wast:5338
-assert_return(() => call($32, "checkRange", [33_752, 33_775, 36]), -1);
+assert_return(() => call($33, "checkRange", [32_812, 33_056, 68]), -1);
 
 // memory_copy.wast:5340
-assert_return(() => call($32, "checkRange", [33_775, 33_778, 32]), -1);
+assert_return(() => call($33, "checkRange", [33_056, 33_660, 89]), -1);
 
 // memory_copy.wast:5342
-assert_return(() => call($32, "checkRange", [33_778, 34_603, 9]), -1);
+assert_return(() => call($33, "checkRange", [33_660, 33_752, 59]), -1);
 
 // memory_copy.wast:5344
-assert_return(() => call($32, "checkRange", [34_603, 35_218, 0]), -1);
+assert_return(() => call($33, "checkRange", [33_752, 33_775, 36]), -1);
 
 // memory_copy.wast:5346
-assert_return(() => call($32, "checkRange", [35_218, 35_372, 10]), -1);
+assert_return(() => call($33, "checkRange", [33_775, 33_778, 32]), -1);
 
 // memory_copy.wast:5348
-assert_return(() => call($32, "checkRange", [35_372, 35_486, 77]), -1);
+assert_return(() => call($33, "checkRange", [33_778, 34_603, 9]), -1);
 
 // memory_copy.wast:5350
-assert_return(() => call($32, "checkRange", [35_486, 35_605, 5]), -1);
+assert_return(() => call($33, "checkRange", [34_603, 35_218, 0]), -1);
 
 // memory_copy.wast:5352
-assert_return(() => call($32, "checkRange", [35_605, 35_629, 77]), -1);
+assert_return(() => call($33, "checkRange", [35_218, 35_372, 10]), -1);
 
 // memory_copy.wast:5354
-assert_return(() => call($32, "checkRange", [35_629, 35_648, 41]), -1);
+assert_return(() => call($33, "checkRange", [35_372, 35_486, 77]), -1);
 
 // memory_copy.wast:5356
-assert_return(() => call($32, "checkRange", [35_648, 36_547, 83]), -1);
+assert_return(() => call($33, "checkRange", [35_486, 35_605, 5]), -1);
 
 // memory_copy.wast:5358
-assert_return(() => call($32, "checkRange", [36_547, 36_755, 74]), -1);
+assert_return(() => call($33, "checkRange", [35_605, 35_629, 77]), -1);
 
 // memory_copy.wast:5360
-assert_return(() => call($32, "checkRange", [36_755, 36_767, 93]), -1);
+assert_return(() => call($33, "checkRange", [35_629, 35_648, 41]), -1);
 
 // memory_copy.wast:5362
-assert_return(() => call($32, "checkRange", [36_767, 36_810, 83]), -1);
+assert_return(() => call($33, "checkRange", [35_648, 36_547, 83]), -1);
 
 // memory_copy.wast:5364
-assert_return(() => call($32, "checkRange", [36_810, 36_839, 100]), -1);
+assert_return(() => call($33, "checkRange", [36_547, 36_755, 74]), -1);
 
 // memory_copy.wast:5366
-assert_return(() => call($32, "checkRange", [36_839, 37_444, 96]), -1);
+assert_return(() => call($33, "checkRange", [36_755, 36_767, 93]), -1);
 
 // memory_copy.wast:5368
-assert_return(() => call($32, "checkRange", [37_444, 38_060, 100]), -1);
+assert_return(() => call($33, "checkRange", [36_767, 36_810, 83]), -1);
 
 // memory_copy.wast:5370
-assert_return(() => call($32, "checkRange", [38_060, 38_131, 10]), -1);
+assert_return(() => call($33, "checkRange", [36_810, 36_839, 100]), -1);
 
 // memory_copy.wast:5372
-assert_return(() => call($32, "checkRange", [38_131, 39_082, 92]), -1);
+assert_return(() => call($33, "checkRange", [36_839, 37_444, 96]), -1);
 
 // memory_copy.wast:5374
-assert_return(() => call($32, "checkRange", [39_082, 39_117, 95]), -1);
+assert_return(() => call($33, "checkRange", [37_444, 38_060, 100]), -1);
 
 // memory_copy.wast:5376
-assert_return(() => call($32, "checkRange", [39_117, 39_187, 77]), -1);
+assert_return(() => call($33, "checkRange", [38_060, 38_131, 10]), -1);
 
 // memory_copy.wast:5378
-assert_return(() => call($32, "checkRange", [39_187, 39_859, 92]), -1);
+assert_return(() => call($33, "checkRange", [38_131, 39_082, 92]), -1);
 
 // memory_copy.wast:5380
-assert_return(() => call($32, "checkRange", [39_859, 39_894, 95]), -1);
+assert_return(() => call($33, "checkRange", [39_082, 39_117, 95]), -1);
 
 // memory_copy.wast:5382
-assert_return(() => call($32, "checkRange", [39_894, 40_257, 77]), -1);
+assert_return(() => call($33, "checkRange", [39_117, 39_187, 77]), -1);
 
 // memory_copy.wast:5384
-assert_return(() => call($32, "checkRange", [40_257, 40_344, 89]), -1);
+assert_return(() => call($33, "checkRange", [39_187, 39_859, 92]), -1);
 
 // memory_copy.wast:5386
-assert_return(() => call($32, "checkRange", [40_344, 40_371, 59]), -1);
+assert_return(() => call($33, "checkRange", [39_859, 39_894, 95]), -1);
 
 // memory_copy.wast:5388
-assert_return(() => call($32, "checkRange", [40_371, 40_804, 77]), -1);
+assert_return(() => call($33, "checkRange", [39_894, 40_257, 77]), -1);
 
 // memory_copy.wast:5390
-assert_return(() => call($32, "checkRange", [40_804, 40_909, 5]), -1);
+assert_return(() => call($33, "checkRange", [40_257, 40_344, 89]), -1);
 
 // memory_copy.wast:5392
-assert_return(() => call($32, "checkRange", [40_909, 42_259, 92]), -1);
+assert_return(() => call($33, "checkRange", [40_344, 40_371, 59]), -1);
 
 // memory_copy.wast:5394
-assert_return(() => call($32, "checkRange", [42_259, 42_511, 77]), -1);
+assert_return(() => call($33, "checkRange", [40_371, 40_804, 77]), -1);
 
 // memory_copy.wast:5396
-assert_return(() => call($32, "checkRange", [42_511, 42_945, 83]), -1);
+assert_return(() => call($33, "checkRange", [40_804, 40_909, 5]), -1);
 
 // memory_copy.wast:5398
-assert_return(() => call($32, "checkRange", [42_945, 43_115, 77]), -1);
+assert_return(() => call($33, "checkRange", [40_909, 42_259, 92]), -1);
 
 // memory_copy.wast:5400
-assert_return(() => call($32, "checkRange", [43_115, 43_306, 42]), -1);
+assert_return(() => call($33, "checkRange", [42_259, 42_511, 77]), -1);
 
 // memory_copy.wast:5402
-assert_return(() => call($32, "checkRange", [43_306, 43_363, 76]), -1);
+assert_return(() => call($33, "checkRange", [42_511, 42_945, 83]), -1);
 
 // memory_copy.wast:5404
-assert_return(() => call($32, "checkRange", [43_363, 43_387, 57]), -1);
+assert_return(() => call($33, "checkRange", [42_945, 43_115, 77]), -1);
 
 // memory_copy.wast:5406
-assert_return(() => call($32, "checkRange", [43_387, 43_438, 59]), -1);
+assert_return(() => call($33, "checkRange", [43_115, 43_306, 42]), -1);
 
 // memory_copy.wast:5408
-assert_return(() => call($32, "checkRange", [43_438, 43_447, 77]), -1);
+assert_return(() => call($33, "checkRange", [43_306, 43_363, 76]), -1);
 
 // memory_copy.wast:5410
-assert_return(() => call($32, "checkRange", [43_447, 43_466, 41]), -1);
+assert_return(() => call($33, "checkRange", [43_363, 43_387, 57]), -1);
 
 // memory_copy.wast:5412
-assert_return(() => call($32, "checkRange", [43_466, 44_129, 83]), -1);
+assert_return(() => call($33, "checkRange", [43_387, 43_438, 59]), -1);
 
 // memory_copy.wast:5414
-assert_return(() => call($32, "checkRange", [44_129, 44_958, 96]), -1);
+assert_return(() => call($33, "checkRange", [43_438, 43_447, 77]), -1);
 
 // memory_copy.wast:5416
-assert_return(() => call($32, "checkRange", [44_958, 45_570, 77]), -1);
+assert_return(() => call($33, "checkRange", [43_447, 43_466, 41]), -1);
 
 // memory_copy.wast:5418
-assert_return(() => call($32, "checkRange", [45_570, 45_575, 92]), -1);
+assert_return(() => call($33, "checkRange", [43_466, 44_129, 83]), -1);
 
 // memory_copy.wast:5420
-assert_return(() => call($32, "checkRange", [45_575, 45_640, 77]), -1);
+assert_return(() => call($33, "checkRange", [44_129, 44_958, 96]), -1);
 
 // memory_copy.wast:5422
-assert_return(() => call($32, "checkRange", [45_640, 45_742, 42]), -1);
+assert_return(() => call($33, "checkRange", [44_958, 45_570, 77]), -1);
 
 // memory_copy.wast:5424
-assert_return(() => call($32, "checkRange", [45_742, 45_832, 72]), -1);
+assert_return(() => call($33, "checkRange", [45_570, 45_575, 92]), -1);
 
 // memory_copy.wast:5426
-assert_return(() => call($32, "checkRange", [45_832, 45_999, 92]), -1);
+assert_return(() => call($33, "checkRange", [45_575, 45_640, 77]), -1);
 
 // memory_copy.wast:5428
-assert_return(() => call($32, "checkRange", [45_999, 46_384, 83]), -1);
+assert_return(() => call($33, "checkRange", [45_640, 45_742, 42]), -1);
 
 // memory_copy.wast:5430
-assert_return(() => call($32, "checkRange", [46_384, 46_596, 95]), -1);
+assert_return(() => call($33, "checkRange", [45_742, 45_832, 72]), -1);
 
 // memory_copy.wast:5432
-assert_return(() => call($32, "checkRange", [46_596, 46_654, 92]), -1);
+assert_return(() => call($33, "checkRange", [45_832, 45_999, 92]), -1);
 
 // memory_copy.wast:5434
-assert_return(() => call($32, "checkRange", [46_654, 47_515, 83]), -1);
+assert_return(() => call($33, "checkRange", [45_999, 46_384, 83]), -1);
 
 // memory_copy.wast:5436
-assert_return(() => call($32, "checkRange", [47_515, 47_620, 77]), -1);
+assert_return(() => call($33, "checkRange", [46_384, 46_596, 95]), -1);
 
 // memory_copy.wast:5438
-assert_return(() => call($32, "checkRange", [47_620, 47_817, 79]), -1);
+assert_return(() => call($33, "checkRange", [46_596, 46_654, 92]), -1);
 
 // memory_copy.wast:5440
-assert_return(() => call($32, "checkRange", [47_817, 47_951, 95]), -1);
+assert_return(() => call($33, "checkRange", [46_654, 47_515, 83]), -1);
 
 // memory_copy.wast:5442
-assert_return(() => call($32, "checkRange", [47_951, 48_632, 100]), -1);
+assert_return(() => call($33, "checkRange", [47_515, 47_620, 77]), -1);
 
 // memory_copy.wast:5444
-assert_return(() => call($32, "checkRange", [48_632, 48_699, 97]), -1);
+assert_return(() => call($33, "checkRange", [47_620, 47_817, 79]), -1);
 
 // memory_copy.wast:5446
-assert_return(() => call($32, "checkRange", [48_699, 48_703, 37]), -1);
+assert_return(() => call($33, "checkRange", [47_817, 47_951, 95]), -1);
 
 // memory_copy.wast:5448
-assert_return(() => call($32, "checkRange", [48_703, 49_764, 77]), -1);
+assert_return(() => call($33, "checkRange", [47_951, 48_632, 100]), -1);
 
 // memory_copy.wast:5450
-assert_return(() => call($32, "checkRange", [49_764, 49_955, 42]), -1);
+assert_return(() => call($33, "checkRange", [48_632, 48_699, 97]), -1);
 
 // memory_copy.wast:5452
-assert_return(() => call($32, "checkRange", [49_955, 50_012, 76]), -1);
+assert_return(() => call($33, "checkRange", [48_699, 48_703, 37]), -1);
 
 // memory_copy.wast:5454
-assert_return(() => call($32, "checkRange", [50_012, 50_036, 57]), -1);
+assert_return(() => call($33, "checkRange", [48_703, 49_764, 77]), -1);
 
 // memory_copy.wast:5456
-assert_return(() => call($32, "checkRange", [50_036, 50_087, 59]), -1);
+assert_return(() => call($33, "checkRange", [49_764, 49_955, 42]), -1);
 
 // memory_copy.wast:5458
-assert_return(() => call($32, "checkRange", [50_087, 50_096, 77]), -1);
+assert_return(() => call($33, "checkRange", [49_955, 50_012, 76]), -1);
 
 // memory_copy.wast:5460
-assert_return(() => call($32, "checkRange", [50_096, 50_115, 41]), -1);
+assert_return(() => call($33, "checkRange", [50_012, 50_036, 57]), -1);
 
 // memory_copy.wast:5462
-assert_return(() => call($32, "checkRange", [50_115, 50_370, 83]), -1);
+assert_return(() => call($33, "checkRange", [50_036, 50_087, 59]), -1);
 
 // memory_copy.wast:5464
-assert_return(() => call($32, "checkRange", [50_370, 51_358, 92]), -1);
+assert_return(() => call($33, "checkRange", [50_087, 50_096, 77]), -1);
 
 // memory_copy.wast:5466
-assert_return(() => call($32, "checkRange", [51_358, 51_610, 77]), -1);
+assert_return(() => call($33, "checkRange", [50_096, 50_115, 41]), -1);
 
 // memory_copy.wast:5468
-assert_return(() => call($32, "checkRange", [51_610, 51_776, 83]), -1);
+assert_return(() => call($33, "checkRange", [50_115, 50_370, 83]), -1);
 
 // memory_copy.wast:5470
-assert_return(() => call($32, "checkRange", [51_776, 51_833, 89]), -1);
+assert_return(() => call($33, "checkRange", [50_370, 51_358, 92]), -1);
 
 // memory_copy.wast:5472
-assert_return(() => call($32, "checkRange", [51_833, 52_895, 100]), -1);
+assert_return(() => call($33, "checkRange", [51_358, 51_610, 77]), -1);
 
 // memory_copy.wast:5474
-assert_return(() => call($32, "checkRange", [52_895, 53_029, 97]), -1);
+assert_return(() => call($33, "checkRange", [51_610, 51_776, 83]), -1);
 
 // memory_copy.wast:5476
-assert_return(() => call($32, "checkRange", [53_029, 53_244, 68]), -1);
+assert_return(() => call($33, "checkRange", [51_776, 51_833, 89]), -1);
 
 // memory_copy.wast:5478
-assert_return(() => call($32, "checkRange", [53_244, 54_066, 100]), -1);
+assert_return(() => call($33, "checkRange", [51_833, 52_895, 100]), -1);
 
 // memory_copy.wast:5480
-assert_return(() => call($32, "checkRange", [54_066, 54_133, 97]), -1);
+assert_return(() => call($33, "checkRange", [52_895, 53_029, 97]), -1);
 
 // memory_copy.wast:5482
-assert_return(() => call($32, "checkRange", [54_133, 54_137, 37]), -1);
+assert_return(() => call($33, "checkRange", [53_029, 53_244, 68]), -1);
 
 // memory_copy.wast:5484
-assert_return(() => call($32, "checkRange", [54_137, 55_198, 77]), -1);
+assert_return(() => call($33, "checkRange", [53_244, 54_066, 100]), -1);
 
 // memory_copy.wast:5486
-assert_return(() => call($32, "checkRange", [55_198, 55_389, 42]), -1);
+assert_return(() => call($33, "checkRange", [54_066, 54_133, 97]), -1);
 
 // memory_copy.wast:5488
-assert_return(() => call($32, "checkRange", [55_389, 55_446, 76]), -1);
+assert_return(() => call($33, "checkRange", [54_133, 54_137, 37]), -1);
 
 // memory_copy.wast:5490
-assert_return(() => call($32, "checkRange", [55_446, 55_470, 57]), -1);
+assert_return(() => call($33, "checkRange", [54_137, 55_198, 77]), -1);
 
 // memory_copy.wast:5492
-assert_return(() => call($32, "checkRange", [55_470, 55_521, 59]), -1);
+assert_return(() => call($33, "checkRange", [55_198, 55_389, 42]), -1);
 
 // memory_copy.wast:5494
-assert_return(() => call($32, "checkRange", [55_521, 55_530, 77]), -1);
+assert_return(() => call($33, "checkRange", [55_389, 55_446, 76]), -1);
 
 // memory_copy.wast:5496
-assert_return(() => call($32, "checkRange", [55_530, 55_549, 41]), -1);
+assert_return(() => call($33, "checkRange", [55_446, 55_470, 57]), -1);
 
 // memory_copy.wast:5498
-assert_return(() => call($32, "checkRange", [55_549, 56_212, 83]), -1);
+assert_return(() => call($33, "checkRange", [55_470, 55_521, 59]), -1);
 
 // memory_copy.wast:5500
-assert_return(() => call($32, "checkRange", [56_212, 57_048, 96]), -1);
+assert_return(() => call($33, "checkRange", [55_521, 55_530, 77]), -1);
 
 // memory_copy.wast:5502
-assert_return(() => call($32, "checkRange", [57_048, 58_183, 77]), -1);
+assert_return(() => call($33, "checkRange", [55_530, 55_549, 41]), -1);
 
 // memory_copy.wast:5504
-assert_return(() => call($32, "checkRange", [58_183, 58_202, 41]), -1);
+assert_return(() => call($33, "checkRange", [55_549, 56_212, 83]), -1);
 
 // memory_copy.wast:5506
-assert_return(() => call($32, "checkRange", [58_202, 58_516, 83]), -1);
+assert_return(() => call($33, "checkRange", [56_212, 57_048, 96]), -1);
 
 // memory_copy.wast:5508
-assert_return(() => call($32, "checkRange", [58_516, 58_835, 95]), -1);
+assert_return(() => call($33, "checkRange", [57_048, 58_183, 77]), -1);
 
 // memory_copy.wast:5510
-assert_return(() => call($32, "checkRange", [58_835, 58_855, 77]), -1);
+assert_return(() => call($33, "checkRange", [58_183, 58_202, 41]), -1);
 
 // memory_copy.wast:5512
-assert_return(() => call($32, "checkRange", [58_855, 59_089, 95]), -1);
+assert_return(() => call($33, "checkRange", [58_202, 58_516, 83]), -1);
 
 // memory_copy.wast:5514
-assert_return(() => call($32, "checkRange", [59_089, 59_145, 77]), -1);
+assert_return(() => call($33, "checkRange", [58_516, 58_835, 95]), -1);
 
 // memory_copy.wast:5516
-assert_return(() => call($32, "checkRange", [59_145, 59_677, 99]), -1);
+assert_return(() => call($33, "checkRange", [58_835, 58_855, 77]), -1);
 
 // memory_copy.wast:5518
-assert_return(() => call($32, "checkRange", [59_677, 60_134, 0]), -1);
+assert_return(() => call($33, "checkRange", [58_855, 59_089, 95]), -1);
 
 // memory_copy.wast:5520
-assert_return(() => call($32, "checkRange", [60_134, 60_502, 89]), -1);
+assert_return(() => call($33, "checkRange", [59_089, 59_145, 77]), -1);
 
 // memory_copy.wast:5522
-assert_return(() => call($32, "checkRange", [60_502, 60_594, 59]), -1);
+assert_return(() => call($33, "checkRange", [59_145, 59_677, 99]), -1);
 
 // memory_copy.wast:5524
-assert_return(() => call($32, "checkRange", [60_594, 60_617, 36]), -1);
+assert_return(() => call($33, "checkRange", [59_677, 60_134, 0]), -1);
 
 // memory_copy.wast:5526
-assert_return(() => call($32, "checkRange", [60_617, 60_618, 32]), -1);
+assert_return(() => call($33, "checkRange", [60_134, 60_502, 89]), -1);
 
 // memory_copy.wast:5528
-assert_return(() => call($32, "checkRange", [60_618, 60_777, 42]), -1);
+assert_return(() => call($33, "checkRange", [60_502, 60_594, 59]), -1);
 
 // memory_copy.wast:5530
-assert_return(() => call($32, "checkRange", [60_777, 60_834, 76]), -1);
+assert_return(() => call($33, "checkRange", [60_594, 60_617, 36]), -1);
 
 // memory_copy.wast:5532
-assert_return(() => call($32, "checkRange", [60_834, 60_858, 57]), -1);
+assert_return(() => call($33, "checkRange", [60_617, 60_618, 32]), -1);
 
 // memory_copy.wast:5534
-assert_return(() => call($32, "checkRange", [60_858, 60_909, 59]), -1);
+assert_return(() => call($33, "checkRange", [60_618, 60_777, 42]), -1);
 
 // memory_copy.wast:5536
-assert_return(() => call($32, "checkRange", [60_909, 60_918, 77]), -1);
+assert_return(() => call($33, "checkRange", [60_777, 60_834, 76]), -1);
 
 // memory_copy.wast:5538
-assert_return(() => call($32, "checkRange", [60_918, 60_937, 41]), -1);
+assert_return(() => call($33, "checkRange", [60_834, 60_858, 57]), -1);
 
 // memory_copy.wast:5540
-assert_return(() => call($32, "checkRange", [60_937, 61_600, 83]), -1);
+assert_return(() => call($33, "checkRange", [60_858, 60_909, 59]), -1);
 
 // memory_copy.wast:5542
-assert_return(() => call($32, "checkRange", [61_600, 62_436, 96]), -1);
+assert_return(() => call($33, "checkRange", [60_909, 60_918, 77]), -1);
 
 // memory_copy.wast:5544
-assert_return(() => call($32, "checkRange", [62_436, 63_307, 77]), -1);
+assert_return(() => call($33, "checkRange", [60_918, 60_937, 41]), -1);
 
 // memory_copy.wast:5546
-assert_return(() => call($32, "checkRange", [63_307, 63_397, 100]), -1);
+assert_return(() => call($33, "checkRange", [60_937, 61_600, 83]), -1);
 
 // memory_copy.wast:5548
-assert_return(() => call($32, "checkRange", [63_397, 63_501, 74]), -1);
+assert_return(() => call($33, "checkRange", [61_600, 62_436, 96]), -1);
 
 // memory_copy.wast:5550
-assert_return(() => call($32, "checkRange", [63_501, 63_525, 93]), -1);
+assert_return(() => call($33, "checkRange", [62_436, 63_307, 77]), -1);
 
 // memory_copy.wast:5552
-assert_return(() => call($32, "checkRange", [63_525, 63_605, 74]), -1);
+assert_return(() => call($33, "checkRange", [63_307, 63_397, 100]), -1);
 
 // memory_copy.wast:5554
-assert_return(() => call($32, "checkRange", [63_605, 63_704, 100]), -1);
+assert_return(() => call($33, "checkRange", [63_397, 63_501, 74]), -1);
 
 // memory_copy.wast:5556
-assert_return(() => call($32, "checkRange", [63_704, 63_771, 97]), -1);
+assert_return(() => call($33, "checkRange", [63_501, 63_525, 93]), -1);
 
 // memory_copy.wast:5558
-assert_return(() => call($32, "checkRange", [63_771, 63_775, 37]), -1);
+assert_return(() => call($33, "checkRange", [63_525, 63_605, 74]), -1);
 
 // memory_copy.wast:5560
-assert_return(() => call($32, "checkRange", [63_775, 64_311, 77]), -1);
+assert_return(() => call($33, "checkRange", [63_605, 63_704, 100]), -1);
 
 // memory_copy.wast:5562
-assert_return(() => call($32, "checkRange", [64_311, 64_331, 26]), -1);
+assert_return(() => call($33, "checkRange", [63_704, 63_771, 97]), -1);
 
 // memory_copy.wast:5564
-assert_return(() => call($32, "checkRange", [64_331, 64_518, 92]), -1);
+assert_return(() => call($33, "checkRange", [63_771, 63_775, 37]), -1);
 
 // memory_copy.wast:5566
-assert_return(() => call($32, "checkRange", [64_518, 64_827, 11]), -1);
+assert_return(() => call($33, "checkRange", [63_775, 64_311, 77]), -1);
 
 // memory_copy.wast:5568
-assert_return(() => call($32, "checkRange", [64_827, 64_834, 26]), -1);
+assert_return(() => call($33, "checkRange", [64_311, 64_331, 26]), -1);
 
 // memory_copy.wast:5570
-assert_return(() => call($32, "checkRange", [64_834, 65_536, 0]), -1);
+assert_return(() => call($33, "checkRange", [64_331, 64_518, 92]), -1);
+
+// memory_copy.wast:5572
+assert_return(() => call($33, "checkRange", [64_518, 64_827, 11]), -1);
+
+// memory_copy.wast:5574
+assert_return(() => call($33, "checkRange", [64_827, 64_834, 26]), -1);
+
+// memory_copy.wast:5576
+assert_return(() => call($33, "checkRange", [64_834, 65_536, 0]), -1);
