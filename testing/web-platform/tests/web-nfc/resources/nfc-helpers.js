@@ -37,9 +37,8 @@ async function initialize_nfc_tests() {
     await loadChromiumResources;
   }
   assert_true(
-    typeof WebNFCTest !== 'undefined',
-    'WebNFC testing interface is not available.'
-  );
+      typeof WebNFCTest !== 'undefined',
+      'WebNFC testing interface is not available.');
   let NFCTest = new WebNFCTest();
   await NFCTest.initialize();
   return NFCTest;
@@ -48,12 +47,10 @@ async function initialize_nfc_tests() {
 function nfc_test(func, name, properties) {
   promise_test(async t => {
     let NFCTest = await initialize_nfc_tests();
-    let mockTest = NFCTest.getMockNFC();
-    try {
-      await func(t, mockTest);
-    } finally {
+    t.add_cleanup(async () => {
       await NFCTest.reset();
-    };
+    });
+    await func(t, NFCTest.getMockNFC());
   }, name, properties);
 }
 
