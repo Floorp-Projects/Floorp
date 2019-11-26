@@ -6,9 +6,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=583181
 <head>
   <title>Test for Bug 583181</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ChromeTask.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body>
+<body onload="onLoad()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=583181">Mozilla Bug 583181</a>
 <p id="display"></p>
 <div id="content" style="display: none">
@@ -36,20 +37,14 @@ is(typeof(contentBuildID), "string", "navigator.buildID should be a string");
 is(+contentBuildID, LEGACY_BUILD_ID,
    "navigator.buildID should be spoofed in content");
 
-//
-// Access navigator.buildID from chrome.
-//
-let chromeScript = SpecialPowers.loadChromeScript(() => {
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-  addMessageListener("test:getBuildID", nav => {
+async function onLoad() {
+  //
+  // Access navigator.buildID from chrome.
+  //
+  let chromeBuildID = await ChromeTask.spawn(null, () => {
     const browser = Services.wm.getMostRecentBrowserWindow();
     return browser.navigator.buildID;
   });
-});
-
-async function onMozillaIFrameLoaded() {
-  let chromeBuildID = await chromeScript.sendQuery("test:getBuildID");
-  chromeScript.destroy();
 
   ok(+chromeBuildID > LEGACY_BUILD_ID,
      `navigator.buildID should be exposed in chrome - got "${chromeBuildID}"`);
@@ -57,7 +52,7 @@ async function onMozillaIFrameLoaded() {
   //
   // Access navigator.buildID from mozilla.org.
   //
-  let mozillaBuildID = getMozillaBuildID();
+  let mozillaBuildID = await getMozillaBuildID();
 
   ok(+mozillaBuildID > LEGACY_BUILD_ID,
      `navigator.buildID should be exposed on mozilla.org ` +
@@ -68,32 +63,31 @@ async function onMozillaIFrameLoaded() {
   //
   // Access navigator.buildID from mozilla.org when resisting fingerprinting.
   //
-  SpecialPowers.pushPrefEnv(
-    {"set": [["privacy.resistFingerprinting", true]]},
-    () => {
-      let resistBuildID = getMozillaBuildID();
+  await SpecialPowers.pushPrefEnv(
+    {"set": [["privacy.resistFingerprinting", true]]});
 
-      is(+resistBuildID, LEGACY_BUILD_ID,
-         "navigator.buildID should be spoofed on mozilla.org when " +
-         "resisting fingerprinting");
+  let resistBuildID = await getMozillaBuildID();
 
-      SimpleTest.finish();
-    }
-  );
+  is(+resistBuildID, LEGACY_BUILD_ID,
+     "navigator.buildID should be spoofed on mozilla.org when " +
+     "resisting fingerprinting");
+
+  SimpleTest.finish();
 }
 
-function getMozillaBuildID() {
-  let Cu = SpecialPowers.Cu;
-  let mozillaIFrame = document.getElementById("mozillaIFrame").contentWindow;
-  let mozillaSandbox = Cu.Sandbox(mozillaIFrame,
-                                  {sandboxPrototype: mozillaIFrame});
-  let mozillaBuildID = Cu.evalInSandbox("window.navigator.buildID",
-                                        mozillaSandbox);
-  Cu.nukeSandbox(mozillaSandbox);
-  return mozillaBuildID;
+async function getMozillaBuildID() {
+  let iframe = document.getElementById("mozillaIFrame");
+
+  await new Promise(resolve => {
+    iframe.addEventListener("load", resolve, { once: true });
+    SpecialPowers.spawn(iframe, [], () => this.content.location.reload());
+  });
+
+  return SpecialPowers.spawn(
+    iframe, [], () => this.content.wrappedJSObject.navigator.buildID);
 }
 </script>
 </pre>
-<iframe id="mozillaIFrame" onload="onMozillaIFrameLoaded();" src="https://www.mozilla.org/" />
+<iframe id="mozillaIFrame" src="https://www.mozilla.org/" />
 </body>
 </html>
