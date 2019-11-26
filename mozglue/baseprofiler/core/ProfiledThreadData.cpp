@@ -94,7 +94,17 @@ void StreamSamplesAndMarkers(const char* aName, int aThreadId,
       "processType",
       "(unknown)" /* XRE_GeckoProcessTypeToString(XRE_GetProcessType()) */);
 
-  aWriter.StringProperty("name", aName);
+  {
+    std::string name = aName;
+    // We currently need to distinguish threads output by Base Profiler from
+    // those in Gecko Profiler, as the frontend could get confused and lose
+    // tracks with the same name.
+    // TODO: As part of the profilers de-duplication, thread data from both
+    // profilers should end up in the same track, at which point this won't be
+    // necessary anymore. See meta bug 1557566.
+    name += " (pre-xul)";
+    aWriter.StringProperty("name", name.c_str());
+  }
 
   // Use given process name (if any).
   if (!aProcessName.empty()) {
