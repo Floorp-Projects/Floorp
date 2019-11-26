@@ -6,7 +6,6 @@ package org.mozilla.fenix
 
 import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.MainScope
@@ -38,22 +37,7 @@ class IntentReceiverActivity : Activity() {
     }
 
     suspend fun processIntent(intent: Intent) {
-        val didLaunchPrivateLink = packageManager
-            ?.getActivityInfo(componentName, PackageManager.GET_META_DATA)
-            ?.metaData
-            ?.getBoolean(LAUNCH_PRIVATE_LINK) ?: false
-
-        /* If LAUNCH_PRIVATE_LINK is set AND we're the default browser they must have pressed "always."
-        This is because LAUNCH_PRIVATE_LINK is only accessible through the "launch browser intent" menu
-        Which only appears if the user doesn't have a default set. */
-        if (didLaunchPrivateLink && Browsers.all(this).isDefaultBrowser) {
-            this.settings().openLinksInAPrivateTab = true
-            components.analytics.metrics.track(Event.PreferenceToggled(
-                preferenceKey = getString(R.string.pref_key_open_links_in_a_private_tab),
-                enabled = true,
-                context = applicationContext
-            ))
-        } else if (!Browsers.all(this).isDefaultBrowser) {
+        if (!Browsers.all(this).isDefaultBrowser) {
             /* If the user has unset us as the default browser, unset openLinksInAPrivateTab */
             this.settings().openLinksInAPrivateTab = false
             components.analytics.metrics.track(Event.PreferenceToggled(
@@ -63,7 +47,7 @@ class IntentReceiverActivity : Activity() {
             ))
         }
 
-        val tabIntentProcessor = if (settings().openLinksInAPrivateTab || didLaunchPrivateLink) {
+        val tabIntentProcessor = if (settings().openLinksInAPrivateTab) {
             components.analytics.metrics.track(Event.OpenedLink(Event.OpenedLink.Mode.PRIVATE))
             components.intentProcessors.privateIntentProcessor
         } else {
@@ -107,10 +91,5 @@ class IntentReceiverActivity : Activity() {
         }
 
         intent.putExtra(HomeActivity.OPEN_TO_BROWSER, openToBrowser)
-    }
-
-    companion object {
-        // This constant must match the metadata from the private activity-alias
-        const val LAUNCH_PRIVATE_LINK = "org.mozilla.fenix.LAUNCH_PRIVATE_LINK"
     }
 }
