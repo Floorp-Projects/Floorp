@@ -56,7 +56,7 @@ In case you want to run the tests with another binary like [Firefox Nightly]:
 	% ./mach marionette-test --binary /path/to/nightly/firefox TEST
 
 When working on Marionette it is often useful to surface the stdout
-from Gecko, which can be achived using the `--gecko-log` option.
+from Gecko, which can be achieved using the `--gecko-log` option.
 See <Debugging.html> for usage instructions, but the gist is that
 you can redirect all Gecko output to stdout:
 
