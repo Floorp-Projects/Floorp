@@ -25,7 +25,7 @@ enum PaymentDelegation {
 interface PaymentInstruments {
   Promise<boolean> delete(DOMString instrumentKey);
   Promise<any> get(DOMString instrumentKey);
-  Promise<sequence<DOMString>> keys();
+  Promise<sequence<DOMString>>  keys();
   Promise<boolean> has(DOMString instrumentKey);
   Promise<void> set(DOMString instrumentKey, PaymentInstrument details);
   Promise<void> clear();
