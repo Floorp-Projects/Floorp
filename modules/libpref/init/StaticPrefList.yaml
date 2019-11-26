@@ -687,7 +687,12 @@
 # Enable/Disable Origin based cache isolation
 - name: browser.cache.cache_isolation
   type: RelaxedAtomicBool
+
+#if defined(NIGHTLY_BUILD)
+  value: true
+#else
   value: false
+#endif
   mirror: always
 
 # -1 = determine dynamically, 0 = none, n = memory capacity in kilobytes.

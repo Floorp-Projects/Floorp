@@ -37,6 +37,7 @@ add_task(async function() {
     set: [
       ["browser.cache.disk.enable", false],
       ["browser.cache.memory.enable", false],
+      ["browser.cache.cache_isolation", false],
       [
         "network.cookie.cookieBehavior",
         Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,

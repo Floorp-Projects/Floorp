@@ -739,6 +739,7 @@ function run_test_real() {
   tests.forEach(f => add_test(f));
   do_get_profile();
 
+  Services.prefs.setBoolPref("browser.cache.cache_isolation", false);
   Services.prefs.setBoolPref("network.predictor.enabled", true);
   Services.prefs.setBoolPref("network.predictor.cleaned-up", true);
   Services.prefs.setBoolPref("network.predictor.doing-tests", true);

@@ -19,6 +19,8 @@ server.start(-1);
 // Disable rcwn to make cache behavior deterministic.
 let rcwnEnabled = Services.prefs.getBoolPref("network.http.rcwn.enabled");
 Services.prefs.setBoolPref("network.http.rcwn.enabled", false);
+// Disable additional Http cache isolation.
+Services.prefs.setBoolPref("browser.cache.cache_isolation", false);
 
 registerCleanupFunction(() => {
   Services.prefs.setBoolPref("network.http.rcwn.enabled", rcwnEnabled);
