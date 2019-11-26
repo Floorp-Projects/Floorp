@@ -3332,10 +3332,59 @@ void BackgroundCursorChild::SendContinueInternal(
       break;
     }
 
-    case CursorRequestParams::TContinuePrimaryKeyParams:
-      // TODO: Implement preloading for this case
-      InvalidateCachedResponses();
+    case CursorRequestParams::TContinuePrimaryKeyParams: {
+      const auto& key = params.get_ContinuePrimaryKeyParams().key();
+      const auto& primaryKey =
+          params.get_ContinuePrimaryKeyParams().primaryKey();
+      if (key.IsUnset() || primaryKey.IsUnset()) {
+        break;
+      }
+
+      // Discard cache entries before the target key.
+      DiscardCachedResponses(
+          [&key, &primaryKey, isLocaleAware = mCursor->IsLocaleAware(),
+           keyCompareOperator = GetKeyOperator(mDirection),
+           transactionSerialNumber = mTransaction->LoggingSerialNumber(),
+           requestSerialNumber = mRequest->LoggingSerialNumber()](
+              const auto& currentCachedResponse) {
+            // This duplicates the logic from the parent. We could avoid this
+            // duplication if we invalidated the cached records always for any
+            // continue-with-key operation, but would lose the benefits of
+            // preloading then.
+            const auto& cachedSortKey =
+                isLocaleAware ? currentCachedResponse.mLocaleAwareKey
+                              : currentCachedResponse.mKey;
+            const auto& cachedSortPrimaryKey =
+                currentCachedResponse.mObjectStoreKey;
+
+            const bool discard =
+                (cachedSortKey == key &&
+                 !(cachedSortPrimaryKey.*keyCompareOperator)(primaryKey)) ||
+                !(cachedSortKey.*keyCompareOperator)(key);
+
+            if (discard) {
+              IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
+                  "PRELOAD: Continue to key %s with primary key %s, discarding "
+                  "cached key %s with cached primary key %s",
+                  "Continue, discarding", transactionSerialNumber,
+                  requestSerialNumber, key.GetBuffer().get(),
+                  primaryKey.GetBuffer().get(), cachedSortKey.GetBuffer().get(),
+                  cachedSortPrimaryKey.GetBuffer().get());
+            } else {
+              IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
+                  "PRELOAD: Continue to key %s with primary key %s, keeping "
+                  "cached key %s with cached primary key %s and further",
+                  "Continue, keeping", transactionSerialNumber,
+                  requestSerialNumber, key.GetBuffer().get(),
+                  primaryKey.GetBuffer().get(), cachedSortKey.GetBuffer().get(),
+                  cachedSortPrimaryKey.GetBuffer().get());
+            }
+
+            return discard;
+          });
+
       break;
+    }
 
     case CursorRequestParams::TAdvanceParams: {
       uint32_t& advanceCount = params.get_AdvanceParams().count();
