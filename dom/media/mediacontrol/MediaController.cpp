@@ -7,10 +7,9 @@
 #include "MediaController.h"
 
 #include "MediaControlService.h"
+#include "MediaControlUtils.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
-
-extern mozilla::LazyLogModule gMediaControlLog;
 
 // avoid redefined macro in unified build
 #undef LOG

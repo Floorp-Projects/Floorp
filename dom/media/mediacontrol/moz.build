@@ -31,6 +31,7 @@ UNIFIED_SOURCES += [
     'MediaControlKeysManager.cpp',
     'MediaController.cpp',
     'MediaControlService.cpp',
+    'MediaControlUtils.cpp',
     'PlaybackController.cpp',
 ]
 
