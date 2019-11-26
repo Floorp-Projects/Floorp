@@ -15,8 +15,8 @@
 
 <script>
 function submitForm() {
-  passField.value = "pass2";
-  passConfirmField.value = "pass2";
+  SpecialPowers.wrap(passField).setUserInput("pass2");
+  SpecialPowers.wrap(passConfirmField).setUserInput("pass2");
 
   form.submit();
 }

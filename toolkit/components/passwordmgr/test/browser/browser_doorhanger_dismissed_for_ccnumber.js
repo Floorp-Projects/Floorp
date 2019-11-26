@@ -85,10 +85,12 @@ add_task(async function test_doorhanger_shown_on_un_with_invalid_ccnumber() {
 
       let processedPromise = listenForTestNotification("FormSubmit");
       await ContentTask.spawn(browser, null, async () => {
-        content.document.getElementById("form-basic-username").value =
-          "1234123412341234";
-        content.document.getElementById("form-basic-password").value = "411";
-
+        content.document
+          .getElementById("form-basic-username")
+          .setUserInput("1234123412341234");
+        content.document
+          .getElementById("form-basic-password")
+          .setUserInput("411");
         content.document.getElementById("form-basic-submit").click();
       });
       await processedPromise;

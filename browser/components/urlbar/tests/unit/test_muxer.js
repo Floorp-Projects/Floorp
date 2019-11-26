@@ -52,13 +52,7 @@ add_task(async function test_muxer() {
 
   let providerName = registerBasicTestProvider(matches);
   let context = createContext(undefined, { providers: [providerName] });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
   /**
    * A test muxer.
    */
@@ -116,13 +110,7 @@ add_task(async function test_preselectedHeuristic_singleProvider() {
   let context = createContext(undefined, {
     providers: [providerName],
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
 
   info("Check results, the order should be: b (heuristic), a, c");
   await UrlbarProvidersManager.startQuery(context, controller);
@@ -173,13 +161,7 @@ add_task(async function test_preselectedHeuristic_multiProviders() {
   let context = createContext(undefined, {
     providers: [provider1Name, provider2Name],
   });
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
 
   info("Check results, the order should be: e (heuristic), a, b, c, d, f");
   await UrlbarProvidersManager.startQuery(context, controller);

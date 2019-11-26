@@ -92,7 +92,7 @@ void StreamSamplesAndMarkers(const char* aName, int aThreadId,
                              double aSinceTime, UniqueStacks& aUniqueStacks) {
   aWriter.StringProperty(
       "processType",
-      "(unknown)" /* XRE_ChildProcessTypeToString(XRE_GetProcessType()) */);
+      "(unknown)" /* XRE_GeckoProcessTypeToString(XRE_GetProcessType()) */);
 
   aWriter.StringProperty("name", aName);
 

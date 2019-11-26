@@ -83,7 +83,6 @@ static const char kPrintingPromptService[] =
 #include "nsContentCID.h"
 #include "nsLayoutCID.h"
 #include "nsContentUtils.h"
-#include "nsLayoutStylesheetCache.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"

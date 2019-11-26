@@ -4,11 +4,12 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <jni.h>
 #include <android/log.h>
 #include "dlfcn.h"
 #include "APKOpen.h"
-#include "ElfLoader.h"
+#include "Linker.h"
 #include "SQLiteBridge.h"
 
 #ifdef DEBUG

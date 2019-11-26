@@ -49,13 +49,8 @@ add_task(function setup() {
     onQueryCancelled: sandbox.stub(),
   };
 
-  controller = new UrlbarController({
+  controller = UrlbarTestUtils.newMockController({
     manager: fPM,
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
   });
   controller.addQueryListener(generalListener);
 });
@@ -63,24 +58,71 @@ add_task(function setup() {
 add_task(function test_constructor_throws() {
   Assert.throws(
     () => new UrlbarController(),
-    /Missing options: browserWindow/,
-    "Should throw if the browserWindow was not supplied"
+    /Missing options: input/,
+    "Should throw if the input was not supplied"
   );
   Assert.throws(
-    () => new UrlbarController({ browserWindow: {} }),
-    /browserWindow should be an actual browser window/,
-    "Should throw if the browserWindow is not a window"
+    () => new UrlbarController({ input: {} }),
+    /input is missing 'window' property/,
+    "Should throw if the input is not a UrlbarInput"
+  );
+  Assert.throws(
+    () => new UrlbarController({ input: { window: {} } }),
+    /input.window should be an actual browser window/,
+    "Should throw if the input.window is not a window"
   );
   Assert.throws(
     () =>
       new UrlbarController({
-        browserWindow: {
-          location: "about:fake",
+        input: {
+          window: {
+            location: "about:fake",
+          },
         },
       }),
-    /browserWindow should be an actual browser window/,
-    "Should throw if the browserWindow does not have the correct location"
+    /input.window should be an actual browser window/,
+    "Should throw if the input.window is not an object"
   );
+  Assert.throws(
+    () =>
+      new UrlbarController({
+        input: {
+          window: {
+            location: {
+              href: "about:fake",
+            },
+          },
+        },
+      }),
+    /input.window should be an actual browser window/,
+    "Should throw if the input.window does not have the correct location"
+  );
+  Assert.throws(
+    () =>
+      new UrlbarController({
+        input: {
+          window: {
+            location: {
+              href: AppConstants.BROWSER_CHROME_URL,
+            },
+          },
+        },
+      }),
+    /input.isPrivate must be set/,
+    "Should throw if input.isPrivate is not set"
+  );
+
+  new UrlbarController({
+    input: {
+      isPrivate: false,
+      window: {
+        location: {
+          href: AppConstants.BROWSER_CHROME_URL,
+        },
+      },
+    },
+  });
+  Assert.ok(true, "Correct call should not throw");
 });
 
 add_task(function test_add_and_remove_listeners() {

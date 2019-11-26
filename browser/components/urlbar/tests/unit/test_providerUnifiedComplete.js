@@ -39,13 +39,7 @@ add_task(async function test_unifiedComplete() {
     Services.search.defaultEngine = oldCurrentEngine;
   });
 
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
   // Also check case insensitivity.
   let searchString = "MoZ oRg";
   let context = createContext(searchString, { isPrivate: false });
@@ -122,13 +116,7 @@ add_task(async function test_bookmarkBehaviorDisabled_tagged() {
   // Disable the bookmark behavior in UnifiedComplete.
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
 
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
   // Also check case insensitivity.
   let searchString = "MoZ oRg";
   let context = createContext(searchString, { isPrivate: false });
@@ -182,13 +170,7 @@ add_task(async function test_bookmarkBehaviorDisabled_untagged() {
   // Disable the bookmark behavior in UnifiedComplete.
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
 
-  let controller = new UrlbarController({
-    browserWindow: {
-      location: {
-        href: AppConstants.BROWSER_CHROME_URL,
-      },
-    },
-  });
+  let controller = UrlbarTestUtils.newMockController();
   // Also check case insensitivity.
   let searchString = "MoZ oRg";
   let context = createContext(searchString, { isPrivate: false });

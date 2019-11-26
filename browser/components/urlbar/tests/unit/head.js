@@ -31,6 +31,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
 });
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");

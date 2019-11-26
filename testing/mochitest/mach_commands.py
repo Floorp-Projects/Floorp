@@ -214,9 +214,9 @@ def setup_argument_parser():
         # emulator if appropriate) before running tests. This check must
         # be done in this admittedly awkward place because
         # MochitestArgumentParser initialization fails if no device is found.
-        from mozrunner.devices.android_device import verify_android_device
+        from mozrunner.devices.android_device import (verify_android_device, InstallIntent)
         # verify device and xre
-        verify_android_device(build_obj, install=False, xre=True)
+        verify_android_device(build_obj, install=InstallIntent.NO, xre=True)
 
     global parser
     parser = MochitestArgumentParser()
@@ -247,8 +247,8 @@ def setup_junit_argument_parser():
 
         import runjunit
 
-        from mozrunner.devices.android_device import verify_android_device
-        verify_android_device(build_obj, install=False, xre=True, network=True)
+        from mozrunner.devices.android_device import (verify_android_device, InstallIntent)
+        verify_android_device(build_obj, install=InstallIntent.NO, xre=True, network=True)
 
     global parser
     parser = runjunit.JunitArgumentParser()
@@ -418,12 +418,12 @@ class MachCommands(MachCommandBase):
             return 1
 
         if buildapp == 'android':
-            from mozrunner.devices.android_device import verify_android_device
+            from mozrunner.devices.android_device import (verify_android_device, InstallIntent)
             app = kwargs.get('app')
             if not app:
                 app = "org.mozilla.geckoview.test"
             device_serial = kwargs.get('deviceSerial')
-            install = not kwargs.get('no_install')
+            install = InstallIntent.NO if kwargs.get('no_install') else InstallIntent.PROMPT
 
             # verify installation
             verify_android_device(self, install=install, xre=False, network=True,
@@ -475,11 +475,14 @@ class GeckoviewJunitCommands(MachCommandBase):
         self._ensure_state_subdir_exists('.')
 
         from mozrunner.devices.android_device import (get_adb_path,
-                                                      verify_android_device)
+                                                      verify_android_device,
+                                                      InstallIntent)
         # verify installation
         app = kwargs.get('app')
         device_serial = kwargs.get('deviceSerial')
-        verify_android_device(self, install=not no_install, xre=False, app=app,
+        verify_android_device(self,
+                              install=InstallIntent.NO if no_install else InstallIntent.PROMPT,
+                              xre=False, app=app,
                               device_serial=device_serial)
 
         if not kwargs.get('adbPath'):

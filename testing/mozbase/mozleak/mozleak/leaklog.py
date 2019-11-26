@@ -127,7 +127,7 @@ def process_leak_log(leak_log_file, leak_thresholds=None,
     The base of leak_log_file for a non-default process needs to end with
       _proctype_pid12345.log
     "proctype" is a string denoting the type of the process, which should
-    be the result of calling XRE_ChildProcessTypeToString(). 12345 is
+    be the result of calling XRE_GeckoProcessTypeToString(). 12345 is
     a series of digits that is the pid for the process. The .log is
     optional.
 

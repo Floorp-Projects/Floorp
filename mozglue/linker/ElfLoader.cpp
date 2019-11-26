@@ -1322,5 +1322,3 @@ int SEGVHandler::__wrap_sigaction(int signum, const struct sigaction* act,
   if (act) that.action = *act;
   return 0;
 }
-
-Logging Logging::Singleton;

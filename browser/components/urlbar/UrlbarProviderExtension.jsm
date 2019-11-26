@@ -226,23 +226,37 @@ class UrlbarProviderExtension extends UrlbarProvider {
   }
 
   /**
+   * This method is called when the user starts and ends an engagement with the
+   * urlbar.
+   *
+   * @param {boolean} isPrivate
+   *   True if the engagement is in a private context.
+   * @param {string} state
+   *   The state of the engagement, one of: start, engagement, abandonment,
+   *   discard.
+   */
+  onEngagement(isPrivate, state) {
+    this._notifyListener("engagement", isPrivate, state);
+  }
+
+  /**
    * Calls a listener function set by the extension API implementation, if any.
    *
    * @param {string} eventName
    *   The name of the listener to call (i.e., the name of the event to fire).
-   * @param {UrlbarQueryContext} context
-   *   The query context relevant to the event.
+   * @param {*} args
+   *   Arguments to the listener function.
    * @returns {*}
    *   The value returned by the listener function, if any.
    */
-  async _notifyListener(eventName, context) {
+  async _notifyListener(eventName, ...args) {
     let listener = this._eventListeners.get(eventName);
     if (!listener) {
       return undefined;
     }
     let result;
     try {
-      result = listener(context);
+      result = listener(...args);
     } catch (error) {
       Cu.reportError(error);
       return undefined;

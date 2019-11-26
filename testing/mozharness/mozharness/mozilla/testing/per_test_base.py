@@ -135,7 +135,7 @@ class SingleTestMixin(object):
                 # Test name substitution, for reftest reference file handling:
                 #  - if both test and reference modified, run the test file
                 #  - if only reference modified, run the test file
-                test_file = os.path.join(os.path.dirname(file), entry[2])
+                test_file = os.path.join(os.path.dirname(file), os.path.basename(entry[2]))
                 self.info("Per-test run substituting %s for %s" % (test_file, file))
                 file = test_file
 

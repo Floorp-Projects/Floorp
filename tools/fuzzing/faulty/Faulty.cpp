@@ -166,7 +166,7 @@ Faulty::Faulty()
       mIsValidProcessType(IsValidProcessType()) {
   if (mIsValidProcessType) {
     FAULTY_LOG("Initializing for new process of type '%s' with pid %u.",
-               XRE_ChildProcessTypeToString(XRE_GetProcessType()), getpid());
+               XRE_GeckoProcessTypeToString(XRE_GetProcessType()), getpid());
 
     /* Setup random seed. */
     const char* userSeed = PR_GetEnv("FAULTY_SEED");
@@ -230,7 +230,7 @@ bool Faulty::IsValidProcessType(void) {
 
   if (!isValidProcessType) {
     FAULTY_LOG("Disabled for this process of type '%s' with pid %d.",
-               XRE_ChildProcessTypeToString(XRE_GetProcessType()), getpid());
+               XRE_GeckoProcessTypeToString(XRE_GetProcessType()), getpid());
   }
 
   return isValidProcessType;

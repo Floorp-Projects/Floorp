@@ -498,10 +498,12 @@ class GTestCommands(MachCommandBase):
                 print("--jobs is not supported on Android and will be ignored")
             if debug or debugger or debugger_args:
                 print("--debug options are not supported on Android and will be ignored")
+            from mozrunner.devices.android_device import InstallIntent
             return self.android_gtest(cwd, shuffle, gtest_filter,
                                       package, adb_path, device_serial,
                                       remote_test_root, libxul_path,
-                                      enable_webrender, not no_install)
+                                      enable_webrender,
+                                      InstallIntent.NO if no_install else InstallIntent.PROMPT)
 
         if package or adb_path or device_serial or remote_test_root or libxul_path or no_install:
             print("One or more Android-only options will be ignored")
@@ -699,8 +701,8 @@ class Install(MachCommandBase):
              description='Install the package on the machine (or device in the case of Android).')
     def install(self, **kwargs):
         if conditions.is_android(self):
-            from mozrunner.devices.android_device import verify_android_device
-            ret = verify_android_device(self, install=True, **kwargs) == 0
+            from mozrunner.devices.android_device import (verify_android_device, InstallIntent)
+            ret = verify_android_device(self, install=InstallIntent.YES, **kwargs) == 0
         else:
             ret = self._run_make(directory=".", target='install', ensure_exit_code=False)
 
@@ -826,7 +828,9 @@ class RunProgram(MachCommandBase):
 
     def _run_android(self, app='org.mozilla.geckoview_example', intent=None, env=[], profile=None,
                      url=None, no_install=None, no_wait=None, fail_if_running=None, restart=None):
-        from mozrunner.devices.android_device import verify_android_device, _get_device
+        from mozrunner.devices.android_device import (verify_android_device,
+                                                      _get_device,
+                                                      InstallIntent)
         from six.moves import shlex_quote
 
         if app == 'org.mozilla.geckoview_example':
@@ -839,7 +843,8 @@ class RunProgram(MachCommandBase):
             raise RuntimeError('Application not recognized: {}'.format(app))
 
         # `verify_android_device` respects `DEVICE_SERIAL` if it is set and sets it otherwise.
-        verify_android_device(self, app=app, install=not no_install)
+        verify_android_device(self, app=app,
+                              install=InstallIntent.NO if no_install else InstallIntent.PROMPT)
         device_serial = os.environ.get('DEVICE_SERIAL')
         if not device_serial:
             print('No ADB devices connected.')

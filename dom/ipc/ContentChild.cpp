@@ -174,7 +174,7 @@
 #include "SandboxHal.h"
 #include "nsDebugImpl.h"
 #include "nsHashPropertyBag.h"
-#include "nsLayoutStylesheetCache.h"
+#include "mozilla/GlobalStyleSheetCache.h"
 #include "nsThreadManager.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsClipboardProxy.h"
@@ -1330,7 +1330,7 @@ void ContentChild::InitSharedUASheets(const Maybe<SharedMemoryHandle>& aHandle,
   // Map the shared memory storing the user agent style sheets.  Do this as
   // early as possible to maximize the chance of being able to map at the
   // address we want.
-  nsLayoutStylesheetCache::SetSharedMemory(*aHandle, aAddress);
+  GlobalStyleSheetCache::SetSharedMemory(*aHandle, aAddress);
 }
 
 void ContentChild::InitXPCOM(
@@ -1417,7 +1417,7 @@ void ContentChild::InitXPCOM(
 
   // The stylesheet cache is not ready yet. Store this URL for future use.
   nsCOMPtr<nsIURI> ucsURL = DeserializeURI(aXPCOMInit.userContentSheetURL());
-  nsLayoutStylesheetCache::SetUserContentCSSURL(ucsURL);
+  GlobalStyleSheetCache::SetUserContentCSSURL(ucsURL);
 
   GfxInfoBase::SetFeatureStatus(aXPCOMInit.gfxFeatureStatus());
 
@@ -3737,6 +3737,10 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
       processListener->OnChannelReady(childChannel, aArgs.redirectIdentifier());
   if (NS_FAILED(rv)) {
     return IPC_OK();
+  }
+
+  if (nsCOMPtr<nsIWritablePropertyBag> bag = do_QueryInterface(newChannel)) {
+    nsHashPropertyBag::CopyFrom(bag, aArgs.properties());
   }
 
   // scopeExit will call CrossProcessRedirectFinished(rv) here

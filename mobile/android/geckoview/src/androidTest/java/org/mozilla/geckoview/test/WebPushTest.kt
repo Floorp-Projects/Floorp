@@ -46,10 +46,8 @@ class WebPushTest : BaseSessionTest() {
         }
 
         private fun generateAuthSecret(): ByteArray {
-            val bytes = BigInteger(128, SecureRandom()).toByteArray()
-            if (bytes.size > 16) {
-                return bytes.copyOfRange(bytes.size - 16, bytes.size)
-            }
+            val bytes = ByteArray(16)
+            SecureRandom().nextBytes(bytes)
 
             return bytes
         }
