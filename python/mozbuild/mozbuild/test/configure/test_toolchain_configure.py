@@ -507,7 +507,7 @@ class LinuxToolchainTest(BaseToolchainTest):
         language='C',
     )
     GXX_7_RESULT = CompilerResult(
-        flags=[],
+        flags=['-std=gnu++17'],
         version='7.3.0',
         type='gcc',
         compiler='/usr/bin/g++-7',
@@ -521,7 +521,7 @@ class LinuxToolchainTest(BaseToolchainTest):
         language='C',
     )
     GXX_8_RESULT = CompilerResult(
-        flags=[],
+        flags=['-std=gnu++17'],
         version='8.3.0',
         type='gcc',
         compiler='/usr/bin/g++-8',
@@ -542,7 +542,7 @@ class LinuxToolchainTest(BaseToolchainTest):
         language='C',
     )
     CLANGXX_5_0_RESULT = CompilerResult(
-        flags=['-std=gnu++14'],
+        flags=['-std=gnu++17'],
         version='5.0.1',
         type='clang',
         compiler='/usr/bin/clang++-5.0',
@@ -885,7 +885,7 @@ class OSXToolchainTest(BaseToolchainTest):
         language='C',
     )
     DEFAULT_CLANGXX_RESULT = CompilerResult(
-        flags=['-std=gnu++14'],
+        flags=['-std=gnu++17'],
         version='5.0.1',
         type='clang',
         compiler='/usr/bin/clang++',
@@ -992,7 +992,7 @@ class WindowsToolchainTest(BaseToolchainTest):
     CLANGXX_CL_3_9_RESULT = 'Only clang-cl 8.0 or newer is supported (found version 3.9.0)'
     CLANGXX_CL_8_0_RESULT = CompilerResult(
         version='8.0.0',
-        flags=['-Xclang', '-std=c++14'],
+        flags=['-Xclang', '-std=c++17'],
         type='clang-cl',
         compiler='/usr/bin/clang-cl',
         language='C++',
