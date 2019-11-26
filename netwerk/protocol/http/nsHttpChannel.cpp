@@ -7715,7 +7715,6 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
   // new process.
   rv = NS_OK;
   if (!mCanceled) {
-    // notify "http-on-may-change-process" observers
     rv = ComputeCrossOriginOpenerPolicyMismatch();
 
     if (rv == NS_ERROR_BLOCKED_BY_POLICY) {
