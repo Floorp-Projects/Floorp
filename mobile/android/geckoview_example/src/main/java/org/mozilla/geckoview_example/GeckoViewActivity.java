@@ -91,7 +91,7 @@ interface BrowserActionDelegate {
 class WebExtensionManager implements WebExtension.ActionDelegate, TabSessionManager.TabObserver {
     public WebExtension extension;
 
-    private LruCache<WebExtension.ActionIcon, Bitmap> mBitmapCache = new LruCache<>(5);
+    private LruCache<WebExtension.Icon, Bitmap> mBitmapCache = new LruCache<>(5);
     private GeckoRuntime mRuntime;
     private WebExtension.Action mDefaultAction;
 
