@@ -50,6 +50,7 @@ class nsGenericHTMLElement;
 namespace mozilla {
 
 enum UseCounter : int16_t;
+enum class UseCounterWorker : int16_t;
 
 namespace dom {
 class CustomElementReactionsStack;
@@ -3097,6 +3098,7 @@ already_AddRefed<Element> CreateXULOrHTMLElement(
     JS::Handle<JSObject*> aGivenProto, ErrorResult& aRv);
 
 void SetUseCounter(JSObject* aObject, UseCounter aUseCounter);
+void SetUseCounter(UseCounterWorker aUseCounter);
 
 // Warnings
 void DeprecationWarning(JSContext* aCx, JSObject* aObject,
