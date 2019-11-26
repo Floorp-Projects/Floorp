@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -16,6 +17,7 @@
 #include "mozilla/RelativeTimeline.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/ThreadSafeWeakPtr.h"
+#include "mozilla/UseCounter.h"
 #include "nsContentUtils.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIEventTarget.h"
@@ -37,7 +39,8 @@ class ThrottledEventQueue;
 namespace dom {
 
 // If you change this, the corresponding list in nsIWorkerDebugger.idl needs
-// to be updated too.
+// to be updated too. And histograms enum for worker use counters uses the same
+// order of worker type. Please also update dom/base/usecounters.py.
 enum WorkerType { WorkerTypeDedicated, WorkerTypeShared, WorkerTypeService };
 
 class ClientInfo;
@@ -901,6 +904,13 @@ class WorkerPrivate : public RelativeTimeline {
   // https://whatpr.org/html/4734/structured-data.html#cross-origin-isolated
   bool CrossOriginIsolated() const;
 
+  void SetUseCounter(UseCounterWorker aUseCounter) {
+    MOZ_ASSERT(!mReportedUseCounters);
+    MOZ_ASSERT(aUseCounter > UseCounterWorker::Unknown);
+    AssertIsOnWorkerThread();
+    mUseCounters[static_cast<size_t>(aUseCounter)] = true;
+  }
+
  private:
   WorkerPrivate(
       WorkerPrivate* aParent, const nsAString& aScriptURL, bool aIsChromeWorker,
@@ -995,6 +1005,14 @@ class WorkerPrivate : public RelativeTimeline {
   // need this async operation to be sure that all the current JS code is
   // executed.
   void DispatchCancelingRunnable();
+
+  bool GetUseCounter(UseCounterWorker aUseCounter) {
+    MOZ_ASSERT(aUseCounter > UseCounterWorker::Unknown);
+    AssertIsOnWorkerThread();
+    return mUseCounters[static_cast<size_t>(aUseCounter)];
+  }
+
+  void ReportUseCounters();
 
   class EventTarget;
   friend class EventTarget;
@@ -1111,6 +1129,14 @@ class WorkerPrivate : public RelativeTimeline {
 
   TimeStamp mCreationTimeStamp;
   DOMHighResTimeStamp mCreationTimeHighRes;
+
+  // Flags for use counters used directly by this worker.
+  static_assert(sizeof(UseCounterWorker) <= sizeof(size_t),
+                "UseCounterWorker is too big");
+  static_assert(UseCounterWorker::Count >= static_cast<UseCounterWorker>(0),
+                "Should be non-negative value and safe to cast to unsigned");
+  std::bitset<static_cast<size_t>(UseCounterWorker::Count)> mUseCounters;
+  bool mReportedUseCounters;
 
   // This is created while creating the WorkerPrivate, so it's safe to be
   // touched on any thread.

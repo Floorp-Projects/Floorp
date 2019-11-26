@@ -136,6 +136,7 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.dom += [
     '!UseCounterList.h',
+    '!UseCounterWorkerList.h',
     'AbstractRange.h',
     'AnonymousContent.h',
     'Attr.h',
@@ -542,6 +543,9 @@ if CONFIG['MOZ_X11']:
 
 GeneratedFile('UseCounterList.h', script='gen-usecounters.py',
               entry_point='use_counter_list', inputs=['UseCounters.conf'])
+
+GeneratedFile('UseCounterWorkerList.h', script='gen-usecounters.py',
+              entry_point='use_counter_list', inputs=['UseCountersWorker.conf'])
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
