@@ -15,7 +15,7 @@ const {
 import type { Node, Props } from "../types";
 
 function shouldRenderRootsInReps(roots: Array<Node>): boolean {
-  if (roots.length > 1) {
+  if (roots.length !== 1) {
     return false;
   }
 

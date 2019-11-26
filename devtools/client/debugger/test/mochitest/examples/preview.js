@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 function empties() {
   const a = "";
   const b = false;
@@ -17,14 +21,16 @@ function smalls() {
 
 function objects() {
   const obj = {
-    foo: 1
+    foo: 1,
   };
+
+  const empty = Object.create(null);
 
   debugger;
 }
 
 function largeArray() {
-  let bs = [];
+  const bs = [];
   for (let i = 0; i <= 100; i++) {
     bs.push({ a: 2, b: { c: 3 } });
   }

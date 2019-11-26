@@ -323,6 +323,11 @@ const OI = connect(
 
 module.exports = (props: Props) => {
   const { roots } = props;
+
+  if (roots.length == 0) {
+    return null;
+  }
+
   if (shouldRenderRootsInReps(roots)) {
     return renderRep(roots[0], props);
   }
