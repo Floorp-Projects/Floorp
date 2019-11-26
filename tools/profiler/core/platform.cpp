@@ -1048,10 +1048,29 @@ class ActivePS {
     uint64_t bufferRangeStart = sInstance->mProfileBuffer.BufferRangeStart();
     // Discard exit profiles that were gathered before our buffer RangeStart.
 #ifdef MOZ_BASE_PROFILER
-    // The buffer range starts at 1 (the first valid entry, 0 is reserved as
-    // null marker). So if it now starts *after* 1, it means we have started to
-    // overwrite our oldest data, and we should get rid of Base profiles if any.
-    if (bufferRangeStart > 1 && sInstance->mBaseProfileThreads) {
+    // If we have started to overwrite our data from when the Base profile was
+    // added, we should get rid of that Base profile because it's now older than
+    // our oldest Gecko profile data.
+    //
+    // When adding: (In practice the starting buffer should be empty)
+    // v Start == End
+    // |                 <-- Buffer range, initially empty.
+    // ^ mGeckoIndexWhenBaseProfileAdded < Start FALSE -> keep it
+    //
+    // Later, still in range:
+    // v Start   v End
+    // |=========|       <-- Buffer range growing.
+    // ^ mGeckoIndexWhenBaseProfileAdded < Start FALSE -> keep it
+    //
+    // Even later, now out of range:
+    //       v Start      v End
+    //       |============|       <-- Buffer range full and sliding.
+    // ^ mGeckoIndexWhenBaseProfileAdded < Start TRUE! -> Discard it
+    if (sInstance->mBaseProfileThreads &&
+        sInstance->mGeckoIndexWhenBaseProfileAdded <
+            CorePS::CoreBlocksRingBuffer().GetState().mRangeStart) {
+      DEBUG_LOG("ClearExpiredExitProfiles() - Discarding base profile %p",
+                sInstance->mBaseProfileThreads.get());
       sInstance->mBaseProfileThreads.reset();
     }
 #endif
@@ -1065,7 +1084,10 @@ class ActivePS {
   static void AddBaseProfileThreads(PSLockRef aLock,
                                     UniquePtr<char[]> aBaseProfileThreads) {
     MOZ_ASSERT(sInstance);
+    DEBUG_LOG("AddBaseProfileThreads(%p)", aBaseProfileThreads.get());
     sInstance->mBaseProfileThreads = std::move(aBaseProfileThreads);
+    sInstance->mGeckoIndexWhenBaseProfileAdded =
+        CorePS::CoreBlocksRingBuffer().GetState().mRangeEnd;
   }
 
   static UniquePtr<char[]> MoveBaseProfileThreads(PSLockRef aLock) {
@@ -1073,6 +1095,8 @@ class ActivePS {
 
     ClearExpiredExitProfiles(aLock);
 
+    DEBUG_LOG("MoveBaseProfileThreads() - Consuming base profile %p",
+              sInstance->mBaseProfileThreads.get());
     return std::move(sInstance->mBaseProfileThreads);
   }
 #endif
@@ -1177,6 +1201,7 @@ class ActivePS {
 #ifdef MOZ_BASE_PROFILER
   // Optional startup profile thread array from BaseProfiler.
   UniquePtr<char[]> mBaseProfileThreads;
+  BlocksRingBuffer::BlockIndex mGeckoIndexWhenBaseProfileAdded;
 #endif
 
   struct ExitProfile {
