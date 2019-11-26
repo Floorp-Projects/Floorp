@@ -336,7 +336,8 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
       aOutput[o].AllocateChannels(mOutputChannelCount[o]);
     }
   } else if (aInput.Length() == 1 && aOutput.Length() == 1) {
-    aOutput[0].AllocateChannels(aInput[0].ChannelCount());
+    uint32_t channelCount = std::max(aInput[0].ChannelCount(), 1U);
+    aOutput[0].AllocateChannels(channelCount);
   } else {
     for (AudioBlock& output : aOutput) {
       output.AllocateChannels(1);
