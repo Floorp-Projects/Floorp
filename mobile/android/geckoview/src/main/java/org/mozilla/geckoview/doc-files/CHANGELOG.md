@@ -465,4 +465,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 4c9f04038d8478206efac05b518920819faeacea
+[api-version]: f7f3675072cd2a0e4d65010942c8f02b4e4266f1

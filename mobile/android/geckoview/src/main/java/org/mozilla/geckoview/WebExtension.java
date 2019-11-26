@@ -491,7 +491,7 @@ public class WebExtension {
                     || "GeckoView:PageAction:OpenPopup".equals(event)
                     || "GeckoView:BrowserAction:Update".equals(event)
                     || "GeckoView:BrowserAction:OpenPopup".equals(event)) {
-                runtime.getWebExtensionDispatcher()
+                runtime.getWebExtensionController()
                         .handleMessage(event, message, callback, mSession);
                 return;
             } else if ("GeckoView:WebExtension:CloseTab".equals(event)) {
