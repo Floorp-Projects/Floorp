@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<title>Service Worker: check referer of top-level script fetch</title>
+<title>Service Worker: check referrer of top-level script fetch</title>
 <meta name="timeout" content="long">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
@@ -26,17 +26,17 @@ promise_test(async (t) => {
   t.add_cleanup(() => service_worker_unregister(t, scope));
   await wait_for_state(t, registration.installing, "activated");
 
-  const expected_referer = host_info["HTTPS_ORIGIN"] + location.pathname;
+  const expected_referrer = host_info["HTTPS_ORIGIN"] + location.pathname;
 
-  // Check referer for register().
+  // Check referrer for register().
   const register_headers = await get_toplevel_script_headers(registration.active);
-  assert_equals(register_headers["referer"], expected_referer, "referer of register()");
+  assert_equals(register_headers["referer"], expected_referrer, "referrer of register()");
 
-  // Check referer for update().
+  // Check referrer for update().
   await registration.update();
   await wait_for_state(t, registration.installing, "installed");
   const update_headers = await get_toplevel_script_headers(registration.waiting);
-  assert_equals(update_headers["referer"], expected_referer, "referer of update()");
-}, "Referer of the top-level script fetch should be the document URL");
+  assert_equals(update_headers["referer"], expected_referrer, "referrer of update()");
+}, "Referrer of the top-level script fetch should be the document URL");
 
 </script>
