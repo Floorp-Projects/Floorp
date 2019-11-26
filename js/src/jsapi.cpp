@@ -1717,6 +1717,16 @@ JS::RealmCreationOptions::setSharedMemoryAndAtomicsEnabled(bool flag) {
   return *this;
 }
 
+bool JS::RealmCreationOptions::getCoopAndCoepEnabled() const {
+  return coopAndCoep_;
+}
+
+JS::RealmCreationOptions& JS::RealmCreationOptions::setCoopAndCoepEnabled(
+    bool flag) {
+  coopAndCoep_ = flag;
+  return *this;
+}
+
 JS::RealmBehaviors& JS::RealmBehaviorsRef(JS::Realm* realm) {
   return realm->behaviors();
 }

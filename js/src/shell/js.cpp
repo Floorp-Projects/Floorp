@@ -3731,6 +3731,7 @@ static const JSClass sandbox_class = {"sandbox", JSCLASS_GLOBAL_FLAGS,
 static void SetStandardRealmOptions(JS::RealmOptions& options) {
   options.creationOptions()
       .setSharedMemoryAndAtomicsEnabled(enableSharedMemory)
+      .setCoopAndCoepEnabled(false)
       .setStreamsEnabled(enableStreams)
       .setReadableByteStreamsEnabled(enableReadableByteStreams)
       .setBYOBStreamReadersEnabled(enableBYOBStreamReaders)
@@ -6200,6 +6201,13 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
         return false;
       }
       principals.reset(newPrincipals);
+    }
+
+    if (!JS_GetProperty(cx, opts, "enableCoopAndCoep", &v)) {
+      return false;
+    }
+    if (v.isBoolean()) {
+      creationOptions.setCoopAndCoepEnabled(v.toBoolean());
     }
   }
 
