@@ -37,6 +37,9 @@ class nsOSHelperAppService : public nsExternalHelperAppService {
   NS_IMETHOD GetApplicationDescription(const nsACString& aScheme,
                                        nsAString& _retval) override;
 
+  NS_IMETHOD IsCurrentAppOSDefaultForProtocol(const nsACString& aScheme,
+                                              bool* _retval) override;
+
   // method overrides for windows registry look up steps....
   NS_IMETHOD GetMIMEInfoFromOS(const nsACString& aMIMEType,
                                const nsACString& aFileExt, bool* aFound,

@@ -152,6 +152,12 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(
   return NS_ERROR_NOT_AVAILABLE;
 }
 
+NS_IMETHODIMP nsOSHelperAppService::IsCurrentAppOSDefaultForProtocol(
+    const nsACString& aScheme, bool* _retval) {
+  *_retval = false;
+  return NS_OK;
+}
+
 // GetMIMEInfoFromRegistry: This function obtains the values of some of the
 // nsIMIMEInfo attributes for the mimeType/extension associated with the input
 // registry key.  The default entry for that key is the name of a registry key

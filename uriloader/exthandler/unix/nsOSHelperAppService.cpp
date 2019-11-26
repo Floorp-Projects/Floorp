@@ -1057,6 +1057,12 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(
 #endif
 }
 
+NS_IMETHODIMP nsOSHelperAppService::IsCurrentAppOSDefaultForProtocol(
+    const nsACString& aScheme, bool* _retval) {
+  *_retval = false;
+  return NS_OK;
+}
+
 nsresult nsOSHelperAppService::GetFileTokenForPath(
     const char16_t* platformAppPath, nsIFile** aFile) {
   LOG(("-- nsOSHelperAppService::GetFileTokenForPath: '%s'\n",

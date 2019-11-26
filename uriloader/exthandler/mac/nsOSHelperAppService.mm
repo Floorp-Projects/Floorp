@@ -31,6 +31,49 @@
 #define HELPERAPPLAUNCHER_BUNDLE_URL "chrome://global/locale/helperAppLauncher.properties"
 #define BRAND_BUNDLE_URL "chrome://branding/locale/brand.properties"
 
+nsresult GetDefaultBundleURL(const nsACString& aScheme, CFURLRef* aBundleURL) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  nsresult rv = NS_ERROR_NOT_AVAILABLE;
+
+  CFStringRef schemeCFString = ::CFStringCreateWithBytes(
+      kCFAllocatorDefault, (const UInt8*)PromiseFlatCString(aScheme).get(), aScheme.Length(),
+      kCFStringEncodingUTF8, false);
+
+  if (schemeCFString) {
+    CFStringRef lookupCFString =
+        ::CFStringCreateWithFormat(NULL, NULL, CFSTR("%@:"), schemeCFString);
+
+    if (lookupCFString) {
+      CFURLRef lookupCFURL = ::CFURLCreateWithString(NULL, lookupCFString, NULL);
+
+      if (lookupCFURL) {
+        if (@available(macOS 10.10, *)) {
+          *aBundleURL = ::LSCopyDefaultApplicationURLForURL(lookupCFURL, kLSRolesAll, NULL);
+          if (*aBundleURL) {
+            rv = NS_OK;
+          }
+        } else {
+          OSStatus theErr = ::LSGetApplicationForURL(lookupCFURL, kLSRolesAll, NULL, aBundleURL);
+          if (theErr == noErr && *aBundleURL) {
+            rv = NS_OK;
+          }
+        }
+
+        ::CFRelease(lookupCFURL);
+      }
+
+      ::CFRelease(lookupCFString);
+    }
+
+    ::CFRelease(schemeCFString);
+  }
+
+  return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
 using mozilla::LogLevel;
 
 /* This is an undocumented interface (in the Foundation framework) that has
@@ -91,52 +134,57 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
 
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
 
-  CFStringRef schemeCFString = ::CFStringCreateWithBytes(
-      kCFAllocatorDefault, (const UInt8*)PromiseFlatCString(aScheme).get(), aScheme.Length(),
-      kCFStringEncodingUTF8, false);
+  CFURLRef handlerBundleURL;
+  rv = GetDefaultBundleURL(aScheme, &handlerBundleURL);
 
-  if (schemeCFString) {
-    CFStringRef lookupCFString =
-        ::CFStringCreateWithFormat(NULL, NULL, CFSTR("%@:"), schemeCFString);
-
-    if (lookupCFString) {
-      CFURLRef lookupCFURL = ::CFURLCreateWithString(NULL, lookupCFString, NULL);
-
-      if (lookupCFURL) {
-        CFURLRef appCFURL = NULL;
-        OSStatus theErr = ::LSGetApplicationForURL(lookupCFURL, kLSRolesAll, NULL, &appCFURL);
-
-        if (theErr == noErr) {
-          CFBundleRef handlerBundle = ::CFBundleCreate(NULL, appCFURL);
-
-          if (handlerBundle) {
-            // Get the human-readable name of the default handler bundle
-            CFStringRef bundleName = (CFStringRef)::CFBundleGetValueForInfoDictionaryKey(
-                handlerBundle, kCFBundleNameKey);
-
-            if (bundleName) {
-              AutoTArray<UniChar, 255> buffer;
-              CFIndex bundleNameLength = ::CFStringGetLength(bundleName);
-              buffer.SetLength(bundleNameLength);
-              ::CFStringGetCharacters(bundleName, CFRangeMake(0, bundleNameLength),
-                                      buffer.Elements());
-              _retval.Assign(reinterpret_cast<char16_t*>(buffer.Elements()), bundleNameLength);
-              rv = NS_OK;
-            }
-
-            ::CFRelease(handlerBundle);
-          }
-
-          ::CFRelease(appCFURL);
-        }
-
-        ::CFRelease(lookupCFURL);
-      }
-
-      ::CFRelease(lookupCFString);
+  if (NS_SUCCEEDED(rv) && handlerBundleURL) {
+    CFBundleRef handlerBundle = CFBundleCreate(NULL, handlerBundleURL);
+    if (!handlerBundle) {
+      ::CFRelease(handlerBundleURL);
+      return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    ::CFRelease(schemeCFString);
+    // Get the human-readable name of the bundle
+    CFStringRef bundleName =
+        (CFStringRef)::CFBundleGetValueForInfoDictionaryKey(handlerBundle, kCFBundleNameKey);
+
+    if (bundleName) {
+      AutoTArray<UniChar, 255> buffer;
+      CFIndex bundleNameLength = ::CFStringGetLength(bundleName);
+      buffer.SetLength(bundleNameLength);
+      ::CFStringGetCharacters(bundleName, CFRangeMake(0, bundleNameLength), buffer.Elements());
+      _retval.Assign(reinterpret_cast<char16_t*>(buffer.Elements()), bundleNameLength);
+      rv = NS_OK;
+    }
+    ::CFRelease(handlerBundle);
+    ::CFRelease(handlerBundleURL);
+  }
+
+  return rv;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP nsOSHelperAppService::IsCurrentAppOSDefaultForProtocol(const nsACString& aScheme,
+                                                                     bool* _retval) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  nsresult rv = NS_ERROR_NOT_AVAILABLE;
+
+  CFURLRef handlerBundleURL;
+  rv = GetDefaultBundleURL(aScheme, &handlerBundleURL);
+  if (NS_SUCCEEDED(rv) && handlerBundleURL) {
+    // Ensure we don't accidentally return success if we can't get an app bundle.
+    rv = NS_ERROR_NOT_AVAILABLE;
+    CFBundleRef appBundle = ::CFBundleGetMainBundle();
+    if (appBundle) {
+      CFURLRef selfURL = ::CFBundleCopyBundleURL(appBundle);
+      *_retval = ::CFEqual(selfURL, handlerBundleURL);
+      rv = NS_OK;
+      ::CFRelease(appBundle);
+      ::CFRelease(selfURL);
+    }
+    ::CFRelease(handlerBundleURL);
   }
 
   return rv;
