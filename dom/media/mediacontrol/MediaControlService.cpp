@@ -5,6 +5,7 @@
 #include "MediaControlService.h"
 
 #include "MediaController.h"
+#include "MediaControlUtils.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Logging.h"
@@ -12,8 +13,6 @@
 #include "mozilla/StaticPtr.h"
 #include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
-
-extern mozilla::LazyLogModule gMediaControlLog;
 
 #undef LOG
 #define LOG(msg, ...)                        \

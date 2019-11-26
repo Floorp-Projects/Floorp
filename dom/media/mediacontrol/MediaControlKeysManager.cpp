@@ -5,15 +5,15 @@
 #include "MediaControlKeysManager.h"
 
 #include "MediaControlUtils.h"
+#include "MediaControlService.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Logging.h"
+#include "mozilla/StaticPrefs_media.h"
 
 #ifdef MOZ_APPLEMEDIA
 #  include "MediaHardwareKeysEventSourceMac.h"
 #endif
-
-extern mozilla::LazyLogModule gMediaControlLog;
 
 #undef LOG
 #define LOG(msg, ...)                        \

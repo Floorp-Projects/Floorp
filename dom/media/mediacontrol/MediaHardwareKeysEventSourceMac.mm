@@ -7,10 +7,7 @@
 #import <IOKit/hidsystem/ev_keymap.h>
 
 #include "MediaHardwareKeysEventSourceMac.h"
-
-#include "mozilla/Logging.h"
-
-extern mozilla::LazyLogModule gMediaControlLog;
+#include "MediaControlUtils.h"
 
 // avoid redefined macro in unified build
 #undef LOG

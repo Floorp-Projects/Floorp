@@ -10,8 +10,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_media.h"
 
-extern mozilla::LazyLogModule gMediaControlLog;
-
 #undef LOG
 #define LOG(msg, ...)                        \
   MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
