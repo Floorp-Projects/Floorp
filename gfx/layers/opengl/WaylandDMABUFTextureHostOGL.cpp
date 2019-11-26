@@ -39,7 +39,7 @@ bool WaylandDMABUFTextureHostOGL::Lock() {
     auto format = mSurface->HasAlpha() ? gfx::SurfaceFormat::R8G8B8A8
                                        : gfx::SurfaceFormat::R8G8B8X8;
     mTextureSource = new EGLImageTextureSource(
-        mProvider, mSurface->GetEGLImage(), format, LOCAL_GL_TEXTURE_EXTERNAL,
+        mProvider, mSurface->GetEGLImage(), format, LOCAL_GL_TEXTURE_2D,
         LOCAL_GL_CLAMP_TO_EDGE,
         gfx::IntSize(mSurface->GetWidth(), mSurface->GetHeight()));
   }
@@ -108,7 +108,7 @@ void WaylandDMABUFTextureHostOGL::PushResourceUpdates(
                     ? &wr::TransactionBuilder::AddExternalImage
                     : &wr::TransactionBuilder::UpdateExternalImage;
   auto imageType =
-      wr::ExternalImageType::TextureHandle(wr::TextureTarget::External);
+      wr::ExternalImageType::TextureHandle(wr::TextureTarget::Default);
 
   gfx::SurfaceFormat format = mSurface->HasAlpha()
                                   ? gfx::SurfaceFormat::R8G8B8A8
