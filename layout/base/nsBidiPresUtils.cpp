@@ -78,7 +78,7 @@ static char16_t GetBidiOverride(ComputedStyle* aComputedStyle) {
   const nsStyleVisibility* vis = aComputedStyle->StyleVisibility();
   if ((vis->mWritingMode == NS_STYLE_WRITING_MODE_VERTICAL_RL ||
        vis->mWritingMode == NS_STYLE_WRITING_MODE_VERTICAL_LR) &&
-      vis->mTextOrientation == NS_STYLE_TEXT_ORIENTATION_UPRIGHT) {
+      vis->mTextOrientation == StyleTextOrientation::Upright) {
     return kLRO;
   }
   const nsStyleTextReset* text = aComputedStyle->StyleTextReset();

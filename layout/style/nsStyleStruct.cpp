@@ -3132,7 +3132,7 @@ nsStyleVisibility::nsStyleVisibility(const Document& aDocument)
       mVisible(NS_STYLE_VISIBILITY_VISIBLE),
       mImageRendering(NS_STYLE_IMAGE_RENDERING_AUTO),
       mWritingMode(NS_STYLE_WRITING_MODE_HORIZONTAL_TB),
-      mTextOrientation(NS_STYLE_TEXT_ORIENTATION_MIXED),
+      mTextOrientation(StyleTextOrientation::Mixed),
       mColorAdjust(StyleColorAdjust::Economy) {
   MOZ_COUNT_CTOR(nsStyleVisibility);
 }

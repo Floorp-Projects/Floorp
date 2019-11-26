@@ -7361,11 +7361,11 @@ nsIFrame* nsLayoutUtils::GetReferenceFrame(nsIFrame* aFrame) {
     case NS_STYLE_WRITING_MODE_VERTICAL_LR:
     case NS_STYLE_WRITING_MODE_VERTICAL_RL:
       switch (aComputedStyle->StyleVisibility()->mTextOrientation) {
-        case NS_STYLE_TEXT_ORIENTATION_MIXED:
+        case StyleTextOrientation::Mixed:
           return gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_MIXED;
-        case NS_STYLE_TEXT_ORIENTATION_UPRIGHT:
+        case StyleTextOrientation::Upright:
           return gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT;
-        case NS_STYLE_TEXT_ORIENTATION_SIDEWAYS:
+        case StyleTextOrientation::Sideways:
           return gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
         default:
           MOZ_ASSERT_UNREACHABLE("unknown text-orientation");
