@@ -15,18 +15,11 @@ dictionary RTCConfiguration {
 
 enum RTCIceCredentialType {
   "password",
-  "oauth"
-};
-
-dictionary RTCOAuthCredential {
-  required DOMString macKey;
-  required DOMString accessToken;
 };
 
 dictionary RTCIceServer {
   required (DOMString or sequence<DOMString>) urls;
   DOMString username;
-  (DOMString or RTCOAuthCredential) credential;
   RTCIceCredentialType credentialType = "password";
 };
 
@@ -319,7 +312,6 @@ dictionary RTCRtpDecodingParameters : RTCRtpCodingParameters {};
 dictionary RTCRtpEncodingParameters : RTCRtpCodingParameters {
   boolean active = true;
   unsigned long maxBitrate;
-  double maxFramerate;
   double scaleResolutionDownBy;
 };
 
