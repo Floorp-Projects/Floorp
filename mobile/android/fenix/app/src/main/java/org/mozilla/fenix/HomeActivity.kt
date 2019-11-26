@@ -47,7 +47,6 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.intent.CrashReporterIntentProcessor
 import org.mozilla.fenix.home.intent.DeepLinkIntentProcessor
-import org.mozilla.fenix.home.intent.NotificationsIntentProcessor
 import org.mozilla.fenix.home.intent.OpenBrowserIntentProcessor
 import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
@@ -76,7 +75,6 @@ open class HomeActivity : AppCompatActivity() {
 
     private val externalSourceIntentProcessors by lazy {
         listOf(
-            NotificationsIntentProcessor(this),
             SpeechProcessingIntentProcessor(this),
             StartSearchIntentProcessor(components.analytics.metrics),
             DeepLinkIntentProcessor(this),
