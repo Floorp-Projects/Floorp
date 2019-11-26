@@ -15,9 +15,7 @@ namespace wr {
 
 RenderWaylandDMABUFTextureHostOGL::RenderWaylandDMABUFTextureHostOGL(
     WaylandDMABufSurface* aSurface)
-    : mSurface(aSurface),
-      mTextureTarget(LOCAL_GL_TEXTURE_2D),
-      mTextureHandle(0) {
+    : mSurface(aSurface), mTextureHandle(0) {
   MOZ_COUNT_CTOR_INHERITED(RenderWaylandDMABUFTextureHostOGL,
                            RenderTextureHostOGL);
 }
@@ -65,20 +63,16 @@ wr::WrExternalImage RenderWaylandDMABUFTextureHostOGL::Lock(
       return InvalidToWrExternalImage();
     }
 
-    mTextureTarget = mGL->GetPreferredEGLImageTextureTarget();
-    MOZ_ASSERT(mTextureTarget == LOCAL_GL_TEXTURE_2D ||
-               mTextureTarget == LOCAL_GL_TEXTURE_EXTERNAL);
-
     mGL->fGenTextures(1, &mTextureHandle);
     // Cache rendering filter.
     mCachedRendering = aRendering;
-    ActivateBindAndTexParameteri(mGL, LOCAL_GL_TEXTURE0, mTextureTarget,
+    ActivateBindAndTexParameteri(mGL, LOCAL_GL_TEXTURE0, LOCAL_GL_TEXTURE_2D,
                                  mTextureHandle, aRendering);
-    mGL->fEGLImageTargetTexture2D(mTextureTarget, mSurface->GetEGLImage());
+    mGL->fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_2D, mSurface->GetEGLImage());
   } else if (IsFilterUpdateNecessary(aRendering)) {
     // Cache new rendering filter.
     mCachedRendering = aRendering;
-    ActivateBindAndTexParameteri(mGL, LOCAL_GL_TEXTURE0, mTextureTarget,
+    ActivateBindAndTexParameteri(mGL, LOCAL_GL_TEXTURE0, LOCAL_GL_TEXTURE_2D,
                                  mTextureHandle, aRendering);
   }
 
