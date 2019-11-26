@@ -5,7 +5,7 @@
 
 promise_test(async test => {
   const script = 'service_workers/sw.js';
-  const scope = 'service_workers/' + location.pathname;
+  const scope = 'service_workers' + location.pathname;
 
   const serviceWorkerRegistration =
       await service_worker_unregister_and_register(test, script, scope);
@@ -20,4 +20,3 @@ promise_test(async test => {
           'test_tag'),
       'register() must reject on pending and installing workers');
 }, 'Periodic Background Sync requires an activated Service Worker');
-
