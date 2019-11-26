@@ -655,8 +655,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
             rawAccessible.name,
             event.DOMNode == this.rootDoc
               ? undefined
-              : this.getRef(rawAccessible.parent),
-            this
+              : this.getRef(rawAccessible.parent)
           );
         }
         break;
@@ -681,7 +680,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
             .forEach(child =>
               events.emit(child, "index-in-parent-change", child.indexInParent)
             );
-          events.emit(accessible, "reorder", rawAccessible.childCount, this);
+          events.emit(accessible, "reorder", rawAccessible.childCount);
         }
         break;
       case EVENT_HIDE:
@@ -701,7 +700,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
       case EVENT_TEXT_INSERTED:
       case EVENT_TEXT_REMOVED:
         if (accessible) {
-          events.emit(accessible, "text-change", this);
+          events.emit(accessible, "text-change");
           if (NAME_FROM_SUBTREE_RULE_ROLES.has(rawAccessible.role)) {
             events.emit(
               accessible,
@@ -709,8 +708,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
               rawAccessible.name,
               event.DOMNode == this.rootDoc
                 ? undefined
-                : this.getRef(rawAccessible.parent),
-              this
+                : this.getRef(rawAccessible.parent)
             );
           }
         }

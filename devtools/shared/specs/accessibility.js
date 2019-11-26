@@ -55,7 +55,6 @@ const accessibleSpec = generateActorSpec({
       type: "nameChange",
       name: Arg(0, "string"),
       parent: Arg(1, "nullable:accessible"),
-      walker: Arg(2, "nullable:accessiblewalker"),
     },
     "value-change": {
       type: "valueChange",
@@ -80,11 +79,9 @@ const accessibleSpec = generateActorSpec({
     reorder: {
       type: "reorder",
       childCount: Arg(0, "number"),
-      walker: Arg(1, "nullable:accessiblewalker"),
     },
     "text-change": {
       type: "textChange",
-      walker: Arg(0, "nullable:accessiblewalker"),
     },
     "index-in-parent-change": {
       type: "indexInParentChange",
