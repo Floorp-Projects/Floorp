@@ -35,7 +35,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIClipboardHelper"
 );
 
-const SEARCH_ICON_ID = "urlbar-search-icon";
+const SEARCH_BUTTON_ID = "urlbar-search-button";
 
 let getBoundsWithoutFlushing = element =>
   element.ownerGlobal.windowUtils.getBoundsWithoutFlushing(element);
@@ -87,9 +87,9 @@ class UrlbarInput {
     if (this.megabar) {
       this.textbox.classList.add("megabar");
       this.textbox.parentNode.classList.add("megabar");
-      this.searchIcon = UrlbarPrefs.get("update1.searchButton");
-      if (this.searchIcon) {
-        this.textbox.classList.add("searchIcon");
+      this.searchButton = UrlbarPrefs.get("update1.searchButton");
+      if (this.searchButton) {
+        this.textbox.classList.add("searchButton");
       }
     }
 
@@ -1725,7 +1725,7 @@ class UrlbarInput {
     if (
       event.target == this.inputField ||
       event.target == this._inputContainer ||
-      event.target.id == SEARCH_ICON_ID
+      event.target.id == SEARCH_BUTTON_ID
     ) {
       this.startLayoutExtend();
       this._maybeSelectAll();
@@ -1781,7 +1781,7 @@ class UrlbarInput {
         if (
           event.target != this.inputField &&
           event.target != this._inputContainer &&
-          event.target.id != SEARCH_ICON_ID
+          event.target.id != SEARCH_BUTTON_ID
         ) {
           break;
         }
@@ -1801,7 +1801,7 @@ class UrlbarInput {
         if (event.detail == 2 && UrlbarPrefs.get("doubleClickSelectsAll")) {
           this.editor.selectAll();
           event.preventDefault();
-        } else if (event.target.id == SEARCH_ICON_ID) {
+        } else if (event.target.id == SEARCH_BUTTON_ID) {
           this._preventClickSelectsAll = true;
           this.search(UrlbarTokenizer.RESTRICT.SEARCH);
         } else if (this.openViewOnFocusForCurrentTab && !this.view.isOpen) {
