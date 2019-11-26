@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 :root {
 	--color_background_highlight: rgba(10, 132, 255, 0.6); /*matched to action_accent in java codebase*/
 	--color_background_highlight_overlay: rgba(171, 171, 171, 0.5);
