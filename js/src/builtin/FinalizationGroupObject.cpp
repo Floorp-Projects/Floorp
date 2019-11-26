@@ -207,14 +207,6 @@ bool FinalizationGroupObject::construct(JSContext* cx, unsigned argc,
     return false;
   }
 
-  if (!proto) {
-    proto =
-        GlobalObject::getOrCreateFinalizationGroupPrototype(cx, cx->global());
-    if (!proto) {
-      return false;
-    }
-  }
-
   Rooted<UniquePtr<ObjectWeakMap>> registrations(
       cx, cx->make_unique<ObjectWeakMap>(cx));
   if (!registrations) {
