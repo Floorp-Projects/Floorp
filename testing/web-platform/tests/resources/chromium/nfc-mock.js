@@ -106,7 +106,7 @@ function assertNDEFReaderOptionsEqual(provided, received) {
 // Checks whether NDEFReaderOptions are matched with given message.
 function matchesWatchOptions(message, options) {
   // Filter by Web NFC id.
-  if (!matchesWebNfcId(message.url, options.url)) return false;
+  if (!matchesWebNfcId(message.url, options.id)) return false;
 
   // Matches any record / media type.
   if ((options.mediaType == null || options.mediaType === '') &&

@@ -36,17 +36,17 @@ promise_test(async t => {
 }, "Test that NDEFReader.scan rejects if signal is not an AbortSignal.");
 
 promise_test(async t => {
-  await waitSyntaxErrorPromise(t, {url: "www.a.com"});
-}, "Test that NDEFReader.scan rejects if NDEFScanOptions.url is missing \
+  await waitSyntaxErrorPromise(t, {id: "www.a.com"});
+}, "Test that NDEFReader.scan rejects if NDEFScanOptions.id is missing \
 components.");
 
 promise_test(async t => {
-  await waitSyntaxErrorPromise(t, {url: "invalid"});
-}, "Test that NDEFReader.scan rejects if NDEFScanOptions.url is invalid.");
+  await waitSyntaxErrorPromise(t, {id: "invalid"});
+}, "Test that NDEFReader.scan rejects if NDEFScanOptions.id is invalid.");
 
 promise_test(async t => {
-  await waitSyntaxErrorPromise(t, {url: "http://a.com"});
-}, "Test that NDEFReader.scan rejects if NDEFScanOptions.url has wrong \
+  await waitSyntaxErrorPromise(t, {id: "http://a.com"});
+}, "Test that NDEFReader.scan rejects if NDEFScanOptions.id has wrong \
 protocol.");
 
 nfc_test(async (t, mockNFC) => {
