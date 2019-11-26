@@ -276,8 +276,7 @@ bool WaylandDMABufSurface::CreateWLBuffer() {
 
 bool WaylandDMABufSurface::IsEGLSupported(mozilla::gl::GLContext* aGLContext) {
   auto* egl = gl::GLLibraryEGL::Get();
-  return (egl->HasKHRImageBase() &&
-          aGLContext->IsExtensionSupported(GLContext::OES_EGL_image_external));
+  return egl->HasKHRImageBase();
 }
 
 bool WaylandDMABufSurface::CreateEGLImage(mozilla::gl::GLContext* aGLContext) {
