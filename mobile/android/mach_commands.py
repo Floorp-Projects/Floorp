@@ -268,7 +268,7 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""")
         # Extract new javadoc to specified directory inside repo.
         src_tar = mozpath.join(self.topobjdir, 'gradle', 'build', 'mobile', 'android',
                                'geckoview', 'libs', 'geckoview-javadoc.jar')
-        dst_path = mozpath.join(repo_path, javadoc_path)
+        dst_path = mozpath.join(repo_path, javadoc_path.format(**fmt))
         mozfile.remove(dst_path)
         mozfile.extract_zip(src_tar, dst_path)
 
