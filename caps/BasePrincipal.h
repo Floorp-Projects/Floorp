@@ -131,7 +131,6 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD GetSiteOrigin(nsACString& aOrigin) override;
   NS_IMETHOD IsThirdPartyURI(nsIURI* uri, bool* aRes) override;
   NS_IMETHOD IsThirdPartyPrincipal(nsIPrincipal* uri, bool* aRes) override;
-  NS_IMETHOD GetIsOriginPotentiallyTrustworthy(bool* aResult) override;
 
   nsresult ToJSON(nsACString& aJSON);
   static already_AddRefed<BasePrincipal> FromJSON(const nsACString& aJSON);
