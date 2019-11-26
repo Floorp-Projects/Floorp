@@ -3985,6 +3985,20 @@ static void TriggerPollJSSamplingOnMainThread() {
   }
 }
 
+#ifdef MOZ_BASE_PROFILER
+static bool HasMinimumLength(const char* aString, size_t aMinimumLength) {
+  if (!aString) {
+    return false;
+  }
+  for (size_t i = 0; i < aMinimumLength; ++i) {
+    if (aString[i] == '\0') {
+      return false;
+    }
+  }
+  return true;
+}
+#endif  // MOZ_BASE_PROFILER
+
 static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
                                   double aInterval, uint32_t aFeatures,
                                   const char** aFilters, uint32_t aFilterCount,
@@ -4052,8 +4066,10 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
     // post-XPCOM shutdown.
     baseprofiler::profiler_stop();
 
-    if (baseprofile && baseprofile.get()[0] != '\0') {
-      // The BaseProfiler startup profile will be stored as a separate process
+    // An "empty" profile string may in fact contain 1 character (a newline),
+    // so we want at least 2 characters to register a profile.
+    if (HasMinimumLength(baseprofile.get(), 2)) {
+      // The BaseProfiler startup profile will be stored as a separate "process"
       // in the Gecko Profiler profile, and shown as a new track under the
       // corresponding Gecko Profiler thread.
       ActivePS::AddBaseProfileThreads(aLock, std::move(baseprofile));
