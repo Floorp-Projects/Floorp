@@ -10,13 +10,13 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 jobs:
-    x86:
+    x86-debug:
         attributes:
             build-type: debug
             code-review: true
         dependencies:
             signing: signing-debug
-            signing-android-test: signing-android-test
+            signing-android-test: signing-android-test-debug
         description: Test Fenix
         include-pull-request-number: true
         run-on-tasks-for: [github-pull-request, github-push]

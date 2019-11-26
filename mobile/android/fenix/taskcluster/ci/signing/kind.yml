@@ -16,7 +16,7 @@ job-template:
     description: Sign Fenix
     worker-type:
         by-build-type:
-            (fennec-production|nightly|beta|production):
+            (fennec-production|nightly|beta|production|android-test-nightly):
                 by-level:
                     '3': signing
                     default: dep-signing
@@ -29,6 +29,10 @@ job-template:
                         '3': fennec-production-signing
                         default: dep-signing
                 nightly:
+                    by-level:
+                        '3': nightly-signing
+                        default: dep-signing
+                android-test-nightly:
                     by-level:
                         '3': nightly-signing
                         default: dep-signing
@@ -49,7 +53,10 @@ job-template:
             default: {}
     run-on-tasks-for: []
     treeherder:
-        job-symbol: Bs
+        job-symbol:
+            by-build-type:
+                android-test.+: Bats
+                default: Bs
         kind: build
         platform: android-all/opt
         tier: 2

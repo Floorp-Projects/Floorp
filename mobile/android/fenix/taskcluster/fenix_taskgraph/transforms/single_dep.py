@@ -8,6 +8,7 @@ Apply some defaults and minor modifications to the single_dep jobs.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.treeherder import inherit_treeherder_from_dep, join_symbol
 
 
@@ -30,6 +31,21 @@ def build_name_and_attributes(config, tasks):
 
 def _get_dependent_job_name_without_its_kind(dependent_job):
     return dependent_job.label[len(dependent_job.kind) + 1:]
+
+
+@transforms.add
+def resolve_keys(config, tasks):
+    for task in tasks:
+        resolve_keyed_by(
+            task,
+            "treeherder.job-symbol",
+            item_name=task["name"],
+            **{
+                'build-type': task["attributes"]["build-type"],
+                'level': config.params["level"],
+            }
+        )
+        yield task
 
 
 @transforms.add
