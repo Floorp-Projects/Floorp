@@ -945,14 +945,14 @@
 # When this pref is enabled document loads with a mismatched
 # Cross-Origin-Embedder-Policy header will fail to load
 - name: browser.tabs.remote.useCrossOriginEmbedderPolicy
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
 # When this pref is enabled top level loads with a mismatched
 # Cross-Origin-Opener-Policy header will be loaded in a separate process.
 - name: browser.tabs.remote.useCrossOriginOpenerPolicy
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
