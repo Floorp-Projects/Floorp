@@ -525,18 +525,16 @@ def check_compiler(compiler, language, target):
             flags.append('-Xclang')
         flags.append('-std=gnu99')
 
-    # Note: this is a strict version check because we used to always add
-    # -std=gnu++14.
-    cxx14_version = 201402
+    cxx17_version = 201703
     if info.language == 'C++':
-        if info.language_version != cxx14_version:
-            # MSVC headers include C++14 features, but don't guard them
+        if info.language_version != cxx17_version:
+            # MSVC headers include C++17 features, but don't guard them
             # with appropriate checks.
             if info.type == 'clang-cl':
                 flags.append('-Xclang')
-                flags.append('-std=c++14')
+                flags.append('-std=c++17')
             else:
-                flags.append('-std=gnu++14')
+                flags.append('-std=gnu++17')
 
     # Check compiler target
     # --------------------------------------------------------------------
