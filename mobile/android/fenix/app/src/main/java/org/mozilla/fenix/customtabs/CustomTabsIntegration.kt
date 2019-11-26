@@ -5,7 +5,6 @@
 package org.mozilla.fenix.customtabs
 
 import android.app.Activity
-import android.view.Gravity
 import android.view.View
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -40,13 +39,6 @@ class CustomTabsIntegration(
             (layoutParams as CoordinatorLayout.LayoutParams).apply {
                 val toolbarHeight = resources.getDimension(R.dimen.browser_toolbar_height).toInt()
                 setMargins(0, toolbarHeight, 0, 0)
-            }
-        }
-
-        // Make the toolbar go to the top.
-        toolbar.run {
-            (layoutParams as CoordinatorLayout.LayoutParams).apply {
-                gravity = Gravity.TOP
             }
         }
 

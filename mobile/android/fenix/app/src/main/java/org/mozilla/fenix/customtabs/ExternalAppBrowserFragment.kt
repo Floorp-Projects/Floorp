@@ -7,7 +7,6 @@ package org.mozilla.fenix.customtabs
 import android.content.Context
 import android.view.Gravity
 import android.view.View
-import androidx.core.view.isGone
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.component_browser_top_toolbar.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
@@ -187,13 +186,8 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
     }
 
     override fun getEngineMargins(): Pair<Int, Int> {
-        val toolbarHidden = toolbar.isGone
-        return if (toolbarHidden) {
-            0 to 0
-        } else {
-            val toolbarSize = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
-            toolbarSize to 0
-        }
+        // Since the top toolbar is dynamic we don't want any margins
+        return 0 to 0
     }
 
     override fun getContextMenuCandidates(
