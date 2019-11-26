@@ -21,6 +21,11 @@ nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsASt
   return NS_ERROR_NOT_AVAILABLE;
 }
 
+NS_IMETHODIMP
+nsOSHelperAppService::IsCurrentAppOSDefaultForProtocol(const nsACString& aScheme, bool* _retval) {
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
 nsresult nsOSHelperAppService::GetFileTokenForPath(const char16_t* aPlatformAppPath,
                                                    nsIFile** aFile) {
   return NS_ERROR_NOT_IMPLEMENTED;

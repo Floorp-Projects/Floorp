@@ -37,6 +37,8 @@ class nsOSHelperAppServiceChild : public nsExternalHelperAppService {
 
   NS_IMETHOD GetApplicationDescription(const nsACString& aScheme,
                                        nsAString& aRetVal) override;
+  NS_IMETHOD IsCurrentAppOSDefaultForProtocol(const nsACString& aScheme,
+                                              bool* _retval) override;
 
   NS_IMETHOD GetMIMEInfoFromOS(const nsACString& aMIMEType,
                                const nsACString& aFileExt, bool* aFound,

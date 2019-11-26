@@ -13,6 +13,42 @@
 #include "nsEscape.h"
 #include "nsIURILoader.h"
 #include "nsCURILoader.h"
+#include "nsCExternalHandlerService.h"
+#include "nsIExternalProtocolService.h"
+#include "mozilla/StaticPtr.h"
+
+static bool sInitializedOurData = false;
+StaticRefPtr<nsIFile> sOurAppFile;
+
+static already_AddRefed<nsIFile> GetCanonicalExecutable(nsIFile* aFile) {
+  nsCOMPtr<nsIFile> binary = aFile;
+#ifdef XP_MACOSX
+  nsAutoString leafName;
+  if (binary) {
+    binary->GetLeafName(leafName);
+  }
+  while (binary && !StringEndsWith(leafName, NS_LITERAL_STRING(".app"))) {
+    nsCOMPtr<nsIFile> parent;
+    binary->GetParent(getter_AddRefs(parent));
+    binary = parent;
+    if (binary) {
+      binary->GetLeafName(leafName);
+    }
+  }
+#endif
+  return binary.forget();
+}
+
+static void EnsureAppDetailsAvailable() {
+  if (sInitializedOurData) {
+    return;
+  }
+  sInitializedOurData = true;
+  nsCOMPtr<nsIFile> binary;
+  XRE_GetBinaryPath(getter_AddRefs(binary));
+  sOurAppFile = GetCanonicalExecutable(binary);
+  ClearOnShutdown(&sOurAppFile);
+}
 
 // nsISupports methods
 NS_IMPL_ADDREF(nsMIMEInfoBase)
@@ -287,12 +323,45 @@ nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI,
                "nsMIMEInfoBase should be a protocol handler");
 
   if (mPreferredAction == useSystemDefault) {
+    // First, ensure we're not accidentally going to call ourselves.
+    // That'd lead to an infinite loop (see bug 215554).
+    nsCOMPtr<nsIExternalProtocolService> extProtService =
+        do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
+    if (!extProtService) {
+      return NS_ERROR_FAILURE;
+    }
+    nsAutoCString scheme;
+    aURI->GetScheme(scheme);
+    bool isDefault = false;
+    nsresult rv =
+        extProtService->IsCurrentAppOSDefaultForProtocol(scheme, &isDefault);
+    if (NS_SUCCEEDED(rv) && isDefault) {
+      // Lie. This will trip the handler service into showing a dialog asking
+      // what the user wants.
+      return NS_ERROR_FILE_NOT_FOUND;
+    }
     return LoadUriInternal(aURI);
   }
 
   if (mPreferredAction == useHelperApp) {
     if (!mPreferredApplication) return NS_ERROR_FILE_NOT_FOUND;
 
+    EnsureAppDetailsAvailable();
+    nsCOMPtr<nsILocalHandlerApp> localPreferredHandler =
+        do_QueryInterface(mPreferredApplication);
+    if (localPreferredHandler) {
+      nsCOMPtr<nsIFile> executable;
+      localPreferredHandler->GetExecutable(getter_AddRefs(executable));
+      executable = GetCanonicalExecutable(executable);
+      bool isOurExecutable = false;
+      if (!executable ||
+          NS_FAILED(executable->Equals(sOurAppFile, &isOurExecutable)) ||
+          isOurExecutable) {
+        // Lie. This will trip the handler service into showing a dialog asking
+        // what the user wants.
+        return NS_ERROR_FILE_NOT_FOUND;
+      }
+    }
     return mPreferredApplication->LaunchWithURI(aURI, aWindowContext);
   }
 

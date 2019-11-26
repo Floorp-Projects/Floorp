@@ -1008,13 +1008,6 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
                       nsIContentDispatchChooser::REASON_CANNOT_HANDLE);
 }
 
-NS_IMETHODIMP nsExternalHelperAppService::GetApplicationDescription(
-    const nsACString& aScheme, nsAString& _retval) {
-  // this method should only be implemented by each OS specific implementation
-  // of this service.
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Methods related to deleting temporary files on exit
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1099,13 +1092,6 @@ nsExternalHelperAppService::GetProtocolHandlerInfo(
   }
 
   return SetProtocolHandlerDefaults(*aHandlerInfo, exists);
-}
-
-NS_IMETHODIMP
-nsExternalHelperAppService::GetProtocolHandlerInfoFromOS(
-    const nsACString& aScheme, bool* found, nsIHandlerInfo** aHandlerInfo) {
-  // intended to be implemented by the subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

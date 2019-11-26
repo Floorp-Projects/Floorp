@@ -39,6 +39,18 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char* aScheme,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme,
+                                                nsAString& _retval) {
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsOSHelperAppService::IsCurrentAppOSDefaultForProtocol(
+    const nsACString& aScheme, bool* _retval) {
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
 nsresult nsOSHelperAppService::GetProtocolHandlerInfoFromOS(
     const nsACString& aScheme, bool* found, nsIHandlerInfo** info) {
   // We don't want to get protocol handlers from the OS in GV; the app

@@ -120,6 +120,12 @@ nsOSHelperAppServiceChild::GetProtocolHandlerInfoFromOS(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsOSHelperAppServiceChild::IsCurrentAppOSDefaultForProtocol(
+    const nsACString& aScheme, bool* aRetVal) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult nsOSHelperAppServiceChild::GetFileTokenForPath(
     const char16_t* platformAppPath, nsIFile** aFile) {
   return NS_ERROR_NOT_IMPLEMENTED;
