@@ -289,6 +289,30 @@ add_task(async function() {
         rows: [[0, ...Array.from({ length: 20 }, (_, i) => i)]],
       },
     },
+    {
+      info: "Testing performance entries",
+      input: "PERFORMANCE_ENTRIES",
+      headers: [
+        "name",
+        "entryType",
+        "initiatorType",
+        "connectStart",
+        "connectEnd",
+        "fetchStart",
+      ],
+      expected: {
+        columns: [
+          "(index)",
+          "initiatorType",
+          "fetchStart",
+          "connectStart",
+          "connectEnd",
+          "name",
+          "entryType",
+        ],
+        rows: [[0, "navigation", /\d+/, /\d+/, /\d+/, TEST_URI, "navigation"]],
+      },
+    },
   ];
 
   await ContentTask.spawn(
@@ -296,7 +320,11 @@ add_task(async function() {
     testCases.map(({ input, headers }) => ({ input, headers })),
     function(tests) {
       tests.forEach(test => {
-        content.wrappedJSObject.doConsoleTable(test.input, test.headers);
+        let { input, headers } = test;
+        if (input === "PERFORMANCE_ENTRIES") {
+          input = content.wrappedJSObject.performance.getEntries();
+        }
+        content.wrappedJSObject.doConsoleTable(input, headers);
       });
     }
   );
@@ -329,8 +357,8 @@ async function testItem(testCase, node) {
   const cells = Array.from(node.querySelectorAll("[role=gridcell]"));
 
   is(
-    JSON.stringify(testCase.expected.columns),
     JSON.stringify(columns.map(column => column.textContent)),
+    JSON.stringify(testCase.expected.columns),
     `${testCase.info} | table has the expected columns`
   );
 
@@ -338,20 +366,45 @@ async function testItem(testCase, node) {
   // header on the table. So we check the "rows" by dividing the number of cells by the
   // number of columns.
   is(
-    testCase.expected.rows.length,
     cells.length / columnsNumber,
+    testCase.expected.rows.length,
     `${testCase.info} | table has the expected number of rows`
   );
 
   testCase.expected.rows.forEach((expectedRow, rowIndex) => {
     const startIndex = rowIndex * columnsNumber;
     // Slicing the cells array so we can get the current "row".
-    const rowCells = cells.slice(startIndex, startIndex + columnsNumber);
-    is(
-      rowCells.map(x => x.textContent).join(" | "),
-      expectedRow.join(" | "),
-      `${testCase.info} | row has the expected content`
-    );
+    const rowCells = cells
+      .slice(startIndex, startIndex + columnsNumber)
+      .map(x => x.textContent);
+
+    const isRegex = x => x && x.constructor.name === "RegExp";
+    const hasRegExp = expectedRow.find(isRegex);
+    if (hasRegExp) {
+      is(
+        rowCells.length,
+        expectedRow.length,
+        `${testCase.info} | row ${rowIndex} has the expected number of cell`
+      );
+      rowCells.forEach((cell, i) => {
+        const expected = expectedRow[i];
+        const info = `${
+          testCase.info
+        } | row ${rowIndex} cell ${i} has the expected content`;
+
+        if (isRegex(expected)) {
+          ok(expected.test(cell), info);
+        } else {
+          is(cell, expected, info);
+        }
+      });
+    } else {
+      is(
+        rowCells.join(" | "),
+        expectedRow.join(" | "),
+        `${testCase.info} | row has the expected content`
+      );
+    }
   });
 
   if (testCase.expected.overflow) {
