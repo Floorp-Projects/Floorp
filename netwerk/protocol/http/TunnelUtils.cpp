@@ -1728,6 +1728,38 @@ nsIInputStreamCallback* InputStreamShim::GetCallback() {
   return mCallback;
 }
 
+class CheckAvailData final : public Runnable {
+ public:
+  explicit CheckAvailData(InputStreamShim* shim)
+      : Runnable("CheckAvailData"), mShim(shim) {}
+
+  ~CheckAvailData() = default;
+
+  NS_IMETHOD Run() override {
+    uint64_t avail = 0;
+    if (NS_SUCCEEDED(mShim->Available(&avail)) && avail) {
+      nsIInputStreamCallback* cb = mShim->GetCallback();
+      if (cb) {
+        cb->OnInputStreamReady(mShim);
+      }
+    }
+    return NS_OK;
+  }
+
+  MOZ_MUST_USE nsresult Dispatch() {
+    if (OnSocketThread()) {
+      return Run();
+    }
+
+    nsCOMPtr<nsIEventTarget> sts =
+        do_GetService("@mozilla.org/network/socket-transport-service;1");
+    return sts->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
+  }
+
+ private:
+  RefPtr<InputStreamShim> mShim;
+};
+
 NS_IMETHODIMP
 InputStreamShim::AsyncWait(nsIInputStreamCallback* callback, unsigned int flags,
                            unsigned int requestedCount,
@@ -1756,6 +1788,11 @@ InputStreamShim::AsyncWait(nsIInputStreamCallback* callback, unsigned int flags,
   {
     mozilla::MutexAutoLock lock(mMutex);
     mCallback = callback;
+  }
+
+  if (callback) {
+    RefPtr<CheckAvailData> cad = new CheckAvailData(this);
+    Unused << cad->Dispatch();
   }
 
   return NS_OK;
