@@ -65,7 +65,7 @@ const GUIDE_STROKE_WIDTH = 1;
  *        regions too. This is useful when used with showOnly.
  *
  * Structure:
- * <div class="highlighter-container">
+ * <div class="highlighter-container" aria-hidden="true">
  *   <div class="box-model-root">
  *     <svg class="box-model-elements" hidden="true">
  *       <g class="box-model-regions">
@@ -125,8 +125,12 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
     const doc = this.win.document;
 
     const highlighterContainer = doc.createElement("div");
-    highlighterContainer.setAttribute("role", "presentation");
     highlighterContainer.className = "highlighter-container box-model";
+    // We need a better solution for how to handle the highlighter from the
+    // accessibility standpoint. For now, in order to avoid displaying it in the
+    // accessibility tree lets hide it altogether. See bug 1598667 for more
+    // context.
+    highlighterContainer.setAttribute("aria-hidden", "true");
 
     // Build the root wrapper, used to adapt to the page zoom.
     const rootWrapper = createNode(this.win, {
