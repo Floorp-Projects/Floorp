@@ -23,7 +23,7 @@ def run_visual_metrics(config, jobs):
         if dep_job is not None:
             platform = dep_job.task['extra']['treeherder-platform']
             job['dependencies'] = {dep_job.label: dep_job.label}
-            job['fetches'][dep_job.label] = ['/public/test_info/jobs.json']
+            job['fetches'][dep_job.label] = ['/public/test_info/browsertime-results.tgz']
             attributes = dict(dep_job.attributes)
             attributes['platform'] = platform
             job['label'] = LABEL % attributes

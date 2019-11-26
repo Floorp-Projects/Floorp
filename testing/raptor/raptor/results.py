@@ -226,6 +226,9 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         super(BrowsertimeResultsHandler, self).__init__(**config)
         self._root_results_dir = root_results_dir
 
+    def result_dir(self):
+        return self._root_results_dir
+
     def result_dir_for_test(self, test):
         return os.path.join(self._root_results_dir, test['name'])
 
@@ -436,28 +439,28 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
 
         return results
 
-    def _extract_vmetrics_jobs(self, test, browsertime_json, browsertime_results):
-        # XXX will do better later
-        url = ("{root_url}/api/queue/v1/task/{task_id}/runs/0/artifacts/public/"
-               "test_info/".format(
-                   root_url=os.environ.get('TASKCLUSTER_ROOT_URL', 'taskcluster-root-url.invalid'),
-                   task_id=os.environ.get("TASK_ID", "??"),
-               ))
+    def _extract_vmetrics(self, browsertime_json, browsertime_results):
+        # The visual metrics task expects posix paths.
+        def _normalized_join(*args):
+            path = os.path.join(*args)
+            return path.replace(os.path.sep, "/")
 
-        json_url = url + "/".join(browsertime_json.split(os.path.sep)[-3:])
-        files = []
-        for res in browsertime_results:
-            files.extend(res.get("files", {}).get("video", []))
-        if len(files) == 0:
-            # no video files.
-            return None
         name = browsertime_json.split(os.path.sep)[-2]
-        result = []
-        for file in files:
-            video_url = url + "browsertime-results/" + name + "/" + file
-            result.append({"browsertime_json_url": json_url,
-                           "video_url": video_url})
-        return result
+        reldir = _normalized_join("browsertime-results", name)
+
+        def _extract_metrics(res):
+            # extracts the video files in one result and send back the
+            # mapping expected by the visual metrics task
+            vfiles = res.get("files", {}).get("video", [])
+            return [{"json_location": _normalized_join(reldir, "browsertime.json"),
+                     "video_location": _normalized_join(reldir, vfile)}
+                    for vfile in vfiles]
+
+        vmetrics = []
+        for res in browsertime_results:
+            vmetrics.extend(_extract_metrics(res))
+
+        return len(vmetrics) > 0 and vmetrics or None
 
     def summarize_and_output(self, test_config, tests, test_names):
         """
@@ -508,7 +511,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 raise
 
             if not run_local:
-                video_files = self._extract_vmetrics_jobs(test, bt_res_json, raw_btresults)
+                video_files = self._extract_vmetrics(bt_res_json, raw_btresults)
                 if video_files:
                     video_jobs.extend(video_files)
 
@@ -586,9 +589,10 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         if not self.gecko_profile:
             validate_success = self._validate_treeherder_data(output, out_perfdata)
 
-        # Dumping the video list for the visual metrics task.
+        # Dumping the video list for the visual metrics task at the root of
+        # the browsertime results dir.
         if len(video_jobs) > 0:
-            jobs_file = os.path.join(test_config["artifact_dir"], "jobs.json")
+            jobs_file = os.path.join(self.result_dir(), "jobs.json")
             LOG.info("Writing %d video jobs into %s" % (len(video_jobs), jobs_file))
             with open(jobs_file, "w") as f:
                 f.write(json.dumps({"jobs": video_jobs}))
