@@ -19,6 +19,9 @@
     <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
     <string name="mozac_feature_downloads_file_not_supported2">Aplikácia %1$s nedokáže prevziať tento typ súboru</string>
 
+    <!-- Message that appears when the downloaded file could not be opened-->
+    <string name="mozac_feature_downloads_could_not_open_file">Nepodarilo sa otvoriť súbor</string>
+
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">Pozastaviť</string>
     <!-- Button that resumes the download when pressed -->
