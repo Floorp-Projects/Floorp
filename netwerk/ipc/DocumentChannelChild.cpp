@@ -342,12 +342,14 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
   // (ContentChild::RecvCrossProcessRedirect)? In that case there is no local
   // existing actor in the destination process... We really need all information
   // to go up to the parent, and then come down to the new child actor.
-  nsCOMPtr<nsIWritablePropertyBag> bag(do_QueryInterface(newChannel));
-  if (bag) {
-    for (auto iter = mPropertyHash.Iter(); !iter.Done(); iter.Next()) {
-      bag->SetProperty(iter.Key(), iter.UserData());
-    }
+  if (nsCOMPtr<nsIWritablePropertyBag> bag = do_QueryInterface(newChannel)) {
+    nsHashPropertyBag::CopyFrom(bag, aArgs.properties());
   }
+  // We still need to copy the property bag to the DCC as the nsDocShell no
+  // longer set the properties on it during ConfigureChannel. This will go away
+  // once the nsDocShell no longer relies on the DCC to determine the history
+  // data and is instead provided that information from the parent.
+  nsHashPropertyBag::CopyFrom(this, aArgs.properties());
 
   // connect parent.
   if (childChannel) {

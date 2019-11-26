@@ -485,6 +485,7 @@ void DocumentLoadListener::SerializeRedirectData(
   aArgs.redirectFlags() = aRedirectFlags;
   aArgs.redirects() = mRedirects;
   aArgs.redirectIdentifier() = mCrossProcessRedirectIdentifier;
+  aArgs.properties() = do_QueryObject(mChannel);
 }
 
 void DocumentLoadListener::TriggerCrossProcessSwitch() {
