@@ -4,22 +4,25 @@
 
 package mozilla.components.support.base.feature
 
+import android.app.Activity
+
 /**
- * Generic interface for fragments, features and other components that want to handle 'back' button presses.
+ * Generic interface for fragments, features and other components that want to handle user
+ * interactions such as 'back' or 'home' button presses.
  */
-@Deprecated("Use `UserInteractionHandler` instead.")
-interface BackHandler {
+interface UserInteractionHandler {
     /**
      * Called when this [UserInteractionHandler] gets the option to handle the user pressing the back key.
      *
      * Returns true if this [UserInteractionHandler] consumed the event and no other components need to be notified.
      */
-    @Deprecated(
-        "Use `UserInteractionHandler` instead.",
-        ReplaceWith(
-            "onBackPressed()",
-            "mozilla.components.support.base.feature.UserInteractionHandler"
-        )
-    )
     fun onBackPressed(): Boolean
+
+    /**
+     * In most cases, when the home button is pressed, we invoke this callback to inform the app that the user
+     * is going to leave the app.
+     *
+     * See also [Activity.onUserLeaveHint] for more details.
+     */
+    fun onHomePressed(): Boolean = false
 }

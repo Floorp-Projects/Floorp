@@ -18,7 +18,7 @@ import mozilla.components.feature.readerview.internal.ReaderViewControlsPresente
 import mozilla.components.feature.readerview.view.ReaderViewControlsView
 import mozilla.components.feature.readerview.ReaderViewFeature.ColorScheme.LIGHT
 import mozilla.components.feature.readerview.ReaderViewFeature.FontType.SERIF
-import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.webextensions.WebExtensionController
 import org.json.JSONObject
@@ -48,7 +48,7 @@ class ReaderViewFeature(
     private val sessionManager: SessionManager,
     controlsView: ReaderViewControlsView,
     private val onReaderViewAvailableChange: OnReaderViewAvailableChange = { }
-) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature, BackHandler {
+) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature, UserInteractionHandler {
 
     @VisibleForTesting
     // This is an internal var to make it mutable for unit testing purposes only

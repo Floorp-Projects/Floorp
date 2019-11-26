@@ -55,6 +55,10 @@ permalink: /changelog/
       `.set()` (rather than `.add()`). This has been corrected, but it may result
       in changes in the sent data if using string list items longer than 20 bytes.
 
+* **support-base**
+  * Deprecated `BackHandler` interface. Use the `UserInteractionHandler.onBackPressed` instead.
+  * Added generic `UserInteractionHandler` interface for fragments, features and other components that want to handle user interactions such as ‘back’ or 'home' button presses.
+
 # 22.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v22.0.0...master)

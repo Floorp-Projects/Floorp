@@ -12,10 +12,11 @@ import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.readerview.view.ReaderViewControlsView
-import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.samples.browser.R
 
+@Suppress("UndocumentedPublicClass")
 class ReaderViewIntegration(
     context: Context,
     engine: Engine,
@@ -23,7 +24,7 @@ class ReaderViewIntegration(
     toolbar: BrowserToolbar,
     view: ReaderViewControlsView,
     readerViewAppearanceButton: FloatingActionButton
-) : LifecycleAwareFeature, BackHandler {
+) : LifecycleAwareFeature, UserInteractionHandler {
 
     private var readerViewButtonVisible = false
 

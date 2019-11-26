@@ -26,7 +26,7 @@ import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SwipeRefreshFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
-import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -41,7 +41,7 @@ import org.mozilla.samples.browser.integration.FindInPageIntegration
  * This class only contains shared code focused on the main browsing content.
  * UI code specific to the app or to custom tabs can be found in the subclasses.
  */
-abstract class BaseBrowserFragment : Fragment(), BackHandler {
+abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
     private val toolbarFeature = ViewBoundFeatureWrapper<ToolbarFeature>()
     private val downloadsFeature = ViewBoundFeatureWrapper<DownloadsFeature>()

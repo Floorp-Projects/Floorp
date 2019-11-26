@@ -23,7 +23,7 @@ import mozilla.components.browser.state.state.CustomTabActionButtonConfig
 import mozilla.components.browser.state.state.CustomTabMenuItem
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
-import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.share
 import mozilla.components.support.ktx.android.view.setNavigationBarTheme
@@ -33,6 +33,7 @@ import mozilla.components.support.utils.ColorUtils.getReadableTextColor
 /**
  * Initializes and resets the Toolbar for a Custom Tab based on the CustomTabConfig.
  */
+@Suppress("LargeClass")
 class CustomTabsToolbarFeature(
     private val sessionManager: SessionManager,
     private val toolbar: BrowserToolbar,
@@ -42,7 +43,7 @@ class CustomTabsToolbarFeature(
     private val window: Window? = null,
     private val shareListener: (() -> Unit)? = null,
     private val closeListener: () -> Unit
-) : LifecycleAwareFeature, BackHandler {
+) : LifecycleAwareFeature, UserInteractionHandler {
     private val context
         get() = toolbar.context
     internal var initialized = false
