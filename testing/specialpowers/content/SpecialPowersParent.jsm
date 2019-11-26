@@ -577,7 +577,9 @@ class SpecialPowersParent extends JSWindowActorParent {
         return undefined;
 
       case "SpecialPowers.Focus":
-        this.manager.rootFrameLoader.ownerElement.focus();
+        if (this.manager.rootFrameLoader) {
+          this.manager.rootFrameLoader.ownerElement.focus();
+        }
         return undefined;
 
       case "SpecialPowers.CreateFiles":
