@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyServiceGetter(
 const XMLURI_PARSE_ERROR =
   "http://www.mozilla.org/newlayout/xml/parsererror.xml";
 
-const NOTIFY_RUNNING = "remote-active";
+const NOTIFY_LISTENING = "remote-listening";
 
 // Complements -marionette flag for starting the Marionette server.
 // We also set this if Marionette is running in order to start the server
@@ -506,8 +506,8 @@ class MarionetteParentProcess {
       }
 
       env.set(ENV_ENABLED, "1");
-      Services.obs.notifyObservers(this, NOTIFY_RUNNING, true);
-      log.debug("Remote service is active");
+      Services.obs.notifyObservers(this, NOTIFY_LISTENING, true);
+      log.debug("Marionette is listening");
     });
   }
 
@@ -520,8 +520,8 @@ class MarionetteParentProcess {
 
     if (this.running) {
       this.server.stop();
-      Services.obs.notifyObservers(this, NOTIFY_RUNNING);
-      log.debug("Remote service is inactive");
+      Services.obs.notifyObservers(this, NOTIFY_LISTENING);
+      log.debug("Marionette stopped listening");
     }
   }
 
