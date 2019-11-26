@@ -44,6 +44,16 @@
   line-height: var(--theme-toolbar-height);
 }
 
+#ruleview-toolbar {
+  flex-wrap: wrap;
+  min-height: calc(var(--theme-toolbar-height) + 1px);
+  height: auto;
+}
+
+#ruleview-toolbar .devtools-searchbox {
+  flex-basis: 7em;
+}
+
 #ruleview-command-toolbar {
   display: flex;
 }
