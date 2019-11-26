@@ -16,6 +16,7 @@
 #include "nsXULAppAPI.h"
 
 #include "mozilla/FileLocation.h"
+#include "mozilla/intl/LocaleService.h"
 
 class nsPIDOMWindowOuter;
 class nsIPrefBranch;
@@ -83,8 +84,6 @@ class nsChromeRegistry : public nsIToolkitChromeRegistry,
   static nsresult RefreshWindow(nsPIDOMWindowOuter* aWindow);
   static nsresult GetProviderAndPath(nsIURI* aChromeURL, nsACString& aProvider,
                                      nsACString& aPath);
-
-  bool GetDirectionForLocale(const nsACString& aLocale);
 
   void SanitizeForBCP47(nsACString& aLocale);
 
