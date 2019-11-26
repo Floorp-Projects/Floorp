@@ -24,7 +24,6 @@
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "mozilla/dom/nsMixedContentBlocker.h"
 
 #include "json/json.h"
 #include "nsSerializationHelper.h"
@@ -468,21 +467,6 @@ BasePrincipal::IsURIInPrefList(const char* aPref, bool* aResult) {
     return NS_OK;
   }
   *aResult = nsContentUtils::IsURIInPrefList(prinURI, aPref);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BasePrincipal::GetIsOriginPotentiallyTrustworthy(bool* aResult) {
-  MOZ_ASSERT(NS_IsMainThread());
-  *aResult = false;
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = GetURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv) || !uri) {
-    return NS_OK;
-  }
-
-  *aResult = nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(uri);
   return NS_OK;
 }
 
