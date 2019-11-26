@@ -1672,14 +1672,16 @@ impl TileCacheInstance {
         // changing near a threshold value.
         if self.frames_until_size_eval == 0 {
             const TILE_SIZE_TINY: f32 = 32.0;
-            const TILE_SIZE_LARGE: f32 = 512.0;
 
             // Work out what size tile is appropriate for this picture cache.
             let desired_tile_size;
 
-            if pic_rect.size.width <= TILE_SIZE_TINY && pic_rect.size.height > TILE_SIZE_LARGE {
+            // There's no need to check the other dimension. If we encounter a picture
+            // that is small on one dimension, it's a reasonable choice to use a scrollbar
+            // sized tile configuration regardless of the other dimension.
+            if pic_rect.size.width <= TILE_SIZE_TINY {
                 desired_tile_size = TILE_SIZE_SCROLLBAR_VERTICAL;
-            } else if pic_rect.size.width > TILE_SIZE_LARGE && pic_rect.size.height <= TILE_SIZE_TINY {
+            } else if pic_rect.size.height <= TILE_SIZE_TINY {
                 desired_tile_size = TILE_SIZE_SCROLLBAR_HORIZONTAL;
             } else {
                 desired_tile_size = TILE_SIZE_DEFAULT;
