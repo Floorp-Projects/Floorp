@@ -72,7 +72,7 @@ abstract class AbstractFetchDownloadService : Service() {
 
     internal data class DownloadJobState(
         var job: Job? = null,
-        var state: DownloadState,
+        @Volatile var state: DownloadState,
         var currentBytesCopied: Long = 0,
         @Volatile var status: DownloadJobStatus,
         var foregroundServiceId: Int = 0,
@@ -108,7 +108,7 @@ abstract class AbstractFetchDownloadService : Service() {
                         currentDownloadJobState.status = DownloadJobStatus.ACTIVE
 
                         currentDownloadJobState.job = CoroutineScope(IO).launch {
-                            startDownloadJob(currentDownloadJobState.state)
+                            startDownloadJob(downloadId)
                         }
 
                         emitNotificationResumeFact()
@@ -137,7 +137,7 @@ abstract class AbstractFetchDownloadService : Service() {
                         currentDownloadJobState.status = DownloadJobStatus.ACTIVE
 
                         currentDownloadJobState.job = CoroutineScope(IO).launch {
-                            startDownloadJob(currentDownloadJobState.state)
+                            startDownloadJob(downloadId)
                         }
 
                         emitNotificationTryAgainFact()
@@ -179,7 +179,7 @@ abstract class AbstractFetchDownloadService : Service() {
         )
 
         downloadJobs[download.id]?.job = CoroutineScope(IO).launch {
-            startDownloadJob(download)
+            startDownloadJob(download.id)
         }
 
         return super.onStartCommand(intent, flags, startId)
@@ -206,30 +206,30 @@ abstract class AbstractFetchDownloadService : Service() {
         }
     }
 
-    internal fun startDownloadJob(download: DownloadState) {
-        val currentDownloadJobState = downloadJobs[download.id] ?: return
+    internal fun startDownloadJob(downloadId: Long) {
+        val currentDownloadJobState = downloadJobs[downloadId] ?: return
 
         val notification = try {
-            performDownload(download)
+            performDownload(currentDownloadJobState.state)
             when (currentDownloadJobState.status) {
                 DownloadJobStatus.PAUSED -> {
-                    DownloadNotification.createPausedDownloadNotification(context, download)
+                    DownloadNotification.createPausedDownloadNotification(context, currentDownloadJobState.state)
                 }
 
                 DownloadJobStatus.ACTIVE -> {
                     currentDownloadJobState.status = DownloadJobStatus.COMPLETED
-                    DownloadNotification.createDownloadCompletedNotification(context, download)
+                    DownloadNotification.createDownloadCompletedNotification(context, currentDownloadJobState.state)
                 }
 
                 DownloadJobStatus.FAILED -> {
-                    DownloadNotification.createDownloadFailedNotification(context, download)
+                    DownloadNotification.createDownloadFailedNotification(context, currentDownloadJobState.state)
                 }
 
                 else -> return
             }
         } catch (e: IOException) {
             currentDownloadJobState.status = DownloadJobStatus.FAILED
-            DownloadNotification.createDownloadFailedNotification(context, download)
+            DownloadNotification.createDownloadFailedNotification(context, currentDownloadJobState.state)
         }
 
         NotificationManagerCompat.from(context).notify(
@@ -237,7 +237,7 @@ abstract class AbstractFetchDownloadService : Service() {
             notification
         )
 
-        sendDownloadCompleteBroadcast(download.id, currentDownloadJobState.status)
+        sendDownloadCompleteBroadcast(downloadId, currentDownloadJobState.status)
     }
 
     internal fun deleteDownloadingFile(downloadState: DownloadState) {
@@ -357,6 +357,8 @@ abstract class AbstractFetchDownloadService : Service() {
                 it
             ))
         } ?: download
+
+        downloadJobs[download.id]?.state = downloadWithUniqueName
 
         if (SDK_INT >= Build.VERSION_CODES.Q) {
             useFileStreamScopedStorage(downloadWithUniqueName, block)
