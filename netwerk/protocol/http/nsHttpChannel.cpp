@@ -9774,8 +9774,7 @@ void nsHttpChannel::SetOriginHeader() {
   nsAutoCString origin("null");
   nsContentUtils::GetASCIIOrigin(referrer, origin);
 
-  // Restrict Origin to same-origin loads if requested by user or leaving from
-  // .onion
+  // Restrict Origin to same-origin loads if requested by user
   if (sSendOriginHeader == 1) {
     nsAutoCString currentOrigin;
     nsContentUtils::GetASCIIOrigin(mURI, currentOrigin);
