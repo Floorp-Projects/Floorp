@@ -100,7 +100,9 @@ struct BaseEventFlags {
   // dispatching into the DOM tree and not completed.
   bool mIsBeingDispatched : 1;
   // If mDispatchedAtLeastOnce is true, the event has been dispatched
-  // as a DOM event and the dispatch has been completed.
+  // as a DOM event and the dispatch has been completed in the process.
+  // So, this is false even if the event has already been dispatched
+  // in another process.
   bool mDispatchedAtLeastOnce : 1;
   // If mIsSynthesizedForTests is true, the event has been synthesized for
   // automated tests or something hacky approach of an add-on.
@@ -321,6 +323,8 @@ struct BaseEventFlags {
     if (IsWaitingReplyFromRemoteProcess()) {
       mPropagationStopped = mImmediatePropagationStopped = false;
     }
+    // mDispatchedAtLeastOnce indicates the state in current process.
+    mDispatchedAtLeastOnce = false;
   }
   /**
    * Return true if the event has been posted to a remote process.
