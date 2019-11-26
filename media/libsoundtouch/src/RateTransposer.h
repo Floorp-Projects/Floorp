@@ -14,13 +14,6 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Last changed  : $Date: 2014-04-06 15:57:21 +0000 (Sun, 06 Apr 2014) $
-// File revision : $Revision: 4 $
-//
-// $Id: RateTransposer.h 195 2014-04-06 15:57:21Z oparviai $
-//
-////////////////////////////////////////////////////////////////////////////////
-//
 // License :
 //
 //  SoundTouch audio processing library
@@ -81,14 +74,14 @@ protected:
     static ALGORITHM algorithm;
 
 public:
-    float rate;
+    double rate;
     int numChannels;
 
     TransposerBase();
     virtual ~TransposerBase();
 
     virtual int transpose(FIFOSampleBuffer &dest, FIFOSampleBuffer &src);
-    virtual void setRate(float newRate);
+    virtual void setRate(double newRate);
     virtual void setChannels(int channels);
 
     // static factory function
@@ -132,20 +125,8 @@ public:
     RateTransposer();
     virtual ~RateTransposer();
 
-    /// Operator 'new' is overloaded so that it automatically creates a suitable instance 
-    /// depending on if we're to use integer or floating point arithmetics.
-//    static void *operator new(size_t s);
-
-    /// Use this function instead of "new" operator to create a new instance of this class. 
-    /// This function automatically chooses a correct implementation, depending on if 
-    /// integer ot floating point arithmetics are to be used.
-//    static RateTransposer *newInstance();
-
     /// Returns the output buffer object
     FIFOSamplePipe *getOutput() { return &outputBuffer; };
-
-    /// Returns the store buffer object
-//    FIFOSamplePipe *getStore() { return &storeBuffer; };
 
     /// Return anti-alias filter object
     AAFilter *getAAFilter();
@@ -158,7 +139,7 @@ public:
 
     /// Sets new target rate. Normal rate = 1.0, smaller values represent slower 
     /// rate, larger faster rates.
-    virtual void setRate(float newRate);
+    virtual void setRate(double newRate);
 
     /// Sets the number of channels, 1 = mono, 2 = stereo
     void setChannels(int channels);
@@ -172,6 +153,9 @@ public:
 
     /// Returns nonzero if there aren't any samples available for outputting.
     int isEmpty() const;
+
+    /// Return approximate initial input-output latency
+    int getLatency() const;
 };
 
 }

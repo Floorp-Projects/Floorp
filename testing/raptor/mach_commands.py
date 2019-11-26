@@ -215,10 +215,10 @@ class MachRaptor(MachCommandBase):
             kwargs['app'] in FIREFOX_ANDROID_BROWSERS
 
         if is_android:
-            from mozrunner.devices.android_device import verify_android_device
+            from mozrunner.devices.android_device import (verify_android_device, InstallIntent)
             from mozdevice import ADBAndroid, ADBHost
-            if not verify_android_device(build_obj,
-                                         install=not kwargs.pop('noinstall', False),
+            install = InstallIntent.NO if kwargs.pop('noinstall', False) else InstallIntent.PROMPT
+            if not verify_android_device(build_obj, install=install,
                                          app=kwargs['binary'],
                                          xre=True):  # Equivalent to 'run_local' = True.
                 return 1

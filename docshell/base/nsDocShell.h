@@ -495,6 +495,24 @@ class nsDocShell final : public nsDocLoader,
 
   nsDocShell* GetInProcessChildAt(int32_t aIndex);
 
+  /**
+   * Helper function that finds the last URI and its transition flags for a
+   * channel.
+   *
+   * This method first checks the channel's property bag to see if previous
+   * info has been saved. If not, it gives back the referrer of the channel.
+   *
+   * @param aChannel
+   *        The channel we are transitioning to
+   * @param aURI
+   *        Output parameter with the previous URI, not addref'd
+   * @param aChannelRedirectFlags
+   *        If a redirect, output parameter with the previous redirect flags
+   *        from nsIChannelEventSink
+   */
+  static void ExtractLastVisit(nsIChannel* aChannel, nsIURI** aURI,
+                               uint32_t* aChannelRedirectFlags);
+
  private:  // member functions
   friend class nsDSURIContentListener;
   friend class FramingChecker;
@@ -733,34 +751,6 @@ class nsDocShell final : public nsDocLoader,
   // instead of the node principal.
   nsIPrincipal* GetInheritedPrincipal(bool aConsiderCurrentDocument,
                                       bool aConsiderStoragePrincipal = false);
-
-  /**
-   * Helper function that determines if channel is an HTTP POST.
-   *
-   * @param aChannel
-   *        The channel to test
-   *
-   * @return True iff channel is an HTTP post.
-   */
-  bool ChannelIsPost(nsIChannel* aChannel);
-
-  /**
-   * Helper function that finds the last URI and its transition flags for a
-   * channel.
-   *
-   * This method first checks the channel's property bag to see if previous
-   * info has been saved. If not, it gives back the referrer of the channel.
-   *
-   * @param aChannel
-   *        The channel we are transitioning to
-   * @param aURI
-   *        Output parameter with the previous URI, not addref'd
-   * @param aChannelRedirectFlags
-   *        If a redirect, output parameter with the previous redirect flags
-   *        from nsIChannelEventSink
-   */
-  void ExtractLastVisit(nsIChannel* aChannel, nsIURI** aURI,
-                        uint32_t* aChannelRedirectFlags);
 
   /**
    * Helper function that caches a URI and a transition for saving later.

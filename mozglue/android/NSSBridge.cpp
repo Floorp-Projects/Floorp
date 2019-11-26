@@ -11,7 +11,7 @@
 #  include <android/log.h>
 #endif
 
-#include "ElfLoader.h"
+#include "Linker.h"
 
 #ifdef DEBUG
 #  define LOG(x...) __android_log_print(ANDROID_LOG_INFO, "GeckoJNI", x)

@@ -137,11 +137,8 @@ nsresult nsBaseChannel::Redirect(nsIChannel* newChannel, uint32_t redirectFlags,
     }
   }
 
-  nsCOMPtr<nsIWritablePropertyBag> bag = ::do_QueryInterface(newChannel);
-  if (bag) {
-    for (auto iter = mPropertyHash.Iter(); !iter.Done(); iter.Next()) {
-      bag->SetProperty(iter.Key(), iter.UserData());
-    }
+  if (nsCOMPtr<nsIWritablePropertyBag> bag = ::do_QueryInterface(newChannel)) {
+    nsHashPropertyBag::CopyFrom(bag, static_cast<nsIPropertyBag2*>(this));
   }
 
   // Notify consumer, giving chance to cancel redirect.

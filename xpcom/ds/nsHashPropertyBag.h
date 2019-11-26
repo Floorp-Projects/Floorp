@@ -17,7 +17,11 @@
 class nsHashPropertyBagBase : public nsIWritablePropertyBag,
                               public nsIWritablePropertyBag2 {
  public:
-  nsHashPropertyBagBase() {}
+  nsHashPropertyBagBase() = default;
+
+  void CopyFrom(const nsHashPropertyBagBase* aOther);
+  void CopyFrom(nsIPropertyBag* aOther);
+  static void CopyFrom(nsIWritablePropertyBag* aTo, nsIPropertyBag* aFrom);
 
   NS_DECL_NSIPROPERTYBAG
   NS_DECL_NSIPROPERTYBAG2
@@ -47,12 +51,12 @@ class nsHashPropertyBag : public nsHashPropertyBagBase {
 /* A cycle collected nsHashPropertyBag for main-thread-only use. */
 class nsHashPropertyBagCC final : public nsHashPropertyBagBase {
  public:
-  nsHashPropertyBagCC() {}
+  nsHashPropertyBagCC() = default;
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHashPropertyBagCC,
                                            nsIWritablePropertyBag)
  protected:
-  virtual ~nsHashPropertyBagCC() {}
+  virtual ~nsHashPropertyBagCC() = default;
 };
 
 inline nsISupports* ToSupports(nsHashPropertyBagBase* aPropertyBag) {

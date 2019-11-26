@@ -197,6 +197,11 @@ var makeFxAccountsInternalMock = function(config) {
     _getAssertion(audience) {
       return Promise.resolve(config.fxaccount.user.assertion);
     },
+    profile: {
+      getProfile() {
+        return null;
+      },
+    },
   };
 };
 

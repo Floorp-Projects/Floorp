@@ -485,6 +485,12 @@ void DocumentLoadListener::SerializeRedirectData(
   aArgs.redirectFlags() = aRedirectFlags;
   aArgs.redirects() = mRedirects;
   aArgs.redirectIdentifier() = mCrossProcessRedirectIdentifier;
+  aArgs.properties() = do_QueryObject(mChannel);
+  nsCOMPtr<nsIURI> previousURI;
+  uint32_t previousFlags = 0;
+  nsDocShell::ExtractLastVisit(mChannel, getter_AddRefs(previousURI),
+                               &previousFlags);
+  aArgs.lastVisitInfo() = LastVisitInfo{previousURI, previousFlags};
 }
 
 void DocumentLoadListener::TriggerCrossProcessSwitch() {
@@ -814,15 +820,11 @@ DocumentLoadListener::AsyncOnChannelRedirect(
     nsCOMPtr<nsIURI> oldURI;
     aOldChannel->GetURI(getter_AddRefs(oldURI));
     uint32_t responseStatus = 0;
-    bool isPost = false;
     if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aOldChannel)) {
       Unused << httpChannel->GetResponseStatus(&responseStatus);
-      nsAutoCString method;
-      Unused << httpChannel->GetRequestMethod(method);
-      isPost = method.EqualsLiteral("POST");
     }
-    mRedirects.AppendElement(
-        DocumentChannelRedirect{oldURI, aFlags, responseStatus, isPost});
+    mRedirects.AppendElement(DocumentChannelRedirect{
+        oldURI, aFlags, responseStatus, net::ChannelIsPost(aOldChannel)});
   }
 
   if (!mDocumentChannelBridge) {

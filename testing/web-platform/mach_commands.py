@@ -44,8 +44,8 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
                 kwargs["package_name"] = package_name = "org.mozilla.geckoview.test"
 
             # Note that this import may fail in non-firefox-for-android trees
-            from mozrunner.devices.android_device import verify_android_device
-            verify_android_device(self, install=True, verbose=False, xre=True, app=package_name)
+            from mozrunner.devices.android_device import (verify_android_device, InstallIntent)
+            verify_android_device(self, install=InstallIntent.PROMPT, verbose=False, xre=True, app=package_name)
 
             if kwargs["certutil_binary"] is None:
                 kwargs["certutil_binary"] = os.path.join(os.environ.get('MOZ_HOST_BIN'), "certutil")

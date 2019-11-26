@@ -94,6 +94,8 @@ This command also allows you to run individual tests or test classes, e.g.
 ./mach geckoview-junit org.mozilla.geckoview.test.NavigationDelegateTest#loadUnknownHost
 ```
 
+To see information on other options, simply run `./mach geckoview-junit --help`; of particular note for dealing with intermittent test failures are `--repeat N` and `--run-until-failure`, both of which do exactly what you’d expect.
+
 ### Updating the changelog and API documentation
 
 If the patch that you want to submit changes the public API for GeckoView, you must ensure that the API documentation is kept up to date. To check whether your patch has altered the API, run the following command.

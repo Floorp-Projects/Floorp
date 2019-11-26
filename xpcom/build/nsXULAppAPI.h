@@ -380,7 +380,7 @@ static const char* const kGeckoProcessTypeString[] = {
 static_assert(MOZ_ARRAY_LENGTH(kGeckoProcessTypeString) == GeckoProcessType_End,
               "Array length mismatch");
 
-XRE_API(const char*, XRE_ChildProcessTypeToString,
+XRE_API(const char*, XRE_GeckoProcessTypeToString,
         (GeckoProcessType aProcessType))
 XRE_API(const char*, XRE_ChildProcessTypeToAnnotation,
         (GeckoProcessType aProcessType))

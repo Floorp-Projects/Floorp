@@ -54,9 +54,7 @@ jobs:
         bouncer-products:
             by-release-type:
                 default: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer', 'msi']
-                esr68: ['complete-mar', 'complete-mar-bz2', 'installer', 'installer-ssl', 'partial-mar', 'msi']
-                # No stub installer in esr60
-                esr60: ['complete-mar', 'complete-mar-bz2', 'installer', 'installer-ssl', 'partial-mar']
+                esr68: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'msi']
         shipping-product: firefox
         treeherder:
             platform: firefox-release/opt

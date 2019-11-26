@@ -28,16 +28,19 @@
 #include <features.h>
 #include <sys/types.h>
 
-#if defined(GP_OS_linux)
-#  include <link.h>  // dl_phdr_info
-#elif defined(GP_OS_android)
+#if defined(MOZ_LINKER)
 #  include "AutoObjectMapper.h"
-#  include "ElfLoader.h"  // dl_phdr_info
+#  include "Linker.h"  // dl_phdr_info
+#elif defined(GP_OS_linux) || defined(GP_OS_android)
+#  include <link.h>  // dl_phdr_info
+#else
+#  error "Unexpected configuration"
+#endif
+
+#if defined(GP_OS_android)
 extern "C" MOZ_EXPORT __attribute__((weak)) int dl_iterate_phdr(
     int (*callback)(struct dl_phdr_info* info, size_t size, void* data),
     void* data);
-#else
-#  error "Unexpected configuration"
 #endif
 
 struct LoadedLibraryInfo {
@@ -55,7 +58,7 @@ struct LoadedLibraryInfo {
   unsigned long mLastMappingEnd;
 };
 
-#if defined(GP_OS_android)
+#if defined(MOZ_LINKER)
 static void outputMapperLog(const char* aBuf) { LOG("%s", aBuf); }
 #endif
 
@@ -78,7 +81,7 @@ static nsCString getId(const char* bin_name) {
   PageAllocator allocator;
   auto_wasteful_vector<uint8_t, kDefaultBuildIdSize> identifier(&allocator);
 
-#if defined(GP_OS_android)
+#if defined(MOZ_LINKER)
   if (nsDependentCString(bin_name).Find("!/") != kNotFound) {
     AutoObjectMapperFaultyLib mapper(outputMapperLog);
     void* image = nullptr;

@@ -23,13 +23,6 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Last changed  : $Date: 2015-02-21 21:24:29 +0000 (Sat, 21 Feb 2015) $
-// File revision : $Revision: 4 $
-//
-// $Id: sse_optimized.cpp 202 2015-02-21 21:24:29Z oparviai $
-//
-////////////////////////////////////////////////////////////////////////////////
-//
 // License :
 //
 //  SoundTouch audio processing library
@@ -71,7 +64,7 @@ using namespace soundtouch;
 #include <math.h>
 
 // Calculates cross correlation of two buffers
-double TDStretchSSE::calcCrossCorr(const float *pV1, const float *pV2, double &anorm) const
+double TDStretchSSE::calcCrossCorr(const float *pV1, const float *pV2, double &anorm)
 {
     int i;
     const float *pVec1;
@@ -183,7 +176,7 @@ double TDStretchSSE::calcCrossCorr(const float *pV1, const float *pV2, double &a
 
 
 
-double TDStretchSSE::calcCrossCorrAccumulate(const float *pV1, const float *pV2, double &norm) const
+double TDStretchSSE::calcCrossCorrAccumulate(const float *pV1, const float *pV2, double &norm)
 {
     // call usual calcCrossCorr function because SSE does not show big benefit of 
     // accumulating "norm" value, and also the "norm" rolling algorithm would get 

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsLayoutStylesheetCache_h__
-#define nsLayoutStylesheetCache_h__
+#ifndef mozilla_GlobalStyleSheetCache_h__
+#define mozilla_GlobalStyleSheetCache_h__
 
 #include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
@@ -31,28 +31,25 @@ namespace css {
 enum FailureAction { eCrash = 0, eLogToConsole };
 
 }  // namespace css
-}  // namespace mozilla
 
-class nsLayoutStylesheetCache final : public nsIObserver,
-                                      public nsIMemoryReporter {
+class GlobalStyleSheetCache final : public nsIObserver,
+                                    public nsIMemoryReporter {
  public:
-  using Shm = nsLayoutStylesheetCacheShm;
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIMEMORYREPORTER
 
-  static nsLayoutStylesheetCache* Singleton();
+  static GlobalStyleSheetCache* Singleton();
 
 #define STYLE_SHEET(identifier_, url_, shared_) \
-  mozilla::NotNull<mozilla::StyleSheet*> identifier_##Sheet();
+  NotNull<StyleSheet*> identifier_##Sheet();
 #include "mozilla/UserAgentStyleSheetList.h"
 #undef STYLE_SHEET
 
-  mozilla::StyleSheet* GetUserContentSheet();
-  mozilla::StyleSheet* GetUserChromeSheet();
-  mozilla::StyleSheet* ChromePreferenceSheet();
-  mozilla::StyleSheet* ContentPreferenceSheet();
+  StyleSheet* GetUserContentSheet();
+  StyleSheet* GetUserChromeSheet();
+  StyleSheet* ChromePreferenceSheet();
+  StyleSheet* ContentPreferenceSheet();
 
   static void InvalidatePreferenceSheets();
 
@@ -60,11 +57,11 @@ class nsLayoutStylesheetCache final : public nsIObserver,
 
   static void SetUserContentCSSURL(nsIURI* aURI);
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   // Set the shared memory segment to load the shared UA sheets from.
   // Called early on in a content process' life from
-  // ContentChild::InitSharedUASheets, before the nsLayoutStylesheetCache
+  // ContentChild::InitSharedUASheets, before the GlobalStyleSheetCache
   // singleton has been created.
   static void SetSharedMemory(const base::SharedMemoryHandle& aHandle,
                               uintptr_t aAddress);
@@ -93,52 +90,51 @@ class nsLayoutStylesheetCache final : public nsIObserver,
   struct Header {
     static constexpr uint32_t kMagic = 0x55415353;
     uint32_t mMagic;  // Must be set to kMagic.
-    const ServoCssRules* mSheets[size_t(mozilla::UserAgentStyleSheetID::Count)];
+    const ServoCssRules* mSheets[size_t(UserAgentStyleSheetID::Count)];
     uint8_t mBuffer[1];
   };
 
-  nsLayoutStylesheetCache();
-  ~nsLayoutStylesheetCache();
+  GlobalStyleSheetCache();
+  ~GlobalStyleSheetCache();
 
   void InitFromProfile();
   void InitSharedSheetsInParent();
-  void InitSharedSheetsInChild(already_AddRefed<Shm> aSharedMemory);
   void InitMemoryReporter();
-  RefPtr<mozilla::StyleSheet> LoadSheetURL(
-      const char* aURL, mozilla::css::SheetParsingMode aParsingMode,
-      mozilla::css::FailureAction aFailureAction);
-  RefPtr<mozilla::StyleSheet> LoadSheetFile(
-      nsIFile* aFile, mozilla::css::SheetParsingMode aParsingMode);
-  RefPtr<mozilla::StyleSheet> LoadSheet(
-      nsIURI* aURI, mozilla::css::SheetParsingMode aParsingMode,
-      mozilla::css::FailureAction aFailureAction);
-  void LoadSheetFromSharedMemory(const char* aURL,
-                                 RefPtr<mozilla::StyleSheet>* aSheet,
-                                 mozilla::css::SheetParsingMode,
-                                 Header*, mozilla::UserAgentStyleSheetID);
-  void BuildPreferenceSheet(RefPtr<mozilla::StyleSheet>* aSheet,
-                            const mozilla::PreferenceSheet::Prefs&);
+  RefPtr<StyleSheet> LoadSheetURL(const char* aURL,
+                                  css::SheetParsingMode aParsingMode,
+                                  css::FailureAction aFailureAction);
+  RefPtr<StyleSheet> LoadSheetFile(nsIFile* aFile,
+                                   css::SheetParsingMode aParsingMode);
+  RefPtr<StyleSheet> LoadSheet(nsIURI* aURI, css::SheetParsingMode aParsingMode,
+                               css::FailureAction aFailureAction);
+  void LoadSheetFromSharedMemory(const char* aURL, RefPtr<StyleSheet>* aSheet,
+                                 css::SheetParsingMode, Header*,
+                                 UserAgentStyleSheetID);
+  void BuildPreferenceSheet(RefPtr<StyleSheet>* aSheet,
+                            const PreferenceSheet::Prefs&);
 
-  static mozilla::StaticRefPtr<nsLayoutStylesheetCache> gStyleCache;
-  static mozilla::StaticRefPtr<mozilla::css::Loader> gCSSLoader;
-  static mozilla::StaticRefPtr<nsIURI> gUserContentSheetURL;
+  static StaticRefPtr<GlobalStyleSheetCache> gStyleCache;
+  static StaticRefPtr<css::Loader> gCSSLoader;
+  static StaticRefPtr<nsIURI> gUserContentSheetURL;
 
 #define STYLE_SHEET(identifier_, url_, shared_) \
-  RefPtr<mozilla::StyleSheet> m##identifier_##Sheet;
+  RefPtr<StyleSheet> m##identifier_##Sheet;
 #include "mozilla/UserAgentStyleSheetList.h"
 #undef STYLE_SHEET
 
-  RefPtr<mozilla::StyleSheet> mChromePreferenceSheet;
-  RefPtr<mozilla::StyleSheet> mContentPreferenceSheet;
-  RefPtr<mozilla::StyleSheet> mUserChromeSheet;
-  RefPtr<mozilla::StyleSheet> mUserContentSheet;
+  RefPtr<StyleSheet> mChromePreferenceSheet;
+  RefPtr<StyleSheet> mContentPreferenceSheet;
+  RefPtr<StyleSheet> mUserChromeSheet;
+  RefPtr<StyleSheet> mUserContentSheet;
 
   // Shared memory segment storing shared style sheets.
-  static mozilla::StaticAutoPtr<base::SharedMemory> sSharedMemory;
+  static StaticAutoPtr<base::SharedMemory> sSharedMemory;
 
   // How much of the shared memory buffer we ended up using.  Used for memory
   // reporting in the parent process.
   static size_t sUsedSharedMemory;
 };
+
+}  // namespace mozilla
 
 #endif
