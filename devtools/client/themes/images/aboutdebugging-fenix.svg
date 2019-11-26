@@ -1,3 +1,6 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="26 26 56 56">
   <defs>
     <linearGradient id="a" x1="78.92" y1="25.09" x2="37.26" y2="74.45" gradientUnits="userSpaceOnUse">
