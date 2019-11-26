@@ -698,6 +698,10 @@ function getDescriptorValue(descriptor) {
     return descriptor.safeGetterValues;
   }
 
+  if (Object.prototype.hasOwnProperty.call(descriptor, "getterValue")) {
+    return descriptor.getterValue;
+  }
+
   if (Object.prototype.hasOwnProperty.call(descriptor, "value")) {
     return descriptor.value;
   }
