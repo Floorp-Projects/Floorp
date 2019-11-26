@@ -10,8 +10,6 @@
 #include "MediaControlService.h"
 #include "mozilla/Logging.h"
 
-extern mozilla::LazyLogModule gMediaControlLog;
-
 namespace mozilla {
 namespace dom {
 
@@ -36,12 +34,10 @@ static const char* ToMediaControlKeysEventStr(MediaControlKeysEvent aKeyEvent) {
           ("MediaControlKeysEventSource=%p, " msg, this, ##__VA_ARGS__))
 
 #undef LOG_KEY
-#define LOG_KEY(msg, key, ...)                                    \
-  if (MOZ_LOG_TEST(gMediaControlLog, mozilla::LogLevel::Debug)) { \
-    MOZ_LOG(gMediaControlLog, LogLevel::Debug,                    \
-            ("MediaControlKeysHandler=%p, " msg, this,            \
-             ToMediaControlKeysEventStr(key), ##__VA_ARGS__));    \
-  }
+#define LOG_KEY(msg, key, ...)                       \
+  MOZ_LOG(gMediaControlLog, LogLevel::Debug,         \
+          ("MediaControlKeysHandler=%p, " msg, this, \
+           ToMediaControlKeysEventStr(key), ##__VA_ARGS__));
 
 NS_IMPL_ISUPPORTS0(MediaControlKeysHandler)
 
