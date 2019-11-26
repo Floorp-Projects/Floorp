@@ -33,7 +33,7 @@ object ErrorPages {
             .use { it.readText() }
             .replace("%pageTitle%", context.getString(R.string.mozac_browser_errorpages_page_title))
             .replace("%backButton%", context.getString(R.string.mozac_browser_errorpages_page_go_back))
-            .replace("%button%", context.getString(R.string.mozac_browser_errorpages_page_refresh))
+            .replace("%button%", context.getString(errorType.refreshButtonRes))
             .replace("%messageShort%", context.getString(errorType.titleRes))
             .replace("%messageLong%", context.getString(errorType.messageRes, uri))
             .replace("%css%", css)
@@ -45,7 +45,8 @@ object ErrorPages {
  */
 enum class ErrorType(
     @StringRes val titleRes: Int,
-    @StringRes val messageRes: Int
+    @StringRes val messageRes: Int,
+    @StringRes val refreshButtonRes: Int = R.string.mozac_browser_errorpages_page_refresh
 ) {
     UNKNOWN(
         R.string.mozac_browser_errorpages_generic_title,
@@ -110,6 +111,11 @@ enum class ErrorType(
     ERROR_UNKNOWN_HOST(
         R.string.mozac_browser_errorpages_unknown_host_title,
         R.string.mozac_browser_errorpages_unknown_host_message
+    ),
+    ERROR_NO_INTERNET(
+        R.string.mozac_browser_errorpages_no_internet_title,
+        R.string.mozac_browser_errorpages_no_internet_message,
+        R.string.mozac_browser_errorpages_no_internet_refresh_button
     ),
     ERROR_MALFORMED_URI(
         R.string.mozac_browser_errorpages_malformed_uri_title,
