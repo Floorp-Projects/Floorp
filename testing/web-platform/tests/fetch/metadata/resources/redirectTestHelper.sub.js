@@ -82,7 +82,7 @@ function RunCommonRedirectTests(testNamePrefix, urlHelperMethod, expectedResults
       e.onload = e => {
         let expectation = { ...expectedResults };
         if (expectation['mode'] != '')
-          expectation['mode'] = 'no-cors';
+          expectation['mode'] = 'navigate';
         fetch('/fetch/metadata/resources/record-header.py?retrieve=true&file=' + key)
           .then(response => response.text())
           .then(t.step_func(text => assert_header_equals(text, expectation)))
@@ -111,7 +111,7 @@ function RunCommonRedirectTests(testNamePrefix, urlHelperMethod, expectedResults
       e.onload = e => {
         let expectation = { ...expectedResults };
         if (expectation['mode'] != '')
-          expectation['mode'] = 'no-cors';
+          expectation['mode'] = 'navigate';
         fetch('/fetch/metadata/resources/record-header.py?retrieve=true&file=' + key)
           .then(response => response.text())
           .then(t.step_func(text => assert_header_equals(text, expectation)))
