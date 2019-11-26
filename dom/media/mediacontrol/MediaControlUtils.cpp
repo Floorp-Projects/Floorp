@@ -21,13 +21,22 @@ mozilla::LazyLogModule gMediaControlLog("MediaControl");
 namespace mozilla {
 namespace dom {
 
-static RefPtr<BrowsingContext> GetBrowingContextByWindowID(uint64_t aWindowID) {
+static RefPtr<BrowsingContext> GetTopBrowsingContextByWindowID(
+    uint64_t aWindowID) {
   RefPtr<nsGlobalWindowOuter> window =
       nsGlobalWindowOuter::GetOuterWindowWithId(aWindowID);
   if (!window) {
     return nullptr;
   }
-  return window->GetBrowsingContext();
+  RefPtr<BrowsingContext> bc = window->GetBrowsingContext();
+  if (!bc || bc->IsDiscarded()) {
+    return nullptr;
+  }
+  bc = bc->Top();
+  if (!bc || bc->IsDiscarded()) {
+    return nullptr;
+  }
+  return bc;
 }
 
 static void NotifyMediaActiveChanged(const RefPtr<BrowsingContext>& aBc,
@@ -43,33 +52,30 @@ static void NotifyMediaActiveChanged(const RefPtr<BrowsingContext>& aBc,
 }
 
 void NotifyMediaStarted(uint64_t aWindowID) {
-  RefPtr<BrowsingContext> bc = GetBrowingContextByWindowID(aWindowID);
-  if (!bc || bc->IsDiscarded()) {
+  RefPtr<BrowsingContext> bc = GetTopBrowsingContextByWindowID(aWindowID);
+  if (!bc) {
     return;
   }
   LOG("Notify media started in BC %" PRId64, bc->Id());
-  bc = bc->Top();
   NotifyMediaActiveChanged(bc, true);
 }
 
 void NotifyMediaStopped(uint64_t aWindowID) {
-  RefPtr<BrowsingContext> bc = GetBrowingContextByWindowID(aWindowID);
-  if (!bc || bc->IsDiscarded()) {
+  RefPtr<BrowsingContext> bc = GetTopBrowsingContextByWindowID(aWindowID);
+  if (!bc) {
     return;
   }
   LOG("Notify media stopped in BC %" PRId64, bc->Id());
-  bc = bc->Top();
   NotifyMediaActiveChanged(bc, false);
 }
 
 void NotifyMediaAudibleChanged(uint64_t aWindowID, bool aAudible) {
-  RefPtr<BrowsingContext> bc = GetBrowingContextByWindowID(aWindowID);
-  if (!bc || bc->IsDiscarded()) {
+  RefPtr<BrowsingContext> bc = GetTopBrowsingContextByWindowID(aWindowID);
+  if (!bc) {
     return;
   }
   LOG("Notify media became %s in BC %" PRId64,
       aAudible ? "audible" : "inaudible", bc->Id());
-  bc = bc->Top();
   if (XRE_IsContentProcess()) {
     ContentChild* contentChild = ContentChild::GetSingleton();
     Unused << contentChild->SendNotifyMediaAudibleChanged(bc, aAudible);
