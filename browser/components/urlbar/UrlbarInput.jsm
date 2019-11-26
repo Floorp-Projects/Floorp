@@ -82,11 +82,12 @@ class UrlbarInput {
     );
     this.panel = this.textbox.querySelector(".urlbarView");
 
-    this.megabar = UrlbarPrefs.get("megabar");
+    // "Megabar" is the internal codename for the update1 design refresh.
+    this.megabar = UrlbarPrefs.get("update1");
     if (this.megabar) {
       this.textbox.classList.add("megabar");
       this.textbox.parentNode.classList.add("megabar");
-      this.searchIcon = UrlbarPrefs.get("searchIcon");
+      this.searchIcon = UrlbarPrefs.get("update1.searchButton");
       if (this.searchIcon) {
         this.textbox.classList.add("searchIcon");
       }

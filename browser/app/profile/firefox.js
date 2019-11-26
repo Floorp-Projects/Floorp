@@ -324,13 +324,15 @@ pref("browser.urlbar.openintab", false);
 pref("browser.urlbar.usepreloadedtopurls.enabled", false);
 pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
 
-// Whether the quantum bar displays the major design update.
-pref("browser.urlbar.megabar", false);
-// Whether we expand the font size when the megabar is focused.
-pref("browser.urlbar.megabar.expandTextOnFocus", false);
-// Whether the megabar displays the permanent search icon.
-pref("browser.urlbar.searchIcon", false);
-pref("browser.urlbar.view.stripHttps", false);
+// Whether the quantum bar displays design update 1.
+pref("browser.urlbar.update1", false);
+// Whether we expand the font size when when the urlbar is
+// focused in design update 1.
+pref("browser.urlbar.update1.expandTextOnFocus", false);
+// Whether the urlbar displays a permanent search button in design update 1.
+pref("browser.urlbar.update1.searchButton", false);
+// Whether the urlbar should strip https from urls in the view.
+pref("browser.urlbar.update1.view.stripHttps", false);
 
 pref("browser.urlbar.openViewOnFocus", false);
 pref("browser.urlbar.eventTelemetry.enabled", false);
