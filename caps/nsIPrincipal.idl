@@ -232,6 +232,18 @@ interface nsIPrincipal : nsISerializable
     bool IsURIInPrefList(in string pref);
 
     /**
+     * Implementation of
+     * https://w3c.github.io/webappsec-secure-contexts/#is-origin-trustworthy
+     *
+     * The value returned by this method feeds into the the Secure Context
+     * algorithm that determins the value of Window.isSecureContext and
+     * WorkerGlobalScope.isSecureContext.
+     *
+     * This method returns false instead of throwing upon errors.
+     */ 
+    readonly attribute bool IsOriginPotentiallyTrustworthy;
+
+    /**
      * Returns the Flags of the Principals 
      * associated AboutModule, in case there is one.
      */
