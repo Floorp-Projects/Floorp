@@ -281,7 +281,7 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   font-size: 1.05em;
 }
 
-@supports -moz-bool-pref("browser.urlbar.megabar.expandTextOnFocus") {
+@supports -moz-bool-pref("browser.urlbar.update1.expandTextOnFocus") {
   .urlbarView {
     font-size: inherit;
   }
