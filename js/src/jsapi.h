@@ -398,8 +398,6 @@ extern JS_PUBLIC_API void JS_SetSizeOfIncludingThisCompartmentCallback(
 extern JS_PUBLIC_API void JS_SetWrapObjectCallbacks(
     JSContext* cx, const JSWrapObjectCallbacks* callbacks);
 
-#if defined(NIGHTLY_BUILD)
-
 // Set a callback that will be called whenever an error
 // is thrown in this runtime. This is designed as a mechanism
 // for logging errors. Note that the VM makes no attempt to sanitize
@@ -412,9 +410,11 @@ extern JS_PUBLIC_API void JS_SetWrapObjectCallbacks(
 // will replace the original error.
 //
 // May be `nullptr`.
+// This is a no-op if built without NIGHTLY_BUILD.
 extern JS_PUBLIC_API void JS_SetErrorInterceptorCallback(
     JSRuntime*, JSErrorInterceptor* callback);
 
+// This returns nullptr if built without NIGHTLY_BUILD.
 extern JS_PUBLIC_API JSErrorInterceptor* JS_GetErrorInterceptorCallback(
     JSRuntime*);
 
@@ -422,8 +422,6 @@ extern JS_PUBLIC_API JSErrorInterceptor* JS_GetErrorInterceptorCallback(
 // If so, return the error type.
 extern JS_PUBLIC_API mozilla::Maybe<JSExnType> JS_GetErrorType(
     const JS::Value& val);
-
-#endif  // defined(NIGHTLY_BUILD)
 
 extern JS_PUBLIC_API void JS_SetCompartmentPrivate(JS::Compartment* compartment,
                                                    void* data);
@@ -1946,21 +1944,19 @@ extern JS_PUBLIC_API void SetScriptPrivateReferenceHooks(
 
 } /* namespace JS */
 
-#if defined(JS_BUILD_BINAST)
-
 namespace JS {
 
+// This throws an exception if built without JS_BUILD_BINAST.
 extern JS_PUBLIC_API JSScript* DecodeBinAST(
     JSContext* cx, const ReadOnlyCompileOptions& options, FILE* file,
     JS::BinASTFormat format);
 
+// This throws an exception if built without JS_BUILD_BINAST.
 extern JS_PUBLIC_API JSScript* DecodeBinAST(
     JSContext* cx, const ReadOnlyCompileOptions& options, const uint8_t* buf,
     size_t length, JS::BinASTFormat format);
 
 } /* namespace JS */
-
-#endif /* JS_BUILD_BINAST */
 
 extern JS_PUBLIC_API bool JS_CheckForInterrupt(JSContext* cx);
 
