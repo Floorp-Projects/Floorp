@@ -62,6 +62,7 @@ nsBaseDragService::nsBaseDragService()
     : mCanDrop(false),
       mOnlyChromeDrop(false),
       mDoingDrag(false),
+      mEndingSession(false),
       mHasImage(false),
       mUserCancelled(false),
       mDragEventDispatchedToChildProcess(false),
@@ -453,9 +454,11 @@ int32_t nsBaseDragService::TakeChildProcessDragAction() {
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
 nsBaseDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
-  if (!mDoingDrag) {
+  if (!mDoingDrag || mEndingSession) {
     return NS_ERROR_FAILURE;
   }
+
+  mEndingSession = true;
 
   if (aDoneDrag && !mSuppressLevel) {
     FireDragEventAtSource(eDragEnd, aKeyModifiers);
@@ -485,6 +488,7 @@ nsBaseDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
   }
 
   mDoingDrag = false;
+  mEndingSession = false;
   mCanDrop = false;
 
   // release the source we've been holding on to.
