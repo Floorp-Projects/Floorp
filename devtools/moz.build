@@ -42,7 +42,7 @@ with Files('docs/tools/debugger-panel.md'):
 with Files('docs/backend/debugger-api.md'):
     BUG_COMPONENT = ('DevTools', 'Debugger')
 
-with Files('docs/tools/http-inspector.md'):
+with Files('docs/tools/console-panel.md'):
     BUG_COMPONENT = ('DevTools', 'Console')
 
 with Files('docs/tools/inspector-panel.md'):
