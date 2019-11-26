@@ -14,8 +14,6 @@ platform(linux,mac) fuzzy(1,35000) == linear-stops.yaml linear-stops-ref.png
 == linear-clamp-1b.yaml linear-clamp-1-ref.yaml
 == linear-clamp-2.yaml linear-clamp-2-ref.yaml
 
-== linear-hard-stop.yaml linear-hard-stop-ref.png
-
 # dithering requires us to fuzz here
 fuzzy(1,20000) == linear.yaml linear-ref.yaml
 fuzzy(1,20000) == linear-reverse.yaml linear-ref.yaml
