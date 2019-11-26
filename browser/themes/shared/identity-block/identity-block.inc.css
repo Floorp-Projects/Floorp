@@ -26,7 +26,7 @@
   padding-inline-start: 8px;
 }
 
-#urlbar.searchIcon > #urlbar-input-container > #identity-box[pageproxystate="invalid"],
+#urlbar.searchButton > #urlbar-input-container > #identity-box[pageproxystate="invalid"],
 #identity-box[pageproxystate="invalid"] > #permissions-granted-icon,
 #identity-box[pageproxystate="invalid"] > #blocked-permissions-container,
 #identity-box[pageproxystate="invalid"] > #notification-popup-box,
@@ -35,7 +35,7 @@
   display: none;
 }
 
-#urlbar:not(.searchIcon) > #urlbar-input-container > #identity-box[pageproxystate="invalid"] {
+#urlbar:not(.searchButton) > #urlbar-input-container > #identity-box[pageproxystate="invalid"] {
   pointer-events: none;
   -moz-user-focus: ignore;
 }
@@ -140,7 +140,7 @@
   list-style-image: url(chrome://branding/content/identity-icons-brand.svg);
 }
 
-#urlbar:not(.searchIcon) > #urlbar-input-container > #identity-box[pageproxystate="invalid"] > #identity-icon {
+#urlbar:not(.searchButton) > #urlbar-input-container > #identity-box[pageproxystate="invalid"] > #identity-icon {
   list-style-image: url(chrome://browser/skin/search-glass.svg);
   fill-opacity: .4;
 }

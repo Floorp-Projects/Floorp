@@ -11,8 +11,8 @@ function test() {
   setup();
 }
 
-const FALLBACK_ANCHOR = gURLBar.searchIcon
-  ? "urlbar-search-icon"
+const FALLBACK_ANCHOR = gURLBar.searchButton
+  ? "urlbar-search-button"
   : "identity-icon";
 
 var tests = [

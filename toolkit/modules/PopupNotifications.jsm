@@ -1214,7 +1214,7 @@ PopupNotifications.prototype = {
 
       if (isNullOrHidden(anchorElement)) {
         anchorElement = this.window.document.getElementById(
-          "urlbar-search-icon"
+          "urlbar-search-button"
         );
       }
 
