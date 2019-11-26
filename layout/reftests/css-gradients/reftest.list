@@ -4,8 +4,7 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,0-2,0-88500) fuzzy-if(azureSkiaGL,0-2,0-
 == linear-diagonal-2a.html linear-diagonal-2-ref.html
 == linear-diagonal-3a.html linear-diagonal-3-ref.html
 == linear-diagonal-4a.html linear-diagonal-4-ref.html
-== fuzzy-if(webrender, 0-1, 23000-43000) linear-premul.html linear-premul-ref.html
-
+fuzzy-if(webrender, 0-1, 23000-43000) == linear-premul.html linear-premul-ref.html
 fuzzy(0-1,0-800000) == linear-flipped-1.html linear-flipped-1-ref.html
 == linear-position-1a.html linear-position-1-ref.html
 == linear-repeat-1a.html linear-repeat-1-ref.html
