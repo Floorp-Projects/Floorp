@@ -82,6 +82,7 @@ function GripMessageBody(props) {
   if (typeof grip === "string" || (grip && grip.type === "longString")) {
     Object.assign(objectInspectorProps, {
       useQuotes,
+      transformEmptyString: true,
       escapeWhitespace,
       style: styleObject,
     });

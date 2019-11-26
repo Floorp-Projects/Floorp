@@ -51,9 +51,23 @@ function StringRep(props) {
     openLink,
     title,
     isInContentPage,
+    transformEmptyString = false,
   } = props;
 
   let text = object;
+  const config = getElementConfig({
+    className,
+    style,
+    actor: object.actor,
+    title,
+  });
+
+  if (text == "" && transformEmptyString && !useQuotes) {
+    return span(
+      { ...config, className: `${config.className} objectBox-empty-string` },
+      "<empty string>"
+    );
+  }
 
   const isLong = isLongString(object);
   const isOpen = member && member.open;
@@ -81,13 +95,6 @@ function StringRep(props) {
     },
     text
   );
-
-  const config = getElementConfig({
-    className,
-    style,
-    actor: object.actor,
-    title,
-  });
 
   if (!isLong) {
     if (containsURL(text)) {

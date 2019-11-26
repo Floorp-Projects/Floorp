@@ -113,6 +113,7 @@ function ConsoleApiCall(props) {
       grip: messageText,
       serviceContainer,
       useQuotes: false,
+      transformEmptyString: true,
       type,
     });
   }
