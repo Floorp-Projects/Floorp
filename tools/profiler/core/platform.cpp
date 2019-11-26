@@ -4025,6 +4025,33 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 
   MOZ_RELEASE_ASSERT(CorePS::Exists() && !ActivePS::Exists(aLock));
 
+#ifdef MOZ_BASE_PROFILER
+  UniquePtr<char[]> baseprofile;
+  if (baseprofiler::profiler_is_active()) {
+    // Note that we still hold the lock, so the sampler cannot run yet and
+    // interact negatively with the still-active BaseProfiler sampler.
+    // Assume that Base Profiler is active because of MOZ_BASE_PROFILER_STARTUP.
+    // Capture the Base Profiler startup profile threads (if any).
+    baseprofile = baseprofiler::profiler_get_profile(
+        /* aSinceTime */ 0, /* aIsShuttingDown */ false,
+        /* aOnlyThreads */ true);
+
+    // Now stop Base Profiler (BP), as further recording will be ignored anyway,
+    // and so that it won't clash with Gecko Profiler (GP) sampling starting
+    // after the lock is dropped.
+    // On Linux this is especially important to do before creating the GP
+    // sampler, because the BP sampler may send a signal (to stop threads to be
+    // sampled), which the GP would intercept before its own initialization is
+    // complete and ready to handle such signals.
+    // Note that even though `profiler_stop()` doesn't immediately destroy and
+    // join the sampler thread, it safely deactivates it in such a way that the
+    // thread will soon exit without doing any actual work.
+    // TODO: Allow non-sampling profiling to continue.
+    // TODO: Re-start BP after GP shutdown, to capture post-XPCOM shutdown.
+    baseprofiler::profiler_stop();
+  }
+#endif
+
 #if defined(GP_PLAT_amd64_windows)
   InitializeWin64ProfilerHooks();
 #endif
@@ -4049,31 +4076,13 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
   MOZ_ASSERT(ActivePS::Exists(aLock));
 
 #ifdef MOZ_BASE_PROFILER
-  if (baseprofiler::profiler_is_active()) {
-    // Note that we still hold the lock, so the sampler cannot run yet and
-    // interact negatively with the still-active BaseProfiler sampler.
-    // Assume that BaseProfiler is active because of MOZ_BASE_PROFILER_STARTUP.
-    // Capture the BaseProfiler startup profile threads (if any).
-    UniquePtr<char[]> baseprofile = baseprofiler::profiler_get_profile(
-        /* aSinceTime */ 0, /* aIsShuttingDown */ false,
-        /* aOnlyThreads */ true);
-
-    // Now stop BaseProfiler, as further recording will be ignored anyway, and
-    // so that it won't clash with Gecko Profiler sampling starting after the
-    // lock is dropped.
-    // TODO: Allow non-sampling profiling to continue.
-    // TODO: Re-start BaseProfiler after Gecko Profiler shutdown, to capture
-    // post-XPCOM shutdown.
-    baseprofiler::profiler_stop();
-
-    // An "empty" profile string may in fact contain 1 character (a newline),
-    // so we want at least 2 characters to register a profile.
-    if (HasMinimumLength(baseprofile.get(), 2)) {
-      // The BaseProfiler startup profile will be stored as a separate "process"
-      // in the Gecko Profiler profile, and shown as a new track under the
-      // corresponding Gecko Profiler thread.
-      ActivePS::AddBaseProfileThreads(aLock, std::move(baseprofile));
-    }
+  // An "empty" profile string may in fact contain 1 character (a newline), so
+  // we want at least 2 characters to register a profile.
+  if (HasMinimumLength(baseprofile.get(), 2)) {
+    // The BaseProfiler startup profile will be stored as a separate "process"
+    // in the Gecko Profiler profile, and shown as a new track under the
+    // corresponding Gecko Profiler thread.
+    ActivePS::AddBaseProfileThreads(aLock, std::move(baseprofile));
   }
 #endif
 
