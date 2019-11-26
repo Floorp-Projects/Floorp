@@ -53,29 +53,40 @@ const TESTCASES = [
   // Begin test cases that shouldn't trigger capture.
   {
     // Empty password field in a form
-    document: `<form><input type=password value=""></form>`,
+    document: `<form><input type=password value="xxx"></form>`,
+    selectorValues: {
+      "[type=password]": "",
+    },
   },
   {
     // Empty password field
     document: `<input type=password value="">`,
+    selectorValues: {
+      "[type=password]": "",
+    },
   },
   {
     // Test with an input that would normally be captured but with SCRIPTS that
     // shouldn't trigger capture.
-    document: `<input type=password value="pass2">`,
+    document: `<input type=password value="">`,
+    selectorValues: {
+      "[type=password]": "pass2",
+    },
     wouldCapture: true,
   },
   {
     // Test with an input that would normally be captured but with SCRIPTS that
     // shouldn't trigger capture.
-    document: `<form><input type=password value="pass2"></form>`,
+    document: `<form><input type=password value=""></form>`,
+    selectorValues: {
+      "[type=password]": "pass2",
+    },
     wouldCapture: true,
   },
 ];
 
-add_task(async function test() {
+async function testFormlesSubmitNavigationNegative(tc, scriptName) {
   let loginFrame = document.getElementById("loginFrame");
-
   let waitTime;
   let android = navigator.appVersion.includes("Android");
   if (android) {
@@ -85,38 +96,46 @@ add_task(async function test() {
     waitTime = 5000;
   }
 
-  for (let tc of TESTCASES) {
-    for (let scriptName of Object.keys(SCRIPTS)) {
-      if (tc.wouldCapture && ["PUSHSTATE", "WINDOW_LOCATION"].includes(scriptName)) {
-        // Don't run scripts that should actually capture for this testcase.
-        continue;
-      }
+  let loadedPromise = new Promise((resolve) => {
+    loginFrame.addEventListener("load", function() {
+      resolve();
+    }, {once: true});
+  });
+  loginFrame.src = DEFAULT_ORIGIN + "/tests/toolkit/components/passwordmgr/test/mochitest/blank.html";
+  await loadedPromise;
 
-      info("Starting testcase with script " + scriptName + ": " + JSON.stringify(tc));
-      let loadedPromise = new Promise((resolve) => {
-        loginFrame.addEventListener("load", function() {
-          resolve();
-        }, {once: true});
-      });
-      loginFrame.src = DEFAULT_ORIGIN + "/tests/toolkit/components/passwordmgr/test/mochitest/blank.html";
-      await loadedPromise;
+  let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
+  // eslint-disable-next-line no-unsanitized/property
+  frameDoc.documentElement.innerHTML = tc.document;
+  // We eliminate no user input as a reason for not capturing by modifying the value
+  setUserInputValues(frameDoc.documentElement, tc.selectorValues);
 
-      let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
-      // eslint-disable-next-line no-unsanitized/property
-      frameDoc.documentElement.innerHTML = tc.document;
+  info("Running " + scriptName + " script to check for a submission");
+  frameDoc.defaultView.eval(SCRIPTS[scriptName]);
 
-      // Wait for the form to be processed before trying to submit.
-      await promiseFormsProcessed();
+  // Wait to see if the promise above resolves.
+  await new Promise(resolve => setTimeout(resolve, waitTime));
+  ok(true, "Done waiting for captures");
+}
 
-      info("Running " + scriptName + " script to check for a submission");
-      frameDoc.defaultView.eval(SCRIPTS[scriptName]);
-
-      // Wait to see if the promise above resolves.
-      await new Promise(resolve => setTimeout(resolve, waitTime));
-      ok(true, "Done waiting for captures");
+let count = 0;
+for (let tc of TESTCASES) {
+  for (let scriptName of Object.keys(SCRIPTS)) {
+    if (tc.wouldCapture && ["PUSHSTATE", "WINDOW_LOCATION"].includes(scriptName)) {
+      // Don't run scripts that should actually capture for this testcase.
+      continue;
     }
+    let taskName = `testcase-${count}-${scriptName}`;
+    let tmp = {
+      async [taskName]() {
+        info("Starting testcase with script " + scriptName + ": " + JSON.stringify(tc));
+        await testFormlesSubmitNavigationNegative(tc, scriptName);
+      },
+    };
+    add_task(tmp[taskName]);
   }
-});
+}
+
 
 </script>
 

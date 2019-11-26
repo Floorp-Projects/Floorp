@@ -22,8 +22,8 @@ add_task(async function test_empty_password() {
       // case. This will cause the doorhanger notification to be displayed.
       await ContentTask.spawn(browser, null, async function() {
         let doc = content.document;
-        doc.getElementById("form-basic-username").value = "username";
-        doc.getElementById("form-basic-password").value = "pw";
+        doc.getElementById("form-basic-username").setUserInput("username");
+        doc.getElementById("form-basic-password").setUserInput("pw");
         doc.getElementById("form-basic").submit();
       });
 

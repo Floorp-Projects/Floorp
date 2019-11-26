@@ -36,9 +36,9 @@ function startTest() {
 
   // Fill in the username and password fields, for account creation.
   // Form 1
-  $_(1, "uname").value = "newuser1";
-  $_(1, "pword").value = "newpass1";
-  $_(1, "qword").value = "newpass1";
+  SpecialPowers.wrap($_(1, "uname")).setUserInput("newuser1");
+  SpecialPowers.wrap($_(1, "pword")).setUserInput("newpass1");
+  SpecialPowers.wrap($_(1, "qword")).setUserInput("newpass1");
 
   // eslint-disable-next-line no-unused-vars
   var button = getFormSubmitButton(1);
