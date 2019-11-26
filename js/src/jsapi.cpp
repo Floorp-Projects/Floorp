@@ -436,15 +436,20 @@ JS_PUBLIC_API void JS_SetSizeOfIncludingThisCompartmentCallback(
   cx->runtime()->sizeOfIncludingThisCompartmentCallback = callback;
 }
 
-#if defined(NIGHTLY_BUILD)
 JS_PUBLIC_API void JS_SetErrorInterceptorCallback(
     JSRuntime* rt, JSErrorInterceptor* callback) {
+#if defined(NIGHTLY_BUILD)
   rt->errorInterception.interceptor = callback;
+#endif  // defined(NIGHTLY_BUILD)
 }
 
 JS_PUBLIC_API JSErrorInterceptor* JS_GetErrorInterceptorCallback(
     JSRuntime* rt) {
+#if defined(NIGHTLY_BUILD)
   return rt->errorInterception.interceptor;
+#else   // !NIGHTLY_BUILD
+  return nullptr;
+#endif  // defined(NIGHTLY_BUILD)
 }
 
 JS_PUBLIC_API Maybe<JSExnType> JS_GetErrorType(const JS::Value& val) {
@@ -464,8 +469,6 @@ JS_PUBLIC_API Maybe<JSExnType> JS_GetErrorType(const JS::Value& val) {
   const js::ErrorObject& err = obj.as<js::ErrorObject>();
   return mozilla::Some(err.type());
 }
-
-#endif  // defined(NIGHTLY_BUILD)
 
 JS_PUBLIC_API void JS_SetWrapObjectCallbacks(
     JSContext* cx, const JSWrapObjectCallbacks* callbacks) {
@@ -3657,20 +3660,25 @@ CompileOptions& CompileOptions::setIntroductionInfoToCaller(
   }
 }
 
-#if defined(JS_BUILD_BINAST)
-
 JSScript* JS::DecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& options,
                            const uint8_t* buf, size_t length,
                            JS::BinASTFormat format) {
+#if defined(JS_BUILD_BINAST)
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
   return frontend::CompileGlobalBinASTScript(cx, options, buf, length, format);
+#else   // !JS_BUILD_BINAST
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_SUPPORT_NOT_ENABLED, "BinAST");
+  return nullptr;
+#endif  // JS_BUILD_BINAST
 }
 
 JSScript* JS::DecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& options,
                            FILE* file, JS::BinASTFormat format) {
+#if defined(JS_BUILD_BINAST)
   FileContents fileContents(cx);
   if (!ReadCompleteFile(cx, file, fileContents)) {
     return nullptr;
@@ -3678,9 +3686,12 @@ JSScript* JS::DecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& options,
 
   return DecodeBinAST(cx, options, fileContents.begin(), fileContents.length(),
                       format);
+#else   // !JS_BUILD_BINAST
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_SUPPORT_NOT_ENABLED, "BinAST");
+  return nullptr;
+#endif  // JS_BUILD_BINAST
 }
-
-#endif
 
 JS_PUBLIC_API JSObject* JS_GetGlobalFromScript(JSScript* script) {
   return &script->global();
