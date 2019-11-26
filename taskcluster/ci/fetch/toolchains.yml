@@ -415,12 +415,12 @@ clang-9:
         repo: https://github.com/llvm/llvm-project
         revision: 0399d5a9682b3cef71c653373e38890c63c4c365
 
-wasi-libc:
-    description: wasi-libc source code
+wasi-sdk:
+    description: wasi-sdk source code
     fetch:
         type: git
-        repo: https://github.com/CraneStation/wasi-libc
-        revision: c35f0f5dd64ad982bbad71f3e3a8942a1029c1e6
+        repo: https://github.com/CraneStation/wasi-sdk
+        revision: 5225b05436ce57f01fe649f411f3ff701246628b
 
 ninja:
     description: ninja 1.9.0
