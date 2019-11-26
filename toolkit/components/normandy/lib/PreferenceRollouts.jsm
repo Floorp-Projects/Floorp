@@ -229,40 +229,6 @@ var PreferenceRollouts = {
   },
 
   /**
-   * Update many existing rollouts. More efficient than calling `update` many
-   * times in a row.
-   * @param {Array<PreferenceRollout>} rollouts
-   * @throws If any of the passed rollouts have a slug that doesn't exist in the database already.
-   */
-  async updateMany(rollouts) {
-    // Don't touch the database if there is nothing to do
-    if (!rollouts.length) {
-      return;
-    }
-
-    // Both of the below operations use .map() instead of a normal loop becaues
-    // once we get the object store, we can't let it expire by spinning the
-    // event loop. This approach queues up all the interactions with the store
-    // immediately, preventing it from expiring too soon.
-
-    const db = await getDatabase();
-    let store = await getStore(db, "readonly");
-    await Promise.all(
-      rollouts.map(async ({ slug }) => {
-        let existingRollout = await store.get(slug);
-        if (!existingRollout) {
-          throw new Error(`Tried to update ${slug}, but it doesn't exist.`);
-        }
-      })
-    );
-
-    // awaiting spun the event loop, so the store is now invalid. Get a new
-    // store. This is also a chance to get it in readwrite mode.
-    store = await getStore(db, "readwrite");
-    await Promise.all(rollouts.map(rollout => store.put(rollout)));
-  },
-
-  /**
    * Test whether there is a rollout in storage with the given slug.
    * @param {string} slug
    * @returns {boolean}
@@ -313,19 +279,5 @@ var PreferenceRollouts = {
         );
       }
     }
-  },
-
-  migrations: {
-    async migration01AddFillerEnrollmentId() {
-      let rollouts = await PreferenceRollouts.getAll();
-      let rolloutsToUpdate = [];
-      for (const rollout of rollouts) {
-        if (typeof rollout.enrollmentId != "string") {
-          rollout.enrollmentId = TelemetryEvents.NO_ENROLLMENT_ID_MARKER;
-          rolloutsToUpdate.push(rollout);
-        }
-      }
-      await PreferenceRollouts.updateMany(rolloutsToUpdate);
-    },
   },
 };
