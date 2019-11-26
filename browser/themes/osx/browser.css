@@ -300,7 +300,7 @@
   font-size: 14px;
 }
 
-@supports -moz-bool-pref("browser.urlbar.megabar.expandTextOnFocus") {
+@supports -moz-bool-pref("browser.urlbar.update1.expandTextOnFocus") {
   .urlbarView {
     font-size: inherit;
   }

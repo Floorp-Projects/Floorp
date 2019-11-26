@@ -290,7 +290,7 @@ add_task(async function test_onProviderResultsRequested() {
         title: "Test remote_tab-tabs result",
         url: "http://example.com/remote_tab-tabs",
         displayUrl:
-          (UrlbarPrefs.get("view.stripHttps") ? "http://" : "") +
+          (UrlbarPrefs.get("update1.view.stripHttps") ? "http://" : "") +
           "example.com/remote_tab-tabs",
       },
     },
@@ -303,7 +303,7 @@ add_task(async function test_onProviderResultsRequested() {
         title: "Test tab-tabs result",
         url: "http://example.com/tab-tabs",
         displayUrl:
-          (UrlbarPrefs.get("view.stripHttps") ? "http://" : "") +
+          (UrlbarPrefs.get("update1.view.stripHttps") ? "http://" : "") +
           "example.com/tab-tabs",
       },
     },
@@ -328,7 +328,7 @@ add_task(async function test_onProviderResultsRequested() {
         title: "Test url-history result",
         url: "http://example.com/url-history",
         displayUrl:
-          (UrlbarPrefs.get("view.stripHttps") ? "http://" : "") +
+          (UrlbarPrefs.get("update1.view.stripHttps") ? "http://" : "") +
           "example.com/url-history",
       },
     },

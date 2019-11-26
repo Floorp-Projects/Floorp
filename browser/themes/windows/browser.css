@@ -554,7 +554,7 @@ menuitem.bookmark-item {
   }
 }
 
-@supports -moz-bool-pref("browser.urlbar.megabar.expandTextOnFocus") {
+@supports -moz-bool-pref("browser.urlbar.update1.expandTextOnFocus") {
   #urlbar[breakout-extend] {
     font-size: 1.25em;
   }

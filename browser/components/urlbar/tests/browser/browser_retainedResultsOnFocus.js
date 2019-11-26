@@ -53,7 +53,7 @@ async function checkDoesNotOpenOnFocus(win = window) {
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.megabar", true]],
+    set: [["browser.urlbar.update1", true]],
   });
   // Add some history for the empty panel.
   await PlacesTestUtils.addVisits([

@@ -103,12 +103,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // The maximum number of results in the urlbar popup.
   ["maxRichResults", 10],
 
-  // Whether the quantum bar displays the major design update.
-  ["megabar", false],
-
-  // Whether the megabar displays the permanent search icon.
-  ["searchIcon", false],
-
   // One-off search buttons enabled status.
   ["oneOffSearches", false],
 
@@ -118,6 +112,11 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Whether to open the urlbar view when the input field is focused by the user.
   ["openViewOnFocus", false],
+
+  // When true, URLs in the user's history that look like search result pages
+  // are styled to look like search engine results instead of the usual history
+  // results.
+  ["restyleSearches", false],
 
   // Whether speculative connections should be enabled.
   ["speculativeConnect.enabled", true],
@@ -148,13 +147,14 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // popular domains will no longer be included in the results.
   ["usepreloadedtopurls.expire_days", 14],
 
-  // When true, URLs in the user's history that look like search result pages
-  // are styled to look like search engine results instead of the usual history
-  // results.
-  ["restyleSearches", false],
+  // Whether the quantum bar displays design update 1.
+  ["update1", false],
+
+  // Whether the urlbar displays a permanent search button in design update 1.
+  ["update1.searchButton", false],
 
   // If true, we strip https:// instead of http:// from URLs in the results view.
-  ["view.stripHttps", false],
+  ["update1.view.stripHttps", false],
 ]);
 const PREF_OTHER_DEFAULTS = new Map([
   ["keyword.enabled", true],
