@@ -83,7 +83,6 @@ import org.mozilla.geckoview.SlowScriptResponse;
 import org.mozilla.geckoview.StorageController;
 import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.WebExtensionController;
-import org.mozilla.geckoview.WebExtensionEventDispatcher;
 import org.mozilla.geckoview.WebMessage;
 import org.mozilla.geckoview.WebNotification;
 import org.mozilla.geckoview.WebNotificationDelegate;
@@ -1458,7 +1457,6 @@ package org.mozilla.geckoview {
   }
 
   public class WebExtensionController {
-    ctor protected WebExtensionController(GeckoRuntime, WebExtensionEventDispatcher);
     method @UiThread @Nullable public WebExtensionController.TabDelegate getTabDelegate();
     method @UiThread public void setTabDelegate(@Nullable WebExtensionController.TabDelegate);
   }

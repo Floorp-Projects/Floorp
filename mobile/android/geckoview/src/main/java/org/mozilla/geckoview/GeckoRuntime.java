@@ -164,15 +164,13 @@ public final class GeckoRuntime implements Parcelable {
     private ServiceWorkerDelegate mServiceWorkerDelegate;
     private WebNotificationDelegate mNotificationDelegate;
     private RuntimeTelemetry mTelemetry;
-    private final WebExtensionEventDispatcher mWebExtensionDispatcher;
     private StorageController mStorageController;
     private final WebExtensionController mWebExtensionController;
     private WebPushController mPushController;
     private final ContentBlockingController mContentBlockingController;
 
     private GeckoRuntime() {
-        mWebExtensionDispatcher = new WebExtensionEventDispatcher();
-        mWebExtensionController = new WebExtensionController(this, mWebExtensionDispatcher);
+        mWebExtensionController = new WebExtensionController(this);
         mContentBlockingController = new ContentBlockingController();
         if (sRuntime != null) {
             throw new IllegalStateException("Only one GeckoRuntime instance is allowed");
@@ -455,7 +453,7 @@ public final class GeckoRuntime implements Parcelable {
         bundle.putBoolean("allowContentMessaging",
                 (webExtension.flags & WebExtension.Flags.ALLOW_CONTENT_MESSAGING) > 0);
 
-        mWebExtensionDispatcher.registerWebExtension(webExtension);
+        mWebExtensionController.registerWebExtension(webExtension);
 
         EventDispatcher.getInstance().dispatch("GeckoView:RegisterWebExtension",
                 bundle, result);
@@ -485,15 +483,11 @@ public final class GeckoRuntime implements Parcelable {
         final GeckoBundle bundle = new GeckoBundle(1);
         bundle.putString("id", webExtension.id);
 
-        mWebExtensionDispatcher.unregisterWebExtension(webExtension);
+        mWebExtensionController.unregisterWebExtension(webExtension);
 
         EventDispatcher.getInstance().dispatch("GeckoView:UnregisterWebExtension", bundle, result);
 
         return result;
-    }
-
-    /* protected */ @NonNull WebExtensionEventDispatcher getWebExtensionDispatcher() {
-        return mWebExtensionDispatcher;
     }
 
     /**
