@@ -1688,7 +1688,6 @@ class RaptorAndroid(PerftestAndroid, Raptor):
             dump_dir = tempfile.mkdtemp()
             remote_dir = posixpath.join(self.remote_profile, 'minidumps')
             if not self.device.is_dir(remote_dir):
-                LOG.error("No crash directory (%s) found on remote device" % remote_dir)
                 return
             self.device.pull(remote_dir, dump_dir)
             mozcrash.log_crashes(LOG, dump_dir, self.config['symbols_path'])

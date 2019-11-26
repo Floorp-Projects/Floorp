@@ -314,13 +314,7 @@ class JUnitTestRunner(MochitestDesktop):
             dump_dir = tempfile.mkdtemp()
             remote_dir = posixpath.join(self.remote_profile, 'minidumps')
             if not self.device.is_dir(remote_dir):
-                # If crash reporting is enabled (MOZ_CRASHREPORTER=1), the
-                # minidumps directory is automatically created when the app
-                # (first) starts, so its lack of presence is a hint that
-                # something went wrong.
-                print("Automation Error: " +
-                      "No crash directory ({}) found on remote device".format(remote_dir))
-                return True
+                return False
             self.device.pull(remote_dir, dump_dir)
             crashed = mozcrash.log_crashes(self.log, dump_dir, symbols_path,
                                            test=self.current_full_name)

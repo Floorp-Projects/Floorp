@@ -155,13 +155,7 @@ class RemoteAutomation(Automation):
             dumpDir = tempfile.mkdtemp()
             remoteCrashDir = posixpath.join(self.remoteProfile, 'minidumps')
             if not self.device.is_dir(remoteCrashDir):
-                # If crash reporting is enabled (MOZ_CRASHREPORTER=1), the
-                # minidumps directory is automatically created when Fennec
-                # (first) starts, so its lack of presence is a hint that
-                # something went wrong.
-                print("Automation Error: No crash directory (%s) found on remote device" %
-                      remoteCrashDir)
-                return True
+                return False
             self.device.pull(remoteCrashDir, dumpDir)
 
             logger = get_default_logger()
