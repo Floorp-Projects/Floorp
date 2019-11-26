@@ -39,7 +39,7 @@ else:
 FORCE_STATIC_LIB = True
 STATIC_LIBRARY_NAME = 'js_static'
 
-if CONFIG['ENABLE_INTL_API']:
+if CONFIG['JS_HAS_INTL_API']:
     USE_LIBS += [
         'icu',
     ]

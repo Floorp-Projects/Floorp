@@ -17,13 +17,13 @@
 #include "js/Utility.h"
 #include "threading/ExclusiveData.h"
 
-#if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
+#if JS_HAS_INTL_API && !MOZ_SYSTEM_ICU
 #  include "unicode/uversion.h"
 
 U_NAMESPACE_BEGIN
 class TimeZone;
 U_NAMESPACE_END
-#endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
+#endif /* JS_HAS_INTL_API && !MOZ_SYSTEM_ICU */
 
 namespace js {
 
@@ -166,7 +166,7 @@ class DateTimeInfo {
     return guard->utcToLocalStandardOffsetSeconds_;
   }
 
-#if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
+#if JS_HAS_INTL_API && !MOZ_SYSTEM_ICU
   enum class TimeZoneOffset { UTC, Local };
 
   /**
@@ -199,7 +199,7 @@ class DateTimeInfo {
   static int32_t localTZA() {
     return utcToLocalStandardOffsetSeconds() * msPerSecond;
   }
-#endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
+#endif /* JS_HAS_INTL_API && !MOZ_SYSTEM_ICU */
 
  private:
   // The two methods below should only be called via js::ResetTimeZoneInternal()
@@ -265,7 +265,7 @@ class DateTimeInfo {
    * <https://unicode-org.atlassian.net/browse/ICU-13845>.
    *
    * When ICU is exclusively used for time zone computations, that means when
-   * |ENABLE_INTL_API && !MOZ_SYSTEM_ICU| is true, this field is only used to
+   * |JS_HAS_INTL_API && !MOZ_SYSTEM_ICU| is true, this field is only used to
    * detect system default time zone changes. It must not be used to convert
    * between local and UTC time, because, as outlined above, this could lead to
    * different results when compared to ICU.
@@ -274,7 +274,7 @@ class DateTimeInfo {
 
   RangeCache dstRange_;  // UTC-based ranges
 
-#if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
+#if JS_HAS_INTL_API && !MOZ_SYSTEM_ICU
   // ICU's TimeZone class is currently only available through the C++ API,
   // see <https://unicode-org.atlassian.net/browse/ICU-13706>. Due to the
   // lack of a stable ABI in C++, we therefore need to restrict this class
@@ -311,7 +311,7 @@ class DateTimeInfo {
   // underlying operating system.
   static constexpr int64_t MinTimeT = 0;          /* time_t 01/01/1970 */
   static constexpr int64_t MaxTimeT = 2145830400; /* time_t 12/31/2037 */
-#endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
+#endif /* JS_HAS_INTL_API && !MOZ_SYSTEM_ICU */
 
   static constexpr int64_t RangeExpansionAmount = 30 * SecondsPerDay;
 
@@ -340,7 +340,7 @@ class DateTimeInfo {
 
   int32_t internalGetDSTOffsetMilliseconds(int64_t utcMilliseconds);
 
-#if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
+#if JS_HAS_INTL_API && !MOZ_SYSTEM_ICU
   /**
    * Compute the UTC offset in milliseconds for the given local time. Called
    * by internalGetOffsetMilliseconds on a cache miss.
@@ -360,7 +360,7 @@ class DateTimeInfo {
                                    int64_t utcMilliseconds, const char* locale);
 
   icu::TimeZone* timeZone();
-#endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
+#endif /* JS_HAS_INTL_API && !MOZ_SYSTEM_ICU */
 };
 
 } /* namespace js */

@@ -70,7 +70,7 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks {
 
     // Disable the toLocaleUpper/Lower case hooks to use the standard,
     // locale-insensitive definition from String.prototype. (These hooks are
-    // only consulted when ENABLE_INTL_API is not set.) Since ENABLE_INTL_API
+    // only consulted when JS_HAS_INTL_API is not set.) Since JS_HAS_INTL_API
     // is always set, these hooks should be disabled.
     localeToUpperCase = nullptr;
     localeToLowerCase = nullptr;
