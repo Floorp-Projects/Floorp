@@ -186,8 +186,7 @@ class RemoteGTests(object):
             dump_dir = tempfile.mkdtemp()
             remote_dir = self.remote_minidumps
             if not self.device.is_dir(remote_dir):
-                log.warning("No crash directory (%s) found on remote device" % remote_dir)
-                return True
+                return False
             self.device.pull(remote_dir, dump_dir)
             crashed = mozcrash.check_for_crashes(dump_dir, symbols_path, test_name="gtest")
         except Exception as e:
