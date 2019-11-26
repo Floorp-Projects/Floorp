@@ -129,6 +129,14 @@ export class Popup extends Component<Props> {
       unHighlightDomElement,
     } = this.props;
 
+    if (properties.length == 0) {
+      return (
+        <div className="preview-popup">
+          <span className="label">{L10N.getStr("preview.noProperties")}</span>
+        </div>
+      );
+    }
+
     return (
       <div
         className="preview-popup"
@@ -188,9 +196,14 @@ export class Popup extends Component<Props> {
 
   getPreviewType() {
     const {
-      preview: { root },
+      preview: { root, properties },
     } = this.props;
-    if (nodeIsPrimitive(root) || nodeIsFunction(root)) {
+    if (
+      nodeIsPrimitive(root) ||
+      nodeIsFunction(root) ||
+      !Array.isArray(properties) ||
+      properties.length === 0
+    ) {
       return "tooltip";
     }
 

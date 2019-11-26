@@ -15,7 +15,7 @@ async function previews(dbg, fnName, previews) {
 async function testBucketedArray(dbg) {
   const invokeResult = invokeInTab("largeArray");
   await waitForPaused(dbg);
-  const preview = await hoverOnToken(dbg, 27, 8, "popup");
+  const preview = await hoverOnToken(dbg, 33, 10, "popup");
 
   is(
     preview.properties.map(p => p.name).join(" "),
@@ -37,21 +37,25 @@ add_task(async function() {
   await testBucketedArray(dbg);
 
   await previews(dbg, "empties", [
-    { line: 2, column: 9, expression: "a", result: '""' },
-    { line: 3, column: 9, expression: "b", result: "false" },
-    { line: 4, column: 9, expression: "c", result: "undefined" },
-    { line: 5, column: 9, expression: "d", result: "null" }
+    { line: 6, column: 9, expression: "a", result: '""' },
+    { line: 7, column: 9, expression: "b", result: "false" },
+    { line: 8, column: 9, expression: "c", result: "undefined" },
+    { line: 9, column: 9, expression: "d", result: "null" },
+  ]);
+
+  await previews(dbg, "objects", [
+    { line: 27, column: 10, expression: "empty", result: "No properties" },
   ]);
 
   await previews(dbg, "smalls", [
-    { line: 10, column: 9, expression: "a", result: '"..."' },
-    { line: 11, column: 9, expression: "b", result: "true" },
-    { line: 12, column: 9, expression: "c", result: "1" },
+    { line: 14, column: 9, expression: "a", result: '"..."' },
+    { line: 15, column: 9, expression: "b", result: "true" },
+    { line: 16, column: 9, expression: "c", result: "1" },
     {
-      line: 13,
+      line: 17,
       column: 9,
       expression: "d",
-      fields: [["length", "0"]]
-    }
+      fields: [["length", "0"]],
+    },
   ]);
 });

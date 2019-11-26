@@ -35,6 +35,10 @@ describe("shouldRenderRootsInReps", () => {
     ).toBeTruthy();
   });
 
+  it("returns false for empty roots", () => {
+    expect(shouldRenderRootsInReps([])).toBeFalsy();
+  });
+
   it("returns true for a big int", () => {
     expect(
       shouldRenderRootsInReps([

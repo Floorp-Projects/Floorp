@@ -2738,7 +2738,7 @@ const {
 } = __webpack_require__(24);
 
 function shouldRenderRootsInReps(roots) {
-  if (roots.length > 1) {
+  if (roots.length !== 1) {
     return false;
   }
 
@@ -7883,6 +7883,10 @@ module.exports = props => {
   const {
     roots
   } = props;
+
+  if (roots.length == 0) {
+    return null;
+  }
 
   if (shouldRenderRootsInReps(roots)) {
     return renderRep(roots[0], props);
