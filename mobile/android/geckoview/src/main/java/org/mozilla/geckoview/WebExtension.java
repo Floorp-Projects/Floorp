@@ -113,30 +113,6 @@ public class WebExtension {
      *                  WebExtensions/WebExtensions_and_the_Add-on_ID
      *               </a>
      *           </ul>
-     */
-
-    /**
-     * Builds a WebExtension instance that can be loaded in GeckoView using
-     * {@link GeckoRuntime#registerWebExtension}
-     *
-     * @param location The WebExtension install location. It must be either a
-     *                 <code>resource:</code> URI to a folder inside the APK or
-     *                 a <code>file:</code> URL to a <code>.xpi</code> file.
-     * @param id Unique identifier for this WebExtension. This identifier must
-     *           either be a GUID or a string formatted like an email address.
-     *           E.g. <pre><code>
-     *              "extensionname@example.org"
-     *              "{daf44bf7-a45e-4450-979c-91cf07434c3d}"
-     *           </code></pre>
-     *
-     *           See also: <ul>
-     *           <li><a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/browser_specific_settings">
-     *                  WebExtensions/manifest.json/browser_specific_settings
-     *               </a>
-     *           <li><a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/WebExtensions_and_the_Add-on_ID#When_do_you_need_an_add-on_ID">
-     *                  WebExtensions/WebExtensions_and_the_Add-on_ID
-     *               </a>
-     *           </ul>
      * @param flags {@link Flags} for this WebExtension.
      */
     public WebExtension(final @NonNull String location, final @NonNull String id,
