@@ -1,7 +1,7 @@
 name: pr-preview-sync
 on:
   schedule:
-    - cron: */5 * * * *
+    - cron: '*/5 * * * *'
 jobs:
   update-pr-preview:
     runs-on: ubuntu-18.04
