@@ -2705,10 +2705,6 @@ pref("browser.tabs.remote.autostart", false);
 // of file:// URIs.
 pref("browser.tabs.remote.separateFileUriProcess", true);
 
-// Pref to control whether we put all data: uri's in the default
-// web process when running with fission.
-pref("browser.tabs.remote.dataUriInDefaultWebProcess", false);
-
 // Pref that enables top level web content pages that are opened from file://
 // URI pages to run in the file content process.
 // This has been added in case breaking any window references between these
