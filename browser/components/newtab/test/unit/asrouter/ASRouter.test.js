@@ -72,6 +72,7 @@ describe("ASRouter", () => {
   let FakeBookmarkPanelHub;
   let FakeToolbarBadgeHub;
   let FakeToolbarPanelHub;
+  let personalizedCfrScores;
 
   function createFakeStorage() {
     const getStub = sandbox.stub();
@@ -118,6 +119,7 @@ describe("ASRouter", () => {
     providerImpressions = {};
     previousSessionEnd = 100;
     sandbox = sinon.createSandbox();
+    personalizedCfrScores = {};
 
     sandbox.spy(ASRouterPreferences, "init");
     sandbox.spy(ASRouterPreferences, "uninit");
@@ -125,7 +127,7 @@ describe("ASRouter", () => {
     sandbox.spy(ASRouterPreferences, "removeListener");
     sandbox.replaceGetter(ASRouterPreferences, "personalizedCfr", function() {
       return {
-        personalizedCfrScores: {},
+        personalizedCfrScores,
         personalizedCfrThreshold: 1.5,
       };
     });
@@ -663,6 +665,42 @@ describe("ASRouter", () => {
 
       await Router.loadMessagesFromAllProviders();
       assert.equal(Router.state, previousState);
+    });
+    it("should apply personalization if defined", async () => {
+      personalizedCfrScores = { FOO: 1, BAR: 2 };
+      const NEW_MESSAGES = [{ id: "FOO" }, { id: "BAR" }];
+
+      fetchStub.withArgs("http://foo.com").resolves({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ messages: NEW_MESSAGES }),
+        headers: FAKE_RESPONSE_HEADERS,
+      });
+
+      await createRouterAndInit([
+        {
+          id: "cfr",
+          personalized: true,
+          personalizedModelVersion: "42",
+          type: "remote",
+          url: "http://foo.com",
+          enabled: true,
+          updateCycleInMs: 300,
+        },
+      ]);
+
+      await Router.loadMessagesFromAllProviders();
+
+      // Make sure messages are there
+      assertRouterContainsMessages(NEW_MESSAGES);
+
+      // Make sure they have a score and personalizedModelVersion
+      for (const expectedMessage of NEW_MESSAGES) {
+        const { id } = expectedMessage;
+        const message = Router.state.messages.find(msg => msg.id === id);
+        assert.propertyVal(message, "score", personalizedCfrScores[message.id]);
+        assert.propertyVal(message, "personalizedModelVersion", "42");
+      }
     });
     it("should update messages for a provider if enough time has passed, without removing messages for other providers", async () => {
       const NEW_MESSAGES = [{ id: "new_123" }];
