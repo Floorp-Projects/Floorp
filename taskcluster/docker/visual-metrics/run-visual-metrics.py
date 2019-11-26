@@ -5,20 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """Instrument visualmetrics.py to run in parallel.
-
-Environment variables:
-
-  VISUAL_METRICS_JOBS_JSON:
-    A JSON blob containing the job descriptions.
-
-    Can be overridden with the --jobs-json-path option set to a local file
-    path.
 """
 
 import argparse
 import os
 import json
+import shutil
 import sys
+import tarfile
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from functools import partial
 from multiprocessing import cpu_count
@@ -28,7 +22,7 @@ import attr
 import requests
 import structlog
 import subprocess
-from voluptuous import Required, Schema, Url
+from voluptuous import Required, Schema
 
 #: The workspace directory where files will be downloaded, etc.
 WORKSPACE_DIR = Path("/", "builds", "worker", "workspace")
@@ -48,14 +42,14 @@ class Job:
     #: json_path: The path to the ``browsertime.json`` file on disk.
     json_path = attr.ib(type=Path)
 
-    #: json_url: The URL of the ``browsertime.json`` file.
-    json_url = attr.ib(type=str)
+    #: json_location: The location or URL of the ``browsertime.json`` file.
+    json_location = attr.ib(type=str)
 
     #: video_path: The path of the video file on disk.
     video_path = attr.ib(type=Path)
 
-    #: video_url: The URl of the video file.
-    video_url = attr.ib(type=str)
+    #: video_location: The path or URL of the video file.
+    video_location = attr.ib(type=str)
 
 
 # NB: Keep in sync with try_task_config_schema in
@@ -64,7 +58,7 @@ class Job:
 JOB_SCHEMA = Schema(
     {
         Required("jobs"): [
-            {Required("browsertime_json_url"): Url(), Required("video_url"): Url()}
+            {Required("json_location"): str, Required("video_location"): str}
         ]
     }
 )
@@ -86,8 +80,7 @@ def run_command(log, cmd):
         log.info("Command succeeded", result=res)
         return 0, res
     except subprocess.CalledProcessError as e:
-        log.info("Command failed", cmd=cmd, status=e.returncode,
-                 output=e.output)
+        log.info("Command failed", cmd=cmd, status=e.returncode, output=e.output)
         return e.returncode, e.output
 
 
@@ -109,50 +102,33 @@ def main(log, args):
     visualmetrics_path = Path(fetch_dir) / "visualmetrics.py"
     if not visualmetrics_path.exists():
         log.error(
-            "Could not locate visualmetrics.py",
-            expected_path=str(visualmetrics_path)
+            "Could not locate visualmetrics.py", expected_path=str(visualmetrics_path)
         )
         return 1
 
-    if args.jobs_json_path:
-        try:
-            with open(str(args.jobs_json_path), "r") as f:
-                jobs_json = json.load(f)
-        except Exception as e:
-            log.error(
-                "Could not read jobs.json file: %s" % e,
-                path=args.jobs_json_path,
-                exc_info=True,
-            )
-            return 1
-
-        log.info(
-            "Loaded jobs.json from file", path=args.jobs_json_path, jobs_json=jobs_json
+    results_path = Path(args.browsertime_results).parent
+    try:
+        with tarfile.open(str(args.browsertime_results)) as tar:
+            tar.extractall(path=str(results_path))
+    except Exception:
+        log.error(
+            "Could not read extract browsertime results archive",
+            path=args.browsertime_results,
+            exc_info=True,
         )
+        return 1
+    log.info("Extracted browsertime results", path=args.browsertime_results)
+    jobs_json_path = results_path / "browsertime-results" / "jobs.json"
+    try:
+        with open(str(jobs_json_path), "r") as f:
+            jobs_json = json.load(f)
+    except Exception as e:
+        log.error(
+            "Could not read jobs.json file: %s" % e, path=jobs_json_path, exc_info=True
+        )
+        return 1
 
-    else:
-        raw_jobs_json = os.getenv("VISUAL_METRICS_JOBS_JSON")
-        if raw_jobs_json is not None and isinstance(raw_jobs_json, bytes):
-            raw_jobs_json = raw_jobs_json.decode("utf-8")
-        elif raw_jobs_json is None:
-            log.error(
-                "Expected one of --jobs-json-path or "
-                "VISUAL_METRICS_JOBS_JSON environment variable."
-            )
-            return 1
-
-        try:
-            jobs_json = json.loads(raw_jobs_json)
-        except (TypeError, ValueError) as e:
-            log.error(
-                "Failed to decode VISUAL_METRICS_JOBS_JSON environment "
-                "variable: %s" % e,
-                value=raw_jobs_json,
-            )
-            return 1
-
-        log.info("Parsed jobs.json from environment", jobs_json=jobs_json)
-
+    log.info("Loaded jobs.json from file", path=jobs_json_path, jobs_json=jobs_json)
     try:
         JOB_SCHEMA(jobs_json)
     except Exception as e:
@@ -164,6 +140,8 @@ def main(log, args):
     except Exception as e:
         log.error("Failed to download jobs: %s" % e, exc_info=True)
         return 1
+
+    runs_failed = 0
 
     with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
         for job, result in zip(
@@ -180,8 +158,11 @@ def main(log, args):
             returncode, res = result
             if returncode != 0:
                 log.error(
-                    "Failed to run visualmetrics.py", video_url=job.video_url, error=res
+                    "Failed to run visualmetrics.py",
+                    video_location=job.video_location,
+                    error=res,
                 )
+                runs_failed += 1
             else:
                 path = job.job_dir / "visual-metrics.json"
                 with path.open("wb") as f:
@@ -195,27 +176,34 @@ def main(log, args):
             {
                 "successful_jobs": [
                     {
-                        "video_url": job.video_url,
-                        "browsertime_json_url": job.json_url,
+                        "video_location": job.video_location,
+                        "json_location": job.json_location,
                         "path": (str(job.job_dir.relative_to(WORKSPACE_DIR)) + "/"),
                     }
                     for job in downloaded_jobs
                 ],
                 "failed_jobs": [
-                    {"video_url": job.video_url, "browsertime_json_url": job.json_url}
+                    {
+                        "video_location": job.video_location,
+                        "json_location": job.json_location,
+                    }
                     for job in failed_jobs
                 ],
             },
             f,
         )
 
-    tarfile = OUTPUT_DIR / "visual-metrics.tar.xz"
-    log.info("Creating the tarfile", tarfile=tarfile)
+    archive = OUTPUT_DIR / "visual-metrics.tar.xz"
+    log.info("Creating the tarfile", tarfile=archive)
     returncode, res = run_command(
-        log, ["tar", "cJf", str(tarfile), "-C", str(WORKSPACE_DIR), "."]
+        log, ["tar", "cJf", str(archive), "-C", str(WORKSPACE_DIR), "."]
     )
     if returncode != 0:
         raise Exception("Could not tar the results")
+
+    # If there's one failure along the way, we want to return > 0
+    # to trigger a red job in TC.
+    return len(failed_jobs) + runs_failed
 
 
 def download_inputs(log, raw_jobs):
@@ -234,14 +222,13 @@ def download_inputs(log, raw_jobs):
     for i, job in enumerate(raw_jobs):
         job_dir = WORKSPACE_JOBS_DIR / str(i)
         job_dir.mkdir(parents=True, exist_ok=True)
-
         pending_jobs.append(
             Job(
                 job_dir,
                 job_dir / "browsertime.json",
-                job["browsertime_json_url"],
+                job["json_location"],
                 job_dir / "video",
-                job["video_url"],
+                job["video_location"],
             )
         )
 
@@ -273,14 +260,15 @@ def download_job(log, job):
         attribute is updated to match the file path given by the video file
         in the ``browsertime.json`` file.
     """
-    log = log.bind(json_url=job.json_url)
+    fetch_dir = Path(os.getenv("MOZ_FETCHES_DIR"))
+    log = log.bind(json_location=job.json_location)
     try:
-        download(job.video_url, job.video_path)
-        download(job.json_url, job.json_path)
+        download_or_copy(fetch_dir / job.video_location, job.video_path)
+        download_or_copy(fetch_dir / job.json_location, job.json_path)
     except Exception as e:
         log.error(
             "Failed to download files for job: %s" % e,
-            video_url=job.video_url,
+            video_location=job.video_location,
             exc_info=True,
         )
         return job, False
@@ -307,6 +295,27 @@ def download_job(log, job):
     job.video_path = video_path
 
     return job, True
+
+
+def download_or_copy(url_or_location, path):
+    """Download the resource at the given URL or path to the local path.
+
+    Args:
+        url_or_location: The URL or path of the resource to download or copy.
+        path: The local path to download or copy the resource to.
+
+    Raises:
+        OSError:
+            Raised if an IO error occurs while writing the file.
+
+        requests.exceptions.HTTPError:
+            Raised when an HTTP error (including e.g., HTTP 404) occurs.
+    """
+    url_or_location = str(url_or_location)
+    if os.path.exists(url_or_location):
+        shutil.copyfile(url_or_location, str(path))
+        return
+    download(url_or_location, path)
 
 
 def download(url, path):
@@ -357,16 +366,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
+
     parser.add_argument(
-        "--jobs-json-path",
+        "--browsertime-results",
         type=Path,
         metavar="PATH",
-        help=(
-            "The path to the jobs.json file. If not present, the "
-            "VISUAL_METRICS_JOBS_JSON environment variable will be used "
-            "instead."
-        )
+        help="The path to the browsertime results tarball.",
+        required=True,
     )
+
     parser.add_argument(
         "visual_metrics_options",
         type=str,
