@@ -48,7 +48,7 @@ add_task(async function test_browser_settings() {
       if (!listeners.has(apiName)) {
         apiObj.onChange.addListener(details => {
           browser.test.sendMessage("onChange", {
-            details: details.details,
+            details,
             setting: apiName,
           });
         });
