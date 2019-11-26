@@ -26,7 +26,7 @@ interface nsIProcessSwitchRequestor : nsISupports
    * Instructs the callee to be loaded in a new process. Like 'redirectTo'
    * this can only be used on channels that have not yet called their
    * listener's OnStartRequest(). Can only be called during the
-   * channel-on-may-change-process observer notification.
+   * http-on-may-change-process observer notification.
    *
    * @param aTabPromise   a promise which resolves to a nsIRemotTab object
    *                      which the load will proceed in.

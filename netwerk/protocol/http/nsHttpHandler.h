@@ -397,6 +397,10 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
     NotifyObservers(chan, NS_HTTP_ON_EXAMINE_CACHED_RESPONSE_TOPIC);
   }
 
+  void OnMayChangeProcess(nsIProcessSwitchRequestor* request) {
+    NotifyObservers(request, NS_HTTP_ON_MAY_CHANGE_PROCESS_TOPIC);
+  }
+
   // Generates the host:port string for use in the Host: header as well as the
   // CONNECT line for proxies. This handles IPv6 literals correctly.
   static MOZ_MUST_USE nsresult GenerateHostPort(const nsCString& host,
@@ -475,6 +479,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   MOZ_MUST_USE nsresult InitConnectionMgr();
 
   void NotifyObservers(nsIChannel* chan, const char* event);
+  void NotifyObservers(nsIProcessSwitchRequestor* request, const char* event);
 
   void SetFastOpenOSSupport();
 

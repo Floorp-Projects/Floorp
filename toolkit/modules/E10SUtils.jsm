@@ -25,12 +25,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "useSeparateDataUriProcess",
-  "browser.tabs.remote.dataUriInDefaultWebProcess",
-  false
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
   "allowLinkedWebInFileUriProcess",
   "browser.tabs.remote.allowLinkedWebInFileUriProcess",
   false
@@ -539,17 +533,11 @@ var E10SUtils = {
       throw Cr.NS_ERROR_UNEXPECTED;
     }
 
-    // Null principals can be loaded in any remote process, but when
-    // using fission we add the option to force them into the default
-    // web process for better test coverage.
+    // Null principals can be loaded in any remote process.
     if (aPrincipal.isNullPrincipal) {
-      if (
-        (aRemoteSubframes && useSeparateDataUriProcess) ||
-        aPreferredRemoteType == NOT_REMOTE
-      ) {
-        return WEB_REMOTE_TYPE;
-      }
-      return aPreferredRemoteType;
+      return aPreferredRemoteType == NOT_REMOTE
+        ? DEFAULT_REMOTE_TYPE
+        : aPreferredRemoteType;
     }
 
     // We might care about the currently loaded URI. Pull it out of our current
@@ -769,9 +757,7 @@ var E10SUtils = {
     // http(s) uri, so make sure we switch if we're currently in that process.
     if (
       (useRemoteSubframes || useHttpResponseProcessSelection) &&
-      (aURI.scheme == "http" ||
-        aURI.scheme == "https" ||
-        aURI.scheme == "data") &&
+      (aURI.scheme == "http" || aURI.scheme == "https") &&
       Services.appinfo.remoteType != NOT_REMOTE
     ) {
       return true;

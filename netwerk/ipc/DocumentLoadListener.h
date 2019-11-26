@@ -329,10 +329,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DocumentLoadListener, DOCUMENT_LOAD_LISTENER_IID)
 
-inline nsISupports* ToSupports(DocumentLoadListener* aObj) {
-  return static_cast<nsIInterfaceRequestor*>(aObj);
-}
-
 }  // namespace net
 }  // namespace mozilla
 

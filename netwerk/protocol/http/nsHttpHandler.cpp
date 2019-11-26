@@ -807,6 +807,14 @@ void nsHttpHandler::NotifyObservers(nsIChannel* chan, const char* event) {
   if (obsService) obsService->NotifyObservers(chan, event, nullptr);
 }
 
+void nsHttpHandler::NotifyObservers(nsIProcessSwitchRequestor* request,
+                                    const char* event) {
+  LOG(("nsHttpHandler::NotifyObservers [request=%p event=\"%s\"]\n", request,
+       event));
+  nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+  if (obsService) obsService->NotifyObservers(request, event, nullptr);
+}
+
 nsresult nsHttpHandler::AsyncOnChannelRedirect(
     nsIChannel* oldChan, nsIChannel* newChan, uint32_t flags,
     nsIEventTarget* mainThreadEventTarget) {

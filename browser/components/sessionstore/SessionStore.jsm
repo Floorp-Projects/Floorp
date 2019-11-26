@@ -54,7 +54,7 @@ const OBSERVING = [
   "browser:purge-session-history-for-domain",
   "idle-daily",
   "clear-origin-attributes-data",
-  "channel-on-may-change-process",
+  "http-on-may-change-process",
 ];
 
 // XUL Window properties to (re)store
@@ -902,7 +902,7 @@ var SessionStoreInternal = {
           this._forgetTabsWithUserContextId(userContextId);
         }
         break;
-      case "channel-on-may-change-process":
+      case "http-on-may-change-process":
         this.onMayChangeProcess(aSubject);
         break;
     }

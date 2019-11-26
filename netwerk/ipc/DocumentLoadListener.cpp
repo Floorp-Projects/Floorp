@@ -613,7 +613,7 @@ void DocumentLoadListener::TriggerRedirectToRealChannel(
 
 NS_IMETHODIMP
 DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
-  RefPtr<nsHttpChannel> httpChannel = do_QueryObject(aRequest);
+  nsCOMPtr<nsHttpChannel> channel = do_QueryInterface(aRequest);
   mChannel = do_QueryInterface(aRequest);
   MOZ_DIAGNOSTIC_ASSERT(mChannel);
 
@@ -643,22 +643,19 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   // also save the value so that when we do call
   // HttpChannelParent::OnStartRequest, we can have the value as it originally
   // was.
-  if (httpChannel) {
-    Unused << httpChannel->GetApplyConversion(&mOldApplyConversion);
-    httpChannel->SetApplyConversion(false);
-  }
+  if (channel) {
+    Unused << channel->GetApplyConversion(&mOldApplyConversion);
+    channel->SetApplyConversion(false);
 
-  // notify "channel-on-may-change-process" observers which is typically
-  // SessionStore.jsm. This will determine if a new process needs to be
-  // spawned and if so SwitchProcessTo() will be called which will set a
-  // ContentProcessIdPromise.
-  nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
-  obsService->NotifyObservers(ToSupports(this), "channel-on-may-change-process",
-                              nullptr);
-
-  if (mRedirectContentProcessIdPromise) {
-    TriggerCrossProcessSwitch();
-    return NS_OK;
+    // notify "http-on-may-change-process" observers which is typically
+    // SessionStore.jsm. This will determine if a new process needs to be
+    // spawned and if so SwitchProcessTo() will be called which will set a
+    // ContentProcessIdPromise.
+    gHttpHandler->OnMayChangeProcess(this);
+    if (mRedirectContentProcessIdPromise) {
+      TriggerCrossProcessSwitch();
+      return NS_OK;
+    }
   }
 
   TriggerRedirectToRealChannel();
