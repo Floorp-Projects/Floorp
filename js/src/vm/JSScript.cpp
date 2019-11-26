@@ -420,15 +420,12 @@ static XDRResult XDRInnerObject(XDRState<mode>* xdr,
       if (mode == XDR_ENCODE) {
         RootedFunction function(cx, &inner->as<JSFunction>());
 
-        if (function->isInterpretedLazy()) {
-          funEnclosingScope = function->lazyScript()->enclosingScope();
-        } else if (function->isInterpreted()) {
-          funEnclosingScope = function->nonLazyScript()->enclosingScope();
-        } else {
-          MOZ_ASSERT(function->isAsmJSNative());
+        if (function->isAsmJSNative()) {
           return xdr->fail(JS::TranscodeResult_Failure_AsmJSNotSupported);
         }
 
+        MOZ_ASSERT(function->enclosingScope());
+        funEnclosingScope = function->enclosingScope();
         funEnclosingScopeIndex =
             FindScopeIndex(data->gcthings(), *funEnclosingScope);
       }
@@ -1324,7 +1321,7 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
       if (mode == XDR_DECODE) {
         elem.init(func);
         if (elem->isInterpretedLazy()) {
-          elem->lazyScript()->setEnclosingLazyScript(lazy);
+          elem->setEnclosingLazyScript(lazy);
         }
       }
     }
@@ -5746,7 +5743,7 @@ LazyScript* LazyScript::Create(
   for (size_t i = 0; i < res->numInnerFunctions(); i++) {
     resInnerFunctions[i].init(innerFunctionBoxes[i]->function());
     if (resInnerFunctions[i]->isInterpretedLazy()) {
-      resInnerFunctions[i]->lazyScript()->setEnclosingLazyScript(res);
+      resInnerFunctions[i]->setEnclosingLazyScript(res);
     }
   }
 
