@@ -7,6 +7,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
 });
 
@@ -19,11 +20,6 @@ XPCOMUtils.defineLazyServiceGetter(
 
 add_task(async function insertTokens() {
   const tests = [
-    {
-      input: "",
-      token: UrlbarTokenizer.RESTRICT.HISTORY,
-      expected: "^ ",
-    },
     {
       input: "mozilla",
       token: UrlbarTokenizer.RESTRICT.HISTORY,
@@ -53,12 +49,14 @@ add_task(async function insertTokens() {
   let win = BrowserWindowTracker.getTopWindow();
   for (let { input, token, expected } of tests) {
     win.gURLBar.search(input);
+    await UrlbarTestUtils.promiseSearchComplete(win);
     TouchBarHelper.insertRestrictionInUrlbar(token);
     Assert.equal(
       win.gURLBar.value,
       expected,
       "The search restriction token should have been entered."
     );
+    await UrlbarTestUtils.promisePopupClose(win);
   }
 });
 
@@ -88,12 +86,14 @@ add_task(async function existingTokens() {
   let win = BrowserWindowTracker.getTopWindow();
   for (let { input, token, expected } of tests) {
     win.gURLBar.search(input);
+    await UrlbarTestUtils.promiseSearchComplete(win);
     TouchBarHelper.insertRestrictionInUrlbar(token);
     Assert.equal(
       win.gURLBar.value,
       expected,
       "The search restriction token should have been replaced."
     );
+    await UrlbarTestUtils.promisePopupClose(win);
   }
 });
 
@@ -118,6 +118,7 @@ add_task(async function stripSpaces() {
   let win = BrowserWindowTracker.getTopWindow();
   for (let { input, token, expected } of tests) {
     win.gURLBar.search(input);
+    await UrlbarTestUtils.promiseSearchComplete(win);
     TouchBarHelper.insertRestrictionInUrlbar(token);
     Assert.equal(
       win.gURLBar.value,
@@ -125,29 +126,33 @@ add_task(async function stripSpaces() {
       "The search restriction token should have been entered " +
         "with stripped whitespace."
     );
+    await UrlbarTestUtils.promisePopupClose(win);
   }
 });
 
 add_task(async function clearURLs() {
   const tests = [
     {
-      loadUrl: "https://example.com",
+      loadUrl: "http://example.com/",
       token: UrlbarTokenizer.RESTRICT.HISTORY,
       expected: "^ ",
     },
     {
-      loadUrl: "about:blank",
+      loadUrl: "about:mozilla",
       token: UrlbarTokenizer.RESTRICT.BOOKMARK,
       expected: "* ",
     },
   ];
   let win = BrowserWindowTracker.getTopWindow();
+  await UrlbarTestUtils.promisePopupClose(win);
   for (let { loadUrl, token, expected } of tests) {
-    let loadedPromise = BrowserTestUtils.browserLoaded(
-      gBrowser.selectedBrowser
-    );
-    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, loadUrl);
+    let browser = win.gBrowser.selectedBrowser;
+    let loadedPromise = BrowserTestUtils.browserLoaded(browser, false, loadUrl);
+    BrowserTestUtils.loadURI(browser, loadUrl);
     await loadedPromise;
+    await TestUtils.waitForCondition(
+      () => win.gURLBar.getAttribute("pageproxystate") == "valid"
+    );
     TouchBarHelper.insertRestrictionInUrlbar(token);
     Assert.equal(
       win.gURLBar.value,
