@@ -1110,11 +1110,28 @@ EnvironmentCache.prototype = {
    * This gets called when the delayed init completes.
    */
   async delayedInit() {
+    this._processData = await Services.sysinfo.processInfo;
+    let processData = await Services.sysinfo.processInfo;
+    // Remove isWow64 and isWowARM64 from processData
+    // to strip it down to just CPU info
+    delete processData.isWow64;
+    delete processData.isWowARM64;
+
+    let oldEnv = null;
+    if (!this._initTask) {
+      oldEnv = this.currentEnvironment;
+    }
+
+    this._cpuData = this._getCPUData();
+    // Augment the return value from the promises with cached values
+    this._cpuData = { ...processData, ...this._cpuData };
+
+    this._currentEnvironment.system.cpu = this._getCPUData();
+
     if (AppConstants.platform == "win") {
       this._hddData = await Services.sysinfo.diskInfo;
-      this._processData = await Services.sysinfo.processInfo;
       let osData = await Services.sysinfo.osInfo;
-      let oldEnv = null;
+
       if (!this._initTask) {
         // We've finished creating the initial env, so notify for the update
         // This is all a bit awkward because `currentEnvironment` clones
@@ -1132,12 +1149,14 @@ EnvironmentCache.prototype = {
 
       this._currentEnvironment.system.os = this._getOSData();
       this._currentEnvironment.system.hdd = this._getHDDData();
+
+      // Windows only values stored in processData
       this._currentEnvironment.system.isWow64 = this._getProcessData().isWow64;
       this._currentEnvironment.system.isWowARM64 = this._getProcessData().isWowARM64;
+    }
 
-      if (!this._initTask) {
-        this._onEnvironmentChange("system-info", oldEnv);
-      }
+    if (!this._initTask) {
+      this._onEnvironmentChange("system-info", oldEnv);
     }
   },
 
@@ -1859,17 +1878,7 @@ EnvironmentCache.prototype = {
       return this._cpuData;
     }
 
-    this._cpuData = {
-      count: getSysinfoProperty("cpucount", null),
-      cores: getSysinfoProperty("cpucores", null),
-      vendor: getSysinfoProperty("cpuvendor", null),
-      family: getSysinfoProperty("cpufamily", null),
-      model: getSysinfoProperty("cpumodel", null),
-      stepping: getSysinfoProperty("cpustepping", null),
-      l2cacheKB: getSysinfoProperty("cpucachel2", null),
-      l3cacheKB: getSysinfoProperty("cpucachel3", null),
-      speedMHz: getSysinfoProperty("cpuspeed", null),
-    };
+    this._cpuData = {};
 
     const CPU_EXTENSIONS = [
       "hasMMX",
