@@ -70,7 +70,7 @@ class DocumentChannelChild final : public nsHashPropertyBag,
  private:
   void ShutdownListeners(nsresult aStatusCode);
 
-  ~DocumentChannelChild();
+  ~DocumentChannelChild() = default;
 
   nsCOMPtr<nsIChannel> mRedirectChannel;
   nsTArray<DocumentChannelRedirect> mRedirects;

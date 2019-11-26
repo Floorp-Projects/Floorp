@@ -153,7 +153,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              uint32_t aLoadFlags);
 
  protected:
-  virtual ~DocumentLoadListener();
+  virtual ~DocumentLoadListener() = default;
 
   // Initiates the switch from DocumentChannel to the real protocol-specific
   // channel, and ensures that RedirectToRealChannelFinished is called when

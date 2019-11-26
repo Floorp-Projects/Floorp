@@ -27,9 +27,6 @@
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
 
-mozilla::LazyLogModule gDocumentChannelLog("DocumentChannel");
-#define LOG(fmt) MOZ_LOG(gDocumentChannelLog, mozilla::LogLevel::Verbose, fmt)
-
 using namespace mozilla::dom;
 
 namespace mozilla {
@@ -55,7 +52,6 @@ DocumentLoadListener::DocumentLoadListener(const PBrowserOrId& aIframeEmbedding,
                                            PBOverrideStatus aOverrideStatus,
                                            ADocumentChannelBridge* aBridge)
     : mLoadContext(aLoadContext), mPBOverride(aOverrideStatus) {
-  LOG(("DocumentLoadListener ctor [this=%p]", this));
   RefPtr<dom::BrowserParent> parent;
   if (aIframeEmbedding.type() == PBrowserOrId::TPBrowserParent) {
     parent =
@@ -63,10 +59,6 @@ DocumentLoadListener::DocumentLoadListener(const PBrowserOrId& aIframeEmbedding,
   }
   mParentChannelListener = new ParentChannelListener(this, parent);
   mDocumentChannelBridge = aBridge;
-}
-
-DocumentLoadListener::~DocumentLoadListener() {
-  LOG(("DocumentLoadListener dtor [this=%p]", this));
 }
 
 bool DocumentLoadListener::Open(
@@ -77,8 +69,6 @@ bool DocumentLoadListener::Open(
     const Maybe<PrincipalInfo>& aContentBlockingAllowListPrincipal,
     const nsString& aCustomUserAgent, const uint64_t& aChannelId,
     const TimeStamp& aAsyncOpenTime, nsresult* aRv) {
-  LOG(("DocumentLoadListener Open [this=%p, uri=%s]", this,
-       aLoadState->URI()->GetSpecOrDefault().get()));
   if (!nsDocShell::CreateChannelForLoadState(
           aLoadState, aLoadInfo, mParentChannelListener, nullptr,
           aInitiatorType, aLoadFlags, aLoadType, aCacheKey, aIsActive,
@@ -154,8 +144,6 @@ bool DocumentLoadListener::Open(
 }
 
 void DocumentLoadListener::DocumentChannelBridgeDisconnected() {
-  LOG(("DocumentLoadListener DocumentChannelBridgeDisconnected [this=%p]",
-       this));
   // The nsHttpChannel may have a reference to this parent, release it
   // to avoid circular references.
   RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(mChannel);
@@ -184,10 +172,6 @@ void DocumentLoadListener::Resume() {
 }
 
 void DocumentLoadListener::RedirectToRealChannelFinished(nsresult aRv) {
-  LOG(
-      ("DocumentLoadListener RedirectToRealChannelFinished [this=%p, "
-       "aRv=%" PRIx32 " ]",
-       this, static_cast<uint32_t>(aRv)));
   if (NS_FAILED(aRv)) {
     FinishReplacementChannelSetup(false);
     return;
@@ -508,8 +492,6 @@ void DocumentLoadListener::TriggerCrossProcessSwitch() {
   MOZ_ASSERT(!mDoingProcessSwitch, "Already in the middle of switching?");
   MOZ_ASSERT(NS_IsMainThread());
 
-  LOG(("DocumentLoadListener TriggerCrossProcessSwitch [this=%p]", this));
-
   mDoingProcessSwitch = true;
 
   RefPtr<DocumentLoadListener> self = this;
@@ -529,7 +511,6 @@ RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
 DocumentLoadListener::RedirectToRealChannel(
     uint32_t aRedirectFlags, uint32_t aLoadFlags,
     const Maybe<uint64_t>& aDestinationProcess) {
-  LOG(("DocumentLoadListener RedirectToRealChannel [this=%p]", this));
   if (aDestinationProcess) {
     dom::ContentParent* cp =
         dom::ContentProcessManager::GetSingleton()->GetContentProcessById(
@@ -626,7 +607,6 @@ void DocumentLoadListener::TriggerRedirectToRealChannel(
 
 NS_IMETHODIMP
 DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
-  LOG(("DocumentLoadListener OnStartRequest [this=%p]", this));
   nsCOMPtr<nsHttpChannel> channel = do_QueryInterface(aRequest);
   mChannel = do_QueryInterface(aRequest);
   MOZ_DIAGNOSTIC_ASSERT(mChannel);
@@ -643,19 +623,6 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   // cancel the parent, which results in this being called. We don't need
   // to forward it on though, since the child side is already completed.
   if (mDoingProcessSwitch) {
-    return NS_OK;
-  }
-
-  // Generally we want to switch to a real channel even if the request failed,
-  // since the listener might want to access protocol-specific data (like http
-  // response headers) in its error handling.
-  // An exception to this is when nsExtProtocolChannel handled the request and
-  // returned NS_ERROR_NO_CONTENT, since creating a real one in the content
-  // process will attempt to handle the URI a second time.
-  nsresult status = NS_OK;
-  aRequest->GetStatus(&status);
-  if (status == NS_ERROR_NO_CONTENT) {
-    mDocumentChannelBridge->DisconnectChildListeners(NS_ERROR_NO_CONTENT);
     return NS_OK;
   }
 
@@ -693,7 +660,6 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
 NS_IMETHODIMP
 DocumentLoadListener::OnStopRequest(nsIRequest* aRequest,
                                     nsresult aStatusCode) {
-  LOG(("DocumentLoadListener OnStopRequest [this=%p]", this));
   mStopRequestValue = Some(aStatusCode);
 
   return NS_OK;
@@ -703,7 +669,6 @@ NS_IMETHODIMP
 DocumentLoadListener::OnDataAvailable(nsIRequest* aRequest,
                                       nsIInputStream* aInputStream,
                                       uint64_t aOffset, uint32_t aCount) {
-  LOG(("DocumentLoadListener OnDataAvailable [this=%p]", this));
   // This isn't supposed to happen, since we suspended the channel, but
   // sometimes Suspend just doesn't work. This can happen when we're routing
   // through nsUnknownDecoder to sniff the content type, and it doesn't handle
@@ -970,5 +935,3 @@ DocumentLoadListener::GetCrossOriginOpenerPolicy(
 
 }  // namespace net
 }  // namespace mozilla
-
-#undef LOG

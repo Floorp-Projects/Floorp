@@ -25,8 +25,10 @@ class DocumentChannelParent final : public ADocumentChannelBridge,
 
   explicit DocumentChannelParent(const dom::PBrowserOrId& aIframeEmbedding,
                                  nsILoadContext* aLoadContext,
-                                 PBOverrideStatus aOverrideStatus);
-
+                                 PBOverrideStatus aOverrideStatus) {
+    mParent = new DocumentLoadListener(aIframeEmbedding, aLoadContext,
+                                       aOverrideStatus, this);
+  }
   bool Init(const DocumentChannelCreationArgs& aArgs);
 
   // PDocumentChannelParent
@@ -68,7 +70,7 @@ class DocumentChannelParent final : public ADocumentChannelBridge,
   RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
   RedirectToRealChannel(uint32_t aRedirectFlags, uint32_t aLoadFlags) override;
 
-  ~DocumentChannelParent();
+  ~DocumentChannelParent() = default;
 
   RefPtr<DocumentLoadListener> mParent;
 };

@@ -166,6 +166,7 @@
 #include "nsINetworkLinkService.h"
 #include "nsIObserverService.h"
 #include "nsIParentChannel.h"
+#include "nsIRemoteWindowContext.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISearchService.h"
@@ -1364,11 +1365,27 @@ void ContentParent::Init() {
   mScriptableHelper = new ScriptableCPInfo(this);
 }
 
+namespace {
+
+class RemoteWindowContext final : public nsIRemoteWindowContext,
+                                  public nsIInterfaceRequestor {
+ public:
+  explicit RemoteWindowContext(BrowserParent* aBrowserParent)
+      : mBrowserParent(aBrowserParent) {}
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSIREMOTEWINDOWCONTEXT
+
+ private:
+  ~RemoteWindowContext();
+  RefPtr<BrowserParent> mBrowserParent;
+};
+
 NS_IMPL_ISUPPORTS(RemoteWindowContext, nsIRemoteWindowContext,
                   nsIInterfaceRequestor)
 
-RemoteWindowContext::RemoteWindowContext(BrowserParent* aBrowserParent)
-    : mBrowserParent(aBrowserParent) {}
+RemoteWindowContext::~RemoteWindowContext() {}
 
 NS_IMETHODIMP
 RemoteWindowContext::GetInterface(const nsIID& aIID, void** aSink) {
@@ -1387,6 +1404,8 @@ RemoteWindowContext::GetUsePrivateBrowsing(bool* aUsePrivateBrowsing) {
   *aUsePrivateBrowsing = loadContext && loadContext->UsePrivateBrowsing();
   return NS_OK;
 }
+
+}  // namespace
 
 void ContentParent::MaybeAsyncSendShutDownMessage() {
   MOZ_ASSERT(NS_IsMainThread());

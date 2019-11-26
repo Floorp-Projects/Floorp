@@ -156,13 +156,6 @@ ParentChannelListener::GetInterface(const nsIID& aIID, void** result) {
     }
   }
 
-  if (aIID.Equals(NS_GET_IID(nsIRemoteWindowContext)) && mBrowserParent) {
-    nsCOMPtr<nsIRemoteWindowContext> ctx(
-        new RemoteWindowContext(mBrowserParent));
-    ctx.forget(result);
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIInterfaceRequestor> ir;
   if (mNextListener && NS_SUCCEEDED(CallQueryInterface(mNextListener.get(),
                                                        getter_AddRefs(ir)))) {
