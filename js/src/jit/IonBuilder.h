@@ -354,6 +354,8 @@ class IonBuilder : public MIRGenerator,
   // Improve the type information at tests
   AbortReasonOr<Ok> improveTypesAtTest(MDefinition* ins, bool trueBranch,
                                        MTest* test);
+  AbortReasonOr<Ok> improveTypesAtTestSuccessor(MTest* test,
+                                                MBasicBlock* successor);
   AbortReasonOr<Ok> improveTypesAtCompare(MCompare* ins, bool trueBranch,
                                           MTest* test);
   AbortReasonOr<Ok> improveTypesAtNullOrUndefinedCompare(MCompare* ins,
