@@ -575,14 +575,6 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
       uint32_t offset = EvaluateInitExpr(globalImportValues, seg->offset());
       uint32_t count = seg->length();
 
-      // Allow zero-sized initializations even if they are out-of-bounds. This
-      // behavior technically only applies when bulk-memory-operations are
-      // enabled, but we will fail with an error during eager bounds checking
-      // above in that case.
-      if (count == 0) {
-        continue;
-      }
-
       if (!eagerBoundsCheck) {
         uint32_t tableLength = tables[seg->tableIndex]->length();
         if (offset > tableLength || tableLength - offset < count) {
@@ -610,14 +602,6 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
 
       uint32_t offset = EvaluateInitExpr(globalImportValues, seg->offset());
       uint32_t count = seg->bytes.length();
-
-      // Allow zero-sized initializations even if they are out-of-bounds. This
-      // behavior technically only applies when bulk-memory-operations are
-      // enabled, but we will fail with an error during eager bounds checking
-      // above in that case.
-      if (count == 0) {
-        continue;
-      }
 
       if (!eagerBoundsCheck) {
         if (offset > memoryLength || memoryLength - offset < count) {
