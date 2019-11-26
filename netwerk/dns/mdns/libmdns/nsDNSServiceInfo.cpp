@@ -44,35 +44,8 @@ nsDNSServiceInfo::nsDNSServiceInfo(nsIDNSServiceInfo* aServiceInfo) {
 
   nsCOMPtr<nsIPropertyBag2> attributes;  // deep copy
   if (NS_SUCCEEDED(aServiceInfo->GetAttributes(getter_AddRefs(attributes)))) {
-    nsCOMPtr<nsISimpleEnumerator> enumerator;
-    if (NS_WARN_IF(
-            NS_FAILED(attributes->GetEnumerator(getter_AddRefs(enumerator))))) {
-      return;
-    }
-
-    nsCOMPtr<nsIWritablePropertyBag2> newAttributes = new nsHashPropertyBag();
-
-    bool hasMoreElements;
-    while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreElements)) &&
-           hasMoreElements) {
-      nsCOMPtr<nsISupports> element;
-      Unused << NS_WARN_IF(
-          NS_FAILED(enumerator->GetNext(getter_AddRefs(element))));
-      nsCOMPtr<nsIProperty> property = do_QueryInterface(element);
-      MOZ_ASSERT(property);
-
-      nsAutoString name;
-      nsCOMPtr<nsIVariant> value;
-      Unused << NS_WARN_IF(NS_FAILED(property->GetName(name)));
-      Unused << NS_WARN_IF(
-          NS_FAILED(property->GetValue(getter_AddRefs(value))));
-      nsAutoCString valueStr;
-      Unused << NS_WARN_IF(NS_FAILED(value->GetAsACString(valueStr)));
-
-      Unused << NS_WARN_IF(
-          NS_FAILED(newAttributes->SetPropertyAsACString(name, valueStr)));
-    }
-
+    RefPtr<nsHashPropertyBag> newAttributes = new nsHashPropertyBag();
+    newAttributes->CopyFrom(attributes);
     Unused << NS_WARN_IF(NS_FAILED(SetAttributes(newAttributes)));
   }
 }
