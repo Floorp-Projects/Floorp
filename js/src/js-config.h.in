@@ -32,6 +32,13 @@
 /* Define to 1 if SpiderMonkey should include ctypes support.  */
 #undef JS_HAS_CTYPES
 
+/* Define to 1 if SpiderMonkey should include trace logging support. */
+#undef JS_TRACE_LOGGING
+
+/* Define to 1 if SpiderMonkey should include a breakpoint function for
+ * artificial OOMs. */
+#undef JS_OOM_BREAKPOINT
+
 /* Define to 1 if SpiderMonkey should support the ability to perform
    entirely too much GC.  */
 #undef JS_GC_ZEAL
