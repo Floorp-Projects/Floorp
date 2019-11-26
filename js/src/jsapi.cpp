@@ -124,6 +124,14 @@ using JS::SourceText;
 #  define JS_ADDRESSOF_VA_LIST(ap) (&(ap))
 #endif
 
+// See preprocessor definition of JS_BITS_PER_WORD in jstypes.h; make sure
+// JS_64BIT (used internally) agrees with it
+#ifdef JS_64BIT
+static_assert(JS_BITS_PER_WORD == 64, "values must be in sync");
+#else
+static_assert(JS_BITS_PER_WORD == 32, "values must be in sync");
+#endif
+
 JS_PUBLIC_API void JS::CallArgs::reportMoreArgsNeeded(JSContext* cx,
                                                       const char* fnname,
                                                       unsigned required,
