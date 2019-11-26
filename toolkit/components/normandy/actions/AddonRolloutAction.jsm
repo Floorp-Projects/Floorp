@@ -118,7 +118,9 @@ class AddonRolloutAction extends BaseAction {
       const conflictError = createError("conflict", {
         addonId: conflictingRollout.addonId,
         conflictingSlug: conflictingRollout.slug,
-        enrollmentId: conflictingRollout.enrollmentId,
+        enrollmentId:
+          conflictingRollout.enrollmentId ||
+          TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       });
       this.reportError(conflictError, "enrollFailed");
       throw conflictError;
@@ -129,7 +131,10 @@ class AddonRolloutAction extends BaseAction {
 
       if (existingRollout && existingRollout.addonId !== install.addon.id) {
         installDeferred.reject(
-          createError("addon-id-changed", { enrollmentId })
+          createError("addon-id-changed", {
+            enrollmentId:
+              enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+          })
         );
         return false; // cancel the upgrade, the add-on ID has changed
       }
@@ -139,7 +144,10 @@ class AddonRolloutAction extends BaseAction {
         Services.vc.compare(existingAddon.version, install.addon.version) > 0
       ) {
         installDeferred.reject(
-          createError("upgrade-required", { enrollmentId })
+          createError("upgrade-required", {
+            enrollmentId:
+              enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+          })
         );
         return false; // cancel the installation, must be an upgrade
       }
@@ -168,7 +176,7 @@ class AddonRolloutAction extends BaseAction {
           recipeId: recipe.id,
           state: AddonRollouts.STATE_ACTIVE,
           slug,
-          enrollmentId,
+          enrollmentId: enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
           ...details,
         });
       }
@@ -211,7 +219,7 @@ class AddonRolloutAction extends BaseAction {
     TelemetryEvents.sendEvent(eventName, "addon_rollout", slug, {
       addonId: installedId,
       addonVersion: installedVersion,
-      enrollmentId,
+      enrollmentId: enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
     });
   }
 
