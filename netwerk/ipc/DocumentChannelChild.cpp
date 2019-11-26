@@ -41,22 +41,43 @@ NS_IMPL_ADDREF(DocumentChannelChild)
 NS_IMPL_RELEASE(DocumentChannelChild)
 
 NS_INTERFACE_MAP_BEGIN(DocumentChannelChild)
-  if (mWasOpened && aIID == NS_GET_IID(nsIHttpChannel)) {
-    // DocumentChannelChild generally is doing an http connection
-    // internally, but doesn't implement the interface. Everything
-    // before AsyncOpen should be duplicated in the parent process
-    // on the real http channel, but anything trying to QI to nsIHttpChannel
-    // after that will be failing and get confused.
-    NS_WARNING(
-        "Trying to request nsIHttpChannel from DocumentChannelChild, this is "
-        "likely broken");
-  }
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
   NS_INTERFACE_MAP_ENTRY(nsIChannel)
   NS_INTERFACE_MAP_ENTRY(nsITraceableChannel)
   NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectCallback)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(DocumentChannelChild)
-NS_INTERFACE_MAP_END_INHERITING(nsHashPropertyBag)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRequest)
+  /* previous macro end with "else" keyword */ {
+    foundInterface = 0;
+    if (mWasOpened && aIID == NS_GET_IID(nsIHttpChannel)) {
+      // DocumentChannelChild generally is doing an http connection
+      // internally, but doesn't implement the interface. Everything
+      // before AsyncOpen should be duplicated in the parent process
+      // on the real http channel, but anything trying to QI to nsIHttpChannel
+      // after that will be failing and get confused.
+      NS_WARNING(
+          "Trying to request nsIHttpChannel from DocumentChannelChild, this is "
+          "likely broken");
+    } else if (aIID == NS_GET_IID(nsIPropertyBag)) {
+      NS_WARNING(
+          "Trying to request nsIPropertyBag from DocumentChannelChild, this "
+          "will be broken");
+    } else if (aIID == NS_GET_IID(nsIPropertyBag2)) {
+      NS_WARNING(
+          "Trying to request nsIPropertyBag2 from DocumentChannelChild, this "
+          "will be broken");
+    } else if (aIID == NS_GET_IID(nsIWritablePropertyBag)) {
+      NS_WARNING(
+          "Trying to request nsIWritablePropertyBag from DocumentChannelChild, "
+          "this will be broken");
+    } else if (aIID == NS_GET_IID(nsIWritablePropertyBag2)) {
+      NS_WARNING(
+          "Trying to request nsIWritablePropertyBag2 from "
+          "DocumentChannelChild, this will be broken");
+    }
+  }
+  if (false) // So we fallback properly in the final macro
+NS_INTERFACE_MAP_END
 
 DocumentChannelChild::DocumentChannelChild(
     nsDocShellLoadState* aLoadState, net::LoadInfo* aLoadInfo,
@@ -161,18 +182,9 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   args.channelId() = mChannelId;
   args.asyncOpenTime() = mAsyncOpenTime;
 
-  nsCOMPtr<nsILoadContext> loadContext;
-  NS_QueryNotificationCallbacks(this, loadContext);
-  if (loadContext) {
-    nsCOMPtr<mozIDOMWindowProxy> domWindow;
-    loadContext->GetAssociatedWindow(getter_AddRefs(domWindow));
-    if (domWindow) {
-      auto* pDomWindow = nsPIDOMWindowOuter::From(domWindow);
-      nsIDocShell* docshell = pDomWindow->GetDocShell();
-      if (docshell) {
-        docshell->GetCustomUserAgent(args.customUserAgent());
-      }
-    }
+  nsDocShell* docshell = GetDocShell();
+  if (docshell) {
+    docshell->GetCustomUserAgent(args.customUserAgent());
   }
 
   nsCOMPtr<nsIBrowserChild> iBrowserChild;
@@ -195,6 +207,22 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   mListener = listener;
 
   return NS_OK;
+}
+
+nsDocShell* DocumentChannelChild::GetDocShell() {
+  nsCOMPtr<nsILoadContext> loadContext;
+  NS_QueryNotificationCallbacks(this, loadContext);
+  if (!loadContext) {
+    return nullptr;
+  }
+  nsCOMPtr<mozIDOMWindowProxy> domWindow;
+  loadContext->GetAssociatedWindow(getter_AddRefs(domWindow));
+  if (!domWindow) {
+    return nullptr;
+  }
+  auto* pDomWindow = nsPIDOMWindowOuter::From(domWindow);
+  nsIDocShell* docshell = pDomWindow->GetDocShell();
+  return nsDocShell::Cast(docshell);
 }
 
 IPCResult DocumentChannelChild::RecvFailedAsyncOpen(
@@ -270,6 +298,7 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
                                              cspToInheritLoadingDocument,
                                              getter_AddRefs(loadInfo)));
 
+  mLastVisitInfo = std::move(aArgs.lastVisitInfo());
   mRedirects = std::move(aArgs.redirects());
   mRedirectResolver = std::move(aResolve);
 
@@ -345,11 +374,6 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
   if (nsCOMPtr<nsIWritablePropertyBag> bag = do_QueryInterface(newChannel)) {
     nsHashPropertyBag::CopyFrom(bag, aArgs.properties());
   }
-  // We still need to copy the property bag to the DCC as the nsDocShell no
-  // longer set the properties on it during ConfigureChannel. This will go away
-  // once the nsDocShell no longer relies on the DCC to determine the history
-  // data and is instead provided that information from the parent.
-  nsHashPropertyBag::CopyFrom(this, aArgs.properties());
 
   // connect parent.
   if (childChannel) {

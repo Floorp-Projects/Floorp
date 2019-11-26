@@ -486,6 +486,11 @@ void DocumentLoadListener::SerializeRedirectData(
   aArgs.redirects() = mRedirects;
   aArgs.redirectIdentifier() = mCrossProcessRedirectIdentifier;
   aArgs.properties() = do_QueryObject(mChannel);
+  nsCOMPtr<nsIURI> previousURI;
+  uint32_t previousFlags = 0;
+  nsDocShell::ExtractLastVisit(mChannel, getter_AddRefs(previousURI),
+                               &previousFlags);
+  aArgs.lastVisitInfo() = LastVisitInfo{previousURI, previousFlags};
 }
 
 void DocumentLoadListener::TriggerCrossProcessSwitch() {

@@ -6119,7 +6119,7 @@ void nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
   if (RefPtr<DocumentChannelChild> docChannel = do_QueryObject(aOldChannel)) {
     nsCOMPtr<nsIURI> previousURI;
     uint32_t previousFlags = 0;
-    ExtractLastVisit(aOldChannel, getter_AddRefs(previousURI), &previousFlags);
+    docChannel->GetLastVisit(getter_AddRefs(previousURI), &previousFlags);
 
     for (auto redirect : docChannel->GetRedirectChain()) {
       if (!redirect.isPost()) {

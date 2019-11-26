@@ -9,7 +9,6 @@
 #define mozilla_net_DocumentChannelChild_h
 
 #include "mozilla/net/PDocumentChannelChild.h"
-#include "nsHashPropertyBag.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIChannel.h"
 #include "nsIChildChannel.h"
@@ -25,11 +24,10 @@
 namespace mozilla {
 namespace net {
 
-class DocumentChannelChild final : public nsHashPropertyBag,
-                                   public PDocumentChannelChild,
-                                   public nsIIdentChannel,
+class DocumentChannelChild final : public nsIIdentChannel,
                                    public nsIAsyncVerifyRedirectCallback,
-                                   public nsITraceableChannel {
+                                   public nsITraceableChannel,
+                                   public PDocumentChannelChild {
  public:
   DocumentChannelChild(nsDocShellLoadState* aLoadState,
                        class LoadInfo* aLoadInfo,
@@ -37,7 +35,7 @@ class DocumentChannelChild final : public nsHashPropertyBag,
                        uint32_t aLoadType, uint32_t aCacheKey, bool aIsActive,
                        bool aIsTopLevelDoc, bool aHasNonEmptySandboxingFlags);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
   NS_DECL_NSICHANNEL
   NS_DECL_NSIIDENTCHANNEL
@@ -67,11 +65,18 @@ class DocumentChannelChild final : public nsHashPropertyBag,
     return mRedirects;
   }
 
+  void GetLastVisit(nsIURI** aURI, uint32_t* aChannelRedirectFlags) const {
+    *aURI = do_AddRef(mLastVisitInfo.uri()).take();
+    *aChannelRedirectFlags = mLastVisitInfo.previousFlags();
+  }
+
  private:
   void ShutdownListeners(nsresult aStatusCode);
+  nsDocShell* GetDocShell();
 
   ~DocumentChannelChild() = default;
 
+  LastVisitInfo mLastVisitInfo;
   nsCOMPtr<nsIChannel> mRedirectChannel;
   nsTArray<DocumentChannelRedirect> mRedirects;
 
