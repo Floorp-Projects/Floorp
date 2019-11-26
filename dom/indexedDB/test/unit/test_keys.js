@@ -293,30 +293,33 @@ function* testSteps() {
     [1, [{}]],
   ];
 
+  function checkInvalidKeyException(ex, i, callText) {
+    let suffix = ` during ${callText} with invalid key ${i}: "${
+      invalidKeys[i]
+    }"`;
+    ok(ex instanceof DOMException, "Threw DOMException" + suffix);
+    is(ex.name, "DataError", "Threw right DOMException" + suffix);
+    is(ex.code, 0, "Threw with right code" + suffix);
+  }
+
   for (i = 0; i < invalidKeys.length; ++i) {
     try {
       indexedDB.cmp(invalidKeys[i], 1);
       ok(false, "didn't throw");
     } catch (ex) {
-      ok(ex instanceof DOMException, "Threw DOMException");
-      is(ex.name, "DataError", "Threw right DOMException");
-      is(ex.code, 0, "Threw with right code");
+      checkInvalidKeyException(ex, i, "cmp(invalidKeys[i], 1)");
     }
     try {
       indexedDB.cmp(1, invalidKeys[i]);
       ok(false, "didn't throw2");
     } catch (ex) {
-      ok(ex instanceof DOMException, "Threw DOMException2");
-      is(ex.name, "DataError", "Threw right DOMException2");
-      is(ex.code, 0, "Threw with right code2");
+      checkInvalidKeyException(ex, i, "cmp(1, invalidKeys[i])");
     }
     try {
       store.put(1, invalidKeys[i]);
       ok(false, "didn't throw3");
     } catch (ex) {
-      ok(ex instanceof DOMException, "Threw DOMException3");
-      is(ex.name, "DataError", "Threw right DOMException3");
-      is(ex.code, 0, "Threw with right code3");
+      checkInvalidKeyException(ex, i, "store.put(1, invalidKeys[i])");
     }
   }
 
