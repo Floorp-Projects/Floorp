@@ -1,3 +1,6 @@
+// META: title=Cookie Store API: cookieStore.set()/get()/delete() for cookies with special names
+// META: global=!default,serviceworker,window
+
 'use strict';
 
 ['__Secure-', '__Host-'].forEach(prefix => {

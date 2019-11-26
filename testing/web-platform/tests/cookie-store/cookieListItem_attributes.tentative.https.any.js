@@ -1,3 +1,6 @@
+// META: title=Cookie Store API: cookieListItem attributes
+// META: global=!default,serviceworker,window
+
 'use strict';
 
 const kCurrentHostname = (new URL(self.location.href)).hostname;
