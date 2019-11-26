@@ -40,6 +40,13 @@ footer = """
 #endif // mozilla_TelemetryHistogramEnums_h"""
 
 
+def get_histogram_typename(histogram):
+    name = histogram.name()
+    if name.startswith("USE_COUNTER2_"):
+        return "UseCounterWorker" if name.endswith("_WORKER") else "UseCounter"
+    return None
+
+
 def main(output, *filenames):
     # Print header.
     print(banner, file=output)
@@ -52,42 +59,46 @@ def main(output, *filenames):
         print("\nError processing histograms:\n" + str(ex) + "\n")
         sys.exit(1)
 
-    groups = itertools.groupby(all_histograms,
-                               lambda h: h.name().startswith("USE_COUNTER2_"))
+    groups = itertools.groupby(all_histograms, get_histogram_typename)
 
     # Print the histogram enums.
-    # Note that parse_histograms.py guarantees that all of the USE_COUNTER2_*
-    # histograms are defined in a contiguous block.  We therefore assume
-    # that there's at most one group for which use_counter_group is true.
+    # Note that parse_histograms.py guarantees that all of the
+    # USE_COUNTER2_*_WORKER and USE_COUNTER2_* histograms are both defined in a
+    # contiguous block.
     print("enum HistogramID : uint32_t {", file=output)
-    seen_use_counters = False
-    for (use_counter_group, histograms) in groups:
-        if use_counter_group:
-            seen_use_counters = True
-
-        # The HistogramDUMMY* enum variables are used to make the computation
-        # of Histogram{First,Last}UseCounter easier.  Otherwise, we'd have to
-        # special case the first and last histogram in the group.
-        if use_counter_group:
-            print("  HistogramFirstUseCounter,", file=output)
-            print("  HistogramDUMMY1 = HistogramFirstUseCounter - 1,", file=output)
+    seen_group_types = {"UseCounter": False, "UseCounterWorker": False}
+    for (group_type, histograms) in groups:
+        if group_type is not None:
+            assert isinstance(group_type, basestring)
+            assert group_type in seen_group_types.keys()
+            assert not seen_group_types[group_type]
+            seen_group_types[group_type] = True
+            # The Histogram*DUMMY enum variables are used to make the computation
+            # of Histogram{First,Last}* easier.  Otherwise, we'd have to special
+            # case the first and last histogram in the group.
+            print("  HistogramFirst%s," % group_type, file=output)
+            print("  Histogram{0}DUMMY1 = HistogramFirst{0} - 1,".format(group_type), file=output)
 
         for histogram in histograms:
             if histogram.record_on_os(buildconfig.substs["OS_TARGET"]):
                 print("  %s," % histogram.name(), file=output)
 
-        if use_counter_group:
-            print("  HistogramDUMMY2,", file=output)
-            print("  HistogramLastUseCounter = HistogramDUMMY2 - 1,", file=output)
+        if group_type is not None:
+            assert isinstance(group_type, basestring)
+            print("  Histogram%sDUMMY2," % group_type, file=output)
+            print("  HistogramLast{0} = Histogram{0}DUMMY2 - 1,".format(group_type), file=output)
 
     print("  HistogramCount,", file=output)
-    if seen_use_counters:
-        print("  HistogramUseCounterCount = HistogramLastUseCounter -"
-              " HistogramFirstUseCounter + 1", file=output)
-    else:
-        print("  HistogramFirstUseCounter = 0,", file=output)
-        print("  HistogramLastUseCounter = 0,", file=output)
-        print("  HistogramUseCounterCount = 0", file=output)
+
+    for (key, value) in seen_group_types.items():
+        if value:
+            print("  Histogram{0}Count = HistogramLast{0} - HistogramFirst{0} + 1,"
+                  .format(key), file=output)
+        else:
+            print("  HistogramFirst%s = 0," % key, file=output)
+            print("  HistogramLast%s = 0," % key, file=output)
+            print("  Histogram%sCount = 0," % key, file=output)
+
     print("};", file=output)
 
     # Write categorical label enums.
