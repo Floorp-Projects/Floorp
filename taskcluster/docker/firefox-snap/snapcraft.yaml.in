@@ -4,21 +4,23 @@ summary: Mozilla Firefox web browser
 description:  Firefox is a powerful, extensible web browser with support for modern web application technologies.
 confinement: strict
 grade: stable
+base: core18
 
 apps:
   firefox:
-    command: desktop-launch $SNAP/firefox
+    command: firefox
     desktop: distribution/firefox.desktop
+    extensions: [gnome-3-28]
     environment:
       DISABLE_WAYLAND: 1
       HOME: "$SNAP_USER_COMMON"
+    slots:
+      - dbus-daemon
     plugs:
       - avahi-observe
       - browser-sandbox
       - camera
       - cups-control
-      - desktop
-      - desktop-legacy
       - gsettings
       - home
       - joystick
@@ -31,7 +33,6 @@ apps:
       - u2f-devices
       - unity7
       - upower-observe
-      - x11
 
 plugs:
   browser-sandbox:
@@ -39,8 +40,6 @@ plugs:
     allow-sandbox: true
 
 parts:
-  desktop-gtk3:
-    source-commit: 6a600b00773e8e4624aa12ee1f8e013ba9f2fc03
   firefox:
     plugin: dump
     source: source
@@ -57,27 +56,33 @@ parts:
       - libc-bin
       - locales-all
       - libcurl3-gnutls
-    after: [desktop-gtk3]
 
   xdg-open:
     after: [firefox]
     plugin: nil
     source: .
-    install: |
+    override-build: |
+      snapcraftctl build
       set -eux
       mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/applications
       install -m 644 mimeapps.list $SNAPCRAFT_PART_INSTALL/usr/share/applications
       update-desktop-database -v $SNAPCRAFT_PART_INSTALL/usr/share/applications
     build-packages:
       - desktop-file-utils
-    build-attributes: [no-system-libraries]
 
   shared-mime-info:
     after: [xdg-open]
     plugin: nil
     stage-packages:
       - shared-mime-info
-    build-attributes: [no-system-libraries]
-    install: |
+    override-build: |
+      snapcraftctl build
       set -eux
+      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/mime
       update-mime-database $SNAPCRAFT_PART_INSTALL/usr/share/mime
+
+slots:
+  dbus-daemon:
+    interface: dbus
+    bus: session
+    name: org.mozilla.firefox
