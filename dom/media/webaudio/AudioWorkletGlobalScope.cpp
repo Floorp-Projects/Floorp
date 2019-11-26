@@ -209,7 +209,7 @@ uint64_t AudioWorkletGlobalScope::CurrentFrame() const {
 }
 
 double AudioWorkletGlobalScope::CurrentTime() const {
-  return static_cast<double>(CurrentFrame()) * SampleRate();
+  return static_cast<double>(CurrentFrame()) / SampleRate();
 }
 
 float AudioWorkletGlobalScope::SampleRate() const {
