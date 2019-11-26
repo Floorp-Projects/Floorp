@@ -91,17 +91,13 @@ impl RemoteAgentHandler {
 
         *self.address.borrow_mut() = addr.to_string();
 
-        // Before we can start the remote agent we ensure the browser session
-        // state has been restored.  This guarantees we wait for all windows
-        // and tabs to be resurrected.
-        //
-        // Once sessionstore-windows-restored fires, it takes care of asking
-        // the remote agent to listen for incoming connections.  Because the
-        // remote agent starts asynchronously, we wait until we receive
-        // remote-listening before we declare to the world that we are ready
-        // to accept connections.
+        // When remote-startup-requested fires, it takes care of
+        // asking the remote agent to listen for incoming connections.
+        // Because the remote agent starts asynchronously, we wait
+        // until we receive remote-listening before we declare to the
+        // world that we are ready to accept connections.
         self.add_observer("remote-listening")?;
-        self.add_observer("sessionstore-windows-restored")?;
+        self.add_observer("remote-startup-requested")?;
 
         Ok(())
     }
@@ -136,7 +132,7 @@ impl RemoteAgentHandler {
         let topic = unsafe { CStr::from_ptr(topic) }.to_str().unwrap();
 
         match topic {
-            "sessionstore-windows-restored" => {
+            "remote-startup-requested" => {
                 if let Err(err) = self.agent.listen(&self.address.borrow()) {
                     fatalln!("unable to start remote agent: {}", err);
                 }
