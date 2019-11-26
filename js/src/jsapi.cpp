@@ -401,6 +401,27 @@ JS_PUBLIC_API JS::ContextOptions& JS::ContextOptionsRef(JSContext* cx) {
   return cx->options();
 }
 
+JS::ContextOptions& JS::ContextOptions::setWasmCranelift(bool flag) {
+#ifdef ENABLE_WASM_CRANELIFT
+  wasmCranelift_ = flag;
+#endif
+  return *this;
+}
+
+JS::ContextOptions& JS::ContextOptions::setWasmGc(bool flag) {
+#ifdef ENABLE_WASM_GC
+  wasmGc_ = flag;
+#endif
+  return *this;
+}
+
+JS::ContextOptions& JS::ContextOptions::setFuzzing(bool flag) {
+#ifdef FUZZING
+  fuzzing_ = flag;
+#endif
+  return *this;
+}
+
 JS_PUBLIC_API bool JS::InitSelfHostedCode(JSContext* cx) {
   MOZ_RELEASE_ASSERT(!cx->runtime()->hasInitializedSelfHosting(),
                      "JS::InitSelfHostedCode() called more than once");

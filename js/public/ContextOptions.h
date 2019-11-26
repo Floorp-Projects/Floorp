@@ -24,12 +24,8 @@ class JS_PUBLIC_API ContextOptions {
         wasmVerbose_(false),
         wasmBaseline_(true),
         wasmIon_(true),
-#ifdef ENABLE_WASM_CRANELIFT
         wasmCranelift_(false),
-#endif
-#ifdef ENABLE_WASM_GC
         wasmGc_(false),
-#endif
         testWasmAwaitTier2_(false),
         throwOnAsmJSValidationFailure_(false),
         asyncStack_(true),
@@ -37,13 +33,8 @@ class JS_PUBLIC_API ContextOptions {
         dumpStackOnDebuggeeWouldRun_(false),
         werror_(false),
         strictMode_(false),
-        extraWarnings_(false)
-#ifdef FUZZING
-        ,
-        fuzzing_(false)
-#endif
-  {
-  }
+        extraWarnings_(false),
+        fuzzing_(false) {}
 
   bool asmJS() const { return asmJS_; }
   ContextOptions& setAsmJS(bool flag) {
@@ -89,13 +80,9 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
-#ifdef ENABLE_WASM_CRANELIFT
   bool wasmCranelift() const { return wasmCranelift_; }
-  ContextOptions& setWasmCranelift(bool flag) {
-    wasmCranelift_ = flag;
-    return *this;
-  }
-#endif
+  // Defined out-of-line because it depends on a compile-time option
+  ContextOptions& setWasmCranelift(bool flag);
 
   bool testWasmAwaitTier2() const { return testWasmAwaitTier2_; }
   ContextOptions& setTestWasmAwaitTier2(bool flag) {
@@ -103,13 +90,9 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
-#ifdef ENABLE_WASM_GC
   bool wasmGc() const { return wasmGc_; }
-  ContextOptions& setWasmGc(bool flag) {
-    wasmGc_ = flag;
-    return *this;
-  }
-#endif
+  // Defined out-of-line because it depends on a compile-time option
+  ContextOptions& setWasmGc(bool flag);
 
   bool throwOnAsmJSValidationFailure() const {
     return throwOnAsmJSValidationFailure_;
@@ -173,22 +156,16 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
-#ifdef FUZZING
   bool fuzzing() const { return fuzzing_; }
-  ContextOptions& setFuzzing(bool flag) {
-    fuzzing_ = flag;
-    return *this;
-  }
-#endif
+  // Defined out-of-line because it depends on a compile-time option
+  ContextOptions& setFuzzing(bool flag);
 
   void disableOptionsForSafeMode() {
     setAsmJS(false);
     setWasm(false);
     setWasmBaseline(false);
     setWasmIon(false);
-#ifdef ENABLE_WASM_GC
     setWasmGc(false);
-#endif
   }
 
  private:
@@ -198,12 +175,8 @@ class JS_PUBLIC_API ContextOptions {
   bool wasmVerbose_ : 1;
   bool wasmBaseline_ : 1;
   bool wasmIon_ : 1;
-#ifdef ENABLE_WASM_CRANELIFT
   bool wasmCranelift_ : 1;
-#endif
-#ifdef ENABLE_WASM_GC
   bool wasmGc_ : 1;
-#endif
   bool testWasmAwaitTier2_ : 1;
   bool throwOnAsmJSValidationFailure_ : 1;
   bool asyncStack_ : 1;
@@ -212,9 +185,7 @@ class JS_PUBLIC_API ContextOptions {
   bool werror_ : 1;
   bool strictMode_ : 1;
   bool extraWarnings_ : 1;
-#ifdef FUZZING
   bool fuzzing_ : 1;
-#endif
 };
 
 JS_PUBLIC_API ContextOptions& ContextOptionsRef(JSContext* cx);
