@@ -120,26 +120,17 @@ diff -u /src/TDStretch.cpp /src/TDStretch.cpp
 +#endif
  
      // Check if MMX/SSE instruction set extensions supported by CPU
- 
-diff --git a/media/libsoundtouch/src/AAFilter.cpp b/media/libsoundtouch/src/AAFilter.cpp
---- a/media/libsoundtouch/src/AAFilter.cpp
-+++ b/media/libsoundtouch/src/AAFilter.cpp
-@@ -44,17 +44,17 @@
- #include <assert.h>
- #include <math.h>
- #include <stdlib.h>
- #include "AAFilter.h"
- #include "FIRFilter.h"
+
+diff -u /src/AAFilter.cpp /src/AAFilter.cpp
+--- /src/AAFilter.cpp
++++ /src/AAFilter.cpp
+@@ -42,7 +42,7 @@
  
  using namespace soundtouch;
  
--#define PI        3.141592655357989
+-#define PI       3.14159265358979323846
 +#define PI       M_PI
  #define TWOPI    (2 * PI)
  
  // define this to save AA filter coefficients to a file
- // #define _DEBUG_SAVE_AAFILTER_COEFFICIENTS   1
- 
- #ifdef _DEBUG_SAVE_AAFILTER_COEFFICIENTS
-     #include <stdio.h>
  
