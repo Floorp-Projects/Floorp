@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css"
+                 href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=617528
+-->
+<window title="Mozilla Bug 617528"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=617528"
+       target="_blank">Mozilla Bug 617528</a>
+  </body>
+
+  <script type="application/javascript"><![CDATA[
+    const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+    var _window;
+    var browser;
+
+    function start() {
+      _window = docShell.rootTreeItem.domWindow.open("window_bug617528.xhtml", "_new", "chrome");
+      _window.addEventListener("load", onLoad, false);
+    }
+
+    function onLoad() {
+      _window.removeEventListener("load", onLoad, false);
+
+      browser = _window.document.getElementById("browser");
+      browser.addEventListener("pageshow", onPageShow, false);
+
+      var uri='data:text/html,\
+<html>\
+  <body>\
+    <div oncontextmenu="event.preventDefault()">\
+      <input id="node" type="text" value="Click here"></input>\
+    </div>\
+  </body>\
+</html>';
+      BrowserTestUtils.loadURI(browser, uri);
+    }
+
+    function onPageShow() {
+      browser.removeEventListener("pageshow", onPageShow, true);
+      SimpleTest.executeSoon(doTest);
+    }
+
+    function onContextMenu1(event) {
+      is(event.defaultPrevented, true,
+        "expected event.defaultPrevented to be true (1)");
+      is(event.target.localName, "input",
+        "expected event.target.localName to be 'input' (1)");
+      is(event.originalTarget.localName, "div",
+        "expected event.originalTarget.localName to be 'div' (1)");
+    }
+
+    function onContextMenu2(event) {
+      is(event.defaultPrevented, false,
+        "expected event.defaultPrevented to be false (2)");
+      is(event.target.localName, "input",
+        "expected event.target.localName to be 'input' (2)");
+      is(event.originalTarget.localName, "div",
+        "expected event.originalTarget.localName to be 'div' (2)");
+    }
+
+    function doTest() {
+      var win = browser.contentWindow;
+      win.focus();
+      var node = win.document.getElementById("node");
+      var rect = node.getBoundingClientRect();
+      var left = rect.left + rect.width / 2;
+      var top = rect.top + rect.height / 2;
+
+      var wu = win.windowUtils;
+
+      browser.addEventListener("contextmenu", onContextMenu1, false);
+      wu.sendMouseEvent("contextmenu", left, top, 2, 1, 0);
+      browser.removeEventListener("contextmenu", onContextMenu1, false);
+
+      browser.addEventListener("contextmenu", onContextMenu2, false);
+      var shiftMask = Event.SHIFT_MASK;
+      wu.sendMouseEvent("contextmenu", left, top, 2, 1, shiftMask);
+      browser.removeEventListener("contextmenu", onContextMenu2, false);
+
+      _window.close();
+      SimpleTest.finish();
+    }
+
+    addLoadEvent(start);
+    SimpleTest.waitForExplicitFinish();
+  ]]></script>
+</window>
