@@ -70,3 +70,6 @@ input[type="checkbox"].toggle-button::before {
 input[type="checkbox"].toggle-button:checked::before {
   transform: translateX(var(--dot-transform-x));
 }
+input[type="checkbox"].toggle-button:dir(rtl)::before {
+  scale: -1;
+}
