@@ -253,10 +253,8 @@ this.browserSettings = class extends ExtensionAPI {
             register: fire => {
               let listener = () => {
                 fire.async({
-                  details: {
-                    levelOfControl: "not_controllable",
-                    value: Services.prefs.getStringPref(HOMEPAGE_URL_PREF),
-                  },
+                  levelOfControl: "not_controllable",
+                  value: Services.prefs.getStringPref(HOMEPAGE_URL_PREF),
                 });
               };
               Services.prefs.addObserver(HOMEPAGE_URL_PREF, listener);
@@ -304,10 +302,8 @@ this.browserSettings = class extends ExtensionAPI {
             register: fire => {
               let listener = (text, id) => {
                 fire.async({
-                  details: {
-                    levelOfControl: "not_controllable",
-                    value: aboutNewTabService.newTabURL,
-                  },
+                  levelOfControl: "not_controllable",
+                  value: aboutNewTabService.newTabURL,
                 });
               };
               Services.obs.addObserver(listener, "newtab-url-changed");

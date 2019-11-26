@@ -119,10 +119,8 @@ this.captivePortal = class extends ExtensionAPI {
             register: fire => {
               let listener = (text, id) => {
                 fire.async({
-                  details: {
-                    levelOfControl: "not_controllable",
-                    value: Services.prefs.getStringPref(CAPTIVE_URL_PREF),
-                  },
+                  levelOfControl: "not_controllable",
+                  value: Services.prefs.getStringPref(CAPTIVE_URL_PREF),
                 });
               };
               Services.prefs.addObserver(CAPTIVE_URL_PREF, listener);

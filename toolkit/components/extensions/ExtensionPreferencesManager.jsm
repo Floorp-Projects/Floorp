@@ -561,9 +561,7 @@ this.ExtensionPreferencesManager = {
         name: `${name}.onChange`,
         register: fire => {
           let listener = async () => {
-            fire.async({
-              details: await settingsAPI.get({}),
-            });
+            fire.async(await settingsAPI.get({}));
           };
           Management.on(`extension-setting-changed:${name}`, listener);
           return () => {
