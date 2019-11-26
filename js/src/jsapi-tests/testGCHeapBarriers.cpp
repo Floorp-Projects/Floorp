@@ -8,12 +8,15 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 
+#include "gc/GCRuntime.h"
 #include "js/ArrayBuffer.h"  // JS::NewArrayBuffer
 #include "js/RootingAPI.h"
 #include "jsapi-tests/tests.h"
 #include "vm/Runtime.h"
 
 #include "vm/JSContext-inl.h"
+
+using namespace js;
 
 // A heap-allocated structure containing one of our barriered pointer wrappers
 // to test.
@@ -67,6 +70,12 @@ JSFunction* CreateGCThing(JSContext* cx) {
   return static_cast<JSFunction*>(CreateGCThing<JSObject>(cx));
 }
 
+// Test post-barrier implementation on wrapper types. The following wrapper
+// types have post barriers:
+//  - JS::Heap
+//  - GCPtr
+//  - HeapPtr
+//  - WeakHeapPtr
 BEGIN_TEST(testGCHeapPostBarriers) {
 #ifdef JS_GC_ZEAL
   AutoLeaveZeal nozeal(cx);
@@ -101,6 +110,7 @@ bool TestHeapPostBarriersForType() {
   CHECK((TestHeapPostBarriersForWrapper<JS::Heap, T>()));
   CHECK((TestHeapPostBarriersForWrapper<js::GCPtr, T>()));
   CHECK((TestHeapPostBarriersForWrapper<js::HeapPtr, T>()));
+  CHECK((TestHeapPostBarriersForWrapper<js::WeakHeapPtr, T>()));
   return true;
 }
 
@@ -111,6 +121,7 @@ bool TestHeapPostBarriersForWrapper() {
   CHECK((TestHeapPostBarrierUpdate<W<T*>, T>()));
   CHECK((TestHeapPostBarrierInitFailure<W<T*>, T>()));
   CHECK((TestHeapPostBarrierInitFailure<const W<T*>, T>()));
+  // TODO: Add tests for moving wrappers (except GCPtr).
   return true;
 }
 
@@ -305,3 +316,206 @@ bool TestWrapper(ObjectT obj, ObjectT obj2, WrapperT& wrapper,
 }
 
 END_TEST(testGCHeapBarrierComparisons)
+
+// Test pre-barrier implementation on wrapper types. The following wrapper types
+// have a pre-barrier:
+//  - GCPtr
+//  - HeapPtr
+//  - PreBarriered
+BEGIN_TEST(testGCHeapPreBarriers) {
+#ifdef JS_GC_ZEAL
+  AutoLeaveZeal nozeal(cx);
+#endif /* JS_GC_ZEAL */
+
+  uint32_t oldMode = JS_GetGCParameter(cx, JSGC_MODE);
+  JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_ZONE_INCREMENTAL);
+
+  RootedObject obj1(cx, JS_NewPlainObject(cx));
+  RootedObject obj2(cx, JS_NewPlainObject(cx));
+  CHECK(obj1);
+  CHECK(obj2);
+
+  // Start an incremental GC so we can detect if we cause barriers to fire, as
+  // these will mark objects black.
+  JS::PrepareForFullGC(cx);
+  SliceBudget budget(WorkBudget(1));
+  gc::GCRuntime* gc = &cx->runtime()->gc;
+  gc->startDebugGC(GC_NORMAL, budget);
+  MOZ_ASSERT(cx->zone()->needsIncrementalBarrier());
+
+  TestWrapper<HeapPtr<JSObject*>>(obj1, obj2);
+  TestWrapper<PreBarriered<JSObject*>>(obj1, obj2);
+
+  // GCPtr is different because 1) it doesn't support move operations as it's
+  // supposed to be part of a GC thing and 2) it doesn't perform a pre-barrier
+  // in its destructor because these are only destroyed as part of a GC where
+  // the barrier is unnecessary.
+  TestGCPtr(obj1, obj2);
+
+  gc::FinishGC(cx, JS::GCReason::API);
+
+  JS_SetGCParameter(cx, JSGC_MODE, oldMode);
+
+  return true;
+}
+
+template <typename Wrapper>
+bool TestWrapper(HandleObject obj1, HandleObject obj2) {
+  CHECK(TestCopyConstruction<Wrapper>(obj1));
+  CHECK(TestMoveConstruction<Wrapper>(obj1));
+  CHECK(TestAssignment<Wrapper>(obj1, obj2));
+  CHECK(TestMoveAssignment<Wrapper>(obj1, obj2));
+  return true;
+}
+
+template <typename Wrapper>
+bool TestCopyConstruction(HandleObject obj) {
+  MakeWhite(obj);
+
+  {
+    Wrapper wrapper1(obj);
+    Wrapper wrapper2(wrapper1);
+    CHECK(wrapper1 == obj);
+    CHECK(wrapper2 == obj);
+    CHECK(!obj->isMarkedAny());
+  }
+
+  // Check destructor performs pre-barrier.
+  MOZ_ASSERT(obj->isMarkedBlack());
+
+  return true;
+}
+
+template <typename Wrapper>
+bool TestMoveConstruction(HandleObject obj) {
+  MakeWhite(obj);
+
+  {
+    Wrapper wrapper1(obj);
+    MakeGray(obj);  // Check that we allow move of gray GC thing.
+    Wrapper wrapper2(std::move(wrapper1));
+    CHECK(!wrapper1);
+    CHECK(wrapper2 == obj);
+    CHECK(obj->isMarkedGray());
+  }
+
+  // Check destructor performs pre-barrier.
+  CHECK(obj->isMarkedBlack());
+
+  return true;
+}
+
+template <typename Wrapper>
+bool TestAssignment(HandleObject obj1, HandleObject obj2) {
+  MakeWhite(obj1);
+  MakeWhite(obj2);
+
+  {
+    Wrapper wrapper1(obj1);
+    Wrapper wrapper2(obj2);
+
+    wrapper2 = wrapper1;
+
+    CHECK(wrapper1 == obj1);
+    CHECK(wrapper2 == obj1);
+    CHECK(!obj1->isMarkedAny());   // No barrier fired.
+    CHECK(obj2->isMarkedBlack());  // Pre barrier fired.
+  }
+
+  // Check destructor performs pre-barrier.
+  CHECK(obj1->isMarkedBlack());
+
+  return true;
+}
+
+template <typename Wrapper>
+bool TestMoveAssignment(HandleObject obj1, HandleObject obj2) {
+  MakeWhite(obj1);
+  MakeWhite(obj2);
+
+  {
+    Wrapper wrapper1(obj1);
+    Wrapper wrapper2(obj2);
+
+    MakeGray(obj1);  // Check we allow move of gray thing.
+    wrapper2 = std::move(wrapper1);
+
+    CHECK(!wrapper1);
+    CHECK(wrapper2 == obj1);
+    CHECK(obj1->isMarkedGray());   // No barrier fired.
+    CHECK(obj2->isMarkedBlack());  // Pre barrier fired.
+  }
+
+  // Check destructor performs pre-barrier.
+  CHECK(obj1->isMarkedBlack());
+
+  return true;
+}
+
+bool TestGCPtr(HandleObject obj1, HandleObject obj2) {
+  CHECK(TestGCPtrCopyConstruction(obj1));
+  CHECK(TestGCPtrAssignment(obj1, obj2));
+  return true;
+}
+
+bool TestGCPtrCopyConstruction(HandleObject obj) {
+  MakeWhite(obj);
+
+  {
+    // Let us destroy GCPtrs ourselves for testing purposes.
+    gc::AutoSetThreadIsSweeping threadIsSweeping;
+
+    GCPtrObject wrapper1(obj);
+    GCPtrObject wrapper2(wrapper1);
+    CHECK(wrapper1 == obj);
+    CHECK(wrapper2 == obj);
+    CHECK(!obj->isMarkedAny());
+  }
+
+  // GCPtr doesn't perform pre-barrier in destructor.
+  CHECK(!obj->isMarkedAny());
+
+  return true;
+}
+
+bool TestGCPtrAssignment(HandleObject obj1, HandleObject obj2) {
+  MakeWhite(obj1);
+  MakeWhite(obj2);
+
+  {
+    // Let us destroy GCPtrs ourselves for testing purposes.
+    gc::AutoSetThreadIsSweeping threadIsSweeping;
+
+    GCPtrObject wrapper1(obj1);
+    GCPtrObject wrapper2(obj2);
+
+    wrapper2 = wrapper1;
+
+    CHECK(wrapper1 == obj1);
+    CHECK(wrapper2 == obj1);
+    CHECK(!obj1->isMarkedAny());   // No barrier fired.
+    CHECK(obj2->isMarkedBlack());  // Pre barrier fired.
+  }
+
+  // GCPtr doesn't perform pre-barrier in destructor.
+  CHECK(!obj1->isMarkedAny());
+
+  return true;
+}
+
+void MakeWhite(JSObject* obj) {
+  gc::TenuredCell* cell = &obj->asTenured();
+  cell->unmark();
+  MOZ_ASSERT(!obj->isMarkedAny());
+}
+
+void MakeGray(JSObject* obj) {
+  gc::TenuredCell* cell = &obj->asTenured();
+  cell->unmark();
+  cell->markIfUnmarked(gc::MarkColor::Gray);
+  MOZ_ASSERT(obj->isMarkedGray());
+}
+
+END_TEST(testGCHeapPreBarriers)
+
+// TODO: Add tests for read barriers.
