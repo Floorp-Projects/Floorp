@@ -11,6 +11,6 @@ self.addEventListener('message', event => {
   sendMessageToDocument('ready');
 });
 
-self.addEventListener('sync', event => {
-  sendMessageToDocument('sync event received!');
+self.addEventListener('periodicsync', event => {
+  sendMessageToDocument('periodicsync event received!');
 });
