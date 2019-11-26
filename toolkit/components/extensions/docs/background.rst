@@ -55,6 +55,7 @@ that is accessible from Javascript:
   in which of these environments the feature will be available.
   Most Javascript features are available in extension pages,
   other environments have limited sets of API features available.
+
 .. |getURL| replace:: ``browser.runtime.getURL()``
 .. _getURL: https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/runtime/getURL
 
