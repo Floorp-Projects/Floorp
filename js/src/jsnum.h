@@ -40,8 +40,9 @@ class StringBuffer;
 
 extern MOZ_MUST_USE bool InitRuntimeNumberState(JSRuntime* rt);
 
-// This is a no-op if built with JS_HAS_INTL_API.
+#if !ENABLE_INTL_API
 extern void FinishRuntimeNumberState(JSRuntime* rt);
+#endif
 
 /* Initialize the Number class, returning its prototype object. */
 extern JSObject* InitNumberClass(JSContext* cx, Handle<GlobalObject*> global);

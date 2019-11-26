@@ -386,7 +386,7 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-#ifdef JS_HAS_TYPED_OBJECTS
+#ifdef ENABLE_TYPED_OBJECTS
   value = BooleanValue(true);
 #else
   value = BooleanValue(false);
@@ -395,7 +395,7 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-#ifdef JS_HAS_INTL_API
+#ifdef ENABLE_INTL_API
   value = BooleanValue(true);
 #else
   value = BooleanValue(false);

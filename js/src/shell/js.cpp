@@ -1301,7 +1301,7 @@ static bool BindToAsyncStack(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-#ifdef JS_HAS_INTL_API
+#ifdef ENABLE_INTL_API
 static bool AddIntlExtras(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.get(0).isObject()) {
@@ -1335,7 +1335,7 @@ static bool AddIntlExtras(JSContext* cx, unsigned argc, Value* vp) {
   args.rval().setUndefined();
   return true;
 }
-#endif  // JS_HAS_INTL_API
+#endif  // ENABLE_INTL_API
 
 static MOZ_MUST_USE bool EvalUtf8AndPrint(JSContext* cx, const char* bytes,
                                           size_t length, int lineno,
@@ -9069,7 +9069,7 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 "            or only when there are no other JavaScript frames on the stack\n"
 "            below it (false). If omitted, this is treated as 'true'."),
 
-#ifdef JS_HAS_INTL_API
+#ifdef ENABLE_INTL_API
     JS_FN_HELP("addIntlExtras", AddIntlExtras, 1, 0,
 "addIntlExtras(obj)",
 "Adds various not-yet-standardized Intl functions as properties on the\n"
@@ -9077,7 +9077,7 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 "functions and their behavior are experimental: don't depend upon them\n"
 "unless you're willing to update your code if these experimental APIs change\n"
 "underneath you."),
-#endif // JS_HAS_INTL_API
+#endif // ENABLE_INTL_API
 
     JS_FN_HELP("wasmCompileInSeparateProcess", WasmCompileInSeparateProcess, 1, 0,
 "wasmCompileInSeparateProcess(buffer)",

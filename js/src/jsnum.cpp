@@ -28,7 +28,7 @@
 #include "double-conversion/double-conversion.h"
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
-#if !JS_HAS_INTL_API
+#if !ENABLE_INTL_API
 #  include "js/LocaleSensitive.h"
 #endif
 #include "js/PropertySpec.h"
@@ -891,7 +891,7 @@ bool js::num_toString(JSContext* cx, unsigned argc, Value* vp) {
   return CallNonGenericMethod<IsNumber, num_toString_impl>(cx, args);
 }
 
-#if !JS_HAS_INTL_API
+#if !ENABLE_INTL_API
 MOZ_ALWAYS_INLINE bool num_toLocaleString_impl(JSContext* cx,
                                                const CallArgs& args) {
   MOZ_ASSERT(IsNumber(args.thisv()));
@@ -1033,7 +1033,7 @@ static bool num_toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<IsNumber, num_toLocaleString_impl>(cx, args);
 }
-#endif /* !JS_HAS_INTL_API */
+#endif /* !ENABLE_INTL_API */
 
 MOZ_ALWAYS_INLINE bool num_valueOf_impl(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsNumber(args.thisv()));
@@ -1246,7 +1246,7 @@ static bool num_toPrecision(JSContext* cx, unsigned argc, Value* vp) {
 static const JSFunctionSpec number_methods[] = {
     JS_FN(js_toSource_str, num_toSource, 0, 0),
     JS_FN(js_toString_str, num_toString, 1, 0),
-#if JS_HAS_INTL_API
+#if ENABLE_INTL_API
     JS_SELF_HOSTED_FN(js_toLocaleString_str, "Number_toLocaleString", 0, 0),
 #else
     JS_FN(js_toLocaleString_str, num_toLocaleString, 0, 0),
@@ -1273,10 +1273,10 @@ static const JSFunctionSpec number_static_methods[] = {
     JS_FS_END};
 
 bool js::InitRuntimeNumberState(JSRuntime* rt) {
-  // XXX If JS_HAS_INTL_API becomes true all the time at some point,
+  // XXX If ENABLE_INTL_API becomes true all the time at some point,
   //     js::InitRuntimeNumberState is no longer fallible, and we should
   //     change its return type.
-#if !JS_HAS_INTL_API
+#if !ENABLE_INTL_API
   /* Copy locale-specific separators into the runtime strings. */
   const char* thousandsSeparator;
   const char* decimalPoint;
@@ -1325,20 +1325,20 @@ bool js::InitRuntimeNumberState(JSRuntime* rt) {
 
   js_memcpy(storage, grouping, groupingSize);
   rt->numGrouping = grouping;
-#endif /* !JS_HAS_INTL_API */
+#endif /* !ENABLE_INTL_API */
   return true;
 }
 
+#if !ENABLE_INTL_API
 void js::FinishRuntimeNumberState(JSRuntime* rt) {
-#if !JS_HAS_INTL_API
   /*
    * The free also releases the memory for decimalSeparator and numGrouping
    * strings.
    */
   char* storage = const_cast<char*>(rt->thousandsSeparator.ref());
   js_free(storage);
-#endif  // !JS_HAS_INTL_API
 }
+#endif
 
 JSObject* NumberObject::createPrototype(JSContext* cx, JSProtoKey key) {
   NumberObject* numberProto =

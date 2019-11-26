@@ -15,11 +15,6 @@
 #include "js/TraceKind.h"
 #include "js/Utility.h"
 
-#ifndef JS_BITS_PER_WORD
-#  error \
-      "JS_BITS_PER_WORD must be defined. Did you forget to include js-config.h?"
-#endif
-
 struct JSExternalStringCallbacks;
 
 /* These values are private to the JS engine. */
