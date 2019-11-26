@@ -13,9 +13,9 @@ import android.net.ConnectivityManager
 import androidx.core.content.getSystemService
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
-import io.mockk.mockkStatic
 import kotlinx.coroutines.runBlocking
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.robolectric.testContext

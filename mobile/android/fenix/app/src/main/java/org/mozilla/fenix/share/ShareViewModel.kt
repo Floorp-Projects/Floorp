@@ -21,6 +21,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.DeviceCapability
+import mozilla.components.feature.share.RecentAppsStorage
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.isOnline
@@ -29,11 +30,17 @@ import org.mozilla.fenix.share.listadapters.SyncShareOption
 
 class ShareViewModel(application: Application) : AndroidViewModel(application) {
 
+    companion object {
+        private const val RECENT_APPS_LIMIT = 6
+    }
+
     private val connectivityManager by lazy { application.getSystemService<ConnectivityManager>() }
     private val fxaAccountManager = application.components.backgroundServices.accountManager
+    private val recentAppsStorage = RecentAppsStorage(application.applicationContext)
 
     private val devicesListLiveData = MutableLiveData<List<SyncShareOption>>(emptyList())
     private val appsListLiveData = MutableLiveData<List<AppShareOption>>(emptyList())
+    private val recentAppsListLiveData = MutableLiveData<List<AppShareOption>>(emptyList())
 
     @VisibleForTesting
     internal val networkCallback = object : ConnectivityManager.NetworkCallback() {
@@ -61,6 +68,10 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
      * List of applications that can be shared to.
      */
     val appsList: LiveData<List<AppShareOption>> get() = appsListLiveData
+    /**
+     * List of recent applications that can be shared to.
+     */
+    val recentAppsList: LiveData<List<AppShareOption>> get() = recentAppsListLiveData
 
     /**
      * Load a list of devices and apps into [devicesList] and [appsList].
@@ -77,7 +88,12 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
             val shareAppsActivities = getIntentActivities(shareIntent, getApplication())
-            val apps = buildAppsList(shareAppsActivities, getApplication())
+            var apps = buildAppsList(shareAppsActivities, getApplication())
+            recentAppsStorage.updateDatabaseWithNewApps(apps.map { app -> app.packageName })
+            val recentApps = buildRecentAppsList(apps)
+            apps = filterOutRecentApps(apps, recentApps)
+
+            recentAppsListLiveData.postValue(recentApps)
             appsListLiveData.postValue(apps)
         }
 
@@ -85,6 +101,27 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
             val devices = buildDeviceList(fxaAccountManager)
             devicesListLiveData.postValue(devices)
         }
+    }
+
+    private fun filterOutRecentApps(
+        apps: List<AppShareOption>,
+        recentApps: List<AppShareOption>
+    ): List<AppShareOption> {
+        return apps.filter { app -> !recentApps.contains(app) }
+    }
+
+    @WorkerThread
+    internal fun buildRecentAppsList(apps: List<AppShareOption>): List<AppShareOption> {
+        val recentAppsDatabase = recentAppsStorage.getRecentAppsUpTo(RECENT_APPS_LIMIT)
+        val result: MutableList<AppShareOption> = ArrayList()
+        for (recentApp in recentAppsDatabase) {
+            for (app in apps) {
+                if (recentApp.packageName == app.packageName) {
+                    result.add(app)
+                }
+            }
+        }
+        return result
     }
 
     /**

@@ -14,6 +14,7 @@ import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -22,6 +23,7 @@ import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.TabData
 import mozilla.components.feature.accounts.push.SendTabUseCases
+import mozilla.components.feature.share.RecentAppsStorage
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
@@ -65,6 +67,8 @@ class DefaultShareController(
     private val sendTabUseCases: SendTabUseCases,
     private val snackbar: FenixSnackbar,
     private val navController: NavController,
+    private val recentAppsStorage: RecentAppsStorage,
+    private val lifecycleScope: CoroutineScope,
     private val dismiss: (ShareController.Result) -> Unit
 ) : ShareController {
 
@@ -79,6 +83,10 @@ class DefaultShareController(
     }
 
     override fun handleShareToApp(app: AppShareOption) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            recentAppsStorage.updateRecentApp(app.packageName)
+        }
+
         val intent = Intent(ACTION_SEND).apply {
             putExtra(EXTRA_TEXT, getShareText())
             putExtra(EXTRA_SUBJECT, shareData.map { it.title }.joinToString(", "))

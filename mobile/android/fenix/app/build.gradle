@@ -5,6 +5,7 @@ plugins {
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 apply plugin: 'jacoco'
 apply from: "$project.rootDir/automation/gradle/versionCode.gradle"
 apply plugin: 'androidx.navigation.safeargs.kotlin'
@@ -436,6 +437,7 @@ dependencies {
     implementation Deps.mozilla_feature_readerview
     implementation Deps.mozilla_feature_tab_collections
     implementation Deps.mozilla_feature_top_sites
+    implementation Deps.mozilla_feature_share
     implementation Deps.mozilla_feature_accounts_push
     implementation Deps.mozilla_feature_webcompat
     implementation Deps.mozilla_feature_webnotifications

@@ -361,7 +361,14 @@
         <item name="android:minHeight">40dp</item>
         <item name="android:layout_marginTop">32dp</item>
         <item name="android:textColor">?accentUsedOnDarkBackground</item>
+    </style>
 
+    <style name="ShareHeaderTextStyle">
+        <item name="android:singleLine">true</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">?secondaryText</item>
+        <item name="android:textSize">@dimen/share_header_text_size</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="FirefoxAccountsDialogStyle" parent="DialogStyleBase">

@@ -1,10 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
@@ -13,43 +11,75 @@
         android:id="@+id/progressBar"
         android:layout_width="76dp"
         android:layout_height="37dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginTop="@dimen/share_progress_bar_margin"
+        android:layout_marginBottom="@dimen/share_progress_bar_margin"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/link_header" />
+        app:layout_constraintTop_toBottomOf="@id/apps_link_header" />
 
-    <TextView
-        android:id="@+id/link_header"
+    <LinearLayout
+        android:id="@+id/recentAppsContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:singleLine="true"
-        android:text="@string/share_link_subheader"
-        android:textAllCaps="true"
-        android:textColor="?secondaryText"
-        android:textSize="12sp"
-        android:textStyle="bold"
+        android:layout_marginStart="@dimen/share_recent_apps_margin"
+        android:layout_marginTop="@dimen/share_recent_apps_margin"
+        android:layout_marginBottom="@dimen/share_recent_apps_margin"
+        android:background="@drawable/recent_apps_background"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/share_recent_apps_padding"
+        android:paddingTop="@dimen/share_recent_apps_padding"
+        android:paddingEnd="@dimen/share_recent_apps_padding"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/recent_apps_link_header"
+            style="@style/ShareHeaderTextStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/share_link_recent_apps_subheader" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recentAppsList"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:clipToPadding="false"
+            android:minHeight="@dimen/share_list_min_height"
+            android:orientation="horizontal"
+            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+            app:spanCount="2" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/apps_link_header"
+        style="@style/ShareHeaderTextStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/share_all_apps_header_margin"
+        android:layout_marginTop="@dimen/share_all_apps_header_margin"
+        android:text="@string/share_link_all_apps_subheader"
+        app:layout_constraintStart_toEndOf="@+id/recentAppsContainer"
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/appsList"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:minHeight="160dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="@dimen/share_all_apps_list_margin"
         android:clipToPadding="false"
+        android:minHeight="@dimen/share_list_min_height"
         android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="8dp"
+        android:paddingStart="@dimen/share_all_apps_list_padding_start"
+        android:paddingEnd="@dimen/share_all_apps_list_padding_end"
         android:visibility="gone"
         app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/link_header"
+        app:layout_constraintStart_toEndOf="@+id/recentAppsContainer"
+        app:layout_constraintTop_toBottomOf="@id/apps_link_header"
         app:spanCount="2" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

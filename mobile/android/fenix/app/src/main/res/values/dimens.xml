@@ -115,4 +115,16 @@
     <dimen name="migration_progress_margin_vertical">8dp</dimen>
     <dimen name="migration_progress_margin_start">4dp</dimen>
 
+    <!-- Share Fragment -->
+    <dimen name="share_recent_apps_background_radius">10dp</dimen>
+    <dimen name="share_recent_apps_padding">8dp</dimen>
+    <dimen name="share_recent_apps_margin">8dp</dimen>
+    <dimen name="share_all_apps_header_margin">16dp</dimen>
+    <dimen name="share_list_min_height">160dp</dimen>
+    <dimen name="share_all_apps_list_margin">8dp</dimen>
+    <dimen name="share_all_apps_list_padding_start">16dp</dimen>
+    <dimen name="share_all_apps_list_padding_end">8dp</dimen>
+    <dimen name="share_header_text_size">12sp</dimen>
+    <dimen name="share_progress_bar_margin">16dp</dimen>
+
 </resources>

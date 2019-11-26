@@ -293,7 +293,7 @@ private fun assertSendToDeviceTitle() = SendToDeviceTitle()
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun ShareALinkTitle() =
-    onView(allOf(withText("SHARE A LINK"), withResourceName("link_header")))
+    onView(allOf(withText(R.string.share_link_all_apps_subheader), withResourceName("apps_link_header")))
 
 private fun assertShareALinkTitle() = ShareALinkTitle()
 

@@ -8,7 +8,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.share_to_apps.*
+import kotlinx.android.synthetic.main.share_to_apps.appsList
+import kotlinx.android.synthetic.main.share_to_apps.progressBar
+import kotlinx.android.synthetic.main.share_to_apps.recentAppsContainer
+import kotlinx.android.synthetic.main.share_to_apps.recentAppsList
 import org.mozilla.fenix.R
 import org.mozilla.fenix.share.listadapters.AppShareAdapter
 import org.mozilla.fenix.share.listadapters.AppShareOption
@@ -26,18 +29,30 @@ class ShareToAppsView(
 ) : LayoutContainer {
 
     private val adapter = AppShareAdapter(interactor)
+    private val recentAdapter = AppShareAdapter(interactor)
 
     init {
         LayoutInflater.from(containerView.context)
             .inflate(R.layout.share_to_apps, containerView, true)
 
         appsList.adapter = adapter
+        recentAppsList.adapter = recentAdapter
     }
 
     fun setShareTargets(targets: List<AppShareOption>) {
         progressBar.visibility = View.GONE
-        appsList.visibility = View.VISIBLE
 
+        appsList.visibility = View.VISIBLE
         adapter.submitList(targets)
+    }
+
+    fun setRecentShareTargets(recentTargets: List<AppShareOption>) {
+        if (recentTargets.isEmpty()) {
+            return
+        }
+        progressBar.visibility = View.GONE
+
+        recentAppsContainer.visibility = View.VISIBLE
+        recentAdapter.submitList(recentTargets)
     }
 }

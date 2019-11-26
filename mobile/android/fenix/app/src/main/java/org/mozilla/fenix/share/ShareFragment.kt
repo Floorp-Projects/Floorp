@@ -12,14 +12,20 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.observe
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import kotlinx.android.synthetic.main.fragment_share.view.*
+import kotlinx.android.synthetic.main.fragment_share.view.appsShareLayout
+import kotlinx.android.synthetic.main.fragment_share.view.closeSharingContent
+import kotlinx.android.synthetic.main.fragment_share.view.closeSharingScrim
+import kotlinx.android.synthetic.main.fragment_share.view.devicesShareLayout
+import kotlinx.android.synthetic.main.fragment_share.view.shareWrapper
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.feature.accounts.push.SendTabUseCases
+import mozilla.components.feature.share.RecentAppsStorage
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.getRootView
@@ -67,7 +73,9 @@ class ShareFragment : AppCompatDialogFragment() {
                 shareData = shareData,
                 snackbar = FenixSnackbar.makeWithToolbarPadding(requireActivity().getRootView()!!),
                 navController = findNavController(),
-                sendTabUseCases = SendTabUseCases(accountManager)
+                sendTabUseCases = SendTabUseCases(accountManager),
+                recentAppsStorage = RecentAppsStorage(requireContext()),
+                lifecycleScope = lifecycleScope
             ) { result ->
                 consumePrompt {
                     when (result) {
@@ -107,6 +115,9 @@ class ShareFragment : AppCompatDialogFragment() {
         }
         viewModel.appsList.observe(viewLifecycleOwner) { appsToShareTo ->
             shareToAppsView.setShareTargets(appsToShareTo)
+        }
+        viewModel.recentAppsList.observe(viewLifecycleOwner) { appsToShareTo ->
+            shareToAppsView.setRecentShareTargets(appsToShareTo)
         }
     }
 

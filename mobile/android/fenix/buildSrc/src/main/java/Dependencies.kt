@@ -126,6 +126,7 @@ object Deps {
     const val mozilla_feature_tab_collections = "org.mozilla.components:feature-tab-collections:${Versions.mozilla_android_components}"
     const val mozilla_feature_accounts_push = "org.mozilla.components:feature-accounts-push:${Versions.mozilla_android_components}"
     const val mozilla_feature_top_sites = "org.mozilla.components:feature-top-sites:${Versions.mozilla_android_components}"
+    const val mozilla_feature_share = "org.mozilla.components:feature-share:${Versions.mozilla_android_components}"
     const val mozilla_feature_webcompat = "org.mozilla.components:feature-webcompat:${Versions.mozilla_android_components}"
     const val mozilla_feature_webnotifications = "org.mozilla.components:feature-webnotifications:${Versions.mozilla_android_components}"
 
