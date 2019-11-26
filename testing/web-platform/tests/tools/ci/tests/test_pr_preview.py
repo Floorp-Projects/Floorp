@@ -191,7 +191,7 @@ def temp_repo():
 
 def synchronize(expected_traffic, refs={}):
     env = {
-        'GITHUB_TOKEN': 'c0ffee'
+        'DEPLOY_TOKEN': 'c0ffee'
     }
     env.update(os.environ)
     server = MockServer((test_host, 0), expected_traffic)
@@ -250,7 +250,7 @@ def synchronize(expected_traffic, refs={}):
 
 def detect(event, expected_github_traffic, expected_preview_traffic):
     env = {
-        'GITHUB_TOKEN': 'c0ffee'
+        'DEPLOY_TOKEN': 'c0ffee'
     }
     env.update(os.environ)
     github_server = MockServer((test_host, 0), expected_github_traffic)
