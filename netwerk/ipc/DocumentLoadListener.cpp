@@ -815,15 +815,11 @@ DocumentLoadListener::AsyncOnChannelRedirect(
     nsCOMPtr<nsIURI> oldURI;
     aOldChannel->GetURI(getter_AddRefs(oldURI));
     uint32_t responseStatus = 0;
-    bool isPost = false;
     if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aOldChannel)) {
       Unused << httpChannel->GetResponseStatus(&responseStatus);
-      nsAutoCString method;
-      Unused << httpChannel->GetRequestMethod(method);
-      isPost = method.EqualsLiteral("POST");
     }
-    mRedirects.AppendElement(
-        DocumentChannelRedirect{oldURI, aFlags, responseStatus, isPost});
+    mRedirects.AppendElement(DocumentChannelRedirect{
+        oldURI, aFlags, responseStatus, net::ChannelIsPost(aOldChannel)});
   }
 
   if (!mDocumentChannelBridge) {

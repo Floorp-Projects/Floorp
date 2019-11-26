@@ -937,6 +937,16 @@ nsresult GetParameterHTTP(const nsACString& aHeaderVal, const char* aParamName,
                           nsAString& aResult);
 
 /**
+ * Helper function that determines if channel is an HTTP POST.
+ *
+ * @param aChannel
+ *        The channel to test
+ *
+ * @return True if channel is an HTTP post.
+ */
+bool ChannelIsPost(nsIChannel* aChannel);
+
+/**
  * Convenience functions for verifying nsIURI schemes. These functions simply
  * wrap aURI->SchemeIs(), but specify the protocol as part of the function name.
  */
