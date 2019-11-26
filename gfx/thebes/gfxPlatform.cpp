@@ -1106,80 +1106,10 @@ void gfxPlatform::Init() {
     }
   }
 
-  if (XRE_IsParentProcess()) {
-    ReportTelemetry();
-  }
-
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
     obs->NotifyObservers(nullptr, "gfx-features-ready", nullptr);
   }
-}
-
-void gfxPlatform::ReportTelemetry() {
-  MOZ_RELEASE_ASSERT(XRE_IsParentProcess(),
-                     "GFX: Only allowed to be called from parent process.");
-
-  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-  nsTArray<uint32_t> displayWidths;
-  nsTArray<uint32_t> displayHeights;
-  gfxInfo->GetDisplayWidth(displayWidths);
-  gfxInfo->GetDisplayHeight(displayHeights);
-
-  uint32_t displayCount = displayWidths.Length();
-  uint32_t displayWidth = displayWidths.Length() > 0 ? displayWidths[0] : 0;
-  uint32_t displayHeight = displayHeights.Length() > 0 ? displayHeights[0] : 0;
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_DISPLAY_COUNT, displayCount);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_DISPLAY_PRIMARY_HEIGHT,
-                       displayHeight);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_DISPLAY_PRIMARY_WIDTH,
-                       displayWidth);
-
-  nsString adapterDesc;
-  gfxInfo->GetAdapterDescription(adapterDesc);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_DESCRIPTION,
-                       adapterDesc);
-
-  nsString adapterVendorId;
-  gfxInfo->GetAdapterVendorID(adapterVendorId);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_VENDOR_ID,
-                       adapterVendorId);
-
-  nsString adapterDeviceId;
-  gfxInfo->GetAdapterDeviceID(adapterDeviceId);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_DEVICE_ID,
-                       adapterDeviceId);
-
-  nsString adapterSubsystemId;
-  gfxInfo->GetAdapterSubsysID(adapterSubsystemId);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_SUBSYSTEM_ID,
-                       adapterSubsystemId);
-
-  uint32_t adapterRam = 0;
-  gfxInfo->GetAdapterRAM(&adapterRam);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_RAM, adapterRam);
-
-  nsString adapterDriver;
-  gfxInfo->GetAdapterDriver(adapterDriver);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_DRIVER_FILES,
-                       adapterDriver);
-
-  nsString adapterDriverVendor;
-  gfxInfo->GetAdapterDriverVendor(adapterDriverVendor);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_DRIVER_VENDOR,
-                       adapterDriverVendor);
-
-  nsString adapterDriverVersion;
-  gfxInfo->GetAdapterDriverVersion(adapterDriverVersion);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_DRIVER_VERSION,
-                       adapterDriverVersion);
-
-  nsString adapterDriverDate;
-  gfxInfo->GetAdapterDriverDate(adapterDriverDate);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_ADAPTER_DRIVER_DATE,
-                       adapterDriverDate);
-
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_HEADLESS, IsHeadless());
 }
 
 static bool IsFeatureSupported(long aFeature, bool aDefault) {
@@ -3665,12 +3595,6 @@ void gfxPlatform::NotifyCompositorCreated(LayersBackend aBackend) {
 
   // Set the backend before we notify so it's available immediately.
   mCompositorBackend = aBackend;
-
-  if (XRE_IsParentProcess()) {
-    Telemetry::ScalarSet(
-        Telemetry::ScalarID::GFX_COMPOSITOR,
-        NS_ConvertUTF8toUTF16(GetLayersBackendName(mCompositorBackend)));
-  }
 
   // Notify that we created a compositor, so telemetry can update.
   NS_DispatchToMainThread(

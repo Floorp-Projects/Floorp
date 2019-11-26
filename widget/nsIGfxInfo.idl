@@ -60,8 +60,8 @@ interface nsIGfxInfo : nsISupports
   /**
    * The amount of RAM in MB in the display adapter.
    */
-  readonly attribute unsigned long adapterRAM;
-  readonly attribute unsigned long adapterRAM2;
+  readonly attribute AString adapterRAM;
+  readonly attribute AString adapterRAM2;
 
   readonly attribute AString adapterDriverVendor;
   readonly attribute AString adapterDriverVendor2;
@@ -78,8 +78,6 @@ interface nsIGfxInfo : nsISupports
    * Information about display devices
    */
   readonly attribute Array<AString> displayInfo;
-  readonly attribute Array<unsigned long> displayWidth;
-  readonly attribute Array<unsigned long> displayHeight;
 
   /**
    * Returns an array of objects describing each monitor. Guaranteed properties
@@ -281,5 +279,4 @@ interface nsIGfxInfo : nsISupports
   // xpcshell-tests.
   boolean controlGPUProcessForXPCShell(in boolean aEnable);
 };
-
 
