@@ -87,7 +87,7 @@ Unlike the profile creator, the client is Python 2 and 3 compatible.
 You can grab a conditioned profile using the client API::
 
    >>> from condprof.client import get_profile
-   >>> get_profile(".", "win64", "cold", "default")
+   >>> get_profile(".", "win64", "settled", "default")
 
 or the **cp-client** script that gets install when you run the
 conditioned profile installer.
