@@ -13,14 +13,14 @@
 #define WR_FEATURE_MULTI_BRUSH
 
 // These constants must match the BrushShaderKind enum in gpu_types.rs.
-#define BRUSH_KIND_SOLID            0x1000000
-#define BRUSH_KIND_IMAGE            0x2000000
-#define BRUSH_KIND_TEXT             0x3000000
-#define BRUSH_KIND_LINEAR_GRADIENT  0x4000000
-#define BRUSH_KIND_RADIAL_GRADIENT  0x5000000
-#define BRUSH_KIND_BLEND            0x6000000
-#define BRUSH_KIND_MIX_BLEND        0x7000000
-#define BRUSH_KIND_YV               0x8000000
+#define BRUSH_KIND_SOLID            1
+#define BRUSH_KIND_IMAGE            2
+#define BRUSH_KIND_TEXT             3
+#define BRUSH_KIND_LINEAR_GRADIENT  4
+#define BRUSH_KIND_RADIAL_GRADIENT  5
+#define BRUSH_KIND_BLEND            6
+#define BRUSH_KIND_MIX_BLEND        7
+#define BRUSH_KIND_YV               8
 
 int vecs_per_brush(int brush_kind);
 

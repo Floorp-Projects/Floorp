@@ -72,15 +72,15 @@ impl ZBufferIdGenerator {
 #[repr(i32)]
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum BrushShaderKind {
-    None = 0,
-    Solid           = 0x1000000,
-    Image           = 0x2000000,
-    Text            = 0x3000000,
-    LinearGradient  = 0x4000000,
-    RadialGradient  = 0x5000000,
-    Blend           = 0x6000000,
-    MixBlend        = 0x7000000,
-    Yuv             = 0x8000000,
+    None            = 0,
+    Solid           = 1,
+    Image           = 2,
+    Text            = 3,
+    LinearGradient  = 4,
+    RadialGradient  = 5,
+    Blend           = 6,
+    MixBlend        = 7,
+    Yuv             = 8,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -368,7 +368,7 @@ impl GlyphInstance {
                 self.prim_header_index.0 as i32,
                 data0,
                 data1,
-                resource_address | BrushShaderKind::Text as i32,
+                resource_address | ((BrushShaderKind::Text as i32) << 24),
             ],
         }
     }
@@ -438,7 +438,7 @@ impl From<BrushInstance> for PrimitiveInstanceData {
                 | ((instance.edge_flags.bits() as i32) << 16)
                 | ((instance.brush_flags.bits() as i32) << 24),
                 instance.resource_address
-                | instance.brush_kind as i32,
+                | ((instance.brush_kind as i32) << 24),
             ]
         }
     }
