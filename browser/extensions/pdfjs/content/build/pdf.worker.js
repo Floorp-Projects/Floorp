@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.4.127';
-const pdfjsBuild = '21895aa7';
+const pdfjsVersion = '2.4.152';
+const pdfjsBuild = '827eb64b';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -223,7 +223,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.4.127';
+    const workerVersion = '2.4.152';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -3239,7 +3239,7 @@ class PDFDocument {
       stream.reset();
 
       if (find(stream, 'endobj', 1024)) {
-        startXRef = stream.pos + 6;
+        startXRef = stream.pos + 6 - stream.start;
       }
     } else {
       const step = 1024;
@@ -7528,9 +7528,9 @@ var FlateStream = function FlateStreamClosure() {
 
       this.codeBuf = 0;
       this.codeSize = 0;
-      var bufferLength = this.bufferLength;
-      buffer = this.ensureBuffer(bufferLength + blockLen);
-      var end = bufferLength + blockLen;
+      const bufferLength = this.bufferLength,
+            end = bufferLength + blockLen;
+      buffer = this.ensureBuffer(end);
       this.bufferLength = end;
 
       if (blockLen === 0) {
@@ -7538,13 +7538,11 @@ var FlateStream = function FlateStreamClosure() {
           this.eof = true;
         }
       } else {
-        for (var n = bufferLength; n < end; ++n) {
-          if ((b = str.getByte()) === -1) {
-            this.eof = true;
-            break;
-          }
+        const block = str.getBytes(blockLen);
+        buffer.set(block, bufferLength);
 
-          buffer[n] = b;
+        if (block.length < blockLen) {
+          this.eof = true;
         }
       }
 
