@@ -49,6 +49,16 @@ promise_test(async t => {
 }, "Test that NDEFReader.scan rejects if NDEFScanOptions.id has wrong \
 protocol.");
 
+promise_test(async t => {
+  if (window.testRunner) {
+    // Deny nfc permissions for Chromium testrunner.
+    window.testRunner.setPermission('nfc', 'denied',
+                                    location.origin, location.origin);
+  }
+  const reader = new NDEFReader();
+  await promise_rejects(t, 'NotAllowedError', reader.scan());
+}, "NDEFReader.scan should fail if user permission is not granted.");
+
 nfc_test(async (t, mockNFC) => {
   mockNFC.setHWStatus(NFCHWStatus.DISABLED);
   const reader = new NDEFReader();
