@@ -153,12 +153,16 @@ jobs:
           treeherder-symbol: Rel
           target-tasks-method: cron_bouncer_check
       run-on-projects:
+          - mozilla-central
           - mozilla-beta
           - mozilla-release
           - mozilla-esr68
       when:
           by-project:
               # No default branch
+              mozilla-central:
+                  - {hour: 7, minute: 0}
+                  - {hour: 19, minute: 0}
               mozilla-beta:
                   - {hour: 7, minute: 0}
                   - {hour: 19, minute: 0}
