@@ -8,7 +8,7 @@
 %define fieldHoverBorderColor hsla(240,5%,5%,.35)
 %define urlbarMarginInline 5px
 %define urlbarBreakoutExtend 2px
-%define urlbarSearchIconWidth calc(16px + 2 * @identityBoxPaddingInline@)
+%define urlbarSearchButtonWidth calc(16px + 2 * @identityBoxPaddingInline@)
 
 :root {
   --toolbar-field-focus-border-color: Highlight;
@@ -130,8 +130,8 @@
   caret-color: transparent;
 }
 
-#urlbar.searchIcon > #urlbar-input-container > #urlbar-search-icon {
-  width: @urlbarSearchIconWidth@;
+#urlbar.searchButton > #urlbar-input-container > #urlbar-search-button {
+  width: @urlbarSearchButtonWidth@;
   background-image: url(chrome://browser/skin/search-glass.svg);
   background-repeat: no-repeat;
   background-position: center;
@@ -140,7 +140,7 @@
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
-#urlbar.searchIcon > #urlbar-input-container[pageproxystate="invalid"] > #urlbar-search-icon {
+#urlbar.searchButton > #urlbar-input-container[pageproxystate="invalid"] > #urlbar-search-button {
   margin-inline-end: 6px;
 }
 
@@ -162,9 +162,9 @@
   inset: 0;
 }
 
-:root:not([chromehidden~="toolbar"]) #urlbar.searchIcon:not([breakout]) > #urlbar-background,
-:root:not([chromehidden~="toolbar"]) #urlbar.searchIcon:not([breakout-extend]) > #urlbar-background {
-  inset-inline-start: @urlbarSearchIconWidth@;
+:root:not([chromehidden~="toolbar"]) #urlbar.searchButton:not([breakout]) > #urlbar-background,
+:root:not([chromehidden~="toolbar"]) #urlbar.searchButton:not([breakout-extend]) > #urlbar-background {
+  inset-inline-start: @urlbarSearchButtonWidth@;
 }
 
 #urlbar.megabar > #urlbar-input-container {
@@ -220,7 +220,7 @@
   padding-inline: calc(@urlbarMarginInline@ + @urlbarBreakoutExtend@);
 }
 
-#urlbar.searchIcon[breakout][breakout-extend] > #urlbar-input-container > #urlbar-search-icon {
+#urlbar.searchButton[breakout][breakout-extend] > #urlbar-input-container > #urlbar-search-button {
   fill: currentColor;
   fill-opacity: .6;
 }

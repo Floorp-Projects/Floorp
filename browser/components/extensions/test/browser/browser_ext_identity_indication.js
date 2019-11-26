@@ -3,7 +3,7 @@
 "use strict";
 
 function confirmDefaults() {
-  if (gURLBar.searchIcon) {
+  if (gURLBar.searchButton) {
     is(
       getComputedStyle(document.getElementById("identity-box")).display,
       "none",
