@@ -1,3 +1,5 @@
+// META: title=Cookie Store API: cookie encoding
+// META: global=!default,serviceworker,window
 // META: script=resources/cookie-test-helpers.js
 
 'use strict';

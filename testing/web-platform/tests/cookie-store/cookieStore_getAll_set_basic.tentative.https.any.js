@@ -1,3 +1,6 @@
+// META: title=Cookie Store API: Interaction between cookieStore.set() and cookieStore.getAll()
+// META: global=!default,serviceworker,window
+
 'use strict';
 
 promise_test(async testCase => {
