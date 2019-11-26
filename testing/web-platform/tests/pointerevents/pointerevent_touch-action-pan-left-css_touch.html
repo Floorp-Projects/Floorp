@@ -1,27 +1,27 @@
 <!doctype html>
 <html>
     <head>
-        <title>touch-action: pan-down</title>
-        <meta name="assert" content="TA15.4 - With `touch-action: pan-down` on a swiped or click/dragged element, only panning in the y-axis down direction should be possible.">
+        <title>touch-action: pan-left</title>
+        <meta name="assert" content="TA15.3 - With `touch-action: pan-left` on a swiped or click/dragged element, only panning on the x-axis left direction should be possible.">
         <meta name="viewport" content="width=device-width">
-        <link rel="stylesheet" type="text/css" href="../pointerevent_styles.css">
+        <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
         <script src="/resources/testdriver.js"></script>
         <script src="/resources/testdriver-actions.js"></script>
         <script src="/resources/testdriver-vendor.js"></script>
-        <script src="../pointerevent_support.js"></script>
+        <script src="pointerevent_support.js"></script>
         <style>
             #target0 {
             width: 700px;
             height: 430px;
-            touch-action: pan-down;
+            touch-action: pan-left;
             }
         </style>
     </head>
     <body onload="run()">
         <h1>Pointer Events touch-action attribute support</h1>
-        <h4 id="desc">Test Description: Try to scroll element UP (drag down), then RIGHT (drag left), then DOWN (drag up). Tap Complete button under the rectangle when done. Expected: only pans in down direction.</h4>
+        <h4 id="desc">Test Description: Try to scroll element DOWN (drag up), then RIGHT (drag left), then LEFT (drag right). Tap Complete button under the rectangle when done. Expected: only pans in left direction.</h4>
         <p>Note: this test is for touch-devices only</p>
         <div id="target0">
             <p>
@@ -87,22 +87,22 @@
                 var target0 = document.getElementById("target0");
                 var btnComplete = document.getElementById("btnComplete");
                 var actions_promise;
-                target0.scrollTop = 200;
+                target0.scrollLeft = 200;
 
                 var scrollListenerExecuted = false;
                 target0.addEventListener("scroll", function(event) {
                     scrollListenerExecuted = true;
-                    assert_greater_than_equal(target0.scrollTop, 200);
+                    assert_less_than_equal(target0.scrollLeft, 200);
                 });
 
-                // Check if "touch-action: pan-down" attribute works properly
-                //TA: 15.4
+                // Check if "touch-action: pan-left" attribute works properly
+                //TA: 15.3
                 on_event(btnComplete, 'click', function(event) {
                     detected_pointertypes[event.pointerType] = true;
                     test_touchaction.step(function() {
                         assert_true(scrollListenerExecuted, "scroll listener should have been executed by the end of the test");
-                        assert_equals(target0.scrollLeft, 0, "scroll x offset should be 0 in the end of the test");
-                        assert_greater_than(target0.scrollTop, 200, "scroll y offset should be greater than 200 in the end of the test");
+                        assert_less_than(target0.scrollLeft, 200, "scroll x offset should be less than 200 in the end of the test");
+                        assert_equals(target0.scrollTop, 0, "scroll y offset should be 0 in the end of the test");
                     });
 
                     // Make sure the test finishes after all the input actions are completed.
@@ -113,16 +113,16 @@
                 });
 
                 // Inject touch inputs.
-                actions_promise = touchScrollInTarget(target0, 'up').then(function() {
+                actions_promise = touchScrollInTarget(target0, 'down').then(function() {
                     return touchScrollInTarget(target0, 'right');
                 }).then(function() {
-                    return touchScrollInTarget(target0, 'down');
+                    return touchScrollInTarget(target0, 'left');
                 }).then(function() {
                     return clickInTarget("touch", btnComplete);
                 });
             }
         </script>
-        <h1>touch-action: pan-down</h1>
+        <h1>touch-action: pan-left</h1>
         <div id="complete-notice">
             <p>The following pointer types were detected: <span id="pointertype-log"></span>.</p>
         </div>
