@@ -174,22 +174,20 @@ function testNDEFScanOptions(message, scanOptions, unmatchedScanOptions, desc) {
     const reader2 = new NDEFReader();
     const controller = new AbortController();
 
-    mockNFC.setReadingMessage(message);
-
     // Reading from unmatched reader will not be triggered
     reader1.onreading = t.unreached_func("reading event should not be fired.");
     unmatchedScanOptions.signal = controller.signal;
-    reader1.scan(unmatchedScanOptions);
+    await reader1.scan(unmatchedScanOptions);
 
     const readerWatcher = new EventWatcher(t, reader2, ["reading", "error"]);
-
     const promise = readerWatcher.wait_for("reading").then(event => {
       controller.abort();
       assertWebNDEFMessagesEqual(event.message, new NDEFMessage(message));
     });
-    // NDEFReader#scan() asynchronously dispatches the onreading event.
     scanOptions.signal = controller.signal;
-    reader2.scan(scanOptions);
+    await reader2.scan(scanOptions);
+
+    mockNFC.setReadingMessage(message);
     await promise;
   }, desc);
 }
@@ -200,19 +198,16 @@ function testReadingMultiMessages(
     const reader = new NDEFReader();
     const controller = new AbortController();
     const readerWatcher = new EventWatcher(t, reader, ["reading", "error"]);
-
     const promise = readerWatcher.wait_for("reading").then(event => {
       controller.abort();
       assertWebNDEFMessagesEqual(event.message, new NDEFMessage(message));
     });
-    // NDEFReader#scan() asynchronously dispatches the onreading event.
     scanOptions.signal = controller.signal;
-    reader.scan(scanOptions);
+    await reader.scan(scanOptions);
 
     // Unmatched message will not be read
     mockNFC.setReadingMessage(unmatchedMessage);
     mockNFC.setReadingMessage(message);
-
     await promise;
   }, desc);
 }
