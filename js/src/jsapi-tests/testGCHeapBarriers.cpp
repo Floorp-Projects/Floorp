@@ -46,13 +46,13 @@ struct DeletePolicy<TestStruct<const js::GCPtr<T>, T>>
 }  // namespace JS
 
 template <typename T>
-static T* CreateGCThing(JSContext* cx) {
+static T* CreateNurseryGCThing(JSContext* cx) {
   MOZ_CRASH();
   return nullptr;
 }
 
 template <>
-JSObject* CreateGCThing(JSContext* cx) {
+JSObject* CreateNurseryGCThing(JSContext* cx) {
   JS::RootedObject obj(cx, JS_NewPlainObject(cx));
   if (!obj) {
     return nullptr;
@@ -62,12 +62,12 @@ JSObject* CreateGCThing(JSContext* cx) {
 }
 
 template <>
-JSFunction* CreateGCThing(JSContext* cx) {
+JSFunction* CreateNurseryGCThing(JSContext* cx) {
   /*
    * We don't actually use the function as a function, so here we cheat and
    * cast a JSObject.
    */
-  return static_cast<JSFunction*>(CreateGCThing<JSObject>(cx));
+  return static_cast<JSFunction*>(CreateNurseryGCThing<JSObject>(cx));
 }
 
 // Test post-barrier implementation on wrapper types. The following wrapper
@@ -83,7 +83,7 @@ BEGIN_TEST(testGCHeapPostBarriers) {
 
   /* Sanity check - objects start in the nursery and then become tenured. */
   JS_GC(cx);
-  JS::RootedObject obj(cx, CreateGCThing<JSObject>(cx));
+  JS::RootedObject obj(cx, CreateNurseryGCThing<JSObject>(cx));
   CHECK(js::gc::IsInsideNursery(obj.get()));
   JS_GC(cx);
   CHECK(!js::gc::IsInsideNursery(obj.get()));
@@ -92,6 +92,7 @@ BEGIN_TEST(testGCHeapPostBarriers) {
   /* JSObject and JSFunction objects are nursery allocated. */
   CHECK(TestHeapPostBarriersForType<JSObject>());
   CHECK(TestHeapPostBarriersForType<JSFunction>());
+  // Bug 1599378: Add string tests.
 
   return true;
 }
@@ -107,10 +108,18 @@ bool CanAccessObject(JSObject* obj) {
 
 template <typename T>
 bool TestHeapPostBarriersForType() {
-  CHECK((TestHeapPostBarriersForWrapper<JS::Heap, T>()));
   CHECK((TestHeapPostBarriersForWrapper<js::GCPtr, T>()));
-  CHECK((TestHeapPostBarriersForWrapper<js::HeapPtr, T>()));
-  CHECK((TestHeapPostBarriersForWrapper<js::WeakHeapPtr, T>()));
+  CHECK((TestHeapPostBarriersForMovableWrapper<JS::Heap, T>()));
+  CHECK((TestHeapPostBarriersForMovableWrapper<js::HeapPtr, T>()));
+  CHECK((TestHeapPostBarriersForMovableWrapper<js::WeakHeapPtr, T>()));
+  return true;
+}
+
+template <template <typename> class W, typename T>
+bool TestHeapPostBarriersForMovableWrapper() {
+  CHECK((TestHeapPostBarriersForWrapper<W, T>()));
+  CHECK((TestHeapPostBarrierMoveConstruction<W<T*>, T>()));
+  CHECK((TestHeapPostBarrierMoveAssignment<W<T*>, T>()));
   return true;
 }
 
@@ -121,13 +130,12 @@ bool TestHeapPostBarriersForWrapper() {
   CHECK((TestHeapPostBarrierUpdate<W<T*>, T>()));
   CHECK((TestHeapPostBarrierInitFailure<W<T*>, T>()));
   CHECK((TestHeapPostBarrierInitFailure<const W<T*>, T>()));
-  // TODO: Add tests for moving wrappers (except GCPtr).
   return true;
 }
 
 template <typename W, typename T>
 bool TestHeapPostBarrierConstruction() {
-  T* initialObj = CreateGCThing<T>(cx);
+  T* initialObj = CreateNurseryGCThing<T>(cx);
   CHECK(initialObj != nullptr);
   CHECK(js::gc::IsInsideNursery(initialObj));
   uintptr_t initialObjAsInt = uintptr_t(initialObj);
@@ -161,7 +169,7 @@ bool TestHeapPostBarrierUpdate() {
   // Normal case - allocate a heap object, write a nursery pointer into it and
   // check that it gets updated on minor GC.
 
-  T* initialObj = CreateGCThing<T>(cx);
+  T* initialObj = CreateNurseryGCThing<T>(cx);
   CHECK(initialObj != nullptr);
   CHECK(js::gc::IsInsideNursery(initialObj));
   uintptr_t initialObjAsInt = uintptr_t(initialObj);
@@ -198,7 +206,7 @@ bool TestHeapPostBarrierInitFailure() {
   // Failure case - allocate a heap object, write a nursery pointer into it
   // and fail to complete initialization.
 
-  T* initialObj = CreateGCThing<T>(cx);
+  T* initialObj = CreateNurseryGCThing<T>(cx);
   CHECK(initialObj != nullptr);
   CHECK(js::gc::IsInsideNursery(initialObj));
 
@@ -215,6 +223,71 @@ bool TestHeapPostBarrierInitFailure() {
     CHECK(wrapper == initialObj);
 
     // testStruct deleted here, as if we left this block due to an error.
+  }
+
+  cx->minorGC(JS::GCReason::API);
+
+  return true;
+}
+
+template <typename W, typename T>
+bool TestHeapPostBarrierMoveConstruction() {
+  T* initialObj = CreateNurseryGCThing<T>(cx);
+  CHECK(initialObj != nullptr);
+  CHECK(js::gc::IsInsideNursery(initialObj));
+  uintptr_t initialObjAsInt = uintptr_t(initialObj);
+
+  {
+    // We don't root our structure because that would end up tracing it on minor
+    // GC and we're testing that heap post barrier works for things that aren't
+    // roots.
+    JS::AutoSuppressGCAnalysis noAnalysis(cx);
+
+    W wrapper1(initialObj);
+    CHECK(wrapper1 == initialObj);
+
+    W wrapper2(std::move(wrapper1));
+    CHECK(wrapper2 == initialObj);
+
+    cx->minorGC(JS::GCReason::API);
+
+    CHECK(uintptr_t(wrapper1.get()) != initialObjAsInt);
+    CHECK(uintptr_t(wrapper2.get()) != initialObjAsInt);
+    CHECK(!js::gc::IsInsideNursery(wrapper2.get()));
+    CHECK(CanAccessObject(wrapper2.get()));
+  }
+
+  cx->minorGC(JS::GCReason::API);
+
+  return true;
+}
+
+template <typename W, typename T>
+bool TestHeapPostBarrierMoveAssignment() {
+  T* initialObj = CreateNurseryGCThing<T>(cx);
+  CHECK(initialObj != nullptr);
+  CHECK(js::gc::IsInsideNursery(initialObj));
+  uintptr_t initialObjAsInt = uintptr_t(initialObj);
+
+  {
+    // We don't root our structure because that would end up tracing it on minor
+    // GC and we're testing that heap post barrier works for things that aren't
+    // roots.
+    JS::AutoSuppressGCAnalysis noAnalysis(cx);
+
+    W wrapper1(initialObj);
+    CHECK(wrapper1 == initialObj);
+
+    W wrapper2;
+    wrapper2 = std::move(wrapper1);
+    CHECK(wrapper2 == initialObj);
+
+    cx->minorGC(JS::GCReason::API);
+
+    CHECK(uintptr_t(wrapper1.get()) != initialObjAsInt);
+    CHECK(uintptr_t(wrapper2.get()) != initialObjAsInt);
+    CHECK(!js::gc::IsInsideNursery(wrapper2.get()));
+    CHECK(CanAccessObject(wrapper2.get()));
   }
 
   cx->minorGC(JS::GCReason::API);
