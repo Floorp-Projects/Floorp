@@ -412,6 +412,25 @@
   display: flex;
 }
 
+.network-monitor .timings-overview {
+  display: flex;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 4px;
+}
+
+.network-monitor .timings-overview-item {
+  display: inline-flex;
+}
+
+.network-monitor .timings-overview-item:not(:first-of-type)::before {
+  content: "";
+  display: inline-flex;
+  margin-inline-end: 10px;
+  margin-inline-start: 10px;
+  width: 1px;
+  background: var(--theme-splitter-color);
+}
+
 .network-monitor .timings-label {
   width: 10em;
 }

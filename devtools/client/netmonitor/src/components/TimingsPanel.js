@@ -4,6 +4,9 @@
 
 "use strict";
 
+const {
+  connect,
+} = require("devtools/client/shared/redux/visibility-handler-connect");
 const { Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
@@ -29,6 +32,7 @@ class TimingsPanel extends Component {
     return {
       connector: PropTypes.object.isRequired,
       request: PropTypes.object.isRequired,
+      firstRequestStartedMs: PropTypes.number.isRequired,
     };
   }
 
@@ -94,13 +98,18 @@ class TimingsPanel extends Component {
   }
 
   render() {
-    const { eventTimings, totalTime } = this.props.request;
+    const { eventTimings, totalTime, startedMs } = this.props.request;
+    const { firstRequestStartedMs } = this.props;
 
     if (!eventTimings) {
       return null;
     }
 
     const { timings, offsets } = eventTimings;
+    const queuedAt = startedMs - firstRequestStartedMs;
+    const startedAt = queuedAt + timings.blocked;
+    const downloadedAt = queuedAt + totalTime;
+
     const timelines = TIMING_KEYS.map((type, idx) => {
       // Determine the relative offset for each timings box. For example, the
       // offset of third timings box will be 0 + blocked offset + dns offset
@@ -151,6 +160,30 @@ class TimingsPanel extends Component {
     return div(
       { className: "panel-container" },
       div(
+        { className: "timings-overview" },
+        span(
+          { className: "timings-overview-item" },
+          L10N.getFormatStr(
+            "netmonitor.timings.queuedAt",
+            getFormattedTime(queuedAt)
+          )
+        ),
+        span(
+          { className: "timings-overview-item" },
+          L10N.getFormatStr(
+            "netmonitor.timings.startedAt",
+            getFormattedTime(startedAt)
+          )
+        ),
+        span(
+          { className: "timings-overview-item" },
+          L10N.getFormatStr(
+            "netmonitor.timings.downloadedAt",
+            getFormattedTime(downloadedAt)
+          )
+        )
+      ),
+      div(
         { className: "label-separator" },
         L10N.getStr("netmonitor.timings.requestTiming")
       ),
@@ -164,4 +197,6 @@ class TimingsPanel extends Component {
   }
 }
 
-module.exports = TimingsPanel;
+module.exports = connect(state => ({
+  firstRequestStartedMs: state.requests.firstStartedMs,
+}))(TimingsPanel);
