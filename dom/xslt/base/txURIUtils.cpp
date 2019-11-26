@@ -9,6 +9,7 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsIPrincipal.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/dom/nsCSPContext.h"
 
 using mozilla::dom::Document;
 using mozilla::net::LoadInfo;
@@ -70,6 +71,13 @@ void URIUtils::ResetWithSource(Document* aNewDoc, nsINode* aSourceNode) {
   aNewDoc->SetPrincipals(sourcePrincipal, sourceStoragePrincipal);
   aNewDoc->SetBaseURI(sourceDoc->GetDocBaseURI());
 
+  // Inherit the csp if there is one
+  nsCOMPtr<nsIContentSecurityPolicy> csp = sourceDoc->GetCsp();
+  if (csp) {
+    RefPtr<nsCSPContext> cspToInherit = new nsCSPContext();
+    cspToInherit->InitFromOther(static_cast<nsCSPContext*>(csp.get()));
+    aNewDoc->SetCsp(cspToInherit);
+  }
   // Copy charset
   aNewDoc->SetDocumentCharacterSetSource(
       sourceDoc->GetDocumentCharacterSetSource());
