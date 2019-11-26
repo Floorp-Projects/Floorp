@@ -35,6 +35,9 @@ import kotlin.random.Random
 /* This ID is used for all Mozilla products.  Setting as default if no ID is passed in */
 private const val MOZILLA_PRODUCT_ID = "{eeb82917-e434-4870-8148-5c03d4caa81b}"
 
+@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+internal const val CAUGHT_EXCEPTION_NOTE = "This is a caught exception, not a real crash"
+
 /**
  * A [CrashReporterService] implementation uploading crash reports to crash-stats.mozilla.com.
  *
@@ -134,14 +137,17 @@ class MozillaSocorroService(
         }
 
         throwable?.let {
-            sendPart(gzipOs, boundary, "JavaStackTrace", getExceptionStackTrace(it,
-                    isCaughtException), nameSet)
+            sendPart(gzipOs, boundary, "JavaStackTrace", getExceptionStackTrace(it), nameSet)
         }
 
         miniDumpFilePath?.let {
             val minidumpFile = File(it)
             sendFile(gzipOs, boundary, "upload_file_minidump", minidumpFile, nameSet)
             minidumpFile.delete()
+        }
+
+        if (isCaughtException) {
+            sendPart(gzipOs, boundary, "Notes", CAUGHT_EXCEPTION_NOTE, nameSet)
         }
 
         sendPackageInstallTime(gzipOs, boundary, nameSet)
@@ -321,15 +327,12 @@ class MozillaSocorroService(
         return resultMap
     }
 
-    private fun getExceptionStackTrace(throwable: Throwable, isCaughtException: Boolean): String {
+    private fun getExceptionStackTrace(throwable: Throwable): String {
         val stringWriter = StringWriter()
         val printWriter = PrintWriter(stringWriter)
         throwable.printStackTrace(printWriter)
         printWriter.flush()
 
-        return when (isCaughtException) {
-            true -> "$INFO_PREFIX $stringWriter"
-            false -> stringWriter.toString()
-        }
+        return stringWriter.toString()
     }
 }

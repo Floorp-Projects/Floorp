@@ -12,6 +12,7 @@ import mozilla.components.support.test.robolectric.testContext
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
@@ -102,6 +103,7 @@ class MozillaSocorroServiceTest {
         assert(request.contains("name=ReleaseChannel\r\n\r\nnightly"))
         assert(request.contains("name=Android_PackageName\r\n\r\nmozilla.components.lib.crash.test"))
         assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
+        assertFalse(request.contains("name=Notes\r\n\r\n$CAUGHT_EXCEPTION_NOTE"))
 
         verify(service).report(crash)
         verify(service).sendReport(crash.throwable, null, null, false)
@@ -129,13 +131,14 @@ class MozillaSocorroServiceTest {
         val bufferedReader = BufferedReader(reader)
         var request = bufferedReader.readText()
 
-        assert(request.contains("name=JavaStackTrace\r\n\r\n$INFO_PREFIX java.lang.RuntimeException: Test"))
+        assert(request.contains("name=JavaStackTrace\r\n\r\njava.lang.RuntimeException: Test"))
         assert(request.contains("name=Android_ProcessName\r\n\r\nmozilla.components.lib.crash.test"))
         assert(request.contains("name=ProductID\r\n\r\n{eeb82917-e434-4870-8148-5c03d4caa81b}"))
         assert(request.contains("name=Vendor\r\n\r\nMozilla"))
         assert(request.contains("name=ReleaseChannel\r\n\r\nnightly"))
         assert(request.contains("name=Android_PackageName\r\n\r\nmozilla.components.lib.crash.test"))
         assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
+        assert(request.contains("name=Notes\r\n\r\n$CAUGHT_EXCEPTION_NOTE"))
 
         verify(service).report(throwable)
         verify(service).sendReport(throwable, null, null, true)
@@ -167,7 +170,7 @@ class MozillaSocorroServiceTest {
         val bufferedReader = BufferedReader(reader)
         var request = bufferedReader.readText()
 
-        assert(request.contains("name=JavaStackTrace\r\n\r\n$INFO_PREFIX java.lang.RuntimeException: Test"))
+        assert(request.contains("name=JavaStackTrace\r\n\r\njava.lang.RuntimeException: Test"))
         assert(request.contains("name=Android_ProcessName\r\n\r\nmozilla.components.lib.crash.test"))
         assert(request.contains("name=ProductID\r\n\r\n{1234-1234-1234}"))
         assert(request.contains("name=Version\r\n\r\n0.1"))
@@ -176,6 +179,7 @@ class MozillaSocorroServiceTest {
         assert(request.contains("name=ReleaseChannel\r\n\r\nnightly"))
         assert(request.contains("name=Android_PackageName\r\n\r\nmozilla.components.lib.crash.test"))
         assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
+        assert(request.contains("name=Notes\r\n\r\n$CAUGHT_EXCEPTION_NOTE"))
 
         verify(service).report(throwable)
         verify(service).sendReport(throwable, null, null, true)
