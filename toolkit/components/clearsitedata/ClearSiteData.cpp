@@ -162,11 +162,8 @@ void ClearSiteData::ClearDataFromChannel(nsIHttpChannel* aChannel) {
     return;
   }
 
-  nsCOMPtr<nsIContentSecurityManager> csm =
-      do_GetService(NS_CONTENTSECURITYMANAGER_CONTRACTID);
-
   bool secure;
-  rv = csm->IsOriginPotentiallyTrustworthy(principal, &secure);
+  rv = principal->GetIsOriginPotentiallyTrustworthy(&secure);
   if (NS_WARN_IF(NS_FAILED(rv)) || !secure) {
     return;
   }

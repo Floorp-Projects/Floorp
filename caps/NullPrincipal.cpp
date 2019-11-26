@@ -141,6 +141,11 @@ NullPrincipal::GetURI(nsIURI** aURI) {
   uri.forget(aURI);
   return NS_OK;
 }
+NS_IMETHODIMP
+NullPrincipal::GetIsOriginPotentiallyTrustworthy(bool* aResult) {
+  *aResult = false;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 NullPrincipal::GetDomain(nsIURI** aDomain) {
