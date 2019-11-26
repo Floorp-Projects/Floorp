@@ -1452,7 +1452,7 @@ JS_FRIEND_API bool js::RuntimeIsBeingDestroyed() {
 
 // No-op implementations of public API that would depend on --with-intl-api
 
-#ifndef ENABLE_INTL_API
+#ifndef JS_HAS_INTL_API
 
 static bool IntlNotEnabled(JSContext* cx) {
   JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
@@ -1472,4 +1472,4 @@ bool js::AddLocaleConstructor(JSContext* cx, JS::HandleObject intl) {
   return IntlNotEnabled(cx);
 }
 
-#endif  // !ENABLE_INTL_API
+#endif  // !JS_HAS_INTL_API

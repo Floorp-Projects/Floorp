@@ -29,24 +29,24 @@ MOZ_ARG_WITH_STRING(intl-api,
     build ICU at all.],
     _INTL_API=$withval)
 
-ENABLE_INTL_API=
+JS_HAS_INTL_API=
 case "$_INTL_API" in
 no)
     ;;
 yes)
-    ENABLE_INTL_API=1
+    JS_HAS_INTL_API=1
     ;;
 *)
     AC_MSG_ERROR([Invalid value passed to --with-intl-api: $_INTL_API])
     ;;
 esac
 
-if test -n "$ENABLE_INTL_API"; then
+if test -n "$JS_HAS_INTL_API"; then
     USE_ICU=1
 fi
 
-if test -n "$ENABLE_INTL_API"; then
-    AC_DEFINE(ENABLE_INTL_API)
+if test -n "$JS_HAS_INTL_API"; then
+    AC_DEFINE(JS_HAS_INTL_API)
 fi
 
 dnl Settings for the implementation of the ECMAScript Internationalization API
@@ -72,7 +72,7 @@ if test -n "$USE_ICU"; then
 fi
 
 AC_SUBST(MOZ_ICU_VERSION)
-AC_SUBST(ENABLE_INTL_API)
+AC_SUBST(JS_HAS_INTL_API)
 AC_SUBST(USE_ICU)
 AC_SUBST(ICU_DATA_FILE)
 

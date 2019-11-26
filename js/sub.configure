@@ -56,7 +56,7 @@ def js_subconfigure(build_env, prepare_configure_options, mozconfig,
         if not o.startswith('--with-system-nspr')
     ]
 
-    if not substs.get('ENABLE_INTL_API'):
+    if not substs.get('JS_HAS_INTL_API'):
         options.append('--without-intl-api')
 
     if substs.get('NSPR_CFLAGS') or substs.get('NSPR_LIBS'):
