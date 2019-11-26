@@ -11,10 +11,6 @@
 #include "base/process_util.h"
 #include "mozilla/ipc/SharedMemory.h"
 
-#ifdef XP_WIN
-#include <windows.h>
-#endif
-
 namespace mozilla {
 
 // Try to map a frozen shm for writing.  Threat model: the process is
@@ -107,40 +103,6 @@ TEST(IPCSharedMemory, Reprotect)
   // Try to alter protection; should succeed, because not frozen
   EXPECT_TRUE(ipc::SharedMemory::SystemProtectFallible(
       mem, 1, ipc::SharedMemory::RightsReadWrite));
-}
-#endif
-
-#ifdef XP_WIN
-// Try to regain write permissions on a read-only handle using
-// DuplicateHandle; this will succeed if the object has no DACL.
-// See also https://crbug.com/338538
-TEST(IPCSharedMemory, WinUnfreeze)
-{
-  base::SharedMemory shm;
-
-  // Create and initialize
-  ASSERT_TRUE(shm.CreateFreezeable(1));
-  ASSERT_TRUE(shm.Map(1));
-  auto mem = reinterpret_cast<char*>(shm.memory());
-  ASSERT_TRUE(mem);
-  *mem = 'A';
-
-  // Freeze
-  ASSERT_TRUE(shm.Freeze());
-  ASSERT_FALSE(shm.memory());
-
-  // Extract handle.
-  auto handle = base::SharedMemory::NULLHandle();
-  ASSERT_TRUE(shm.GiveToProcess(base::GetCurrentProcId(), &handle));
-  ASSERT_TRUE(shm.IsHandleValid(handle));
-  ASSERT_FALSE(shm.IsValid());
-
-  // Unfreeze.
-  bool unfroze = ::DuplicateHandle(GetCurrentProcess(), handle,
-                                   GetCurrentProcess(), &handle,
-                                   FILE_MAP_ALL_ACCESS, false,
-                                   DUPLICATE_CLOSE_SOURCE);
-  ASSERT_FALSE(unfroze);
 }
 #endif
 
