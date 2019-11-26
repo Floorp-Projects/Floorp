@@ -9,7 +9,6 @@ var request_time;
 var response_time;
 
 var cache_storage;
-
 var httpserver = new HttpServer();
 httpserver.start(-1);
 
@@ -69,6 +68,8 @@ function check_cached_data(aCachedData, aCallback) {
 }
 
 function run_test() {
+  Services.prefs.setBoolPref("browser.cache.cache_isolation", false);
+
   do_get_profile();
   evict_cache_entries();
 

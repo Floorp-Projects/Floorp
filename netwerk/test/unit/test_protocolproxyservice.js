@@ -25,6 +25,8 @@ var pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
 var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
   Ci.nsIPrefBranch
 );
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+Services.prefs.setBoolPref("browser.cache.cache_isolation", false);
 
 /**
  * Test nsIProtocolHandler that allows proxying, but doesn't allow HTTP

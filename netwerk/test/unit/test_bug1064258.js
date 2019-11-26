@@ -53,6 +53,8 @@ function contentHandler2(metadata, response) {
 }
 
 function run_test() {
+  Services.prefs.setBoolPref("browser.cache.cache_isolation", false);
+
   httpServer = new HttpServer();
   httpServer.registerPathHandler("/content1", contentHandler1);
   httpServer.registerPathHandler("/content2", contentHandler2);

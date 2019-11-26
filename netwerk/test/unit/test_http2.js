@@ -1407,6 +1407,7 @@ function run_test() {
   prefs.setBoolPref("network.http.spdy.enabled.http2", true);
   prefs.setBoolPref("network.http.altsvc.enabled", true);
   prefs.setBoolPref("network.http.altsvc.oe", true);
+  prefs.setBoolPref("browser.cache.cache_isolation", false);
   prefs.setCharPref(
     "network.dns.localDomains",
     "foo.example.com, bar.example.com"

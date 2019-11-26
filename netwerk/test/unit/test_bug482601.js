@@ -37,6 +37,8 @@ var listener = {
 };
 
 function run_test() {
+  Services.prefs.setBoolPref("browser.cache.cache_isolation", false);
+
   httpserv = new HttpServer();
   httpserv.registerPathHandler("/bug482601/nocache", bug482601_nocache);
   httpserv.registerPathHandler("/bug482601/partial", bug482601_partial);
