@@ -625,26 +625,26 @@ function checkSystemSection(data, assertProcessData) {
     "MemoryMB must be a number."
   );
 
-  if (assertProcessData) {
-    if (gIsWindows || gIsMac || gIsLinux) {
-      let EXTRA_CPU_FIELDS = [
-        "cores",
-        "model",
-        "family",
-        "stepping",
-        "l2cacheKB",
-        "l3cacheKB",
-        "speedMHz",
-        "vendor",
-      ];
+  if (gIsWindows || gIsMac || gIsLinux) {
+    let EXTRA_CPU_FIELDS = [
+      "cores",
+      "model",
+      "family",
+      "stepping",
+      "l2cacheKB",
+      "l3cacheKB",
+      "speedMHz",
+      "vendor",
+    ];
 
-      for (let f of EXTRA_CPU_FIELDS) {
-        // Note this is testing TelemetryEnvironment.js only, not that the
-        // values are valid - null is the fallback.
-        Assert.ok(f in data.system.cpu, f + " must be available under cpu.");
-      }
+    for (let f of EXTRA_CPU_FIELDS) {
+      // Note this is testing TelemetryEnvironment.js only, not that the
+      // values are valid - null is the fallback.
+      Assert.ok(f in data.system.cpu, f + " must be available under cpu.");
+    }
 
-      if (gIsWindows) {
+    if (gIsWindows) {
+      if (assertProcessData) {
         Assert.equal(
           typeof data.system.isWow64,
           "boolean",
@@ -655,61 +655,45 @@ function checkSystemSection(data, assertProcessData) {
           "boolean",
           "isWowARM64 must be available on Windows and have the correct type."
         );
-        Assert.ok(
-          "virtualMaxMB" in data.system,
-          "virtualMaxMB must be available."
-        );
-        Assert.ok(
-          Number.isFinite(data.system.virtualMaxMB),
-          "virtualMaxMB must be a number."
-        );
-
-        for (let f of [
-          "count",
-          "model",
-          "family",
-          "stepping",
-          "l2cacheKB",
-          "l3cacheKB",
-          "speedMHz",
-        ]) {
-          Assert.ok(
-            Number.isFinite(data.system.cpu[f]),
-            f + " must be a number if non null."
-          );
-        }
       }
+      Assert.ok(
+        "virtualMaxMB" in data.system,
+        "virtualMaxMB must be available."
+      );
+      Assert.ok(
+        Number.isFinite(data.system.virtualMaxMB),
+        "virtualMaxMB must be a number."
+      );
+    }
 
-      // These should be numbers if they are not null
-      for (let f of [
-        "count",
-        "model",
-        "family",
-        "stepping",
-        "l2cacheKB",
-        "l3cacheKB",
-        "speedMHz",
-      ]) {
-        Assert.ok(
-          !(f in data.system.cpu) ||
-            data.system.cpu[f] === null ||
-            Number.isFinite(data.system.cpu[f]),
-          f + " must be a number if non null."
-        );
-      }
+    // We insist these are available
+    for (let f of ["cores"]) {
+      Assert.ok(
+        !(f in data.system.cpu) || Number.isFinite(data.system.cpu[f]),
+        f + " must be a number if non null."
+      );
+    }
 
-      // We insist these are available
-      for (let f of ["cores"]) {
-        Assert.ok(
-          !(f in data.system.cpu) || Number.isFinite(data.system.cpu[f]),
-          f + " must be a number if non null."
-        );
-      }
+    // These should be numbers if they are not null
+    for (let f of [
+      "model",
+      "family",
+      "stepping",
+      "l2cacheKB",
+      "l3cacheKB",
+      "speedMHz",
+    ]) {
+      Assert.ok(
+        !(f in data.system.cpu) ||
+          data.system.cpu[f] === null ||
+          Number.isFinite(data.system.cpu[f]),
+        f + " must be a number if non null."
+      );
     }
   }
 
   let cpuData = data.system.cpu;
-
+  Assert.ok(Number.isFinite(cpuData.count), "CPU count must be a number.");
   Assert.ok(
     Array.isArray(cpuData.extensions),
     "CPU extensions must be available."
@@ -2535,28 +2519,6 @@ if (gIsWindows) {
       typeof data.system.isWowARM64,
       "boolean",
       "isWowARM64 must be a boolean."
-    );
-    // These should be numbers if they are not null
-    for (let f of [
-      "count",
-      "model",
-      "family",
-      "stepping",
-      "l2cacheKB",
-      "l3cacheKB",
-      "speedMHz",
-      "cores",
-    ]) {
-      Assert.ok(
-        !(f in data.system.cpu) ||
-          data.system.cpu[f] === null ||
-          Number.isFinite(data.system.cpu[f]),
-        f + " must be a number if non null."
-      );
-    }
-    Assert.ok(
-      checkString(data.system.cpu.vendor),
-      "vendor must be a valid string."
     );
   });
 
