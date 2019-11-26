@@ -17,11 +17,11 @@ const {
 
 describe("AuditController component:", () => {
   it("dead accessible actor", () => {
-    const accessible = mockAccessible();
+    const accessibleFront = mockAccessible();
     const wrapper = mount(
       AuditController(
         {
-          accessible,
+          accessibleFront,
         },
         span()
       )
@@ -39,47 +39,47 @@ describe("AuditController component:", () => {
     });
 
     const instance = wrapper.instance();
-    expect(accessible.on.mock.calls.length).toBe(1);
-    expect(accessible.off.mock.calls.length).toBe(1);
-    expect(accessible.on.mock.calls[0]).toEqual([
+    expect(accessibleFront.on.mock.calls.length).toBe(1);
+    expect(accessibleFront.off.mock.calls.length).toBe(1);
+    expect(accessibleFront.on.mock.calls[0]).toEqual([
       "audited",
       instance.onAudited,
     ]);
-    expect(accessible.off.mock.calls[0]).toEqual([
+    expect(accessibleFront.off.mock.calls[0]).toEqual([
       "audited",
       instance.onAudited,
     ]);
   });
 
   it("accessible without checks", () => {
-    const accessible = mockAccessible({
+    const accessibleFront = mockAccessible({
       actorID: "1",
     });
     const wrapper = mount(
       AuditController(
         {
-          accessible,
+          accessibleFront,
         },
         span()
       )
     );
 
     expect(wrapper.html()).toMatchSnapshot();
-    expect(accessible.audit.mock.calls.length).toBe(1);
-    expect(accessible.on.mock.calls.length).toBe(1);
-    expect(accessible.off.mock.calls.length).toBe(0);
+    expect(accessibleFront.audit.mock.calls.length).toBe(1);
+    expect(accessibleFront.on.mock.calls.length).toBe(1);
+    expect(accessibleFront.off.mock.calls.length).toBe(0);
   });
 
   it("accessible with checks", () => {
     const checks = { foo: "bar" };
-    const accessible = mockAccessible({
+    const accessibleFront = mockAccessible({
       actorID: "1",
       checks,
     });
     const wrapper = mount(
       AuditController(
         {
-          accessible,
+          accessibleFront,
         },
         span({ className: "child" })
       )

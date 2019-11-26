@@ -154,7 +154,7 @@ class MainFrame extends Component {
               },
               AccessibilityTree({ accessibilityWalker })
             ),
-            endPanel: RightSidebar({ accessibilityWalker }),
+            endPanel: RightSidebar(),
             vert: this.useLandscapeMode,
           })
         )

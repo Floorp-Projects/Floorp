@@ -82,7 +82,6 @@ class AccessibilityRow extends Component {
       ...TreeRow.propTypes,
       hasContextMenu: PropTypes.bool.isRequired,
       dispatch: PropTypes.func.isRequired,
-      accessibilityWalker: PropTypes.object,
       scrollContentNodeIntoView: PropTypes.bool.isRequired,
       supports: PropTypes.object,
     };
@@ -94,7 +93,7 @@ class AccessibilityRow extends Component {
       scrollContentNodeIntoView,
     } = this.props;
     if (selected) {
-      this.unhighlight();
+      this.unhighlight(object);
       this.update();
       this.highlight(
         object,
@@ -119,7 +118,7 @@ class AccessibilityRow extends Component {
     } = this.props;
     // If row is selected, update corresponding accessible details.
     if (!prevProps.member.selected && selected) {
-      this.unhighlight();
+      this.unhighlight(object);
       this.update();
       this.highlight(
         object,
@@ -192,14 +191,14 @@ class AccessibilityRow extends Component {
    *          Promise that resolves when the node is scrolled into view if
    *          possible.
    */
-  async scrollNodeIntoViewIfNeeded(accessible) {
-    if (!accessible.actorID) {
+  async scrollNodeIntoViewIfNeeded(accessibleFront) {
+    if (!accessibleFront.actorID) {
       return;
     }
 
-    const domWalker = (await accessible.targetFront.getFront("inspector"))
+    const domWalker = (await accessibleFront.targetFront.getFront("inspector"))
       .walker;
-    const node = await domWalker.getNodeFromActor(accessible.actorID, [
+    const node = await domWalker.getNodeFromActor(accessibleFront.actorID, [
       "rawAccessible",
       "DOMNode",
     ]);
@@ -217,34 +216,40 @@ class AccessibilityRow extends Component {
     }
   }
 
-  async highlight(accessible, options, scrollContentNodeIntoView) {
-    const { accessibilityWalker, dispatch } = this.props;
-    dispatch(unhighlight());
+  async highlight(accessibleFront, options, scrollContentNodeIntoView) {
+    this.props.dispatch(unhighlight());
+    if (!accessibleFront) {
+      return;
+    }
 
-    if (!accessible || !accessibilityWalker) {
+    const accessibilityWalkerFront = accessibleFront.parent();
+    if (!accessibilityWalkerFront) {
       return;
     }
 
     // If necessary scroll the node into view before showing the accessibility
     // highlighter.
     if (scrollContentNodeIntoView) {
-      await this.scrollNodeIntoViewIfNeeded(accessible);
+      await this.scrollNodeIntoViewIfNeeded(accessibleFront);
     }
 
-    accessibilityWalker
-      .highlightAccessible(accessible, options)
+    accessibilityWalkerFront
+      .highlightAccessible(accessibleFront, options)
       .catch(error => console.warn(error));
   }
 
-  unhighlight() {
-    const { accessibilityWalker, dispatch } = this.props;
-    dispatch(unhighlight());
-
-    if (!accessibilityWalker) {
+  unhighlight(accessibleFront) {
+    this.props.dispatch(unhighlight());
+    if (!accessibleFront) {
       return;
     }
 
-    accessibilityWalker.unhighlight().catch(error => console.warn(error));
+    const accessibilityWalkerFront = accessibleFront.parent();
+    if (!accessibilityWalkerFront) {
+      return;
+    }
+
+    accessibilityWalkerFront.unhighlight().catch(error => console.warn(error));
   }
 
   async printToJSON() {
@@ -306,13 +311,13 @@ class AccessibilityRow extends Component {
       ...this.props,
       onContextMenu: this.props.hasContextMenu && (e => this.onContextMenu(e)),
       onMouseOver: () => this.highlight(member.object),
-      onMouseOut: () => this.unhighlight(),
+      onMouseOut: () => this.unhighlight(member.object),
       key: `${member.path}-${member.active ? "active" : "inactive"}`,
     };
 
     return AuditController(
       {
-        accessible: member.object,
+        accessibleFront: member.object,
       },
       AuditFilter({}, HighlightableTreeRow(props))
     );
