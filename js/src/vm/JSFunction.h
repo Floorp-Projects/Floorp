@@ -652,6 +652,8 @@ class JSFunction : public js::NativeObject {
 
   static bool delazifyLazilyInterpretedFunction(JSContext* cx,
                                                 js::HandleFunction fun);
+  static bool delazifySelfHostedLazyFunction(JSContext* cx,
+                                             js::HandleFunction fun);
   void maybeRelazify(JSRuntime* rt);
 
   // Function Scripts
@@ -674,12 +676,17 @@ class JSFunction : public js::NativeObject {
   static JSScript* getOrCreateScript(JSContext* cx, js::HandleFunction fun) {
     MOZ_ASSERT(fun->isInterpreted());
     MOZ_ASSERT(cx);
-    if (fun->isInterpretedLazy()) {
+
+    if (fun->hasLazyScript()) {
       if (!delazifyLazilyInterpretedFunction(cx, fun)) {
         return nullptr;
       }
-      return fun->nonLazyScript();
+    } else if (fun->hasSelfHostedLazyScript()) {
+      if (!delazifySelfHostedLazyFunction(cx, fun)) {
+        return nullptr;
+      }
     }
+
     return fun->nonLazyScript();
   }
 

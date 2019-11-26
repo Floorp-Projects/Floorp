@@ -1635,41 +1635,49 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
 /* static */
 bool JSFunction::delazifyLazilyInterpretedFunction(JSContext* cx,
                                                    HandleFunction fun) {
-  MOZ_ASSERT(fun->isInterpretedLazy());
+  MOZ_ASSERT(fun->hasLazyScript());
   MOZ_ASSERT(cx->compartment() == fun->compartment());
 
   // The function must be same-compartment but might be cross-realm. Make sure
   // the script is created in the function's realm.
   AutoRealm ar(cx, fun);
 
-  if (fun->hasLazyScript()) {
-    Rooted<LazyScript*> lazy(cx, fun->lazyScript());
-    RootedFunction canonicalFun(cx, lazy->function());
+  Rooted<LazyScript*> lazy(cx, fun->lazyScript());
+  RootedFunction canonicalFun(cx, lazy->function());
 
-    // If this function is non-canonical, then use the canonical function first
-    // to get the delazified script. This may result in calling this method
-    // again on the canonical function. This ensures the canonical function is
-    // always non-lazy if any of the clones are non-lazy.
-    if (fun != canonicalFun) {
-      JSScript* script = JSFunction::getOrCreateScript(cx, canonicalFun);
-      if (!script) {
-        return false;
-      }
-
-      fun->setUnlazifiedScript(script);
-      return true;
+  // If this function is non-canonical, then use the canonical function first
+  // to get the delazified script. This may result in calling this method
+  // again on the canonical function. This ensures the canonical function is
+  // always non-lazy if any of the clones are non-lazy.
+  if (fun != canonicalFun) {
+    JSScript* script = JSFunction::getOrCreateScript(cx, canonicalFun);
+    if (!script) {
+      return false;
     }
 
-    // Even if we relazified the canonical function, the GC may not have swept
-    // the non-lazy script yet. In this case, we can reuse it.
-    if (lazy->hasScript()) {
-      fun->setUnlazifiedScript(lazy->maybeScript());
-      return true;
-    }
-
-    // Finally, compile the script if it really doesn't exist.
-    return DelazifyCanonicalScriptedFunction(cx, fun);
+    fun->setUnlazifiedScript(script);
+    return true;
   }
+
+  // Even if we relazified the canonical function, the GC may not have swept
+  // the non-lazy script yet. In this case, we can reuse it.
+  if (lazy->hasScript()) {
+    fun->setUnlazifiedScript(lazy->maybeScript());
+    return true;
+  }
+
+  // Finally, compile the script if it really doesn't exist.
+  return DelazifyCanonicalScriptedFunction(cx, fun);
+}
+
+/* static */
+bool JSFunction::delazifySelfHostedLazyFunction(JSContext* cx,
+                                                js::HandleFunction fun) {
+  MOZ_ASSERT(cx->compartment() == fun->compartment());
+
+  // The function must be same-compartment but might be cross-realm. Make sure
+  // the script is created in the function's realm.
+  AutoRealm ar(cx, fun);
 
   /* Lazily cloned self-hosted script. */
   MOZ_ASSERT(fun->isSelfHostedBuiltin());
