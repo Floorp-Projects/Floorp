@@ -3739,6 +3739,10 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
     return IPC_OK();
   }
 
+  if (nsCOMPtr<nsIWritablePropertyBag> bag = do_QueryInterface(newChannel)) {
+    nsHashPropertyBag::CopyFrom(bag, aArgs.properties());
+  }
+
   // scopeExit will call CrossProcessRedirectFinished(rv) here
   return IPC_OK();
 }
