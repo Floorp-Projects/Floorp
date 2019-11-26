@@ -38,6 +38,7 @@
     <string name="pref_key_account_auth_error" translatable="false">pref_key_account_auth_error</string>
     <string name="pref_key_private_mode" translatable="false">pref_key_private_mode</string>
     <string name="pref_key_theme" translatable="false">pref_key_theme</string>
+    <string name="pref_key_toolbar" translatable="false">pref_key_toolbar</string>
     <string name="pref_key_leakcanary" translatable="false">pref_key_leakcanary</string>
     <string name="pref_key_remote_debugging" translatable="false">pref_key_remote_debugging</string>
     <string name="pref_key_experimentation" translatable="false">pref_key_experimentation</string>
@@ -90,6 +91,10 @@
     <string name="pref_key_phone_feature_notification" translatable="false">pref_key_phone_feature_notification</string>
     <string name="pref_key_category_phone_feature" translatable="false">pref_key_category_phone_feature</string>
     <string name="pref_key_exceptions_clear_site_permissions" translatable="false">pref_key_exceptions_clear_site_permissions</string>
+
+    <!-- Toolbar Settings -->
+    <string name="pref_key_toolbar_top" translatable="false">pref_key_toolbar_top</string>
+    <string name="pref_key_toolbar_bottom" translatable="false">pref_key_toolbar_bottom</string>
 
     <!-- Theme Settings -->
     <string name="pref_key_light_theme" translatable="false">pref_key_light_theme</string>

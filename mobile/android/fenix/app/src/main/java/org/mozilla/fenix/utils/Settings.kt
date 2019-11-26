@@ -8,6 +8,7 @@ import android.app.Application
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
+import android.view.accessibility.AccessibilityManager
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
@@ -198,10 +199,28 @@ class Settings private constructor(
         true
     )
 
+    val shouldUseFixedTopToolbar: Boolean
+        get() {
+            val accessibilityManager =
+                appContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+            return accessibilityManager?.isTouchExplorationEnabled ?: false
+        }
+
     var shouldDeleteBrowsingDataOnQuit by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_delete_browsing_data_on_quit),
         default = false
     )
+
+    var shouldUseBottomToolbar by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_toolbar_bottom),
+        default = true
+    )
+
+    val toolbarSettingString: String
+        get() = when {
+            shouldUseBottomToolbar -> appContext.getString(R.string.preference_bottom_toolbar)
+            else -> appContext.getString(R.string.preference_top_toolbar)
+        }
 
     fun getDeleteDataOnQuit(type: DeleteBrowsingDataOnQuitType): Boolean =
         preferences.getBoolean(type.getPreferenceKey(appContext), false)

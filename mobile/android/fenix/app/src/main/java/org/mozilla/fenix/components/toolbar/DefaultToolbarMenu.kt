@@ -12,15 +12,15 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
+import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
-import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.storage.BookmarksStorage
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.ThemeManager
@@ -31,6 +31,7 @@ class DefaultToolbarMenu(
     private val context: Context,
     private val hasAccountProblem: Boolean = false,
     private val requestDesktopStateProvider: () -> Boolean = { false },
+    private val shouldReverseItems: Boolean,
     private val onItemTapped: (ToolbarMenu.Item) -> Unit = {},
     private val lifecycleOwner: LifecycleOwner,
     private val bookmarksStorage: BookmarksStorage,
@@ -146,7 +147,7 @@ class DefaultToolbarMenu(
         fun shouldShowReaderAppearance(): Boolean =
             sessionManager.selectedSession?.readerMode ?: false
 
-        listOfNotNull(
+        val menuItems = listOfNotNull(
             help,
             settings,
             library,
@@ -164,6 +165,8 @@ class DefaultToolbarMenu(
             BrowserMenuDivider(),
             menuToolbar
         )
+
+        if (shouldReverseItems) { menuItems.reversed() } else { menuItems }
     }
 
     private val help = BrowserMenuImageText(

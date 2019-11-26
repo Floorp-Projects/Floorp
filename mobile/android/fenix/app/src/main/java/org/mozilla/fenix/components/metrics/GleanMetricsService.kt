@@ -6,8 +6,8 @@ package org.mozilla.fenix.components.metrics
 
 import android.content.Context
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import mozilla.components.service.glean.BuildConfig
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
@@ -40,6 +40,7 @@ import org.mozilla.fenix.GleanMetrics.SearchWidget
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.GleanMetrics.Tab
+import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -445,6 +446,10 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.ViewLoginPassword -> EventWrapper<NoExtraKeys>(
             { Logins.viewPasswordLogin.record(it) }
         )
+        is Event.ToolbarPositionChanged -> EventWrapper(
+            { ToolbarSettings.changedPosition.record(it) },
+            { ToolbarSettings.changedPositionKeys.valueOf(it) }
+        )
         // Don't record other events in Glean:
         is Event.AddBookmark -> null
         is Event.OpenedBookmark -> null
@@ -502,6 +507,7 @@ class GleanMetricsService(private val context: Context) : MetricsService {
             mozillaProducts.set(MozillaProductDetector.getInstalledMozillaProducts(context))
             adjustCampaign.set(context.settings().adjustCampaignId)
             totalUriCount.set(context.settings().totalUriCount.toString())
+            toolbarPosition.set(context.settings().toolbarSettingString)
         }
 
         SearchDefaultEngine.apply {

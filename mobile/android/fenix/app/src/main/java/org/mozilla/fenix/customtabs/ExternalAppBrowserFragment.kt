@@ -9,7 +9,7 @@ import android.view.Gravity
 import android.view.View
 import androidx.core.view.isGone
 import androidx.navigation.fragment.navArgs
-import kotlinx.android.synthetic.main.component_search.*
+import kotlinx.android.synthetic.main.component_browser_top_toolbar.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session

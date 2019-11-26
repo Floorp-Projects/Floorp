@@ -27,6 +27,7 @@ import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Library
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
+import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.R
 import java.util.Locale
@@ -163,6 +164,12 @@ sealed class Event {
             // If the event is not in the allow list, we don't want to track it
             require(booleanPreferenceTelemetryAllowList.contains(preferenceKey))
         }
+    }
+
+    data class ToolbarPositionChanged(val position: Position) : Event() {
+        enum class Position { TOP, BOTTOM }
+        override val extras: Map<ToolbarSettings.changedPositionKeys, String>?
+            get() = hashMapOf(ToolbarSettings.changedPositionKeys.position to position.name)
     }
 
     data class OpenedLink(val mode: Mode) : Event() {

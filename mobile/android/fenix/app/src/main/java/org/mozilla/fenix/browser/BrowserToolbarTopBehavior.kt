@@ -111,7 +111,7 @@ class BrowserToolbarTopBehavior(
         val params = view.layoutParams as CoordinatorLayout.LayoutParams
 
         // Position the snackbar below the toolbar so that it doesn't overlay the toolbar.
-        params.anchorId = R.id.quick_action_sheet
+        params.anchorId = R.id.toolbar
         params.anchorGravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
         params.gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
 

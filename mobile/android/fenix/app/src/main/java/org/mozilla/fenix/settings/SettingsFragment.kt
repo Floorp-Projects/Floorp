@@ -48,6 +48,7 @@ import org.mozilla.fenix.R.string.pref_key_search_settings
 import org.mozilla.fenix.R.string.pref_key_sign_in
 import org.mozilla.fenix.R.string.pref_key_site_permissions
 import org.mozilla.fenix.R.string.pref_key_theme
+import org.mozilla.fenix.R.string.pref_key_toolbar
 import org.mozilla.fenix.R.string.pref_key_tracking_protection_settings
 import org.mozilla.fenix.R.string.pref_key_your_rights
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
@@ -114,6 +115,10 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
 
         showToolbar(getString(R.string.settings_title))
 
+        update()
+    }
+
+    private fun update() {
         val trackingProtectionPreference =
             findPreference<Preference>(getPreferenceKey(pref_key_tracking_protection_settings))
         trackingProtectionPreference?.summary = context?.let {
@@ -124,11 +129,15 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
             }
         }
 
+        val toolbarPreference =
+            findPreference<Preference>(getPreferenceKey(pref_key_toolbar))
+        toolbarPreference?.summary = context?.settings()?.toolbarSettingString
+
         val themesPreference =
             findPreference<Preference>(getPreferenceKey(pref_key_theme))
         themesPreference?.summary = context?.settings()?.themeSettingString
 
-        val aboutPreference = findPreference<Preference>(getPreferenceKey(R.string.pref_key_about))
+        val aboutPreference = findPreference<Preference>(getPreferenceKey(pref_key_about))
         val appName = getString(R.string.app_name)
         aboutPreference?.title = getString(R.string.preferences_about, appName)
 
@@ -241,6 +250,9 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
             resources.getString(pref_key_theme) -> {
                 navigateToThemeSettings()
             }
+            resources.getString(pref_key_toolbar) -> {
+                navigateToToolbarSettings()
+            }
             resources.getString(pref_key_privacy_link) -> {
                 requireContext().let { context ->
                     val intent = SupportUtils.createCustomTabIntent(
@@ -318,6 +330,11 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
 
     private fun navigateToThemeSettings() {
         val directions = SettingsFragmentDirections.actionSettingsFragmentToThemeFragment()
+        Navigation.findNavController(view!!).navigate(directions)
+    }
+
+    private fun navigateToToolbarSettings() {
+        val directions = SettingsFragmentDirections.actionSettingsFragmentToToolbarSettingsFragment()
         Navigation.findNavController(view!!).navigate(directions)
     }
 

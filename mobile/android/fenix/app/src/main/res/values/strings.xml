@@ -179,6 +179,8 @@
     <string name="preferences_category_account">Account</string>
     <!-- Preference shown on banner to sign into account -->
     <string name="preferences_sign_in">Sign in</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Toolbar</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Theme</string>
     <!-- Preference description for banner about signing in -->
@@ -315,6 +317,12 @@
     <string name="pair_open_camera">Open Camera</string>
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">Cancel</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Top</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Bottom</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
@@ -940,7 +948,7 @@
     <string name="browser_toolbar_long_press_popup_paste">Paste</string>
     <!-- Snackbar message shown after an URL has been copied to clipboard. -->
     <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL copied to clipboard</string>
-  
+
     <!-- Title text for the Add To Homescreen dialog -->
     <string name="add_to_homescreen_title">Add to Home screen</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->

@@ -9,8 +9,14 @@ import android.graphics.drawable.BitmapDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.LayoutRes
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
+import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
+import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED
+import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL
+import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP
 import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -19,6 +25,7 @@ import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getColorFromAttr
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.SearchFragmentState
 
 /**
@@ -58,8 +65,16 @@ class ToolbarView(
     override val containerView: View?
         get() = container
 
+    private val settings = container.context.settings()
+
+    @LayoutRes
+    private val toolbarLayout = when {
+        settings.shouldUseBottomToolbar -> R.layout.component_bottom_browser_toolbar
+        else -> R.layout.component_browser_top_toolbar
+    }
+
     val view: BrowserToolbar = LayoutInflater.from(container.context)
-        .inflate(R.layout.component_search, container, true)
+        .inflate(toolbarLayout, container, true)
         .findViewById(R.id.toolbar)
 
     private var isInitialized = false
@@ -67,6 +82,8 @@ class ToolbarView(
     init {
         view.apply {
             editMode()
+
+            setScrollFlagsForTopToolbar()
 
             elevation = TOOLBAR_ELEVATION_IN_DP.dpToPx(resources.displayMetrics).toFloat()
 
@@ -144,5 +161,25 @@ class ToolbarView(
 
     companion object {
         private const val TOOLBAR_ELEVATION_IN_DP = 16
+    }
+}
+
+/**
+ * Dynamically sets scroll flags for the top toolbar when the user does not have a screen reader enabled
+ * Note that the bottom toolbar is currently fixed and will never have scroll flags set
+ */
+fun BrowserToolbar.setScrollFlagsForTopToolbar() {
+    // Don't set scroll flags for bottom toolbar
+    if (context.settings().shouldUseBottomToolbar) {
+        return
+    }
+
+    val params = layoutParams as AppBarLayout.LayoutParams
+    params.scrollFlags = when (context.settings().shouldUseFixedTopToolbar) {
+        true -> 0
+        false -> {
+            SCROLL_FLAG_SCROLL or SCROLL_FLAG_ENTER_ALWAYS or SCROLL_FLAG_SNAP or
+                SCROLL_FLAG_EXIT_UNTIL_COLLAPSED
+        }
     }
 }
