@@ -111,10 +111,6 @@ bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
   DCHECK(mapped_file_ == NULL);
   read_only_ = false;
 
-  // If the shared memory object has no DACL, any process can
-  // duplicate its handles with any access rights; e.g., re-add write
-  // access to a read-only handle.  To prevent that, we give it an
-  // empty DACL, so that no process can do that.
   SECURITY_ATTRIBUTES sa, *psa = nullptr;
   SECURITY_DESCRIPTOR sd;
   ACL dacl;
@@ -133,8 +129,6 @@ bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
       return false;
     }
 
-    // Older versions of Windows will silently ignore the security
-    // attributes unless the object has a name.
     if (!mozilla::IsWin8Point1OrLater()) {
       name.AssignLiteral("MozSharedMem_");
       for (size_t i = 0; i < 4; ++i) {
