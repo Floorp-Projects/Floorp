@@ -1253,8 +1253,12 @@ bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
   MOZ_ASSERT(obj->canUnwrapAs<SharedArrayBufferObject>());
 
   if (!cloneDataPolicy.isSharedArrayBufferAllowed()) {
-    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
-                              JSMSG_SC_NOT_CLONABLE, "SharedArrayBuffer");
+    auto errorMsg =
+        context()->realm()->creationOptions().getCoopAndCoepEnabled()
+            ? JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP
+            : JSMSG_SC_NOT_CLONABLE;
+    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, errorMsg,
+                              "SharedArrayBuffer");
     return false;
   }
 
@@ -1293,8 +1297,12 @@ bool JSStructuredCloneWriter::writeSharedWasmMemory(HandleObject obj) {
 
   // Check the policy here so that we can report a sane error.
   if (!cloneDataPolicy.isSharedArrayBufferAllowed()) {
-    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
-                              JSMSG_SC_NOT_CLONABLE, "WebAssembly.Memory");
+    auto errorMsg =
+        context()->realm()->creationOptions().getCoopAndCoepEnabled()
+            ? JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP
+            : JSMSG_SC_NOT_CLONABLE;
+    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, errorMsg,
+                              "WebAssembly.Memory");
     return false;
   }
 
@@ -2217,8 +2225,12 @@ bool JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes,
 
 bool JSStructuredCloneReader::readSharedArrayBuffer(MutableHandleValue vp) {
   if (!cloneDataPolicy.isSharedArrayBufferAllowed()) {
-    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
-                              JSMSG_SC_NOT_CLONABLE, "SharedArrayBuffer");
+    auto errorMsg =
+        context()->realm()->creationOptions().getCoopAndCoepEnabled()
+            ? JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP
+            : JSMSG_SC_NOT_CLONABLE;
+    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, errorMsg,
+                              "SharedArrayBuffer");
     return false;
   }
 
@@ -2277,8 +2289,12 @@ bool JSStructuredCloneReader::readSharedWasmMemory(uint32_t nbytes,
   }
 
   if (!cloneDataPolicy.isSharedArrayBufferAllowed()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_SC_NOT_CLONABLE, "WebAssembly.Memory");
+    auto errorMsg =
+        context()->realm()->creationOptions().getCoopAndCoepEnabled()
+            ? JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP
+            : JSMSG_SC_NOT_CLONABLE;
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errorMsg,
+                              "WebAssembly.Memory");
     return false;
   }
 
