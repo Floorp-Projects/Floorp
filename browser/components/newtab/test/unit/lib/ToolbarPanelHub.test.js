@@ -405,9 +405,15 @@ describe("ToolbarPanelHub", () => {
         m => m.template === "whatsnew_panel_message"
       );
       getMessagesStub.returns(messages);
+      const ev1 = sandbox.stub();
+      ev1.withArgs("type").returns(2); // cookie
+      ev1.withArgs("count").returns(4);
+      const ev2 = sandbox.stub();
+      ev2.withArgs("type").returns(2); // cookie
+      ev2.withArgs("count").returns(3);
       getEventsByDateRangeStub.returns([
-        { getResultByName: sandbox.stub().returns(2) },
-        { getResultByName: sandbox.stub().returns(3) },
+        { getResultByName: ev1 },
+        { getResultByName: ev2 },
       ]);
 
       await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
@@ -416,8 +422,39 @@ describe("ToolbarPanelHub", () => {
         {
           id: sinon.match.string,
           args: {
-            blockedCount: "5",
+            blockedCount: 7,
             earliestDate: getEarliestRecordedDateStub(),
+            cookie: 7,
+          },
+        },
+      ]);
+    });
+    it("should correctly compute event counts per type", async () => {
+      const messages = (await PanelTestProvider.getMessages()).filter(
+        m => m.template === "whatsnew_panel_message"
+      );
+      getMessagesStub.returns(messages);
+      const ev1 = sandbox.stub();
+      ev1.withArgs("type").returns(1); // tracker
+      ev1.withArgs("count").returns(4);
+      const ev2 = sandbox.stub();
+      ev2.withArgs("type").returns(4); // fingerprinter
+      ev2.withArgs("count").returns(3);
+      getEventsByDateRangeStub.returns([
+        { getResultByName: ev1 },
+        { getResultByName: ev2 },
+      ]);
+
+      await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
+
+      assert.calledWithExactly(global.RemoteL10n.l10n.formatMessages, [
+        {
+          id: sinon.match.string,
+          args: {
+            blockedCount: 7,
+            earliestDate: getEarliestRecordedDateStub(),
+            tracker: 4,
+            fingerprinter: 3,
           },
         },
       ]);
