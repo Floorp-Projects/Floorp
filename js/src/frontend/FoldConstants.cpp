@@ -718,6 +718,7 @@ static bool FoldAndOrCoalesce(JSContext* cx, ParseNode** nodePtr) {
 
     bool isTruthyCoalesceNode =
         isCoalesceNode && !((*elem)->isKind(ParseNodeKind::NullExpr) ||
+                            (*elem)->isKind(ParseNodeKind::VoidExpr) ||
                             (*elem)->isKind(ParseNodeKind::RawUndefinedExpr));
     bool canShortCircuit = (isOrNode && t == Truthy) ||
                            (isAndNode && t == Falsy) || isTruthyCoalesceNode;
