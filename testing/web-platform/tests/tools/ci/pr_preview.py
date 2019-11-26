@@ -206,7 +206,7 @@ class Remote(object):
         output = subprocess.check_output([
             'git',
             '-c',
-            'credential.username={}"'.format(self._token),
+            'credential.username={}'.format(self._token),
             '-c',
             'core.askPass=true',
             'ls-remote',
@@ -227,7 +227,7 @@ class Remote(object):
         subprocess.check_call([
             'git',
             '-c',
-            'credential.username={}"'.format(self._token),
+            'credential.username={}'.format(self._token),
             '-c',
             'core.askPass=true',
             'push',
