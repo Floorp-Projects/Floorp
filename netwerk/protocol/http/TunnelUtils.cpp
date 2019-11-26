@@ -1038,7 +1038,7 @@ class OutputStreamShim : public nsIAsyncOutputStream {
     mWeakTrans = new WeakTransProxy(aTrans);
   }
 
-  nsIOutputStreamCallback* GetCallback();
+  already_AddRefed<nsIOutputStreamCallback> TakeCallback();
 
  private:
   virtual ~OutputStreamShim() {
@@ -1050,7 +1050,7 @@ class OutputStreamShim : public nsIAsyncOutputStream {
   }
 
   RefPtr<WeakTransProxy> mWeakTrans;  // SpdyConnectTransaction *
-  nsIOutputStreamCallback* mCallback;
+  nsCOMPtr<nsIOutputStreamCallback> mCallback;
   nsresult mStatus;
   mozilla::Mutex mMutex;
 
@@ -1077,7 +1077,8 @@ class InputStreamShim : public nsIAsyncInputStream {
     mWeakTrans = new WeakTransProxy(aTrans);
   }
 
-  nsIInputStreamCallback* GetCallback();
+  already_AddRefed<nsIInputStreamCallback> TakeCallback();
+  bool HasCallback();
 
  private:
   virtual ~InputStreamShim() {
@@ -1089,7 +1090,7 @@ class InputStreamShim : public nsIAsyncInputStream {
   }
 
   RefPtr<WeakTransProxy> mWeakTrans;  // SpdyConnectTransaction *
-  nsIInputStreamCallback* mCallback;
+  nsCOMPtr<nsIInputStreamCallback> mCallback;
   nsresult mStatus;
   mozilla::Mutex mMutex;
 
@@ -1312,24 +1313,26 @@ nsresult SpdyConnectTransaction::ReadSegments(nsAHttpSegmentReader* reader,
 
   *countRead = 0;
   nsresult rv = Flush(count, countRead);
-  nsIOutputStreamCallback* cb = mTunnelStreamOut->GetCallback();
-  if (!cb && !(*countRead)) {
+  if (!(*countRead)) {
     return NS_BASE_STREAM_WOULD_BLOCK;
   }
 
-  if (cb) {
-    // See if there is any more data available
-    rv = cb->OnOutputStreamReady(mTunnelStreamOut);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // Write out anything that may have come out of the stream just above
-    uint32_t subtotal;
-    count -= *countRead;
-    rv = Flush(count, &subtotal);
-    *countRead += subtotal;
+  nsCOMPtr<nsIOutputStreamCallback> cb = mTunnelStreamOut->TakeCallback();
+  if (!cb) {
+    return NS_BASE_STREAM_WOULD_BLOCK;
   }
+
+  // See if there is any more data available
+  rv = cb->OnOutputStreamReady(mTunnelStreamOut);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Write out anything that may have come out of the stream just above
+  uint32_t subtotal;
+  count -= *countRead;
+  rv = Flush(count, &subtotal);
+  *countRead += subtotal;
 
   return rv;
 }
@@ -1356,14 +1359,14 @@ void SpdyConnectTransaction::CreateShimError(nsresult code) {
   }
 
   if (mTunnelStreamIn) {
-    nsIInputStreamCallback* cb = mTunnelStreamIn->GetCallback();
+    nsCOMPtr<nsIInputStreamCallback> cb = mTunnelStreamIn->TakeCallback();
     if (cb) {
       cb->OnInputStreamReady(mTunnelStreamIn);
     }
   }
 
   if (mTunnelStreamOut) {
-    nsIOutputStreamCallback* cb = mTunnelStreamOut->GetCallback();
+    nsCOMPtr<nsIOutputStreamCallback> cb = mTunnelStreamOut->TakeCallback();
     if (cb) {
       cb->OnOutputStreamReady(mTunnelStreamOut);
     }
@@ -1401,10 +1404,7 @@ nsresult SpdyConnectTransaction::WriteSegments(nsAHttpSegmentWriter* writer,
                                                uint32_t count,
                                                uint32_t* countWritten) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  nsIInputStreamCallback* cb =
-      mTunneledConn ? mTunnelStreamIn->GetCallback() : nullptr;
-  LOG(("SpdyConnectTransaction::WriteSegments %p max=%d cb=%p\n", this, count,
-       cb));
+  LOG(("SpdyConnectTransaction::WriteSegments %p max=%d", this, count));
 
   // For websockets, we need to forward the initial response through to the base
   // transaction so the normal websocket plumbing can do all the things it needs
@@ -1420,7 +1420,11 @@ nsresult SpdyConnectTransaction::WriteSegments(nsAHttpSegmentWriter* writer,
     return rv;
   }
 
-  if (!mTunneledConn || !cb) {
+  nsCOMPtr<nsIInputStreamCallback> cb =
+      mTunneledConn ? mTunnelStreamIn->TakeCallback() : nullptr;
+  LOG(("SpdyConnectTransaction::WriteSegments %p cb=%p", this, cb.get()));
+
+  if (!cb) {
     return NS_BASE_STREAM_WOULD_BLOCK;
   }
 
@@ -1435,7 +1439,7 @@ nsresult SpdyConnectTransaction::WriteSegments(nsAHttpSegmentWriter* writer,
        "goodput %p out %" PRId64 "\n",
        this, mTunneledConn.get(), mTunneledConn->ContentBytesWritten()));
   if (NS_SUCCEEDED(rv) && !mTunneledConn->ContentBytesWritten()) {
-    nsIOutputStreamCallback* ocb = mTunnelStreamOut->GetCallback();
+    nsCOMPtr<nsIOutputStreamCallback> ocb = mTunnelStreamOut->TakeCallback();
     mTunnelStreamOut->AsyncWait(ocb, 0, 0, nullptr);
   }
   return rv;
@@ -1445,6 +1449,9 @@ nsresult SpdyConnectTransaction::WebsocketWriteSegments(
     nsAHttpSegmentWriter* writer, uint32_t count, uint32_t* countWritten) {
   MOZ_ASSERT(OnSocketThread());
   MOZ_ASSERT(mIsWebsocket);
+  LOG(("SpdyConnectTransaction::WebsocketWriteSegments %p max=%d", this,
+       count));
+
   if (mDrivingTransaction && !mDrivingTransaction->IsDone()) {
     // Transaction hasn't received end of headers yet, so keep passing data to
     // it until it has. Then we can take over.
@@ -1464,10 +1471,13 @@ nsresult SpdyConnectTransaction::WebsocketWriteSegments(
 
   nsresult rv = WriteDataToBuffer(writer, count, countWritten);
   if (NS_SUCCEEDED(rv)) {
-    if (!mTunneledConn || !mTunnelStreamIn->GetCallback()) {
+    if (!mTunneledConn) {
       return NS_BASE_STREAM_WOULD_BLOCK;
     }
-    nsIInputStreamCallback* cb = mTunnelStreamIn->GetCallback();
+    nsCOMPtr<nsIInputStreamCallback> cb = mTunnelStreamIn->TakeCallback();
+    if (!cb) {
+      return NS_BASE_STREAM_WOULD_BLOCK;
+    }
     rv = cb->OnInputStreamReady(mTunnelStreamIn);
   }
 
@@ -1475,7 +1485,7 @@ nsresult SpdyConnectTransaction::WebsocketWriteSegments(
 }
 
 bool SpdyConnectTransaction::ConnectedReadyForInput() {
-  return mTunneledConn && mTunnelStreamIn->GetCallback();
+  return mTunneledConn && mTunnelStreamIn->HasCallback();
 }
 
 nsHttpRequestHead* SpdyConnectTransaction::RequestHead() {
@@ -1512,9 +1522,9 @@ void SpdyConnectTransaction::SetConnRefTaken() {
   mDrivingTransaction = nullptr;  // Just in case
 }
 
-nsIOutputStreamCallback* OutputStreamShim::GetCallback() {
+already_AddRefed<nsIOutputStreamCallback> OutputStreamShim::TakeCallback() {
   mozilla::MutexAutoLock lock(mMutex);
-  return mCallback;
+  return mCallback.forget();
 }
 
 class WebsocketHasDataToWrite final : public Runnable {
@@ -1723,9 +1733,14 @@ OutputStreamShim::IsNonBlocking(bool* _retval) {
   return NS_OK;
 }
 
-nsIInputStreamCallback* InputStreamShim::GetCallback() {
+already_AddRefed<nsIInputStreamCallback> InputStreamShim::TakeCallback() {
   mozilla::MutexAutoLock lock(mMutex);
-  return mCallback;
+  return mCallback.forget();
+}
+
+bool InputStreamShim::HasCallback() {
+  mozilla::MutexAutoLock lock(mMutex);
+  return mCallback != nullptr;
 }
 
 class CheckAvailData final : public Runnable {
@@ -1738,7 +1753,7 @@ class CheckAvailData final : public Runnable {
   NS_IMETHOD Run() override {
     uint64_t avail = 0;
     if (NS_SUCCEEDED(mShim->Available(&avail)) && avail) {
-      nsIInputStreamCallback* cb = mShim->GetCallback();
+      nsCOMPtr<nsIInputStreamCallback> cb = mShim->TakeCallback();
       if (cb) {
         cb->OnInputStreamReady(mShim);
       }
