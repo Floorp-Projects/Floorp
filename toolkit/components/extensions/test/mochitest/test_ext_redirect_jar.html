@@ -50,25 +50,28 @@ function getExtension() {
         return {redirectUrl};
       }, {urls: ["*://*/intercept*"]}, ["blocking"]);
 
-      async function testSubFrameResource(tabId, code) {
-        let [result] = await browser.tabs.executeScript(tabId, {code: `
-          new Promise(resolve => {
+      let code = `new Promise(resolve => {
             var s = document.createElement('iframe');
             s.src = "/intercept?r=" + Math.random();
-            s.onload = () => resolve(['loaded', s.contentWindow.location.href]);
+            s.onload = async () => {
+                let url = await window.wrappedJSObject.SpecialPowers.spawn(s, [], () => content.location.href );
+              resolve(['loaded', url]);
+            }
             s.onerror = () => resolve(['error']);
             document.documentElement.appendChild(s);
-          });`,
-        });
+          });`;
+
+      async function testSubFrameResource(tabId, code) {
+        let [result] = await browser.tabs.executeScript(tabId, { code });
         return result;
       }
 
       let tab = await browser.tabs.create({url: "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_sample.html"});
-      let result = await testSubFrameResource(tab.id);
+      let result = await testSubFrameResource(tab.id, code);
       browser.test.assertEq("loaded", result[0], "frame 1 loaded");
       browser.test.assertEq(redirectUrl, result[1], "frame 1 redirected");
       // If jar caching breaks redirects, this next test will fail (See Bug 1390346).
-      result = await testSubFrameResource(tab.id);
+      result = await testSubFrameResource(tab.id, code);
       browser.test.assertEq("loaded", result[0], "frame 2 loaded");
       browser.test.assertEq(redirectUrl, result[1], "frame 2 redirected");
       await browser.tabs.remove(tab.id);
