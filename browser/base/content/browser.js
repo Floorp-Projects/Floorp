@@ -2351,6 +2351,12 @@ var gBrowserInit = {
       NewTabPagePreloading.maybeCreatePreloadedBrowser(window);
     });
 
+    if (AppConstants.NIGHTLY_BUILD) {
+      scheduleIdleTask(() => {
+        FissionTestingUI.init();
+      });
+    }
+
     // This should always go last, since the idle tasks (except for the ones with
     // timeouts) should execute in order. Note that this observer notification is
     // not guaranteed to fire, since the window could close before we get here.
@@ -9358,3 +9364,22 @@ var ConfirmationHint = {
     ));
   },
 };
+
+if (AppConstants.NIGHTLY_BUILD) {
+  var FissionTestingUI = {
+    init() {
+      let autostart = Services.prefs.getBoolPref("fission.autostart");
+      if (!autostart) {
+        return;
+      }
+
+      let newFissionWindow = document.getElementById("Tools:FissionWindow");
+      let newNonFissionWindow = document.getElementById(
+        "Tools:NonFissionWindow"
+      );
+
+      newFissionWindow.hidden = gFissionBrowser;
+      newNonFissionWindow.hidden = !gFissionBrowser;
+    },
+  };
+}

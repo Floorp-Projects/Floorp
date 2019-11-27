@@ -25,6 +25,14 @@
                 <menuitem id="menu_newPrivateWindow"
                           command="Tools:PrivateBrowsing"
                           key="key_privatebrowsing" data-l10n-id="menu-file-new-private-window"/>
+#ifdef NIGHTLY_BUILD
+                <menuitem id="menu_newFissionWindow"
+                          command="Tools:FissionWindow"
+                          accesskey="s" label="New Fission Window"/>
+                <menuitem id="menu_newNonFissionWindow"
+                          command="Tools:NonFissionWindow"
+                          accesskey="s" label="New Non-Fission Window"/>
+#endif
                 <menuitem id="menu_openLocation"
                           hidden="true"
                           command="Browser:OpenLocation"
