@@ -197,8 +197,8 @@ class TypeDescr : public NativeObject {
         getFixedSlot(JS_DESCR_SLOT_TRACE_LIST).toPrivate());
   }
 
-  void initInstances(const JSRuntime* rt, uint8_t* mem, size_t length);
-  void traceInstances(JSTracer* trace, uint8_t* mem, size_t length);
+  void initInstance(const JSRuntime* rt, uint8_t* mem);
+  void traceInstance(JSTracer* trace, uint8_t* mem);
 
   static void finalize(JSFreeOp* fop, JSObject* obj);
 };
