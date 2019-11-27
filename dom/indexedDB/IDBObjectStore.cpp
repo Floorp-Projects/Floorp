@@ -1802,43 +1802,38 @@ already_AddRefed<IDBIndex> IDBObjectStore::Index(const nsAString& aName,
     return nullptr;
   }
 
-  const nsTArray<IndexMetadata>& indexes = mSpec->indexes();
+  const nsTArray<IndexMetadata>& indexMetadatas = mSpec->indexes();
 
-  const IndexMetadata* metadata = nullptr;
+  const auto endIndexMetadatas = indexMetadatas.cend();
+  const auto foundMetadata =
+      std::find_if(indexMetadatas.cbegin(), endIndexMetadatas,
+                   [&aName](const auto& indexMetadata) {
+                     return indexMetadata.name() == aName;
+                   });
 
-  for (uint32_t idxCount = indexes.Length(), idxIndex = 0; idxIndex < idxCount;
-       idxIndex++) {
-    const IndexMetadata& index = indexes[idxIndex];
-    if (index.name() == aName) {
-      metadata = &index;
-      break;
-    }
-  }
-
-  if (!metadata) {
+  if (foundMetadata == endIndexMetadatas) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR);
     return nullptr;
   }
 
-  const int64_t desiredId = metadata->id();
+  const IndexMetadata& metadata = *foundMetadata;
+
+  const auto endIndexes = mIndexes.cend();
+  const auto foundIndex =
+      std::find_if(mIndexes.cbegin(), endIndexes,
+                   [desiredId = metadata.id()](const auto& index) {
+                     return index->Id() == desiredId;
+                   });
 
   RefPtr<IDBIndex> index;
 
-  for (uint32_t idxCount = mIndexes.Length(), idxIndex = 0; idxIndex < idxCount;
-       idxIndex++) {
-    RefPtr<IDBIndex>& existingIndex = mIndexes[idxIndex];
-
-    if (existingIndex->Id() == desiredId) {
-      index = existingIndex;
-      break;
-    }
-  }
-
-  if (!index) {
-    index = IDBIndex::Create(this, *metadata);
+  if (foundIndex == endIndexes) {
+    index = IDBIndex::Create(this, metadata);
     MOZ_ASSERT(index);
 
     mIndexes.AppendElement(index);
+  } else {
+    index = *foundIndex;
   }
 
   return index.forget();
