@@ -25,10 +25,7 @@ async function setPref() {
 
 async function unsetPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [RESPONSE_PROCESS_SELECTION_PREF, false],
-      [DOCUMENT_CHANNEL_PREF, false],
-    ],
+    set: [[RESPONSE_PROCESS_SELECTION_PREF, false]],
   });
 }
 
