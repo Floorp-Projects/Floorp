@@ -1515,13 +1515,6 @@ uint8_t* TypedObject::typedMemBase() const {
 
 bool TypedObject::isAttached() const {
   if (is<InlineTransparentTypedObject>()) {
-    ObjectWeakMap* table = ObjectRealm::get(this).lazyArrayBuffers.get();
-    if (table) {
-      JSObject* buffer = table->lookup(this);
-      if (buffer) {
-        return !buffer->as<ArrayBufferObject>().isDetached();
-      }
-    }
     return true;
   }
   if (is<InlineOpaqueTypedObject>()) {

@@ -240,9 +240,9 @@ static void StatsRealmCallback(JSContext* cx, void* data,
       &realmStats.typeInferenceArrayTypeTables,
       &realmStats.typeInferenceObjectTypeTables, &realmStats.realmObject,
       &realmStats.realmTables, &realmStats.innerViewsTable,
-      &realmStats.lazyArrayBuffersTable, &realmStats.objectMetadataTable,
-      &realmStats.savedStacksSet, &realmStats.varNamesSet,
-      &realmStats.nonSyntacticLexicalScopesTable, &realmStats.jitRealm);
+      &realmStats.objectMetadataTable, &realmStats.savedStacksSet,
+      &realmStats.varNamesSet, &realmStats.nonSyntacticLexicalScopesTable,
+      &realmStats.jitRealm);
 }
 
 static void StatsArenaCallback(JSRuntime* rt, void* data, gc::Arena* arena,

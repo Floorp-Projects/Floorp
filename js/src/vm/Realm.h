@@ -248,11 +248,6 @@ class ObjectRealm {
   // Map from array buffers to views sharing that storage.
   JS::WeakCache<js::InnerViewTable> innerViews;
 
-  // Inline transparent typed objects do not initially have an array buffer,
-  // but can have that buffer created lazily if it is accessed later. This
-  // table manages references from such typed objects to their buffers.
-  js::UniquePtr<js::ObjectWeakMap> lazyArrayBuffers;
-
   // Keep track of the metadata objects which can be associated with each JS
   // object. Both keys and values are in this realm.
   js::UniquePtr<js::ObjectWeakMap> objectMetadataTable;
@@ -276,7 +271,6 @@ class ObjectRealm {
 
   void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               size_t* innerViewsArg,
-                              size_t* lazyArrayBuffersArg,
                               size_t* objectMetadataTablesArg,
                               size_t* nonSyntacticLexicalEnvironmentsArg);
 
@@ -467,13 +461,15 @@ class JS::Realm : public JS::shadow::Realm {
   void destroy(JSFreeOp* fop);
   void clearTables();
 
-  void addSizeOfIncludingThis(
-      mozilla::MallocSizeOf mallocSizeOf, size_t* tiAllocationSiteTables,
-      size_t* tiArrayTypeTables, size_t* tiObjectTypeTables,
-      size_t* realmObject, size_t* realmTables, size_t* innerViewsArg,
-      size_t* lazyArrayBuffersArg, size_t* objectMetadataTablesArg,
-      size_t* savedStacksSet, size_t* varNamesSet,
-      size_t* nonSyntacticLexicalEnvironmentsArg, size_t* jitRealm);
+  void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                              size_t* tiAllocationSiteTables,
+                              size_t* tiArrayTypeTables,
+                              size_t* tiObjectTypeTables, size_t* realmObject,
+                              size_t* realmTables, size_t* innerViewsArg,
+                              size_t* objectMetadataTablesArg,
+                              size_t* savedStacksSet, size_t* varNamesSet,
+                              size_t* nonSyntacticLexicalEnvironmentsArg,
+                              size_t* jitRealm);
 
   JS::Zone* zone() { return zone_; }
   const JS::Zone* zone() const { return zone_; }
