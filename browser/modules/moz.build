@@ -136,7 +136,6 @@ EXTRA_JS_MODULES += [
     'AsyncTabSwitcher.jsm',
     'BrowserUsageTelemetry.jsm',
     'BrowserWindowTracker.jsm',
-    'ContentClick.jsm',
     'ContentCrashHandlers.jsm',
     'ContentObservers.js',
     'ContentSearch.jsm',
