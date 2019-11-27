@@ -3,12 +3,6 @@
 
 // This test asserts that the new debugger works from the browser toolbox process
 
-/* import-globals-from helpers.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/framework/test/helpers.js",
-  this
-);
-
 // There are shutdown issues for which multiple rejections are left uncaught.
 // See bug 1018184 for resolving these issues.
 const { PromiseTestUtils } = ChromeUtils.import(

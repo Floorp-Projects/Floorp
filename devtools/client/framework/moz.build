@@ -16,8 +16,9 @@ BROWSER_CHROME_MANIFESTS += [
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 DIRS += [
-    'components',
     'actions',
+    'browser-toolbox',
+    'components',
     'reducers',
 ]
 
@@ -39,7 +40,6 @@ DevToolsModules(
     'toolbox-options.js',
     'toolbox-tabs-order-manager.js',
     'toolbox.js',
-    'ToolboxProcess.jsm',
 )
 
 with Files('**'):
