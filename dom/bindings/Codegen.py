@@ -8095,33 +8095,7 @@ class CGPerSignatureCall(CGThing):
 
         if useCounterName:
             # Generate a telemetry call for when [UseCounter] is used.
-            windowCode = fill(
-                """
-                SetUseCounter(obj, eUseCounter_${useCounterName});
-                """,
-                useCounterName = useCounterName)
-            workerCode = fill(
-                """
-                SetUseCounter(UseCounterWorker::${useCounterName});
-                """,
-                useCounterName = useCounterName)
-            code = ""
-            if idlNode.isExposedInWindow() and idlNode.isExposedInAnyWorker():
-                code += fill(
-                    """
-                    if (NS_IsMainThread()) {
-                      ${windowCode}
-                    } else {
-                      ${workerCode}
-                    }
-                    """,
-                    windowCode=windowCode,
-                    workerCode=workerCode)
-            elif idlNode.isExposedInWindow():
-                code += windowCode
-            elif idlNode.isExposedInAnyWorker():
-                code += workerCode
-
+            code = "SetUseCounter(obj, eUseCounter_%s);\n" % useCounterName
             cgThings.append(CGGeneric(code))
 
         self.cgRoot = CGList(cgThings)

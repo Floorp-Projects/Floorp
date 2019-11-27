@@ -725,10 +725,6 @@ def from_UseCounters_conf(filename, strict_type_checks):
     return usecounters.generate_histograms(filename)
 
 
-def from_UseCountersWorker_conf(filename, strict_type_checks):
-    return usecounters.generate_histograms(filename, True)
-
-
 def from_nsDeprecatedOperationList(filename, strict_type_checks):
     operation_regex = re.compile('^DEPRECATED_OPERATION\\(([^)]+)\\)')
     histograms = collections.OrderedDict()
@@ -832,8 +828,6 @@ try:
     import usecounters
 
     FILENAME_PARSERS.append(lambda x: from_UseCounters_conf if x == 'UseCounters.conf' else None)
-    FILENAME_PARSERS.append(
-        lambda x: from_UseCountersWorker_conf if x == 'UseCountersWorker.conf' else None)
 except ImportError:
     pass
 
@@ -870,26 +864,17 @@ the histograms defined in filenames.
                 ParserError('Duplicate histogram name "%s".' % name).handle_later()
             all_histograms[name] = definition
 
-    def check_continuity(iterable, filter_function, name):
-        indices = filter(filter_function, enumerate(iterable.iterkeys()))
-        if indices:
-            lower_bound = indices[0][0]
-            upper_bound = indices[-1][0]
-            n_counters = upper_bound - lower_bound + 1
-            if n_counters != len(indices):
-                ParserError("Histograms %s must be defined in a contiguous block." %
-                            name).handle_later()
-
-    # We require that all USE_COUNTER2_*_WORKER histograms be defined in a contiguous
+    # We require that all USE_COUNTER2_* histograms be defined in a contiguous
     # block.
-    check_continuity(all_histograms,
-                     lambda x: x[1].startswith("USE_COUNTER2_") and x[1].endswith("_WORKER"),
-                     "use counter worker")
-    # And all other USE_COUNTER2_* histograms be defined in a contiguous
-    # block.
-    check_continuity(all_histograms,
-                     lambda x: x[1].startswith("USE_COUNTER2_") and not x[1].endswith("_WORKER"),
-                     "use counter")
+    use_counter_indices = filter(lambda x: x[1].startswith("USE_COUNTER2_"),
+                                 enumerate(all_histograms.iterkeys()))
+    if use_counter_indices:
+        lower_bound = use_counter_indices[0][0]
+        upper_bound = use_counter_indices[-1][0]
+        n_counters = upper_bound - lower_bound + 1
+        if n_counters != len(use_counter_indices):
+            ParserError("Use counter histograms must be defined in a contiguous block."
+                        ).handle_later()
 
     # Check that histograms that were removed from Histograms.json etc.
     # are also removed from the allowlists.
