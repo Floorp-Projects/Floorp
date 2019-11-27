@@ -51,14 +51,14 @@ class DocumentChannelChild final : public nsIIdentChannel,
   mozilla::ipc::IPCResult RecvDeleteSelf();
 
   mozilla::ipc::IPCResult RecvRedirectToRealChannel(
-      const RedirectToRealChannelArgs& aArgs,
+      RedirectToRealChannelArgs&& aArgs,
       RedirectToRealChannelResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvAttachStreamFilter(
       Endpoint<extensions::PStreamFilterParent>&& aEndpoint);
 
   mozilla::ipc::IPCResult RecvConfirmRedirect(
-      const LoadInfoArgs& aLoadInfo, nsIURI* aNewUri,
+      LoadInfoArgs&& aLoadInfo, nsIURI* aNewUri,
       ConfirmRedirectResolver&& aResolve);
 
   const nsTArray<DocumentChannelRedirect>& GetRedirectChain() const {
