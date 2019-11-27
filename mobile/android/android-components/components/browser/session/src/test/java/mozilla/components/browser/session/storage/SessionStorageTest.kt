@@ -380,7 +380,11 @@ class SessionStorageTest {
                 ArgumentMatchers.eq(300L),
                 ArgumentMatchers.eq(TimeUnit.SECONDS))).thenReturn(scheduledFuture)
 
-        val lifecycle = LifecycleRegistry(mock(LifecycleOwner::class.java))
+        // LifecycleRegistry only keeps a weak reference to the owner, so it is important to keep
+        // a reference here too during the test run.
+        // See https://github.com/mozilla-mobile/android-components/issues/5166
+        val owner = mock(LifecycleOwner::class.java)
+        val lifecycle = LifecycleRegistry(owner)
 
         val storage = SessionStorage(testContext, engine)
         storage.autoSave(mock())
