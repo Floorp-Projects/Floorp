@@ -617,7 +617,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
                 text.contains(" ") ||
 
                 // ... or if user is hitting a backspace (the string is getting smaller)
-                (textLength == textLengthBeforeChange - 1 || textLength == 0)
+                (textLength < textLengthBeforeChange || textLength == 0)
             )
 
             autoCompletePrefixLength = textLength

@@ -272,6 +272,10 @@ class InlineAutocompleteEditTextTest {
         et.setText("tex")
         assertEquals(1, invokedCounter)
 
+        // Simulate removing a block of text.  We don't expect autocomplete to have been called
+        et.setText("t")
+        assertEquals(1, invokedCounter)
+
         // Presence of a space is counted as a 'search query', we don't autocomplete those.
         et.setText("search term")
         assertEquals(1, invokedCounter)
