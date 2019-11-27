@@ -6090,6 +6090,32 @@ class LIsNullOrUndefined : public LInstructionHelper<1, BOX_PIECES, 0> {
   MIsNullOrUndefined* mir() const { return mir_->toIsNullOrUndefined(); }
 };
 
+class LIsNullOrUndefinedAndBranch
+    : public LControlInstructionHelper<2, BOX_PIECES, 0> {
+  MIsNullOrUndefined* isNullOrUndefined_;
+
+ public:
+  LIR_HEADER(IsNullOrUndefinedAndBranch)
+  static const size_t Input = 0;
+
+  LIsNullOrUndefinedAndBranch(MIsNullOrUndefined* isNullOrUndefined,
+                              MBasicBlock* ifTrue, MBasicBlock* ifFalse,
+                              const LBoxAllocation& input)
+      : LControlInstructionHelper(classOpcode),
+        isNullOrUndefined_(isNullOrUndefined) {
+    setSuccessor(0, ifTrue);
+    setSuccessor(1, ifFalse);
+    setBoxOperand(Input, input);
+  }
+
+  MBasicBlock* ifTrue() const { return getSuccessor(0); }
+  MBasicBlock* ifFalse() const { return getSuccessor(1); }
+
+  MIsNullOrUndefined* isNullOrUndefinedMir() const {
+    return isNullOrUndefined_;
+  }
+};
+
 class LHasClass : public LInstructionHelper<1, 1, 0> {
  public:
   LIR_HEADER(HasClass);

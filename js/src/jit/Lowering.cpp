@@ -852,6 +852,17 @@ void LIRGenerator::visitTest(MTest* test) {
     return;
   }
 
+  if (opd->isIsNullOrUndefined() && opd->isEmittedAtUses()) {
+    MIsNullOrUndefined* isNullOrUndefined = opd->toIsNullOrUndefined();
+    MDefinition* input = isNullOrUndefined->value();
+    MOZ_ASSERT(input->type() == MIRType::Value);
+
+    auto* lir = new (alloc()) LIsNullOrUndefinedAndBranch(
+        isNullOrUndefined, ifTrue, ifFalse, useBoxAtStart(input));
+    add(lir, test);
+    return;
+  }
+
   if (opd->isIsNoIter()) {
     MOZ_ASSERT(opd->isEmittedAtUses());
 
@@ -4191,7 +4202,7 @@ void LIRGenerator::visitIsConstructor(MIsConstructor* ins) {
   define(new (alloc()) LIsConstructor(useRegister(ins->object())), ins);
 }
 
-static bool CanEmitIsObjectAtUses(MInstruction* ins) {
+static bool CanEmitIsObjectOrIsNullOrUndefinedAtUses(MInstruction* ins) {
   if (!ins->canEmitAtUses()) {
     return false;
   }
@@ -4215,7 +4226,7 @@ static bool CanEmitIsObjectAtUses(MInstruction* ins) {
 }
 
 void LIRGenerator::visitIsObject(MIsObject* ins) {
-  if (CanEmitIsObjectAtUses(ins)) {
+  if (CanEmitIsObjectOrIsNullOrUndefinedAtUses(ins)) {
     emitAtUses(ins);
     return;
   }
@@ -4227,6 +4238,11 @@ void LIRGenerator::visitIsObject(MIsObject* ins) {
 }
 
 void LIRGenerator::visitIsNullOrUndefined(MIsNullOrUndefined* ins) {
+  if (CanEmitIsObjectOrIsNullOrUndefinedAtUses(ins)) {
+    emitAtUses(ins);
+    return;
+  }
+
   MDefinition* opd = ins->input();
   MOZ_ASSERT(opd->type() == MIRType::Value);
   LIsNullOrUndefined* lir =
