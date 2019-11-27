@@ -31,6 +31,7 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -100,6 +101,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/FeaturePolicy.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
+#include "mozilla/dom/FramingChecker.h"
 #include "mozilla/dom/HTMLAllCollection.h"
 #include "mozilla/dom/HTMLMetaElement.h"
 #include "mozilla/dom/HTMLSharedElement.h"
@@ -2988,6 +2990,39 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 
   rv = InitCSP(aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Bug 1574372: Download should be fully done in the parent process.
+  // Unfortunately we currently can not determine whether a load will
+  // result in a download in the parent process. Hence, if running in
+  // non-fission-mode then we will have to enforce checks for
+  // frame-ancestors and x-frame-options here in the content process
+  // but if we run in fission-mode then we do those two security
+  // checks within DOMSecurityManager::Observe in the parent.
+  bool fissionEnabled = StaticPrefs::fission_autostart();
+  if (!fissionEnabled) {
+    nsContentPolicyType contentType = loadInfo->GetExternalContentPolicyType();
+    // frame-ancestor check only makes sense for subdocument and object loads,
+    // if this is not a load of such type, there is nothing to do here.
+    if (contentType == nsIContentPolicy::TYPE_SUBDOCUMENT ||
+        contentType == nsIContentPolicy::TYPE_OBJECT) {
+      if (mCSP) {
+        bool safeAncestry = false;
+        // PermitsAncestry sends violation reports when necessary
+        rv = mCSP->PermitsAncestry(loadInfo, &safeAncestry);
+        if (NS_FAILED(rv) || !safeAncestry) {
+          // stop!  ERROR page!
+          aChannel->Cancel(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION);
+        }
+      }
+    }
+
+    // the checks for type_subdoc or type_object happen within
+    // CheckFrameOptions.
+    if (!FramingChecker::CheckFrameOptions(aChannel, mCSP)) {
+      // stop!  ERROR page!
+      aChannel->Cancel(NS_ERROR_XFO_VIOLATION);
+    }
+  }
 
   // Initialize FeaturePolicy
   rv = InitFeaturePolicy(aChannel);

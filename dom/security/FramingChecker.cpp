@@ -97,13 +97,20 @@ void FramingChecker::ReportError(const char* aMessageTag,
   nsCOMPtr<nsIURI> parentURI;
   if (aParentContext) {
     BrowsingContext* topContext = aParentContext->Top();
-    WindowGlobalParent* window =
-        topContext->Canonical()->GetCurrentWindowGlobal();
-    if (window) {
-      parentURI = window->GetDocumentURI();
+    // If fission is enabled, then ReportError is called in the parent
+    // process, otherwise in the content process. After Bug 1574372 we
+    // should be able to remove that branching code for querying parentURI.
+    if (XRE_IsParentProcess()) {
+      WindowGlobalParent* window =
+          topContext->Canonical()->GetCurrentWindowGlobal();
+      if (window) {
+        parentURI = window->GetDocumentURI();
+      }
+    } else if (nsPIDOMWindowOuter* windowOuter = topContext->GetDOMWindow()) {
+      parentURI = windowOuter->GetDocumentURI();
     }
+    ReportError(aMessageTag, parentURI, aChildURI, aPolicy, aInnerWindowID);
   }
-  ReportError(aMessageTag, parentURI, aChildURI, aPolicy, aInnerWindowID);
 }
 
 /* static */
@@ -131,26 +138,36 @@ bool FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
   nsCOMPtr<nsIURI> topUri;
 
   while (ctx) {
-    WindowGlobalParent* window = ctx->Canonical()->GetCurrentWindowGlobal();
-    if (window) {
-      if (window->DocumentPrincipal()->IsSystemPrincipal()) {
-        return true;
+    nsCOMPtr<nsIPrincipal> principal;
+    // If fission is enabled, then CheckOneFrameOptionsPolicy is called in the
+    // parent process, otherwise in the content process. After Bug 1574372 we
+    // should be able to remove that branching code for querying principal.
+    if (XRE_IsParentProcess()) {
+      WindowGlobalParent* window = ctx->Canonical()->GetCurrentWindowGlobal();
+      if (window) {
+        // Using the URI of the Principal and not the document because e.g.
+        // window.open inherits the principal and hence the URI of the
+        // opening context needed for same origin checks.
+        principal = window->DocumentPrincipal();
+        principal->GetURI(getter_AddRefs(topUri));
       }
-      // Using the URI of the Principal and not the document because e.g.
-      // window.open inherits the principal and hence the URI of the
-      // opening context needed for same origin checks.
-      nsCOMPtr<nsIPrincipal> principal = window->DocumentPrincipal();
+    } else if (nsPIDOMWindowOuter* windowOuter = ctx->GetDOMWindow()) {
+      principal = nsGlobalWindowOuter::Cast(windowOuter)->GetPrincipal();
       principal->GetURI(getter_AddRefs(topUri));
+    }
 
-      if (checkSameOrigin) {
-        bool isPrivateWin =
-            principal->OriginAttributesRef().mPrivateBrowsingId > 0;
-        nsresult rv = ssm->CheckSameOriginURI(uri, topUri, true, isPrivateWin);
-        // one of the ancestors is not same origin as this document
-        if (NS_FAILED(rv)) {
-          ReportError("XFOSameOrigin", topUri, uri, aPolicy, innerWindowID);
-          return false;
-        }
+    if (principal && principal->IsSystemPrincipal()) {
+      return true;
+    }
+
+    if (checkSameOrigin) {
+      bool isPrivateWin =
+          principal && principal->OriginAttributesRef().mPrivateBrowsingId > 0;
+      nsresult rv = ssm->CheckSameOriginURI(uri, topUri, true, isPrivateWin);
+      // one of the ancestors is not same origin as this document
+      if (NS_FAILED(rv)) {
+        ReportError("XFOSameOrigin", topUri, uri, aPolicy, innerWindowID);
+        return false;
       }
     }
     ctx = ctx->GetParent();
@@ -173,7 +190,9 @@ bool FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
 static bool ShouldIgnoreFrameOptions(nsIChannel* aChannel,
                                      nsIContentSecurityPolicy* aCSP) {
   NS_ENSURE_TRUE(aChannel, false);
-  NS_ENSURE_TRUE(aCSP, false);
+  if (!aCSP) {
+    return false;
+  }
 
   bool enforcesFrameAncestors = false;
   aCSP->GetEnforcesFrameAncestors(&enforcesFrameAncestors);
@@ -201,14 +220,13 @@ static bool ShouldIgnoreFrameOptions(nsIChannel* aChannel,
   return true;
 }
 
-// Check if X-Frame-Options permits this document to be loaded as a subdocument.
-// This will iterate through and check any number of X-Frame-Options policies
-// in the request (comma-separated in a header, multiple headers, etc).
+// Check if X-Frame-Options permits this document to be loaded as a
+// subdocument. This will iterate through and check any number of
+// X-Frame-Options policies in the request (comma-separated in a header,
+// multiple headers, etc).
 /* static */
 bool FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
                                        nsIContentSecurityPolicy* aCsp) {
-  MOZ_ASSERT(XRE_IsParentProcess(), "x-frame-options check only in parent");
-
   if (!aChannel) {
     return true;
   }
@@ -233,6 +251,22 @@ bool FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
   // not apply and we should allow the load.
   if (loadInfo->TriggeringPrincipal()->GetIsAddonOrExpandedAddonPrincipal()) {
     return true;
+  }
+
+  // Bug 1574372: Download should be fully done in the parent process.
+  // Unfortunately we currently can not determine whether a load will
+  // result in a download in the parent process. As an interim hotfix
+  // for Bug 1593832, we are going to allow loads using a content-type
+  // of 'application/octet-stream' which will definitley result in
+  // a download.
+  if (XRE_IsParentProcess()) {
+    // Bug 1599131: Remove carve outs for downloads within x-frame-options
+    // when fission enabled
+    nsAutoCString type;
+    aChannel->GetContentType(type);
+    if (type.LowerCaseEqualsLiteral("application/octet-stream")) {
+      return true;
+    }
   }
 
   nsCOMPtr<nsIHttpChannel> httpChannel;
