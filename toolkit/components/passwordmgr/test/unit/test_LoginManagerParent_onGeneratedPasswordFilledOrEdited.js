@@ -206,7 +206,7 @@ add_task(async function test_onGeneratedPasswordFilledOrEdited() {
     "Should have no saved logins at the start of the test"
   );
 
-  LMP._onGeneratedPasswordFilledOrEdited({
+  await LMP._onGeneratedPasswordFilledOrEdited({
     browsingContextId: 99,
     formActionOrigin: "https://www.mozilla.org",
     password: generatedPassword,
@@ -318,7 +318,7 @@ add_task(async function test_onGeneratedPasswordFilledOrEdited_editToEmpty() {
     "Should have no saved logins at the start of the test"
   );
 
-  LMP._onGeneratedPasswordFilledOrEdited({
+  await LMP._onGeneratedPasswordFilledOrEdited({
     browsingContextId: 99,
     formActionOrigin: "https://www.mozilla.org",
     password: generatedPassword,
@@ -392,7 +392,7 @@ add_task(async function test_addUsernameBeforeAutoSaveEdit() {
     "Should have no saved logins at the start of the test"
   );
 
-  LMP._onGeneratedPasswordFilledOrEdited({
+  await LMP._onGeneratedPasswordFilledOrEdited({
     browsingContextId: 99,
     formActionOrigin: "https://www.mozilla.org",
     password: generatedPassword,

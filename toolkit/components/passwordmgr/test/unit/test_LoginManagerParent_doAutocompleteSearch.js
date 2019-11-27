@@ -49,13 +49,13 @@ add_task(async function test_doAutocompleteSearch_generated_noLogins() {
       };
     });
 
-  let result1 = LMP.doAutocompleteSearch(arg1);
+  let result1 = await LMP.doAutocompleteSearch(arg1);
   equal(result1.logins.length, 0, "no logins");
   ok(result1.generatedPassword, "has a generated password");
   equal(result1.generatedPassword.length, 15, "generated password length");
 
   info("repeat the search and ensure the same password was used");
-  let result2 = LMP.doAutocompleteSearch(arg1);
+  let result2 = await LMP.doAutocompleteSearch(arg1);
   equal(result2.logins.length, 0, "no logins");
   equal(
     result2.generatedPassword,
@@ -65,7 +65,7 @@ add_task(async function test_doAutocompleteSearch_generated_noLogins() {
 
   info("Check cases where a password shouldn't be generated");
 
-  let result3 = LMP.doAutocompleteSearch({
+  let result3 = await LMP.doAutocompleteSearch({
     ...arg1,
     ...{ isPasswordField: false },
   });
@@ -77,14 +77,14 @@ add_task(async function test_doAutocompleteSearch_generated_noLogins() {
 
   let arg1_2 = { ...arg1 };
   arg1_2.autocompleteInfo.fieldName = "";
-  let result4 = LMP.doAutocompleteSearch(arg1_2);
+  let result4 = await LMP.doAutocompleteSearch(arg1_2);
   equal(
     result4.generatedPassword,
     null,
     "no generated password when not autocomplete=new-password"
   );
 
-  let result5 = LMP.doAutocompleteSearch({
+  let result5 = await LMP.doAutocompleteSearch({
     ...arg1,
     ...{ browsingContextId: 999 },
   });

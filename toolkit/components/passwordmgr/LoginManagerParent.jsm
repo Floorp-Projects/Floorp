@@ -132,7 +132,7 @@ class LoginManagerParent extends JSWindowActorParent {
    * @param {boolean} options.acceptDifferentSubdomains Include results for eTLD+1 matches
    * @param {boolean} options.ignoreActionAndRealm Include all form and HTTP auth logins for the site
    */
-  static searchAndDedupeLogins(
+  static async searchAndDedupeLogins(
     formOrigin,
     {
       acceptDifferentSubdomains,
@@ -155,7 +155,7 @@ class LoginManagerParent extends JSWindowActorParent {
       }
     }
     try {
-      logins = LoginHelper.searchLoginsWithObject(matchData);
+      logins = await Services.logins.searchLoginsAsync(matchData);
     } catch (e) {
       // Record the last time the user cancelled the MP prompt
       // to avoid spamming them with MP prompts for autocomplete.
@@ -199,9 +199,11 @@ class LoginManagerParent extends JSWindowActorParent {
       case "PasswordManager:onFormSubmit": {
         // TODO Verify msg.target's principals against the formOrigin?
         let browser = this.getRootBrowser();
-        this.onFormSubmit(browser, data);
+        let submitPromise = this.onFormSubmit(browser, data);
         if (gListenerForTests) {
-          gListenerForTests("FormSubmit", data);
+          submitPromise.then(() => {
+            gListenerForTests("FormSubmit", data);
+          });
         }
         break;
       }
@@ -361,7 +363,7 @@ class LoginManagerParent extends JSWindowActorParent {
         guid,
       });
     } else {
-      logins = LoginManagerParent.searchAndDedupeLogins(formOrigin, {
+      logins = await LoginManagerParent.searchAndDedupeLogins(formOrigin, {
         formActionOrigin: actionOrigin,
         ignoreActionAndRealm: true,
         acceptDifferentSubdomains: LoginHelper.includeOtherSubdomainsInLookup,
@@ -375,7 +377,7 @@ class LoginManagerParent extends JSWindowActorParent {
     return { logins: jsLogins, recipes };
   }
 
-  doAutocompleteSearch({
+  async doAutocompleteSearch({
     autocompleteInfo,
     formOrigin,
     actionOrigin,
@@ -428,7 +430,7 @@ class LoginManagerParent extends JSWindowActorParent {
       log("Creating new autocomplete search result.");
 
       // Autocomplete results do not need to match actionOrigin or exact origin.
-      logins = LoginManagerParent.searchAndDedupeLogins(formOrigin, {
+      logins = await LoginManagerParent.searchAndDedupeLogins(formOrigin, {
         formActionOrigin: actionOrigin,
         ignoreActionAndRealm: true,
         acceptDifferentSubdomains: LoginHelper.includeOtherSubdomainsInLookup,
@@ -552,7 +554,7 @@ class LoginManagerParent extends JSWindowActorParent {
     return prompterSvc;
   }
 
-  onFormSubmit(
+  async onFormSubmit(
     browser,
     {
       origin,
@@ -616,7 +618,7 @@ class LoginManagerParent extends JSWindowActorParent {
 
     // Below here we have one login per hostPort + action + username with the
     // matching scheme being preferred.
-    let logins = LoginManagerParent.searchAndDedupeLogins(origin, {
+    let logins = await LoginManagerParent.searchAndDedupeLogins(origin, {
       formActionOrigin,
     });
 
@@ -737,7 +739,7 @@ class LoginManagerParent extends JSWindowActorParent {
     prompter.promptToSavePassword(formLogin, dismissedPrompt);
   }
 
-  _onGeneratedPasswordFilledOrEdited({
+  async _onGeneratedPasswordFilledOrEdited({
     formActionOrigin,
     password,
     username = "",
@@ -864,7 +866,7 @@ class LoginManagerParent extends JSWindowActorParent {
       // Check if we already have a login saved for this site since we don't want to overwrite it in
       // case the user still needs their old password to successfully complete a password change.
       // An empty formActionOrigin is used as a wildcard to not restrict to action matches.
-      let logins = LoginManagerParent.searchAndDedupeLogins(formOrigin, {
+      let logins = await LoginManagerParent.searchAndDedupeLogins(formOrigin, {
         acceptDifferentSubdomains: false,
         httpRealm: null,
         ignoreActionAndRealm: false,
