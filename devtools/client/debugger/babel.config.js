@@ -38,6 +38,11 @@ module.exports = {
             alias: {
               "devtools/client/shared/vendor/react": "react",
               "devtools/client/shared/vendor/react-dom": "react-dom",
+              "devtools/client/shared/vendor/react-dom-factories":
+                "react-dom-factories",
+              "devtools/client/shared/vendor/react-prop-types": "prop-types",
+              // Map all require("devtools/...") to the real devtools root.
+              "^devtools\\/(.*)": `${__dirname}/../../\\1`,
             },
           },
         ],

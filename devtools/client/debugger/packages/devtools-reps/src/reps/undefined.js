@@ -3,10 +3,9 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Dependencies
-const { getGripType, wrapRender } = require("./rep-utils");
+const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
-const dom = require("react-dom-factories");
-const { span } = dom;
+const { getGripType, wrapRender } = require("./rep-utils");
 
 /**
  * Renders undefined value

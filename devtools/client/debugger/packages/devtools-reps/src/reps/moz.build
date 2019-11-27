@@ -1,0 +1,43 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DevToolsModules(
+  'accessible.js',
+  'accessor.js',
+  'array.js',
+  'attribute.js',
+  'big-int.js',
+  'comment-node.js',
+  'constants.js',
+  'date-time.js',
+  'document-type.js',
+  'document.js',
+  'element-node.js',
+  'error.js',
+  'event.js',
+  'function.js',
+  'grip-array.js',
+  'grip-map-entry.js',
+  'grip-map.js',
+  'grip.js',
+  'infinity.js',
+  'nan.js',
+  'null.js',
+  'number.js',
+  'object-with-text.js',
+  'object-with-url.js',
+  'object.js',
+  'promise.js',
+  'regexp.js',
+  'rep-utils.js',
+  'rep.js',
+  'string.js',
+  'stylesheet.js',
+  'symbol.js',
+  'text-node.js',
+  'undefined.js',
+  'window.js'
+)

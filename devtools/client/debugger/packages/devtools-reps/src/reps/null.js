@@ -3,9 +3,8 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Dependencies
+const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 const { wrapRender } = require("./rep-utils");
-const dom = require("react-dom-factories");
-const { span } = dom;
 
 /**
  * Renders null value
