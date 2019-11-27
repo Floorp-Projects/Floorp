@@ -359,7 +359,7 @@ class LoginManagerParent extends JSWindowActorParent {
     // Autocomplete results do not need to match actionOrigin or exact origin.
     let logins = null;
     if (guid) {
-      logins = LoginHelper.searchLoginsWithObject({
+      logins = await Services.logins.searchLoginsAsync({
         guid,
       });
     } else {
@@ -601,7 +601,7 @@ class LoginManagerParent extends JSWindowActorParent {
     );
 
     if (autoFilledLoginGuid) {
-      let loginsForGuid = LoginHelper.searchLoginsWithObject({
+      let loginsForGuid = await Services.logins.searchLoginsAsync({
         guid: autoFilledLoginGuid,
       });
       if (
@@ -811,7 +811,7 @@ class LoginManagerParent extends JSWindowActorParent {
       // The edit was to a login that was auto-saved.
       // Note that it could have been saved in a totally different tab in the session.
       if (generatedPW.storageGUID) {
-        let existingLogins = LoginHelper.searchLoginsWithObject({
+        let existingLogins = await Services.logins.searchLoginsAsync({
           guid: generatedPW.storageGUID,
         });
 
