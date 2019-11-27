@@ -1034,10 +1034,9 @@ this.LoginHelper = {
     let formLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
       Ci.nsILoginInfo
     );
-    // For compatibility for the Lockwise extension we fallback to hostname/formSubmitURL
     formLogin.init(
-      login.origin || login.hostname,
-      "formSubmitURL" in login ? login.formSubmitURL : login.formActionOrigin,
+      login.origin,
+      login.formActionOrigin,
       login.httpRealm,
       login.username,
       login.password,

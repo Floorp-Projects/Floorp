@@ -154,11 +154,11 @@ interface nsILoginManagerStorage : nsISupports {
    * Search for logins matching the specified criteria. Called when looking
    * for logins that might be applicable to a form or authentication request.
    *
-   * @param aHostname
+   * @param aOrigin
    *        The origin to restrict searches to. For example: "http://www.site.com".
    * @param aActionURL
    *        For form logins, this argument should be the origin to which the
-   *        form will be submitted. For protocol logins, specify null.
+   *        form will be submitted. For HTTP auth. logins, specify null.
    * @param aHttpRealm
    *        For protocol logins, this argument should be the HTTP Realm
    *        for which the login applies. This is obtained from the
@@ -166,7 +166,7 @@ interface nsILoginManagerStorage : nsISupports {
    *        specify null.
    * @return An array of nsILoginInfo objects.
    */
-  Array<nsILoginInfo> findLogins(in AString aHostname, in AString aActionURL,
+  Array<nsILoginInfo> findLogins(in AString aOrigin, in AString aActionOrigin,
 				 in AString aHttpRealm);
 
 
@@ -177,11 +177,11 @@ interface nsILoginManagerStorage : nsISupports {
    * check for logins without causing the user to be prompted for a master
    * password to decrypt the logins.
    *
-   * @param aHostname
+   * @param aOrigin
    *        The origin to restrict searches to. Specify an empty string
    *        to match all origins. A null value will not match any logins, and
    *        will thus always return a count of 0.
-   * @param aActionURL
+   * @param aActionOrigin
    *        The origin to which a form login will be submitted. To match any
    *        form login, specify an empty string. To not match any form
    *        login, specify null.
@@ -190,7 +190,7 @@ interface nsILoginManagerStorage : nsISupports {
    *        any realm, specify an empty string. To not match logins for any
    *        realm, specify null.
    */
-  unsigned long countLogins(in AString aHostname, in AString aActionURL,
+  unsigned long countLogins(in AString aOrigin, in AString aActionOrigin,
                             in AString aHttpRealm);
   /**
    * True when a master password prompt is being shown.
