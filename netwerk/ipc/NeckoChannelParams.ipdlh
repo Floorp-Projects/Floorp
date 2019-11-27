@@ -402,5 +402,5 @@ struct RedirectToRealChannelArgs {
 
 
 
-} // namespace ipc
+} // namespace net
 } // namespace mozilla
