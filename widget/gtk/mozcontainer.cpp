@@ -217,19 +217,19 @@ void moz_container_init(MozContainer* container) {
   // We can draw to x11 window any time.
   container->ready_to_draw = gfxPlatformGtk::GetPlatform()->IsX11Display();
   container->surface_needs_clear = true;
-  container->inital_draw_cb = nullptr;
   container->subsurface_dx = 0;
   container->subsurface_dy = 0;
   container->surface_position_needs_update = 0;
+  container->initial_draw_cbs.clear();
 #endif
 
   LOG(("%s [%p]\n", __FUNCTION__, (void*)container));
 }
 
 #if defined(MOZ_WAYLAND)
-void moz_container_set_initial_draw_callback(
-    MozContainer* container, std::function<void(void)> inital_draw_cb) {
-  container->inital_draw_cb = inital_draw_cb;
+void moz_container_add_initial_draw_callback(
+    MozContainer* container, const std::function<void(void)>& initial_draw_cb) {
+  container->initial_draw_cbs.push_back(initial_draw_cb);
 }
 
 static wl_surface* moz_container_get_gtk_container_surface(
@@ -253,17 +253,20 @@ static void frame_callback_handler(void* data, struct wl_callback* callback,
 
   LOGWAYLAND(
       ("%s [%p] frame_callback_handler %p ready_to_draw %d (set to true)"
-       " inital_draw callback %d\n",
+       " initial_draw callback %zd\n",
        __FUNCTION__, (void*)container, (void*)container->frame_callback_handler,
-       container->ready_to_draw, container->inital_draw_cb ? 1 : 0));
+       container->ready_to_draw, container->initial_draw_cbs.size()));
 
   g_clear_pointer(&container->frame_callback_handler, wl_callback_destroy);
   container->frame_callback_handler_surface_id = -1;
 
-  if (!container->ready_to_draw && container->inital_draw_cb) {
-    container->inital_draw_cb();
+  if (!container->ready_to_draw) {
+    container->ready_to_draw = true;
+    for (auto const& cb : container->initial_draw_cbs) {
+      cb();
+    }
+    container->initial_draw_cbs.clear();
   }
-  container->ready_to_draw = true;
 }
 
 static const struct wl_callback_listener frame_listener = {
@@ -561,8 +564,7 @@ static void moz_container_add(GtkContainer* container, GtkWidget* widget) {
 }
 
 #ifdef MOZ_WAYLAND
-struct wl_surface* moz_container_get_wl_surface(MozContainer* container,
-                                                int scale) {
+struct wl_surface* moz_container_get_wl_surface(MozContainer* container) {
   LOGWAYLAND(("%s [%p] surface %p ready_to_draw %d\n", __FUNCTION__,
               (void*)container, (void*)container->surface,
               container->ready_to_draw));
@@ -611,7 +613,6 @@ struct wl_surface* moz_container_get_wl_surface(MozContainer* container,
                        container->subsurface_dy);
   }
 
-  wl_surface_set_buffer_scale(container->surface, scale);
   return container->surface;
 }
 
@@ -622,11 +623,11 @@ struct wl_egl_window* moz_container_get_wl_egl_window(MozContainer* container,
 
   // Always call moz_container_get_wl_surface() to ensure underlying
   // container->surface has correct scale and position.
-  wl_surface* surface = moz_container_get_wl_surface(container, scale);
+  wl_surface* surface = moz_container_get_wl_surface(container);
   if (!surface) {
     return nullptr;
   }
-
+  wl_surface_set_buffer_scale(surface, scale);
   if (!container->eglwindow) {
     GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
     container->eglwindow =

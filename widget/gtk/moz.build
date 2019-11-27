@@ -54,6 +54,7 @@ UNIFIED_SOURCES += [
 
 SOURCES += [
     'nsWindow.cpp', # conflicts with X11 headers
+    'WaylandVsyncSource.cpp', # conflicts with X11 headers
 ]
 
 if CONFIG['MOZ_X11']:

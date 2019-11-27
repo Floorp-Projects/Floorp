@@ -101,13 +101,6 @@ gfxPlatformGtk::gfxPlatformGtk() {
     mCompositorDisplay = nullptr;
   }
 #endif  // MOZ_X11
-#ifdef MOZ_WAYLAND
-  // Wayland compositors use g_get_monotonic_time() to get timestamps.
-  mWaylandLastVsyncTimestamp = (g_get_monotonic_time() / 1000);
-  // Set default display fps to 60
-  mWaylandFrameDelay = 1000 / 60;
-#endif
-
   gPlatformFTLibrary = Factory::NewFTLibrary();
   MOZ_ASSERT(gPlatformFTLibrary);
   Factory::SetFTLibrary(gPlatformFTLibrary);
@@ -501,13 +494,7 @@ class GtkVsyncSource final : public VsyncSource {
           mVsyncThread("GLXVsyncThread"),
           mVsyncTask(nullptr),
           mVsyncEnabledLock("GLXVsyncEnabledLock"),
-          mVsyncEnabled(false)
-#  ifdef MOZ_WAYLAND
-          ,
-          mIsWaylandDisplay(false)
-#  endif
-    {
-    }
+          mVsyncEnabled(false) {}
 
     // Sets up the display's GL context on a worker thread.
     // Required as GLContexts may only be used by the creating thread.
@@ -525,15 +512,6 @@ class GtkVsyncSource final : public VsyncSource {
       lock.Wait();
       return mGLContext != nullptr;
     }
-
-#  ifdef MOZ_WAYLAND
-    bool SetupWayland() {
-      MonitorAutoLock lock(mSetupLock);
-      MOZ_ASSERT(NS_IsMainThread());
-      mIsWaylandDisplay = true;
-      return mVsyncThread.Start();
-    }
-#  endif
 
     // Called on the Vsync thread to setup the GL context.
     void SetupGLContext() {
@@ -585,9 +563,7 @@ class GtkVsyncSource final : public VsyncSource {
 
     virtual void EnableVsync() override {
       MOZ_ASSERT(NS_IsMainThread());
-#  if !defined(MOZ_WAYLAND)
       MOZ_ASSERT(mGLContext, "GLContext not setup!");
-#  endif
 
       MonitorAutoLock lock(mVsyncEnabledLock);
       if (mVsyncEnabled) {
@@ -598,12 +574,8 @@ class GtkVsyncSource final : public VsyncSource {
       // If the task has not nulled itself out, it hasn't yet realized
       // that vsync was disabled earlier, so continue its execution.
       if (!mVsyncTask) {
-        mVsyncTask =
-            NewRunnableMethod("GtkVsyncSource::GLXDisplay::RunVsync", this,
-#  if defined(MOZ_WAYLAND)
-                              mIsWaylandDisplay ? &GLXDisplay::RunVsyncWayland :
-#  endif
-                                                &GLXDisplay::RunVsync);
+        mVsyncTask = NewRunnableMethod("GtkVsyncSource::GLXDisplay::RunVsync",
+                                       this, &GLXDisplay::RunVsync);
         RefPtr<Runnable> addrefedTask = mVsyncTask;
         mVsyncThread.message_loop()->PostTask(addrefedTask.forget());
       }
@@ -683,41 +655,6 @@ class GtkVsyncSource final : public VsyncSource {
       }
     }
 
-#  ifdef MOZ_WAYLAND
-    /* VSync on Wayland is tricky as we can get only "last VSync" event signal.
-     * That means we should draw next frame at "last Vsync + frame delay" time.
-     */
-    void RunVsyncWayland() {
-      MOZ_ASSERT(!NS_IsMainThread());
-
-      for (;;) {
-        {
-          MonitorAutoLock lock(mVsyncEnabledLock);
-          if (!mVsyncEnabled) {
-            mVsyncTask = nullptr;
-            return;
-          }
-        }
-
-        gint64 lastVsync = gfxPlatformGtk::GetPlatform()->GetWaylandLastVsync();
-        gint64 currTime = (g_get_monotonic_time() / 1000);
-
-        gint64 remaining =
-            gfxPlatformGtk::GetPlatform()->GetWaylandFrameDelay() -
-            (currTime - lastVsync);
-        if (remaining > 0) {
-          PlatformThread::Sleep(remaining);
-        } else {
-          // Time from last HW Vsync is longer than our frame delay,
-          // use our approximation then.
-          gfxPlatformGtk::GetPlatform()->SetWaylandLastVsync(currTime);
-        }
-
-        NotifyVsync(TimeStamp::Now());
-      }
-    }
-#  endif
-
     void Cleanup() {
       MOZ_ASSERT(!NS_IsMainThread());
 
@@ -733,9 +670,6 @@ class GtkVsyncSource final : public VsyncSource {
     RefPtr<Runnable> mVsyncTask;
     Monitor mVsyncEnabledLock;
     bool mVsyncEnabled;
-#  ifdef MOZ_WAYLAND
-    bool mIsWaylandDisplay;
-#  endif
   };
 
  private:
@@ -746,10 +680,9 @@ class GtkVsyncSource final : public VsyncSource {
 already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
 #  ifdef MOZ_WAYLAND
   if (IsWaylandDisplay()) {
-    RefPtr<VsyncSource> vsyncSource = new GtkVsyncSource();
-    VsyncSource::Display& display = vsyncSource->GetGlobalDisplay();
-    static_cast<GtkVsyncSource::GLXDisplay&>(display).SetupWayland();
-    return vsyncSource.forget();
+    // For wayland, we simply return the standard software vsync for now.
+    // This powers refresh drivers and the likes.
+    return gfxPlatform::CreateHardwareVsyncSource();
   }
 #  endif
 
