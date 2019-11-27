@@ -222,10 +222,6 @@ void RenderCompositorOGL::CreateSurface(wr::NativeSurfaceId aId,
 
 void RenderCompositorOGL::DestroySurface(NativeSurfaceId aId) {
   auto layerCursor = mNativeLayers.find(wr::AsUint64(aId));
-  if (layerCursor == mNativeLayers.end()) {
-    printf("deleting non-existent layer %" PRId64 "\n", wr::AsUint64(aId));
-    return;
-  }
   MOZ_RELEASE_ASSERT(layerCursor != mNativeLayers.end());
   mNativeLayers.erase(layerCursor);
   // If the layer is currently present in mNativeLayerRoot, it will be destroyed
