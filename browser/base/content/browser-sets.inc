@@ -92,6 +92,14 @@
     <command id="Tools:Sanitize" oncommand="Sanitizer.showUI(window);"/>
     <command id="Tools:PrivateBrowsing"
       oncommand="OpenBrowserWindow({private: true});"/>
+#ifdef NIGHTLY_BUILD
+    <command id="Tools:FissionWindow"
+      oncommand="OpenBrowserWindow({fission: true});"
+      hidden="true"/>
+    <command id="Tools:NonFissionWindow"
+      oncommand="OpenBrowserWindow({fission: false});"
+      hidden="true"/>
+#endif
     <command id="History:UndoCloseTab" oncommand="undoCloseTab();"/>
     <command id="History:UndoCloseWindow" oncommand="undoCloseWindow();"/>
 
