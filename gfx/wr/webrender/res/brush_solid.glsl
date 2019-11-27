@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_SPECIFIC_BRUSH 1
+#define VECS_PER_SOLID_BRUSH 1
+#define VECS_PER_SPECIFIC_BRUSH VECS_PER_SOLID_BRUSH
+
+#define WR_BRUSH_VS_FUNCTION solid_brush_vs
+#define WR_BRUSH_FS_FUNCTION solid_brush_fs
 
 #include shared,prim_shared,brush
 
@@ -23,7 +27,7 @@ SolidBrush fetch_solid_primitive(int address) {
     return SolidBrush(data);
 }
 
-void brush_vs(
+void solid_brush_vs(
     VertexInfo vi,
     int prim_address,
     RectWithSize local_rect,
@@ -47,7 +51,7 @@ void brush_vs(
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
-Fragment brush_fs() {
+Fragment solid_brush_fs() {
     vec4 color = vColor;
 #ifdef WR_FEATURE_ALPHA_PASS
     color *= init_transform_fs(vLocalPos);

@@ -73,9 +73,14 @@ impl ZBufferIdGenerator {
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum BrushShaderKind {
     None = 0,
-    Solid = 0x1000000,
-    Image = 0x2000000,
-    Text = 0x4000000,
+    Solid           = 0x1000000,
+    Image           = 0x2000000,
+    Text            = 0x3000000,
+    LinearGradient  = 0x4000000,
+    RadialGradient  = 0x5000000,
+    Blend           = 0x6000000,
+    MixBlend        = 0x7000000,
+    Yuv             = 0x8000000,
 }
 
 #[derive(Debug, Copy, Clone)]
