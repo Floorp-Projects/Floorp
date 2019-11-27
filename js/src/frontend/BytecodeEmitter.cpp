@@ -8166,8 +8166,12 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
     return false;
   }
 
-  bool success = singleton ? emitIndex32(JSOP_OBJECT, gcThingIndex)
-                           : emitIndex32(JSOP_NEWOBJECT, gcThingIndex);
+  bool isInnerSingleton = flags.contains(ObjLiteralFlag::IsInnerSingleton);
+
+  JSOp op = singleton
+                ? JSOP_OBJECT
+                : isInnerSingleton ? JSOP_NEWOBJECT_WITHGROUP : JSOP_NEWOBJECT;
+  bool success = emitIndex32(op, gcThingIndex);
   if (!success) {
     return false;
   }
@@ -8548,6 +8552,9 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
     }
     if (!useObjLiteralValues) {
       flags += ObjLiteralFlag::NoValues;
+    }
+    if (isInner) {
+      flags += ObjLiteralFlag::IsInnerSingleton;
     }
 
     // Use an ObjLiteral op. This will record ObjLiteral insns in the
