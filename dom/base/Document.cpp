@@ -306,7 +306,6 @@
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TabGroup.h"
-#include "mozilla/dom/ChromeObserver.h"
 #ifdef MOZ_XUL
 #  include "mozilla/dom/XULBroadcastManager.h"
 #  include "mozilla/dom/XULPersist.h"
@@ -11003,15 +11002,10 @@ void Document::SetReadyStateInternal(ReadyState aReadyState,
   }
   // At the time of loading start, we don't have timing object, record time.
 
-  if (READYSTATE_INTERACTIVE == aReadyState &&
-      nsContentUtils::IsSystemPrincipal(NodePrincipal())) {
-    if (!mXULPersist) {
+  if (READYSTATE_INTERACTIVE == aReadyState) {
+    if (!mXULPersist && nsContentUtils::IsSystemPrincipal(NodePrincipal())) {
       mXULPersist = new XULPersist(this);
       mXULPersist->Init();
-    }
-    if (!mChromeObserver) {
-      mChromeObserver = new ChromeObserver(this);
-      mChromeObserver->Init();
     }
   }
 
