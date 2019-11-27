@@ -1261,6 +1261,15 @@ ArrayBufferObject* ArrayBufferObject::createZeroed(
   return buffer;
 }
 
+ArrayBufferObject* ArrayBufferObject::createForTypedObject(JSContext* cx,
+                                                           uint32_t nbytes) {
+  ArrayBufferObject* buffer = createZeroed(cx, nbytes);
+  if (buffer) {
+    buffer->setHasTypedObjectViews();
+  }
+  return buffer;
+}
+
 ArrayBufferObject* ArrayBufferObject::createEmpty(JSContext* cx) {
   AutoSetNewObjectMetadata metadata(cx);
   ArrayBufferObject* obj = NewBuiltinClassInstance<ArrayBufferObject>(cx);
@@ -1483,15 +1492,11 @@ JSObject* ArrayBufferObject::firstView() {
              : nullptr;
 }
 
-void ArrayBufferObject::setFirstView(JSObject* view) {
-  MOZ_ASSERT_IF(view,
-                view->is<ArrayBufferViewObject>() || view->is<TypedObject>());
+void ArrayBufferObject::setFirstView(ArrayBufferViewObject* view) {
   setFixedSlot(FIRST_VIEW_SLOT, ObjectOrNullValue(view));
 }
 
-bool ArrayBufferObject::addView(JSContext* cx, JSObject* view) {
-  MOZ_ASSERT(view->is<ArrayBufferViewObject>() || view->is<TypedObject>());
-
+bool ArrayBufferObject::addView(JSContext* cx, ArrayBufferViewObject* view) {
   if (!firstView()) {
     setFirstView(view);
     return true;

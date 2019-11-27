@@ -1607,15 +1607,7 @@ void OutlineTypedObject::attach(JSContext* cx, ArrayBufferObject& buffer,
   MOZ_ASSERT(!isAttached());
   MOZ_ASSERT(offset <= buffer.byteLength());
   MOZ_ASSERT(size() <= buffer.byteLength() - offset);
-
-  buffer.setHasTypedObjectViews();
-
-  {
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (!buffer.addView(cx, this)) {
-      oomUnsafe.crash("TypedObject::attach");
-    }
-  }
+  MOZ_ASSERT(buffer.hasTypedObjectViews());
 
   setOwnerAndData(&buffer, buffer.dataPointer() + offset);
 }
@@ -1688,7 +1680,7 @@ TypedObject* TypedObject::createZeroed(JSContext* cx, HandleTypeDescr descr,
   // Allocate and initialize the memory for this instance.
   size_t totalSize = descr->size();
   Rooted<ArrayBufferObject*> buffer(cx);
-  buffer = ArrayBufferObject::createZeroed(cx, totalSize);
+  buffer = ArrayBufferObject::createForTypedObject(cx, totalSize);
   if (!buffer) {
     return nullptr;
   }
