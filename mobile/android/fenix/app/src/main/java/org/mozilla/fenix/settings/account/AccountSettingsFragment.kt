@@ -166,7 +166,12 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         val historyNameKey = getPreferenceKey(R.string.pref_key_sync_history)
         findPreference<CheckBoxPreference>(historyNameKey)?.apply {
             setOnPreferenceChangeListener { _, newValue ->
-                SyncEnginesStorage(context).setStatus(SyncEngine.History, newValue as Boolean)
+                requireComponents.analytics.metrics.track(Event.PreferenceToggled(
+                    preferenceKey = historyNameKey,
+                    enabled = newValue as Boolean,
+                    context = context
+                ))
+                SyncEnginesStorage(context).setStatus(SyncEngine.History, newValue)
                 @Suppress("DeferredResultUnused")
                 context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.EngineChange)
                 true
@@ -176,7 +181,12 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         val bookmarksNameKey = getPreferenceKey(R.string.pref_key_sync_bookmarks)
         findPreference<CheckBoxPreference>(bookmarksNameKey)?.apply {
             setOnPreferenceChangeListener { _, newValue ->
-                SyncEnginesStorage(context).setStatus(SyncEngine.Bookmarks, newValue as Boolean)
+                requireComponents.analytics.metrics.track(Event.PreferenceToggled(
+                    preferenceKey = bookmarksNameKey,
+                    enabled = newValue as Boolean,
+                    context = context
+                ))
+                SyncEnginesStorage(context).setStatus(SyncEngine.Bookmarks, newValue)
                 @Suppress("DeferredResultUnused")
                 context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.EngineChange)
                 true
