@@ -8,7 +8,9 @@ const INTERMEDIATE_URI_1 = Services.io.newURI(
   ROOT_URI + "redirect_twice_perma.sjs"
 );
 const INTERMEDIATE_URI_2 = Services.io.newURI(ROOT_URI + "redirect_once.sjs");
-const TARGET_URI = Services.io.newURI(ROOT_URI + "final.html");
+const TARGET_URI = Services.io.newURI(
+  "http://test1.example.com/tests/toolkit/components/places/tests/browser/final.html"
+);
 
 const REDIRECT_SOURCE_VISIT_BONUS = Services.prefs.getIntPref(
   "places.frecency.redirectSourceVisitBonus"

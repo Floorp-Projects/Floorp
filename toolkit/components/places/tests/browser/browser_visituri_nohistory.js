@@ -6,7 +6,7 @@
 const INITIAL_URL =
   "http://example.com/tests/toolkit/components/places/tests/browser/begin.html";
 const FINAL_URL =
-  "http://example.com/tests/toolkit/components/places/tests/browser/final.html";
+  "http://test1.example.com/tests/toolkit/components/places/tests/browser/final.html";
 
 /**
  * One-time observer callback.
