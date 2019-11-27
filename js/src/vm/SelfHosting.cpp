@@ -2387,8 +2387,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     IntrinsicObjectIsTypeDescr),
     JS_INLINABLE_FN("ObjectIsTypedObject", js::ObjectIsTypedObject, 1, 0,
                     IntrinsicObjectIsTypedObject),
-    JS_INLINABLE_FN("ObjectIsOpaqueTypedObject", js::ObjectIsOpaqueTypedObject,
-                    1, 0, IntrinsicObjectIsOpaqueTypedObject),
     JS_INLINABLE_FN("ObjectIsTransparentTypedObject",
                     js::ObjectIsTransparentTypedObject, 1, 0,
                     IntrinsicObjectIsTransparentTypedObject),
