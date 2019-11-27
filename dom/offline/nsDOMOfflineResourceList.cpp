@@ -576,14 +576,14 @@ void nsDOMOfflineResourceList::FirePendingEvents() {
   mPendingEvents.Clear();
 }
 
-nsresult nsDOMOfflineResourceList::SendEvent(const nsAString& aEventName) {
+void nsDOMOfflineResourceList::SendEvent(const nsAString& aEventName) {
   // Don't send events to closed windows
   if (!GetOwner()) {
-    return NS_OK;
+    return;
   }
 
   if (!GetOwner()->GetDocShell()) {
-    return NS_OK;
+    return;
   }
 
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
@@ -596,12 +596,10 @@ nsresult nsDOMOfflineResourceList::SendEvent(const nsAString& aEventName) {
   // queued while frozen, save the event for later.
   if (GetOwner()->IsFrozen() || mPendingEvents.Count() > 0) {
     mPendingEvents.AppendObject(event);
-    return NS_OK;
+    return;
   }
 
   DispatchEvent(*event);
-
-  return NS_OK;
 }
 
 //
