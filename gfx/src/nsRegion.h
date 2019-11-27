@@ -528,10 +528,6 @@ class nsRegion {
   friend std::ostream& operator<<(std::ostream& stream, const nsRegion& m);
   void OutputToStream(std::string aObjName, std::ostream& stream) const;
 
-  static nsresult InitStatic() { return NS_OK; }
-
-  static void ShutdownStatic() {}
-
  private:
 #ifdef DEBUG_REGIONS
   class OperationStringGenerator {
