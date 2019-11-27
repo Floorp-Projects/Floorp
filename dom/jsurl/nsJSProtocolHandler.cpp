@@ -1043,27 +1043,11 @@ bool nsJSChannel::GetIsDocumentLoad() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsJSProtocolHandler::nsJSProtocolHandler() {}
+nsJSProtocolHandler::nsJSProtocolHandler() = default;
 
-nsresult nsJSProtocolHandler::Init() { return NS_OK; }
-
-nsJSProtocolHandler::~nsJSProtocolHandler() {}
+nsJSProtocolHandler::~nsJSProtocolHandler() = default;
 
 NS_IMPL_ISUPPORTS(nsJSProtocolHandler, nsIProtocolHandler)
-
-nsresult nsJSProtocolHandler::Create(nsISupports* aOuter, REFNSIID aIID,
-                                     void** aResult) {
-  if (aOuter) return NS_ERROR_NO_AGGREGATION;
-
-  nsJSProtocolHandler* ph = new nsJSProtocolHandler();
-  NS_ADDREF(ph);
-  nsresult rv = ph->Init();
-  if (NS_SUCCEEDED(rv)) {
-    rv = ph->QueryInterface(aIID, aResult);
-  }
-  NS_RELEASE(ph);
-  return rv;
-}
 
 /* static */ nsresult nsJSProtocolHandler::EnsureUTF8Spec(
     const nsCString& aSpec, const char* aCharset, nsACString& aUTF8Spec) {

@@ -49,10 +49,6 @@ class nsJSProtocolHandler : public nsIProtocolHandler {
   // nsJSProtocolHandler methods:
   nsJSProtocolHandler();
 
-  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-
-  nsresult Init();
-
   static nsresult CreateNewURI(const nsACString& aSpec, const char* aCharset,
                                nsIURI* aBaseURI, nsIURI** result);
 
