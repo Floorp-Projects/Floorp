@@ -342,6 +342,8 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
    */
   static void PVsyncActorCreated(mozilla::layout::VsyncChild* aVsyncChild);
 
+  void CreateVsyncRefreshTimer();
+
 #ifdef DEBUG
   /**
    * Check whether the given observer is an observer for the given flush type
@@ -479,8 +481,9 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
 
   void FinishedWaitingForTransaction();
 
-  mozilla::RefreshDriverTimer* ChooseTimer() const;
+  mozilla::RefreshDriverTimer* ChooseTimer();
   mozilla::RefreshDriverTimer* mActiveTimer;
+  RefPtr<mozilla::RefreshDriverTimer> mOwnTimer;
 
   // nsPresContext passed in constructor and unset in Disconnect.
   mozilla::WeakPtr<nsPresContext> mPresContext;

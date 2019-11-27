@@ -16,7 +16,18 @@ using namespace mozilla::layers;
 namespace mozilla {
 
 CompositorVsyncDispatcher::CompositorVsyncDispatcher()
-    : mCompositorObserverLock("CompositorObserverLock"), mDidShutdown(false) {
+    : mVsyncSource(gfxPlatform::GetPlatform()->GetHardwareVsync()),
+      mCompositorObserverLock("CompositorObserverLock"),
+      mDidShutdown(false) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+}
+
+CompositorVsyncDispatcher::CompositorVsyncDispatcher(
+    RefPtr<gfx::VsyncSource> aVsyncSource)
+    : mVsyncSource(std::move(aVsyncSource)),
+      mCompositorObserverLock("CompositorObserverLock"),
+      mDidShutdown(false) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 }
@@ -45,13 +56,9 @@ void CompositorVsyncDispatcher::ObserveVsync(bool aEnable) {
   }
 
   if (aEnable) {
-    gfxPlatform::GetPlatform()
-        ->GetHardwareVsync()
-        ->AddCompositorVsyncDispatcher(this);
+    mVsyncSource->AddCompositorVsyncDispatcher(this);
   } else {
-    gfxPlatform::GetPlatform()
-        ->GetHardwareVsync()
-        ->RemoveCompositorVsyncDispatcher(this);
+    mVsyncSource->RemoveCompositorVsyncDispatcher(this);
   }
 }
 
@@ -89,8 +96,11 @@ void CompositorVsyncDispatcher::Shutdown() {
   }
 }
 
-RefreshTimerVsyncDispatcher::RefreshTimerVsyncDispatcher()
-    : mRefreshTimersLock("RefreshTimers lock") {
+RefreshTimerVsyncDispatcher::RefreshTimerVsyncDispatcher(
+    gfx::VsyncSource::Display* aDisplay)
+    : mDisplay(aDisplay),
+      mDisplayLock("RefreshTimerVsyncDispatcherDisplayLock"),
+      mRefreshTimersLock("RefreshTimers lock") {
   MOZ_ASSERT(XRE_IsParentProcess() || recordreplay::IsRecordingOrReplaying());
   MOZ_ASSERT(NS_IsMainThread());
 }
@@ -98,6 +108,12 @@ RefreshTimerVsyncDispatcher::RefreshTimerVsyncDispatcher()
 RefreshTimerVsyncDispatcher::~RefreshTimerVsyncDispatcher() {
   MOZ_ASSERT(XRE_IsParentProcess() || recordreplay::IsRecordingOrReplaying());
   MOZ_ASSERT(NS_IsMainThread());
+}
+
+void RefreshTimerVsyncDispatcher::MoveToDisplay(
+    gfx::VsyncSource::Display* aDisplay) {
+  MutexAutoLock lock(mDisplayLock);
+  mDisplay = aDisplay;
 }
 
 void RefreshTimerVsyncDispatcher::NotifyVsync(const VsyncEvent& aVsync) {
@@ -156,9 +172,8 @@ void RefreshTimerVsyncDispatcher::UpdateVsyncStatus() {
     return;
   }
 
-  gfx::VsyncSource::Display& display =
-      gfxPlatform::GetPlatform()->GetHardwareVsync()->GetGlobalDisplay();
-  display.NotifyRefreshTimerVsyncStatus(NeedsVsync());
+  MutexAutoLock lock(mDisplayLock);
+  mDisplay->NotifyRefreshTimerVsyncStatus(NeedsVsync());
 }
 
 bool RefreshTimerVsyncDispatcher::NeedsVsync() {

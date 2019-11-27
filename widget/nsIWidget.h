@@ -30,6 +30,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/widget/IMEData.h"
+#include "VsyncSource.h"
 #include "nsDataHashtable.h"
 #include "nsIObserver.h"
 #include "nsIWidgetListener.h"
@@ -2023,6 +2024,12 @@ class nsIWidget : public nsISupports {
    * return the compositor which is doing that on our behalf.
    */
   virtual CompositorBridgeChild* GetRemoteRenderer() { return nullptr; }
+
+  /**
+   * If this widget has its own vsync source, return it, otherwise return
+   * nullptr. An example of such local source would be Wayland frame callbacks.
+   */
+  virtual RefPtr<mozilla::gfx::VsyncSource> GetVsyncSource() { return nullptr; }
 
   /**
    * Returns true if the widget requires synchronous repaints on resize,

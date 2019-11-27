@@ -340,6 +340,7 @@ static nsWindow* gFocusWindow = nullptr;
 static bool gBlockActivateEvent = false;
 static bool gGlobalsInitialized = false;
 static bool gRaiseWindows = true;
+static bool gUseWaylandVsync = false;
 static GList* gVisibleWaylandPopupWindows = nullptr;
 
 #if GTK_CHECK_VERSION(3, 4, 0)
@@ -672,6 +673,14 @@ void nsWindow::Destroy() {
   }
   mLayerManager = nullptr;
 
+#ifdef MOZ_WAYLAND
+  // Shut down our local vsync source
+  if (mWaylandVsyncSource) {
+    mWaylandVsyncSource->Shutdown();
+    mWaylandVsyncSource = nullptr;
+  }
+#endif
+
   // It is safe to call DestroyeCompositor several times (here and
   // in the parent class) since it will take effect only once.
   // The reason we call it here is because on gtk platforms we need
@@ -715,12 +724,6 @@ void nsWindow::Destroy() {
     LOGFOCUS(("automatically losing focus...\n"));
     gFocusWindow = nullptr;
   }
-
-#ifdef MOZ_WAYLAND
-  if (mContainer) {
-    moz_container_set_initial_draw_callback(mContainer, nullptr);
-  }
-#endif
 
   GtkWidget* owningWidget = GetMozContainerWidget();
   if (mShell) {
@@ -2216,6 +2219,25 @@ void nsWindow::MaybeResumeCompositor() {
       remoteRenderer->SendResumeAsync();
     }
     remoteRenderer->SendForcePresent();
+  }
+}
+
+void nsWindow::CreateCompositorVsyncDispatcher() {
+  if (!mWaylandVsyncSource) {
+    nsBaseWidget::CreateCompositorVsyncDispatcher();
+    return;
+  }
+
+  if (XRE_IsParentProcess()) {
+    if (!mCompositorVsyncDispatcherLock) {
+      mCompositorVsyncDispatcherLock =
+          MakeUnique<Mutex>("mCompositorVsyncDispatcherLock");
+    }
+    MutexAutoLock lock(*mCompositorVsyncDispatcherLock);
+    if (!mCompositorVsyncDispatcher) {
+      mCompositorVsyncDispatcher =
+          new CompositorVsyncDispatcher(mWaylandVsyncSource);
+    }
   }
 }
 #endif
@@ -3929,7 +3951,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       if (!mIsX11Display && ComputeShouldAccelerate()) {
         mCompositorInitiallyPaused = true;
         RefPtr<nsWindow> self(this);
-        moz_container_set_initial_draw_callback(mContainer, [self]() -> void {
+        moz_container_add_initial_draw_callback(mContainer, [self]() -> void {
           self->mNeedsCompositorResume = true;
           self->MaybeResumeCompositor();
         });
@@ -4209,6 +4231,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 #  ifdef MOZ_WAYLAND
   else if (!mIsX11Display) {
     mSurfaceProvider.Initialize(this);
+    WaylandStartVsync();
   }
 #  endif
 #endif
@@ -4415,6 +4438,50 @@ void nsWindow::HideWaylandWindow() {
   gtk_widget_hide(mShell);
 }
 
+void nsWindow::WaylandStartVsync() {
+#ifdef MOZ_WAYLAND
+  if (!gUseWaylandVsync) {
+    return;
+  }
+
+  if (!mWaylandVsyncSource) {
+    mWaylandVsyncSource = new mozilla::WaylandVsyncSource(mContainer);
+    WaylandVsyncSource::WaylandDisplay& display =
+        static_cast<WaylandVsyncSource::WaylandDisplay&>(
+            mWaylandVsyncSource->GetGlobalDisplay());
+    if (!display.Setup()) {
+      NS_WARNING("Could not start Wayland vsync monitor");
+    }
+  }
+
+  // The widget is going to be shown, so reconfigure the surface
+  // of our vsync source.
+  RefPtr<nsWindow> self(this);
+  moz_container_add_initial_draw_callback(mContainer, [self]() -> void {
+    WaylandVsyncSource::WaylandDisplay& display =
+        static_cast<WaylandVsyncSource::WaylandDisplay&>(
+            self->mWaylandVsyncSource->GetGlobalDisplay());
+    display.EnableMonitor();
+    if (display.IsVsyncEnabled()) {
+      display.Notify();
+    }
+  });
+#endif
+}
+
+void nsWindow::WaylandStopVsync() {
+#ifdef MOZ_WAYLAND
+  if (mWaylandVsyncSource) {
+    // The widget is going to be hidden, so clear the surface of our
+    // vsync source.
+    WaylandVsyncSource::WaylandDisplay& display =
+        static_cast<WaylandVsyncSource::WaylandDisplay&>(
+            mWaylandVsyncSource->GetGlobalDisplay());
+    display.DisableMonitor();
+  }
+#endif
+}
+
 void nsWindow::NativeShow(bool aAction) {
   if (aAction) {
     // unset our flag now that our window has been shown
@@ -4433,6 +4500,9 @@ void nsWindow::NativeShow(bool aAction) {
         }
       }
       gtk_widget_show(mShell);
+      if (!mIsX11Display) {
+        WaylandStartVsync();
+      }
     } else if (mContainer) {
       gtk_widget_show(GTK_WIDGET(mContainer));
     } else if (mGdkWindow) {
@@ -4440,6 +4510,7 @@ void nsWindow::NativeShow(bool aAction) {
     }
   } else {
     if (!mIsX11Display) {
+      WaylandStopVsync();
       if (IsWaylandPopup() && IsMainMenuWindow()) {
         CleanupWaylandPopups();
       }
@@ -5316,6 +5387,16 @@ already_AddRefed<nsIScreen> nsWindow::GetWidgetScreen() {
   screenManager->ScreenForRect(deskBounds.x, deskBounds.y, deskBounds.width,
                                deskBounds.height, getter_AddRefs(screen));
   return screen.forget();
+}
+
+RefPtr<VsyncSource> nsWindow::GetVsyncSource() {
+#ifdef MOZ_WAYLAND
+  if (mWaylandVsyncSource) {
+    return mWaylandVsyncSource;
+  }
+#endif
+
+  return nullptr;
 }
 
 static bool IsFullscreenSupported(GtkWidget* aShell) {
@@ -6310,7 +6391,8 @@ static void drag_data_received_event_cb(GtkWidget* aWidget,
 static nsresult initialize_prefs(void) {
   gRaiseWindows =
       Preferences::GetBool("mozilla.widget.raise-on-setfocus", true);
-
+  gUseWaylandVsync =
+      Preferences::GetBool("widget.wayland_vsync.enabled", false);
   return NS_OK;
 }
 
@@ -7250,9 +7332,14 @@ void nsWindow::GetCompositorWidgetInitData(
 
 #ifdef MOZ_WAYLAND
 wl_surface* nsWindow::GetWaylandSurface() {
-  if (mContainer)
-    return moz_container_get_wl_surface(MOZ_CONTAINER(mContainer),
-                                        GdkScaleFactor());
+  if (mContainer) {
+    struct wl_surface* surface = moz_container_get_wl_surface(
+        MOZ_CONTAINER(mContainer));
+    if (surface != NULL) {
+      wl_surface_set_buffer_scale(surface, GdkScaleFactor());
+    }
+    return surface;
+  }
 
   NS_WARNING(
       "nsWindow::GetWaylandSurfaces(): We don't have any mContainer for "

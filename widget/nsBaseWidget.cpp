@@ -1180,7 +1180,9 @@ void nsBaseWidget::CreateCompositorVsyncDispatcher() {
           MakeUnique<Mutex>("mCompositorVsyncDispatcherLock");
     }
     MutexAutoLock lock(*mCompositorVsyncDispatcherLock.get());
-    mCompositorVsyncDispatcher = new CompositorVsyncDispatcher();
+    if (!mCompositorVsyncDispatcher) {
+      mCompositorVsyncDispatcher = new CompositorVsyncDispatcher();
+    }
   }
 }
 
