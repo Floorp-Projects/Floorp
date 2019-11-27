@@ -602,6 +602,38 @@ security:
       - 'geckoview'
     record_in_processes:
       - main
+  intermediate_preloading_num_preloaded:
+    bug_numbers:
+      - 1519273
+      - 1553550
+    description: >
+      Number of intermediate certificates pre-loaded.
+    expires: "80"
+    kind: uint
+    notification_emails:
+      - seceng-telemetry@mozilla.com
+      - jjones@mozilla.com
+      - dkeeler@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  intermediate_preloading_num_pending:
+    bug_numbers:
+      - 1519273
+      - 1553550
+    description: >
+      Number of intermediate certificates pending pre-load.
+    expires: "80"
+    kind: uint
+    notification_emails:
+      - seceng-telemetry@mozilla.com
+      - jjones@mozilla.com
+      - dkeeler@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
   client_cert:
     bug_numbers:
       - 1255120
