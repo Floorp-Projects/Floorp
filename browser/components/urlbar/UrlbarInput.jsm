@@ -87,7 +87,7 @@ class UrlbarInput {
     if (this.megabar) {
       this.textbox.classList.add("megabar");
       this.textbox.parentNode.classList.add("megabar");
-      this.searchButton = UrlbarPrefs.get("update1.searchButton");
+      this.searchButton = UrlbarPrefs.get("update2.searchButton");
       if (this.searchButton) {
         this.textbox.classList.add("searchButton");
       }

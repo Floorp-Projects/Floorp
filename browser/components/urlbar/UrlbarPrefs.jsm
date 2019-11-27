@@ -150,11 +150,11 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether the quantum bar displays design update 1.
   ["update1", false],
 
-  // Whether the urlbar displays a permanent search button in design update 1.
-  ["update1.searchButton", false],
-
   // If true, we strip https:// instead of http:// from URLs in the results view.
   ["update1.view.stripHttps", false],
+
+  // Whether the urlbar displays a permanent search button in design update 2.
+  ["update2.searchButton", false],
 ]);
 const PREF_OTHER_DEFAULTS = new Map([
   ["keyword.enabled", true],
