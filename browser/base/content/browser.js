@@ -5212,6 +5212,8 @@ var XULBrowserWindow = {
       return true;
     }
 
+    dump("shouldLoadURI: " + aURI.spec + "\n");
+
     let browser = aDocShell
       .QueryInterface(Ci.nsIDocShellTreeItem)
       .sameTypeRootTreeItem.QueryInterface(Ci.nsIDocShell).chromeEventHandler;
