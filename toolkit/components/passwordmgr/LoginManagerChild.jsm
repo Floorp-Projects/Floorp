@@ -2256,10 +2256,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       usernameField = aField;
     }
 
-    let form = LoginFormFactory.createFromField(aField);
-
     return {
-      formActionOrigin: LoginHelper.getFormActionOrigin(form),
       usernameField: {
         found: !!usernameField,
         disabled:
