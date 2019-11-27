@@ -36,6 +36,7 @@ from mozbuild.frontend.data import (
     IPDLCollection,
     LocalizedPreprocessedFiles,
     LocalizedFiles,
+    SandboxedWasmLibrary,
     SharedLibrary,
     StaticLibrary,
     UnifiedSources,
@@ -248,7 +249,8 @@ class CommonBackend(BuildBackend):
                     no_pgo_objs.append(o)
 
         def expand(lib, recurse_objs, system_libs):
-            if isinstance(lib, (HostLibrary, StaticLibrary)):
+            if isinstance(lib, (HostLibrary, StaticLibrary,
+                                SandboxedWasmLibrary)):
                 if lib.no_expand_lib:
                     static_libs.append(lib)
                     recurse_objs = False
@@ -271,9 +273,11 @@ class CommonBackend(BuildBackend):
 
         add_objs(input_bin)
 
-        system_libs = not isinstance(input_bin, (HostLibrary, StaticLibrary))
+        system_libs = not isinstance(input_bin, (HostLibrary, StaticLibrary,
+                                                 SandboxedWasmLibrary))
         for lib in input_bin.linked_libraries:
-            if isinstance(lib, (HostLibrary, StaticLibrary)):
+            if isinstance(lib, (HostLibrary, StaticLibrary,
+                                SandboxedWasmLibrary)):
                 expand(lib, True, system_libs)
             elif isinstance(lib, SharedLibrary):
                 if lib not in seen_libs:

@@ -42,6 +42,7 @@ from mozbuild.frontend.data import (
     TestManifest,
     UnifiedSources,
     VariablePassthru,
+    WasmSources,
 )
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import (
@@ -79,6 +80,8 @@ class TestEmitterBasic(unittest.TestCase):
             VISIBILITY_FLAGS=['-include',
                               '$(topsrcdir)/config/gcc_hidden.h'],
             OBJ_SUFFIX='obj',
+            WASM_OBJ_SUFFIX='wasm',
+            WASM_CFLAGS=['-foo'],
         )
         if extra_substs:
             substs.update(extra_substs)
@@ -1334,6 +1337,41 @@ class TestEmitterBasic(unittest.TestCase):
                                                            reader.config.substs['OBJ_SUFFIX'])),
                               linkable.objs)
 
+    def test_wasm_sources(self):
+        """Test that HOST_SOURCES works properly."""
+        reader = self.reader('wasm-sources')
+        objs = list(self.read_topsrcdir(reader))
+
+        # The second to last object is a linkable.
+        linkable = objs[-2]
+        # Other than that, we only care about the WasmSources objects.
+        objs = objs[:2]
+        for o in objs:
+            self.assertIsInstance(o, WasmSources)
+
+        suffix_map = {obj.canonical_suffix: obj for obj in objs}
+        self.assertEqual(len(suffix_map), 2)
+
+        expected = {
+            '.cpp': ['a.cpp', 'b.cc', 'c.cxx'],
+            '.c': ['d.c'],
+        }
+        for suffix, files in expected.items():
+            sources = suffix_map[suffix]
+            self.assertEqual(
+                sources.files,
+                [mozpath.join(reader.config.topsrcdir, f) for f in files] +
+                ([mozpath.join(
+                    reader.config.topsrcdir,
+                    'third_party/rust/rlbox_lucet_sandbox/c_src/lucet_sandbox_wrapper.c')]
+                 if suffix == '.c' else []))
+            for f in files:
+                self.assertIn(mozpath.join(
+                    reader.config.topobjdir,
+                    '%s.%s' % (mozpath.splitext(f)[0],
+                               reader.config.substs['WASM_OBJ_SUFFIX'])),
+                              linkable.objs)
+
     def test_unified_sources(self):
         """Test that UNIFIED_SOURCES works properly."""
         reader = self.reader('unified-sources')
@@ -1678,6 +1716,17 @@ class TestEmitterBasic(unittest.TestCase):
             'Objdir file specified in SYMBOLS_FILE not in GENERATED_FILES:'
         ):
             self.read_topsrcdir(reader)
+
+    def test_wasm_compile_flags(self):
+        reader = self.reader('wasm-compile-flags')
+        flags = list(self.read_topsrcdir(reader))[2]
+        self.assertIsInstance(flags, ComputedFlags)
+        self.assertEqual(flags.flags['WASM_CFLAGS'],
+                         reader.config.substs['WASM_CFLAGS'])
+        self.assertEqual(flags.flags['MOZBUILD_WASM_CFLAGS'],
+                         ['-funroll-loops', '-wasm-arg'])
+        self.assertEqual(set(flags.flags['WASM_DEFINES']),
+                         set(['-DFOO', '-DBAZ="abcd"', '-UQUX', '-DBAR=7', '-DVALUE=xyz']))
 
 
 if __name__ == '__main__':
