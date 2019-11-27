@@ -133,7 +133,7 @@ class FileReader final : public DOMEventTargetHelper,
   nsresult GetAsDataURL(Blob* aBlob, const char* aFileData, uint32_t aDataLen,
                         nsAString& aResult);
 
-  nsresult OnLoadEnd(nsresult aStatus);
+  void OnLoadEnd(nsresult aStatus);
 
   void StartProgressEventTimer();
   void ClearProgressEventTimer();
