@@ -367,6 +367,10 @@ add_task(async function test_alt_up() {
   let promise = promiseEvent(searchPopup, "popuphidden");
   EventUtils.synthesizeKey("KEY_Escape");
   await promise;
+  ok(
+    !textbox.selectedButton,
+    "no one-off button should be selected after closing the panel"
+  );
 
   // check that alt+up opens the panel...
   promise = promiseEvent(searchPopup, "popupshown");
