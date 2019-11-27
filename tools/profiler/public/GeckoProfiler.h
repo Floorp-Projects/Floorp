@@ -329,10 +329,14 @@ void profiler_shutdown();
 //                  substring, or
 //              (b) the filter is of the form "pid:<n>" where n is the process
 //                  id of the process that the thread is running in.
+//   "aActiveBrowsingContextID" Browsing Context of the active browser screen's
+//               active tab. It's being used to determine the profiled tab.
+//               It's "0" if we failed to get the ID.
 //   "aDuration" is the duration of entries in the profiler's circular buffer.
 void profiler_start(
     mozilla::PowerOfTwo32 aCapacity, double aInterval, uint32_t aFeatures,
     const char** aFilters, uint32_t aFilterCount,
+    uint64_t aActiveBrowsingContextID,
     const mozilla::Maybe<double>& aDuration = mozilla::Nothing());
 
 // Stop the profiler and discard the profile without saving it. A no-op if the
@@ -347,6 +351,7 @@ void profiler_stop();
 void profiler_ensure_started(
     mozilla::PowerOfTwo32 aCapacity, double aInterval, uint32_t aFeatures,
     const char** aFilters, uint32_t aFilterCount,
+    uint64_t aActiveBrowsingContextID,
     const mozilla::Maybe<double>& aDuration = mozilla::Nothing());
 
 //---------------------------------------------------------------------------
@@ -528,7 +533,8 @@ bool profiler_feature_active(uint32_t aFeature);
 void profiler_get_start_params(
     int* aEntrySize, mozilla::Maybe<double>* aDuration, double* aInterval,
     uint32_t* aFeatures,
-    mozilla::Vector<const char*, 0, mozilla::MallocAllocPolicy>* aFilters);
+    mozilla::Vector<const char*, 0, mozilla::MallocAllocPolicy>* aFilters,
+    uint64_t* aActiveBrowsingContextID);
 
 // The number of milliseconds since the process started. Operates the same
 // whether the profiler is active or inactive.

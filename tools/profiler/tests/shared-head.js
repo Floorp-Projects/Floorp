@@ -24,6 +24,7 @@ function startProfiler(callersSettings) {
     settings.interval,
     settings.features,
     settings.threads,
+    0,
     settings.duration
   );
 }
