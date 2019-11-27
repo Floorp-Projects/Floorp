@@ -111,7 +111,7 @@ add_task(async function test_mpAutocompleteUIBusy() {
   }
   Services.obs.addObserver(dialogObserver, "common-dialog-loaded");
 
-  let results = loginManagerParent.doAutocompleteSearch(arg1);
+  let results = await loginManagerParent.doAutocompleteSearch(arg1);
   is(results.logins.length, 0, "No results since uiBusy is true");
   await close(win);
 
