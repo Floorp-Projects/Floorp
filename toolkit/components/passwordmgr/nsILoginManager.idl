@@ -135,13 +135,13 @@ interface nsILoginManager : nsISupports {
    * Search for logins matching the specified criteria. Called when looking
    * for logins that might be applicable to a form or authentication request.
    *
-   * @param aHostname
+   * @param aOrigin
    *        The origin to restrict searches to. For example: "http://www.site.com".
    *        To find logins for a given nsIURI, you would typically pass in
    *        its prePath (excluding userPass).
-   * @param aActionURL
+   * @param aActionOrigin
    *        For form logins, this argument should be the origin to which the
-   *        form will be submitted, not the whole URL (despite the name).
+   *        form will be submitted, not the whole URL.
    *        For HTTP auth. logins, specify null.
    *        An empty string ("") will match any value (except null).
    * @param aHttpRealm
@@ -152,7 +152,7 @@ interface nsILoginManager : nsISupports {
    *        An empty string ("") will match any value (except null).
    * @return An array of nsILoginInfo objects.
    */
-  Array<nsILoginInfo> findLogins(in AString aHostname, in AString aActionURL,
+  Array<nsILoginInfo> findLogins(in AString aOrigin, in AString aActionOrigin,
 				 in AString aHttpRealm);
 
   /**
@@ -162,11 +162,11 @@ interface nsILoginManager : nsISupports {
    * check for logins without causing the user to be prompted for a master
    * password to decrypt the logins.
    *
-   * @param aHostname
+   * @param aOrigin
    *        The origin to restrict searches to. Specify an empty string
    *        to match all origins. A null value will not match any logins, and
    *        will thus always return a count of 0.
-   * @param aActionURL
+   * @param aActionOrigin
    *        The origin to which a form login will be submitted. To match any
    *        form login, specify an empty string. To not match any form
    *        login, specify null.
@@ -175,7 +175,7 @@ interface nsILoginManager : nsISupports {
    *        any realm, specify an empty string. To not match logins for any
    *        realm, specify null.
    */
-  unsigned long countLogins(in AString aHostname, in AString aActionURL,
+  unsigned long countLogins(in AString aOrigin, in AString aActionOrigin,
                             in AString aHttpRealm);
 
   /**
