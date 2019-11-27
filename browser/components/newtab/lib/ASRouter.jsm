@@ -1998,6 +1998,52 @@ class _ASRouter {
     }
   }
 
+  /**
+   * sendAsyncMessageToPreloaded - Sends an action to each preloaded browser, if any
+   *
+   * @param  {obj} action An action to be sent to content
+   */
+  sendAsyncMessageToPreloaded(action) {
+    const preloadedBrowsers = this.getPreloadedBrowser();
+    if (preloadedBrowsers) {
+      for (let preloadedBrowser of preloadedBrowsers) {
+        try {
+          preloadedBrowser.sendAsyncMessage(OUTGOING_MESSAGE_NAME, action);
+        } catch (e) {
+          // The preloaded page is no longer available, so just ignore.
+        }
+      }
+    }
+  }
+
+  /**
+   * getPreloadedBrowser - Retrieve the port of any preloaded browsers
+   *
+   * @return {Array|null} An array of ports belonging to the preloaded browsers, or null
+   *                      if there aren't any preloaded browsers
+   */
+  getPreloadedBrowser() {
+    let preloadedPorts = [];
+    for (let port of this.messageChannel.messagePorts) {
+      if (this.isPreloadedBrowser(port.browser)) {
+        preloadedPorts.push(port);
+      }
+    }
+    return preloadedPorts.length ? preloadedPorts : null;
+  }
+
+  /**
+   * isPreloadedBrowser - Returns true if the passed browser has been preloaded
+   *                      for faster rendering of new tabs.
+   *
+   * @param {<browser>} A <browser> to check.
+   * @return {boolean} True if the browser is preloaded.
+   *                   False if there aren't any preloaded browsers
+   */
+  isPreloadedBrowser(browser) {
+    return browser.getAttribute("preloadedState") === "preloaded";
+  }
+
   dispatch(action, target) {
     this.onMessage({ data: action, target });
   }
@@ -2098,10 +2144,19 @@ class _ASRouter {
         if (action.data.preventDismiss) {
           break;
         }
-        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
+
+        const outgoingMessage = {
           type: "CLEAR_MESSAGE",
           data: { id: action.data.id },
-        });
+        };
+        if (action.data.preloadedOnly) {
+          this.sendAsyncMessageToPreloaded(outgoingMessage);
+        } else {
+          this.messageChannel.sendAsyncMessage(
+            OUTGOING_MESSAGE_NAME,
+            outgoingMessage
+          );
+        }
         break;
       case "DISMISS_MESSAGE_BY_ID":
         this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
