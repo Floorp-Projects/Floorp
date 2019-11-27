@@ -13092,6 +13092,27 @@ void CodeGenerator::visitIsNullOrUndefined(LIsNullOrUndefined* ins) {
   }
 }
 
+void CodeGenerator::visitIsNullOrUndefinedAndBranch(
+    LIsNullOrUndefinedAndBranch* ins) {
+  MDefinition* input = ins->isNullOrUndefinedMir()->value();
+  Label* ifTrue = getJumpLabelForBranch(ins->ifTrue());
+  Label* ifFalse = getJumpLabelForBranch(ins->ifFalse());
+  ValueOperand value = ToValue(ins, LIsNullOrUndefinedAndBranch::Input);
+
+  ScratchTagScope tag(masm, value);
+  masm.splitTagForTest(value, tag);
+
+  if (input->mightBeType(MIRType::Null)) {
+    masm.branchTestNull(Assembler::Equal, tag, ifTrue);
+  }
+  if (input->mightBeType(MIRType::Undefined)) {
+    masm.branchTestUndefined(Assembler::Equal, tag, ifTrue);
+  }
+  if (!isNextBlock(ins->ifFalse()->lir())) {
+    masm.jump(ifFalse);
+  }
+}
+
 void CodeGenerator::loadOutermostJSScript(Register reg) {
   // The "outermost" JSScript means the script that we are compiling
   // basically; this is not always the script associated with the
