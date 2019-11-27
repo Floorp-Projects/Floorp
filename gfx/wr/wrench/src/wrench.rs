@@ -10,7 +10,6 @@ use dwrote;
 #[cfg(all(unix, not(target_os = "android")))]
 use font_loader::system_fonts;
 use winit::EventsLoopProxy;
-use crate::json_frame_writer::JsonFrameWriter;
 use crate::ron_frame_writer::RonFrameWriter;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -41,7 +40,6 @@ pub enum FontDescriptor {
 
 pub enum SaveType {
     Yaml,
-    Json,
     Ron,
     Binary,
 }
@@ -191,8 +189,6 @@ impl Wrench {
             SaveType::Yaml => Box::new(
                 YamlFrameWriterReceiver::new(&PathBuf::from("yaml_frames")),
             ) as Box<dyn webrender::ApiRecordingReceiver>,
-            SaveType::Json => Box::new(JsonFrameWriter::new(&PathBuf::from("json_frames"))) as
-                Box<dyn webrender::ApiRecordingReceiver>,
             SaveType::Ron => Box::new(RonFrameWriter::new(&PathBuf::from("ron_frames"))) as
                 Box<dyn webrender::ApiRecordingReceiver>,
             SaveType::Binary => Box::new(webrender::BinaryRecorder::new(
