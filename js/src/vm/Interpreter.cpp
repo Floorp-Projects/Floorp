@@ -3795,7 +3795,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(JSOP_NEWARRAY_COPYONWRITE)
 
-    CASE(JSOP_NEWOBJECT) {
+    CASE(JSOP_NEWOBJECT)
+    CASE(JSOP_NEWOBJECT_WITHGROUP) {
       JSObject* obj = NewObjectOperation(cx, script, REGS.pc);
       if (!obj) {
         goto error;
@@ -5195,9 +5196,29 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
                                  jsbytecode* pc,
                                  NewObjectKind newKind /* = GenericObject */) {
   MOZ_ASSERT(newKind != SingletonObject);
+  bool withTemplate =
+      (*pc == JSOP_NEWOBJECT || *pc == JSOP_NEWOBJECT_WITHGROUP);
+  bool withTemplateGroup = (*pc == JSOP_NEWOBJECT_WITHGROUP);
 
   RootedObjectGroup group(cx);
-  if (ObjectGroup::useSingletonForAllocationSite(script, pc, JSProto_Object)) {
+  RootedPlainObject baseObject(cx);
+
+  // Extract the template object, if one exists.
+  if (withTemplate) {
+    baseObject = &script->getObject(pc)->as<PlainObject>();
+  }
+
+  // Choose the group. Three cases:
+  // - JSOP_NEWOBJECT_WITHGROUP explicitly indicates that we should use the
+  //   same group as the template object's group.
+  // - otherwise, if some heuristics indicate that we should use a singleton,
+  //   we set the allocation-kind to ensure this.
+  // - otherwise, we look up a group based on the allocation site, i.e., the
+  //   (script, pc) tuple.
+  if (withTemplateGroup) {
+    group = baseObject->getGroup(cx, baseObject);
+  } else if (ObjectGroup::useSingletonForAllocationSite(script, pc,
+                                                        JSProto_Object)) {
     newKind = SingletonObject;
   } else {
     group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Object);
@@ -5220,8 +5241,8 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
 
   RootedPlainObject obj(cx);
 
-  if (*pc == JSOP_NEWOBJECT) {
-    RootedPlainObject baseObject(cx, &script->getObject(pc)->as<PlainObject>());
+  // Actually allocate the object.
+  if (withTemplate) {
     obj = CopyInitializerObject(cx, baseObject, newKind);
   } else {
     MOZ_ASSERT(*pc == JSOP_NEWINIT);
@@ -5237,10 +5258,12 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
   } else {
     obj->setGroup(group);
 
-    AutoSweepObjectGroup sweep(group);
-    if (PreliminaryObjectArray* preliminaryObjects =
-            group->maybePreliminaryObjects(sweep)) {
-      preliminaryObjects->registerNewObject(obj);
+    if (!IsInsideNursery(obj)) {
+      AutoSweepObjectGroup sweep(group);
+      if (PreliminaryObjectArray* preliminaryObjects =
+              group->maybePreliminaryObjects(sweep)) {
+        preliminaryObjects->registerNewObject(obj);
+      }
     }
   }
 

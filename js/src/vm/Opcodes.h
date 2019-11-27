@@ -901,7 +901,10 @@
      * Pushes newly created object onto the stack.
      *
      * This opcode takes an object with the final shape, which can be set at
-     * the start and slots then filled in directly.
+     * the start and slots then filled in directly. We compute a group based on
+     * allocation site (or new group if the template's group is a singleton);
+     * see JSOP_NEWOBJECT_WITHGROUP for a variant that uses the same group as
+     * the template object.
      *
      *   Category: Literals
      *   Type: Object
@@ -2537,7 +2540,21 @@
      *   Operands: int32_t offset
      *   Stack: cond => cond
      */ \
-    MACRO(JSOP_COALESCE, 241, "coalesce", NULL, 5, 1, 1, JOF_JUMP|JOF_DETECTING)
+    MACRO(JSOP_COALESCE, 241, "coalesce", NULL, 5, 1, 1, JOF_JUMP|JOF_DETECTING) \
+    /*
+     * Pushes newly created object onto the stack.
+     *
+     * This opcode takes an object with the final shape, which can be set at
+     * the start and slots then filled in directly. Uses the group from the
+     * template object; see JSOP_NEWOBJECT for a variant with different
+     * heuristics.
+     *
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t baseobjIndex
+     *   Stack: => obj
+     */ \
+    MACRO(JSOP_NEWOBJECT_WITHGROUP, 242, "newobjectwithgroup", NULL, 5, 0, 1, JOF_OBJECT|JOF_IC)
 
 // clang-format on
 
@@ -2546,7 +2563,6 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  MACRO(242)                                   \
   MACRO(243)                                   \
   MACRO(244)                                   \
   MACRO(245)                                   \

@@ -324,6 +324,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
         break;
       }
       case JSOP_NEWOBJECT:
+      case JSOP_NEWOBJECT_WITHGROUP:
       case JSOP_NEWINIT: {
         ICStub* stub = alloc.newStub<ICNewObject_Fallback>(Kind::NewObject);
         if (!addIC(loc, stub)) {
