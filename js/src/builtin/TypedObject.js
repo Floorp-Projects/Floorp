@@ -47,9 +47,6 @@ function TypedObjectGet(descr, typedObj, offset) {
   assert(IsObject(descr) && ObjectIsTypeDescr(descr),
          "get() called with bad type descr");
 
-  if (!TypedObjectIsAttached(typedObj))
-    ThrowTypeError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
-
   switch (DESCR_KIND(descr)) {
   case JS_TYPEREPR_SCALAR_KIND:
     return TypedObjectGetScalar(descr, typedObj, offset);
@@ -157,9 +154,6 @@ function TypedObjectGetReference(descr, typedObj, offset) {
 // it to `descr` as needed. This is the most general entry point
 // and works for any type.
 function TypedObjectSet(descr, typedObj, offset, name, fromValue) {
-  if (!TypedObjectIsAttached(typedObj))
-    ThrowTypeError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
-
   switch (DESCR_KIND(descr)) {
   case JS_TYPEREPR_SCALAR_KIND:
     TypedObjectSetScalar(descr, typedObj, offset, fromValue);
@@ -310,9 +304,6 @@ function ConvertAndCopyTo(destDescr,
   assert(IsObject(destTypedObj) && ObjectIsTypedObject(destTypedObj),
          "ConvertAndCopyTo: not type typedObj");
 
-  if (!TypedObjectIsAttached(destTypedObj))
-    ThrowTypeError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
-
   TypedObjectSet(destDescr, destTypedObj, destOffset, fieldName, fromValue);
 }
 
@@ -324,9 +315,6 @@ function Reify(sourceDescr,
          "Reify: not type obj");
   assert(IsObject(sourceTypedObj) && ObjectIsTypedObject(sourceTypedObj),
          "Reify: not type typedObj");
-
-  if (!TypedObjectIsAttached(sourceTypedObj))
-    ThrowTypeError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
 
   return TypedObjectGet(sourceDescr, sourceTypedObj, sourceOffset);
 }
