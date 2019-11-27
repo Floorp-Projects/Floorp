@@ -977,15 +977,6 @@ class UrlbarInput {
     ) {
       return;
     }
-    // The user is copying less than the entire string, provided the view is
-    // not open, otherwise it may be the autofill selection
-    if (
-      this.selectionStart != this.selectionEnd &&
-      !(this.selectionStart == 0 && this.selectionEnd == this.value.length) &&
-      !this.view.isOpen
-    ) {
-      return;
-    }
     // The Urlbar is unfocused and the view is closed
     if (this.getAttribute("focused") != "true" && !this.view.isOpen) {
       return;
