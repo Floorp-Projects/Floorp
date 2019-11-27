@@ -13248,19 +13248,17 @@ static bool IsInActiveTab(Document* aDoc) {
   return activeWindow == rootWin;
 }
 
-nsresult Document::RemoteFrameFullscreenChanged(Element* aFrameElement) {
+void Document::RemoteFrameFullscreenChanged(Element* aFrameElement) {
   // Ensure the frame element is the fullscreen element in this document.
   // If the frame element is already the fullscreen element in this document,
   // this has no effect.
   auto request = FullscreenRequest::CreateForRemote(aFrameElement);
   RequestFullscreen(std::move(request), XRE_IsContentProcess());
-  return NS_OK;
 }
 
-nsresult Document::RemoteFrameFullscreenReverted() {
+void Document::RemoteFrameFullscreenReverted() {
   UniquePtr<FullscreenExit> exit = FullscreenExit::CreateForRemote(this);
   RestorePreviousFullscreenState(std::move(exit));
-  return NS_OK;
 }
 
 /* static */
