@@ -404,8 +404,7 @@ DataStorage::Reader::~Reader() {
   {
     MonitorAutoLock readyLock(mDataStorage->mReadyMonitor);
     mDataStorage->mReady = true;
-    nsresult rv = mDataStorage->mReadyMonitor.NotifyAll();
-    Unused << NS_WARN_IF(NS_FAILED(rv));
+    mDataStorage->mReadyMonitor.NotifyAll();
   }
 
   // This is for tests.
