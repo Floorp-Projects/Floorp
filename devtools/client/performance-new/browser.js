@@ -16,7 +16,6 @@
  * @typedef {import("./@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
  * @typedef {import("./@types/perf").RestartBrowserWithEnvironmentVariable} RestartBrowserWithEnvironmentVariable
  * @typedef {import("./@types/perf").GetEnvironmentVariable} GetEnvironmentVariable
- * @typedef {import("./@types/perf").GetActiveBrowsingContextID} GetActiveBrowsingContextID
  */
 
 /**
@@ -546,33 +545,6 @@ function openFilePickerForObjdir(window, objdirs, changeObjdirs) {
   });
 }
 
-/**
- * Gets the ID of active BrowsingContext from the browser.
- *
- * @type {GetActiveBrowsingContextID}
- */
-function getActiveBrowsingContextID() {
-  const { Services } = lazyServices();
-  const win = Services.wm.getMostRecentWindow("navigator:browser");
-
-  if (
-    win &&
-    win.gBrowser &&
-    win.gBrowser.selectedBrowser &&
-    win.gBrowser.selectedBrowser.browsingContext &&
-    win.gBrowser.selectedBrowser.browsingContext.id
-  ) {
-    return win.gBrowser.selectedBrowser.browsingContext.id;
-  }
-
-  console.error(
-    "Failed to get the active BrowsingContext ID while starting the profiler."
-  );
-  // `0` mean that we failed to ge the active BrowsingContext ID, and it's
-  // treated as null value in the platform.
-  return 0;
-}
-
 module.exports = {
   receiveProfile,
   getRecordingPreferencesFromDebuggee,
@@ -581,5 +553,4 @@ module.exports = {
   restartBrowserWithEnvironmentVariable,
   getEnvironmentVariable,
   openFilePickerForObjdir,
-  getActiveBrowsingContextID,
 };

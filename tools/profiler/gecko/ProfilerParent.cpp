@@ -131,9 +131,8 @@ void ProfilerParent::Init() {
   double interval = 0;
   mozilla::Vector<const char*> filters;
   uint32_t features;
-  uint64_t activeBrowsingContextID;
-  profiler_get_start_params(&entries, &duration, &interval, &features, &filters,
-                            &activeBrowsingContextID);
+  profiler_get_start_params(&entries, &duration, &interval, &features,
+                            &filters);
 
   if (entries != 0) {
     ProfilerInitParams ipcParams;
@@ -142,7 +141,6 @@ void ProfilerParent::Init() {
     ipcParams.duration() = duration;
     ipcParams.interval() = interval;
     ipcParams.features() = features;
-    ipcParams.activeBrowsingContextID() = activeBrowsingContextID;
 
     for (uint32_t i = 0; i < filters.length(); ++i) {
       ipcParams.filters().AppendElement(filters[i]);
@@ -193,7 +191,6 @@ void ProfilerParent::ProfilerStarted(nsIProfilerStartParams* aParams) {
   aParams->GetInterval(&ipcParams.interval());
   aParams->GetFeatures(&ipcParams.features());
   ipcParams.filters() = aParams->GetFilters();
-  aParams->GetActiveBrowsingContextID(&ipcParams.activeBrowsingContextID());
 
   ProfilerParentTracker::Enumerate([&](ProfilerParent* profilerParent) {
     Unused << profilerParent->SendStart(ipcParams);

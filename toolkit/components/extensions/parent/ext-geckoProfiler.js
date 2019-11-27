@@ -98,7 +98,6 @@ this.geckoProfiler = class extends ExtensionAPI {
               interval,
               features,
               threads,
-              0,
               windowLength
             );
           } else {
@@ -107,7 +106,6 @@ this.geckoProfiler = class extends ExtensionAPI {
               interval,
               features,
               [],
-              0,
               windowLength
             );
           }
