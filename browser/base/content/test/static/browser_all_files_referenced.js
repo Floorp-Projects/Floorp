@@ -191,7 +191,7 @@ var whitelist = [
   // Bug 1337345
   { file: "resource://gre/modules/Manifest.jsm" },
   // Bug 1356045
-  { file: "chrome://global/content/test-ipc.xul" },
+  { file: "chrome://global/content/test-ipc.xhtml" },
   // Bug 1378173 (warning: still used by devtools)
   { file: "resource://gre/modules/Promise.jsm" },
   // Bug 1494170
