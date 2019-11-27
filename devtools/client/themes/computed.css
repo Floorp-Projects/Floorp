@@ -17,6 +17,15 @@
   transform: rotate(-90deg);
 }
 
+#computedview-panel .inspector-tabpanel {
+  min-width: 0;
+}
+
+#computedview-panel #browser-style-checkbox-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 #computed-container {
   overflow: auto;
   height: 100%;
@@ -93,9 +102,6 @@
 }
 
 .computed-property-name {
-  overflow-x: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   outline: 0 !important;
 }
 
@@ -118,9 +124,6 @@
 }
 
 .computed-property-value {
-  overflow-x: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   padding-inline-start: 14px;
   outline: 0 !important;
 }
