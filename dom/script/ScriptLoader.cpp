@@ -50,6 +50,7 @@
 #include "nsICacheInfoChannel.h"
 #include "nsITimedChannel.h"
 #include "nsIScriptElement.h"
+#include "nsISupportsPriority.h"
 #include "nsIDocShell.h"
 #include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
@@ -1369,7 +1370,18 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
 
   nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
   if (cos) {
-    if (aRequest->mScriptFromHead && aRequest->IsBlockingScript()) {
+    if (aRequest->IsLinkPreloadScript()) {
+      // This is <link rel="preload" as="script"> initiated speculative load,
+      // put it to the group that is not blocked by leaders and doesn't block
+      // follower at the same time. Giving it a much higher priority will make
+      // this request be processed ahead of other Unblocked requests, but with
+      // the same weight as Leaders.  This will make us behave similar way for
+      // both http2 and http1.
+      cos->AddClassFlags(nsIClassOfService::Unblocked);
+      if (nsCOMPtr<nsISupportsPriority> sp = do_QueryInterface(channel)) {
+        sp->AdjustPriority(nsISupportsPriority::PRIORITY_HIGHEST);
+      }
+    } else if (aRequest->mScriptFromHead && aRequest->IsBlockingScript()) {
       // synchronous head scripts block loading of most other non js/css
       // content such as images, Leader implicitely disallows tailing
       cos->AddClassFlags(nsIClassOfService::Leader);
@@ -1619,7 +1631,7 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     // It's possible these attributes changed since we started the preload so
     // update them here.
     request->SetScriptMode(aElement->GetScriptDeferred(),
-                           aElement->GetScriptAsync());
+                           aElement->GetScriptAsync(), false);
 
     AccumulateCategorical(LABELS_DOM_SCRIPT_PRELOAD_RESULT::Used);
   } else {
@@ -1646,7 +1658,7 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
                                 ourCORSMode, sriMetadata, referrerPolicy);
     request->mIsInline = false;
     request->SetScriptMode(aElement->GetScriptDeferred(),
-                           aElement->GetScriptAsync());
+                           aElement->GetScriptAsync(), false);
     // keep request->mScriptFromHead to false so we don't treat non preloaded
     // scripts as blockers for full page load. See bug 792438.
 
@@ -1795,7 +1807,7 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
   // inline classic scripts ignore both these attributes.
   MOZ_ASSERT(!aElement->GetScriptDeferred());
   MOZ_ASSERT_IF(!request->IsModuleRequest(), !aElement->GetScriptAsync());
-  request->SetScriptMode(false, aElement->GetScriptAsync());
+  request->SetScriptMode(false, aElement->GetScriptAsync(), false);
 
   LOG(("ScriptLoadRequest (%p): Created request for inline script",
        request.get()));
@@ -3724,6 +3736,7 @@ void ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
                               const nsAString& aCrossOrigin,
                               const nsAString& aIntegrity, bool aScriptFromHead,
                               bool aAsync, bool aDefer, bool aNoModule,
+                              bool aLinkPreload,
                               const ReferrerPolicy aReferrerPolicy) {
   NS_ENSURE_TRUE_VOID(mDocument);
   // Check to see if scripts has been turned off.
@@ -3762,7 +3775,7 @@ void ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
       Element::StringToCORSMode(aCrossOrigin), sriMetadata, aReferrerPolicy);
   request->mIsInline = false;
   request->mScriptFromHead = aScriptFromHead;
-  request->SetScriptMode(aDefer, aAsync);
+  request->SetScriptMode(aDefer, aAsync, aLinkPreload);
   request->SetIsPreloadRequest();
 
   if (LOG_ENABLED()) {

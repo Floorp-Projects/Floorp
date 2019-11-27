@@ -978,29 +978,31 @@ void nsHtml5TreeOpExecutor::PreloadScript(
     const nsAString& aURL, const nsAString& aCharset, const nsAString& aType,
     const nsAString& aCrossOrigin, const nsAString& aIntegrity,
     dom::ReferrerPolicy aReferrerPolicy, bool aScriptFromHead, bool aAsync,
-    bool aDefer, bool aNoModule) {
+    bool aDefer, bool aNoModule, bool aLinkPreload) {
   nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYet(aURL);
   if (!uri) {
     return;
   }
   mDocument->ScriptLoader()->PreloadURI(
       uri, aCharset, aType, aCrossOrigin, aIntegrity, aScriptFromHead, aAsync,
-      aDefer, aNoModule, GetPreloadReferrerPolicy(aReferrerPolicy));
+      aDefer, aNoModule, aLinkPreload,
+      GetPreloadReferrerPolicy(aReferrerPolicy));
 }
 
 void nsHtml5TreeOpExecutor::PreloadStyle(const nsAString& aURL,
                                          const nsAString& aCharset,
                                          const nsAString& aCrossOrigin,
                                          const nsAString& aReferrerPolicy,
-                                         const nsAString& aIntegrity) {
+                                         const nsAString& aIntegrity,
+                                         bool aLinkPreload) {
   nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYet(aURL);
   if (!uri) {
     return;
   }
 
   mDocument->PreloadStyle(uri, Encoding::ForLabel(aCharset), aCrossOrigin,
-                          GetPreloadReferrerPolicy(aReferrerPolicy),
-                          aIntegrity);
+                          GetPreloadReferrerPolicy(aReferrerPolicy), aIntegrity,
+                          aLinkPreload);
 }
 
 void nsHtml5TreeOpExecutor::PreloadImage(

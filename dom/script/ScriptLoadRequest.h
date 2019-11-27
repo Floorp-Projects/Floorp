@@ -210,9 +210,19 @@ class ScriptLoadRequest
                          : ScriptText<Utf8Unit>().clearAndFree();
   }
 
-  enum class ScriptMode : uint8_t { eBlocking, eDeferred, eAsync };
+  enum class ScriptMode : uint8_t {
+    eBlocking,
+    eDeferred,
+    eAsync,
+    eLinkPreload  // this is a load initiated by <link rel="preload"
+                  // as="script"> tag
+  };
 
-  void SetScriptMode(bool aDeferAttr, bool aAsyncAttr);
+  void SetScriptMode(bool aDeferAttr, bool aAsyncAttr, bool aLinkPreload);
+
+  bool IsLinkPreloadScript() const {
+    return mScriptMode == ScriptMode::eLinkPreload;
+  }
 
   bool IsBlockingScript() const { return mScriptMode == ScriptMode::eBlocking; }
 

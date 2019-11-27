@@ -1058,9 +1058,9 @@ nsresult Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
   }
 
   nsContentPolicyType contentPolicyType =
-      aIsPreload == IsPreload::Yes
-          ? nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD
-          : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET;
+      aIsPreload == IsPreload::No
+          ? nsIContentPolicy::TYPE_INTERNAL_STYLESHEET
+          : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD;
 
   nsCOMPtr<nsILoadInfo> secCheckLoadInfo = new net::LoadInfo(
       aLoadingPrincipal, aTriggeringPrincipal, aRequestingNode,
@@ -1341,9 +1341,9 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
         nsILoadInfo::SEC_ALLOW_CHROME;
 
     nsContentPolicyType contentPolicyType =
-        aIsPreload == IsPreload::Yes
-            ? nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD
-            : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET;
+        aIsPreload == IsPreload::No
+            ? nsIContentPolicy::TYPE_INTERNAL_STYLESHEET
+            : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD;
 
     // Just load it
     nsCOMPtr<nsIChannel> channel;
@@ -1482,9 +1482,9 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
   securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
 
   nsContentPolicyType contentPolicyType =
-      aIsPreload == IsPreload::Yes
-          ? nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD
-          : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET;
+      aIsPreload == IsPreload::No
+          ? nsIContentPolicy::TYPE_INTERNAL_STYLESHEET
+          : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD;
 
   nsCOMPtr<nsIChannel> channel;
   // Note we are calling NS_NewChannelWithTriggeringPrincipal here with a node
@@ -1527,6 +1527,11 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
   if (!aLoadData.ShouldDefer()) {
     if (nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(channel)) {
       cos->AddClassFlags(nsIClassOfService::Leader);
+    }
+    if (aIsPreload == IsPreload::FromLink) {
+      if (nsCOMPtr<nsISupportsPriority> sp = do_QueryInterface(channel)) {
+        sp->AdjustPriority(nsISupportsPriority::PRIORITY_HIGHEST);
+      }
     }
   }
 
