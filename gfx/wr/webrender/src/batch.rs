@@ -11,7 +11,7 @@ use crate::composite::{CompositeState, CompositeTile, CompositeTileSurface};
 use crate::glyph_rasterizer::GlyphFormat;
 use crate::gpu_cache::{GpuBlockData, GpuCache, GpuCacheHandle, GpuCacheAddress};
 use crate::gpu_types::{BrushFlags, BrushInstance, PrimitiveHeaders, ZBufferId, ZBufferIdGenerator};
-use crate::gpu_types::{ClipMaskInstance, SplitCompositeInstance, BrushShaderKind};
+use crate::gpu_types::{ClipMaskInstance, SplitCompositeInstance};
 use crate::gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance};
 use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
 use crate::internal_types::{FastHashMap, SavedTargetIndex, Swizzle, TextureSource, Filter};
@@ -68,22 +68,6 @@ pub enum BatchKind {
     SplitComposite,
     TextRun(GlyphFormat),
     Brush(BrushBatchKind),
-}
-
-impl BatchKind {
-    fn shader_kind(&self) -> BrushShaderKind {
-        match self {
-            BatchKind::Brush(BrushBatchKind::Solid) => BrushShaderKind::Solid,
-            BatchKind::Brush(BrushBatchKind::Image(..)) => BrushShaderKind::Image,
-            BatchKind::Brush(BrushBatchKind::LinearGradient) => BrushShaderKind::LinearGradient,
-            BatchKind::Brush(BrushBatchKind::RadialGradient) => BrushShaderKind::RadialGradient,
-            BatchKind::Brush(BrushBatchKind::Blend) => BrushShaderKind::Blend,
-            BatchKind::Brush(BrushBatchKind::MixBlend { .. }) => BrushShaderKind::MixBlend,
-            BatchKind::Brush(BrushBatchKind::YuvImage(..)) => BrushShaderKind::Yuv,
-            BatchKind::TextRun(..) => BrushShaderKind::Text,
-            _ => BrushShaderKind::None,
-        }
-    }
 }
 
 /// Optional textures that can be used as a source in the shaders.
@@ -591,7 +575,7 @@ impl BatchBuilder {
         clip_task_address: RenderTaskAddress,
         brush_flags: BrushFlags,
         prim_header_index: PrimitiveHeaderIndex,
-        resource_address: i32,
+        user_data: i32,
         prim_vis_mask: PrimitiveVisibilityMask,
     ) {
         for batcher in &mut self.batchers {
@@ -605,8 +589,7 @@ impl BatchBuilder {
                     render_task_address,
                     brush_flags,
                     prim_header_index,
-                    resource_address,
-                    brush_kind: batch_key.kind.shader_kind(),
+                    user_data,
                 };
 
                 batcher.push_single_instance(

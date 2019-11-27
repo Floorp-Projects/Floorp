@@ -34,7 +34,7 @@ use std::{
     time::Duration,
 };
 use webrender_build::shader::ProgramSourceDigest;
-use webrender_build::shader::{ShaderSourceParser, shader_source_from_file};
+use webrender_build::shader::{parse_shader_source, shader_source_from_file};
 
 /// Sequence number for frames, as tracked by the device layer.
 #[derive(Debug, Copy, Clone, PartialEq, Ord, Eq, PartialOrd)]
@@ -288,11 +288,7 @@ fn build_shader_main_string<F: FnMut(&str)>(
     output: &mut F,
 ) {
     let shared_source = get_shader_source(base_filename, override_path);
-    ShaderSourceParser::new().parse(
-        shared_source,
-        &|f| get_shader_source(f, override_path),
-        output
-    );
+    parse_shader_source(shared_source, &|f| get_shader_source(f, override_path), output);
 }
 
 pub trait FileWatcherHandler: Send {
