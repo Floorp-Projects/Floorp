@@ -384,6 +384,13 @@ this.LoginManagerStorage_json.prototype = {
     return result;
   },
 
+  async searchLoginsAsync(matchData) {
+    this.log("searchLoginsAsync:", matchData);
+    let result = this.searchLogins(LoginHelper.newPropertyBag(matchData));
+    // Emulate being async:
+    return Promise.resolve(result);
+  },
+
   /**
    * Public wrapper around _searchLogins to convert the nsIPropertyBag to a
    * JavaScript object and decrypt the results.
