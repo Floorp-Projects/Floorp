@@ -5,8 +5,6 @@
 #[macro_use]
 extern crate clap;
 #[macro_use]
-extern crate lazy_static;
-#[macro_use]
 extern crate log;
 #[macro_use]
 extern crate serde;
@@ -56,9 +54,7 @@ use winit::VirtualKeyCode;
 use crate::wrench::{Wrench, WrenchThing};
 use crate::yaml_frame_reader::YamlFrameReader;
 
-lazy_static! {
-    static ref PLATFORM_DEFAULT_FACE_NAME: String = String::from("Arial");
-}
+pub const PLATFORM_DEFAULT_FACE_NAME: &str = "Arial";
 
 pub static mut CURRENT_FRAME_NUMBER: u32 = 0;
 

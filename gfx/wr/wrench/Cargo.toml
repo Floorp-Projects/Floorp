@@ -16,7 +16,6 @@ gleam = "0.6.2"
 glutin = "0.21"
 app_units = "0.7"
 clap = { version = "2", features = ["yaml"] }
-lazy_static = "1"
 log = "0.4"
 yaml-rust = "0.4"
 serde_json = "1.0"
