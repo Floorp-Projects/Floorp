@@ -115,12 +115,6 @@ void multi_brush_vs(
 
 #define INVALID_SEGMENT_INDEX                   0xffff
 
-#ifndef WR_FEATURE_MULTI_BRUSH
-int vecs_per_brush(int brush_kind) {
-    return VECS_PER_SPECIFIC_BRUSH;
-}
-#endif
-
 void main(void) {
     // Load the brush instance from vertex attributes.
     Instance instance = decode_instance_attributes();
@@ -135,8 +129,18 @@ void main(void) {
         segment_rect = ph.local_rect;
         segment_data = vec4(0.0);
     } else {
+        // This contraption is needed by the Mac GLSL compiler which falls
+        // over (generating garbage values) if:
+        // - we use a variable insead of the ACTUAL_VECS_PER_BRUSH define,
+        // - this compile time condition is done inside of vecs_per_brush.
+        #ifdef WR_FEATURE_MULTI_BRUSH
+        #define ACTUAL_VECS_PER_BRUSH vecs_per_brush(instance.brush_kind)
+        #else
+        #define ACTUAL_VECS_PER_BRUSH VECS_PER_SPECIFIC_BRUSH
+        #endif
+
         int segment_address = ph.specific_prim_address +
-                              vecs_per_brush(instance.brush_kind) +
+                              ACTUAL_VECS_PER_BRUSH +
                               instance.segment_index * VECS_PER_SEGMENT;
 
         vec4[2] segment_info = fetch_from_gpu_cache_2(segment_address);
