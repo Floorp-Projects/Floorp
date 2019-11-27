@@ -1,12 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from helpers.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/framework/test/helpers.js",
-  this
-);
-
 // There are shutdown issues for which multiple rejections are left uncaught.
 // See bug 1018184 for resolving these issues.
 const { PromiseTestUtils } = ChromeUtils.import(
@@ -17,19 +11,15 @@ PromiseTestUtils.whitelistRejectionsGlobally(/File closed/);
 // On debug test slave, it takes about 50s to run the test.
 requestLongerTimeout(4);
 
-// Test that DevTools panels are rendered in "rtl" (right-to-left) in the Browser Toolbox.
 add_task(async function() {
-  await pushPref("intl.uidirection", 1);
-
   const ToolboxTask = await initBrowserToolboxTask();
   await ToolboxTask.importFunctions({});
 
-  const dir = await ToolboxTask.spawn(null, async () => {
+  const hasCloseButton = await ToolboxTask.spawn(null, async () => {
     /* global gToolbox */
-    const inspector = await gToolbox.selectTool("inspector");
-    return inspector.panelDoc.dir;
+    return !!gToolbox.doc.getElementById("toolbox-close");
   });
-  is(dir, "rtl", "Inspector panel has the expected direction");
+  ok(!hasCloseButton, "Browser toolbox doesn't have a close button");
 
   await ToolboxTask.destroy();
 });

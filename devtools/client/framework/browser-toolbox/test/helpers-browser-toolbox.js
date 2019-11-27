@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { BrowserToolboxProcess } = ChromeUtils.import(
-  "resource://devtools/client/framework/ToolboxProcess.jsm"
+const { BrowserToolboxLauncher } = ChromeUtils.import(
+  "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
 );
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
@@ -44,17 +44,17 @@ async function initBrowserToolboxTask({ enableBrowserToolboxFission } = {}) {
   ).PromiseTestUtils.whitelistRejectionsGlobally(/File closed/);
 
   const process = await new Promise(onRun => {
-    BrowserToolboxProcess.init(null, onRun, /* overwritePreferences */ true);
+    BrowserToolboxLauncher.init(null, onRun, /* overwritePreferences */ true);
   });
   ok(true, "Browser toolbox started\n");
   is(
-    BrowserToolboxProcess.getBrowserToolboxSessionState(),
+    BrowserToolboxLauncher.getBrowserToolboxSessionState(),
     true,
     "Has session state"
   );
 
   // The port of the DebuggerServer installed in the toolbox process is fixed.
-  // See toolbox-process-window.js
+  // See browser-toolbox-window.js
   let transport;
   while (true) {
     try {
@@ -115,7 +115,7 @@ async function initBrowserToolboxTask({ enableBrowserToolboxFission } = {}) {
     is(exitCode, 0, "The remote debugger process died cleanly");
 
     is(
-      BrowserToolboxProcess.getBrowserToolboxSessionState(),
+      BrowserToolboxLauncher.getBrowserToolboxSessionState(),
       false,
       "No session state after closing"
     );
