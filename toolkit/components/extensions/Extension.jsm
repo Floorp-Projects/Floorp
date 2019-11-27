@@ -11,7 +11,7 @@ var EXPORTED_SYMBOLS = [
   "ExtensionData",
   "Langpack",
   "Management",
-  "UninstallObserver",
+  "ExtensionAddonObserver",
 ];
 
 /* exported Extension, ExtensionData */
@@ -259,9 +259,11 @@ var UUIDMap = {
   },
 };
 
-// For extensions that have called setUninstallURL(), send an event
-// so the browser can display the URL.
-var UninstallObserver = {
+/**
+ * Observer AddonManager events and translate them into extension events,
+ * as well as handle any last cleanup after uninstalling an extension.
+ */
+var ExtensionAddonObserver = {
   initialized: false,
 
   init() {
@@ -276,6 +278,27 @@ var UninstallObserver = {
     if (this.initialized) {
       AddonManager.removeAddonListener(this);
       this.initialized = false;
+    }
+  },
+
+  onEnabling(addon) {
+    if (addon.type !== "extension") {
+      return;
+    }
+    Management._callHandlers([addon.id], "enabling", "onEnabling");
+  },
+
+  onDisabled(addon) {
+    if (addon.type !== "extension") {
+      return;
+    }
+    if (Services.appinfo.inSafeMode) {
+      // Ensure ExtensionPreferencesManager updates its data and
+      // modules can run any disable logic they need to.  We only
+      // handle safeMode here because there is a bunch of additional
+      // logic that happens in Extension.shutdown when running in
+      // normal mode.
+      Management._callHandlers([addon.id], "disable", "onDisable");
     }
   },
 
@@ -354,7 +377,7 @@ var UninstallObserver = {
   },
 };
 
-UninstallObserver.init();
+ExtensionAddonObserver.init();
 
 const manifestTypes = new Map([
   ["theme", "manifest.ThemeManifest"],

@@ -86,7 +86,7 @@ add_task(async function setup() {
 });
 
 // This test must run before any restart of the addonmanager so the
-// uninstallObserver works.
+// ExtensionAddonObserver works.
 add_task(async function test_permissions_removed() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {

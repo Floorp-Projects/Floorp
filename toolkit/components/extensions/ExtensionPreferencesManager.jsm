@@ -67,14 +67,14 @@ Management.on("uninstall", async (type, { id }) => {
   return this.ExtensionPreferencesManager.removeAll(id);
 });
 
-Management.on("disable", (type, id) => {
-  ExtensionPreferencesManager.disableAll(id);
+Management.on("disable", async (type, id) => {
+  await Management.asyncLoadSettingsModules();
+  return this.ExtensionPreferencesManager.disableAll(id);
 });
 
-Management.on("startup", async (type, extension) => {
-  if (extension.startupReason == "ADDON_ENABLE") {
-    ExtensionPreferencesManager.enableAll(extension.id);
-  }
+Management.on("enabling", async (type, id) => {
+  await Management.asyncLoadSettingsModules();
+  return this.ExtensionPreferencesManager.enableAll(id);
 });
 /* eslint-enable mozilla/balanced-listeners */
 

@@ -241,6 +241,9 @@ let apiManager = new (class extends SchemaAPIManager {
     if (event === "disable") {
       promises.push(...ids.map(id => this.emit("disable", id)));
     }
+    if (event === "enabling") {
+      promises.push(...ids.map(id => this.emit("enabling", id)));
+    }
 
     AsyncShutdown.profileBeforeChange.addBlocker(
       `Extension API ${event} handlers for ${ids.join(",")}`,

@@ -48,7 +48,7 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "UninstallObserver",
+  "ExtensionAddonObserver",
   "resource://gre/modules/Extension.jsm"
 );
 
@@ -956,7 +956,7 @@ var AddonTestUtils = {
     // AddonListeners are removed when the addonManager is shutdown,
     // ensure the Extension observer is added.  We call uninit in
     // promiseShutdown to allow re-initialization.
-    UninstallObserver.init();
+    ExtensionAddonObserver.init();
 
     let XPIScope = ChromeUtils.import(
       "resource://gre/modules/addons/XPIProvider.jsm",
@@ -1055,7 +1055,7 @@ var AddonTestUtils = {
       "resource://gre/modules/Extension.jsm",
       null
     );
-    UninstallObserver.uninit();
+    ExtensionAddonObserver.uninit();
     ChromeUtils.defineModuleGetter(
       ExtensionScope,
       "XPIProvider",

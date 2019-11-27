@@ -5,6 +5,7 @@ const { AddonTestUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProviderExtension: "resource:///modules/UrlbarProviderExtension.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
@@ -21,6 +22,17 @@ AddonTestUtils.createAppInfo(
   "1",
   "42"
 );
+
+function promiseUninstallCompleted(extensionId) {
+  return new Promise(resolve => {
+    // eslint-disable-next-line mozilla/balanced-listeners
+    ExtensionParent.apiManager.on("uninstall-complete", (type, { id }) => {
+      if (id === extensionId) {
+        executeSoon(resolve);
+      }
+    });
+  });
+}
 
 const ORIGINAL_NOTIFICATION_TIMEOUT =
   UrlbarProviderExtension.notificationTimeout;
@@ -1433,7 +1445,9 @@ add_task(async function test_setOpenViewOnFocus() {
     "Successfully enabled the open-view-on-focus mode"
   );
 
+  let completed = promiseUninstallCompleted(ext.id);
   await ext.unload();
+  await completed;
 
   Assert.equal(
     getPrefValue(),
@@ -1471,7 +1485,9 @@ add_task(async function test_engagementTelemetry() {
     "Successfully enabled the engagement telemetry"
   );
 
+  let completed = promiseUninstallCompleted(ext.id);
   await ext.unload();
+  await completed;
 
   Assert.equal(
     getPrefValue(),
