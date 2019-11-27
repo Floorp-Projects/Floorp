@@ -710,23 +710,39 @@ def ensure_subprocess_env(env, encoding='utf-8'):
         encoding (str): Encoding to use when converting to/from bytes/text
                         (default: utf-8).
     """
-    def ensure_bytes(value, encoding='utf-8'):
-        try:
-            return value.encode(encoding)
-        except AttributeError:
-            return value
+    # We can't import six.ensure_binary() or six.ensure_text() because this module
+    # has to run stand-alone.  Instead we'll implement an abbreviated version of the
+    # checks it does.
 
-    def ensure_unicode(value, encoding='utf-8'):
-        try:
-            return value.decode(encoding)
-        except AttributeError:
-            return value
+    if PY3:
+        text_type = str
+        binary_type = bytes
+    else:
+        text_type = unicode
+        binary_type = str
 
-    ensure = ensure_bytes if sys.version_info[0] < 3 else ensure_unicode
+    def ensure_binary(s):
+        if isinstance(s, text_type):
+            return s.encode(encoding, errors='strict')
+        elif isinstance(s, binary_type):
+            return s
+        else:
+            raise TypeError("not expecting type '%s'" % type(s))
+
+    def ensure_text(s):
+        if isinstance(s, binary_type):
+            return s.decode(encoding, errors='strict')
+        elif isinstance(s, text_type):
+            return s
+        else:
+            raise TypeError("not expecting type '%s'" % type(s))
+
+    ensure = ensure_binary if PY2 else ensure_text
+
     try:
-        return {ensure(k, encoding): ensure(v, encoding) for k, v in env.iteritems()}
+        return {ensure(k): ensure(v) for k, v in env.iteritems()}
     except AttributeError:
-        return {ensure(k, encoding): ensure(v, encoding) for k, v in env.items()}
+        return {ensure(k): ensure(v) for k, v in env.items()}
 
 
 if __name__ == '__main__':
