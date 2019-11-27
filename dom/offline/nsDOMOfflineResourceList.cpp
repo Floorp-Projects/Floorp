@@ -131,7 +131,6 @@ nsresult nsDOMOfflineResourceList::Init() {
       NS_ENSURE_SUCCESS(rv, rv);
 
       UpdateAdded(cacheUpdate);
-      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
@@ -709,30 +708,31 @@ nsresult nsDOMOfflineResourceList::GetCacheKey(const nsAString& aURI,
   return GetCacheKey(requestedURI, aKey);
 }
 
-nsresult nsDOMOfflineResourceList::UpdateAdded(nsIOfflineCacheUpdate* aUpdate) {
+void nsDOMOfflineResourceList::UpdateAdded(nsIOfflineCacheUpdate* aUpdate) {
   // Ignore partial updates.
   bool partial;
   nsresult rv = aUpdate->GetPartial(&partial);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  NS_ENSURE_SUCCESS_VOID(rv);
   if (partial) {
-    return NS_OK;
+    return;
   }
 
   nsCOMPtr<nsIURI> updateURI;
   rv = aUpdate->GetManifestURI(getter_AddRefs(updateURI));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   bool equals;
   rv = updateURI->Equals(mManifestURI, &equals);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   if (!equals) {
     // This update doesn't belong to us
-    return NS_OK;
+    return;
   }
 
-  NS_ENSURE_TRUE(!mCacheUpdate, NS_ERROR_FAILURE);
+  if (mCacheUpdate) {
+    return;
+  }
 
   // We don't need to emit signals here.  Updates are either added
   // when they are scheduled (in which case they are always IDLE) or
@@ -741,8 +741,6 @@ nsresult nsDOMOfflineResourceList::UpdateAdded(nsIOfflineCacheUpdate* aUpdate) {
 
   mCacheUpdate = aUpdate;
   mCacheUpdate->AddObserver(this, true);
-
-  return NS_OK;
 }
 
 already_AddRefed<nsIApplicationCacheContainer>
