@@ -47,20 +47,45 @@
 ///
 
 
+// These constants must match the BrushShaderKind enum in gpu_types.rs.
+#define BRUSH_KIND_SOLID            0x1000000
+#define BRUSH_KIND_IMAGE            0x2000000
+#define BRUSH_KIND_TEXT             0x3000000
+#define BRUSH_KIND_LINEAR_GRADIENT  0x4000000
+#define BRUSH_KIND_RADIAL_GRADIENT  0x5000000
+#define BRUSH_KIND_BLEND            0x6000000
+#define BRUSH_KIND_MIX_BLEND        0x7000000
+#define BRUSH_KIND_YV               0x8000000
+
+#ifdef WR_FEATURE_MULTI_BRUSH
+flat varying int v_brush_kind;
+#endif
+
 #ifdef WR_VERTEX_SHADER
 
-void brush_vs(
-    VertexInfo vi,
-    int prim_address,
-    RectWithSize local_rect,
-    RectWithSize segment_rect,
-    ivec4 prim_user_data,
-    int specific_resource_address,
-    mat4 transform,
-    PictureTask pic_task,
-    int brush_flags,
-    vec4 segment_data
+#define FWD_DECLARE_VS_FUNCTION(name)   \
+void name(                              \
+    VertexInfo vi,                      \
+    int prim_address,                   \
+    RectWithSize local_rect,            \
+    RectWithSize segment_rect,          \
+    ivec4 prim_user_data,               \
+    int specific_resource_address,      \
+    mat4 transform,                     \
+    PictureTask pic_task,               \
+    int brush_flags,                    \
+    vec4 segment_data                   \
 );
+
+// Forward-declare all brush vertex entry points.
+FWD_DECLARE_VS_FUNCTION(image_brush_vs)
+FWD_DECLARE_VS_FUNCTION(solid_brush_vs)
+FWD_DECLARE_VS_FUNCTION(blend_brush_vs)
+FWD_DECLARE_VS_FUNCTION(mix_blend_brush_vs)
+FWD_DECLARE_VS_FUNCTION(linear_gradient_brush_vs)
+FWD_DECLARE_VS_FUNCTION(radial_gradient_brush_vs)
+FWD_DECLARE_VS_FUNCTION(yuv_brush_vs)
+
 
 #define VECS_PER_SEGMENT                    2
 
@@ -72,10 +97,11 @@ void brush_vs(
 
 #define INVALID_SEGMENT_INDEX                   0xffff
 
-// These constants must match the BrushShaderKind enum in gpu_types.rs.
-#define BRUSH_KIND_SOLID 0x1000000
-#define BRUSH_KIND_IMAGE 0x2000000
-#define BRUSH_KIND_TEXT  0x4000000
+#ifndef WR_FEATURE_MULTI_BRUSH
+int vecs_per_brush(int brush_kind) {
+    return VECS_PER_SPECIFIC_BRUSH;
+}
+#endif
 
 void main(void) {
     // Load the brush instance from vertex attributes.
@@ -92,7 +118,7 @@ void main(void) {
         segment_data = vec4(0.0);
     } else {
         int segment_address = ph.specific_prim_address +
-                              VECS_PER_SPECIFIC_BRUSH +
+                              vecs_per_brush(instance.brush_kind) +
                               instance.segment_index * VECS_PER_SEGMENT;
 
         vec4[2] segment_info = fetch_from_gpu_cache_2(segment_address);
@@ -157,19 +183,36 @@ void main(void) {
 #endif
 
     // Run the specific brush VS code to write interpolators.
-    brush_vs(
-        vi,
-        ph.specific_prim_address,
-        ph.local_rect,
-        segment_rect,
-        ph.user_data,
-        instance.resource_address,
-        transform.m,
-        pic_task,
-        brush_flags,
-        segment_data
-    );
+
+#define BRUSH_VS_PARAMS vi, ph.specific_prim_address, ph.local_rect,    \
+    segment_rect, ph.user_data, instance.resource_address, transform.m, \
+    pic_task, brush_flags, segment_data
+
+    // If this shader supports multiple brushes, select the right one
+    // for this instance instance.
+#ifdef WR_FEATURE_MULTI_BRUSH
+    v_brush_kind = instance.brush_kind;
+
+    switch (instance.brush_kind) {
+        #ifdef WR_FEATURE_IMAGE_BRUSH
+        case BRUSH_KIND_IMAGE:
+            image_brush_vs(BRUSH_VS_PARAMS);
+            break;
+        #endif
+
+        #ifdef WR_FEATURE_SOLID_BRUSH
+        case BRUSH_KIND_SOLID:
+            solid_brush_vs(BRUSH_VS_PARAMS);
+            break;
+        #endif
+    }
+
+#else
+    WR_BRUSH_VS_FUNCTION(BRUSH_VS_PARAMS);
+#endif
+
 }
+
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
@@ -181,14 +224,41 @@ struct Fragment {
 #endif
 };
 
-Fragment brush_fs();
+// Foward-declare all brush entry-points.
+Fragment image_brush_fs();
+Fragment solid_brush_fs();
+Fragment blend_brush_fs();
+Fragment mix_blend_brush_fs();
+Fragment linear_gradient_brush_fs();
+Fragment radial_gradient_brush_fs();
+Fragment yuv_brush_fs();
 
 void main(void) {
 #ifdef WR_FEATURE_DEBUG_OVERDRAW
     oFragColor = WR_DEBUG_OVERDRAW_COLOR;
 #else
+
+    Fragment frag;
     // Run the specific brush FS code to output the color.
-    Fragment frag = brush_fs();
+#ifdef WR_FEATURE_MULTI_BRUSH
+    switch (v_brush_kind) {
+#ifdef WR_FEATURE_IMAGE_BRUSH
+        case BRUSH_KIND_IMAGE: {
+            frag = image_brush_fs();
+            break;
+        }
+#endif
+#ifdef WR_FEATURE_SOLID_BRUSH
+        case BRUSH_KIND_SOLID: {
+            frag = solid_brush_fs();
+            break;
+        }
+#endif
+    }
+#else
+    frag = WR_BRUSH_FS_FUNCTION();
+#endif
+
 
 #ifdef WR_FEATURE_ALPHA_PASS
     // Apply the clip mask

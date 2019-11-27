@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_SPECIFIC_BRUSH 2
+#define VECS_PER_LINEAR_GRADIENT_BRUSH 2
+#define VECS_PER_SPECIFIC_BRUSH VECS_PER_LINEAR_GRADIENT_BRUSH
+
+#define WR_BRUSH_VS_FUNCTION linear_gradient_brush_vs
+#define WR_BRUSH_FS_FUNCTION linear_gradient_brush_fs
 
 #include shared,prim_shared,brush
 
@@ -40,7 +44,7 @@ Gradient fetch_gradient(int address) {
     );
 }
 
-void brush_vs(
+void linear_gradient_brush_vs(
     VertexInfo vi,
     int prim_address,
     RectWithSize local_rect,
@@ -85,7 +89,7 @@ void brush_vs(
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
-Fragment brush_fs() {
+Fragment linear_gradient_brush_fs() {
 
 #ifdef WR_FEATURE_ALPHA_PASS
     // Handle top and left inflated edges (see brush_image).

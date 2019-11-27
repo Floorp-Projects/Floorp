@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_SPECIFIC_BRUSH 3
+#define VECS_PER_MIX_BLEND_BRUSH 3
+#define VECS_PER_SPECIFIC_BRUSH VECS_PER_MIX_BLEND_BRUSH
+
+#define WR_BRUSH_VS_FUNCTION mix_blend_brush_vs
+#define WR_BRUSH_FS_FUNCTION mix_blend_brush_fs
 
 #include shared,prim_shared,brush
 
@@ -17,7 +21,7 @@ vec2 snap_device_pos(VertexInfo vi, float device_pixel_scale) {
     return vi.world_pos.xy * device_pixel_scale / max(0.0, vi.world_pos.w) + vi.snap_offset;
 }
 
-void brush_vs(
+void mix_blend_brush_vs(
     VertexInfo vi,
     int prim_address,
     RectWithSize local_rect,
@@ -205,7 +209,7 @@ const int MixBlendMode_Saturation  = 13;
 const int MixBlendMode_Color       = 14;
 const int MixBlendMode_Luminosity  = 15;
 
-Fragment brush_fs() {
+Fragment mix_blend_brush_fs() {
     vec4 Cb = textureLod(sPrevPassColor, vBackdropUv, 0.0);
     vec4 Cs = textureLod(sPrevPassColor, vSrcUv, 0.0);
 

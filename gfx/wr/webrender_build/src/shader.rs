@@ -79,7 +79,7 @@ impl ShaderSourceParser {
 
 /// Reads a shader source file from disk into a String.
 pub fn shader_source_from_file(shader_path: &Path) -> String {
-    assert!(shader_path.exists(), "Shader not found");
+    assert!(shader_path.exists(), "Shader not found {:?}", shader_path);
     let mut source = String::new();
     File::open(&shader_path)
         .expect("Shader not found")

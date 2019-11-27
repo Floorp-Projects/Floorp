@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_SPECIFIC_BRUSH 3
+#define VECS_PER_BLEND_BRUSH 3
+#define VECS_PER_SPECIFIC_BRUSH VECS_PER_BLEND_BRUSH
+
+#define WR_BRUSH_VS_FUNCTION blend_brush_vs
+#define WR_BRUSH_FS_FUNCTION blend_brush_fs
 
 #define COMPONENT_TRANSFER_IDENTITY 0
 #define COMPONENT_TRANSFER_TABLE 1
@@ -29,7 +33,7 @@ flat varying vec4 vFloodColor;
 
 #ifdef WR_VERTEX_SHADER
 
-void brush_vs(
+void blend_brush_vs(
     VertexInfo vi,
     int prim_address,
     RectWithSize local_rect,
@@ -237,7 +241,7 @@ vec4 ComponentTransfer(vec4 colora) {
     return colora;
 }
 
-Fragment brush_fs() {
+Fragment blend_brush_fs() {
     float perspective_divisor = mix(gl_FragCoord.w, 1.0, vLayerAndPerspective.y);
     vec2 uv = vUv * perspective_divisor;
     vec4 Cs = texture(sColor0, vec3(uv, vLayerAndPerspective.x));
