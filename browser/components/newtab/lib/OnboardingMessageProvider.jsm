@@ -268,7 +268,7 @@ const ONBOARDING_MESSAGES = () => [
       },
     },
     targeting:
-      "trailheadTriplet == 'supercharge' || ( 'dynamic' in trailheadTriplet && usesFirefoxSync == false)",
+      "trailheadTriplet in ['supercharge', 'static'] || ( 'dynamic' in trailheadTriplet && usesFirefoxSync == false)",
     trigger: { id: "showOnboarding" },
   },
   {
@@ -290,7 +290,7 @@ const ONBOARDING_MESSAGES = () => [
     },
     // Use service oauth client_id to identify 'Firefox Monitor' service attached to Firefox Account
     // https://docs.telemetry.mozilla.org/datasets/fxa_metrics/attribution.html#service-attribution
-    targeting: `trailheadTriplet == 'supercharge' || ('dynamic' in trailheadTriplet && !("${FX_MONITOR_CLIENT_ID}" in attachedFxAOAuthClients|mapToProperty('id')))`,
+    targeting: `trailheadTriplet in ['supercharge', 'static'] || ('dynamic' in trailheadTriplet && !("${FX_MONITOR_CLIENT_ID}" in attachedFxAOAuthClients|mapToProperty('id')))`,
     trigger: { id: "showOnboarding" },
   },
   {
@@ -351,7 +351,7 @@ const ONBOARDING_MESSAGES = () => [
       },
     },
     targeting:
-      "trailheadTriplet == 'supercharge' || ('dynamic' in trailheadTriplet && sync.mobileDevices < 1)",
+      "trailheadTriplet in ['supercharge', 'static'] || ('dynamic' in trailheadTriplet && sync.mobileDevices < 1)",
     trigger: { id: "showOnboarding" },
   },
   {
