@@ -41,11 +41,12 @@ class Benchmark(object):
             # Some benchmarks may have been downloaded from a fetch task, make
             # sure they get copied over.
             fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
-            if fetches_dir and os.path.isdir(fetches_dir):
+            if test.get('fetch_task', False) and fetches_dir and os.path.isdir(fetches_dir):
                 for name in os.listdir(fetches_dir):
-                    path = os.path.join(fetches_dir, name)
-                    if os.path.isdir(path):
-                        shutil.copytree(path, os.path.join(self.bench_dir, name))
+                    if test.get('fetch_task') in name:
+                        path = os.path.join(fetches_dir, name)
+                        if os.path.isdir(path):
+                            shutil.copytree(path, os.path.join(self.bench_dir, name))
 
         LOG.info("bench_dir contains:")
         LOG.info(os.listdir(self.bench_dir))
