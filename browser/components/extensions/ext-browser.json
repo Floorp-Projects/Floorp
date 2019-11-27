@@ -37,6 +37,7 @@
     "scopes": [],
     "events": ["update", "uninstall", "disable"],
     "schema": "chrome://browser/content/schemas/chrome_settings_overrides.json",
+    "settings": true,
     "manifest": ["chrome_settings_overrides"]
   },
   "commands": {
@@ -210,6 +211,7 @@
     "url": "chrome://browser/content/parent/ext-urlbar.js",
     "schema": "chrome://browser/content/schemas/urlbar.json",
     "scopes": ["addon_parent"],
+    "settings": true,
     "paths": [
       ["urlbar"],
       ["urlbar", "contextualTip"]

@@ -78,7 +78,10 @@ XPCOMUtils.defineLazyGetter(this, "homepagePopup", () => {
 // and check if the homepage is active, then show the doorhanger in that case.
 async function handleInitialHomepagePopup(extensionId, homepageUrl) {
   // browser.startup.page == 1 is show homepage.
-  if (Services.prefs.getIntPref("browser.startup.page") == 1) {
+  if (
+    Services.prefs.getIntPref("browser.startup.page") == 1 &&
+    windowTracker.topWindow
+  ) {
     let { gBrowser } = windowTracker.topWindow;
     let tab = gBrowser.selectedTab;
     let currentUrl = gBrowser.currentURI.spec;

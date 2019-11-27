@@ -17,6 +17,9 @@ ChromeUtils.defineModuleGetter(
   "Preferences",
   "resource://gre/modules/Preferences.jsm"
 );
+var { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 
 const {
   createAppInfo,
@@ -563,8 +566,13 @@ add_task(async function test_preference_manager_set_when_disabled() {
   ok(isUndefinedPref("foo"), "test pref is not set");
 
   await ExtensionSettingsStore.initialize();
+  let lastItemChange = PromiseUtils.defer();
   ExtensionPreferencesManager.addSetting("some-pref", {
     prefNames: ["foo", "bar"],
+    onPrefsChanged(item) {
+      lastItemChange.resolve(item);
+      lastItemChange = PromiseUtils.defer();
+    },
     setCallback(value) {
       return { [this.prefNames[0]]: value, [this.prefNames[1]]: false };
     },
@@ -620,11 +628,16 @@ add_task(async function test_preference_manager_set_when_disabled() {
   await ExtensionSettingsStore._reloadFile(true);
 
   // Now unload the extension to test prefs are reset properly.
+  let promise = lastItemChange.promise;
   await extension.unload();
 
   // Test that the pref is unset when an extension is uninstalled.
-  item = await ExtensionPreferencesManager.getSetting("prefs", "some-pref");
-  equal(item, null, "The value has been reset");
+  item = await promise;
+  deepEqual(
+    item,
+    { key: "some-pref", initialValue: { bar: true } },
+    "The value has been reset"
+  );
   ok(isUndefinedPref("foo"), "user pref is not set");
   equal(
     Services.prefs.getBoolPref("bar"),

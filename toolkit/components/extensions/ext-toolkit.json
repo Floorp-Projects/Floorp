@@ -20,6 +20,7 @@
     "url": "chrome://extensions/content/parent/ext-browserSettings.js",
     "schema": "chrome://extensions/content/schemas/browser_settings.json",
     "scopes": ["addon_parent"],
+    "settings": true,
     "paths": [
       ["browserSettings"]
     ]
@@ -44,6 +45,7 @@
     "url": "chrome://extensions/content/parent/ext-contextualIdentities.js",
     "schema": "chrome://extensions/content/schemas/contextual_identities.json",
     "scopes": ["addon_parent"],
+    "settings": true,
     "events": ["startup"],
     "permissions": ["contextualIdentities"],
     "paths": [
@@ -142,6 +144,7 @@
     "url": "chrome://extensions/content/parent/ext-privacy.js",
     "schema": "chrome://extensions/content/schemas/privacy.json",
     "scopes": ["addon_parent"],
+    "settings": true,
     "paths": [
       ["privacy"]
     ]
@@ -156,6 +159,7 @@
     "url": "chrome://extensions/content/parent/ext-proxy.js",
     "schema": "chrome://extensions/content/schemas/proxy.json",
     "scopes": ["addon_parent"],
+    "settings": true,
     "paths": [
       ["proxy"]
     ]
