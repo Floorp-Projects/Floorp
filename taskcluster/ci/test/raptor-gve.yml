@@ -11,7 +11,7 @@ job-defaults:
             .*: ['mozilla-central']
             default: ['mozilla-central']
     target: geckoview_example.apk
-    tier: 2
+    tier: 1
     virtualization: hardware
     mozharness:
         script: raptor_script.py
@@ -202,7 +202,6 @@ raptor-scn-power-idle-geckoview:
     try-name: raptor-scn-power-idle-geckoview
     treeherder-symbol: Rap(idl-p)
     run-on-projects: []
-    tier: 3
     mozharness:
         extra-options:
             - --test=raptor-scn-power-idle
@@ -217,7 +216,6 @@ raptor-scn-cpu-memory-idle-geckoview:
     try-name: raptor-scn-cpu-memory-idle-geckoview
     treeherder-symbol: Rap(idl-cm)
     run-on-projects: []
-    tier: 3
     mozharness:
         extra-options:
             - --test=raptor-scn-power-idle
@@ -232,7 +230,6 @@ raptor-scn-cpu-memory-power-idle-geckoview:
     try-name: raptor-scn-cpu-memory-power-idle-geckoview
     treeherder-symbol: Rap(idl-cmp)
     run-on-projects: []
-    tier: 3
     mozharness:
         extra-options:
             - --test=raptor-scn-power-idle
@@ -249,7 +246,6 @@ raptor-scn-power-idle-bg-geckoview:
     try-name: raptor-scn-power-idle-bg-geckoview
     treeherder-symbol: Rap(idlbg-p)
     run-on-projects: []
-    tier: 3
     mozharness:
         extra-options:
             - --test=raptor-scn-power-idle-bg
@@ -264,7 +260,6 @@ raptor-scn-cpu-memory-idle-bg-geckoview:
     try-name: raptor-scn-cpu-memory-idle-bg-geckoview
     treeherder-symbol: Rap(idlbg-cm)
     run-on-projects: []
-    tier: 3
     mozharness:
         extra-options:
             - --test=raptor-scn-power-idle-bg
@@ -279,7 +274,6 @@ raptor-scn-cpu-memory-power-idle-bg-geckoview:
     try-name: raptor-scn-cpu-memory-power-idle-bg-geckoview
     treeherder-symbol: Rap(idlbg-cmp)
     run-on-projects: []
-    tier: 3
     mozharness:
         extra-options:
             - --test=raptor-scn-power-idle-bg
@@ -301,7 +295,6 @@ raptor-unity-webgl-geckoview:
             android-hw-.*/pgo: ['trunk', 'mozilla-beta']
             default: ['mozilla-central', 'mozilla-beta']
     max-run-time: 900
-    tier: 3
     mozharness:
         extra-options:
             - --test=raptor-unity-webgl
@@ -344,11 +337,6 @@ raptor-tp6m-1-geckoview-cold:
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             default: ['trunk', 'mozilla-beta']
     e10s: true
-    tier:
-        by-test-platform:
-            android-hw-p2-8-0-arm7.*: 2
-            android-hw-g5.*: 2
-            default: 1
     mozharness:
         extra-options:
             - --test=raptor-tp6m-1-cold
@@ -368,11 +356,6 @@ raptor-tp6m-2-geckoview-cold:
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             default: ['trunk', 'mozilla-beta']
     e10s: true
-    tier:
-        by-test-platform:
-            android-hw-p2-8-0-arm7.*: 2
-            android-hw-g5.*: 2
-            default: 1
     mozharness:
         extra-options:
             - --test=raptor-tp6m-2-cold
@@ -392,11 +375,6 @@ raptor-tp6m-3-geckoview-cold:
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             default: ['trunk', 'mozilla-beta']
     e10s: true
-    tier:
-        by-test-platform:
-            android-hw-p2-8-0-arm7.*: 2
-            android-hw-g5.*: 2
-            default: 1
     mozharness:
         extra-options:
             - --test=raptor-tp6m-3-cold
@@ -416,11 +394,6 @@ raptor-tp6m-4-geckoview-cold:
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             default: ['trunk', 'mozilla-beta']
     e10s: true
-    tier:
-        by-test-platform:
-            android-hw-p2-8-0-arm7.*: 2
-            android-hw-g5.*: 2
-            default: 1
     mozharness:
         extra-options:
             - --test=raptor-tp6m-4-cold
@@ -440,11 +413,6 @@ raptor-tp6m-5-geckoview-cold:
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             default: ['trunk', 'mozilla-beta']
     e10s: true
-    tier:
-        by-test-platform:
-            android-hw-p2-8-0-arm7.*: 2
-            android-hw-g5.*: 2
-            default: 1
     mozharness:
         extra-options:
             - --test=raptor-tp6m-5-cold
@@ -464,11 +432,6 @@ raptor-tp6m-6-geckoview-cold:
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             default: ['trunk', 'mozilla-beta']
     e10s: true
-    tier:
-        by-test-platform:
-            android-hw-p2-8-0-arm7.*: 2
-            android-hw-g5.*: 2
-            default: 1
     mozharness:
         extra-options:
             - --test=raptor-tp6m-6-cold
