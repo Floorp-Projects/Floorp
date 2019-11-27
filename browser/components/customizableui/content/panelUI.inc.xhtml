@@ -271,6 +271,18 @@
                        label="&newPrivateWindow.label;"
                        key="key_privatebrowsing"
                        command="Tools:PrivateBrowsing"/>
+#ifdef NIGHTLY_BUILD
+        <toolbarbutton id="appMenu-fission-window-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="New Fission Window"
+                       accesskey="s"
+                       command="Tools:FissionWindow"/>
+        <toolbarbutton id="appMenu-non-fission-window-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="New Non-Fission Window"
+                       accesskey="s"
+                       command="Tools:NonFissionWindow"/>
+#endif
         <toolbarbutton id="appMenuRestoreLastSession"
                        label="&appMenuHistory.restoreSession.label;"
                        class="subviewbutton subviewbutton-iconic"
