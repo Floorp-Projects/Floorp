@@ -24,6 +24,7 @@ import java.util.LinkedList;
     private LinkedList<ByteBuffer> mBuffers = new LinkedList<>();
     private boolean mEOF;
     private boolean mClosed;
+    private boolean mHaveError;
     private long mReadTimeout;
     private boolean mResumed;
     private Support mSupport;
@@ -45,7 +46,6 @@ import java.util.LinkedList;
     @Override
     public synchronized void close() throws IOException {
         super.close();
-        sendEof();
         mClosed = true;
     }
 
@@ -116,6 +116,10 @@ import java.util.LinkedList;
         }
 
         if (mEOF && mBuffers.size() == 0) {
+            if (mHaveError) {
+                throw new IOException("Unknown error");
+            }
+
             // We have no data and we're not expecting more.
             return -1;
         }
@@ -138,7 +142,26 @@ import java.util.LinkedList;
      */
     @WrapForJNI(calledFrom = "gecko")
     public synchronized void sendEof() {
+        if (mEOF) {
+            throw new IllegalStateException("Already have EOF");
+        }
+
         mEOF = true;
+        notifyAll();
+    }
+
+    /**
+     * Called by native code to indicate that there was an error
+     * while reading the stream.
+     */
+    @WrapForJNI(calledFrom = "gecko")
+    public synchronized void sendError() {
+        if (mEOF) {
+            throw new IllegalStateException("Already have EOF");
+        }
+
+        mEOF = true;
+        mHaveError = true;
         notifyAll();
     }
 
@@ -152,8 +175,12 @@ import java.util.LinkedList;
     private synchronized void appendBuffer(final byte[] buf) throws IOException {
         ThreadUtils.assertOnGeckoThread();
 
+        if (mClosed) {
+            throw new IllegalStateException("Stream is closed");
+        }
+
         if (mEOF) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("EOF, no more data expected");
         }
 
         mBuffers.add(ByteBuffer.wrap(buf));
