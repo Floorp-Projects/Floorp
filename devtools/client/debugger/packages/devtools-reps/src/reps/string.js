@@ -3,7 +3,11 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Dependencies
-const PropTypes = require("prop-types");
+const {
+  a,
+  span,
+} = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const {
   containsURL,
@@ -17,9 +21,6 @@ const {
   uneatLastUrlCharsRegex,
   urlRegex,
 } = require("./rep-utils");
-
-const dom = require("react-dom-factories");
-const { a, span } = dom;
 
 /**
  * Renders a string. String value is enclosed within quotes.

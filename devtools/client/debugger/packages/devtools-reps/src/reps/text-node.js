@@ -3,14 +3,15 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // ReactJS
-const PropTypes = require("prop-types");
+const {
+  button,
+  span,
+} = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 // Reps
 const { isGrip, cropString, wrapRender } = require("./rep-utils");
 const { MODE } = require("./constants");
-
-const dom = require("react-dom-factories");
-const { span } = dom;
 
 /**
  * Renders DOM #text node.
@@ -54,7 +55,7 @@ function TextNode(props) {
     }
 
     if (onInspectIconClick) {
-      inspectIcon = dom.button({
+      inspectIcon = button({
         className: "open-inspector",
         draggable: false,
         // TODO: Localize this with "openNodeInInspector" when Bug 1317038 lands
