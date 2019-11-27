@@ -7724,10 +7724,9 @@ bool BytecodeEmitter::emitConditionalExpression(
 
 // Check for an object-literal property list that can be handled by the
 // ObjLiteral writer. We immediately rule out class bodies. Then, we ensure
-// that for each `prop: value` pair, the key is a constant name (and not a
-// numeric index), there is no accessor specified, and the value can be encoded
-// by an ObjLiteral instruction (constant number, string, boolean,
-// null/undefined).
+// that for each `prop: value` pair, the key is a constant name or numeric
+// index, there is no accessor specified, and the value can be encoded by an
+// ObjLiteral instruction (constant number, string, boolean, null/undefined).
 void BytecodeEmitter::isPropertyListObjLiteralCompatible(ListNode* obj,
                                                          PropListType type,
                                                          bool* withValues,
@@ -7808,8 +7807,7 @@ bool BytecodeEmitter::isArrayObjLiteralCompatible(ParseNode* arrayHead) {
 }
 
 bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
-                                       PropListType type,
-                                       bool isInnerSingleton) {
+                                       PropListType type, bool isInner) {
   //                [stack] CTOR? OBJ
 
   size_t curFieldKeyIndex = 0;
@@ -7828,7 +7826,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         ParseNode* nameExpr = field->name().as<UnaryNode>().kid();
 
         if (!emitTree(nameExpr, ValueUsage::WantValue, EMIT_LINENOTE,
-                      /* isInnerSingleton = */ isInnerSingleton)) {
+                      /* isInner = */ isInner)) {
           //        [stack] CTOR? OBJ ARRAY KEY
           return false;
         }
@@ -8479,7 +8477,7 @@ bool BytecodeEmitter::emitInitializeInstanceFields() {
 // Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See
 // the comment on emitSwitch.
 MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
-                                                  bool isInnerSingleton) {
+                                                  bool isInner) {
   bool isSingletonContext = !objNode->hasNonConstInitializer() &&
                             objNode->head() && checkSingletonContext();
 
@@ -8495,7 +8493,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
   // 1. The list of property names is "normal" and constant (no computed
   //    values, no integer indices), the values are all simple constants
   //    (numbers, booleans, strings), *and* this occurs in a run-once
-  //    (singleton) context. In this case, we can add emit ObjLiteral
+  //    (singleton) context. In this case, we can emit ObjLiteral
   //    instructions to build an object with values, and the object will be
   //    attached to a JSOP_OBJECT opcode, whose semantics are for the backend to
   //    simply steal the object from the script.
@@ -8518,7 +8516,13 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
   bool useObjLiteralValues = false;
   isPropertyListObjLiteralCompatible(objNode, ObjectLiteral,
                                      &useObjLiteralValues, &useObjLiteral);
-  if (!isSingletonContext) {
+
+  // We can't rely on the ObjLiteral-constructed object's values to be used if
+  // we're only using ObjLiteral to build a template for JSOP_NEWOBJECT instead
+  // of JSOP_OBJECT. This is the case either when we're not in singleton
+  // context, or when we are but we're treating it as non-singleton (see other
+  // comments related to isInner).
+  if (!isSingletonContext || isInner) {
     useObjLiteralValues = false;
   }
 
@@ -8538,7 +8542,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
       // Use `ObjectGroup::newPlainObject` rather than
       // `NewBuiltinClassInstance<PlainObject>`.
       flags += ObjLiteralFlag::SpecificGroup;
-      if (!isInnerSingleton) {
+      if (!isInner) {
         flags += ObjLiteralFlag::Singleton;
       }
     }
@@ -8566,7 +8570,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
       // Case 2 above: the ObjLiteral only created a template object. We still
       // need to emit bytecode to fill in its values.
       if (!emitPropertyList(objNode, oe, ObjectLiteral,
-                            /* isInnerSingleton = */ true)) {
+                            /* isInner = */ true)) {
         //              [stack] OBJ
         return false;
       }
@@ -8617,8 +8621,8 @@ bool BytecodeEmitter::replaceNewInitWithNewObject(JSObject* obj,
 }
 
 bool BytecodeEmitter::emitArrayLiteral(ListNode* array) {
+  bool isSingleton = checkSingletonContext();
   if (!array->hasNonConstInitializer() && array->head()) {
-    bool isSingleton = checkSingletonContext();
     // If the array consists entirely of primitive values, make a
     // template object with copy on write elements that can be reused
     // every time the initializer executes. In non-singleton mode, don't do
@@ -8632,10 +8636,12 @@ bool BytecodeEmitter::emitArrayLiteral(ListNode* array) {
     }
   }
 
-  return emitArray(array->head(), array->count());
+  return emitArray(array->head(), array->count(),
+                   /* isInner = */ isSingleton);
 }
 
-bool BytecodeEmitter::emitArray(ParseNode* arrayHead, uint32_t count) {
+bool BytecodeEmitter::emitArray(ParseNode* arrayHead, uint32_t count,
+                                bool isInner /* = false */) {
   /*
    * Emit code for [a, b, c] that is equivalent to constructing a new
    * array and in source order evaluating each element value and adding
@@ -8704,7 +8710,7 @@ bool BytecodeEmitter::emitArray(ParseNode* arrayHead, uint32_t count) {
       } else {
         expr = elem;
       }
-      if (!emitTree(expr)) {
+      if (!emitTree(expr, ValueUsage::WantValue, EMIT_LINENOTE, isInner)) {
         //          [stack] ARRAY INDEX? VALUE
         return false;
       }
@@ -9350,7 +9356,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitInstrumentationForOpcodeSlow(
 bool BytecodeEmitter::emitTree(
     ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::WantValue */,
     EmitLineNumberNote emitLineNote /* = EMIT_LINENOTE */,
-    bool isInnerSingleton /* = false */) {
+    bool isInner /* = false */) {
   if (!CheckRecursionLimit(cx)) {
     return false;
   }
@@ -9771,7 +9777,7 @@ bool BytecodeEmitter::emitTree(
       break;
 
     case ParseNodeKind::ObjectExpr:
-      if (!emitObject(&pn->as<ListNode>(), isInnerSingleton)) {
+      if (!emitObject(&pn->as<ListNode>(), isInner)) {
         return false;
       }
       break;
