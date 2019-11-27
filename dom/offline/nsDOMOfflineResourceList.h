@@ -97,7 +97,7 @@ class nsDOMOfflineResourceList final : public mozilla::DOMEventTargetHelper,
   void SendEvent(const nsAString& aEventName);
 
   nsresult UpdateAdded(nsIOfflineCacheUpdate* aUpdate);
-  nsresult UpdateCompleted(nsIOfflineCacheUpdate* aUpdate);
+  void UpdateCompleted(nsIOfflineCacheUpdate* aUpdate);
 
   already_AddRefed<nsIApplicationCacheContainer> GetDocumentAppCacheContainer();
   already_AddRefed<nsIApplicationCache> GetDocumentAppCache();
