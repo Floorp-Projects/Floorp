@@ -706,9 +706,6 @@ class OutlineTypedObject : public TypedObject {
   // Otherwise, use this to attach to memory referenced by another typedObj.
   void attach(JSContext* cx, TypedObject& typedObj, uint32_t offset);
 
-  // Invoked when array buffer is transferred elsewhere
-  void notifyBufferDetached(void* newData);
-
   static void obj_trace(JSTracer* trace, JSObject* object);
 };
 

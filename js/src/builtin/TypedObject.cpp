@@ -2170,10 +2170,6 @@ bool TypedObject::obj_newEnumerate(JSContext* cx, HandleObject obj,
   return true;
 }
 
-void OutlineTypedObject::notifyBufferDetached(void* newData) {
-  setData(reinterpret_cast<uint8_t*>(newData));
-}
-
 /******************************************************************************
  * Inline typed objects
  */
