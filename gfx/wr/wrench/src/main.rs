@@ -13,7 +13,6 @@ mod angle;
 mod binary_frame_reader;
 mod blob;
 mod egl;
-mod json_frame_writer;
 mod parse_function;
 mod perf;
 mod png;
@@ -443,10 +442,9 @@ fn main() {
     let dp_ratio = args.value_of("dp_ratio").map(|v| v.parse::<f32>().unwrap());
     let save_type = args.value_of("save").map(|s| match s {
         "yaml" => wrench::SaveType::Yaml,
-        "json" => wrench::SaveType::Json,
         "ron" => wrench::SaveType::Ron,
         "binary" => wrench::SaveType::Binary,
-        _ => panic!("Save type must be json, ron, yaml, or binary")
+        _ => panic!("Save type must be ron, yaml, or binary")
     });
     let size = args.value_of("size")
         .map(|s| if s == "720p" {
