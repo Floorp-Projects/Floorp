@@ -13,6 +13,12 @@ var { ExtensionParent } = ChromeUtils.import(
 
 ChromeUtils.defineModuleGetter(
   this,
+  "ExtensionPermissions",
+  "resource://gre/modules/ExtensionPermissions.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
   "ExtensionSettingsStore",
   "resource://gre/modules/ExtensionSettingsStore.jsm"
 );
@@ -125,7 +131,7 @@ async function handleHomepageUrl(extension, homepageUrl) {
     let item = await ExtensionPreferencesManager.getSetting(
       "homepage_override"
     );
-    inControl = item && item.id == extension.id;
+    inControl = item && item.id && item.id == extension.id;
   }
 
   if (inControl) {
@@ -252,6 +258,10 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
       this.processDefaultSearchSetting("removeSetting", id),
       this.removeEngine(id),
     ]);
+  }
+
+  static async onEnabling(id) {
+    chrome_settings_overrides.processDefaultSearchSetting("enable", id);
   }
 
   static async onUninstall(id) {
@@ -506,21 +516,28 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
 };
 
 ExtensionPreferencesManager.addSetting("homepage_override", {
-  prefNames: [HOMEPAGE_PREF, HOMEPAGE_EXTENSION_CONTROLLED],
+  prefNames: [
+    HOMEPAGE_PREF,
+    HOMEPAGE_EXTENSION_CONTROLLED,
+    HOMEPAGE_PRIVATE_ALLOWED,
+  ],
   // ExtensionPreferencesManager will call onPrefsChanged when control changes
   // and it updates the preferences. We are passed the item from
   // ExtensionSettingsStore that details what is in control. If there is an id
   // then control has changed to an extension, if there is no id then control
   // has been returned to the user.
-  onPrefsChanged(item) {
+  async onPrefsChanged(item) {
     if (item.id) {
       homepagePopup.addObserver(item.id);
 
       let policy = ExtensionParent.WebExtensionPolicy.getByID(item.id);
-      Services.prefs.setBoolPref(
-        HOMEPAGE_PRIVATE_ALLOWED,
-        policy && policy.privateBrowsingAllowed
-      );
+      let allowed = policy && policy.privateBrowsingAllowed;
+      if (!policy) {
+        // We'll generally hit this path during safe mode changes.
+        let perms = await ExtensionPermissions.get(item.id);
+        allowed = perms.permissions.includes("internal:privateBrowsingAllowed");
+      }
+      Services.prefs.setBoolPref(HOMEPAGE_PRIVATE_ALLOWED, allowed);
       Services.prefs.setBoolPref(HOMEPAGE_EXTENSION_CONTROLLED, true);
     } else {
       homepagePopup.removeObserver();
@@ -530,9 +547,13 @@ ExtensionPreferencesManager.addSetting("homepage_override", {
     }
   },
   setCallback(value) {
+    // Setting the pref will result in onPrefsChanged being called, which
+    // will then set HOMEPAGE_PRIVATE_ALLOWED.  We want to ensure that this
+    // pref will be set/unset as apropriate.
     return {
       [HOMEPAGE_PREF]: value,
       [HOMEPAGE_EXTENSION_CONTROLLED]: !!value,
+      [HOMEPAGE_PRIVATE_ALLOWED]: false,
     };
   },
 });

@@ -5,15 +5,19 @@
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
+
 const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
 
-const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
-const { ExtensionParent } = ChromeUtils.import(
+// Lazy load to avoid having Services.appinfo cached first.
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionParent",
   "resource://gre/modules/ExtensionParent.jsm"
 );
-const { apiManager } = ExtensionParent;
+
+const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -35,12 +39,15 @@ AddonTestUtils.createAppInfo(
 );
 
 add_task(async function test_settings_modules_not_loaded() {
-  await apiManager.lazyInit();
+  await ExtensionParent.apiManager.lazyInit();
   // Test that no settings modules are loaded.
-  let modules = Array.from(apiManager.settingsModules);
+  let modules = Array.from(ExtensionParent.apiManager.settingsModules);
   ok(modules.length, "we have settings modules");
   for (let name of modules) {
-    ok(!apiManager.getModule(name).loaded, `${name} is not loaded`);
+    ok(
+      !ExtensionParent.apiManager.getModule(name).loaded,
+      `${name} is not loaded`
+    );
   }
 });
 
@@ -87,7 +94,7 @@ add_task(async function test_settings_validated() {
   }
   await AddonTestUtils.cleanupTempXPIs();
 
-  // Restart everything, the UninstallObserver should handle updating state.
+  // Restart everything, the ExtensionAddonObserver should handle updating state.
   let prefChanged = TestUtils.waitForPrefChange("browser.startup.homepage");
   await AddonTestUtils.promiseStartupManager();
   await prefChanged;
@@ -101,11 +108,43 @@ add_task(async function test_settings_validated() {
   await AddonTestUtils.promiseShutdownManager();
 });
 
-add_task(async function test_settings_validated_safemode_uninstall() {
+add_task(async function test_settings_validated_safemode() {
   let defaultNewTab = aboutNewTabService.newTabURL;
   equal(defaultNewTab, "about:newtab", "Newtab url is default.");
   let defaultHomepageURL = HomePage.get();
   equal(defaultHomepageURL, "about:home", "Home page url is default.");
+
+  function isDefaultSettings(postfix) {
+    equal(
+      HomePage.get(),
+      defaultHomepageURL,
+      `Home page url is default ${postfix}.`
+    );
+    equal(
+      aboutNewTabService.newTabURL,
+      defaultNewTab,
+      `newTabURL is default ${postfix}.`
+    );
+  }
+
+  function isExtensionSettings(postfix) {
+    equal(
+      HomePage.get(),
+      "https://example.com/",
+      `Home page url is extension controlled ${postfix}.`
+    );
+    ok(
+      aboutNewTabService.newTabURL.endsWith("/newtab"),
+      `newTabURL is extension controlled ${postfix}.`
+    );
+  }
+
+  async function switchSafeMode(inSafeMode) {
+    await AddonTestUtils.promiseShutdownManager();
+    AddonTestUtils.appInfo.inSafeMode = inSafeMode;
+    await AddonTestUtils.promiseStartupManager();
+    return AddonManager.getAddonByID("test@mochi");
+  }
 
   let xpi = await AddonTestUtils.createTempWebExtensionFile({
     manifest: {
@@ -124,35 +163,28 @@ add_task(async function test_settings_validated_safemode_uninstall() {
   await AddonTestUtils.promiseStartupManager();
   await extension.awaitStartup();
 
-  equal(
-    HomePage.get(),
-    "https://example.com/",
-    "Home page url is extension controlled."
-  );
-  ok(
-    aboutNewTabService.newTabURL.endsWith("/newtab"),
-    "newTabURL is extension controlled."
-  );
+  isExtensionSettings("on extension startup");
 
-  await AddonTestUtils.promiseShutdownManager();
-  AddonTestUtils.appInfo.inSafeMode = true;
-  await AddonTestUtils.promiseStartupManager();
-  let addon = await AddonManager.getAddonByID("test@mochi");
+  // Disable in safemode and verify settings are removed in normal mode.
+  let addon = await switchSafeMode(true);
+  await addon.disable();
+  addon = await switchSafeMode(false);
+  isDefaultSettings("after disabling addon during safemode");
 
-  // Restart everything, the UninstallObserver should handle updating state.
-  let prefChanged = TestUtils.waitForPrefChange("browser.startup.homepage");
+  // Enable in safemode and verify settings are back in normal mode.
+  addon = await switchSafeMode(true);
+  await addon.enable();
+  addon = await switchSafeMode(false);
+  isExtensionSettings("after enabling addon during safemode");
+
+  // Uninstall in safemode and verify settings are removed in normal mode.
+  addon = await switchSafeMode(true);
   await addon.uninstall();
-  await prefChanged;
-
-  equal(HomePage.get(), defaultHomepageURL, "Home page url is default.");
-  equal(
-    aboutNewTabService.newTabURL,
-    defaultNewTab,
-    "newTabURL is reset to default."
-  );
+  addon = await switchSafeMode(false);
+  isDefaultSettings("after uninstalling addon during safemode");
 
   await AddonTestUtils.promiseShutdownManager();
-  AddonTestUtils.appInfo.inSafeMode = false;
+  await AddonTestUtils.cleanupTempXPIs();
 });
 
 // There are more settings modules than used in this test file, they should have been
@@ -160,9 +192,9 @@ add_task(async function test_settings_validated_safemode_uninstall() {
 // been loaded.
 add_task(async function test_settings_modules_loaded() {
   // Test that all settings modules are loaded.
-  let modules = Array.from(apiManager.settingsModules);
+  let modules = Array.from(ExtensionParent.apiManager.settingsModules);
   ok(modules.length, "we have settings modules");
   for (let name of modules) {
-    ok(apiManager.getModule(name).loaded, `${name} was loaded`);
+    ok(ExtensionParent.apiManager.getModule(name).loaded, `${name} was loaded`);
   }
 });
