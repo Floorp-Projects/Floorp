@@ -19,6 +19,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_svg.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/BinarySearch.h"
@@ -1757,6 +1758,9 @@ static nscoord LetterSpacing(nsIFrame* aFrame,
   }
 
   if (nsSVGUtils::IsInSVGTextSubtree(aFrame)) {
+    if (!StaticPrefs::svg_text_spacing_enabled()) {
+      return 0;
+    }
     // SVG text can have a scaling factor applied so that very small or very
     // large font-sizes don't suffer from poor glyph placement due to app unit
     // rounding. The used letter-spacing value must be scaled by the same
@@ -1783,6 +1787,9 @@ static nscoord WordSpacing(nsIFrame* aFrame, const gfxTextRun* aTextRun,
     // factor, although any percentage basis has already effectively been
     // scaled, since it's the space glyph width, which is based on the already-
     // scaled font-size.
+    if (!StaticPrefs::svg_text_spacing_enabled()) {
+      return 0;
+    }
     auto spacing = aStyleText->mWordSpacing;
     spacing.length._0 *= GetSVGFontSizeScaleFactor(aFrame);
     return spacing.Resolve([&] { return GetSpaceWidthAppUnits(aTextRun); });
@@ -1796,6 +1803,11 @@ static nscoord WordSpacing(nsIFrame* aFrame, const gfxTextRun* aTextRun,
 // letter-spacing or word-spacing is present.
 static gfx::ShapedTextFlags GetSpacingFlags(
     nsIFrame* aFrame, const nsStyleText* aStyleText = nullptr) {
+  if (nsSVGUtils::IsInSVGTextSubtree(aFrame) &&
+      !StaticPrefs::svg_text_spacing_enabled()) {
+    return gfx::ShapedTextFlags();
+  }
+
   const nsStyleText* styleText = aFrame->StyleText();
   const auto& ls = styleText->mLetterSpacing;
   const auto& ws = styleText->mWordSpacing;

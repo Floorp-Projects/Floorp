@@ -7476,6 +7476,12 @@
   value: false
   mirror: always
 
+# Is support for letter-spacing and word-spacing in SVG text enabled?
+- name: svg.text-spacing.enabled
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "telemetry."
 #---------------------------------------------------------------------------
