@@ -9,11 +9,7 @@ import sys
 import time
 import traceback
 
-try:
-    from unittest import TextTestResult
-except ImportError:
-    # bug 971243 - python 2.6 compatibilty
-    from unittest import _TextTestResult as TextTestResult
+from unittest import TextTestResult
 
 """Adapter used to output structuredlog messages from unittest
 testsuites"""
