@@ -157,7 +157,6 @@
                                                    \
   _(IntrinsicObjectIsTypedObject)                  \
   _(IntrinsicObjectIsTransparentTypedObject)       \
-  _(IntrinsicObjectIsOpaqueTypedObject)            \
   _(IntrinsicObjectIsTypeDescr)                    \
   _(IntrinsicTypeDescrIsSimpleType)                \
   _(IntrinsicTypeDescrIsArrayType)

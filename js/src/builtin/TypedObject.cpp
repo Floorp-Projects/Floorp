@@ -2455,15 +2455,6 @@ bool js::ObjectIsTypedObject(JSContext*, unsigned argc, Value* vp) {
   return true;
 }
 
-bool js::ObjectIsOpaqueTypedObject(JSContext*, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  JSObject& obj = args[0].toObject();
-  args.rval().setBoolean(obj.is<TypedObject>() &&
-                         obj.as<TypedObject>().opaque());
-  return true;
-}
-
 bool js::ObjectIsTransparentTypedObject(JSContext*, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
