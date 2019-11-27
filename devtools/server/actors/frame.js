@@ -42,7 +42,7 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
   _frameLifetimePool: null,
   get frameLifetimePool() {
     if (!this._frameLifetimePool) {
-      this._frameLifetimePool = new ActorPool(this.conn);
+      this._frameLifetimePool = new ActorPool(this.conn, "frame");
       this.conn.addActorPool(this._frameLifetimePool);
     }
     return this._frameLifetimePool;

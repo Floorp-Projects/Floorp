@@ -13,8 +13,9 @@ const { method } = require("devtools/shared/protocol");
  * used to accumulate and quickly dispose of groups of actors that
  * share a lifetime.
  */
-function ActorPool(connection) {
+function ActorPool(connection, label) {
   this.conn = connection;
+  this._label = label;
   this._actors = {};
 }
 
@@ -112,6 +113,12 @@ ActorPool.prototype = {
         continue;
       }
       yield actor;
+    }
+  },
+
+  dumpPool() {
+    for (const actor in this._actors) {
+      console.log(`>> ${actor}`);
     }
   },
 };
