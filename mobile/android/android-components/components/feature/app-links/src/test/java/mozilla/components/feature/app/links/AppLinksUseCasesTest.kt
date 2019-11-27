@@ -73,10 +73,6 @@ class AppLinksUseCasesTest {
         // We will redirect to it if browser option set to true.
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
         assertTrue(redirect.isRedirect())
-
-        // But we do from a context menu.
-        val menuRedirect = subject.appLinkRedirect(appUrl)
-        assertTrue(menuRedirect.isRedirect())
     }
 
     @Test
@@ -105,8 +101,12 @@ class AppLinksUseCasesTest {
         val context = createContext(appUrl to appPackage, appUrl to browserPackage)
         val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
 
-        val redirect = subject.appLinkRedirect(appUrl)
+        val redirect = subject.interceptedAppLinkRedirect(appUrl)
         assertTrue(redirect.isRedirect())
+
+        // But we do from a context menu.
+        val menuRedirect = subject.appLinkRedirect(appUrl)
+        assertTrue(menuRedirect.isRedirect())
     }
 
     @Test
@@ -127,8 +127,7 @@ class AppLinksUseCasesTest {
         val redirect = subject.interceptedAppLinkRedirect(uri)
         assertTrue(redirect.hasExternalApp())
         assertNotNull(redirect.appIntent)
-        assertNotNull(redirect.info)
-        assertEquals("com.example.app", redirect.info!!.activityInfo.packageName)
+        assertNotNull(redirect.marketplaceIntent)
 
         assertEquals("zxing://scan/", redirect.appIntent!!.dataString)
     }
@@ -170,8 +169,6 @@ class AppLinksUseCasesTest {
         assertFalse(redirect.hasExternalApp())
         assertTrue(redirect.hasFallback())
 
-        assertNull(redirect.info)
-
         assertEquals("http://zxing.org", redirect.fallbackUrl)
     }
 
@@ -179,7 +176,7 @@ class AppLinksUseCasesTest {
     fun `An openAppLink use case starts an activity`() {
         val context = createContext()
         val appIntent = Intent()
-        val redirect = AppLinkRedirect(appIntent, appUrl)
+        val redirect = AppLinkRedirect(appIntent, appUrl, null)
         val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
 
         subject.openAppLink(redirect)
