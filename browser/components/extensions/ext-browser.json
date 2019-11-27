@@ -35,7 +35,7 @@
   "chrome_settings_overrides": {
     "url": "chrome://browser/content/parent/ext-chrome-settings-overrides.js",
     "scopes": [],
-    "events": ["update", "uninstall", "disable"],
+    "events": ["update", "uninstall", "disable", "enabling"],
     "schema": "chrome://browser/content/schemas/chrome_settings_overrides.json",
     "settings": true,
     "manifest": ["chrome_settings_overrides"]
@@ -221,7 +221,7 @@
     "url": "chrome://browser/content/parent/ext-url-overrides.js",
     "schema": "chrome://browser/content/schemas/url_overrides.json",
     "scopes": ["addon_parent"],
-    "events": ["update", "uninstall", "disable"],
+    "events": ["update", "uninstall", "disable", "enabling"],
     "manifest": ["chrome_url_overrides"],
     "paths": [
       ["urlOverrides"]

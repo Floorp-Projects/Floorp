@@ -114,31 +114,27 @@ ExtensionParent.apiManager.on(
   }
 );
 
+async function processSettings(action, id) {
+  await ExtensionSettingsStore.initialize();
+  if (ExtensionSettingsStore.hasSetting(id, STORE_TYPE, NEW_TAB_SETTING_NAME)) {
+    ExtensionSettingsStore[action](id, STORE_TYPE, NEW_TAB_SETTING_NAME);
+  }
+}
+
 this.urlOverrides = class extends ExtensionAPI {
   static async onDisable(id) {
     newTabPopup.clearConfirmation(id);
-    await ExtensionSettingsStore.initialize();
-    if (
-      ExtensionSettingsStore.hasSetting(id, STORE_TYPE, NEW_TAB_SETTING_NAME)
-    ) {
-      ExtensionSettingsStore.disable(id, STORE_TYPE, NEW_TAB_SETTING_NAME);
-    }
+    await processSettings("disable", id);
+  }
+
+  static async onEnabling(id) {
+    await processSettings("enable", id);
   }
 
   static async onUninstall(id) {
     // TODO: This can be removed once bug 1438364 is fixed and all data is cleaned up.
     newTabPopup.clearConfirmation(id);
-
-    await ExtensionSettingsStore.initialize();
-    if (
-      ExtensionSettingsStore.hasSetting(id, STORE_TYPE, NEW_TAB_SETTING_NAME)
-    ) {
-      ExtensionSettingsStore.removeSetting(
-        id,
-        STORE_TYPE,
-        NEW_TAB_SETTING_NAME
-      );
-    }
+    await processSettings("removeSetting", id);
   }
 
   static async onUpdate(id, manifest) {
@@ -163,11 +159,10 @@ this.urlOverrides = class extends ExtensionAPI {
     let { extension } = this;
     let { manifest } = extension;
 
-    await ExtensionSettingsStore.initialize();
-
     if (manifest.chrome_url_overrides.newtab) {
       let url = extension.baseURI.resolve(manifest.chrome_url_overrides.newtab);
 
+      await ExtensionSettingsStore.initialize();
       let item = await ExtensionSettingsStore.addSetting(
         extension.id,
         STORE_TYPE,
