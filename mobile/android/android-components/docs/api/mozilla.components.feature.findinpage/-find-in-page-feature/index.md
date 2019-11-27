@@ -2,7 +2,7 @@
 
 # FindInPageFeature
 
-`class FindInPageFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`BackHandler`](../../mozilla.components.support.base.feature/-back-handler/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/findinpage/src/main/java/mozilla/components/feature/findinpage/FindInPageFeature.kt#L20)
+`class FindInPageFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`UserInteractionHandler`](../../mozilla.components.support.base.feature/-user-interaction-handler/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/findinpage/src/main/java/mozilla/components/feature/findinpage/FindInPageFeature.kt#L20)
 
 Feature implementation that will keep a [FindInPageView](../../mozilla.components.feature.findinpage.view/-find-in-page-view/index.md) in sync with a bound [SessionState](../../mozilla.components.browser.state.state/-session-state/index.md).
 
@@ -21,6 +21,12 @@ Feature implementation that will keep a [FindInPageView](../../mozilla.component
 | [start](start.md) | `fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [stop](stop.md) | `fun stop(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [unbind](unbind.md) | `fun unbind(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Unbinds the feature from a previously bound [SessionState](../../mozilla.components.browser.state.state/-session-state/index.md). The [FindInPageView](../../mozilla.components.feature.findinpage.view/-find-in-page-view/index.md) will be cleared and not be updated to present the "Find in Page" state anymore. |
+
+### Inherited Functions
+
+| Name | Summary |
+|---|---|
+| [onHomePressed](../../mozilla.components.support.base.feature/-user-interaction-handler/on-home-pressed.md) | `open fun onHomePressed(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>In most cases, when the home button is pressed, we invoke this callback to inform the app that the user is going to leave the app. |
 
 ### Extension Functions
 

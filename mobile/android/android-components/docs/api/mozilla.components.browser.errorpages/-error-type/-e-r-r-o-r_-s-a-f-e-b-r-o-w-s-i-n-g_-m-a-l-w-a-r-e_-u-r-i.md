@@ -2,11 +2,12 @@
 
 # ERROR_SAFEBROWSING_MALWARE_URI
 
-`ERROR_SAFEBROWSING_MALWARE_URI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L138)
+`ERROR_SAFEBROWSING_MALWARE_URI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L144)
 
 ### Inherited Properties
 
 | Name | Summary |
 |---|---|
 | [messageRes](message-res.md) | `val messageRes: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+| [refreshButtonRes](refresh-button-res.md) | `val refreshButtonRes: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [titleRes](title-res.md) | `val titleRes: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |

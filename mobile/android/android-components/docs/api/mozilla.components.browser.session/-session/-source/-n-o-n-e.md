@@ -2,7 +2,7 @@
 
 # NONE
 
-`NONE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L158)
+`NONE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L159)
 
 Default value and for testing purposes
 

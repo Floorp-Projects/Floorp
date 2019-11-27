@@ -2,11 +2,12 @@
 
 # ERROR_INVALID_CONTENT_ENCODING
 
-`ERROR_INVALID_CONTENT_ENCODING` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L106)
+`ERROR_INVALID_CONTENT_ENCODING` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L107)
 
 ### Inherited Properties
 
 | Name | Summary |
 |---|---|
 | [messageRes](message-res.md) | `val messageRes: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+| [refreshButtonRes](refresh-button-res.md) | `val refreshButtonRes: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [titleRes](title-res.md) | `val titleRes: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
