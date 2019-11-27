@@ -2,7 +2,7 @@
 
 # Session
 
-`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L50)
+`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L51)
 
 Value type that represents the state of a browser session. Changes can be observed.
 
@@ -73,4 +73,5 @@ Value type that represents the state of a browser session. Changes can be observ
 | [installableManifest](../../mozilla.components.feature.pwa.ext/installable-manifest.md) | `fun `[`Session`](./index.md)`.installableManifest(): `[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`?`<br>Checks if the current session represents an installable web app. If so, return the web app manifest. Otherwise, return null. |
 | [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
 | [toCustomTabSessionState](../../mozilla.components.browser.session.ext/to-custom-tab-session-state.md) | `fun `[`Session`](./index.md)`.toCustomTabSessionState(): `[`CustomTabSessionState`](../../mozilla.components.browser.state.state/-custom-tab-session-state/index.md)<br>Creates a matching [CustomTabSessionState](../../mozilla.components.browser.state.state/-custom-tab-session-state/index.md) from a custom tab [Session](./index.md). |
+| [toReaderState](../../mozilla.components.browser.session.ext/to-reader-state.md) | `fun `[`Session`](./index.md)`.toReaderState(): `[`ReaderState`](../../mozilla.components.browser.state.state/-reader-state/index.md)<br>Creates a matching [ReaderState](../../mozilla.components.browser.state.state/-reader-state/index.md) from a [Session](./index.md) |
 | [toTabSessionState](../../mozilla.components.browser.session.ext/to-tab-session-state.md) | `fun `[`Session`](./index.md)`.toTabSessionState(): `[`TabSessionState`](../../mozilla.components.browser.state.state/-tab-session-state/index.md)<br>Create a matching [TabSessionState](../../mozilla.components.browser.state.state/-tab-session-state/index.md) from a [Session](./index.md). |

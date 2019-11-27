@@ -6,7 +6,7 @@
 
 | Name | Summary |
 |---|---|
-| [QrFeature](-qr-feature/index.md) | `class QrFeature : `[`LifecycleAwareFeature`](../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`BackHandler`](../mozilla.components.support.base.feature/-back-handler/index.md)`, `[`PermissionsFeature`](../mozilla.components.support.base.feature/-permissions-feature/index.md)<br>Feature implementation that provides QR scanning functionality via the [QrFragment](-qr-fragment/index.md). |
+| [QrFeature](-qr-feature/index.md) | `class QrFeature : `[`LifecycleAwareFeature`](../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`UserInteractionHandler`](../mozilla.components.support.base.feature/-user-interaction-handler/index.md)`, `[`PermissionsFeature`](../mozilla.components.support.base.feature/-permissions-feature/index.md)<br>Feature implementation that provides QR scanning functionality via the [QrFragment](-qr-fragment/index.md). |
 | [QrFragment](-qr-fragment/index.md) | `class QrFragment : Fragment`<br>A [Fragment](#) that displays a QR scanner. |
 
 ### Type Aliases

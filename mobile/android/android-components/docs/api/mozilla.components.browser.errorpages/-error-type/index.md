@@ -26,6 +26,7 @@ Enum containing all supported error types that we can display an error page for.
 | [ERROR_CONTENT_CRASHED](-e-r-r-o-r_-c-o-n-t-e-n-t_-c-r-a-s-h-e-d.md) |  |
 | [ERROR_INVALID_CONTENT_ENCODING](-e-r-r-o-r_-i-n-v-a-l-i-d_-c-o-n-t-e-n-t_-e-n-c-o-d-i-n-g.md) |  |
 | [ERROR_UNKNOWN_HOST](-e-r-r-o-r_-u-n-k-n-o-w-n_-h-o-s-t.md) |  |
+| [ERROR_NO_INTERNET](-e-r-r-o-r_-n-o_-i-n-t-e-r-n-e-t.md) |  |
 | [ERROR_MALFORMED_URI](-e-r-r-o-r_-m-a-l-f-o-r-m-e-d_-u-r-i.md) |  |
 | [ERROR_UNKNOWN_PROTOCOL](-e-r-r-o-r_-u-n-k-n-o-w-n_-p-r-o-t-o-c-o-l.md) |  |
 | [ERROR_FILE_NOT_FOUND](-e-r-r-o-r_-f-i-l-e_-n-o-t_-f-o-u-n-d.md) |  |
@@ -42,6 +43,7 @@ Enum containing all supported error types that we can display an error page for.
 | Name | Summary |
 |---|---|
 | [messageRes](message-res.md) | `val messageRes: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+| [refreshButtonRes](refresh-button-res.md) | `val refreshButtonRes: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [titleRes](title-res.md) | `val titleRes: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 
 ### Extension Functions

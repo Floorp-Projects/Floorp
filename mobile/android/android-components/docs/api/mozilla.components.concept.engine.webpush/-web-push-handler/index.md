@@ -10,7 +10,7 @@ A handler for all WebPush messages and [subscriptions](https://developer.mozilla
 
 | Name | Summary |
 |---|---|
-| [onPushMessage](on-push-message.md) | `abstract fun onPushMessage(subscription: `[`WebPushSubscription`](../-web-push-subscription/index.md)`, message: `[`ByteArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Invoked when a push message has been delivered. |
+| [onPushMessage](on-push-message.md) | `abstract fun onPushMessage(scope: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, message: `[`ByteArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Invoked when a push message has been delivered. |
 | [onSubscriptionChanged](on-subscription-changed.md) | `abstract fun onSubscriptionChanged(subscription: `[`WebPushSubscription`](../-web-push-subscription/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Invoked when a subscription has now changed/expired. |
 
 ### Extension Functions
