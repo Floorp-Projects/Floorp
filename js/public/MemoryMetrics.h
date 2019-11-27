@@ -730,7 +730,6 @@ struct RealmStats {
   MACRO(Other, MallocHeap, realmObject)                       \
   MACRO(Other, MallocHeap, realmTables)                       \
   MACRO(Other, MallocHeap, innerViewsTable)                   \
-  MACRO(Other, MallocHeap, lazyArrayBuffersTable)             \
   MACRO(Other, MallocHeap, objectMetadataTable)               \
   MACRO(Other, MallocHeap, savedStacksSet)                    \
   MACRO(Other, MallocHeap, varNamesSet)                       \
