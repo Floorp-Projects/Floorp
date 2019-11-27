@@ -1273,11 +1273,12 @@ nsresult nsAutoCompleteController::EnterMatch(bool aIsPopupSelection,
   }
 
   obsSvc->NotifyObservers(input, "autocomplete-did-enter-text", nullptr);
-  ClosePopup();
 
   bool cancel;
   bool itemWasSelected = selectedIndex >= 0 && !value.IsEmpty();
   input->OnTextEntered(aEvent, itemWasSelected, &cancel);
+
+  ClosePopup();
 
   return NS_OK;
 }
