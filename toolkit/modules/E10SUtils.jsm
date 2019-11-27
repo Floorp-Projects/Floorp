@@ -395,6 +395,8 @@ var E10SUtils = {
       return NOT_REMOTE;
     }
 
+    dump(aURI.spec + "\n");
+
     switch (aURI.scheme) {
       case "javascript":
         // javascript URIs can load in any, they apply to the current document.
