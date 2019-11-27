@@ -56,7 +56,7 @@ impl FontDescriptor {
             }
         } else {
             FontDescriptor::Family {
-                name: PLATFORM_DEFAULT_FACE_NAME.clone(),
+                name: PLATFORM_DEFAULT_FACE_NAME.to_string(),
             }
         }
     }
