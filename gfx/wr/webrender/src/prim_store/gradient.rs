@@ -166,22 +166,25 @@ impl From<LinearGradientKey> for LinearGradientTemplate {
             // Fast path not supported on segmented (border-image) gradients.
             item.nine_patch.is_none();
 
-        let mut prev_offset = None;
         // Convert the stops to more convenient representation
         // for the current gradient builder.
+        let mut prev_color = None;
+
         let stops: Vec<GradientStop> = item.stops.iter().map(|stop| {
             let color: ColorF = stop.color.into();
             min_alpha = min_alpha.min(color.a);
 
-            // The fast path doesn't support hard color stops, yet.
-            // Since the length of the gradient is a fixed size (512 device pixels), if there
-            // is a hard stop you will see bilinear interpolation with this method, instead
-            // of an abrupt color change.
-            if prev_offset == Some(stop.offset) {
-                supports_caching = false;
+            if let Some(prev_color) = prev_color {
+                // The fast path doesn't support hard color stops, yet.
+                // Since the length of the gradient is a fixed size (512 device pixels), if there
+                // is a hard stop you will see bilinear interpolation with this method, instead
+                // of an abrupt color change.
+                if prev_color == color {
+                    supports_caching = false;
+                }
             }
 
-            prev_offset = Some(stop.offset);
+            prev_color = Some(color);
 
             GradientStop {
                 offset: stop.offset,
