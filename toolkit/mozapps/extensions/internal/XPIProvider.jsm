@@ -1716,7 +1716,11 @@ class BootstrapScope {
    */
   async callBootstrapMethod(aMethod, aReason, aExtraParams = {}) {
     let { addon, runInSafeMode } = this;
-    if (Services.appinfo.inSafeMode && !runInSafeMode) {
+    if (
+      Services.appinfo.inSafeMode &&
+      !runInSafeMode &&
+      aMethod !== "uninstall"
+    ) {
       return null;
     }
 

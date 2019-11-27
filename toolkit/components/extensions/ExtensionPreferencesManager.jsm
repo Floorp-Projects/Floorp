@@ -60,8 +60,11 @@ XPCOMUtils.defineLazyGetter(this, "defaultPreferences", function() {
 });
 
 /* eslint-disable mozilla/balanced-listeners */
-Management.on("uninstall", (type, { id }) => {
-  ExtensionPreferencesManager.removeAll(id);
+Management.on("uninstall", async (type, { id }) => {
+  // Ensure managed preferences are cleared if they were
+  // not cleared at the module level.
+  await Management.asyncLoadSettingsModules();
+  return this.ExtensionPreferencesManager.removeAll(id);
 });
 
 Management.on("disable", (type, id) => {
