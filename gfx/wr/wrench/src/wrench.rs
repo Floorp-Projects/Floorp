@@ -603,6 +603,7 @@ impl Wrench {
         ];
 
         let color_and_offset = [(ColorF::BLACK, 2.0), (ColorF::WHITE, 0.0)];
+        self.renderer.device.begin_frame(); // next line might compile shaders:
         let dr = self.renderer.debug_renderer().unwrap();
 
         for ref co in &color_and_offset {
@@ -613,6 +614,7 @@ impl Wrench {
                 y += self.device_pixel_ratio * dr.line_height();
             }
         }
+        self.renderer.device.end_frame();
     }
 
     pub fn shut_down(self, rx: Receiver<NotifierEvent>) {
