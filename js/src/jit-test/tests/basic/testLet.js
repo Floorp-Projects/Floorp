@@ -19,9 +19,9 @@ function test(str, arg, result)
     // test reflection logic
     Reflect.parse(got);
 
-    // test xdr by cloning a cross-compartment function
+    // test script cloning
     var code = "(function (x) { " + str + " })";
-    var c = clone(otherGlobal.evaluate(code));
+    var c = cloneAndExecuteScript(code, otherGlobal);
     assertEq(c.toSource(), eval(code).toSource());
 
     var got = fun(arg);
