@@ -155,6 +155,7 @@ jobs:
       run-on-projects:
           - mozilla-beta
           - mozilla-release
+          - mozilla-esr68
       when:
           by-project:
               # No default branch
@@ -162,6 +163,9 @@ jobs:
                   - {hour: 7, minute: 0}
                   - {hour: 19, minute: 0}
               mozilla-release:
+                  - {hour: 7, minute: 0}
+                  - {hour: 19, minute: 0}
+              mozilla-esr68:
                   - {hour: 7, minute: 0}
                   - {hour: 19, minute: 0}
 
