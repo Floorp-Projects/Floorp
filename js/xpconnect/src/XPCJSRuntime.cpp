@@ -1121,7 +1121,7 @@ void XPCJSRuntime::Shutdown(JSContext* cx) {
 
   JS::SetGCSliceCallback(cx, mPrevGCSliceCallback);
 
-  nsScriptSecurityManager::GetScriptSecurityManager()->ClearJSCallbacks(cx);
+  nsScriptSecurityManager::ClearJSCallbacks(cx);
 
   // Shut down the helper threads
   gHelperThreads->Shutdown();
