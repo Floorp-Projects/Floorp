@@ -171,10 +171,9 @@ nsAttrValue::nsAttrValue(const nsIntMargin& aValue) : mBits(0) {
 nsAttrValue::~nsAttrValue() { ResetIfSet(); }
 
 /* static */
-nsresult nsAttrValue::Init() {
-  NS_ASSERTION(!sEnumTableArray, "nsAttrValue already initialized");
+void nsAttrValue::Init() {
+  MOZ_ASSERT(!sEnumTableArray, "nsAttrValue already initialized");
   sEnumTableArray = new nsTArray<const EnumTable*>;
-  return NS_OK;
 }
 
 /* static */
