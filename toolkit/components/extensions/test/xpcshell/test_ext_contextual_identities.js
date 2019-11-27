@@ -2,16 +2,13 @@
 
 do_get_profile();
 
-function waitForPrefChange(pref) {
-  return new Promise(resolve => {
-    function observeChange() {
-      Services.prefs.removeObserver(pref, observeChange);
-      resolve();
-    }
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionPreferencesManager",
+  "resource://gre/modules/ExtensionPreferencesManager.jsm"
+);
 
-    Services.prefs.addObserver(pref, observeChange);
-  });
-}
+const CONTAINERS_PREF = "privacy.userContext.enabled";
 
 AddonTestUtils.init(this);
 
@@ -45,7 +42,6 @@ add_task(async function test_contextualIdentities_without_permissions() {
 });
 
 add_task(async function test_contextualIdentity_events() {
-  const CONTAINERS_PREF = "privacy.userContext.enabled";
   async function background() {
     function createOneTimeListener(type) {
       return new Promise((resolve, reject) => {
@@ -157,7 +153,6 @@ add_task(async function test_contextualIdentity_events() {
 });
 
 add_task(async function test_contextualIdentity_with_permissions() {
-  const CONTAINERS_PREF = "privacy.userContext.enabled";
   const initial = Services.prefs.getBoolPref(CONTAINERS_PREF);
 
   async function background() {
@@ -364,11 +359,7 @@ add_task(async function test_contextualIdentity_with_permissions() {
     true,
     "Pref should now be enabled, whatever it's initial state"
   );
-  const prefChange = waitForPrefChange(CONTAINERS_PREF);
   await extension.unload();
-  if (initial === false) {
-    await prefChange;
-  }
   equal(
     Services.prefs.getBoolPref(CONTAINERS_PREF),
     initial,
@@ -379,7 +370,6 @@ add_task(async function test_contextualIdentity_with_permissions() {
 });
 
 add_task(async function test_contextualIdentity_extensions_enable_containers() {
-  const CONTAINERS_PREF = "privacy.userContext.enabled";
   const initial = Services.prefs.getBoolPref(CONTAINERS_PREF);
   async function background() {
     let ci = await browser.contextualIdentities.get("firefox-container-1");
@@ -399,6 +389,19 @@ add_task(async function test_contextualIdentity_extensions_enable_containers() {
       },
     });
   }
+  async function testSetting(expect, message) {
+    let setting = await ExtensionPreferencesManager.getSetting(
+      "privacy.containers"
+    );
+    if (expect === null) {
+      equal(setting, null, message);
+    } else {
+      equal(setting.value, expect, message);
+    }
+  }
+  function testPref(expect, message) {
+    equal(Services.prefs.getBoolPref(CONTAINERS_PREF), expect, message);
+  }
 
   let extension = makeExtension("containers-test@mozilla.org");
   await extension.startup();
@@ -408,40 +411,24 @@ add_task(async function test_contextualIdentity_extensions_enable_containers() {
     true,
     "Pref should now be enabled, whatever it's initial state"
   );
-  const prefChange = waitForPrefChange(CONTAINERS_PREF);
   await extension.unload();
-  // If pref was false we should wait for the pref to change back here.
-  if (initial === false) {
-    await prefChange;
-  }
-  equal(
-    Services.prefs.getBoolPref(CONTAINERS_PREF),
-    initial,
-    "Pref should now be initial state"
-  );
+  await testSetting(null, "setting should be unset");
+  testPref(initial, "setting should be initial value");
 
   // Lets set containers explicitly to be off and test we keep it that way after removal
   Services.prefs.setBoolPref(CONTAINERS_PREF, false);
+
   let extension1 = makeExtension("containers-test-1@mozilla.org");
   await extension1.startup();
   await extension1.awaitFinish("contextualIdentities");
-  equal(
-    Services.prefs.getBoolPref(CONTAINERS_PREF),
-    true,
-    "Pref should now be enabled, whatever it's initial state"
-  );
-  const prefChange1 = waitForPrefChange(CONTAINERS_PREF);
-  await extension1.unload();
-  // We explicitly have a pref that was set off, extensions turned it on
-  // Lets wait until the pref flips back to the user set value of off
-  await prefChange1;
-  equal(
-    Services.prefs.getBoolPref(CONTAINERS_PREF),
-    false,
-    "Pref should now be disabled, whatever it's initial state"
-  );
+  await testSetting(extension1.id, "setting should be controlled");
+  testPref(true, "Pref should now be enabled, whatever it's initial state");
 
-  // Lets set containers explicitly to be on and test we keep it that way after removal
+  await extension1.unload();
+  await testSetting(null, "setting should be unset");
+  testPref(false, "Pref should be false");
+
+  // Lets set containers explicitly to be on and test we keep it that way after removal.
   Services.prefs.setBoolPref(CONTAINERS_PREF, true);
 
   let extension2 = makeExtension("containers-test-2@mozilla.org");
@@ -452,29 +439,19 @@ add_task(async function test_contextualIdentity_extensions_enable_containers() {
   await extension3.awaitFinish("contextualIdentities");
 
   // Flip the ordering to check it's still enabled
-  equal(
-    Services.prefs.getBoolPref(CONTAINERS_PREF),
-    true,
-    "Pref should now be enabled 1"
-  );
+  await testSetting(extension3.id, "setting should still be controlled by 3");
+  testPref(true, "Pref should now be enabled 1");
   await extension3.unload();
-  equal(
-    Services.prefs.getBoolPref(CONTAINERS_PREF),
-    true,
-    "Pref should now be enabled 2"
-  );
+  await testSetting(extension2.id, "setting should still be controlled by 2");
+  testPref(true, "Pref should now be enabled 2");
   await extension2.unload();
-  equal(
-    Services.prefs.getBoolPref(CONTAINERS_PREF),
-    true,
-    "Pref should now be enabled 3"
-  );
+  await testSetting(null, "setting should be unset");
+  testPref(true, "Pref should now be enabled 3");
 
   Services.prefs.clearUserPref(CONTAINERS_PREF);
 });
 
 add_task(async function test_contextualIdentity_preference_change() {
-  const CONTAINERS_PREF = "privacy.userContext.enabled";
   async function background() {
     let extensionInfo = await browser.management.getSelf();
     if (extensionInfo.version == "1.0.0") {
@@ -525,9 +502,12 @@ add_task(async function test_contextualIdentity_preference_change() {
   await extension2.startup();
   await extension2.awaitFinish("contextualIdentities");
 
-  const prefChange = waitForPrefChange(CONTAINERS_PREF);
   await extension.unload();
-  await prefChange;
+  equal(
+    Services.prefs.getBoolPref(CONTAINERS_PREF),
+    false,
+    "Pref should now be the initial state we set it to."
+  );
 
   Services.prefs.clearUserPref(CONTAINERS_PREF);
 });
