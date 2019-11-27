@@ -329,8 +329,6 @@ pref("browser.urlbar.update1", false);
 // Whether we expand the font size when when the urlbar is
 // focused in design update 1.
 pref("browser.urlbar.update1.expandTextOnFocus", false);
-// Whether the urlbar displays a permanent search button in design update 1.
-pref("browser.urlbar.update1.searchButton", false);
 // Whether the urlbar should strip https from urls in the view.
 pref("browser.urlbar.update1.view.stripHttps", false);
 
