@@ -57,7 +57,8 @@ struct Instance
     int clip_address;
     int segment_index;
     int flags;
-    int user_data;
+    int resource_address;
+    int brush_kind;
 };
 
 Instance decode_instance_attributes() {
@@ -68,7 +69,8 @@ Instance decode_instance_attributes() {
     instance.clip_address = aData.y & 0xffff;
     instance.segment_index = aData.z & 0xffff;
     instance.flags = aData.z & 0xffff0000;
-    instance.user_data = aData.w;
+    instance.resource_address = aData.w & 0xffffff;
+    instance.brush_kind = aData.w & 0xff000000;
 
     return instance;
 }

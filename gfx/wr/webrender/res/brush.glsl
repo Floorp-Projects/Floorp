@@ -72,6 +72,11 @@ void brush_vs(
 
 #define INVALID_SEGMENT_INDEX                   0xffff
 
+// These constants must match the BrushShaderKind enum in gpu_types.rs.
+#define BRUSH_KIND_SOLID 0x1000000
+#define BRUSH_KIND_IMAGE 0x2000000
+#define BRUSH_KIND_TEXT  0x4000000
+
 void main(void) {
     // Load the brush instance from vertex attributes.
     Instance instance = decode_instance_attributes();
@@ -158,7 +163,7 @@ void main(void) {
         ph.local_rect,
         segment_rect,
         ph.user_data,
-        instance.user_data,
+        instance.resource_address,
         transform.m,
         pic_task,
         brush_flags,
