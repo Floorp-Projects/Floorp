@@ -167,7 +167,6 @@ static bool CanInlineCrossRealm(InlinableNative native) {
     case InlinableNative::IntrinsicTypedArrayByteOffset:
     case InlinableNative::IntrinsicTypedArrayElementShift:
     case InlinableNative::IntrinsicObjectIsTypedObject:
-    case InlinableNative::IntrinsicObjectIsTransparentTypedObject:
     case InlinableNative::IntrinsicObjectIsTypeDescr:
     case InlinableNative::IntrinsicTypeDescrIsSimpleType:
     case InlinableNative::IntrinsicTypeDescrIsArrayType:
@@ -574,9 +573,6 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
                             &OutlineOpaqueTypedObject::class_,
                             &InlineTransparentTypedObject::class_,
                             &InlineOpaqueTypedObject::class_);
-    case InlinableNative::IntrinsicObjectIsTransparentTypedObject:
-      return inlineHasClass(callInfo, &OutlineTransparentTypedObject::class_,
-                            &InlineTransparentTypedObject::class_);
     case InlinableNative::IntrinsicObjectIsTypeDescr:
       return inlineObjectIsTypeDescr(callInfo);
     case InlinableNative::IntrinsicTypeDescrIsSimpleType:
