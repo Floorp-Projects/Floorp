@@ -851,11 +851,14 @@ SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
   // FIXME(heycam): We could create a single PropertyProvider for all
   // TextRenderedRuns that correspond to the text frame, rather than recreate
   // it each time here.
-  nsTextFrame::PropertyProvider provider(mFrame, start);
+  Maybe<nsTextFrame::PropertyProvider> provider;
+  if (StaticPrefs::svg_text_spacing_enabled()) {
+    provider.emplace(mFrame, start);
+  }
 
   // Measure that range.
   gfxTextRun::Metrics metrics = textRun->MeasureText(
-      range, gfxFont::LOOSE_INK_EXTENTS, nullptr, &provider);
+      range, gfxFont::LOOSE_INK_EXTENTS, nullptr, provider.ptrOr(nullptr));
   // Make sure it includes the font-box.
   gfxRect fontBox(0, -metrics.mAscent, metrics.mAdvanceWidth,
                   metrics.mAscent + metrics.mDescent);
@@ -868,7 +871,7 @@ SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
   gfxFloat x, width;
   if (aFlags & eNoHorizontalOverflow) {
     x = 0.0;
-    width = textRun->GetAdvanceWidth(range, &provider);
+    width = textRun->GetAdvanceWidth(range, provider.ptrOr(nullptr));
   } else {
     x = metrics.mBoundingBox.x;
     width = metrics.mBoundingBox.width;
@@ -949,7 +952,10 @@ void TextRenderedRun::GetClipEdges(nscoord& aVisIStartEdge,
 
   gfxSkipCharsIterator it = mFrame->EnsureTextRun(nsTextFrame::eInflated);
   gfxTextRun* textRun = mFrame->GetTextRun(nsTextFrame::eInflated);
-  nsTextFrame::PropertyProvider provider(mFrame, it);
+  Maybe<nsTextFrame::PropertyProvider> provider;
+  if (StaticPrefs::svg_text_spacing_enabled()) {
+    provider.emplace(mFrame, it);
+  }
 
   // Get the covered content offset/length for this rendered run in skipped
   // characters, since that is what GetAdvanceWidth expects.
@@ -974,12 +980,12 @@ void TextRenderedRun::GetClipEdges(nscoord& aVisIStartEdge,
   // Measure the advance width in the text run between the start of
   // frame's content and the start of the rendered run's content,
   nscoord startEdge = textRun->GetAdvanceWidth(
-      Range(frameRange.start, runRange.start), &provider);
+      Range(frameRange.start, runRange.start), provider.ptrOr(nullptr));
 
   // and between the end of the rendered run's content and the end
   // of the frame's content.
-  nscoord endEdge =
-      textRun->GetAdvanceWidth(Range(runRange.end, frameRange.end), &provider);
+  nscoord endEdge = textRun->GetAdvanceWidth(
+      Range(runRange.end, frameRange.end), provider.ptrOr(nullptr));
 
   if (textRun->IsRightToLeft()) {
     aVisIStartEdge = endEdge;
@@ -993,12 +999,15 @@ void TextRenderedRun::GetClipEdges(nscoord& aVisIStartEdge,
 nscoord TextRenderedRun::GetAdvanceWidth() const {
   gfxSkipCharsIterator it = mFrame->EnsureTextRun(nsTextFrame::eInflated);
   gfxTextRun* textRun = mFrame->GetTextRun(nsTextFrame::eInflated);
-  nsTextFrame::PropertyProvider provider(mFrame, it);
+  Maybe<nsTextFrame::PropertyProvider> provider;
+  if (StaticPrefs::svg_text_spacing_enabled()) {
+    provider.emplace(mFrame, it);
+  }
 
   Range range = ConvertOriginalToSkipped(it, mTextFrameContentOffset,
                                          mTextFrameContentLength);
 
-  return textRun->GetAdvanceWidth(range, &provider);
+  return textRun->GetAdvanceWidth(range, provider.ptrOr(nullptr));
 }
 
 int32_t TextRenderedRun::GetCharNumAtPosition(nsPresContext* aContext,
@@ -1043,14 +1052,17 @@ int32_t TextRenderedRun::GetCharNumAtPosition(nsPresContext* aContext,
 
   gfxSkipCharsIterator it = mFrame->EnsureTextRun(nsTextFrame::eInflated);
   gfxTextRun* textRun = mFrame->GetTextRun(nsTextFrame::eInflated);
-  nsTextFrame::PropertyProvider provider(mFrame, it);
+  Maybe<nsTextFrame::PropertyProvider> provider;
+  if (StaticPrefs::svg_text_spacing_enabled()) {
+    provider.emplace(mFrame, it);
+  }
 
   // Next check that the point lies horizontally within the left and right
   // edges of the text.
   Range range = ConvertOriginalToSkipped(it, mTextFrameContentOffset,
                                          mTextFrameContentLength);
-  gfxFloat runAdvance =
-      aContext->AppUnitsToGfxUnits(textRun->GetAdvanceWidth(range, &provider));
+  gfxFloat runAdvance = aContext->AppUnitsToGfxUnits(
+      textRun->GetAdvanceWidth(range, provider.ptrOr(nullptr)));
 
   gfxFloat pos = writingMode.IsVertical() ? p.y : p.x;
   if (pos < 0 || pos >= runAdvance) {
@@ -1064,7 +1076,7 @@ int32_t TextRenderedRun::GetCharNumAtPosition(nsPresContext* aContext,
   for (int32_t i = mTextFrameContentLength - 1; i >= 0; i--) {
     range = ConvertOriginalToSkipped(it, mTextFrameContentOffset, i);
     gfxFloat advance = aContext->AppUnitsToGfxUnits(
-        textRun->GetAdvanceWidth(range, &provider));
+        textRun->GetAdvanceWidth(range, provider.ptrOr(nullptr)));
     if ((rtl && pos < runAdvance - advance) || (!rtl && pos >= advance)) {
       return i;
     }
@@ -2405,12 +2417,15 @@ gfxFloat CharIterator::GetGlyphAdvance(nsPresContext* aContext) const {
     return 0.0;
   }
 
-  nsTextFrame::PropertyProvider provider(TextFrame(), start);
+  Maybe<nsTextFrame::PropertyProvider> provider;
+  if (StaticPrefs::svg_text_spacing_enabled()) {
+    provider.emplace(TextFrame(), start);
+  }
 
   float cssPxPerDevPx =
       nsPresContext::AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
 
-  gfxFloat advance = mTextRun->GetAdvanceWidth(range, &provider);
+  gfxFloat advance = mTextRun->GetAdvanceWidth(range, provider.ptrOr(nullptr));
   return aContext->AppUnitsToGfxUnits(advance) * mLengthAdjustScaleFactor *
          cssPxPerDevPx;
 }
@@ -2421,11 +2436,14 @@ gfxFloat CharIterator::GetAdvance(nsPresContext* aContext) const {
 
   gfxSkipCharsIterator start =
       TextFrame()->EnsureTextRun(nsTextFrame::eInflated);
-  nsTextFrame::PropertyProvider provider(TextFrame(), start);
+  Maybe<nsTextFrame::PropertyProvider> provider;
+  if (StaticPrefs::svg_text_spacing_enabled()) {
+    provider.emplace(TextFrame(), start);
+  }
 
   uint32_t offset = mSkipCharsIterator.GetSkippedOffset();
-  gfxFloat advance =
-      mTextRun->GetAdvanceWidth(Range(offset, offset + 1), &provider);
+  gfxFloat advance = mTextRun->GetAdvanceWidth(Range(offset, offset + 1),
+                                               provider.ptrOr(nullptr));
   return aContext->AppUnitsToGfxUnits(advance) * mLengthAdjustScaleFactor *
          cssPxPerDevPx;
 }
@@ -2446,12 +2464,15 @@ gfxFloat CharIterator::GetGlyphPartialAdvance(uint32_t aPartLength,
     return 0.0;
   }
 
-  nsTextFrame::PropertyProvider provider(TextFrame(), start);
+  Maybe<nsTextFrame::PropertyProvider> provider;
+  if (StaticPrefs::svg_text_spacing_enabled()) {
+    provider.emplace(TextFrame(), start);
+  }
 
   float cssPxPerDevPx =
       nsPresContext::AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
 
-  gfxFloat advance = mTextRun->GetAdvanceWidth(range, &provider);
+  gfxFloat advance = mTextRun->GetAdvanceWidth(range, provider.ptrOr(nullptr));
   return aContext->AppUnitsToGfxUnits(advance) * mLengthAdjustScaleFactor *
          cssPxPerDevPx;
 }
@@ -3802,12 +3823,15 @@ nsresult SVGTextFrame::GetSubStringLength(nsIContent* aContent,
 
       gfxSkipCharsIterator it = frame->EnsureTextRun(nsTextFrame::eInflated);
       gfxTextRun* textRun = frame->GetTextRun(nsTextFrame::eInflated);
-      nsTextFrame::PropertyProvider provider(frame, it);
+      Maybe<nsTextFrame::PropertyProvider> provider;
+      if (StaticPrefs::svg_text_spacing_enabled()) {
+        provider.emplace(frame, it);
+      }
 
       Range range = ConvertOriginalToSkipped(it, offset, trimmedLength);
 
       // Accumulate the advance.
-      textLength += textRun->GetAdvanceWidth(range, &provider);
+      textLength += textRun->GetAdvanceWidth(range, provider.ptrOr(nullptr));
     }
 
     // Advance, ready for next call:
@@ -3880,12 +3904,15 @@ nsresult SVGTextFrame::GetSubStringLengthSlowFallback(nsIContent* aContent,
       gfxSkipCharsIterator it =
           run.mFrame->EnsureTextRun(nsTextFrame::eInflated);
       gfxTextRun* textRun = run.mFrame->GetTextRun(nsTextFrame::eInflated);
-      nsTextFrame::PropertyProvider provider(run.mFrame, it);
+      Maybe<nsTextFrame::PropertyProvider> provider;
+      if (StaticPrefs::svg_text_spacing_enabled()) {
+        provider.emplace(run.mFrame, it);
+      }
 
       Range range = ConvertOriginalToSkipped(it, offset, length);
 
       // Accumulate the advance.
-      textLength += textRun->GetAdvanceWidth(range, &provider);
+      textLength += textRun->GetAdvanceWidth(range, provider.ptrOr(nullptr));
     }
 
     run = runIter.Next();
@@ -4368,7 +4395,10 @@ void SVGTextFrame::DetermineCharPositions(nsTArray<nsPoint>& aPositions) {
   for (nsTextFrame* frame = frit.Current(); frame; frame = frit.Next()) {
     gfxSkipCharsIterator it = frame->EnsureTextRun(nsTextFrame::eInflated);
     gfxTextRun* textRun = frame->GetTextRun(nsTextFrame::eInflated);
-    nsTextFrame::PropertyProvider provider(frame, it);
+    Maybe<nsTextFrame::PropertyProvider> provider;
+    if (StaticPrefs::svg_text_spacing_enabled()) {
+      provider.emplace(frame, it);
+    }
 
     // Reset the position to the new frame's position.
     position = frit.Position();
@@ -4406,8 +4436,8 @@ void SVGTextFrame::DetermineCharPositions(nsTArray<nsPoint>& aPositions) {
            (!textRun->IsLigatureGroupStart(it.GetSkippedOffset()) ||
             !textRun->IsClusterStart(it.GetSkippedOffset()))) {
       uint32_t offset = it.GetSkippedOffset();
-      nscoord advance =
-          textRun->GetAdvanceWidth(Range(offset, offset + 1), &provider);
+      nscoord advance = textRun->GetAdvanceWidth(Range(offset, offset + 1),
+                                                 provider.ptrOr(nullptr));
       (textRun->IsVertical() ? position.y : position.x) +=
           textRun->IsRightToLeft() ? -advance : advance;
       aPositions.AppendElement(lastPosition);
@@ -4421,8 +4451,8 @@ void SVGTextFrame::DetermineCharPositions(nsTArray<nsPoint>& aPositions) {
           textRun->IsLigatureGroupStart(it.GetSkippedOffset()) &&
           textRun->IsClusterStart(it.GetSkippedOffset())) {
         // A real visible character.
-        nscoord advance =
-            textRun->GetAdvanceWidth(ClusterRange(textRun, it), &provider);
+        nscoord advance = textRun->GetAdvanceWidth(ClusterRange(textRun, it),
+                                                   provider.ptrOr(nullptr));
         (textRun->IsVertical() ? position.y : position.x) +=
             textRun->IsRightToLeft() ? -advance : advance;
         lastPosition = position;
