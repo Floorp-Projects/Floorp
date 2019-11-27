@@ -612,7 +612,8 @@ FileReader::OnInputStreamReady(nsIAsyncInputStream* aStream) {
     if (rv == NS_BASE_STREAM_CLOSED) {
       rv = NS_OK;
     }
-    return OnLoadEnd(rv);
+    OnLoadEnd(rv);
+    return NS_OK;
   }
 
   mTransferred += count;
@@ -637,7 +638,7 @@ FileReader::GetName(nsACString& aName) {
   return NS_OK;
 }
 
-nsresult FileReader::OnLoadEnd(nsresult aStatus) {
+void FileReader::OnLoadEnd(nsresult aStatus) {
   // Cancel the progress event timer
   ClearProgressEventTimer();
 
@@ -647,20 +648,20 @@ nsresult FileReader::OnLoadEnd(nsresult aStatus) {
   // Quick return, if failed.
   if (NS_FAILED(aStatus)) {
     FreeDataAndDispatchError(aStatus);
-    return NS_OK;
+    return;
   }
 
   // In case we read a different number of bytes, we can assume that the
   // underlying storage has changed. We should not continue.
   if (mDataLen != mTotal) {
     FreeDataAndDispatchError(NS_ERROR_FAILURE);
-    return NS_OK;
+    return;
   }
 
   // ArrayBuffer needs a custom handling.
   if (mDataFormat == FILE_AS_ARRAYBUFFER) {
     OnLoadEndArrayBuffer();
-    return NS_OK;
+    return;
   }
 
   nsresult rv = NS_OK;
@@ -681,11 +682,10 @@ nsresult FileReader::OnLoadEnd(nsresult aStatus) {
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     FreeDataAndDispatchError(rv);
-    return NS_OK;
+    return;
   }
 
   FreeDataAndDispatchSuccess();
-  return NS_OK;
 }
 
 void FileReader::Abort() {
