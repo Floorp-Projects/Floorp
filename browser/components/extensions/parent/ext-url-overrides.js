@@ -100,24 +100,16 @@ ExtensionParent.apiManager.on(
   async (eventName, setting) => {
     let extensionId, url;
     if (setting.type === STORE_TYPE && setting.key === NEW_TAB_SETTING_NAME) {
-      let { item = {} } = setting;
-      if (setting.action === "enable") {
-        // If setting.item exists, it is the new value.  If it doesn't exist, and an
-        // extension is being enabled, we use the id.
-        extensionId = item.id || setting.id;
+      // If the actual setting has changed in some way, we will have
+      // setting.item which is what the setting has been changed to.  If
+      // we have an item, we always want to update the newTabUrl values.
+      let { item } = setting;
+      if (item) {
+        // If we're resetting, id will be undefined.
+        extensionId = item.id;
         url = item.value || item.initialValue;
-      } else if (setting.item) {
-        // We're disabling or removing a setting.
-        if (item.id && item.value) {
-          // Another extension is gaining control.
-          extensionId = item.id;
-          url = item.value;
-        } else {
-          // we're resetting to the original value, do not set extensionId.
-          url = item.initialValue;
-        }
+        setNewTabURL(extensionId, url);
       }
-      setNewTabURL(extensionId, url);
     }
   }
 );
