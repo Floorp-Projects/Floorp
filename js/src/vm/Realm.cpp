@@ -38,6 +38,10 @@
 
 using namespace js;
 
+Realm::DebuggerVectorEntry::DebuggerVectorEntry(js::Debugger* dbg_,
+                                                JSObject* link)
+    : dbg(dbg_), debuggerLink(link) {}
+
 ObjectRealm::ObjectRealm(JS::Zone* zone)
     : innerViews(zone, zone), iteratorCache(zone) {}
 
@@ -268,6 +272,8 @@ void Realm::traceGlobal(JSTracer* trc) {
   TraceEdge(trc, &lexicalEnv_, "realm-global-lexical");
 
   savedStacks_.trace(trc);
+
+  DebugAPI::traceFromRealm(trc, this);
 
   // Atoms are always tenured.
   if (!JS::RuntimeHeapIsMinorCollecting()) {

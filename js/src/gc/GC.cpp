@@ -4176,7 +4176,6 @@ void GCRuntime::markWeakReferences(gcstats::PhaseKind phase) {
         markedAny |= WeakMapBase::markZoneIteratively(zone, &marker);
       }
     }
-    markedAny |= DebugAPI::markIteratively(&marker);
     markedAny |= jit::JitRuntime::MarkJitcodeGlobalTableIteratively(&marker);
 
     if (!markedAny) {
