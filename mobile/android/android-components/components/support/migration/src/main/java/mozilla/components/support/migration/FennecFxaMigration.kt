@@ -40,7 +40,7 @@ private data class FennecAuthenticationInfo(
  *
  * @property failure Wrapped [FxaMigrationResult] indicating exact failure reason.
  */
-class FxaMigrationException(val failure: Failure) : Exception()
+class FxaMigrationException(val failure: Failure) : Exception(failure.toString())
 
 /**
  * Result of an FxA migration.
@@ -106,7 +106,11 @@ sealed class FxaMigrationResult {
          * Failed to sign in into an authenticated account. Currently, this could be either due to network failures,
          * invalid credentials, or server-side issues.
          */
-        data class FailedToSignIntoAuthenticatedAccount(val email: String, val stateLabel: String) : Failure()
+        data class FailedToSignIntoAuthenticatedAccount(val email: String, val stateLabel: String) : Failure() {
+            override fun toString(): String {
+                return "Failed to sign-into authenticated account in state $stateLabel"
+            }
+        }
     }
 }
 
