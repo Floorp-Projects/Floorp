@@ -161,10 +161,8 @@ class OpenDatabaseOp;
 class TransactionBase;
 class TransactionDatabaseOperationBase;
 class VersionChangeTransaction;
-struct CommonCursorTypeTraits;
 template <bool StatementHasIndexKeyBindings>
 struct ValueCursorTypeTraits;
-struct IndexCursorTypeTraits;
 
 /*******************************************************************************
  * Constants
@@ -7594,12 +7592,27 @@ class IndexCountRequestOp final : public IndexRequestOpBase {
   }
 };
 
+struct CursorPosition {
+  // TODO: Probably, it is still necessary to change more related identifiers
+  // (e.g. local variables) and literals, to be in line with the new member
+  // names below.
+
+  Key mPosition;  ///< The current key, i.e. the key representing the cursor's
+                  ///< position
+                  ///< (https://w3c.github.io/IndexedDB/#cursor-position).
+  Key mObjectStorePosition;  ///< The key representing the cursor's object store
+                             ///< position
+  ///< (https://w3c.github.io/IndexedDB/#cursor-object-store-position).
+  Key mLocaleAwarePosition;  ///< If mLocale is set, this is mPosition converted
+                             ///< to mLocale. Otherwise, it is unset.
+
+  const Key& GetSortKey(const Cursor& aCursor) const;
+};
+
 class Cursor final : public PBackgroundIDBCursorParent {
   friend class TransactionBase;
-  friend struct CommonCursorTypeTraits;
   friend struct ValueCursorTypeTraits<true>;
   friend struct ValueCursorTypeTraits<false>;
-  friend struct IndexCursorTypeTraits;
 
   class ContinueOp;
   class CursorOpBase;
@@ -7623,6 +7636,10 @@ class Cursor final : public PBackgroundIDBCursorParent {
   const int64_t mObjectStoreId;
   const int64_t mIndexId;
 
+  // TODO: mContinueQuery, mContinueToQuery, mContinuePrimaryKeyQuery and
+  // mLocaleAwareRangeBound are initialized by OpenOp, and only read by
+  // ContinueOp. For ContinueOp, they should only be visible as const.
+
   nsCString mContinueQuery;
   nsCString mContinueToQuery;
   nsCString mContinuePrimaryKeyQuery;
@@ -7630,24 +7647,12 @@ class Cursor final : public PBackgroundIDBCursorParent {
       mLocale;  ///< The locale if the cursor is locale-aware, otherwise empty.
                 ///< Note that only index-based cursors can be locale-aware.
 
-  // TODO: Probably, it is still necessary to change more related identifiers
-  // (e.g. local variables) and literals, to be in line with the new member
-  // names below.
-
-  Key mPosition;  ///< The current key, i.e. the key representing the cursor's
-                  ///< position
-                  ///< (https://w3c.github.io/IndexedDB/#cursor-position).
-  Key mObjectStorePosition;  ///< The key representing the cursor's object store
-                             ///< position
-  ///< (https://w3c.github.io/IndexedDB/#cursor-object-store-position).
   Key mLocaleAwareRangeBound;  ///< If the cursor is based on a key range, the
                                ///< bound in the direction of iteration (e.g.
                                ///< the upper bound in case of mDirection ==
                                ///< NEXT). If the cursor is based on a key, it
                                ///< is unset. If mLocale is set, this was
                                ///< converted to mLocale.
-  Key mLocaleAwarePosition;  ///< If mLocale is set, this is mPosition converted
-                             ///< to mLocale. Otherwise, it is unset.
 
   CursorOpBase* mCurrentlyRunningOp;
 
@@ -7670,11 +7675,14 @@ class Cursor final : public PBackgroundIDBCursorParent {
          RefPtr<FullIndexMetadata> aIndexMetadata, Direction aDirection,
          ConstructFromTransactionBase aConstructionTag);
 
+  bool IsLocaleAware() const { return !mLocale.IsEmpty(); }
+
  private:
   // Reference counted.
   ~Cursor() override { MOZ_ASSERT(mActorDestroyed); }
 
-  bool VerifyRequestParams(const CursorRequestParams& aParams) const;
+  bool VerifyRequestParams(const CursorRequestParams& aParams,
+                           const CursorPosition& aPosition) const;
 
   // Only called by TransactionBase.
   bool Start(const OpenCursorParams& aParams);
@@ -7695,13 +7703,8 @@ class Cursor final : public PBackgroundIDBCursorParent {
       const CursorRequestParams& aParams, const Key& aCurrentKey,
       const Key& aCurrentObjectStoreKey) override;
 
-  bool IsLocaleAware() const { return !mLocale.IsEmpty(); }
-
   void SetOptionalKeyRange(const Maybe<SerializedKeyRange>& aOptionalKeyRange,
                            bool* aOpen);
-
-  const Key& GetSortKey() const;
-  Key* GetModifiableSortKey();
 };
 
 using FilesArray = nsTArray<FallibleTArray<StructuredCloneFile>>;
@@ -7738,16 +7741,19 @@ class Cursor::CursorOpBase : public TransactionDatabaseOperationBase {
   void Cleanup() override;
 
   nsresult PopulateResponseFromStatement(mozIStorageStatement* aStmt,
-                                         bool aInitializeResponse);
+                                         bool aInitializeResponse,
+                                         Key* const aOptOutSortKey);
 
   nsresult PopulateExtraResponses(mozIStorageStatement* aStmt,
                                   uint32_t aMaxExtraCount,
-                                  const nsCString& aOperation);
+                                  const nsCString& aOperation,
+                                  Key* const aOptPreviousSortKey);
 
  private:
   template <enum OpenCursorParams::Type CursorType>
   nsresult PopulateResponseFromTypedStatement(mozIStorageStatement* const aStmt,
-                                              const bool aInitializeResponse);
+                                              const bool aInitializeResponse,
+                                              Key* const aOptOutSortKey);
 };
 
 class Cursor::OpenOp final : public Cursor::CursorOpBase {
@@ -7791,8 +7797,11 @@ class Cursor::ContinueOp final : public Cursor::CursorOpBase {
 
  private:
   // Only created by Cursor.
-  ContinueOp(Cursor* aCursor, CursorRequestParams aParams)
-      : CursorOpBase(aCursor), mParams(std::move(aParams)) {
+  ContinueOp(Cursor* aCursor, CursorRequestParams aParams,
+             CursorPosition aPosition)
+      : CursorOpBase(aCursor),
+        mParams(std::move(aParams)),
+        mCurrentPosition{std::move(aPosition)} {
     MOZ_ASSERT(mParams.type() != CursorRequestParams::T__None);
   }
 
@@ -7800,6 +7809,8 @@ class Cursor::ContinueOp final : public Cursor::CursorOpBase {
   ~ContinueOp() override = default;
 
   nsresult DoDatabaseWork(DatabaseConnection* aConnection) override;
+
+  const CursorPosition mCurrentPosition;
 };
 
 class Utils final : public PBackgroundIndexedDBUtilsParent {
@@ -9440,8 +9451,24 @@ struct CommonCursorTypeTraits {
   explicit CommonCursorTypeTraits(const TransactionDatabaseOperationBase& aOp)
       : mOp{aOp} {}
 
-  nsresult GetKeys(mozIStorageStatement* const aStmt, Cursor* const aCursor) {
-    nsresult rv = aCursor->mPosition.SetFromStatement(aStmt, 0);
+  nsresult GetKeys(mozIStorageStatement* const aStmt,
+                   Key* const aOptOutSortKey) {
+    const nsresult rv = GetCommonKeys(aStmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (aOptOutSortKey) {
+      *aOptOutSortKey = mPosition;
+    }
+
+    return NS_OK;
+  }
+
+  nsresult GetCommonKeys(mozIStorageStatement* const aStmt) {
+    MOZ_ASSERT(mPosition.IsUnset());
+
+    nsresult rv = mPosition.SetFromStatement(aStmt, 0);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -9450,53 +9477,74 @@ struct CommonCursorTypeTraits {
         "PRELOAD: Populating response with key %s", "Populating",
         IDB_LOG_ID_STRING(mOp.BackgroundChildLoggingId()),
         mOp.TransactionLoggingSerialNumber(), mOp.LoggingSerialNumber(),
-        aCursor->mPosition.GetBuffer().get());
+        mPosition.GetBuffer().get());
 
     return NS_OK;
   }
 
   template <typename Response>
-  static void FillKeys(Response* const aResponse, const Cursor& aCursor) {
-    aResponse->key() = aCursor.mPosition;
+  void FillKeys(Response* const aResponse) {
+    MOZ_ASSERT(!mPosition.IsUnset());
+    aResponse->key() = std::move(mPosition);
   }
+
+ protected:
+  const Key& GetPosition() const { return mPosition; }
 
  private:
   const TransactionDatabaseOperationBase& mOp;
+  Key mPosition;
 };
 
 struct IndexCursorTypeTraits : CommonCursorTypeTraits {
   using CommonCursorTypeTraits::CommonCursorTypeTraits;
 
-  nsresult GetKeys(mozIStorageStatement* const aStmt, Cursor* const aCursor) {
-    nsresult rv = CommonCursorTypeTraits::GetKeys(aStmt, aCursor);
+  nsresult GetKeys(mozIStorageStatement* const aStmt,
+                   Key* const aOptOutSortKey) {
+    MOZ_ASSERT(mLocaleAwarePosition.IsUnset());
+    MOZ_ASSERT(mObjectStorePosition.IsUnset());
+
+    nsresult rv = CommonCursorTypeTraits::GetCommonKeys(aStmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = aCursor->mLocaleAwarePosition.SetFromStatement(aStmt, 1);
+    rv = mLocaleAwarePosition.SetFromStatement(aStmt, 1);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = aCursor->mObjectStorePosition.SetFromStatement(aStmt, 2);
+    rv = mObjectStorePosition.SetFromStatement(aStmt, 2);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
+
+    if (aOptOutSortKey) {
+      *aOptOutSortKey =
+          mLocaleAwarePosition.IsUnset() ? GetPosition() : mLocaleAwarePosition;
     }
 
     return NS_OK;
   }
 
   template <typename Response>
-  constexpr void FillKeys(Response* const aResponse, const Cursor& aCursor) {
-    CommonCursorTypeTraits::FillKeys(aResponse, aCursor);
-    aResponse->sortKey() = aCursor.mLocaleAwarePosition;
-    aResponse->objectKey() = aCursor.mObjectStorePosition;
+  void FillKeys(Response* const aResponse) {
+    MOZ_ASSERT(!mLocaleAwarePosition.IsUnset());
+    MOZ_ASSERT(!mObjectStorePosition.IsUnset());
+
+    CommonCursorTypeTraits::FillKeys(aResponse);
+    aResponse->sortKey() = std::move(mLocaleAwarePosition);
+    aResponse->objectKey() = std::move(mObjectStorePosition);
   }
+
+ private:
+  Key mLocaleAwarePosition, mObjectStorePosition;
 };
 
 struct KeyCursorTypeTraits {
   static constexpr nsresult MaybeGetCloneInfo(
-      mozIStorageStatement* const /*aStmt*/, const Cursor* const /*aCursor*/) {
+      mozIStorageStatement* const /*aStmt*/,
+      const FileManager* /*aFileManager*/) {
     return NS_OK;
   }
 
@@ -9508,12 +9556,14 @@ struct KeyCursorTypeTraits {
 template <bool StatementHasIndexKeyBindings>
 struct ValueCursorTypeTraits {
   nsresult MaybeGetCloneInfo(mozIStorageStatement* const aStmt,
-                             const Cursor* const aCursor) {
+                             const FileManager* aFileManager) {
+    MOZ_ASSERT(aFileManager);
+
     constexpr auto offset = StatementHasIndexKeyBindings ? 2 : 0;
 
     const nsresult rv =
         DatabaseOperationBase::GetStructuredCloneReadInfoFromStatement(
-            aStmt, 2 + offset, 1 + offset, *aCursor->mFileManager, &mCloneInfo);
+            aStmt, 2 + offset, 1 + offset, *aFileManager, &mCloneInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -15273,7 +15323,8 @@ Cursor::Cursor(RefPtr<TransactionBase> aTransaction, const Type aType,
       "Lots of code here assumes only four types of cursors!");
 }
 
-bool Cursor::VerifyRequestParams(const CursorRequestParams& aParams) const {
+bool Cursor::VerifyRequestParams(const CursorRequestParams& aParams,
+                                 const CursorPosition& aPosition) const {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != CursorRequestParams::T__None);
   MOZ_ASSERT(mObjectStoreMetadata);
@@ -15311,7 +15362,7 @@ bool Cursor::VerifyRequestParams(const CursorRequestParams& aParams) const {
     return false;
   }
 
-  const Key& sortKey = GetSortKey();
+  const Key& sortKey = aPosition.GetSortKey(*this);
 
   switch (aParams.type()) {
     case CursorRequestParams::TContinueParams: {
@@ -15349,18 +15400,18 @@ bool Cursor::VerifyRequestParams(const CursorRequestParams& aParams) const {
       MOZ_ASSERT(!primaryKey.IsUnset());
       switch (mDirection) {
         case IDBCursor::NEXT:
-          if (NS_WARN_IF(
-                  key < sortKey ||
-                  (key == sortKey && primaryKey <= mObjectStorePosition))) {
+          if (NS_WARN_IF(key < sortKey ||
+                         (key == sortKey &&
+                          primaryKey <= aPosition.mObjectStorePosition))) {
             ASSERT_UNLESS_FUZZING();
             return false;
           }
           break;
 
         case IDBCursor::PREV:
-          if (NS_WARN_IF(
-                  key > sortKey ||
-                  (key == sortKey && primaryKey >= mObjectStorePosition))) {
+          if (NS_WARN_IF(key > sortKey ||
+                         (key == sortKey &&
+                          primaryKey >= aPosition.mObjectStorePosition))) {
             ASSERT_UNLESS_FUZZING();
             return false;
           }
@@ -15422,12 +15473,6 @@ void Cursor::SendResponseInternal(
   MOZ_ASSERT_IF(aResponse.type() == CursorResponse::Tnsresult,
                 NS_ERROR_GET_MODULE(aResponse.get_nsresult()) ==
                     NS_ERROR_MODULE_DOM_INDEXEDDB);
-  MOZ_ASSERT_IF(aResponse.type() == CursorResponse::Tvoid_t,
-                mPosition.IsUnset());
-  MOZ_ASSERT_IF(aResponse.type() == CursorResponse::Tvoid_t,
-                mLocaleAwareRangeBound.IsUnset());
-  MOZ_ASSERT_IF(aResponse.type() == CursorResponse::Tvoid_t,
-                mObjectStorePosition.IsUnset());
   MOZ_ASSERT_IF(
       aResponse.type() == CursorResponse::Tnsresult ||
           aResponse.type() == CursorResponse::Tvoid_t ||
@@ -15545,33 +15590,28 @@ mozilla::ipc::IPCResult Cursor::RecvContinue(
 #endif
       ;
 
-  // At the time of writing, the child always passes its current position and
-  // object store position.
-  //
-  // TODO: Probably, aCurrentKey is always set, unless ActorsChild is changed to
-  // pass it only when necessary, e.g. only pass if some cached responses were
-  // invalidated, and the cursor in the parent actually needs to go back to a
-  // previous position.
-  if (!aCurrentKey.IsUnset()) {
-    if (IsLocaleAware()) {
-      const nsresult rv =
-          LocalizeKey(aCurrentKey, mLocale, &mLocaleAwarePosition);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        ASSERT_UNLESS_FUZZING();
-        return IPC_FAIL_NO_REASON(this);
-      }
+  auto position = CursorPosition{};
+
+  MOZ_ASSERT(!aCurrentKey.IsUnset());
+
+  if (IsLocaleAware()) {
+    const nsresult rv =
+        LocalizeKey(aCurrentKey, mLocale, &position.mLocaleAwarePosition);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      ASSERT_UNLESS_FUZZING();
+      return IPC_FAIL_NO_REASON(this);
     }
-    mPosition = aCurrentKey;
   }
+  position.mPosition = aCurrentKey;
 
   if (!aCurrentObjectStoreKey.IsUnset()) {
     MOZ_ASSERT(mType == OpenCursorParams::TIndexOpenCursorParams ||
                mType == OpenCursorParams::TIndexOpenKeyCursorParams);
 
-    mObjectStorePosition = aCurrentObjectStoreKey;
+    position.mObjectStorePosition = aCurrentObjectStoreKey;
   }
 
-  if (!trustParams && !VerifyRequestParams(aParams)) {
+  if (!trustParams && !VerifyRequestParams(aParams, position)) {
     ASSERT_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
@@ -15586,7 +15626,8 @@ mozilla::ipc::IPCResult Cursor::RecvContinue(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  const RefPtr<ContinueOp> continueOp = new ContinueOp(this, aParams);
+  const RefPtr<ContinueOp> continueOp =
+      new ContinueOp(this, aParams, std::move(position));
   if (NS_WARN_IF(!continueOp->Init(mTransaction))) {
     continueOp->Cleanup();
     return IPC_FAIL_NO_REASON(this);
@@ -15598,11 +15639,9 @@ mozilla::ipc::IPCResult Cursor::RecvContinue(
   return IPC_OK();
 }
 
-const Key& Cursor::GetSortKey() const {
-  return IsLocaleAware() ? mLocaleAwarePosition : mPosition;
+const Key& CursorPosition::GetSortKey(const Cursor& aCursor) const {
+  return aCursor.IsLocaleAware() ? mLocaleAwarePosition : mPosition;
 }
-
-Key* Cursor::GetModifiableSortKey() { return &const_cast<Key&>(GetSortKey()); }
 
 /*******************************************************************************
  * FileManager
@@ -25928,18 +25967,29 @@ void Cursor::CursorOpBase::Cleanup() {
 
 template <enum OpenCursorParams::Type CursorType>
 nsresult Cursor::CursorOpBase::PopulateResponseFromTypedStatement(
-    mozIStorageStatement* const aStmt, const bool aInitializeResponse) {
+    mozIStorageStatement* const aStmt, const bool aInitializeResponse,
+    Key* const aOptOutSortKey) {
   auto cursorTypeTraits = CursorTypeTraits<CursorType>{*this};
+  auto previousKey = aOptOutSortKey ? std::move(*aOptOutSortKey) : Key{};
 
   {
-    const auto rv = cursorTypeTraits.GetKeys(aStmt, mCursor);
+    const auto rv = cursorTypeTraits.GetKeys(aStmt, aOptOutSortKey);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
+  // aOptOutSortKey must be set iff the cursor is a unique cursor. For unique
+  // cursors, we need to skip records with the same key. The SQL queries
+  // currently do not filter these out.
+  if (aOptOutSortKey && !previousKey.IsUnset() &&
+      previousKey == *aOptOutSortKey) {
+    return NS_OK;
+  }
+
   {
-    const auto rv = cursorTypeTraits.MaybeGetCloneInfo(aStmt, mCursor);
+    const auto rv =
+        cursorTypeTraits.MaybeGetCloneInfo(aStmt, mCursor->mFileManager);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -25952,14 +26002,15 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromTypedStatement(
 
   auto& responses = cursorTypeTraits.GetTypedResponse(&mResponse);
   auto* response = responses.AppendElement();
-  cursorTypeTraits.FillKeys(response, *mCursor);
+  cursorTypeTraits.FillKeys(response);
   cursorTypeTraits.MaybeFillCloneInfo(response, &mFiles);
 
   return NS_OK;
 }
 
 nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
-    mozIStorageStatement* const aStmt, const bool aInitializeResponse) {
+    mozIStorageStatement* const aStmt, const bool aInitializeResponse,
+    Key* const aOptOutSortKey) {
   Transaction()->AssertIsOnConnectionThread();
   MOZ_ASSERT_IF(aInitializeResponse,
                 mResponse.type() == CursorResponse::T__None);
@@ -25972,7 +26023,7 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
            mResponse.type() == CursorResponse::TArrayOfIndexCursorResponse),
       aInitializeResponse);
 
-  nsresult (CursorOpBase::*populateFunc)(mozIStorageStatement*, bool);
+  nsresult (CursorOpBase::*populateFunc)(mozIStorageStatement*, bool, Key*);
 
   switch (mCursor->mType) {
     case OpenCursorParams::TObjectStoreOpenCursorParams:
@@ -25999,18 +26050,13 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
       MOZ_CRASH("Should never get here!");
   }
 
-  return ((this)->*(populateFunc))(aStmt, aInitializeResponse);
+  return ((this)->*(populateFunc))(aStmt, aInitializeResponse, aOptOutSortKey);
 }
 
 nsresult Cursor::CursorOpBase::PopulateExtraResponses(
     mozIStorageStatement* const aStmt, const uint32_t aMaxExtraCount,
-    const nsCString& aOperation) {
+    const nsCString& aOperation, Key* const aOptPreviousSortKey) {
   AssertIsOnConnectionThread();
-
-  // For unique cursors, we need to skip records with the same key. The SQL
-  // queries currently do not filter these out.
-  Key previousKey =
-      IsUnique(mCursor->mDirection) ? mCursor->GetSortKey() : Key{};
 
   uint32_t extraCount = 0;
   do {
@@ -26024,31 +26070,19 @@ nsresult Cursor::CursorOpBase::PopulateExtraResponses(
     }
 
     if (!hasResult) {
-      // TODO: For the first result, in case the cursor reaches the end
-      // prematurely, mCursor's key members are unset. Should we do this here as
-      // well?
-
       break;
-    }
-
-    if (IsUnique(mCursor->mDirection)) {
-      const auto& currentKey = mCursor->GetSortKey();
-      const bool sameKey = previousKey == currentKey;
-      previousKey = currentKey;
-      if (sameKey) {
-        continue;
-      }
     }
 
     // TODO: Similar to the call to ExecuteStep above, it would be better not to
     // fail here. However, this would require the equivalent of the strong
     // exception guarantee of PopulateResponseFromStatement, which it does not
     // provide right now.
-    rv = PopulateResponseFromStatement(aStmt, false);
+    rv = PopulateResponseFromStatement(aStmt, false, aOptPreviousSortKey);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
+    // TODO: Do not count entries skipped for unique cursors.
     ++extraCount;
   } while (true);
 
@@ -26269,7 +26303,10 @@ nsresult Cursor::OpenOp::DoObjectStoreDatabaseWork(
     return NS_OK;
   }
 
-  rv = PopulateResponseFromStatement(&*stmt, true);
+  Key previousKey;
+  auto* optPreviousKey = IsUnique(mCursor->mDirection) ? &previousKey : nullptr;
+
+  rv = PopulateResponseFromStatement(&*stmt, true, optPreviousKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -26288,7 +26325,7 @@ nsresult Cursor::OpenOp::DoObjectStoreDatabaseWork(
   // as well (or move this to DoDatabaseWork).
 
   return PopulateExtraResponses(&*stmt, mCursor->mMaxExtraCount,
-                                NS_LITERAL_CSTRING("OpenOp"));
+                                NS_LITERAL_CSTRING("OpenOp"), optPreviousKey);
 }
 
 nsresult Cursor::OpenOp::DoObjectStoreKeyDatabaseWork(
@@ -26349,7 +26386,10 @@ nsresult Cursor::OpenOp::DoObjectStoreKeyDatabaseWork(
     return NS_OK;
   }
 
-  rv = PopulateResponseFromStatement(&*stmt, true);
+  Key previousKey;
+  auto* optPreviousKey = IsUnique(mCursor->mDirection) ? &previousKey : nullptr;
+
+  rv = PopulateResponseFromStatement(&*stmt, true, optPreviousKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -26468,7 +26508,10 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
     return NS_OK;
   }
 
-  rv = PopulateResponseFromStatement(&*stmt, true);
+  Key previousKey;
+  auto* optPreviousKey = IsUnique(mCursor->mDirection) ? &previousKey : nullptr;
+
+  rv = PopulateResponseFromStatement(&*stmt, true, optPreviousKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -26483,7 +26526,7 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
   // ContinueOp::DoDatabaseWork.
 
   return PopulateExtraResponses(&*stmt, mCursor->mMaxExtraCount,
-                                NS_LITERAL_CSTRING("OpenOp"));
+                                NS_LITERAL_CSTRING("OpenOp"), optPreviousKey);
 }
 
 nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
@@ -26583,7 +26626,10 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
     return NS_OK;
   }
 
-  rv = PopulateResponseFromStatement(&*stmt, true);
+  Key previousKey;
+  auto* optPreviousKey = IsUnique(mCursor->mDirection) ? &previousKey : nullptr;
+
+  rv = PopulateResponseFromStatement(&*stmt, true, optPreviousKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -26602,8 +26648,6 @@ nsresult Cursor::OpenOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   MOZ_ASSERT(mCursor->mContinueQuery.IsEmpty());
   MOZ_ASSERT(mCursor->mContinueToQuery.IsEmpty());
   MOZ_ASSERT(mCursor->mContinuePrimaryKeyQuery.IsEmpty());
-  MOZ_ASSERT(mCursor->mPosition.IsUnset());
-  MOZ_ASSERT(mCursor->mLocaleAwareRangeBound.IsUnset());
 
   AUTO_PROFILER_LABEL("Cursor::OpenOp::DoDatabaseWork", DOM);
 
@@ -26642,14 +26686,6 @@ nsresult Cursor::CursorOpBase::SendSuccessResult() {
   MOZ_ASSERT(mCursor);
   MOZ_ASSERT(mCursor->mCurrentlyRunningOp == this);
   MOZ_ASSERT(mResponse.type() != CursorResponse::T__None);
-  MOZ_ASSERT_IF(mResponse.type() == CursorResponse::Tvoid_t,
-                mCursor->mPosition.IsUnset());
-  MOZ_ASSERT_IF(mResponse.type() == CursorResponse::Tvoid_t,
-                mCursor->mLocaleAwarePosition.IsUnset());
-  MOZ_ASSERT_IF(mResponse.type() == CursorResponse::Tvoid_t,
-                mCursor->mLocaleAwareRangeBound.IsUnset());
-  MOZ_ASSERT_IF(mResponse.type() == CursorResponse::Tvoid_t,
-                mCursor->mObjectStorePosition.IsUnset());
 
   if (IsActorDestroyed()) {
     return NS_ERROR_DOM_INDEXEDDB_ABORT_ERR;
@@ -26670,7 +26706,7 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   MOZ_ASSERT(mCursor->mObjectStoreId);
   MOZ_ASSERT(!mCursor->mContinueQuery.IsEmpty());
   MOZ_ASSERT(!mCursor->mContinueToQuery.IsEmpty());
-  MOZ_ASSERT(!mCursor->mPosition.IsUnset());
+  MOZ_ASSERT(!mCurrentPosition.mPosition.IsUnset());
 
   const bool isIndex =
       mCursor->mType == OpenCursorParams::TIndexOpenCursorParams ||
@@ -26680,7 +26716,7 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
                             mCursor->mDirection == IDBCursor::PREV),
                 !mCursor->mContinuePrimaryKeyQuery.IsEmpty());
   MOZ_ASSERT_IF(isIndex, mCursor->mIndexId);
-  MOZ_ASSERT_IF(isIndex, !mCursor->mObjectStorePosition.IsUnset());
+  MOZ_ASSERT_IF(isIndex, !mCurrentPosition.mObjectStorePosition.IsUnset());
 
   AUTO_PROFILER_LABEL("Cursor::ContinueOp::DoDatabaseWork", DOM);
 
@@ -26705,28 +26741,14 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   bool hasContinueKey = false;
   bool hasContinuePrimaryKey = false;
-  // TODO: the name 'currentKey' for this variable is confusing, as this is only
-  // the current key if !hasContinueKey. It is however, always a bound for the
-  // key/position in the operation's result. Maybe rename to
-  // targetKey/targetPosition (which is also not exact, as it might imply that
-  // the result always has this key).
-  Key& currentKey = *mCursor->GetModifiableSortKey();
 
-  IDB_LOG_MARK_PARENT_TRANSACTION_REQUEST(
-      "PRELOAD: ContinueOp: currentKey == %s", "currentKey",
-      IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
-      mTransactionLoggingSerialNumber, mLoggingSerialNumber,
-      currentKey.GetBuffer().get());
+  auto explicitContinueKey = Key{};
 
   switch (mParams.type()) {
     case CursorRequestParams::TContinueParams:
       if (!mParams.get_ContinueParams().key().IsUnset()) {
         hasContinueKey = true;
-        // TODO: This writes either to mLocaleAwarePosition or to mPosition, is
-        // that correct? Probably it's ok, because
-        // PopulateResponseFromStatement, contrary to its name, also updates the
-        // fields of mCursor.
-        currentKey = mParams.get_ContinueParams().key();
+        explicitContinueKey = mParams.get_ContinueParams().key();
       }
       break;
     case CursorRequestParams::TContinuePrimaryKeyParams:
@@ -26737,7 +26759,7 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
                  mCursor->mDirection == IDBCursor::PREV);
       hasContinueKey = true;
       hasContinuePrimaryKey = true;
-      currentKey = mParams.get_ContinuePrimaryKeyParams().key();
+      explicitContinueKey = mParams.get_ContinuePrimaryKeyParams().key();
       break;
     case CursorRequestParams::TAdvanceParams:
       break;
@@ -26790,7 +26812,10 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   }
 
   // Bind current key.
-  rv = currentKey.BindToStatement(&*stmt, kStmtParamNameCurrentKey);
+  const auto& continueKey = hasContinueKey
+                                ? explicitContinueKey
+                                : mCurrentPosition.GetSortKey(*mCursor);
+  rv = continueKey.BindToStatement(&*stmt, kStmtParamNameCurrentKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -26809,7 +26834,7 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   if (isIndex && !hasContinueKey &&
       (mCursor->mDirection == IDBCursor::NEXT ||
        mCursor->mDirection == IDBCursor::PREV)) {
-    rv = mCursor->mObjectStorePosition.BindToStatement(
+    rv = mCurrentPosition.mObjectStorePosition.BindToStatement(
         &*stmt, kStmtParamNameObjectStorePosition);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -26832,22 +26857,21 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     }
 
     if (!hasResult) {
-      mCursor->mPosition.Unset();
-      mCursor->mLocaleAwarePosition.Unset();
-      mCursor->mLocaleAwareRangeBound.Unset();
-      mCursor->mObjectStorePosition.Unset();
       mResponse = void_t();
       return NS_OK;
     }
   }
 
-  rv = PopulateResponseFromStatement(&*stmt, true);
+  Key previousKey;
+  auto* optPreviousKey = IsUnique(mCursor->mDirection) ? &previousKey : nullptr;
+
+  rv = PopulateResponseFromStatement(&*stmt, true, optPreviousKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  return PopulateExtraResponses(&*stmt, maxExtraCount,
-                                NS_LITERAL_CSTRING("ContinueOp"));
+  return PopulateExtraResponses(
+      &*stmt, maxExtraCount, NS_LITERAL_CSTRING("ContinueOp"), optPreviousKey);
 }
 
 Utils::Utils()
