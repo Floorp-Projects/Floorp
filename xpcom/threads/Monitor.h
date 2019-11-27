@@ -36,8 +36,8 @@ class Monitor {
   void Wait() { mCondVar.Wait(); }
   CVStatus Wait(TimeDuration aDuration) { return mCondVar.Wait(aDuration); }
 
-  nsresult Notify() { return mCondVar.Notify(); }
-  nsresult NotifyAll() { return mCondVar.NotifyAll(); }
+  void Notify() { mCondVar.Notify(); }
+  void NotifyAll() { mCondVar.NotifyAll(); }
 
   void AssertCurrentThreadOwns() const { mMutex.AssertCurrentThreadOwns(); }
 
@@ -72,8 +72,8 @@ class MOZ_STACK_CLASS MonitorAutoLock {
   void Wait() { mMonitor->Wait(); }
   CVStatus Wait(TimeDuration aDuration) { return mMonitor->Wait(aDuration); }
 
-  nsresult Notify() { return mMonitor->Notify(); }
-  nsresult NotifyAll() { return mMonitor->NotifyAll(); }
+  void Notify() { mMonitor->Notify(); }
+  void NotifyAll() { mMonitor->NotifyAll(); }
 
  private:
   MonitorAutoLock();
