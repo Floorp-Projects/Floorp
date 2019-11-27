@@ -376,7 +376,6 @@ export class ASRouterAdminInner extends React.PureComponent {
     this.state = {
       messageFilter: "all",
       evaluationStatus: {},
-      trailhead: {},
       stringTargetingParameters: null,
       newStringTargetingParameters: null,
       copiedToClipboard: false,
@@ -1101,8 +1100,12 @@ export class ASRouterAdminInner extends React.PureComponent {
   }
 
   renderTrailheadInfo() {
-    const { trailheadInterrupt, trailheadTriplet } = this.state.trailhead;
-    return (
+    const {
+      trailheadInterrupt,
+      trailheadTriplet,
+      trailheadInitialized,
+    } = this.state;
+    return trailheadInitialized ? (
       <table className="minimal-table">
         <tbody>
           <tr>
@@ -1115,6 +1118,11 @@ export class ASRouterAdminInner extends React.PureComponent {
           </tr>
         </tbody>
       </table>
+    ) : (
+      <p>
+        Trailhead is not initialized. To update these values, load
+        about:welcome.
+      </p>
     );
   }
 
