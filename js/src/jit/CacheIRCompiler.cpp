@@ -2008,22 +2008,6 @@ bool CacheIRCompiler::emitGuardMagicValue() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardNoDetachedTypedObjects() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  // All stubs manipulating typed objects must check the zone-wide flag
-  // indicating whether their underlying storage might be detached, to bail
-  // out if needed.
-  uint32_t* address = &cx_->zone()->detachedTypedObjects;
-  masm.branch32(Assembler::NotEqual, AbsoluteAddress(address), Imm32(0),
-                failure->label());
-  return true;
-}
-
 bool CacheIRCompiler::emitGuardNoDenseElements() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   Register obj = allocator.useRegister(masm, reader.objOperandId());

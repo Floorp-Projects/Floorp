@@ -186,11 +186,7 @@ enum : uint32_t {
 
   // (0x00200000 is unused)
 
-  /*
-   * For a global object, whether any array buffers in this compartment with
-   * typed object views have ever been detached.
-   */
-  OBJECT_FLAG_TYPED_OBJECT_HAS_DETACHED_BUFFER = 0x00400000,
+  // (0x00400000 is unused)
 
   /*
    * Whether objects with this type should be allocated directly in the
