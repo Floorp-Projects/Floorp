@@ -177,13 +177,15 @@ void RenderCompositorOGL::CompositorEndFrame() {
     uint64_t windowPixelCount = uint64_t(bufferSize.width) * bufferSize.height;
     profiler_add_text_marker(
         "WR OS Compositor frame",
-        nsPrintfCString("%d%% painting, %d%% overdraw, %d%% memory, %d used "
-                        "layers + %d unused layers",
+        nsPrintfCString("%d%% painting, %d%% overdraw, %d used "
+                        "layers (%d%% memory) + %d unused layers (%d%% memory)",
                         int(mDrawnPixelCount * 100 / windowPixelCount),
                         int(mAddedClippedPixelCount * 100 / windowPixelCount),
-                        int(mAddedPixelCount * 100 / windowPixelCount),
                         int(mAddedLayers.Length()),
-                        int(mNativeLayers.size() - mAddedLayers.Length())),
+                        int(mAddedPixelCount * 100 / windowPixelCount),
+                        int(mNativeLayers.size() - mAddedLayers.Length()),
+                        int((mTotalPixelCount - mAddedPixelCount) * 100 /
+                            windowPixelCount)),
         JS::ProfilingCategoryPair::GRAPHICS, mBeginFrameTimeStamp,
         TimeStamp::NowUnfuzzed());
   }
@@ -230,12 +232,15 @@ void RenderCompositorOGL::CreateSurface(wr::NativeSurfaceId aId,
       IntSize(aSize.width, aSize.height), aIsOpaque);
   layer->SetGLContext(mGL);
   mNativeLayers.insert({wr::AsUint64(aId), layer});
+  mTotalPixelCount += gfx::IntRect({}, layer->GetSize()).Area();
 }
 
 void RenderCompositorOGL::DestroySurface(NativeSurfaceId aId) {
   auto layerCursor = mNativeLayers.find(wr::AsUint64(aId));
   MOZ_RELEASE_ASSERT(layerCursor != mNativeLayers.end());
+  RefPtr<layers::NativeLayer> layer = std::move(layerCursor->second);
   mNativeLayers.erase(layerCursor);
+  mTotalPixelCount -= gfx::IntRect({}, layer->GetSize()).Area();
   // If the layer is currently present in mNativeLayerRoot, it will be destroyed
   // once CompositorEndFrame() replaces mNativeLayerRoot's layers and drops that
   // reference.
