@@ -1514,21 +1514,10 @@ uint8_t* TypedObject::typedMemBase() const {
 }
 
 bool TypedObject::isAttached() const {
-  if (is<InlineTransparentTypedObject>()) {
+  if (is<InlineTypedObject>()) {
     return true;
   }
-  if (is<InlineOpaqueTypedObject>()) {
-    return true;
-  }
-  if (!as<OutlineTypedObject>().outOfLineTypedMem()) {
-    return false;
-  }
-  JSObject& owner = as<OutlineTypedObject>().owner();
-  if (owner.is<ArrayBufferObject>() &&
-      owner.as<ArrayBufferObject>().isDetached()) {
-    return false;
-  }
-  return true;
+  return as<OutlineTypedObject>().outOfLineTypedMem();
 }
 
 /******************************************************************************
