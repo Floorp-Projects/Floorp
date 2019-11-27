@@ -314,4 +314,3 @@ skip-if(release_or_beta) pref(dom.paintWorklet.enabled,true) pref(dom.worklet.en
 pref(layout.css.motion-path.enabled,true) load 1594949.html
 pref(layout.css.motion-path.enabled,true) pref(layout.css.individual-transform.enabled,true) load 1594960.html
 load 1586444.html
-load 1599286.html

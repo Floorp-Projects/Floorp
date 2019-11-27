@@ -50,7 +50,6 @@ scrollcorner, resizer, scrollbar, scrollbarbutton, slider {
   /* These properties are not included in 'all'. */
   -moz-list-reversed: initial;
   -moz-font-smoothing-background-color: initial;
-  -moz-min-font-size-ratio: initial;
 
   /* Using initial is not sufficient for direction, since its initial value can
    * depend on the document's language.
