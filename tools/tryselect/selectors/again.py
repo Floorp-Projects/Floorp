@@ -91,7 +91,12 @@ def run(index=0, purge=False, list_configs=False, list_tasks=0, message='{msg}',
     if list_configs or list_tasks > 0:
         for i, data in enumerate(history):
             msg, config = json.loads(data)
-            print('{}. {}'.format(i, msg))
+            n = len(config['tasks'])
+            print('{index}. ({n} task{s}) {msg}'.format(
+                index=i,
+                msg=msg,
+                n=n,
+                s='' if n == 1 else 's'))
 
             if list_tasks > 0:
                 indent = ' ' * 4
