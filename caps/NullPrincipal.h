@@ -112,11 +112,11 @@ class NullPrincipal final : public BasePrincipal {
   nsCOMPtr<nsIURI> mURI;
 
  private:
-  // If aIsFirstParty is true, this NullPrincipal will be initialized base on
-  // the aOriginAttributes with FirstPartyDomain set to an unique value, and
-  // this value is generated from mURI.path, with ".mozilla" appending at the
+  // If aIsFirstParty is true, this NullPrincipal will be initialized based on
+  // the aOriginAttributes with FirstPartyDomain set to a unique value.
+  // This value is generated from mURI.path, with ".mozilla" appended at the
   // end.
-  nsresult Init(const OriginAttributes& aOriginAttributes, bool aIsFirstParty);
+  void Init(const OriginAttributes& aOriginAttributes, bool aIsFirstParty);
 };
 
 }  // namespace mozilla
