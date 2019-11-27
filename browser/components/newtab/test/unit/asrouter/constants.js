@@ -136,6 +136,7 @@ export const FAKE_RECOMMENDATION = {
 // Stubs methods on RemotePageManager
 export class FakeRemotePageManager {
   constructor() {
+    this.messagePorts = [];
     this.addMessageListener = sinon.stub();
     this.sendAsyncMessage = sinon.stub();
     this.removeMessageListener = sinon.stub();
