@@ -377,11 +377,7 @@ var PlacesOrganizer = {
     // At this point, resetSearchBox is true, because the left pane selection
     // has changed; otherwise we would have returned earlier.
 
-    let input = PlacesSearchBox.searchFilter;
-    input.value = "";
-    try {
-      input.editor.transactionManager.clear();
-    } catch (e) {}
+    PlacesSearchBox.searchFilter.reset();
     this._setSearchScopeForNode(node);
     this.updateDetailsPane();
   },
