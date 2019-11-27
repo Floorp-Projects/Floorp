@@ -9,7 +9,6 @@ var cacheFlushObserver = {
 };
 
 function run_test() {
-  Services.prefs.setBoolPref("browser.cache.cache_isolation", false);
   do_get_profile();
   do_await_remote_message("flush").then(() => {
     Services.cache2
