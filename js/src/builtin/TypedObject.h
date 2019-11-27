@@ -354,7 +354,6 @@ class ComplexTypeDescr : public TypeDescr {
 };
 
 bool IsTypedObjectClass(const JSClass* clasp);  // Defined below
-bool IsTypedObjectArray(JSObject& obj);
 
 MOZ_MUST_USE bool CreateUserSizeAndAlignmentProperties(JSContext* cx,
                                                        HandleTypeDescr obj);
@@ -652,6 +651,8 @@ class OutlineTypedObject : public TypedObject {
 
   void setOwnerAndData(JSObject* owner, uint8_t* data);
 
+  void setData(uint8_t* data) { data_ = data; }
+
  public:
   // JIT accessors.
   static size_t offsetOfData() { return offsetof(OutlineTypedObject, data_); }
@@ -662,16 +663,7 @@ class OutlineTypedObject : public TypedObject {
     return *owner_;
   }
 
-  JSObject* maybeOwner() const { return owner_; }
-
   uint8_t* outOfLineTypedMem() const { return data_; }
-
-  void setData(uint8_t* data) { data_ = data; }
-
-  void resetOffset(size_t offset) {
-    MOZ_ASSERT(offset <= (size_t)size());
-    setData(typedMemBase() + offset);
-  }
 
   // Helper for createUnattached()
   static OutlineTypedObject* createUnattachedWithClass(
