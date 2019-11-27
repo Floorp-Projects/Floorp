@@ -19,6 +19,14 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsITrackingDBService"
 );
 
+const idToTextMap = new Map([
+  [Ci.nsITrackingDBService.TRACKERS_ID, "tracker"],
+  [Ci.nsITrackingDBService.TRACKING_COOKIES_ID, "cookie"],
+  [Ci.nsITrackingDBService.CRYPTOMINERS_ID, "cryptominer"],
+  [Ci.nsITrackingDBService.FINGERPRINTERS_ID, "fingerprinter"],
+  [Ci.nsITrackingDBService.SOCIAL_ID, "social"],
+]);
+
 const WHATSNEW_ENABLED_PREF = "browser.messaging-system.whatsNewPanel.enabled";
 const PROTECTIONS_PANEL_INFOMSG_PREF =
   "browser.protections_panel.infoMessage.seen";
@@ -391,21 +399,28 @@ class _ToolbarPanelHub {
       dateTo
     );
     // Count all events in the past 6 weeks
+    // Returns an object with:
+    // `blockedCount` total number of blocked resources
+    // {tracker|cookie|social...} breakdown by event type as defined by `idToTextMap`
     const totalEvents = eventsByDate.reduce(
-      (acc, day) => acc + day.getResultByName("count"),
-      0
+      (acc, day) => {
+        const type = day.getResultByName("type");
+        const count = day.getResultByName("count");
+        acc[idToTextMap.get(type)] = (acc[idToTextMap.get(type)] || 0) + count;
+        acc.blockedCount += count;
+        return acc;
+      },
+      { blockedCount: 0 }
     );
     return {
       // Keys need to match variable names used in asrouter.ftl
       // `earliestDate` will be either 6 weeks ago or when tracking recording
       // started. Whichever is more recent.
-      earliestDate: new Date(
-        Math.max(
-          new Date(await TrackingDBService.getEarliestRecordedDate()),
-          dateFrom
-        )
-      ).getTime(),
-      blockedCount: totalEvents.toLocaleString(),
+      earliestDate: Math.max(
+        new Date(await TrackingDBService.getEarliestRecordedDate()),
+        dateFrom
+      ),
+      ...totalEvents,
     };
   }
 

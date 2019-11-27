@@ -7,13 +7,12 @@
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const {
-  translateNodeFrontToGrip,
-} = require("devtools/client/inspector/shared/utils");
 
-const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
-const { Rep } = REPS;
-const ElementNode = REPS.ElementNode;
+loader.lazyRequireGetter(
+  this,
+  "getNodeRep",
+  "devtools/client/inspector/shared/node-reps"
+);
 
 const Types = require("../types");
 
@@ -53,11 +52,7 @@ class FlexItem extends PureComponent {
         onMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
       },
       dom.span({ className: "flex-item-index" }, index),
-      Rep({
-        defaultRep: ElementNode,
-        mode: MODE.TINY,
-        object: translateNodeFrontToGrip(nodeFront),
-      })
+      getNodeRep(nodeFront)
     );
   }
 }

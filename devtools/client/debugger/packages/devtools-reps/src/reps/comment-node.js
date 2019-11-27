@@ -3,7 +3,8 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Dependencies
-const PropTypes = require("prop-types");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 const {
   isGrip,
   cropString,
@@ -12,8 +13,6 @@ const {
 } = require("./rep-utils");
 const { MODE } = require("./constants");
 const nodeConstants = require("../shared/dom-node-constants");
-const dom = require("react-dom-factories");
-const { span } = dom;
 
 /**
  * Renders DOM comment node.

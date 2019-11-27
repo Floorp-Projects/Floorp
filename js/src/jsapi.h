@@ -1872,25 +1872,6 @@ extern JS_PUBLIC_API bool JS_IsFunctionBound(JSFunction* fun);
 
 extern JS_PUBLIC_API JSObject* JS_GetBoundFunctionTarget(JSFunction* fun);
 
-namespace JS {
-
-/**
- * Clone a top-level function into cx's global. This function will dynamically
- * fail if funobj was lexically nested inside some other function.
- */
-extern JS_PUBLIC_API JSObject* CloneFunctionObject(JSContext* cx,
-                                                   HandleObject funobj);
-
-/**
- * As above, but providing an explicit scope chain.  scopeChain must not include
- * the global object on it; that's implicit.  It needs to contain the other
- * objects that should end up on the clone's scope chain.
- */
-extern JS_PUBLIC_API JSObject* CloneFunctionObject(
-    JSContext* cx, HandleObject funobj, HandleObjectVector scopeChain);
-
-}  // namespace JS
-
 extern JS_PUBLIC_API JSObject* JS_GetGlobalFromScript(JSScript* script);
 
 extern JS_PUBLIC_API const char* JS_GetScriptFilename(JSScript* script);

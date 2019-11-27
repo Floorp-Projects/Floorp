@@ -29,6 +29,7 @@ class nsNetworkLinkService : public nsINetworkLinkService,
   void OnLinkUp() override;
   void OnLinkDown() override;
   void OnLinkStatusKnown() override;
+  void OnDnsSuffixListUpdated() override;
 
  private:
   virtual ~nsNetworkLinkService() = default;

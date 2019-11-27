@@ -6,7 +6,17 @@ function assertWithMessage(got, expected, message) {
     assertEq(message + ": " + got, message + ": " + expected);
 }
 
-function testFunc() {
+var obj = {
+    checkNameLookup: function() {
+	return "local";
+    },
+
+    checkThisBinding: function() {
+	return this.checkNameLookup();
+    },
+};
+
+evaluate("(" + function() {
     assertWithMessage(checkNameLookup(), "local", "nameLookup");
     assertWithMessage(checkThisBinding(), "local", "thisBinding");
 
@@ -18,17 +28,4 @@ function testFunc() {
 	assertWithMessage(checkNameLookup(), "local", "nameLookup" + reason);
 	assertWithMessage(checkThisBinding(), "local", "thisBinding" + reason);
     })();
-}
-
-var obj = {
-    checkNameLookup: function() {
-	return "local";
-    },
-
-    checkThisBinding: function() {
-	return this.checkNameLookup();
-    },
-};
-
-var cloneFunc = clone(testFunc, obj);
-cloneFunc();
+} + ")()", {envChainObject: obj});

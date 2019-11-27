@@ -27,7 +27,7 @@ from .util.schema import validate_schema, Schema
 from .util.taskcluster import get_artifact
 from .util.taskgraph import find_decision_task, find_existing_tasks_from_previous_kinds
 from .util.yaml import load_yaml
-from voluptuous import Required, Optional, Url
+from voluptuous import Required, Optional
 
 
 logger = logging.getLogger(__name__)
@@ -120,8 +120,8 @@ PER_PROJECT_PARAMETERS = {
 visual_metrics_jobs_schema = Schema({
         Required('jobs'): [
             {
-                Required('browsertime_json_url'): Url(),
-                Required('video_url'): Url(),
+                Required('json_location'): str,
+                Required('video_location'): str,
             }
         ]
 })

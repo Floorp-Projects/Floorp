@@ -78,6 +78,7 @@ async function waitForPendingPaints(toolbox) {
   let window = panel.panelWin || panel._frameWindow || panel.panelWindow;
   return damp.waitForPendingPaints(window);
 }
+exports.waitForPendingPaints = waitForPendingPaints;
 
 const openToolbox = async function(tool = "webconsole", onLoad) {
   let tab = getActiveTab();
@@ -103,15 +104,21 @@ exports.closeToolbox = async function() {
   await gDevTools.closeToolbox(target);
 };
 
+// Settle test isn't recorded, it only prints the pending duration
+async function recordPendingPaints(name, toolbox) {
+  dump(`Wait for pending paints on '${name}'\n`);
+  const test = runTest(`${name}.settle.DAMP`, false);
+  await waitForPendingPaints(toolbox);
+  test.done();
+}
+exports.recordPendingPaints = recordPendingPaints;
+
 exports.openToolboxAndLog = async function(name, tool, onLoad) {
-  let test = runTest(`${name}.open.DAMP`);
+  const test = runTest(`${name}.open.DAMP`);
   let toolbox = await openToolbox(tool, onLoad);
   test.done();
 
-  // Settle test isn't recorded, it only prints the pending duration
-  test = runTest(`${name}.open.settle.DAMP`, false);
-  await waitForPendingPaints(toolbox);
-  test.done();
+  await recordPendingPaints(`${name}.open`, toolbox);
 
   // Force freeing memory after toolbox open as it creates a lot of objects
   // and for complex documents, it introduces a GC that runs during 'reload' test.
@@ -136,9 +143,5 @@ exports.reloadPageAndLog = async function(name, toolbox, onReload) {
   await damp.reloadPage(onReload);
   test.done();
 
-  // Settle test isn't recorded, it only prints the pending duration
-  dump(`Wait for pending paints on '${name}'\n`);
-  test = runTest(`${name}.reload.settle.DAMP`, false);
-  await waitForPendingPaints(toolbox);
-  test.done();
+  await recordPendingPaints(`${name}.reload`, toolbox);
 };

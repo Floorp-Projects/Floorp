@@ -771,6 +771,9 @@ static mozilla::Atomic<bool> sAwaitFixEnabled(false);
 void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
   options.creationOptions()
       .setSharedMemoryAndAtomicsEnabled(sSharedMemoryEnabled)
+      .setCoopAndCoepEnabled(
+          StaticPrefs::browser_tabs_remote_useCrossOriginOpenerPolicy() &&
+          StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy())
       .setStreamsEnabled(sStreamsEnabled)
       .setWritableStreamsEnabled(
           StaticPrefs::javascript_options_writable_streams())

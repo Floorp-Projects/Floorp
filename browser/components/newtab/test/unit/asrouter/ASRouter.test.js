@@ -29,6 +29,7 @@ import { PanelTestProvider } from "lib/PanelTestProvider.jsm";
 import ProviderResponseSchema from "content-src/asrouter/schemas/provider-response.schema.json";
 import { SnippetsTestMessageProvider } from "lib/SnippetsTestMessageProvider.jsm";
 
+const OUTGOING_MESSAGE_NAME = "ASRouter:parent-to-child";
 const MESSAGE_PROVIDER_PREF_NAME =
   "browser.newtabpage.activity-stream.asrouter.providers.snippets";
 const FAKE_PROVIDERS = [
@@ -1545,6 +1546,19 @@ describe("ASRouter", () => {
           PARENT_TO_CHILD_MESSAGE_NAME,
           { type: "CLEAR_MESSAGE", data: { id: "foo" } }
         );
+      });
+      it("should only send CLEAR_MESSAGE to preloaded if action.data.preloadedOnly is true", async () => {
+        sandbox.stub(Router, "sendAsyncMessageToPreloaded");
+        const msg = fakeAsyncMessage({
+          type: "BLOCK_MESSAGE_BY_ID",
+          data: { id: "foo", preloadedOnly: true },
+        });
+        await Router.onMessage(msg);
+
+        assert.calledWith(Router.sendAsyncMessageToPreloaded, {
+          type: "CLEAR_MESSAGE",
+          data: { id: "foo" },
+        });
       });
       it("should add the campaign to the messageBlockList instead of id if .campaign is specified and not select messages of that campaign again", async () => {
         await Router.setState({
@@ -3574,6 +3588,51 @@ describe("ASRouter", () => {
       Router.observe("", "", "foo");
 
       assert.notCalled(CFRPageActions.reloadL10n);
+    });
+  });
+
+  describe("#sendAsyncMessageToPreloaded", () => {
+    it("should send the message to the preloaded browser if there's data and a preloaded browser exists", () => {
+      const port = {
+        browser: {
+          getAttribute() {
+            return "preloaded";
+          },
+        },
+        sendAsyncMessage: sinon.spy(),
+      };
+      Router.messageChannel.messagePorts.push(port);
+
+      const action = { type: "FOO" };
+      Router.sendAsyncMessageToPreloaded(action);
+      assert.calledWith(port.sendAsyncMessage, OUTGOING_MESSAGE_NAME, action);
+    });
+    it("should send the message to all the preloaded browsers if there's data and they exist", () => {
+      const port = {
+        browser: {
+          getAttribute() {
+            return "preloaded";
+          },
+        },
+        sendAsyncMessage: sinon.spy(),
+      };
+      Router.messageChannel.messagePorts.push(port);
+      Router.messageChannel.messagePorts.push(port);
+      Router.sendAsyncMessageToPreloaded({ type: "FOO" });
+      assert.calledTwice(port.sendAsyncMessage);
+    });
+    it("should not send the message to the preloaded browser if there's no data and a preloaded browser does not exists", () => {
+      const port = {
+        browser: {
+          getAttribute() {
+            return "consumed";
+          },
+        },
+        sendAsyncMessage: sinon.spy(),
+      };
+      Router.messageChannel.messagePorts.push(port);
+      Router.sendAsyncMessageToPreloaded({ type: "FOO" });
+      assert.notCalled(port.sendAsyncMessage);
     });
   });
 });

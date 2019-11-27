@@ -18,6 +18,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import tarfile
 
 import requests
 
@@ -1797,6 +1798,16 @@ def main(args=sys.argv[1:]):
 
             LOG.critical(" ".join("%s: %s" % (subject, msg) for subject, msg in message))
         os.sys.exit(1)
+
+    # if we're running browsertime in the CI, we want to zip the result dir
+    if args.browsertime and not args.run_local:
+        result_dir = raptor.results_handler.result_dir()
+        if os.path.exists(result_dir):
+            LOG.info("Creating tarball at %s" % result_dir + ".tgz")
+            with tarfile.open(result_dir + ".tgz", "w:gz") as tar:
+                tar.add(result_dir, arcname=os.path.basename(result_dir))
+            LOG.info("Removing %s" % result_dir)
+            shutil.rmtree(result_dir)
 
     # when running raptor locally with gecko profiling on, use the view-gecko-profile
     # tool to automatically load the latest gecko profile in profiler.firefox.com

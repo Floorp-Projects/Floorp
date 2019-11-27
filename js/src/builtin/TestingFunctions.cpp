@@ -4361,7 +4361,6 @@ static bool ShellCloneAndExecuteScript(JSContext* cx, unsigned argc,
 
   JS::CompileOptions options(cx);
   options.setFileAndLine(filename.get(), lineno);
-  options.setNoScriptRval(true);
 
   JS::SourceText<char16_t> srcBuf;
   if (!srcBuf.init(cx, src, srclen, SourceOwnership::Borrowed)) {
@@ -4383,14 +4382,19 @@ static bool ShellCloneAndExecuteScript(JSContext* cx, unsigned argc,
     return false;
   }
 
-  AutoRealm ar(cx, global);
-
   JS::RootedValue rval(cx);
-  if (!JS::CloneAndExecuteScript(cx, script, &rval)) {
+  {
+    AutoRealm ar(cx, global);
+    if (!JS::CloneAndExecuteScript(cx, script, &rval)) {
+      return false;
+    }
+  }
+
+  if (!cx->compartment()->wrap(cx, &rval)) {
     return false;
   }
 
-  args.rval().setUndefined();
+  args.rval().set(rval);
   return true;
 }
 
