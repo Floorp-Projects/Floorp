@@ -10,6 +10,8 @@
 #include "nsIObserver.h"
 #include "nsIContentSecurityPolicy.h"
 
+class nsIChannel;
+
 class DOMSecurityManager final : public nsIObserver {
  public:
   NS_DECL_ISUPPORTS
@@ -21,15 +23,15 @@ class DOMSecurityManager final : public nsIObserver {
   DOMSecurityManager() = default;
   ~DOMSecurityManager() = default;
 
-  // Only enforces the frame-anecstor check which needs to happen in
+  // Only enforces the frame-ancestor check which needs to happen in
   // the parent because we can only access the window global in the
   // parent. The actual CSP gets parsed and applied in content.
   nsresult ParseCSPAndEnforceFrameAncestorCheck(
       nsIChannel* aChannel, nsIContentSecurityPolicy** aOutCSP);
 
   // XFO checks are ignored in case CSP frame-ancestors is present,
-  nsresult EnforeXFrameOptionsCheck(nsIChannel* aChannel,
-                                    nsIContentSecurityPolicy* aCsp);
+  void EnforceXFrameOptionsCheck(nsIChannel* aChannel,
+                                 nsIContentSecurityPolicy* aCsp);
 
   static void Shutdown();
 };
