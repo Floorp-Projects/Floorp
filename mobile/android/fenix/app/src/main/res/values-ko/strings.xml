@@ -2,8 +2,8 @@
 <resources>
 
 
-    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
-    <string name="app_name_private">Firefox Preview (비공개)</string>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">Firefox Preview 사생활 보호 모드</string>
 
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
@@ -16,7 +16,7 @@
     <string name="search_hint">검색어나 주소 입력</string>
 
     <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header">열린탭 없음</string>
+    <string name="no_open_tabs_header_2">열린 탭 없음</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">열린 탭이 여기에 표시됩니다.</string>
 
@@ -24,6 +24,10 @@
     <!-- Title for private session option -->
     <string name="private_browsing_title">사생활 보호 세션에 있습니다</string>
 
+    <string name="private_browsing_common_myths">
+
+       사생활 보호 모드에 관한 흔한 오해
+    </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">세션 삭제</string>
 
@@ -52,6 +56,10 @@
     <string name="browser_menu_refresh">새로고침</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">중지</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">북마크</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">북마크 수정</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">도움말</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -84,6 +92,12 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by">POWERED BY %1$s</string>
+
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">%1$s에서 제공</string>
+    <!-- Browser menu button to put the the current page in reader mode -->
+    <string name="browser_menu_read">리더뷰</string>
 
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
@@ -139,8 +153,8 @@
     <string name="preferences_category_privacy">개인 정보</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">사이트 권한</string>
-    <!-- Preference for launching links in a private tab-->
-    <string name="preferences_launch_links_in_private_mode">사생활 보호 탭에서 링크 열기</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">사생활 보호 모드 바로 가기 추가</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">접근성</string>
     <!-- Preference category for account information -->
@@ -161,6 +175,8 @@
     <string name="preferences_data_choices">데이터 선택</string>
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">데이터 수집</string>
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_link">개인 정보 정책</string>
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">개발자 도구</string>
     <!-- Preference for developers -->
@@ -276,27 +292,6 @@
     <string name="preference_auto_battery_theme">배터리 세이버로 설정</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">기기 테마 따르기</string>
-
-    <!-- Quick Action Sheet -->
-    <!-- Button in the browser chrome to share the current page -->
-    <string name="quick_action_share">공유</string>
-    <!-- Button in the browser chrome to download the current page -->
-    <string name="quick_action_download">다운로드</string>
-    <!-- Button in the browser chrome in the browser to bookmark the current page -->
-    <string name="quick_action_bookmark">북마크</string>
-    <!-- Button in the browser chrome in the browser to edit the bookmark of the current page -->
-    <string name="quick_action_bookmark_edit">북마크 편집</string>
-    <!-- Button in the browser chrome in the browser to put the the current page in reader mode -->
-    <string name="quick_action_read">읽기</string>
-    <!-- Button in the browser chrome to exit reader mode -->
-    <string name="quick_action_read_close">닫기</string>
-    <!-- Button in the browser chrome to open the current page in an external app -->
-    <string name="quick_action_open_app_link">앱으로 열기</string>
-    <!-- Button in the browser chrome to configure reader mode appearance e.g. the used font type and size -->
-    <string name="quick_action_read_appearance">모양</string>
-    <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
-        with shortcuts to commonly used actions such as Share, Bookmark etc.. -->
-    <string name="quick_action_sheet_handle">빠른 실행</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -617,6 +612,8 @@
 
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">탭 삭제됨</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">탭 닫힘</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">실행 취소</string>
 

@@ -2,6 +2,9 @@
 <resources>
 
 
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">Firefox Preview privé</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Plus d’options</string>
@@ -90,6 +93,9 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by">FONCTIONNE GRÂCE À %1$s</string>
 
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">Fonctionne grâce à %1$s</string>
     <!-- Browser menu button to put the the current page in reader mode -->
     <string name="browser_menu_read">Mode lecture</string>
     <!-- Browser menu button to open the current page in an external app -->
@@ -354,6 +360,8 @@
     <string name="add_tab">Ajouter un onglet</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Fermer l’onglet</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Fermer l’onglet %s</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Ouvrir le menu des onglets</string>
     <!-- Open tabs menu item to close all tabs -->
@@ -652,6 +660,8 @@
     <string name="notification_pbm_action_open">Ouvrir</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
     <string name="notification_pbm_action_delete_and_open">Supprimer et ouvrir</string>
+    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_powered_by_channel_name">Fonctionne grâce à</string>
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Collection supprimée</string>
 
@@ -675,6 +685,10 @@
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">ANNULER</string>
 
+    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_undo">Annuler</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_confirm">Confirmer</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Autoriser %1$s à ouvrir %2$s</string>
@@ -947,6 +961,9 @@
     <!-- Paste the text in the clipboard -->
     <string name="browser_toolbar_long_press_popup_paste">Coller</string>
   
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">Adresse copiée dans le presse-papiers</string>
+  
     <!-- Title text for the Add To Homescreen dialog -->
     <string name="add_to_homescreen_title">Ajouter à l’écran d’accueil</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
@@ -1028,6 +1045,10 @@
     <string name="saved_login_hide_password">Masquer le mot de passe</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Déverrouillez pour afficher vos identifiants enregistrés</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Protégez vos identifiants et mots de passe</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Configurez un schéma de verrouillage, un code PIN ou un mot de passe pour protéger vos identifiants de connexion et mots de passe enregistrés pour le cas où quelqu’un accède à votre appareil.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Plus tard</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
