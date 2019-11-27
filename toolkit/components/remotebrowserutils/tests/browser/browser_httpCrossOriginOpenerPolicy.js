@@ -15,7 +15,7 @@ async function setPref() {
 
 async function unsetPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [[COOP_PREF, false], [DOCUMENT_CHANNEL_PREF, false]],
+    set: [[COOP_PREF, false]],
   });
 }
 
