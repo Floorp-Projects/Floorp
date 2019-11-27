@@ -10,11 +10,6 @@ var p = new Proxy(t, {
     },
     get(t, id) { return t[id]; }
 });
-evaluate(`function testFunc() {
-    x += " x";
-}`);
-
-var cloneFunc = clone(testFunc, p);
-cloneFunc();
+evaluate(`x += " x";`, {envChainObject: p});
 assertEq(hits, 2);
 assertEq(t.x, "undefined x");

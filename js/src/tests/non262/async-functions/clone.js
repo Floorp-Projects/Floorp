@@ -1,17 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) -- needs clone, cloneAndExecuteScript, drainJobQueue
-
-// Async functions can be cloned.
-let f = clone(async function f() {
-  var a = await 1;
-  var b = await 2;
-  var c = await 3;
-  return a + b + c;
-});
-
-var V;
-f().then(v => V = v);
-drainJobQueue();
-assertEq(V, 6);
+// |reftest| skip-if(!xulRuntime.shell) -- needs cloneAndExecuteScript, drainJobQueue
 
 // Async function source code scripts can be cloned.
 let g = newGlobal();
