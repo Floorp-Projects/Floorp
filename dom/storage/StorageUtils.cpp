@@ -6,6 +6,14 @@
 
 #include "StorageUtils.h"
 
+#include "mozilla/OriginAttributes.h"
+#include "nsDebug.h"
+#include "nsIPrincipal.h"
+#include "nsIURI.h"
+#include "nsIURL.h"
+#include "nsNetUtil.h"
+#include "nsPrintfCString.h"
+
 namespace mozilla {
 namespace dom {
 namespace StorageUtils {
