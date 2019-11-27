@@ -12,9 +12,11 @@ const {
   translateNodeFrontToGrip,
 } = require("devtools/client/inspector/shared/utils");
 
-const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
-const { Rep } = REPS;
-const ElementNode = REPS.ElementNode;
+loader.lazyRequireGetter(
+  this,
+  "getNodeRep",
+  "devtools/client/inspector/shared/node-reps"
+);
 
 const Types = require("../types");
 
@@ -69,11 +71,7 @@ class FlexItemSelector extends PureComponent {
         className: "devtools-button devtools-dropdown-button",
         onClick: this.onShowFlexItemMenu,
       },
-      Rep({
-        defaultRep: ElementNode,
-        mode: MODE.TINY,
-        object: translateNodeFrontToGrip(flexItem.nodeFront),
-      })
+      getNodeRep(flexItem.nodeFront)
     );
   }
 }

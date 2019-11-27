@@ -13,13 +13,12 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const {
-  translateNodeFrontToGrip,
-} = require("devtools/client/inspector/shared/utils");
 
-const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
-const { Rep } = REPS;
-const ElementNode = REPS.ElementNode;
+loader.lazyRequireGetter(
+  this,
+  "getNodeRep",
+  "devtools/client/inspector/shared/node-reps"
+);
 
 const Types = require("../types");
 
@@ -84,10 +83,7 @@ class FlexContainer extends PureComponent {
       null,
       dom.div(
         { className: "flex-header-container-label" },
-        Rep({
-          defaultRep: ElementNode,
-          mode: MODE.TINY,
-          object: translateNodeFrontToGrip(nodeFront),
+        getNodeRep(nodeFront, {
           onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
           onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
         }),
