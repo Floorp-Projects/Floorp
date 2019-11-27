@@ -149,7 +149,10 @@ var PictureInPicture = {
   onCommand(event) {
     let win = event.target.ownerGlobal;
     let browser = win.gBrowser.selectedBrowser;
-    browser.messageManager.sendAsyncMessage("PictureInPicture:KeyToggle");
+    let actor = browser.browsingContext.currentWindowGlobal.getActor(
+      "PictureInPicture"
+    );
+    actor.sendAsyncMessage("PictureInPicture:KeyToggle");
   },
 
   async focusTabAndClosePip() {
