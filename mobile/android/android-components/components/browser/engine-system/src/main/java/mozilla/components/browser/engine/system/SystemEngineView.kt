@@ -251,7 +251,7 @@ class SystemEngineView @JvmOverloads constructor(
             if (request.isForMainFrame) {
                 session?.let {
                     it.notifyObservers {
-                        onLoadRequest(request.url.toString(), request.hasGesture(), true, {})
+                        onLoadRequest(request.url.toString(), request.hasGesture(), true, { _: Boolean, _: String -> })
                     }
                 }
             }

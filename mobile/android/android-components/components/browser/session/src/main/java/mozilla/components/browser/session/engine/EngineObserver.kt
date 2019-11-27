@@ -71,19 +71,22 @@ internal class EngineObserver(
         url: String,
         triggeredByRedirect: Boolean,
         triggeredByWebContent: Boolean,
-        shouldLoadUri: (Boolean) -> Unit
+        shouldLoadUri: (Boolean, String) -> Unit
     ) {
         if (triggeredByRedirect || triggeredByWebContent) {
             session.searchTerms = ""
         }
 
+        /* Debugging code for Android-components/issues/5127, will remove */
+        val shouldLoadUriWithId = { shouldLoad: Boolean -> shouldLoadUri(shouldLoad, "$this:${session.id}") }
         session.loadRequestMetadata = Consumable.from(LoadRequestMetadata(
             url,
             arrayOf(
                 if (triggeredByRedirect) LoadRequestOption.REDIRECT else LoadRequestOption.NONE,
                 if (triggeredByWebContent) LoadRequestOption.WEB_CONTENT else LoadRequestOption.NONE
             ),
-            shouldLoadUri
+            /* Debugging code for Android-components/issues/5127, will remove */
+            shouldLoadUriWithId
         ))
     }
 

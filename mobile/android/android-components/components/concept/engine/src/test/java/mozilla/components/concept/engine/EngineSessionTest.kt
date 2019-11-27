@@ -28,7 +28,7 @@ import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.
 
 class EngineSessionTest {
     private val unknownHitResult = HitResult.UNKNOWN("file://foobar")
-    private val allowOrDeny: (Boolean) -> Unit = {}
+    private val allowOrDeny: (Boolean, String) -> Unit = { _, _ -> }
 
     @Test
     fun `registered observers will be notified`() {

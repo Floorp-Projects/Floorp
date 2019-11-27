@@ -477,7 +477,7 @@ class SystemEngineSessionTest {
 
         engineSession.webView.webViewClient.shouldInterceptRequest(engineSession.webView, request)
 
-        val allowOrDeny = argumentCaptor<(Boolean) -> Unit>()
+        val allowOrDeny = argumentCaptor<(Boolean, String) -> Unit>()
         verify(observer).onLoadRequest(anyString(), eq(true), eq(true), allowOrDeny.capture())
 
         val redirect: WebResourceRequest = mock()
@@ -517,7 +517,7 @@ class SystemEngineSessionTest {
             engineSession.webView,
             request)
 
-        val allowOrDeny = argumentCaptor<(Boolean) -> Unit>()
+        val allowOrDeny = argumentCaptor<(Boolean, String) -> Unit>()
         verify(observer, never()).onLoadRequest(anyString(), anyBoolean(), anyBoolean(), allowOrDeny.capture())
     }
 
