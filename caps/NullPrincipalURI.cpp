@@ -31,12 +31,6 @@ NullPrincipalURI::NullPrincipalURI(const NullPrincipalURI& aOther) {
   mPath.Assign(aOther.mPath);
 }
 
-/* static */
-already_AddRefed<NullPrincipalURI> NullPrincipalURI::Create() {
-  RefPtr<NullPrincipalURI> uri = new NullPrincipalURI();
-  return uri.forget();
-}
-
 static NS_DEFINE_CID(kNullPrincipalURIImplementationCID,
                      NS_NULLPRINCIPALURI_IMPLEMENTATION_CID);
 

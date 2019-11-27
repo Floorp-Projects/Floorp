@@ -86,8 +86,7 @@ nsresult NullPrincipal::Init(const OriginAttributes& aOriginAttributes,
 
     mURI = aURI;
   } else {
-    mURI = NullPrincipalURI::Create();
-    NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_AVAILABLE);
+    mURI = new NullPrincipalURI();
   }
 
   nsAutoCString originNoSuffix;
@@ -101,8 +100,7 @@ nsresult NullPrincipal::Init(const OriginAttributes& aOriginAttributes,
 
 nsresult NullPrincipal::Init(const OriginAttributes& aOriginAttributes,
                              bool aIsFirstParty) {
-  mURI = NullPrincipalURI::Create();
-  NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_AVAILABLE);
+  mURI = new NullPrincipalURI();
 
   nsAutoCString originNoSuffix;
   DebugOnly<nsresult> rv = mURI->GetSpec(originNoSuffix);
