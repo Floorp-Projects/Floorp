@@ -1697,8 +1697,16 @@ void NetlinkService::ComputeDNSSuffixList() {
     res_nclose(&res);
   }
 
-  MutexAutoLock lock(mMutex);
-  mDNSSuffixList = std::move(suffixList);
+  RefPtr<NetlinkServiceListener> listener;
+  {
+    MutexAutoLock lock(mMutex);
+    listener = mListener;
+    mDNSSuffixList = std::move(suffixList);
+  }
+
+  if (listener) {
+    listener->OnDnsSuffixListUpdated();
+  }
 #endif
 }
 
