@@ -305,6 +305,21 @@ class WebExecutorTest {
     }
 
     @Test(expected = IOException::class)
+    fun testFetchStreamError() {
+
+        val expectedCount = 1 * 1024 * 1024 // 1MB
+        val response = executor.fetch(WebRequest("$TEST_ENDPOINT/bytes/$expectedCount"),
+                GeckoWebExecutor.FETCH_FLAGS_STREAM_FAILURE_TEST).pollDefault()!!
+
+        assertThat("Status code should match", response.statusCode, equalTo(200))
+        assertThat("Content-Length should match",response.headers["Content-Length"]!!.toInt(), equalTo(expectedCount))
+
+        val stream = response.body!!
+        val bytes = ByteArray(1)
+        stream.read(bytes)
+    }
+
+    @Test(expected = IOException::class)
     fun readClosedStream() {
         val response = executor.fetch(WebRequest("$TEST_ENDPOINT/anything")).pollDefault()!!
 
