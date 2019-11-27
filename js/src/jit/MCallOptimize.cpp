@@ -172,7 +172,6 @@ static bool CanInlineCrossRealm(InlinableNative native) {
     case InlinableNative::IntrinsicObjectIsTypeDescr:
     case InlinableNative::IntrinsicTypeDescrIsSimpleType:
     case InlinableNative::IntrinsicTypeDescrIsArrayType:
-    case InlinableNative::IntrinsicSetTypedObjectOffset:
     case InlinableNative::IntrinsicArrayIteratorPrototypeOptimizable:
       MOZ_CRASH("Unexpected cross-realm intrinsic call");
 
@@ -589,8 +588,6 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
                             &ReferenceTypeDescr::class_);
     case InlinableNative::IntrinsicTypeDescrIsArrayType:
       return inlineHasClass(callInfo, &ArrayTypeDescr::class_);
-    case InlinableNative::IntrinsicSetTypedObjectOffset:
-      return inlineSetTypedObjectOffset(callInfo);
     case InlinableNative::Limit:
       break;
   }
@@ -3418,50 +3415,6 @@ IonBuilder::InliningResult IonBuilder::inlineObjectIsTypeDescr(
   pushConstant(BooleanValue(result));
 
   callInfo.setImplicitlyUsedUnchecked();
-  return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningResult IonBuilder::inlineSetTypedObjectOffset(
-    CallInfo& callInfo) {
-  MOZ_ASSERT(!callInfo.constructing());
-  MOZ_ASSERT(callInfo.argc() == 2);
-
-  MDefinition* typedObj = callInfo.getArg(0);
-  MDefinition* offset = callInfo.getArg(1);
-
-  // Return type should be undefined or something wacky is going on.
-  if (getInlineReturnType() != MIRType::Undefined) {
-    return InliningStatus_NotInlined;
-  }
-
-  // Check typedObj is a, well, typed object. Go ahead and use TI
-  // data. If this check should fail, that is almost certainly a bug
-  // in self-hosted code -- either because it's not being careful
-  // with TI or because of something else -- but we'll just let it
-  // fall through to the SetTypedObjectOffset intrinsic in such
-  // cases.
-  TemporaryTypeSet* types = typedObj->resultTypeSet();
-  if (typedObj->type() != MIRType::Object || !types) {
-    return InliningStatus_NotInlined;
-  }
-  switch (types->forAllClasses(constraints(), IsTypedObjectClass)) {
-    case TemporaryTypeSet::ForAllResult::ALL_FALSE:
-    case TemporaryTypeSet::ForAllResult::EMPTY:
-    case TemporaryTypeSet::ForAllResult::MIXED:
-      return InliningStatus_NotInlined;
-    case TemporaryTypeSet::ForAllResult::ALL_TRUE:
-      break;
-  }
-
-  // Check type of offset argument is an integer.
-  if (offset->type() != MIRType::Int32) {
-    return InliningStatus_NotInlined;
-  }
-
-  callInfo.setImplicitlyUsedUnchecked();
-  MInstruction* ins = MSetTypedObjectOffset::New(alloc(), typedObj, offset);
-  current->add(ins);
-  current->push(ins);
   return InliningStatus_Inlined;
 }
 
