@@ -512,8 +512,6 @@ class nsXULElement : public nsStyledElement {
 
   bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override;
 
-  void MaybeUpdatePrivateLifetime();
-
  protected:
   ~nsXULElement();
 
@@ -555,6 +553,17 @@ class nsXULElement : public nsStyledElement {
   void AddListenerForAttributeIfNeeded(const nsAttrName& aName);
   void AddListenerForAttributeIfNeeded(nsAtom* aLocalName);
 
+  nsIWidget* GetWindowWidget();
+
+  // attribute setters for widget
+  nsresult HideWindowChrome(bool aShouldHide);
+  void SetChromeMargins(const nsAttrValue* aValue);
+  void ResetChromeMargins();
+
+  void SetDrawsInTitlebar(bool aState);
+  void SetDrawsTitle(bool aState);
+  void UpdateBrightTitlebarForeground(Document* aDocument);
+
  protected:
   void AddTooltipSupport();
   void RemoveTooltipSupport();
@@ -585,6 +594,8 @@ class nsXULElement : public nsStyledElement {
 
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aGivenProto) override;
+
+  void MaybeUpdatePrivateLifetime();
 
   bool IsEventStoppedFromAnonymousScrollbar(mozilla::EventMessage aMessage);
 
