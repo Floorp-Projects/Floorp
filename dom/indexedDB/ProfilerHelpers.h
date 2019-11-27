@@ -110,19 +110,19 @@ class MOZ_STACK_CLASS LoggingString final : public nsAutoCString {
     Append(kCommaSpace);
 
     switch (aTransaction->GetMode()) {
-      case IDBTransaction::READ_ONLY:
+      case IDBTransaction::Mode::ReadOnly:
         AppendLiteral("\"readonly\"");
         break;
-      case IDBTransaction::READ_WRITE:
+      case IDBTransaction::Mode::ReadWrite:
         AppendLiteral("\"readwrite\"");
         break;
-      case IDBTransaction::READ_WRITE_FLUSH:
+      case IDBTransaction::Mode::ReadWriteFlush:
         AppendLiteral("\"readwriteflush\"");
         break;
-      case IDBTransaction::CLEANUP:
+      case IDBTransaction::Mode::Cleanup:
         AppendLiteral("\"cleanup\"");
         break;
-      case IDBTransaction::VERSION_CHANGE:
+      case IDBTransaction::Mode::VersionChange:
         AppendLiteral("\"versionchange\"");
         break;
       default:
