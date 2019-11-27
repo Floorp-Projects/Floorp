@@ -79,6 +79,7 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         ErrorType.ERROR_FILE_ACCESS_DENIED,
         ErrorType.ERROR_PROXY_CONNECTION_REFUSED,
         ErrorType.ERROR_UNKNOWN_PROXY_HOST,
+        ErrorType.ERROR_NO_INTERNET,
         ErrorType.ERROR_UNKNOWN_PROTOCOL -> RiskLevel.Low
 
         ErrorType.ERROR_SECURITY_BAD_CERT,

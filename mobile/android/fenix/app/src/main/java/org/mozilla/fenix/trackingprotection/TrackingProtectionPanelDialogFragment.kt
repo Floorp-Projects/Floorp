@@ -27,7 +27,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.lib.state.ext.observe
-import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -38,7 +38,7 @@ import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 
-class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), BackHandler {
+class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
     private val args by navArgs<TrackingProtectionPanelDialogFragmentArgs>()
 

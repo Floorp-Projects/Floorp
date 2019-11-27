@@ -11,7 +11,7 @@ import androidx.core.view.isVisible
 import kotlinx.android.synthetic.main.component_bookmark.view.*
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
-import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.LibraryPageView
 import org.mozilla.fenix.library.SelectionInteractor
@@ -95,7 +95,7 @@ interface BookmarkViewInteractor : SelectionInteractor<BookmarkNode> {
 class BookmarkView(
     container: ViewGroup,
     val interactor: BookmarkViewInteractor
-) : LibraryPageView(container), BackHandler {
+) : LibraryPageView(container), UserInteractionHandler {
 
     val view: View = LayoutInflater.from(container.context)
         .inflate(R.layout.component_bookmark, container, true)

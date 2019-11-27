@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
 import kotlinx.android.synthetic.main.component_history.*
 import kotlinx.android.synthetic.main.component_history.view.*
-import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.LibraryPageView
 import org.mozilla.fenix.library.SelectionInteractor
@@ -51,7 +51,7 @@ interface HistoryViewInteractor : SelectionInteractor<HistoryItem> {
 class HistoryView(
     container: ViewGroup,
     val interactor: HistoryInteractor
-) : LibraryPageView(container), BackHandler {
+) : LibraryPageView(container), UserInteractionHandler {
 
     val view: View = LayoutInflater.from(container.context)
         .inflate(R.layout.component_history, container, true)

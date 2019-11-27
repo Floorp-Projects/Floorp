@@ -3,7 +3,7 @@ package org.mozilla.fenix.components
 import android.view.View
 import android.view.ViewStub
 import androidx.annotation.UiThread
-import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import java.lang.ref.WeakReference
 
@@ -16,7 +16,7 @@ import java.lang.ref.WeakReference
  */
 abstract class InflationAwareFeature(
     private val stub: ViewStub
-) : LifecycleAwareFeature, BackHandler {
+) : LifecycleAwareFeature, UserInteractionHandler {
 
     internal lateinit var view: WeakReference<View>
     internal var feature: LifecycleAwareFeature? = null
@@ -62,7 +62,7 @@ abstract class InflationAwareFeature(
      * @return true if the feature also implements [BackHandler] and the feature has been initiated.
      */
     override fun onBackPressed(): Boolean {
-        return (feature as? BackHandler)?.onBackPressed() ?: false
+        return (feature as? UserInteractionHandler)?.onBackPressed() ?: false
     }
 
     /**
