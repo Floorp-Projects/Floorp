@@ -10,6 +10,7 @@ function run_test() {
     "pagesize",
     "pageshift",
     "memmapalign",
+    "cpucount",
     "memsize",
   ];
   let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
