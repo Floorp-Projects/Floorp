@@ -628,9 +628,9 @@ already_AddRefed<IDBRequest> IDBCursor::Update(JSContext* aCx,
     return nullptr;
   }
 
-  if (mTransaction->GetMode() == IDBTransaction::CLEANUP || IsSourceDeleted() ||
-      !mHaveValue || mType == Type_ObjectStoreKey || mType == Type_IndexKey ||
-      mContinueCalled) {
+  if (mTransaction->GetMode() == IDBTransaction::Mode::Cleanup ||
+      IsSourceDeleted() || !mHaveValue || mType == Type_ObjectStoreKey ||
+      mType == Type_IndexKey || mContinueCalled) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
     return nullptr;
   }
