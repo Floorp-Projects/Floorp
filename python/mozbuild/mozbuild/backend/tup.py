@@ -371,6 +371,14 @@ class TupBackend(CommonBackend):
         ]
         return cmd
 
+    def _py3_action(self, action):
+        cmd = [
+            '$(PYTHON3)',
+            '-m',
+            'mozbuild.action.%s' % action,
+        ]
+        return cmd
+
     def _lib_paths(self, objdir, libs):
         return [mozpath.relpath(mozpath.join(l.objdir, l.import_name), objdir)
                 for l in libs]
