@@ -7732,7 +7732,8 @@ class Cursor::CursorOpBase : public TransactionDatabaseOperationBase {
 
   ~CursorOpBase() override = default;
 
-  bool SendFailureResult(nsresult aResultCode) override;
+  bool SendFailureResult(nsresult aResultCode) final;
+  nsresult SendSuccessResult() final;
 
   void Cleanup() override;
 
@@ -7781,8 +7782,6 @@ class Cursor::OpenOp final : public Cursor::CursorOpBase {
   nsresult DoIndexKeyDatabaseWork(DatabaseConnection* aConnection);
 
   nsresult DoDatabaseWork(DatabaseConnection* aConnection) override;
-
-  nsresult SendSuccessResult() override;
 };
 
 class Cursor::ContinueOp final : public Cursor::CursorOpBase {
@@ -7801,8 +7800,6 @@ class Cursor::ContinueOp final : public Cursor::CursorOpBase {
   ~ContinueOp() override = default;
 
   nsresult DoDatabaseWork(DatabaseConnection* aConnection) override;
-
-  nsresult SendSuccessResult() override;
 };
 
 class Utils final : public PBackgroundIndexedDBUtilsParent {
@@ -26642,7 +26639,7 @@ nsresult Cursor::OpenOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   return NS_OK;
 }
 
-nsresult Cursor::OpenOp::SendSuccessResult() {
+nsresult Cursor::CursorOpBase::SendSuccessResult() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mCursor);
   MOZ_ASSERT(mCursor->mCurrentlyRunningOp == this);
@@ -26853,29 +26850,6 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   return PopulateExtraResponses(&*stmt, maxExtraCount,
                                 NS_LITERAL_CSTRING("ContinueOp"));
-}
-
-nsresult Cursor::ContinueOp::SendSuccessResult() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mCursor);
-  MOZ_ASSERT(mCursor->mCurrentlyRunningOp == this);
-  MOZ_ASSERT_IF(mResponse.type() == CursorResponse::Tvoid_t,
-                mCursor->mPosition.IsUnset());
-  MOZ_ASSERT_IF(mResponse.type() == CursorResponse::Tvoid_t,
-                mCursor->mLocaleAwareRangeBound.IsUnset());
-  MOZ_ASSERT_IF(mResponse.type() == CursorResponse::Tvoid_t,
-                mCursor->mObjectStorePosition.IsUnset());
-
-  if (IsActorDestroyed()) {
-    return NS_ERROR_DOM_INDEXEDDB_ABORT_ERR;
-  }
-
-  mCursor->SendResponseInternal(mResponse, mFiles);
-
-#ifdef DEBUG
-  mResponseSent = true;
-#endif
-  return NS_OK;
 }
 
 Utils::Utils()
