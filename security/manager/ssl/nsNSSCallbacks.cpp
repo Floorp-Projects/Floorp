@@ -1401,8 +1401,10 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   } else {
     if (mozilla::net::SSLTokensCache::IsEnabled()) {
       RebuildCertificateInfoFromSSLTokenCache(infoObject);
+      infoObject->NoteSessionResumptionTime(true);
     } else {
       RebuildVerifiedCertificateInformation(fd, infoObject);
+      infoObject->NoteSessionResumptionTime(false);
     }
   }
 
