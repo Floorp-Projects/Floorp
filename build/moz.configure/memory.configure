@@ -58,8 +58,10 @@ def phc_default(milestone, target, replace_malloc_default, replace_malloc):
        (replace_malloc.origin != 'default' and not replace_malloc):
         return False
     # Nightly only because PHC has a non-negligible performance cost.
-    if not milestone.is_nightly:
-        return False
+    # XXX: This test is currently disabled to allow some testing of PHC on
+    # early beta 72. It will be re-enabled for late beta 72 in bug 1599337.
+    #if not milestone.is_nightly:
+    #    return False
     # Both Linux32 and Win32 have frequent crashes when stack tracing (for
     # unclear reasons), so PHC is enabled only on 64-bit only in both cases.
     #
