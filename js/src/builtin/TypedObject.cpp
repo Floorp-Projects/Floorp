@@ -1528,13 +1528,10 @@ bool TypedObject::isAttached() const {
 OutlineTypedObject* OutlineTypedObject::createUnattached(JSContext* cx,
                                                          HandleTypeDescr descr,
                                                          gc::InitialHeap heap) {
-  if (descr->opaque()) {
-    return createUnattachedWithClass(cx, &OutlineOpaqueTypedObject::class_,
-                                     descr, heap);
-  } else {
-    return createUnattachedWithClass(cx, &OutlineTransparentTypedObject::class_,
-                                     descr, heap);
-  }
+  const JSClass* clasp = descr->opaque()
+                             ? &OutlineOpaqueTypedObject::class_
+                             : &OutlineTransparentTypedObject::class_;
+  return createUnattachedWithClass(cx, clasp, descr, heap);
 }
 
 void OutlineTypedObject::setOwnerAndData(JSObject* owner, uint8_t* data) {
@@ -1591,8 +1588,7 @@ OutlineTypedObject* OutlineTypedObject::createUnattachedWithClass(
   return obj;
 }
 
-void OutlineTypedObject::attach(JSContext* cx, ArrayBufferObject& buffer,
-                                uint32_t offset) {
+void OutlineTypedObject::attach(ArrayBufferObject& buffer, uint32_t offset) {
   MOZ_ASSERT(!isAttached());
   MOZ_ASSERT(offset <= buffer.byteLength());
   MOZ_ASSERT(size() <= buffer.byteLength() - offset);
@@ -1615,13 +1611,36 @@ void OutlineTypedObject::attach(JSContext* cx, TypedObject& typedObj,
   }
 
   if (owner->is<ArrayBufferObject>()) {
-    attach(cx, owner->as<ArrayBufferObject>(), offset);
+    attach(owner->as<ArrayBufferObject>(), offset);
   } else {
     MOZ_ASSERT(owner->is<InlineTypedObject>());
     JS::AutoCheckCannotGC nogc(cx);
     setOwnerAndData(
         owner, owner->as<InlineTypedObject>().inlineTypedMem(nogc) + offset);
   }
+}
+
+/*static*/
+OutlineTypedObject* OutlineTypedObject::createZeroed(JSContext* cx,
+                                                     HandleTypeDescr descr,
+                                                     gc::InitialHeap heap) {
+  // Create unattached wrapper object.
+  Rooted<OutlineTypedObject*> obj(
+      cx, OutlineTypedObject::createUnattached(cx, descr, heap));
+  if (!obj) {
+    return nullptr;
+  }
+
+  // Allocate and initialize the memory for this instance.
+  size_t totalSize = descr->size();
+  Rooted<ArrayBufferObject*> buffer(cx);
+  buffer = ArrayBufferObject::createForTypedObject(cx, totalSize);
+  if (!buffer) {
+    return nullptr;
+  }
+  descr->initInstance(cx->runtime(), buffer->dataPointer());
+  obj->attach(*buffer, 0);
+  return obj;
 }
 
 /*static*/
@@ -1675,23 +1694,7 @@ TypedObject* TypedObject::createZeroed(JSContext* cx, HandleTypeDescr descr,
     return obj;
   }
 
-  // Create unattached wrapper object.
-  Rooted<OutlineTypedObject*> obj(
-      cx, OutlineTypedObject::createUnattached(cx, descr, heap));
-  if (!obj) {
-    return nullptr;
-  }
-
-  // Allocate and initialize the memory for this instance.
-  size_t totalSize = descr->size();
-  Rooted<ArrayBufferObject*> buffer(cx);
-  buffer = ArrayBufferObject::createForTypedObject(cx, totalSize);
-  if (!buffer) {
-    return nullptr;
-  }
-  descr->initInstance(cx->runtime(), buffer->dataPointer());
-  obj->attach(cx, *buffer, 0);
-  return obj;
+  return OutlineTypedObject::createZeroed(cx, descr, heap);
 }
 
 /* static */
