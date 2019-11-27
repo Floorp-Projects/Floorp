@@ -1656,7 +1656,7 @@ TypedObject* TypedObject::createZeroed(JSContext* cx, HandleTypeDescr descr,
       return nullptr;
     }
     JS::AutoCheckCannotGC nogc(cx);
-    descr->initInstances(cx->runtime(), obj->inlineTypedMem(nogc), 1);
+    descr->initInstance(cx->runtime(), obj->inlineTypedMem(nogc));
     return obj;
   }
 
@@ -1674,7 +1674,7 @@ TypedObject* TypedObject::createZeroed(JSContext* cx, HandleTypeDescr descr,
   if (!buffer) {
     return nullptr;
   }
-  descr->initInstances(cx->runtime(), buffer->dataPointer(), 1);
+  descr->initInstance(cx->runtime(), buffer->dataPointer());
   obj->attach(cx, *buffer, 0);
   return obj;
 }
@@ -1718,7 +1718,7 @@ void OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
     return;
   }
 
-  descr.traceInstances(trc, newData, 1);
+  descr.traceInstance(trc, newData);
 }
 
 bool TypeDescr::hasProperty(const JSAtomState& names, jsid id) {
@@ -2185,7 +2185,7 @@ void InlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
     return;
   }
 
-  typedObj.typeDescr().traceInstances(trc, typedObj.inlineTypedMem(), 1);
+  typedObj.typeDescr().traceInstance(trc, typedObj.inlineTypedMem());
 }
 
 /* static */
@@ -2786,23 +2786,13 @@ void MemoryInitVisitor::visitReference(ReferenceTypeDescr& descr,
   MOZ_CRASH("Invalid kind");
 }
 
-void TypeDescr::initInstances(const JSRuntime* rt, uint8_t* mem,
-                              size_t length) {
-  MOZ_ASSERT(length >= 1);
-
+void TypeDescr::initInstance(const JSRuntime* rt, uint8_t* mem) {
   MemoryInitVisitor visitor(rt);
 
-  // Initialize the 0th instance
+  // Initialize the instance
   memset(mem, 0, size());
   if (opaque()) {
     visitReferences(*this, mem, visitor);
-  }
-
-  // Stamp out N copies of later instances
-  uint8_t* target = mem;
-  for (size_t i = 1; i < length; i++) {
-    target += size();
-    memcpy(target, mem, size());
   }
 }
 
@@ -2850,13 +2840,10 @@ void MemoryTracingVisitor::visitReference(ReferenceTypeDescr& descr,
   MOZ_CRASH("Invalid kind");
 }
 
-void TypeDescr::traceInstances(JSTracer* trace, uint8_t* mem, size_t length) {
+void TypeDescr::traceInstance(JSTracer* trace, uint8_t* mem) {
   MemoryTracingVisitor visitor(trace);
 
-  for (size_t i = 0; i < length; i++) {
-    visitReferences(*this, mem, visitor);
-    mem += size();
-  }
+  visitReferences(*this, mem, visitor);
 }
 
 namespace {
