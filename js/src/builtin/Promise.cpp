@@ -3539,6 +3539,7 @@ static bool PromiseAllSettledElementFunction(JSContext* cx, unsigned argc,
   return true;
 }
 
+#ifdef NIGHTLY_BUILD
 // Promise.any (Stage 3 proposal)
 // https://tc39.es/proposal-promise-any/
 //
@@ -3547,6 +3548,7 @@ static bool Promise_static_any(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return CommonPromiseCombinator(cx, args, CombinatorKind::Any);
 }
+#endif
 
 // Promise.any (Stage 3 proposal)
 // https://tc39.es/proposal-promise-any/
