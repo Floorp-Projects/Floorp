@@ -87,7 +87,7 @@ class FileManager final {
 
   already_AddRefed<nsIFile> EnsureJournalDirectory();
 
-  already_AddRefed<FileInfo> GetFileInfo(int64_t aId);
+  already_AddRefed<FileInfo> GetFileInfo(int64_t aId) const;
 
   already_AddRefed<FileInfo> GetNewFileInfo();
 
