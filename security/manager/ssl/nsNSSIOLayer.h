@@ -79,6 +79,7 @@ class nsNSSSocketInfo final : public CommonSocketControl {
   void SetHandshakeCompleted();
   bool IsHandshakeCompleted() const { return mHandshakeCompleted; }
   void NoteTimeUntilReady();
+  void NoteSessionResumptionTime(bool aUsingExternalCache);
 
   void SetFalseStartCallbackCalled() { mFalseStartCallbackCalled = true; }
   void SetFalseStarted() { mFalseStarted = true; }
