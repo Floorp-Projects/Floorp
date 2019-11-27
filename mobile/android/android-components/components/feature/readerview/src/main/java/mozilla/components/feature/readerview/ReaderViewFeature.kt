@@ -23,6 +23,7 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.webextensions.WebExtensionController
 import org.json.JSONObject
 import java.lang.ref.WeakReference
+import java.util.Locale
 import kotlin.properties.Delegates.observable
 
 typealias OnReaderViewAvailableChange = (available: Boolean) -> Unit
@@ -280,8 +281,8 @@ class ReaderViewFeature(
         private fun createShowReaderMessage(config: Config): JSONObject {
             val configJson = JSONObject()
                     .put(ACTION_VALUE_SHOW_FONT_SIZE, config.fontSize)
-                    .put(ACTION_VALUE_SHOW_FONT_TYPE, config.fontType.name.toLowerCase())
-                    .put(ACTION_VALUE_SHOW_COLOR_SCHEME, config.colorScheme.name.toLowerCase())
+                    .put(ACTION_VALUE_SHOW_FONT_TYPE, config.fontType.name.toLowerCase(Locale.ROOT))
+                    .put(ACTION_VALUE_SHOW_COLOR_SCHEME, config.colorScheme.name.toLowerCase(Locale.ROOT))
 
             return JSONObject()
                     .put(ACTION_MESSAGE_KEY, ACTION_SHOW)

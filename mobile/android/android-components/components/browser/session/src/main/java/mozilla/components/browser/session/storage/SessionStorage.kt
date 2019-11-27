@@ -14,6 +14,7 @@ import mozilla.components.browser.session.ext.readSnapshot
 import mozilla.components.browser.session.ext.writeSnapshot
 import mozilla.components.concept.engine.Engine
 import java.io.File
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 private const val STORE_FILE_NAME_FORMAT = "mozilla_components_session_storage_%s.json"
@@ -90,5 +91,6 @@ private fun removeSnapshotFromDisk(context: Context, engine: Engine) {
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal fun getFileForEngine(context: Context, engine: Engine): AtomicFile {
-    return AtomicFile(File(context.filesDir, String.format(STORE_FILE_NAME_FORMAT, engine.name()).toLowerCase()))
+    return AtomicFile(File(context.filesDir, String.format(STORE_FILE_NAME_FORMAT, engine.name())
+        .toLowerCase(Locale.ROOT)))
 }

@@ -11,6 +11,7 @@ import mozilla.appservices.push.PushAPI
 import mozilla.appservices.push.PushManager
 import mozilla.appservices.push.SubscriptionResponse
 import java.io.Closeable
+import java.util.Locale
 
 /**
  * An interface that wraps the [PushAPI].
@@ -123,4 +124,4 @@ internal fun ServiceType.toBridgeType() = when (this) {
 }
 
 @VisibleForTesting
-internal fun Protocol.asString() = name.toLowerCase()
+internal fun Protocol.asString() = name.toLowerCase(Locale.ROOT)
