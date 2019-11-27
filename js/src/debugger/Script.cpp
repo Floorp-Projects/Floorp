@@ -1574,6 +1574,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOP_NEWARRAY_COPYONWRITE:
     case JSOP_NEWINIT:
     case JSOP_NEWOBJECT:
+    case JSOP_NEWOBJECT_WITHGROUP:
     case JSOP_INITELEM:
     case JSOP_INITHIDDENELEM:
     case JSOP_INITELEM_INC:

@@ -3058,18 +3058,21 @@ bool BaselineCodeGen<Handler>::emit_JSOP_INITELEM_ARRAY() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_NEWOBJECT() {
-  frame.syncStack(0);
+  return emitNewObject();
+}
 
-  if (!emitNextIC()) {
-    return false;
-  }
-
-  frame.push(R0);
-  return true;
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_JSOP_NEWOBJECT_WITHGROUP() {
+  return emitNewObject();
 }
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_NEWINIT() {
+  return emitNewObject();
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emitNewObject() {
   frame.syncStack(0);
 
   if (!emitNextIC()) {
