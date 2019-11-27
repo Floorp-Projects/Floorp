@@ -392,7 +392,6 @@ raptor-unity-webgl-firefox:
     variants: ["fission"]
     try-name: raptor-unity-webgl-firefox
     treeherder-symbol: Rap(ugl)
-    tier: 3
     mozharness:
         extra-options:
             - --test=raptor-unity-webgl
@@ -688,7 +687,6 @@ raptor-tp6-1-firefox-cold:
     description: "Raptor tp6-1 cold page-load on Firefox"
     try-name: raptor-tp6-1-firefox-cold
     treeherder-symbol: Rap(tp6-c-1)
-    tier: 2
     condprof: True
     mozharness:
         extra-options:
@@ -699,7 +697,6 @@ raptor-tp6-2-firefox-cold:
     try-name: raptor-tp6-2-firefox-cold
     treeherder-symbol: Rap(tp6-c-2)
     max-run-time: 2700
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-2-cold
@@ -708,7 +705,6 @@ raptor-tp6-3-firefox-cold:
     description: "Raptor tp6-3 cold page-load on Firefox"
     try-name: raptor-tp6-3-firefox-cold
     treeherder-symbol: Rap(tp6-c-3)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-3-cold
@@ -717,7 +713,6 @@ raptor-tp6-4-firefox-cold:
     description: "Raptor tp6-4 cold page-load on Firefox"
     try-name: raptor-tp6-4-firefox-cold
     treeherder-symbol: Rap(tp6-c-4)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-4-cold
@@ -726,7 +721,6 @@ raptor-tp6-5-firefox-cold:
     description: "Raptor tp6-5 cold page-load on Firefox"
     try-name: raptor-tp6-5-firefox-cold
     treeherder-symbol: Rap(tp6-c-5)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-5-cold
@@ -735,7 +729,6 @@ raptor-tp6-6-firefox-cold:
     description: "Raptor tp6-6 cold page-load on Firefox"
     try-name: raptor-tp6-6-firefox-cold
     treeherder-symbol: Rap(tp6-c-6)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-6-cold
@@ -744,7 +737,6 @@ raptor-tp6-7-firefox-cold:
     description: "Raptor tp6-7 cold page-load on Firefox"
     try-name: raptor-tp6-7-firefox-cold
     treeherder-symbol: Rap(tp6-c-7)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-7-cold
@@ -753,7 +745,6 @@ raptor-tp6-8-firefox-cold:
     description: "Raptor tp6-8 cold page-load on Firefox"
     try-name: raptor-tp6-8-firefox-cold
     treeherder-symbol: Rap(tp6-c-8)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-8-cold
@@ -762,7 +753,6 @@ raptor-tp6-9-firefox-cold:
     description: "Raptor tp6-9 cold page-load on Firefox"
     try-name: raptor-tp6-9-firefox-cold
     treeherder-symbol: Rap(tp6-c-9)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-9-cold
@@ -771,7 +761,6 @@ raptor-tp6-10-firefox-cold:
     description: "Raptor tp6-10 cold page-load on Firefox"
     try-name: raptor-tp6-10-firefox-cold
     treeherder-symbol: Rap(tp6-c-10)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-10-cold
@@ -780,7 +769,6 @@ raptor-tp6-11-firefox-cold:
     description: "Raptor tp6-11 cold page-load on Firefox"
     try-name: raptor-tp6-11-firefox-cold
     treeherder-symbol: Rap(tp6-c-11)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-11-cold
@@ -789,7 +777,6 @@ raptor-tp6-12-firefox-cold:
     description: "Raptor tp6-12 cold page-load on Firefox"
     try-name: raptor-tp6-12-firefox-cold
     treeherder-symbol: Rap(tp6-c-12)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-12-cold
@@ -798,7 +785,6 @@ raptor-tp6-13-firefox-cold:
     description: "Raptor tp6-13 cold page-load on Firefox"
     try-name: raptor-tp6-13-firefox-cold
     treeherder-symbol: Rap(tp6-c-13)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-13-cold
@@ -807,7 +793,6 @@ raptor-tp6-14-firefox-cold:
     description: "Raptor tp6-14 cold page-load on Firefox"
     try-name: raptor-tp6-14-firefox-cold
     treeherder-symbol: Rap(tp6-c-14)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-14-cold
@@ -816,7 +801,6 @@ raptor-tp6-15-firefox-cold:
     description: "Raptor tp6-15 cold page-load on Firefox"
     try-name: raptor-tp6-15-firefox-cold
     treeherder-symbol: Rap(tp6-c-15)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-15-cold
@@ -825,7 +809,6 @@ raptor-tp6-16-firefox-cold:
     description: "Raptor tp6-16 cold page-load on Firefox"
     try-name: raptor-tp6-16-firefox-cold
     treeherder-symbol: Rap(tp6-c-16)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-16-cold
@@ -834,7 +817,6 @@ raptor-tp6-17-firefox-cold:
     description: "Raptor tp6-17 cold page-load on Firefox"
     try-name: raptor-tp6-17-firefox-cold
     treeherder-symbol: Rap(tp6-c-17)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-17-cold
@@ -843,7 +825,6 @@ raptor-tp6-18-firefox-cold:
     description: "Raptor tp6-18 cold page-load on Firefox"
     try-name: raptor-tp6-18-firefox-cold
     treeherder-symbol: Rap(tp6-c-18)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-18-cold
@@ -852,7 +833,6 @@ raptor-tp6-19-firefox-cold:
     description: "Raptor tp6-19 cold page-load on Firefox"
     try-name: raptor-tp6-19-firefox-cold
     treeherder-symbol: Rap(tp6-c-19)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-19-cold
@@ -861,7 +841,6 @@ raptor-tp6-20-firefox-cold:
     description: "Raptor tp6-20 cold page-load on Firefox"
     try-name: raptor-tp6-20-firefox-cold
     treeherder-symbol: Rap(tp6-c-20)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-20-cold
@@ -870,7 +849,6 @@ raptor-tp6-21-firefox-cold:
     description: "Raptor tp6-21 cold page-load on Firefox"
     try-name: raptor-tp6-21-firefox-cold
     treeherder-symbol: Rap(tp6-c-21)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-21-cold
@@ -879,7 +857,6 @@ raptor-tp6-22-firefox-cold:
     description: "Raptor tp6-22 cold page-load on Firefox"
     try-name: raptor-tp6-22-firefox-cold
     treeherder-symbol: Rap(tp6-c-22)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-22-cold
@@ -888,7 +865,6 @@ raptor-tp6-23-firefox-cold:
     description: "Raptor tp6-23 cold page-load on Firefox"
     try-name: raptor-tp6-23-firefox-cold
     treeherder-symbol: Rap(tp6-c-23)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-23-cold
@@ -897,7 +873,6 @@ raptor-tp6-24-firefox-cold:
     description: "Raptor tp6-24 cold page-load on Firefox"
     try-name: raptor-tp6-24-firefox-cold
     treeherder-symbol: Rap(tp6-c-24)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-24-cold
@@ -906,7 +881,6 @@ raptor-tp6-25-firefox-cold:
     description: "Raptor tp6-25 cold page-load on Firefox"
     try-name: raptor-tp6-25-firefox-cold
     treeherder-symbol: Rap(tp6-c-25)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-25-cold
@@ -915,7 +889,6 @@ raptor-tp6-26-firefox-cold:
     description: "Raptor tp6-26 cold page-load on Firefox"
     try-name: raptor-tp6-26-firefox-cold
     treeherder-symbol: Rap(tp6-c-26)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-26-cold
@@ -924,7 +897,6 @@ raptor-tp6-27-firefox-cold:
     description: "Raptor tp6-27 cold page-load on Firefox"
     try-name: raptor-tp6-27-firefox-cold
     treeherder-symbol: Rap(tp6-c-27)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-27-cold
@@ -933,7 +905,6 @@ raptor-tp6-28-firefox-cold:
     description: "Raptor tp6-28 cold page-load on Firefox"
     try-name: raptor-tp6-28-firefox-cold
     treeherder-symbol: Rap(tp6-c-28)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-28-cold
@@ -942,7 +913,6 @@ raptor-tp6-29-firefox-cold:
     description: "Raptor tp6-29 cold page-load on Firefox"
     try-name: raptor-tp6-29-firefox-cold
     treeherder-symbol: Rap(tp6-c-29)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-29-cold
@@ -951,7 +921,6 @@ raptor-tp6-30-firefox-cold:
     description: "Raptor tp6-30 cold page-load on Firefox"
     try-name: raptor-tp6-30-firefox-cold
     treeherder-symbol: Rap(tp6-c-30)
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6-30-cold
@@ -962,7 +931,6 @@ raptor-ares6-firefox:
     try-name: raptor-ares6-firefox
     treeherder-symbol: Rap(ares6)
     max-run-time: 2500
-    tier: 3
     mozharness:
         extra-options:
             - --test=raptor-ares6
