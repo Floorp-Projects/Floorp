@@ -242,6 +242,10 @@ class HostDefines(BaseDefines):
     pass
 
 
+class WasmDefines(BaseDefines):
+    pass
+
+
 class WebIDLCollection(ContextDerived):
     """Collects WebIDL info referenced during the build."""
 
@@ -457,8 +461,12 @@ class Linkable(ContextDerived):
 
         return [mozpath.join(self.objdir, '%s%s.%s' % (obj_prefix,
                                                        mozpath.splitext(mozpath.basename(f))[0],
-                                                       self.config.substs.get('OBJ_SUFFIX', '')))
+                                                       self._obj_suffix()))
                 for f in sources]
+
+    def _obj_suffix(self):
+        """Can be overridden by a base class for custom behavior."""
+        return self.config.substs.get('OBJ_SUFFIX', '')
 
     @property
     def no_pgo_objs(self):
@@ -668,6 +676,20 @@ class StaticLibrary(Library):
         Library.__init__(self, context, basename, real_name)
         self.link_into = link_into
         self.no_expand_lib = no_expand_lib
+
+
+class SandboxedWasmLibrary(Library):
+    """Context derived container object for a static sandboxed wasm library"""
+    # This is a real static library; make it known to the build system.
+    no_expand_lib = True
+    KIND = 'wasm'
+
+    def __init__(self, context, basename, real_name=None):
+        Library.__init__(self, context, basename, real_name)
+
+    def _obj_suffix(self):
+        """Can be overridden by a base class for custom behavior."""
+        return self.config.substs.get('WASM_OBJ_SUFFIX', '')
 
 
 class BaseRustLibrary(object):
@@ -1029,6 +1051,20 @@ class HostSources(HostMixin, BaseSources):
 
 class HostGeneratedSources(HostMixin, BaseSources):
     """Represents generated files to be compiled for the host during the build."""
+
+    def __init__(self, context, files, canonical_suffix):
+        BaseSources.__init__(self, context, files, canonical_suffix)
+
+
+class WasmSources(BaseSources):
+    """Represents files to be compiled with the wasm compiler during the build."""
+
+    def __init__(self, context, files, canonical_suffix):
+        BaseSources.__init__(self, context, files, canonical_suffix)
+
+
+class WasmGeneratedSources(BaseSources):
+    """Represents generated files to be compiled with the wasm compiler during the build."""
 
     def __init__(self, context, files, canonical_suffix):
         BaseSources.__init__(self, context, files, canonical_suffix)

@@ -1848,20 +1848,25 @@ def wasm_cxx_with_flags(wasm_cxx, provided_wasm_cxx, wasi_sysroot):
 set_config('WASM_CXX', wasm_cxx_with_flags, when=requires_wasm_sandboxing)
 
 
+wasm_compile_flags = dependable(['-fno-exceptions', '-fno-strict-aliasing', '-Qunused-arguments'])
 option(env='WASM_CFLAGS', nargs=1, help='Options to pass to WASM_CC',
        when=requires_wasm_sandboxing)
-@depends('WASM_CFLAGS', when=requires_wasm_sandboxing)
-def wasm_cflags(value):
+@depends('WASM_CFLAGS', wasm_compile_flags, when=requires_wasm_sandboxing)
+def wasm_cflags(value, wasm_compile_flags):
     if value:
-        return value
+        return wasm_compile_flags + value
+    else:
+        return wasm_compile_flags
 set_config('WASM_CFLAGS', wasm_cflags, when=requires_wasm_sandboxing)
 
 option(env='WASM_CXXFLAGS', nargs=1, help='Options to pass to WASM_CXX',
        when=requires_wasm_sandboxing)
-@depends('WASM_CXXFLAGS', when=requires_wasm_sandboxing)
-def wasm_cxxflags(value):
+@depends('WASM_CXXFLAGS', wasm_compile_flags, when=requires_wasm_sandboxing)
+def wasm_cxxflags(value, wasm_compile_flags):
     if value:
-        return value
+        return wasm_compile_flags + value
+    else:
+        return wasm_compile_flags
 set_config('WASM_CXXFLAGS', wasm_cxxflags, when=requires_wasm_sandboxing)
 
 option(env='WASM_LDFLAGS', nargs=1,

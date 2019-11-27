@@ -448,19 +448,20 @@ class TargetCompileFlags(BaseCompileFlags):
     """Base class that encapsulates some common logic between CompileFlags and
     WasmCompileFlags.
     """
-    def __init__(self, context, prefix='', additionally=()):
+    def __init__(self, context, prefix='', additionally=(), instead={}):
         # `prefix` is a string to be prepended to all dest_var names.
         # `additionally` is a sequence of (flat, default, dest_vars) to be added
         # to the flag_variables tuple.
+        # `instead` is a string-to-string map that maps base dest_var names to
+        # replacement names; e.g., if instead={'FOO':'BAR'}, then 'FOO' is
+        # replaced with 'BAR' wherever it would occur in a dest_var.
         main_src_dir = mozpath.dirname(context.main_path)
         self._context = context
 
         self.flag_variables = tuple(list(additionally) + [
-            (flag, default, tuple(prefix + dest_var for dest_var in dest_vars))
+            (flag, default, tuple(set(instead.get(prefix + dest_var, prefix + dest_var)
+                                      for dest_var in dest_vars)))
             for flag, default, dest_vars in (
-                    ('STL', context.config.substs.get('STL_FLAGS'),
-                     ('CXXFLAGS',)),
-                    ('DEFINES', None, ('CXXFLAGS', 'CFLAGS')),
                     ('LIBRARY_DEFINES', None, ('CXXFLAGS', 'CFLAGS')),
                     ('BASE_INCLUDES',
                      ['-I%s' % main_src_dir, '-I%s' % context.objdir],
@@ -550,6 +551,9 @@ class TargetCompileFlags(BaseCompileFlags):
 class CompileFlags(TargetCompileFlags):
     def __init__(self, context):
         TargetCompileFlags.__init__(self, context, prefix='', additionally=(
+            ('DEFINES', None, ('CXXFLAGS', 'CFLAGS')),
+            ('STL', context.config.substs.get('STL_FLAGS'),
+             ('CXXFLAGS',)),
             ('VISIBILITY', context.config.substs.get('VISIBILITY_FLAGS'),
              ('CXXFLAGS', 'CFLAGS')),
             ('MOZ_HARDENING_CFLAGS',
@@ -574,9 +578,19 @@ class CompileFlags(TargetCompileFlags):
 class WasmFlags(TargetCompileFlags):
     def __init__(self, context):
         TargetCompileFlags.__init__(
-            self, context, prefix='WASM_', additionally=tuple(
-                (name, context.config.substs.get(name), (name,))
-                for name in ('WASM_CFLAGS', 'WASM_CXXFLAGS', 'WASM_LDFLAGS')))
+            self, context, prefix='WASM_', additionally=(
+                tuple(
+                    (name, context.config.substs.get(name), (name,))
+                    for name in ('WASM_CFLAGS', 'WASM_CXXFLAGS', 'WASM_LDFLAGS')) +
+                (('WASM_DEFINES', None, ('WASM_CFLAGS', 'WASM_CXXFLAGS')),
+                 ('MOZBUILD_WASM_CFLAGS', None, ('WASM_CFLAGS',)),
+                 ('MOZBUILD_WASM_CXXFLAGS', None, ('WASM_CXXFLAGS',)))),
+            # Unlike target/host compilation, we don't distinguish between
+            # LDFLAGS for C and C++.
+            instead={
+                'WASM_C_LDFLAGS': 'WASM_LDFLAGS',
+                'WASM_CXX_LDFLAGS': 'WASM_LDFLAGS',
+            })
 
 
 class FinalTargetValue(ContextDerivedValue, unicode):
@@ -1641,6 +1655,10 @@ VARIABLES = {
         with the host compiler.
         """),
 
+    'WASM_SOURCES': (ContextDerivedTypedList(Path, StrictOrderingOnAppendList), list,
+                     """Source code files to compile with the wasm compiler.
+        """),
+
     'HOST_LIBRARY_NAME': (unicode, unicode,
                           """Name of target library generated when cross compiling.
         """),
@@ -1669,6 +1687,11 @@ VARIABLES = {
         differ from the library code name.
 
         Implies FORCE_SHARED_LIB.
+        """),
+
+    'SANDBOXED_WASM_LIBRARY_NAME': (
+        unicode, unicode,
+        """The name of the static sandboxed wasm library generated for a directory.
         """),
 
     'SHARED_LIBRARY_OUTPUT_CATEGORY': (unicode, unicode,
@@ -2232,6 +2255,11 @@ VARIABLES = {
            Note that the ordering of flags matters here; these flags will be
            added to the compiler's command line in the same order as they
            appear in the moz.build file.
+        """),
+
+    'WASM_DEFINES': (InitializedDefines, dict,
+                     """Dictionary of compiler defines to declare for wasm compilation.
+        See ``DEFINES`` for specifics.
         """),
 
     'CMFLAGS': (List, list,

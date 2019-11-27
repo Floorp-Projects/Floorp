@@ -342,7 +342,7 @@ class TestRecursiveMakeBackend(BackendTester):
             self.assertEqual(found, val)
 
     def test_sources(self):
-        """Ensure SOURCES and HOST_SOURCES are handled properly."""
+        """Ensure SOURCES, HOST_SOURCES and WASM_SOURCES are handled properly."""
         env = self._consume('sources', RecursiveMakeBackend)
 
         backend_path = mozpath.join(env.topobjdir, 'backend.mk')
@@ -372,6 +372,14 @@ class TestRecursiveMakeBackend(BackendTester):
             'SSRCS': [
                 'SSRCS += $(srcdir)/baz.S',
                 'SSRCS += $(srcdir)/foo.S',
+            ],
+            'WASM_CSRCS': [
+                'WASM_CSRCS += $(srcdir)/bar.c',
+                ('WASM_CSRCS += $(srcdir)/third_party/rust/rlbox_lucet_sandbox/'
+                 'c_src/lucet_sandbox_wrapper.c'),
+            ],
+            'WASM_CPPSRCS': [
+                'WASM_CPPSRCS += $(srcdir)/bar.cpp',
             ],
         }
 

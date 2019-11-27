@@ -62,6 +62,7 @@ from .data import (
     HostRustLibrary,
     RustProgram,
     RustTests,
+    SandboxedWasmLibrary,
     SharedLibrary,
     SimpleProgram,
     Sources,
@@ -70,6 +71,9 @@ from .data import (
     TestManifest,
     UnifiedSources,
     VariablePassthru,
+    WasmDefines,
+    WasmGeneratedSources,
+    WasmSources,
     XPCOMComponentManifests,
     XPIDLModule,
 )
@@ -124,6 +128,7 @@ class TreeMetadataEmitter(LoggingMixin):
         self._binaries = OrderedDict()
         self._compile_dirs = set()
         self._host_compile_dirs = set()
+        self._wasm_compile_dirs = set()
         self._asm_compile_dirs = set()
         self._compile_flags = dict()
         self._compile_as_flags = dict()
@@ -295,7 +300,8 @@ class TreeMetadataEmitter(LoggingMixin):
             for o in obj.linked_libraries:
                 if isinstance(o, (HostRustLibrary, RustLibrary)):
                     libs.append(o)
-                elif isinstance(o, (HostLibrary, StaticLibrary)):
+                elif isinstance(o, (HostLibrary, StaticLibrary,
+                                    SandboxedWasmLibrary)):
                     libs.extend(rust_libraries(o))
             return libs
 
@@ -354,16 +360,19 @@ class TreeMetadataEmitter(LoggingMixin):
     LIBRARY_NAME_VAR = {
         'host': 'HOST_LIBRARY_NAME',
         'target': 'LIBRARY_NAME',
+        'wasm': 'SANDBOXED_WASM_LIBRARY_NAME',
     }
 
     LIBSTDCXX_VAR = {
         'host': 'MOZ_LIBSTDCXX_HOST_VERSION',
         'target': 'MOZ_LIBSTDCXX_TARGET_VERSION',
+        'wasm': 'MOZ_LIBSTDCXX_TARGET_VERSION',
     }
 
     STDCXXCOMPAT_NAME = {
         'host': 'host_stdc++compat',
         'target': 'stdc++compat',
+        'wasm': 'stdc++compat',
     }
 
     def _link_libraries(self, context, obj, variable, extra_sources):
@@ -600,6 +609,7 @@ class TreeMetadataEmitter(LoggingMixin):
     def _handle_linkables(self, context, passthru, generated_files):
         linkables = []
         host_linkables = []
+        wasm_linkables = []
 
         def add_program(prog, var):
             if var.startswith('HOST_'):
@@ -705,6 +715,8 @@ class TreeMetadataEmitter(LoggingMixin):
         soname = context.get('SONAME')
 
         lib_defines = context.get('LIBRARY_DEFINES')
+
+        wasm_lib = context.get('SANDBOXED_WASM_LIBRARY_NAME')
 
         shared_args = {}
         static_args = {}
@@ -849,10 +861,33 @@ class TreeMetadataEmitter(LoggingMixin):
                                                  'LIBRARY_NAME to take effect', context)
                 lib.lib_defines.update(lib_defines)
 
+        if wasm_lib:
+            if wasm_lib == libname:
+                raise SandboxValidationError(
+                    'SANDBOXED_WASM_LIBRARY_NAME and LIBRARY_NAME must have a '
+                    'different value.', context)
+            if wasm_lib == host_libname:
+                raise SandboxValidationError(
+                    'SANDBOXED_WASM_LIBRARY_NAME and HOST_LIBRARY_NAME must '
+                    'have a different value.', context)
+            if wasm_lib == shared_name:
+                raise SandboxValidationError(
+                    'SANDBOXED_WASM_LIBRARY_NAME and SHARED_NAME must have a '
+                    'different value.', context)
+            if wasm_lib == static_name:
+                raise SandboxValidationError(
+                    'SANDBOXED_WASM_LIBRARY_NAME and STATIC_NAME must have a '
+                    'different value.', context)
+            lib = SandboxedWasmLibrary(context, libname, real_name=wasm_lib)
+            self._libs[libname].append(lib)
+            self._linkage.append((context, lib, 'USE_LIBS'))
+            wasm_linkables.append(lib)
+            self._wasm_compile_dirs.add(context.objdir)
+
         # Only emit sources if we have linkables defined in the same context.
         # Note the linkables are not emitted in this function, but much later,
         # after aggregation (because of e.g. USE_LIBS processing).
-        if not (linkables or host_linkables):
+        if not (linkables or host_linkables or wasm_linkables):
             return
 
         self._compile_dirs.add(context.objdir)
@@ -868,7 +903,7 @@ class TreeMetadataEmitter(LoggingMixin):
         sources = defaultdict(list)
         gen_sources = defaultdict(list)
         all_flags = {}
-        for symbol in ('SOURCES', 'HOST_SOURCES', 'UNIFIED_SOURCES'):
+        for symbol in ('SOURCES', 'HOST_SOURCES', 'UNIFIED_SOURCES', 'WASM_SOURCES'):
             srcs = sources[symbol]
             gen_srcs = gen_sources[symbol]
             context_srcs = context.get(symbol, [])
@@ -941,6 +976,12 @@ class TreeMetadataEmitter(LoggingMixin):
             HOST_SOURCES=(HostSources, HostGeneratedSources, ['.c', '.mm', '.cpp']),
             UNIFIED_SOURCES=(UnifiedSources, None, ['.c', '.mm', '.cpp']),
         )
+        # Only include a WasmSources or WasmGeneratedSources context if there
+        # are any WASM_SOURCES. (This is going to matter later because we inject
+        # an extra .c file to compile with the wasm compiler if, and only if,
+        # there are any WASM sources.)
+        if sources['WASM_SOURCES'] or gen_sources['WASM_SOURCES']:
+            varmap['WASM_SOURCES'] = (WasmSources, WasmGeneratedSources, ['.c', '.cpp'])
         # Track whether there are any C++ source files.
         # Technically this won't do the right thing for SIMPLE_PROGRAMS in
         # a directory with mixed C and C++ source, but it's not that important.
@@ -963,6 +1004,12 @@ class TreeMetadataEmitter(LoggingMixin):
             for srcs, cls in ((sources[variable], klass),
                               (gen_sources[variable], gen_klass)):
                 # Now sort the files to let groupby work.
+                srcs = list(srcs)
+                if cls is WasmSources:
+                    srcs.append(
+                        mozpath.join(self.config.topsrcdir,
+                                     ('third_party/rust/rlbox_lucet_sandbox/'
+                                      'c_src/lucet_sandbox_wrapper.c')))
                 sorted_files = sorted(srcs, key=canonical_suffix_for_file)
                 for canonical_suffix, files in itertools.groupby(
                         sorted_files, canonical_suffix_for_file):
@@ -974,7 +1021,7 @@ class TreeMetadataEmitter(LoggingMixin):
                     if variable.startswith('UNIFIED_'):
                         arglist.append(context.get('FILES_PER_UNIFIED_FILE', 16))
                     obj = cls(*arglist)
-                    srcs = obj.files
+                    srcs = list(obj.files)
                     if isinstance(obj, UnifiedSources) and obj.have_unified_mapping:
                         srcs = dict(obj.unified_source_mapping).keys()
                     ctxt_sources[variable][canonical_suffix] += sorted(srcs)
@@ -992,6 +1039,9 @@ class TreeMetadataEmitter(LoggingMixin):
             for host_linkable in host_linkables:
                 for suffix, srcs in ctxt_sources['HOST_SOURCES'].items():
                     host_linkable.sources[suffix] += srcs
+            for wasm_linkable in wasm_linkables:
+                for suffix, srcs in ctxt_sources['WASM_SOURCES'].items():
+                    wasm_linkable.sources[suffix] += srcs
 
         for f, flags in sorted(all_flags.iteritems()):
             if flags.flags:
@@ -1036,6 +1086,7 @@ class TreeMetadataEmitter(LoggingMixin):
         computed_link_flags = ComputedFlags(context, context['LINK_FLAGS'])
         computed_host_flags = ComputedFlags(context, context['HOST_COMPILE_FLAGS'])
         computed_as_flags = ComputedFlags(context, context['ASM_FLAGS'])
+        computed_wasm_flags = ComputedFlags(context, context['WASM_FLAGS'])
 
         # Proxy some variables as-is until we have richer classes to represent
         # them. We should aim to keep this set small because it violates the
@@ -1071,6 +1122,10 @@ class TreeMetadataEmitter(LoggingMixin):
         for v in ['CXXFLAGS', 'CFLAGS']:
             if v in context and context[v]:
                 computed_flags.resolve_flags('MOZBUILD_%s' % v, context[v])
+
+        for v in ['WASM_CFLAGS', 'WASM_CXXFLAGS', 'WASM_LDFLAGS']:
+            if v in context and context[v]:
+                computed_wasm_flags.resolve_flags('MOZBUILD_%s' % v, context[v])
 
         for v in ['HOST_CXXFLAGS', 'HOST_CFLAGS']:
             if v in context and context[v]:
@@ -1123,6 +1178,7 @@ class TreeMetadataEmitter(LoggingMixin):
             computed_flags.resolve_flags('RTL', [rtl_flag])
             if not context.config.substs.get('CROSS_COMPILE'):
                 computed_host_flags.resolve_flags('RTL', [rtl_flag])
+            computed_wasm_flags.resolve_flags('RTL', [rtl_flag])
 
         generated_files = set()
         localized_generated_files = set()
@@ -1139,11 +1195,10 @@ class TreeMetadataEmitter(LoggingMixin):
             generated_files.add(str(sub.relpath))
             yield sub
 
-        for defines_var, cls, backend_flags in (('DEFINES', Defines,
-                                                 (computed_flags, computed_as_flags)),
-                                                ('HOST_DEFINES', HostDefines,
-                                                 (computed_host_flags,))
-                                                ):
+        for defines_var, cls, backend_flags in (
+                ('DEFINES', Defines, (computed_flags, computed_as_flags,)),
+                ('HOST_DEFINES', HostDefines, (computed_host_flags,)),
+                ('WASM_DEFINES', WasmDefines, (computed_wasm_flags,))):
             defines = context.get(defines_var)
             if defines:
                 defines_obj = cls(context, defines)
@@ -1205,6 +1260,7 @@ class TreeMetadataEmitter(LoggingMixin):
         computed_flags.resolve_flags('LOCAL_INCLUDES', ['-I%s' % p for p in local_includes])
         computed_as_flags.resolve_flags('LOCAL_INCLUDES', ['-I%s' % p for p in local_includes])
         computed_host_flags.resolve_flags('LOCAL_INCLUDES', ['-I%s' % p for p in local_includes])
+        computed_wasm_flags.resolve_flags('LOCAL_INCLUDES', ['-I%s' % p for p in local_includes])
 
         for obj in self._handle_linkables(context, passthru, generated_files):
             yield obj
@@ -1383,6 +1439,9 @@ class TreeMetadataEmitter(LoggingMixin):
 
         if context.objdir in self._host_compile_dirs:
             yield computed_host_flags
+
+        if context.objdir in self._wasm_compile_dirs:
+            yield computed_wasm_flags
 
     def _create_substitution(self, cls, context, path):
         sub = cls(context)

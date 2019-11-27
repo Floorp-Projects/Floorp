@@ -64,12 +64,15 @@ from ..frontend.data import (
     HostSharedLibrary,
     RustProgram,
     RustTests,
+    SandboxedWasmLibrary,
     SharedLibrary,
     SimpleProgram,
     Sources,
     StaticLibrary,
     TestManifest,
     VariablePassthru,
+    WasmGeneratedSources,
+    WasmSources,
     XPIDLModule,
 )
 from ..util import (
@@ -513,6 +516,30 @@ class RecursiveMakeBackend(MakeBackend):
                     backend_file.write('%s += %s\n' % (var, p))
             self._compile_graph[mozpath.join(
                 backend_file.relobjdir, 'host-objects')]
+        elif isinstance(obj, (WasmSources, WasmGeneratedSources)):
+            suffix_map = {
+                '.c': 'WASM_CSRCS',
+                '.cpp': 'WASM_CPPSRCS',
+            }
+            variables = [suffix_map[obj.canonical_suffix]]
+            if isinstance(obj, WasmGeneratedSources):
+                variables.append('GARBAGE')
+                base = backend_file.objdir
+                cls = ObjDirPath
+                prefix = '!'
+            else:
+                base = backend_file.srcdir
+                cls = SourcePath
+                prefix = ''
+            for f in sorted(obj.files):
+                p = self._pretty_path(
+                    cls(obj._context, prefix + mozpath.relpath(f, base)),
+                    backend_file,
+                )
+                for var in variables:
+                    backend_file.write('%s += %s\n' % (var, p))
+            self._compile_graph[mozpath.join(
+                backend_file.relobjdir, 'target-objects')]
         elif isinstance(obj, VariablePassthru):
             # Sorted so output is consistent and we don't bump mtimes.
             for k, v in sorted(obj.variables.items()):
@@ -622,6 +649,10 @@ class RecursiveMakeBackend(MakeBackend):
 
         elif isinstance(obj, StaticLibrary):
             self._process_static_library(obj, backend_file)
+            self._process_linked_libraries(obj, backend_file)
+
+        elif isinstance(obj, SandboxedWasmLibrary):
+            self._process_sandboxed_wasm_library(obj, backend_file)
             self._process_linked_libraries(obj, backend_file)
 
         elif isinstance(obj, HostLibrary):
@@ -1280,6 +1311,9 @@ class RecursiveMakeBackend(MakeBackend):
         if libdef.no_expand_lib:
             backend_file.write('NO_EXPAND_LIBS := 1\n')
 
+    def _process_sandboxed_wasm_library(self, libdef, backend_file):
+        backend_file.write('WASM_LIBRARY := %s\n' % libdef.lib_name)
+
     def _process_rust_library(self, libdef, backend_file):
         backend_file.write_once('%s := %s\n' % (libdef.LIB_FILE_VAR, libdef.import_name))
         backend_file.write_once('CARGO_FILE := $(srcdir)/Cargo.toml\n')
@@ -1353,15 +1387,18 @@ class RecursiveMakeBackend(MakeBackend):
         # accommodates clang-plugin, where we would otherwise pass an
         # incorrect list file format to the host compiler as well as when
         # creating an archive with AR, which doesn't understand list files.
-        if (objs == obj.objs and not isinstance(obj, (HostLibrary, StaticLibrary)) or
-            isinstance(obj, StaticLibrary) and obj.no_expand_lib):
+        if (objs == obj.objs and not isinstance(obj, (HostLibrary, StaticLibrary,
+                                                      SandboxedWasmLibrary)) or
+            isinstance(obj, (StaticLibrary, SandboxedWasmLibrary)) and
+            obj.no_expand_lib):
             backend_file.write_once('%s_OBJS := %s\n' % (obj.name,
                                                          objs_ref))
             if profile_gen_objs:
                 backend_file.write_once('%s_PGO_OBJS := %s\n' % (obj.name,
                                                                  pgo_objs_ref))
             write_obj_deps(obj_target, objs_ref, pgo_objs_ref)
-        elif not isinstance(obj, (HostLibrary, StaticLibrary)):
+        elif not isinstance(obj, (HostLibrary, StaticLibrary,
+                                  SandboxedWasmLibrary)):
             list_file_path = '%s.list' % obj.name.replace('.', '_')
             list_file_ref = self._make_list_file(obj.KIND, obj.objdir, objs,
                                                  list_file_path)
