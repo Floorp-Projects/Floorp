@@ -5,7 +5,7 @@
 const initialURL =
   "http://example.com/tests/toolkit/components/places/tests/browser/begin.html";
 const finalURL =
-  "http://example.com/tests/toolkit/components/places/tests/browser/final.html";
+  "http://test1.example.com/tests/toolkit/components/places/tests/browser/final.html";
 
 var observer;
 var visitSavedPromise;
