@@ -7788,6 +7788,8 @@ class Cursor::OpenOp final : public Cursor::CursorOpBase {
   nsresult DoIndexKeyDatabaseWork(DatabaseConnection* aConnection);
 
   nsresult DoDatabaseWork(DatabaseConnection* aConnection) override;
+
+  nsresult ProcessStatementSteps(mozIStorageStatement* aStmt);
 };
 
 class Cursor::ContinueOp final : public Cursor::CursorOpBase {
@@ -26243,6 +26245,37 @@ void Cursor::OpenOp::PrepareIndexKeyConditionClause(
   }
 }
 
+nsresult Cursor::OpenOp::ProcessStatementSteps(
+    mozIStorageStatement* const aStmt) {
+  bool hasResult;
+  nsresult rv = aStmt->ExecuteStep(&hasResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!hasResult) {
+    mResponse = void_t();
+    return NS_OK;
+  }
+
+  Key previousKey;
+  auto* optPreviousKey = IsUnique(mCursor->mDirection) ? &previousKey : nullptr;
+
+  rv = PopulateResponseFromStatement(aStmt, true, optPreviousKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // The degree to which extra responses on OpenOp can actually be used depends
+  // on the parameters of subsequent ContinueOp operations, see also comment in
+  // ContinueOp::DoDatabaseWork.
+  //
+  // TODO: We should somehow evaluate the effects of this. Maybe use a smaller
+  // extra count than for ContinueOp?
+  return PopulateExtraResponses(aStmt, mCursor->mMaxExtraCount,
+                                NS_LITERAL_CSTRING("OpenOp"), optPreviousKey);
+}
+
 nsresult Cursor::OpenOp::DoObjectStoreDatabaseWork(
     DatabaseConnection* aConnection) {
   MOZ_ASSERT(aConnection);
@@ -26292,40 +26325,10 @@ nsresult Cursor::OpenOp::DoObjectStoreDatabaseWork(
     }
   }
 
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (!hasResult) {
-    mResponse = void_t();
-    return NS_OK;
-  }
-
-  Key previousKey;
-  auto* optPreviousKey = IsUnique(mCursor->mDirection) ? &previousKey : nullptr;
-
-  rv = PopulateResponseFromStatement(&*stmt, true, optPreviousKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   // Now we need to make the query for ContinueOp.
   PrepareKeyConditionClauses(kStmtParamNameKey, directionClause, queryStart);
 
-  // The degree to which extra responses on OpenOp can actually be used depends
-  // on the parameters of subsequent ContinueOp operations, see also comment in
-  // ContinueOp::DoDatabaseWork.
-  //
-  // TODO: We should somehow evaluate the effects of this. Maybe use a smaller
-  // extra count than for ContinueOp?
-  //
-  // TODO: If this is done here, do this in the other Do*DatabaseWork functions
-  // as well (or move this to DoDatabaseWork).
-
-  return PopulateExtraResponses(&*stmt, mCursor->mMaxExtraCount,
-                                NS_LITERAL_CSTRING("OpenOp"), optPreviousKey);
+  return ProcessStatementSteps(&*stmt);
 }
 
 nsresult Cursor::OpenOp::DoObjectStoreKeyDatabaseWork(
@@ -26375,29 +26378,10 @@ nsresult Cursor::OpenOp::DoObjectStoreKeyDatabaseWork(
     }
   }
 
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (!hasResult) {
-    mResponse = void_t();
-    return NS_OK;
-  }
-
-  Key previousKey;
-  auto* optPreviousKey = IsUnique(mCursor->mDirection) ? &previousKey : nullptr;
-
-  rv = PopulateResponseFromStatement(&*stmt, true, optPreviousKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   // Now we need to make the query to get the next match.
   PrepareKeyConditionClauses(kStmtParamNameKey, directionClause, queryStart);
 
-  return NS_OK;
+  return ProcessStatementSteps(&*stmt);
 }
 
 nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
@@ -26497,36 +26481,12 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
     }
   }
 
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (!hasResult) {
-    mResponse = void_t();
-    return NS_OK;
-  }
-
-  Key previousKey;
-  auto* optPreviousKey = IsUnique(mCursor->mDirection) ? &previousKey : nullptr;
-
-  rv = PopulateResponseFromStatement(&*stmt, true, optPreviousKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   // Now we need to make the query to get the next match.
   PrepareIndexKeyConditionClause(kColumnNameAliasSortKey, directionClause,
                                  NS_LITERAL_CSTRING("index_table."),
                                  std::move(queryStart));
 
-  // The degree to which extra responses on OpenOp can actually be used depends
-  // on the parameters of subsequent ContinueOp operations, see also comment in
-  // ContinueOp::DoDatabaseWork.
-
-  return PopulateExtraResponses(&*stmt, mCursor->mMaxExtraCount,
-                                NS_LITERAL_CSTRING("OpenOp"), optPreviousKey);
+  return ProcessStatementSteps(&*stmt);
 }
 
 nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
@@ -26615,30 +26575,11 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
     }
   }
 
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (!hasResult) {
-    mResponse = void_t();
-    return NS_OK;
-  }
-
-  Key previousKey;
-  auto* optPreviousKey = IsUnique(mCursor->mDirection) ? &previousKey : nullptr;
-
-  rv = PopulateResponseFromStatement(&*stmt, true, optPreviousKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   // Now we need to make the query to get the next match.
   PrepareIndexKeyConditionClause(kColumnNameAliasSortKey, directionClause,
                                  NS_LITERAL_CSTRING(""), std::move(queryStart));
 
-  return NS_OK;
+  return ProcessStatementSteps(&*stmt);
 }
 
 nsresult Cursor::OpenOp::DoDatabaseWork(DatabaseConnection* aConnection) {
