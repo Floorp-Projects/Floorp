@@ -161,6 +161,10 @@ class OpenDatabaseOp;
 class TransactionBase;
 class TransactionDatabaseOperationBase;
 class VersionChangeTransaction;
+struct CommonCursorTypeTraits;
+template <bool StatementHasIndexKeyBindings>
+struct ValueCursorTypeTraits;
+struct IndexCursorTypeTraits;
 
 /*******************************************************************************
  * Constants
@@ -5425,6 +5429,14 @@ class DatabaseOperationBase : public Runnable,
     mResultCode = aErrorCode;
   }
 
+  static nsresult GetStructuredCloneReadInfoFromStatement(
+      mozIStorageStatement* aStatement, uint32_t aDataIndex,
+      uint32_t aFileIdsIndex, FileManager* aFileManager,
+      StructuredCloneReadInfo* aInfo) {
+    return GetStructuredCloneReadInfoFromSource(
+        aStatement, aDataIndex, aFileIdsIndex, aFileManager, aInfo);
+  }
+
  protected:
   DatabaseOperationBase(const nsID& aBackgroundChildLoggingId,
                         uint64_t aLoggingSerialNumber)
@@ -5448,14 +5460,6 @@ class DatabaseOperationBase : public Runnable,
       const SerializedKeyRange& aKeyRange, const nsACString& aKeyColumnName);
 
   static uint64_t ReinterpretDoubleAsUInt64(double aDouble);
-
-  static nsresult GetStructuredCloneReadInfoFromStatement(
-      mozIStorageStatement* aStatement, uint32_t aDataIndex,
-      uint32_t aFileIdsIndex, FileManager* aFileManager,
-      StructuredCloneReadInfo* aInfo) {
-    return GetStructuredCloneReadInfoFromSource(
-        aStatement, aDataIndex, aFileIdsIndex, aFileManager, aInfo);
-  }
 
   static nsresult GetStructuredCloneReadInfoFromValueArray(
       mozIStorageValueArray* aValues, uint32_t aDataIndex,
@@ -5613,6 +5617,10 @@ class TransactionDatabaseOperationBase : public DatabaseOperationBase {
   }
 
   void NoteContinueReceived();
+
+  int64_t TransactionLoggingSerialNumber() const {
+    return mTransactionLoggingSerialNumber;
+  }
 
   // May be overridden by subclasses if they need to perform work on the
   // background thread before being dispatched. Returning false will kill the
@@ -7588,6 +7596,10 @@ class IndexCountRequestOp final : public IndexRequestOpBase {
 
 class Cursor final : public PBackgroundIDBCursorParent {
   friend class TransactionBase;
+  friend struct CommonCursorTypeTraits;
+  friend struct ValueCursorTypeTraits<true>;
+  friend struct ValueCursorTypeTraits<false>;
+  friend struct IndexCursorTypeTraits;
 
   class ContinueOp;
   class CursorOpBase;
@@ -7692,10 +7704,12 @@ class Cursor final : public PBackgroundIDBCursorParent {
   Key* GetModifiableSortKey();
 };
 
+using FilesArray = nsTArray<FallibleTArray<StructuredCloneFile>>;
+
 class Cursor::CursorOpBase : public TransactionDatabaseOperationBase {
  protected:
   RefPtr<Cursor> mCursor;
-  nsTArray<FallibleTArray<StructuredCloneFile>> mFiles;
+  FilesArray mFiles;
 
   CursorResponse mResponse;
 
@@ -7728,6 +7742,11 @@ class Cursor::CursorOpBase : public TransactionDatabaseOperationBase {
   nsresult PopulateExtraResponses(mozIStorageStatement* aStmt,
                                   uint32_t aMaxExtraCount,
                                   const nsCString& aOperation);
+
+ private:
+  template <enum OpenCursorParams::Type CursorType>
+  nsresult PopulateResponseFromTypedStatement(mozIStorageStatement* const aStmt,
+                                              const bool aInitializeResponse);
 };
 
 class Cursor::OpenOp final : public Cursor::CursorOpBase {
@@ -9416,6 +9435,150 @@ nsAutoCString GetSortKeyClause(const ComparisonOperator aComparisonOperator,
   return GetKeyClause(kColumnNameAliasSortKey, aComparisonOperator,
                       aStmtParamName);
 }
+
+template <enum OpenCursorParams::Type CursorType>
+struct CursorTypeTraits;
+
+struct CommonCursorTypeTraits {
+  explicit CommonCursorTypeTraits(const TransactionDatabaseOperationBase& aOp)
+      : mOp{aOp} {}
+
+  nsresult GetKeys(mozIStorageStatement* const aStmt, Cursor* const aCursor) {
+    nsresult rv = aCursor->mPosition.SetFromStatement(aStmt, 0);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    IDB_LOG_MARK_PARENT_TRANSACTION_REQUEST(
+        "PRELOAD: Populating response with key %s", "Populating",
+        IDB_LOG_ID_STRING(mOp.BackgroundChildLoggingId()),
+        mOp.TransactionLoggingSerialNumber(), mOp.LoggingSerialNumber(),
+        aCursor->mPosition.GetBuffer().get());
+
+    return NS_OK;
+  }
+
+  template <typename Response>
+  static void FillKeys(Response* const aResponse, const Cursor& aCursor) {
+    aResponse->key() = aCursor.mPosition;
+  }
+
+ private:
+  const TransactionDatabaseOperationBase& mOp;
+};
+
+struct IndexCursorTypeTraits : CommonCursorTypeTraits {
+  using CommonCursorTypeTraits::CommonCursorTypeTraits;
+
+  nsresult GetKeys(mozIStorageStatement* const aStmt, Cursor* const aCursor) {
+    nsresult rv = CommonCursorTypeTraits::GetKeys(aStmt, aCursor);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = aCursor->mLocaleAwarePosition.SetFromStatement(aStmt, 1);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = aCursor->mObjectStorePosition.SetFromStatement(aStmt, 2);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    return NS_OK;
+  }
+
+  template <typename Response>
+  constexpr void FillKeys(Response* const aResponse, const Cursor& aCursor) {
+    CommonCursorTypeTraits::FillKeys(aResponse, aCursor);
+    aResponse->sortKey() = aCursor.mLocaleAwarePosition;
+    aResponse->objectKey() = aCursor.mObjectStorePosition;
+  }
+};
+
+struct KeyCursorTypeTraits {
+  static constexpr nsresult MaybeGetCloneInfo(
+      mozIStorageStatement* const /*aStmt*/, Cursor* const /*aCursor*/) {
+    return NS_OK;
+  }
+
+  template <typename Response>
+  static constexpr void MaybeFillCloneInfo(Response* const /*aResponse*/,
+                                           FilesArray* const /*aFiles*/) {}
+};
+
+template <bool StatementHasIndexKeyBindings>
+struct ValueCursorTypeTraits {
+  nsresult MaybeGetCloneInfo(mozIStorageStatement* const aStmt,
+                             Cursor* const aCursor) {
+    constexpr auto offset = StatementHasIndexKeyBindings ? 2 : 0;
+
+    const nsresult rv =
+        DatabaseOperationBase::GetStructuredCloneReadInfoFromStatement(
+            aStmt, 2 + offset, 1 + offset, aCursor->mFileManager, &mCloneInfo);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (mCloneInfo.mHasPreprocessInfo) {
+      IDB_WARNING("Preprocessing for cursors not yet implemented!");
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return NS_OK;
+  }
+
+  template <typename Response>
+  void MaybeFillCloneInfo(Response* const aResponse, FilesArray* const aFiles) {
+    aResponse->cloneInfo().data().data = std::move(mCloneInfo.mData);
+    aFiles->AppendElement(std::move(mCloneInfo.mFiles));
+  }
+
+ private:
+  StructuredCloneReadInfo mCloneInfo{
+      JS::StructuredCloneScope::DifferentProcess};
+};
+
+template <>
+struct CursorTypeTraits<OpenCursorParams::TObjectStoreOpenCursorParams>
+    : ValueCursorTypeTraits<false>, CommonCursorTypeTraits {
+  using CommonCursorTypeTraits::CommonCursorTypeTraits;
+
+  static auto& GetTypedResponse(CursorResponse* const aResponse) {
+    return aResponse->get_ArrayOfObjectStoreCursorResponse();
+  }
+};
+
+template <>
+struct CursorTypeTraits<OpenCursorParams::TObjectStoreOpenKeyCursorParams>
+    : KeyCursorTypeTraits, CommonCursorTypeTraits {
+  using CommonCursorTypeTraits::CommonCursorTypeTraits;
+
+  static auto& GetTypedResponse(CursorResponse* const aResponse) {
+    return aResponse->get_ArrayOfObjectStoreKeyCursorResponse();
+  }
+};
+
+template <>
+struct CursorTypeTraits<OpenCursorParams::TIndexOpenCursorParams>
+    : ValueCursorTypeTraits<true>, IndexCursorTypeTraits {
+  using IndexCursorTypeTraits::IndexCursorTypeTraits;
+
+  static auto& GetTypedResponse(CursorResponse* const aResponse) {
+    return aResponse->get_ArrayOfIndexCursorResponse();
+  }
+};
+
+template <>
+struct CursorTypeTraits<OpenCursorParams::TIndexOpenKeyCursorParams>
+    : KeyCursorTypeTraits, IndexCursorTypeTraits {
+  using IndexCursorTypeTraits::IndexCursorTypeTraits;
+
+  static auto& GetTypedResponse(CursorResponse* const aResponse) {
+    return aResponse->get_ArrayOfIndexKeyCursorResponse();
+  }
+};
 }  // namespace
 
 /*******************************************************************************
@@ -25768,6 +25931,38 @@ void Cursor::CursorOpBase::Cleanup() {
   TransactionDatabaseOperationBase::Cleanup();
 }
 
+template <enum OpenCursorParams::Type CursorType>
+nsresult Cursor::CursorOpBase::PopulateResponseFromTypedStatement(
+    mozIStorageStatement* const aStmt, const bool aInitializeResponse) {
+  auto cursorTypeTraits = CursorTypeTraits<CursorType>{*this};
+
+  {
+    const auto rv = cursorTypeTraits.GetKeys(aStmt, mCursor);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  {
+    const auto rv = cursorTypeTraits.MaybeGetCloneInfo(aStmt, mCursor);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  if (aInitializeResponse) {
+    mResponse = std::remove_reference_t<decltype(
+        cursorTypeTraits.GetTypedResponse(&mResponse))>{};
+  }
+
+  auto& responses = cursorTypeTraits.GetTypedResponse(&mResponse);
+  auto* response = responses.AppendElement();
+  cursorTypeTraits.FillKeys(response, *mCursor);
+  cursorTypeTraits.MaybeFillCloneInfo(response, &mFiles);
+
+  return NS_OK;
+}
+
 nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
     mozIStorageStatement* const aStmt, const bool aInitializeResponse) {
   Transaction()->AssertIsOnConnectionThread();
@@ -25782,123 +25977,34 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
            mResponse.type() == CursorResponse::TArrayOfIndexCursorResponse),
       aInitializeResponse);
 
-  nsresult rv = mCursor->mPosition.SetFromStatement(aStmt, 0);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  IDB_LOG_MARK_PARENT_TRANSACTION_REQUEST(
-      "PRELOAD: Populating response with key %s", "Populating",
-      IDB_LOG_ID_STRING(mBackgroundChildLoggingId),
-      mTransactionLoggingSerialNumber, mLoggingSerialNumber,
-      mCursor->mPosition.GetBuffer().get());
+  nsresult (CursorOpBase::*populateFunc)(mozIStorageStatement*, bool);
 
   switch (mCursor->mType) {
-    case OpenCursorParams::TObjectStoreOpenCursorParams: {
-      StructuredCloneReadInfo cloneInfo(
-          JS::StructuredCloneScope::DifferentProcess);
-      rv = GetStructuredCloneReadInfoFromStatement(
-          aStmt, 2, 1, mCursor->mFileManager, &cloneInfo);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      if (cloneInfo.mHasPreprocessInfo) {
-        IDB_WARNING("Preprocessing for cursors not yet implemented!");
-        return NS_ERROR_NOT_IMPLEMENTED;
-      }
-
-      if (aInitializeResponse) {
-        mResponse = nsTArray<ObjectStoreCursorResponse>();
-      }
-
-      auto& responses = mResponse.get_ArrayOfObjectStoreCursorResponse();
-      auto& response = *responses.AppendElement();
-      response.cloneInfo().data().data = std::move(cloneInfo.mData);
-      response.key() = mCursor->mPosition;
-
-      mFiles.AppendElement(std::move(cloneInfo.mFiles));
+    case OpenCursorParams::TObjectStoreOpenCursorParams:
+      populateFunc = &CursorOpBase::PopulateResponseFromTypedStatement<
+          OpenCursorParams::TObjectStoreOpenCursorParams>;
       break;
-    }
 
-    case OpenCursorParams::TObjectStoreOpenKeyCursorParams: {
-      if (aInitializeResponse) {
-        mResponse = nsTArray<ObjectStoreKeyCursorResponse>();
-      }
-
-      auto& responses = mResponse.get_ArrayOfObjectStoreKeyCursorResponse();
-      auto& response = *responses.AppendElement();
-      response.key() = mCursor->mPosition;
+    case OpenCursorParams::TObjectStoreOpenKeyCursorParams:
+      populateFunc = &CursorOpBase::PopulateResponseFromTypedStatement<
+          OpenCursorParams::TObjectStoreOpenKeyCursorParams>;
       break;
-    }
 
-    case OpenCursorParams::TIndexOpenCursorParams: {
-      rv = mCursor->mLocaleAwarePosition.SetFromStatement(aStmt, 1);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      rv = mCursor->mObjectStorePosition.SetFromStatement(aStmt, 2);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      StructuredCloneReadInfo cloneInfo(
-          JS::StructuredCloneScope::DifferentProcess);
-      rv = GetStructuredCloneReadInfoFromStatement(
-          aStmt, 4, 3, mCursor->mFileManager, &cloneInfo);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      if (cloneInfo.mHasPreprocessInfo) {
-        IDB_WARNING("Preprocessing for cursors not yet implemented!");
-        return NS_ERROR_NOT_IMPLEMENTED;
-      }
-
-      if (aInitializeResponse) {
-        mResponse = nsTArray<IndexCursorResponse>();
-      }
-
-      auto& responses = mResponse.get_ArrayOfIndexCursorResponse();
-      auto& response = *responses.AppendElement();
-      response.cloneInfo().data().data = std::move(cloneInfo.mData);
-      response.key() = mCursor->mPosition;
-      response.sortKey() = mCursor->mLocaleAwarePosition;
-      response.objectKey() = mCursor->mObjectStorePosition;
-
-      mFiles.AppendElement(std::move(cloneInfo.mFiles));
+    case OpenCursorParams::TIndexOpenCursorParams:
+      populateFunc = &CursorOpBase::PopulateResponseFromTypedStatement<
+          OpenCursorParams::TIndexOpenCursorParams>;
       break;
-    }
 
-    case OpenCursorParams::TIndexOpenKeyCursorParams: {
-      rv = mCursor->mLocaleAwarePosition.SetFromStatement(aStmt, 1);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      rv = mCursor->mObjectStorePosition.SetFromStatement(aStmt, 2);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      if (aInitializeResponse) {
-        mResponse = nsTArray<IndexKeyCursorResponse>();
-      }
-
-      auto& responses = mResponse.get_ArrayOfIndexKeyCursorResponse();
-      auto& response = *responses.AppendElement();
-      response.key() = mCursor->mPosition;
-      response.sortKey() = mCursor->mLocaleAwarePosition;
-      response.objectKey() = mCursor->mObjectStorePosition;
+    case OpenCursorParams::TIndexOpenKeyCursorParams:
+      populateFunc = &CursorOpBase::PopulateResponseFromTypedStatement<
+          OpenCursorParams::TIndexOpenKeyCursorParams>;
       break;
-    }
 
     default:
       MOZ_CRASH("Should never get here!");
   }
 
-  return NS_OK;
+  return ((this)->*(populateFunc))(aStmt, aInitializeResponse);
 }
 
 nsresult Cursor::CursorOpBase::PopulateExtraResponses(
