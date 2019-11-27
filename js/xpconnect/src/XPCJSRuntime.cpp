@@ -1895,10 +1895,6 @@ static void ReportRealmStats(const JS::RealmStats& realmStats,
                  realmStats.innerViewsTable,
                  "The table for array buffer inner views.");
 
-  ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("lazy-array-buffers"),
-                 realmStats.lazyArrayBuffersTable,
-                 "The table for typed object lazy array buffers.");
-
   ZRREPORT_BYTES(
       realmJSPathPrefix + NS_LITERAL_CSTRING("object-metadata"),
       realmStats.objectMetadataTable,
