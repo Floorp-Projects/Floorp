@@ -9,18 +9,10 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
-loader.lazyGetter(this, "Rep", function() {
-  return require("devtools/client/shared/components/reps/reps").REPS.Rep;
-});
-loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/reps").MODE;
-});
-
 loader.lazyRequireGetter(
   this,
-  "translateNodeFrontToGrip",
-  "devtools/client/inspector/shared/utils",
-  true
+  "getNodeRep",
+  "devtools/client/inspector/shared/node-reps"
 );
 
 const BOXMODEL_STRINGS_URI = "devtools/client/locales/boxmodel.properties";
@@ -74,10 +66,7 @@ class ComputedProperty extends PureComponent {
         },
         referenceElementType
       ),
-      Rep({
-        defaultRep: referenceElement,
-        mode: MODE.TINY,
-        object: translateNodeFrontToGrip(referenceElement),
+      getNodeRep(referenceElement, {
         onInspectIconClick: () =>
           setSelectedNode(referenceElement, { reason: "box-model" }),
         onDOMNodeMouseOver: () =>

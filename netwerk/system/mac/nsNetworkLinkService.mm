@@ -29,6 +29,7 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/SHA1.h"
 #include "mozilla/Base64.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "nsNetworkLinkService.h"
@@ -266,6 +267,13 @@ static OSStatus IsInterfaceActive(const SCDynamicStoreRef aStoreRef, const char*
 
 void nsNetworkLinkService::GetDnsSuffixListInternal() {
   MOZ_ASSERT(!NS_IsMainThread());
+
+  RefPtr<nsNetworkLinkService> self = this;
+  auto sendNotification = mozilla::MakeScopeExit([self] {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "nsNetworkLinkService::GetDnsSuffixListInternal",
+        [self]() { self->NotifyObservers(NS_DNS_SUFFIX_LIST_UPDATED_TOPIC, nullptr); }));
+  });
 
   nsAutoCString primaryServiceName;
   nsAutoCString primaryServiceId;

@@ -102,6 +102,11 @@ interface nsINetworkLinkService : nsISupports
 #define NS_NETWORK_ID_CHANGED_TOPIC "network:networkid-changed"
 
 /**
+ * DNS suffix list has updated.
+ */
+#define NS_DNS_SUFFIX_LIST_UPDATED_TOPIC "network:dns-suffix-list-updated"
+
+/**
  * We send notifications through nsIObserverService with topic
  * NS_NETWORK_LINK_TYPE_TOPIC whenever the network connection type
  * changes. We pass one of the valid connection type constants

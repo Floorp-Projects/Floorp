@@ -594,6 +594,8 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
     mPlatformDNSIndications = platformDNSIndications;
   }
 
+  NotifyObservers(NS_DNS_SUFFIX_LIST_UPDATED_TOPIC, nullptr);
+
   calculateNetworkId();
 
   return ret;

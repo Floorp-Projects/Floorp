@@ -65,8 +65,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyImporter(
   this,
-  "BrowserToolboxProcess",
-  "resource://devtools/client/framework/ToolboxProcess.jsm"
+  "BrowserToolboxLauncher",
+  "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
 );
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
@@ -338,7 +338,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
         await gDevToolsBrowser.toggleToolboxCommand(window.gBrowser, startTime);
         break;
       case "browserToolbox":
-        BrowserToolboxProcess.init();
+        BrowserToolboxLauncher.init();
         break;
       case "browserConsole":
         const {

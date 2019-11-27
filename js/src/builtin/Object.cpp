@@ -7,6 +7,8 @@
 #include "builtin/Object.h"
 
 #include "mozilla/MaybeOneOf.h"
+#include "mozilla/Range.h"
+#include "mozilla/RangedPtr.h"
 
 #include <algorithm>
 
@@ -18,6 +20,7 @@
 #include "js/PropertySpec.h"
 #include "js/UniquePtr.h"
 #include "util/StringBuffer.h"
+#include "util/Text.h"
 #include "vm/AsyncFunction.h"
 #include "vm/DateObject.h"
 #include "vm/EqualityOperations.h"  // js::SameValue
@@ -36,6 +39,9 @@
 using namespace js;
 
 using js::frontend::IsIdentifier;
+
+using mozilla::Range;
+using mozilla::RangedPtr;
 
 bool js::obj_construct(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -140,12 +146,14 @@ static bool obj_toSource(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 template <typename CharT>
-static bool Consume(const CharT*& s, const CharT* e, const char* chars) {
+static bool Consume(RangedPtr<const CharT>& s, RangedPtr<const CharT> e,
+                    const char* chars) {
+  MOZ_ASSERT(s <= e);
   size_t len = strlen(chars);
-  if (s + len >= e) {
+  if (e - s < len) {
     return false;
   }
-  if (!EqualChars(s, chars, len)) {
+  if (!EqualChars(s.get(), chars, len)) {
     return false;
   }
   s += len;
@@ -153,8 +161,21 @@ static bool Consume(const CharT*& s, const CharT* e, const char* chars) {
 }
 
 template <typename CharT>
-static void ConsumeSpaces(const CharT*& s, const CharT* e) {
-  while (*s == ' ' && s < e) {
+static bool ConsumeUntil(RangedPtr<const CharT>& s, RangedPtr<const CharT> e,
+                         char16_t ch) {
+  MOZ_ASSERT(s <= e);
+  const CharT* result = js_strchr_limit(s.get(), ch, e.get());
+  if (!result) {
+    return false;
+  }
+  s += result - s.get();
+  MOZ_ASSERT(*s == ch);
+  return true;
+}
+
+template <typename CharT>
+static void ConsumeSpaces(RangedPtr<const CharT>& s, RangedPtr<const CharT> e) {
+  while (s < e && *s == ' ') {
     s++;
   }
 }
@@ -164,11 +185,11 @@ static void ConsumeSpaces(const CharT*& s, const CharT* e) {
  * between '(function $name' and ')'.
  */
 template <typename CharT>
-static bool ArgsAndBodySubstring(mozilla::Range<const CharT> chars,
-                                 size_t* outOffset, size_t* outLen) {
-  const CharT* const start = chars.begin().get();
-  const CharT* s = start;
-  const CharT* e = chars.end().get();
+static bool ArgsAndBodySubstring(Range<const CharT> chars, size_t* outOffset,
+                                 size_t* outLen) {
+  const RangedPtr<const CharT> start = chars.begin();
+  RangedPtr<const CharT> s = start;
+  RangedPtr<const CharT> e = chars.end();
 
   if (s == e) {
     return false;
@@ -204,21 +225,21 @@ static bool ArgsAndBodySubstring(mozilla::Range<const CharT> chars,
 
   // Jump over the function's name.
   if (Consume(s, e, "[")) {
-    s = js_strchr_limit(s, ']', e);
-    if (!s) {
+    if (!ConsumeUntil(s, e, ']')) {
       return false;
     }
-    s++;
+    s++;  // Skip ']'.
     ConsumeSpaces(s, e);
-    if (*s != '(') {
+    if (s >= e || *s != '(') {
       return false;
     }
   } else {
-    s = js_strchr_limit(s, '(', e);
-    if (!s) {
+    if (!ConsumeUntil(s, e, '(')) {
       return false;
     }
   }
+
+  MOZ_ASSERT(*s == '(');
 
   *outOffset = s - start;
   *outLen = e - s;

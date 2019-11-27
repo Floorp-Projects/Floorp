@@ -3,8 +3,11 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // ReactJS
-const PropTypes = require("prop-types");
-const { button, span } = require("react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {
+  button,
+  span,
+} = require("devtools/client/shared/vendor/react-dom-factories");
 
 // Utils
 const { isGrip, wrapRender } = require("./rep-utils");

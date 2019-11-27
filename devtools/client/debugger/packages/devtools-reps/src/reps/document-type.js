@@ -3,12 +3,11 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // ReactJS
-const PropTypes = require("prop-types");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
 // Reps
 const { getGripType, isGrip, wrapRender } = require("./rep-utils");
-const dom = require("react-dom-factories");
-const { span } = dom;
 
 /**
  * Renders DOM documentType object.

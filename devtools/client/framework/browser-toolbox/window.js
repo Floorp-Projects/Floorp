@@ -23,8 +23,8 @@ const L10N = new LocalizationHelper(
 );
 loader.lazyImporter(
   this,
-  "BrowserToolboxProcess",
-  "resource://devtools/client/framework/ToolboxProcess.jsm"
+  "BrowserToolboxLauncher",
+  "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
 );
 
 // Timeout to wait before we assume that a connect() timed out without an error.
@@ -78,7 +78,7 @@ var connect = async function() {
 
   // A port needs to be passed in from the environment, for instance:
   //    MOZ_BROWSER_TOOLBOX_PORT=6080 ./mach run -chrome \
-  //      chrome://devtools/content/framework/toolbox-process-window.html
+  //      chrome://devtools/content/framework/browser-toolbox/window.html
   if (!port) {
     throw new Error(
       "Must pass a port in an env variable with MOZ_BROWSER_TOOLBOX_PORT"
@@ -173,7 +173,7 @@ function onCloseCommand(event) {
  * running in the parent process. i.e. frontend code.
  */
 function onDebugBrowserToolbox() {
-  BrowserToolboxProcess.init();
+  BrowserToolboxLauncher.init();
 }
 
 async function openToolbox(target) {
