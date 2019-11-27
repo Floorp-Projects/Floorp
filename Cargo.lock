@@ -3213,7 +3213,7 @@ dependencies = [
  "byteorder 1.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "digest 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "murmurhash3 0.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -4040,7 +4040,7 @@ name = "unic-langid"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "unic-langid-impl 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "unic-langid-impl 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -4056,7 +4056,7 @@ dependencies = [
 
 [[package]]
 name = "unic-langid-impl"
-version = "0.7.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "tinystr 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -4897,7 +4897,7 @@ dependencies = [
 "checksum typenum 1.10.0 (registry+https://github.com/rust-lang/crates.io-index)" = "612d636f949607bdf9b123b4a6f6d966dedf3ff669f7f045890d3a4a73948169"
 "checksum uluru 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "6d7b39d0c32eba57d52d334e4bdd150df6e755264eefaa1ae2e7cd125f35e1ca"
 "checksum unic-langid 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)" = "7935b530ca240640bf8dd67d04301a3ed02bfc8635105fea9e9a26477143ca22"
-"checksum unic-langid-impl 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)" = "0c31597f012f34035fc7ed6c3f7160eac6d1581e2b54e2cf29ab3f43b2fe1d64"
+"checksum unic-langid-impl 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)" = "86ab4a5be993d5b9d082476a7dd7149c083cf63a72469e700c09e69784511957"
 "checksum unicase 2.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "a84e5511b2a947f3ae965dcb29b13b7b1691b6e7332cf5dbc1744138d5acb7f6"
 "checksum unicode-bidi 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)" = "49f2bd0c6468a8230e1db229cff8029217cf623c767ea5d60bfbd42729ea54d5"
 "checksum unicode-normalization 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "51ccda9ef9efa3f7ef5d91e8f9b83bbe6955f9bf86aec89d5cce2c874625920f"

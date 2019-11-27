@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "unic-langid-impl"
-version = "0.7.1"
+version = "0.7.2"
 authors = ["Zibi Braniecki <gandalf@mozilla.com>"]
 exclude = ["data/*"]
 description = "API for managing Unicode Language Identifiers"
