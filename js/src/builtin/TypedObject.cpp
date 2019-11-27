@@ -2439,21 +2439,6 @@ bool js::AttachTypedObject(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-bool js::SetTypedObjectOffset(JSContext*, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<TypedObject>());
-  MOZ_RELEASE_ASSERT(args[1].isInt32());
-
-  OutlineTypedObject& typedObj = args[0].toObject().as<OutlineTypedObject>();
-  int32_t offset = args[1].toInt32();
-
-  MOZ_ASSERT(typedObj.isAttached());
-  typedObj.resetOffset(offset);
-  args.rval().setUndefined();
-  return true;
-}
-
 bool js::ObjectIsTypeDescr(JSContext*, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);

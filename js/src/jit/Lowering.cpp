@@ -2930,13 +2930,6 @@ void LIRGenerator::visitTypedObjectElements(MTypedObjectElements* ins) {
   define(new (alloc()) LTypedObjectElements(useRegister(ins->object())), ins);
 }
 
-void LIRGenerator::visitSetTypedObjectOffset(MSetTypedObjectOffset* ins) {
-  add(new (alloc())
-          LSetTypedObjectOffset(useRegister(ins->object()),
-                                useRegister(ins->offset()), temp(), temp()),
-      ins);
-}
-
 void LIRGenerator::visitInitializedLength(MInitializedLength* ins) {
   MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
   define(new (alloc()) LInitializedLength(useRegisterAtStart(ins->elements())),

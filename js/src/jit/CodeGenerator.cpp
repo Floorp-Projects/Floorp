@@ -7791,32 +7791,6 @@ void CodeGenerator::visitTypedObjectElements(LTypedObjectElements* lir) {
   }
 }
 
-void CodeGenerator::visitSetTypedObjectOffset(LSetTypedObjectOffset* lir) {
-  Register object = ToRegister(lir->object());
-  Register offset = ToRegister(lir->offset());
-  Register temp0 = ToRegister(lir->temp0());
-  Register temp1 = ToRegister(lir->temp1());
-
-  // Compute the base pointer for the typed object's owner.
-  masm.loadPtr(Address(object, OutlineTypedObject::offsetOfOwner()), temp0);
-
-  Label inlineObject, done;
-  masm.branchIfInlineTypedObject(temp0, temp1, &inlineObject);
-
-  masm.loadPrivate(Address(temp0, ArrayBufferObject::offsetOfDataSlot()),
-                   temp0);
-  masm.jump(&done);
-
-  masm.bind(&inlineObject);
-  masm.addPtr(ImmWord(InlineTypedObject::offsetOfDataStart()), temp0);
-
-  masm.bind(&done);
-
-  // Compute the new data pointer and set it in the object.
-  masm.addPtr(offset, temp0);
-  masm.storePtr(temp0, Address(object, OutlineTypedObject::offsetOfData()));
-}
-
 void CodeGenerator::visitStringLength(LStringLength* lir) {
   Register input = ToRegister(lir->string());
   Register output = ToRegister(lir->output());
