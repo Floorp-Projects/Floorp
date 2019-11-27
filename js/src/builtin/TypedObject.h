@@ -805,14 +805,6 @@ MOZ_MUST_USE bool NewDerivedTypedObject(JSContext* cx, unsigned argc,
 MOZ_MUST_USE bool AttachTypedObject(JSContext* cx, unsigned argc, Value* vp);
 
 /*
- * Usage: SetTypedObjectOffset(typedObj, offset)
- *
- * Changes the offset for `typedObj` within its buffer to `offset`.
- * `typedObj` must already be attached.
- */
-MOZ_MUST_USE bool SetTypedObjectOffset(JSContext*, unsigned argc, Value* vp);
-
-/*
  * Usage: ObjectIsTypeDescr(obj)
  *
  * True if `obj` is a type object.

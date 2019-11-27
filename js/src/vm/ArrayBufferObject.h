@@ -427,8 +427,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static BufferContents createMappedContents(int fd, size_t offset,
                                              size_t length);
 
-  static size_t offsetOfDataSlot() { return getFixedSlotOffset(DATA_SLOT); }
-
   void setHasTypedObjectViews() { setFlags(flags() | TYPED_OBJECT_VIEWS); }
 
  protected:

@@ -7378,29 +7378,6 @@ class MTypedObjectElements : public MUnaryInstruction,
   }
 };
 
-// Inlined version of the js::SetTypedObjectOffset() intrinsic.
-class MSetTypedObjectOffset : public MBinaryInstruction,
-                              public NoTypePolicy::Data {
- private:
-  MSetTypedObjectOffset(MDefinition* object, MDefinition* offset)
-      : MBinaryInstruction(classOpcode, object, offset) {
-    MOZ_ASSERT(object->type() == MIRType::Object);
-    MOZ_ASSERT(offset->type() == MIRType::Int32);
-    setResultType(MIRType::None);
-  }
-
- public:
-  INSTRUCTION_HEADER(SetTypedObjectOffset)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object), (1, offset))
-
-  AliasSet getAliasSet() const override {
-    // This affects the result of MTypedObjectElements,
-    // which is described as a load of ObjectFields.
-    return AliasSet::Store(AliasSet::ObjectFields);
-  }
-};
-
 class MKeepAliveObject : public MUnaryInstruction,
                          public SingleObjectPolicy::Data {
   explicit MKeepAliveObject(MDefinition* object)
