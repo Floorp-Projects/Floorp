@@ -79,9 +79,11 @@ nsresult nsDOMCSSAttributeDeclaration::SetCSSDeclaration(
   MOZ_ASSERT_IF(aClosureData, !aClosureData->mClosure);
 
   aDecl->SetDirty();
-  return mIsSMILOverride
-             ? mElement->SetSMILOverrideStyleDeclaration(aDecl)
-             : mElement->SetInlineStyleDeclaration(*aDecl, *aClosureData);
+  if (mIsSMILOverride) {
+    mElement->SetSMILOverrideStyleDeclaration(*aDecl);
+    return NS_OK;
+  }
+  return mElement->SetInlineStyleDeclaration(*aDecl, *aClosureData);
 }
 
 Document* nsDOMCSSAttributeDeclaration::DocToUpdate() {

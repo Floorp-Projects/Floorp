@@ -1835,11 +1835,8 @@ DeclarationBlock* Element::GetSMILOverrideStyleDeclaration() {
   return slots ? slots->mSMILOverrideStyleDeclaration.get() : nullptr;
 }
 
-nsresult Element::SetSMILOverrideStyleDeclaration(
-    DeclarationBlock* aDeclaration) {
-  Element::nsExtendedDOMSlots* slots = ExtendedDOMSlots();
-
-  slots->mSMILOverrideStyleDeclaration = aDeclaration;
+void Element::SetSMILOverrideStyleDeclaration(DeclarationBlock& aDeclaration) {
+  ExtendedDOMSlots()->mSMILOverrideStyleDeclaration = &aDeclaration;
 
   // Only need to request a restyle if we're in a document.  (We might not
   // be in a document, if we're clearing animation effects on a target node
@@ -1849,8 +1846,6 @@ nsresult Element::SetSMILOverrideStyleDeclaration(
       presShell->RestyleForAnimation(this, StyleRestyleHint_RESTYLE_SMIL);
     }
   }
-
-  return NS_OK;
 }
 
 bool Element::IsLabelable() const { return false; }
