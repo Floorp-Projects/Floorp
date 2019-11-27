@@ -237,4 +237,15 @@ interface nsICookieManager : nsISupports
    * @param aPattern origin attribute pattern in JSON format
    */
   void removeCookiesFromExactHost(in AUTF8String aHost, in AString aPattern);
+
+  /**
+   * Removes all cookies that were created on or after aSinceWhen, and returns
+   * a Promise which will be resolved when the last such cookie has been
+   * removed.
+   *
+   * @param aSinceWhen the starting point in time after which no cookies should
+   *        be created when the Promise returned from this method is resolved.
+   */
+  [implicit_jscontext]
+  Promise removeAllSince(in int64_t aSinceWhen);
 };
