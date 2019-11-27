@@ -3135,6 +3135,46 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtTest(MDefinition* ins,
 
       return replaceTypeSet(subject, type, test);
     }
+    case MDefinition::Opcode::IsNullOrUndefined: {
+      MDefinition* subject = ins->getOperand(0);
+      TemporaryTypeSet* oldType = subject->resultTypeSet();
+
+      // Create temporary typeset equal to the type if there is no
+      // resultTypeSet.
+      TemporaryTypeSet tmp;
+      if (!oldType) {
+        if (subject->type() == MIRType::Value) {
+          return Ok();
+        }
+        oldType = &tmp;
+        tmp.addType(
+            TypeSet::PrimitiveType(ValueTypeFromMIRType(subject->type())),
+            alloc_->lifoAlloc());
+      }
+
+      // If ins does not have a typeset we return as we cannot optimize.
+      if (oldType->unknown()) {
+        return Ok();
+      }
+
+      // Decide either to set or remove.
+      TemporaryTypeSet filter;
+      filter.addType(TypeSet::UndefinedType(), alloc_->lifoAlloc());
+      filter.addType(TypeSet::NullType(), alloc_->lifoAlloc());
+
+      TemporaryTypeSet* type;
+      if (trueBranch) {
+        type = TypeSet::intersectSets(&filter, oldType, alloc_->lifoAlloc());
+      } else {
+        type = TypeSet::removeSet(oldType, &filter, alloc_->lifoAlloc());
+      }
+
+      if (!type) {
+        return abort(AbortReason::Alloc);
+      }
+
+      return replaceTypeSet(subject, type, test);
+    }
 
     case MDefinition::Opcode::Compare:
       return improveTypesAtCompare(ins->toCompare(), trueBranch, test);
