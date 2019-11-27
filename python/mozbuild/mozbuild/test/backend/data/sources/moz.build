@@ -19,3 +19,6 @@ SOURCES += ['bar.c', 'foo.c']
 SOURCES += ['bar.mm', 'foo.mm']
 
 SOURCES += ['baz.S', 'foo.S']
+
+WASM_SOURCES += ['bar.cpp']
+WASM_SOURCES += ['bar.c']
