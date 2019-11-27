@@ -3628,59 +3628,6 @@ static bool Intern(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool Clone(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  if (args.length() == 0) {
-    JS_ReportErrorASCII(cx, "Invalid arguments to clone");
-    return false;
-  }
-
-  RootedObject funobj(cx);
-  {
-    Maybe<JSAutoRealm> ar;
-    RootedObject obj(cx, args[0].isPrimitive() ? nullptr : &args[0].toObject());
-
-    if (obj && obj->is<CrossCompartmentWrapperObject>()) {
-      obj = UncheckedUnwrap(obj);
-      ar.emplace(cx, obj);
-      args[0].setObject(*obj);
-    }
-    if (obj && obj->is<JSFunction>()) {
-      funobj = obj;
-    } else {
-      JSFunction* fun = JS_ValueToFunction(cx, args[0]);
-      if (!fun) {
-        return false;
-      }
-      funobj = JS_GetFunctionObject(fun);
-    }
-  }
-
-  RootedObject env(cx);
-  if (args.length() > 1) {
-    if (!JS_ValueToObject(cx, args[1], &env)) {
-      return false;
-    }
-  } else {
-    env = JS::CurrentGlobalOrNull(cx);
-    MOZ_ASSERT(env);
-  }
-
-  // Should it worry us that we might be getting with wrappers
-  // around with wrappers here?
-  JS::RootedObjectVector envChain(cx);
-  if (env && !env->is<GlobalObject>() && !envChain.append(env)) {
-    return false;
-  }
-  JSObject* clone = JS::CloneFunctionObject(cx, funobj, envChain);
-  if (!clone) {
-    return false;
-  }
-  args.rval().setObject(*clone);
-  return true;
-}
-
 static bool Crash(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() == 0) {
@@ -8440,10 +8387,6 @@ static bool TransplantableObject(JSContext* cx, unsigned argc, Value* vp) {
 
 // clang-format off
 static const JSFunctionSpecWithHelp shell_functions[] = {
-    JS_FN_HELP("clone", Clone, 1, 0,
-"clone(fun[, scope])",
-"  Clone function object."),
-
     JS_FN_HELP("options", Options, 0, 0,
 "options([option ...])",
 "  Get or toggle JavaScript options."),
