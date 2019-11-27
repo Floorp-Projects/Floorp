@@ -5688,6 +5688,24 @@ MDefinition* MTypedArrayIndexToInt32::foldsTo(TempAllocator& alloc) {
   return MConstant::New(alloc, Int32Value(ival));
 }
 
+MDefinition* MIsNullOrUndefined::foldsTo(TempAllocator& alloc) {
+  MDefinition* input = value();
+  if (input->isBox()) {
+    input = input->getOperand(0);
+  }
+
+  if (input->type() == MIRType::Null || input->type() == MIRType::Undefined) {
+    return MConstant::New(alloc, BooleanValue(true));
+  }
+
+  if (!input->mightBeType(MIRType::Null) &&
+      !input->mightBeType(MIRType::Undefined)) {
+    return MConstant::New(alloc, BooleanValue(false));
+  }
+
+  return this;
+}
+
 bool jit::ElementAccessIsDenseNative(CompilerConstraintList* constraints,
                                      MDefinition* obj, MDefinition* id) {
   if (obj->mightBeType(MIRType::String)) {

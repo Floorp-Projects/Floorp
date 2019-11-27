@@ -10777,6 +10777,8 @@ class MIsNullOrUndefined : public MUnaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, value))
 
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins);
   }
