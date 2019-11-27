@@ -29,7 +29,7 @@ class nsMemoryImpl : public nsIMemory {
                          void** aResult);
 
   nsresult FlushMemory(const char16_t* aReason, bool aImmediate);
-  nsresult RunFlushers(const char16_t* aReason);
+  void RunFlushers(const char16_t* aReason);
 
  protected:
   struct FlushEvent : public nsIRunnable {

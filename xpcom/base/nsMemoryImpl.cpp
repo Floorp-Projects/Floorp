@@ -74,8 +74,6 @@ nsresult nsMemoryImpl::Create(nsISupports* aOuter, const nsIID& aIID,
 }
 
 nsresult nsMemoryImpl::FlushMemory(const char16_t* aReason, bool aImmediate) {
-  nsresult rv = NS_OK;
-
   if (aImmediate) {
     // They've asked us to run the flusher *immediately*. We've
     // got to be on the UI main thread for us to be able to do
@@ -94,9 +92,10 @@ nsresult nsMemoryImpl::FlushMemory(const char16_t* aReason, bool aImmediate) {
   PRIntervalTime now = PR_IntervalNow();
 
   // Run the flushers immediately if we can; otherwise, proxy to the
-  // UI thread an run 'em asynchronously.
+  // UI thread can run 'em asynchronously.
+  nsresult rv = NS_OK;
   if (aImmediate) {
-    rv = RunFlushers(aReason);
+    RunFlushers(aReason);
   } else {
     // Don't broadcast more than once every 1000ms to avoid being noisy
     if (PR_IntervalToMicroseconds(now - sLastFlushTime) > 1000) {
@@ -109,7 +108,7 @@ nsresult nsMemoryImpl::FlushMemory(const char16_t* aReason, bool aImmediate) {
   return rv;
 }
 
-nsresult nsMemoryImpl::RunFlushers(const char16_t* aReason) {
+void nsMemoryImpl::RunFlushers(const char16_t* aReason) {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
     // Instead of:
@@ -139,7 +138,6 @@ nsresult nsMemoryImpl::RunFlushers(const char16_t* aReason) {
   }
 
   sIsFlushing = false;
-  return NS_OK;
 }
 
 // XXX need NS_IMPL_STATIC_ADDREF/RELEASE
