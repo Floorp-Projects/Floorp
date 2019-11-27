@@ -2311,7 +2311,19 @@ impl PrimitiveStore {
             // Inflate the local bounding rect if required by the filter effect.
             // This inflaction factor is to be applied to the surface itself.
             if pic.options.inflate_if_required {
+                // The picture's local rect is calculated as the union of the
+                // snapped primitive rects, which should result in a snapped
+                // local rect, unless it was inflated. This is also done during
+                // surface configuration when calculating the picture's
+                // estimated local rect.
+                let snap_pic_to_raster = SpaceSnapper::new_with_target(
+                    surface.raster_spatial_node_index,
+                    pic.spatial_node_index,
+                    surface.device_pixel_scale,
+                    frame_context.clip_scroll_tree,
+                );
                 surface_rect = rc.composite_mode.inflate_picture_rect(surface_rect, surface.inflation_factor);
+                surface_rect = snap_pic_to_raster.snap_rect(&surface_rect);
             }
 
             // Layout space for the picture is picture space from the
