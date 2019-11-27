@@ -41,7 +41,7 @@ export class Triplets extends React.PureComponent {
     this.props.onAction({ ...action, ...actionUpdates });
     // Only block if message is in dynamic triplets experiment
     if (message.blockOnClick) {
-      this.props.onBlockById(message.id);
+      this.props.onBlockById(message.id, { preloadedOnly: true });
     }
   }
 
