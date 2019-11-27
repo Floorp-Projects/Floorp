@@ -15,7 +15,6 @@ const dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, {
 const ORIGIN_HTTP_EXAMPLE_ORG = "http://example.org";
 const ORIGIN_HTTPS_EXAMPLE_ORG = "https://example.org";
 const ORIGIN_HTTPS_EXAMPLE_ORG_8080 = "https://example.org:8080";
-const ORIGIN_HTTPS_SUB_EXAMPLE_ORG = "https://sub.example.org";
 
 const FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1 = formLogin({
   formActionOrigin: ORIGIN_HTTPS_EXAMPLE_ORG,
@@ -47,21 +46,6 @@ const FORM_LOGIN_HTTPS_EXAMPLE_ORG_8080_U1_P2 = formLogin({
   password: "pass2",
 });
 
-// Subdomain
-
-const FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P1 = formLogin({
-  formActionOrigin: ORIGIN_HTTPS_SUB_EXAMPLE_ORG,
-  guid: "FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P1",
-  origin: ORIGIN_HTTPS_SUB_EXAMPLE_ORG,
-});
-
-const FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P2 = formLogin({
-  formActionOrigin: ORIGIN_HTTPS_SUB_EXAMPLE_ORG,
-  guid: "FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P2",
-  origin: ORIGIN_HTTPS_SUB_EXAMPLE_ORG,
-  password: "pass2",
-});
-
 // HTTP Auth.
 
 const HTTP_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1 = authLogin({
@@ -80,10 +64,9 @@ XPCOMUtils.defineLazyGetter(this, "_stringBundle", function() {
  */
 add_task(async function test_initialize() {
   Services.prefs.setBoolPref("signon.schemeUpgrades", true);
-  Services.prefs.setBoolPref("signon.includeOtherSubdomainsInLookup", true);
 });
 
-add_task(async function test_sameOriginOnlyHTTPS() {
+add_task(async function test_sameOriginBothHTTPAndHTTPSDeduped() {
   await runTestcase({
     formOrigin: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.origin,
     savedLogins: [FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1],
@@ -156,7 +139,7 @@ add_task(async function test_sameOriginSchemeDowngrade() {
   });
 });
 
-add_task(async function test_sameOriginShadowedSchemeUpgrade() {
+add_task(async function test_sameOriginNotShadowedSchemeUpgrade() {
   await runTestcase({
     formOrigin: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.origin,
     savedLogins: [
@@ -166,6 +149,11 @@ add_task(async function test_sameOriginShadowedSchemeUpgrade() {
     expectedItems: [
       {
         login: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
+        time: true,
+      },
+      {
+        login: FORM_LOGIN_HTTP_EXAMPLE_ORG_U1_P2,
+        time: true,
       },
     ],
   });
@@ -199,13 +187,6 @@ add_task(async function test_sameDomainDifferentPort_onDefault() {
     expectedItems: [
       {
         login: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
-        time: true,
-      },
-      "--", // separator
-      FORM_LOGIN_HTTPS_EXAMPLE_ORG_8080_U1_P2.displayOrigin, // group heading
-      {
-        login: FORM_LOGIN_HTTPS_EXAMPLE_ORG_8080_U1_P2,
-        time: true,
       },
     ],
   });
@@ -222,103 +203,6 @@ add_task(async function test_sameDomainDifferentPort_onNonDefault() {
     expectedItems: [
       {
         login: FORM_LOGIN_HTTPS_EXAMPLE_ORG_8080_U1_P2,
-        time: true,
-      },
-      "--", // separator
-      FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.displayOrigin, // group heading
-      {
-        login: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
-        time: true,
-      },
-    ],
-  });
-});
-
-// Subdomain tasks
-
-add_task(async function test_onlySubdomainOnBaseDomain() {
-  await runTestcase({
-    formOrigin: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.origin,
-    savedLogins: [FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P1],
-    expectedItems: [
-      // No separator
-      FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P1.displayOrigin,
-      {
-        login: FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P1,
-      },
-    ],
-  });
-});
-
-add_task(async function test_subdomainDedupeOnBaseDomain() {
-  await runTestcase({
-    formOrigin: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.origin,
-    savedLogins: [
-      FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
-      FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P1,
-    ],
-    expectedItems: [
-      {
-        login: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
-      },
-    ],
-  });
-});
-
-add_task(async function test_subdomainDedupeOnSubDomain() {
-  await runTestcase({
-    formOrigin: FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P1.origin,
-    savedLogins: [
-      FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
-      FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P1,
-    ],
-    expectedItems: [
-      {
-        login: FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P1,
-      },
-    ],
-  });
-});
-
-add_task(async function test_subdomainIncludedOnBaseDomain() {
-  await runTestcase({
-    formOrigin: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.origin,
-    savedLogins: [
-      FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
-      FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P2,
-    ],
-    expectedItems: [
-      {
-        login: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
-        time: true,
-      },
-      "--", // separator
-      FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P2.displayOrigin, // group heading
-      {
-        login: FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P2,
-        time: true,
-      },
-    ],
-  });
-});
-
-add_task(async function test_subdomainIncludedOnSubDomain() {
-  await runTestcase({
-    formOrigin: FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P2.origin,
-    savedLogins: [
-      FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
-      FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P2,
-    ],
-    expectedItems: [
-      {
-        login: FORM_LOGIN_HTTPS_SUB_EXAMPLE_ORG_U1_P2,
-        time: true,
-      },
-      "--", // separator
-      FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.displayOrigin, // group heading
-      {
-        login: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
-        time: true,
       },
     ],
   });
@@ -331,8 +215,6 @@ add_task(async function test_sameOriginOnlyHTTPAuth() {
     formOrigin: FORM_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.origin,
     savedLogins: [HTTP_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1],
     expectedItems: [
-      // No separator
-      HTTP_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1.displayOrigin, // group heading
       {
         login: HTTP_LOGIN_HTTPS_EXAMPLE_ORG_U1_P1,
       },
@@ -394,7 +276,7 @@ async function runTestcase({ formOrigin, savedLogins, expectedItems }) {
   // Try to clear the fragment.
   LoginManagerContextMenu.clearLoginsFromMenu(document);
   Assert.equal(
-    document.querySelectorAll("menuitem, menuseparator, menucaption").length,
+    document.querySelectorAll("menuitem").length,
     0,
     "All items correctly cleared."
   );
@@ -432,24 +314,7 @@ function checkLoginItems(actualItems, expectedDetails) {
   for (let [i, expectedDetail] of expectedDetails.entries()) {
     let actualElement = actualItems[i];
 
-    // Separator
-    if (expectedDetail == "--") {
-      Assert.equal(actualElement.localName, "menuseparator", "Check localName");
-      continue;
-    }
-
-    // Section heading
-    if (typeof expectedDetail == "string") {
-      Assert.equal(actualElement.localName, "menucaption", "Check localName");
-      continue;
-    }
-
     Assert.equal(actualElement.localName, "menuitem", "Check localName");
-    Assert.equal(
-      actualElement.id,
-      "login-" + expectedDetail.login.guid,
-      `Check id ${i}`
-    );
 
     let expectedLabel = expectedDetail.login.username;
     if (!expectedLabel) {

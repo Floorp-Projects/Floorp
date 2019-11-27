@@ -40,17 +40,10 @@ this.LoginManagerContextMenu = {
    *        The origin of the document that the context menu was activated from.
    *        This isn't the same as the browser's top-level document origin
    *        when subframes are involved.
-   * @param {string} formActionOrigin
-   *        The origin of the LoginForm's action.
    * @returns {DocumentFragment} a document fragment with all the login items.
    */
-  addLoginsToMenu(
-    inputElementIdentifier,
-    browser,
-    formOrigin,
-    formActionOrigin
-  ) {
-    let foundLogins = this._findLogins(formOrigin, formActionOrigin);
+  addLoginsToMenu(inputElementIdentifier, browser, formOrigin) {
+    let foundLogins = this._findLogins(formOrigin);
 
     if (!foundLogins.length) {
       return null;
@@ -58,32 +51,7 @@ this.LoginManagerContextMenu = {
 
     let fragment = browser.ownerDocument.createDocumentFragment();
     let duplicateUsernames = this._findDuplicates(foundLogins);
-    // Default `lastDisplayOrigin` to the hostPort of the form so that we don't
-    // show a menucaption above logins that are direct matches for this document.
-    let lastDisplayOrigin = LoginHelper.maybeGetHostPortForURL(formOrigin);
-    let lastMenuCaption = null;
     for (let login of foundLogins) {
-      // Add a section header containing the displayOrigin above logins that
-      // aren't matches for the form's origin.
-      if (lastDisplayOrigin != login.displayOrigin) {
-        if (fragment.children.length) {
-          let menuSeparator = fragment.ownerDocument.createXULElement(
-            "menuseparator"
-          );
-          menuSeparator.className = "context-login-item";
-          fragment.appendChild(menuSeparator);
-        }
-
-        lastMenuCaption = fragment.ownerDocument.createXULElement(
-          "menucaption"
-        );
-        lastMenuCaption.setAttribute("role", "group");
-        lastMenuCaption.label = login.displayOrigin;
-        lastMenuCaption.className = "context-login-item";
-
-        fragment.appendChild(lastMenuCaption);
-      }
-
       let item = fragment.ownerDocument.createXULElement("menuitem");
 
       let username = login.username;
@@ -98,16 +66,8 @@ this.LoginManagerContextMenu = {
         );
         username = this._getLocalizedString("loginHostAge", [username, time]);
       }
-      item.id = "login-" + login.guid;
       item.setAttribute("label", username);
       item.setAttribute("class", "context-login-item");
-      if (lastMenuCaption) {
-        item.setAttribute("aria-level", "2");
-        lastMenuCaption.setAttribute(
-          "aria-owns",
-          lastMenuCaption.getAttribute("aria-owns") + item.id + " "
-        );
-      }
 
       // login is bound so we can keep the reference to each object.
       item.addEventListener(
@@ -123,7 +83,6 @@ this.LoginManagerContextMenu = {
       );
 
       fragment.appendChild(item);
-      lastDisplayOrigin = login.displayOrigin;
     }
 
     return fragment;
@@ -155,52 +114,51 @@ this.LoginManagerContextMenu = {
     });
   },
 
-  loginSort(formHostPort, a, b) {
-    let maybeHostPortA = LoginHelper.maybeGetHostPortForURL(a.origin);
-    let maybeHostPortB = LoginHelper.maybeGetHostPortForURL(b.origin);
-
-    // Exact hostPort matches should appear first.
-    if (formHostPort == maybeHostPortA && formHostPort != maybeHostPortB) {
-      return -1;
-    }
-    if (formHostPort != maybeHostPortA && formHostPort == maybeHostPortB) {
-      return 1;
-    }
-
-    // Next sort by displayOrigin (which contains the httpRealm)
-    if (a.displayOrigin !== b.displayOrigin) {
-      return a.displayOrigin.localeCompare(b.displayOrigin);
-    }
-
-    // Finally sort by username within the displayOrigin.
-    return a.username.localeCompare(b.username);
-  },
-
   /**
-   * Find logins for the specified origin.
+   * Find logins for the specified origin..
    *
    * @param {string} formOrigin
    *        Origin of the logins we want to find that has be sanitized by `getLoginOrigin`.
    *        This isn't the same as the browser's top-level document URI
    *        when subframes are involved.
-   * @param {string} formActionOrigin
    *
    * @returns {nsILoginInfo[]} a login list
    */
-  _findLogins(formOrigin, formActionOrigin) {
+  _findLogins(formOrigin) {
     let searchParams = {
-      acceptDifferentSubdomains: LoginHelper.includeOtherSubdomainsInLookup,
-      formActionOrigin,
-      ignoreActionAndRealm: true,
+      origin: formOrigin,
+      schemeUpgrades: LoginHelper.schemeUpgrades,
     };
-
-    let logins = LoginManagerParent.searchAndDedupeLogins(
-      formOrigin,
-      searchParams
+    let logins = LoginHelper.searchLoginsWithObject(searchParams);
+    let resolveBy = ["scheme", "timePasswordChanged"];
+    logins = LoginHelper.dedupeLogins(
+      logins,
+      ["username", "password"],
+      resolveBy,
+      formOrigin
     );
 
-    let formHostPort = LoginHelper.maybeGetHostPortForURL(formOrigin);
-    logins.sort(this.loginSort.bind(null, formHostPort));
+    // Sort logins in alphabetical order and by date.
+    logins.sort((loginA, loginB) => {
+      // Sort alphabetically
+      let result = loginA.username.localeCompare(loginB.username);
+      if (result) {
+        // Forces empty logins to be at the end
+        if (!loginA.username) {
+          return 1;
+        }
+        if (!loginB.username) {
+          return -1;
+        }
+        return result;
+      }
+
+      // Same username logins are sorted by last change date
+      let metaA = loginA.QueryInterface(Ci.nsILoginMetaInfo);
+      let metaB = loginB.QueryInterface(Ci.nsILoginMetaInfo);
+      return metaB.timePasswordChanged - metaA.timePasswordChanged;
+    });
+
     return logins;
   },
 

@@ -458,15 +458,6 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   margin-inline-end: 0 !important;
 }
 
-#fill-login-popup > menucaption {
-  color: GrayText;
-  font-weight: normal;
-}
-
-#fill-login-popup > menucaption > .menu-iconic-left {
-  display: none;
-}
-
 .webextension-popup-browser,
 .webextension-popup-stack {
   border-radius: inherit;

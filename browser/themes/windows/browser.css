@@ -832,19 +832,6 @@ panel[touchmode] .PanelUI-subView #appMenu-zoom-controls > .subviewbutton-iconic
   margin-top: -4px;
 }
 
-#fill-login-popup > menucaption {
-  color: GrayText;
-}
-
-/* Match the treatment of menucaption used for <optgroup> */
-#fill-login-popup > menucaption > .menu-iconic-left {
-  display: none
-}
-
-#fill-login-popup > menucaption > .menu-iconic-text {
-  -moz-appearance: menuitemtext
-}
-
 %include browser-aero.css
 
 @media (-moz-os-version: windows-win7) {

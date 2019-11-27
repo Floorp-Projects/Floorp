@@ -801,12 +801,6 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   padding-right: 0;
 }
 
-#fill-login-popup > menucaption {
-  color: -moz-mac-menushadow;
-  font-weight: normal;
-  padding-inline-start: 11px;
-}
-
 .cui-widget-panelview[id^=PanelUI-webext-] {
   border-radius: 3.5px;
 }
