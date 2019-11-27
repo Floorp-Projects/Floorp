@@ -13752,6 +13752,35 @@
     "bug_numbers": [1341531],
     "description": "Time (ms) for the APZ handled wheel event to dispatch, but before handlers executing."
   },
+  "INTERMEDIATE_PRELOADING_ERRORS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["seceng-telemetry@mozilla.com", "jjones@mozilla.com", "dkeeler@mozilla.com"],
+    "expires_in_version": "80",
+    "kind": "categorical",
+    "labels": ["emptyAttachment",
+               "failedToDownloadMisc",
+               "failedToFetch",
+               "failedToObserve",
+               "failedToRemove",
+               "failedToUpdateNSS",
+               "failedToUpdateDB",
+               "unexpectedHash",
+               "unexpectedLength"],
+    "bug_numbers": [1519273, 1553550],
+    "description": "Errors occurred during intermediate certificate preloading."
+  },
+  "INTERMEDIATE_PRELOADING_UPDATE_TIME_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["seceng-telemetry@mozilla.com", "jjones@mozilla.com", "dkeeler@mozilla.com"],
+    "expires_in_version": "80",
+    "kind": "exponential",
+    "high": 180000,
+    "n_buckets": 50,
+    "bug_numbers": [1519273, 1553550],
+    "description": "Number of milliseconds to update the pre-loaded data, if updated."
+  },
   "IPC_SYNC_MESSAGE_MANAGER_LATENCY_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],

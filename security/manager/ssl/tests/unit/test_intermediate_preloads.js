@@ -15,6 +15,9 @@ const { RemoteSecuritySettings } = ChromeUtils.import(
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 const { X509 } = ChromeUtils.import("resource://gre/modules/psm/X509.jsm");
 
 const { IntermediatePreloadsClient } = RemoteSecuritySettings.init();
@@ -46,6 +49,22 @@ function getHashCommon(aStr, useBase64) {
 // Get a hexified SHA-256 hash of the given string.
 function getHash(aStr) {
   return hexify(getHashCommon(aStr, false));
+}
+
+function countTelemetryReports(histogram) {
+  let count = 0;
+  for (let x in histogram.values) {
+    count += histogram.values[x];
+  }
+  return count;
+}
+
+function clearTelemetry() {
+  Services.telemetry.getHistogramById("INTERMEDIATE_PRELOADING_ERRORS").clear();
+  Services.telemetry
+    .getHistogramById("INTERMEDIATE_PRELOADING_UPDATE_TIME_MS")
+    .clear();
+  Services.telemetry.clearScalars();
 }
 
 function getSubjectBytes(certDERString) {
@@ -202,10 +221,27 @@ add_task(
     const invalidHash =
       "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d";
 
+    clearTelemetry();
+
     const result = await syncAndDownload(["int.pem"], {
       hashFunc: () => invalidHash,
     });
     equal(result, "success", "Preloading update should have run");
+
+    let errors_histogram = Services.telemetry
+      .getHistogramById("INTERMEDIATE_PRELOADING_ERRORS")
+      .snapshot();
+
+    equal(
+      countTelemetryReports(errors_histogram),
+      1,
+      "There should be one error report"
+    );
+    equal(
+      errors_histogram.values[7],
+      1,
+      "There should be one invalid hash error"
+    );
 
     equal(
       (await locallyDownloaded()).length,
@@ -240,10 +276,27 @@ add_task(
   async function test_preload_invalid_length() {
     Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
 
+    clearTelemetry();
+
     const result = await syncAndDownload(["int.pem"], {
       lengthFunc: () => 42,
     });
     equal(result, "success", "Preloading update should have run");
+
+    let errors_histogram = Services.telemetry
+      .getHistogramById("INTERMEDIATE_PRELOADING_ERRORS")
+      .snapshot();
+
+    equal(
+      countTelemetryReports(errors_histogram),
+      1,
+      "There should be only one error report"
+    );
+    equal(
+      errors_histogram.values[8],
+      1,
+      "There should be one invalid length error"
+    );
 
     equal(
       (await locallyDownloaded()).length,
@@ -392,6 +445,8 @@ add_task(
       files.push(["int.pem", "int2.pem"][i % 2]);
     }
 
+    clearTelemetry();
+
     let result = await syncAndDownload(files);
     equal(result, "success", "Preloading update should have run");
 
@@ -399,6 +454,33 @@ add_task(
       (await locallyDownloaded()).length,
       100,
       "There should have been only 100 downloaded"
+    );
+
+    const scalars = TelemetryTestUtils.getProcessScalars("parent");
+    TelemetryTestUtils.assertScalar(
+      scalars,
+      "security.intermediate_preloading_num_preloaded",
+      100,
+      "Should have preloaded 100 certs"
+    );
+    TelemetryTestUtils.assertScalar(
+      scalars,
+      "security.intermediate_preloading_num_pending",
+      100,
+      "Should report 100 pending"
+    );
+
+    let time_histogram = Services.telemetry
+      .getHistogramById("INTERMEDIATE_PRELOADING_UPDATE_TIME_MS")
+      .snapshot();
+    let errors_histogram = Services.telemetry
+      .getHistogramById("INTERMEDIATE_PRELOADING_ERRORS")
+      .snapshot();
+    equal(countTelemetryReports(time_histogram), 1, "Should report time once");
+    equal(
+      countTelemetryReports(errors_histogram),
+      0,
+      "There should be no error reports"
     );
 
     // Re-run
