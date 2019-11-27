@@ -30,6 +30,7 @@ class nsAndroidNetworkLinkService
   void OnLinkUp() override;
   void OnLinkDown() override;
   void OnLinkStatusKnown() override;
+  void OnDnsSuffixListUpdated() override;
 
  private:
   virtual ~nsAndroidNetworkLinkService() = default;
