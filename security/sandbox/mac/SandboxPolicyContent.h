@@ -216,8 +216,8 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
   (allow file-read-data
       (literal "/Library/Preferences/.GlobalPreferences.plist")
       (home-literal "/Library/Preferences/.GlobalPreferences.plist")
-      (home-regex #"/Library/Preferences/ByHost/\.GlobalPreferences.*"))
-      (home-literal "/Library/Preferences/com.apple.universalaccess.plist")
+      (home-regex #"/Library/Preferences/ByHost/\.GlobalPreferences.*")
+      (home-literal "/Library/Preferences/com.apple.universalaccess.plist"))
   (allow mach-lookup
       (global-name "com.apple.cfprefsd.agent")
       (global-name "com.apple.cfprefsd.daemon"))
