@@ -22,7 +22,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/ParentSHistory.h"
 #include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/layers/LayersTypes.h"
@@ -346,8 +345,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   mozilla::dom::Element* GetOwnerContent() { return mOwnerContent; }
 
-  mozilla::dom::ParentSHistory* GetParentSHistory() { return mParentSHistory; }
-
   /**
    * Tell this FrameLoader to use a particular remote browser.
    *
@@ -507,8 +504,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   // Holds the last known size of the frame.
   mozilla::ScreenIntSize mLazySize;
-
-  RefPtr<mozilla::dom::ParentSHistory> mParentSHistory;
 
   RefPtr<mozilla::dom::TabListener> mSessionStoreListener;
 

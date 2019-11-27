@@ -41,12 +41,6 @@ interface FrameLoader {
   readonly attribute BrowsingContext? browsingContext;
 
   /**
-   * Get the ParentSHistory for the nsFrameLoader. May return null if this
-   * frameloader is not for a toplevel frame.
-   */
-  readonly attribute ParentSHistory? parentSHistory;
-
-  /**
    * Find out whether the loader's frame is at too great a depth in
    * the frame tree.  This can be used to decide what operations may
    * or may not be allowed on the loader's docshell.
