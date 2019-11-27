@@ -5,7 +5,8 @@
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools" android:id="@+id/no_content_wrapper"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/no_content_wrapper"
         android:background="@drawable/empty_session_control_background"
         android:layout_marginBottom="12dp"
         android:padding="16dp"
@@ -32,6 +33,7 @@
             tools:text="@tools:sample/lorem"
             android:textColor="?primaryText"
             android:textSize="14sp"
-            android:textStyle="normal" />
+            android:textStyle="normal"
+            android:textAlignment="viewStart"/>
 
 </LinearLayout>
