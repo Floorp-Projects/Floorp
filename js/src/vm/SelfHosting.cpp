@@ -2586,6 +2586,9 @@ GlobalObject* JSRuntime::createSelfHostingGlobal(JSContext* cx) {
 
   JS::RealmOptions options;
   options.creationOptions().setNewCompartmentAndZone();
+  // Debugging the selfHosted zone is not supported because CCWs are not
+  // allowed in that zone.
+  options.creationOptions().setInvisibleToDebugger(true);
   options.behaviors().setDiscardSource(true);
 
   Realm* realm = NewRealm(cx, nullptr, options);
