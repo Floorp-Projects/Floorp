@@ -6,4 +6,5 @@
 
 DIRS += [
 	'object-inspector',
+	'reps',
 ]

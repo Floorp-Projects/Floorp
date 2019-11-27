@@ -26,5 +26,7 @@ module.exports = {
   transformIgnorePatterns: ["node_modules/(?!devtools-)"],
   moduleNameMapper: {
     "\\.css$": "<rootDir>/../../../src/test/__mocks__/styleMock.js",
+    // Map all require("devtools/...") to the real devtools root.
+    "^devtools\\/(.*)": `${__dirname}/../../../../$1`,
   },
 };

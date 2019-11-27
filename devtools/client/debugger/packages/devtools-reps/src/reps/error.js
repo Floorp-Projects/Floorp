@@ -3,15 +3,15 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // ReactJS
-const PropTypes = require("prop-types");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { span } = require("devtools/client/shared/vendor/react-dom-factories");
+
 // Utils
 const { getGripType, isGrip, wrapRender } = require("./rep-utils");
 const { cleanFunctionName } = require("./function");
 const { isLongString } = require("./string");
 const { MODE } = require("./constants");
 
-const dom = require("react-dom-factories");
-const { span } = dom;
 const IGNORED_SOURCE_URLS = ["debugger eval code"];
 
 /**
