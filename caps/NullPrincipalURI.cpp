@@ -21,25 +21,19 @@ using namespace mozilla;
 ////////////////////////////////////////////////////////////////////////////////
 //// NullPrincipalURI
 
-NullPrincipalURI::NullPrincipalURI() {}
+NullPrincipalURI::NullPrincipalURI() {
+  GkRustUtils::GenerateUUID(mPath);
+  MOZ_ASSERT(mPath.Length() == NSID_LENGTH - 1);
+  MOZ_ASSERT(strlen(mPath.get()) == NSID_LENGTH - 1);
+}
 
 NullPrincipalURI::NullPrincipalURI(const NullPrincipalURI& aOther) {
   mPath.Assign(aOther.mPath);
 }
 
-nsresult NullPrincipalURI::Init() {
-  GkRustUtils::GenerateUUID(mPath);
-  MOZ_ASSERT(mPath.Length() == NSID_LENGTH - 1);
-  MOZ_ASSERT(strlen(mPath.get()) == NSID_LENGTH - 1);
-
-  return NS_OK;
-}
-
 /* static */
 already_AddRefed<NullPrincipalURI> NullPrincipalURI::Create() {
   RefPtr<NullPrincipalURI> uri = new NullPrincipalURI();
-  nsresult rv = uri->Init();
-  NS_ENSURE_SUCCESS(rv, nullptr);
   return uri.forget();
 }
 
@@ -299,10 +293,6 @@ bool NullPrincipalURI::Deserialize(const mozilla::ipc::URIParams& aParams) {
     MOZ_ASSERT_UNREACHABLE("unexpected URIParams type");
     return false;
   }
-
-  nsresult rv = Init();
-  NS_ENSURE_SUCCESS(rv, false);
-
   return true;
 }
 

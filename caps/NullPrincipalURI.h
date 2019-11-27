@@ -50,8 +50,6 @@ class NullPrincipalURI final : public nsIURI, public nsISizeOf {
 
   ~NullPrincipalURI() {}
 
-  nsresult Init();
-
   nsAutoCStringN<NSID_LENGTH> mPath;
 
   nsresult Clone(nsIURI** aURI);
