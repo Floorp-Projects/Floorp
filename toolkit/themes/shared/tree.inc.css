@@ -200,6 +200,7 @@ html|input.tree-input {
   margin: 0;
   margin-inline-start: -4px;
   padding: 1px;
+  font: inherit;
 }
 
 .scrollbar-topmost {
