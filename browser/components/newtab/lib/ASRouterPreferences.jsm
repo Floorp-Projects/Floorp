@@ -13,17 +13,6 @@ const PROVIDER_PREF_BRANCH =
 const DEVTOOLS_PREF =
   "browser.newtabpage.activity-stream.asrouter.devtoolsEnabled";
 const FXA_USERNAME_PREF = "services.sync.username";
-const FIRST_RUN_PREF = "trailhead.firstrun.branches";
-const DEFAULT_FIRSTRUN_TRIPLET = "supercharge";
-const DEFAULT_FIRSTRUN_INTERRUPT = "join";
-
-function getTrailheadConfigFromPref(value) {
-  let [interrupt, triplet] = value.split("-");
-  return {
-    trailheadInterrupt: interrupt || DEFAULT_FIRSTRUN_INTERRUPT,
-    trailheadTriplet: triplet || DEFAULT_FIRSTRUN_TRIPLET,
-  };
-}
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
@@ -31,15 +20,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.messaging-system.personalized-cfr.scores",
   "{}"
 );
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "trailheadPrefs",
-  FIRST_RUN_PREF,
-  "",
-  null,
-  getTrailheadConfigFromPref
-);
-
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "personalizedCfrThreshold",
@@ -103,11 +83,6 @@ class _ASRouterPreferences {
       }
       return filtered;
     }, []);
-  }
-
-  // istanbul ignore next
-  get trailhead() {
-    return trailheadPrefs;
   }
 
   get providers() {
@@ -248,12 +223,10 @@ this._ASRouterPreferences = _ASRouterPreferences;
 this.ASRouterPreferences = new _ASRouterPreferences();
 this.TEST_PROVIDERS = TEST_PROVIDERS;
 this.TARGETING_PREFERENCES = TARGETING_PREFERENCES;
-this.getTrailheadConfigFromPref = getTrailheadConfigFromPref;
 
 const EXPORTED_SYMBOLS = [
   "_ASRouterPreferences",
   "ASRouterPreferences",
   "TEST_PROVIDERS",
   "TARGETING_PREFERENCES",
-  "getTrailheadConfigFromPref",
 ];
