@@ -25997,6 +25997,12 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromTypedStatement(
     }
   }
 
+  // CAUTION: It is important that only the part of the function above this
+  // comment may fail, and modifications to the data structure (in particular
+  // mResponse and mFiles) may only be made below. This is necessary to allow to
+  // discard entries that were attempted to be preloaded without causing an
+  // inconsistent state.
+
   if (aInitializeResponse) {
     mResponse = std::remove_reference_t<decltype(
         cursorTypeTraits.GetTypedResponse(&mResponse))>{};
@@ -26075,13 +26081,21 @@ nsresult Cursor::CursorOpBase::PopulateExtraResponses(
       break;
     }
 
-    // TODO: Similar to the call to ExecuteStep above, it would be better not to
-    // fail here. However, this would require the equivalent of the strong
-    // exception guarantee of PopulateResponseFromStatement, which it does not
-    // provide right now.
+    // PopulateResponseFromStatement does not modify the data in case of
+    // failure, so we can just use the results already populated, and discard
+    // any remaining entries, and signal overall success. Probably, future
+    // attempts to access the same entry will fail as well, but it might never
+    // be accessed by the application.
     rv = PopulateResponseFromStatement(aStmt, false, aOptPreviousSortKey);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      // TODO: Maybe disable preloading for this cursor? The problem will
+      // probably reoccur on the next attempt, and disabling preloading will
+      // reduce latency. However, if some problematic entry will be skipped
+      // over, after that it might be fine again. To judge this, the causes for
+      // such failures would need to be analyzed more thoroughly. Since this
+      // seems to be rare, maybe no further action is necessary at all.
+
+      break;
     }
 
     // TODO: Do not count entries skipped for unique cursors.
