@@ -411,14 +411,13 @@ var Sanitizer = {
           )) {
             let currentDocument = currentWindow.document;
 
-            // searchBar may not exist if it's in the customize mode.
+            // searchBar.textbox may not exist due to the search bar binding
+            // not having been constructed yet if the search bar is in the
+            // overflow or menu panel. It won't have a value or edit history in
+            // that case.
             let searchBar = currentDocument.getElementById("searchbar");
-            if (searchBar) {
-              let input = searchBar.textbox;
-              input.value = "";
-              try {
-                input.editor.transactionManager.clear();
-              } catch (e) {}
+            if (searchBar && searchBar.textbox) {
+              searchBar.textbox.reset();
             }
 
             let tabBrowser = currentWindow.gBrowser;
