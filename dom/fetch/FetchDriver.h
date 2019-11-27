@@ -184,7 +184,7 @@ class FetchDriver final : public nsIStreamListener,
 
   void SetRequestHeaders(nsIHttpChannel* aChannel) const;
 
-  nsresult FinishOnStopRequest(AlternativeDataStreamListener* aAltDataListener);
+  void FinishOnStopRequest(AlternativeDataStreamListener* aAltDataListener);
 };
 
 }  // namespace dom
