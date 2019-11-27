@@ -13066,19 +13066,30 @@ void CodeGenerator::visitIsObjectAndBranch(LIsObjectAndBranch* ins) {
 }
 
 void CodeGenerator::visitIsNullOrUndefined(LIsNullOrUndefined* ins) {
+  MDefinition* input = ins->mir()->value();
   Register output = ToRegister(ins->output());
   ValueOperand value = ToValue(ins, LIsNullOrUndefined::Input);
 
-  Label isNotNull, done;
-  masm.branchTestNull(Assembler::NotEqual, value, &isNotNull);
+  if (input->mightBeType(MIRType::Null)) {
+    if (input->mightBeType(MIRType::Undefined)) {
+      Label isNotNull, done;
+      masm.branchTestNull(Assembler::NotEqual, value, &isNotNull);
 
-  masm.move32(Imm32(1), output);
-  masm.jump(&done);
+      masm.move32(Imm32(1), output);
+      masm.jump(&done);
 
-  masm.bind(&isNotNull);
-  masm.testUndefinedSet(Assembler::Equal, value, output);
+      masm.bind(&isNotNull);
+      masm.testUndefinedSet(Assembler::Equal, value, output);
 
-  masm.bind(&done);
+      masm.bind(&done);
+    } else {
+      masm.testNullSet(Assembler::Equal, value, output);
+    }
+  } else if (input->mightBeType(MIRType::Undefined)) {
+    masm.testUndefinedSet(Assembler::Equal, value, output);
+  } else {
+    masm.move32(Imm32(0), output);
+  }
 }
 
 void CodeGenerator::loadOutermostJSScript(Register reg) {
