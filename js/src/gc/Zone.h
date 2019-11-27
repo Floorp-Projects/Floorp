@@ -624,13 +624,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   // Delete an empty compartment after its contents have been merged.
   void deleteEmptyCompartment(JS::Compartment* comp);
 
-  // Non-zero if the storage underlying any typed object in this zone might
-  // be detached. This is stored in Zone because IC stubs bake in a pointer
-  // to this field and Baseline IC code is shared across realms within a
-  // Zone. Furthermore, it's not entirely clear if this flag is ever set to
-  // a non-zero value since bug 1458011.
-  uint32_t detachedTypedObjects = 0;
-
   void finishRoots();
 
  private:

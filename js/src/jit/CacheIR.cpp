@@ -1676,10 +1676,6 @@ AttachDecision GetPropIRGenerator::tryAttachTypedObject(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  if (cx_->zone()->detachedTypedObjects) {
-    return AttachDecision::NoAction;
-  }
-
   TypedObject* typedObj = &obj->as<TypedObject>();
   if (!typedObj->typeDescr().is<StructTypeDescr>()) {
     return AttachDecision::NoAction;
@@ -1702,7 +1698,6 @@ AttachDecision GetPropIRGenerator::tryAttachTypedObject(HandleObject obj,
   uint32_t typeDescr = SimpleTypeDescrKey(&fieldDescr->as<SimpleTypeDescr>());
 
   maybeEmitIdGuard(id);
-  writer.guardNoDetachedTypedObjects();
   writer.guardGroupForLayout(objId, obj->group());
   writer.loadTypedObjectResult(objId, fieldOffset, layout, typeDescr);
 
@@ -2262,16 +2257,9 @@ AttachDecision GetPropIRGenerator::tryAttachTypedElement(
     return AttachDecision::NoAction;
   }
 
-  // Don't attach typed object stubs if the underlying storage could be
-  // detached, as the stub will always bail out.
-  if (IsPrimitiveArrayTypedObject(obj) && cx_->zone()->detachedTypedObjects) {
-    return AttachDecision::NoAction;
-  }
-
   TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
 
   if (IsPrimitiveArrayTypedObject(obj)) {
-    writer.guardNoDetachedTypedObjects();
     writer.guardGroupForLayout(objId, obj->group());
   } else {
     writer.guardShapeForClass(objId, obj->as<TypedArrayObject>().shape());
@@ -3458,10 +3446,6 @@ AttachDecision SetPropIRGenerator::tryAttachTypedObjectProperty(
     return AttachDecision::NoAction;
   }
 
-  if (cx_->zone()->detachedTypedObjects) {
-    return AttachDecision::NoAction;
-  }
-
   if (!obj->as<TypedObject>().typeDescr().is<StructTypeDescr>()) {
     return AttachDecision::NoAction;
   }
@@ -3491,7 +3475,6 @@ AttachDecision SetPropIRGenerator::tryAttachTypedObjectProperty(
   TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
 
   maybeEmitIdGuard(id);
-  writer.guardNoDetachedTypedObjects();
   writer.guardGroupForLayout(objId, obj->group());
 
   typeCheckInfo_.set(obj->group(), id);
@@ -3984,12 +3967,6 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedElement(
     if (index >= obj->as<TypedObject>().length()) {
       return AttachDecision::NoAction;
     }
-
-    // Don't attach stubs if the underlying storage for typed objects
-    // in the zone could be detached, as the stub will always bail out.
-    if (cx_->zone()->detachedTypedObjects) {
-      return AttachDecision::NoAction;
-    }
   }
 
   Scalar::Type elementType = TypedThingElementType(obj);
@@ -4007,7 +3984,6 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedElement(
   }
 
   if (IsPrimitiveArrayTypedObject(obj)) {
-    writer.guardNoDetachedTypedObjects();
     writer.guardGroupForLayout(objId, obj->group());
   } else {
     writer.guardShapeForClass(objId, obj->as<TypedArrayObject>().shape());

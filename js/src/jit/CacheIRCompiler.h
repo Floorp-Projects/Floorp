@@ -51,7 +51,6 @@ class IonCacheIRCompiler;
   _(GuardNotDOMProxy)                     \
   _(GuardSpecificInt32Immediate)          \
   _(GuardMagicValue)                      \
-  _(GuardNoDetachedTypedObjects)          \
   _(GuardNoDenseElements)                 \
   _(GuardAndGetNumberFromString)          \
   _(GuardAndGetNumberFromBoolean)         \

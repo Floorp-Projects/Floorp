@@ -238,7 +238,6 @@ extern const uint32_t ArgLengths[];
   _(GuardSpecificSymbol, Id, Field)                                            \
   _(GuardSpecificInt32Immediate, Id, Int32, Byte)                              \
   _(GuardSpecificNativeFunction, Id, Word)                                     \
-  _(GuardNoDetachedTypedObjects, None)                                         \
   _(GuardMagicValue, Id, Byte)                                                 \
   _(GuardFrameHasNoArgumentsObject, None)                                      \
   _(GuardNoDenseElements, Id)                                                  \
@@ -1105,10 +1104,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 
   void guardIsExtensible(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::GuardIsExtensible, obj);
-  }
-
-  void guardNoDetachedTypedObjects() {
-    writeOp(CacheOp::GuardNoDetachedTypedObjects);
   }
 
   void guardFrameHasNoArgumentsObject() {
