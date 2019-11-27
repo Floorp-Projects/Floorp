@@ -21,7 +21,8 @@ class nsProfilerStartParams : public nsIProfilerStartParams {
   nsProfilerStartParams(uint32_t aEntries,
                         const mozilla::Maybe<double>& aDuration,
                         double aInterval, uint32_t aFeatures,
-                        nsTArray<nsCString>&& aFilters);
+                        nsTArray<nsCString>&& aFilters,
+                        uint64_t aActiveBrowsingContextID);
 
  private:
   virtual ~nsProfilerStartParams();
@@ -30,6 +31,7 @@ class nsProfilerStartParams : public nsIProfilerStartParams {
   double mInterval;
   uint32_t mFeatures;
   nsTArray<nsCString> mFilters;
+  uint64_t mActiveBrowsingContextID;
 };
 
 #endif
