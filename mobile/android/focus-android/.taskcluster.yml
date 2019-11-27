@@ -17,7 +17,7 @@ tasks:
       deadline: {$fromNow: '2 hours'}
       schedulerId: taskcluster-github
       provisionerId: mobile-1
-      workerType: b-linux
+      workerType: b-linux   # We don't use decision because PRs just schedule a single task
       scopes: []
       routes: []
       payload:
@@ -69,7 +69,7 @@ tasks:
         deadline: {$fromNow: '2 hours'}
         schedulerId: taskcluster-github
         provisionerId: mobile-3
-        workerType: b-linux
+        workerType: decision
         routes:
           - 'notify.irc-channel.#android-ci.on-any'
         scopes:
@@ -134,7 +134,7 @@ tasks:
         expires: ${expires_in}
         schedulerId: ${scheduler_id}   # Must be explicit because of Chain of Trust
         provisionerId: mobile-3
-        workerType: b-linux
+        workerType: decision
         requires: all-completed   # Must be explicit because of Chain of Trust
         priority: highest
         retries: 5
@@ -209,7 +209,7 @@ tasks:
         expires: ${expires_in}
         schedulerId: ${scheduler_id}    # Must be explicit because of Chain of Trust
         provisionerId: mobile-3
-        workerType: b-linux
+        workerType: decision
         requires: all-completed   # Must be explicit because of Chain of Trust
         priority: medium
         retries: 5
