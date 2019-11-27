@@ -73,19 +73,13 @@ class OffTheBooksCondVar : BlockingResourceBase {
    * Notify
    * @see prcvar.h
    **/
-  nsresult Notify() {
-    mImpl.notify_one();
-    return NS_OK;
-  }
+  void Notify() { mImpl.notify_one(); }
 
   /**
    * NotifyAll
    * @see prcvar.h
    **/
-  nsresult NotifyAll() {
-    mImpl.notify_all();
-    return NS_OK;
-  }
+  void NotifyAll() { mImpl.notify_all(); }
 
 #ifdef DEBUG
   /**
