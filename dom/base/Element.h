@@ -1365,8 +1365,8 @@ class Element : public FragmentOrElement {
    * @param aValue the JS to attach
    * @param aDefer indicates if deferred execution is allowed
    */
-  nsresult SetEventHandler(nsAtom* aEventName, const nsAString& aValue,
-                           bool aDefer = true);
+  void SetEventHandler(nsAtom* aEventName, const nsAString& aValue,
+                       bool aDefer = true);
 
   /**
    * Do whatever needs to be done when the mouse leaves a link

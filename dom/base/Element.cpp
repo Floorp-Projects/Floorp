@@ -2021,13 +2021,13 @@ nsresult Element::LeaveLink(nsPresContext* aPresContext) {
   return nsDocShell::Cast(shell)->OnLeaveLink();
 }
 
-nsresult Element::SetEventHandler(nsAtom* aEventName, const nsAString& aValue,
-                                  bool aDefer) {
+void Element::SetEventHandler(nsAtom* aEventName, const nsAString& aValue,
+                              bool aDefer) {
   Document* ownerDoc = OwnerDoc();
   if (ownerDoc->IsLoadedAsData()) {
     // Make this a no-op rather than throwing an error to avoid
     // the error causing problems setting the attribute.
-    return NS_OK;
+    return;
   }
 
   MOZ_ASSERT(aEventName, "Must have event name!");
@@ -2035,13 +2035,12 @@ nsresult Element::SetEventHandler(nsAtom* aEventName, const nsAString& aValue,
   EventListenerManager* manager =
       GetEventListenerManagerForAttr(aEventName, &defer);
   if (!manager) {
-    return NS_OK;
+    return;
   }
 
   defer = defer && aDefer;  // only defer if everyone agrees...
   manager->SetEventHandler(aEventName, aValue, defer,
                            !nsContentUtils::IsChromeDoc(ownerDoc), this);
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------

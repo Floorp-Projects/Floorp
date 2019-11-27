@@ -286,9 +286,7 @@ nsresult SVGElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
   if (IsEventAttributeName(aName) && aValue) {
     MOZ_ASSERT(aValue->Type() == nsAttrValue::eString,
                "Expected string value for script body");
-    nsresult rv =
-        SetEventHandler(GetEventNameForAttr(aName), aValue->GetStringValue());
-    NS_ENSURE_SUCCESS(rv, rv);
+    SetEventHandler(GetEventNameForAttr(aName), aValue->GetStringValue());
   }
 
   return SVGElementBase::AfterSetAttr(aNamespaceID, aName, aValue, aOldValue,
