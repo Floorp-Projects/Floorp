@@ -79,9 +79,7 @@ function TypedObjectGetDerivedIf(descr, typedObj, offset, cond) {
 function TypedObjectGetOpaque(descr, typedObj, offset) {
   assert(!TypeDescrIsSimpleType(descr),
          "getDerived() used with simple type");
-  var opaqueTypedObj = NewOpaqueTypedObject(descr);
-  AttachTypedObject(opaqueTypedObj, typedObj, offset | 0);
-  return opaqueTypedObj;
+  return NewOpaqueTypedObject(descr, typedObj, offset | 0);
 }
 
 function TypedObjectGetOpaqueIf(descr, typedObj, offset, cond) {

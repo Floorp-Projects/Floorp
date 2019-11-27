@@ -688,6 +688,10 @@ class OutlineTypedObject : public TypedObject {
                                            Handle<TypedObject*> typedContents,
                                            uint32_t offset);
 
+  static OutlineTypedObject* createOpaque(JSContext* cx, HandleTypeDescr descr,
+                                          Handle<TypedObject*> target,
+                                          uint32_t offset);
+
   // Use this method when `buffer` is the owner of the memory.
   void attach(JSContext* cx, ArrayBufferObject& buffer, uint32_t offset);
 
@@ -770,9 +774,11 @@ class InlineOpaqueTypedObject : public InlineTypedObject {
 };
 
 /*
- * Usage: NewOpaqueTypedObject(typeObj)
+ * Usage: NewOpaqueTypedObject(typeObj, newDatum, newOffset)
  *
- * Constructs a new, unattached instance of `Handle`.
+ * Constructs a new, unattached instance of `Handle`, and then moves the new
+ * instance to point at the memory referenced by `newDatum` with the offset
+ * `newOffset`.
  */
 MOZ_MUST_USE bool NewOpaqueTypedObject(JSContext* cx, unsigned argc, Value* vp);
 
@@ -783,14 +789,6 @@ MOZ_MUST_USE bool NewOpaqueTypedObject(JSContext* cx, unsigned argc, Value* vp);
  */
 MOZ_MUST_USE bool NewDerivedTypedObject(JSContext* cx, unsigned argc,
                                         Value* vp);
-
-/*
- * Usage: AttachTypedObject(typedObj, newDatum, newOffset)
- *
- * Moves `typedObj` to point at the memory referenced by `newDatum` with
- * the offset `newOffset`.
- */
-MOZ_MUST_USE bool AttachTypedObject(JSContext* cx, unsigned argc, Value* vp);
 
 /*
  * Usage: ObjectIsTypeDescr(obj)
