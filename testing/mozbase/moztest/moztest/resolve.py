@@ -8,6 +8,9 @@ import fnmatch
 import os
 import pickle
 import sys
+
+import six
+
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 
@@ -350,8 +353,8 @@ def rewrite_test_base(test, new_base, honor_install_to_subdir=False):
     return test
 
 
+@six.add_metaclass(ABCMeta)
 class TestLoader(MozbuildObject):
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def __call__(self):
@@ -391,7 +394,7 @@ class BuildBackendLoader(TestLoader):
         with open(test_defaults, 'rb') as fh:
             defaults = pickle.load(fh)
 
-        for path, tests in test_data.items():
+        for path, tests in six.iteritems(test_data):
             for metadata in tests:
                 defaults_manifests = [metadata['manifest']]
 
@@ -416,8 +419,12 @@ class TestManifestLoader(TestLoader):
         super(TestManifestLoader, self).__init__(*args, **kwargs)
         self.finder = FileFinder(self.topsrcdir)
         self.reader = self.mozbuild_reader(config_mode="empty")
-        self.variables = {'{}_MANIFESTS'.format(k): v[0] for k, v in TEST_MANIFESTS.items()}
-        self.variables.update({'{}_MANIFESTS'.format(f.upper()): f for f in REFTEST_FLAVORS})
+        self.variables = {
+            '{}_MANIFESTS'.format(k): v[0] for k, v in six.iteritems(TEST_MANIFESTS)
+        }
+        self.variables.update({
+            '{}_MANIFESTS'.format(f.upper()): f for f in REFTEST_FLAVORS
+        })
 
     def _load_manifestparser_manifest(self, mpath):
         mp = TestManifest(manifests=[mpath], strict=True, rootdir=self.topsrcdir,
@@ -648,7 +655,7 @@ class TestResolver(MozbuildObject):
             print("Loading wpt manifest failed")
             return
 
-        for manifest, data in manifests.iteritems():
+        for manifest, data in six.iteritems(manifests):
             tests_root = data["tests_path"]
             for test_type, path, tests in manifest:
                 full_path = os.path.join(tests_root, path)
@@ -747,7 +754,7 @@ class TestResolver(MozbuildObject):
             reader = self.mozbuild_reader(config_mode='empty')
             files_info = reader.files_info(changed_files)
 
-            for path, info in files_info.items():
+            for path, info in six.iteritems(files_info):
                 paths |= info.test_files
                 tags |= info.test_tags
                 flavors |= info.test_flavors
@@ -773,7 +780,7 @@ class TestResolver(MozbuildObject):
                 run_suites.add(entry)
                 continue
             suitefound = False
-            for suite, v in TEST_SUITES.items():
+            for suite, v in six.iteritems(TEST_SUITES):
                 if entry.lower() in v.get('aliases', []):
                     run_suites.add(suite)
                     suitefound = True
