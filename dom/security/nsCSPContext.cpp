@@ -1530,8 +1530,6 @@ nsresult nsCSPContext::AsyncReportViolation(
 NS_IMETHODIMP
 nsCSPContext::PermitsAncestry(nsILoadInfo* aLoadInfo,
                               bool* outPermitsAncestry) {
-  MOZ_ASSERT(XRE_IsParentProcess(), "frame-ancestor check only in parent");
-
   nsresult rv;
 
   *outPermitsAncestry = true;
@@ -1544,26 +1542,35 @@ nsCSPContext::PermitsAncestry(nsILoadInfo* aLoadInfo,
   nsCOMPtr<nsIURI> uriClone;
 
   while (ctx) {
-    WindowGlobalParent* window = ctx->Canonical()->GetCurrentWindowGlobal();
-    if (window) {
-      nsCOMPtr<nsIURI> currentURI = window->GetDocumentURI();
-      if (currentURI) {
-        nsAutoCString spec;
-        currentURI->GetSpec(spec);
-        // delete the userpass from the URI.
-        rv = NS_MutateURI(currentURI)
-                 .SetRef(EmptyCString())
-                 .SetUserPass(EmptyCString())
-                 .Finalize(uriClone);
-
-        // If setUserPass fails for some reason, just return a clone of the
-        // current URI
-        if (NS_FAILED(rv)) {
-          rv = NS_GetURIWithoutRef(currentURI, getter_AddRefs(uriClone));
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-        ancestorsArray.AppendElement(uriClone);
+    nsCOMPtr<nsIURI> currentURI;
+    // If fission is enabled, then permitsAncestry is called in the parent
+    // process, otherwise in the content process. After Bug 1574372 we should
+    // be able to remove that branching code for querying currentURI.
+    if (XRE_IsParentProcess()) {
+      WindowGlobalParent* window = ctx->Canonical()->GetCurrentWindowGlobal();
+      if (window) {
+        currentURI = window->GetDocumentURI();
       }
+    } else if (nsPIDOMWindowOuter* windowOuter = ctx->GetDOMWindow()) {
+      currentURI = windowOuter->GetDocumentURI();
+    }
+
+    if (currentURI) {
+      nsAutoCString spec;
+      currentURI->GetSpec(spec);
+      // delete the userpass from the URI.
+      rv = NS_MutateURI(currentURI)
+               .SetRef(EmptyCString())
+               .SetUserPass(EmptyCString())
+               .Finalize(uriClone);
+
+      // If setUserPass fails for some reason, just return a clone of the
+      // current URI
+      if (NS_FAILED(rv)) {
+        rv = NS_GetURIWithoutRef(currentURI, getter_AddRefs(uriClone));
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      ancestorsArray.AppendElement(uriClone);
     }
     ctx = ctx->GetParent();
   }

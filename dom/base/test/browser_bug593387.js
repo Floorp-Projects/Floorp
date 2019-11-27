@@ -49,54 +49,68 @@ add_task(async function test() {
 
       // ---------------------------------------------------
       // Test 2: Try the same with a content top-level context)
-      var observerDeferred = {};
-      observerDeferred.promise = new Promise(resolve => {
-        observerDeferred.resolve = resolve;
-      });
-
-      // X-Frame-Options checks happen in the parent, hence we have to
-      // proxy the csp violation notifications.
-      SpecialPowers.registerObservers("xfo-on-violate-policy");
-
-      function examiner() {
-        SpecialPowers.addObserver(this, "specialpowers-xfo-on-violate-policy");
-      }
-      examiner.prototype = {
-        observe(subject, topic, data) {
-          var asciiSpec = SpecialPowers.getPrivilegedProps(
-            SpecialPowers.do_QueryInterface(subject, "nsIURI"),
-            "asciiSpec"
-          );
-          is(
-            asciiSpec,
-            "http://mochi.test:8888/browser/dom/base/test/file_x-frame-options_page.sjs?testid=deny&xfo=deny",
-            "correct subject"
-          );
-          is(topic, "specialpowers-xfo-on-violate-policy", "correct topic");
-          is(data, "DENY", "correct data");
-
-          myExaminer.remove();
-          observerDeferred.resolve();
-        },
-        remove() {
-          SpecialPowers.removeObserver(
-            this,
-            "specialpowers-xfo-on-violate-policy"
-          );
-        },
-      };
-      let myExaminer = new examiner();
 
       await BrowserTestUtils.loadURI(newBrowser, "http://example.com/");
       await BrowserTestUtils.browserLoaded(newBrowser);
 
-      await ContentTask.spawn(newBrowser, null, function() {
-        var frame = content.document.createElement("iframe");
-        frame.src =
-          "http://mochi.test:8888/browser/dom/base/test/file_x-frame-options_page.sjs?testid=deny&xfo=deny";
-        content.document.body.appendChild(frame);
-      });
-      await observerDeferred.promise;
+      let observerData = await SpecialPowers.spawn(
+        newBrowser,
+        [],
+        async function() {
+          var observerDeferred = {};
+          observerDeferred.promise = new Promise(resolve => {
+            observerDeferred.resolve = resolve;
+          });
+
+          // X-Frame-Options checks happen in the parent, hence we have to
+          // proxy the csp violation notifications.
+          SpecialPowers.registerObservers("xfo-on-violate-policy");
+
+          function examiner() {
+            // Depending on whether xfo checks are performed in the parent
+            // or in the content process we have to use the specialpowers version
+            // for observing XFO violations. After Bug 1574372 we should be able
+            // to remove the "xfo-on-violate-policy" here.
+            SpecialPowers.addObserver(
+              this,
+              "specialpowers-xfo-on-violate-policy"
+            );
+            SpecialPowers.addObserver(this, "xfo-on-violate-policy");
+          }
+          examiner.prototype = {
+            observe(subject, topic, data) {
+              var asciiSpec = SpecialPowers.getPrivilegedProps(
+                SpecialPowers.do_QueryInterface(subject, "nsIURI"),
+                "asciiSpec"
+              );
+
+              myExaminer.remove();
+              observerDeferred.resolve({ asciiSpec, topic, data });
+            },
+            remove() {
+              SpecialPowers.removeObserver(
+                this,
+                "specialpowers-xfo-on-violate-policy"
+              );
+              SpecialPowers.removeObserver(this, "xfo-on-violate-policy");
+            },
+          };
+          let myExaminer = new examiner();
+
+          var frame = content.document.createElement("iframe");
+          frame.src =
+            "http://mochi.test:8888/browser/dom/base/test/file_x-frame-options_page.sjs?testid=deny&xfo=deny";
+          content.document.body.appendChild(frame);
+          return observerDeferred.promise;
+        }
+      );
+      is(
+        observerData.asciiSpec,
+        "http://mochi.test:8888/browser/dom/base/test/file_x-frame-options_page.sjs?testid=deny&xfo=deny",
+        "correct subject"
+      );
+      ok(observerData.topic.endsWith("xfo-on-violate-policy"), "correct topic");
+      is(observerData.data, "DENY", "correct data");
     }
   );
 });

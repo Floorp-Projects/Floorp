@@ -9,6 +9,7 @@
 #include "nsContentSecurityUtils.h"
 #include "mozilla/dom/FramingChecker.h"
 #include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/StaticPrefs_fission.h"
 
 #include "nsIMultiPartChannel.h"
 #include "nsIObserverService.h"
@@ -84,19 +85,29 @@ DOMSecurityManager::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  nsresult rv =
-      ParseCSPAndEnforceFrameAncestorCheck(channel, getter_AddRefs(csp));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // X-Frame-Options needs to be enforced after CSP frame-ancestors
-  // checks because if frame-ancestors is present, then x-frame-options
-  // will be discarded
-  rv = EnforeXFrameOptionsCheck(channel, csp);
-  if (NS_FAILED(rv)) {
-    return rv;
+  // Bug 1574372: Download should be fully done in the parent process.
+  // Unfortunately we currently can not determine whether a load will
+  // result in a download in the parent process. Hence, if running in
+  // fission-mode, then we will enforce the security checks for
+  // frame-ancestors and x-frame-options here in the parent using some
+  // additional carveouts for downloads but if we run in
+  // non-fission-mode then we do those two security checks within
+  // Document::StartDocumentLoad in the content process.
+  bool fissionEnabled = StaticPrefs::fission_autostart();
+  if (fissionEnabled) {
+    nsCOMPtr<nsIContentSecurityPolicy> csp;
+    nsresult rv =
+        ParseCSPAndEnforceFrameAncestorCheck(channel, getter_AddRefs(csp));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    // X-Frame-Options needs to be enforced after CSP frame-ancestors
+    // checks because if frame-ancestors is present, then x-frame-options
+    // will be discarded
+    rv = EnforeXFrameOptionsCheck(channel, csp);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   return NS_OK;

@@ -33,23 +33,29 @@ function checkFinished() {
 }
 
 // X-Frame-Options checks happen in the parent, hence we have to
-// proxy the csp violation notifications.
+// proxy the xfo violation notifications.
 SpecialPowers.registerObservers("xfo-on-violate-policy");
 
 function examiner() {
+  // Depending on whether xfo checks are performed in the parent
+  // or in the content process we have to use the specialpowers version
+  // for observing XFO violations. After Bug 1574372 we should be able
+  // to remove the "xfo-on-violate-policy" here.
   SpecialPowers.addObserver(this, "specialpowers-xfo-on-violate-policy");
+  SpecialPowers.addObserver(this, "xfo-on-violate-policy");
 }
 examiner.prototype  = {
   observe(subject, topic, data) {
     var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
 
     is(asciiSpec, "http://mochi.test:8888/tests/dom/security/test/csp/file_ro_ignore_xfo.html", "correct subject");  
-    is(topic, "specialpowers-xfo-on-violate-policy", "correct topic");
+    ok(topic.endsWith("xfo-on-violate-policy"), "correct topic");
     is(data, "deny", "correct data");
     checkFinished();
   },
   remove() {
     SpecialPowers.removeObserver(this, "specialpowers-xfo-on-violate-policy");
+    SpecialPowers.removeObserver(this, "xfo-on-violate-policy");
   }
 }
 window.examiner = new examiner();
