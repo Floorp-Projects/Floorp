@@ -10,6 +10,7 @@
 
 #include <gtk/gtk.h>
 #include <functional>
+#include <vector>
 
 /*
  * MozContainer
@@ -82,7 +83,7 @@ struct _MozContainer {
   gboolean surface_position_needs_update;
   gboolean surface_needs_clear;
   gboolean ready_to_draw;
-  std::function<void(void)> inital_draw_cb;
+  std::vector<std::function<void(void)>> initial_draw_cbs;
 #endif
   gboolean force_default_visual;
 };
@@ -98,19 +99,20 @@ void moz_container_put(MozContainer* container, GtkWidget* child_widget, gint x,
 void moz_container_force_default_visual(MozContainer* container);
 
 #ifdef MOZ_WAYLAND
-struct wl_surface* moz_container_get_wl_surface(MozContainer* container,
-                                                int scale);
+struct wl_surface* moz_container_get_wl_surface(MozContainer* container);
 struct wl_egl_window* moz_container_get_wl_egl_window(MozContainer* container,
                                                       int scale);
 
 gboolean moz_container_has_wl_egl_window(MozContainer* container);
 gboolean moz_container_surface_needs_clear(MozContainer* container);
-void moz_container_set_initial_draw_callback(
-    MozContainer* container, std::function<void(void)> inital_draw_cb);
 void moz_container_move_resize(MozContainer* container, int dx, int dy,
                                int width, int height);
 void moz_container_egl_window_set_size(MozContainer* container, int width,
                                        int height);
+void moz_container_scale_changed(MozContainer* container,
+                                 GtkAllocation* aAllocation);
+void moz_container_add_initial_draw_callback(
+    MozContainer* container, const std::function<void(void)>& initial_draw_cb);
 #endif
 
 #endif /* __MOZ_CONTAINER_H__ */

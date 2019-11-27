@@ -3987,6 +3987,7 @@ pref("network.tcp.tcp_fastopen_http_stalls_timeout", 20);
 #endif
 #ifdef MOZ_WAYLAND
   pref("widget.wayland_dmabuf_backend.enabled", false);
+  pref("widget.wayland_vsync.enabled", false);
 #endif
 
 // Timeout for outbound network geolocation provider XHR

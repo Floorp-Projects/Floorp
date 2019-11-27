@@ -45,7 +45,7 @@ VsyncSource::Display::Display()
     : mDispatcherLock("display dispatcher lock"),
       mRefreshTimerNeedsVsync(false) {
   MOZ_ASSERT(NS_IsMainThread());
-  mRefreshTimerVsyncDispatcher = new RefreshTimerVsyncDispatcher();
+  mRefreshTimerVsyncDispatcher = new RefreshTimerVsyncDispatcher(this);
 }
 
 VsyncSource::Display::~Display() {
@@ -117,6 +117,7 @@ void VsyncSource::Display::MoveListenersToNewSource(
       std::move(mCompositorVsyncDispatchers));
 
   aNewDisplay.mRefreshTimerVsyncDispatcher = mRefreshTimerVsyncDispatcher;
+  mRefreshTimerVsyncDispatcher->MoveToDisplay(&aNewDisplay);
   mRefreshTimerVsyncDispatcher = nullptr;
 }
 

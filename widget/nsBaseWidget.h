@@ -214,7 +214,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   already_AddRefed<mozilla::CompositorVsyncDispatcher>
   GetCompositorVsyncDispatcher();
-  void CreateCompositorVsyncDispatcher();
+  virtual void CreateCompositorVsyncDispatcher();
   virtual void CreateCompositor();
   virtual void CreateCompositor(int aWidth, int aHeight);
   virtual void SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
