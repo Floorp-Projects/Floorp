@@ -19,7 +19,6 @@ var httpserver = null;
 
 function run_test() {
   // setup test
-  Services.prefs.setBoolPref("browser.cache.cache_isolation", false);
   httpserver = new HttpServer();
   httpserver.registerPathHandler("/test", contentHandler);
   httpserver.start(-1);

@@ -80,8 +80,6 @@ FinalListener.prototype = {
 };
 
 function run_test() {
-  Services.prefs.setBoolPref("browser.cache.cache_isolation", false);
-
   httpserv = new HttpServer();
   httpserv.registerPathHandler("/cl", content_location);
   httpserv.registerPathHandler("/post", post_target);

@@ -10,7 +10,6 @@
  */
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort + "/content";
@@ -69,9 +68,6 @@ function check_has_alt_data_in_index(aHasAltData) {
 }
 
 function run_test() {
-  if (!inChildProcess()) {
-    Services.prefs.setBoolPref("browser.cache.cache_isolation", false);
-  }
   do_get_profile();
   httpServer = new HttpServer();
   httpServer.registerPathHandler("/content", contentHandler);
