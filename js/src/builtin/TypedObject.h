@@ -607,7 +607,6 @@ class TypedObject : public JSObject {
   uint32_t offset() const;
   uint32_t length() const;
   uint8_t* typedMem(const JS::AutoRequireNoGC&) const { return typedMem(); }
-  bool isAttached() const;
 
   uint32_t size() const { return typeDescr().size(); }
 
@@ -817,15 +816,6 @@ MOZ_MUST_USE bool ObjectIsTypedObject(JSContext* cx, unsigned argc, Value* vp);
 MOZ_MUST_USE bool TypeDescrIsSimpleType(JSContext*, unsigned argc, Value* vp);
 
 MOZ_MUST_USE bool TypeDescrIsArrayType(JSContext*, unsigned argc, Value* vp);
-
-/*
- * Usage: TypedObjectIsAttached(obj)
- *
- * Given a TypedObject `obj`, returns true if `obj` is
- * "attached" (i.e., its data pointer is nullptr).
- */
-MOZ_MUST_USE bool TypedObjectIsAttached(JSContext* cx, unsigned argc,
-                                        Value* vp);
 
 /*
  * Usage: TypedObjectTypeDescr(obj)

@@ -1494,8 +1494,6 @@ uint32_t TypedObject::length() const {
 }
 
 uint8_t* TypedObject::typedMem() const {
-  MOZ_ASSERT(isAttached());
-
   if (is<InlineTypedObject>()) {
     return as<InlineTypedObject>().inlineTypedMem();
   }
@@ -1503,7 +1501,6 @@ uint8_t* TypedObject::typedMem() const {
 }
 
 uint8_t* TypedObject::typedMemBase() const {
-  MOZ_ASSERT(isAttached());
   MOZ_ASSERT(is<OutlineTypedObject>());
 
   JSObject& owner = as<OutlineTypedObject>().owner();
@@ -1511,13 +1508,6 @@ uint8_t* TypedObject::typedMemBase() const {
     return owner.as<ArrayBufferObject>().dataPointer();
   }
   return owner.as<InlineTypedObject>().inlineTypedMem();
-}
-
-bool TypedObject::isAttached() const {
-  if (is<InlineTypedObject>()) {
-    return true;
-  }
-  return as<OutlineTypedObject>().outOfLineTypedMem();
 }
 
 /******************************************************************************
@@ -1589,7 +1579,6 @@ OutlineTypedObject* OutlineTypedObject::createUnattachedWithClass(
 }
 
 void OutlineTypedObject::attach(ArrayBufferObject& buffer, uint32_t offset) {
-  MOZ_ASSERT(!isAttached());
   MOZ_ASSERT(offset <= buffer.byteLength());
   MOZ_ASSERT(size() <= buffer.byteLength() - offset);
   MOZ_ASSERT(buffer.hasTypedObjectViews());
@@ -1600,9 +1589,6 @@ void OutlineTypedObject::attach(ArrayBufferObject& buffer, uint32_t offset) {
 
 void OutlineTypedObject::attach(JSContext* cx, TypedObject& typedObj,
                                 uint32_t offset) {
-  MOZ_ASSERT(!isAttached());
-  MOZ_ASSERT(typedObj.isAttached());
-
   JSObject* owner = &typedObj;
   if (typedObj.is<OutlineTypedObject>()) {
     owner = &typedObj.as<OutlineTypedObject>().owner();
@@ -1704,8 +1690,10 @@ void OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
   TraceEdge(trc, typedObj.shapePtr(), "OutlineTypedObject_shape");
 
   if (!typedObj.owner_) {
+    MOZ_ASSERT(!typedObj.data_);
     return;
   }
+  MOZ_ASSERT(typedObj.data_);
 
   TypeDescr& descr = typedObj.typeDescr();
 
@@ -1732,7 +1720,7 @@ void OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
     }
   }
 
-  if (!descr.opaque() || !typedObj.isAttached()) {
+  if (!descr.opaque()) {
     return;
   }
 
@@ -1854,12 +1842,6 @@ bool TypedObject::obj_getProperty(JSContext* cx, HandleObject obj,
 
     case type::Array:
       if (JSID_IS_ATOM(id, cx->names().length)) {
-        if (!typedObj->isAttached()) {
-          JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                    JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
-          return false;
-        }
-
         vp.setInt32(typedObj->length());
         return true;
       }
@@ -2011,12 +1993,6 @@ bool TypedObject::obj_getOwnPropertyDescriptor(
     JSContext* cx, HandleObject obj, HandleId id,
     MutableHandle<PropertyDescriptor> desc) {
   Rooted<TypedObject*> typedObj(cx, &obj->as<TypedObject>());
-  if (!typedObj->isAttached()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
-    return false;
-  }
-
   Rooted<TypeDescr*> descr(cx, &typedObj->typeDescr());
   switch (descr->kind()) {
     case type::Scalar:
@@ -2436,13 +2412,6 @@ bool js::TypeDescrIsArrayType(JSContext*, unsigned argc, Value* vp) {
   MOZ_ASSERT(args[0].toObject().is<js::TypeDescr>());
   JSObject& obj = args[0].toObject();
   args.rval().setBoolean(obj.is<js::ArrayTypeDescr>());
-  return true;
-}
-
-bool js::TypedObjectIsAttached(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  TypedObject& typedObj = args[0].toObject().as<TypedObject>();
-  args.rval().setBoolean(typedObj.isAttached());
   return true;
 }
 
