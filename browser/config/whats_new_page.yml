@@ -71,6 +71,7 @@
       versions: ["<{version.major_number}.0"]
       locales:
           - be
+          - ca
           - cak
           - cs
           - cy
@@ -81,26 +82,26 @@
           - en-GB
           - en-US
           - es-AR
-          - es-CL
           - es-ES
           - es-MX
+          - eu
+          - fa
           - fr
           - fy-NL
           - gn
+          - hr
           - hsb
           - hu
           - ia
           - id
           - it
           - ka
-          - lij
+          - lt
+          - nb-NO
           - nl
           - nn-NO
           - pl
           - pt-BR
-          - pt-PT
-          - rm
-          - ro
           - ru
           - sk
           - sl
