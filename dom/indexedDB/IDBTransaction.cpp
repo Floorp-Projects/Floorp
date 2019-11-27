@@ -642,25 +642,14 @@ void IDBTransaction::AbortInternal(const nsresult aAbortCode,
                          }),
           mObjectStores.end());
 
-      // TODO: if nsTArray had an insert iterator, we could use the following
-      // instead:
-      // std::copy_if(std::make_move_iterator(mDeletedObjectStores.begin()),
-      //              std::make_move_iterator(mDeletedObjectStores.end()),
-      //              std::back_inserter(mObjectStores),
-      //              [&validIds](const auto& deletedObjectStore) {
-      //                const int64_t objectStoreId = deletedObjectStore->Id();
-      //                MOZ_ASSERT(objectStoreId);
-      //                return validIds.Contains(uint64_t(objectStoreId));
-      //              });
-      for (auto& deletedObjectStore : mDeletedObjectStores) {
-        const int64_t objectStoreId = deletedObjectStore->Id();
-        MOZ_ASSERT(objectStoreId);
-
-        if (validIds.Contains(uint64_t(objectStoreId))) {
-          RefPtr<IDBObjectStore>* objectStore = mObjectStores.AppendElement();
-          objectStore->swap(deletedObjectStore);
-        }
-      }
+      std::copy_if(std::make_move_iterator(mDeletedObjectStores.begin()),
+                   std::make_move_iterator(mDeletedObjectStores.end()),
+                   MakeBackInserter(mObjectStores),
+                   [&validIds](const auto& deletedObjectStore) {
+                     const int64_t objectStoreId = deletedObjectStore->Id();
+                     MOZ_ASSERT(objectStoreId);
+                     return validIds.Contains(uint64_t(objectStoreId));
+                   });
     }
     mDeletedObjectStores.Clear();
   }
