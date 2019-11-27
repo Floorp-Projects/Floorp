@@ -125,7 +125,8 @@ class nsHtml5SpeculativeLoad {
                          nsHtml5String aType, nsHtml5String aCrossOrigin,
                          nsHtml5String aIntegrity,
                          nsHtml5String aReferrerPolicy, bool aParserInHead,
-                         bool aAsync, bool aDefer, bool aNoModule) {
+                         bool aAsync, bool aDefer, bool aNoModule,
+                         bool aLinkPreload) {
     MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
                "Trying to reinitialize a speculative load!");
     if (aNoModule) {
@@ -152,6 +153,7 @@ class nsHtml5SpeculativeLoad {
 
     mIsAsync = aAsync;
     mIsDefer = aDefer;
+    mIsLinkPreload = aLinkPreload;
   }
 
   inline void InitImportStyle(nsString&& aUrl) {
@@ -168,8 +170,8 @@ class nsHtml5SpeculativeLoad {
 
   inline void InitStyle(nsHtml5String aUrl, nsHtml5String aCharset,
                         nsHtml5String aCrossOrigin,
-                        nsHtml5String aReferrerPolicy,
-                        nsHtml5String aIntegrity) {
+                        nsHtml5String aReferrerPolicy, nsHtml5String aIntegrity,
+                        bool aLinkPreload) {
     MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
                "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadStyle;
@@ -184,6 +186,7 @@ class nsHtml5SpeculativeLoad {
             referrerPolicy));
     aIntegrity.ToString(
         mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity);
+    mIsLinkPreload = aLinkPreload;
   }
 
   /**
@@ -260,6 +263,13 @@ class nsHtml5SpeculativeLoad {
    */
   bool mIsAsync;
   bool mIsDefer;
+
+  /**
+   * True if and only if this is a speculative load initiated by <link
+   * rel="preload"> tag encounter.  Passed to the handling loader as an
+   * indication to raise the priority.
+   */
+  bool mIsLinkPreload;
 
   /* If mOpCode is eSpeculativeLoadPictureSource, this is the value of the
    * "sizes" attribute. If the attribute is not set, this will be a void

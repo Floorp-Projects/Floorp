@@ -3213,7 +3213,7 @@ class Document : public nsINode,
   void PreloadStyle(nsIURI* aURI, const Encoding* aEncoding,
                     const nsAString& aCrossOriginAttr,
                     ReferrerPolicyEnum aReferrerPolicy,
-                    const nsAString& aIntegrity);
+                    const nsAString& aIntegrity, bool aIsLinkPreload);
 
   /**
    * Called by the chrome registry to load style sheets.

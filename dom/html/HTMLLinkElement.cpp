@@ -13,6 +13,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/HTMLLinkElementBinding.h"
@@ -402,7 +403,8 @@ static const DOMTokenListSupportedToken sSupportedRelValues[] = {
 
 nsDOMTokenList* HTMLLinkElement::RelList() {
   if (!mRelList) {
-    if (Preferences::GetBool("network.preload")) {
+    if (Preferences::GetBool("network.preload") ||
+        StaticPrefs::network_preload_experimental()) {
       mRelList = new nsDOMTokenList(this, nsGkAtoms::rel, sSupportedRelValues);
     } else {
       mRelList =
