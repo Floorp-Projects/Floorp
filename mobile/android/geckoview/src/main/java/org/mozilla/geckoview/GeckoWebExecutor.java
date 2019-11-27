@@ -54,7 +54,7 @@ public class GeckoWebExecutor {
     }
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({FETCH_FLAGS_NONE, FETCH_FLAGS_ANONYMOUS, FETCH_FLAGS_NO_REDIRECTS})
+    @IntDef({FETCH_FLAGS_NONE, FETCH_FLAGS_ANONYMOUS, FETCH_FLAGS_NO_REDIRECTS, FETCH_FLAGS_STREAM_FAILURE_TEST})
     /* package */ @interface FetchFlags {};
 
     /**
@@ -73,6 +73,12 @@ public class GeckoWebExecutor {
      */
     @WrapForJNI
     public static final int FETCH_FLAGS_NO_REDIRECTS = 1 << 1;
+
+    /**
+     * This flag causes a read error in the {@link WebResponse} body. Useful for testing.
+     */
+    @WrapForJNI
+    public static final int FETCH_FLAGS_STREAM_FAILURE_TEST = 1 << 10;
 
     /**
      * Create a new GeckoWebExecutor instance.

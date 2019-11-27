@@ -23,6 +23,7 @@
 
 #include "mozilla/net/DNS.h"  // for NetAddr
 #include "mozilla/net/CookieSettings.h"
+#include "mozilla/Preferences.h"
 
 #include "nsNetUtil.h"  // for NS_NewURI, NS_NewChannel, NS_NewStreamLoader
 
@@ -161,8 +162,10 @@ class LoaderListener final : public nsIStreamListener,
   NS_DECL_THREADSAFE_ISUPPORTS
 
   explicit LoaderListener(java::GeckoResult::Param aResult,
-                          bool aAllowRedirects)
-      : mResult(aResult), mAllowRedirects(aAllowRedirects) {
+                          bool aAllowRedirects, bool testStreamFailure)
+      : mResult(aResult),
+        mTestStreamFailure(testStreamFailure),
+        mAllowRedirects(aAllowRedirects) {
     MOZ_ASSERT(mResult);
   }
 
@@ -202,7 +205,11 @@ class LoaderListener final : public nsIStreamListener,
   NS_IMETHOD
   OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) override {
     if (mStream) {
-      mStream->SendEof();
+      if (NS_FAILED(aStatusCode)) {
+        mStream->SendError();
+      } else {
+        mStream->SendEof();
+      }
     }
     return NS_OK;
   }
@@ -211,6 +218,10 @@ class LoaderListener final : public nsIStreamListener,
   OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
                   uint64_t aOffset, uint32_t aCount) override {
     MOZ_ASSERT(mStream);
+
+    if (mTestStreamFailure) {
+      aRequest->Cancel(NS_ERROR_ABORT);
+    }
 
     // We only need this for the ReadSegments call, the value is unused.
     uint32_t countRead;
@@ -311,6 +322,7 @@ class LoaderListener final : public nsIStreamListener,
   const java::GeckoResult::GlobalRef mResult;
   java::GeckoInputStream::GlobalRef mStream;
   java::GeckoInputStream::Support::GlobalRef mSupport;
+  const bool mTestStreamFailure;
 
   bool mAllowRedirects;
 };
@@ -517,8 +529,12 @@ nsresult WebExecutorSupport::CreateStreamLoader(
   const bool allowRedirects =
       !(aFlags & java::GeckoWebExecutor::FETCH_FLAGS_NO_REDIRECTS);
 
+  const bool testStreamFailure =
+      (aFlags & java::GeckoWebExecutor::FETCH_FLAGS_STREAM_FAILURE_TEST);
+
   // All done, set up the listener
-  RefPtr<LoaderListener> listener = new LoaderListener(aResult, allowRedirects);
+  RefPtr<LoaderListener> listener =
+      new LoaderListener(aResult, allowRedirects, testStreamFailure);
 
   rv = channel->SetNotificationCallbacks(listener);
   NS_ENSURE_SUCCESS(rv, rv);
