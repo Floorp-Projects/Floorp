@@ -66,9 +66,6 @@ class nsBaseChannel
 
   nsBaseChannel();
 
-  // This method must be called to initialize the basechannel instance.
-  nsresult Init() { return NS_OK; }
-
  protected:
   // -----------------------------------------------
   // Methods to be implemented by the derived class:

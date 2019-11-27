@@ -239,11 +239,6 @@ nsFileChannel::nsFileChannel(nsIURI* uri) : mUploadLength(0), mFileURI(uri) {}
 nsresult nsFileChannel::Init() {
   NS_ENSURE_STATE(mLoadInfo);
 
-  nsresult rv;
-
-  rv = nsBaseChannel::Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // If we have a link file, we should resolve its target right away.
   // This is to protect against a same origin attack where the same link file
   // can point to different resources right after the first resource is loaded.
