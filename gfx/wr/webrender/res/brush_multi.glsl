@@ -20,6 +20,14 @@ int vecs_per_brush(int brush_kind);
 #include brush_solid
 #endif
 
+#undef VECS_PER_SPECIFIC_BRUSH
+#undef WR_BRUSH_VS_FUNCTION
+#undef WR_BRUSH_FS_FUNCTION
+
+#ifdef WR_FEATURE_BLEND_BRUSH
+#include brush_blend
+#endif
+
 int vecs_per_brush(int brush_kind) {
     int result;
     switch (brush_kind) {
@@ -32,6 +40,12 @@ int vecs_per_brush(int brush_kind) {
         #ifdef WR_FEATURE_IMAGE_BRUSH
         case BRUSH_KIND_SOLID:
             result = VECS_PER_SOLID_BRUSH;
+            break;
+        #endif
+
+        #ifdef WR_FEATURE_BLEND_BRUSH
+        case BRUSH_KIND_BLEND:
+            result = VECS_PER_BLEND_BRUSH;
             break;
         #endif
     }

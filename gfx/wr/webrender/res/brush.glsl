@@ -69,6 +69,9 @@ flat varying vec4 flat_varying_vec4_1;
 flat varying vec4 flat_varying_vec4_2;
 flat varying vec4 flat_varying_vec4_3;
 flat varying vec4 flat_varying_vec4_4;
+
+flat varying ivec4 flat_varying_ivec4_0;
+
 varying vec4 varying_vec4_0;
 varying vec4 varying_vec4_1;
 
@@ -216,6 +219,12 @@ void main(void) {
             solid_brush_vs(BRUSH_VS_PARAMS);
             break;
         #endif
+
+        #ifdef WR_FEATURE_BLEND_BRUSH
+        case BRUSH_KIND_BLEND:
+            blend_brush_vs(BRUSH_VS_PARAMS);
+            break;
+        #endif
     }
 
 #else
@@ -262,6 +271,12 @@ void main(void) {
 #ifdef WR_FEATURE_SOLID_BRUSH
         case BRUSH_KIND_SOLID: {
             frag = solid_brush_fs();
+            break;
+        }
+#endif
+#ifdef WR_FEATURE_BLEND_BRUSH
+        case BRUSH_KIND_BLEND: {
+            frag = blend_brush_fs();
             break;
         }
 #endif
