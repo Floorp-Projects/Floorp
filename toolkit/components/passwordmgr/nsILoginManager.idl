@@ -189,8 +189,22 @@ interface nsILoginManager : nsISupports {
                             in AString aHttpRealm);
 
   /**
+   * Asynchonously search for logins in the login manager. The Promise always
+   * resolves to an array; if there are no logins the array is empty.
+   *
+   * @param {object} matchData
+   *        The data used to search as a JS object. This does not follow the same
+   *        requirements as findLogins for those fields. Wildcard matches are
+   *        simply not specified.
+   * @return A promise resolving to an array of nsILoginInfo objects.
+   */
+  Promise searchLoginsAsync(in jsval matchData);
+
+  /**
    * Search for logins in the login manager. An array is always returned;
    * if there are no logins the array is empty.
+   * @deprecated New code should use `searchLoginsAsync`.
+   *             Only autocomplete, prompt, and test code still use this.
    *
    * @param matchData
    *        The data used to search. This does not follow the same
