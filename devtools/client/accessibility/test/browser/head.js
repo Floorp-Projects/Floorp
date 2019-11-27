@@ -142,7 +142,7 @@ async function addTestTab(url) {
 
   // Wait for inspector load here to avoid protocol errors on shutdown, since
   // accessibility panel test can be too fast.
-  await win.gToolbox.loadTool("inspector");
+  await panel._toolbox.loadTool("inspector");
 
   return {
     tab,
