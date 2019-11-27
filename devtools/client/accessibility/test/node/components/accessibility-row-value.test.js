@@ -21,40 +21,13 @@ const {
 } = require("devtools/client/shared/components/reps/reps");
 const AuditController = require("devtools/client/accessibility/components/AuditController");
 
-const ConnectedAccessibilityRowValueClass = require("devtools/client/accessibility/components/AccessibilityRowValue");
-const AccessibilityRowValueClass =
-  ConnectedAccessibilityRowValueClass.WrappedComponent;
-const AccessibilityRowValue = createFactory(
-  ConnectedAccessibilityRowValueClass
-);
+const AccessibilityRowValueClass = require("devtools/client/accessibility/components/AccessibilityRowValue");
+const AccessibilityRowValue = createFactory(AccessibilityRowValueClass);
 
 describe("AccessibilityRowValue component:", () => {
-  it("audit not supported", () => {
-    const store = setupStore({
-      preloadedState: { ui: { supports: {} } },
-    });
-    const wrapper = mount(
-      Provider(
-        { store },
-        AccessibilityRowValue({
-          member: { object: mockAccessible() },
-        })
-      )
-    );
-
-    expect(wrapper.html()).toMatchSnapshot();
-    const rowValue = wrapper.find(AccessibilityRowValueClass);
-    expect(rowValue.children().length).toBe(1);
-    const container = rowValue.childAt(0);
-    expect(container.type()).toBe("span");
-    expect(container.prop("role")).toBe("presentation");
-    expect(container.children().length).toBe(1);
-    expect(container.childAt(0).type()).toBe(Rep);
-  });
-
   it("basic render", () => {
     const store = setupStore({
-      preloadedState: { ui: { supports: { audit: true } } },
+      preloadedState: { ui: { supports: {} } },
     });
     const wrapper = mount(
       Provider(
