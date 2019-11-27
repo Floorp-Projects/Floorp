@@ -222,7 +222,6 @@ function debug(aMsg) {
     aMsg = ("SessionStore: " + aMsg).replace(/\S{80}/g, "$&\n");
     Services.console.logStringMessage(aMsg);
   }
-  dump(aMsg + "\n");
 }
 
 /**
