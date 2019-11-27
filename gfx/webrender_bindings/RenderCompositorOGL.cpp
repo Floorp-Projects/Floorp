@@ -12,6 +12,10 @@
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 
+#ifdef MOZ_GECKO_PROFILER
+#  include "ProfilerMarkerPayload.h"
+#endif
+
 namespace mozilla {
 namespace wr {
 
@@ -163,19 +167,27 @@ void RenderCompositorOGL::CompositorBeginFrame() {
   mAddedLayers.Clear();
   mAddedPixelCount = 0;
   mAddedClippedPixelCount = 0;
+  mBeginFrameTimeStamp = TimeStamp::NowUnfuzzed();
 }
 
 void RenderCompositorOGL::CompositorEndFrame() {
-  auto bufferSize = GetBufferSize();
-  uint64_t windowPixelCount = uint64_t(bufferSize.width) * bufferSize.height;
-  printf(
-      "CompositorEndFrame with %d layers (%d used / %d unused), in-use memory: "
-      "%d%%, overdraw: %d%%, painting: %d%%\n",
-      int(mNativeLayers.size()), int(mAddedLayers.Length()),
-      int(mNativeLayers.size() - mAddedLayers.Length()),
-      int(mAddedPixelCount * 100 / windowPixelCount),
-      int(mAddedClippedPixelCount * 100 / windowPixelCount),
-      int(mDrawnPixelCount * 100 / windowPixelCount));
+#ifdef MOZ_GECKO_PROFILER
+  if (profiler_thread_is_being_profiled()) {
+    auto bufferSize = GetBufferSize();
+    uint64_t windowPixelCount = uint64_t(bufferSize.width) * bufferSize.height;
+    profiler_add_text_marker(
+        "WR OS Compositor frame",
+        nsPrintfCString("%d%% painting, %d%% overdraw, %d%% memory, %d used "
+                        "layers + %d unused layers",
+                        int(mDrawnPixelCount * 100 / windowPixelCount),
+                        int(mAddedClippedPixelCount * 100 / windowPixelCount),
+                        int(mAddedPixelCount * 100 / windowPixelCount),
+                        int(mAddedLayers.Length()),
+                        int(mNativeLayers.size() - mAddedLayers.Length())),
+        JS::ProfilingCategoryPair::GRAPHICS, mBeginFrameTimeStamp,
+        TimeStamp::NowUnfuzzed());
+  }
+#endif
   mDrawnPixelCount = 0;
 
   mNativeLayerRoot->SetLayers(mAddedLayers);

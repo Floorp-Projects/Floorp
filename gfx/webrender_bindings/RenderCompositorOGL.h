@@ -8,6 +8,7 @@
 #define MOZILLA_GFX_RENDERCOMPOSITOR_OGL_H
 
 #include "mozilla/webrender/RenderCompositor.h"
+#include "mozilla/TimeStamp.h"
 
 namespace mozilla {
 
@@ -71,6 +72,7 @@ class RenderCompositorOGL : public RenderCompositor {
   uint64_t mDrawnPixelCount = 0;
   gfx::IntRect mVisibleBounds;
   std::unordered_map<uint64_t, RefPtr<layers::NativeLayer>> mNativeLayers;
+  TimeStamp mBeginFrameTimeStamp;
 
   // Used to apply back-pressure in WaitForGPU().
   GLsync mPreviousFrameDoneSync;
