@@ -150,7 +150,7 @@ class BouncerCheck(BaseScript):
             for prev_version in self.config.get("prev_versions", []):
                 product_name = product["product-name"] % {"version": self.config["version"],
                                                           "prev_version": prev_version}
-                for bouner_platform in product["platforms"]:
+                for bouncer_platform in product["platforms"]:
                     for locale in self.config["locales"]:
                         url = BOUNCER_URL_PATTERN.format(
                             bouncer_prefix=self.config["bouncer_prefix"],
