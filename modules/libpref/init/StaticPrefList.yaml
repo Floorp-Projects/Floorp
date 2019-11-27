@@ -4791,7 +4791,7 @@
 # Make `zoom` a `transform` + `transform-origin` alias.
 - name: layout.css.zoom-transform-hack.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
   rust: true
 
