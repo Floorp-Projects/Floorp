@@ -37,7 +37,6 @@ declare namespace MockedExports {
     addWebTab: (url: string, options: any) => BrowserTab;
     contentPrincipal: any;
     selectedTab: BrowserTab;
-    selectedBrowser?: ChromeBrowser;
     messageManager: MessageManager;
   }
 
@@ -47,14 +46,6 @@ declare namespace MockedExports {
 
   interface ChromeWindow {
     gBrowser: Browser;
-  }
-
-  interface ChromeBrowser {
-    browsingContext?: BrowsingContext;
-  }
-
-  interface BrowsingContext {
-    id: number;
   }
 
   type GetPref<T> = (prefName: string, defaultValue?: T) => T;

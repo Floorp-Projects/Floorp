@@ -74,13 +74,13 @@ const lazyProfilerGetSymbols = requireLazy(() =>
   (ChromeUtils.import("resource://gre/modules/ProfilerGetSymbols.jsm"))
 );
 
-const lazyBrowserModule = requireLazy(() => {
+const lazyReceiveProfile = requireLazy(() => {
   const { require } = ChromeUtils.import(
     "resource://devtools/shared/Loader.jsm"
   );
   /** @type {import("devtools/client/performance-new/browser")} */
   const browserModule = require("devtools/client/performance-new/browser");
-  return browserModule;
+  return browserModule.receiveProfile;
 });
 
 const lazyPreferenceManagement = requireLazy(() => {
@@ -164,7 +164,7 @@ async function captureProfile() {
       }
     );
 
-  const receiveProfile = lazyBrowserModule().receiveProfile;
+  const receiveProfile = lazyReceiveProfile();
   receiveProfile(profile, getSymbolsFromThisBrowser);
 
   Services.profiler.StopProfiler();
@@ -184,17 +184,11 @@ function startProfiler() {
     duration,
   } = translatePreferencesToState(getRecordingPreferencesFromBrowser());
 
-  // Get the active BrowsingContext ID from browser.
-  const getActiveBrowsingContextID = lazyBrowserModule()
-    .getActiveBrowsingContextID;
-  const activeBrowsingContextID = getActiveBrowsingContextID();
-
   Services.profiler.StartProfiler(
     entries,
     interval,
     features,
     threads,
-    activeBrowsingContextID,
     duration
   );
 }

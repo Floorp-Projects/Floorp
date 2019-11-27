@@ -22,25 +22,12 @@ add_task(async function() {
   );
   is(await front.isActive(), false, "The profiler is not active yet.");
 
-  // Getting the active BrowsingContext ID to assert in the "profiler-started" event.
-  const win = Services.wm.getMostRecentWindow("navigator:browser");
-  const activeBrowsingContextID =
-    win.gBrowser.selectedBrowser.browsingContext.id;
-
-  front.once(
-    "profiler-started",
-    (entries, interval, features, duration, activeBCID) => {
-      is(entries, 1024, "Should apply entries by startProfiler");
-      is(interval, 0.1, "Should apply interval by startProfiler");
-      is(typeof features, "number", "Should apply features by startProfiler");
-      is(duration, 2, "Should apply duration by startProfiler");
-      is(
-        activeBCID,
-        activeBrowsingContextID,
-        "Should apply active browsing context ID by startProfiler"
-      );
-    }
-  );
+  front.once("profiler-started", (entries, interval, features, duration) => {
+    is(entries, 1024, "Should apply entries by startProfiler");
+    is(interval, 0.1, "Should apply interval by startProfiler");
+    is(typeof features, "number", "Should apply features by startProfiler");
+    is(duration, 2, "Should apply duration by startProfiler");
+  });
 
   // Start the profiler.
   await front.startProfiler({

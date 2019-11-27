@@ -11,7 +11,6 @@
       settings.interval,
       settings.features,
       settings.threads,
-      0,
       settings.duration
     );
 
