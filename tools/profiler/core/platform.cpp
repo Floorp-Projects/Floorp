@@ -629,12 +629,13 @@ class ActivePS {
 
   ActivePS(PSLockRef aLock, PowerOfTwo32 aCapacity, double aInterval,
            uint32_t aFeatures, const char** aFilters, uint32_t aFilterCount,
-           const Maybe<double>& aDuration)
+           uint64_t aActiveBrowsingContextID, const Maybe<double>& aDuration)
       : mGeneration(sNextGeneration++),
         mCapacity(aCapacity),
         mDuration(aDuration),
         mInterval(aInterval),
         mFeatures(AdjustFeatures(aFeatures, aFilterCount)),
+        mActiveBrowsingContextID(aActiveBrowsingContextID),
         // 8 bytes per entry.
         mProfileBuffer(CorePS::CoreBlocksRingBuffer(),
                        PowerOfTwo32(aCapacity.Value() * 8)),
@@ -729,10 +730,11 @@ class ActivePS {
  public:
   static void Create(PSLockRef aLock, PowerOfTwo32 aCapacity, double aInterval,
                      uint32_t aFeatures, const char** aFilters,
-                     uint32_t aFilterCount, const Maybe<double>& aDuration) {
+                     uint32_t aFilterCount, uint64_t aActiveBrowsingContextID,
+                     const Maybe<double>& aDuration) {
     MOZ_ASSERT(!sInstance);
     sInstance = new ActivePS(aLock, aCapacity, aInterval, aFeatures, aFilters,
-                             aFilterCount, aDuration);
+                             aFilterCount, aActiveBrowsingContextID, aDuration);
   }
 
   static MOZ_MUST_USE SamplerThread* Destroy(PSLockRef aLock) {
@@ -749,13 +751,14 @@ class ActivePS {
   static bool Equals(PSLockRef, PowerOfTwo32 aCapacity,
                      const Maybe<double>& aDuration, double aInterval,
                      uint32_t aFeatures, const char** aFilters,
-                     uint32_t aFilterCount) {
+                     uint32_t aFilterCount, uint64_t aActiveBrowsingContextID) {
     MOZ_ASSERT(sInstance);
     if (sInstance->mCapacity != aCapacity ||
         sInstance->mDuration != aDuration ||
         sInstance->mInterval != aInterval ||
         sInstance->mFeatures != aFeatures ||
-        sInstance->mFilters.length() != aFilterCount) {
+        sInstance->mFilters.length() != aFilterCount ||
+        sInstance->mActiveBrowsingContextID != aActiveBrowsingContextID) {
       return false;
     }
 
@@ -837,6 +840,12 @@ class ActivePS {
       if (sInstance->mDuration) {
         aWriter.DoubleProperty("duration", sInstance->mDuration.value());
       }
+      // Here, we are converting uint64_t to double. Browsing Context IDs are
+      // being created using `nsContentUtils::GenerateProcessSpecificId`, which
+      // is specifically designed to only use 53 of the 64 bits to be lossless
+      // when passed into and out of JS as a double.
+      aWriter.DoubleProperty("activeBrowsingContextID",
+                             sInstance->mActiveBrowsingContextID);
     }
     aWriter.EndObject();
   }
@@ -850,6 +859,8 @@ class ActivePS {
   PS_GET(double, Interval)
 
   PS_GET(uint32_t, Features)
+
+  PS_GET(uint64_t, ActiveBrowsingContextID)
 
 #define PS_GET_FEATURE(n_, str_, Name_, desc_)                \
   static bool Feature##Name_(PSLockRef) {                     \
@@ -1163,6 +1174,11 @@ class ActivePS {
 
   // Substrings of names of threads we want to profile.
   Vector<std::string> mFilters;
+
+  // Browsing Context ID of the active active browser screen's active tab.
+  // It's being used to determine the profiled tab. It's "0" if we failed to
+  // get the ID.
+  const uint64_t mActiveBrowsingContextID;
 
   // The buffer into which all samples are recorded.
   ProfileBuffer mProfileBuffer;
@@ -3443,16 +3459,16 @@ static void NotifyObservers(const char* aTopic,
 static void NotifyProfilerStarted(const PowerOfTwo32& aCapacity,
                                   const Maybe<double>& aDuration,
                                   double aInterval, uint32_t aFeatures,
-                                  const char** aFilters,
-                                  uint32_t aFilterCount) {
+                                  const char** aFilters, uint32_t aFilterCount,
+                                  uint64_t aActiveBrowsingContextID) {
   nsTArray<nsCString> filtersArray;
   for (size_t i = 0; i < aFilterCount; ++i) {
     filtersArray.AppendElement(aFilters[i]);
   }
 
-  nsCOMPtr<nsIProfilerStartParams> params =
-      new nsProfilerStartParams(aCapacity.Value(), aDuration, aInterval,
-                                aFeatures, std::move(filtersArray));
+  nsCOMPtr<nsIProfilerStartParams> params = new nsProfilerStartParams(
+      aCapacity.Value(), aDuration, aInterval, aFeatures,
+      std::move(filtersArray), aActiveBrowsingContextID);
 
   ProfilerParent::ProfilerStarted(params);
   NotifyObservers("profiler-started", params);
@@ -3461,6 +3477,7 @@ static void NotifyProfilerStarted(const PowerOfTwo32& aCapacity,
 static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
                                   double aInterval, uint32_t aFeatures,
                                   const char** aFilters, uint32_t aFilterCount,
+                                  uint64_t aActiveBrowsingContextID,
                                   const Maybe<double>& aDuration);
 
 // This basically duplicates AutoProfilerLabel's constructor.
@@ -3669,7 +3686,7 @@ void profiler_init(void* aStackTop) {
     }
 
     locked_profiler_start(lock, capacity, interval, features, filters.begin(),
-                          filters.length(), duration);
+                          filters.length(), 0, duration);
   }
 
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
@@ -3681,7 +3698,7 @@ void profiler_init(void* aStackTop) {
   // We do this with gPSMutex unlocked. The comment in profiler_stop() explains
   // why.
   NotifyProfilerStarted(capacity, duration, interval, features, filters.begin(),
-                        filters.length());
+                        filters.length(), 0);
 }
 
 static void locked_profiler_save_profile_to_file(PSLockRef aLock,
@@ -3801,7 +3818,8 @@ void profiler_get_profile_json_into_lazily_allocated_buffer(
 
 void profiler_get_start_params(int* aCapacity, Maybe<double>* aDuration,
                                double* aInterval, uint32_t* aFeatures,
-                               Vector<const char*>* aFilters) {
+                               Vector<const char*>* aFilters,
+                               uint64_t* aActiveBrowsingContextID) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   if (NS_WARN_IF(!aCapacity) || NS_WARN_IF(!aDuration) ||
@@ -3817,6 +3835,7 @@ void profiler_get_start_params(int* aCapacity, Maybe<double>* aDuration,
     *aDuration = Nothing();
     *aInterval = 0;
     *aFeatures = 0;
+    *aActiveBrowsingContextID = 0;
     aFilters->clear();
     return;
   }
@@ -3825,6 +3844,7 @@ void profiler_get_start_params(int* aCapacity, Maybe<double>* aDuration,
   *aDuration = ActivePS::Duration(lock);
   *aInterval = ActivePS::Interval(lock);
   *aFeatures = ActivePS::Features(lock);
+  *aActiveBrowsingContextID = ActivePS::ActiveBrowsingContextID(lock);
 
   const Vector<std::string>& filters = ActivePS::Filters(lock);
   MOZ_ALWAYS_TRUE(aFilters->resize(filters.length()));
@@ -4027,12 +4047,14 @@ static bool HasMinimumLength(const char* aString, size_t aMinimumLength) {
 static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
                                   double aInterval, uint32_t aFeatures,
                                   const char** aFilters, uint32_t aFilterCount,
+                                  uint64_t aActiveBrowsingContextID,
                                   const Maybe<double>& aDuration) {
   if (LOG_TEST) {
     LOG("locked_profiler_start");
     LOG("- capacity  = %u", unsigned(aCapacity.Value()));
     LOG("- duration  = %.2f", aDuration ? *aDuration : -1);
     LOG("- interval = %.2f", aInterval);
+    LOG("- browsing context ID = %" PRIu64, aActiveBrowsingContextID);
 
 #define LOG_FEATURE(n_, str_, Name_, desc_)     \
   if (ProfilerFeature::Has##Name_(aFeatures)) { \
@@ -4092,10 +4114,11 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
   if (aDuration && *aDuration <= 0) {
     duration = Nothing();
   }
+
   double interval = aInterval > 0 ? aInterval : PROFILER_DEFAULT_INTERVAL;
 
   ActivePS::Create(aLock, capacity, interval, aFeatures, aFilters, aFilterCount,
-                   duration);
+                   aActiveBrowsingContextID, duration);
 
   // ActivePS::Create can only succeed or crash.
   MOZ_ASSERT(ActivePS::Exists(aLock));
@@ -4187,7 +4210,8 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 
 void profiler_start(PowerOfTwo32 aCapacity, double aInterval,
                     uint32_t aFeatures, const char** aFilters,
-                    uint32_t aFilterCount, const Maybe<double>& aDuration) {
+                    uint32_t aFilterCount, uint64_t aActiveBrowsingContextID,
+                    const Maybe<double>& aDuration) {
   LOG("profiler_start");
 
   SamplerThread* samplerThread = nullptr;
@@ -4205,7 +4229,7 @@ void profiler_start(PowerOfTwo32 aCapacity, double aInterval,
     }
 
     locked_profiler_start(lock, aCapacity, aInterval, aFeatures, aFilters,
-                          aFilterCount, aDuration);
+                          aFilterCount, aActiveBrowsingContextID, aDuration);
   }
 
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
@@ -4222,12 +4246,13 @@ void profiler_start(PowerOfTwo32 aCapacity, double aInterval,
     delete samplerThread;
   }
   NotifyProfilerStarted(aCapacity, aDuration, aInterval, aFeatures, aFilters,
-                        aFilterCount);
+                        aFilterCount, aActiveBrowsingContextID);
 }
 
 void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
                              uint32_t aFeatures, const char** aFilters,
                              uint32_t aFilterCount,
+                             uint64_t aActiveBrowsingContextID,
                              const Maybe<double>& aDuration) {
   LOG("profiler_ensure_started");
 
@@ -4244,17 +4269,18 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
     if (ActivePS::Exists(lock)) {
       // The profiler is active.
       if (!ActivePS::Equals(lock, aCapacity, aDuration, aInterval, aFeatures,
-                            aFilters, aFilterCount)) {
+                            aFilters, aFilterCount, aActiveBrowsingContextID)) {
         // Stop and restart with different settings.
         samplerThread = locked_profiler_stop(lock);
         locked_profiler_start(lock, aCapacity, aInterval, aFeatures, aFilters,
-                              aFilterCount, aDuration);
+                              aFilterCount, aActiveBrowsingContextID,
+                              aDuration);
         startedProfiler = true;
       }
     } else {
       // The profiler is stopped.
       locked_profiler_start(lock, aCapacity, aInterval, aFeatures, aFilters,
-                            aFilterCount, aDuration);
+                            aFilterCount, aActiveBrowsingContextID, aDuration);
       startedProfiler = true;
     }
   }
@@ -4269,7 +4295,7 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
 
   if (startedProfiler) {
     NotifyProfilerStarted(aCapacity, aDuration, aInterval, aFeatures, aFilters,
-                          aFilterCount);
+                          aFilterCount, aActiveBrowsingContextID);
   }
 }
 
