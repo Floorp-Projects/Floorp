@@ -2143,6 +2143,7 @@ WorkerPrivate::WorkerPrivate(
       mLoadingWorkerScript(false),
       mCreationTimeStamp(TimeStamp::Now()),
       mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC),
+      mReportedUseCounters(false),
       mAgentClusterId(aAgentClusterId),
       mWorkerThreadAccessible(aParent),
       mPostSyncLoopOperations(0),
@@ -3443,6 +3444,9 @@ void WorkerPrivate::ClearMainEventQueue(WorkerRanOrNot aRanOrNot) {
     MOZ_ASSERT(currentThread);
 
     NS_ProcessPendingEvents(currentThread);
+
+    // We are about to destroy worker, report all use counters.
+    ReportUseCounters();
   }
 
   MOZ_ASSERT(mCancelAllPendingRunnables);
@@ -3859,6 +3863,73 @@ void WorkerPrivate::DispatchCancelingRunnable() {
   RefPtr<CancelingWithTimeoutOnParentRunnable> rr =
       new CancelingWithTimeoutOnParentRunnable(this);
   rr->Dispatch();
+}
+
+void WorkerPrivate::ReportUseCounters() {
+  AssertIsOnWorkerThread();
+
+  static const bool kDebugUseCounters = false;
+
+  if (mReportedUseCounters) {
+    return;
+  }
+  mReportedUseCounters = true;
+
+  if (Telemetry::HistogramUseCounterWorkerCount <= 0 || IsChromeWorker()) {
+    return;
+  }
+
+  const size_t type = Type();
+  switch (type) {
+    case WorkerTypeDedicated:
+      Telemetry::Accumulate(Telemetry::DEDICATED_WORKER_DESTROYED, 1);
+      break;
+    case WorkerTypeShared:
+      Telemetry::Accumulate(Telemetry::SHARED_WORKER_DESTROYED, 1);
+      break;
+    case WorkerTypeService:
+      Telemetry::Accumulate(Telemetry::SERVICE_WORKER_DESTROYED, 1);
+      break;
+    default:
+      MOZ_ASSERT(false, "Unknown worker type");
+      return;
+  }
+
+  if (kDebugUseCounters) {
+    nsAutoCString path(Domain());
+    path.AppendLiteral("(");
+    NS_ConvertUTF16toUTF8 script(ScriptURL());
+    path.Append(script);
+    path.AppendPrintf(", 0x%p)", static_cast<void*>(this));
+    printf("-- Worker use counters for %s --\n", path.get());
+  }
+
+  static_assert(
+      static_cast<size_t>(UseCounterWorker::Count) * 3 ==
+          static_cast<size_t>(Telemetry::HistogramUseCounterWorkerCount),
+      "There should be three histograms (dedicated and shared and "
+      "servie) for each worker use counter");
+  const size_t count = static_cast<size_t>(UseCounterWorker::Count);
+  const size_t factor =
+      static_cast<size_t>(Telemetry::HistogramUseCounterWorkerCount) / count;
+  MOZ_ASSERT(factor > type);
+
+  for (size_t c = 0; c < count; ++c) {
+    // Histograms for worker use counters use the same order as the worker types
+    // , so we can use the worker type to index to corresponding histogram.
+    Telemetry::HistogramID id = static_cast<Telemetry::HistogramID>(
+        Telemetry::HistogramFirstUseCounterWorker + c * factor + type);
+    MOZ_ASSERT(id <= Telemetry::HistogramLastUseCounterWorker);
+
+    if (bool value = GetUseCounter(static_cast<UseCounterWorker>(c))) {
+      Telemetry::Accumulate(id, 1);
+
+      if (kDebugUseCounters) {
+        const char* name = Telemetry::GetHistogramName(id);
+        printf("  %s  #%d: %d\n", name, id, value);
+      }
+    }
+  }
 }
 
 void WorkerPrivate::StopSyncLoop(nsIEventTarget* aSyncLoopTarget,
