@@ -4,10 +4,10 @@
 
 from __future__ import absolute_import
 
-import time
 import os
+import time
 
-from six import string_types
+import six
 
 import mozinfo
 
@@ -50,7 +50,7 @@ class TestContext(object):
         def get(attr):
             value = getattr(self, attr)
             if isinstance(value, dict):
-                value = frozenset(value.items())
+                value = frozenset(six.iteritems(value))
             return value
         return hash(frozenset([get(a) for a in self.attrs]))
 
@@ -88,7 +88,7 @@ class TestResult(object):
 
         msg = "Result '%s' not in possible results: %s" %\
               (result_expected, ', '.join(self.POSSIBLE_RESULTS))
-        assert isinstance(name, string_types), "name has to be a string"
+        assert isinstance(name, six.string_types), "name has to be a string"
         assert result_expected in self.POSSIBLE_RESULTS, msg
 
         self.name = name
@@ -174,7 +174,7 @@ class TestResult(object):
             raise ValueError(msg)
 
         # use lists instead of multiline strings
-        if isinstance(output, string_types):
+        if isinstance(output, six.string_types):
             output = output.splitlines()
 
         self.time_end = time_end if time_end is not None else time.time()
