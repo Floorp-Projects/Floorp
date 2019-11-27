@@ -938,10 +938,10 @@ DevToolsStartup.prototype = {
       Services.obs.addObserver(observe, "devtools-thread-resumed");
     }
 
-    const { BrowserToolboxProcess } = ChromeUtils.import(
-      "resource://devtools/client/framework/ToolboxProcess.jsm"
+    const { BrowserToolboxLauncher } = ChromeUtils.import(
+      "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
     );
-    BrowserToolboxProcess.init(null, null, null, binaryPath);
+    BrowserToolboxLauncher.init(null, null, null, binaryPath);
 
     if (pauseOnStartup) {
       // Spin the event loop until the debugger connects.
