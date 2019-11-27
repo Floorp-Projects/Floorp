@@ -47,29 +47,12 @@ class AccessibilityStartup {
     try {
       this._walker = await this._accessibility.getWalker();
       this._supports = {};
-      // Only works with FF61+ targets
-      this._supports.enableDisable = await this.target.actorHasMethod(
-        "accessibility",
-        "enable"
-      );
+      [this._supports.simulation] = await Promise.all([
+        // Added in Firefox 70.
+        this.target.actorHasMethod("accessibility", "getSimulator"),
+      ]);
 
-      if (this._supports.enableDisable) {
-        [
-          this._supports.relations,
-          this._supports.snapshot,
-          this._supports.audit,
-          this._supports.hydration,
-          this._supports.simulation,
-        ] = await Promise.all([
-          this.target.actorHasMethod("accessible", "getRelations"),
-          this.target.actorHasMethod("accessible", "snapshot"),
-          this.target.actorHasMethod("accessible", "audit"),
-          this.target.actorHasMethod("accessible", "hydrate"),
-          this.target.actorHasMethod("accessibility", "getSimulator"),
-        ]);
-
-        await this._accessibility.bootstrap();
-      }
+      await this._accessibility.bootstrap();
 
       return true;
     } catch (e) {
