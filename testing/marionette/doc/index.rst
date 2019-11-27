@@ -38,14 +38,16 @@ Some further documentation can be found here:
    :maxdepth: 1
 
    Intro.md
+   Building.md
    PythonTests.md
    Protocol.md
    Contributing.md
+   NewContributors.md
+   Patches.md
    Debugging.md
    Testing.md
    Taskcluster.md
    CodeStyle.md
-   Patching.md
    SeleniumAtoms.md
    Prefs.md
    internals/index
