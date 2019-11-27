@@ -92,7 +92,7 @@ nsresult nsMemoryImpl::FlushMemory(const char16_t* aReason, bool aImmediate) {
   PRIntervalTime now = PR_IntervalNow();
 
   // Run the flushers immediately if we can; otherwise, proxy to the
-  // UI thread can run 'em asynchronously.
+  // UI thread and run 'em asynchronously.
   nsresult rv = NS_OK;
   if (aImmediate) {
     RunFlushers(aReason);
