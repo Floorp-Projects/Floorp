@@ -5,9 +5,6 @@
 
 var EXPORTED_SYMBOLS = ["ClickHandlerChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(
@@ -31,7 +28,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/E10SUtils.jsm"
 );
 
-class ClickHandlerChild extends ActorChild {
+class ClickHandlerChild extends JSWindowActorChild {
   handleEvent(event) {
     if (
       !event.isTrusted ||
@@ -122,7 +119,7 @@ class ClickHandlerChild extends ActorChild {
       // should we allow mixed content.
       json.allowMixedContent = false;
       let docshell = ownerDoc.defaultView.docShell;
-      if (this.mm.docShell.mixedContentChannel) {
+      if (this.docShell.mixedContentChannel) {
         const sm = Services.scriptSecurityManager;
         try {
           let targetURI = Services.io.newURI(href);
@@ -151,13 +148,13 @@ class ClickHandlerChild extends ActorChild {
         event.preventMultipleActions();
       }
 
-      this.mm.sendAsyncMessage("Content:Click", json);
+      this.sendAsyncMessage("Content:Click", json);
       return;
     }
 
     // This might be middle mouse navigation.
     if (event.button == 1) {
-      this.mm.sendAsyncMessage("Content:Click", json);
+      this.sendAsyncMessage("Content:Click", json);
     }
   }
 
@@ -173,7 +170,7 @@ class ClickHandlerChild extends ActorChild {
    *       to behave like an <a> element, which SVG links (XLink) don't.
    */
   _hrefAndLinkNodeForClickEvent(event) {
-    let { content } = this.mm;
+    let content = this.contentWindow;
     function isHTMLLink(aNode) {
       // Be consistent with what nsContextMenu.js does.
       return (
