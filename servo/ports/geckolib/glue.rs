@@ -6784,27 +6784,25 @@ pub unsafe extern "C" fn Servo_IsUnknownPropertyRecordedInUseCounter(
 #[no_mangle]
 pub unsafe extern "C" fn Servo_IsCssPropertyRecordedInUseCounter(
     use_counters: &UseCounters,
-    property: *const nsACString,
+    property: &nsACString,
     known_prop: *mut bool,
 ) -> bool {
     *known_prop = false;
-    let prop_name = property.as_ref().unwrap().as_str_unchecked();
-    let non_custom_id = match PropertyId::parse_enabled_for_all_content(prop_name) {
-        Ok(p) => {
-            *known_prop = true;
-            p.non_custom_id()
-        }
-        Err(..) => None,
-    };
 
-    if let Some(id) = non_custom_id {
-        return use_counters.non_custom_properties.recorded(id);
+    let prop_name = property.as_str_unchecked();
+    if let Ok(p) = PropertyId::parse_unchecked_for_testing(prop_name) {
+        if let Some(id) = p.non_custom_id() {
+            *known_prop = true;
+            return use_counters.non_custom_properties.recorded(id);
+        }
     }
 
-    CountedUnknownProperty::parse_for_test(prop_name).map_or(false, |p| {
+    if let Some(p) = CountedUnknownProperty::parse_for_testing(prop_name) {
         *known_prop = true;
-        use_counters.counted_unknown_properties.recorded(p)
-    })
+        return use_counters.counted_unknown_properties.recorded(p)
+    }
+
+    false
 }
 
 #[no_mangle]
