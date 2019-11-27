@@ -62,10 +62,10 @@ function doTests() {
   textbox.value = "foo";
   is(icons.selectedPanel, clearIcon, "clear icon is displayed when setting a value");
 
-  textbox.reset();
+  textbox.value = "";
   is(textbox.defaultValue, "", "defaultValue is empty");
   is(textbox.value, "", "reset method clears the textbox");
-  is(icons.selectedPanel, searchIcon, "search icon is displayed after textbox.reset()");
+  is(icons.selectedPanel, searchIcon, "search icon is displayed after clearing value");
 
   textbox.value = "foo";
   gExpectedValue = "";
