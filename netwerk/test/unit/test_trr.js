@@ -1115,8 +1115,7 @@ add_task(async function test_dnsSuffix() {
     };
     Services.obs.notifyObservers(
       networkLinkService,
-      "network:link-status-changed",
-      "changed"
+      "network:dns-suffix-list-updated"
     );
     await new DNSListener("test.com", "1.2.3.4");
     await new DNSListener("example.org", "127.0.0.1");
@@ -1127,8 +1126,7 @@ add_task(async function test_dnsSuffix() {
     networkLinkService.dnsSuffixList = [];
     Services.obs.notifyObservers(
       networkLinkService,
-      "network:link-status-changed",
-      "changed"
+      "network:dns-suffix-list-updated"
     );
   }
 

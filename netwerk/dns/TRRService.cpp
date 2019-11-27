@@ -73,6 +73,7 @@ nsresult TRRService::Init() {
     observerService->AddObserver(this, kClearPrivateData, true);
     observerService->AddObserver(this, kPurge, true);
     observerService->AddObserver(this, NS_NETWORK_LINK_TOPIC, true);
+    observerService->AddObserver(this, NS_DNS_SUFFIX_LIST_UPDATED_TOPIC, true);
   }
   nsCOMPtr<nsIPrefBranch> prefBranch;
   GetPrefBranch(getter_AddRefs(prefBranch));
@@ -101,6 +102,9 @@ nsresult TRRService::Init() {
 
   gTRRService = this;
 
+  nsCOMPtr<nsINetworkLinkService> nls =
+      do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID);
+  RebuildSuffixList(nls);
   LOG(("Initialized TRRService\n"));
   return NS_OK;
 }
@@ -452,10 +456,13 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
     if (mTRRBLStorage) {
       mTRRBLStorage->Clear();
     }
+  } else if (!strcmp(aTopic, NS_DNS_SUFFIX_LIST_UPDATED_TOPIC)) {
+    LOG(("TRRService dnsSuffixList-updated-event"));
+    nsCOMPtr<nsINetworkLinkService> link = do_QueryInterface(aSubject);
+    RebuildSuffixList(link);
   } else if (!strcmp(aTopic, NS_NETWORK_LINK_TOPIC)) {
     LOG(("TRRService link-event"));
     nsCOMPtr<nsINetworkLinkService> link = do_QueryInterface(aSubject);
-    RebuildSuffixList(link);
     CheckPlatformDNSStatus(link);
   }
   return NS_OK;
