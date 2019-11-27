@@ -7,6 +7,7 @@ package org.mozilla.samples.browser.addons
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -27,6 +28,8 @@ class InstalledAddOnDetailsActivity : AppCompatActivity() {
     private fun bind(addOn: AddOn) {
         title = addOn.translatableName.translate()
 
+        bindEnableSwitch(addOn.enabled)
+
         bindSettings()
 
         bindDetails(addOn)
@@ -37,6 +40,14 @@ class InstalledAddOnDetailsActivity : AppCompatActivity() {
     private fun bindVersion(addOn: AddOn) {
         val versionView = findViewById<TextView>(R.id.version_text)
         versionView.text = addOn.version
+    }
+
+    private fun bindEnableSwitch(enabled: Boolean) {
+        val switch = findViewById<Switch>(R.id.enable_switch)
+        switch.setState(enabled)
+        switch.setOnCheckedChangeListener { _, isChecked ->
+            switch.setState(isChecked)
+        }
     }
 
     private fun bindSettings() {
@@ -65,5 +76,15 @@ class InstalledAddOnDetailsActivity : AppCompatActivity() {
         findViewById<View>(R.id.remove_add_on).setOnClickListener {
             Toast.makeText(this, "Removed Add-on", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun Switch.setState(checked: Boolean) {
+        val text = if (checked) {
+            R.string.addon_settings_on
+        } else {
+            R.string.addon_settings_off
+        }
+        setText(text)
+        isChecked = checked
     }
 }

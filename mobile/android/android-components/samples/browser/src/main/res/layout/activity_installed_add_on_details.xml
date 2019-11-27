@@ -15,10 +15,24 @@
             android:paddingStart="?android:attr/listPreferredItemPaddingStart"
             android:paddingEnd="?android:attr/listPreferredItemPaddingEnd">
 
+        <Switch
+                android:id="@+id/enable_switch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:background="?android:attr/selectableItemBackground"
+                android:checked="true"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="@string/addon_settings_on"
+                android:padding="16dp"
+                android:textSize="18sp"/>
+
         <TextView
                 android:id="@+id/settings"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_below="@+id/enable_switch"
                 android:background="?android:attr/selectableItemBackground"
                 android:drawablePadding="10dp"
                 android:padding="16dp"

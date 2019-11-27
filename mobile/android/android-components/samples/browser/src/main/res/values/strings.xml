@@ -19,6 +19,10 @@
     <string name="add_on_learn_more">Learn more about permissions</string>
     <string name="add_on_rating">Rating</string>
     <string name="add_on_settings">Settings</string>
+    <string name="addon_settings_on">On</string>
+    <string name="addon_settings_off">Off</string>
+    <string name="addon_settings_installed_section">Installed</string>
+    <string name="addon_settings_recommended_section">Recommended</string>
     <string name="add_on_details">Details</string>
     <string name="add_on_permissions">Permissions</string>
     <string name="add_on_remove">Remove add-on</string>
