@@ -17,8 +17,7 @@ interface nsILoginManager : nsISupports {
    * Calling any method of nsILoginManager before this promise is resolved
    * might trigger the synchronous initialization fallback.
    */
-  readonly attribute jsval initializationPromise;
-
+  readonly attribute Promise initializationPromise;
 
   /**
    * Store a new login in the login manager.
@@ -33,8 +32,6 @@ interface nsILoginManager : nsISupports {
    */
   nsILoginInfo addLogin(in nsILoginInfo aLogin);
 
-
-
   /**
    * Like addLogin, but asynchronous and for many logins.
    *
@@ -47,7 +44,7 @@ interface nsILoginManager : nsISupports {
    * created. However, if the caller specifies non-default values, they will
    * be used instead.
    */
-  jsval addLogins(in jsval aLogins);
+  Promise addLogins(in jsval aLogins);
 
   /**
    * Remove a login from the login manager.
@@ -59,7 +56,6 @@ interface nsILoginManager : nsISupports {
    * values of any nsILoginMetaInfo properties are ignored.
    */
   void removeLogin(in nsILoginInfo aLogin);
-
 
   /**
    * Modify an existing login in the login manager.
@@ -82,7 +78,6 @@ interface nsILoginManager : nsISupports {
    */
   void modifyLogin(in nsILoginInfo oldLogin, in nsISupports newLoginData);
 
-
   /**
    * Remove all logins known to login manager.
    *
@@ -91,7 +86,6 @@ interface nsILoginManager : nsISupports {
    * login first (which might require knowing the master password).
    */
   void removeAllLogins();
-
 
   /**
    * Fetch all logins in the login manager. An array is always returned;
@@ -107,7 +101,7 @@ interface nsILoginManager : nsISupports {
    *
    * @return A promise which resolves with a JS Array of nsILoginInfo objects.
    */
-  jsval getAllLoginsAsync();
+  Promise getAllLoginsAsync();
 
   /**
    * Obtain a list of all origins for which password saving is disabled.
@@ -116,7 +110,6 @@ interface nsILoginManager : nsISupports {
    */
   Array<AString> getAllDisabledHosts();
 
-
   /**
    * Check to see if saving logins has been disabled for an origin.
    *
@@ -124,7 +117,6 @@ interface nsILoginManager : nsISupports {
    *        The origin to check. For example: "http://foo.com".
    */
   boolean getLoginSavingEnabled(in AString aHost);
-
 
   /**
    * Disable (or enable) storing logins for the specified origin. When
@@ -138,7 +130,6 @@ interface nsILoginManager : nsISupports {
    *        disabled (false)
    */
   void setLoginSavingEnabled(in AString aHost, in boolean isEnabled);
-
 
   /**
    * Search for logins matching the specified criteria. Called when looking
@@ -163,7 +154,6 @@ interface nsILoginManager : nsISupports {
    */
   Array<nsILoginInfo> findLogins(in AString aHostname, in AString aActionURL,
 				 in AString aHttpRealm);
-
 
   /**
    * Search for logins matching the specified criteria, as with

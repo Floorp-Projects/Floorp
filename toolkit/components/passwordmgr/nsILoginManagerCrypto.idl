@@ -36,7 +36,7 @@ interface nsILoginManagerCrypto : nsISupports {
    * Encrypts the specified strings, similar to encrypt, but returning a promise
    * which resolves with the the encrypted strings.
    */
-  jsval encryptMany(in jsval plainTexts);
+  Promise encryptMany(in jsval plainTexts);
 
   /**
    * decrypt
@@ -62,7 +62,7 @@ interface nsILoginManagerCrypto : nsISupports {
    * cipherText value can not be successfully decrypted (eg, if it was
    * encrypted with some other key).
    */
-  jsval decryptMany(in jsval cipherTexts);
+  Promise decryptMany(in jsval cipherTexts);
 
   /**
    * uiBusy
