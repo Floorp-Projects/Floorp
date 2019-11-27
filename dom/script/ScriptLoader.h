@@ -322,6 +322,7 @@ class ScriptLoader final : public nsISupports {
                           const nsAString& aType, const nsAString& aCrossOrigin,
                           const nsAString& aIntegrity, bool aScriptFromHead,
                           bool aAsync, bool aDefer, bool aNoModule,
+                          bool aLinkPreload,
                           const ReferrerPolicy aReferrerPolicy);
 
   /**

@@ -6827,6 +6827,13 @@
   value: false
   mirror: always
 
+# Whether to use the new experimental preload code based on the speculative loader
+# inside the html5 parser.
+- name: network.preload-experimental
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Telemetry of traffic categories. Whether or not to enable HttpTrafficAnalyzer.
 - name: network.traffic_analyzer.enabled
   type: RelaxedAtomicBool

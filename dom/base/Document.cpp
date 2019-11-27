@@ -11310,18 +11310,20 @@ NS_IMPL_ISUPPORTS(StubCSSLoaderObserver, nsICSSLoaderObserver)
 void Document::PreloadStyle(nsIURI* uri, const Encoding* aEncoding,
                             const nsAString& aCrossOriginAttr,
                             const enum ReferrerPolicy aReferrerPolicy,
-                            const nsAString& aIntegrity) {
+                            const nsAString& aIntegrity, bool aIsLinkPreload) {
   // The CSSLoader will retain this object after we return.
   nsCOMPtr<nsICSSLoaderObserver> obs = new StubCSSLoaderObserver();
 
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
       ReferrerInfo::CreateFromDocumentAndPolicyOverride(this, aReferrerPolicy);
 
+  auto preloadType = aIsLinkPreload ? css::Loader::IsPreload::FromLink
+                                    : css::Loader::IsPreload::FromParser;
+
   // Charset names are always ASCII.
   Unused << CSSLoader()->LoadSheet(
-      uri, css::Loader::IsPreload::Yes, NodePrincipal(), aEncoding,
-      referrerInfo, obs, Element::StringToCORSMode(aCrossOriginAttr),
-      aIntegrity);
+      uri, preloadType, NodePrincipal(), aEncoding, referrerInfo, obs,
+      Element::StringToCORSMode(aCrossOriginAttr), aIntegrity);
 }
 
 RefPtr<StyleSheet> Document::LoadChromeSheetSync(nsIURI* uri) {

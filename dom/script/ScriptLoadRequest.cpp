@@ -156,8 +156,11 @@ inline ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() {
   return static_cast<ModuleLoadRequest*>(this);
 }
 
-void ScriptLoadRequest::SetScriptMode(bool aDeferAttr, bool aAsyncAttr) {
-  if (aAsyncAttr) {
+void ScriptLoadRequest::SetScriptMode(bool aDeferAttr, bool aAsyncAttr,
+                                      bool aLinkPreload) {
+  if (aLinkPreload) {
+    mScriptMode = ScriptMode::eLinkPreload;
+  } else if (aAsyncAttr) {
     mScriptMode = ScriptMode::eAsync;
   } else if (aDeferAttr || IsModuleRequest()) {
     mScriptMode = ScriptMode::eDeferred;
