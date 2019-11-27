@@ -830,6 +830,7 @@ bool CheckAntiTrackingPermission(nsIPrincipal* aPrincipal,
 
       LOG(("Found a matching permission"));
       found = true;
+      break;
     }
 
     if (!found) {
