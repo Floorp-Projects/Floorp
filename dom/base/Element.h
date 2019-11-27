@@ -336,7 +336,7 @@ class Element : public FragmentOrElement {
    * notify the document's pres context, so that the style changes will be
    * noticed.
    */
-  nsresult SetSMILOverrideStyleDeclaration(DeclarationBlock* aDeclaration);
+  void SetSMILOverrideStyleDeclaration(DeclarationBlock&);
 
   /**
    * Returns a new SMILAttr that allows the caller to animate the given
