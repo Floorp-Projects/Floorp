@@ -167,6 +167,12 @@ export type RestartBrowserWithEnvironmentVariable =
 export type GetEnvironmentVariable = (envName: string) => string;
 
 /**
+ * This is the type signature for a function to query the browser for the
+ * ID of BrowsingContext of active tab.
+ */
+export type GetActiveBrowsingContextID = () => number;
+
+/**
  * This interface is injected into profiler.firefox.com
  */
 interface GeckoProfilerFrameScriptInterface {

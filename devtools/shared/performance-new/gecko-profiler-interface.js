@@ -18,6 +18,11 @@ loader.lazyImporter(
 );
 
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
+loader.lazyRequireGetter(
+  this,
+  "BrowserModule",
+  "devtools/client/performance-new/browser"
+);
 
 // Some platforms are built without the Gecko Profiler.
 const IS_SUPPORTED_PLATFORM = "nsIProfiler" in Ci;
@@ -96,6 +101,7 @@ class ActorReadyGeckoProfilerInterface {
         "leaf",
       ],
       threads: options.threads || ["GeckoMain", "Compositor"],
+      activeBrowsingContextID: BrowserModule.getActiveBrowsingContextID(),
     };
 
     try {
@@ -105,6 +111,7 @@ class ActorReadyGeckoProfilerInterface {
         settings.interval,
         settings.features,
         settings.threads,
+        settings.activeBrowsingContextID,
         settings.duration
       );
     } catch (e) {
@@ -216,7 +223,8 @@ class ActorReadyGeckoProfilerInterface {
           param.entries,
           param.interval,
           param.features,
-          param.duration
+          param.duration,
+          param.activeBrowsingContextID
         );
         break;
       case "profiler-stopped":
