@@ -17,6 +17,7 @@ function f()
     window.addEventListener("popstate", spin);
     window.close();
     window.location = "#c";
+    window.opener.postMessage("finish", "*");
     finish();
 }
 
@@ -32,6 +33,7 @@ function start()
 {
     var html = "<script>" + f + "<\/script><body onload=f()>";
     var win = window.open("data:text/html," + encodeURIComponent(html), null, "width=300,height=300");
+window.addEventListener("finish", () => { document.documentElement.removeAttribute("class"); }, false);
     win.finish = function() {
       SpecialPowers.clearUserPref("security.data_uri.unique_opaque_origin");
       document.documentElement.removeAttribute("class");
