@@ -91,14 +91,6 @@ void ChildSHistory::EvictLocalContentViewers() {
 
 nsISHistory* ChildSHistory::LegacySHistory() { return mHistory; }
 
-ParentSHistory* ChildSHistory::GetParentIfSameProcess() {
-  if (XRE_IsContentProcess()) {
-    return nullptr;
-  }
-
-  MOZ_CRASH("Unimplemented!");
-}
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChildSHistory)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)

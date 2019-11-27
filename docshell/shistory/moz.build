@@ -27,7 +27,6 @@ EXPORTS += [
 EXPORTS.mozilla.dom += [
     'ChildSHistory.h',
     'MaybeNewPSHEntry.h',
-    'ParentSHistory.h',
     'SHEntryChild.h',
     'SHEntryParent.h',
     'SHistoryChild.h',
@@ -40,7 +39,6 @@ UNIFIED_SOURCES += [
     'nsSHEntry.cpp',
     'nsSHEntryShared.cpp',
     'nsSHistory.cpp',
-    'ParentSHistory.cpp',
     'SHEntryChild.cpp',
     'SHEntryParent.cpp',
     'SHistoryChild.cpp',
