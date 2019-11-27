@@ -9048,16 +9048,6 @@ bool IonBuilder::checkTypedObjectIndexInBounds(
   MDefinition* length;
   if (objPrediction.hasKnownArrayLength(&lenOfAll)) {
     length = constantInt(lenOfAll);
-
-    // If we are not loading the length from the object itself, only
-    // optimize if the array buffer can never be a detached array buffer.
-    TypeSet::ObjectKey* globalKey =
-        TypeSet::ObjectKey::get(&script()->global());
-    if (globalKey->hasFlags(constraints(),
-                            OBJECT_FLAG_TYPED_OBJECT_HAS_DETACHED_BUFFER)) {
-      trackOptimizationOutcome(TrackedOutcome::TypedObjectHasDetachedBuffer);
-      return false;
-    }
   } else {
     trackOptimizationOutcome(TrackedOutcome::TypedObjectArrayRange);
     return false;
@@ -10579,13 +10569,6 @@ bool IonBuilder::jsop_length_fastPath() {
     // Compute the length for array typed objects.
     TypedObjectPrediction prediction = typedObjectPrediction(obj);
     if (!prediction.isUseless()) {
-      TypeSet::ObjectKey* globalKey =
-          TypeSet::ObjectKey::get(&script()->global());
-      if (globalKey->hasFlags(constraints(),
-                              OBJECT_FLAG_TYPED_OBJECT_HAS_DETACHED_BUFFER)) {
-        return false;
-      }
-
       MInstruction* length;
       int32_t sizedLength;
       if (prediction.hasKnownArrayLength(&sizedLength)) {
@@ -11757,13 +11740,6 @@ AbortReasonOr<Ok> IonBuilder::getPropTryScalarPropOfTypedObject(
     return Ok();
   }
 
-  // Don't optimize if the typed object's underlying buffer may be detached.
-  TypeSet::ObjectKey* globalKey = TypeSet::ObjectKey::get(&script()->global());
-  if (globalKey->hasFlags(constraints(),
-                          OBJECT_FLAG_TYPED_OBJECT_HAS_DETACHED_BUFFER)) {
-    return Ok();
-  }
-
   trackOptimizationSuccess();
   *emitted = true;
 
@@ -11779,13 +11755,6 @@ AbortReasonOr<Ok> IonBuilder::getPropTryReferencePropOfTypedObject(
     bool* emitted, MDefinition* typedObj, int32_t fieldOffset,
     TypedObjectPrediction fieldPrediction, PropertyName* name) {
   ReferenceType fieldType = fieldPrediction.referenceType();
-
-  TypeSet::ObjectKey* globalKey = TypeSet::ObjectKey::get(&script()->global());
-  if (globalKey->hasFlags(constraints(),
-                          OBJECT_FLAG_TYPED_OBJECT_HAS_DETACHED_BUFFER)) {
-    return Ok();
-  }
-
   if (fieldType == ReferenceType::TYPE_WASM_ANYREF) {
     return Ok();
   }
@@ -11805,15 +11774,6 @@ AbortReasonOr<Ok> IonBuilder::getPropTryReferencePropOfTypedObject(
 AbortReasonOr<Ok> IonBuilder::getPropTryComplexPropOfTypedObject(
     bool* emitted, MDefinition* typedObj, int32_t fieldOffset,
     TypedObjectPrediction fieldPrediction, size_t fieldIndex) {
-  // Don't optimize if the typed object's underlying buffer may be detached.
-  TypeSet::ObjectKey* globalKey = TypeSet::ObjectKey::get(&script()->global());
-  if (globalKey->hasFlags(constraints(),
-                          OBJECT_FLAG_TYPED_OBJECT_HAS_DETACHED_BUFFER)) {
-    return Ok();
-  }
-
-  // OK, perform the optimization
-
   // Identify the type object for the field.
   MDefinition* type = loadTypedObjectType(typedObj);
   MDefinition* fieldTypeObj =
@@ -12755,13 +12715,6 @@ AbortReasonOr<Ok> IonBuilder::setPropTryReferencePropOfTypedObject(
     bool* emitted, MDefinition* obj, int32_t fieldOffset, MDefinition* value,
     TypedObjectPrediction fieldPrediction, PropertyName* name) {
   ReferenceType fieldType = fieldPrediction.referenceType();
-
-  TypeSet::ObjectKey* globalKey = TypeSet::ObjectKey::get(&script()->global());
-  if (globalKey->hasFlags(constraints(),
-                          OBJECT_FLAG_TYPED_OBJECT_HAS_DETACHED_BUFFER)) {
-    return Ok();
-  }
-
   if (fieldType == ReferenceType::TYPE_WASM_ANYREF) {
     return Ok();
   }
@@ -12782,13 +12735,6 @@ AbortReasonOr<Ok> IonBuilder::setPropTryScalarPropOfTypedObject(
   Scalar::Type fieldType = fieldPrediction.scalarType();
 
   if (!CheckTypedObjectSupportedType(fieldType)) {
-    return Ok();
-  }
-
-  // Don't optimize if the typed object's underlying buffer may be detached.
-  TypeSet::ObjectKey* globalKey = TypeSet::ObjectKey::get(&script()->global());
-  if (globalKey->hasFlags(constraints(),
-                          OBJECT_FLAG_TYPED_OBJECT_HAS_DETACHED_BUFFER)) {
     return Ok();
   }
 
