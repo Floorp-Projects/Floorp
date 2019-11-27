@@ -37,15 +37,13 @@ class NullPrincipalURI final : public nsIURI, public nsISizeOf {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURI
 
+  NullPrincipalURI();
+
   // nsISizeOf
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
-  // Returns null on failure.
-  static already_AddRefed<NullPrincipalURI> Create();
-
  private:
-  NullPrincipalURI();
   NullPrincipalURI(const NullPrincipalURI& aOther);
 
   ~NullPrincipalURI() {}
