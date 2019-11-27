@@ -281,7 +281,7 @@ IPCResult DocumentChannelChild::RecvDeleteSelf() {
 }
 
 IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
-    const RedirectToRealChannelArgs& aArgs,
+    RedirectToRealChannelArgs&& aArgs,
     RedirectToRealChannelResolver&& aResolve) {
   RefPtr<dom::Document> loadingDocument;
   mLoadInfo->GetLoadingDocument(getter_AddRefs(loadingDocument));
@@ -448,7 +448,7 @@ DocumentChannelChild::OnRedirectVerifyCallback(nsresult aStatusCode) {
 }
 
 IPCResult DocumentChannelChild::RecvConfirmRedirect(
-    const LoadInfoArgs& aLoadInfo, nsIURI* aNewUri,
+    LoadInfoArgs&& aLoadInfo, nsIURI* aNewUri,
     ConfirmRedirectResolver&& aResolve) {
   // This is effectively the same as AsyncOnChannelRedirect, except since we're
   // not propagating the redirect into this process, we don't have an nsIChannel
@@ -464,9 +464,9 @@ IPCResult DocumentChannelChild::RecvConfirmRedirect(
     cspToInheritLoadingDocument = do_QueryReferent(ctx);
   }
   nsCOMPtr<nsILoadInfo> loadInfo;
-  MOZ_ALWAYS_SUCCEEDS(LoadInfoArgsToLoadInfo(Some(aLoadInfo), loadingDocument,
-                                             cspToInheritLoadingDocument,
-                                             getter_AddRefs(loadInfo)));
+  MOZ_ALWAYS_SUCCEEDS(LoadInfoArgsToLoadInfo(
+      Some(std::move(aLoadInfo)), loadingDocument, cspToInheritLoadingDocument,
+      getter_AddRefs(loadInfo)));
 
   nsCOMPtr<nsIURI> originalUri;
   GetOriginalURI(getter_AddRefs(originalUri));
