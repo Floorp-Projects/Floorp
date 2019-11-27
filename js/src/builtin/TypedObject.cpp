@@ -1645,6 +1645,21 @@ OutlineTypedObject* OutlineTypedObject::createDerived(
 }
 
 /*static*/
+OutlineTypedObject* OutlineTypedObject::createOpaque(JSContext* cx,
+                                                     HandleTypeDescr descr,
+                                                     HandleTypedObject target,
+                                                     uint32_t offset) {
+  Rooted<OutlineTypedObject*> obj(cx);
+  obj = createUnattachedWithClass(cx, &OutlineOpaqueTypedObject::class_, descr);
+  if (!obj) {
+    return nullptr;
+  }
+
+  obj->attach(cx, *target, offset);
+  return obj;
+}
+
+/*static*/
 TypedObject* TypedObject::createZeroed(JSContext* cx, HandleTypeDescr descr,
                                        gc::InitialHeap heap) {
   // If possible, create an object with inline data.
@@ -2348,16 +2363,19 @@ bool TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp) {
 
 bool js::NewOpaqueTypedObject(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
+  MOZ_ASSERT(args.length() == 3);
   MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<TypeDescr>());
+  MOZ_RELEASE_ASSERT(args[2].isInt32());
 
   Rooted<TypeDescr*> descr(cx, &args[0].toObject().as<TypeDescr>());
-  Rooted<OutlineTypedObject*> obj(cx);
-  obj = OutlineTypedObject::createUnattachedWithClass(
-      cx, &OutlineOpaqueTypedObject::class_, descr);
+  Rooted<TypedObject*> target(cx, &args[1].toObject().as<TypedObject>());
+  uint32_t offset = AssertedCast<uint32_t>(args[2].toInt32());
+
+  auto* obj = OutlineTypedObject::createOpaque(cx, descr, target, offset);
   if (!obj) {
     return false;
   }
+
   args.rval().setObject(*obj);
   return true;
 }
@@ -2380,21 +2398,6 @@ bool js::NewDerivedTypedObject(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   args.rval().setObject(*obj);
-  return true;
-}
-
-bool js::AttachTypedObject(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 3);
-  MOZ_RELEASE_ASSERT(args[2].isInt32());
-
-  OutlineTypedObject& handle = args[0].toObject().as<OutlineTypedObject>();
-  TypedObject& target = args[1].toObject().as<TypedObject>();
-  MOZ_ASSERT(!handle.isAttached());
-  uint32_t offset = AssertedCast<uint32_t>(args[2].toInt32());
-
-  handle.attach(cx, target, offset);
-
   return true;
 }
 
