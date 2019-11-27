@@ -119,6 +119,7 @@ function load() {
     req.send();
   }
   window.addEventListener('keypress', handle_keyboard_shortcut);
+  window.addEventListener('keydown',  handle_keydown);
   ID("image1").addEventListener('error', image_load_error);
   ID("image2").addEventListener('error', image_load_error);
 }
@@ -587,6 +588,23 @@ function handle_keyboard_shortcut(event) {
   }
 }
 
+function handle_keydown(event) {
+  switch (event.keyCode) {
+  case 37:  // left arrow
+    move_pixel(-1, 0);
+    break;
+  case 38:  // up arrow
+    move_pixel(0,-1);
+    break;
+  case 39:  // right arrow
+    move_pixel(1, 0);
+    break;
+  case 40:  // down arrow
+    move_pixel(0, 1);
+    break;
+  }
+}
+
 function shift_images(dir) {
   var activeItem = document.querySelector(".activeitem");
   if (!activeItem) {
@@ -644,6 +662,10 @@ function hex_as_rgb(hex) {
 
 function magnify(evt) {
   var { x: x, y: y } = cursor_point(evt);
+  do_magnify(x, y);
+}
+
+function do_magnify(x, y) {
   var centerPixelColor1, centerPixelColor2;
 
   var dx_lo = -Math.floor(gMagWidth / 2);
@@ -692,6 +714,20 @@ function show_pixelinfo(x, y, pix1rgb, pix1hex, pix2rgb, pix2hex) {
   ID("pix1rgb").textContent = pix1rgb;
   ID("pix2hex").textContent = pix2hex;
   ID("pix2rgb").textContent = pix2rgb;
+}
+
+function move_pixel(deltax, deltay) {
+  coords = ID("coords").textContent.split(',');
+  x = parseInt(coords[0]);
+  y = parseInt(coords[1]);
+  if (isNaN(x) || isNaN(y)) {
+    return;
+  }
+  x = x + deltax;
+  y = y + deltay;
+  if (x >= 0 && y >= 0 && x < gImage1Data.width && y < gImage1Data.height) {
+    do_magnify(x, y);
+  }
 }
 
   ]]></script>
