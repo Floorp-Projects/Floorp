@@ -57,7 +57,7 @@ pub fn parse_variant_subtag(subtag: &[u8]) -> Result<TinyStr8, ParserError> {
         return Err(ParserError::InvalidSubtag);
     }
 
-    let s = TinyStr8::from_bytes(subtag).unwrap();
+    let s = TinyStr8::from_bytes(subtag).map_err(|_| ParserError::InvalidSubtag)?;
 
     if (slen >= 5 && !s.is_ascii_alphanumeric())
         || (slen == 4

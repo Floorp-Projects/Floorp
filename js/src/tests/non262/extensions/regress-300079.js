@@ -26,12 +26,10 @@ function test()
   else {
     expect = 'PASSED';
 
-    f = evaluate("(function () { return a * a; })");
-    g = clone(f, {a: 3});
-    f = null;
+    f = evaluate("(function () { return a * a; })", {envChainObject: {a: 3}});
     gc();
     try {
-      a_squared = g(2);
+      a_squared = f(2);
       if (a_squared != 9)
         throw "Unexpected return from g: a_squared == " + a_squared;
       actual = "PASSED";

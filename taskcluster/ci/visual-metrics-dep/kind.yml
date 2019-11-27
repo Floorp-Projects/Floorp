@@ -39,5 +39,5 @@ job-template:
             - visual-metrics
     run:
         using: run-task
-        command: /builds/worker/bin/run-visual-metrics.py --jobs-json-path /builds/worker/fetches/jobs.json -- --orange --perceptual --contentful --force --renderignore 5 --json --viewport
+        command: /builds/worker/bin/run-visual-metrics.py --browsertime-results /builds/worker/fetches/browsertime-results.tgz -- --orange --perceptual --contentful --force --renderignore 5 --json --viewport
         checkout: false

@@ -32,8 +32,8 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyImporter(
   this,
-  "BrowserToolboxProcess",
-  "resource://devtools/client/framework/ToolboxProcess.jsm"
+  "BrowserToolboxLauncher",
+  "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
 );
 
 const {
@@ -424,7 +424,7 @@ DevTools.prototype = {
    */
   saveDevToolsSession: function(state) {
     state.browserConsole = BrowserConsoleManager.getBrowserConsoleSessionState();
-    state.browserToolbox = BrowserToolboxProcess.getBrowserToolboxSessionState();
+    state.browserToolbox = BrowserToolboxLauncher.getBrowserToolboxSessionState();
   },
 
   /**
@@ -432,7 +432,7 @@ DevTools.prototype = {
    */
   restoreDevToolsSession: function({ browserConsole, browserToolbox }) {
     if (browserToolbox) {
-      BrowserToolboxProcess.init();
+      BrowserToolboxLauncher.init();
     }
 
     if (browserConsole && !BrowserConsoleManager.getBrowserConsole()) {

@@ -78,8 +78,8 @@ template <>
 struct ParamTraits<mozilla::dom::IDBTransaction::Mode>
     : public ContiguousEnumSerializer<
           mozilla::dom::IDBTransaction::Mode,
-          mozilla::dom::IDBTransaction::READ_ONLY,
-          mozilla::dom::IDBTransaction::MODE_INVALID> {};
+          mozilla::dom::IDBTransaction::Mode::ReadOnly,
+          mozilla::dom::IDBTransaction::Mode::Invalid> {};
 
 }  // namespace IPC
 

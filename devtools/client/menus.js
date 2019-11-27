@@ -53,8 +53,8 @@ loader.lazyRequireGetter(
 
 loader.lazyImporter(
   this,
-  "BrowserToolboxProcess",
-  "resource://devtools/client/framework/ToolboxProcess.jsm"
+  "BrowserToolboxLauncher",
+  "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
 );
 loader.lazyImporter(
   this,
@@ -95,7 +95,7 @@ exports.menuitems = [
     id: "menu_browserToolbox",
     l10nKey: "browserToolboxMenu",
     oncommand() {
-      BrowserToolboxProcess.init();
+      BrowserToolboxLauncher.init();
     },
     keyId: "browserToolbox",
   },

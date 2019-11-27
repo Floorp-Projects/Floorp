@@ -48,7 +48,7 @@
     "hasConsoleMessage": false,
     "findConsoleMessage": false,
     "promise": false,
-    "BrowserToolboxProcess": false,
+    "BrowserToolboxLauncher": false,
     "OS": false,
     "selectors": false,
     "waitForNextDispatch": false,

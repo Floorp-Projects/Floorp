@@ -84,19 +84,22 @@
 
     var tpl = document.createElement('template');
     tpl.innerHTML =
-      `<!-- <div> elements with ${deep} nested childs, all with ${attributes} attributes -->
-       <!-- The deepest <div> has id="deep"> -->
-       ${tree}
-       <!-- ${n} <div> elements without any children -->
-       ${repeat}
-       <!-- Elements for custom.inspector.manyrules tests -->
-       <div class="no-css-rules"></div>
-       <div class="many-css-rules"></div>
-       <div class="expand-many-children">
-       ${expandManyChildren}
-       </div>
-       <div class="expand-balanced">
-       ${expandBalanced}
+      `
+       <div id="initial-node">
+         <!-- <div> elements with ${deep} nested childs, all with ${attributes} attributes -->
+         <!-- The deepest <div> has id="deep"> -->
+         ${tree}
+         <!-- ${n} <div> elements without any children -->
+         ${repeat}
+         <!-- Elements for custom.inspector.manyrules tests -->
+         <div class="no-css-rules"></div>
+         <div class="many-css-rules"></div>
+         <div class="expand-many-children">
+         ${expandManyChildren}
+         </div>
+         <div class="expand-balanced">
+         ${expandBalanced}
+         </div>
        </div>`;
     document.body.appendChild(tpl.content);
   </script>

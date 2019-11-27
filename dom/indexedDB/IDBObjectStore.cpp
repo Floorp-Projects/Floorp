@@ -1494,7 +1494,8 @@ already_AddRefed<IDBRequest> IDBObjectStore::AddOrPut(
   MOZ_ASSERT(aCx);
   MOZ_ASSERT_IF(aFromCursor, aOverwrite);
 
-  if (mTransaction->GetMode() == IDBTransaction::CLEANUP || mDeletedSpec) {
+  if (mTransaction->GetMode() == IDBTransaction::Mode::Cleanup ||
+      mDeletedSpec) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
     return nullptr;
   }
@@ -1513,7 +1514,11 @@ already_AddRefed<IDBRequest> IDBObjectStore::AddOrPut(
   StructuredCloneWriteInfo cloneWriteInfo(mTransaction->Database());
   nsTArray<IndexUpdateInfo> updateInfo;
 
-  GetAddInfo(aCx, aValueWrapper, aKey, cloneWriteInfo, key, updateInfo, aRv);
+  {
+    const auto autoStateRestore = mTransaction->TemporarilyProceedToInactive();
+    GetAddInfo(aCx, aValueWrapper, aKey, cloneWriteInfo, key, updateInfo, aRv);
+  }
+
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -2043,7 +2048,7 @@ already_AddRefed<IDBIndex> IDBObjectStore::CreateIndex(
     const IDBIndexParameters& aOptionalParameters, ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  if (mTransaction->GetMode() != IDBTransaction::VERSION_CHANGE ||
+  if (mTransaction->GetMode() != IDBTransaction::Mode::VersionChange ||
       mDeletedSpec) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
     return nullptr;
@@ -2143,7 +2148,7 @@ already_AddRefed<IDBIndex> IDBObjectStore::CreateIndex(
 void IDBObjectStore::DeleteIndex(const nsAString& aName, ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  if (mTransaction->GetMode() != IDBTransaction::VERSION_CHANGE ||
+  if (mTransaction->GetMode() != IDBTransaction::Mode::VersionChange ||
       mDeletedSpec) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
     return;
@@ -2419,7 +2424,7 @@ const nsString& IDBObjectStore::Name() const {
 void IDBObjectStore::SetName(const nsAString& aName, ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  if (mTransaction->GetMode() != IDBTransaction::VERSION_CHANGE ||
+  if (mTransaction->GetMode() != IDBTransaction::Mode::VersionChange ||
       mDeletedSpec) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;

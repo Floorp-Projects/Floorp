@@ -3,16 +3,17 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // ReactJS
-const PropTypes = require("prop-types");
+const {
+  button,
+  span,
+} = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 // Utils
 const { isGrip, wrapRender } = require("./rep-utils");
 const { rep: StringRep, isLongString } = require("./string");
 const { MODE } = require("./constants");
-const nodeConstants = require("../shared/dom-node-constants");
-
-const dom = require("react-dom-factories");
-const { span } = dom;
+const nodeConstants = require("devtools/shared/dom-node-constants");
 
 const MAX_ATTRIBUTE_LENGTH = 50;
 
@@ -70,7 +71,7 @@ function ElementNode(props) {
     }
 
     if (onInspectIconClick) {
-      inspectIcon = dom.button({
+      inspectIcon = button({
         className: "open-inspector",
         // TODO: Localize this with "openNodeInInspector" when Bug 1317038 lands
         title: inspectIconTitle || "Click to select the node in the inspector",

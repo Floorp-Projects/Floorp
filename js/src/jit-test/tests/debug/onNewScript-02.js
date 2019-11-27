@@ -44,7 +44,7 @@ test(function () { g.eval("var obj = {get x() { return 1; }, set x(v) { print(v)
 test(function () { return g.Function("a", "b", "return b - a;"); });
 
 // cloning a function with nested functions
-test(function () { g.clone(evaluate("(function(x) { return x + 1; })")); });
+test(function () { cloneAndExecuteScript("(function(x) { return x + 1; })", g); });
 
 // eval declaring a star generator
 test(function () { g.eval("function* sg(n) { for (var i=0;i<n;i++) yield i; }"); });

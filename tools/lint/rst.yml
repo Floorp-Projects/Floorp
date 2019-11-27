@@ -4,7 +4,6 @@ rst:
     include: [.]
     exclude:
         - toolkit/components/telemetry/docs/
-        - toolkit/components/extensions/
     extensions:
         - rst
     support-files:

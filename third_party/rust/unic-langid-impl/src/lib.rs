@@ -738,3 +738,8 @@ pub fn canonicalize<S: AsRef<[u8]>>(input: S) -> Result<String, LanguageIdentifi
     let lang_id = LanguageIdentifier::from_bytes(input.as_ref())?;
     Ok(lang_id.to_string())
 }
+
+#[test]
+fn invalid_subtag() {
+    assert!(LanguageIdentifier::from_bytes("en-ÁÁÁÁ".as_bytes()).is_err());
+}

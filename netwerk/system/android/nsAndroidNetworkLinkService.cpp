@@ -202,6 +202,14 @@ void nsAndroidNetworkLinkService::OnLinkDown() {
 
 void nsAndroidNetworkLinkService::OnLinkStatusKnown() { mStatusIsKnown = true; }
 
+void nsAndroidNetworkLinkService::OnDnsSuffixListUpdated() {
+  RefPtr<nsAndroidNetworkLinkService> self = this;
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction("nsAndroidNetworkLinkService::OnDnsSuffixListUpdated", [self]() {
+        self->NotifyObservers(NS_DNS_SUFFIX_LIST_UPDATED_TOPIC, nullptr);
+      }));
+}
+
 /* Sends the given event. Assumes aTopic/aData never goes out of scope (static
  * strings are ideal).
  */

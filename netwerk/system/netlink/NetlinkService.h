@@ -39,6 +39,7 @@ class NetlinkServiceListener : public nsISupports {
   virtual void OnLinkUp() = 0;
   virtual void OnLinkDown() = 0;
   virtual void OnLinkStatusKnown() = 0;
+  virtual void OnDnsSuffixListUpdated() = 0;
 
  protected:
   virtual ~NetlinkServiceListener() = default;
