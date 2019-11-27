@@ -156,7 +156,6 @@
   _(IntrinsicTypedArrayElementShift)               \
                                                    \
   _(IntrinsicObjectIsTypedObject)                  \
-  _(IntrinsicObjectIsTransparentTypedObject)       \
   _(IntrinsicObjectIsTypeDescr)                    \
   _(IntrinsicTypeDescrIsSimpleType)                \
   _(IntrinsicTypeDescrIsArrayType)
