@@ -771,11 +771,11 @@ nsDOMOfflineResourceList::GetDocumentAppCache() {
   return nullptr;
 }
 
-nsresult nsDOMOfflineResourceList::UpdateCompleted(
+void nsDOMOfflineResourceList::UpdateCompleted(
     nsIOfflineCacheUpdate* aUpdate) {
   if (aUpdate != mCacheUpdate) {
     // This isn't the update we're watching.
-    return NS_OK;
+    return;
   }
 
   bool partial;
@@ -797,8 +797,6 @@ nsresult nsDOMOfflineResourceList::UpdateCompleted(
       SendEvent(NS_LITERAL_STRING(CACHED_STR));
     }
   }
-
-  return NS_OK;
 }
 
 nsresult nsDOMOfflineResourceList::GetCacheKey(nsIURI* aURI, nsCString& aKey) {
