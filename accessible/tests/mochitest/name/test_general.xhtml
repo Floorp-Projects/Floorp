@@ -100,6 +100,9 @@
       // Multiple labels for single button: XUL button takes the last one.
       testName("btn_label_4", "label5");
 
+      // Label associated with HTML element.
+      testName("input_label", "input label");
+
 
       //////////////////////////////////////////////////////////////////////////
       // tooltiptext (if nothing above isn't presented then tooltiptext is used)
@@ -267,6 +270,9 @@
     <label control="btn_label_4">label4</label>
     <label control="btn_label_4">label5</label>
     <button id="btn_label_4"/>
+
+    <label control="input_label">input label</label>
+    <html:input id="input_label"/>
   </hbox>
 
   <!-- tooltiptext -->
