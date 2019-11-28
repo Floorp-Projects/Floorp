@@ -7,6 +7,8 @@ const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 const CLIENT = PublicSuffixList.CLIENT;
 const SIGNAL = "public-suffix-list-updated";
 
@@ -47,6 +49,14 @@ const PAYLOAD_UPDATED_AND_CREATED_RECORDS = {
 
 const fakeDafsaBinFile = do_get_file("data/fake_remote_dafsa.bin");
 const mockedFilePath = fakeDafsaBinFile.path;
+
+function setup() {
+  Services.prefs.setBoolPref("network.psl.onUpdate_notify", true);
+}
+setup();
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("network.psl.onUpdate_notify");
+});
 
 /**
  * downloadCalled is used by mockDownload() and resetMockDownload()
