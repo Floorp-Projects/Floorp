@@ -1,14 +1,15 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 /* exported preferences */
-/* global Components, ExtensionAPI, ExtensionCommon, Services */
-let Cu2 = Components.utils;
-Cu2.import("resource://gre/modules/Services.jsm");
-Cu2.import("resource://gre/modules/ExtensionSettingsStore.jsm");
-Cu2.import("resource://gre/modules/AddonManager.jsm");
-Cu2.import("resource://gre/modules/NetUtil.jsm");
-Cu2.import("resource://gre/modules/ExtensionPreferencesManager.jsm");
-/* global ExtensionPreferencesManager */
+/* global ExtensionAPI, ExtensionCommon */
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ExtensionPreferencesManager } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPreferencesManager.jsm"
+);
 // TODO file scope issue on experiments that join extension contexts causing redeclaration issues.
 
 const TRR_URI_PREF = "network.trr.uri";
