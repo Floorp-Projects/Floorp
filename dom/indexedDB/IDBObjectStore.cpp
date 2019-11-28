@@ -30,7 +30,6 @@
 #include "mozilla/Move.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/IDBMutableFileBinding.h"
@@ -1909,20 +1908,8 @@ void IDBObjectStore::GetKeyPath(JSContext* aCx,
 already_AddRefed<DOMStringList> IDBObjectStore::IndexNames() {
   AssertIsOnOwningThread();
 
-  const nsTArray<IndexMetadata>& indexes = mSpec->indexes();
-
-  RefPtr<DOMStringList> list = new DOMStringList();
-
-  if (!indexes.IsEmpty()) {
-    nsTArray<nsString>& listNames = list->StringArray();
-    listNames.SetCapacity(indexes.Length());
-
-    for (uint32_t index = 0; index < indexes.Length(); index++) {
-      listNames.InsertElementSorted(indexes[index].name());
-    }
-  }
-
-  return list.forget();
+  return CreateSortedDOMStringList(
+      mSpec->indexes(), [](const auto& index) { return index.name(); });
 }
 
 already_AddRefed<IDBRequest> IDBObjectStore::GetInternal(
