@@ -111,7 +111,7 @@
 
 #urlbar[focused="true"]:-moz-lwtheme,
 #navigator-toolbox #searchbar:focus-within:-moz-lwtheme {
-  color: var(--lwt-toolbar-field-focus-color, var(--lwt-toolbar-field-color, black));
+  color: var(--lwt-toolbar-field-focus-color);
 }
 
 #urlbar:not(.megabar)[focused="true"]:-moz-lwtheme,
