@@ -4,6 +4,7 @@
                  type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         title="Accessible XUL access keys and shortcut keys tests">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
@@ -17,8 +18,8 @@
   <![CDATA[
     function openMenu(aMenuID, aMenuitemID)
     {
-      this.menuNode = getNode(aMenuID),
-      this.menuitemNode = getNode(aMenuitemID),
+      this.menuNode = getNode(aMenuID);
+      this.menuitemNode = getNode(aMenuitemID);
 
       this.eventSeq = [
         new invokerChecker(EVENT_FOCUS, this.menuNode)
@@ -53,6 +54,11 @@
     var gQueue = null;
     function doTest()
     {
+      // HTML element should get accessKey from associated XUL label.
+      let input = getAccessible("input");
+      is(input.accessKey, (MAC ? "⌃⌥i" : "Alt+Shift+i"),
+         "Wrong accessKey on input");
+
       gQueue = new eventQueue();
       gQueue.push(new openMenu("menu", "menuitem"));
       gQueue.invoke(); // Will call SimpleTest.finish();
@@ -78,6 +84,9 @@
     </body>
 
     <vbox flex="1">
+      <label control="input" accesskey="i">input</label>
+      <html:input id="input"/>
+
       <keyset>
         <key key="l" modifiers="control" id="key1"/>
       </keyset>

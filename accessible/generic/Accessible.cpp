@@ -230,8 +230,8 @@ KeyBinding Accessible::AccessKey() const {
       HTMLLabelIterator iter(Document(), this,
                              HTMLLabelIterator::eSkipAncestorLabel);
       label = iter.Next();
-
-    } else if (mContent->IsXULElement()) {
+    }
+    if (!label) {
       XULLabelIterator iter(Document(), mContent);
       label = iter.Next();
     }
@@ -753,6 +753,21 @@ void Accessible::TakeFocus() const {
   }
 }
 
+void Accessible::NameFromAssociatedXULLabel(DocAccessible* aDocument,
+                                            nsIContent* aElm, nsString& aName) {
+  Accessible* label = nullptr;
+  XULLabelIterator iter(aDocument, aElm);
+  while ((label = iter.Next())) {
+    // Check if label's value attribute is used
+    label->Elm()->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName);
+    if (aName.IsEmpty()) {
+      // If no value attribute, a non-empty label must contain
+      // children that define its text -- possibly using HTML
+      nsTextEquivUtils::AppendTextEquivFromContent(label, label->Elm(), &aName);
+    }
+  }
+}
+
 void Accessible::XULElmName(DocAccessible* aDocument, nsIContent* aElm,
                             nsString& aName) {
   /**
@@ -786,18 +801,7 @@ void Accessible::XULElmName(DocAccessible* aDocument, nsIContent* aElm,
   // CASES #2 and #3 ------ label as a child or <label control="id" ... >
   // </label>
   if (aName.IsEmpty()) {
-    Accessible* label = nullptr;
-    XULLabelIterator iter(aDocument, aElm);
-    while ((label = iter.Next())) {
-      // Check if label's value attribute is used
-      label->Elm()->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName);
-      if (aName.IsEmpty()) {
-        // If no value attribute, a non-empty label must contain
-        // children that define its text -- possibly using HTML
-        nsTextEquivUtils::AppendTextEquivFromContent(label, label->Elm(),
-                                                     &aName);
-      }
-    }
+    NameFromAssociatedXULLabel(aDocument, aElm, aName);
   }
 
   aName.CompressWhitespace();
@@ -1620,9 +1624,8 @@ Relation Accessible::RelationByType(RelationType aType) const {
           new IDRefsIterator(mDoc, mContent, nsGkAtoms::aria_labelledby));
       if (mContent->IsHTMLElement()) {
         rel.AppendIter(new HTMLLabelIterator(Document(), this));
-      } else if (mContent->IsXULElement()) {
-        rel.AppendIter(new XULLabelIterator(Document(), mContent));
       }
+      rel.AppendIter(new XULLabelIterator(Document(), mContent));
 
       return rel;
     }
@@ -1978,6 +1981,11 @@ ENameValueFlag Accessible::NativeName(nsString& aName) const {
     }
 
     if (!aName.IsEmpty()) return eNameOK;
+
+    NameFromAssociatedXULLabel(mDoc, mContent, aName);
+    if (!aName.IsEmpty()) {
+      return eNameOK;
+    }
 
     nsTextEquivUtils::GetNameFromSubtree(this, aName);
     return aName.IsEmpty() ? eNameOK : eNameFromSubtree;
