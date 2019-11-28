@@ -109,6 +109,43 @@ describe("CFRPageActions", () => {
       pageAction = new PageAction(window, dispatchStub);
     });
 
+    describe("#addImpression", () => {
+      it("should call _sendTelemetry with the impression payload", () => {
+        const recommendation = {
+          id: "foo",
+          content: { bucket_id: "bar" },
+        };
+        sandbox.spy(pageAction, "_sendTelemetry");
+
+        pageAction.addImpression(recommendation);
+
+        assert.calledWith(pageAction._sendTelemetry, {
+          message_id: "foo",
+          bucket_id: "bar",
+          event: "IMPRESSION",
+        });
+      });
+      it("should include modelVersion if presented in the message", () => {
+        const recommendation = {
+          id: "foo",
+          content: { bucket_id: "bar" },
+          personalizedModelVersion: "model_version_1",
+        };
+        sandbox.spy(pageAction, "_sendTelemetry");
+
+        pageAction.addImpression(recommendation);
+
+        assert.calledWith(pageAction._sendTelemetry, {
+          message_id: "foo",
+          bucket_id: "bar",
+          event: "IMPRESSION",
+          event_context: {
+            modelVersion: "model_version_1",
+          },
+        });
+      });
+    });
+
     describe("#showAddressBarNotifier", () => {
       it("should un-hideAddressBarNotifier the element and set the right label value", async () => {
         await pageAction.showAddressBarNotifier(fakeRecommendation);
@@ -560,6 +597,32 @@ describe("CFRPageActions", () => {
             message_id: fakeRecommendation.id,
             bucket_id: fakeRecommendation.content.bucket_id,
             event: "CLICK_DOORHANGER",
+          },
+        });
+      });
+      it("should send modelVersion if presented in the message", async () => {
+        const recommendationWithModelVersion = {
+          ...fakeRecommendation,
+          personalizedModelVersion: "model_version_1",
+        };
+        CFRPageActions.clearRecommendations();
+        await CFRPageActions.addRecommendation(
+          fakeBrowser,
+          fakeHost,
+          recommendationWithModelVersion,
+          dispatchStub
+        );
+        await pageAction._showPopupOnClick();
+
+        assert.calledWith(dispatchStub, {
+          type: "DOORHANGER_TELEMETRY",
+          data: {
+            action: "cfr_user_event",
+            source: "CFR",
+            message_id: fakeRecommendation.id,
+            bucket_id: fakeRecommendation.content.bucket_id,
+            event: "CLICK_DOORHANGER",
+            event_context: { modelVersion: "model_version_1" },
           },
         });
       });
