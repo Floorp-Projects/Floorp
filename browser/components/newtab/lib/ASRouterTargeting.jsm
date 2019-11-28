@@ -119,6 +119,9 @@ const FRECENT_SITES_IGNORE_BLOCKED = false;
 const FRECENT_SITES_NUM_ITEMS = 25;
 const FRECENT_SITES_MIN_FRECENCY = 100;
 
+const CACHE_EXPIRATION = 60 * 1000;
+const jexlEvaluationCache = new Map();
+
 /**
  * CachedTargetingGetter
  * @param property {string} Name of the method called on ActivityStreamProvider
@@ -538,21 +541,52 @@ this.ASRouterTargeting = {
   },
 
   /**
+   * getCachedEvaluation - Return a cached jexl evaluation if available
+   *
+   * @param {string} targeting JEXL expression to lookup
+   * @returns {obj|null} Object with value result or null if not available
+   */
+  getCachedEvaluation(targeting) {
+    if (jexlEvaluationCache.has(targeting)) {
+      const { timestamp, value } = jexlEvaluationCache.get(targeting);
+      if (Date.now() - timestamp <= CACHE_EXPIRATION) {
+        return { value };
+      }
+      jexlEvaluationCache.delete(targeting);
+    }
+
+    return null;
+  },
+
+  /**
    * checkMessageTargeting - Checks is a message's targeting parameters are satisfied
    *
    * @param {*} message An AS router message
    * @param {obj} context A FilterExpression context
    * @param {func} onError A function to handle errors (takes two params; error, message)
+   * @param {boolean} shouldCache Should the JEXL evaluations be cached and reused.
    * @returns
    */
-  async checkMessageTargeting(message, context, onError) {
+  async checkMessageTargeting(message, context, onError, shouldCache) {
     // If no targeting is specified,
     if (!message.targeting) {
       return true;
     }
     let result;
     try {
+      if (shouldCache) {
+        result = this.getCachedEvaluation(message.targeting);
+        if (result) {
+          return result.value;
+        }
+      }
       result = await this.isMatch(message.targeting, context);
+      if (shouldCache) {
+        jexlEvaluationCache.set(message.targeting, {
+          timestamp: Date.now(),
+          value: result,
+        });
+      }
     } catch (error) {
       Cu.reportError(error);
       if (onError) {
@@ -577,7 +611,7 @@ this.ASRouterTargeting = {
     return this.combineContexts(context, triggerContext);
   },
 
-  _isMessageMatch(message, trigger, context, onError) {
+  _isMessageMatch(message, trigger, context, onError, shouldCache = false) {
     return (
       message &&
       (trigger
@@ -585,7 +619,7 @@ this.ASRouterTargeting = {
         : !message.trigger) &&
       // If a trigger expression was passed to this function, the message should match it.
       // Otherwise, we should choose a message with no trigger property (i.e. a message that can show up at any time)
-      this.checkMessageTargeting(message, context, onError)
+      this.checkMessageTargeting(message, context, onError, shouldCache)
     );
   },
 
@@ -597,15 +631,28 @@ this.ASRouterTargeting = {
    * @param {trigger} string A trigger expression if a message for that trigger is desired
    * @param {obj|null} context A FilterExpression context. Defaults to TargetingGetters above.
    * @param {func} onError A function to handle errors (takes two params; error, message)
+   * @param {boolean} shouldCache Should the JEXL evaluations be cached and reused.
    * @returns {obj} an AS router message
    */
-  async findMatchingMessage({ messages, trigger, context, onError }) {
+  async findMatchingMessage({
+    messages,
+    trigger,
+    context,
+    onError,
+    shouldCache = false,
+  }) {
     const sortedMessages = this._getSortedMessages(messages);
     const combinedContext = this._getCombinedContext(trigger, context);
 
     for (const candidate of sortedMessages) {
       if (
-        await this._isMessageMatch(candidate, trigger, combinedContext, onError)
+        await this._isMessageMatch(
+          candidate,
+          trigger,
+          combinedContext,
+          onError,
+          shouldCache
+        )
       ) {
         return candidate;
       }
