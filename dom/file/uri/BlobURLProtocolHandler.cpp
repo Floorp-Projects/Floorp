@@ -580,14 +580,12 @@ nsresult BlobURLProtocolHandler::AddDataEntry(MediaSource* aMediaSource,
 }
 
 /* static */
-nsresult BlobURLProtocolHandler::AddDataEntry(const nsACString& aURI,
-                                              nsIPrincipal* aPrincipal,
-                                              BlobImpl* aBlobImpl) {
+void BlobURLProtocolHandler::AddDataEntry(const nsACString& aURI,
+                                          nsIPrincipal* aPrincipal,
+                                          BlobImpl* aBlobImpl) {
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aBlobImpl);
-
   AddDataEntryInternal(aURI, aBlobImpl, aPrincipal);
-  return NS_OK;
 }
 
 /* static */
