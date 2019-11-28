@@ -38,15 +38,13 @@
 #ifndef XPCOM_GLUE_AVOID_NSPR
 /**
  * We need to be able to hold a reference to a Moz2D SourceSurface from Image
- * subclasses. This is potentially a problem since Images can be addrefed
- * or released off the main thread. We can ensure that we never AddRef
- * a SourceSurface off the main thread, but we might want to Release due
- * to an Image being destroyed off the main thread.
+ * subclasses. Whilst SourceSurface is atomic refcounted and thus safe to
+ * AddRef/Release on any thread, it is potentially a problem since clean up code
+ * may need to run on a the main thread.
  *
  * We use nsCountedRef<nsMainThreadSourceSurfaceRef> to reference the
- * SourceSurface. When AddRefing, we assert that we're on the main thread.
- * When Releasing, if we're not on the main thread, we post an event to
- * the main thread to do the actual release.
+ * SourceSurface. When Releasing, if we're not on the main thread, we post an
+ * event to the main thread to do the actual release.
  */
 class nsMainThreadSourceSurfaceRef;
 
@@ -80,11 +78,7 @@ class nsAutoRefTraits<nsMainThreadSourceSurfaceRef> {
     nsCOMPtr<nsIRunnable> runnable = new SurfaceReleaser(aRawRef);
     NS_DispatchToMainThread(runnable);
   }
-  static void AddRef(RawRef aRawRef) {
-    NS_ASSERTION(NS_IsMainThread(),
-                 "Can only add a reference on the main thread");
-    aRawRef->AddRef();
-  }
+  static void AddRef(RawRef aRawRef) { aRawRef->AddRef(); }
 };
 
 class nsOwningThreadSourceSurfaceRef;
