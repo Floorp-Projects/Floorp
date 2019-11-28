@@ -118,8 +118,8 @@ class FinalizationRecordVectorObject : public NativeObject {
 
   static FinalizationRecordVectorObject* create(JSContext* cx);
 
-  RecordVector& records();
-  const RecordVector& records() const;
+  RecordVector* records();
+  const RecordVector* records() const;
 
   bool isEmpty() const;
 
