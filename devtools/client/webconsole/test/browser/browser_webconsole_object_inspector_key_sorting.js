@@ -107,20 +107,14 @@ add_task(async function() {
 });
 
 async function testKeyOrder(hud, command, expectedKeys) {
-  info(`Testing command: [${command}]`);
+  info(`Testing command: ${command}`);
+  await clearOutput(hud);
 
   info(
     "Wait for a new .result message with an object inspector to be displayed"
   );
-  const resultsCount = findMessages(hud, "", ".result").length;
-  execute(hud, command);
-  const oi = await waitFor(() => {
-    const results = findMessages(hud, "", ".result");
-    if (results.length == resultsCount + 1) {
-      return results.pop().querySelector(".tree");
-    }
-    return false;
-  });
+  const { node } = await executeAndWaitForMessage(hud, command, "", ".result");
+  const oi = node.querySelector(".tree");
 
   info("Expand object inspector");
   const onOiExpanded = waitFor(() => {
