@@ -1625,8 +1625,11 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
 
     const rawNode = node.rawNode;
-    if (rawNode.nodeType !== rawNode.ownerDocument.ELEMENT_NODE) {
-      throw new Error("Can only change innerHTML to element nodes");
+    if (
+      rawNode.nodeType !== rawNode.ownerDocument.ELEMENT_NODE &&
+      rawNode.nodeType !== rawNode.ownerDocument.DOCUMENT_FRAGMENT_NODE
+    ) {
+      throw new Error("Can only change innerHTML to element or fragment nodes");
     }
     // eslint-disable-next-line no-unsanitized/property
     rawNode.innerHTML = value;

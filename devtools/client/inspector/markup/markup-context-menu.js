@@ -630,16 +630,21 @@ class MarkupContextMenu {
     return [linkFollow, linkCopy];
   }
 
-  _getPasteSubmenu(isEditableElement) {
+  _getPasteSubmenu(isElement, isFragment, isAnonymous) {
     const isPasteable =
-      isEditableElement && this._getClipboardContentForPaste();
+      !isAnonymous &&
+      (isFragment || isElement) &&
+      this._getClipboardContentForPaste();
     const disableAdjacentPaste =
       !isPasteable ||
+      !isElement ||
       this.selection.isRoot() ||
       this.selection.isBodyNode() ||
       this.selection.isHeadNode();
     const disableFirstLastPaste =
-      !isPasteable || (this.selection.isHTMLNode() && this.selection.isRoot());
+      !isPasteable ||
+      !isElement ||
+      (this.selection.isHTMLNode() && this.selection.isRoot());
 
     const pasteSubmenu = new Menu();
     pasteSubmenu.append(
@@ -656,7 +661,7 @@ class MarkupContextMenu {
         id: "node-menu-pasteouterhtml",
         label: INSPECTOR_L10N.getStr("inspectorPasteOuterHTML.label"),
         accesskey: INSPECTOR_L10N.getStr("inspectorPasteOuterHTML.accesskey"),
-        disabled: !isPasteable,
+        disabled: !isPasteable || !isElement,
         click: () => this._pasteOuterHTML(),
       })
     );
@@ -902,7 +907,7 @@ class MarkupContextMenu {
     menu.append(
       new MenuItem({
         label: INSPECTOR_L10N.getStr("inspectorPasteHTMLSubmenu.label"),
-        submenu: this._getPasteSubmenu(isEditableElement),
+        submenu: this._getPasteSubmenu(isElement, isFragment, isAnonymous),
       })
     );
 
