@@ -308,7 +308,7 @@ if CONFIG['OS_ARCH'] == 'FreeBSD':
 if CONFIG['OS_ARCH'] == 'Darwin':
     OS_LIBS += [
         # Link to Metal as required by the Metal gfx-hal backend
-        '-framework Metal',
+        '-weak_framework Metal',
     ]
 
 
