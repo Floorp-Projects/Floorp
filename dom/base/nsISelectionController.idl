@@ -24,9 +24,13 @@ webidl Selection;
 [builtinclass, scriptable, uuid(3801c9d4-8e69-4bfc-9edb-b58278621f8f)]
 interface nsISelectionController : nsISelectionDisplay
 {
-   // RawSelectionType values:
+   // Begin of RawSelectionType values.
    const short SELECTION_NONE                      = 0;
+   // Corresponds to the Selection exposed via window.getSelection() and
+   // document.getSelection().
    const short SELECTION_NORMAL                    = 1;
+   // Corresponds to the Selection used for spellchecking in <textarea>s and
+   // "contentEditable" elements.
    const short SELECTION_SPELLCHECK                = 2;
    const short SELECTION_IME_RAWINPUT              = 3;
    const short SELECTION_IME_SELECTEDRAWTEXT       = 4;
@@ -37,6 +41,7 @@ interface nsISelectionController : nsISelectionDisplay
    const short SELECTION_FIND                      = 8;
    const short SELECTION_URLSECONDARY              = 9;
    const short SELECTION_URLSTRIKEOUT              = 10;
+   // End of RawSelectionType values.
    const short NUM_SELECTIONTYPES                  = 11;
 
    // SelectionRegion values:
