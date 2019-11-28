@@ -1076,6 +1076,13 @@ class Accessible : public nsISupports {
   void ARIAName(nsString& aName) const;
 
   /**
+   * Returns the accessible name specified for this control using XUL
+   * <label control="id" ...>.
+   */
+  static void NameFromAssociatedXULLabel(DocAccessible* aDocument,
+                                         nsIContent* aElm, nsString& aName);
+
+  /**
    * Return the name for XUL element.
    */
   static void XULElmName(DocAccessible* aDocument, nsIContent* aElm,
