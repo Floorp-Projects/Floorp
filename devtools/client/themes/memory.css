@@ -98,6 +98,11 @@ html, body, #app, #memory-tool {
   align-items: center;
 }
 
+.devtools-toolbar > .toolbar-text {
+  display: flex;
+  align-items: center;
+}
+
 .devtools-toolbar-select {
   margin-inline-start: 5px;
 }
