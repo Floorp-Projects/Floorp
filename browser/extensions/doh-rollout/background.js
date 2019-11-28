@@ -100,7 +100,7 @@ const stateManager = {
   },
 
   async rememberDoorhangerShown() {
-    // This will be shown on startup and netChange events until a user clicks
+    // This will be shown on startup and network changes until a user clicks
     // to confirm/disable DoH or presses the esc key (confirming)
     log("Remembering that doorhanger has been shown");
     await rollout.setSetting(DOH_DOORHANGER_SHOWN_PREF, true);
@@ -226,26 +226,6 @@ const rollout = {
     browser.experiments.heuristics.sendHeuristicsPing("disable_doh", results);
     await stateManager.rememberDisableHeuristics();
     await stateManager.rememberDoorhangerShown();
-  },
-
-  async netChangeListener() {
-    // Possible race condition between multiple notifications?
-    let curTime = new Date().getTime() / 1000;
-    let timePassed = curTime - this.lastNetworkChangeTime;
-    log("Time passed since last network change:", timePassed);
-    if (timePassed < 30) {
-      return;
-    }
-
-    this.lastNetworkChangeTime = curTime;
-
-    // Run heuristics to determine if DoH should be disabled
-    let decision = await rollout.heuristics("netChange");
-    if (decision === "disable_doh") {
-      await stateManager.setState("disabled");
-    } else {
-      await stateManager.setState("enabled");
-    }
   },
 
   async heuristics(evaluateReason) {
@@ -478,25 +458,41 @@ const rollout = {
     }
 
     // Listen for network change events to run heuristics again
-    browser.experiments.netChange.onConnectionChanged.addListener(async () => {
+    browser.networkStatus.onConnectionChanged.addListener(async () => {
       log("onConnectionChanged");
-      // Only run the heuristics if user hasn't explicitly enabled/disabled DoH
-      let shouldRunHeuristics = await stateManager.shouldRunHeuristics();
-      let shouldShowDoorhanger = await stateManager.shouldShowDoorhanger();
 
-      if (!shouldRunHeuristics) {
+      let linkInfo = await browser.networkStatus.getLinkInfo();
+      if (linkInfo.status !== "up") {
+        log("Link down.");
+        if (rollout.networkSettledTimeout) {
+          log("Canceling queued heuristics run.");
+          clearTimeout(rollout.networkSettledTimeout);
+          rollout.networkSettledTimeout = null;
+        }
         return;
       }
 
-      const netChangeDecision = await rollout.heuristics("netChange");
+      log("Queing a heuristics run in 60s, will cancel if network fluctuates.");
+      rollout.networkSettledTimeout = setTimeout(async () => {
+        log("No network fluctuation for 60 seconds, running heuristics.");
+        // Only run the heuristics if user hasn't explicitly enabled/disabled DoH
+        let shouldRunHeuristics = await stateManager.shouldRunHeuristics();
+        let shouldShowDoorhanger = await stateManager.shouldShowDoorhanger();
 
-      if (netChangeDecision === "disable_doh") {
-        await stateManager.setState("disabled");
-      } else if (shouldShowDoorhanger) {
-        await stateManager.showDoorHangerAndEnableDoH();
-      } else {
-        await stateManager.setState("enabled");
-      }
+        if (!shouldRunHeuristics) {
+          return;
+        }
+
+        const netChangeDecision = await rollout.heuristics("netChange");
+
+        if (netChangeDecision === "disable_doh") {
+          await stateManager.setState("disabled");
+        } else if (shouldShowDoorhanger) {
+          await stateManager.showDoorHangerAndEnableDoH();
+        } else {
+          await stateManager.setState("enabled");
+        }
+      }, 60000);
     });
   },
 
