@@ -1,7 +1,7 @@
 {
   "title": "WhatsNewMessage",
   "description": "A template for the messages that appear in the What's New panel.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "object",
   "definitions": {
     "localizableText": {
@@ -27,6 +27,10 @@
     "layout": {
       "description": "Different message layouts",
      "enum": ["tracking-protections"]
+    },
+    "layout_title_content_variable": {
+      "description": "Select what profile specific value to show for the current layout.",
+      "type": "string"
     },
     "bucket_id": {
       "type": "string",
@@ -80,5 +84,8 @@
     }
   },
   "additionalProperties": false,
-  "required": ["published_date", "title", "body", "cta_url", "bucket_id"]
+  "required": ["published_date", "title", "body", "cta_url", "bucket_id"],
+  "dependencies": {
+    "layout": ["layout_title_content_variable"]
+  }
 }

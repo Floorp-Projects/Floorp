@@ -141,6 +141,34 @@ cfr-whatsnew-lockwise-take-body =
    backed up passwords from anywhere.
 cfr-whatsnew-lockwise-take-link-text = Get the app
 
+## Picture-in-Picture
+
+cfr-whatsnew-pip-header = Watch videos while you browse
+cfr-whatsnew-pip-body = Picture-in-picture pops video into a floating window so you can watch while working in other tabs.
+cfr-whatsnew-pip-cta = Learn more
+
+## Permission Prompt
+
+cfr-whatsnew-permission-prompt-header = Fewer annoying site pop-ups
+cfr-whatsnew-permission-prompt-body = { -brand-shorter-name } now blocks sites from automatically asking to send you pop-up messages.
+cfr-whatsnew-permission-prompt-cta = Learn more
+
+## Fingerprinter Counter
+
+# This string is displayed before a large numeral that indicates the total
+# number of tracking elements blocked. Don’t add $fingerprinterCount to your
+# localization, because it would result in the number showing twice.
+cfr-whatsnew-fingerprinter-counter-header =
+  { $fingerprinterCount ->
+    [one] Fingerprinter blocked
+   *[other] Fingerprinters blocked
+  }
+cfr-whatsnew-fingerprinter-counter-body = { -brand-shorter-name } blocks many fingerprinters that secretly gather information about your device and actions to create an advertising profile of you.
+
+# Message variation when fingerprinters count is less than 10
+cfr-whatsnew-fingerprinter-counter-header-alt = Fingerprinters
+cfr-whatsnew-fingerprinter-counter-body-alt = { -brand-shorter-name } can block fingerprinters that secretly gather information about your device and actions to create an advertising profile of you.
+
 ## Bookmark Sync
 
 cfr-doorhanger-sync-bookmarks-header = Get this bookmark on your phone

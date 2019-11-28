@@ -281,6 +281,16 @@ describe("ToolbarPanelHub", () => {
       messages[0].content.link_text = { string_id: "link_text_id" };
 
       getMessagesStub.returns(messages);
+      const ev1 = sandbox.stub();
+      ev1.withArgs("type").returns(1); // tracker
+      ev1.withArgs("count").returns(4);
+      const ev2 = sandbox.stub();
+      ev2.withArgs("type").returns(4); // fingerprinter
+      ev2.withArgs("count").returns(3);
+      getEventsByDateRangeStub.returns([
+        { getResultByName: ev1 },
+        { getResultByName: ev2 },
+      ]);
 
       await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
 
@@ -288,6 +298,14 @@ describe("ToolbarPanelHub", () => {
         assert.ok(createdElements.find(el => el.tagName === "h2"));
         if (message.content.layout === "tracking-protections") {
           assert.ok(createdElements.find(el => el.tagName === "h4"));
+        }
+        if (message.id === "WHATS_NEW_FINGERPRINTER_COUNTER_72") {
+          assert.ok(createdElements.find(el => el.tagName === "h4"));
+          assert.ok(
+            createdElements.find(
+              el => el.tagName === "h2" && el.textContent === 3
+            )
+          );
         }
         assert.ok(createdElements.find(el => el.tagName === "p"));
       }
@@ -424,7 +442,11 @@ describe("ToolbarPanelHub", () => {
           args: {
             blockedCount: 7,
             earliestDate: getEarliestRecordedDateStub(),
-            cookie: 7,
+            cookieCount: 7,
+            cryptominerCount: 0,
+            socialCount: 0,
+            trackerCount: 0,
+            fingerprinterCount: 0,
           },
         },
       ]);
@@ -453,8 +475,11 @@ describe("ToolbarPanelHub", () => {
           args: {
             blockedCount: 7,
             earliestDate: getEarliestRecordedDateStub(),
-            tracker: 4,
-            fingerprinter: 3,
+            trackerCount: 4,
+            fingerprinterCount: 3,
+            cookieCount: 0,
+            cryptominerCount: 0,
+            socialCount: 0,
           },
         },
       ]);
