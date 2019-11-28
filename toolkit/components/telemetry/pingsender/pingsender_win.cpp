@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include <direct.h>
 #include <windows.h>
 #include <wininet.h>
 
@@ -146,6 +147,32 @@ bool Post(const string& url, const string& payload) {
   }
 
   return rv;
+}
+
+void ChangeCurrentWorkingDirectory(const string& pingPath) {
+  char fullPath[MAX_PATH + 1] = {};
+  if (!_fullpath(fullPath, pingPath.c_str(), sizeof(fullPath))) {
+    PINGSENDER_LOG("Could not build the full path to the ping\n");
+    return;
+  }
+
+  char drive[_MAX_DRIVE] = {};
+  char dir[_MAX_DIR] = {};
+  if (_splitpath_s(fullPath, drive, sizeof(drive), dir, sizeof(dir), nullptr, 0,
+                   nullptr, 0)) {
+    PINGSENDER_LOG("Could not split the current path\n");
+    return;
+  }
+
+  char cwd[MAX_PATH + 1] = {};
+  if (_makepath_s(cwd, sizeof(cwd), drive, dir, nullptr, nullptr)) {
+    PINGSENDER_LOG("Could not assemble the path for the new cwd\n");
+    return;
+  }
+
+  if (_chdir(cwd) == -1) {
+    PINGSENDER_LOG("Could not change the current working directory\n");
+  }
 }
 
 }  // namespace PingSender

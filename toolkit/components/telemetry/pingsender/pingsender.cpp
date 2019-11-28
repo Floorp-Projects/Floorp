@@ -173,6 +173,8 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
 
+  ChangeCurrentWorkingDirectory(pingPath);
+
   string ping(ReadPing(pingPath));
 
   if (ping.empty()) {
