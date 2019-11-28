@@ -4171,7 +4171,7 @@ void GCRuntime::markWeakReferences(gcstats::PhaseKind phase) {
 
   for (;;) {
     bool markedAny = false;
-    if (!marker.isWeakMarking()) {
+    if (!marker.isWeakMarkingTracer()) {
       for (ZoneIterT zone(this); !zone.done(); zone.next()) {
         markedAny |= WeakMapBase::markZoneIteratively(zone, &marker);
       }
