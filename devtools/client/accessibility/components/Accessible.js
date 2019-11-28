@@ -112,7 +112,6 @@ class Accessible extends Component {
       labelledby: PropTypes.string.isRequired,
       parents: PropTypes.object,
       relations: PropTypes.object,
-      supports: PropTypes.object,
     };
   }
 
@@ -181,7 +180,7 @@ class Accessible extends Component {
   }
 
   async update() {
-    const { dispatch, accessibleFront, supports } = this.props;
+    const { dispatch, accessibleFront } = this.props;
     if (!accessibleFront.actorID) {
       return;
     }
@@ -189,7 +188,7 @@ class Accessible extends Component {
     const domWalker = (await accessibleFront.targetFront.getFront("inspector"))
       .walker;
 
-    dispatch(updateDetails(domWalker, accessibleFront, supports));
+    dispatch(updateDetails(domWalker, accessibleFront));
   }
 
   setExpanded(item, isExpanded) {
@@ -540,13 +539,12 @@ const makeParentMap = items => {
   return map;
 };
 
-const mapStateToProps = ({ details, ui }) => {
+const mapStateToProps = ({ details }) => {
   const {
     accessible: accessibleFront,
     DOMNode: nodeFront,
     relations,
   } = details;
-  const { supports } = ui;
   if (!accessibleFront || !nodeFront) {
     return {};
   }
@@ -556,9 +554,7 @@ const mapStateToProps = ({ details, ui }) => {
       if (key === "DOMNode") {
         props.nodeFront = nodeFront;
       } else if (key === "relations") {
-        if (supports.relations) {
-          props.relations = relations;
-        }
+        props.relations = relations;
       } else {
         props[key] = accessibleFront[key];
       }
@@ -569,7 +565,7 @@ const mapStateToProps = ({ details, ui }) => {
   );
   const parents = makeParentMap(items);
 
-  return { accessibleFront, nodeFront, items, parents, relations, supports };
+  return { accessibleFront, nodeFront, items, parents, relations };
 };
 
 module.exports = connect(mapStateToProps)(Accessible);

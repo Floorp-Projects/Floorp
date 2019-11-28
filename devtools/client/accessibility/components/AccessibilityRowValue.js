@@ -11,8 +11,6 @@ const {
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
-const { connect } = require("devtools/client/shared/vendor/react-redux");
-
 const Badges = createFactory(require("./Badges"));
 const AuditController = createFactory(require("./AuditController"));
 
@@ -26,16 +24,10 @@ class AccessibilityRowValue extends Component {
       member: PropTypes.shape({
         object: PropTypes.object,
       }).isRequired,
-      supports: PropTypes.object.isRequired,
     };
   }
 
   render() {
-    const {
-      member,
-      supports: { audit },
-    } = this.props;
-
     return span(
       {
         role: "presentation",
@@ -45,19 +37,14 @@ class AccessibilityRowValue extends Component {
         defaultRep: Grip,
         cropLimit: 50,
       }),
-      audit &&
-        AuditController(
-          {
-            accessibleFront: member.object,
-          },
-          Badges()
-        )
+      AuditController(
+        {
+          accessibleFront: this.props.member.object,
+        },
+        Badges()
+      )
     );
   }
 }
 
-const mapStateToProps = ({ ui: { supports } }) => {
-  return { supports };
-};
-
-module.exports = connect(mapStateToProps)(AccessibilityRowValue);
+module.exports = AccessibilityRowValue;
