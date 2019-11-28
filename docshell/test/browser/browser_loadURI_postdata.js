@@ -2,8 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const gPostData = "postdata=true";
+const gUrl =
+  "http://mochi.test:8888/browser/docshell/test/browser/print_postdata.sjs";
 
-function test() {
+add_task(async function test_loadURI_persists_postData() {
   waitForExplicitFinish();
 
   let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
@@ -25,19 +27,16 @@ function test() {
     Ci.nsIPrincipal
   );
 
-  tab.linkedBrowser.loadURI(
-    "http://mochi.test:8888/browser/docshell/test/browser/print_postdata.sjs",
-    {
-      triggeringPrincipal: systemPrincipal,
-      postData: postStream,
-    }
-  );
-  BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
-    ContentTask.spawn(tab.linkedBrowser, gPostData, function(postData) {
-      var bodyText = content.document.body.textContent;
-      is(bodyText, postData, "post data was submitted correctly");
-    }).then(() => {
-      finish();
-    });
+  tab.linkedBrowser.loadURI(gUrl, {
+    triggeringPrincipal: systemPrincipal,
+    postData: postStream,
   });
-}
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, gUrl);
+  let body = await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [],
+    () => content.document.body.textContent
+  );
+  is(body, gPostData, "post data was submitted correctly");
+  finish();
+});
