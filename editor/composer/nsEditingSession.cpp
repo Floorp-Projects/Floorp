@@ -737,7 +737,8 @@ nsEditingSession::OnLocationChange(nsIWebProgress* aWebProgress,
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
   RefPtr<nsCommandManager> commandManager = docShell->GetCommandManager();
-  return commandManager->CommandStatusChanged("obs_documentLocationChanged");
+  commandManager->CommandStatusChanged("obs_documentLocationChanged");
+  return NS_OK;
 }
 
 /*---------------------------------------------------------------------------
