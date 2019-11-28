@@ -117,7 +117,7 @@ add_task(async function setup() {
     true
   );
 
-  useTestEngineConfig("resource://test/data1/");
+  await useTestEngines("data1");
   Services.prefs.setCharPref(SearchUtils.BROWSER_SEARCH_PREF + "region", "US");
   Services.locale.availableLocales = ["en-US"];
   Services.locale.requestedLocales = ["en-US"];

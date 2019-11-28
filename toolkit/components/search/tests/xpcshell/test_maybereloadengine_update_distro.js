@@ -6,7 +6,7 @@
 const SEARCH_SERVICE_TOPIC = "browser-search-service";
 
 add_task(async function setup() {
-  useTestEngines("search-extensions");
+  await useTestEngines("data", "search-extensions");
   const defaultBranch = Services.prefs.getDefaultBranch(null);
 
   defaultBranch.setCharPref("distribution.id", "partner-test");
