@@ -35,9 +35,9 @@
         document.querySelector("#perf-settings-threads-summary").click();
 
         const threadTextEl = document.querySelector("#perf-settings-thread-text");
-        is(selectors.getThreads(getState()).join(","), "GeckoMain,Compositor",
+        is(selectors.getThreads(getState()).join(","), "GeckoMain,Compositor,Renderer",
           "The threads starts out with the default");
-        is(threadTextEl.value, "GeckoMain,Compositor",
+        is(threadTextEl.value, "GeckoMain,Compositor,Renderer",
           "The threads starts out with the default in the thread text input");
         is(recordingPreferencesCalls.length, 0,
           "No calls have been made to set preferences");
@@ -45,20 +45,20 @@
         // Click the Compositor checkbox.
         document.querySelector("#perf-settings-thread-checkbox-compositor").click();
 
-        is(selectors.getThreads(getState()).join(","), "GeckoMain",
+        is(selectors.getThreads(getState()).join(","), "GeckoMain,Renderer",
           "The threads have been updated");
-        is(threadTextEl.value, "GeckoMain",
+        is(threadTextEl.value, "GeckoMain,Renderer",
           "The threads have been updated in the thread text input");
         is(recordingPreferencesCalls.length, 1,
           "The preferences have been updated.");
-        is(recordingPreferencesCalls[0].threads.join(","), "GeckoMain",
+        is(recordingPreferencesCalls[0].threads.join(","), "GeckoMain,Renderer",
           "The preferences have been updated.");
 
         // Enable a thread
         document.querySelector("#perf-settings-thread-checkbox-dom-worker").click();
-        is(selectors.getThreads(getState()).join(","), "GeckoMain,DOM Worker",
+        is(selectors.getThreads(getState()).join(","), "GeckoMain,Renderer,DOM Worker",
           "Another thread was added");
-        is(threadTextEl.value, "GeckoMain,DOM Worker",
+        is(threadTextEl.value, "GeckoMain,Renderer,DOM Worker",
           "Another thread was in the thread text input");
 
         // See the initial state of the checkbox
