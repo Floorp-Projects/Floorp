@@ -6120,16 +6120,8 @@ void nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
     nsCOMPtr<nsIURI> previousURI;
     uint32_t previousFlags = 0;
     docChannel->GetLastVisit(getter_AddRefs(previousURI), &previousFlags);
-
-    for (auto redirect : docChannel->GetRedirectChain()) {
-      if (!redirect.isPost()) {
-        AddURIVisit(redirect.uri(), previousURI, previousFlags,
-                    redirect.responseStatus());
-        previousURI = redirect.uri();
-        previousFlags = redirect.redirectFlags();
-      }
-    }
-    SaveLastVisit(aNewChannel, previousURI, previousFlags);
+    SavePreviousRedirectsAndLastVisit(aNewChannel, previousURI, previousFlags,
+                                      docChannel->GetRedirectChain());
   } else {
     // Below a URI visit is saved (see AddURIVisit method doc).
     // The visit chain looks something like:
@@ -11842,6 +11834,23 @@ void nsDocShell::AddURIVisit(nsIURI* aURI, nsIURI* aPreviousURI,
   }
 }
 
+void nsDocShell::SavePreviousRedirectsAndLastVisit(
+    nsIChannel* aChannel, nsIURI* aPreviousURI, uint32_t aPreviousFlags,
+    const nsTArray<net::DocumentChannelRedirect>& aRedirects) {
+  nsCOMPtr<nsIURI> previousURI = aPreviousURI;
+  uint32_t previousFlags = aPreviousFlags;
+
+  for (auto& redirect : aRedirects) {
+    if (!redirect.isPost()) {
+      AddURIVisit(redirect.uri(), previousURI, previousFlags,
+                  redirect.responseStatus());
+      previousURI = redirect.uri();
+      previousFlags = redirect.redirectFlags();
+    }
+  }
+  SaveLastVisit(aChannel, previousURI, previousFlags);
+}
+
 //*****************************************************************************
 // nsDocShell: Helper Routines
 //*****************************************************************************
@@ -12956,7 +12965,9 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
 
   // Call into InternalLoad with the pending channel when it is received.
   cpcl->RegisterCallback(
-      aIdentifier, [self, aHistoryIndex](nsIChildChannel* aChannel) {
+      aIdentifier, [self, aHistoryIndex](
+                       nsIChildChannel* aChannel,
+                       nsTArray<net::DocumentChannelRedirect>&& aRedirects) {
         if (NS_WARN_IF(self->mIsBeingDestroyed)) {
           nsCOMPtr<nsIRequest> request = do_QueryInterface(aChannel);
           if (request) {
@@ -12970,6 +12981,15 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
             aChannel, getter_AddRefs(loadState));
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return;
+        }
+
+        if (nsCOMPtr<nsIChannel> channel = do_QueryInterface(aChannel)) {
+          nsCOMPtr<nsIURI> previousURI;
+          uint32_t previousFlags = 0;
+          ExtractLastVisit(channel, getter_AddRefs(previousURI),
+                           &previousFlags);
+          self->SavePreviousRedirectsAndLastVisit(channel, previousURI,
+                                                  previousFlags, aRedirects);
         }
 
         // If we're performing a history load, locate the correct history entry,

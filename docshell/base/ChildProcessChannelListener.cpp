@@ -13,21 +13,21 @@ static StaticRefPtr<ChildProcessChannelListener> sCPCLSingleton;
 
 void ChildProcessChannelListener::RegisterCallback(uint64_t aIdentifier,
                                                    Callback&& aCallback) {
-  if (auto channel = mChannels.GetAndRemove(aIdentifier)) {
-    aCallback(*channel);
+  if (auto args = mChannelArgs.GetAndRemove(aIdentifier)) {
+    aCallback(args->mChannel, std::move(args->mRedirects));
   } else {
     mCallbacks.Put(aIdentifier, std::move(aCallback));
   }
 }
 
-NS_IMETHODIMP ChildProcessChannelListener::OnChannelReady(
-    nsIChildChannel* aChannel, uint64_t aIdentifier) {
+void ChildProcessChannelListener::OnChannelReady(
+    nsIChildChannel* aChannel, uint64_t aIdentifier,
+    nsTArray<net::DocumentChannelRedirect>&& aRedirects) {
   if (auto callback = mCallbacks.GetAndRemove(aIdentifier)) {
-    (*callback)(aChannel);
+    (*callback)(aChannel, std::move(aRedirects));
   } else {
-    mChannels.Put(aIdentifier, aChannel);
+    mChannelArgs.Put(aIdentifier, {aChannel, std::move(aRedirects)});
   }
-  return NS_OK;
 }
 
 ChildProcessChannelListener::ChildProcessChannelListener() = default;
