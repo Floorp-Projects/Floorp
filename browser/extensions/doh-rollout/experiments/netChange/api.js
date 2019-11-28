@@ -1,11 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 /* exported netChange */
-/* global Cc, Ci, Components, EventManager, ExtensionAPI, Services, ExtensionCommon */
-let Cu4 = Components.utils;
-Cu4.import("resource://gre/modules/Services.jsm");
-Cu4.import("resource://gre/modules/ExtensionCommon.jsm");
+/* global Cc, Ci, ExtensionAPI, ExtensionCommon */
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const { setTimeout } = Cu4.import("resource://gre/modules/Timer.jsm");
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 var { EventManager } = ExtensionCommon;
 let gNetworkLinkService = Cc[

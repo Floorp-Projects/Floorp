@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 /* global browser, runHeuristics */
 
@@ -265,14 +269,6 @@ const rollout = {
   },
 
   async getSetting(name, defaultValue) {
-    if (defaultValue === undefined) {
-      throw new Error(
-        `Missing defaultValue argument when trying to fetch pref: ${JSON.stringify(
-          name
-        )}`
-      );
-    }
-
     switch (typeof defaultValue) {
       case "boolean":
         log({
@@ -284,10 +280,7 @@ const rollout = {
             defaultValue
           ),
         });
-        return await browser.experiments.preferences.getBoolPref(
-          name,
-          defaultValue
-        );
+        return browser.experiments.preferences.getBoolPref(name, defaultValue);
       case "number":
         log({
           context: "getSetting",
@@ -298,10 +291,7 @@ const rollout = {
             defaultValue
           ),
         });
-        return await browser.experiments.preferences.getIntPref(
-          name,
-          defaultValue
-        );
+        return browser.experiments.preferences.getIntPref(name, defaultValue);
       case "string":
         log({
           context: "getSetting",
@@ -312,9 +302,12 @@ const rollout = {
             defaultValue
           ),
         });
-        return await browser.experiments.preferences.getCharPref(
-          name,
-          defaultValue
+        return browser.experiments.preferences.getCharPref(name, defaultValue);
+      default:
+        throw new Error(
+          `Invalid defaultValue argument when trying to fetch pref: ${JSON.stringify(
+            name
+          )}`
         );
     }
   },
