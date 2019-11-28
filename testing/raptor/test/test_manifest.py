@@ -166,8 +166,8 @@ def test_get_raptor_test_list_firefox(create_args):
     test_list = get_raptor_test_list(args, mozinfo.os)
     assert len(test_list) == 4
 
-    subtests = ['raptor-tp6-google-firefox', 'raptor-tp6-amazon-firefox',
-                'raptor-tp6-facebook-firefox', 'raptor-tp6-youtube-firefox']
+    subtests = ['raptor-tp6-unittest-google-firefox', 'raptor-tp6-unittest-amazon-firefox',
+                'raptor-tp6-unittest-facebook-firefox', 'raptor-tp6-unittest-youtube-firefox']
 
     for next_subtest in test_list:
         assert next_subtest['name'] in subtests
