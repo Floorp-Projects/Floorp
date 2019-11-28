@@ -9,7 +9,7 @@ import android.content.Context
 import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.FragmentManager
-import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
@@ -35,7 +35,7 @@ class QrFeature(
     private val fragmentManager: FragmentManager,
     private val onScanResult: OnScanResult = { },
     override val onNeedToRequestPermissions: OnNeedToRequestPermissions = { }
-) : LifecycleAwareFeature, BackHandler, PermissionsFeature {
+) : LifecycleAwareFeature, UserInteractionHandler, PermissionsFeature {
     private var containerViewId: Int = 0
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

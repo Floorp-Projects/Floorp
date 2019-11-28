@@ -341,7 +341,7 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs[providedDownload.value.id]?.job?.join()
 
         assertEquals(ACTIVE, service.downloadJobs[providedDownload.value.id]?.status)
-        verify(service).startDownloadJob(providedDownload.value)
+        verify(service).startDownloadJob(providedDownload.value.id)
     }
 
     @Test
@@ -384,7 +384,7 @@ class AbstractFetchDownloadServiceTest {
         service.downloadJobs[providedDownload.value.id]?.job?.join()
 
         assertEquals(ACTIVE, service.downloadJobs[providedDownload.value.id]?.status)
-        verify(service).startDownloadJob(providedDownload.value)
+        verify(service).startDownloadJob(providedDownload.value.id)
     }
 
     @Test

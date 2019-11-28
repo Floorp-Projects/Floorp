@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package mozilla.components.browser.state.reducer
+
+import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.action.ReaderAction
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.ReaderState
+
+internal object ReaderStateReducer {
+
+    /**
+     * [EngineAction] Reducer function for modifying a specific [ReaderState]
+     * of a [BrowserState].
+     */
+    fun reduce(state: BrowserState, action: ReaderAction): BrowserState = when (action) {
+        is ReaderAction.UpdateReaderableAction -> state.copyWithReaderState(action.tabId) {
+            it.copy(readerable = action.readerable)
+        }
+        is ReaderAction.UpdateReaderActiveAction -> state.copyWithReaderState(action.tabId) {
+            it.copy(active = action.active)
+        }
+    }
+}
+
+private fun BrowserState.copyWithReaderState(
+    tabId: String,
+    update: (ReaderState) -> ReaderState
+): BrowserState {
+    return copy(
+        tabs = tabs.map { current ->
+            if (current.id == tabId) {
+                current.copy(readerState = update.invoke(current.readerState))
+            } else {
+                current
+            }
+        }
+    )
+}

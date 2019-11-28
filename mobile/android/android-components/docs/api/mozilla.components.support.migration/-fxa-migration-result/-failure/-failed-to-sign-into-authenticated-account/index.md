@@ -19,3 +19,9 @@ invalid credentials, or server-side issues.
 |---|---|
 | [email](email.md) | `val email: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [stateLabel](state-label.md) | `val stateLabel: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+
+### Functions
+
+| Name | Summary |
+|---|---|
+| [toString](to-string.md) | `fun toString(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |

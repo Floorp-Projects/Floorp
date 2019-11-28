@@ -3,6 +3,15 @@
     <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_downloads_notification_channel">Téléchargements</string>
 
+    <!-- Text shown on the second row of a paused download notification. -->
+    <string name="mozac_feature_downloads_paused_notification_text">Téléchargement mis en pause</string>
+    <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_completed_notification_text2">Téléchargement terminé</string>
+    <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_failed_notification_text2">Le téléchargement a échoué</string>
+
+    <!-- Alert dialog confirmation before download a file, this is the title. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_dialog_title2">Télécharger (%1$s)</string>
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
     <string name="mozac_feature_downloads_dialog_download">Télécharger</string>
 
@@ -15,4 +24,17 @@
     <!-- Message that appears when the downloaded file could not be opened-->
     <string name="mozac_feature_downloads_could_not_open_file">Impossible d’ouvrir le fichier</string>
 
-    </resources>
+    <!-- Button that pauses the download when pressed -->
+    <string name="mozac_feature_downloads_button_pause">Pause</string>
+    <!-- Button that resumes the download when pressed -->
+    <string name="mozac_feature_downloads_button_resume">Reprendre</string>
+    <!-- Button that cancels the download when pressed -->
+    <string name="mozac_feature_downloads_button_cancel">Annuler</string>
+    <!-- Button that opens the downloaded file when pressed -->
+    <string name="mozac_feature_downloads_button_open">Ouvrir</string>
+    <!-- Button that restarts the download after a failed attempt -->
+    <string name="mozac_feature_downloads_button_try_again">Réessayer</string>
+
+    <!-- Content description for close button -->
+    <string name="mozac_feature_downloads_button_close">Fermer</string>
+</resources>

@@ -2,7 +2,7 @@
 
 # BrowserAction
 
-`data class BrowserAction` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/BrowserAction.kt#L21)
+`data class BrowserAction` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/BrowserAction.kt#L20)
 
 Value type that represents the state of a browser action within a [WebExtension](../-web-extension/index.md).
 
@@ -10,7 +10,7 @@ Value type that represents the state of a browser action within a [WebExtension]
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `BrowserAction(title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, icon: <ERROR CLASS>, uri: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, badgeText: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, badgeTextColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, badgeBackgroundColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, onClick: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>Value type that represents the state of a browser action within a [WebExtension](../-web-extension/index.md). |
+| [&lt;init&gt;](-init-.md) | `BrowserAction(title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, loadIcon: suspend (`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`) -> <ERROR CLASS>?, badgeText: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, badgeTextColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, badgeBackgroundColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, onClick: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>Value type that represents the state of a browser action within a [WebExtension](../-web-extension/index.md). |
 
 ### Properties
 
@@ -20,10 +20,9 @@ Value type that represents the state of a browser action within a [WebExtension]
 | [badgeText](badge-text.md) | `val badgeText: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The browser action's badge text. |
 | [badgeTextColor](badge-text-color.md) | `val badgeTextColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>The browser action's badge text color. |
 | [enabled](enabled.md) | `val enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Indicates if the browser action should be enabled or disabled. |
-| [icon](icon.md) | `val icon: <ERROR CLASS>`<br>The image for this browser icon. |
+| [loadIcon](load-icon.md) | `val loadIcon: suspend (`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`) -> <ERROR CLASS>?`<br>A suspending function returning the icon in the provided size. |
 | [onClick](on-click.md) | `val onClick: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A callback to be executed when this browser action is clicked. |
 | [title](title.md) | `val title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The title of the browser action to be visible in the user interface. |
-| [uri](uri.md) | `val uri: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The url to get the HTML document, representing the internal user interface of the extension. |
 
 ### Extension Functions
 

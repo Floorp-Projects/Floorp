@@ -7,6 +7,7 @@ package mozilla.components.browser.session.ext
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.CustomTabSessionState
+import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.TrackingProtectionState
@@ -16,7 +17,13 @@ import mozilla.components.browser.state.state.content.FindResultState
  * Create a matching [TabSessionState] from a [Session].
  */
 fun Session.toTabSessionState(): TabSessionState {
-    return TabSessionState(id, toContentState(), toTrackingProtectionState(), parentId = parentId)
+    return TabSessionState(
+        id,
+        toContentState(),
+        toTrackingProtectionState(),
+        parentId = parentId,
+        readerState = toReaderState()
+    )
 }
 
 /**
@@ -38,6 +45,13 @@ private fun Session.toContentState(): ContentState {
         securityInfo.toSecurityInfoState(),
         thumbnail
     )
+}
+
+/**
+ * Creates a matching [ReaderState] from a [Session]
+ */
+fun Session.toReaderState(): ReaderState {
+    return ReaderState(readerable, readerMode)
 }
 
 /**

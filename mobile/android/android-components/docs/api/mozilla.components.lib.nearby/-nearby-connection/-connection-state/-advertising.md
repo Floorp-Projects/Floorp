@@ -2,7 +2,7 @@
 
 # Advertising
 
-`object Advertising : `[`ConnectionState`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L85)
+`object Advertising : `[`ConnectionState`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L115)
 
 This device is advertising its presence. If it is discovered by another device,
 the next state will be [Authenticating](-authenticating/index.md).

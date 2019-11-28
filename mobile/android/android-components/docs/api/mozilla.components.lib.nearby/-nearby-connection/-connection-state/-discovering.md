@@ -2,7 +2,7 @@
 
 # Discovering
 
-`object Discovering : `[`ConnectionState`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L91)
+`object Discovering : `[`ConnectionState`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L121)
 
 This device is trying to discover devices that are advertising. If it discovers one,
 the next state with be [Initiating](-initiating/index.md).

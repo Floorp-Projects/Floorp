@@ -2,7 +2,7 @@
 
 # onStateUpdated
 
-`abstract fun onStateUpdated(connectionState: `[`ConnectionState`](../-nearby-connection/-connection-state/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L419)
+`abstract fun onStateUpdated(connectionState: `[`ConnectionState`](../-nearby-connection/-connection-state/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L449)
 
 Called whenever the connection's state is set. In the absence of failures, the
 new state should differ from the prior state, but that is not guaranteed.

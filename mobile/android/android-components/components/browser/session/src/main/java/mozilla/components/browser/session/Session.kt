@@ -27,6 +27,7 @@ import mozilla.components.browser.state.action.ContentAction.UpdateThumbnailActi
 import mozilla.components.browser.state.action.ContentAction.UpdateTitleAction
 import mozilla.components.browser.state.action.ContentAction.UpdateUrlAction
 import mozilla.components.browser.state.action.CustomTabListAction.RemoveCustomTabAction
+import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.action.TabListAction.AddTabAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.state.CustomTabConfig
@@ -474,6 +475,7 @@ class Session(
      */
     var readerable: Boolean by Delegates.observable(false) { _, _, new ->
         notifyObservers { onReaderableStateUpdated(this@Session, new) }
+        store?.syncDispatch(ReaderAction.UpdateReaderableAction(id, new))
     }
 
     /**
@@ -481,6 +483,7 @@ class Session(
      */
     var readerMode: Boolean by Delegates.observable(false) { _, old, new ->
         notifyObservers(old, new) { onReaderModeChanged(this@Session, new) }
+        store?.syncDispatch(ReaderAction.UpdateReaderActiveAction(id, new))
     }
 
     /**

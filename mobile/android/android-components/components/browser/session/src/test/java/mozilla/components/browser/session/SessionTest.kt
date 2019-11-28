@@ -17,6 +17,7 @@ import mozilla.components.browser.session.ext.toSecurityInfoState
 import mozilla.components.browser.session.ext.toTabSessionState
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CustomTabListAction
+import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.store.BrowserStore
@@ -1010,6 +1011,19 @@ class SessionTest {
     }
 
     @Test
+    fun `action is dispatched when readerable state changes`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+        session.readerable = true
+
+        verify(store).dispatch(ReaderAction.UpdateReaderableAction(session.id, true))
+        verifyNoMoreInteractions(store)
+    }
+
+    @Test
     fun `observer is notified when reader mode state changes`() {
         val observer = mock(Session.Observer::class.java)
 
@@ -1024,6 +1038,19 @@ class SessionTest {
                 eq(true))
 
         assertTrue(session.readerMode)
+    }
+
+    @Test
+    fun `action is dispatched when reader mode state changes`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+        session.readerMode = true
+
+        verify(store).dispatch(ReaderAction.UpdateReaderActiveAction(session.id, true))
+        verifyNoMoreInteractions(store)
     }
 
     @Test

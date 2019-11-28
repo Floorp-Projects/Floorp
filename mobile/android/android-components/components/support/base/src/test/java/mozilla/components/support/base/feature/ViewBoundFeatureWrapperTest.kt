@@ -36,7 +36,7 @@ class ViewBoundFeatureWrapperTest {
 
     @Test
     fun `onBackPressed is forwarded to feature`() {
-        val feature = MockFeatureWithBackHandler(onBackPressed = true)
+        val feature = MockFeatureWithUserInteractionHandler(onBackPressed = true)
 
         val wrapper = ViewBoundFeatureWrapper(
             feature = feature,
@@ -48,7 +48,7 @@ class ViewBoundFeatureWrapperTest {
         assertTrue(feature.onBackPressedInvoked)
 
         assertFalse(ViewBoundFeatureWrapper(
-            feature = MockFeatureWithBackHandler(onBackPressed = false),
+            feature = MockFeatureWithUserInteractionHandler(onBackPressed = false),
             owner = MockedLifecycleOwner(MockedLifecycle(Lifecycle.State.CREATED)),
             view = mock()
         ).onBackPressed())
@@ -379,9 +379,9 @@ private open class MockFeature : LifecycleAwareFeature {
     }
 }
 
-private class MockFeatureWithBackHandler(
+private class MockFeatureWithUserInteractionHandler(
     private val onBackPressed: Boolean = false
-) : MockFeature(), BackHandler {
+) : MockFeature(), UserInteractionHandler {
     var onBackPressedInvoked = false
         private set
 

@@ -161,6 +161,13 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Sin conexión a Internet</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Verificá tu conexión a la red o intentá volver a cargar la página en un ratito.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Recargar</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">La dirección no es válida</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
       <p>La dirección provista no tiene un formato reconocible. Mirá si no hay errores en la barra de direcciones e intentá nuevamente.</p>

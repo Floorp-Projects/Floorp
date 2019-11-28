@@ -20,6 +20,7 @@
 | [mozilla.components.service.fxa.manager.AccountState](../mozilla.components.service.fxa.manager/-account-state/index.md) | States of the [FxaAccountManager](../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md). |
 | [mozilla.components.lib.state.Action](../mozilla.components.lib.state/-action.md) | Generic interface for actions to be dispatched on a [Store](../mozilla.components.lib.state/-store/index.md). |
 | [mozilla.components.support.base.facts.Action](../mozilla.components.support.base.facts/-action/index.md) | A user or system action that causes [Fact](../mozilla.components.support.base.facts/-fact/index.md) instances to be emitted. |
+| [mozilla.components.concept.engine.webextension.ActionHandler](../mozilla.components.concept.engine.webextension/-action-handler/index.md) | A handler for web extension (browser and page) actions. |
 | [mozilla.components.browser.icons.processor.AdaptiveIconProcessor](../mozilla.components.browser.icons.processor/-adaptive-icon-processor/index.md) | [IconProcessor](../mozilla.components.browser.icons.processor/-icon-processor/index.md) implementation that builds maskable icons. |
 | [mozilla.components.feature.addons.AddOn](../mozilla.components.feature.addons/-add-on/index.md) | Represents an add-on based on the AMO store: https://addons.mozilla.org/en-US/firefox/ |
 | [mozilla.components.feature.addons.amo.AddOnCollectionProvider](../mozilla.components.feature.addons.amo/-add-on-collection-provider/index.md) | Provide access to the collections AMO API. https://addons-server.readthedocs.io/en/latest/topics/api/collections.html |
@@ -404,7 +405,6 @@
 | [mozilla.components.lib.fetch.okhttp.OkHttpClient](../mozilla.components.lib.fetch.okhttp/-ok-http-client/index.md) | [Client](../mozilla.components.concept.fetch/-client/index.md) implementation using OkHttp. |
 | [mozilla.components.ui.autocomplete.OnCommitListener](../mozilla.components.ui.autocomplete/-on-commit-listener.md) |  |
 | [mozilla.components.ui.autocomplete.OnDispatchKeyEventPreImeListener](../mozilla.components.ui.autocomplete/-on-dispatch-key-event-pre-ime-listener.md) |  |
-| [mozilla.components.feature.downloads.manager.OnDownloadCompleted](../mozilla.components.feature.downloads.manager/-on-download-completed.md) |  |
 | [mozilla.components.ui.autocomplete.OnFilterListener](../mozilla.components.ui.autocomplete/-on-filter-listener.md) |  |
 | [mozilla.components.ui.autocomplete.OnKeyPreImeListener](../mozilla.components.ui.autocomplete/-on-key-pre-ime-listener.md) |  |
 | [mozilla.components.support.base.feature.OnNeedToRequestPermissions](../mozilla.components.support.base.feature/-on-need-to-request-permissions.md) |  |
@@ -462,6 +462,8 @@
 | [mozilla.components.feature.qr.QrFeature](../mozilla.components.feature.qr/-qr-feature/index.md) | Feature implementation that provides QR scanning functionality via the [QrFragment](../mozilla.components.feature.qr/-qr-fragment/index.md). |
 | [mozilla.components.feature.qr.QrFragment](../mozilla.components.feature.qr/-qr-fragment/index.md) | A [Fragment](#) that displays a QR scanner. |
 | [mozilla.components.service.glean.private.QuantityMetricType](../mozilla.components.service.glean.private/-quantity-metric-type.md) |  |
+| [mozilla.components.browser.state.action.ReaderAction](../mozilla.components.browser.state.action/-reader-action/index.md) | [BrowserAction](../mozilla.components.browser.state.action/-browser-action.md) implementations related to updating the [ReaderState](../mozilla.components.browser.state.state/-reader-state/index.md) of a single [TabSessionState](../mozilla.components.browser.state.state/-tab-session-state/index.md) inside [BrowserState](../mozilla.components.browser.state.state/-browser-state/index.md). |
+| [mozilla.components.browser.state.state.ReaderState](../mozilla.components.browser.state.state/-reader-state/index.md) | Value type that represents the state of reader mode/view. |
 | [mozilla.components.feature.readerview.view.ReaderViewControlsBar](../mozilla.components.feature.readerview.view/-reader-view-controls-bar/index.md) | A customizable ReaderView control bar implementing [ReaderViewControlsView](../mozilla.components.feature.readerview.view/-reader-view-controls-view/index.md). |
 | [mozilla.components.feature.readerview.view.ReaderViewControlsView](../mozilla.components.feature.readerview.view/-reader-view-controls-view/index.md) | An interface for views that can display ReaderView appearance controls (e.g. font size, font type). |
 | [mozilla.components.feature.readerview.ReaderViewFeature](../mozilla.components.feature.readerview/-reader-view-feature/index.md) | Feature implementation that provides a reader view for the selected session, based on a web extension. |
@@ -659,6 +661,7 @@
 | [mozilla.components.concept.engine.UnsupportedSetting](../mozilla.components.concept.engine/-unsupported-setting/index.md) |  |
 | [mozilla.components.concept.engine.UnsupportedSettingException](../mozilla.components.concept.engine/-unsupported-setting-exception/index.md) | Exception thrown by default if a setting is not supported by an engine or session. |
 | [mozilla.components.browser.engine.system.matcher.UrlMatcher](../mozilla.components.browser.engine.system.matcher/-url-matcher/index.md) | Provides functionality to process categorized URL black/white lists and match URLs against these lists. |
+| [mozilla.components.support.base.feature.UserInteractionHandler](../mozilla.components.support.base.feature/-user-interaction-handler/index.md) | Generic interface for fragments, features and other components that want to handle user interactions such as 'back' or 'home' button presses. |
 | [mozilla.components.service.glean.private.UuidMetricType](../mozilla.components.service.glean.private/-uuid-metric-type.md) |  |
 | [mozilla.components.feature.customtabs.store.ValidateRelationshipAction](../mozilla.components.feature.customtabs.store/-validate-relationship-action/index.md) | Marks the state of a custom tabs [Relation](#) verification. |
 | [mozilla.components.service.fretboard.ValuesProvider](../mozilla.components.service.fretboard/-values-provider/index.md) | Class used to provide custom filter values |
@@ -704,3 +707,4 @@
 | [mozilla.components.service.fxa.sync.WorkManagerSyncDispatcher](../mozilla.components.service.fxa.sync/-work-manager-sync-dispatcher/index.md) |  |
 | [mozilla.components.service.fretboard.scheduler.workmanager.WorkManagerSyncScheduler](../mozilla.components.service.fretboard.scheduler.workmanager/-work-manager-sync-scheduler/index.md) | Class used to schedule sync of experiment configuration from the server using WorkManager |
 | [mozilla.components.service.fxa.sync.WorkManagerSyncWorker](../mozilla.components.service.fxa.sync/-work-manager-sync-worker/index.md) |  |
+| [mozilla.components.feature.downloads.manager.onDownloadStopped](../mozilla.components.feature.downloads.manager/on-download-stopped.md) |  |

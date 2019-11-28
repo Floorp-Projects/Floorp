@@ -94,13 +94,18 @@ class AppLinksUseCases(
                 else -> redirectData.appIntent
             }
 
-            val fallbackUrl = if (redirectData.fallbackIntent?.data?.isHttpOrHttps == true) {
-                redirectData.fallbackIntent.dataString
-            } else {
-                null
+            val fallbackUrl = when {
+                redirectData.fallbackIntent?.data?.isHttpOrHttps == true ->
+                    redirectData.fallbackIntent.dataString
+                else -> null
             }
 
-            return AppLinkRedirect(appIntent, fallbackUrl, redirectData.resolveInfo)
+            val marketplaceIntent = when {
+                launchInApp() -> redirectData.marketplaceIntent
+                else -> null
+            }
+
+            return AppLinkRedirect(appIntent, fallbackUrl, marketplaceIntent)
         }
 
         private fun isDefaultBrowser(intent: Intent) =
@@ -109,7 +114,7 @@ class AppLinksUseCases(
         private fun getNonBrowserActivities(intent: Intent): List<ResolveInfo> {
             return findActivities(intent)
                 .map { it.activityInfo.packageName to it }
-                .filter { !browserPackageNames.contains(it.first) }
+                .filter { !browserPackageNames.contains(it.first) || intent.`package` == it.first }
                 .map { it.second }
         }
 
@@ -161,11 +166,24 @@ class AppLinksUseCases(
         }
     }
 
+    /**
+     * Open market intent created by the [GetAppLinkRedirect].
+     */
+    class OpenMarketplaceIntent internal constructor(
+        private val context: Context
+    ) {
+        operator fun invoke(redirect: AppLinkRedirect) {
+            val intent = redirect.marketplaceIntent ?: return
+            context.startActivity(intent)
+        }
+    }
+
     val openAppLink: OpenAppLinkRedirect by lazy { OpenAppLinkRedirect(context) }
+    val openMarketplaceIntent: OpenMarketplaceIntent by lazy { OpenMarketplaceIntent(context) }
     val interceptedAppLinkRedirect: GetAppLinkRedirect by lazy {
         GetAppLinkRedirect(
             includeHttpAppLinks = false,
-            includeInstallAppFallback = false
+            includeInstallAppFallback = true
         )
     }
     val appLinkRedirect: GetAppLinkRedirect by lazy {

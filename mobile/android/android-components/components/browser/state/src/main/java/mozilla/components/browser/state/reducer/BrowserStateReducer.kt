@@ -8,6 +8,7 @@ import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
@@ -27,10 +28,11 @@ internal object BrowserStateReducer {
         return when (action) {
             is ContentAction -> ContentStateReducer.reduce(state, action)
             is CustomTabListAction -> CustomTabListReducer.reduce(state, action)
+            is EngineAction -> EngineStateReducer.reduce(state, action)
+            is ReaderAction -> ReaderStateReducer.reduce(state, action)
             is SystemAction -> SystemReducer.reduce(state, action)
             is TabListAction -> TabListReducer.reduce(state, action)
             is TrackingProtectionAction -> TrackingProtectionStateReducer.reduce(state, action)
-            is EngineAction -> EngineStateReducer.reduce(state, action)
             is WebExtensionAction -> WebExtensionReducer.reduce(state, action)
         }
     }

@@ -6,7 +6,7 @@ package mozilla.components.feature.session
 
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
-import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
@@ -17,7 +17,7 @@ class SessionFeature(
     private val goBackUseCase: SessionUseCases.GoBackUseCase,
     engineView: EngineView,
     private val sessionId: String? = null
-) : LifecycleAwareFeature, BackHandler {
+) : LifecycleAwareFeature, UserInteractionHandler {
     internal val presenter = EngineViewPresenter(sessionManager, engineView, sessionId)
 
     /**

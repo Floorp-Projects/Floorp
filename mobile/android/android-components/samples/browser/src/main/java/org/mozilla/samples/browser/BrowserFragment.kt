@@ -16,7 +16,7 @@ import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.WebExtensionToolbarFeature
-import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.ReaderViewIntegration
@@ -24,7 +24,7 @@ import org.mozilla.samples.browser.integration.ReaderViewIntegration
 /**
  * Fragment used for browsing the web within the main app.
  */
-class BrowserFragment : BaseBrowserFragment(), BackHandler {
+class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
     private val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewIntegration>()
     private val webExtToolbarFeature = ViewBoundFeatureWrapper<WebExtensionToolbarFeature>()

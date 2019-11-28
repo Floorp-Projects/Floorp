@@ -24,6 +24,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -47,6 +48,7 @@ class AppLinksFeatureTest {
     private val webUrl = "https://example.com"
     private val webUrlWithAppLink = "https://soundcloud.com"
     private val intentUrl = "zxing://scan"
+    private val marketplaceUrl = "market://details?id=example.com"
 
     @Before
     fun setup() {
@@ -64,9 +66,9 @@ class AppLinksFeatureTest {
         `when`(mockUseCases.interceptedAppLinkRedirect).thenReturn(mockGetRedirect)
         `when`(mockUseCases.openAppLink).thenReturn(mockOpenRedirect)
 
-        val webRedirect = AppLinkRedirect(null, webUrl)
-        val appRedirect = AppLinkRedirect(Intent.parseUri(intentUrl, 0), null)
-        val appRedirectFromWebUrl = AppLinkRedirect(Intent.parseUri(webUrlWithAppLink, 0), null)
+        val webRedirect = AppLinkRedirect(null, webUrl, null)
+        val appRedirect = AppLinkRedirect(Intent.parseUri(intentUrl, 0), null, null)
+        val appRedirectFromWebUrl = AppLinkRedirect(Intent.parseUri(webUrlWithAppLink, 0), null, null)
 
         `when`(mockGetRedirect.invoke(webUrl)).thenReturn(webRedirect)
         `when`(mockGetRedirect.invoke(intentUrl)).thenReturn(appRedirect)
@@ -144,14 +146,14 @@ class AppLinksFeatureTest {
         )
 
         val blackListedUrl = "$blacklistedScheme://example.com"
-        val blacklistedRedirect = AppLinkRedirect(Intent.parseUri(blackListedUrl, 0), blackListedUrl)
+        val blacklistedRedirect = AppLinkRedirect(Intent.parseUri(blackListedUrl, 0), blackListedUrl, null)
         `when`(mockGetRedirect.invoke(blackListedUrl)).thenReturn(blacklistedRedirect)
         subject.handleLoadRequest(session, blackListedUrl, true)
         verify(mockGetRedirect).invoke(blackListedUrl)
         verify(mockOpenRedirect, never()).invoke(blacklistedRedirect)
 
         val whiteListedUrl = "$whitelistedScheme://example.com"
-        val whitelistedRedirect = AppLinkRedirect(Intent.parseUri(whiteListedUrl, 0), whiteListedUrl)
+        val whitelistedRedirect = AppLinkRedirect(Intent.parseUri(whiteListedUrl, 0), whiteListedUrl, null)
         `when`(mockGetRedirect.invoke(whiteListedUrl)).thenReturn(whitelistedRedirect)
         subject.handleLoadRequest(session, whiteListedUrl, true)
         verify(mockGetRedirect).invoke(whiteListedUrl)
@@ -335,10 +337,7 @@ class AppLinksFeatureTest {
             data = Uri.parse(javascriptUri)
         }
 
-        val redirect = AppLinkRedirect(
-            intent,
-            javascriptUri)
-
+        val redirect = AppLinkRedirect(intent, javascriptUri, null)
         feature.handleRedirect(redirect, Session("https://www.amazon.ca"))
 
         verify(openAppUseCase, never()).invoke(redirect)
@@ -353,12 +352,31 @@ class AppLinksFeatureTest {
                 useCases = mockUseCases
         ))
 
-        val redirect = AppLinkRedirect(null, webUrl)
+        val redirect = AppLinkRedirect(null, webUrl, null)
         val session = Session(webUrl)
 
         `when`(mockLegacySessionManager.getOrCreateEngineSession(any())).thenReturn(mockEngineSession)
         feature.handleRedirect(redirect, session)
 
         verify(feature).handleFallback(redirect, session)
+    }
+
+    @Test
+    fun `Use the market intent if app is not installed`() {
+        val openMarketplaceIntent: AppLinksUseCases.OpenMarketplaceIntent = mock()
+        val useCases: AppLinksUseCases = mock()
+        whenever(useCases.openMarketplaceIntent).thenReturn(openMarketplaceIntent)
+
+        val feature = AppLinksFeature(
+            testContext,
+            sessionManager = mock(),
+            interceptLinkClicks = true,
+            useCases = useCases
+        )
+
+        val redirect = AppLinkRedirect(null, null, Intent.parseUri(marketplaceUrl, 0))
+        feature.handleRedirect(redirect, Session("https://www.amazon.ca"))
+
+        verify(openMarketplaceIntent, atLeastOnce()).invoke(redirect)
     }
 }
