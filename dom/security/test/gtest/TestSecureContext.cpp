@@ -70,7 +70,8 @@ TEST(SecureContext, IsOriginPotentiallyTrustworthyWithContentPrincipal)
     rv = nsScriptSecurityManager::GetScriptSecurityManager()
              ->CreateContentPrincipalFromOrigin(uri, getter_AddRefs(prin));
     bool isPotentiallyTrustworthy = false;
-    rv = prin->GetIsOriginPotentiallyTrustworthy(&isPotentiallyTrustworthy);
+    rv = csManager->IsOriginPotentiallyTrustworthy(prin,
+                                                   &isPotentiallyTrustworthy);
     ASSERT_EQ(NS_OK, rv);
     ASSERT_EQ(isPotentiallyTrustworthy, uris[i].expectedResult);
   }
@@ -81,10 +82,14 @@ TEST(SecureContext, IsOriginPotentiallyTrustworthyWithSystemPrincipal)
   RefPtr<nsScriptSecurityManager> ssManager =
       nsScriptSecurityManager::GetScriptSecurityManager();
   ASSERT_TRUE(!!ssManager);
+  nsCOMPtr<nsIContentSecurityManager> csManager =
+      do_GetService(NS_CONTENTSECURITYMANAGER_CONTRACTID);
+  ASSERT_TRUE(!!csManager);
+
   nsCOMPtr<nsIPrincipal> sysPrin = nsContentUtils::GetSystemPrincipal();
   bool isPotentiallyTrustworthy;
-  nsresult rv =
-      sysPrin->GetIsOriginPotentiallyTrustworthy(&isPotentiallyTrustworthy);
+  nsresult rv = csManager->IsOriginPotentiallyTrustworthy(
+      sysPrin, &isPotentiallyTrustworthy);
   ASSERT_EQ(rv, NS_OK);
   ASSERT_TRUE(isPotentiallyTrustworthy);
 }
@@ -94,12 +99,15 @@ TEST(SecureContext, IsOriginPotentiallyTrustworthyWithNullPrincipal)
   RefPtr<nsScriptSecurityManager> ssManager =
       nsScriptSecurityManager::GetScriptSecurityManager();
   ASSERT_TRUE(!!ssManager);
+  nsCOMPtr<nsIContentSecurityManager> csManager =
+      do_GetService(NS_CONTENTSECURITYMANAGER_CONTRACTID);
+  ASSERT_TRUE(!!csManager);
 
   RefPtr<NullPrincipal> nullPrin =
       NullPrincipal::CreateWithoutOriginAttributes();
   bool isPotentiallyTrustworthy;
-  nsresult rv =
-      nullPrin->GetIsOriginPotentiallyTrustworthy(&isPotentiallyTrustworthy);
+  nsresult rv = csManager->IsOriginPotentiallyTrustworthy(
+      nullPrin, &isPotentiallyTrustworthy);
   ASSERT_EQ(rv, NS_OK);
   ASSERT_TRUE(!isPotentiallyTrustworthy);
 }
