@@ -23,11 +23,18 @@ export const helpers = {
       interruptCleared === true ? false : Boolean(message.content);
     const hasTriplets = Boolean(message.bundle && message.bundle.length);
     // Allow 1) falsy to not render a header 2) default welcome 3) custom header
+
     const tripletsHeaderId =
       message.tripletsHeaderId === undefined
         ? "onboarding-welcome-header"
         : message.tripletsHeaderId;
-    const UTMTerm = message.utm_term || "";
+    let UTMTerm = message.utm_term || "";
+
+    UTMTerm =
+      message.utm_term && message.trailheadTriplet
+        ? `${message.utm_term}-${message.trailheadTriplet}`
+        : UTMTerm;
+
     return {
       hasTriplets,
       hasInterrupt,
