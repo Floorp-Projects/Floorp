@@ -12,11 +12,12 @@ transforms:
 kind-dependencies:
     - build
 
+
 job-template:
     description: Sign Fenix
     worker-type:
         by-build-type:
-            (fennec-production|nightly|beta|production|android-test-nightly):
+            (fennec-.+|nightly|beta|production|android-test-nightly):
                 by-level:
                     '3': signing
                     default: dep-signing
@@ -24,9 +25,13 @@ job-template:
     worker:
         signing-type:
             by-build-type:
-                fennec-production:
+                fennec-(beta|production):
                     by-level:
                         '3': fennec-production-signing
+                        default: dep-signing
+                fennec-nightly:
+                    by-level:
+                        '3': fennec-nightly-signing
                         default: dep-signing
                 nightly:
                     by-level:
@@ -48,7 +53,7 @@ job-template:
                 default: dep-signing
     index:
         by-build-type:
-            (fennec-production|nightly|performance-test|beta|production):
+            (fennec-.+|nightly|performance-test|beta|production):
                 type: signing
             default: {}
     run-on-tasks-for: []

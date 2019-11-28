@@ -95,17 +95,6 @@ jobs:
         treeherder:
             symbol: nightly(B)
 
-    fennec-production:
-        attributes:
-            nightly: true
-        include-nightly-version: true
-        include-shippable-secrets: true
-        run:
-            geckoview-engine: geckoBeta
-            gradle-build-type: fennecProduction
-        treeherder:
-            symbol: nightlyFennec(B)
-
     beta:
         attributes:
             release-type: beta
@@ -129,3 +118,40 @@ jobs:
         run-on-tasks-for: [github-release]
         treeherder:
             symbol: production(B)
+
+    fennec-nightly:
+        attributes:
+            nightly: true
+        include-nightly-version: true
+        include-shippable-secrets: true
+        run:
+            geckoview-engine: geckoNightly
+            gradle-build-type: fennecNightly
+        treeherder:
+            symbol: nightlyFennec(B)
+
+    fennec-beta:
+        attributes:
+            # TODO replace `nightly: true` by `release-type: beta` once the data migration
+            # testing is over
+            nightly: true
+        include-release-version: true
+        include-shippable-secrets: true
+        run:
+            geckoview-engine: geckoBeta
+            gradle-build-type: fennecBeta
+        treeherder:
+            symbol: betaFennec(B)
+
+    fennec-production:
+        attributes:
+            # TODO replace `nightly: true` by `release-type: production` once the data migration
+            # testing is over
+            nightly: true
+        include-release-version: true
+        include-shippable-secrets: true
+        run:
+            geckoview-engine: geckoBeta
+            gradle-build-type: fennecProduction
+        treeherder:
+            symbol: productionFennec(B)
