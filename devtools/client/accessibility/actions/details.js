@@ -10,16 +10,17 @@ const { UPDATE_DETAILS } = require("../constants");
  *
  * @param {Object} dom walker front
  * @param {Object} accessible front
+ * @param {Object} list of supported serverside features.
  */
-exports.updateDetails = (domWalker, accessible) => dispatch =>
+exports.updateDetails = (domWalker, accessible, supports) => dispatch =>
   Promise.all([
     domWalker.getNodeFromActor(accessible.actorID, [
       "rawAccessible",
       "DOMNode",
     ]),
-    accessible.getRelations(),
-    accessible.audit(),
-    accessible.hydrate(),
+    supports.relations ? accessible.getRelations() : [],
+    supports.audit ? accessible.audit() : {},
+    supports.hydration ? accessible.hydrate() : null,
   ])
     .then(response => dispatch({ accessible, type: UPDATE_DETAILS, response }))
     .catch(error => dispatch({ accessible, type: UPDATE_DETAILS, error }));
