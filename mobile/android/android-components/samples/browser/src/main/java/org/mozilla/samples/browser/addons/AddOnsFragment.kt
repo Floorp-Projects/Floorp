@@ -14,6 +14,8 @@ import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.StringRes
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -23,6 +25,8 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.AddOn
 import org.mozilla.samples.browser.R
+import org.mozilla.samples.browser.addons.AddOnsFragment.CustomViewHolder.AddOnViewHolder
+import org.mozilla.samples.browser.addons.AddOnsFragment.CustomViewHolder.SectionViewHolder
 import org.mozilla.samples.browser.addons.PermissionsDialogFragment.PromptsStyling
 import org.mozilla.samples.browser.ext.components
 
@@ -75,10 +79,32 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
      */
     inner class AddOnsAdapter(
         private val clickListener: View.OnClickListener,
-        private val addOns: List<AddOn>
-    ) :
-        RecyclerView.Adapter<AddOnViewHolder>() {
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AddOnViewHolder {
+        addons: List<AddOn>
+    ) : RecyclerView.Adapter<CustomViewHolder>() {
+        private val items: List<Any>
+
+        init {
+            items = createListWithSections(addons)
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CustomViewHolder {
+            return if (viewType == VIEW_HOLDER_TYPE_ADDON) {
+                createAddonViewHolder(parent)
+            } else {
+                createSectionViewHolder(parent)
+            }
+        }
+
+        private fun createSectionViewHolder(parent: ViewGroup): CustomViewHolder {
+            val context = parent.context
+            val inflater = LayoutInflater.from(context)
+            val view = inflater.inflate(R.layout.addons_section_item, parent, false)
+            val titleView = view.findViewById<TextView>(R.id.title)
+
+            return SectionViewHolder(view, titleView)
+        }
+
+        private fun createAddonViewHolder(parent: ViewGroup): AddOnViewHolder {
             val context = parent.context
             val inflater = LayoutInflater.from(context)
             val view = inflater.inflate(R.layout.add_ons_item, parent, false)
@@ -99,12 +125,28 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
             )
         }
 
-        override fun getItemCount() = addOns.size
+        override fun getItemCount() = items.size
 
-        override fun onBindViewHolder(holder: AddOnViewHolder, position: Int) {
-            val addOn = addOns[position]
-            val context = holder.view.context
-            //  For loading the icon we need https://github.com/mozilla-mobile/android-components/issues/4175
+        override fun getItemViewType(position: Int): Int {
+            val isSection = items[position] !is AddOn
+            return if (isSection) VIEW_HOLDER_TYPE_SECTION else VIEW_HOLDER_TYPE_ADDON
+        }
+
+        override fun onBindViewHolder(holder: CustomViewHolder, position: Int) {
+            val item = items[position]
+
+            when (holder) {
+                is SectionViewHolder -> bindSection(holder, item as Section)
+                is AddOnViewHolder -> bindAddon(holder, item as AddOn)
+            }
+        }
+
+        private fun bindSection(holder: SectionViewHolder, section: Section) {
+            holder.titleView.setText(section.title)
+        }
+
+        private fun bindAddon(holder: AddOnViewHolder, addOn: AddOn) {
+            val context = holder.itemView.context
             addOn.rating?.let {
                 val userCount = context.getString(R.string.add_on_user_rating_count)
                 val ratingContentDescription =
@@ -117,9 +159,15 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
 
             holder.titleView.text = addOn.translatableName.translate()
             holder.summaryView.text = addOn.translatableSummary.translate()
-            holder.view.tag = addOn
-            holder.view.setOnClickListener(clickListener)
-            holder.addButton.setOnClickListener(clickListener)
+            holder.itemView.tag = addOn
+            holder.itemView.setOnClickListener(clickListener)
+            holder.addButton.isVisible = !addOn.installed
+            val listener = if (!addOn.installed) {
+                clickListener
+            } else {
+                null
+            }
+            holder.addButton.setOnClickListener(listener)
 
             scope.launch {
                 val iconBitmap = context.components.addOnProvider.getAddOnIconBitmap(addOn)
@@ -131,20 +179,56 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
                 }
             }
         }
+
+        private fun createListWithSections(addons: List<AddOn>): List<Any> {
+            // We want to have the installed add-ons first in the list.
+            val sortedAddons = addons.sortedBy { !it.installed }
+
+            val itemsWithSections = ArrayList<Any>()
+            val shouldAddInstalledSection = sortedAddons.first().installed
+            var isRecommendedSectionAdded = false
+
+            if (shouldAddInstalledSection) {
+                itemsWithSections.add(Section(R.string.addon_settings_installed_section))
+            }
+
+            sortedAddons.forEach { addon ->
+                if (!isRecommendedSectionAdded && !addon.installed) {
+                    itemsWithSections.add(Section(R.string.addon_settings_recommended_section))
+                    isRecommendedSectionAdded = true
+                }
+
+                itemsWithSections.add(addon)
+            }
+            return itemsWithSections
+        }
     }
 
     /**
-     * A view holder for displaying add-on items.
+     * A base view holder.
      */
-    class AddOnViewHolder(
-        val view: View,
-        val iconView: ImageView,
-        val titleView: TextView,
-        val summaryView: TextView,
-        val ratingView: RatingBar,
-        val userCountView: TextView,
-        val addButton: ImageView
-    ) : RecyclerView.ViewHolder(view)
+    sealed class CustomViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        /**
+         * A view holder for displaying section items.
+         */
+        class SectionViewHolder(
+            view: View,
+            val titleView: TextView
+        ) : CustomViewHolder(view)
+
+        /**
+         * A view holder for displaying add-on items.
+         */
+        class AddOnViewHolder(
+            view: View,
+            val iconView: ImageView,
+            val titleView: TextView,
+            val summaryView: TextView,
+            val ratingView: RatingBar,
+            val userCountView: TextView,
+            val addButton: ImageView
+        ) : CustomViewHolder(view)
+    }
 
     override fun onClick(view: View) {
         val context = view.context
@@ -201,5 +285,9 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
     }
     companion object {
         private const val PERMISSIONS_DIALOG_FRAGMENT_TAG = "ADDONS_PERMISSIONS_DIALOG_FRAGMENT"
+        private const val VIEW_HOLDER_TYPE_SECTION = 0
+        private const val VIEW_HOLDER_TYPE_ADDON = 1
     }
+
+    private inner class Section(@StringRes val title: Int)
 }
