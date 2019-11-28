@@ -909,14 +909,19 @@ class MOZ_STACK_CLASS AutoAssertFunctionDelazificationCompletion {
   RootedFunction fun_;
 #endif
 
+  void checkIsLazy() {
+    MOZ_ASSERT(fun_->isInterpretedLazy(), "Function should remain lazy");
+    MOZ_ASSERT(!fun_->lazyScript()->hasScript(),
+               "LazyScript should not have a script");
+  }
+
  public:
   AutoAssertFunctionDelazificationCompletion(JSContext* cx, HandleFunction fun)
 #ifdef DEBUG
       : fun_(cx, fun)
 #endif
   {
-    MOZ_ASSERT(fun_->isInterpretedLazy());
-    MOZ_ASSERT(!fun_->lazyScript()->hasScript());
+    checkIsLazy();
   }
 
   ~AutoAssertFunctionDelazificationCompletion() {
@@ -928,14 +933,12 @@ class MOZ_STACK_CLASS AutoAssertFunctionDelazificationCompletion {
 
     // If fun_ is not nullptr, it means delazification doesn't complete.
     // Assert that the function keeps linking to lazy script
-    MOZ_ASSERT(fun_->isInterpretedLazy());
-    MOZ_ASSERT(!fun_->lazyScript()->hasScript());
+    checkIsLazy();
   }
 
   void complete() {
     // Assert the completion of delazification and forget the function.
-    MOZ_ASSERT(fun_->hasScript());
-    MOZ_ASSERT(!fun_->hasUncompletedScript());
+    MOZ_ASSERT(fun_->nonLazyScript());
 
 #ifdef DEBUG
     fun_ = nullptr;
