@@ -6,18 +6,33 @@
 
 interface nsIChildChannel;
 
-[scriptable, uuid(50af805f-e4db-40d9-9dd8-1ae9ab12bdc2)]
+%{ C++
+#include "mozilla/net/NeckoChannelParams.h"
+#include "nsTArray.h"
+%}
+
+native DocumentChannelRedirectArrayMove(nsTArray<mozilla::net::DocumentChannelRedirect>&&);
+
+[scriptable, builtinclass, uuid(50af805f-e4db-40d9-9dd8-1ae9ab12bdc2)]
 interface nsIChildProcessChannelListener : nsISupports
 {
   /**
    * @param aChildChannel - new child channel
    * @param aIdentifier - returned by call to getChannelRedirectTarget. Used to
-                          identify the new channel.
+   *                      identify the new channel.
+   * @param aRedirects - DocumentChannel only reports a single redirect via the
+   *                     normal confirmation mechanism (when they replace
+   *                     themselves with a real channel), but can have had an
+   *                     arbitrary number of redirects handled in the parent
+   *                     process. aRedirects contains the list of all redirects
+   *                     encountered.
    *
    * This method has to call aChildChannel->completeRedirectSetup(listener, context)
    * in order to be ready for content; listener is a class that implements
    * nsIStreamListener.
    */
-  void onChannelReady(in nsIChildChannel aChildChannel, in unsigned long long aIdentifier);
+  [noscript, nostdcall, notxpcom]
+  void OnChannelReady(
+      in nsIChildChannel aChildChannel, in unsigned long long aIdentifier,
+      in DocumentChannelRedirectArrayMove aRedirects);
 };
-
