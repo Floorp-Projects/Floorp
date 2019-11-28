@@ -702,7 +702,6 @@ already_AddRefed<IDBRequest> IDBCursor::Update(JSContext* aCx,
 
   if (mType == Type_ObjectStore) {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
-        " %s: Child  Transaction[%lld] Request[%llu]: "
         "database(%s).transaction(%s).objectStore(%s)."
         "cursor(%s).update(%s)",
         "IDBCursor.update()", mTransaction->LoggingSerialNumber(),
