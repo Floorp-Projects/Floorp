@@ -74,16 +74,13 @@ var preferences = class preferences extends ExtensionAPI {
           }).api(),
 
           state: Object.assign(
-            ExtensionPreferencesManager.getSettingsAPI(
-              context.extension.id,
-              "dohRollout.state",
-              () => {
+            ExtensionPreferencesManager.getSettingsAPI({
+              extensionId: context.extension.id,
+              name: "dohRollout.state",
+              callback: () => {
                 throw new Error("Not supported");
               },
-              undefined,
-              false,
-              () => {}
-            ),
+            }),
             {
               set: details => {
                 return ExtensionPreferencesManager.setSetting(
