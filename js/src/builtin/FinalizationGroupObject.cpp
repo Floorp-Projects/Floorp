@@ -103,43 +103,52 @@ FinalizationRecordVectorObject* FinalizationRecordVectorObject::create(
 /* static */
 void FinalizationRecordVectorObject::trace(JSTracer* trc, JSObject* obj) {
   auto rv = &obj->as<FinalizationRecordVectorObject>();
-  rv->records().trace(trc);
+  if (auto* records = rv->records()) {
+    records->trace(trc);
+  }
 }
 
 /* static */
 void FinalizationRecordVectorObject::finalize(JSFreeOp* fop, JSObject* obj) {
   auto rv = &obj->as<FinalizationRecordVectorObject>();
-  fop->delete_(obj, &rv->records(), MemoryUse::FinalizationRecordVector);
+  fop->delete_(obj, rv->records(), MemoryUse::FinalizationRecordVector);
 }
 
-inline FinalizationRecordVectorObject::RecordVector&
+inline FinalizationRecordVectorObject::RecordVector*
 FinalizationRecordVectorObject::records() {
-  return *static_cast<RecordVector*>(privatePtr());
+  return static_cast<RecordVector*>(privatePtr());
 }
 
-inline const FinalizationRecordVectorObject::RecordVector&
+inline const FinalizationRecordVectorObject::RecordVector*
 FinalizationRecordVectorObject::records() const {
-  return *static_cast<const RecordVector*>(privatePtr());
+  return static_cast<const RecordVector*>(privatePtr());
 }
 
 inline void* FinalizationRecordVectorObject::privatePtr() const {
-  void* ptr = getReservedSlot(RecordsSlot).toPrivate();
+  Value value = getReservedSlot(RecordsSlot);
+  if (value.isUndefined()) {
+    return nullptr;
+  }
+  void* ptr = value.toPrivate();
   MOZ_ASSERT(ptr);
   return ptr;
 }
 
 inline bool FinalizationRecordVectorObject::isEmpty() const {
-  return records().empty();
+  MOZ_ASSERT(records());
+  return records()->empty();
 }
 
 inline bool FinalizationRecordVectorObject::append(
     HandleFinalizationRecordObject record) {
-  return records().append(record);
+  MOZ_ASSERT(records());
+  return records()->append(record);
 }
 
 inline void FinalizationRecordVectorObject::remove(
     HandleFinalizationRecordObject record) {
-  records().eraseIfEqual(record);
+  MOZ_ASSERT(records());
+  records()->eraseIfEqual(record);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -491,9 +500,10 @@ bool FinalizationGroupObject::unregister(JSContext* cx, unsigned argc,
 
   RootedObject obj(cx, group->registrations()->lookup(unregisterToken));
   if (obj) {
-    auto& records = obj->as<FinalizationRecordVectorObject>().records();
-    MOZ_ASSERT(!records.empty());
-    for (FinalizationRecordObject* record : records) {
+    auto* records = obj->as<FinalizationRecordVectorObject>().records();
+    MOZ_ASSERT(records);
+    MOZ_ASSERT(!records->empty());
+    for (FinalizationRecordObject* record : *records) {
       // Clear the fields of this record; it will be removed from the target's
       // list when it is next swept.
       record->clear();
