@@ -265,7 +265,11 @@
   box-shadow: var(--newtab-card-shadow);
 
   font-size: 13px;
-  padding: 20px;
+  padding: 20px 40px 60px;
+
+  @media (max-width: 865px) {
+    padding: 20px 40px;
+  }
 
   @media (min-width: $break-point-widest) {
     font-size: 15px;

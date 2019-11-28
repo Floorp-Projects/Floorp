@@ -3873,20 +3873,19 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
 .onboardingMessageImage {
   height: 112px;
   width: 120px;
-  background-size: 120px;
+  background-size: auto 140px;
   background-position: center center;
   background-repeat: no-repeat;
-  display: inline-block;
-  vertical-align: middle; }
+  display: inline-block; }
   @media (max-width: 865px) {
     .onboardingMessageImage {
       height: 75px;
       min-width: 80px;
-      background-size: 80px; } }
+      background-size: 140px; } }
   @media (min-width: 1122px) {
     .onboardingMessageImage {
       width: 250px;
-      background-size: auto 112px; } }
+      background-size: auto 140px; } }
   .onboardingMessageImage.addons {
     background-image: url("../data/content/assets/illustration-addons@2x.png"); }
   .onboardingMessageImage.privatebrowsing {
@@ -4211,7 +4210,10 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   border-radius: 4px;
   box-shadow: var(--newtab-card-shadow);
   font-size: 13px;
-  padding: 20px; }
+  padding: 20px 40px 60px; }
+  @media (max-width: 865px) {
+    .trailheadCard {
+      padding: 20px 40px; } }
   @media (min-width: 1122px) {
     .trailheadCard {
       font-size: 15px; } }
@@ -4468,8 +4470,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
         background: rgba(12, 12, 13, 0.3); }
     .fullpage-wrapper .trailheadCard .onboardingMessageImage {
       height: 112px;
-      width: 154px;
-      background-size: 154px; }
+      width: 154px; }
     @media screen and (max-width: 975px) {
       .fullpage-wrapper .trailheadCard {
         width: 300px; } }
