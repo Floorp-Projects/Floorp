@@ -166,6 +166,7 @@ class AnonymousContent;
 class Attr;
 class XULBroadcastManager;
 class XULPersist;
+class ChromeObserver;
 class ClientInfo;
 class ClientState;
 class CDATASection;
@@ -5335,6 +5336,7 @@ class Document : public nsINode,
 
   RefPtr<XULBroadcastManager> mXULBroadcastManager;
   RefPtr<XULPersist> mXULPersist;
+  RefPtr<ChromeObserver> mChromeObserver;
 
   RefPtr<HTMLAllCollection> mAll;
 
