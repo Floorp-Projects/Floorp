@@ -27,24 +27,11 @@ function getTrailheadConfigFromPref(value) {
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "personalizedCfrScores",
-  "browser.messaging-system.personalized-cfr.scores",
-  "{}"
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
   "trailheadPrefs",
   FIRST_RUN_PREF,
   "",
   null,
   getTrailheadConfigFromPref
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "personalizedCfrThreshold",
-  "browser.messaging-system.personalized-cfr.score-threshold",
-  0.0
 );
 
 const DEFAULT_STATE = {
@@ -85,6 +72,32 @@ class _ASRouterPreferences {
   constructor() {
     Object.assign(this, DEFAULT_STATE);
     this._callbacks = new Set();
+
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "personalizedCfrScores",
+      "browser.messaging-system.personalized-cfr.scores",
+      "{}",
+      null,
+      this._transformPersonalizedCfrScores
+    );
+
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "personalizedCfrThreshold",
+      "browser.messaging-system.personalized-cfr.score-threshold",
+      5000
+    );
+  }
+
+  _transformPersonalizedCfrScores(value) {
+    let result = {};
+    try {
+      result = JSON.parse(value);
+    } catch (e) {
+      Cu.reportError(e);
+    }
+    return result;
   }
 
   _getProviderConfig() {
@@ -158,19 +171,6 @@ class _ASRouterPreferences {
       );
     }
     return this._devtoolsEnabled;
-  }
-
-  get personalizedCfr() {
-    let scores = {};
-    try {
-      scores = JSON.parse(personalizedCfrScores);
-    } catch (e) {
-      Cu.reportError(e);
-    }
-    return {
-      personalizedCfrScores: scores,
-      personalizedCfrThreshold: parseFloat(personalizedCfrThreshold),
-    };
   }
 
   observe(aSubject, aTopic, aPrefName) {

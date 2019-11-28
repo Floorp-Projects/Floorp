@@ -4,7 +4,6 @@ import {
   getTrailheadConfigFromPref,
   TEST_PROVIDERS,
 } from "lib/ASRouterPreferences.jsm";
-import { GlobalOverrider } from "test/unit/utils";
 const FAKE_PROVIDERS = [{ id: "foo" }, { id: "bar" }];
 
 const PROVIDER_PREF_BRANCH =
@@ -358,35 +357,22 @@ describe("ASRouterPreferences", () => {
       assert.notCalled(callback);
     });
   });
-  describe("#personalizedCfr", () => {
-    let globals;
-    let reportError;
-    beforeEach(() => {
-      globals = new GlobalOverrider();
-      reportError = sandbox.stub();
-      globals.set("Cu", { reportError });
-    });
-    afterEach(() => {
-      globals.restore();
-    });
+  describe("#_transformPersonalizedCfrScores", () => {
     it("should report JSON.parse errors", () => {
-      globals.set("personalizedCfrScores", "foo");
-      globals.set("personalizedCfrThreshold", "2.0");
+      sandbox.stub(global.Cu, "reportError");
 
-      const result = ASRouterPreferences.personalizedCfr;
+      ASRouterPreferences._transformPersonalizedCfrScores("");
 
-      assert.calledOnce(reportError);
-      assert.propertyVal(result, "personalizedCfrThreshold", 2.0);
+      assert.calledOnce(global.Cu.reportError);
     });
-    it("should return an object and a float", () => {
-      globals.set("personalizedCfrScores", '{"foo":true}');
-      globals.set("personalizedCfrThreshold", "2.0");
-
-      const result = ASRouterPreferences.personalizedCfr;
-
-      assert.notCalled(reportError);
-      assert.propertyVal(result, "personalizedCfrThreshold", 2.0);
-      assert.propertyVal(result.personalizedCfrScores, "foo", true);
+    it("should return an object parsed from a string", () => {
+      const scores = { FOO: 3000, BAR: 4000 };
+      assert.deepEqual(
+        ASRouterPreferences._transformPersonalizedCfrScores(
+          JSON.stringify(scores)
+        ),
+        scores
+      );
     });
   });
   describe("#getTrailheadConfigFromPref", () => {

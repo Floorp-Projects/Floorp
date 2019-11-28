@@ -123,12 +123,12 @@ describe("ASRouter", () => {
     sandbox.stub(ASRouterPreferences, "trailhead").get(() => {
       return { trailheadTriplet: "test" };
     });
-    sandbox.replaceGetter(ASRouterPreferences, "personalizedCfr", function() {
-      return {
-        personalizedCfrScores,
-        personalizedCfrThreshold: 1.5,
-      };
-    });
+    sandbox.replaceGetter(
+      ASRouterPreferences,
+      "personalizedCfrScores",
+      () => personalizedCfrScores
+    );
+
     clock = sandbox.useFakeTimers();
     fetchStub = sandbox
       .stub(global, "fetch")
@@ -1080,12 +1080,6 @@ describe("ASRouter", () => {
         "messageImpressions",
         Router.state.messageImpressions
       );
-    });
-    it("should have personalizedCfrScores in the message context", () => {
-      assert.property(Router._getMessagesContext(), "scores");
-    });
-    it("should have personalizedCfrThreshold in the message context", () => {
-      assert.property(Router._getMessagesContext(), "scoreThreshold");
     });
     it("should return all unblocked messages that match the template, trigger if returnAll=true", async () => {
       const message1 = {
