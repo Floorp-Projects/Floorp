@@ -218,3 +218,91 @@ describe("#CachedTargetingGetter", () => {
     });
   });
 });
+describe("ASRouterTargeting", () => {
+  let evalStub;
+  let sandbox;
+  let clock;
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
+    evalStub = sandbox.stub(global.FilterExpressions, "eval");
+    sandbox.replace(ASRouterTargeting, "Environment", {});
+    clock = sinon.useFakeTimers();
+  });
+  afterEach(() => {
+    clock.restore();
+    sandbox.restore();
+  });
+  it("should cache evaluation result", async () => {
+    evalStub.resolves(true);
+
+    await ASRouterTargeting.checkMessageTargeting(
+      { targeting: "jexl1" },
+      {},
+      sandbox.stub(),
+      true
+    );
+    await ASRouterTargeting.checkMessageTargeting(
+      { targeting: "jexl2" },
+      {},
+      sandbox.stub(),
+      true
+    );
+    await ASRouterTargeting.checkMessageTargeting(
+      { targeting: "jexl1" },
+      {},
+      sandbox.stub(),
+      true
+    );
+
+    assert.calledTwice(evalStub);
+  });
+  it("should not cache evaluation result", async () => {
+    evalStub.resolves(true);
+
+    await ASRouterTargeting.checkMessageTargeting(
+      { targeting: "jexl" },
+      {},
+      sandbox.stub(),
+      false
+    );
+    await ASRouterTargeting.checkMessageTargeting(
+      { targeting: "jexl" },
+      {},
+      sandbox.stub(),
+      false
+    );
+    await ASRouterTargeting.checkMessageTargeting(
+      { targeting: "jexl" },
+      {},
+      sandbox.stub(),
+      false
+    );
+
+    assert.calledThrice(evalStub);
+  });
+  it("should expire cache entries", async () => {
+    evalStub.resolves(true);
+
+    await ASRouterTargeting.checkMessageTargeting(
+      { targeting: "jexl" },
+      {},
+      sandbox.stub(),
+      true
+    );
+    await ASRouterTargeting.checkMessageTargeting(
+      { targeting: "jexl" },
+      {},
+      sandbox.stub(),
+      true
+    );
+    clock.tick(60 * 1000 + 1);
+    await ASRouterTargeting.checkMessageTargeting(
+      { targeting: "jexl" },
+      {},
+      sandbox.stub(),
+      true
+    );
+
+    assert.calledTwice(evalStub);
+  });
+});
