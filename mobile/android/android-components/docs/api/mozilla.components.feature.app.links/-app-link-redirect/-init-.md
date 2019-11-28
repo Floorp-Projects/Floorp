@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`AppLinkRedirect(appIntent: <ERROR CLASS>?, fallbackUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?, info: <ERROR CLASS>? = null)`
+`AppLinkRedirect(appIntent: <ERROR CLASS>?, fallbackUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?, marketplaceIntent: <ERROR CLASS>?)`
 
 Data class for the external Intent or fallback URL a given URL encodes for.
 

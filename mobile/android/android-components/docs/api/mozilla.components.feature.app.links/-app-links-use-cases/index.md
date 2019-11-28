@@ -33,6 +33,7 @@ of security concerns.
 |---|---|
 | [GetAppLinkRedirect](-get-app-link-redirect/index.md) | `inner class GetAppLinkRedirect`<br>Parse a URL and check if it can be handled by an app elsewhere on the Android device. If that app is not available, then a market place intent is also provided. |
 | [OpenAppLinkRedirect](-open-app-link-redirect/index.md) | `class OpenAppLinkRedirect`<br>Open an external app with the redirect created by the [GetAppLinkRedirect](-get-app-link-redirect/index.md). |
+| [OpenMarketplaceIntent](-open-marketplace-intent/index.md) | `class OpenMarketplaceIntent`<br>Open market intent created by the [GetAppLinkRedirect](-get-app-link-redirect/index.md). |
 
 ### Constructors
 
@@ -48,6 +49,7 @@ of security concerns.
 | [browserPackageNames](browser-package-names.md) | `val browserPackageNames: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>` |
 | [interceptedAppLinkRedirect](intercepted-app-link-redirect.md) | `val interceptedAppLinkRedirect: `[`GetAppLinkRedirect`](-get-app-link-redirect/index.md) |
 | [openAppLink](open-app-link.md) | `val openAppLink: `[`OpenAppLinkRedirect`](-open-app-link-redirect/index.md) |
+| [openMarketplaceIntent](open-marketplace-intent.md) | `val openMarketplaceIntent: `[`OpenMarketplaceIntent`](-open-marketplace-intent/index.md) |
 
 ### Extension Functions
 
