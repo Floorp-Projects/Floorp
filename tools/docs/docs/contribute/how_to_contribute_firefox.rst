@@ -33,7 +33,7 @@ Firefox provides a mechanism to install all dependencies; in the source tree:
      $ ./mach bootstrap
 
 The default options are recommended.
-Select "Artifact Mode" if you are not planning to write C++ or Rust code.
+Select "`Artifact Mode <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Artifact_builds>`__" if you are not planning to write C++ or Rust code.
 
 `More
 information <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Linux_Prerequisites>`__
