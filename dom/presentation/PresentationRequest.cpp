@@ -509,8 +509,14 @@ bool PresentationRequest::IsPrioriAuthenticatedURL(const nsAString& aUrl) {
     return false;
   }
 
+  nsCOMPtr<nsIContentSecurityManager> csm =
+      do_GetService(NS_CONTENTSECURITYMANAGER_CONTRACTID);
+  if (NS_WARN_IF(!csm)) {
+    return false;
+  }
+
   bool isTrustworthyOrigin = false;
-  principal->GetIsOriginPotentiallyTrustworthy(&isTrustworthyOrigin);
+  csm->IsOriginPotentiallyTrustworthy(principal, &isTrustworthyOrigin);
   return isTrustworthyOrigin;
 }
 

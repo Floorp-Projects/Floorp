@@ -6,13 +6,16 @@
 
 add_task(
   function test_isOriginPotentiallyTrustworthnsIContentSecurityManagery() {
+    let contentSecManager = Cc[
+      "@mozilla.org/contentsecuritymanager;1"
+    ].getService(Ci.nsIContentSecurityManager);
     let uri = NetUtil.newURI("moz-extension://foobar/something.html");
     let principal = Services.scriptSecurityManager.createContentPrincipal(
       uri,
       {}
     );
     Assert.equal(
-      principal.IsOriginPotentiallyTrustworthy(),
+      contentSecManager.isOriginPotentiallyTrustworthy(principal),
       true,
       "it is potentially trustworthy"
     );
