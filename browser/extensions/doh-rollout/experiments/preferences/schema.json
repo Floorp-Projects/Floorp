@@ -1,86 +1,16 @@
 [
   {
     "namespace": "experiments.preferences",
-    "description": "Manage prefs for an addon",
-    "types": [
-      {
-        "id": "pref",
-        "type": "object",
-        "description": "Preference to set",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string"
-          },
-          "value": {
-            "type": "any"
-          }
-        }
-      }
-    ],
+    "description": "A mirror for Services.prefs.",
     "events": [
       {
         "name": "onPrefChanged",
         "type": "function",
-        "description": "Fired when the proxy setting is changed.",
+        "description": "Fired upon changes to `doh-rollout.enabled` and `doh-rollout.debug`.",
         "parameters": []
       }
     ],
     "functions": [
-            {
-        "name": "get",
-        "type": "function",
-        "description": "Gets the value of the preference manager",
-        "parameters": [
-          {
-            "type": "string",
-            "name": "settingName"
-          }
-        ],
-        "async": true
-      },
-      {
-        "name": "clear",
-        "type": "function",
-        "description": "Deletes the extension and clears up",
-        "parameters": [
-          {
-            "type": "any",
-            "name": "stateName"
-          }
-        ],
-        "async": true
-      },
-      {
-        "name": "set",
-        "type": "function",
-        "description": "Sets the value of the preference manager",
-        "parameters": [
-          {
-            "type": "string",
-            "name": "settingName"
-          },
-          {
-            "type": "any",
-            "name": "value"
-          }
-        ],
-        "async": true
-      },
-      {
-        "name": "add",
-        "type": "function",
-        "description": "Sets up a preference manager that we can manage later",
-        "parameters": [
-          {
-            "type": "string",
-            "name": "settingName"
-          }
-        ],
-        "async": true
-      },
       {
         "name": "getIntPref",
         "type": "function",
@@ -201,12 +131,6 @@
         ],
         "async": true
       }
-    ],
-    "properties": {
-      "state": {
-        "$ref": "types.Setting",
-        "description": "This property controls the proxy settings"
-      }
-    }
+    ]
   }
 ]
