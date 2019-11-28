@@ -2587,26 +2587,29 @@ void GCMarker::enterWeakMarkingMode() {
     return;
   }
 
+  if (weakMapAction() != ExpandWeakMaps) {
+    return;
+  }
+
   // During weak marking mode, we maintain a table mapping weak keys to
   // entries in known-live weakmaps. Initialize it with the keys of marked
   // weakmaps -- or more precisely, the keys of marked weakmaps that are
   // mapped to not yet live values. (Once bug 1167452 implements incremental
   // weakmap marking, this initialization step will become unnecessary, as
   // the table will already hold all such keys.)
-  if (weakMapAction() == ExpandWeakMaps) {
-    tag_ = TracerKindTag::WeakMarking;
 
-    // If there was an 'enter-weak-marking-mode' token in the queue, then it
-    // and everything after it will still be in the queue so we can process
-    // them now.
-    while (processMarkQueue() == QueueYielded) {
-    };
+  tag_ = TracerKindTag::WeakMarking;
 
-    for (SweepGroupZonesIter zone(runtime()); !zone.done(); zone.next()) {
-      for (WeakMapBase* m : zone->gcWeakMapList()) {
-        if (m->mapColor) {
-          mozilla::Unused << m->markEntries(this);
-        }
+  // If there was an 'enter-weak-marking-mode' token in the queue, then it
+  // and everything after it will still be in the queue so we can process
+  // them now.
+  while (processMarkQueue() == QueueYielded) {
+  };
+
+  for (SweepGroupZonesIter zone(runtime()); !zone.done(); zone.next()) {
+    for (WeakMapBase* m : zone->gcWeakMapList()) {
+      if (m->mapColor) {
+        mozilla::Unused << m->markEntries(this);
       }
     }
   }
