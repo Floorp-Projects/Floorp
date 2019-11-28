@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
         'properties': {
             'depth': {
                 'type': 'integer',
-                'default': 5,
+                'default': 9,
                 'minimum': 1,
                 'maximum': 25,
                 'title': 'Depth',
@@ -77,7 +77,7 @@ def backfill_action(parameters, graph_config, input, task_group_id, task_id):
     label = task['metadata']['name']
     pushes = []
     inclusive_tweak = 1 if input.get('inclusive') else 0
-    depth = input.get('depth', 5) + inclusive_tweak
+    depth = input.get('depth', 9) + inclusive_tweak
     end_id = int(parameters['pushlog_id']) - (1 - inclusive_tweak)
 
     while True:
