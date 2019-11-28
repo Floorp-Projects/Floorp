@@ -85,7 +85,7 @@ talos-chrome:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             windows10-aarch64/opt: ['try']
             default: ['mozilla-beta', 'trunk', 'try']
-    max-run-time: 1200
+    max-run-time: 1800
     mozharness:
         extra-options:
             - --suite=chromez
@@ -334,6 +334,7 @@ talos-g5:
     max-run-time:
         by-test-platform:
             linux64.*: 1200
+            macosx.*: 2400
             default: 1800
 
 talos-g5-profiling:
