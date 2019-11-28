@@ -2044,14 +2044,17 @@ already_AddRefed<IDBIndex> IDBObjectStore::CreateIndex(
   }
 
   auto& indexes = const_cast<nsTArray<IndexMetadata>&>(mSpec->indexes());
-  for (uint32_t count = indexes.Length(), index = 0; index < count; index++) {
-    if (aName == indexes[index].name()) {
-      aRv.ThrowDOMException(
-          NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR,
-          nsPrintfCString("Index named '%s' already exists at index '%u'",
-                          NS_ConvertUTF16toUTF8(aName).get(), index));
-      return nullptr;
-    }
+  const auto end = indexes.cend();
+  const auto foundIt = std::find_if(
+      indexes.cbegin(), end,
+      [&aName](const auto& index) { return aName == index.name(); });
+  if (foundIt != end) {
+    aRv.ThrowDOMException(
+        NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR,
+        nsPrintfCString("Index named '%s' already exists at index '%zu'",
+                        NS_ConvertUTF16toUTF8(aName).get(),
+                        foundIt.GetIndex()));
+    return nullptr;
   }
 
   KeyPath keyPath(0);
