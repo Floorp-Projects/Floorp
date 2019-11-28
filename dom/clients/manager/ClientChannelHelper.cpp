@@ -90,6 +90,9 @@ class ClientChannelHelper final : public nsIInterfaceRequestor,
         Maybe<ClientInfo> newClientInfo = newLoadInfo->GetReservedClientInfo();
         if (newClientInfo) {
           if (!reservedClient || reservedClient->Info() != *newClientInfo) {
+            // clear `reservedClient` first to ensure the same clientInfo ID has
+            // been removed before adding again.
+            reservedClient.reset(nullptr);
             reservedClient = ClientManager::CreateSourceFromInfo(*newClientInfo,
                                                                  mEventTarget);
           }
