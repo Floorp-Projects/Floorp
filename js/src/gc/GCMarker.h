@@ -306,8 +306,14 @@ class GCMarker : public JSTracer {
 
   void enterWeakMarkingMode();
   void leaveWeakMarkingMode();
+
+  // Do not use linear-time weak marking for the rest of this collection.
+  // Currently, this will only be triggered by an OOM when updating needed data
+  // structures.
   void abortLinearWeakMarking() {
-    leaveWeakMarkingMode();
+    if (state == MarkingState::WeakMarking) {
+      leaveWeakMarkingMode();
+    }
     state = MarkingState::IterativeMarking;
   }
 
