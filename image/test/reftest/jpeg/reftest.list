@@ -52,3 +52,14 @@ random-if(Android) == jpg-srgb-icc.jpg jpg-srgb-icc.png
 # "Here is the beginning of a boundary," and --$(boundary)-- means "All done
 # sending you parts.")
 HTTP == webcam-simulacrum.mjpg blue.jpg
+# Same as the above but as img elements in html files to get better test
+# coverage of multipart images.
+# Images loaded at the top level are actually loaded into an ImageDocument
+# which is a slim html document wrapper around the image.
+# Multipart images send multiple OnStartRequest's, each OnStartRequest causes
+# us to create a new ImageDocument to show the next part.
+# This differs from displaying a multipart image in an img element in a regular
+# document where we use the same document and same elements and same layout
+# frames for each part. So we have this testcase to test those different
+# codepaths.
+HTTP == webcam-simulacrum.html blue.html
