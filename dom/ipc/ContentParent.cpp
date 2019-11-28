@@ -1695,6 +1695,10 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
           dumpID = mCrashReporter->MinidumpID();
         }
         props->SetPropertyAsAString(NS_LITERAL_STRING("dumpID"), dumpID);
+
+        // Propagate `isLikelyOOM`.
+        Unused << props->SetPropertyAsBool(NS_LITERAL_STRING("isLikelyOOM"),
+                                           mCrashReporter->IsLikelyOOM());
       } else {
         CrashReporter::FinalizeOrphanedMinidump(OtherPid(),
                                                 GeckoProcessType_Content);
