@@ -51,7 +51,9 @@ class UnsupportedBrowserList extends PureComponent {
     );
 
     return dom.ul(
-      {},
+      {
+        className: "compatibility-unsupported-browser-list",
+      },
       [...browsersMap.entries()].map(([id, { name, versions }]) =>
         UnsupportedBrowserItem({ key: id, id, name, versions })
       )
