@@ -402,10 +402,7 @@ const MessageLoaderUtils = {
 
           // This is to support a personalization experiment
           if (provider.personalized) {
-            const score =
-              ASRouterPreferences.personalizedCfr.personalizedCfrScores[
-                message.id
-              ];
+            const score = ASRouterPreferences.personalizedCfrScores[message.id];
             if (score) {
               message.score = score;
             }
@@ -971,23 +968,12 @@ class _ASRouter {
   _getMessagesContext() {
     const { messageImpressions, previousSessionEnd } = this.state;
 
-    const {
-      personalizedCfrScores,
-      personalizedCfrThreshold,
-    } = ASRouterPreferences.personalizedCfr;
-
     return {
       get messageImpressions() {
         return messageImpressions;
       },
       get previousSessionEnd() {
         return previousSessionEnd;
-      },
-      get scores() {
-        return personalizedCfrScores;
-      },
-      get scoreThreshold() {
-        return personalizedCfrThreshold;
       },
     };
   }
