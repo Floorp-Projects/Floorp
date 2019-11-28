@@ -1872,6 +1872,9 @@ bool FlushOutput(JSContext* aCx, Sequence<JS::Value>& aSequence,
 bool Console::ProcessArguments(JSContext* aCx, const Sequence<JS::Value>& aData,
                                Sequence<JS::Value>& aSequence,
                                Sequence<nsString>& aStyles) const {
+  // This method processes the arguments as format strings (%d, %i, %s...)
+  // only if the first element of them is a valid and not-empty string.
+
   if (aData.IsEmpty()) {
     return true;
   }
@@ -1889,6 +1892,10 @@ bool Console::ProcessArguments(JSContext* aCx, const Sequence<JS::Value>& aData,
   nsAutoJSString string;
   if (NS_WARN_IF(!string.init(aCx, jsString))) {
     return false;
+  }
+
+  if (string.IsEmpty()) {
+    return ArgumentsToValueList(aData, aSequence);
   }
 
   nsString::const_iterator start, end;
