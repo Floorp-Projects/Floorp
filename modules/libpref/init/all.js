@@ -3992,6 +3992,12 @@ pref("network.tcp.tcp_fastopen_http_check_for_stalls_only_if_idle_for", 10);
 pref("network.tcp.tcp_fastopen_http_stalls_limit", 3);
 pref("network.tcp.tcp_fastopen_http_stalls_timeout", 20);
 
+// This pref controls if we send the "public-suffix-list-updated" notification
+// from PublicSuffixList.onUpdate() - Doing so would cause the PSL graph to
+// be updated while Firefox is running which may cause principals to have an
+// inconsistent state. See bug 1582647 comment 30
+pref("network.psl.onUpdate_notify", false);
+
 #ifdef MOZ_WIDGET_GTK
   pref("gfx.xrender.enabled",false);
   pref("widget.content.allow-gtk-dark-theme", false);
