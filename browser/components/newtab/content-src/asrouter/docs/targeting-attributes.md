@@ -45,6 +45,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [personalizedCfrScores](#personalizedcfrscores)
 * [personalizedCfrThreshold](#personalizedcfrthreshold)
 * [messageImpressions](#messageimpressions)
+* [blockedCountByType](#blockedcountbytype)
 
 ## Detailed usage
 
@@ -635,4 +636,26 @@ Badge impressions should not be used for targeting.
 
 ```
 declare const messageImpressions: { [key: string]: Array<UnixEpochNumber> };
+```
+
+### `blockedCountByType`
+
+Returns a breakdown by category of all blocked resources in the past 42 days.
+
+#### Definition
+
+```
+declare const messageImpressions: { [key: string]: number };
+```
+
+#### Examples
+
+```javascript
+Object {
+  trackerCount: 0,
+  cookieCount: 34,
+  cryptominerCount: 0,
+  fingerprinterCount: 3,
+  socialCount: 2
+}
 ```
