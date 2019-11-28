@@ -316,8 +316,8 @@ var UITour = {
     );
   },
 
-  onPageEvent(aMessage, aEvent) {
-    let browser = aMessage.target;
+  onPageEvent(aEvent, aBrowser) {
+    let browser = aBrowser;
     let window = browser.ownerGlobal;
 
     // Does the window have tabs? We need to make sure since windowless browsers do
@@ -328,9 +328,7 @@ var UITour = {
       window = Services.wm.getMostRecentWindow("navigator:browser");
     }
 
-    let messageManager = browser.messageManager;
-
-    log.debug("onPageEvent:", aEvent.detail, aMessage);
+    log.debug("onPageEvent:", aEvent.detail);
 
     if (typeof aEvent.detail != "object") {
       log.warn("Malformed event - detail not an object");
@@ -412,7 +410,7 @@ var UITour = {
                   let button = {
                     label: buttonData.label,
                     callback: event => {
-                      this.sendPageCallback(messageManager, callback);
+                      this.sendPageCallback(browser, callback);
                     },
                   };
 
@@ -439,19 +437,12 @@ var UITour = {
             let infoOptions = {};
             if (typeof data.closeButtonCallbackID == "string") {
               infoOptions.closeButtonCallback = () => {
-                this.sendPageCallback(
-                  messageManager,
-                  data.closeButtonCallbackID
-                );
+                this.sendPageCallback(browser, data.closeButtonCallbackID);
               };
             }
             if (typeof data.targetCallbackID == "string") {
               infoOptions.targetCallback = details => {
-                this.sendPageCallback(
-                  messageManager,
-                  data.targetCallbackID,
-                  details
-                );
+                this.sendPageCallback(browser, data.targetCallbackID, details);
               };
             }
 
@@ -478,7 +469,7 @@ var UITour = {
         this.noautohideMenus.add(data.name);
         this.showMenu(window, data.name, () => {
           if (typeof data.showCallbackID == "string") {
-            this.sendPageCallback(messageManager, data.showCallbackID);
+            this.sendPageCallback(browser, data.showCallbackID);
           }
         });
         break;
@@ -502,7 +493,7 @@ var UITour = {
         }
 
         this.getConfiguration(
-          messageManager,
+          browser,
           window,
           data.configuration,
           data.callbackID
@@ -590,7 +581,7 @@ var UITour = {
         let targetPromise = this.getTarget(window, data.name);
         targetPromise
           .then(target => {
-            this.addNavBarWidget(target, messageManager, data.callbackID);
+            this.addNavBarWidget(target, browser, data.callbackID);
           })
           .catch(log.error);
         break;
@@ -621,7 +612,7 @@ var UITour = {
             "browser.uitour.treatment." + name
           );
         } catch (ex) {}
-        this.sendPageCallback(messageManager, data.callbackID, { value });
+        this.sendPageCallback(browser, data.callbackID, { value });
         break;
       }
 
@@ -642,14 +633,14 @@ var UITour = {
             let searchbar = target.node;
 
             if (searchbar.textbox.open) {
-              this.sendPageCallback(messageManager, data.callbackID);
+              this.sendPageCallback(browser, data.callbackID);
             } else {
               let onPopupShown = () => {
                 searchbar.textbox.popup.removeEventListener(
                   "popupshown",
                   onPopupShown
                 );
-                this.sendPageCallback(messageManager, data.callbackID);
+                this.sendPageCallback(browser, data.callbackID);
               };
 
               searchbar.textbox.popup.addEventListener(
@@ -665,7 +656,7 @@ var UITour = {
 
       case "ping": {
         if (typeof data.callbackID == "string") {
-          this.sendPageCallback(messageManager, data.callbackID);
+          this.sendPageCallback(browser, data.callbackID);
         }
         break;
       }
@@ -944,10 +935,13 @@ var UITour = {
     return null;
   },
 
-  sendPageCallback(aMessageManager, aCallbackID, aData = {}) {
+  sendPageCallback(aBrowser, aCallbackID, aData = {}) {
     let detail = { data: aData, callbackID: aCallbackID };
     log.debug("sendPageCallback", detail);
-    aMessageManager.sendAsyncMessage("UITour:SendPageCallback", detail);
+    let contextToVisit = aBrowser.browsingContext;
+    let global = contextToVisit.currentWindowGlobal;
+    let actor = global.getActor("UITour");
+    actor.sendAsyncMessage("UITour:SendPageCallback", detail);
   },
 
   isElementVisible(aElement) {
@@ -1647,20 +1641,20 @@ var UITour = {
     aPanel.hidden = false;
   },
 
-  getConfiguration(aMessageManager, aWindow, aConfiguration, aCallbackID) {
+  getConfiguration(aBrowser, aWindow, aConfiguration, aCallbackID) {
     switch (aConfiguration) {
       case "appinfo":
-        this.getAppInfo(aMessageManager, aWindow, aCallbackID);
+        this.getAppInfo(aBrowser, aWindow, aCallbackID);
         break;
       case "availableTargets":
-        this.getAvailableTargets(aMessageManager, aWindow, aCallbackID);
+        this.getAvailableTargets(aBrowser, aWindow, aCallbackID);
         break;
       case "search":
       case "selectedSearchEngine":
         Services.search
           .getVisibleEngines()
           .then(engines => {
-            this.sendPageCallback(aMessageManager, aCallbackID, {
+            this.sendPageCallback(aBrowser, aCallbackID, {
               searchEngineIdentifier: Services.search.defaultEngine.identifier,
               engines: engines
                 .filter(engine => engine.identifier)
@@ -1668,21 +1662,21 @@ var UITour = {
             });
           })
           .catch(() => {
-            this.sendPageCallback(aMessageManager, aCallbackID, {
+            this.sendPageCallback(aBrowser, aCallbackID, {
               engines: [],
               searchEngineIdentifier: "",
             });
           });
         break;
       case "fxa":
-        this.getFxA(aMessageManager, aCallbackID);
+        this.getFxA(aBrowser, aCallbackID);
         break;
 
       // NOTE: 'sync' is deprecated and should be removed in Firefox 73 (because
       // by then, all consumers will have upgraded to use 'fxa' in that version
       // and later.)
       case "sync":
-        this.sendPageCallback(aMessageManager, aCallbackID, {
+        this.sendPageCallback(aBrowser, aCallbackID, {
           setup: Services.prefs.prefHasUserValue("services.sync.username"),
           desktopDevices: Services.prefs.getIntPref(
             "services.sync.clients.devices.desktop",
@@ -1700,7 +1694,7 @@ var UITour = {
         break;
       case "canReset":
         this.sendPageCallback(
-          aMessageManager,
+          aBrowser,
           aCallbackID,
           ResetProfile.resetSupported()
         );
@@ -1733,12 +1727,12 @@ var UITour = {
     }
   },
 
-  getFxA(aMessageManager, aCallbackID) {
+  getFxA(aBrowser, aCallbackID) {
     (async () => {
       let setup = !!(await fxAccounts.getSignedInUser());
       let result = { setup };
       if (!setup) {
-        this.sendPageCallback(aMessageManager, aCallbackID, result);
+        this.sendPageCallback(aBrowser, aCallbackID, result);
         return;
       }
       // We are signed in so need to build a richer result.
@@ -1797,14 +1791,14 @@ var UITour = {
           };
           return accum;
         }, {});
-      this.sendPageCallback(aMessageManager, aCallbackID, result);
+      this.sendPageCallback(aBrowser, aCallbackID, result);
     })().catch(err => {
       log.error(err);
-      this.sendPageCallback(aMessageManager, aCallbackID, {});
+      this.sendPageCallback(aBrowser, aCallbackID, {});
     });
   },
 
-  getAppInfo(aMessageManager, aWindow, aCallbackID) {
+  getAppInfo(aBrowser, aWindow, aCallbackID) {
     (async () => {
       let appinfo = { version: Services.appinfo.version };
 
@@ -1860,14 +1854,14 @@ var UITour = {
       appinfo.profileCreatedWeeksAgo = createdWeeksAgo;
       appinfo.profileResetWeeksAgo = resetWeeksAgo;
 
-      this.sendPageCallback(aMessageManager, aCallbackID, appinfo);
+      this.sendPageCallback(aBrowser, aCallbackID, appinfo);
     })().catch(err => {
       log.error(err);
-      this.sendPageCallback(aMessageManager, aCallbackID, {});
+      this.sendPageCallback(aBrowser, aCallbackID, {});
     });
   },
 
-  getAvailableTargets(aMessageManager, aChromeWindow, aCallbackID) {
+  getAvailableTargets(aBrowser, aChromeWindow, aCallbackID) {
     (async () => {
       let window = aChromeWindow;
       let data = this.availableTargetsCache.get(window);
@@ -1876,7 +1870,7 @@ var UITour = {
           "getAvailableTargets: Using cached targets list",
           data.targets.join(",")
         );
-        this.sendPageCallback(aMessageManager, aCallbackID, data);
+        this.sendPageCallback(aBrowser, aCallbackID, data);
         return;
       }
 
@@ -1897,16 +1891,16 @@ var UITour = {
         targets: targetNames,
       };
       this.availableTargetsCache.set(window, data);
-      this.sendPageCallback(aMessageManager, aCallbackID, data);
+      this.sendPageCallback(aBrowser, aCallbackID, data);
     })().catch(err => {
       log.error(err);
-      this.sendPageCallback(aMessageManager, aCallbackID, {
+      this.sendPageCallback(aBrowser, aCallbackID, {
         targets: [],
       });
     });
   },
 
-  addNavBarWidget(aTarget, aMessageManager, aCallbackID) {
+  addNavBarWidget(aTarget, aBrowser, aCallbackID) {
     if (aTarget.node) {
       log.error(
         "addNavBarWidget: can't add a widget already present:",
@@ -1930,7 +1924,7 @@ var UITour = {
       aTarget.widgetName,
       CustomizableUI.AREA_NAVBAR
     );
-    this.sendPageCallback(aMessageManager, aCallbackID);
+    this.sendPageCallback(aBrowser, aCallbackID);
   },
 
   _addAnnotationPanelMutationObserver(aPanelEl) {
@@ -2000,19 +1994,14 @@ var UITour = {
       }
 
       for (let browser of openTourBrowsers) {
-        let messageManager = browser.messageManager;
-        if (!messageManager) {
-          log.error(
-            "notify: Trying to notify a browser without a messageManager",
-            browser
-          );
-          continue;
-        }
         let detail = {
           event: eventName,
           params,
         };
-        messageManager.sendAsyncMessage("UITour:SendPageNotification", detail);
+        let contextToVisit = browser.browsingContext;
+        let global = contextToVisit.currentWindowGlobal;
+        let actor = global.getActor("UITour");
+        actor.sendAsyncMessage("UITour:SendPageNotification", detail);
       }
     }
   },
