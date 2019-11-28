@@ -2260,7 +2260,7 @@ JSFunction* js::CloneFunctionReuseScript(
     MOZ_ASSERT(fun->hasSelfHostedLazyScript());
     MOZ_ASSERT(fun->compartment() == clone->compartment());
     SelfHostedLazyScript* lazy = fun->selfHostedLazyScript();
-    clone->initSelfHostLazyScript(lazy);
+    clone->initSelfHostedLazyScript(lazy);
     clone->initEnvironment(enclosingEnv);
   }
 
