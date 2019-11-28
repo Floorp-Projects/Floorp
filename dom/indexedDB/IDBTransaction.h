@@ -59,7 +59,7 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
     Invalid
   };
 
-  enum struct ReadyState { Initial = 0, Loading, Inactive, Committing, Done };
+  enum struct ReadyState { Active, Inactive, Committing, Finished };
 
  private:
   // TODO: Only non-const because of Bug 1575173.
@@ -101,7 +101,8 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
   const uint32_t mLineNo;
   const uint32_t mColumn;
 
-  ReadyState mReadyState;
+  ReadyState mReadyState = ReadyState::Active;
+  bool mStarted = false;
   const Mode mMode;
 
   bool mCreating;    ///< Set between successful creation until the transaction
@@ -163,19 +164,19 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
 
   void RefreshSpec(bool aMayDelete);
 
-  bool IsOpen() const;
+  bool CanAcceptRequests() const;
 
-  bool IsCommittingOrDone() const {
+  bool IsCommittingOrFinished() const {
     AssertIsOnOwningThread();
 
     return mReadyState == ReadyState::Committing ||
-           mReadyState == ReadyState::Done;
+           mReadyState == ReadyState::Finished;
   }
 
-  bool IsDone() const {
+  bool IsFinished() const {
     AssertIsOnOwningThread();
 
-    return mReadyState == ReadyState::Done;
+    return mReadyState == ReadyState::Finished;
   }
 
   bool IsWriteAllowed() const {
@@ -191,14 +192,11 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
 
   auto TemporarilyProceedToInactive() {
     AssertIsOnOwningThread();
-    MOZ_ASSERT(mReadyState == ReadyState::Initial ||
-               mReadyState == ReadyState::Loading);
-    const auto savedReadyState = mReadyState;
+    MOZ_ASSERT(mReadyState == ReadyState::Active);
     mReadyState = ReadyState::Inactive;
 
     struct AutoRestoreState {
       IDBTransaction& mOwner;
-      ReadyState mSavedReadyState;
 #ifdef DEBUG
       uint32_t mSavedPendingRequestCount;
 #endif
@@ -208,11 +206,11 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
         MOZ_ASSERT(mOwner.mReadyState == ReadyState::Inactive);
         MOZ_ASSERT(mOwner.mPendingRequestCount == mSavedPendingRequestCount);
 
-        mOwner.mReadyState = mSavedReadyState;
+        mOwner.mReadyState = ReadyState::Active;
       }
     };
 
-    return AutoRestoreState{*this, savedReadyState
+    return AutoRestoreState{*this
 #ifdef DEBUG
                             ,
                             mPendingRequestCount

@@ -195,7 +195,7 @@ void IDBCursor::DropJSObjects() {
 bool IDBCursor::IsSourceDeleted() const {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mTransaction);
-  MOZ_ASSERT(mTransaction->IsOpen());
+  MOZ_ASSERT(mTransaction->CanAcceptRequests());
 
   IDBObjectStore* sourceObjectStore;
   if (mType == Type_Index || mType == Type_IndexKey) {
@@ -376,7 +376,7 @@ void IDBCursor::Continue(JSContext* aCx, JS::Handle<JS::Value> aKey,
                          ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  if (!mTransaction->IsOpen()) {
+  if (!mTransaction->CanAcceptRequests()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return;
   }
@@ -466,7 +466,7 @@ void IDBCursor::ContinuePrimaryKey(JSContext* aCx, JS::Handle<JS::Value> aKey,
                                    ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  if (!mTransaction->IsOpen()) {
+  if (!mTransaction->CanAcceptRequests()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return;
   }
@@ -575,7 +575,7 @@ void IDBCursor::Advance(uint32_t aCount, ErrorResult& aRv) {
     return;
   }
 
-  if (!mTransaction->IsOpen()) {
+  if (!mTransaction->CanAcceptRequests()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return;
   }
@@ -618,7 +618,7 @@ already_AddRefed<IDBRequest> IDBCursor::Update(JSContext* aCx,
                                                ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  if (!mTransaction->IsOpen()) {
+  if (!mTransaction->CanAcceptRequests()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -729,7 +729,7 @@ already_AddRefed<IDBRequest> IDBCursor::Delete(JSContext* aCx,
                                                ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  if (!mTransaction->IsOpen()) {
+  if (!mTransaction->CanAcceptRequests()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }

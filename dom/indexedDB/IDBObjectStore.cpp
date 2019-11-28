@@ -1500,7 +1500,7 @@ already_AddRefed<IDBRequest> IDBObjectStore::AddOrPut(
     return nullptr;
   }
 
-  if (!mTransaction->IsOpen()) {
+  if (!mTransaction->CanAcceptRequests()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -1523,7 +1523,7 @@ already_AddRefed<IDBRequest> IDBObjectStore::AddOrPut(
     return nullptr;
   }
 
-  if (!mTransaction->IsOpen()) {
+  if (!mTransaction->CanAcceptRequests()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -1693,7 +1693,7 @@ already_AddRefed<IDBRequest> IDBObjectStore::GetAllInternal(
     return nullptr;
   }
 
-  if (!mTransaction->IsOpen()) {
+  if (!mTransaction->CanAcceptRequests()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -1764,7 +1764,7 @@ already_AddRefed<IDBRequest> IDBObjectStore::Clear(JSContext* aCx,
     return nullptr;
   }
 
-  if (!mTransaction->IsOpen()) {
+  if (!mTransaction->CanAcceptRequests()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -1797,7 +1797,7 @@ already_AddRefed<IDBIndex> IDBObjectStore::Index(const nsAString& aName,
                                                  ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  if (mTransaction->IsCommittingOrDone() || mDeletedSpec) {
+  if (mTransaction->IsCommittingOrFinished() || mDeletedSpec) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
@@ -1935,7 +1935,7 @@ already_AddRefed<IDBRequest> IDBObjectStore::GetInternal(
     return nullptr;
   }
 
-  if (!mTransaction->IsOpen()) {
+  if (!mTransaction->CanAcceptRequests()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -1992,7 +1992,7 @@ already_AddRefed<IDBRequest> IDBObjectStore::DeleteInternal(
     return nullptr;
   }
 
-  if (!mTransaction->IsOpen()) {
+  if (!mTransaction->CanAcceptRequests()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -2050,7 +2050,8 @@ already_AddRefed<IDBIndex> IDBObjectStore::CreateIndex(
   }
 
   IDBTransaction* const transaction = IDBTransaction::GetCurrent();
-  if (!transaction || transaction != mTransaction || !transaction->IsOpen()) {
+  if (!transaction || transaction != mTransaction ||
+      !transaction->CanAcceptRequests()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -2150,7 +2151,8 @@ void IDBObjectStore::DeleteIndex(const nsAString& aName, ErrorResult& aRv) {
   }
 
   IDBTransaction* transaction = IDBTransaction::GetCurrent();
-  if (!transaction || transaction != mTransaction || !transaction->IsOpen()) {
+  if (!transaction || transaction != mTransaction ||
+      !transaction->CanAcceptRequests()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return;
   }
@@ -2220,7 +2222,7 @@ already_AddRefed<IDBRequest> IDBObjectStore::Count(JSContext* aCx,
     return nullptr;
   }
 
-  if (!mTransaction->IsOpen()) {
+  if (!mTransaction->CanAcceptRequests()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -2272,7 +2274,7 @@ already_AddRefed<IDBRequest> IDBObjectStore::OpenCursorInternal(
     return nullptr;
   }
 
-  if (!mTransaction->IsOpen()) {
+  if (!mTransaction->CanAcceptRequests()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -2426,7 +2428,8 @@ void IDBObjectStore::SetName(const nsAString& aName, ErrorResult& aRv) {
   }
 
   IDBTransaction* transaction = IDBTransaction::GetCurrent();
-  if (!transaction || transaction != mTransaction || !transaction->IsOpen()) {
+  if (!transaction || transaction != mTransaction ||
+      !transaction->CanAcceptRequests()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return;
   }
