@@ -3080,7 +3080,7 @@ bool JSRuntime::createLazySelfHostedFunctionClone(
     return false;
   }
   fun->setIsSelfHostedBuiltin();
-  fun->initSelfHostLazyScript(&cx->runtime()->selfHostedLazyScript.ref());
+  fun->initSelfHostedLazyScript(&cx->runtime()->selfHostedLazyScript.ref());
   SetClonedSelfHostedFunctionName(fun, selfHostedName);
   return true;
 }
