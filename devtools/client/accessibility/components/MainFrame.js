@@ -48,7 +48,7 @@ class MainFrame extends Component {
       auditing: PropTypes.array.isRequired,
       supports: PropTypes.object,
       simulator: PropTypes.object,
-      toolbox: PropTypes.object.isRequired,
+      toolboxDoc: PropTypes.object.isRequired,
     };
   }
 
@@ -118,7 +118,7 @@ class MainFrame extends Component {
       enabled,
       auditing,
       simulator,
-      toolbox,
+      toolboxDoc,
     } = this.props;
 
     if (!enabled) {
@@ -132,12 +132,7 @@ class MainFrame extends Component {
       { bundles: fluentBundles },
       div(
         { className: "mainFrame", role: "presentation" },
-        Toolbar({
-          accessibility,
-          accessibilityWalker,
-          simulator,
-          toolboxDoc: toolbox.doc,
-        }),
+        Toolbar({ accessibility, accessibilityWalker, simulator, toolboxDoc }),
         isAuditing && AuditProgressOverlay(),
         span(
           {
@@ -157,12 +152,9 @@ class MainFrame extends Component {
                 className: "main-panel",
                 role: "presentation",
               },
-              AccessibilityTree({
-                accessibilityWalker,
-                toolboxDoc: toolbox.doc,
-              })
+              AccessibilityTree({ accessibilityWalker })
             ),
-            endPanel: RightSidebar({ toolbox }),
+            endPanel: RightSidebar(),
             vert: this.useLandscapeMode,
           })
         )

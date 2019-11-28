@@ -93,6 +93,10 @@ class Checks extends Component {
 }
 
 const mapStateToProps = ({ details, ui }) => {
+  if (!ui.supports.audit) {
+    return {};
+  }
+
   const { audit } = details;
   if (!audit) {
     return {};

@@ -36,11 +36,13 @@ window.onload = async function() {
     const { FILTERS } = browserRequire("devtools/client/accessibility/constants");
 
     async function withMockEnv(func) {
-      const { gTelemetry: originalTelemetry } = window;
+      const { gToolbox: originalToolbox, gTelemetry: originalTelemetry } = window;
+      window.gToolbox = { doc: document };
       window.gTelemetry = null;
 
       await func();
 
+      window.gToolbox = originalToolbox;
       window.gTelemetry = originalTelemetry;
     }
 
@@ -86,13 +88,21 @@ window.onload = async function() {
         getValue: (object, id) => object[id],
       },
       hasContextMenu: true,
-      toolboxDoc: document,
+    };
+
+    const mockProps = {
+      ...defaultProps,
+      hasContextMenu: null,
     };
 
     const auditState = { audit: { filters: { [FILTERS.CONTRAST]: false }}};
 
     const defaultState = {
-      ui: { supports: {} },
+      ui: { supports: { snapshot: true }},
+      ...auditState,
+    };
+    const mockState = {
+      ui: { supports: {}},
       ...auditState,
     };
 
@@ -134,6 +144,23 @@ window.onload = async function() {
       browserWindow.openWebLinkIn = defaultOpenWebLinkIn;
       menu.remove();
     });
+
+    info("Check accessibility row when context menu is not supported.");
+    renderAccessibilityRow(defaultProps, mockState);
+    row = document.getElementById(ROW_ID);
+
+    info("Check contextmenu listener is not called when context menu is not supported.");
+    Simulate.contextMenu(row);
+    let menu = menuDoc.getElementById("accessibility-row-contextmenu");
+    ok(!menu, "contextmenu event handler was never called.");
+
+    info("Check accessibility row when no context menu is available.");
+    renderAccessibilityRow(mockProps, defaultState);
+    row = document.getElementById(ROW_ID);
+
+    Simulate.contextMenu(row);
+    menu = menuDoc.getElementById("accessibility-row-contextmenu");
+    ok(!menu, "contextmenu event handler was never called.");
   } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
