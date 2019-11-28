@@ -22,9 +22,9 @@ add_task(function test() {
   } = setupBackgroundJsm();
 
   Assert.equal(
-    getRecordingPreferencesFromBrowser().buffersize,
-    getDefaultRecordingPreferences().buffersize,
-    "The initial state has the default buffersize."
+    getRecordingPreferencesFromBrowser().entries,
+    getDefaultRecordingPreferences().entries,
+    "The initial state has the default entries."
   );
   Assert.equal(
     getRecordingPreferencesFromBrowser().interval,
