@@ -30,22 +30,6 @@ const {
   A11Y_SERVICE_ENABLED_COUNT,
 } = require("../constants");
 
-class OldVersionDescription extends Component {
-  render() {
-    return div(
-      { className: "description" },
-      p(
-        { className: "general" },
-        img({
-          src: "chrome://devtools/skin/images/accessibility.svg",
-          alt: L10N.getStr("accessibility.logo"),
-        }),
-        L10N.getStr("accessibility.description.oldVersion")
-      )
-    );
-  }
-}
-
 /**
  * Landing UI for the accessibility panel when Accessibility features are
  * deactivated.
@@ -160,4 +144,3 @@ const mapStateToProps = ({ ui }) => ({
 
 // Exports from this module
 exports.Description = connect(mapStateToProps)(Description);
-exports.OldVersionDescription = OldVersionDescription;
