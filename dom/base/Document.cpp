@@ -5064,11 +5064,6 @@ static bool HasPresShell(nsPIDOMWindowOuter* aWindow) {
   return docShell->GetPresShell() != nullptr;
 }
 
-nsresult Document::SetEditingState(EditingState aState) {
-  mEditingState = aState;
-  return NS_OK;
-}
-
 nsresult Document::EditingStateChanged() {
   if (mRemovedFromDocShell) {
     return NS_OK;

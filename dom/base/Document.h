@@ -1794,7 +1794,7 @@ class Document : public nsINode,
    * to enable/disable editing, call EditingStateChanged() or
    * SetDesignMode().
    */
-  nsresult SetEditingState(EditingState aState);
+  void SetEditingState(EditingState aState) { mEditingState = aState; }
 
   /**
    * Called when this Document's editor is destroyed.
