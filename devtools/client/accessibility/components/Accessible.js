@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-/* global EVENTS, gTelemetry, gToolbox */
+/* global EVENTS, gTelemetry */
 
 // React & Redux
 const {
@@ -112,6 +112,7 @@ class Accessible extends Component {
       labelledby: PropTypes.string.isRequired,
       parents: PropTypes.object,
       relations: PropTypes.object,
+      toolbox: PropTypes.object.isRequired,
     };
   }
 
@@ -204,7 +205,7 @@ class Accessible extends Component {
   }
 
   async showHighlighter(nodeFront) {
-    if (!gToolbox) {
+    if (!this.props.toolbox) {
       return;
     }
 
@@ -213,7 +214,7 @@ class Accessible extends Component {
   }
 
   async hideHighlighter(nodeFront) {
-    if (!gToolbox) {
+    if (!this.props.toolbox) {
       return;
     }
 
@@ -237,7 +238,7 @@ class Accessible extends Component {
       .catch(error => {
         // Only report an error where there's still a toolbox. Ignore cases
         // where toolbox is already destroyed.
-        if (gToolbox) {
+        if (this.props.toolbox) {
           console.error(error);
         }
       });
@@ -257,24 +258,23 @@ class Accessible extends Component {
     accessibilityWalkerFront.unhighlight().catch(error => {
       // Only report an error where there's still a toolbox. Ignore cases where
       // toolbox is already destroyed.
-      if (gToolbox) {
+      if (this.props.toolbox) {
         console.error(error);
       }
     });
   }
 
-  selectNode(nodeFront, reason = "accessibility") {
+  async selectNode(nodeFront, reason = "accessibility") {
     if (gTelemetry) {
       gTelemetry.scalarAdd(TELEMETRY_NODE_INSPECTED_COUNT, 1);
     }
 
-    if (!gToolbox) {
+    if (!this.props.toolbox) {
       return;
     }
 
-    gToolbox
-      .selectTool("inspector")
-      .then(() => gToolbox.selection.setNodeFront(nodeFront, reason));
+    const inspector = await this.props.toolbox.selectTool("inspector");
+    inspector.selection.setNodeFront(nodeFront, reason);
   }
 
   async selectAccessible(accessibleFront) {

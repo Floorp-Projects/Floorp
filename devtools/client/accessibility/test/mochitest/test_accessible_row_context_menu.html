@@ -36,13 +36,11 @@ window.onload = async function() {
     const { FILTERS } = browserRequire("devtools/client/accessibility/constants");
 
     async function withMockEnv(func) {
-      const { gToolbox: originalToolbox, gTelemetry: originalTelemetry } = window;
-      window.gToolbox = { doc: document };
+      const { gTelemetry: originalTelemetry } = window;
       window.gTelemetry = null;
 
       await func();
 
-      window.gToolbox = originalToolbox;
       window.gTelemetry = originalTelemetry;
     }
 
@@ -88,6 +86,7 @@ window.onload = async function() {
         getValue: (object, id) => object[id],
       },
       hasContextMenu: true,
+      toolboxDoc: document,
     };
 
     const auditState = { audit: { filters: { [FILTERS.CONTRAST]: false }}};
