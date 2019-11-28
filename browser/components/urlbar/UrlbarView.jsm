@@ -27,6 +27,9 @@ const SELECTABLE_ELEMENTS = [
   "urlbarView-tip-help",
 ];
 
+const getBoundsWithoutFlushing = element =>
+  element.ownerGlobal.windowUtils.getBoundsWithoutFlushing(element);
+
 /**
  * Receives and displays address bar autocomplete results.
  */
@@ -553,8 +556,6 @@ class UrlbarView {
     this.panel.removeAttribute("actionoverride");
 
     if (!this.input.megabar) {
-      let getBoundsWithoutFlushing = element =>
-        this.window.windowUtils.getBoundsWithoutFlushing(element);
       let px = number => number.toFixed(2) + "px";
       let inputRect = getBoundsWithoutFlushing(this.input.textbox);
 
@@ -623,6 +624,9 @@ class UrlbarView {
         );
       }
     }
+
+    this._enableOrDisableRowWrap();
+
     this.input.inputField.setAttribute("aria-expanded", "true");
     this.input.dropmarker.setAttribute("open", "true");
 
@@ -1322,6 +1326,14 @@ class UrlbarView {
     }
   }
 
+  _enableOrDisableRowWrap() {
+    if (getBoundsWithoutFlushing(this.input.textbox).width <= 425) {
+      this._rows.setAttribute("wrap", "true");
+    } else {
+      this._rows.removeAttribute("wrap");
+    }
+  }
+
   _setElementOverflowing(element, overflowing) {
     element.toggleAttribute("overflow", overflowing);
     if (overflowing) {
@@ -1439,6 +1451,7 @@ class UrlbarView {
 
   _on_resize() {
     if (this.input.megabar) {
+      this._enableOrDisableRowWrap();
       return;
     }
 
