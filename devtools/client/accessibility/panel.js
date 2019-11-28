@@ -86,7 +86,6 @@ AccessibilityPanel.prototype = {
     );
 
     this.shouldRefresh = true;
-    this.panelWin.gToolbox = this._toolbox;
 
     await this.startup.initAccessibility();
     this.picker = new Picker(this);
@@ -171,7 +170,7 @@ AccessibilityPanel.prototype = {
       supports: this.supports,
       fluentBundles: this.fluentBundles,
       simulator: this.simulator,
-      toolboxDoc: this._toolbox.doc,
+      toolbox: this._toolbox,
     });
   },
 
@@ -300,7 +299,6 @@ AccessibilityPanel.prototype = {
     }
 
     this._telemetry = null;
-    this.panelWin.gToolbox = null;
     this.panelWin.gTelemetry = null;
 
     this.emit("destroyed");

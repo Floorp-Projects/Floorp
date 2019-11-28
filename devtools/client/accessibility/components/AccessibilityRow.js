@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-/* global gTelemetry, gToolbox, EVENTS */
+/* global gTelemetry, EVENTS */
 
 // React & Redux
 const {
@@ -81,6 +81,7 @@ class AccessibilityRow extends Component {
     return {
       ...TreeRow.propTypes,
       dispatch: PropTypes.func.isRequired,
+      toolboxDoc: PropTypes.object.isRequired,
       scrollContentNodeIntoView: PropTypes.bool.isRequired,
     };
   }
@@ -268,7 +269,7 @@ class AccessibilityRow extends Component {
     e.stopPropagation();
     e.preventDefault();
 
-    if (!gToolbox) {
+    if (!this.props.toolboxDoc) {
       return;
     }
 
@@ -281,7 +282,7 @@ class AccessibilityRow extends Component {
       })
     );
 
-    menu.popup(e.screenX, e.screenY, gToolbox.doc);
+    menu.popup(e.screenX, e.screenY, this.props.toolboxDoc);
 
     if (gTelemetry) {
       gTelemetry.scalarAdd(TELEMETRY_ACCESSIBLE_CONTEXT_MENU_OPENED, 1);
