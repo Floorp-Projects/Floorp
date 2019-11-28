@@ -23,6 +23,7 @@ const ACTIVE_ON_DOCTYPE_ITEMS = [
 const ACTIVE_ON_SHADOW_ROOT_ITEMS = [
   "node-menu-pasteinnerhtml",
   "node-menu-copyinner",
+  "node-menu-edithtml",
 ].concat(ACTIVE_ON_DOCTYPE_ITEMS);
 
 const ALL_MENU_ITEMS = [
