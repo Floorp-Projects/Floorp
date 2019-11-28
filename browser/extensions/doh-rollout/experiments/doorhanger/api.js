@@ -5,14 +5,9 @@
 "use strict";
 /* global BrowserWindowTracker, ExtensionCommon, ExtensionAPI */
 /* exported doorhanger */
-
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-const { ExtensionUtils } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionUtils.jsm"
-);
+ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm", this);
 
 var { EventManager, EventEmitter } = ExtensionCommon;
 const {
