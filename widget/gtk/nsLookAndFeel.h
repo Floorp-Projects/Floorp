@@ -31,6 +31,10 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   virtual char16_t GetPasswordCharacterImpl() override;
   virtual bool GetEchoPasswordImpl() override;
 
+  virtual nsTArray<LookAndFeelInt> GetIntCacheImpl() override;
+  virtual void SetIntCacheImpl(
+      const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) override;
+
   bool IsCSDAvailable() const { return mCSDAvailable; }
 
   static const nscolor kBlack = NS_RGB(0, 0, 0);
