@@ -665,7 +665,7 @@ bool GlobalObject::initFinalizationIteratorProto(JSContext* cx,
   }
 
   FinalizationIteratorObject* iterator =
-      NewObjectWithClassProto<FinalizationIteratorObject>(cx, proto);
+      NewObjectWithGivenProto<FinalizationIteratorObject>(cx, proto);
   if (!iterator) {
     return nullptr;
   }
