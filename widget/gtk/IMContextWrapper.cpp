@@ -3131,7 +3131,7 @@ void IMContextWrapper::Selection::Assign(
     const WidgetQueryContentEvent& aEvent) {
   MOZ_ASSERT(aEvent.mMessage == eQuerySelectedText);
   MOZ_ASSERT(aEvent.mSucceeded);
-  mString = aEvent.mReply.mString.Length();
+  mString = aEvent.mReply.mString;
   mOffset = aEvent.mReply.mOffset;
   mWritingMode = aEvent.GetWritingMode();
 }
