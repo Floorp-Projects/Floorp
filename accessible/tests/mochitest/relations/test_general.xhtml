@@ -4,6 +4,7 @@
                  type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         title="nsIAccessible::getAccessibleRelated() tests">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
@@ -37,6 +38,10 @@
       testRelation("label3", RELATION_LABEL_FOR, "checkbox3");
       testRelation("label4", RELATION_LABEL_FOR, "checkbox3");
       testRelation("checkbox3", RELATION_LABELLED_BY, ["label3", "label4"]);
+
+      // xul:label@control referring to HTML element
+      testRelation("label_input", RELATION_LABEL_FOR, "input");
+      testRelation("input", RELATION_LABELLED_BY, "label_input");
 
       // aria-describedby
       testRelation("descr1", RELATION_DESCRIPTION_FOR, "checkbox4");
@@ -157,6 +162,9 @@
     <description id="label4">label</description>
     <description role="checkbox" id="checkbox3"
                  aria-labelledby="label3 label4"/>
+
+    <label id="label_input" control="input">label</label>
+    <html:input id="input"/>
 
     <description id="descr1">description</description>
     <description role="checkbox" id="checkbox4" aria-describedby="descr1"/>
