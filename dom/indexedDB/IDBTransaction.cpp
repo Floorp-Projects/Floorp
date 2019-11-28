@@ -91,7 +91,8 @@ auto IDBTransaction::DoWithTransactionChild(const Func& aFunc) const {
 IDBTransaction::IDBTransaction(IDBDatabase* const aDatabase,
                                const nsTArray<nsString>& aObjectStoreNames,
                                const Mode aMode, nsString aFilename,
-                               const uint32_t aLineNo, const uint32_t aColumn)
+                               const uint32_t aLineNo, const uint32_t aColumn,
+                               CreatedFromFactoryFunction /*aDummy*/)
     : DOMEventTargetHelper(aDatabase),
       mDatabase(aDatabase),
       mObjectStoreNames(aObjectStoreNames),
@@ -168,7 +169,7 @@ IDBTransaction::~IDBTransaction() {
 }
 
 // static
-already_AddRefed<IDBTransaction> IDBTransaction::CreateVersionChange(
+RefPtr<IDBTransaction> IDBTransaction::CreateVersionChange(
     IDBDatabase* const aDatabase,
     BackgroundVersionChangeTransactionChild* const aActor,
     IDBOpenDBRequest* const aOpenRequest, const int64_t aNextObjectStoreId,
@@ -180,14 +181,14 @@ already_AddRefed<IDBTransaction> IDBTransaction::CreateVersionChange(
   MOZ_ASSERT(aNextObjectStoreId > 0);
   MOZ_ASSERT(aNextIndexId > 0);
 
-  nsTArray<nsString> emptyObjectStoreNames;
+  const nsTArray<nsString> emptyObjectStoreNames;
 
   nsString filename;
   uint32_t lineNo, column;
   aOpenRequest->GetCallerLocation(filename, &lineNo, &column);
-  RefPtr<IDBTransaction> transaction =
-      new IDBTransaction(aDatabase, emptyObjectStoreNames, Mode::VersionChange,
-                         std::move(filename), lineNo, column);
+  auto transaction = MakeRefPtr<IDBTransaction>(
+      aDatabase, emptyObjectStoreNames, Mode::VersionChange,
+      std::move(filename), lineNo, column, CreatedFromFactoryFunction{});
 
   transaction->NoteActiveTransaction();
 
@@ -198,11 +199,11 @@ already_AddRefed<IDBTransaction> IDBTransaction::CreateVersionChange(
   aDatabase->RegisterTransaction(transaction);
   transaction->mRegistered = true;
 
-  return transaction.forget();
+  return transaction;
 }
 
 // static
-already_AddRefed<IDBTransaction> IDBTransaction::Create(
+RefPtr<IDBTransaction> IDBTransaction::Create(
     JSContext* const aCx, IDBDatabase* const aDatabase,
     const nsTArray<nsString>& aObjectStoreNames, const Mode aMode) {
   MOZ_ASSERT(aDatabase);
@@ -214,8 +215,9 @@ already_AddRefed<IDBTransaction> IDBTransaction::Create(
   nsString filename;
   uint32_t lineNo, column;
   IDBRequest::CaptureCaller(aCx, filename, &lineNo, &column);
-  RefPtr<IDBTransaction> transaction = new IDBTransaction(
-      aDatabase, aObjectStoreNames, aMode, std::move(filename), lineNo, column);
+  auto transaction = MakeRefPtr<IDBTransaction>(
+      aDatabase, aObjectStoreNames, aMode, std::move(filename), lineNo, column,
+      CreatedFromFactoryFunction{});
 
   if (!NS_IsMainThread()) {
     WorkerPrivate* const workerPrivate = GetCurrentThreadWorkerPrivate();
@@ -252,7 +254,7 @@ already_AddRefed<IDBTransaction> IDBTransaction::Create(
   aDatabase->RegisterTransaction(transaction);
   transaction->mRegistered = true;
 
-  return transaction.forget();
+  return transaction;
 }
 
 // static
@@ -468,7 +470,7 @@ void IDBTransaction::GetCallerLocation(nsAString& aFilename,
   *aColumn = mColumn;
 }
 
-already_AddRefed<IDBObjectStore> IDBTransaction::CreateObjectStore(
+RefPtr<IDBObjectStore> IDBTransaction::CreateObjectStore(
     const ObjectStoreSpec& aSpec) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aSpec.metadata().id());
@@ -500,7 +502,7 @@ already_AddRefed<IDBObjectStore> IDBTransaction::CreateObjectStore(
 
   mObjectStores.AppendElement(objectStore);
 
-  return objectStore.forget();
+  return objectStore;
 }
 
 void IDBTransaction::DeleteObjectStore(const int64_t aObjectStoreId) {
@@ -588,19 +590,17 @@ void IDBTransaction::RenameIndex(IDBObjectStore* const aObjectStore,
 }
 
 void IDBTransaction::AbortInternal(const nsresult aAbortCode,
-                                   already_AddRefed<DOMException> aError) {
+                                   RefPtr<DOMException> aError) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(NS_FAILED(aAbortCode));
   MOZ_ASSERT(!IsCommittingOrFinished());
-
-  RefPtr<DOMException> error = aError;
 
   const bool isVersionChange = mMode == Mode::VersionChange;
   const bool needToSendAbort = mReadyState == ReadyState::Active && !mStarted;
 
   mAbortCode = aAbortCode;
   mReadyState = ReadyState::Finished;
-  mError = error.forget();
+  mError = std::move(aError);
 
   if (isVersionChange) {
     // If a version change transaction is aborted, we must revert the world
@@ -676,7 +676,10 @@ void IDBTransaction::Abort(IDBRequest* const aRequest) {
   ErrorResult rv;
   RefPtr<DOMException> error = aRequest->GetError(rv);
 
-  AbortInternal(aRequest->GetErrorCode(), error.forget());
+  // TODO: Do we deliberately ignore rv here? Isn't there a static analysis that
+  // prevents that?
+
+  AbortInternal(aRequest->GetErrorCode(), std::move(error));
 }
 
 void IDBTransaction::Abort(const nsresult aErrorCode) {
@@ -688,8 +691,7 @@ void IDBTransaction::Abort(const nsresult aErrorCode) {
     return;
   }
 
-  RefPtr<DOMException> error = DOMException::Create(aErrorCode);
-  AbortInternal(aErrorCode, error.forget());
+  AbortInternal(aErrorCode, DOMException::Create(aErrorCode));
 }
 
 void IDBTransaction::Abort(ErrorResult& aRv) {
@@ -845,20 +847,20 @@ DOMException* IDBTransaction::GetError() const {
   return mError;
 }
 
-already_AddRefed<DOMStringList> IDBTransaction::ObjectStoreNames() const {
+RefPtr<DOMStringList> IDBTransaction::ObjectStoreNames() const {
   AssertIsOnOwningThread();
 
   if (mMode == Mode::VersionChange) {
     return mDatabase->ObjectStoreNames();
   }
 
-  RefPtr<DOMStringList> list = new DOMStringList();
+  auto list = MakeRefPtr<DOMStringList>();
   list->StringArray() = mObjectStoreNames;
-  return list.forget();
+  return list;
 }
 
-already_AddRefed<IDBObjectStore> IDBTransaction::ObjectStore(
-    const nsAString& aName, ErrorResult& aRv) {
+RefPtr<IDBObjectStore> IDBTransaction::ObjectStore(const nsAString& aName,
+                                                   ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   if (IsCommittingOrFinished()) {
@@ -906,7 +908,7 @@ already_AddRefed<IDBObjectStore> IDBTransaction::ObjectStore(
     mObjectStores.AppendElement(objectStore);
   }
 
-  return objectStore.forget();
+  return objectStore;
 }
 
 NS_IMPL_ADDREF_INHERITED(IDBTransaction, DOMEventTargetHelper)

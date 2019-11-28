@@ -119,13 +119,13 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
 #endif
 
  public:
-  static already_AddRefed<IDBTransaction> CreateVersionChange(
+  static MOZ_MUST_USE RefPtr<IDBTransaction> CreateVersionChange(
       IDBDatabase* aDatabase,
       indexedDB::BackgroundVersionChangeTransactionChild* aActor,
       IDBOpenDBRequest* aOpenRequest, int64_t aNextObjectStoreId,
       int64_t aNextIndexId);
 
-  static already_AddRefed<IDBTransaction> Create(
+  static MOZ_MUST_USE RefPtr<IDBTransaction> Create(
       JSContext* aCx, IDBDatabase* aDatabase,
       const nsTArray<nsString>& aObjectStoreNames, Mode aMode);
 
@@ -243,7 +243,7 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
     return mObjectStoreNames;
   }
 
-  already_AddRefed<IDBObjectStore> CreateObjectStore(
+  MOZ_MUST_USE RefPtr<IDBObjectStore> CreateObjectStore(
       const indexedDB::ObjectStoreSpec& aSpec);
 
   void DeleteObjectStore(int64_t aObjectStoreId);
@@ -297,8 +297,8 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
 
   DOMException* GetError() const;
 
-  already_AddRefed<IDBObjectStore> ObjectStore(const nsAString& aName,
-                                               ErrorResult& aRv);
+  MOZ_MUST_USE RefPtr<IDBObjectStore> ObjectStore(const nsAString& aName,
+                                                  ErrorResult& aRv);
 
   void Abort(ErrorResult& aRv);
 
@@ -306,19 +306,24 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
   IMPL_EVENT_HANDLER(complete)
   IMPL_EVENT_HANDLER(error)
 
-  already_AddRefed<DOMStringList> ObjectStoreNames() const;
+  MOZ_MUST_USE RefPtr<DOMStringList> ObjectStoreNames() const;
 
   // EventTarget
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
  private:
+  struct CreatedFromFactoryFunction {};
+
+ public:
   IDBTransaction(IDBDatabase* aDatabase,
                  const nsTArray<nsString>& aObjectStoreNames, Mode aMode,
-                 nsString aFilename, uint32_t aLineNo, uint32_t aColumn);
+                 nsString aFilename, uint32_t aLineNo, uint32_t aColumn,
+                 CreatedFromFactoryFunction aDummy);
+
+ private:
   ~IDBTransaction();
 
-  void AbortInternal(nsresult aAbortCode,
-                     already_AddRefed<DOMException> aError);
+  void AbortInternal(nsresult aAbortCode, RefPtr<DOMException> aError);
 
   void SendCommit();
 
