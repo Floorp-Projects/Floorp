@@ -14,6 +14,7 @@
 #include "FileInfo.h"
 #include "IDBMutableFile.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
+#include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/File.h"
 #include "nsIInputStream.h"
 
@@ -108,6 +109,24 @@ inline size_t StructuredCloneReadInfo::Size() const {
   }
 
   return size;
+}
+
+template <typename E, typename Map>
+already_AddRefed<DOMStringList> CreateSortedDOMStringList(
+    const nsTArray<E>& aArray, const Map& aMap) {
+  auto list = MakeRefPtr<DOMStringList>();
+
+  if (!aArray.IsEmpty()) {
+    nsTArray<nsString>& mapped = list->StringArray();
+    mapped.SetCapacity(aArray.Length());
+
+    std::transform(aArray.cbegin(), aArray.cend(), MakeBackInserter(mapped),
+                   aMap);
+
+    mapped.Sort();
+  }
+
+  return list.forget();
 }
 
 }  // namespace indexedDB

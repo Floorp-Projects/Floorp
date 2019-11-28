@@ -22,7 +22,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/storage.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/DOMStringListBinding.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/File.h"
@@ -336,22 +335,9 @@ already_AddRefed<DOMStringList> IDBDatabase::ObjectStoreNames() const {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mSpec);
 
-  const nsTArray<ObjectStoreSpec>& objectStores = mSpec->objectStores();
-
-  RefPtr<DOMStringList> list = new DOMStringList();
-
-  if (!objectStores.IsEmpty()) {
-    nsTArray<nsString>& listNames = list->StringArray();
-    listNames.SetCapacity(objectStores.Length());
-
-    std::transform(
-        objectStores.cbegin(), objectStores.cend(), MakeBackInserter(listNames),
-        [](const auto& objectStore) { return objectStore.metadata().name(); });
-
-    listNames.Sort();
-  }
-
-  return list.forget();
+  return CreateSortedDOMStringList(
+      mSpec->objectStores(),
+      [](const auto& objectStore) { return objectStore.metadata().name(); });
 }
 
 already_AddRefed<Document> IDBDatabase::GetOwnerDocument() const {
