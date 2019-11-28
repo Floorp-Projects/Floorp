@@ -1,0 +1,62 @@
+{
+  "manifest_version": 2,
+  "name": "__MSG_extensionName__",
+  "default_locale": "en_US",
+  "description": "__MSG_extensionDescription__",
+  "version": "1.2.0rc2",
+
+  "hidden": true,
+
+  "applications": {
+    "gecko": {
+      "id": "doh-rollout@mozilla.org"
+    }
+  },
+
+  "permissions": [
+    "captivePortal",
+    "dns",
+    "normandyAddonStudy",
+    "storage",
+    "telemetry"
+  ],
+
+  "background": {
+    "scripts": ["heuristics.js", "background.js"]
+  },
+
+  "experiment_apis": {
+    "preferences": {
+      "schema": "experiments/preferences/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiments/preferences/api.js",
+        "paths": [["experiments", "preferences"]]
+      }
+    },
+    "heuristics": {
+      "schema": "experiments/heuristics/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiments/heuristics/api.js",
+        "paths": [["experiments", "heuristics"]]
+      }
+    },
+    "netChange": {
+      "schema": "experiments/netChange/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiments/netChange/api.js",
+        "paths": [["experiments", "netChange"]]
+      }
+    },
+    "doorhanger": {
+      "schema": "experiments/doorhanger/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiments/doorhanger/api.js",
+        "paths": [["experiments", "doorhanger"]]
+      }
+    }
+  }
+}

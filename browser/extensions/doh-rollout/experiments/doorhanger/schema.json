@@ -1,0 +1,48 @@
+[
+  {
+    "namespace": "experiments.doorhanger",
+    "description":
+      "Can be used to show a notification to users",
+    "functions": [
+      {
+        "name": "show",
+        "type": "function",
+        "description": "Show the notification to the user.",
+        "async": true,
+        "parameters": [
+          {
+            "type": "object",
+            "name": "properties",
+            "description": "Text properties for the doorhanger",
+            "properties": {
+              "name": {"type": "string", "description": "Name of the doorhanger"},
+              "text": {"type": "string", "description": "Description in the doorhanger"},
+              "okLabel": {"type": "string"},
+              "okAccessKey": {"type": "string"},
+              "cancelLabel": {"type": "string"},
+              "cancelAccessKey": {"type": "string"}
+            }
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "name": "onDoorhangerAccept",
+        "type": "function",
+        "description": "The user clicked 'OK, Got It'",
+        "parameters": [
+          {"type": "integer", "name": "tabId", "minimum": 0}
+        ]
+      },
+      {
+        "name": "onDoorhangerDecline",
+        "type": "function",
+        "description": "The user clicked 'Disable Protection'",
+        "parameters": [
+          {"type": "integer", "name": "tabId", "minimum": 0}
+        ]
+      }
+    ]
+  }
+]
