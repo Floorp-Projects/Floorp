@@ -851,8 +851,8 @@ mozInlineSpellChecker::GetMisspelledWord(nsINode* aNode, int32_t aOffset,
 
 NS_IMETHODIMP
 mozInlineSpellChecker::ReplaceWord(nsINode* aNode, int32_t aOffset,
-                                   const nsAString& newword) {
-  if (NS_WARN_IF(!mTextEditor) || NS_WARN_IF(newword.IsEmpty())) {
+                                   const nsAString& aNewWord) {
+  if (NS_WARN_IF(!mTextEditor) || NS_WARN_IF(aNewWord.IsEmpty())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -864,8 +864,16 @@ mozInlineSpellChecker::ReplaceWord(nsINode* aNode, int32_t aOffset,
     return NS_OK;
   }
 
+  // In usual cases, any words shouldn't include line breaks, but technically,
+  // they may include and we need to avoid `HTMLTextAreaElement.value` returns
+  // \r.  Therefore, we need to handle it here.
+  nsString newWord(aNewWord);
+  if (!mTextEditor->AsHTMLEditor()) {
+    nsContentUtils::PlatformToDOMLineBreaks(newWord);
+  }
+
   RefPtr<TextEditor> textEditor(mTextEditor);
-  DebugOnly<nsresult> rv = textEditor->ReplaceTextAsAction(newword, range);
+  DebugOnly<nsresult> rv = textEditor->ReplaceTextAsAction(newWord, range);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert the new word");
   return NS_OK;
 }
