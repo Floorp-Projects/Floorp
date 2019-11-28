@@ -16,8 +16,7 @@
   "permissions": [
     "captivePortal",
     "dns",
-    "storage",
-    "telemetry"
+    "storage"
   ],
 
   "background": {

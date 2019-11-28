@@ -4,31 +4,12 @@
 
 "use strict";
 
-/* exported preferences */
 /* global ExtensionAPI, ExtensionCommon */
+
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import(
-  "resource://gre/modules/ExtensionPreferencesManager.jsm",
-  this
-);
-
-const TRR_URI_PREF = "network.trr.uri";
-const TRR_DISABLE_ECS_PREF = "network.trr.disable-ECS";
-
-ExtensionPreferencesManager.addSetting("dohRollout.state", {
-  prefNames: [TRR_URI_PREF, TRR_DISABLE_ECS_PREF],
-
-  setCallback() {
-    let prefs = {};
-    prefs[TRR_URI_PREF] = "https://mozilla.cloudflare-dns.com/dns-query";
-    prefs[TRR_DISABLE_ECS_PREF] = true;
-    return prefs;
-  },
-});
 
 var preferences = class preferences extends ExtensionAPI {
   getAPI(context) {
-    const EventManager = ExtensionCommon.EventManager;
     return {
       experiments: {
         preferences: {
@@ -57,7 +38,7 @@ var preferences = class preferences extends ExtensionAPI {
             return Services.prefs.prefHasUserValue(name);
           },
 
-          onPrefChanged: new EventManager({
+          onPrefChanged: new ExtensionCommon.EventManager({
             context,
             name: "preferences.onPrefChanged",
             register: fire => {
@@ -72,25 +53,6 @@ var preferences = class preferences extends ExtensionAPI {
               };
             },
           }).api(),
-
-          state: Object.assign(
-            ExtensionPreferencesManager.getSettingsAPI({
-              extensionId: context.extension.id,
-              name: "dohRollout.state",
-              callback: () => {
-                throw new Error("Not supported");
-              },
-            }),
-            {
-              set: details => {
-                return ExtensionPreferencesManager.setSetting(
-                  context.extension.id,
-                  "dohRollout.state",
-                  details.value
-                );
-              },
-            }
-          ),
         },
       },
     };

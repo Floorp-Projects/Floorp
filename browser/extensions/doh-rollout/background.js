@@ -65,7 +65,6 @@ const DOH_DEBUG_PREF = "doh-rollout.debug";
 const stateManager = {
   async setState(state) {
     log("setState: ", state);
-    browser.experiments.preferences.state.set({ value: state });
 
     switch (state) {
       case "uninstalled":
