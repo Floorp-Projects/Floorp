@@ -3,11 +3,10 @@
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
+  await useTestEngines("data", "search-extensions");
 });
 
 add_task(async function test_async() {
-  configureToLoadJarEngines();
-
   Assert.ok(!Services.search.isInitialized);
 
   let aStatus = await Services.search.init();

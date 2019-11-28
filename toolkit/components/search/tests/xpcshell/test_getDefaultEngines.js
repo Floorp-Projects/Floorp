@@ -39,7 +39,7 @@ const EXPECTED_ORDER = modernConfig
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
 
-  useTestEngineConfig();
+  await useTestEngines();
 
   Services.prefs.setBoolPref(
     SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",

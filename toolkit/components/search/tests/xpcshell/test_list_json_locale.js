@@ -5,8 +5,8 @@
 
 "use strict";
 
-add_task(function test_setup() {
-  useTestEngineConfig();
+add_task(async function setup() {
+  await useTestEngines();
 
   Services.prefs.setBoolPref(
     SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",

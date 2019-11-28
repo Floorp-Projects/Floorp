@@ -10,7 +10,7 @@
 const SEARCH_APP_DIR = 1;
 
 add_task(async function setup() {
-  configureToLoadJarEngines();
+  await useTestEngines("data", "search-extensions");
   await AddonTestUtils.promiseStartupManager();
 });
 
