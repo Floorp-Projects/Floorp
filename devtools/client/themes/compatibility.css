@@ -6,6 +6,7 @@
   --compatibility-base-unit: 4px;
   --compatibility-cause-color: var(--theme-text-color-alt);
   --compatibility-issue-icon-size: calc(var(--compatibility-base-unit) * 3);
+  --compatibility-unsupported-browser-icon-size: calc(var(--compatibility-base-unit) * 4);
 }
 
 .compatibility-app {
@@ -19,12 +20,28 @@
   padding: 0;
 }
 
+/*
+ * Layout of the issue item
+ *  +------+--------------+-----------------+---------------------------+
+ *  | icon | issue factor | (issue causes)? | unsupported browser icons |
+ *  +------+--------------+-----------------+---------------------------+
+ */
 .compatibility-issue-item {
-  display: flex;
-  gap: var(--compatibility-base-unit);
+  display: grid;
+  grid-template-columns: var(--compatibility-issue-icon-size) max-content 1fr max-content;
   align-items: center;
   padding-inline-start: calc(var(--compatibility-base-unit) * 2);
+  padding-inline-end: calc(var(--compatibility-base-unit) * 4);
   padding-block: calc(var(--compatibility-base-unit) * 2);
+}
+
+.compatibility-issue-item > *:nth-child(-n+2) {
+  /*
+   * The reason why we don't use `gap` in `.compatibility-issue-item` is
+   * because there are cases that the `issue causes` element is null,
+   * then the layout will be broken a bit.
+   */
+  margin-inline-start: var(--compatibility-base-unit);
 }
 
 .compatibility-issue-item:not(:last-child) {
@@ -56,4 +73,42 @@
 .compatibility-issue-item__mdn-link {
   color: var(--theme-highlight-blue);
   text-decoration: none;
+}
+
+.compatibility-unsupported-browser-list {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  list-style: none;
+  padding: 0;
+  gap: calc(var(--compatibility-base-unit) * 2);
+}
+
+.compatibility-unsupported-browser-item {
+  width: var(--compatibility-unsupported-browser-icon-size);
+  height: var(--compatibility-unsupported-browser-icon-size);
+  position: relative;
+}
+
+.compatibility-unsupported-browser-item--mobile::after {
+  content: "";
+  width: calc(var(--compatibility-base-unit) * 2);
+  height: calc(var(--compatibility-base-unit) * 3);
+  background-color: var(--theme-body-background);
+  background-size: calc(var(--compatibility-base-unit) * 2 - 2px);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-image: url(chrome://devtools/skin/images/browsers/mobile.svg);
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
+  position: absolute;
+  right: calc(var(--compatibility-base-unit) * -1);
+  bottom: calc(var(--compatibility-base-unit) * -1);
+}
+
+.compatibility-unsupported-browser-item__icon {
+  width: 100%;
+  height: 100%;
+  fill: var(--theme-icon-dimmed-color);
+  -moz-context-properties: fill;
 }
