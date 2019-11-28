@@ -120,7 +120,7 @@ already_AddRefed<nsIInputStream> DeserializeIPCStream(
 //       with complex ipdl structures.  For example, you may want to create an
 //       array of RAII AutoIPCStream objects or build your own wrapping
 //       RAII object to handle other actors that need to be cleaned up.
-class AutoIPCStream final {
+class AutoIPCStream {
  public:
   // Implicitly create an Maybe<IPCStream> value.  Either
   // TakeValue() or TakeOptionalValue() can be used.
@@ -180,6 +180,14 @@ class AutoIPCStream final {
   Maybe<IPCStream>* const mOptionalValue = nullptr;
   bool mTaken = false;
   const bool mDelayedStart;
+};
+
+class HoldIPCStream final : public AutoIPCStream {
+ public:
+  NS_INLINE_DECL_REFCOUNTING(HoldIPCStream)
+
+ private:
+  ~HoldIPCStream() = default;
 };
 
 template <>

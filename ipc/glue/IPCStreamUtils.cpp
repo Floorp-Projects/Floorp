@@ -441,7 +441,8 @@ Maybe<IPCStream>& AutoIPCStream::TakeOptionalValue() {
 void IPDLParamTraits<nsIInputStream*>::Write(IPC::Message* aMsg,
                                              IProtocol* aActor,
                                              nsIInputStream* aParam) {
-  mozilla::ipc::AutoIPCStream autoStream;
+  auto autoStream = MakeRefPtr<HoldIPCStream>();
+
   bool ok = false;
   bool found = false;
 
@@ -453,22 +454,22 @@ void IPDLParamTraits<nsIInputStream*>::Write(IPC::Message* aMsg,
     switch (actor->GetProtocolId()) {
       case PContentMsgStart:
         if (actor->GetSide() == mozilla::ipc::ParentSide) {
-          ok = autoStream.Serialize(
+          ok = autoStream->Serialize(
               aParam, static_cast<mozilla::dom::ContentParent*>(actor));
         } else {
           MOZ_RELEASE_ASSERT(actor->GetSide() == mozilla::ipc::ChildSide);
-          ok = autoStream.Serialize(
+          ok = autoStream->Serialize(
               aParam, static_cast<mozilla::dom::ContentChild*>(actor));
         }
         found = true;
         break;
       case PBackgroundMsgStart:
         if (actor->GetSide() == mozilla::ipc::ParentSide) {
-          ok = autoStream.Serialize(
+          ok = autoStream->Serialize(
               aParam, static_cast<mozilla::ipc::PBackgroundParent*>(actor));
         } else {
           MOZ_RELEASE_ASSERT(actor->GetSide() == mozilla::ipc::ChildSide);
-          ok = autoStream.Serialize(
+          ok = autoStream->Serialize(
               aParam, static_cast<mozilla::ipc::PBackgroundChild*>(actor));
         }
         found = true;
@@ -487,7 +488,13 @@ void IPDLParamTraits<nsIInputStream*>::Write(IPC::Message* aMsg,
   }
   MOZ_RELEASE_ASSERT(ok, "Failed to serialize nsIInputStream");
 
-  WriteIPDLParam(aMsg, aActor, autoStream.TakeOptionalValue());
+  WriteIPDLParam(aMsg, aActor, autoStream->TakeOptionalValue());
+
+  // Dispatch the autoStream to an async runnable, so that we guarantee it
+  // outlives this callstack, and doesn't shut down any actors we created
+  // until after we've finished sending the current message.
+  NS_ProxyRelease("IPDLParamTraits<nsIInputStream*>::Write::autoStream",
+                  NS_GetCurrentThread(), autoStream.forget(), true);
 }
 
 bool IPDLParamTraits<nsIInputStream*>::Read(const IPC::Message* aMsg,
