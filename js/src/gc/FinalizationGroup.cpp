@@ -33,7 +33,11 @@ bool GCRuntime::registerWithFinalizationGroup(JSContext* cx,
       return false;
     }
   }
-  return ptr->value().append(record);
+  if (!ptr->value().append(record)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  return true;
 }
 
 void GCRuntime::markFinalizationGroupData(JSTracer* trc) {
