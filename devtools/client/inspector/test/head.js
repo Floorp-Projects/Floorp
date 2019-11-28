@@ -240,6 +240,24 @@ var getNodeFrontInFrame = async function(selector, frameSelector, inspector) {
 };
 
 /**
+ * Get the NodeFront for the shadowRoot of a shadow host.
+ *
+ * @param {String|NodeFront} hostSelector
+ *        Selector or front of the element to which the shadow root is attached.
+ * @param {InspectorPanel} inspector
+ *        The instance of InspectorPanel currently loaded in the toolbox
+ * @return {Promise} Resolves the node front when the inspector is updated with the new
+ *         node.
+ */
+var getShadowRoot = async function(hostSelector, inspector) {
+  const hostFront = await getNodeFront(hostSelector, inspector);
+  const { nodes } = await inspector.walker.children(hostFront);
+
+  // Find the shadow root in the children of the host element.
+  return nodes.filter(node => node.isShadowRoot)[0];
+};
+
+/**
  * Get the NodeFront for a node that matches a given css selector inside a shadow root.
  *
  * @param {String} selector
@@ -256,11 +274,7 @@ var getNodeFrontInShadowDom = async function(
   hostSelector,
   inspector
 ) {
-  const hostFront = await getNodeFront(hostSelector, inspector);
-  const { nodes } = await inspector.walker.children(hostFront);
-
-  // Find the shadow root in the children of the host element.
-  const shadowRoot = nodes.filter(node => node.isShadowRoot)[0];
+  const shadowRoot = await getShadowRoot(hostSelector, inspector);
   if (!shadowRoot) {
     throw new Error(
       "Could not find a shadow root under selector: " + hostSelector

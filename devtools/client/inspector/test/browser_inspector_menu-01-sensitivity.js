@@ -20,6 +20,11 @@ const ACTIVE_ON_DOCTYPE_ITEMS = [
   "node-menu-useinconsole",
 ];
 
+const ACTIVE_ON_SHADOW_ROOT_ITEMS = [
+  "node-menu-pasteinnerhtml",
+  "node-menu-copyinner",
+].concat(ACTIVE_ON_DOCTYPE_ITEMS);
+
 const ALL_MENU_ITEMS = [
   "node-menu-edithtml",
   "node-menu-copyinner",
@@ -45,6 +50,10 @@ const INACTIVE_ON_DOCTYPE_ITEMS = ALL_MENU_ITEMS.filter(
   item => !ACTIVE_ON_DOCTYPE_ITEMS.includes(item)
 );
 
+const INACTIVE_ON_SHADOW_ROOT_ITEMS = ALL_MENU_ITEMS.filter(
+  item => !ACTIVE_ON_SHADOW_ROOT_ITEMS.includes(item)
+);
+
 /**
  * Test cases, each item of this array may define the following properties:
  *   desc: string that will be logged
@@ -53,6 +62,8 @@ const INACTIVE_ON_DOCTYPE_ITEMS = ALL_MENU_ITEMS.filter(
  *   clipboardData: clipboard content
  *   clipboardDataType: clipboard content type
  *   attributeTrigger: attribute that will be used as context menu trigger
+ *   shadowRoot: if true, selects the shadow root from the node, rather than
+ *   the node itself.
  */
 const TEST_CASES = [
   {
@@ -225,6 +236,14 @@ const TEST_CASES = [
     disabled: PASTE_MENU_ITEMS.concat(["node-menu-copyimagedatauri"]),
     attributeTrigger: "data-edit",
   },
+  {
+    desc: "Shadow Root",
+    clipboardData: "<p>some text</p>",
+    clipboardDataType: "text",
+    disabled: INACTIVE_ON_SHADOW_ROOT_ITEMS,
+    selector: "#host",
+    shadowRoot: true,
+  },
 ];
 
 var clipboard = require("devtools/shared/platform/clipboard");
@@ -236,12 +255,22 @@ registerCleanupFunction(() => {
 add_task(async function() {
   const { inspector } = await openInspectorForURL(TEST_URL);
   for (const test of TEST_CASES) {
-    const { desc, disabled, selector, attributeTrigger } = test;
+    const {
+      desc,
+      disabled,
+      selector,
+      attributeTrigger,
+      shadowRoot = false,
+    } = test;
 
     info(`Test ${desc}`);
     setupClipboard(test.clipboardData, test.clipboardDataType);
 
-    const front = await getNodeFrontForSelector(selector, inspector);
+    const front = await getNodeFrontForSelector(
+      selector,
+      inspector,
+      shadowRoot
+    );
 
     info("Selecting the specified node.");
     await selectNode(front, inspector);
@@ -275,10 +304,14 @@ add_task(async function() {
  * A helper that fetches a front for a node that matches the given selector or
  * doctype node if the selector is falsy.
  */
-async function getNodeFrontForSelector(selector, inspector) {
+async function getNodeFrontForSelector(selector, inspector, shadowRoot) {
   if (selector) {
     info("Retrieving front for selector " + selector);
-    return getNodeFront(selector, inspector);
+    const node = await getNodeFront(selector, inspector);
+    if (shadowRoot) {
+      return getShadowRoot(node, inspector);
+    }
+    return node;
   }
 
   info("Retrieving front for doctype node");
