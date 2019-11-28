@@ -394,7 +394,10 @@ class Heap extends Component {
           ),
           L10N.getStr("toolbar.pop-view.label")
         ),
-        L10N.getStr("toolbar.viewing-individuals")
+        dom.span(
+          { className: "toolbar-text" },
+          L10N.getStr("toolbar.viewing-individuals")
+        )
       ),
       HSplitBox({
         start: tree,
