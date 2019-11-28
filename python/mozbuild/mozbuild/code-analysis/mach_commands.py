@@ -88,11 +88,12 @@ class StaticAnalysisSubCommand(SubCommand):
 
 
 class StaticAnalysisMonitor(object):
-    def __init__(self, srcdir, objdir, clang_tidy_config, total):
+    def __init__(self, srcdir, objdir, clang_tidy_config, source, total):
         self._total = total
         self._processed = 0
         self._current = None
         self._srcdir = srcdir
+        self._source = source
 
         self._clang_tidy_config = clang_tidy_config['clang_checkers']
         # Transform the configuration to support Regex
@@ -112,7 +113,7 @@ class StaticAnalysisMonitor(object):
 
             # Output paths relative to repository root
             warning['filename'] = mozpath.relpath(
-                map_file_to_source(warning['filename']), self._srcdir)
+                map_file_to_source(warning['filename'], self._source), self._srcdir)
 
             self._warnings_database.insert(warning)
 
@@ -145,7 +146,8 @@ class StaticAnalysisMonitor(object):
         if line.find('clang-tidy') != -1:
             filename = line.split(' ')[-1]
             if os.path.isfile(filename):
-                self._current = mozpath.relpath(map_file_to_source(filename), self._srcdir)
+                self._current = mozpath.relpath(
+                    map_file_to_source(filename, self._source), self._srcdir)
             else:
                 self._current = None
             self._processed = self._processed + 1
@@ -284,7 +286,7 @@ class StaticAnalysis(MachCommandBase):
             checks=checks, header_filter=header_filter, sources=source, jobs=jobs, fix=fix)
 
         monitor = StaticAnalysisMonitor(
-            self.topsrcdir, self.topobjdir, self._clang_tidy_config, total)
+            self.topsrcdir, self.topobjdir, self._clang_tidy_config, source, total)
 
         footer = StaticAnalysisFooter(self.log_manager.terminal, monitor)
         with StaticAnalysisOutputManager(self.log_manager, monitor, footer) as output_manager:
