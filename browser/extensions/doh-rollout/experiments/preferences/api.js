@@ -6,11 +6,11 @@
 
 /* exported preferences */
 /* global ExtensionAPI, ExtensionCommon */
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { ExtensionPreferencesManager } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionPreferencesManager.jsm"
+ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+ChromeUtils.import(
+  "resource://gre/modules/ExtensionPreferencesManager.jsm",
+  this
 );
-// TODO file scope issue on experiments that join extension contexts causing redeclaration issues.
 
 const TRR_URI_PREF = "network.trr.uri";
 const TRR_DISABLE_ECS_PREF = "network.trr.disable-ECS";
