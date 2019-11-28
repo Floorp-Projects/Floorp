@@ -76,7 +76,9 @@ const TESTS = {
     const listener = new ConsoleAPIListener(null, {
       onConsoleAPICall(message) {
         equal(message.level, "error");
-        equal(message.arguments[0], "foo: bar");
+        const [arg] = message.arguments;
+        equal(arg.message, "foo");
+        equal(arg.stack, "bar");
         listener.destroy();
         done();
       },
@@ -86,10 +88,9 @@ const TESTS = {
 
     function throwListener() {
       emitter.off("throw-exception");
-      throw Object.create({
-        toString: () => "foo",
-        stack: "bar",
-      });
+      const err = new Error("foo");
+      err.stack = "bar";
+      throw err;
     }
 
     emitter.on("throw-exception", throwListener);

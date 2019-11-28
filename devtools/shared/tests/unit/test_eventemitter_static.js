@@ -193,8 +193,9 @@ const TESTS = {
     const listener = new ConsoleAPIListener(null, {
       onConsoleAPICall(message) {
         equal(message.level, "error", "Got the first exception");
-        ok(
-          message.arguments[0].startsWith("Error: Boom!"),
+        equal(
+          message.arguments[0].message,
+          "Boom!",
           "unhandled exception is logged"
         );
 
