@@ -165,6 +165,13 @@
 	</ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Keine Internetverbindung</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Überprüfen Sie Ihre Netzwerkverbindung oder versuchen Sie in wenigen Augenblicken, die Seite neu zu laden.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Neu laden</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Ungültige Adresse</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
 	<p>Das Format der angegebenen Adresse wurde nicht erkannt. Bitte überprüfen Sie die Adressleiste auf Fehler und versuchen Sie es erneut.</p>
@@ -256,12 +263,4 @@
 	<p>Die Website auf %1$s wurde als betrügerische Website gemeldet und aufgrund Ihrer Sicherheitseinstellungen blockiert.</p>
 	]]></string>
 
-    <!-- The tile for the list of external apps to open the link in -->
-    <string name="mozac_feature_applinks_open_in">Öffnen in…</string>
-    <!-- The description to warn users that their private browsing session changes  -->
-    <string name="mozac_feature_applinks_confirm_dialog_title">In App öffnen? Ihre Aktivitäten sind dann möglicherweise nicht mehr privat.</string>
-    <!-- Opens the selected time -->
-    <string name="mozac_feature_applinks_confirm_dialog_confirm">Öffnen</string>
-    <!-- Cancels the prompt -->
-    <string name="mozac_feature_applinks_confirm_dialog_deny">Abbrechen</string>
-</resources>
+    </resources>

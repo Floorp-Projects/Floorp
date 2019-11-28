@@ -176,6 +176,13 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Ingen internetanslutning</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Kontrollera din nätverksanslutning eller försök ladda om sidan om en stund.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Ladda om</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Ogiltig adress</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
       <p>Den angivna adressen är inte i ett erkänt format. Kontrollera adressfältet för fel och försök igen.</p>
