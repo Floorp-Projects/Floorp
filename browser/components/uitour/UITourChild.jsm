@@ -4,15 +4,12 @@
 
 var EXPORTED_SYMBOLS = ["UITourChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const PREF_TEST_WHITELIST = "browser.uitour.testingOrigins";
 const UITOUR_PERMISSION = "uitour";
 
-class UITourChild extends ActorChild {
+class UITourChild extends JSWindowActorChild {
   handleEvent(event) {
     if (!Services.prefs.getBoolPref("browser.uitour.enabled")) {
       return;
@@ -20,12 +17,11 @@ class UITourChild extends ActorChild {
     if (!this.ensureTrustedOrigin()) {
       return;
     }
-    this.mm.addMessageListener("UITour:SendPageCallback", this);
-    this.mm.addMessageListener("UITour:SendPageNotification", this);
-    this.mm.sendAsyncMessage("UITour:onPageEvent", {
+
+    this.sendAsyncMessage("UITour:onPageEvent", {
       detail: event.detail,
       type: event.type,
-      pageVisibilityState: this.mm.content.document.visibilityState,
+      pageVisibilityState: this.document.visibilityState,
     });
   }
 
@@ -68,13 +64,11 @@ class UITourChild extends ActorChild {
   }
 
   ensureTrustedOrigin() {
-    let { content } = this.mm;
-
-    if (content.top != content) {
+    if (this.browsingContext.top != this.browsingContext) {
       return false;
     }
 
-    let uri = content.document.documentURIObject;
+    let uri = this.document.documentURIObject;
 
     if (uri.schemeIs("chrome")) {
       return true;
@@ -85,7 +79,7 @@ class UITourChild extends ActorChild {
     }
 
     let principal = Services.scriptSecurityManager.principalWithOA(
-      content.document.nodePrincipal,
+      this.document.nodePrincipal,
       {}
     );
     let permission = Services.perms.testPermissionFromPrincipal(
@@ -117,7 +111,7 @@ class UITourChild extends ActorChild {
       return;
     }
 
-    let win = this.mm.content;
+    let win = this.contentWindow;
     let eventName = "mozUITour" + type;
     let event = new win.CustomEvent(eventName, {
       bubbles: true,
