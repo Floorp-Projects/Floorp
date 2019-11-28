@@ -1,0 +1,75 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEFINES['MOZ_APP_VERSION'] = CONFIG['MOZ_APP_VERSION']
+DEFINES['MOZ_APP_MAXVERSION'] = CONFIG['MOZ_APP_MAXVERSION']
+
+
+FINAL_TARGET_FILES.features['doh-rollout@mozilla.org'] += [
+  'background.js',
+  'heuristics.js',
+  'manifest.json'
+]
+
+FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["experiments"]["doorhanger"] += [
+  'experiments/doorhanger/api.js',
+  'experiments/doorhanger/schema.json'
+]
+
+FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["experiments"]["heuristics"] += [
+  'experiments/heuristics/api.js',
+  'experiments/heuristics/schema.json'
+]
+
+FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["experiments"]["netChange"] += [
+  'experiments/netChange/api.js',
+  'experiments/netChange/schema.json'
+]
+
+FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["experiments"]["preferences"] += [
+  'experiments/preferences/api.js',
+  'experiments/preferences/schema.json'
+]
+
+FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["de"] += [
+  '_locales/de/messages.json'
+]
+
+FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["en_CA"] += [
+  '_locales/en_CA/messages.json'
+]
+
+FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["en_GB"] += [
+  '_locales/en_GB/messages.json'
+]
+
+FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["en_US"] += [
+  '_locales/en_US/messages.json'
+]
+
+FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["es_ES"] += [
+  '_locales/es_ES/messages.json'
+]
+
+FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["es_MX"] += [
+  '_locales/es_MX/messages.json'
+]
+
+FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["fr"] += [
+  '_locales/fr/messages.json'
+]
+
+FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["it"] += [
+  '_locales/it/messages.json'
+]
+
+FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["ru"] += [
+  '_locales/ru/messages.json'
+]
+
+FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["zh_CN"] += [
+  '_locales/zh_CN/messages.json'
+]
