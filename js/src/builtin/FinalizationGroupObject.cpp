@@ -587,19 +587,22 @@ bool FinalizationGroupObject::cleanupQueuedHoldings(
 
   // 4. If callback is undefined, set callback to
   //    finalizationGroup.[[CleanupCallback]].
-  RootedObject callback(cx, callbackArg);
-  if (!callbackArg) {
-    callback = group->cleanupCallback();
+  RootedValue callback(cx);
+  if (callbackArg) {
+    callback.setObject(*callbackArg);
+  } else {
+    JSObject* cleanupCallback = group->cleanupCallback();
+    MOZ_ASSERT(cleanupCallback);
+    callback.setObject(*cleanupCallback);
   }
 
   // 5. Set finalizationGroup.[[IsFinalizationGroupCleanupJobActive]] to true.
   group->setCleanupJobActive(true);
 
   // 6. Let result be Call(callback, undefined, iterator).
+  RootedValue iteratorVal(cx, ObjectValue(*iterator));
   RootedValue rval(cx);
-  JS::AutoValueArray<1> args(cx);
-  args[0].setObject(*iterator);
-  bool ok = JS::Call(cx, UndefinedHandleValue, callback, args, &rval);
+  bool ok = Call(cx, callback, UndefinedHandleValue, iteratorVal, &rval);
 
   // Remove holdings that were iterated over.
   size_t index = iterator->index();
