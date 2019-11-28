@@ -29,7 +29,6 @@ async function setRTAMOOnboarding() {
   // Reset trailhead so it loads the new branch.
   Services.prefs.clearUserPref("trailhead.firstrun.didSeeAboutWelcome");
   await ASRouter.setState({ trailheadInitialized: false });
-  await ASRouter.setupTrailhead();
   ASRouter._updateMessageProviders();
   await ASRouter.loadMessagesFromAllProviders();
 
