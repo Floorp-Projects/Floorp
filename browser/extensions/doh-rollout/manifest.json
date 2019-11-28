@@ -16,6 +16,7 @@
   "permissions": [
     "captivePortal",
     "dns",
+    "networkStatus",
     "storage"
   ],
 
@@ -38,14 +39,6 @@
         "scopes": ["addon_parent"],
         "script": "experiments/heuristics/api.js",
         "paths": [["experiments", "heuristics"]]
-      }
-    },
-    "netChange": {
-      "schema": "experiments/netChange/schema.json",
-      "parent": {
-        "scopes": ["addon_parent"],
-        "script": "experiments/netChange/api.js",
-        "paths": [["experiments", "netChange"]]
       }
     },
     "doorhanger": {

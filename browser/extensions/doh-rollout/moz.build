@@ -24,11 +24,6 @@ FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["experiments"]["heuristic
   'experiments/heuristics/schema.json'
 ]
 
-FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["experiments"]["netChange"] += [
-  'experiments/netChange/api.js',
-  'experiments/netChange/schema.json'
-]
-
 FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["experiments"]["preferences"] += [
   'experiments/preferences/api.js',
   'experiments/preferences/schema.json'
