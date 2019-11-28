@@ -185,10 +185,8 @@ function onReset(state, { accessibility, supports }) {
     enabled,
     canBeDisabled,
     canBeEnabled,
+    supports,
   };
-  if (supports) {
-    newState.supports = supports;
-  }
 
   return newState;
 }
