@@ -20,11 +20,11 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 const idToTextMap = new Map([
-  [Ci.nsITrackingDBService.TRACKERS_ID, "tracker"],
-  [Ci.nsITrackingDBService.TRACKING_COOKIES_ID, "cookie"],
-  [Ci.nsITrackingDBService.CRYPTOMINERS_ID, "cryptominer"],
-  [Ci.nsITrackingDBService.FINGERPRINTERS_ID, "fingerprinter"],
-  [Ci.nsITrackingDBService.SOCIAL_ID, "social"],
+  [Ci.nsITrackingDBService.TRACKERS_ID, "trackerCount"],
+  [Ci.nsITrackingDBService.TRACKING_COOKIES_ID, "cookieCount"],
+  [Ci.nsITrackingDBService.CRYPTOMINERS_ID, "cryptominerCount"],
+  [Ci.nsITrackingDBService.FINGERPRINTERS_ID, "fingerprinterCount"],
+  [Ci.nsITrackingDBService.SOCIAL_ID, "socialCount"],
 ]);
 
 const WHATSNEW_ENABLED_PREF = "browser.messaging-system.whatsNewPanel.enabled";
@@ -333,7 +333,9 @@ class _ToolbarPanelHub {
         wrapperEl.appendChild(
           await this._createElement(doc, "h2", {
             classList: "whatsNew-message-title-large",
-            content: this.state.contentArguments.blockedCount,
+            content: this.state.contentArguments[
+              content.layout_title_content_variable
+            ],
           })
         );
         break;
@@ -398,20 +400,22 @@ class _ToolbarPanelHub {
       dateFrom,
       dateTo
     );
-    // Count all events in the past 6 weeks
-    // Returns an object with:
+    // Make sure we set all types of possible values to 0 because they might
+    // be referenced by fluent strings
+    let totalEvents = { blockedCount: 0 };
+    for (let blockedType of idToTextMap.values()) {
+      totalEvents[blockedType] = 0;
+    }
+    // Count all events in the past 6 weeks. Returns an object with:
     // `blockedCount` total number of blocked resources
     // {tracker|cookie|social...} breakdown by event type as defined by `idToTextMap`
-    const totalEvents = eventsByDate.reduce(
-      (acc, day) => {
-        const type = day.getResultByName("type");
-        const count = day.getResultByName("count");
-        acc[idToTextMap.get(type)] = (acc[idToTextMap.get(type)] || 0) + count;
-        acc.blockedCount += count;
-        return acc;
-      },
-      { blockedCount: 0 }
-    );
+    totalEvents = eventsByDate.reduce((acc, day) => {
+      const type = day.getResultByName("type");
+      const count = day.getResultByName("count");
+      acc[idToTextMap.get(type)] = (acc[idToTextMap.get(type)] || 0) + count;
+      acc.blockedCount += count;
+      return acc;
+    }, totalEvents);
     return {
       // Keys need to match variable names used in asrouter.ftl
       // `earliestDate` will be either 6 weeks ago or when tracking recording
