@@ -16,7 +16,6 @@
   "permissions": [
     "captivePortal",
     "dns",
-    "normandyAddonStudy",
     "storage",
     "telemetry"
   ],
