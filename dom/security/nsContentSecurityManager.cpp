@@ -1051,30 +1051,3 @@ nsContentSecurityManager::PerformSecurityCheck(
   inAndOutListener.forget(outStreamListener);
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsContentSecurityManager::IsOriginPotentiallyTrustworthy(
-    nsIPrincipal* aPrincipal, bool* aIsTrustWorthy) {
-  MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_ARG_POINTER(aPrincipal);
-  NS_ENSURE_ARG_POINTER(aIsTrustWorthy);
-
-  if (aPrincipal->IsSystemPrincipal()) {
-    *aIsTrustWorthy = true;
-    return NS_OK;
-  }
-  *aIsTrustWorthy = false;
-  if (aPrincipal->GetIsNullPrincipal()) {
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(aPrincipal->GetIsContentPrincipal(),
-             "Nobody is expected to call us with an nsIExpandedPrincipal");
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, rv);
-  *aIsTrustWorthy = nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(uri);
-
-  return NS_OK;
-}
