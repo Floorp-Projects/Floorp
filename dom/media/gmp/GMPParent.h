@@ -64,7 +64,7 @@ class GMPParent final
 
   RefPtr<GenericPromise> Init(GeckoMediaPluginServiceParent* aService,
                               nsIFile* aPluginDir);
-  nsresult CloneFrom(const GMPParent* aOther);
+  void CloneFrom(const GMPParent* aOther);
 
   void Crash();
 

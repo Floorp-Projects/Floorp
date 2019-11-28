@@ -71,7 +71,7 @@ GMPParent::~GMPParent() {
   MOZ_ASSERT(!mProcess);
 }
 
-nsresult GMPParent::CloneFrom(const GMPParent* aOther) {
+void GMPParent::CloneFrom(const GMPParent* aOther) {
   MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
   MOZ_ASSERT(aOther->mDirectory && aOther->mService, "null plugin directory");
 
@@ -88,7 +88,6 @@ nsresult GMPParent::CloneFrom(const GMPParent* aOther) {
     mCapabilities.AppendElement(cap);
   }
   mAdapter = aOther->mAdapter;
-  return NS_OK;
 }
 
 RefPtr<GenericPromise> GMPParent::Init(GeckoMediaPluginServiceParent* aService,
