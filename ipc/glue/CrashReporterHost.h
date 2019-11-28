@@ -94,14 +94,6 @@ class CrashReporterHost {
     return mExtraAnnotations[CrashReporter::Annotation::additional_minidumps];
   }
 
-  // Return `true` if this crash reporter has been identified as a likely OOM.
-  //
-  // At the time of this writing, OOMs detection is considered reliable under
-  // Windows but other platforms quite often return false negatives.
-  //
-  // `CrashReporterHost::FinalizeCrashReport()` MUST have been called already.
-  bool IsLikelyOOM();
-
  private:
   static void AsyncAddCrash(int32_t aProcessType, int32_t aCrashType,
                             const nsString& aChildDumpID);
