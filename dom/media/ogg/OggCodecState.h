@@ -304,7 +304,7 @@ class VorbisState : public OggCodecState {
 
   // Reconstructs the granulepos of Vorbis packets stored in the mUnstamped
   // array.
-  nsresult ReconstructVorbisGranulepos();
+  void ReconstructVorbisGranulepos();
 
   // The "block size" of the previously decoded Vorbis packet, or 0 if we've
   // not yet decoded anything. This is used to calculate the number of samples

@@ -754,7 +754,7 @@ nsresult VorbisState::PageIn(ogg_page* aPage) {
   return NS_OK;
 }
 
-nsresult VorbisState::ReconstructVorbisGranulepos() {
+void VorbisState::ReconstructVorbisGranulepos() {
   // The number of samples in a Vorbis packet is:
   // window_blocksize(previous_packet)/4+window_blocksize(current_packet)/4
   // See: http://xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-230001.3.2
@@ -796,7 +796,7 @@ nsresult VorbisState::ReconstructVorbisGranulepos() {
 
     mGranulepos = packet->granulepos;
     RecordVorbisPacketSamples(packet.get(), samples);
-    return NS_OK;
+    return;
   }
 
   bool unknownGranulepos = last->granulepos == -1;
@@ -860,8 +860,6 @@ nsresult VorbisState::ReconstructVorbisGranulepos() {
   mPrevVorbisBlockSize = vorbis_packet_blocksize(&mVorbisInfo, last.get());
   mPrevVorbisBlockSize = std::max(static_cast<long>(0), mPrevVorbisBlockSize);
   mGranulepos = last->granulepos;
-
-  return NS_OK;
 }
 
 OpusState::OpusState(ogg_page* aBosPage)
