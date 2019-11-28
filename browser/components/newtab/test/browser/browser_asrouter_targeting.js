@@ -908,6 +908,20 @@ add_task(async function checkCFRAddonsUserPref() {
   );
 });
 
+add_task(async function check_blockedCountByType() {
+  const message = {
+    id: "foo",
+    targeting:
+      "blockedCountByType.cryptominerCount == 0 && blockedCountByType.socialCount == 0",
+  };
+
+  is(
+    await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
+    message,
+    "should select correct item"
+  );
+});
+
 add_task(async function checkCFRPinnedTabsTargetting() {
   const now = Date.now();
   const timeMinutesAgo = numMinutes => now - numMinutes * 60 * 1000;

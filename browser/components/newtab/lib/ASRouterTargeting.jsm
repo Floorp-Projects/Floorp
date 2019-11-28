@@ -482,6 +482,33 @@ const TargetingGetters = {
   get totalBlockedCount() {
     return TrackingDBService.sumAllEvents();
   },
+  get blockedCountByType() {
+    const idToTextMap = new Map([
+      [Ci.nsITrackingDBService.TRACKERS_ID, "trackerCount"],
+      [Ci.nsITrackingDBService.TRACKING_COOKIES_ID, "cookieCount"],
+      [Ci.nsITrackingDBService.CRYPTOMINERS_ID, "cryptominerCount"],
+      [Ci.nsITrackingDBService.FINGERPRINTERS_ID, "fingerprinterCount"],
+      [Ci.nsITrackingDBService.SOCIAL_ID, "socialCount"],
+    ]);
+
+    const dateTo = new Date();
+    const dateFrom = new Date(dateTo.getTime() - 42 * 24 * 60 * 60 * 1000);
+    return TrackingDBService.getEventsByDateRange(dateFrom, dateTo).then(
+      eventsByDate => {
+        let totalEvents = {};
+        for (let blockedType of idToTextMap.values()) {
+          totalEvents[blockedType] = 0;
+        }
+
+        return eventsByDate.reduce((acc, day) => {
+          const type = day.getResultByName("type");
+          const count = day.getResultByName("count");
+          acc[idToTextMap.get(type)] = acc[idToTextMap.get(type)] + count;
+          return acc;
+        }, totalEvents);
+      }
+    );
+  },
   get attachedFxAOAuthClients() {
     // Explicitly catch error objects e.g.  NO_ACCOUNT triggered when
     // setting FXA_USERNAME_PREF from tests
