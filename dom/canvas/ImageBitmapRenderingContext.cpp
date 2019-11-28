@@ -12,7 +12,7 @@ namespace mozilla {
 namespace dom {
 
 ImageBitmapRenderingContext::ImageBitmapRenderingContext()
-    : mWidth(0), mHeight(0) {}
+    : mWidth(0), mHeight(0), mIsCapturedFrameInvalid(false) {}
 
 ImageBitmapRenderingContext::~ImageBitmapRenderingContext() {
   RemovePostRefreshObserver();
@@ -193,7 +193,7 @@ ImageBitmapRenderingContext::Reset() {
   }
 
   mImage = nullptr;
-
+  mIsCapturedFrameInvalid = false;
   return NS_OK;
 }
 
@@ -235,6 +235,8 @@ void ImageBitmapRenderingContext::MarkContextClean() {}
 
 NS_IMETHODIMP
 ImageBitmapRenderingContext::Redraw(const gfxRect& aDirty) {
+  mIsCapturedFrameInvalid = true;
+
   if (!mCanvasElement) {
     return NS_OK;
   }
@@ -249,10 +251,12 @@ ImageBitmapRenderingContext::SetIsIPC(bool aIsIPC) { return NS_OK; }
 
 void ImageBitmapRenderingContext::DidRefresh() {}
 
-void ImageBitmapRenderingContext::MarkContextCleanForFrameCapture() {}
+void ImageBitmapRenderingContext::MarkContextCleanForFrameCapture() {
+  mIsCapturedFrameInvalid = false;
+}
 
 bool ImageBitmapRenderingContext::IsContextCleanForFrameCapture() {
-  return true;
+  return !mIsCapturedFrameInvalid;
 }
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ImageBitmapRenderingContext)
