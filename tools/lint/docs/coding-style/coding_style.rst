@@ -1,6 +1,6 @@
-============
-Coding style
-============
+================
+C++ Coding style
+================
 
 
 This document attempts to explain the basic styles and patterns used in
@@ -17,24 +17,6 @@ conforms to recommendations.
 
    Firefox code base uses the `Google Coding style for C++
    code <https://google.github.io/styleguide/cppguide.html>`__
-
-Article navigation
-------------------
-
-#. `Naming_and_formatting_code <#Naming_and_Formatting_code>`__.
-#. `General practices <#General_C.2FC.2B.2B_Practices>`__.
-#. `C/C++ practices <#CC_practices>`__.
-#. `JavaScript practices <#JavaScript_practices>`__.
-#. `Java practices <#Java_practices>`__.
-#. `Makefile/moz.build practices <#Makefile_moz.build_practices>`__.
-#. `Python practices <#Python_Practices>`__.
-#. `SVG practices <#SVG_practices>`__.
-#. `COM, pointers and strings <#COM_and_pointers>`__.
-#. `IDL <#IDL>`__.
-#. `Error handling <#Error_handling>`__.
-#. `C++ strings <#Strings>`__.
-#. `Usage of PR_(MAX|MIN|ABS|ROUNDUP) macro
-   calls <#Usage_of_PR_(MAXMINABSROUNDUP)_macro_calls>`__
 
 
 Naming and formatting code
@@ -66,7 +48,7 @@ Objective-C/C++.
 Indentation
 ~~~~~~~~~~~
 
-Two spaces per logic level, or four spaces in Python code.
+Two spaces per logic level.
 
 Note that class visibility and ``goto`` labels do not consume a logic
 level, but ``switch`` ``case`` labels do. See examples below.
@@ -127,11 +109,11 @@ by setting the "case-label" offset:
 
    (c-set-offset 'case-label '+)
 
-| Control keywords ``if``, ``for``, ``while``, and ``switch`` are always
-  followed by a space to distinguish them from function calls, which
-  have no trailing space.
-| ``else`` should only ever be followed by ``{`` or ``if``; i.e., other
-  control keywords are not allowed and should be placed inside braces.
+Control keywords ``if``, ``for``, ``while``, and ``switch`` are always
+followed by a space to distinguish them from function calls, which
+have no trailing space.
+``else`` should only ever be followed by ``{`` or ``if``; i.e., other
+control keywords are not allowed and should be placed inside braces.
 
 
 C++ namespaces
@@ -299,47 +281,6 @@ but can NOT be further overridden in the derived classes. This should
 help the person reading the code fully understand what the declaration
 is doing, without needing to further examine base classes.
 
-JavaScript
-^^^^^^^^^^
-
-In JavaScript, functions should use camelCase, but should not capitalize
-the first letter. Methods should not use the named function expression
-syntax, because our tools understand method names:
-
-.. code-block:: cpp
-
-   doSomething: function (aFoo, aBar) {
-     ...
-   }
-
-In-line functions should have spaces around braces, except before commas
-or semicolons:
-
-.. code-block:: cpp
-
-   function valueObject(aValue) { return { value: aValue }; }
-
-
-JavaScript objects
-~~~~~~~~~~~~~~~~~~
-
-.. code-block:: cpp
-
-   var foo = { prop1: "value1" };
-
-   var bar = {
-     prop1: "value1",
-     prop2: "value2"
-   };
-
-Constructors for objects should be capitalized and use Pascal Case:
-
-.. code-block:: cpp
-
-   function ObjectConstructor() {
-     this.foo = "bar";
-   }
-
 
 Mode line
 ~~~~~~~~~
@@ -357,8 +298,7 @@ files, use the following, specifying two-space indentation:
     * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 Be sure to use the correct "Mode" in the first line, don't use "C++" in
-JavaScript files. The exception to this is in Python code, in which we
-use four spaces for indentations.
+JavaScript files.
 
 Declarations
 ~~~~~~~~~~~~
@@ -382,29 +322,12 @@ operators must be left on their original lines if the line break happens
 around the operator. The second line should start in the same column as
 the start of the expression in the first line.
 
-In JavaScript, overlong expressions not joined by ``&&`` and
-``||`` should break so the operator starts on the second line and
-starting in the same column as the beginning of the expression in the
-first line. This applies to ``?:``, binary arithmetic operators
-including ``+``, and member-of operators. Rationale: an operator at the
-front of the continuation line makes for faster visual scanning, as
-there is no need to read to the end of line. Also there exists a
-context-sensitive keyword hazard in JavaScript; see {{bug(442099, "bug",
-19)}}, which can be avoided by putting . at the start of a continuation
-line, in long member expression.
-
-In JavaScript, ``==`` is preferred to ``===``.
-
 Unary keyword operators, such as ``typeof`` and ``sizeof``, should have
 their operand parenthesized; e.g. ``typeof("foo") == "string"``.
 
 
 Literals
 ~~~~~~~~
-
-Double-quoted strings (e.g. ``"foo"``) are preferred to single-quoted
-strings (e.g. ``'foo'``), in JavaScript, except to avoid escaping
-embedded double quotes, or when assigning inline event handlers.
 
 Use ``\uXXXX`` unicode escapes for non-ASCII characters. The character
 set for XUL, DTD, script, and properties files is UTF-8, which is not easily
@@ -432,20 +355,6 @@ Variable prefixes
       should use \`CamelCase\` instead (e.g.
       ``enum class Foo { Bar, Baz }``).
 
--  JavaScript Specific Prefixes
-
-   -  \_=member (variable or function) (e.g. ``_length`` or
-      ``_setType(aType)``)
-   -  k=enumeration value (e.g. ``const kDisplayModeNormal = 0``)
-   -  on=event handler (e.g. ``function onLoad()``)
-   -  Convenience constants for interface names should be prefixed with
-      ``nsI``:
-
-      .. code-block:: javascript
-
-         const nsISupports = Components.interfaces.nsISupports;
-         const nsIWBN = Components.interfaces.nsIWebBrowserNavigation;
-
 
 Global functions/macros/etc
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -464,25 +373,6 @@ Error Variables
 -  local nsresult result codes should be \`rv`. \`rv\` should not be
    used for bool or other result types.
 -  local bool result codes should be \`ok\`
-
-
-General practices
------------------
-
--  Don't put an ``else`` right after a ``return`` (or a ``break``).
-   Delete the ``else``, it's unnecessary and increases indentation
-   level.
--  Don't leave debug ``printf``\ s or ``dump``\ s lying around.
--  Use `JavaDoc-style
-   comments <https://www.oracle.com/technetwork/java/javase/documentation/index-137868.html>`__.
--  When fixing a problem, check to see if the problem occurs elsewhere
-   in the same file, and fix it everywhere if possible.
--  End the file with a newline. Make sure your patches don't contain
-   files with the text "no newline at end of file" in them.
--  Declare local variables as near to their use as possible.
--  For new files, be sure to use the right `license
-   boilerplate <https://www.mozilla.org/MPL/headers/>`__, per our
-   `license policy <https://www.mozilla.org/MPL/license-policy.html>`__.
 
 
 C/C++ practices
@@ -539,184 +429,6 @@ C/C++ practices
    ``dom/media/foo.h`` would use the guard ``DOM_MEDIA_FOO_H_``.
 
 
-JavaScript practices
---------------------
-
--  Make sure you are aware of the `JavaScript
-   Tips <https://developer.mozilla.org/docs/Mozilla/JavaScript_Tips>`__.
--  Do not compare ``x == true`` or ``x == false``. Use ``(x)`` or
-   ``(!x)`` instead. ``x == true``, is certainly different from if
-   ``(x)``! Compare objects to ``null``, numbers to ``0`` or strings to
-   ``""``, if there is chance for confusion.
--  Make sure that your code doesn't generate any strict JavaScript
-   warnings, such as:
-
-   -  Duplicate variable declaration.
-   -  Mixing ``return;`` with ``return value;``
-   -  Undeclared variables or members. If you are unsure if an array
-      value exists, compare the index to the array's length. If you are
-      unsure if an object member exists, use ``"name"`` in ``aObject``,
-      or if you are expecting a particular type you may use
-      ``typeof(aObject.name) == "function"`` (or whichever type you are
-      expecting).
-
--  Use ``['value1, value2']`` to create a JavaScript array in preference
-   to using
-   ``new {{JSxRef("Array", "Array", "Syntax", 1)}}(value1, value2)``
-   which can be confusing, as ``new Array(length)`` will actually create
-   a physically empty array with the given logical length, while
-   ``[value]`` will always create a 1-element array. You cannot actually
-   guarantee to be able to preallocate memory for an array.
--  Use ``{ member: value, ... }`` to create a JavaScript object; a
-   useful advantage over ``new {{JSxRef("Object", "Object", "", 1)}}()``
-   is the ability to create initial properties and use extended
-   JavaScript syntax, to define getters and setters.
--  If having defined a constructor you need to assign default
-   properties, it is preferred to assign an object literal to the
-   prototype property.
--  Use regular expressions, but use wisely. For instance, to check that
-   ``aString`` is not completely whitespace use
-   ``/\S/.{{JSxRef("RegExp.test", "test(aString)", "", 1)}}``. Only use
-   {{JSxRef("String.search", "aString.search()")}} if you need to know
-   the position of the result, or {{JSxRef("String.match",
-   "aString.match()")}} if you need to collect matching substrings
-   (delimited by parentheses in the regular expression). Regular
-   expressions are less useful if the match is unknown in advance, or to
-   extract substrings in known positions in the string. For instance,
-   {{JSxRef("String.slice", "aString.slice(-1)")}} returns the last
-   letter in ``aString``, or the empty string if ``aString`` is empty.
-
-
-Java practices
---------------
-
--  We use the `Java Coding
-   Style <https://www.oracle.com/technetwork/java/codeconvtoc-136057.html>`__.
-   Quick summary:
-
-   -  FirstLetterUpperCase for class names.
-   -  camelCase for method and variable names.
-   -  One declaration per line:
-
-      .. code-block:: java
-
-         int x, y; // this is BAD!
-         int a;    // split it over
-         int b;    // two lines
-
--  Braces should be placed like so (generally, opening braces on same
-   line, closing braces on a new line):
-
-   .. code-block:: java
-
-      public void func(int arg) {
-          if (arg != 0) {
-              while (arg > 0) {
-                  arg--;
-              }
-          } else {
-              arg++;
-          }
-      }
-
--  Places we differ from the Java coding style:
-
-   -  Start class variable names with 'm' prefix (e.g.
-      mSomeClassVariable) and static variables with 's' prefix (e.g.
-      sSomeStaticVariable)
-   -  ``import`` statements:
-
-      -  Do not use wildcard imports like \`import java.util.*;\`
-      -  Organize imports by blocks separated by empty line:
-         org.mozilla.*, android.*, com.*, net.*, org.*, then java.\*
-         This is basically what Android Studio does by default, except
-         that we place org.mozilla.\* at the front - please adjust
-         Settings -> Editor -> Code Style -> Java -> Imports
-         accordingly.
-      -  Within each import block, alphabetize import names with
-         uppercase before lowercase. For example, ``com.example.Foo`` is
-         before ``com.example.bar``
-
-   -  4-space indents.
-   -  Spaces, not tabs.
-   -  Don't restrict yourself to 80-character lines. Google's Android
-      style guide suggests 100-character lines, which is also the
-      default setting in Android Studio. Java code tends to be long
-      horizontally, so use appropriate judgement when wrapping. Avoid
-      deep indents on wrapping. Note that aligning the wrapped part of a
-      line, with some previous part of the line (rather than just using
-      a fixed indent), may require shifting the code every time the line
-      changes, resulting in spurious whitespace changes.
-
--  For additional specifics on Firefox for Android, see the `Coding
-   Style guide for Firefox on
-   Android <https://wiki.mozilla.org/Mobile/Fennec/Android#Coding_Style>`__.
--  The `Android Coding
-   Style <https://source.android.com/source/code-style.html>`__ has some
-   useful guidelines too.
-
-
-Makefile/moz.build practices
-----------------------------
-
--  Changes to makefile and moz.build variables do not require
-   build-config peer review. Any other build system changes, such as
-   adding new scripts or rules, require review from the build-config
-   team.
--  Suffix long ``if``/``endif`` conditionals with #{ & #}, so editors
-   can display matched tokens enclosing a block of statements.
-
-   ::
-
-      ifdef CHECK_TYPE #{
-        ifneq ($(flavor var_type),recursive) #{
-          $(warning var should be expandable but detected var_type=$(flavor var_type))
-        endif #}
-      endif #}
-
--  moz.build are python and follow normal Python style.
--  List assignments should be written with one element per line. Align
-   closing square brace with start of variable assignment. If ordering
-   is not important, variables should be in alphabetical order.
-
-   .. code-block:: python
-
-      var += [
-          'foo',
-          'bar'
-      ]
-
--  Use ``CONFIG['CPU_ARCH'] {=arm}`` to test for generic classes of
-   architecture rather than ``CONFIG['OS_TEST'] {=armv7}`` (re: bug 886689).
-
-Python practices
-----------------
-
--  Install the
-   `mozext <https://hg.mozilla.org/hgcustom/version-control-tools/file/default/hgext/mozext>`__
-   Mercurial extension, and address every issue reported on commit,
-   qrefresh, or the output of ``hg critic``.
--  Follow `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`__.
--  Do not place statements on the same line as ``if/elif/else``
-   conditionals to form a one-liner.
--  Global vars, please avoid them at all cost.
--  Exclude outer parenthesis from conditionals.Use
-   ``if x > 5:,``\ rather than ``if (x > 5):``
--  Use string formatters, rather than var + str(val).
-   ``var = 'Type %s value is %d'% ('int', 5).``
--  Utilize tools like
-   `pylint <https://pypi.python.org/pypi/pylint>`__ or
-   `pychecker <http://pychecker.sourceforge.net>`__ to screen
-   sources for common problems.
--  Testing/Unit tests, please write them.
-
-
-SVG practices
--------------
-
-Check `SVG
-Guidelines <https://developer.mozilla.org/docs/Mozilla/Developer_guide/SVG_Guidelines>`__ for
-more details.
 
 
 COM, pointers and strings
