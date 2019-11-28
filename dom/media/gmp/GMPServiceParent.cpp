@@ -785,13 +785,12 @@ already_AddRefed<GMPParent> GeckoMediaPluginServiceParent::ClonePlugin(
   MOZ_ASSERT(aOriginal);
 
   RefPtr<GMPParent> gmp = CreateGMPParent(mMainThread);
-  nsresult rv = gmp ? gmp->CloneFrom(aOriginal) : NS_ERROR_NOT_AVAILABLE;
-
-  if (NS_FAILED(rv)) {
+  if (!gmp) {
     NS_WARNING("Can't Create GMPParent");
     return nullptr;
   }
 
+  gmp->CloneFrom(aOriginal);
   return gmp.forget();
 }
 
