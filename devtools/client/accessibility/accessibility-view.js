@@ -17,6 +17,9 @@ const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 // Accessibility Panel
 const MainFrame = createFactory(require("./components/MainFrame"));
+const OldVersionDescription = createFactory(
+  require("./components/Description").OldVersionDescription
+);
 
 // Store
 const createStore = require("devtools/client/shared/redux/create-store");
@@ -62,8 +65,8 @@ AccessibilityView.prototype = {
    *        - simulator             {Object}
    *                                front for simulator actor responsible for setting
    *                                color matrices in docShell
-   *        - toolbox               {Object}
-   *                                devtools toolbox.
+   *        - toolboxDoc            {Document}
+   *                                toolbox document that will used by menus.
    */
   async initialize({
     front,
@@ -71,17 +74,23 @@ AccessibilityView.prototype = {
     supports,
     fluentBundles,
     simulator,
-    toolbox,
+    toolboxDoc,
   }) {
     // Make sure state is reset every time accessibility panel is initialized.
     await this.store.dispatch(reset(front, supports));
     const container = document.getElementById("content");
+
+    if (!supports.enableDisable) {
+      ReactDOM.render(OldVersionDescription(), container);
+      return;
+    }
+
     const mainFrame = MainFrame({
       accessibility: front,
       accessibilityWalker: walker,
       fluentBundles,
       simulator,
-      toolbox,
+      toolboxDoc,
     });
     // Render top level component
     const provider = createElement(Provider, { store: this.store }, mainFrame);
@@ -98,9 +107,9 @@ AccessibilityView.prototype = {
     window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_HIGHLIGHTED);
   },
 
-  async selectNodeAccessible(walker, node) {
+  async selectNodeAccessible(walker, node, supports) {
     let accessible = await walker.getAccessibleFor(node);
-    if (accessible) {
+    if (accessible && supports.hydration) {
       await accessible.hydrate();
     }
 
@@ -115,7 +124,7 @@ AccessibilityView.prototype = {
           accessible = await walker.getAccessibleFor(child);
           // indexInParent property is only available with additional request
           // for data (hydration) about the accessible object.
-          if (accessible) {
+          if (accessible && supports.hydration) {
             await accessible.hydrate();
           }
 

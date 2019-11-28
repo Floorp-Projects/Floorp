@@ -43,7 +43,9 @@ window.onload = async function() {
           off: () => {},
         },
       },
-      ui: { supports: {} }
+      ui: {
+        supports: {},
+      },
     };
 
     const mockStore = createStore((state, action) =>
@@ -51,13 +53,28 @@ window.onload = async function() {
     const provider = createElement(Provider, { store: mockStore }, a);
     const accessible = ReactDOM.render(provider, window.document.body);
     ok(accessible, "Should be able to mount Accessible instances");
+
+    info("Render accessible object when relations are not supported.");
     let relationsNode = document.getElementById("/relations");
+    ok(!relationsNode, "Relations are not rendered when not supported.");
+
+    info("Render accessible object when relations are supported but are empty.");
+    let state = {
+      ...mockState,
+      ui: {
+        supports: {
+          relations: true,
+        },
+      },
+    };
+    await mockStore.dispatch({ type: "update", ...state });
+    relationsNode = document.getElementById("/relations");
     ok(relationsNode, "Relations are rendered when supported.");
     let arrow = relationsNode.querySelector(".arrow.theme-twisty");
     is(arrow.style.visibility, "hidden", "Relations are empty.");
 
     info("Render accessible object with relations.");
-    const state = {
+    state = {
       details: {
         ...mockState.details,
         relations: {
@@ -67,6 +84,11 @@ window.onload = async function() {
             name: "New Tab",
             role: "document",
           },
+        },
+      },
+      ui: {
+        supports: {
+          relations: true,
         },
       },
     };
