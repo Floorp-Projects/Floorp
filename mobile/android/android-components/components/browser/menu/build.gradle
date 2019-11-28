@@ -30,6 +30,7 @@ dependencies {
     implementation Dependencies.androidx_core_ktx
     implementation Dependencies.androidx_recyclerview
     implementation Dependencies.androidx_cardview
+    implementation Dependencies.androidx_constraintlayout
 
     implementation Dependencies.kotlin_stdlib
 

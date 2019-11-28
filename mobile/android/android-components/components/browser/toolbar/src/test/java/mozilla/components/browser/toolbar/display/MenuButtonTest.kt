@@ -6,18 +6,21 @@ package mozilla.components.browser.toolbar.display
 
 import android.content.Context
 import android.content.res.Resources
+import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.graphics.drawable.Drawable
 import android.view.View
+import android.widget.ImageView
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.core.view.children
 import androidx.core.view.isVisible
-import androidx.core.view.iterator
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
+import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.toolbar.R
 import mozilla.components.support.test.any
@@ -28,7 +31,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -45,15 +47,25 @@ class MenuButtonTest {
     private lateinit var menuBuilder: BrowserMenuBuilder
     private lateinit var menu: BrowserMenu
     private lateinit var menuButton: MenuButton
+    private lateinit var menuIcon: ImageView
+    private lateinit var highlightView: ImageView
+    private lateinit var notificationIconView: ImageView
 
     @Before
     fun setup() {
+        val context = spy(testContext)
+        doReturn("Menu").`when`(context).getString(R.string.mozac_browser_toolbar_menu_button)
+
         menu = mock()
 
         menuBuilder = mock()
-        `when`(menuBuilder.build(testContext)).thenReturn(menu)
+        `when`(menuBuilder.build(context)).thenReturn(menu)
 
-        menuButton = MenuButton(testContext)
+        menuButton = MenuButton(context)
+        val images = menuButton.children.mapNotNull { it as? AppCompatImageView }.toList()
+        highlightView = images[0]
+        menuIcon = images[1]
+        notificationIconView = images[2]
     }
 
     @Test
@@ -91,19 +103,16 @@ class MenuButtonTest {
 
     @Test
     fun `icon has content description`() {
-        val icon = menuButton.extractIcon()
-
-        assertEquals("Menu", icon.contentDescription)
-        assertNotNull(icon.drawable)
+        assertEquals("Menu", menuIcon.contentDescription)
+        assertNotNull(menuIcon.drawable)
     }
 
     @Test
     fun `icon color filter can be changed`() {
-        val icon = menuButton.extractIcon()
-        assertNull(icon.colorFilter)
+        assertNull(menuIcon.colorFilter)
 
         menuButton.setColorFilter(0xffffff)
-        assertEquals(PorterDuffColorFilter(0xffffff, PorterDuff.Mode.SRC_ATOP), icon.colorFilter)
+        assertEquals(PorterDuffColorFilter(0xffffff, PorterDuff.Mode.SRC_ATOP), menuIcon.colorFilter)
     }
 
     @Test
@@ -112,15 +121,16 @@ class MenuButtonTest {
         val context = mockContextWithColorResource(colorResource, 0xffffff)
 
         val menuButton = MenuButton(context)
-        val highlight = menuButton.extractHighlight()
-        assertFalse(highlight.isVisible)
+        assertFalse(highlightView.isVisible)
+        assertFalse(notificationIconView.isVisible)
 
         var isHighlighted = false
+        val highlight = spy(BrowserMenuHighlight.HighPriority(colorResource))
         val highlightMenuBuilder = spy(BrowserMenuBuilder(listOf(
             BrowserMenuHighlightableItem(
                 label = "Test",
                 startImageResource = 0,
-                highlight = BrowserMenuHighlightableItem.Highlight(0, 0, colorResource, colorResource),
+                highlight = highlight,
                 isHighlighted = { isHighlighted }
             )
         )))
@@ -130,13 +140,49 @@ class MenuButtonTest {
         menuButton.invalidateMenu()
 
         verify(menu, never()).invalidate()
-        assertFalse(highlight.isVisible)
+        assertFalse(highlightView.isVisible)
+        assertFalse(notificationIconView.isVisible)
 
         isHighlighted = true
         menuButton.invalidateMenu()
 
-        assertTrue(highlight.isVisible)
+        verify(highlight).backgroundTint
         verify(context).getDrawable(R.drawable.mozac_menu_indicator)
+    }
+
+    @Test
+    fun `icon displays dot if low highlighted item is present in menu`() {
+        val colorResource = 200
+        val context = mockContextWithColorResource(colorResource, Color.BLUE)
+
+        val menuButton = MenuButton(context)
+        assertFalse(highlightView.isVisible)
+        assertFalse(notificationIconView.isVisible)
+
+        var isHighlighted = false
+        val highlight = spy(BrowserMenuHighlight.LowPriority(colorResource))
+        val highlightMenuBuilder = spy(BrowserMenuBuilder(listOf(
+            BrowserMenuHighlightableItem(
+                label = "Test",
+                startImageResource = 0,
+                highlight = highlight,
+                isHighlighted = { isHighlighted }
+            )
+        )))
+        `when`(highlightMenuBuilder.build(context)).thenReturn(menu)
+
+        menuButton.menuBuilder = highlightMenuBuilder
+        menuButton.invalidateMenu()
+
+        verify(menu, never()).invalidate()
+        assertFalse(highlightView.isVisible)
+        assertFalse(notificationIconView.isVisible)
+
+        isHighlighted = true
+        menuButton.invalidateMenu()
+
+        verify(highlight).notificationTint
+        verify(context).getDrawable(R.drawable.mozac_menu_notification)
     }
 
     @Test
@@ -164,10 +210,4 @@ class MenuButtonTest {
 
         return context
     }
-
-    private fun MenuButton.extractIcon() =
-        iterator().asSequence().last { it is AppCompatImageView } as AppCompatImageView
-
-    private fun MenuButton.extractHighlight() =
-        iterator().asSequence().first { it is AppCompatImageView } as AppCompatImageView
 }

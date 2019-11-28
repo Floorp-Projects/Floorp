@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
@@ -16,6 +17,7 @@ import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.engine.system.SystemEngine
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.menu.BrowserMenuBuilder
+import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.browser.menu.item.BrowserMenuCheckbox
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
@@ -171,12 +173,10 @@ open class DefaultComponents(private val applicationContext: Context) {
     private val menuItems by lazy {
         val items = mutableListOf(
             menuToolbar,
-            BrowserMenuHighlightableItem("Highlight", R.drawable.mozac_ic_share, android.R.color.black,
-                highlight = BrowserMenuHighlightableItem.Highlight(
-                    R.drawable.mozac_ic_search,
-                    R.drawable.mozac_ic_stop,
-                    R.drawable.background_with_ripple,
-                    android.R.color.holo_green_dark
+            BrowserMenuHighlightableItem("No Highlight", R.drawable.mozac_ic_share, android.R.color.black,
+                highlight = BrowserMenuHighlight.LowPriority(
+                    notificationTint = ContextCompat.getColor(applicationContext, android.R.color.holo_green_dark),
+                    label = "Highlight"
                 )
             ) {
                 Toast.makeText(applicationContext, "Highlight", Toast.LENGTH_SHORT).show()
