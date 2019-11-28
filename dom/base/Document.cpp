@@ -5299,7 +5299,7 @@ nsresult Document::EditingStateChanged() {
 // Helper class, used below in ChangeContentEditableCount().
 class DeferredContentEditableCountChangeEvent : public Runnable {
  public:
-  DeferredContentEditableCountChangeEvent(Document* aDoc, nsIContent* aElement)
+  DeferredContentEditableCountChangeEvent(Document* aDoc, Element* aElement)
       : mozilla::Runnable("DeferredContentEditableCountChangeEvent"),
         mDoc(aDoc),
         mElement(aElement) {}
@@ -5313,11 +5313,10 @@ class DeferredContentEditableCountChangeEvent : public Runnable {
 
  private:
   RefPtr<Document> mDoc;
-  nsCOMPtr<nsIContent> mElement;
+  RefPtr<Element> mElement;
 };
 
-nsresult Document::ChangeContentEditableCount(nsIContent* aElement,
-                                              int32_t aChange) {
+void Document::ChangeContentEditableCount(Element* aElement, int32_t aChange) {
   NS_ASSERTION(int32_t(mContentEditableCount) + aChange >= 0,
                "Trying to decrement too much.");
 
@@ -5325,11 +5324,9 @@ nsresult Document::ChangeContentEditableCount(nsIContent* aElement,
 
   nsContentUtils::AddScriptRunner(
       new DeferredContentEditableCountChangeEvent(this, aElement));
-
-  return NS_OK;
 }
 
-void Document::DeferredContentEditableCountChange(nsIContent* aElement) {
+void Document::DeferredContentEditableCountChange(Element* aElement) {
   if (mParser ||
       (mUpdateNestLevel > 0 && (mContentEditableCount > 0) != IsEditingOn())) {
     return;

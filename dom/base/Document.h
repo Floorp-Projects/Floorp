@@ -1747,13 +1747,11 @@ class Document : public nsINode,
    * Should be called when an element's editable changes as a result of
    * changing its contentEditable attribute/property.
    *
-   * @param aElement the element for which the contentEditable
-   *                 attribute/property was changed
-   * @param aChange +1 if the contentEditable attribute/property was changed to
-   *                true, -1 if it was changed to false
+   * The change should be +1 if the contentEditable attribute/property was
+   * changed to true, -1 if it was changed to false.
    */
-  nsresult ChangeContentEditableCount(nsIContent* aElement, int32_t aChange);
-  void DeferredContentEditableCountChange(nsIContent* aElement);
+  void ChangeContentEditableCount(Element*, int32_t aChange);
+  void DeferredContentEditableCountChange(Element*);
 
   enum class EditingState : int8_t {
     eTearingDown = -2,
