@@ -203,8 +203,7 @@ class MarkupContextMenu {
     if (!this.selection.isNode()) {
       return;
     }
-
-    this.markup.beginEditingOuterHTML(this.selection.nodeFront);
+    this.markup.beginEditingHTML(this.selection.nodeFront);
   }
 
   /**
@@ -750,7 +749,6 @@ class MarkupContextMenu {
     const isAnonymous = this.selection.isAnonymousNode();
     const isElement =
       this.selection.isElementNode() && !this.selection.isPseudoElementNode();
-    const isEditableElement = isElement && !isAnonymous;
     const isDuplicatableElement =
       isElement && !isAnonymous && !this.selection.isRoot();
     const isScreenshotable =
@@ -762,7 +760,7 @@ class MarkupContextMenu {
         id: "node-menu-edithtml",
         label: INSPECTOR_L10N.getStr("inspectorHTMLEdit.label"),
         accesskey: INSPECTOR_L10N.getStr("inspectorHTMLEdit.accesskey"),
-        disabled: !isEditableElement,
+        disabled: isAnonymous || (!isElement && !isFragment),
         click: () => this._editHTML(),
       })
     );
@@ -799,7 +797,7 @@ class MarkupContextMenu {
         accesskey: INSPECTOR_L10N.getStr(
           "inspectorAttributesSubmenu.accesskey"
         ),
-        submenu: this._getAttributesSubmenu(isEditableElement),
+        submenu: this._getAttributesSubmenu(isElement && !isAnonymous),
       })
     );
 
