@@ -259,6 +259,7 @@
 }
 
 #protections-popup-mainView-panel-header-section {
+  overflow: hidden;
   color: white;
   background: radial-gradient(circle farthest-side at top right, #9059FF, #0250BB);
 }
