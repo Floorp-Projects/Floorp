@@ -200,6 +200,12 @@ interface nsIPrincipal : nsISerializable
     readonly attribute ACString origin;
 
     /**
+     * Returns an ASCII compatible representation
+     * of the principals Origin
+     */
+    readonly attribute ACString AsciiOrigin;
+
+    /**
       * Returns the ASCII Spec from the Principals URI.
       * Might return the empty string, e.g. for the case of
       * a SystemPrincipal or an EpxandedPrincipal.
@@ -352,6 +358,10 @@ interface nsIPrincipal : nsISerializable
       return aOut << "nsIPrincipal { " << origin << " }";
     }
     %}
+    /*
+    * Returns true if the URI is an Onion URI
+    */
+    [infallible] readonly attribute boolean isOnion;
 };
 
 /**
