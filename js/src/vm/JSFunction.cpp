@@ -765,7 +765,9 @@ inline void JSFunction::trace(JSTracer* trc) {
     // Functions can be be marked as interpreted despite having no script
     // yet at some points when parsing, and can be lazy with no lazy script
     // for self-hosted code.
-    if (hasScript() && !hasUncompletedScript()) {
+    if (isIncomplete()) {
+      MOZ_ASSERT(u.scripted.s.script_ == nullptr);
+    } else if (hasScript()) {
       JSScript* script = static_cast<JSScript*>(u.scripted.s.script_);
       TraceManuallyBarrieredEdge(trc, &script, "script");
       u.scripted.s.script_ = script;
@@ -1693,7 +1695,7 @@ void JSFunction::maybeRelazify(JSRuntime* rt) {
   // Try to relazify functions with a non-lazy script. Note: functions can be
   // marked as interpreted despite having no script yet at some points when
   // parsing.
-  if (!hasScript() || hasUncompletedScript()) {
+  if (isIncomplete()) {
     return;
   }
 

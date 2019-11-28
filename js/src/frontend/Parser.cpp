@@ -7219,8 +7219,7 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
       }
     } else {
       // There should not be any non-lazy script yet.
-      MOZ_ASSERT_IF(ctorbox->hasObject(),
-                    ctorbox->function()->hasUncompletedScript());
+      MOZ_ASSERT_IF(ctorbox->hasObject(), ctorbox->function()->isIncomplete());
     }
 
     if (numFields == 0) {
