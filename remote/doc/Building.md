@@ -23,10 +23,12 @@ do this, provided you haven’t touched any compiled code (C++ or Rust):
 
 	% ./mach build faster
 
-Component files include the likes of command-line-handler.js,
+Component files include the likes of components.conf,
 RemoteAgent.manifest, moz.build files, and jar.mn.
 All the JS modules (files ending with `.jsm`) are symlinked into
 the build and can be changed without rebuilding.
+The remote agent’s startup code found under remote/startup/
+is written in Rust and requires rebuilds when changed.
 
 You may also opt out of building the remote agent entirely by setting
 the `--disable-cdp` build flag in your [mozconfig]:
