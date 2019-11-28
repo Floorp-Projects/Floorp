@@ -5291,16 +5291,12 @@ mozilla::ipc::IPCResult ContentParent::RecvStoreAndBroadcastBlobURLRegistration(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  if (NS_SUCCEEDED(
-          BlobURLProtocolHandler::AddDataEntry(aURI, aPrincipal, blobImpl))) {
-    BroadcastBlobURLRegistration(aURI, blobImpl, aPrincipal, this);
-
-    // We want to store this blobURL, so we can unregister it if the child
-    // crashes.
-    mBlobURLs.AppendElement(aURI);
-  }
-
+  BlobURLProtocolHandler::AddDataEntry(aURI, aPrincipal, blobImpl);
   BroadcastBlobURLRegistration(aURI, blobImpl, aPrincipal, this);
+  // We want to store this blobURL, so we can unregister it if the child
+  // crashes.
+  mBlobURLs.AppendElement(aURI);
+
   return IPC_OK();
 }
 
@@ -5310,7 +5306,6 @@ ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(
   BlobURLProtocolHandler::RemoveDataEntry(aURI, false /* Don't broadcast */);
   BroadcastBlobURLUnregistration(aURI, this);
   mBlobURLs.RemoveElement(aURI);
-
   return IPC_OK();
 }
 

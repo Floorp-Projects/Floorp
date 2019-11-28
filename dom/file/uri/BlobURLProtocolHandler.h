@@ -44,13 +44,10 @@ class BlobURLProtocolHandler final : public nsIProtocolHandler,
 
   // Methods for managing uri->object mapping
   // AddDataEntry creates the URI with the given scheme and returns it in aUri
-  static nsresult AddDataEntry(mozilla::dom::BlobImpl* aBlobImpl,
-                               nsIPrincipal* aPrincipal, nsACString& aUri);
-  static nsresult AddDataEntry(mozilla::dom::MediaSource* aMediaSource,
-                               nsIPrincipal* aPrincipal, nsACString& aUri);
+  static nsresult AddDataEntry(BlobImpl*, nsIPrincipal*, nsACString& aUri);
+  static nsresult AddDataEntry(MediaSource*, nsIPrincipal*, nsACString& aUri);
   // IPC only
-  static nsresult AddDataEntry(const nsACString& aURI, nsIPrincipal* aPrincipal,
-                               mozilla::dom::BlobImpl* aBlobImpl);
+  static void AddDataEntry(const nsACString& aURI, nsIPrincipal*, BlobImpl*);
 
   // This method revokes a blobURL. Because some operations could still be in
   // progress, the revoking consists in marking the blobURL as revoked and in
@@ -67,8 +64,7 @@ class BlobURLProtocolHandler final : public nsIProtocolHandler,
                        nsCycleCollectionTraversalCallback& aCallback);
 
   static bool GetAllBlobURLEntries(
-      nsTArray<mozilla::dom::BlobURLRegistrationData>& aRegistrations,
-      mozilla::dom::ContentParent* aCP);
+      nsTArray<BlobURLRegistrationData>& aRegistrations, ContentParent*);
 
   // This method returns false if aURI is not a known BlobURL. Otherwise it
   // returns true.
