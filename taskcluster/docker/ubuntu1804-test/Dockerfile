@@ -5,17 +5,22 @@
 FROM          ubuntu:18.04
 MAINTAINER    Edwin Takahashi <egao@mozilla.com>
 
-RUN mkdir -p /builds
-RUN id worker || useradd -d /builds/worker -s /bin/bash -m worker
+# Create necessary directories and worker user account
+RUN     mkdir -p /builds && mkdir -p artifacts
+RUN     id worker || useradd -d /builds/worker -s /bin/bash -m worker
 WORKDIR /builds/worker
 
 # We need to declare all potentially cache volumes as caches. Also,
 # making high I/O paths volumes increase I/O throughput because of
 # AUFS slowness.
-VOLUME /builds/worker/.cache
-VOLUME /builds/worker/checkouts
-VOLUME /builds/worker/tooltool-cache
-VOLUME /builds/worker/workspace
+VOLUME  /builds/worker/.cache
+VOLUME  /builds/worker/checkouts
+VOLUME  /builds/worker/tooltool-cache
+VOLUME  /builds/worker/workspace
+
+# In test.sh we accept START_VNC to start a vnc daemon.
+# Exposing this port allows it to work.
+EXPOSE  5900
 
 # %include python/mozbuild/mozbuild/action/tooltool.py
 ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /setup/tooltool.py
@@ -35,10 +40,6 @@ ADD topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /setup/install-mer
 # %include taskcluster/docker/recipes/install-node.sh
 ADD topsrcdir/taskcluster/docker/recipes/install-node.sh /setup/install-node.sh
 
-# %include taskcluster/docker/recipes/ubuntu1804-test-system-setup.sh
-ADD topsrcdir/taskcluster/docker/recipes/ubuntu1804-test-system-setup.sh /setup/system-setup.sh
-RUN           bash /setup/system-setup.sh
-
 # Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
 # %include taskcluster/docker/recipes/xvfb.sh
 ADD topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh
@@ -49,50 +50,33 @@ ADD topsrcdir/taskcluster/scripts/run-task /builds/worker/bin/run-task
 # %include taskcluster/scripts/misc/fetch-content
 ADD topsrcdir/taskcluster/scripts/misc/fetch-content /builds/worker/bin/fetch-content
 
+ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /builds/worker/scripts/tooltool.py
+
+# %include taskcluster/docker/recipes/ubuntu1804-test-system-setup.sh
+ADD topsrcdir/taskcluster/docker/recipes/ubuntu1804-test-system-setup.sh /setup/system-setup.sh
+RUN     bash /setup/system-setup.sh
+
 # %include taskcluster/scripts/tester/test-linux.sh
 ADD topsrcdir/taskcluster/scripts/tester/test-linux.sh /builds/worker/bin/test-linux.sh
 
-ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /builds/worker/scripts/tooltool.py
-
 # Set variable normally configured at login, by the shells parent process, these
 # are taken from GNU su manual
-ENV           HOME          /builds/worker
-ENV           SHELL         /bin/bash
-ENV           USER          worker
-ENV           LOGNAME       worker
-ENV           HOSTNAME      taskcluster-worker
-ENV           LANG          en_US.UTF-8
-ENV           LC_ALL        en_US.UTF-8
-
-# Add utilities and configuration
-COPY         dot-files/config              /builds/worker/.config
-COPY         dot-files/pulse               /builds/worker/.pulse
-RUN          chmod +x bin/*
-
-# allow the worker user to access video devices
-RUN usermod -a -G video worker
-
-RUN mkdir -p artifacts
-
-ENV PATH $PATH:/builds/worker/bin
-
-# Disable Ubuntu update prompt
-# http://askubuntu.com/questions/515161/ubuntu-12-04-disable-release-notification-of-14-04-in-update-manager
-ADD release-upgrades /etc/update-manager/release-upgrades
-
-# Disable tools with on-login popups that interfere with tests; see bug 1240084 and bug 984944.
-ADD autostart/jockey-gtk.desktop autostart/deja-dup-monitor.desktop /etc/xdg/autostart/
-
-# Bug 1345105 - Do not run periodical update checks and downloads
-ADD autostart/gnome-software-service.desktop /etc/xdg/autostart/
-
-# In test.sh we accept START_VNC to start a vnc daemon.
-# Exposing this port allows it to work.
-EXPOSE 5900
+ENV     HOME            /builds/worker
+ENV     SHELL           /bin/bash
+ENV     USER            worker
+ENV     LOGNAME         worker
+ENV     HOSTNAME        taskcluster-worker
+ENV     LANG            en_US.UTF-8
+ENV     LC_ALL          en_US.UTF-8
+ENV     PATH            $PATH:/builds/worker/bin
 
 # This helps not forgetting setting DISPLAY=:0 when running
 # tests outside of test.sh
 ENV DISPLAY :0
+
+# Add utilities and configuration
+COPY    dot-files/config        /builds/worker/.config
+COPY    dot-files/pulse         /builds/worker/.pulse
 
 # Disable apport (app crash reporter) to avoid stealing focus from test runs
 ADD apport /etc/default/apport
@@ -100,19 +84,28 @@ ADD apport /etc/default/apport
 # Disable font antialiasing for now to match releng's setup
 ADD fonts.conf /builds/worker/.fonts.conf
 
+# Bug 1345105 - Do not run periodical update checks and downloads
+ADD autostart/gnome-software-service.desktop /etc/xdg/autostart/
+
+# allow the worker user to access video devices
+RUN     usermod -a -G video worker
+
+# Set execution and ownership privileges
+RUN     chmod +x bin/*; chown -R worker:worker /builds/worker
+
 # Set up first-run experience for interactive mode
 ADD motd /etc/taskcluster-motd
 ADD taskcluster-interactive-shell /bin/taskcluster-interactive-shell
-RUN chmod +x /bin/taskcluster-interactive-shell
-
-RUN chown -R worker:worker /builds/worker
+RUN     chmod +x /bin/taskcluster-interactive-shell
 
 # gnome-keyring-daemon is configured to have the IPC_LOCK capability (to lock pages with secrets in
 # memory), but docker isn't run with that capability granted. So, if we were to try running
 # gnome-keyring-daemon without first clearing the capability, it would just exit with the message
 # "Operation not permitted". Luckily it doesn't actually require the capability.
-RUN setcap -r /usr/bin/gnome-keyring-daemon
+RUN     setcap -r /usr/bin/gnome-keyring-daemon
 
+# Ubuntu 18.04 (or any other GNOME3 based systems) needs dbus to have various
+# test function as expected. Use entrypoint to initialize dbus as root.
 COPY dbus.sh /usr/local/bin/dbus.sh
 RUN chmod +x /usr/local/bin/dbus.sh
 ENTRYPOINT ["/usr/local/bin/dbus.sh"]
