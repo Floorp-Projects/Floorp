@@ -9,6 +9,7 @@ js/src/builtin/intl/TimeZoneDataGenerated.h
 
 # Don't want to reformat irregexp. bug 1510128
 js/src/irregexp/.*
+js/src/new-regexp/.*
 
 # Don't want to reformat zydis (third-party library subject to occasional updates).
 js/src/zydis/.*
