@@ -379,7 +379,8 @@ C/C++ practices
 ---------------
 
 -  **Have you checked for compiler warnings?** Warnings often point to
-   real bugs.
+   real bugs. `Many of them <https://searchfox.org/mozilla-central/source/build/moz.configure/warnings.configure>`__ 
+   are enabled by default in the build system.
 -  In C++ code, use ``nullptr`` for pointers. In C code, using ``NULL``
    or ``0`` is allowed.
 -  Don't use ``PRBool`` and ``PRPackedBool`` in C++, use ``bool``
@@ -392,21 +393,21 @@ C/C++ practices
    ``(!x)`` instead. ``x == true``, is certainly different from if
    ``(x)``!
 -  In general, initialize variables with ``nsFoo aFoo = bFoo,`` and not
-   nsFoo aFoo(bFoo).
+   ``nsFoo aFoo(bFoo)``.
 
-   -  For constructors, initialize member variables with : nsFoo
-      aFoo(bFoo) syntax.
+   -  For constructors, initialize member variables with : ``nsFoo
+      aFoo(bFoo)`` syntax.
 
 -  To avoid warnings created by variables used only in debug builds, use
    the
-   ```DebugOnly<T>`` <https://developer.mozilla.org/docs/Mozilla/Debugging/DebugOnly%3CT%3E>`__
+   `DebugOnly<T> <https://developer.mozilla.org/docs/Mozilla/Debugging/DebugOnly%3CT%3E>`__
    helper when declaring them.
 -  You should `use the static preference
    API <https://developer.mozilla.org/docs/Mozilla/Preferences/Using_preferences_from_application_code>`__ for
    working with preferences.
 -  One-argument constructors, that are not copy or move constructors,
    should generally be marked explicit. Exceptions should be annotated
-   with MOZ_IMPLICIT.
+   with ``MOZ_IMPLICIT``.
 -  Use ``char32_t`` as the return type or argument type of a method that
    returns or takes as argument a single Unicode scalar value. (Don't
    use UTF-32 strings, though.)
@@ -458,7 +459,7 @@ COM, pointers and strings
 -  For constant strings, use ``NS_LITERAL_STRING("...")`` instead of
    ``NS_ConvertASCIItoUCS2("...")``, ``AssignWithConversion("...")``,
    ``EqualsWithConversion("...")``, or ``nsAutoString()``
--  To compare a string with a literal, use .EqualsLiteral("...").
+-  To compare a string with a literal, use ``.EqualsLiteral("...")``.
 -  Use `Contract
    IDs <news://news.mozilla.org/3994AE3E.D96EF810@netscape.com>`__,
    instead of CIDs with do_CreateInstance/do_GetService.
@@ -661,9 +662,9 @@ Consider a more complicated example to hide a bug:
      foo->Call2();
    }
 
-The intent of the author, may have been, that foo->Call2() would only
-happen when val had a false value. In fact, foo->Call2() will also be
-called, when foo->GetBooleanValue(&val) fails. This may, or may not,
+The intent of the author, may have been, that ``foo->Call2()`` would only
+happen when val had a false value. In fact, ``foo->Call2()`` will also be
+called, when ``foo->GetBooleanValue(&val)`` fails. This may, or may not,
 have been the author's intent. It is not clear from this code. Here is
 an updated version:
 
@@ -681,7 +682,7 @@ an updated version:
    }
 
 In this example, the author's intent is clear, and an error condition
-avoids both calls to foo->Call1() and foo->Call2();
+avoids both calls to ``foo->Call1()`` and ``foo->Call2();``
 
 *Possible exceptions:* Sometimes it is not fatal if a call fails. For
 instance, if you are notifying a series of observers that an event has
