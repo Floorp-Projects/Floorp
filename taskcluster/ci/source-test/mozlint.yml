@@ -233,11 +233,29 @@ shellcheck:
 
 
 localization:
-    description: l10n tests for strings with errors and conflicts with cross-channel
+    description: l10n tests for strings with errors
     treeherder:
         symbol: text(l1nt)
     run:
         mach: lint -l l10n -f treeherder
+    attributes:
+        code-review: false
+    when:
+        files-changed:
+            - '**/locales/en-US/**'
+            - '**/l10n.toml'
+            - 'third_party/python/compare-locales/**'
+            - 'third_party/python/fluent/**'
+
+
+l10n-conflicts:
+    description: l10n tests for strings with errors and conflicts with cross-channel
+    treeherder:
+        symbol: text(l1nt-conflicts)
+    run-on-projects:
+        - try
+    run:
+        mach: lint -W -l l10n -f treeherder -f json:/builds/worker/mozlint.json
     when:
         files-changed:
             - '**/locales/en-US/**'
