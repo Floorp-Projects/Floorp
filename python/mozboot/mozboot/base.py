@@ -293,6 +293,12 @@ class BaseBootstrapper(object):
         '''
         pass
 
+    def ensure_lucetc_packages(self, state_dir, checkout_root):
+        '''
+        Install lucetc.
+        '''
+        pass
+
     def ensure_node_packages(self, state_dir, checkout_root):
         '''
         Install any necessary packages needed to supply NodeJS'''
