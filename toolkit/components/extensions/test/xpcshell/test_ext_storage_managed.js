@@ -21,6 +21,9 @@ const MANIFEST = {
 
 AddonTestUtils.init(this);
 
+const server = createHttpServer({ hosts: ["example.com"] });
+server.registerDirectory("/data/", do_get_file("data"));
+
 add_task(async function setup() {
   await ExtensionTestUtils.startAddonManager();
 
@@ -108,6 +111,39 @@ add_task(async function test_storage_managed() {
     { null: null, obj: MANIFEST.data.obj },
     { str: "hello", num: 2 },
   ]);
+  await extension.unload();
+});
+
+add_task(async function test_storage_managed_from_content_script() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: { gecko: { id: MANIFEST.name } },
+      permissions: ["storage"],
+      content_scripts: [
+        {
+          js: ["contentscript.js"],
+          matches: ["*://*/*"],
+          run_at: "document_end",
+        },
+      ],
+    },
+
+    files: {
+      "contentscript.js": async function() {
+        browser.test.sendMessage(
+          "results",
+          await browser.storage.managed.get()
+        );
+      },
+    },
+  });
+
+  await extension.startup();
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/data/file_sample.html"
+  );
+  deepEqual(await extension.awaitMessage("results"), MANIFEST.data);
+  await contentPage.close();
   await extension.unload();
 });
 
