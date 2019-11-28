@@ -5066,12 +5066,11 @@ nsresult nsHttpChannel::OpenCacheInputStream(nsICacheEntry* cacheEntry,
   }
 
   nsCOMPtr<nsIInputStream> altData;
-  int64_t altDataSize;
+  int64_t altDataSize = -1;
   if (foundAltData) {
     rv = cacheEntry->OpenAlternativeInputStream(altDataType,
                                                 getter_AddRefs(altData));
     if (NS_SUCCEEDED(rv)) {
-      LOG(("Opened alt-data input stream type=%s", altDataType.get()));
       // We have succeeded.
       mAvailableCachedAltDataType = altDataType;
       mDeliveringAltData = deliverAltData;
@@ -5079,6 +5078,10 @@ nsresult nsHttpChannel::OpenCacheInputStream(nsICacheEntry* cacheEntry,
       // Set the correct data size on the channel.
       Unused << cacheEntry->GetAltDataSize(&altDataSize);
       mAltDataLength = altDataSize;
+
+      LOG(("Opened alt-data input stream [type=%s, size=%" PRId64
+           ", deliverAltData=%d]",
+           altDataType.get(), mAltDataLength, deliverAltData));
 
       if (deliverAltData) {
         stream = altData;
