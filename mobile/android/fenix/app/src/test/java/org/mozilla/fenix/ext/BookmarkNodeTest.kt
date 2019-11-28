@@ -12,6 +12,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
+import java.util.UUID
 
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
@@ -84,7 +85,7 @@ class BookmarkNodeTest {
 
     private fun newBookmarkNode(title: String, position: Int, children: List<BookmarkNode>?) = BookmarkNode(
             type = BookmarkNodeType.ITEM,
-            guid = "11",
+            guid = UUID.randomUUID().toString(),
             parentGuid = "12",
             position = position,
             title = title,
