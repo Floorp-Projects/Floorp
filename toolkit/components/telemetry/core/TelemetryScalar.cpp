@@ -140,6 +140,7 @@ enum class ScalarResult : uint8_t {
   KeyIsEmpty,
   KeyTooLong,
   TooManyKeys,
+  KeyNotAllowed,
   // String Scalar Errors
   StringTooLong,
   // Unsigned Scalar Errors
@@ -168,11 +169,12 @@ struct DynamicScalarInfo : BaseScalarInfo {
   DynamicScalarInfo(uint32_t aKind, bool aRecordOnRelease, bool aExpired,
                     const nsACString& aName, bool aKeyed, bool aBuiltin,
                     const nsTArray<nsCString>& aStores)
-      : BaseScalarInfo(
-            aKind,
-            aRecordOnRelease ? nsITelemetry::DATASET_ALL_CHANNELS
-                             : nsITelemetry::DATASET_PRERELEASE_CHANNELS,
-            RecordedProcessType::All, aKeyed, GetCurrentProduct(), aBuiltin),
+      : BaseScalarInfo(aKind,
+                       aRecordOnRelease
+                           ? nsITelemetry::DATASET_ALL_CHANNELS
+                           : nsITelemetry::DATASET_PRERELEASE_CHANNELS,
+                       RecordedProcessType::All, aKeyed, 0, 0,
+                       GetCurrentProduct(), aBuiltin),
         mDynamicName(aName),
         mDynamicExpiration(aExpired) {
     store_count = aStores.Length();
@@ -210,7 +212,6 @@ const char* DynamicScalarInfo::expiration() const {
 }
 
 uint32_t DynamicScalarInfo::storeOffset() const { return store_offset; }
-
 uint32_t DynamicScalarInfo::storeCount() const { return store_count; }
 
 typedef nsBaseHashtableET<nsDepCharHashKey, ScalarKey> CharPtrEntryType;
@@ -851,7 +852,10 @@ class KeyedScalar {
   // We store the name instead of a reference to the BaseScalarInfo because
   // the BaseScalarInfo can move if it's from a dynamic scalar.
   explicit KeyedScalar(const BaseScalarInfo& info)
-      : mScalarName(info.name()), mMaximumNumberOfKeys(kMaximumNumberOfKeys){};
+      : mScalarName(info.name()),
+        mScalarKeyCount(info.key_count),
+        mScalarKeyOffset(info.key_offset),
+        mMaximumNumberOfKeys(kMaximumNumberOfKeys){};
   ~KeyedScalar() = default;
 
   // Set, Add and SetMaximum functions as described in the Telemetry IDL.
@@ -891,10 +895,14 @@ class KeyedScalar {
 
   const nsCString mScalarName;
   ScalarKeysMapType mScalarKeys;
+  uint32_t mScalarKeyCount;
+  uint32_t mScalarKeyOffset;
   uint32_t mMaximumNumberOfKeys;
 
   ScalarResult GetScalarForKey(const StaticMutexAutoLock& locker,
                                const nsAString& aKey, ScalarBase** aRet);
+
+  bool AllowsKey(const nsAString& aKey) const;
 };
 
 ScalarResult KeyedScalar::SetValue(const StaticMutexAutoLock& locker,
@@ -939,7 +947,7 @@ void KeyedScalar::SetValue(const StaticMutexAutoLock& locker,
   if (sr != ScalarResult::Ok) {
     // Bug 1451813 - We now report which scalars exceed the key limit in
     // telemetry.keyed_scalars_exceed_limit.
-    if (sr != ScalarResult::TooManyKeys) {
+    if (sr == ScalarResult::KeyTooLong) {
       MOZ_ASSERT(false, "Key too long to be recorded in the scalar.");
     }
     return;
@@ -956,7 +964,7 @@ void KeyedScalar::SetValue(const StaticMutexAutoLock& locker,
   if (sr != ScalarResult::Ok) {
     // Bug 1451813 - We now report which scalars exceed the key limit in
     // telemetry.keyed_scalars_exceed_limit.
-    if (sr != ScalarResult::TooManyKeys) {
+    if (sr == ScalarResult::KeyTooLong) {
       MOZ_ASSERT(false, "Key too long to be recorded in the scalar.");
     }
     return;
@@ -973,7 +981,7 @@ void KeyedScalar::AddValue(const StaticMutexAutoLock& locker,
   if (sr != ScalarResult::Ok) {
     // Bug 1451813 - We now report which scalars exceed the key limit in
     // telemetry.keyed_scalars_exceed_limit.
-    if (sr != ScalarResult::TooManyKeys) {
+    if (sr == ScalarResult::KeyTooLong) {
       MOZ_ASSERT(false, "Key too long to be recorded in the scalar.");
     }
     return;
@@ -990,9 +998,10 @@ void KeyedScalar::SetMaximum(const StaticMutexAutoLock& locker,
   if (sr != ScalarResult::Ok) {
     // Bug 1451813 - We now report which scalars exceed the key limit in
     // telemetry.keyed_scalars_exceed_limit.
-    if (sr != ScalarResult::TooManyKeys) {
+    if (sr == ScalarResult::KeyTooLong) {
       MOZ_ASSERT(false, "Key too long to be recorded in the scalar.");
     }
+
     return;
   }
 
@@ -1050,6 +1059,23 @@ ScalarResult KeyedScalar::GetScalarForKey(const StaticMutexAutoLock& locker,
                                           ScalarBase** aRet) {
   if (aKey.IsEmpty()) {
     return ScalarResult::KeyIsEmpty;
+  }
+
+  if (!AllowsKey(aKey)) {
+    KeyedScalar* scalarUnknown = nullptr;
+    ScalarKey scalarUnknownUniqueId{
+        static_cast<uint32_t>(
+            mozilla::Telemetry::ScalarID::TELEMETRY_KEYED_SCALARS_UNKNOWN_KEYS),
+        false};
+    ProcessID process = ProcessID::Parent;
+    nsresult rv = internal_GetKeyedScalarByEnum(locker, scalarUnknownUniqueId,
+                                                process, &scalarUnknown);
+    if (NS_FAILED(rv)) {
+      return ScalarResult::TooManyKeys;
+    }
+    scalarUnknown->AddValue(locker, NS_ConvertUTF8toUTF16(mScalarName), 1);
+
+    return ScalarResult::KeyNotAllowed;
   }
 
   if (aKey.Length() > kMaximumKeyStringLength) {
@@ -1115,6 +1141,22 @@ size_t KeyedScalar::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) {
     n += scalar->SizeOfIncludingThis(aMallocSizeOf);
   }
   return n;
+}
+
+bool KeyedScalar::AllowsKey(const nsAString& aKey) const {
+  // If we didn't specify a list of allowed keys, just return true.
+  if (mScalarKeyCount == 0) {
+    return true;
+  }
+
+  for (uint32_t i = 0; i < mScalarKeyCount; ++i) {
+    uint32_t stringIndex = gScalarKeysTable[mScalarKeyOffset + i];
+    if (aKey.EqualsASCII(&gScalarsStringTable[stringIndex])) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 typedef nsUint32HashKey ScalarIDHashKey;
@@ -1255,6 +1297,11 @@ void internal_LogScalarError(const nsACString& aScalarName, ScalarResult aSr) {
       AppendUTF8toUTF16(
           nsPrintfCString(" - The key length must be limited to %d characters.",
                           kMaximumKeyStringLength),
+          errorMessage);
+      break;
+    case ScalarResult::KeyNotAllowed:
+      AppendUTF8toUTF16(
+          nsPrintfCString(" - The key is not allowed for this scalar."),
           errorMessage);
       break;
     case ScalarResult::TooManyKeys:

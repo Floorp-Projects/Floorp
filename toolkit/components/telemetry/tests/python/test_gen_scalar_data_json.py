@@ -58,6 +58,7 @@ newscalar:
                     "expires": "never",
                     "record_on_release": True,
                     "keyed": False,
+                    "keys": [],
                     "stores": ["main"],
                     "products": ["firefox", "fennec", "geckoview"],
                 },
@@ -67,6 +68,7 @@ newscalar:
                     "expires": "never",
                     "record_on_release": False,
                     "keyed": False,
+                    "keys": [],
                     "stores": ["main"],
                     "products": ["firefox"],
                 }

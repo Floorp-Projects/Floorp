@@ -2635,6 +2635,28 @@ telemetry:
     record_in_processes:
       - 'main'
 
+  keyed_scalars_unknown_keys:
+    bug_numbers:
+      - 1365529
+    description: >
+      The count of attempted accumulations to unknown scalar keys for
+      scalars that restrict the set of allowed keys ('keys' property).
+      The names of the offending scalars are used as keys in this probe.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+      - brizental@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+      - 'geckoview'
+      - 'thunderbird'
+    record_in_processes:
+      - all
+
   about_telemetry_pageload:
     bug_numbers:
       - 1512503
@@ -5169,6 +5191,28 @@ telemetry.test:
     expires: never
     kind: uint
     keyed: true
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    products:
+      - 'firefox'
+      - 'fennec'
+      - 'geckoview'
+      - 'thunderbird'
+    record_in_processes:
+      - 'main'
+
+  keyed_with_keys:
+    bug_numbers:
+      - 1277806
+    description: A testing keyed scalar with defined keys; not meant to be touched.
+    expires: never
+    kind: uint
+    keyed: true
+    keys:
+      - 'only'
+      - 'meant'
+      - 'for'
+      - 'testing'
     notification_emails:
       - telemetry-client-dev@mozilla.com
     products:
