@@ -809,7 +809,7 @@ class JSFunction : public js::NativeObject {
     MOZ_ASSERT(hasLazyScript());
   }
 
-  void initSelfHostLazyScript(js::SelfHostedLazyScript* lazy) {
+  void initSelfHostedLazyScript(js::SelfHostedLazyScript* lazy) {
     MOZ_ASSERT(isInterpreted());
     flags_.clearInterpreted();
     flags_.setInterpretedLazy();
