@@ -36,7 +36,8 @@ file_footer = """\
 """
 
 
-def write_scalar_info(scalar, output, name_index, expiration_index, store_index, store_count):
+def write_scalar_info(scalar, output, name_index, expiration_index, store_index, store_count,
+                      key_count, key_index):
     """Writes a scalar entry to the output file.
 
     :param scalar: a ScalarType instance describing the scalar.
@@ -45,13 +46,15 @@ def write_scalar_info(scalar, output, name_index, expiration_index, store_index,
     :param expiration_index: the index of the expiration version in the strings table.
     """
     if scalar.record_on_os(buildconfig.substs["OS_TARGET"]):
-        print("  {{ {}, {}, {}, {}, {}, {}, {}, {}, {} }},"
+        print("  {{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }},"
               .format(scalar.nsITelemetry_kind,
                       name_index,
                       expiration_index,
                       scalar.dataset,
                       " | ".join(scalar.record_in_processes_enum),
                       "true" if scalar.keyed else "false",
+                      key_count,
+                      key_index,
                       " | ".join(scalar.products_enum),
                       store_count,
                       store_index),
@@ -68,6 +71,9 @@ def write_scalar_tables(scalars, output):
 
     store_table = []
     total_store_count = 0
+
+    keys_table = []
+    total_key_count = 0
 
     print("const ScalarInfo gScalars[] = {", file=output)
     for s in scalars:
@@ -86,14 +92,27 @@ def write_scalar_tables(scalars, output):
             store_table.append((s.label, string_table.stringIndexes(stores)))
             total_store_count += len(stores)
 
+        keys = s.keys
+        key_index = 0
+        if len(keys) > 0:
+            key_index = total_key_count
+            keys_table.append((s.label, string_table.stringIndexes(keys)))
+            total_key_count += len(keys)
+
         # Write the scalar info entry.
-        write_scalar_info(s, output, name_index, exp_index, store_index, len(stores))
+        write_scalar_info(s, output, name_index, exp_index, store_index, len(stores),
+                          len(keys), key_index)
     print("};", file=output)
 
     string_table_name = "gScalarsStringTable"
     string_table.writeDefinition(output, string_table_name)
     static_assert(output, "sizeof(%s) <= UINT32_MAX" % string_table_name,
                   "index overflow")
+
+    print("\nconstexpr uint32_t gScalarKeysTable[] = {", file=output)
+    for name, indexes in keys_table:
+        print("/* %s */ %s," % (name, ", ".join(map(str, indexes))), file=output)
+    print("};", file=output)
 
     store_table_name = "gScalarStoresTable"
     print("\n#if defined(_MSC_VER) && !defined(__clang__)", file=output)
@@ -139,6 +158,7 @@ def generate_JSON_definitions(output, *filenames):
         scalar_definitions[category][scalar.name] = OrderedDict({
             'kind': scalar.nsITelemetry_kind,
             'keyed': scalar.keyed,
+            'keys': scalar.keys,
             'record_on_release': True if scalar.dataset_short == 'opt-out' else False,
             # We don't expire dynamic-builtin scalars: they're only meant for
             # use in local developer builds anyway. They will expire when rebuilding.
