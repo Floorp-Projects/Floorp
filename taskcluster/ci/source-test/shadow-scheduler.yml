@@ -22,13 +22,13 @@ job-defaults:
         mach: taskgraph optimized -p task-id=$DECISION_TASK_ID --output-file /builds/worker/optimized_tasks.list
         sparse-profile: taskgraph
 
-seta_10_120:
-    description: Runs the seta_10_120 experimental optimization strategy
+seta_15_180:
+    description: Runs the seta_15_180 experimental optimization strategy
     treeherder:
-        symbol: SS(seta_10_120)
+        symbol: SS(seta_15_180)
     index:
         product: source
-        job-name: shadow-scheduler-seta_10_120
+        job-name: shadow-scheduler-seta_15_180
     worker:
         env:
-            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:seta_10_120
+            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:seta_15_180
