@@ -5,6 +5,7 @@
 EXTRA_JS_MODULES += [
     'UITour.jsm',
     'UITourChild.jsm',
+    'UITourParent.jsm'
 ]
 
 BROWSER_CHROME_MANIFESTS += [
