@@ -13,7 +13,7 @@ add_task(async function setup() {
     true
   );
 
-  useTestEngineConfig();
+  await useTestEngines();
 });
 
 async function checkOrder(expectedOrder) {

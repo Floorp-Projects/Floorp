@@ -8,10 +8,10 @@
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
+  await useTestEngines("data", "search-extensions");
 });
 
 add_task(async function test_distribution_unreadable() {
-  configureToLoadJarEngines();
   const distributionDir = installDistributionEngine();
   const oldPermissions = distributionDir.permissions;
   distributionDir.permissions = 0o000;

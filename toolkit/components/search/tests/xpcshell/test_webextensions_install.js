@@ -55,7 +55,7 @@ async function installSearchExtension(id, name) {
 }
 
 add_task(async function setup() {
-  useTestEngines("test-extensions");
+  await useTestEngines("data", "test-extensions");
   await promiseStartupManager();
 
   registerCleanupFunction(async () => {

@@ -9,7 +9,7 @@
 
 // Check that current engine matches with US searchDefault from list.json
 add_task(async function test_searchDefaultEngineUS() {
-  useTestEngineConfig("resource://test/data1/");
+  await useTestEngines("data1");
 
   Services.prefs.setBoolPref(
     SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",

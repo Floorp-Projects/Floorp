@@ -69,37 +69,22 @@ AddonTestUtils.createAppInfo(
 );
 
 /**
- * Configure preferences to load engines from
- * chrome://testsearchplugin/locale/searchplugins/
+ * Load engines from test data located in particular folders.
+ *
+ * @param {string} [folder]
+ *   The folder name to use.
+ * @param {string} [subFolder]
+ *   The subfolder to use, if any.
  */
-function configureToLoadJarEngines() {
-  let searchExtensions = do_get_cwd();
-  searchExtensions.append("data");
-  searchExtensions.append("search-extensions");
-  let url = "file://" + searchExtensions.path;
+async function useTestEngines(folder = "data", subFolder = null) {
+  let url = `resource://test/${folder}/`;
+  if (subFolder) {
+    url += `${subFolder}/`;
+  }
   let resProt = Services.io
     .getProtocolHandler("resource")
     .QueryInterface(Ci.nsIResProtocolHandler);
   resProt.setSubstitution("search-extensions", Services.io.newURI(url));
-}
-
-/**
- * Load engines from test data located in 'folder'.
- *
- * @param {string} folder
- *   The folder name to use.
- */
-function useTestEngines(folder) {
-  let searchExtensions = do_get_cwd();
-  searchExtensions.append("data");
-  searchExtensions.append(folder);
-  let resProt = Services.io
-    .getProtocolHandler("resource")
-    .QueryInterface(Ci.nsIResProtocolHandler);
-  resProt.setSubstitution(
-    "search-extensions",
-    Services.io.newURI("file://" + searchExtensions.path)
-  );
 }
 
 async function promiseCacheData() {
@@ -193,20 +178,6 @@ function isUSTimezone() {
 const kDefaultenginenamePref = "browser.search.defaultenginename";
 const kTestEngineName = "Test search engine";
 const TOPIC_LOCALES_CHANGE = "intl:app-locales-changed";
-
-/**
- * Overrides list.json with test data from the specified location,
- * e.g. data/list.json.
- *
- * @param {string} url
- *   The resource url to set the location from.
- */
-function useTestEngineConfig(url = "resource://test/data/") {
-  const resProt = Services.io
-    .getProtocolHandler("resource")
-    .QueryInterface(Ci.nsIResProtocolHandler);
-  resProt.setSubstitution("search-extensions", Services.io.newURI(url));
-}
 
 /**
  * Loads the current default engine list.json via parsing the json manually.

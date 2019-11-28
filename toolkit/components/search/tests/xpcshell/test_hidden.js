@@ -4,7 +4,7 @@
 const kUrlPref = "geoSpecificDefaults.url";
 
 add_task(async function setup() {
-  configureToLoadJarEngines();
+  await useTestEngines("data", "search-extensions");
 
   // Geo specific defaults won't be fetched if there's no country code.
   Services.prefs.setCharPref(

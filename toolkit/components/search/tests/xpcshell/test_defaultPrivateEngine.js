@@ -14,7 +14,7 @@ let originalDefault;
 let originalPrivateDefault;
 
 add_task(async function setup() {
-  useTestEngineConfig();
+  await useTestEngines();
 
   Services.prefs.setCharPref(SearchUtils.BROWSER_SEARCH_PREF + "region", "US");
   Services.prefs.setBoolPref(
