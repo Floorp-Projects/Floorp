@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from mozboot.base import BaseBootstrapper
 from mozboot.linux_common import (
     ClangStaticAnalysisInstall,
+    LucetcInstall,
     NasmInstall,
     NodeInstall,
     SccacheInstall,
@@ -22,8 +23,9 @@ import re
 import subprocess
 
 
-class GentooBootstrapper(NasmInstall, NodeInstall, StyloInstall, ClangStaticAnalysisInstall,
-                         SccacheInstall, BaseBootstrapper):
+class GentooBootstrapper(
+        NasmInstall, NodeInstall, StyloInstall, ClangStaticAnalysisInstall,
+        SccacheInstall, LucetcInstall, BaseBootstrapper):
 
     def __init__(self, version, dist_id, **kwargs):
         BaseBootstrapper.__init__(self, **kwargs)
