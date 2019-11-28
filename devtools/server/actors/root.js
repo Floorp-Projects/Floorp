@@ -602,7 +602,7 @@ RootActor.prototype = {
     const window = Services.wm.getMostRecentWindow(
       DebuggerServer.chromeWindowType
     );
-    if (window.docShell.browsingContext.id === id) {
+    if (window && window.docShell.browsingContext.id === id) {
       return [
         ...window.document.querySelectorAll(`browser[remote="true"]`),
       ].map(browser => browser.browsingContext);
