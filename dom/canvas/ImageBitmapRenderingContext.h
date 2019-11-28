@@ -74,6 +74,8 @@ class ImageBitmapRenderingContext final
   virtual already_AddRefed<Layer> GetCanvasLayer(
       nsDisplayListBuilder* aBuilder, Layer* aOldLayer,
       LayerManager* aManager) override;
+  bool UpdateWebRenderCanvasData(nsDisplayListBuilder* aBuilder,
+                                 WebRenderCanvasData* aCanvasData) override;
   virtual void MarkContextClean() override;
 
   NS_IMETHOD Redraw(const gfxRect& aDirty) override;

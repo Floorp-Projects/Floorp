@@ -231,6 +231,27 @@ already_AddRefed<Layer> ImageBitmapRenderingContext::GetCanvasLayer(
   return imageLayer.forget();
 }
 
+bool ImageBitmapRenderingContext::UpdateWebRenderCanvasData(
+    nsDisplayListBuilder* aBuilder, WebRenderCanvasData* aCanvasData) {
+  if (!mImage) {
+    // No DidTransactionCallback will be received, so mark the context clean
+    // now so future invalidations will be dispatched.
+    MarkContextClean();
+    return false;
+  }
+
+  RefPtr<ImageContainer> imageContainer = aCanvasData->GetImageContainer();
+  AutoTArray<ImageContainer::NonOwningImage, 1> imageList;
+  RefPtr<layers::Image> image = ClipToIntrinsicSize();
+  if (!image) {
+    return false;
+  }
+
+  imageList.AppendElement(ImageContainer::NonOwningImage(image));
+  imageContainer->SetCurrentImages(imageList);
+  return true;
+}
+
 void ImageBitmapRenderingContext::MarkContextClean() {}
 
 NS_IMETHODIMP
