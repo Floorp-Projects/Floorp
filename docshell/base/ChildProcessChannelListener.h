@@ -20,7 +20,12 @@ namespace dom {
 class ChildProcessChannelListener final
     : public nsIChildProcessChannelListener {
  public:
-  typedef std::function<void(nsIChildChannel*)> Callback;
+  using Callback = std::function<void(
+      nsIChildChannel*, nsTArray<net::DocumentChannelRedirect>&&)>;
+  struct CallbackArgs {
+    nsCOMPtr<nsIChildChannel> mChannel;
+    nsTArray<net::DocumentChannelRedirect> mRedirects;
+  };
 
   ChildProcessChannelListener();
 
@@ -34,8 +39,9 @@ class ChildProcessChannelListener final
  private:
   virtual ~ChildProcessChannelListener();
 
+  // TODO Backtrack.
   nsDataHashtable<nsUint64HashKey, Callback> mCallbacks;
-  nsDataHashtable<nsUint64HashKey, nsCOMPtr<nsIChildChannel>> mChannels;
+  nsDataHashtable<nsUint64HashKey, CallbackArgs> mChannelArgs;
 };
 
 }  // namespace dom

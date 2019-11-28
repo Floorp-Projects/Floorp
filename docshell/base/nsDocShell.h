@@ -74,6 +74,7 @@ class EventTarget;
 }  // namespace dom
 namespace net {
 class LoadInfo;
+class DocumentChannelRedirect;
 }  // namespace net
 }  // namespace mozilla
 
@@ -791,6 +792,24 @@ class nsDocShell final : public nsDocLoader,
   void AddURIVisit(nsIURI* aURI, nsIURI* aPreviousURI,
                    uint32_t aChannelRedirectFlags,
                    uint32_t aResponseStatus = 0);
+
+  /**
+   * Helper function that will add the redirect chain found in aRedirects using
+   * IHistory (see AddURI and SaveLastVisit above for details)
+   *
+   * @param aChannel
+   *        Channel that will have these properties saved
+   * @param aURI
+   *        The URI that was just visited
+   * @param aChannelRedirectFlags
+   *        For redirects, the redirect flags from nsIChannelEventSink
+   *        (0 otherwise)
+   * @param aRedirects
+   *        The redirect chain collected by the DocumentChannelParent
+   */
+  void SavePreviousRedirectsAndLastVisit(
+      nsIChannel* aChannel, nsIURI* aURI, uint32_t aChannelRedirectFlags,
+      const nsTArray<mozilla::net::DocumentChannelRedirect>& aRedirects);
 
   // Sets the current document's current state object to the given SHEntry's
   // state object. The current state object is eventually given to the page

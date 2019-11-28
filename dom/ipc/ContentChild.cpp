@@ -3734,18 +3734,17 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIChildProcessChannelListener> processListener =
-      do_GetService("@mozilla.org/network/childProcessChannelListener;1");
-  // The listener will call completeRedirectSetup on the channel.
-  rv =
-      processListener->OnChannelReady(childChannel, aArgs.redirectIdentifier());
-  if (NS_FAILED(rv)) {
-    return IPC_OK();
-  }
-
+  // We need to copy the property bag before signaling that the channel
+  // is ready so that the nsDocShell can retrieve the history data when called.
   if (nsCOMPtr<nsIWritablePropertyBag> bag = do_QueryInterface(newChannel)) {
     nsHashPropertyBag::CopyFrom(bag, aArgs.properties());
   }
+
+  nsCOMPtr<nsIChildProcessChannelListener> processListener =
+      do_GetService("@mozilla.org/network/childProcessChannelListener;1");
+  // The listener will call completeRedirectSetup on the channel.
+  processListener->OnChannelReady(childChannel, aArgs.redirectIdentifier(),
+                                  std::move(aArgs.redirects()));
 
   // scopeExit will call CrossProcessRedirectFinished(rv) here
   return IPC_OK();
