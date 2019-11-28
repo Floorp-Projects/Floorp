@@ -59,7 +59,8 @@ abstract class InflationAwareFeature(
     /**
      * Called when the feature gets the option to handle the user pressing the back key.
      *
-     * @return true if the feature also implements [BackHandler] and the feature has been initiated.
+     * @return true if the feature also implements [UserInteractionHandler] and the feature has
+     * been initiated.
      */
     override fun onBackPressed(): Boolean {
         return (feature as? UserInteractionHandler)?.onBackPressed() ?: false

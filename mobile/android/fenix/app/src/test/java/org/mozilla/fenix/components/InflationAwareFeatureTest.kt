@@ -2,7 +2,7 @@ package org.mozilla.fenix.components
 
 import android.view.View
 import android.view.ViewStub
-import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -68,11 +68,11 @@ class InflationAwareFeatureTest {
     }
 
     @Test
-    fun `if feature has implemented BackHandler invoke it`() {
+    fun `if feature has implemented UserInteractionHandler invoke it`() {
         val stub: ViewStub = mock()
         val inflationFeature: InflationAwareFeature = spy(TestableInflationAwareFeature(stub))
         val innerFeature: LifecycleAwareFeature = mock()
-        val backHandlerFeature = object : LifecycleAwareFeature, BackHandler {
+        val userInteractionHandlerFeature = object : LifecycleAwareFeature, UserInteractionHandler {
             override fun onBackPressed() = true
 
             override fun start() {}
@@ -86,7 +86,7 @@ class InflationAwareFeatureTest {
 
         assert(!inflationFeature.onBackPressed())
 
-        inflationFeature.feature = backHandlerFeature
+        inflationFeature.feature = userInteractionHandlerFeature
 
         assert(inflationFeature.onBackPressed())
     }
