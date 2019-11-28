@@ -1049,7 +1049,10 @@ This reports the user's interaction with Activity Stream Router.
   "source": "CFR",
   // message_id could be the ID of the recommendation, such as "wikipedia_addon"
   "message_id": "wikipedia_addon",
-  "event": "[IMPRESSION | INSTALL | PIN | BLOCK | DISMISS | RATIONALE | LEARN_MORE | CLICK | CLICK_DOORHANGER | MANAGE]"
+  "event": "[IMPRESSION | INSTALL | PIN | BLOCK | DISMISS | RATIONALE | LEARN_MORE | CLICK | CLICK_DOORHANGER | MANAGE]",
+  // "modelVersion" records the model identifier for the CFR machine learning experiment, see more detail in Bug 1594422.
+  // Non-experiment users will not report this field.
+  "event_context": "{ \"modelVersion\": \"some_model_version_id\" }"
 }
 ```
 
