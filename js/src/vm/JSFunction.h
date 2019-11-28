@@ -715,16 +715,13 @@ class JSFunction : public js::NativeObject {
     return nullptr;
   }
 
-  // The state of a JSFunction whose script errored out during bytecode
-  // compilation. Such JSFunctions are only reachable via GC iteration and
-  // not from script.
-  // If u.scripted.s.script_ is non-null, the pointed JSScript is guaranteed
-  // to be complete (see the comment above JSScript::initFromFunctionBox
-  // callsite in JSScript::fullyInitFromEmitter).
-  bool hasUncompletedScript() const {
-    MOZ_ASSERT(hasScript());
-    return !u.scripted.s.script_;
-  }
+  // The default state of a JSFunction that is not ready for execution. This is
+  // generally the result of failure during bytecode compilation.
+  //
+  // If u.scripted.s.script_ is non-null, the pointed JSScript is guaranteed to
+  // be complete (see the comment above JSScript::initFromFunctionBox callsite
+  // in JSScript::fullyInitFromEmitter).
+  bool isIncomplete() const { return isInterpreted() && !u.scripted.s.script_; }
 
   JSScript* nonLazyScript() const {
     MOZ_ASSERT(hasScript());
