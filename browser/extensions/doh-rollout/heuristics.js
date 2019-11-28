@@ -3,12 +3,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
+
 /* global browser */
 /* exported runHeuristics */
 
 const GLOBAL_CANARY = "use-application-dns.net";
 
-// TODO: Confirm that this error message corresponds to NXDOMAIN
 const NXDOMAIN_ERR = "NS_ERROR_UNKNOWN_HOST";
 
 async function dnsLookup(hostname) {
@@ -22,16 +22,18 @@ async function dnsLookup(hostname) {
     addresses = [null];
     err = e.message;
   }
+
   return { addresses, err };
 }
 
 async function dnsListLookup(domainList) {
   let results = [];
-  for (let i = 0; i < domainList.length; i++) {
-    let domain = domainList[i];
+
+  for (let domain of domainList) {
     let { addresses } = await dnsLookup(domain);
     results = results.concat(addresses);
   }
+
   return results;
 }
 
@@ -57,59 +59,51 @@ async function safeSearch() {
 
   // Compare strict domain lookups to non-strict domain lookups
   let safeSearchChecks = {};
-  for (let i = 0; i < providerList.length; i++) {
-    let providerObj = providerList[i];
-    let providerName = providerObj.name;
+  for (let provider of providerList) {
+    let providerName = provider.name;
     safeSearchChecks[providerName] = "enable_doh";
 
     let results = {};
-    results.unfilteredAnswers = await dnsListLookup(providerObj.unfiltered);
-    results.safeSearchAnswers = await dnsListLookup(providerObj.safeSearch);
+    results.unfilteredAnswers = await dnsListLookup(provider.unfiltered);
+    results.safeSearchAnswers = await dnsListLookup(provider.safeSearch);
 
     // Given a provider, check if the answer for any safe search domain
     // matches the answer for any default domain
-    for (let j = 0; j < results.safeSearchAnswers.length; j++) {
-      let answer = results.safeSearchAnswers[j];
-      if (answer === null) {
-        continue;
-      }
-
-      let safeSearchEnabled = results.unfilteredAnswers.includes(answer);
-      if (safeSearchEnabled) {
+    for (let answer of results.safeSearchAnswers) {
+      if (answer && results.unfilteredAnswers.includes(answer)) {
         safeSearchChecks[providerName] = "disable_doh";
       }
     }
   }
+
   return safeSearchChecks;
 }
 
 async function zscalerCanary() {
   const ZSCALER_CANARY = "sitereview.zscaler.com";
+
   let { addresses } = await dnsLookup(ZSCALER_CANARY);
-  for (let j = 0; j < addresses.length; j++) {
-    let answer = addresses[j];
+  for (let address of addresses) {
     if (
-      answer == "213.152.228.242" ||
-      answer == "199.168.151.251" ||
-      answer == "8.25.203.30"
+      ["213.152.228.242", "199.168.151.251", "8.25.203.30"].includes(address)
     ) {
       // if sitereview.zscaler.com resolves to either one of the 3 IPs above,
       // Zscaler Shift service is in use, don't enable DoH
       return "disable_doh";
     }
   }
+
   return "enable_doh";
 }
 
 // TODO: Confirm the expected behavior when filtering is on
 async function globalCanary() {
   let { addresses, err } = await dnsLookup(GLOBAL_CANARY);
-  if (err === NXDOMAIN_ERR) {
+
+  if (err === NXDOMAIN_ERR || !addresses.length) {
     return "disable_doh";
   }
-  if (addresses.length === 0) {
-    return "disable_doh";
-  }
+
   return "enable_doh";
 }
 
@@ -119,9 +113,11 @@ async function modifiedRoots() {
     "security.enterprise_roots.enabled",
     false
   );
+
   if (rootsEnabled) {
     return "disable_doh";
   }
+
   return "enable_doh";
 }
 
@@ -137,7 +133,7 @@ async function runHeuristics() {
   let thirdPartyRootsCheck = await browser.experiments.heuristics.checkThirdPartyRoots();
 
   // Return result of each heuristic
-  let heuristics = {
+  return {
     google: safeSearchChecks.google,
     youtube: safeSearchChecks.youtube,
     zscalerCanary: zscalerCheck,
@@ -147,5 +143,4 @@ async function runHeuristics() {
     thirdPartyRoots: thirdPartyRootsCheck,
     policy: enterpriseCheck,
   };
-  return heuristics;
 }
