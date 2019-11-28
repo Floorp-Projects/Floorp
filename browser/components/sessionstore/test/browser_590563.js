@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test() {
+add_task(async function() {
   let sessionData = {
     windows: [
       {
@@ -26,25 +26,21 @@ function test() {
     ],
   };
 
-  waitForExplicitFinish();
+  let win = await newWindowWithState(state);
 
-  newWindowWithState(state, function(win) {
-    registerCleanupFunction(() => BrowserTestUtils.closeWindow(win));
+  registerCleanupFunction(() => BrowserTestUtils.closeWindow(win));
 
-    is(gBrowser.tabs.length, 1, "The total number of tabs should be 1");
-    is(
-      gBrowser.visibleTabs.length,
-      1,
-      "The total number of visible tabs should be 1"
-    );
+  is(gBrowser.tabs.length, 1, "The total number of tabs should be 1");
+  is(
+    gBrowser.visibleTabs.length,
+    1,
+    "The total number of visible tabs should be 1"
+  );
 
-    executeSoon(function() {
-      waitForFocus(function() {
-        middleClickTest(win);
-      }, win);
-    });
-  });
-}
+  await new Promise(resolve => executeSoon(resolve));
+  await new Promise(resolve => waitForFocus(resolve, win));
+  await middleClickTest(win);
+});
 
 async function middleClickTest(win) {
   let browser = win.gBrowser.selectedBrowser;
@@ -91,19 +87,20 @@ async function middleClickTest(win) {
     3,
     "The total number of visible tabs should be 3 after restoring 2 tabs by middle click"
   );
-  finish();
 }
 
-function newWindowWithState(state, callback) {
+async function newWindowWithState(state) {
   let opts = "chrome,all,dialog=no,height=800,width=800";
   let win = window.openDialog(AppConstants.BROWSER_CHROME_URL, "_blank", opts);
 
-  win.addEventListener(
-    "load",
-    function() {
-      // The form data will be restored before SSTabRestored, so we want to listen
-      // for that on the currently selected tab
-      let onSSTabRestored = event => {
+  await BrowserTestUtils.waitForEvent(win, "load");
+
+  // The form data will be restored before SSTabRestored, so we want to listen
+  // for that on the currently selected tab
+  await new Promise(resolve => {
+    win.gBrowser.tabContainer.addEventListener(
+      "SSTabRestored",
+      function onSSTabRestored(event) {
         let tab = event.target;
         if (tab.selected) {
           win.gBrowser.tabContainer.removeEventListener(
@@ -111,19 +108,14 @@ function newWindowWithState(state, callback) {
             onSSTabRestored,
             true
           );
-          callback(win);
+          resolve();
         }
-      };
-      win.gBrowser.tabContainer.addEventListener(
-        "SSTabRestored",
-        onSSTabRestored,
-        true
-      );
+      },
+      true
+    );
 
-      executeSoon(function() {
-        ss.setWindowState(win, JSON.stringify(state), true);
-      });
-    },
-    { once: true }
-  );
+    executeSoon(() => ss.setWindowState(win, JSON.stringify(state), true));
+  });
+
+  return win;
 }
