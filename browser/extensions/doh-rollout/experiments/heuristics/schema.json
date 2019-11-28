@@ -7,8 +7,7 @@
         "name": "setupTelemetry",
         "type": "function",
         "description": "Sets up the Telemetry for the addon",
-        "parameters": [
-        ],
+        "parameters": [],
         "async": false
       },
       {
@@ -81,24 +80,21 @@
         "name": "checkEnterprisePolicies",
         "type": "function",
         "description": "Checks for enterprise policies",
-        "parameters": [
-        ],
+        "parameters": [],
         "async": true
       },
       {
         "name": "checkParentalControls",
         "type": "function",
         "description": "Checks for browser-based parental controls",
-        "parameters": [
-        ],
+        "parameters": [],
         "async": true
       },
       {
         "name": "checkThirdPartyRoots",
         "type": "function",
         "description": "Checks for third party roots",
-        "parameters": [
-        ],
+        "parameters": [],
         "async": true
       }
     ]

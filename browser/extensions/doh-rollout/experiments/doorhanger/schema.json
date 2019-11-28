@@ -1,8 +1,7 @@
 [
   {
     "namespace": "experiments.doorhanger",
-    "description":
-      "Can be used to show a notification to users",
+    "description": "Can be used to show a notification to users",
     "functions": [
       {
         "name": "show",
@@ -15,12 +14,26 @@
             "name": "properties",
             "description": "Text properties for the doorhanger",
             "properties": {
-              "name": {"type": "string", "description": "Name of the doorhanger"},
-              "text": {"type": "string", "description": "Description in the doorhanger"},
-              "okLabel": {"type": "string"},
-              "okAccessKey": {"type": "string"},
-              "cancelLabel": {"type": "string"},
-              "cancelAccessKey": {"type": "string"}
+              "name": {
+                "type": "string",
+                "description": "Name of the doorhanger"
+              },
+              "text": {
+                "type": "string",
+                "description": "Description in the doorhanger"
+              },
+              "okLabel": {
+                "type": "string"
+              },
+              "okAccessKey": {
+                "type": "string"
+              },
+              "cancelLabel": {
+                "type": "string"
+              },
+              "cancelAccessKey": {
+                "type": "string"
+              }
             }
           }
         ]
@@ -32,7 +45,11 @@
         "type": "function",
         "description": "The user clicked 'OK, Got It'",
         "parameters": [
-          {"type": "integer", "name": "tabId", "minimum": 0}
+          {
+            "type": "integer",
+            "name": "tabId",
+            "minimum": 0
+          }
         ]
       },
       {
@@ -40,7 +57,11 @@
         "type": "function",
         "description": "The user clicked 'Disable Protection'",
         "parameters": [
-          {"type": "integer", "name": "tabId", "minimum": 0}
+          {
+            "type": "integer",
+            "name": "tabId",
+            "minimum": 0
+          }
         ]
       }
     ]

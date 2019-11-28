@@ -3,11 +3,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
+
 /* global BrowserWindowTracker, ExtensionCommon, ExtensionAPI */
-/* exported doorhanger */
+
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm", this);
 
 var { EventManager, EventEmitter } = ExtensionCommon;
 const {
@@ -22,9 +21,8 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/BrowserWindowTracker.jsm"
 );
 
-/** Return most recent NON-PRIVATE browser window, so that we can
- * manipulate chrome elements on it.
- */
+// Return most recent NON-PRIVATE browser window, so that we can
+// manipulate chrome elements on it.
 function getMostRecentBrowserWindow() {
   return BrowserWindowTracker.getTopWindow({
     private: false,
@@ -92,7 +90,7 @@ class DoorhangerEventEmitter extends EventEmitter {
   }
 }
 
-var doorhanger = class doorhanger extends ExtensionAPI {
+this.doorhanger = class doorhanger extends ExtensionAPI {
   getAPI(context) {
     const doorhangerEventEmitter = new DoorhangerEventEmitter();
     return {
