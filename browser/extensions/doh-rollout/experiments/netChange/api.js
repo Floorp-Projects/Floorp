@@ -5,11 +5,11 @@
 "use strict";
 /* exported netChange */
 /* global Cc, Ci, ExtensionAPI, ExtensionCommon */
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-var { EventManager } = ExtensionCommon;
 let gNetworkLinkService = Cc[
   "@mozilla.org/network/network-link-service;1"
 ].getService(Ci.nsINetworkLinkService);
@@ -20,12 +20,12 @@ function sleep(ms) {
 
 let netChangeWaiting = false;
 
-var netChange = class netChange extends ExtensionAPI {
+this.netChange = class netChange extends ExtensionAPI {
   getAPI(context) {
     return {
       experiments: {
         netChange: {
-          onConnectionChanged: new EventManager({
+          onConnectionChanged: new ExtensionCommon.EventManager({
             context,
             name: "netChange.onConnectionChanged",
             register: fire => {

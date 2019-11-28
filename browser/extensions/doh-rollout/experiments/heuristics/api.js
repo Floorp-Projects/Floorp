@@ -5,7 +5,7 @@
 "use strict";
 /* exported heuristics */
 /* global Cc, Ci, ExtensionAPI  */
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
 function log() {
   // eslint-disable-next-line no-constant-condition
