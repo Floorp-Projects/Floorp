@@ -142,9 +142,9 @@ var NativeManifests = {
           );
           return null;
         }
-        if (context.envType !== "addon_parent") {
+        if (type !== "storage" && context.envType !== "addon_parent") {
           Cu.reportError(
-            `Attempting to connect to a native host that does not allow messages from content scripts ${path}.`
+            `Native manifest at ${path} is not available to non-extension contexts`
           );
           return;
         }
