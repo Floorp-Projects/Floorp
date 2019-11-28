@@ -1,0 +1,212 @@
+[
+  {
+    "namespace": "experiments.preferences",
+    "description": "Manage prefs for an addon",
+    "types": [
+      {
+        "id": "pref",
+        "type": "object",
+        "description": "Preference to set",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "value": {
+            "type": "any"
+          }
+        }
+      }
+    ],
+    "events": [
+      {
+        "name": "onPrefChanged",
+        "type": "function",
+        "description": "Fired when the proxy setting is changed.",
+        "parameters": []
+      }
+    ],
+    "functions": [
+            {
+        "name": "get",
+        "type": "function",
+        "description": "Gets the value of the preference manager",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "settingName"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "clear",
+        "type": "function",
+        "description": "Deletes the extension and clears up",
+        "parameters": [
+          {
+            "type": "any",
+            "name": "stateName"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "set",
+        "type": "function",
+        "description": "Sets the value of the preference manager",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "settingName"
+          },
+          {
+            "type": "any",
+            "name": "value"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "add",
+        "type": "function",
+        "description": "Sets up a preference manager that we can manage later",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "settingName"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "getIntPref",
+        "type": "function",
+        "description": "Get the value of a integer preference",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "name"
+          },
+          {
+            "type": "integer",
+            "name": "defaultValue"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "setIntPref",
+        "type": "function",
+        "description": "Sets the value of a integer preference",
+        "parameters": [
+          {
+            "type": "string",
+            "enum": ["network.trr.mode", "doh-rollout.previous.trr.mode"]
+          },
+          {
+            "type": "integer",
+            "name": "defaultValue"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "getBoolPref",
+        "type": "function",
+        "description": "Get the value of a boolean preference",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "name"
+          },
+          {
+            "type": "boolean",
+            "name": "defaultValue"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "setBoolPref",
+        "type": "function",
+        "description": "Sets the value of a boolean preference",
+        "parameters": [
+          {
+            "type": "string",
+            "enum": ["doh-rollout.doorhanger-shown", "doh-rollout.self-enabled", "doh-rollout.disable-heuristics", "doh-rollout.doneFirstRun", "doh-rollout.skipHeuristicsCheck", "doh-rollout.balrog-migration-done"]
+          },
+          {
+            "type": "boolean",
+            "name": "defaultValue"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "getCharPref",
+        "type": "function",
+        "description": "Gets the value of a string preference",
+        "parameters": [
+          {
+            "type": "string",
+            "enum": ["doh-rollout.doorhanger-decision"]
+          },
+          {
+            "type": "string",
+            "name": "defaultValue"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "setCharPref",
+        "type": "function",
+        "description": "Sets the value of a string preference",
+        "parameters": [
+          {
+            "type": "string",
+            "enum": ["doh-rollout.doorhanger-decision"]
+          },
+          {
+            "type": "string",
+            "name": "defaultValue"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "clearUserPref",
+        "type": "function",
+        "description": "Resets value of prefence back to default",
+        "parameters": [
+          {
+            "type": "string",
+            "enum": ["doh-rollout.self-enabled"]
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "prefHasUserValue",
+        "type": "function",
+        "description": "Check if the user has set a value of a preference",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "name"
+          }
+        ],
+        "async": true
+      }
+    ],
+    "properties": {
+      "state": {
+        "$ref": "types.Setting",
+        "description": "This property controls the proxy settings"
+      }
+    }
+  }
+]
