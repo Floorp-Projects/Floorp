@@ -61,7 +61,7 @@ class StatusBar extends Component {
 
   render() {
     const { summary } = this.props;
-    const { count, totalSize, totalMs } = summary;
+    const { count, totalMs, sentSize, receivedSize, totalSize } = summary;
 
     const countText =
       count === 0
@@ -71,6 +71,8 @@ class StatusBar extends Component {
             L10N.getStr("networkMenu.ws.summary.framesCount2")
           ).replace("#1", count);
     const totalSizeText = getFormattedSize(totalSize);
+    const sentSizeText = getFormattedSize(sentSize);
+    const receivedText = getFormattedSize(receivedSize);
     const totalMillisText = getFormattedTime(totalMs);
 
     return footer(
@@ -89,7 +91,12 @@ class StatusBar extends Component {
               "status-bar-label frames-list-network-summary-total-size",
             title: TOOLTIP_FRAMES_TOTAL_SIZE,
           },
-          totalSizeText
+          L10N.getFormatStr(
+            "networkMenu.ws.summary.tooltip.framesTranferredSize",
+            totalSizeText,
+            sentSizeText,
+            receivedText
+          )
         ),
       count !== 0 &&
         div(
