@@ -14,29 +14,49 @@ function setupBackgroundJsm() {
 }
 
 add_task(function test() {
-  info("Test that we get the default values from state.");
-  const {
-    getRecordingPreferencesFromBrowser,
-    revertRecordingPreferences,
-    getDefaultRecordingPreferences,
-  } = setupBackgroundJsm();
+  info("Test that we get the default preference values from the browser.");
+  const { getRecordingPreferencesFromBrowser } = setupBackgroundJsm();
 
-  Assert.equal(
+  Assert.notEqual(
     getRecordingPreferencesFromBrowser().entries,
-    getDefaultRecordingPreferences().entries,
+    undefined,
     "The initial state has the default entries."
   );
-  Assert.equal(
+  Assert.notEqual(
     getRecordingPreferencesFromBrowser().interval,
-    getDefaultRecordingPreferences().interval,
+    undefined,
     "The initial state has the default interval."
+  );
+  Assert.notEqual(
+    getRecordingPreferencesFromBrowser().features,
+    undefined,
+    "The initial state has the default features."
   );
   Assert.equal(
     getRecordingPreferencesFromBrowser().features.includes("js"),
-    getDefaultRecordingPreferences().features.includes("js"),
+    true,
     "The js feature is initialized to the default."
   );
-  revertRecordingPreferences();
+  Assert.notEqual(
+    getRecordingPreferencesFromBrowser().threads,
+    undefined,
+    "The initial state has the default threads."
+  );
+  Assert.equal(
+    getRecordingPreferencesFromBrowser().threads.includes("GeckoMain"),
+    true,
+    "The GeckoMain thread is initialized to the default."
+  );
+  Assert.notEqual(
+    getRecordingPreferencesFromBrowser().objdirs,
+    undefined,
+    "The initial state has the default objdirs."
+  );
+  Assert.notEqual(
+    getRecordingPreferencesFromBrowser().duration,
+    undefined,
+    "The duration is initialized to the duration."
+  );
 });
 
 add_task(function test() {
