@@ -2097,12 +2097,12 @@ pref("devtools.performance.recording.duration", 0);
 #if defined(__ANDROID__)
   // If it's android, add "java" feature as well. Other features must be same
   // with else branch. Please update both of them.
-  pref("devtools.performance.recording.features", "[\"js\",\"leaf\",\"responsiveness\",\"stackwalk\",\"java\"]");
+  pref("devtools.performance.recording.features", "[\"js\",\"leaf\",\"stackwalk\",\"java\"]");
 #else
   // Please update the if branch as well if you upadate this.
-  pref("devtools.performance.recording.features", "[\"js\",\"leaf\",\"responsiveness\",\"stackwalk\"]");
+  pref("devtools.performance.recording.features", "[\"js\",\"leaf\",\"stackwalk\"]");
 #endif
-pref("devtools.performance.recording.threads", "[\"GeckoMain\",\"Compositor\"]");
+pref("devtools.performance.recording.threads", "[\"GeckoMain\",\"Compositor\",\"Renderer\"]");
 // A JSON array of strings, where each string is a file path to an objdir on
 // the host machine. This is used in order to look up symbol information from
 // build artifacts of local builds.
