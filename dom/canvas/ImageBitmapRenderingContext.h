@@ -91,6 +91,13 @@ class ImageBitmapRenderingContext final
   int32_t mHeight;
 
   RefPtr<layers::Image> mImage;
+
+  /**
+   * Flag to avoid unnecessary surface copies to FrameCaptureListeners in the
+   * case when the canvas is not currently being drawn into and not rendered
+   * but canvas capturing is still ongoing.
+   */
+  bool mIsCapturedFrameInvalid;
 };
 
 }  // namespace dom
