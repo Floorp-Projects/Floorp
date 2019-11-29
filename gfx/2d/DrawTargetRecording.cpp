@@ -503,13 +503,25 @@ DrawTargetRecording::CreateSourceSurfaceFromData(unsigned char* aData,
                                                  SurfaceFormat aFormat) const {
   RefPtr<SourceSurface> surf = DataSourceSurfaceRecording::Init(
       aData, aSize, aStride, aFormat, mRecorder);
+  mRecorder->RecordEvent(RecordedOptimizeSourceSurface(surf, this, surf));
   return surf.forget();
 }
 
 already_AddRefed<SourceSurface> DrawTargetRecording::OptimizeSourceSurface(
     SourceSurface* aSurface) const {
-  RefPtr<SourceSurface> surf(aSurface);
-  return surf.forget();
+  if (aSurface->GetType() == SurfaceType::RECORDING) {
+    return do_AddRef(aSurface);
+  }
+
+  EnsureSurfaceStoredRecording(mRecorder, aSurface, "OptimizeSourceSurface");
+
+  RefPtr<SourceSurface> retSurf = new SourceSurfaceRecording(
+      aSurface->GetSize(), aSurface->GetFormat(), mRecorder);
+
+  mRecorder->RecordEvent(
+      RecordedOptimizeSourceSurface(aSurface, this, retSurf));
+
+  return retSurf.forget();
 }
 
 already_AddRefed<SourceSurface>
