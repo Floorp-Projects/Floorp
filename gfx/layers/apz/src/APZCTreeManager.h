@@ -618,9 +618,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   already_AddRefed<AsyncPanZoomController> FindZoomableApzc(
       AsyncPanZoomController* aStart) const;
 
-  const ScreenMargin& GetGeckoFixedLayerMargins() const {
-    return mGeckoFixedLayerMargins;
-  }
+  ScreenMargin GetGeckoFixedLayerMargins() const;
 
  private:
   typedef bool (*GuidComparator)(const ScrollableLayerGuid&,
