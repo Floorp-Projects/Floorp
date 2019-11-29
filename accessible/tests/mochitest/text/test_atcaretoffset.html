@@ -413,7 +413,11 @@
   <textarea id="textarea" cols="5">aword
 two words</textarea>
 
-  <textarea id="ta_wrapped" cols="5">hi hello my longfriend t sq t</textarea>
+  <!-- scrollbar-width: none is needed so that the width of the scrollbar
+    doesn't incorrectly affect the width of the textarea on some systems.
+    See bug 1600170 and bug 33654.
+    -->
+  <textarea id="ta_wrapped" cols="5" style="scrollbar-width: none;">hi hello my longfriend t sq t</textarea>
   </pre>
 </body>
 </html>
