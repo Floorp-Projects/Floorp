@@ -674,7 +674,7 @@ function addDeviceInModal(ui, device) {
   return saved;
 }
 
-function editDeviceInModal(ui, device, newDevice) {
+async function editDeviceInModal(ui, device, newDevice) {
   const { Simulate } = ui.toolWindow.require(
     "devtools/client/shared/vendor/react-dom-test-utils"
   );
@@ -717,7 +717,15 @@ function editDeviceInModal(ui, device, newDevice) {
       state.devices.custom.find(({ name }) => name == newDevice.name) &&
       !state.devices.custom.find(({ name }) => name == device.name)
   );
+
+  // Editing a custom device triggers a "device-change" message.
+  // Wait for the `device-changed` event to avoid unfinished requests during the
+  // tests.
+  const onDeviceChanged = ui.once("device-changed");
+
   Simulate.click(formSave);
+
+  await onDeviceChanged;
   return saved;
 }
 
