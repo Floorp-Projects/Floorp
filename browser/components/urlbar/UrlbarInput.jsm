@@ -718,9 +718,6 @@ class UrlbarInput {
     }
     this._resultForCurrentValue = result;
 
-    // Also update userTypedValue. See bug 287996.
-    this.window.gBrowser.userTypedValue = this.value;
-
     // The value setter clobbers the actiontype attribute, so update this after
     // that.
     if (result) {
@@ -1089,9 +1086,6 @@ class UrlbarInput {
     this.inputField.value = val;
     this.formatValue();
     this.removeAttribute("actiontype");
-    if (!this.view.isOpen) {
-      this.view.clear();
-    }
 
     // Dispatch ValueChange event for accessibility.
     let event = this.document.createEvent("Events");
@@ -1674,13 +1668,13 @@ class UrlbarInput {
     this.removeAttribute("focused");
     this.endLayoutExtend();
 
+    if (this._autofillPlaceholder && this.window.gBrowser.userTypedValue) {
+      // Restore value to the last typed one, removing any autofilled portion.
+      this.value = this.window.gBrowser.userTypedValue;
+    }
+
     this.formatValue();
     this._resetSearchState();
-
-    // Clear selection unless we are switching application windows.
-    if (this.document.activeElement != this.inputField) {
-      this.selectionStart = this.selectionEnd = 0;
-    }
 
     // In certain cases, like holding an override key and confirming an entry,
     // we don't key a keyup event for the override key, thus we make this
@@ -1789,6 +1783,12 @@ class UrlbarInput {
           break;
         }
 
+        // Clear any previous selection unless we are focused, to ensure it
+        // doesn't affect drag selection.
+        if (this._focusedViaMousedown) {
+          this.selectionStart = this.selectionEnd = 0;
+        }
+
         if (event.detail == 2 && UrlbarPrefs.get("doubleClickSelectsAll")) {
           this.editor.selectAll();
           event.preventDefault();
@@ -1861,9 +1861,11 @@ class UrlbarInput {
     }
     this.removeAttribute("actiontype");
 
-    if (!value && this.view.isOpen) {
-      this.view.close();
+    if (!this.view.isOpen || !value) {
       this.view.clear();
+    }
+    if (this.view.isOpen && !value) {
+      this.view.close();
       return;
     }
 
