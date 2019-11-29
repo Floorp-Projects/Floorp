@@ -30,10 +30,6 @@ void ChildProcessChannelListener::OnChannelReady(
   }
 }
 
-ChildProcessChannelListener::ChildProcessChannelListener() = default;
-
-ChildProcessChannelListener::~ChildProcessChannelListener() = default;
-
 already_AddRefed<ChildProcessChannelListener>
 ChildProcessChannelListener::GetSingleton() {
   if (!sCPCLSingleton) {
@@ -43,8 +39,6 @@ ChildProcessChannelListener::GetSingleton() {
   RefPtr<ChildProcessChannelListener> cpcl = sCPCLSingleton;
   return cpcl.forget();
 }
-
-NS_IMPL_ISUPPORTS(ChildProcessChannelListener, nsIChildProcessChannelListener);
 
 }  // namespace dom
 }  // namespace mozilla
