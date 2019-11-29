@@ -152,6 +152,11 @@ struct APZCTreeManager::TreeBuildingState {
   // is cleared back to Nothing(). Note that this is only used in the WebRender
   // codepath.
   Maybe<uint64_t> mZoomAnimationId;
+
+  // This is populated with all the HitTestingTreeNodes that have a fixed
+  // position animation id (which indicates that they need to be sampled for
+  // WebRender on the sampler thread).
+  std::vector<HitTestingTreeNode*> mFixedPositionNodesWithAnimationId;
 };
 
 class APZCTreeManager::CheckerboardFlushObserver : public nsIObserver {
@@ -473,6 +478,10 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
           if (node->IsScrollThumbNode() && node->GetScrollbarAnimationId()) {
             state.mScrollThumbs.push_back(node);
           }
+          // GetFixedPositionAnimationId is only set when webrender is enabled.
+          if (node->GetFixedPositionAnimationId().isSome()) {
+            state.mFixedPositionNodesWithAnimationId.push_back(node);
+          }
           if (apzc && node->IsPrimaryHolder()) {
             state.mScrollTargets[apzc->GetGuid()] = node;
           }
@@ -618,6 +627,17 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
           thumb->GetScrollbarData(), targetGuid, target->GetTransform(),
           target->IsAncestorOf(thumb));
     }
+
+    mFixedPositionInfo.clear();
+    // For non-webrender, state.mFixedPositionNodesWithAnimationId will be empty
+    // so this will be a no-op.
+    for (HitTestingTreeNode* fixedPos :
+         state.mFixedPositionNodesWithAnimationId) {
+      MOZ_ASSERT(fixedPos->GetFixedPositionAnimationId().isSome());
+      mFixedPositionInfo.emplace_back(
+          fixedPos->GetFixedPositionAnimationId().value(),
+          fixedPos->GetFixedPosSides());
+    }
   }
 
   for (size_t i = 0; i < state.mNodesToDestroy.Length(); i++) {
@@ -740,6 +760,21 @@ void APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
     transforms.AppendElement(
         wr::ToWrTransformProperty(info.mThumbAnimationId, transform));
   }
+
+  for (const FixedPositionInfo& info : mFixedPositionInfo) {
+    ScreenPoint translation =
+        AsyncCompositionManager::ComputeFixedMarginsOffset(
+            mCompositorFixedLayerMargins, info.mFixedPosSides,
+            mGeckoFixedLayerMargins);
+
+    LayerToParentLayerMatrix4x4 transform =
+        LayerToParentLayerMatrix4x4::Translation(ViewAs<ParentLayerPixel>(
+            translation, PixelCastJustification::ScreenIsParentLayerForRoot));
+
+    transforms.AppendElement(
+        wr::ToWrTransformProperty(info.mFixedPositionAnimationId, transform));
+  }
+
   aTxn.AppendTransformProperties(transforms);
 
   // Advance animations. It's important that this happens after
