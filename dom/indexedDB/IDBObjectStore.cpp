@@ -2389,11 +2389,8 @@ void IDBObjectStore::NoteDeletion() {
 
   mSpec = mDeletedSpec;
 
-  if (!mIndexes.IsEmpty()) {
-    for (uint32_t count = mIndexes.Length(), index = 0; index < count;
-         index++) {
-      mIndexes[index]->NoteDeletion();
-    }
+  for (const auto& index : mIndexes) {
+    index->NoteDeletion();
   }
 }
 
