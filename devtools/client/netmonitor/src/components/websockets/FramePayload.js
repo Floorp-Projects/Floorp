@@ -26,6 +26,10 @@ const MESSAGE_DATA_LIMIT = Services.prefs.getIntPref(
 const MESSAGE_DATA_TRUNCATED = L10N.getStr("messageDataTruncated");
 const SocketIODecoder = require("devtools/client/netmonitor/src/components/websockets/parsers/socket-io/index.js");
 const {
+  JsonHubProtocol,
+  HandshakeProtocol,
+} = require("devtools/client/netmonitor/src/components/websockets/parsers/signalr/index.js");
+const {
   parseSockJS,
 } = require("devtools/client/netmonitor/src/components/websockets/parsers/sockjs/index.js");
 
@@ -107,6 +111,15 @@ class FramePayload extends Component {
         formattedDataTitle: "SockJS",
       };
     }
+    // signalr payload
+    const signalRPayload = this.parseSignalR(payload);
+    if (signalRPayload) {
+      return {
+        formattedData: signalRPayload,
+        formattedDataTitle: "SignalR",
+      };
+    }
+
     // json payload
     const { json } = isJSON(payload);
     if (json) {
@@ -140,6 +153,47 @@ class FramePayload extends Component {
     } catch (err) {
       // Ignore errors
     }
+    return null;
+  }
+
+  parseSignalR(payload) {
+    // attempt to parse as HandshakeResponseMessage
+    let decoder;
+    try {
+      decoder = new HandshakeProtocol();
+      const [remainingData, responseMessage] = decoder.parseHandshakeResponse(
+        payload
+      );
+
+      if (responseMessage) {
+        return {
+          handshakeResponse: responseMessage,
+          remainingData: this.parseSignalR(remainingData),
+        };
+      }
+    } catch (err) {
+      // ignore errors;
+    }
+
+    // attempt to parse as JsonHubProtocolMessage
+    try {
+      decoder = new JsonHubProtocol();
+      const msgs = decoder.parseMessages(payload, null);
+      if (msgs && msgs.length) {
+        return msgs;
+      }
+    } catch (err) {
+      // ignore errors;
+    }
+
+    // MVP Signalr
+    if (payload.endsWith("\u001e")) {
+      const { json } = isJSON(payload.slice(0, -1));
+      if (json) {
+        return json;
+      }
+    }
+
     return null;
   }
 
