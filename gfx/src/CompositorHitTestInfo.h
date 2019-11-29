@@ -59,6 +59,11 @@ enum class CompositorHitTestFlags : uint8_t {
   // is received within a timeout period, the event may be dropped.
   // Only meaningful in combination with eDispatchToContent.
   eRequiresTargetConfirmation,  // 0x0800
+
+  // Bits 0x1000, 0x2000, 0x4000, and 0x8000 are used by SideBitsPacked in
+  // WebRenderAPI.cpp when we pack SideBits and CompositorHitTestInfo into a
+  // uint16_t and pass in into webrender to store in the item tag.
+
 };
 
 using CompositorHitTestInfo = EnumSet<CompositorHitTestFlags, uint32_t>;
