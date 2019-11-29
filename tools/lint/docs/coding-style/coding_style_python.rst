@@ -2,11 +2,23 @@
 Python Coding style
 ===================
 
+Coding style
+~~~~~~~~~~~~
+
+`black <https://github.com/psf/black/>`_ is the tool used to reformat the Python code.
+
+Linting
+~~~~~~~
+
+The Python linting is done by `flake8 <https://gitlab.com/pycqa/flake8>`_.
+flake8 is executed by mozlint both at review phase and in the CI.
+See the :ref:`flake8` documentation for more information.
+
+
 Indentation
 ~~~~~~~~~~~
 
 Four spaces in Python code.
-
 
 
 Makefile/moz.build practices
