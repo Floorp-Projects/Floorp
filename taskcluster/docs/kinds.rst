@@ -617,6 +617,15 @@ iris
 ----
 Iris testing suite
 
+maybe-release
+-------------
+A shipitscript task that does the following:
+
+1. Checks if automated releases are disabled
+2. Checks if the changes between the current revision and the previous releases
+   revision are considered "worthwhile" for a new release.
+3. Triggers the release via ship-it, which will then create an action task.
+
 l10n-bump
 ---------
 Cron-driven tasks that bump l10n-changesets files in-tree, using data from the l10n dashboard.
