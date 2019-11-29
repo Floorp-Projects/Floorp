@@ -6934,6 +6934,10 @@ bool nsDisplayOwnLayer::IsZoomingLayer() const {
   return GetType() == DisplayItemType::TYPE_ASYNC_ZOOM;
 }
 
+bool nsDisplayOwnLayer::IsFixedPositionLayer() const {
+  return GetType() == DisplayItemType::TYPE_FIXED_POSITION;
+}
+
 // nsDisplayOpacity uses layers for rendering
 already_AddRefed<Layer> nsDisplayOwnLayer::BuildLayer(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
@@ -6959,8 +6963,10 @@ bool nsDisplayOwnLayer::CreateWebRenderCommands(
     const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   Maybe<wr::WrAnimationProperty> prop;
-  bool needsProp = aManager->LayerManager()->AsyncPanZoomEnabled() &&
-                   (IsScrollThumbLayer() || IsZoomingLayer());
+  bool needsProp =
+      aManager->LayerManager()->AsyncPanZoomEnabled() &&
+      (IsScrollThumbLayer() || IsZoomingLayer() || IsFixedPositionLayer());
+
   if (needsProp) {
     // APZ is enabled and this is a scroll thumb or zooming layer, so we need
     // to create and set an animation id. That way APZ can adjust the position/
@@ -6999,8 +7005,8 @@ bool nsDisplayOwnLayer::CreateWebRenderCommands(
 bool nsDisplayOwnLayer::UpdateScrollData(
     mozilla::layers::WebRenderScrollData* aData,
     mozilla::layers::WebRenderLayerScrollData* aLayerData) {
-  bool isRelevantToApz =
-      (IsScrollThumbLayer() || IsScrollbarContainer() || IsZoomingLayer());
+  bool isRelevantToApz = (IsScrollThumbLayer() || IsScrollbarContainer() ||
+                          IsZoomingLayer() || IsFixedPositionLayer());
   if (!isRelevantToApz) {
     return false;
   }
@@ -7011,6 +7017,11 @@ bool nsDisplayOwnLayer::UpdateScrollData(
 
   if (IsZoomingLayer()) {
     aLayerData->SetZoomAnimationId(mWrAnimationId);
+    return true;
+  }
+
+  if (IsFixedPositionLayer()) {
+    aLayerData->SetFixedPositionAnimationId(mWrAnimationId);
     return true;
   }
 

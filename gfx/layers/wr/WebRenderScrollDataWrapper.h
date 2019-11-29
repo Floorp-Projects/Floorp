@@ -359,6 +359,11 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
     return mLayer->GetScrollbarAnimationId();
   }
 
+  Maybe<uint64_t> GetFixedPositionAnimationId() const {
+    MOZ_ASSERT(IsValid());
+    return mLayer->GetFixedPositionAnimationId();
+  }
+
   ScrollableLayerGuid::ViewID GetFixedPositionScrollContainerId() const {
     MOZ_ASSERT(IsValid());
     return mLayer->GetFixedPositionScrollContainerId();

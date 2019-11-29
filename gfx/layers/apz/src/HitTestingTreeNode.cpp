@@ -133,9 +133,11 @@ const ScrollbarData& HitTestingTreeNode::GetScrollbarData() const {
 }
 
 void HitTestingTreeNode::SetFixedPosData(
-    ScrollableLayerGuid::ViewID aFixedPosTarget, SideBits aFixedPosSides) {
+    ScrollableLayerGuid::ViewID aFixedPosTarget, SideBits aFixedPosSides,
+    const Maybe<uint64_t>& aFixedPositionAnimationId) {
   mFixedPosTarget = aFixedPosTarget;
   mFixedPosSides = aFixedPosSides;
+  mFixedPositionAnimationId = aFixedPositionAnimationId;
 }
 
 ScrollableLayerGuid::ViewID HitTestingTreeNode::GetFixedPosTarget() const {
@@ -143,6 +145,10 @@ ScrollableLayerGuid::ViewID HitTestingTreeNode::GetFixedPosTarget() const {
 }
 
 SideBits HitTestingTreeNode::GetFixedPosSides() const { return mFixedPosSides; }
+
+Maybe<uint64_t> HitTestingTreeNode::GetFixedPositionAnimationId() const {
+  return mFixedPositionAnimationId;
+}
 
 void HitTestingTreeNode::SetPrevSibling(HitTestingTreeNode* aSibling) {
   mPrevSibling = aSibling;
