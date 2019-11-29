@@ -1000,7 +1000,8 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     node->SetScrollbarData(aLayer.GetScrollbarAnimationId(),
                            aLayer.GetScrollbarData());
     node->SetFixedPosData(aLayer.GetFixedPositionScrollContainerId(),
-                          aLayer.GetFixedPositionSides());
+                          aLayer.GetFixedPositionSides(),
+                          aLayer.GetFixedPositionAnimationId());
     return node;
   }
 
@@ -1225,7 +1226,8 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
   node->SetScrollbarData(aLayer.GetScrollbarAnimationId(),
                          aLayer.GetScrollbarData());
   node->SetFixedPosData(aLayer.GetFixedPositionScrollContainerId(),
-                        aLayer.GetFixedPositionSides());
+                        aLayer.GetFixedPositionSides(),
+                        aLayer.GetFixedPositionAnimationId());
   return node;
 }
 

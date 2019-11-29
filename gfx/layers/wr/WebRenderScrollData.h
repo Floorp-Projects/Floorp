@@ -117,6 +117,13 @@ class WebRenderLayerScrollData final {
     return mScrollbarAnimationId;
   }
 
+  void SetFixedPositionAnimationId(const uint64_t& aId) {
+    mFixedPositionAnimationId = Some(aId);
+  }
+  Maybe<uint64_t> GetFixedPositionAnimationId() const {
+    return mFixedPositionAnimationId;
+  }
+
   void SetFixedPositionScrollContainerId(ScrollableLayerGuid::ViewID aId) {
     mFixedPosScrollContainerId = aId;
   }
@@ -168,6 +175,7 @@ class WebRenderLayerScrollData final {
   EventRegionsOverride mEventRegionsOverride;
   ScrollbarData mScrollbarData;
   Maybe<uint64_t> mScrollbarAnimationId;
+  Maybe<uint64_t> mFixedPositionAnimationId;
   ScrollableLayerGuid::ViewID mFixedPosScrollContainerId;
   wr::RenderRoot mRenderRoot;
   Maybe<uint64_t> mZoomAnimationId;
@@ -285,6 +293,7 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData> {
     WriteParam(aMsg, aParam.mEventRegionsOverride);
     WriteParam(aMsg, aParam.mScrollbarData);
     WriteParam(aMsg, aParam.mScrollbarAnimationId);
+    WriteParam(aMsg, aParam.mFixedPositionAnimationId);
     WriteParam(aMsg, aParam.mFixedPosScrollContainerId);
     WriteParam(aMsg, aParam.mRenderRoot);
     WriteParam(aMsg, aParam.mZoomAnimationId);
@@ -306,6 +315,7 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData> {
            ReadParam(aMsg, aIter, &aResult->mEventRegionsOverride) &&
            ReadParam(aMsg, aIter, &aResult->mScrollbarData) &&
            ReadParam(aMsg, aIter, &aResult->mScrollbarAnimationId) &&
+           ReadParam(aMsg, aIter, &aResult->mFixedPositionAnimationId) &&
            ReadParam(aMsg, aIter, &aResult->mFixedPosScrollContainerId) &&
            ReadParam(aMsg, aIter, &aResult->mRenderRoot) &&
            ReadParam(aMsg, aIter, &aResult->mZoomAnimationId) &&
