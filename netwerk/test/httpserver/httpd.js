@@ -2559,6 +2559,13 @@ ServerHandler.prototype = {
   // see nsIHttpServer.registerPathHandler
   //
   registerPathHandler(path, handler) {
+    if (path.length == 0) {
+      throw Components.Exception(
+        "Handler path cannot be empty",
+        Cr.NS_ERROR_INVALID_ARG
+      );
+    }
+
     // XXX true path validation!
     if (path.charAt(0) != "/" && path != "CONNECT") {
       throw Components.Exception("", Cr.NS_ERROR_INVALID_ARG);
