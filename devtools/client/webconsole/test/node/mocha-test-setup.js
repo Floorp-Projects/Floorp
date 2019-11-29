@@ -6,7 +6,8 @@
 "use strict";
 
 const mcRoot = `${__dirname}/../../../../../`;
-const getModule = mcPath => `module.exports = require("${mcRoot}${mcPath}");`;
+const getModule = mcPath =>
+  `module.exports = require("${(mcRoot + mcPath).replace(/\\/gi, "/")}");`;
 
 const { pref } = require("devtools-services");
 pref("devtools.debugger.remote-timeout", 10000);
