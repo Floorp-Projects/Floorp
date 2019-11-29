@@ -232,7 +232,7 @@ class WebRenderAPI final {
 
   bool HitTest(const wr::WorldPoint& aPoint, wr::WrPipelineId& aOutPipelineId,
                layers::ScrollableLayerGuid::ViewID& aOutScrollId,
-               gfx::CompositorHitTestInfo& aOutHitInfo);
+               gfx::CompositorHitTestInfo& aOutHitInfo, SideBits& aOutSideBits);
 
   void SendTransaction(TransactionBuilder& aTxn);
 
@@ -586,10 +586,12 @@ class DisplayListBuilder final {
   Maybe<layers::ScrollableLayerGuid::ViewID> GetContainingFixedPosScrollTarget(
       const ActiveScrolledRoot* aAsr);
 
+  Maybe<SideBits> GetContainingFixedPosSideBits(const ActiveScrolledRoot* aAsr);
+
   // Set the hit-test info to be used for all display items until the next call
   // to SetHitTestInfo or ClearHitTestInfo.
   void SetHitTestInfo(const layers::ScrollableLayerGuid::ViewID& aScrollId,
-                      gfx::CompositorHitTestInfo aHitInfo);
+                      gfx::CompositorHitTestInfo aHitInfo, SideBits aSideBits);
   // Clears the hit-test info so that subsequent display items will not have it.
   void ClearHitTestInfo();
 
@@ -606,23 +608,26 @@ class DisplayListBuilder final {
     mClipChainLeaf = aClipRect;
   }
 
-  // A chain of RAII objects, each holding a (ASR, ViewID) tuple of data. The
-  // topmost object is pointed to by the mActiveFixedPosTracker pointer in
-  // the wr::DisplayListBuilder.
+  // A chain of RAII objects, each holding a (ASR, ViewID, SideBits) tuple of
+  // data. The topmost object is pointed to by the mActiveFixedPosTracker
+  // pointer in the wr::DisplayListBuilder.
   class MOZ_RAII FixedPosScrollTargetTracker final {
    public:
     FixedPosScrollTargetTracker(DisplayListBuilder& aBuilder,
                                 const ActiveScrolledRoot* aAsr,
-                                layers::ScrollableLayerGuid::ViewID aScrollId);
+                                layers::ScrollableLayerGuid::ViewID aScrollId,
+                                SideBits aSideBits);
     ~FixedPosScrollTargetTracker();
     Maybe<layers::ScrollableLayerGuid::ViewID> GetScrollTargetForASR(
         const ActiveScrolledRoot* aAsr);
+    Maybe<SideBits> GetSideBitsForASR(const ActiveScrolledRoot* aAsr);
 
    private:
     FixedPosScrollTargetTracker* mParentTracker;
     DisplayListBuilder& mBuilder;
     const ActiveScrolledRoot* mAsr;
     layers::ScrollableLayerGuid::ViewID mScrollId;
+    SideBits mSideBits;
   };
 
  protected:
