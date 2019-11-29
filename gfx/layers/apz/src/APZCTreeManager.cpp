@@ -2929,6 +2929,11 @@ already_AddRefed<AsyncPanZoomController> APZCTreeManager::FindZoomableApzc(
   return GetZoomableTarget(aStart, aStart);
 }
 
+ScreenMargin APZCTreeManager::GetGeckoFixedLayerMargins() const {
+  RecursiveMutexAutoLock lock(mTreeLock);
+  return mGeckoFixedLayerMargins;
+}
+
 AsyncPanZoomController* APZCTreeManager::FindRootContentApzcForLayersId(
     LayersId aLayersId) const {
   mTreeLock.AssertCurrentThreadIn();
