@@ -28,17 +28,31 @@
         android:theme="@style/NormalTheme"
         android:usesCleartextTraffic="true"
         tools:ignore="UnusedAttribute">
-        <activity
-            android:name=".HomeActivity"
-            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
-            android:launchMode="singleTask"
-            android:windowSoftInputMode="adjustResize">
+
+        <!--
+          We inherited this entry (org.mozilla.gecko.App) from Fennec. We need to keep this as our
+          main launcher to avoid launcher icons on the home screen disappearing for all our users
+          on a Fennec build.
+        -->
+        <activity-alias
+            android:name="org.mozilla.gecko.App"
+            android:targetActivity=".HomeActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity-alias>
+
+        <activity
+            android:name=".HomeActivity"
+            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.BROWSABLE" />
@@ -62,10 +76,6 @@
                 <data android:scheme="fenix"
                     android:host="make_default_browser"/>
             </intent-filter>
-
-            <meta-data
-                android:name="android.app.shortcuts"
-                android:resource="@xml/shortcuts" />
         </activity>
 
         <activity
