@@ -10,6 +10,7 @@ categories:
         - devtools
         - toolkit
         - js
+        - mobile/android/geckoview
         - dom/bindings/webidl
         - modules/libpref
         - remote
