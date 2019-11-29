@@ -252,6 +252,7 @@ l10n-conflicts:
     description: l10n tests for strings with errors and conflicts with cross-channel
     treeherder:
         symbol: text(l1nt-conflicts)
+    always-target: false
     run-on-projects:
         - try
     run:
