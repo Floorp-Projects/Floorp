@@ -48,14 +48,15 @@ function getAddonElement(managerWindow, addonId) {
   );
 }
 
-function assertDisabledSideloadedAddonElement(managerWindow, addonElement) {
-  const doc = addonElement.ownerDocument;
+function assertSideloadedAddonElementState(addonElement, checked) {
   const enableBtn = addonElement.querySelector('[action="toggle-disabled"]');
   is(
-    doc.l10n.getAttributes(enableBtn).id,
-    "enable-addon-button-label",
-    "The button has the enable label"
+    enableBtn.checked,
+    checked,
+    `The enable button is ${!checked ? " not " : ""} checked`
   );
+  is(enableBtn.localName, "input", "The enable button is an input");
+  is(enableBtn.type, "checkbox", "It's a checkbox");
 }
 
 function clickEnableExtension(managerWindow, addonElement) {
@@ -220,7 +221,7 @@ add_task(async function test_sideloading() {
   // XUL or HTML about:addons addon entry element.
   const addonElement = await getAddonElement(win, ID2);
 
-  assertDisabledSideloadedAddonElement(win, addonElement);
+  assertSideloadedAddonElementState(addonElement, false);
 
   info("Test enabling sideloaded addon 2 from about:addons enable button");
 
@@ -267,6 +268,7 @@ add_task(async function test_sideloading() {
 
   addon2 = await AddonManager.getAddonByID(ID2);
   is(addon2.userDisabled, false, "Addon 2 should be enabled");
+  assertSideloadedAddonElementState(addonElement, true);
 
   // Test post install notification on addon 2.
   await testPostInstallIncognitoCheckbox(addon2);
