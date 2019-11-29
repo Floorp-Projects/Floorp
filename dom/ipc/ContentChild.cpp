@@ -37,6 +37,7 @@
 #include "mozilla/dom/BrowserBridgeHost.h"
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientOpenWindowOpActors.h"
+#include "mozilla/dom/ChildProcessChannelListener.h"
 #include "mozilla/dom/ChildProcessMessageManager.h"
 #include "mozilla/dom/ContentProcessMessageManager.h"
 #include "mozilla/dom/ContentParent.h"
@@ -102,7 +103,6 @@
 #include "mozilla/HangDetails.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/UnderrunHandler.h"
-#include "nsIChildProcessChannelListener.h"
 #include "mozilla/net/HttpChannelChild.h"
 #include "nsQueryObject.h"
 #include "imgLoader.h"
@@ -3740,8 +3740,8 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
     nsHashPropertyBag::CopyFrom(bag, aArgs.properties());
   }
 
-  nsCOMPtr<nsIChildProcessChannelListener> processListener =
-      do_GetService("@mozilla.org/network/childProcessChannelListener;1");
+  RefPtr<ChildProcessChannelListener> processListener =
+      ChildProcessChannelListener::GetSingleton();
   // The listener will call completeRedirectSetup on the channel.
   processListener->OnChannelReady(childChannel, aArgs.redirectIdentifier(),
                                   std::move(aArgs.redirects()));
