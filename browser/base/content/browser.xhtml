@@ -275,17 +275,17 @@
       <vbox id="editBookmarkPanelBottomContent"
             flex="1">
         <checkbox id="editBookmarkPanel_showForNewBookmarks"
-                  label="&editBookmark.showForNewBookmarks.label;"
-                  accesskey="&editBookmark.showForNewBookmarks.accesskey;"
+                  data-l10n-id="bookmark-panel-show-editor-checkbox"
                   oncommand="StarUI.onShowForNewBookmarksCheckboxCommand();"/>
       </vbox>
       <hbox id="editBookmarkPanelBottomButtons"
             class="panel-footer"
-            style="min-width: &editBookmark.panel.width;;">
+            data-l10n-id="bookmark-panel"
+            data-l10n-attrs="style">
 #ifndef XP_UNIX
         <button id="editBookmarkPanelDoneButton"
                 class="editBookmarkPanelBottomButton"
-                label="&editBookmark.done.label;"
+                data-l10n-id="bookmark-panel-done-button"
                 default="true"
                 oncommand="StarUI.panel.hidePopup();"/>
         <button id="editBookmarkPanelRemoveButton"
@@ -297,7 +297,7 @@
                 oncommand="StarUI.removeBookmarkButtonCommand();"/>
         <button id="editBookmarkPanelDoneButton"
                 class="editBookmarkPanelBottomButton"
-                label="&editBookmark.done.label;"
+                data-l10n-id="bookmark-panel-done-button"
                 default="true"
                 oncommand="StarUI.panel.hidePopup();"/>
 #endif
