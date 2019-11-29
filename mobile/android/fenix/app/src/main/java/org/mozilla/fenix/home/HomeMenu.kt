@@ -64,26 +64,25 @@ class HomeMenu(
 
             BrowserMenuDivider(),
 
+            @Suppress("Deprecation")
             BrowserMenuHighlightableItem(
                 label = context.getString(R.string.browser_menu_settings),
-                imageResource = R.drawable.ic_settings,
+                startImageResource = R.drawable.ic_settings,
                 iconTintColorResource =
-                if (hasAccountProblem) R.color.sync_error_text_color else primaryTextColor,
-
+                    if (hasAccountProblem) R.color.sync_error_text_color else primaryTextColor,
                 textColorResource =
-                if (hasAccountProblem) R.color.sync_error_text_color else primaryTextColor,
-
-                highlight = if (hasAccountProblem) {
-                    BrowserMenuHighlightableItem.Highlight(
-                        endImageResource = R.drawable.ic_alert,
-                        backgroundResource = R.drawable.sync_error_background_with_ripple,
-                        colorResource = R.color.sync_error_background_color
-                    )
-                } else null
+                    if (hasAccountProblem) R.color.sync_error_text_color else primaryTextColor,
+                highlight = BrowserMenuHighlightableItem.Highlight(
+                    endImageResource = R.drawable.ic_alert,
+                    backgroundResource = R.drawable.sync_error_background_with_ripple,
+                    colorResource = R.color.sync_error_background_color
+                ),
+                isHighlighted = { hasAccountProblem }
             ) {
                 onItemTapped.invoke(Item.Settings)
             },
 
+            @Suppress("Deprecation")
             BrowserMenuHighlightableItem(
                 context.getString(R.string.browser_menu_whats_new),
                 R.drawable.ic_whats_new,
