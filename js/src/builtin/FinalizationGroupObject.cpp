@@ -355,7 +355,7 @@ bool FinalizationGroupObject::register_(JSContext* cx, unsigned argc,
     return false;
   }
 
-  RootedValue holdings(cx, args.get(1));
+  HandleValue holdings = args.get(1);
 
   // 6. If Type(unregisterToken) is not Object,
   //    a. If unregisterToken is not undefined, throw a TypeError exception.
