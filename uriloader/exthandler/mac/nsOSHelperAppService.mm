@@ -181,7 +181,6 @@ NS_IMETHODIMP nsOSHelperAppService::IsCurrentAppOSDefaultForProtocol(const nsACS
       CFURLRef selfURL = ::CFBundleCopyBundleURL(appBundle);
       *_retval = ::CFEqual(selfURL, handlerBundleURL);
       rv = NS_OK;
-      ::CFRelease(appBundle);
       ::CFRelease(selfURL);
     }
     ::CFRelease(handlerBundleURL);
