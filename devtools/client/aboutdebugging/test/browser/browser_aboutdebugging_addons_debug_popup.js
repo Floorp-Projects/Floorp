@@ -18,9 +18,6 @@ requestLongerTimeout(2);
 const ADDON_ID = "test-devtools-webextension@mozilla.org";
 const ADDON_NAME = "test-devtools-webextension";
 
-// This is a migration from:
-// https://searchfox.org/mozilla-central/source/devtools/client/aboutdebugging/test/browser_addons_debug_webextension_popup.js
-
 /**
  * This test file ensures that the webextension addon developer toolbox:
  * - when the debug button is clicked on a webextension, the opened toolbox

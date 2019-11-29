@@ -17,9 +17,6 @@ Services.scriptloader.loadSubScript(
 const SW_TAB_URL = URL_ROOT + "resources/service-workers/push-sw.html";
 const SW_URL = URL_ROOT + "resources/service-workers/push-sw.js";
 
-// This is a migration from:
-// https://searchfox.org/mozilla-central/source/devtools/client/aboutdebugging/test/browser_service_workers.js
-
 /**
  * Test that service workers appear and dissapear from the runtime page when they
  * are registered / unregistered.
