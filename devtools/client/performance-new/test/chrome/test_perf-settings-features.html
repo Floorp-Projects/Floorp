@@ -31,10 +31,21 @@
 
         await mountAndInitializeComponent();
 
+        const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+        // We need to filter out unsupported features because we don't have
+        // "stackwalk" feature on all platforms and build configurations. For
+        // example, we don't have this feature on macOS release and beta because
+        // we don't have frame pointers there.
+        const supportedFeatures = Services.profiler.GetFeatures();
+        const filterFeatures = features =>
+          features.filter(feature => supportedFeatures.includes(feature));
+
         // Open up the features summary.
         document.querySelector("#perf-settings-features-summary").click();
 
-        is(selectors.getFeatures(getState()).join(","), "js,leaf,stackwalk",
+        is(selectors.getFeatures(getState()).join(","),
+          filterFeatures(["js", "leaf", "stackwalk"]).join(","),
           "The features starts out with the default");
         is(recordingPreferencesCalls.length, 0,
           "No calls have been made to set preferences");
@@ -42,16 +53,20 @@
         // Click the "features checkbox.
         document.querySelector("#perf-settings-feature-checkbox-js").click();
 
-        is(selectors.getFeatures(getState()).join(","), "leaf,stackwalk",
+
+        is(selectors.getFeatures(getState()).join(","),
+          filterFeatures(["leaf", "stackwalk"]).join(","),
           "The feature has been removed.");
         is(recordingPreferencesCalls.length, 1,
           "The preferences have been updated.");
-        is(recordingPreferencesCalls[0].features.join(","), "leaf,stackwalk",
+        is(recordingPreferencesCalls[0].features.join(","),
+          filterFeatures(["leaf", "stackwalk"]).join(","),
           "The preferences have been updated.");
 
         // Enable a feature
         document.querySelector("#perf-settings-feature-checkbox-screenshots").click();
-        is(selectors.getFeatures(getState()).join(","), "screenshots,leaf,stackwalk",
+        is(selectors.getFeatures(getState()).join(","),
+          filterFeatures(["screenshots", "leaf", "stackwalk"]).join(","),
           "Another feature was added");
 
         // Start the profiler by clicking the start button, and flushing the async
@@ -62,7 +77,7 @@
         is(perfFrontMock._startProfilerCalls.length, 1,
           "Start profiler was called once");
         is(perfFrontMock._startProfilerCalls[0].features.join(","),
-          "screenshots,leaf,stackwalk",
+          filterFeatures(["screenshots", "leaf", "stackwalk"]).join(","),
           "Start profiler was called with the correct features");
       });
     </script>
