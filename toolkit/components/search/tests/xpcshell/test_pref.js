@@ -38,6 +38,13 @@ add_task(async function test_pref_initial_value() {
     base + "good%26id%3Dunique",
     "Should have got the submission URL with the correct code"
   );
+
+  // Now clear the user-set preference. Having a user set preference means
+  // we don't get updates from the pref service of changes on the default
+  // branch. Normally, this won't be an issue, since we don't expect users
+  // to be playing with these prefs, and worst-case, they'll just get the
+  // actual change on restart.
+  Services.prefs.clearUserPref(SearchUtils.BROWSER_SEARCH_PREF + "param.code");
 });
 
 add_task(async function test_pref_updated() {
