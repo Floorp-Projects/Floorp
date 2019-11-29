@@ -335,9 +335,6 @@ void Realm::finishRoots() {
   }
 
   objects_.finishRoots();
-
-  clearScriptCounts();
-  clearScriptLCov();
 }
 
 void ObjectRealm::sweepAfterMinorGC() {
