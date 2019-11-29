@@ -3360,6 +3360,10 @@ AbortReasonOr<Ok> IonBuilder::visitTest(JSOp op, bool* restarted) {
     return visitTestBackedge(op, restarted);
   }
 
+  // JSOP_AND and JSOP_OR inspect the top stack value but don't pop it.
+  // Also note that JSOP_CASE must pop a second value on the true-branch (the
+  // input to the switch-statement). This conditional pop happens in
+  // visitJumpTarget.
   bool mustKeepCondition = (op == JSOP_AND || op == JSOP_OR);
   MDefinition* ins = mustKeepCondition ? current->peek(-1) : current->pop();
 
@@ -3489,14 +3493,15 @@ AbortReasonOr<Ok> IonBuilder::visitJumpTarget(JSOp op) {
     setTerminatedBlock();
   }
 
-  auto addEdge = [&](MBasicBlock* pred, size_t popped) -> AbortReasonOr<Ok> {
+  auto addEdge = [&](MBasicBlock* pred, size_t numToPop) -> AbortReasonOr<Ok> {
     if (joinBlock) {
-      if (!joinBlock->addPredecessorPopN(alloc(), pred, popped)) {
+      MOZ_ASSERT(pred->stackDepth() - numToPop == joinBlock->stackDepth());
+      if (!joinBlock->addPredecessorPopN(alloc(), pred, numToPop)) {
         return abort(AbortReason::Alloc);
       }
       return Ok();
     }
-    MOZ_TRY_VAR(joinBlock, newBlockPopN(pred, pc, popped));
+    MOZ_TRY_VAR(joinBlock, newBlockPopN(pred, pc, numToPop));
     return Ok();
   };
 
@@ -3531,11 +3536,13 @@ AbortReasonOr<Ok> IonBuilder::visitJumpTarget(JSOp op) {
   //         \    |
   //        joinBlock
   auto createEmptyBlockForTest =
-      [&](MBasicBlock* pred, size_t successor) -> AbortReasonOr<MBasicBlock*> {
+      [&](MBasicBlock* pred, size_t successor,
+          size_t numToPop) -> AbortReasonOr<MBasicBlock*> {
     MOZ_ASSERT(joinBlock);
 
     MBasicBlock* emptyBlock;
-    MOZ_TRY_VAR(emptyBlock, newBlock(pred, pc));
+    MOZ_TRY_VAR(emptyBlock, newBlockPopN(pred, pc, numToPop));
+    MOZ_ASSERT(emptyBlock->stackDepth() == joinBlock->stackDepth());
 
     MTest* test = pred->lastIns()->toTest();
     test->initSuccessor(successor, emptyBlock);
@@ -3555,29 +3562,35 @@ AbortReasonOr<Ok> IonBuilder::visitJumpTarget(JSOp op) {
     switch (edge.kind()) {
       case PendingEdge::Kind::TestTrue: {
         // JSOP_CASE must pop the value when branching to the true-target.
-        size_t numPopped = (edge.testOp() == JSOP_CASE) ? 1 : 0;
+        // If we create an empty block, we have to pop the value there instead
+        // of as part of the emptyBlock -> joinBlock edge so stack depths match
+        // the current depth.
+        const size_t numToPop = (edge.testOp() == JSOP_CASE) ? 1 : 0;
 
+        const size_t successor = 0;  // true-branch
         if (joinBlock && TestTrueTargetIsJoinPoint(edge.testOp())) {
           MBasicBlock* pred;
           MOZ_TRY_VAR(pred,
-                      createEmptyBlockForTest(source, /* successor = */ 0));
-          MOZ_TRY(addEdge(pred, numPopped));
+                      createEmptyBlockForTest(source, successor, numToPop));
+          MOZ_TRY(addEdge(pred, 0));
         } else {
-          MOZ_TRY(addEdge(source, numPopped));
-          lastIns->toTest()->initSuccessor(0, joinBlock);
+          MOZ_TRY(addEdge(source, numToPop));
+          lastIns->toTest()->initSuccessor(successor, joinBlock);
         }
         continue;
       }
 
       case PendingEdge::Kind::TestFalse: {
+        const size_t numToPop = 0;
+        const size_t successor = 1;  // false-branch
         if (joinBlock && !TestTrueTargetIsJoinPoint(edge.testOp())) {
           MBasicBlock* pred;
           MOZ_TRY_VAR(pred,
-                      createEmptyBlockForTest(source, /* successor = */ 1));
+                      createEmptyBlockForTest(source, successor, numToPop));
           MOZ_TRY(addEdge(pred, 0));
         } else {
-          MOZ_TRY(addEdge(source, 0));
-          lastIns->toTest()->initSuccessor(1, joinBlock);
+          MOZ_TRY(addEdge(source, numToPop));
+          lastIns->toTest()->initSuccessor(successor, joinBlock);
         }
         continue;
       }
