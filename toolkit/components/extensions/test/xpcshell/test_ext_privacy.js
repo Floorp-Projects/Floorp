@@ -20,8 +20,14 @@ const {
 } = AddonTestUtils;
 
 AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+
+// Currently security.tls.version.min has a different default
+// value in Nightly and Beta/Release builds.
+const tlsMinPref = Services.prefs.getIntPref("security.tls.version.min");
+const tlsMinVer = tlsMinPref === 3 ? "TLSv1.2" : "TLSv1";
 
 add_task(async function test_privacy() {
   // Create an object to hold the values to which we will initialize the prefs.
@@ -377,7 +383,11 @@ add_task(async function test_privacy_other_prefs() {
   async function testSetting(setting, value, expected, expectedValue = value) {
     extension.sendMessage("set", { value: value }, setting);
     let data = await extension.awaitMessage("settingData");
-    deepEqual(data.value, expectedValue);
+    deepEqual(
+      data.value,
+      expectedValue,
+      `Got expected result on setting ${setting} to ${uneval(value)}`
+    );
     for (let pref in expected) {
       equal(
         Preferences.get(pref),
@@ -580,11 +590,11 @@ add_task(async function test_privacy_other_prefs() {
       maximum: "TLSv1.1",
     },
     {
-      "security.tls.version.min": 3,
+      "security.tls.version.min": tlsMinPref,
       "security.tls.version.max": 2,
     },
     {
-      minimum: "TLSv1.2",
+      minimum: tlsMinVer,
       maximum: "TLSv1.1",
     }
   );
@@ -596,11 +606,11 @@ add_task(async function test_privacy_other_prefs() {
       maximum: "invalid",
     },
     {
-      "security.tls.version.min": 3,
+      "security.tls.version.min": tlsMinPref,
       "security.tls.version.max": 4,
     },
     {
-      minimum: "TLSv1.2",
+      minimum: tlsMinVer,
       maximum: "TLSv1.3",
     }
   );
@@ -642,11 +652,11 @@ add_task(async function test_privacy_other_prefs() {
       maximum: "TLSv1.2",
     },
     {
-      "security.tls.version.min": 3,
+      "security.tls.version.min": tlsMinPref,
       "security.tls.version.max": 3,
     },
     {
-      minimum: "TLSv1.2",
+      minimum: tlsMinVer,
       maximum: "TLSv1.2",
     }
   );
