@@ -1,12 +1,10 @@
 ---
 layout: default
-title: Home
+title: Geckoview
 nav_order: 1
 summary: GeckoView, a WebView-like component from Mozilla specifically designed for building Android browsers.
 tags: [GeckoView,Gecko,mozilla,android,WebView,mobile,mozilla-central]
 ---
-
-# Welcome to GeckoView
 
 Android offers a built-in WebView, which applications can hook into in order to display web pages within the context of their app. However, Android's WebView is not really intended for building browsers, and hence, many advanced Web APIs are disabled. Furthermore, it is also a moving target: different phones might have different versions of WebView, all of which your app has to support.
 
