@@ -2,7 +2,7 @@
 
 # getLayoutResource
 
-`fun getLayoutResource(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuHighlightableItem.kt#L75)
+`fun getLayoutResource(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuHighlightableItem.kt#L72)
 
 Overrides [BrowserMenuImageText.getLayoutResource](../-browser-menu-image-text/get-layout-resource.md)
 
