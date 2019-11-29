@@ -1175,6 +1175,11 @@ struct ParamTraits<mozilla::Array<T, Length>> {
   }
 };
 
+template <>
+struct ParamTraits<mozilla::SideBits>
+    : public BitFlagsEnumSerializer<mozilla::SideBits,
+                                    mozilla::SideBits::eAll> {};
+
 } /* namespace IPC */
 
 namespace mozilla {
