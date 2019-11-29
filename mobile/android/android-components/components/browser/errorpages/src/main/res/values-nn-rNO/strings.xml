@@ -184,6 +184,9 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Inga internetttilkopling</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Ugyldig adresse</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
       <p>Oppgjeven adresse er ikkje i eit attkjennande format. Sjå i adresselinja om det er skrivefeil, og prøv igjen.</p>
