@@ -440,6 +440,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
           }
 
           if (aLayerMetrics.Metrics().IsRootContent()) {
+            MutexAutoLock lock(mMapLock);
             mGeckoFixedLayerMargins =
                 aLayerMetrics.Metrics().GetFixedLayerMargins();
           } else {
@@ -1894,7 +1895,7 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
         }
         touchData.mScreenPoint = *untransformedScreenPoint;
         if (mFixedPosSidesForInputBlock != SideBits::eNone) {
-          RecursiveMutexAutoLock lock(mTreeLock);
+          MutexAutoLock lock(mMapLock);
           touchData.mScreenPoint -=
               RoundedToInt(AsyncCompositionManager::ComputeFixedMarginsOffset(
                   mCompositorFixedLayerMargins, mFixedPosSidesForInputBlock,
@@ -3195,6 +3196,7 @@ Maybe<ScreenIntPoint> APZCTreeManager::ConvertToGecko(
       UntransformBy(transformScreenToGecko, aPoint);
   if (geckoPoint) {
     if (mFixedPosSidesForInputBlock != SideBits::eNone) {
+      MutexAutoLock mapLock(mMapLock);
       *geckoPoint -=
           RoundedToInt(AsyncCompositionManager::ComputeFixedMarginsOffset(
               mCompositorFixedLayerMargins, mFixedPosSidesForInputBlock,
@@ -3330,11 +3332,15 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
           });
     }
   } else if (IsFixedToRootContent(aNode)) {
-    ParentLayerPoint translation = ViewAs<ParentLayerPixel>(
-        AsyncCompositionManager::ComputeFixedMarginsOffset(
-            mCompositorFixedLayerMargins, aNode->GetFixedPosSides(),
-            mGeckoFixedLayerMargins),
-        PixelCastJustification::ScreenIsParentLayerForRoot);
+    ParentLayerPoint translation;
+    {
+      MutexAutoLock mapLock(mMapLock);
+      translation = ViewAs<ParentLayerPixel>(
+          AsyncCompositionManager::ComputeFixedMarginsOffset(
+              mCompositorFixedLayerMargins, aNode->GetFixedPosSides(),
+              mGeckoFixedLayerMargins),
+          PixelCastJustification::ScreenIsParentLayerForRoot);
+    }
     return aNode->GetTransform() *
            CompleteAsyncTransform(
                AsyncTransformComponentMatrix::Translation(translation));
@@ -3445,7 +3451,7 @@ void APZCTreeManager::SendSubtreeTransformsToChromeMainThread(
 
 void APZCTreeManager::SetFixedLayerMargins(ScreenIntCoord aTop,
                                            ScreenIntCoord aBottom) {
-  RecursiveMutexAutoLock lock(mTreeLock);
+  MutexAutoLock lock(mMapLock);
   mCompositorFixedLayerMargins.top = aTop;
   mCompositorFixedLayerMargins.bottom = aBottom;
 }

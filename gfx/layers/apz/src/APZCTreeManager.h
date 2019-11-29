@@ -895,13 +895,13 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   ScreenPoint mCurrentMousePosition;
   /* Extra margins that should be applied to content that fixed wrt. the
    * RCD-RSF, to account for the dynamic toolbar.
-   * Acquire mTreeLock before accessing this.
+   * Acquire mMapLock before accessing this.
    */
   ScreenMargin mCompositorFixedLayerMargins;
   /* Similar to above |mCompositorFixedLayerMargins|. But this value is the
    * margins on the main-thread at the last time position:fixed elements were
    * updated during the dynamic toolbar transitions.
-   * Acquire mTreeLock before accessing this.
+   * Acquire mMapLock before accessing this.
    */
   ScreenMargin mGeckoFixedLayerMargins;
   /* For logging the APZC tree for debugging (enabled by the apz.printtree
