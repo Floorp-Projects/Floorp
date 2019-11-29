@@ -1075,7 +1075,7 @@ var Impl = {
         TelemetrySession.resetSubsessionCounter();
 
         // 5. Set ClientID to a known value
-        let oldClientId = this._clientID;
+        let oldClientId = await ClientID.getClientID();
         this._clientID = await ClientID.setClientID(
           TelemetryUtils.knownClientID
         );
