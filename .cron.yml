@@ -5,6 +5,21 @@
 ---
 
 jobs:
+    - name: daily-releases
+      job:
+          type: decision-task
+          treeherder-symbol: RPd
+          target-tasks-method: daily_releases
+      run-on-projects:
+          - mozilla-beta
+      when:
+          by-project:
+              mozilla-beta:
+                - {weekday: 'Monday', hour: 4, minute: 0}
+                - {weekday: 'Wednesday', hour: 4, minute: 0}
+                - {weekday: 'Friday', hour: 4, minute: 0}
+              # No default
+
     - name: nightly-desktop
       job:
           type: decision-task
