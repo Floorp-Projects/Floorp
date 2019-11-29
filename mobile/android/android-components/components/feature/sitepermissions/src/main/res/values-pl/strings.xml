@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Title of a dialog for a notification permission request. -->
-    <string name="mozac_feature_sitepermissions_notification_title">Zezwolić witrynie %1$s na wysyłanie powiadomień?</string>
+    <string name="mozac_feature_sitepermissions_notification_title">Czy odbierać powiadomienia od witryny „%1$s”?</string>
     <!-- Title of a dialog for a camera permission request. -->
-    <string name="mozac_feature_sitepermissions_camera_title">Zezwolić witrynie %1$s na używanie kamery?</string>
+    <string name="mozac_feature_sitepermissions_camera_title">Czy udostępnić obraz z kamery witrynie „%1$s”?</string>
     <!-- Title of a dialog for a microphone permission request. -->
-    <string name="mozac_feature_sitepermissions_microfone_title">Zezwolić witrynie %1$s na używanie mikrofonu?</string>
+    <string name="mozac_feature_sitepermissions_microfone_title">Czy udostępnić dźwięk z mikrofonu witrynie „%1$s”?</string>
     <!-- Title of a dialog for a location permission request. -->
-    <string name="mozac_feature_sitepermissions_location_title">Zezwolić witrynie %1$s na używanie informacji o położeniu?</string>
+    <string name="mozac_feature_sitepermissions_location_title">Czy udostępnić witrynie „%1$s” informacje o położeniu?</string>
     <!-- Title of a dialog for a camera and microphone permission request. -->
-    <string name="mozac_feature_sitepermissions_camera_and_microphone">Zezwolić witrynie %1$s na używanie kamery i mikrofonu?</string>
+    <string name="mozac_feature_sitepermissions_camera_and_microphone">Czy udostępnić obraz z kamery i dźwięk z mikrofonu witrynie „%1$s”?</string>
     <!-- Option in a dialog for requesting a microphone permission, this option will give access to
          the first microphone-->
     <string name="mozac_feature_sitepermissions_option_microphone_one">1. mikrofon</string>
