@@ -263,6 +263,10 @@ class IonBuilder : public MIRGenerator,
                                         jsbytecode* loopHeadPc, bool isForIn,
                                         jsbytecode* loopStartPc,
                                         jsbytecode* loopStopPc);
+  AbortReasonOr<Ok> analyzeNewLoopTypesForLocation(
+      MBasicBlock* entry, const BytecodeLocation loc,
+      const mozilla::Maybe<BytecodeLocation>& last_,
+      const mozilla::Maybe<BytecodeLocation>& earlier);
 
   AbortReasonOr<MBasicBlock*> newBlock(size_t stackDepth, jsbytecode* pc,
                                        MBasicBlock* maybePredecessor = nullptr);
