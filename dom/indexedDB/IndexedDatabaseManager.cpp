@@ -860,19 +860,15 @@ already_AddRefed<FileManager> FileManagerInfo::GetFileManager(
     PersistenceType aPersistenceType, const nsAString& aName) const {
   AssertIsOnIOThread();
 
-  const nsTArray<RefPtr<FileManager> >& managers =
-      GetImmutableArray(aPersistenceType);
+  const auto& managers = GetImmutableArray(aPersistenceType);
 
-  for (uint32_t i = 0; i < managers.Length(); i++) {
-    const RefPtr<FileManager>& fileManager = managers[i];
+  const auto end = managers.cend();
+  const auto foundIt =
+      std::find_if(managers.cbegin(), end, [&aName](const auto& fileManager) {
+        return fileManager->DatabaseName() == aName;
+      });
 
-    if (fileManager->DatabaseName() == aName) {
-      RefPtr<FileManager> result = fileManager;
-      return result.forget();
-    }
-  }
-
-  return nullptr;
+  return foundIt != end ? RefPtr<FileManager>{*foundIt}.forget() : nullptr;
 }
 
 void FileManagerInfo::AddFileManager(FileManager* aFileManager) {
