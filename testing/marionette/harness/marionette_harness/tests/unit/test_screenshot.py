@@ -8,10 +8,11 @@ import base64
 import hashlib
 import imghdr
 import struct
-import sys
 import tempfile
 import unittest
 import urllib
+
+import mozinfo
 
 from marionette_driver import By
 from marionette_driver.errors import NoSuchWindowException
@@ -228,18 +229,22 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
         self.assertRaises(NoSuchWindowException, self.marionette.screenshot)
         self.marionette.switch_to_window(self.start_tab)
 
+    @unittest.skipIf(mozinfo.info["bits"] == 32, "Bug 1582973 - Risk for OOM on 32bit")
     def test_capture_vertical_bounds(self):
         self.marionette.navigate(inline("<body style='margin-top: 32768px'>foo"))
         screenshot = self.marionette.screenshot()
         self.assert_png(screenshot)
 
+    @unittest.skipIf(mozinfo.info["bits"] == 32, "Bug 1582973 - Risk for OOM on 32bit")
     def test_capture_horizontal_bounds(self):
         self.marionette.navigate(inline("<body style='margin-left: 32768px'>foo"))
         screenshot = self.marionette.screenshot()
         self.assert_png(screenshot)
 
+    @unittest.skipIf(mozinfo.info["bits"] == 32, "Bug 1582973 - Risk for OOM on 32bit")
     def test_capture_area_bounds(self):
-        self.marionette.navigate(inline("<body style='margin-right: 21747px; margin-top: 21747px'>foo"))
+        self.marionette.navigate(
+            inline("<body style='margin-right: 21747px; margin-top: 21747px'>foo"))
         screenshot = self.marionette.screenshot()
         self.assert_png(screenshot)
 
