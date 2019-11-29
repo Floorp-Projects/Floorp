@@ -2149,43 +2149,39 @@ void IDBObjectStore::DeleteIndex(const nsAString& aName, ErrorResult& aRv) {
 
   auto& metadataArray = const_cast<nsTArray<IndexMetadata>&>(mSpec->indexes());
 
-  int64_t foundId = 0;
+  const auto endMetadata = metadataArray.cend();
+  const auto foundMetadataIt = std::find_if(
+      metadataArray.cbegin(), endMetadata,
+      [&aName](const auto& metadata) { return aName == metadata.name(); });
 
-  for (uint32_t metadataCount = metadataArray.Length(), metadataIndex = 0;
-       metadataIndex < metadataCount; metadataIndex++) {
-    const IndexMetadata& metadata = metadataArray[metadataIndex];
-    MOZ_ASSERT(metadata.id());
-
-    if (aName == metadata.name()) {
-      foundId = metadata.id();
-
-      // Must do this before altering the metadata array!
-      for (uint32_t indexCount = mIndexes.Length(), indexIndex = 0;
-           indexIndex < indexCount; indexIndex++) {
-        RefPtr<IDBIndex>& index = mIndexes[indexIndex];
-
-        if (index->Id() == foundId) {
-          index->NoteDeletion();
-
-          RefPtr<IDBIndex>* deletedIndex = mDeletedIndexes.AppendElement();
-          deletedIndex->swap(mIndexes[indexIndex]);
-
-          mIndexes.RemoveElementAt(indexIndex);
-          break;
-        }
-      }
-
-      metadataArray.RemoveElementAt(metadataIndex);
-
-      RefreshSpec(/* aMayDelete */ false);
-      break;
-    }
-  }
-
-  if (!foundId) {
+  if (foundMetadataIt == endMetadata) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR);
     return;
   }
+
+  const auto foundId = foundMetadataIt->id();
+  MOZ_ASSERT(foundId);
+
+  // Must remove index from mIndexes before altering the metadata array!
+  {
+    const auto end = mIndexes.end();
+    const auto foundIt = std::find_if(
+        mIndexes.begin(), end,
+        [foundId](const auto& index) { return index->Id() == foundId; });
+    // TODO: Or should we assert foundIt != end?
+    if (foundIt != end) {
+      auto& index = *foundIt;
+
+      index->NoteDeletion();
+
+      mDeletedIndexes.EmplaceBack(std::move(index));
+      mIndexes.RemoveElementAt(foundIt.GetIndex());
+    }
+  }
+
+  metadataArray.RemoveElementAt(foundMetadataIt.GetIndex());
+
+  RefreshSpec(/* aMayDelete */ false);
 
   // Don't do this in the macro because we always need to increment the serial
   // number to keep in sync with the parent.
