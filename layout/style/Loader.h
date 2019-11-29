@@ -205,12 +205,15 @@ class Loader final {
       nsIURI*, SheetParsingMode = eAuthorSheetFeatures,
       UseSystemPrincipal = UseSystemPrincipal::No);
 
-  /**
-   * Yes: this is a speculative load initiated by a <script> tag
-   * Link: this is a speculative load as well, but initiated by <link
-   *       rel="preload" as="style"> tag
-   */
-  enum class IsPreload { No, FromParser, FromLink };
+  enum class IsPreload {
+    No,
+    // This is a speculative load initiated by a <link rel=stylesheet> tag
+    // scanned by the parser, or @import rules found in a <style> tag.
+    FromParser,
+    // This is a speculative load as well, but initiated by
+    // <link rel="preload" as="style">
+    FromLink,
+  };
 
   /**
    * Asynchronously load the stylesheet at aURL.  If a successful result is
