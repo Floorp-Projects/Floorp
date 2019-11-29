@@ -1091,4 +1091,132 @@ class ZZAccessibilityTest : BaseSessionTest() {
             assertThat("'Rating' has correct range type", thirdRange.rangeInfo.type, equalTo(AccessibilityNodeInfo.RangeInfo.RANGE_TYPE_PERCENT))
         }
     }
+
+    @Test fun testLinksMovingByDefault() {
+        loadTestPage("test-links")
+        waitForInitialFocus()
+        var nodeId = View.NO_ID;
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on a with href",
+                    node.text as String, startsWith("a with href"))
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat("a with href is a link",
+                            node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
+                            equalTo("link"))
+                }
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on a with no attributes",
+                    node.text as String, startsWith("a with no attributes"))
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat("a with no attributes is not a link",
+                            node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
+                            equalTo(""))
+                }
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on a with name",
+                    node.text as String, startsWith("a with name"))
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat("a with name is not a link",
+                            node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
+                            equalTo(""))
+                }
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on a with onclick",
+                    node.text as String, startsWith("a with onclick"))
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat("a with onclick is a link",
+                            node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
+                            equalTo("link"))
+                }
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on span with role link",
+                    node.text as String, startsWith("span with role link"))
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat("span with role link is a link",
+                            node.extras.getCharSequence("AccessibilityNodeInfo.roleDescription")!!.toString(),
+                            equalTo("link"))
+                }
+            }
+        })
+    }
+
+    @Test fun testLinksMovingByLink() {
+        loadTestPage("test-links")
+        waitForInitialFocus()
+        var nodeId = View.NO_ID;
+
+        val bundle = Bundle()
+        bundle.putString(AccessibilityNodeInfo.ACTION_ARGUMENT_HTML_ELEMENT_STRING, "LINK")
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, bundle)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on a with href",
+                    node.text as String, startsWith("a with href"))
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, bundle)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on a with onclick",
+                    node.text as String, startsWith("a with onclick"))
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, bundle)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on span with role link",
+                    node.text as String, startsWith("span with role link"))
+            }
+        })
+    }
 }
