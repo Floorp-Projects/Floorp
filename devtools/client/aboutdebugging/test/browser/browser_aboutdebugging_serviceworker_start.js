@@ -12,9 +12,6 @@ Services.scriptloader.loadSubScript(
 const SW_TAB_URL = URL_ROOT + "resources/service-workers/empty-sw.html";
 const SW_URL = URL_ROOT + "resources/service-workers/empty-sw.js";
 
-// This is a migration from:
-// https://searchfox.org/mozilla-central/source/devtools/client/aboutdebugging/test/browser_service_workers_start.js
-
 /**
  * Test that service workers can be started using about:debugging.
  */
