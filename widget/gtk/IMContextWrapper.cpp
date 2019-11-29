@@ -1701,6 +1701,10 @@ gboolean IMContextWrapper::OnRetrieveSurroundingNative(GtkIMContext* aContext) {
     return FALSE;
   }
 
+  // Despite taking a pointer and a length, IBus wants the string to be
+  // zero-terminated and doesn't like U+0000 within the string.
+  uniStr.ReplaceChar(char16_t(0), char16_t(0xFFFD));
+
   NS_ConvertUTF16toUTF8 utf8Str(nsDependentSubstring(uniStr, 0, cursorPos));
   uint32_t cursorPosInUTF8 = utf8Str.Length();
   AppendUTF16toUTF8(nsDependentSubstring(uniStr, cursorPos), utf8Str);
