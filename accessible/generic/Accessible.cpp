@@ -747,8 +747,7 @@ void Accessible::TakeFocus() const {
   if (fm) {
     dom::AutoHandlingUserInputStatePusher inputStatePusher(true);
     // XXXbz: Can we actually have a non-element content here?
-    RefPtr<Element> element =
-        focusContent->IsElement() ? focusContent->AsElement() : nullptr;
+    RefPtr<dom::Element> element = dom::Element::FromNodeOrNull(focusContent);
     fm->SetFocus(element, 0);
   }
 }

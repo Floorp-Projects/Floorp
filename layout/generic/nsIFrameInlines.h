@@ -212,7 +212,8 @@ nsIFrame* nsIFrame::GetClosestFlattenedTreeAncestorPrimaryFrame() const {
   if (!mContent) {
     return nullptr;
   }
-  Element* parent = mContent->GetFlattenedTreeParentElementForStyle();
+  mozilla::dom::Element* parent =
+      mContent->GetFlattenedTreeParentElementForStyle();
   while (parent) {
     if (nsIFrame* frame = parent->GetPrimaryFrame()) {
       return frame;

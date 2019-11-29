@@ -312,7 +312,7 @@ Accessible* XULRadioGroupAccessible::CurrentItem() const {
     return nullptr;
   }
 
-  RefPtr<Element> currentItemElm;
+  RefPtr<dom::Element> currentItemElm;
   nsCOMPtr<nsIDOMXULRadioGroupElement> group =
       mSelectControl->AsXULRadioGroup();
   if (group) {
@@ -334,7 +334,7 @@ void XULRadioGroupAccessible::SetCurrentItem(const Accessible* aItem) {
     return;
   }
 
-  nsCOMPtr<Element> itemElm = aItem->Elm();
+  nsCOMPtr<dom::Element> itemElm = aItem->Elm();
   nsCOMPtr<nsIDOMXULRadioGroupElement> group =
       mSelectControl->AsXULRadioGroup();
   if (group) {

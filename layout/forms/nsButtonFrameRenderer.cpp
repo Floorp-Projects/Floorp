@@ -47,7 +47,7 @@ void nsButtonFrameRenderer::SetFrame(nsFrame* aFrame,
 nsIFrame* nsButtonFrameRenderer::GetFrame() { return mFrame; }
 
 void nsButtonFrameRenderer::SetDisabled(bool aDisabled, bool aNotify) {
-  Element* element = mFrame->GetContent()->AsElement();
+  dom::Element* element = mFrame->GetContent()->AsElement();
   if (aDisabled)
     element->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, EmptyString(),
                      aNotify);

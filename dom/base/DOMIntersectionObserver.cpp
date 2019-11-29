@@ -62,16 +62,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMIntersectionObserver)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 already_AddRefed<DOMIntersectionObserver> DOMIntersectionObserver::Constructor(
-    const mozilla::dom::GlobalObject& aGlobal,
-    mozilla::dom::IntersectionCallback& aCb, mozilla::ErrorResult& aRv) {
+    const GlobalObject& aGlobal, dom::IntersectionCallback& aCb,
+    ErrorResult& aRv) {
   return Constructor(aGlobal, aCb, IntersectionObserverInit(), aRv);
 }
 
 already_AddRefed<DOMIntersectionObserver> DOMIntersectionObserver::Constructor(
-    const mozilla::dom::GlobalObject& aGlobal,
-    mozilla::dom::IntersectionCallback& aCb,
-    const mozilla::dom::IntersectionObserverInit& aOptions,
-    mozilla::ErrorResult& aRv) {
+    const GlobalObject& aGlobal, dom::IntersectionCallback& aCb,
+    const IntersectionObserverInit& aOptions, ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> window =
       do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
@@ -90,7 +88,7 @@ already_AddRefed<DOMIntersectionObserver> DOMIntersectionObserver::Constructor(
   }
 
   if (aOptions.mThreshold.IsDoubleSequence()) {
-    const mozilla::dom::Sequence<double>& thresholds =
+    const Sequence<double>& thresholds =
         aOptions.mThreshold.GetAsDoubleSequence();
     observer->mThresholds.SetCapacity(thresholds.Length());
     for (const auto& thresh : thresholds) {
@@ -117,7 +115,7 @@ bool DOMIntersectionObserver::SetRootMargin(const nsAString& aString) {
   return Servo_IntersectionObserverRootMargin_Parse(&aString, &mRootMargin);
 }
 
-void DOMIntersectionObserver::GetRootMargin(mozilla::dom::DOMString& aRetVal) {
+void DOMIntersectionObserver::GetRootMargin(DOMString& aRetVal) {
   nsString& retVal = aRetVal;
   Servo_IntersectionObserverRootMargin_ToString(&mRootMargin, &retVal);
 }
@@ -514,8 +512,7 @@ void DOMIntersectionObserver::Notify() {
   if (!mQueuedEntries.Length()) {
     return;
   }
-  mozilla::dom::Sequence<mozilla::OwningNonNull<DOMIntersectionObserverEntry>>
-      entries;
+  Sequence<OwningNonNull<DOMIntersectionObserverEntry>> entries;
   if (entries.SetCapacity(mQueuedEntries.Length(), mozilla::fallible)) {
     for (size_t i = 0; i < mQueuedEntries.Length(); ++i) {
       RefPtr<DOMIntersectionObserverEntry> next = mQueuedEntries[i];
