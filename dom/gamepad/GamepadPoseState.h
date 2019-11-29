@@ -32,9 +32,13 @@ enum class GamepadCapabilityFlags : uint16_t {
    */
   Cap_LinearAcceleration = 1 << 4,
   /**
+   * Cap_GripSpacePosition is set if the Gamepad has a grip space position.
+   */
+  Cap_GripSpacePosition = 1 << 5,
+  /**
    * Cap_All used for validity checking during IPC serialization
    */
-  Cap_All = (1 << 5) - 1
+  Cap_All = (1 << 6) - 1
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(GamepadCapabilityFlags)

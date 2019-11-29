@@ -23,9 +23,14 @@ enum GamepadHand {
   "right"
 };
 
+/**
+ * https://www.w3.org/TR/gamepad/#gamepadmappingtype-enum
+ * https://immersive-web.github.io/webxr-gamepads-module/#enumdef-gamepadmappingtype
+ */
 enum GamepadMappingType {
   "",
-  "standard"
+  "standard",
+  "xr-standard"
 };
 
 [Pref="dom.gamepad.enabled",
