@@ -333,7 +333,7 @@ void DocumentLoadListener::ResumeSuspendedChannel(
       std::move(mPendingRequests);
   MOZ_ASSERT(mPendingRequests.IsEmpty());
 
-  nsCOMPtr<nsHttpChannel> httpChannel = do_QueryInterface(mChannel);
+  RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel);
   if (httpChannel) {
     httpChannel->SetApplyConversion(mOldApplyConversion);
   }
@@ -806,7 +806,7 @@ DocumentLoadListener::AsyncOnChannelRedirect(
   // Since we're redirecting away from aOldChannel, we should check if it
   // had a COOP mismatch, since we want the final result for this to
   // include the state of all channels we redirected through.
-  nsCOMPtr<nsHttpChannel> httpChannel = do_QueryInterface(aOldChannel);
+  RefPtr<nsHttpChannel> httpChannel = do_QueryObject(aOldChannel);
   if (httpChannel) {
     bool mismatch = false;
     MOZ_ALWAYS_SUCCEEDS(
@@ -911,14 +911,14 @@ DocumentLoadListener::HasCrossOriginOpenerPolicyMismatch(bool* aMismatch) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsHttpChannel> channel = do_QueryInterface(mChannel);
-  if (!channel) {
+  RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel);
+  if (!httpChannel) {
     // Not an nsHttpChannel assume it's okay to switch.
     *aMismatch = false;
     return NS_OK;
   }
 
-  return channel->HasCrossOriginOpenerPolicyMismatch(aMismatch);
+  return httpChannel->HasCrossOriginOpenerPolicyMismatch(aMismatch);
 }
 
 NS_IMETHODIMP
@@ -929,13 +929,13 @@ DocumentLoadListener::GetCrossOriginOpenerPolicy(
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsHttpChannel> channel = do_QueryInterface(mChannel);
-  if (!channel) {
+  RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel);
+  if (!httpChannel) {
     *aPolicy = nsILoadInfo::OPENER_POLICY_NULL;
     return NS_OK;
   }
 
-  return channel->GetCrossOriginOpenerPolicy(aPolicy);
+  return httpChannel->GetCrossOriginOpenerPolicy(aPolicy);
 }
 
 }  // namespace net
