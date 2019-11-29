@@ -173,6 +173,15 @@ uint16_t TraversalRule::ControlMatch(Accessible* aAccessible) {
              nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
     case roles::LINK:
       return LinkMatch(aAccessible);
+    case roles::EDITCOMBOBOX:
+      if (aAccessible->NativeState() & states::EDITABLE) {
+        // Only match ARIA 1.0 comboboxes; i.e. where the combobox itself is
+        // editable. If it's a 1.1 combobox, the combobox is just a container;
+        // we want to stop on the textbox inside it, not the container.
+        return nsIAccessibleTraversalRule::FILTER_MATCH |
+               nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
+      }
+      break;
     default:
       break;
   }
@@ -186,6 +195,14 @@ uint16_t TraversalRule::DefaultMatch(Accessible* aAccessible) {
       // We don't want to ignore the subtree because this is often
       // where the list box hangs out.
       return nsIAccessibleTraversalRule::FILTER_MATCH;
+    case roles::EDITCOMBOBOX:
+      if (aAccessible->NativeState() & states::EDITABLE) {
+        // Only match ARIA 1.0 comboboxes; i.e. where the combobox itself is
+        // editable. If it's a 1.1 combobox, the combobox is just a container;
+        // we want to stop on the textbox inside it.
+        return nsIAccessibleTraversalRule::FILTER_MATCH;
+      }
+      break;
     case roles::TEXT_LEAF:
     case roles::GRAPHIC:
       // Nameless text leaves are boring, skip them.
