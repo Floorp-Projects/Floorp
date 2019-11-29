@@ -59,7 +59,7 @@ class WebExtensionToolbarTest {
             badgeBackgroundColor = Color.BLUE
         ) {}
 
-        val action = WebExtensionToolbarAction(browserAction) {}
+        val action = WebExtensionToolbarAction(browserAction, iconJobDispatcher = testDispatcher) {}
         action.bind(view)
         action.iconJob?.joinBlocking()
         testDispatcher.advanceUntilIdle()
@@ -79,17 +79,18 @@ class WebExtensionToolbarTest {
         var listenerWasClicked = false
 
         val browserAction = BrowserAction(
-                title = "title",
-                loadIcon = { mock() },
-                enabled = false,
-                badgeText = "badgeText",
-                badgeTextColor = Color.WHITE,
-                badgeBackgroundColor = Color.BLUE
+            title = "title",
+            loadIcon = { mock() },
+            enabled = false,
+            badgeText = "badgeText",
+            badgeTextColor = Color.WHITE,
+            badgeBackgroundColor = Color.BLUE
         ) {}
 
         val action = WebExtensionToolbarAction(
             browserAction,
-            padding = Padding(1, 2, 3, 4)
+            padding = Padding(1, 2, 3, 4),
+            iconJobDispatcher = testDispatcher
         ) {
             listenerWasClicked = true
         }
@@ -129,7 +130,8 @@ class WebExtensionToolbarTest {
 
         val action = WebExtensionToolbarAction(
             browserAction,
-            padding = Padding(1, 2, 3, 4)
+            padding = Padding(1, 2, 3, 4),
+            iconJobDispatcher = testDispatcher
         ) {}
 
         val attachListenerCaptor = argumentCaptor<View.OnAttachStateChangeListener>()

@@ -236,6 +236,10 @@ class GeckoWebExtensionTest {
         actionDelegateCaptor.value.onBrowserAction(nativeGeckoWebExt, null, nativeBrowserAction)
         verify(actionHandler).onBrowserAction(eq(extension), eq(null), actionCaptor.capture())
 
+        // Verify that toggle popup is forwarded to the handler
+        actionDelegateCaptor.value.onTogglePopup(nativeGeckoWebExt, nativeBrowserAction)
+        verify(actionHandler).onToggleBrowserActionPopup(eq(extension), actionCaptor.capture())
+
         // We don't have access to the native WebExtension.Action fields and
         // can't mock them either, but we can verify that we've linked
         // the actions by simulating a click.

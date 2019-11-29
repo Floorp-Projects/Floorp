@@ -29,7 +29,9 @@ class Components(private val applicationContext: Context) : DefaultComponents(ap
             it.installWebExtension("mozacBorderify", "resource://android/assets/extensions/borderify/") {
                 ext, throwable -> Log.log(Log.Priority.ERROR, "SampleBrowser", throwable, "Failed to install $ext")
             }
-
+            it.installWebExtension("mozacTest", "resource://android/assets/extensions/test/", supportActions = true) {
+                ext, throwable -> Log.log(Log.Priority.ERROR, "SampleBrowser", throwable, "Failed to install $ext")
+            }
             WebCompatFeature.install(it)
         }
     }

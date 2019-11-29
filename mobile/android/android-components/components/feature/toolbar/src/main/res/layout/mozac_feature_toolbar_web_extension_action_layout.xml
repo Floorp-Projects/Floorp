@@ -14,8 +14,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_gravity="center"
-            android:importantForAccessibility="no"
-            android:src="@drawable/mozac_ic_web_extension_default_icon" />
+            android:importantForAccessibility="no" />
 
     <TextView
             android:id="@+id/badge_text"

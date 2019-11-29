@@ -40,4 +40,29 @@ interface WebExtensionDelegate {
      * @return true if the tab was closed, otherwise false.
      */
     fun onCloseTab(webExtension: WebExtension?, engineSession: EngineSession) = false
+
+    /**
+     * Invoked when a web extension defines a browser action. To listen for session-specific
+     * overrides of [BrowserAction]s and other action-specific events (e.g. opening a popup)
+     * see [WebExtension.registerActionHandler].
+     *
+     * @param webExtension The [WebExtension] defining the browser action.
+     * @param action the defined [BrowserAction].
+     */
+    fun onBrowserActionDefined(webExtension: WebExtension, action: BrowserAction) = Unit
+
+    /**
+     * Invoked when a browser action wants to toggle a popup view.
+     *
+     * @param webExtension The [WebExtension] that wants to display the popup.
+     * @param engineSession The [EngineSession] to use for displaying the popup.
+     * @param action the [BrowserAction] that defines the popup.
+     * @return the [EngineSession] used to display the popup, or null if no popup
+     * was displayed.
+     */
+    fun onToggleBrowserActionPopup(
+        webExtension: WebExtension,
+        engineSession: EngineSession,
+        action: BrowserAction
+    ): EngineSession? = null
 }

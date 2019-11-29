@@ -12,6 +12,8 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -29,8 +31,12 @@ class WebExtensionActionTest {
         store.dispatch(WebExtensionAction.InstallWebExtension(extension)).joinBlocking()
 
         assertFalse(store.state.extensions.isEmpty())
-
         assertEquals(extension, store.state.extensions.values.first())
+
+        // Installing the same extension twice should have no effect
+        val state = store.state
+        store.dispatch(WebExtensionAction.InstallWebExtension(extension)).joinBlocking()
+        assertSame(state, store.state)
     }
 
     @Test
@@ -112,5 +118,19 @@ class WebExtensionActionTest {
         val extensions = store.state.tabs.first().extensionState
 
         assertEquals(mockedBrowserAction2, extensions.values.first().browserAction)
+    }
+
+    @Test
+    fun `UpdateBrowserActionPopupSession - Adds popup session ID to the web extension state`() {
+        val store = BrowserStore()
+
+        val extension = WebExtensionState("id", "url")
+        store.dispatch(WebExtensionAction.InstallWebExtension(extension)).joinBlocking()
+
+        assertEquals(extension, store.state.extensions[extension.id])
+        assertNull(store.state.extensions[extension.id]?.browserActionPopupSession)
+
+        store.dispatch(WebExtensionAction.UpdateBrowserActionPopupSession(extension.id, "popupId")).joinBlocking()
+        assertEquals("popupId", store.state.extensions[extension.id]?.browserActionPopupSession)
     }
 }

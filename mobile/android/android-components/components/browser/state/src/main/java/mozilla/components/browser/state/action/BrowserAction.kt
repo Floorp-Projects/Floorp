@@ -280,6 +280,14 @@ sealed class WebExtensionAction : BrowserAction() {
     ) : WebExtensionAction()
 
     /**
+     * Keeps track of the last session used to display the [BrowserAction] popup.
+     */
+    data class UpdateBrowserActionPopupSession(
+        val extensionId: String,
+        val popupSessionId: String
+    ) : WebExtensionAction()
+
+    /**
      * Updates a browser action that belongs to the given [sessionId] and [extensionId] on the
      * [TabSessionState.extensionState].
      */

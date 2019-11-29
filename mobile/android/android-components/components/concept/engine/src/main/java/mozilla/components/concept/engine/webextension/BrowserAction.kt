@@ -18,11 +18,11 @@ import android.graphics.Bitmap
  * @property onClick A callback to be executed when this browser action is clicked.
  */
 data class BrowserAction(
-    val title: String,
-    val enabled: Boolean,
-    val loadIcon: suspend (Int) -> Bitmap?,
-    val badgeText: String,
-    val badgeTextColor: Int,
-    val badgeBackgroundColor: Int,
+    val title: String?,
+    val enabled: Boolean?,
+    val loadIcon: (suspend (Int) -> Bitmap?)?,
+    val badgeText: String?,
+    val badgeTextColor: Int?,
+    val badgeBackgroundColor: Int?,
     val onClick: () -> Unit
 )
