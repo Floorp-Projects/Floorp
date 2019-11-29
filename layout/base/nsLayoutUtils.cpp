@@ -1863,6 +1863,54 @@ nsIScrollableFrame* nsLayoutUtils::GetScrollableFrameFor(
 }
 
 /* static */
+SideBits nsLayoutUtils::GetSideBitsForFixedPositionContent(
+    const nsIFrame* aFixedPosFrame) {
+  return GetSideBitsAndAdjustAnchorForFixedPositionContent(
+      nullptr, aFixedPosFrame, nullptr, nullptr);
+}
+
+/* static */
+SideBits nsLayoutUtils::GetSideBitsAndAdjustAnchorForFixedPositionContent(
+    const nsIFrame* aViewportFrame, const nsIFrame* aFixedPosFrame,
+    LayerPoint* aAnchor, const Rect* aAnchorRect) {
+  SideBits sides = SideBits::eNone;
+  if (aFixedPosFrame != aViewportFrame) {
+    const nsStylePosition* position = aFixedPosFrame->StylePosition();
+    if (!position->mOffset.Get(eSideRight).IsAuto()) {
+      sides |= SideBits::eRight;
+      if (!position->mOffset.Get(eSideLeft).IsAuto()) {
+        sides |= SideBits::eLeft;
+        if (aAnchor) {
+          aAnchor->x = aAnchorRect->x + aAnchorRect->width / 2.f;
+        }
+      } else {
+        if (aAnchor) {
+          aAnchor->x = aAnchorRect->XMost();
+        }
+      }
+    } else if (!position->mOffset.Get(eSideLeft).IsAuto()) {
+      sides |= SideBits::eLeft;
+    }
+    if (!position->mOffset.Get(eSideBottom).IsAuto()) {
+      sides |= SideBits::eBottom;
+      if (!position->mOffset.Get(eSideTop).IsAuto()) {
+        sides |= SideBits::eTop;
+        if (aAnchor) {
+          aAnchor->y = aAnchorRect->y + aAnchorRect->height / 2.f;
+        }
+      } else {
+        if (aAnchor) {
+          aAnchor->y = aAnchorRect->YMost();
+        }
+      }
+    } else if (!position->mOffset.Get(eSideTop).IsAuto()) {
+      sides |= SideBits::eTop;
+    }
+  }
+  return sides;
+}
+
+/* static */
 void nsLayoutUtils::SetFixedPositionLayerData(
     Layer* aLayer, const nsIFrame* aViewportFrame, const nsRect& aAnchorRect,
     const nsIFrame* aFixedPosFrame, nsPresContext* aPresContext,
@@ -1898,32 +1946,8 @@ void nsLayoutUtils::SetFixedPositionLayerData(
   // defaulting to top-left.
   LayerPoint anchor(anchorRect.x, anchorRect.y);
 
-  SideBits sides = SideBits::eNone;
-  if (aFixedPosFrame != aViewportFrame) {
-    const nsStylePosition* position = aFixedPosFrame->StylePosition();
-    if (!position->mOffset.Get(eSideRight).IsAuto()) {
-      sides |= SideBits::eRight;
-      if (!position->mOffset.Get(eSideLeft).IsAuto()) {
-        sides |= SideBits::eLeft;
-        anchor.x = anchorRect.x + anchorRect.width / 2.f;
-      } else {
-        anchor.x = anchorRect.XMost();
-      }
-    } else if (!position->mOffset.Get(eSideLeft).IsAuto()) {
-      sides |= SideBits::eLeft;
-    }
-    if (!position->mOffset.Get(eSideBottom).IsAuto()) {
-      sides |= SideBits::eBottom;
-      if (!position->mOffset.Get(eSideTop).IsAuto()) {
-        sides |= SideBits::eTop;
-        anchor.y = anchorRect.y + anchorRect.height / 2.f;
-      } else {
-        anchor.y = anchorRect.YMost();
-      }
-    } else if (!position->mOffset.Get(eSideTop).IsAuto()) {
-      sides |= SideBits::eTop;
-    }
-  }
+  SideBits sides = GetSideBitsAndAdjustAnchorForFixedPositionContent(
+      aViewportFrame, aFixedPosFrame, &anchor, &anchorRect);
 
   ViewID id = ScrollIdForRootScrollFrame(aPresContext);
   aLayer->SetFixedPositionData(id, anchor, sides);
