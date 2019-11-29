@@ -17,6 +17,7 @@
 #include "nsStyleConsts.h"
 
 using namespace mozilla;
+using mozilla::dom::Element;
 using mozilla::dom::HTMLInputElement;
 
 //#define FCF_NOISY

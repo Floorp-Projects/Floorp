@@ -94,7 +94,7 @@ class nsAutoCompleteController final : public nsIAutoCompleteController,
       return popup.forget();
     }
 
-    nsCOMPtr<Element> popupEl;
+    nsCOMPtr<mozilla::dom::Element> popupEl;
     mInput->GetPopupElement(getter_AddRefs(popupEl));
     if (popupEl) {
       return popupEl->AsAutoCompletePopup();

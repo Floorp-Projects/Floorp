@@ -101,7 +101,7 @@ struct AnimationProperty {
   }
 
   void SetPerformanceWarning(const AnimationPerformanceWarning& aWarning,
-                             const Element* aElement);
+                             const dom::Element* aElement);
 };
 
 struct ElementPropertyTransition;

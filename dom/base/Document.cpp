@@ -97,6 +97,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/CSPDictionariesBinding.h"
+#include "mozilla/dom/DOMIntersectionObserver.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/FeaturePolicy.h"
@@ -1407,8 +1408,7 @@ bool Document::CallerIsTrustedAboutNetError(JSContext* aCx, JSObject* aObject) {
   return IsAboutErrorPage(win, "neterror");
 }
 
-void Document::GetNetErrorInfo(mozilla::dom::NetErrorInfo& aInfo,
-                               ErrorResult& aRv) {
+void Document::GetNetErrorInfo(NetErrorInfo& aInfo, ErrorResult& aRv) {
   nsCOMPtr<nsISupports> info;
   nsCOMPtr<nsITransportSecurityInfo> tsi;
   nsresult rv = NS_OK;
@@ -1443,8 +1443,8 @@ bool Document::CallerIsTrustedAboutCertError(JSContext* aCx,
   return IsAboutErrorPage(win, "certerror");
 }
 
-void Document::GetFailedCertSecurityInfo(
-    mozilla::dom::FailedCertSecurityInfo& aInfo, ErrorResult& aRv) {
+void Document::GetFailedCertSecurityInfo(FailedCertSecurityInfo& aInfo,
+                                         ErrorResult& aRv) {
   nsCOMPtr<nsISupports> info;
   nsCOMPtr<nsITransportSecurityInfo> tsi;
   nsresult rv = NS_OK;
@@ -1596,13 +1596,13 @@ void Document::GetFailedCertSecurityInfo(
     nsDependentCString derString(reinterpret_cast<char*>(certArray.Elements()),
                                  certArray.Length() - 1);
     nsAutoCString der64;
-    rv = mozilla::Base64Encode(derString, der64);
+    rv = Base64Encode(derString, der64);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aRv.Throw(rv);
       return;
     }
     if (!certChainStrings.AppendElement(NS_ConvertUTF8toUTF16(der64),
-                                        mozilla::fallible)) {
+                                        fallible)) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;
     }
@@ -1641,11 +1641,11 @@ void Document::GetFailedCertSecurityInfo(
   bool isPrivateBrowsing = nsContentUtils::IsInPrivateBrowsing(this);
   uint32_t flags =
       isPrivateBrowsing ? nsISocketProvider::NO_PERMANENT_STORAGE : 0;
-  mozilla::OriginAttributes attrs;
+  OriginAttributes attrs;
   attrs = nsContentUtils::GetOriginAttributes(this);
   nsCOMPtr<nsIURI> aURI;
   mFailedChannel->GetURI(getter_AddRefs(aURI));
-  mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
+  ContentChild* cc = ContentChild::GetSingleton();
   mozilla::ipc::URIParams uri;
   SerializeURI(aURI, uri);
   cc->SendIsSecureURI(nsISiteSecurityService::HEADER_HSTS, uri, flags, attrs,
@@ -1860,7 +1860,7 @@ NS_INTERFACE_TABLE_HEAD(Document)
     NS_INTERFACE_TABLE_ENTRY(Document, nsINode)
     NS_INTERFACE_TABLE_ENTRY(Document, Document)
     NS_INTERFACE_TABLE_ENTRY(Document, nsIScriptObjectPrincipal)
-    NS_INTERFACE_TABLE_ENTRY(Document, mozilla::dom::EventTarget)
+    NS_INTERFACE_TABLE_ENTRY(Document, EventTarget)
     NS_INTERFACE_TABLE_ENTRY(Document, nsISupportsWeakReference)
     NS_INTERFACE_TABLE_ENTRY(Document, nsIRadioGroupContainer)
     NS_INTERFACE_TABLE_ENTRY(Document, nsIMutationObserver)
@@ -2179,11 +2179,11 @@ nsresult Document::Init() {
       static_cast<nsIMutationObserver*>(this));
 
   mOnloadBlocker = new OnloadBlocker();
-  mCSSLoader = new mozilla::css::Loader(this);
+  mCSSLoader = new css::Loader(this);
   // Assume we're not quirky, until we know otherwise
   mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
 
-  mStyleImageLoader = new mozilla::css::ImageLoader(this);
+  mStyleImageLoader = new css::ImageLoader(this);
 
   mNodeInfoManager = new nsNodeInfoManager();
   nsresult rv = mNodeInfoManager->Init(this);
@@ -2211,7 +2211,7 @@ nsresult Document::Init() {
 
   // we need to create a policy here so getting the policy within
   // ::Policy() can *always* return a non null policy
-  mFeaturePolicy = new mozilla::dom::FeaturePolicy(this);
+  mFeaturePolicy = new dom::FeaturePolicy(this);
   mFeaturePolicy->SetDefaultOrigin(NodePrincipal());
 
   mStyleSet = MakeUnique<ServoStyleSet>(*this);
@@ -2392,7 +2392,7 @@ void Document::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
       // Inform the associated request context about this load start so
       // any of its internal load progress flags gets reset.
       nsCOMPtr<nsIRequestContextService> rcsvc =
-          mozilla::net::RequestContextService::GetOrCreate();
+          net::RequestContextService::GetOrCreate();
       if (rcsvc) {
         nsCOMPtr<nsIRequestContext> rc;
         rcsvc->GetRequestContextFromLoadGroup(aLoadGroup, getter_AddRefs(rc));
@@ -3255,8 +3255,7 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
   return NS_OK;
 }
 
-already_AddRefed<mozilla::dom::FeaturePolicy>
-Document::GetParentFeaturePolicy() {
+already_AddRefed<dom::FeaturePolicy> Document::GetParentFeaturePolicy() {
   if (!mDocumentContainer) {
     return nullptr;
   }
@@ -3271,7 +3270,7 @@ Document::GetParentFeaturePolicy() {
     return nullptr;
   }
 
-  RefPtr<mozilla::dom::FeaturePolicy> parentPolicy;
+  RefPtr<dom::FeaturePolicy> parentPolicy;
   if (context->IsContentSubframe() && !context->GetParent()->IsInProcess()) {
     // We are in cross process, so try to get feature policy from
     // container's BrowsingContext
@@ -15348,8 +15347,7 @@ already_AddRefed<mozilla::dom::Promise> Document::HasStorageAccess(
   return promise.forget();
 }
 
-already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
-    mozilla::ErrorResult& aRv) {
+already_AddRefed<Promise> Document::RequestStorageAccess(ErrorResult& aRv) {
   nsIGlobalObject* global = GetScopeObject();
   if (!global) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);

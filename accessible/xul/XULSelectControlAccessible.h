@@ -39,7 +39,7 @@ class XULSelectControlAccessible : public AccessibleWrap {
   virtual void SetCurrentItem(const Accessible* aItem) override;
 
  protected:
-  RefPtr<Element> mSelectControl;
+  RefPtr<dom::Element> mSelectControl;
 };
 
 }  // namespace a11y

@@ -12,6 +12,7 @@
 namespace mozilla {
 
 using mozilla::dom::Document;
+using mozilla::dom::Element;
 using mozilla::dom::Link;
 
 static Document* GetLinkDocument(const Link& aLink) {

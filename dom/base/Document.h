@@ -5336,7 +5336,7 @@ class Document : public nsINode,
   RefPtr<XULBroadcastManager> mXULBroadcastManager;
   RefPtr<XULPersist> mXULPersist;
 
-  RefPtr<mozilla::dom::HTMLAllCollection> mAll;
+  RefPtr<HTMLAllCollection> mAll;
 
   // document lightweight theme for use with :-moz-lwtheme,
   // :-moz-lwtheme-brighttext and :-moz-lwtheme-darktext

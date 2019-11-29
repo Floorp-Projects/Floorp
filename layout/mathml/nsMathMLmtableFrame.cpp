@@ -25,6 +25,7 @@
 
 using namespace mozilla;
 using namespace mozilla::image;
+using mozilla::dom::Element;
 
 //
 // <mtable> -- table or matrix - implementation

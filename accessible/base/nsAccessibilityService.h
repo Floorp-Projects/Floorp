@@ -30,6 +30,7 @@ class PresShell;
 
 namespace dom {
 class DOMStringList;
+class Element;
 }
 
 namespace a11y {
@@ -53,7 +54,8 @@ SelectionManager* SelectionMgr();
 ApplicationAccessible* ApplicationAcc();
 xpcAccessibleApplication* XPCApplicationAcc();
 
-typedef Accessible*(New_Accessible)(Element* aElement, Accessible* aContext);
+typedef Accessible*(New_Accessible)(mozilla::dom::Element* aElement,
+                                    Accessible* aContext);
 
 // These fields are not `nsStaticAtom* const` because MSVC doesn't like it.
 struct MarkupAttrInfo {

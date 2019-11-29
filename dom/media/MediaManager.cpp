@@ -173,6 +173,7 @@ using dom::ConstrainDoubleRange;
 using dom::ConstrainLongRange;
 using dom::DisplayMediaStreamConstraints;
 using dom::Document;
+using dom::Element;
 using dom::FeaturePolicyUtils;
 using dom::File;
 using dom::GetUserMediaRequest;

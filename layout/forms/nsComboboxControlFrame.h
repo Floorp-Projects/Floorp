@@ -50,7 +50,8 @@ class nsComboboxControlFrame final : public nsBlockFrame,
                                      public nsISelectControlFrame,
                                      public nsIRollupListener,
                                      public nsIStatefulFrame {
-  typedef mozilla::gfx::DrawTarget DrawTarget;
+  using DrawTarget = mozilla::gfx::DrawTarget;
+  using Element = mozilla::dom::Element;
 
  public:
   friend nsComboboxControlFrame* NS_NewComboboxControlFrame(

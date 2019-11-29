@@ -60,7 +60,7 @@ void XULComboboxAccessible::Description(nsString& aDescription) {
   nsCOMPtr<nsIDOMXULMenuListElement> menuListElm = Elm()->AsXULMenuList();
   if (!menuListElm) return;
 
-  nsCOMPtr<Element> focusedOptionItem;
+  nsCOMPtr<dom::Element> focusedOptionItem;
   menuListElm->GetSelectedItem(getter_AddRefs(focusedOptionItem));
   if (focusedOptionItem && mDoc) {
     Accessible* focusedOptionAcc = mDoc->GetAccessible(focusedOptionItem);

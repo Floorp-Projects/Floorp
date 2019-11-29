@@ -26,7 +26,7 @@ inline void Element::UnregisterActivityObserver() {
 }  // namespace dom
 }  // namespace mozilla
 
-inline Element* nsINode::GetFlattenedTreeParentElement() const {
+inline mozilla::dom::Element* nsINode::GetFlattenedTreeParentElement() const {
   nsINode* parentNode = GetFlattenedTreeParentNode();
   if
     MOZ_LIKELY(parentNode && parentNode->IsElement()) {
@@ -36,13 +36,12 @@ inline Element* nsINode::GetFlattenedTreeParentElement() const {
   return nullptr;
 }
 
-inline Element* nsINode::GetFlattenedTreeParentElementForStyle() const {
+inline mozilla::dom::Element* nsINode::GetFlattenedTreeParentElementForStyle()
+    const {
   nsINode* parentNode = GetFlattenedTreeParentNodeForStyle();
-  if
-    MOZ_LIKELY(parentNode && parentNode->IsElement()) {
-      return parentNode->AsElement();
-    }
-
+  if (MOZ_LIKELY(parentNode && parentNode->IsElement())) {
+    return parentNode->AsElement();
+  }
   return nullptr;
 }
 

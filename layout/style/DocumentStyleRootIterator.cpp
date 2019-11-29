@@ -22,13 +22,13 @@ DocumentStyleRootIterator::DocumentStyleRootIterator(nsINode* aStyleRoot)
 
   dom::Document* doc = aStyleRoot->OwnerDoc();
   MOZ_ASSERT(doc == aStyleRoot);
-  if (Element* root = doc->GetRootElement()) {
+  if (dom::Element* root = doc->GetRootElement()) {
     mStyleRoots.AppendElement(root);
   }
   nsContentUtils::AppendDocumentLevelNativeAnonymousContentTo(doc, mStyleRoots);
 }
 
-Element* DocumentStyleRootIterator::GetNextStyleRoot() {
+dom::Element* DocumentStyleRootIterator::GetNextStyleRoot() {
   for (;;) {
     if (mPosition >= mStyleRoots.Length()) {
       return nullptr;
