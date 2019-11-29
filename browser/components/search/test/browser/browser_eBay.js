@@ -61,7 +61,6 @@ add_task(async function test() {
               purpose: undefined,
             },
           ],
-          mozparams: {},
         },
       ],
     },

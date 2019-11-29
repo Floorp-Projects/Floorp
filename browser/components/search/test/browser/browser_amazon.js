@@ -68,7 +68,6 @@ add_task(async function test() {
               purpose: undefined,
             },
           ],
-          mozparams: {},
         },
         {
           type: "application/x-suggestions+json",
