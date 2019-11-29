@@ -90,7 +90,6 @@ add_task(async function test() {
               purpose: "newtab",
             },
           ],
-          mozparams: {},
         },
         {
           type: "application/x-suggestions+json",
