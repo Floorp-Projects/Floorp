@@ -212,7 +212,7 @@ ScrollableLayerGuid APZSampler::GetGuid(const LayerMetricsWrapper& aLayer) {
   return aLayer.GetApzc()->GetGuid();
 }
 
-const ScreenMargin& APZSampler::GetGeckoFixedLayerMargins() const {
+ScreenMargin APZSampler::GetGeckoFixedLayerMargins() const {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   AssertOnSamplerThread();
 
