@@ -98,7 +98,7 @@ DebuggerClient.prototype = {
    *         element is the traits object (help figure out the features
    *         and behaviors of the server we connect to. See RootActor).
    */
-  connect: function(onConnected) {
+  connect(onConnected) {
     return new Promise(resolve => {
       this.once("connected", (applicationType, traits) => {
         this.traits = traits;
@@ -122,7 +122,7 @@ DebuggerClient.prototype = {
    * @return Promise
    *         Resolves after the underlying transport is closed.
    */
-  close: function(onClosed) {
+  close(onClosed) {
     const promise = new Promise(resolve => {
       // Disable detach event notifications, because event handlers will be in a
       // cleared scope by the time they run.
@@ -162,7 +162,7 @@ DebuggerClient.prototype = {
    * @param string actor
    *        The actor ID to send the request to.
    */
-  release: function(to) {
+  release(to) {
     return this.request({
       to,
       type: "release",
@@ -216,7 +216,7 @@ DebuggerClient.prototype = {
    *                     This object also emits "progress" events for each chunk
    *                     that is copied.  See stream-utils.js.
    */
-  request: function(packet, onResponse) {
+  request(packet, onResponse) {
     if (!this.mainRoot) {
       throw Error("Have not yet received a hello packet from the server.");
     }
@@ -357,7 +357,7 @@ DebuggerClient.prototype = {
    *                     This object also emits "progress" events for each chunk
    *                     that is copied.  See stream-utils.js.
    */
-  startBulkRequest: function(request) {
+  startBulkRequest(request) {
     if (!this.traits.bulk) {
       throw Error("Server doesn't support bulk transfers");
     }
@@ -451,7 +451,7 @@ DebuggerClient.prototype = {
    * greetings from new root actors, is the only case at the moment) we must be
    * prepared for a "reply" that doesn't correspond to any request we sent.
    */
-  expectReply: function(actor, request) {
+  expectReply(actor, request) {
     if (this._activeRequests.has(actor)) {
       throw Error("clashing handlers for next reply from " + actor);
     }
@@ -475,7 +475,7 @@ DebuggerClient.prototype = {
    * @param packet object
    *        The incoming packet.
    */
-  onPacket: function(packet) {
+  onPacket(packet) {
     if (!packet.from) {
       DevToolsUtils.reportException(
         "onPacket",
@@ -574,7 +574,7 @@ DebuggerClient.prototype = {
    *                  This object also emits "progress" events for each chunk
    *                  that is copied.  See stream-utils.js.
    */
-  onBulkPacket: function(packet) {
+  onBulkPacket(packet) {
     const { actor } = packet;
 
     if (!actor) {
@@ -612,7 +612,7 @@ DebuggerClient.prototype = {
    *        The status code that corresponds to the reason for closing
    *        the stream.
    */
-  onClosed: function() {
+  onClosed() {
     if (this._closed) {
       return;
     }
@@ -776,10 +776,10 @@ DebuggerClient.prototype = {
     return this.__pools;
   },
 
-  addActorPool: function(pool) {
+  addActorPool(pool) {
     this._pools.add(pool);
   },
-  removeActorPool: function(pool) {
+  removeActorPool(pool) {
     this._pools.delete(pool);
   },
 
@@ -788,12 +788,12 @@ DebuggerClient.prototype = {
    *
    * @param {String} actorID: The actor ID to look for.
    */
-  getFrontByID: function(actorID) {
+  getFrontByID(actorID) {
     const pool = this.poolFor(actorID);
     return pool ? pool.get(actorID) : null;
   },
 
-  poolFor: function(actorID) {
+  poolFor(actorID) {
     for (const pool of this._pools) {
       if (pool.has(actorID)) {
         return pool;
@@ -807,7 +807,7 @@ DebuggerClient.prototype = {
    * @param {Object} grip: The grip to create the ObjectFront for.
    * @returns {ObjectFront}
    */
-  createObjectFront: function(grip) {
+  createObjectFront(grip) {
     return new ObjectFront(this, grip);
   },
 
