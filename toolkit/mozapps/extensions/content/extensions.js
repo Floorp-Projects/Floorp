@@ -608,7 +608,7 @@ var gViewController = {
     );
   },
 
-  loadView(aViewId, sourceEvent) {
+  loadView(aViewId) {
     var isRefresh = false;
     if (aViewId == this.currentViewId) {
       if (this.isLoading) {
@@ -623,14 +623,10 @@ var gViewController = {
       isRefresh = true;
     }
 
-    let isKeyboardNavigation =
-      sourceEvent &&
-      sourceEvent.mozInputSource === MouseEvent.MOZ_SOURCE_KEYBOARD;
     var state = {
       view: aViewId,
       previousView: this.currentViewId,
       historyEntryId: ++this.nextHistoryEntryId,
-      isKeyboardNavigation,
     };
     if (!isRefresh) {
       gHistory.pushState(state);
@@ -1538,9 +1534,9 @@ const addonTypes = new Set([
   "locale",
 ]);
 const htmlViewOpts = {
-  loadViewFn(view, sourceEvent) {
+  loadViewFn(view) {
     let viewId = `addons://${view}`;
-    gViewController.loadView(viewId, sourceEvent);
+    gViewController.loadView(viewId);
   },
   replaceWithDefaultViewFn() {
     gViewController.replaceView(gViewDefault);
