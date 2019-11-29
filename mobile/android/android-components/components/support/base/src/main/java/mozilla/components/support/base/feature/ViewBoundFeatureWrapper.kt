@@ -147,7 +147,9 @@ class ViewBoundFeatureWrapper<T : LifecycleAwareFeature>() {
         val feature = feature ?: return false
 
         if (feature !is UserInteractionHandler) {
-            throw IllegalAccessError("Feature does not implement BackHandler interface")
+            throw IllegalAccessError(
+                "Feature does not implement ${UserInteractionHandler::class.java.simpleName} interface"
+            )
         }
 
         return feature.onBackPressed()
