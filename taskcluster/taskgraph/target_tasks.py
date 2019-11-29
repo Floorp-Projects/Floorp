@@ -630,6 +630,18 @@ def target_tasks_nightly_asan(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
 
+@_target_task('daily_releases')
+def target_tasks_daily_releases(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required to identify if we should release.
+    If we determine that we should the task will communicate to ship-it to
+    schedule the release itself."""
+
+    def filter(task):
+        return task.kind in ['maybe-release']
+
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
 @_target_task('nightly_desktop')
 def target_tasks_nightly_desktop(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of linux, mac,
