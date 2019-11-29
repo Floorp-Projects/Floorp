@@ -321,7 +321,7 @@ const rollout = {
     results.evaluateReason = event;
 
     // Reset skipHeuristicsCheck
-    await rollout.setSetting(DOH_SKIP_HEURISTICS_PREF, false);
+    await this.setSetting(DOH_SKIP_HEURISTICS_PREF, false);
 
     // This confirms if a user has modified DoH (via the TRR_MODE_PREF) outside of the addon
     // This runs only on the FIRST time that add-on is enabled and if the stored pref
@@ -344,7 +344,7 @@ const rollout = {
     results.evaluateReason = event;
 
     // Reset skipHeuristicsCheck
-    await rollout.setSetting(DOH_SKIP_HEURISTICS_PREF, false);
+    await this.setSetting(DOH_SKIP_HEURISTICS_PREF, false);
 
     // Check for Policies before running the rest of the heuristics
     let policyEnableDoH = await browser.experiments.heuristics.checkEnterprisePolicies();
@@ -355,7 +355,7 @@ const rollout = {
 
     if (policyEnableDoH === "no_policy_set") {
       // Resetting skipHeuristicsCheck in case a user had a policy and then removed it!
-      await rollout.setSetting(DOH_SKIP_HEURISTICS_PREF, false);
+      await this.setSetting(DOH_SKIP_HEURISTICS_PREF, false);
       return;
     }
 
@@ -364,7 +364,7 @@ const rollout = {
     }
 
     // Don't check for prefHasUserValue if policy is set to disable DoH
-    await rollout.setSetting(DOH_SKIP_HEURISTICS_PREF, true);
+    await this.setSetting(DOH_SKIP_HEURISTICS_PREF, true);
 
     browser.experiments.heuristics.sendHeuristicsPing(policyEnableDoH, results);
   },
@@ -423,7 +423,7 @@ const rollout = {
     log("calling init");
 
     // Check if the add-on has run before
-    let doneFirstRun = await rollout.getSetting(DOH_DONE_FIRST_RUN_PREF, false);
+    let doneFirstRun = await this.getSetting(DOH_DONE_FIRST_RUN_PREF, false);
 
     // Register the events for sending pings
     browser.experiments.heuristics.setupTelemetry();
@@ -433,7 +433,7 @@ const rollout = {
 
     if (!doneFirstRun) {
       log("first run!");
-      await rollout.setSetting(DOH_DONE_FIRST_RUN_PREF, true);
+      await this.setSetting(DOH_DONE_FIRST_RUN_PREF, true);
       // Check if user has a set a custom pref only on first run, not on each startup
       await this.trrModePrefHasUserValue("first_run", results);
       await this.enterprisePolicyCheck("first_run", results);
@@ -443,18 +443,15 @@ const rollout = {
     }
 
     // Only run the heuristics if user hasn't explicitly enabled/disabled DoH
-    let skipHeuristicsCheck = await rollout.getSetting(
+    let skipHeuristicsCheck = await this.getSetting(
       DOH_SKIP_HEURISTICS_PREF,
       false
     );
 
     log("skipHeuristicsCheck: ", skipHeuristicsCheck);
 
-    if (!skipHeuristicsCheck) {
-      let shouldRunHeuristics = await stateManager.shouldRunHeuristics();
-      if (shouldRunHeuristics) {
-        await rollout.main();
-      }
+    if (!skipHeuristicsCheck && (await stateManager.shouldRunHeuristics())) {
+      await this.runStartupHeuristics();
     }
 
     // Listen for network change events to run heuristics again
@@ -494,36 +491,21 @@ const rollout = {
         }
       }, 60000);
     });
-  },
 
-  isCaptive(state) {
-    return !["unlocked_portal", "not_captive"].includes(state);
-  },
-
-  async main() {
     // Listen to the captive portal when it unlocks
-    browser.captivePortal.onStateChanged.addListener(rollout.onReady);
-
-    // If the captive portal is already unlocked or doesn't exist,
-    // run the measurement.
-    let state = await browser.captivePortal.getState();
-    log("Captive state:", state);
-    if (!this.isCaptive(state)) {
-      await rollout.onReady({ state });
-    }
+    browser.captivePortal.onConnectivityAvailable.addListener(async () => {
+      log("Captive portal onConnectivityAvailable, running heuristics.");
+      if (rollout.networkSettledTimeout) {
+        log("Canceling queued heuristics run.");
+        clearTimeout(rollout.networkSettledTimeout);
+        rollout.networkSettledTimeout = null;
+      }
+      await this.runStartupHeuristics();
+    });
   },
 
-  async onReady(details) {
-    // Now that we're here, stop listening to the captive portal
-    browser.captivePortal.onStateChanged.removeListener(rollout.onReady);
-
-    // Only proceed if we're not behind a captive portal
-    if (this.isCaptive(details.state)) {
-      return;
-    }
-
-    // Run startup heuristics to determine if DoH should be disabled
-    let decision = await rollout.heuristics("startup");
+  async runStartupHeuristics() {
+    let decision = await this.heuristics("startup");
     let shouldShowDoorhanger = await stateManager.shouldShowDoorhanger();
     if (decision === "disable_doh") {
       await stateManager.setState("disabled");
