@@ -525,11 +525,7 @@ EngineURL.prototype = {
     var requestPurpose = purpose || "searchbar";
 
     // If a particular purpose isn't defined in the plugin, fallback to 'searchbar'.
-    if (
-      !this.params.some(
-        p => p.purpose !== undefined && p.purpose == requestPurpose
-      )
-    ) {
+    if (!this.params.some(p => p.purpose && p.purpose == requestPurpose)) {
       requestPurpose = "searchbar";
     }
 
@@ -540,7 +536,7 @@ EngineURL.prototype = {
       var param = this.params[i];
 
       // If this parameter has a purpose, only add it if the purpose matches
-      if (param.purpose !== undefined && param.purpose != requestPurpose) {
+      if (param.purpose && param.purpose != requestPurpose) {
         continue;
       }
 
@@ -1984,14 +1980,14 @@ SearchEngine.prototype = {
     return this.__internalAliases;
   },
 
-  _getSearchFormWithPurpose(aPurpose = "") {
+  _getSearchFormWithPurpose(purpose) {
     // First look for a <Url rel="searchform">
     var searchFormURL = this._getURLOfType(
       SearchUtils.URL_TYPE.SEARCH,
       "searchform"
     );
     if (searchFormURL) {
-      let submission = searchFormURL.getSubmission("", this, aPurpose);
+      let submission = searchFormURL.getSubmission("", this, purpose);
 
       // If the rel=searchform URL is not type="get" (i.e. has postData),
       // ignore it, since we can only return a URL.
