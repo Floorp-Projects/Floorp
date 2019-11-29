@@ -1221,15 +1221,25 @@ void CanvasRenderingContext2D::RestoreClipsAndTransformToTarget() {
     mTarget->PushClipRect(gfx::Rect(0, 0, mWidth, mHeight));
   }
 
-  for (const auto& style : mStyleStack) {
-    for (const auto& clipOrTransform : style.clipsAndTransforms) {
-      if (clipOrTransform.IsClip()) {
-        mTarget->PushClip(clipOrTransform.clip);
+  for (auto& style : mStyleStack) {
+    for (auto clipOrTransform = style.clipsAndTransforms.begin();
+         clipOrTransform != style.clipsAndTransforms.end(); clipOrTransform++) {
+      if (clipOrTransform->IsClip()) {
+        if (mClipsNeedConverting) {
+          // We have possibly changed backends, so we need to convert the clips
+          // in case they are no longer compatible with mTarget.
+          RefPtr<PathBuilder> pathBuilder = mTarget->CreatePathBuilder();
+          clipOrTransform->clip->StreamToSink(pathBuilder);
+          clipOrTransform->clip = pathBuilder->Finish();
+        }
+        mTarget->PushClip(clipOrTransform->clip);
       } else {
-        mTarget->SetTransform(clipOrTransform.transform);
+        mTarget->SetTransform(clipOrTransform->transform);
       }
     }
   }
+
+  mClipsNeedConverting = false;
 }
 
 bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
@@ -1419,6 +1429,7 @@ bool CanvasRenderingContext2D::TrySharedTarget(
     // we are already using a shared buffer provider, we are allocating a new
     // one because the current one failed so let's just fall back to the basic
     // provider.
+    mClipsNeedConverting = true;
     return false;
   }
 
