@@ -14,7 +14,6 @@
 #define mozilla_dom_Element_h__
 
 #include "AttrArray.h"
-#include "DOMIntersectionObserver.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
 #include "nsChangeHint.h"

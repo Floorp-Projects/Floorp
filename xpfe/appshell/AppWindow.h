@@ -213,7 +213,7 @@ class AppWindow final : public nsIBaseWindow,
   void RemoveTooltipSupport();
 
   NS_IMETHOD GetWindowDOMWindow(mozIDOMWindowProxy** aDOMWindow);
-  mozilla::dom::Element* GetWindowDOMElement() const;
+  dom::Element* GetWindowDOMElement() const;
 
   // See nsIDocShellTreeOwner for docs on next two methods
   nsresult ContentShellAdded(nsIDocShellTreeItem* aContentShell, bool aPrimary);

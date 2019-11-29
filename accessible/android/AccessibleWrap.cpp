@@ -862,7 +862,7 @@ bool AccessibleWrap::HandleLiveRegionEvent(AccEvent* aEvent) {
     Accessible* atomicAncestor = nullptr;
     for (Accessible* parent = announcementTarget; parent;
          parent = parent->Parent()) {
-      Element* element = parent->Elm();
+      dom::Element* element = parent->Elm();
       if (element &&
           element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_atomic,
                                nsGkAtoms::_true, eCaseMatters)) {

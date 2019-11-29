@@ -191,7 +191,7 @@ void nsTextBoxFrame::UpdateAttributes(nsAtom* aAttribute, bool& aResize,
   aRedraw = false;
 
   if (aAttribute == nullptr || aAttribute == nsGkAtoms::crop) {
-    static Element::AttrValuesArray strings[] = {
+    static dom::Element::AttrValuesArray strings[] = {
         nsGkAtoms::left,  nsGkAtoms::start, nsGkAtoms::center,
         nsGkAtoms::right, nsGkAtoms::end,   nsGkAtoms::none,
         nullptr};

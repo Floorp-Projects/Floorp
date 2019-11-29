@@ -254,7 +254,7 @@ uint8_t GetIndexFromRoleMap(const nsRoleMapEntry* aRoleMap);
  * Return accessible state from ARIA universal states applied to the given
  * element.
  */
-uint64_t UniversalStatesFor(mozilla::dom::Element* aElement);
+uint64_t UniversalStatesFor(dom::Element* aElement);
 
 /**
  * Get the ARIA attribute characteristics for a given ARIA attribute.
@@ -277,7 +277,7 @@ bool HasDefinedARIAHidden(nsIContent* aContent);
 class AttrIterator {
  public:
   explicit AttrIterator(nsIContent* aContent)
-      : mElement(Element::FromNode(aContent)), mAttrIdx(0) {
+      : mElement(dom::Element::FromNode(aContent)), mAttrIdx(0) {
     mAttrCount = mElement ? mElement->GetAttrCount() : 0;
   }
 

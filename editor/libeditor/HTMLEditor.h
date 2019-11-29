@@ -4576,7 +4576,7 @@ class MOZ_STACK_CLASS ParagraphStateAtSelection final {
    */
   static void AppendDescendantFormatNodesAndFirstInlineNode(
       nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
-      Element& aNonFormatBlockElement);
+      mozilla::dom::Element& aNonFormatBlockElement);
 
   /**
    * CollectEditableFormatNodesInSelection() collects only editable nodes

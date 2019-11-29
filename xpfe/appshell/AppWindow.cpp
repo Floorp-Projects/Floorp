@@ -102,6 +102,7 @@ using dom::AutoNoJSAPI;
 using dom::BrowserHost;
 using dom::BrowsingContext;
 using dom::Document;
+using dom::Element;
 using dom::EventTarget;
 using dom::LoadURIOptions;
 
@@ -2080,7 +2081,7 @@ AppWindow::GetPrimaryContentSize(int32_t* aWidth, int32_t* aHeight) {
 nsresult AppWindow::GetPrimaryRemoteTabSize(int32_t* aWidth, int32_t* aHeight) {
   BrowserHost* host = BrowserHost::GetFrom(mPrimaryBrowserParent.get());
   // Need strong ref, since Client* can run script.
-  nsCOMPtr<Element> element = host->GetOwnerElement();
+  RefPtr<dom::Element> element = host->GetOwnerElement();
   NS_ENSURE_STATE(element);
 
   *aWidth = element->ClientWidth();

@@ -538,7 +538,7 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
    */
   nsIContent* GetLeftContent() const { return mLeftContent; }
   dom::Element* GetLeftContentAsElement() const {
-    return Element::FromNodeOrNull(mLeftContent);
+    return dom::Element::FromNodeOrNull(mLeftContent);
   }
 
   /**
@@ -548,7 +548,7 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
    */
   nsIContent* GetMiddleContent() const { return mMiddleContent; }
   dom::Element* GetMiddleContentAsElement() const {
-    return Element::FromNodeOrNull(mMiddleContent);
+    return dom::Element::FromNodeOrNull(mMiddleContent);
   }
 
   /**
@@ -558,7 +558,7 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
    */
   nsIContent* GetRightContent() const { return mRightContent; }
   dom::Element* GetRightContentAsElement() const {
-    return Element::FromNodeOrNull(mRightContent);
+    return dom::Element::FromNodeOrNull(mRightContent);
   }
 
   SplitRangeOffFromNodeResult(nsIContent* aLeftContent,

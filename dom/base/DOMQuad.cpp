@@ -9,6 +9,7 @@
 #include "mozilla/dom/DOMQuadBinding.h"
 #include "mozilla/dom/DOMPoint.h"
 #include "mozilla/dom/DOMRect.h"
+#include "mozilla/dom/DOMRectBinding.h"
 #include <algorithm>
 
 using namespace mozilla;

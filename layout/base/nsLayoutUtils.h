@@ -3166,7 +3166,7 @@ class nsSetAttrRunnable : public mozilla::Runnable {
 
   NS_DECL_NSIRUNNABLE
 
-  RefPtr<Element> mElement;
+  RefPtr<mozilla::dom::Element> mElement;
   RefPtr<nsAtom> mAttrName;
   nsAutoString mValue;
 };
@@ -3177,7 +3177,7 @@ class nsUnsetAttrRunnable : public mozilla::Runnable {
 
   NS_DECL_NSIRUNNABLE
 
-  RefPtr<Element> mElement;
+  RefPtr<mozilla::dom::Element> mElement;
   RefPtr<nsAtom> mAttrName;
 };
 

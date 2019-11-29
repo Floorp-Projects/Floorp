@@ -335,10 +335,10 @@ class nsTextControlFrame final : public nsContainerFrame,
     Placeholder,
     Preview,
   };
-  already_AddRefed<Element> CreateEmptyAnonymousDiv(
-      AnonymousDivType aAnonymousDivType) const;
-  already_AddRefed<Element> CreateEmptyAnonymousDivWithTextNode(
-      AnonymousDivType aAnonymousDivType) const;
+  already_AddRefed<mozilla::dom::Element> CreateEmptyAnonymousDiv(
+      AnonymousDivType) const;
+  already_AddRefed<mozilla::dom::Element> CreateEmptyAnonymousDivWithTextNode(
+      AnonymousDivType) const;
 
   bool ShouldInitializeEagerly() const;
   void InitializeEagerlyIfNeeded();

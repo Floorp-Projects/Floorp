@@ -483,7 +483,7 @@ void nsResizerFrame::RestoreOriginalSize(nsIContent* aContent) {
 /* returns a Direction struct containing the horizontal and vertical direction
  */
 nsResizerFrame::Direction nsResizerFrame::GetDirection() {
-  static const Element::AttrValuesArray strings[] = {
+  static const mozilla::dom::Element::AttrValuesArray strings[] = {
       // clang-format off
      nsGkAtoms::topleft,    nsGkAtoms::top,    nsGkAtoms::topright,
      nsGkAtoms::left,                          nsGkAtoms::right,

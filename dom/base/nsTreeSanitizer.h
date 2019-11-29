@@ -209,7 +209,8 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
    * @param aAttribute optional, the attribute being removed or modified.
    */
   void LogMessage(const char* aMessage, mozilla::dom::Document* aDoc,
-                  Element* aElement = nullptr, nsAtom* aAttr = nullptr);
+                  mozilla::dom::Element* aElement = nullptr,
+                  nsAtom* aAttr = nullptr);
 
   /**
    * The whitelist of HTML elements.

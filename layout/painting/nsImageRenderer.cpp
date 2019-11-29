@@ -168,7 +168,7 @@ bool nsImageRenderer::PrepareImage() {
       mPrepareResult = ImgDrawResult::SUCCESS;
       break;
     case eStyleImageType_Element: {
-      Element* paintElement =  // may be null
+      dom::Element* paintElement =  // may be null
           SVGObserverUtils::GetAndObserveBackgroundImage(
               mForFrame->FirstContinuation(), mImage->GetElementId());
       // If the referenced element is an <img>, <canvas>, or <video> element,

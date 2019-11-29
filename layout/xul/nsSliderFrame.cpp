@@ -598,7 +598,7 @@ nsresult nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
     DragThumb(true);
 
 #ifdef MOZ_WIDGET_GTK
-    RefPtr<Element> thumb = thumbFrame->GetContent()->AsElement();
+    RefPtr<dom::Element> thumb = thumbFrame->GetContent()->AsElement();
     thumb->SetAttr(kNameSpaceID_None, nsGkAtoms::active,
                    NS_LITERAL_STRING("true"), true);
 #endif
@@ -770,8 +770,8 @@ void nsSliderFrame::CurrentPositionChanged() {
   mCurPos = curPos;
 }
 
-static void UpdateAttribute(Element* aScrollbar, nscoord aNewPos, bool aNotify,
-                            bool aIsSmooth) {
+static void UpdateAttribute(dom::Element* aScrollbar, nscoord aNewPos,
+                            bool aNotify, bool aIsSmooth) {
   nsAutoString str;
   str.AppendInt(aNewPos);
 
@@ -1086,7 +1086,7 @@ nsresult nsSliderFrame::StartDrag(Event* aEvent) {
   }
 
 #ifdef MOZ_WIDGET_GTK
-  RefPtr<Element> thumb = thumbFrame->GetContent()->AsElement();
+  RefPtr<dom::Element> thumb = thumbFrame->GetContent()->AsElement();
   thumb->SetAttr(kNameSpaceID_None, nsGkAtoms::active,
                  NS_LITERAL_STRING("true"), true);
 #endif
@@ -1123,7 +1123,7 @@ nsresult nsSliderFrame::StopDrag() {
 #ifdef MOZ_WIDGET_GTK
   nsIFrame* thumbFrame = mFrames.FirstChild();
   if (thumbFrame) {
-    RefPtr<Element> thumb = thumbFrame->GetContent()->AsElement();
+    RefPtr<dom::Element> thumb = thumbFrame->GetContent()->AsElement();
     thumb->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, true);
   }
 #endif

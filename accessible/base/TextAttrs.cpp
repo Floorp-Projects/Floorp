@@ -263,7 +263,7 @@ bool TextAttrsMgr::InvalidTextAttr::GetValue(nsIContent* aElm,
   nsIContent* elm = aElm;
   do {
     if (nsAccUtils::HasDefinedARIAToken(elm, nsGkAtoms::aria_invalid)) {
-      static Element::AttrValuesArray tokens[] = {
+      static dom::Element::AttrValuesArray tokens[] = {
           nsGkAtoms::_false, nsGkAtoms::grammar, nsGkAtoms::spelling, nullptr};
 
       int32_t idx = elm->AsElement()->FindAttrValueIn(

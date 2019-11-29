@@ -39,6 +39,7 @@
 
 using namespace mozilla;
 
+using mozilla::dom::Element;
 using mozilla::dom::Event;
 
 class nsSplitterInfo {
