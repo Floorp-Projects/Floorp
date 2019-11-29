@@ -28,7 +28,7 @@ const actions = require("./src/actions/index");
 
 const { WorkersListener } = require("devtools/client/shared/workers-listener");
 
-const { services } = require("./src/modules/application-services");
+const { services } = require("./src/modules/services");
 
 const App = createFactory(require("./src/components/App"));
 
@@ -49,6 +49,7 @@ window.Application = {
 
     this.store = configureStore();
     this.actions = bindActionCreators(actions, this.store.dispatch);
+    this.serviceWorkerRegistrationFronts = [];
 
     services.init(this.toolbox);
 
@@ -103,9 +104,7 @@ window.Application = {
       ? (await this.deviceFront.getDescription()).canDebugServiceWorkers
       : false;
 
-    this.actions.updateCanDebugWorkers(
-      canDebugWorkers && services.features.doesDebuggerSupportWorkers
-    );
+    this.actions.updateCanDebugWorkers(canDebugWorkers);
   },
 
   destroy() {
