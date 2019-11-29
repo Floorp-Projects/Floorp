@@ -11,6 +11,15 @@
 <script type="text/javascript">
 "use strict";
 window.sw = navigator.serviceWorker.register("debug-sw.js");
+
+/* exported fetchFromWorker */
+async function fetchFromWorker() {
+  const response = await fetch("test");
+  const text = await response.text();
+  console.log(`Response from worker: ${text}`);
+}
 </script>
+
+<p>This page has a <code>fetchFromWorker()</code> function.</p>
 </body>
 </html>

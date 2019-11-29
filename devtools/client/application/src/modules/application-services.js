@@ -4,6 +4,8 @@
 
 "use strict";
 
+const Services = require("Services");
+
 class ManifestDevToolsError extends Error {
   constructor(...params) {
     super(...params);
@@ -12,14 +14,26 @@ class ManifestDevToolsError extends Error {
   }
 }
 
-class Services {
+class ApplicationServices {
   init(toolbox) {
     this._toolbox = toolbox;
+
+    this.features = {
+      doesDebuggerSupportWorkers: Services.prefs.getBoolPref(
+        "devtools.debugger.features.windowless-service-workers",
+        false
+      ),
+    };
   }
 
   selectTool(toolId) {
     this._assertInit();
     return this._toolbox.selectTool(toolId);
+  }
+
+  async openWorkerInDebugger(workerTargetFront) {
+    const debuggerPanel = await this.selectTool("jsdebugger");
+    debuggerPanel.selectWorker(workerTargetFront);
   }
 
   async fetchManifest() {
@@ -54,5 +68,5 @@ class Services {
 module.exports = {
   ManifestDevToolsError,
   // exports a singleton, which will be used across all application panel modules
-  services: new Services(),
+  services: new ApplicationServices(),
 };

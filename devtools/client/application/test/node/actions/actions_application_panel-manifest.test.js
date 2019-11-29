@@ -12,7 +12,7 @@ const { setupStore } = require("devtools/client/application/test/node/helpers");
 const {
   ManifestDevToolsError,
   services,
-} = require("devtools/client/application/src/modules/services");
+} = require("devtools/client/application/src/modules/application-services");
 
 const {
   FETCH_MANIFEST_FAILURE,

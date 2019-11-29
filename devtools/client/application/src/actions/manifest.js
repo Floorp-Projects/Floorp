@@ -6,7 +6,10 @@
 
 const { l10n } = require("../modules/l10n");
 
-const { services, ManifestDevToolsError } = require("../modules/services");
+const {
+  services,
+  ManifestDevToolsError,
+} = require("../modules/application-services");
 const {
   FETCH_MANIFEST_FAILURE,
   FETCH_MANIFEST_START,
