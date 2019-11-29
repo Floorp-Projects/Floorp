@@ -193,7 +193,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
   },
 
   get isDestroyed() {
-    return this.actorID == null;
+    return this.walker == null || this.actorID == null;
   },
 
   get role() {
@@ -369,6 +369,10 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     }
 
     const doc = await this.walker.getDocument();
+    if (this.isDestroyed) {
+      // This accessible actor is destroyed.
+      return relationObjects;
+    }
     relations.forEach(relation => {
       if (RELATIONS_TO_IGNORE.has(relation.relationType)) {
         return;
@@ -475,6 +479,10 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       appliedColorMatrix: this.walker.colorMatrix,
     });
 
+    if (this.isDestroyed) {
+      // This accessible actor is destroyed.
+      return null;
+    }
     walker.restoreStyles(win);
 
     return contrastRatio;
