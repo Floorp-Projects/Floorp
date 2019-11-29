@@ -1185,10 +1185,10 @@ def enable_fission_on_central(config, tests):
             yield test
             continue
 
-        # Mochitest/wpt only (with exceptions)
+        # Mochitest/wpt/awsy only (with exceptions)
         exceptions = ('gpu', 'remote', 'screenshots')
         if (test['attributes']['unittest_category'] not in
-                ('mochitest', 'web-platform-tests') or
+                ('mochitest', 'web-platform-tests', 'awsy') or
                 any(s in test['attributes']['unittest_suite'] for s in exceptions)):
             yield test
             continue
@@ -1213,6 +1213,8 @@ def enable_fission_on_central(config, tests):
             test['tier'] = 3
             if platform == 'linux64' and btype == 'debug' and test['webrender']:
                 test['run-on-projects'] = ['ash', 'try', 'trunk']
+        elif test['attributes']['unittest_category'] == 'awsy':
+            test['tier'] = 3
         yield test
 
 
