@@ -33,14 +33,6 @@ FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["de"] += [
   '_locales/de/messages.json'
 ]
 
-FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["en_CA"] += [
-  '_locales/en_CA/messages.json'
-]
-
-FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["en_GB"] += [
-  '_locales/en_GB/messages.json'
-]
-
 FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["en_US"] += [
   '_locales/en_US/messages.json'
 ]
