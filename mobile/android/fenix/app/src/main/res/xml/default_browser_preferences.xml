@@ -10,6 +10,7 @@
         app:iconSpaceReserved="false" />
     <CheckBoxPreference
         android:layout="@layout/checkbox_left_preference"
+        android:defaultValue="false"
         android:key="@string/pref_key_open_links_in_a_private_tab"
         android:title="@string/preferences_open_links_in_a_private_tab" />
 </PreferenceScreen>
