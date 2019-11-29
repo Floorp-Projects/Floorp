@@ -270,6 +270,7 @@ const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
   getWalker() {
     if (!this.walker) {
       this.walker = new AccessibleWalkerActor(this.conn, this.targetActor);
+      this.manage(this.walker);
     }
     return this.walker;
   },
@@ -311,10 +312,6 @@ const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
     this.destroyed = new Promise(resolve => {
       resolver = resolve;
     });
-
-    if (this.walker) {
-      this.walker.reset();
-    }
 
     Services.obs.removeObserver(this, "a11y-init-or-shutdown");
     if (DebuggerServer.isInChildProcess) {
