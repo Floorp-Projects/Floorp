@@ -23,6 +23,12 @@ loader.lazyRequireGetter(
   "nodeConstants",
   "devtools/shared/dom-node-constants"
 );
+loader.lazyRequireGetter(
+  this,
+  "isDefunct",
+  "devtools/server/actors/utils/accessibility",
+  true
+);
 
 const {
   accessibility: {
@@ -483,6 +489,9 @@ function tabIndexRule(accessible) {
 }
 
 function auditKeyboard(accessible) {
+  if (isDefunct(accessible)) {
+    return null;
+  }
   // Do not test anything on accessible objects for documents or frames.
   if (
     accessible.role === Ci.nsIAccessibleRole.ROLE_DOCUMENT ||
