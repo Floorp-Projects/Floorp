@@ -8418,39 +8418,40 @@ nsGridContainerFrame* nsGridContainerFrame::GetGridContainerFrame(
 nsGridContainerFrame* nsGridContainerFrame::GetGridFrameWithComputedInfo(
     nsIFrame* aFrame) {
   nsGridContainerFrame* gridFrame = GetGridContainerFrame(aFrame);
-  if (gridFrame) {
-    // if any of our properties are missing, generate them
-    bool reflowNeeded = (!gridFrame->HasProperty(GridColTrackInfo()) ||
-                         !gridFrame->HasProperty(GridRowTrackInfo()) ||
-                         !gridFrame->HasProperty(GridColumnLineInfo()) ||
-                         !gridFrame->HasProperty(GridRowLineInfo()));
+  if (!gridFrame) {
+    return nullptr;
+  }
 
-    if (reflowNeeded) {
-      // Trigger a reflow that generates additional grid property data.
-      // Hold onto aFrame while we do this, in case reflow destroys it.
-      AutoWeakFrame weakFrameRef(aFrame);
+  auto HasComputedInfo = [](const nsGridContainerFrame& aFrame) -> bool {
+    return aFrame.HasProperty(GridColTrackInfo()) &&
+           aFrame.HasProperty(GridRowTrackInfo()) &&
+           aFrame.HasProperty(GridColumnLineInfo()) &&
+           aFrame.HasProperty(GridRowLineInfo());
+  };
 
-      RefPtr<mozilla::PresShell> presShell = gridFrame->PresShell();
-      gridFrame->AddStateBits(NS_STATE_GRID_GENERATE_COMPUTED_VALUES);
-      presShell->FrameNeedsReflow(gridFrame, IntrinsicDirty::Resize,
-                                  NS_FRAME_IS_DIRTY);
-      presShell->FlushPendingNotifications(FlushType::Layout);
+  if (HasComputedInfo(*gridFrame)) {
+    return gridFrame;
+  }
 
-      // Since the reflow may have side effects, get the grid frame
-      // again. But if the weakFrameRef is no longer valid, then we
-      // must bail out.
-      if (!weakFrameRef.IsAlive()) {
-        return nullptr;
-      }
+  // Trigger a reflow that generates additional grid property data.
+  // Hold onto aFrame while we do this, in case reflow destroys it.
+  AutoWeakFrame weakFrameRef(gridFrame);
 
-      gridFrame = GetGridContainerFrame(weakFrameRef.GetFrame());
+  RefPtr<mozilla::PresShell> presShell = gridFrame->PresShell();
+  gridFrame->AddStateBits(NS_STATE_GRID_GENERATE_COMPUTED_VALUES);
+  presShell->FrameNeedsReflow(gridFrame, IntrinsicDirty::Resize,
+                              NS_FRAME_IS_DIRTY);
+  presShell->FlushPendingNotifications(FlushType::Layout);
 
-      // Assert the grid properties are present
-      MOZ_ASSERT(!gridFrame || gridFrame->HasProperty(GridColTrackInfo()));
-      MOZ_ASSERT(!gridFrame || gridFrame->HasProperty(GridRowTrackInfo()));
-      MOZ_ASSERT(!gridFrame || gridFrame->HasProperty(GridColumnLineInfo()));
-      MOZ_ASSERT(!gridFrame || gridFrame->HasProperty(GridRowLineInfo()));
-    }
+  // If the weakFrameRef is no longer valid, then we must bail out.
+  if (!weakFrameRef.IsAlive()) {
+    return nullptr;
+  }
+
+  // This can happen if for some reason we ended up not reflowing, like in print
+  // preview under some circumstances.
+  if (MOZ_UNLIKELY(!HasComputedInfo(*gridFrame))) {
+    return nullptr;
   }
 
   return gridFrame;
