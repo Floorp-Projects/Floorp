@@ -371,9 +371,7 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
 
   SideBits GetFixedPositionSides() const {
     MOZ_ASSERT(IsValid());
-
-    // TODO: Implement for WebRender.
-    return SideBits::eNone;
+    return mLayer->GetFixedPositionSides();
   }
 
   Maybe<uint64_t> GetZoomAnimationId() const {
