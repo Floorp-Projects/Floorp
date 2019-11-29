@@ -631,147 +631,177 @@ AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypes(MBasicBlock* entry,
   BytecodeLocation end(script_, loopStopPc);
 
   // Iterate the bytecode quickly to seed possible types in the loopheader.
-  BytecodeLocation last = start;
-  BytecodeLocation earlier = last;
+  Maybe<BytecodeLocation> last;
+  Maybe<BytecodeLocation> earlier;
 
   for (auto it : BytecodeLocationRange(start, end)) {
-    // Keeping track of previous BytecodeLocation values
+    MOZ_TRY(analyzeNewLoopTypesForLocation(entry, it, last, earlier));
     earlier = last;
-    last = it;
-
-    uint32_t slot;
-
-    if (it.is(JSOP_SETLOCAL)) {
-      slot = info().localSlot(it.local());
-    } else if (it.is(JSOP_SETARG)) {
-      slot = info().argSlotUnchecked(it.arg());
-    } else {
-      continue;
-    }
-    if (slot >= info().firstStackSlot()) {
-      continue;
-    }
-    if (!last.isValid(script_)) {
-      continue;
-    }
-
-    MPhi* phi = entry->getSlot(slot)->toPhi();
-
-    if (last.is(JSOP_POS) || last.is(JSOP_TONUMERIC)) {
-      last = earlier;
-    }
-
-    if (last.opHasTypeSet()) {
-      TemporaryTypeSet* typeSet = bytecodeTypes(last.toRawBytecode());
-      if (!typeSet->empty()) {
-        MIRType type = typeSet->getKnownMIRType();
-        if (!phi->addBackedgeType(alloc(), type, typeSet)) {
-          return abort(AbortReason::Alloc);
-        }
-      }
-    } else if (last.is(JSOP_GETLOCAL) || last.is(JSOP_GETARG)) {
-      uint32_t slot = (last.is(JSOP_GETLOCAL))
-                          ? info().localSlot(last.local())
-                          : info().argSlotUnchecked(last.arg());
-      if (slot < info().firstStackSlot()) {
-        MPhi* otherPhi = entry->getSlot(slot)->toPhi();
-        if (otherPhi->hasBackedgeType()) {
-          if (!phi->addBackedgeType(alloc(), otherPhi->type(),
-                                    otherPhi->resultTypeSet())) {
-            return abort(AbortReason::Alloc);
-          }
-        }
-      }
-    } else {
-      MIRType type = MIRType::None;
-      switch (last.getOp()) {
-        case JSOP_VOID:
-        case JSOP_UNDEFINED:
-          type = MIRType::Undefined;
-          break;
-        case JSOP_GIMPLICITTHIS:
-          if (!script()->hasNonSyntacticScope()) {
-            type = MIRType::Undefined;
-          }
-          break;
-        case JSOP_NULL:
-          type = MIRType::Null;
-          break;
-        case JSOP_ZERO:
-        case JSOP_ONE:
-        case JSOP_INT8:
-        case JSOP_INT32:
-        case JSOP_UINT16:
-        case JSOP_UINT24:
-        case JSOP_RESUMEINDEX:
-          type = MIRType::Int32;
-          break;
-        case JSOP_BITAND:
-        case JSOP_BITOR:
-        case JSOP_BITXOR:
-        case JSOP_BITNOT:
-        case JSOP_RSH:
-        case JSOP_LSH:
-          type = inspector->expectedResultType(last.toRawBytecode());
-          break;
-        case JSOP_URSH:
-          // Unsigned right shift is not applicable to BigInts, so we don't need
-          // to query the baseline inspector for the possible result types.
-          type = MIRType::Int32;
-          break;
-        case JSOP_FALSE:
-        case JSOP_TRUE:
-        case JSOP_EQ:
-        case JSOP_NE:
-        case JSOP_LT:
-        case JSOP_LE:
-        case JSOP_GT:
-        case JSOP_GE:
-        case JSOP_NOT:
-        case JSOP_STRICTEQ:
-        case JSOP_STRICTNE:
-        case JSOP_IN:
-        case JSOP_INSTANCEOF:
-        case JSOP_HASOWN:
-          type = MIRType::Boolean;
-          break;
-        case JSOP_DOUBLE:
-          type = MIRType::Double;
-          break;
-        case JSOP_ITERNEXT:
-        case JSOP_STRING:
-        case JSOP_TOSTRING:
-        case JSOP_TYPEOF:
-        case JSOP_TYPEOFEXPR:
-          type = MIRType::String;
-          break;
-        case JSOP_SYMBOL:
-          type = MIRType::Symbol;
-          break;
-        case JSOP_ADD:
-        case JSOP_SUB:
-        case JSOP_MUL:
-        case JSOP_DIV:
-        case JSOP_MOD:
-        case JSOP_NEG:
-        case JSOP_INC:
-        case JSOP_DEC:
-          type = inspector->expectedResultType(last.toRawBytecode());
-          break;
-        case JSOP_BIGINT:
-          type = MIRType::BigInt;
-          break;
-        default:
-          break;
-      }
-      if (type != MIRType::None) {
-        if (!phi->addBackedgeType(alloc(), type, nullptr)) {
-          return abort(AbortReason::Alloc);
-        }
-      }
-    }
+    last = mozilla::Some(it);
   }
+
   return Ok();
+}
+
+AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypesForLocation(
+    MBasicBlock* entry, const BytecodeLocation loc,
+    const Maybe<BytecodeLocation>& last_,
+    const Maybe<BytecodeLocation>& earlier) {
+  // Unfortunately Maybe<> cannot be passed as by-value argument so make a copy
+  // here.
+  Maybe<BytecodeLocation> last = last_;
+
+  // We're only interested in JSOP_SETLOCAL and JSOP_SETARG.
+  uint32_t slot;
+  if (loc.is(JSOP_SETLOCAL)) {
+    slot = info().localSlot(loc.local());
+  } else if (loc.is(JSOP_SETARG)) {
+    slot = info().argSlotUnchecked(loc.arg());
+  } else {
+    return Ok();
+  }
+  if (slot >= info().firstStackSlot()) {
+    return Ok();
+  }
+
+  // Ensure there is a |last| instruction.
+  if (!last) {
+    return Ok();
+  }
+  MOZ_ASSERT(last->isValid(script_));
+
+  // Analyze the |last| bytecode instruction to try to dermine the type of this
+  // local/argument.
+
+  MPhi* phi = entry->getSlot(slot)->toPhi();
+
+  auto addPhiBackedgeType =
+      [&](MIRType type, TemporaryTypeSet* typeSet) -> AbortReasonOr<Ok> {
+    if (!phi->addBackedgeType(alloc(), type, typeSet)) {
+      return abort(AbortReason::Alloc);
+    }
+    return Ok();
+  };
+
+  // If it's a JSOP_POS or JSOP_TONUMERIC, use its operand instead.
+  if (last->is(JSOP_POS) || last->is(JSOP_TONUMERIC)) {
+    MOZ_ASSERT(earlier);
+    last = earlier;
+  }
+
+  // If the |last| op had a TypeSet, use it.
+  if (last->opHasTypeSet()) {
+    TemporaryTypeSet* typeSet = bytecodeTypes(last->toRawBytecode());
+    if (typeSet->empty()) {
+      return Ok();
+    }
+    return addPhiBackedgeType(typeSet->getKnownMIRType(), typeSet);
+  }
+
+  // If the |last| op was a JSOP_GETLOCAL or JSOP_GETARG, use that slot's type.
+  if (last->is(JSOP_GETLOCAL) || last->is(JSOP_GETARG)) {
+    uint32_t slot = (last->is(JSOP_GETLOCAL))
+                        ? info().localSlot(last->local())
+                        : info().argSlotUnchecked(last->arg());
+    if (slot >= info().firstStackSlot()) {
+      return Ok();
+    }
+    MPhi* otherPhi = entry->getSlot(slot)->toPhi();
+    if (!otherPhi->hasBackedgeType()) {
+      return Ok();
+    }
+    return addPhiBackedgeType(otherPhi->type(), otherPhi->resultTypeSet());
+  }
+
+  // If the |last| op has a known type (determined statically or from
+  // BaselineInspector), use that.
+  MIRType type = MIRType::None;
+  switch (last->getOp()) {
+    case JSOP_VOID:
+    case JSOP_UNDEFINED:
+      type = MIRType::Undefined;
+      break;
+    case JSOP_GIMPLICITTHIS:
+      if (!script()->hasNonSyntacticScope()) {
+        type = MIRType::Undefined;
+      }
+      break;
+    case JSOP_NULL:
+      type = MIRType::Null;
+      break;
+    case JSOP_ZERO:
+    case JSOP_ONE:
+    case JSOP_INT8:
+    case JSOP_INT32:
+    case JSOP_UINT16:
+    case JSOP_UINT24:
+    case JSOP_RESUMEINDEX:
+      type = MIRType::Int32;
+      break;
+    case JSOP_BITAND:
+    case JSOP_BITOR:
+    case JSOP_BITXOR:
+    case JSOP_BITNOT:
+    case JSOP_RSH:
+    case JSOP_LSH:
+      type = inspector->expectedResultType(last->toRawBytecode());
+      break;
+    case JSOP_URSH:
+      // Unsigned right shift is not applicable to BigInts, so we don't need
+      // to query the baseline inspector for the possible result types.
+      type = MIRType::Int32;
+      break;
+    case JSOP_FALSE:
+    case JSOP_TRUE:
+    case JSOP_EQ:
+    case JSOP_NE:
+    case JSOP_LT:
+    case JSOP_LE:
+    case JSOP_GT:
+    case JSOP_GE:
+    case JSOP_NOT:
+    case JSOP_STRICTEQ:
+    case JSOP_STRICTNE:
+    case JSOP_IN:
+    case JSOP_INSTANCEOF:
+    case JSOP_HASOWN:
+      type = MIRType::Boolean;
+      break;
+    case JSOP_DOUBLE:
+      type = MIRType::Double;
+      break;
+    case JSOP_ITERNEXT:
+    case JSOP_STRING:
+    case JSOP_TOSTRING:
+    case JSOP_TYPEOF:
+    case JSOP_TYPEOFEXPR:
+      type = MIRType::String;
+      break;
+    case JSOP_SYMBOL:
+      type = MIRType::Symbol;
+      break;
+    case JSOP_ADD:
+    case JSOP_SUB:
+    case JSOP_MUL:
+    case JSOP_DIV:
+    case JSOP_MOD:
+    case JSOP_NEG:
+    case JSOP_INC:
+    case JSOP_DEC:
+      type = inspector->expectedResultType(last->toRawBytecode());
+      break;
+    case JSOP_BIGINT:
+      type = MIRType::BigInt;
+      break;
+    default:
+      break;
+  }
+
+  if (type == MIRType::None) {
+    return Ok();
+  }
+
+  return addPhiBackedgeType(type, /* typeSet = */ nullptr);
 }
 
 AbortReasonOr<Ok> IonBuilder::init() {
