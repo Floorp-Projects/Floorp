@@ -398,11 +398,12 @@ class BuildBackendLoader(TestLoader):
             for metadata in tests:
                 defaults_manifests = [metadata['manifest']]
 
-                ancestor_manifest = metadata.get('ancestor-manifest')
+                ancestor_manifest = metadata.get('ancestor_manifest')
                 if ancestor_manifest:
                     # The (ancestor manifest, included manifest) tuple
                     # contains the defaults of the included manifest, so
                     # use it instead of [metadata['manifest']].
+                    ancestor_manifest = os.path.join(self.topsrcdir, ancestor_manifest)
                     defaults_manifests[0] = (ancestor_manifest, metadata['manifest'])
                     defaults_manifests.append(ancestor_manifest)
 
