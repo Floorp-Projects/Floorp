@@ -2673,8 +2673,9 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPointWR(
   wr::WrPipelineId pipelineId;
   ScrollableLayerGuid::ViewID scrollId;
   gfx::CompositorHitTestInfo hitInfo;
+  SideBits sideBits = SideBits::eNone;
   bool hitSomething = wr->HitTest(wr::ToWorldPoint(aHitTestPoint), pipelineId,
-                                  scrollId, hitInfo);
+                                  scrollId, hitInfo, sideBits);
   if (!hitSomething) {
     return hit;
   }
@@ -2727,20 +2728,7 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPointWR(
                                   mTreeLock);
   }
 
-  // TODO: Setting hit.mFixedPosSides needs to be implemented for WebRender.
-  // There are two possible implementation strategies here:
-  //  (1) Have the WebRender HitTest API call return enough information
-  //      to locate the fixed node that was hit, and use
-  //      HitTestingTreeNode::GetFixedPosSides() to get the fixed sides.
-  //      Note that the fixed node that was hit may be a descendant of
-  //      the scrolling node found via GetTargetNode() above, so it's
-  //      not enough to simply walk up the hit testing tree from that node.
-  //      Note also that, in this case,
-  //      WebRenderScrollDataWrapper::GetFixedPositionSides() needs to be
-  //      implemented as well, so the fixed pos sides are populated in the
-  //      hit testing tree.
-  //  (2) Propagate the fixed position sides to WebRender itself, and have
-  //      the WebRender HitTest API call return them directly.
+  hit.mFixedPosSides = sideBits;
 
   return hit;
 }
