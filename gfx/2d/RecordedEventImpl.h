@@ -911,6 +911,35 @@ class RecordedSourceSurfaceDestruction
   MOZ_IMPLICIT RecordedSourceSurfaceDestruction(S& aStream);
 };
 
+class RecordedOptimizeSourceSurface
+    : public RecordedEventDerived<RecordedOptimizeSourceSurface> {
+ public:
+  RecordedOptimizeSourceSurface(ReferencePtr aSurface, ReferencePtr aDT,
+                                ReferencePtr aOptimizedSurface)
+      : RecordedEventDerived(OPTIMIZESOURCESURFACE),
+        mSurface(aSurface),
+        mDT(aDT),
+        mOptimizedSurface(aOptimizedSurface) {}
+
+  bool PlayEvent(Translator* aTranslator) const override;
+
+  template <class S>
+  void Record(S& aStream) const;
+  void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
+
+  std::string GetName() const override { return "OptimizeSourceSurface"; }
+
+ private:
+  friend class RecordedEvent;
+
+  ReferencePtr mSurface;
+  ReferencePtr mDT;
+  ReferencePtr mOptimizedSurface;
+
+  template <class S>
+  MOZ_IMPLICIT RecordedOptimizeSourceSurface(S& aStream);
+};
+
 class RecordedExternalSurfaceCreation
     : public RecordedEventDerived<RecordedExternalSurfaceCreation> {
  public:
@@ -2869,6 +2898,35 @@ inline void RecordedSourceSurfaceDestruction::OutputSimpleEventInfo(
   aStringStream << "[" << mRefPtr << "] SourceSurface Destroyed";
 }
 
+inline bool RecordedOptimizeSourceSurface::PlayEvent(
+    Translator* aTranslator) const {
+  RefPtr<SourceSurface> src =
+      aTranslator->LookupDrawTarget(mDT)->OptimizeSourceSurface(
+          aTranslator->LookupSourceSurface(mSurface));
+  aTranslator->AddSourceSurface(mOptimizedSurface, src);
+  return true;
+}
+
+template <class S>
+void RecordedOptimizeSourceSurface::Record(S& aStream) const {
+  WriteElement(aStream, mSurface);
+  WriteElement(aStream, mDT);
+  WriteElement(aStream, mOptimizedSurface);
+}
+
+template <class S>
+RecordedOptimizeSourceSurface::RecordedOptimizeSourceSurface(S& aStream)
+    : RecordedEventDerived(OPTIMIZESOURCESURFACE) {
+  ReadElement(aStream, mSurface);
+  ReadElement(aStream, mDT);
+  ReadElement(aStream, mOptimizedSurface);
+}
+
+inline void RecordedOptimizeSourceSurface::OutputSimpleEventInfo(
+    std::stringstream& aStringStream) const {
+  aStringStream << "[" << mSurface << "] Surface Optimized (DT: " << mDT << ")";
+}
+
 inline bool RecordedExternalSurfaceCreation::PlayEvent(
     Translator* aTranslator) const {
   RefPtr<SourceSurface> surface = aTranslator->LookupExternalSurface(mKey);
@@ -3574,7 +3632,8 @@ inline void RecordedFilterNodeSetInput::OutputSimpleEventInfo(
   f(INTOLUMINANCE, RecordedIntoLuminanceSource);                   \
   f(EXTERNALSURFACECREATION, RecordedExternalSurfaceCreation);     \
   f(FLUSH, RecordedFlush);                                         \
-  f(DETACHALLSNAPSHOTS, RecordedDetachAllSnapshots);
+  f(DETACHALLSNAPSHOTS, RecordedDetachAllSnapshots);               \
+  f(OPTIMIZESOURCESURFACE, RecordedOptimizeSourceSurface);
 
 #define DO_WITH_EVENT_TYPE(_typeenum, _class) \
   case _typeenum: {                           \
