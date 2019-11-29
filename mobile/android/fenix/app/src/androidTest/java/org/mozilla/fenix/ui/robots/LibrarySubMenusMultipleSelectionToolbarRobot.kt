@@ -45,7 +45,7 @@ class LibrarySubMenusMultipleSelectionToolbarRobot {
 
         mDevice.waitNotNull(
             Until.findObject(
-                By.text("SHARE A LINK")
+                By.text("ALL ACTIONS")
             ), waitingTime
         )
     }
@@ -55,7 +55,7 @@ class LibrarySubMenusMultipleSelectionToolbarRobot {
 
         mDevice.waitNotNull(
             Until.findObject(
-                By.text("SHARE A LINK")
+                By.text("ALL ACTIONS")
             ), waitingTime
         )
     }

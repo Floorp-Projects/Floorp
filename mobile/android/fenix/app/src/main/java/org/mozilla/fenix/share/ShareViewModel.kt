@@ -31,12 +31,13 @@ import org.mozilla.fenix.share.listadapters.SyncShareOption
 class ShareViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
-        private const val RECENT_APPS_LIMIT = 6
+        internal const val RECENT_APPS_LIMIT = 6
     }
 
     private val connectivityManager by lazy { application.getSystemService<ConnectivityManager>() }
     private val fxaAccountManager = application.components.backgroundServices.accountManager
-    private val recentAppsStorage = RecentAppsStorage(application.applicationContext)
+    @VisibleForTesting
+    internal var recentAppsStorage = RecentAppsStorage(application.applicationContext)
 
     private val devicesListLiveData = MutableLiveData<List<SyncShareOption>>(emptyList())
     private val appsListLiveData = MutableLiveData<List<AppShareOption>>(emptyList())
@@ -131,8 +132,9 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
         connectivityManager?.unregisterNetworkCallback(networkCallback)
     }
 
+    @VisibleForTesting
     @WorkerThread
-    private fun getIntentActivities(shareIntent: Intent, context: Context): List<ResolveInfo>? {
+    fun getIntentActivities(shareIntent: Intent, context: Context): List<ResolveInfo>? {
         return context.packageManager.queryIntentActivities(shareIntent, 0)
     }
 

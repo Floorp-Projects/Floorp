@@ -48,7 +48,7 @@ class ThreeDotMenuMainRobot {
     fun verifyReaderViewAppearance(visible: Boolean) = assertReaderViewAppearanceButton(visible)
     fun clickShareButton() {
         shareButton().click()
-        mDevice.waitNotNull(Until.findObject(By.text("SHARE A LINK")), waitingTime)
+        mDevice.waitNotNull(Until.findObject(By.text("ALL ACTIONS")), waitingTime)
     }
 
     fun verifyShareTabButton() = assertShareTabButton()
@@ -293,7 +293,7 @@ private fun assertSendToDeviceTitle() = SendToDeviceTitle()
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun ShareALinkTitle() =
-    onView(allOf(withText(R.string.share_link_all_apps_subheader), withResourceName("apps_link_header")))
+    onView(allOf(withText("ALL ACTIONS"), withResourceName("apps_link_header")))
 
 private fun assertShareALinkTitle() = ShareALinkTitle()
 

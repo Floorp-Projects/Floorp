@@ -22,11 +22,15 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.TabData
 import mozilla.components.feature.accounts.push.SendTabUseCases
+import mozilla.components.feature.share.RecentAppsStorage
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
@@ -44,6 +48,7 @@ import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
+@ExperimentalCoroutinesApi
 class ShareControllerTest {
     // Need a valid context to retrieve Strings for example, but we also need it to return our "metrics"
     private val context: Context = spyk(testContext)
@@ -58,12 +63,15 @@ class ShareControllerTest {
         TabData("title1", "url1")
     )
     private val textToShare = "${shareData[0].title} ${shareData[0].url}\n\n${shareData[1].title} ${shareData[1].url}"
+    private val testCoroutineScope = TestCoroutineScope()
     private val sendTabUseCases = mockk<SendTabUseCases>(relaxed = true)
     private val snackbar = mockk<FenixSnackbar>(relaxed = true)
     private val navController = mockk<NavController>(relaxed = true)
     private val dismiss = mockk<(ShareController.Result) -> Unit>(relaxed = true)
+    private val recentAppStorage = mockk<RecentAppsStorage>(relaxed = true)
     private val controller = DefaultShareController(
-        context, shareData, sendTabUseCases, snackbar, navController, dismiss
+        context, shareData, sendTabUseCases, snackbar, navController,
+        recentAppStorage, testCoroutineScope, dismiss
     )
 
     @Before
@@ -79,7 +87,7 @@ class ShareControllerTest {
     }
 
     @Test
-    fun `handleShareToApp should start a new sharing activity and close this`() {
+    fun `handleShareToApp should start a new sharing activity and close this`() = runBlocking {
         val appPackageName = "package"
         val appClassName = "activity"
         val appShareOption = AppShareOption("app", mockk(), appPackageName, appClassName)
@@ -88,8 +96,10 @@ class ShareControllerTest {
         // needed for capturing the actual Intent used the `slot` one doesn't have this flag so we
         // need to use an Activity Context.
         val activityContext: Context = mockk<Activity>()
-        val testController = DefaultShareController(activityContext, shareData, mockk(), mockk(), mockk(), dismiss)
+        val testController = DefaultShareController(activityContext, shareData, mockk(), mockk(), mockk(),
+            recentAppStorage, testCoroutineScope, dismiss)
         every { activityContext.startActivity(capture(shareIntent)) } just Runs
+        every { recentAppStorage.updateRecentApp(appShareOption.packageName) } just Runs
 
         testController.handleShareToApp(appShareOption)
 
@@ -104,6 +114,7 @@ class ShareControllerTest {
             assertThat(shareIntent.captured.component!!.className).isEqualTo(appClassName)
         }
         verifyOrder {
+            recentAppStorage.updateRecentApp(appShareOption.packageName)
             activityContext.startActivity(shareIntent.captured)
             dismiss(ShareController.Result.SUCCESS)
         }
@@ -119,7 +130,8 @@ class ShareControllerTest {
         // needed for capturing the actual Intent used the `slot` one doesn't have this flag so we
         // need to use an Activity Context.
         val activityContext: Context = mockk<Activity>()
-        val testController = DefaultShareController(activityContext, shareData, mockk(), snackbar, mockk(), dismiss)
+        val testController = DefaultShareController(activityContext, shareData, mockk(), snackbar,
+            mockk(), mockk(), testCoroutineScope, dismiss)
         every { activityContext.startActivity(capture(shareIntent)) } throws SecurityException()
         every { activityContext.getString(R.string.share_error_snackbar) } returns "Cannot share to this app"
 
@@ -242,7 +254,14 @@ class ShareControllerTest {
     @Test
     fun `getSuccessMessage should return different strings depending on the number of shared tabs`() {
         val controllerWithOneSharedTab = DefaultShareController(
-            context, listOf(ShareData(url = "url0", title = "title0")), mockk(), mockk(), mockk(), mockk()
+            context,
+            listOf(ShareData(url = "url0", title = "title0")),
+            mockk(),
+            mockk(),
+            mockk(),
+            mockk(),
+            mockk(),
+            mockk()
         )
         val controllerWithMoreSharedTabs = controller
         val expectedTabSharedMessage = context.getString(R.string.sync_sent_tab_snackbar)

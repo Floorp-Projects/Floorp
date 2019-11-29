@@ -22,9 +22,9 @@ import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.sitepermissions.SitePermissions
@@ -42,16 +42,17 @@ import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
+@ExperimentalCoroutinesApi
 @UseExperimental(ObsoleteCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class DefaultQuickSettingsControllerTest {
     private val context = testContext
     private val store = mockk<QuickSettingsFragmentStore>()
-    private val coroutinesScope = GlobalScope
+    private val coroutinesScope = TestCoroutineScope()
     private val navController = mockk<NavController>(relaxed = true)
     private val browserSession = mockk<Session>()
-    private val sitePermissions = SitePermissions(origin = "", savedAt = 123)
+    private val sitePermissions: SitePermissions = SitePermissions(origin = "", savedAt = 123)
     private val appSettings = mockk<Settings>(relaxed = true)
     private val permissionStorage = mockk<PermissionStorage>(relaxed = true)
     private val reload = mockk<SessionUseCases.ReloadUrlUseCase>(relaxed = true)
@@ -121,9 +122,8 @@ class DefaultQuickSettingsControllerTest {
         // We want to verify that the Status is toggled and this event is passed to Controller also.
         assertThat(sitePermissions.camera).isSameAs(NO_DECISION)
         verifyOrder {
-            sitePermissions.toggle(capture(toggledFeature)).also {
-                controller.handlePermissionsChange(it)
-            }
+            val permission = sitePermissions.toggle(capture(toggledFeature))
+            controller.handlePermissionsChange(permission)
         }
         // We should also modify View's state. Not necessarily as the last operation.
         verify {
