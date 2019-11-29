@@ -25,6 +25,9 @@ async function enableServiceWorkerDebugging() {
   // SW debugging in multi-e10s.
   await pushPref("dom.ipc.processCount", 1);
 
+  // Enable service workers in the debugger
+  await pushPref("devtools.debugger.features.windowless-service-workers", true);
+
   // Wait for dom.ipc.processCount to be updated before releasing processes.
   Services.ppmm.releaseCachedProcesses();
 }
