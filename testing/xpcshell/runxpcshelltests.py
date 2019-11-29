@@ -857,9 +857,9 @@ class XPCShellTests(object):
 
     def normalizeTest(self, root, test_object):
         path = test_object.get('file_relpath', test_object['relpath'])
-        if 'dupe-manifest' in test_object and 'ancestor-manifest' in test_object:
+        if 'dupe-manifest' in test_object and 'ancestor_manifest' in test_object:
             test_object['id'] = '%s:%s' % (os.path.basename
-                                           (test_object['ancestor-manifest']), path)
+                                           (test_object['ancestor_manifest']), path)
         else:
             test_object['id'] = path
 
