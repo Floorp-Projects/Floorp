@@ -3,16 +3,8 @@
 
 "use strict";
 
-self.addEventListener("activate", event => {
-  event.waitUntil(self.clients.claim());
-});
-
+// Bug 1328293
 self.onfetch = function(event) {
-  const url = event.request.url;
-
-  const response = url.endsWith("test")
-    ? new Response("lorem ipsum", { statusText: "OK" })
-    : fetch(event.request);
-
-  event.respondWith(response);
+  const a = 5;
+  console.log(a);
 };
