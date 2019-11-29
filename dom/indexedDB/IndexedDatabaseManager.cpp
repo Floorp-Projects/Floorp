@@ -916,15 +916,16 @@ void FileManagerInfo::InvalidateAndRemoveFileManager(
     PersistenceType aPersistenceType, const nsAString& aName) {
   AssertIsOnIOThread();
 
-  nsTArray<RefPtr<FileManager> >& managers = GetArray(aPersistenceType);
+  auto& managers = GetArray(aPersistenceType);
+  const auto end = managers.cend();
+  const auto foundIt =
+      std::find_if(managers.cbegin(), end, [&aName](const auto& fileManager) {
+        return fileManager->DatabaseName() == aName;
+      });
 
-  for (uint32_t i = 0; i < managers.Length(); i++) {
-    RefPtr<FileManager>& fileManager = managers[i];
-    if (fileManager->DatabaseName() == aName) {
-      fileManager->Invalidate();
-      managers.RemoveElementAt(i);
-      return;
-    }
+  if (foundIt != end) {
+    (*foundIt)->Invalidate();
+    managers.RemoveElementAt(foundIt.GetIndex());
   }
 }
 
