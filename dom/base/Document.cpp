@@ -3004,7 +3004,13 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     // if this is not a load of such type, there is nothing to do here.
     if (contentType == nsIContentPolicy::TYPE_SUBDOCUMENT ||
         contentType == nsIContentPolicy::TYPE_OBJECT) {
-      if (mCSP) {
+      // we only enforce frame-ancestors if the load is an actual http
+      // channel, otherwise we block dynamic iframes since about:blank
+      // inherits the CSP.
+      nsCOMPtr<nsIHttpChannel> httpChannel;
+      nsContentSecurityUtils::GetHttpChannelFromPotentialMultiPart(
+          aChannel, getter_AddRefs(httpChannel));
+      if (httpChannel && mCSP) {
         bool safeAncestry = false;
         // PermitsAncestry sends violation reports when necessary
         rv = mCSP->PermitsAncestry(loadInfo, &safeAncestry);
