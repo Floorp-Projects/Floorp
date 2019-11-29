@@ -1,0 +1,40 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.maybe_release:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    description: Check recent releases and trigger a new ship-it phase if worthwhile.
+    worker-type:
+        by-release-level:
+            production: scriptworker-k8s/gecko-3-shipit
+            staging: scriptworker-k8s/gecko-1-shipit
+    worker:
+        implementation: shipit-maybe-release
+    scopes:
+        by-release-level:
+            production:
+                - project:releng:ship-it:server:production
+                - project:releng:ship-it:action:create-new-release
+            staging:
+                - project:releng:ship-it:server:staging
+                - project:releng:ship-it:action:create-new-release
+    run-on-projects: []
+
+jobs:
+    firefox:
+        name: maybe-release-firefox
+        shipping-product: firefox
+        worker:
+            phase: push_firefox
+
+    devedition:
+        name: maybe-release-devedition
+        shipping-product: devedition
+        worker:
+            phase: push_devedition
