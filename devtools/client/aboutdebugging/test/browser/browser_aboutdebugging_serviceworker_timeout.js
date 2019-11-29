@@ -17,9 +17,6 @@ const SW_TAB_URL = URL_ROOT + "resources/service-workers/empty-sw.html";
 const SW_URL = URL_ROOT + "resources/service-workers/empty-sw.js";
 const SW_TIMEOUT = 4000;
 
-// This is a migration from:
-// https://searchfox.org/mozilla-central/source/devtools/client/aboutdebugging/test/browser_service_workers_timeout.js
-
 /**
  * Test that service workers will _not_ timeout and be stopped when a toolbox is attached
  * to them. Feature implemented in Bug 1228382.
