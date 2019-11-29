@@ -369,7 +369,7 @@ class GeckoEngineSession(
                 GeckoResult.fromValue(AllowOrDeny.DENY)
             } else {
                 val geckoResult: GeckoResult<AllowOrDeny> = GeckoResult()
-                val allowOrDeny: (Boolean) -> Unit = { shouldAllow ->
+                val allowOrDeny: (Boolean, String) -> Unit = { shouldAllow, _ ->
                     val result = if (shouldAllow) AllowOrDeny.ALLOW else AllowOrDeny.DENY
                     geckoResult.complete(result)
                 }

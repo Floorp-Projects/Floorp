@@ -523,7 +523,7 @@ class EngineObserverTest {
 
         val observer = EngineObserver(session)
         observer.onLoadRequest(url = url, triggeredByRedirect = false, triggeredByWebContent = true,
-            shouldLoadUri = {})
+            shouldLoadUri = { _: Boolean, _: String -> })
 
         assertEquals("", session.searchTerms)
         val triggeredByRedirect = session.loadRequestMetadata.peek()?.isSet(LoadRequestOption.REDIRECT)
@@ -541,7 +541,7 @@ class EngineObserverTest {
 
         val observer = EngineObserver(session)
         observer.onLoadRequest(url = url, triggeredByRedirect = true, triggeredByWebContent = false,
-            shouldLoadUri = {})
+            shouldLoadUri = { _: Boolean, _: String -> })
 
         assertEquals("", session.searchTerms)
         val triggeredByRedirect = session.loadRequestMetadata.peek()?.isSet(LoadRequestOption.REDIRECT)
@@ -559,7 +559,7 @@ class EngineObserverTest {
 
         val observer = EngineObserver(session)
         observer.onLoadRequest(url = url, triggeredByRedirect = false, triggeredByWebContent = false,
-            shouldLoadUri = {})
+            shouldLoadUri = { _: Boolean, _: String -> })
 
         assertEquals("Mozilla Foundation", session.searchTerms)
 

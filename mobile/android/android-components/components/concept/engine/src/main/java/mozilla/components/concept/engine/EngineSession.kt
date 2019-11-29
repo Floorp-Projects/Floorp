@@ -85,7 +85,8 @@ abstract class EngineSession(
             url: String,
             triggeredByRedirect: Boolean,
             triggeredByWebContent: Boolean,
-            shouldLoadUri: (Boolean) -> Unit
+            /* Debugging code for Android-components/issues/5127, will remove String as parameter*/
+            shouldLoadUri: (Boolean, String) -> Unit
         ) = Unit
 
         @Suppress("LongParameterList")

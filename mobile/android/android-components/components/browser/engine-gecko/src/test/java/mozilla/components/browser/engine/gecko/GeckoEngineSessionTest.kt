@@ -1861,7 +1861,7 @@ class GeckoEngineSessionTest {
                 url: String,
                 triggeredByRedirect: Boolean,
                 triggeredByWebContent: Boolean,
-                shouldLoadUri: (Boolean) -> Unit
+                shouldLoadUri: (Boolean, String) -> Unit
             ) {
                 observedTriggeredByRedirect = triggeredByRedirect
                 observedUrl = url
@@ -1898,7 +1898,7 @@ class GeckoEngineSessionTest {
                 url: String,
                 triggeredByRedirect: Boolean,
                 triggeredByWebContent: Boolean,
-                shouldLoadUri: (Boolean) -> Unit
+                shouldLoadUri: (Boolean, String) -> Unit
             ) {
                 observedTriggeredByWebContent = triggeredByWebContent
                 observedUrl = url

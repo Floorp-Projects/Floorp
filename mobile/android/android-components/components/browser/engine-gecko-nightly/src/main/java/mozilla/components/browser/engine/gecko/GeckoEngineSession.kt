@@ -361,9 +361,19 @@ class GeckoEngineSession(
                 GeckoResult.fromValue(AllowOrDeny.DENY)
             } else {
                 val geckoResult: GeckoResult<AllowOrDeny> = GeckoResult()
-                val allowOrDeny: (Boolean) -> Unit = { shouldAllow ->
+                var completedBy: String? = null
+                val allowOrDeny: (Boolean, String) -> Unit = { shouldAllow, newCaller ->
+
+                    /* Debugging code for Android-components/issues/5127, will remove */
+                    if (completedBy != null) {
+                        throw IllegalStateException("GeckoResult already completed by $completedBy, " +
+                            "new caller is $newCaller")
+                    }
+
                     val result = if (shouldAllow) AllowOrDeny.ALLOW else AllowOrDeny.DENY
                     geckoResult.complete(result)
+                    /* Debugging code for Android-components/issues/5127, will remove */
+                    completedBy = newCaller
                 }
 
                 notifyObservers {
