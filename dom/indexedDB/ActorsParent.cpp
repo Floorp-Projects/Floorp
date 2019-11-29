@@ -8564,7 +8564,7 @@ class MOZ_STACK_CLASS FileHelper final {
 bool TokenizerIgnoreNothing(char16_t /* aChar */) { return false; }
 
 nsresult DeserializeStructuredCloneFile(const FileManager& aFileManager,
-                                        const nsString& aText,
+                                        const nsDependentSubstring& aText,
                                         StructuredCloneFile* aFile) {
   MOZ_ASSERT(!aText.IsEmpty());
   MOZ_ASSERT(aFile);
@@ -8634,11 +8634,10 @@ nsresult DeserializeStructuredCloneFiles(
   nsCharSeparatedTokenizerTemplate<TokenizerIgnoreNothing> tokenizer(aText,
                                                                      ' ');
 
-  nsAutoString token;
   nsresult rv;
 
   while (tokenizer.hasMoreTokens()) {
-    token = tokenizer.nextToken();
+    const auto& token = tokenizer.nextToken();
     MOZ_ASSERT(!token.IsEmpty());
 
     auto* const file = aResult.EmplaceBack(StructuredCloneFile::eBlob);
