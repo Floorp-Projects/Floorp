@@ -1219,4 +1219,87 @@ class ZZAccessibilityTest : BaseSessionTest() {
             }
         })
     }
+
+    @Test fun testAriaComboBoxesMovingByDefault() {
+        loadTestPage("test-aria-comboboxes")
+        waitForInitialFocus()
+        var nodeId = View.NO_ID;
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus is EditBox",
+                        node.className.toString(),
+                        equalTo("android.widget.EditText"))
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat("Accessibility focus on ARIA 1.0 combobox",
+                            node.extras.getString("AccessibilityNodeInfo.hint"),
+                            equalTo("ARIA 1.0 combobox"))
+                }
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus is EditBox",
+                        node.className.toString(),
+                        equalTo("android.widget.EditText"))
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat("Accessibility focus on ARIA 1.1 combobox",
+                            node.extras.getString("AccessibilityNodeInfo.hint"),
+                            equalTo("ARIA 1.1 combobox"))
+                }
+            }
+        })
+    }
+
+    @Test fun testAriaComboBoxesMovingByControl() {
+        loadTestPage("test-aria-comboboxes")
+        waitForInitialFocus()
+        var nodeId = View.NO_ID;
+
+        val bundle = Bundle()
+        bundle.putString(AccessibilityNodeInfo.ACTION_ARGUMENT_HTML_ELEMENT_STRING, "CONTROL")
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, bundle)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus is EditBox",
+                        node.className.toString(),
+                        equalTo("android.widget.EditText"))
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat("Accessibility focus on ARIA 1.0 combobox",
+                            node.extras.getString("AccessibilityNodeInfo.hint"),
+                            equalTo("ARIA 1.0 combobox"))
+                }
+            }
+        })
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, bundle)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus is EditBox",
+                        node.className.toString(),
+                        equalTo("android.widget.EditText"))
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat("Accessibility focus on ARIA 1.1 combobox",
+                            node.extras.getString("AccessibilityNodeInfo.hint"),
+                            equalTo("ARIA 1.1 combobox"))
+                }
+            }
+        })
+    }
 }
