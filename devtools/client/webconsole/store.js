@@ -23,6 +23,7 @@ const { getPrefsService } = require("devtools/client/webconsole/utils/prefs");
 const { reducers } = require("./reducers/index");
 
 // Middlewares
+const { ignore } = require("devtools/client/shared/redux/middleware/ignore");
 const eventTelemetry = require("./middleware/event-telemetry");
 const historyPersistence = require("./middleware/history-persistence");
 const {
@@ -83,6 +84,7 @@ function configureStore(webConsoleUI, options = {}) {
   };
 
   const middleware = applyMiddleware(
+    ignore,
     thunkWithOptions.bind(null, {
       prefsService,
       ...options.thunkArgs,
