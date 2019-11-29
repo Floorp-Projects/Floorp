@@ -4,6 +4,7 @@
 
 addons-window =
     .title = Add-ons Manager
+addons-page-title = Add-ons Manager
 
 search-header =
     .placeholder = Search addons.mozilla.org
@@ -37,9 +38,6 @@ preferences =
         [windows] { -brand-short-name } Options
        *[other] { -brand-short-name } Preferences
     }
-
-tools-menu =
-    .tooltiptext = Tools for all add-ons
 
 show-unsigned-extensions-button =
     .label = Some extensions could not be verified
@@ -367,9 +365,9 @@ remove-addon-button = Remove
 remove-addon-disabled-button = Can’t Be Removed <a data-l10n-name="link">Why?</a>
 disable-addon-button = Disable
 enable-addon-button = Enable
-disable-addon-button-label =
-    .aria-label = Disable
-enable-addon-button-label =
+# This is used for the toggle on the extension card, it's a checkbox and this
+# is always its label.
+extension-enable-addon-button-label =
     .aria-label = Enable
 preferences-addon-button =
     { PLATFORM() ->
@@ -482,5 +480,9 @@ shortcuts-heading = Manage Extension Shortcuts
 
 theme-heading-search-label = Find more themes
 extension-heading-search-label = Find more extensions
+default-heading-search-label = Find more add-ons
 addons-heading-search-input =
     .placeholder = Search addons.mozilla.org
+
+addon-page-options-button =
+    .title = Tools for all add-ons

@@ -5,6 +5,8 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <title data-l10n-id="addons-page-title"></title>
+
     <!-- Bug 1571346 Remove 'unsafe-inline' from style-src within about:addons -->
     <!-- @CSP the 'onclick' handler for the searchButtonIcon within the file search-textbox.js, using: sha512-kSDNX67wegjpcf8CSj/L6h46a0QUKm2CyijGxC5PhSWVvPU9gdd28QVBBFq9t8N5UGKUFdDcZsjYbGSlYG0y3g== -->
     <meta http-equiv="Content-Security-Policy" content="default-src chrome:; script-src chrome: 'sha512-kSDNX67wegjpcf8CSj/L6h46a0QUKm2CyijGxC5PhSWVvPU9gdd28QVBBFq9t8N5UGKUFdDcZsjYbGSlYG0y3g=='; style-src chrome: 'unsafe-inline'; img-src chrome: file: jar: https: http:; connect-src chrome: data: https: http:; object-src 'none'">
@@ -54,7 +56,7 @@
           <div class="spacer"></div>
           <addon-updates-message id="updates-message" hidden></addon-updates-message>
           <div class="page-options-menu">
-            <button class="more-options-button" action="page-options"></button>
+            <button class="more-options-button" action="page-options" aria-haspopup="menu" aria-expanded="false" data-l10n-id="addon-page-options-button"></button>
           </div>
         </div>
       </div>
@@ -121,7 +123,7 @@
               </a>
               <div class="spacer"></div>
               <button class="theme-enable-button" action="toggle-disabled" hidden></button>
-              <input type="checkbox" class="toggle-button extension-enable-button" action="toggle-disabled" hidden>
+              <input type="checkbox" class="toggle-button extension-enable-button" action="toggle-disabled" data-l10n-id="extension-enable-addon-button-label" hidden>
               <button
                 class="more-options-button"
                 action="more-options"
@@ -142,7 +144,7 @@
 
     <template name="addon-name-container-in-disco-card">
       <div class="disco-card-head">
-        <span class="disco-addon-name"></span>
+        <h3 class="disco-addon-name"></h3>
         <span class="disco-addon-author"><a data-l10n-name="author" target="_blank"></a></span>
       </div>
       <button class="disco-cta-button primary" action="install-addon"></button>
@@ -342,7 +344,7 @@
       <div class="card shortcut">
         <div class="card-heading">
           <img class="card-heading-icon addon-icon">
-          <span class="addon-name"></span>
+          <h2 class="addon-name"></h2>
         </div>
       </div>
     </template>

@@ -19,9 +19,10 @@ function assertDisabledSideloadedExtensionElement(managerWindow, addonElement) {
   );
   is(
     doc.l10n.getAttributes(toggleDisabled).id,
-    "enable-addon-button-label",
+    "extension-enable-addon-button-label",
     "Addon toggle-disabled action has the enable label"
   );
+  ok(!toggleDisabled.checked, "toggle-disable isn't checked");
 }
 
 function assertEnabledSideloadedExtensionElement(managerWindow, addonElement) {
@@ -31,9 +32,10 @@ function assertEnabledSideloadedExtensionElement(managerWindow, addonElement) {
   );
   is(
     doc.l10n.getAttributes(toggleDisabled).id,
-    "enable-addon-button-label",
+    "extension-enable-addon-button-label",
     "Addon toggle-disabled action has the enable label"
   );
+  ok(!toggleDisabled.checked, "toggle-disable isn't checked");
 }
 
 function clickEnableExtension(managerWindow, addonElement) {

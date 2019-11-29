@@ -110,8 +110,8 @@ add_task(async function testExtensionList() {
   ok(disableToggle.checked, "The disable toggle is checked");
   is(
     doc.l10n.getAttributes(disableToggle).id,
-    "disable-addon-button-label",
-    "The toggle has the disable label"
+    "extension-enable-addon-button-label",
+    "The toggle has the enable label"
   );
   ok(disableToggle.getAttribute("aria-label"), "There's an aria-label");
   ok(!disableToggle.hidden, "The toggle is visible");
@@ -129,8 +129,8 @@ add_task(async function testExtensionList() {
   ok(!disableToggle.checked, "The disable toggle is unchecked");
   is(
     doc.l10n.getAttributes(disableToggle).id,
-    "enable-addon-button-label",
-    "The button has the enable label"
+    "extension-enable-addon-button-label",
+    "The button has the same enable label"
   );
   ok(disableToggle.getAttribute("aria-label"), "There's an aria-label");
 

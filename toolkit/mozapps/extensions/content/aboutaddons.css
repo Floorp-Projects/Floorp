@@ -292,10 +292,6 @@ addon-card:not([expanded]) .addon-description {
 
 /* Discopane extensions to the add-on card */
 
-recommended-addon-card .addon-name {
-  display: flex;
-}
-
 recommended-addon-card .addon-description:not(:empty) {
   margin-top: 0.5em;
 }
@@ -304,6 +300,13 @@ recommended-addon-card .addon-description:not(:empty) {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+}
+
+.disco-addon-name {
+  font-size: inherit;
+  font-weight: normal;
+  line-height: normal;
+  margin: 0;
 }
 
 .disco-addon-author {

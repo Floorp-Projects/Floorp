@@ -1283,6 +1283,9 @@ class AddonPageHeader extends HTMLElement {
       this.heading = this.querySelector(".header-name");
       this.searchLabel = this.querySelector(".search-label");
       this.backButton = this.querySelector(".back-button");
+      this.pageOptionsMenuButton = this.querySelector(
+        '[action="page-options"]'
+      );
       // The addon-page-options element is outside of this element since this is
       // position: sticky and that would break the positioning of the menu.
       this.pageOptionsMenu = document.getElementById(
@@ -1290,10 +1293,16 @@ class AddonPageHeader extends HTMLElement {
       );
     }
     this.addEventListener("click", this);
+    // Use capture since the event is actually triggered on the internal
+    // panel-list and it doesn't bubble.
+    this.pageOptionsMenu.addEventListener("shown", this, true);
+    this.pageOptionsMenu.addEventListener("hidden", this, true);
   }
 
   disconnectedCallback() {
     this.removeEventListener("click", this);
+    this.pageOptionsMenu.removeEventListener("shown", this, true);
+    this.pageOptionsMenu.removeEventListener("hidden", this, true);
   }
 
   setViewInfo({ type, param }) {
@@ -1309,20 +1318,16 @@ class AddonPageHeader extends HTMLElement {
       document.l10n.setAttributes(this.heading, `${viewType}-heading`);
     }
 
-    if (
-      viewType === "extension" ||
-      viewType === "theme" ||
-      viewType === "shortcuts"
-    ) {
-      let labelType = viewType === "shortcuts" ? "extension" : viewType;
-      document.l10n.setAttributes(
-        this.searchLabel,
-        `${labelType}-heading-search-label`
-      );
-    } else {
-      this.searchLabel.removeAttribute("data-l10n-id");
-      this.searchLabel.textContent = "";
-    }
+    let customSearchLabelTypes = {
+      shortcuts: "extension",
+      extension: "extension",
+      theme: "theme",
+    };
+    let searchLabelType = customSearchLabelTypes[viewType] || "default";
+    document.l10n.setAttributes(
+      this.searchLabel,
+      `${searchLabelType}-heading-search-label`
+    );
   }
 
   handleEvent(e) {
@@ -1336,6 +1341,11 @@ class AddonPageHeader extends HTMLElement {
           this.pageOptionsMenu.toggle(e);
           break;
       }
+    } else if (e.type == "shown" || e.type == "hidden") {
+      this.pageOptionsMenuButton.setAttribute(
+        "aria-expanded",
+        this.pageOptionsMenu.open
+      );
     }
   }
 }
@@ -1410,6 +1420,10 @@ class AddonPageOptions extends HTMLElement {
 
   toggle(...args) {
     return this.panel.toggle(...args);
+  }
+
+  get open() {
+    return this.panel.open;
   }
 
   render() {
@@ -2730,11 +2744,10 @@ class AddonCard extends HTMLElement {
     }
     name.title = `${addon.name} ${addon.version}`;
 
-    let toggleDisabledAction = addon.userDisabled ? "enable" : "disable";
-    let canToggleDisabled = hasPermission(addon, toggleDisabledAction);
     let toggleDisabledButton = card.querySelector('[action="toggle-disabled"]');
     if (toggleDisabledButton) {
-      toggleDisabledButton.hidden = !canToggleDisabled;
+      let toggleDisabledAction = addon.userDisabled ? "enable" : "disable";
+      toggleDisabledButton.hidden = !hasPermission(addon, toggleDisabledAction);
       if (addon.type === "theme") {
         document.l10n.setAttributes(
           toggleDisabledButton,
@@ -2742,10 +2755,6 @@ class AddonCard extends HTMLElement {
         );
       } else if (addon.type === "extension") {
         toggleDisabledButton.checked = !addon.userDisabled;
-        document.l10n.setAttributes(
-          toggleDisabledButton,
-          `${toggleDisabledAction}-addon-button-label`
-        );
       }
     }
 
