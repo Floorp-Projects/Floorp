@@ -56,6 +56,11 @@ async function runWebInFileTest() {
       filePid,
       "Check that new http tab opened from file loaded in file content process."
     );
+    is(
+      httpBrowser.remoteType,
+      E10SUtils.FILE_REMOTE_TYPE,
+      "Check that tab now has file remote type."
+    );
 
     // Check that reload doesn't break the file content process affinity.
     if (httpTab != gBrowser.selectedTab) {
