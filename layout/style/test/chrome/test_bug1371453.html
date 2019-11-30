@@ -13,20 +13,17 @@ const Cu = SpecialPowers.Components.utils;
 const { ContentTaskUtils } = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
 document.styleSheetChangeEventsEnabled = true;
 
-runTest();
+onload = runTest;
 
 async function runTest() {
-  document.getElementsByTagName("link")[1].sheet.insertRule('@import url("blahblah")', 0);
+  const sheet = document.getElementsByTagName("link")[1].sheet;
+  sheet.insertRule('@import url("blahblah")', 0);
 
-  // Await and then process the event we expect to arrive.
-  let event = await ContentTaskUtils.waitForEvent(document, "StyleRuleAdded", true);
-  is(event.rule.type, CSSRule.IMPORT_RULE, "Got expected import rule.");
-
-  isnot(event.rule.styleSheet, null, "Import rule contains a stylesheet.");
-
-  isnot(event.rule.media, null, "Import rule contains a media list.");
-
-  is(event.rule.href, "blahblah", "Import rule contains expected href.");
+  const rule = sheet.cssRules[0];
+  is(rule.type, CSSRule.IMPORT_RULE, "Got expected import rule.");
+  isnot(rule.styleSheet, null, "Import rule contains a stylesheet.");
+  isnot(rule.media, null, "Import rule contains a media list.");
+  is(rule.href, "blahblah", "Import rule contains expected href.");
 
   SimpleTest.finish();
 }
