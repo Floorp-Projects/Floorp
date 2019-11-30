@@ -113,7 +113,6 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/StaticPrefs_page_load.h"
 #include "PaintWorkletImpl.h"
 
 // Interfaces Needed
@@ -1038,8 +1037,6 @@ nsGlobalWindowInner::~nsGlobalWindowInner() {
 
   nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
   if (ac) ac->RemoveWindowAsListener(this);
-
-  mDeprioritizedLoadRunner.clear();
 
   nsLayoutStatics::Release();
 }
@@ -2563,6 +2560,10 @@ void nsPIDOMWindowInner::SetAudioCapture(bool aCapture) {
 }
 
 void nsGlobalWindowInner::SetActiveLoadingState(bool aIsLoading) {
+  if (GetBrowsingContext()) {
+    GetBrowsingContext()->SetLoading(aIsLoading);
+  }
+
   if (StaticPrefs::dom_separate_event_queue_for_post_message_enabled()) {
     if (!aIsLoading) {
       Document* doc = GetExtantDoc();
@@ -2578,36 +2579,6 @@ void nsGlobalWindowInner::SetActiveLoadingState(bool aIsLoading) {
   if (!nsGlobalWindowInner::Cast(this)->IsChromeWindow()) {
     mTimeoutManager->SetLoading(aIsLoading);
   }
-
-  if (!aIsLoading) {
-    while (!mDeprioritizedLoadRunner.isEmpty()) {
-      nsCOMPtr<nsIRunnable> runner = mDeprioritizedLoadRunner.popFirst();
-      NS_DispatchToCurrentThread(runner.forget());
-    }
-  }
-}
-
-nsPIDOMWindowInner* nsPIDOMWindowInner::GetWindowForDeprioritizedLoadRunner() {
-  Document* doc = GetExtantDoc();
-  if (!doc) {
-    return nullptr;
-  }
-  doc = doc->GetTopLevelContentDocument();
-  if (!doc || (doc->GetReadyStateEnum() <= Document::READYSTATE_UNINITIALIZED ||
-               doc->GetReadyStateEnum() >= Document::READYSTATE_COMPLETE)) {
-    return nullptr;
-  }
-
-  return doc->GetInnerWindow();
-}
-
-void nsGlobalWindowInner::AddDeprioritizedLoadRunner(nsIRunnable* aRunner) {
-  MOZ_ASSERT(GetWindowForDeprioritizedLoadRunner() == this);
-  RefPtr<DeprioritizedLoadRunner> runner = new DeprioritizedLoadRunner(aRunner);
-  mDeprioritizedLoadRunner.insertBack(runner);
-  NS_DispatchToCurrentThreadQueue(
-      runner.forget(), StaticPrefs::page_load_deprioritization_period(),
-      EventQueuePriority::Idle);
 }
 
 // nsISpeechSynthesisGetter

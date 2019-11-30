@@ -8,6 +8,7 @@
 #define mozilla_dom_BrowsingContext_h
 
 #include "GVAutoplayRequestUtils.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Tuple.h"
@@ -484,6 +485,11 @@ class BrowsingContext : public nsISupports,
   // Performs access control to check that 'this' can access 'aTarget'.
   bool CanAccess(BrowsingContext* aTarget, bool aConsiderOpener = true);
 
+  // The runnable will be called once there is idle time, or the top level
+  // page has been loaded or if a timeout has fired.
+  // Must be called only on the top level BrowsingContext.
+  void AddDeprioritizedLoadRunner(nsIRunnable* aRunner);
+
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(BrowsingContext* aParent, BrowsingContextGroup* aGroup,
@@ -562,6 +568,8 @@ class BrowsingContext : public nsISupports,
   void DidSetGVAudibleAutoplayRequestStatus();
   void DidSetGVInaudibleAutoplayRequestStatus();
 
+  void DidSetLoading();
+
   // Type of BrowsingContent
   const Type mType;
 
@@ -610,6 +618,28 @@ class BrowsingContext : public nsISupports,
   // The start time of user gesture, this is only available if the browsing
   // context is in process.
   TimeStamp mUserGestureStart;
+
+  class DeprioritizedLoadRunner
+      : public mozilla::Runnable,
+        public mozilla::LinkedListElement<DeprioritizedLoadRunner> {
+   public:
+    explicit DeprioritizedLoadRunner(nsIRunnable* aInner)
+        : Runnable("DeprioritizedLoadRunner"), mInner(aInner) {}
+
+    NS_IMETHOD Run() override {
+      if (mInner) {
+        RefPtr<nsIRunnable> inner = std::move(mInner);
+        inner->Run();
+      }
+
+      return NS_OK;
+    }
+
+   private:
+    RefPtr<nsIRunnable> mInner;
+  };
+
+  mozilla::LinkedList<DeprioritizedLoadRunner> mDeprioritizedLoadRunner;
 };
 
 /**
