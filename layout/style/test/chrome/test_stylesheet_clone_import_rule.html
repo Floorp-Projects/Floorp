@@ -15,10 +15,9 @@
   const Cu = SpecialPowers.Components.utils;
   const { ContentTaskUtils } = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
 
-  document.styleSheetChangeEventsEnabled = true;
-
   let theOnlyDiv = document.getElementById("theOnlyDiv");
-  let stylesheet = document.getElementById("theOnlyLink").sheet;
+  let link = document.getElementById("theOnlyLink");
+  let stylesheet = link.sheet;
 
   runTest().catch(function(reason) {
     ok(false, "Failed with reason: " + reason);
@@ -31,61 +30,24 @@
   }
 
   async function runTest() {
-
     // Test that the div is initially red (from base.css)
     is(getComputedStyle(theOnlyDiv).color, "rgb(0, 128, 0)", "div begins as green.");
-
-    // Create a Promise to watch for some number of events.
-    let generateCountingListenerCallback = function(numberOfEventsToWaitFor, arrayToFill) {
-      let eventsReceived = 0;
-      return function(event) {
-        info("Event processor: called with event " + event.rule.cssText);
-        arrayToFill.push(event);
-        return (++eventsReceived >= numberOfEventsToWaitFor);
-      }
-    };
-    let events = [];
-    let gotAllOurStyleRuleAddedEvents = ContentTaskUtils.waitForEvent(document,
-      "StyleRuleAdded", true, generateCountingListenerCallback(2, events));
 
     // Insert some import rules.
     stylesheet.insertRule('@import url("import_useless2.css")', 0);
     stylesheet.insertRule('@import url("import_useless2.css")', 1);
 
-    // Wait for the StyleRuleAdded events to be fired. This function returns the last event,
-    // but we don't care what it contains -- only that the correct number of events fired.
-    await gotAllOurStyleRuleAddedEvents;
-    is(events.length, 2, "Got the expected number of StyleRuleAdded events.");
-
     // Do some sanity checking of our import rules.
     let primaryRules = stylesheet.cssRules;
-    for (let i = 0; i < 2; ++i) {
-      // Check that the main stylesheet rule is the same rule we saw in the event listener.
-      is(primaryRules[i], events[i].rule, "Rule " + i + " matches the event listener.");
-
-      // Get the imported sheet and confirm it is non-null.
-      let importSheet = primaryRules[i].styleSheet;
-      ok(importSheet, "Imported sheet " + i + " exists.");
-      if (!importSheet) {
-        info("Sheet " + i + " doesn't exist -- aborting.");
-        return;
-      }
-
-      // Confirm the import sheet has rules.
-      info("Retrieving rules for sheet " + i);
-      let rules;
-
+    await ContentTaskUtils.waitForCondition(function() {
       try {
-        rules = importSheet.cssRules;
-      } catch (e) {
-        throw "Exception thrown when retrieving rules for sheet " + i + ": " + e.message;
+        primaryRules[0].styleSheet.cssRules;
+        primaryRules[1].styleSheet.cssRules;
+        return true;
+      } catch (ex) {
+        return false;
       }
-      ok(rules, "Imported sheet " + i + " has rules.");
-      if (!rules) {
-        info("Rules for sheet " + i + " don't exist -- aborting.");
-        return;
-      }
-    }
+    });
 
     // Make some helper variables for the comparison tests.
     let importSheet1 = primaryRules[0].styleSheet;
