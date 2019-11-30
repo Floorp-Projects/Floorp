@@ -94,8 +94,7 @@ void CSSMediaRule::GetCssText(nsAString& aCssText) const {
 }
 
 /* virtual */
-size_t CSSMediaRule::SizeOfIncludingThis(
-    mozilla::MallocSizeOf aMallocSizeOf) const {
+size_t CSSMediaRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   // TODO Implement this!
   return aMallocSizeOf(this);
 }

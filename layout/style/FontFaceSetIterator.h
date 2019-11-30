@@ -16,8 +16,7 @@ namespace dom {
 
 class FontFaceSetIterator final {
  public:
-  FontFaceSetIterator(mozilla::dom::FontFaceSet* aFontFaceSet,
-                      bool aIsKeyAndValue);
+  FontFaceSetIterator(FontFaceSet*, bool aIsKeyAndValue);
 
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(FontFaceSetIterator)
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(FontFaceSetIterator)
@@ -27,7 +26,7 @@ class FontFaceSetIterator final {
 
   // WebIDL
   void Next(JSContext* aCx, FontFaceSetIteratorResult& aResult,
-            mozilla::ErrorResult& aRv);
+            ErrorResult& aRv);
 
  private:
   ~FontFaceSetIterator();

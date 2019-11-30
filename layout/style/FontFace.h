@@ -39,7 +39,7 @@ namespace dom {
 
 class FontFace final : public nsISupports, public nsWrapperCache {
   friend class mozilla::PostTraversalTask;
-  friend class mozilla::dom::FontFaceBufferSource;
+  friend class FontFaceBufferSource;
   friend class Entry;
 
  public:
@@ -152,31 +152,31 @@ class FontFace final : public nsISupports, public nsWrapperCache {
   // Web IDL
   static already_AddRefed<FontFace> Constructor(
       const GlobalObject& aGlobal, const nsAString& aFamily,
-      const mozilla::dom::StringOrArrayBufferOrArrayBufferView& aSource,
-      const mozilla::dom::FontFaceDescriptors& aDescriptors, ErrorResult& aRV);
+      const StringOrArrayBufferOrArrayBufferView& aSource,
+      const FontFaceDescriptors& aDescriptors, ErrorResult& aRV);
 
   void GetFamily(nsString& aResult);
-  void SetFamily(const nsAString& aValue, mozilla::ErrorResult& aRv);
+  void SetFamily(const nsAString& aValue, ErrorResult& aRv);
   void GetStyle(nsString& aResult);
-  void SetStyle(const nsAString& aValue, mozilla::ErrorResult& aRv);
+  void SetStyle(const nsAString& aValue, ErrorResult& aRv);
   void GetWeight(nsString& aResult);
-  void SetWeight(const nsAString& aValue, mozilla::ErrorResult& aRv);
+  void SetWeight(const nsAString& aValue, ErrorResult& aRv);
   void GetStretch(nsString& aResult);
-  void SetStretch(const nsAString& aValue, mozilla::ErrorResult& aRv);
+  void SetStretch(const nsAString& aValue, ErrorResult& aRv);
   void GetUnicodeRange(nsString& aResult);
-  void SetUnicodeRange(const nsAString& aValue, mozilla::ErrorResult& aRv);
+  void SetUnicodeRange(const nsAString& aValue, ErrorResult& aRv);
   void GetVariant(nsString& aResult);
-  void SetVariant(const nsAString& aValue, mozilla::ErrorResult& aRv);
+  void SetVariant(const nsAString& aValue, ErrorResult& aRv);
   void GetFeatureSettings(nsString& aResult);
-  void SetFeatureSettings(const nsAString& aValue, mozilla::ErrorResult& aRv);
+  void SetFeatureSettings(const nsAString& aValue, ErrorResult& aRv);
   void GetVariationSettings(nsString& aResult);
-  void SetVariationSettings(const nsAString& aValue, mozilla::ErrorResult& aRv);
+  void SetVariationSettings(const nsAString& aValue, ErrorResult& aRv);
   void GetDisplay(nsString& aResult);
-  void SetDisplay(const nsAString& aValue, mozilla::ErrorResult& aRv);
+  void SetDisplay(const nsAString& aValue, ErrorResult& aRv);
 
-  mozilla::dom::FontFaceLoadStatus Status();
-  mozilla::dom::Promise* Load(mozilla::ErrorResult& aRv);
-  mozilla::dom::Promise* GetLoaded(mozilla::ErrorResult& aRv);
+  FontFaceLoadStatus Status();
+  Promise* Load(ErrorResult& aRv);
+  Promise* GetLoaded(ErrorResult& aRv);
 
  private:
   FontFace(nsISupports* aParent, FontFaceSet* aFontFaceSet);
@@ -191,7 +191,7 @@ class FontFace final : public nsISupports, public nsWrapperCache {
   // Returns true if the descriptor was modified, false if descriptor is
   // unchanged (which may not be an error: check aRv for actual failure).
   bool SetDescriptor(nsCSSFontDesc aFontDesc, const nsAString& aValue,
-                     mozilla::ErrorResult& aRv);
+                     ErrorResult& aRv);
 
   /**
    * Sets all of the descriptor values in mDescriptors using values passed
@@ -210,7 +210,7 @@ class FontFace final : public nsISupports, public nsWrapperCache {
   /**
    * Sets the current loading status.
    */
-  void SetStatus(mozilla::dom::FontFaceLoadStatus aStatus);
+  void SetStatus(FontFaceLoadStatus aStatus);
 
   void GetDesc(nsCSSFontDesc aDescID, nsString& aResult) const;
 
@@ -241,7 +241,7 @@ class FontFace final : public nsISupports, public nsWrapperCache {
   // A Promise that is fulfilled once the font represented by this FontFace is
   // loaded, and is rejected if the load fails. This promise is created lazily
   // when JS asks for it.
-  RefPtr<mozilla::dom::Promise> mLoaded;
+  RefPtr<Promise> mLoaded;
 
   // Saves the rejection code for mLoaded if mLoaded hasn't been created yet.
   nsresult mLoadedRejection;
@@ -258,7 +258,7 @@ class FontFace final : public nsISupports, public nsWrapperCache {
   // Note that we can't just reflect the value of the gfxUserFontEntry's
   // status, since the spec sometimes requires us to go through the event
   // loop before updating the status, rather than doing it immediately.
-  mozilla::dom::FontFaceLoadStatus mStatus;
+  FontFaceLoadStatus mStatus;
 
   // Represents where a FontFace's data is coming from.
   enum SourceType {
