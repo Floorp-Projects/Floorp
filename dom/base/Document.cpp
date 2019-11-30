@@ -211,8 +211,6 @@
 #include "nsIPrompt.h"
 #include "nsIPropertyBag2.h"
 #include "mozilla/dom/PageTransitionEvent.h"
-#include "mozilla/dom/StyleRuleChangeEvent.h"
-#include "mozilla/dom/StyleSheetChangeEvent.h"
 #include "mozilla/dom/StyleSheetApplicableStateChangeEvent.h"
 #include "nsJSUtils.h"
 #include "nsFrameLoader.h"
@@ -6329,39 +6327,6 @@ void Document::ApplicableStylesChanged() {
   pc->RestyleManager()->NextRestyleIsForCSSRuleChanges();
 }
 
-#define DO_STYLESHEET_NOTIFICATION(className, type, memberName, argName) \
-  do {                                                                   \
-    className##Init init;                                                \
-    init.mBubbles = true;                                                \
-    init.mCancelable = true;                                             \
-    init.mStylesheet = &aSheet;                                          \
-    init.memberName = argName;                                           \
-                                                                         \
-    RefPtr<className> event =                                            \
-        className::Constructor(this, NS_LITERAL_STRING(type), init);     \
-    event->SetTrusted(true);                                             \
-    event->SetTarget(this);                                              \
-    RefPtr<AsyncEventDispatcher> asyncDispatcher =                       \
-        new AsyncEventDispatcher(this, event);                           \
-    asyncDispatcher->mOnlyChromeDispatch = ChromeOnlyDispatch::eYes;     \
-    asyncDispatcher->PostDOMEvent();                                     \
-  } while (0);
-
-void Document::NotifyStyleSheetAdded(StyleSheet& aSheet, bool aDocumentSheet) {
-  if (StyleSheetChangeEventsEnabled()) {
-    DO_STYLESHEET_NOTIFICATION(StyleSheetChangeEvent, "StyleSheetAdded",
-                               mDocumentSheet, aDocumentSheet);
-  }
-}
-
-void Document::NotifyStyleSheetRemoved(StyleSheet& aSheet,
-                                       bool aDocumentSheet) {
-  if (StyleSheetChangeEventsEnabled()) {
-    DO_STYLESHEET_NOTIFICATION(StyleSheetChangeEvent, "StyleSheetRemoved",
-                               mDocumentSheet, aDocumentSheet);
-  }
-}
-
 void Document::RemoveStyleSheetFromStyleSets(StyleSheet* aSheet) {
   if (mStyleSetFilled) {
     mStyleSet->RemoveDocStyleSheet(aSheet);
@@ -6378,12 +6343,8 @@ void Document::RemoveStyleSheet(StyleSheet* aSheet) {
     return;
   }
 
-  if (!mIsGoingAway) {
-    if (sheet->IsApplicable()) {
-      RemoveStyleSheetFromStyleSets(sheet);
-    }
-
-    NotifyStyleSheetRemoved(*sheet, true);
+  if (!mIsGoingAway && sheet->IsApplicable()) {
+    RemoveStyleSheetFromStyleSets(sheet);
   }
 
   sheet->ClearAssociatedDocumentOrShadowRoot();
@@ -6395,8 +6356,6 @@ void Document::InsertSheetAt(size_t aIndex, StyleSheet& aSheet) {
   if (aSheet.IsApplicable()) {
     AddStyleSheetToStyleSets(&aSheet);
   }
-
-  NotifyStyleSheetAdded(aSheet, true);
 }
 
 void Document::SetStyleSheetApplicableState(StyleSheet& aSheet,
@@ -6411,9 +6370,22 @@ void Document::SetStyleSheetApplicableState(StyleSheet& aSheet,
   }
 
   if (StyleSheetChangeEventsEnabled()) {
-    DO_STYLESHEET_NOTIFICATION(StyleSheetApplicableStateChangeEvent,
-                               "StyleSheetApplicableStateChanged", mApplicable,
-                               aApplicable);
+    StyleSheetApplicableStateChangeEventInit init;
+    init.mBubbles = true;
+    init.mCancelable = true;
+    init.mStylesheet = &aSheet;
+    init.mApplicable = aApplicable;
+
+    RefPtr<StyleSheetApplicableStateChangeEvent> event =
+        StyleSheetApplicableStateChangeEvent::Constructor(
+            this, NS_LITERAL_STRING("StyleSheetApplicableStateChanged"),
+            init);
+    event->SetTrusted(true);
+    event->SetTarget(this);
+    RefPtr<AsyncEventDispatcher> asyncDispatcher =
+        new AsyncEventDispatcher(this, event);
+    asyncDispatcher->mOnlyChromeDispatch = ChromeOnlyDispatch::eYes;
+    asyncDispatcher->PostDOMEvent();
   }
 
   if (!mSSApplicableStateNotificationPending) {
@@ -6523,10 +6495,6 @@ nsresult Document::AddAdditionalStyleSheet(additionalSheetType aType,
     mStyleSet->AppendStyleSheet(ConvertAdditionalSheetType(aType), aSheet);
     ApplicableStylesChanged();
   }
-
-  // Passing false, so documet.styleSheets.length will not be affected by
-  // these additional sheets.
-  NotifyStyleSheetAdded(*aSheet, false);
   return NS_OK;
 }
 
@@ -6549,10 +6517,6 @@ void Document::RemoveAdditionalStyleSheet(additionalSheetType aType,
         ApplicableStylesChanged();
       }
     }
-
-    // Passing false, so documet.styleSheets.length will not be affected by
-    // these additional sheets.
-    NotifyStyleSheetRemoved(*sheetRef, false);
     sheetRef->ClearAssociatedDocumentOrShadowRoot();
   }
 }
@@ -7250,62 +7214,29 @@ void Document::RuleChanged(StyleSheet& aSheet, css::Rule* aRule) {
   if (aSheet.IsApplicable()) {
     ApplicableStylesChanged();
   }
-
-  if (!StyleSheetChangeEventsEnabled()) {
-    return;
-  }
-
-  DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent, "StyleRuleChanged", mRule,
-                             aRule);
 }
 
 void Document::RuleAdded(StyleSheet& aSheet, css::Rule& aRule) {
   if (aRule.IsIncompleteImportRule()) {
-    // Don't send StyleRuleAdded just yet, we'll send it when it loads.
-    //
-    // We also don't want to call ApplicableStylesChanged(), so return.
     return;
   }
 
   if (aSheet.IsApplicable()) {
     ApplicableStylesChanged();
   }
-
-  if (!StyleSheetChangeEventsEnabled()) {
-    return;
-  }
-
-  DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent, "StyleRuleAdded", mRule,
-                             &aRule);
 }
 
 void Document::ImportRuleLoaded(dom::CSSImportRule& aRule, StyleSheet& aSheet) {
   if (aSheet.IsApplicable()) {
     ApplicableStylesChanged();
   }
-
-  if (!StyleSheetChangeEventsEnabled()) {
-    return;
-  }
-
-  DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent, "StyleRuleAdded", mRule,
-                             &aRule);
 }
 
 void Document::RuleRemoved(StyleSheet& aSheet, css::Rule& aRule) {
   if (aSheet.IsApplicable()) {
     ApplicableStylesChanged();
   }
-
-  if (!StyleSheetChangeEventsEnabled()) {
-    return;
-  }
-
-  DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent, "StyleRuleRemoved", mRule,
-                             &aRule);
 }
-
-#undef DO_STYLESHEET_NOTIFICATION
 
 static Element* GetCustomContentContainer(PresShell* aPresShell) {
   if (!aPresShell || !aPresShell->GetCanvasFrame()) {

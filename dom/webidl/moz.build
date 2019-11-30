@@ -1027,9 +1027,7 @@ WEBIDL_FILES += [
     'PopStateEvent.webidl',
     'PopupBlockedEvent.webidl',
     'ProgressEvent.webidl',
-    'StyleRuleChangeEvent.webidl',
     'StyleSheetApplicableStateChangeEvent.webidl',
-    'StyleSheetChangeEvent.webidl',
 ]
 
 # We only expose our prefable test interfaces in debug builds, just to be on
@@ -1086,9 +1084,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'PromiseRejectionEvent.webidl',
     'ScrollViewChangeEvent.webidl',
     'SecurityPolicyViolationEvent.webidl',
-    'StyleRuleChangeEvent.webidl',
     'StyleSheetApplicableStateChangeEvent.webidl',
-    'StyleSheetChangeEvent.webidl',
     'TCPServerSocketEvent.webidl',
     'TCPSocketErrorEvent.webidl',
     'TCPSocketEvent.webidl',
