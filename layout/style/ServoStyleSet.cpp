@@ -843,9 +843,29 @@ static OriginFlags ToOriginFlags(StyleOrigin aOrigin) {
   }
 }
 
+void ServoStyleSet::ImportRuleLoaded(dom::CSSImportRule&, StyleSheet& aSheet) {
+  if (mStyleRuleMap) {
+    mStyleRuleMap->SheetAdded(aSheet);
+  }
+
+  // TODO: Should probably consider ancestor sheets too.
+  if (!aSheet.IsApplicable()) {
+    return;
+  }
+
+  // TODO(emilio): Could handle it better given we know it is an insertion, and
+  // use the style invalidation machinery stuff that we do for regular sheet
+  // insertions.
+  MarkOriginsDirty(ToOriginFlags(aSheet.GetOrigin()));
+}
+
 void ServoStyleSet::RuleAdded(StyleSheet& aSheet, css::Rule& aRule) {
   if (mStyleRuleMap) {
     mStyleRuleMap->RuleAdded(aSheet, aRule);
+  }
+
+  if (!aSheet.IsApplicable() || aRule.IsIncompleteImportRule()) {
+    return;
   }
 
   // FIXME(emilio): Could be more granular based on aRule.
@@ -857,17 +877,21 @@ void ServoStyleSet::RuleRemoved(StyleSheet& aSheet, css::Rule& aRule) {
     mStyleRuleMap->RuleRemoved(aSheet, aRule);
   }
 
+  if (!aSheet.IsApplicable()) {
+    return;
+  }
+
   // FIXME(emilio): Could be more granular based on aRule.
   MarkOriginsDirty(ToOriginFlags(aSheet.GetOrigin()));
 }
 
 void ServoStyleSet::RuleChanged(StyleSheet& aSheet, css::Rule* aRule) {
+  if (!aSheet.IsApplicable()) {
+    return;
+  }
+
   // FIXME(emilio): Could be more granular based on aRule.
   MarkOriginsDirty(ToOriginFlags(aSheet.GetOrigin()));
-}
-
-void ServoStyleSet::StyleSheetCloned(StyleSheet& aSheet) {
-  mNeedsRestyleAfterEnsureUniqueInner = true;
 }
 
 #ifdef DEBUG

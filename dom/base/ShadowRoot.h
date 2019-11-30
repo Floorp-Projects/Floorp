@@ -34,6 +34,7 @@ class Rule;
 
 namespace dom {
 
+class CSSImportRule;
 class Element;
 class HTMLInputElement;
 
@@ -75,7 +76,8 @@ class ShadowRoot final : public DocumentFragment,
   void RuleAdded(StyleSheet&, css::Rule&);
   void RuleRemoved(StyleSheet&, css::Rule&);
   void RuleChanged(StyleSheet&, css::Rule*);
-  void StyleSheetCloned(StyleSheet&);
+  void ImportRuleLoaded(CSSImportRule&, StyleSheet&);
+  void SheetCloned(StyleSheet&);
   void StyleSheetApplicableStateChanged(StyleSheet&, bool aApplicable);
 
   StyleSheetList* StyleSheets() {

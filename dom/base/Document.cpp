@@ -96,6 +96,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/CSSImportRule.h"
 #include "mozilla/dom/CSPDictionariesBinding.h"
 #include "mozilla/dom/DOMIntersectionObserver.h"
 #include "mozilla/dom/Element.h"
@@ -6333,7 +6334,7 @@ void Document::ApplicableStylesChanged() {
     className##Init init;                                                \
     init.mBubbles = true;                                                \
     init.mCancelable = true;                                             \
-    init.mStylesheet = aSheet;                                           \
+    init.mStylesheet = &aSheet;                                          \
     init.memberName = argName;                                           \
                                                                          \
     RefPtr<className> event =                                            \
@@ -6346,14 +6347,14 @@ void Document::ApplicableStylesChanged() {
     asyncDispatcher->PostDOMEvent();                                     \
   } while (0);
 
-void Document::NotifyStyleSheetAdded(StyleSheet* aSheet, bool aDocumentSheet) {
+void Document::NotifyStyleSheetAdded(StyleSheet& aSheet, bool aDocumentSheet) {
   if (StyleSheetChangeEventsEnabled()) {
     DO_STYLESHEET_NOTIFICATION(StyleSheetChangeEvent, "StyleSheetAdded",
                                mDocumentSheet, aDocumentSheet);
   }
 }
 
-void Document::NotifyStyleSheetRemoved(StyleSheet* aSheet,
+void Document::NotifyStyleSheetRemoved(StyleSheet& aSheet,
                                        bool aDocumentSheet) {
   if (StyleSheetChangeEventsEnabled()) {
     DO_STYLESHEET_NOTIFICATION(StyleSheetChangeEvent, "StyleSheetRemoved",
@@ -6382,7 +6383,7 @@ void Document::RemoveStyleSheet(StyleSheet* aSheet) {
       RemoveStyleSheetFromStyleSets(sheet);
     }
 
-    NotifyStyleSheetRemoved(sheet, true);
+    NotifyStyleSheetRemoved(*sheet, true);
   }
 
   sheet->ClearAssociatedDocumentOrShadowRoot();
@@ -6395,19 +6396,17 @@ void Document::InsertSheetAt(size_t aIndex, StyleSheet& aSheet) {
     AddStyleSheetToStyleSets(&aSheet);
   }
 
-  NotifyStyleSheetAdded(&aSheet, true);
+  NotifyStyleSheetAdded(aSheet, true);
 }
 
-void Document::SetStyleSheetApplicableState(StyleSheet* aSheet,
+void Document::SetStyleSheetApplicableState(StyleSheet& aSheet,
                                             bool aApplicable) {
-  MOZ_ASSERT(aSheet, "null arg");
-
   // If we're actually in the document style sheet list
-  if (mStyleSheets.IndexOf(aSheet) != mStyleSheets.NoIndex) {
+  if (mStyleSheets.IndexOf(&aSheet) != mStyleSheets.NoIndex) {
     if (aApplicable) {
-      AddStyleSheetToStyleSets(aSheet);
+      AddStyleSheetToStyleSets(&aSheet);
     } else {
-      RemoveStyleSheetFromStyleSets(aSheet);
+      RemoveStyleSheetFromStyleSets(&aSheet);
     }
   }
 
@@ -6510,9 +6509,13 @@ nsresult Document::LoadAdditionalStyleSheet(additionalSheetType aType,
 
 nsresult Document::AddAdditionalStyleSheet(additionalSheetType aType,
                                            StyleSheet* aSheet) {
-  if (mAdditionalSheets[aType].Contains(aSheet)) return NS_ERROR_INVALID_ARG;
+  if (mAdditionalSheets[aType].Contains(aSheet)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
-  if (!aSheet->IsApplicable()) return NS_ERROR_INVALID_ARG;
+  if (!aSheet->IsApplicable()) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   mAdditionalSheets[aType].AppendElement(aSheet);
 
@@ -6523,7 +6526,7 @@ nsresult Document::AddAdditionalStyleSheet(additionalSheetType aType,
 
   // Passing false, so documet.styleSheets.length will not be affected by
   // these additional sheets.
-  NotifyStyleSheetAdded(aSheet, false);
+  NotifyStyleSheetAdded(*aSheet, false);
   return NS_OK;
 }
 
@@ -6549,7 +6552,7 @@ void Document::RemoveAdditionalStyleSheet(additionalSheetType aType,
 
     // Passing false, so documet.styleSheets.length will not be affected by
     // these additional sheets.
-    NotifyStyleSheetRemoved(sheetRef, false);
+    NotifyStyleSheetRemoved(*sheetRef, false);
     sheetRef->ClearAssociatedDocumentOrShadowRoot();
   }
 }
@@ -7243,37 +7246,63 @@ void Document::ContentStateChanged(nsIContent* aContent,
                                (this, aContent, aStateMask));
 }
 
-void Document::StyleRuleChanged(StyleSheet* aSheet, css::Rule* aStyleRule) {
-  ApplicableStylesChanged();
+void Document::RuleChanged(StyleSheet& aSheet, css::Rule* aRule) {
+  if (aSheet.IsApplicable()) {
+    ApplicableStylesChanged();
+  }
 
   if (!StyleSheetChangeEventsEnabled()) {
     return;
   }
 
   DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent, "StyleRuleChanged", mRule,
-                             aStyleRule);
+                             aRule);
 }
 
-void Document::StyleRuleAdded(StyleSheet* aSheet, css::Rule* aStyleRule) {
-  ApplicableStylesChanged();
+void Document::RuleAdded(StyleSheet& aSheet, css::Rule& aRule) {
+  if (aRule.IsIncompleteImportRule()) {
+    // Don't send StyleRuleAdded just yet, we'll send it when it loads.
+    //
+    // We also don't want to call ApplicableStylesChanged(), so return.
+    return;
+  }
+
+  if (aSheet.IsApplicable()) {
+    ApplicableStylesChanged();
+  }
 
   if (!StyleSheetChangeEventsEnabled()) {
     return;
   }
 
   DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent, "StyleRuleAdded", mRule,
-                             aStyleRule);
+                             &aRule);
 }
 
-void Document::StyleRuleRemoved(StyleSheet* aSheet, css::Rule* aStyleRule) {
-  ApplicableStylesChanged();
+void Document::ImportRuleLoaded(dom::CSSImportRule& aRule, StyleSheet& aSheet) {
+  if (aSheet.IsApplicable()) {
+    ApplicableStylesChanged();
+  }
+
+  if (!StyleSheetChangeEventsEnabled()) {
+    return;
+  }
+
+  DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent, "StyleRuleAdded", mRule,
+                             &aRule);
+}
+
+void Document::RuleRemoved(StyleSheet& aSheet, css::Rule& aRule) {
+  if (aSheet.IsApplicable()) {
+    ApplicableStylesChanged();
+  }
 
   if (!StyleSheetChangeEventsEnabled()) {
     return;
   }
 
   DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent, "StyleRuleRemoved", mRule,
-                             aStyleRule);
+                             &aRule);
 }
 
 #undef DO_STYLESHEET_NOTIFICATION
