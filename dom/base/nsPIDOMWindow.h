@@ -176,16 +176,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   // Note: not related to IsLoading.  Set to false if there's an error, etc.
   virtual void SetActiveLoadingState(bool aIsActiveLoading) = 0;
 
-  nsPIDOMWindowInner* GetWindowForDeprioritizedLoadRunner();
-
-  /**
-   * The runnable will be called once there is idle time, or the top level
-   * page has been loaded or if a timeout has fired.
-   * Must be called only on the top level window, the one
-   * GetWindowForDeprioritizedLoadRunner returns.
-   */
-  virtual void AddDeprioritizedLoadRunner(nsIRunnable* aRunner) = 0;
-
   bool AddAudioContext(mozilla::dom::AudioContext* aAudioContext);
   void RemoveAudioContext(mozilla::dom::AudioContext* aAudioContext);
   void MuteAudioContexts();

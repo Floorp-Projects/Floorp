@@ -2308,14 +2308,14 @@ void XMLHttpRequestMainThread::ChangeStateToDone(bool aWasSync) {
     mChannel->GetLoadFlags(&loadFlags);
     if (loadFlags & nsIRequest::LOAD_BACKGROUND) {
       nsPIDOMWindowInner* owner = GetOwner();
-      nsPIDOMWindowInner* topWin =
-          owner ? owner->GetWindowForDeprioritizedLoadRunner() : nullptr;
-      if (topWin) {
+      BrowsingContext* bc = owner ? owner->GetBrowsingContext() : nullptr;
+      bc = bc ? bc->Top() : nullptr;
+      if (bc && bc->GetLoading()) {
         MOZ_ASSERT(!mDelayedDoneNotifier);
         RefPtr<XMLHttpRequestDoneNotifier> notifier =
             new XMLHttpRequestDoneNotifier(this);
         mDelayedDoneNotifier = notifier;
-        topWin->AddDeprioritizedLoadRunner(notifier);
+        bc->AddDeprioritizedLoadRunner(notifier);
         return;
       }
     }

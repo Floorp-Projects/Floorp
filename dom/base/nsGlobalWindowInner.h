@@ -1242,7 +1242,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   void RemoveIdleCallback(mozilla::dom::IdleRequest* aRequest);
 
   void SetActiveLoadingState(bool aIsLoading) override;
-  void AddDeprioritizedLoadRunner(nsIRunnable* aRunner) override;
 
  protected:
   // Window offline status. Checked to see if we need to fire offline event
@@ -1413,28 +1412,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   nsTArray<mozilla::UniquePtr<PromiseDocumentFlushedResolver>>
       mDocumentFlushedResolvers;
-
-  class DeprioritizedLoadRunner
-      : public mozilla::Runnable,
-        public mozilla::LinkedListElement<DeprioritizedLoadRunner> {
-   public:
-    explicit DeprioritizedLoadRunner(nsIRunnable* aInner)
-        : Runnable("DeprioritizedLoadRunner"), mInner(aInner) {}
-
-    NS_IMETHOD Run() override {
-      if (mInner) {
-        RefPtr<nsIRunnable> inner = std::move(mInner);
-        inner->Run();
-      }
-
-      return NS_OK;
-    }
-
-   private:
-    RefPtr<nsIRunnable> mInner;
-  };
-
-  mozilla::LinkedList<DeprioritizedLoadRunner> mDeprioritizedLoadRunner;
 
   static InnerWindowByIdTable* sInnerWindowsById;
 
