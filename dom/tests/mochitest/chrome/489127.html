@@ -15,13 +15,13 @@
 
   function check(x, y, top, right, bottom, left, list) {
     let nodes = dwu.nodesFromRect(x, y, top, right, bottom, left, true, false, false);
-    
+
     list.push(e.body);
     list.push(e.html);
 
     if (nodes.length != list.length) {
       ok(false, "Different number of nodes for rect" +
-                "[" + x + "," + y + "], " + 
+                "[" + x + "," + y + "], " +
                 "[" + top + "," + right + "," + bottom + "," + left + "]");
       return;
     }
@@ -29,13 +29,13 @@
     for (var i = 0; i < nodes.length; i++) {
       if (nodes[i] != list[i]) {
         ok(false, "Unexpected node #" + i + " for rect " +
-                  "[" + x + "," + y + "], " + 
+                  "[" + x + "," + y + "], " +
                   "[" + top + "," + right + "," + bottom + "," + left + "]");
         return;
       }
     }
     ok(true, "All correct nodes found for rect "  +
-             "[" + x + "," + y + "], " + 
+             "[" + x + "," + y + "], " +
              "[" + top + "," + right + "," + bottom + "," + left + "]");
   }
 
@@ -157,7 +157,7 @@ span {
 <body id="body">
   <h1 id="h1"></h1>
   <div id="d1"></div>
-  
+
   <!-- floated element -->
   <div id="d2" style="float: left"></div>
 
@@ -165,10 +165,10 @@ span {
   <p id="p1" style="float: left; visibility: hidden"></p>
 
   <p id="p2" style="clear: left"><span id="span"></span></p>
-  
+
   <!-- absolute position -->
   <p id="p3" style="position:absolute; top: 10px; left:50px; height:50px;"></p>
-  
+
   <!-- fixed position -->
   <p id="p4" style="position: fixed; top: 30px; left: 150px; height: 50px; background-color: blue;"></p>
 
