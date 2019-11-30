@@ -38,8 +38,7 @@ class CSSMediaRule final : public css::ConditionRule {
                         ErrorResult& aRv) final;
   dom::MediaList* Media();
 
-  size_t SizeOfIncludingThis(
-      mozilla::MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfIncludingThis(MallocSizeOf) const override;
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;

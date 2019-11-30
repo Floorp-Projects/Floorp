@@ -79,14 +79,14 @@ class MappedDeclarations final {
   template <typename T,
             typename = typename std::enable_if<std::is_enum<T>::value>::type>
   void SetKeywordValue(nsCSSPropertyID aId, T aValue) {
-    static_assert(mozilla::EnumTypeFitsWithin<T, int32_t>::value,
+    static_assert(EnumTypeFitsWithin<T, int32_t>::value,
                   "aValue must be an enum that fits within 32 bits");
     SetKeywordValue(aId, static_cast<int32_t>(aValue));
   }
   template <typename T,
             typename = typename std::enable_if<std::is_enum<T>::value>::type>
   void SetKeywordValueIfUnset(nsCSSPropertyID aId, T aValue) {
-    static_assert(mozilla::EnumTypeFitsWithin<T, int32_t>::value,
+    static_assert(EnumTypeFitsWithin<T, int32_t>::value,
                   "aValue must be an enum that fits within 32 bits");
     SetKeywordValueIfUnset(aId, static_cast<int32_t>(aValue));
   }

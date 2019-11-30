@@ -17,9 +17,9 @@
 
 #define AVG2(a, b) (((a) + (b) + 1) >> 1)
 
-using mozilla::dom::Document;
-
 namespace mozilla {
+
+using dom::Document;
 
 bool PreferenceSheet::sInitialized;
 PreferenceSheet::Prefs PreferenceSheet::sContentPrefs;

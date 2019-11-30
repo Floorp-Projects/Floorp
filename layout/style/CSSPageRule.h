@@ -28,8 +28,8 @@ class CSSPageRuleDeclaration final : public nsDOMCSSDeclaration {
   nsINode* GetParentObject() final;
 
  protected:
-  mozilla::DeclarationBlock* GetOrCreateCSSDeclaration(
-      Operation aOperation, mozilla::DeclarationBlock** aCreated) final;
+  DeclarationBlock* GetOrCreateCSSDeclaration(
+      Operation aOperation, DeclarationBlock** aCreated) final;
   nsresult SetCSSDeclaration(DeclarationBlock* aDecl,
                              MutationClosureData* aClosureData) final;
   Document* DocToUpdate() final { return nullptr; }

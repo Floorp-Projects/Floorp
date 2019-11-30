@@ -94,8 +94,7 @@ class Rule : public nsISupports, public nsWrapperCache {
 
   // This is pure virtual because all of Rule's data members are non-owning and
   // thus measured elsewhere.
-  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-      MOZ_MUST_OVERRIDE = 0;
+  virtual size_t SizeOfIncludingThis(MallocSizeOf) const MOZ_MUST_OVERRIDE = 0;
 
   // WebIDL interface
   virtual uint16_t Type() const = 0;
