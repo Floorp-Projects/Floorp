@@ -67,6 +67,8 @@ SPHINX_TREES['try'] = 'tryselect/docs'
 
 SPHINX_TREES['docs'] = 'docs/docs'
 
+SPHINX_TREES['static-analysis'] = 'clang-tidy/docs'
+
 with Files('tryselect/docs/**'):
     SCHEDULES.exclusive = ['docs']
 

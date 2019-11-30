@@ -18,6 +18,10 @@ conforms to recommendations.
    Firefox code base uses the `Google Coding style for C++
    code <https://google.github.io/styleguide/cppguide.html>`__
 
+A significant part of the C++ coding style update can be
+delegated to clang-format. See:ref:`Formatting C++ Code With clang-format`
+for more information.
+
 
 Naming and formatting code
 --------------------------
