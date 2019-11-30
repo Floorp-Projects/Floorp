@@ -9,6 +9,7 @@
 #include "Rule.h"
 
 #include "mozilla/css/GroupRule.h"
+#include "mozilla/dom/CSSImportRule.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "nsCCUncollectableMarker.h"
 #include "mozilla/dom/Document.h"
@@ -101,6 +102,14 @@ bool Rule::IsReadOnly() const {
              "a parent rule should be read only iff the owning sheet is "
              "read only");
   return mSheet && mSheet->IsReadOnly();
+}
+
+bool Rule::IsIncompleteImportRule() const {
+  if (Type() != CSSRule_Binding::IMPORT_RULE) {
+    return false;
+  }
+  auto* sheet = static_cast<const dom::CSSImportRule*>(this)->GetStyleSheet();
+  return !sheet || !sheet->IsComplete();
 }
 
 }  // namespace css

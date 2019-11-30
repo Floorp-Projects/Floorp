@@ -397,6 +397,11 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   bool IsReadOnly() const;
 
  private:
+  // Returns the ShadowRoot that contains this stylesheet or our ancestor
+  // stylesheet, if any.
+  //
+  // TODO(emilio): This may need to have multiple shadow roots with
+  // constructable stylesheets.
   dom::ShadowRoot* GetContainingShadow() const;
 
   StyleSheetInfo& Inner() {
