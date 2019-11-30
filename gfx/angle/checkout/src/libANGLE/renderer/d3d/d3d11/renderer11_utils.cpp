@@ -2426,7 +2426,8 @@ void InitializeFeatures(const Renderer11DeviceCaps &deviceCaps,
             features->callClearTwice.enabled    = capsVersion < IntelDriverVersion(4771);
             features->emulateIsnanFloat.enabled = capsVersion < IntelDriverVersion(4542);
         }
-        else if (IsBroadwell(adapterDesc.DeviceId) || IsHaswell(adapterDesc.DeviceId))
+        else if (IsBroadwell(adapterDesc.DeviceId) || IsHaswell(adapterDesc.DeviceId) ||
+                 IsIvyBridge(adapterDesc.DeviceId))
         {
             features->rewriteUnaryMinusOperator.enabled = capsVersion < IntelDriverVersion(4624);
 

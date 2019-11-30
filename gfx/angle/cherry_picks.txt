@@ -1,3 +1,17 @@
+commit 6bbe8f55d3e4b3b44394af323c5842296938ceab
+Author: Lee Salzman <lsalzman@mozilla.com>
+Date:   Fri Aug 2 07:11:16 2019 +1000
+
+    Use image upload workaround for Intel Ivy Bridge with D3D11 renderer.
+    
+    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1578910
+    
+    Bug: angleproject:3980
+    Change-Id: Ia14c5afd989365975bc57b303e59b4ef7669d522
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/1845664
+    Reviewed-by: Geoff Lang <geofflang@chromium.org>
+    Commit-Queue: Geoff Lang <geofflang@chromium.org>
+
 commit fe53e2b60af2314d7fe7040915c1499ef3bb7274
 Author: Miko Mynttinen <mikokm@gmail.com>
 Date:   Fri Nov 1 17:23:03 2019 +0100

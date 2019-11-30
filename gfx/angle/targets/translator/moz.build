@@ -7,13 +7,18 @@ DEFINES['ANGLE_ENABLE_GLSL'] = True
 DEFINES['ANGLE_ENABLE_HLSL'] = True
 #DEFINES['ANGLE_IS_64_BIT_CPU'] = True
 #DEFINES['CERT_CHAIN_PARA_HAS_EXTRA_FIELDS'] = True
+#DEFINES['CHROMIUM_BUILD'] = True
 DEFINES['CR_CLANG_REVISION'] = '"357692-1"'
 DEFINES['DYNAMIC_ANNOTATIONS_ENABLED'] = '0'
+#DEFINES['FULL_SAFE_BROWSING'] = True
 #DEFINES['NDEBUG'] = True
 DEFINES['NOMINMAX'] = True
+#DEFINES['NO_TCMALLOC'] = True
 DEFINES['NTDDI_VERSION'] = 'NTDDI_WIN10_RS2'
 #DEFINES['NVALGRIND'] = True
 #DEFINES['PSAPI_VERSION'] = '2'
+#DEFINES['SAFE_BROWSING_CSD'] = True
+#DEFINES['SAFE_BROWSING_DB_LOCAL'] = True
 DEFINES['UNICODE'] = True
 #DEFINES['USE_AURA'] = '1'
 #DEFINES['WIN32'] = True
@@ -49,7 +54,7 @@ LOCAL_INCLUDES += [
 #    '-fcrash-diagnostics-dir=../tools/clang/crashreports',
 #    '-fdebug-compilation-dir',
 #    '-fmerge-all-constants',
-#    '-fmsc-version=1916',
+#    '-fmsc-version=1911',
 #    '-fno-standalone-debug',
 #    '-gcodeview-ghash',
 #    '-instcombine-lower-dbg-declare=0',
@@ -141,7 +146,6 @@ LOCAL_INCLUDES += [
 #    '/Z7',
 #    '/Zc:inline',
 #    '/Zc:sizedDealloc-',
-#    '/Zc:twoPhase',
 #]
 
 SOURCES += [
@@ -290,9 +294,9 @@ DIRS += [
 #    '/OPT:NOLLDTAILMERGE',
 #    '/OPT:REF',
 #    '/pdbaltpath:%_PDB%',
-#    '/PDBSourcePath:C:/Code/angle/out',
+#    '/PDBSourcePath:C:/dev/angle/out',
 #    '/PROFILE',
-#    '/TIMESTAMP:1564894800',
+#    '/TIMESTAMP:1554613200',
 #    '/WX',
 #]
 
