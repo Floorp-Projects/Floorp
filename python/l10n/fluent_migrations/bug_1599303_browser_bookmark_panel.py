@@ -23,6 +23,6 @@ bookmark-panel-show-editor-checkbox =
 bookmark-panel-done-button =
     .label = { COPY(from_path, "editBookmark.done.label") }
 bookmark-panel =
-    .style = { COPY(from_path, "editBookmark.panel.width") }
+    .style = min-width: { COPY(from_path, "editBookmark.panel.width") }
 """, from_path="browser/chrome/browser/browser.dtd")
     )
