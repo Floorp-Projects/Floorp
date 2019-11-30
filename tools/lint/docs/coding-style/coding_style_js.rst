@@ -1,6 +1,12 @@
 =======================
-Javascript Coding style
+JavaScript Coding style
 =======================
+
+Coding style
+~~~~~~~~~~~~
+
+`prettier <https://prettier.io/>`_ is the tool used to reformat the JavaScript code.
+
 
 Methods and functions
 ~~~~~~~~~~~~~~~~~~~~~
