@@ -53,6 +53,7 @@ class DCLayerTree {
 
   void SetDefaultSwapChain(IDXGISwapChain1* aSwapChain);
   void MaybeUpdateDebug();
+  void WaitForCommitCompletion();
 
   // Interface for wr::Compositor
   void CompositorBeginFrame();
@@ -164,6 +165,7 @@ class DCLayerTree {
   }
   void SetDefaultSwapChain(IDXGISwapChain1* aSwapChain) {}
   void MaybeUpdateDebug() {}
+  void WaitForCommitCompletion() {}
 
   // Interface for wr::Compositor
   void CompositorBeginFrame() {}
