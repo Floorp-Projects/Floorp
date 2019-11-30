@@ -28,6 +28,7 @@ categories:
         - web-platform
     code_quality_doc:
         - tools/lint
+        - tools/static-analysis
     l10n_doc:
         - intl
         - tools/compare-locales
