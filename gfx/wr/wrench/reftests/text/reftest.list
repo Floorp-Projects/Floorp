@@ -50,6 +50,7 @@ platform(linux) options(disable-subpixel) == alpha-transform.yaml alpha-transfor
 platform(linux) == subpixel-rotate.yaml subpixel-rotate.png
 platform(linux) == subpixel-scale.yaml subpixel-scale.png
 platform(linux) == subpixel-skew.yaml subpixel-skew.png
+fuzzy(1,381) platform(linux) == subpixel-translate.yaml subpixel-translate-ref.yaml
 != shadow-rotate.yaml blank.yaml
 platform(linux) == embedded-bitmaps.yaml embedded-bitmaps.png
 platform(linux) == clipped-transform.yaml clipped-transform.png
