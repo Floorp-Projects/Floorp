@@ -72,6 +72,8 @@ class PostMessageEvent final : public Runnable {
         aMessageData);
   }
 
+  void DispatchToTargetThread(ErrorResult& aError);
+
  private:
   PostMessageEvent(BrowsingContext* aSource, const nsAString& aCallerOrigin,
                    nsGlobalWindowOuter* aTargetWindow,

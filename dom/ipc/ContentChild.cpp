@@ -4070,7 +4070,7 @@ mozilla::ipc::IPCResult ContentChild::RecvWindowPostMessage(
       aData.callerDocumentURI(), aData.isFromPrivateWindow());
   event->UnpackFrom(aMessage);
 
-  window->Dispatch(TaskCategory::Other, event.forget());
+  event->DispatchToTargetThread(IgnoredErrorResult());
   return IPC_OK();
 }
 
