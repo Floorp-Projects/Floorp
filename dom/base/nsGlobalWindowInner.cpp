@@ -2564,18 +2564,6 @@ void nsGlobalWindowInner::SetActiveLoadingState(bool aIsLoading) {
     GetBrowsingContext()->SetLoading(aIsLoading);
   }
 
-  if (StaticPrefs::dom_separate_event_queue_for_post_message_enabled()) {
-    if (!aIsLoading) {
-      Document* doc = GetExtantDoc();
-      if (doc) {
-        if (doc->IsTopLevelContentDocument()) {
-          mozilla::dom::TabGroup* tabGroup = doc->GetDocGroup()->GetTabGroup();
-          tabGroup->FlushPostMessageEvents();
-        }
-      }
-    }
-  }
-
   if (!nsGlobalWindowInner::Cast(this)->IsChromeWindow()) {
     mTimeoutManager->SetLoading(aIsLoading);
   }

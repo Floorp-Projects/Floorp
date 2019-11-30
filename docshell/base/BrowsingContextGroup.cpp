@@ -7,6 +7,8 @@
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/BrowsingContextBinding.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/ThrottledEventQueue.h"
 
 namespace mozilla {
 namespace dom {
@@ -131,6 +133,46 @@ nsISupports* BrowsingContextGroup::GetParentObject() const {
 JSObject* BrowsingContextGroup::WrapObject(JSContext* aCx,
                                            JS::Handle<JSObject*> aGivenProto) {
   return BrowsingContextGroup_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+nsresult BrowsingContextGroup::QueuePostMessageEvent(
+    already_AddRefed<nsIRunnable>&& aRunnable) {
+  if (StaticPrefs::dom_separate_event_queue_for_post_message_enabled()) {
+    if (!mPostMessageEventQueue) {
+      nsCOMPtr<nsISerialEventTarget> target = GetMainThreadSerialEventTarget();
+      mPostMessageEventQueue = ThrottledEventQueue::Create(
+          target, "PostMessage Queue",
+          nsIRunnablePriority::PRIORITY_DEFERRED_TIMERS);
+      nsresult rv = mPostMessageEventQueue->SetIsPaused(false);
+      MOZ_ALWAYS_SUCCEEDS(rv);
+    }
+
+    // Ensure the queue is enabled
+    if (mPostMessageEventQueue->IsPaused()) {
+      nsresult rv = mPostMessageEventQueue->SetIsPaused(false);
+      MOZ_ALWAYS_SUCCEEDS(rv);
+    }
+
+    if (mPostMessageEventQueue) {
+      mPostMessageEventQueue->Dispatch(std::move(aRunnable),
+                                       NS_DISPATCH_NORMAL);
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
+void BrowsingContextGroup::FlushPostMessageEvents() {
+  if (StaticPrefs::dom_separate_event_queue_for_post_message_enabled()) {
+    if (mPostMessageEventQueue) {
+      nsresult rv = mPostMessageEventQueue->SetIsPaused(true);
+      MOZ_ALWAYS_SUCCEEDS(rv);
+      nsCOMPtr<nsIRunnable> event;
+      while ((event = mPostMessageEventQueue->GetEvent())) {
+        NS_DispatchToMainThread(event.forget());
+      }
+    }
+  }
 }
 
 static StaticRefPtr<BrowsingContextGroup> sChromeGroup;
