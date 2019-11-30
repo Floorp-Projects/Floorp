@@ -2310,7 +2310,7 @@ void XMLHttpRequestMainThread::ChangeStateToDone(bool aWasSync) {
       nsPIDOMWindowInner* owner = GetOwner();
       BrowsingContext* bc = owner ? owner->GetBrowsingContext() : nullptr;
       bc = bc ? bc->Top() : nullptr;
-      if (bc && bc->GetLoading()) {
+      if (bc && bc->IsLoading()) {
         MOZ_ASSERT(!mDelayedDoneNotifier);
         RefPtr<XMLHttpRequestDoneNotifier> notifier =
             new XMLHttpRequestDoneNotifier(this);

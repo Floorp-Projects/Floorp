@@ -585,7 +585,7 @@ void MainThreadFetchResolver::OnResponseAvailableInternal(
     nsCOMPtr<nsPIDOMWindowInner> inner = do_QueryInterface(go);
     BrowsingContext* bc = inner ? inner->GetBrowsingContext() : nullptr;
     bc = bc ? bc->Top() : nullptr;
-    if (bc && bc->GetLoading()) {
+    if (bc && bc->IsLoading()) {
       bc->AddDeprioritizedLoadRunner(
           new ResolveFetchPromise(mPromise, mResponse));
     } else {
