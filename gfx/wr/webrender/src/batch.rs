@@ -888,8 +888,17 @@ impl BatchBuilder {
                 let prim_data = &ctx.data_stores.text_run[data_handle];
                 let prim_cache_address = gpu_cache.get_address(&prim_data.gpu_cache_handle);
 
+                // The local prim rect is only informative for text primitives, as
+                // thus is not directly necessary for any drawing of the text run.
+                // However the glyph offsets are relative to the prim rect origin
+                // less the unsnapped reference frame offset. In the prim header,
+                // we only have room to store the snapped reference frame offset,
+                // which we cannot recalculate because it ignores the animated
+                // components for the transform. As such, we adjust the prim rect
+                // origin here, so that the shader does not need to know the
+                // unsnapped offset as well.
                 let prim_header = PrimitiveHeader {
-                    local_rect: prim_rect,
+                    local_rect: prim_rect.translate(-run.reference_frame_relative_offset),
                     local_clip_rect: prim_info.combined_local_clip_rect,
                     specific_prim_address: prim_cache_address,
                     transform_id,

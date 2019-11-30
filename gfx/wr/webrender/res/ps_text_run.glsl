@@ -90,105 +90,6 @@ TextRun fetch_text_run(int address) {
     return TextRun(data[0], data[1]);
 }
 
-VertexInfo write_text_vertex(RectWithSize local_clip_rect,
-                             float z,
-#ifdef WR_FEATURE_GLYPH_TRANSFORM
-                             mat2 glyph_transform,
-#else
-                             float glyph_scale,
-#endif
-                             Transform transform,
-                             PictureTask task,
-                             vec2 text_offset,
-                             vec2 glyph_offset,
-                             RectWithSize glyph_rect,
-                             vec2 snap_bias) {
-    // Glyph space refers to the pixel space used by glyph rasterization during frame
-    // building. If a non-identity transform was used, WR_FEATURE_GLYPH_TRANSFORM will
-    // be set. Otherwise, regardless of whether the raster space is LOCAL or SCREEN,
-    // we ignored the transform during glyph rasterization, and need to snap just using
-    // the device pixel scale and the raster scale.
-#ifdef WR_FEATURE_GLYPH_TRANSFORM
-    // Transform from glyph space back to local space.
-    mat2 glyph_transform_inv = inverse(glyph_transform);
-
-    // Glyph raster pixels include the impact of the transform. This path can only be
-    // entered for 3d transforms that can be coerced into a 2d transform; they have no
-    // perspective, and have a 2d inverse. This is a looser condition than axis aligned
-    // transforms because it also allows 2d rotations.
-    vec2 raster_glyph_offset = glyph_transform * glyph_offset;
-    vec2 raster_snap_offset = floor(raster_glyph_offset + snap_bias) - raster_glyph_offset;
-    vec2 local_snap_offset = glyph_transform_inv * raster_snap_offset;
-
-    // We want to eliminate any subpixel translation in device space to ensure glyph
-    // snapping is stable for equivalent glyph subpixel positions. Note that we must use
-    // device pixels, and not glyph raster pixels for this purpose.
-    vec2 device_text_pos = (transform.m * vec4(text_offset, 0.0, 1.0)).xy * task.device_pixel_scale;
-    vec2 device_snap_offset = floor(device_text_pos + 0.5) - device_text_pos;
-
-    // The glyph rect is in device space, so transform it back to local space.
-    RectWithSize local_rect = transform_rect(glyph_rect, glyph_transform_inv);
-
-    // Select the corner of the glyph's local space rect that we are processing.
-    vec2 local_pos = local_rect.p0 + local_rect.size * aPosition.xy;
-
-    // If the glyph's local rect would fit inside the local clip rect, then select a corner from
-    // the device space glyph rect to reduce overdraw of clipped pixels in the fragment shader.
-    // Otherwise, fall back to clamping the glyph's local rect to the local clip rect.
-    if (rect_inside_rect(local_rect, local_clip_rect)) {
-        local_pos = glyph_transform_inv * (glyph_rect.p0 + glyph_rect.size * aPosition.xy);
-    }
-#else
-    // Glyph raster pixels do not include the impact of the transform. Instead it was
-    // replaced with an identity transform during glyph rasterization. As such only the
-    // impact of the raster scale (if in local space) and the device pixel scale (for both
-    // local and screen space) are included.
-    //
-    // This implies one or more of the following conditions:
-    // - The transform is an identity. In that case, setting WR_FEATURE_GLYPH_TRANSFORM
-    //   should have the same output result as not. We just distingush which path to use
-    //   based on the transform used during glyph rasterization. (Screen space).
-    // - The transform contains an animation. We will imply local raster space in such
-    //   cases to avoid constantly rerasterizing the glyphs.
-    // - The transform has perspective or does not have a 2d inverse (Screen or local space).
-    // - The transform's scale will result in result in very large rasterized glyphs and
-    //   we clamped the size. This will imply local raster space.
-    vec2 raster_glyph_offset = glyph_offset * glyph_scale;
-    vec2 raster_snap_offset = floor(raster_glyph_offset + snap_bias) - raster_glyph_offset;
-    vec2 local_snap_offset = raster_snap_offset / glyph_scale;
-
-    // The transform may be animated, so we don't want to do any snapping here for the
-    // text offset to avoid glyphs wiggling. The text offset should have been snapped
-    // already for axis aligned transforms excluding any animations during frame building.
-    vec2 device_snap_offset = vec2(0.0);
-
-    // Select the corner of the glyph rect that we are processing.
-    vec2 local_pos = glyph_rect.p0 + glyph_rect.size * aPosition.xy;
-#endif
-
-    // Clamp to the local clip rect.
-    local_pos = clamp_rect(local_pos, local_clip_rect);
-
-    // Map the clamped local space corner into device space.
-    vec4 world_pos = transform.m * vec4(local_pos, 0.0, 1.0);
-    vec2 device_pos = world_pos.xy * task.device_pixel_scale;
-    vec4 snapped_world_pos = transform.m * vec4(local_pos + local_snap_offset, 0.0, 1.0);
-    vec2 snapped_device_pos = snapped_world_pos.xy * task.device_pixel_scale + device_snap_offset * snapped_world_pos.w;
-
-    // Apply offsets for the render task to get correct screen location.
-    vec2 final_offset = -task.content_origin + task.common_data.task_rect.p0;
-
-    gl_Position = uTransform * vec4(snapped_device_pos + final_offset * world_pos.w, z * world_pos.w, world_pos.w);
-
-    VertexInfo vi = VertexInfo(
-        local_pos,
-        snapped_device_pos - device_pos,
-        world_pos
-    );
-
-    return vi;
-}
-
 void main(void) {
     Instance instance = decode_instance_attributes();
 
@@ -208,29 +109,14 @@ void main(void) {
         color_mode = uMode;
     }
 
+    // Note that the unsnapped reference frame relative offset has already
+    // been subtracted from the prim local rect origin during batching.
+    // It was done this way to avoid pushing both the snapped and the
+    // unsnapped offsets to the shader.
     Glyph glyph = fetch_glyph(ph.specific_prim_address, glyph_index);
-    glyph.offset += ph.local_rect.p0 - text_offset;
+    glyph.offset += ph.local_rect.p0;
 
     GlyphResource res = fetch_glyph_resource(instance.resource_address);
-
-#ifdef WR_FEATURE_GLYPH_TRANSFORM
-    // Transform from local space to glyph space.
-    mat2 glyph_transform = mat2(transform.m) * task.device_pixel_scale;
-
-    // Compute the glyph rect in glyph space.
-    RectWithSize glyph_rect = RectWithSize(res.offset + glyph_transform * (text_offset + glyph.offset),
-                                           res.uv_rect.zw - res.uv_rect.xy);
-#else
-    float raster_scale = float(ph.user_data.z) / 65535.0;
-
-    // Scale from glyph space to local space.
-    float glyph_scale_inv = res.scale / (raster_scale * task.device_pixel_scale);
-    float glyph_scale = 1.0 / glyph_scale_inv;
-
-    // Compute the glyph rect in local space.
-    RectWithSize glyph_rect = RectWithSize(glyph_scale_inv * res.offset + text_offset + glyph.offset,
-                                           glyph_scale_inv * (res.uv_rect.zw - res.uv_rect.xy));
-#endif
 
     vec2 snap_bias;
     // In subpixel mode, the subpixel offset has already been
@@ -257,28 +143,101 @@ void main(void) {
             break;
     }
 
-    VertexInfo vi = write_text_vertex(ph.local_clip_rect,
-                                      ph.z,
+    // Glyph space refers to the pixel space used by glyph rasterization during frame
+    // building. If a non-identity transform was used, WR_FEATURE_GLYPH_TRANSFORM will
+    // be set. Otherwise, regardless of whether the raster space is LOCAL or SCREEN,
+    // we ignored the transform during glyph rasterization, and need to snap just using
+    // the device pixel scale and the raster scale.
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
-                                      glyph_transform,
+    // Transform from local space to glyph space.
+    mat2 glyph_transform = mat2(transform.m) * task.device_pixel_scale;
+    vec2 glyph_translation = transform.m[3].xy * task.device_pixel_scale;
+
+    // Transform from glyph space back to local space.
+    mat2 glyph_transform_inv = inverse(glyph_transform);
+
+    // Glyph raster pixels include the impact of the transform. This path can only be
+    // entered for 3d transforms that can be coerced into a 2d transform; they have no
+    // perspective, and have a 2d inverse. This is a looser condition than axis aligned
+    // transforms because it also allows 2d rotations.
+    vec2 raster_glyph_offset = floor(glyph_transform * glyph.offset + snap_bias);
+
+    // We want to eliminate any subpixel translation in device space to ensure glyph
+    // snapping is stable for equivalent glyph subpixel positions. Note that we must take
+    // into account the translation from the transform for snapping purposes.
+    vec2 raster_text_offset = floor(glyph_transform * text_offset + glyph_translation + 0.5) - glyph_translation;
+
+    // Compute the glyph rect in glyph space.
+    RectWithSize glyph_rect = RectWithSize(res.offset + raster_glyph_offset + raster_text_offset,
+                                           res.uv_rect.zw - res.uv_rect.xy);
+
+    // The glyph rect is in glyph space, so transform it back to local space.
+    RectWithSize local_rect = transform_rect(glyph_rect, glyph_transform_inv);
+
+    // Select the corner of the glyph's local space rect that we are processing.
+    vec2 local_pos = local_rect.p0 + local_rect.size * aPosition.xy;
+
+    // If the glyph's local rect would fit inside the local clip rect, then select a corner from
+    // the device space glyph rect to reduce overdraw of clipped pixels in the fragment shader.
+    // Otherwise, fall back to clamping the glyph's local rect to the local clip rect.
+    if (rect_inside_rect(local_rect, ph.local_clip_rect)) {
+        local_pos = glyph_transform_inv * (glyph_rect.p0 + glyph_rect.size * aPosition.xy);
+    }
 #else
-                                      glyph_scale,
+    float raster_scale = float(ph.user_data.z) / 65535.0;
+
+    // Scale from glyph space to local space.
+    float glyph_scale_inv = res.scale / (raster_scale * task.device_pixel_scale);
+    float glyph_scale = 1.0 / glyph_scale_inv;
+
+    // Glyph raster pixels do not include the impact of the transform. Instead it was
+    // replaced with an identity transform during glyph rasterization. As such only the
+    // impact of the raster scale (if in local space) and the device pixel scale (for both
+    // local and screen space) are included.
+    //
+    // This implies one or more of the following conditions:
+    // - The transform is an identity. In that case, setting WR_FEATURE_GLYPH_TRANSFORM
+    //   should have the same output result as not. We just distingush which path to use
+    //   based on the transform used during glyph rasterization. (Screen space).
+    // - The transform contains an animation. We will imply local raster space in such
+    //   cases to avoid constantly rerasterizing the glyphs.
+    // - The transform has perspective or does not have a 2d inverse (Screen or local space).
+    // - The transform's scale will result in result in very large rasterized glyphs and
+    //   we clamped the size. This will imply local raster space.
+    vec2 raster_glyph_offset = floor(glyph.offset * glyph_scale + snap_bias);
+
+    // Compute the glyph rect in local space.
+    //
+    // The transform may be animated, so we don't want to do any snapping here for the
+    // text offset to avoid glyphs wiggling. The text offset should have been snapped
+    // already for axis aligned transforms excluding any animations during frame building.
+    RectWithSize glyph_rect = RectWithSize(glyph_scale_inv * (res.offset + raster_glyph_offset) + text_offset,
+                                           glyph_scale_inv * (res.uv_rect.zw - res.uv_rect.xy));
+
+    // Select the corner of the glyph rect that we are processing.
+    vec2 local_pos = glyph_rect.p0 + glyph_rect.size * aPosition.xy;
 #endif
-                                      transform,
-                                      task,
-                                      text_offset,
-                                      glyph.offset,
-                                      glyph_rect,
-                                      snap_bias);
+
+    // Clamp to the local clip rect.
+    local_pos = clamp_rect(local_pos, ph.local_clip_rect);
+
+    // Map the clamped local space corner into device space.
+    vec4 world_pos = transform.m * vec4(local_pos, 0.0, 1.0);
+    vec2 device_pos = world_pos.xy * task.device_pixel_scale;
+
+    // Apply offsets for the render task to get correct screen location.
+    vec2 final_offset = -task.content_origin + task.common_data.task_rect.p0;
+
+    gl_Position = uTransform * vec4(device_pos + final_offset * world_pos.w, ph.z * world_pos.w, world_pos.w);
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
-    vec2 f = (glyph_transform * vi.local_pos - glyph_rect.p0) / glyph_rect.size;
+    vec2 f = (glyph_transform * local_pos - glyph_rect.p0) / glyph_rect.size;
     V_UV_CLIP = vec4(f, 1.0 - f);
 #else
-    vec2 f = (vi.local_pos - glyph_rect.p0) / glyph_rect.size;
+    vec2 f = (local_pos - glyph_rect.p0) / glyph_rect.size;
 #endif
 
-    write_clip(vi.world_pos, vi.snap_offset, clip_area);
+    write_clip(world_pos, vec2(0.0), clip_area);
 
     switch (color_mode) {
         case COLOR_MODE_ALPHA:
