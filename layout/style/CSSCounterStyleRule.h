@@ -45,7 +45,7 @@ class CSSCounterStyleRule final : public css::Rule {
 #include "nsCSSCounterDescList.h"
 #undef CSS_COUNTER_DESC
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
+  size_t SizeOfIncludingThis(MallocSizeOf) const final;
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 

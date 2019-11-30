@@ -29,8 +29,7 @@ class CSSImportRule final : public css::Rule {
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
 
-  size_t SizeOfIncludingThis(
-      mozilla::MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfIncludingThis(MallocSizeOf) const override;
 
   // WebIDL interface
   uint16_t Type() const final { return CSSRule_Binding::IMPORT_RULE; }

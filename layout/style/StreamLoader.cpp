@@ -38,7 +38,7 @@ StreamLoader::OnStartRequest(nsIRequest* aRequest) {
       if (length > MaxValue<nsACString::size_type>::value) {
         return (mStatus = NS_ERROR_OUT_OF_MEMORY);
       }
-      if (!mBytes.SetCapacity(length, mozilla::fallible_t())) {
+      if (!mBytes.SetCapacity(length, fallible)) {
         return (mStatus = NS_ERROR_OUT_OF_MEMORY);
       }
     }
@@ -162,7 +162,7 @@ nsresult StreamLoader::WriteSegmentFun(nsIInputStream*, void* aClosure,
     }
   }
 
-  if (!self->mBytes.Append(aSegment, aCount, mozilla::fallible_t())) {
+  if (!self->mBytes.Append(aSegment, aCount, fallible)) {
     self->mBytes.Truncate();
     return (self->mStatus = NS_ERROR_OUT_OF_MEMORY);
   }

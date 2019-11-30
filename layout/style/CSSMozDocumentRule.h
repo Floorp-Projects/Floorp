@@ -39,8 +39,7 @@ class CSSMozDocumentRule final : public css::ConditionRule {
   void SetConditionText(const nsAString& aConditionText,
                         ErrorResult& aRv) final;
 
-  size_t SizeOfIncludingThis(
-      mozilla::MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfIncludingThis(MallocSizeOf) const override;
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
