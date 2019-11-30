@@ -583,10 +583,10 @@ void MainThreadFetchResolver::OnResponseAvailableInternal(
     nsCOMPtr<nsIGlobalObject> go = mPromise->GetParentObject();
     mResponse = new Response(go, aResponse, mSignalImpl);
     nsCOMPtr<nsPIDOMWindowInner> inner = do_QueryInterface(go);
-    nsPIDOMWindowInner* topLevel =
-        inner ? inner->GetWindowForDeprioritizedLoadRunner() : nullptr;
-    if (topLevel) {
-      topLevel->AddDeprioritizedLoadRunner(
+    BrowsingContext* bc = inner ? inner->GetBrowsingContext() : nullptr;
+    bc = bc ? bc->Top() : nullptr;
+    if (bc && bc->GetLoading()) {
+      bc->AddDeprioritizedLoadRunner(
           new ResolveFetchPromise(mPromise, mResponse));
     } else {
       mPromise->MaybeResolve(mResponse);
