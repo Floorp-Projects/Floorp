@@ -6077,45 +6077,7 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
     return;
   }
 
-  if (StaticPrefs::dom_separate_event_queue_for_post_message_enabled() &&
-      !DocGroup::TryToLoadIframesInBackground()) {
-    BrowsingContext* bc = GetBrowsingContext();
-    bc = bc ? bc->Top() : nullptr;
-    if (bc && bc->IsLoading()) {
-      // As long as the top level is loading, we can dispatch events to the
-      // queue because the queue will be flushed eventually
-      aError = bc->Group()->QueuePostMessageEvent(event.forget());
-      return;
-    }
-  }
-
-  if (DocGroup::TryToLoadIframesInBackground()) {
-    RefPtr<nsIDocShell> docShell = GetDocShell();
-    RefPtr<nsDocShell> dShell = nsDocShell::Cast(docShell);
-
-    // PostMessage that are added to the BrowsingContextGroup are the ones that
-    // can be flushed when the top level document is loaded.
-    // TreadAsBackgroundLoad DocShells are treated specially.
-    if (dShell) {
-      if (!dShell->TreatAsBackgroundLoad()) {
-        BrowsingContext* bc = GetBrowsingContext();
-        bc = bc ? bc->Top() : nullptr;
-        if (bc && bc->IsLoading()) {
-          // As long as the top level is loading, we can dispatch events to the
-          // queue because the queue will be flushed eventually
-          aError = bc->Group()->QueuePostMessageEvent(event.forget());
-          return;
-        }
-      } else if (mDoc->GetReadyStateEnum() < Document::READYSTATE_COMPLETE) {
-        mozilla::dom::DocGroup* docGroup = GetDocGroup();
-        aError = docGroup->QueueIframePostMessages(event.forget(),
-                                                   dShell->GetOuterWindowID());
-        return;
-      }
-    }
-  }
-
-  aError = Dispatch(TaskCategory::Other, event.forget());
+  event->DispatchToTargetThread(aError);
 }
 
 class nsCloseEvent : public Runnable {
