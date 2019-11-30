@@ -13,6 +13,7 @@
 #include "mozilla/dom/BrowsingContextBinding.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Location.h"
 #include "mozilla/dom/LocationBinding.h"
@@ -1349,17 +1350,40 @@ void BrowsingContext::DidSetIsPopupSpam() {
   }
 }
 
+bool BrowsingContext::IsLoading() {
+  if (GetLoading()) {
+    return true;
+  }
+
+  // If we're in the same process as the page, we're possibly just
+  // updating the flag.
+  nsIDocShell* shell = GetDocShell();
+  if (shell) {
+    Document* doc = shell->GetDocument();
+    return doc && doc->GetReadyStateEnum() < Document::READYSTATE_COMPLETE;
+  }
+
+  return false;
+}
+
 void BrowsingContext::DidSetLoading() {
-  if (!mLoading) {
-    while (!mDeprioritizedLoadRunner.isEmpty()) {
-      nsCOMPtr<nsIRunnable> runner = mDeprioritizedLoadRunner.popFirst();
-      NS_DispatchToCurrentThread(runner.forget());
-    }
+  if (mLoading) {
+    return;
+  }
+
+  while (!mDeprioritizedLoadRunner.isEmpty()) {
+    nsCOMPtr<nsIRunnable> runner = mDeprioritizedLoadRunner.popFirst();
+    NS_DispatchToCurrentThread(runner.forget());
+  }
+
+  if (StaticPrefs::dom_separate_event_queue_for_post_message_enabled() &&
+      Top() == this) {
+    Group()->FlushPostMessageEvents();
   }
 }
 
 void BrowsingContext::AddDeprioritizedLoadRunner(nsIRunnable* aRunner) {
-  MOZ_ASSERT(mLoading);
+  MOZ_ASSERT(IsLoading());
   MOZ_ASSERT(Top() == this);
 
   RefPtr<DeprioritizedLoadRunner> runner = new DeprioritizedLoadRunner(aRunner);
