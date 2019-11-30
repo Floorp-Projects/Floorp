@@ -50,8 +50,10 @@ class AutoScrollController {
 
       if (
         node instanceof content.XULElement &&
-        mmScrollbarPosition &&
-        (node.localName == "scrollbar" || node.localName == "scrollcorner")
+        ((mmScrollbarPosition &&
+          (node.localName == "scrollbar" ||
+            node.localName == "scrollcorner")) ||
+          node.localName == "treechildren")
       ) {
         return true;
       }
