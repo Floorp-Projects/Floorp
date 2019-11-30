@@ -317,7 +317,7 @@ bool VRShMem::JoinShMem() {
       msg.AppendPrintf("VRService OpenMutex error \"%lu\".", GetLastError());
       NS_WARNING(msg.get());
 #  endif
-      MOZ_ASSERT(false);
+      return false;
     }
     MOZ_ASSERT(GetLastError() == 0);
   }

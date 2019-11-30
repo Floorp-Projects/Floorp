@@ -21,6 +21,7 @@
 #include "nsString.h"
 #include "nsArray.h"
 #include "nsCOMPtr.h"
+#include "mozilla/StaticPrefs_extensions.h"
 
 #include "windows.h"
 #include "WinUtils.h"
@@ -68,6 +69,10 @@ nsFxrCommandLineHandler::Handle(nsICommandLine* aCmdLine) {
     if (XRE_IsParentProcess() && !XRE_IsE10sParentProcess()) {
       MOZ_CRASH("--fxr not supported without e10s");
     }
+
+    MOZ_ASSERT(mozilla::StaticPrefs::extensions_webextensions_remote(),
+               "Remote extensions are the only supported configuration on "
+               "desktop platforms");
 
     aCmdLine->SetPreventDefault(true);
 
