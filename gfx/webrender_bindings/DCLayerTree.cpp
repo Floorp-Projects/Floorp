@@ -126,6 +126,10 @@ void DCLayerTree::MaybeUpdateDebug() {
   }
 }
 
+void DCLayerTree::WaitForCommitCompletion() {
+  mCompositionDevice->WaitForCommitCompletion();
+}
+
 bool DCLayerTree::MaybeUpdateDebugCounter() {
   bool debugCounter = StaticPrefs::gfx_webrender_debug_dcomp_counter();
   if (mDebugCounter == debugCounter) {

@@ -83,6 +83,10 @@ class RenderCompositorANGLE : public RenderCompositor {
   bool RequestFullRender() override;
   uint32_t GetMaxPartialPresentRects() override;
 
+  bool MaybeReadback(const gfx::IntSize& aReadbackSize,
+                     const wr::ImageFormat& aReadbackFormat,
+                     const Range<uint8_t>& aReadbackBuffer) override;
+
  protected:
   bool UseCompositor();
   void InitializeUsePartialPresent();
