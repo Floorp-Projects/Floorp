@@ -136,6 +136,11 @@ function setupBrowser() {
     );
 
     FullScreen.init();
+
+    // Send this notification to start and allow background scripts for
+    // WebExtensions, since this FxR UI doesn't participate in typical
+    // startup activities
+    Services.obs.notifyObservers(window, "extensions-late-startup");
   }
 }
 
