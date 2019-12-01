@@ -1659,7 +1659,7 @@ void nsBidiPresUtils::RepositionRubyContentFrame(
                     aFrame->GetSize(), aBorderPadding.IStart(aFrameWM));
   isize += aBorderPadding.IEnd(aFrameWM);
 
-  if (aFrame->StyleText()->mRubyAlign == NS_STYLE_RUBY_ALIGN_START) {
+  if (aFrame->StyleText()->mRubyAlign == StyleRubyAlign::Start) {
     return;
   }
   nscoord residualISize = aFrame->ISize(aFrameWM) - isize;

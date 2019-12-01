@@ -2658,7 +2658,7 @@ struct nsLineLayout::JustificationComputationState {
 };
 
 static bool IsRubyAlignSpaceAround(nsIFrame* aRubyBase) {
-  return aRubyBase->StyleText()->mRubyAlign == NS_STYLE_RUBY_ALIGN_SPACE_AROUND;
+  return aRubyBase->StyleText()->mRubyAlign == StyleRubyAlign::SpaceAround;
 }
 
 /**
@@ -2940,14 +2940,14 @@ void nsLineLayout::ExpandRubyBox(PerFrameData* aFrame, nscoord aReservedISize,
   WritingMode lineWM = mRootSpan->mWritingMode;
   auto rubyAlign = aFrame->mFrame->StyleText()->mRubyAlign;
   switch (rubyAlign) {
-    case NS_STYLE_RUBY_ALIGN_START:
+    case StyleRubyAlign::Start:
       // do nothing for start
       break;
-    case NS_STYLE_RUBY_ALIGN_SPACE_BETWEEN:
-    case NS_STYLE_RUBY_ALIGN_SPACE_AROUND: {
+    case StyleRubyAlign::SpaceBetween:
+    case StyleRubyAlign::SpaceAround: {
       int32_t opportunities = aFrame->mJustificationInfo.mInnerOpportunities;
       int32_t gaps = opportunities * 2;
-      if (rubyAlign == NS_STYLE_RUBY_ALIGN_SPACE_AROUND) {
+      if (rubyAlign == StyleRubyAlign::SpaceAround) {
         // Each expandable ruby box with ruby-align space-around has a
         // gap at each of its sides. For rb/rbc, see comment in
         // AssignInterframeJustificationGaps; for rt/rtc, see comment
@@ -2963,7 +2963,7 @@ void nsLineLayout::ExpandRubyBox(PerFrameData* aFrame, nscoord aReservedISize,
       // fall-through to center per spec.
       MOZ_FALLTHROUGH;
     }
-    case NS_STYLE_RUBY_ALIGN_CENTER:
+    case StyleRubyAlign::Center:
       // Indent all children by half of the reserved inline size.
       for (PerFrameData* child = aFrame->mSpan->mFirstFrame; child;
            child = child->mNext) {
