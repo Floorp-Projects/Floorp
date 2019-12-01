@@ -1512,7 +1512,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleResize mResize;
   mozilla::StyleOrient mOrient;
   uint8_t mIsolation;  // NS_STYLE_ISOLATION_*
-  uint8_t mTopLayer;   // NS_STYLE_TOP_LAYER_*
+  mozilla::StyleTopLayer mTopLayer;
 
   mozilla::StyleTouchAction mTouchAction;
   uint8_t mScrollBehavior;  // NS_STYLE_SCROLL_BEHAVIOR_*

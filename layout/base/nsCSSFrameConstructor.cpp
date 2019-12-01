@@ -966,8 +966,8 @@ nsContainerFrame* nsFrameConstructorState::GetGeometricParent(
     return mFloatedList.containingBlock;
   }
 
-  if (aStyleDisplay.mTopLayer != NS_STYLE_TOP_LAYER_NONE) {
-    MOZ_ASSERT(aStyleDisplay.mTopLayer == NS_STYLE_TOP_LAYER_TOP,
+  if (aStyleDisplay.mTopLayer != StyleTopLayer::None) {
+    MOZ_ASSERT(aStyleDisplay.mTopLayer == StyleTopLayer::Top,
                "-moz-top-layer should be either none or top");
     MOZ_ASSERT(aStyleDisplay.IsAbsolutelyPositionedStyle(),
                "Top layer items should always be absolutely positioned");
@@ -1046,7 +1046,7 @@ AbsoluteFrameList* nsFrameConstructorState::GetOutOfFlowFrameList(
 
   if (aCanBePositioned) {
     const nsStyleDisplay* disp = aNewFrame->StyleDisplay();
-    if (disp->mTopLayer != NS_STYLE_TOP_LAYER_NONE) {
+    if (disp->mTopLayer != StyleTopLayer::None) {
       *aPlaceholderType = PLACEHOLDER_FOR_TOPLAYER;
       if (disp->mPosition == NS_STYLE_POSITION_FIXED) {
         *aPlaceholderType |= PLACEHOLDER_FOR_FIXEDPOS;
@@ -1069,7 +1069,7 @@ AbsoluteFrameList* nsFrameConstructorState::GetOutOfFlowFrameList(
 
 void nsFrameConstructorState::ConstructBackdropFrameFor(nsIContent* aContent,
                                                         nsIFrame* aFrame) {
-  MOZ_ASSERT(aFrame->StyleDisplay()->mTopLayer == NS_STYLE_TOP_LAYER_TOP);
+  MOZ_ASSERT(aFrame->StyleDisplay()->mTopLayer == StyleTopLayer::Top);
   nsContainerFrame* frame = do_QueryFrame(aFrame);
   if (!frame) {
     NS_WARNING("Cannot create backdrop frame for non-container frame");
@@ -1080,7 +1080,7 @@ void nsFrameConstructorState::ConstructBackdropFrameFor(nsIContent* aContent,
       mPresShell->StyleSet()->ResolvePseudoElementStyle(
           *aContent->AsElement(), PseudoStyleType::backdrop,
           /* aParentStyle */ nullptr);
-  MOZ_ASSERT(style->StyleDisplay()->mTopLayer == NS_STYLE_TOP_LAYER_TOP);
+  MOZ_ASSERT(style->StyleDisplay()->mTopLayer == StyleTopLayer::Top);
   nsContainerFrame* parentFrame =
       GetGeometricParent(*style->StyleDisplay(), nullptr);
 
