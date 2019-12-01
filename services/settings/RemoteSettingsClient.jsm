@@ -60,6 +60,11 @@ const DB_NAME = "remote-settings";
 const TELEMETRY_COMPONENT = "remotesettings";
 
 XPCOMUtils.defineLazyGetter(this, "console", () => Utils.log);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gServerURL",
+  "services.settings.server"
+);
 
 /**
  * cacheProxy returns an object Proxy that will memoize properties of the target.
@@ -272,7 +277,7 @@ class RemoteSettingsClient extends EventEmitter {
   }
 
   httpClient() {
-    const api = new KintoHttpClient(Utils.SERVER_URL);
+    const api = new KintoHttpClient(gServerURL);
     return api.bucket(this.bucketName).collection(this.collectionName);
   }
 
@@ -393,7 +398,7 @@ class RemoteSettingsClient extends EventEmitter {
   async sync(options) {
     // We want to know which timestamp we are expected to obtain in order to leverage
     // cache busting. We don't provide ETag because we don't want a 304.
-    const { changes } = await Utils.fetchLatestChanges(Utils.SERVER_URL, {
+    const { changes } = await Utils.fetchLatestChanges(gServerURL, {
       filters: {
         collection: this.collectionName,
         bucket: this.bucketName,
@@ -542,7 +547,7 @@ class RemoteSettingsClient extends EventEmitter {
           // Fetch changes from server, and make sure we overwrite local data.
           const strategy = Kinto.syncStrategy.PULL_ONLY;
           syncResult = await kintoCollection.sync({
-            remote: Utils.SERVER_URL,
+            remote: gServerURL,
             strategy,
             expectedTimestamp,
           });
