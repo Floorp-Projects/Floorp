@@ -654,10 +654,12 @@ enum class StyleWhiteSpace : uint8_t {
 };
 
 // ruby-align, see nsStyleText
-#define NS_STYLE_RUBY_ALIGN_START 0
-#define NS_STYLE_RUBY_ALIGN_CENTER 1
-#define NS_STYLE_RUBY_ALIGN_SPACE_BETWEEN 2
-#define NS_STYLE_RUBY_ALIGN_SPACE_AROUND 3
+enum class StyleRubyAlign : uint8_t {
+  Start,
+  Center,
+  SpaceBetween,
+  SpaceAround,
+};
 
 // ruby-position, see nsStyleText
 #define NS_STYLE_RUBY_POSITION_OVER 0
