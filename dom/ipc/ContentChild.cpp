@@ -2254,22 +2254,16 @@ bool ContentChild::DeallocPBenchmarkStorageChild(
   return true;
 }
 
-PSpeechSynthesisChild* ContentChild::AllocPSpeechSynthesisChild() {
 #ifdef MOZ_WEBSPEECH
+PSpeechSynthesisChild* ContentChild::AllocPSpeechSynthesisChild() {
   MOZ_CRASH("No one should be allocating PSpeechSynthesisChild actors");
-#else
-  return nullptr;
-#endif
 }
 
 bool ContentChild::DeallocPSpeechSynthesisChild(PSpeechSynthesisChild* aActor) {
-#ifdef MOZ_WEBSPEECH
   delete aActor;
   return true;
-#else
-  return false;
-#endif
 }
+#endif
 
 PWebrtcGlobalChild* ContentChild::AllocPWebrtcGlobalChild() {
 #ifdef MOZ_WEBRTC

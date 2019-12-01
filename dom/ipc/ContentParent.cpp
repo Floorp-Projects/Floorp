@@ -3798,35 +3798,25 @@ mozilla::ipc::IPCResult ContentParent::RecvPPresentationConstructor(
   return IPC_OK();
 }
 
-PSpeechSynthesisParent* ContentParent::AllocPSpeechSynthesisParent() {
 #ifdef MOZ_WEBSPEECH
+PSpeechSynthesisParent* ContentParent::AllocPSpeechSynthesisParent() {
   return new mozilla::dom::SpeechSynthesisParent();
-#else
-  return nullptr;
-#endif
 }
 
 bool ContentParent::DeallocPSpeechSynthesisParent(
     PSpeechSynthesisParent* aActor) {
-#ifdef MOZ_WEBSPEECH
   delete aActor;
   return true;
-#else
-  return false;
-#endif
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvPSpeechSynthesisConstructor(
     PSpeechSynthesisParent* aActor) {
-#ifdef MOZ_WEBSPEECH
   if (!static_cast<SpeechSynthesisParent*>(aActor)->SendInit()) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
-#else
-  return IPC_FAIL_NO_REASON(this);
-#endif
 }
+#endif
 
 mozilla::ipc::IPCResult ContentParent::RecvStartVisitedQueries(
     const nsTArray<URIParams>& aUris) {

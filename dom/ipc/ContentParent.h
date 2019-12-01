@@ -920,12 +920,13 @@ class ContentParent final : public PContentParent,
   virtual mozilla::ipc::IPCResult RecvPPresentationConstructor(
       PPresentationParent* aActor) override;
 
+#ifdef MOZ_WEBSPEECH
   PSpeechSynthesisParent* AllocPSpeechSynthesisParent();
-
   bool DeallocPSpeechSynthesisParent(PSpeechSynthesisParent* aActor);
 
   virtual mozilla::ipc::IPCResult RecvPSpeechSynthesisConstructor(
       PSpeechSynthesisParent* aActor) override;
+#endif
 
   PWebBrowserPersistDocumentParent* AllocPWebBrowserPersistDocumentParent(
       PBrowserParent* aBrowser, const uint64_t& aOuterWindowID);
