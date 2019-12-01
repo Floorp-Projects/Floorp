@@ -101,6 +101,7 @@ rusty-enums = [
     "mozilla::StyleUserInput",
     "mozilla::StyleBoxDirection",
     "mozilla::StyleTextJustify",
+    "mozilla::StyleRubyAlign",
     "mozilla::StyleHyphens",
     "mozilla::StyleShapeSourceType",
     "mozilla::StyleBasicShapeType",

@@ -3408,7 +3408,7 @@ nsStyleText::nsStyleText(const Document& aDocument)
       mTextJustify(StyleTextJustify::Auto),
       mWhiteSpace(StyleWhiteSpace::Normal),
       mHyphens(StyleHyphens::Manual),
-      mRubyAlign(NS_STYLE_RUBY_ALIGN_SPACE_AROUND),
+      mRubyAlign(StyleRubyAlign::SpaceAround),
       mRubyPosition(NS_STYLE_RUBY_POSITION_OVER),
       mTextSizeAdjust(NS_STYLE_TEXT_SIZE_ADJUST_AUTO),
       mTextCombineUpright(NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE),
