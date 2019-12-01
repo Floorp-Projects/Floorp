@@ -629,8 +629,10 @@ enum class StyleObjectFit : uint8_t {
 #define NS_STYLE_TEXT_TRANSFORM_FULL_SIZE_KANA 5
 
 // See nsStyleDisplay
-#define NS_STYLE_TOP_LAYER_NONE 0  // not in the top layer
-#define NS_STYLE_TOP_LAYER_TOP 1   // in the top layer
+enum class StyleTopLayer : uint8_t {
+  None,
+  Top,
+};
 
 // See nsStyleVisibility
 #define NS_STYLE_VISIBILITY_HIDDEN 0

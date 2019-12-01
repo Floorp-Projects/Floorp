@@ -129,7 +129,7 @@ void ViewportFrame::BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
       //    layer for fullscreen. See ShouldInTopLayerForFullscreen().
       // In both cases, we want to skip the frame here and paint it in
       // the normal path.
-      if (frame->StyleDisplay()->mTopLayer == NS_STYLE_TOP_LAYER_NONE) {
+      if (frame->StyleDisplay()->mTopLayer == StyleTopLayer::None) {
         MOZ_ASSERT(!aBuilder->IsForPainting() ||
                    !ShouldInTopLayerForFullscreen(elem));
         continue;
@@ -162,7 +162,7 @@ void ViewportFrame::BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
   if (nsCanvasFrame* canvasFrame = PresShell()->GetCanvasFrame()) {
     if (dom::Element* container = canvasFrame->GetCustomContentContainer()) {
       if (nsIFrame* frame = container->GetPrimaryFrame()) {
-        MOZ_ASSERT(frame->StyleDisplay()->mTopLayer != NS_STYLE_TOP_LAYER_NONE,
+        MOZ_ASSERT(frame->StyleDisplay()->mTopLayer != StyleTopLayer::None,
                    "ua.css should ensure this");
         MOZ_ASSERT(frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW);
         BuildDisplayListForTopLayerFrame(aBuilder, frame, aList);

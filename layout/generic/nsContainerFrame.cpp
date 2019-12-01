@@ -74,7 +74,7 @@ void nsContainerFrame::SetInitialChildList(ChildListID aListID,
                "unexpected second call to SetInitialChildList");
     mFrames.SetFrames(aChildList);
   } else if (aListID == kBackdropList) {
-    MOZ_ASSERT(StyleDisplay()->mTopLayer != NS_STYLE_TOP_LAYER_NONE,
+    MOZ_ASSERT(StyleDisplay()->mTopLayer != StyleTopLayer::None,
                "Only top layer frames should have backdrop");
     MOZ_ASSERT(GetStateBits() & NS_FRAME_OUT_OF_FLOW,
                "Top layer frames should be out-of-flow");
@@ -277,7 +277,7 @@ void nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot,
     }
 
     MOZ_ASSERT(!GetProperty(BackdropProperty()) ||
-                   StyleDisplay()->mTopLayer != NS_STYLE_TOP_LAYER_NONE,
+                   StyleDisplay()->mTopLayer != StyleTopLayer::None,
                "only top layer frame may have backdrop");
     if (hasBackdrop) {
       SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
