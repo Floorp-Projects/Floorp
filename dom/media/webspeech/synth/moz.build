@@ -57,10 +57,10 @@ if CONFIG['MOZ_WEBSPEECH']:
     if CONFIG['MOZ_SYNTH_SPEECHD']:
         DIRS += ['speechd']
 
-IPDL_SOURCES += [
-    'ipc/PSpeechSynthesis.ipdl',
-    'ipc/PSpeechSynthesisRequest.ipdl',
-]
+    IPDL_SOURCES += [
+        'ipc/PSpeechSynthesis.ipdl',
+        'ipc/PSpeechSynthesisRequest.ipdl',
+    ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
