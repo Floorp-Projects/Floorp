@@ -2679,7 +2679,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mResize(StyleResize::None),
       mOrient(StyleOrient::Inline),
       mIsolation(NS_STYLE_ISOLATION_AUTO),
-      mTopLayer(NS_STYLE_TOP_LAYER_NONE),
+      mTopLayer(StyleTopLayer::None),
       mTouchAction(StyleTouchAction_AUTO),
       mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),
       mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
