@@ -728,6 +728,7 @@ nsresult ProxyAutoConfig::SetupJS() {
 
   auto CompilePACScript = [this](JSContext* cx) -> JSScript* {
     JS::CompileOptions options(cx);
+    options.setSkipFilenameValidation(true);
     options.setFileAndLine(this->mPACURI.get(), 1);
 
     // Per ProxyAutoConfig::Init, compile as UTF-8 if the full data is UTF-8,
