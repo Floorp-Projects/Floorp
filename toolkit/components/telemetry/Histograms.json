@@ -9284,10 +9284,10 @@
      "description": "A counter incremented every time the simplified mode is unavailable on print preview."
    },
   "PRINT_DIALOG_OPENED_COUNT": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["carnold@mozilla.org"],
-    "bug_numbers": [1306624, 1568968],
+    "alert_emails": ["jwatt@jwatt.org"],
+    "bug_numbers": [1306624, 1568968, 1594391],
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
@@ -9295,10 +9295,10 @@
     "description": "A counter incremented every time the user opens print dialog."
   },
   "PRINT_COUNT": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-     "alert_emails": ["carnold@mozilla.org"],
-     "bug_numbers": [1287587, 1568968],
+     "alert_emails": ["jwatt@jwatt.org"],
+     "bug_numbers": [1287587, 1568968, 1594391],
      "expires_in_version": "never",
      "kind": "count",
      "keyed": true,
