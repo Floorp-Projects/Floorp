@@ -76,7 +76,7 @@
 #ifdef XP_MACOSX
     <separator/>
 
-    <hbox align="end">
+    <hbox pack="end">
       <button id="setDesktopBackground"
               label="&setDesktopBackground.title;"
               oncommand="gSetBackground.setDesktopBackground();"/>
