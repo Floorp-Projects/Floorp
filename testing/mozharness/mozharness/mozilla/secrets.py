@@ -8,7 +8,7 @@
 """
 
 import os
-import urllib2
+from six.moves import urllib
 import json
 
 
@@ -20,7 +20,7 @@ class SecretsMixin(object):
         # within a taskcluster task.  Outside of that environment, do not
         # use this action.
         url = "http://taskcluster/secrets/v1/secret/" + secret_name
-        res = urllib2.urlopen(url)
+        res = urllib.request.urlopen(url)
         if res.getcode() != 200:
             self.fatal("Error fetching from secrets API:" + res.read())
 
