@@ -29,7 +29,11 @@ android {
 
 dependencies {
     // Parts of this dependency are typealiase'd or are otherwise part of this module's public API.
-    api Dependencies.mozilla_sync_logins
+    api(Dependencies.mozilla_sync_logins) {
+      // Use our own version of the Glean dependency,
+      // which might be different from the version declared by A-S.
+      exclude group: 'org.mozilla.components', module: 'service-glean'
+    }
     api Dependencies.mozilla_sync15
 
     // Types defined in concept-sync are part of this module's public API.
@@ -37,6 +41,7 @@ dependencies {
 
     implementation project(':concept-storage')
     implementation project(':support-sync-telemetry')
+    implementation project(':service-glean')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines

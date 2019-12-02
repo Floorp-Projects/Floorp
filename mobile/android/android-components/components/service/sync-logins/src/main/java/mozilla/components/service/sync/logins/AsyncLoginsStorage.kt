@@ -12,7 +12,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.plus
 import mozilla.appservices.logins.DatabaseLoginsStorage
 import mozilla.appservices.logins.LoginsStorage
-import mozilla.appservices.logins.MemoryLoginsStorage
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.appservices.sync15.SyncTelemetryPing
@@ -210,8 +209,7 @@ interface AsyncLoginsStorage : AutoCloseable {
      * generated automatically. The format of generated guids
      * are left up to the implementation of LoginsStorage (in
      * practice the [DatabaseLoginsStorage] generates 12-character
-     * base64url (RFC 4648) encoded strings, and [MemoryLoginsStorage]
-     * generates strings using [java.util.UUID.toString])
+     * base64url (RFC 4648) encoded strings.
      *
      * This will return an error result if a GUID is provided but
      * collides with an existing record, or if the provided record
@@ -385,13 +383,6 @@ open class AsyncLoginsStorageAdapter<T : LoginsStorage>(private val wrapped: T) 
          */
         fun forDatabase(dbPath: String): AsyncLoginsStorageAdapter<DatabaseLoginsStorage> {
             return AsyncLoginsStorageAdapter(DatabaseLoginsStorage(dbPath))
-        }
-
-        /**
-         * Creates an [AsyncLoginsStorage] that is backed by a [MemoryLoginsStorage].
-         */
-        fun inMemory(items: List<ServerPassword>): AsyncLoginsStorageAdapter<MemoryLoginsStorage> {
-            return AsyncLoginsStorageAdapter(MemoryLoginsStorage(items))
         }
     }
 }
