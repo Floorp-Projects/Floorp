@@ -21,7 +21,7 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
     def setUp(self):
         super(TestWindowHandles, self).setUp()
 
-        self.xul_dialog = "chrome://marionette/content/test_dialog.xul"
+        self.chrome_dialog = "chrome://marionette/content/test_dialog.xhtml"
 
     def tearDown(self):
         self.close_all_tabs()
@@ -79,7 +79,7 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
 
     def tst_window_handles_after_opening_new_non_browser_window(self):
-        new_window = self.open_chrome_window(self.xul_dialog)
+        new_window = self.open_chrome_window(self.chrome_dialog)
         self.assert_window_handles()
         self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs))
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)

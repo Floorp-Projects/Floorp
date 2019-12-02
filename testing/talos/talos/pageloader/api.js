@@ -61,9 +61,9 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 async function talosStart() {
-  // Tests are driven from pageloader.xul.  We need to be careful to open
-  // pageloader.xul before dismissing the default browser window or we
-  // may inadvertently cause the browser to exit before the pageloader.xul
+  // Tests are driven from pageloader.xhtml.  We need to be careful to open
+  // pageloader.xhtml before dismissing the default browser window or we
+  // may inadvertently cause the browser to exit before the pageloader.xhtml
   // window is opened.  Start by finding or waiting for the default window.
   let defaultWin = Services.wm.getMostRecentWindow("navigator:browser");
   if (!defaultWin) {
@@ -84,8 +84,8 @@ async function talosStart() {
   }
 
   // Wwe've got the default window, it is time for pageloader to take over.
-  // Open pageloader.xul in a new window and then close the default window.
-  let chromeURL = "chrome://pageloader/content/pageloader.xul";
+  // Open pageloader.xhtml in a new window and then close the default window.
+  let chromeURL = "chrome://pageloader/content/pageloader.xhtml";
 
   let args = {};
   args.wrappedJSObject = args;

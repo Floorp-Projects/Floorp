@@ -42,7 +42,7 @@ function testManifest(manifestPath, baseURI) {
   Components.manager.addBootstrappedManifestLocation(manifestPath);
 
   // Test Adding Content URL
-  test_mapping("chrome://test1/content", baseURI + "test/test1.xul");
+  test_mapping("chrome://test1/content", baseURI + "test/test1.xhtml");
 
   // Test Adding Locale URL
   test_mapping("chrome://test1/locale", baseURI + "test/test1.dtd");
@@ -51,7 +51,7 @@ function testManifest(manifestPath, baseURI) {
   test_mapping("chrome://test1/skin", baseURI + "test/test1.css");
 
   // Test Adding Manifest URL
-  test_mapping("chrome://test2/content", baseURI + "test/test2.xul");
+  test_mapping("chrome://test2/content", baseURI + "test/test2.xhtml");
   test_mapping("chrome://test2/locale", baseURI + "test/test2.dtd");
 
   // Test Adding Override
@@ -61,7 +61,7 @@ function testManifest(manifestPath, baseURI) {
   Components.manager.removeBootstrappedManifestLocation(manifestPath);
 
   // Test Removing Content URL
-  test_removed_mapping("chrome://test1/content", baseURI + "test/test1.xul");
+  test_removed_mapping("chrome://test1/content", baseURI + "test/test1.xhtml");
 
   // Test Removing Content URL
   test_removed_mapping("chrome://test1/locale", baseURI + "test/test1.dtd");
@@ -70,7 +70,7 @@ function testManifest(manifestPath, baseURI) {
   test_removed_mapping("chrome://test1/skin", baseURI + "test/test1.css");
 
   // Test Removing Manifest URL
-  test_removed_mapping("chrome://test2/content", baseURI + "test/test2.xul");
+  test_removed_mapping("chrome://test2/content", baseURI + "test/test2.xhtml");
   test_removed_mapping("chrome://test2/locale", baseURI + "test/test2.dtd");
 }
 

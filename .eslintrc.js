@@ -120,6 +120,7 @@ module.exports = {
       "no-array-constructor": "off",
       "no-undef": "off",
       "no-unused-vars": "off",
+      "no-useless-concat": "off",
       "no-redeclare": "off",
       "no-global-assign": "off",
     }
@@ -355,6 +356,35 @@ module.exports = {
       "no-redeclare": "off",
       "no-sequences": "off",
       "no-shadow": "off",
+      "no-unused-vars": "off",
+      "no-useless-call": "off",
+    }
+  }, {
+    "files": [
+      "testing/mochitest/browser-harness.xhtml",
+      "testing/mochitest/chrome/test_chromeGetTestFile.xhtml",
+      "testing/mochitest/chrome/test_sanityEventUtils.xhtml",
+      "testing/mochitest/chrome/test_sanityException.xhtml",
+      "testing/mochitest/chrome/test_sanityException2.xhtml",
+      "testing/mochitest/harness.xhtml",
+    ],
+    "rules": {
+      "dot-notation": "off",
+      "object-shorthand": "off",
+      "mozilla/use-services": "off",
+      "mozilla/no-compare-against-boolean-literals": "off",
+      "mozilla/no-useless-parameters": "off",
+      "mozilla/no-useless-removeEventListener": "off",
+      "mozilla/use-cc-etc": "off",
+      "consistent-return": "off",
+      "no-fallthrough": "off",
+      "no-nested-ternary": "off",
+      "no-redeclare": "off",
+      "no-sequences": "off",
+      "no-shadow": "off",
+      "no-throw-literal": "off",
+      "no-undef": "off",
+      "no-unsanitized/property": "off",
       "no-unused-vars": "off",
       "no-useless-call": "off",
     }
