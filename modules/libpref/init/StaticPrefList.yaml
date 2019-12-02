@@ -6946,6 +6946,14 @@
   value: true
   mirror: always
 
+# Whether NotifyIpInterfaceChange should be called immediately after
+# registration in order to record the initial state of the network adapters.
+- name: network.notify.initial_call
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------

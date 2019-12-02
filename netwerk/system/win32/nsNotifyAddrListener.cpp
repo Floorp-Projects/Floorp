@@ -294,8 +294,8 @@ nsNotifyAddrListener::Run() {
       StaticPrefs::network_notify_IPv6() ? AF_UNSPEC
                                          : AF_INET,  // IPv4 and IPv6
       (PIPINTERFACE_CHANGE_CALLBACK)OnInterfaceChange,
-      this,   // pass to callback
-      false,  // no initial notification
+      this,                                        // pass to callback
+      StaticPrefs::network_notify_initial_call(),  // initial notification
       &interfacechange);
 
   if (ret == NO_ERROR) {
@@ -416,6 +416,7 @@ nsresult nsNotifyAddrListener::NotifyObservers(const char* aTopic,
 
 DWORD
 nsNotifyAddrListener::CheckAdaptersAddresses(void) {
+  MOZ_ASSERT(!NS_IsMainThread(), "Don't call this on the main thread");
   ULONG len = 16384;
 
   PIP_ADAPTER_ADDRESSES adapterList = (PIP_ADAPTER_ADDRESSES)moz_xmalloc(len);
