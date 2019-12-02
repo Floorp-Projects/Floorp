@@ -3223,48 +3223,6 @@ static_assert(
 
 namespace js {
 
-// Variable-length data for LazyScripts. Contains vector of inner functions and
-// vector of captured property ids.
-class alignas(uintptr_t) LazyScriptData final {
- private:
-  uint32_t numClosedOverBindings_ = 0;
-  uint32_t numInnerFunctions_ = 0;
-
-  FieldInitializers fieldInitializers_ = FieldInitializers::Invalid();
-
-  // Size to allocate
-  static size_t AllocationSize(uint32_t numClosedOverBindings,
-                               uint32_t numInnerFunctions);
-  size_t allocationSize() const;
-
-  // Translate an offset into a concrete pointer.
-  template <typename T>
-  T* offsetToPointer(size_t offset) {
-    uintptr_t base = reinterpret_cast<uintptr_t>(this);
-    return reinterpret_cast<T*>(base + offset);
-  }
-
-  template <typename T>
-  void initElements(size_t offset, size_t length);
-
-  LazyScriptData(uint32_t numClosedOverBindings, uint32_t numInnerFunctions);
-
- public:
-  static LazyScriptData* new_(JSContext* cx, uint32_t numClosedOverBindings,
-                              uint32_t numInnerFunctions);
-
-  friend class LazyScript;
-
-  mozilla::Span<GCPtrAtom> closedOverBindings();
-  mozilla::Span<GCPtrFunction> innerFunctions();
-
-  void trace(JSTracer* trc);
-
-  // LazyScriptData has trailing data so isn't copyable or movable.
-  LazyScriptData(const LazyScriptData&) = delete;
-  LazyScriptData& operator=(const LazyScriptData&) = delete;
-};
-
 // Information about a script which may be (or has been) lazily compiled to
 // bytecode from its source.
 class LazyScript : public BaseScript {
@@ -3353,14 +3311,14 @@ class LazyScript : public BaseScript {
   // +-----------------+
 
   // Heap allocated table with any free variables, inner functions, or class
-  // fields. This will be nullptr if none exist.
-  LazyScriptData* lazyData_;
+  // fields. This will be nullptr if none exists.
+  PrivateScriptData* data_ = nullptr;
 
   static const uint32_t NumClosedOverBindingsBits = 20;
   static const uint32_t NumInnerFunctionsBits = 20;
 
   LazyScript(JSFunction* fun, uint8_t* stubEntry,
-             ScriptSourceObject& sourceObject, LazyScriptData* data,
+             ScriptSourceObject& sourceObject, PrivateScriptData* data,
              uint32_t immutableFlags, uint32_t sourceStart, uint32_t sourceEnd,
              uint32_t toStringStart, uint32_t toStringEnd, uint32_t lineno,
              uint32_t column);
@@ -3368,8 +3326,8 @@ class LazyScript : public BaseScript {
   // Create a LazyScript without initializing the closedOverBindings and the
   // innerFunctions. To be GC-safe, the caller must initialize both vectors
   // with valid atoms and functions.
-  static LazyScript* CreateRaw(JSContext* cx, uint32_t numClosedOverBindings,
-                               uint32_t numInnerFunctions, HandleFunction fun,
+  static LazyScript* CreateRaw(JSContext* cx, uint32_t ngcthings,
+                               HandleFunction fun,
                                HandleScriptSourceObject sourceObject,
                                uint32_t immutableFlags, uint32_t sourceStart,
                                uint32_t sourceEnd, uint32_t toStringStart,
@@ -3400,12 +3358,19 @@ class LazyScript : public BaseScript {
   //
   // The sourceObject and enclosingScope arguments may be null if the
   // enclosing function is also lazy.
-  static LazyScript* CreateForXDR(
-      JSContext* cx, uint32_t numClosedOverBindings, uint32_t numInnerFunctions,
-      HandleFunction fun, HandleScript script, HandleScope enclosingScope,
-      HandleScriptSourceObject sourceObject, uint32_t immutableFlags,
-      uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
-      uint32_t toStringEnd, uint32_t lineno, uint32_t column);
+  static LazyScript* CreateForXDR(JSContext* cx, uint32_t ngcthings,
+                                  HandleFunction fun, HandleScript script,
+                                  HandleScope enclosingScope,
+                                  HandleScriptSourceObject sourceObject,
+                                  uint32_t immutableFlags, uint32_t sourceStart,
+                                  uint32_t sourceEnd, uint32_t toStringStart,
+                                  uint32_t toStringEnd, uint32_t lineno,
+                                  uint32_t column);
+
+  template <XDRMode mode>
+  static XDRResult XDRScriptData(XDRState<mode>* xdr,
+                                 HandleScriptSourceObject sourceObject,
+                                 Handle<LazyScript*> lazy);
 
   bool canRelazify() const {
     // Only functions without inner functions or direct eval are re-lazified.
@@ -3441,20 +3406,8 @@ class LazyScript : public BaseScript {
     return enclosingScope()->hasOnChain(ScopeKind::NonSyntactic);
   }
 
-  mozilla::Span<GCPtrAtom> closedOverBindings() {
-    return lazyData_ ? lazyData_->closedOverBindings()
-                     : mozilla::Span<GCPtrAtom>();
-  }
-  uint32_t numClosedOverBindings() const {
-    return lazyData_ ? lazyData_->closedOverBindings().size() : 0;
-  };
-
-  mozilla::Span<GCPtrFunction> innerFunctions() {
-    return lazyData_ ? lazyData_->innerFunctions()
-                     : mozilla::Span<GCPtrFunction>();
-  }
-  uint32_t numInnerFunctions() const {
-    return lazyData_ ? lazyData_->innerFunctions().size() : 0;
+  mozilla::Span<JS::GCCellPtr> gcthings() {
+    return data_ ? data_->gcthings() : mozilla::Span<JS::GCCellPtr>();
   }
 
   frontend::ParseGoal parseGoal() const {
@@ -3472,13 +3425,13 @@ class LazyScript : public BaseScript {
   void setWrappedByDebugger() { setFlag(MutableFlags::WrappedByDebugger); }
 
   void setFieldInitializers(FieldInitializers fieldInitializers) {
-    MOZ_ASSERT(lazyData_);
-    lazyData_->fieldInitializers_ = fieldInitializers;
+    MOZ_ASSERT(data_);
+    data_->setFieldInitializers(fieldInitializers);
   }
 
   const FieldInitializers& getFieldInitializers() const {
-    MOZ_ASSERT(lazyData_);
-    return lazyData_->fieldInitializers_;
+    MOZ_ASSERT(data_);
+    return data_->getFieldInitializers();
   }
 
   // Returns true if the enclosing script has ever been compiled.
@@ -3498,7 +3451,7 @@ class LazyScript : public BaseScript {
   static const JS::TraceKind TraceKind = JS::TraceKind::LazyScript;
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-    return mallocSizeOf(lazyData_);
+    return mallocSizeOf(data_);
   }
 };
 
