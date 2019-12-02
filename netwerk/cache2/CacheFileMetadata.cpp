@@ -147,12 +147,7 @@ void CacheFileMetadata::SetHandle(CacheFileHandle* aHandle) {
   mHandle = aHandle;
 }
 
-nsresult CacheFileMetadata::GetKey(nsACString& _retval) {
-  _retval = mKey;
-  return NS_OK;
-}
-
-nsresult CacheFileMetadata::ReadMetadata(CacheFileMetadataListener* aListener) {
+void CacheFileMetadata::ReadMetadata(CacheFileMetadataListener* aListener) {
   LOG(("CacheFileMetadata::ReadMetadata() [this=%p, listener=%p]", this,
        aListener));
 
@@ -175,7 +170,7 @@ nsresult CacheFileMetadata::ReadMetadata(CacheFileMetadataListener* aListener) {
 
     InitEmptyMetadata();
     aListener->OnMetadataRead(NS_OK);
-    return NS_OK;
+    return;
   }
 
   if (size < int64_t(sizeof(CacheFileMetadataHeader) + 2 * sizeof(uint32_t))) {
@@ -187,7 +182,7 @@ nsresult CacheFileMetadata::ReadMetadata(CacheFileMetadataListener* aListener) {
 
     InitEmptyMetadata();
     aListener->OnMetadataRead(NS_OK);
-    return NS_OK;
+    return;
   }
 
   // Set offset so that we read at least kMinMetadataRead if the file is big
@@ -225,10 +220,7 @@ nsresult CacheFileMetadata::ReadMetadata(CacheFileMetadataListener* aListener) {
     mListener = nullptr;
     InitEmptyMetadata();
     aListener->OnMetadataRead(NS_OK);
-    return NS_OK;
   }
-
-  return NS_OK;
 }
 
 uint32_t CacheFileMetadata::CalcMetadataSize(uint32_t aElementsSize,
@@ -478,7 +470,7 @@ nsresult CacheFileMetadata::SetElement(const char* aKey, const char* aValue) {
   return NS_OK;
 }
 
-nsresult CacheFileMetadata::Visit(nsICacheEntryMetaDataVisitor* aVisitor) {
+void CacheFileMetadata::Visit(nsICacheEntryMetaDataVisitor* aVisitor) {
   const char* data = mBuf;
   const char* limit = mBuf + mElementsSize;
 
@@ -494,8 +486,6 @@ nsresult CacheFileMetadata::Visit(nsICacheEntryMetaDataVisitor* aVisitor) {
   }
 
   MOZ_ASSERT(data == limit, "Metadata elements corrupted");
-
-  return NS_OK;
 }
 
 CacheHash::Hash16_t CacheFileMetadata::GetHash(uint32_t aIndex) {
@@ -551,72 +541,37 @@ nsresult CacheFileMetadata::RemoveHash(uint32_t aIndex) {
   return NS_OK;
 }
 
-nsresult CacheFileMetadata::AddFlags(uint32_t aFlags) {
+void CacheFileMetadata::AddFlags(uint32_t aFlags) {
   MarkDirty(false);
   mMetaHdr.mFlags |= aFlags;
-  return NS_OK;
 }
 
-nsresult CacheFileMetadata::RemoveFlags(uint32_t aFlags) {
+void CacheFileMetadata::RemoveFlags(uint32_t aFlags) {
   MarkDirty(false);
   mMetaHdr.mFlags &= ~aFlags;
-  return NS_OK;
 }
 
-nsresult CacheFileMetadata::GetFlags(uint32_t* _retval) {
-  *_retval = mMetaHdr.mFlags;
-  return NS_OK;
-}
-
-nsresult CacheFileMetadata::SetExpirationTime(uint32_t aExpirationTime) {
+void CacheFileMetadata::SetExpirationTime(uint32_t aExpirationTime) {
   LOG(("CacheFileMetadata::SetExpirationTime() [this=%p, expirationTime=%d]",
        this, aExpirationTime));
 
   MarkDirty(false);
   mMetaHdr.mExpirationTime = aExpirationTime;
-  return NS_OK;
 }
 
-nsresult CacheFileMetadata::GetExpirationTime(uint32_t* _retval) {
-  *_retval = mMetaHdr.mExpirationTime;
-  return NS_OK;
-}
-
-nsresult CacheFileMetadata::SetFrecency(uint32_t aFrecency) {
+void CacheFileMetadata::SetFrecency(uint32_t aFrecency) {
   LOG(("CacheFileMetadata::SetFrecency() [this=%p, frecency=%f]", this,
        (double)aFrecency));
 
   MarkDirty(false);
   mMetaHdr.mFrecency = aFrecency;
-  return NS_OK;
 }
 
-nsresult CacheFileMetadata::GetFrecency(uint32_t* _retval) {
-  *_retval = mMetaHdr.mFrecency;
-  return NS_OK;
-}
-
-nsresult CacheFileMetadata::GetLastModified(uint32_t* _retval) {
-  *_retval = mMetaHdr.mLastModified;
-  return NS_OK;
-}
-
-nsresult CacheFileMetadata::GetLastFetched(uint32_t* _retval) {
-  *_retval = mMetaHdr.mLastFetched;
-  return NS_OK;
-}
-
-nsresult CacheFileMetadata::GetFetchCount(uint32_t* _retval) {
-  *_retval = mMetaHdr.mFetchCount;
-  return NS_OK;
-}
-
-nsresult CacheFileMetadata::OnFetched() {
+void CacheFileMetadata::OnFetched() {
   MarkDirty(false);
 
   mMetaHdr.mLastFetched = NOW_SECONDS();
   ++mMetaHdr.mFetchCount;
-  return NS_OK;
 }
 
 void CacheFileMetadata::MarkDirty(bool aUpdateLastModified) {

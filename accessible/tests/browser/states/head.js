@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* exported waitForIFrameUpdates, spawnTestStates */
+/* exported waitForIFrameA11yReady, waitForIFrameUpdates, spawnTestStates */
 
 // Load the shared-head file first.
 /* import-globals-from ../shared-head.js */
@@ -19,6 +19,35 @@ loadScripts(
   { name: "common.js", dir: MOCHITESTS_DIR },
   { name: "promisified-events.js", dir: MOCHITESTS_DIR }
 );
+
+// This is another version of addA11yLoadEvent for fission.
+async function waitForIFrameA11yReady(iFrameBrowsingContext) {
+  async function waitForReady() {
+    new Promise(resolve => {
+      function waitForDocLoad() {
+        SpecialPowers.executeSoon(() => {
+          const acc = SpecialPowers.Cc[
+            "@mozilla.org/accessibilityService;1"
+          ].getService(SpecialPowers.Ci.nsIAccessibilityService);
+
+          const accDoc = acc.getAccessibleFor(content.document);
+          let state = {};
+          accDoc.getState(state, {});
+          if (state.value & SpecialPowers.Ci.nsIAccessibleStates.STATE_BUSY) {
+            SpecialPowers.executeSoon(waitForDocLoad);
+            return;
+          }
+          resolve();
+        }, 0);
+      }
+      waitForDocLoad();
+    });
+  }
+
+  await SimpleTest.promiseFocus(window);
+
+  await SpecialPowers.spawn(iFrameBrowsingContext, [], waitForReady);
+}
 
 // A utility function to make sure the information of scroll position or visible
 // area changes reach to out-of-process iframes.

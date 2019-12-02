@@ -88,8 +88,7 @@ bool DocumentLoadListener::Open(
   RefPtr<HttpBaseChannel> httpBaseChannel = do_QueryObject(mChannel, aRv);
   if (httpBaseChannel) {
     nsCOMPtr<nsIURI> topWindowURI = DeserializeURI(aTopWindowURI);
-    *aRv = httpBaseChannel->SetTopWindowURI(topWindowURI);
-    MOZ_ASSERT(NS_SUCCEEDED(*aRv));
+    httpBaseChannel->SetTopWindowURI(topWindowURI);
 
     if (aContentBlockingAllowListPrincipal) {
       nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal =

@@ -30,4 +30,5 @@ assert.throws(RangeError, function() {
 assert.throws(RangeError, function() {
   1n ** -100000000000000000n;
 }, '1n ** -100000000000000000n throws RangeError');
+
 reportCompare(0, 0);

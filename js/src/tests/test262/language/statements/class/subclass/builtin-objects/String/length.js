@@ -28,4 +28,5 @@ assert.sameValue(s2.length, 7);
 verifyNotWritable(s2, 'length');
 verifyNotEnumerable(s2, 'length');
 verifyNotConfigurable(s2, 'length');
+
 reportCompare(0, 0);

@@ -133,14 +133,14 @@ SOURCES += [
 ]
 
 PREPROCESSED_IPDL_SOURCES += [
+    'PBrowser.ipdl',
+    'PBrowserBridge.ipdl',
     'PContent.ipdl',
 ]
 
 IPDL_SOURCES += [
     'DOMTypes.ipdlh',
     'MemoryReportTypes.ipdlh',
-    'PBrowser.ipdl',
-    'PBrowserBridge.ipdl',
     'PBrowserOrId.ipdlh',
     'PColorPicker.ipdl',
     'PContentPermission.ipdlh',

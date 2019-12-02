@@ -29,4 +29,5 @@ assert.throws(TypeError, function() {
   class C extends Base {}
 });
 assert.sameValue(calls, 1, "The value of `calls` is `1`");
+
 reportCompare(0, 0);

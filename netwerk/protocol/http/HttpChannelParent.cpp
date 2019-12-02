@@ -458,8 +458,7 @@ bool HttpChannelParent::DoAsyncOpen(
 
   if (apiRedirectToUri) httpChannel->RedirectTo(apiRedirectToUri);
   if (topWindowUri) {
-    rv = httpChannel->SetTopWindowURI(topWindowUri);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    httpChannel->SetTopWindowURI(topWindowUri);
   }
 
   if (aContentBlockingAllowListPrincipal) {
@@ -2233,8 +2232,7 @@ void HttpChannelParent::StartDiversion() {
   }
 
   // Now mParentListener can be diverted to mDivertListener.
-  DebugOnly<nsresult> rvdbg = mParentListener->DivertTo(mDivertListener);
-  MOZ_ASSERT(NS_SUCCEEDED(rvdbg));
+  mParentListener->DivertTo(mDivertListener);
   mDivertListener = nullptr;
 
   // Either IPC channel is closed or background channel

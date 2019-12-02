@@ -64,4 +64,5 @@ assert.sameValue(
   true,
   'The result of ("900719925474099101" != 900719925474099102n) is true'
 );
+
 reportCompare(0, 0);

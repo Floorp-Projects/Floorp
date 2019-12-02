@@ -319,13 +319,11 @@ nsresult PresentationSessionInfo::Close(nsresult aReason, uint32_t aState) {
   return NS_OK;
 }
 
-nsresult PresentationSessionInfo::OnTerminate(
+void PresentationSessionInfo::OnTerminate(
     nsIPresentationControlChannel* aControlChannel) {
   mIsOnTerminating = true;  // Mark for terminating transport channel
   SetStateWithReason(nsIPresentationSessionListener::STATE_TERMINATED, NS_OK);
   SetControlChannel(aControlChannel);
-
-  return NS_OK;
 }
 
 nsresult PresentationSessionInfo::ReplySuccess() {

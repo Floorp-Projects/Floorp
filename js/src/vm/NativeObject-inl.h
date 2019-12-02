@@ -117,6 +117,9 @@ inline void NativeObject::markDenseElementsNotPacked(JSContext* cx) {
 
 inline void NativeObject::elementsRangeWriteBarrierPost(uint32_t start,
                                                         uint32_t count) {
+  if (!isTenured()) {
+    return;
+  }
   for (size_t i = 0; i < count; i++) {
     const Value& v = elements_[start + i];
     if (v.isGCThing()) {

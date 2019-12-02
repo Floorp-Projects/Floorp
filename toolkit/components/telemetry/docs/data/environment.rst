@@ -383,6 +383,7 @@ The following is a partial list of collected preferences.
 - ``browser.zoom.full`` (deprecated): True if zoom is enabled for both text and images, that is if "Zoom Text Only" is not enabled. Defaults to true. This preference was collected in Firefox 50 to 52 (`Bug 979323 <https://bugzilla.mozilla.org/show_bug.cgi?id=979323>`_).
 
 - ``fission.autostart``: True if fission is enabled at startup. Default to false. For more information please visit `the project wiki page <https://wiki.mozilla.org/Project_Fission>`_.
+
 attribution
 ~~~~~~~~~~~
 

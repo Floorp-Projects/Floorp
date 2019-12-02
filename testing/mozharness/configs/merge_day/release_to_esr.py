@@ -10,12 +10,6 @@ config = {
     ],
     "replacements": [
         # File, from, to
-        ("browser/confvars.sh",
-         "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-release",
-         "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-esr"),
-        ("browser/confvars.sh",
-         "MAR_CHANNEL_ID=firefox-mozilla-release",
-         "MAR_CHANNEL_ID=firefox-mozilla-esr"),
         ("build/mozconfig.common",
          "# Enable enforcing that add-ons are signed by the trusted root",
          "# Disable enforcing that add-ons are signed by the trusted root"),

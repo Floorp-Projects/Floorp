@@ -141,9 +141,9 @@ class CacheFileMetadata final : public CacheFileIOListener,
 
   void SetHandle(CacheFileHandle* aHandle);
 
-  nsresult GetKey(nsACString& _retval);
+  const nsACString& GetKey() const { return mKey; }
 
-  nsresult ReadMetadata(CacheFileMetadataListener* aListener);
+  void ReadMetadata(CacheFileMetadataListener* aListener);
   uint32_t CalcMetadataSize(uint32_t aElementsSize, uint32_t aHashCount);
   nsresult WriteMetadata(uint32_t aOffset,
                          CacheFileMetadataListener* aListener);
@@ -157,25 +157,25 @@ class CacheFileMetadata final : public CacheFileIOListener,
 
   const char* GetElement(const char* aKey);
   nsresult SetElement(const char* aKey, const char* aValue);
-  nsresult Visit(nsICacheEntryMetaDataVisitor* aVisitor);
+  void Visit(nsICacheEntryMetaDataVisitor* aVisitor);
 
   CacheHash::Hash16_t GetHash(uint32_t aIndex);
   nsresult SetHash(uint32_t aIndex, CacheHash::Hash16_t aHash);
   nsresult RemoveHash(uint32_t aIndex);
 
-  nsresult AddFlags(uint32_t aFlags);
-  nsresult RemoveFlags(uint32_t aFlags);
-  nsresult GetFlags(uint32_t* _retval);
-  nsresult SetExpirationTime(uint32_t aExpirationTime);
-  nsresult GetExpirationTime(uint32_t* _retval);
-  nsresult SetFrecency(uint32_t aFrecency);
-  nsresult GetFrecency(uint32_t* _retval);
-  nsresult GetLastModified(uint32_t* _retval);
-  nsresult GetLastFetched(uint32_t* _retval);
-  nsresult GetFetchCount(uint32_t* _retval);
+  void AddFlags(uint32_t aFlags);
+  void RemoveFlags(uint32_t aFlags);
+  uint32_t GetFlags() const { return mMetaHdr.mFlags; }
+  void SetExpirationTime(uint32_t aExpirationTime);
+  uint32_t GetExpirationTime() const { return mMetaHdr.mExpirationTime; }
+  void SetFrecency(uint32_t aFrecency);
+  uint32_t GetFrecency() const { return mMetaHdr.mFrecency; }
+  uint32_t GetLastModified() const { return mMetaHdr.mLastModified; }
+  uint32_t GetLastFetched() const { return mMetaHdr.mLastFetched; }
+  uint32_t GetFetchCount() const { return mMetaHdr.mFetchCount; }
   // Called by upper layers to indicate the entry this metadata belongs
   // with has been fetched, i.e. delivered to the consumer.
-  nsresult OnFetched();
+  void OnFetched();
 
   int64_t Offset() { return mOffset; }
   uint32_t ElementsSize() { return mElementsSize; }

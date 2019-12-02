@@ -66,11 +66,6 @@ nsresult nsDirectoryService::GetCurrentProcessDirectory(nsIFile** aFile)
   return mXCurProcD->Clone(aFile);
 }  // GetCurrentProcessDirectory()
 
-nsresult nsDirectoryService::SetCurrentProcessDirectory(nsIFile* aFile) {
-  mXCurProcD = aFile;
-  return NS_OK;
-}
-
 StaticRefPtr<nsDirectoryService> nsDirectoryService::gService;
 
 nsDirectoryService::nsDirectoryService() : mHashtable(128) {}

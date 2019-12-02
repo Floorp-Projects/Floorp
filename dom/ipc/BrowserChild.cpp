@@ -2186,6 +2186,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvPasteTransferable(
   return IPC_OK();
 }
 
+#ifdef ACCESSIBILITY
 a11y::PDocAccessibleChild* BrowserChild::AllocPDocAccessibleChild(
     PDocAccessibleChild*, const uint64_t&, const uint32_t&,
     const IAccessibleHolder&) {
@@ -2195,11 +2196,10 @@ a11y::PDocAccessibleChild* BrowserChild::AllocPDocAccessibleChild(
 
 bool BrowserChild::DeallocPDocAccessibleChild(
     a11y::PDocAccessibleChild* aChild) {
-#ifdef ACCESSIBILITY
   delete static_cast<mozilla::a11y::DocAccessibleChild*>(aChild);
-#endif
   return true;
 }
+#endif
 
 PColorPickerChild* BrowserChild::AllocPColorPickerChild(const nsString&,
                                                         const nsString&) {

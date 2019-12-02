@@ -29,4 +29,5 @@ C.eval = 3;
 assert.sameValue(x, 3, "The value of `x` is `3`");
 C.arguments = 4;
 assert.sameValue(x, 4, "The value of `x` is `4`");
+
 reportCompare(0, 0);

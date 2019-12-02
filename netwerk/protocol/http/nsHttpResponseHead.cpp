@@ -841,7 +841,7 @@ bool nsHttpResponseHead::ExpiresInPast_locked() const {
          NS_SUCCEEDED(GetDateValue_locked(&dateVal)) && expiresVal < dateVal;
 }
 
-nsresult nsHttpResponseHead::UpdateHeaders(nsHttpResponseHead* aOther) {
+void nsHttpResponseHead::UpdateHeaders(nsHttpResponseHead* aOther) {
   LOG(("nsHttpResponseHead::UpdateHeaders [this=%p]\n", this));
 
   RecursiveMutexAutoLock monitor(mRecursiveMutex);
@@ -884,8 +884,6 @@ nsresult nsHttpResponseHead::UpdateHeaders(nsHttpResponseHead* aOther) {
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
-
-  return NS_OK;
 }
 
 void nsHttpResponseHead::Reset() {

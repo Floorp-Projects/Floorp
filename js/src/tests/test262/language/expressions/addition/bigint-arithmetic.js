@@ -1399,4 +1399,5 @@ assert.sameValue(
   -0x1FDB97530ECA86420n,
   'The result of (-0xFEDCBA9876543210n + -0xFEDCBA9876543210n) is -0x1FDB97530ECA86420n'
 );
+
 reportCompare(0, 0);

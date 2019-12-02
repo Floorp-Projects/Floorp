@@ -15,4 +15,5 @@ testWithBigIntTypedArrayConstructors(function(TA) {
     Atomics.store(new TA(buffer), 0, 0n);
   }, '`Atomics.store(new TA(buffer), 0, 0n)` throws TypeError');
 });
+
 reportCompare(0, 0);

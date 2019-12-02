@@ -54,4 +54,5 @@ assert.sameValue(
   false,
   'The result of (Number.MIN_VALUE <= -10n) is false'
 );
+
 reportCompare(0, 0);

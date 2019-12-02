@@ -289,7 +289,9 @@ PresentationService::Observe(nsISupports* aSubject, const char* aTopic,
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     HandleShutdown();
     return NS_OK;
-  } else if (!strcmp(aTopic, PRESENTATION_DEVICE_CHANGE_TOPIC)) {
+  }
+
+  if (!strcmp(aTopic, PRESENTATION_DEVICE_CHANGE_TOPIC)) {
     // Ignore the "update" case here, since we only care about the arrival and
     // removal of the device.
     if (!NS_strcmp(aData, u"add")) {
@@ -298,13 +300,16 @@ PresentationService::Observe(nsISupports* aSubject, const char* aTopic,
         return NS_ERROR_FAILURE;
       }
 
-      return HandleDeviceAdded(device);
-    } else if (!NS_strcmp(aData, u"remove")) {
-      return HandleDeviceRemoved();
+      HandleDeviceAdded(device);
+      return NS_OK;
     }
 
+    if (!NS_strcmp(aData, u"remove")) {
+      return HandleDeviceRemoved();
+    }
     return NS_OK;
-  } else if (!strcmp(aTopic, PRESENTATION_SESSION_REQUEST_TOPIC)) {
+  }
+  if (!strcmp(aTopic, PRESENTATION_SESSION_REQUEST_TOPIC)) {
     nsCOMPtr<nsIPresentationSessionRequest> request(
         do_QueryInterface(aSubject));
     if (NS_WARN_IF(!request)) {
@@ -312,7 +317,8 @@ PresentationService::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     return HandleSessionRequest(request);
-  } else if (!strcmp(aTopic, PRESENTATION_TERMINATE_REQUEST_TOPIC)) {
+  }
+  if (!strcmp(aTopic, PRESENTATION_TERMINATE_REQUEST_TOPIC)) {
     nsCOMPtr<nsIPresentationTerminateRequest> request(
         do_QueryInterface(aSubject));
     if (NS_WARN_IF(!request)) {
@@ -320,7 +326,8 @@ PresentationService::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     return HandleTerminateRequest(request);
-  } else if (!strcmp(aTopic, PRESENTATION_RECONNECT_REQUEST_TOPIC)) {
+  }
+  if (!strcmp(aTopic, PRESENTATION_RECONNECT_REQUEST_TOPIC)) {
     nsCOMPtr<nsIPresentationSessionRequest> request(
         do_QueryInterface(aSubject));
     if (NS_WARN_IF(!request)) {
@@ -328,12 +335,12 @@ PresentationService::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     return HandleReconnectRequest(request);
-  } else if (!strcmp(aTopic, "profile-after-change")) {
+  }
+  if (!strcmp(aTopic, "profile-after-change")) {
     // It's expected since we add and entry to |kLayoutCategories| in
     // |nsLayoutModule.cpp| to launch this service earlier.
     return NS_OK;
   }
-
   MOZ_ASSERT(false, "Unexpected topic for PresentationService");
   return NS_ERROR_UNEXPECTED;
 }
@@ -357,13 +364,9 @@ void PresentationService::HandleShutdown() {
   }
 }
 
-nsresult PresentationService::HandleDeviceAdded(
-    nsIPresentationDevice* aDevice) {
+void PresentationService::HandleDeviceAdded(nsIPresentationDevice* aDevice) {
   PRES_DEBUG("%s\n", __func__);
-  if (!aDevice) {
-    MOZ_ASSERT(false, "aDevice shoud no be null.");
-    return NS_ERROR_INVALID_ARG;
-  }
+  MOZ_ASSERT(aDevice);
 
   // Query for only unavailable URLs while device added.
   nsTArray<nsString> unavailableUrls;
@@ -379,11 +382,9 @@ nsresult PresentationService::HandleDeviceAdded(
   }
 
   if (!supportedAvailabilityUrl.IsEmpty()) {
-    return mAvailabilityManager.DoNotifyAvailableChange(
-        supportedAvailabilityUrl, true);
+    mAvailabilityManager.DoNotifyAvailableChange(supportedAvailabilityUrl,
+                                                 true);
   }
-
-  return NS_OK;
 }
 
 nsresult PresentationService::HandleDeviceRemoved() {
@@ -430,12 +431,12 @@ nsresult PresentationService::UpdateAvailabilityUrlChange(
   }
 
   if (supportedAvailabilityUrl.IsEmpty()) {
-    return mAvailabilityManager.DoNotifyAvailableChange(aAvailabilityUrls,
-                                                        false);
+    mAvailabilityManager.DoNotifyAvailableChange(aAvailabilityUrls, false);
+  } else {
+    mAvailabilityManager.DoNotifyAvailableChange(supportedAvailabilityUrl,
+                                                 true);
   }
-
-  return mAvailabilityManager.DoNotifyAvailableChange(supportedAvailabilityUrl,
-                                                      true);
+  return NS_OK;
 }
 
 nsresult PresentationService::HandleSessionRequest(
@@ -566,7 +567,8 @@ nsresult PresentationService::HandleTerminateRequest(
   PRES_DEBUG("%s:handle termination:id[%s], receiver[%d]\n", __func__,
              NS_ConvertUTF16toUTF8(sessionId).get(), isFromReceiver);
 
-  return info->OnTerminate(ctrlChannel);
+  info->OnTerminate(ctrlChannel);
+  return NS_OK;
 }
 
 nsresult PresentationService::HandleReconnectRequest(
@@ -1077,7 +1079,8 @@ NS_IMETHODIMP
 PresentationService::UpdateWindowIdBySessionId(const nsAString& aSessionId,
                                                uint8_t aRole,
                                                const uint64_t aWindowId) {
-  return UpdateWindowIdBySessionIdInternal(aSessionId, aRole, aWindowId);
+  UpdateWindowIdBySessionIdInternal(aSessionId, aRole, aWindowId);
+  return NS_OK;
 }
 
 bool PresentationService::IsSessionAccessible(const nsAString& aSessionId,

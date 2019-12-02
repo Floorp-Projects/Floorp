@@ -965,6 +965,8 @@ bool js::GCMarker::mark(T* thing) {
 void BaseScript::traceChildren(JSTracer* trc) {
   TraceEdge(trc, &functionOrGlobal_, "function");
   TraceNullableEdge(trc, &sourceObject_, "sourceObject");
+
+  warmUpData_.trace(trc);
 }
 
 void LazyScript::traceChildren(JSTracer* trc) {
@@ -975,25 +977,8 @@ void LazyScript::traceChildren(JSTracer* trc) {
     TraceNullableEdge(trc, &script_, "script");
   }
 
-  if (enclosingLazyScriptOrScope_) {
-    TraceGenericPointerRoot(
-        trc,
-        reinterpret_cast<Cell**>(
-            enclosingLazyScriptOrScope_.unsafeUnbarrieredForTracing()),
-        "enclosingScope or enclosingLazyScript");
-  }
-
-  // We rely on the fact that atoms are always tenured.
-  for (GCPtrAtom& closedOverBinding : closedOverBindings()) {
-    if (closedOverBinding) {
-      TraceEdge(trc, &closedOverBinding, "closedOverBinding");
-    }
-  }
-
-  for (GCPtrFunction& innerFunction : innerFunctions()) {
-    if (innerFunction) {
-      TraceEdge(trc, &innerFunction, "lazyScriptInnerFunction");
-    }
+  if (data_) {
+    data_->trace(trc);
   }
 
   if (trc->isMarkingTracer()) {
@@ -1007,26 +992,20 @@ inline void js::GCMarker::eagerlyMarkChildren(LazyScript* thing) {
     traverseEdge(thing, static_cast<JSObject*>(thing->sourceObject_));
   }
 
+  thing->warmUpData_.trace(this);
+
   // script_ is weak so is not traced here.
 
-  if (thing->enclosingLazyScriptOrScope_) {
-    TraceManuallyBarrieredGenericPointerEdge(
-        this,
-        reinterpret_cast<Cell**>(
-            thing->enclosingLazyScriptOrScope_.unsafeUnbarrieredForTracing()),
-        "enclosingScope or enclosingLazyScript");
-  }
-
-  // We rely on the fact that atoms are always tenured.
-  for (GCPtrAtom& closedOverBinding : thing->closedOverBindings()) {
-    if (closedOverBinding) {
-      traverseEdge(thing, static_cast<JSString*>(closedOverBinding));
-    }
-  }
-
-  for (GCPtrFunction& innerFunction : thing->innerFunctions()) {
-    if (innerFunction) {
-      traverseEdge(thing, static_cast<JSObject*>(innerFunction));
+  if (thing->data_) {
+    // Traverse the PrivateScriptData::gcthings() array.
+    for (JS::GCCellPtr& elem : thing->data_->gcthings()) {
+      if (elem.is<JSObject>()) {
+        traverseEdge(thing, &elem.as<JSObject>());
+      } else if (elem.is<JSString>()) {
+        traverseEdge(thing, &elem.as<JSString>());
+      } else {
+        MOZ_ASSERT(!elem);
+      }
     }
   }
 
