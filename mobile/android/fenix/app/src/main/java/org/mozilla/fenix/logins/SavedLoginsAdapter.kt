@@ -17,8 +17,12 @@ class SavedLoginsAdapter(
     private val interactor: SavedLoginsInteractor
 ) : ListAdapter<SavedLoginsItem, SavedLoginsListItemViewHolder>(DiffCallback) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SavedLoginsListItemViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int
+    ): SavedLoginsListItemViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(SavedLoginsListItemViewHolder.LAYOUT_ID, parent, false)
         return SavedLoginsListItemViewHolder(view, interactor)
     }
 
