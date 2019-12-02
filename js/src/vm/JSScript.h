@@ -1632,6 +1632,12 @@ class BaseScript : public gc::TenuredCell {
   // The ScriptSourceObject for this script.
   GCPtr<ScriptSourceObject*> sourceObject_ = {};
 
+  // Unshared variable-length data. This may be nullptr for lazy scripts of leaf
+  // functions. Note that meaning of this data is different if the script is
+  // lazy vs non-lazy. In both cases, the JSFunction pointers will represent the
+  // inner-functions, but other kinds of entries have different interpretations.
+  PrivateScriptData* data_ = nullptr;
+
   // Range of characters in scriptSource which contains this script's source,
   // that is, the range used by the Parser to produce this script.
   //
@@ -2085,6 +2091,28 @@ setterLevel:                                                                  \
     }
   }
 
+  mozilla::Span<const JS::GCCellPtr> gcthings() const {
+    return data_ ? data_->gcthings() : mozilla::Span<JS::GCCellPtr>();
+  }
+
+  void setFieldInitializers(FieldInitializers fieldInitializers) {
+    MOZ_ASSERT(data_);
+    data_->setFieldInitializers(fieldInitializers);
+  }
+
+  const FieldInitializers& getFieldInitializers() const {
+    MOZ_ASSERT(data_);
+    return data_->getFieldInitializers();
+  }
+
+ protected:
+  void finalize(JSFreeOp* fop);
+
+ public:
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
+    return mallocSizeOf(data_);
+  }
+
   // JIT accessors
   static constexpr size_t offsetOfJitCodeRaw() {
     return offsetof(BaseScript, jitCodeRaw_);
@@ -2512,9 +2540,6 @@ class JSScript : public js::BaseScript {
   // Shareable script data
   RefPtr<js::RuntimeScriptData> scriptData_ = {};
 
-  // Unshared variable-length data
-  js::PrivateScriptData* data_ = nullptr;
-
  private:
   /* Information used to re-lazify a lazily-parsed interpreted function. */
   js::LazyScript* lazyScript = nullptr;
@@ -2776,16 +2801,6 @@ class JSScript : public js::BaseScript {
   static void argumentsOptimizationFailed(JSContext* cx,
                                           js::HandleScript script);
 
-  void setFieldInitializers(js::FieldInitializers fieldInitializers) {
-    MOZ_ASSERT(data_);
-    data_->setFieldInitializers(fieldInitializers);
-  }
-
-  const js::FieldInitializers& getFieldInitializers() const {
-    MOZ_ASSERT(data_);
-    return data_->getFieldInitializers();
-  }
-
   /*
    * Arguments access (via JSOP_*ARG* opcodes) must access the canonical
    * location for the argument. If an arguments object exists AND it's mapped
@@ -3030,20 +3045,14 @@ class JSScript : public js::BaseScript {
   }
 
   /*
-   * computedSizeOfData() is the in-use size of all the data sections.
    * sizeOfData() is the size of the block allocated to hold all the data
    * sections (which can be larger than the in-use size).
    */
-  size_t computedSizeOfData() const;
   size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const;
 
   void addSizeOfJitScript(mozilla::MallocSizeOf mallocSizeOf,
                           size_t* sizeOfJitScript,
                           size_t* sizeOfBaselineFallbackStubs) const;
-
-  mozilla::Span<const JS::GCCellPtr> gcthings() const {
-    return data_->gcthings();
-  }
 
   mozilla::Span<const JSTryNote> trynotes() const {
     return immutableScriptData()->tryNotes();
@@ -3310,10 +3319,6 @@ class LazyScript : public BaseScript {
   // | enclosing Scope |<-------------+
   // +-----------------+
 
-  // Heap allocated table with any free variables, inner functions, or class
-  // fields. This will be nullptr if none exists.
-  PrivateScriptData* data_ = nullptr;
-
   static const uint32_t NumClosedOverBindingsBits = 20;
   static const uint32_t NumInnerFunctionsBits = 20;
 
@@ -3406,10 +3411,6 @@ class LazyScript : public BaseScript {
     return enclosingScope()->hasOnChain(ScopeKind::NonSyntactic);
   }
 
-  mozilla::Span<JS::GCCellPtr> gcthings() {
-    return data_ ? data_->gcthings() : mozilla::Span<JS::GCCellPtr>();
-  }
-
   frontend::ParseGoal parseGoal() const {
     if (hasFlag(ImmutableFlags::IsModule)) {
       return frontend::ParseGoal::Module;
@@ -3424,16 +3425,6 @@ class LazyScript : public BaseScript {
   }
   void setWrappedByDebugger() { setFlag(MutableFlags::WrappedByDebugger); }
 
-  void setFieldInitializers(FieldInitializers fieldInitializers) {
-    MOZ_ASSERT(data_);
-    data_->setFieldInitializers(fieldInitializers);
-  }
-
-  const FieldInitializers& getFieldInitializers() const {
-    MOZ_ASSERT(data_);
-    return data_->getFieldInitializers();
-  }
-
   // Returns true if the enclosing script has ever been compiled.
   // Once the enclosing script is compiled, the scope chain is created.
   // This LazyScript is delazify-able as long as it has the enclosing scope,
@@ -3446,13 +3437,9 @@ class LazyScript : public BaseScript {
 
   friend class GCMarker;
   void traceChildren(JSTracer* trc);
-  void finalize(JSFreeOp* fop);
+  void finalize(JSFreeOp* fop) { BaseScript::finalize(fop); }
 
   static const JS::TraceKind TraceKind = JS::TraceKind::LazyScript;
-
-  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-    return mallocSizeOf(data_);
-  }
 };
 
 /* If this fails, add/remove padding within LazyScript. */

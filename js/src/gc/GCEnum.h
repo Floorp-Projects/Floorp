@@ -98,7 +98,6 @@ enum class ZealMode {
   _(ObjectElements)                        \
   _(ObjectSlots)                           \
   _(ScriptPrivateData)                     \
-  _(LazyScriptData)                        \
   _(MapObjectTable)                        \
   _(BigIntDigits)                          \
   _(ScopeData)                             \
