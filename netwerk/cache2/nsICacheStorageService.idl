@@ -80,6 +80,14 @@ interface nsICacheStorageService : nsISupports
   void clearOrigin(in nsIPrincipal aPrincipal);
 
   /**
+   * Evict any cache entry having the same originAttributes.
+   *
+   * @param aOriginAttributes
+   *   The origin attributes in string format to compare the entries with.
+   */
+  void clearOriginAttributes(in AString aOriginAttributes);
+
+  /**
    * Evict the whole cache.
    */
   void clear();
