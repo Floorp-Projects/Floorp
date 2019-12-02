@@ -135,7 +135,7 @@ nsString OptimizeFileName(const nsAString& aFileName) {
 }
 
 /*
- * FilenameToEvalType takes a fileName and returns a Pair of strings.
+ * FilenameToFilenameType takes a fileName and returns a Pair of strings.
  * The First entry is a string indicating the type of fileName
  * The Second entry is a Maybe<string> that can contain additional details to
  * report.
@@ -147,7 +147,7 @@ nsString OptimizeFileName(const nsAString& aFileName) {
  */
 
 /* static */
-FilenameTypeAndDetails nsContentSecurityUtils::FilenameToEvalType(
+FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
     const nsString& fileName) {
   // These are strings because the Telemetry Events API only accepts strings
   static NS_NAMED_LITERAL_CSTRING(kChromeURI, "chromeuri");
@@ -466,7 +466,7 @@ void nsContentSecurityUtils::NotifyEvalUsage(bool aIsSystemPrincipal,
                          : Telemetry::EventID::Security_Evalusage_Parentprocess;
 
   FilenameTypeAndDetails fileNameTypeAndDetails =
-      FilenameToEvalType(aFileNameA);
+      FilenameToFilenameType(aFileNameA);
   mozilla::Maybe<nsTArray<EventExtraEntry>> extra;
   if (fileNameTypeAndDetails.second().isSome()) {
     extra = Some<nsTArray<EventExtraEntry>>({EventExtraEntry{
