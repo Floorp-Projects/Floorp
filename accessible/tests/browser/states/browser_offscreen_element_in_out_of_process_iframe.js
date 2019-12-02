@@ -57,7 +57,7 @@ add_task(async function() {
     // Setup an out-of-process iframe which is initially scrolled out.
     const iframe = await SpecialPowers.spawn(browser, [iframeURL], setup);
 
-    await waitForIFrameUpdates();
+    await waitForIFrameA11yReady(iframe);
     await spawnTestStates(
       iframe,
       "target",
