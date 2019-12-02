@@ -6,6 +6,8 @@
 #ifndef mozilla_netwerk_protocol_http_HttpTrafficAnalyzer_h
 #define mozilla_netwerk_protocol_http_HttpTrafficAnalyzer_h
 
+#include "nsTArrayForwardDeclare.h"
+
 namespace mozilla {
 namespace net {
 
@@ -35,12 +37,11 @@ class HttpTrafficAnalyzer final {
       bool aIsPrivateMode, bool aIsSystemPrincipal, bool aIsThirdParty,
       ClassOfService aClassOfService, TrackingClassification aClassification);
 
-  nsresult IncrementHttpTransaction(HttpTrafficCategory aCategory);
-  nsresult IncrementHttpConnection(HttpTrafficCategory aCategory);
-  nsresult IncrementHttpConnection(nsTArray<HttpTrafficCategory>&& aCategories);
-  nsresult AccumulateHttpTransferredSize(HttpTrafficCategory aCategory,
-                                         uint64_t aBytesRead,
-                                         uint64_t aBytesSent);
+  void IncrementHttpTransaction(HttpTrafficCategory aCategory);
+  void IncrementHttpConnection(HttpTrafficCategory aCategory);
+  void IncrementHttpConnection(nsTArray<HttpTrafficCategory>&& aCategories);
+  void AccumulateHttpTransferredSize(HttpTrafficCategory aCategory,
+                                     uint64_t aBytesRead, uint64_t aBytesSent);
 };
 
 }  // namespace net

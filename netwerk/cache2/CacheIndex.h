@@ -793,8 +793,8 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   virtual ~CacheIndex();
 
   NS_IMETHOD OnFileOpened(CacheFileHandle* aHandle, nsresult aResult) override;
-  nsresult OnFileOpenedInternal(FileOpenHelper* aOpener,
-                                CacheFileHandle* aHandle, nsresult aResult);
+  void OnFileOpenedInternal(FileOpenHelper* aOpener, CacheFileHandle* aHandle,
+                            nsresult aResult);
   NS_IMETHOD OnDataWritten(CacheFileHandle* aHandle, const char* aBuf,
                            nsresult aResult) override;
   NS_IMETHOD OnDataRead(CacheFileHandle* aHandle, char* aBuf,

@@ -300,16 +300,13 @@ nsresult ParentChannelListener::SuspendForDiversion() {
   return NS_OK;
 }
 
-nsresult ParentChannelListener::ResumeForDiversion() {
+void ParentChannelListener::ResumeForDiversion() {
   MOZ_RELEASE_ASSERT(mSuspendedForDiversion, "Must already be suspended!");
-
   // Allow OnStart/OnData/OnStop callbacks to be forwarded to mNextListener.
   mSuspendedForDiversion = false;
-
-  return NS_OK;
 }
 
-nsresult ParentChannelListener::DivertTo(nsIStreamListener* aListener) {
+void ParentChannelListener::DivertTo(nsIStreamListener* aListener) {
   MOZ_ASSERT(aListener);
   MOZ_RELEASE_ASSERT(mSuspendedForDiversion, "Must already be suspended!");
 
@@ -319,8 +316,7 @@ nsresult ParentChannelListener::DivertTo(nsIStreamListener* aListener) {
   mInterceptCanceled = false;
 
   mNextListener = aListener;
-
-  return ResumeForDiversion();
+  ResumeForDiversion();
 }
 
 void ParentChannelListener::SetupInterception(

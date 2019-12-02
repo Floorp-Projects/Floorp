@@ -441,7 +441,7 @@ void CacheFileChunk::WaitForUpdate(CacheFileChunkListener* aCallback) {
   mUpdateListeners.AppendElement(item);
 }
 
-nsresult CacheFileChunk::CancelWait(CacheFileChunkListener* aCallback) {
+void CacheFileChunk::CancelWait(CacheFileChunkListener* aCallback) {
   AssertOwnsLock();
 
   LOG(("CacheFileChunk::CancelWait() [this=%p, listener=%p]", this, aCallback));
@@ -464,8 +464,6 @@ nsresult CacheFileChunk::CancelWait(CacheFileChunkListener* aCallback) {
     MOZ_ASSERT(mUpdateListeners[i]->mCallback != aCallback);
   }
 #endif
-
-  return NS_OK;
 }
 
 nsresult CacheFileChunk::NotifyUpdateListeners() {
@@ -550,7 +548,7 @@ void CacheFileChunk::UpdateDataSize(uint32_t aOffset, uint32_t aLen) {
   mValidityMap.Log();
 }
 
-nsresult CacheFileChunk::Truncate(uint32_t aOffset) {
+void CacheFileChunk::Truncate(uint32_t aOffset) {
   MOZ_RELEASE_ASSERT(mState == READY || mState == WRITING || mState == READING);
 
   if (mState == READING) {
@@ -558,7 +556,6 @@ nsresult CacheFileChunk::Truncate(uint32_t aOffset) {
   }
 
   mBuf->SetDataSize(aOffset);
-  return NS_OK;
 }
 
 nsresult CacheFileChunk::OnFileOpened(CacheFileHandle* aHandle,

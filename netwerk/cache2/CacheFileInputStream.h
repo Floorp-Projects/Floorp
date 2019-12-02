@@ -47,7 +47,7 @@ class CacheFileInputStream : public nsIAsyncInputStream,
  private:
   virtual ~CacheFileInputStream();
 
-  nsresult CloseWithStatusLocked(nsresult aStatus);
+  void CloseWithStatusLocked(nsresult aStatus);
   void CleanUp();
   void ReleaseChunk();
   void EnsureCorrectChunk(bool aReleaseOnly);

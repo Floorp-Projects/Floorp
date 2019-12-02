@@ -461,10 +461,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
     return mRequestHead.ClearHeader(nsHttp::Referer);
   }
 
-  MOZ_MUST_USE nsresult SetTopWindowURI(nsIURI* aTopWindowURI) {
-    mTopWindowURI = aTopWindowURI;
-    return NS_OK;
-  }
+  void SetTopWindowURI(nsIURI* aTopWindowURI) { mTopWindowURI = aTopWindowURI; }
 
   void SetContentBlockingAllowListPrincipal(nsIPrincipal* aPrincipal) {
     mContentBlockingAllowListPrincipal = aPrincipal;
@@ -622,8 +619,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // Proxy release all members above on main thread.
   void ReleaseMainThreadOnlyReferences();
 
-  nsresult ExplicitSetUploadStreamLength(uint64_t aContentLength,
-                                         bool aStreamHasHeaders);
+  void ExplicitSetUploadStreamLength(uint64_t aContentLength,
+                                     bool aStreamHasHeaders);
 
   void MaybeResumeAsyncOpen();
 
