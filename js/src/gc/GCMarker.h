@@ -235,6 +235,26 @@ class MarkStackIter {
 
 } /* namespace gc */
 
+enum MarkingState : uint8_t {
+  // Have not yet started marking.
+  NotActive,
+
+  // Main marking mode. Weakmap marking will be populating the weakKeys tables
+  // but not consulting them. The state will transition to WeakMarking until it
+  // is done, then back to RegularMarking.
+  RegularMarking,
+
+  // Same as RegularMarking except now every marked obj/script is immediately
+  // looked up in the weakKeys table to see if it is a weakmap key, and
+  // therefore might require marking its value. Transitions back to
+  // RegularMarking when done.
+  WeakMarking,
+
+  // Same as RegularMarking, but we OOMed (or obeyed a directive in the test
+  // marking queue) and fell back to iterating until the next GC.
+  IterativeMarking
+};
+
 class GCMarker : public JSTracer {
  public:
   explicit GCMarker(JSRuntime* rt);
@@ -288,7 +308,7 @@ class GCMarker : public JSTracer {
   void leaveWeakMarkingMode();
   void abortLinearWeakMarking() {
     leaveWeakMarkingMode();
-    linearWeakMarkingDisabled_ = true;
+    state = MarkingState::IterativeMarking;
   }
 
   void delayMarkingChildren(gc::Cell* cell);
@@ -329,6 +349,8 @@ class GCMarker : public JSTracer {
 
   template <typename T>
   void markImplicitEdges(T* oldThing);
+
+  bool isWeakMarking() const { return state == MarkingState::WeakMarking; }
 
  private:
 #ifdef DEBUG
@@ -436,14 +458,11 @@ class GCMarker : public JSTracer {
   /* Whether more work has been added to the delayed marking list. */
   MainThreadOrGCTaskData<bool> delayedMarkingWorkAdded;
 
-  /*
-   * If the weakKeys table OOMs, disable the linear algorithm and fall back
-   * to iterating until the next GC.
-   */
-  MainThreadOrGCTaskData<bool> linearWeakMarkingDisabled_;
-
   /* The count of marked objects during GC. */
   size_t markCount;
+
+  /* Track the state of marking. */
+  MainThreadOrGCTaskData<MarkingState> state;
 
 #ifdef DEBUG
   /* Count of arenas that are currently in the stack. */
