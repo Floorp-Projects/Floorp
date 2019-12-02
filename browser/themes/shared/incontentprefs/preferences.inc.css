@@ -27,7 +27,7 @@ body {
   overflow: hidden;
 }
 
-body {
+#preferences-body {
   display: -moz-box;
   -moz-box-orient: vertical;
 }
