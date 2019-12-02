@@ -89,6 +89,11 @@ void nsApplicationChooser::Done(GtkWidget* chooser, gint response) {
       nsCOMPtr<nsIFile> localExecutable;
       gchar* fileWithFullPath =
           g_find_program_in_path(g_app_info_get_executable(app_info));
+      if (!fileWithFullPath) {
+        g_object_unref(app_info);
+        NS_WARNING("Cannot find program in path.");
+        break;
+      }
       rv = NS_NewNativeLocalFile(nsDependentCString(fileWithFullPath), false,
                                  getter_AddRefs(localExecutable));
       g_free(fileWithFullPath);
