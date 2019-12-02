@@ -17,7 +17,6 @@ add_task(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["fission.preserve_browsing_contexts", true],
-      ["browser.tabs.remote.useHTTPResponseProcessSelection", true],
       ["browser.tabs.documentchannel", true],
     ],
   });

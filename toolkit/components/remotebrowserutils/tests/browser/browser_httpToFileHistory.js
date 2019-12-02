@@ -2,8 +2,6 @@ const { E10SUtils } = ChromeUtils.import(
   "resource://gre/modules/E10SUtils.jsm"
 );
 
-const RESPONSE_PROCESS_SELECTION_PREF =
-  "browser.tabs.remote.useHTTPResponseProcessSelection";
 const DOCUMENT_CHANNEL_PREF = "browser.tabs.documentchannel";
 const FISSION_PREF = "fission.autostart";
 const HISTORY = [
@@ -121,19 +119,14 @@ async function runTest() {
   });
 }
 
-add_task(async function prefDisabled() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[RESPONSE_PROCESS_SELECTION_PREF, false]],
-  });
+add_task(async function prefNotSet() {
   await runTest();
 });
 
 add_task(async function prefEnabled() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [RESPONSE_PROCESS_SELECTION_PREF, true],
-      [DOCUMENT_CHANNEL_PREF, true],
-    ],
+    set: [[DOCUMENT_CHANNEL_PREF, true]],
   });
   await runTest();
+  await SpecialPowers.popPrefEnv();
 });
