@@ -36,9 +36,15 @@ struct IPDLParamTraits<dom::NewPSHEntry> {
 /* static */
 void IPDLParamTraits<dom::CrossProcessSHEntry*>::Write(
     IPC::Message* aMsg, IProtocol* aActor, dom::CrossProcessSHEntry* aEntry) {
-  MOZ_RELEASE_ASSERT(aActor->GetSide() == ParentSide, "wrong side!");
   MOZ_DIAGNOSTIC_ASSERT(aActor->ToplevelProtocol()->GetProtocolId() ==
                         PContentMsgStart);
+  if (aActor->GetSide() == ChildSide) {
+    WriteIPDLParam(aMsg, aActor,
+                   static_cast<dom::PSHEntryChild*>(
+                       static_cast<dom::SHEntryChild*>(aEntry)));
+
+    return;
+  }
 
   dom::MaybeNewPSHEntryParent entry(static_cast<dom::PSHEntryParent*>(nullptr));
   if (aEntry) {
@@ -53,8 +59,18 @@ void IPDLParamTraits<dom::CrossProcessSHEntry*>::Write(
 bool IPDLParamTraits<dom::CrossProcessSHEntry*>::Read(
     const IPC::Message* aMsg, PickleIterator* aIter,
     mozilla::ipc::IProtocol* aActor, RefPtr<dom::CrossProcessSHEntry>* aEntry) {
-  MOZ_RELEASE_ASSERT(aActor->GetSide() == ChildSide, "wrong side!");
+  if (aActor->GetSide() == ParentSide) {
+    dom::PSHEntryParent* actor;
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &actor)) {
+      aActor->FatalError("Error deserializing MaybeNewPSHEntry");
+      return false;
+    }
 
+    *aEntry =
+        actor ? static_cast<dom::SHEntryParent*>(actor)->GetSHEntry() : nullptr;
+
+    return true;
+  }
   dom::MaybeNewPSHEntryChild actor(static_cast<dom::PSHEntryChild*>(nullptr));
   if (!ReadIPDLParam(aMsg, aIter, aActor, &actor)) {
     aActor->FatalError("Error deserializing MaybeNewPSHEntry");

@@ -988,8 +988,6 @@ SHEntryChild::CreateLoadInfo(nsDocShellLoadState** aLoadState) {
   if (!SendCreateLoadInfo(&loadState)) {
     return NS_ERROR_FAILURE;
   }
-  // Avoid dealing with serializing the PSHEntry by setting it here
-  loadState->SetSHEntry(this);
   loadState.forget(aLoadState);
   return NS_OK;
 }

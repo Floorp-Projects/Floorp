@@ -118,7 +118,6 @@ class nsLegacySHEntry final : public nsSHEntry {
   NS_IMETHOD_(bool) HasBFCacheEntry(nsIBFCacheEntry* aEntry) override;
   NS_IMETHOD AbandonBFCacheEntry() override;
   NS_IMETHOD_(void) ClearEntry() override;
-  NS_IMETHOD CreateLoadInfo(nsDocShellLoadState** aLoadState) override;
   NS_IMETHOD GetBfcacheID(uint64_t* aBFCacheID) override;
 
  private:
