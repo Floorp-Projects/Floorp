@@ -2770,9 +2770,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
     data.mIsPrivate.Construct() = aPrivatedMode.value();
   }
   if (aPositions.Length() != 0) {
-    data.mPositions.Construct().Assign(std::move(aPositions));
-    data.mPositionDescendants.Construct().Assign(
-        std::move(aPositionDescendants));
+    data.mPositions.Construct(std::move(aPositions));
+    data.mPositionDescendants.Construct(std::move(aPositionDescendants));
   }
   if (aIdVals.Length() != 0) {
     SessionStoreUtils::ComposeInputData(aIdVals, data.mId.Construct());
@@ -2792,20 +2791,20 @@ mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
       url.AppendElement(input.url);
     }
 
-    data.mInputDescendants.Construct().Assign(std::move(descendants));
-    data.mNumId.Construct().Assign(std::move(numId));
-    data.mNumXPath.Construct().Assign(std::move(numXPath));
-    data.mInnerHTML.Construct().Assign(std::move(innerHTML));
-    data.mUrl.Construct().Assign(std::move(url));
+    data.mInputDescendants.Construct(std::move(descendants));
+    data.mNumId.Construct(std::move(numId));
+    data.mNumXPath.Construct(std::move(numXPath));
+    data.mInnerHTML.Construct(std::move(innerHTML));
+    data.mUrl.Construct(std::move(url));
   }
   // In normal case, we only update the storage when needed.
   // However, we need to reset the session storage(aOrigins.Length() will be 0)
   //   if the usage is over the "browser_sessionstore_dom_storage_limit".
   // In this case, aIsFullStorage is true.
   if (aOrigins.Length() != 0 || aIsFullStorage) {
-    data.mStorageOrigins.Construct().Assign(std::move(aOrigins));
-    data.mStorageKeys.Construct().Assign(std::move(aKeys));
-    data.mStorageValues.Construct().Assign(std::move(aValues));
+    data.mStorageOrigins.Construct(std::move(aOrigins));
+    data.mStorageKeys.Construct(std::move(aKeys));
+    data.mStorageValues.Construct(std::move(aValues));
     data.mIsFullStorage.Construct() = aIsFullStorage;
   }
 
