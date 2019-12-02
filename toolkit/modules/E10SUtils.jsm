@@ -57,6 +57,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
+  "documentChannel",
+  "browser.tabs.documentchannel",
+  false
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
   "useCrossOriginOpenerPolicy",
   "browser.tabs.remote.useCrossOriginOpenerPolicy",
   false
@@ -283,6 +289,9 @@ var E10SUtils = {
 
   useCrossOriginOpenerPolicy() {
     return useCrossOriginOpenerPolicy;
+  },
+  documentChannel() {
+    return documentChannel;
   },
 
   /**
