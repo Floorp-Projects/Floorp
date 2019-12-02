@@ -73,7 +73,9 @@ def attributeReturnType(a, getter, macro):
     # builtinclass" case too, so we'd just have memberCanRunScript() check
     # can_explicitly_run_script and call it here.  But that would likely require
     # a fair amount of Gecko-side annotation work.  See bug 1534292.
-    if a.explicit_can_run_script:
+    if (a.explicit_can_run_script or
+        (a.explicit_getter_can_run_script and getter) or
+        (a.explicit_setter_can_run_script and not getter)):
         ret = "MOZ_CAN_RUN_SCRIPT " + ret
     return ret
 
