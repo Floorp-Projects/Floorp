@@ -128,6 +128,12 @@ static inline unsigned DigitLeadingZeroes(BigInt::Digit x) {
                         : mozilla::CountLeadingZeroes64(x);
 }
 
+#ifdef DEBUG
+static bool HasLeadingZeroes(BigInt* bi) {
+  return bi->digitLength() > 0 && bi->digit(bi->digitLength() - 1) == 0;
+}
+#endif
+
 BigInt* BigInt::createUninitialized(JSContext* cx, size_t digitLength,
                                     bool isNegative) {
   if (digitLength > MaxDigitLength) {
@@ -447,8 +453,8 @@ void BigInt::multiplyAccumulate(BigInt* multiplicand, Digit multiplier,
 }
 
 inline int8_t BigInt::absoluteCompare(BigInt* x, BigInt* y) {
-  MOZ_ASSERT(!x->digitLength() || x->digit(x->digitLength() - 1));
-  MOZ_ASSERT(!y->digitLength() || y->digit(y->digitLength() - 1));
+  MOZ_ASSERT(!HasLeadingZeroes(x));
+  MOZ_ASSERT(!HasLeadingZeroes(y));
 
   // Sanity checks to catch negative zeroes escaping to the wild.
   MOZ_ASSERT(!x->isNegative() || !x->isZero());
@@ -485,6 +491,44 @@ BigInt* BigInt::absoluteAdd(JSContext* cx, HandleBigInt x, HandleBigInt y,
 
   if (right->isZero()) {
     return resultNegative == left->isNegative() ? left : neg(cx, left);
+  }
+
+  // Fast path for the likely-common case of up to a uint64_t of magnitude.
+  if (left->absFitsInUint64() && right->absFitsInUint64()) {
+    uint64_t lhs = left->uint64FromAbsNonZero();
+    uint64_t rhs = right->uint64FromAbsNonZero();
+
+    uint64_t res = lhs + rhs;
+    bool overflow = res < lhs;
+    MOZ_ASSERT(res != 0 || overflow);
+
+    size_t resultLength = 1;
+    if (DigitBits == 32) {
+      if (overflow) {
+        resultLength = 3;
+      } else if (res >> 32) {
+        resultLength = 2;
+      }
+    } else {
+      if (overflow) {
+        resultLength = 2;
+      }
+    }
+    BigInt* result = createUninitialized(cx, resultLength, resultNegative);
+    if (!result) {
+      return nullptr;
+    }
+    result->setDigit(0, res);
+    if (DigitBits == 32 && resultLength > 1) {
+      result->setDigit(1, res >> 32);
+    }
+    if (overflow) {
+      constexpr size_t overflowIndex = DigitBits == 32 ? 2 : 1;
+      result->setDigit(overflowIndex, 1);
+    }
+
+    MOZ_ASSERT(!HasLeadingZeroes(result));
+    return result;
   }
 
   RootedBigInt result(
