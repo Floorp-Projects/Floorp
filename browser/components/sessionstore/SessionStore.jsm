@@ -2644,10 +2644,7 @@ var SessionStoreInternal = {
     let topDocShell = topBC.embedderElement.ownerGlobal.docShell;
     let { useRemoteSubframes } = topDocShell.QueryInterface(Ci.nsILoadContext);
     if (!useRemoteSubframes) {
-      if (
-        !E10SUtils.useHttpResponseProcessSelection() &&
-        !E10SUtils.useCrossOriginOpenerPolicy()
-      ) {
+      if (!E10SUtils.useCrossOriginOpenerPolicy()) {
         debug(
           `[process-switch]: response process selection disabled - ignoring`
         );
