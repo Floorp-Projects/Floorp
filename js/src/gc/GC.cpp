@@ -8122,10 +8122,6 @@ AutoSuppressGC::AutoSuppressGC(JSContext* cx)
   suppressGC_++;
 }
 
-bool js::UninlinedIsInsideNursery(const gc::Cell* cell) {
-  return IsInsideNursery(cell);
-}
-
 #ifdef DEBUG
 AutoDisableProxyCheck::AutoDisableProxyCheck() {
   TlsContext.get()->disableStrictProxyChecking();

@@ -2734,26 +2734,6 @@ inline void GCMarker::appendToDelayedMarkingList(Arena** listTail,
   *listTail = arena;
 }
 
-template <typename T>
-static void PushArenaTyped(GCMarker* gcmarker, Arena* arena) {
-  for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
-    gcmarker->traverse(i.get<T>());
-  }
-}
-
-struct PushArenaFunctor {
-  template <typename T>
-  void operator()(GCMarker* gcmarker, Arena* arena) {
-    PushArenaTyped<T>(gcmarker, arena);
-  }
-};
-
-void gc::PushArena(GCMarker* gcmarker, Arena* arena) {
-  DispatchTraceKindTyped(PushArenaFunctor(),
-                         MapAllocToTraceKind(arena->getAllocKind()), gcmarker,
-                         arena);
-}
-
 #ifdef DEBUG
 void GCMarker::checkZone(void* p) {
   MOZ_ASSERT(started);

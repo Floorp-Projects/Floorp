@@ -197,9 +197,6 @@ struct MOZ_RAII AutoDisableCompactingGC {
   JSContext* cx;
 };
 
-// This is the same as IsInsideNursery, but not inlined.
-bool UninlinedIsInsideNursery(const gc::Cell* cell);
-
 } /* namespace js */
 
 #endif /* gc_GC_h */
