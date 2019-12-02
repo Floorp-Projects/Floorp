@@ -9,6 +9,12 @@ const TEST_URL = `data:text/html;charset=utf-8,${TEST_CONTENT}`;
 // Test for the tooltip coordinate on the browsing document in RDM.
 
 addRDMTask(TEST_URL, async ({ ui }) => {
+  info("Create a promise which waits until the tooltip will be shown");
+  const tooltip = ui.browserWindow.gBrowser.ownerDocument.getElementById(
+    "remoteBrowserTooltip"
+  );
+  const onTooltipShown = waitUntil(() => tooltip.state === "open");
+
   info("Show a tooltip");
   await spawnViewportTask(ui, {}, async () => {
     const target = content.document.querySelector("h1");
@@ -36,10 +42,7 @@ addRDMTask(TEST_URL, async ({ ui }) => {
   });
 
   info("Wait for showing the tooltip");
-  const tooltip = ui.browserWindow.gBrowser.ownerDocument.getElementById(
-    "remoteBrowserTooltip"
-  );
-  await waitUntil(() => tooltip.state === "open");
+  await onTooltipShown;
 
   info("Test the X coordinate of the tooltip");
   isnot(tooltip.screenX, 0, "The X coordinate of tooltip should not be 0");
