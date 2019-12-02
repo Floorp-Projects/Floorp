@@ -81,7 +81,7 @@ class ManifestParser(object):
         self.source_files = set()
         self.strict = strict
         self.rootdir = rootdir
-        self.relativeRoot = None
+        self._root = None
         self.finder = finder
         self._handle_defaults = handle_defaults
         if manifests:
@@ -91,6 +91,34 @@ class ManifestParser(object):
         if self.finder:
             return self.finder.get(path) is not None
         return os.path.exists(path)
+
+    @property
+    def root(self):
+        if not self._root:
+            if self.rootdir is None:
+                self._root = ""
+            else:
+                assert os.path.isabs(self.rootdir)
+                self._root = self.rootdir + os.path.sep
+        return self._root
+
+    def relative_to_root(self, path):
+        # Microoptimization, because relpath is quite expensive.
+        # We know that rootdir is an absolute path or empty. If path
+        # starts with rootdir, then path is also absolute and the tail
+        # of the path is the relative path (possibly non-normalized,
+        # when here is unknown).
+        # For this to work rootdir needs to be terminated with a path
+        # separator, so that references to sibling directories with
+        # a common prefix don't get misscomputed (e.g. /root and
+        # /rootbeer/file).
+        # When the rootdir is unknown, the relpath needs to be left
+        # unchanged. We use an empty string as rootdir in that case,
+        # which leaves relpath unchanged after slicing.
+        if path.startswith(self.root):
+            return path[len(self.root):]
+        else:
+            return relpath(path, self.root)
 
     # methods for reading manifests
 
@@ -139,14 +167,6 @@ class ManifestParser(object):
             fp = filename
             filename = here = None
         defaults['here'] = here
-
-        # Rootdir is needed for relative path calculation. Precompute it for
-        # the microoptimization used below.
-        if self.rootdir is None:
-            rootdir = ""
-        else:
-            assert os.path.isabs(self.rootdir)
-            rootdir = self.rootdir + os.path.sep
 
         # read the configuration
         sections = read_ini(fp=fp, variables=defaults, strict=self.strict,
@@ -201,29 +221,11 @@ class ManifestParser(object):
             test = data
             test['name'] = section
 
-            def relative_to_root(path):
-                # Microoptimization, because relpath is quite expensive.
-                # We know that rootdir is an absolute path or empty. If path
-                # starts with rootdir, then path is also absolute and the tail
-                # of the path is the relative path (possibly non-normalized,
-                # when here is unknown).
-                # For this to work rootdir needs to be terminated with a path
-                # separator, so that references to sibling directories with
-                # a common prefix don't get misscomputed (e.g. /root and
-                # /rootbeer/file).
-                # When the rootdir is unknown, the relpath needs to be left
-                # unchanged. We use an empty string as rootdir in that case,
-                # which leaves relpath unchanged after slicing.
-                if path.startswith(rootdir):
-                    return path[len(rootdir):]
-                else:
-                    return relpath(path, rootdir)
-
             # Will be None if the manifest being read is a file-like object.
             test['manifest'] = filename
             test['manifest_relpath'] = None
             if test['manifest']:
-                test['manifest_relpath'] = relative_to_root(normalize_path(test['manifest']))
+                test['manifest_relpath'] = self.relative_to_root(normalize_path(test['manifest']))
 
             # determine the path
             path = test.get('path', section)
@@ -238,7 +240,7 @@ class ManifestParser(object):
                     path = os.path.join(here, path)
                     if '..' in path:
                         path = os.path.normpath(path)
-                _relpath = relative_to_root(path)
+                _relpath = self.relative_to_root(path)
 
             test['path'] = path
             test['relpath'] = _relpath
@@ -248,7 +250,7 @@ class ManifestParser(object):
                 # indicate that in the test object for the sake of identifying
                 # a test, particularly in the case a test file is included by
                 # multiple manifests.
-                test['ancestor-manifest'] = parentmanifest
+                test['ancestor_manifest'] = self.relative_to_root(parentmanifest)
 
             # append the item
             self.tests.append(test)
@@ -505,7 +507,7 @@ class ManifestParser(object):
                 'manifest',
                 'manifest_relpath',
                 'relpath',
-                'ancestor-manifest'
+                'ancestor_manifest'
             ]
             for key in sorted(test.keys()):
                 if key in reserved:
