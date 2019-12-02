@@ -226,12 +226,6 @@ void TextTrack::GetActiveCueArray(nsTArray<RefPtr<TextTrackCue> >& aCues) {
 
 TextTrackReadyState TextTrack::ReadyState() const { return mReadyState; }
 
-void TextTrack::SetReadyState(uint32_t aReadyState) {
-  if (aReadyState <= TextTrackReadyState::FailedToLoad) {
-    SetReadyState(static_cast<TextTrackReadyState>(aReadyState));
-  }
-}
-
 void TextTrack::SetReadyState(TextTrackReadyState aState) {
   WEBVTT_LOG("SetReadyState=%s", ToReadyStateStr(aState));
   mReadyState = aState;
@@ -309,7 +303,7 @@ bool TextTrack::IsLoaded() {
       return true;
     }
   }
-  return (mReadyState >= Loaded);
+  return mReadyState >= TextTrackReadyState::Loaded;
 }
 
 void TextTrack::NotifyCueActiveStateChanged(TextTrackCue* aCue) {
