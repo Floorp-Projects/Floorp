@@ -18,7 +18,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
 
   info("Checking initial width/height with meta viewport on");
   await setTouchAndMetaViewportSupport(ui, true);
-  await doInitialChecks(ui, 440);
+  await doInitialChecks(ui, 980);
   await setTouchAndMetaViewportSupport(ui, false);
 
   info("Changing the RDM size");
