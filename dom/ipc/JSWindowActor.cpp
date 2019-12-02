@@ -112,6 +112,34 @@ void JSWindowActor::SetName(const nsAString& aName) {
   mName = aName;
 }
 
+static ipc::StructuredCloneData CloneJSStack(JSContext* aCx,
+                                             JS::Handle<JSObject*> aStack) {
+  JS::Rooted<JS::Value> stackVal(aCx, JS::ObjectOrNullValue(aStack));
+
+  {
+    IgnoredErrorResult rv;
+    ipc::StructuredCloneData data;
+    data.Write(aCx, stackVal, rv);
+    if (!rv.Failed()) {
+      return data;
+    }
+  }
+  ErrorResult rv;
+  ipc::StructuredCloneData data;
+  data.Write(aCx, JS::NullHandleValue, rv);
+  return data;
+}
+
+static ipc::StructuredCloneData CaptureJSStack(JSContext* aCx) {
+  JS::Rooted<JSObject*> stack(aCx, nullptr);
+  if (JS::ContextOptionsRef(aCx).asyncStack() &&
+      !JS::CaptureCurrentStack(aCx, &stack)) {
+    JS_ClearPendingException(aCx);
+  }
+
+  return CloneJSStack(aCx, stack);
+}
+
 void JSWindowActor::SendAsyncMessage(JSContext* aCx,
                                      const nsAString& aMessageName,
                                      JS::Handle<JS::Value> aObj,
@@ -128,7 +156,7 @@ void JSWindowActor::SendAsyncMessage(JSContext* aCx,
   meta.messageName() = aMessageName;
   meta.kind() = JSWindowActorMessageKind::Message;
 
-  SendRawMessage(meta, std::move(data), aRv);
+  SendRawMessage(meta, std::move(data), CaptureJSStack(aCx), aRv);
 }
 
 already_AddRefed<Promise> JSWindowActor::SendQuery(
@@ -160,12 +188,22 @@ already_AddRefed<Promise> JSWindowActor::SendQuery(
 
   mPendingQueries.Put(meta.queryId(), promise);
 
-  SendRawMessage(meta, std::move(data), aRv);
+  SendRawMessage(meta, std::move(data), CaptureJSStack(aCx), aRv);
   return promise.forget();
 }
 
+#define CHILD_DIAGNOSTIC_ASSERT(test, msg) \
+  do {                                     \
+    if (XRE_IsParentProcess()) {           \
+      MOZ_ASSERT(test, msg);               \
+    } else {                               \
+      MOZ_DIAGNOSTIC_ASSERT(test, msg);    \
+    }                                      \
+  } while (0)
+
 void JSWindowActor::ReceiveRawMessage(const JSWindowActorMessageMeta& aMetadata,
-                                      ipc::StructuredCloneData&& aData) {
+                                      ipc::StructuredCloneData&& aData,
+                                      ipc::StructuredCloneData&& aStack) {
   AutoEntryScript aes(GetParentObject(), "JSWindowActor message handler");
   JSContext* cx = aes.cx();
 
@@ -174,13 +212,24 @@ void JSWindowActor::ReceiveRawMessage(const JSWindowActorMessageMeta& aMetadata,
   JS::Rooted<JS::Value> data(cx);
   aData.Read(cx, &data, error);
   if (NS_WARN_IF(error.Failed())) {
-    if (XRE_IsParentProcess()) {
-      MOZ_ASSERT(false, "Should not receive non-decodable data");
-    } else {
-      MOZ_DIAGNOSTIC_ASSERT(false, "Should not receive non-decodable data");
-    }
+    CHILD_DIAGNOSTIC_ASSERT(false, "Should not receive non-decodable data");
     MOZ_ALWAYS_TRUE(error.MaybeSetPendingException(cx));
     return;
+  }
+
+  JS::Rooted<JSObject*> stack(cx);
+  Maybe<JS::AutoSetAsyncStackForNewCalls> stackSetter;
+  {
+    JS::Rooted<JS::Value> stackVal(cx);
+    aStack.Read(cx, &stackVal, IgnoreErrors());
+    if (stackVal.isObject()) {
+      stack = &stackVal.toObject();
+      if (!js::IsSavedFrame(stack)) {
+        CHILD_DIAGNOSTIC_ASSERT(false, "Stack must be a SavedFrame object");
+        return;
+      }
+      stackSetter.emplace(cx, stack, "JSWindowActor query");
+    }
   }
 
   switch (aMetadata.kind()) {
@@ -228,7 +277,7 @@ void JSWindowActor::ReceiveMessageOrQuery(
       return;
     }
 
-    RefPtr<QueryHandler> handler = new QueryHandler(this, aMetadata);
+    RefPtr<QueryHandler> handler = new QueryHandler(this, aMetadata, promise);
     promise->AppendNativeHandler(handler);
   }
 
@@ -282,8 +331,10 @@ void JSWindowActor::ReceiveQueryReply(JSContext* aCx,
 // Native handler for our generated promise which is used to handle Queries and
 // send the reply when their promises have been resolved.
 JSWindowActor::QueryHandler::QueryHandler(
-    JSWindowActor* aActor, const JSWindowActorMessageMeta& aMetadata)
+    JSWindowActor* aActor, const JSWindowActorMessageMeta& aMetadata,
+    Promise* aPromise)
     : mActor(aActor),
+      mPromise(aPromise),
       mMessageName(aMetadata.messageName()),
       mQueryId(aMetadata.queryId()) {}
 
@@ -377,8 +428,13 @@ void JSWindowActor::QueryHandler::SendReply(JSContext* aCx,
   meta.queryId() = mQueryId;
   meta.kind() = aKind;
 
-  mActor->SendRawMessage(meta, std::move(aData), IgnoreErrors());
+  JS::Rooted<JSObject*> promise(aCx, mPromise->PromiseObj());
+  JS::Rooted<JSObject*> stack(aCx, JS::GetPromiseResolutionSite(promise));
+
+  mActor->SendRawMessage(meta, std::move(aData), CloneJSStack(aCx, stack),
+                         IgnoreErrors());
   mActor = nullptr;
+  mPromise = nullptr;
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JSWindowActor::QueryHandler)
@@ -388,7 +444,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(JSWindowActor::QueryHandler)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(JSWindowActor::QueryHandler)
 
-NS_IMPL_CYCLE_COLLECTION(JSWindowActor::QueryHandler, mActor)
+NS_IMPL_CYCLE_COLLECTION(JSWindowActor::QueryHandler, mActor, mPromise)
 
 }  // namespace dom
 }  // namespace mozilla
