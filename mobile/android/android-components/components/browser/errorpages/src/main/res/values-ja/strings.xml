@@ -168,10 +168,17 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">インターネットに接続されていません</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">ネットワーク接続を確認するか、しばらくしてからページを再読み込みしてください。</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">再読み込み</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">アドレスが無効です</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
       <p>指定されたアドレスの書式が正しくありません。ミスがないかロケーションバーを確認してください。</p>
-    ]]></string><!-- The document title and heading of an error page. -->
+    ]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">アドレスの書式が正しくありません</string>
     <!-- This string contains markup. The URL should not be localized. -->

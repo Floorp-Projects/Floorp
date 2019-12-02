@@ -168,6 +168,13 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Нет соединения с Интернетом</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Проверьте подключение к Интернету или попробуйте перезагрузить страницу позже.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Перезагрузить</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Некорректный адрес</string>
 
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
@@ -261,12 +268,4 @@
       <p>Имеется информация о том, что веб-страница на %1$s является поддельным сайтом. В соответствии с вашими настройками безопасности она была заблокирована.</p>
     ]]></string>
 
-    <!-- The tile for the list of external apps to open the link in -->
-    <string name="mozac_feature_applinks_open_in">Открыть в…</string>
-    <!-- The description to warn users that their private browsing session changes  -->
-    <string name="mozac_feature_applinks_confirm_dialog_title">Открыть это в приложении? Возможно, ваши действия перестанут быть приватными.</string>
-    <!-- Opens the selected time -->
-    <string name="mozac_feature_applinks_confirm_dialog_confirm">Открыть</string>
-    <!-- Cancels the prompt -->
-    <string name="mozac_feature_applinks_confirm_dialog_deny">Отмена</string>
-</resources>
+    </resources>
