@@ -685,8 +685,8 @@ bool TabListener::UpdateSessionStore(uint32_t aFlushId, bool aIsFinal) {
     nsTArray<nsCString> positions;
     nsTArray<int> descendants;
     mSessionStore->GetScrollPositions(positions, descendants);
-    data.mPositions.Construct().Assign(std::move(positions));
-    data.mPositionDescendants.Construct().Assign(std::move(descendants));
+    data.mPositions.Construct(std::move(positions));
+    data.mPositionDescendants.Construct(std::move(descendants));
   }
   if (mSessionStore->IsFormDataChanged()) {
     nsTArray<CollectedInputDataValue> dataWithId, dataWithXpath;
@@ -712,11 +712,11 @@ bool TabListener::UpdateSessionStore(uint32_t aFlushId, bool aIsFinal) {
       url.AppendElement(input.url);
     }
     if (descendants.Length() != 0) {
-      data.mInputDescendants.Construct().Assign(std::move(descendants));
-      data.mNumId.Construct().Assign(std::move(numId));
-      data.mNumXPath.Construct().Assign(std::move(numXPath));
-      data.mInnerHTML.Construct().Assign(std::move(innerHTML));
-      data.mUrl.Construct().Assign(std::move(url));
+      data.mInputDescendants.Construct(std::move(descendants));
+      data.mNumId.Construct(std::move(numId));
+      data.mNumXPath.Construct(std::move(numXPath));
+      data.mInnerHTML.Construct(std::move(innerHTML));
+      data.mUrl.Construct(std::move(url));
     }
   }
   if (mSessionStore->IsStorageUpdated()) {
@@ -724,9 +724,9 @@ bool TabListener::UpdateSessionStore(uint32_t aFlushId, bool aIsFinal) {
     nsTArray<nsString> keys, values;
     data.mIsFullStorage.Construct() =
         mSessionStore->GetAndClearStorageChanges(origins, keys, values);
-    data.mStorageOrigins.Construct().Assign(std::move(origins));
-    data.mStorageKeys.Construct().Assign(std::move(keys));
-    data.mStorageValues.Construct().Assign(std::move(values));
+    data.mStorageOrigins.Construct(std::move(origins));
+    data.mStorageKeys.Construct(std::move(keys));
+    data.mStorageValues.Construct(std::move(values));
   }
 
   nsCOMPtr<nsISessionStoreFunctions> funcs =
