@@ -2607,6 +2607,10 @@ var SessionStoreInternal = {
   // Examine the channel response to see if we should change the process
   // performing the given load. aRequestor implements nsIProcessSwitchRequestor
   onMayChangeProcess(aRequestor) {
+    if (!E10SUtils.documentChannel()) {
+      throw new Error("This code is only used by document channel");
+    }
+
     let switchRequestor;
     try {
       switchRequestor = aRequestor.QueryInterface(Ci.nsIProcessSwitchRequestor);
