@@ -502,11 +502,10 @@ void BackgroundHangThread::ReportHang(TimeDuration aHangTime,
   // Recovered from a hang; called on the monitor thread
   // mManager->mLock IS locked
 
-  HangDetails hangDetails(
-      aHangTime,
-      nsDependentCString(XRE_GeckoProcessTypeToString(XRE_GetProcessType())),
-      VoidString(), mThreadName, mRunnableName, std::move(mHangStack),
-      std::move(mAnnotations));
+  HangDetails hangDetails(aHangTime,
+                          nsDependentCString(XRE_GetProcessTypeString()),
+                          VoidString(), mThreadName, mRunnableName,
+                          std::move(mHangStack), std::move(mAnnotations));
 
   PersistedToDisk persistedToDisk = aPersistedToDisk;
   if (aPersistedToDisk == PersistedToDisk::Yes && XRE_IsParentProcess() &&
