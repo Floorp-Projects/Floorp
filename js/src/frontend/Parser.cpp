@@ -2625,11 +2625,10 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   }
 
   funbox->initFromLazyFunction(fun);
-  BaseScript* base = fun->baseScript();
 
-  PropagateTransitiveParseFlags(base, pc_->sc());
+  PropagateTransitiveParseFlags(funbox, pc_->sc());
 
-  if (!tokenStream.advance(base->sourceEnd())) {
+  if (!tokenStream.advance(funbox->sourceEnd)) {
     return false;
   }
 
