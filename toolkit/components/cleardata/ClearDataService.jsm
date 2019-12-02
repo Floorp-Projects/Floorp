@@ -148,6 +148,13 @@ const NetworkCacheCleaner = {
     });
   },
 
+  deleteByOriginAttributes(aOriginAttributesString) {
+    return new Promise(aResolve => {
+      Services.cache2.clearOriginAttributes(aOriginAttributesString);
+      aResolve();
+    });
+  },
+
   deleteAll() {
     return new Promise(aResolve => {
       Services.cache2.clear();

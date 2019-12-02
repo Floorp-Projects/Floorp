@@ -75,7 +75,6 @@ nsresult CacheObserver::Init() {
   obs->AddObserver(sSelf, "profile-before-change", true);
   obs->AddObserver(sSelf, "xpcom-shutdown", true);
   obs->AddObserver(sSelf, "last-pb-context-exited", true);
-  obs->AddObserver(sSelf, "clear-origin-attributes-data", true);
   obs->AddObserver(sSelf, "memory-pressure", true);
 
   return NS_OK;
@@ -274,54 +273,6 @@ void CacheObserver::ParentDirOverride(nsIFile** aDir) {
   sSelf->mCacheParentDirectoryOverride->Clone(aDir);
 }
 
-namespace {
-namespace CacheStorageEvictHelper {
-
-nsresult ClearStorage(bool const aPrivate, bool const aAnonymous,
-                      OriginAttributes& aOa) {
-  nsresult rv;
-
-  aOa.SyncAttributesWithPrivateBrowsing(aPrivate);
-  RefPtr<LoadContextInfo> info = GetLoadContextInfo(aAnonymous, aOa);
-
-  nsCOMPtr<nsICacheStorage> storage;
-  RefPtr<CacheStorageService> service = CacheStorageService::Self();
-  NS_ENSURE_TRUE(service, NS_ERROR_FAILURE);
-
-  // Clear disk storage
-  rv = service->DiskCacheStorage(info, false, getter_AddRefs(storage));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = storage->AsyncEvictStorage(nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Clear memory storage
-  rv = service->MemoryCacheStorage(info, getter_AddRefs(storage));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = storage->AsyncEvictStorage(nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult Run(OriginAttributes& aOa) {
-  nsresult rv;
-
-  // Clear all [private X anonymous] combinations
-  rv = ClearStorage(false, false, aOa);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = ClearStorage(false, true, aOa);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = ClearStorage(true, false, aOa);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = ClearStorage(true, true, aOa);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-}  // namespace CacheStorageEvictHelper
-}  // namespace
-
 // static
 bool CacheObserver::EntryIsTooBig(int64_t aSize, bool aUsingDisk) {
   // If custom limit is set, check it.
@@ -408,21 +359,6 @@ CacheObserver::Observe(nsISupports* aSubject, const char* aTopic,
     if (service) {
       service->DropPrivateBrowsingEntries();
     }
-
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, "clear-origin-attributes-data")) {
-    OriginAttributes oa;
-    if (!oa.Init(nsDependentString(aData))) {
-      NS_ERROR(
-          "Could not parse OriginAttributes JSON in "
-          "clear-origin-attributes-data notification");
-      return NS_OK;
-    }
-
-    nsresult rv = CacheStorageEvictHelper::Run(oa);
-    NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }

@@ -651,6 +651,52 @@ nsresult CacheStorageService::Dispatch(nsIRunnable* aEvent) {
   return cacheIOThread->Dispatch(aEvent, CacheIOThread::MANAGEMENT);
 }
 
+namespace CacheStorageEvictHelper {
+
+nsresult ClearStorage(bool const aPrivate, bool const aAnonymous,
+                      OriginAttributes& aOa) {
+  nsresult rv;
+
+  aOa.SyncAttributesWithPrivateBrowsing(aPrivate);
+  RefPtr<LoadContextInfo> info = GetLoadContextInfo(aAnonymous, aOa);
+
+  nsCOMPtr<nsICacheStorage> storage;
+  RefPtr<CacheStorageService> service = CacheStorageService::Self();
+  NS_ENSURE_TRUE(service, NS_ERROR_FAILURE);
+
+  // Clear disk storage
+  rv = service->DiskCacheStorage(info, false, getter_AddRefs(storage));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = storage->AsyncEvictStorage(nullptr);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Clear memory storage
+  rv = service->MemoryCacheStorage(info, getter_AddRefs(storage));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = storage->AsyncEvictStorage(nullptr);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult Run(OriginAttributes& aOa) {
+  nsresult rv;
+
+  // Clear all [private X anonymous] combinations
+  rv = ClearStorage(false, false, aOa);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = ClearStorage(false, true, aOa);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = ClearStorage(true, false, aOa);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = ClearStorage(true, true, aOa);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+}  // namespace CacheStorageEvictHelper
+
 // nsICacheStorageService
 
 NS_IMETHODIMP CacheStorageService::MemoryCacheStorage(
@@ -778,6 +824,26 @@ NS_IMETHODIMP CacheStorageService::ClearOrigin(nsIPrincipal* aPrincipal) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = ClearOriginInternal(origin, aPrincipal->OriginAttributesRef(), false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP CacheStorageService::ClearOriginAttributes(
+    const nsAString& aOriginAttributes) {
+  nsresult rv;
+
+  if (NS_WARN_IF(aOriginAttributes.IsEmpty())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  OriginAttributes oa;
+  if (!oa.Init(aOriginAttributes)) {
+    NS_ERROR("Could not parse the argument for OriginAttributes");
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = CacheStorageEvictHelper::Run(oa);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
