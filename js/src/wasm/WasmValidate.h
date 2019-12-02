@@ -224,9 +224,6 @@ struct ModuleEnvironment {
   bool hugeMemoryEnabled() const {
     return !isAsmJS() && compilerEnv->hugeMemory();
   }
-  uint32_t funcMaxResults() const {
-    return multiValuesEnabled() ? MaxResults : 1;
-  }
   bool funcIsImport(uint32_t funcIndex) const {
     return funcIndex < funcImportGlobalDataOffsets.length();
   }
