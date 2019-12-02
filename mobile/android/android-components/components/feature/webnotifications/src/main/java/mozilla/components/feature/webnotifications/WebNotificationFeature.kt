@@ -23,7 +23,7 @@ import mozilla.components.support.base.log.logger.Logger
 import java.lang.UnsupportedOperationException
 
 private const val NOTIFICATION_CHANNEL_ID = "mozac.feature.webnotifications.generic.channel"
-private const val NOTIFICATION_TAG_ID = "mozac.feature.webnotifications.generic.tag"
+private const val NOTIFICATION_ID = 1
 
 /**
  * Feature implementation for configuring and displaying web notifications to the user.
@@ -50,8 +50,6 @@ class WebNotificationFeature(
 ) : WebNotificationDelegate {
     private val logger = Logger("WebNotificationFeature")
     private var pendingRequestId = 0
-    private var notificationId = 0
-    private val notificationIdMap = HashMap<String, Int>()
     private val notificationManager = context.getSystemService<NotificationManager>()
     private val nativeNotificationBridge = NativeNotificationBridge(browserIcons, smallIcon)
 
@@ -65,26 +63,18 @@ class WebNotificationFeature(
 
     override fun onShowNotification(webNotification: WebNotification) {
         ensureNotificationGroupAndChannelExists()
-
-        notificationIdMap[webNotification.tag]?.let {
-            notificationManager?.cancel(NOTIFICATION_TAG_ID, it)
-        }
+        notificationManager?.cancel(webNotification.tag, NOTIFICATION_ID)
 
         pendingRequestId++
-        notificationId++
-        notificationIdMap[webNotification.tag] = notificationId
-
         GlobalScope.launch(Dispatchers.IO) {
             val notification = nativeNotificationBridge.convertToAndroidNotification(
                 webNotification, context, NOTIFICATION_CHANNEL_ID, activityClass, pendingRequestId)
-            notificationManager?.notify(NOTIFICATION_TAG_ID, notificationId, notification)
+            notificationManager?.notify(webNotification.tag, NOTIFICATION_ID, notification)
         }
     }
 
     override fun onCloseNotification(webNotification: WebNotification) {
-        notificationIdMap[webNotification.tag]?.let {
-            notificationManager?.cancel(NOTIFICATION_TAG_ID, it)
-        }
+        notificationManager?.cancel(webNotification.tag, NOTIFICATION_ID)
     }
 
     private fun ensureNotificationGroupAndChannelExists() {
