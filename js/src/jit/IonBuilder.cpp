@@ -22,6 +22,7 @@
 #include "jit/JitSpewer.h"
 #include "jit/Lowering.h"
 #include "jit/MIRGraph.h"
+#include "util/CheckedArithmetic.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
