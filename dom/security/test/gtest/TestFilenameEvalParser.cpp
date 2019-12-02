@@ -14,6 +14,8 @@
 
 static NS_NAMED_LITERAL_CSTRING(kChromeURI, "chromeuri");
 static NS_NAMED_LITERAL_CSTRING(kResourceURI, "resourceuri");
+static NS_NAMED_LITERAL_CSTRING(kBlobUri, "bloburi");
+static NS_NAMED_LITERAL_CSTRING(kDataUri, "dataurl");
 static NS_NAMED_LITERAL_CSTRING(kSingleString, "singlestring");
 static NS_NAMED_LITERAL_CSTRING(kMozillaExtension, "mozillaextension");
 static NS_NAMED_LITERAL_CSTRING(kOtherExtension, "otherextension");
@@ -43,6 +45,34 @@ TEST(FilenameEvalParser, ResourceChrome)
         nsContentSecurityUtils::FilenameToFilenameType(str);
     ASSERT_TRUE(ret.first() == kResourceURI && ret.second().isSome() &&
                 ret.second().value() == str);
+  }
+}
+
+TEST(FilenameEvalParser, BlobData)
+{
+  {
+    NS_NAMED_LITERAL_STRING(str, "blob://000-000");
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToFilenameType(str);
+    ASSERT_TRUE(ret.first() == kBlobUri && !ret.second().isSome());
+  }
+  {
+    NS_NAMED_LITERAL_STRING(str, "blob:000-000");
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToFilenameType(str);
+    ASSERT_TRUE(ret.first() == kBlobUri && !ret.second().isSome());
+  }
+  {
+    NS_NAMED_LITERAL_STRING(str, "data://blahblahblah");
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToFilenameType(str);
+    ASSERT_TRUE(ret.first() == kDataUri && !ret.second().isSome());
+  }
+  {
+    NS_NAMED_LITERAL_STRING(str, "data:blahblahblah");
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToFilenameType(str);
+    ASSERT_TRUE(ret.first() == kDataUri && !ret.second().isSome());
   }
 }
 
