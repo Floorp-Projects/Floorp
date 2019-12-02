@@ -11,6 +11,7 @@ import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavDirections
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
@@ -312,80 +313,90 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         }
     }
 
+    private fun navigateFromSettings(directions: NavDirections) {
+        view?.let {
+            val navController = Navigation.findNavController(it)
+            if (navController.currentDestination?.id == R.id.settingsFragment) {
+                navController.navigate(directions)
+            }
+        }
+    }
+
     private fun navigateToLoginsSettingsFragment() {
         val directions = SettingsFragmentDirections.actionSettingsFragmentToLoginsFragment()
-        Navigation.findNavController(view!!).navigate(directions)
+        navigateFromSettings(directions)
     }
 
     private fun navigateToSearchEngineSettings() {
         val directions = SettingsFragmentDirections.actionSettingsFragmentToSearchEngineFragment()
-        Navigation.findNavController(view!!).navigate(directions)
+        navigateFromSettings(directions)
     }
 
     private fun navigateToTrackingProtectionSettings() {
         val directions =
             SettingsFragmentDirections.actionSettingsFragmentToTrackingProtectionFragment()
-        Navigation.findNavController(view!!).navigate(directions)
+        navigateFromSettings(directions)
     }
 
     private fun navigateToThemeSettings() {
         val directions = SettingsFragmentDirections.actionSettingsFragmentToThemeFragment()
-        Navigation.findNavController(view!!).navigate(directions)
+        navigateFromSettings(directions)
     }
 
     private fun navigateToToolbarSettings() {
-        val directions = SettingsFragmentDirections.actionSettingsFragmentToToolbarSettingsFragment()
-        Navigation.findNavController(view!!).navigate(directions)
+        val directions =
+            SettingsFragmentDirections.actionSettingsFragmentToToolbarSettingsFragment()
+        navigateFromSettings(directions)
     }
 
     private fun navigateToSitePermissions() {
         val directions =
             SettingsFragmentDirections.actionSettingsFragmentToSitePermissionsFragment()
-        Navigation.findNavController(view!!).navigate(directions)
+        navigateFromSettings(directions)
     }
 
     private fun navigateToAccessibility() {
         val directions = SettingsFragmentDirections.actionSettingsFragmentToAccessibilityFragment()
-        Navigation.findNavController(view!!).navigate(directions)
+        navigateFromSettings(directions)
     }
 
     private fun navigateToDefaultBrowserSettingsFragment() {
         val directions =
             SettingsFragmentDirections.actionSettingsFragmentToDefaultBrowserSettingsFragment()
-        Navigation.findNavController(view!!).navigate(directions)
+        navigateFromSettings(directions)
     }
 
     private fun navigateToDataChoices() {
         val directions = SettingsFragmentDirections.actionSettingsFragmentToDataChoicesFragment()
-        Navigation.findNavController(view!!).navigate(directions)
+        navigateFromSettings(directions)
     }
 
     private fun navigateToAbout() {
         val directions = SettingsFragmentDirections.actionSettingsFragmentToAboutFragment()
-        Navigation.findNavController(view!!).navigate(directions)
+        navigateFromSettings(directions)
     }
 
     private fun navigateToAccountProblem() {
         val directions = SettingsFragmentDirections.actionSettingsFragmentToAccountProblemFragment()
-        Navigation.findNavController(view!!).navigate(directions)
+        navigateFromSettings(directions)
     }
 
     private fun navigateToAccountSettings() {
         val directions =
             SettingsFragmentDirections.actionSettingsFragmentToAccountSettingsFragment()
-        Navigation.findNavController(view!!).navigate(directions)
+        navigateFromSettings(directions)
     }
 
     private fun navigateToDeleteBrowsingData() {
         val directions =
             SettingsFragmentDirections.actionSettingsFragmentToDeleteBrowsingDataFragment()
-        Navigation.findNavController(view!!).navigate(directions)
+        navigateFromSettings(directions)
     }
 
     private fun navigateToDeleteBrowsingDataOnQuit() {
         val directions =
             SettingsFragmentDirections.actionSettingsFragmentToDeleteBrowsingDataOnQuitFragment()
-        Navigation.findNavController(view!!).navigate(directions)
+        navigateFromSettings(directions)
     }
 
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
