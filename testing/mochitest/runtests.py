@@ -2214,6 +2214,8 @@ toolbar#nav-bar {
             self.start_script_kwargs['testUrl'] = testUrl or 'about:blank'
 
             if detectShutdownLeaks:
+                env['MOZ_LOG'] = (env['MOZ_LOG'] + "," if env['MOZ_LOG'] else "") + \
+                    "DocShellAndDOMWindowLeak:3"
                 shutdownLeaks = ShutdownLeaks(self.log)
             else:
                 shutdownLeaks = None
