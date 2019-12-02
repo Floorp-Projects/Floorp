@@ -91,13 +91,13 @@ class XULInfoTester:
         # Maps JS expr to evaluation result.
         self.cache = {}
 
-    def test(self, cond):
+    def test(self, cond, options=[]):
         """Test a XUL predicate condition against this local info."""
         ans = self.cache.get(cond, None)
         if ans is None:
             cmd = [
                 self.js_bin
-            ] + self.js_args + [
+            ] + self.js_args + options + [
                 # run in safe configuration, since it is hard to debug
                 # crashes when running code here. In particular, msan will
                 # error out if the jit is active.
@@ -123,7 +123,7 @@ class XULInfoTester:
 class NullXULInfoTester:
     """Can be used to parse manifests without a JS shell."""
 
-    def test(self, cond):
+    def test(self, cond, options=[]):
         return False
 
 
@@ -140,9 +140,14 @@ def _parse_one(testcase, terms, xul_tester):
         elif parts[pos] == 'random':
             testcase.random = True
             pos += 1
+        elif parts[pos].startswith('shell-option('):
+            # This directive adds an extra option to pass to the shell.
+            option = parts[pos][len('shell-option('):-1]
+            testcase.options.append(option)
+            pos += 1
         elif parts[pos].startswith('fails-if'):
             cond = parts[pos][len('fails-if('):-1]
-            if xul_tester.test(cond):
+            if xul_tester.test(cond, testcase.options):
                 testcase.expect = False
             pos += 1
         elif parts[pos].startswith('asserts-if'):
@@ -151,7 +156,7 @@ def _parse_one(testcase, terms, xul_tester):
             pos += 1
         elif parts[pos].startswith('skip-if'):
             cond = parts[pos][len('skip-if('):-1]
-            if xul_tester.test(cond):
+            if xul_tester.test(cond, testcase.options):
                 testcase.expect = testcase.enable = False
             pos += 1
         elif parts[pos].startswith('ignore-flag'):
@@ -160,7 +165,7 @@ def _parse_one(testcase, terms, xul_tester):
             pos += 1
         elif parts[pos].startswith('random-if'):
             cond = parts[pos][len('random-if('):-1]
-            if xul_tester.test(cond):
+            if xul_tester.test(cond, testcase.options):
                 testcase.random = True
             pos += 1
         elif parts[pos] == 'slow':
@@ -168,12 +173,12 @@ def _parse_one(testcase, terms, xul_tester):
             pos += 1
         elif parts[pos].startswith('slow-if'):
             cond = parts[pos][len('slow-if('):-1]
-            if xul_tester.test(cond):
+            if xul_tester.test(cond, testcase.options):
                 testcase.slow = True
             pos += 1
         elif parts[pos] == 'silentfail':
             # silentfails use tons of memory, and Darwin doesn't support ulimit.
-            if xul_tester.test("xulRuntime.OS == 'Darwin'"):
+            if xul_tester.test("xulRuntime.OS == 'Darwin'", testcase.options):
                 testcase.expect = testcase.enable = False
             pos += 1
         elif parts[pos].startswith('error:'):
@@ -204,7 +209,8 @@ def _build_manifest_script_entry(script_name, test):
                           if not (term == "module" or
                                   term == "async" or
                                   term.startswith("error:") or
-                                  term.startswith("ignore-flag("))])
+                                  term.startswith("ignore-flag(") or
+                                  term.startswith("shell-option("))])
         if terms:
             line.append(terms)
     if test.error:
