@@ -241,59 +241,27 @@ template XDRResult js::XDRScriptConst(XDRState<XDR_DECODE>*,
 
 // Code LazyScript's closed over bindings.
 template <XDRMode mode>
-/* static */
-XDRResult LazyScript::XDRScriptData(XDRState<mode>* xdr,
-                                    HandleScriptSourceObject sourceObject,
-                                    Handle<LazyScript*> lazy) {
+static XDRResult XDRLazyClosedOverBindings(XDRState<mode>* xdr,
+                                           MutableHandle<LazyScript*> lazy) {
   JSContext* cx = xdr->cx();
-
   RootedAtom atom(cx);
-  RootedFunction func(cx);
+  for (GCPtrAtom& elem : lazy->closedOverBindings()) {
+    uint8_t endOfScopeSentinel;
+    if (mode == XDR_ENCODE) {
+      atom = elem.get();
+      endOfScopeSentinel = !atom;
+    }
 
-  for (JS::GCCellPtr& elem : lazy->data_->gcthings()) {
-    JS::TraceKind kind = elem.kind();
+    MOZ_TRY(xdr->codeUint8(&endOfScopeSentinel));
 
-    MOZ_TRY(xdr->codeEnum32(&kind));
+    if (endOfScopeSentinel) {
+      atom = nullptr;
+    } else {
+      MOZ_TRY(XDRAtom(xdr, &atom));
+    }
 
-    switch (kind) {
-      case JS::TraceKind::Object: {
-        if (mode == XDR_ENCODE) {
-          func = &elem.as<JSObject>().as<JSFunction>();
-        }
-        MOZ_TRY(XDRInterpretedFunction(xdr, nullptr, sourceObject, &func));
-        if (mode == XDR_DECODE) {
-          MOZ_ASSERT(func->isInterpretedLazy());
-          func->setEnclosingLazyScript(lazy);
-
-          elem = JS::GCCellPtr(func);
-        }
-        break;
-      }
-
-      case JS::TraceKind::String: {
-        if (mode == XDR_ENCODE) {
-          gc::Cell* cell = elem.asCell();
-          MOZ_ASSERT_IF(cell, cell->is<JSAtom>());
-          atom = static_cast<JSAtom*>(cell);
-        }
-        MOZ_TRY(XDRAtom(xdr, &atom));
-        if (mode == XDR_DECODE) {
-          elem = JS::GCCellPtr(static_cast<JSString*>(atom));
-        }
-        break;
-      }
-
-      case JS::TraceKind::Null: {
-        // This is default so nothing to do.
-        MOZ_ASSERT(!elem);
-        break;
-      }
-
-      default: {
-        // Fail in debug, but only soft-fail in release
-        MOZ_ASSERT(false, "Bad XDR class kind");
-        return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
-      }
+    if (mode == XDR_DECODE) {
+      elem.init(atom);
     }
   }
 
@@ -311,10 +279,8 @@ static XDRResult XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun,
 
   JSContext* cx = xdr->cx();
 
-  RootedScriptSourceObject sourceObject(cx, script->sourceObject());
-
   uint32_t immutableFlags;
-  uint32_t ngcthings;
+  uint32_t numClosedOverBindings;
   {
     uint32_t sourceStart = script->sourceStart();
     uint32_t sourceEnd = script->sourceEnd();
@@ -326,13 +292,17 @@ static XDRResult XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun,
 
     if (mode == XDR_ENCODE) {
       immutableFlags = lazy->immutableFlags();
-      ngcthings = lazy->gcthings().size();
+      numClosedOverBindings = lazy->numClosedOverBindings();
       MOZ_ASSERT(sourceStart == lazy->sourceStart());
       MOZ_ASSERT(sourceEnd == lazy->sourceEnd());
       MOZ_ASSERT(toStringStart == lazy->toStringStart());
       MOZ_ASSERT(toStringEnd == lazy->toStringEnd());
       MOZ_ASSERT(lineno == lazy->lineno());
       MOZ_ASSERT(column == lazy->column());
+      // We can assert we have no inner functions because we don't
+      // relazify scripts with inner functions.  See
+      // JSFunction::delazifyLazilyInterpretedFunction.
+      MOZ_ASSERT(!lazy->hasInnerFunctions());
       if (fun->kind() == FunctionFlags::FunctionKind::ClassConstructor) {
         numFieldInitializers =
             (uint32_t)lazy->getFieldInitializers().numFieldInitializers;
@@ -343,13 +313,14 @@ static XDRResult XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun,
 
     MOZ_TRY(xdr->codeUint32(&immutableFlags));
     MOZ_TRY(xdr->codeUint32(&numFieldInitializers));
-    MOZ_TRY(xdr->codeUint32(&ngcthings));
+    MOZ_TRY(xdr->codeUint32(&numClosedOverBindings));
 
     if (mode == XDR_DECODE) {
+      RootedScriptSourceObject sourceObject(cx, script->sourceObject());
       lazy.set(LazyScript::CreateForXDR(
-          cx, ngcthings, fun, script, enclosingScope, sourceObject,
-          immutableFlags, sourceStart, sourceEnd, toStringStart, toStringEnd,
-          lineno, column));
+          cx, numClosedOverBindings, /* numInnerFunctions = */ 0, fun, script,
+          enclosingScope, sourceObject, immutableFlags, sourceStart, sourceEnd,
+          toStringStart, toStringEnd, lineno, column));
       if (!lazy) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
@@ -361,11 +332,11 @@ static XDRResult XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun,
     }
   }
 
-  // We can assert we have no inner functions because we don't relazify scripts
-  // with inner functions. See JSFunction::delazifyLazilyInterpretedFunction.
-  MOZ_ASSERT(!lazy->hasInnerFunctions());
+  // Code binding names.
+  MOZ_TRY(XDRLazyClosedOverBindings(xdr, lazy));
 
-  MOZ_TRY(LazyScript::XDRScriptData(xdr, sourceObject, lazy));
+  // No need to do anything with inner functions, since we asserted we don't
+  // have any.
 
   return Ok();
 }
@@ -660,15 +631,6 @@ js::ScriptSource* js::BaseScript::maybeForwardedScriptSource() const {
   return UncheckedUnwrapWithoutExpose(source)
       ->as<ScriptSourceObject>()
       .source();
-}
-
-void js::BaseScript::finalize(JSFreeOp* fop) {
-  if (data_) {
-    size_t size = data_->allocationSize();
-    AlwaysPoison(data_, JS_POISONED_JSSCRIPT_DATA_PATTERN, size,
-                 MemCheckKind::MakeNoAccess);
-    fop->free_(this, data_, size, MemoryUse::ScriptPrivateData);
-  }
 }
 
 template <XDRMode mode>
@@ -1287,7 +1249,8 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
     uint32_t column;
     uint32_t immutableFlags;
     uint32_t numFieldInitializers;
-    uint32_t ngcthings;
+    uint32_t numClosedOverBindings;
+    uint32_t numInnerFunctions;
 
     if (mode == XDR_ENCODE) {
       // Note: it's possible the LazyScript has a non-null script_ pointer
@@ -1309,7 +1272,8 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
       } else {
         numFieldInitializers = UINT32_MAX;
       }
-      ngcthings = lazy->gcthings().size();
+      numClosedOverBindings = lazy->numClosedOverBindings();
+      numInnerFunctions = lazy->numInnerFunctions();
     }
 
     MOZ_TRY(xdr->codeUint32(&sourceStart));
@@ -1320,13 +1284,14 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
     MOZ_TRY(xdr->codeUint32(&column));
     MOZ_TRY(xdr->codeUint32(&immutableFlags));
     MOZ_TRY(xdr->codeUint32(&numFieldInitializers));
-    MOZ_TRY(xdr->codeUint32(&ngcthings));
+    MOZ_TRY(xdr->codeUint32(&numClosedOverBindings));
+    MOZ_TRY(xdr->codeUint32(&numInnerFunctions));
 
     if (mode == XDR_DECODE) {
       lazy.set(LazyScript::CreateForXDR(
-          cx, ngcthings, fun, nullptr, enclosingScope, sourceObject,
-          immutableFlags, sourceStart, sourceEnd, toStringStart, toStringEnd,
-          lineno, column));
+          cx, numClosedOverBindings, numInnerFunctions, fun, nullptr,
+          enclosingScope, sourceObject, immutableFlags, sourceStart, sourceEnd,
+          toStringStart, toStringEnd, lineno, column));
       if (!lazy) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
@@ -1340,7 +1305,27 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
     }
   }
 
-  MOZ_TRY(LazyScript::XDRScriptData(xdr, sourceObject, lazy));
+  // Code closed-over bindings.
+  MOZ_TRY(XDRLazyClosedOverBindings(xdr, lazy));
+
+  // Code inner functions.
+  {
+    RootedFunction func(cx);
+    for (GCPtrFunction& elem : lazy->innerFunctions()) {
+      if (mode == XDR_ENCODE) {
+        func = elem.get();
+      }
+
+      MOZ_TRY(XDRInterpretedFunction(xdr, nullptr, sourceObject, &func));
+
+      if (mode == XDR_DECODE) {
+        elem.init(func);
+        if (elem->isInterpretedLazy()) {
+          elem->setEnclosingLazyScript(lazy);
+        }
+      }
+    }
+  }
 
   return Ok();
 }
@@ -4599,6 +4584,8 @@ void JSScript::assertValidJumpTargets() const {
 }
 #endif
 
+size_t JSScript::computedSizeOfData() const { return data_->allocationSize(); }
+
 size_t JSScript::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const {
   return mallocSizeOf(data_);
 }
@@ -4628,9 +4615,6 @@ void JSScript::finalize(JSFreeOp* fop) {
 
   fop->runtime()->geckoProfiler().onScriptFinalized(this);
 
-  // Finalize the base-script fields.
-  BaseScript::finalize(fop);
-
   if (hasJitScript()) {
     releaseJitScriptOnFinalize(fop);
   }
@@ -4644,6 +4628,13 @@ void JSScript::finalize(JSFreeOp* fop) {
     zone()->scriptVTuneIdMap->remove(this);
   }
 #endif
+
+  if (data_) {
+    size_t size = computedSizeOfData();
+    AlwaysPoison(data_, JS_POISONED_JSSCRIPT_DATA_PATTERN, size,
+                 MemCheckKind::MakeNoAccess);
+    fop->free_(this, data_, size, MemoryUse::ScriptPrivateData);
+  }
 
   freeScriptData();
 
@@ -5282,32 +5273,12 @@ void RuntimeScriptData::markForCrossZone(JSContext* cx) {
 }
 
 void ScriptWarmUpData::trace(JSTracer* trc) {
-  uintptr_t tag = data_ & TagMask;
-  switch (tag) {
-    case EnclosingScriptTag: {
-      LazyScript* enclosingScript = toEnclosingScript();
-      TraceManuallyBarrieredEdge(trc, &enclosingScript, "enclosingScript");
-      setTaggedPtr<EnclosingScriptTag>(enclosingScript);
-      break;
-    }
-
-    case EnclosingScopeTag: {
-      Scope* enclosingScope = toEnclosingScope();
-      TraceManuallyBarrieredEdge(trc, &enclosingScope, "enclosingScope");
-      setTaggedPtr<EnclosingScopeTag>(enclosingScope);
-      break;
-    }
-
-    case JitScriptTag: {
-      toJitScript()->trace(trc);
-      break;
-    }
-
-    default: {
-      MOZ_ASSERT(isWarmUpCount());
-      break;
-    }
+  if (isJitScript()) {
+    toJitScript()->trace(trc);
+    return;
   }
+
+  MOZ_ASSERT(isWarmUpCount());
 }
 
 void JSScript::traceChildren(JSTracer* trc) {
@@ -5327,6 +5298,8 @@ void JSScript::traceChildren(JSTracer* trc) {
     scriptData()->traceChildren(trc);
   }
 
+  warmUpData_.trace(trc);
+
   if (maybeLazyScript()) {
     TraceManuallyBarrieredEdge(trc, &lazyScript, "lazyScript");
   }
@@ -5337,6 +5310,13 @@ void JSScript::traceChildren(JSTracer* trc) {
 
   if (trc->isMarkingTracer()) {
     GCMarker::fromTracer(trc)->markImplicitEdges(this);
+  }
+}
+
+void LazyScript::finalize(JSFreeOp* fop) {
+  if (lazyData_) {
+    fop->free_(this, lazyData_, lazyData_->allocationSize(),
+               MemoryUse::LazyScriptData);
   }
 }
 
@@ -5558,23 +5538,110 @@ bool JSScript::formalLivesInArgumentsObject(unsigned argSlot) {
   return argsObjAliasesFormals() && !formalIsAliased(argSlot);
 }
 
+/* static */ size_t LazyScriptData::AllocationSize(
+    uint32_t numClosedOverBindings, uint32_t numInnerFunctions) {
+  size_t size = sizeof(LazyScriptData);
+
+  size += numClosedOverBindings * sizeof(GCPtrAtom);
+  size += numInnerFunctions * sizeof(GCPtrFunction);
+
+  return size;
+}
+
+inline size_t LazyScriptData::allocationSize() const {
+  return AllocationSize(numClosedOverBindings_, numInnerFunctions_);
+}
+
+// Placement-new elements of an array. This should optimize away for types with
+// trivial default initiation.
+template <typename T>
+void LazyScriptData::initElements(size_t offset, size_t length) {
+  void* raw = offsetToPointer<void>(offset);
+  DefaultInitializeElements<T>(raw, length);
+}
+
+LazyScriptData::LazyScriptData(uint32_t numClosedOverBindings,
+                               uint32_t numInnerFunctions)
+    : numClosedOverBindings_(numClosedOverBindings),
+      numInnerFunctions_(numInnerFunctions) {
+  // Variable-length data begins immediately after LazyScriptData itself.
+  size_t cursor = sizeof(*this);
+
+  // Default-initialize trailing arrays.
+
+  static_assert(alignof(LazyScriptData) >= alignof(GCPtrAtom),
+                "Incompatible alignment");
+  initElements<GCPtrAtom>(cursor, numClosedOverBindings);
+  cursor += numClosedOverBindings * sizeof(GCPtrAtom);
+
+  static_assert(alignof(GCPtrAtom) >= alignof(GCPtrFunction),
+                "Incompatible alignment");
+  initElements<GCPtrFunction>(cursor, numInnerFunctions);
+  cursor += numInnerFunctions * sizeof(GCPtrFunction);
+
+  // Sanity check
+  MOZ_ASSERT(AllocationSize(numClosedOverBindings, numInnerFunctions) ==
+             cursor);
+}
+
+/* static */ LazyScriptData* LazyScriptData::new_(
+    JSContext* cx, uint32_t numClosedOverBindings, uint32_t numInnerFunctions) {
+  // Compute size including trailing arrays
+  size_t size = AllocationSize(numClosedOverBindings, numInnerFunctions);
+
+  // Allocate contiguous raw buffer
+  void* raw = cx->pod_malloc<uint8_t>(size);
+  MOZ_ASSERT(uintptr_t(raw) % alignof(LazyScriptData) == 0);
+  if (!raw) {
+    return nullptr;
+  }
+
+  // Constuct the LazyScriptData. Trailing arrays are uninitialized but
+  // GCPtrs are put into a safe state.
+  return new (raw) LazyScriptData(numClosedOverBindings, numInnerFunctions);
+}
+
+mozilla::Span<GCPtrAtom> LazyScriptData::closedOverBindings() {
+  size_t offset = sizeof(LazyScriptData);
+  return mozilla::MakeSpan(offsetToPointer<GCPtrAtom>(offset),
+                           numClosedOverBindings_);
+}
+
+mozilla::Span<GCPtrFunction> LazyScriptData::innerFunctions() {
+  size_t offset =
+      sizeof(LazyScriptData) + sizeof(GCPtrAtom) * numClosedOverBindings_;
+  return mozilla::MakeSpan(offsetToPointer<GCPtrFunction>(offset),
+                           numInnerFunctions_);
+}
+
+void LazyScriptData::trace(JSTracer* trc) {
+  if (numClosedOverBindings_) {
+    auto array = closedOverBindings();
+    TraceRange(trc, array.size(), array.data(), "closedOverBindings");
+  }
+
+  if (numInnerFunctions_) {
+    auto array = innerFunctions();
+    TraceRange(trc, array.size(), array.data(), "innerFunctions");
+  }
+}
+
 LazyScript::LazyScript(JSFunction* fun, uint8_t* stubEntry,
-                       ScriptSourceObject& sourceObject,
-                       PrivateScriptData* data, uint32_t immutableFlags,
-                       uint32_t sourceStart, uint32_t sourceEnd,
-                       uint32_t toStringStart, uint32_t toStringEnd,
-                       uint32_t lineno, uint32_t column)
+                       ScriptSourceObject& sourceObject, LazyScriptData* data,
+                       uint32_t immutableFlags, uint32_t sourceStart,
+                       uint32_t sourceEnd, uint32_t toStringStart,
+                       uint32_t toStringEnd, uint32_t lineno, uint32_t column)
     : BaseScript(stubEntry, fun, &sourceObject, sourceStart, sourceEnd,
                  toStringStart, toStringEnd),
-      script_(nullptr) {
+      script_(nullptr),
+      lazyData_(data) {
   lineno_ = lineno;
   column_ = column;
 
   immutableFlags_ = immutableFlags;
 
   if (data) {
-    data_ = data;
-    AddCellMemory(this, data->allocationSize(), MemoryUse::ScriptPrivateData);
+    AddCellMemory(this, data->allocationSize(), MemoryUse::LazyScriptData);
   }
 }
 
@@ -5593,23 +5660,19 @@ void LazyScript::setEnclosingLazyScript(LazyScript* enclosingLazyScript) {
   // Enclosing scopes never transition back to enclosing lazy scripts.
   MOZ_ASSERT(!hasEnclosingScope());
 
-  warmUpData_.initEnclosingScript(enclosingLazyScript);
+  enclosingLazyScriptOrScope_ = enclosingLazyScript;
 }
 
 void LazyScript::setEnclosingScope(Scope* enclosingScope) {
   MOZ_ASSERT(enclosingScope);
   MOZ_ASSERT(!hasEnclosingScope());
 
-  if (warmUpData_.isEnclosingScript()) {
-    warmUpData_.clearEnclosingScript();
-  }
-
-  MOZ_ASSERT(warmUpData_.isWarmUpCount());
-  warmUpData_.initEnclosingScope(enclosingScope);
+  enclosingLazyScriptOrScope_ = enclosingScope;
 }
 
 /* static */
-LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t ngcthings,
+LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t numClosedOverBindings,
+                                  uint32_t numInnerFunctions,
                                   HandleFunction fun,
                                   HandleScriptSourceObject sourceObject,
                                   uint32_t immutableFlags, uint32_t sourceStart,
@@ -5620,11 +5683,12 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t ngcthings,
 
   MOZ_ASSERT(sourceObject);
 
-  // Allocate a PrivateScriptData if it will not be empty. Lazy class
-  // constructors also need PrivateScriptData for field lists.
-  Rooted<UniquePtr<PrivateScriptData>> data(cx);
-  if (ngcthings || fun->isClassConstructor()) {
-    data.reset(PrivateScriptData::new_(cx, ngcthings));
+  // Allocate a LazyScriptData if it will not be empty. Lazy class constructors
+  // also need LazyScriptData for field lists.
+  Rooted<UniquePtr<LazyScriptData>> data(cx);
+  if (numClosedOverBindings || numInnerFunctions || fun->isClassConstructor()) {
+    data.reset(
+        LazyScriptData::new_(cx, numClosedOverBindings, numInnerFunctions));
     if (!data) {
       return nullptr;
     }
@@ -5663,52 +5727,41 @@ LazyScript* LazyScript::Create(
     immutableFlags |= uint32_t(ImmutableFlags::HasInnerFunctions);
   }
 
-  uint32_t ngcthings =
-      innerFunctionBoxes.length() + closedOverBindings.length();
-
   LazyScript* res = LazyScript::CreateRaw(
-      cx, ngcthings, fun, sourceObject, immutableFlags, sourceStart, sourceEnd,
-      toStringStart, toStringEnd, lineno, column);
+      cx, closedOverBindings.length(), innerFunctionBoxes.length(), fun,
+      sourceObject, immutableFlags, sourceStart, sourceEnd, toStringStart,
+      toStringEnd, lineno, column);
   if (!res) {
     return nullptr;
   }
 
-  // Fill in gcthing data with inner functions followed by binding data.
-  mozilla::Span<JS::GCCellPtr> gcThings =
-      res->data_ ? res->data_->gcthings() : mozilla::Span<JS::GCCellPtr>();
-  auto iter = gcThings.begin();
-
-  for (const frontend::FunctionBox* funbox : innerFunctionBoxes) {
-    JSFunction* fun = funbox->function();
-    *iter++ = JS::GCCellPtr(fun);
-
-    MOZ_ASSERT(fun->isInterpretedLazy());
-    fun->setEnclosingLazyScript(res);
+  mozilla::Span<GCPtrAtom> resClosedOverBindings = res->closedOverBindings();
+  for (size_t i = 0; i < res->numClosedOverBindings(); i++) {
+    resClosedOverBindings[i].init(closedOverBindings[i]);
   }
 
-  for (JSAtom* binding : closedOverBindings) {
-    if (binding) {
-      *iter++ = JS::GCCellPtr(binding);
-    } else {
-      iter++;
+  mozilla::Span<GCPtrFunction> resInnerFunctions = res->innerFunctions();
+  for (size_t i = 0; i < res->numInnerFunctions(); i++) {
+    resInnerFunctions[i].init(innerFunctionBoxes[i]->function());
+    if (resInnerFunctions[i]->isInterpretedLazy()) {
+      resInnerFunctions[i]->setEnclosingLazyScript(res);
     }
   }
-
-  MOZ_ASSERT(iter == gcThings.end());
 
   return res;
 }
 
 /* static */
 LazyScript* LazyScript::CreateForXDR(
-    JSContext* cx, uint32_t ngcthings, HandleFunction fun, HandleScript script,
-    HandleScope enclosingScope, HandleScriptSourceObject sourceObject,
-    uint32_t immutableFlags, uint32_t sourceStart, uint32_t sourceEnd,
-    uint32_t toStringStart, uint32_t toStringEnd, uint32_t lineno,
-    uint32_t column) {
+    JSContext* cx, uint32_t numClosedOverBindings, uint32_t numInnerFunctions,
+    HandleFunction fun, HandleScript script, HandleScope enclosingScope,
+    HandleScriptSourceObject sourceObject, uint32_t immutableFlags,
+    uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
+    uint32_t toStringEnd, uint32_t lineno, uint32_t column) {
   LazyScript* res = LazyScript::CreateRaw(
-      cx, ngcthings, fun, sourceObject, immutableFlags, sourceStart, sourceEnd,
-      toStringStart, toStringEnd, lineno, column);
+      cx, numClosedOverBindings, numInnerFunctions, fun, sourceObject,
+      immutableFlags, sourceStart, sourceEnd, toStringStart, toStringEnd,
+      lineno, column);
   if (!res) {
     return nullptr;
   }
