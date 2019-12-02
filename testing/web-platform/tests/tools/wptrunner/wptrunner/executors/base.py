@@ -130,6 +130,7 @@ class ExecutorException(Exception):
 class TimedRunner(object):
     def __init__(self, logger, func, protocol, url, timeout, extra_timeout):
         self.func = func
+        self.logger = logger
         self.result = None
         self.protocol = protocol
         self.url = url
