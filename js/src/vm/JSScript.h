@@ -2822,17 +2822,34 @@ class JSScript : public js::BaseScript {
 
   void updateJitCodeRaw(JSRuntime* rt);
 
-  // We don't relazify functions with a JitScript or JIT code, but some
-  // callers (XDR, testing functions) want to know whether this script is
-  // relazifiable ignoring (or after) discarding JIT code.
-  bool isRelazifiableIgnoringJitCode() const {
-    return (selfHosted() || lazyScript) && !hasInnerFunctions() &&
-           !isGenerator() && !isAsync() && !isDefaultClassConstructor() &&
-           !doNotRelazify() && !hasCallSiteObj();
-  }
   bool isRelazifiable() const {
-    return isRelazifiableIgnoringJitCode() && !hasJitScript();
+    // A script may not be relazifiable if parts of it can be entrained in
+    // interesting ways:
+    //  - Scripts with inner-functions or direct-eval (which can add
+    //    inner-functions) should not be relazified as their Scopes may be part
+    //    of another scope-chain.
+    //  - Generators and async functions may be re-entered in complex ways so
+    //    don't discard bytecode.
+    //  - Functions with template literals must always return the same object
+    //    instance so must not discard it by relazifying.
+    return !hasInnerFunctions() && !hasDirectEval() && !isGenerator() &&
+           !isAsync() && !hasCallSiteObj();
   }
+  bool canRelazify() const {
+    // In order to actually relazify we must satisfy additional runtime
+    // conditions:
+    //  - The lazy form must still exist. This is either the original LazyScript
+    //    or the self-hosted script that we cloned from.
+    //  - There must not be any JIT code attached since the relazification
+    //    process does not know how to discard it. In general, the GC should
+    //    discard most JIT code before attempting relazification.
+    //  - Specific subsystems (such as the Debugger) may disable scripts for
+    //    their own reasons.
+    bool lazyAvailable = selfHosted() || lazyScript;
+    return isRelazifiable() && lazyAvailable && !hasJitScript() &&
+           !doNotRelazify();
+  }
+
   void setLazyScript(js::LazyScript* lazy) { lazyScript = lazy; }
   js::LazyScript* maybeLazyScript() { return lazyScript; }
 
@@ -3376,15 +3393,6 @@ class LazyScript : public BaseScript {
   static XDRResult XDRScriptData(XDRState<mode>* xdr,
                                  HandleScriptSourceObject sourceObject,
                                  Handle<LazyScript*> lazy);
-
-  bool canRelazify() const {
-    // Only functions without inner functions or direct eval are re-lazified.
-    // Functions with either of those are on the static scope chain of their
-    // inner functions, or in the case of eval, possibly eval'd inner
-    // functions. Note that if this ever changes, XDRRelazificationInfo will
-    // have to be fixed.
-    return !hasInnerFunctions() && !hasDirectEval();
-  }
 
   void initScript(JSScript* script);
 

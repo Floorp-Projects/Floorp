@@ -1607,7 +1607,7 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
   RootedScript script(cx, fun->nonLazyScript());
   MOZ_ASSERT(lazy->maybeScript() == script);
 
-  if (lazy->canRelazify()) {
+  if (script->isRelazifiable()) {
     // Remember the lazy script on the compiled script, so it can be
     // stored on the function again in case of re-lazification.
     // Only functions without inner functions are re-lazified.
@@ -1726,7 +1726,7 @@ void JSFunction::maybeRelazify(JSRuntime* rt) {
 
   // Don't relazify functions with JIT code.
   JSScript* script = nonLazyScript();
-  if (!script->isRelazifiable()) {
+  if (!script->canRelazify()) {
     return;
   }
 
