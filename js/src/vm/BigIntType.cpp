@@ -251,7 +251,7 @@ BigInt* BigInt::neg(JSContext* cx, HandleBigInt x) {
 #if !defined(JS_64BIT)
 #  define HAVE_TWO_DIGIT 1
 using TwoDigit = uint64_t;
-#elif defined(HAVE_INT128_SUPPORT)
+#elif defined(__SIZEOF_INT128__)
 #  define HAVE_TWO_DIGIT 1
 using TwoDigit = __uint128_t;
 #endif
