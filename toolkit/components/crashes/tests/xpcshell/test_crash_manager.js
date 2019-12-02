@@ -122,9 +122,9 @@ add_task(async function test_store_expires() {
 // Ensure discovery of unprocessed events files works.
 add_task(async function test_unprocessed_events_files() {
   let m = await getManager();
-  await m.createEventsFile("1", "test.1", new Date(), "foo", 0);
-  await m.createEventsFile("2", "test.1", new Date(), "bar", 0);
-  await m.createEventsFile("1", "test.1", new Date(), "baz", 1);
+  await m.createEventsFile("1", "test.1", new Date(), "foo", "{}", 0);
+  await m.createEventsFile("2", "test.1", new Date(), "bar", "{}", 0);
+  await m.createEventsFile("1", "test.1", new Date(), "baz", "{}", 1);
 
   let paths = await m._getUnprocessedEventsFiles();
   Assert.equal(paths.length, 3);
@@ -159,7 +159,7 @@ add_task(async function test_malformed_files_deleted() {
 add_task(async function test_aggregate_ignore_unknown_events() {
   let m = await getManager();
 
-  await m.createEventsFile("1", "crash.main.2", DUMMY_DATE, "id1");
+  await m.createEventsFile("1", "crash.main.3", DUMMY_DATE, "id1", "{}");
   await m.createEventsFile("2", "foobar.1", new Date(), "dummy");
 
   let count = await m.aggregateEventsFiles();
@@ -176,7 +176,7 @@ add_task(async function test_prune_old() {
   let m = await getManager();
   let oldDate = new Date(Date.now() - 86400000);
   let newDate = new Date(Date.now() - 10000);
-  await m.createEventsFile("1", "crash.main.2", oldDate, "id1");
+  await m.createEventsFile("1", "crash.main.3", oldDate, "id1", "{}");
   await m.addCrash(m.PROCESS_TYPE_PLUGIN, m.CRASH_TYPE_CRASH, "id2", newDate);
 
   await m.aggregateEventsFiles();
@@ -201,12 +201,12 @@ add_task(async function test_prune_old() {
 
 add_task(async function test_schedule_maintenance() {
   let m = await getManager();
-  await m.createEventsFile("1", "crash.main.2", DUMMY_DATE, "id1");
+  await m.createEventsFile("1", "crash.main.3", DUMMY_DATE, "id1", "{}");
 
   let oldDate = new Date(
     Date.now() - m.PURGE_OLDER_THAN_DAYS * 2 * 24 * 60 * 60 * 1000
   );
-  await m.createEventsFile("2", "crash.main.2", oldDate, "id2");
+  await m.createEventsFile("2", "crash.main.3", oldDate, "id2", "{}");
 
   await m.scheduleMaintenance(25);
   let crashes = await m.getCrashes();
@@ -220,7 +220,7 @@ const productName = "Firefox";
 const productId = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
 const sha256Hash =
   "f8410c3ac4496cfa9191a1240f0e365101aef40c7bf34fc5bcb8ec511832ed79";
-const stackTraces = '{"status":"OK"}';
+const stackTraces = { status: "OK" };
 
 add_task(async function test_main_crash_event_file() {
   let ac = new TelemetryArchiveTesting.Checker();
@@ -233,30 +233,23 @@ add_task(async function test_main_crash_event_file() {
   theEnvironment.testValue = 'MyValue"';
 
   let m = await getManager();
-  const fileContent =
-    crashId +
-    "\n" +
-    "ProductName=" +
-    productName +
-    "\n" +
-    "ProductID=" +
-    productId +
-    "\n" +
-    "TelemetryEnvironment=" +
-    JSON.stringify(theEnvironment) +
-    "\n" +
-    "TelemetrySessionId=" +
-    sessionId +
-    "\n" +
-    "MinidumpSha256Hash=" +
-    sha256Hash +
-    "\n" +
-    "StackTraces=" +
-    stackTraces +
-    "\n" +
-    "ThisShouldNot=end-up-in-the-ping\n";
+  const metadata = JSON.stringify({
+    ProductName: productName,
+    ProductID: productId,
+    TelemetryEnvironment: JSON.stringify(theEnvironment),
+    TelemetrySessionId: sessionId,
+    MinidumpSha256Hash: sha256Hash,
+    StackTraces: stackTraces,
+    ThisShouldNot: "end-up-in-the-ping",
+  });
 
-  await m.createEventsFile(crashId, "crash.main.2", DUMMY_DATE, fileContent);
+  await m.createEventsFile(
+    crashId,
+    "crash.main.3",
+    DUMMY_DATE,
+    crashId,
+    metadata
+  );
   let count = await m.aggregateEventsFiles();
   Assert.equal(count, 1);
 
@@ -300,18 +293,19 @@ add_task(async function test_main_crash_event_file() {
 add_task(async function test_main_crash_event_file_noenv() {
   let ac = new TelemetryArchiveTesting.Checker();
   await ac.promiseInit();
-  const fileContent =
-    crashId +
-    "\n" +
-    "ProductName=" +
-    productName +
-    "\n" +
-    "ProductID=" +
-    productId +
-    "\n";
+  const metadata = JSON.stringify({
+    ProductName: productName,
+    ProductID: productId,
+  });
 
   let m = await getManager();
-  await m.createEventsFile(crashId, "crash.main.2", DUMMY_DATE, fileContent);
+  await m.createEventsFile(
+    crashId,
+    "crash.main.3",
+    DUMMY_DATE,
+    crashId,
+    metadata
+  );
   let count = await m.aggregateEventsFiles();
   Assert.equal(count, 1);
 
@@ -339,12 +333,13 @@ add_task(async function test_main_crash_event_file_noenv() {
 
 add_task(async function test_crash_submission_event_file() {
   let m = await getManager();
-  await m.createEventsFile("1", "crash.main.2", DUMMY_DATE, "crash1");
+  await m.createEventsFile("1", "crash.main.3", DUMMY_DATE, "crash1", "{}");
   await m.createEventsFile(
     "1-submission",
     "crash.submission.1",
     DUMMY_DATE_2,
-    "crash1\nfalse\n"
+    "crash1",
+    "false\n"
   );
 
   // The line below has been intentionally commented out to make sure that
@@ -354,7 +349,8 @@ add_task(async function test_crash_submission_event_file() {
     "2-submission",
     "crash.submission.1",
     DUMMY_DATE_2,
-    "crash2\ntrue\nbp-2"
+    "crash2",
+    "true\nbp-2"
   );
   let count = await m.aggregateEventsFiles();
   Assert.equal(count, 3);
@@ -402,7 +398,13 @@ add_task(async function test_high_water_mark() {
   let store = await m._getStore();
 
   for (let i = 0; i < store.HIGH_WATER_DAILY_THRESHOLD + 1; i++) {
-    await m.createEventsFile("m" + i, "crash.main.2", DUMMY_DATE, "m" + i);
+    await m.createEventsFile(
+      "m" + i,
+      "crash.main.3",
+      DUMMY_DATE,
+      "m" + i,
+      "{}"
+    );
   }
 
   let count = await m.aggregateEventsFiles();

@@ -1,10 +1,9 @@
-const { parseKeyValuePairsFromFile } = ChromeUtils.import(
-  "resource://gre/modules/KeyValueParser.jsm"
-);
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 var success = false;
 var observerFired = false;
+var observerPromise = null;
 
 var testObserver = {
   idleHang: true,
@@ -34,37 +33,39 @@ var testObserver = {
     pluginExtraFile.append(pluginId + ".extra");
     ok(pluginExtraFile.exists(), "plugin extra file exists");
 
-    let extraData = parseKeyValuePairsFromFile(pluginExtraFile);
+    observerPromise = OS.File.read(pluginExtraFile.path, {
+      encoding: "utf-8",
+    }).then(json => {
+      let extraData = JSON.parse(json);
 
-    // check additional dumps
+      // check additional dumps
+      ok(
+        "additional_minidumps" in extraData,
+        "got field for additional minidumps"
+      );
+      is(
+        additionalDumps,
+        extraData.additional_minidumps,
+        "the annotation matches the propbag entry"
+      );
+      let dumpNames = extraData.additional_minidumps.split(",");
+      ok(dumpNames.includes("browser"), "browser in additional_minidumps");
 
-    ok(
-      "additional_minidumps" in extraData,
-      "got field for additional minidumps"
-    );
-    is(
-      additionalDumps,
-      extraData.additional_minidumps,
-      "the annotation matches the propbag entry"
-    );
-    let dumpNames = extraData.additional_minidumps.split(",");
-    ok(dumpNames.includes("browser"), "browser in additional_minidumps");
+      for (let name of dumpNames) {
+        let file = profD.clone();
+        file.append(pluginId + "-" + name + ".dmp");
+        ok(file.exists(), "additional dump '" + name + "' exists");
+      }
 
-    for (let name of dumpNames) {
-      let file = profD.clone();
-      file.append(pluginId + "-" + name + ".dmp");
-      ok(file.exists(), "additional dump '" + name + "' exists");
-    }
-
-    // check cpu usage field
-
-    ok("PluginCpuUsage" in extraData, "got extra field for plugin cpu usage");
-    let cpuUsage = parseFloat(extraData.PluginCpuUsage);
-    if (this.idleHang) {
-      ok(cpuUsage == 0, "plugin cpu usage is 0%");
-    } else {
-      ok(cpuUsage > 0, "plugin cpu usage is >0%");
-    }
+      // check cpu usage field
+      ok("PluginCpuUsage" in extraData, "got extra field for plugin cpu usage");
+      let cpuUsage = parseFloat(extraData.PluginCpuUsage);
+      if (this.idleHang) {
+        ok(cpuUsage == 0, "plugin cpu usage is 0%");
+      } else {
+        ok(cpuUsage > 0, "plugin cpu usage is >0%");
+      }
+    });
   },
 
   QueryInterface: ChromeUtils.generateQI([
@@ -110,5 +111,7 @@ function onPluginCrashed(aEvent) {
 
   Services.obs.removeObserver(testObserver, "plugin-crashed");
 
-  SimpleTest.finish();
+  observerPromise.then(() => {
+    SimpleTest.finish();
+  });
 }

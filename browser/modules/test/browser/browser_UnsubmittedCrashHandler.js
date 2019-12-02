@@ -111,7 +111,7 @@ function createPendingCrashReports(howMany, accessDate) {
   );
   // CrashSubmit expects there to be a ServerURL key-value
   // pair in the .extra file, so we'll satisfy it.
-  let extraFileContents = "ServerURL=" + SERVER_URL;
+  let extraFileContents = JSON.stringify({ ServerURL: SERVER_URL });
 
   return (async function() {
     let uuids = [];

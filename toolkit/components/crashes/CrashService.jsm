@@ -6,9 +6,6 @@
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
 ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm", this);
-const { parseKeyValuePairs } = ChromeUtils.import(
-  "resource://gre/modules/KeyValueParser.jsm"
-);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
@@ -121,19 +118,8 @@ function processExtraFile(extraPath) {
     try {
       let decoder = new TextDecoder();
       let extraData = await OS.File.read(extraPath);
-      let keyValuePairs = parseKeyValuePairs(decoder.decode(extraData));
 
-      // When reading from an .extra file literal '\\n' sequences are
-      // automatically unescaped to two backslashes plus a newline, so we need
-      // to re-escape them into '\\n' again so that the fields holding JSON
-      // strings are valid.
-      ["TelemetryEnvironment", "StackTraces"].forEach(field => {
-        if (field in keyValuePairs) {
-          keyValuePairs[field] = keyValuePairs[field].replace(/\n/g, "n");
-        }
-      });
-
-      return keyValuePairs;
+      return JSON.parse(decoder.decode(extraData));
     } catch (e) {
       Cu.reportError(e);
       return {};

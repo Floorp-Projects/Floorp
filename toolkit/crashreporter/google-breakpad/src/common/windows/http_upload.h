@@ -29,7 +29,7 @@
 
 // HTTPUpload provides a "nice" API to send a multipart HTTP(S) POST
 // request using wininet.  It currently supports requests that contain
-// a set of string parameters (key/value pairs), and a file to upload.
+// parameters encoded in a JSON string, and a file to upload.
 
 #ifndef COMMON_WINDOWS_HTTP_UPLOAD_H_
 #define COMMON_WINDOWS_HTTP_UPLOAD_H_
@@ -47,10 +47,10 @@
 
 namespace google_breakpad {
 
-using std::string;
-using std::wstring;
 using std::map;
+using std::string;
 using std::vector;
+using std::wstring;
 
 class HTTPUpload {
  public:
@@ -58,15 +58,14 @@ class HTTPUpload {
   // request to the given URL.
   // Each key in |files| is the name of the file part of the request
   // (i.e. it corresponds to the name= attribute on an <input type="file">.
-  // Parameter names must contain only printable ASCII characters,
-  // and may not contain a quote (") character.
+  // Parameters are specified as a JSON-encoded string in |parameters|.
   // Only HTTP(S) URLs are currently supported.  Returns true on success.
   // If the request is successful and response_body is non-NULL,
   // the response body will be returned in response_body.
   // If response_code is non-NULL, it will be set to the HTTP response code
   // received (or 0 if the request failed before getting an HTTP response).
   static bool SendRequest(const wstring &url,
-                          const map<wstring, wstring> &parameters,
+                          const string &parameters,
                           const map<wstring, wstring> &files,
                           int *timeout,
                           wstring *response_body,
@@ -87,10 +86,10 @@ class HTTPUpload {
   // Generates a HTTP request header for a multipart form submit.
   static wstring GenerateRequestHeader(const wstring &boundary);
 
-  // Given a set of parameters, a set of upload files, and a file part name,
+  // Given a parameter string, a set of upload files, and a file part name,
   // generates a multipart request body string with these parameters
   // and minidump contents.  Returns true on success.
-  static bool GenerateRequestBody(const map<wstring, wstring> &parameters,
+  static bool GenerateRequestBody(const string &parameters,
                                   const map<wstring, wstring> &files,
                                   const wstring &boundary,
                                   string *request_body);
@@ -108,11 +107,6 @@ class HTTPUpload {
 
   // Converts a UTF16 string to specified code page.
   static string WideToMBCP(const wstring &wide, unsigned int cp);
-
-  // Checks that the given list of parameters has only printable
-  // ASCII characters in the parameter name, and does not contain
-  // any quote (") characters.  Returns true if so.
-  static bool CheckParameters(const map<wstring, wstring> &parameters);
 
   // No instances of this class should be created.
   // Disallow all constructors, destructors, and operator=.
