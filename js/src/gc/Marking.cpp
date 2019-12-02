@@ -653,7 +653,7 @@ void GCMarker::markEphemeronValues(gc::Cell* markedCell,
 
 template <typename T>
 void GCMarker::markImplicitEdgesHelper(T markedThing) {
-  if (!isWeakMarkingTracer()) {
+  if (!isWeakMarking()) {
     return;
   }
 
@@ -1593,7 +1593,7 @@ GCMarker::MarkQueueProgress GCMarker::processMarkQueue() {
         return QueueYielded;
       } else if (js::StringEqualsLiteral(str, "enter-weak-marking-mode") ||
                  js::StringEqualsLiteral(str, "abort-weak-marking-mode")) {
-        if (!isWeakMarkingTracer() && !linearWeakMarkingDisabled_) {
+        if (state == MarkingState::RegularMarking) {
           // We can't enter weak marking mode at just any time, so instead
           // we'll stop processing the queue and continue on with the GC. Once
           // we enter weak marking mode, we can continue to the rest of the
@@ -2430,11 +2430,11 @@ GCMarker::GCMarker(JSRuntime* rt)
       color(MarkColor::Black),
       mainStackColor(MarkColor::Black),
       delayedMarkingList(nullptr),
-      delayedMarkingWorkAdded(false)
+      delayedMarkingWorkAdded(false),
+      state(MarkingState::NotActive)
 #ifdef DEBUG
       ,
       markLaterArenas(0),
-      started(false),
       strictCompartmentChecking(false),
       markQueue(rt),
       queuePos(0)
@@ -2448,12 +2448,9 @@ bool GCMarker::init(JSGCMode gcMode) {
 }
 
 void GCMarker::start() {
-#ifdef DEBUG
-  MOZ_ASSERT(!started);
-  started = true;
-#endif
+  MOZ_ASSERT(state == MarkingState::NotActive);
+  state = MarkingState::RegularMarking;
   color = MarkColor::Black;
-  linearWeakMarkingDisabled_ = false;
 
 #ifdef DEBUG
   queuePos = 0;
@@ -2465,15 +2462,11 @@ void GCMarker::start() {
 }
 
 void GCMarker::stop() {
-#ifdef DEBUG
   MOZ_ASSERT(isDrained());
-
-  MOZ_ASSERT(started);
-  started = false;
-
   MOZ_ASSERT(!delayedMarkingList);
   MOZ_ASSERT(markLaterArenas == 0);
-#endif
+  MOZ_ASSERT(state != MarkingState::NotActive);
+  state = MarkingState::NotActive;
 
   stack.clear();
   auxStack.clear();
@@ -2582,12 +2575,9 @@ void GCMarker::repush(JSObject* obj) {
 void GCMarker::enterWeakMarkingMode() {
   MOZ_ASSERT(runtime()->gc.nursery().isEmpty());
 
-  MOZ_ASSERT(tag_ == TracerKindTag::Marking);
-  if (linearWeakMarkingDisabled_) {
-    return;
-  }
-
-  if (weakMapAction() != ExpandWeakMaps) {
+  MOZ_ASSERT(weakMapAction() == ExpandWeakMaps);
+  MOZ_ASSERT(state != MarkingState::WeakMarking);
+  if (state == MarkingState::IterativeMarking) {
     return;
   }
 
@@ -2598,7 +2588,10 @@ void GCMarker::enterWeakMarkingMode() {
   // weakmap marking, this initialization step will become unnecessary, as
   // the table will already hold all such keys.)
 
-  tag_ = TracerKindTag::WeakMarking;
+  // Set state before doing anything else, so any new key that is marked
+  // during the following gcWeakKeys scan will itself be looked up in
+  // gcWeakKeys and marked according to ephemeron rules.
+  state = MarkingState::WeakMarking;
 
   // If there was an 'enter-weak-marking-mode' token in the queue, then it
   // and everything after it will still be in the queue so we can process
@@ -2616,10 +2609,12 @@ void GCMarker::enterWeakMarkingMode() {
 }
 
 void GCMarker::leaveWeakMarkingMode() {
-  MOZ_ASSERT_IF(
-      weakMapAction() == ExpandWeakMaps && !linearWeakMarkingDisabled_,
-      tag_ == TracerKindTag::WeakMarking);
-  tag_ = TracerKindTag::Marking;
+  MOZ_ASSERT(state == MarkingState::WeakMarking ||
+             state == MarkingState::IterativeMarking);
+
+  if (state != MarkingState::IterativeMarking) {
+    state = MarkingState::RegularMarking;
+  }
 
   // Table is expensive to maintain when not in weak marking mode, so we'll
   // rebuild it upon entry rather than allow it to contain stale data.
@@ -2780,7 +2775,7 @@ void gc::PushArena(GCMarker* gcmarker, Arena* arena) {
 
 #ifdef DEBUG
 void GCMarker::checkZone(void* p) {
-  MOZ_ASSERT(started);
+  MOZ_ASSERT(state != MarkingState::NotActive);
   DebugOnly<Cell*> cell = static_cast<Cell*>(p);
   MOZ_ASSERT_IF(cell->isTenured(),
                 cell->asTenured().zone()->isCollectingFromAnyThread());
