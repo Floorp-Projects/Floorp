@@ -2402,14 +2402,11 @@ bool nsUrlClassifierDBService::ShutdownHasStarted() {
 
 // static
 nsUrlClassifierDBServiceWorker* nsUrlClassifierDBService::GetWorker() {
-  nsresult rv;
-  RefPtr<nsUrlClassifierDBService> service =
-      nsUrlClassifierDBService::GetInstance(&rv);
-  if (!inst) {
+  if (!sUrlClassifierDBService) {
     return nullptr;
   }
 
-  return service->mWorker;
+  return sUrlClassifierDBService->mWorker;
 }
 
 NS_IMETHODIMP
