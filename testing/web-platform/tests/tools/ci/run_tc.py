@@ -119,17 +119,17 @@ def start_userspace_oom_killer():
 
 
 def make_hosts_file():
-    subprocess.check_call(["sudo", "sh", "-c", "./wpt make-hosts-file >> /etc/hosts"])
+    run(["sudo", "sh", "-c", "./wpt make-hosts-file >> /etc/hosts"])
 
 
 def checkout_revision(rev):
-    subprocess.check_call(["git", "checkout", "--quiet", rev])
+    run(["git", "checkout", "--quiet", rev])
 
 
 def install_certificates():
-    subprocess.check_call(["sudo", "cp", "tools/certs/cacert.pem",
-                           "/usr/local/share/ca-certificates/cacert.crt"])
-    subprocess.check_call(["sudo", "update-ca-certificates"])
+    run(["sudo", "cp", "tools/certs/cacert.pem",
+         "/usr/local/share/ca-certificates/cacert.crt"])
+    run(["sudo", "update-ca-certificates"])
 
 
 def install_chrome(channel):
@@ -317,7 +317,7 @@ def main():
     args = get_parser().parse_args()
 
     if args.rev is not None:
-        task_head = subprocess.check_output(["git", "rev-parse", "task_head"]).strip()
+        task_head = run(["git", "rev-parse", "task_head"], return_stdout=True).strip()
         if task_head != args.rev:
             print("CRITICAL: task_head points at %s, expected %s. "
                   "This may be because the branch was updated" % (task_head, args.rev))
