@@ -15,6 +15,8 @@
 #include "nsRefPtrHashtable.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "nsDataHashtable.h"
+#include "nsThread.h"
 
 namespace mozilla {
 namespace dom {
@@ -103,13 +105,11 @@ class PresentationServiceBase {
       }
     }
 
-    nsresult UpdateWindowId(const nsAString& aSessionId,
-                            const uint64_t aWindowId) {
+    void UpdateWindowId(const nsAString& aSessionId, const uint64_t aWindowId) {
       MOZ_ASSERT(NS_IsMainThread());
 
       RemoveSessionId(aSessionId);
       AddSessionId(aWindowId, aSessionId);
-      return NS_OK;
     }
 
     void Clear() {
@@ -213,8 +213,8 @@ class PresentationServiceBase {
       }
     }
 
-    nsresult DoNotifyAvailableChange(
-        const nsTArray<nsString>& aAvailabilityUrls, bool aAvailable) {
+    void DoNotifyAvailableChange(const nsTArray<nsString>& aAvailabilityUrls,
+                                 bool aAvailable) {
       typedef nsClassHashtable<nsISupportsHashKey, nsTArray<nsString>>
           ListenerToUrlsMap;
       ListenerToUrlsMap availabilityListenerTable;
@@ -245,7 +245,6 @@ class PresentationServiceBase {
         Unused << NS_WARN_IF(NS_FAILED(
             listener->NotifyAvailableChange(*it.UserData(), aAvailable)));
       }
-      return NS_OK;
     }
 
     void GetAvailbilityUrlByAvailability(nsTArray<nsString>& aOutArray,
@@ -319,17 +318,17 @@ class PresentationServiceBase {
     }
   }
 
-  nsresult UpdateWindowIdBySessionIdInternal(const nsAString& aSessionId,
-                                             uint8_t aRole,
-                                             const uint64_t aWindowId) {
+  void UpdateWindowIdBySessionIdInternal(const nsAString& aSessionId,
+                                         uint8_t aRole,
+                                         const uint64_t aWindowId) {
     MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
                aRole == nsIPresentationService::ROLE_RECEIVER);
 
     if (aRole == nsIPresentationService::ROLE_CONTROLLER) {
-      return mControllerSessionIdManager.UpdateWindowId(aSessionId, aWindowId);
+      mControllerSessionIdManager.UpdateWindowId(aSessionId, aWindowId);
+    } else {
+      mReceiverSessionIdManager.UpdateWindowId(aSessionId, aWindowId);
     }
-
-    return mReceiverSessionIdManager.UpdateWindowId(aSessionId, aWindowId);
   }
 
   // Store the responding listener based on the window ID of the (in-process or
