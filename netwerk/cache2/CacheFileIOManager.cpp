@@ -387,9 +387,9 @@ nsresult CacheFileHandles::GetHandle(const SHA1Sum::Hash* aHash,
   return NS_OK;
 }
 
-nsresult CacheFileHandles::NewHandle(const SHA1Sum::Hash* aHash, bool aPriority,
-                                     CacheFileHandle::PinningStatus aPinning,
-                                     CacheFileHandle** _retval) {
+already_AddRefed<CacheFileHandle> CacheFileHandles::NewHandle(
+    const SHA1Sum::Hash* aHash, bool aPriority,
+    CacheFileHandle::PinningStatus aPinning) {
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
   MOZ_ASSERT(aHash);
 
@@ -417,9 +417,7 @@ nsresult CacheFileHandles::NewHandle(const SHA1Sum::Hash* aHash, bool aPriority,
       ("CacheFileHandles::NewHandle() hash=%08x%08x%08x%08x%08x "
        "created new handle %p, entry=%p",
        LOGSHA1(aHash), handle.get(), entry));
-
-  handle.forget(_retval);
-  return NS_OK;
+  return handle.forget();
 }
 
 void CacheFileHandles::RemoveHandle(CacheFileHandle* aHandle) {
@@ -1207,7 +1205,7 @@ nsresult CacheFileIOManager::Shutdown() {
   return NS_OK;
 }
 
-nsresult CacheFileIOManager::ShutdownInternal() {
+void CacheFileIOManager::ShutdownInternal() {
   LOG(("CacheFileIOManager::ShutdownInternal() [this=%p]", this));
 
   MOZ_ASSERT(mIOThread->IsCurrentThread());
@@ -1275,8 +1273,6 @@ nsresult CacheFileIOManager::ShutdownInternal() {
     mContextEvictor->Shutdown();
     mContextEvictor = nullptr;
   }
-
-  return NS_OK;
 }
 
 // static
@@ -1459,7 +1455,7 @@ nsresult CacheFileIOManager::UnscheduleMetadataWrite(CacheFile* aFile) {
   return target->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
 }
 
-nsresult CacheFileIOManager::UnscheduleMetadataWriteInternal(CacheFile* aFile) {
+void CacheFileIOManager::UnscheduleMetadataWriteInternal(CacheFile* aFile) {
   MOZ_ASSERT(IsOnIOThreadOrCeased());
 
   mScheduledMetadataWrites.RemoveElement(aFile);
@@ -1468,8 +1464,6 @@ nsresult CacheFileIOManager::UnscheduleMetadataWriteInternal(CacheFile* aFile) {
     mMetadataWritesTimer->Cancel();
     mMetadataWritesTimer = nullptr;
   }
-
-  return NS_OK;
 }
 
 // static
@@ -1484,7 +1478,7 @@ nsresult CacheFileIOManager::ShutdownMetadataWriteScheduling() {
   return target->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
 }
 
-nsresult CacheFileIOManager::ShutdownMetadataWriteSchedulingInternal() {
+void CacheFileIOManager::ShutdownMetadataWriteSchedulingInternal() {
   MOZ_ASSERT(IsOnIOThreadOrCeased());
 
   nsTArray<RefPtr<CacheFile> > files;
@@ -1498,8 +1492,6 @@ nsresult CacheFileIOManager::ShutdownMetadataWriteSchedulingInternal() {
     mMetadataWritesTimer->Cancel();
     mMetadataWritesTimer = nullptr;
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1590,9 +1582,7 @@ nsresult CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash* aHash,
       handle = nullptr;
     }
 
-    rv = mHandles.NewHandle(aHash, aFlags & PRIORITY, pinning,
-                            getter_AddRefs(handle));
-    NS_ENSURE_SUCCESS(rv, rv);
+    handle = mHandles.NewHandle(aHash, aFlags & PRIORITY, pinning);
 
     bool exists;
     rv = file->Exists(&exists);
@@ -1647,10 +1637,7 @@ nsresult CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash* aHash,
     pinning = CacheFileHandle::PinningStatus::UNKNOWN;
   }
 
-  rv = mHandles.NewHandle(aHash, aFlags & PRIORITY, pinning,
-                          getter_AddRefs(handle));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  handle = mHandles.NewHandle(aHash, aFlags & PRIORITY, pinning);
   if (exists) {
     // If this file has been found evicted through the context file evictor
     // above for any of pinned or non-pinned state, these calls ensure we doom
@@ -1777,9 +1764,8 @@ nsresult CacheFileIOManager::OpenSpecialFileInternal(
   return NS_OK;
 }
 
-nsresult CacheFileIOManager::CloseHandleInternal(CacheFileHandle* aHandle) {
+void CacheFileIOManager::CloseHandleInternal(CacheFileHandle* aHandle) {
   nsresult rv;
-
   LOG(("CacheFileIOManager::CloseHandleInternal() [handle=%p]", aHandle));
 
   MOZ_ASSERT(!aHandle->IsClosed());
@@ -1823,8 +1809,6 @@ nsresult CacheFileIOManager::CloseHandleInternal(CacheFileHandle* aHandle) {
       mHandles.RemoveHandle(aHandle);
     }
   }
-
-  return NS_OK;
 }
 
 // static
@@ -2475,11 +2459,8 @@ nsresult CacheFileIOManager::GetEntryInfo(
   }
 
   // Now get the context + enhance id + URL from the key.
-  nsAutoCString key;
-  metadata->GetKey(key);
-
   RefPtr<nsILoadContextInfo> info =
-      CacheFileUtils::ParseKey(key, &enhanceId, &uriSpec);
+      CacheFileUtils::ParseKey(metadata->GetKey(), &enhanceId, &uriSpec);
   MOZ_ASSERT(info);
   if (!info) {
     return NS_OK;
@@ -2487,18 +2468,9 @@ nsresult CacheFileIOManager::GetEntryInfo(
 
   // Pick all data to pass to the callback.
   int64_t dataSize = metadata->Offset();
-  uint32_t fetchCount;
-  if (NS_FAILED(metadata->GetFetchCount(&fetchCount))) {
-    fetchCount = 0;
-  }
-  uint32_t expirationTime;
-  if (NS_FAILED(metadata->GetExpirationTime(&expirationTime))) {
-    expirationTime = 0;
-  }
-  uint32_t lastModified;
-  if (NS_FAILED(metadata->GetLastModified(&lastModified))) {
-    lastModified = 0;
-  }
+  uint32_t fetchCount = metadata->GetFetchCount();
+  uint32_t expirationTime = metadata->GetExpirationTime();
+  uint32_t lastModified = metadata->GetLastModified();
 
   // Call directly on the callback.
   aCallback->OnEntryInfo(uriSpec, enhanceId, dataSize, fetchCount, lastModified,
@@ -3195,8 +3167,7 @@ nsresult CacheFileIOManager::CacheIndexStateChanged() {
 
   // We have to re-distatch even if we are on IO thread to prevent reentering
   // the lock in CacheIndex
-  nsCOMPtr<nsIRunnable> ev;
-  ev = NewRunnableMethod(
+  nsCOMPtr<nsIRunnable> ev = NewRunnableMethod(
       "net::CacheFileIOManager::CacheIndexStateChangedInternal",
       gInstance.get(), &CacheFileIOManager::CacheIndexStateChangedInternal);
 
@@ -3211,18 +3182,17 @@ nsresult CacheFileIOManager::CacheIndexStateChanged() {
   return NS_OK;
 }
 
-nsresult CacheFileIOManager::CacheIndexStateChangedInternal() {
+void CacheFileIOManager::CacheIndexStateChangedInternal() {
   if (mShuttingDown) {
     // ignore notification during shutdown
-    return NS_OK;
+    return;
   }
 
   if (!mContextEvictor) {
-    return NS_OK;
+    return;
   }
 
   mContextEvictor->CacheIndexStateChanged();
-  return NS_OK;
 }
 
 nsresult CacheFileIOManager::TrashDirectory(nsIFile* aFile) {

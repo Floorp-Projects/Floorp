@@ -370,4 +370,5 @@ assert.throws(TypeError, function() {
     }
   };
 }, '0n + {valueOf: function() {return {};}, toString: function() {return {};}} throws TypeError');
+
 reportCompare(0, 0);

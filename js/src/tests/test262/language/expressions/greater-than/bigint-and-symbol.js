@@ -12,4 +12,5 @@ assert.throws(TypeError, function() {
 assert.throws(TypeError, function() {
   Symbol('2') > 3n;
 }, 'Symbol("2") > 3n throws TypeError');
+
 reportCompare(0, 0);

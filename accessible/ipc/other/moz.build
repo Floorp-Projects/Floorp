@@ -4,11 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# With --disable-accessibility, we need to compile PDocAccessible.ipdl, but
-# not the C++.
-IPDL_SOURCES += ['PDocAccessible.ipdl']
 
 if CONFIG['ACCESSIBILITY']:
+    IPDL_SOURCES += ['PDocAccessible.ipdl']
+
     EXPORTS.mozilla.a11y += [
         'DocAccessibleChild.h',
         'ProxyAccessible.h',

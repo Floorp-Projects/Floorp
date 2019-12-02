@@ -1,7 +1,7 @@
 /* import-globals-from ../unit/head_crashreporter.js */
 load("../unit/head_crashreporter.js");
 
-function run_test() {
+add_task(async function run_test() {
   if (!("@mozilla.org/toolkit/crash-reporter;1" in Cc)) {
     dump(
       "INFO | test_content_rust_panic.js | Can't test crashreporter in a non-libxul build.\n"
@@ -10,7 +10,7 @@ function run_test() {
   }
 
   // Try crashing with a Rust panic
-  do_triggered_content_crash(
+  await do_triggered_content_crash(
     function() {
       Cc["@mozilla.org/xpcom/debug;1"]
         .getService(Ci.nsIDebug2)
@@ -20,4 +20,4 @@ function run_test() {
       Assert.equal(extra.MozCrashReason, "OH NO\nOH NOES!");
     }
   );
-}
+});

@@ -43,4 +43,5 @@ assert.sameValue(4n >> {
     return 2n;
   }
 }, 1n, 'The result of (4n >> {toString: function() {return 2n;}}) is 1n');
+
 reportCompare(0, 0);

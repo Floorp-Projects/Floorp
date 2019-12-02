@@ -29,7 +29,7 @@ class nsBufferedStream : public nsISeekableStream {
 
   nsBufferedStream();
 
-  nsresult Close();
+  void Close();
 
  protected:
   virtual ~nsBufferedStream();

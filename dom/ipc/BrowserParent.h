@@ -475,17 +475,17 @@ class BrowserParent final : public PBrowserParent,
 
   bool DeallocPColorPickerParent(PColorPickerParent* aColorPicker);
 
+#ifdef ACCESSIBILITY
   PDocAccessibleParent* AllocPDocAccessibleParent(PDocAccessibleParent*,
                                                   const uint64_t&,
                                                   const uint32_t&,
                                                   const IAccessibleHolder&);
-
   bool DeallocPDocAccessibleParent(PDocAccessibleParent*);
-
   virtual mozilla::ipc::IPCResult RecvPDocAccessibleConstructor(
       PDocAccessibleParent* aDoc, PDocAccessibleParent* aParentDoc,
       const uint64_t& aParentID, const uint32_t& aMsaaID,
       const IAccessibleHolder& aDocCOMProxy) override;
+#endif
 
   mozilla::ipc::IPCResult RecvNewWindowGlobal(
       ManagedEndpoint<PWindowGlobalParent>&& aEndpoint,

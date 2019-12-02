@@ -85,4 +85,5 @@ assert.sameValue({
     return 1n;
   }
 }, 0b10n, 'The result of (({valueOf: function() {return 0b101n;}}) >> {valueOf: function() {return 1n;}}) is 0b10n');
+
 reportCompare(0, 0);

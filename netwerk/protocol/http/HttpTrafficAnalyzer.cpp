@@ -176,7 +176,7 @@ HttpTrafficCategory HttpTrafficAnalyzer::CreateTrafficCategory(
   return HttpTrafficCategory::eInvalid;
 }
 
-nsresult HttpTrafficAnalyzer::IncrementHttpTransaction(
+void HttpTrafficAnalyzer::IncrementHttpTransaction(
     HttpTrafficCategory aCategory) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(StaticPrefs::network_traffic_analyzer_enabled());
@@ -187,10 +187,9 @@ nsresult HttpTrafficAnalyzer::IncrementHttpTransaction(
 
   Telemetry::AccumulateCategoricalKeyed(NS_LITERAL_CSTRING("Transaction"),
                                         gTelemetryLabel[aCategory]);
-  return NS_OK;
 }
 
-nsresult HttpTrafficAnalyzer::IncrementHttpConnection(
+void HttpTrafficAnalyzer::IncrementHttpConnection(
     HttpTrafficCategory aCategory) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(StaticPrefs::network_traffic_analyzer_enabled());
@@ -201,10 +200,9 @@ nsresult HttpTrafficAnalyzer::IncrementHttpConnection(
 
   Telemetry::AccumulateCategoricalKeyed(NS_LITERAL_CSTRING("Connection"),
                                         gTelemetryLabel[aCategory]);
-  return NS_OK;
 }
 
-nsresult HttpTrafficAnalyzer::IncrementHttpConnection(
+void HttpTrafficAnalyzer::IncrementHttpConnection(
     nsTArray<HttpTrafficCategory>&& aCategories) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(StaticPrefs::network_traffic_analyzer_enabled());
@@ -242,14 +240,13 @@ nsresult HttpTrafficAnalyzer::IncrementHttpConnection(
     break;
   }
 
-  Unused << IncrementHttpConnection(best);
-  return NS_OK;
+  IncrementHttpConnection(best);
 }
 
 #define CLAMP_U32(num) \
   Clamp<uint32_t>(num, 0, std::numeric_limits<uint32_t>::max())
 
-nsresult HttpTrafficAnalyzer::AccumulateHttpTransferredSize(
+void HttpTrafficAnalyzer::AccumulateHttpTransferredSize(
     HttpTrafficCategory aCategory, uint64_t aBytesRead, uint64_t aBytesSent) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(StaticPrefs::network_traffic_analyzer_enabled());
@@ -265,7 +262,6 @@ nsresult HttpTrafficAnalyzer::AccumulateHttpTransferredSize(
     Telemetry::ScalarAdd(Telemetry::ScalarID::NETWORKING_DATA_TRANSFERRED_V3_KB,
                          NS_ConvertUTF8toUTF16(gKeyName[aCategory]), total);
   }
-  return NS_OK;
 }
 
 }  // namespace net

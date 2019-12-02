@@ -43,7 +43,7 @@ class PresentationService final
 
   virtual ~PresentationService();
   void HandleShutdown();
-  nsresult HandleDeviceAdded(nsIPresentationDevice* aDevice);
+  void HandleDeviceAdded(nsIPresentationDevice* aDevice);
   nsresult HandleDeviceRemoved();
   nsresult HandleSessionRequest(nsIPresentationSessionRequest* aRequest);
   nsresult HandleTerminateRequest(nsIPresentationTerminateRequest* aRequest);

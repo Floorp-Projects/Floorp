@@ -13,7 +13,6 @@
 
 #include "Authenticode.h"
 #include "BaseProfiler.h"
-#include "CrashAnnotations.h"
 #include "nsAutoPtr.h"
 #include "nsWindowsDllInterceptor.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
@@ -47,7 +46,7 @@ glue::detail::DllServicesBase* gDllServices;
 using namespace mozilla;
 
 using CrashReporter::Annotation;
-using CrashReporter::AnnotationToString;
+using CrashReporter::AnnotationWriter;
 
 #define DLL_BLOCKLIST_ENTRY(name, ...) {name, __VA_ARGS__},
 #define DLL_BLOCKLIST_STRING_TYPE const char*
@@ -217,6 +216,26 @@ class ReentrancySentinel {
 
 std::map<DWORD, const char*>* ReentrancySentinel::sThreadMap;
 
+class WritableBuffer {
+ public:
+  WritableBuffer() : mBuffer{0}, mLen(0) {}
+
+  void Write(const char* aData, size_t aLen) {
+    size_t writable_len = std::min(aLen, Available());
+    memcpy(mBuffer + mLen, aData, writable_len);
+    mLen += writable_len;
+  }
+
+  size_t const Length() { return mLen; }
+  const char* Data() { return mBuffer; }
+
+ private:
+  size_t const Available() { return sizeof(mBuffer) - mLen; }
+
+  char mBuffer[1024];
+  size_t mLen;
+};
+
 /**
  * This is a linked list of DLLs that have been blocked. It doesn't use
  * mozilla::LinkedList because this is an append-only list and doesn't need
@@ -226,9 +245,9 @@ class DllBlockSet {
  public:
   static void Add(const char* name, unsigned long long version);
 
-  // Write the list of blocked DLLs to a file HANDLE. This method is run after
-  // a crash occurs and must therefore not use the heap, etc.
-  static void Write(HANDLE file);
+  // Write the list of blocked DLLs to a WritableBuffer object. This method is
+  // run after a crash occurs and must therefore not use the heap, etc.
+  static void Write(WritableBuffer& buffer);
 
  private:
   DllBlockSet(const char* name, unsigned long long version)
@@ -256,7 +275,7 @@ void DllBlockSet::Add(const char* name, unsigned long long version) {
   gFirst = n;
 }
 
-void DllBlockSet::Write(HANDLE file) {
+void DllBlockSet::Write(WritableBuffer& buffer) {
   // It would be nicer to use AutoCriticalSection here. However, its destructor
   // might not run if an exception occurs, in which case we would never leave
   // the critical section. (MSVC warns about this possibility.) So we
@@ -266,12 +285,11 @@ void DllBlockSet::Write(HANDLE file) {
   // Because this method is called after a crash occurs, and uses heap memory,
   // protect this entire block with a structured exception handler.
   MOZ_SEH_TRY {
-    DWORD nBytes;
     for (DllBlockSet* b = gFirst; b; b = b->mNext) {
       // write name[,v.v.v.v];
-      WriteFile(file, b->mName, strlen(b->mName), &nBytes, nullptr);
+      buffer.Write(b->mName, strlen(b->mName));
       if (b->mVersion != DllBlockInfo::ALL_VERSIONS) {
-        WriteFile(file, ",", 1, &nBytes, nullptr);
+        buffer.Write(",", 1);
         uint16_t parts[4];
         parts[0] = b->mVersion >> 48;
         parts[1] = (b->mVersion >> 32) & 0xFFFF;
@@ -279,14 +297,14 @@ void DllBlockSet::Write(HANDLE file) {
         parts[3] = b->mVersion & 0xFFFF;
         for (int p = 0; p < 4; ++p) {
           char buf[32];
-          ltoa(parts[p], buf, 10);
-          WriteFile(file, buf, strlen(buf), &nBytes, nullptr);
+          _ltoa_s(parts[p], buf, sizeof(buf), 10);
+          buffer.Write(buf, strlen(buf));
           if (p != 3) {
-            WriteFile(file, ".", 1, &nBytes, nullptr);
+            buffer.Write(".", 1);
           }
         }
       }
-      WriteFile(file, ";", 1, &nBytes, nullptr);
+      buffer.Write(";", 1);
     }
   }
   MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {}
@@ -686,31 +704,22 @@ MFBT_API void DllBlocklist_Initialize(uint32_t aInitFlags) {
 MFBT_API void DllBlocklist_Shutdown() {}
 #endif  // DEBUG
 
-static void WriteAnnotation(HANDLE aFile, Annotation aAnnotation,
-                            const char* aValue, DWORD* aNumBytes) {
-  const char* str = AnnotationToString(aAnnotation);
-  WriteFile(aFile, str, strlen(str), aNumBytes, nullptr);
-  WriteFile(aFile, "=", 1, aNumBytes, nullptr);
-  WriteFile(aFile, aValue, strlen(aValue), aNumBytes, nullptr);
-}
+static void InternalWriteNotes(AnnotationWriter& aWriter) {
+  WritableBuffer buffer;
+  DllBlockSet::Write(buffer);
 
-static void InternalWriteNotes(HANDLE file) {
-  DWORD nBytes;
-
-  WriteAnnotation(file, Annotation::BlockedDllList, "", &nBytes);
-  DllBlockSet::Write(file);
-  WriteFile(file, "\n", 1, &nBytes, nullptr);
+  aWriter.Write(Annotation::BlockedDllList, buffer.Data(), buffer.Length());
 
   if (sBlocklistInitFailed) {
-    WriteAnnotation(file, Annotation::BlocklistInitFailed, "1\n", &nBytes);
+    aWriter.Write(Annotation::BlocklistInitFailed, "1");
   }
 
   if (sUser32BeforeBlocklist) {
-    WriteAnnotation(file, Annotation::User32BeforeBlocklist, "1\n", &nBytes);
+    aWriter.Write(Annotation::User32BeforeBlocklist, "1");
   }
 }
 
-using WriterFn = void (*)(HANDLE);
+using WriterFn = void (*)(AnnotationWriter&);
 static WriterFn gWriterFn = &InternalWriteNotes;
 
 static void GetNativeNtBlockSetWriter() {
@@ -721,9 +730,9 @@ static void GetNativeNtBlockSetWriter() {
   }
 }
 
-MFBT_API void DllBlocklist_WriteNotes(HANDLE file) {
+MFBT_API void DllBlocklist_WriteNotes(AnnotationWriter& aWriter) {
   MOZ_ASSERT(gWriterFn);
-  gWriterFn(file);
+  gWriterFn(aWriter);
 }
 
 MFBT_API bool DllBlocklist_CheckStatus() {

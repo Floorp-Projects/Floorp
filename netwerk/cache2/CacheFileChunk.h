@@ -140,7 +140,7 @@ class CacheFileChunk final : public CacheFileIOListener,
                 CacheHash::Hash16_t aHash, CacheFileChunkListener* aCallback);
   nsresult Write(CacheFileHandle* aHandle, CacheFileChunkListener* aCallback);
   void WaitForUpdate(CacheFileChunkListener* aCallback);
-  nsresult CancelWait(CacheFileChunkListener* aCallback);
+  void CancelWait(CacheFileChunkListener* aCallback);
   nsresult NotifyUpdateListeners();
 
   uint32_t Index() const;
@@ -182,7 +182,7 @@ class CacheFileChunk final : public CacheFileIOListener,
   void AssertOwnsLock() const;
 
   void UpdateDataSize(uint32_t aOffset, uint32_t aLen);
-  nsresult Truncate(uint32_t aOffset);
+  void Truncate(uint32_t aOffset);
 
   bool CanAllocate(uint32_t aSize) const;
   void BuffersAllocationChanged(uint32_t aFreed, uint32_t aAllocated);

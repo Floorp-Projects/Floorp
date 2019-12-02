@@ -37,6 +37,8 @@ std::string WideToUTF8(const std::wstring& wide, bool* success = 0);
 
 #endif
 
+#include "json/json.h"
+
 #define UI_CRASH_REPORTER_FILENAME "crashreporter"
 #define UI_MINIDUMP_ANALYZER_FILENAME "minidump-analyzer"
 #define UI_PING_SENDER_FILENAME "pingsender"
@@ -103,7 +105,7 @@ void LogMessage(const std::string& message);
 void DeleteDump();
 
 // Telemetry ping
-bool SendCrashPing(StringTable& strings, const std::string& hash,
+bool SendCrashPing(Json::Value& extra, const std::string& hash,
                    std::string& pingUuid, const std::string& pingDir);
 
 static const unsigned int kSaveCount = 10;
@@ -122,7 +124,7 @@ void UIShowDefaultUI();
 // Run the UI for when the app was launched with a dump file
 // Return true if the user sent (or tried to send) the crash report,
 // false if they chose not to, and it should be deleted.
-bool UIShowCrashUI(const StringTable& files, const StringTable& queryParameters,
+bool UIShowCrashUI(const StringTable& files, const Json::Value& queryParameters,
                    const std::string& sendURL,
                    const std::vector<std::string>& restartArgs);
 

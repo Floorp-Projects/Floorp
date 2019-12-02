@@ -47,19 +47,13 @@ def run_one_clang_format_batch(args):
         return e
 
 
-def map_file_to_source(abs_path, source):
-    # We have as an input an absolute path for whom we verify if it's a symlink,
-    # if so, we follow that symlink and we match it with elements from source,
-    # If the match is done we return abs_path, otherwise None.
-    assert isinstance(source, (list, tuple))
+def build_repo_relative_path(abs_path, repo_path):
+    '''Build path relative to repository root'''
 
     if os.path.islink(abs_path):
         abs_path = mozpath.realpath(abs_path)
 
-    # Look for abs_path in source
-    if abs_path in source:
-        return abs_path
-    return None
+    return mozpath.relpath(abs_path, repo_path)
 
 
 def prompt_bool(prompt, limit=5):
@@ -88,19 +82,18 @@ class StaticAnalysisSubCommand(SubCommand):
 
 
 class StaticAnalysisMonitor(object):
-    def __init__(self, srcdir, objdir, clang_tidy_config, source, total):
+    def __init__(self, srcdir, objdir, clang_tidy_config, total):
         self._total = total
         self._processed = 0
         self._current = None
         self._srcdir = srcdir
-        self._source = source
 
         self._clang_tidy_config = clang_tidy_config['clang_checkers']
         # Transform the configuration to support Regex
         for item in self._clang_tidy_config:
             if item['name'] == '-*':
                 continue
-            item['name'].replace('*', '.*')
+            item['name'] = item['name'].replace('*', '.*')
 
         from mozbuild.compilation.warnings import (
             WarningsCollector,
@@ -111,9 +104,8 @@ class StaticAnalysisMonitor(object):
 
         def on_warning(warning):
 
-            # Output paths relative to repository root
-            warning['filename'] = mozpath.relpath(
-                map_file_to_source(warning['filename'], self._source), self._srcdir)
+            # Output paths relative to repository root if the paths are under repo tree
+            warning['filename'] = build_repo_relative_path(warning['filename'], self._srcdir)
 
             self._warnings_database.insert(warning)
 
@@ -146,8 +138,7 @@ class StaticAnalysisMonitor(object):
         if line.find('clang-tidy') != -1:
             filename = line.split(' ')[-1]
             if os.path.isfile(filename):
-                self._current = mozpath.relpath(
-                    map_file_to_source(filename, self._source), self._srcdir)
+                self._current = build_repo_relative_path(filename, self._srcdir)
             else:
                 self._current = None
             self._processed = self._processed + 1
@@ -286,7 +277,7 @@ class StaticAnalysis(MachCommandBase):
             checks=checks, header_filter=header_filter, sources=source, jobs=jobs, fix=fix)
 
         monitor = StaticAnalysisMonitor(
-            self.topsrcdir, self.topobjdir, self._clang_tidy_config, source, total)
+            self.topsrcdir, self.topobjdir, self._clang_tidy_config, total)
 
         footer = StaticAnalysisFooter(self.log_manager.terminal, monitor)
         with StaticAnalysisOutputManager(self.log_manager, monitor, footer) as output_manager:
@@ -537,12 +528,6 @@ class StaticAnalysis(MachCommandBase):
     def dump_cov_artifact(self, cov_results, source, output):
         # Parse Coverity json into structured issues
 
-        def relpath(path):
-            '''Build path relative to repository root'''
-            if path.startswith(self.topsrcdir):
-                return os.path.relpath(path, self.topsrcdir)
-            return path
-
         with open(cov_results) as f:
             result = json.load(f)
 
@@ -574,7 +559,8 @@ class StaticAnalysis(MachCommandBase):
                 # Embed all events into extra message
                 for event in issue['events']:
                     dict_issue['extra']['stack'].append(
-                        {'file_path': relpath(event['strippedFilePathname']),
+                        {'file_path': build_repo_relative_path(event['strippedFilePathname'],
+                                                               self.topsrcdir),
                          'line_number': event['lineNumber'],
                          'path_type': event['eventTag'],
                          'description': event['eventDescription']})
@@ -582,7 +568,8 @@ class StaticAnalysis(MachCommandBase):
                 return dict_issue
 
             for issue in result['issues']:
-                path = map_file_to_source(issue['strippedMainEventFilePathname'], source)
+                path = build_repo_relative_path(issue['strippedMainEventFilePathname'],
+                                                self.topsrcdir)
                 if path is None:
                     # Since we skip a result we should log it
                     self.log(logging.INFO, 'static-analysis', {},
@@ -592,7 +579,6 @@ class StaticAnalysis(MachCommandBase):
                                 issue['strippedMainEventFilePathname'])
                              )
                     continue
-                path = relpath(path)
                 if path in files_list:
                     files_list[path]['warnings'].append(build_element(issue))
                 else:

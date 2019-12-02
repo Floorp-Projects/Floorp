@@ -19,6 +19,8 @@ namespace dom {
 class LegacySHEntry;
 class PSHEntryChild;
 class PSHEntryParent;
+class PSHistoryChild;
+class PSHistoryParent;
 class SHEntryChild;
 
 struct NewPSHEntry final {

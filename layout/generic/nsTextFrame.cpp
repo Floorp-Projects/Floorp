@@ -2367,7 +2367,10 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
     fontGroup = GetInflatedFontGroupForFrame(firstFrame);
   }
 
-  if (!fontGroup) {
+  if (fontGroup) {
+    // Refresh fontgroup if necessary, before trying to build textruns.
+    fontGroup->CheckForUpdatedPlatformList();
+  } else {
     DestroyUserData(userDataToDestroy);
     return nullptr;
   }

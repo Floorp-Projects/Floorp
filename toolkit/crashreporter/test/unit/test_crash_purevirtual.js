@@ -1,4 +1,4 @@
-function run_test() {
+add_task(async function run_test() {
   if (!("@mozilla.org/toolkit/crash-reporter;1" in Cc)) {
     dump(
       "INFO | test_crash_purevirtual.js | Can't test crashreporter in a non-libxul build.\n"
@@ -15,7 +15,7 @@ function run_test() {
   }
 
   // Try crashing with a pure virtual call
-  do_crash(
+  await do_crash(
     function() {
       crashType = CrashTestUtils.CRASH_PURE_VIRTUAL_CALL;
       crashReporter.annotateCrashReport("TestKey", "TestValue");
@@ -26,4 +26,4 @@ function run_test() {
     // process will exit with a zero exit status
     true
   );
-}
+});

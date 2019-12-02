@@ -757,22 +757,22 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
   }
 }
 
-#ifdef EARLY_BETA_OR_EARLIER
-// Assert that we never use the SystemPrincipal to load remote documents
-// i.e., HTTP, HTTPS, FTP URLs
-static void AssertSystemPrincipalMustNotLoadRemoteDocuments(
+/* static */
+nsresult nsContentSecurityManager::CheckSystemPrincipalLoads(
     nsIChannel* aChannel) {
+  // Assert that we never use the SystemPrincipal to load remote documents
+  // i.e., HTTP, HTTPS, FTP URLs
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
   // bail out, if we're not loading with a SystemPrincipal
   if (!nsContentUtils::IsSystemPrincipal(loadInfo->LoadingPrincipal())) {
-    return;
+    return NS_OK;
   }
   nsContentPolicyType contentPolicyType =
       loadInfo->GetExternalContentPolicyType();
   if ((contentPolicyType != nsIContentPolicy::TYPE_DOCUMENT) &&
       (contentPolicyType != nsIContentPolicy::TYPE_SUBDOCUMENT)) {
-    return;
+    return NS_OK;
   }
   nsCOMPtr<nsIURI> finalURI;
   NS_GetFinalChannelURI(aChannel, getter_AddRefs(finalURI));
@@ -780,16 +780,16 @@ static void AssertSystemPrincipalMustNotLoadRemoteDocuments(
   if (!nsContentUtils::SchemeIs(finalURI, "http") &&
       !nsContentUtils::SchemeIs(finalURI, "https") &&
       !nsContentUtils::SchemeIs(finalURI, "ftp")) {
-    return;
+    return NS_OK;
   }
 
   // FIXME The discovery feature in about:addons uses the SystemPrincpal.
   // We should remove the exception for AMO with bug 1544011.
   // We should remove the exception for Firefox Accounts with bug 1561318.
   static nsAutoCString sDiscoveryPrePath;
-#  ifdef ANDROID
+#ifdef ANDROID
   static nsAutoCString sFxaSPrePath;
-#  endif
+#endif
   static bool recvdPrefValues = false;
   if (!recvdPrefValues) {
     nsAutoCString discoveryURLString;
@@ -802,7 +802,7 @@ static void AssertSystemPrincipalMustNotLoadRemoteDocuments(
     if (discoveryURL) {
       discoveryURL->GetPrePath(sDiscoveryPrePath);
     }
-#  ifdef ANDROID
+#ifdef ANDROID
     nsAutoCString fxaURLString;
     Preferences::GetCString("identity.fxaccounts.remote.webchannel.uri",
                             fxaURLString);
@@ -811,34 +811,42 @@ static void AssertSystemPrincipalMustNotLoadRemoteDocuments(
     if (fxaURL) {
       fxaURL->GetPrePath(sFxaSPrePath);
     }
-#  endif
+#endif
     recvdPrefValues = true;
   }
   nsAutoCString requestedPrePath;
   finalURI->GetPrePath(requestedPrePath);
 
   if (requestedPrePath.Equals(sDiscoveryPrePath)) {
-    return;
+    return NS_OK;
   }
-#  ifdef ANDROID
+#ifdef ANDROID
   if (requestedPrePath.Equals(sFxaSPrePath)) {
-    return;
+    return NS_OK;
   }
-#  endif
+#endif
+  nsAutoCString requestedURL;
+  finalURI->GetAsciiSpec(requestedURL);
+  MOZ_LOG(
+      sCSMLog, LogLevel::Verbose,
+      ("SystemPrincipal must not load remote documents. URL: %s", requestedURL)
+          .get());
   if (xpc::AreNonLocalConnectionsDisabled()) {
     bool disallowSystemPrincipalRemoteDocuments = Preferences::GetBool(
         "security.disallow_non_local_systemprincipal_in_tests");
     if (disallowSystemPrincipalRemoteDocuments) {
       // our own mochitest needs NS_ASSERTION instead of MOZ_ASSERT
       NS_ASSERTION(false, "SystemPrincipal must not load remote documents.");
-      return;
+      aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
+      return NS_ERROR_CONTENT_BLOCKED;
     }
     // but other mochitest are exempt from this
-    return;
+    return NS_OK;
   }
-  MOZ_RELEASE_ASSERT(false, "SystemPrincipal must not load remote documents.");
+  MOZ_ASSERT(false, "SystemPrincipal must not load remote documents.");
+  aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
+  return NS_ERROR_CONTENT_BLOCKED;
 }
-#endif
 
 /*
  * Based on the security flags provided in the loadInfo of the channel,
@@ -866,9 +874,8 @@ nsresult nsContentSecurityManager::doContentSecurityCheck(
     DebugDoContentSecurityCheck(aChannel, loadInfo);
   }
 
-#ifdef EARLY_BETA_OR_EARLIER
-  AssertSystemPrincipalMustNotLoadRemoteDocuments(aChannel);
-#endif
+  nsresult rv = CheckSystemPrincipalLoads(aChannel);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // if dealing with a redirected channel then we have already installed
   // streamlistener and redirect proxies and so we are done.
@@ -878,7 +885,7 @@ nsresult nsContentSecurityManager::doContentSecurityCheck(
 
   // make sure that only one of the five security flags is set in the loadinfo
   // e.g. do not require same origin and allow cross origin at the same time
-  nsresult rv = ValidateSecurityFlags(loadInfo);
+  rv = ValidateSecurityFlags(loadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (loadInfo->GetSecurityMode() ==

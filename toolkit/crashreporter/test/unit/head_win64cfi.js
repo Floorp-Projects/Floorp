@@ -190,18 +190,20 @@ function assertStack(stack, expected) {
 //   "context", "scan", et al. May be null if you don't need to check the stack.
 // minidumpAnalyzerArgs: An array of additional arguments to pass to
 //   minidump-analyzer.exe.
-function do_x64CFITest(how, expectedStack, minidumpAnalyzerArgs) {
+async function do_x64CFITest(how, expectedStack, minidumpAnalyzerArgs) {
   // Setup is run in the subprocess so we cannot use any closures.
   let setupFn = "crashType = CrashTestUtils." + how + ";";
 
-  let callbackFn = function(minidumpFile, extra, extraFile) {
+  let callbackFn = async function(minidumpFile, extra, extraFile) {
     runMinidumpAnalyzer(minidumpFile, minidumpAnalyzerArgs);
 
     // Refresh updated extra data
-    extra = parseKeyValuePairsFromFile(extraFile);
+    let data = await OS.File.read(extraFile.path);
+    let decoder = new TextDecoder();
+    extra = JSON.parse(decoder.decode(data));
 
     initTestCrasherSymbols();
-    let stackTraces = JSON.parse(extra.StackTraces);
+    let stackTraces = extra.StackTraces;
     let crashingThreadIndex = stackTraces.crash_info.crashing_thread;
     gModules = stackTraces.modules;
     let crashingFrames = stackTraces.threads[crashingThreadIndex].frames;

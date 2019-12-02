@@ -68,4 +68,5 @@ class Subclass1 extends Base {
 }
 
 new Subclass1();
+
 reportCompare(0, 0);

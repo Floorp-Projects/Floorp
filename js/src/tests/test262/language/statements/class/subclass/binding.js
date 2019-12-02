@@ -50,4 +50,5 @@ assert.sameValue(
   Subclass.prototype,
   "`Object.getPrototypeOf(s)` returns `Subclass.prototype`"
 );
+
 reportCompare(0, 0);

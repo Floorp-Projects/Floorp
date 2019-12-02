@@ -6,6 +6,8 @@
 #ifndef WEBGPU_TYPES_H_
 #define WEBGPU_TYPES_H_
 
+#include <cstdint>
+
 namespace mozilla {
 namespace webgpu {
 

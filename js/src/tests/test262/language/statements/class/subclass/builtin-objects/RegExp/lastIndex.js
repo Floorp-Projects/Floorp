@@ -24,4 +24,5 @@ assert.sameValue(re.lastIndex, 0);
 verifyWritable(re, 'lastIndex');
 verifyNotEnumerable(re, 'lastIndex');
 verifyNotConfigurable(re, 'lastIndex');
+
 reportCompare(0, 0);

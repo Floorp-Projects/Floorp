@@ -35,6 +35,6 @@ function after_crash(mdump, extra) {
   Assert.equal(extra.ShutdownProgress, "profile-before-change");
 }
 
-function run_test() {
-  do_crash(setup_crash, after_crash);
-}
+add_task(async function run_test() {
+  await do_crash(setup_crash, after_crash);
+});

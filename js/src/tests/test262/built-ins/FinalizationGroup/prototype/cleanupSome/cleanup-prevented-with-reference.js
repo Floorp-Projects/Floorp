@@ -1,4 +1,4 @@
-// |reftest| skip async -- FinalizationGroup is not supported
+// |reftest| skip-if(!this.hasOwnProperty('FinalizationGroup')) async -- FinalizationGroup is not enabled unconditionally
 // Copyright (C) 2019 Leo Balter. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

@@ -43,4 +43,5 @@ assert.sameValue(3n - {
     return 2n;
   }
 }, 1n, 'The result of (3n - {toString: function() {return 2n;}}) is 1n');
+
 reportCompare(0, 0);
