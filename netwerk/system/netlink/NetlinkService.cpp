@@ -1676,8 +1676,8 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
 
 void NetlinkService::ComputeDNSSuffixList() {
   MOZ_ASSERT(!NS_IsMainThread(), "Must not be called on the main thread");
-#if defined(HAVE_RES_NINIT)
   nsTArray<nsCString> suffixList;
+#if defined(HAVE_RES_NINIT)
   struct __res_state res;
   if (res_ninit(&res) == 0) {
     for (int i = 0; i < MAXDNSRCH; i++) {
@@ -1688,18 +1688,16 @@ void NetlinkService::ComputeDNSSuffixList() {
     }
     res_nclose(&res);
   }
-
+#endif
   RefPtr<NetlinkServiceListener> listener;
   {
     MutexAutoLock lock(mMutex);
     listener = mListener;
     mDNSSuffixList = std::move(suffixList);
   }
-
   if (listener) {
     listener->OnDnsSuffixListUpdated();
   }
-#endif
 }
 
 void NetlinkService::UpdateLinkStatus() {
