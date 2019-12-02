@@ -45,8 +45,8 @@ class nsDirectoryService final : public nsIDirectoryService,
 
   static mozilla::StaticRefPtr<nsDirectoryService> gService;
 
-  nsresult SetCurrentProcessDirectory(nsIFile* aFile);
-  nsresult GetCurrentProcessDirectory(nsIFile** aFile);
+  void SetCurrentProcessDirectory(nsIFile* aFile) { mXCurProcD = aFile; }
+  nsresult GetCurrentProcessDirectory(nsIFile**);
 
  private:
   ~nsDirectoryService();
