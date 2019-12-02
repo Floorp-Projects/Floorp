@@ -19,6 +19,12 @@ permalink: /changelog/
   * Replaced `BrowserMenuHighlightableItem.Highlight` with `BrowserMenuHighlight.HighPriority` to highlight a menu item with some background color. `Highlight` has been deprecated.
   * Added `BrowserMenuHighlight.LowPriority` to highlight a menu item with a dot over the icon.
 
+* **storage-sync**
+  * Added `RemoteTabsStorage` for synced tabs.
+
+* **service-firefox-accounts**
+  * Removed `StorageSync` interface as it is superseded by the sync manager.
+
 # 23.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v22.0.0...v23.0.0)

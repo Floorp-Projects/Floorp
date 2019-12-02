@@ -61,14 +61,6 @@ interface LockableStore : SyncableStore {
  */
 interface SyncableStore {
     /**
-     * Performs a sync.
-     *
-     * @param authInfo Auth information necessary for syncing this store.
-     * @return [SyncStatus] A status object describing how sync went.
-     */
-    suspend fun sync(authInfo: SyncAuthInfo): SyncStatus
-
-    /**
      * This should be removed. See: https://github.com/mozilla/application-services/issues/1877
      *
      * @return raw internal handle that could be used for referencing underlying [PlacesApi]. Use it with SyncManager.

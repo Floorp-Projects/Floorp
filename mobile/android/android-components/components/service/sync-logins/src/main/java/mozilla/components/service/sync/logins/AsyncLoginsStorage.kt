@@ -389,7 +389,13 @@ data class SyncableLoginsStore(
     val store: AsyncLoginsStorage,
     val key: () -> Deferred<String>
 ) : LockableStore {
-    override suspend fun sync(authInfo: SyncAuthInfo): SyncStatus {
+    /**
+     * Performs a sync.
+     *
+     * @param authInfo Auth information necessary for syncing this store.
+     * @return [SyncStatus] A status object describing how sync went.
+     */
+    suspend fun sync(authInfo: SyncAuthInfo): SyncStatus {
         return try {
             withUnlocked {
                 it.sync(authInfo.into()).await()

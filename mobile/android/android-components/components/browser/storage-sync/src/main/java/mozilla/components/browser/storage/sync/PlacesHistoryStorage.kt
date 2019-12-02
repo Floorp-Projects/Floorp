@@ -184,7 +184,7 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
      * @param authInfo The authentication information to sync with.
      * @return Sync status of OK or Error
      */
-    override suspend fun sync(authInfo: SyncAuthInfo): SyncStatus {
+    suspend fun sync(authInfo: SyncAuthInfo): SyncStatus {
         return withContext(scope.coroutineContext) {
             syncAndHandleExceptions {
                 places.syncHistory(authInfo)
