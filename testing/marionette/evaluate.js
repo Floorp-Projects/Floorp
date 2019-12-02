@@ -135,14 +135,7 @@ evaluate.sandbox = function(
     marionetteSandbox.window.addEventListener("unload", unloadHandler);
 
     let promises = [
-      Cu.evalInSandbox(
-        src,
-        sb,
-        "1.8",
-        file,
-        line,
-        /* enforceFilenameRestrictions */ false
-      ),
+      Cu.evalInSandbox(src, sb, "1.8", file, line),
       timeoutPromise,
     ];
 
