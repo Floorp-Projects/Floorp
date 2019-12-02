@@ -582,8 +582,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
 #  endif
     printf_stderr(
         "\n\nCHILDCHILDCHILDCHILD (process type %s)\n  debug me @ %d\n\n",
-        XRE_GeckoProcessTypeToString(XRE_GetProcessType()),
-        base::GetCurrentProcId());
+        XRE_GetProcessTypeString(), base::GetCurrentProcId());
     sleep(GetDebugChildPauseTime());
   }
 #elif defined(OS_WIN)
@@ -594,8 +593,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
   } else if (PR_GetEnv("MOZ_DEBUG_CHILD_PAUSE")) {
     printf_stderr(
         "\n\nCHILDCHILDCHILDCHILD (process type %s)\n  debug me @ %d\n\n",
-        XRE_GeckoProcessTypeToString(XRE_GetProcessType()),
-        base::GetCurrentProcId());
+        XRE_GetProcessTypeString(), base::GetCurrentProcId());
     ::Sleep(GetDebugChildPauseTime());
   }
 #endif
