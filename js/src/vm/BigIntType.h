@@ -362,9 +362,7 @@ class BigInt final
   static JSLinearString* toStringGeneric(JSContext* cx, Handle<BigInt*>,
                                          unsigned radix);
 
-  static BigInt* trimHighZeroDigits(JSContext* cx, Handle<BigInt*> x);
-  static BigInt* destructivelyTrimHighZeroDigits(JSContext* cx,
-                                                 Handle<BigInt*> x);
+  static BigInt* destructivelyTrimHighZeroDigits(JSContext* cx, BigInt* x);
 
   friend struct ::JSStructuredCloneReader;
   friend struct ::JSStructuredCloneWriter;

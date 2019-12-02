@@ -1359,7 +1359,7 @@ JSLinearString* BigInt::toStringGeneric(JSContext* cx, HandleBigInt x,
                                maximumCharactersRequired - writePos);
 }
 
-BigInt* BigInt::trimHighZeroDigits(JSContext* cx, HandleBigInt x) {
+BigInt* BigInt::destructivelyTrimHighZeroDigits(JSContext* cx, BigInt* x) {
   if (x->isZero()) {
     MOZ_ASSERT(!x->isNegative());
     return x;
@@ -1380,20 +1380,36 @@ BigInt* BigInt::trimHighZeroDigits(JSContext* cx, HandleBigInt x) {
   }
 
   unsigned newLength = nonZeroIndex + 1;
-  BigInt* trimmedBigInt = createUninitialized(cx, newLength, x->isNegative());
-  if (!trimmedBigInt) {
-    return nullptr;
-  }
-  for (unsigned i = 0; i < newLength; i++) {
-    trimmedBigInt->setDigit(i, x->digit(i));
+
+  if (newLength > InlineDigitsLength) {
+    MOZ_ASSERT(x->hasHeapDigits());
+
+    auto* p =
+        cx->pod_realloc<Digit>(x->heapDigits_, x->digitLength(), newLength);
+    if (!p) {
+      return nullptr;
+    }
+    x->heapDigits_ = p;
+
+    RemoveCellMemory(x, x->digitLength() * sizeof(Digit),
+                     js::MemoryUse::BigIntDigits);
+    AddCellMemory(x, newLength * sizeof(Digit), js::MemoryUse::BigIntDigits);
+  } else {
+    if (x->hasHeapDigits()) {
+      Digit digits[InlineDigitsLength];
+      std::copy_n(x->heapDigits_, InlineDigitsLength, digits);
+
+      js_free(x->heapDigits_);
+      RemoveCellMemory(x, x->digitLength() * sizeof(Digit),
+                       js::MemoryUse::BigIntDigits);
+
+      std::copy_n(digits, InlineDigitsLength, x->inlineDigits_);
+    }
   }
 
-  return trimmedBigInt;
-}
+  x->setLengthAndFlags(newLength, x->isNegative() ? SignBit : 0);
 
-BigInt* BigInt::destructivelyTrimHighZeroDigits(JSContext* cx, HandleBigInt x) {
-  // TODO: Modify in place instead of allocating.
-  return trimHighZeroDigits(cx, x);
+  return x;
 }
 
 // The maximum value `radix**charCount - 1` must be represented as a max number
