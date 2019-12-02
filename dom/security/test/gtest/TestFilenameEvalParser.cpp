@@ -32,13 +32,15 @@ TEST(FilenameEvalParser, ResourceChrome)
 {
   {
     NS_NAMED_LITERAL_STRING(str, "chrome://firegestures/content/browser.js");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
     ASSERT_TRUE(ret.first() == kChromeURI && ret.second().isSome() &&
                 ret.second().value() == str);
   }
   {
     NS_NAMED_LITERAL_STRING(str, "resource://firegestures/content/browser.js");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
     ASSERT_TRUE(ret.first() == kResourceURI && ret.second().isSome() &&
                 ret.second().value() == str);
   }
@@ -52,7 +54,8 @@ TEST(FilenameEvalParser, MozExtension)
         "jar:file:///c:/users/bob/appdata/roaming/mozilla/firefox/profiles/foo/"
         "extensions/federated-learning@shield.mozilla.org.xpi!/experiments/"
         "study/api.js");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
     ASSERT_TRUE(ret.first() == kMozillaExtension &&
                 ret.second().value() ==
                     NS_LITERAL_STRING(
@@ -64,7 +67,8 @@ TEST(FilenameEvalParser, MozExtension)
         "jar:file:///c:/users/bob/appdata/roaming/mozilla/firefox/profiles/foo/"
         "extensions/federated-learning@shigeld.mozilla.org.xpi!/experiments/"
         "study/api.js");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
     ASSERT_TRUE(
         ret.first() == kMozillaExtension &&
         ret.second().value() ==
@@ -77,7 +81,8 @@ TEST(FilenameEvalParser, MozExtension)
         "jar:file:///c:/users/bob/appdata/roaming/mozilla/firefox/profiles/foo/"
         "extensions/federated-learning@shigeld.mozilla.org.xpi!/experiments/"
         "study/apiiiiiiiiiiiiiiiiiiiiiiiiiiiiii.js");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
     ASSERT_TRUE(
         ret.first() == kMozillaExtension &&
         ret.second().value() ==
@@ -90,20 +95,23 @@ TEST(FilenameEvalParser, UserChromeJS)
 {
   {
     NS_NAMED_LITERAL_STRING(str, "firegestures/content/browser.uc.js");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
     ASSERT_TRUE(ret.first() == kSuspectedUserChromeJS &&
                 !ret.second().isSome());
   }
   {
     NS_NAMED_LITERAL_STRING(str, "firegestures/content/browser.uc.js?");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
     ASSERT_TRUE(ret.first() == kSuspectedUserChromeJS &&
                 !ret.second().isSome());
   }
   {
     nsLiteralString str =
         NS_LITERAL_STRING("firegestures/content/browser.uc.js?243244224");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
     ASSERT_TRUE(ret.first() == kSuspectedUserChromeJS &&
                 !ret.second().isSome());
   }
@@ -112,7 +120,8 @@ TEST(FilenameEvalParser, UserChromeJS)
         str,
         "file:///b:/fxprofiles/mark/chrome/"
         "addbookmarkherewithmiddleclick.uc.js?1558444389291");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
     ASSERT_TRUE(ret.first() == kSuspectedUserChromeJS &&
                 !ret.second().isSome());
   }
@@ -122,13 +131,15 @@ TEST(FilenameEvalParser, SingleFile)
 {
   {
     NS_NAMED_LITERAL_STRING(str, "browser.uc.js?2456");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
     ASSERT_TRUE(ret.first() == kSingleString && ret.second().isSome() &&
                 ret.second().value() == str);
   }
   {
     NS_NAMED_LITERAL_STRING(str, "debugger");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
     ASSERT_TRUE(ret.first() == kSingleString && ret.second().isSome() &&
                 ret.second().value() == str);
   }
@@ -138,12 +149,14 @@ TEST(FilenameEvalParser, Other)
 {
   {
     NS_NAMED_LITERAL_STRING(str, "firegestures--content");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
     ASSERT_TRUE(ret.first() == kOther && !ret.second().isSome());
   }
   {
     NS_NAMED_LITERAL_STRING(str, "gallop://thing/fire");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
 #if defined(XP_WIN)
     ASSERT_TRUE(ret.first() == kSanitizedWindowsURL &&
                 ret.second().value() == NS_LITERAL_STRING("gallop"));
@@ -153,7 +166,8 @@ TEST(FilenameEvalParser, Other)
   }
   {
     NS_NAMED_LITERAL_STRING(str, "gallop://fire");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
 #if defined(XP_WIN)
     ASSERT_TRUE(ret.first() == kSanitizedWindowsURL &&
                 ret.second().value() == NS_LITERAL_STRING("gallop"));
@@ -163,7 +177,8 @@ TEST(FilenameEvalParser, Other)
   }
   {
     NS_NAMED_LITERAL_STRING(str, "firegestures/content");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
 #if defined(XP_WIN)
     ASSERT_TRUE(ret.first() == kSanitizedWindowsPath &&
                 ret.second().value() == NS_LITERAL_STRING("content"));
@@ -173,7 +188,8 @@ TEST(FilenameEvalParser, Other)
   }
   {
     NS_NAMED_LITERAL_STRING(str, "firegestures\\content");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
 #if defined(XP_WIN)
     ASSERT_TRUE(ret.first() == kSanitizedWindowsPath &&
                 ret.second().value() == NS_LITERAL_STRING("content"));
@@ -183,7 +199,8 @@ TEST(FilenameEvalParser, Other)
   }
   {
     NS_NAMED_LITERAL_STRING(str, "/home/tom/files/thing");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
 #if defined(XP_WIN)
     ASSERT_TRUE(ret.first() == kSanitizedWindowsPath &&
                 ret.second().value() == NS_LITERAL_STRING("thing"));
@@ -193,7 +210,8 @@ TEST(FilenameEvalParser, Other)
   }
   {
     NS_NAMED_LITERAL_STRING(str, "file://c/uers/tom/file.txt");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
 #if defined(XP_WIN)
     ASSERT_TRUE(ret.first() == kSanitizedWindowsURL &&
                 ret.second().value() ==
@@ -204,7 +222,8 @@ TEST(FilenameEvalParser, Other)
   }
   {
     NS_NAMED_LITERAL_STRING(str, "c:/uers/tom/file.txt");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
 #if defined(XP_WIN)
     ASSERT_TRUE(ret.first() == kSanitizedWindowsPath &&
                 ret.second().value() == NS_LITERAL_STRING("file.txt"));
@@ -214,7 +233,8 @@ TEST(FilenameEvalParser, Other)
   }
   {
     NS_NAMED_LITERAL_STRING(str, "http://example.com/");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
 #if defined(XP_WIN)
     ASSERT_TRUE(ret.first() == kSanitizedWindowsURL &&
                 ret.second().value() == NS_LITERAL_STRING("http"));
@@ -224,7 +244,8 @@ TEST(FilenameEvalParser, Other)
   }
   {
     NS_NAMED_LITERAL_STRING(str, "http://example.com/thing.html");
-    FilenameType ret = nsContentSecurityUtils::FilenameToEvalType(str);
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToEvalType(str);
 #if defined(XP_WIN)
     ASSERT_TRUE(ret.first() == kSanitizedWindowsURL &&
                 ret.second().value() == NS_LITERAL_STRING("http"));
