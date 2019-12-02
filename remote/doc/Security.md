@@ -91,8 +91,9 @@ It is our assumption that if an attacker has shell access to the
 user account, there is little we can do to prevent secrets from
 being accessed or leaked.
 
-The preference `remote.enabled` defaults to false in Nightly, and
-it is the purpose to flip this to true to ship the remote agent for
-Firefox Nightly users following [a security review].
+The preference `remote.enabled` is true on the Firefox Nightly
+release channel.  The [security review] was completed in November
+2019.
 
-[a security review]: https://bugzilla.mozilla.org/show_bug.cgi?id=1542229
+
+[security review]: https://bugzilla.mozilla.org/show_bug.cgi?id=1542229

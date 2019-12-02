@@ -10,7 +10,7 @@ To increase the internal logging verbosity you can use the
 
 If you use mach to start Firefox:
 
-	./mach run --setpref "remote.enabled=true" --setpref "remote.log.level=Debug" --remote-debugger
+	./mach run --setpref "remote.log.level=Debug" --remote-debugger
 
 
 Enabling logging of emitted events
@@ -20,7 +20,7 @@ To dump events produced by EventEmitter,
 including CDP events produced by the remote agent,
 you can use the `toolkit.dump.emit` [preference]:
 
-    ./mach run --setpref "remote.enabled=true" --setpref "toolkit.dump.emit=true" --remote-debugger
+    ./mach run --setpref "toolkit.dump.emit=true" --remote-debugger
 
 
 Logging observer notifications

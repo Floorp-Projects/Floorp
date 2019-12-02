@@ -1,19 +1,21 @@
 "use strict";
 
-/**
- * nodejs script to test basic CDP behaviors against Firefox and Chromium.
- *
- * Install chrome-remote-interface, the npm package for a CDP client in node:
- * $ npm install chrome-remote-interface
- *
- * Run Firefox or Chromium with server turned on:
- * $ ./mach run --setpref "remote.enabled=true" --remote-debugging-port 9222
- * $ firefox --remote-debugging-port 9222
- * $ chromium-browser --remote-debugging-port=9222
- *
- * Run this script:
- * $ node demo.js
- */
+// Node.js script to test basic CDP behaviors against Firefox and Chromium.
+//
+// Install chrome-remote-interface, the npm package for a CDP client in node:
+//
+// 	% npm install chrome-remote-interface
+//
+// Run Firefox or Chromium with server turned on:
+//
+// 	% ./mach run --remote-debugging-port 9222
+// 	% firefox --remote-debugging-port 9222
+// 	% chromium-browser --remote-debugging-port=9222
+//
+// Then run this script:
+//
+// 	% node demo.js
+
 const CDP = require("chrome-remote-interface");
 
 async function demo() {
