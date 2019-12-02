@@ -554,8 +554,8 @@ BigInt* BigInt::absoluteAdd(JSContext* cx, HandleBigInt x, HandleBigInt y,
     return result;
   }
 
-  RootedBigInt result(
-      cx, createUninitialized(cx, left->digitLength() + 1, resultNegative));
+  BigInt* result =
+      createUninitialized(cx, left->digitLength() + 1, resultNegative);
   if (!result) {
     return nullptr;
   }
@@ -603,8 +603,7 @@ BigInt* BigInt::absoluteSub(JSContext* cx, HandleBigInt x, HandleBigInt y,
     return createFromNonZeroRawUint64(cx, res, resultNegative);
   }
 
-  RootedBigInt result(
-      cx, createUninitialized(cx, x->digitLength(), resultNegative));
+  BigInt* result = createUninitialized(cx, x->digitLength(), resultNegative);
   if (!result) {
     return nullptr;
   }
@@ -768,8 +767,7 @@ BigInt* BigInt::absoluteLeftShiftAlwaysCopy(JSContext* cx, HandleBigInt x,
 
   unsigned n = x->digitLength();
   unsigned resultLength = mode == LeftShiftMode::AlwaysAddOneDigit ? n + 1 : n;
-  RootedBigInt result(cx,
-                      createUninitialized(cx, resultLength, x->isNegative()));
+  BigInt* result = createUninitialized(cx, resultLength, x->isNegative());
   if (!result) {
     return nullptr;
   }
@@ -973,8 +971,7 @@ inline BigInt* BigInt::absoluteBitwiseOp(JSContext* cx, HandleBigInt x,
   }
   bool resultNegative = false;
 
-  RootedBigInt result(cx,
-                      createUninitialized(cx, resultLength, resultNegative));
+  BigInt* result = createUninitialized(cx, resultLength, resultNegative);
   if (!result) {
     return nullptr;
   }
@@ -985,7 +982,7 @@ inline BigInt* BigInt::absoluteBitwiseOp(JSContext* cx, HandleBigInt x,
   }
 
   if (kind != BitwiseOpKind::SymmetricTrim) {
-    HandleBigInt& source =
+    BigInt* source =
         kind == BitwiseOpKind::AsymmetricFill ? x : xLength == i ? y : x;
     for (; i < resultLength; i++) {
       result->setDigit(i, source->digit(i));
@@ -1032,8 +1029,7 @@ BigInt* BigInt::absoluteAddOne(JSContext* cx, HandleBigInt x,
   }
 
   unsigned resultLength = inputLength + willOverflow;
-  RootedBigInt result(cx,
-                      createUninitialized(cx, resultLength, resultNegative));
+  BigInt* result = createUninitialized(cx, resultLength, resultNegative);
   if (!result) {
     return nullptr;
   }
@@ -1069,7 +1065,7 @@ BigInt* BigInt::absoluteSubOne(JSContext* cx, HandleBigInt x,
     return createFromDigit(cx, d - 1, resultNegative);
   }
 
-  RootedBigInt result(cx, createUninitialized(cx, length, resultNegative));
+  BigInt* result = createUninitialized(cx, length, resultNegative);
   if (!result) {
     return nullptr;
   }
@@ -1546,7 +1542,7 @@ BigInt* BigInt::parseLiteralDigits(JSContext* cx,
   if (!calculateMaximumDigitsRequired(cx, radix, end - start, &length)) {
     return nullptr;
   }
-  RootedBigInt result(cx, createUninitialized(cx, length, isNegative));
+  BigInt* result = createUninitialized(cx, length, isNegative);
   if (!result) {
     return nullptr;
   }
@@ -1862,8 +1858,7 @@ BigInt* BigInt::mul(JSContext* cx, HandleBigInt x, HandleBigInt y) {
   }
 
   unsigned resultLength = x->digitLength() + y->digitLength();
-  RootedBigInt result(cx,
-                      createUninitialized(cx, resultLength, resultNegative));
+  BigInt* result = createUninitialized(cx, resultLength, resultNegative);
   if (!result) {
     return nullptr;
   }
@@ -2026,7 +2021,7 @@ BigInt* BigInt::pow(JSContext* cx, HandleBigInt x, HandleBigInt y) {
     int length = 1 + (n / DigitBits);
     // Result is negative for odd powers of -2n.
     bool resultNegative = x->isNegative() && (n & 1);
-    RootedBigInt result(cx, createUninitialized(cx, length, resultNegative));
+    BigInt* result = createUninitialized(cx, length, resultNegative);
     if (!result) {
       return nullptr;
     }
@@ -2073,8 +2068,7 @@ BigInt* BigInt::lshByAbsolute(JSContext* cx, HandleBigInt x, HandleBigInt y) {
   int length = x->digitLength();
   bool grow = bitsShift && (x->digit(length - 1) >> (DigitBits - bitsShift));
   int resultLength = length + digitShift + grow;
-  RootedBigInt result(cx,
-                      createUninitialized(cx, resultLength, x->isNegative()));
+  BigInt* result = createUninitialized(cx, resultLength, x->isNegative());
   if (!result) {
     return nullptr;
   }
@@ -2416,8 +2410,7 @@ BigInt* BigInt::truncateAndSubFromPowerOfTwo(JSContext* cx, HandleBigInt x,
   }
 
   size_t resultLength = CeilDiv(bits, DigitBits);
-  RootedBigInt result(cx,
-                      createUninitialized(cx, resultLength, resultNegative));
+  BigInt* result = createUninitialized(cx, resultLength, resultNegative);
   if (!result) {
     return nullptr;
   }
@@ -3340,7 +3333,7 @@ Maybe<bool> BigInt::lessThan(double lhs, BigInt* rhs) {
 
 bool BigInt::lessThan(JSContext* cx, HandleBigInt lhs, HandleString rhs,
                       Maybe<bool>& res) {
-  RootedBigInt rhsBigInt(cx);
+  BigInt* rhsBigInt;
   JS_TRY_VAR_OR_RETURN_FALSE(cx, rhsBigInt, StringToBigInt(cx, rhs));
   if (!rhsBigInt) {
     res = Nothing();
@@ -3352,7 +3345,7 @@ bool BigInt::lessThan(JSContext* cx, HandleBigInt lhs, HandleString rhs,
 
 bool BigInt::lessThan(JSContext* cx, HandleString lhs, HandleBigInt rhs,
                       Maybe<bool>& res) {
-  RootedBigInt lhsBigInt(cx);
+  BigInt* lhsBigInt;
   JS_TRY_VAR_OR_RETURN_FALSE(cx, lhsBigInt, StringToBigInt(cx, lhs));
   if (!lhsBigInt) {
     res = Nothing();
