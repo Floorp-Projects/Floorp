@@ -2173,11 +2173,6 @@
   value: true
   mirror: always
 
-- name: dom.security.featurePolicy.experimental.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Expose the 'policy' attribute in document and HTMLIFrameElement
 - name: dom.security.featurePolicy.webidl.enabled
   type: bool

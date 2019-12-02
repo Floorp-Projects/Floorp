@@ -38,9 +38,6 @@ class FeaturePolicyUtils final {
   // Returns true if aFeatureName is a known feature policy name.
   static bool IsSupportedFeature(const nsAString& aFeatureName);
 
-  // Returns true if aFeatureName is a experimental feature policy name.
-  static bool IsExperimentalFeature(const nsAString& aFeatureName);
-
   // Runs aCallback for each known feature policy, with the feature name as
   // argument.
   static void ForEachFeature(const std::function<void(const char*)>& aCallback);
