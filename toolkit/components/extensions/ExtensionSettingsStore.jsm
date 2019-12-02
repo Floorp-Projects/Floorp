@@ -61,12 +61,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ExtensionParent.jsm"
 );
 
-// Defined for readability of precedence and selection code.  keyInfo.selected will be
-// one of these defines, or the id of an extension if an extension has been explicitly
-// selected.
-const SETTING_USER_SET = null;
-const SETTING_PRECEDENCE_ORDER = undefined;
-
 const JSON_FILE_NAME = "extension-settings.json";
 const JSON_FILE_VERSION = 2;
 const STORE_PATH = OS.Path.join(
@@ -158,28 +152,20 @@ function getItem(type, key, id) {
     return null;
   }
 
-  // If no id was provided, the selected entry will have precedence.
-  if (!id && keyInfo.selected) {
-    id = keyInfo.selected;
-  }
   if (id) {
     // Return the item that corresponds to the extension with id of id.
     let item = keyInfo.precedenceList.find(item => item.id === id);
     return item ? { key, value: item.value, id } : null;
   }
 
-  // Find the highest precedence, enabled setting, if it has not been
-  // user set.
-  if (keyInfo.selected === SETTING_PRECEDENCE_ORDER) {
-    for (let item of keyInfo.precedenceList) {
-      if (item.enabled) {
-        return { key, value: item.value, id: item.id };
-      }
+  // Find the highest precedence, enabled setting.
+  for (let item of keyInfo.precedenceList) {
+    if (item.enabled) {
+      return { key, value: item.value, id: item.id };
     }
   }
 
-  // Nothing found in the precedenceList or the setting is user-set,
-  // return the initialValue.
+  // Nothing found in the precedenceList, return the initialValue.
   return { key, initialValue: keyInfo.initialValue };
 }
 
@@ -198,9 +184,8 @@ function precedenceComparator(a, b) {
  * Helper method that alters a setting, either by changing its enabled status
  * or by removing it.
  *
- * @param {string|null} id
- *        The id of the extension for which a setting is being altered, may also
- *        be SETTING_USER_SET (null).
+ * @param {string} id
+ *        The id of the extension for which a setting is being removed/disabled.
  * @param {string} type
  *        The type of setting to be altered.
  * @param {string} key
@@ -215,7 +200,7 @@ function precedenceComparator(a, b) {
  *          the current top precedent setting has not changed.
  */
 function alterSetting(id, type, key, action) {
-  let returnItem = null;
+  let returnItem;
   ensureType(type);
 
   let keyInfo = _store.data[type][key];
@@ -230,54 +215,27 @@ function alterSetting(id, type, key, action) {
 
   let foundIndex = keyInfo.precedenceList.findIndex(item => item.id == id);
 
-  if (foundIndex === -1 && (action !== "select" || id !== SETTING_USER_SET)) {
+  if (foundIndex === -1) {
     if (action === "remove") {
       return null;
     }
     throw new Error(
-      `Cannot alter the setting for ${type}:${key} as ${id} does not exist.`
+      `Cannot alter the setting for ${type}:${key} as it does not exist.`
     );
   }
 
-  let selected = keyInfo.selected;
   switch (action) {
-    case "select":
-      if (foundIndex >= 0 && !keyInfo.precedenceList[foundIndex].enabled) {
-        throw new Error(
-          `Cannot select the setting for ${type}:${key} as ${id} is disabled.`
-        );
-      }
-      keyInfo.selected = id;
-      keyInfo.selectedDate = Date.now();
-      break;
-
     case "remove":
-      // Removing a user-set setting reverts to precedence order.
-      if (id === keyInfo.selected) {
-        keyInfo.selected = SETTING_PRECEDENCE_ORDER;
-        delete keyInfo.selectedDate;
-      }
       keyInfo.precedenceList.splice(foundIndex, 1);
       break;
 
     case "enable":
       keyInfo.precedenceList[foundIndex].enabled = true;
       keyInfo.precedenceList.sort(precedenceComparator);
-      // Enabling a setting does not change a user-set setting, so we
-      // save and bail early.
-      if (keyInfo.selected !== SETTING_PRECEDENCE_ORDER) {
-        _store.saveSoon();
-        return null;
-      }
       foundIndex = keyInfo.precedenceList.findIndex(item => item.id == id);
       break;
 
     case "disable":
-      // Disabling a user-set setting reverts to precedence order.
-      if (keyInfo.selected === id) {
-        keyInfo.selected = SETTING_PRECEDENCE_ORDER;
-        delete keyInfo.selectedDate;
-      }
       keyInfo.precedenceList[foundIndex].enabled = false;
       keyInfo.precedenceList.sort(precedenceComparator);
       break;
@@ -286,7 +244,7 @@ function alterSetting(id, type, key, action) {
       throw new Error(`${action} is not a valid action for alterSetting.`);
   }
 
-  if (selected !== keyInfo.selected || foundIndex === 0) {
+  if (foundIndex === 0) {
     returnItem = getItem(type, key);
   }
 
@@ -306,8 +264,6 @@ function alterSetting(id, type, key, action) {
 }
 
 var ExtensionSettingsStore = {
-  SETTING_USER_SET,
-
   /**
    * Loads the JSON file for the SettingsStore into memory.
    * The promise this returns must be resolved before asking the SettingsStore
@@ -321,7 +277,8 @@ var ExtensionSettingsStore = {
   },
 
   /**
-   * Adds a setting to the store, returning the new setting if it changes.
+   * Adds a setting to the store, possibly returning the current top precedent
+   * setting.
    *
    * @param {string} id
    *        The id of the extension for which a setting is being added.
@@ -345,7 +302,7 @@ var ExtensionSettingsStore = {
    *                          value, which corresponds to the item that was
    *                          just added, or null if the item that was just
    *                          added does not need to be set because it is not
-   *                          selected or at the top of the precedence list.
+   *                          at the top of the precedence list.
    */
   async addSetting(
     id,
@@ -377,7 +334,6 @@ var ExtensionSettingsStore = {
 
     // Check for this item in the precedenceList.
     let foundIndex = keyInfo.precedenceList.findIndex(item => item.id == id);
-    let newInstall = false;
     if (foundIndex === -1) {
       // No item for this extension, so add a new one.
       let addon = await AddonManager.getAddonByID(id);
@@ -387,7 +343,6 @@ var ExtensionSettingsStore = {
         value,
         enabled: true,
       });
-      newInstall = addon.installDate.valueOf() > keyInfo.selectedDate;
     } else {
       // Item already exists or this extension, so update it.
       let item = keyInfo.precedenceList[foundIndex];
@@ -398,29 +353,19 @@ var ExtensionSettingsStore = {
 
     // Sort the list.
     keyInfo.precedenceList.sort(precedenceComparator);
-    foundIndex = keyInfo.precedenceList.findIndex(item => item.id == id);
-
-    // If our new setting is top of precedence, then reset the selected entry.
-    if (foundIndex === 0 && newInstall) {
-      keyInfo.selected = SETTING_PRECEDENCE_ORDER;
-      delete keyInfo.selectedDate;
-    }
 
     _store.saveSoon();
 
-    // Check whether this is currently selected item if one is
-    // selected, otherwise the top item has precedence.
-    if (
-      keyInfo.selected !== SETTING_USER_SET &&
-      (keyInfo.selected === id || foundIndex === 0)
-    ) {
+    // Check whether this is currently the top item.
+    if (keyInfo.precedenceList[0].id == id) {
       return { id, key, value };
     }
     return null;
   },
 
   /**
-   * Removes a setting from the store, returning the new setting if it changes.
+   * Removes a setting from the store, possibly returning the current top
+   * precedent setting.
    *
    * @param {string} id
    *        The id of the extension for which a setting is being removed.
@@ -430,14 +375,17 @@ var ExtensionSettingsStore = {
    *        A string that uniquely identifies the setting.
    *
    * @returns {object | null}
-   *          Either an object with properties for key and value if the setting changes, or null.
+   *          Either an object with properties for key and value, which
+   *          corresponds to the current top precedent setting, or null if
+   *          the current top precedent setting has not changed.
    */
   removeSetting(id, type, key) {
     return alterSetting(id, type, key, "remove");
   },
 
   /**
-   * Enables a setting in the store, returning the new setting if it changes.
+   * Enables a setting in the store, possibly returning the current top
+   * precedent setting.
    *
    * @param {string} id
    *        The id of the extension for which a setting is being enabled.
@@ -447,14 +395,17 @@ var ExtensionSettingsStore = {
    *        A string that uniquely identifies the setting.
    *
    * @returns {object | null}
-   *          Either an object with properties for key and value if the setting changes, or null.
+   *          Either an object with properties for key and value, which
+   *          corresponds to the current top precedent setting, or null if
+   *          the current top precedent setting has not changed.
    */
   enable(id, type, key) {
     return alterSetting(id, type, key, "enable");
   },
 
   /**
-   * Disables a setting in the store, returning the new setting if it changes.
+   * Disables a setting in the store, possibly returning the current top
+   * precedent setting.
    *
    * @param {string} id
    *        The id of the extension for which a setting is being disabled.
@@ -464,36 +415,39 @@ var ExtensionSettingsStore = {
    *        A string that uniquely identifies the setting.
    *
    * @returns {object | null}
-   *          Either an object with properties for key and value if the setting changes, or null.
+   *          Either an object with properties for key and value, which
+   *          corresponds to the current top precedent setting, or null if
+   *          the current top precedent setting has not changed.
    */
   disable(id, type, key) {
     return alterSetting(id, type, key, "disable");
   },
 
   /**
-   * Specifically select an extension, or no extension, that will be in control of
-   * this setting.
+   * Mark a setting as being controlled by a user's choice. This will disable all of
+   * the extension defined values for the extension.
    *
-   * To select a specific extension that controls this setting, pass the extension id.
-   *
-   * To select as user-set  pass SETTING_USER_SET as the id.  In this case, no extension
-   * will have control of the setting.
-   *
-   * Once a specific selection is made, precedence order will not be used again unless the selected
-   * extension is disabled, removed, or a new extension takes control of the setting.
-   *
-   * @param {string | null} id
-   *        The id of the extension being selected or SETTING_USER_SET (null).
-   * @param {string} type
-   *        The type of setting to be selected.
-   * @param {string} key
-   *        A string that uniquely identifies the setting.
-   *
-   * @returns {object | null}
-   *          Either an object with properties for key and value if the setting changes, or null.
+   * @param {string} type The type of the setting.
+   * @param {string} key The key of the setting.
    */
-  select(id, type, key) {
-    return alterSetting(id, type, key, "select");
+  setByUser(type, key) {
+    let { precedenceList } =
+      (_store.data[type] && _store.data[type][key]) || {};
+    if (!precedenceList) {
+      // The setting for this key does not exist. Nothing to do.
+      return;
+    }
+
+    for (let item of precedenceList) {
+      item.enabled = false;
+    }
+    ExtensionParent.apiManager.emit("extension-setting-changed", {
+      action: "disable",
+      type,
+      key,
+    });
+
+    _store.saveSoon();
   },
 
   /**
@@ -579,18 +533,6 @@ var ExtensionSettingsStore = {
     let keyInfo = _store.data[type][key];
     if (!keyInfo || !keyInfo.precedenceList.length) {
       return "controllable_by_this_extension";
-    }
-
-    if (keyInfo.selected !== SETTING_PRECEDENCE_ORDER) {
-      if (id === keyInfo.selected) {
-        return "controlled_by_this_extension";
-      }
-      // When user set, the setting is never "controllable" unless the installDate
-      // is later than the user date.
-      let addon = await AddonManager.getAddonByID(id);
-      return keyInfo.selectedDate > addon.installDate.valueOf()
-        ? "not_controllable"
-        : "controllable_by_this_extension";
     }
 
     let enabledItems = keyInfo.precedenceList.filter(item => item.enabled);
