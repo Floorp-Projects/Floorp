@@ -151,7 +151,7 @@ email (dev-builds), on slack in #sccache, or in #build on irc.
 Steps for setting up a server
 =============================
 
-Build servers must run linux and use bubblewrap 3.0+ for sandboxing of compile
+Build servers must run linux and use bubblewrap 0.3.0+ for sandboxing of compile
 processes. This requires a kernel 4.6 or greater, so Ubuntu 18+, RHEL 8, or
 similar.
 
