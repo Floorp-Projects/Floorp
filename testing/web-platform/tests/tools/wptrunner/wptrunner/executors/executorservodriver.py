@@ -134,7 +134,7 @@ class ServoWebDriverRun(TimedRunner):
 
     def run_func(self):
         try:
-            self.result = True, self.func(self.session, self.url, self.timeout)
+            self.result = True, self.func(self.protocol.session, self.url, self.timeout)
         except webdriver.TimeoutException:
             self.result = False, ("EXTERNAL-TIMEOUT", None)
         except (socket.timeout, IOError):
@@ -183,7 +183,7 @@ class ServoWebDriverTestharnessExecutor(TestharnessExecutor):
 
         success, data = ServoWebDriverRun(self.logger,
                                           self.do_testharness,
-                                          self.protocol.session,
+                                          self.protocol,
                                           url,
                                           timeout,
                                           self.extra_timeout).run()
