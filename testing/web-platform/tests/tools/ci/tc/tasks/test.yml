@@ -34,7 +34,7 @@ components:
       install-certificates: true
 
   wpt-run:
-    name: wpt-${vars.browser}-${vars.channel}-${vars.suite}-chunk-${chunks.id}
+    name: wpt-${vars.browser}-${vars.channel}-${vars.suite}-${chunks.id}
     options:
       browser:
         - ${vars.browser}
