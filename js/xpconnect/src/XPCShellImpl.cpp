@@ -366,7 +366,9 @@ static bool Load(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     JS::CompileOptions options(cx);
-    options.setFileAndLine(filename.get(), 1).setIsRunOnce(true);
+    options.setFileAndLine(filename.get(), 1)
+        .setIsRunOnce(true)
+        .setSkipFilenameValidation(true);
     JS::Rooted<JSScript*> script(cx);
     JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
     script = JS::CompileUtf8File(cx, options, file);
@@ -699,7 +701,9 @@ static bool ProcessUtf8Line(AutoJSAPI& jsapi, const char* buffer,
                             int startline) {
   JSContext* cx = jsapi.cx();
   JS::CompileOptions options(cx);
-  options.setFileAndLine("typein", startline).setIsRunOnce(true);
+  options.setFileAndLine("typein", startline)
+      .setIsRunOnce(true)
+      .setSkipFilenameValidation(true);
 
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
   if (!srcBuf.init(cx, buffer, strlen(buffer), JS::SourceOwnership::Borrowed)) {
@@ -769,7 +773,8 @@ static bool ProcessFile(AutoJSAPI& jsapi, const char* filename, FILE* file,
     JS::CompileOptions options(cx);
     options.setFileAndLine(filename, 1)
         .setIsRunOnce(true)
-        .setNoScriptRval(true);
+        .setNoScriptRval(true)
+        .setSkipFilenameValidation(true);
     script = JS::CompileUtf8File(cx, options, file);
     if (!script) {
       return false;
@@ -986,6 +991,7 @@ static bool ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc,
         }
 
         JS::CompileOptions opts(cx);
+        opts.setSkipFilenameValidation(true);
         opts.setFileAndLine("-e", 1);
 
         JS::SourceText<mozilla::Utf8Unit> srcBuf;
