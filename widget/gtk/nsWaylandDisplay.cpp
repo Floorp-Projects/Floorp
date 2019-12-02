@@ -7,6 +7,10 @@
 
 #include "nsWaylandDisplay.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 namespace mozilla {
 namespace widget {
 
