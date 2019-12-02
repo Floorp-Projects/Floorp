@@ -313,6 +313,11 @@ void LIRGenerator::visitWasmNeg(MWasmNeg* ins) {
   }
 }
 
+void LIRGenerator::visitWasmHeapBase(MWasmHeapBase* ins) {
+  auto* lir = new (alloc()) LWasmHeapBase(LAllocation());
+  define(lir, ins);
+}
+
 void LIRGenerator::visitWasmLoad(MWasmLoad* ins) {
   MDefinition* base = ins->base();
   MOZ_ASSERT(base->type() == MIRType::Int32);
