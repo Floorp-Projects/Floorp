@@ -121,7 +121,7 @@ class StructuredOutputParser(OutputParser):
             self.update_levels(tbpl_level, level)
 
     def _subtract_tuples(self, old, new):
-        items = set(old.keys() + new.keys())
+        items = set(list(old.keys()) + list(new.keys()))
         merged = defaultdict(int)
         for item in items:
             merged[item] = new.get(item, 0) - old.get(item, 0)
@@ -210,7 +210,7 @@ class StructuredOutputParser(OutputParser):
             'suite_end': 'No suite end message was emitted by this harness.',
             'test_end': 'No checks run.',
         }
-        for action, diagnostic_message in required_actions.iteritems():
+        for action, diagnostic_message in required_actions.items():
             if action not in summary.action_counts:
                 self.log(diagnostic_message, ERROR)
                 self.update_levels(*error_pair)
