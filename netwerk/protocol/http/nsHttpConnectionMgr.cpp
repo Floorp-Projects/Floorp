@@ -626,7 +626,7 @@ nsresult nsHttpConnectionMgr::UpdateRequestTokenBucket(
                    aBucket);
 }
 
-nsresult nsHttpConnectionMgr::ClearConnectionHistory() {
+void nsHttpConnectionMgr::ClearConnectionHistory() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   LOG(("nsHttpConnectionMgr::ClearConnectionHistory"));
@@ -640,8 +640,6 @@ nsresult nsHttpConnectionMgr::ClearConnectionHistory() {
       iter.Remove();
     }
   }
-
-  return NS_OK;
 }
 
 nsresult nsHttpConnectionMgr::CloseIdleConnection(nsHttpConnection* conn) {

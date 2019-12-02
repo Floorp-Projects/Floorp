@@ -3558,8 +3558,7 @@ nsresult nsHttpChannel::ProcessPartialContent(
   }
 
   // merge any new headers with the cached response headers
-  rv = mCachedResponseHead->UpdateHeaders(mResponseHead);
-  if (NS_FAILED(rv)) return rv;
+  mCachedResponseHead->UpdateHeaders(mResponseHead);
 
   // update the cached response head
   nsAutoCString head;
@@ -3702,8 +3701,7 @@ nsresult nsHttpChannel::ProcessNotModified(
   }
 
   // merge any new headers with the cached response headers
-  rv = mCachedResponseHead->UpdateHeaders(mResponseHead);
-  if (NS_FAILED(rv)) return rv;
+  mCachedResponseHead->UpdateHeaders(mResponseHead);
 
   // update the cached response head
   nsAutoCString head;

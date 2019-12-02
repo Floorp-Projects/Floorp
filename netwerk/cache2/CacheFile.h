@@ -162,13 +162,12 @@ class CacheFile final : public CacheFileChunkListener,
   int64_t BytesFromChunk(uint32_t aIndex, bool aAlternativeData);
   nsresult Truncate(int64_t aOffset);
 
-  nsresult RemoveInput(CacheFileInputStream* aInput, nsresult aStatus);
-  nsresult RemoveOutput(CacheFileOutputStream* aOutput, nsresult aStatus);
+  void RemoveInput(CacheFileInputStream* aInput, nsresult aStatus);
+  void RemoveOutput(CacheFileOutputStream* aOutput, nsresult aStatus);
   nsresult NotifyChunkListener(CacheFileChunkListener* aCallback,
                                nsIEventTarget* aTarget, nsresult aResult,
                                uint32_t aChunkIdx, CacheFileChunk* aChunk);
-  nsresult QueueChunkListener(uint32_t aIndex,
-                              CacheFileChunkListener* aCallback);
+  void QueueChunkListener(uint32_t aIndex, CacheFileChunkListener* aCallback);
   nsresult NotifyChunkListeners(uint32_t aIndex, nsresult aResult,
                                 CacheFileChunk* aChunk);
   bool HaveChunkListeners(uint32_t aIndex);

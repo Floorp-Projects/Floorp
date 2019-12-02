@@ -2170,8 +2170,8 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
     mHandlerActive = false;
 
     // clear cache of all authentication credentials.
-    Unused << mAuthCache.ClearAll();
-    Unused << mPrivateAuthCache.ClearAll();
+    mAuthCache.ClearAll();
+    mPrivateAuthCache.ClearAll();
     if (mWifiTickler) mWifiTickler->Cancel();
 
     // Inform nsIOService that network is tearing down.
@@ -2206,8 +2206,8 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
     rv = InitConnectionMgr();
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   } else if (!strcmp(topic, "net:clear-active-logins")) {
-    Unused << mAuthCache.ClearAll();
-    Unused << mPrivateAuthCache.ClearAll();
+    mAuthCache.ClearAll();
+    mPrivateAuthCache.ClearAll();
   } else if (!strcmp(topic, "net:cancel-all-connections")) {
     if (mConnMgr) {
       mConnMgr->AbortAndCloseAllConnections(0, nullptr);
@@ -2240,7 +2240,7 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
          nsCOMPtr<nsIURI> uri = do_QueryInterface(subject);
 #endif
   } else if (!strcmp(topic, "last-pb-context-exited")) {
-    Unused << mPrivateAuthCache.ClearAll();
+    mPrivateAuthCache.ClearAll();
     if (mConnMgr) {
       mConnMgr->ClearAltServiceMappings();
     }
