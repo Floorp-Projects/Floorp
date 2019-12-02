@@ -2,7 +2,7 @@
 
 # createView
 
-`open fun createView(parent: <ERROR CLASS>): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/toolbar/src/main/java/mozilla/components/feature/toolbar/WebExtensionToolbarAction.kt#L36)
+`open fun createView(parent: <ERROR CLASS>): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/toolbar/src/main/java/mozilla/components/feature/toolbar/WebExtensionToolbarAction.kt#L37)
 
 Overrides [Action.createView](../../mozilla.components.concept.toolbar/-toolbar/-action/create-view.md)
 

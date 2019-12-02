@@ -2,7 +2,7 @@
 
 # ACCEPT_ALL
 
-`ACCEPT_ALL` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L164)
+`ACCEPT_ALL` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L165)
 
 Accept first-party and third-party cookies and site data.
 

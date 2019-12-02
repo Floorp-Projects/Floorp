@@ -2,7 +2,7 @@
 
 # MigrateHistoryException
 
-`class MigrateHistoryException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L81)
+`class MigrateHistoryException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L84)
 
 Unexpected exception while migrating history.
 

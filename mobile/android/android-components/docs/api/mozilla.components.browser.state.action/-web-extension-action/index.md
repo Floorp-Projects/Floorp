@@ -13,6 +13,7 @@
 |---|---|
 | [InstallWebExtension](-install-web-extension/index.md) | `data class InstallWebExtension : `[`WebExtensionAction`](./index.md)<br>Installs the given [extension](-install-web-extension/extension.md) and adds it to the [BrowserState.extensions](../../mozilla.components.browser.state.state/-browser-state/extensions.md). |
 | [UpdateBrowserAction](-update-browser-action/index.md) | `data class UpdateBrowserAction : `[`WebExtensionAction`](./index.md)<br>Updates a browser action of a given [extensionId](-update-browser-action/extension-id.md). |
+| [UpdateBrowserActionPopupSession](-update-browser-action-popup-session/index.md) | `data class UpdateBrowserActionPopupSession : `[`WebExtensionAction`](./index.md)<br>Keeps track of the last session used to display the [BrowserAction](../-browser-action.md) popup. |
 | [UpdateTabBrowserAction](-update-tab-browser-action/index.md) | `data class UpdateTabBrowserAction : `[`WebExtensionAction`](./index.md)<br>Updates a browser action that belongs to the given [sessionId](-update-tab-browser-action/session-id.md) and [extensionId](-update-tab-browser-action/extension-id.md) on the [TabSessionState.extensionState](../../mozilla.components.browser.state.state/-tab-session-state/extension-state.md). |
 
 ### Extension Functions
@@ -27,4 +28,5 @@
 |---|---|
 | [InstallWebExtension](-install-web-extension/index.md) | `data class InstallWebExtension : `[`WebExtensionAction`](./index.md)<br>Installs the given [extension](-install-web-extension/extension.md) and adds it to the [BrowserState.extensions](../../mozilla.components.browser.state.state/-browser-state/extensions.md). |
 | [UpdateBrowserAction](-update-browser-action/index.md) | `data class UpdateBrowserAction : `[`WebExtensionAction`](./index.md)<br>Updates a browser action of a given [extensionId](-update-browser-action/extension-id.md). |
+| [UpdateBrowserActionPopupSession](-update-browser-action-popup-session/index.md) | `data class UpdateBrowserActionPopupSession : `[`WebExtensionAction`](./index.md)<br>Keeps track of the last session used to display the [BrowserAction](../-browser-action.md) popup. |
 | [UpdateTabBrowserAction](-update-tab-browser-action/index.md) | `data class UpdateTabBrowserAction : `[`WebExtensionAction`](./index.md)<br>Updates a browser action that belongs to the given [sessionId](-update-tab-browser-action/session-id.md) and [extensionId](-update-tab-browser-action/extension-id.md) on the [TabSessionState.extensionState](../../mozilla.components.browser.state.state/-tab-session-state/extension-state.md). |

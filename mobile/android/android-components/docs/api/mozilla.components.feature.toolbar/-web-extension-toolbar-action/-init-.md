@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`WebExtensionToolbarAction(browserAction: `[`WebExtensionBrowserAction`](../-web-extension-browser-action.md)`, padding: `[`Padding`](../../mozilla.components.support.base.android/-padding/index.md)`? = null, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`
+`WebExtensionToolbarAction(browserAction: `[`WebExtensionBrowserAction`](../-web-extension-browser-action.md)`, padding: `[`Padding`](../../mozilla.components.support.base.android/-padding/index.md)`? = null, iconJobDispatcher: CoroutineDispatcher, listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`
 
 An action button that represents an web extension item to be added to the toolbar.
 
