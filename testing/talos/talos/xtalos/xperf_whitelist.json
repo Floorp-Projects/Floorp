@@ -380,7 +380,7 @@
     "minbytes": 0,
     "maxbytes": 127000
   },
-  "{profile}\\extensions\\pageloader@mozilla.org\\chrome\\pageloader.xul": {
+  "{profile}\\extensions\\pageloader@mozilla.org\\chrome\\pageloader.xhtml": {
     "mincount": 0,
     "maxcount": 4,
     "minbytes": 0,

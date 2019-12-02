@@ -34,8 +34,8 @@ try {
 // case it is not defined) from a parent/opener window.
 //
 // Finding the SpecialPowers object is needed when we have ChromePowers in
-// harness.xul and we need SpecialPowers in the iframe, and also for tests
-// like test_focus.xul where we open a window which opens another window which
+// harness.xhtml and we need SpecialPowers in the iframe, and also for tests
+// like test_focus.xhtml where we open a window which opens another window which
 // includes SimpleTest.js.
 (function() {
     function ancestor(w) {

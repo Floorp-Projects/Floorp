@@ -20,7 +20,7 @@ class TestWindowTypeChrome(WindowManagerMixin, MarionetteTestCase):
         super(TestWindowTypeChrome, self).tearDown()
 
     def test_get_window_type(self):
-        win = self.open_chrome_window("chrome://marionette/content/test.xul")
+        win = self.open_chrome_window("chrome://marionette/content/test.xhtml")
         self.marionette.switch_to_window(win)
 
         window_type = self.marionette.execute_script(

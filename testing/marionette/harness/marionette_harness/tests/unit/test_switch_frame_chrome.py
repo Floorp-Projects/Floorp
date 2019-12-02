@@ -15,7 +15,7 @@ class TestSwitchFrameChrome(WindowManagerMixin, MarionetteTestCase):
         super(TestSwitchFrameChrome, self).setUp()
         self.marionette.set_context("chrome")
 
-        new_window = self.open_chrome_window("chrome://marionette/content/test.xul")
+        new_window = self.open_chrome_window("chrome://marionette/content/test.xhtml")
         self.marionette.switch_to_window(new_window)
         self.assertNotEqual(self.start_window, self.marionette.current_chrome_window_handle)
 
@@ -24,26 +24,26 @@ class TestSwitchFrameChrome(WindowManagerMixin, MarionetteTestCase):
         super(TestSwitchFrameChrome, self).tearDown()
 
     def test_switch_simple(self):
-        self.assertIn("test.xul", self.marionette.get_url(), "Initial navigation has failed")
+        self.assertIn("test.xhtml", self.marionette.get_url(), "Initial navigation has failed")
         self.marionette.switch_to_frame(0)
-        self.assertIn("test2.xul", self.marionette.get_url(),"Switching by index failed")
+        self.assertIn("test2.xhtml", self.marionette.get_url(),"Switching by index failed")
         self.marionette.switch_to_frame()
         self.assertEqual(None, self.marionette.get_active_frame(), "Switiching by null failed")
-        self.assertIn("test.xul", self.marionette.get_url(), "Switching by null failed")
+        self.assertIn("test.xhtml", self.marionette.get_url(), "Switching by null failed")
         self.marionette.switch_to_frame("iframe")
-        self.assertIn("test2.xul", self.marionette.get_url(), "Switching by name failed")
+        self.assertIn("test2.xhtml", self.marionette.get_url(), "Switching by name failed")
         self.marionette.switch_to_frame()
-        self.assertIn("test.xul", self.marionette.get_url(), "Switching by null failed")
+        self.assertIn("test.xhtml", self.marionette.get_url(), "Switching by null failed")
         self.marionette.switch_to_frame("iframename")
-        self.assertIn("test2.xul", self.marionette.get_url(), "Switching by name failed")
+        self.assertIn("test2.xhtml", self.marionette.get_url(), "Switching by name failed")
         iframe_element = self.marionette.get_active_frame()
         self.marionette.switch_to_frame()
-        self.assertIn("test.xul", self.marionette.get_url(), "Switching by null failed")
+        self.assertIn("test.xhtml", self.marionette.get_url(), "Switching by null failed")
         self.marionette.switch_to_frame(iframe_element)
-        self.assertIn("test2.xul", self.marionette.get_url(), "Switching by element failed")
+        self.assertIn("test2.xhtml", self.marionette.get_url(), "Switching by element failed")
 
     def test_stack_trace(self):
-        self.assertIn("test.xul", self.marionette.get_url(), "Initial navigation has failed")
+        self.assertIn("test.xhtml", self.marionette.get_url(), "Initial navigation has failed")
         self.marionette.switch_to_frame(0)
         self.assertRaises(JavascriptException, self.marionette.execute_async_script, "foo();")
         try:

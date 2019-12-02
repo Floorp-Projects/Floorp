@@ -20,7 +20,7 @@ class TestTitleChrome(WindowManagerMixin, MarionetteTestCase):
         super(TestTitleChrome, self).tearDown()
 
     def test_get_chrome_title(self):
-        win = self.open_chrome_window("chrome://marionette/content/test.xul")
+        win = self.open_chrome_window("chrome://marionette/content/test.xhtml")
         self.marionette.switch_to_window(win)
 
         title = self.marionette.execute_script(
