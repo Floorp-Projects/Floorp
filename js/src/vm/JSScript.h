@@ -1511,6 +1511,108 @@ class ScriptWarmUpData {
 static_assert(sizeof(ScriptWarmUpData) == sizeof(uintptr_t),
               "JIT code depends on ScriptWarmUpData being pointer-sized");
 
+struct FieldInitializers {
+#ifdef DEBUG
+  bool valid;
+#endif
+  // This struct will eventually have a vector of constant values for optimizing
+  // field initializers.
+  size_t numFieldInitializers;
+
+  explicit FieldInitializers(size_t numFieldInitializers)
+      :
+#ifdef DEBUG
+        valid(true),
+#endif
+        numFieldInitializers(numFieldInitializers) {
+  }
+
+  static FieldInitializers Invalid() { return FieldInitializers(); }
+
+ private:
+  FieldInitializers()
+      :
+#ifdef DEBUG
+        valid(false),
+#endif
+        numFieldInitializers(0) {
+  }
+};
+
+// [SMDOC] - JSScript data layout (unshared)
+//
+// PrivateScriptData stores variable-length data associated with a script.
+// Abstractly a PrivateScriptData consists of all these arrays:
+//
+//   * A non-empty array of GCCellPtr in gcthings()
+//
+// Accessing this array just requires calling the appropriate public
+// Span-computing function.
+class alignas(uintptr_t) PrivateScriptData final {
+  uint32_t ngcthings = 0;
+
+  js::FieldInitializers fieldInitializers_ = js::FieldInitializers::Invalid();
+
+  // Translate an offset into a concrete pointer.
+  template <typename T>
+  T* offsetToPointer(size_t offset) {
+    uintptr_t base = reinterpret_cast<uintptr_t>(this);
+    uintptr_t elem = base + offset;
+    return reinterpret_cast<T*>(elem);
+  }
+
+  // Helpers for creating initializing trailing data
+  template <typename T>
+  void initElements(size_t offset, size_t length);
+
+  // Size to allocate
+  static size_t AllocationSize(uint32_t ngcthings);
+
+  // Initialize header and PackedSpans
+  explicit PrivateScriptData(uint32_t ngcthings);
+
+ public:
+  static constexpr size_t offsetOfGCThings() {
+    return sizeof(PrivateScriptData);
+  }
+
+  // Accessors for typed array spans.
+  mozilla::Span<JS::GCCellPtr> gcthings() {
+    size_t offset = offsetOfGCThings();
+    return mozilla::MakeSpan(offsetToPointer<JS::GCCellPtr>(offset), ngcthings);
+  }
+
+  void setFieldInitializers(FieldInitializers fieldInitializers) {
+    fieldInitializers_ = fieldInitializers;
+  }
+  const FieldInitializers& getFieldInitializers() { return fieldInitializers_; }
+
+  // Allocate a new PrivateScriptData. Headers and GCPtrs are initialized.
+  static PrivateScriptData* new_(JSContext* cx, uint32_t ngcthings);
+
+  template <XDRMode mode>
+  static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
+                                    js::HandleScript script,
+                                    js::HandleScriptSourceObject sourceObject,
+                                    js::HandleScope scriptEnclosingScope,
+                                    js::HandleFunction fun);
+
+  // Clone src script data into dst script.
+  static bool Clone(JSContext* cx, js::HandleScript src, js::HandleScript dst,
+                    js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
+
+  static bool InitFromEmitter(JSContext* cx, js::HandleScript script,
+                              js::frontend::BytecodeEmitter* bce);
+
+  void trace(JSTracer* trc);
+
+  size_t allocationSize() const;
+
+  // PrivateScriptData has trailing data so isn't copyable or movable.
+  PrivateScriptData(const PrivateScriptData&) = delete;
+  PrivateScriptData& operator=(const PrivateScriptData&) = delete;
+};
+
 // This class contains fields and accessors that are common to both lazy and
 // non-lazy interpreted scripts. This must be located at offset +0 of any
 // derived classes in order for the 'jitCodeRaw' mechanism to work with the
@@ -1998,34 +2100,6 @@ setterLevel:                                                                  \
   }
 };
 
-struct FieldInitializers {
-#ifdef DEBUG
-  bool valid;
-#endif
-  // This struct will eventually have a vector of constant values for optimizing
-  // field initializers.
-  size_t numFieldInitializers;
-
-  explicit FieldInitializers(size_t numFieldInitializers)
-      :
-#ifdef DEBUG
-        valid(true),
-#endif
-        numFieldInitializers(numFieldInitializers) {
-  }
-
-  static FieldInitializers Invalid() { return FieldInitializers(); }
-
- private:
-  FieldInitializers()
-      :
-#ifdef DEBUG
-        valid(false),
-#endif
-        numFieldInitializers(0) {
-  }
-};
-
 /*
  * NB: after a successful XDR_DECODE, XDRScript callers must do any required
  * subsequent set-up of owning function or script object and then call
@@ -2046,80 +2120,6 @@ XDRResult XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
  */
 template <XDRMode mode>
 XDRResult XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
-
-// [SMDOC] - JSScript data layout (unshared)
-//
-// PrivateScriptData stores variable-length data associated with a script.
-// Abstractly a PrivateScriptData consists of all these arrays:
-//
-//   * A non-empty array of GCCellPtr in gcthings()
-//
-// Accessing this array just requires calling the appropriate public
-// Span-computing function.
-class alignas(uintptr_t) PrivateScriptData final {
-  uint32_t ngcthings = 0;
-
-  js::FieldInitializers fieldInitializers_ = js::FieldInitializers::Invalid();
-
-  // Translate an offset into a concrete pointer.
-  template <typename T>
-  T* offsetToPointer(size_t offset) {
-    uintptr_t base = reinterpret_cast<uintptr_t>(this);
-    uintptr_t elem = base + offset;
-    return reinterpret_cast<T*>(elem);
-  }
-
-  // Helpers for creating initializing trailing data
-  template <typename T>
-  void initElements(size_t offset, size_t length);
-
-  // Size to allocate
-  static size_t AllocationSize(uint32_t ngcthings);
-
-  // Initialize header and PackedSpans
-  explicit PrivateScriptData(uint32_t ngcthings);
-
- public:
-  static constexpr size_t offsetOfGCThings() {
-    return sizeof(PrivateScriptData);
-  }
-
-  // Accessors for typed array spans.
-  mozilla::Span<JS::GCCellPtr> gcthings() {
-    size_t offset = offsetOfGCThings();
-    return mozilla::MakeSpan(offsetToPointer<JS::GCCellPtr>(offset), ngcthings);
-  }
-
-  void setFieldInitializers(FieldInitializers fieldInitializers) {
-    fieldInitializers_ = fieldInitializers;
-  }
-  const FieldInitializers& getFieldInitializers() { return fieldInitializers_; }
-
-  // Allocate a new PrivateScriptData. Headers and GCPtrs are initialized.
-  static PrivateScriptData* new_(JSContext* cx, uint32_t ngcthings);
-
-  template <XDRMode mode>
-  static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
-                                    js::HandleScript script,
-                                    js::HandleScriptSourceObject sourceObject,
-                                    js::HandleScope scriptEnclosingScope,
-                                    js::HandleFunction fun);
-
-  // Clone src script data into dst script.
-  static bool Clone(JSContext* cx, js::HandleScript src, js::HandleScript dst,
-                    js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
-
-  static bool InitFromEmitter(JSContext* cx, js::HandleScript script,
-                              js::frontend::BytecodeEmitter* bce);
-
-  void trace(JSTracer* trc);
-
-  size_t allocationSize() const;
-
-  // PrivateScriptData has trailing data so isn't copyable or movable.
-  PrivateScriptData(const PrivateScriptData&) = delete;
-  PrivateScriptData& operator=(const PrivateScriptData&) = delete;
-};
 
 // [SMDOC] JSScript data layout (immutable)
 //
