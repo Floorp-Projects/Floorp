@@ -1,14 +1,16 @@
-self.GLOBAL = {
-  isWindow: function() { return false; },
-  isWorker: function() { return true; },
-};
-importScripts("/resources/testharness.js");
+// META: title=Cookie Store API: cookiechange event in ServiceWorker with mismatched subscription
+// META: global=!default,serviceworker
+
+'use strict';
+
+const kScope = '/cookie-store/does/not/exist';
 
 // Resolves when the service worker receives the 'activate' event.
 const kServiceWorkerActivatedPromise = new Promise((resolve) => {
   self.addEventListener('activate', event => { resolve(); });
 });
 
+// Resolves when a cookiechange event is received.
 const kCookieChangeReceivedPromise = new Promise((resolve) => {
   self.addEventListener('cookiechange', (event) => {
     resolve(event);
@@ -19,11 +21,15 @@ promise_test(async testCase => {
   await kServiceWorkerActivatedPromise;
 
   const subscriptions = [
-    { name: 'cookie-name', matchType: 'equals',
-      url: '/cookie-store/scope/path' }];
+    { name: 'cookie-name', matchType: 'equals', url: `${kScope}/path` },
+  ];
   await registration.cookies.subscribe(subscriptions);
   testCase.add_cleanup(() => registration.cookies.unsubscribe(subscriptions));
 
+  await cookieStore.set('another-cookie-name', 'cookie-value');
+  testCase.add_cleanup(async () => {
+    await cookieStore.delete('another-cookie-name');
+  });
   await cookieStore.set('cookie-name', 'cookie-value');
   testCase.add_cleanup(async () => {
     await cookieStore.delete('cookie-name');
@@ -37,7 +43,4 @@ promise_test(async testCase => {
   assert_equals(event.deleted.length, 0);
   assert_true(event instanceof ExtendableCookieChangeEvent);
   assert_true(event instanceof ExtendableEvent);
-}, 'cookiechange dispatched with cookie change that matches subscription ' +
-   'to event handler registered with oncookiechange');
-
-done();
+}, 'cookiechange not dispatched for change that does not match subscription');
