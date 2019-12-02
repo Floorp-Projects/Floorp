@@ -53,7 +53,6 @@ class HistoryTest {
     }
 
     @Test
-    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun noHistoryItemsInCacheTest() {
         homeScreen {
         }.openThreeDotMenu {
@@ -98,6 +97,7 @@ class HistoryTest {
     }
 
     @Test
+    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun deleteAllHistoryTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -148,7 +148,7 @@ class HistoryTest {
         }.openThreeDotMenu {
         }.openHistory {
             longTapSelectItem(firstWebPage.url)
-            openActionBarOverflowOrOptionsMenu(activityTestRule.getActivity())
+            openActionBarOverflowOrOptionsMenu(activityTestRule.activity)
         }
 
         multipleSelectionToolbar {
@@ -169,7 +169,7 @@ class HistoryTest {
         }.openLibrary {
         }.openHistory {
             longTapSelectItem(firstWebPage.url)
-            openActionBarOverflowOrOptionsMenu(activityTestRule.getActivity())
+            openActionBarOverflowOrOptionsMenu(activityTestRule.activity)
         }
 
         multipleSelectionToolbar {
@@ -180,6 +180,7 @@ class HistoryTest {
     }
 
     @Test
+    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun deleteMultipleSelectionTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
@@ -195,7 +196,7 @@ class HistoryTest {
         }.openHistory {
             longTapSelectItem(firstWebPage.url)
             longTapSelectItem(secondWebPage.url)
-            openActionBarOverflowOrOptionsMenu(activityTestRule.getActivity())
+            openActionBarOverflowOrOptionsMenu(activityTestRule.activity)
         }
 
         multipleSelectionToolbar {
@@ -227,7 +228,6 @@ class HistoryTest {
     }
 
     @Test
-    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun verifyBackNavigation() {
         homeScreen {
         }.openThreeDotMenu {
