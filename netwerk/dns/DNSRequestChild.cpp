@@ -196,7 +196,7 @@ class CancelDNSRequestEvent : public Runnable {
         mReasonForCancel(aReason) {}
 
   NS_IMETHOD Run() override {
-    if (mDnsRequest->mIPCOpen) {
+    if (mDnsRequest->CanSend()) {
       // Send request to Parent process.
       mDnsRequest->SendCancelDNSRequest(mDnsRequest->mHost, mDnsRequest->mType,
                                         mDnsRequest->mOriginAttributes,
@@ -225,8 +225,7 @@ DNSRequestChild::DNSRequestChild(const nsACString& aHost, const uint16_t& aType,
       mHost(aHost),
       mType(aType),
       mOriginAttributes(aOriginAttributes),
-      mFlags(aFlags),
-      mIPCOpen(false) {}
+      mFlags(aFlags) {}
 
 void DNSRequestChild::StartRequest() {
   // we can only do IPDL on the main thread
@@ -263,11 +262,6 @@ void DNSRequestChild::StartRequest() {
     MOZ_ASSERT(false, "Wrong process");
     return;
   }
-
-  mIPCOpen = true;
-
-  // IPDL holds a reference until IPDL channel gets destroyed
-  AddIPDLReference();
 }
 
 void DNSRequestChild::CallOnLookupComplete() {
@@ -283,7 +277,6 @@ void DNSRequestChild::CallOnLookupByTypeComplete() {
 
 mozilla::ipc::IPCResult DNSRequestChild::RecvLookupCompleted(
     const DNSRequestResponse& reply) {
-  mIPCOpen = false;
   MOZ_ASSERT(mListener);
 
   switch (reply.type()) {
@@ -340,16 +333,12 @@ mozilla::ipc::IPCResult DNSRequestChild::RecvLookupCompleted(
   return IPC_OK();
 }
 
-void DNSRequestChild::ReleaseIPDLReference() {
+void DNSRequestChild::ActorDestroy(ActorDestroyReason why) {
   // Request is done or destroyed. Remove it from the hash table.
   RefPtr<ChildDNSService> dnsServiceChild =
       dont_AddRef(ChildDNSService::GetSingleton());
   dnsServiceChild->NotifyRequestDone(this);
-
-  Release();
 }
-
-void DNSRequestChild::ActorDestroy(ActorDestroyReason why) { mIPCOpen = false; }
 
 //-----------------------------------------------------------------------------
 // DNSRequestChild::nsISupports
@@ -363,7 +352,7 @@ NS_IMPL_ISUPPORTS(DNSRequestChild, nsICancelable)
 
 NS_IMETHODIMP
 DNSRequestChild::Cancel(nsresult reason) {
-  if (mIPCOpen) {
+  if (CanSend()) {
     // We can only do IPDL on the main thread
     nsCOMPtr<nsIRunnable> runnable = new CancelDNSRequestEvent(this, reason);
     SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());

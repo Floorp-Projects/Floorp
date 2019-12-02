@@ -141,12 +141,11 @@ bool SocketProcessParent::DeallocPWebrtcTCPSocketParent(
   return true;
 }
 
-PDNSRequestParent* SocketProcessParent::AllocPDNSRequestParent(
+already_AddRefed<PDNSRequestParent> SocketProcessParent::AllocPDNSRequestParent(
     const nsCString& aHost, const OriginAttributes& aOriginAttributes,
     const uint32_t& aFlags) {
-  DNSRequestParent* p = new DNSRequestParent();
-  p->AddRef();
-  return p;
+  RefPtr<DNSRequestParent> actor = new DNSRequestParent();
+  return actor.forget();
 }
 
 mozilla::ipc::IPCResult SocketProcessParent::RecvPDNSRequestConstructor(
@@ -155,12 +154,6 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvPDNSRequestConstructor(
   static_cast<DNSRequestParent*>(aActor)->DoAsyncResolve(
       aHost, aOriginAttributes, aFlags);
   return IPC_OK();
-}
-
-bool SocketProcessParent::DeallocPDNSRequestParent(PDNSRequestParent* aParent) {
-  DNSRequestParent* p = static_cast<DNSRequestParent*>(aParent);
-  p->Release();
-  return true;
 }
 
 // To ensure that IPDL is finished before SocketParent gets deleted.

@@ -254,21 +254,6 @@ bool NeckoChild::DeallocPUDPSocketChild(PUDPSocketChild* child) {
   return true;
 }
 
-PDNSRequestChild* NeckoChild::AllocPDNSRequestChild(
-    const nsCString& aHost, const OriginAttributes& aOriginAttributes,
-    const uint32_t& aFlags) {
-  // We don't allocate here: instead we always use IPDL constructor that takes
-  // an existing object
-  MOZ_ASSERT_UNREACHABLE("AllocPDNSRequestChild should not be called on child");
-  return nullptr;
-}
-
-bool NeckoChild::DeallocPDNSRequestChild(PDNSRequestChild* aChild) {
-  DNSRequestChild* p = static_cast<DNSRequestChild*>(aChild);
-  p->ReleaseIPDLReference();
-  return true;
-}
-
 PChannelDiverterChild* NeckoChild::AllocPChannelDiverterChild(
     const ChannelDiverterArgs& channel) {
   return new ChannelDiverterChild();

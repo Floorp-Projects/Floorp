@@ -598,12 +598,11 @@ bool NeckoParent::DeallocPUDPSocketParent(PUDPSocketParent* actor) {
   return true;
 }
 
-PDNSRequestParent* NeckoParent::AllocPDNSRequestParent(
+already_AddRefed<PDNSRequestParent> NeckoParent::AllocPDNSRequestParent(
     const nsCString& aHost, const OriginAttributes& aOriginAttributes,
     const uint32_t& aFlags) {
-  DNSRequestParent* p = new DNSRequestParent();
-  p->AddRef();
-  return p;
+  RefPtr<DNSRequestParent> actor = new DNSRequestParent();
+  return actor.forget();
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPDNSRequestConstructor(
@@ -612,12 +611,6 @@ mozilla::ipc::IPCResult NeckoParent::RecvPDNSRequestConstructor(
   static_cast<DNSRequestParent*>(aActor)->DoAsyncResolve(
       aHost, aOriginAttributes, aFlags);
   return IPC_OK();
-}
-
-bool NeckoParent::DeallocPDNSRequestParent(PDNSRequestParent* aParent) {
-  DNSRequestParent* p = static_cast<DNSRequestParent*>(aParent);
-  p->Release();
-  return true;
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvSpeculativeConnect(
