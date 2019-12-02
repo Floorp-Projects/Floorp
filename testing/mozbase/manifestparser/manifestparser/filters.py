@@ -322,14 +322,11 @@ class chunk_by_runtime(InstanceFilter):
         self.total_chunks = total_chunks
         self.runtimes = {normsep(m): r for m, r in runtimes.items()}
 
-    def get_manifest(self, test):
-        return normsep(test.get('ancestor_manifest') or test['manifest_relpath'])
-
     def __call__(self, tests, values):
         tests = list(tests)
 
         # Find runtimes for all relevant manifests.
-        manifests = set(self.get_manifest(t) for t in tests)
+        manifests = set(normsep(t['manifest_relpath']) for t in tests)
         runtimes = [(self.runtimes[m], m) for m in manifests if m in self.runtimes]
 
         # Compute the average to use as a default for manifests that don't exist.
@@ -357,7 +354,7 @@ class chunk_by_runtime(InstanceFilter):
         runtime, this_manifests = chunks[self.this_chunk - 1]
         log("Cumulative test runtime is around {} minutes (average is {} minutes)".format(
             round(runtime / 60), round(sum([c[0] for c in chunks]) / (60 * len(chunks)))))
-        return (t for t in tests if self.get_manifest(t) in this_manifests)
+        return (t for t in tests if normsep(t['manifest_relpath']) in this_manifests)
 
 
 class tags(InstanceFilter):
