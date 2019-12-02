@@ -532,28 +532,6 @@ static bool PushFunctionScript(JSContext* cx, Debugger* dbg, HandleFunction fun,
   return wrapped && NewbornArrayPush(cx, array, ObjectValue(*wrapped));
 }
 
-static bool PushInnerFunctions(JSContext* cx, Debugger* dbg, HandleObject array,
-                               mozilla::Span<const JS::GCCellPtr> gcThings) {
-  RootedFunction fun(cx);
-
-  for (JS::GCCellPtr gcThing : gcThings) {
-    if (!gcThing.is<JSObject>()) {
-      continue;
-    }
-
-    JSObject* obj = &gcThing.as<JSObject>();
-    if (obj->is<JSFunction>()) {
-      fun = &obj->as<JSFunction>();
-
-      if (!PushFunctionScript(cx, dbg, fun, array)) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
-
 bool DebuggerScript::CallData::getChildScripts() {
   if (!ensureScriptMaybeLazy()) {
     return false;
@@ -565,15 +543,31 @@ bool DebuggerScript::CallData::getChildScripts() {
     return false;
   }
 
+  RootedFunction fun(cx);
   if (obj->getReferent().is<JSScript*>()) {
     RootedScript script(cx, obj->getReferent().as<JSScript*>());
-    if (!PushInnerFunctions(cx, dbg, result, script->gcthings())) {
-      return false;
+    for (JS::GCCellPtr gcThing : script->gcthings()) {
+      if (!gcThing.is<JSObject>()) {
+        continue;
+      }
+
+      JSObject* obj = &gcThing.as<JSObject>();
+      if (obj->is<JSFunction>()) {
+        fun = &obj->as<JSFunction>();
+
+        if (!PushFunctionScript(cx, dbg, fun, result)) {
+          return false;
+        }
+      }
     }
   } else {
     Rooted<LazyScript*> lazy(cx, obj->getReferent().as<LazyScript*>());
-    if (!PushInnerFunctions(cx, dbg, result, lazy->gcthings())) {
-      return false;
+
+    for (const GCPtrFunction& innerFun : lazy->innerFunctions()) {
+      fun = innerFun;
+      if (!PushFunctionScript(cx, dbg, fun, result)) {
+        return false;
+      }
     }
   }
 
