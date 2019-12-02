@@ -67,7 +67,7 @@
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Help</string>
     <!-- Browser menu button that sends a to a the what's new article -->
-    <string name="browser_menu_whats_new">What\’s New</string>
+    <string name="browser_menu_whats_new">What’s New</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Settings</string>
     <!-- Browser menu button that opens a user's library -->
@@ -122,7 +122,7 @@
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">Allow</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
-    <string name="search_suggestions_onboarding_do_not_allow_button">Don\’t allow</string>
+    <string name="search_suggestions_onboarding_do_not_allow_button">Don’t allow</string>
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">Allow search suggestions in private sessions?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -886,7 +886,7 @@
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_2">Pages will load normally, but block fewer trackers.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
-    <string name="preference_enhanced_tracking_protection_standard_info_button">What\’s blocked by standard tracking protection</string>
+    <string name="preference_enhanced_tracking_protection_standard_info_button">What’s blocked by standard tracking protection</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strict</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
@@ -898,7 +898,7 @@
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Stronger protection, but may cause some sites or content to break.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
-    <string name="preference_enhanced_tracking_protection_strict_info_button">What\’s blocked by strict tracking protection</string>
+    <string name="preference_enhanced_tracking_protection_strict_info_button">What’s blocked by strict tracking protection</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Blocked</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
@@ -936,7 +936,7 @@
     <!-- About page link text to open open source licenses screen -->
     <string name="about_open_source_licenses">Open source libraries we use</string>
     <!-- About page link text to open what's new link -->
-    <string name="about_whats_new">What\’s new in %s</string>
+    <string name="about_whats_new">What’s new in %s</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS Libraries</string>
@@ -1018,7 +1018,7 @@
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">Save</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
-    <string name="logins_doorhanger_save_dont_save">Don\’t save</string>
+    <string name="logins_doorhanger_save_dont_save">Don’t save</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
     <string name="logins_password_copied">Password copied to clipboard</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
