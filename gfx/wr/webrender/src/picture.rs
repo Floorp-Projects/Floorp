@@ -99,7 +99,7 @@ use crate::render_backend::DataStores;
 use crate::render_task_graph::RenderTaskId;
 use crate::render_target::RenderTargetKind;
 use crate::render_task::{RenderTask, RenderTaskLocation, BlurTaskCache, ClearMode};
-use crate::resource_cache::ResourceCache;
+use crate::resource_cache::{ResourceCache, ImageGeneration};
 use crate::scene::SceneProperties;
 use smallvec::SmallVec;
 use std::{mem, u8, marker, u32};
@@ -371,9 +371,6 @@ struct TilePostUpdateState<'a> {
 
 /// Information about the dependencies of a single primitive instance.
 struct PrimitiveDependencyInfo {
-    /// If true, this instance can be cached.
-    is_cacheable: bool,
-
     /// If true, we should clip the prim rect to the tile boundaries.
     clip_by_tile: bool,
 
@@ -387,7 +384,7 @@ struct PrimitiveDependencyInfo {
     prim_clip_rect: PictureRect,
 
     /// Image keys this primitive depends on.
-    image_keys: SmallVec<[ImageKey; 8]>,
+    images: SmallVec<[ImageDependency; 8]>,
 
     /// Opacity bindings this primitive depends on.
     opacity_bindings: SmallVec<[OpacityBinding; 4]>,
@@ -405,13 +402,11 @@ impl PrimitiveDependencyInfo {
         prim_uid: ItemUid,
         prim_origin: PicturePoint,
         prim_clip_rect: PictureRect,
-        is_cacheable: bool,
     ) -> Self {
         PrimitiveDependencyInfo {
             prim_uid,
             prim_origin,
-            is_cacheable,
-            image_keys: SmallVec::new(),
+            images: SmallVec::new(),
             opacity_bindings: SmallVec::new(),
             clip_by_tile: false,
             prim_clip_rect,
@@ -545,8 +540,6 @@ enum InvalidationReason {
     FractionalOffset,
     /// The background color changed
     BackgroundColor,
-    /// Tile was not cacheable (e.g. video element)
-    NonCacheable,
     /// The opaque state of the backing native surface changed
     SurfaceOpacityChanged,
     /// There was no backing texture (evicted or never rendered)
@@ -788,13 +781,8 @@ impl Tile {
             return;
         }
 
-        // Mark if the tile is cacheable at all.
-        if !info.is_cacheable {
-            self.invalidate(Some(info.prim_clip_rect), InvalidationReason::NonCacheable);
-        }
-
         // Include any image keys this tile depends on.
-        self.current_descriptor.image_keys.extend_from_slice(&info.image_keys);
+        self.current_descriptor.images.extend_from_slice(&info.images);
 
         // Include any opacity bindings this primitive depends on.
         self.current_descriptor.opacity_bindings.extend_from_slice(&info.opacity_bindings);
@@ -846,7 +834,7 @@ impl Tile {
         // truncated to MAX_PRIM_SUB_DEPS during update_prim_dependencies.
         debug_assert!(info.spatial_nodes.len() <= MAX_PRIM_SUB_DEPS);
         debug_assert!(info.clips.len() <= MAX_PRIM_SUB_DEPS);
-        debug_assert!(info.image_keys.len() <= MAX_PRIM_SUB_DEPS);
+        debug_assert!(info.images.len() <= MAX_PRIM_SUB_DEPS);
         debug_assert!(info.opacity_bindings.len() <= MAX_PRIM_SUB_DEPS);
 
         self.current_descriptor.prims.push(PrimitiveDescriptor {
@@ -855,7 +843,7 @@ impl Tile {
             prim_clip_rect: prim_clip_rect.into(),
             transform_dep_count: info.spatial_nodes.len()  as u8,
             clip_dep_count: info.clips.len() as u8,
-            image_dep_count: info.image_keys.len() as u8,
+            image_dep_count: info.images.len() as u8,
             opacity_binding_dep_count: info.opacity_bindings.len() as u8,
         });
 
@@ -1174,7 +1162,7 @@ pub struct TileDescriptor {
     clips: Vec<ItemUid>,
 
     /// List of image keys that this tile depends on.
-    image_keys: Vec<ImageKey>,
+    images: Vec<ImageDependency>,
 
     /// The set of opacity bindings that this tile depends on.
     // TODO(gw): Ugh, get rid of all opacity binding support!
@@ -1191,7 +1179,7 @@ impl TileDescriptor {
             prims: Vec::new(),
             clips: Vec::new(),
             opacity_bindings: Vec::new(),
-            image_keys: Vec::new(),
+            images: Vec::new(),
             transforms: Vec::new(),
         }
     }
@@ -1229,10 +1217,11 @@ impl TileDescriptor {
             pt.end_level();
         }
 
-        if !self.image_keys.is_empty() {
-            pt.new_level("image_keys".to_string());
-            for key in &self.image_keys {
-                pt.new_level(format!("key={:?}", key));
+        if !self.images.is_empty() {
+            pt.new_level("images".to_string());
+            for info in &self.images {
+                pt.new_level(format!("key={:?}", info.key));
+                pt.new_level(format!("generation={:?}", info.generation));
                 pt.end_level();
             }
             pt.end_level();
@@ -1265,7 +1254,7 @@ impl TileDescriptor {
         self.prims.clear();
         self.clips.clear();
         self.opacity_bindings.clear();
-        self.image_keys.clear();
+        self.images.clear();
         self.transforms.clear();
     }
 }
@@ -1940,18 +1929,11 @@ impl TileCacheInstance {
             return false;
         }
 
-        // Some primitives can not be cached (e.g. external video images)
-        let is_cacheable = prim_instance.is_cacheable(
-            &data_stores,
-            resource_cache,
-        );
-
         // Build the list of resources that this primitive has dependencies on.
         let mut prim_info = PrimitiveDependencyInfo::new(
             prim_instance.uid(),
             prim_rect.origin,
             pic_clip_rect,
-            is_cacheable,
         );
 
         // Include the prim spatial node, if differs relative to cache root.
@@ -2038,15 +2020,28 @@ impl TileCacheInstance {
                     }
                 }
 
-                prim_info.image_keys.push(image_data.key);
+                prim_info.images.push(ImageDependency {
+                    key: image_data.key,
+                    generation: resource_cache.get_image_generation(image_data.key),
+                });
             }
             PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
                 let yuv_image_data = &data_stores.yuv_image[data_handle].kind;
-                prim_info.image_keys.extend_from_slice(&yuv_image_data.yuv_key);
+                prim_info.images.extend(
+                    yuv_image_data.yuv_key.iter().map(|key| {
+                        ImageDependency {
+                            key: *key,
+                            generation: resource_cache.get_image_generation(*key),
+                        }
+                    })
+                );
             }
             PrimitiveInstanceKind::ImageBorder { data_handle, .. } => {
                 let border_data = &data_stores.image_border[data_handle].kind;
-                prim_info.image_keys.push(border_data.request.key);
+                prim_info.images.push(ImageDependency {
+                    key: border_data.request.key,
+                    generation: resource_cache.get_image_generation(border_data.request.key),
+                });
             }
             PrimitiveInstanceKind::PushClipChain |
             PrimitiveInstanceKind::PopClipChain => {
@@ -2139,7 +2134,7 @@ impl TileCacheInstance {
         prim_info.clips.truncate(MAX_PRIM_SUB_DEPS);
         prim_info.opacity_bindings.truncate(MAX_PRIM_SUB_DEPS);
         prim_info.spatial_nodes.truncate(MAX_PRIM_SUB_DEPS);
-        prim_info.image_keys.truncate(MAX_PRIM_SUB_DEPS);
+        prim_info.images.truncate(MAX_PRIM_SUB_DEPS);
 
         // Normalize the tile coordinates before adding to tile dependencies.
         // For each affected tile, mark any of the primitive dependencies.
@@ -4571,11 +4566,18 @@ struct PrimitiveComparisonKey {
     curr_index: PrimitiveDependencyIndex,
 }
 
+/// Information stored an image dependency
+#[derive(Debug, Copy, Clone, PartialEq)]
+struct ImageDependency {
+    key: ImageKey,
+    generation: ImageGeneration,
+}
+
 /// A helper struct to compare a primitive and all its sub-dependencies.
 struct PrimitiveComparer<'a> {
     clip_comparer: CompareHelper<'a, ItemUid>,
     transform_comparer: CompareHelper<'a, SpatialNodeIndex>,
-    image_comparer: CompareHelper<'a, ImageKey>,
+    image_comparer: CompareHelper<'a, ImageDependency>,
     opacity_comparer: CompareHelper<'a, OpacityBinding>,
     resource_cache: &'a ResourceCache,
     spatial_nodes: &'a FastHashMap<SpatialNodeIndex, SpatialNodeDependency>,
@@ -4601,8 +4603,8 @@ impl<'a> PrimitiveComparer<'a> {
         );
 
         let image_comparer = CompareHelper::new(
-            &prev.image_keys,
-            &curr.image_keys,
+            &prev.images,
+            &curr.images,
         );
 
         let opacity_comparer = CompareHelper::new(
@@ -4684,7 +4686,7 @@ impl<'a> PrimitiveComparer<'a> {
             prev.image_dep_count,
             curr.image_dep_count,
             |curr| {
-                resource_cache.is_image_dirty(*curr)
+                resource_cache.get_image_generation(curr.key) != curr.generation
             }
         ) {
             return PrimitiveCompareResult::Image;
