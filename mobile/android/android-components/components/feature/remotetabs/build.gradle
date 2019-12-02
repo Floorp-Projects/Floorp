@@ -29,8 +29,12 @@ android {
 
 dependencies {
     implementation project(':service-firefox-accounts')
+    implementation project(':browser-icons')
     implementation project(':browser-state')
     implementation project(':browser-storage-sync')
+    implementation project(':concept-awesomebar')
+    implementation project(':concept-engine')
+    implementation project(':feature-session')
     implementation project(':support-ktx')
     implementation project(':support-base')
 
