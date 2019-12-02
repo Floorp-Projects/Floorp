@@ -34,6 +34,7 @@ import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.addons.amo.AddOnCollectionProvider
+import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.customtabs.CustomTabIntentProcessor
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
@@ -143,6 +144,7 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     val searchUseCases by lazy { SearchUseCases(applicationContext, searchEngineManager, sessionManager) }
     val defaultSearchUseCase by lazy { { searchTerms: String -> searchUseCases.defaultSearch.invoke(searchTerms) } }
+    val appLinksUseCases by lazy { AppLinksUseCases(applicationContext) }
 
     val webAppManifestStorage by lazy { ManifestStorage(applicationContext) }
     val webAppShortcutManager by lazy { WebAppShortcutManager(applicationContext, client, webAppManifestStorage) }
@@ -205,6 +207,23 @@ open class DefaultComponents(private val applicationContext: Context) {
                 }
             }.apply {
                 visible = { webAppUseCases.isPinningSupported() && sessionManager.selectedSession != null }
+            }
+        )
+
+        items.add(
+            SimpleBrowserMenuItem("Open in App") {
+                val getRedirect = appLinksUseCases.appLinkRedirect
+                sessionManager.selectedSession?.let {
+                    val redirect = getRedirect.invoke(it.url)
+                    redirect.appIntent?.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    appLinksUseCases.openAppLink.invoke(redirect)
+                }
+            }.apply {
+                visible = {
+                    sessionManager.selectedSession?.let {
+                        appLinksUseCases.appLinkRedirect(it.url).hasExternalApp()
+                    } ?: false
+                }
             }
         )
 

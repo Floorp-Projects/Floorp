@@ -29,8 +29,9 @@ class AppLinksUseCasesTest {
     private val appUrl = "https://example.com"
     private val appPackage = "com.example.app"
     private val browserPackage = "com.browser"
+    private val testBrowserPackage = "com.current.browser"
 
-    private fun createContext(vararg urlToPackages: Pair<String, String>): Context {
+    private fun createContext(vararg urlToPackages: Pair<String, String>, default: Boolean = false): Context {
         val pm = testContext.packageManager
         val packageManager = shadowOf(pm)
 
@@ -52,6 +53,9 @@ class AppLinksUseCasesTest {
 
         val context = mock<Context>()
         `when`(context.packageManager).thenReturn(pm)
+        if (!default) {
+            `when`(context.packageName).thenReturn(testBrowserPackage)
+        }
 
         return context
     }
@@ -84,7 +88,7 @@ class AppLinksUseCasesTest {
         assertFalse(redirect.isRedirect())
 
         val menuRedirect = subject.appLinkRedirect(appUrl)
-        assertFalse(menuRedirect.isRedirect())
+        assertTrue(menuRedirect.isRedirect())
     }
 
     @Test
@@ -94,6 +98,9 @@ class AppLinksUseCasesTest {
 
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
         assertFalse(redirect.isRedirect())
+
+        val menuRedirect = subject.appLinkRedirect(appUrl)
+        assertFalse(menuRedirect.hasExternalApp())
     }
 
     @Test
@@ -107,6 +114,15 @@ class AppLinksUseCasesTest {
         // But we do from a context menu.
         val menuRedirect = subject.appLinkRedirect(appUrl)
         assertTrue(menuRedirect.isRedirect())
+    }
+
+    @Test
+    fun `A URL that also matches default activity is not an app link`() {
+        val context = createContext(appUrl to appPackage, appUrl to browserPackage, default = true)
+        val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
+
+        val menuRedirect = subject.appLinkRedirect(appUrl)
+        assertFalse(menuRedirect.hasExternalApp())
     }
 
     @Test
@@ -138,7 +154,7 @@ class AppLinksUseCasesTest {
         val context = createContext(uri to appPackage, appUrl to browserPackage)
         val subject = AppLinksUseCases(context, { true }, setOf(browserPackage))
 
-        val redirect = subject.appLinkRedirect.invoke(uri)
+        val redirect = subject.interceptedAppLinkRedirect.invoke(uri)
 
         assertTrue(redirect.hasExternalApp())
         assertTrue(redirect.isInstallable())

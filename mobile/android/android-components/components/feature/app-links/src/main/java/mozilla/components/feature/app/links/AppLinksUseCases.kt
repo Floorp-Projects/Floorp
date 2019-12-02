@@ -77,6 +77,7 @@ class AppLinksUseCases(
      * @param includeInstallAppFallback If {true} then offer an app-link to the installed market app
      * if no web fallback is available.
      */
+    @Suppress("ComplexMethod")
     inner class GetAppLinkRedirect internal constructor(
         private val includeHttpAppLinks: Boolean = false,
         private val ignoreDefaultBrowser: Boolean = false,
@@ -90,6 +91,7 @@ class AppLinksUseCases(
                 redirectData.resolveInfo == null -> null
                 includeHttpAppLinks && (ignoreDefaultBrowser ||
                     (redirectData.appIntent != null && isDefaultBrowser(redirectData.appIntent))) -> null
+                includeHttpAppLinks -> redirectData.appIntent
                 !launchInApp() && isAppIntentHttpOrHttps -> null
                 else -> redirectData.appIntent
             }
@@ -139,13 +141,21 @@ class AppLinksUseCases(
                 }
             }
 
+            val resolveInfoList = intent?.let {
+                getNonBrowserActivities(it)
+            }
+            val resolveInfo = resolveInfoList?.firstOrNull()
+
+            // only target intent for specific app if only one non browser app is found
+            if (resolveInfoList?.count() == 1) {
+                resolveInfo?.let {
+                    intent.`package` = it.activityInfo?.packageName
+                }
+            }
+
             val appIntent = when (intent.data) {
                 null -> null
                 else -> intent
-            }
-
-            val resolveInfo = appIntent?.let {
-                getNonBrowserActivities(it).firstOrNull()
             }
 
             return RedirectData(appIntent, fallbackIntent, marketplaceIntent, resolveInfo)
