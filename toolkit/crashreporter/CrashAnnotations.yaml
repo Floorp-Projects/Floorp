@@ -112,26 +112,17 @@ AvailablePageFile:
 
 AvailablePhysicalMemory:
   description: >
-    Amount of free physical memory in bytes.
-    - Under Windows, populated with the contents of the MEMORYSTATUSEX's structure
+    Windows-only, amount of free physical memory in bytes. This annotation
+    is populated with the contents of the MEMORYSTATUSEX's structure
     ullAvailPhys field.
-    - Under macOS, populated with vm_statistics64_data_t::free_count.
-    - Not available under other platforms.
-  type: string
-  ping: true
-
-AvailableSwapMemory:
-  description: >
-    macOS-only, amount of free swap space. Populated with the coontents of
-    sysctl "vm.swapusage" :: xsu_avail.
   type: string
   ping: true
 
 AvailableVirtualMemory:
   description: >
-    Windows-only, amount of free virtual memory in bytes. Populated with the contents
-    of the MEMORYSTATUSEX's structure ullAvailVirtual field.
-    For macOS, see AvailableSwapMemory, AvailablePhysicalMemory and PurgeablePhysicalMemory.
+    Windows-only, amount of free virtual memory in bytes. This annotation is
+    populated with the contents of the MEMORYSTATUSEX's structure
+    ullAvailVirtual field.
   type: string
   ping: true
 
@@ -699,14 +690,6 @@ ProxyStreamValid:
     Set to "false" when encountering an invalid IPC proxy stream.
   type: string
 
-PurgeablePhysicalMemory:
-  description: >
-    macOS only. Amount of physical memory currently allocated but which may
-    be deallocated by the system in case of memory pressure. Populated from
-    vm_statistics64_data_t::purgeable_count * vm_page_size.
-  type: string
-  ping: true
-
 RDDProcessStatus:
   description: >
     Status of the RDD process, can be set to "Running" or "Destroyed"
@@ -843,25 +826,23 @@ ThreadIdNameMapping:
 
 TotalPageFile:
   description: >
-    Maximum amount of memory that can be committed.
-    - Under Windows, populated with the contents of the PERFORMANCE_INFORMATION's
-      structure CommitLimit field.
-    - Not available on other systems.
+    Windows-only, maximum amount of memory that can be committed.  This
+    annotation is populated with the contents of the PERFORMANCE_INFORMATION's
+    structure CommitLimit field.
   type: string
   ping: true
 
 TotalPhysicalMemory:
   description: >
-    Amount of physical memory in bytes.
-    - Under Windows, populated with the contents of the MEMORYSTATUSEX's structure
+    Windows-only, amount of physical memory in bytes. This annotation is
+    populated with the contents of the MEMORYSTATUSEX's structure
     ullTotalPhys field.
-    - Under macOS, populated with sysctl "hw.memsize".
   type: string
   ping: true
 
 TotalVirtualMemory:
   description: >
-    Windows-only. Size of the virtual address space. This annotation is
+    Windows-only, size of the virtual address space. This annotation is
     populated with the contents of the MEMORYSTATUSEX's structure
     ullTotalVirtual field.
   type: string
