@@ -6,12 +6,16 @@
 
 #include "nsDocShellLoadState.h"
 #include "nsIDocShell.h"
+#include "SHEntryParent.h"
+#include "SHEntryChild.h"
+#include "nsISHEntry.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIWebNavigation.h"
 #include "nsIChildChannel.h"
 #include "ReferrerInfo.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
+#include "mozilla/StaticPrefs_fission.h"
 
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/NullPrincipal.h"
@@ -73,6 +77,14 @@ nsDocShellLoadState::nsDocShellLoadState(
   mHeadersStream = aLoadState.HeadersStream();
   mSrcdocData = aLoadState.SrcdocData();
   mResultPrincipalURI = aLoadState.ResultPrincipalURI();
+  if (!aLoadState.SHEntry() || !StaticPrefs::fission_sessionHistoryInParent()) {
+    return;
+  }
+  if (XRE_IsParentProcess()) {
+    mSHEntry = static_cast<LegacySHEntry*>(aLoadState.SHEntry());
+  } else {
+    mSHEntry = static_cast<SHEntryChild*>(aLoadState.SHEntry());
+  }
 }
 
 nsDocShellLoadState::~nsDocShellLoadState() {}
@@ -649,6 +661,18 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.HeadersStream() = mHeadersStream;
   loadState.SrcdocData() = mSrcdocData;
   loadState.ResultPrincipalURI() = mResultPrincipalURI;
-
+  if (!mSHEntry || !StaticPrefs::fission_sessionHistoryInParent()) {
+    // Without the pref, we don't have an actor for shentry and thus
+    // we can't serialize it. We could write custom (de)serializers,
+    // but a session history rewrite is on the way anyway.
+    return loadState;
+  }
+  if (XRE_IsParentProcess()) {
+    loadState.SHEntry() = static_cast<CrossProcessSHEntry*>(
+        static_cast<LegacySHEntry*>(mSHEntry.get()));
+  } else {
+    loadState.SHEntry() = static_cast<CrossProcessSHEntry*>(
+        static_cast<SHEntryChild*>(mSHEntry.get()));
+  }
   return loadState;
 }

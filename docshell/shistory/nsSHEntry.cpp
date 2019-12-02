@@ -999,6 +999,7 @@ nsSHEntry::CreateLoadInfo(nsDocShellLoadState** aLoadState) {
   loadState->SetLoadFlags(flags);
 
   loadState->SetFirstParty(true);
+  loadState->SetSHEntry(this);
 
   loadState.forget(aLoadState);
   return NS_OK;
@@ -1009,20 +1010,6 @@ nsSHEntry::GetBfcacheID(uint64_t* aBFCacheID) {
   MOZ_CRASH(
       "Classes inheriting from nsSHEntry should implement this. "
       "Bug 1546344 will clean this up.");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLegacySHEntry::CreateLoadInfo(nsDocShellLoadState** aLoadState) {
-  RefPtr<nsDocShellLoadState> loadState;
-  nsSHEntry::CreateLoadInfo(getter_AddRefs(loadState));
-  // If CreateLoadInfo is getting called from a parent process,
-  // then the call will never go through SHEntryChild::CreateLoadInfo
-  // and then the nsSHEntry will never be set on load state.
-  // This is why we have to override this method here
-  // and set the nsSHEntry.
-  loadState->SetSHEntry(this);
-  loadState.forget(aLoadState);
   return NS_OK;
 }
 

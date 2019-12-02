@@ -37,6 +37,7 @@ using refcounted class nsIReferrerInfo from "mozilla/dom/ReferrerInfoUtils.h";
 using refcounted class nsIVariant from "mozilla/dom/PropertyBagUtils.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using refcounted class nsISHEntry from "nsISHEntry.h";
+using refcounted class mozilla::dom::CrossProcessSHEntry from "mozilla/dom/MaybeNewPSHEntry.h";
 
 namespace mozilla {
 namespace dom {
@@ -252,9 +253,12 @@ struct DocShellLoadStateInit
   nsIInputStream HeadersStream;
 
   nsString SrcdocData; // useless without sourcedocshell
+  // This might be missing if serialization of session history entries is
+  // not supported. This is the case when 'fission.sessionHistoryInParent'
+  // pref is off.
+  CrossProcessSHEntry SHEntry;
 
   // Fields missing due to lack of need or serialization
-  // nsCOMPtr<nsISHEntry> mSHEntry;
   // nsCOMPtr<nsIDocShell> mSourceDocShell;
   // bool mIsSrcDocLoad; // useless without sourcedocshell
   // nsIChannel pendingRedirectedChannel; // sent through other mechanism

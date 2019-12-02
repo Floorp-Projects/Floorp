@@ -17,6 +17,8 @@ namespace mozilla {
 namespace dom {
 
 class LegacySHEntry;
+class PSHistoryChild;
+class PSHistoryParent;
 class PSHEntryChild;
 class PSHEntryParent;
 class PSHistoryChild;
