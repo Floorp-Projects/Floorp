@@ -16,6 +16,7 @@
 #include "jit/VMFunctions.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
+#include "vm/BigIntType.h"
 #include "vm/EqualityOperations.h"
 #include "vm/Instrumentation.h"
 #include "vm/Interpreter.h"
@@ -48,20 +49,20 @@ namespace jit {
   _(BaselineGetFunctionThis, js::jit::BaselineGetFunctionThis)                 \
   _(BaselineThrowInitializedThis, js::jit::BaselineThrowInitializedThis)       \
   _(BaselineThrowUninitializedThis, js::jit::BaselineThrowUninitializedThis)   \
-  _(BigIntAdd, js::jit::BigIntAdd)                                             \
-  _(BigIntBitAnd, js::jit::BigIntBitAnd)                                       \
-  _(BigIntBitNot, js::jit::BigIntBitNot)                                       \
-  _(BigIntBitOr, js::jit::BigIntBitOr)                                         \
-  _(BigIntBitXor, js::jit::BigIntBitXor)                                       \
-  _(BigIntDec, js::jit::BigIntDec)                                             \
-  _(BigIntDiv, js::jit::BigIntDiv)                                             \
-  _(BigIntInc, js::jit::BigIntInc)                                             \
-  _(BigIntLeftShift, js::jit::BigIntLeftShift)                                 \
-  _(BigIntMod, js::jit::BigIntMod)                                             \
-  _(BigIntMul, js::jit::BigIntMul)                                             \
-  _(BigIntNeg, js::jit::BigIntNeg)                                             \
-  _(BigIntPow, js::jit::BigIntPow)                                             \
-  _(BigIntRightShift, js::jit::BigIntRightShift)                               \
+  _(BigIntAdd, JS::BigInt::add)                                                \
+  _(BigIntBitAnd, JS::BigInt::bitAnd)                                          \
+  _(BigIntBitNot, JS::BigInt::bitNot)                                          \
+  _(BigIntBitOr, JS::BigInt::bitOr)                                            \
+  _(BigIntBitXor, JS::BigInt::bitXor)                                          \
+  _(BigIntDec, JS::BigInt::dec)                                                \
+  _(BigIntDiv, JS::BigInt::div)                                                \
+  _(BigIntInc, JS::BigInt::inc)                                                \
+  _(BigIntLeftShift, JS::BigInt::lsh)                                          \
+  _(BigIntMod, JS::BigInt::mod)                                                \
+  _(BigIntMul, JS::BigInt::mul)                                                \
+  _(BigIntNeg, JS::BigInt::neg)                                                \
+  _(BigIntPow, JS::BigInt::pow)                                                \
+  _(BigIntRightShift, JS::BigInt::rsh)                                         \
   _(BigIntStringEqual,                                                         \
     js::jit::BigIntStringEqual<js::jit::EqualityKind::Equal>)                  \
   _(BigIntStringGreaterThanOrEqual,                                            \
@@ -70,7 +71,7 @@ namespace jit {
     js::jit::BigIntStringCompare<js::jit::ComparisonKind::LessThan>)           \
   _(BigIntStringNotEqual,                                                      \
     js::jit::BigIntStringEqual<js::jit::EqualityKind::NotEqual>)               \
-  _(BigIntSub, js::jit::BigIntSub)                                             \
+  _(BigIntSub, JS::BigInt::sub)                                                \
   _(BindVarOperation, js::BindVarOperation)                                    \
   _(BitAnd, js::BitAnd)                                                        \
   _(BitLsh, js::BitLsh)                                                        \
