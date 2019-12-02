@@ -615,6 +615,22 @@ XPCOMUtils.defineLazyGetter(this, "gTabbrowserBundle", function() {
   );
 });
 
+// Temporary for Delegated Credentials Study:
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1582591
+if (AppConstants.NIGHTLY_BUILD) {
+  let { DelegatedCredsExperiment } = ChromeUtils.import(
+    "resource:///modules/DelegatedCredsExperiment.jsm"
+  );
+
+  var today = new Date();
+  var expiryDate = new Date("2020-01-10 0:00:00");
+  if (today < expiryDate) {
+    DelegatedCredsExperiment.runTest();
+  } else {
+    DelegatedCredsExperiment.uninstall();
+  }
+}
+
 const global = this;
 
 const listeners = {
