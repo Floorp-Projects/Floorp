@@ -71,10 +71,10 @@ def attributeReturnType(a, getter, macro):
         ret = "MOZ_MUST_USE " + ret
     # Ideally, we'd set MOZ_CAN_RUN_SCRIPT in the "scriptable and not
     # builtinclass" case too, so we'd just have memberCanRunScript() check
-    # can_explicitly_run_script and call it here.  But that would likely require
-    # a fair amount of Gecko-side annotation work.  See bug 1534292.
-    if (a.explicit_can_run_script or
-        (a.explicit_getter_can_run_script and getter) or
+    # explicit_setter_can_run_script/explicit_setter_can_run_script and call it
+    # here.  But that would likely require a fair amount of Gecko-side
+    # annotation work.  See bug 1534292.
+    if ((a.explicit_getter_can_run_script and getter) or
         (a.explicit_setter_can_run_script and not getter)):
         ret = "MOZ_CAN_RUN_SCRIPT " + ret
     return ret
@@ -125,7 +125,7 @@ def methodReturnType(m, macro):
         ret = "MOZ_MUST_USE " + ret
     # Ideally, we'd set MOZ_CAN_RUN_SCRIPT in the "scriptable and not
     # builtinclass" case too, so we'd just have memberCanRunScript() check
-    # can_explicitly_run_script and call it here.  But that would likely require
+    # explicit_can_run_script and call it here.  But that would likely require
     # a fair amount of Gecko-side annotation work.  See bug 1534292.
     if m.explicit_can_run_script:
         ret = "MOZ_CAN_RUN_SCRIPT " + ret
