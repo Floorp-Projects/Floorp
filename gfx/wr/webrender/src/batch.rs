@@ -20,13 +20,12 @@ use crate::prim_store::{DeferredResolve, EdgeAaSegmentMask, PrimitiveInstanceKin
 use crate::prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
 use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex, VECS_PER_SEGMENT, SpaceMapper};
 use crate::prim_store::image::ImageSource;
-use crate::render_backend::DataStores;
 use crate::render_target::RenderTargetContext;
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraph};
 use crate::render_task::RenderTaskAddress;
 use crate::renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
 use crate::renderer::{BLOCKS_PER_UV_RECT, MAX_VERTEX_TEXTURE_WIDTH};
-use crate::resource_cache::{CacheItem, GlyphFetchResult, ImageRequest, ResourceCache, ImageProperties};
+use crate::resource_cache::{CacheItem, GlyphFetchResult, ImageRequest, ResourceCache};
 use smallvec::SmallVec;
 use std::{f32, i32, usize};
 use crate::util::{project_rect, TransformedRectKind};
@@ -2692,46 +2691,6 @@ impl BrushBatchParameters {
                     specific_resource_address,
                 }
             ),
-        }
-    }
-}
-
-impl PrimitiveInstance {
-    pub fn is_cacheable(
-        &self,
-        data_stores: &DataStores,
-        resource_cache: &ResourceCache,
-    ) -> bool {
-        let image_key = match self.kind {
-            PrimitiveInstanceKind::Image { data_handle, .. } => {
-                let image_data = &data_stores.image[data_handle].kind;
-                image_data.key
-            }
-            PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
-                let yuv_image_data =
-                    &data_stores.yuv_image[data_handle].kind;
-                yuv_image_data.yuv_key[0]
-            }
-            PrimitiveInstanceKind::Picture { .. } |
-            PrimitiveInstanceKind::TextRun { .. } |
-            PrimitiveInstanceKind::LineDecoration { .. } |
-            PrimitiveInstanceKind::NormalBorder { .. } |
-            PrimitiveInstanceKind::ImageBorder { .. } |
-            PrimitiveInstanceKind::Rectangle { .. } |
-            PrimitiveInstanceKind::LinearGradient { .. } |
-            PrimitiveInstanceKind::RadialGradient { .. } |
-            PrimitiveInstanceKind::PushClipChain |
-            PrimitiveInstanceKind::PopClipChain |
-            PrimitiveInstanceKind::Clear { .. } |
-            PrimitiveInstanceKind::Backdrop { .. } => {
-                return true;
-            }
-        };
-        match resource_cache.get_image_properties(image_key) {
-            Some(ImageProperties { external_image: Some(_), .. }) => {
-                false
-            }
-            _ => true
         }
     }
 }
