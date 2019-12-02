@@ -108,9 +108,8 @@ var global = this;
       height,
     });
 
-    const zoom = content.windowUtils.getResolution();
-    width = content.innerWidth * zoom;
-    height = content.innerHeight * zoom;
+    width = content.innerWidth;
+    height = content.innerHeight;
     debug(`EMIT RESIZEVIEWPORT: ${width} x ${height}`);
     sendAsyncMessage("ResponsiveMode:OnResizeViewport", {
       width,

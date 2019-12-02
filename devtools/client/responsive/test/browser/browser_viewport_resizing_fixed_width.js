@@ -35,7 +35,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
     {
       metaSupport: true,
       before: [2.0, 300, 150],
-      after: [0.25, 200, 200], // This checks that min-zoom is active.
+      after: [0.25, 300, 300], // This checks that min-zoom is active.
     },
   ];
 
