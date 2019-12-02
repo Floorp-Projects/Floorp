@@ -74,10 +74,11 @@ bool CompareTextTracks::LessThan(TextTrack* aOne, TextTrack* aTwo) const {
   TextTrackSource sourceTwo = aTwo->GetTextTrackSource();
   if (sourceOne != sourceTwo) {
     return sourceOne == TextTrackSource::Track ||
-           (sourceOne == AddTextTrack && sourceTwo == MediaResourceSpecific);
+           (sourceOne == TextTrackSource::AddTextTrack &&
+            sourceTwo == TextTrackSource::MediaResourceSpecific);
   }
   switch (sourceOne) {
-    case Track: {
+    case TextTrackSource::Track: {
       int32_t positionOne = TrackChildPosition(aOne);
       int32_t positionTwo = TrackChildPosition(aTwo);
       // If either position one or positiontwo are -1 then something has gone
@@ -85,13 +86,13 @@ bool CompareTextTracks::LessThan(TextTrack* aOne, TextTrack* aTwo) const {
       return positionOne != -1 && positionTwo != -1 &&
              positionOne < positionTwo;
     }
-    case AddTextTrack:
+    case TextTrackSource::AddTextTrack:
       // For AddTextTrack sources the tracks will already be in the correct
       // relative order in the source array. Assume we're called in iteration
       // order and can therefore always report aOne < aTwo to maintain the
       // original temporal ordering.
       return true;
-    case MediaResourceSpecific:
+    case TextTrackSource::MediaResourceSpecific:
       // No rules for Media Resource Specific tracks yet.
       break;
   }

@@ -26,6 +26,8 @@ interface HTMLTrackElement : HTMLElement {
   const unsigned short LOADING = 1;
   const unsigned short LOADED = 2;
   const unsigned short ERROR = 3;
+
+  [BinaryName="readyStateForBindings"]
   readonly attribute unsigned short readyState;
 
   readonly attribute TextTrack? track;
