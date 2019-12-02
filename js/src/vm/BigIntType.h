@@ -95,7 +95,7 @@ class BigInt final
 
   void traceChildren(JSTracer* trc);
   void finalize(JSFreeOp* fop);
-  js::HashNumber hash();
+  js::HashNumber hash() const;
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
   static BigInt* createUninitialized(JSContext* cx, size_t digitLength,
@@ -218,8 +218,8 @@ class BigInt final
                        mozilla::Maybe<bool>& res);
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  void dump();  // Debugger-friendly stderr dump.
-  void dump(js::GenericPrinter& out);
+  void dump() const;  // Debugger-friendly stderr dump.
+  void dump(js::GenericPrinter& out) const;
 #endif
 
  private:
