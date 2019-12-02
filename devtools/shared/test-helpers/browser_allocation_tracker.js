@@ -37,7 +37,8 @@ add_task(async function() {
     global,
     undefined,
     "test-file.js",
-    1
+    1,
+    /* enforceFilenameRestrictions */ false
   );
   /* eslint-enable no-undef */
 
@@ -58,7 +59,14 @@ add_task(async function() {
       ` + ${afterCreation - before} -> ${afterCreation})`
   );
 
-  Cu.evalInSandbox("list = null;", global, undefined, "test-file.js", 7);
+  Cu.evalInSandbox(
+    "list = null;",
+    global,
+    undefined,
+    "test-file.js",
+    7,
+    /* enforceFilenameRestrictions */ false
+  );
 
   Cu.forceGC();
   Cu.forceCC();
