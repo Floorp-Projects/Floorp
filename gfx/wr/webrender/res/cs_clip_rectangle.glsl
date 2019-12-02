@@ -118,8 +118,13 @@ void main(void) {
 
 #ifdef WR_FEATURE_FAST_PATH
 // See http://www.iquilezles.org/www/articles/distfunctions2d/distfunctions2d.htm
-float sdf_rounded_rect(vec2 pos, vec3 clip_params) {
-    return length(max(abs(pos) - clip_params.xy, 0.0)) - clip_params.z;
+float sd_box(in vec2 pos, in vec2 box_size) {
+    vec2 d = abs(pos) - box_size;
+    return length(max(d, vec2(0.0))) + min(max(d.x,d.y), 0.0);
+}
+
+float sd_rounded_box(in vec2 pos, in vec2 box_size, in float radius) {
+    return sd_box(pos, box_size) - radius;
 }
 #endif
 
@@ -128,7 +133,7 @@ void main(void) {
     float aa_range = compute_aa_range(local_pos);
 
 #ifdef WR_FEATURE_FAST_PATH
-    float d = sdf_rounded_rect(local_pos, vClipParams);
+    float d = sd_rounded_box(local_pos, vClipParams.xy, vClipParams.z);
     float f = distance_aa(aa_range, d);
     float final_alpha = mix(f, 1.0 - f, vClipMode);
 #else
