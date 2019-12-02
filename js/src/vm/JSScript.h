@@ -1397,6 +1397,75 @@ class ScriptSourceObject : public NativeObject {
 enum class GeneratorKind : bool { NotGenerator, Generator };
 enum class FunctionAsyncKind : bool { SyncFunction, AsyncFunction };
 
+// ScriptWarmUpData represents a pointer-sized field in JSScript that stores
+// one of the following:
+//
+// * The script's warm-up count. This is only used until the script has a
+//   JitScript. The Baseline Interpreter and JITs use the warm-up count stored
+//   in JitScript.
+//
+// * A pointer to the JitScript, when the script is warm enough for the Baseline
+//   Interpreter.
+//
+// Pointer tagging is used to distinguish those states.
+class ScriptWarmUpData {
+  static constexpr uintptr_t NumTagBits = 2;
+  static constexpr uint32_t MaxWarmUpCount = UINT32_MAX >> NumTagBits;
+
+ public:
+  // Public only for the JITs.
+  static constexpr uintptr_t TagMask = (1 << NumTagBits) - 1;
+  static constexpr uintptr_t JitScriptTag = 0;
+  static constexpr uintptr_t WarmUpCountTag = 1;
+
+ private:
+  uintptr_t data_ = 0 | WarmUpCountTag;
+
+  void setWarmUpCount(uint32_t count) {
+    if (count > MaxWarmUpCount) {
+      count = MaxWarmUpCount;
+    }
+    data_ = (uintptr_t(count) << NumTagBits) | WarmUpCountTag;
+  }
+
+ public:
+  void trace(JSTracer* trc);
+
+  bool isWarmUpCount() const { return (data_ & TagMask) == WarmUpCountTag; }
+  bool isJitScript() const { return (data_ & TagMask) == JitScriptTag; }
+
+  uint32_t toWarmUpCount() const {
+    MOZ_ASSERT(isWarmUpCount());
+    return data_ >> NumTagBits;
+  }
+  void resetWarmUpCount(uint32_t count) {
+    MOZ_ASSERT(isWarmUpCount());
+    setWarmUpCount(count);
+  }
+  void incWarmUpCount(uint32_t amount) {
+    MOZ_ASSERT(isWarmUpCount());
+    data_ += uintptr_t(amount) << NumTagBits;
+  }
+
+  jit::JitScript* toJitScript() const {
+    MOZ_ASSERT(isJitScript());
+    static_assert(JitScriptTag == 0, "Code depends on JitScriptTag being zero");
+    return reinterpret_cast<jit::JitScript*>(data_);
+  }
+  void setJitScript(jit::JitScript* jitScript) {
+    MOZ_ASSERT(isWarmUpCount());
+    MOZ_ASSERT((uintptr_t(jitScript) & TagMask) == 0);
+    data_ = uintptr_t(jitScript) | JitScriptTag;
+  }
+  void clearJitScript() {
+    MOZ_ASSERT(isJitScript());
+    setWarmUpCount(0);
+  }
+};
+
+static_assert(sizeof(ScriptWarmUpData) == sizeof(uintptr_t),
+              "JIT code depends on ScriptWarmUpData being pointer-sized");
+
 // This class contains fields and accessors that are common to both lazy and
 // non-lazy interpreted scripts. This must be located at offset +0 of any
 // derived classes in order for the 'jitCodeRaw' mechanism to work with the
@@ -2375,75 +2444,6 @@ using RuntimeScriptDataTable =
     HashSet<RuntimeScriptData*, RuntimeScriptDataHasher, SystemAllocPolicy>;
 
 extern void SweepScriptData(JSRuntime* rt);
-
-// ScriptWarmUpData represents a pointer-sized field in JSScript that stores
-// one of the following:
-//
-// * The script's warm-up count. This is only used until the script has a
-//   JitScript. The Baseline Interpreter and JITs use the warm-up count stored
-//   in JitScript.
-//
-// * A pointer to the JitScript, when the script is warm enough for the Baseline
-//   Interpreter.
-//
-// Pointer tagging is used to distinguish those states.
-class ScriptWarmUpData {
-  static constexpr uintptr_t NumTagBits = 2;
-  static constexpr uint32_t MaxWarmUpCount = UINT32_MAX >> NumTagBits;
-
- public:
-  // Public only for the JITs.
-  static constexpr uintptr_t TagMask = (1 << NumTagBits) - 1;
-  static constexpr uintptr_t JitScriptTag = 0;
-  static constexpr uintptr_t WarmUpCountTag = 1;
-
- private:
-  uintptr_t data_ = 0 | WarmUpCountTag;
-
-  void setWarmUpCount(uint32_t count) {
-    if (count > MaxWarmUpCount) {
-      count = MaxWarmUpCount;
-    }
-    data_ = (uintptr_t(count) << NumTagBits) | WarmUpCountTag;
-  }
-
- public:
-  void trace(JSTracer* trc);
-
-  bool isWarmUpCount() const { return (data_ & TagMask) == WarmUpCountTag; }
-  bool isJitScript() const { return (data_ & TagMask) == JitScriptTag; }
-
-  uint32_t toWarmUpCount() const {
-    MOZ_ASSERT(isWarmUpCount());
-    return data_ >> NumTagBits;
-  }
-  void resetWarmUpCount(uint32_t count) {
-    MOZ_ASSERT(isWarmUpCount());
-    setWarmUpCount(count);
-  }
-  void incWarmUpCount(uint32_t amount) {
-    MOZ_ASSERT(isWarmUpCount());
-    data_ += uintptr_t(amount) << NumTagBits;
-  }
-
-  jit::JitScript* toJitScript() const {
-    MOZ_ASSERT(isJitScript());
-    static_assert(JitScriptTag == 0, "Code depends on JitScriptTag being zero");
-    return reinterpret_cast<jit::JitScript*>(data_);
-  }
-  void setJitScript(jit::JitScript* jitScript) {
-    MOZ_ASSERT(isWarmUpCount());
-    MOZ_ASSERT((uintptr_t(jitScript) & TagMask) == 0);
-    data_ = uintptr_t(jitScript) | JitScriptTag;
-  }
-  void clearJitScript() {
-    MOZ_ASSERT(isJitScript());
-    setWarmUpCount(0);
-  }
-};
-
-static_assert(sizeof(ScriptWarmUpData) == sizeof(uintptr_t),
-              "JIT code depends on ScriptWarmUpData being pointer-sized");
 
 } /* namespace js */
 
