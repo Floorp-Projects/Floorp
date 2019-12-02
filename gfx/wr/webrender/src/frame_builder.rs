@@ -998,4 +998,26 @@ impl Frame {
     pub fn must_be_drawn(&self) -> bool {
         self.has_texture_cache_tasks && !self.has_been_rendered
     }
+
+    // Returns true if this frame doesn't alter what is on screen currently.
+    pub fn is_nop(&self) -> bool {
+        // If picture caching is disabled, we don't have enough information
+        // to know if this frame is a nop, so it gets drawn unconditionally.
+        if !self.composite_state.picture_caching_is_enabled {
+            return false;
+        }
+
+        // When picture caching is enabled, the first (main framebuffer) pass
+        // consists of compositing tiles only (whether via the simple compositor
+        // or the native OS compositor). If there are no other passes, that
+        // implies that none of the picture cache tiles were updated, and thus
+        // the frame content must be exactly the same as last frame. If this is
+        // true, drawing this frame is a no-op and can be skipped.
+
+        if self.passes.len() > 1 {
+            return false;
+        }
+
+        true
+    }
 }
