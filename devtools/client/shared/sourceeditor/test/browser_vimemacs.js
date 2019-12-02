@@ -8,11 +8,13 @@ const URI =
   "/shared/sourceeditor/test/codemirror/vimemacs.html";
 loadHelperScript("helper_codemirror_runner.js");
 
-function test() {
+async function test() {
   requestLongerTimeout(4);
   waitForExplicitFinish();
 
-  addTab(URI).then(function(tab) {
-    runCodeMirrorTest(tab.linkedBrowser);
-  });
+  // Needed for a loadFrameScript(data:) call in helper_codemirror_runner.js
+  await pushPref("security.allow_parent_unrestricted_js_loads", true);
+
+  const tab = await addTab(URI);
+  runCodeMirrorTest(tab.linkedBrowser);
 }
