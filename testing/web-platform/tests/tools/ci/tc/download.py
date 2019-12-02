@@ -15,6 +15,7 @@ logger = logging.getLogger("tc-download")
 # be https://community-tc.services.mozilla.com)
 TASKCLUSTER_ROOT_URL = 'https://taskcluster.net'
 
+
 def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--ref", action="store", default="master",
