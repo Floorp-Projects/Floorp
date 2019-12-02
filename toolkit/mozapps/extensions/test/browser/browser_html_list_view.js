@@ -949,13 +949,14 @@ add_task(async function testDisabledDimming() {
 
   const checkOpacity = (card, expected, msg) => {
     let { opacity } = card.ownerGlobal.getComputedStyle(card.firstElementChild);
-    is(opacity, expected, msg);
+    let normalize = val => Math.floor(val * 10);
+    is(normalize(opacity), normalize(expected), msg);
   };
   const waitForTransition = card =>
     BrowserTestUtils.waitForEvent(
       card.firstElementChild,
       "transitionend",
-      e => e.propertyName === "opacity"
+      e => e.propertyName === "opacity" && e.target.classList.contains("card")
     );
 
   let card = getCardByAddonId(doc, id);
