@@ -2624,10 +2624,8 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
     return false;
   }
 
+  funbox->initFromLazyFunction(fun);
   BaseScript* base = fun->baseScript();
-  if (base->needsHomeObject()) {
-    funbox->setNeedsHomeObject();
-  }
 
   PropagateTransitiveParseFlags(base, pc_->sc());
 
