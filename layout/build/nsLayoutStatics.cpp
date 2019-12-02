@@ -252,9 +252,6 @@ nsresult nsLayoutStatics::Initialize() {
 
   nsPermissionManager::Startup();
 
-  nsCookieService::AppClearDataObserverInit();
-  nsApplicationCacheService::AppClearDataObserverInit();
-
 #ifdef MOZ_XUL
   nsMenuBarListener::InitializeStatics();
 #endif

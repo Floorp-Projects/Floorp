@@ -31,7 +31,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsITrackingDBService"
 );
 
-// A Cleaner is an object with 4 methods. These methods must return a Promise
+// A Cleaner is an object with 5 methods. These methods must return a Promise
 // object. Here a description of these methods:
 // * deleteAll() - this method _must_ exist. When called, it deletes all the
 //                 data owned by the cleaner.
@@ -50,6 +50,9 @@ XPCOMUtils.defineLazyServiceGetter(
 //                          **no fallback is used**, as for a number of
 //                          cleaners, no such data will ever exist and
 //                          therefore clearing it does not make sense.
+// * deleteByOriginAttributes() - this method is implemented only if the cleaner
+//                                knows how to delete data by originAttributes
+//                                pattern.
 
 const CookieCleaner = {
   deleteByLocalFiles(aOriginAttributes) {
@@ -74,6 +77,17 @@ const CookieCleaner = {
 
   deleteByRange(aFrom, aTo) {
     return Services.cookies.removeAllSince(aFrom);
+  },
+
+  deleteByOriginAttributes(aOriginAttributesString) {
+    return new Promise(aResolve => {
+      try {
+        Services.cookies.removeCookiesWithOriginAttributes(
+          aOriginAttributesString
+        );
+      } catch (ex) {}
+      aResolve();
+    });
   },
 
   deleteAll() {
@@ -383,6 +397,18 @@ const MediaDevicesCleaner = {
 };
 
 const AppCacheCleaner = {
+  deleteByOriginAttributes(aOriginAttributesString) {
+    return new Promise(aResolve => {
+      let appCacheService = Cc[
+        "@mozilla.org/network/application-cache-service;1"
+      ].getService(Ci.nsIApplicationCacheService);
+      try {
+        appCacheService.evictMatchingOriginAttributes(aOriginAttributesString);
+      } catch (ex) {}
+      aResolve();
+    });
+  },
+
   deleteAll() {
     // AppCache: this doesn't wait for the cleanup to be complete.
     OfflineAppCacheHelper.clear();
@@ -571,6 +597,36 @@ const QuotaCleaner = {
     }
 
     return Promise.all(promises);
+  },
+
+  deleteByOriginAttributes(aOriginAttributesString) {
+    // The legacy LocalStorage implementation that will eventually be removed.
+    // And it should've been cleared while notifying observers with
+    // clear-origin-attributes-data.
+
+    return ServiceWorkerCleanUp.removeFromOriginAttributes(
+      aOriginAttributesString
+    )
+      .then(
+        _ => /* exceptionThrown = */ false,
+        _ => /* exceptionThrown = */ true
+      )
+      .then(exceptionThrown => {
+        // QuotaManager: In the event of a failure, we call reject to propagate
+        // the error upwards.
+        return new Promise((aResolve, aReject) => {
+          let req = Services.qms.clearStoragesForOriginAttributesPattern(
+            aOriginAttributesString
+          );
+          req.callback = () => {
+            if (req.resultCode == Cr.NS_OK) {
+              aResolve();
+            } else {
+              aReject({ message: "Delete by origin attributes failed" });
+            }
+          };
+        });
+      });
   },
 
   deleteAll() {
@@ -848,6 +904,11 @@ const PermissionsCleaner = {
 
   deleteByRange(aFrom, aTo) {
     Services.perms.removeAllSince(aFrom / 1000);
+    return Promise.resolve();
+  },
+
+  deleteByOriginAttributes(aOriginAttributesString) {
+    Services.perms.removePermissionsWithAttributes(aOriginAttributesString);
     return Promise.resolve();
   },
 
@@ -1180,10 +1241,32 @@ ClearDataService.prototype = Object.freeze({
   },
 
   deleteDataFromOriginAttributesPattern(aPattern) {
+    if (!aPattern) {
+      return Cr.NS_ERROR_INVALID_ARG;
+    }
+
+    let patternString = JSON.stringify(aPattern);
+    // XXXtt remove clear-origin-attributes-data entirely
     Services.obs.notifyObservers(
       null,
       "clear-origin-attributes-data",
-      JSON.stringify(aPattern)
+      patternString
+    );
+
+    let dummyCallback = {
+      onDataDeleted: () => {},
+    };
+    return this._deleteInternal(
+      Ci.nsIClearDataService.CLEAR_ALL,
+      dummyCallback,
+      aCleaner => {
+        if (aCleaner.deleteByOriginAttributes) {
+          return aCleaner.deleteByOriginAttributes(patternString);
+        }
+
+        // We don't want to delete more than what is strictly required.
+        return Promise.resolve();
+      }
     );
   },
 

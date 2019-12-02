@@ -102,8 +102,6 @@ static StaticRefPtr<nsCookieService> gCookieService;
 #define IDX_SAME_SITE 11
 #define IDX_RAW_SAME_SITE 12
 
-#define TOPIC_CLEAR_ORIGIN_DATA "clear-origin-attributes-data"
-
 static const int64_t kCookiePurgeAge =
     int64_t(30 * 24 * 60 * 60) * PR_USEC_PER_SEC;  // 30 days in microseconds
 
@@ -458,31 +456,6 @@ NS_IMPL_ISUPPORTS(CloseCookieDBListener, mozIStorageCompletionCallback)
 
 namespace {
 
-class AppClearDataObserver final : public nsIObserver {
-  ~AppClearDataObserver() = default;
-
- public:
-  NS_DECL_ISUPPORTS
-
-  // nsIObserver implementation.
-  NS_IMETHOD
-  Observe(nsISupports* aSubject, const char* aTopic,
-          const char16_t* aData) override {
-    MOZ_ASSERT(!nsCRT::strcmp(aTopic, TOPIC_CLEAR_ORIGIN_DATA));
-
-    MOZ_ASSERT(XRE_IsParentProcess());
-
-    nsCOMPtr<nsICookieManager> cookieManager =
-        do_GetService(NS_COOKIEMANAGER_CONTRACTID);
-    MOZ_ASSERT(cookieManager);
-
-    return cookieManager->RemoveCookiesWithOriginAttributes(
-        nsDependentString(aData), EmptyCString());
-  }
-};
-
-NS_IMPL_ISUPPORTS(AppClearDataObserver, nsIObserver)
-
 // comparator class for sorting cookies by entry and index.
 class CompareCookiesByIndex {
  public:
@@ -556,14 +529,6 @@ already_AddRefed<nsCookieService> nsCookieService::GetSingleton() {
   }
 
   return do_AddRef(gCookieService);
-}
-
-/* static */
-void nsCookieService::AppClearDataObserverInit() {
-  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
-  nsCOMPtr<nsIObserver> obs = new AppClearDataObserver();
-  observerService->AddObserver(obs, TOPIC_CLEAR_ORIGIN_DATA,
-                               /* ownsWeak= */ false);
 }
 
 /******************************************************************************
