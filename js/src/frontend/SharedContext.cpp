@@ -210,7 +210,16 @@ void FunctionBox::initFromLazyFunction(JSFunction* fun) {
   if (lazy->needsHomeObject()) {
     setNeedsHomeObject();
   }
+
   enclosingScope_ = fun->enclosingScope();
+
+  if (lazy->bindingsAccessedDynamically()) {
+    setBindingsAccessedDynamically();
+  }
+  if (lazy->hasDirectEval()) {
+    setHasDirectEval();
+  }
+
   initWithEnclosingScope(enclosingScope_, fun);
 }
 

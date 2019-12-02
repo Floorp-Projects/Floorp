@@ -7179,7 +7179,6 @@ bool BytecodeEmitter::isRestParameter(ParseNode* expr) {
   }
 
   FunctionBox* funbox = sc->asFunctionBox();
-  RootedFunction fun(cx, funbox->function());
   if (!funbox->hasRest()) {
     return false;
   }
@@ -7960,10 +7959,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 
       if (propVal->is<FunctionNode>() &&
           propVal->as<FunctionNode>().funbox()->needsHomeObject()) {
-        MOZ_ASSERT(propVal->as<FunctionNode>()
-                       .funbox()
-                       ->function()
-                       ->allowSuperProperty());
+        MOZ_ASSERT(propVal->as<FunctionNode>().funbox()->allowSuperProperty());
 
         if (!pe.emitInitHomeObject()) {
           //        [stack] CTOR? OBJ CTOR? KEY? FUN
@@ -8367,7 +8363,7 @@ bool BytecodeEmitter::emitCreateFieldInitializers(ClassEmitter& ce,
           return false;
         }
         if (initializer->funbox()->needsHomeObject()) {
-          MOZ_ASSERT(initializer->funbox()->function()->allowSuperProperty());
+          MOZ_ASSERT(initializer->funbox()->allowSuperProperty());
           if (!ce.emitFieldInitializerHomeObject()) {
             //          [stack] CTOR OBJ ARRAY LAMBDA
             return false;
