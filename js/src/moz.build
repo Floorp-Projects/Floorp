@@ -445,7 +445,7 @@ DIRS += [
     'gc',
     'jit',
     'wasm',
-]
+] + (['new-regexp'] if CONFIG['ENABLE_NEW_REGEXP'] else [])
 
 if CONFIG['JS_JITSPEW']:
     DIRS += ['zydis']
