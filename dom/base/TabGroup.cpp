@@ -270,35 +270,5 @@ uint32_t TabGroup::Count(bool aActiveOnly) const {
   return count;
 }
 
-/*static*/
-bool TabGroup::HasOnlyThrottableTabs() {
-  if (!sTabGroups) {
-    return false;
-  }
-
-  for (TabGroup* tabGroup = sTabGroups->getFirst(); tabGroup;
-       tabGroup =
-           static_cast<LinkedListElement<TabGroup>*>(tabGroup)->getNext()) {
-    for (auto iter = tabGroup->Iter(); !iter.Done(); iter.Next()) {
-      DocGroup* docGroup = iter.Get()->mDocGroup;
-      for (auto* documentInDocGroup : *docGroup) {
-        if (documentInDocGroup->IsCurrentActiveDocument()) {
-          nsPIDOMWindowInner* win = documentInDocGroup->GetInnerWindow();
-          if (win && win->IsCurrentInnerWindow()) {
-            nsPIDOMWindowOuter* outer = win->GetOuterWindow();
-            if (outer) {
-              TimeoutManager& tm = win->TimeoutManager();
-              if (!tm.BudgetThrottlingEnabled(outer->IsBackground())) {
-                return false;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  return true;
-}
-
 }  // namespace dom
 }  // namespace mozilla
