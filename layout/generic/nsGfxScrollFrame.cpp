@@ -6654,6 +6654,20 @@ uint32_t nsIScrollableFrame::GetAvailableScrollingDirections() const {
   return directions;
 }
 
+uint32_t nsIScrollableFrame::GetAvailableVisualScrollingDirections() const {
+  nscoord oneDevPixel =
+      GetScrolledFrame()->PresContext()->AppUnitsPerDevPixel();
+  uint32_t directions = 0;
+  nsRect scrollRange = GetVisualScrollRange();
+  if (scrollRange.width >= oneDevPixel) {
+    directions |= HORIZONTAL;
+  }
+  if (scrollRange.height >= oneDevPixel) {
+    directions |= VERTICAL;
+  }
+  return directions;
+}
+
 static nsRect InflateByScrollMargin(const nsRect& aTargetRect,
                                     const nsMargin& aScrollMargin,
                                     const nsRect& aScrolledRect) {
