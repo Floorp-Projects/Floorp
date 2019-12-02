@@ -516,14 +516,6 @@ pref("browser.tabs.delayHidingAudioPlayingIconMS", 3000);
 pref("security.allow_eval_with_system_principal", false);
 pref("security.allow_eval_in_parent_process", false);
 
-#ifdef NIGHTLY_BUILD
-  pref("browser.tabs.remote.useHTTPResponseProcessSelection", true);
-#else
-  // Disabled outside of nightly due to bug 1554217
-  pref("browser.tabs.remote.useHTTPResponseProcessSelection", false);
-#endif
-
-
 // Unload tabs when available memory is running low
 pref("browser.tabs.unloadOnLowMemory", false);
 
