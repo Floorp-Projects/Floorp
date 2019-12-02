@@ -166,6 +166,13 @@
 	]]></string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Aucune connexion internet</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Vérifiez votre connexion réseau ou essayez d’actualiser la page dans quelques instants.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Actualiser</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Adresse invalide</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
 	<p>L’adresse fournie n’est pas dans un format reconnu. Veuillez vérifier qu’il n’y a pas d’erreur dans la barre d’adresse et réessayez.</p>
@@ -258,12 +265,4 @@
 	<p>Le site web à l’adresse %1$s a été signalé comme étant trompeur et a été bloqué suivant vos préférences de sécurité.</p>
 	]]></string>
 
-    <!-- The tile for the list of external apps to open the link in -->
-    <string name="mozac_feature_applinks_open_in">Ouvrir dans…</string>
-    <!-- The description to warn users that their private browsing session changes  -->
-    <string name="mozac_feature_applinks_confirm_dialog_title">Ouvrir dans l’application ? Votre activité pourrait ne plus être privée.</string>
-    <!-- Opens the selected time -->
-    <string name="mozac_feature_applinks_confirm_dialog_confirm">Ouvrir</string>
-    <!-- Cancels the prompt -->
-    <string name="mozac_feature_applinks_confirm_dialog_deny">Annuler</string>
-</resources>
+    </resources>

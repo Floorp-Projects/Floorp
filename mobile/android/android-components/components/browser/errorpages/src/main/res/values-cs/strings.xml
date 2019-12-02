@@ -94,7 +94,7 @@ kdo se snaží vydávat za server.</li>
       <p>Prohlížeč je teď v režimu offline a k požadované položce se nelze připojit.</p>
       <ul>
         <li>Je počítač připojen k funkční síti?</li>
-        <li>Pro přechod do režimu online a obnovení stránky klepněte na tlačítko „Zkusit znovu“.</li>
+        <li>Pro přechod do režimu online a opětovné načtení stránky klepněte na tlačítko „Zkusit znovu“.</li>
       </ul>
     ]]></string>
 
@@ -164,6 +164,9 @@ kdo se snaží vydávat za server.</li>
         <li>Pokud nemůžete načíst žádnou stránku, zkontrolujte svá mobilní data nebo Wi-Fi připojení.</li>
       </ul>
     ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Připojení k Internetu není dostupné</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Neplatná adresa</string>
