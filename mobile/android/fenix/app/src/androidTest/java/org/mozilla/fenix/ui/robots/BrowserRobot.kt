@@ -76,6 +76,14 @@ class BrowserRobot {
         }
     }
 
+    fun clickLinkMatchingText(expectedText: String) {
+        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        mDevice.waitNotNull(Until.findObject(By.text(expectedText)), TestAssetHelper.waitingTime)
+
+        val element = mDevice.findObject(By.text(expectedText))
+        element.click()
+    }
+
     class Transition {
         private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         private fun threeDotButton() = onView(
