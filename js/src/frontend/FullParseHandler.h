@@ -102,22 +102,7 @@ class FullParseHandler {
         lazyOuterFunction_(cx, lazyOuterFunction),
         lazyInnerFunctionIndex(0),
         lazyClosedOverBindingIndex(0),
-        sourceKind_(kind) {
-    // The LazyScript::gcthings() array contains the inner function list
-    // followed by the closed-over bindings data. Advance the index for
-    // closed-over bindings to the end of the inner functions. The
-    // nextLazyInnerFunction / nextLazyClosedOverBinding accessors confirm we
-    // have the expected types. See also: LazyScript::Create.
-    if (lazyOuterFunction) {
-      for (JS::GCCellPtr gcThing : lazyOuterFunction->gcthings()) {
-        if (gcThing.is<JSObject>()) {
-          lazyClosedOverBindingIndex++;
-        } else {
-          break;
-        }
-      }
-    }
-  }
+        sourceKind_(kind) {}
 
   static NullNode null() { return NullNode(); }
 
@@ -1051,17 +1036,15 @@ class FullParseHandler {
   bool canSkipLazyInnerFunctions() { return !!lazyOuterFunction_; }
   bool canSkipLazyClosedOverBindings() { return !!lazyOuterFunction_; }
   JSFunction* nextLazyInnerFunction() {
-    return &lazyOuterFunction_->gcthings()[lazyInnerFunctionIndex++]
-                .as<JSObject>()
-                .as<JSFunction>();
+    MOZ_ASSERT(lazyInnerFunctionIndex <
+               lazyOuterFunction_->numInnerFunctions());
+    return lazyOuterFunction_->innerFunctions()[lazyInnerFunctionIndex++];
   }
   JSAtom* nextLazyClosedOverBinding() {
-    // These entries are either JSAtom* or nullptr, so use the 'asCell()'
-    // accessor which is faster.
-    gc::Cell* cell =
-        lazyOuterFunction_->gcthings()[lazyClosedOverBindingIndex++].asCell();
-    MOZ_ASSERT_IF(cell, cell->is<JSAtom>());
-    return static_cast<JSAtom*>(cell);
+    MOZ_ASSERT(lazyClosedOverBindingIndex <
+               lazyOuterFunction_->numClosedOverBindings());
+    return lazyOuterFunction_
+        ->closedOverBindings()[lazyClosedOverBindingIndex++];
   }
 };
 
