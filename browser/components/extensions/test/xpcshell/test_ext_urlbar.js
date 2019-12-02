@@ -117,8 +117,8 @@ add_task(async function test_registerProvider() {
             "SearchString is non empty"
           );
           browser.test.assertTrue(
-            Array.isArray(query.acceptableSources),
-            "acceptableSources is an array"
+            Array.isArray(query.sources),
+            "sources is an array"
           );
           return state;
         }, name);
@@ -193,7 +193,7 @@ add_task(async function test_onProviderResultsRequested() {
         browser.test.assertFalse(query.isPrivate);
         browser.test.assertEq(query.maxResults, 10);
         browser.test.assertEq(query.searchString, "test");
-        browser.test.assertTrue(Array.isArray(query.acceptableSources));
+        browser.test.assertTrue(Array.isArray(query.sources));
         return [
           {
             type: "remote_tab",

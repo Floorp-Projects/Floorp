@@ -49,7 +49,7 @@
             "type": "string",
             "description": "The query's search string."
           },
-          "acceptableSources": {
+          "sources": {
             "type": "array",
             "description": "List of acceptable source types to return.",
             "items": {
