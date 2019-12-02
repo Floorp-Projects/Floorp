@@ -24,8 +24,10 @@ info: |
         BitwiseORExpression
 features: [coalesce-expression]
 negative:
-    phase: early
+    phase: parse
     type: SyntaxError
 ---*/
+
+$DONOTEVALUATE();
 
 0 ?? 0 || true;

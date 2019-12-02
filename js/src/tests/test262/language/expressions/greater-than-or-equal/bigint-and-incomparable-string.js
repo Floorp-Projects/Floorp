@@ -25,4 +25,5 @@ assert.sameValue('++1' >= 0n, false, 'The result of ("++1" >= 0n) is false');
 assert.sameValue('--1' >= 0n, false, 'The result of ("--1" >= 0n) is false');
 assert.sameValue('1e0' >= 0n, false, 'The result of ("1e0" >= 0n) is false');
 assert.sameValue('Infinity' >= 0n, false, 'The result of ("Infinity" >= 0n) is false');
+
 reportCompare(0, 0);

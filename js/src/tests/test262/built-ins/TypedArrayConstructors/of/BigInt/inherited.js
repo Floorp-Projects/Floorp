@@ -23,4 +23,5 @@ testWithBigIntTypedArrayConstructors(function(TA) {
     "constructor does not define an own property named 'of'"
   );
 });
+
 reportCompare(0, 0);

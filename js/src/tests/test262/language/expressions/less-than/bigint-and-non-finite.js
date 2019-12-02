@@ -27,4 +27,5 @@ assert.sameValue(-1n < -Infinity, false, 'The result of (-1n < -Infinity) is fal
 assert.sameValue(-Infinity < -1n, true, 'The result of (-Infinity < -1n) is true');
 assert.sameValue(0n < NaN, false, 'The result of (0n < NaN) is false');
 assert.sameValue(NaN < 0n, false, 'The result of (NaN < 0n) is false');
+
 reportCompare(0, 0);

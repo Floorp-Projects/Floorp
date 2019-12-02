@@ -33,4 +33,5 @@ assert.throws(RangeError, function() {
 assert.throws(RangeError, function() {
   1000000000000000000n % 0n;
 }, '1000000000000000000n % 0n throws RangeError');
+
 reportCompare(0, 0);

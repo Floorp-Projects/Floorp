@@ -26,4 +26,5 @@ assert.sameValue(1n === NaN, false, 'The result of (1n === NaN) is false');
 assert.sameValue(NaN === 1n, false, 'The result of (NaN === 1n) is false');
 assert.sameValue(-1n === NaN, false, 'The result of (-1n === NaN) is false');
 assert.sameValue(NaN === -1n, false, 'The result of (NaN === -1n) is false');
+
 reportCompare(0, 0);
