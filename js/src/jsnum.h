@@ -7,7 +7,6 @@
 #ifndef jsnum_h
 #define jsnum_h
 
-#include "mozilla/Compiler.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Range.h"
 #include "mozilla/Utf8.h"
@@ -17,21 +16,6 @@
 #include "js/Conversions.h"
 
 #include "vm/StringType.h"
-
-// This macro is should be `one' if current compiler supports builtin functions
-// like __builtin_sadd_overflow.
-#if MOZ_IS_GCC
-// GCC supports these functions.
-#  define BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(x) 1
-#else
-// For CLANG, we use its own function to check for this.
-#  ifdef __has_builtin
-#    define BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(x) __has_builtin(x)
-#  endif
-#endif
-#ifndef BUILTIN_CHECKED_ARITHMETIC_SUPPORTED
-#  define BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(x) 0
-#endif
 
 namespace js {
 
@@ -358,39 +342,6 @@ static MOZ_MUST_USE inline bool ToIndex(JSContext* cx, JS::HandleValue v,
 static MOZ_MUST_USE inline bool ToIndex(JSContext* cx, JS::HandleValue v,
                                         uint64_t* index) {
   return ToIndex(cx, v, JSMSG_BAD_INDEX, index);
-}
-
-MOZ_MUST_USE inline bool SafeAdd(int32_t one, int32_t two, int32_t* res) {
-#if BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(__builtin_sadd_overflow)
-  // Using compiler's builtin function.
-  return !__builtin_sadd_overflow(one, two, res);
-#else
-  // Use unsigned for the 32-bit operation since signed overflow gets
-  // undefined behavior.
-  *res = uint32_t(one) + uint32_t(two);
-  int64_t ores = (int64_t)one + (int64_t)two;
-  return ores == (int64_t)*res;
-#endif
-}
-
-MOZ_MUST_USE inline bool SafeSub(int32_t one, int32_t two, int32_t* res) {
-#if BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(__builtin_ssub_overflow)
-  return !__builtin_ssub_overflow(one, two, res);
-#else
-  *res = uint32_t(one) - uint32_t(two);
-  int64_t ores = (int64_t)one - (int64_t)two;
-  return ores == (int64_t)*res;
-#endif
-}
-
-MOZ_MUST_USE inline bool SafeMul(int32_t one, int32_t two, int32_t* res) {
-#if BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(__builtin_smul_overflow)
-  return !__builtin_smul_overflow(one, two, res);
-#else
-  *res = uint32_t(one) * uint32_t(two);
-  int64_t ores = (int64_t)one * (int64_t)two;
-  return ores == (int64_t)*res;
-#endif
 }
 
 } /* namespace js */
