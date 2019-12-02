@@ -9,16 +9,24 @@ testFile.append(TEST_FILE);
 testFile.normalize();
 const testFileURI = Services.io.newFileURI(testFile).spec;
 
-function CheckBrowserInPid(browser, expectedPid, message) {
-  return ContentTask.spawn(browser, { expectedPid, message }, arg => {
-    is(Services.appinfo.processID, arg.expectedPid, arg.message);
+function getBrowserPid(browser) {
+  return SpecialPowers.spawn(browser, [], () => {
+    const { Services } = ChromeUtils.import(
+      "resource://gre/modules/Services.jsm"
+    );
+
+    return Services.appinfo.processID;
   });
 }
 
-function CheckBrowserNotInPid(browser, unExpectedPid, message) {
-  return ContentTask.spawn(browser, { unExpectedPid, message }, arg => {
-    isnot(Services.appinfo.processID, arg.unExpectedPid, arg.message);
-  });
+async function CheckBrowserInPid(browser, expectedPid, message) {
+  let pid = await getBrowserPid(browser);
+  is(pid, expectedPid, message);
+}
+
+async function CheckBrowserNotInPid(browser, unExpectedPid, message) {
+  let pid = await getBrowserPid(browser);
+  isnot(pid, unExpectedPid, message);
 }
 
 // Test for bug 1343184.
@@ -33,9 +41,7 @@ async function runWebInFileTest() {
   // Open file:// page.
   await BrowserTestUtils.withNewTab(testFileURI, async function(fileBrowser) {
     // Get the file:// URI pid for comparison later.
-    let filePid = await ContentTask.spawn(fileBrowser, null, () => {
-      return Services.appinfo.processID;
-    });
+    let filePid = await getBrowserPid(fileBrowser);
 
     // Check that http tab opened from JS in file:// page is in same process.
     let promiseTabOpened = BrowserTestUtils.waitForNewTab(
@@ -43,7 +49,7 @@ async function runWebInFileTest() {
       TEST_HTTP,
       true
     );
-    await ContentTask.spawn(fileBrowser, TEST_HTTP, uri => {
+    await SpecialPowers.spawn(fileBrowser, [TEST_HTTP], uri => {
       content.open(uri, "_blank");
     });
     let httpTab = await promiseTabOpened;
@@ -154,7 +160,7 @@ async function runWebInFileTest() {
 
     // Check that location change doesn't break the affinity.
     promiseLoad = BrowserTestUtils.browserLoaded(httpBrowser, false, TEST_HTTP);
-    await ContentTask.spawn(httpBrowser, TEST_HTTP, uri => {
+    await SpecialPowers.spawn(httpBrowser, [TEST_HTTP], uri => {
       content.location = uri;
     });
     await promiseLoad;
@@ -183,9 +189,7 @@ async function runWebInFileTest() {
     );
 
     // Check that history back now remains in the web content process.
-    let httpPid = await ContentTask.spawn(httpBrowser, null, () => {
-      return Services.appinfo.processID;
-    });
+    let httpPid = await getBrowserPid(httpBrowser);
     promiseLocation = BrowserTestUtils.waitForLocationChange(
       gBrowser,
       TEST_HTTP
