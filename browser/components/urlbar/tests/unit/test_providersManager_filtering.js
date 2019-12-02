@@ -159,10 +159,8 @@ add_task(async function test_filter_isActive() {
       return UrlbarUtils.PROVIDER_TYPE.PROFILE;
     }
     isActive(context) {
-      info("Acceptable sources: " + context.acceptableSources);
-      return context.acceptableSources.includes(
-        UrlbarUtils.RESULT_SOURCE.BOOKMARKS
-      );
+      info("Acceptable sources: " + context.sources);
+      return context.sources.includes(UrlbarUtils.RESULT_SOURCE.BOOKMARKS);
     }
     isRestricting(context) {
       return false;
@@ -316,11 +314,7 @@ add_task(async function test_nofilter_restrict() {
       return UrlbarUtils.PROVIDER_TYPE.IMMEDIATE;
     }
     isActive(context) {
-      Assert.equal(
-        context.acceptableSources.length,
-        1,
-        "Check acceptableSources"
-      );
+      Assert.equal(context.sources.length, 1, "Check acceptable sources");
       return true;
     }
     isRestricting(context) {
