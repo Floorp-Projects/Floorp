@@ -203,6 +203,12 @@ In function signatures, prefer accepting or returning ``RefPtr`` instead of
 legimitate uses of ``already_AddRefed`` are described in its
 `documentation <https://searchfox.org/mozilla-central/rev/4df8821c1b824db5f40f381f48432f219d99ae36/mfbt/AlreadyAddRefed.h#31>`_.
 
+Enums
+-----
+
+Use scoped resp. strongly typed enums (``enum struct``) rather than non-scoped
+enums. Use PascalCase for naming the values of scoped enums.
+
 Evolution Process
 =================
 
