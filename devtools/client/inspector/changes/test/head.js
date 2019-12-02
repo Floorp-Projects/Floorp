@@ -55,6 +55,7 @@ function getDeclarations(panelDoc, selector = "", containerNode = null) {
       return {
         property: el.querySelector(".changes__declaration-name").textContent,
         value: el.querySelector(".changes__declaration-value").textContent,
+        element: el,
       };
     });
 }
@@ -88,4 +89,14 @@ function getAddedSelectors(panelDoc) {
 
 function getRemovedSelectors(panelDoc) {
   return getSelectors(panelDoc, ".diff-remove");
+}
+
+async function getChangesContextMenu(changesView, element) {
+  const onContextMenu = changesView.contextMenu.once("open");
+  info(`Trigger context menu for element: ${element}`);
+  synthesizeContextMenuEvent(element);
+  info(`Wait for context menu to show`);
+  await onContextMenu;
+
+  return changesView.contextMenu;
 }
