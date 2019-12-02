@@ -983,6 +983,12 @@ class Attribute(object):
     # explicit_can_run_script is true if the attribute is explicitly annotated
     # as being able to cause script to run.
     explicit_can_run_script = False
+    # explicit_setter_can_run_script is true if the attribute is explicitly
+    # annotated as having a setter that can cause script to run.
+    explicit_setter_can_run_script = False
+    # explicit_getter_can_run_script is true if the attribute is explicitly
+    # annotated as having a getter that can cause script to run.
+    explicit_getter_can_run_script = False
 
     def __init__(self, type, name, attlist, readonly, location, doccomments):
         self.type = type
@@ -1020,6 +1026,10 @@ class Attribute(object):
                 self.infallible = True
             elif name == 'can_run_script':
                 self.explicit_can_run_script = True
+            elif name == 'setter_can_run_script':
+                self.explicit_setter_can_run_script = True
+            elif name == 'getter_can_run_script':
+                self.explicit_getter_can_run_script = True
             else:
                 raise IDLError("Unexpected attribute '%s'" % name, aloc)
 
