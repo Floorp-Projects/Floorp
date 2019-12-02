@@ -173,7 +173,8 @@ function setPrefs(name, setting, item) {
  * of the prefs.
  *
  * @param {string} id
- *        The id of the extension for which a setting is being modified.
+ *        The id of the extension for which a setting is being modified.  Also
+ *        see selectSetting.
  * @param {string} name
  *        The name of the setting being processed.
  * @param {string} action
@@ -299,6 +300,24 @@ this.ExtensionPreferencesManager = {
    */
   enableSetting(id, name) {
     return processSetting(id, name, "enable");
+  },
+
+  /**
+   * Specifically select an extension, the user, or the precedence order that will
+   * be in control of this setting.
+   *
+   * @param {string | null} id
+   *        The id of the extension for which a setting is being selected, or
+   *        ExtensionSettingStore.SETTING_USER_SET (null).
+   * @param {string} name
+   *        The unique id of the setting.
+   *
+   * @returns {Promise}
+   *          Resolves to true if the preferences were changed and to false if
+   *          the preferences were not changed.
+   */
+  selectSetting(id, name) {
+    return processSetting(id, name, "select");
   },
 
   /**
