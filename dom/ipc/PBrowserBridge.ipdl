@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBrowser;
+#ifdef ACCESSIBILITY
 include protocol PDocAccessible;
+#endif
 
 include DOMTypes;
 
@@ -103,6 +105,7 @@ parent:
 
   async SkipBrowsingContextDetach();
 
+#ifdef ACCESSIBILITY
   /**
    * Tell the parent the accessible for this iframe's embedder
    * OuterDocAccessible.
@@ -110,6 +113,7 @@ parent:
    * aID is the unique id of the embedder accessible within that document.
    */
   async SetEmbedderAccessible(PDocAccessible aDoc, uint64_t aID);
+#endif
 };
 
 }  // namespace dom

@@ -104,10 +104,8 @@ nsHttpAuthManager::SetAuthIdentity(
 
 NS_IMETHODIMP
 nsHttpAuthManager::ClearAll() {
-  nsresult rv = mAuthCache->ClearAll();
-  nsresult rv2 = mPrivateAuthCache->ClearAll();
-  if (NS_FAILED(rv)) return rv;
-  if (NS_FAILED(rv2)) return rv2;
+  mAuthCache->ClearAll();
+  mPrivateAuthCache->ClearAll();
   return NS_OK;
 }
 

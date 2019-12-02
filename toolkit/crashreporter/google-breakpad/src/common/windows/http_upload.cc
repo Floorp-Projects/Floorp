@@ -63,18 +63,13 @@ class HTTPUpload::AutoInternetHandle {
 
 // static
 bool HTTPUpload::SendRequest(const wstring &url,
-                             const map<wstring, wstring> &parameters,
+                             const string &parameters,
                              const map<wstring, wstring> &files,
                              int *timeout,
                              wstring *response_body,
                              int *response_code) {
   if (response_code) {
     *response_code = 0;
-  }
-
-  // TODO(bryner): support non-ASCII parameter names
-  if (!CheckParameters(parameters)) {
-    return false;
   }
 
   // Break up the URL and make sure we can handle it
@@ -265,7 +260,7 @@ wstring HTTPUpload::GenerateRequestHeader(const wstring &boundary) {
 }
 
 // static
-bool HTTPUpload::GenerateRequestBody(const map<wstring, wstring> &parameters,
+bool HTTPUpload::GenerateRequestBody(const string &parameters,
                                      const map<wstring, wstring> &files,
                                      const wstring &boundary,
                                      string *request_body) {
@@ -276,14 +271,19 @@ bool HTTPUpload::GenerateRequestBody(const map<wstring, wstring> &parameters,
 
   request_body->clear();
 
-  // Append each of the parameter pairs as a form-data part
-  for (map<wstring, wstring>::const_iterator pos = parameters.begin();
-       pos != parameters.end(); ++pos) {
-    request_body->append("--" + boundary_str + "\r\n");
-    request_body->append("Content-Disposition: form-data; name=\"" +
-                         WideToUTF8(pos->first) + "\"\r\n\r\n" +
-                         WideToUTF8(pos->second) + "\r\n");
+  // Append the extra data as a single JSON form entry
+  request_body->append("--" + boundary_str + "\r\n");
+  request_body->append(
+      "Content-Disposition: form-data; "
+      "name=\"extra\"; "
+      "filename=\"extra.json\"\r\n");
+  request_body->append("Content-Type: application/json\r\n");
+  request_body->append("\r\n");
+
+  if (!parameters.empty()) {
+    request_body->append(parameters);
   }
+  request_body->append("\r\n");
 
   for (map<wstring, wstring>::const_iterator pos = files.begin();
        pos != files.end(); ++pos) {
@@ -397,24 +397,6 @@ string HTTPUpload::WideToMBCP(const wstring &wide, unsigned int cp) {
   string result(buf);
   delete[] buf;
   return result;
-}
-
-// static
-bool HTTPUpload::CheckParameters(const map<wstring, wstring> &parameters) {
-  for (map<wstring, wstring>::const_iterator pos = parameters.begin();
-       pos != parameters.end(); ++pos) {
-    const wstring &str = pos->first;
-    if (str.size() == 0) {
-      return false;  // disallow empty parameter names
-    }
-    for (unsigned int i = 0; i < str.size(); ++i) {
-      wchar_t c = str[i];
-      if (c < 32 || c == '"' || c > 127) {
-        return false;
-      }
-    }
-  }
-  return true;
 }
 
 }  // namespace google_breakpad

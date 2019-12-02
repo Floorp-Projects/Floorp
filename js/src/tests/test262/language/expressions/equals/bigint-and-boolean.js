@@ -29,4 +29,5 @@ assert.sameValue(2n == false, false, 'The result of (2n == false) is false');
 assert.sameValue(false == 2n, false, 'The result of (false == 2n) is false');
 assert.sameValue(2n == true, false, 'The result of (2n == true) is false');
 assert.sameValue(true == 2n, false, 'The result of (true == 2n) is false');
+
 reportCompare(0, 0);

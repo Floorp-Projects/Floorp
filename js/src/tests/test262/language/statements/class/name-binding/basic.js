@@ -34,4 +34,5 @@ assert.sameValue(C, C2, "The value of `C` is `C2`");
 C2 = undefined;
 new C().x = 1;
 assert.sameValue(C, C2, "The value of `C` is `C2`");
+
 reportCompare(0, 0);

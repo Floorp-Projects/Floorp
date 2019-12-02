@@ -182,11 +182,11 @@ nsresult MulticastDNSDeviceProvider::Init() {
   return NS_OK;
 }
 
-nsresult MulticastDNSDeviceProvider::Uninit() {
+void MulticastDNSDeviceProvider::Uninit() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mInitialized) {
-    return NS_OK;
+    return;
   }
 
   ClearDevices();
@@ -204,7 +204,6 @@ nsresult MulticastDNSDeviceProvider::Uninit() {
   }
 
   mInitialized = false;
-  return NS_OK;
 }
 
 nsresult MulticastDNSDeviceProvider::StartServer() {
@@ -245,7 +244,7 @@ nsresult MulticastDNSDeviceProvider::StartServer() {
   return NS_OK;
 }
 
-nsresult MulticastDNSDeviceProvider::StopServer() {
+void MulticastDNSDeviceProvider::StopServer() {
   LOG_I("StopServer: %s", mServiceName.get());
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -257,8 +256,6 @@ nsresult MulticastDNSDeviceProvider::StopServer() {
     mPresentationService->SetListener(nullptr);
     mPresentationService->Close();
   }
-
-  return NS_OK;
 }
 
 void MulticastDNSDeviceProvider::AbortServerRetry() {
@@ -336,7 +333,7 @@ nsresult MulticastDNSDeviceProvider::RegisterMDNSService() {
                                         getter_AddRefs(mRegisterRequest));
 }
 
-nsresult MulticastDNSDeviceProvider::UnregisterMDNSService(nsresult aReason) {
+void MulticastDNSDeviceProvider::UnregisterMDNSService(nsresult aReason) {
   LOG_I("UnregisterMDNSService: %s (0x%08" PRIx32 ")", mServiceName.get(),
         static_cast<uint32_t>(aReason));
   MOZ_ASSERT(NS_IsMainThread());
@@ -345,8 +342,6 @@ nsresult MulticastDNSDeviceProvider::UnregisterMDNSService(nsresult aReason) {
     mRegisterRequest->Cancel(aReason);
     mRegisterRequest = nullptr;
   }
-
-  return NS_OK;
 }
 
 nsresult MulticastDNSDeviceProvider::StopDiscovery(nsresult aReason) {
@@ -575,9 +570,7 @@ MulticastDNSDeviceProvider::SetListener(
       return rv;
     }
   } else {
-    if (NS_WARN_IF(NS_FAILED(rv = Uninit()))) {
-      return rv;
-    }
+    Uninit();
   }
 
   return NS_OK;
@@ -865,12 +858,9 @@ MulticastDNSDeviceProvider::OnServiceResolved(nsIDNSServiceInfo* aServiceInfo) {
   if (FindDeviceById(host, index)) {
     return UpdateDevice(index, serviceName, serviceType, address, port,
                         certFingerprint);
-  } else {
-    return AddDevice(host, serviceName, serviceType, address, port,
-                     certFingerprint);
   }
-
-  return NS_OK;
+  return AddDevice(host, serviceName, serviceType, address, port,
+                   certFingerprint);
 }
 
 NS_IMETHODIMP
@@ -1082,7 +1072,8 @@ nsresult MulticastDNSDeviceProvider::OnDiscoverableChanged(bool aEnabled) {
     return StartServer();
   }
 
-  return StopServer();
+  StopServer();
+  return NS_OK;
 }
 
 nsresult MulticastDNSDeviceProvider::OnServiceNameChanged(
@@ -1092,10 +1083,7 @@ nsresult MulticastDNSDeviceProvider::OnServiceNameChanged(
 
   mServiceName = aServiceName;
 
-  nsresult rv;
-  if (NS_WARN_IF(NS_FAILED(rv = UnregisterMDNSService(NS_OK)))) {
-    return rv;
-  }
+  UnregisterMDNSService(NS_OK);
 
   if (mDiscoverable) {
     return RegisterMDNSService();

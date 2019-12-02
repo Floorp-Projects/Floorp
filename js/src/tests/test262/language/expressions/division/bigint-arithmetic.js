@@ -1068,4 +1068,5 @@ assert.sameValue(
   0x1n,
   'The result of (-0xFEDCBA9876543210n / -0xFEDCBA9876543210n) is 0x1n'
 );
+
 reportCompare(0, 0);

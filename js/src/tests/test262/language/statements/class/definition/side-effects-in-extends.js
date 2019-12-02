@@ -16,4 +16,5 @@ assert.sameValue(
     Object.getPrototypeOf(D.prototype),
     "The value of `C.prototype` is `Object.getPrototypeOf(D.prototype)`"
 );
+
 reportCompare(0, 0);

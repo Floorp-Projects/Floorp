@@ -132,11 +132,31 @@ var PrintUtils = {
    *        The <xul:browser> that the nsIDOMWindow for aWindowID belongs to.
    */
   printWindow(aWindowID, aBrowser) {
+    const printPreviewIsOpen = !!document.getElementById(
+      "print-preview-toolbar"
+    );
+
+    if (printPreviewIsOpen) {
+      this._logKeyedTelemetry("PRINT_DIALOG_OPENED_COUNT", "FROM_PREVIEW");
+    } else {
+      this._logKeyedTelemetry("PRINT_DIALOG_OPENED_COUNT", "FROM_PAGE");
+    }
+
     aBrowser.messageManager.sendAsyncMessage("Printing:Print", {
       windowID: aWindowID,
       simplifiedMode: this._shouldSimplify,
       defaultPrinterName: this._getDefaultPrinterName(),
     });
+
+    if (printPreviewIsOpen) {
+      if (this._shouldSimplify) {
+        this._logKeyedTelemetry("PRINT_COUNT", "SIMPLIFIED");
+      } else {
+        this._logKeyedTelemetry("PRINT_COUNT", "WITH_PREVIEW");
+      }
+    } else {
+      this._logKeyedTelemetry("PRINT_COUNT", "WITHOUT_PREVIEW");
+    }
   },
 
   /**
@@ -681,6 +701,11 @@ var PrintUtils = {
   logTelemetry(ID) {
     let histogram = Services.telemetry.getHistogramById(ID);
     histogram.add(true);
+  },
+
+  _logKeyedTelemetry(id, key) {
+    let histogram = Services.telemetry.getKeyedHistogramById(id);
+    histogram.add(key);
   },
 
   onKeyDownPP(aEvent) {

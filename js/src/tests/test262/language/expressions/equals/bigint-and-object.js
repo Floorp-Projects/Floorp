@@ -132,4 +132,5 @@ assert.sameValue({
     return '900719925474099102';
   }
 } == 900719925474099101n, false, 'The result of (({toString: function() {return "900719925474099102";}}) == 900719925474099101n) is false');
+
 reportCompare(0, 0);

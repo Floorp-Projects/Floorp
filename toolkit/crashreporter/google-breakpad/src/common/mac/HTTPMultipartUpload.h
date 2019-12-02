@@ -37,7 +37,7 @@
 @interface HTTPMultipartUpload : NSObject {
  @protected
   NSURL *url_;                  // The destination URL (STRONG)
-  NSDictionary *parameters_;    // The key/value pairs for sending data (STRONG)
+  NSMutableString *parameters_;  // The JSON payload for sending data (STRONG)
   NSMutableDictionary *files_;  // Dictionary of name/file-path (STRONG)
   NSString *boundary_;          // The boundary string (STRONG)
   NSHTTPURLResponse *response_; // The response from the send (STRONG)
@@ -47,8 +47,8 @@
 
 - (NSURL *)URL;
 
-- (void)setParameters:(NSDictionary *)parameters;
-- (NSDictionary *)parameters;
+- (void)setParameters:(NSMutableString *)parameters;
+- (NSMutableString *)parameters;
 
 - (void)addFileAtPath:(NSString *)path name:(NSString *)name;
 - (void)addFileContents:(NSData *)data name:(NSString *)name;

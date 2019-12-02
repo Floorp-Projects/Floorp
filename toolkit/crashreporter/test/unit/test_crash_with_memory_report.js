@@ -1,4 +1,4 @@
-function run_test() {
+add_task(async function run_test() {
   if (!("@mozilla.org/toolkit/crash-reporter;1" in Cc)) {
     dump(
       "INFO | test_crash_oom.js | Can't test crashreporter in a non-libxul build.\n"
@@ -10,7 +10,7 @@ function run_test() {
   // head.js so that nsICrashReporter::saveMemoryReport can use a profile
   // within the crasher subprocess.
 
-  do_crash(
+  await do_crash(
     function() {
       // Delay crashing so that the memory report has time to complete.
       shouldDelay = true;
@@ -49,4 +49,4 @@ function run_test() {
     },
     true
   );
-}
+});

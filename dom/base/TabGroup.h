@@ -125,11 +125,6 @@ class TabGroup final : public SchedulerGroup,
 
   static LinkedList<TabGroup>* GetTabGroupList() { return sTabGroups; }
 
-  // This returns true if all the window objects in all the TabGroups are
-  // either inactive (for example in bfcache) or are in background tabs which
-  // can be throttled.
-  static bool HasOnlyThrottableTabs();
-
  private:
   virtual AbstractThread* AbstractMainThreadForImpl(
       TaskCategory aCategory) override;

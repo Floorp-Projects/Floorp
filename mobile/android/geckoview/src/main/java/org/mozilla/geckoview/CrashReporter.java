@@ -9,12 +9,13 @@ import android.os.Bundle;
 import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -26,10 +27,10 @@ import java.net.URLDecoder;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -40,6 +41,7 @@ public class CrashReporter {
     private static final String LOGTAG = "GeckoCrashReporter";
     private static final String MINI_DUMP_PATH_KEY = "upload_file_minidump";
     private static final String PAGE_URL_KEY = "URL";
+    private static final String MINIDUMP_SHA256_HASH_KEY = "MinidumpSha256Hash";
     private static final String NOTES_KEY = "Notes";
     private static final String SERVER_URL_KEY = "ServerURL";
     private static final String STACK_TRACES_KEY = "StackTraces";
@@ -47,7 +49,6 @@ public class CrashReporter {
     private static final String PRODUCT_ID_KEY = "ProductID";
     private static final String PRODUCT_ID = "{eeb82917-e434-4870-8148-5c03d4caa81b}";
     private static final List<String> IGNORE_KEYS = Arrays.asList(
-            NOTES_KEY,
             PAGE_URL_KEY,
             SERVER_URL_KEY,
             STACK_TRACES_KEY
@@ -130,23 +131,27 @@ public class CrashReporter {
                                                                @NonNull final File extrasFile,
                                                                @NonNull final String appName)
             throws IOException, URISyntaxException {
-        // Compute the minidump hash and generate the stack traces
-        computeMinidumpHash(extrasFile, minidumpFile);
+        final JSONObject annotations = getCrashAnnotations(context, minidumpFile, extrasFile, appName);
 
-        // Extract the annotations from the .extra file
-        HashMap<String, String> extrasMap = readStringsFromFile(extrasFile.getPath());
+        final String url = annotations.optString(SERVER_URL_KEY, null);
+        if (url == null) {
+            return GeckoResult.fromException(new Exception("No server url present"));
+        }
 
-        return sendCrashReport(context, minidumpFile, extrasMap, appName);
+        for (String key : IGNORE_KEYS) {
+            annotations.remove(key);
+        }
+
+        return sendCrashReport(url, minidumpFile, annotations);
     }
 
     /**
      * Sends a crash report to the Mozilla  <a href="https://wiki.mozilla.org/Socorro">Socorro</a>
      * crash report server.
      *
-     * @param context The current {@link Context}
+     * @param serverURL The URL used to submit the crash report.
      * @param minidumpFile A {@link File} referring to the minidump.
-     * @param extras A {@link HashMap} with the parsed key-value pairs from the extras file.
-     * @param appName A human-readable app name.
+     * @param extras A {@link JSONObject} holding the parsed JSON from the extra file.
      * @throws IOException This can be thrown if there was a networking error while sending the report.
      * @throws URISyntaxException This can be thrown if the crash server URI from the extra data was invalid.
      * @return A GeckoResult containing the crash ID as a String.
@@ -155,22 +160,14 @@ public class CrashReporter {
      */
     @AnyThread
     public static @NonNull GeckoResult<String> sendCrashReport(
-        @NonNull final Context context, @NonNull final File minidumpFile,
-        @NonNull final Map<String, String> extras,
-        @NonNull final String appName) throws IOException, URISyntaxException {
+        @NonNull final String serverURL, @NonNull final File minidumpFile,
+        @NonNull final JSONObject extras)
+            throws IOException, URISyntaxException {
         Log.d(LOGTAG, "Sending crash report: " + minidumpFile.getPath());
-
-        String spec = extras.get(SERVER_URL_KEY);
-        if (spec == null) {
-            return GeckoResult.fromException(new Exception("No server url present"));
-        }
-
-        extras.put(PRODUCT_NAME_KEY, appName);
-        extras.put(PRODUCT_ID_KEY, PRODUCT_ID);
 
         HttpURLConnection conn = null;
         try {
-            final URL url = new URL(URLDecoder.decode(spec, "UTF-8"));
+            final URL url = new URL(URLDecoder.decode(serverURL, "UTF-8"));
             final URI uri = new URI(url.getProtocol(), url.getUserInfo(),
                     url.getHost(), url.getPort(),
                     url.getPath(), url.getQuery(), url.getRef());
@@ -182,38 +179,7 @@ public class CrashReporter {
             conn.setRequestProperty("Content-Encoding", "gzip");
 
             OutputStream os = new GZIPOutputStream(conn.getOutputStream());
-            for (String key : extras.keySet()) {
-                if (IGNORE_KEYS.contains(key)) {
-                    Log.d(LOGTAG, "Ignoring: " + key);
-                    continue;
-                }
-
-                sendPart(os, boundary, key, extras.get(key));
-            }
-
-            StringBuilder sb = new StringBuilder();
-            sb.append(extras.containsKey(NOTES_KEY) ? extras.get(NOTES_KEY) + "\n" : "");
-            sb.append(Build.MANUFACTURER).append(' ')
-                    .append(Build.MODEL).append('\n')
-                    .append(Build.FINGERPRINT);
-            sendPart(os, boundary, NOTES_KEY, sb.toString());
-
-            sendPart(os, boundary, "Android_Manufacturer", Build.MANUFACTURER);
-            sendPart(os, boundary, "Android_Model", Build.MODEL);
-            sendPart(os, boundary, "Android_Board", Build.BOARD);
-            sendPart(os, boundary, "Android_Brand", Build.BRAND);
-            sendPart(os, boundary, "Android_Device", Build.DEVICE);
-            sendPart(os, boundary, "Android_Display", Build.DISPLAY);
-            sendPart(os, boundary, "Android_Fingerprint", Build.FINGERPRINT);
-            sendPart(os, boundary, "Android_CPU_ABI", Build.CPU_ABI);
-            sendPart(os, boundary, "Android_PackageName", context.getPackageName());
-            try {
-                sendPart(os, boundary, "Android_CPU_ABI2", Build.CPU_ABI2);
-                sendPart(os, boundary, "Android_Hardware", Build.HARDWARE);
-            } catch (Exception ex) {
-                Log.e(LOGTAG, "Exception while sending SDK version 8 keys", ex);
-            }
-            sendPart(os, boundary, "Android_Version",  Build.VERSION.SDK_INT + " (" + Build.VERSION.CODENAME + ")");
+            sendAnnotations(os, boundary, extras);
             sendFile(os, boundary, MINI_DUMP_PATH_KEY, minidumpFile);
             os.write(("\r\n--" + boundary + "--\r\n").getBytes());
             os.flush();
@@ -257,66 +223,33 @@ public class CrashReporter {
         return GeckoResult.fromException(new Exception("Failed to submit crash report"));
     }
 
-    private static void computeMinidumpHash(final File extraFile, final File minidump) {
+    private static String computeMinidumpHash(@NonNull final File minidump) throws IOException {
+        MessageDigest md = null;
+        FileInputStream stream = new FileInputStream(minidump);
         try {
-            FileInputStream stream = new FileInputStream(minidump);
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md = MessageDigest.getInstance("SHA-256");
 
-            try {
-                byte[] buffer = new byte[4096];
-                int readBytes;
+            byte[] buffer = new byte[4096];
+            int readBytes;
 
-                while ((readBytes = stream.read(buffer)) != -1) {
-                    md.update(buffer, 0, readBytes);
-                }
-            } finally {
-                stream.close();
+            while ((readBytes = stream.read(buffer)) != -1) {
+                md.update(buffer, 0, readBytes);
             }
-
-            byte[] digest = md.digest();
-            StringBuilder hash = new StringBuilder(84);
-
-            hash.append("MinidumpSha256Hash=");
-
-            for (int i = 0; i < digest.length; i++) {
-                hash.append(Integer.toHexString((digest[i] & 0xf0) >> 4));
-                hash.append(Integer.toHexString(digest[i] & 0x0f));
-            }
-
-            hash.append('\n');
-
-            FileWriter writer = new FileWriter(extraFile, /* append */ true);
-
-            try {
-                writer.write(hash.toString());
-            } finally {
-                writer.close();
-            }
-        } catch (Exception e) {
-            Log.e(LOGTAG, "exception while computing the minidump hash: ", e);
-        }
-    }
-
-    private static HashMap<String, String> readStringsFromFile(final String filePath)
-            throws IOException {
-        FileReader fileReader = null;
-        BufferedReader bufReader = null;
-        try {
-            fileReader = new FileReader(filePath);
-            bufReader = new BufferedReader(fileReader);
-            return readStringsFromReader(bufReader);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IOException(e);
         } finally {
-            try {
-                if (fileReader != null) {
-                    fileReader.close();
-                }
-
-                if (bufReader != null) {
-                    bufReader.close();
-                }
-            } catch (IOException e) {
-            }
+            stream.close();
         }
+
+        byte[] digest = md.digest();
+        StringBuilder hash = new StringBuilder(64);
+
+        for (int i = 0; i < digest.length; i++) {
+            hash.append(Integer.toHexString((digest[i] & 0xf0) >> 4));
+            hash.append(Integer.toHexString(digest[i] & 0x0f));
+        }
+
+        return hash.toString();
     }
 
     private static HashMap<String, String> readStringsFromReader(final BufferedReader reader)
@@ -334,6 +267,62 @@ public class CrashReporter {
         return map;
     }
 
+    private static JSONObject readExtraFile(final String filePath)
+            throws IOException, JSONException {
+        byte[] buffer = new byte[4096];
+        FileInputStream inputStream = new FileInputStream(filePath);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        int bytesRead = 0;
+
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            outputStream.write(buffer, 0, bytesRead);
+        }
+
+        String contents = new String(outputStream.toByteArray(), "UTF-8");
+        return new JSONObject(contents);
+    }
+
+    private static JSONObject getCrashAnnotations(@NonNull final Context context,
+                                                  @NonNull final File minidump,
+                                                  @NonNull final File extra,
+                                                  @NonNull final String appName)
+            throws IOException {
+        try {
+            final JSONObject annotations = readExtraFile(extra.getPath());
+
+            // Compute the minidump hash and generate the stack traces
+            try {
+                final String hash = computeMinidumpHash(minidump);
+                annotations.put(MINIDUMP_SHA256_HASH_KEY, hash);
+            } catch (Exception e) {
+                Log.e(LOGTAG, "exception while computing the minidump hash: ", e);
+            }
+
+            annotations.put(PRODUCT_NAME_KEY, appName);
+            annotations.put(PRODUCT_ID_KEY, PRODUCT_ID);
+            annotations.put("Android_Manufacturer", Build.MANUFACTURER);
+            annotations.put("Android_Model", Build.MODEL);
+            annotations.put("Android_Board", Build.BOARD);
+            annotations.put("Android_Brand", Build.BRAND);
+            annotations.put("Android_Device", Build.DEVICE);
+            annotations.put("Android_Display", Build.DISPLAY);
+            annotations.put("Android_Fingerprint", Build.FINGERPRINT);
+            annotations.put("Android_CPU_ABI", Build.CPU_ABI);
+            annotations.put("Android_PackageName", context.getPackageName());
+            try {
+                annotations.put("Android_CPU_ABI2", Build.CPU_ABI2);
+                annotations.put("Android_Hardware", Build.HARDWARE);
+            } catch (Exception ex) {
+                Log.e(LOGTAG, "Exception while sending SDK version 8 keys", ex);
+            }
+            annotations.put("Android_Version",  Build.VERSION.SDK_INT + " (" + Build.VERSION.CODENAME + ")");
+
+            return annotations;
+        } catch (JSONException e) {
+            throw new IOException(e);
+        }
+    }
+
     private static String generateBoundary() {
         // Generate some random numbers to fill out the boundary
         int r0 = (int)(Integer.MAX_VALUE * Math.random());
@@ -341,17 +330,16 @@ public class CrashReporter {
         return String.format("---------------------------%08X%08X", r0, r1);
     }
 
-    private static void sendPart(final OutputStream os, final String boundary, final String name,
-                                 final String data) {
-        try {
-            os.write(("--" + boundary + "\r\n" +
-                    "Content-Disposition: form-data; name=\"" + name + "\"\r\n" +
-                    "\r\n" +
-                    data + "\r\n"
-            ).getBytes());
-        } catch (Exception ex) {
-            Log.e(LOGTAG, "Exception when sending \"" + name + "\"", ex);
-        }
+    private static void sendAnnotations(final OutputStream os, final String boundary,
+                                        final JSONObject extras) throws IOException {
+        os.write(("--" + boundary + "\r\n" +
+                "Content-Disposition: form-data; name=\"extra\"; " +
+                "filename=\"extra.json\"\r\n" +
+                "Content-Type: application/json\r\n" +
+                "\r\n"
+        ).getBytes());
+        os.write(extras.toString().getBytes("UTF-8"));
+        os.write('\n');
     }
 
     private static void sendFile(final OutputStream os, final String boundary, final String name,

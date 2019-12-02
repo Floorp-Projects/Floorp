@@ -10,6 +10,7 @@
     (defined(_M_IX86) || defined(_M_X64) || defined(_M_ARM64))
 
 #  include <windows.h>
+#  include "CrashAnnotations.h"
 #  include "mozilla/Attributes.h"
 #  include "mozilla/Types.h"
 
@@ -23,7 +24,7 @@ enum DllBlocklistInitFlags {
 
 MFBT_API void DllBlocklist_Initialize(
     uint32_t aInitFlags = eDllBlocklistInitFlagDefault);
-MFBT_API void DllBlocklist_WriteNotes(HANDLE file);
+MFBT_API void DllBlocklist_WriteNotes(CrashReporter::AnnotationWriter& aWriter);
 MFBT_API bool DllBlocklist_CheckStatus();
 
 // This export intends to clean up after DllBlocklist_Initialize().

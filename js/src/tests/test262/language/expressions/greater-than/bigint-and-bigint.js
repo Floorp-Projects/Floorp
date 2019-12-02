@@ -162,4 +162,5 @@ assert.sameValue(
   false,
   'The result of (0x100000000n > 0x10000000000000000n) is false'
 );
+
 reportCompare(0, 0);

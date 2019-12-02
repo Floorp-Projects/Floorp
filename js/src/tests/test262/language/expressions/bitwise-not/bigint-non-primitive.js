@@ -42,4 +42,5 @@ assert.sameValue(~{
     return 1n;
   }
 }, -2n, 'The value of ~{toString: function() {return 1n;}} is -2n');
+
 reportCompare(0, 0);

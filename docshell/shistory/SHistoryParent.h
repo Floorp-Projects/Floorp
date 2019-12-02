@@ -16,6 +16,7 @@ namespace mozilla {
 namespace dom {
 
 class SHistoryParent;
+class SHEntryParent;
 
 /**
  * Session history implementation based on the legacy implementation that used

@@ -86,4 +86,5 @@ class BadSubclass extends Base {
 }
 
 assert.throws(ReferenceError, function() { new BadSubclass(); });
+
 reportCompare(0, 0);

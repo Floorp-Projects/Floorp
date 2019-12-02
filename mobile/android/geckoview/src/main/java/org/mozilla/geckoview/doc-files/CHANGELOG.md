@@ -51,6 +51,10 @@ exclude: true
 - Added ['GeckoWebExecutor#FETCH_FLAGS_STREAM_FAILURE_TEST'][72.22], which is a new
   flag used to immediately fail when reading a `WebResponse` body.
   ([bug 1594905]({{bugzilla}}1594905))
+- Changed [`CrashReporter#sendCrashReport(Context, File, JSONObject)`][72.23] to
+  accept a JSON object instead of a Map. Said object also includes the
+  application name that was previously passed as the fourth argument to the
+  method, which was thus removed.
 
 [72.1]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture-
 [72.2]: {{javadoc_uri}}/Autofill.html
@@ -74,6 +78,7 @@ exclude: true
 [72.20]: https://developer.android.com/reference/java/lang/String
 [72.21]: {{javadoc_uri}}/WebExtension.Icon.html
 [72.22]: {{javadoc_uri}}/GeckoWebExecutor.html#FETCH_FLAGS_STREAM_FAILURE_TEST
+[72.23]: {{javadoc_uri}}/CrashReporter#sendCrashReport-android.content.Context-java.io.File-org.json.JSONObject-
 
 ## v71
 - Added a content blocking flag for blocked social cookies to [`ContentBlocking`][70.17].
@@ -471,4 +476,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 40acc9e29d33b23b72a345047ed1f6d4695b8c65
+[api-version]: 4c9f04038d8478206efac05b518920819faeacea
