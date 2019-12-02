@@ -5,7 +5,6 @@
 
 #include "nsICaptivePortalService.h"
 #include "nsIParentalControlsService.h"
-#include "nsINetworkLinkService.h"
 #include "nsIObserverService.h"
 #include "nsIURIMutator.h"
 #include "nsNetUtil.h"
@@ -71,7 +70,6 @@ nsresult TRRService::Init() {
     observerService->AddObserver(this, kOpenCaptivePortalLoginEvent, true);
     observerService->AddObserver(this, kClearPrivateData, true);
     observerService->AddObserver(this, kPurge, true);
-    observerService->AddObserver(this, NS_NETWORK_LINK_TOPIC, true);
   }
   nsCOMPtr<nsIPrefBranch> prefBranch;
   GetPrefBranch(getter_AddRefs(prefBranch));
@@ -450,21 +448,6 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
     if (mTRRBLStorage) {
       mTRRBLStorage->Clear();
     }
-  } else if (!strcmp(aTopic, NS_NETWORK_LINK_TOPIC)) {
-    mDNSSuffixDomains.Clear();
-    nsAutoCString data = NS_ConvertUTF16toUTF8(aData);
-    if (data.EqualsLiteral(NS_NETWORK_LINK_DATA_CHANGED)) {
-      nsCOMPtr<nsINetworkLinkService> link = do_QueryInterface(aSubject);
-      // The network link service notification normally passes itself as the
-      // subject, but some unit tests will sometimes pass a null subject.
-      if (link) {
-        nsTArray<nsCString> suffixList;
-        link->GetDnsSuffixList(suffixList);
-        for (const auto& item : suffixList) {
-          mDNSSuffixDomains.PutEntry(item);
-        }
-      }
-    }
   }
   return NS_OK;
 }
@@ -553,10 +536,6 @@ bool TRRService::IsTRRBlacklisted(const nsACString& aHost,
     LOG(("Host [%s] is TRR blacklisted via pref\n", aHost.BeginReading()));
     return true;
   }
-  if (mDNSSuffixDomains.GetEntry(aHost)) {
-    LOG(("Host [%s] is TRR blacklisted dns suffix\n", aHost.BeginReading()));
-    return true;
-  }
 
   if (!Enabled()) {
     return true;
@@ -622,11 +601,6 @@ bool TRRService::IsExcludedFromTRR(const nsACString& aHost) {
         Substring(aHost, dot, aHost.Length() - dot);
 
     if (mExcludedDomains.GetEntry(subdomain)) {
-      LOG(("Subdomain [%s] of host [%s] Is Excluded From TRR via pref\n",
-           subdomain.BeginReading(), aHost.BeginReading()));
-      return true;
-    }
-    if (mDNSSuffixDomains.GetEntry(subdomain)) {
       LOG(("Subdomain [%s] of host [%s] Is Excluded From TRR via pref\n",
            subdomain.BeginReading(), aHost.BeginReading()));
       return true;

@@ -106,7 +106,6 @@ class TRRService : public nsIObserver,
 
   // A set of domains that we should not use TRR for.
   nsTHashtable<nsCStringHashKey> mExcludedDomains;
-  nsTHashtable<nsCStringHashKey> mDNSSuffixDomains;
 
   enum ConfirmationState {
     CONFIRM_INIT = 0,
