@@ -812,17 +812,6 @@ QuotaManagerService::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-  if (!strcmp(aTopic, "clear-origin-attributes-data")) {
-    nsCOMPtr<nsIQuotaRequest> request;
-    nsresult rv = ClearStoragesForOriginAttributesPattern(
-        nsDependentString(aData), getter_AddRefs(request));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    return NS_OK;
-  }
-
   if (!strcmp(aTopic, OBSERVER_TOPIC_IDLE_DAILY)) {
     PerformIdleMaintenance();
     return NS_OK;

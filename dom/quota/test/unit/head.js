@@ -328,14 +328,14 @@ function getCurrentUsage(usageHandler) {
   return request;
 }
 
-function getPrincipal(url) {
+function getPrincipal(url, attr = {}) {
   let uri = Cc["@mozilla.org/network/io-service;1"]
     .getService(Ci.nsIIOService)
     .newURI(url);
   let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
     Ci.nsIScriptSecurityManager
   );
-  return ssm.createContentPrincipal(uri, {});
+  return ssm.createContentPrincipal(uri, attr);
 }
 
 function getCurrentPrincipal() {
