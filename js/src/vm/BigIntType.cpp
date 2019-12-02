@@ -591,6 +591,18 @@ BigInt* BigInt::absoluteSub(JSContext* cx, HandleBigInt x, HandleBigInt y,
     return resultNegative == x->isNegative() ? x : neg(cx, x);
   }
 
+  // Fast path for the likely-common case of up to a uint64_t of magnitude.
+  if (x->absFitsInUint64() && y->absFitsInUint64()) {
+    uint64_t lhs = x->uint64FromAbsNonZero();
+    uint64_t rhs = y->uint64FromAbsNonZero();
+    MOZ_ASSERT(lhs > rhs);
+
+    uint64_t res = lhs - rhs;
+    MOZ_ASSERT(res != 0);
+
+    return createFromNonZeroRawUint64(cx, res, resultNegative);
+  }
+
   RootedBigInt result(
       cx, createUninitialized(cx, x->digitLength(), resultNegative));
   if (!result) {
