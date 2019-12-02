@@ -191,8 +191,8 @@ class CodeCoverageMixin(SingleTestMixin):
                 'test': 'testing/mochitest/baselinecoverage/browser_chrome/browser_baselinecoverage.js',  # NOQA: E501
                 'suite': 'mochitest-browser-chrome'
             },
-            '.xul': {
-                'test': 'testing/mochitest/baselinecoverage/chrome/test_baselinecoverage.xul',
+            '.xhtml': {
+                'test': 'testing/mochitest/baselinecoverage/chrome/test_baselinecoverage.xhtml',
                 'suite': 'mochitest-chrome'
             }
         }

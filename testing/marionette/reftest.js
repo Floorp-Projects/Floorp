@@ -137,7 +137,7 @@ reftest.Runner = class {
     assert.positiveInteger(height);
 
     let reftestWin = this.parentWindow.open(
-      "chrome://marionette/content/reftest.xul",
+      "chrome://marionette/content/reftest.xhtml",
       "reftest",
       `chrome,height=${height},width=${width}`
     );

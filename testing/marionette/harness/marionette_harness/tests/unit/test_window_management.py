@@ -39,7 +39,7 @@ class TestNoSuchWindowContent(WindowManagerMixin, MarionetteTestCase):
             self.marionette.switch_to_window(new_window)
 
     def test_closed_chrome_window_while_in_frame(self):
-        new_window = self.open_chrome_window("chrome://marionette/content/test.xul")
+        new_window = self.open_chrome_window("chrome://marionette/content/test.xhtml")
         self.marionette.switch_to_window(new_window)
         with self.marionette.using_context("chrome"):
             self.marionette.switch_to_frame("iframe")

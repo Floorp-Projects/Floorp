@@ -97,7 +97,7 @@ function testInit() {
 
     Services.ww.openWindow(
       window,
-      "chrome://mochikit/content/browser-harness.xul",
+      "chrome://mochikit/content/browser-harness.xhtml",
       "browserTest",
       "chrome,centerscreen,dialog=no,resizable,titlebar,toolbar=no,width=800,height=600",
       sstring

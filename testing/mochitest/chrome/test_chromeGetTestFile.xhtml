@@ -17,21 +17,21 @@
     SimpleTest.waitForExplicitFinish();
 
     SimpleTest.doesThrow(function () {
-      getTestFilePath("/test_chromeGetTestFile.xul")
+      getTestFilePath("/test_chromeGetTestFile.xhtml")
     }, "getTestFilePath rejects absolute paths");
 
     Promise.all([
-      OS.File.exists(getTestFilePath("test_chromeGetTestFile.xul"))
+      OS.File.exists(getTestFilePath("test_chromeGetTestFile.xhtml"))
         .then(function (exists) {
           ok(exists, "getTestFilePath consider the path as being relative");
         }),
 
-      OS.File.exists(getTestFilePath("./test_chromeGetTestFile.xul"))
+      OS.File.exists(getTestFilePath("./test_chromeGetTestFile.xhtml"))
         .then(function (exists) {
           ok(exists, "getTestFilePath also accepts explicit relative path");
         }),
 
-      OS.File.exists(getTestFilePath("./test_chromeGetTestFileTypo.xul"))
+      OS.File.exists(getTestFilePath("./test_chromeGetTestFileTypo.xhtml"))
         .then(function (exists) {
           ok(!exists, "getTestFilePath do not throw if the file doesn't exists");
         }),
