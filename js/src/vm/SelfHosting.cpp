@@ -79,7 +79,7 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
 
-#include "gc/PrivateIterators-inl.h"
+#include "gc/GC-inl.h"
 #include "vm/BooleanObject-inl.h"
 #include "vm/BytecodeIterator-inl.h"
 #include "vm/BytecodeLocation-inl.h"
