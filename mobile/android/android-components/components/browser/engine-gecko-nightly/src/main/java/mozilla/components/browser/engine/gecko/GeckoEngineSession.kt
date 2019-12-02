@@ -65,6 +65,11 @@ class GeckoEngineSession(
     internal lateinit var geckoSession: GeckoSession
     internal var currentUrl: String? = null
     internal var scrollY: Int = 0
+
+    // This is set once the first content paint has occurred and can be used to
+    // decide if it's safe to call capturePixels on the view.
+    internal var firstContentfulPaint = false
+
     internal var job: Job = Job()
     private var lastSessionState: GeckoSession.SessionState? = null
     private var stateBeforeCrash: GeckoSession.SessionState? = null
@@ -314,6 +319,7 @@ class GeckoEngineSession(
         super.close()
         job.cancel()
         geckoSession.close()
+        firstContentfulPaint = false
     }
 
     /**
@@ -558,6 +564,10 @@ class GeckoEngineSession(
     @Suppress("ComplexMethod")
     internal fun createContentDelegate() = object : GeckoSession.ContentDelegate {
         override fun onFirstComposite(session: GeckoSession) = Unit
+
+        override fun onFirstContentfulPaint(session: GeckoSession) {
+            firstContentfulPaint = true
+        }
 
         override fun onContextMenu(
             session: GeckoSession,

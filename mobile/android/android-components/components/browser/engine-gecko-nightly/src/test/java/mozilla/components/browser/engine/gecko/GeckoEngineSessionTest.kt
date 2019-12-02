@@ -2064,6 +2064,21 @@ class GeckoEngineSessionTest {
         assertEquals(WindowRequest.Type.CLOSE, receivedWindowRequest!!.type)
     }
 
+    @Test
+    fun managesStateOfFirstContenfulPaint() {
+        val engineSession = GeckoEngineSession(mock(),
+                geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        assertFalse(engineSession.firstContentfulPaint)
+        contentDelegate.value.onFirstContentfulPaint(geckoSession)
+        assertTrue(engineSession.firstContentfulPaint)
+
+        engineSession.close()
+        assertFalse(engineSession.firstContentfulPaint)
+    }
+
     private fun mockGeckoSession(): GeckoSession {
         val session = mock<GeckoSession>()
         whenever(session.settings).thenReturn(
