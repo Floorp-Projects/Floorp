@@ -67,11 +67,11 @@ PresentationIPCService::StartSession(
       nsGlobalWindowInner::GetInnerWindowWithId(aWindowId);
   TabId tabId = BrowserParent::GetTabIdFrom(window->GetDocShell());
 
-  return SendRequest(
-      aCallback,
-      StartSessionRequest(aUrls, nsString(aSessionId), nsString(aOrigin),
-                          nsString(aDeviceId), aWindowId, tabId,
-                          IPC::Principal(aPrincipal)));
+  SendRequest(aCallback, StartSessionRequest(
+                             aUrls, nsString(aSessionId), nsString(aOrigin),
+                             nsString(aDeviceId), aWindowId, tabId,
+                             IPC::Principal(aPrincipal)));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -88,9 +88,9 @@ PresentationIPCService::SendSessionMessage(const nsAString& aSessionId,
     return info->Send(aData);
   }
 
-  return SendRequest(
-      nullptr,
-      SendSessionMessageRequest(nsString(aSessionId), aRole, nsString(aData)));
+  SendRequest(nullptr, SendSessionMessageRequest(nsString(aSessionId), aRole,
+                                                 nsString(aData)));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -137,11 +137,8 @@ PresentationIPCService::CloseSession(const nsAString& aSessionId, uint8_t aRole,
                                      uint8_t aClosedReason) {
   MOZ_ASSERT(!aSessionId.IsEmpty());
 
-  nsresult rv = SendRequest(
-      nullptr, CloseSessionRequest(nsString(aSessionId), aRole, aClosedReason));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  SendRequest(nullptr,
+              CloseSessionRequest(nsString(aSessionId), aRole, aClosedReason));
 
   RefPtr<PresentationContentSessionInfo> info =
       GetSessionInfo(aSessionId, aRole);
@@ -157,11 +154,7 @@ PresentationIPCService::TerminateSession(const nsAString& aSessionId,
                                          uint8_t aRole) {
   MOZ_ASSERT(!aSessionId.IsEmpty());
 
-  nsresult rv = SendRequest(
-      nullptr, TerminateSessionRequest(nsString(aSessionId), aRole));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  SendRequest(nullptr, TerminateSessionRequest(nsString(aSessionId), aRole));
 
   RefPtr<PresentationContentSessionInfo> info =
       GetSessionInfo(aSessionId, aRole);
@@ -183,8 +176,9 @@ PresentationIPCService::ReconnectSession(
     return NS_ERROR_INVALID_ARG;
   }
 
-  return SendRequest(
-      aCallback, ReconnectSessionRequest(aUrls, nsString(aSessionId), aRole));
+  SendRequest(aCallback,
+              ReconnectSessionRequest(aUrls, nsString(aSessionId), aRole));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -197,11 +191,11 @@ PresentationIPCService::BuildTransport(const nsAString& aSessionId,
     return NS_ERROR_INVALID_ARG;
   }
 
-  return SendRequest(nullptr,
-                     BuildTransportRequest(nsString(aSessionId), aRole));
+  SendRequest(nullptr, BuildTransportRequest(nsString(aSessionId), aRole));
+  return NS_OK;
 }
 
-nsresult PresentationIPCService::SendRequest(
+void PresentationIPCService::SendRequest(
     nsIPresentationServiceCallback* aCallback,
     const PresentationIPCRequest& aRequest) {
   if (sPresentationChild) {
@@ -210,7 +204,6 @@ nsresult PresentationIPCService::SendRequest(
         !sPresentationChild->SendPPresentationRequestConstructor(actor,
                                                                  aRequest));
   }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -339,7 +332,8 @@ NS_IMETHODIMP
 PresentationIPCService::UpdateWindowIdBySessionId(const nsAString& aSessionId,
                                                   uint8_t aRole,
                                                   const uint64_t aWindowId) {
-  return UpdateWindowIdBySessionIdInternal(aSessionId, aRole, aWindowId);
+  UpdateWindowIdBySessionIdInternal(aSessionId, aRole, aWindowId);
+  return NS_OK;
 }
 
 nsresult PresentationIPCService::NotifySessionStateChange(
@@ -393,8 +387,8 @@ nsresult PresentationIPCService::NotifySessionConnect(
 NS_IMETHODIMP
 PresentationIPCService::NotifyAvailableChange(
     const nsTArray<nsString>& aAvailabilityUrls, bool aAvailable) {
-  return mAvailabilityManager.DoNotifyAvailableChange(aAvailabilityUrls,
-                                                      aAvailable);
+  mAvailabilityManager.DoNotifyAvailableChange(aAvailabilityUrls, aAvailable);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
