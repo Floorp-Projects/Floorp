@@ -152,6 +152,8 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
   // These are strings because the Telemetry Events API only accepts strings
   static NS_NAMED_LITERAL_CSTRING(kChromeURI, "chromeuri");
   static NS_NAMED_LITERAL_CSTRING(kResourceURI, "resourceuri");
+  static NS_NAMED_LITERAL_CSTRING(kBlobUri, "bloburi");
+  static NS_NAMED_LITERAL_CSTRING(kDataUri, "dataurl");
   static NS_NAMED_LITERAL_CSTRING(kSingleString, "singlestring");
   static NS_NAMED_LITERAL_CSTRING(kMozillaExtension, "mozillaextension");
   static NS_NAMED_LITERAL_CSTRING(kOtherExtension, "otherextension");
@@ -176,6 +178,14 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
   }
   if (StringBeginsWith(fileName, NS_LITERAL_STRING("resource://"))) {
     return FilenameTypeAndDetails(kResourceURI, Some(fileName));
+  }
+
+  // blob: and data:
+  if (StringBeginsWith(fileName, NS_LITERAL_STRING("blob:"))) {
+    return FilenameTypeAndDetails(kBlobUri, Nothing());
+  }
+  if (StringBeginsWith(fileName, NS_LITERAL_STRING("data:"))) {
+    return FilenameTypeAndDetails(kDataUri, Nothing());
   }
 
   if (!NS_IsMainThread()) {
@@ -697,7 +707,6 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
   }
 
   NS_ConvertUTF8toUTF16 filenameU(aFilename);
-
   if (StringBeginsWith(filenameU, NS_LITERAL_STRING("chrome://"))) {
     // If it's a chrome:// url, allow it
     return true;
@@ -719,6 +728,29 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
   MOZ_LOG(sCSMLog, LogLevel::Info,
           ("ValidateScriptFilename System:%i %s\n", (aIsSystemRealm ? 1 : 0),
            aFilename));
+
+  // Send Telemetry
+  FilenameTypeAndDetails fileNameTypeAndDetails =
+      FilenameToFilenameType(filenameU);
+
+  Telemetry::EventID eventType =
+      Telemetry::EventID::Security_Javascriptload_Parentprocess;
+
+  mozilla::Maybe<nsTArray<EventExtraEntry>> extra;
+  if (fileNameTypeAndDetails.second().isSome()) {
+    extra = Some<nsTArray<EventExtraEntry>>({EventExtraEntry{
+        NS_LITERAL_CSTRING("fileinfo"),
+        NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second().value())}});
+  } else {
+    extra = Nothing();
+  }
+
+  if (!sTelemetryEventEnabled.exchange(true)) {
+    sTelemetryEventEnabled = true;
+    Telemetry::SetEventRecordingEnabled(NS_LITERAL_CSTRING("security"), true);
+  }
+  Telemetry::RecordEvent(eventType,
+                         mozilla::Some(fileNameTypeAndDetails.first()), extra);
 
   // Presently we are not enforcing any restrictions for the script filename,
   // we're only reporting Telemetry. In the future we will assert in debug
