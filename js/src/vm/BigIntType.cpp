@@ -584,20 +584,11 @@ BigInt* BigInt::absoluteAdd(JSContext* cx, HandleBigInt x, HandleBigInt y,
 BigInt* BigInt::absoluteSub(JSContext* cx, HandleBigInt x, HandleBigInt y,
                             bool resultNegative) {
   MOZ_ASSERT(x->digitLength() >= y->digitLength());
-
-  if (x->isZero()) {
-    MOZ_ASSERT(y->isZero());
-    return x;
-  }
+  MOZ_ASSERT(absoluteCompare(x, y) > 0);
+  MOZ_ASSERT(!x->isZero());
 
   if (y->isZero()) {
     return resultNegative == x->isNegative() ? x : neg(cx, x);
-  }
-
-  int8_t comparisonResult = absoluteCompare(x, y);
-  MOZ_ASSERT(comparisonResult >= 0);
-  if (comparisonResult == 0) {
-    return zero(cx);
   }
 
   RootedBigInt result(
@@ -1800,7 +1791,12 @@ BigInt* BigInt::add(JSContext* cx, HandleBigInt x, HandleBigInt y) {
 
   // x + -y == x - y == -(y - x)
   // -x + y == y - x == -(x - y)
-  if (absoluteCompare(x, y) >= 0) {
+  int8_t compare = absoluteCompare(x, y);
+  if (compare == 0) {
+    return zero(cx);
+  }
+
+  if (compare > 0) {
     return absoluteSub(cx, x, y, xNegative);
   }
 
@@ -1815,9 +1811,15 @@ BigInt* BigInt::sub(JSContext* cx, HandleBigInt x, HandleBigInt y) {
     // (-x) - y == -(x + y)
     return absoluteAdd(cx, x, y, xNegative);
   }
+
   // x - y == -(y - x)
   // (-x) - (-y) == y - x == -(x - y)
-  if (absoluteCompare(x, y) >= 0) {
+  int8_t compare = absoluteCompare(x, y);
+  if (compare == 0) {
+    return zero(cx);
+  }
+
+  if (compare > 0) {
     return absoluteSub(cx, x, y, xNegative);
   }
 
