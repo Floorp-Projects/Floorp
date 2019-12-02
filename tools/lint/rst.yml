@@ -2,8 +2,6 @@
 rst:
     description: RST linter
     include: [.]
-    exclude:
-        - toolkit/components/telemetry/docs/
     extensions:
         - rst
     support-files:
