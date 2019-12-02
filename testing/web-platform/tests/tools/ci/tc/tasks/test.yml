@@ -190,6 +190,7 @@ tasks:
         - wpt-${vars.browser}-${vars.channel}-stability:
             use:
               - wpt-base
+              - run-options
               - browser-${vars.browser}
               - trigger-pr
               - tests-affected
