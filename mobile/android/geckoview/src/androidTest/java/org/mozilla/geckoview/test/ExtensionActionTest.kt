@@ -127,12 +127,20 @@ class ExtensionActionTest : BaseSessionTest() {
                 { extension!!.setActionDelegate(null) },
                 object : WebExtension.ActionDelegate {
             override fun onBrowserAction(extension: WebExtension, session: GeckoSession?, action: WebExtension.Action) {
+                if (sessionRule.currentCall.counter == 1) {
+                    // When attaching the delegate, we will receive a default message, ignore it
+                    return
+                }
                 assertEquals(id, "#browserAction")
                 default = action
                 tester(action)
                 result.complete(null)
             }
             override fun onPageAction(extension: WebExtension, session: GeckoSession?, action: WebExtension.Action) {
+                if (sessionRule.currentCall.counter == 1) {
+                    // When attaching the delegate, we will receive a default message, ignore it
+                    return
+                }
                 assertEquals(id, "#pageAction")
                 default = action
                 tester(action)
@@ -180,6 +188,36 @@ class ExtensionActionTest : BaseSessionTest() {
             assertEquals(action.title, "Test action default")
             assertEquals(action.enabled, false)
         }
+    }
+
+    @Test
+    fun attachingDelegateTriggersDefaultUpdate() {
+        val result = GeckoResult<Void>()
+
+        // We should always get a default update after we attach the delegate
+        when (id) {
+            "#browserAction" -> {
+                extension!!.setActionDelegate(object : WebExtension.ActionDelegate {
+                    override fun onBrowserAction(extension: WebExtension, session: GeckoSession?,
+                                                 action: WebExtension.Action) {
+                        assertEquals(action.title, "Test action default")
+                        result.complete(null)
+                    }
+                })
+            }
+            "#pageAction" -> {
+                extension!!.setActionDelegate(object : WebExtension.ActionDelegate {
+                    override fun onPageAction(extension: WebExtension, session: GeckoSession?,
+                                              action: WebExtension.Action) {
+                        assertEquals(action.title, "Test action default")
+                        result.complete(null)
+                    }
+                })
+            }
+            else -> throw IllegalArgumentException()
+        }
+
+        sessionRule.waitForResult(result)
     }
 
     @Test
