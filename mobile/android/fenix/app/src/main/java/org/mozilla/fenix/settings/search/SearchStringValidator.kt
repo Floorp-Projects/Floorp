@@ -9,13 +9,18 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
+import java.io.IOException
 
 object SearchStringValidator {
     enum class Result { Success, CannotReach }
 
     fun isSearchStringValid(client: Client, searchString: String): Result {
         val request = createRequest(searchString)
-        val response = client.fetch(request)
+        val response = try {
+            client.fetch(request)
+        } catch (e: IOException) {
+            return Result.CannotReach
+        }
         return if (response.isSuccess) Result.Success else Result.CannotReach
     }
 
