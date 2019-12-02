@@ -95,6 +95,12 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    */
   uint32_t GetAvailableScrollingDirections() const;
   /**
+   * Returns the directions in which scrolling is allowed (if the scroll range
+   * is at least one device pixel in that direction) when taking into account
+   * the visual viewport size.
+   */
+  uint32_t GetAvailableVisualScrollingDirections() const;
+  /**
    * Return the actual sizes of all possible scrollbars. Returns 0 for scrollbar
    * positions that don't have a scrollbar or where the scrollbar is not
    * visible. Do not call this while this frame's descendants are being
@@ -189,6 +195,10 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * GetScrollPosition().
    */
   virtual nsPoint GetVisualViewportOffset() const = 0;
+  /**
+   * Get the area that must contain the visual viewport offset.
+   */
+  virtual nsRect GetVisualScrollRange() const = 0;
   /**
    * Return how much we would try to scroll by in each direction if
    * asked to scroll by one "line" vertically and horizontally.
