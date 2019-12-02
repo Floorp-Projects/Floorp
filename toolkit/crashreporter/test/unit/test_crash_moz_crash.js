@@ -1,6 +1,6 @@
-function run_test() {
+add_task(async function run_test() {
   // Try crashing with a runtime abort
-  do_crash(
+  await do_crash(
     function() {
       crashType = CrashTestUtils.CRASH_MOZ_CRASH;
       crashReporter.annotateCrashReport("TestKey", "TestValue");
@@ -14,4 +14,4 @@ function run_test() {
     // process will exit with a zero exit status
     true
   );
-}
+});

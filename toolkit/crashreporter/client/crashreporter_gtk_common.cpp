@@ -47,7 +47,7 @@ GtkWidget* gRestartButton = 0;
 bool gInitialized = false;
 bool gDidTrySend = false;
 StringTable gFiles;
-StringTable gQueryParameters;
+Json::Value gQueryParameters;
 string gHttpProxy;
 string gAuth;
 string gCACertificateFile;
@@ -180,11 +180,15 @@ void LoadProxyinfo() {
 }
 
 gpointer SendThread(gpointer args) {
+  Json::StreamWriterBuilder builder;
+  builder["indentation"] = "";
+  string parameters(writeString(builder, gQueryParameters));
+
   string response, error;
   long response_code;
 
   bool success = google_breakpad::HTTPUpload::SendRequest(
-      gSendURL, gQueryParameters, gFiles, gHttpProxy, gAuth, gCACertificateFile,
+      gSendURL, parameters, gFiles, gHttpProxy, gAuth, gCACertificateFile,
       &response, &response_code, &error);
   if (success) {
     LogMessage("Crash report submitted successfully");
@@ -243,7 +247,7 @@ static void UpdateURL() {
   if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gIncludeURLCheck))) {
     gQueryParameters["URL"] = gURLParameter;
   } else {
-    gQueryParameters.erase("URL");
+    gQueryParameters.removeMember("URL");
   }
 }
 

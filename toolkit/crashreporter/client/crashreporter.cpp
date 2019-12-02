@@ -24,6 +24,7 @@
 #  include <dlfcn.h>
 #endif
 
+#include "json/json.h"
 #include "nss.h"
 #include "sechash.h"
 
@@ -41,6 +42,7 @@ using std::vector;
 namespace CrashReporter {
 
 StringTable gStrings;
+Json::Value gData;
 string gSettingsPath;
 string gEventsPath;
 string gPingPath;
@@ -127,6 +129,18 @@ bool ReadStringsFromFile(const string& path, StringTable& strings,
   return success;
 }
 
+static bool ReadExtraFile(const string& aExtraDataPath, Json::Value& aExtra) {
+  bool success = false;
+  ifstream* f = UIOpenRead(aExtraDataPath, ios::in);
+  if (f->is_open()) {
+    Json::CharReaderBuilder builder;
+    success = parseFromStream(builder, *f, &aExtra, nullptr);
+  }
+
+  delete f;
+  return success;
+}
+
 static string Basename(const string& file) {
   string::size_type slashIndex = file.rfind(UI_DIR_SEPARATOR);
   if (slashIndex != string::npos)
@@ -144,9 +158,50 @@ static string GetDumpLocalID() {
   return localId.substr(0, dot);
 }
 
-// This appends the aKey/aValue entry to the main crash event so that it can
-// be picked up by Firefox once it restarts
-static void AppendToEventFile(const string& aKey, const string& aValue) {
+static bool ReadEventFile(const string& aPath, string& aEventVersion,
+                          string& aTime, string& aUuid, Json::Value& aData) {
+  bool res = false;
+  ifstream* f = UIOpenRead(aPath, ios::binary);
+
+  if (f->is_open()) {
+    std::getline(*f, aEventVersion, '\n');
+    res = f->good();
+    std::getline(*f, aTime, '\n');
+    res &= f->good();
+    std::getline(*f, aUuid, '\n');
+    res &= f->good();
+
+    if (res) {
+      Json::CharReaderBuilder builder;
+      res = parseFromStream(builder, *f, &aData, nullptr);
+    }
+  }
+
+  delete f;
+  return res;
+}
+
+static void OverwriteEventFile(const string& aPath, const string& aEventVersion,
+                               const string& aTime, const string& aUuid,
+                               const Json::Value& aData) {
+  ofstream* f = UIOpenWrite(aPath, ios::binary | ios::trunc);
+  if (f->is_open()) {
+    f->write(aEventVersion.c_str(), aEventVersion.length()) << '\n';
+    f->write(aTime.c_str(), aTime.length()) << '\n';
+    f->write(aUuid.c_str(), aUuid.length()) << '\n';
+
+    Json::StreamWriterBuilder builder;
+    builder["indentation"] = "";
+    std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+    writer->write(aData, f);
+    *f << "\n";
+  }
+
+  delete f;
+}
+
+static void UpdateEventFile(const Json::Value& aExtraData, const string& aHash,
+                            const string& aPingUuid) {
   if (gEventsPath.empty()) {
     // If there is no path for finding the crash event, skip this step.
     return;
@@ -154,14 +209,28 @@ static void AppendToEventFile(const string& aKey, const string& aValue) {
 
   string localId = GetDumpLocalID();
   string path = gEventsPath + UI_DIR_SEPARATOR + localId;
-  ofstream* f = UIOpenWrite(path, ios::app);
+  string eventVersion;
+  string crashTime;
+  string crashUuid;
+  Json::Value eventData;
 
-  if (f->is_open()) {
-    *f << aKey << "=" << aValue << std::endl;
-    f->close();
+  if (!ReadEventFile(path, eventVersion, crashTime, crashUuid, eventData)) {
+    return;
   }
 
-  delete f;
+  if (!aHash.empty()) {
+    eventData["MinidumpSha256Hash"] = aHash;
+  }
+
+  if (!aPingUuid.empty()) {
+    eventData["CrashPingUUID"] = aPingUuid;
+  }
+
+  if (aExtraData.isMember("StackTraces")) {
+    eventData["StackTraces"] = aExtraData["StackTraces"];
+  }
+
+  OverwriteEventFile(path, eventVersion, crashTime, crashUuid, eventData);
 }
 
 static void WriteSubmissionEvent(SubmissionResult result,
@@ -468,14 +537,13 @@ static string ComputeDumpHash() {
 
 using namespace CrashReporter;
 
-void RewriteStrings(StringTable& queryParameters) {
+Json::Value kEmptyJsonString("");
+
+void RewriteStrings(Json::Value& aExtraData) {
   // rewrite some UI strings with the values from the query parameters
-  string product = queryParameters["ProductName"];
-  string vendor = queryParameters["Vendor"];
-  if (vendor.empty()) {
-    // Assume Mozilla if no vendor is specified
-    vendor = "Mozilla";
-  }
+  string product = aExtraData.get("ProductName", kEmptyJsonString).asString();
+  Json::Value mozilla("Mozilla");
+  string vendor = aExtraData.get("Vendor", mozilla).asString();
 
   char buf[4096];
   UI_SNPRINTF(buf, sizeof(buf), gStrings[ST_CRASHREPORTERVENDORTITLE].c_str(),
@@ -522,8 +590,13 @@ void RewriteStrings(StringTable& queryParameters) {
   gStrings[ST_ERROR_ENDOFLIFE] = buf;
 }
 
-bool CheckEndOfLifed(string version) {
-  string reportPath = gSettingsPath + UI_DIR_SEPARATOR + "EndOfLife" + version;
+bool CheckEndOfLifed(const Json::Value& aVersion) {
+  if (!aVersion.isString()) {
+    return false;
+  }
+
+  string reportPath =
+      gSettingsPath + UI_DIR_SEPARATOR + "EndOfLife" + aVersion.asString();
   return UIFileExists(reportPath);
 }
 
@@ -600,22 +673,22 @@ int main(int argc, char** argv) {
       gMemoryFile.erase();
     }
 
-    StringTable queryParameters;
-    if (!ReadStringsFromFile(gExtraFile, queryParameters, true)) {
+    Json::Value extraData;
+    if (!ReadExtraFile(gExtraFile, extraData)) {
       UIError(gStrings[ST_ERROR_EXTRAFILEREAD]);
       return 0;
     }
 
-    if (queryParameters.find("ProductName") == queryParameters.end()) {
+    if (!extraData.isMember("ProductName")) {
       UIError(gStrings[ST_ERROR_NOPRODUCTNAME]);
       return 0;
     }
 
     // There is enough information in the extra file to rewrite strings
     // to be product specific
-    RewriteStrings(queryParameters);
+    RewriteStrings(extraData);
 
-    if (queryParameters.find("ServerURL") == queryParameters.end()) {
+    if (!extraData.isMember("ServerURL")) {
       UIError(gStrings[ST_ERROR_NOSERVERURL]);
       return 0;
     }
@@ -624,8 +697,10 @@ int main(int argc, char** argv) {
     // asking the platform-specific code to guess.
     gSettingsPath = UIGetEnv("MOZ_CRASHREPORTER_DATA_DIRECTORY");
     if (gSettingsPath.empty()) {
-      string product = queryParameters["ProductName"];
-      string vendor = queryParameters["Vendor"];
+      string product =
+          extraData.get("ProductName", kEmptyJsonString).asString();
+      string vendor = extraData.get("Vendor", kEmptyJsonString).asString();
+
       if (!UIGetSettingsPath(vendor, product, gSettingsPath)) {
         gSettingsPath.clear();
       }
@@ -642,23 +717,11 @@ int main(int argc, char** argv) {
     gPingPath = UIGetEnv("MOZ_CRASHREPORTER_PING_DIRECTORY");
 
     // Assemble and send the crash ping
-    string hash;
+    string hash = ComputeDumpHash();
+
     string pingUuid;
-
-    hash = ComputeDumpHash();
-    if (!hash.empty()) {
-      AppendToEventFile("MinidumpSha256Hash", hash);
-    }
-
-    if (SendCrashPing(queryParameters, hash, pingUuid, gPingPath)) {
-      AppendToEventFile("CrashPingUUID", pingUuid);
-    }
-
-    // Update the crash event with stacks if they are present
-    auto stackTracesItr = queryParameters.find("StackTraces");
-    if (stackTracesItr != queryParameters.end()) {
-      AppendToEventFile(stackTracesItr->first, stackTracesItr->second);
-    }
+    SendCrashPing(extraData, hash, pingUuid, gPingPath);
+    UpdateEventFile(extraData, hash, pingUuid);
 
     if (!UIFileExists(gReporterDumpFile)) {
       UIError(gStrings[ST_ERROR_DUMPFILEEXISTS]);
@@ -671,12 +734,12 @@ int main(int argc, char** argv) {
       return 0;
     }
 
-    string sendURL = queryParameters["ServerURL"];
+    string sendURL = extraData.get("ServerURL", kEmptyJsonString).asString();
     // we don't need to actually send these
-    queryParameters.erase("ServerURL");
-    queryParameters.erase("StackTraces");
+    extraData.removeMember("ServerURL");
+    extraData.removeMember("StackTraces");
 
-    queryParameters["Throttleable"] = "1";
+    extraData["Throttleable"] = "1";
 
     // re-set XUL_APP_FILE for xulrunner wrapped apps
     const char* appfile = getenv("MOZ_CRASHREPORTER_RESTART_XUL_APP_FILE");
@@ -716,8 +779,9 @@ int main(int argc, char** argv) {
     }
 
     // see if this version has been end-of-lifed
-    if (queryParameters.find("Version") != queryParameters.end() &&
-        CheckEndOfLifed(queryParameters["Version"])) {
+
+    if (extraData.isMember("Version") &&
+        CheckEndOfLifed(extraData["Version"])) {
       UIError(gStrings[ST_ERROR_ENDOFLIFE]);
       DeleteDump();
       return 0;
@@ -729,8 +793,9 @@ int main(int argc, char** argv) {
       files["memory_report"] = gMemoryFile;
     }
 
-    if (!UIShowCrashUI(files, queryParameters, sendURL, restartArgs))
+    if (!UIShowCrashUI(files, extraData, sendURL, restartArgs)) {
       DeleteDump();
+    }
   }
 
   UIShutdown();

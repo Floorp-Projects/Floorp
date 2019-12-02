@@ -12,7 +12,7 @@ function check(extra, size) {
   Assert.ok(/^(\d+,)*\d+$/.test(extra.PHCFreeStack));
 }
 
-function run_test() {
+add_task(async function run_test() {
   if (!("@mozilla.org/toolkit/crash-reporter;1" in Cc)) {
     dump(
       "INFO | test_crash_phc.js | Can't test crashreporter in a non-libxul build.\n"
@@ -20,7 +20,7 @@ function run_test() {
     return;
   }
 
-  do_crash(
+  await do_crash(
     function() {
       crashType = CrashTestUtils.CRASH_PHC_USE_AFTER_FREE;
     },
@@ -31,7 +31,7 @@ function run_test() {
     true
   );
 
-  do_crash(
+  await do_crash(
     function() {
       crashType = CrashTestUtils.CRASH_PHC_DOUBLE_FREE;
     },
@@ -41,4 +41,4 @@ function run_test() {
     },
     true
   );
-}
+});

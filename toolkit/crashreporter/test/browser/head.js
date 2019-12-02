@@ -140,11 +140,7 @@ function writeMinidumpFile(dir, uuid, date) {
 }
 
 function writeExtraFile(dir, uuid, date, data) {
-  let extradata = "";
-  for (let x in data) {
-    extradata += x + "=" + data[x] + "\n";
-  }
-  writeCrashReportFile(dir, uuid, ".extra", date, extradata);
+  writeCrashReportFile(dir, uuid, ".extra", date, JSON.stringify(data));
 }
 
 function writeMemoryReport(dir, uuid, date) {

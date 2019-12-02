@@ -1,7 +1,7 @@
 /* import-globals-from ../unit/head_crashreporter.js */
 load("../unit/head_crashreporter.js");
 
-function run_test() {
+add_task(async function run_test() {
   if (!("@mozilla.org/toolkit/crash-reporter;1" in Cc)) {
     dump(
       "INFO | test_content_annotation.js | Can't test crashreporter in a non-libxul build.\n"
@@ -15,7 +15,7 @@ function run_test() {
   scope.TelemetryController.testSetup();
 
   // Try crashing with a runtime abort
-  do_content_crash(
+  await do_content_crash(
     function() {
       crashType = CrashTestUtils.CRASH_MOZ_CRASH;
       crashReporter.annotateCrashReport("TestKey", "TestValue");
@@ -29,4 +29,4 @@ function run_test() {
       Assert.notEqual(extra.Notes.indexOf("!!!foo!!!"), -1);
     }
   );
-}
+});
