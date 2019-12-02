@@ -89,7 +89,7 @@ const document_scroller = document.scrollingElement;
 test(() => {
   // Confirm that the document-level scroller is the snap container for all of
   // the snap areas.
-  document_scroller.scrollBy(0, 10);
+  document_scroller.scrollTo(0, 10);
   assert_equals(document_scroller.scrollTop, 500);
   // Snaps to the inner snap area.
   document_scroller.scrollBy(0, 75);
@@ -121,9 +121,13 @@ test(() => {
 
  // Test that attaching a new snap container also properly assigns snap areas.
  test(() => {
+  // All containers should capture snap areas.
+  middle_scroller.style.setProperty("overflow", "scroll");
+  inner_scroller.style.setProperty("overflow", "scroll");
+
   // Sanity check that the scrollers still snap to the snap areas.
-  document_scroller.scrollBy(0, 10);
-  inner_scroller.scrollBy(0,10);
+  document_scroller.scrollTo(0, 10);
+  inner_scroller.scrollTo(0,10);
   assert_equals(inner_scroller.scrollTop, 300);
   assert_equals(document_scroller.scrollTop, 500);
 
@@ -142,7 +146,7 @@ test(() => {
   assert_equals(document_scroller.scrollTop, 400);
 
   // Inserted scroller snaps.
-  inserted_scroller.scrollBy(0, 10);
+  inserted_scroller.scrollTo(0, 10);
   assert_equals(inserted_scroller.scrollTop, 500);
  }, "Attaching a new element that is scrollable should assign the correct snap\
  areas to it.");
