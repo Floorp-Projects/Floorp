@@ -2264,11 +2264,7 @@ uint64_t BigInt::toUint64(BigInt* x) {
     return 0;
   }
 
-  uint64_t digit = x->digit(0);
-
-  if (DigitBits == 32 && x->digitLength() > 1) {
-    digit |= static_cast<uint64_t>(x->digit(1)) << 32;
-  }
+  uint64_t digit = x->uint64FromAbsNonZero();
 
   // Return the two's complement if x is negative.
   if (x->isNegative()) {
@@ -2281,20 +2277,16 @@ uint64_t BigInt::toUint64(BigInt* x) {
 bool BigInt::isInt64(BigInt* x, int64_t* result) {
   MOZ_MAKE_MEM_UNDEFINED(result, sizeof(*result));
 
-  size_t length = x->digitLength();
-  if (length > (DigitBits == 32 ? 2 : 1)) {
+  if (!x->absFitsInUint64()) {
     return false;
   }
 
-  if (length == 0) {
+  if (x->isZero()) {
     *result = 0;
     return true;
   }
 
-  uint64_t magnitude = x->digit(0);
-  if (DigitBits == 32 && length > 1) {
-    magnitude |= static_cast<uint64_t>(x->digit(1)) << 32;
-  }
+  uint64_t magnitude = x->uint64FromAbsNonZero();
 
   if (x->isNegative()) {
     constexpr uint64_t Int64MinMagnitude = uint64_t(1) << 63;
@@ -2800,17 +2792,13 @@ double BigInt::numberValue(BigInt* x) {
   constexpr unsigned ExponentBias = Double::kExponentBias;
   constexpr uint8_t SignShift = Double::kExponentWidth + SignificandWidth;
 
-  size_t length = x->digitLength();
-  MOZ_ASSERT(length != 0);
+  MOZ_ASSERT(x->digitLength() > 0);
 
   // Fast path for the likely-common case of up to a uint64_t of magnitude not
   // exceeding integral precision in IEEE-754.  (Note that we *depend* on this
   // optimization being performed further down.)
-  if (length <= 64 / DigitBits) {
-    uint64_t magnitude = x->digit(0);
-    if (DigitBits == 32 && length > 1) {
-      magnitude |= static_cast<uint64_t>(x->digit(1)) << 32;
-    }
+  if (x->absFitsInUint64()) {
+    uint64_t magnitude = x->uint64FromAbsNonZero();
     const uint64_t MaxIntegralPrecisionDouble = uint64_t(1)
                                                 << (SignificandWidth + 1);
     if (magnitude <= MaxIntegralPrecisionDouble) {
@@ -2818,6 +2806,7 @@ double BigInt::numberValue(BigInt* x) {
     }
   }
 
+  size_t length = x->digitLength();
   Digit msd = x->digit(length - 1);
   uint8_t msdLeadingZeroes = DigitLeadingZeroes(msd);
 

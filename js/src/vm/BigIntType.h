@@ -7,6 +7,7 @@
 #ifndef vm_BigIntType_h
 #define vm_BigIntType_h
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Range.h"
 #include "mozilla/Span.h"
 
@@ -79,7 +80,12 @@ class BigInt final
     return Digits(hasInlineDigits() ? inlineDigits_ : heapDigits_,
                   digitLength());
   }
-  Digit digit(size_t idx) { return digits()[idx]; }
+  using ConstDigits = mozilla::Span<const Digit>;
+  ConstDigits digits() const {
+    return ConstDigits(hasInlineDigits() ? inlineDigits_ : heapDigits_,
+                       digitLength());
+  }
+  Digit digit(size_t idx) const { return digits()[idx]; }
   void setDigit(size_t idx, Digit digit) { digits()[idx] = digit; }
 
   bool isZero() const { return digitLength() == 0; }
@@ -363,6 +369,18 @@ class BigInt final
                                          unsigned radix);
 
   static BigInt* destructivelyTrimHighZeroDigits(JSContext* cx, BigInt* x);
+
+  bool absFitsInUint64() const { return digitLength() <= 64 / DigitBits; }
+
+  uint64_t uint64FromAbsNonZero() const {
+    MOZ_ASSERT(!isZero());
+
+    uint64_t val = digit(0);
+    if (DigitBits == 32 && digitLength() > 1) {
+      val |= static_cast<uint64_t>(digit(1)) << 32;
+    }
+    return val;
+  }
 
   friend struct ::JSStructuredCloneReader;
   friend struct ::JSStructuredCloneWriter;
