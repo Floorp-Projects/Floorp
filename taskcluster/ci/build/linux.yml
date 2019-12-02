@@ -37,6 +37,7 @@ linux64/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-plain/opt:
     description: "Linux64 Opt Plain"
@@ -74,6 +75,7 @@ linux64-plain/opt:
             - linux64-node
             - linux64-cbindgen
             - lucetc
+            - wasi-sysroot
 
 linux64-fuzzing/debug:
     description: "Linux64 Fuzzing Debug"
@@ -112,6 +114,7 @@ linux64-fuzzing/debug:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64/debug:
     description: "Linux64 Debug"
@@ -149,6 +152,7 @@ linux64/debug:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-plain/debug:
     description: "Linux64 Debug Plain"
@@ -186,6 +190,7 @@ linux64-plain/debug:
             - linux64-node
             - linux64-cbindgen
             - lucetc
+            - wasi-sysroot
 
 linux64-devedition-nightly/opt:
     description: "Linux64 devedition Nightly"
@@ -230,6 +235,7 @@ linux64-devedition-nightly/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-base-toolchains/opt:
     description: "Linux64 base toolchains Opt"
@@ -266,6 +272,7 @@ linux64-base-toolchains/opt:
             - linux64-nasm-2.13.02
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-base-toolchains/debug:
     description: "Linux64 base toolchains Debug"
@@ -304,6 +311,7 @@ linux64-base-toolchains/debug:
             - linux64-nasm-2.13.02
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-base-toolchains-clang/opt:
     description: "Linux64 base toolchains clang Opt"
@@ -339,6 +347,7 @@ linux64-base-toolchains-clang/opt:
             - linux64-nasm-2.13.02
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-base-toolchains-clang/debug:
     description: "Linux64 base toolchains clang Debug"
@@ -376,6 +385,7 @@ linux64-base-toolchains-clang/debug:
             - linux64-nasm-2.13.02
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux/opt:
     description: "Linux32 Opt"
@@ -413,6 +423,7 @@ linux/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux/debug:
     description: "Linux32 Debug"
@@ -451,6 +462,7 @@ linux/debug:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux-rusttests/opt:
     description: "Linux32 Rust Tests Opt"
@@ -491,6 +503,7 @@ linux-rusttests/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux-rusttests/debug:
     description: "Linux32 Rust Tests Debug"
@@ -531,6 +544,7 @@ linux-rusttests/debug:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux-devedition-nightly/opt:
     description: "Linux32 devedition Nightly"
@@ -576,6 +590,7 @@ linux-devedition-nightly/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux-shippable/opt:
     description: "Linux32 Shippable"
@@ -617,6 +632,7 @@ linux-shippable/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux-reproduced/opt:
     description: "Linux32 Reproduced"
@@ -658,6 +674,7 @@ linux-reproduced/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-asan/opt:
     description: "Linux64 Opt ASAN"
@@ -696,6 +713,7 @@ linux64-asan/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-tsan/opt:
     description: "Linux64 Opt TSAN"
@@ -733,6 +751,7 @@ linux64-tsan/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-tsan-fuzzing/opt:
     description: "Linux64 Fuzzing Opt TSAN"
@@ -770,6 +789,7 @@ linux64-tsan-fuzzing/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-asan-fuzzing/opt:
     description: "Linux64 Fuzzing Opt ASAN"
@@ -808,6 +828,7 @@ linux64-asan-fuzzing/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-asan-fuzzing-ccov/opt:
     description: "Linux64 Fuzzing Opt ASAN w/ Coverage"
@@ -846,6 +867,7 @@ linux64-asan-fuzzing-ccov/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-fuzzing-ccov/opt:
     description: "Linux64 Fuzzing Opt w/ Coverage"
@@ -886,6 +908,7 @@ linux64-fuzzing-ccov/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-asan-reporter-nightly/opt:
     description: "Linux64 Opt ASAN Reporter Nightly"
@@ -934,6 +957,7 @@ linux64-asan-reporter-nightly/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-asan/debug:
     description: "Linux64 Debug ASAN"
@@ -972,6 +996,7 @@ linux64-asan/debug:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-shippable/opt:
     description: "Linux64 Shippable"
@@ -1012,6 +1037,7 @@ linux64-shippable/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-noopt/debug:
     description: "Linux64 No-optimize Debug"
@@ -1052,6 +1078,7 @@ linux64-noopt/debug:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-rusttests/opt:
     description: "Linux64 Rust Tests Opt"
@@ -1091,6 +1118,7 @@ linux64-rusttests/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-rusttests/debug:
     description: "Linux64 Rust Tests Debug"
@@ -1130,6 +1158,7 @@ linux64-rusttests/debug:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-tup/opt:
     description: "Linux64 Tup"
@@ -1170,6 +1199,7 @@ linux64-tup/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-ccov/opt:
     description: "Linux64-CCov Opt"
@@ -1210,6 +1240,7 @@ linux64-ccov/opt:
             - linux64-node
             - linux64-grcov
             - lucetc
+            - wasi-sysroot
 
 linux64-add-on-devel/opt:
     description: "Linux64 add-on-devel"
@@ -1247,6 +1278,7 @@ linux64-add-on-devel/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-aarch64/opt:
     description: "Linux64 aarch64 Opt"
@@ -1286,6 +1318,7 @@ linux64-aarch64/opt:
             - linux64-sccache
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux-gcp/debug:
     description: "Linux32 Debug - built on GCP"
@@ -1327,6 +1360,7 @@ linux-gcp/debug:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux-gcp/opt:
     description: "Linux32 Opt - built on GCP"
@@ -1367,6 +1401,7 @@ linux-gcp/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-gcp/debug:
     description: "Linux64 Debug - built on GCP"
@@ -1407,6 +1442,7 @@ linux64-gcp/debug:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
 
 linux64-gcp/opt:
     description: "Linux64 Opt - built on GCP"
@@ -1446,3 +1482,4 @@ linux64-gcp/opt:
             - linux64-nasm
             - linux64-node
             - lucetc
+            - wasi-sysroot
