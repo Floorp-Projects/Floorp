@@ -174,7 +174,8 @@ private fun threeDotMenuRecyclerViewExists() {
     onView(withId(R.id.mozac_browser_menu_recyclerView)).check(matches(isDisplayed()))
 }
 
-private fun settingsButton() = onView(allOf(withText(R.string.settings)))
+private fun settingsButton() = onView(allOf(withText(R.string.settings),
+    withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 private fun assertSettingsButton() = settingsButton()
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
@@ -255,6 +256,7 @@ private fun ShareALinkTitle() =
 
 private fun assertShareALinkTitle() = ShareALinkTitle()
 
-private fun whatsNewButton() = onView(allOf(withText("What's New")))
+private fun whatsNewButton() = onView(allOf(withText("What's New"),
+    withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 private fun assertWhatsNewButton() = whatsNewButton()
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
