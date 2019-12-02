@@ -1,11 +1,13 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="20dp"
-    android:paddingBottom="10dp"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
-
+    android:paddingBottom="10dp">
 
     <ImageView
         android:id="@+id/info_button"
@@ -17,39 +19,39 @@
 
     <TextView
         android:id="@+id/title"
-        android:textAppearance="?android:attr/textAppearanceListItem"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
-        android:text="@string/search_suggestions_onboarding_title"
         android:paddingBottom="12dp"
-        app:layout_constraintStart_toStartOf="parent"
+        android:textAppearance="?android:attr/textAppearanceListItem"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="@string/search_suggestions_onboarding_title" />
 
     <TextView
         android:id="@+id/text"
-        android:textAppearance="?android:attr/textAppearanceSmall"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/search_suggestions_onboarding_text"
-        app:layout_constraintStart_toStartOf="@id/title"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        app:layout_constraintBottom_toTopOf="@id/learn_more"
         app:layout_constraintEnd_toEndOf="@id/title"
-        app:layout_constraintTop_toBottomOf="@id/title"
-        app:layout_constraintBottom_toTopOf="@id/learn_more"/>
+        app:layout_constraintStart_toStartOf="@id/title"
+        app:layout_constraintTop_toBottomOf="@id/title" />
 
     <TextView
         android:id="@+id/learn_more"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:textColor="?attr/accentHighContrast"
-        android:textStyle="bold"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/exceptions_empty_message_learn_more_link"
-        app:layout_constraintStart_toStartOf="@id/title"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="?attr/accentHighContrast"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@id/allow"
         app:layout_constraintEnd_toEndOf="@id/title"
-        app:layout_constraintTop_toBottomOf="@id/text"
-        app:layout_constraintBottom_toTopOf="@id/allow"/>
+        app:layout_constraintStart_toStartOf="@id/title"
+        app:layout_constraintTop_toBottomOf="@id/text" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/allow"
@@ -58,20 +60,20 @@
         android:layout_height="wrap_content"
         android:padding="12dp"
         android:text="@string/search_suggestions_onboarding_allow_button"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/title"
-        app:layout_constraintTop_toBottomOf="@id/text"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@id/text" />
 
     <TextView
         android:id="@+id/dismiss"
-        android:textColor="#ffffff"
-        android:textStyle="bold"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:padding="20dp"
         android:text="@string/search_suggestions_onboarding_do_not_allow_button"
-        app:layout_constraintEnd_toStartOf="@id/allow"
+        android:textColor="#ffffff"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="@id/allow"
-        app:layout_constraintTop_toTopOf="@id/allow"/>
+        app:layout_constraintEnd_toStartOf="@id/allow"
+        app:layout_constraintTop_toTopOf="@id/allow" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -37,14 +37,14 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getSpannable
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.awesomebar.AwesomeBarView
 import org.mozilla.fenix.search.toolbar.ToolbarView
 import org.mozilla.fenix.settings.SupportUtils
-import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.settings
 
 @Suppress("TooManyFunctions", "LargeClass")
 class SearchFragment : Fragment(), UserInteractionHandler {
@@ -86,12 +86,13 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             requireComponents.search.provider.getDefaultEngine(requireContext())
         )
 
-        val showSearchSuggestions = if ((activity as HomeActivity).browsingModeManager.mode.isPrivate) {
-            requireContext().settings().shouldShowSearchSuggestions &&
-                    requireContext().settings().shouldShowSearchSuggestionsInPrivate
-        } else {
-            requireContext().settings().shouldShowSearchSuggestions
-        }
+        val showSearchSuggestions =
+            if ((activity as HomeActivity).browsingModeManager.mode.isPrivate) {
+                requireContext().settings().shouldShowSearchSuggestions &&
+                        requireContext().settings().shouldShowSearchSuggestionsInPrivate
+            } else {
+                requireContext().settings().shouldShowSearchSuggestions
+            }
 
         searchStore = StoreProvider.get(this) {
             SearchFragmentStore(
@@ -199,7 +200,8 @@ class SearchFragment : Fragment(), UserInteractionHandler {
                 (activity as HomeActivity)
                     .openToBrowserAndLoad(
                         searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
-                            SupportUtils.SumoTopic.SEARCH_SUGGESTION),
+                            SupportUtils.SumoTopic.SEARCH_SUGGESTION
+                        ),
                         newTab = searchStore.state.session == null,
                         from = BrowserDirection.FromSearch
                     )
@@ -216,11 +218,12 @@ class SearchFragment : Fragment(), UserInteractionHandler {
                 context?.settings()?.shouldShowSearchSuggestionsInPrivate = false
                 context?.settings()?.showSearchSuggestionsInPrivateOnboardingFinished = true
             }
+
+            inflated.text.text =
+                getString(R.string.search_suggestions_onboarding_text, getString(R.string.app_name))
         }
 
-        view.search_suggestions_onboarding.setOnInflateListener((stubListener)
-
-        )
+        view.search_suggestions_onboarding.setOnInflateListener((stubListener))
 
         view.toolbar_wrapper.clipToOutline = false
 
@@ -263,7 +266,10 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             toolbarView.view.requestFocus()
         }
 
-        updateClipboardSuggestion(searchStore.state, requireContext().components.clipboardHandler.url)
+        updateClipboardSuggestion(
+            searchStore.state,
+            requireContext().components.clipboardHandler.url
+        )
 
         permissionDidUpdate = false
         hideToolbar()
@@ -292,7 +298,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
     private fun updateClipboardSuggestion(searchState: SearchFragmentState, clipboardUrl: String?) {
         val visibility =
             if (searchState.showClipboardSuggestions && searchState.query.isEmpty() && !clipboardUrl.isNullOrEmpty())
-            View.VISIBLE else View.GONE
+                View.VISIBLE else View.GONE
 
         fill_link_from_clipboard.visibility = visibility
         divider_line.visibility = visibility

@@ -151,7 +151,7 @@ class ThreeDotMenuMainRobot {
         }
 
         fun openWhatsNew(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            mDevice.waitNotNull(Until.findObject(By.text("What's New")), waitingTime)
+            mDevice.waitNotNull(Until.findObject(By.text("What’s New")), waitingTime)
             whatsNewButton().click()
 
             BrowserRobot().interact()
@@ -256,7 +256,9 @@ private fun ShareALinkTitle() =
 
 private fun assertShareALinkTitle() = ShareALinkTitle()
 
-private fun whatsNewButton() = onView(allOf(withText("What's New"),
+private fun whatsNewButton() = onView(
+    allOf(
+        withText("What’s New"),
     withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 private fun assertWhatsNewButton() = whatsNewButton()
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
