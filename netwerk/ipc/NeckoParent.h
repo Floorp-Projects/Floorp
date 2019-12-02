@@ -150,14 +150,13 @@ class NeckoParent : public PNeckoParent {
       PUDPSocketParent*, nsIPrincipal* aPrincipal,
       const nsCString& aFilter) override;
   bool DeallocPUDPSocketParent(PUDPSocketParent*);
-  PDNSRequestParent* AllocPDNSRequestParent(
+  already_AddRefed<PDNSRequestParent> AllocPDNSRequestParent(
       const nsCString& aHost, const OriginAttributes& aOriginAttributes,
       const uint32_t& aFlags);
   virtual mozilla::ipc::IPCResult RecvPDNSRequestConstructor(
       PDNSRequestParent* actor, const nsCString& hostName,
       const OriginAttributes& aOriginAttributes,
       const uint32_t& flags) override;
-  bool DeallocPDNSRequestParent(PDNSRequestParent*);
   mozilla::ipc::IPCResult RecvSpeculativeConnect(const URIParams& aURI,
                                                  nsIPrincipal* aPrincipal,
                                                  const bool& aAnonymous);

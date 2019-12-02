@@ -47,10 +47,6 @@ class SocketProcessChild final : public PSocketProcessChild {
 
   PWebrtcTCPSocketChild* AllocPWebrtcTCPSocketChild(const Maybe<TabId>& tabId);
   bool DeallocPWebrtcTCPSocketChild(PWebrtcTCPSocketChild* aActor);
-  PDNSRequestChild* AllocPDNSRequestChild(
-      const nsCString& aHost, const OriginAttributes& aOriginAttributes,
-      const uint32_t& aFlags);
-  bool DeallocPDNSRequestChild(PDNSRequestChild*);
 
   void CleanUp();
   void DestroySocketProcessBridgeParent(ProcessId aId);
