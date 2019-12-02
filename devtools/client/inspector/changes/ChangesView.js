@@ -45,9 +45,12 @@ class ChangesView {
     this.onChangesFrontAvailable = this.onChangesFrontAvailable.bind(this);
     this.onChangesFrontDestroyed = this.onChangesFrontDestroyed.bind(this);
     this.onContextMenu = this.onContextMenu.bind(this);
+    this.onCopy = this.onCopy.bind(this);
     this.onCopyAllChanges = this.copyAllChanges.bind(this);
+    this.onCopyDeclaration = this.copyDeclaration.bind(this);
     this.onCopyRule = this.copyRule.bind(this);
     this.onClearChanges = this.onClearChanges.bind(this);
+    this.onSelectAll = this.onSelectAll.bind(this);
     this.onTargetAvailable = this.onTargetAvailable.bind(this);
     this.onTargetDestroyed = this.onTargetDestroyed.bind(this);
 
@@ -58,7 +61,15 @@ class ChangesView {
 
   get contextMenu() {
     if (!this._contextMenu) {
-      this._contextMenu = new ChangesContextMenu(this);
+      this._contextMenu = new ChangesContextMenu({
+        onCopy: this.onCopy,
+        onCopyAllChanges: this.onCopyAllChanges,
+        onCopyDeclaration: this.onCopyDeclaration,
+        onCopyRule: this.onCopyRule,
+        onSelectAll: this.onSelectAll,
+        toolboxDocument: this.inspector.toolbox.doc,
+        window: this.window,
+      });
     }
 
     return this._contextMenu;
@@ -230,7 +241,7 @@ class ChangesView {
    * Handler for the "Copy" option from the context menu.
    * Copies the current text selection to the clipboard.
    */
-  copySelection() {
+  onCopy() {
     clipboardHelper.copyString(this.window.getSelection().toString());
   }
 
@@ -241,6 +252,16 @@ class ChangesView {
 
   onClearChanges() {
     this.store.dispatch(resetChanges());
+  }
+
+  /**
+   * Select all text.
+   */
+  onSelectAll() {
+    const selection = this.window.getSelection();
+    selection.selectAllChildren(
+      this.document.getElementById("sidebar-panel-changes")
+    );
   }
 
   /**
