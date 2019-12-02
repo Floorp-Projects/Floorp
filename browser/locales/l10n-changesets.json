@@ -405,7 +405,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "cfbb6b46ea0f"
+        "revision": "a7eb482ae8f4"
     },
     "es-CL": {
         "platforms": [
@@ -1396,7 +1396,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "0c04fc8b47fb"
+        "revision": "ce86f190c37b"
     },
     "ta": {
         "platforms": [
