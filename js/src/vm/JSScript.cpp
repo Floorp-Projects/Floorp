@@ -662,6 +662,15 @@ js::ScriptSource* js::BaseScript::maybeForwardedScriptSource() const {
       .source();
 }
 
+void js::BaseScript::finalize(JSFreeOp* fop) {
+  if (data_) {
+    size_t size = data_->allocationSize();
+    AlwaysPoison(data_, JS_POISONED_JSSCRIPT_DATA_PATTERN, size,
+                 MemCheckKind::MakeNoAccess);
+    fop->free_(this, data_, size, MemoryUse::ScriptPrivateData);
+  }
+}
+
 template <XDRMode mode>
 /* static */
 XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
@@ -4590,8 +4599,6 @@ void JSScript::assertValidJumpTargets() const {
 }
 #endif
 
-size_t JSScript::computedSizeOfData() const { return data_->allocationSize(); }
-
 size_t JSScript::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const {
   return mallocSizeOf(data_);
 }
@@ -4621,6 +4628,9 @@ void JSScript::finalize(JSFreeOp* fop) {
 
   fop->runtime()->geckoProfiler().onScriptFinalized(this);
 
+  // Finalize the base-script fields.
+  BaseScript::finalize(fop);
+
   if (hasJitScript()) {
     releaseJitScriptOnFinalize(fop);
   }
@@ -4634,13 +4644,6 @@ void JSScript::finalize(JSFreeOp* fop) {
     zone()->scriptVTuneIdMap->remove(this);
   }
 #endif
-
-  if (data_) {
-    size_t size = computedSizeOfData();
-    AlwaysPoison(data_, JS_POISONED_JSSCRIPT_DATA_PATTERN, size,
-                 MemCheckKind::MakeNoAccess);
-    fop->free_(this, data_, size, MemoryUse::ScriptPrivateData);
-  }
 
   freeScriptData();
 
@@ -5337,12 +5340,6 @@ void JSScript::traceChildren(JSTracer* trc) {
   }
 }
 
-void LazyScript::finalize(JSFreeOp* fop) {
-  if (data_) {
-    fop->free_(this, data_, data_->allocationSize(), MemoryUse::LazyScriptData);
-  }
-}
-
 size_t JSScript::calculateLiveFixed(jsbytecode* pc) {
   size_t nlivefixed = numAlwaysLiveFixedSlots();
 
@@ -5569,15 +5566,15 @@ LazyScript::LazyScript(JSFunction* fun, uint8_t* stubEntry,
                        uint32_t lineno, uint32_t column)
     : BaseScript(stubEntry, fun, &sourceObject, sourceStart, sourceEnd,
                  toStringStart, toStringEnd),
-      script_(nullptr),
-      data_(data) {
+      script_(nullptr) {
   lineno_ = lineno;
   column_ = column;
 
   immutableFlags_ = immutableFlags;
 
   if (data) {
-    AddCellMemory(this, data->allocationSize(), MemoryUse::LazyScriptData);
+    data_ = data;
+    AddCellMemory(this, data->allocationSize(), MemoryUse::ScriptPrivateData);
   }
 }
 
