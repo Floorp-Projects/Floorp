@@ -2,7 +2,7 @@
 
 # MigrateGeckoException
 
-`class MigrateGeckoException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L98)
+`class MigrateGeckoException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L101)
 
 Unexpected exception while migrating gecko profile.
 

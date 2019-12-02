@@ -6,6 +6,7 @@
 
 | Name | Summary |
 |---|---|
+| [AbstractMigrationService](-abstract-migration-service/index.md) | `abstract class AbstractMigrationService`<br>Abstract implementation of a background service running a configured [FennecMigrator](-fennec-migrator/index.md). |
 | [FennecMigrator](-fennec-migrator/index.md) | `class FennecMigrator`<br>Entrypoint for Fennec data migration. See [Builder](-fennec-migrator/-builder/index.md) for public API. |
 | [FennecProfile](-fennec-profile/index.md) | `data class FennecProfile`<br>A profile of "Fennec" (Firefox for Android). |
 | [FxaMigrationResult](-fxa-migration-result/index.md) | `sealed class FxaMigrationResult`<br>Result of an FxA migration. |
