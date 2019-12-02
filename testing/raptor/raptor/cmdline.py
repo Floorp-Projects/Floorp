@@ -141,8 +141,11 @@ def create_parser(mach_interface=False):
     add_arg('--enable-webrender', dest="enable_webrender", action="store_true", default=False,
             help="Enable the WebRender compositor in Gecko.")
     add_arg('--with-conditioned-profile', dest="with_conditioned_profile", action="store_true",
-            default=False,
-            help="Run Raptor tests with a conditioned profile.")
+            default=False, help="Run Raptor tests with a conditioned profile.")
+    add_arg('--enable-fission', dest="enable_fission", action="store_true", default=False,
+            help="Enable Fission (site isolation) in Gecko.")
+    add_arg('--setpref', dest="extra_prefs", action="append", default=[],
+            help="A preference to set. Must be a key-value pair separated by a ':'.")
     if not mach_interface:
         add_arg('--run-local', dest="run_local", default=False, action="store_true",
                 help="Flag which indicates if Raptor is running locally or in production")
