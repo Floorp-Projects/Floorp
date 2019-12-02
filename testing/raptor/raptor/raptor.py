@@ -34,6 +34,7 @@ from mozdevice import ADBDevice
 from mozlog import commandline
 from mozpower import MozPower
 from mozprofile import create_profile
+from mozprofile.cli import parse_preferences
 from mozproxy import get_playback
 from mozrunner import runners
 
@@ -107,7 +108,7 @@ either Raptor or browsertime."""
                  is_release_build=False, debug_mode=False, post_startup_delay=None,
                  interrupt_handler=None, e10s=True, enable_webrender=False,
                  results_handler_class=RaptorResultsHandler, with_conditioned_profile=False,
-                 **kwargs):
+                 extra_prefs={}, **kwargs):
 
         # Override the magic --host HOST_IP with the value of the environment variable.
         if host == 'HOST_IP':
@@ -133,6 +134,8 @@ either Raptor or browsertime."""
             'e10s': e10s,
             'enable_webrender': enable_webrender,
             'with_conditioned_profile': with_conditioned_profile,
+            'enable_fission': extra_prefs.get('fission.autostart', False),
+            'extra_prefs': extra_prefs
         }
         # We can never use e10s on fennec
         if self.config['app'] == 'fennec':
@@ -222,6 +225,11 @@ either Raptor or browsertime."""
             path = os.path.join(self.profile_data_dir, profile)
             LOG.info("Merging profile: {}".format(path))
             self.profile.merge(path)
+
+        if self.config['extra_prefs'].get('fission.autostart', False):
+            LOG.info('Enabling fission via browser preferences')
+            LOG.info('Browser preferences: {}'.format(self.config['extra_prefs']))
+        self.profile.set_preferences(self.config['extra_prefs'])
 
         # share the profile dir with the config and the control server
         self.config['local_profile_dir'] = self.profile.profile
@@ -858,7 +866,8 @@ class Raptor(Perftest):
             power_test=self.config.get('power_test'),
             cpu_test=self.config.get('cpu_test'),
             memory_test=self.config.get('memory_test'),
-            with_conditioned_profile=self.config['with_conditioned_profile']
+            with_conditioned_profile=self.config['with_conditioned_profile'],
+            extra_prefs=self.config.get('extra_prefs')
         )
         browser_name, browser_version = self.get_browser_meta()
         self.results_handler.add_browser_meta(self.config['app'], browser_version)
@@ -1342,7 +1351,7 @@ class RaptorAndroid(PerftestAndroid, Raptor):
     def build_browser_profile(self):
         super(RaptorAndroid, self).build_browser_profile()
 
-        # Merge in the android profile
+        # Merge in the Android profile.
         path = os.path.join(self.profile_data_dir, 'raptor-android')
         LOG.info("Merging profile: {}".format(path))
         self.profile.merge(path)
@@ -1707,6 +1716,19 @@ class RaptorAndroid(PerftestAndroid, Raptor):
 
 def main(args=sys.argv[1:]):
     args = parse_args()
+
+    args.extra_prefs = parse_preferences(args.extra_prefs or [])
+
+    if args.enable_fission:
+        args.extra_prefs.update({
+            'fission.autostart': True,
+            'dom.serviceWorkers.parent_intercept': True,
+            'browser.tabs.documentchannel': True,
+        })
+
+    if args.extra_prefs and args.extra_prefs.get('fission.autostart', False):
+        args.enable_fission = True
+
     commandline.setup_logging('raptor', args, {'tbpl': sys.stdout})
 
     LOG.info("raptor-start")
@@ -1775,6 +1797,7 @@ def main(args=sys.argv[1:]):
                           interrupt_handler=SignalHandler(),
                           enable_webrender=args.enable_webrender,
                           with_conditioned_profile=args.with_conditioned_profile,
+                          extra_prefs=args.extra_prefs or {}
                           )
 
     success = raptor.run_tests(raptor_test_list, raptor_test_names)

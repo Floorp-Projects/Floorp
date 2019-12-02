@@ -34,6 +34,7 @@ class PerftestResultsHandler(object):
         self.page_timeout_list = []
         self.images = []
         self.supporting_data = None
+        self.fission_enabled = kwargs.get('extra_prefs', {}).get('fission.autostart', False)
         self.browser_version = None
         self.browser_name = None
         self.with_conditioned_profile = with_conditioned_profile
@@ -177,6 +178,8 @@ class RaptorResultsHandler(PerftestResultsHandler):
         new_result = RaptorTestResult(new_result_json)
         if self.with_conditioned_profile:
             new_result.extra_options.append('condprof')
+        if self.fission_enabled:
+            new_result.extra_options.append('fission_enabled')
         self.results.append(new_result)
 
     def summarize_and_output(self, test_config, tests, test_names):

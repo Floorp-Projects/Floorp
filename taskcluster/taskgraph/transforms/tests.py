@@ -1174,6 +1174,10 @@ def split_variants(config, tests):
             testv['treeherder-symbol'] = join_symbol(group, symbol)
 
             testv.update(variant.get('replace', {}))
+
+            if test['suite'] == 'raptor':
+                testv['tier'] = max(testv['tier'], 2)
+
             yield merge(testv, variant.get('merge', {}))
 
 
