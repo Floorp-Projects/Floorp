@@ -124,7 +124,7 @@ def compute_manifest_runtimes(suites, platform):
                 continue
 
             for test in resolver.tests_by_path[path]:
-                manifest = test['manifest_relpath']
+                manifest = test.get('ancestor_manifest') or test['manifest_relpath']
                 manifest_runtimes[manifest] += duration
 
     manifest_runtimes = {k: round(v, 2) for k, v in manifest_runtimes.items()}
