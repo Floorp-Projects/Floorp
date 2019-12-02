@@ -183,7 +183,7 @@ void BigInt::finalize(JSFreeOp* fop) {
   }
 }
 
-js::HashNumber BigInt::hash() {
+js::HashNumber BigInt::hash() const {
   js::HashNumber h =
       mozilla::HashBytes(digits().data(), digitLength() * sizeof(Digit));
   return mozilla::AddToHash(h, isNegative());
@@ -3511,12 +3511,12 @@ template JSAtom* js::BigIntToAtom<js::CanGC>(JSContext* cx, HandleBigInt bi);
 template JSAtom* js::BigIntToAtom<js::NoGC>(JSContext* cx, HandleBigInt bi);
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-void BigInt::dump() {
+void BigInt::dump() const {
   js::Fprinter out(stderr);
   dump(out);
 }
 
-void BigInt::dump(js::GenericPrinter& out) {
+void BigInt::dump(js::GenericPrinter& out) const {
   if (isNegative()) {
     out.putChar('-');
   }
