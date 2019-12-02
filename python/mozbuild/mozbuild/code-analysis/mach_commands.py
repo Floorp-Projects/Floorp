@@ -93,7 +93,7 @@ class StaticAnalysisMonitor(object):
         for item in self._clang_tidy_config:
             if item['name'] == '-*':
                 continue
-            item['name'].replace('*', '.*')
+            item['name'] = item['name'].replace('*', '.*')
 
         from mozbuild.compilation.warnings import (
             WarningsCollector,
