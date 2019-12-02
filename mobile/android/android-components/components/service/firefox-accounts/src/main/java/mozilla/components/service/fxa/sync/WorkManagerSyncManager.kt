@@ -292,6 +292,7 @@ class WorkManagerSyncWorker(
                 SyncEngine.History.nativeName -> SyncEngine.History
                 SyncEngine.Bookmarks.nativeName -> SyncEngine.Bookmarks
                 SyncEngine.Passwords.nativeName -> SyncEngine.Passwords
+                SyncEngine.Tabs.nativeName -> SyncEngine.Tabs
                 else -> throw IllegalStateException("Invalid syncable store: $it")
             }
             engine to GlobalSyncableStoreProvider.getStore(engine.nativeName)!!
@@ -339,6 +340,7 @@ class WorkManagerSyncWorker(
                 SyncEngine.History -> RustSyncManager.setPlaces(it.value.getHandle())
                 SyncEngine.Bookmarks -> RustSyncManager.setPlaces(it.value.getHandle())
                 SyncEngine.Passwords -> RustSyncManager.setLogins(it.value.getHandle())
+                SyncEngine.Tabs -> RustSyncManager.setTabs(it.value.getHandle())
             }
         }
 
