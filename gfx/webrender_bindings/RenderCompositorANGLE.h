@@ -90,8 +90,9 @@ class RenderCompositorANGLE : public RenderCompositor {
  protected:
   bool UseCompositor();
   void InitializeUsePartialPresent();
-  void InsertPresentWaitQuery(RenderedFrameId aRenderedFrameId);
-  bool WaitForPreviousPresentQuery();
+  void InsertGraphicsCommandsFinishedWaitQuery(
+      RenderedFrameId aRenderedFrameId);
+  bool WaitForPreviousGraphicsCommandsFinishedQuery();
   bool ResizeBufferIfNeeded();
   bool CreateEGLSurface();
   void DestroyEGLSurface();
