@@ -22,6 +22,7 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.service.fxa.FirefoxAccount
+import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.DeviceConfig
@@ -46,6 +47,7 @@ const val CLIENT_ID = "3c49430b43dfba77"
 const val REDIRECT_URL = "https://accounts.firefox.com/oauth/success/$CLIENT_ID"
 
 class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener, CoroutineScope, SyncStatusObserver {
+    private lateinit var keyStorage: SecureAbove22Preferences
     private lateinit var loginsStorage: SyncableLoginsStore
     private lateinit var listView: ListView
     private lateinit var adapter: ArrayAdapter<String>
@@ -83,10 +85,14 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         listView.adapter = adapter
         activityContext = this
 
+        keyStorage = SecureAbove22Preferences(this, "secret-data-storage")
+        keyStorage.putString(SyncEngine.Passwords.nativeName, "my-not-so-secret-password")
+        GlobalSyncableStoreProvider.configureKeyStorage(keyStorage)
+
         loginsStorage = SyncableLoginsStore(
             AsyncLoginsStorageAdapter.forDatabase(File(activityContext.filesDir, "logins.sqlite").canonicalPath)
         ) {
-            CompletableDeferred("my-not-so-secret-password")
+            CompletableDeferred(keyStorage.getString(SyncEngine.Passwords.nativeName)!!)
         }
         GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to loginsStorage)
 

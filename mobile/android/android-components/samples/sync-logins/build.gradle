@@ -41,6 +41,7 @@ dependencies {
     implementation project(':service-sync-logins')
     implementation project(':support-rustlog')
     implementation project(':support-rusthttp')
+    implementation project(':lib-dataprotect')
     implementation project(':lib-fetch-httpurlconnection')
 
     implementation Dependencies.kotlin_stdlib
