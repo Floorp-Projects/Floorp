@@ -5,6 +5,8 @@
 package org.mozilla.fenix
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkInfo
 import androidx.annotation.RawRes
 import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
@@ -45,19 +47,39 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         errorType: ErrorType,
         uri: String?
     ): RequestInterceptor.ErrorResponse? {
-        val riskLevel = getRiskLevel(errorType)
+        val improvedErrorType = improveErrorType(errorType)
 
-        context.components.analytics.metrics.track(Event.ErrorPageVisited(errorType))
+        val riskLevel = getRiskLevel(improvedErrorType)
+
+        context.components.analytics.metrics.track(Event.ErrorPageVisited(improvedErrorType))
 
         return RequestInterceptor.ErrorResponse(
             ErrorPages.createErrorPage(
                 context,
-                errorType,
+                improvedErrorType,
                 uri = uri,
                 htmlResource = riskLevel.htmlRes,
                 cssResource = riskLevel.cssRes
             )
         )
+    }
+
+    /**
+     * Where possible, this will make the error type more accurate by including information not
+     * available to AC.
+     */
+    private fun improveErrorType(errorType: ErrorType): ErrorType {
+        // This is not an ideal solution. For context, see:
+        // https://github.com/mozilla-mobile/android-components/pull/5068#issuecomment-558415367
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetwork: NetworkInfo? = cm.activeNetworkInfo
+        @Suppress("DEPRECATION") // NetworkCallback is not appropriate for this use case
+        val isConnected: Boolean = activeNetwork?.isConnectedOrConnecting == true
+
+        return when {
+            errorType == ErrorType.ERROR_UNKNOWN_HOST && !isConnected -> ErrorType.ERROR_NO_INTERNET
+            else -> errorType
+        }
     }
 
     private fun getRiskLevel(errorType: ErrorType): RiskLevel = when (errorType) {
