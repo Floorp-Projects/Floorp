@@ -1472,7 +1472,7 @@ static MOZ_ALWAYS_INLINE bool AddOperation(JSContext* cx,
   }
 
   if (lhs.isBigInt() || rhs.isBigInt()) {
-    return BigInt::add(cx, lhs, rhs, res);
+    return BigInt::addValue(cx, lhs, rhs, res);
   }
 
   res.setNumber(lhs.toNumber() + rhs.toNumber());
@@ -1488,7 +1488,7 @@ static MOZ_ALWAYS_INLINE bool SubOperation(JSContext* cx,
   }
 
   if (lhs.isBigInt() || rhs.isBigInt()) {
-    return BigInt::sub(cx, lhs, rhs, res);
+    return BigInt::subValue(cx, lhs, rhs, res);
   }
 
   res.setNumber(lhs.toNumber() - rhs.toNumber());
@@ -1504,7 +1504,7 @@ static MOZ_ALWAYS_INLINE bool MulOperation(JSContext* cx,
   }
 
   if (lhs.isBigInt() || rhs.isBigInt()) {
-    return BigInt::mul(cx, lhs, rhs, res);
+    return BigInt::mulValue(cx, lhs, rhs, res);
   }
 
   res.setNumber(lhs.toNumber() * rhs.toNumber());
@@ -1520,7 +1520,7 @@ static MOZ_ALWAYS_INLINE bool DivOperation(JSContext* cx,
   }
 
   if (lhs.isBigInt() || rhs.isBigInt()) {
-    return BigInt::div(cx, lhs, rhs, res);
+    return BigInt::divValue(cx, lhs, rhs, res);
   }
 
   res.setNumber(NumberDiv(lhs.toNumber(), rhs.toNumber()));
@@ -1544,7 +1544,7 @@ static MOZ_ALWAYS_INLINE bool ModOperation(JSContext* cx,
   }
 
   if (lhs.isBigInt() || rhs.isBigInt()) {
-    return BigInt::mod(cx, lhs, rhs, res);
+    return BigInt::modValue(cx, lhs, rhs, res);
   }
 
   res.setNumber(NumberMod(lhs.toNumber(), rhs.toNumber()));
@@ -1560,7 +1560,7 @@ static MOZ_ALWAYS_INLINE bool PowOperation(JSContext* cx,
   }
 
   if (lhs.isBigInt() || rhs.isBigInt()) {
-    return BigInt::pow(cx, lhs, rhs, res);
+    return BigInt::powValue(cx, lhs, rhs, res);
   }
 
   res.setNumber(ecmaPow(lhs.toNumber(), rhs.toNumber()));
