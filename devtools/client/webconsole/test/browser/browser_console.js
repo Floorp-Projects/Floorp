@@ -21,8 +21,6 @@ const TEST_IMAGE =
   "test/test-image.png";
 
 add_task(async function() {
-  // Needed for the execute() function below
-  await pushPref("security.allow_parent_unrestricted_js_loads", true);
   await pushPref("devtools.browserconsole.contentMessages", true);
   await addTab(TEST_URI);
 
