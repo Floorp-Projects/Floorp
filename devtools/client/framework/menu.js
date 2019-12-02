@@ -41,6 +41,13 @@ Menu.prototype.append = function(menuItem) {
 };
 
 /**
+ * Remove all items from the Menu
+ */
+Menu.prototype.clear = function() {
+  this.menuitems = [];
+};
+
+/**
  * Add an item to a specified position in the menu
  *
  * @param {int} pos
