@@ -247,7 +247,6 @@ nsresult SessionStorageManagerConstructor(nsISupports* aOuter, REFNSIID aIID,
 
 static const mozilla::Module::CategoryEntry kLayoutCategories[] = {
     // clang-format off
-  { "clear-origin-attributes-data", "QuotaManagerService", "service," QUOTAMANAGER_SERVICE_CONTRACTID },
     {nullptr}
     // clang-format on
 };

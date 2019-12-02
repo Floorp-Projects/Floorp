@@ -72,6 +72,13 @@ this.ServiceWorkerCleanUp = {
     return Promise.all(promises);
   },
 
+  removeFromOriginAttributes(aOriginAttributesString) {
+    serviceWorkerManager.removeRegistrationsByOriginAttributes(
+      aOriginAttributesString
+    );
+    return Promise.resolve();
+  },
+
   removeAll() {
     let promises = [];
     let serviceWorkers = serviceWorkerManager.getAllRegistrations();

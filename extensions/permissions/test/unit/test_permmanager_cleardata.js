@@ -11,13 +11,12 @@ function createPrincipal(aOrigin, aOriginAttributes) {
   );
 }
 
-// Return the data required by 'clear-origin-attributes-data' notification.
 function getData(aPattern) {
   return JSON.stringify(aPattern);
 }
 
 // Use aEntries to create principals, add permissions to them and check that they have them.
-// Then, it is notifying 'clear-origin-attributes-data' with the given aData and check if the permissions
+// Then, it is removing origin attributes with the given aData and check if the permissions
 // of principals[i] matches the permission in aResults[i].
 function test(aEntries, aData, aResults) {
   let principals = [];
@@ -44,7 +43,9 @@ function test(aEntries, aData, aResults) {
     );
   }
 
-  Services.obs.notifyObservers(null, "clear-origin-attributes-data", aData);
+  // `clear-origin-attributes-data` notification is removed from permission
+  // manager
+  pm.removePermissionsWithAttributes(aData);
 
   var length = aEntries.length;
   for (let i = 0; i < length; ++i) {

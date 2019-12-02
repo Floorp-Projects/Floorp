@@ -142,6 +142,9 @@ interface nsIServiceWorkerManager : nsISupports
   // It returns an array of nsIServiceWorkerRegistrationInfos.
   nsIArray getAllRegistrations();
 
+  // For clear-origin-attributes-data
+  void removeRegistrationsByOriginAttributes(in AString aOriginAttributes);
+
   // It calls softUpdate() for each child process.
   [implicit_jscontext] void propagateSoftUpdate(in jsval aOriginAttributes,
                                                 in AString aScope);
