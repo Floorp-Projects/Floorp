@@ -12,7 +12,6 @@ layer.
 
 See https://firefox-source-docs.mozilla.org/remote/ for documentation.
 
-The remote agent is disabled by default, but can be enabled by
-setting a preference before running it:
+It is available in Firefox Nightly and is started this way:
 
-	% ./mach run --setpref "remote.enabled=true" --remote-debugger
+	% ./mach run --remote-debugger
