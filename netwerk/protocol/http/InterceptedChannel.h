@@ -42,8 +42,7 @@ class InterceptedChannelBase : public nsIInterceptedChannel {
 
   void EnsureSynthesizedResponse();
   void DoNotifyController();
-  MOZ_MUST_USE nsresult DoSynthesizeStatus(uint16_t aStatus,
-                                           const nsACString& aReason);
+  void DoSynthesizeStatus(uint16_t aStatus, const nsACString& aReason);
   MOZ_MUST_USE nsresult DoSynthesizeHeader(const nsACString& aName,
                                            const nsACString& aValue);
 

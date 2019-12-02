@@ -477,10 +477,11 @@ NS_IMETHODIMP _OldCacheEntryWrapper::VisitMetaData(
 
 namespace {
 
-nsresult GetCacheSessionNameForStoragePolicy(
-    const nsACString& scheme, nsCacheStoragePolicy storagePolicy,
-    bool isPrivate, OriginAttributes const* originAttribs,
-    nsACString& sessionName) {
+void GetCacheSessionNameForStoragePolicy(const nsACString& scheme,
+                                         nsCacheStoragePolicy storagePolicy,
+                                         bool isPrivate,
+                                         OriginAttributes const* originAttribs,
+                                         nsACString& sessionName) {
   MOZ_ASSERT(!isPrivate || storagePolicy == nsICache::STORE_IN_MEMORY);
 
   // HTTP
@@ -525,8 +526,6 @@ nsresult GetCacheSessionNameForStoragePolicy(
   nsAutoCString suffix;
   originAttribs->CreateSuffix(suffix);
   sessionName.Append(suffix);
-
-  return NS_OK;
 }
 
 nsresult GetCacheSession(const nsACString& aScheme, bool aWriteToDisk,
@@ -547,10 +546,9 @@ nsresult GetCacheSession(const nsACString& aScheme, bool aWriteToDisk,
   if (aAppCache) {
     aAppCache->GetClientID(clientId);
   } else {
-    rv = GetCacheSessionNameForStoragePolicy(
+    GetCacheSessionNameForStoragePolicy(
         aScheme, storagePolicy, aLoadInfo->IsPrivate(),
         aLoadInfo->OriginAttributesPtr(), clientId);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   LOG(("  GetCacheSession for client=%s, policy=%d", clientId.get(),
