@@ -588,3 +588,16 @@ js_option('--enable-wasm-multi-value',
 
 set_config('ENABLE_WASM_MULTI_VALUE', depends_if('--enable-wasm-multi-value')(lambda x: True))
 set_define('ENABLE_WASM_MULTI_VALUE', depends_if('--enable-wasm-multi-value')(lambda x: True))
+
+# Initial support for new regexp engine
+# ==================================================
+
+js_option('--enable-new-regexp', default=False, help='Enable new regexp engine')
+
+@depends('--enable-new-regexp')
+def enable_new_regexp(value):
+    if value:
+        return True
+
+set_config('ENABLE_NEW_REGEXP', enable_new_regexp)
+set_define('ENABLE_NEW_REGEXP', enable_new_regexp)
