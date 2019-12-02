@@ -220,6 +220,13 @@ void FunctionBox::initFromLazyFunction(JSFunction* fun) {
     setHasDirectEval();
   }
 
+  sourceStart = lazy->sourceStart();
+  sourceEnd = lazy->sourceEnd();
+  toStringStart = lazy->toStringStart();
+  toStringEnd = lazy->toStringEnd();
+  startLine = lazy->lineno();
+  startColumn = lazy->column();
+
   initWithEnclosingScope(enclosingScope_, fun);
 }
 
