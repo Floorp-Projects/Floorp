@@ -122,6 +122,7 @@ bool RenderCompositorEGL::Resume() {
     // than where the surface was created.
     const auto& gle = gl::GLContextEGL::Cast(gl());
     const auto& egl = gle->mEgl;
+    MakeCurrent();
     // Make eglSwapBuffers() non-blocking on wayland.
     egl->fSwapInterval(egl->Display(), 0);
   } else {
