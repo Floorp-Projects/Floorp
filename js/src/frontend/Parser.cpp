@@ -1840,7 +1840,7 @@ static bool EmitLazyScript(JSContext* cx, FunctionBox* funbox,
   MOZ_ASSERT(function);
   LazyScript* lazy = LazyScript::Create(
       cx, function, sourceObject, data.closedOverBindings,
-      data.innerFunctionBoxes, funbox->bufStart, funbox->bufEnd,
+      data.innerFunctionBoxes, funbox->sourceStart, funbox->sourceEnd,
       funbox->toStringStart, funbox->toStringEnd, funbox->startLine,
       funbox->startColumn, parseGoal);
   if (!lazy) {
