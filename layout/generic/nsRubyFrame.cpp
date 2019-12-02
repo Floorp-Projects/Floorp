@@ -302,13 +302,13 @@ void nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     nscoord reservedISize = RubyUtils::GetReservedISize(textContainer);
     segmentISize = std::max(segmentISize, size.ISize(lineWM) + reservedISize);
 
-    uint8_t rubyPosition = textContainer->StyleText()->mRubyPosition;
-    MOZ_ASSERT(rubyPosition == NS_STYLE_RUBY_POSITION_OVER ||
-               rubyPosition == NS_STYLE_RUBY_POSITION_UNDER);
+    auto rubyPosition = textContainer->StyleText()->mRubyPosition;
+    MOZ_ASSERT(rubyPosition == StyleRubyPosition::Over ||
+               rubyPosition == StyleRubyPosition::Under);
     Maybe<LogicalSide> side;
-    if (rubyPosition == NS_STYLE_RUBY_POSITION_OVER) {
+    if (rubyPosition == StyleRubyPosition::Over) {
       side.emplace(lineWM.LogicalSideForLineRelativeDir(eLineRelativeDirOver));
-    } else if (rubyPosition == NS_STYLE_RUBY_POSITION_UNDER) {
+    } else if (rubyPosition == StyleRubyPosition::Under) {
       side.emplace(lineWM.LogicalSideForLineRelativeDir(eLineRelativeDirUnder));
     } else {
       // XXX inter-character support in bug 1055672
