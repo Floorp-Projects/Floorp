@@ -1,13 +1,14 @@
 Building
 ========
 
-The remote agent is included in the default Firefox build, but
-disabled by default.  To expose the remote agent you can set the
-`remote.enabled` preference to true before running it:
+The remote agent is included in the default Firefox build, but only
+ships on the Firefox Nightly release channel:
 
-	% ./mach run --setpref="remote.enabled=true" --remote-debugger
+	% ./mach run --remote-debugger
 
-The source code is found under `$(topsrcdir)/remote`.
+The source code can be found under [remote/ in central].
+
+There are two build modes to choose from:
 
 Full build mode
 ---------------
@@ -47,5 +48,6 @@ them, place this in your [mozconfig]:
 	ac_add_options --enable-artifact-builds
 
 
+[remote/ in central]: https://searchfox.org/mozilla-central/source/remote
 [mozconfig]: ../build/buildsystem/mozconfigs.html
 [artifact builds]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Artifact_builds
