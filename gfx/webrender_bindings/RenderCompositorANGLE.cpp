@@ -415,7 +415,7 @@ bool RenderCompositorANGLE::BeginFrame() {
 RenderedFrameId RenderCompositorANGLE::EndFrame(
     const FfiVec<DeviceIntRect>& aDirtyRects) {
   RenderedFrameId frameId = GetNextRenderFrameId();
-  InsertPresentWaitQuery(frameId);
+  InsertGraphicsCommandsFinishedWaitQuery(frameId);
 
   if (!UseCompositor()) {
     if (mWidget->AsWindows()->HasFxrOutputHandler()) {
@@ -493,7 +493,7 @@ bool RenderCompositorANGLE::WaitForGPU() {
   //   Wait for query #2.
   //
   // This ensures we're done reading textures before swapping buffers.
-  return WaitForPreviousPresentQuery();
+  return WaitForPreviousGraphicsCommandsFinishedQuery();
 }
 
 bool RenderCompositorANGLE::ResizeBufferIfNeeded() {
@@ -654,7 +654,8 @@ RefPtr<ID3D11Query> RenderCompositorANGLE::GetD3D11Query() {
   return query;
 }
 
-void RenderCompositorANGLE::InsertPresentWaitQuery(RenderedFrameId aFrameId) {
+void RenderCompositorANGLE::InsertGraphicsCommandsFinishedWaitQuery(
+    RenderedFrameId aFrameId) {
   RefPtr<ID3D11Query> query;
   query = GetD3D11Query();
   if (!query) {
@@ -665,7 +666,7 @@ void RenderCompositorANGLE::InsertPresentWaitQuery(RenderedFrameId aFrameId) {
   mWaitForPresentQueries.emplace(aFrameId, query);
 }
 
-bool RenderCompositorANGLE::WaitForPreviousPresentQuery() {
+bool RenderCompositorANGLE::WaitForPreviousGraphicsCommandsFinishedQuery() {
   size_t waitLatency = mUseTripleBuffering ? 3 : 2;
 
   while (mWaitForPresentQueries.size() >= waitLatency) {
