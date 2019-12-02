@@ -101,6 +101,7 @@
 #include "js/Initialization.h"
 #include "js/StableStringChars.h"
 #include "js/Utility.h"
+#include "util/CheckedArithmetic.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
 
@@ -210,6 +211,28 @@ BigInt* BigInt::one(JSContext* cx) { return createFromDigit(cx, 1, false); }
 
 BigInt* BigInt::negativeOne(JSContext* cx) {
   return createFromDigit(cx, 1, true);
+}
+
+BigInt* BigInt::createFromNonZeroRawUint64(JSContext* cx, uint64_t n,
+                                           bool isNegative) {
+  MOZ_ASSERT(n != 0);
+
+  size_t resultLength = 1;
+  if (DigitBits == 32 && (n >> 32) != 0) {
+    resultLength = 2;
+  }
+
+  BigInt* result = createUninitialized(cx, resultLength, isNegative);
+  if (!result) {
+    return nullptr;
+  }
+  result->setDigit(0, n);
+  if (DigitBits == 32 && resultLength > 1) {
+    result->setDigit(1, n >> 32);
+  }
+
+  MOZ_ASSERT(!HasLeadingZeroes(result));
+  return result;
 }
 
 BigInt* BigInt::neg(JSContext* cx, HandleBigInt x) {
@@ -1810,8 +1833,21 @@ BigInt* BigInt::mul(JSContext* cx, HandleBigInt x, HandleBigInt y) {
     return y;
   }
 
-  unsigned resultLength = x->digitLength() + y->digitLength();
   bool resultNegative = x->isNegative() != y->isNegative();
+
+  // Fast path for the likely-common case of up to a uint64_t of magnitude.
+  if (x->absFitsInUint64() && y->absFitsInUint64()) {
+    uint64_t lhs = x->uint64FromAbsNonZero();
+    uint64_t rhs = y->uint64FromAbsNonZero();
+
+    uint64_t res;
+    if (js::SafeMul(lhs, rhs, &res)) {
+      MOZ_ASSERT(res != 0);
+      return createFromNonZeroRawUint64(cx, res, resultNegative);
+    }
+  }
+
+  unsigned resultLength = x->digitLength() + y->digitLength();
   RootedBigInt result(cx,
                       createUninitialized(cx, resultLength, resultNegative));
   if (!result) {

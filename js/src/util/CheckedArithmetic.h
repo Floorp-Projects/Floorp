@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
+#include "mozilla/MathAlgorithms.h"
 
 #include <stdint.h>
 
@@ -59,6 +60,31 @@ MOZ_MUST_USE inline bool SafeMul(int32_t one, int32_t two, int32_t* res) {
   *res = uint32_t(one) * uint32_t(two);
   int64_t ores = (int64_t)one * (int64_t)two;
   return ores == (int64_t)*res;
+#endif
+}
+
+MOZ_MUST_USE inline bool SafeMul(uint64_t one, uint64_t two, uint64_t* res) {
+#if BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(__builtin_mul_overflow)
+  return !__builtin_mul_overflow(one, two, res);
+#else
+  // Hacker's Delight, 2nd edition, 2-13 Overflow detection, Fig. 2-2.
+  int zeroes =
+      mozilla::CountLeadingZeroes64(one) + mozilla::CountLeadingZeroes64(two);
+  if (zeroes <= 62) {
+    return false;
+  }
+  uint64_t half = one * (two >> 1);
+  if (int64_t(half) < 0) {
+    return false;
+  }
+  *res = half * 2;
+  if (two & 1) {
+    *res += one;
+    if (*res < one) {
+      return false;
+    }
+  }
+  return true;
 #endif
 }
 

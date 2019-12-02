@@ -104,6 +104,8 @@ class BigInt final
   static BigInt* createFromUint64(JSContext* cx, uint64_t n);
   static BigInt* createFromInt64(JSContext* cx, int64_t n);
   static BigInt* createFromDigit(JSContext* cx, Digit d, bool isNegative);
+  static BigInt* createFromNonZeroRawUint64(JSContext* cx, uint64_t n,
+                                            bool isNegative);
   // FIXME: Cache these values.
   static BigInt* zero(JSContext* cx);
   static BigInt* one(JSContext* cx);
