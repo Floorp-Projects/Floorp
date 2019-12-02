@@ -1108,7 +1108,7 @@ static bool IsRelazifiableFunction(JSContext* cx, unsigned argc, Value* vp) {
 
   JSFunction* fun = &args[0].toObject().as<JSFunction>();
   args.rval().setBoolean(fun->hasScript() &&
-                         fun->nonLazyScript()->isRelazifiable());
+                         fun->nonLazyScript()->isRelazifiableIgnoringJitCode());
   return true;
 }
 
