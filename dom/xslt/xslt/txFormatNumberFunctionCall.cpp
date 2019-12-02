@@ -275,20 +275,23 @@ nsresult txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
   bool carry = (0 <= i + 1) && (i + 1 < buflen) && (buf[i + 1] >= '5');
   bool hasFraction = false;
 
-  CheckedUint32 resPos = CheckedUint32(res.Length()) - 1;
+  // The number of characters in res that we haven't filled in.
+  CheckedUint32 resRemain = CheckedUint32(res.Length());
 
-#define CHECKED_SET_CHAR(c)                                       \
-  if (!resPos.isValid() || !res.SetCharAt(c, resPos--.value())) { \
-    ReportInvalidArg(aContext);                                   \
-    return NS_ERROR_XPATH_INVALID_ARG;                            \
+#define CHECKED_SET_CHAR(c)                                           \
+  --resRemain;                                                        \
+  if (!resRemain.isValid() || !res.SetCharAt(c, resRemain.value())) { \
+    ReportInvalidArg(aContext);                                       \
+    return NS_ERROR_XPATH_INVALID_ARG;                                \
   }
 
 #define CHECKED_TRUNCATE()             \
-  if (!resPos.isValid()) {             \
+  --resRemain;                         \
+  if (!resRemain.isValid()) {          \
     ReportInvalidArg(aContext);        \
     return NS_ERROR_XPATH_INVALID_ARG; \
   }                                    \
-  res.Truncate(resPos--.value());
+  res.Truncate(resRemain.value());
 
   // Fractions
   for (; i >= bufIntDigits; --i) {
@@ -345,9 +348,9 @@ nsresult txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
 
   if (carry) {
     if (i % groupSize == 0) {
-      res.Insert(format->mGroupingSeparator, resPos.value() + 1);
+      res.Insert(format->mGroupingSeparator, resRemain.value());
     }
-    res.Insert((char16_t)(1 + format->mZeroDigit), resPos.value() + 1);
+    res.Insert((char16_t)(1 + format->mZeroDigit), resRemain.value());
   }
 
   if (!hasFraction && !intDigits && !carry) {
