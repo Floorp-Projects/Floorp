@@ -38,6 +38,7 @@ the serialization of a GitHub event payload.
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -98,12 +99,8 @@ def get_parser():
                    help="Start xvfb")
     p.add_argument("--checkout",
                    help="Revision to checkout before starting job")
-    p.add_argument("--install-certificates", action="store_true", default=None,
-                   help="Install web-platform.test certificates to UA store")
-    p.add_argument("--no-install-certificates", action="store_false", default=None,
-                   help="Don't install web-platform.test certificates to UA store")
-    p.add_argument("--rev",
-                   help="Revision that the task_head ref is expected to point to")
+    p.add_argument("job",
+                   help="Name of the job associated with the current event")
     p.add_argument("script",
                    help="Script to run for the job")
     p.add_argument("script_args",
@@ -119,17 +116,11 @@ def start_userspace_oom_killer():
 
 
 def make_hosts_file():
-    run(["sudo", "sh", "-c", "./wpt make-hosts-file >> /etc/hosts"])
+    subprocess.check_call(["sudo", "sh", "-c", "./wpt make-hosts-file >> /etc/hosts"])
 
 
 def checkout_revision(rev):
-    run(["git", "checkout", "--quiet", rev])
-
-
-def install_certificates():
-    run(["sudo", "cp", "tools/certs/cacert.pem",
-         "/usr/local/share/ca-certificates/cacert.crt"])
-    run(["sudo", "update-ca-certificates"])
+    subprocess.check_call(["git", "checkout", "--quiet", rev])
 
 
 def install_chrome(channel):
@@ -222,6 +213,31 @@ def start_xvfb():
     start(["sudo", "fluxbox", "-display", os.environ["DISPLAY"]])
 
 
+def get_extra_jobs(event):
+    body = None
+    jobs = set()
+    if not event:
+        return jobs
+    if "commits" in event and event["commits"]:
+        body = event["commits"][0]["message"]
+    elif "pull_request" in event:
+        body = event["pull_request"]["body"]
+
+    if not body:
+        return jobs
+
+    regexp = re.compile(r"\s*tc-jobs:(.*)$")
+
+    for line in body.splitlines():
+        m = regexp.match(line)
+        if m:
+            items = m.group(1)
+            for item in items.split(","):
+                jobs.add(item.strip())
+            break
+    return jobs
+
+
 def set_variables(event):
     # Set some variables that we use to get the commits on the current branch
     ref_prefix = "refs/heads/"
@@ -242,12 +258,25 @@ def set_variables(event):
         os.environ["GITHUB_BRANCH"] = branch
 
 
+def include_job(job):
+    # Special case things that unconditionally run on pushes,
+    # assuming a higher layer is filtering the required list of branches
+    if "GITHUB_PULL_REQUEST" not in os.environ:
+        return True
+
+    if (os.environ["GITHUB_PULL_REQUEST"] == "false" and
+        job == "run-all"):
+        return True
+
+    jobs_str = run([os.path.join(root, "wpt"),
+                    "test-jobs"], return_stdout=True)
+    print(jobs_str)
+    return job in set(jobs_str.splitlines())
+
+
 def setup_environment(args):
     if args.hosts_file:
         make_hosts_file()
-
-    if args.install_certificates:
-        install_certificates()
 
     if "chrome" in args.browser:
         assert args.channel is not None
@@ -316,13 +345,6 @@ def fetch_event_data():
 def main():
     args = get_parser().parse_args()
 
-    if args.rev is not None:
-        task_head = run(["git", "rev-parse", "task_head"], return_stdout=True).strip()
-        if task_head != args.rev:
-            print("CRITICAL: task_head points at %s, expected %s. "
-                  "This may be because the branch was updated" % (task_head, args.rev))
-            sys.exit(1)
-
     if "TASK_EVENT" in os.environ:
         event = json.loads(os.environ["TASK_EVENT"])
     else:
@@ -332,6 +354,25 @@ def main():
         set_variables(event)
 
     setup_repository()
+
+    extra_jobs = get_extra_jobs(event)
+
+    job = args.job
+
+    print("Job %s" % job)
+
+    run_if = [(lambda: job == "all", "job set to 'all'"),
+              (lambda:"all" in extra_jobs, "Manually specified jobs includes 'all'"),
+              (lambda:job in extra_jobs, "Manually specified jobs includes '%s'" % job),
+              (lambda:include_job(job), "CI required jobs includes '%s'" % job)]
+
+    for fn, msg in run_if:
+        if fn():
+            print(msg)
+            break
+    else:
+        print("Job not scheduled for this push")
+        return
 
     # Run the job
     setup_environment(args)
