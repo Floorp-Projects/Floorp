@@ -44,6 +44,7 @@ use std::os::raw::c_void;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use std::time::SystemTime;
+use std::u32;
 use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction};
 use crate::util::drain_filter;
 
@@ -179,6 +180,15 @@ struct BlobImageTemplate {
     valid_tiles_after_bounds_change: Option<TileRange>,
 }
 
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct ImageGeneration(pub u32);
+
+impl ImageGeneration {
+    pub const INVALID: ImageGeneration = ImageGeneration(u32::MAX);
+}
+
 struct ImageResource {
     data: CachedImageData,
     descriptor: ImageDescriptor,
@@ -186,6 +196,7 @@ struct ImageResource {
     /// This is used to express images that are virtually very large
     /// but with only a visible sub-set that is valid at a given time.
     visible_rect: DeviceIntRect,
+    generation: ImageGeneration,
 }
 
 #[derive(Clone, Debug)]
@@ -500,10 +511,6 @@ pub struct ResourceCache {
     /// A log of the last three frames worth of deleted image keys kept
     /// for debugging purposes.
     deleted_blob_keys: VecDeque<Vec<BlobImageKey>>,
-    /// A set of the image keys that have been requested, and require
-    /// updates to the texture cache. Images in this category trigger
-    /// invalidations for picture caching tiles.
-    dirty_image_keys: FastHashSet<ImageKey>,
 }
 
 impl ResourceCache {
@@ -533,7 +540,6 @@ impl ResourceCache {
             blob_image_rasterizer_consumed_epoch: BlobImageRasterizerEpoch(0),
             // We want to keep three frames worth of delete blob keys
             deleted_blob_keys: vec![Vec::new(), Vec::new(), Vec::new()].into(),
-            dirty_image_keys: FastHashSet::default(),
         }
     }
 
@@ -874,6 +880,7 @@ impl ResourceCache {
             data,
             tiling,
             visible_rect: *visible_rect,
+            generation: ImageGeneration(0),
         };
 
         self.resources.image_templates.insert(image_key, resource);
@@ -942,6 +949,7 @@ impl ResourceCache {
             data,
             tiling,
             visible_rect: descriptor.size.into(),
+            generation: ImageGeneration(image.generation.0 + 1),
         };
     }
 
@@ -1054,12 +1062,12 @@ impl ResourceCache {
         }
     }
 
-    /// Check if an image has changed since it was last requested.
-    pub fn is_image_dirty(
-        &self,
-        image_key: ImageKey,
-    ) -> bool {
-        self.dirty_image_keys.contains(&image_key)
+    /// Return the current generation of an image template
+    pub fn get_image_generation(&self, key: ImageKey) -> ImageGeneration {
+        self.resources
+            .image_templates
+            .get(key)
+            .map_or(ImageGeneration::INVALID, |template| template.generation)
     }
 
     pub fn request_image(
@@ -1162,10 +1170,6 @@ impl ResourceCache {
         if !self.pending_image_requests.insert(request) {
             return
         }
-
-        // By this point, we know that the image request is considered dirty, and will
-        // require a texture cache modification.
-        self.dirty_image_keys.insert(request.key);
 
         if template.data.is_blob() {
             let request: BlobImageRequest = request.into();
@@ -1762,7 +1766,6 @@ impl ResourceCache {
         debug_assert_eq!(self.state, State::QueryResources);
         self.state = State::Idle;
         self.texture_cache.end_frame(texture_cache_profile);
-        self.dirty_image_keys.clear();
     }
 
     pub fn set_debug_flags(&mut self, flags: DebugFlags) {
@@ -1918,6 +1921,7 @@ struct PlainImageTemplate {
     data: String,
     descriptor: ImageDescriptor,
     tiling: Option<TileSize>,
+    generation: ImageGeneration,
 }
 
 #[cfg(any(feature = "capture", feature = "replay"))]
@@ -2154,6 +2158,7 @@ impl ResourceCache {
                         },
                         descriptor: template.descriptor.clone(),
                         tiling: template.tiling,
+                        generation: template.generation,
                     })
                 })
                 .collect(),
@@ -2279,6 +2284,7 @@ impl ResourceCache {
                 descriptor: template.descriptor,
                 tiling: template.tiling,
                 visible_rect: template.descriptor.size.into(),
+                generation: template.generation,
             });
         }
 
