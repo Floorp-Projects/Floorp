@@ -117,11 +117,8 @@ bool FunctionBox::atomsAreKept() { return cx_->zone()->hasKeptAtoms(); }
 FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
                          uint32_t toStringStart, Directives directives,
                          bool extraWarnings, GeneratorKind generatorKind,
-                         FunctionAsyncKind asyncKind, bool isArrow,
-                         bool isNamedLambda, bool isGetter, bool isSetter,
-                         bool isMethod, bool isInterpreted,
-                         bool isInterpretedLazy,
-                         FunctionFlags::FunctionKind kind, JSAtom* explicitName)
+                         FunctionAsyncKind asyncKind, JSAtom* explicitName,
+                         FunctionFlags flags)
     : ObjectBox(nullptr, traceListHead, TraceListNode::NodeType::Function),
       SharedContext(cx, Kind::FunctionBox, directives, extraWarnings),
       enclosingScope_(nullptr),
@@ -159,16 +156,9 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
       isDerivedClassConstructor_(false),
       hasThisBinding_(false),
       hasInnerFunctions_(false),
-      isArrow_(isArrow),
-      isNamedLambda_(isNamedLambda),
-      isGetter_(isGetter),
-      isSetter_(isSetter),
-      isMethod_(isMethod),
-      isInterpreted_(isInterpreted),
-      isInterpretedLazy_(isInterpretedLazy),
-      kind_(kind),
+      nargs_(0),
       explicitName_(explicitName),
-      nargs_(0) {}
+      flags_(flags) {}
 
 FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
                          JSFunction* fun, uint32_t toStringStart,
@@ -176,10 +166,7 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
                          GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind)
     : FunctionBox(cx, traceListHead, toStringStart, directives, extraWarnings,
-                  generatorKind, asyncKind, fun->isArrow(),
-                  fun->isNamedLambda(), fun->isGetter(), fun->isSetter(),
-                  fun->isMethod(), fun->isInterpreted(),
-                  fun->isInterpretedLazy(), fun->kind(), fun->explicitName()) {
+                  generatorKind, asyncKind, fun->explicitName(), fun->flags()) {
   gcThing = fun;
   // Functions created at parse time may be set singleton after parsing and
   // baked into JIT code, so they must be allocated tenured. They are held by
@@ -193,12 +180,7 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
                          bool extraWarnings, GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind)
     : FunctionBox(cx, traceListHead, toStringStart, directives, extraWarnings,
-                  generatorKind, asyncKind, data.get().flags.isArrow(),
-                  data.get().flags.isNamedLambda(data.get().atom),
-                  data.get().flags.isGetter(), data.get().flags.isSetter(),
-                  data.get().flags.isMethod(), data.get().flags.isInterpreted(),
-                  data.get().flags.isInterpretedLazy(), data.get().flags.kind(),
-                  data.get().atom) {
+                  generatorKind, asyncKind, data.get().atom, data.get().flags) {
   functionCreationData_.emplace(data);
 }
 

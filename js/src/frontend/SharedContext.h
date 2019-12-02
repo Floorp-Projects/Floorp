@@ -328,9 +328,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
   FunctionBox(JSContext* cx, TraceListNode* traceListHead,
               uint32_t toStringStart, Directives directives, bool extraWarnings,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-              bool isArrow, bool isNamedLambda, bool isGetter, bool isSetter,
-              bool isMethod, bool isInterpreted, bool isInterpretedLazy,
-              FunctionFlags::FunctionKind kind, JSAtom* explicitName);
+              JSAtom* explicitName, FunctionFlags flags);
 
   void initWithEnclosingScope(Scope* enclosingScope, JSFunction* fun);
 
@@ -426,21 +424,10 @@ class FunctionBox : public ObjectBox, public SharedContext {
   // Whether this function has nested functions.
   bool hasInnerFunctions_ : 1;
 
-  // Whether this function is an arrow function
-  bool isArrow_ : 1;
-
-  bool isNamedLambda_ : 1;
-  bool isGetter_ : 1;
-  bool isSetter_ : 1;
-  bool isMethod_ : 1;
-
-  bool isInterpreted_ : 1;
-  bool isInterpretedLazy_ : 1;
-
-  FunctionFlags::FunctionKind kind_;
-  JSAtom* explicitName_;
-
   uint16_t nargs_;
+
+  JSAtom* explicitName_;
+  FunctionFlags flags_;
 
   mozilla::Maybe<LazyScriptCreationData> lazyScriptData_;
 
@@ -609,7 +596,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool needsIteratorResult() const { return isGenerator() && !isAsync(); }
   bool needsPromiseResult() const { return isAsync() && !isGenerator(); }
 
-  bool isArrow() const { return isArrow_; }
+  bool isArrow() const { return flags_.isArrow(); }
   bool isLambda() const {
     if (hasObject()) {
       return function()->isLambda();
@@ -633,16 +620,18 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool needsHomeObject() const { return needsHomeObject_; }
   bool isDerivedClassConstructor() const { return isDerivedClassConstructor_; }
   bool hasInnerFunctions() const { return hasInnerFunctions_; }
-  bool isNamedLambda() const { return isNamedLambda_; }
-  bool isGetter() const { return isGetter_; }
-  bool isSetter() const { return isSetter_; }
-  bool isMethod() const { return isMethod_; }
+  bool isNamedLambda() const { return flags_.isNamedLambda(explicitName()); }
+  bool isGetter() const { return flags_.isGetter(); }
+  bool isSetter() const { return flags_.isSetter(); }
+  bool isMethod() const { return flags_.isMethod(); }
 
-  bool isInterpreted() const { return isInterpreted_; }
-  void setIsInterpreted(bool interpreted) { isInterpreted_ = interpreted; }
-  bool isInterpretedLazy() const { return isInterpretedLazy_; }
+  bool isInterpreted() const { return flags_.isInterpreted(); }
+  void setIsInterpreted(bool interpreted) {
+    flags_.setFlags(FunctionFlags::INTERPRETED, interpreted);
+  }
+  bool isInterpretedLazy() const { return flags_.isInterpretedLazy(); }
   void setIsInterpretedLazy(bool interpretedLazy) {
-    isInterpretedLazy_ = interpretedLazy;
+    flags_.setFlags(FunctionFlags::INTERPRETED_LAZY, interpretedLazy);
   }
 
   void initLazyScript(LazyScript* script) {
@@ -650,7 +639,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
     setIsInterpretedLazy(function()->isInterpretedLazy());
   }
 
-  FunctionFlags::FunctionKind kind() { return kind_; }
+  FunctionFlags::FunctionKind kind() { return flags_.kind(); }
 
   JSAtom* explicitName() const { return explicitName_; }
 
