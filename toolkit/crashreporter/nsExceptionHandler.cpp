@@ -59,8 +59,6 @@
 #  include <crt_externs.h>
 #  include <fcntl.h>
 #  include <mach/mach.h>
-#  include <mach/vm_statistics.h>
-#  include <sys/sysctl.h>
 #  include <sys/types.h>
 #  include <spawn.h>
 #  include <unistd.h>
@@ -769,19 +767,18 @@ static void OpenAPIData(PlatformWriter& aWriter, const XP_CHAR* dump_path,
   aWriter.Open(extraDataPath);
 }
 
+#ifdef XP_WIN
 static void WriteMemoryAnnotation(AnnotationWriter& aWriter,
                                   Annotation aAnnotation, uint64_t aValue) {
-  // This function is used to write values of 64 bits, which can safely be
-  // assumed to fit within 20 decimal digits, so we need neither allocation nor
-  // overflow checking.
   char buffer[128];
-  if (SprintfLiteral(buffer, "%llu", aValue) > 0) {
+  if (!_ui64toa_s(aValue, buffer, sizeof(buffer), 10)) {
     aWriter.Write(aAnnotation, buffer);
   }
 }
+#endif  // XP_WIN
 
-#ifdef XP_WIN
 static void WriteMemoryStatus(AnnotationWriter& aWriter) {
+#ifdef XP_WIN
   MEMORYSTATUSEX statex;
   statex.dwLength = sizeof(statex);
   if (GlobalMemoryStatusEx(&statex)) {
@@ -805,63 +802,8 @@ static void WriteMemoryStatus(AnnotationWriter& aWriter) {
         aWriter, Annotation::AvailablePageFile,
         (info.CommitLimit - info.CommitTotal) * info.PageSize);
   }
+#endif  // XP_WIN
 }
-#elif XP_MACOSX
-// Extract the total physical memory of the system.
-static void WritePhysicalMemoryStatus(AnnotationWriter& aWriter) {
-  uint64_t physicalMemoryByteSize = 0;
-  const size_t NAME_LEN = 2;
-  int name[NAME_LEN] = {/* Hardware */ CTL_HW,
-                        /* 64-bit physical memory size */ HW_MEMSIZE};
-  size_t infoByteSize = sizeof(physicalMemoryByteSize);
-  if (sysctl(name, NAME_LEN, &physicalMemoryByteSize, &infoByteSize,
-             /* We do not replace data */ nullptr,
-             /* We do not replace data */ 0) != -1) {
-    WriteMemoryAnnotation(aWriter, Annotation::TotalPhysicalMemory,
-                          physicalMemoryByteSize);
-  }
-}
-
-// Extract available and purgeable physical memory.
-static void WriteAvailableMemoryStatus(AnnotationWriter& aWriter) {
-  auto host = mach_host_self();
-  vm_statistics64_data_t stats;
-  unsigned int count = HOST_VM_INFO64_COUNT;
-  if (host_statistics64(host, HOST_VM_INFO64, (host_info64_t)&stats, &count) ==
-      KERN_SUCCESS) {
-    WriteMemoryAnnotation(aWriter, Annotation::AvailablePhysicalMemory,
-                          stats.free_count * vm_page_size);
-    WriteMemoryAnnotation(aWriter, Annotation::PurgeablePhysicalMemory,
-                          stats.purgeable_count * vm_page_size);
-  }
-}
-
-// Extract the status of the swap.
-static void WriteSwapFileStatus(AnnotationWriter& aWriter) {
-  const size_t NAME_LEN = 2;
-  int name[] = {/* Hardware */ CTL_VM,
-                /* 64-bit physical memory size */ VM_SWAPUSAGE};
-  struct xsw_usage swapUsage;
-  size_t infoByteSize = sizeof(swapUsage);
-  if (sysctl(name, NAME_LEN, &swapUsage, &infoByteSize,
-             /* We do not replace data */ nullptr,
-             /* We do not replace data */ 0) != -1) {
-    WriteMemoryAnnotation(aWriter, Annotation::AvailableSwapMemory,
-                          swapUsage.xsu_avail);
-  }
-}
-static void WriteMemoryStatus(AnnotationWriter& aWriter) {
-  WritePhysicalMemoryStatus(aWriter);
-  WriteAvailableMemoryStatus(aWriter);
-  WriteSwapFileStatus(aWriter);
-}
-#else
-
-static void WriteMemoryStatus(AnnotationWriter& aWriter) {
-  // No memory data for other platforms yet.
-}
-
-#endif  // XP_WIN || XP_MACOSX || else
 
 #if !defined(MOZ_WIDGET_ANDROID)
 
