@@ -41,4 +41,5 @@ assert.throws(Test262Error, function() {
 });
 
 assert.sameValue(calls, 1);
+
 reportCompare(0, 0);

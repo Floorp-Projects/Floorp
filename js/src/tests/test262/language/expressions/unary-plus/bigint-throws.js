@@ -29,4 +29,5 @@ assert.throws(TypeError, function() {
 assert.throws(TypeError, function() {
   +1000000000000000n;
 }, '+1000000000000000n throws TypeError');
+
 reportCompare(0, 0);

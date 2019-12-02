@@ -19,4 +19,5 @@ assert.throws(TypeError, function() {
   class C extends Math.abs {}
 });
 delete Math.abs.prototype;
+
 reportCompare(0, 0);

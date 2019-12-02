@@ -39,4 +39,5 @@ testWithBigIntTypedArrayConstructors(function(TA) {
     sample.slice();
   });
 });
+
 reportCompare(0, 0);

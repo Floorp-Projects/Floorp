@@ -69,4 +69,5 @@ assert.throws(TypeError, function() {
     }
   };
 }, '0n >>> {toString: function() {return Symbol("1");}} throws TypeError');
+
 reportCompare(0, 0);

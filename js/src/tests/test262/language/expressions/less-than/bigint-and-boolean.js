@@ -19,4 +19,5 @@ assert.sameValue(-3n < true, true, 'The result of (-3n < true) is true');
 assert.sameValue(true < -3n, false, 'The result of (true < -3n) is false');
 assert.sameValue(-3n < false, true, 'The result of (-3n < false) is true');
 assert.sameValue(false < -3n, false, 'The result of (false < -3n) is false');
+
 reportCompare(0, 0);

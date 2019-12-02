@@ -61,4 +61,5 @@ assert.throws(TypeError, function() {
     }
   };
 }, '0n >>> {toString: function() {return 2n;}} throws TypeError');
+
 reportCompare(0, 0);

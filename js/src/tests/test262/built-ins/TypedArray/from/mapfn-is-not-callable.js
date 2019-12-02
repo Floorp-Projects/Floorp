@@ -55,4 +55,5 @@ assert.sameValue(
   getIterator, 0,
   "IsCallable(mapfn) check occurs before getting source[@@iterator]"
 );
+
 reportCompare(0, 0);

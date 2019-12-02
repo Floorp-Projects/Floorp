@@ -80,4 +80,5 @@ assert.sameValue(0b011n ^ {
     return 0b101n;
   }
 }, 0b110n, 'The result of (0b011n ^ {toString: function() {return 0b101n;}}) is 0b110n');
+
 reportCompare(0, 0);

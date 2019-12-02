@@ -83,4 +83,5 @@ assert.throws(TypeError, function() {
 assert.throws(TypeError, function() {
   undefined + 1n;
 }, 'undefined + 1n throws TypeError');
+
 reportCompare(0, 0);

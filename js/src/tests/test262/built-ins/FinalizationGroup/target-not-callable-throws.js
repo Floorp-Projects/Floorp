@@ -1,4 +1,4 @@
-// |reftest| skip -- FinalizationGroup is not supported
+// |reftest| skip -- WeakRef is not supported
 // Copyright (C) 2019 Leo Balter. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -12,7 +12,7 @@ info: |
   1. If NewTarget is undefined, throw a TypeError exception.
   2. If IsCallable(cleanupCallback) is false, throw a TypeError exception.
   ...
-features: [FinalizationGroup]
+features: [FinalizationGroup, WeakRef]
 ---*/
 
 assert.sameValue(
