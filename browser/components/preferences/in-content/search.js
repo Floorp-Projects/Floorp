@@ -569,7 +569,13 @@ var gSearchPane = {
     await Services.search.setDefault(
       document.getElementById("defaultEngine").selectedItem.engine
     );
-    ExtensionSettingsStore.setByUser(SEARCH_TYPE, SEARCH_KEY);
+    if (ExtensionSettingsStore.getSetting(SEARCH_TYPE, SEARCH_KEY) !== null) {
+      ExtensionSettingsStore.select(
+        ExtensionSettingsStore.SETTING_USER_SET,
+        SEARCH_TYPE,
+        SEARCH_KEY
+      );
+    }
   },
 
   async setDefaultPrivateEngine() {
