@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#![deny(missing_docs)]
-
 extern crate serde_bytes;
 
 use crate::channel::{self, MsgSender, Payload, PayloadSender, PayloadSenderHelperMethods};
@@ -22,48 +20,22 @@ use crate::display_list::{BuiltDisplayList, BuiltDisplayListDescriptor};
 use crate::image::{BlobImageData, BlobImageKey, ImageData, ImageDescriptor, ImageKey};
 use crate::units::*;
 
-/// Width and height in device pixels of image tiles.
-pub type TileSize = u16;
 
+pub type TileSize = u16;
 /// Documents are rendered in the ascending order of their associated layer values.
 pub type DocumentLayer = i8;
 
-/// Update of a persistent resource in WebRender.
-///
-/// ResourceUpdate changes keep theirs effect across display list changes.
 #[derive(Clone, Deserialize, Serialize)]
 pub enum ResourceUpdate {
-    /// See `AddImage`.
     AddImage(AddImage),
-    /// See `UpdateImage`.
     UpdateImage(UpdateImage),
-    /// See `AddBlobImage`.
     AddBlobImage(AddBlobImage),
-    /// See `UpdateBlobImage`.
     UpdateBlobImage(UpdateBlobImage),
-    /// Delete an existing image or blob-image resource.
-    ///
-    /// It is invalid to continue referring to the image key in any display list
-    /// in the transaction that contains the `DeleteImage` message and subsequent
-    /// transactions.
     DeleteImage(ImageKey),
-    /// See `AddBlobImage::visible_area`.
     SetBlobImageVisibleArea(BlobImageKey, DeviceIntRect),
-    /// See `AddFont`.
     AddFont(AddFont),
-    /// Deletes an already existing font resource.
-    ///
-    /// It is invalid to continue referring to the font key in any display list
-    /// in the transaction that contains the `DeleteImage` message and subsequent
-    /// transactions.
     DeleteFont(font::FontKey),
-    /// See `AddFontInstance`.
     AddFontInstance(AddFontInstance),
-    /// Deletes an already existing font instance resource.
-    ///
-    /// It is invalid to continue referring to the font instance in any display
-    /// list in the transaction that contains the `DeleteImage` message and
-    /// subsequent transactions.
     DeleteFontInstance(font::FontInstanceKey),
 }
 
@@ -103,34 +75,31 @@ impl fmt::Debug for ResourceUpdate {
 ///  - no redundant work is performed if two commands in the same transaction cause the scene or
 ///    the frame to be rebuilt.
 pub struct Transaction {
-    /// Operations affecting the scene (applied before scene building).
+    // Operations affecting the scene (applied before scene building).
     scene_ops: Vec<SceneMsg>,
-    /// Operations affecting the generation of frames (applied after scene building).
+    // Operations affecting the generation of frames (applied after scene building).
     frame_ops: Vec<FrameMsg>,
 
-    /// Additional display list data.
+    // Additional display list data.
     payloads: Vec<Payload>,
 
     notifications: Vec<NotificationRequest>,
 
-    /// Persistent resource updates to apply as part of this transaction.
+    // Resource updates are applied after scene building.
     pub resource_updates: Vec<ResourceUpdate>,
 
-    /// If true the transaction is piped through the scene building thread, if false
-    /// it will be applied directly on the render backend.
+    // If true the transaction is piped through the scene building thread, if false
+    // it will be applied directly on the render backend.
     use_scene_builder_thread: bool,
 
     generate_frame: bool,
 
-    /// Set to true in order to force re-rendering even if WebRender can't internally
-    /// detect that something has changed.
     pub invalidate_rendered_frame: bool,
 
     low_priority: bool,
 }
 
 impl Transaction {
-    /// Constructor.
     pub fn new() -> Self {
         Transaction {
             scene_ops: Vec::new(),
@@ -145,24 +114,17 @@ impl Transaction {
         }
     }
 
-    /// Marks this transaction to allow it to skip going through the scene builder
-    /// thread.
-    ///
-    /// This is useful to avoid jank in transaction associated with animated
-    /// property updates, panning and zooming.
-    ///
-    /// Note that transactions that skip the scene builder thread can race ahead of
-    /// transactions that don't skip it.
+    // TODO: better name?
     pub fn skip_scene_builder(&mut self) {
         self.use_scene_builder_thread = false;
     }
 
-    /// Marks this transaction to enforce going through the scene builder thread.
+    // TODO: this is temporary, using the scene builder thread is the default for
+    // most transactions, and opt-in for specific cases like scrolling and async video.
     pub fn use_scene_builder_thread(&mut self) {
         self.use_scene_builder_thread = true;
     }
 
-    /// Returns true if the transaction has no effect.
     pub fn is_empty(&self) -> bool {
         !self.generate_frame &&
             !self.invalidate_rendered_frame &&
@@ -172,7 +134,6 @@ impl Transaction {
             self.notifications.is_empty()
     }
 
-    /// Update a pipeline's epoch.
     pub fn update_epoch(&mut self, pipeline_id: PipelineId, epoch: Epoch) {
         // We track epochs before and after scene building.
         // This one will be applied to the pending scene right away:
@@ -249,9 +210,8 @@ impl Transaction {
         self.payloads.push(Payload { epoch, pipeline_id, display_list_data });
     }
 
-    /// Add a set of persistent resource updates to apply as part of this transaction.
-    pub fn update_resources(&mut self, mut resources: Vec<ResourceUpdate>) {
-        self.resource_updates.append(&mut resources);
+    pub fn update_resources(&mut self, resources: Vec<ResourceUpdate>) {
+        self.merge(resources);
     }
 
     // Note: Gecko uses this to get notified when a transaction that contains
@@ -297,7 +257,6 @@ impl Transaction {
         self.frame_ops.push(FrameMsg::Scroll(scroll_location, cursor));
     }
 
-    ///
     pub fn scroll_node_with_id(
         &mut self,
         origin: LayoutPoint,
@@ -307,22 +266,18 @@ impl Transaction {
         self.frame_ops.push(FrameMsg::ScrollNodeWithId(origin, id, clamp));
     }
 
-    ///
     pub fn set_page_zoom(&mut self, page_zoom: ZoomFactor) {
         self.scene_ops.push(SceneMsg::SetPageZoom(page_zoom));
     }
 
-    ///
     pub fn set_pinch_zoom(&mut self, pinch_zoom: ZoomFactor) {
         self.frame_ops.push(FrameMsg::SetPinchZoom(pinch_zoom));
     }
 
-    ///
     pub fn set_is_transform_pinch_zooming(&mut self, is_zooming: bool, animation_id: PropertyBindingId) {
         self.frame_ops.push(FrameMsg::SetIsTransformPinchZooming(is_zooming, animation_id));
     }
 
-    ///
     pub fn set_pan(&mut self, pan: DeviceIntPoint) {
         self.frame_ops.push(FrameMsg::SetPan(pan));
     }
@@ -383,7 +338,6 @@ impl Transaction {
         )
     }
 
-    /// See `ResourceUpdate::AddImage`.
     pub fn add_image(
         &mut self,
         key: ImageKey,
@@ -399,7 +353,6 @@ impl Transaction {
         }));
     }
 
-    /// See `ResourceUpdate::UpdateImage`.
     pub fn update_image(
         &mut self,
         key: ImageKey,
@@ -415,12 +368,10 @@ impl Transaction {
         }));
     }
 
-    /// See `ResourceUpdate::DeleteImage`.
     pub fn delete_image(&mut self, key: ImageKey) {
         self.resource_updates.push(ResourceUpdate::DeleteImage(key));
     }
 
-    /// See `ResourceUpdate::AddBlobImage`.
     pub fn add_blob_image(
         &mut self,
         key: BlobImageKey,
@@ -440,7 +391,6 @@ impl Transaction {
         );
     }
 
-    /// See `ResourceUpdate::UpdateBlobImage`.
     pub fn update_blob_image(
         &mut self,
         key: BlobImageKey,
@@ -460,34 +410,28 @@ impl Transaction {
         );
     }
 
-    /// See `ResourceUpdate::DeleteBlobImage`.
     pub fn delete_blob_image(&mut self, key: BlobImageKey) {
         self.resource_updates.push(ResourceUpdate::DeleteImage(key.as_image()));
     }
 
-    /// See `ResourceUpdate::SetBlobImageVisibleArea`.
     pub fn set_blob_image_visible_area(&mut self, key: BlobImageKey, area: DeviceIntRect) {
         self.resource_updates.push(ResourceUpdate::SetBlobImageVisibleArea(key, area))
     }
 
-    /// See `ResourceUpdate::AddFont`.
     pub fn add_raw_font(&mut self, key: font::FontKey, bytes: Vec<u8>, index: u32) {
         self.resource_updates
             .push(ResourceUpdate::AddFont(AddFont::Raw(key, bytes, index)));
     }
 
-    /// See `ResourceUpdate::AddFont`.
     pub fn add_native_font(&mut self, key: font::FontKey, native_handle: font::NativeFontHandle) {
         self.resource_updates
             .push(ResourceUpdate::AddFont(AddFont::Native(key, native_handle)));
     }
 
-    /// See `ResourceUpdate::DeleteFont`.
     pub fn delete_font(&mut self, key: font::FontKey) {
         self.resource_updates.push(ResourceUpdate::DeleteFont(key));
     }
 
-    /// See `ResourceUpdate::AddFontInstance`.
     pub fn add_font_instance(
         &mut self,
         key: font::FontInstanceKey,
@@ -508,53 +452,47 @@ impl Transaction {
             }));
     }
 
-    /// See `ResourceUpdate::DeleteFontInstance`.
     pub fn delete_font_instance(&mut self, key: font::FontInstanceKey) {
         self.resource_updates.push(ResourceUpdate::DeleteFontInstance(key));
     }
 
-    /// A hint that this transaction can be processed at a lower priority. High-
-    /// priority transactions can jump ahead of regular-priority transactions,
-    /// but both high- and regular-priority transactions are processed in order
-    /// relative to other transactions of the same priority.
+    // A hint that this transaction can be processed at a lower priority. High-
+    // priority transactions can jump ahead of regular-priority transactions,
+    // but both high- and regular-priority transactions are processed in order
+    // relative to other transactions of the same priority.
     pub fn set_low_priority(&mut self, low_priority: bool) {
         self.low_priority = low_priority;
     }
 
-    /// Returns whether this transaction is marked as low priority.
     pub fn is_low_priority(&self) -> bool {
         self.low_priority
     }
+
+    pub fn merge(&mut self, mut other: Vec<ResourceUpdate>) {
+        self.resource_updates.append(&mut other);
+    }
+
+    pub fn clear(&mut self) {
+        self.resource_updates.clear()
+    }
 }
 
-///
 pub struct DocumentTransaction {
-    ///
     pub document_id: DocumentId,
-    ///
     pub transaction: Transaction,
 }
 
 /// Represents a transaction in the format sent through the channel.
 #[derive(Clone, Deserialize, Serialize)]
 pub struct TransactionMsg {
-    /// Changes that require re-building the scene.
     pub scene_ops: Vec<SceneMsg>,
-    /// Changes to animated properties that do not require re-building the scene.
     pub frame_ops: Vec<FrameMsg>,
-    /// Updates to resources that persist across display lists.
     pub resource_updates: Vec<ResourceUpdate>,
-    /// Whether to trigger frame building and rendering if something has changed.
     pub generate_frame: bool,
-    /// Whether to force frame building and rendering even if no changes are internally
-    /// observed.
     pub invalidate_rendered_frame: bool,
-    /// Whether to enforce that this transaction go through the scene builder.
     pub use_scene_builder_thread: bool,
-    ///
     pub low_priority: bool,
 
-    /// Handlers to notify at certain points of the pipeline.
     #[serde(skip)]
     pub notifications: Vec<NotificationRequest>,
 }
@@ -583,7 +521,6 @@ impl fmt::Debug for TransactionMsg {
 }
 
 impl TransactionMsg {
-    /// Returns true if this transaction has no effect.
     pub fn is_empty(&self) -> bool {
         !self.generate_frame &&
             !self.invalidate_rendered_frame &&
@@ -593,7 +530,7 @@ impl TransactionMsg {
             self.notifications.is_empty()
     }
 
-    /// Creates a transaction message from a single frame message.
+    // TODO: We only need this for a few RenderApi methods which we should remove.
     pub fn frame_message(msg: FrameMsg) -> Self {
         TransactionMsg {
             scene_ops: Vec::new(),
@@ -607,7 +544,6 @@ impl TransactionMsg {
         }
     }
 
-    /// Creates a transaction message from a single scene message.
     pub fn scene_message(msg: SceneMsg) -> Self {
         TransactionMsg {
             scene_ops: vec![msg],
@@ -622,103 +558,52 @@ impl TransactionMsg {
     }
 }
 
-/// Creates an image resource with provided parameters.
-///
-/// Must be matched with a `DeleteImage` at some point to prevent memory leaks.
 #[derive(Clone, Deserialize, Serialize)]
 pub struct AddImage {
-    /// A key to identify the image resource.
     pub key: ImageKey,
-    /// Properties of the image.
     pub descriptor: ImageDescriptor,
-    /// The pixels of the image.
     pub data: ImageData,
-    /// An optional tiling scheme to apply when storing the image's data
-    /// on the GPU. Applies to both width and heights of the tiles.
-    ///
-    /// Note that WebRender may internally chose to tile large images
-    /// even if this member is set to `None`.
     pub tiling: Option<TileSize>,
 }
 
-/// Updates an already existing image resource.
 #[derive(Clone, Deserialize, Serialize)]
 pub struct UpdateImage {
-    /// The key identfying the image resource to update.
     pub key: ImageKey,
-    /// Properties of the image.
     pub descriptor: ImageDescriptor,
-    /// The pixels of the image.
     pub data: ImageData,
-    /// An optional dirty rect that lets WebRender optimize the amount of
-    /// data to transfer to the GPU.
-    ///
-    /// The data provided must still represent the entire image.
     pub dirty_rect: ImageDirtyRect,
 }
 
-/// Creates a blob-image resource with provided parameters.
-///
-/// Must be matched with a `DeleteImage` at some point to prevent memory leaks.
 #[derive(Clone, Deserialize, Serialize)]
 pub struct AddBlobImage {
-    /// A key to identify the blob-image resource.
     pub key: BlobImageKey,
-    /// Properties of the image.
     pub descriptor: ImageDescriptor,
-    /// The blob-image's serialized commands.
+    //#[serde(with = "serde_image_data_raw")]
     pub data: Arc<BlobImageData>,
-    /// The portion of the plane in the blob-image's internal coordinate
-    /// system that is stretched to fill the image display item.
-    ///
-    /// Unlike regular images, blob images are not limited in size. The
-    /// top-left corner of their internal coordinate system is also not
-    /// necessary at (0, 0).
-    /// This means that blob images can be updated to insert/remove content
-    /// in any direction to support panning and zooming.
     pub visible_rect: DeviceIntRect,
-    /// An optional tiling scheme to apply when rasterizing the blob-image
-    /// and when storing its rasterized data on the GPU.
-    /// Applies to both width and heights of the tiles.
-    ///
-    /// Note that WebRender may internally chose to tile large blob-images
-    /// even if this member is set to `None`.
     pub tiling: Option<TileSize>,
 }
 
-/// Updates an already existing blob-image resource.
 #[derive(Clone, Deserialize, Serialize)]
 pub struct UpdateBlobImage {
-    /// The key identfying the blob-image resource to update.
     pub key: BlobImageKey,
-    /// Properties of the image.
     pub descriptor: ImageDescriptor,
-    /// The blob-image's serialized commands.
+    //#[serde(with = "serde_image_data_raw")]
     pub data: Arc<BlobImageData>,
-    /// See `AddBlobImage::visible_rect`.
     pub visible_rect: DeviceIntRect,
-    /// An optional dirty rect that lets WebRender optimize the amount of
-    /// data to to rasterize and transfer to the GPU.
     pub dirty_rect: BlobDirtyRect,
 }
 
-/// Creates a font resource.
-///
-/// Must be matched with a corresponding `ResourceUpdate::DeleteFont` at some point to prevent
-/// memory leaks.
 #[derive(Clone, Deserialize, Serialize)]
 pub enum AddFont {
-    ///
     Raw(
         font::FontKey,
         #[serde(with = "serde_bytes")] Vec<u8>,
         u32
     ),
-    ///
     Native(font::FontKey, font::NativeFontHandle),
 }
 
-/// Describe an item that matched a hit-test query.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct HitTestItem {
     /// The pipeline that the display item that was hit belongs to.
@@ -737,105 +622,64 @@ pub struct HitTestItem {
     pub point_relative_to_item: LayoutPoint,
 }
 
-/// Returned by `RenderApi::hit_test`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct HitTestResult {
-    /// List of items that are match the hit-test query. 
     pub items: Vec<HitTestItem>,
 }
 
 bitflags! {
     #[derive(Deserialize, MallocSizeOf, Serialize)]
-    ///
     pub struct HitTestFlags: u8 {
-        ///
         const FIND_ALL = 0b00000001;
-        ///
         const POINT_RELATIVE_TO_PIPELINE_VIEWPORT = 0b00000010;
     }
 }
 
-/// Creates a font instance resource.
-///
-/// Must be matched with a corresponding `DeleteFontInstance` at some point
-/// to prevent memory leaks.
 #[derive(Clone, Deserialize, Serialize)]
 pub struct AddFontInstance {
-    /// A key to identify the font instance.
     pub key: font::FontInstanceKey,
-    /// The font resource's key.
     pub font_key: font::FontKey,
-    /// Glyph size in app units.
     pub glyph_size: Au,
-    ///
     pub options: Option<font::FontInstanceOptions>,
-    ///
     pub platform_options: Option<font::FontInstancePlatformOptions>,
-    ///
     pub variations: Vec<font::FontVariation>,
 }
 
-/// Frame messages affect building the scene.
+// Frame messages affect building the scene.
 #[derive(Clone, Deserialize, Serialize)]
 pub enum SceneMsg {
-    ///
     UpdateEpoch(PipelineId, Epoch),
-    ///
     SetPageZoom(ZoomFactor),
-    ///
     SetRootPipeline(PipelineId),
-    ///
     RemovePipeline(PipelineId),
-    ///
     EnableFrameOutput(PipelineId, bool),
-    ///
     SetDisplayList {
-        ///
         list_descriptor: BuiltDisplayListDescriptor,
-        ///
         epoch: Epoch,
-        ///
         pipeline_id: PipelineId,
-        ///
         background: Option<ColorF>,
-        ///
         viewport_size: LayoutSize,
-        ///
         content_size: LayoutSize,
-        ///
         preserve_frame_state: bool,
     },
-    ///
     SetDocumentView {
-        ///
         device_rect: DeviceIntRect,
-        ///
         device_pixel_ratio: f32,
     },
 }
 
-/// Frame messages affect frame generation (applied after building the scene).
+// Frame messages affect frame generation (applied after building the scene).
 #[derive(Clone, Deserialize, Serialize)]
 pub enum FrameMsg {
-    ///
     UpdateEpoch(PipelineId, Epoch),
-    ///
     HitTest(Option<PipelineId>, WorldPoint, HitTestFlags, MsgSender<HitTestResult>),
-    ///
     SetPan(DeviceIntPoint),
-    ///
     Scroll(ScrollLocation, WorldPoint),
-    ///
     ScrollNodeWithId(LayoutPoint, di::ExternalScrollId, ScrollClamping),
-    ///
     GetScrollNodeState(MsgSender<Vec<ScrollNodeState>>),
-    ///
     UpdateDynamicProperties(DynamicProperties),
-    ///
     AppendDynamicProperties(DynamicProperties),
-    ///
     SetPinchZoom(ZoomFactor),
-    ///
     SetIsTransformPinchZooming(bool, PropertyBindingId),
 }
 
@@ -875,9 +719,7 @@ bitflags!{
     // Note: capturing `FRAME` without `SCENE` is not currently supported.
     #[derive(Deserialize, Serialize)]
     pub struct CaptureBits: u8 {
-        ///
         const SCENE = 0x1;
-        ///
         const FRAME = 0x2;
     }
 }
@@ -886,17 +728,11 @@ bitflags!{
     /// Mask for clearing caches in debug commands.
     #[derive(Deserialize, Serialize)]
     pub struct ClearCache: u8 {
-        ///
         const IMAGES = 0b1;
-        ///
         const GLYPHS = 0b01;
-        ///
         const GLYPH_DIMENSIONS = 0b001;
-        ///
         const RENDER_TASKS = 0b0001;
-        ///
         const TEXTURE_CACHE = 0b00001;
-        ///
         const RASTERIZED_BLOBS = 0b000001;
     }
 }
@@ -905,13 +741,10 @@ bitflags!{
 /// that is returned by `RenderBackend`.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CapturedDocument {
-    ///
     pub document_id: DocumentId,
-    ///
     pub root_pipeline_id: Option<PipelineId>,
 }
 
-/// Update of the state of built-in debugging facilities.
 #[derive(Clone, Deserialize, Serialize)]
 pub enum DebugCommand {
     /// Sets the provided debug flags.
@@ -942,11 +775,10 @@ pub enum DebugCommand {
     /// Causes the low priority scene builder to pause for a given amount of milliseconds
     /// each time it processes a transaction.
     SimulateLongLowPrioritySceneBuild(u32),
-    /// Logs transactions to a file for debugging purposes
+    // Logs transactions to a file for debugging purposes
     SetTransactionLogging(bool),
 }
 
-/// Message sent by the `RenderApi` to the render backend thread.
 #[derive(Clone, Deserialize, Serialize)]
 pub enum ApiMsg {
     /// Add/remove/update images and fonts.
@@ -984,13 +816,8 @@ pub enum ApiMsg {
     /// Wakes the render backend's event loop up. Needed when an event is communicated
     /// through another channel.
     WakeUp,
-    /// See `RenderApi::wake_scene_builder`.
     WakeSceneBuilder,
-    /// Block until a round-trip to the scene builder thread has completed. This
-    /// ensures that any transactions (including ones deferred to the scene
-    /// builder thread) have been processed.
     FlushSceneBuilder(MsgSender<()>),
-    /// Shut the WebRender instance down.
     ShutDown(Option<MsgSender<()>>),
 }
 
@@ -1018,45 +845,29 @@ impl fmt::Debug for ApiMsg {
     }
 }
 
-/// An epoch identifies the state of a pipeline in time.
-///
-/// This is mostly used as a synchronization mechanism to observe how/when particular pipeline
-/// updates propagate through WebRender and are applied at various stages.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct Epoch(pub u32);
 
 impl Epoch {
-    /// Magic invalid epoch value.
     pub fn invalid() -> Epoch {
         Epoch(u32::MAX)
     }
 }
 
-/// ID namespaces uniquely identify different users of WebRender's API.
-///
-/// For example in Gecko each content process uses a separate id namespace. 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, Eq, MallocSizeOf, PartialEq, Hash, Ord, PartialOrd, PeekPoke)]
 #[derive(Deserialize, Serialize)]
 pub struct IdNamespace(pub u32);
 
-/// A key uniquely identifying a WebRender document.
-///
-/// Instances can manage one or several documents (using the same render backend thread).
-/// Each document will internally correspond to a single scene, and scenes are made of
-/// one or several pipelines.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize, PeekPoke)]
 pub struct DocumentId {
-    ///
     pub namespace_id: IdNamespace,
-    ///
     pub id: u32,
 }
 
 impl DocumentId {
-    ///
     pub fn new(namespace_id: IdNamespace, id: u32) -> Self {
         DocumentId {
             namespace_id,
@@ -1064,7 +875,6 @@ impl DocumentId {
         }
     }
 
-    ///
     pub const INVALID: DocumentId = DocumentId { namespace_id: IdNamespace(0), id: 0 };
 }
 
@@ -1087,17 +897,13 @@ impl Default for PipelineId {
 }
 
 impl PipelineId {
-    ///
     pub fn dummy() -> Self {
         PipelineId(0, 0)
     }
 }
 
-///
 #[derive(Copy, Clone, Debug, MallocSizeOf, Serialize, Deserialize)]
 pub enum ClipIntern {}
-
-///
 #[derive(Copy, Clone, Debug, MallocSizeOf, Serialize, Deserialize)]
 pub enum FilterDataIntern {}
 
@@ -1107,9 +913,7 @@ pub enum FilterDataIntern {}
 pub enum PrimitiveKeyKind {
     /// Clear an existing rect, used for special effects on some platforms.
     Clear,
-    ///
     Rectangle {
-        ///
         color: ColorU,
     },
 }
@@ -1143,12 +947,10 @@ macro_rules! enumerate_interners {
 
 macro_rules! declare_interning_memory_report {
     ( $( $name:ident: $ty:ident, )+ ) => {
-        ///
         #[repr(C)]
         #[derive(AddAssign, Clone, Debug, Default, Deserialize, Serialize)]
         pub struct InternerSubReport {
             $(
-                ///
                 pub $name: usize,
             )+
         }
@@ -1162,9 +964,7 @@ enumerate_interners!(declare_interning_memory_report);
 #[repr(C)]
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct InterningMemoryReport {
-    ///
     pub interners: InternerSubReport,
-    ///
     pub data_stores: InternerSubReport,
 }
 
@@ -1178,7 +978,6 @@ impl ::std::ops::AddAssign for InterningMemoryReport {
 /// Collection of heap sizes, in bytes.
 /// cbindgen:derive-eq=false
 #[repr(C)]
-#[allow(missing_docs)]
 #[derive(AddAssign, Clone, Debug, Default, Deserialize, Serialize)]
 pub struct MemoryReport {
     //
@@ -1214,7 +1013,7 @@ pub type VoidPtrToSizeFn = unsafe extern "C" fn(ptr: *const c_void) -> usize;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-struct ResourceId(pub u32);
+pub struct ResourceId(pub u32);
 
 /// An opaque pointer-sized value.
 #[repr(C)]
@@ -1226,7 +1025,6 @@ pub struct ExternalEvent {
 unsafe impl Send for ExternalEvent {}
 
 impl ExternalEvent {
-    /// Creates the event from an opaque pointer-sized value.
     pub fn from_raw(raw: usize) -> Self {
         ExternalEvent { raw }
     }
@@ -1236,19 +1034,12 @@ impl ExternalEvent {
     }
 }
 
-/// Describe whether or not scrolling should be clamped by the content bounds.
 #[derive(Clone, Deserialize, Serialize)]
 pub enum ScrollClamping {
-    ///
     ToContentBounds,
-    ///
     NoClamping,
 }
 
-/// Allows the API to communicate with WebRender.
-///
-/// This object is created along with the `Renderer` and it's main use from a
-/// user perspective is to create one or several `RenderApi` objects.
 #[derive(Clone, Deserialize, Serialize)]
 pub struct RenderApiSender {
     api_sender: MsgSender<ApiMsg>,
@@ -1256,7 +1047,6 @@ pub struct RenderApiSender {
 }
 
 impl RenderApiSender {
-    /// Used internally by the `Renderer`.
     pub fn new(api_sender: MsgSender<ApiMsg>, payload_sender: PayloadSender) -> Self {
         RenderApiSender {
             api_sender,
@@ -1308,7 +1098,6 @@ impl RenderApiSender {
 }
 
 bitflags! {
-    /// Flags to enable/disable various builtin debugging tools.
     #[repr(C)]
     #[derive(Default, Deserialize, MallocSizeOf, Serialize)]
     pub struct DebugFlags: u32 {
@@ -1320,21 +1109,10 @@ bitflags! {
         const TEXTURE_CACHE_DBG     = 1 << 2;
         /// Display GPU timing results.
         const GPU_TIME_QUERIES      = 1 << 3;
-        /// Query the number of pixels that pass the depth test divided and show it
-        /// in the profiler as a percentage of the number of pixels in the screen
-        /// (window width times height).
         const GPU_SAMPLE_QUERIES    = 1 << 4;
-        /// Render each quad with their own draw call.
-        ///
-        /// Terrible for performance but can help with understanding the drawing
-        /// order when inspecting renderdoc or apitrace recordings.
         const DISABLE_BATCHING      = 1 << 5;
-        /// Display the pipeline epochs.
         const EPOCHS                = 1 << 6;
-        /// Reduce the amount of information displayed by the profiler so that
-        /// it occupies less screen real-estate.
         const COMPACT_PROFILER      = 1 << 7;
-        /// Print driver messages to stdout.
         const ECHO_DRIVER_MESSAGES  = 1 << 8;
         /// Show an indicator that moves every time a frame is rendered.
         const NEW_FRAME_INDICATOR   = 1 << 9;
@@ -1344,9 +1122,7 @@ bitflags! {
         const SHOW_OVERDRAW         = 1 << 11;
         /// Display the contents of GPU cache.
         const GPU_CACHE_DBG         = 1 << 12;
-        /// Show a red bar that moves each time a slow frame is detected. 
         const SLOW_FRAME_INDICATOR  = 1 << 13;
-        /// Clear evicted parts of the texture cache for debugging purposes.
         const TEXTURE_CACHE_DBG_CLEAR_EVICTED = 1 << 14;
         /// Show picture caching debug overlay
         const PICTURE_CACHING_DBG   = 1 << 15;
@@ -1361,18 +1137,11 @@ bitflags! {
         /// Disable various bits of the WebRender pipeline, to help narrow
         /// down where slowness might be coming from.
         const DISABLE_OPAQUE_PASS = 1 << 19;
-        ///
         const DISABLE_ALPHA_PASS = 1 << 20;
-        ///
         const DISABLE_CLIP_MASKS = 1 << 21;
-        ///
         const DISABLE_TEXT_PRIMS = 1 << 22;
-        ///
         const DISABLE_GRADIENT_PRIMS = 1 << 23;
-        ///
         const OBSCURE_IMAGES = 1 << 24;
-        /// Taint the transparent area of the glyphs with a random opacity to easily
-        /// see when glyphs are re-rasterized. 
         const GLYPH_FLASHING = 1 << 25;
         /// The profiler only displays information that is out of the ordinary.
         const SMART_PROFILER        = 1 << 26;
@@ -1383,7 +1152,6 @@ bitflags! {
     }
 }
 
-/// The main entry point to interact with WebRender.
 pub struct RenderApi {
     api_sender: MsgSender<ApiMsg>,
     payload_sender: PayloadSender,
@@ -1392,27 +1160,19 @@ pub struct RenderApi {
 }
 
 impl RenderApi {
-    /// Returns the namespace ID used by this API object.
     pub fn get_namespace_id(&self) -> IdNamespace {
         self.namespace_id
     }
 
-    ///
     pub fn clone_sender(&self) -> RenderApiSender {
         RenderApiSender::new(self.api_sender.clone(), self.payload_sender.clone())
     }
 
-    /// Add a document to the WebRender instance.
-    ///
-    /// Instances can manage one or several documents (using the same render backend thread).
-    /// Each document will internally correspond to a single scene, and scenes are made of
-    /// one or several pipelines.
     pub fn add_document(&self, initial_size: DeviceIntSize, layer: DocumentLayer) -> DocumentId {
         let new_id = self.next_unique_id();
         self.add_document_with_id(initial_size, layer, new_id)
     }
 
-    /// See `add_document`
     pub fn add_document_with_id(&self,
                                 initial_size: DeviceIntSize,
                                 layer: DocumentLayer,
@@ -1425,19 +1185,16 @@ impl RenderApi {
         document_id
     }
 
-    /// Delete a document.
     pub fn delete_document(&self, document_id: DocumentId) {
         let msg = ApiMsg::DeleteDocument(document_id);
         self.api_sender.send(msg).unwrap();
     }
 
-    /// Generate a new font key
     pub fn generate_font_key(&self) -> font::FontKey {
         let new_id = self.next_unique_id();
         font::FontKey::new(self.namespace_id, new_id)
     }
 
-    /// Generate a new font instance key
     pub fn generate_font_instance_key(&self) -> font::FontInstanceKey {
         let new_id = self.next_unique_id();
         font::FontInstanceKey::new(self.namespace_id, new_id)
@@ -1489,34 +1246,26 @@ impl RenderApi {
             .unwrap();
     }
 
-    /// A Gecko-specific notification mechanism to get some code executed on the
-    /// `Renderer`'s thread, mostly replaced by `NotificationHandler`. You should
-    /// probably use the latter instead.
     pub fn send_external_event(&self, evt: ExternalEvent) {
         let msg = ApiMsg::ExternalEvent(evt);
         self.api_sender.send(msg).unwrap();
     }
 
-    /// Notify WebRender that now is a good time to flush caches and release
-    /// as much memory as possible.
     pub fn notify_memory_pressure(&self) {
         self.api_sender.send(ApiMsg::MemoryPressure).unwrap();
     }
 
-    /// Synchronously requests memory report.
     pub fn report_memory(&self) -> MemoryReport {
         let (tx, rx) = channel::msg_channel().unwrap();
         self.api_sender.send(ApiMsg::ReportMemory(tx)).unwrap();
         rx.recv().unwrap()
     }
 
-    /// Update debugging flags.
     pub fn set_debug_flags(&self, flags: DebugFlags) {
         let cmd = DebugCommand::SetFlags(flags);
         self.api_sender.send(ApiMsg::DebugCommand(cmd)).unwrap();
     }
 
-    /// Shut the WebRender instance down.
     pub fn shut_down(&self, synchronously: bool) {
         if synchronously {
             let (tx, rx) = channel::msg_channel().unwrap();
@@ -1581,7 +1330,6 @@ impl RenderApi {
             .unwrap()
     }
 
-    /// Send a transaction to WebRender.
     pub fn send_transaction(&self, document_id: DocumentId, transaction: Transaction) {
         let (msg, payloads) = transaction.finalize();
         for payload in payloads {
@@ -1590,7 +1338,6 @@ impl RenderApi {
         self.api_sender.send(ApiMsg::UpdateDocuments(vec![document_id], vec![msg])).unwrap();
     }
 
-    /// Send multiple transactions.
     pub fn send_transactions(&self, document_ids: Vec<DocumentId>, mut transactions: Vec<Transaction>) {
         debug_assert!(document_ids.len() == transactions.len());
         let length = document_ids.len();
@@ -1657,16 +1404,13 @@ impl RenderApi {
         );
     }
 
-    ///
+
     pub fn get_scroll_node_state(&self, document_id: DocumentId) -> Vec<ScrollNodeState> {
         let (tx, rx) = channel::msg_channel().unwrap();
         self.send_frame_msg(document_id, FrameMsg::GetScrollNodeState(tx));
         rx.recv().unwrap()
     }
 
-    // Some internal scheduling magic that leaked into the API.
-    // Buckle up and see APZUpdater.cpp for more info about what this is about.
-    #[doc(hidden)]
     pub fn wake_scene_builder(&self) {
         self.send_message(ApiMsg::WakeSceneBuilder);
     }
@@ -1703,7 +1447,6 @@ impl RenderApi {
         documents
     }
 
-    /// Update the state of builtin debugging facilities.
     pub fn send_debug_cmd(&self, cmd: DebugCommand) {
         let msg = ApiMsg::DebugCommand(cmd);
         self.send_message(msg);
@@ -1717,16 +1460,12 @@ impl Drop for RenderApi {
     }
 }
 
-///
 #[derive(Clone, Deserialize, Serialize)]
 pub struct ScrollNodeState {
-    ///
     pub id: di::ExternalScrollId,
-    ///
     pub scroll_offset: LayoutVector2D,
 }
 
-///
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum ScrollLocation {
     /// Scroll by a certain amount.
@@ -1753,7 +1492,6 @@ impl ZoomFactor {
     }
 }
 
-/// A key to identify an animated property binding.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, Deserialize, MallocSizeOf, PartialEq, Serialize, Eq, Hash, PeekPoke)]
 pub struct PropertyBindingId {
@@ -1762,7 +1500,6 @@ pub struct PropertyBindingId {
 }
 
 impl PropertyBindingId {
-    /// Constructor.
     pub fn new(value: u64) -> Self {
         PropertyBindingId {
             namespace: IdNamespace((value >> 32) as u32),
@@ -1776,21 +1513,18 @@ impl PropertyBindingId {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub struct PropertyBindingKey<T> {
-    ///
     pub id: PropertyBindingId,
     _phantom: PhantomData<T>,
 }
 
 /// Construct a property value from a given key and value.
 impl<T: Copy> PropertyBindingKey<T> {
-    ///
     pub fn with(&self, value: T) -> PropertyValue<T> {
         PropertyValue { key: *self, value }
     }
 }
 
 impl<T> PropertyBindingKey<T> {
-    /// Constructor.
     pub fn new(value: u64) -> Self {
         PropertyBindingKey {
             id: PropertyBindingId::new(value),
@@ -1808,9 +1542,7 @@ impl<T> PropertyBindingKey<T> {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub enum PropertyBinding<T> {
-    /// Non-animated value.
     Value(T),
-    /// Animated binding.
     Binding(PropertyBindingKey<T>, T),
 }
 
@@ -1830,9 +1562,7 @@ impl<T> From<T> for PropertyBinding<T> {
 /// supplied by the calling code.
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
 pub struct PropertyValue<T> {
-    ///
     pub key: PropertyBindingKey<T>,
-    ///
     pub value: T,
 }
 
@@ -1841,68 +1571,42 @@ pub struct PropertyValue<T> {
 /// animated properties.
 #[derive(Clone, Deserialize, Serialize, Debug, PartialEq, Default)]
 pub struct DynamicProperties {
-    ///
     pub transforms: Vec<PropertyValue<LayoutTransform>>,
-    ///
     pub floats: Vec<PropertyValue<f32>>,
 }
 
-/// A handler to integrate WebRender with the thread that contains the `Renderer`.
 pub trait RenderNotifier: Send {
-    ///
     fn clone(&self) -> Box<dyn RenderNotifier>;
-    /// Wake the thread containing the `Renderer` up (after updates have been put
-    /// in the renderer's queue).
     fn wake_up(&self);
-    /// Notify the thread containing the `Renderer` that a new frame is ready.
     fn new_frame_ready(&self, _: DocumentId, scrolled: bool, composite_needed: bool, render_time_ns: Option<u64>);
-    /// A Gecko-specific notification mechanism to get some code executed on the
-    /// `Renderer`'s thread, mostly replaced by `NotificationHandler`. You should
-    /// probably use the latter instead.
     fn external_event(&self, _evt: ExternalEvent) {
         unimplemented!()
     }
-    /// Notify the thread containing the `Renderer` that the render backend has been
-    /// shut down.
     fn shut_down(&self) {}
 }
 
-/// A stage of the rendering pipeline.
 #[repr(u32)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Checkpoint {
-    ///
     SceneBuilt,
-    ///
     FrameBuilt,
-    ///
     FrameTexturesUpdated,
-    ///
     FrameRendered,
     /// NotificationRequests get notified with this if they get dropped without having been
     /// notified. This provides the guarantee that if a request is created it will get notified.
     TransactionDropped,
 }
 
-/// A handler to notify when a transaction reaches certain stages of the rendering
-/// pipeline.
 pub trait NotificationHandler : Send + Sync {
-    /// Entry point of the handler to implement. Invoked by WebRender.
     fn notify(&self, when: Checkpoint);
 }
 
-/// A request to notify a handler when the transaction reaches certain stages of the
-/// rendering pipeline.
-///
-/// The request is guaranteed to be notified once and only once, even if the transaction
-/// is dropped before the requested check-point.
 pub struct NotificationRequest {
     handler: Option<Box<dyn NotificationHandler>>,
     when: Checkpoint,
 }
 
 impl NotificationRequest {
-    /// Constructor.
     pub fn new(when: Checkpoint, handler: Box<dyn NotificationHandler>) -> Self {
         NotificationRequest {
             handler: Some(handler),
@@ -1910,10 +1614,8 @@ impl NotificationRequest {
         }
     }
 
-    /// The specified stage at which point the handler should be notified.
     pub fn when(&self) -> Checkpoint { self.when }
 
-    /// Called by WebRender at specified stages to notify the registered handler.
     pub fn notify(mut self) {
         if let Some(handler) = self.handler.take() {
             handler.notify(self.when);
