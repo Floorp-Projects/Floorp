@@ -1542,6 +1542,12 @@ impl RenderBackend {
                 (pending_update, rendered_document)
             };
 
+            // If there are no texture cache updates to apply, and if the produced
+            // frame is a no-op, then we can skip compositing this frame completely.
+            if pending_update.is_nop() && rendered_document.frame.is_nop() {
+                doc.rendered_frame_is_valid = true;
+            }
+
             let msg = ResultMsg::PublishPipelineInfo(doc.updated_pipeline_info());
             self.result_tx.send(msg).unwrap();
 
