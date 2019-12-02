@@ -3429,6 +3429,9 @@ bool nsContentUtils::ContentIsDraggable(nsIContent* aContent) {
       return false;
     }
   }
+  if (aContent->IsSVGElement()) {
+    return false;
+  }
 
   // special handling for content area image and link dragging
   return IsDraggableImage(aContent) || IsDraggableLink(aContent);
