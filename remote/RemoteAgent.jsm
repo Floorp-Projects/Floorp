@@ -66,9 +66,6 @@ class RemoteAgentClass {
 
     this.targets = new Targets();
     this.targets.on("target-created", (eventName, target) => {
-      if (!target.path) {
-        throw new Error(`Target is missing 'path' attribute: ${target}`);
-      }
       this.server.registerPathHandler(target.path, target);
     });
     this.targets.on("target-destroyed", (eventName, target) => {
