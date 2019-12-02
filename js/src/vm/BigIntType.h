@@ -143,36 +143,36 @@ class BigInt final
   // must be called with at least one BigInt operand. Binary
   // operations will throw a TypeError if one of the operands is not a
   // BigInt value.
-  static bool add(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
-                  MutableHandle<Value> res);
-  static bool sub(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
-                  MutableHandle<Value> res);
-  static bool mul(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
-                  MutableHandle<Value> res);
-  static bool div(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
-                  MutableHandle<Value> res);
-  static bool mod(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
-                  MutableHandle<Value> res);
-  static bool pow(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
-                  MutableHandle<Value> res);
-  static bool neg(JSContext* cx, Handle<Value> operand,
-                  MutableHandle<Value> res);
-  static bool inc(JSContext* cx, Handle<Value> operand,
-                  MutableHandle<Value> res);
-  static bool dec(JSContext* cx, Handle<Value> operand,
-                  MutableHandle<Value> res);
-  static bool lsh(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
-                  MutableHandle<Value> res);
-  static bool rsh(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
-                  MutableHandle<Value> res);
-  static bool bitAnd(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
-                     MutableHandle<Value> res);
-  static bool bitXor(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
-                     MutableHandle<Value> res);
-  static bool bitOr(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
-                    MutableHandle<Value> res);
-  static bool bitNot(JSContext* cx, Handle<Value> operand,
-                     MutableHandle<Value> res);
+  static bool addValue(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
+                       MutableHandle<Value> res);
+  static bool subValue(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
+                       MutableHandle<Value> res);
+  static bool mulValue(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
+                       MutableHandle<Value> res);
+  static bool divValue(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
+                       MutableHandle<Value> res);
+  static bool modValue(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
+                       MutableHandle<Value> res);
+  static bool powValue(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
+                       MutableHandle<Value> res);
+  static bool negValue(JSContext* cx, Handle<Value> operand,
+                       MutableHandle<Value> res);
+  static bool incValue(JSContext* cx, Handle<Value> operand,
+                       MutableHandle<Value> res);
+  static bool decValue(JSContext* cx, Handle<Value> operand,
+                       MutableHandle<Value> res);
+  static bool lshValue(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
+                       MutableHandle<Value> res);
+  static bool rshValue(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
+                       MutableHandle<Value> res);
+  static bool bitAndValue(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
+                          MutableHandle<Value> res);
+  static bool bitXorValue(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
+                          MutableHandle<Value> res);
+  static bool bitOrValue(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
+                         MutableHandle<Value> res);
+  static bool bitNotValue(JSContext* cx, Handle<Value> operand,
+                          MutableHandle<Value> res);
 
   static double numberValue(BigInt* x);
 

@@ -2586,8 +2586,8 @@ static bool ValidBigIntOperands(JSContext* cx, HandleValue lhs,
   return true;
 }
 
-bool BigInt::add(JSContext* cx, HandleValue lhs, HandleValue rhs,
-                 MutableHandleValue res) {
+bool BigInt::addValue(JSContext* cx, HandleValue lhs, HandleValue rhs,
+                      MutableHandleValue res) {
   if (!ValidBigIntOperands(cx, lhs, rhs)) {
     return false;
   }
@@ -2602,8 +2602,8 @@ bool BigInt::add(JSContext* cx, HandleValue lhs, HandleValue rhs,
   return true;
 }
 
-bool BigInt::sub(JSContext* cx, HandleValue lhs, HandleValue rhs,
-                 MutableHandleValue res) {
+bool BigInt::subValue(JSContext* cx, HandleValue lhs, HandleValue rhs,
+                      MutableHandleValue res) {
   if (!ValidBigIntOperands(cx, lhs, rhs)) {
     return false;
   }
@@ -2618,8 +2618,8 @@ bool BigInt::sub(JSContext* cx, HandleValue lhs, HandleValue rhs,
   return true;
 }
 
-bool BigInt::mul(JSContext* cx, HandleValue lhs, HandleValue rhs,
-                 MutableHandleValue res) {
+bool BigInt::mulValue(JSContext* cx, HandleValue lhs, HandleValue rhs,
+                      MutableHandleValue res) {
   if (!ValidBigIntOperands(cx, lhs, rhs)) {
     return false;
   }
@@ -2634,8 +2634,8 @@ bool BigInt::mul(JSContext* cx, HandleValue lhs, HandleValue rhs,
   return true;
 }
 
-bool BigInt::div(JSContext* cx, HandleValue lhs, HandleValue rhs,
-                 MutableHandleValue res) {
+bool BigInt::divValue(JSContext* cx, HandleValue lhs, HandleValue rhs,
+                      MutableHandleValue res) {
   if (!ValidBigIntOperands(cx, lhs, rhs)) {
     return false;
   }
@@ -2650,8 +2650,8 @@ bool BigInt::div(JSContext* cx, HandleValue lhs, HandleValue rhs,
   return true;
 }
 
-bool BigInt::mod(JSContext* cx, HandleValue lhs, HandleValue rhs,
-                 MutableHandleValue res) {
+bool BigInt::modValue(JSContext* cx, HandleValue lhs, HandleValue rhs,
+                      MutableHandleValue res) {
   if (!ValidBigIntOperands(cx, lhs, rhs)) {
     return false;
   }
@@ -2666,8 +2666,8 @@ bool BigInt::mod(JSContext* cx, HandleValue lhs, HandleValue rhs,
   return true;
 }
 
-bool BigInt::pow(JSContext* cx, HandleValue lhs, HandleValue rhs,
-                 MutableHandleValue res) {
+bool BigInt::powValue(JSContext* cx, HandleValue lhs, HandleValue rhs,
+                      MutableHandleValue res) {
   if (!ValidBigIntOperands(cx, lhs, rhs)) {
     return false;
   }
@@ -2682,7 +2682,8 @@ bool BigInt::pow(JSContext* cx, HandleValue lhs, HandleValue rhs,
   return true;
 }
 
-bool BigInt::neg(JSContext* cx, HandleValue operand, MutableHandleValue res) {
+bool BigInt::negValue(JSContext* cx, HandleValue operand,
+                      MutableHandleValue res) {
   MOZ_ASSERT(operand.isBigInt());
 
   RootedBigInt operandBigInt(cx, operand.toBigInt());
@@ -2694,7 +2695,8 @@ bool BigInt::neg(JSContext* cx, HandleValue operand, MutableHandleValue res) {
   return true;
 }
 
-bool BigInt::inc(JSContext* cx, HandleValue operand, MutableHandleValue res) {
+bool BigInt::incValue(JSContext* cx, HandleValue operand,
+                      MutableHandleValue res) {
   MOZ_ASSERT(operand.isBigInt());
 
   RootedBigInt operandBigInt(cx, operand.toBigInt());
@@ -2706,7 +2708,8 @@ bool BigInt::inc(JSContext* cx, HandleValue operand, MutableHandleValue res) {
   return true;
 }
 
-bool BigInt::dec(JSContext* cx, HandleValue operand, MutableHandleValue res) {
+bool BigInt::decValue(JSContext* cx, HandleValue operand,
+                      MutableHandleValue res) {
   MOZ_ASSERT(operand.isBigInt());
 
   RootedBigInt operandBigInt(cx, operand.toBigInt());
@@ -2718,8 +2721,8 @@ bool BigInt::dec(JSContext* cx, HandleValue operand, MutableHandleValue res) {
   return true;
 }
 
-bool BigInt::lsh(JSContext* cx, HandleValue lhs, HandleValue rhs,
-                 MutableHandleValue res) {
+bool BigInt::lshValue(JSContext* cx, HandleValue lhs, HandleValue rhs,
+                      MutableHandleValue res) {
   if (!ValidBigIntOperands(cx, lhs, rhs)) {
     return false;
   }
@@ -2734,8 +2737,8 @@ bool BigInt::lsh(JSContext* cx, HandleValue lhs, HandleValue rhs,
   return true;
 }
 
-bool BigInt::rsh(JSContext* cx, HandleValue lhs, HandleValue rhs,
-                 MutableHandleValue res) {
+bool BigInt::rshValue(JSContext* cx, HandleValue lhs, HandleValue rhs,
+                      MutableHandleValue res) {
   if (!ValidBigIntOperands(cx, lhs, rhs)) {
     return false;
   }
@@ -2750,8 +2753,8 @@ bool BigInt::rsh(JSContext* cx, HandleValue lhs, HandleValue rhs,
   return true;
 }
 
-bool BigInt::bitAnd(JSContext* cx, HandleValue lhs, HandleValue rhs,
-                    MutableHandleValue res) {
+bool BigInt::bitAndValue(JSContext* cx, HandleValue lhs, HandleValue rhs,
+                         MutableHandleValue res) {
   if (!ValidBigIntOperands(cx, lhs, rhs)) {
     return false;
   }
@@ -2766,8 +2769,8 @@ bool BigInt::bitAnd(JSContext* cx, HandleValue lhs, HandleValue rhs,
   return true;
 }
 
-bool BigInt::bitXor(JSContext* cx, HandleValue lhs, HandleValue rhs,
-                    MutableHandleValue res) {
+bool BigInt::bitXorValue(JSContext* cx, HandleValue lhs, HandleValue rhs,
+                         MutableHandleValue res) {
   if (!ValidBigIntOperands(cx, lhs, rhs)) {
     return false;
   }
@@ -2782,8 +2785,8 @@ bool BigInt::bitXor(JSContext* cx, HandleValue lhs, HandleValue rhs,
   return true;
 }
 
-bool BigInt::bitOr(JSContext* cx, HandleValue lhs, HandleValue rhs,
-                   MutableHandleValue res) {
+bool BigInt::bitOrValue(JSContext* cx, HandleValue lhs, HandleValue rhs,
+                        MutableHandleValue res) {
   if (!ValidBigIntOperands(cx, lhs, rhs)) {
     return false;
   }
@@ -2798,8 +2801,8 @@ bool BigInt::bitOr(JSContext* cx, HandleValue lhs, HandleValue rhs,
   return true;
 }
 
-bool BigInt::bitNot(JSContext* cx, HandleValue operand,
-                    MutableHandleValue res) {
+bool BigInt::bitNotValue(JSContext* cx, HandleValue operand,
+                         MutableHandleValue res) {
   MOZ_ASSERT(operand.isBigInt());
 
   RootedBigInt operandBigInt(cx, operand.toBigInt());
