@@ -8338,7 +8338,7 @@ static bool ShouldInflateFontsForContainer(const nsIFrame* aFrame) {
   // we hit overflow-y [or -x, for vertical mode]: scroll or auto.
   const nsStyleText* styleText = aFrame->StyleText();
 
-  return styleText->mTextSizeAdjust != NS_STYLE_TEXT_SIZE_ADJUST_NONE &&
+  return styleText->mTextSizeAdjust != StyleTextSizeAdjust::None &&
          !(aFrame->GetStateBits() & NS_FRAME_IN_CONSTRAINED_BSIZE) &&
          // We also want to disable font inflation for containers that have
          // preformatted text.
