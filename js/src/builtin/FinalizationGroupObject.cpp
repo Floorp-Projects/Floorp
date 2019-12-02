@@ -154,10 +154,13 @@ inline void FinalizationRecordVectorObject::remove(
 ///////////////////////////////////////////////////////////////////////////
 // FinalizationGroupObject
 
+// Bug 1600300: FinalizationGroupObject is foreground finalized so that HeapPtr
+// destructors never see referents with released arenas. When this is fixed we
+// may be able to make this background finalized again.
 const JSClass FinalizationGroupObject::class_ = {
     "FinalizationGroup",
     JSCLASS_HAS_CACHED_PROTO(JSProto_FinalizationGroup) |
-        JSCLASS_HAS_RESERVED_SLOTS(SlotCount) | JSCLASS_BACKGROUND_FINALIZE,
+        JSCLASS_HAS_RESERVED_SLOTS(SlotCount) | JSCLASS_FOREGROUND_FINALIZE,
     &classOps_, &classSpec_};
 
 const JSClass FinalizationGroupObject::protoClass_ = {
