@@ -18,12 +18,11 @@ class Document;
 }  // namespace dom
 }  // namespace mozilla
 
-typedef mozilla::Pair<nsCString, mozilla::Maybe<nsString>>
-    FilenameTypeAndDetails;
+typedef mozilla::Pair<nsCString, mozilla::Maybe<nsString>> FilenameType;
 
 class nsContentSecurityUtils {
  public:
-  static FilenameTypeAndDetails FilenameToFilenameType(const nsString& fileName);
+  static FilenameType FilenameToEvalType(const nsString& fileName);
   static bool IsEvalAllowed(JSContext* cx, bool aIsSystemPrincipal,
                             const nsAString& aScript);
   static void NotifyEvalUsage(bool aIsSystemPrincipal,
@@ -39,9 +38,6 @@ class nsContentSecurityUtils {
 #if defined(DEBUG)
   static void AssertAboutPageHasCSP(mozilla::dom::Document* aDocument);
 #endif
-
-  static bool ValidateScriptFilename(const char* aFilename,
-                                     bool aIsSystemRealm);
 };
 
 #endif /* nsContentSecurityUtils_h___ */

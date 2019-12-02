@@ -861,12 +861,7 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
   options.setIsRunOnce(true)
       .setNoScriptRval(false)
       .setFileAndLine(filename, lineno)
-      .setIntroductionType("debugger eval")
-      /* Do not perform the Javascript filename validation security check for
-       * javascript executions sent through the debugger. Besides making up
-       * a filename for these codepaths, we must allow arbitrary JS execution
-       * for the Browser toolbox to function. */
-      .setSkipFilenameValidation(true);
+      .setIntroductionType("debugger eval");
 
   if (frame && frame.hasScript() && frame.script()->strict()) {
     options.setForceStrictMode();
