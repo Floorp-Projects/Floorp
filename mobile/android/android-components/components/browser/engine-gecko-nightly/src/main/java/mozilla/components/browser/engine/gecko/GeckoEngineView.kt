@@ -146,13 +146,17 @@ class GeckoEngineView @JvmOverloads constructor(
     }
 
     override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) {
-        val geckoResult = currentGeckoView.capturePixels()
-        geckoResult.then({ bitmap ->
-            onFinish(bitmap)
-            GeckoResult<Void>()
-        }, {
-            onFinish(null)
-            GeckoResult<Void>()
-        })
+        // Do not capture pixels if no content has been rendered for this session yet. GeckoView
+        // might otherwise throw an IllegalStateException if the compositor isn't ready.
+        if (currentSession?.firstContentfulPaint == true) {
+            val geckoResult = currentGeckoView.capturePixels()
+            geckoResult.then({ bitmap ->
+                onFinish(bitmap)
+                GeckoResult<Void>()
+            }, {
+                onFinish(null)
+                GeckoResult<Void>()
+            })
+        }
     }
 }
