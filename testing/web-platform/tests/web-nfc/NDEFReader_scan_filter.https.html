@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
-<title>Web NFC: NDEFReader option tests</title>
+<title>Web NFC: NDEFReader.scan() filter tests</title>
 <link rel="author" title="Intel" href="http://www.intel.com"/>
 <link rel="help" href="https://w3c.github.io/web-nfc/"/>
 <script src="/resources/testharness.js"></script>
@@ -10,7 +10,7 @@
 
 'use strict';
 
-const NDEFReaderOptionTests =
+const multiScanOptionsTests =
   [
     {
       desc: "Test that reading data succeed when NDEFScanOptions'" +
@@ -78,7 +78,7 @@ const NDEFReaderOptionTests =
     }
   ];
 
-const ReadMultiMessagesTests =
+const multiMessagesTests =
   [
     {
       desc: "Test that filtering 'empty' record from different messages" +
@@ -147,21 +147,53 @@ const ReadMultiMessagesTests =
     }
   ];
 
-for (let NDEFReaderOptionTest of NDEFReaderOptionTests) {
-  testNDEFScanOptions(
-    NDEFReaderOptionTest.message,
-    NDEFReaderOptionTest.scanOptions,
-    NDEFReaderOptionTest.unmatchedScanOptions,
-    NDEFReaderOptionTest.desc
+for (let multiScanOptionsTest of multiScanOptionsTests) {
+  testMultiScanOptions(
+    multiScanOptionsTest.message,
+    multiScanOptionsTest.scanOptions,
+    multiScanOptionsTest.unmatchedScanOptions,
+    multiScanOptionsTest.desc
   );
 }
 
-for (let readMultiMessagesTest of ReadMultiMessagesTests) {
-  testReadingMultiMessages(
-    readMultiMessagesTest.message,
-    readMultiMessagesTest.scanOptions,
-    readMultiMessagesTest.unmatchedMessage,
-    readMultiMessagesTest.desc
+for (let multiMessagesTest of multiMessagesTests) {
+  testMultiMessages(
+    multiMessagesTest.message,
+    multiMessagesTest.scanOptions,
+    multiMessagesTest.unmatchedMessage,
+    multiMessagesTest.desc
   );
 }
+
+nfc_test(async (t, mockNFC) => {
+  const reader = new NDEFReader();
+  const controller = new AbortController();
+  const signal = controller.signal;
+  const textMsg = createMessage([createTextRecord(test_text_data)]);
+  const urlMsg = createMessage([createUrlRecord(test_url_data)]);
+  const mimeMsg = createMessage([createMimeRecord(test_buffer_data)]);
+
+  const readerWatcher = new EventWatcher(t, reader, ["reading", "error"]);
+  const promise = readerWatcher.wait_for("reading").then(event => {
+    controller.abort();
+    assertWebNDEFMessagesEqual(event.message, new NDEFMessage(mimeMsg));
+  });
+
+  const scanOptions1 = { recordType: "text", signal: signal };
+  const scanOptions2 = {recordType: "url", signal: signal };
+  const scanOptions3 = {recordType: "mime", signal: signal };
+
+  await reader.scan(scanOptions1);
+  await reader.scan(scanOptions2);
+  // There is maximum one filter for an NDEFReader object,
+  // last filter will replace all previous ones.
+  await reader.scan(scanOptions3);
+
+  mockNFC.setReadingMessage(textMsg);
+  mockNFC.setReadingMessage(urlMsg);
+  mockNFC.setReadingMessage(mimeMsg);
+  await promise;
+}, "Multiple scan() from the same NDEFReader object with new options should \
+replace existing filters.");
+
 </script>
