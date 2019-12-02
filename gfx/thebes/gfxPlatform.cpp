@@ -1258,6 +1258,20 @@ bool gfxPlatform::IsHeadless() {
 /* static */
 bool gfxPlatform::UseWebRender() { return gfx::gfxVars::UseWebRender(); }
 
+/* static */
+bool gfxPlatform::CanMigrateMacGPUs() {
+  int32_t pMigration = StaticPrefs::gfx_compositor_gpu_migration();
+
+  bool forceDisable = pMigration == 0;
+  bool forceEnable = pMigration == 2;
+
+  // Don't use migration with webrender (too buggy for nightly) - Bug 1600178
+  bool blocked = UseWebRender();
+
+  return forceEnable || (!forceDisable && !blocked);
+}
+
+
 static bool sLayersIPCIsUp = false;
 
 /* static */
