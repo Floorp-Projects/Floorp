@@ -149,8 +149,9 @@ bool JSScript::createJitScript(JSContext* cx) {
     return false;
   }
 
+  MOZ_ASSERT(!hasJitScript());
   prepareForDestruction.release();
-  warmUpData_.initJitScript(jitScript.release());
+  warmUpData_.setJitScript(jitScript.release());
   AddCellMemory(this, allocSize.value(), MemoryUse::JitScript);
 
   // We have a JitScript so we can set the script's jitCodeRaw_ pointer to the
