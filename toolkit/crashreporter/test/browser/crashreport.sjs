@@ -111,7 +111,12 @@ function parseMultipartForm(request)
             //TODO: handle non-ascii here?
             let name = b.substring(6, b.length - 1);
             //TODO: handle multiple-value properties?
-            formData[name] = part;
+            if (("Content-Type" in headers) &&
+                (headers["Content-Type"] == "application/json")) {
+              formData = Object.assign(formData, JSON.parse(part));
+            } else {
+              formData[name] = part;
+            }
           }
           //TODO: handle filename= ?
           //TODO: handle multipart/mixed for multi-file uploads?
@@ -157,7 +162,7 @@ function handleRequest(request, response)
         .getService(Ci.nsIUUIDGenerator);
       let uuid = uuidGenerator.generateUUID().toString();
       // ditch the {}, add bp- prefix
-      uuid = 'bp-' + uuid.substring(1,uuid.length-2);
+      uuid = 'bp-' + uuid.substring(1,uuid.length-1);
 
       let d = JSON.stringify(formData);
       //dump('saving crash report ' + uuid + ': ' + d + '\n');

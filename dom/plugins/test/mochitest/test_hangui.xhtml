@@ -19,8 +19,6 @@
 </body>
 <script class="testbody" type="application/javascript">
 <![CDATA[
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 SimpleTest.waitForExplicitFinish();
 SimpleTest.expectChildProcessCrash();
 SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
