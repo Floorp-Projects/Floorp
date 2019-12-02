@@ -5318,8 +5318,6 @@ void JSScript::traceChildren(JSTracer* trc) {
     scriptData()->traceChildren(trc);
   }
 
-  warmUpData_.trace(trc);
-
   if (maybeLazyScript()) {
     TraceManuallyBarrieredEdge(trc, &lazyScript, "lazyScript");
   }
@@ -5680,14 +5678,19 @@ void LazyScript::setEnclosingLazyScript(LazyScript* enclosingLazyScript) {
   // Enclosing scopes never transition back to enclosing lazy scripts.
   MOZ_ASSERT(!hasEnclosingScope());
 
-  enclosingLazyScriptOrScope_ = enclosingLazyScript;
+  warmUpData_.initEnclosingScript(enclosingLazyScript);
 }
 
 void LazyScript::setEnclosingScope(Scope* enclosingScope) {
   MOZ_ASSERT(enclosingScope);
   MOZ_ASSERT(!hasEnclosingScope());
 
-  enclosingLazyScriptOrScope_ = enclosingScope;
+  if (warmUpData_.isEnclosingScript()) {
+    warmUpData_.clearEnclosingScript();
+  }
+
+  MOZ_ASSERT(warmUpData_.isWarmUpCount());
+  warmUpData_.initEnclosingScope(enclosingScope);
 }
 
 /* static */

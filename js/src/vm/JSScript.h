@@ -1568,6 +1568,8 @@ class BaseScript : public gc::TenuredCell {
   uint32_t immutableFlags_ = 0;
   uint32_t mutableFlags_ = 0;
 
+  ScriptWarmUpData warmUpData_ = {};
+
   BaseScript(uint8_t* stubEntry, JSObject* functionOrGlobal,
              ScriptSourceObject* sourceObject, uint32_t sourceStart,
              uint32_t sourceEnd, uint32_t toStringStart, uint32_t toStringEnd)
@@ -1990,6 +1992,9 @@ setterLevel:                                                                  \
   }
   static constexpr size_t offsetOfMutableFlags() {
     return offsetof(BaseScript, mutableFlags_);
+  }
+  static constexpr size_t offsetOfWarmUpData() {
+    return offsetof(BaseScript, warmUpData_);
   }
 };
 
@@ -2511,8 +2516,6 @@ class JSScript : public js::BaseScript {
   js::PrivateScriptData* data_ = nullptr;
 
  private:
-  js::ScriptWarmUpData warmUpData_ = {};
-
   /* Information used to re-lazify a lazily-parsed interpreted function. */
   js::LazyScript* lazyScript = nullptr;
 
@@ -2800,9 +2803,6 @@ class JSScript : public js::BaseScript {
   }
   static constexpr size_t offsetOfPrivateScriptData() {
     return offsetof(JSScript, data_);
-  }
-  static constexpr size_t offsetOfWarmUpData() {
-    return offsetof(JSScript, warmUpData_);
   }
 
   void updateJitCodeRaw(JSRuntime* rt);
@@ -3274,7 +3274,7 @@ class LazyScript : public BaseScript {
   WeakHeapPtrScript script_;
   friend void js::gc::SweepLazyScripts(GCParallelTask* task);
 
-  // This field holds one of:
+  // The BaseScript::warmUpData_ field is used as follows:
   //   * LazyScript in which the script is nested.  This case happens if the
   //     enclosing script is lazily parsed and have never been compiled.
   //
@@ -3301,6 +3301,8 @@ class LazyScript : public BaseScript {
   //     enclosing script has ever been compiled.
   //
   //   * nullptr for incomplete (initial or failure) state
+  //      NOTE: We currently represent this as WarmUpCount(0) inside the
+  //      ScriptWarmUpData tagged pointer.
   //
   // This field should be accessed via accessors:
   //   * enclosingScope
@@ -3349,7 +3351,6 @@ class LazyScript : public BaseScript {
   // +-----------------+              |
   // | enclosing Scope |<-------------+
   // +-----------------+
-  GCPtr<TenuredCell*> enclosingLazyScriptOrScope_;
 
   // Heap allocated table with any free variables, inner functions, or class
   // fields. This will be nullptr if none exist.
@@ -3423,25 +3424,17 @@ class LazyScript : public BaseScript {
   }
   bool hasScript() const { return bool(script_); }
 
-  bool hasEnclosingScope() const {
-    return enclosingLazyScriptOrScope_ &&
-           enclosingLazyScriptOrScope_->is<Scope>();
-  }
+  bool hasEnclosingScope() const { return warmUpData_.isEnclosingScope(); }
   bool hasEnclosingLazyScript() const {
-    return enclosingLazyScriptOrScope_ &&
-           enclosingLazyScriptOrScope_->is<LazyScript>();
+    return warmUpData_.isEnclosingScript();
   }
 
   LazyScript* enclosingLazyScript() const {
-    MOZ_ASSERT(hasEnclosingLazyScript());
-    return enclosingLazyScriptOrScope_->as<LazyScript>();
+    return warmUpData_.toEnclosingScript();
   }
   void setEnclosingLazyScript(LazyScript* enclosingLazyScript);
 
-  Scope* enclosingScope() const {
-    MOZ_ASSERT(hasEnclosingScope());
-    return enclosingLazyScriptOrScope_->as<Scope>();
-  }
+  Scope* enclosingScope() const { return warmUpData_.toEnclosingScope(); }
   void setEnclosingScope(Scope* enclosingScope);
 
   bool hasNonSyntacticScope() const {
