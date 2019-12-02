@@ -127,4 +127,5 @@ assert.throws(Test262Error, function() {
   arr.flatMap(mapperFn);
 }, 'Return abrupt completion from getting the @@species');
 assert.sameValue(called, 1, 'got species once');
+
 reportCompare(0, 0);

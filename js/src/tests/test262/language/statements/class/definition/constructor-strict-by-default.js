@@ -13,4 +13,5 @@ class C {
   }
 }
 new C();
+
 reportCompare(0, 0);

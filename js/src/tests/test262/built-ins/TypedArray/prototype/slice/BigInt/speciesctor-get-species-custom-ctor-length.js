@@ -44,4 +44,5 @@ testWithBigIntTypedArrayConstructors(function(TA) {
   result = sample.slice();
   assert.sameValue(result.length, customCount, "length > count");
 });
+
 reportCompare(0, 0);

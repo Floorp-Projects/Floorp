@@ -48,4 +48,5 @@ testWithTypedArrayConstructors(function(TA) {
   Uint8Array,
   Uint8ClampedArray
 ]);
+
 reportCompare(0, 0);

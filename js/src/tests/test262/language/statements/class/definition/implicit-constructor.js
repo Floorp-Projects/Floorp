@@ -12,4 +12,5 @@ assert.sameValue(
     C.prototype,
     "`Object.getPrototypeOf(c)` returns `C.prototype`"
 );
+
 reportCompare(0, 0);

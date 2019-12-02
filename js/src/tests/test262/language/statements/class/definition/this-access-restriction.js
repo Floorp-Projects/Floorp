@@ -96,4 +96,5 @@ class C3 extends Object {
   }
 };
 new C3();
+
 reportCompare(0, 0);

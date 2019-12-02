@@ -101,4 +101,5 @@ assert.throws(TypeError, function() {
     }
   };
 }, '({valueOf: function() {return 0b101n;}}) >>> {valueOf: function() {return 1n;}} throws TypeError');
+
 reportCompare(0, 0);

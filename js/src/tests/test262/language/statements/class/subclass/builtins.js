@@ -28,4 +28,5 @@ assert.sameValue(
   "[object Uint8Array]",
   "`Object.prototype.toString.call(eua)` returns `\"[object Uint8Array]\"`"
 );
+
 reportCompare(0, 0);
