@@ -70,7 +70,10 @@ MOZ_MUST_USE bool js::ReadableStreamReaderGenericInitialize(
     Handle<ReadableStream*> unwrappedStream, ForAuthorCodeBool forAuthorCode) {
   cx->check(reader);
 
-  // Step 1: Set reader.[[ownerReadableStream]] to stream.
+  // Step 1: Set reader.[[forAuthorCode]] to true.
+  reader->setForAuthorCode(forAuthorCode);
+
+  // Step 2: Set reader.[[ownerReadableStream]] to stream.
   {
     Rooted<JSObject*> readerCompartmentStream(cx, unwrappedStream);
     if (!cx->compartment()->wrap(cx, &readerCompartmentStream)) {
@@ -79,20 +82,20 @@ MOZ_MUST_USE bool js::ReadableStreamReaderGenericInitialize(
     reader->setStream(readerCompartmentStream);
   }
 
-  // Step 2 is moved to the end.
+  // Step 3 is moved to the end.
 
-  // Step 3: If stream.[[state]] is "readable",
+  // Step 4: If stream.[[state]] is "readable",
   Rooted<JSObject*> promise(cx);
   if (unwrappedStream->readable()) {
     // Step a: Set reader.[[closedPromise]] to a new promise.
     promise = PromiseObject::createSkippingExecutor(cx);
   } else if (unwrappedStream->closed()) {
-    // Step 4: Otherwise, if stream.[[state]] is "closed",
-    // Step a: Set reader.[[closedPromise]] to a new promise resolved with
+    // Step 5: Otherwise, if stream.[[state]] is "closed",
+    // Step a: Set reader.[[closedPromise]] to a promise resolved with
     //         undefined.
     promise = PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
   } else {
-    // Step 5: Otherwise,
+    // Step 6: Otherwise,
     // Step a: Assert: stream.[[state]] is "errored".
     MOZ_ASSERT(unwrappedStream->errored());
 
@@ -118,10 +121,6 @@ MOZ_MUST_USE bool js::ReadableStreamReaderGenericInitialize(
 
   reader->setClosedPromise(promise);
 
-  // Extra step not in the standard. See the comment on
-  // `ReadableStreamReader::forAuthorCode()`.
-  reader->setForAuthorCode(forAuthorCode);
-
   // Step 4 of caller 3.6.3. new ReadableStreamDefaultReader(stream):
   // Step 5 of caller 3.7.3. new ReadableStreamBYOBReader(stream):
   //     Set this.[[read{Into}Requests]] to a new empty List.
@@ -130,7 +129,7 @@ MOZ_MUST_USE bool js::ReadableStreamReaderGenericInitialize(
     return false;
   }
 
-  // Step 2: Set stream.[[reader]] to reader.
+  // Step 3: Set stream.[[reader]] to reader.
   // Doing this last prevents a partially-initialized reader from being
   // attached to the stream (and possibly left there on OOM).
   {
