@@ -29,6 +29,67 @@ async function CheckBrowserNotInPid(browser, unExpectedPid, message) {
   isnot(pid, unExpectedPid, message);
 }
 
+async function runWebNotInFileTest() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.tabs.remote.allowLinkedWebInFileUriProcess", false]],
+  });
+  info("Running test with allowLinkedWebInFileUriProcess=false");
+
+  // Verify that with this pref disabled the new HTTP content loaded into a file
+  // tab causes a process switch.
+
+  // Open file:// page.
+  await BrowserTestUtils.withNewTab(testFileURI, async function(fileBrowser) {
+    // Get the file:// URI pid for comparison later.
+    let filePid = await getBrowserPid(fileBrowser);
+
+    // Check that http tab opened from JS in file:// page is in a different
+    // process.
+    let promiseTabOpened = BrowserTestUtils.waitForNewTab(
+      gBrowser,
+      TEST_HTTP,
+      /* waitForLoad */ true
+    );
+    await SpecialPowers.spawn(fileBrowser, [TEST_HTTP], uri => {
+      content.open(uri, "_blank");
+    });
+    let httpTab = await promiseTabOpened;
+    let httpBrowser = httpTab.linkedBrowser;
+    registerCleanupFunction(async function() {
+      BrowserTestUtils.removeTab(httpTab);
+    });
+    await CheckBrowserNotInPid(
+      httpBrowser,
+      filePid,
+      "Check that new http tab opened from file loaded in a new content process."
+    );
+    ok(
+      E10SUtils.isWebRemoteType(httpBrowser.remoteType),
+      `Check that tab now has web remote type, got ${httpBrowser.remoteType}.`
+    );
+
+    // Check that a file:// URI load switches back to the file process.
+    let httpPid = await getBrowserPid(httpBrowser);
+    let promiseLoad = BrowserTestUtils.browserLoaded(
+      httpBrowser,
+      /* includeSubFrames */ false,
+      testFileURI
+    );
+    BrowserTestUtils.loadURI(httpBrowser, testFileURI);
+    await promiseLoad;
+    await CheckBrowserNotInPid(
+      httpBrowser,
+      httpPid,
+      "Check that tab not in http content process after file:// load."
+    );
+    is(
+      httpBrowser.remoteType,
+      E10SUtils.FILE_REMOTE_TYPE,
+      "Check that tab now has file remote type."
+    );
+  });
+}
+
 // Test for bug 1343184.
 async function runWebInFileTest() {
   // Set prefs to ensure file content process, to allow linked web content in
@@ -234,6 +295,5 @@ add_task(async function setup() {
   });
 });
 
-add_task(async function runTest() {
-  await runWebInFileTest();
-});
+add_task(runWebNotInFileTest);
+add_task(runWebInFileTest);
