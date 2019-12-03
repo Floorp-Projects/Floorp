@@ -19,7 +19,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PreferenceRollouts: "resource://normandy/lib/PreferenceRollouts.jsm",
   RecipeRunner: "resource://normandy/lib/RecipeRunner.jsm",
   ShieldPreferences: "resource://normandy/lib/ShieldPreferences.jsm",
-  TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
 });
 
@@ -65,7 +64,7 @@ var Normandy = {
     }
   },
 
-  async observe(subject, topic, data) {
+  observe(subject, topic, data) {
     if (topic === UI_AVAILABLE_NOTIFICATION) {
       Services.obs.removeObserver(this, UI_AVAILABLE_NOTIFICATION);
       this.finishInit();
@@ -127,11 +126,7 @@ var Normandy = {
 
   async uninit() {
     await CleanupManager.cleanup();
-    Services.prefs.removeObserver(LogManager.configure, PREF_LOGGING_LEVEL);
-    Services.obs.removeObserver(
-      this,
-      TelemetryUtils.TELEMETRY_UPLOAD_DISABLED_TOPIC
-    );
+    Services.prefs.removeObserver(PREF_LOGGING_LEVEL, LogManager.configure);
     await PreferenceRollouts.uninit();
 
     // In case the observer didn't run, clean it up.

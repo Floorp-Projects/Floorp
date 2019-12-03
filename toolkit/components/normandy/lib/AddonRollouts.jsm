@@ -39,10 +39,6 @@ ChromeUtils.defineModuleGetter(
  *   The hash of the XPI file.
  * @property {string} xpiHashAlgorithm
  *   The algorithm used to hash the XPI file.
- * @property {string} enrollmentId
- *   A random ID generated at time of enrollment. It should be included on all
- *   telemetry related to this rollout. It should not be re-used by other
- *   rollouts, or any other purpose. May be null on old rollouts.
  */
 
 var EXPORTED_SYMBOLS = ["AddonRollouts"];
@@ -101,15 +97,6 @@ const AddonRollouts = {
         type: "normandy-addonrollout",
       });
     }
-  },
-
-  /** When Telemetry is disabled, clear all identifiers from the stored rollouts.  */
-  async onTelemetryDisabled() {
-    const rollouts = await this.getAll();
-    for (const rollout of rollouts) {
-      rollout.enrollmentId = TelemetryEvents.NO_ENROLLMENT_ID_MARKER;
-    }
-    await this.updateMany(rollouts);
   },
 
   /**
