@@ -186,6 +186,14 @@ class TestModalAlerts(BaseAlertTestCase):
         )
         self.assertEqual(status.text, "restricted")
 
+    def test_http_auth_send_keys(self):
+        self.marionette.navigate(self.marionette.absolute_url("http_auth"))
+        self.wait_for_alert(timeout=self.marionette.timeout.page_load)
+
+        alert = self.marionette.switch_to_alert()
+        with self.assertRaises(errors.UnsupportedOperationException):
+            alert.send_keys("foo")
+
     def test_alert_opened_before_session_starts(self):
         self.marionette.navigate(self.marionette.absolute_url("http_auth"))
         self.wait_for_alert(timeout=self.marionette.timeout.page_load)
