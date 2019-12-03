@@ -102,6 +102,10 @@ using mozilla::ScopedPRFileDesc;
 #  include "mozilla/jni/Utils.h"
 #endif
 
+#ifdef MOZ_ENABLE_FORKSERVER
+#  include "mozilla/ipc/ForkServiceChild.h"
+#endif
+
 static bool ShouldHaveDirectoryService() {
   return GeckoProcessType_Default == XRE_GetProcessType();
 }
@@ -355,6 +359,11 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
     if (NS_SUCCEEDED(rv)) {
       contentTempDir->GetNativePath(mTmpDirName);
     }
+  }
+#endif
+#if defined(MOZ_ENABLE_FORKSERVER)
+  if (aProcessType == GeckoProcessType_Content) {
+    mLaunchOptions->use_forkserver = true;
   }
 #endif
 }
@@ -819,7 +828,10 @@ void BaseProcessLauncher::GetChildLogName(const char* origLogName,
 //
 // Android also needs a single dedicated thread to simplify thread
 // safety in java.
-#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID)
+//
+// Fork server needs a dedicated thread for accessing
+// |ForkServiceChild|.
+#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ENABLE_FORKSERVER)
 
 static mozilla::StaticMutex gIPCLaunchThreadMutex;
 static mozilla::StaticRefPtr<nsIThread> gIPCLaunchThread;
@@ -872,7 +884,7 @@ nsCOMPtr<nsIEventTarget> GetIPCLauncher() {
   return thread;
 }
 
-#else  // defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID)
+#else  // defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ENABLE_FORKSERVER)
 
 // Other platforms use an on-demand thread pool.
 
@@ -883,7 +895,7 @@ nsCOMPtr<nsIEventTarget> GetIPCLauncher() {
   return pool;
 }
 
-#endif  // XP_WIN
+#endif  // XP_WIN || MOZ_WIDGET_ANDROID || MOZ_ENABLE_FORKSERVER
 
 void
 #if defined(XP_WIN)
