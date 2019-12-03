@@ -66,6 +66,13 @@ interface nsIParserUtils : nsISupports
   const unsigned long SanitizerLogRemovals = (1 << 6);
 
   /**
+   * Flag for sanitizer: Only CSS conditional rules will be moved,
+   * nothing else will be changed.
+   * Can be combined with flag SanitizerLogRemovals, only.
+   */
+  const unsigned long SanitizerRemoveOnlyConditionalCSS = (1 << 7);
+
+  /**
    * Parses a string into an HTML document, sanitizes the document and
    * returns the result serialized to a string.
    *
