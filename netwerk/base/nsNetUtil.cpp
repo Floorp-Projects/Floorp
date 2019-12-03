@@ -20,6 +20,7 @@
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Telemetry.h"
+#include "nsBufferedStreams.h"
 #include "nsCategoryCache.h"
 #include "nsContentUtils.h"
 #include "nsFileStreams.h"
@@ -1263,9 +1264,9 @@ MOZ_MUST_USE nsresult NS_NewBufferedInputStream(
     uint32_t aBufferSize) {
   nsCOMPtr<nsIInputStream> inputStream = std::move(aInputStream);
 
-  nsresult rv;
-  nsCOMPtr<nsIBufferedInputStream> in =
-      do_CreateInstance(NS_BUFFEREDINPUTSTREAM_CONTRACTID, &rv);
+  nsCOMPtr<nsIBufferedInputStream> in;
+  nsresult rv = nsBufferedInputStream::Create(
+      nullptr, NS_GET_IID(nsIBufferedInputStream), getter_AddRefs(in));
   if (NS_SUCCEEDED(rv)) {
     rv = in->Init(inputStream, aBufferSize);
     if (NS_SUCCEEDED(rv)) {
