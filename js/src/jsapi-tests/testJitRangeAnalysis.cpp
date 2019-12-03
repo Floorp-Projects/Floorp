@@ -346,3 +346,16 @@ BEGIN_TEST(testJitRangeAnalysis_shiftRight) {
   return true;
 }
 END_TEST(testJitRangeAnalysis_shiftRight)
+
+BEGIN_TEST(testJitRangeAnalysis_MathCeil) {
+  MinimalAlloc func;
+
+  Range* n0_5 = Range::NewDoubleSingletonRange(func.alloc, -0.5);
+  Range* n0_5Ceil = Range::ceil(func.alloc, n0_5);
+
+  CHECK(n0_5Ceil);
+  CHECK(n0_5Ceil->canBeNegativeZero());
+
+  return true;
+}
+END_TEST(testJitRangeAnalysis_MathCeil)
