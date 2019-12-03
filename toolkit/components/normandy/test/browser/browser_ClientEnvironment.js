@@ -4,8 +4,11 @@ ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm", this);
 ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", this);
+ChromeUtils.import("resource://normandy/lib/AddonRollouts.jsm", this);
 ChromeUtils.import("resource://normandy/lib/ClientEnvironment.jsm", this);
 ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm", this);
+ChromeUtils.import("resource://normandy/lib/PreferenceRollouts.jsm", this);
+ChromeUtils.import("resource://normandy/lib/RecipeRunner.jsm", this);
 ChromeUtils.import("resource://testing-common/NormandyTestUtils.jsm", this);
 
 add_task(async function testTelemetry() {
@@ -163,4 +166,85 @@ add_task(async function testExperiments() {
 add_task(async function isFirstRun() {
   await SpecialPowers.pushPrefEnv({ set: [["app.normandy.first_run", true]] });
   ok(ClientEnvironment.isFirstRun, "isFirstRun is read from preferences");
+});
+
+decorate_task(
+  PreferenceExperiments.withMockExperiments([
+    NormandyTestUtils.factories.preferenceStudyFactory({
+      branch: "a-test-branch",
+    }),
+  ]),
+  AddonStudies.withStudies([
+    NormandyTestUtils.factories.branchedAddonStudyFactory({
+      branch: "b-test-branch",
+    }),
+  ]),
+  async function testStudies([prefExperiment], [addonStudy]) {
+    Assert.deepEqual(
+      await ClientEnvironment.studies,
+      {
+        pref: {
+          [prefExperiment.slug]: prefExperiment,
+        },
+        addon: {
+          [addonStudy.slug]: addonStudy,
+        },
+      },
+      "addon and preference studies shold be accessible"
+    );
+    is(
+      (await ClientEnvironment.studies).pref[prefExperiment.slug].branch,
+      "a-test-branch",
+      "A specific preference experiment field should be accessible in the context"
+    );
+    is(
+      (await ClientEnvironment.studies).addon[addonStudy.slug].branch,
+      "b-test-branch",
+      "A specific addon study field should be accessible in the context"
+    );
+
+    ok(RecipeRunner.getCapabilities().has("jexl.context.normandy.studies"));
+    ok(RecipeRunner.getCapabilities().has("jexl.context.env.studies"));
+  }
+);
+
+decorate_task(PreferenceRollouts.withTestMock, async function testRollouts() {
+  const prefRollout = {
+    slug: "test-rollout",
+    preference: [],
+    enrollmentId: "test-enrollment-id-1",
+  };
+  await PreferenceRollouts.add(prefRollout);
+  const addonRollout = {
+    slug: "test-rollout-1",
+    extension: {},
+    enrollmentId: "test-enrollment-id-2",
+  };
+  await AddonRollouts.add(addonRollout);
+
+  Assert.deepEqual(
+    await ClientEnvironment.rollouts,
+    {
+      pref: {
+        [prefRollout.slug]: prefRollout,
+      },
+      addon: {
+        [addonRollout.slug]: addonRollout,
+      },
+    },
+    "addon and preference rollouts should be accessible"
+  );
+  is(
+    (await ClientEnvironment.rollouts).pref[prefRollout.slug].enrollmentId,
+    "test-enrollment-id-1",
+    "A specific preference rollout field should be accessible in the context"
+  );
+  is(
+    (await ClientEnvironment.rollouts).addon[addonRollout.slug].enrollmentId,
+    "test-enrollment-id-2",
+    "A specific addon rollout field should be accessible in the context"
+  );
+
+  ok(RecipeRunner.getCapabilities().has("jexl.context.normandy.rollouts"));
+  ok(RecipeRunner.getCapabilities().has("jexl.context.env.rollouts"));
 });
