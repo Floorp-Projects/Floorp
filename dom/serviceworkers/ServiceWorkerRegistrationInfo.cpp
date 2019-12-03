@@ -170,7 +170,7 @@ ServiceWorkerRegistrationInfo::GetScope(nsAString& aScope) {
 NS_IMETHODIMP
 ServiceWorkerRegistrationInfo::GetScriptSpec(nsAString& aScriptSpec) {
   MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<ServiceWorkerInfo> newest = Newest();
+  RefPtr<ServiceWorkerInfo> newest = NewestIncludingEvaluating();
   if (newest) {
     CopyUTF8toUTF16(newest->ScriptSpec(), aScriptSpec);
   }
@@ -188,6 +188,15 @@ ServiceWorkerRegistrationInfo::GetLastUpdateTime(PRTime* _retval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(_retval);
   *_retval = mLastUpdateTime;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceWorkerRegistrationInfo::GetEvaluatingWorker(
+    nsIServiceWorkerInfo** aResult) {
+  MOZ_ASSERT(NS_IsMainThread());
+  RefPtr<ServiceWorkerInfo> info = mEvaluatingWorker;
+  info.forget(aResult);
   return NS_OK;
 }
 
@@ -530,6 +539,11 @@ void ServiceWorkerRegistrationInfo::SetEvaluating(
   MOZ_ASSERT(mActiveWorker != aServiceWorker);
 
   mEvaluatingWorker = aServiceWorker;
+
+  // We don't call UpdateRegistrationState() here because the evaluating worker
+  // is currently not exposed to content on the registration, so calling it here
+  // would produce redundant IPC traffic.
+  NotifyChromeRegistrationListeners();
 }
 
 void ServiceWorkerRegistrationInfo::ClearEvaluating() {
@@ -543,6 +557,9 @@ void ServiceWorkerRegistrationInfo::ClearEvaluating() {
   // We don't update the redundant time for the sw here, since we've not expose
   // evalutingWorker yet.
   mEvaluatingWorker = nullptr;
+
+  // As for SetEvaluating, UpdateRegistrationState() does not need to be called.
+  NotifyChromeRegistrationListeners();
 }
 
 void ServiceWorkerRegistrationInfo::ClearInstalling() {
