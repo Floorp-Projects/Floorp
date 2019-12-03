@@ -1746,11 +1746,6 @@ main {
       border-left: 1px solid var(--newtab-border-secondary-color); }
     .asrouter-admin .message-item td:last-child {
       border-right: 1px solid var(--newtab-border-secondary-color); }
-  .asrouter-admin .message-item.current .message-id span {
-    background: #FFE900;
-    padding: 2px 5px; }
-    [lwt-newtab-brighttext] .asrouter-admin .message-item.current .message-id span {
-      color: #000; }
   .asrouter-admin .message-item.blocked .message-id,
   .asrouter-admin .message-item.blocked .message-summary {
     opacity: 0.5; }

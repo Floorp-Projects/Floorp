@@ -505,7 +505,6 @@ class _ASRouter {
     this._storage = null;
     this._resetInitialization();
     this._state = {
-      lastMessageId: null,
       providers: [],
       messageBlockList: [],
       providerBlockList: [],
@@ -1418,7 +1417,6 @@ class _ASRouter {
   }
 
   async setMessageById(id, target, force = true, action = {}) {
-    await this.setState({ lastMessageId: id });
     const newMessage = this.getMessageById(id);
 
     await this._sendMessageToTarget(newMessage, target, action.data, force);
@@ -1789,13 +1787,13 @@ class _ASRouter {
 
     if (endpoint) {
       message = await this.handleMessageRequest({ provider: "preview" });
+
       // We don't want to cache preview messages, remove them after we selected the message to show
-      await this.setState(state => ({
-        lastMessageId: message ? message.id : null,
-        messages: message
-          ? state.messages.filter(m => m.id !== message.id)
-          : state.messages,
-      }));
+      if (message) {
+        await this.setState(state => ({
+          messages: state.messages.filter(m => m.id !== message.id),
+        }));
+      }
     } else {
       // On new tab, send cards if they match; othwerise send a snippet
       message = await this.handleMessageRequest({
@@ -1806,8 +1804,6 @@ class _ASRouter {
       if (!message) {
         message = await this.handleMessageRequest({ provider: "snippets" });
       }
-
-      await this.setState({ lastMessageId: message ? message.id : null });
     }
 
     await this._sendMessageToTarget(message, target);
@@ -1827,7 +1823,6 @@ class _ASRouter {
       triggerContext: trigger.context,
     });
 
-    await this.setState({ lastMessageId: message ? message.id : null });
     await this._sendMessageToTarget(message, target, trigger);
   }
 
