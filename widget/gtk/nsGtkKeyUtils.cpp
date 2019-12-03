@@ -18,6 +18,7 @@
 #  include <gdk/gdkkeysyms-compat.h>
 #endif
 #include <X11/XKBlib.h>
+#include "X11UndefineNone.h"
 #include "IMContextWrapper.h"
 #include "WidgetUtils.h"
 #include "keysym2ucs.h"
