@@ -4767,8 +4767,8 @@ void WorkerPrivate::EndCTypesCall() {
   SetGCTimerMode(PeriodicTimer);
 }
 
-bool WorkerPrivate::ConnectMessagePort(
-    JSContext* aCx, const MessagePortIdentifier& aIdentifier) {
+bool WorkerPrivate::ConnectMessagePort(JSContext* aCx,
+                                       UniqueMessagePortId& aIdentifier) {
   AssertIsOnWorkerThread();
 
   WorkerGlobalScope* globalScope = GlobalScope();
@@ -4776,7 +4776,7 @@ bool WorkerPrivate::ConnectMessagePort(
   JS::Rooted<JSObject*> jsGlobal(aCx, globalScope->GetWrapper());
   MOZ_ASSERT(jsGlobal);
 
-  // This MessagePortIdentifier is used to create a new port, still connected
+  // This UniqueMessagePortId is used to create a new port, still connected
   // with the other one, but in the worker thread.
   ErrorResult rv;
   RefPtr<MessagePort> port = MessagePort::Create(globalScope, aIdentifier, rv);
