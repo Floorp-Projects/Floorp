@@ -44,7 +44,7 @@ class ClientInfo;
 class ClientSource;
 class Function;
 class MessagePort;
-class UniqueMessagePortId;
+class MessagePortIdentifier;
 class PerformanceStorage;
 class TimeoutHandler;
 class WorkerControlRunnable;
@@ -365,7 +365,8 @@ class WorkerPrivate : public RelativeTimeline {
     BeginCTypesCall();
   }
 
-  bool ConnectMessagePort(JSContext* aCx, UniqueMessagePortId& aIdentifier);
+  bool ConnectMessagePort(JSContext* aCx,
+                          const MessagePortIdentifier& aIdentifier);
 
   WorkerGlobalScope* GetOrCreateGlobalScope(JSContext* aCx);
 

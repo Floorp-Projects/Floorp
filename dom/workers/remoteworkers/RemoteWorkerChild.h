@@ -29,7 +29,6 @@ class ErrorValue;
 class FetchEventOpProxyChild;
 class RemoteWorkerData;
 class ServiceWorkerOp;
-class UniqueMessagePortId;
 class WeakWorkerRef;
 class WorkerErrorReport;
 class WorkerPrivate;
@@ -60,7 +59,7 @@ class RemoteWorkerChild final
   void FlushReportsOnMainThread(nsIConsoleReportCollector* aReporter);
 
   void AddPortIdentifier(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-                         UniqueMessagePortId& aPortIdentifier);
+                         const MessagePortIdentifier& aPortIdentifier);
 
   RefPtr<GenericNonExclusivePromise> GetTerminationPromise();
 

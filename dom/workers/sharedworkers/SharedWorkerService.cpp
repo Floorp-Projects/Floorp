@@ -54,7 +54,7 @@ class GetOrCreateWorkerManagerRunnable final : public Runnable {
   RefPtr<SharedWorkerParent> mActor;
   RemoteWorkerData mData;
   uint64_t mWindowID;
-  UniqueMessagePortId mPortIdentifier;
+  MessagePortIdentifier mPortIdentifier;
 };
 
 class WorkerManagerCreatedRunnable final : public Runnable {
@@ -62,13 +62,13 @@ class WorkerManagerCreatedRunnable final : public Runnable {
   WorkerManagerCreatedRunnable(
       already_AddRefed<SharedWorkerManagerWrapper> aManagerWrapper,
       SharedWorkerParent* aActor, const RemoteWorkerData& aData,
-      uint64_t aWindowID, UniqueMessagePortId& aPortIdentifier)
+      uint64_t aWindowID, const MessagePortIdentifier& aPortIdentifier)
       : Runnable("WorkerManagerCreatedRunnable"),
         mManagerWrapper(aManagerWrapper),
         mActor(aActor),
         mData(aData),
         mWindowID(aWindowID),
-        mPortIdentifier(std::move(aPortIdentifier)) {}
+        mPortIdentifier(aPortIdentifier) {}
 
   NS_IMETHOD
   Run() {
@@ -90,7 +90,7 @@ class WorkerManagerCreatedRunnable final : public Runnable {
   RefPtr<SharedWorkerParent> mActor;
   RemoteWorkerData mData;
   uint64_t mWindowID;
-  UniqueMessagePortId mPortIdentifier;
+  MessagePortIdentifier mPortIdentifier;
 };
 
 class ErrorPropagationRunnable final : public Runnable {
@@ -168,10 +168,13 @@ void SharedWorkerService::GetOrCreateWorkerManager(
 void SharedWorkerService::GetOrCreateWorkerManagerOnMainThread(
     nsIEventTarget* aBackgroundEventTarget, SharedWorkerParent* aActor,
     const RemoteWorkerData& aData, uint64_t aWindowID,
-    UniqueMessagePortId& aPortIdentifier) {
+    const MessagePortIdentifier& aPortIdentifier) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aBackgroundEventTarget);
   MOZ_ASSERT(aActor);
+
+  auto closeMessagePortIdentifier =
+      MakeScopeExit([&] { MessagePort::ForceClose(aPortIdentifier); });
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsIPrincipal> storagePrincipal =
@@ -225,6 +228,8 @@ void SharedWorkerService::GetOrCreateWorkerManagerOnMainThread(
   RefPtr<WorkerManagerCreatedRunnable> r = new WorkerManagerCreatedRunnable(
       wrapper.forget(), aActor, aData, aWindowID, aPortIdentifier);
   aBackgroundEventTarget->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+
+  closeMessagePortIdentifier.release();
 }
 
 void SharedWorkerService::ErrorPropagationOnMainThread(
