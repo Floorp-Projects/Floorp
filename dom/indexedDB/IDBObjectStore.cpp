@@ -2080,8 +2080,11 @@ already_AddRefed<IDBIndex> IDBObjectStore::CreateIndex(
   }
 
 #ifdef DEBUG
-  for (uint32_t count = mIndexes.Length(), index = 0; index < count; index++) {
-    MOZ_ASSERT(mIndexes[index]->Name() != aName);
+  {
+    const auto duplicateIndexName = std::any_of(
+        mIndexes.cbegin(), mIndexes.cend(),
+        [&aName](const auto& index) { return index->Name() == aName; });
+    MOZ_ASSERT(!duplicateIndexName);
   }
 #endif
 
