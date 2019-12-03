@@ -86,7 +86,7 @@ class NullPrincipal final : public BasePrincipal {
   virtual nsresult PopulateJSONObject(Json::Value& aObject) override;
 
   // Serializable keys are the valid enum fields the serialization supports
-  enum SerializableKeys { eSpec = 0, eSuffix, eMax = eSuffix };
+  enum SerializableKeys : uint8_t { eSpec = 0, eSuffix, eMax = eSuffix };
   typedef mozilla::BasePrincipal::KeyValT<SerializableKeys> KeyVal;
 
   static already_AddRefed<BasePrincipal> FromProperties(

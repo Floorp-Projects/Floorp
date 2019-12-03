@@ -261,9 +261,10 @@ class BasePrincipal : public nsJSPrincipals {
   template<typename SerializedKey>
   struct KeyValT
   {
+    static_assert(sizeof(SerializedKey) == 1, "SerializedKey should be a uint8_t");
+    SerializedKey key;
     bool valueWasSerialized;
     nsCString value;
-    SerializedKey key;
   };
 
  private:
