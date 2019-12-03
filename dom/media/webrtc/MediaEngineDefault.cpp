@@ -132,7 +132,8 @@ void MediaEngineDefaultVideoSource::GetSettings(
 
 nsresult MediaEngineDefaultVideoSource::Allocate(
     const MediaTrackConstraints& aConstraints, const MediaEnginePrefs& aPrefs,
-    uint64_t aWindowID, const char** aOutBadConstraint) {
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+    const char** aOutBadConstraint) {
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kReleased);
@@ -409,7 +410,8 @@ void MediaEngineDefaultAudioSource::GetSettings(
 
 nsresult MediaEngineDefaultAudioSource::Allocate(
     const MediaTrackConstraints& aConstraints, const MediaEnginePrefs& aPrefs,
-    uint64_t aWindowID, const char** aOutBadConstraint) {
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+    const char** aOutBadConstraint) {
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kReleased);

@@ -30,7 +30,8 @@ class MediaEngineTabVideoSource : public MediaEngineSource {
   }
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
-                    const MediaEnginePrefs& aPrefs, uint64_t aWindowID,
+                    const MediaEnginePrefs& aPrefs,
+                    const ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint) override;
   nsresult Deallocate() override;
   void SetTrack(const RefPtr<SourceMediaTrack>& aTrack,

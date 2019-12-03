@@ -7002,7 +7002,7 @@
 # Prefs starting with "permissions."
 #---------------------------------------------------------------------------
 
-- name: permissions.delegation.enabled
+- name: permissions.delegation.enable
   type: bool
   value: @IS_NIGHTLY_BUILD@
   mirror: always

@@ -20,7 +20,7 @@ try {
 function message(m) {
   // eslint-disable-next-line no-unsanitized/property
   document.getElementById("message").innerHTML = m;
-  parent.postMessage(m, "*");
+  window.parent.postMessage(m, "*");
 }
 
 var gStreams = [];
@@ -51,7 +51,7 @@ function requestDevice(aAudio, aVideo, aShare, aBadDevice = false) {
     opts.fake = true;
   }
 
-  navigator.mediaDevices.getUserMedia(opts)
+  window.navigator.mediaDevices.getUserMedia(opts)
     .then(stream => {
       gStreams.push(stream);
       message("ok");
