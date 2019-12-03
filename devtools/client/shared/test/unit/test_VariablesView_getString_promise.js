@@ -4,7 +4,7 @@
 "use strict";
 
 const { VariablesView } = ChromeUtils.import(
-  "resource://devtools/client/shared/widgets/VariablesView.jsm"
+  "resource://devtools/client/storage/VariablesView.jsm"
 );
 
 const PENDING = {
