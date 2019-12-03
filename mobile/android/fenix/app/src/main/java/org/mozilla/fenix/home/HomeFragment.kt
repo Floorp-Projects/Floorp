@@ -13,6 +13,8 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.PopupWindow
@@ -210,7 +212,26 @@ class HomeFragment : Fragment() {
 
         activity.themeManager.applyStatusBarTheme(activity)
 
+        setFragmentFullScreen(this.activity?.window, view.homeLayout)
+
         return view
+    }
+
+    private fun setFragmentFullScreen(window: Window?, homeScreen: View) {
+
+        window?.decorView?.setOnApplyWindowInsetsListener { _, insets ->
+
+            homeScreen.setPadding(
+                homeScreen.paddingLeft,
+                homeScreen.paddingTop + insets.stableInsetTop,
+                homeScreen.paddingRight,
+                homeScreen.paddingBottom + insets.stableInsetBottom
+            )
+
+            window.decorView.setOnApplyWindowInsetsListener(null)
+
+            insets.consumeSystemWindowInsets()
+        }
     }
 
     @ExperimentalCoroutinesApi
@@ -249,7 +270,7 @@ class HomeFragment : Fragment() {
                 if (menu == null) {
                     menu = homeMenu?.menuBuilder?.build(requireContext())?.show(
                         anchor = it,
-                        orientation = BrowserMenu.Orientation.DOWN,
+                        orientation = BrowserMenu.Orientation.UP,
                         onDismiss = { menu = null }
                     )
                 } else {
@@ -438,6 +459,8 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        this.activity?.window?.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
         hideToolbar()
     }
 
@@ -771,6 +794,11 @@ class HomeFragment : Fragment() {
 
             it.toTab(requireContext(), it == selected, mediaState)
         }
+    }
+
+    override fun onPause() {
+        this.activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
+        super.onPause()
     }
 
     companion object {
