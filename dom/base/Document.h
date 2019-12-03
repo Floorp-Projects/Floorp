@@ -2289,22 +2289,11 @@ class Document : public nsINode,
 
   // ScreenOrientation related APIs
 
-  void SetCurrentOrientation(OrientationType aType, uint16_t aAngle) {
-    mCurrentOrientationType = aType;
-    mCurrentOrientationAngle = aAngle;
-  }
-
-  uint16_t CurrentOrientationAngle() const { return mCurrentOrientationAngle; }
-  OrientationType CurrentOrientationType() const {
-    return mCurrentOrientationType;
-  }
   void ClearOrientationPendingPromise();
   bool SetOrientationPendingPromise(Promise* aPromise);
   Promise* GetOrientationPendingPromise() const {
     return mOrientationPendingPromise;
   }
-
-  void SetRDMPaneOrientation(OrientationType aType, uint16_t aAngle);
 
   //----------------------------------------------------------------------
 
@@ -5247,9 +5236,6 @@ class Document : public nsINode,
   // ScreenOrientation "pending promise" as described by
   // http://www.w3.org/TR/screen-orientation/
   RefPtr<Promise> mOrientationPendingPromise;
-
-  uint16_t mCurrentOrientationAngle;
-  OrientationType mCurrentOrientationType;
 
   nsTArray<RefPtr<nsFrameLoader>> mInitializableFrameLoaders;
   nsTArray<nsCOMPtr<nsIRunnable>> mFrameLoaderFinalizers;
