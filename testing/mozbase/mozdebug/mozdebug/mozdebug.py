@@ -324,4 +324,5 @@ def get_default_valgrind_tool_specific_args():
     return ['--partial-loads-ok=yes',
             '--leak-check=summary',
             '--show-possibly-lost=no',
+            '--show-mismatched-frees=no',
             ]
