@@ -6,6 +6,7 @@
 #ifndef nsHttpConnectionMgr_h__
 #define nsHttpConnectionMgr_h__
 
+#include "HttpConnectionMgrShell.h"
 #include "nsHttpConnection.h"
 #include "nsHttpTransaction.h"
 #include "nsTArray.h"
@@ -46,44 +47,18 @@ struct HttpRetParams;
 class nsHttpConnectionMgr;
 typedef void (nsHttpConnectionMgr::*nsConnEventHandler)(int32_t, ARefBase*);
 
-class nsHttpConnectionMgr final : public nsIObserver {
+class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
+                                  public nsIObserver {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_HTTPCONNECTIONMGRSHELL
   NS_DECL_NSIOBSERVER
-
-  // parameter names
-  enum nsParamName {
-    MAX_URGENT_START_Q,
-    MAX_CONNECTIONS,
-    MAX_PERSISTENT_CONNECTIONS_PER_HOST,
-    MAX_PERSISTENT_CONNECTIONS_PER_PROXY,
-    MAX_REQUEST_DELAY,
-    THROTTLING_ENABLED,
-    THROTTLING_SUSPEND_FOR,
-    THROTTLING_RESUME_FOR,
-    THROTTLING_READ_LIMIT,
-    THROTTLING_READ_INTERVAL,
-    THROTTLING_HOLD_TIME,
-    THROTTLING_MAX_TIME,
-    PROXY_BE_CONSERVATIVE
-  };
 
   //-------------------------------------------------------------------------
   // NOTE: functions below may only be called on the main thread.
   //-------------------------------------------------------------------------
 
   nsHttpConnectionMgr();
-
-  MOZ_MUST_USE nsresult
-  Init(uint16_t maxUrgentExcessiveConns, uint16_t maxConnections,
-       uint16_t maxPersistentConnectionsPerHost,
-       uint16_t maxPersistentConnectionsPerProxy, uint16_t maxRequestDelay,
-       bool throttleEnabled, uint32_t throttleVersion,
-       uint32_t throttleSuspendFor, uint32_t throttleResumeFor,
-       uint32_t throttleReadLimit, uint32_t throttleReadInterval,
-       uint32_t throttleHoldTime, uint32_t throttleMaxTime,
-       bool beConservativeForProxy);
-  MOZ_MUST_USE nsresult Shutdown();
 
   //-------------------------------------------------------------------------
   // NOTE: functions below may be called on any thread.
@@ -93,9 +68,6 @@ class nsHttpConnectionMgr final : public nsIObserver {
   // given time.
   void PruneDeadConnectionsAfter(uint32_t time);
 
-  // this cancels all outstanding transactions but does not shut down the mgr
-  void AbortAndCloseAllConnections(int32_t, ARefBase*);
-
   // Stops timer scheduled for next pruning of dead connections if
   // there are no more idle connections or active spdy ones
   void ConditionallyStopPruneDeadConnectionsTimer();
@@ -104,64 +76,11 @@ class nsHttpConnectionMgr final : public nsIObserver {
   // active connections.
   void ConditionallyStopTimeoutTick();
 
-  // adds a transaction to the list of managed transactions.
-  MOZ_MUST_USE nsresult AddTransaction(nsHttpTransaction*, int32_t priority);
-
-  // Add a new transaction with a sticky connection from |transWithStickyConn|.
-  MOZ_MUST_USE nsresult
-  AddTransactionWithStickyConn(nsHttpTransaction* trans, int32_t priority,
-                               nsHttpTransaction* transWithStickyConn);
-
-  // called to reschedule the given transaction.  it must already have been
-  // added to the connection manager via AddTransaction.
-  MOZ_MUST_USE nsresult RescheduleTransaction(nsHttpTransaction*,
-                                              int32_t priority);
-
-  // TOOD
-  void UpdateClassOfServiceOnTransaction(nsHttpTransaction*,
-                                         uint32_t classOfService);
-
-  // cancels a transaction w/ the given reason.
-  MOZ_MUST_USE nsresult CancelTransaction(nsHttpTransaction*, nsresult reason);
   MOZ_MUST_USE nsresult CancelTransactions(nsHttpConnectionInfo*,
                                            nsresult reason);
 
-  // called to force the connection manager to prune its list of idle
-  // connections.
-  MOZ_MUST_USE nsresult PruneDeadConnections();
-
   // called to close active connections with no registered "traffic"
   MOZ_MUST_USE nsresult PruneNoTraffic();
-
-  // "VerifyTraffic" means marking connections now, and then check again in
-  // N seconds to see if there's been any traffic and if not, kill
-  // that connection.
-  MOZ_MUST_USE nsresult VerifyTraffic();
-
-  // Close all idle persistent connections and prevent any active connections
-  // from being reused. Optional connection info resets CI specific
-  // information such as Happy Eyeballs history.
-  MOZ_MUST_USE nsresult DoShiftReloadConnectionCleanup(nsHttpConnectionInfo*);
-
-  // called to get a reference to the socket transport service.  the socket
-  // transport service is not available when the connection manager is down.
-  MOZ_MUST_USE nsresult GetSocketThreadTarget(nsIEventTarget**);
-
-  // called to indicate a transaction for the connectionInfo is likely coming
-  // soon. The connection manager may use this information to start a TCP
-  // and/or SSL level handshake for that resource immediately so that it is
-  // ready when the transaction is submitted. No obligation is taken on by the
-  // connection manager, nor is the submitter obligated to actually submit a
-  // real transaction for this connectionInfo.
-  MOZ_MUST_USE nsresult SpeculativeConnect(nsHttpConnectionInfo*,
-                                           nsIInterfaceRequestor*,
-                                           uint32_t caps = 0,
-                                           NullHttpTransaction* = nullptr);
-
-  // called when a connection is done processing a transaction.  if the
-  // connection can be reused then it will be added to the idle list, else
-  // it will be closed.
-  MOZ_MUST_USE nsresult ReclaimConnection(nsHttpConnection* conn);
 
   // called by the main thread to execute the taketransport() logic on the
   // socket thread after a 101 response has been received and the socket
@@ -172,22 +91,7 @@ class nsHttpConnectionMgr final : public nsIObserver {
   MOZ_MUST_USE nsresult CompleteUpgrade(
       HttpTransactionShell* aTrans, nsIHttpUpgradeListener* aUpgradeListener);
 
-  // called to update a parameter after the connection manager has already
-  // been initialized.
-  MOZ_MUST_USE nsresult UpdateParam(nsParamName name, uint16_t value);
-
-  // called from main thread to post a new request token bucket
-  // to the socket thread
-  MOZ_MUST_USE nsresult UpdateRequestTokenBucket(EventTokenBucket* aBucket);
-
-  // clears the connection history mCT
-  void ClearConnectionHistory();
-
   void ReportFailedToProcess(nsIURI* uri);
-
-  // Causes a large amount of connection diagnostic information to be
-  // printed to the javascript console
-  void PrintDiagnostics();
 
   //-------------------------------------------------------------------------
   // NOTE: functions below may be called only on the socket thread.
@@ -199,13 +103,7 @@ class nsHttpConnectionMgr final : public nsIObserver {
                                nsHttpConnectionInfo* wildcardCI,
                                nsHttpConnection* conn);
 
-  // called to force the transaction queue to be processed once more, giving
-  // preference to the specified connection.
-  MOZ_MUST_USE nsresult ProcessPendingQ(nsHttpConnectionInfo*);
   MOZ_MUST_USE bool ProcessPendingQForEntry(nsHttpConnectionInfo*);
-
-  // Try and process all pending transactions
-  MOZ_MUST_USE nsresult ProcessPendingQ();
 
   // This is used to force an idle connection to be closed and removed from
   // the idle connection list. It is called when the idle connection detects
@@ -226,8 +124,6 @@ class nsHttpConnectionMgr final : public nsIObserver {
 
   // public, so that the SPDY/http2 seesions can activate
   void ActivateTimeoutTick();
-
-  nsresult UpdateCurrentTopLevelOuterContentWindowId(uint64_t aWindowId);
 
   // tracks and untracks active transactions according their throttle status
   void AddActiveTransaction(nsHttpTransaction* aTrans);
@@ -257,8 +153,6 @@ class nsHttpConnectionMgr final : public nsIObserver {
   uint64_t CurrentTopLevelOuterContentWindowId() {
     return mCurrentTopLevelOuterContentWindowId;
   }
-
-  void BlacklistSpdy(const nsHttpConnectionInfo* ci);
 
  private:
   virtual ~nsHttpConnectionMgr();
@@ -694,6 +588,7 @@ class nsHttpConnectionMgr final : public nsIObserver {
   void OnMsgVerifyTraffic(int32_t, ARefBase*);
   void OnMsgPruneNoTraffic(int32_t, ARefBase*);
   void OnMsgUpdateCurrentTopLevelOuterContentWindowId(int32_t, ARefBase*);
+  void OnMsgClearConnectionHistory(int32_t, ARefBase*);
 
   // Total number of active connections in all of the ConnectionEntry objects
   // that are accessed from mCT connection table.
