@@ -618,12 +618,13 @@ button > hbox > label {
 
 #fxaSyncComputerName {
   -moz-box-flex: 1;
+  margin-block: 4px;
   margin-inline-start: 0;
-  margin-bottom: 4px;
 }
 
 #fxaChangeDeviceName {
   margin-block: 4px;
+  margin-inline-end: 0;
 }
 
 #noFxaCaption {
