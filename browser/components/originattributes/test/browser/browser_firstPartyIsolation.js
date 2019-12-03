@@ -85,7 +85,7 @@ add_task(async function cookie_test() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser, true);
 
   let count = 0;
-  for (let cookie of Services.cookies.enumerator) {
+  for (let cookie of Services.cookies.cookies) {
     count++;
     Assert.equal(cookie.value, "foo", "Cookie value should be foo");
     Assert.equal(

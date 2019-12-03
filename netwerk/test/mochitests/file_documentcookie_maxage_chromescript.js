@@ -4,7 +4,7 @@ function getCookieService() {
 
 function getCookies(cs) {
   let cookies = [];
-  for (let cookie of cs.enumerator) {
+  for (let cookie of cs.cookies) {
     cookies.push({
       host: cookie.host,
       path: cookie.path,

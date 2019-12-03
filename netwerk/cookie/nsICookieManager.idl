@@ -13,7 +13,6 @@ class OriginAttributes;
 
 [ptr] native OriginAttributesPtr(mozilla::OriginAttributes);
 
-interface nsISimpleEnumerator;
 interface nsICookie;
 interface nsIFile;
 
@@ -32,20 +31,20 @@ interface nsICookieManager : nsISupports
   void removeAll();
 
   /**
-   * Called to enumerate through each cookie in the cookie list.
-   * The objects enumerated over are of type nsICookie
-   * This enumerator should only be used for non-private browsing cookies.
-   * To retrieve an enumerator for private browsing cookies, use
+   * Returns an array of cookies in the cookie list.
+   * The objects in the array are of type nsICookie
+   * This array only contains non-private browsing cookies.
+   * To retrieve an array of private browsing cookies, use
    * getCookiesWithOriginAttributes.
    */
-  readonly attribute nsISimpleEnumerator enumerator;
+  readonly attribute Array<nsICookie> cookies;
 
   /**
-   * Called to enumerate through each session cookie in the cookie list.
-   * The objects enumerated over are of type nsICookie
-   * This enumerator should only be used for non-private browsing cookies.
+   * Returns an array of session cookies in the cookie list.
+   * The objects in the array are of type nsICookie
+   * This array only contains non-private browsing cookies.
    */
-  readonly attribute nsISimpleEnumerator sessionEnumerator;
+  readonly attribute Array<nsICookie> sessionCookies;
 
   /**
    * Called to remove an individual cookie from the cookie list, specified
@@ -178,7 +177,7 @@ interface nsICookieManager : nsISupports
   unsigned long countCookiesFromHost(in AUTF8String aHost);
 
   /**
-   * Returns an enumerator of cookies that exist within the base domain of
+   * Returns an array of cookies that exist within the base domain of
    * 'aHost'. Thus, for a host "weather.yahoo.com", the base domain would be
    * "yahoo.com", and any host or domain cookies for "yahoo.com" and its
    * subdomains would be returned.
@@ -190,7 +189,7 @@ interface nsICookieManager : nsISupports
    * @param aOriginAttributes The originAttributes of cookies that would be
    *                          retrived.
    *
-   * @return an nsISimpleEnumerator of nsICookie objects.
+   * @return an array of nsICookie objects.
    *
    * @see countCookiesFromHost
    */

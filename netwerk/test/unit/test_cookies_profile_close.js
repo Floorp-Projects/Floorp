@@ -30,10 +30,9 @@ function* do_run_test() {
   // Set a cookie.
   let uri = NetUtil.newURI("http://foo.com");
   Services.cookies.setCookieString(uri, null, "oh=hai; max-age=1000", null);
-  let enumerator = Services.cookiemgr.enumerator;
-  Assert.ok(enumerator.hasMoreElements());
-  let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
-  Assert.ok(!enumerator.hasMoreElements());
+  let cookies = Services.cookiemgr.cookies;
+  Assert.ok(cookies.length == 1);
+  let cookie = cookies[0];
 
   // Fire 'profile-before-change'.
   do_close_profile();
@@ -57,7 +56,7 @@ function* do_run_test() {
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
   do_check_throws(function() {
-    Services.cookiemgr.enumerator;
+    Services.cookiemgr.cookies;
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
   do_check_throws(function() {
