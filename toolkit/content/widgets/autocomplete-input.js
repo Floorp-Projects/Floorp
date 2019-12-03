@@ -21,6 +21,13 @@
         "resource://gre/modules/PrivateBrowsingUtils.jsm"
       );
 
+      XPCOMUtils.defineLazyPreferenceGetter(
+        this,
+        "disablePopupAutohide",
+        "ui.popup.disable_autohide",
+        false
+      );
+
       this.addEventListener("input", event => {
         this.onInput(event);
       });
@@ -84,6 +91,7 @@
               this.mController.handleEnter(true);
             }
             if (!this.ignoreBlurWhileSearching) {
+              this._dontClosePopup = this.disablePopupAutohide;
               this.detachController();
             }
           }
@@ -456,6 +464,10 @@
     }
 
     closePopup() {
+      if (this._dontClosePopup) {
+        delete this._dontClosePopup;
+        return;
+      }
       this.popup.closePopup();
     }
 
