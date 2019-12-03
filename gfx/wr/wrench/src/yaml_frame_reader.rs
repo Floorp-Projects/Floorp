@@ -1655,6 +1655,13 @@ impl YamlFrameReader {
                     flags.remove(PrimitiveFlags::IS_BACKFACE_VISIBLE);
                 }
             }
+            if let Some(is_scrollbar_container) = item["scrollbar-container"].as_bool() {
+                if is_scrollbar_container {
+                    flags.insert(PrimitiveFlags::IS_SCROLLBAR_CONTAINER);
+                } else {
+                    flags.remove(PrimitiveFlags::IS_SCROLLBAR_CONTAINER);
+                }
+            }
 
             let mut info = CommonItemProperties {
                 clip_rect,
