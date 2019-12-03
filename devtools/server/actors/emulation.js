@@ -423,7 +423,7 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
       this.win.screen.orientation.angle !== angle ||
       this.win.screen.orientation.type !== type
     ) {
-      this.win.document.setRDMPaneOrientation(type, angle);
+      this.docShell.browsingContext.setRDMPaneOrientation(type, angle);
     }
   },
 

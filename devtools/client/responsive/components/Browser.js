@@ -12,7 +12,6 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const { PORTRAIT_PRIMARY, LANDSCAPE_PRIMARY } = require("../constants");
 const Types = require("../types");
 const e10s = require("../utils/e10s");
 const message = require("../utils/message");
@@ -42,7 +41,6 @@ class Browser extends PureComponent {
     super(props);
     this.onContentResize = this.onContentResize.bind(this);
     this.onResizeViewport = this.onResizeViewport.bind(this);
-    this.onSetScreenOrientation = this.onSetScreenOrientation.bind(this);
   }
 
   /**
@@ -113,21 +111,8 @@ class Browser extends PureComponent {
     });
   }
 
-  onSetScreenOrientation(msg) {
-    const { width, height } = msg.data;
-    const { angle, id } = this.props.viewport;
-    const type = height >= width ? PORTRAIT_PRIMARY : LANDSCAPE_PRIMARY;
-
-    this.props.onChangeViewportOrientation(id, type, angle);
-  }
-
   async startFrameScript() {
-    const {
-      browser,
-      onContentResize,
-      onResizeViewport,
-      onSetScreenOrientation,
-    } = this;
+    const { browser, onContentResize, onResizeViewport } = this;
     const mm = browser.frameLoader.messageManager;
 
     // Notify tests when the content has received a resize event.  This is not
@@ -136,7 +121,6 @@ class Browser extends PureComponent {
     // resized to match.
     e10s.on(mm, "OnContentResize", onContentResize);
     e10s.on(mm, "OnResizeViewport", onResizeViewport);
-    e10s.on(mm, "OnLocationChange", onSetScreenOrientation);
 
     const ready = e10s.once(mm, "ChildScriptReady");
     mm.loadFrameScript(FRAME_SCRIPT, true);
@@ -155,17 +139,11 @@ class Browser extends PureComponent {
   }
 
   async stopFrameScript() {
-    const {
-      browser,
-      onContentResize,
-      onResizeViewport,
-      onSetScreenOrientation,
-    } = this;
+    const { browser, onContentResize, onResizeViewport } = this;
     const mm = browser.frameLoader.messageManager;
 
     e10s.off(mm, "OnContentResize", onContentResize);
     e10s.off(mm, "OnResizeViewport", onResizeViewport);
-    e10s.off(mm, "OnLocationChange", onSetScreenOrientation);
     await e10s.request(mm, "Stop");
     message.post(window, "stop-frame-script:done");
   }
