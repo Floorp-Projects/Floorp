@@ -32,6 +32,11 @@ static const DelegateInfo sPermissionsMap[] = {
      DelegatePolicy::ePersistDeniedCrossOrigin},
     {"persistent-storage", nullptr, DelegatePolicy::ePersistDeniedCrossOrigin},
     {"vibration", nullptr, DelegatePolicy::ePersistDeniedCrossOrigin},
+    {"midi", nullptr, DelegatePolicy::eDelegateUseIframeOrigin},
+    {"storage-access", nullptr, DelegatePolicy::eDelegateUseIframeOrigin},
+    {"camera", u"camera", DelegatePolicy::eDelegateUseFeaturePolicy},
+    {"microphone", u"microphone", DelegatePolicy::eDelegateUseFeaturePolicy},
+    {"screen", u"display-capture", DelegatePolicy::eDelegateUseFeaturePolicy},
 };
 
 NS_IMPL_CYCLE_COLLECTION(PermissionDelegateHandler)
@@ -47,8 +52,9 @@ PermissionDelegateHandler::PermissionDelegateHandler(dom::Document* aDocument)
   MOZ_ASSERT(aDocument);
 }
 
+/* static */
 const DelegateInfo* PermissionDelegateHandler::GetPermissionDelegateInfo(
-    const nsAString& aPermissionName) const {
+    const nsAString& aPermissionName) {
   nsAutoString lowerContent(aPermissionName);
   ToLowerCase(lowerContent);
 
@@ -59,6 +65,32 @@ const DelegateInfo* PermissionDelegateHandler::GetPermissionDelegateInfo(
   }
 
   return nullptr;
+}
+
+/* static */
+nsresult PermissionDelegateHandler::GetDelegatePrincipal(
+    const nsACString& aType, nsIContentPermissionRequest* aRequest,
+    nsIPrincipal** aResult) {
+  MOZ_ASSERT(aRequest);
+
+  if (!StaticPrefs::permissions_delegation_enabled()) {
+    return aRequest->GetPrincipal(aResult);
+  }
+
+  const DelegateInfo* info =
+      GetPermissionDelegateInfo(NS_ConvertUTF8toUTF16(aType));
+  if (!info) {
+    *aResult = nullptr;
+    return NS_OK;
+  }
+
+  if (info->mPolicy == DelegatePolicy::eDelegateUseTopOrigin ||
+      (info->mPolicy == DelegatePolicy::eDelegateUseFeaturePolicy &&
+       StaticPrefs::dom_security_featurePolicy_enabled())) {
+    return aRequest->GetTopLevelPrincipal(aResult);
+  }
+
+  return aRequest->GetPrincipal(aResult);
 }
 
 bool PermissionDelegateHandler::Initialize() {
@@ -86,13 +118,20 @@ static bool IsTopWindowContent(Document* aDocument) {
   return browsingContext && browsingContext->IsTopContent();
 }
 
+bool PermissionDelegateHandler::HasFeaturePolicyAllowed(
+    const DelegateInfo* info) const {
+  if (info->mPolicy != DelegatePolicy::eDelegateUseFeaturePolicy ||
+      !info->mFeatureName) {
+    return true;
+  }
+
+  nsAutoString featureName(info->mFeatureName);
+  return FeaturePolicyUtils::IsFeatureAllowed(mDocument, featureName);
+}
+
 bool PermissionDelegateHandler::HasPermissionDelegated(
     const nsACString& aType) {
   MOZ_ASSERT(mDocument);
-
-  if (!StaticPrefs::permissions_delegation_enable()) {
-    return true;
-  }
 
   // System principal should have right to make permission request
   if (mPrincipal->IsSystemPrincipal()) {
@@ -101,21 +140,12 @@ bool PermissionDelegateHandler::HasPermissionDelegated(
 
   const DelegateInfo* info =
       GetPermissionDelegateInfo(NS_ConvertUTF8toUTF16(aType));
-
-  // If the type is not in the supported list, auto denied
-  if (!info) {
+  if (!info || !HasFeaturePolicyAllowed(info)) {
     return false;
   }
 
-  if (info->mPolicy == DelegatePolicy::eDelegateUseFeaturePolicy &&
-      info->mFeatureName) {
-    nsAutoString featureName(info->mFeatureName);
-    // Default allowlist for a feature used in permissions delegate should be
-    // set to eSelf, to ensure that permission is denied by default and only
-    // have the opportunity to request permission with allow attribute.
-    if (!FeaturePolicyUtils::IsFeatureAllowed(mDocument, featureName)) {
-      return false;
-    }
+  if (!StaticPrefs::permissions_delegation_enabled()) {
+    return true;
   }
 
   if (info->mPolicy == DelegatePolicy::ePersistDeniedCrossOrigin &&
@@ -137,35 +167,21 @@ nsresult PermissionDelegateHandler::GetPermission(const nsACString& aType,
     return NS_OK;
   }
 
+  const DelegateInfo* info =
+      GetPermissionDelegateInfo(NS_ConvertUTF8toUTF16(aType));
+  if (!info || !HasFeaturePolicyAllowed(info)) {
+    *aPermission = nsIPermissionManager::DENY_ACTION;
+    return NS_OK;
+  }
+
   nsresult (NS_STDCALL nsIPermissionManager::*testPermission)(
       nsIPrincipal*, const nsACString&, uint32_t*) =
       aExactHostMatch ? &nsIPermissionManager::TestExactPermissionFromPrincipal
                       : &nsIPermissionManager::TestPermissionFromPrincipal;
 
-  if (!StaticPrefs::permissions_delegation_enable()) {
+  if (!StaticPrefs::permissions_delegation_enabled()) {
     return (mPermissionManager->*testPermission)(mPrincipal, aType,
                                                  aPermission);
-  }
-
-  const DelegateInfo* info =
-      GetPermissionDelegateInfo(NS_ConvertUTF8toUTF16(aType));
-
-  // If the type is not in the supported list, auto denied
-  if (!info) {
-    *aPermission = nsIPermissionManager::DENY_ACTION;
-    return NS_OK;
-  }
-
-  if (info->mPolicy == DelegatePolicy::eDelegateUseFeaturePolicy &&
-      info->mFeatureName) {
-    nsAutoString featureName(info->mFeatureName);
-    // Default allowlist for a feature used in permissions delegate should be
-    // set to eSelf, to ensure that permission is denied by default and only
-    // have the opportunity to request permission with allow attribute.
-    if (!FeaturePolicyUtils::IsFeatureAllowed(mDocument, featureName)) {
-      *aPermission = nsIPermissionManager::DENY_ACTION;
-      return NS_OK;
-    }
   }
 
   if (info->mPolicy == DelegatePolicy::ePersistDeniedCrossOrigin &&

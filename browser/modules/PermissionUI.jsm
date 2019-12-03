@@ -163,6 +163,14 @@ var PermissionPromptPrototype = {
   },
 
   /**
+   * Indicates the type of the permission request from content. This type might
+   * be different from the permission key used in the permissions database.
+   */
+  get type() {
+    return undefined;
+  },
+
+  /**
    * If the nsIPermissionManager is being queried and written
    * to for this permission request, set this to the key to be
    * used. If this is undefined, no integration with temporary
@@ -711,6 +719,10 @@ var PermissionPromptForRequestPrototype = {
   },
 
   get principal() {
+    if (Services.prefs.getBoolPref("permissions.delegate.enable", false)) {
+      let request = this.request.QueryInterface(Ci.nsIContentPermissionRequest);
+      return request.getDelegatePrincipal(this.type);
+    }
     return this.request.principal;
   },
 
@@ -738,6 +750,10 @@ function GeolocationPermissionPrompt(request) {
 
 GeolocationPermissionPrompt.prototype = {
   __proto__: PermissionPromptForRequestPrototype,
+
+  get type() {
+    return "geo";
+  },
 
   get permissionKey() {
     return "geo";
@@ -888,6 +904,10 @@ function DesktopNotificationPermissionPrompt(request) {
 DesktopNotificationPermissionPrompt.prototype = {
   __proto__: PermissionPromptForRequestPrototype,
 
+  get type() {
+    return "desktop-notification";
+  },
+
   get permissionKey() {
     return "desktop-notification";
   },
@@ -991,6 +1011,10 @@ function PersistentStoragePermissionPrompt(request) {
 PersistentStoragePermissionPrompt.prototype = {
   __proto__: PermissionPromptForRequestPrototype,
 
+  get type() {
+    return "persistent-storage";
+  },
+
   get permissionKey() {
     return "persistent-storage";
   },
@@ -1078,6 +1102,10 @@ function MIDIPermissionPrompt(request) {
 
 MIDIPermissionPrompt.prototype = {
   __proto__: PermissionPromptForRequestPrototype,
+
+  get type() {
+    return "midi";
+  },
 
   get permissionKey() {
     return this.permName;
@@ -1169,6 +1197,10 @@ StorageAccessPermissionPrompt.prototype = {
 
   get usePermissionManager() {
     return false;
+  },
+
+  get type() {
+    return "storage-access";
   },
 
   get permissionKey() {
