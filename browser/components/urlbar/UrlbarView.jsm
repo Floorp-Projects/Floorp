@@ -843,6 +843,14 @@ class UrlbarView {
     helpIcon.setAttribute("data-l10n-id", "urlbar-tip-help-icon");
     item._elements.set("helpButton", helpIcon);
     item._content.appendChild(helpIcon);
+
+    // Due to role=button, the button and help icon can sometimes become
+    // focused.  We want to prevent that because the input should always be
+    // focused instead.  (This happens when input.search("", { focus: false })
+    // is called, a tip is the first result but not heuristic, and the user tabs
+    // the into the button from the navbar buttons.  The input is skipped and
+    // the focus goes straight to the tip button.)
+    item.addEventListener("focus", () => this.input.focus(), true);
   }
 
   _updateRow(item, result) {
