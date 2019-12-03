@@ -28,6 +28,10 @@ class nsTraceRefcnt {
    * activity that occurs because of static constructors or destructors.
    */
   static void SetActivityIsLegal(bool aLegal);
+
+#ifdef MOZ_ENABLE_FORKSERVER
+  static void ResetLogFiles();
+#endif
 };
 
 #endif  // nsTraceRefcnt_h

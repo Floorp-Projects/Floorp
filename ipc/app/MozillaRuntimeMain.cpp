@@ -13,18 +13,67 @@
 
 using namespace mozilla;
 
-int main(int argc, char* argv[]) {
-#ifdef HAS_DLL_BLOCKLIST
-  DllBlocklist_Initialize(eDllBlocklistInitFlagIsChildProcess);
+static bool
+UseForkServer(int argc, char* argv[]) {
+#if defined(MOZ_ENABLE_FORKSERVER)
+  return strcmp(argv[argc - 1], "forkserver") == 0;
+#else
+  return false;
 #endif
+}
 
+static int
+RunForkServer(Bootstrap::UniquePtr&& bootstrap, int argc, char* argv[]) {
+#if defined(MOZ_ENABLE_FORKSERVER)
+  int ret = 0;
+
+  bootstrap->NS_LogInit();
+
+  // Run a fork server in this process, single thread.  When it
+  // returns, it means the fork server have been stopped or a new
+  // content process is created.
+  //
+  // For the later case, XRE_ForkServer() will return false, running
+  // in a content process just forked from the fork server process.
+  // argc & argv will be updated with the values passing from the
+  // chrome process.  With the new values, this function
+  // continues the reset of the code acting as a content process.
+  if(bootstrap->XRE_ForkServer(&argc, &argv)) {
+    // Return from the fork server in the fork server process.
+    // Stop the fork server.
+  } else {
+    // In a content process forked from the fork server.
+    // Start acting as a content process.
+    ret = content_process_main(bootstrap.get(), argc, argv);
+  }
+
+  bootstrap->NS_LogTerm();
+  return ret;
+#else
+  return 0;
+#endif
+}
+
+int main(int argc, char* argv[]) {
   Bootstrap::UniquePtr bootstrap = GetBootstrap();
   if (!bootstrap) {
     return 2;
   }
-  int ret = content_process_main(bootstrap.get(), argc, argv);
-#if defined(DEBUG) && defined(HAS_DLL_BLOCKLIST)
-  DllBlocklist_Shutdown();
+
+  int ret;
+  if (UseForkServer(argc, argv)) {
+    ret = RunForkServer(std::move(bootstrap), argc, argv);
+  } else {
+#ifdef HAS_DLL_BLOCKLIST
+    DllBlocklist_Initialize(eDllBlocklistInitFlagIsChildProcess);
 #endif
+
+    ret = content_process_main(bootstrap.get(), argc, argv);
+
+#if defined(DEBUG) && defined(HAS_DLL_BLOCKLIST)
+    DllBlocklist_Shutdown();
+#endif
+  }
+
   return ret;
 }

@@ -112,5 +112,45 @@ ForkServiceChild::OnMessageReceived(IPC::Message&& message) {
     message.EndRead(iter__, message.type());
 }
 
+NS_IMPL_ISUPPORTS(ForkServerLauncher, nsIObserver)
+
+bool ForkServerLauncher::mHaveStartedClient = false;
+StaticRefPtr<ForkServerLauncher> ForkServerLauncher::mSingleton;
+
+ForkServerLauncher::ForkServerLauncher() {
+}
+
+ForkServerLauncher::~ForkServerLauncher() {
+}
+
+already_AddRefed<ForkServerLauncher>
+ForkServerLauncher::Create() {
+    if (mSingleton == nullptr) {
+        mSingleton = new ForkServerLauncher();
+    }
+    RefPtr<ForkServerLauncher> launcher = mSingleton;
+    return launcher.forget();
+}
+
+NS_IMETHODIMP
+ForkServerLauncher::Observe(nsISupports* aSubject,
+                           const char* aTopic,
+                           const char16_t* aData) {
+    if (!mHaveStartedClient && strcmp(aTopic, NS_XPCOM_STARTUP_CATEGORY) == 0) {
+        mHaveStartedClient = true;
+        ForkServiceChild::StartForkServer();
+
+        nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
+        MOZ_ASSERT(obsSvc != nullptr);
+        obsSvc->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+    }
+
+    if (mHaveStartedClient && strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+        mHaveStartedClient = false;
+        ForkServiceChild::StopForkServer();
+    }
+    return NS_OK;
+}
+
 }
 }
