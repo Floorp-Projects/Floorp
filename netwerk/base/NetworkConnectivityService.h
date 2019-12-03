@@ -49,6 +49,9 @@ class NetworkConnectivityService : public nsINetworkConnectivityService,
 
   nsCOMPtr<nsIChannel> mIPv4Channel;
   nsCOMPtr<nsIChannel> mIPv6Channel;
+
+  bool mCheckedNetworkId = false;
+  bool mHasNetworkId = false;
 };
 
 }  // namespace net
