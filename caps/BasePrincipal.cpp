@@ -162,21 +162,20 @@ static nsTArray<typename T::KeyVal> GetJSONKeys(const Json::Value* aInput) {
   int size = T::eMax + 1;
   nsTArray<typename T::KeyVal> fields;
   for (int i = 0; i != size; i++) {
-    typename T::KeyVal field;
-    // field.valueWasSerialized returns if the field was found in the
+    typename T::KeyVal* field = fields.AppendElement();
+    // field->valueWasSerialized returns if the field was found in the
     // deserialized code. This simplifies the consumers from having to check
     // length.
-    field.valueWasSerialized = false;
-    field.key = static_cast<typename T::SerializableKeys>(i);
-    const std::string key = std::to_string(field.key);
+    field->valueWasSerialized = false;
+    field->key = static_cast<typename T::SerializableKeys>(i);
+    const std::string key = std::to_string(field->key);
     if (aInput->isMember(key)) {
       const Json::Value& val = (*aInput)[key];
       if (val.isString()) {
-        field.value.Append(nsDependentCString(val.asCString()));
-        field.valueWasSerialized = true;
+        field->value.Append(nsDependentCString(val.asCString()));
+        field->valueWasSerialized = true;
       }
     }
-    fields.AppendElement(field);
   }
   return fields;
 }
