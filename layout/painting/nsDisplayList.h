@@ -5622,6 +5622,9 @@ class nsDisplayOpacity : public nsDisplayWrapList {
     MOZ_ASSERT(aOther.mChildOpacityState != ChildOpacityState::Applied);
   }
 
+  void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+               HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) override;
+
 #ifdef NS_BUILD_REFCNT_LOGGING
   ~nsDisplayOpacity() override { MOZ_COUNT_DTOR(nsDisplayOpacity); }
 #endif
