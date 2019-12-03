@@ -2845,6 +2845,8 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvEndRecordingToMemory(
         [resolve{aResolve}]() { resolve(Nothing()); });
   }
 
+  mHaveCompositionRecorder = false;
+
   return IPC_OK();
 }
 
