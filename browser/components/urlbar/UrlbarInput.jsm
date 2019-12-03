@@ -718,6 +718,9 @@ class UrlbarInput {
     }
     this._resultForCurrentValue = result;
 
+    // Also update userTypedValue. See bug 287996.
+    this.window.gBrowser.userTypedValue = this.value;
+
     // The value setter clobbers the actiontype attribute, so update this after
     // that.
     if (result) {
@@ -759,7 +762,6 @@ class UrlbarInput {
     // selection and it's the autofill placeholder value, then do autofill.
     if (
       !isPlaceholderSelected &&
-      !this._autofillIgnoresSelection &&
       (this.selectionStart != this.selectionEnd ||
         this.selectionEnd != this._lastSearchString.length)
     ) {
@@ -793,9 +795,6 @@ class UrlbarInput {
    *
    * @param {boolean} [options.allowAutofill]
    *   Whether or not to allow providers to include autofill results.
-   * @param {boolean} [options.autofillIgnoresSelection]
-   *   Normally we autofill only if the cursor is at the end of the string,
-   *   if this is set we'll autofill regardless of selection.
    * @param {string} [options.searchString]
    *   The search string.  If not given, the current input value is used.
    *   Otherwise, the current input value must start with this value.
@@ -812,7 +811,6 @@ class UrlbarInput {
    */
   startQuery({
     allowAutofill = true,
-    autofillIgnoresSelection = false,
     searchString = null,
     resetSearchState = true,
     event = null,
@@ -832,7 +830,6 @@ class UrlbarInput {
       return;
     }
 
-    this._autofillIgnoresSelection = autofillIgnoresSelection;
     if (resetSearchState) {
       this._resetSearchState();
     }
@@ -995,6 +992,7 @@ class UrlbarInput {
       this._toolbar.setAttribute("urlbar-exceeds-toolbar-bounds", "true");
     }
     this.setAttribute("breakout-extend", "true");
+    this.view.reOpen();
 
     // Enable the animation only after the first extend call to ensure it
     // doesn't run when opening a new window.
@@ -1091,6 +1089,9 @@ class UrlbarInput {
     this.inputField.value = val;
     this.formatValue();
     this.removeAttribute("actiontype");
+    if (!this.view.isOpen) {
+      this.view.clear();
+    }
 
     // Dispatch ValueChange event for accessibility.
     let event = this.document.createEvent("Events");
@@ -1673,13 +1674,13 @@ class UrlbarInput {
     this.removeAttribute("focused");
     this.endLayoutExtend();
 
-    if (this._autofillPlaceholder && this.window.gBrowser.userTypedValue) {
-      // Restore value to the last typed one, removing any autofilled portion.
-      this.value = this.window.gBrowser.userTypedValue;
-    }
-
     this.formatValue();
     this._resetSearchState();
+
+    // Clear selection unless we are switching application windows.
+    if (this.document.activeElement != this.inputField) {
+      this.selectionStart = this.selectionEnd = 0;
+    }
 
     // In certain cases, like holding an override key and confirming an entry,
     // we don't key a keyup event for the override key, thus we make this
@@ -1741,7 +1742,6 @@ class UrlbarInput {
     // We handle mouse-based expansion events separately in _on_click.
     if (this._focusedViaMousedown) {
       this._focusedViaMousedown = false;
-      this.view.maybeReopen();
     } else {
       this.startLayoutExtend();
       if (this.inputField.hasAttribute("refocused-by-panel")) {
@@ -1789,12 +1789,6 @@ class UrlbarInput {
           break;
         }
 
-        // Clear any previous selection unless we are focused, to ensure it
-        // doesn't affect drag selection.
-        if (this._focusedViaMousedown) {
-          this.selectionStart = this.selectionEnd = 0;
-        }
-
         if (event.detail == 2 && UrlbarPrefs.get("doubleClickSelectsAll")) {
           this.editor.selectAll();
           event.preventDefault();
@@ -1829,13 +1823,9 @@ class UrlbarInput {
           this._mousedownOnUrlbarDescendant = false;
           break;
         }
-        // Don't close the view when clicking on a tab; we may want to keep the
-        // view open on tab switch, and the TabSelect event arrived earlier.
-        if (event.target.closest("tab")) {
-          break;
-        }
-        // Close the view when clicking on toolbars and other UI pieces that
-        // might not automatically remove focus from the input.
+
+        // Close the view when clicking on toolbars and other UI pieces that might
+        // not automatically remove focus from the input.
         // Respect the autohide preference for easier inspecting/debugging via
         // the browser toolbox.
         if (!UrlbarPrefs.get("ui.popup.disable_autohide")) {
@@ -1871,11 +1861,9 @@ class UrlbarInput {
     }
     this.removeAttribute("actiontype");
 
-    if (!this.view.isOpen || !value) {
-      this.view.clear();
-    }
-    if (this.view.isOpen && !value) {
+    if (!value && this.view.isOpen) {
       this.view.close();
+      this.view.clear();
       return;
     }
 
