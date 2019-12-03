@@ -3,6 +3,9 @@
 
 "use strict";
 
+// Test can run for a long time on asan or debug platforms.
+requestLongerTimeout(3);
+
 /* import-globals-from helper-collapsibilities.js */
 Services.scriptloader.loadSubScript(
   CHROME_URL_ROOT + "helper-collapsibilities.js",
