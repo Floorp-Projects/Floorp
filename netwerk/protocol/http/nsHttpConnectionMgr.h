@@ -16,7 +16,6 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"
-#include "AlternateServices.h"
 #include "ARefBase.h"
 #include "nsWeakReference.h"
 #include "TCPFastOpen.h"
@@ -47,7 +46,7 @@ struct HttpRetParams;
 class nsHttpConnectionMgr;
 typedef void (nsHttpConnectionMgr::*nsConnEventHandler)(int32_t, ARefBase*);
 
-class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
+class nsHttpConnectionMgr final : public nsIObserver {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER

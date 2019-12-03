@@ -1708,7 +1708,7 @@ nsresult nsHttpTransaction::HandleContentStart() {
         break;
       case 421:
         LOG(("Misdirected Request.\n"));
-        gHttpHandler->ConnMgr()->ClearHostMapping(mConnInfo);
+        gHttpHandler->AltServiceCache()->ClearHostMapping(mConnInfo);
 
         // retry on a new connection - just in case
         if (!mRestartCount) {

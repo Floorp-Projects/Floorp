@@ -1085,7 +1085,7 @@ void nsHttpConnection::Close(nsresult reason, bool aIsShutdown) {
     if (((reason == NS_ERROR_NET_RESET) ||
          (NS_ERROR_GET_MODULE(reason) == NS_ERROR_MODULE_SECURITY)) &&
         mConnInfo && !(mTransactionCaps & NS_HTTP_ERROR_SOFTLY)) {
-      gHttpHandler->ConnMgr()->ClearHostMapping(mConnInfo);
+      gHttpHandler->AltServiceCache()->ClearHostMapping(mConnInfo);
     }
 
     if (mSocketTransport) {

@@ -152,7 +152,7 @@ void AltSvcMapping::ProcessHeader(
       originAttributes.CreateSuffix(suffix);
       LOG(("Alt Svc clearing mapping for %s:%d:%s", originHost.get(),
            originPort, suffix.get()));
-      gHttpHandler->ConnMgr()->ClearHostMapping(
+      gHttpHandler->AltServiceCache()->ClearHostMapping(
           originHost, originPort, originAttributes, topWindowOrigin);
       continue;
     }
@@ -177,17 +177,17 @@ void AltSvcMapping::ProcessHeader(
     }
 
     RefPtr<AltSvcMapping> mapping = new AltSvcMapping(
-        gHttpHandler->ConnMgr()->GetStoragePtr(),
-        gHttpHandler->ConnMgr()->StorageEpoch(), originScheme, originHost,
-        originPort, username, topWindowOrigin, privateBrowsing, isolated,
-        NowInSeconds() + maxage, hostname, portno, npnToken, originAttributes,
-        isHttp3);
+        gHttpHandler->AltServiceCache()->GetStoragePtr(),
+        gHttpHandler->AltServiceCache()->StorageEpoch(), originScheme,
+        originHost, originPort, username, topWindowOrigin, privateBrowsing,
+        isolated, NowInSeconds() + maxage, hostname, portno, npnToken,
+        originAttributes, isHttp3);
     if (mapping->TTL() <= 0) {
       LOG(("Alt Svc invalid map"));
       mapping = nullptr;
       // since this isn't a parse error, let's clear any existing mapping
       // as that would have happened if we had accepted the parameters.
-      gHttpHandler->ConnMgr()->ClearHostMapping(
+      gHttpHandler->AltServiceCache()->ClearHostMapping(
           originHost, originPort, originAttributes, topWindowOrigin);
     } else {
       gHttpHandler->UpdateAltServiceMapping(mapping, proxyInfo, callbacks, caps,
@@ -1116,8 +1116,8 @@ class ProxyClearHostMapping : public Runnable {
 
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
-    gHttpHandler->ConnMgr()->ClearHostMapping(mHost, mPort, mOriginAttributes,
-                                              mTopWindowOrigin);
+    gHttpHandler->AltServiceCache()->ClearHostMapping(
+        mHost, mPort, mOriginAttributes, mTopWindowOrigin);
     return NS_OK;
   }
 
