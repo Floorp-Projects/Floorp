@@ -140,7 +140,8 @@ enum class ZealMode {
   _(ICUObject)                             \
   _(FinalizationGroupHoldingsVector)       \
   _(FinalizationGroupRegistrations)        \
-  _(FinalizationRecordVector)
+  _(FinalizationRecordVector)              \
+  _(ZoneAllocPolicy)
 
 #define JS_FOR_EACH_MEMORY_USE(_)  \
   JS_FOR_EACH_PUBLIC_MEMORY_USE(_) \
