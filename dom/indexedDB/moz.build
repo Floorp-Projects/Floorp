@@ -24,6 +24,7 @@ XPCSHELL_TESTS_MANIFESTS += [
 TEST_DIRS += ['test/gtest']
 
 EXPORTS.mozilla.dom += [
+    'FlippedOnce.h',
     'IDBCursor.h',
     'IDBDatabase.h',
     'IDBEvents.h',
