@@ -30,15 +30,23 @@ add_task(async function() {
     true
   );
 
+  let initialValue = gURLBar.untrimmedValue;
   let expectedURLBarChange = SLOW_PAGE;
   let sawChange = false;
-  let handler = e => {
-    sawChange = true;
-    is(
+  let handler = () => {
+    isnot(
       gURLBar.untrimmedValue,
-      expectedURLBarChange,
-      "Should not change URL bar value!"
+      initialValue,
+      "Should not revert URL bar value!"
     );
+    if (gURLBar.getAttribute("pageproxystate") == "valid") {
+      sawChange = true;
+      is(
+        gURLBar.untrimmedValue,
+        expectedURLBarChange,
+        "Should set expected URL bar value!"
+      );
+    }
   };
 
   let obs = new MutationObserver(handler);
