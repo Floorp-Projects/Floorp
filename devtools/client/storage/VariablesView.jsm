@@ -198,11 +198,6 @@ VariablesView.prototype = {
   toolbox: null,
 
   /**
-   * The controller for this VariablesView, if it has one.
-   */
-  controller: null,
-
-  /**
    * The amount of time (in milliseconds) it takes to empty this view lazily.
    */
   lazyEmptyDelay: LAZY_EMPTY_DELAY,
@@ -540,25 +535,6 @@ VariablesView.prototype = {
    *        The variable or property to search for.
    */
   _doSearch: function(aToken) {
-    if (this.controller && this.controller.supportsSearch()) {
-      // Retrieve the main Scope in which we add attributes
-      const scope = this._store[0]._store.get(undefined);
-      if (!aToken) {
-        // Prune the view from old previous content
-        // so that we delete the intermediate search results
-        // we created in previous searches
-        for (const property of scope._store.values()) {
-          property.remove();
-        }
-      }
-      // Retrieve new attributes eventually hidden in splits
-      this.controller.performSearch(scope, aToken);
-      // Filter already displayed attributes
-      if (aToken) {
-        scope._performSearch(aToken.toLowerCase());
-      }
-      return;
-    }
     for (const scope of this._store) {
       switch (aToken) {
         case "":

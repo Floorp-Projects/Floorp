@@ -32,7 +32,7 @@ loader.lazyRequireGetter(
 loader.lazyImporter(
   this,
   "VariablesView",
-  "resource://devtools/client/shared/widgets/VariablesView.jsm"
+  "resource://devtools/client/storage/VariablesView.jsm"
 );
 
 /**
