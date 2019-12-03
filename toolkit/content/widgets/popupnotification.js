@@ -22,7 +22,7 @@
         ".popup-notification-description > b:last-of-type":
           "text=secondname,popupid",
         ".popup-notification-description > span:last-of-type":
-          "secondendlabel,popupid",
+          "text=secondendlabel,popupid",
         ".popup-notification-closebutton":
           "oncommand=closebuttoncommand,hidden=closebuttonhidden",
         ".popup-notification-learnmore-link":

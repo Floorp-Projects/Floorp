@@ -1,41 +1,175 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+const permissionError =
+  "error: NotAllowedError: The request is not allowed " +
+  "by the user agent or the platform in the current context.";
+
+const PromptResult = {
+  ALLOW: "allow",
+  DENY: "deny",
+  PROMPT: "prompt",
+};
+
+const Perms = Services.perms;
+
+async function promptNoDelegate(aThirdPartyOrgin) {
+  // Persistent allowed first party origin
+  const uri = gBrowser.selectedBrowser.documentURI;
+  PermissionTestUtils.add(uri, "microphone", Services.perms.ALLOW_ACTION);
+  PermissionTestUtils.add(uri, "camera", Services.perms.ALLOW_ACTION);
+
+  // Check that we get a prompt.
+  const observerPromise = expectObserverCalled("getUserMedia:request");
+  const promise = promisePopupNotificationShown("webRTC-shareDevices");
+  await promiseRequestDevice(true, true, "frame4");
+  await promise;
+  await observerPromise;
+
+  // The 'Remember this decision' checkbox is hidden.
+  const notification = PopupNotifications.panel.firstElementChild;
+  const checkbox = notification.checkbox;
+  ok(!!checkbox, "checkbox is present");
+  ok(checkbox.hidden, "checkbox is not visible");
+  ok(!checkbox.checked, "checkbox not checked");
+
+  // Check the label of the notification should be the first party
+  is(
+    PopupNotifications.getNotification("webRTC-shareDevices").options.name,
+    uri.host,
+    "Use first party's origin"
+  );
+
+  // Check the secondName of the notification should be the third party
+  is(
+    PopupNotifications.getNotification("webRTC-shareDevices").options
+      .secondName,
+    aThirdPartyOrgin,
+    "Use third party's origin as secondName"
+  );
+
+  let indicator = promiseIndicatorWindow();
+  let observerPromise1 = expectObserverCalled("getUserMedia:response:allow");
+  let observerPromise2 = expectObserverCalled("recording-device-events");
+  await promiseMessage("ok", () =>
+    EventUtils.synthesizeMouseAtCenter(notification.button, {})
+  );
+  await observerPromise1;
+  await observerPromise2;
+  Assert.deepEqual(
+    await getMediaCaptureState(),
+    { audio: true, video: true },
+    "expected camera and microphone to be shared"
+  );
+  await indicator;
+  await checkSharingUI({ audio: true, video: true });
+
+  // Cleanup.
+  await closeStream(false, "frame4");
+
+  PermissionTestUtils.remove(uri, "camera");
+  PermissionTestUtils.remove(uri, "microphone");
+}
+
+async function promptNoDelegateScreenSharing(aThirdPartyOrgin) {
+  // Persistent allow screen sharing
+  const uri = gBrowser.selectedBrowser.documentURI;
+  PermissionTestUtils.add(uri, "screen", Services.perms.ALLOW_ACTION);
+
+  const observerPromise = expectObserverCalled("getUserMedia:request");
+  const promise = promisePopupNotificationShown("webRTC-shareDevices");
+  await promiseRequestDevice(false, true, "frame4", "screen");
+  await promise;
+  await observerPromise;
+
+  checkDeviceSelectors(false, false, true);
+  const notification = PopupNotifications.panel.firstElementChild;
+  const iconclass = notification.getAttribute("iconclass");
+  ok(iconclass.includes("screen-icon"), "panel using screen icon");
+
+  // The 'Remember this decision' checkbox is hidden.
+  const checkbox = notification.checkbox;
+  ok(!!checkbox, "checkbox is present");
+  ok(checkbox.hidden, "checkbox is not visible");
+  ok(!checkbox.checked, "checkbox not checked");
+
+  // Check the label of the notification should be the first party
+  is(
+    PopupNotifications.getNotification("webRTC-shareDevices").options.name,
+    uri.host,
+    "Use first party's origin"
+  );
+
+  // Check the secondName of the notification should be the third party
+  is(
+    PopupNotifications.getNotification("webRTC-shareDevices").options
+      .secondName,
+    aThirdPartyOrgin,
+    "Use third party's origin as secondName"
+  );
+
+  const menulist = document.getElementById("webRTC-selectWindow-menulist");
+  const count = menulist.itemCount;
+  menulist.getItemAtIndex(count - 1).doCommand();
+  ok(!notification.button.disabled, "Allow button is enabled");
+
+  const indicator = promiseIndicatorWindow();
+  const observerPromise1 = expectObserverCalled("getUserMedia:response:allow");
+  const observerPromise2 = expectObserverCalled("recording-device-events");
+  await promiseMessage("ok", () =>
+    EventUtils.synthesizeMouseAtCenter(notification.button, {})
+  );
+  await observerPromise1;
+  await observerPromise2;
+  Assert.deepEqual(
+    await getMediaCaptureState(),
+    { screen: "Screen" },
+    "expected screen to be shared"
+  );
+
+  await indicator;
+  await checkSharingUI({ screen: "Screen" });
+  await closeStream(false, "frame4");
+
+  PermissionTestUtils.remove(uri, "screen");
+}
 
 var gTests = [
   {
-    desc: "'Always Allow' disabled on third party pages",
+    desc:
+      "'Always Allow' enabled on third party pages, when origin is explicitly allowed",
     run: async function checkNoAlwaysOnThirdParty() {
-      // Initially set both permissions to 'allow'.
-      let origin = "https://test1.example.com/";
-      PermissionTestUtils.add(
-        origin,
-        "microphone",
-        Services.perms.ALLOW_ACTION
-      );
-      PermissionTestUtils.add(origin, "camera", Services.perms.ALLOW_ACTION);
+      // Initially set both permissions to 'prompt'.
+      const uri = gBrowser.selectedBrowser.documentURI;
+      PermissionTestUtils.add(uri, "microphone", Services.perms.PROMPT_ACTION);
+      PermissionTestUtils.add(uri, "camera", Services.perms.PROMPT_ACTION);
 
-      // Request devices and expect a prompt despite the saved 'Allow' permission,
-      // because we're a third party.
-      let observerPromise = expectObserverCalled("getUserMedia:request");
-      let promise = promisePopupNotificationShown("webRTC-shareDevices");
+      const observerPromise = expectObserverCalled("getUserMedia:request");
+      const promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(true, true, "frame1");
       await promise;
       await observerPromise;
       checkDeviceSelectors(true, true);
 
-      // Ensure that the 'Remember this decision' checkbox is absent.
-      let notification = PopupNotifications.panel.firstElementChild;
-      let checkbox = notification.checkbox;
+      // The 'Remember this decision' checkbox is visible.
+      const notification = PopupNotifications.panel.firstElementChild;
+      const checkbox = notification.checkbox;
       ok(!!checkbox, "checkbox is present");
-      ok(checkbox.hidden, "checkbox is not visible");
+      ok(!checkbox.hidden, "checkbox is visible");
       ok(!checkbox.checked, "checkbox not checked");
 
-      let indicator = promiseIndicatorWindow();
-      let observerPromise1 = expectObserverCalled(
+      // Check the label of the notification should be the first party
+      is(
+        PopupNotifications.getNotification("webRTC-shareDevices").options.name,
+        uri.host,
+        "Use first party's origin"
+      );
+
+      const indicator = promiseIndicatorWindow();
+      const observerPromise1 = expectObserverCalled(
         "getUserMedia:response:allow"
       );
-      let observerPromise2 = expectObserverCalled("recording-device-events");
+      const observerPromise2 = expectObserverCalled("recording-device-events");
       await promiseMessage("ok", () =>
         EventUtils.synthesizeMouseAtCenter(notification.button, {})
       );
@@ -51,38 +185,39 @@ var gTests = [
 
       // Cleanup.
       await closeStream(false, "frame1");
-      PermissionTestUtils.remove(origin, "camera");
-      PermissionTestUtils.remove(origin, "microphone");
+      PermissionTestUtils.remove(uri, "camera");
+      PermissionTestUtils.remove(uri, "microphone");
     },
   },
   {
-    desc: "'Always Allow' disabled when sharing screen in third party iframes",
+    desc:
+      "'Always Allow' disabled when sharing screen in third party iframes, when origin is explicitly allowed",
     run: async function checkScreenSharing() {
-      let observerPromise = expectObserverCalled("getUserMedia:request");
-      let promise = promisePopupNotificationShown("webRTC-shareDevices");
+      const observerPromise = expectObserverCalled("getUserMedia:request");
+      const promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(false, true, "frame1", "screen");
       await promise;
       await observerPromise;
 
       checkDeviceSelectors(false, false, true);
-      let notification = PopupNotifications.panel.firstElementChild;
-      let iconclass = notification.getAttribute("iconclass");
+      const notification = PopupNotifications.panel.firstElementChild;
+      const iconclass = notification.getAttribute("iconclass");
       ok(iconclass.includes("screen-icon"), "panel using screen icon");
 
-      // Ensure that the 'Remember this decision' checkbox is absent.
-      let checkbox = notification.checkbox;
+      // The 'Remember this decision' checkbox is visible.
+      const checkbox = notification.checkbox;
       ok(!!checkbox, "checkbox is present");
-      ok(checkbox.hidden, "checkbox is not visible");
+      ok(!checkbox.hidden, "checkbox is visible");
       ok(!checkbox.checked, "checkbox not checked");
 
-      let menulist = document.getElementById("webRTC-selectWindow-menulist");
-      let count = menulist.itemCount;
+      const menulist = document.getElementById("webRTC-selectWindow-menulist");
+      const count = menulist.itemCount;
       ok(
         count >= 4,
         "There should be the 'Select Window or Screen' item, a separator and at least one window and one screen"
       );
 
-      let noWindowOrScreenItem = menulist.getItemAtIndex(0);
+      const noWindowOrScreenItem = menulist.getItemAtIndex(0);
       ok(
         noWindowOrScreenItem.hasAttribute("selected"),
         "the 'Select Window or Screen' item is selected"
@@ -106,11 +241,11 @@ var gTests = [
       menulist.getItemAtIndex(count - 1).doCommand();
       ok(!notification.button.disabled, "Allow button is enabled");
 
-      let indicator = promiseIndicatorWindow();
-      let observerPromise1 = expectObserverCalled(
+      const indicator = promiseIndicatorWindow();
+      const observerPromise1 = expectObserverCalled(
         "getUserMedia:response:allow"
       );
-      let observerPromise2 = expectObserverCalled("recording-device-events");
+      const observerPromise2 = expectObserverCalled("recording-device-events");
       await promiseMessage("ok", () =>
         EventUtils.synthesizeMouseAtCenter(notification.button, {})
       );
@@ -127,9 +262,325 @@ var gTests = [
       await closeStream(false, "frame1");
     },
   },
+
+  {
+    desc: "getUserMedia use persistent permissions from first party",
+    run: async function checkUsePersistentPermissionsFirstParty() {
+      async function checkPersistentPermission(
+        aPermission,
+        aRequestType,
+        aIframeId,
+        aExpect
+      ) {
+        info(
+          `Test persistent permission ${aPermission} type ${aRequestType} expect ${aExpect}`
+        );
+        const uri = gBrowser.selectedBrowser.documentURI;
+        // Persistent allow/deny for first party uri
+        PermissionTestUtils.add(uri, aRequestType, aPermission);
+
+        let audio = aRequestType == "microphone";
+        let video = aRequestType == "camera";
+        const screen = aRequestType == "screen" ? "screen" : undefined;
+        if (screen) {
+          audio = false;
+          video = true;
+        }
+        if (aExpect == PromptResult.PROMPT) {
+          // Check that we get a prompt.
+          const observerPromise = expectObserverCalled("getUserMedia:request");
+          const observerPromise1 = expectObserverCalled(
+            "getUserMedia:response:deny"
+          );
+          const observerPromise2 = expectObserverCalled(
+            "recording-window-ended"
+          );
+          const promise = promisePopupNotificationShown("webRTC-shareDevices");
+          await promiseRequestDevice(audio, video, aIframeId, screen);
+          await promise;
+          await observerPromise;
+
+          // Check the label of the notification should be the first party
+          is(
+            PopupNotifications.getNotification("webRTC-shareDevices").options
+              .name,
+            uri.host,
+            "Use first party's origin"
+          );
+
+          // Deny the request to cleanup...
+          await promiseMessage(permissionError, () => {
+            activateSecondaryAction(kActionDeny);
+          });
+          await observerPromise1;
+          await observerPromise2;
+          let browser = gBrowser.selectedBrowser;
+          SitePermissions.removeFromPrincipal(null, aRequestType, browser);
+        } else if (aExpect == PromptResult.ALLOW) {
+          const observerPromise = expectObserverCalled("getUserMedia:request");
+          const observerPromise1 = expectObserverCalled(
+            "getUserMedia:response:allow"
+          );
+          const observerPromise2 = expectObserverCalled(
+            "recording-device-events"
+          );
+          const promise = promiseMessage("ok");
+          await promiseRequestDevice(audio, video, aIframeId, screen);
+          await promise;
+          await observerPromise;
+
+          await promiseNoPopupNotification("webRTC-shareDevices");
+          await observerPromise1;
+          await observerPromise2;
+
+          let expected = {};
+          if (audio) {
+            expected.audio = audio;
+          }
+          if (video) {
+            expected.video = video;
+          }
+
+          Assert.deepEqual(
+            await getMediaCaptureState(),
+            expected,
+            "expected " + Object.keys(expected).join(" and ") + " to be shared"
+          );
+
+          await closeStream(false, "frame1");
+        } else if (aExpect == PromptResult.DENY) {
+          const observerPromise = expectObserverCalled(
+            "recording-window-ended"
+          );
+          const promise = promiseMessage(permissionError);
+          await promiseRequestDevice(audio, video, aIframeId, screen);
+          await promise;
+          await observerPromise;
+        }
+
+        PermissionTestUtils.remove(uri, aRequestType);
+      }
+
+      await checkPersistentPermission(
+        Perms.PROMPT_ACTION,
+        "camera",
+        "frame1",
+        PromptResult.PROMPT
+      );
+      await checkPersistentPermission(
+        Perms.DENY_ACTION,
+        "camera",
+        "frame1",
+        PromptResult.DENY
+      );
+      await checkPersistentPermission(
+        Perms.ALLOW_ACTION,
+        "camera",
+        "frame1",
+        PromptResult.ALLOW
+      );
+
+      await checkPersistentPermission(
+        Perms.PROMPT_ACTION,
+        "microphone",
+        "frame1",
+        PromptResult.PROMPT
+      );
+      await checkPersistentPermission(
+        Perms.DENY_ACTION,
+        "microphone",
+        "frame1",
+        PromptResult.DENY
+      );
+      await checkPersistentPermission(
+        Perms.ALLOW_ACTION,
+        "microphone",
+        "frame1",
+        PromptResult.ALLOW
+      );
+
+      await checkPersistentPermission(
+        Perms.PROMPT_ACTION,
+        "screen",
+        "frame1",
+        PromptResult.PROMPT
+      );
+      await checkPersistentPermission(
+        Perms.DENY_ACTION,
+        "screen",
+        "frame1",
+        PromptResult.DENY
+      );
+      // Always prompt screen sharing
+      await checkPersistentPermission(
+        Perms.ALLOW_ACTION,
+        "screen",
+        "frame1",
+        PromptResult.PROMPT
+      );
+
+      // Denied by default if allow is not defined
+      await checkPersistentPermission(
+        Perms.PROMPT_ACTION,
+        "camera",
+        "frame3",
+        PromptResult.DENY
+      );
+      await checkPersistentPermission(
+        Perms.DENY_ACTION,
+        "camera",
+        "frame3",
+        PromptResult.DENY
+      );
+      await checkPersistentPermission(
+        Perms.ALLOW_ACTION,
+        "camera",
+        "frame3",
+        PromptResult.DENY
+      );
+
+      await checkPersistentPermission(
+        Perms.PROMPT_ACTION,
+        "microphone",
+        "frame3",
+        PromptResult.DENY
+      );
+      await checkPersistentPermission(
+        Perms.DENY_ACTION,
+        "microphone",
+        "frame3",
+        PromptResult.DENY
+      );
+      await checkPersistentPermission(
+        Perms.ALLOW_ACTION,
+        "microphone",
+        "frame3",
+        PromptResult.DENY
+      );
+
+      await checkPersistentPermission(
+        Perms.PROMPT_ACTION,
+        "screen",
+        "frame3",
+        PromptResult.DENY
+      );
+      await checkPersistentPermission(
+        Perms.DENY_ACTION,
+        "screen",
+        "frame3",
+        PromptResult.DENY
+      );
+      await checkPersistentPermission(
+        Perms.ALLOW_ACTION,
+        "screen",
+        "frame3",
+        PromptResult.DENY
+      );
+    },
+  },
+
+  {
+    desc: "getUserMedia use temporary blocked permissions from first party",
+    run: async function checkUseTempPermissionsBlockFirstParty() {
+      async function checkTempPermission(aRequestType) {
+        let browser = gBrowser.selectedBrowser;
+        let observerPromise = expectObserverCalled("getUserMedia:request");
+        let observerPromise1 = expectObserverCalled(
+          "getUserMedia:response:deny"
+        );
+        let observerPromise2 = expectObserverCalled("recording-window-ended");
+        let promise = promisePopupNotificationShown("webRTC-shareDevices");
+        let audio = aRequestType == "microphone";
+        let video = aRequestType == "camera";
+        const screen = aRequestType == "screen" ? "screen" : undefined;
+        if (screen) {
+          audio = false;
+          video = true;
+        }
+
+        await promiseRequestDevice(audio, video, null, screen);
+        await promise;
+        await observerPromise;
+
+        // Temporarily grant/deny from top level
+        // Only need to check allow and deny temporary permissions
+        await promiseMessage(permissionError, () => {
+          activateSecondaryAction(kActionDeny);
+        });
+        await observerPromise1;
+        await observerPromise2;
+        await checkNotSharing();
+
+        observerPromise = expectObserverCalled("getUserMedia:request");
+        observerPromise1 = expectObserverCalled("getUserMedia:response:deny");
+        observerPromise2 = expectObserverCalled("recording-window-ended");
+        promise = promiseMessage(permissionError);
+        await promiseRequestDevice(audio, video, "frame1", screen);
+        await promise;
+
+        await observerPromise;
+        await observerPromise1;
+        await observerPromise2;
+
+        SitePermissions.removeFromPrincipal(null, aRequestType, browser);
+      }
+
+      // At the moment we only save temporary deny
+      await checkTempPermission("camera");
+      await checkTempPermission("microphone");
+      await checkTempPermission("screen");
+    },
+  },
+
+  {
+    desc:
+      "Prompt and display both first party and third party origin in maybe unsafe permission delegation",
+    run: async function checkPromptNoDelegate() {
+      await promptNoDelegate("test1.example.com");
+    },
+  },
+  {
+    desc:
+      "Prompt and display both first party and third party origin when sharing screen in unsafe permission delegation",
+    run: async function checkPromptNoDelegateScreenSharing() {
+      await promptNoDelegateScreenSharing("test1.example.com");
+    },
+  },
+  {
+    desc:
+      "Change location, prompt and display both first party and third party origin in maybe unsafe permission delegation",
+    run: async function checkPromptNoDelegateChangeLoxation() {
+      await promiseChangeLocationFrame(
+        "frame4",
+        "https://test2.example.com/browser/browser/base/content/test/webrtc/get_user_media.html"
+      );
+      await promptNoDelegate("test2.example.com");
+    },
+  },
+
+  {
+    desc:
+      "Change location, prompt and display both first party and third party origin when sharing screen in unsafe permission delegation",
+    run: async function checkPromptNoDelegateScreenSharingChangeLocation() {
+      await promiseChangeLocationFrame(
+        "frame4",
+        "https://test2.example.com/browser/browser/base/content/test/webrtc/get_user_media.html"
+      );
+      await promptNoDelegateScreenSharing("test2.example.com");
+    },
+  },
 ];
 
 add_task(async function test() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["permissions.delegation.enabled", true],
+      ["dom.security.featurePolicy.enabled", true],
+      ["dom.security.featurePolicy.header.enabled", true],
+      ["dom.security.featurePolicy.webidl.enabled", true],
+    ],
+  });
+
   await runTests(gTests, {
     relativeURI: "get_user_media_in_xorigin_frame.html",
   });
