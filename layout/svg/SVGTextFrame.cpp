@@ -316,27 +316,6 @@ static nscoord GetBaselinePosition(nsTextFrame* aFrame, gfxTextRun* aTextRun,
 }
 
 /**
- * For a given text run, returns the range of skipped characters that comprise
- * the ligature group and/or cluster that includes the character represented
- * by the specified gfxSkipCharsIterator.
- *
- * @param aTextRun The text run to use for determining whether a given character
- *   is part of a ligature or cluster.
- * @param aIterator The gfxSkipCharsIterator to use for the current position
- *   in the text run.
- */
-static gfxTextRun::Range ClusterRange(gfxTextRun* aTextRun,
-                                      const gfxSkipCharsIterator& aIterator) {
-  uint32_t start = aIterator.GetSkippedOffset();
-  uint32_t end = start + 1;
-  while (end < aTextRun->GetLength() && (!aTextRun->IsLigatureGroupStart(end) ||
-                                         !aTextRun->IsClusterStart(end))) {
-    end++;
-  }
-  return gfxTextRun::Range(start, end);
-}
-
-/**
  * Truncates an array to be at most the length of another array.
  *
  * @param aArrayToTruncate The array to truncate.
@@ -1967,16 +1946,12 @@ class CharIterator {
     // Iterate over all original characters from the DOM that are within valid
     // text content elements.
     eOriginal,
+    // Iterate only over characters that are not skipped characters.
+    eUnskipped,
     // Iterate only over characters that are addressable by the positioning
     // attributes x="", y="", etc.  This includes all characters after
     // collapsing white space as required by the value of 'white-space'.
     eAddressable,
-    // Iterate only over characters that are the first of clusters or ligature
-    // groups.
-    eClusterAndLigatureGroupStart,
-    // Iterate only over characters that are part of a cluster or ligature
-    // group but not the first character.
-    eClusterOrLigatureGroupMiddle
   };
 
   /**
@@ -2099,33 +2074,6 @@ class CharIterator {
   }
 
   /**
-   * Returns the number of undisplayed characters between the beginning of
-   * the glyph and the current character.
-   */
-  uint32_t GlyphUndisplayedCharacters() const {
-    return mGlyphUndisplayedCharacters;
-  }
-
-  /**
-   * Gets the original character offsets within the Text for the
-   * cluster/ligature group the current character is a part of.
-   *
-   * @param aOriginalOffset The offset of the start of the cluster/ligature
-   *   group (output).
-   * @param aOriginalLength The length of cluster/ligature group (output).
-   */
-  void GetOriginalGlyphOffsets(uint32_t& aOriginalOffset,
-                               uint32_t& aOriginalLength) const;
-
-  /**
-   * Gets the advance, in user units, of the glyph the current character is
-   * part of.
-   *
-   * @param aContext The context to use for unit conversions.
-   */
-  gfxFloat GetGlyphAdvance(nsPresContext* aContext) const;
-
-  /**
    * Gets the advance, in user units, of the current character.  If the
    * character is a part of ligature, then the advance returned will be
    * a fraction of the ligature glyph's advance.
@@ -2135,34 +2083,22 @@ class CharIterator {
   gfxFloat GetAdvance(nsPresContext* aContext) const;
 
   /**
-   * Gets the specified partial advance of the glyph the current character is
-   * part of.  The partial advance is measured from the first character
-   * corresponding to the glyph until the specified part length.
-   *
-   * The part length value does not include any undisplayed characters in the
-   * middle of the cluster/ligature group.  For example, if you have:
-   *
-   *   <text>f<tspan display="none">x</tspan>i</text>
-   *
-   * and the "f" and "i" are ligaturized, then calling GetGlyphPartialAdvance
-   * with aPartLength values will have the following results:
-   *
-   *   0 => 0
-   *   1 => adv("fi") / 2
-   *   2 => adv("fi")
-   *
-   * @param aPartLength The number of characters in the cluster/ligature group
-   *   to measure.
-   * @param aContext The context to use for unit conversions.
-   */
-  gfxFloat GetGlyphPartialAdvance(uint32_t aPartLength,
-                                  nsPresContext* aContext) const;
-
-  /**
    * Returns the frame corresponding to the <textPath> that the current
    * character is within.
    */
   nsIFrame* TextPathFrame() const { return mFrameIterator.TextPathFrame(); }
+
+#ifdef DEBUG
+  /**
+   * Returns the subtree we were constructed with.
+   */
+  nsIContent* GetSubtree() const { return mSubtree; }
+
+  /**
+   * Returns the CharacterFilter mode in use.
+   */
+  CharacterFilter Filter() const { return mFilter; }
+#endif
 
  private:
   /**
@@ -2183,7 +2119,6 @@ class CharIterator {
   void UpdateGlyphStartTextElementCharIndex() {
     if (!IsOriginalCharSkipped() && IsClusterAndLigatureGroupStart()) {
       mGlyphStartTextElementCharIndex = mTextElementCharIndex;
-      mGlyphUndisplayedCharacters = 0;
     }
   }
 
@@ -2196,6 +2131,13 @@ class CharIterator {
    * The iterator for text frames.
    */
   TextFrameIterator mFrameIterator;
+
+#ifdef DEBUG
+  /**
+   * The subtree we were constructed with.
+   */
+  nsIContent* mSubtree;
+#endif
 
   /**
    * A gfxSkipCharsIterator for the text frame the current character is
@@ -2225,16 +2167,8 @@ class CharIterator {
   uint32_t mGlyphStartTextElementCharIndex;
 
   /**
-   * If we are iterating in mode eClusterOrLigatureGroupMiddle, then
-   * this tracks how many undisplayed characters were encountered
-   * between the start of this glyph (at mGlyphStartTextElementCharIndex)
-   * and the current character (at mTextElementCharIndex).
-   */
-  uint32_t mGlyphUndisplayedCharacters;
-
-  /**
    * The scale factor to apply to glyph advances returned by
-   * GetGlyphAdvance etc. to take into account textLength="".
+   * GetAdvance etc. to take into account textLength="".
    */
   float mLengthAdjustScaleFactor;
 
@@ -2250,13 +2184,15 @@ CharIterator::CharIterator(SVGTextFrame* aSVGTextFrame,
                            nsIContent* aSubtree, bool aPostReflow)
     : mFilter(aFilter),
       mFrameIterator(aSVGTextFrame, aSubtree),
+#ifdef DEBUG
+      mSubtree(aSubtree),
+#endif
       mFrameForTrimCheck(nullptr),
       mTrimmedOffset(0),
       mTrimmedLength(0),
       mTextRun(nullptr),
       mTextElementCharIndex(0),
       mGlyphStartTextElementCharIndex(0),
-      mGlyphUndisplayedCharacters(0),
       mLengthAdjustScaleFactor(aSVGTextFrame->mLengthAdjustScaleFactor),
       mPostReflow(aPostReflow) {
   if (!AtEnd()) {
@@ -2379,57 +2315,6 @@ bool CharIterator::IsOriginalCharTrimmed() const {
        mFrameForTrimCheck->TextFragment()->CharAt(index) == '\n'));
 }
 
-void CharIterator::GetOriginalGlyphOffsets(uint32_t& aOriginalOffset,
-                                           uint32_t& aOriginalLength) const {
-  gfxSkipCharsIterator it = TextFrame()->EnsureTextRun(nsTextFrame::eInflated);
-  it.SetOriginalOffset(mSkipCharsIterator.GetOriginalOffset() -
-                       (mTextElementCharIndex -
-                        mGlyphStartTextElementCharIndex -
-                        mGlyphUndisplayedCharacters));
-
-  while (it.GetSkippedOffset() > 0 &&
-         (!mTextRun->IsClusterStart(it.GetSkippedOffset()) ||
-          !mTextRun->IsLigatureGroupStart(it.GetSkippedOffset()))) {
-    it.AdvanceSkipped(-1);
-  }
-
-  aOriginalOffset = it.GetOriginalOffset();
-
-  // Find the end of the cluster/ligature group.
-  it.SetOriginalOffset(mSkipCharsIterator.GetOriginalOffset());
-  do {
-    it.AdvanceSkipped(1);
-  } while (it.GetSkippedOffset() < mTextRun->GetLength() &&
-           (!mTextRun->IsClusterStart(it.GetSkippedOffset()) ||
-            !mTextRun->IsLigatureGroupStart(it.GetSkippedOffset())));
-
-  aOriginalLength = it.GetOriginalOffset() - aOriginalOffset;
-}
-
-gfxFloat CharIterator::GetGlyphAdvance(nsPresContext* aContext) const {
-  uint32_t offset, length;
-  GetOriginalGlyphOffsets(offset, length);
-
-  gfxSkipCharsIterator it = TextFrame()->EnsureTextRun(nsTextFrame::eInflated);
-  gfxSkipCharsIterator start = it;
-  Range range = ConvertOriginalToSkipped(it, offset, length);
-  if (range.Length() == 0) {
-    return 0.0;
-  }
-
-  Maybe<nsTextFrame::PropertyProvider> provider;
-  if (StaticPrefs::svg_text_spacing_enabled()) {
-    provider.emplace(TextFrame(), start);
-  }
-
-  float cssPxPerDevPx =
-      nsPresContext::AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
-
-  gfxFloat advance = mTextRun->GetAdvanceWidth(range, provider.ptrOr(nullptr));
-  return aContext->AppUnitsToGfxUnits(advance) * mLengthAdjustScaleFactor *
-         cssPxPerDevPx;
-}
-
 gfxFloat CharIterator::GetAdvance(nsPresContext* aContext) const {
   float cssPxPerDevPx =
       nsPresContext::AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
@@ -2444,35 +2329,6 @@ gfxFloat CharIterator::GetAdvance(nsPresContext* aContext) const {
   uint32_t offset = mSkipCharsIterator.GetSkippedOffset();
   gfxFloat advance = mTextRun->GetAdvanceWidth(Range(offset, offset + 1),
                                                provider.ptrOr(nullptr));
-  return aContext->AppUnitsToGfxUnits(advance) * mLengthAdjustScaleFactor *
-         cssPxPerDevPx;
-}
-
-gfxFloat CharIterator::GetGlyphPartialAdvance(uint32_t aPartLength,
-                                              nsPresContext* aContext) const {
-  uint32_t offset, length;
-  GetOriginalGlyphOffsets(offset, length);
-
-  NS_ASSERTION(aPartLength <= length, "invalid aPartLength value");
-  length = aPartLength;
-
-  gfxSkipCharsIterator it = TextFrame()->EnsureTextRun(nsTextFrame::eInflated);
-  gfxSkipCharsIterator start = it;
-
-  Range range = ConvertOriginalToSkipped(it, offset, length);
-  if (range.Length() == 0) {
-    return 0.0;
-  }
-
-  Maybe<nsTextFrame::PropertyProvider> provider;
-  if (StaticPrefs::svg_text_spacing_enabled()) {
-    provider.emplace(TextFrame(), start);
-  }
-
-  float cssPxPerDevPx =
-      nsPresContext::AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
-
-  gfxFloat advance = mTextRun->GetAdvanceWidth(range, provider.ptrOr(nullptr));
   return aContext->AppUnitsToGfxUnits(advance) * mLengthAdjustScaleFactor *
          cssPxPerDevPx;
 }
@@ -2497,7 +2353,6 @@ bool CharIterator::NextCharacter() {
 
   // Skip any undisplayed characters.
   uint32_t undisplayed = mFrameIterator.UndisplayedCharacters();
-  mGlyphUndisplayedCharacters += undisplayed;
   mTextElementCharIndex += undisplayed;
   if (!TextFrame()) {
     // We're at the end.
@@ -2512,20 +2367,16 @@ bool CharIterator::NextCharacter() {
 }
 
 bool CharIterator::MatchesFilter() const {
-  if (mFilter == eOriginal) {
-    return true;
+  switch (mFilter) {
+    case eOriginal:
+      return true;
+    case eUnskipped:
+      return !IsOriginalCharSkipped();
+    case eAddressable:
+      return !IsOriginalCharSkipped() && !IsOriginalCharUnaddressable();
   }
-
-  if (IsOriginalCharSkipped()) {
-    return false;
-  }
-
-  if (mFilter == eAddressable) {
-    return !IsOriginalCharUnaddressable();
-  }
-
-  return (mFilter == eClusterAndLigatureGroupStart) ==
-         IsClusterAndLigatureGroupStart();
+  MOZ_ASSERT_UNREACHABLE("Invalid mFilter value");
+  return true;
 }
 
 // -----------------------------------------------------------------------------
@@ -3996,6 +3847,60 @@ nsresult SVGTextFrame::GetStartPositionOfChar(nsIContent* aContent,
 }
 
 /**
+ * Returns the advance of the entire glyph whose starting character is at
+ * aTextElementCharIndex.
+ *
+ * aIterator, if provided, must be a CharIterator that already points to
+ * aTextElementCharIndex that is restricted to aContent and is using
+ * filter mode eAddressable.
+ */
+static gfxFloat GetGlyphAdvance(SVGTextFrame* aFrame, nsIContent* aContent,
+                                uint32_t aTextElementCharIndex,
+                                CharIterator* aIterator) {
+  MOZ_ASSERT(!aIterator || (aIterator->Filter() == CharIterator::eAddressable &&
+                            aIterator->GetSubtree() == aContent &&
+                            aIterator->GlyphStartTextElementCharIndex() ==
+                                aTextElementCharIndex),
+             "Invalid aIterator");
+
+  Maybe<CharIterator> newIterator;
+  CharIterator* it = aIterator;
+  if (!it) {
+    newIterator.emplace(aFrame, CharIterator::eAddressable, aContent);
+    if (!newIterator->AdvanceToSubtree()) {
+      MOZ_ASSERT_UNREACHABLE("Invalid aContent");
+      return 0.0;
+    }
+    it = newIterator.ptr();
+  }
+
+  while (it->GlyphStartTextElementCharIndex() != aTextElementCharIndex) {
+    if (!it->Next()) {
+      MOZ_ASSERT_UNREACHABLE("Invalid aTextElementCharIndex");
+      return 0.0;
+    }
+  }
+
+  if (it->AtEnd()) {
+    MOZ_ASSERT_UNREACHABLE("Invalid aTextElementCharIndex");
+    return 0.0;
+  }
+
+  nsPresContext* presContext = aFrame->PresContext();
+  gfxFloat advance = 0.0;
+
+  for (;;) {
+    advance += it->GetAdvance(presContext);
+    if (!it->Next() ||
+        it->GlyphStartTextElementCharIndex() != aTextElementCharIndex) {
+      break;
+    }
+  }
+
+  return advance;
+}
+
+/**
  * Implements the SVG DOM GetEndPositionOfChar method for the specified
  * text content element.
  */
@@ -4020,7 +3925,9 @@ nsresult SVGTextFrame::GetEndPositionOfChar(nsIContent* aContent,
   uint32_t startIndex = it.GlyphStartTextElementCharIndex();
 
   // Get the advance of the glyph.
-  gfxFloat advance = it.GetGlyphAdvance(PresContext());
+  gfxFloat advance =
+      GetGlyphAdvance(this, aContent, startIndex,
+                      it.IsClusterAndLigatureGroupStart() ? &it : nullptr);
   if (it.TextRun()->IsRightToLeft()) {
     advance = -advance;
   }
@@ -4051,26 +3958,30 @@ nsresult SVGTextFrame::GetExtentOfChar(nsIContent* aContent, uint32_t aCharNum,
 
   UpdateGlyphPositioning();
 
+  // Search for the character whose addressable index is aCharNum.
   CharIterator it(this, CharIterator::eAddressable, aContent);
   if (!it.AdvanceToSubtree() || !it.Next(aCharNum)) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
   nsPresContext* presContext = PresContext();
-
   float cssPxPerDevPx = nsPresContext::AppUnitsToFloatCSSPixels(
       presContext->AppUnitsPerDevPixel());
 
-  // We need to return the extent of the whole glyph.
+  nsTextFrame* textFrame = it.TextFrame();
   uint32_t startIndex = it.GlyphStartTextElementCharIndex();
+  bool isRTL = it.TextRun()->IsRightToLeft();
+  bool isVertical = it.TextRun()->IsVertical();
+
+  // Get the glyph advance.
+  gfxFloat advance =
+      GetGlyphAdvance(this, aContent, startIndex,
+                      it.IsClusterAndLigatureGroupStart() ? &it : nullptr);
+  gfxFloat x = isRTL ? -advance : 0.0;
 
   // The ascent and descent gives the height of the glyph.
   gfxFloat ascent, descent;
-  GetAscentAndDescentInAppUnits(it.TextFrame(), ascent, descent);
-
-  // Get the advance of the glyph.
-  gfxFloat advance = it.GetGlyphAdvance(presContext);
-  gfxFloat x = it.TextRun()->IsRightToLeft() ? -advance : 0.0;
+  GetAscentAndDescentInAppUnits(textFrame, ascent, descent);
 
   // The horizontal extent is the origin of the glyph plus the advance
   // in the direction of the glyph's rotation.
@@ -4080,7 +3991,7 @@ nsresult SVGTextFrame::GetExtentOfChar(nsIContent* aContent, uint32_t aCharNum,
   m.PreScale(1 / mFontSizeScaleFactor, 1 / mFontSizeScaleFactor);
 
   gfxRect glyphRect;
-  if (it.TextRun()->IsVertical()) {
+  if (isVertical) {
     glyphRect = gfxRect(
         -presContext->AppUnitsToGfxUnits(descent) * cssPxPerDevPx, x,
         presContext->AppUnitsToGfxUnits(ascent + descent) * cssPxPerDevPx,
@@ -4389,7 +4300,7 @@ bool SVGTextFrame::ResolvePositions(nsTArray<gfxPoint>& aDeltas,
 void SVGTextFrame::DetermineCharPositions(nsTArray<nsPoint>& aPositions) {
   NS_ASSERTION(aPositions.IsEmpty(), "expected aPositions to be empty");
 
-  nsPoint position, lastPosition;
+  nsPoint position;
 
   TextFrameIterator frit(this);
   for (nsTextFrame* frame = frit.Current(); frame; frame = frit.Next()) {
@@ -4429,33 +4340,20 @@ void SVGTextFrame::DetermineCharPositions(nsTArray<nsPoint>& aPositions) {
       it.AdvanceOriginal(1);
     }
 
-    // If a ligature was started in the previous frame, we should record
-    // the ligature's start position, not any partial position.
-    while (it.GetOriginalOffset() < frame->GetContentEnd() &&
-           !it.IsOriginalCharSkipped() &&
-           (!textRun->IsLigatureGroupStart(it.GetSkippedOffset()) ||
-            !textRun->IsClusterStart(it.GetSkippedOffset()))) {
-      uint32_t offset = it.GetSkippedOffset();
-      nscoord advance = textRun->GetAdvanceWidth(Range(offset, offset + 1),
-                                                 provider.ptrOr(nullptr));
-      (textRun->IsVertical() ? position.y : position.x) +=
-          textRun->IsRightToLeft() ? -advance : advance;
-      aPositions.AppendElement(lastPosition);
-      it.AdvanceOriginal(1);
-    }
-
-    // The meat of the text frame.
+    // Visible characters in the text frame.
     while (it.GetOriginalOffset() < frame->GetContentEnd()) {
       aPositions.AppendElement(position);
-      if (!it.IsOriginalCharSkipped() &&
-          textRun->IsLigatureGroupStart(it.GetSkippedOffset()) &&
-          textRun->IsClusterStart(it.GetSkippedOffset())) {
-        // A real visible character.
-        nscoord advance = textRun->GetAdvanceWidth(ClusterRange(textRun, it),
+      if (!it.IsOriginalCharSkipped()) {
+        // Accumulate partial ligature advance into position.  (We must get
+        // partial advances rather than get the advance of the whole ligature
+        // group / cluster at once, since the group may span text frames, and
+        // the PropertyProvider only has spacing information for the current
+        // text frame.)
+        uint32_t offset = it.GetSkippedOffset();
+        nscoord advance = textRun->GetAdvanceWidth(Range(offset, offset + 1),
                                                    provider.ptrOr(nullptr));
         (textRun->IsVertical() ? position.y : position.x) +=
             textRun->IsRightToLeft() ? -advance : advance;
-        lastPosition = position;
       }
       it.AdvanceOriginal(1);
     }
@@ -4556,58 +4454,81 @@ void SVGTextFrame::AdjustChunksForLineBreaks() {
 void SVGTextFrame::AdjustPositionsForClusters() {
   nsPresContext* presContext = PresContext();
 
-  CharIterator it(this, CharIterator::eClusterOrLigatureGroupMiddle,
-                  /* aSubtree */ nullptr);
+  // Find all of the characters that are in the middle of a cluster or
+  // ligature group, and adjust their positions and rotations to match
+  // the first character of the cluster/group.
+  //
+  // Also move the boundaries of text rendered runs and anchored chunks to
+  // not lie in the middle of cluster/group.
+
+  // The partial advance of the current cluster or ligature group that we
+  // have accumulated.
+  gfxFloat partialAdvance = 0.0;
+
+  CharIterator it(this, CharIterator::eUnskipped, /* aSubtree */ nullptr);
   while (!it.AtEnd()) {
-    // Find the start of the cluster/ligature group.
-    uint32_t charIndex = it.TextElementCharIndex();
-    uint32_t startIndex = it.GlyphStartTextElementCharIndex();
+    if (it.IsClusterAndLigatureGroupStart()) {
+      // If we're at the start of a new cluster or ligature group, reset our
+      // accumulated partial advance.
+      partialAdvance = 0.0;
+    } else {
+      // Otherwise, we're in the middle of a cluster or ligature group, and
+      // we need to use the currently accumulated partial advance to adjust
+      // the character's position and rotation.
 
-    mPositions[charIndex].mClusterOrLigatureGroupMiddle = true;
+      // Find the start of the cluster/ligature group.
+      uint32_t charIndex = it.TextElementCharIndex();
+      uint32_t startIndex = it.GlyphStartTextElementCharIndex();
+      MOZ_ASSERT(charIndex != startIndex,
+                 "If the current character is in the middle of a cluster or "
+                 "ligature group, then charIndex must be different from "
+                 "startIndex");
 
-    // Don't allow different rotations on ligature parts.
-    bool rotationAdjusted = false;
-    double angle = mPositions[startIndex].mAngle;
-    if (mPositions[charIndex].mAngle != angle) {
-      mPositions[charIndex].mAngle = angle;
-      rotationAdjusted = true;
-    }
+      mPositions[charIndex].mClusterOrLigatureGroupMiddle = true;
 
-    // Find out the partial glyph advance for this character and update
-    // the character position.
-    uint32_t partLength =
-        charIndex - startIndex - it.GlyphUndisplayedCharacters();
-    gfxFloat advance = it.GetGlyphPartialAdvance(partLength, presContext) /
-                       mFontSizeScaleFactor;
-    gfxPoint direction = gfxPoint(cos(angle), sin(angle)) *
-                         (it.TextRun()->IsRightToLeft() ? -1.0 : 1.0);
-    if (it.TextRun()->IsVertical()) {
-      Swap(direction.x, direction.y);
-    }
-    mPositions[charIndex].mPosition =
-        mPositions[startIndex].mPosition + direction * advance;
-
-    // Ensure any runs that would end in the middle of a ligature now end just
-    // after the ligature.
-    if (mPositions[charIndex].mRunBoundary) {
-      mPositions[charIndex].mRunBoundary = false;
-      if (charIndex + 1 < mPositions.Length()) {
-        mPositions[charIndex + 1].mRunBoundary = true;
+      // Don't allow different rotations on ligature parts.
+      bool rotationAdjusted = false;
+      double angle = mPositions[startIndex].mAngle;
+      if (mPositions[charIndex].mAngle != angle) {
+        mPositions[charIndex].mAngle = angle;
+        rotationAdjusted = true;
       }
-    } else if (rotationAdjusted) {
-      if (charIndex + 1 < mPositions.Length()) {
-        mPositions[charIndex + 1].mRunBoundary = true;
+
+      // Update the character position.
+      gfxFloat advance = partialAdvance / mFontSizeScaleFactor;
+      gfxPoint direction = gfxPoint(cos(angle), sin(angle)) *
+                           (it.TextRun()->IsRightToLeft() ? -1.0 : 1.0);
+      if (it.TextRun()->IsVertical()) {
+        Swap(direction.x, direction.y);
+      }
+      mPositions[charIndex].mPosition =
+          mPositions[startIndex].mPosition + direction * advance;
+
+      // Ensure any runs that would end in the middle of a ligature now end just
+      // after the ligature.
+      if (mPositions[charIndex].mRunBoundary) {
+        mPositions[charIndex].mRunBoundary = false;
+        if (charIndex + 1 < mPositions.Length()) {
+          mPositions[charIndex + 1].mRunBoundary = true;
+        }
+      } else if (rotationAdjusted) {
+        if (charIndex + 1 < mPositions.Length()) {
+          mPositions[charIndex + 1].mRunBoundary = true;
+        }
+      }
+
+      // Ensure any anchored chunks that would begin in the middle of a ligature
+      // now begin just after the ligature.
+      if (mPositions[charIndex].mStartOfChunk) {
+        mPositions[charIndex].mStartOfChunk = false;
+        if (charIndex + 1 < mPositions.Length()) {
+          mPositions[charIndex + 1].mStartOfChunk = true;
+        }
       }
     }
 
-    // Ensure any anchored chunks that would begin in the middle of a ligature
-    // now begin just after the ligature.
-    if (mPositions[charIndex].mStartOfChunk) {
-      mPositions[charIndex].mStartOfChunk = false;
-      if (charIndex + 1 < mPositions.Length()) {
-        mPositions[charIndex + 1].mStartOfChunk = true;
-      }
-    }
+    // Accumulate the current character's partial advance.
+    partialAdvance += it.GetAdvance(presContext);
 
     it.Next();
   }
@@ -4679,8 +4600,7 @@ gfxFloat SVGTextFrame::GetStartOffset(nsIFrame* aTextPathFrame) {
 void SVGTextFrame::DoTextPathLayout() {
   nsPresContext* context = PresContext();
 
-  CharIterator it(this, CharIterator::eClusterAndLigatureGroupStart,
-                  /* aSubtree */ nullptr);
+  CharIterator it(this, CharIterator::eOriginal, /* aSubtree */ nullptr);
   while (!it.AtEnd()) {
     nsIFrame* textPathFrame = it.TextPathFrame();
     if (!textPathFrame) {
@@ -4709,13 +4629,56 @@ void SVGTextFrame::DoTextPathLayout() {
     gfxFloat offset = GetStartOffset(textPathFrame);
     Float pathLength = path->ComputeLength();
 
-    // Loop for each text frame in the text path.
-    do {
+    // If the first character within the text path is in the middle of a
+    // cluster or ligature group, just skip it and don't apply text path
+    // positioning.
+    while (!it.AtEnd()) {
+      if (it.IsOriginalCharSkipped()) {
+        it.Next();
+        continue;
+      }
+      if (it.IsClusterAndLigatureGroupStart()) {
+        break;
+      }
+      it.Next();
+    }
+
+    // Loop for each character in the text path.
+    while (!it.AtEnd() && it.TextPathFrame() &&
+           it.TextPathFrame()->GetContent() == textPath) {
+      // The index of the cluster or ligature group's first character.
       uint32_t i = it.TextElementCharIndex();
-      gfxFloat halfAdvance =
-          it.GetGlyphAdvance(context) / mFontSizeScaleFactor / 2.0;
+
+      MOZ_ASSERT(!mPositions[i].mClusterOrLigatureGroupMiddle);
+
       gfxFloat sign = it.TextRun()->IsRightToLeft() ? -1.0 : 1.0;
       bool vertical = it.TextRun()->IsVertical();
+
+      // Compute cumulative advances for each character of the cluster or
+      // ligature group.
+      AutoTArray<gfxFloat, 4> partialAdvances;
+      gfxFloat partialAdvance = it.GetAdvance(context);
+      partialAdvances.AppendElement(partialAdvance);
+      while (it.Next()) {
+        // This loop may end up outside of the current text path, but
+        // that's OK; we'll consider any complete cluster or ligature
+        // group that begins inside the text path as being affected
+        // by it.
+        if (it.IsOriginalCharSkipped()) {
+          // Leave partialAdvance unchanged.
+        } else if (it.IsClusterAndLigatureGroupStart()) {
+          break;
+        } else {
+          partialAdvance += it.GetAdvance(context);
+        }
+        partialAdvances.AppendElement(partialAdvance);
+      }
+
+      // The index after the entire cluster or ligature group.
+      uint32_t j = it.TextElementCharIndex();
+
+      gfxFloat halfAdvance =
+          partialAdvances.LastElement() / mFontSizeScaleFactor / 2.0;
       gfxFloat midx =
           (vertical ? mPositions[i].mPosition.y : mPositions[i].mPosition.x) +
           sign * halfAdvance + offset;
@@ -4744,19 +4707,14 @@ void SVGTextFrame::DoTextPathLayout() {
       mPositions[i].mAngle += rotation;
 
       // Position any characters for a partial ligature.
-      for (uint32_t j = i + 1; j < mPositions.Length() &&
-                               mPositions[j].mClusterOrLigatureGroupMiddle;
-           j++) {
+      for (uint32_t k = i + 1; k < j; k++) {
         gfxPoint partialAdvance = ThebesPoint(direction) *
-                                  it.GetGlyphPartialAdvance(j - i, context) /
-                                  mFontSizeScaleFactor;
-        mPositions[j].mPosition = mPositions[i].mPosition + partialAdvance;
-        mPositions[j].mAngle = mPositions[i].mAngle;
-        mPositions[j].mHidden = mPositions[i].mHidden;
+                                  partialAdvances[k - i] / mFontSizeScaleFactor;
+        mPositions[k].mPosition = mPositions[i].mPosition + partialAdvance;
+        mPositions[k].mAngle = mPositions[i].mAngle;
+        mPositions[k].mHidden = mPositions[i].mHidden;
       }
-      it.Next();
-    } while (it.TextPathFrame() &&
-             it.TextPathFrame()->GetContent() == textPath);
+    }
   }
 }
 
