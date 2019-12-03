@@ -74,7 +74,7 @@ class DocumentChannelChild final : public nsIIdentChannel,
   void ShutdownListeners(nsresult aStatusCode);
   nsDocShell* GetDocShell();
 
-  ~DocumentChannelChild() = default;
+  ~DocumentChannelChild();
 
   LastVisitInfo mLastVisitInfo;
   nsCOMPtr<nsIChannel> mRedirectChannel;
