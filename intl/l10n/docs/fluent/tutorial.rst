@@ -17,39 +17,19 @@ prior experience with those systems.
 Using Fluent in Gecko
 =====================
 
-`Fluent`_ is a modern localization system currently being progressively introduced into
+`Fluent`_ is a modern localization system introduced into
 the Gecko platform with a focus on quality, performance, maintenance and completeness.
 
-In order to ensure that Fluent is ready for engineers to work with, the initial
-migrations are performed manually with a lot of oversight from the involved
-stakeholders.
-
-In this initial phase, `Firefox Preferences`_ is being migrated as the first target
-and, as a result, the first bindings to be stabilized are for chrome-privileged
-XUL context.
-
-From there we plan to focus on two areas:
-
- - `Unprivileged Contexts`_
- - `System Add-ons`_
-
-The end goal is replacing all uses of DTD and StringBundle within Firefox's codebase.
-
-If you want to use Fluent, and your code involves one of the areas currently unsupported,
-we'd like to work with you on getting Fluent ready for your code.
-
+The legacy DTD system is deprecated, and Fluent should be used where possible.
 
 Getting a Review
 ----------------
 
-If you end up working on any patch which touches FTL files, we have a temporary
-hook in place that will reject your patch unless you get an r+ from one of the following
-L10n Drivers:
+If you work on any patch that touches FTL files, you'll need to get a review
+from `fluent-reviewers`__. There's a Herald hook that automatically sets
+that group as a blocking reviewer.
 
-  - Francesco Lodolo (:flod)
-  - Zibi Braniecki (:gandalf)
-  - Axel Hecht (:pike)
-  - Staś Małolepszy (:stas)
+__ https://phabricator.services.mozilla.com/tag/fluent-reviewers/
 
 Guidelines for the review process are available `here`__.
 
@@ -58,16 +38,12 @@ __ ./fluent_review.html
 Major Benefits
 ==============
 
-Not only was the previous system designed over 20 years ago using file formats
-never intended for localization, but also the Web stack which Fluent ties into has
-completely changed over the same period, and the domain of internationalization
-got a powerful foundation in the form of `Unicode`_, `CLDR`_ and `ICU`_ which Fluent tightly
-`interoperates with`__.
+Fluent `ties tightly`__ into the domain of internationalization
+through `Unicode`_, `CLDR`_ and `ICU`_.
 
 __ https://github.com/projectfluent/fluent/wiki/Fluent-and-Standards
 
-While it is beyond the scope of this document to cover all the benefits of Fluent in detail,
-below is an attempt to select some most observable changes for each group of consumers.
+More specifically, the most observable benefits for each group of consumers are
 
 
 Developers
@@ -98,22 +74,16 @@ Product Quality
  - Runtime localization allows for dynamic language changes and updates over-the-air
  - DOM Overlays increase localization security
 
-Many other smaller improvements will be noticed by the users of the system over time
-and, with the new foundation, the Fluent team is `currently working`__ on multiple highly
-requested features which will further improve the experience of developing
-localizable UIs.
-
 __ https://github.com/projectfluent/fluent/wiki/Error-Handling
-__ https://github.com/projectfluent/fluent/wiki/Roadmap
 
 
 Fluent Translation List - FTL
 =============================
 
-Fluent introduces a new localization format designed specifically for easy readability
-and localization features offered by the system.
+Fluent introduces a file format designed specifically for easy readability
+and the localization features offered by the system.
 
-At first glance the format resembles `.properties` file. It may look like this:
+At first glance the format is a simple key-value store. It may look like this:
 
 .. code-block:: fluent
 
@@ -170,10 +140,10 @@ the new features and concepts introduced by Fluent.
   `allow_button` or `allowButton`, unless there are technically constraints – like
   identifiers generated at run-time from external sources – that make this impractical.
 
-In order to ensure the quality of the output, a lot of new checks and tooling
-has been added to the build system.
-`Pontoon`_, the main localization tool used to translate Firefox, has been rebuilding
-its user experience to support localizers in their work.
+In order to ensure the quality of the output, a lot of checks and tooling
+is part of the build system.
+`Pontoon`_, the main localization tool used to translate Firefox, also supports
+Fluent and its features to help localizers in their work.
 
 
 .. _fluent-tutorial-social-contract:
@@ -185,8 +155,8 @@ Fluent uses the concept of a `social contract` between developer and localizers.
 This contract is established by the selection of a unique identifier, called :js:`l10n-id`,
 which carries a promise of being used in a particular place to carry a particular meaning.
 
-The use of unique identifiers is not new for Firefox engineers, but it is important
-to recognize that Fluent formalizes this relationship.
+The use of unique identifiers is shared with legacy localization systems in
+Firefox.
 
 .. important::
 
@@ -197,10 +167,6 @@ to recognize that Fluent formalizes this relationship.
 
 In return, localizers enter the social contract by promising to provide an accurate
 and clean translation of the messages that match the request.
-
-In previous localization systems, developers were responsible for differentiating
-string variants based on a platform via pre-processing instructions, or
-selecting which strings should be formatted using `PluralForms.jsm`.
 
 In Fluent, the developer is not to be bothered with inner logic and complexity that the
 localization will use to construct the response. Whether `declensions`__ or other
@@ -213,8 +179,6 @@ __ https://en.wikipedia.org/wiki/Declension
 
 Markup Localization
 ===================
-
-Fluent fully replaces the use of `DTD`_ in localization.
 
 To localize an element in Fluent, the developer adds a new message to
 an FTL file and then has to associate an :js:`l10n-id` with the element
@@ -229,11 +193,10 @@ by defining a :js:`data-l10n-id` attribute:
 Fluent will take care of the rest, populating the element with the message value
 in its content and all localizable attributes if defined.
 
-The difference compared to the use of DTD is that the developer provides only a single
-message to localize the whole element, rather than a separate entity for
-the value and each of the attributes.
+The developer provides only a single message to localize the whole element,
+including the value and selected attributes.
 
-The other change is that the developer can localize a whole fragment of DOM:
+The value can be a whole fragment of DOM:
 
 .. code-block:: html
 
@@ -300,8 +263,6 @@ __ https://www.w3.org/TR/2011/WD-html5-20110525/text-level-semantics.html
 Runtime Localization
 ====================
 
-Fluent fully replaces the use of `StringBundle`_ in localization.
-
 In almost every case the JS runtime code will operate on a particular document, either
 XUL, XHTML or HTML.
 
@@ -352,10 +313,11 @@ DOM annotation is not possible.
 
 .. note::
 
-  This API is currently only available as asynchronous. In case of Firefox,
+  This API is available as asynchronous. In case of Firefox,
   the only non-DOM localizable calls are used where the output goes to
   a third-party like Bluetooth, Notifications etc.
-  All those cases should already be asynchronous.
+  All those cases should already be asynchronous. If you can't avoid synchronous
+  access, you can use ``mozILocalization.formatMessagesSync`` with synchronous IO.
 
 
 Internationalization
@@ -387,9 +349,7 @@ Plural Rules
 ------------
 
 The most common localization feature is the ability to provide different variants
-of the same string depending on plural categories.
-
-Fluent replaces the use of the proprietary :code:`PluralForms.jsm` with a Unicode CLDR
+of the same string depending on plural categories. Fluent ties into the Unicode CLDR
 standard called `Plural Rules`_.
 
 In order to allow localizers to use it, all the developer has to do is to pass
@@ -410,8 +370,8 @@ language requires that:
          *[other] You have { $unreadCount } unread messages
       }
 
-Fluent guesses that, since the variant selection is performed based on a number,
-its `plural category`__ should be retrieved.
+If the variant selection is performed based on a number, Fluent matches that
+number against literal numbers as well as its `plural category`__.
 
 If the given translation doesn't need pluralization for the string (for example
 Japanese often will not), the localizer can replace it with:
@@ -463,7 +423,7 @@ representation of the date in string:
 
 .. code-block:: javascript
 
-  document.l10n.setAttributes(element, "welcome-message", {
+  document.l10n.formatValue("welcome-message", {
   startDate: FluentDateTime(new Date(), {
       year: "numeric",
       month: "long",
@@ -493,7 +453,8 @@ At the moment Fluent supports two formatters that match JS Intl API counterparts
  * **NUMBER**: `Intl.NumberFormat`__
  * **DATETIME**: `Intl.DateTimeFormat`__
 
-With time more formatters will be added.
+With time more formatters will be added. Also, this feature is not exposed
+to ``setAttributes`` at this point, as that serializes to JSON.
 
 __ https://projectfluent.org/fluent/guide/functions.html#partially-formatted-variables
 __ https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NumberFormat
@@ -501,9 +462,6 @@ __ https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Obje
 
 Registering New L10n Files
 ==========================
-
-In the previous system, a new localization file had to be registered in order to
-add it in the `jar.mn` file for packaging.
 
 Fluent uses a wildcard statement, packaging all localization resources into
 their component's `/localization/` directory.
@@ -529,15 +487,15 @@ The URI provided to the :html:`<link/>` element are relative paths within the lo
 system.
 
 
-Custom Contexts
-===============
+Custom Localizations
+====================
 
 The above method creates a single localization context per document.
 In almost all scenarios that's sufficient.
 
 In rare edge cases where the developer needs to fetch additional resources, or
 the same resources in another language, it is possible to create additional
-contexts manually using the `Localization` class:
+Localization object manually using the `Localization` class:
 
 .. code-block:: javascript
 
@@ -735,7 +693,7 @@ communicate with DOMLocalization.
 L10nRegistry
 ------------
 
-L10nRegistry is our resource management service. It replaces :js:`ChromeRegistry` and
+L10nRegistry is our resource management service. It
 maintains the state of resources packaged into the build and language packs,
 providing an asynchronous iterator of :js:`FluentBundle` objects for a given locale set
 and resources that the :js:`Localization` class uses.

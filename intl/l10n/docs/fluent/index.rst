@@ -2,11 +2,11 @@
 Fluent
 ======
 
-`Fluent`_ is a new localization system, developed by Mozilla, which aims to replace
+`Fluent`_ is a localization system developed by Mozilla, which aims to replace
 all existing localization models currently used at Mozilla.
 
 In case of Firefox it directly supersedes DTD and StringBundle systems, providing
-a large number of new features and improvements over both of them, for developers
+a large number of features and improvements over both of them, for developers
 and localizers.
 
 .. toctree::
