@@ -201,9 +201,7 @@ function LightweightThemeConsumer(aDocument) {
 
   Services.obs.addObserver(this, "lightweight-theme-styling-update");
 
-  // We're responsible for notifying LightweightThemeManager when the OS is in
-  // dark mode so it can activate the dark theme. We don't want this on Linux
-  // as the default theme picks up the right colors from dark GTK themes.
+  // In Linux, the default theme picks up the right colors from dark GTK themes.
   if (AppConstants.platform != "linux") {
     this.darkThemeMediaQuery = this._win.matchMedia("(-moz-system-dark-theme)");
     this.darkThemeMediaQuery.addListener(this);
