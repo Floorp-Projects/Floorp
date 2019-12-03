@@ -29,6 +29,12 @@ namespace base {
 struct FileDescriptor;
 }
 
+namespace mozilla {
+namespace ipc {
+class MiniTransceiver;
+}
+}
+
 class FileDescriptorSet;
 
 namespace IPC {
@@ -332,6 +338,7 @@ class Message : public Pickle {
 #ifdef FUZZING
   friend class mozilla::ipc::Faulty;
 #endif
+  friend class mozilla::ipc::MiniTransceiver;
 
 #ifdef MOZ_TASK_TRACER
   void TaskTracerDispatch();
