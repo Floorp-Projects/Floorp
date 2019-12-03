@@ -184,17 +184,21 @@ addRDMTask(TEST_URL, async function({ ui }) {
       "Got expected number of devices in device selector."
     );
 
-    const added = items.find(i => i.getAttribute("label") === addedDevice.name);
+    const added = findItem(items, addedDevice.name);
     ok(added, "Dummy device added to the device selector.");
 
     for (const name of preferredDevices.added.keys()) {
-      const menuItem = items.find(item => item.getAttribute("label") === name);
+      const menuItem = findItem(items, name);
       ok(menuItem, "Device added by user still in the device selector.");
     }
 
     for (const name of preferredDevices.removed.keys()) {
-      const menuItem = items.find(item => item.getAttribute("label") === name);
+      const menuItem = findItem(items, name);
       ok(!menuItem, "Device removed by user not in the device selector.");
     }
   });
 });
+
+function findItem(items, name) {
+  return items.find(item => item.getAttribute("label").includes(name));
+}
