@@ -127,8 +127,7 @@ nsString MediaEngineTabVideoSource::GetGroupId() const {
 
 nsresult MediaEngineTabVideoSource::Allocate(
     const dom::MediaTrackConstraints& aConstraints,
-    const MediaEnginePrefs& aPrefs,
-    const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+    const MediaEnginePrefs& aPrefs, uint64_t aWindowID,
     const char** aOutBadConstraint) {
   AssertIsOnOwningThread();
 

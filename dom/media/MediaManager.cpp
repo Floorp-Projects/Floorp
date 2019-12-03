@@ -1023,7 +1023,7 @@ MediaDevice::GetMediaSource(nsAString& aMediaSource) {
 
 nsresult MediaDevice::Allocate(const MediaTrackConstraints& aConstraints,
                                const MediaEnginePrefs& aPrefs,
-                               const ipc::PrincipalInfo& aPrincipalInfo,
+                               uint64_t aWindowID,
                                const char** aOutBadConstraint) {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
   MOZ_ASSERT(mSource);
@@ -1035,8 +1035,7 @@ nsresult MediaDevice::Allocate(const MediaTrackConstraints& aConstraints,
     return NS_ERROR_FAILURE;
   }
 
-  return mSource->Allocate(aConstraints, aPrefs, aPrincipalInfo,
-                           aOutBadConstraint);
+  return mSource->Allocate(aConstraints, aPrefs, aWindowID, aOutBadConstraint);
 }
 
 void MediaDevice::SetTrack(const RefPtr<SourceMediaTrack>& aTrack,
@@ -1503,7 +1502,7 @@ class GetUserMediaTask : public Runnable {
 
     if (mAudioDevice) {
       auto& constraints = GetInvariant(mConstraints.mAudio);
-      rv = mAudioDevice->Allocate(constraints, mPrefs, mPrincipalInfo,
+      rv = mAudioDevice->Allocate(constraints, mPrefs, mWindowID,
                                   &badConstraint);
       if (NS_FAILED(rv)) {
         errorMsg = "Failed to allocate audiosource";
@@ -1517,7 +1516,7 @@ class GetUserMediaTask : public Runnable {
     }
     if (!errorMsg && mVideoDevice) {
       auto& constraints = GetInvariant(mConstraints.mVideo);
-      rv = mVideoDevice->Allocate(constraints, mPrefs, mPrincipalInfo,
+      rv = mVideoDevice->Allocate(constraints, mPrefs, mWindowID,
                                   &badConstraint);
       if (NS_FAILED(rv)) {
         errorMsg = "Failed to allocate videosource";
