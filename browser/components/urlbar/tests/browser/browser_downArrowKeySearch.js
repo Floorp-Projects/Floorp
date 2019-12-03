@@ -54,3 +54,16 @@ add_task(async function empty() {
   Assert.equal(details.url, "http://example.com/");
   Assert.equal(gURLBar.value, "");
 });
+
+add_task(async function new_window() {
+  // The megabar works properly in a new window.
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  win.gURLBar.focus();
+  EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+  await UrlbarTestUtils.promiseSearchComplete(win);
+  Assert.equal(UrlbarTestUtils.getSelectedRowIndex(win), -1);
+  let details = await UrlbarTestUtils.getDetailsOfResultAt(win, 0);
+  Assert.equal(details.url, "http://example.com/");
+  Assert.equal(win.gURLBar.value, "");
+  await BrowserTestUtils.closeWindow(win);
+});
