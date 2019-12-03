@@ -2622,13 +2622,11 @@ var SessionStoreInternal = {
 
     // Check that the document has a corresponding BrowsingContext.
     let browsingContext;
-    let isSubframe = false;
     let cp = channel.loadInfo.externalContentPolicyType;
     if (cp == Ci.nsIContentPolicy.TYPE_DOCUMENT) {
       browsingContext = channel.loadInfo.browsingContext;
     } else {
       browsingContext = channel.loadInfo.frameBrowsingContext;
-      isSubframe = true;
     }
 
     if (!browsingContext) {
@@ -2735,8 +2733,7 @@ var SessionStoreInternal = {
       true,
       useRemoteSubframes,
       preferredRemoteType,
-      currentPrincipal,
-      isSubframe
+      currentPrincipal
     );
 
     debug(
@@ -2981,7 +2978,7 @@ var SessionStoreInternal = {
     // waiting for data from the frame script. This throbber is disabled
     // if the URI is a local about: URI.
     let uriObj = aTab.linkedBrowser.currentURI;
-    if (!uriObj || (uriObj && !uriObj.schemeIs("about"))) {
+    if (!uriObj || (uriObj && !aWindow.gBrowser.isLocalAboutURI(uriObj))) {
       newTab.setAttribute("busy", "true");
     }
 
@@ -3665,7 +3662,7 @@ var SessionStoreInternal = {
     // Start the throbber to pretend we're doing something while actually
     // waiting for data from the frame script. This throbber is disabled
     // if the URI is a local about: URI.
-    if (!uriObj || (uriObj && !uriObj.schemeIs("about"))) {
+    if (!uriObj || (uriObj && !window.gBrowser.isLocalAboutURI(uriObj))) {
       tab.setAttribute("busy", "true");
     }
 
