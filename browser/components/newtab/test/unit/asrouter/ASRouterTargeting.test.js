@@ -308,6 +308,56 @@ describe("ASRouterTargeting", () => {
 
     assert.calledTwice(evalStub);
   });
+
+  describe("#findMatchingMessage", () => {
+    let matchStub;
+    let messages = [
+      { id: "FOO", targeting: "match" },
+      { id: "BAR", targeting: "match" },
+      { id: "BAZ" },
+    ];
+    beforeEach(() => {
+      matchStub = sandbox
+        .stub(ASRouterTargeting, "_isMessageMatch")
+        .callsFake(message => message.targeting === "match");
+    });
+    it("should return an array of matches if returnAll is true", async () => {
+      assert.deepEqual(
+        await ASRouterTargeting.findMatchingMessage({
+          messages,
+          returnAll: true,
+        }),
+        [{ id: "FOO", targeting: "match" }, { id: "BAR", targeting: "match" }]
+      );
+    });
+    it("should return an empty array if no matches were found and returnAll is true", async () => {
+      matchStub.returns(false);
+      assert.deepEqual(
+        await ASRouterTargeting.findMatchingMessage({
+          messages,
+          returnAll: true,
+        }),
+        []
+      );
+    });
+    it("should return the first match if returnAll is false", async () => {
+      assert.deepEqual(
+        await ASRouterTargeting.findMatchingMessage({
+          messages,
+        }),
+        messages[0]
+      );
+    });
+    it("should return null if if no matches were found and returnAll is false", async () => {
+      matchStub.returns(false);
+      assert.deepEqual(
+        await ASRouterTargeting.findMatchingMessage({
+          messages,
+        }),
+        null
+      );
+    });
+  });
 });
 
 /**

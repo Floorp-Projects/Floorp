@@ -1044,7 +1044,9 @@ describe("ASRouter", () => {
       };
       await Router.setState({ messages: [message2, message1] });
       // Just return the first message provided as arg
-      sandbox.stub(Router, "_findMessage").callsFake(messages => messages[0]);
+      sandbox
+        .stub(ASRouterTargeting, "findMatchingMessage")
+        .callsFake(({ messages }) => messages[0]);
 
       const result = Router.handleMessageRequest({ triggerId: "foo" });
 
@@ -1065,7 +1067,9 @@ describe("ASRouter", () => {
       };
       await Router.setState({ messages: [message2, message1] });
       // Just return the first message provided as arg
-      sandbox.stub(Router, "_findMessage").callsFake(messages => messages[0]);
+      sandbox
+        .stub(ASRouterTargeting, "findMatchingMessage")
+        .callsFake(({ messages }) => messages[0]);
 
       const result = Router.handleMessageRequest({
         triggerId: "foo",
@@ -1097,8 +1101,8 @@ describe("ASRouter", () => {
         template: "badge",
       };
       sandbox
-        .stub(Router, "_findAllMessages")
-        .callsFake(messages => [message2, message1]);
+        .stub(ASRouterTargeting, "findMatchingMessage")
+        .callsFake(() => [message2, message1]);
       await Router.setState({ messages: [message3, message2, message1] });
       const result = await Router.handleMessageRequest({
         template: "whatsnew-panel",
@@ -1126,21 +1130,17 @@ describe("ASRouter", () => {
       };
       await Router.setState({ messages: [message2, message1] });
       // Just return the first message provided as arg
-      const stub = sandbox.stub(Router, "_findMessage");
+      const stub = sandbox.stub(ASRouterTargeting, "findMatchingMessage");
 
       Router.handleMessageRequest(trigger);
 
       assert.calledOnce(stub);
-      assert.calledWithExactly(
-        stub,
-        sinon.match.array,
-        {
-          id: trigger.triggerId,
-          param: trigger.triggerParam,
-          context: trigger.triggerContext,
-        },
-        { shouldCache: false }
-      );
+
+      const [options] = stub.firstCall.args;
+      assert.propertyVal(options.trigger, "id", trigger.triggerId);
+      assert.propertyVal(options.trigger, "param", trigger.triggerParam);
+      assert.propertyVal(options.trigger, "context", trigger.triggerContext);
+      assert.propertyVal(options, "shouldCache", false);
     });
     it("should cache snippets messages", async () => {
       const trigger = {
@@ -1161,21 +1161,14 @@ describe("ASRouter", () => {
       };
       await Router.setState({ messages: [message2, message1] });
       // Just return the first message provided as arg
-      const stub = sandbox.stub(Router, "_findMessage");
+      const stub = sandbox.stub(ASRouterTargeting, "findMatchingMessage");
 
       Router.handleMessageRequest(trigger);
 
       assert.calledOnce(stub);
-      assert.calledWithExactly(
-        stub,
-        sinon.match.array,
-        {
-          id: trigger.triggerId,
-          param: trigger.triggerParam,
-          context: trigger.triggerContext,
-        },
-        { shouldCache: true }
-      );
+
+      const [options] = stub.firstCall.args;
+      assert.propertyVal(options, "shouldCache", true);
     });
     it("should filter out messages without a trigger (or different) when a triggerId is defined", async () => {
       const trigger = { triggerId: "foo" };
@@ -1195,7 +1188,9 @@ describe("ASRouter", () => {
       };
       await Router.setState({ messages: [message2, message1, message3] });
       // Just return the first message provided as arg
-      sandbox.stub(Router, "_findMessage").callsFake(args => args);
+      sandbox
+        .stub(ASRouterTargeting, "findMatchingMessage")
+        .callsFake(args => args.messages);
 
       const result = Router.handleMessageRequest(trigger);
 
@@ -1867,43 +1862,22 @@ describe("ASRouter", () => {
 
     describe("#onMessage: TRIGGER", () => {
       it("should pass the trigger to ASRouterTargeting on TRIGGER message", async () => {
-        sandbox.stub(Router, "_findMessage").resolves();
+        sandbox.stub(ASRouterTargeting, "findMatchingMessage").resolves();
         const msg = fakeAsyncMessage({
           type: "TRIGGER",
           data: { trigger: { id: "firstRun" } },
         });
         await Router.onMessage(msg);
 
-        assert.calledOnce(Router._findMessage);
-        assert.deepEqual(Router._findMessage.firstCall.args[1], {
-          id: "firstRun",
-          param: undefined,
-          context: undefined,
-        });
-      });
-      it("consider the trigger when picking a message", async () => {
-        const messages = [
+        assert.calledOnce(ASRouterTargeting.findMatchingMessage);
+        assert.deepEqual(
+          ASRouterTargeting.findMatchingMessage.firstCall.args[0].trigger,
           {
-            id: "foo1",
-            template: "simple_template",
-            bundled: 1,
-            trigger: { id: "foo" },
-            content: { title: "Foo1", body: "Foo123-1" },
-          },
-        ];
-
-        const { data } = fakeAsyncMessage({
-          type: "TRIGGER",
-          data: { trigger: { id: "foo" } },
-        });
-        const message = await Router._findMessage(messages, data.data.trigger);
-        assert.equal(message, messages[0]);
-
-        const matches = await Router._findAllMessages(
-          messages,
-          data.data.trigger
+            id: "firstRun",
+            param: undefined,
+            context: undefined,
+          }
         );
-        assert.deepEqual(matches, messages);
       });
       it("should pick a message with the right targeting and trigger", async () => {
         let messages = [
