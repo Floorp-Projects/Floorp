@@ -134,7 +134,6 @@ class nsIAppWindow;
 class nsXULPrototypeDocument;
 class nsXULPrototypeElement;
 class PermissionDelegateHandler;
-class nsIPermissionDelegateHandler;
 struct nsFont;
 
 namespace mozilla {
@@ -4198,8 +4197,6 @@ class Document : public nsINode,
   }
 
   void SetPrototypeDocument(nsXULPrototypeDocument* aPrototype);
-
-  nsIPermissionDelegateHandler* PermDelegateHandler();
 
   // Returns true if we use overlay scrollbars on the system wide or on the
   // given document.

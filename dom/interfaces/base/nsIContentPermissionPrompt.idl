@@ -92,21 +92,11 @@ interface nsIContentPermissionRequest : nsISupports {
   readonly attribute boolean userHadInteractedWithDocument;
   readonly attribute DOMTimeStamp documentDOMContentLoadedTimestamp;
 
-  readonly attribute boolean maybeUnsafePermissionDelegate;
   /**
    *  The requester to get the required information of
    *  the window.
    */
   readonly attribute nsIContentPermissionRequester requester;
-
-  /*
-   * Get delegate principal of the permission request. This will return nullptr,
-   * or request's principal or top level principal based on the delegate policy
-   * will be applied for a given type.
-   *
-   * @param aType the permission type to get
-   */
-  nsIPrincipal getDelegatePrincipal(in ACString aType);
 
   /**
    * allow or cancel the request

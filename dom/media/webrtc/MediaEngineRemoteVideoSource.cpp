@@ -192,7 +192,8 @@ nsString MediaEngineRemoteVideoSource::GetGroupId() const {
 
 nsresult MediaEngineRemoteVideoSource::Allocate(
     const MediaTrackConstraints& aConstraints, const MediaEnginePrefs& aPrefs,
-    uint64_t aWindowID, const char** aOutBadConstraint) {
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+    const char** aOutBadConstraint) {
   LOG("%s", __PRETTY_FUNCTION__);
   AssertIsOnOwningThread();
 
@@ -215,7 +216,7 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
 
   if (camera::GetChildAndCall(&camera::CamerasChild::AllocateCaptureDevice,
                               mCapEngine, mUniqueId.get(), kMaxUniqueIdLength,
-                              mCaptureIndex, aWindowID)) {
+                              mCaptureIndex, aPrincipalInfo)) {
     return NS_ERROR_FAILURE;
   }
 

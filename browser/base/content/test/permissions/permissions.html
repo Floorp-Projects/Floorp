@@ -18,16 +18,6 @@ function requestPush() {
   });
 }
 
-function requestGeo() {
-  return navigator.geolocation.getCurrentPosition(() => {
-    parent.postMessage("allow", "*");
-  }, error => {
-    // PERMISSION_DENIED = 1
-    parent.postMessage(error.code == 1 ? "deny" : "allow", "*");
-  });
-}
-
-
 window.onmessage = function(event) {
   switch (event.data) {
   case "push":
@@ -40,7 +30,7 @@ window.onmessage = function(event) {
   <body onkeydown="gKeyDowns++;" onkeypress="gKeyPresses++">
 	<!-- This page could eventually request permissions from content
 	     and make sure that chrome responds appropriately -->
-  <button id="geo" onclick="requestGeo()">Geolocation</button>
+  <button id="geo" onclick="navigator.geolocation.getCurrentPosition(() => {})">Geolocation</button>
   <button id="desktop-notification" onclick="Notification.requestPermission()">Notifications</button>
   <button id="push" onclick="requestPush()">Push Notifications</button>
   <button id="camera" onclick="navigator.mediaDevices.getUserMedia({video: true, fake: true})">Camera</button>

@@ -15,10 +15,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundParent.h"
-#include "mozilla/dom/CanonicalBrowsingContext.h"
-#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs_permissions.h"
 #include "nsIPermissionManager.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
@@ -635,45 +632,28 @@ mozilla::ipc::IPCResult CamerasParent::RecvGetCaptureDevice(
   return IPC_OK();
 }
 
-// Find out whether the given window with id has permission to use the
-// camera. If the permission is not persistent, we'll make it a one-shot by
-// removing the (session) permission.
-static bool HasCameraPermission(const uint64_t& aWindowId) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  RefPtr<dom::WindowGlobalParent> window =
-      dom::WindowGlobalParent::GetByInnerWindowId(aWindowId);
-  if (!window) {
-    // Could not find window by id
+// Find out whether the given principal has permission to use the
+// camera. If the permission is not persistent, we'll make it
+// a one-shot by removing the (session) permission.
+static bool HasCameraPermission(const ipc::PrincipalInfo& aPrincipalInfo) {
+  if (aPrincipalInfo.type() == ipc::PrincipalInfo::TNullPrincipalInfo) {
     return false;
   }
 
-  // If we delegate permission from first party, we should use the top level
-  // window
-  if (StaticPrefs::dom_security_featurePolicy_enabled() &&
-      StaticPrefs::permissions_delegation_enabled()) {
-    RefPtr<dom::BrowsingContext> topBC = window->BrowsingContext()->Top();
-    window = topBC->Canonical()->GetCurrentWindowGlobal();
-  }
-
-  // Return false if the window is not the currently-active window for its
-  // BrowsingContext.
-  if (!window || !window->IsCurrentGlobal()) {
-    return false;
-  }
-
-  nsIPrincipal* principal = window->DocumentPrincipal();
-  if (principal->GetIsNullPrincipal()) {
-    return false;
-  }
-
-  if (principal->IsSystemPrincipal()) {
+  if (aPrincipalInfo.type() == ipc::PrincipalInfo::TSystemPrincipalInfo) {
     return true;
   }
 
-  MOZ_ASSERT(principal->GetIsContentPrincipal());
+  MOZ_ASSERT(aPrincipalInfo.type() ==
+             ipc::PrincipalInfo::TContentPrincipalInfo);
 
   nsresult rv;
+  nsCOMPtr<nsIPrincipal> principal =
+      PrincipalInfoToPrincipal(aPrincipalInfo, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
   // Name used with nsIPermissionManager
   static const nsLiteralCString cameraPermission =
       NS_LITERAL_CSTRING("MediaManagerVideo");
@@ -702,15 +682,15 @@ static bool HasCameraPermission(const uint64_t& aWindowId) {
 
 mozilla::ipc::IPCResult CamerasParent::RecvAllocateCaptureDevice(
     const CaptureEngine& aCapEngine, const nsCString& unique_id,
-    const uint64_t& aWindowID) {
+    const PrincipalInfo& aPrincipalInfo) {
   LOG(("%s: Verifying permissions", __PRETTY_FUNCTION__));
   RefPtr<CamerasParent> self(this);
   RefPtr<Runnable> mainthread_runnable = NewRunnableFrom([self, aCapEngine,
                                                           unique_id,
-                                                          aWindowID]() {
+                                                          aPrincipalInfo]() {
     // Verify whether the claimed origin has received permission
     // to use the camera, either persistently or this session (one shot).
-    bool allowed = HasCameraPermission(aWindowID);
+    bool allowed = HasCameraPermission(aPrincipalInfo);
     if (!allowed) {
       // Developer preference for turning off permission check.
       if (Preferences::GetBool("media.navigator.permission.disabled", false) ||
