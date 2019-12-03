@@ -180,6 +180,22 @@ function initialize() {
           iframe.style.height = `${Math.min(600, height)}px`;
         };
 
+        // Tell the iframe whether we're in dark mode or not. This approach
+        // unfortunately has two flaws. First, since this is a boolean setting,
+        // we ignore any theme information and just flip on our preset dark mode
+        // if the theme is dark enough. It might look out of place depending on
+        // the system or Firefox theme in use. Second, we won't detect all dark
+        // mode cases here. If the user is using the default Firefox theme, which
+        // normally adjusts to system-themes, we'll only be able to detect dark
+        // mode on Windows and Macintosh. In Linux, instead of having a global
+        // dark mode setting, we use GTK-theme colors directly for theming, and
+        // those won't be detected here. Similarly, if a Windows user is not using
+        // the particular dark mode system setting, but instead using a darker
+        // system theme, then that will also not be detected here.
+        contentWindow.gIsDarkMode = document.documentElement.hasAttribute(
+          "lwt-popup-brighttext"
+        );
+
         // The popup has an annoying rendering "blip" when first rendering the react
         // components. This adds a blocker until the content is ready to show.
         event.detail.addBlocker(
