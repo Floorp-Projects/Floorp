@@ -26,7 +26,42 @@ nsHttpRequestHead::nsHttpRequestHead()
   MOZ_COUNT_CTOR(nsHttpRequestHead);
 }
 
+nsHttpRequestHead::nsHttpRequestHead(const nsHttpRequestHead& aRequestHead)
+    : mRecursiveMutex("nsHttpRequestHead.mRecursiveMutex"),
+      mInVisitHeaders(false) {
+  nsHttpRequestHead& other = const_cast<nsHttpRequestHead&>(aRequestHead);
+  RecursiveMutexAutoLock monitor(other.mRecursiveMutex);
+
+  mHeaders = other.mHeaders;
+  mMethod = other.mMethod;
+  mVersion = other.mVersion;
+  mRequestURI = other.mRequestURI;
+  mPath = other.mPath;
+  mOrigin = other.mOrigin;
+  mParsedMethod = other.mParsedMethod;
+  mHTTPS = other.mHTTPS;
+  mInVisitHeaders = false;
+}
+
 nsHttpRequestHead::~nsHttpRequestHead() { MOZ_COUNT_DTOR(nsHttpRequestHead); }
+
+nsHttpRequestHead& nsHttpRequestHead::operator=(
+    const nsHttpRequestHead& aRequestHead) {
+  nsHttpRequestHead& other = const_cast<nsHttpRequestHead&>(aRequestHead);
+  RecursiveMutexAutoLock monitorOther(other.mRecursiveMutex);
+  RecursiveMutexAutoLock monitor(mRecursiveMutex);
+
+  mHeaders = other.mHeaders;
+  mMethod = other.mMethod;
+  mVersion = other.mVersion;
+  mRequestURI = other.mRequestURI;
+  mPath = other.mPath;
+  mOrigin = other.mOrigin;
+  mParsedMethod = other.mParsedMethod;
+  mHTTPS = other.mHTTPS;
+  mInVisitHeaders = false;
+  return *this;
+}
 
 // Don't use this function. It is only used by HttpChannelParent to avoid
 // copying of request headers!!!

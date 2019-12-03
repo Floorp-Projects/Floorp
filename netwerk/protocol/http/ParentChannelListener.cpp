@@ -132,7 +132,7 @@ ParentChannelListener::GetInterface(const nsIID& aIID, void** result) {
   }
 
   if (mBrowserParent && aIID.Equals(NS_GET_IID(nsIPrompt))) {
-    nsCOMPtr<Element> frameElement = mBrowserParent->GetOwnerElement();
+    nsCOMPtr<dom::Element> frameElement = mBrowserParent->GetOwnerElement();
     if (frameElement) {
       nsCOMPtr<nsPIDOMWindowOuter> win = frameElement->OwnerDoc()->GetWindow();
       NS_ENSURE_TRUE(win, NS_ERROR_UNEXPECTED);

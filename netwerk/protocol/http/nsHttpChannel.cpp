@@ -861,7 +861,7 @@ nsresult nsHttpChannel::DoConnect(HttpTransactionShell* aTransWithStickyConn) {
     return rv;
   }
 
-  rv = mTransactionPump->AsyncRead(this, nullptr);
+  rv = mTransaction->AsyncRead(this, getter_AddRefs(mTransactionPump));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1289,11 +1289,10 @@ nsresult nsHttpChannel::SetupTransaction() {
 
   HttpTrafficCategory category = CreateTrafficCategory();
 
-  nsCOMPtr<nsIAsyncInputStream> responseStream;
-  rv = mTransaction->Init(
-      mCaps, mConnectionInfo, &mRequestHead, mUploadStream, mReqContentLength,
-      mUploadStreamHasHeaders, GetCurrentThreadEventTarget(), callbacks, this,
-      mTopLevelOuterContentWindowId, category, getter_AddRefs(responseStream));
+  rv = mTransaction->Init(mCaps, mConnectionInfo, &mRequestHead, mUploadStream,
+                          mReqContentLength, mUploadStreamHasHeaders,
+                          GetCurrentThreadEventTarget(), callbacks, this,
+                          mTopLevelOuterContentWindowId, category);
   if (NS_FAILED(rv)) {
     mTransaction = nullptr;
     return rv;
@@ -1304,8 +1303,6 @@ nsresult nsHttpChannel::SetupTransaction() {
     mTransaction->SetRequestContext(mRequestContext);
   }
 
-  rv = nsInputStreamPump::Create(getter_AddRefs(mTransactionPump),
-                                 responseStream);
   return rv;
 }
 
@@ -1814,7 +1811,10 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     }
 
     if (!typeSniffersCalled && mTransactionPump) {
-      mTransactionPump->PeekStream(CallTypeSniffers, thisChannel);
+      RefPtr<nsInputStreamPump> pump = do_QueryObject(mTransactionPump);
+      if (pump) {
+        pump->PeekStream(CallTypeSniffers, thisChannel);
+      }
     }
   }
 
@@ -8567,7 +8567,9 @@ nsHttpChannel::GetDeliveryTarget(nsIEventTarget** aEventTarget) {
     return mCachePump->GetDeliveryTarget(aEventTarget);
   }
   if (mTransactionPump) {
-    return mTransactionPump->GetDeliveryTarget(aEventTarget);
+    nsCOMPtr<nsIThreadRetargetableRequest> request =
+        do_QueryInterface(mTransactionPump);
+    return request->GetDeliveryTarget(aEventTarget);
   }
   return NS_ERROR_NOT_AVAILABLE;
 }
@@ -9632,7 +9634,7 @@ nsHttpChannel::ResumeInternal() {
       std::swap(callOnResume, mCallOnResume);
 
       RefPtr<nsHttpChannel> self(this);
-      RefPtr<nsInputStreamPump> transactionPump = mTransactionPump;
+      nsCOMPtr<nsIRequest> transactionPump = mTransactionPump;
       RefPtr<nsInputStreamPump> cachePump = mCachePump;
 
       nsresult rv = NS_DispatchToCurrentThread(NS_NewRunnableFunction(
@@ -9680,7 +9682,7 @@ nsHttpChannel::ResumeInternal() {
                    "pump %p, this=%p",
                    self->mTransactionPump.get(), self.get()));
 
-              RefPtr<nsInputStreamPump> pump = self->mTransactionPump;
+              nsCOMPtr<nsIRequest> pump = self->mTransactionPump;
               NS_DispatchToCurrentThread(NS_NewRunnableFunction(
                   "nsHttpChannel::CallOnResume new transaction",
                   [pump{std::move(pump)}]() { pump->Resume(); }));

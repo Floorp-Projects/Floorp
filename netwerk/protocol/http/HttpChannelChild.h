@@ -142,7 +142,7 @@ class HttpChannelChild final : public PHttpChannelChild,
       const uint32_t& cacheKey, const nsCString& altDataType,
       const int64_t& altDataLen, const bool& deliveringAltData,
       const bool& aApplyConversion, const bool& aIsResolvedByTRR,
-      const ResourceTimingStruct& aTiming,
+      const ResourceTimingStructArgs& aTiming,
       const bool& aAllRedirectsSameOrigin) override;
   mozilla::ipc::IPCResult RecvFailedAsyncOpen(const nsresult& status) override;
   mozilla::ipc::IPCResult RecvRedirect1Begin(
@@ -151,7 +151,8 @@ class HttpChannelChild final : public PHttpChannelChild,
       const ParentLoadInfoForwarderArgs& loadInfoForwarder,
       const nsHttpResponseHead& responseHead,
       const nsCString& securityInfoSerialization, const uint64_t& channelId,
-      const NetAddr& oldPeerAddr, const ResourceTimingStruct& aTiming) override;
+      const NetAddr& oldPeerAddr,
+      const ResourceTimingStructArgs& aTiming) override;
   mozilla::ipc::IPCResult RecvRedirect3Complete() override;
   mozilla::ipc::IPCResult RecvAssociateApplicationCache(
       const nsCString& groupID, const nsCString& clientID) override;
@@ -286,7 +287,7 @@ class HttpChannelChild final : public PHttpChannelChild,
                                  const uint32_t& aCount,
                                  const nsCString& aData);
   void ProcessOnStopRequest(const nsresult& aStatusCode,
-                            const ResourceTimingStruct& aTiming,
+                            const ResourceTimingStructArgs& aTiming,
                             const nsHttpHeaderArray& aResponseTrailers);
   void ProcessFlushedForDiversion();
   void ProcessDivertMessages();
@@ -486,7 +487,7 @@ class HttpChannelChild final : public PHttpChannelChild,
       const NetAddr& peerAddr, const uint32_t& cacheKey,
       const nsCString& altDataType, const int64_t& altDataLen,
       const bool& deliveringAltData, const bool& aApplyConversion,
-      const bool& aIsResolvedByTRR, const ResourceTimingStruct& aTiming,
+      const bool& aIsResolvedByTRR, const ResourceTimingStructArgs& aTiming,
       const bool& aAllRedirectsSameOrigin);
   void MaybeDivertOnData(const nsCString& data, const uint64_t& offset,
                          const uint32_t& count);
@@ -494,7 +495,7 @@ class HttpChannelChild final : public PHttpChannelChild,
                           const uint64_t& offset, const uint32_t& count,
                           const nsCString& data);
   void OnStopRequest(const nsresult& channelStatus,
-                     const ResourceTimingStruct& timing,
+                     const ResourceTimingStructArgs& timing,
                      const nsHttpHeaderArray& aResponseTrailers);
   void MaybeDivertOnStop(const nsresult& aChannelStatus);
   void FailedAsyncOpen(const nsresult& status);
@@ -506,7 +507,7 @@ class HttpChannelChild final : public PHttpChannelChild,
                       const nsHttpResponseHead& responseHead,
                       const nsACString& securityInfoSerialization,
                       const uint64_t& channelId,
-                      const ResourceTimingStruct& timing);
+                      const ResourceTimingStructArgs& timing);
   bool Redirect3Complete(OverrideRunnable* aRunnable);
   void DeleteSelf();
   void DoNotifyListener();

@@ -48,6 +48,9 @@ EXPORTS.mozilla.net += [
     'HttpChannelChild.h',
     'HttpChannelParent.h',
     'HttpInfo.h',
+    'HttpTransactionChild.h',
+    'HttpTransactionParent.h',
+    'HttpTransactionShell.h',
     'nsServerTiming.h',
     'NullHttpChannel.h',
     'ParentChannelListener.h',
@@ -86,6 +89,8 @@ UNIFIED_SOURCES += [
     'HttpChannelParent.cpp',
     'HttpInfo.cpp',
     'HttpTrafficAnalyzer.cpp',
+    'HttpTransactionChild.cpp',
+    'HttpTransactionParent.cpp',
     'InterceptedChannel.cpp',
     'InterceptedHttpChannel.cpp',
     'nsCORSListenerProxy.cpp',
@@ -123,6 +128,7 @@ IPDL_SOURCES += [
     'PClassifierDummyChannel.ipdl',
     'PHttpBackgroundChannel.ipdl',
     'PHttpChannel.ipdl',
+    'PHttpTransaction.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

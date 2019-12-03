@@ -13,6 +13,48 @@ namespace net {
 // Yes, we support QI to nsProxyInfo
 NS_IMPL_ISUPPORTS(nsProxyInfo, nsProxyInfo, nsIProxyInfo)
 
+// These pointers are declared in nsProtocolProxyService.cpp and
+// comparison of mType by string pointer is valid within necko
+extern const char kProxyType_HTTP[];
+extern const char kProxyType_HTTPS[];
+extern const char kProxyType_SOCKS[];
+extern const char kProxyType_SOCKS4[];
+extern const char kProxyType_SOCKS5[];
+extern const char kProxyType_DIRECT[];
+
+nsProxyInfo::nsProxyInfo(const nsACString& aType, const nsACString& aHost,
+                         int32_t aPort, const nsACString& aUsername,
+                         const nsACString& aPassword, uint32_t aFlags,
+                         uint32_t aTimeout, uint32_t aResolveFlags,
+                         const nsACString& aProxyAuthorizationHeader,
+                         const nsACString& aConnectionIsolationKey)
+    : mHost(aHost),
+      mUsername(aUsername),
+      mPassword(aPassword),
+      mProxyAuthorizationHeader(aProxyAuthorizationHeader),
+      mConnectionIsolationKey(aConnectionIsolationKey),
+      mPort(aPort),
+      mFlags(aFlags),
+      mResolveFlags(aResolveFlags),
+      mTimeout(aTimeout),
+      mNext(nullptr) {
+  if (aType.EqualsASCII(kProxyType_HTTP)) {
+    mType = kProxyType_HTTP;
+  } else if (aType.EqualsASCII(kProxyType_HTTPS)) {
+    mType = kProxyType_HTTPS;
+  } else if (aType.EqualsASCII(kProxyType_SOCKS)) {
+    mType = kProxyType_SOCKS;
+  } else if (aType.EqualsASCII(kProxyType_SOCKS4)) {
+    mType = kProxyType_SOCKS4;
+  } else if (aType.EqualsASCII(kProxyType_SOCKS5)) {
+    mType = kProxyType_SOCKS5;
+  } else if (aType.EqualsASCII(kProxyType_PROXY)) {
+    mType = kProxyType_PROXY;
+  } else {
+    mType = kProxyType_DIRECT;
+  }
+}
+
 NS_IMETHODIMP
 nsProxyInfo::GetHost(nsACString& result) {
   result = mHost;
@@ -93,15 +135,6 @@ nsProxyInfo::SetFailoverProxy(nsIProxyInfo* proxy) {
   pi.swap(mNext);
   return NS_OK;
 }
-
-// These pointers are declared in nsProtocolProxyService.cpp and
-// comparison of mType by string pointer is valid within necko
-extern const char kProxyType_HTTP[];
-extern const char kProxyType_HTTPS[];
-extern const char kProxyType_SOCKS[];
-extern const char kProxyType_SOCKS4[];
-extern const char kProxyType_SOCKS5[];
-extern const char kProxyType_DIRECT[];
 
 bool nsProxyInfo::IsDirect() {
   if (!mType) return true;
