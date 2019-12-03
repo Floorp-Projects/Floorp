@@ -11,7 +11,14 @@
 // * Private browsing windows work the same as normal windows
 // * Opens the panel only if there is a user typed search string
 
-async function checkOpensOnFocus(win = window) {
+async function checkPanelRemainsClosed(win) {
+  // Because the panel opening may not be immediate, we must wait a bit.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, 500));
+  Assert.ok(!win.gURLBar.view.isOpen, "check urlbar panel is not open");
+}
+
+async function checkOpensOnFocus(win, state) {
   Assert.ok(!win.gURLBar.view.isOpen, "check urlbar panel is not open");
   win.gURLBar.blur();
 
@@ -19,6 +26,11 @@ async function checkOpensOnFocus(win = window) {
   await UrlbarTestUtils.promisePopupOpen(win, () => {
     win.document.getElementById("Browser:OpenLocation").doCommand();
   });
+
+  await UrlbarTestUtils.promiseSearchComplete(win);
+  Assert.equal(state.selectionStart, win.gURLBar.selectionStart);
+  Assert.equal(state.selectionEnd, win.gURLBar.selectionEnd);
+
   await UrlbarTestUtils.promisePopupClose(win, () => {
     win.gURLBar.blur();
   });
@@ -26,9 +38,13 @@ async function checkOpensOnFocus(win = window) {
   await UrlbarTestUtils.promisePopupOpen(win, () => {
     EventUtils.synthesizeMouseAtCenter(win.gURLBar.inputField, {}, win);
   });
+
+  await UrlbarTestUtils.promiseSearchComplete(win);
+  Assert.equal(state.selectionStart, win.gURLBar.selectionStart);
+  Assert.equal(state.selectionEnd, win.gURLBar.selectionEnd);
 }
 
-async function checkDoesNotOpenOnFocus(win = window) {
+async function checkDoesNotOpenOnFocus(win) {
   Assert.ok(
     !win.gURLBar.openViewOnFocusForCurrentTab,
     "openViewOnFocusForCurrentTab should be false"
@@ -38,31 +54,35 @@ async function checkDoesNotOpenOnFocus(win = window) {
 
   info("Check the keyboard shortcut.");
   win.document.getElementById("Browser:OpenLocation").doCommand();
-  // Because the panel opening may not be immediate, we must wait a bit.
-  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  await new Promise(resolve => setTimeout(resolve, 500));
-  Assert.ok(!win.gURLBar.view.isOpen, "check urlbar panel is not open");
+  await checkPanelRemainsClosed(win);
   win.gURLBar.blur();
   info("Focus with the mouse.");
   EventUtils.synthesizeMouseAtCenter(win.gURLBar.inputField, {}, win);
-  // Because the panel opening may not be immediate, we must wait a bit.
-  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  await new Promise(resolve => setTimeout(resolve, 500));
-  Assert.ok(!win.gURLBar.view.isOpen, "check urlbar panel is not open");
+  await checkPanelRemainsClosed(win);
 }
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update1", true]],
+    set: [
+      ["browser.urlbar.update1", true],
+      ["browser.urlbar.autoFill", true],
+      ["browser.urlbar.clickSelectsAll", true],
+    ],
   });
-  // Add some history for the empty panel.
+  // Add some history for the empty panel and autofill.
   await PlacesTestUtils.addVisits([
     {
-      uri: "http://mochi.test:8888/",
+      uri: "http://example.com/",
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    },
+    {
+      uri: "http://example.com/foo/",
       transition: PlacesUtils.history.TRANSITIONS.TYPED,
     },
   ]);
-  registerCleanupFunction(PlacesUtils.history.clear);
+  registerCleanupFunction(async function() {
+    await PlacesUtils.history.clear();
+  });
 });
 
 async function test_window(win) {
@@ -80,18 +100,25 @@ async function test_window(win) {
         info("The panel should not open on the page by default");
         await checkDoesNotOpenOnFocus(win);
 
+        // In one case use a value that triggers autofill.
+        let autofill = url == "http://example.com/";
         await UrlbarTestUtils.promiseAutocompleteResultPopup({
           window: win,
           waitForFocus,
-          value: "foo",
+          value: autofill ? "ex" : "foo",
+          fireInputEvent: true,
         });
+        let { value, selectionStart, selectionEnd } = win.gURLBar;
+        if (!autofill) {
+          selectionStart = 0;
+        }
+        info("expected " + value + " " + selectionStart + " " + selectionEnd);
         await UrlbarTestUtils.promisePopupClose(win, () => {
           win.gURLBar.blur();
         });
 
         info("The panel should open when there's a search string");
-        await checkOpensOnFocus(win);
-
+        await checkOpensOnFocus(win, { value, selectionStart, selectionEnd });
         await UrlbarTestUtils.promisePopupClose(win, () => {
           win.gURLBar.blur();
         });
@@ -107,10 +134,206 @@ add_task(async function test_normalWindow() {
   await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(async function privateWindow() {
+add_task(async function test_privateWindow() {
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
   await test_window(privateWin);
   await BrowserTestUtils.closeWindow(privateWin);
+});
+
+add_task(async function test_tabSwitch() {
+  info("Check that switching tabs reopens the view.");
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window: win,
+    waitForFocus,
+    value: "ex",
+    fireInputEvent: true,
+  });
+  let { value, selectionStart, selectionEnd } = win.gURLBar;
+  Assert.equal(value, "example.com/", "Check autofill value");
+  Assert.ok(
+    selectionStart > 0 && selectionEnd > selectionStart,
+    "Check autofill selection"
+  );
+
+  Assert.ok(win.gURLBar.focused, "The urlbar should be focused");
+  let tab1 = win.gBrowser.selectedTab;
+
+  async function check_autofill() {
+    await UrlbarTestUtils.promiseSearchComplete(win);
+    Assert.equal(win.gURLBar.value, "example.com/", "Check autofill value");
+    Assert.equal(selectionStart, win.gURLBar.selectionStart);
+    Assert.equal(selectionEnd, win.gURLBar.selectionEnd);
+  }
+
+  info("Open a new tab with the same search");
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(win.gBrowser);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window: win,
+    waitForFocus,
+    value: "ex",
+    fireInputEvent: true,
+  });
+
+  info("Switch across tabs");
+  for (let tab of win.gBrowser.tabs) {
+    await UrlbarTestUtils.promisePopupOpen(win, async () => {
+      await BrowserTestUtils.switchTab(win.gBrowser, tab);
+    });
+    await check_autofill();
+  }
+
+  info("Close tab and check the view is open.");
+  await UrlbarTestUtils.promisePopupOpen(win, () => {
+    BrowserTestUtils.removeTab(tab2);
+  });
+  await check_autofill();
+
+  info("Open a new tab with a different search");
+  tab2 = await BrowserTestUtils.openNewForegroundTab(win.gBrowser);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window: win,
+    waitForFocus,
+    value: "xam",
+    fireInputEvent: true,
+  });
+
+  info("Switch to the first tab and check the panel closes");
+  await UrlbarTestUtils.promisePopupClose(win, async () => {
+    await BrowserTestUtils.switchTab(win.gBrowser, tab1);
+  });
+  await checkPanelRemainsClosed(win);
+
+  info("Switch to the second tab and check the panel opens");
+  await UrlbarTestUtils.promisePopupOpen(win, async () => {
+    await BrowserTestUtils.switchTab(win.gBrowser, tab2);
+  });
+  await UrlbarTestUtils.promiseSearchComplete(win);
+  Assert.equal(win.gURLBar.value, "xam", "check value");
+  Assert.equal(win.gURLBar.selectionStart, 3);
+  Assert.equal(win.gURLBar.selectionEnd, 3);
+
+  info("autofill in tab2, switch to tab1, then back to tab2 with the mouse");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window: win,
+    waitForFocus,
+    value: "e",
+    fireInputEvent: true,
+  });
+  // Adjust selection start, we are using a different search string.
+  selectionStart = 1;
+  await UrlbarTestUtils.promisePopupClose(win, async () => {
+    await BrowserTestUtils.switchTab(win.gBrowser, tab1);
+  });
+  await checkPanelRemainsClosed(win);
+  await UrlbarTestUtils.promisePopupOpen(win, () => {
+    info("click on tab2");
+    tab2.click();
+  });
+  await check_autofill();
+
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function test_tabSwitch_pageproxystate() {
+  info("Switching tabs on valid pageproxystate executes the right search.");
+
+  info("Adding some visits for the empty panel");
+  await PlacesTestUtils.addVisits([
+    "http://example.com/",
+    "http://mochi.test:8888/",
+  ]);
+  registerCleanupFunction(PlacesUtils.history.clear);
+
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  await BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "about:robots");
+  let tab1 = win.gBrowser.selectedTab;
+
+  info("Open a new tab and the empty search");
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(win.gBrowser);
+  await UrlbarTestUtils.promisePopupOpen(win, async () => {
+    win.gURLBar.focus();
+    // On Linux and Mac down moves caret to the end of the text unless it's
+    // there already.
+    win.gURLBar.selectionStart = win.gURLBar.selectionEnd =
+      win.gURLBar.value.length;
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+  });
+  await UrlbarTestUtils.promiseSearchComplete(win);
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(win, 0);
+  Assert.notEqual(result.url, "about:robots");
+
+  info("Switch to the first tab and start searching with DOWN");
+  await UrlbarTestUtils.promisePopupClose(win, async () => {
+    await BrowserTestUtils.switchTab(win.gBrowser, tab1);
+  });
+  await checkPanelRemainsClosed(win);
+  await UrlbarTestUtils.promisePopupOpen(win, async () => {
+    win.gURLBar.focus();
+    // On Linux and Mac down moves caret to the end of the text unless it's
+    // there already.
+    win.gURLBar.selectionStart = win.gURLBar.selectionEnd =
+      win.gURLBar.value.length;
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+  });
+  await UrlbarTestUtils.promiseSearchComplete(win);
+
+  info("Switchng to the second tab should not the search");
+  await UrlbarTestUtils.promisePopupClose(win, async () => {
+    await BrowserTestUtils.switchTab(win.gBrowser, tab2);
+  });
+  await checkPanelRemainsClosed(win);
+
+  info("Switchng to the first tab reopens the non-empty search");
+  await UrlbarTestUtils.promisePopupOpen(win, async () => {
+    await BrowserTestUtils.switchTab(win.gBrowser, tab1);
+  });
+  await UrlbarTestUtils.promiseSearchComplete(win);
+  result = await UrlbarTestUtils.getDetailsOfResultAt(win, 0);
+  Assert.equal(result.url, "about:robots");
+
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function test_tabSwitch_emptySearch() {
+  info("Switching between empty-search tabs should not reopen the view.");
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+
+  info("Open the empty search");
+  let tab1 = win.gBrowser.selectedTab;
+  await UrlbarTestUtils.promisePopupOpen(win, async () => {
+    win.gURLBar.focus();
+    // On Linux and Mac down moves caret to the end of the text unless it's
+    // there already.
+    win.gURLBar.selectionStart = win.gURLBar.selectionEnd =
+      win.gURLBar.value.length;
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+  });
+  await UrlbarTestUtils.promiseSearchComplete(win);
+
+  info("Open a new tab and the empty search");
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(win.gBrowser);
+  await UrlbarTestUtils.promisePopupOpen(win, async () => {
+    win.gURLBar.focus();
+    // On Linux and Mac down moves caret to the end of the text unless it's
+    // there already.
+    win.gURLBar.selectionStart = win.gURLBar.selectionEnd =
+      win.gURLBar.value.length;
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+  });
+  await UrlbarTestUtils.promiseSearchComplete(win);
+
+  info("Switching to the first tab should not reopen the view");
+  await UrlbarTestUtils.promisePopupClose(win, async () => {
+    await BrowserTestUtils.switchTab(win.gBrowser, tab1);
+  });
+  await checkPanelRemainsClosed(win);
+
+  info("Switching to the second tab should not reopen the view");
+  await BrowserTestUtils.switchTab(win.gBrowser, tab2);
+  await checkPanelRemainsClosed(win);
+
+  await BrowserTestUtils.closeWindow(win);
 });

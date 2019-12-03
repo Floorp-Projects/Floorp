@@ -759,6 +759,7 @@ class UrlbarInput {
     // selection and it's the autofill placeholder value, then do autofill.
     if (
       !isPlaceholderSelected &&
+      !this._autofillIgnoresSelection &&
       (this.selectionStart != this.selectionEnd ||
         this.selectionEnd != this._lastSearchString.length)
     ) {
@@ -792,6 +793,9 @@ class UrlbarInput {
    *
    * @param {boolean} [options.allowAutofill]
    *   Whether or not to allow providers to include autofill results.
+   * @param {boolean} [options.autofillIgnoresSelection]
+   *   Normally we autofill only if the cursor is at the end of the string,
+   *   if this is set we'll autofill regardless of selection.
    * @param {string} [options.searchString]
    *   The search string.  If not given, the current input value is used.
    *   Otherwise, the current input value must start with this value.
@@ -808,6 +812,7 @@ class UrlbarInput {
    */
   startQuery({
     allowAutofill = true,
+    autofillIgnoresSelection = false,
     searchString = null,
     resetSearchState = true,
     event = null,
@@ -827,6 +832,7 @@ class UrlbarInput {
       return;
     }
 
+    this._autofillIgnoresSelection = autofillIgnoresSelection;
     if (resetSearchState) {
       this._resetSearchState();
     }
@@ -989,7 +995,6 @@ class UrlbarInput {
       this._toolbar.setAttribute("urlbar-exceeds-toolbar-bounds", "true");
     }
     this.setAttribute("breakout-extend", "true");
-    this.view.reOpen();
 
     // Enable the animation only after the first extend call to ensure it
     // doesn't run when opening a new window.
@@ -1736,6 +1741,7 @@ class UrlbarInput {
     // We handle mouse-based expansion events separately in _on_click.
     if (this._focusedViaMousedown) {
       this._focusedViaMousedown = false;
+      this.view.maybeReopen();
     } else {
       this.startLayoutExtend();
       if (this.inputField.hasAttribute("refocused-by-panel")) {
@@ -1823,9 +1829,13 @@ class UrlbarInput {
           this._mousedownOnUrlbarDescendant = false;
           break;
         }
-
-        // Close the view when clicking on toolbars and other UI pieces that might
-        // not automatically remove focus from the input.
+        // Don't close the view when clicking on a tab; we may want to keep the
+        // view open on tab switch, and the TabSelect event arrived earlier.
+        if (event.target.closest("tab")) {
+          break;
+        }
+        // Close the view when clicking on toolbars and other UI pieces that
+        // might not automatically remove focus from the input.
         // Respect the autohide preference for easier inspecting/debugging via
         // the browser toolbox.
         if (!UrlbarPrefs.get("ui.popup.disable_autohide")) {

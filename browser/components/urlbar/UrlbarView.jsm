@@ -60,7 +60,6 @@ class UrlbarView {
     this._rows.addEventListener("overflow", this);
     this._rows.addEventListener("underflow", this);
 
-    this.window.addEventListener("deactivate", this);
     this.window.gBrowser.tabContainer.addEventListener("TabSelect", this);
 
     this.controller.setView(this);
@@ -412,10 +411,30 @@ class UrlbarView {
     }
   }
 
-  reOpen() {
-    if (this._rows.firstElementChild) {
-      this._openPanel();
+  maybeReopen() {
+    // Reopen if we have cached results and the input is focused, unless the
+    // search string is empty or different. We don't restore the empty search
+    // because this is supposed to restore the search status when the user
+    // abandoned a search engagement, just opening the dropdown is not
+    // considered a sufficient engagement.
+    if (
+      this.input.megabar &&
+      this._rows.firstElementChild &&
+      this.input.focused &&
+      this.input.value &&
+      this._queryContext.searchString == this.input.value
+    ) {
+      // In some cases where we can move across tabs with an open panel.
+      if (!this.isOpen) {
+        this._openPanel();
+      }
+      this.input.startQuery({
+        autofillIgnoresSelection: true,
+        searchString: this.input.value,
+      });
+      return true;
     }
+    return false;
   }
 
   // UrlbarController listener methods.
@@ -1468,20 +1487,15 @@ class UrlbarView {
     this.close();
   }
 
-  _on_deactivate() {
-    // When switching to another browser window, open tabs, history or other
-    // data sources are likely to change, so make sure we don't re-show stale
-    // results when switching back.
-    if (!UrlbarPrefs.get("ui.popup.disable_autohide")) {
-      this.clear();
-    }
-  }
-
   _on_TabSelect() {
+    // A TabSelect doesn't always change urlbar focus, so we must try to reopen
+    // here too, not just on focus.
+    if (this.maybeReopen()) {
+      return;
+    }
     // The input may retain focus when switching tabs in which case we
     // need to close the view explicitly.
     this.close();
-    this.clear();
   }
 }
 
