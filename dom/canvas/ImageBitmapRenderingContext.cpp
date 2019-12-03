@@ -12,7 +12,7 @@ namespace mozilla {
 namespace dom {
 
 ImageBitmapRenderingContext::ImageBitmapRenderingContext()
-    : mWidth(0), mHeight(0) {}
+    : mWidth(0), mHeight(0), mIsCapturedFrameInvalid(false) {}
 
 ImageBitmapRenderingContext::~ImageBitmapRenderingContext() {
   RemovePostRefreshObserver();
@@ -193,7 +193,7 @@ ImageBitmapRenderingContext::Reset() {
   }
 
   mImage = nullptr;
-
+  mIsCapturedFrameInvalid = false;
   return NS_OK;
 }
 
@@ -231,10 +231,33 @@ already_AddRefed<Layer> ImageBitmapRenderingContext::GetCanvasLayer(
   return imageLayer.forget();
 }
 
+bool ImageBitmapRenderingContext::UpdateWebRenderCanvasData(
+    nsDisplayListBuilder* aBuilder, WebRenderCanvasData* aCanvasData) {
+  if (!mImage) {
+    // No DidTransactionCallback will be received, so mark the context clean
+    // now so future invalidations will be dispatched.
+    MarkContextClean();
+    return false;
+  }
+
+  RefPtr<ImageContainer> imageContainer = aCanvasData->GetImageContainer();
+  AutoTArray<ImageContainer::NonOwningImage, 1> imageList;
+  RefPtr<layers::Image> image = ClipToIntrinsicSize();
+  if (!image) {
+    return false;
+  }
+
+  imageList.AppendElement(ImageContainer::NonOwningImage(image));
+  imageContainer->SetCurrentImages(imageList);
+  return true;
+}
+
 void ImageBitmapRenderingContext::MarkContextClean() {}
 
 NS_IMETHODIMP
 ImageBitmapRenderingContext::Redraw(const gfxRect& aDirty) {
+  mIsCapturedFrameInvalid = true;
+
   if (!mCanvasElement) {
     return NS_OK;
   }
@@ -249,10 +272,12 @@ ImageBitmapRenderingContext::SetIsIPC(bool aIsIPC) { return NS_OK; }
 
 void ImageBitmapRenderingContext::DidRefresh() {}
 
-void ImageBitmapRenderingContext::MarkContextCleanForFrameCapture() {}
+void ImageBitmapRenderingContext::MarkContextCleanForFrameCapture() {
+  mIsCapturedFrameInvalid = false;
+}
 
 bool ImageBitmapRenderingContext::IsContextCleanForFrameCapture() {
-  return true;
+  return !mIsCapturedFrameInvalid;
 }
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ImageBitmapRenderingContext)

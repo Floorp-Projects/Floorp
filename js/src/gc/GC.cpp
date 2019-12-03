@@ -4171,12 +4171,11 @@ void GCRuntime::markWeakReferences(gcstats::PhaseKind phase) {
 
   for (;;) {
     bool markedAny = false;
-    if (!marker.isWeakMarkingTracer()) {
+    if (!marker.isWeakMarking()) {
       for (ZoneIterT zone(this); !zone.done(); zone.next()) {
         markedAny |= WeakMapBase::markZoneIteratively(zone, &marker);
       }
     }
-    markedAny |= DebugAPI::markIteratively(&marker);
     markedAny |= jit::JitRuntime::MarkJitcodeGlobalTableIteratively(&marker);
 
     if (!markedAny) {
@@ -8120,10 +8119,6 @@ void ArenaLists::adoptArenas(ArenaLists* fromArenaLists,
 AutoSuppressGC::AutoSuppressGC(JSContext* cx)
     : suppressGC_(cx->suppressGC.ref()) {
   suppressGC_++;
-}
-
-bool js::UninlinedIsInsideNursery(const gc::Cell* cell) {
-  return IsInsideNursery(cell);
 }
 
 #ifdef DEBUG

@@ -9801,11 +9801,12 @@ RegI32 BaseCompiler::popMemoryAccess(MemoryAccessDesc* access,
 }
 
 void BaseCompiler::pushHeapBase() {
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64)
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64) || \
+    defined(JS_CODEGEN_MIPS64)
   RegI64 heapBase = needI64();
   moveI64(RegI64(Register64(HeapReg)), heapBase);
   pushI64(heapBase);
-#elif defined(JS_CODEGEN_ARM)
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32)
   RegI32 heapBase = needI32();
   moveI32(RegI32(HeapReg), heapBase);
   pushI32(heapBase);

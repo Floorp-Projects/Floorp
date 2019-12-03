@@ -372,6 +372,15 @@ WebRenderCanvasRendererAsync* WebRenderCanvasData::CreateCanvasRenderer() {
   return mCanvasRenderer.get();
 }
 
+ImageContainer* WebRenderCanvasData::GetImageContainer() {
+  if (!mContainer) {
+    mContainer = LayerManager::CreateImageContainer();
+  }
+  return mContainer;
+}
+
+void WebRenderCanvasData::ClearImageContainer() { mContainer = nullptr; }
+
 WebRenderRemoteData::WebRenderRemoteData(RenderRootStateManager* aManager,
                                          nsDisplayItem* aItem)
     : WebRenderUserData(aManager, aItem) {}

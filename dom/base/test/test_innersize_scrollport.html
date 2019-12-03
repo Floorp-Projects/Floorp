@@ -24,18 +24,8 @@ function run()
 
   var utils = SpecialPowers.getDOMWindowUtils(window);
   utils.setVisualViewportSize(newWidth, newHeight);
-  is(window.innerWidth, newWidth, "innerWidth not updated to viewport width");
-  is(window.innerHeight, newHeight, "innerHeight not updated to viewport height");
-
-  var innerWidthGetter = Object.getOwnPropertyDescriptor(window, "innerWidth").get;
-  var innerHeightGetter = Object.getOwnPropertyDescriptor(window, "innerHeight").get;
-
-  window.innerWidth = oldWidth;
-  window.innerHeight = oldHeight;
-  is(window.innerWidth, oldWidth, "Should have redefined innerWidth");
-  is(window.innerHeight, oldHeight, "Should have redefined innerWidth");
-  is(innerWidthGetter.call(window), newWidth, "innerWidth clobbered by direct set");
-  is(innerHeightGetter.call(window), newHeight, "innerHeight clobbered by direct set");
+  is(window.innerWidth, oldWidth, "innerWidth unaffected by changes to visual viewport size");
+  is(window.innerHeight, oldHeight, "innerHeight unaffected by changes to visual viewport size");
 
   SimpleTest.finish();
 }

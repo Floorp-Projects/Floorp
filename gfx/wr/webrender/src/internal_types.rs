@@ -375,6 +375,11 @@ impl TextureUpdateList {
         }
     }
 
+    /// Returns true if this is a no-op (no updates to be applied).
+    pub fn is_nop(&self) -> bool {
+        self.allocations.is_empty() && self.updates.is_empty()
+    }
+
     /// Sets the clears_shared_cache flag for renderer-side sanity checks.
     #[inline]
     pub fn note_clear(&mut self) {

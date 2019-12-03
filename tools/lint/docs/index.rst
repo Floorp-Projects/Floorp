@@ -23,7 +23,7 @@ like mach, phabricator and taskcluster.
 
 .. toctree::
   :caption: Linting User Guide
-  :maxdepth: 2
+  :maxdepth: 1
   :glob:
 
   usage

@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/DOMTypes.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 
@@ -21,13 +22,51 @@ class nsIGlobalObject;
 namespace mozilla {
 namespace dom {
 
-class ClonedMessageData;
 class MessagePortChild;
-class MessagePortIdentifier;
 struct PostMessageOptions;
 class PostMessageRunnable;
 class SharedMessagePortMessage;
 class StrongWorkerRef;
+
+// A class to hold a MessagePortIdentifier from
+// MessagePort::CloneAndDistentangle() and close if neither passed to
+// MessagePort::Create() nor release()ed to send via IPC.
+// When the `neutered` field of the MessagePortIdentifier is false, a close is
+// required.
+// This does not derive from MessagePortIdentifier because
+// MessagePortIdentifier is final and because use of UniqueMessagePortId as a
+// MessagePortIdentifier is intentionally prevented without release of
+// ownership.
+class UniqueMessagePortId final {
+ public:
+  UniqueMessagePortId() { mIdentifier.neutered() = true; }
+  explicit UniqueMessagePortId(const MessagePortIdentifier& aIdentifier)
+      : mIdentifier(aIdentifier) {}
+  UniqueMessagePortId(UniqueMessagePortId&& aOther) noexcept
+      : mIdentifier(aOther.mIdentifier) {
+    aOther.mIdentifier.neutered() = true;
+  }
+  ~UniqueMessagePortId() { ForceClose(); };
+  void ForceClose();
+
+  MOZ_MUST_USE MessagePortIdentifier release() {
+    MessagePortIdentifier id = mIdentifier;
+    mIdentifier.neutered() = true;
+    return id;
+  }
+  // const member accessors are not required because a const
+  // UniqueMessagePortId is not useful.
+  nsID& uuid() { return mIdentifier.uuid(); }
+  nsID& destinationUuid() { return mIdentifier.destinationUuid(); }
+  uint32_t& sequenceId() { return mIdentifier.sequenceId(); }
+  bool& neutered() { return mIdentifier.neutered(); }
+
+  UniqueMessagePortId(const UniqueMessagePortId& aOther) = delete;
+  void operator=(const UniqueMessagePortId& aOther) = delete;
+
+ private:
+  MessagePortIdentifier mIdentifier;
+};
 
 class MessagePort final : public DOMEventTargetHelper {
   friend class PostMessageRunnable;
@@ -41,9 +80,9 @@ class MessagePort final : public DOMEventTargetHelper {
                                               const nsID& aDestinationUUID,
                                               ErrorResult& aRv);
 
-  static already_AddRefed<MessagePort> Create(
-      nsIGlobalObject* aGlobal, const MessagePortIdentifier& aIdentifier,
-      ErrorResult& aRv);
+  static already_AddRefed<MessagePort> Create(nsIGlobalObject* aGlobal,
+                                              UniqueMessagePortId& aIdentifier,
+                                              ErrorResult& aRv);
 
   // For IPC.
   static void ForceClose(const MessagePortIdentifier& aIdentifier);
@@ -73,7 +112,7 @@ class MessagePort final : public DOMEventTargetHelper {
 
   bool CanBeCloned() const { return !mHasBeenTransferredOrClosed; }
 
-  void CloneAndDisentangle(MessagePortIdentifier& aIdentifier);
+  void CloneAndDisentangle(UniqueMessagePortId& aIdentifier);
 
   void CloseForced();
 

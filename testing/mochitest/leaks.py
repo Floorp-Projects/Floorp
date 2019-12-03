@@ -8,6 +8,9 @@
 import re
 from operator import itemgetter
 
+RE_DOCSHELL = re.compile("I\/DocShellAndDOMWindowLeak ([+\-]{2})DOCSHELL")
+RE_DOMWINDOW = re.compile("I\/DocShellAndDOMWindowLeak ([+\-]{2})DOMWINDOW")
+
 
 class ShutdownLeaks(object):
 
@@ -24,6 +27,10 @@ class ShutdownLeaks(object):
         self.hiddenWindowsCount = 0
         self.leakedDocShells = set()
         self.hiddenDocShellsCount = 0
+        self.numDocShellCreatedLogsSeen = 0
+        self.numDocShellDestroyedLogsSeen = 0
+        self.numDomWindowCreatedLogsSeen = 0
+        self.numDomWindowDestroyedLogsSeen = 0
         self.currentTest = None
         self.seenShutdown = set()
 
@@ -34,11 +41,17 @@ class ShutdownLeaks(object):
         if action in ('log', 'process_output'):
             line = message['message'] if action == 'log' else message['data']
 
-            if line[2:11] == "DOMWINDOW":
-                self._logWindow(line)
-            elif line[2:10] == "DOCSHELL":
-                self._logDocShell(line)
-            elif line.startswith("Completed ShutdownLeaks collections in process"):
+            m = RE_DOMWINDOW.search(line)
+            if m:
+                self._logWindow(line, m.group(1) == "++")
+                return
+
+            m = RE_DOCSHELL.search(line)
+            if m:
+                self._logDocShell(line, m.group(1) == "++")
+                return
+
+            if line.startswith("Completed ShutdownLeaks collections in process"):
                 pid = int(line.split()[-1])
                 self.seenShutdown.add(pid)
         elif action == 'test_start':
@@ -59,6 +72,31 @@ class ShutdownLeaks(object):
             self.logger.error(
                 "TEST-UNEXPECTED-FAIL | ShutdownLeaks | process() called before end of test suite")
             failures += 1
+
+        if self.numDocShellCreatedLogsSeen == 0 or self.numDocShellDestroyedLogsSeen == 0:
+            self.logger.error("TEST-UNEXPECTED-FAIL | did not see DOCSHELL log strings."
+                              " this occurs if the DOCSHELL logging gets disabled by"
+                              " something. %d created seen %d destroyed seen" %
+                              (self.numDocShellCreatedLogsSeen, self.numDocShellDestroyedLogsSeen))
+            failures += 1
+        else:
+            self.logger.info(
+                    "TEST-INFO | Confirming we saw %d DOCSHELL created and %d destroyed log"
+                    " strings." %
+                    (self.numDocShellCreatedLogsSeen, self.numDocShellDestroyedLogsSeen))
+
+        if self.numDomWindowCreatedLogsSeen == 0 or self.numDomWindowDestroyedLogsSeen == 0:
+            self.logger.error("TEST-UNEXPECTED-FAIL | did not see DOMWINDOW log strings."
+                              " this occurs if the DOMWINDOW logging gets disabled by"
+                              " something%d created seen %d destroyed seen" %
+                              (self.numDomWindowCreatedLogsSeen,
+                               self.numDomWindowDestroyedLogsSeen))
+            failures += 1
+        else:
+            self.logger.info(
+                    "TEST-INFO | Confirming we saw %d DOMWINDOW created and %d destroyed log"
+                    " strings." %
+                    (self.numDomWindowCreatedLogsSeen, self.numDomWindowDestroyedLogsSeen))
 
         for test in self._parseLeakingTests():
             for url, count in self._zipLeakedWindows(test["leakedWindows"]):
@@ -96,10 +134,11 @@ class ShutdownLeaks(object):
 
         return failures
 
-    def _logWindow(self, line):
-        created = line[:2] == "++"
+    def _logWindow(self, line, created):
         pid = self._parseValue(line, "pid")
         serial = self._parseValue(line, "serial")
+        self.numDomWindowCreatedLogsSeen += 1 if created else 0
+        self.numDomWindowDestroyedLogsSeen += 0 if created else 1
 
         # log line has invalid format
         if not pid or not serial:
@@ -122,10 +161,11 @@ class ShutdownLeaks(object):
             else:
                 self.hiddenWindowsCount += 1
 
-    def _logDocShell(self, line):
-        created = line[:2] == "++"
+    def _logDocShell(self, line, created):
         pid = self._parseValue(line, "pid")
         id = self._parseValue(line, "id")
+        self.numDocShellCreatedLogsSeen += 1 if created else 0
+        self.numDocShellDestroyedLogsSeen += 0 if created else 1
 
         # log line has invalid format
         if not pid or not id:

@@ -249,7 +249,7 @@ class BloatEntry {
 
   bool PrintDumpHeader(FILE* aOut, const char* aMsg) {
     fprintf(aOut, "\n== BloatView: %s, %s process %d\n", aMsg,
-            XRE_GeckoProcessTypeToString(XRE_GetProcessType()), getpid());
+            XRE_GetProcessTypeString(), getpid());
     if (gLogLeaksOnly && !mStats.HaveLeaks()) {
       return false;
     }
@@ -506,8 +506,7 @@ static bool InitLog(const EnvCharType* aEnvVar, const char* aMsg,
           fname.Cut(fname.Length() - 4, 4);
         }
         fname.Append('_');
-        const char* processType =
-            XRE_GeckoProcessTypeToString(XRE_GetProcessType());
+        const char* processType = XRE_GetProcessTypeString();
         fname.AppendASCII(processType);
         fname.AppendLiteral("_pid");
         fname.AppendInt((uint32_t)getpid());
@@ -827,8 +826,7 @@ static void LogDMDFile() {
   }
 
   const char* logProcessEnv = PR_GetEnv("MOZ_DMD_LOG_PROCESS");
-  if (logProcessEnv && !!strcmp(logProcessEnv, XRE_GeckoProcessTypeToString(
-                                                   XRE_GetProcessType()))) {
+  if (logProcessEnv && !!strcmp(logProcessEnv, XRE_GetProcessTypeString())) {
     return;
   }
 

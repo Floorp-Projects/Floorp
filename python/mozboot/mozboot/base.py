@@ -158,7 +158,7 @@ MODERN_MERCURIAL_VERSION = LooseVersion('4.8')
 MODERN_PYTHON_VERSION = LooseVersion('2.7.3')
 
 # Upgrade rust older than this.
-MODERN_RUST_VERSION = LooseVersion('1.37.0')
+MODERN_RUST_VERSION = LooseVersion('1.39.0')
 
 # Upgrade nasm older than this.
 MODERN_NASM_VERSION = LooseVersion('2.14')
@@ -290,6 +290,12 @@ class BaseBootstrapper(object):
     def ensure_sccache_packages(self, state_dir, checkout_root):
         '''
         Install sccache.
+        '''
+        pass
+
+    def ensure_lucetc_packages(self, state_dir, checkout_root):
+        '''
+        Install lucetc.
         '''
         pass
 

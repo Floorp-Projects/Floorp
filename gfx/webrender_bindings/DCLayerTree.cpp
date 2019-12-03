@@ -126,6 +126,10 @@ void DCLayerTree::MaybeUpdateDebug() {
   }
 }
 
+void DCLayerTree::WaitForCommitCompletion() {
+  mCompositionDevice->WaitForCommitCompletion();
+}
+
 bool DCLayerTree::MaybeUpdateDebugCounter() {
   bool debugCounter = StaticPrefs::gfx_webrender_debug_dcomp_counter();
   if (mDebugCounter == debugCounter) {
@@ -201,6 +205,7 @@ void DCLayerTree::Bind(wr::NativeSurfaceId aId, wr::DeviceIntPoint* aOffset,
   auto it = mDCLayers.find(wr::AsUint64(aId));
   MOZ_ASSERT(it != mDCLayers.end());
   if (it == mDCLayers.end()) {
+    gfxCriticalNote << "Failed to get DCLayer for bind: " << wr::AsUint64(aId);
     return;
   }
 
@@ -237,7 +242,7 @@ void DCLayerTree::CreateSurface(wr::NativeSurfaceId aId,
 
   auto layer = MakeUnique<DCLayer>(this);
   if (!layer->Initialize(aSize, aIsOpaque)) {
-    gfxCriticalNote << "Failed to initialize DCLayer";
+    gfxCriticalNote << "Failed to initialize DCLayer: " << wr::AsUint64(aId);
     return;
   }
 

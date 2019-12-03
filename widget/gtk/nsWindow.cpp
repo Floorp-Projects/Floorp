@@ -4430,9 +4430,21 @@ void nsWindow::HideWaylandWindow() {
   if (mContainer && moz_container_has_wl_egl_window(mContainer)) {
     // Because wl_egl_window is destroyed on moz_container_unmap(),
     // the current compositor cannot use it anymore. To avoid crash,
-    // destroy the compositor & recreate a new compositor on next
-    // expose event.
-    DestroyLayerManager();
+    // pause the compositor and destroy EGLSurface & resume the compositor
+    // and re-create EGLSurface on next expose event.
+    MOZ_ASSERT(GetRemoteRenderer());
+    if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
+      // XXX slow sync IPC
+      remoteRenderer->SendPause();
+      // Re-request initial draw callback
+      RefPtr<nsWindow> self(this);
+      moz_container_add_initial_draw_callback(mContainer, [self]() -> void {
+        self->mNeedsCompositorResume = true;
+        self->MaybeResumeCompositor();
+      });
+    } else {
+      DestroyLayerManager();
+    }
   }
 #endif
   gtk_widget_hide(mShell);
@@ -7333,8 +7345,8 @@ void nsWindow::GetCompositorWidgetInitData(
 #ifdef MOZ_WAYLAND
 wl_surface* nsWindow::GetWaylandSurface() {
   if (mContainer) {
-    struct wl_surface* surface = moz_container_get_wl_surface(
-        MOZ_CONTAINER(mContainer));
+    struct wl_surface* surface =
+        moz_container_get_wl_surface(MOZ_CONTAINER(mContainer));
     if (surface != NULL) {
       wl_surface_set_buffer_scale(surface, GdkScaleFactor());
     }

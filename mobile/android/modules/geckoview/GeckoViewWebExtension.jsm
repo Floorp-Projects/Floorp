@@ -352,6 +352,25 @@ var GeckoViewWebExtension = {
         break;
       }
 
+      case "GeckoView:ActionDelegate:Attached": {
+        const extension = this.extensionById(aData.extensionId);
+        if (!extension) {
+          return;
+        }
+
+        const browserAction = this.browserActions.get(extension);
+        if (browserAction) {
+          // Send information about this action to the delegate
+          browserAction.updateOnChange(null);
+        }
+
+        const pageAction = this.pageActions.get(extension);
+        if (pageAction) {
+          pageAction.updateOnChange(null);
+        }
+        break;
+      }
+
       case "GeckoView:UnregisterWebExtension": {
         if (!this.extensionScopes.has(aData.id)) {
           aCallback.onError(

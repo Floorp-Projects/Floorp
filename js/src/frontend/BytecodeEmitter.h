@@ -364,7 +364,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitTree(ParseNode* pn,
                              ValueUsage valueUsage = ValueUsage::WantValue,
                              EmitLineNumberNote emitLineNote = EMIT_LINENOTE,
-                             bool isInnerSingleton = false);
+                             bool isInner = false);
 
   // Emit global, eval, or module code for tree rooted at body. Always
   // encompasses the entire source.
@@ -466,7 +466,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
       ShouldInstrument shouldInstrument = ShouldInstrument::No);
 
   MOZ_MUST_USE bool emitArrayLiteral(ListNode* array);
-  MOZ_MUST_USE bool emitArray(ParseNode* arrayHead, uint32_t count);
+  MOZ_MUST_USE bool emitArray(ParseNode* arrayHead, uint32_t count,
+                              bool isInner = false);
 
   MOZ_MUST_USE bool emitInternedScopeOp(uint32_t index, JSOp op);
   MOZ_MUST_USE bool emitInternedObjectOp(uint32_t index, JSOp op);
@@ -479,7 +480,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
       FunctionNode* funNode, bool needsProto = false,
       ListNode* classContentsIfConstructor = nullptr);
   MOZ_NEVER_INLINE MOZ_MUST_USE bool emitObject(ListNode* objNode,
-                                                bool isInnerSingleton = false);
+                                                bool isInner = false);
 
   MOZ_MUST_USE bool replaceNewInitWithNewObject(JSObject* obj,
                                                 BytecodeOffset offset);
@@ -495,8 +496,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   bool isArrayObjLiteralCompatible(ParseNode* arrayHead);
 
   MOZ_MUST_USE bool emitPropertyList(ListNode* obj, PropertyEmitter& pe,
-                                     PropListType type,
-                                     bool isInnerSingleton = false);
+                                     PropListType type, bool isInner = false);
 
   MOZ_MUST_USE bool emitPropertyListObjLiteral(ListNode* obj, PropListType type,
                                                ObjLiteralFlags flags);

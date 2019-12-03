@@ -10,6 +10,7 @@ import subprocess
 from mozboot.base import BaseBootstrapper
 from mozboot.linux_common import (
     ClangStaticAnalysisInstall,
+    LucetcInstall,
     NodeInstall,
     SccacheInstall,
     StyloInstall,
@@ -22,8 +23,9 @@ if sys.version_info < (3,):
     input = raw_input  # noqa
 
 
-class SolusBootstrapper(NodeInstall, StyloInstall, SccacheInstall,
-                        ClangStaticAnalysisInstall, BaseBootstrapper):
+class SolusBootstrapper(
+        NodeInstall, StyloInstall, SccacheInstall, ClangStaticAnalysisInstall,
+        LucetcInstall, BaseBootstrapper):
     '''Solus experimental bootstrapper.'''
 
     SYSTEM_PACKAGES = [

@@ -514,6 +514,20 @@ const MESSAGES = () => [
     },
   },
   {
+    id: "SIMPLE_BELOW_SEARCH_TEST_2",
+    template: "simple_below_search_snippet",
+    content: {
+      icon: TEST_ICON,
+      icon_dark_theme: TEST_ICON_BW,
+      text:
+        "<syncLink>Connect your Firefox Account to Sync</syncLink> your protected passwords, open tabs and bookmarks, and they'll always be available to you - on all of your devices.",
+      links: {
+        syncLink: { url: "https://www.mozilla.org/en-US/firefox/accounts" },
+      },
+      block_button_text: "Block",
+    },
+  },
+  {
     id: "SIMPLE_BELOW_SEARCH_TEST_TITLE",
     template: "simple_below_search_snippet",
     content: {

@@ -195,27 +195,6 @@ nsresult NS_NewXMLDocument(Document** aInstancePtrResult, bool aLoadedAsData,
   return NS_OK;
 }
 
-nsresult NS_NewXBLDocument(Document** aInstancePtrResult, nsIURI* aDocumentURI,
-                           nsIURI* aBaseURI, nsIPrincipal* aPrincipal) {
-  nsresult rv = NS_NewDOMDocument(
-      aInstancePtrResult, NS_LITERAL_STRING("http://www.mozilla.org/xbl"),
-      NS_LITERAL_STRING("bindings"), nullptr, aDocumentURI, aBaseURI,
-      aPrincipal, false, nullptr, DocumentFlavorLegacyGuess);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  Document* doc = *aInstancePtrResult;
-
-  // XBL documents must allow XUL and XBL elements in them but the usual check
-  // only checks if the document is loaded in the system principal which is
-  // sometimes not the case.
-  doc->ForceEnableXULXBL();
-
-  doc->SetLoadedAsInteractiveData(true);
-  doc->SetReadyStateInternal(Document::READYSTATE_COMPLETE);
-
-  return NS_OK;
-}
-
 namespace mozilla {
 namespace dom {
 

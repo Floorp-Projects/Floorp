@@ -74,6 +74,8 @@ class ImageBitmapRenderingContext final
   virtual already_AddRefed<Layer> GetCanvasLayer(
       nsDisplayListBuilder* aBuilder, Layer* aOldLayer,
       LayerManager* aManager) override;
+  bool UpdateWebRenderCanvasData(nsDisplayListBuilder* aBuilder,
+                                 WebRenderCanvasData* aCanvasData) override;
   virtual void MarkContextClean() override;
 
   NS_IMETHOD Redraw(const gfxRect& aDirty) override;
@@ -91,6 +93,13 @@ class ImageBitmapRenderingContext final
   int32_t mHeight;
 
   RefPtr<layers::Image> mImage;
+
+  /**
+   * Flag to avoid unnecessary surface copies to FrameCaptureListeners in the
+   * case when the canvas is not currently being drawn into and not rendered
+   * but canvas capturing is still ongoing.
+   */
+  bool mIsCapturedFrameInvalid;
 };
 
 }  // namespace dom

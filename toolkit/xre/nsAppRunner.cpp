@@ -4915,6 +4915,10 @@ GeckoProcessType XRE_GetProcessType() {
   return mozilla::startup::sChildProcessType;
 }
 
+const char* XRE_GetProcessTypeString() {
+  return XRE_GeckoProcessTypeToString(XRE_GetProcessType());
+}
+
 bool XRE_IsE10sParentProcess() {
 #ifdef MOZ_WIDGET_ANDROID
   return XRE_IsParentProcess() && BrowserTabsRemoteAutostart() &&

@@ -17,6 +17,126 @@
 #include "js/Value.h"
 #include "js/Vector.h"
 
+/*
+ * [SMDOC] ObjLiteral (Object Literal) Handling
+ * ============================================
+ *
+ * The `ObjLiteral*` family of classes defines an infastructure to handle
+ * object literals as they are encountered at parse time and translate them
+ * into objects that are attached to the bytecode.
+ *
+ * The object-literal "instructions", whose opcodes are defined in
+ * `ObjLiteralOpcode` below, each specify one key (atom property name, or
+ * numeric index) and one value. An `ObjLiteralWriter` buffers a linear
+ * sequence of such instructions, along with a side-table of atom references.
+ * The writer stores a compact binary format that is then interpreted by the
+ * `ObjLiteralReader` to construct an object according to the instructions.
+ *
+ * This may seem like an odd dance: create an intermediate data structure that
+ * specifies key/value pairs, then later build the object. Why not just do so
+ * directly, as we parse? In fact, we used to do this. However, for several
+ * good reasons, we want to avoid allocating or touching GC objects at all
+ * *during* the parse. We thus use a sequence of ObjLiteral instructions as an
+ * intermediate data structure to carry object literal contents from parse to
+ * the time at which we *can* allocate objects.
+ *
+ * (The original intent was to allow for ObjLiteral instructions to actually be
+ * invoked by a new JS opcode, JSOP_OBJLITERAL, thus replacing the more general
+ * opcode sequences sometimes generated to fill in objects and removing the
+ * need to attach actual objects to JSOP_OBJECT or JSOP_NEWOBJECT. However,
+ * this was far too invasive and led to performance regressions, so currently
+ * ObjLiteral only carries literals as far as the end of the parse pipeline,
+ * when all GC things are allocated.)
+ *
+ * ObjLiteral data structures are used to represent object literals whenever
+ * they are "compatible". See
+ * BytecodeEmitter::isPropertyListObjLiteralCompatible for the precise
+ * conditions; in brief, we can represent object literals with "primitive"
+ * (numeric, boolean, string, null/undefined) values, and "normal"
+ * (non-computed) object names. We can also represent arrays with the same
+ * value restrictions. We cannot represent nested objects. We use ObjLiteral in
+ * two different ways:
+ *
+ * - To build a template object, when we can support the properties but not the
+ *   keys.
+ * - To build the actual result object, when we support the properties and the
+ *   keys and this is a JSOP_OBJECT case (see below).
+ *
+ * Design and Performance Considerations
+ * -------------------------------------
+ *
+ * As a brief overview, there are a number of opcodes that allocate objects:
+ *
+ * - JSOP_NEWINIT allocates a new empty `{}` object.
+ *
+ * - JSOP_NEWOBJECT, with an object as an argument (held by the script data
+ *   side-tables), allocates a new object with `undefined` property values but
+ *   with a defined set of properties. The given object is used as a
+ *   *template*.
+ *
+ * - JSOP_NEWOBJECT_WITHGROUP (added as part of this ObjLiteral work), same as
+ *   above but uses the ObjectGroup of the template object for the new object,
+ *   rather than trying to apply a set of heuristics to choose a group.
+ *
+ * - JSOP_OBJECT, with an object as argument, instructs the runtime to
+ *   literally return the object argument as the result. This is thus only an
+ *   "allocation" in the sense that the object was originally allocated when
+ *   the script data / bytecode was created. It is only used when we know for
+ *   sure that the script, and this program point within the script, will run
+ *   *once*. (See the `treatAsRunOnce` flag on JSScript.)
+ *
+ * Before we go further, we also define "singleton context" and "singleton
+ * group". An operation occurs in a "singleton context", according to the
+ * parser, if it will only ever execute once. In particular, this happens when
+ * (i) the script is a "run-once" script, which is usually the case for e.g.
+ * top-level scripts of web-pages (they run on page load, but no function or
+ * handle wraps or refers to the script so it can't be invoked again),
+ * and (ii) the operation itself is not within a loop or function in that
+ * run-once script. "Singleton group", on the other hand, refers to an
+ * ObjectGroup (used by Type Inference) that represents only one object, and
+ * has a special flag set to mark it as such. Usually we want to give singleton
+ * groups to object allocations that happen in a singleton context (because
+ * there will only ever be one of the object), hence the connection between
+ * these terms.
+ *
+ * When we encounter an object literal, we decide which opcode to use, and we
+ * construct the ObjLiteral and the bytecode using its result appropriately:
+ *
+ * - If in a singleton context, and if we support the values, we use
+ *   JSOP_OBJECT and we build the ObjLiteral instructions with values.
+ * - Otherwise, if we support the keys but not the values, or if we are not
+ *   in a singleton context, we use JSOP_NEWOBJECT or JSOP_NEWOBJECT_WITHGROUP,
+ *   depending on the "inner singleton" status (see below). In this case, the
+ *   initial opcode only creates an object with empty values, so
+ *   BytecodeEmitter then generates bytecode to set the values
+ *   appropriately.
+ * - Otherwise, we generate JSOP_NEWINIT and bytecode to add properties one at
+ *   a time. This will always work, but is the slowest and least
+ *   memory-efficient option.
+ *
+ * We need to take special care to ensure that the ObjectGroup of the resulting
+ * object is chosen "correctly". Failure to do so can result in all sorts
+ * of performance and/or memory regressions. In brief, we want to use a
+ * singleton group whenever an object is allocated in a singleton context.
+ * However, there is a special "inner singleton" context that deserves special
+ * mention. When a program has a nested tree of objects, the old
+ * (pre-ObjLiteral) world would perform a group lookup by shape (list of
+ * property IDs) for all non-root objects, so in the following snippet, the
+ * inner objects would share a group:
+ *
+ *     var list = [{a: 0}, {a: 1}];
+ *     var obj = { first: {a: 0}, second: {a: 1} };
+ *
+ * In the generated bytecode, the inner objects are created first, then placed
+ * in the relevant properties of the outer objects/arrays using
+ * INITPROP/INITELEM. Thus to a naïve analysis, it appears that the inner
+ * objects are singletons. But heuristically it is better if they are not. So
+ * we pass down an `isInner` boolean while recursively traversing the
+ * parse-node tree and generating bytecode. If we encounter an object literal
+ * that is in singleton (run-once) context but also `isInner`, then we set
+ * special flags to ensure its shape is looked up based on properties instead.
+ */
+
 namespace js {
 
 // Object-literal instruction opcodes. An object literal is constructed by a
@@ -54,6 +174,13 @@ enum class ObjLiteralFlag : uint8_t {
 
   // No values are provided; the object is meant as a template object.
   NoValues = 5,
+
+  // This object is inside a top-level singleton, and so prior to ObjLiteral,
+  // would have been allocated at parse time, but is now allocated in bytecode.
+  // We do special things to get the right group on the template object; this
+  // flag indicates that if JSOP_NEWOBJECT copies the object, it should retain
+  // its group.
+  IsInnerSingleton = 6,
 };
 
 using ObjLiteralFlags = mozilla::EnumSet<ObjLiteralFlag>;
