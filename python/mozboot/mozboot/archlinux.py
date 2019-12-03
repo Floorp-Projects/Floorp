@@ -17,6 +17,7 @@ from mozboot.linux_common import (
     NodeInstall,
     SccacheInstall,
     StyloInstall,
+    WasiSysrootInstall,
 )
 
 # NOTE: This script is intended to be run with a vanilla Python install.  We
@@ -28,7 +29,7 @@ if sys.version_info < (3,):
 
 class ArchlinuxBootstrapper(
         NodeInstall, StyloInstall, SccacheInstall, ClangStaticAnalysisInstall,
-        LucetcInstall, BaseBootstrapper):
+        LucetcInstall, WasiSysrootInstall, BaseBootstrapper):
     '''Archlinux experimental bootstrapper.'''
 
     SYSTEM_PACKAGES = [

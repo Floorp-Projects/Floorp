@@ -12,6 +12,7 @@ from mozboot.linux_common import (
     NodeInstall,
     SccacheInstall,
     StyloInstall,
+    WasiSysrootInstall,
 )
 
 try:
@@ -25,7 +26,7 @@ import subprocess
 
 class GentooBootstrapper(
         NasmInstall, NodeInstall, StyloInstall, ClangStaticAnalysisInstall,
-        SccacheInstall, LucetcInstall, BaseBootstrapper):
+        SccacheInstall, LucetcInstall, WasiSysrootInstall, BaseBootstrapper):
 
     def __init__(self, version, dist_id, **kwargs):
         BaseBootstrapper.__init__(self, **kwargs)

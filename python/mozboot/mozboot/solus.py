@@ -14,6 +14,7 @@ from mozboot.linux_common import (
     NodeInstall,
     SccacheInstall,
     StyloInstall,
+    WasiSysrootInstall,
 )
 
 # NOTE: This script is intended to be run with a vanilla Python install.  We
@@ -25,7 +26,7 @@ if sys.version_info < (3,):
 
 class SolusBootstrapper(
         NodeInstall, StyloInstall, SccacheInstall, ClangStaticAnalysisInstall,
-        LucetcInstall, BaseBootstrapper):
+        LucetcInstall, WasiSysrootInstall, BaseBootstrapper):
     '''Solus experimental bootstrapper.'''
 
     SYSTEM_PACKAGES = [
