@@ -237,7 +237,7 @@ void main(void) {
     vec2 f = (local_pos - glyph_rect.p0) / glyph_rect.size;
 #endif
 
-    write_clip(world_pos, vec2(0.0), clip_area);
+    write_clip(world_pos, clip_area);
 
     switch (color_mode) {
         case COLOR_MODE_ALPHA:

@@ -20,11 +20,6 @@
 
 #ifdef WR_VERTEX_SHADER
 
-//Note: this function is unsafe for `vi.world_pos.w <= 0.0`
-vec2 snap_device_pos(VertexInfo vi, float device_pixel_scale) {
-    return vi.world_pos.xy * device_pixel_scale / max(0.0, vi.world_pos.w) + vi.snap_offset;
-}
-
 void mix_blend_brush_vs(
     VertexInfo vi,
     int prim_address,
@@ -37,19 +32,20 @@ void mix_blend_brush_vs(
     int brush_flags,
     vec4 unused
 ) {
-    vec2 snapped_device_pos = snap_device_pos(vi, pic_task.device_pixel_scale);
+    //Note: this is unsafe for `vi.world_pos.w <= 0.0`
+    vec2 device_pos = vi.world_pos.xy * pic_task.device_pixel_scale / max(0.0, vi.world_pos.w);
     vec2 texture_size = vec2(textureSize(sPrevPassColor, 0));
     V_OP = prim_user_data.x;
 
     PictureTask src_task = fetch_picture_task(prim_user_data.z);
-    vec2 src_uv = snapped_device_pos +
+    vec2 src_uv = device_pos +
                   src_task.common_data.task_rect.p0 -
                   src_task.content_origin;
     V_SRC_UV = src_uv / texture_size;
     V_SRC_LAYER = src_task.common_data.texture_layer_index;
 
     RenderTaskCommonData backdrop_task = fetch_render_task_common_data(prim_user_data.y);
-    vec2 backdrop_uv = snapped_device_pos +
+    vec2 backdrop_uv = device_pos +
                        backdrop_task.task_rect.p0 -
                        src_task.content_origin;
     V_BACKDROP_UV = backdrop_uv / texture_size;
