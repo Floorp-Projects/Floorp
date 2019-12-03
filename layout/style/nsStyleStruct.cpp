@@ -3499,8 +3499,6 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
       (mLetterSpacing != aNewData.mLetterSpacing) ||
       (mLineHeight != aNewData.mLineHeight) ||
       (mTextIndent != aNewData.mTextIndent) ||
-      (mTextUnderlineOffset != aNewData.mTextUnderlineOffset) ||
-      (mTextDecorationSkipInk != aNewData.mTextDecorationSkipInk) ||
       (mTextJustify != aNewData.mTextJustify) ||
       (mWordSpacing != aNewData.mWordSpacing) ||
       (mMozTabSize != aNewData.mMozTabSize)) {
@@ -3527,6 +3525,8 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
   if (mTextShadow != aNewData.mTextShadow ||
       mTextEmphasisStyle != aNewData.mTextEmphasisStyle ||
       mWebkitTextStrokeWidth != aNewData.mWebkitTextStrokeWidth ||
+      mTextUnderlineOffset != aNewData.mTextUnderlineOffset ||
+      mTextDecorationSkipInk != aNewData.mTextDecorationSkipInk ||
       mTextUnderlinePosition != aNewData.mTextUnderlinePosition) {
     hint |= nsChangeHint_UpdateSubtreeOverflow | nsChangeHint_SchedulePaint |
             nsChangeHint_RepaintFrame;
