@@ -77,9 +77,7 @@ class nsNetworkLinkService : public nsINetworkLinkService,
   // time to discover the gateway's MAC address.
   nsCOMPtr<nsITimer> mNetworkIdTimer;
 
-  // Is true if preference network.netlink.route.check.IPv4 was successfully
-  // parsed and stored to mRouteCheckIPv4
-  bool mDoRouteCheckIPv4;
+  // IP address used to check the route for public traffic.
   struct in_addr mRouteCheckIPv4;
 };
 
