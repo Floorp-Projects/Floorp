@@ -165,4 +165,7 @@ class CentOSFedoraBootstrapper(NasmInstall, NodeInstall, StyloInstall,
         self.suggest_mobile_android_mozconfig(artifact_mode=True)
 
     def upgrade_mercurial(self, current):
-        self.dnf_update('mercurial')
+        if current is None:
+            self.dnf_install('mercurial')
+        else:
+            self.dnf_update('mercurial')
