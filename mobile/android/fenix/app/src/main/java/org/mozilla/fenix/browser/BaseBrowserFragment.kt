@@ -6,7 +6,6 @@ package org.mozilla.fenix.browser
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -365,12 +364,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                         FenixSnackbar.make(view.rootView, Snackbar.LENGTH_SHORT)
                             .setText(getString(R.string.full_screen_notification))
                             .show()
-                        activity?.requestedOrientation =
-                            ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
                         activity?.enterToImmersiveMode()
                         browserToolbarView.view.visibility = View.GONE
                     } else {
-                        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
                         activity?.exitImmersiveModeIfNeeded()
                         (activity as? HomeActivity)?.let { activity ->
                             activity.themeManager.applyStatusBarTheme(activity)
