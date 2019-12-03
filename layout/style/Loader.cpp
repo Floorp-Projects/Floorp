@@ -1282,7 +1282,7 @@ void Loader::InsertChildSheet(StyleSheet& aSheet, StyleSheet& aParentSheet) {
   // child sheets should always start out enabled, even if they got
   // cloned off of top-level sheets which were disabled
   aSheet.SetEnabled(true);
-  aParentSheet.PrependStyleSheet(&aSheet);
+  aParentSheet.AppendStyleSheet(aSheet);
 
   LOG(("  Inserting into parent sheet"));
 }
