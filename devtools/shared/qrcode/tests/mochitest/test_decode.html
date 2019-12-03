@@ -10,7 +10,10 @@ Test decoding a simple message
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
+"use strict";
+
 window.onload = function() {
+
   const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
   const QR = require("devtools/shared/qrcode/index");

@@ -12,6 +12,8 @@
 <p>Test for cached messages</p>
 
 <script class="testbody" type="application/javascript">
+"use strict";
+
 window.docShell.cssErrorReportingEnabled = true;
 var ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
                           .getService(Ci.nsIConsoleAPIStorage);
@@ -96,6 +98,8 @@ function doConsoleCalls() {
 </script>
 
 <script class="testbody" type="text/javascript">
+"use strict";
+
 SimpleTest.waitForExplicitFinish();
 var {ConsoleServiceListener} =
   require("devtools/server/actors/webconsole/listeners/console-service");

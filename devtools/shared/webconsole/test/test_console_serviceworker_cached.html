@@ -12,6 +12,8 @@
 <p>Test for getCachedMessages and Service Workers</p>
 
 <script class="testbody" type="text/javascript">
+"use strict";
+
 SimpleTest.waitForExplicitFinish();
 
 const BASE_URL = "https://example.com/chrome/devtools/shared/webconsole/test/";
@@ -73,7 +75,8 @@ const startTest = async function () {
   // they shouldn't show up in a call to getCachedMessages.
   // However, there is a fetch event which is logged due to loading the tab.
   info("Adding a new tab at the same URL");
-  const tab2 = await addTab(FRAME_URL);
+
+  await addTab(FRAME_URL);
   await new Promise(resolve => {
     info("Attaching console to tab 2");
     attachConsoleToTab(["ConsoleAPI"], function(state) {

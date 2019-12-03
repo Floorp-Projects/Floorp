@@ -12,6 +12,8 @@
 <p>Web Console throw tests</p>
 
 <script class="testbody" type="text/javascript">
+"use strict";
+
 SimpleTest.waitForExplicitFinish();
 
 function startTest()
@@ -20,15 +22,15 @@ function startTest()
   attachConsoleToTab([], onAttach);
 }
 
-function onAttach(aState, aResponse)
+function onAttach(aState)
 {
   const tests = [];
 
   const falsyValues = ["-0", "null", "undefined", "Infinity", "-Infinity", "NaN"];
   falsyValues.forEach(function(value) {
     tests.push(async function() {
-      const aResponse = await aState.webConsoleFront.evaluateJSAsync("throw " + value + ";")
-      const type = aResponse.exception.type;
+      const response = await aState.webConsoleFront.evaluateJSAsync("throw " + value + ";")
+      const type = response.exception.type;
       is(type, value, "exception.type for throw " + value);
       nextTest();
     });
@@ -37,8 +39,8 @@ function onAttach(aState, aResponse)
   const identityTestValues = [false, 0];
   identityTestValues.forEach(function(value) {
     tests.push(async function() {
-      const aResponse = await aState.webConsoleFront.evaluateJSAsync("throw " + value + ";")
-      const exception = aResponse.exception;
+      const response = await aState.webConsoleFront.evaluateJSAsync("throw " + value + ";")
+      const exception = response.exception;
       is(exception, value, "response.exception for throw " + value);
       nextTest();
     });
@@ -49,11 +51,11 @@ function onAttach(aState, aResponse)
                         DebuggerServer.LONG_STRING_INITIAL_LENGTH
                       );
   tests.push(async function() {
-    const aResponse = await aState.webConsoleFront.evaluateJSAsync("throw '" + longString + "';")
-    is(aResponse.exception.initial, shortedString,
+    const response = await aState.webConsoleFront.evaluateJSAsync("throw '" + longString + "';")
+    is(response.exception.initial, shortedString,
       "exception.initial for throw longString"
     );
-    is(aResponse.exceptionMessage.initial, shortedString,
+    is(response.exceptionMessage.initial, shortedString,
       "exceptionMessage.initial for throw longString"
     );
     nextTest();
@@ -66,8 +68,8 @@ function onAttach(aState, aResponse)
   ];
   symbolTestValues.forEach(function([expr, message]) {
     tests.push(async function() {
-      const aResponse = await aState.webConsoleFront.evaluateJSAsync("throw " + expr + ";");
-      is(aResponse.exceptionMessage, message,
+      const response = await aState.webConsoleFront.evaluateJSAsync("throw " + expr + ";");
+      is(response.exceptionMessage, message,
          "response.exception for throw " + expr);
       nextTest();
     });
