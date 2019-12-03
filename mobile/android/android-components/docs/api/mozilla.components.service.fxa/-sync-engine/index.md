@@ -14,6 +14,7 @@ Describes possible sync engines that device can support.
 | [History](-history.md) | `object History : `[`SyncEngine`](./index.md)<br>A history engine. |
 | [Other](-other/index.md) | `data class Other : `[`SyncEngine`](./index.md)<br>An engine that's none of the above, described by [name](-other/name.md). |
 | [Passwords](-passwords.md) | `object Passwords : `[`SyncEngine`](./index.md)<br>A 'logins/passwords' engine. |
+| [Tabs](-tabs.md) | `object Tabs : `[`SyncEngine`](./index.md)<br>A remote tabs engine. |
 
 ### Properties
 
@@ -35,3 +36,4 @@ Describes possible sync engines that device can support.
 | [History](-history.md) | `object History : `[`SyncEngine`](./index.md)<br>A history engine. |
 | [Other](-other/index.md) | `data class Other : `[`SyncEngine`](./index.md)<br>An engine that's none of the above, described by [name](-other/name.md). |
 | [Passwords](-passwords.md) | `object Passwords : `[`SyncEngine`](./index.md)<br>A 'logins/passwords' engine. |
+| [Tabs](-tabs.md) | `object Tabs : `[`SyncEngine`](./index.md)<br>A remote tabs engine. |
