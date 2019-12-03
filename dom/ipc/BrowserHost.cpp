@@ -303,17 +303,6 @@ BrowserHost::GetHasBeforeUnload(bool* aHasBeforeUnload) {
   return NS_OK;
 }
 
-/* readonly attribute Element ownerElement; */
-NS_IMETHODIMP
-BrowserHost::GetOwnerElement(mozilla::dom::Element** aOwnerElement) {
-  if (!mRoot) {
-    *aOwnerElement = nullptr;
-    return NS_OK;
-  }
-  *aOwnerElement = mRoot->GetOwnerElement();
-  return NS_OK;
-}
-
 /* boolean startApzAutoscroll (in float aAnchorX, in float aAnchorY, in nsViewID
  * aScrollId, in uint32_t aPresShellId); */
 NS_IMETHODIMP
