@@ -868,6 +868,16 @@ class PictureInPictureChild extends JSWindowActorChild {
         }
         break;
       }
+      case "resize": {
+        let video = event.target;
+        if (this.inPictureInPicture(video)) {
+          this.sendAsyncMessage("PictureInPicture:Resize", {
+            videoHeight: video.videoHeight,
+            videoWidth: video.videoWidth,
+          });
+        }
+        break;
+      }
     }
   }
 
@@ -1043,6 +1053,7 @@ class PictureInPictureChild extends JSWindowActorChild {
       originatingVideo.addEventListener("play", this);
       originatingVideo.addEventListener("pause", this);
       originatingVideo.addEventListener("volumechange", this);
+      originatingVideo.addEventListener("resize", this);
     }
   }
 
@@ -1059,6 +1070,7 @@ class PictureInPictureChild extends JSWindowActorChild {
       originatingVideo.removeEventListener("play", this);
       originatingVideo.removeEventListener("pause", this);
       originatingVideo.removeEventListener("volumechange", this);
+      originatingVideo.removeEventListener("resize", this);
     }
   }
 
