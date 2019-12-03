@@ -98,6 +98,7 @@ test-info-all:
         job-name: test-info-all
     worker:
         docker-image: {in-tree: debian7-amd64-build}
+        max-run-time: 5400
     run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
@@ -112,5 +113,5 @@ test-info-all:
         cwd: '{checkout}'
         command: >-
             source taskcluster/scripts/misc/source-test-common.sh &&
-            ./mach test-info report --show-tests --show-summary --output-file /builds/worker/artifacts/test-info-all-tests.json &&
+            ./mach test-info report --show-tests --show-summary --show-activedata --output-file /builds/worker/artifacts/test-info-all-tests.json &&
             ./mach test-info report --show-annotations --output-file /builds/worker/artifacts/test-info-manifest-conditions.json
