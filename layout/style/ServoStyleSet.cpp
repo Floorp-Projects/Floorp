@@ -39,15 +39,15 @@
 #include "nsWindowSizes.h"
 #include "GeckoProfiler.h"
 
-using namespace mozilla::dom;
+namespace mozilla {
+
+using namespace dom;
 
 #ifdef DEBUG
 bool ServoStyleSet::IsCurrentThreadInServoTraversal() {
   return sInServoTraversal && (NS_IsMainThread() || Servo_IsWorkerThread());
 }
 #endif
-
-namespace mozilla {
 
 constexpr const StyleOrigin ServoStyleSet::kOrigins[];
 
@@ -89,8 +89,6 @@ class MOZ_RAII AutoPrepareTraversal {
   AutoRestyleTimelineMarker mTimelineMarker;
   AutoSetInServoTraversal mSetInServoTraversal;
 };
-
-}  // namespace mozilla
 
 ServoStyleSet::ServoStyleSet(Document& aDocument) : mDocument(&aDocument) {
   PreferenceSheet::EnsureInitialized();
@@ -993,10 +991,8 @@ bool ServoStyleSet::EnsureUniqueInnerOnCSSSheets() {
     }
 
     // Enqueue all the sheet's children.
-    AutoTArray<StyleSheet*, 3> children;
-    sheet->AppendAllChildSheets(children);
-    for (auto* sheet : children) {
-      queue.AppendElement(MakePair(sheet, owner));
+    for (StyleSheet* child : sheet->ChildSheets()) {
+      queue.AppendElement(MakePair(child, owner));
     }
   }
 
@@ -1277,3 +1273,5 @@ UACacheReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 
   return NS_OK;
 }
+
+}  // namespace mozilla
