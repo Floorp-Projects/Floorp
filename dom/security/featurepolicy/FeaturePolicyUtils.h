@@ -49,6 +49,13 @@ class FeaturePolicyUtils final {
   static FeaturePolicyValue DefaultAllowListFeature(
       const nsAString& aFeatureName);
 
+  // This method returns true if aFeatureName is in unsafe allowed "*" case.
+  // We are in "unsafe" case when there is 'allow "*"' presents for an origin
+  // that's not presented in the ancestor feature policy chain, via src, via
+  // explicitly listed in allow, and not being the top-level origin.
+  static bool IsFeatureUnsafeAllowedAll(Document* aDocument,
+                                        const nsAString& aFeatureName);
+
  private:
   static void ReportViolation(Document* aDocument,
                               const nsAString& aFeatureName);
