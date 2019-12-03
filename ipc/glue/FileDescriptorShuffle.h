@@ -49,6 +49,12 @@ class FileDescriptorShuffle {
   // Can be used to close other fds after performing the dup2()s.
   bool MapsTo(int aFd) const;
 
+  // Forget the information, so that it's destructor will not try to
+  // delete FDs duped by itself.
+  void Forget() {
+    mTempFds.Clear();
+  }
+
  private:
   nsTArray<std::pair<int, int>> mMapping;
   nsTArray<int> mTempFds;
