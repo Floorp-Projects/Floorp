@@ -23,7 +23,7 @@ Mozilla Source Tree Documentation
 
 .. toctree::
    :caption: Localization
-   :maxdepth: 1
+   :maxdepth: 2
 
    {l10n_doc}
 
