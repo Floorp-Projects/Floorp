@@ -33,6 +33,37 @@ TEST_F(TlsConnectTest, KeyUpdateClient) {
   CheckEpochs(4, 3);
 }
 
+TEST_F(TlsConnectStreamTls13, KeyUpdateTooEarly_Client) {
+  StartConnect();
+  auto filter = MakeTlsFilter<TlsEncryptedHandshakeMessageReplacer>(
+      server_, kTlsHandshakeFinished, kTlsHandshakeKeyUpdate);
+  filter->EnableDecryption();
+
+  client_->Handshake();
+  server_->Handshake();
+  ExpectAlert(client_, kTlsAlertUnexpectedMessage);
+  client_->Handshake();
+  client_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_KEY_UPDATE);
+  server_->Handshake();
+  server_->CheckErrorCode(SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT);
+}
+
+TEST_F(TlsConnectStreamTls13, KeyUpdateTooEarly_Server) {
+  StartConnect();
+  auto filter = MakeTlsFilter<TlsEncryptedHandshakeMessageReplacer>(
+      client_, kTlsHandshakeFinished, kTlsHandshakeKeyUpdate);
+  filter->EnableDecryption();
+
+  client_->Handshake();
+  server_->Handshake();
+  client_->Handshake();
+  ExpectAlert(server_, kTlsAlertUnexpectedMessage);
+  server_->Handshake();
+  server_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_KEY_UPDATE);
+  client_->Handshake();
+  client_->CheckErrorCode(SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT);
+}
+
 TEST_F(TlsConnectTest, KeyUpdateClientRequestUpdate) {
   ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
   Connect();

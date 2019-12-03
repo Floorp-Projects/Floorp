@@ -493,18 +493,11 @@ nssCKFWObject_GetAttributeSize(
 {
     CK_ULONG rv;
 
-#ifdef NSSDEBUG
     if (!pError) {
         return (CK_ULONG)0;
     }
 
-    *pError = nssCKFWObject_verifyPointer(fwObject);
-    if (CKR_OK != *pError) {
-        return (CK_ULONG)0;
-    }
-#endif /* NSSDEBUG */
-
-    if (!fwObject->mdObject->GetAttributeSize) {
+    if (!fwObject || !fwObject->mdObject || !fwObject->mdObject->GetAttributeSize) {
         *pError = CKR_GENERAL_ERROR;
         return (CK_ULONG)0;
     }
