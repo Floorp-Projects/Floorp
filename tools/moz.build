@@ -10,9 +10,6 @@ with Files("**"):
 with Files("code-coverage/**"):
     BUG_COMPONENT = ("Testing", "Code Coverage")
 
-with Files("compare-locales/docs/**"):
-    BUG_COMPONENT = ('Mozilla Localizations', 'Documentation')
-
 with Files("compare-locales/mach_commands.py"):
     BUG_COMPONENT = ("Localization Infrastructure and Tools", "compare-locales")
 
@@ -56,11 +53,6 @@ with Files("update-verify/**"):
 SPHINX_TREES['lint'] = 'lint/docs'
 
 with Files('lint/docs/**'):
-    SCHEDULES.exclusive = ['docs']
-
-SPHINX_TREES['compare-locales'] = 'compare-locales/docs'
-
-with Files('compare-locales/docs/**'):
     SCHEDULES.exclusive = ['docs']
 
 SPHINX_TREES['try'] = 'tryselect/docs'
