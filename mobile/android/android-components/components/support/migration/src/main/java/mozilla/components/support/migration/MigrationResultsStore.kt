@@ -43,6 +43,7 @@ internal class MigrationResultsStore(context: Context) : SharedPreferencesCache<
         }
     }
 
+    @Suppress("ComplexMethod")
     override fun fromJSON(obj: JSONObject): MigrationResults {
         val result = mutableMapOf<Migration, MigrationRun>()
         val list = obj.optJSONArray("list") ?: throw IllegalStateException("Corrupt migration history")
@@ -59,6 +60,7 @@ internal class MigrationResultsStore(context: Context) : SharedPreferencesCache<
                 Migration.Gecko.javaClass.simpleName -> Migration.Gecko
                 Migration.FxA.javaClass.simpleName -> Migration.FxA
                 Migration.Logins.javaClass.simpleName -> Migration.Logins
+                Migration.Settings.javaClass.simpleName -> Migration.Settings
                 else -> throw IllegalStateException("Unrecognized migration type: $migrationName")
             }
             result[migration] = MigrationRun(version = migrationVersion, success = migrationSuccess)

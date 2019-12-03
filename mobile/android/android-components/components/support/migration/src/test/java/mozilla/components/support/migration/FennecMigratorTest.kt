@@ -4,6 +4,7 @@
 
 package mozilla.components.support.migration
 
+import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.places.PlacesException
@@ -764,5 +765,47 @@ class FennecMigratorTest {
 
         loginStorage.ensureUnlocked("test storage key").await()
         assertEquals(0, loginStorage.list().await().size)
+    }
+
+    @Test
+    fun `settings migration - no fennec prefs`() = runBlocking {
+        // Fennec SharedPreferences are missing / empty
+        val crashReporter: CrashReporter = mock()
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateSettings()
+            .setCoroutineContext(this.coroutineContext)
+            .build()
+
+        with(migrator.migrateAsync().await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.Settings))
+            assertTrue(this.getValue(Migration.Settings).success)
+        }
+        verifyZeroInteractions(crashReporter)
+    }
+
+    @Test
+    fun `settings migration - missing FHR value`() = runBlocking {
+        val fennecAppPrefs = testContext.getSharedPreferences(FennecSettingsMigration.FENNEC_APP_SHARED_PREFS_NAME, Context.MODE_PRIVATE)
+
+        // Make prefs non-empty.
+        fennecAppPrefs.edit().putString("dummy", "key").apply()
+
+        val crashReporter: CrashReporter = mock()
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateSettings()
+            .setCoroutineContext(this.coroutineContext)
+            .build()
+
+        with(migrator.migrateAsync().await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.Settings))
+            assertFalse(this.getValue(Migration.Settings).success)
+        }
+        val captor = argumentCaptor<Exception>()
+        verify(crashReporter).submitCaughtException(captor.capture())
+
+        assertEquals(SettingsMigrationException::class, captor.value::class)
+        assertEquals("Missing FHR pref value", captor.value.message)
     }
 }

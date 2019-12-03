@@ -21,6 +21,7 @@ import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.sync.logins.AsyncLoginsStorage
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.migration.FennecMigrator.Builder
 import java.io.File
 import java.lang.Exception
 import java.util.concurrent.Executors
@@ -60,6 +61,11 @@ sealed class Migration(val currentVersion: Int) {
      * Migrates Gecko(View) internal files.
      */
     object Gecko : Migration(currentVersion = 1)
+
+    /**
+     * Migrates all Fennec settings backed by SharedPreferences.
+     */
+    object Settings : Migration(currentVersion = 1)
 }
 
 /**
@@ -106,11 +112,18 @@ sealed class FennecMigratorException(cause: Exception) : Exception(cause) {
      * @param cause Original exception which caused the problem.
      */
     class MigrateOpenTabsException(cause: Exception) : FennecMigratorException(cause)
+
     /**
      * Unexpected exception while migrating gecko profile.
      * @param cause Original exception which caused the problem.
      */
     class MigrateGeckoException(cause: Exception) : FennecMigratorException(cause)
+
+    /**
+     * Unexpected exception while migrating settings.
+     * @param cause Original exception which caused the problem
+     */
+    class MigrateSettingsException(cause: Exception) : FennecMigratorException(cause)
 }
 
 /**
@@ -250,6 +263,14 @@ class FennecMigrator private constructor(
         fun migrateFxa(accountManager: FxaAccountManager, version: Int = Migration.FxA.currentVersion): Builder {
             this.accountManager = accountManager
             migrations.add(VersionedMigration(Migration.FxA, version))
+            return this
+        }
+
+        /**
+         * Enable all Fennec - Fenix common settings migration.
+         */
+        fun migrateSettings(version: Int = Migration.Settings.currentVersion): Builder {
+            migrations.add(VersionedMigration(Migration.Settings, version))
             return this
         }
 
@@ -395,6 +416,7 @@ class FennecMigrator private constructor(
                 Migration.FxA -> migrateFxA()
                 Migration.Gecko -> migrateGecko()
                 Migration.Logins -> migrateLogins()
+                Migration.Settings -> migrateSharedPrefs()
             }
 
             results[versionedMigration.migration] = when (migrationResult) {
@@ -623,6 +645,38 @@ class FennecMigrator private constructor(
                 FennecMigratorException.MigrateGeckoException(e)
             )
             Result.Failure(e)
+        }
+    }
+
+    private fun migrateSharedPrefs(): Result<SettingsMigrationResult> {
+        val result = FennecSettingsMigration.migrateSharedPrefs(context)
+        if (result is Result.Failure<SettingsMigrationResult>) {
+            val migrationFailureWrapper = result.throwables.first() as SettingsMigrationException
+            return when (val failure = migrationFailureWrapper.failure) {
+                is SettingsMigrationResult.Failure.MissingFHRPrefValue -> {
+                    logger.error("Missing FHR value: $failure")
+                    crashReporter.submitCaughtException(migrationFailureWrapper)
+                    result
+                }
+                is SettingsMigrationResult.Failure.WrongTelemetryValueAfterMigration -> {
+                    logger.error("Wrong telemetry value: $failure")
+                    crashReporter.submitCaughtException(migrationFailureWrapper)
+                    result
+                }
+            }
+        }
+
+        val migrationSuccess = result as Result.Success<SettingsMigrationResult>
+        return when (val success = migrationSuccess.value as SettingsMigrationResult.Success) {
+            // The rest are all successful migrations.
+            is SettingsMigrationResult.Success.NoFennecPrefs -> {
+                logger.debug("No Fennec prefs detected")
+                result
+            }
+            is SettingsMigrationResult.Success.SettingsMigrated -> {
+                logger.debug("Migrated settings; telemetry=${success.telemetry}")
+                result
+            }
         }
     }
 }
