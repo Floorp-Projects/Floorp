@@ -57,8 +57,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "documentChannel",
-  "browser.tabs.documentchannel",
+  "useHttpResponseProcessSelection",
+  "browser.tabs.remote.useHTTPResponseProcessSelection",
   false
 );
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -287,11 +287,11 @@ var E10SUtils = {
   PRIVILEGEDMOZILLA_REMOTE_TYPE,
   LARGE_ALLOCATION_REMOTE_TYPE,
 
+  useHttpResponseProcessSelection() {
+    return useHttpResponseProcessSelection;
+  },
   useCrossOriginOpenerPolicy() {
     return useCrossOriginOpenerPolicy;
-  },
-  documentChannel() {
-    return documentChannel;
   },
 
   /**
@@ -768,7 +768,7 @@ var E10SUtils = {
     // We should never be sending a POST request from the parent process to a
     // http(s) uri, so make sure we switch if we're currently in that process.
     if (
-      useRemoteSubframes &&
+      (useRemoteSubframes || useHttpResponseProcessSelection) &&
       (aURI.scheme == "http" ||
         aURI.scheme == "https" ||
         aURI.scheme == "data") &&
