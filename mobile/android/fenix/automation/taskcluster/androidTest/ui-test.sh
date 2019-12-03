@@ -74,7 +74,10 @@ set +e
 
 if [[ "${device_type}" =~ ^(arm64-v8a|armeabi-v7a|x86_64|x86)$ ]]; then
     flank_template="${PATH_TEST}/flank-${device_type}.yml"
-    echo "device_type: ${device_type}"
+elif [[ "${device_type}" == "x86-start-test" ]]; then
+    flank_template="${PATH_TEST}/flank-x86-start-test.yml"
+elif [[ "${device_type}" == "arm-start-test" ]]; then
+    flank_template="${PATH_TEST}/flank-armeabi-v7a-start-test.yml"
 else
     echo "NOT FOUND"
     exitcode=1
@@ -82,18 +85,32 @@ fi
 
 APK_APP="$(get_abs_filename $APK_APP)"
 APK_TEST="$(get_abs_filename $APK_TEST)"
+echo "device_type: ${device_type}"
 echo "APK_APP: ${APK_APP}"
 echo "APK_TEST: ${APK_TEST}"
 
 # function to exit script with exit code from test run.
 # (Only 0 if all test executions passed)
 function failure_check() {
+    echo
+    echo
     if [[ $exitcode -ne 0 ]]; then
-        echo
-        echo
         echo "ERROR: UI test run failed, please check above URL"
+    else
+	echo "All UI test(s) have passed!"
     fi
-    exit $exitcode
+
+    echo
+    echo "COPY ARTIFACTS"
+    echo
+    cp -r ./results /builds/worker/artifacts
+
+    echo
+    echo "RESULTS"
+    echo
+    ls -la ./results
+    echo
+    echo
 }
 
 echo
@@ -109,25 +126,5 @@ echo
 $JAVA_BIN -jar $FLANK_BIN android run --config=$flank_template --max-test-shards=$num_shards --app=$APK_APP --test=$APK_TEST --project=$GOOGLE_PROJECT
 exitcode=$?
 failure_check
-echo
-echo
 
-echo
-echo "COPY ARTIFACTS"
-echo
-cp -r ./results ./test_artifacts
-exitcode=$?
-failure_check
-echo
-echo
-
-echo
-echo "RESULTS"
-echo
-ls -la ./results
-echo
-echo
-
-echo "All UI test(s) have passed!"
-echo
-echo
+exit $exitcode

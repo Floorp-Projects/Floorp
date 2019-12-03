@@ -45,6 +45,6 @@ jobs:
                 GOOGLE_PROJECT: moz-fenix
             artifacts:
                 - name: public
-                  path: /build/fenix/results
+                  path: /builds/worker/artifacts
                   type: directory
         worker-type: b-android
