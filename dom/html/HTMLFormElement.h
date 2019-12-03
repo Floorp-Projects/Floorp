@@ -363,6 +363,21 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   MOZ_CAN_RUN_SCRIPT void MaybeSubmit(Element* aSubmitter);
   MOZ_CAN_RUN_SCRIPT void MaybeReset(Element* aSubmitter);
   void Submit(ErrorResult& aRv);
+
+  /**
+   * Requests to submit the form. Unlike submit(), this method includes
+   * interactive constraint validation and firing a submit event,
+   * either of which can cancel submission.
+   *
+   * @param aSubmitter The submitter argument can be used to point to a specific
+   *                   submit button.
+   * @param aRv        An ErrorResult.
+   * @see
+   * https://html.spec.whatwg.org/multipage/forms.html#dom-form-requestsubmit
+   */
+  MOZ_CAN_RUN_SCRIPT void RequestSubmit(nsGenericHTMLElement* aSubmitter,
+                                        ErrorResult& aRv);
+
   void Reset();
 
   bool CheckValidity() { return CheckFormValidity(nullptr); }
