@@ -990,38 +990,18 @@ nsresult nsMultiplexInputStreamConstructor(nsISupports* aOuter, REFNSIID aIID,
   return inst->QueryInterface(aIID, aResult);
 }
 
-void nsMultiplexInputStream::Serialize(InputStreamParams& aParams,
-                                       FileDescriptorArray& aFileDescriptors,
-                                       bool aDelayedStart, uint32_t aMaxSize,
-                                       uint32_t* aSizeUsed,
-                                       mozilla::dom::ContentChild* aManager) {
+void nsMultiplexInputStream::Serialize(
+    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
+    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::ipc::ParentToChildStreamActorManager* aManager) {
   SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
                     aSizeUsed, aManager);
 }
 
-void nsMultiplexInputStream::Serialize(InputStreamParams& aParams,
-                                       FileDescriptorArray& aFileDescriptors,
-                                       bool aDelayedStart, uint32_t aMaxSize,
-                                       uint32_t* aSizeUsed,
-                                       PBackgroundChild* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
-                    aSizeUsed, aManager);
-}
-
-void nsMultiplexInputStream::Serialize(InputStreamParams& aParams,
-                                       FileDescriptorArray& aFileDescriptors,
-                                       bool aDelayedStart, uint32_t aMaxSize,
-                                       uint32_t* aSizeUsed,
-                                       mozilla::dom::ContentParent* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
-                    aSizeUsed, aManager);
-}
-
-void nsMultiplexInputStream::Serialize(InputStreamParams& aParams,
-                                       FileDescriptorArray& aFileDescriptors,
-                                       bool aDelayedStart, uint32_t aMaxSize,
-                                       uint32_t* aSizeUsed,
-                                       PBackgroundParent* aManager) {
+void nsMultiplexInputStream::Serialize(
+    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
+    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::ipc::ChildToParentStreamActorManager* aManager) {
   SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
                     aSizeUsed, aManager);
 }

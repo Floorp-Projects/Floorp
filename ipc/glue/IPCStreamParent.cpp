@@ -5,8 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IPCStreamDestination.h"
-#include "mozilla/dom/ContentParent.h"
-#include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/ipc/PParentToChildStreamParent.h"
 #include "mozilla/Unused.h"
@@ -66,30 +64,8 @@ class IPCStreamSourceParent final : public PParentToChildStreamParent,
 
 /* static */
 PParentToChildStreamParent* IPCStreamSource::Create(
-    nsIAsyncInputStream* aInputStream, dom::ContentParent* aManager) {
-  MOZ_ASSERT(aInputStream);
-  MOZ_ASSERT(aManager);
-
-  // PContent can only be used on the main thread
-  MOZ_ASSERT(NS_IsMainThread());
-
-  IPCStreamSourceParent* source = IPCStreamSourceParent::Create(aInputStream);
-  if (!source) {
-    return nullptr;
-  }
-
-  if (!aManager->SendPParentToChildStreamConstructor(source)) {
-    // no delete here, the manager will delete the actor for us.
-    return nullptr;
-  }
-
-  source->ActorConstructed();
-  return source;
-}
-
-/* static */
-PParentToChildStreamParent* IPCStreamSource::Create(
-    nsIAsyncInputStream* aInputStream, PBackgroundParent* aManager) {
+    nsIAsyncInputStream* aInputStream,
+    ParentToChildStreamActorManager* aManager) {
   MOZ_ASSERT(aInputStream);
   MOZ_ASSERT(aManager);
 

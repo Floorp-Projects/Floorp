@@ -6,6 +6,7 @@
 #include "SocketProcessParent.h"
 
 #include "SocketProcessHost.h"
+#include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryIPC.h"
@@ -154,6 +155,53 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvPDNSRequestConstructor(
   static_cast<DNSRequestParent*>(aActor)->DoAsyncResolve(
       aHost, aOriginAttributes, aFlags);
   return IPC_OK();
+}
+
+PFileDescriptorSetParent* SocketProcessParent::AllocPFileDescriptorSetParent(
+    const FileDescriptor& aFD) {
+  return new FileDescriptorSetParent(aFD);
+}
+
+bool SocketProcessParent::DeallocPFileDescriptorSetParent(
+    PFileDescriptorSetParent* aActor) {
+  delete static_cast<FileDescriptorSetParent*>(aActor);
+  return true;
+}
+
+PChildToParentStreamParent*
+SocketProcessParent::AllocPChildToParentStreamParent() {
+  return mozilla::ipc::AllocPChildToParentStreamParent();
+}
+
+bool SocketProcessParent::DeallocPChildToParentStreamParent(
+    PChildToParentStreamParent* aActor) {
+  delete aActor;
+  return true;
+}
+
+PParentToChildStreamParent*
+SocketProcessParent::AllocPParentToChildStreamParent() {
+  MOZ_CRASH("PParentToChildStreamChild actors should be manually constructed!");
+}
+
+bool SocketProcessParent::DeallocPParentToChildStreamParent(
+    PParentToChildStreamParent* aActor) {
+  delete aActor;
+  return true;
+}
+
+PParentToChildStreamParent*
+SocketProcessParent::SendPParentToChildStreamConstructor(
+    PParentToChildStreamParent* aActor) {
+  MOZ_ASSERT(NS_IsMainThread());
+  return PSocketProcessParent::SendPParentToChildStreamConstructor(aActor);
+}
+
+PFileDescriptorSetParent*
+SocketProcessParent::SendPFileDescriptorSetConstructor(
+    const FileDescriptor& aFD) {
+  MOZ_ASSERT(NS_IsMainThread());
+  return PSocketProcessParent::SendPFileDescriptorSetConstructor(aFD);
 }
 
 // To ensure that IPDL is finished before SocketParent gets deleted.

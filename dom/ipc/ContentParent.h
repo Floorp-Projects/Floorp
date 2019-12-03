@@ -15,6 +15,7 @@
 #include "mozilla/gfx/GPUProcessListener.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/PParentToChildStreamParent.h"
 #include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/Attributes.h"
@@ -127,18 +128,20 @@ struct CancelContentJSOptions;
     }                                                \
   }
 
-class ContentParent final : public PContentParent,
-                            public nsIObserver,
-                            public nsIDOMGeoPositionCallback,
-                            public nsIDOMGeoPositionErrorCallback,
-                            public nsIInterfaceRequestor,
-                            public gfx::gfxVarReceiver,
-                            public mozilla::LinkedListElement<ContentParent>,
-                            public gfx::GPUProcessListener,
-                            public mozilla::MemoryReportingProcess,
-                            public mozilla::dom::ipc::MessageManagerCallback,
-                            public CPOWManagerGetter,
-                            public mozilla::ipc::IShmemAllocator {
+class ContentParent final
+    : public PContentParent,
+      public nsIObserver,
+      public nsIDOMGeoPositionCallback,
+      public nsIDOMGeoPositionErrorCallback,
+      public nsIInterfaceRequestor,
+      public gfx::gfxVarReceiver,
+      public mozilla::LinkedListElement<ContentParent>,
+      public gfx::GPUProcessListener,
+      public mozilla::MemoryReportingProcess,
+      public mozilla::dom::ipc::MessageManagerCallback,
+      public CPOWManagerGetter,
+      public mozilla::ipc::IShmemAllocator,
+      public mozilla::ipc::ParentToChildStreamActorManager {
   typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
   typedef mozilla::ipc::PFileDescriptorSetParent PFileDescriptorSetParent;
   typedef mozilla::ipc::TestShellParent TestShellParent;
@@ -649,6 +652,11 @@ class ContentParent final : public PContentParent,
       const PostMessageData& aData);
 
   FORWARD_SHMEM_ALLOCATOR_TO(PContentParent)
+
+  PParentToChildStreamParent* SendPParentToChildStreamConstructor(
+      PParentToChildStreamParent* aActor) override;
+  PFileDescriptorSetParent* SendPFileDescriptorSetConstructor(
+      const FileDescriptor& aFD) override;
 
  protected:
   bool CheckBrowsingContextOwnership(BrowsingContext* aBC,

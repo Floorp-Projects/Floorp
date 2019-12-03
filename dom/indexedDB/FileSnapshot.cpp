@@ -271,23 +271,8 @@ StreamWrapper::IsNonBlocking(bool* _retval) {
 void StreamWrapper::Serialize(InputStreamParams& aParams,
                               FileDescriptorArray& aFileDescriptors,
                               bool aDelayedStart, uint32_t aMaxSize,
-                              uint32_t* aSizeUsed, ContentChild* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
-                    aSizeUsed, aManager);
-}
-
-void StreamWrapper::Serialize(InputStreamParams& aParams,
-                              FileDescriptorArray& aFileDescriptors,
-                              bool aDelayedStart, uint32_t aMaxSize,
-                              uint32_t* aSizeUsed, PBackgroundChild* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
-                    aSizeUsed, aManager);
-}
-
-void StreamWrapper::Serialize(InputStreamParams& aParams,
-                              FileDescriptorArray& aFileDescriptors,
-                              bool aDelayedStart, uint32_t aMaxSize,
-                              uint32_t* aSizeUsed, ContentParent* aManager) {
+                              uint32_t* aSizeUsed,
+                              ParentToChildStreamActorManager* aManager) {
   SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
                     aSizeUsed, aManager);
 }
@@ -296,7 +281,7 @@ void StreamWrapper::Serialize(InputStreamParams& aParams,
                               FileDescriptorArray& aFileDescriptors,
                               bool aDelayedStart, uint32_t aMaxSize,
                               uint32_t* aSizeUsed,
-                              PBackgroundParent* aManager) {
+                              ChildToParentStreamActorManager* aManager) {
   SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
                     aSizeUsed, aManager);
 }

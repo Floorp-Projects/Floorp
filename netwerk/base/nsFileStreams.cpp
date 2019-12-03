@@ -544,7 +544,7 @@ void nsFileInputStream::Serialize(InputStreamParams& aParams,
                                   FileDescriptorArray& aFileDescriptors,
                                   bool aDelayedStart, uint32_t aMaxSize,
                                   uint32_t* aSizeUsed,
-                                  mozilla::dom::ContentChild* aManager) {
+                                  ParentToChildStreamActorManager* aManager) {
   MOZ_ASSERT(aSizeUsed);
   *aSizeUsed = 0;
 
@@ -555,29 +555,7 @@ void nsFileInputStream::Serialize(InputStreamParams& aParams,
                                   FileDescriptorArray& aFileDescriptors,
                                   bool aDelayedStart, uint32_t aMaxSize,
                                   uint32_t* aSizeUsed,
-                                  PBackgroundChild* aManager) {
-  MOZ_ASSERT(aSizeUsed);
-  *aSizeUsed = 0;
-
-  SerializeInternal(aParams, aFileDescriptors);
-}
-
-void nsFileInputStream::Serialize(InputStreamParams& aParams,
-                                  FileDescriptorArray& aFileDescriptors,
-                                  bool aDelayedStart, uint32_t aMaxSize,
-                                  uint32_t* aSizeUsed,
-                                  mozilla::dom::ContentParent* aManager) {
-  MOZ_ASSERT(aSizeUsed);
-  *aSizeUsed = 0;
-
-  SerializeInternal(aParams, aFileDescriptors);
-}
-
-void nsFileInputStream::Serialize(InputStreamParams& aParams,
-                                  FileDescriptorArray& aFileDescriptors,
-                                  bool aDelayedStart, uint32_t aMaxSize,
-                                  uint32_t* aSizeUsed,
-                                  PBackgroundParent* aManager) {
+                                  ChildToParentStreamActorManager* aManager) {
   MOZ_ASSERT(aSizeUsed);
   *aSizeUsed = 0;
 

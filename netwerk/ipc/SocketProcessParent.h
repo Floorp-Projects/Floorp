@@ -8,6 +8,7 @@
 
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ipc/CrashReporterHelper.h"
+#include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/net/PSocketProcessParent.h"
 
 namespace mozilla {
@@ -29,7 +30,8 @@ class SocketProcessHost;
 // by SocketProcessHost.
 class SocketProcessParent final
     : public PSocketProcessParent,
-      public ipc::CrashReporterHelper<GeckoProcessType_Socket> {
+      public ipc::CrashReporterHelper<GeckoProcessType_Socket>,
+      public ipc::ParentToChildStreamActorManager {
  public:
   friend class SocketProcessHost;
 
@@ -69,6 +71,20 @@ class SocketProcessParent final
                                const bool& aAnonymize,
                                const bool& aMinimizeMemoryUsage,
                                const Maybe<ipc::FileDescriptor>& aDMDFile);
+
+  PFileDescriptorSetParent* AllocPFileDescriptorSetParent(
+      const FileDescriptor& fd);
+  bool DeallocPFileDescriptorSetParent(PFileDescriptorSetParent* aActor);
+
+  PChildToParentStreamParent* AllocPChildToParentStreamParent();
+  bool DeallocPChildToParentStreamParent(PChildToParentStreamParent* aActor);
+  PParentToChildStreamParent* AllocPParentToChildStreamParent();
+  bool DeallocPParentToChildStreamParent(PParentToChildStreamParent* aActor);
+
+  PParentToChildStreamParent* SendPParentToChildStreamConstructor(
+      PParentToChildStreamParent* aActor) override;
+  PFileDescriptorSetParent* SendPFileDescriptorSetConstructor(
+      const FileDescriptor& aFD) override;
 
  private:
   SocketProcessHost* mHost;

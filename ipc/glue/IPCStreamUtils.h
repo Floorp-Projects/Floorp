@@ -18,6 +18,11 @@ class ContentChild;
 class ContentParent;
 }  // namespace dom
 
+namespace net {
+class SocketProcessParent;
+class SocketProcessChild;
+}  // namespace net
+
 namespace ipc {
 
 class PBackgroundChild;
@@ -153,6 +158,11 @@ class AutoIPCStream {
   // be called on the main thread or Worker threads.
   bool Serialize(nsIInputStream* aStream, PBackgroundChild* aManager);
 
+  // Serialize the input stream or create a SendStream actor using the
+  // SocketProcess manager.  If neither of these succeed, then crash.  This
+  // should only be used on the main thread.
+  bool Serialize(nsIInputStream* aStream, net::SocketProcessChild* aManager);
+
   // Serialize the input stream.
   MOZ_MUST_USE bool Serialize(nsIInputStream* aStream,
                               dom::ContentParent* aManager);
@@ -160,6 +170,10 @@ class AutoIPCStream {
   // Serialize the input stream.
   MOZ_MUST_USE bool Serialize(nsIInputStream* aStream,
                               PBackgroundParent* aManager);
+
+  // Serialize the input stream.
+  MOZ_MUST_USE bool Serialize(nsIInputStream* aStream,
+                              net::SocketProcessParent* aManager);
 
   // Get the IPCStream as a non-optional value.  This will
   // assert if a stream has not been serialized or if it has already been taken.

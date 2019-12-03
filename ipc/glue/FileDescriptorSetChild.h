@@ -20,6 +20,12 @@ class ContentChild;
 
 }  // namespace dom
 
+namespace net {
+
+class SocketProcessChild;
+
+}  // namespace net
+
 namespace ipc {
 
 class BackgroundChildImpl;
@@ -28,6 +34,7 @@ class FileDescriptor;
 class FileDescriptorSetChild final : public PFileDescriptorSetChild {
   friend class BackgroundChildImpl;
   friend class mozilla::dom::ContentChild;
+  friend class mozilla::net::SocketProcessChild;
   friend class PFileDescriptorSetChild;
 
   nsTArray<FileDescriptor> mFileDescriptors;

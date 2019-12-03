@@ -6112,6 +6112,19 @@ mozilla::ipc::IPCResult ContentParent::RecvCommitBrowsingContextTransaction(
   aTransaction.Apply(aContext);
   return IPC_OK();
 }
+
+PParentToChildStreamParent* ContentParent::SendPParentToChildStreamConstructor(
+    PParentToChildStreamParent* aActor) {
+  MOZ_ASSERT(NS_IsMainThread());
+  return PContentParent::SendPParentToChildStreamConstructor(aActor);
+}
+
+PFileDescriptorSetParent* ContentParent::SendPFileDescriptorSetConstructor(
+    const FileDescriptor& aFD) {
+  MOZ_ASSERT(NS_IsMainThread());
+  return PContentParent::SendPFileDescriptorSetConstructor(aFD);
+}
+
 }  // namespace dom
 }  // namespace mozilla
 
