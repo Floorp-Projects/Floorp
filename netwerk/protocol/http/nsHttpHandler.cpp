@@ -61,9 +61,11 @@
 #include "nsRFPService.h"
 #include "rust-helper/src/helper.h"
 
+#include "mozilla/net/HttpConnectionMgrParent.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/RequestContextService.h"
+#include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
@@ -589,19 +591,35 @@ nsresult nsHttpHandler::InitConnectionMgr() {
     return NS_OK;
   }
 
-  nsresult rv;
+  if (mConnMgr) {
+    return NS_OK;
+  }
 
-  if (!mConnMgr) {
+  if (gIOService->UseSocketProcess() && XRE_IsParentProcess()) {
+    if (!gIOService->SocketProcessReady()) {
+      gIOService->CallOrWaitForSocketProcess(
+          []() { Unused << gHttpHandler->InitConnectionMgr(); });
+      return NS_OK;
+    }
+
+    RefPtr<HttpConnectionMgrParent> connMgr = new HttpConnectionMgrParent();
+    if (!SocketProcessParent::GetSingleton()->SendPHttpConnectionMgrConstructor(
+            connMgr)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    mConnMgr = connMgr;
+  } else {
+    MOZ_ASSERT(XRE_IsSocketProcess() || !gIOService->UseSocketProcess());
     mConnMgr = new nsHttpConnectionMgr();
   }
 
-  rv = mConnMgr->Init(
+  return mConnMgr->Init(
       mMaxUrgentExcessiveConns, mMaxConnections,
       mMaxPersistentConnectionsPerServer, mMaxPersistentConnectionsPerProxy,
       mMaxRequestDelay, mThrottleEnabled, mThrottleVersion, mThrottleSuspendFor,
       mThrottleResumeFor, mThrottleReadLimit, mThrottleReadInterval,
       mThrottleHoldTime, mThrottleMaxTime, mBeConservativeForProxy);
-  return rv;
 }
 
 nsresult nsHttpHandler::AddStandardRequestHeaders(
@@ -2697,30 +2715,28 @@ bool nsHttpHandler::IsHttp3VersionSupportedHex(const nsACString& version) {
 
 nsresult nsHttpHandler::InitiateTransaction(HttpTransactionShell* aTrans,
                                             int32_t aPriority) {
-  return mConnMgr->AddTransaction(aTrans->AsHttpTransaction(), aPriority);
+  return mConnMgr->AddTransaction(aTrans, aPriority);
 }
 nsresult nsHttpHandler::InitiateTransactionWithStickyConn(
     HttpTransactionShell* aTrans, int32_t aPriority,
     HttpTransactionShell* aTransWithStickyConn) {
-  return mConnMgr->AddTransactionWithStickyConn(
-      aTrans->AsHttpTransaction(), aPriority,
-      aTransWithStickyConn->AsHttpTransaction());
+  return mConnMgr->AddTransactionWithStickyConn(aTrans, aPriority,
+                                                aTransWithStickyConn);
 }
 
 nsresult nsHttpHandler::RescheduleTransaction(HttpTransactionShell* trans,
                                               int32_t priority) {
-  return mConnMgr->RescheduleTransaction(trans->AsHttpTransaction(), priority);
+  return mConnMgr->RescheduleTransaction(trans, priority);
 }
 
 void nsHttpHandler::UpdateClassOfServiceOnTransaction(
     HttpTransactionShell* trans, uint32_t classOfService) {
-  mConnMgr->UpdateClassOfServiceOnTransaction(trans->AsHttpTransaction(),
-                                              classOfService);
+  mConnMgr->UpdateClassOfServiceOnTransaction(trans, classOfService);
 }
 
 nsresult nsHttpHandler::CancelTransaction(HttpTransactionShell* trans,
                                           nsresult reason) {
-  return mConnMgr->CancelTransaction(trans->AsHttpTransaction(), reason);
+  return mConnMgr->CancelTransaction(trans, reason);
 }
 
 }  // namespace net
