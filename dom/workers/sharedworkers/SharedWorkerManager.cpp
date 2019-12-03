@@ -64,7 +64,7 @@ SharedWorkerManager::~SharedWorkerManager() {
 
 bool SharedWorkerManager::MaybeCreateRemoteWorker(
     const RemoteWorkerData& aData, uint64_t aWindowID,
-    UniqueMessagePortId& aPortIdentifier, base::ProcessId aProcessId) {
+    const MessagePortIdentifier& aPortIdentifier, base::ProcessId aProcessId) {
   AssertIsOnBackgroundThread();
 
   if (!mRemoteWorkerController) {
@@ -79,7 +79,7 @@ bool SharedWorkerManager::MaybeCreateRemoteWorker(
     mRemoteWorkerController->AddWindowID(aWindowID);
   }
 
-  mRemoteWorkerController->AddPortIdentifier(aPortIdentifier.release());
+  mRemoteWorkerController->AddPortIdentifier(aPortIdentifier);
   return true;
 }
 

@@ -1054,7 +1054,7 @@ bool StructuredCloneHolder::CustomReadTransferHandler(
     }
 #endif
     MOZ_ASSERT(aExtraData < mPortIdentifiers.Length());
-    UniqueMessagePortId portIdentifier(mPortIdentifiers[aExtraData]);
+    const MessagePortIdentifier& portIdentifier = mPortIdentifiers[aExtraData];
 
     ErrorResult rv;
     RefPtr<MessagePort> port = MessagePort::Create(mGlobal, portIdentifier, rv);
@@ -1133,16 +1133,15 @@ bool StructuredCloneHolder::CustomWriteTransferHandler(
     MessagePort* port = nullptr;
     nsresult rv = UNWRAP_OBJECT(MessagePort, &obj, port);
     if (NS_SUCCEEDED(rv)) {
+      // We use aExtraData to store the index of this new port identifier.
+      *aExtraData = mPortIdentifiers.Length();
+      MessagePortIdentifier* identifier = mPortIdentifiers.AppendElement();
+
       if (!port->CanBeCloned()) {
         return false;
       }
 
-      UniqueMessagePortId identifier;
-      port->CloneAndDisentangle(identifier);
-
-      // We use aExtraData to store the index of this new port identifier.
-      *aExtraData = mPortIdentifiers.Length();
-      mPortIdentifiers.AppendElement(identifier.release());
+      port->CloneAndDisentangle(*identifier);
 
       *aTag = SCTAG_DOM_MAP_MESSAGEPORT;
       *aOwnership = JS::SCTAG_TMO_CUSTOM;
