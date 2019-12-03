@@ -935,7 +935,7 @@ static void ConfigureContentGtkTheme() {
 
   // ...and use a default Gtk theme as a fallback.
   if (contentThemeName.IsEmpty() && !IsGtkThemeCompatibleWithHTMLColors()) {
-    LOG(("    Non-compatible drark theme, default to Adwaita\n"));
+    LOG(("    Non-compatible dark theme, default to Adwaita\n"));
     g_object_set(settings, "gtk-theme-name", "Adwaita", nullptr);
   }
 }
