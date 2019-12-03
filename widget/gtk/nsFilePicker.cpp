@@ -3,13 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Types.h"
+#include <dlfcn.h>
+#include <gtk/gtk.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <gtk/gtk.h>
-
+#include "mozilla/Types.h"
 #include "nsGtkUtils.h"
 #include "nsIFileURL.h"
 #include "nsIGIOService.h"

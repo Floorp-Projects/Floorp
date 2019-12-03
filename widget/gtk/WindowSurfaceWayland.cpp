@@ -773,7 +773,7 @@ static bool IsWindowFullScreenUpdate(
     const LayoutDeviceIntRegion& aUpdatedRegion) {
   if (aUpdatedRegion.GetNumRects() > 1) return false;
 
-  IntRect rect = aUpdatedRegion.RectIter().Get().ToUnknownRect();
+  gfx::IntRect rect = aUpdatedRegion.RectIter().Get().ToUnknownRect();
   return (rect.x == 0 && rect.y == 0 && aScreenRect.width == rect.width &&
           aScreenRect.height == rect.height);
 }

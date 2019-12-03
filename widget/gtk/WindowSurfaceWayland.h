@@ -8,9 +8,13 @@
 #define _MOZILLA_WIDGET_GTK_WINDOW_SURFACE_WAYLAND_H
 
 #include <prthread.h>
+#include "gfxImageSurface.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Types.h"
 #include "nsWaylandDisplay.h"
+#include "nsWindow.h"
 #include "WaylandDMABufSurface.h"
+#include "WindowSurface.h"
 
 #define BACK_BUFFER_NUM 3
 
