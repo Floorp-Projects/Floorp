@@ -9,7 +9,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CycleCollectedJSContext.h"  // for nsAutoMicroTask
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/GeolocationPositionError.h"
 #include "mozilla/dom/GeolocationPositionErrorBinding.h"
@@ -984,21 +983,6 @@ bool Geolocation::ShouldBlockInsecureRequests() const {
   return false;
 }
 
-bool Geolocation::FeaturePolicyBlocked() const {
-  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryReferent(mOwner);
-  if (!win) {
-    return true;
-  }
-
-  nsCOMPtr<Document> doc = win->GetExtantDoc();
-  if (!doc) {
-    return false;
-  }
-
-  return FeaturePolicyUtils::IsFeatureAllowed(doc,
-                                              NS_LITERAL_STRING("geolocation"));
-}
-
 bool Geolocation::ClearPendingRequest(nsGeolocationRequest* aRequest) {
   if (aRequest->IsWatch() && this->IsAlreadyCleared(aRequest)) {
     this->NotifyAllowedRequest(aRequest);
@@ -1051,7 +1035,7 @@ nsresult Geolocation::GetCurrentPosition(GeoPositionCallback callback,
       static_cast<uint8_t>(mProtocolType), target);
 
   if (!StaticPrefs::geo_enabled() || ShouldBlockInsecureRequests() ||
-      !FeaturePolicyBlocked()) {
+      !request->CheckPermissionDelegate()) {
     request->RequestDelayedTask(target,
                                 nsGeolocationRequest::DelayedTaskType::Deny);
     return NS_OK;
@@ -1124,7 +1108,7 @@ int32_t Geolocation::WatchPosition(GeoPositionCallback aCallback,
       watchId);
 
   if (!StaticPrefs::geo_enabled() || ShouldBlockInsecureRequests() ||
-      !FeaturePolicyBlocked()) {
+      !request->CheckPermissionDelegate()) {
     request->RequestDelayedTask(target,
                                 nsGeolocationRequest::DelayedTaskType::Deny);
     return watchId;
