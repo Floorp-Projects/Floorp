@@ -622,16 +622,6 @@ partial interface Document {
     readonly attribute FeaturePolicy featurePolicy;
 };
 
-/**
- * Document extensions to support devtools.
- */
-partial interface Document {
-  // Extension to give chrome JS the ability to set the window screen
-  // orientation while in RDM.
-  [ChromeOnly]
-  void setRDMPaneOrientation(OrientationType type, float rotationAngle);
-};
-
 // Extension to give chrome JS the ability to specify a non-default keypress
 // event model.
 partial interface Document {
