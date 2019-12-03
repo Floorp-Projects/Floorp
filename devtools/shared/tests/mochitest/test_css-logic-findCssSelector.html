@@ -7,6 +7,7 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
+"use strict";
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { findCssSelector } = require("devtools/shared/inspector/css-logic");
@@ -30,10 +31,10 @@ window.onload = function() {
 };
 
 addTest(function findAllCssSelectors() {
-  var nodes = document.querySelectorAll("*");
-  for (var i = 0; i < nodes.length; i++) {
-    var selector = findCssSelector(nodes[i]);
-    var matches = document.querySelectorAll(selector);
+  const nodes = document.querySelectorAll("*");
+  for (let i = 0; i < nodes.length; i++) {
+    const selector = findCssSelector(nodes[i]);
+    const matches = document.querySelectorAll(selector);
 
     is(matches.length, 1, "There is a single match: " + selector);
     is(matches[0], nodes[i], "The selector matches the correct node: " + selector);
@@ -43,22 +44,22 @@ addTest(function findAllCssSelectors() {
 });
 
 addTest(function findCssSelectorNotContainedInDocument() {
-  var unattached = document.createElement("div");
+  const unattached = document.createElement("div");
   unattached.id = "unattached";
   is(findCssSelector(unattached), "", "Unattached node returns empty string");
 
-  var unattachedChild = document.createElement("div");
+  const unattachedChild = document.createElement("div");
   unattached.appendChild(unattachedChild);
   is(findCssSelector(unattachedChild), "", "Unattached child returns empty string");
 
-  var unattachedBody = document.createElement("body");
+  const unattachedBody = document.createElement("body");
   is(findCssSelector(unattachedBody), "", "Unattached body returns empty string");
 
   runNextTest();
 });
 
 addTest(function findCssSelectorBasic() {
-  let data = [
+  const data = [
     "#one",
     "#" + CSS.escape("2"),
     ".three",
@@ -75,11 +76,11 @@ addTest(function findCssSelectorBasic() {
     "#" + CSS.escape("!, \", #, $, %, &, ', (, ), *, +, ,, -, ., /, :, ;, <, =, >, ?, @, [, \\, ], ^, `, {, |, }, ~"),
   ];
 
-  let container = document.querySelector("#find-css-selector");
+  const container = document.querySelector("#find-css-selector");
   is(container.children.length, data.length, "Container has correct number of children.");
 
   for (let i = 0; i < data.length; i++) {
-    let node = container.children[i];
+    const node = container.children[i];
     is(findCssSelector(node), data[i], "matched id for index " + (i - 1));
   }
 

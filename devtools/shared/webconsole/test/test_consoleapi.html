@@ -12,6 +12,8 @@
 <p>Test for the Console API</p>
 
 <script class="testbody" type="text/javascript">
+"use strict";
+
 SimpleTest.waitForExplicitFinish();
 
 let expectedConsoleCalls = [];
@@ -43,8 +45,7 @@ function doConsoleCalls(aState)
 
   (function(global, foreign) {
     "use asm";
-    var fromAsmJS = foreign.fromAsmJS;
-    function inAsmJS2() { fromAsmJS() }
+    function inAsmJS2() { foreign.fromAsmJS() }
     function inAsmJS1() { inAsmJS2() }
     return inAsmJS1
   })(null, { fromAsmJS:fromAsmJS })();

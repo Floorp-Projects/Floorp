@@ -14,6 +14,8 @@
 <iframe src="https://example.com/chrome/devtools/shared/webconsole/test/network_requests_iframe.html"></iframe>
 
 <script class="testbody" type="text/javascript">
+"use strict";
+
 SimpleTest.waitForExplicitFinish();
 
 let gCurrentTestCase = -1;
@@ -44,8 +46,7 @@ function startTest()
     const gSSService = Cc["@mozilla.org/ssservice;1"]
                        .getService(Ci.nsISiteSecurityService);
 
-    const gIOService = Cc["@mozilla.org/network/io-service;1"]
-                       .getService(Ci.nsIIOService);
+    const gIOService = Services.io;
 
     const uri = gIOService.newURI(TEST_CASES[0].url);
     gSSService.resetState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0);

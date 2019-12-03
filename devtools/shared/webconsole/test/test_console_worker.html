@@ -12,6 +12,8 @@
 <p>Test for the Console API and Workers</p>
 
 <script class="testbody" type="text/javascript">
+"use strict";
+
 SimpleTest.waitForExplicitFinish();
 
 const expectedCachedConsoleCalls = [
@@ -30,9 +32,9 @@ const expectedConsoleAPICalls = [
 ];
 
 window.onload = async function () {
-  const {state,response} = await new Promise(resolve => {
-    attachConsoleToWorker(["ConsoleAPI"], (state, response) => {
-      resolve({state,response})
+  const {state} = await new Promise(resolve => {
+    attachConsoleToWorker(["ConsoleAPI"], (s) => {
+      resolve({state: s})
     });
   });
 
