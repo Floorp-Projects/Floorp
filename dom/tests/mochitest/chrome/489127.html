@@ -13,8 +13,8 @@
 
   let dwu = window.windowUtils;
 
-  function check(x, y, top, right, bottom, left, list) {
-    let nodes = dwu.nodesFromRect(x, y, top, right, bottom, left, true, false, false);
+  function check(x, y, top, right, bottom, left, onlyVisible, list) {
+    let nodes = dwu.nodesFromRect(x, y, top, right, bottom, left, true, false, onlyVisible);
 
     list.push(e.body);
     list.push(e.html);
@@ -44,44 +44,44 @@
     // Set up shortcut access to elements
     e.html = document.getElementsByTagName("html")[0];
     ['h1', 'd1', 'd2', 'p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'span',
-     'a1', 'a2', 'a3', 'transf', 'iframe1', 'body'].forEach(function(a) {
+     'a1', 'a2', 'a3', 'transf', 'iframe1', 'body', 'opacity'].forEach(function(a) {
       e[a] = document.getElementById(a);
     });
 
     window.scrollTo(0, 0);
 
     // Top, Right, Bottom, Left directions:
-    check(53, 71, 0,  0,  0,  0, []);
-    check(53, 71, 10, 0,  0,  0, [e.h1]);
-    check(53, 71, 0,  10, 0,  0, [e.p3]);
-    check(53, 71, 0,  0,  10, 0, [e.d1]);
-    check(152, 105, 0, 0, 0, 10, [e.d1]);
-    check(152, 105, 10, 10, 10, 10, [e.p4, e.p3, e.d1]);
+    check(53, 71, 0,  0,  0,  0, false, []);
+    check(53, 71, 10, 0,  0,  0, false, [e.h1]);
+    check(53, 71, 0,  10, 0,  0, false, [e.p3]);
+    check(53, 71, 0,  0,  10, 0, false, [e.d1]);
+    check(152, 105, 0, 0, 0, 10, false, [e.d1]);
+    check(152, 105, 10, 10, 10, 10, false, [e.p4, e.p3, e.d1]);
 
     // e.p1 is invisible and shouldn't appear:
-    check(153,193,0,0,0,0,[e.p5]);
-    check(153,193,0,20,0,20, [e.p5, e.d2]);
+    check(153,193,0,0,0,0,false,[e.p5]);
+    check(153,193,0,20,0,20, false, [e.p5, e.d2]);
 
     // Precise pixel checks:
-    check(144, 183, 0, 0, 0, 0, []);
-    check(144, 183, 0, 0, 1, 0, [e.p5]);
-    check(144, 183, 0, 0, 0, 1, [e.d2]);
-    check(144, 183, 0, 0, 1, 1, [e.p5, e.d2]);
-    check(77,  240, 0, 0, 0, 0, [e.p2]);
-    check(77,  240, 1, 0, 0, 0, [e.p5, e.p2]);
-    check(77,  240, 0, 0, 1, 0, [e.span, e.p2]);
-    check(77,  240, 1, 0, 1, 0, [e.p5, e.span, e.p2]);
+    check(144, 183, 0, 0, 0, 0, false, []);
+    check(144, 183, 0, 0, 1, 0, false, [e.p5]);
+    check(144, 183, 0, 0, 0, 1, false, [e.d2]);
+    check(144, 183, 0, 0, 1, 1, false, [e.p5, e.d2]);
+    check(77,  240, 0, 0, 0, 0, false, [e.p2]);
+    check(77,  240, 1, 0, 0, 0, false, [e.p5, e.p2]);
+    check(77,  240, 0, 0, 1, 0, false, [e.span, e.p2]);
+    check(77,  240, 1, 0, 1, 0, false, [e.p5, e.span, e.p2]);
 
     // Expanding area checks:
-    check(39, 212, 0,  0,  0,  0, []);
-    check(39, 212, 10, 0,  0,  0, [e.d2]);
-    check(39, 212, 0,  0,  10, 0, [e.p2]);
-    check(39, 212, 10, 1,  30, 0, [e.d2, e.p2]);
-    check(39, 212, 10, 5,  30, 0, [e.span, e.d2, e.p2]);
-    check(39, 212, 10, 15, 30, 0, [e.p5, e.span, e.d2, e.p2]);
+    check(39, 212, 0,  0,  0,  0, false, []);
+    check(39, 212, 10, 0,  0,  0, false, [e.d2]);
+    check(39, 212, 0,  0,  10, 0, false, [e.p2]);
+    check(39, 212, 10, 1,  30, 0, false, [e.d2, e.p2]);
+    check(39, 212, 10, 5,  30, 0, false, [e.span, e.d2, e.p2]);
+    check(39, 212, 10, 15, 30, 0, false, [e.p5, e.span, e.d2, e.p2]);
 
     // Elements inside iframe shouldn't be returned:
-    check(15, 410, 0, 30, 50, 0, [e.iframe1]);
+    check(15, 410, 0, 30, 50, 0, false, [e.iframe1]);
 
     // Area with links and text nodes:
     let [x1, y1] = getCenterFor(e.a1);
@@ -89,16 +89,23 @@
     let [x3, y3] = getCenterFor(e.a3);
     let [xt, yt] = [(x2 + x1) / 2, y1]; //text node between a1 and a2
 
-    check(x1, y1, 0, 0,       0,       0, [e.a1.firstChild, e.a1, e.p6]);
-    check(x1, y1, 0, 0,       y3 - y1, 0, [e.a3.firstChild, e.a3, e.a1.firstChild, e.a1, e.p6]);
-    check(x1, y1, 0, xt - x1, 0,       0, [e.p6.childNodes[1], e.a1.firstChild, e.a1, e.p6]);
-    check(x1, y1, 0, x2 - x1, 0,       0, [e.a2.firstChild, e.a2, e.p6.childNodes[1], e.a1.firstChild, e.a1, e.p6]);
-    check(x1, y1, 0, x2 - x1, y3 - y1, 0, [e.a3.firstChild, e.a3, e.a2.firstChild, e.a2, e.p6.childNodes[1], e.a1.firstChild, e.a1, e.p6]);
+    check(x1, y1, 0, 0,       0,       0, false, [e.a1.firstChild, e.a1, e.p6]);
+    check(x1, y1, 0, 0,       y3 - y1, 0, false, [e.a3.firstChild, e.a3, e.a1.firstChild, e.a1, e.p6]);
+    check(x1, y1, 0, xt - x1, 0,       0, false, [e.p6.childNodes[1], e.a1.firstChild, e.a1, e.p6]);
+    check(x1, y1, 0, x2 - x1, 0,       0, false, [e.a2.firstChild, e.a2, e.p6.childNodes[1], e.a1.firstChild, e.a1, e.p6]);
+    check(x1, y1, 0, x2 - x1, y3 - y1, 0, false, [e.a3.firstChild, e.a3, e.a2.firstChild, e.a2, e.p6.childNodes[1], e.a1.firstChild, e.a1, e.p6]);
 
     // 2d transform:
-    check(61, 671, 0, 0,  0,  0,  []);
-    check(61, 671, 0, 30, 0,  10, [e.transf]);
-    check(61, 671, 0, 30, 90, 10, [e.transf.firstChild, e.transf]);
+    check(61, 671, 0, 0,  0,  0,  false, []);
+    check(61, 671, 0, 30, 0,  10, false, [e.transf]);
+    check(61, 671, 0, 30, 90, 10, false, [e.transf.firstChild, e.transf]);
+
+    // opacity: with and without aVisibleOnly = true
+    {
+      let [x, y] = getCenterFor(e.opacity);
+      check(x, y, 1, 1, 1, 1, false, [e.opacity]);
+      check(x, y, 1, 1, 1, 1, true, []);
+    }
 
     done();
 
@@ -127,7 +134,6 @@ h1, div, p, span, iframe {
   margin: 10px;
 }
 
-
 span {
   display: inline-block;
 }
@@ -145,6 +151,11 @@ span {
 #transf {
   margin-top: 60px;
   -moz-transform: rotate(-45deg);
+}
+
+#opacity {
+  opacity: 0;
+  margin-top: 60px;
 }
 
 #decimal {
@@ -183,5 +194,7 @@ span {
   <p id="p6"><a href="#" id="a1">A</a> / <a href="#" id="a2">A</a><br/><a href="#" id="a3">A</a></p>
 
   <div id="transf">text</div>
+
+  <div id="opacity">text</div>
 </body>
 </html>

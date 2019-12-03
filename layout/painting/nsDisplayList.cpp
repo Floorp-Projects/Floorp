@@ -6412,6 +6412,18 @@ nsDisplayOpacity::nsDisplayOpacity(
   mState.mOpacity = mOpacity;
 }
 
+void nsDisplayOpacity::HitTest(nsDisplayListBuilder* aBuilder,
+                               const nsRect& aRect,
+                               nsDisplayItem::HitTestState* aState,
+                               nsTArray<nsIFrame*>* aOutFrames) {
+  // TODO(emilio): special-casing zero is a bit arbitrary... Maybe we should
+  // only consider fully opaque items? Or make this configurable somehow?
+  if (aBuilder->HitTestIsForVisibility() && mOpacity == 0.0f) {
+    return;
+  }
+  nsDisplayWrapList::HitTest(aBuilder, aRect, aState, aOutFrames);
+}
+
 nsRegion nsDisplayOpacity::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                            bool* aSnap) const {
   *aSnap = false;
