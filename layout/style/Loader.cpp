@@ -542,8 +542,8 @@ auto Loader::Sheets::Lookup(SheetLoadDataHashKey& aKey, bool aSyncLoad)
     LOG(("  From completed: %p", lookup.Data().get()));
     AssertComplete(*lookup.Data());
     MOZ_ASSERT(lookup.Data()->ParsingMode() == aKey.ParsingMode());
-    // Make sure the stylesheet hasn't been modified; that is an indication that
-    // its rules have been exposed to CSSOM and so we can't use it.
+    // Make sure the stylesheet hasn't been modified, as otherwise it may not
+    // contain the rules we care about.
     if (!lookup.Data()->HasModifiedRules()) {
       RefPtr<StyleSheet>& cachedSheet = lookup.Data();
       RefPtr<StyleSheet> clone = CloneSheet(*cachedSheet);
