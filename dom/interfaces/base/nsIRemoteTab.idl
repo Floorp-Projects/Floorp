@@ -76,11 +76,6 @@ interface nsIRemoteTab : nsISupports
   readonly attribute boolean hasBeforeUnload;
 
   /**
-   * The frame element which currently embeds this nsIRemoteTab object.
-   */
-  readonly attribute Element ownerElement;
-
-  /**
    * Notify APZ to start autoscrolling.
    * (aAnchorX, aAnchorY) are the coordinates of the autoscroll anchor,
    * in CSS coordinates relative to the screen. aScrollId and
