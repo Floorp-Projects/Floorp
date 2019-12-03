@@ -81,3 +81,8 @@ export function validateContext(state: State, cx: Context) {
     validateThreadContext(state, (cx: any));
   }
 }
+
+export function isValidThreadContext(state: State, cx: ThreadContext) {
+  const newcx = getThreadContext(state);
+  return cx.thread == newcx.thread && cx.pauseCounter == newcx.pauseCounter;
+}
