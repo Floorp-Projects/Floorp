@@ -131,6 +131,9 @@ class MachCommands(MachCommandBase):
                 # Reduce noise level on rustc and/or LLVM compiled code.
                 # See bug 1365915
                 '--expensive-definedness-checks=yes',
+                # Compensate for the compiler inlining `new` but not `delete`
+                # or vice versa.
+                '--show-mismatched-frees=no',
             ]
 
             for s in suppressions:
