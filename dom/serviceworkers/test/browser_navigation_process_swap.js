@@ -46,6 +46,7 @@ async function runTest() {
   // requests to `ORIGIN` will be marked as controlled.
   await SpecialPowers.pushPrefEnv({
     set: [
+      ["browser.tabs.remote.useHTTPResponseProcessSelection", true],
       ["browser.tabs.documentchannel", true],
       ["dom.serviceWorkers.enabled", true],
       ["dom.serviceWorkers.exemptFromPerDomainMax", true],
@@ -113,12 +114,10 @@ async function runTest() {
   info("Waiting for the browser to stop");
   await BrowserTestUtils.browserStopped(tab.linkedBrowser);
 
-  if (SpecialPowers.useRemoteSubframes) {
-    Assert.ok(
-      E10SUtils.isWebRemoteType(tab.linkedBrowser.remoteType),
-      `${CROSS_ORIGIN_URL} should load in a web-content process`
-    );
-  }
+  Assert.ok(
+    E10SUtils.isWebRemoteType(tab.linkedBrowser.remoteType),
+    `${CROSS_ORIGIN_URL} should load in a web-content process`
+  );
 
   // Step 3: cleanup.
   info("Loading initial page to unregister all Service Workers");
