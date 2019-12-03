@@ -15,7 +15,6 @@
  *                   click property will be ignored
  *   - sublabel String
  *   - accelerator Accelerator
- *   - icon NativeImage
  *   - position String - This field allows fine-grained definition of the
  *                       specific location within a given menu.
  *
@@ -35,6 +34,7 @@
  *    String type
  *      Can be normal, separator, submenu, checkbox or radio
  *    String label
+ *    String image
  *    Boolean enabled
  *      If false, the menu item will be greyed out and unclickable.
  *    Boolean checked
@@ -56,6 +56,7 @@ function MenuItem({
   hover = () => {},
   id = null,
   label = "",
+  image = null,
   submenu = null,
   type = "normal",
   visible = true,
@@ -69,6 +70,7 @@ function MenuItem({
   this.hover = hover;
   this.id = id;
   this.label = label;
+  this.image = image;
   this.submenu = submenu;
   this.type = type;
   this.visible = visible;
