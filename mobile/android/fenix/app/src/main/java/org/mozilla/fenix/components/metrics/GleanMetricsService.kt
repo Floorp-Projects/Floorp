@@ -42,6 +42,7 @@ import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.GleanMetrics.Tab
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
+import org.mozilla.fenix.GleanMetrics.UserSpecifiedSearchEngines
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.BrowsersCache
@@ -453,6 +454,15 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.ToolbarPositionChanged -> EventWrapper(
             { ToolbarSettings.changedPosition.record(it) },
             { ToolbarSettings.changedPositionKeys.valueOf(it) }
+        )
+        is Event.CustomEngineAdded -> EventWrapper<NoExtraKeys>(
+            { UserSpecifiedSearchEngines.customEngineAdded.record(it) }
+        )
+        is Event.CustomEngineDeleted -> EventWrapper<NoExtraKeys>(
+            { UserSpecifiedSearchEngines.customEngineDeleted.record(it) }
+        )
+        is Event.SearchWithCustomEngine -> EventWrapper<NoExtraKeys>(
+            { UserSpecifiedSearchEngines.searchWithCustomEngine.record(it) }
         )
         // Don't record other events in Glean:
         is Event.AddBookmark -> null

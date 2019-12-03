@@ -30,6 +30,7 @@ import kotlinx.coroutines.withContext
 import mozilla.components.browser.search.SearchEngine
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
@@ -211,6 +212,7 @@ class AddSearchEngineFragment : Fragment(), CompoundButton.OnCheckedChangeListen
                             .show()
                     }
 
+                    context?.components?.analytics?.metrics?.track(Event.CustomEngineAdded)
                     findNavController().popBackStack()
                 }
             }

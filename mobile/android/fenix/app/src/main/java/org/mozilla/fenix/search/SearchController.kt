@@ -58,6 +58,13 @@ class DefaultSearchController(
             }
 
             context.metrics.track(event)
+            if (CustomSearchEngineStore.isCustomSearchEngine(
+                    context,
+                    store.state.searchEngineSource.searchEngine.identifier
+                )
+            ) {
+                context.components.analytics.metrics.track(Event.SearchWithCustomEngine)
+            }
         }
     }
 
@@ -86,6 +93,13 @@ class DefaultSearchController(
         )
 
         context.metrics.track(Event.EnteredUrl(false))
+        if (CustomSearchEngineStore.isCustomSearchEngine(
+                context,
+                store.state.searchEngineSource.searchEngine.identifier
+            )
+        ) {
+            context.components.analytics.metrics.track(Event.SearchWithCustomEngine)
+        }
     }
 
     override fun handleSearchTermsTapped(searchTerms: String) {
@@ -99,6 +113,13 @@ class DefaultSearchController(
 
         val event = createSearchEvent(store.state.searchEngineSource.searchEngine, true)
         context.metrics.track(event)
+        if (CustomSearchEngineStore.isCustomSearchEngine(
+                context,
+                store.state.searchEngineSource.searchEngine.identifier
+            )
+        ) {
+            context.components.analytics.metrics.track(Event.SearchWithCustomEngine)
+        }
     }
 
     override fun handleSearchShortcutEngineSelected(searchEngine: SearchEngine) {

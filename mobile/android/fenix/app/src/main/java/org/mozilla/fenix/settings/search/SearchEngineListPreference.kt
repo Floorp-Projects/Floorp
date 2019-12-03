@@ -23,6 +23,7 @@ import kotlinx.coroutines.MainScope
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.provider.SearchEngineList
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
@@ -191,6 +192,10 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
                         .getDefaultEngine(context)
                         .name
                 }
+                if (CustomSearchEngineStore.isCustomSearchEngine(context, engine.identifier)) {
+                    context.components.analytics.metrics.track(Event.CustomEngineDeleted)
+                }
+                refreshSearchEngineViews(context)
             }
         )
 

@@ -1658,6 +1658,41 @@ download_notification:
       - fenix-core@mozilla.com
     expires: "2020-03-01"
 
+user_specified_search_engines:
+  custom_engine_added:
+    type: event
+    description: >
+      A user added a new custom search engine
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5884
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/6918
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  custom_engine_deleted:
+    type: event
+    description: >
+      A user deleted a custom search engine
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5586
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/6918
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  search_with_custom_engine:
+    type: event
+    description: >
+      A user performed a search with a custom search engine
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5586
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/6918
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+
 search_suggestions:
   enable_in_private:
     type: event
