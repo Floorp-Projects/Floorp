@@ -590,7 +590,6 @@ export class ASRouterAdminInner extends React.PureComponent {
   }
 
   renderMessageItem(msg) {
-    const isCurrent = msg.id === this.state.lastMessageId;
     const isBlocked =
       this.state.messageBlockList.includes(msg.id) ||
       this.state.messageBlockList.includes(msg.campaign);
@@ -599,9 +598,6 @@ export class ASRouterAdminInner extends React.PureComponent {
       : 0;
 
     let itemClassName = "message-item";
-    if (isCurrent) {
-      itemClassName += " current";
-    }
     if (isBlocked) {
       itemClassName += " blocked";
     }
