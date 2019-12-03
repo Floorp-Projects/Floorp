@@ -169,9 +169,12 @@ static nsTArray<typename T::KeyVal> GetJSONKeys(const Json::Value* aInput) {
     field.valueWasSerialized = false;
     field.key = static_cast<typename T::SerializableKeys>(i);
     const std::string key = std::to_string(field.key);
-    if (aInput->isMember(key) && (*aInput)[key].isString()) {
-      field.value.Append(nsDependentCString((*aInput)[key].asCString()));
-      field.valueWasSerialized = true;
+    if (aInput->isMember(key)) {
+      const Json::Value& val = (*aInput)[key];
+      if (val.isString()) {
+        field.value.Append(nsDependentCString(val.asCString()));
+        field.valueWasSerialized = true;
+      }
     }
     fields.AppendElement(field);
   }
