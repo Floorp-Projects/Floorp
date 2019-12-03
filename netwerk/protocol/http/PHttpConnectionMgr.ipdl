@@ -1,0 +1,37 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PSocketProcess;
+include protocol PHttpTransaction;
+
+namespace mozilla {
+namespace net {
+
+async refcounted protocol PHttpConnectionMgr
+{
+  manager PSocketProcess;
+
+child:
+  async __delete__();
+
+  async DoShiftReloadConnectionCleanup();
+  async PruneDeadConnections();
+  async AbortAndCloseAllConnections();
+  async UpdateCurrentTopLevelOuterContentWindowId(uint64_t aWindowId);
+  async AddTransaction(PHttpTransaction aTrans, int32_t aPriority);
+  async AddTransactionWithStickyConn(PHttpTransaction aTrans, int32_t aPriority,
+                                     PHttpTransaction aTransWithStickyConn);
+  async RescheduleTransaction(PHttpTransaction aTrans, int32_t aPriority);
+  async UpdateClassOfServiceOnTransaction(PHttpTransaction aTrans,
+                                          uint32_t aClassOfService);
+  async CancelTransaction(PHttpTransaction aTrans, nsresult aReason);
+  async VerifyTraffic();
+  async ClearConnectionHistory();
+};
+
+} // namespace net
+} // namespace mozilla

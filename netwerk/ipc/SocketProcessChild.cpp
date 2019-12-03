@@ -8,6 +8,7 @@
 
 #include "base/task.h"
 #include "HttpTransactionChild.h"
+#include "HttpConnectionMgrChild.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/ipc/CrashReporterClient.h"
@@ -267,6 +268,36 @@ PFileDescriptorSetChild* SocketProcessChild::SendPFileDescriptorSetConstructor(
     const FileDescriptor& aFD) {
   MOZ_ASSERT(NS_IsMainThread());
   return PSocketProcessChild::SendPFileDescriptorSetConstructor(aFD);
+}
+
+already_AddRefed<PHttpConnectionMgrChild>
+SocketProcessChild::AllocPHttpConnectionMgrChild() {
+  LOG(("SocketProcessChild::AllocPHttpConnectionMgrChild \n"));
+  if (!gHttpHandler) {
+    nsresult rv;
+    nsCOMPtr<nsIIOService> ios = do_GetIOService(&rv);
+    if (NS_FAILED(rv)) {
+      return nullptr;
+    }
+
+    nsCOMPtr<nsIProtocolHandler> handler;
+    rv = ios->GetProtocolHandler("http", getter_AddRefs(handler));
+    if (NS_FAILED(rv)) {
+      return nullptr;
+    }
+
+    // Initialize DNS Service here, since it needs to be done in main thread.
+    nsCOMPtr<nsIDNSService> dns =
+        do_GetService("@mozilla.org/network/dns-service;1", &rv);
+    if (NS_FAILED(rv)) {
+      return nullptr;
+    }
+
+    RefPtr<HttpConnectionMgrChild> actor = new HttpConnectionMgrChild();
+    return actor.forget();
+  }
+
+  return nullptr;
 }
 
 }  // namespace net
