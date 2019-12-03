@@ -23,7 +23,7 @@ const NormandyTestUtils = {
   },
 
   factories: {
-    addonStudyFactory(attrs) {
+    addonStudyFactory(attrs = {}) {
       for (const key of ["name", "description"]) {
         if (attrs && attrs[key]) {
           throw new Error(
@@ -55,7 +55,7 @@ const NormandyTestUtils = {
       );
     },
 
-    branchedAddonStudyFactory(attrs) {
+    branchedAddonStudyFactory(attrs = {}) {
       return NormandyTestUtils.factories.addonStudyFactory(
         Object.assign(
           {
@@ -66,7 +66,7 @@ const NormandyTestUtils = {
       );
     },
 
-    preferenceStudyFactory(attrs) {
+    preferenceStudyFactory(attrs = {}) {
       const defaultPref = {
         "test.study": {},
       };
