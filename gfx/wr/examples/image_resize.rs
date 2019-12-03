@@ -98,7 +98,7 @@ impl Example for App {
                 let mut txn = Transaction::new();
                 txn.update_image(
                     self.image_key,
-                    ImageDescriptor::new(64, 64, ImageFormat::BGRA8, true, false),
+                    ImageDescriptor::new(64, 64, ImageFormat::BGRA8, ImageDescriptorFlags::IS_OPAQUE),
                     ImageData::new(image_data),
                     &DirtyRect::All,
                 );

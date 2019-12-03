@@ -188,7 +188,7 @@ impl ImageData {
                         };
                     }
 
-                    let mut is_opaque = image_properties.descriptor.is_opaque;
+                    let mut is_opaque = image_properties.descriptor.is_opaque();
                     let request = ImageRequest {
                         key: self.key,
                         rendering: self.image_rendering,
@@ -232,7 +232,7 @@ impl ImageData {
                                 frame_state.gpu_cache,
                                 frame_state.render_tasks,
                                 None,
-                                image_properties.descriptor.is_opaque,
+                                image_properties.descriptor.is_opaque(),
                                 |render_tasks| {
                                     // Create a task to blit from the texture cache to
                                     // a normal transient render task surface. This will

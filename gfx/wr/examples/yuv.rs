@@ -108,7 +108,7 @@ impl Example for App {
         let yuv_chanel3 = api.generate_image_key();
         txn.add_image(
             yuv_chanel1,
-            ImageDescriptor::new(100, 100, ImageFormat::R8, true, false),
+            ImageDescriptor::new(100, 100, ImageFormat::R8, ImageDescriptorFlags::IS_OPAQUE),
             ImageData::External(ExternalImageData {
                 id: ExternalImageId(0),
                 channel_index: 0,
@@ -120,7 +120,7 @@ impl Example for App {
         );
         txn.add_image(
             yuv_chanel2,
-            ImageDescriptor::new(100, 100, ImageFormat::RG8, true, false),
+            ImageDescriptor::new(100, 100, ImageFormat::RG8, ImageDescriptorFlags::IS_OPAQUE),
             ImageData::External(ExternalImageData {
                 id: ExternalImageId(1),
                 channel_index: 0,
@@ -132,7 +132,7 @@ impl Example for App {
         );
         txn.add_image(
             yuv_chanel2_1,
-            ImageDescriptor::new(100, 100, ImageFormat::R8, true, false),
+            ImageDescriptor::new(100, 100, ImageFormat::R8, ImageDescriptorFlags::IS_OPAQUE),
             ImageData::External(ExternalImageData {
                 id: ExternalImageId(2),
                 channel_index: 0,
@@ -144,7 +144,7 @@ impl Example for App {
         );
         txn.add_image(
             yuv_chanel3,
-            ImageDescriptor::new(100, 100, ImageFormat::R8, true, false),
+            ImageDescriptor::new(100, 100, ImageFormat::R8, ImageDescriptorFlags::IS_OPAQUE),
             ImageData::External(ExternalImageData {
                 id: ExternalImageId(3),
                 channel_index: 0,

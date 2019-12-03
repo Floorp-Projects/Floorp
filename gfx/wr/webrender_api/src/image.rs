@@ -238,6 +238,26 @@ impl ColorDepth {
     }
 }
 
+bitflags! {
+    /// Various flags that are part of an image descriptor.
+    #[derive(Deserialize, Serialize)]
+    pub struct ImageDescriptorFlags: u32 {
+        /// Whether this image is opaque, or has an alpha channel. Avoiding blending
+        /// for opaque surfaces is an important optimization.
+        const IS_OPAQUE = 1;
+        /// Whether to allow the driver to automatically generate mipmaps. If images
+        /// are already downscaled appropriately, mipmap generation can be wasted
+        /// work, and cause performance problems on some cards/drivers.
+        ///
+        /// See https://github.com/servo/webrender/pull/2555/
+        const ALLOW_MIPMAPS = 2;
+        /// This is used as a performance hint - this image may be promoted to a native
+        /// compositor surface under certain (implementation specific) conditions. This
+        /// is typically used for large videos, and canvas elements.
+        const PREFER_COMPOSITOR_SURFACE = 4;
+    }
+}
+
 /// Metadata (but not storage) describing an image In WebRender.
 #[derive(Copy, Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ImageDescriptor {
@@ -256,15 +276,8 @@ pub struct ImageDescriptor {
     /// tells the texture upload machinery where to find the bytes to upload for
     /// this tile. Non-tiled images generally set this to zero.
     pub offset: i32,
-    /// Whether this image is opaque, or has an alpha channel. Avoiding blending
-    /// for opaque surfaces is an important optimization.
-    pub is_opaque: bool,
-    /// Whether to allow the driver to automatically generate mipmaps. If images
-    /// are already downscaled appropriately, mipmap generation can be wasted
-    /// work, and cause performance problems on some cards/drivers.
-    ///
-    /// See https://github.com/servo/webrender/pull/2555/
-    pub allow_mipmaps: bool,
+    /// Various bool flags related to this descriptor.
+    pub flags: ImageDescriptorFlags,
 }
 
 impl ImageDescriptor {
@@ -273,16 +286,14 @@ impl ImageDescriptor {
         width: i32,
         height: i32,
         format: ImageFormat,
-        is_opaque: bool,
-        allow_mipmaps: bool,
+        flags: ImageDescriptorFlags,
     ) -> Self {
         ImageDescriptor {
             size: size2(width, height),
             format,
             stride: None,
             offset: 0,
-            is_opaque,
-            allow_mipmaps,
+            flags,
         }
     }
 
@@ -303,6 +314,22 @@ impl ImageDescriptor {
             DeviceIntPoint::zero(),
             self.size,
         )
+    }
+
+    /// Returns true if this descriptor is opaque
+    pub fn is_opaque(&self) -> bool {
+        self.flags.contains(ImageDescriptorFlags::IS_OPAQUE)
+    }
+
+    /// Returns true if this descriptor allows mipmaps
+    pub fn allow_mipmaps(&self) -> bool {
+        self.flags.contains(ImageDescriptorFlags::ALLOW_MIPMAPS)
+    }
+
+    /// Returns true if this descriptor wants to be drawn as a native
+    /// compositor surface.
+    pub fn prefer_compositor_surface(&self) -> bool {
+        self.flags.contains(ImageDescriptorFlags::PREFER_COMPOSITOR_SURFACE)
     }
 }
 

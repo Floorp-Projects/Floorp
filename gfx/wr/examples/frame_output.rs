@@ -101,7 +101,7 @@ impl App {
 
         txn.add_image(
             self.external_image_key.unwrap(),
-            ImageDescriptor::new(100, 100, ImageFormat::BGRA8, true, false),
+            ImageDescriptor::new(100, 100, ImageFormat::BGRA8, ImageDescriptorFlags::IS_OPAQUE),
             ImageData::External(ExternalImageData {
                 id: ExternalImageId(0),
                 channel_index: 0,

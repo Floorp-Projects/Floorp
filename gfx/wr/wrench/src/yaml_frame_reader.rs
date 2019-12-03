@@ -226,7 +226,7 @@ fn generate_checkerboard_image(
     }
 
     (
-        ImageDescriptor::new(width as i32, height as i32, ImageFormat::BGRA8, true, false),
+        ImageDescriptor::new(width as i32, height as i32, ImageFormat::BGRA8, ImageDescriptorFlags::IS_OPAQUE),
         ImageData::new(pixels),
     )
 }
@@ -244,7 +244,7 @@ fn generate_xy_gradient_image(w: u32, h: u32) -> (ImageDescriptor, ImageData) {
     }
 
     (
-        ImageDescriptor::new(w as i32, h as i32, ImageFormat::BGRA8, true, false),
+        ImageDescriptor::new(w as i32, h as i32, ImageFormat::BGRA8, ImageDescriptorFlags::IS_OPAQUE),
         ImageData::new(pixels),
     )
 }
@@ -273,8 +273,13 @@ fn generate_solid_color_image(
         }
     }
 
+    let mut flags = ImageDescriptorFlags::empty();
+    if a == 255 {
+        flags |= ImageDescriptorFlags::IS_OPAQUE;
+    }
+
     (
-        ImageDescriptor::new(w as i32, h as i32, ImageFormat::BGRA8, a == 255, false),
+        ImageDescriptor::new(w as i32, h as i32, ImageFormat::BGRA8, flags),
         ImageData::new(pixels),
     )
 }
@@ -649,12 +654,18 @@ impl YamlFrameReader {
                     }
                     _ => panic!("We don't support whatever your crazy image type is, come on"),
                 };
+                let mut flags = ImageDescriptorFlags::empty();
+                if is_image_opaque(format, &bytes[..]) {
+                    flags |= ImageDescriptorFlags::IS_OPAQUE;
+                }
+                if self.allow_mipmaps {
+                    flags |= ImageDescriptorFlags::ALLOW_MIPMAPS;
+                }
                 let descriptor = ImageDescriptor::new(
                     image_width as i32,
                     image_height as i32,
                     format,
-                    is_image_opaque(format, &bytes[..]),
-                    self.allow_mipmaps,
+                    flags,
                 );
                 let data = ImageData::new(bytes);
                 (descriptor, data)

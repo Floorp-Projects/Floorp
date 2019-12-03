@@ -116,7 +116,7 @@ impl Example for App {
             self.image_generator.generate_image(128);
             txn.add_image(
                 key0,
-                ImageDescriptor::new(128, 128, ImageFormat::BGRA8, true, false),
+                ImageDescriptor::new(128, 128, ImageFormat::BGRA8, ImageDescriptorFlags::IS_OPAQUE),
                 ImageData::new(self.image_generator.take()),
                 None,
             );
@@ -124,7 +124,7 @@ impl Example for App {
             self.image_generator.generate_image(128);
             txn.add_image(
                 key1,
-                ImageDescriptor::new(128, 128, ImageFormat::BGRA8, true, false),
+                ImageDescriptor::new(128, 128, ImageFormat::BGRA8, ImageDescriptorFlags::IS_OPAQUE),
                 ImageData::new(self.image_generator.take()),
                 None,
             );
@@ -220,7 +220,12 @@ impl Example for App {
 
                                 txn.add_image(
                                     image_key,
-                                    ImageDescriptor::new(size, size, ImageFormat::BGRA8, true, false),
+                                    ImageDescriptor::new(
+                                        size,
+                                        size,
+                                        ImageFormat::BGRA8,
+                                        ImageDescriptorFlags::IS_OPAQUE,
+                                    ),
                                     ImageData::new(self.image_generator.take()),
                                     None,
                                 );
@@ -238,7 +243,7 @@ impl Example for App {
 
                         txn.update_image(
                             image_key,
-                            ImageDescriptor::new(size, size, ImageFormat::BGRA8, true, false),
+                            ImageDescriptor::new(size, size, ImageFormat::BGRA8, ImageDescriptorFlags::IS_OPAQUE),
                             ImageData::new(self.image_generator.take()),
                             &DirtyRect::All,
                         );
@@ -259,7 +264,7 @@ impl Example for App {
 
                         txn.add_image(
                             image_key,
-                            ImageDescriptor::new(size, size, ImageFormat::BGRA8, true, false),
+                            ImageDescriptor::new(size, size, ImageFormat::BGRA8, ImageDescriptorFlags::IS_OPAQUE),
                             ImageData::External(image_data),
                             None,
                         );
@@ -277,7 +282,7 @@ impl Example for App {
 
                         txn.add_image(
                             image_key,
-                            ImageDescriptor::new(size, size, ImageFormat::BGRA8, true, false),
+                            ImageDescriptor::new(size, size, ImageFormat::BGRA8, ImageDescriptorFlags::IS_OPAQUE),
                             ImageData::new(self.image_generator.take()),
                             None,
                         );
