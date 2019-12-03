@@ -87,14 +87,8 @@ class NullPrincipal final : public BasePrincipal {
 
   // Serializable keys are the valid enum fields the serialization supports
   enum SerializableKeys { eSpec = 0, eSuffix, eMax = eSuffix };
-  // KeyVal is a lightweight storage that passes
-  // SerializableKeys and values after JSON parsing in the BasePrincipal to
-  // FromProperties
-  struct KeyVal {
-    bool valueWasSerialized;
-    nsCString value;
-    SerializableKeys key;
-  };
+  typedef mozilla::BasePrincipal::KeyValT<SerializableKeys> KeyVal;
+
   static already_AddRefed<BasePrincipal> FromProperties(
       nsTArray<NullPrincipal::KeyVal>& aFields);
 
