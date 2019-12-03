@@ -5,6 +5,7 @@ browser.jar:
 %  content browser %content/browser/ contentaccessible=yes
 
         content/browser/aboutDialog-appUpdater.js     (content/aboutDialog-appUpdater.js)
+        content/browser/aboutDialog-appUpdater-legacy.js     (content/aboutDialog-appUpdater-legacy.js)
 *       content/browser/aboutDialog.xul               (content/aboutDialog.xul)
         content/browser/aboutDialog.js                (content/aboutDialog.js)
         content/browser/aboutDialog.css               (content/aboutDialog.css)
