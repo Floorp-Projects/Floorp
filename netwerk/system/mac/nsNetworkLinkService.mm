@@ -34,6 +34,7 @@
 #include "mozilla/Telemetry.h"
 #include "nsNetworkLinkService.h"
 #include "../../base/IPv6Utils.h"
+#include "../NetworkLinkServiceDefines.h"
 
 #import <Cocoa/Cocoa.h>
 #import <netinet/in.h>
@@ -86,8 +87,7 @@ nsNetworkLinkService::nsNetworkLinkService()
       mCFRunLoop(nullptr),
       mRunLoopSource(nullptr),
       mStoreRef(nullptr),
-      mMutex("nsNetworkLinkService::mMutex"),
-      mDoRouteCheckIPv4(false) {}
+      mMutex("nsNetworkLinkService::mMutex") {}
 
 nsNetworkLinkService::~nsNetworkLinkService() = default;
 
@@ -602,8 +602,8 @@ bool nsNetworkLinkService::IPv4NetworkId(SHA1Sum* aSHA1) {
     NS_WARNING("IPv4NetworkId: No default gateways");
   }
 
-  if (!mDoRouteCheckIPv4 || !RoutingFromKernel(hash)) {
-    NS_WARNING("IPv4NetworkId: No route to the predefine destincation");
+  if (!RoutingFromKernel(hash)) {
+    NS_WARNING("IPv4NetworkId: No route to the predefined destination");
   }
 
   // We didn't get any valid hash key to generate network ID.
@@ -851,6 +851,12 @@ nsresult nsNetworkLinkService::Init(void) {
   rv = observerService->AddObserver(this, "xpcom-shutdown", false);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (inet_pton(AF_INET, ROUTE_CHECK_IPV4, &mRouteCheckIPv4) != 1) {
+    LOG(("Cannot parse address " ROUTE_CHECK_IPV4));
+    MOZ_DIAGNOSTIC_ASSERT(false, "Cannot parse address " ROUTE_CHECK_IPV4);
+    return NS_ERROR_UNEXPECTED;
+  }
+
   // If the network reachability API can reach 0.0.0.0 without
   // requiring a connection, there is a network interface available.
   struct sockaddr_in addr;
@@ -948,15 +954,6 @@ nsresult nsNetworkLinkService::Init(void) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   UpdateReachability();
-
-  nsAutoCString routecheckIP;
-
-  rv = Preferences::GetCString("network.netlink.route.check.IPv4", routecheckIP);
-  if (NS_SUCCEEDED(rv)) {
-    if (inet_pton(AF_INET, routecheckIP.get(), &mRouteCheckIPv4) == 1) {
-      mDoRouteCheckIPv4 = true;
-    }
-  }
 
   calculateNetworkIdWithDelay(0);
 
