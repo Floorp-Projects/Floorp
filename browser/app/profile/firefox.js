@@ -421,9 +421,9 @@ pref("permissions.postPrompt.animate", true);
 #endif
 
 #ifdef NIGHTLY_BUILD
-  pref("permissions.delegation.enable", true);
+  pref("permissions.delegation.enabled", true);
 #else
-  pref("permissions.delegation.enable", false);
+  pref("permissions.delegation.enabled", false);
 #endif
 
 // handle links targeting new windows
