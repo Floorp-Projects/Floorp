@@ -8,6 +8,10 @@ const CROSS_SUBFRAME_PAGE =
   getRootDirectory(gTestPath).replace("chrome://mochitests/content", ORIGIN) +
   "temporary_permissions_subframe.html";
 
+const CROSS_FRAME_PAGE =
+  getRootDirectory(gTestPath).replace("chrome://mochitests/content", ORIGIN) +
+  "temporary_permissions_frame.html";
+
 const PromptResult = {
   ALLOW: "allow",
   DENY: "deny",
@@ -17,6 +21,93 @@ const PromptResult = {
 var Perms = Services.perms;
 var uri = NetUtil.newURI(ORIGIN);
 var principal = Services.scriptSecurityManager.createContentPrincipal(uri, {});
+
+async function checkNotificationBothOrigins(
+  firstPartyOrigin,
+  thirdPartyOrigin
+) {
+  // Notification is shown, check label and deny to clean
+  let popuphidden = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popuphidden"
+  );
+
+  let notification = PopupNotifications.panel.firstElementChild;
+  // Check the label of the notificaiton should be the first party
+  is(
+    PopupNotifications.getNotification("geolocation").options.name,
+    firstPartyOrigin,
+    "Use first party's origin"
+  );
+
+  // Check the second name of the notificaiton should be the third party
+  is(
+    PopupNotifications.getNotification("geolocation").options.secondName,
+    thirdPartyOrigin,
+    "Use third party's origin"
+  );
+
+  // Check remember checkbox is hidden
+  let checkbox = notification.checkbox;
+  ok(!!checkbox, "checkbox is present");
+  ok(checkbox.hidden, "checkbox is not visible");
+  ok(!checkbox.checked, "checkbox not checked");
+
+  EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {});
+  await popuphidden;
+}
+
+async function checkGeolocation(browser, frameId, expect) {
+  let waitForPrompt = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popupshown"
+  );
+
+  let isPrompt = expect == PromptResult.PROMPT;
+  await SpecialPowers.spawn(
+    browser,
+    [{ frameId, expect, isPrompt }],
+    async args => {
+      let frame = content.document.getElementById(args.frameId);
+
+      let waitForNoPrompt = new Promise(resolve => {
+        function onMessage(event) {
+          // Check the result right here because there's no notification
+          Assert.equal(
+            event.data,
+            args.expect,
+            "Correct expectation for third party"
+          );
+          content.window.removeEventListener("message", onMessage);
+          resolve();
+        }
+
+        if (!args.isPrompt) {
+          content.window.addEventListener("message", onMessage);
+        }
+      });
+
+      await content.SpecialPowers.spawn(frame, [], async () => {
+        const { E10SUtils } = ChromeUtils.import(
+          "resource://gre/modules/E10SUtils.jsm"
+        );
+
+        E10SUtils.wrapHandlingUserInput(this.content, true, function() {
+          let frameDoc = this.content.document;
+          frameDoc.getElementById("geo").click();
+        });
+      });
+
+      if (!args.isPrompt) {
+        await waitForNoPrompt;
+      }
+    }
+  );
+
+  if (isPrompt) {
+    await waitForPrompt;
+  }
+}
 
 add_task(async function setup() {
   await new Promise(r => {
@@ -48,28 +139,7 @@ add_task(async function testUseTempPermissionsFirstParty() {
       browser
     );
 
-    // Request a permission.
-    await ContentTask.spawn(browser, uri.host, async function(host0) {
-      let frame = content.document.getElementById("frame");
-      function onMessage(event) {
-        // Check the result right here because there's no notification
-        is(event.data, "deny", "Expected deny for third party");
-        content.window.removeEventListener("message", onMessage);
-      }
-
-      content.window.addEventListener("message", onMessage);
-
-      await content.SpecialPowers.spawn(frame, [host0], async function(host) {
-        const { E10SUtils } = ChromeUtils.import(
-          "resource://gre/modules/E10SUtils.jsm"
-        );
-
-        E10SUtils.wrapHandlingUserInput(this.content, true, function() {
-          let frameDoc = this.content.document;
-          frameDoc.getElementById("geo").click();
-        });
-      });
-    });
+    await checkGeolocation(browser, "frame", PromptResult.DENY);
 
     SitePermissions.removeFromPrincipal(principal, "geo", browser);
   });
@@ -83,48 +153,9 @@ add_task(async function testUsePersistentPermissionsFirstParty() {
   ) {
     async function checkPermission(aPermission, aExpect) {
       PermissionTestUtils.add(uri, "geo", aPermission);
-
-      let waitForPrompt = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown"
-      );
-
-      // Request a permission.
-      await ContentTask.spawn(
-        browser,
-        { host: uri.host, expect: aExpect },
-        async function(args) {
-          let frame = content.document.getElementById("frame");
-          if (args.expect != "prompt") {
-            function onMessage(event) {
-              // Check the result right here because there's no notification
-              is(
-                event.data,
-                args.expect,
-                "Expected correct permission for third party"
-              );
-              content.window.removeEventListener("message", onMessage);
-            }
-            content.window.addEventListener("message", onMessage);
-          }
-
-          await content.SpecialPowers.spawn(frame, [args.host], async function(
-            host
-          ) {
-            const { E10SUtils } = ChromeUtils.import(
-              "resource://gre/modules/E10SUtils.jsm"
-            );
-
-            E10SUtils.wrapHandlingUserInput(this.content, true, function() {
-              let frameDoc = this.content.document;
-              frameDoc.getElementById("geo").click();
-            });
-          });
-        }
-      );
+      await checkGeolocation(browser, "frame", aExpect);
 
       if (aExpect == PromptResult.PROMPT) {
-        await waitForPrompt;
         // Notification is shown, check label and deny to clean
         let popuphidden = BrowserTestUtils.waitForEvent(
           PopupNotifications.panel,
@@ -151,5 +182,76 @@ add_task(async function testUsePersistentPermissionsFirstParty() {
     await checkPermission(Perms.PROMPT_ACTION, PromptResult.PROMPT);
     await checkPermission(Perms.DENY_ACTION, PromptResult.DENY);
     await checkPermission(Perms.ALLOW_ACTION, PromptResult.ALLOW);
+  });
+});
+
+// Test that we should prompt if we are in unsafe permission delegation. The
+// prompt popup should include both first and third party origin.
+add_task(async function testPromptInMaybeUnsafePermissionDelegation() {
+  await BrowserTestUtils.withNewTab(CROSS_SUBFRAME_PAGE, async function(
+    browser
+  ) {
+    // Persistent allow top level origin
+    PermissionTestUtils.add(uri, "geo", Perms.ALLOW_ACTION);
+
+    await checkGeolocation(browser, "frameAllowsAll", PromptResult.PROMPT);
+    await checkNotificationBothOrigins(uri.host, "example.org");
+
+    SitePermissions.removeFromPrincipal(null, "geo", browser);
+    PermissionTestUtils.remove(uri, "geo");
+  });
+});
+
+// Test that we should prompt if we are in unsafe permission delegation and
+// change location to origin which is not explicitly trusted. The prompt popup
+// should include both first and third party origin.
+add_task(async function testPromptChangeLocatioUnsafePermissionDelegation() {
+  await BrowserTestUtils.withNewTab(CROSS_SUBFRAME_PAGE, async function(
+    browser
+  ) {
+    // Persistent allow top level origin
+    PermissionTestUtils.add(uri, "geo", Perms.ALLOW_ACTION);
+
+    // Request change location.
+    await ContentTask.spawn(browser, { host: uri.host }, async function(args) {
+      let frame = content.document.getElementById("frameAllowsAll");
+      await new Promise(resolve => {
+        function listener() {
+          frame.removeEventListener("load", listener, true);
+          resolve();
+        }
+        frame.addEventListener("load", listener, true);
+
+        frame.contentWindow.location =
+          "https://test1.example.com/browser/browser/base/content/test/permissions/permissions.html";
+      });
+    });
+
+    await checkGeolocation(browser, "frameAllowsAll", PromptResult.PROMPT);
+    await checkNotificationBothOrigins(uri.host, "test1.example.com");
+
+    SitePermissions.removeFromPrincipal(null, "geo", browser);
+    PermissionTestUtils.remove(uri, "geo");
+  });
+});
+
+// If we are in unsafe permission delegation and the origin is explicitly
+// trusted in ancestor chain. Do not need prompt
+add_task(async function testExplicitlyAllowedInChain() {
+  await BrowserTestUtils.withNewTab(CROSS_FRAME_PAGE, async function(browser) {
+    // Persistent allow top level origin
+    PermissionTestUtils.add(uri, "geo", Perms.ALLOW_ACTION);
+
+    const iframeAncestor = await SpecialPowers.spawn(browser, [], () => {
+      return content.document.getElementById("frameAncestor").browsingContext;
+    });
+
+    await checkGeolocation(
+      iframeAncestor,
+      "frameAllowsAll",
+      PromptResult.ALLOW
+    );
+
+    PermissionTestUtils.remove(uri, "geo");
   });
 });

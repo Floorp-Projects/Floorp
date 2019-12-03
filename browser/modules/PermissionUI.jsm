@@ -149,20 +149,6 @@ var PermissionPromptPrototype = {
   },
 
   /**
-   * Provides the preferred name to use in the permission popups,
-   * based on the principal URI (the URI.hostPort for any URI scheme
-   * besides the moz-extension one which should default to the
-   * extension name).
-   */
-  get principalName() {
-    if (this.principal.addonPolicy) {
-      return this.principal.addonPolicy.name;
-    }
-
-    return this.principal.URI.hostPort;
-  },
-
-  /**
    * Indicates the type of the permission request from content. This type might
    * be different from the permission key used in the permissions database.
    */
@@ -281,6 +267,20 @@ var PermissionPromptPrototype = {
    */
   get message() {
     throw new Error("Not implemented.");
+  },
+
+  /**
+   * Provides the preferred name to use in the permission popups,
+   * based on the principal URI (the URI.hostPort for any URI scheme
+   * besides the moz-extension one which should default to the
+   * extension name).
+   */
+  getPrincipalName(principal = this.principal) {
+    if (principal.addonPolicy) {
+      return principal.addonPolicy.name;
+    }
+
+    return principal.URI.hostPort;
   },
 
   /**
@@ -421,7 +421,10 @@ var PermissionPromptPrototype = {
         return;
       }
 
-      if (state == SitePermissions.ALLOW) {
+      if (
+        state == SitePermissions.ALLOW &&
+        !this.request.maybeUnsafePermissionDelegate
+      ) {
         this.allow();
         return;
       }
@@ -719,11 +722,8 @@ var PermissionPromptForRequestPrototype = {
   },
 
   get principal() {
-    if (Services.prefs.getBoolPref("permissions.delegate.enable", false)) {
-      let request = this.request.QueryInterface(Ci.nsIContentPermissionRequest);
-      return request.getDelegatePrincipal(this.type);
-    }
-    return this.request.principal;
+    let request = this.request.QueryInterface(Ci.nsIContentPermissionRequest);
+    return request.getDelegatePrincipal(this.type);
   },
 
   cancel() {
@@ -768,7 +768,7 @@ GeolocationPermissionPrompt.prototype = {
     let options = {
       learnMoreURL: Services.urlFormatter.formatURLPref(pref),
       displayURI: false,
-      name: this.principalName,
+      name: this.getPrincipalName(),
     };
 
     if (this.principal.schemeIs("file")) {
@@ -778,6 +778,12 @@ GeolocationPermissionPrompt.prototype = {
       options.checkbox = {
         show: !PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal),
       };
+    }
+
+    if (this.request.maybeUnsafePermissionDelegate) {
+      // Second name should be the third party origin
+      options.secondName = this.getPrincipalName(this.request.principal);
+      options.checkbox = { show: false };
     }
 
     if (options.checkbox.show) {
@@ -800,6 +806,13 @@ GeolocationPermissionPrompt.prototype = {
   get message() {
     if (this.principal.schemeIs("file")) {
       return gBrowserBundle.GetStringFromName("geolocation.shareWithFile3");
+    }
+
+    if (this.request.maybeUnsafePermissionDelegate) {
+      return gBrowserBundle.formatStringFromName(
+        "geolocation.shareWithSiteUnsafeDelegation",
+        ["<>", "{}"]
+      );
     }
 
     return gBrowserBundle.formatStringFromName("geolocation.shareWithSite3", [
@@ -923,7 +936,7 @@ DesktopNotificationPermissionPrompt.prototype = {
     return {
       learnMoreURL,
       displayURI: false,
-      name: this.principalName,
+      name: this.getPrincipalName(),
     };
   },
 
@@ -1026,7 +1039,7 @@ PersistentStoragePermissionPrompt.prototype = {
     return {
       learnMoreURL,
       displayURI: false,
-      name: this.principalName,
+      name: this.getPrincipalName(),
     };
   },
 
@@ -1115,7 +1128,7 @@ MIDIPermissionPrompt.prototype = {
     // TODO (bug 1433235) We need a security/permissions explanation URL for this
     let options = {
       displayURI: false,
-      name: this.principalName,
+      name: this.getPrincipalName(),
     };
 
     if (this.principal.schemeIs("file")) {
