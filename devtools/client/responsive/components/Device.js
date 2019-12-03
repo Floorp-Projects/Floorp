@@ -14,6 +14,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const { getFormatStr } = require("../utils/l10n");
+const { parseUserAgent } = require("../utils/ua");
 const Types = require("../types");
 
 const DeviceInfo = createFactory(require("./DeviceInfo"));
@@ -50,22 +51,70 @@ class Device extends PureComponent {
     this.props.onDeviceCheckboxChange(e);
   }
 
-  render() {
-    const { children, device } = this.props;
-    const details = getFormatStr(
-      "responsive.deviceDetails",
+  getBrowserOrOsTooltip(agent) {
+    if (agent) {
+      return agent.name + (agent.version ? ` ${agent.version}` : "");
+    }
+
+    return null;
+  }
+
+  getTooltip() {
+    const { device } = this.props;
+    const { browser, os } = parseUserAgent(device.userAgent);
+
+    const browserTitle = this.getBrowserOrOsTooltip(browser);
+    const osTitle = this.getBrowserOrOsTooltip(os);
+    let browserAndOsTitle = null;
+    if (browserTitle && osTitle) {
+      browserAndOsTitle = getFormatStr(
+        "responsive.deviceDetails.browserAndOS",
+        browserTitle,
+        osTitle
+      );
+    } else if (browserTitle || osTitle) {
+      browserAndOsTitle = browserTitle || osTitle;
+    }
+
+    const sizeTitle = getFormatStr(
+      "responsive.deviceDetails.size",
       device.width,
-      device.height,
-      device.pixelRatio,
-      device.userAgent,
+      device.height
+    );
+
+    const dprTitle = getFormatStr(
+      "responsive.deviceDetails.DPR",
+      device.pixelRatio
+    );
+
+    const uaTitle = getFormatStr(
+      "responsive.deviceDetails.UA",
+      device.userAgent
+    );
+
+    const touchTitle = getFormatStr(
+      "responsive.deviceDetails.touch",
       device.touch
     );
+
+    return (
+      `${browserAndOsTitle ? browserAndOsTitle + "\n" : ""}` +
+      `${sizeTitle}\n` +
+      `${dprTitle}\n` +
+      `${uaTitle}\n` +
+      `${touchTitle}\n`
+    );
+  }
+
+  render() {
+    const { children, device } = this.props;
+    const tooltip = this.getTooltip();
 
     return dom.label(
       {
         className: "device-label",
         key: device.name,
-        title: details,
+        title: tooltip,
       },
       dom.input({
         className: "device-input-checkbox",
