@@ -27,7 +27,7 @@ function onAttach(aState, aResponse)
   onConsoleCall = onConsoleCall.bind(null, aState);
   aState.webConsoleFront.on("consoleAPICall", onConsoleCall);
 
-  let docAsProto = Object.create(document);
+  const docAsProto = Object.create(document);
 
   top.console.log("hello", docAsProto);
 }
@@ -49,16 +49,16 @@ function onConsoleCall(aState, aPacket)
   aState.webConsoleFront.off("consoleAPICall", onConsoleCall);
 
   info("inspecting object properties");
-  let args = aPacket.message.arguments;
+  const args = aPacket.message.arguments;
   onProperties = onProperties.bind(null, aState);
 
-  let client = new ObjectFront(aState.dbgClient, args[1]);
+  const client = new ObjectFront(aState.dbgClient, args[1]);
   client.getPrototypeAndProperties().then(onProperties);
 }
 
 function onProperties(aState, aResponse)
 {
-  let props = aResponse.ownProperties;
+  const props = aResponse.ownProperties;
   let keys = Object.keys(props);
   info(keys.length + " ownProperties: " + keys);
 

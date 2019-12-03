@@ -106,9 +106,9 @@ let consoleAPIListener, consoleServiceListener;
 let consoleAPICalls = 0;
 let pageErrors = 0;
 
-let handlers = {
+const handlers = {
   onConsoleAPICall: function onConsoleAPICall(message) {
-    for (let msg of expectedConsoleCalls) {
+    for (const msg of expectedConsoleCalls) {
       if (msg.functionName == message.functionName &&
           msg.filename.test(message.filename)) {
         consoleAPICalls++;
@@ -124,7 +124,7 @@ let handlers = {
     if (!(message instanceof Ci.nsIScriptError)) {
       return;
     }
-    for (let msg of expectedPageErrors) {
+    for (const msg of expectedPageErrors) {
       if (msg.category == message.category &&
           msg.errorMessage.test(message.errorMessage)) {
         pageErrors++;
@@ -158,14 +158,14 @@ function onAttach1(state, response) {
 }
 
 function onCachedConsoleAPI(state, response) {
-  let msgs = response.messages;
+  const msgs = response.messages;
   info("cached console messages: " + msgs.length);
 
   ok(msgs.length >= expectedConsoleCalls.length,
      "number of cached console messages");
 
-  for (let msg of msgs) {
-    for (let expected of expectedConsoleCalls) {
+  for (const msg of msgs) {
+    for (const expected of expectedConsoleCalls) {
       if (expected.functionName == msg.functionName &&
           expected.filename.test(msg.filename)) {
         expectedConsoleCalls.splice(expectedConsoleCalls.indexOf(expected));
@@ -196,14 +196,14 @@ function onAttach2(state, response) {
 }
 
 function onCachedPageErrors(state, response) {
-  let msgs = response.messages;
+  const msgs = response.messages;
   info("cached page errors: " + msgs.length);
 
   ok(msgs.length >= expectedPageErrors.length,
      "number of cached page errors");
 
-  for (let msg of msgs) {
-    for (let expected of expectedPageErrors) {
+  for (const msg of msgs) {
+    for (const expected of expectedPageErrors) {
       if (expected.category == msg.category &&
           expected.errorMessage.test(msg.errorMessage)) {
         expectedPageErrors.splice(expectedPageErrors.indexOf(expected));

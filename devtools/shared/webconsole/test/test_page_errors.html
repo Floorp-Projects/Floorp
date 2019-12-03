@@ -132,7 +132,7 @@ function doPageErrors() {
   };
 
   let container = document.createElement("script");
-  for (let stmt of Object.keys(expectedPageErrors)) {
+  for (const stmt of Object.keys(expectedPageErrors)) {
       if (expectedPageErrors[stmt].exception) {
           SimpleTest.expectUncaughtException();
       }
@@ -157,7 +157,7 @@ function onAttach(state, response) {
   doPageErrors();
 }
 
-let pageErrors = [];
+const pageErrors = [];
 
 function onPageError(state, packet) {
   if (!packet.pageError.sourceName.includes("test_page_errors")) {

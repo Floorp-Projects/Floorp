@@ -70,17 +70,17 @@ function onConsoleCall(aState, aPacket)
   aState.webConsoleFront.off("consoleAPICall", onConsoleCall);
 
   info("inspecting object properties");
-  let args = aPacket.message.arguments;
+  const args = aPacket.message.arguments;
   onProperties = onProperties.bind(null, aState);
 
-  let client = new ObjectFront(aState.dbgClient, args[1]);
+  const client = new ObjectFront(aState.dbgClient, args[1]);
   client.getPrototypeAndProperties().then(onProperties);
 }
 
 function onProperties(aState, aResponse)
 {
-  let props = aResponse.ownProperties;
-  let keys = Object.keys(props);
+  const props = aResponse.ownProperties;
+  const keys = Object.keys(props);
   info(keys.length + " ownProperties: " + keys);
 
   ok(keys.length >= Object.keys(expectedProps).length, "number of properties");

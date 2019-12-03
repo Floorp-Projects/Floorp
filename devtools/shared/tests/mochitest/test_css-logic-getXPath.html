@@ -34,22 +34,22 @@ window.onload = function () {
 };
 
 addTest(function getXPathForUnattachedElement() {
-  let unattached = document.createElement("div");
+  const unattached = document.createElement("div");
   unattached.id = "unattached";
   is(CssLogic.getXPath(unattached), "", "Unattached node returns empty string");
 
-  let unattachedChild = document.createElement("div");
+  const unattachedChild = document.createElement("div");
   unattached.appendChild(unattachedChild);
   is(CssLogic.getXPath(unattachedChild), "", "Unattached child returns empty string");
 
-  let unattachedBody = document.createElement("body");
+  const unattachedBody = document.createElement("body");
   is(CssLogic.getXPath(unattachedBody), "", "Unattached body returns empty string");
 
   runNextTest();
 });
 
 addTest(function getXPath() {
-  let data = [{
+  const data = [{
     // Target elements that have an ID get a short XPath.
     selector: "#i-have-an-id",
     path: "//*[@id=\"i-have-an-id\"]"
@@ -68,8 +68,8 @@ addTest(function getXPath() {
     path: "/html/body/namespace:test/namespace:body"
   }];
 
-  for (let {selector, path} of data) {
-    let node = document.querySelector(selector);
+  for (const {selector, path} of data) {
+    const node = document.querySelector(selector);
     is(CssLogic.getXPath(node), path, `Full css path is correct for ${selector}`);
   }
 

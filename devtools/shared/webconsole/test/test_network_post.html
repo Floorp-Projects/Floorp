@@ -32,7 +32,7 @@ function onAttach(aState, aResponse)
   onNetworkEventUpdate = onNetworkEventUpdate.bind(null, aState);
   aState.dbgClient.on("networkEventUpdate", onNetworkEventUpdate);
 
-  let iframe = document.querySelector("iframe").contentWindow;
+  const iframe = document.querySelector("iframe").contentWindow;
   iframe.wrappedJSObject.testXhrPost();
 }
 
@@ -40,7 +40,7 @@ function onNetworkEvent(aState, aPacket)
 {
   info("checking the network event packet");
 
-  let netActor = aPacket.eventActor;
+  const netActor = aPacket.eventActor;
 
   checkObject(netActor, {
     actor: /[a-z]/,
@@ -54,7 +54,7 @@ function onNetworkEvent(aState, aPacket)
   aState.webConsoleFront.off("serverNetworkEvent", onNetworkEvent);
 }
 
-let updates = [];
+const updates = [];
 
 function onNetworkEventUpdate(aState, aPacket)
 {

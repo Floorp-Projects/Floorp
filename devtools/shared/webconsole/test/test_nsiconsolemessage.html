@@ -38,14 +38,14 @@ function onAttach(aState, aResponse)
   info("waiting for messages");
 }
 
-let receivedMessages = [];
+const receivedMessages = [];
 
 function onLogMessage(aState, aPacket)
 {
   info("received message: " + aPacket.message);
 
   let found = false;
-  for (let expected of expectedMessages) {
+  for (const expected of expectedMessages) {
     if (expected.message == aPacket.message) {
       found = true;
       break;

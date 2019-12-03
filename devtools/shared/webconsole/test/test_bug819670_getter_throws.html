@@ -40,7 +40,7 @@ function onEvaluate(aState, aResponse)
   ok(!aResponse.helperResult, "no helper result");
 
   onInspect = onInspect.bind(null, aState);
-  let client = new ObjectFront(aState.dbgClient, aResponse.result);
+  const client = new ObjectFront(aState.dbgClient, aResponse.result);
   client.getPrototypeAndProperties().then(onInspect);
 }
 
@@ -48,9 +48,9 @@ function onInspect(aState, aResponse)
 {
   ok(!aResponse.error, "no response error");
 
-  let expectedProps =  Object.getOwnPropertyNames(document.__proto__);
+  const expectedProps =  Object.getOwnPropertyNames(document.__proto__);
 
-  let props = aResponse.ownProperties;
+  const props = aResponse.ownProperties;
   ok(props, "response properties available");
 
   if (props) {
