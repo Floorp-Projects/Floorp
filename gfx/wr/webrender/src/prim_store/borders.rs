@@ -249,7 +249,7 @@ impl ImageBorderData {
 
         common.opacity = if let Some(image_properties) = image_properties {
             PrimitiveOpacity {
-                is_opaque: image_properties.descriptor.is_opaque,
+                is_opaque: image_properties.descriptor.is_opaque(),
             }
         } else {
             PrimitiveOpacity::opaque()

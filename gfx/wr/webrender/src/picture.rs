@@ -2009,7 +2009,7 @@ impl TileCacheInstance {
                 if opacity_binding_index == OpacityBindingIndex::INVALID {
                     if let Some(image_properties) = resource_cache.get_image_properties(image_data.key) {
                         // If this image is opaque, it can be considered as a possible opaque backdrop
-                        if image_properties.descriptor.is_opaque {
+                        if image_properties.descriptor.is_opaque() {
                             backdrop_candidate = Some(BackdropKind::Image);
                         }
                     }

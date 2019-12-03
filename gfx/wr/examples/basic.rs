@@ -203,7 +203,7 @@ impl Example for App {
         let image_mask_key = api.generate_image_key();
         txn.add_image(
             image_mask_key,
-            ImageDescriptor::new(2, 2, ImageFormat::R8, true, false),
+            ImageDescriptor::new(2, 2, ImageFormat::R8, ImageDescriptorFlags::IS_OPAQUE),
             ImageData::new(vec![0, 80, 180, 255]),
             None,
         );

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use webrender::api::{ImageData, ImageDescriptor, ImageFormat};
+use webrender::api::{ImageData, ImageDescriptor, ImageFormat, ImageDescriptorFlags};
 
 pub fn make_checkerboard(width: u32, height: u32) -> (ImageDescriptor, ImageData) {
     let mut image_data = Vec::new();
@@ -13,7 +13,7 @@ pub fn make_checkerboard(width: u32, height: u32) -> (ImageDescriptor, ImageData
         }
     }
     (
-        ImageDescriptor::new(width as i32, height as i32, ImageFormat::BGRA8, true, false),
+        ImageDescriptor::new(width as i32, height as i32, ImageFormat::BGRA8, ImageDescriptorFlags::IS_OPAQUE),
         ImageData::new(image_data)
     )
 }
