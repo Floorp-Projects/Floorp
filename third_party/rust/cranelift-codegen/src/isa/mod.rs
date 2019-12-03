@@ -63,10 +63,12 @@ use crate::result::CodegenResult;
 use crate::settings;
 use crate::settings::SetResult;
 use crate::timing;
+use alloc::borrow::Cow;
 use alloc::boxed::Box;
+use alloc::vec::Vec;
 use core::fmt;
-use failure_derive::Fail;
 use target_lexicon::{triple, Architecture, PointerWidth, Triple};
+use thiserror::Error;
 
 #[cfg(feature = "riscv")]
 mod riscv;
@@ -124,14 +126,14 @@ pub fn lookup_by_name(name: &str) -> Result<Builder, LookupError> {
 }
 
 /// Describes reason for target lookup failure
-#[derive(Fail, PartialEq, Eq, Copy, Clone, Debug)]
+#[derive(Error, PartialEq, Eq, Copy, Clone, Debug)]
 pub enum LookupError {
     /// Support for this target was disabled in the current build.
-    #[fail(display = "Support for this target is disabled")]
+    #[error("Support for this target is disabled")]
     SupportDisabled,
 
     /// Support for this target has not yet been implemented.
-    #[fail(display = "Support for this target has not been implemented yet")]
+    #[error("Support for this target has not been implemented yet")]
     Unsupported,
 }
 
@@ -314,7 +316,7 @@ pub trait TargetIsa: fmt::Display + Sync {
     /// Arguments and return values for the caller's frame pointer and other callee-saved registers
     /// should not be added by this function. These arguments are not added until after register
     /// allocation.
-    fn legalize_signature(&self, sig: &mut ir::Signature, current: bool);
+    fn legalize_signature(&self, sig: &mut Cow<ir::Signature>, current: bool);
 
     /// Get the register class that should be used to represent an ABI argument or return value of
     /// type `ty`. This should be the top-level register class that contains the argument
@@ -349,7 +351,8 @@ pub trait TargetIsa: fmt::Display + Sync {
             func.stack_slots.push(ss);
         }
 
-        layout_stack(&mut func.stack_slots, word_size)?;
+        let is_leaf = func.is_leaf();
+        layout_stack(&mut func.stack_slots, is_leaf, word_size)?;
         Ok(())
     }
 
@@ -377,4 +380,11 @@ pub trait TargetIsa: fmt::Display + Sync {
 
     /// IntCC condition for Unsigned Subtraction Overflow (Borrow/Carry).
     fn unsigned_sub_overflow_condition(&self) -> ir::condcodes::IntCC;
+
+    /// Emit unwind information for the given function.
+    ///
+    /// Only some calling conventions (e.g. Windows fastcall) will have unwind information.
+    fn emit_unwind_info(&self, _func: &ir::Function, _mem: &mut Vec<u8>) {
+        // No-op by default
+    }
 }

@@ -1,76 +1,73 @@
-use crate::cdsl::operands::{OperandKind, OperandKindBuilder as Builder, OperandKindFields};
+use crate::cdsl::operands::{OperandKind, OperandKindFields};
 
-pub struct EntityRefs {
+/// Small helper to initialize an OperandBuilder with the right kind, for a given name and doc.
+fn new(format_field_name: &'static str, rust_type: &'static str, doc: &'static str) -> OperandKind {
+    OperandKind::new(format_field_name, rust_type, OperandKindFields::EntityRef).with_doc(doc)
+}
+
+pub(crate) struct EntityRefs {
     /// A reference to an extended basic block in the same function.
     /// This is primarliy used in control flow instructions.
-    pub ebb: OperandKind,
+    pub(crate) ebb: OperandKind,
 
     /// A reference to a stack slot declared in the function preamble.
-    pub stack_slot: OperandKind,
+    pub(crate) stack_slot: OperandKind,
 
     /// A reference to a global value.
-    pub global_value: OperandKind,
+    pub(crate) global_value: OperandKind,
 
     /// A reference to a function signature declared in the function preamble.
     /// This is used to provide the call signature in a call_indirect instruction.
-    pub sig_ref: OperandKind,
+    pub(crate) sig_ref: OperandKind,
 
     /// A reference to an external function declared in the function preamble.
     /// This is used to provide the callee and signature in a call instruction.
-    pub func_ref: OperandKind,
+    pub(crate) func_ref: OperandKind,
 
     /// A reference to a jump table declared in the function preamble.
-    pub jump_table: OperandKind,
+    pub(crate) jump_table: OperandKind,
 
     /// A reference to a heap declared in the function preamble.
-    pub heap: OperandKind,
+    pub(crate) heap: OperandKind,
 
     /// A reference to a table declared in the function preamble.
-    pub table: OperandKind,
+    pub(crate) table: OperandKind,
 
     /// A variable-sized list of value operands. Use for Ebb and function call arguments.
-    pub varargs: OperandKind,
+    pub(crate) varargs: OperandKind,
 }
 
 impl EntityRefs {
     pub fn new() -> Self {
         Self {
-            ebb: create("ebb", "An extended basic block in the same function.")
-                .default_member("destination")
-                .build(),
+            ebb: new(
+                "destination",
+                "ir::Ebb",
+                "An extended basic block in the same function.",
+            ),
+            stack_slot: new("stack_slot", "ir::StackSlot", "A stack slot"),
 
-            stack_slot: create("stack_slot", "A stack slot").build(),
+            global_value: new("global_value", "ir::GlobalValue", "A global value."),
 
-            global_value: create("global_value", "A global value.").build(),
+            sig_ref: new("sig_ref", "ir::SigRef", "A function signature."),
 
-            sig_ref: create("sig_ref", "A function signature.").build(),
+            func_ref: new("func_ref", "ir::FuncRef", "An external function."),
 
-            func_ref: create("func_ref", "An external function.").build(),
+            jump_table: new("table", "ir::JumpTable", "A jump table."),
 
-            jump_table: create("jump_table", "A jump table.")
-                .default_member("table")
-                .build(),
+            heap: new("heap", "ir::Heap", "A heap."),
 
-            heap: create("heap", "A heap.").build(),
+            table: new("table", "ir::Table", "A table."),
 
-            table: create("table", "A table.").build(),
-
-            varargs: Builder::new("variable_args", OperandKindFields::VariableArgs)
-                .doc(
-                    r#"
+            varargs: OperandKind::new("", "&[Value]", OperandKindFields::VariableArgs).with_doc(
+                r#"
                         A variable size list of `value` operands.
 
                         Use this to represent arguments passed to a function call, arguments
                         passed to an extended basic block, or a variable number of results
                         returned from an instruction.
                     "#,
-                )
-                .build(),
+            ),
         }
     }
-}
-
-/// Small helper to initialize an OperandBuilder with the right kind, for a given name and doc.
-fn create(name: &'static str, doc: &'static str) -> Builder {
-    Builder::new(name, OperandKindFields::EntityRef).doc(doc)
 }

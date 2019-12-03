@@ -62,6 +62,9 @@ pub struct DataFlowGraph {
     /// well as the external function references.
     pub signatures: PrimaryMap<SigRef, Signature>,
 
+    /// The pre-legalization signature for each entry in `signatures`, if any.
+    pub old_signatures: SecondaryMap<SigRef, Option<Signature>>,
+
     /// External function references. These are functions that can be called directly.
     pub ext_funcs: PrimaryMap<FuncRef, ExtFuncData>,
 
@@ -85,6 +88,7 @@ impl DataFlowGraph {
             value_lists: ValueListPool::new(),
             values: PrimaryMap::new(),
             signatures: PrimaryMap::new(),
+            old_signatures: SecondaryMap::new(),
             ext_funcs: PrimaryMap::new(),
             values_labels: None,
             constants: ConstantPool::new(),
@@ -100,6 +104,7 @@ impl DataFlowGraph {
         self.value_lists.clear();
         self.values.clear();
         self.signatures.clear();
+        self.old_signatures.clear();
         self.ext_funcs.clear();
         self.values_labels = None;
         self.constants.clear();
@@ -378,7 +383,7 @@ impl ValueDef {
     /// Unwrap the instruction where the value was defined, or panic.
     pub fn unwrap_inst(&self) -> Inst {
         match *self {
-            ValueDef::Result(inst, _) => inst,
+            Self::Result(inst, _) => inst,
             _ => panic!("Value is not an instruction result"),
         }
     }
@@ -386,7 +391,7 @@ impl ValueDef {
     /// Unwrap the EBB there the parameter is defined, or panic.
     pub fn unwrap_ebb(&self) -> Ebb {
         match *self {
-            ValueDef::Param(ebb, _) => ebb,
+            Self::Param(ebb, _) => ebb,
             _ => panic!("Value is not an EBB parameter"),
         }
     }
@@ -402,7 +407,7 @@ impl ValueDef {
     /// this value.
     pub fn num(self) -> usize {
         match self {
-            ValueDef::Result(_, n) | ValueDef::Param(_, n) => n,
+            Self::Result(_, n) | Self::Param(_, n) => n,
         }
     }
 }

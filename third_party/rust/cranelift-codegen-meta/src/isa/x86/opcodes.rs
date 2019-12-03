@@ -15,6 +15,14 @@ pub static ADD_IMM: [u8; 1] = [0x81];
 /// Add sign-extended imm8 to r/m{16,32,64}.
 pub static ADD_IMM8_SIGN_EXTEND: [u8; 1] = [0x83];
 
+/// Add packed double-precision floating-point values from xmm2/mem to xmm1 and store result in  
+/// xmm1 (SSE2).
+pub static ADDPD: [u8; 3] = [0x66, 0x0f, 0x58];
+
+/// Add packed single-precision floating-point values from xmm2/mem to xmm1 and store result in  
+/// xmm1 (SSE).
+pub static ADDPS: [u8; 2] = [0x0f, 0x58];
+
 /// Add the low double-precision floating-point value from xmm2/mem to xmm1
 /// and store the result in xmm1.
 pub static ADDSD: [u8; 3] = [0xf2, 0x0f, 0x58];
@@ -61,6 +69,14 @@ pub static CMP_IMM8: [u8; 1] = [0x83];
 /// Compare r{16,32,64} with r/m of the same size.
 pub static CMP_REG: [u8; 1] = [0x39];
 
+/// Compare packed double-precision floating-point value in xmm2/m32 and xmm1 using bits 2:0 of
+/// imm8 as comparison predicate (SSE2).
+pub static CMPPD: [u8; 3] = [0x66, 0x0f, 0xc2];
+
+/// Compare packed single-precision floating-point value in xmm2/m32 and xmm1 using bits 2:0 of
+/// imm8 as comparison predicate (SSE).
+pub static CMPPS: [u8; 2] = [0x0f, 0xc2];
+
 /// Convert scalar double-precision floating-point value to scalar single-precision
 /// floating-point value.
 pub static CVTSD2SS: [u8; 3] = [0xf2, 0x0f, 0x5a];
@@ -84,6 +100,14 @@ pub static CVTTSS2SI: [u8; 3] = [0xf3, 0x0f, 0x2c];
 
 /// Unsigned divide for {16,32,64}-bit.
 pub static DIV: [u8; 1] = [0xf7];
+
+/// Divide packed double-precision floating-point values in xmm1 by packed double-precision
+/// floating-point values in xmm2/mem (SSE2).
+pub static DIVPD: [u8; 3] = [0x66, 0x0f, 0x5e];
+
+/// Divide packed single-precision floating-point values in xmm1 by packed single-precision
+/// floating-point values in xmm2/mem (SSE).
+pub static DIVPS: [u8; 2] = [0x0f, 0x5e];
 
 /// Divide low double-precision floating-point value in xmm1 by low double-precision
 /// floating-point value in xmm2/m64.
@@ -134,6 +158,14 @@ pub static LEA: [u8; 1] = [0x8d];
 /// Count the number of leading zero bits.
 pub static LZCNT: [u8; 3] = [0xf3, 0x0f, 0xbd];
 
+/// Return the maximum packed double-precision floating-point values between xmm1 and xmm2/m128
+/// (SSE2).
+pub static MAXPD: [u8; 3] = [0x66, 0x0f, 0x5f];
+
+/// Return the maximum packed single-precision floating-point values between  xmm1 and xmm2/m128
+/// (SSE).
+pub static MAXPS: [u8; 2] = [0x0f, 0x5f];
+
 /// Return the maximum scalar double-precision floating-point value between
 /// xmm2/m64 and xmm1.
 pub static MAXSD: [u8; 3] = [0xf2, 0x0f, 0x5f];
@@ -141,6 +173,14 @@ pub static MAXSD: [u8; 3] = [0xf2, 0x0f, 0x5f];
 /// Return the maximum scalar single-precision floating-point value between
 /// xmm2/m32 and xmm1.
 pub static MAXSS: [u8; 3] = [0xf3, 0x0f, 0x5f];
+
+/// Return the minimum packed double-precision floating-point values between xmm1 and xmm2/m128
+/// (SSE2).
+pub static MINPD: [u8; 3] = [0x66, 0x0f, 0x5d];
+
+/// Return the minimum packed single-precision floating-point values between xmm1 and xmm2/m128
+/// (SSE).
+pub static MINPS: [u8; 2] = [0x0f, 0x5d];
 
 /// Return the minimum scalar double-precision floating-point value between
 /// xmm2/m64 and xmm1.
@@ -216,6 +256,14 @@ pub static MOVZX_WORD: [u8; 2] = [0x0f, 0xb7];
 /// Unsigned multiply for {16,32,64}-bit.
 pub static MUL: [u8; 1] = [0xf7];
 
+/// Multiply packed double-precision floating-point values from xmm2/mem to xmm1 and store result
+/// in xmm1 (SSE2).
+pub static MULPD: [u8; 3] = [0x66, 0x0f, 0x59];
+
+/// Multiply packed single-precision floating-point values from xmm2/mem to xmm1 and store result
+/// in xmm1 (SSE).
+pub static MULPS: [u8; 2] = [0x0f, 0x59];
+
 /// Multiply the low double-precision floating-point value in xmm2/m64 by the
 /// low double-precision floating-point value in xmm1.
 pub static MULSD: [u8; 3] = [0xf2, 0x0f, 0x59];
@@ -266,6 +314,9 @@ pub static PADDUSW: [u8; 3] = [0x66, 0x0f, 0xdd];
 /// Bitwise AND of xmm2/m128 and xmm1 (SSE2).
 pub static PAND: [u8; 3] = [0x66, 0x0f, 0xdb];
 
+/// Bitwise AND NOT of xmm2/m128 and xmm1 (SSE2).
+pub static PANDN: [u8; 3] = [0x66, 0x0f, 0xdf];
+
 /// Compare packed data for equal (SSE2).
 pub static PCMPEQB: [u8; 3] = [0x66, 0x0f, 0x74];
 
@@ -277,6 +328,18 @@ pub static PCMPEQQ: [u8; 4] = [0x66, 0x0f, 0x38, 0x29];
 
 /// Compare packed data for equal (SSE2).
 pub static PCMPEQW: [u8; 3] = [0x66, 0x0f, 0x75];
+
+/// Compare packed signed byte integers for greater than (SSE2).
+pub static PCMPGTB: [u8; 3] = [0x66, 0x0f, 0x64];
+
+/// Compare packed signed doubleword integers for greater than (SSE2).
+pub static PCMPGTD: [u8; 3] = [0x66, 0x0f, 0x66];
+
+/// Compare packed signed quadword integers for greater than (SSE4.2).
+pub static PCMPGTQ: [u8; 4] = [0x66, 0x0f, 0x38, 0x37];
+
+/// Compare packed signed word integers for greater than (SSE2).
+pub static PCMPGTW: [u8; 3] = [0x66, 0x0f, 0x65];
 
 /// Extract doubleword or quadword, depending on REX.W (SSE4.1).
 pub static PEXTR: [u8; 4] = [0x66, 0x0f, 0x3a, 0x16];
@@ -295,6 +358,54 @@ pub static PINSRB: [u8; 4] = [0x66, 0x0f, 0x3a, 0x20];
 
 /// Insert word (SSE2).
 pub static PINSRW: [u8; 3] = [0x66, 0x0f, 0xc4];
+
+/// Compare packed signed byte integers in xmm1 and xmm2/m128 and store packed maximum values in
+/// xmm1 (SSE4.1).
+pub static PMAXSB: [u8; 4] = [0x66, 0x0f, 0x38, 0x3c];
+
+/// Compare packed signed doubleword integers in xmm1 and xmm2/m128 and store packed maximum
+/// values in xmm1 (SSE4.1).
+pub static PMAXSD: [u8; 4] = [0x66, 0x0f, 0x38, 0x3d];
+
+/// Compare packed signed word integers in xmm1 and xmm2/m128 and store packed maximum values in
+/// xmm1 (SSE2).
+pub static PMAXSW: [u8; 3] = [0x66, 0x0f, 0xee];
+
+/// Compare packed unsigned byte integers in xmm1 and xmm2/m128 and store packed maximum values in
+/// xmm1 (SSE2).
+pub static PMAXUB: [u8; 3] = [0x66, 0x0f, 0xde];
+
+/// Compare packed unsigned doubleword integers in xmm1 and xmm2/m128 and store packed maximum
+/// values in xmm1 (SSE4.1).
+pub static PMAXUD: [u8; 4] = [0x66, 0x0f, 0x38, 0x3f];
+
+/// Compare packed unsigned word integers in xmm1 and xmm2/m128 and store packed maximum values in
+/// xmm1 (SSE4.1).
+pub static PMAXUW: [u8; 4] = [0x66, 0x0f, 0x38, 0x3e];
+
+/// Compare packed signed byte integers in xmm1 and xmm2/m128 and store packed minimum values in
+/// xmm1 (SSE4.1).
+pub static PMINSB: [u8; 4] = [0x66, 0x0f, 0x38, 0x38];
+
+/// Compare packed signed doubleword integers in xmm1 and xmm2/m128 and store packed minimum
+/// values in xmm1 (SSE4.1).
+pub static PMINSD: [u8; 4] = [0x66, 0x0f, 0x38, 0x39];
+
+/// Compare packed signed word integers in xmm1 and xmm2/m128 and store packed minimum values in
+/// xmm1 (SSE2).
+pub static PMINSW: [u8; 3] = [0x66, 0x0f, 0xea];
+
+/// Compare packed unsigned byte integers in xmm1 and xmm2/m128 and store packed minimum values in
+/// xmm1 (SSE2).
+pub static PMINUB: [u8; 3] = [0x66, 0x0f, 0xda];
+
+/// Compare packed unsigned doubleword integers in xmm1 and xmm2/m128 and store packed minimum
+/// values in xmm1 (SSE4.1).
+pub static PMINUD: [u8; 4] = [0x66, 0x0f, 0x38, 0x3b];
+
+/// Compare packed unsigned word integers in xmm1 and xmm2/m128 and store packed minimum values in
+/// xmm1 (SSE4.1).
+pub static PMINUW: [u8; 4] = [0x66, 0x0f, 0x38, 0x3a];
 
 /// Multiply the packed signed word integers in xmm1 and xmm2/m128, and store the low 16 bits of
 /// the results in xmm1 (SSE2).
@@ -319,6 +430,18 @@ pub static PSHUFB: [u8; 4] = [0x66, 0x0f, 0x38, 0x00];
 /// Shuffle the doublewords in xmm2/m128 based on the encoding in imm8 and
 /// store the result in xmm1 (SSE2).
 pub static PSHUFD: [u8; 3] = [0x66, 0x0f, 0x70];
+
+/// Shift words in xmm1 by imm8; the direction and sign-bit behavior is controlled by the RRR
+/// digit used in the ModR/M byte (SSE2).
+pub static PS_W_IMM: [u8; 3] = [0x66, 0x0f, 0x71];
+
+/// Shift doublewords in xmm1 by imm8; the direction and sign-bit behavior is controlled by the RRR
+/// digit used in the ModR/M byte (SSE2).
+pub static PS_D_IMM: [u8; 3] = [0x66, 0x0f, 0x72];
+
+/// Shift quadwords in xmm1 by imm8; the direction and sign-bit behavior is controlled by the RRR
+/// digit used in the ModR/M byte (SSE2).
+pub static PS_Q_IMM: [u8; 3] = [0x66, 0x0f, 0x73];
 
 /// Shift words in xmm1 left by xmm2/m128 while shifting in 0s (SSE2).
 pub static PSLLW: [u8; 3] = [0x66, 0x0f, 0xf1];
@@ -372,6 +495,10 @@ pub static PSUBUSB: [u8; 3] = [0x66, 0x0f, 0xd8];
 /// and saturate results (SSE2).
 pub static PSUBUSW: [u8; 3] = [0x66, 0x0f, 0xd9];
 
+/// Set ZF if xmm2/m128 AND xmm1 result is all 0s; set CF if xmm2/m128 AND NOT xmm1 result is all
+/// 0s (SSE4.1).
+pub static PTEST: [u8; 4] = [0x66, 0x0f, 0x38, 0x17];
+
 /// Push r{16,32,64}.
 pub static PUSH_REG: [u8; 1] = [0x50];
 
@@ -399,6 +526,14 @@ pub static SBB: [u8; 1] = [0x19];
 /// Set byte if overflow (OF=1).
 pub static SET_BYTE_IF_OVERFLOW: [u8; 2] = [0x0f, 0x90];
 
+/// Compute the square root of the packed double-precision floating-point values and store the
+/// result in xmm1 (SSE2).
+pub static SQRTPD: [u8; 3] = [0x66, 0x0f, 0x51];
+
+/// Compute the square root of the packed double-precision floating-point values and store the
+/// result in xmm1 (SSE).
+pub static SQRTPS: [u8; 2] = [0x0f, 0x51];
+
 /// Compute square root of scalar double-precision floating-point value.
 pub static SQRTSD: [u8; 3] = [0xf2, 0x0f, 0x51];
 
@@ -407,6 +542,14 @@ pub static SQRTSS: [u8; 3] = [0xf3, 0x0f, 0x51];
 
 /// Subtract r{16,32,64} from r/m of same size.
 pub static SUB: [u8; 1] = [0x29];
+
+/// Subtract packed double-precision floating-point values in xmm2/mem from xmm1 and store result
+/// in xmm1 (SSE2).
+pub static SUBPD: [u8; 3] = [0x66, 0x0f, 0x5c];
+
+/// Subtract packed single-precision floating-point values in xmm2/mem from xmm1 and store result
+/// in xmm1 (SSE).
+pub static SUBPS: [u8; 2] = [0x0f, 0x5c];
 
 /// Subtract the low double-precision floating-point value in xmm2/m64 from xmm1
 /// and store the result in xmm1.

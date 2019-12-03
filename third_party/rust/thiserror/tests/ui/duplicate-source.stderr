@@ -1,0 +1,11 @@
+error: duplicate #[source] attribute
+ --> $DIR/duplicate-source.rs:7:5
+  |
+7 |     #[source]
+  |     ^^^^^^^^^
+
+error: duplicate #[source] attribute
+  --> $DIR/duplicate-source.rs:16:9
+   |
+16 |         #[source]
+   |         ^^^^^^^^^
