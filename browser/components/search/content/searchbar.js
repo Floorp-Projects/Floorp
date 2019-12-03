@@ -227,10 +227,9 @@
       let uri = this.currentEngine.iconURI;
       this.setIcon(this, uri ? uri.spec : "");
 
-      let name = this.currentEngine.name;
-      let text = this._stringBundle.getFormattedString("searchtip", [name]);
-      this._textbox.label = text;
-      this._textbox.tooltipText = text;
+      this._textbox.title = this._stringBundle.getFormattedString("searchtip", [
+        this.currentEngine.name,
+      ]);
     }
 
     updateGoButtonVisibility() {
