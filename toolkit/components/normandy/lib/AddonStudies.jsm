@@ -179,6 +179,15 @@ var AddonStudies = {
     });
   },
 
+  /** When Telemetry is disabled, clear all identifiers from the stored studies.  */
+  async onTelemetryDisabled() {
+    const studies = await this.getAll();
+    for (const study of studies) {
+      study.enrollmentId = TelemetryEvents.NO_ENROLLMENT_ID_MARKER;
+    }
+    await this.updateMany(studies);
+  },
+
   /**
    * Change from "name" and "description" to "slug", "userFacingName",
    * and "userFacingDescription".
