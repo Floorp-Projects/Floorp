@@ -7523,7 +7523,7 @@
 # Is support for letter-spacing and word-spacing in SVG text enabled?
 - name: svg.text-spacing.enabled
   type: bool
-  value: true
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------
