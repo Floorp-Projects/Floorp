@@ -47,12 +47,9 @@ static_assert(nsICrashService::PROCESS_TYPE_SOCKET ==
 static_assert(nsICrashService::PROCESS_TYPE_SANDBOX_BROKER ==
                   (int)GeckoProcessType_RemoteSandboxBroker,
               "GeckoProcessType enum is out of sync with nsICrashService!");
-static_assert(nsICrashService::PROCESS_TYPE_FORKSERVER ==
-                  (int)GeckoProcessType_ForkServer,
-              "GeckoProcessType enum is out of sync with nsICrashService!");
 // Add new static asserts here if you add more process types.
 // Update this static assert as well.
-static_assert(nsICrashService::PROCESS_TYPE_FORKSERVER + 1 ==
+static_assert(nsICrashService::PROCESS_TYPE_SANDBOX_BROKER + 1 ==
                   (int)GeckoProcessType_End,
               "GeckoProcessType enum is out of sync with nsICrashService!");
 

@@ -220,21 +220,6 @@ IPDL_SOURCES = [
     'URIParams.ipdlh',
 ]
 
-if CONFIG['MOZ_ENABLE_FORKSERVER']:
-    EXPORTS.mozilla.ipc += [
-        'ForkServer.h',
-        'ForkServiceChild.h',
-        'MiniTransceiver.h',
-    ]
-    UNIFIED_SOURCES += [
-        'ForkServer.cpp',
-        'ForkServiceChild.cpp',
-        'MiniTransceiver.cpp',
-    ]
-    XPCOM_MANIFESTS += [
-        'components.conf',
-    ]
-
 LOCAL_INCLUDES += [
     '/dom/ipc',
     '/toolkit/crashreporter',
