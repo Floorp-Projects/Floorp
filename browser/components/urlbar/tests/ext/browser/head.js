@@ -43,6 +43,16 @@ add_task(async function loadSource() {
   scriptSource = await (await fetch("file://" + SCRIPT_PATH)).text();
 });
 
+/**
+ * Loads a mock extension with our browser.experiments.urlbar API and a
+ * background script.  Be sure to call `await ext.unload()` when you're done
+ * with it.
+ *
+ * @param {function} background
+ *   This function is serialized and becomes the background script.
+ * @returns {object}
+ *   The extension.
+ */
 async function loadExtension(background) {
   let ext = ExtensionTestUtils.loadExtension({
     manifest: {
