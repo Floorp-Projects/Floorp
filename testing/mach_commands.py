@@ -649,6 +649,9 @@ class CramTest(MachCommandBase):
         return subprocess.call(cmd, cwd=self.topsrcdir)
 
 
+ACTIVEDATA_RECORD_LIMIT = 10000
+
+
 @CommandProvider
 class TestInfoCommand(MachCommandBase):
     from datetime import date, timedelta
@@ -665,9 +668,9 @@ class TestInfoCommand(MachCommandBase):
     @CommandArgument('test_names', nargs=argparse.REMAINDER,
                      help='Test(s) of interest.')
     @CommandArgument('--branches',
-                     default='mozilla-central,mozilla-inbound,autoland',
+                     default='mozilla-central,autoland',
                      help='Report for named branches '
-                          '(default: mozilla-central,mozilla-inbound,autoland)')
+                          '(default: mozilla-central,autoland)')
     @CommandArgument('--start',
                      default=(date.today() - timedelta(7)
                               ).strftime("%Y-%m-%d"),
@@ -903,8 +906,8 @@ class TestInfoCommand(MachCommandBase):
         return "%s/%s%s:" % (platform, tp, self.get_run_types(record))
 
     def submit(self, query):
-        import requests
         import datetime
+        import requests
         if self.verbose:
             print(datetime.datetime.now())
             print(json.dumps(query))
@@ -1085,9 +1088,9 @@ class TestInfoCommand(MachCommandBase):
     @SubCommand('test-info', 'long-tasks',
                 description='Find tasks approaching their taskcluster max-run-time.')
     @CommandArgument('--branches',
-                     default='mozilla-central,mozilla-inbound,autoland',
+                     default='mozilla-central,autoland',
                      help='Report for named branches '
-                          '(default: mozilla-central,mozilla-inbound,autoland)')
+                          '(default: mozilla-central,autoland)')
     @CommandArgument('--start',
                      default=(date.today() - timedelta(7)
                               ).strftime("%Y-%m-%d"),
@@ -1199,6 +1202,8 @@ class TestInfoCommand(MachCommandBase):
                      help='Include summary in report.')
     @CommandArgument('--show-annotations', action='store_true',
                      help='Include list of manifest annotation conditions in report.')
+    @CommandArgument('--show-activedata', action='store_true',
+                     help='Include additional data from ActiveData, like run times and counts.')
     @CommandArgument('--filter-values',
                      help='Comma-separated list of value regular expressions to filter on; '
                           'displayed tests contain all specified values.')
@@ -1211,11 +1216,22 @@ class TestInfoCommand(MachCommandBase):
                      help='Do not categorize by bugzilla component.')
     @CommandArgument('--output-file',
                      help='Path to report file.')
+    @CommandArgument('--branches',
+                     default='mozilla-central,autoland',
+                     help='Query ActiveData for named branches '
+                          '(default: mozilla-central,autoland)')
+    @CommandArgument('--days',
+                     type=int,
+                     default=7,
+                     help='Query ActiveData for specified number of days')
     def test_report(self, components, flavor, subsuite, paths,
                     show_manifests, show_tests, show_summary, show_annotations,
-                    filter_values, filter_keys, show_components, output_file):
-        import mozpack.path as mozpath
+                    show_activedata,
+                    filter_values, filter_keys, show_components, output_file,
+                    branches, days):
         import re
+        import traceback
+        import mozpack.path as mozpath
         from mozbuild.build_commands import Build
         from moztest.resolve import TestResolver, TestManifestLoader
 
@@ -1390,6 +1406,13 @@ class TestInfoCommand(MachCommandBase):
                 for key in by_component['tests']:
                     by_component['tests'][key].sort(key=lambda k: k['test'])
 
+        if show_activedata:
+            try:
+                self.add_activedata(branches, days, by_component)
+            except Exception:
+                print("Failed to retrieve some ActiveData data.")
+                traceback.print_exc()
+
         if show_summary:
             by_component['summary'] = {}
             by_component['summary']['components'] = len(component_set)
@@ -1416,6 +1439,166 @@ class TestInfoCommand(MachCommandBase):
                 f.write(json_report)
         else:
             print(json_report)
+
+    def add_activedata_for_suite(self, branches, days, by_component,
+                                 suite_clause, path_mod):
+        import requests
+
+        def submit(query):
+            response = requests.post("http://activedata.allizom.org/query",
+                                     data=json.dumps(query),
+                                     stream=True)
+            response.raise_for_status()
+            data = response.json()["data"]
+            return data
+
+        dates_clause = {"date": "today-%dday" % days}
+        ad_query = {
+            "from": "unittest",
+            "limit": ACTIVEDATA_RECORD_LIMIT,
+            "format": "list",
+            "groupby": ["result.test"],
+            "select": [
+                {
+                    "name": "result.count",
+                    "aggregate": "count"
+                },
+                {
+                    "name": "result.duration",
+                    "value": "result.duration",
+                    "aggregate": "sum"
+                },
+                {
+                    "name": "result.failures",
+                    "value": {"case": [
+                        {"when": {"eq": {"result.ok": "F"}}, "then": 1}
+                    ]},
+                    "aggregate": "sum",
+                    "default": 0
+                },
+                {
+                    "name": "result.skips",
+                    "value": {"case": [
+                        {"when": {"eq": {"result.status": "SKIP"}}, "then": 1}
+                    ]},
+                    "aggregate": "sum",
+                    "default": 0
+                }
+            ],
+            "where": {"and": [
+                suite_clause,
+                {"in": {"repo.branch.name": branches.split(',')}},
+                {"gt": {"run.timestamp": dates_clause}}
+            ]}
+        }
+        ad_response = submit(ad_query)
+        if len(ad_response) == ACTIVEDATA_RECORD_LIMIT:
+            print("warning: limit reached; some data may be missing")
+        for record in ad_response:
+            if 'result' in record:
+                result = record['result']
+                self.update_report(by_component, result, path_mod)
+
+    def update_report(self, by_component, result, path_mod):
+        if 'test' in result and 'tests' in by_component:
+            test = result['test']
+            if path_mod:
+                test = path_mod(test)
+            for bc in by_component['tests']:
+                for item in by_component['tests'][bc]:
+                    if test == item['test']:
+                        seconds = result.get('duration', 'unknown')
+                        if seconds != 'unknown':
+                            seconds = round(seconds, 2)
+                        item['total run time, seconds'] = seconds
+                        item['total runs'] = result.get('count', 'unknown')
+                        item['skipped runs'] = result.get('skips', 'unknown')
+                        item['failed runs'] = result.get('failures', 'unknown')
+                        return True
+        return False
+
+    def path_mod_reftest(self, path):
+        # "<path1> == <path2>" -> "<path1>"
+        path = path.split(' ')[0]
+        # "<path>?<params>" -> "<path>"
+        path = path.split('?')[0]
+        # "<path>#<fragment>" -> "<path>"
+        path = path.split('#')[0]
+        # "chrome://reftest/content/<path>" -> "layout/reftests/<path>"
+        path = path.replace('chrome://reftest/content', 'layout/reftests')
+        return path
+
+    def path_mod_jsreftest(self, path):
+        # "<path-to>/jsreftest.html?test=<path>" -> "<path>"
+        path = path.split('=')[1]
+        # "<path>;assert" -> "<path>"
+        path = path.split(';')[0]
+        # "<rel-path>" -> "js/src/tests/<path>"
+        path = os.path.join('js', 'src', 'tests', path)
+        return path
+
+    def path_mod_marionette(self, path):
+        # "<path> <test-name>" -> "<path>"
+        path = path.split(' ')[0]
+        # "part1\part2" -> "part1/part2"
+        path = path.replace('\\', os.path.sep)
+        return path
+
+    def path_mod_crashtest(self, path):
+        # TODO: revisit the need for these transforms after bug 1596567
+        import re
+        # "chrome://reftest/content/crashtests/<path>" -> "<path>"
+        path = path.replace('chrome://reftest/content/crashtests/', '')
+        # "file://<path2>/reftests/tests/<path>" -> "<path>"
+        path = re.sub(r'file://.*/reftest/tests/', '', path)
+        # "http://<ip>/tests/<path>" -> "<path>"
+        path = re.sub(r'http://\d*\.\d*\.\d*\.\d*:\d*/tests/', '', path)
+        return path
+
+    def path_mod_wpt(self, path):
+        if path[0] == os.path.sep:
+            # "/<path>" -> "<path>"
+            path = path[1:]
+        # "<path>" -> "testing/web-platform/tests/<path>"
+        path = os.path.join('testing', 'web-platform', 'tests', path)
+        # "<path>?<params>" -> "<path>"
+        path = path.split('?')[0]
+        return path
+
+    def path_mod_jittest(self, path):
+        # "part1\part2" -> "part1/part2"
+        path = path.replace('\\', os.path.sep)
+        # "<path>" -> "js/src/jit-test/tests/<path>"
+        return os.path.join('js', 'src', 'jit-test', 'tests', path)
+
+    def add_activedata(self, branches, days, by_component):
+        suites = {
+            "reftest": self.path_mod_reftest,
+            "web-platform-tests": self.path_mod_wpt,
+            "web-platform-tests-reftests": self.path_mod_wpt,
+            "jsreftest": self.path_mod_jsreftest,
+            "crashtest": self.path_mod_crashtest,
+            "xpcshell": None,
+            "mochitest-plain": None,
+            "jittest": self.path_mod_jittest,
+            "mochitest-browser-chrome": None,
+            "mochitest-media": None,
+            "mochitest-devtools-chrome": None,
+            "marionette": self.path_mod_marionette,
+            "mochitest-chrome": None,
+            "web-platform-tests-wdspec": self.path_mod_wpt,
+            "geckoview-junit": None,
+            "cppunittest": None,
+        }
+        for suite in suites:
+            print("Adding ActiveData data for %s..." % suite)
+            suite_clause = {"eq": {"run.suite.name": suite}}
+            self.add_activedata_for_suite(branches, days, by_component,
+                                          suite_clause, suites[suite])
+        # remainder
+        suite_clause = {"not": {"in": {"run.suite.name": list(suites)}}}
+        self.add_activedata_for_suite(branches, days, by_component,
+                                      suite_clause, None)
 
 
 @CommandProvider
