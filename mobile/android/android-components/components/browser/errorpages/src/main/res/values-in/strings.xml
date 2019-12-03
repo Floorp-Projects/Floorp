@@ -185,6 +185,13 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Tidak ada sambungan Internet</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Periksa koneksi jaringan Anda atau coba muat ulang halaman dalam beberapa saat.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Muat ulang</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Alamat Tidak Valid</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
       <p>Laman yang diberikan tidak dalam format yang dikenali. Periksa ulang bilah lokasi kemudian coba kembali.</p>
