@@ -24,7 +24,7 @@ function evaluateJS(input) {
 function startTest() {
   info ("Content window opened, attaching console to it");
 
-  let systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
+  const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
   ok (!gWin.document.nodePrincipal.equals(systemPrincipal),
       "The test document is not using the system principal");
 
@@ -36,7 +36,7 @@ function startTest() {
 
 tests = [
   async function keys() {
-    let response = await evaluateJS("keys({foo: 'bar'})");
+    const response = await evaluateJS("keys({foo: 'bar'})");
     checkObject(response, {
       result: {
         class: "Array",
@@ -48,7 +48,7 @@ tests = [
     nextTest();
   },
   async function values() {
-    let response = await evaluateJS("values({foo: 'bar'})");
+    const response = await evaluateJS("values({foo: 'bar'})");
     checkObject(response, {
       result: {
         class: "Array",
@@ -70,7 +70,7 @@ function testEnd() {
   });
 }
 
-let load = async function () {
+const load = async function () {
   removeEventListener("load", load);
 
   await new Promise(resolve => {

@@ -23,18 +23,18 @@ let gTmpFile;
 function doFileActivity()
 {
   info("doFileActivity");
-  let fileContent = "<p>hello world from bug 798764";
+  const fileContent = "<p>hello world from bug 798764";
 
   gTmpFile = FileUtils.getFile("TmpD", ["bug798764.html"]);
   gTmpFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
-  let fout = FileUtils.openSafeFileOutputStream(gTmpFile,
+  const fout = FileUtils.openSafeFileOutputStream(gTmpFile,
     FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE);
 
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+  const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
                   createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
-  let fileContentStream = converter.convertToInputStream(fileContent);
+  const fileContentStream = converter.convertToInputStream(fileContent);
 
   NetUtil.asyncCopy(fileContentStream, fout, addIframe);
 }
@@ -44,7 +44,7 @@ function addIframe(aStatus)
   ok(Components.isSuccessCode(aStatus),
      "the temporary file was saved successfully");
 
-  let iframe = document.createElement("iframe");
+  const iframe = document.createElement("iframe");
   iframe.src = NetUtil.newURI(gTmpFile).spec;
   document.body.appendChild(iframe);
 }

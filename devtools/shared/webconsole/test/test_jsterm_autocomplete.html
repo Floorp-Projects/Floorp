@@ -138,8 +138,8 @@
 
   async function doAutocomplete1(webConsoleFront) {
     info("test autocomplete for 'window.foo'");
-    let response = await webConsoleFront.autocomplete("window.foo");
-    let matches = response.matches;
+    const response = await webConsoleFront.autocomplete("window.foo");
+    const matches = response.matches;
 
     is(response.matchProp, "foo", "matchProp");
     is(matches.length, 1, "matches.length");
@@ -148,8 +148,8 @@
 
   async function doAutocomplete2(webConsoleFront) {
     info("test autocomplete for 'window.foobarObject.'");
-    let response = await webConsoleFront.autocomplete("window.foobarObject.");
-    let matches = response.matches;
+    const response = await webConsoleFront.autocomplete("window.foobarObject.");
+    const matches = response.matches;
 
     ok(!response.matchProp, "matchProp");
     is(matches.length, 7, "matches.length");
@@ -160,8 +160,8 @@
   async function doAutocomplete3(webConsoleFront) {
     // Check that completion suggestions are offered inside the string.
     info("test autocomplete for 'dump(window.foobarObject.)'");
-    let response = await webConsoleFront.autocomplete("dump(window.foobarObject.)", 25);
-    let matches = response.matches;
+    const response = await webConsoleFront.autocomplete("dump(window.foobarObject.)", 25);
+    const matches = response.matches;
 
     ok(!response.matchProp, "matchProp");
     is(matches.length, 7, "matches.length");
@@ -172,7 +172,7 @@
   async function doAutocomplete4(webConsoleFront) {
     // Check that completion requests can have no suggestions.
     info("test autocomplete for 'dump(window.foobarObject.)'");
-    let response = await webConsoleFront.autocomplete("dump(window.foobarObject.)");
+    const response = await webConsoleFront.autocomplete("dump(window.foobarObject.)");
     ok(!response.matchProp, "matchProp");
     is(response.matches, null, "matches is null");
   }
@@ -181,7 +181,7 @@
     // Check that completion requests with too large objects will
     // have no suggestions.
     info("test autocomplete for 'window.largeObject1.'");
-    let response = await webConsoleFront.autocomplete("window.largeObject1.");
+    const response = await webConsoleFront.autocomplete("window.largeObject1.");
     ok(!response.matchProp, "matchProp");
     info (response.matches.join("|"));
     is(response.matches.length, 0, "Bailed out with too many properties");
@@ -191,7 +191,7 @@
     // Check that completion requests with pretty large objects will
     // have MAX_AUTOCOMPLETIONS suggestions
     info("test autocomplete for 'window.largeObject2.'");
-    let response = await webConsoleFront.autocomplete("window.largeObject2.");
+    const response = await webConsoleFront.autocomplete("window.largeObject2.");
     ok(!response.matchProp, "matchProp");
     is(response.matches.length, MAX_AUTOCOMPLETIONS, "matches.length is MAX_AUTOCOMPLETIONS");
   }
@@ -199,7 +199,7 @@
   async function doAutocompleteProxyThrowsPrototype(webConsoleFront) {
     // Check that completion provides own properties even if [[GetPrototypeOf]] throws.
     info("test autocomplete for 'window.proxy1.'");
-    let response = await webConsoleFront.autocomplete("window.proxy1.");
+    const response = await webConsoleFront.autocomplete("window.proxy1.");
     ok(!response.matchProp, "matchProp");
     is(response.matches.length, 1, "matches.length");
     checkObject(response.matches, ["foo"]);
@@ -208,7 +208,7 @@
   async function doAutocompleteProxyThrowsOwnKeys(webConsoleFront) {
     // Check that completion provides inherited properties even if [[OwnPropertyKeys]] throws.
     info("test autocomplete for 'window.proxy2.'");
-    let response = await webConsoleFront.autocomplete("window.proxy2.");
+    const response = await webConsoleFront.autocomplete("window.proxy2.");
     ok(!response.matchProp, "matchProp");
     is(response.matches.length, 1, "matches.length");
     checkObject(response.matches, ["foo"]);
@@ -217,9 +217,9 @@
   async function doAutocompleteSandbox(webConsoleFront) {
     // Check that completion provides inherited properties even if [[OwnPropertyKeys]] throws.
     info("test autocomplete for 'Cu.Sandbox.'");
-    let response = await webConsoleFront.autocomplete("Cu.Sandbox.");
+    const response = await webConsoleFront.autocomplete("Cu.Sandbox.");
     ok(!response.matchProp, "matchProp");
-    let keys = Object.getOwnPropertyNames(Object.prototype).sort();
+    const keys = Object.getOwnPropertyNames(Object.prototype).sort();
     is(response.matches.length, keys.length, "matches.length");
     // checkObject(response.matches, keys);
     is(response.matches.join(" - "), keys.join(" - "));
@@ -227,7 +227,7 @@
 
   async function doAutocompleteArray(webConsoleFront) {
     info("test autocomplete for [1,2,3]");
-    let response = await webConsoleFront.autocomplete("[1,2,3].");
+    const response = await webConsoleFront.autocomplete("[1,2,3].");
     let {matches} = response;
 
     ok(matches.length > 0, "There are completion results for the array");
@@ -268,7 +268,7 @@
 
   async function doAutocompleteString(webConsoleFront) {
     info(`test autocomplete for "foo".`);
-    let response = await webConsoleFront.autocomplete(`"foo".`);
+    const response = await webConsoleFront.autocomplete(`"foo".`);
     let {matches} = response;
 
     ok(matches.length > 0, "There are completion results for the string");
@@ -513,7 +513,7 @@
 
     for (const input of inputs) {
       info(`test autocomplete for "${input}"`);
-      let matches = (await webConsoleFront.autocomplete(input)).matches;
+      const matches = (await webConsoleFront.autocomplete(input)).matches;
       ok(matches.includes("foobarObject"), `Expected autocomplete result for ${input}"`);
     }
   }
@@ -609,7 +609,7 @@ async function doKeywordsAutocomplete(webConsoleFront) {
     ];
     for (const input of inputs) {
       info(`test autocomplete for "${input}"`);
-      let matches = (await webConsoleFront.autocomplete(input)).matches;
+      const matches = (await webConsoleFront.autocomplete(input)).matches;
       is(matches, null, `No autocomplete result for ${input}"`);
     }
   }

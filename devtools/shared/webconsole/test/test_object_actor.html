@@ -29,12 +29,12 @@ function onAttach(state, response) {
   onConsoleCall = onConsoleCall.bind(null, state);
   state.webConsoleFront.on("consoleAPICall", onConsoleCall);
 
-  let longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 3)).join("\u0629");
+  const longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 3)).join("\u0629");
 
   // Here we put the objects in the correct window, to avoid having them all
   // wrapped by proxies for cross-compartment access.
 
-  let foobarObject = top.Object.create(null);
+  const foobarObject = top.Object.create(null);
   foobarObject.tamarbuta = longString;
   foobarObject.foo = 1;
   foobarObject.foobar = "hello";
@@ -149,15 +149,15 @@ function onConsoleCall(state, aPacket) {
   state.webConsoleFront.off("consoleAPICall", onConsoleCall);
 
   info("inspecting object properties");
-  let args = aPacket.message.arguments;
+  const args = aPacket.message.arguments;
   onProperties = onProperties.bind(null, state);
 
-  let client = new ObjectFront(state.dbgClient, args[1]);
+  const client = new ObjectFront(state.dbgClient, args[1]);
   client.getPrototypeAndProperties().then(onProperties);
 }
 
 function onProperties(state, response) {
-  let props = response.ownProperties;
+  const props = response.ownProperties;
   is(Object.keys(props).length, Object.keys(expectedProps).length,
      "number of enumerable properties");
   checkObject(props, expectedProps);

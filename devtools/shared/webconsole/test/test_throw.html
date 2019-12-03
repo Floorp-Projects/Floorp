@@ -22,29 +22,29 @@ function startTest()
 
 function onAttach(aState, aResponse)
 {
-  let tests = [];
+  const tests = [];
 
-  let falsyValues = ["-0", "null", "undefined", "Infinity", "-Infinity", "NaN"];
+  const falsyValues = ["-0", "null", "undefined", "Infinity", "-Infinity", "NaN"];
   falsyValues.forEach(function(value) {
     tests.push(async function() {
       const aResponse = await aState.webConsoleFront.evaluateJSAsync("throw " + value + ";")
-      let type = aResponse.exception.type;
+      const type = aResponse.exception.type;
       is(type, value, "exception.type for throw " + value);
       nextTest();
     });
   });
 
-  let identityTestValues = [false, 0];
+  const identityTestValues = [false, 0];
   identityTestValues.forEach(function(value) {
     tests.push(async function() {
       const aResponse = await aState.webConsoleFront.evaluateJSAsync("throw " + value + ";")
-      let exception = aResponse.exception;
+      const exception = aResponse.exception;
       is(exception, value, "response.exception for throw " + value);
       nextTest();
     });
   });
 
-  let longString = Array(DebuggerServer.LONG_STRING_LENGTH + 1).join("a"),
+  const longString = Array(DebuggerServer.LONG_STRING_LENGTH + 1).join("a"),
       shortedString = longString.substring(0,
                         DebuggerServer.LONG_STRING_INITIAL_LENGTH
                       );
@@ -59,7 +59,7 @@ function onAttach(aState, aResponse)
     nextTest();
   });
 
-  let symbolTestValues = [
+  const symbolTestValues = [
     ["Symbol.iterator", "Symbol(Symbol.iterator)"],
     ["Symbol('foo')", "Symbol(foo)"],
     ["Symbol()", "Symbol()"],

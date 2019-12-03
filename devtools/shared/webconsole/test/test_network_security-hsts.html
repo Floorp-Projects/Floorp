@@ -41,13 +41,13 @@ function startTest()
 
   SimpleTest.registerCleanupFunction(() => {
     // Reset HSTS state.
-    let gSSService = Cc["@mozilla.org/ssservice;1"]
+    const gSSService = Cc["@mozilla.org/ssservice;1"]
                        .getService(Ci.nsISiteSecurityService);
 
-    let gIOService = Cc["@mozilla.org/network/io-service;1"]
+    const gIOService = Cc["@mozilla.org/network/io-service;1"]
                        .getService(Ci.nsIIOService);
 
-    let uri = gIOService.newURI(TEST_CASES[0].url);
+    const uri = gIOService.newURI(TEST_CASES[0].url);
     gSSService.resetState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0);
   });
 
@@ -72,17 +72,17 @@ function runNextCase(aState) {
     return;
   }
 
-  let { desc, url } = TEST_CASES[gCurrentTestCase];
+  const { desc, url } = TEST_CASES[gCurrentTestCase];
   info("Testing site with " + desc);
 
-  let iframe = document.querySelector("iframe").contentWindow;
+  const iframe = document.querySelector("iframe").contentWindow;
   iframe.wrappedJSObject.makeXhrCallback("GET", url);
 }
 
 function onNetworkEventUpdate(aState, aPacket)
 {
   function onSecurityInfo(packet) {
-    let data = TEST_CASES[gCurrentTestCase];
+    const data = TEST_CASES[gCurrentTestCase];
     is(packet.securityInfo.hsts, data.usesHSTS,
       "Strict Transport Security detected correctly.");
 

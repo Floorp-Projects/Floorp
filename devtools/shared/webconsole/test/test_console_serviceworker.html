@@ -17,7 +17,7 @@ SimpleTest.waitForExplicitFinish();
 // Utils functions
 function withFrame(url) {
   return new Promise(resolve => {
-    let iframe = document.createElement("iframe");
+    const iframe = document.createElement("iframe");
     iframe.onload = function () {
       resolve(iframe);
     };
@@ -50,7 +50,7 @@ function messageServiceWorker(win, scope, message) {
       win.navigator.serviceWorker.onmessage = evt => {
         resolve();
       };
-      let sw = swr.active || swr.waiting || swr.installing;
+      const sw = swr.active || swr.waiting || swr.installing;
       sw.postMessage({ type: "PING", message: message });
     });
   });
@@ -63,15 +63,15 @@ function unregisterServiceWorker(win) {
 }
 
 // Test
-let BASE_URL = "https://example.com/chrome/devtools/shared/webconsole/test/";
-let SERVICE_WORKER_URL = BASE_URL + "helper_serviceworker.js";
-let SCOPE = BASE_URL + "foo/";
-let NONSCOPE_FRAME_URL = BASE_URL + "sandboxed_iframe.html";
-let SCOPE_FRAME_URL = SCOPE + "fake.html";
-let SCOPE_FRAME_URL2 = SCOPE + "whatsit.html";
-let MESSAGE = 'Tic Tock';
+const BASE_URL = "https://example.com/chrome/devtools/shared/webconsole/test/";
+const SERVICE_WORKER_URL = BASE_URL + "helper_serviceworker.js";
+const SCOPE = BASE_URL + "foo/";
+const NONSCOPE_FRAME_URL = BASE_URL + "sandboxed_iframe.html";
+const SCOPE_FRAME_URL = SCOPE + "fake.html";
+const SCOPE_FRAME_URL2 = SCOPE + "whatsit.html";
+const MESSAGE = 'Tic Tock';
 
-let expectedConsoleCalls = [
+const expectedConsoleCalls = [
     {
       level: "log",
       filename: /helper_serviceworker/,
@@ -100,7 +100,7 @@ let expectedConsoleCalls = [
 ];
 let consoleCalls = [];
 
-let startTest = async function () {
+const startTest = async function () {
   removeEventListener("load", startTest);
 
   await new Promise(resolve => {
@@ -114,7 +114,7 @@ let startTest = async function () {
 };
 addEventListener("load", startTest);
 
-let onAttach = async function (state, response) {
+const onAttach = async function (state, response) {
   onConsoleAPICall = onConsoleAPICall.bind(null, state);
   state.webConsoleFront.on("consoleAPICall", onConsoleAPICall);
 
