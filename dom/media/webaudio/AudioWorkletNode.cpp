@@ -8,12 +8,14 @@
 
 #include "AudioParamMap.h"
 #include "mozilla/dom/AudioWorkletNodeBinding.h"
+#include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessagePort.h"
 
 namespace mozilla {
 namespace dom {
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(AudioWorkletNode, AudioNode)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioWorkletNode, AudioNode, mPort)
 
 class WorkletNodeEngine final : public AudioNodeEngine {
  public:
@@ -433,6 +435,23 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
   }
 
   /**
+   * 4. Let messageChannel be a new MessageChannel.
+   */
+  RefPtr<MessageChannel> messageChannel =
+      MessageChannel::Constructor(aGlobal, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+  /* 5. Let nodePort be the value of messageChannel’s port1 attribute.
+   * 6. Let processorPortOnThisSide be the value of messageChannel’s port2
+   *    attribute.
+   * 7. Let serializedProcessorPort be the result of
+   *    StructuredSerializeWithTransfer(processorPortOnThisSide,
+   *                                    « processorPortOnThisSide »).
+   */
+  UniqueMessagePortId processorPortId;
+  messageChannel->Port2()->CloneAndDisentangle(processorPortId);
+  /**
    * 8. Convert options dictionary to optionsObject.
    */
   JSContext* cx = aGlobal.Context();
@@ -456,6 +475,10 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
+  /**
+   * 10. Set node’s port to nodePort.
+   */
+  audioWorkletNode->mPort = messageChannel->Port1();
 
   auto engine =
       new WorkletNodeEngine(audioWorkletNode, aOptions.mOutputChannelCount);
@@ -489,11 +512,6 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
 }
 
 AudioParamMap* AudioWorkletNode::GetParameters(ErrorResult& aRv) const {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
-}
-
-MessagePort* AudioWorkletNode::GetPort(ErrorResult& aRv) const {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return nullptr;
 }
