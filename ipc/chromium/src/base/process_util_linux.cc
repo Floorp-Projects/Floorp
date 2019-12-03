@@ -11,10 +11,24 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "algorithm"
+
+#if defined(MOZ_ENABLE_FORKSERVER)
+#include <stdlib.h>
+#include <sys/types.h>
+#  if defined(DEBUG)
+#include "base/message_loop.h"
+#  endif
+#include "mozilla/DebugOnly.h"
+
+using namespace mozilla::ipc;
+#endif
+
 #include "base/eintr_wrapper.h"
 #include "base/logging.h"
 #include "mozilla/ipc/FileDescriptorShuffle.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/StaticPtr.h"
 
 // WARNING: despite the name, this file is also used on the BSDs and
 // Solaris (basically, Unixes that aren't Mac OS), not just Linux.
@@ -26,6 +40,119 @@ static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
 }  // namespace
 
 namespace base {
+
+#if defined(MOZ_ENABLE_FORKSERVER)
+static mozilla::StaticAutoPtr<std::vector<int> > sNoCloseFDs;
+
+void
+RegisterForkServerNoCloseFD(int fd) {
+  if (!sNoCloseFDs) {
+    sNoCloseFDs = new std::vector<int>();
+  }
+  sNoCloseFDs->push_back(fd);
+}
+
+static bool
+IsNoCloseFd(int fd) {
+  if (!sNoCloseFDs) {
+    return false;
+  }
+  return std::any_of(sNoCloseFDs->begin(), sNoCloseFDs->end(),
+                     [fd](int regfd) -> bool { return regfd == fd; });
+}
+
+AppProcessBuilder::AppProcessBuilder() {
+}
+
+static void
+ReplaceEnviroment(const LaunchOptions& options) {
+  for (auto& elt : options.env_map) {
+    setenv(elt.first.c_str(), elt.second.c_str(), 1);
+  }
+}
+
+bool
+AppProcessBuilder::ForkProcess(const std::vector<std::string>& argv,
+                               const LaunchOptions& options, ProcessHandle* process_handle) {
+  argv_ = argv;
+  if (!shuffle_.Init(options.fds_to_remap)) {
+    return false;
+  }
+
+  // Avoid the content of the buffer being sent out by child processes
+  // repeatly.
+  fflush(stdout);
+  fflush(stderr);
+
+#ifdef OS_LINUX
+  pid_t pid = options.fork_delegate ? options.fork_delegate->Fork() : fork();
+  // WARNING: if pid == 0, only async signal safe operations are permitted from
+  // here until exec or _exit.
+  //
+  // Specifically, heap allocation is not safe: the sandbox's fork substitute
+  // won't run the pthread_atfork handlers that fix up the malloc locks.
+#else
+  pid_t pid = fork();
+#endif
+
+  if (pid < 0) {
+    return false;
+  }
+
+  if (pid == 0) {
+    ReplaceEnviroment(options);
+  } else {
+    gProcessLog.print("==> process %d launched child process %d\n",
+                      GetCurrentProcId(), pid);
+    if (options.wait) HANDLE_EINTR(waitpid(pid, 0, 0));
+  }
+
+  if (process_handle) *process_handle = pid;
+
+  return true;
+}
+
+void
+AppProcessBuilder::ReplaceArguments(int *argcp, char*** argvp) {
+  // Change argc & argv of main() with the arguments passing
+  // through IPC.
+  char** argv = new char*[argv_.size() + 1];
+  char** p = argv;
+  for (auto& elt : argv_) {
+    *p++ = strdup(elt.c_str());
+  }
+  *p = nullptr;
+  *argvp = argv;
+  *argcp = argv_.size();
+}
+
+void
+AppProcessBuilder::InitAppProcess(int *argcp, char*** argvp) {
+  MOZ_ASSERT(MessageLoop::current() == nullptr,
+             "The message loop of the main thread should have been destroyed");
+
+  // The fork server handle SIGCHLD to read status of content
+  // processes to handle Zombies.  But, it is not necessary for
+  // content processes.
+  signal(SIGCHLD, SIG_DFL);
+
+  for (const auto& fds : shuffle_.Dup2Sequence()) {
+    int fd = HANDLE_EINTR(dup2(fds.first, fds.second));
+    MOZ_RELEASE_ASSERT(fd == fds.second, "dup2 failed");
+  }
+
+  CloseSuperfluousFds(&shuffle_, [](void* ctx, int fd) {
+    return static_cast<decltype(&shuffle_)>(ctx)->MapsTo(fd) ||
+      IsNoCloseFd(fd);
+  });
+  // Without this, the destructor of |shuffle_| would try to close FDs
+  // created by it, but they have been closed by
+  // |CloseSuperfluousFds()|.
+  shuffle_.Forget();
+
+  ReplaceArguments(argcp, argvp);
+}
+#endif  // MOZ_ENABLE_FORKSERVER
 
 bool LaunchApp(const std::vector<std::string>& argv,
                const LaunchOptions& options, ProcessHandle* process_handle) {
@@ -53,12 +180,8 @@ bool LaunchApp(const std::vector<std::string>& argv,
   if (pid == 0) {
     // In the child:
     for (const auto& fds : shuffle.Dup2Sequence()) {
-      if (HANDLE_EINTR(dup2(fds.first, fds.second)) != fds.second) {
-        // This shouldn't happen, but check for it.  And see below
-        // about logging being unsafe here, so this is debug only.
-        DLOG(ERROR) << "dup2 failed";
-        _exit(127);
-      }
+      int fd = HANDLE_EINTR(dup2(fds.first, fds.second));
+      MOZ_RELEASE_ASSERT(fd == fds.second, "dup2 failed");
     }
 
     CloseSuperfluousFds(&shuffle, [](void* aCtx, int aFd) {
@@ -70,11 +193,11 @@ bool LaunchApp(const std::vector<std::string>& argv,
     argv_cstr[argv.size()] = NULL;
 
     execve(argv_cstr[0], argv_cstr.get(), envp.get());
-    // if we get here, we're in serious trouble and should complain loudly
-    // NOTE: This is async signal unsafe; it could deadlock instead.  (But
-    // only on debug builds; otherwise it's a signal-safe no-op.)
-    DLOG(ERROR) << "FAILED TO exec() CHILD PROCESS, path: " << argv_cstr[0];
-    _exit(127);
+
+    char failed_exec[256];
+    snprintf(failed_exec, sizeof(failed_exec),
+             "FAILED TO exec() CHILD PROCESS, path: %s", argv_cstr[0]);
+    MOZ_CRASH_UNSAFE(failed_exec);
   }
 
   // In the parent:
