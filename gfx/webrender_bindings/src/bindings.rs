@@ -356,6 +356,12 @@ pub struct WrImageDescriptor {
 
 impl<'a> Into<ImageDescriptor> for &'a WrImageDescriptor {
     fn into(self) -> ImageDescriptor {
+        let mut flags = ImageDescriptorFlags::empty();
+
+        if self.opacity == OpacityType::Opaque {
+            flags |= ImageDescriptorFlags::IS_OPAQUE;
+        }
+
         ImageDescriptor {
             size: DeviceIntSize::new(self.width, self.height),
             stride: if self.stride != 0 {
@@ -364,9 +370,8 @@ impl<'a> Into<ImageDescriptor> for &'a WrImageDescriptor {
                 None
             },
             format: self.format,
-            is_opaque: self.opacity == OpacityType::Opaque,
             offset: 0,
-            allow_mipmaps: false,
+            flags,
         }
     }
 }

@@ -6,7 +6,7 @@ use api::{FontInstanceFlags, FontInstancePlatformOptions};
 use api::{FontKey, FontInstanceKey, FontRenderMode, FontTemplate, FontVariation};
 use api::{ColorU, GlyphIndex, GlyphDimensions, SyntheticItalics};
 use api::units::*;
-use api::{ImageDescriptor, ImageFormat, DirtyRect};
+use api::{ImageDescriptor, ImageDescriptorFlags, ImageFormat, DirtyRect};
 use crate::internal_types::ResourceCacheError;
 use crate::platform::font::FontContext;
 use crate::device::TextureFilter;
@@ -208,8 +208,7 @@ impl GlyphRasterizer {
                                 size: size2(glyph.width, glyph.height),
                                 stride: None,
                                 format: FORMAT,
-                                is_opaque: false,
-                                allow_mipmaps: false,
+                                flags: ImageDescriptorFlags::empty(),
                                 offset: 0,
                             },
                             TextureFilter::Linear,

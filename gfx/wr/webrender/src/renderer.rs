@@ -2625,9 +2625,9 @@ impl Renderer {
 
     #[cfg(feature = "debugger")]
     fn get_screenshot_for_debugger(&mut self) -> String {
-        use api::ImageDescriptor;
+        use api::{ImageDescriptor, ImageDescriptorFlags};
 
-        let desc = ImageDescriptor::new(1024, 768, ImageFormat::BGRA8, true, false);
+        let desc = ImageDescriptor::new(1024, 768, ImageFormat::BGRA8, ImageDescriptorFlags::IS_OPAQUE);
         let data = self.device.read_pixels(&desc);
         let screenshot = debug_server::Screenshot::new(desc.size, data);
 

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-use api::{ImageDescriptor, DirtyRect};
+use api::{ImageDescriptor, ImageDescriptorFlags, DirtyRect};
 use api::units::*;
 use crate::border::BorderSegmentCacheKey;
 use crate::box_shadow::{BoxShadowCacheKey};
@@ -131,12 +131,17 @@ impl RenderTaskCache {
             RenderTargetKind::Alpha => texture_cache.shared_alpha_expected_format(),
         };
 
+        let flags = if entry.is_opaque {
+            ImageDescriptorFlags::IS_OPAQUE
+        } else {
+            ImageDescriptorFlags::empty()
+        };
+
         let descriptor = ImageDescriptor::new(
             size.width,
             size.height,
             image_format,
-            entry.is_opaque,
-            false,
+            flags,
         );
 
         // Allocate space in the texture cache, but don't supply
