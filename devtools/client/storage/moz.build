@@ -8,8 +8,7 @@ BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 DevToolsModules(
     'panel.js',
-    'ui.js',
-    'VariablesView.jsm',
+    'ui.js'
 )
 
 with Files('**'):
