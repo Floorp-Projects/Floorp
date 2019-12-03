@@ -32,7 +32,6 @@ A base class for concrete implementations of PlacesStorages
 | Name | Summary |
 |---|---|
 | [getHandle](../../mozilla.components.concept.sync/-syncable-store/get-handle.md) | `abstract fun getHandle(): `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)<br>This should be removed. See: https://github.com/mozilla/application-services/issues/1877 |
-| [sync](../../mozilla.components.concept.sync/-syncable-store/sync.md) | `abstract suspend fun sync(authInfo: `[`SyncAuthInfo`](../../mozilla.components.concept.sync/-sync-auth-info/index.md)`): `[`SyncStatus`](../../mozilla.components.concept.sync/-sync-status/index.md)<br>Performs a sync. |
 
 ### Extension Functions
 

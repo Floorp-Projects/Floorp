@@ -2,7 +2,7 @@
 
 # Other
 
-`data class Other : `[`SyncEngine`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L90)
+`data class Other : `[`SyncEngine`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L95)
 
 An engine that's none of the above, described by [name](name.md).
 

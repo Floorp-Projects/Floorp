@@ -30,7 +30,7 @@
 | [StatePersistenceCallback](-state-persistence-callback/index.md) | `interface StatePersistenceCallback`<br>Describes a delegate object that is used by [OAuthAccount](-o-auth-account/index.md) to persist its internal state as it changes. |
 | [StoreSyncStatus](-store-sync-status/index.md) | `data class StoreSyncStatus` |
 | [SyncAuthInfo](-sync-auth-info/index.md) | `data class SyncAuthInfo`<br>A Firefox Sync friendly auth object which can be obtained from [OAuthAccount](-o-auth-account/index.md). |
-| [SyncStatus](-sync-status/index.md) | `sealed class SyncStatus`<br>Results of running a sync via [SyncableStore.sync](-syncable-store/sync.md). |
+| [SyncStatus](-sync-status/index.md) | `sealed class SyncStatus`<br>Results of running a sync via [SyncableStore.sync](#). |
 | [SyncableStore](-syncable-store/index.md) | `interface SyncableStore`<br>Describes a "sync" entry point for a storage layer. |
 | [TabData](-tab-data/index.md) | `data class TabData` |
 
