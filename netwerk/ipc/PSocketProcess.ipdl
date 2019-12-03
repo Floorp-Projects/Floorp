@@ -7,6 +7,7 @@ include protocol PDNSRequest;
 include protocol PSocketProcessBridge;
 include protocol PProfiler;
 include protocol PWebrtcTCPSocket;
+include protocol PHttpTransaction;
 include protocol PFileDescriptorSet;
 include protocol PChildToParentStream;
 include protocol PParentToChildStream;
@@ -33,6 +34,7 @@ protocol PSocketProcess
   manages PDNSRequest;
   manages PWebrtcTCPSocket;
   manages PFileDescriptorSet;
+  manages PHttpTransaction;
   manages PChildToParentStream;
   manages PParentToChildStream;
 
@@ -65,6 +67,7 @@ child:
   async InitProfiler(Endpoint<PProfilerChild> aEndpoint);
   // test-only
   async SocketProcessTelemetryPing();
+  async PHttpTransaction();
   async PParentToChildStream();
 
 both:

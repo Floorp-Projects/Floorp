@@ -5,6 +5,7 @@
 #ifndef nsAHttpConnection_h__
 #define nsAHttpConnection_h__
 
+#include "nsHttp.h"
 #include "nsISupports.h"
 #include "nsAHttpTransaction.h"
 #include "HttpTrafficAnalyzer.h"
@@ -18,6 +19,8 @@ namespace net {
 
 class nsHttpConnectionInfo;
 class nsHttpConnection;
+class nsHttpRequestHead;
+class nsHttpResponseHead;
 
 //-----------------------------------------------------------------------------
 // Abstract base class for a HTTP connection

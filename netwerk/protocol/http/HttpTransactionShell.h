@@ -21,6 +21,7 @@ namespace mozilla {
 namespace net {
 
 class Http2PushedStreamWrapper;
+class HttpTransactionParent;
 class nsHttpConnectionInfo;
 class nsHttpHeaderArray;
 class nsHttpRequestHead;
@@ -63,19 +64,22 @@ class HttpTransactionShell : public nsISupports {
   // @param topLevelOuterContentWindowId
   //        indicate the top level outer content window in which
   //        this transaction is being loaded.
-  // @param responseBody
-  //        the input stream that will contain the response data.  async
-  //        wait on this input stream for data.  on first notification,
-  //        headers should be available (check transaction status).
-  //
   MOZ_MUST_USE nsresult virtual Init(
       uint32_t caps, nsHttpConnectionInfo* connInfo,
       nsHttpRequestHead* reqHeaders, nsIInputStream* reqBody,
       uint64_t reqContentLength, bool reqBodyIncludesHeaders,
       nsIEventTarget* consumerTarget, nsIInterfaceRequestor* callbacks,
       nsITransportEventSink* eventsink, uint64_t topLevelOuterContentWindowId,
-      HttpTrafficCategory trafficCategory,
-      nsIAsyncInputStream** responseBody) = 0;
+      HttpTrafficCategory trafficCategory) = 0;
+
+  // @param aListener
+  //        receives notifications.
+  // @param pump
+  //        the pump that will contain the response data. async wait on this
+  //        input stream for data. On first notification, headers should be
+  //        available (check transaction status).
+  virtual nsresult AsyncRead(nsIStreamListener* listener,
+                             nsIRequest** pump) = 0;
 
   virtual void SetClassOfService(uint32_t classOfService) = 0;
 
@@ -131,7 +135,12 @@ class HttpTransactionShell : public nsISupports {
   virtual int32_t GetProxyConnectResponseCode() = 0;
   virtual bool ResolvedByTRR() = 0;
 
+  virtual nsresult SetSniffedTypeToChannel(
+      nsIRequest* aPump, nsIChannel* aChannel,
+      nsInputStreamPump::PeekSegmentFun aCallTypeSniffers) = 0;
+
   virtual nsHttpTransaction* AsHttpTransaction() = 0;
+  virtual HttpTransactionParent* AsHttpTransactionParent() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
@@ -143,7 +152,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
       uint64_t reqContentLength, bool reqBodyIncludesHeaders,                  \
       nsIEventTarget* consumerTarget, nsIInterfaceRequestor* callbacks,        \
       nsITransportEventSink* eventsink, uint64_t topLevelOuterContentWindowId, \
-      HttpTrafficCategory trafficCategory, nsIAsyncInputStream** responseBody) \
+      HttpTrafficCategory trafficCategory) override;                           \
+  virtual nsresult AsyncRead(nsIStreamListener* listener, nsIRequest** pump)   \
       override;                                                                \
   virtual void SetClassOfService(uint32_t classOfService) override;            \
   virtual nsHttpResponseHead* TakeResponseHead() override;                     \
@@ -179,7 +189,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual bool ProxyConnectFailed() override;                                  \
   virtual int32_t GetProxyConnectResponseCode() override;                      \
   virtual bool ResolvedByTRR() override;                                       \
-  virtual nsHttpTransaction* AsHttpTransaction() override;
+  virtual nsresult SetSniffedTypeToChannel(                                    \
+      nsIRequest* aPump, nsIChannel* aChannel,                                 \
+      nsInputStreamPump::PeekSegmentFun aCallTypeSniffers) override;           \
+  virtual nsHttpTransaction* AsHttpTransaction() override;                     \
+  virtual HttpTransactionParent* AsHttpTransactionParent() override;
 }  // namespace net
 }  // namespace mozilla
 

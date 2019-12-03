@@ -48,7 +48,7 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
                                    const nsCString& aData);
 
   IPCResult RecvOnStopRequest(const nsresult& aChannelStatus,
-                              const ResourceTimingStruct& aTiming,
+                              const ResourceTimingStructArgs& aTiming,
                               const TimeStamp& aLastActiveTabOptHit,
                               const nsHttpHeaderArray& aResponseTrailers);
 

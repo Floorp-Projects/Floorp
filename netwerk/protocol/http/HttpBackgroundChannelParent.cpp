@@ -196,7 +196,7 @@ bool HttpBackgroundChannelParent::OnTransportAndData(
 }
 
 bool HttpBackgroundChannelParent::OnStopRequest(
-    const nsresult& aChannelStatus, const ResourceTimingStruct& aTiming,
+    const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
     const nsHttpHeaderArray& aResponseTrailers) {
   LOG(
       ("HttpBackgroundChannelParent::OnStopRequest [this=%p "
@@ -211,7 +211,7 @@ bool HttpBackgroundChannelParent::OnStopRequest(
   if (!IsOnBackgroundThread()) {
     MutexAutoLock lock(mBgThreadMutex);
     nsresult rv = mBackgroundThread->Dispatch(
-        NewRunnableMethod<const nsresult, const ResourceTimingStruct,
+        NewRunnableMethod<const nsresult, const ResourceTimingStructArgs,
                           const nsHttpHeaderArray>(
             "net::HttpBackgroundChannelParent::OnStopRequest", this,
             &HttpBackgroundChannelParent::OnStopRequest, aChannelStatus,

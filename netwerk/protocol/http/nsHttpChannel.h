@@ -603,7 +603,7 @@ class nsHttpChannel final : public HttpBaseChannel,
  private:
   nsCOMPtr<nsICancelable> mProxyRequest;
 
-  RefPtr<nsInputStreamPump> mTransactionPump;
+  nsCOMPtr<nsIRequest> mTransactionPump;
   RefPtr<HttpTransactionShell> mTransaction;
 
   uint64_t mLogicalOffset;

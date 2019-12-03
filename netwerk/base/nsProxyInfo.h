@@ -38,6 +38,8 @@ class nsProxyInfo final : public nsIProxyInfo {
   uint32_t Flags() const { return mFlags; }
   const nsCString& Username() const { return mUsername; }
   const nsCString& Password() const { return mPassword; }
+  uint32_t Timeout() { return mTimeout; }
+  uint32_t ResolveFlags() { return mResolveFlags; }
   const nsCString& ProxyAuthorizationHeader() const {
     return mProxyAuthorizationHeader;
   }
@@ -60,6 +62,16 @@ class nsProxyInfo final : public nsIProxyInfo {
         mResolveFlags(0),
         mTimeout(UINT32_MAX),
         mNext(nullptr) {}
+
+  // For accessing mNext.
+  friend class HttpTransactionParent;
+  // For the CTOR below.
+  friend class HttpTransactionChild;
+  nsProxyInfo(const nsACString& aType, const nsACString& aHost, int32_t aPort,
+              const nsACString& aUsername, const nsACString& aPassword,
+              uint32_t aFlags, uint32_t aTimeout, uint32_t aResolveFlags,
+              const nsACString& aProxyAuthorizationHeader,
+              const nsACString& aConnectionIsolationKey);
 
   ~nsProxyInfo() { NS_IF_RELEASE(mNext); }
 

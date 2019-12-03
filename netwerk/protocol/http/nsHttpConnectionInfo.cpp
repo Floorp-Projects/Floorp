@@ -303,6 +303,9 @@ void nsHttpConnectionInfo::SetOriginServer(const nsACString& host,
   BuildHashKey();
 }
 
+// Note that this function needs to be synced with
+// HttpTransactionChild::DeserializeHttpConnectionInfoCloneArgs to make sure
+// nsHttpConnectionInfo can be serialized/deserialized.
 already_AddRefed<nsHttpConnectionInfo> nsHttpConnectionInfo::Clone() const {
   RefPtr<nsHttpConnectionInfo> clone;
   if (mRoutedHost.IsEmpty()) {

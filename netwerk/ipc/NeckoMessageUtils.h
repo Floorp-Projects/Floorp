@@ -15,7 +15,6 @@
 #include "nsString.h"
 #include "prio.h"
 #include "mozilla/net/DNS.h"
-#include "TimingStruct.h"
 #include "nsILoadInfo.h"
 
 namespace IPC {
@@ -136,54 +135,6 @@ struct ParamTraits<mozilla::net::NetAddr> {
 
     /* We've been tricked by some socket family we don't know about! */
     return false;
-  }
-};
-
-template <>
-struct ParamTraits<mozilla::net::ResourceTimingStruct> {
-  static void Write(Message* aMsg,
-                    const mozilla::net::ResourceTimingStruct& aParam) {
-    WriteParam(aMsg, aParam.domainLookupStart);
-    WriteParam(aMsg, aParam.domainLookupEnd);
-    WriteParam(aMsg, aParam.connectStart);
-    WriteParam(aMsg, aParam.tcpConnectEnd);
-    WriteParam(aMsg, aParam.secureConnectionStart);
-    WriteParam(aMsg, aParam.connectEnd);
-    WriteParam(aMsg, aParam.requestStart);
-    WriteParam(aMsg, aParam.responseStart);
-    WriteParam(aMsg, aParam.responseEnd);
-
-    WriteParam(aMsg, aParam.fetchStart);
-    WriteParam(aMsg, aParam.redirectStart);
-    WriteParam(aMsg, aParam.redirectEnd);
-
-    WriteParam(aMsg, aParam.transferSize);
-    WriteParam(aMsg, aParam.encodedBodySize);
-    WriteParam(aMsg, aParam.protocolVersion);
-
-    WriteParam(aMsg, aParam.cacheReadStart);
-    WriteParam(aMsg, aParam.cacheReadEnd);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   mozilla::net::ResourceTimingStruct* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->domainLookupStart) &&
-           ReadParam(aMsg, aIter, &aResult->domainLookupEnd) &&
-           ReadParam(aMsg, aIter, &aResult->connectStart) &&
-           ReadParam(aMsg, aIter, &aResult->tcpConnectEnd) &&
-           ReadParam(aMsg, aIter, &aResult->secureConnectionStart) &&
-           ReadParam(aMsg, aIter, &aResult->connectEnd) &&
-           ReadParam(aMsg, aIter, &aResult->requestStart) &&
-           ReadParam(aMsg, aIter, &aResult->responseStart) &&
-           ReadParam(aMsg, aIter, &aResult->responseEnd) &&
-           ReadParam(aMsg, aIter, &aResult->fetchStart) &&
-           ReadParam(aMsg, aIter, &aResult->redirectStart) &&
-           ReadParam(aMsg, aIter, &aResult->redirectEnd) &&
-           ReadParam(aMsg, aIter, &aResult->transferSize) &&
-           ReadParam(aMsg, aIter, &aResult->encodedBodySize) &&
-           ReadParam(aMsg, aIter, &aResult->protocolVersion) &&
-           ReadParam(aMsg, aIter, &aResult->cacheReadStart) &&
-           ReadParam(aMsg, aIter, &aResult->cacheReadEnd);
   }
 };
 
