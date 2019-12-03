@@ -162,12 +162,30 @@ handle_sigchld(int s) {
   waitpid(-1, nullptr, WNOHANG);
 }
 
-void
-InitForkServerProcess() {
+static void
+InstallChildSignalHandler() {
   // Since content processes are not children of the chrome process
   // any more, the fork server process has to handle SIGCHLD, or
   // content process would remain zombie after dead.
   signal(SIGCHLD, handle_sigchld);
+}
+
+static void
+ReserveFileDescriptors() {
+  // Reserve the lower positions of the file descriptors to make sure
+  // debug files and other files don't take these positions.  So we
+  // can keep their file descriptors during CloseSuperfluousFds() with
+  // out any confliction with mapping passing from the parent process.
+  int fd = open("/dev/null", O_RDONLY);
+  for (int i = 1; i < 10; i++) {
+    dup(fd);
+  }
+}
+
+void
+InitForkServerProcess() {
+  InstallChildSignalHandler();
+  ReserveFileDescriptors();
 }
 
 static bool
