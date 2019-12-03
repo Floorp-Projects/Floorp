@@ -373,6 +373,15 @@ var PreferenceExperiments = {
     };
   },
 
+  /** When Telemetry is disabled, clear all identifiers from the stored experiments.  */
+  async onTelemetryDisabled() {
+    const store = await ensureStorage();
+    for (const experiment of Object.values(store.data.experiments)) {
+      experiment.enrollmentId = TelemetryEvents.NO_ENROLLMENT_ID_MARKER;
+    }
+    store.saveSoon();
+  },
+
   /**
    * Clear all stored data about active and past experiments.
    */
