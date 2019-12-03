@@ -107,14 +107,7 @@ IDBTransaction::IDBTransaction(IDBDatabase* const aDatabase,
       mMode(aMode),
       mCreating(false),
       mRegistered(false),
-      mAbortedByScript(false),
-      mNotedActiveTransaction(false)
-#ifdef DEBUG
-      ,
-      mSentCommitOrAbort(false),
-      mFiredCompleteOrAbort(false)
-#endif
-{
+      mNotedActiveTransaction(false) {
   MOZ_ASSERT(aDatabase);
   aDatabase->AssertIsOnOwningThread();
 
@@ -237,8 +230,7 @@ RefPtr<IDBTransaction> IDBTransaction::Create(
     if (NS_WARN_IF(!workerRef)) {
       // Silence the destructor assertion if we never made this object live.
 #ifdef DEBUG
-      MOZ_ASSERT(!transaction->mSentCommitOrAbort);
-      transaction->mSentCommitOrAbort = true;
+      transaction->mSentCommitOrAbort.Flip();
 #endif
       return nullptr;
     }
@@ -342,8 +334,7 @@ void IDBTransaction::OnNewRequest() {
 
   if (!mPendingRequestCount) {
     MOZ_ASSERT(ReadyState::Active == mReadyState);
-    MOZ_ASSERT(!mStarted);
-    mStarted = true;
+    mStarted.Flip();
   }
 
   ++mPendingRequestCount;
@@ -374,8 +365,7 @@ void IDBTransaction::OnRequestFinished(
       // Don't try to send any more messages to the parent if the request actor
       // was killed.
 #ifdef DEBUG
-      MOZ_ASSERT(!mSentCommitOrAbort);
-      mSentCommitOrAbort = true;
+      mSentCommitOrAbort.Flip();
 #endif
       IDB_LOG_MARK_CHILD_TRANSACTION(
           "Request actor was killed, transaction will be aborted",
@@ -388,7 +378,6 @@ void IDBTransaction::SendCommit() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(NS_SUCCEEDED(mAbortCode));
   MOZ_ASSERT(IsCommittingOrFinished());
-  MOZ_ASSERT(!mSentCommitOrAbort);
   MOZ_ASSERT(!mPendingRequestCount);
 
   // Don't do this in the macro because we always need to increment the serial
@@ -402,7 +391,7 @@ void IDBTransaction::SendCommit() {
   DoWithTransactionChild([](auto& actor) { actor.SendCommit(); });
 
 #ifdef DEBUG
-  mSentCommitOrAbort = true;
+  mSentCommitOrAbort.Flip();
 #endif
 }
 
@@ -410,7 +399,6 @@ void IDBTransaction::SendAbort(const nsresult aResultCode) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(NS_FAILED(aResultCode));
   MOZ_ASSERT(IsCommittingOrFinished());
-  MOZ_ASSERT(!mSentCommitOrAbort);
 
   // Don't do this in the macro because we always need to increment the serial
   // number to keep in sync with the parent.
@@ -424,7 +412,7 @@ void IDBTransaction::SendAbort(const nsresult aResultCode) {
       [aResultCode](auto& actor) { actor.SendAbort(aResultCode); });
 
 #ifdef DEBUG
-  mSentCommitOrAbort = true;
+  mSentCommitOrAbort.Flip();
 #endif
 }
 
@@ -704,8 +692,7 @@ void IDBTransaction::Abort(ErrorResult& aRv) {
 
   AbortInternal(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR, nullptr);
 
-  MOZ_ASSERT(!mAbortedByScript);
-  mAbortedByScript = true;
+  mAbortedByScript.Flip();
 }
 
 void IDBTransaction::FireCompleteOrAbortEvents(const nsresult aResult) {
@@ -715,7 +702,7 @@ void IDBTransaction::FireCompleteOrAbortEvents(const nsresult aResult) {
   mReadyState = ReadyState::Finished;
 
 #ifdef DEBUG
-  mFiredCompleteOrAbort = true;
+  mFiredCompleteOrAbort.Flip();
 #endif
 
   // Make sure we drop the WorkerRef when this function completes.

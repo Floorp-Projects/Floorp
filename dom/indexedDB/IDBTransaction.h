@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_idbtransaction_h__
 #define mozilla_dom_idbtransaction_h__
 
+#include "FlippedOnce.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/IDBTransactionBinding.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -102,7 +103,7 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
   const uint32_t mColumn;
 
   ReadyState mReadyState = ReadyState::Active;
-  bool mStarted = false;
+  FlippedOnce<false> mStarted;
   const Mode mMode;
 
   bool mCreating;    ///< Set between successful creation until the transaction
@@ -110,12 +111,12 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
   bool mRegistered;  ///< Whether mDatabase->RegisterTransaction() has been
                      ///< called (which may not be the case if construction was
                      ///< incomplete).
-  bool mAbortedByScript;
+  FlippedOnce<false> mAbortedByScript;
   bool mNotedActiveTransaction;
 
 #ifdef DEBUG
-  bool mSentCommitOrAbort;
-  bool mFiredCompleteOrAbort;
+  FlippedOnce<false> mSentCommitOrAbort;
+  FlippedOnce<false> mFiredCompleteOrAbort;
 #endif
 
  public:
