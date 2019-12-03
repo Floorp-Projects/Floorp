@@ -1291,7 +1291,7 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
           MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
         }
-        COPY_CODES(len + 1);
+        COPY_CODES(len + 2);
       } else {
         MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
         return;
