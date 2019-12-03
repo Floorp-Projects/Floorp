@@ -46,6 +46,8 @@ interface HTMLFormElement : HTMLElement {
 
   [Throws]
   void submit();
+  [Pref="dom.forms.requestsubmit.enabled", Throws]
+  void requestSubmit(optional HTMLElement? submitter = null);
   [CEReactions]
   void reset();
   boolean checkValidity();
