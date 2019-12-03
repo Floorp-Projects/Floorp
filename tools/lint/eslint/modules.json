@@ -232,6 +232,7 @@
   "utils.js": ["encryptPayload", "makeIdentityConfig", "makeFxAccountsInternalMock", "configureFxAccountIdentity", "configureIdentity", "SyncTestingInfrastructure", "waitForZeroTimer", "MockFxaStorageManager", "AccountState", "sumHistogram", "CommonUtils", "CryptoUtils", "TestingUtils", "promiseZeroTimer", "promiseNamedTimer", "getLoginTelemetryScalar", "syncTestLogging"],
   "Utils.jsm": ["Utils", "Logger", "PivotContext", "PrefCache"],
   "VariablesView.jsm": ["VariablesView", "escapeHTML"],
+  "VariablesViewController.jsm": ["VariablesViewController", "StackFrameUtils"],
   "version.jsm": ["VERSION"],
   "vtt.jsm": ["WebVTT"],
   "WebChannel.jsm": ["WebChannel", "WebChannelBroker"],
