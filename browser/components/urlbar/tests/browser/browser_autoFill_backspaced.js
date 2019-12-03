@@ -11,12 +11,7 @@ async function test_autocomplete(data) {
   let { desc, typed, autofilled, modified, keys, type, onAutoFill } = data;
   info(desc);
 
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    waitForFocus,
-    value: typed,
-    fireInputEvent: true,
-  });
+  await promiseAutocompleteResultPopup(typed);
   Assert.equal(gURLBar.value, autofilled, "autofilled value is as expected");
   if (onAutoFill) {
     onAutoFill();
@@ -27,7 +22,8 @@ async function test_autocomplete(data) {
     let args = Array.isArray(key) ? key : [key];
     EventUtils.synthesizeKey(...args);
   }
-  await UrlbarTestUtils.promiseSearchComplete(window);
+
+  await promiseSearchComplete();
 
   Assert.equal(gURLBar.value, modified, "backspaced value is as expected");
 
@@ -136,16 +132,8 @@ add_task(async function() {
     onAutoFill: () => {
       gURLBar.blur();
       gURLBar.focus();
-      Assert.equal(
-        gURLBar.selectionStart,
-        gURLBar.value.length,
-        "blur/focus should not change selection"
-      );
-      Assert.equal(
-        gURLBar.selectionEnd,
-        gURLBar.value.length,
-        "blur/focus should not change selection"
-      );
+      gURLBar.selectionStart = 1;
+      gURLBar.selectionEnd = 12;
     },
   });
   await test_autocomplete({
@@ -153,26 +141,18 @@ add_task(async function() {
     typed: "ex",
     autofilled: "example.com/",
     modified: "e",
-    keys: ["KEY_ArrowLeft", "KEY_Delete"],
+    keys: ["KEY_Delete"],
     type: UrlbarUtils.RESULT_TYPE.SEARCH,
     onAutoFill: () => {
       gURLBar.blur();
       gURLBar.focus();
-      Assert.equal(
-        gURLBar.selectionStart,
-        gURLBar.value.length,
-        "blur/focus should not change selection"
-      );
-      Assert.equal(
-        gURLBar.selectionEnd,
-        gURLBar.value.length,
-        "blur/focus should not change selection"
-      );
+      gURLBar.selectionStart = 1;
+      gURLBar.selectionEnd = 12;
     },
   });
   await test_autocomplete({
     desc: "double BACK_SPACE after blur should search",
-    typed: "exa",
+    typed: "ex",
     autofilled: "example.com/",
     modified: "e",
     keys: ["KEY_Backspace", "KEY_Backspace"],
@@ -180,16 +160,8 @@ add_task(async function() {
     onAutoFill: () => {
       gURLBar.blur();
       gURLBar.focus();
-      Assert.equal(
-        gURLBar.selectionStart,
-        gURLBar.value.length,
-        "blur/focus should not change selection"
-      );
-      Assert.equal(
-        gURLBar.selectionEnd,
-        gURLBar.value.length,
-        "blur/focus should not change selection"
-      );
+      gURLBar.selectionStart = 2;
+      gURLBar.selectionEnd = 12;
     },
   });
 
