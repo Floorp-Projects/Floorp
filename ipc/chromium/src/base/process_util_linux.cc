@@ -16,16 +16,20 @@
 #if defined(MOZ_ENABLE_FORKSERVER)
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #  if defined(DEBUG)
 #include "base/message_loop.h"
 #  endif
 #include "mozilla/DebugOnly.h"
+#include "mozilla/ipc/ForkServiceChild.h"
 
 using namespace mozilla::ipc;
 #endif
 
 #include "base/eintr_wrapper.h"
 #include "base/logging.h"
+#include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/ipc/FileDescriptorShuffle.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/StaticPtr.h"
@@ -152,10 +156,56 @@ AppProcessBuilder::InitAppProcess(int *argcp, char*** argvp) {
 
   ReplaceArguments(argcp, argvp);
 }
+
+static void
+handle_sigchld(int s) {
+  waitpid(-1, nullptr, WNOHANG);
+}
+
+void
+InitForkServerProcess() {
+  // Since content processes are not children of the chrome process
+  // any more, the fork server process has to handle SIGCHLD, or
+  // content process would remain zombie after dead.
+  signal(SIGCHLD, handle_sigchld);
+}
+
+static bool
+LaunchAppWithForkServer(const std::vector<std::string>& argv,
+                      const LaunchOptions& options,
+                      ProcessHandle* process_handle) {
+  MOZ_ASSERT(ForkServiceChild::Get());
+
+  nsTArray<nsCString> _argv(argv.size());
+  nsTArray<mozilla::EnvVar> env(options.env_map.size());
+  nsTArray<mozilla::FdMapping> fdsremap(options.fds_to_remap.size());
+
+  for (auto& arg : argv) {
+    _argv.AppendElement(arg.c_str());
+  }
+  for (auto& vv : options.env_map) {
+    env.AppendElement(mozilla::EnvVar(nsCString(vv.first.c_str()),
+                                      nsCString(vv.second.c_str())));
+  }
+  for (auto& fdmapping : options.fds_to_remap) {
+    fdsremap.AppendElement(mozilla::FdMapping(mozilla::ipc::FileDescriptor(fdmapping.first),
+                                              fdmapping.second));
+  }
+
+  return ForkServiceChild::Get()->SendForkNewSubprocess(_argv, env,
+                                                       fdsremap,
+                                                       process_handle);
+}
 #endif  // MOZ_ENABLE_FORKSERVER
 
 bool LaunchApp(const std::vector<std::string>& argv,
                const LaunchOptions& options, ProcessHandle* process_handle) {
+#if defined(MOZ_ENABLE_FORKSERVER)
+  if (options.use_forkserver) {
+    return LaunchAppWithForkServer(argv, options, process_handle);
+  }
+#endif
+
   mozilla::UniquePtr<char*[]> argv_cstr(new char*[argv.size() + 1]);
 
   EnvironmentArray envp = BuildEnvironmentArray(options.env_map);
