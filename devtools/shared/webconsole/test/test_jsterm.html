@@ -14,6 +14,8 @@
 <iframe id="content-iframe" src="http://example.com/chrome/devtools/shared/webconsole/test/sandboxed_iframe.html"></iframe>
 
 <script class="testbody" type="text/javascript">
+"use strict";
+
 SimpleTest.waitForExplicitFinish();
 
 let gState;
@@ -181,7 +183,7 @@ async function doEvalWithBindingFrame() {
   const iframeObjectActor = response.result.actor;
   ok(iframeObjectActor, "There is an actor associated with the response");
 
-  const selectedObjectGlobal = await evaluateJS("this.temp1 = _self;", {
+  await evaluateJS("this.temp1 = _self;", {
     selectedObjectActor: iframeObjectActor
   });
   ok(top.temp1 && top.temp1.bar === 1,

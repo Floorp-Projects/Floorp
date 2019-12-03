@@ -48,6 +48,7 @@ module.exports = {
       "client/framework/**",
       "client/shared/*.jsm",
       "client/shared/widgets/*.jsm",
+      "shared/webconsole/test/*.html",
     ],
     "rules": {
       "mozilla/no-aArgs": "off",

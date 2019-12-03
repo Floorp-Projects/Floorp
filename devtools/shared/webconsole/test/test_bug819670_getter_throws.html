@@ -12,6 +12,8 @@
 <p>Test for Bug 819670 - Web console object inspection does not handle native getters throwing very well</p>
 
 <script class="testbody" type="text/javascript">
+"use strict";
+
 SimpleTest.waitForExplicitFinish();
 
 function startTest()
@@ -48,6 +50,7 @@ function onInspect(aState, aResponse)
 {
   ok(!aResponse.error, "no response error");
 
+  // eslint-disable-next-line no-proto
   const expectedProps =  Object.getOwnPropertyNames(document.__proto__);
 
   const props = aResponse.ownProperties;

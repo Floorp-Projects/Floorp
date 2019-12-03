@@ -59,9 +59,6 @@ devtools/client/performance/components/test/test_jit_optimizations_01.html
 devtools/server/tests/browser/storage-*.html
 !devtools/server/tests/browser/storage-unsecured-iframe.html
 devtools/server/tests/browser/stylesheets-nested-iframes.html
-devtools/shared/qrcode/tests/mochitest/test_decode.html
-devtools/shared/tests/mochitest/*.html
-devtools/shared/webconsole/test/test_*.html
 devtools/client/webreplay/mochitest/examples/*.html
 
 # Ignore devtools debugger files
