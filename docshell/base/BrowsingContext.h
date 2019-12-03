@@ -274,6 +274,18 @@ class BrowsingContext : public nsISupports,
 
   bool IsLoading();
 
+  // ScreenOrientation related APIs
+  void SetCurrentOrientation(OrientationType aType, float aAngle) {
+    SetCurrentOrientationType(aType);
+    SetCurrentOrientationAngle(aAngle);
+  }
+
+  void SetRDMPaneOrientation(OrientationType aType, float aAngle) {
+    if (mInRDMPane) {
+      SetCurrentOrientation(aType, aAngle);
+    }
+  }
+
   // Using the rules for choosing a browsing context we try to find
   // the browsing context with the given name in the set of
   // transitively reachable browsing contexts. Performs access control
