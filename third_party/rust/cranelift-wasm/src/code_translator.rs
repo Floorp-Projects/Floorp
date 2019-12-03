@@ -41,7 +41,10 @@ use cranelift_frontend::{FunctionBuilder, Variable};
 use wasmparser::{MemoryImmediate, Operator};
 
 // Clippy warns about "flags: _" but its important to document that the flags field is ignored
-#[cfg_attr(feature = "cargo-clippy", allow(clippy::unneeded_field_pattern))]
+#[cfg_attr(
+    feature = "cargo-clippy",
+    allow(clippy::unneeded_field_pattern, clippy::cognitive_complexity)
+)]
 /// Translates wasm operators into Cranelift IR instructions. Returns `true` if it inserted
 /// a return.
 pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
@@ -783,15 +786,15 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             let (arg1, arg2) = state.pop2();
             state.push1(builder.ins().iadd(arg1, arg2));
         }
-        Operator::I32And | Operator::I64And => {
+        Operator::I32And | Operator::I64And | Operator::V128And => {
             let (arg1, arg2) = state.pop2();
             state.push1(builder.ins().band(arg1, arg2));
         }
-        Operator::I32Or | Operator::I64Or => {
+        Operator::I32Or | Operator::I64Or | Operator::V128Or => {
             let (arg1, arg2) = state.pop2();
             state.push1(builder.ins().bor(arg1, arg2));
         }
-        Operator::I32Xor | Operator::I64Xor => {
+        Operator::I32Xor | Operator::I64Xor | Operator::V128Xor => {
             let (arg1, arg2) = state.pop2();
             state.push1(builder.ins().bxor(arg1, arg2));
         }
@@ -1016,12 +1019,12 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             state.push1(splatted)
         }
         Operator::I8x16ExtractLaneS { lane } | Operator::I16x8ExtractLaneS { lane } => {
-            let vector = optionally_bitcast_vector(state.pop1(), type_of(op), builder);
+            let vector = pop1_with_bitcast(state, type_of(op), builder);
             let extracted = builder.ins().extractlane(vector, lane.clone());
             state.push1(builder.ins().sextend(I32, extracted))
         }
         Operator::I8x16ExtractLaneU { lane } | Operator::I16x8ExtractLaneU { lane } => {
-            let vector = optionally_bitcast_vector(state.pop1(), type_of(op), builder);
+            let vector = pop1_with_bitcast(state, type_of(op), builder);
             state.push1(builder.ins().extractlane(vector, lane.clone()));
             // on x86, PEXTRB zeroes the upper bits of the destination register of extractlane so uextend is elided; of course, this depends on extractlane being legalized to a PEXTRB
         }
@@ -1029,7 +1032,7 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
         | Operator::I64x2ExtractLane { lane }
         | Operator::F32x4ExtractLane { lane }
         | Operator::F64x2ExtractLane { lane } => {
-            let vector = optionally_bitcast_vector(state.pop1(), type_of(op), builder);
+            let vector = pop1_with_bitcast(state, type_of(op), builder);
             state.push1(builder.ins().extractlane(vector, lane.clone()))
         }
         Operator::I8x16ReplaceLane { lane }
@@ -1051,9 +1054,7 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             ))
         }
         Operator::V8x16Shuffle { lanes, .. } => {
-            let (vector_a, vector_b) = state.pop2();
-            let a = optionally_bitcast_vector(vector_a, I8X16, builder);
-            let b = optionally_bitcast_vector(vector_b, I8X16, builder);
+            let (a, b) = pop2_with_bitcast(state, I8X16, builder);
             let lanes = ConstantData::from(lanes.as_ref());
             let mask = builder.func.dfg.immediates.push(lanes);
             let shuffled = builder.ins().shuffle(a, b, mask);
@@ -1064,52 +1065,40 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             // types (e.g. i8x16) for others.
         }
         Operator::I8x16Add | Operator::I16x8Add | Operator::I32x4Add | Operator::I64x2Add => {
-            let (a, b) = state.pop2();
+            let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
             state.push1(builder.ins().iadd(a, b))
         }
         Operator::I8x16AddSaturateS | Operator::I16x8AddSaturateS => {
-            let (a, b) = state.pop2();
+            let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
             state.push1(builder.ins().sadd_sat(a, b))
         }
         Operator::I8x16AddSaturateU | Operator::I16x8AddSaturateU => {
-            let (a, b) = state.pop2();
+            let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
             state.push1(builder.ins().uadd_sat(a, b))
         }
         Operator::I8x16Sub | Operator::I16x8Sub | Operator::I32x4Sub | Operator::I64x2Sub => {
-            let (a, b) = state.pop2();
+            let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
             state.push1(builder.ins().isub(a, b))
         }
         Operator::I8x16SubSaturateS | Operator::I16x8SubSaturateS => {
-            let (a, b) = state.pop2();
+            let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
             state.push1(builder.ins().ssub_sat(a, b))
         }
         Operator::I8x16SubSaturateU | Operator::I16x8SubSaturateU => {
-            let (a, b) = state.pop2();
+            let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
             state.push1(builder.ins().usub_sat(a, b))
         }
         Operator::I8x16Neg | Operator::I16x8Neg | Operator::I32x4Neg | Operator::I64x2Neg => {
-            let a = state.pop1();
+            let a = pop1_with_bitcast(state, type_of(op), builder);
             state.push1(builder.ins().ineg(a))
         }
         Operator::I16x8Mul | Operator::I32x4Mul => {
-            let (a, b) = state.pop2();
+            let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
             state.push1(builder.ins().imul(a, b))
         }
         Operator::V128Not => {
             let a = state.pop1();
             state.push1(builder.ins().bnot(a));
-        }
-        Operator::V128And => {
-            let (a, b) = state.pop2();
-            state.push1(builder.ins().band(a, b));
-        }
-        Operator::V128Or => {
-            let (a, b) = state.pop2();
-            state.push1(builder.ins().bor(a, b));
-        }
-        Operator::V128Xor => {
-            let (a, b) = state.pop2();
-            state.push1(builder.ins().bxor(a, b));
         }
         Operator::I16x8Shl | Operator::I32x4Shl | Operator::I64x2Shl => {
             let (a, b) = state.pop2();
@@ -1138,80 +1127,121 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
             let b_mod_bitwidth = builder.ins().band_imm(b, bitwidth - 1);
             state.push1(builder.ins().sshr(bitcast_a, b_mod_bitwidth))
         }
-        Operator::I8x16Eq
-        | Operator::I8x16Ne
-        | Operator::I8x16LtS
-        | Operator::I8x16LtU
-        | Operator::I8x16GtS
-        | Operator::I8x16GtU
-        | Operator::I8x16LeS
-        | Operator::I8x16LeU
-        | Operator::I8x16GeS
-        | Operator::I8x16GeU
-        | Operator::I16x8Eq
-        | Operator::I16x8Ne
-        | Operator::I16x8LtS
-        | Operator::I16x8LtU
-        | Operator::I16x8GtS
-        | Operator::I16x8GtU
-        | Operator::I16x8LeS
-        | Operator::I16x8LeU
-        | Operator::I16x8GeS
-        | Operator::I16x8GeU
-        | Operator::I32x4Eq
-        | Operator::I32x4Ne
-        | Operator::I32x4LtS
-        | Operator::I32x4LtU
-        | Operator::I32x4GtS
-        | Operator::I32x4GtU
-        | Operator::I32x4LeS
-        | Operator::I32x4LeU
-        | Operator::I32x4GeS
-        | Operator::I32x4GeU
-        | Operator::F32x4Eq
-        | Operator::F32x4Ne
-        | Operator::F32x4Lt
-        | Operator::F32x4Gt
-        | Operator::F32x4Le
-        | Operator::F32x4Ge
-        | Operator::F64x2Eq
-        | Operator::F64x2Ne
-        | Operator::F64x2Lt
-        | Operator::F64x2Gt
-        | Operator::F64x2Le
-        | Operator::F64x2Ge
-        | Operator::V128Bitselect
-        | Operator::I8x16AnyTrue
-        | Operator::I8x16AllTrue
-        | Operator::I8x16Shl
+        Operator::V128Bitselect => {
+            let (a, b, c) = state.pop3();
+            let bitcast_a = optionally_bitcast_vector(a, I8X16, builder);
+            let bitcast_b = optionally_bitcast_vector(b, I8X16, builder);
+            let bitcast_c = optionally_bitcast_vector(c, I8X16, builder);
+            // The CLIF operand ordering is slightly different and the types of all three
+            // operands must match (hence the bitcast).
+            state.push1(builder.ins().bitselect(bitcast_c, bitcast_a, bitcast_b))
+        }
+        Operator::I8x16AnyTrue
+        | Operator::I16x8AnyTrue
+        | Operator::I32x4AnyTrue
+        | Operator::I64x2AnyTrue => {
+            let bool_result = builder.ins().vany_true(state.pop1());
+            state.push1(builder.ins().bint(I32, bool_result))
+        }
+        Operator::I8x16AllTrue
+        | Operator::I16x8AllTrue
+        | Operator::I32x4AllTrue
+        | Operator::I64x2AllTrue => {
+            let bool_result = builder.ins().vall_true(state.pop1());
+            state.push1(builder.ins().bint(I32, bool_result))
+        }
+        Operator::I8x16Eq | Operator::I16x8Eq | Operator::I32x4Eq => {
+            translate_vector_icmp(IntCC::Equal, type_of(op), builder, state)
+        }
+        Operator::I8x16Ne | Operator::I16x8Ne | Operator::I32x4Ne => {
+            translate_vector_icmp(IntCC::NotEqual, type_of(op), builder, state)
+        }
+        Operator::I8x16GtS | Operator::I16x8GtS | Operator::I32x4GtS => {
+            translate_vector_icmp(IntCC::SignedGreaterThan, type_of(op), builder, state)
+        }
+        Operator::I8x16LtS | Operator::I16x8LtS | Operator::I32x4LtS => {
+            translate_vector_icmp(IntCC::SignedLessThan, type_of(op), builder, state)
+        }
+        Operator::I8x16GtU | Operator::I16x8GtU | Operator::I32x4GtU => {
+            translate_vector_icmp(IntCC::UnsignedGreaterThan, type_of(op), builder, state)
+        }
+        Operator::I8x16LtU | Operator::I16x8LtU | Operator::I32x4LtU => {
+            translate_vector_icmp(IntCC::UnsignedLessThan, type_of(op), builder, state)
+        }
+        Operator::I8x16GeS | Operator::I16x8GeS | Operator::I32x4GeS => {
+            translate_vector_icmp(IntCC::SignedGreaterThanOrEqual, type_of(op), builder, state)
+        }
+        Operator::I8x16LeS | Operator::I16x8LeS | Operator::I32x4LeS => {
+            translate_vector_icmp(IntCC::SignedLessThanOrEqual, type_of(op), builder, state)
+        }
+        Operator::I8x16GeU | Operator::I16x8GeU | Operator::I32x4GeU => translate_vector_icmp(
+            IntCC::UnsignedGreaterThanOrEqual,
+            type_of(op),
+            builder,
+            state,
+        ),
+        Operator::I8x16LeU | Operator::I16x8LeU | Operator::I32x4LeU => {
+            translate_vector_icmp(IntCC::UnsignedLessThanOrEqual, type_of(op), builder, state)
+        }
+        Operator::F32x4Eq | Operator::F64x2Eq => {
+            translate_vector_fcmp(FloatCC::Equal, type_of(op), builder, state)
+        }
+        Operator::F32x4Ne | Operator::F64x2Ne => {
+            translate_vector_fcmp(FloatCC::NotEqual, type_of(op), builder, state)
+        }
+        Operator::F32x4Lt | Operator::F64x2Lt => {
+            translate_vector_fcmp(FloatCC::LessThan, type_of(op), builder, state)
+        }
+        Operator::F32x4Gt | Operator::F64x2Gt => {
+            translate_vector_fcmp(FloatCC::GreaterThan, type_of(op), builder, state)
+        }
+        Operator::F32x4Le | Operator::F64x2Le => {
+            translate_vector_fcmp(FloatCC::LessThanOrEqual, type_of(op), builder, state)
+        }
+        Operator::F32x4Ge | Operator::F64x2Ge => {
+            translate_vector_fcmp(FloatCC::GreaterThanOrEqual, type_of(op), builder, state)
+        }
+        Operator::F32x4Add | Operator::F64x2Add => {
+            let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
+            state.push1(builder.ins().fadd(a, b))
+        }
+        Operator::F32x4Sub | Operator::F64x2Sub => {
+            let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
+            state.push1(builder.ins().fsub(a, b))
+        }
+        Operator::F32x4Mul | Operator::F64x2Mul => {
+            let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
+            state.push1(builder.ins().fmul(a, b))
+        }
+        Operator::F32x4Div | Operator::F64x2Div => {
+            let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
+            state.push1(builder.ins().fdiv(a, b))
+        }
+        Operator::F32x4Max | Operator::F64x2Max => {
+            let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
+            state.push1(builder.ins().fmax(a, b))
+        }
+        Operator::F32x4Min | Operator::F64x2Min => {
+            let (a, b) = pop2_with_bitcast(state, type_of(op), builder);
+            state.push1(builder.ins().fmin(a, b))
+        }
+        Operator::F32x4Sqrt | Operator::F64x2Sqrt => {
+            let a = pop1_with_bitcast(state, type_of(op), builder);
+            state.push1(builder.ins().sqrt(a))
+        }
+        Operator::F32x4Neg | Operator::F64x2Neg => {
+            let a = pop1_with_bitcast(state, type_of(op), builder);
+            state.push1(builder.ins().fneg(a))
+        }
+        Operator::F32x4Abs | Operator::F64x2Abs => {
+            let a = pop1_with_bitcast(state, type_of(op), builder);
+            state.push1(builder.ins().fabs(a))
+        }
+        Operator::I8x16Shl
         | Operator::I8x16ShrS
         | Operator::I8x16ShrU
         | Operator::I8x16Mul
-        | Operator::I16x8AnyTrue
-        | Operator::I16x8AllTrue
-        | Operator::I32x4AnyTrue
-        | Operator::I32x4AllTrue
-        | Operator::I64x2AnyTrue
-        | Operator::I64x2AllTrue
         | Operator::I64x2ShrS
-        | Operator::F32x4Abs
-        | Operator::F32x4Neg
-        | Operator::F32x4Sqrt
-        | Operator::F32x4Add
-        | Operator::F32x4Sub
-        | Operator::F32x4Mul
-        | Operator::F32x4Div
-        | Operator::F32x4Min
-        | Operator::F32x4Max
-        | Operator::F64x2Abs
-        | Operator::F64x2Neg
-        | Operator::F64x2Sqrt
-        | Operator::F64x2Add
-        | Operator::F64x2Sub
-        | Operator::F64x2Mul
-        | Operator::F64x2Div
-        | Operator::F64x2Min
-        | Operator::F64x2Max
         | Operator::I32x4TruncSF32x4Sat
         | Operator::I32x4TruncUF32x4Sat
         | Operator::I64x2TruncSF64x2Sat
@@ -1447,10 +1477,34 @@ fn translate_icmp(cc: IntCC, builder: &mut FunctionBuilder, state: &mut FuncTran
     state.push1(builder.ins().bint(I32, val));
 }
 
+fn translate_vector_icmp(
+    cc: IntCC,
+    needed_type: Type,
+    builder: &mut FunctionBuilder,
+    state: &mut FuncTranslationState,
+) {
+    let (a, b) = state.pop2();
+    let bitcast_a = optionally_bitcast_vector(a, needed_type, builder);
+    let bitcast_b = optionally_bitcast_vector(b, needed_type, builder);
+    state.push1(builder.ins().icmp(cc, bitcast_a, bitcast_b))
+}
+
 fn translate_fcmp(cc: FloatCC, builder: &mut FunctionBuilder, state: &mut FuncTranslationState) {
     let (arg0, arg1) = state.pop2();
     let val = builder.ins().fcmp(cc, arg0, arg1);
     state.push1(builder.ins().bint(I32, val));
+}
+
+fn translate_vector_fcmp(
+    cc: FloatCC,
+    needed_type: Type,
+    builder: &mut FunctionBuilder,
+    state: &mut FuncTranslationState,
+) {
+    let (a, b) = state.pop2();
+    let bitcast_a = optionally_bitcast_vector(a, needed_type, builder);
+    let bitcast_b = optionally_bitcast_vector(b, needed_type, builder);
+    state.push1(builder.ins().fcmp(cc, bitcast_a, bitcast_b))
 }
 
 fn translate_br_if(
@@ -1650,7 +1704,7 @@ fn type_of(operator: &Operator) -> Type {
 }
 
 /// Some SIMD operations only operate on I8X16 in CLIF; this will convert them to that type by
-/// adding a raw_bitcast if necessary
+/// adding a raw_bitcast if necessary.
 fn optionally_bitcast_vector(
     value: Value,
     needed_type: Type,
@@ -1661,4 +1715,29 @@ fn optionally_bitcast_vector(
     } else {
         value
     }
+}
+
+/// A helper for popping and bitcasting a single value; since SIMD values can lose their type by
+/// using v128 (i.e. CLIF's I8x16) we must re-type the values using a bitcast to avoid CLIF
+/// typing issues.
+fn pop1_with_bitcast(
+    state: &mut FuncTranslationState,
+    needed_type: Type,
+    builder: &mut FunctionBuilder,
+) -> Value {
+    optionally_bitcast_vector(state.pop1(), needed_type, builder)
+}
+
+/// A helper for popping and bitcasting two values; since SIMD values can lose their type by
+/// using v128 (i.e. CLIF's I8x16) we must re-type the values using a bitcast to avoid CLIF
+/// typing issues.
+fn pop2_with_bitcast(
+    state: &mut FuncTranslationState,
+    needed_type: Type,
+    builder: &mut FunctionBuilder,
+) -> (Value, Value) {
+    let (a, b) = state.pop2();
+    let bitcast_a = optionally_bitcast_vector(a, needed_type, builder);
+    let bitcast_b = optionally_bitcast_vector(b, needed_type, builder);
+    (bitcast_a, bitcast_b)
 }

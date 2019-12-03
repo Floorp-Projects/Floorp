@@ -1,19 +1,34 @@
 use alloc::string::String;
 
+use core::fmt;
+
 /// An error returned from parsing a triple.
-#[derive(Fail, Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 #[allow(missing_docs)]
 pub enum ParseError {
-    #[fail(display = "Unrecognized architecture: {}", _0)]
     UnrecognizedArchitecture(String),
-    #[fail(display = "Unrecognized vendor: {}", _0)]
     UnrecognizedVendor(String),
-    #[fail(display = "Unrecognized operating system: {}", _0)]
     UnrecognizedOperatingSystem(String),
-    #[fail(display = "Unrecognized environment: {}", _0)]
     UnrecognizedEnvironment(String),
-    #[fail(display = "Unrecognized binary format: {}", _0)]
     UnrecognizedBinaryFormat(String),
-    #[fail(display = "Unrecognized field: {}", _0)]
     UnrecognizedField(String),
 }
+
+impl fmt::Display for ParseError {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        use ParseError::*;
+        match self {
+            UnrecognizedArchitecture(msg) => write!(fmt, "Unrecognized architecture: {}", msg),
+            UnrecognizedVendor(msg) => write!(fmt, "Unrecognized vendor: {}", msg),
+            UnrecognizedOperatingSystem(msg) => {
+                write!(fmt, "Unrecognized operating system: {}", msg)
+            }
+            UnrecognizedEnvironment(msg) => write!(fmt, "Unrecognized environment: {}", msg),
+            UnrecognizedBinaryFormat(msg) => write!(fmt, "Unrecognized binary format: {}", msg),
+            UnrecognizedField(msg) => write!(fmt, "Unrecognized field: {}", msg),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for ParseError {}

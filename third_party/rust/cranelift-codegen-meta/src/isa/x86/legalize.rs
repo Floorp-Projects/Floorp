@@ -2,10 +2,11 @@ use crate::cdsl::ast::{constant, var, ExprBuilder, Literal};
 use crate::cdsl::instructions::{vector, Bindable, InstructionGroup};
 use crate::cdsl::types::{LaneType, ValueType};
 use crate::cdsl::xform::TransformGroupBuilder;
-use crate::shared::types::Float::F64;
-use crate::shared::types::Int::{I16, I32, I64};
+use crate::shared::types::Float::{F32, F64};
+use crate::shared::types::Int::{I16, I32, I64, I8};
 use crate::shared::Definitions as SharedDefinitions;
 
+#[allow(clippy::many_single_char_names)]
 pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &InstructionGroup) {
     let mut group = TransformGroupBuilder::new(
         "x86_expand",
@@ -20,23 +21,28 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
     // List of instructions.
     let insts = &shared.instructions;
     let band = insts.by_name("band");
+    let band_not = insts.by_name("band_not");
     let bitcast = insts.by_name("bitcast");
+    let bitselect = insts.by_name("bitselect");
     let bor = insts.by_name("bor");
     let bnot = insts.by_name("bnot");
     let bxor = insts.by_name("bxor");
     let clz = insts.by_name("clz");
     let ctz = insts.by_name("ctz");
     let extractlane = insts.by_name("extractlane");
-    let f64const = insts.by_name("f64const");
     let fcmp = insts.by_name("fcmp");
     let fcvt_from_uint = insts.by_name("fcvt_from_uint");
     let fcvt_to_sint = insts.by_name("fcvt_to_sint");
     let fcvt_to_uint = insts.by_name("fcvt_to_uint");
     let fcvt_to_sint_sat = insts.by_name("fcvt_to_sint_sat");
     let fcvt_to_uint_sat = insts.by_name("fcvt_to_uint_sat");
+    let fabs = insts.by_name("fabs");
     let fmax = insts.by_name("fmax");
     let fmin = insts.by_name("fmin");
+    let fneg = insts.by_name("fneg");
+    let fsub = insts.by_name("fsub");
     let iadd = insts.by_name("iadd");
+    let icmp = insts.by_name("icmp");
     let iconst = insts.by_name("iconst");
     let imul = insts.by_name("imul");
     let ineg = insts.by_name("ineg");
@@ -53,20 +59,27 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
     let shuffle = insts.by_name("shuffle");
     let srem = insts.by_name("srem");
     let sshr = insts.by_name("sshr");
+    let trueif = insts.by_name("trueif");
     let udiv = insts.by_name("udiv");
     let umulhi = insts.by_name("umulhi");
     let ushr_imm = insts.by_name("ushr_imm");
     let urem = insts.by_name("urem");
     let ushr = insts.by_name("ushr");
     let vconst = insts.by_name("vconst");
+    let vall_true = insts.by_name("vall_true");
+    let vany_true = insts.by_name("vany_true");
 
     let x86_bsf = x86_instructions.by_name("x86_bsf");
     let x86_bsr = x86_instructions.by_name("x86_bsr");
+    let x86_pmaxu = x86_instructions.by_name("x86_pmaxu");
+    let x86_pmins = x86_instructions.by_name("x86_pmins");
+    let x86_pminu = x86_instructions.by_name("x86_pminu");
     let x86_pshufb = x86_instructions.by_name("x86_pshufb");
     let x86_pshufd = x86_instructions.by_name("x86_pshufd");
     let x86_psll = x86_instructions.by_name("x86_psll");
     let x86_psra = x86_instructions.by_name("x86_psra");
     let x86_psrl = x86_instructions.by_name("x86_psrl");
+    let x86_ptest = x86_instructions.by_name("x86_ptest");
     let x86_umulx = x86_instructions.by_name("x86_umulx");
     let x86_smulx = x86_instructions.by_name("x86_smulx");
 
@@ -246,7 +259,7 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
         def!(r = popcnt.I64(x)),
         vec![
             def!(qv3 = ushr_imm(x, imm64_1)),
-            def!(qc77 = iconst(Literal::constant(&imm.imm64, 0x7777777777777777))),
+            def!(qc77 = iconst(Literal::constant(&imm.imm64, 0x7777_7777_7777_7777))),
             def!(qv4 = band(qv3, qc77)),
             def!(qv5 = isub(x, qv4)),
             def!(qv6 = ushr_imm(qv4, imm64_1)),
@@ -257,9 +270,9 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
             def!(qv11 = isub(qv8, qv10)),
             def!(qv12 = ushr_imm(qv11, imm64_4)),
             def!(qv13 = iadd(qv11, qv12)),
-            def!(qc0F = iconst(Literal::constant(&imm.imm64, 0x0F0F0F0F0F0F0F0F))),
+            def!(qc0F = iconst(Literal::constant(&imm.imm64, 0x0F0F_0F0F_0F0F_0F0F))),
             def!(qv14 = band(qv13, qc0F)),
-            def!(qc01 = iconst(Literal::constant(&imm.imm64, 0x0101010101010101))),
+            def!(qc01 = iconst(Literal::constant(&imm.imm64, 0x0101_0101_0101_0101))),
             def!(qv15 = imul(qv14, qc01)),
             def!(r = ushr_imm(qv15, Literal::constant(&imm.imm64, 56))),
         ],
@@ -287,7 +300,7 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
         def!(r = popcnt.I32(x)),
         vec![
             def!(lv3 = ushr_imm(x, imm64_1)),
-            def!(lc77 = iconst(Literal::constant(&imm.imm64, 0x77777777))),
+            def!(lc77 = iconst(Literal::constant(&imm.imm64, 0x7777_7777))),
             def!(lv4 = band(lv3, lc77)),
             def!(lv5 = isub(x, lv4)),
             def!(lv6 = ushr_imm(lv4, imm64_1)),
@@ -298,9 +311,9 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
             def!(lv11 = isub(lv8, lv10)),
             def!(lv12 = ushr_imm(lv11, imm64_4)),
             def!(lv13 = iadd(lv11, lv12)),
-            def!(lc0F = iconst(Literal::constant(&imm.imm64, 0x0F0F0F0F))),
+            def!(lc0F = iconst(Literal::constant(&imm.imm64, 0x0F0F_0F0F))),
             def!(lv14 = band(lv13, lc0F)),
-            def!(lc01 = iconst(Literal::constant(&imm.imm64, 0x01010101))),
+            def!(lc01 = iconst(Literal::constant(&imm.imm64, 0x0101_0101))),
             def!(lv15 = imul(lv14, lc01)),
             def!(r = ushr_imm(lv15, Literal::constant(&imm.imm64, 24))),
         ],
@@ -321,10 +334,11 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
     // SIMD
     let uimm8_zero = Literal::constant(&imm.uimm8, 0x00);
     let uimm8_one = Literal::constant(&imm.uimm8, 0x01);
-    let ieee64_zero = Literal::constant(&imm.ieee64, 0x00);
+    let u128_zeroes = constant(vec![0x00; 16]);
     let b = var("b");
     let c = var("c");
     let d = var("d");
+    let e = var("e");
 
     // SIMD vector size: eventually multiple vector sizes may be supported but for now only SSE-sized vectors are available
     let sse_vector_size: u64 = 128;
@@ -333,15 +347,14 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
     // SIMD splat: 8-bits
     for ty in ValueType::all_lane_types().filter(|t| t.lane_bits() == 8) {
         let splat_any8x16 = splat.bind(vector(ty, sse_vector_size));
-        let bitcast_f64_to_any8x16 = raw_bitcast.bind(vector(ty, sse_vector_size)).bind(F64);
         narrow.legalize(
             def!(y = splat_any8x16(x)),
             vec![
                 def!(a = scalar_to_vector(x)), // move into the lowest 8 bits of an XMM register
-                // TODO replace the following two instructions with `vconst(0)` when this is possible; see https://github.com/CraneStation/cranelift/issues/1052
-                def!(b = f64const(ieee64_zero)), // zero out a different XMM register; the shuffle mask for moving the lowest byte to all other byte lanes is 0x0
-                def!(c = bitcast_f64_to_any8x16(b)), // no instruction emitted; informs the SSA that the 0 in b can be used as a vector of this type
-                def!(y = x86_pshufb(a, c)), // PSHUFB takes two XMM operands, one of which is a shuffle mask (i.e. b)
+                def!(b = vconst(u128_zeroes)), // zero out a different XMM register; the shuffle mask
+                // for moving the lowest byte to all other byte lanes is 0x0
+                def!(y = x86_pshufb(a, b)), // PSHUFB takes two XMM operands, one of which is a
+                                            // shuffle mask (i.e. b)
             ],
         );
     }
@@ -428,6 +441,135 @@ pub(crate) fn define(shared: &mut SharedDefinitions, x86_instructions: &Instruct
         narrow.legalize(
             def!(a = sshr(x, y)),
             vec![def!(b = bitcast(y)), def!(a = x86_psra(x, b))],
+        );
+    }
+
+    // SIMD select
+    for ty in ValueType::all_lane_types().filter(allowed_simd_type) {
+        let bitselect = bitselect.bind(vector(ty, sse_vector_size)); // must bind both x/y and c
+        narrow.legalize(
+            def!(d = bitselect(c, x, y)),
+            vec![
+                def!(a = band(x, c)),
+                def!(b = band_not(y, c)),
+                def!(d = bor(a, b)),
+            ],
+        );
+    }
+
+    // SIMD vany_true
+    let ne = Literal::enumerator_for(&imm.intcc, "ne");
+    for ty in ValueType::all_lane_types().filter(allowed_simd_type) {
+        let vany_true = vany_true.bind(vector(ty, sse_vector_size));
+        narrow.legalize(
+            def!(y = vany_true(x)),
+            vec![def!(a = x86_ptest(x, x)), def!(y = trueif(ne, a))],
+        );
+    }
+
+    // SIMD vall_true
+    let eq = Literal::enumerator_for(&imm.intcc, "eq");
+    for ty in ValueType::all_lane_types().filter(allowed_simd_type) {
+        let vall_true = vall_true.bind(vector(ty, sse_vector_size));
+        if ty.is_int() {
+            // In the common case (Wasm's integer-only all_true), we do not require a bitcast.
+            narrow.legalize(
+                def!(y = vall_true(x)),
+                vec![
+                    def!(a = vconst(u128_zeroes)),
+                    def!(c = icmp(eq, x, a)),
+                    def!(d = x86_ptest(c, c)),
+                    def!(y = trueif(eq, d)),
+                ],
+            );
+        } else {
+            // However, to support other types we must bitcast them to an integer vector to use
+            // icmp.
+            let lane_type_as_int = LaneType::int_from_bits(ty.lane_bits() as u16);
+            let raw_bitcast_to_int = raw_bitcast.bind(vector(lane_type_as_int, sse_vector_size));
+            narrow.legalize(
+                def!(y = vall_true(x)),
+                vec![
+                    def!(a = vconst(u128_zeroes)),
+                    def!(b = raw_bitcast_to_int(x)),
+                    def!(c = icmp(eq, b, a)),
+                    def!(d = x86_ptest(c, c)),
+                    def!(y = trueif(eq, d)),
+                ],
+            );
+        }
+    }
+
+    // SIMD icmp ne
+    let ne = Literal::enumerator_for(&imm.intcc, "ne");
+    for ty in ValueType::all_lane_types().filter(|ty| allowed_simd_type(ty) && ty.is_int()) {
+        let icmp_ = icmp.bind(vector(ty, sse_vector_size));
+        narrow.legalize(
+            def!(c = icmp_(ne, a, b)),
+            vec![def!(x = icmp(eq, a, b)), def!(c = bnot(x))],
+        );
+    }
+
+    // SIMD icmp greater-/less-than
+    let sgt = Literal::enumerator_for(&imm.intcc, "sgt");
+    let ugt = Literal::enumerator_for(&imm.intcc, "ugt");
+    let sge = Literal::enumerator_for(&imm.intcc, "sge");
+    let uge = Literal::enumerator_for(&imm.intcc, "uge");
+    let slt = Literal::enumerator_for(&imm.intcc, "slt");
+    let ult = Literal::enumerator_for(&imm.intcc, "ult");
+    let sle = Literal::enumerator_for(&imm.intcc, "sle");
+    let ule = Literal::enumerator_for(&imm.intcc, "ule");
+    for ty in &[I8, I16, I32] {
+        // greater-than
+        let icmp_ = icmp.bind(vector(*ty, sse_vector_size));
+        narrow.legalize(
+            def!(c = icmp_(ugt, a, b)),
+            vec![def!(x = x86_pmaxu(a, b)), def!(c = icmp(eq, a, x))],
+        );
+        let icmp_ = icmp.bind(vector(*ty, sse_vector_size));
+        narrow.legalize(
+            def!(c = icmp_(sge, a, b)),
+            vec![def!(x = x86_pmins(a, b)), def!(c = icmp(eq, x, b))],
+        );
+        let icmp_ = icmp.bind(vector(*ty, sse_vector_size));
+        narrow.legalize(
+            def!(c = icmp_(uge, a, b)),
+            vec![def!(x = x86_pminu(a, b)), def!(c = icmp(eq, x, b))],
+        );
+
+        // less-than
+        let icmp_ = icmp.bind(vector(*ty, sse_vector_size));
+        narrow.legalize(def!(c = icmp_(slt, a, b)), vec![def!(c = icmp(sgt, b, a))]);
+        let icmp_ = icmp.bind(vector(*ty, sse_vector_size));
+        narrow.legalize(def!(c = icmp_(ult, a, b)), vec![def!(c = icmp(ugt, b, a))]);
+        let icmp_ = icmp.bind(vector(*ty, sse_vector_size));
+        narrow.legalize(def!(c = icmp_(sle, a, b)), vec![def!(c = icmp(sge, b, a))]);
+        let icmp_ = icmp.bind(vector(*ty, sse_vector_size));
+        narrow.legalize(def!(c = icmp_(ule, a, b)), vec![def!(c = icmp(uge, b, a))]);
+    }
+
+    for ty in &[F32, F64] {
+        let fneg = fneg.bind(vector(*ty, sse_vector_size));
+        narrow.legalize(
+            def!(b = fneg(a)),
+            vec![def!(c = vconst(u128_zeroes)), def!(b = fsub(c, a))],
+        );
+    }
+
+    // SIMD fabs
+    for ty in &[F32, F64] {
+        let fabs = fabs.bind(vector(*ty, sse_vector_size));
+        let lane_type_as_int = LaneType::int_from_bits(LaneType::from(*ty).lane_bits() as u16);
+        let vconst = vconst.bind(vector(lane_type_as_int, sse_vector_size));
+        let bitcast_to_float = raw_bitcast.bind(vector(*ty, sse_vector_size));
+        narrow.legalize(
+            def!(b = fabs(a)),
+            vec![
+                def!(c = vconst(ones)),
+                def!(d = ushr_imm(c, uimm8_one)), // Create a mask of all 1s except the MSB.
+                def!(e = bitcast_to_float(d)),    // Cast mask to the floating-point type.
+                def!(b = band(a, e)),             // Unset the MSB.
+            ],
         );
     }
 

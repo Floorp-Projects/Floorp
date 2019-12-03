@@ -1,21 +1,20 @@
+use cranelift_codegen_shared::condcodes::IntCC;
 use cranelift_entity::{entity_impl, PrimaryMap};
 
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Display, Error, Formatter};
-use std::ops;
 use std::rc::Rc;
 
 use crate::cdsl::camel_case;
-use crate::cdsl::formats::{
-    FormatField, FormatRegistry, InstructionFormat, InstructionFormatIndex,
-};
+use crate::cdsl::formats::{FormatField, InstructionFormat};
 use crate::cdsl::operands::Operand;
 use crate::cdsl::type_inference::Constraint;
 use crate::cdsl::types::{LaneType, ReferenceType, ValueType, VectorType};
 use crate::cdsl::typevar::TypeVar;
+
+use crate::shared::formats::Formats;
 use crate::shared::types::{Bool, Float, Int, Reference};
-use cranelift_codegen_shared::condcodes::IntCC;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub(crate) struct OpcodeNumber(u32);
@@ -23,25 +22,14 @@ entity_impl!(OpcodeNumber);
 
 pub(crate) type AllInstructions = PrimaryMap<OpcodeNumber, Instruction>;
 
-pub(crate) struct InstructionGroupBuilder<'format_reg, 'all_inst> {
-    _name: &'static str,
-    _doc: &'static str,
-    format_registry: &'format_reg FormatRegistry,
+pub(crate) struct InstructionGroupBuilder<'all_inst> {
     all_instructions: &'all_inst mut AllInstructions,
     own_instructions: Vec<Instruction>,
 }
 
-impl<'format_reg, 'all_inst> InstructionGroupBuilder<'format_reg, 'all_inst> {
-    pub fn new(
-        name: &'static str,
-        doc: &'static str,
-        all_instructions: &'all_inst mut AllInstructions,
-        format_registry: &'format_reg FormatRegistry,
-    ) -> Self {
+impl<'all_inst> InstructionGroupBuilder<'all_inst> {
+    pub fn new(all_instructions: &'all_inst mut AllInstructions) -> Self {
         Self {
-            _name: name,
-            _doc: doc,
-            format_registry,
             all_instructions,
             own_instructions: Vec::new(),
         }
@@ -49,7 +37,7 @@ impl<'format_reg, 'all_inst> InstructionGroupBuilder<'format_reg, 'all_inst> {
 
     pub fn push(&mut self, builder: InstructionBuilder) {
         let opcode_number = OpcodeNumber(self.all_instructions.next_key().as_u32());
-        let inst = builder.build(self.format_registry, opcode_number);
+        let inst = builder.build(opcode_number);
         // Note this clone is cheap, since Instruction is a Rc<> wrapper for InstructionContent.
         self.own_instructions.push(inst.clone());
         self.all_instructions.push(inst);
@@ -57,8 +45,6 @@ impl<'format_reg, 'all_inst> InstructionGroupBuilder<'format_reg, 'all_inst> {
 
     pub fn build(self) -> InstructionGroup {
         InstructionGroup {
-            _name: self._name,
-            _doc: self._doc,
             instructions: self.own_instructions,
         }
     }
@@ -68,8 +54,6 @@ impl<'format_reg, 'all_inst> InstructionGroupBuilder<'format_reg, 'all_inst> {
 /// target architecture can support instructions from multiple groups, and it
 /// does not necessarily support all instructions in a group.
 pub(crate) struct InstructionGroup {
-    _name: &'static str,
-    _doc: &'static str,
     instructions: Vec<Instruction>,
 }
 
@@ -77,8 +61,8 @@ impl InstructionGroup {
     pub fn by_name(&self, name: &'static str) -> &Instruction {
         self.instructions
             .iter()
-            .find(|inst| &inst.name == name)
-            .expect(&format!("unexisting instruction with name {}", name))
+            .find(|inst| inst.name == name)
+            .unwrap_or_else(|| panic!("unexisting instruction with name {}", name))
     }
 }
 
@@ -115,7 +99,7 @@ pub(crate) struct InstructionContent {
     pub constraints: Vec<Constraint>,
 
     /// Instruction format, automatically derived from the input operands.
-    pub format: InstructionFormatIndex,
+    pub format: Rc<InstructionFormat>,
 
     /// One of the input or output operands is a free type variable. None if the instruction is not
     /// polymorphic, set otherwise.
@@ -152,19 +136,7 @@ pub(crate) struct InstructionContent {
     pub writes_cpu_flags: bool,
 }
 
-#[derive(Clone, Debug)]
-pub(crate) struct Instruction {
-    content: Rc<InstructionContent>,
-}
-
-impl ops::Deref for Instruction {
-    type Target = InstructionContent;
-    fn deref(&self) -> &Self::Target {
-        &*self.content
-    }
-}
-
-impl Instruction {
+impl InstructionContent {
     pub fn snake_name(&self) -> &str {
         if &self.name == "return" {
             "return_"
@@ -185,15 +157,17 @@ impl Instruction {
     }
 }
 
+pub(crate) type Instruction = Rc<InstructionContent>;
+
 impl Bindable for Instruction {
     fn bind(&self, parameter: impl Into<BindParameter>) -> BoundInstruction {
         BoundInstruction::new(self).bind(parameter)
     }
 }
 
-impl fmt::Display for Instruction {
+impl fmt::Display for InstructionContent {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        if self.operands_out.len() > 0 {
+        if !self.operands_out.is_empty() {
             let operands_out = self
                 .operands_out
                 .iter()
@@ -206,7 +180,7 @@ impl fmt::Display for Instruction {
 
         fmt.write_str(&self.name)?;
 
-        if self.operands_in.len() > 0 {
+        if !self.operands_in.is_empty() {
             let operands_in = self
                 .operands_in
                 .iter()
@@ -224,6 +198,7 @@ impl fmt::Display for Instruction {
 pub(crate) struct InstructionBuilder {
     name: String,
     doc: String,
+    format: Rc<InstructionFormat>,
     operands_in: Option<Vec<Operand>>,
     operands_out: Option<Vec<Operand>>,
     constraints: Option<Vec<Constraint>>,
@@ -242,10 +217,11 @@ pub(crate) struct InstructionBuilder {
 }
 
 impl InstructionBuilder {
-    pub fn new<S: Into<String>>(name: S, doc: S) -> Self {
+    pub fn new<S: Into<String>>(name: S, doc: S, format: &Rc<InstructionFormat>) -> Self {
         Self {
             name: name.into(),
             doc: doc.into(),
+            format: format.clone(),
             operands_in: None,
             operands_out: None,
             constraints: None,
@@ -268,59 +244,76 @@ impl InstructionBuilder {
         self.operands_in = Some(operands.iter().map(|x| (*x).clone()).collect());
         self
     }
+
     pub fn operands_out(mut self, operands: Vec<&Operand>) -> Self {
         assert!(self.operands_out.is_none());
         self.operands_out = Some(operands.iter().map(|x| (*x).clone()).collect());
         self
     }
+
     pub fn constraints(mut self, constraints: Vec<Constraint>) -> Self {
         assert!(self.constraints.is_none());
         self.constraints = Some(constraints);
         self
     }
 
+    #[allow(clippy::wrong_self_convention)]
     pub fn is_terminator(mut self, val: bool) -> Self {
         self.is_terminator = val;
         self
     }
+
+    #[allow(clippy::wrong_self_convention)]
     pub fn is_branch(mut self, val: bool) -> Self {
         self.is_branch = val;
         self
     }
+
+    #[allow(clippy::wrong_self_convention)]
     pub fn is_indirect_branch(mut self, val: bool) -> Self {
         self.is_indirect_branch = val;
         self
     }
+
+    #[allow(clippy::wrong_self_convention)]
     pub fn is_call(mut self, val: bool) -> Self {
         self.is_call = val;
         self
     }
+
+    #[allow(clippy::wrong_self_convention)]
     pub fn is_return(mut self, val: bool) -> Self {
         self.is_return = val;
         self
     }
+
+    #[allow(clippy::wrong_self_convention)]
     pub fn is_ghost(mut self, val: bool) -> Self {
         self.is_ghost = val;
         self
     }
+
     pub fn can_load(mut self, val: bool) -> Self {
         self.can_load = val;
         self
     }
+
     pub fn can_store(mut self, val: bool) -> Self {
         self.can_store = val;
         self
     }
+
     pub fn can_trap(mut self, val: bool) -> Self {
         self.can_trap = val;
         self
     }
+
     pub fn other_side_effects(mut self, val: bool) -> Self {
         self.other_side_effects = val;
         self
     }
 
-    fn build(self, format_registry: &FormatRegistry, opcode_number: OpcodeNumber) -> Instruction {
+    fn build(self, opcode_number: OpcodeNumber) -> Instruction {
         let operands_in = self.operands_in.unwrap_or_else(Vec::new);
         let operands_out = self.operands_out.unwrap_or_else(Vec::new);
 
@@ -329,7 +322,7 @@ impl InstructionBuilder {
         for (i, op) in operands_in.iter().enumerate() {
             if op.is_value() {
                 value_opnums.push(i);
-            } else if op.is_immediate() {
+            } else if op.is_immediate_or_entityref() {
                 imm_opnums.push(i);
             } else {
                 assert!(op.is_varargs());
@@ -342,43 +335,41 @@ impl InstructionBuilder {
             .filter_map(|(i, op)| if op.is_value() { Some(i) } else { None })
             .collect();
 
-        let format_index = format_registry.lookup(&operands_in);
-        let format = format_registry.get(format_index);
+        verify_format(&self.name, &operands_in, &self.format);
+
         let polymorphic_info =
-            verify_polymorphic(&operands_in, &operands_out, &format, &value_opnums);
+            verify_polymorphic(&operands_in, &operands_out, &self.format, &value_opnums);
 
         // Infer from output operands whether an instruciton clobbers CPU flags or not.
         let writes_cpu_flags = operands_out.iter().any(|op| op.is_cpu_flags());
 
         let camel_name = camel_case(&self.name);
 
-        Instruction {
-            content: Rc::new(InstructionContent {
-                name: self.name,
-                camel_name,
-                opcode_number,
-                doc: self.doc,
-                operands_in,
-                operands_out,
-                constraints: self.constraints.unwrap_or_else(Vec::new),
-                format: format_index,
-                polymorphic_info,
-                value_opnums,
-                value_results,
-                imm_opnums,
-                is_terminator: self.is_terminator,
-                is_branch: self.is_branch,
-                is_indirect_branch: self.is_indirect_branch,
-                is_call: self.is_call,
-                is_return: self.is_return,
-                is_ghost: self.is_ghost,
-                can_load: self.can_load,
-                can_store: self.can_store,
-                can_trap: self.can_trap,
-                other_side_effects: self.other_side_effects,
-                writes_cpu_flags,
-            }),
-        }
+        Rc::new(InstructionContent {
+            name: self.name,
+            camel_name,
+            opcode_number,
+            doc: self.doc,
+            operands_in,
+            operands_out,
+            constraints: self.constraints.unwrap_or_else(Vec::new),
+            format: self.format,
+            polymorphic_info,
+            value_opnums,
+            value_results,
+            imm_opnums,
+            is_terminator: self.is_terminator,
+            is_branch: self.is_branch,
+            is_indirect_branch: self.is_indirect_branch,
+            is_call: self.is_call,
+            is_return: self.is_return,
+            is_ghost: self.is_ghost,
+            can_load: self.can_load,
+            can_store: self.can_store,
+            can_trap: self.can_trap,
+            other_side_effects: self.other_side_effects,
+            writes_cpu_flags,
+        })
     }
 }
 
@@ -402,7 +393,7 @@ impl ValueTypeOrAny {
 type VectorBitWidth = u64;
 
 /// An parameter used for binding instructions to specific types or values
-pub enum BindParameter {
+pub(crate) enum BindParameter {
     Any,
     Lane(LaneType),
     Vector(LaneType, VectorBitWidth),
@@ -411,7 +402,7 @@ pub enum BindParameter {
 }
 
 /// Constructor for more easily building vector parameters from any lane type
-pub fn vector(parameter: impl Into<LaneType>, vector_size: VectorBitWidth) -> BindParameter {
+pub(crate) fn vector(parameter: impl Into<LaneType>, vector_size: VectorBitWidth) -> BindParameter {
     BindParameter::Vector(parameter.into(), vector_size)
 }
 
@@ -452,16 +443,15 @@ impl From<Immediate> for BindParameter {
 }
 
 #[derive(Clone)]
-pub enum Immediate {
-    UInt8(u8),
-    UInt128(u128),
+pub(crate) enum Immediate {
+    // When needed, this enum should be expanded to include other immediate types (e.g. u8, u128).
+    IntCC(IntCC),
 }
 
 impl Display for Immediate {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         match self {
-            Immediate::UInt8(x) => write!(f, "{}", x),
-            Immediate::UInt128(x) => write!(f, "{}", x),
+            Immediate::IntCC(x) => write!(f, "IntCC::{:?}", x),
         }
     }
 }
@@ -510,7 +500,7 @@ impl BoundInstruction {
             .inst
             .operands_in
             .iter()
-            .filter(|o| o.is_immediate())
+            .filter(|o| o.is_immediate_or_entityref())
             .count();
         if self.immediate_values.len() > immediate_count {
             return Err(format!(
@@ -558,12 +548,67 @@ impl Bindable for BoundInstruction {
     }
 }
 
+/// Checks that the input operands actually match the given format.
+fn verify_format(inst_name: &str, operands_in: &[Operand], format: &InstructionFormat) {
+    // A format is defined by:
+    // - its number of input value operands,
+    // - its number and names of input immediate operands,
+    // - whether it has a value list or not.
+    let mut num_values = 0;
+    let mut num_immediates = 0;
+
+    for operand in operands_in.iter() {
+        if operand.is_varargs() {
+            assert!(
+                format.has_value_list,
+                "instruction {} has varargs, but its format {} doesn't have a value list; you may \
+                 need to use a different format.",
+                inst_name, format.name
+            );
+        }
+        if operand.is_value() {
+            num_values += 1;
+        }
+        if operand.is_immediate_or_entityref() {
+            if let Some(format_field) = format.imm_fields.get(num_immediates) {
+                assert_eq!(
+                    format_field.kind.rust_field_name,
+                    operand.kind.rust_field_name,
+                    "{}th operand of {} should be {} (according to format), not {} (according to \
+                     inst definition). You may need to use a different format.",
+                    num_immediates,
+                    inst_name,
+                    format_field.kind.rust_field_name,
+                    operand.kind.rust_field_name
+                );
+                num_immediates += 1;
+            }
+        }
+    }
+
+    assert_eq!(
+        num_values, format.num_value_operands,
+        "inst {} doesnt' have as many value input operand as its format {} declares; you may need \
+         to use a different format.",
+        inst_name, format.name
+    );
+
+    assert_eq!(
+        num_immediates,
+        format.imm_fields.len(),
+        "inst {} doesn't have as many immediate input \
+         operands as its format {} declares; you may need to use a different format.",
+        inst_name,
+        format.name
+    );
+}
+
 /// Check if this instruction is polymorphic, and verify its use of type variables.
 fn verify_polymorphic(
-    operands_in: &Vec<Operand>,
-    operands_out: &Vec<Operand>,
+    operands_in: &[Operand],
+    operands_out: &[Operand],
     format: &InstructionFormat,
-    value_opnums: &Vec<usize>,
+    value_opnums: &[usize],
 ) -> Option<PolymorphicInfo> {
     // The instruction is polymorphic if it has one free input or output operand.
     let is_polymorphic = operands_in
@@ -607,7 +652,7 @@ fn verify_polymorphic(
     // If we reached here, it means the type variable indicated as the typevar operand couldn't
     // control every other input and output type variable. We need to look at the result type
     // variables.
-    if operands_out.len() == 0 {
+    if operands_out.is_empty() {
         // No result means no other possible type variable, so it's a type inference failure.
         match maybe_error_message {
             Some(msg) => panic!(msg),
@@ -644,8 +689,8 @@ fn verify_polymorphic(
 /// Return a vector of other type variables used, or a string explaining what went wrong.
 fn is_ctrl_typevar_candidate(
     ctrl_typevar: &TypeVar,
-    operands_in: &Vec<Operand>,
-    operands_out: &Vec<Operand>,
+    operands_in: &[Operand],
+    operands_out: &[Operand],
 ) -> Result<Vec<TypeVar>, String> {
     let mut other_typevars = Vec::new();
 
@@ -709,7 +754,7 @@ fn is_ctrl_typevar_candidate(
 }
 
 #[derive(Clone, Hash, PartialEq, Eq)]
-pub enum FormatPredicateKind {
+pub(crate) enum FormatPredicateKind {
     /// Is the field member equal to the expected value (stored here)?
     IsEqual(String),
 
@@ -747,13 +792,10 @@ pub enum FormatPredicateKind {
 
     /// Is the referenced data object colocated?
     IsColocatedData,
-
-    /// Does the operation have a specific condition code?
-    HasConditionCode(IntCC),
 }
 
 #[derive(Clone, Hash, PartialEq, Eq)]
-pub struct FormatPredicateNode {
+pub(crate) struct FormatPredicateNode {
     format_name: &'static str,
     member_name: &'static str,
     kind: FormatPredicateKind,
@@ -836,16 +878,12 @@ impl FormatPredicateNode {
             FormatPredicateKind::IsColocatedData => {
                 format!("predicates::is_colocated_data({}, func)", self.member_name)
             }
-            FormatPredicateKind::HasConditionCode(code) => format!(
-                "predicates::is_equal({}, IntCC::{:?})",
-                self.member_name, code
-            ),
         }
     }
 }
 
 #[derive(Clone, Hash, PartialEq, Eq)]
-pub enum TypePredicateNode {
+pub(crate) enum TypePredicateNode {
     /// Is the value argument (at the index designated by the first member) the same type as the
     /// type name (second member)?
     TypeVarCheck(usize, String),
@@ -871,7 +909,7 @@ impl TypePredicateNode {
 
 /// A basic node in an instruction predicate: either an atom, or an AND of two conditions.
 #[derive(Clone, Hash, PartialEq, Eq)]
-pub enum InstructionPredicateNode {
+pub(crate) enum InstructionPredicateNode {
     FormatPredicate(FormatPredicateNode),
 
     TypePredicate(TypePredicateNode),
@@ -969,8 +1007,7 @@ impl InstructionPredicate {
             .value_opnums
             .iter()
             .enumerate()
-            .filter(|(_, &op_num)| inst.operands_in[op_num].type_var().unwrap() == type_var)
-            .next()
+            .find(|(_, &op_num)| inst.operands_in[op_num].type_var().unwrap() == type_var)
             .unwrap()
             .0;
         InstructionPredicateNode::TypePredicate(TypePredicateNode::TypeVarCheck(
@@ -1114,24 +1151,12 @@ impl InstructionPredicate {
         ))
     }
 
-    pub fn new_is_colocated_data(format_registry: &FormatRegistry) -> InstructionPredicateNode {
-        let format = format_registry.get(format_registry.by_name("UnaryGlobalValue"));
+    pub fn new_is_colocated_data(formats: &Formats) -> InstructionPredicateNode {
+        let format = &formats.unary_global_value;
         InstructionPredicateNode::FormatPredicate(FormatPredicateNode::new(
-            format,
+            &*format,
             "global_value",
             FormatPredicateKind::IsColocatedData,
-        ))
-    }
-
-    pub fn new_has_condition_code(
-        format: &InstructionFormat,
-        condition_code: IntCC,
-        field_name: &'static str,
-    ) -> InstructionPredicateNode {
-        InstructionPredicateNode::FormatPredicate(FormatPredicateNode::new(
-            format,
-            field_name,
-            FormatPredicateKind::HasConditionCode(condition_code),
         ))
     }
 
@@ -1271,15 +1296,16 @@ impl Into<InstSpec> for BoundInstruction {
 mod test {
     use super::*;
     use crate::cdsl::formats::InstructionFormatBuilder;
-    use crate::cdsl::operands::{OperandBuilder, OperandKindBuilder, OperandKindFields};
+    use crate::cdsl::operands::{OperandKind, OperandKindFields};
     use crate::cdsl::typevar::TypeSetBuilder;
     use crate::shared::types::Int::{I32, I64};
 
     fn field_to_operand(index: usize, field: OperandKindFields) -> Operand {
-        // pretend the index string is &'static
+        // Pretend the index string is &'static.
         let name = Box::leak(index.to_string().into_boxed_str());
-        let kind = OperandKindBuilder::new(name, field).build();
-        let operand = OperandBuilder::new(name, kind).build();
+        // Format's name / rust_type don't matter here.
+        let kind = OperandKind::new(name, name, field);
+        let operand = Operand::new(name, kind);
         operand
     }
 
@@ -1295,8 +1321,7 @@ mod test {
         inputs: Vec<OperandKindFields>,
         outputs: Vec<OperandKindFields>,
     ) -> Instruction {
-        // setup a format from the input operands
-        let mut formats = FormatRegistry::new();
+        // Setup a format from the input operands.
         let mut format = InstructionFormatBuilder::new("fake");
         for (i, f) in inputs.iter().enumerate() {
             match f {
@@ -1307,13 +1332,13 @@ mod test {
                 _ => {}
             };
         }
-        formats.insert(format);
+        let format = format.build();
 
-        // create the fake instruction
-        InstructionBuilder::new("fake", "A fake instruction for testing.")
+        // Create the fake instruction.
+        InstructionBuilder::new("fake", "A fake instruction for testing.", &format)
             .operands_in(field_to_operands(inputs).iter().collect())
             .operands_out(field_to_operands(outputs).iter().collect())
-            .build(&formats, OpcodeNumber(42))
+            .build(OpcodeNumber(42))
     }
 
     #[test]
@@ -1327,7 +1352,7 @@ mod test {
     #[test]
     fn ensure_bound_instructions_can_bind_immediates() {
         let inst = build_fake_instruction(vec![OperandKindFields::ImmValue], vec![]);
-        let bound_inst = inst.bind(Immediate::UInt8(42));
+        let bound_inst = inst.bind(Immediate::IntCC(IntCC::Equal));
         assert!(bound_inst.verify_bindings().is_ok());
     }
 
@@ -1336,7 +1361,7 @@ mod test {
     fn ensure_instructions_fail_to_bind() {
         let inst = build_fake_instruction(vec![], vec![]);
         inst.bind(BindParameter::Lane(LaneType::IntType(I32)));
-        // trying to bind to an instruction with no inputs should fail
+        // Trying to bind to an instruction with no inputs should fail.
     }
 
     #[test]
@@ -1353,8 +1378,9 @@ mod test {
     #[should_panic]
     fn ensure_instructions_fail_to_bind_too_many_immediates() {
         let inst = build_fake_instruction(vec![OperandKindFields::ImmValue], vec![]);
-        inst.bind(BindParameter::Immediate(Immediate::UInt8(0)))
-            .bind(BindParameter::Immediate(Immediate::UInt8(1)));
-        // trying to bind too many immediates to an instruction  should fail
+        inst.bind(BindParameter::Immediate(Immediate::IntCC(IntCC::Equal)))
+            .bind(BindParameter::Immediate(Immediate::IntCC(IntCC::Equal)));
+        // Trying to bind too many immediates to an instruction should fail; note that the immediate
+        // values are nonsensical but irrelevant to the purpose of this test.
     }
 }

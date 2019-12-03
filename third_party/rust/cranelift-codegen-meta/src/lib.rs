@@ -1,3 +1,5 @@
+//! This crate generates Rust sources for use by
+//! [`cranelift_codegen`](../cranelift_codegen/index.html).
 #[macro_use]
 mod cdsl;
 mod srcgen;
@@ -17,13 +19,15 @@ mod default_map;
 mod shared;
 mod unique_table;
 
+/// Generate an ISA from an architecture string (e.g. "x86_64").
 pub fn isa_from_arch(arch: &str) -> Result<isa::Isa, String> {
     isa::Isa::from_arch(arch).ok_or_else(|| format!("no supported isa found for arch `{}`", arch))
 }
 
 /// Generates all the Rust source files used in Cranelift from the meta-language.
-pub fn generate(isas: &Vec<isa::Isa>, out_dir: &str) -> Result<(), error::Error> {
-    // Common definitions.
+pub fn generate(isas: &[isa::Isa], out_dir: &str) -> Result<(), error::Error> {
+    // Create all the definitions:
+    // - common definitions.
     let mut shared_defs = shared::define();
 
     gen_settings::generate(
@@ -34,18 +38,22 @@ pub fn generate(isas: &Vec<isa::Isa>, out_dir: &str) -> Result<(), error::Error>
     )?;
     gen_types::generate("types.rs", &out_dir)?;
 
-    // Per ISA definitions.
+    // - per ISA definitions.
     let isas = isa::define(isas, &mut shared_defs);
 
-    gen_inst::generate(&shared_defs, "opcodes.rs", "inst_builder.rs", &out_dir)?;
+    // At this point, all definitions are done.
+    let all_formats = shared_defs.verify_instruction_formats();
 
-    gen_legalizer::generate(
-        &isas,
-        &shared_defs.format_registry,
-        &shared_defs.transform_groups,
-        "legalize",
+    // Generate all the code.
+    gen_inst::generate(
+        all_formats,
+        &shared_defs.all_instructions,
+        "opcodes.rs",
+        "inst_builder.rs",
         &out_dir,
     )?;
+
+    gen_legalizer::generate(&isas, &shared_defs.transform_groups, "legalize", &out_dir)?;
 
     for isa in isas {
         gen_registers::generate(&isa, &format!("registers-{}.rs", isa.name), &out_dir)?;
@@ -65,7 +73,6 @@ pub fn generate(isas: &Vec<isa::Isa>, out_dir: &str) -> Result<(), error::Error>
         )?;
 
         gen_binemit::generate(
-            &shared_defs.format_registry,
             &isa.name,
             &isa.recipes,
             &format!("binemit-{}.rs", isa.name),

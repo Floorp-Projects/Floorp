@@ -1,5 +1,5 @@
+//! Generate transformations to legalize instructions without encodings.
 use crate::cdsl::ast::{Def, DefPool, Expr, VarPool};
-use crate::cdsl::formats::FormatRegistry;
 use crate::cdsl::isa::TargetIsa;
 use crate::cdsl::operands::Operand;
 use crate::cdsl::type_inference::Constraint;
@@ -21,18 +21,14 @@ use std::iter::FromIterator;
 ///
 /// Also create a local variable named `predicate` with the value of the evaluated instruction
 /// predicate, or `true` if the node has no predicate.
-fn unwrap_inst(
-    transform: &Transform,
-    format_registry: &FormatRegistry,
-    fmt: &mut Formatter,
-) -> bool {
+fn unwrap_inst(transform: &Transform, fmt: &mut Formatter) -> bool {
     let var_pool = &transform.var_pool;
     let def_pool = &transform.def_pool;
 
     let def = def_pool.get(transform.src);
     let apply = &def.apply;
     let inst = &apply.inst;
-    let iform = format_registry.get(inst.format);
+    let iform = &inst.format;
 
     fmt.comment(format!(
         "Unwrap fields from instruction format {}",
@@ -71,7 +67,7 @@ fn unwrap_inst(
         let mut imm_and_varargs = inst
             .operands_in
             .iter()
-            .filter(|op| op.is_immediate())
+            .filter(|op| op.is_immediate_or_entityref())
             .count();
         if iform.has_value_list {
             imm_and_varargs += 1;
@@ -120,7 +116,7 @@ fn unwrap_inst(
         let emit_one_value =
             |fmt: &mut Formatter, needs_comma: bool, op_num: usize, op: &Operand| {
                 let comma = if needs_comma { "," } else { "" };
-                if op.is_immediate() {
+                if op.is_immediate_or_entityref() {
                     let n = inst.imm_opnums.iter().position(|&i| i == op_num).unwrap();
                     fmtln!(fmt, "{}{}", iform.imm_fields[n].member, comma);
                 } else if op.is_value() {
@@ -192,7 +188,7 @@ fn unwrap_inst(
 
     // If the definition creates results, detach the values and place them in locals.
     let mut replace_inst = false;
-    if def.defined_vars.len() > 0 {
+    if !def.defined_vars.is_empty() {
         if def.defined_vars
             == def_pool
                 .get(var_pool.get(def.defined_vars[0]).dst_def.unwrap())
@@ -271,7 +267,7 @@ fn build_derived_expr(tv: &TypeVar) -> String {
 ///
 /// The emitted code is a statement redefining the `predicate` variable like this:
 ///     let predicate = predicate && ...
-fn emit_runtime_typecheck<'a, 'b>(
+fn emit_runtime_typecheck<'a>(
     constraint: &'a Constraint,
     type_sets: &mut UniqueTable<'a, TypeSet>,
     fmt: &mut Formatter,
@@ -438,7 +434,6 @@ fn emit_dst_inst(def: &Def, def_pool: &DefPool, var_pool: &VarPool, fmt: &mut Fo
 fn gen_transform<'a>(
     replace_inst: bool,
     transform: &'a Transform,
-    format_registry: &FormatRegistry,
     type_sets: &mut UniqueTable<'a, TypeSet>,
     fmt: &mut Formatter,
 ) {
@@ -446,7 +441,7 @@ fn gen_transform<'a>(
     let apply = &transform.def_pool.get(transform.src).apply;
 
     let inst_predicate = apply
-        .inst_predicate_with_ctrl_typevar(format_registry, &transform.var_pool)
+        .inst_predicate_with_ctrl_typevar(&transform.var_pool)
         .rust_predicate("pos.func");
 
     let has_extra_constraints = !transform.type_env.constraints.is_empty();
@@ -560,7 +555,6 @@ fn gen_transform<'a>(
 
 fn gen_transform_group<'a>(
     group: &'a TransformGroup,
-    format_registry: &FormatRegistry,
     transform_groups: &TransformGroups,
     type_sets: &mut UniqueTable<'a, TypeSet>,
     fmt: &mut Formatter,
@@ -593,7 +587,7 @@ fn gen_transform_group<'a>(
             let inst = &transform.def_pool.get(def_index).apply.inst;
             inst_to_transforms
                 .entry(inst.camel_name.clone())
-                .or_insert(Vec::new())
+                .or_insert_with(Vec::new)
                 .push(transform);
         }
 
@@ -610,14 +604,14 @@ fn gen_transform_group<'a>(
                         let transforms = inst_to_transforms.get(camel_name).unwrap();
 
                         // Unwrap the source instruction, create local variables for the input variables.
-                        let replace_inst = unwrap_inst(&transforms[0], format_registry, fmt);
+                        let replace_inst = unwrap_inst(&transforms[0], fmt);
                         fmt.empty_line();
 
-                        for (i, transform) in transforms.into_iter().enumerate() {
+                        for (i, transform) in transforms.iter().enumerate() {
                             if i > 0 {
                                 fmt.empty_line();
                             }
-                            gen_transform(replace_inst, transform, format_registry, type_sets, fmt);
+                            gen_transform(replace_inst, transform, type_sets, fmt);
                         }
                     });
                     fmtln!(fmt, "}");
@@ -665,7 +659,6 @@ fn gen_transform_group<'a>(
 /// Generate `TYPE_SETS` and `LEGALIZE_ACTIONS` tables.
 fn gen_isa(
     isa: &TargetIsa,
-    format_registry: &FormatRegistry,
     transform_groups: &TransformGroups,
     shared_group_names: &mut HashSet<&'static str>,
     fmt: &mut Formatter,
@@ -679,13 +672,7 @@ fn gen_isa(
                     isa_name == isa.name,
                     "ISA-specific legalizations must be used by the same ISA"
                 );
-                gen_transform_group(
-                    group,
-                    format_registry,
-                    transform_groups,
-                    &mut type_sets,
-                    fmt,
-                );
+                gen_transform_group(group, transform_groups, &mut type_sets, fmt);
             }
             None => {
                 shared_group_names.insert(group.name);
@@ -711,8 +698,7 @@ fn gen_isa(
 
 /// Generate the legalizer files.
 pub(crate) fn generate(
-    isas: &Vec<TargetIsa>,
-    format_registry: &FormatRegistry,
+    isas: &[TargetIsa],
     transform_groups: &TransformGroups,
     filename_prefix: &str,
     out_dir: &str,
@@ -721,13 +707,7 @@ pub(crate) fn generate(
 
     for isa in isas {
         let mut fmt = Formatter::new();
-        gen_isa(
-            isa,
-            format_registry,
-            transform_groups,
-            &mut shared_group_names,
-            &mut fmt,
-        );
+        gen_isa(isa, transform_groups, &mut shared_group_names, &mut fmt);
         fmt.update_file(format!("{}-{}.rs", filename_prefix, isa.name), out_dir)?;
     }
 
@@ -738,13 +718,7 @@ pub(crate) fn generate(
     sorted_shared_group_names.sort();
     for group_name in &sorted_shared_group_names {
         let group = transform_groups.by_name(group_name);
-        gen_transform_group(
-            group,
-            format_registry,
-            transform_groups,
-            &mut type_sets,
-            &mut fmt,
-        );
+        gen_transform_group(group, transform_groups, &mut type_sets, &mut fmt);
     }
     gen_typesets_table(&type_sets, &mut fmt);
     fmt.update_file(format!("{}r.rs", filename_prefix), out_dir)?;

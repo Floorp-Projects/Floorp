@@ -1,21 +1,21 @@
 [package]
 authors = ["The Cranelift Project Developers"]
 name = "cranelift-frontend"
-version = "0.46.1"
+version = "0.49.0"
 description = "Cranelift IR builder helper"
 license = "Apache-2.0 WITH LLVM-exception"
 documentation = "https://cranelift.readthedocs.io/"
 categories = ["no-std"]
-repository = "https://github.com/CraneStation/cranelift"
+repository = "https://github.com/bytecodealliance/cranelift"
 readme = "README.md"
 edition = "2018"
 
 [dependencies]
-cranelift-codegen = { path = "../cranelift-codegen", version = "0.46.1", default-features = false }
-target-lexicon = "0.8.1"
+cranelift-codegen = { path = "../cranelift-codegen", version = "0.49.0", default-features = false }
+target-lexicon = "0.9"
 log = { version = "0.4.6", default-features = false }
 hashbrown = { version = "0.6", optional = true }
-smallvec = { version = "0.6.10" }
+smallvec = { version = "1.0.0" }
 
 [features]
 default = ["std", "basic-blocks"]
@@ -27,4 +27,4 @@ basic-blocks = ["cranelift-codegen/basic-blocks"]
 
 [badges]
 maintenance = { status = "experimental" }
-travis-ci = { repository = "CraneStation/cranelift" }
+travis-ci = { repository = "bytecodealliance/cranelift" }

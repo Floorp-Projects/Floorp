@@ -1,4 +1,4 @@
-use crate::cdsl::operands::{OperandKind, OperandKindBuilder as Builder};
+use crate::cdsl::operands::{EnumValues, OperandKind, OperandKindFields};
 
 use std::collections::HashMap;
 
@@ -73,50 +73,40 @@ pub(crate) struct Immediates {
     pub trapcode: OperandKind,
 }
 
+fn new_imm(format_field_name: &'static str, rust_type: &'static str) -> OperandKind {
+    OperandKind::new(format_field_name, rust_type, OperandKindFields::ImmValue)
+}
+fn new_enum(
+    format_field_name: &'static str,
+    rust_type: &'static str,
+    values: EnumValues,
+) -> OperandKind {
+    OperandKind::new(
+        format_field_name,
+        rust_type,
+        OperandKindFields::ImmEnum(values),
+    )
+}
+
 impl Immediates {
     pub fn new() -> Self {
         Self {
-            imm64: Builder::new_imm("imm64")
-                .doc("A 64-bit immediate integer.")
-                .build(),
-
-            uimm8: Builder::new_imm("uimm8")
-                .doc("An 8-bit immediate unsigned integer.")
-                .build(),
-
-            uimm32: Builder::new_imm("uimm32")
-                .doc("A 32-bit immediate unsigned integer.")
-                .build(),
-
-            uimm128: Builder::new_imm("uimm128")
-                .doc("A 128-bit immediate unsigned integer.")
-                .rust_type("ir::Immediate")
-                .build(),
-
-            pool_constant: Builder::new_imm("poolConstant")
-                .doc("A constant stored in the constant pool.")
-                .default_member("constant_handle")
-                .rust_type("ir::Constant")
-                .build(),
-
-            offset32: Builder::new_imm("offset32")
-                .doc("A 32-bit immediate signed offset.")
-                .default_member("offset")
-                .build(),
-
-            ieee32: Builder::new_imm("ieee32")
-                .doc("A 32-bit immediate floating point number.")
-                .build(),
-
-            ieee64: Builder::new_imm("ieee64")
-                .doc("A 64-bit immediate floating point number.")
-                .build(),
-
-            boolean: Builder::new_imm("boolean")
-                .doc("An immediate boolean.")
-                .rust_type("bool")
-                .build(),
-
+            imm64: new_imm("imm", "ir::immediates::Imm64").with_doc("A 64-bit immediate integer."),
+            uimm8: new_imm("imm", "ir::immediates::Uimm8")
+                .with_doc("An 8-bit immediate unsigned integer."),
+            uimm32: new_imm("imm", "ir::immediates::Uimm32")
+                .with_doc("A 32-bit immediate unsigned integer."),
+            uimm128: new_imm("imm", "ir::Immediate")
+                .with_doc("A 128-bit immediate unsigned integer."),
+            pool_constant: new_imm("constant_handle", "ir::Constant")
+                .with_doc("A constant stored in the constant pool."),
+            offset32: new_imm("offset", "ir::immediates::Offset32")
+                .with_doc("A 32-bit immediate signed offset."),
+            ieee32: new_imm("imm", "ir::immediates::Ieee32")
+                .with_doc("A 32-bit immediate floating point number."),
+            ieee64: new_imm("imm", "ir::immediates::Ieee64")
+                .with_doc("A 64-bit immediate floating point number."),
+            boolean: new_imm("imm", "bool").with_doc("An immediate boolean."),
             intcc: {
                 let mut intcc_values = HashMap::new();
                 intcc_values.insert("eq", "Equal");
@@ -131,11 +121,8 @@ impl Immediates {
                 intcc_values.insert("ult", "UnsignedLessThan");
                 intcc_values.insert("of", "Overflow");
                 intcc_values.insert("nof", "NotOverflow");
-                Builder::new_enum("intcc", intcc_values)
-                    .doc("An integer comparison condition code.")
-                    .default_member("cond")
-                    .rust_type("ir::condcodes::IntCC")
-                    .build()
+                new_enum("cond", "ir::condcodes::IntCC", intcc_values)
+                    .with_doc("An integer comparison condition code.")
             },
 
             floatcc: {
@@ -154,35 +141,20 @@ impl Immediates {
                 floatcc_values.insert("ule", "UnorderedOrLessThanOrEqual");
                 floatcc_values.insert("ugt", "UnorderedOrGreaterThan");
                 floatcc_values.insert("uge", "UnorderedOrGreaterThanOrEqual");
-                Builder::new_enum("floatcc", floatcc_values)
-                    .doc("A floating point comparison condition code")
-                    .default_member("cond")
-                    .rust_type("ir::condcodes::FloatCC")
-                    .build()
+                new_enum("cond", "ir::condcodes::FloatCC", floatcc_values)
+                    .with_doc("A floating point comparison condition code")
             },
 
-            memflags: Builder::new_imm("memflags")
-                .doc("Memory operation flags")
-                .default_member("flags")
-                .rust_type("ir::MemFlags")
-                .build(),
-
-            regunit: Builder::new_imm("regunit")
-                .doc("A register unit in the target ISA")
-                .rust_type("isa::RegUnit")
-                .build(),
-
+            memflags: new_imm("flags", "ir::MemFlags").with_doc("Memory operation flags"),
+            regunit: new_imm("regunit", "isa::RegUnit")
+                .with_doc("A register unit in the target ISA"),
             trapcode: {
                 let mut trapcode_values = HashMap::new();
                 trapcode_values.insert("stk_ovf", "StackOverflow");
                 trapcode_values.insert("heap_oob", "HeapOutOfBounds");
                 trapcode_values.insert("int_ovf", "IntegerOverflow");
                 trapcode_values.insert("int_divz", "IntegerDivisionByZero");
-                Builder::new_enum("trapcode", trapcode_values)
-                    .doc("A trap reason code.")
-                    .default_member("code")
-                    .rust_type("ir::TrapCode")
-                    .build()
+                new_enum("code", "ir::TrapCode", trapcode_values).with_doc("A trap reason code.")
             },
         }
     }

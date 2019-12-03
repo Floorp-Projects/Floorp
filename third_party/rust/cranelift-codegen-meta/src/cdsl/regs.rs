@@ -2,10 +2,10 @@ use cranelift_codegen_shared::constants;
 use cranelift_entity::{entity_impl, EntityRef, PrimaryMap};
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct RegBankIndex(u32);
+pub(crate) struct RegBankIndex(u32);
 entity_impl!(RegBankIndex);
 
-pub struct RegBank {
+pub(crate) struct RegBank {
     pub name: &'static str,
     pub first_unit: u8,
     pub units: u8,
@@ -73,10 +73,10 @@ impl RegBank {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
-pub struct RegClassIndex(u32);
+pub(crate) struct RegClassIndex(u32);
 entity_impl!(RegClassIndex);
 
-pub struct RegClass {
+pub(crate) struct RegClass {
     pub name: &'static str,
     pub index: RegClassIndex,
     pub width: u8,
@@ -130,12 +130,12 @@ impl RegClass {
     }
 }
 
-pub enum RegClassProto {
+pub(crate) enum RegClassProto {
     TopLevel(RegBankIndex),
     SubClass(RegClassIndex),
 }
 
-pub struct RegClassBuilder {
+pub(crate) struct RegClassBuilder {
     pub name: &'static str,
     pub width: u8,
     pub count: u8,
@@ -164,7 +164,7 @@ impl RegClassBuilder {
             name,
             width: 0,
             count: stop - start,
-            start: start,
+            start,
             proto: RegClassProto::SubClass(parent_index),
         }
     }
@@ -181,7 +181,7 @@ impl RegClassBuilder {
     }
 }
 
-pub struct RegBankBuilder {
+pub(crate) struct RegBankBuilder {
     pub name: &'static str,
     pub units: u8,
     pub names: Vec<&'static str>,
@@ -214,13 +214,13 @@ impl RegBankBuilder {
         self
     }
     pub fn pinned_reg(mut self, unit: u16) -> Self {
-        assert!(unit < (self.units as u16));
+        assert!(unit < u16::from(self.units));
         self.pinned_reg = Some(unit);
         self
     }
 }
 
-pub struct IsaRegsBuilder {
+pub(crate) struct IsaRegsBuilder {
     pub banks: PrimaryMap<RegBankIndex, RegBank>,
     pub classes: PrimaryMap<RegClassIndex, RegClass>,
 }
@@ -234,7 +234,7 @@ impl IsaRegsBuilder {
     }
 
     pub fn add_bank(&mut self, builder: RegBankBuilder) -> RegBankIndex {
-        let first_unit = if self.banks.len() == 0 {
+        let first_unit = if self.banks.is_empty() {
             0
         } else {
             let last = &self.banks.last().unwrap();
@@ -358,8 +358,7 @@ impl IsaRegsBuilder {
                             .unwrap()
                             .subclasses
                             .iter()
-                            .find(|x| **x == *i2)
-                            .is_some());
+                            .any(|x| *x == *i2));
                     }
                 }
             }
@@ -385,7 +384,7 @@ impl IsaRegsBuilder {
     }
 }
 
-pub struct IsaRegs {
+pub(crate) struct IsaRegs {
     pub banks: PrimaryMap<RegBankIndex, RegBank>,
     pub classes: PrimaryMap<RegClassIndex, RegClass>,
 }
@@ -402,7 +401,7 @@ impl IsaRegs {
         self.classes
             .values()
             .find(|&class| class.name == name)
-            .expect(&format!("register class {} not found", name))
+            .unwrap_or_else(|| panic!("register class {} not found", name))
             .index
     }
 

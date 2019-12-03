@@ -1,6 +1,8 @@
+use std::rc::Rc;
+
 use cranelift_entity::{entity_impl, PrimaryMap};
 
-use crate::cdsl::formats::{FormatRegistry, InstructionFormatIndex};
+use crate::cdsl::formats::InstructionFormat;
 use crate::cdsl::instructions::InstructionPredicate;
 use crate::cdsl::regs::RegClassIndex;
 use crate::cdsl::settings::SettingPredicateNumber;
@@ -16,7 +18,7 @@ use crate::cdsl::settings::SettingPredicateNumber;
 /// Register instances can be created with the constructor, or accessed as
 /// attributes on the register class: `GPR.rcx`.
 #[derive(Copy, Clone, Hash, PartialEq, Eq)]
-pub struct Register {
+pub(crate) struct Register {
     pub regclass: RegClassIndex,
     pub unit: u8,
 }
@@ -32,7 +34,7 @@ impl Register {
 /// A `Stack` object can be used to indicate an operand constraint for a value
 /// operand that must live in a stack slot.
 #[derive(Copy, Clone, Hash, PartialEq)]
-pub struct Stack {
+pub(crate) struct Stack {
     pub regclass: RegClassIndex,
 }
 
@@ -40,20 +42,20 @@ impl Stack {
     pub fn new(regclass: RegClassIndex) -> Self {
         Self { regclass }
     }
-    pub fn stack_base_mask(&self) -> &'static str {
+    pub fn stack_base_mask(self) -> &'static str {
         // TODO: Make this configurable instead of just using the SP.
         "StackBaseMask(1)"
     }
 }
 
 #[derive(Clone, Hash, PartialEq)]
-pub struct BranchRange {
+pub(crate) struct BranchRange {
     pub inst_size: u64,
     pub range: u64,
 }
 
 #[derive(Copy, Clone, Hash, PartialEq)]
-pub enum OperandConstraint {
+pub(crate) enum OperandConstraint {
     RegClass(RegClassIndex),
     FixedReg(Register),
     TiedInput(usize),
@@ -108,7 +110,7 @@ pub(crate) struct EncodingRecipe {
     pub name: String,
 
     /// Associated instruction format.
-    pub format: InstructionFormatIndex,
+    pub format: Rc<InstructionFormat>,
 
     /// Base number of bytes in the binary encoded instruction.
     pub base_size: u64,
@@ -141,7 +143,7 @@ pub(crate) struct EncodingRecipe {
 // Implement PartialEq ourselves: take all the fields into account but the name.
 impl PartialEq for EncodingRecipe {
     fn eq(&self, other: &Self) -> bool {
-        self.format == other.format
+        Rc::ptr_eq(&self.format, &other.format)
             && self.base_size == other.base_size
             && self.operands_in == other.operands_in
             && self.operands_out == other.operands_out
@@ -166,7 +168,7 @@ pub(crate) type Recipes = PrimaryMap<EncodingRecipeNumber, EncodingRecipe>;
 #[derive(Clone)]
 pub(crate) struct EncodingRecipeBuilder {
     pub name: String,
-    format: InstructionFormatIndex,
+    format: Rc<InstructionFormat>,
     pub base_size: u64,
     pub operands_in: Option<Vec<OperandConstraint>>,
     pub operands_out: Option<Vec<OperandConstraint>>,
@@ -179,10 +181,10 @@ pub(crate) struct EncodingRecipeBuilder {
 }
 
 impl EncodingRecipeBuilder {
-    pub fn new(name: impl Into<String>, format: InstructionFormatIndex, base_size: u64) -> Self {
+    pub fn new(name: impl Into<String>, format: &Rc<InstructionFormat>, base_size: u64) -> Self {
         Self {
             name: name.into(),
-            format,
+            format: format.clone(),
             base_size,
             operands_in: None,
             operands_out: None,
@@ -250,18 +252,17 @@ impl EncodingRecipeBuilder {
         self
     }
 
-    pub fn build(self, formats: &FormatRegistry) -> EncodingRecipe {
-        let operands_in = self.operands_in.unwrap_or(Vec::new());
-        let operands_out = self.operands_out.unwrap_or(Vec::new());
+    pub fn build(self) -> EncodingRecipe {
+        let operands_in = self.operands_in.unwrap_or_default();
+        let operands_out = self.operands_out.unwrap_or_default();
 
         // The number of input constraints must match the number of format input operands.
-        if !formats.get(self.format).has_value_list {
-            let format = formats.get(self.format);
+        if !self.format.has_value_list {
             assert!(
-                operands_in.len() == format.num_value_operands,
+                operands_in.len() == self.format.num_value_operands,
                 format!(
                     "missing operand constraints for recipe {} (format {})",
-                    self.name, format.name
+                    self.name, self.format.name
                 )
             );
         }
@@ -281,7 +282,7 @@ impl EncodingRecipeBuilder {
         let clobbers_flags = self.clobbers_flags.unwrap_or(true);
 
         EncodingRecipe {
-            name: self.name.into(),
+            name: self.name,
             format: self.format,
             base_size: self.base_size,
             operands_in,

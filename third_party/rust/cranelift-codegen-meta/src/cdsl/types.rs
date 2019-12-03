@@ -6,7 +6,7 @@ use crate::shared::types as shared_types;
 use cranelift_codegen_shared::constants;
 
 // Rust name prefix used for the `rust_name` method.
-static _RUST_NAME_PREFIX: &'static str = "ir::types::";
+static _RUST_NAME_PREFIX: &str = "ir::types::";
 
 // ValueType variants (i8, i32, ...) are provided in `shared::types.rs`.
 
@@ -15,8 +15,7 @@ static _RUST_NAME_PREFIX: &'static str = "ir::types::";
 /// All SSA values have a type that is described by an instance of `ValueType`
 /// or one of its subclasses.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum ValueType {
-    BV(BVType),
+pub(crate) enum ValueType {
     Lane(LaneType),
     Reference(ReferenceType),
     Special(SpecialType),
@@ -41,7 +40,6 @@ impl ValueType {
     /// Return a string containing the documentation comment for this type.
     pub fn doc(&self) -> String {
         match *self {
-            ValueType::BV(ref b) => b.doc(),
             ValueType::Lane(l) => l.doc(),
             ValueType::Reference(r) => r.doc(),
             ValueType::Special(s) => s.doc(),
@@ -52,7 +50,6 @@ impl ValueType {
     /// Return the number of bits in a lane.
     pub fn lane_bits(&self) -> u64 {
         match *self {
-            ValueType::BV(ref b) => b.lane_bits(),
             ValueType::Lane(l) => l.lane_bits(),
             ValueType::Reference(r) => r.lane_bits(),
             ValueType::Special(s) => s.lane_bits(),
@@ -76,7 +73,6 @@ impl ValueType {
     /// Find the unique number associated with this type.
     pub fn number(&self) -> Option<u8> {
         match *self {
-            ValueType::BV(_) => None,
             ValueType::Lane(l) => Some(l.number()),
             ValueType::Reference(r) => Some(r.number()),
             ValueType::Special(s) => Some(s.number()),
@@ -105,19 +101,11 @@ impl ValueType {
 impl fmt::Display for ValueType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            ValueType::BV(ref b) => b.fmt(f),
             ValueType::Lane(l) => l.fmt(f),
             ValueType::Reference(r) => r.fmt(f),
             ValueType::Special(s) => s.fmt(f),
             ValueType::Vector(ref v) => v.fmt(f),
         }
-    }
-}
-
-/// Create a ValueType from a given bitvector type.
-impl From<BVType> for ValueType {
-    fn from(bv: BVType) -> Self {
-        ValueType::BV(bv)
     }
 }
 
@@ -151,7 +139,7 @@ impl From<VectorType> for ValueType {
 
 /// A concrete scalar type that can appear as a vector lane too.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub enum LaneType {
+pub(crate) enum LaneType {
     BoolType(shared_types::Bool),
     FloatType(shared_types::Float),
     IntType(shared_types::Int),
@@ -242,31 +230,24 @@ impl LaneType {
         })
     }
 
-    pub fn by(&self, lanes: u16) -> ValueType {
+    pub fn by(self, lanes: u16) -> ValueType {
         if lanes == 1 {
-            (*self).into()
+            self.into()
         } else {
-            ValueType::Vector(VectorType::new(*self, lanes.into()))
+            ValueType::Vector(VectorType::new(self, lanes.into()))
         }
     }
 
-    pub fn is_float(&self) -> bool {
+    pub fn is_float(self) -> bool {
         match self {
             LaneType::FloatType(_) => true,
             _ => false,
         }
     }
 
-    pub fn is_int(&self) -> bool {
+    pub fn is_int(self) -> bool {
         match self {
             LaneType::IntType(_) => true,
-            _ => false,
-        }
-    }
-
-    pub fn is_bool(&self) -> bool {
-        match self {
-            LaneType::BoolType(_) => true,
             _ => false,
         }
     }
@@ -319,7 +300,7 @@ impl From<shared_types::Int> for LaneType {
 }
 
 /// An iterator for different lane types.
-pub struct LaneTypeIterator {
+pub(crate) struct LaneTypeIterator {
     bool_iter: shared_types::BoolIterator,
     int_iter: shared_types::IntIterator,
     float_iter: shared_types::FloatIterator,
@@ -356,7 +337,7 @@ impl Iterator for LaneTypeIterator {
 /// A vector type has a lane type which is an instance of `LaneType`,
 /// and a positive number of lanes.
 #[derive(Clone, PartialEq, Eq, Hash)]
-pub struct VectorType {
+pub(crate) struct VectorType {
     base: LaneType,
     lanes: u64,
 }
@@ -420,46 +401,11 @@ impl fmt::Debug for VectorType {
     }
 }
 
-/// A flat bitvector type. Used for semantics description only.
-#[derive(Clone, PartialEq, Eq, Hash)]
-pub struct BVType {
-    bits: u64,
-}
-
-impl BVType {
-    /// Initialize a new bitvector type with `n` bits.
-    pub fn new(bits: u16) -> Self {
-        Self { bits: bits.into() }
-    }
-
-    /// Return a string containing the documentation comment for this bitvector type.
-    pub fn doc(&self) -> String {
-        format!("A bitvector type with {} bits.", self.bits)
-    }
-
-    /// Return the number of bits in a lane.
-    pub fn lane_bits(&self) -> u64 {
-        self.bits
-    }
-}
-
-impl fmt::Display for BVType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "bv{}", self.bits)
-    }
-}
-
-impl fmt::Debug for BVType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "BVType(bits={})", self.lane_bits())
-    }
-}
-
 /// A concrete scalar type that is neither a vector nor a lane type.
 ///
 /// Special types cannot be used to form vectors.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub enum SpecialType {
+pub(crate) enum SpecialType {
     Flag(shared_types::Flag),
 }
 
@@ -521,7 +467,7 @@ impl From<shared_types::Flag> for SpecialType {
     }
 }
 
-pub struct SpecialTypeIterator {
+pub(crate) struct SpecialTypeIterator {
     flag_iter: shared_types::FlagIterator,
 }
 
@@ -546,7 +492,7 @@ impl Iterator for SpecialTypeIterator {
 
 /// Reference type is scalar type, but not lane type.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ReferenceType(pub shared_types::Reference);
+pub(crate) struct ReferenceType(pub shared_types::Reference);
 
 impl ReferenceType {
     /// Return a string containing the documentation comment for this reference type.
@@ -600,7 +546,7 @@ impl From<shared_types::Reference> for ReferenceType {
 }
 
 /// An iterator for different reference types.
-pub struct ReferenceTypeIterator {
+pub(crate) struct ReferenceTypeIterator {
     reference_iter: shared_types::ReferenceIterator,
 }
 
