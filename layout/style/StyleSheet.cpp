@@ -664,6 +664,36 @@ uint64_t StyleSheet::FindOwningWindowInnerID() const {
   return windowID;
 }
 
+void StyleSheet::RemoveFromParent() {
+  if (!mParent) {
+    return;
+  }
+
+  // TODO(emilio): It seems we should actually use mozilla::LinkedList or such
+  // for this.
+  //
+  // Also this is still pretty bogus, see where we declare mFirstChild in
+  // StyleSheetInfo.
+  bool found = false;
+  for (auto* child = mParent->GetFirstChild(); child; child = child->mNext) {
+    if (child == this) {
+      // We can only get here if we're the first.
+      found = true;
+      mParent->Inner().mFirstChild = mNext;
+      break;
+    }
+    if (child->mNext == this) {
+      found = true;
+      child->mNext = mNext;
+      break;
+    }
+  }
+  MOZ_DIAGNOSTIC_ASSERT(found, "Should find the rule in the child list.");
+  mParent = nullptr;
+  ClearAssociatedDocumentOrShadowRoot();
+  mNext = nullptr;
+}
+
 void StyleSheet::UnparentChildren() {
   // XXXbz this is a little bogus; see the XXX comment where we
   // declare mFirstChild in StyleSheetInfo.
