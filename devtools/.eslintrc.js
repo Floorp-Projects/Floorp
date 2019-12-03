@@ -32,6 +32,7 @@ module.exports = {
       "client/framework/**",
       "client/shared/*.jsm",
       "client/shared/widgets/*.jsm",
+      "client/storage/VariablesView.jsm",
     ],
     "rules": {
       "consistent-return": "off",
@@ -64,6 +65,8 @@ module.exports = {
     "files": [
       "client/framework/**",
       "client/shared/widgets/*.jsm",
+      "client/storage/VariablesView.jsm",
+      "client/storage/VariablesView.jsm",
     ],
     "rules": {
       "no-shadow": "off",
