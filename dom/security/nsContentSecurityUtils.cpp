@@ -696,6 +696,7 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
 /* static */
 bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
                                                     bool aIsSystemRealm) {
+  static Maybe<bool> sGeneralConfigFilenameSet;
   // If the pref is permissive, allow everything
   if (StaticPrefs::security_allow_parent_unrestricted_js_loads()) {
     return true;
@@ -703,6 +704,41 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
 
   // If we're not in the parent process allow everything (presently)
   if (!XRE_IsE10sParentProcess()) {
+    return true;
+  }
+
+  // We only perform a check of this preference on the Main Thread
+  // (because a String-based preference check is only safe on Main Thread.)
+  // The consequence of this is that if a user is using userChromeJS _and_
+  // the scripts they use start a worker - we will enter this function,
+  // skip over this pref check that would normally cause us to allow the
+  // load - and we will block it.
+  // While not ideal, we do not officially support userChromeJS, and hopefully
+  // the usage of workers is even lower than userChromeJS usage.
+  if (NS_IsMainThread()) {
+    // This preference is a file used for autoconfiguration of Firefox
+    // by administrators. It will also run in the parent process and throw
+    // assumptions about what can run where out of the window.
+    if (!sGeneralConfigFilenameSet.isSome()) {
+      nsAutoString jsConfigPref;
+      Preferences::GetString("general.config.filename", jsConfigPref);
+      sGeneralConfigFilenameSet.emplace(!jsConfigPref.IsEmpty());
+    }
+    if (sGeneralConfigFilenameSet.value()) {
+      MOZ_LOG(sCSMLog, LogLevel::Debug,
+              ("Allowing a javascript load of %s because "
+               "general.config.filename is set",
+               aFilename));
+      return true;
+    }
+  }
+
+  if (XRE_IsE10sParentProcess() &&
+      !StaticPrefs::extensions_webextensions_remote()) {
+    MOZ_LOG(sCSMLog, LogLevel::Debug,
+            ("Allowing a javascript load of %s because the web extension "
+             "process is disabled.",
+             aFilename));
     return true;
   }
 
