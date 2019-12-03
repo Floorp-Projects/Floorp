@@ -1124,6 +1124,12 @@ Function SendPing
     nsJSON::Set /tree ping "Data" "succeeded" /value true
   ${EndIf}
 
+  ${If} ${Silent}
+    nsJSON::Set /tree ping "Data" "silent" /value true
+  ${Else}
+    nsJSON::Set /tree ping "Data" "silent" /value false
+  ${EndIf}
+
   ; Send the ping request. This call will block until a response is received,
   ; but we shouldn't have any windows still open, so we won't jank anything.
   nsJSON::Set /http ping
