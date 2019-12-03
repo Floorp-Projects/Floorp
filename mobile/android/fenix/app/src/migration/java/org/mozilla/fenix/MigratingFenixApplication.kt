@@ -34,6 +34,10 @@ class MigratingFenixApplication : FenixApplication() {
             .migrateOpenTabs(this.components.core.sessionManager)
             .migrateHistory(this.components.core.historyStorage)
             .migrateBookmarks(this.components.core.bookmarksStorage)
+            .migrateLogins(
+                this.components.core.passwordsStorage.store,
+                this.components.core.passwordsEncryptionKey
+            )
             .migrateFxa(this.components.backgroundServices.accountManager)
             .build()
 

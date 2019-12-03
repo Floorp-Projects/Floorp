@@ -200,7 +200,7 @@ class Core(private val context: Context) {
      */
     fun getSecureAbove22Preferences() = SecureAbove22Preferences(context, KEY_STORAGE_NAME)
 
-    private val passwordsEncryptionKey: String =
+    val passwordsEncryptionKey: String =
         getSecureAbove22Preferences().getString(PASSWORDS_KEY)
             ?: generateEncryptionKey(KEY_STRENGTH).also {
                 if (context.settings().passwordsEncryptionKeyGenerated) {
