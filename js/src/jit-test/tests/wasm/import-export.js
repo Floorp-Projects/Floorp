@@ -510,11 +510,7 @@ var m = new Module(wasmTextToBinary(`
         (memory 0)
         (data (i32.const 0x10001) ""))
 `));
-if (wasmBulkMemSupported()) {
-    assertErrorMessage(() => new Instance(m), RuntimeError, /out of bounds/);
-} else {
-    assertEq(new Instance(m) instanceof Instance, true);
-}
+assertSegmentFitError(() => new Instance(m));
 
 // Errors during segment initialization do not have observable effects
 // and are checked against the actual memory/table length, not the declared
