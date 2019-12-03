@@ -1346,6 +1346,8 @@ Document::Document(const char* aContentType)
       mFlashClassification(FlashClassification::Unknown),
       mScrollAnchorAdjustmentLength(0),
       mScrollAnchorAdjustmentCount(0),
+      mCurrentOrientationAngle(0),
+      mCurrentOrientationType(OrientationType::Portrait_primary),
       mServoRestyleRootDirtyBits(0),
       mThrowOnDynamicMarkupInsertionCounter(0),
       mIgnoreOpensDuringUnloadCounter(0),
@@ -13570,6 +13572,12 @@ bool Document::SetOrientationPendingPromise(Promise* aPromise) {
 
   mOrientationPendingPromise = aPromise;
   return true;
+}
+
+void Document::SetRDMPaneOrientation(OrientationType aType, uint16_t aAngle) {
+  if (GetBrowsingContext()->InRDMPane()) {
+    SetCurrentOrientation(aType, aAngle);
+  }
 }
 
 static void DispatchPointerLockChange(Document* aTarget) {
