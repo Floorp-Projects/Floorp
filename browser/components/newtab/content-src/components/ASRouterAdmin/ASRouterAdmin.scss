@@ -152,17 +152,6 @@
       }
     }
 
-    &.current {
-      .message-id span {
-        background: $yellow-50;
-        padding: 2px 5px;
-
-        [lwt-newtab-brighttext] & {
-          color: $black;
-        }
-      }
-    }
-
     &.blocked {
       .message-id,
       .message-summary {

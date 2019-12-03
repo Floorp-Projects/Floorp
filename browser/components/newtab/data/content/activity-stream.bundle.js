@@ -1301,14 +1301,9 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
   }
 
   renderMessageItem(msg) {
-    const isCurrent = msg.id === this.state.lastMessageId;
     const isBlocked = this.state.messageBlockList.includes(msg.id) || this.state.messageBlockList.includes(msg.campaign);
     const impressions = this.state.messageImpressions[msg.id] ? this.state.messageImpressions[msg.id].length : 0;
     let itemClassName = "message-item";
-
-    if (isCurrent) {
-      itemClassName += " current";
-    }
 
     if (isBlocked) {
       itemClassName += " blocked";

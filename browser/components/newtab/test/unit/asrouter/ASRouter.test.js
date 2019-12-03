@@ -1259,16 +1259,6 @@ describe("ASRouter", () => {
 
   describe("onMessage", () => {
     describe("#onMessage: NEWTAB_MESSAGE_REQUEST", () => {
-      it("should set state.lastMessageId to a message id", async () => {
-        await Router.setState({
-          messages: [{ id: "foo", provider: "snippets" }],
-        });
-        await Router.onMessage(
-          fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST" })
-        );
-
-        assert.equal(Router.state.lastMessageId, "foo");
-      });
       it("should send a message back to the to the target", async () => {
         // force the only message to be a regular message so getRandomItemFromArray picks it
         await Router.setState({
@@ -1276,13 +1266,11 @@ describe("ASRouter", () => {
         });
         const msg = fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST" });
         await Router.onMessage(msg);
-        const [currentMessage] = Router.state.messages.filter(
-          message => message.id === Router.state.lastMessageId
-        );
+
         assert.calledWith(
           msg.target.sendAsyncMessage,
           PARENT_TO_CHILD_MESSAGE_NAME,
-          { type: "SET_MESSAGE", data: currentMessage }
+          { type: "SET_MESSAGE", data: { id: "foo", provider: "snippets" } }
         );
       });
       it("should send a message back to the to the target if there is a bundle, too", async () => {
@@ -1301,9 +1289,6 @@ describe("ASRouter", () => {
         });
         const msg = fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST" });
         await Router.onMessage(msg);
-        const [currentMessage] = Router.state.messages.filter(
-          message => message.id === Router.state.lastMessageId
-        );
         assert.calledWith(
           msg.target.sendAsyncMessage,
           PARENT_TO_CHILD_MESSAGE_NAME
@@ -1311,10 +1296,6 @@ describe("ASRouter", () => {
         assert.equal(
           msg.target.sendAsyncMessage.firstCall.args[1].type,
           "SET_BUNDLED_MESSAGES"
-        );
-        assert.equal(
-          msg.target.sendAsyncMessage.firstCall.args[1].data.bundle[0].content,
-          currentMessage.content
         );
       });
       it("should properly order the message's bundle if specified", async () => {
@@ -1531,7 +1512,6 @@ describe("ASRouter", () => {
 
     describe("#onMessage: BLOCK_MESSAGE_BY_ID", () => {
       it("should add the id to the messageBlockList and broadcast a CLEAR_MESSAGE message with the id", async () => {
-        await Router.setState({ lastMessageId: "foo" });
         const msg = fakeAsyncMessage({
           type: "BLOCK_MESSAGE_BY_ID",
           data: { id: "foo" },
