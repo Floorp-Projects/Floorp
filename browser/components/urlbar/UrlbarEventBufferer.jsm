@@ -78,7 +78,7 @@ class UrlbarEventBufferer {
       // The time at which the current or last search was started. This is used
       // to check how much time passed while deferring the user's actions. Must
       // be set using the monotonic Cu.now() helper.
-      startDate: null,
+      startDate: Cu.now(),
       // Status of the query; one of QUERY_STATUS.*
       status: QUERY_STATUS.UKNOWN,
       // The searchString from the query context.
@@ -278,6 +278,12 @@ class UrlbarEventBufferer {
    * @returns {boolean} Whether the event can be played.
    */
   isSafeToPlayDeferredEvent(event) {
+    if (this._lastQuery.status != QUERY_STATUS.RUNNING) {
+      // The view can't get any more results, so there's no need to further
+      // defer events.
+      return true;
+    }
+
     let waitingFirstResult =
       this._lastQuery.status == QUERY_STATUS.RUNNING &&
       !this._lastQuery.results.length;
@@ -294,12 +300,6 @@ class UrlbarEventBufferer {
       // We're still waiting on the first results, or the popup hasn't opened
       // yet, so not safe.
       return false;
-    }
-
-    if (this._lastQuery.status == QUERY_STATUS.COMPLETE) {
-      // The view can't get any more results, so there's no need to further
-      // defer events.
-      return true;
     }
 
     let isMacDownNavigation =
