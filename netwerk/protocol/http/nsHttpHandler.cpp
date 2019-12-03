@@ -488,6 +488,8 @@ nsresult nsHttpHandler::Init() {
   rv = InitConnectionMgr();
   if (NS_FAILED(rv)) return rv;
 
+  mAltSvcCache = MakeUnique<AltSvcCache>();
+
   mRequestContextService = RequestContextService::GetOrCreate();
 
 #if defined(ANDROID)
@@ -2151,7 +2153,7 @@ nsHttpHandler::GetMisc(nsACString& value) {
 
 NS_IMETHODIMP
 nsHttpHandler::GetAltSvcCacheKeys(nsTArray<nsCString>& value) {
-  return mConnMgr->GetAltSvcCacheKeys(value);
+  return mAltSvcCache->GetAltSvcCacheKeys(value);
 }
 
 //-----------------------------------------------------------------------------
@@ -2205,6 +2207,7 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
     // initialize connection manager
     rv = InitConnectionMgr();
     MOZ_ASSERT(NS_SUCCEEDED(rv));
+    mAltSvcCache = MakeUnique<AltSvcCache>();
   } else if (!strcmp(topic, "net:clear-active-logins")) {
     mAuthCache.ClearAll();
     mPrivateAuthCache.ClearAll();
@@ -2241,8 +2244,8 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
 #endif
   } else if (!strcmp(topic, "last-pb-context-exited")) {
     mPrivateAuthCache.ClearAll();
-    if (mConnMgr) {
-      mConnMgr->ClearAltServiceMappings();
+    if (mAltSvcCache) {
+      mAltSvcCache->ClearAltServiceMappings();
     }
   } else if (!strcmp(topic, "browser:purge-session-history")) {
     if (mConnMgr) {
@@ -2252,7 +2255,9 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
             &nsHttpConnectionMgr::ClearConnectionHistory);
         gSocketTransportService->Dispatch(event, NS_DISPATCH_NORMAL);
       }
-      mConnMgr->ClearAltServiceMappings();
+      if (mAltSvcCache) {
+        mAltSvcCache->ClearAltServiceMappings();
+      }
     }
   } else if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
     nsAutoCString converted = NS_ConvertUTF16toUTF8(data);
