@@ -183,7 +183,9 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters* aParams,
   AccountStorageForTextRun(this, 1);
 #endif
 
-  mSkipDrawing = mFontGroup->ShouldSkipDrawing();
+  mSkipDrawing =
+      mFontGroup->ShouldSkipDrawing() &&
+      !(aFlags2 & nsTextFrameUtils::Flags::DontSkipDrawingForPendingUserFonts);
 }
 
 gfxTextRun::~gfxTextRun() {
