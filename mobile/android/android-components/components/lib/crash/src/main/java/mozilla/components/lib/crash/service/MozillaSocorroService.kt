@@ -136,8 +136,9 @@ class MozillaSocorroService(
             extrasFile.delete()
         }
 
-        throwable?.let {
-            sendPart(gzipOs, boundary, "JavaStackTrace", getExceptionStackTrace(it), nameSet)
+        if (throwable?.stackTrace?.isEmpty() == false) {
+            sendPart(gzipOs, boundary, "JavaStackTrace", getExceptionStackTrace(throwable,
+                isCaughtException), nameSet)
         }
 
         miniDumpFilePath?.let {
@@ -327,12 +328,15 @@ class MozillaSocorroService(
         return resultMap
     }
 
-    private fun getExceptionStackTrace(throwable: Throwable): String {
+    private fun getExceptionStackTrace(throwable: Throwable, isCaughtException: Boolean): String {
         val stringWriter = StringWriter()
         val printWriter = PrintWriter(stringWriter)
         throwable.printStackTrace(printWriter)
         printWriter.flush()
 
-        return stringWriter.toString()
+        return when (isCaughtException) {
+            true -> "$INFO_PREFIX $stringWriter"
+            false -> stringWriter.toString()
+        }
     }
 }
