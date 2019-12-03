@@ -2622,11 +2622,13 @@ var SessionStoreInternal = {
 
     // Check that the document has a corresponding BrowsingContext.
     let browsingContext;
+    let isSubframe = false;
     let cp = channel.loadInfo.externalContentPolicyType;
     if (cp == Ci.nsIContentPolicy.TYPE_DOCUMENT) {
       browsingContext = channel.loadInfo.browsingContext;
     } else {
       browsingContext = channel.loadInfo.frameBrowsingContext;
+      isSubframe = true;
     }
 
     if (!browsingContext) {
@@ -2733,7 +2735,8 @@ var SessionStoreInternal = {
       true,
       useRemoteSubframes,
       preferredRemoteType,
-      currentPrincipal
+      currentPrincipal,
+      isSubframe
     );
 
     debug(
