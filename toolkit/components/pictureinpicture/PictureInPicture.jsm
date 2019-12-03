@@ -70,6 +70,11 @@ class PictureInPictureParent extends JSWindowActorParent {
         PictureInPicture.handlePictureInPictureRequest(browser, videoData);
         break;
       }
+      case "PictureInPicture:Resize": {
+        let videoData = aMessage.data;
+        PictureInPicture.resizePictureInPictureWindow(videoData);
+        break;
+      }
       case "PictureInPicture:Close": {
         /**
          * Content has requested that its Picture in Picture window go away.
@@ -274,7 +279,76 @@ var PictureInPicture = {
    *   Resolves once the window has opened and loaded the player component.
    */
   async openPipWindow(parentWin, videoData) {
+    let { top, left, width, height } = this.fitToScreen(parentWin, videoData);
+
+    let features =
+      `${PLAYER_FEATURES},top=${top},left=${left},` +
+      `outerWidth=${width},outerHeight=${height}`;
+
+    let pipWindow = Services.ww.openWindow(
+      parentWin,
+      PLAYER_URI,
+      null,
+      features,
+      null
+    );
+
+    TelemetryStopwatch.start(
+      "FX_PICTURE_IN_PICTURE_WINDOW_OPEN_DURATION",
+      pipWindow,
+      {
+        inSeconds: true,
+      }
+    );
+
+    return new Promise(resolve => {
+      pipWindow.addEventListener(
+        "load",
+        () => {
+          resolve(pipWindow);
+        },
+        { once: true }
+      );
+    });
+  },
+
+  /**
+   * Calculate the desired size and position for a Picture in Picture window
+   * for the provided window and videoData.
+   *
+   * @param windowOrPlayer (chrome window|player window)
+   *   The window hosting the browser that requested the Picture in
+   *   Picture window. If this is an existing player window then the returned
+   *   player size and position will be determined based on the existing
+   *   player window's size and position.
+   *
+   * @param videoData (object)
+   *   An object containing the following properties:
+   *
+   *   videoHeight (int):
+   *     The preferred height of the video.
+   *
+   *   videoWidth (int):
+   *     The preferred width of the video.
+   *
+   * @returns object
+   *   The size and position for the player window.
+   *
+   *   top (int):
+   *     The top position for the player window.
+   *
+   *   left (int):
+   *     The left position for the player window.
+   *
+   *   width (int):
+   *     The width of the player window.
+   *
+   *   height (int):
+   *     The height of the player window.
+   */
+  fitToScreen(windowOrPlayer, videoData) {
     let { videoHeight, videoWidth } = videoData;
+    let isPlayerWindow = windowOrPlayer == this.getWeakPipPlayer();
 
     // The Picture in Picture window will open on the same display as the
     // originating window, and anchor to the bottom right.
@@ -282,8 +356,8 @@ var PictureInPicture = {
       Ci.nsIScreenManager
     );
     let screen = screenManager.screenForRect(
-      parentWin.screenX,
-      parentWin.screenY,
+      windowOrPlayer.screenX,
+      windowOrPlayer.screenY,
       1,
       1
     );
@@ -317,33 +391,47 @@ var PictureInPicture = {
     screenTop.value =
       (screenTop.value - fullTop.value) * scaleFactor + fullTop.value;
 
-    // For now, the Picture in Picture window will be a maximum of a quarter
-    // of the screen height, and a third of the screen width.
-    const MAX_HEIGHT = screenHeight.value / 4;
-    const MAX_WIDTH = screenWidth.value / 3;
+    // If we have a player window, maintain the previous player window's size by
+    // clamping the new video's largest dimension to the player window's
+    // largest dimension.
+    //
+    // Otherwise the Picture in Picture window will be a maximum of a quarter of
+    // the screen height, and a third of the screen width.
+    let preferredSize;
+    if (isPlayerWindow) {
+      let prevWidth = windowOrPlayer.innerWidth;
+      let prevHeight = windowOrPlayer.innerHeight;
+      preferredSize = prevWidth >= prevHeight ? prevWidth : prevHeight;
+    }
+    const MAX_HEIGHT = preferredSize || screenHeight.value / 4;
+    const MAX_WIDTH = preferredSize || screenWidth.value / 3;
 
-    let resultWidth = videoWidth;
-    let resultHeight = videoHeight;
+    let width = videoWidth;
+    let height = videoHeight;
+    let aspectRatio = videoWidth / videoHeight;
 
-    if (videoHeight > MAX_HEIGHT || videoWidth > MAX_WIDTH) {
-      let aspectRatio = videoWidth / videoHeight;
-      // We're bigger than the max - take the largest dimension and clamp
-      // it to the associated max. Recalculate the other dimension to maintain
-      // aspect ratio.
+    if (
+      videoHeight > MAX_HEIGHT ||
+      videoWidth > MAX_WIDTH ||
+      (isPlayerWindow && videoHeight < MAX_HEIGHT && videoWidth < MAX_WIDTH)
+    ) {
+      // We're bigger than the max, or smaller than the previous player window.
+      // Take the largest dimension and clamp it to the associated max.
+      // Recalculate the other dimension to maintain aspect ratio.
       if (videoWidth >= videoHeight) {
         // We're clamping the width, so the height must be adjusted to match
         // the original aspect ratio. Since aspect ratio is width over height,
         // that means we need to _divide_ the MAX_WIDTH by the aspect ratio to
         // calculate the appropriate height.
-        resultWidth = MAX_WIDTH;
-        resultHeight = Math.round(MAX_WIDTH / aspectRatio);
+        width = MAX_WIDTH;
+        height = Math.round(MAX_WIDTH / aspectRatio);
       } else {
         // We're clamping the height, so the width must be adjusted to match
         // the original aspect ratio. Since aspect ratio is width over height,
         // this means we need to _multiply_ the MAX_HEIGHT by the aspect ratio
         // to calculate the appropriate width.
-        resultHeight = MAX_HEIGHT;
-        resultWidth = Math.round(MAX_HEIGHT * aspectRatio);
+        height = MAX_HEIGHT;
+        width = Math.round(MAX_HEIGHT * aspectRatio);
       }
     }
 
@@ -362,39 +450,23 @@ var PictureInPicture = {
     // the screenLeft and screenTop values, which tell us where this screen is
     // located relative to the "origin" in absolute coordinates.
     let isRTL = Services.locale.isAppLocaleRTL;
-    let pipLeft = isRTL
+    let left = isRTL
       ? screenLeft.value
-      : screenLeft.value + screenWidth.value - resultWidth;
-    let pipTop = screenTop.value + screenHeight.value - resultHeight;
-    let features =
-      `${PLAYER_FEATURES},top=${pipTop},left=${pipLeft},` +
-      `outerWidth=${resultWidth},outerHeight=${resultHeight}`;
+      : screenLeft.value + screenWidth.value - width;
+    let top = screenTop.value + screenHeight.value - height;
 
-    let pipWindow = Services.ww.openWindow(
-      parentWin,
-      PLAYER_URI,
-      null,
-      features,
-      null
-    );
+    return { top, left, width, height };
+  },
 
-    TelemetryStopwatch.start(
-      "FX_PICTURE_IN_PICTURE_WINDOW_OPEN_DURATION",
-      pipWindow,
-      {
-        inSeconds: true,
-      }
-    );
+  resizePictureInPictureWindow(videoData) {
+    let win = this.getWeakPipPlayer();
 
-    return new Promise(resolve => {
-      pipWindow.addEventListener(
-        "load",
-        () => {
-          resolve(pipWindow);
-        },
-        { once: true }
-      );
-    });
+    if (!win) {
+      return;
+    }
+
+    let { width, height } = this.fitToScreen(win, videoData);
+    win.resizeTo(width, height);
   },
 
   openToggleContextMenu(window, data) {
