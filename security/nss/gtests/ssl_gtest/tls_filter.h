@@ -454,6 +454,67 @@ class TlsHandshakeDropper : public TlsHandshakeFilter {
   }
 };
 
+class TlsEncryptedHandshakeMessageReplacer : public TlsRecordFilter {
+ public:
+  TlsEncryptedHandshakeMessageReplacer(const std::shared_ptr<TlsAgent>& a,
+                                       uint8_t old_ct, uint8_t new_ct)
+      : TlsRecordFilter(a), old_ct_(old_ct), new_ct_(new_ct) {}
+
+ protected:
+  PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
+                                    const DataBuffer& record, size_t* offset,
+                                    DataBuffer* output) override {
+    if (header.content_type() != ssl_ct_application_data) {
+      return KEEP;
+    }
+
+    uint16_t protection_epoch = 0;
+    uint8_t inner_content_type;
+    DataBuffer plaintext;
+    if (!Unprotect(header, record, &protection_epoch, &inner_content_type,
+                   &plaintext) ||
+        !plaintext.len()) {
+      return KEEP;
+    }
+
+    if (inner_content_type != ssl_ct_handshake) {
+      return KEEP;
+    }
+
+    size_t off = 0;
+    uint32_t msg_len = 0;
+    uint32_t msg_type = 255;  // Not a real message
+    do {
+      if (!plaintext.Read(off, 1, &msg_type) || msg_type == old_ct_) {
+        break;
+      }
+
+      // Increment and check next messages
+      if (!plaintext.Read(++off, 3, &msg_len)) {
+        break;
+      }
+      off += 3 + msg_len;
+    } while (msg_type != old_ct_);
+
+    if (msg_type == old_ct_) {
+      plaintext.Write(off, new_ct_, 1);
+    }
+
+    DataBuffer ciphertext;
+    bool ok = Protect(spec(protection_epoch), header, inner_content_type,
+                      plaintext, &ciphertext, 0);
+    if (!ok) {
+      return KEEP;
+    }
+    *offset = header.Write(output, *offset, ciphertext);
+    return CHANGE;
+  }
+
+ private:
+  uint8_t old_ct_;
+  uint8_t new_ct_;
+};
+
 class TlsExtensionInjector : public TlsHandshakeFilter {
  public:
   TlsExtensionInjector(const std::shared_ptr<TlsAgent>& a, uint16_t ext,

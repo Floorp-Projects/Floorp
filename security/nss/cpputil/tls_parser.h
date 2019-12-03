@@ -31,6 +31,7 @@ const uint8_t kTlsHandshakeCertificateRequest = 13;
 const uint8_t kTlsHandshakeCertificateVerify = 15;
 const uint8_t kTlsHandshakeClientKeyExchange = 16;
 const uint8_t kTlsHandshakeFinished = 20;
+const uint8_t kTlsHandshakeKeyUpdate = 24;
 
 const uint8_t kTlsAlertWarning = 1;
 const uint8_t kTlsAlertFatal = 2;
