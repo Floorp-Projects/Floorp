@@ -243,6 +243,8 @@ NetworkConnectivityService::RecheckIPConnectivity() {
   }
 
   nsresult rv;
+  mHasNetworkId = false;
+  mCheckedNetworkId = false;
   mIPv4Channel = SetupIPCheckChannel(/* ipv4 = */ true);
   if (mIPv4Channel) {
     rv = mIPv4Channel->AsyncOpen(this);
@@ -277,16 +279,10 @@ NetworkConnectivityService::OnStopRequest(nsIRequest* aRequest,
     mIPv4Channel = nullptr;
 
     if (mIPv4 == nsINetworkConnectivityService::OK) {
-      nsCOMPtr<nsINetworkLinkService> nls =
-          do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID);
-      nsAutoCString networkId;
-      if (nls) {
-        nls->GetNetworkID(networkId);
-      }
       Telemetry::AccumulateCategorical(
-          networkId.IsEmpty() ? Telemetry::LABELS_NETWORK_ID_ONLINE::absent
-                              : Telemetry::LABELS_NETWORK_ID_ONLINE::present);
-      LOG(("networkId.IsEmpty() : %d\n", networkId.IsEmpty()));
+          mHasNetworkId ? Telemetry::LABELS_NETWORK_ID_ONLINE::present
+                        : Telemetry::LABELS_NETWORK_ID_ONLINE::absent);
+      LOG(("mHasNetworkId : %d\n", mHasNetworkId));
     }
   } else if (aRequest == mIPv6Channel) {
     mIPv6 = status;
@@ -307,6 +303,22 @@ NetworkConnectivityService::OnDataAvailable(nsIRequest* aRequest,
                                             nsIInputStream* aInputStream,
                                             uint64_t aOffset, uint32_t aCount) {
   nsAutoCString data;
+
+  // We perform this check here, instead of doing it in OnStopRequest in case
+  // a network down event occurs after the data has arrived but before we fire
+  // OnStopRequest. That would cause us to report a missing networkID, even
+  // though it was not empty while receiving data.
+  if (aRequest == mIPv4Channel && !mCheckedNetworkId) {
+    nsCOMPtr<nsINetworkLinkService> nls =
+        do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID);
+    nsAutoCString networkId;
+    if (nls) {
+      nls->GetNetworkID(networkId);
+    }
+    mHasNetworkId = !networkId.IsEmpty();
+    mCheckedNetworkId = true;
+  }
+
   Unused << NS_ReadInputStreamToString(aInputStream, data, aCount);
   return NS_OK;
 }
