@@ -43,6 +43,17 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ipc/EnvironmentMap.h"
 
+#if defined(MOZ_ENABLE_FORKSERVER)
+#include "nsString.h"
+#include "mozilla/ipc/FileDescriptorShuffle.h"
+
+namespace mozilla {
+namespace ipc {
+class FileDescriptor;
+}
+}
+#endif
+
 #if defined(OS_MACOSX)
 struct kinfo_proc;
 #endif
@@ -163,6 +174,46 @@ typedef mozilla::UniquePtr<char*[], FreeEnvVarsArray> EnvironmentArray;
 // Merge an environment map with the current environment.
 // Existing variables are overwritten by env_vars_to_set.
 EnvironmentArray BuildEnvironmentArray(const environment_map& env_vars_to_set);
+#endif
+
+#if defined(MOZ_ENABLE_FORKSERVER)
+/**
+ * Create and initialize a new process as a content process.
+ *
+ * This class is used only by the fork server.
+ * To create a new content process, two steps are
+ *  - calling |ForkProcess()| to create a new process, and
+ *  - calling |InitAppProcess()| in the new process, the child
+ *    process, to initialize it for running WEB content later.
+ *
+ * The fork server can clean up it's resources in-between the first
+ * and second step, that is why two steps.
+ */
+class AppProcessBuilder {
+public:
+  AppProcessBuilder();
+  // This function will fork a new process for use as a
+  // content processes.
+  bool ForkProcess(const std::vector<std::string>& argv,
+                   const LaunchOptions& options, ProcessHandle* process_handle);
+  // This function will be called in the child process to initializes
+  // the environment of the content process.  It should be called
+  // after the message loop of the main thread, to make sure the fork
+  // server is destroyed properly in the child process.
+  //
+  // The message loop may allocate resources like file descriptors.
+  // If this function is called before the end of the loop, the
+  // reosurces may be destroyed while the loop is still alive.
+  void InitAppProcess(int *argcp, char*** argvp);
+
+private:
+  void ReplaceArguments(int *argcp, char*** argvp);
+
+  mozilla::ipc::FileDescriptorShuffle shuffle_;
+  std::vector<std::string> argv_;
+};
+
+void RegisterForkServerNoCloseFD(int aFd);
 #endif
 
 // Executes the application specified by cl. This function delegates to one
