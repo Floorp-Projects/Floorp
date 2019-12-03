@@ -576,7 +576,7 @@ pref("media.cubeb.logging_level", "");
 #endif
 
 // GraphRunner (fixed MediaTrackGraph thread) control
-pref("media.audiograph.single_thread.enabled", true);
+pref("media.audiograph.single_thread.enabled", false);
 
 // APZ preferences. For documentation/details on what these prefs do, check
 // gfx/layers/apz/src/AsyncPanZoomController.cpp.
