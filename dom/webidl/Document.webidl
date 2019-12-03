@@ -23,7 +23,6 @@ interface URI;
 interface nsIDocShell;
 interface nsILoadGroup;
 interface nsIReferrerInfo;
-interface nsIPermissionDelegateHandler;
 interface XULCommandDispatcher;
 
 enum VisibilityState { "hidden", "visible" };
@@ -686,10 +685,4 @@ partial interface Document {
 partial interface Document {
   [ChromeOnly, BinaryName="setUserHasInteracted"]
   void userInteractionForTesting();
-};
-
-// Extension for permission delegation.
-partial interface Document {
-  [Pref="permissions.delegation.enabled", ChromeOnly, Pure]
-  readonly attribute nsIPermissionDelegateHandler permDelegateHandler;
 };

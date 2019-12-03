@@ -42,7 +42,8 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource {
   nsString GetGroupId() const override;
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
-                    const MediaEnginePrefs& aPrefs, uint64_t aWindowID,
+                    const MediaEnginePrefs& aPrefs,
+                    const ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint) override;
   void SetTrack(const RefPtr<SourceMediaTrack>& aTrack,
                 const PrincipalHandle& aPrincipal) override;
@@ -104,7 +105,8 @@ class MediaEngineDefaultAudioSource : public MediaEngineSource {
   nsString GetGroupId() const override;
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
-                    const MediaEnginePrefs& aPrefs, uint64_t aWindowID,
+                    const MediaEnginePrefs& aPrefs,
+                    const ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint) override;
   void SetTrack(const RefPtr<SourceMediaTrack>& aTrack,
                 const PrincipalHandle& aPrincipal) override;

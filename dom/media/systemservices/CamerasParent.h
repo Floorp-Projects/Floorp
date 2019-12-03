@@ -28,6 +28,10 @@
 
 namespace mozilla {
 
+namespace ipc {
+class PrincipalInfo;
+}
+
 namespace camera {
 
 class CamerasParent;
@@ -76,7 +80,7 @@ class CamerasParent final : public PCamerasParent,
   // Messages received form the child. These run on the IPC/PBackground thread.
   mozilla::ipc::IPCResult RecvAllocateCaptureDevice(
       const CaptureEngine& aEngine, const nsCString& aUnique_idUTF8,
-      const uint64_t& aWindowID) override;
+      const ipc::PrincipalInfo& aPrincipalInfo) override;
   mozilla::ipc::IPCResult RecvReleaseCaptureDevice(const CaptureEngine&,
                                                    const int&) override;
   mozilla::ipc::IPCResult RecvNumberOfCaptureDevices(

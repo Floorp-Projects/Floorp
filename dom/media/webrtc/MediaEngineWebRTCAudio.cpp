@@ -370,7 +370,7 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
 
 nsresult MediaEngineWebRTCMicrophoneSource::Allocate(
     const dom::MediaTrackConstraints& aConstraints,
-    const MediaEnginePrefs& aPrefs, uint64_t aWindowID,
+    const MediaEnginePrefs& aPrefs, const ipc::PrincipalInfo& aPrincipalInfo,
     const char** aOutBadConstraint) {
   AssertIsOnOwningThread();
 

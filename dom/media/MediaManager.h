@@ -82,7 +82,8 @@ class MediaDevice : public nsIMediaDevice {
       bool aIsChrome);
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
-                    const MediaEnginePrefs& aPrefs, uint64_t aWindowId,
+                    const MediaEnginePrefs& aPrefs,
+                    const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint);
   void SetTrack(const RefPtr<SourceMediaTrack>& aTrack,
                 const PrincipalHandle& aPrincipal);

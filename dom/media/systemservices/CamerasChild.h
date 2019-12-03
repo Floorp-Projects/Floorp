@@ -23,6 +23,7 @@ namespace mozilla {
 
 namespace ipc {
 class BackgroundChildImpl;
+class PrincipalInfo;
 }  // namespace ipc
 
 namespace camera {
@@ -181,7 +182,8 @@ class CamerasChild final : public PCamerasChild {
   int StopCapture(CaptureEngine aCapEngine, const int capture_id);
   int AllocateCaptureDevice(CaptureEngine aCapEngine, const char* unique_idUTF8,
                             const unsigned int unique_idUTF8Length,
-                            int& capture_id, uint64_t aWindowID);
+                            int& capture_id,
+                            const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
   int GetCaptureCapability(CaptureEngine aCapEngine, const char* unique_idUTF8,
                            const unsigned int capability_number,
                            webrtc::VideoCaptureCapability& capability);
