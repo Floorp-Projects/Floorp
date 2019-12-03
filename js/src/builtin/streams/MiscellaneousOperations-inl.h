@@ -110,6 +110,16 @@ inline MOZ_MUST_USE bool RejectUnwrappedPromiseWithError(
   return RejectUnwrappedPromiseWithError(cx, &promise, error);
 }
 
+/**
+ * Sets Promise.[[PromiseIsHandled]] to true and removes rejection from
+ * the list of unhandled rejected promise.
+ */
+inline void SetPromiseIsHandled(JSContext* cx,
+                                JS::Handle<PromiseObject*> promise) {
+  promise->setHandled();
+  cx->runtime()->removeUnhandledRejectedPromise(cx, promise);
+}
+
 }  // namespace js
 
 #endif  // builtin_streams_MiscellaneousOperations_inl_h
