@@ -1263,28 +1263,53 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRemoveCorsPreflightCacheEntry(
 // HttpChannelParent::nsIRequestObserver
 //-----------------------------------------------------------------------------
 
-static void GetTimingAttributes(HttpBaseChannel* aChannel,
-                                ResourceTimingStruct& aTiming) {
-  aChannel->GetDomainLookupStart(&aTiming.domainLookupStart);
-  aChannel->GetDomainLookupEnd(&aTiming.domainLookupEnd);
-  aChannel->GetConnectStart(&aTiming.connectStart);
-  aChannel->GetTcpConnectEnd(&aTiming.tcpConnectEnd);
-  aChannel->GetSecureConnectionStart(&aTiming.secureConnectionStart);
-  aChannel->GetConnectEnd(&aTiming.connectEnd);
-  aChannel->GetRequestStart(&aTiming.requestStart);
-  aChannel->GetResponseStart(&aTiming.responseStart);
-  aChannel->GetResponseEnd(&aTiming.responseEnd);
-  aChannel->GetAsyncOpen(&aTiming.fetchStart);
-  aChannel->GetRedirectStart(&aTiming.redirectStart);
-  aChannel->GetRedirectEnd(&aTiming.redirectEnd);
-  aChannel->GetTransferSize(&aTiming.transferSize);
-  aChannel->GetEncodedBodySize(&aTiming.encodedBodySize);
+static ResourceTimingStructArgs GetTimingAttributes(HttpBaseChannel* aChannel) {
+  ResourceTimingStructArgs args;
+  TimeStamp timeStamp;
+  aChannel->GetDomainLookupStart(&timeStamp);
+  args.domainLookupStart() = timeStamp;
+  aChannel->GetDomainLookupEnd(&timeStamp);
+  args.domainLookupEnd() = timeStamp;
+  aChannel->GetConnectStart(&timeStamp);
+  args.connectStart() = timeStamp;
+  aChannel->GetTcpConnectEnd(&timeStamp);
+  args.tcpConnectEnd() = timeStamp;
+  aChannel->GetSecureConnectionStart(&timeStamp);
+  args.secureConnectionStart() = timeStamp;
+  aChannel->GetConnectEnd(&timeStamp);
+  args.connectEnd() = timeStamp;
+  aChannel->GetRequestStart(&timeStamp);
+  args.requestStart() = timeStamp;
+  aChannel->GetResponseStart(&timeStamp);
+  args.responseStart() = timeStamp;
+  aChannel->GetResponseEnd(&timeStamp);
+  args.responseEnd() = timeStamp;
+  aChannel->GetAsyncOpen(&timeStamp);
+  args.fetchStart() = timeStamp;
+  aChannel->GetRedirectStart(&timeStamp);
+  args.redirectStart() = timeStamp;
+  aChannel->GetRedirectEnd(&timeStamp);
+  args.redirectEnd() = timeStamp;
+
+  uint64_t size = 0;
+  aChannel->GetTransferSize(&size);
+  args.transferSize() = size;
+
+  aChannel->GetEncodedBodySize(&size);
+  args.encodedBodySize() = size;
   // decodedBodySize can be computed in the child process so it doesn't need
   // to be passed down.
-  aChannel->GetProtocolVersion(aTiming.protocolVersion);
 
-  aChannel->GetCacheReadStart(&aTiming.cacheReadStart);
-  aChannel->GetCacheReadEnd(&aTiming.cacheReadEnd);
+  nsCString protocolVersion;
+  aChannel->GetProtocolVersion(protocolVersion);
+  args.protocolVersion() = protocolVersion;
+
+  aChannel->GetCacheReadStart(&timeStamp);
+  args.cacheReadStart() = timeStamp;
+
+  aChannel->GetCacheReadEnd(&timeStamp);
+  args.cacheReadEnd() = timeStamp;
+  return args;
 }
 
 NS_IMETHODIMP
@@ -1424,9 +1449,6 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
     cleanedUpRequest = true;
   }
 
-  ResourceTimingStruct timing;
-  GetTimingAttributes(mChannel, timing);
-
   bool isResolvedByTRR = false;
   chan->GetIsResolvedByTRR(&isResolvedByTRR);
 
@@ -1442,8 +1464,8 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
           mCacheEntry ? true : false, cacheEntryId, fetchCount, expirationTime,
           cachedCharset, secInfoSerialization, chan->GetSelfAddr(),
           chan->GetPeerAddr(), redirectCount, cacheKey, altDataType, altDataLen,
-          deliveringAltData, applyConversion, isResolvedByTRR, timing,
-          allRedirectsSameOrigin)) {
+          deliveringAltData, applyConversion, isResolvedByTRR,
+          GetTimingAttributes(mChannel), allRedirectsSameOrigin)) {
     rv = NS_ERROR_UNEXPECTED;
   }
   requestHead->Exit();
@@ -1470,8 +1492,6 @@ HttpChannelParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
 
   MOZ_RELEASE_ASSERT(!mDivertingFromChild,
                      "Cannot call OnStopRequest if diverting is set!");
-  ResourceTimingStruct timing;
-  GetTimingAttributes(mChannel, timing);
 
   RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(mChannel);
   if (httpChannelImpl) {
@@ -1486,7 +1506,7 @@ HttpChannelParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
 
   if (mIPCClosed || !mBgParent ||
       !mBgParent->OnStopRequest(
-          aStatusCode, timing,
+          aStatusCode, GetTimingAttributes(mChannel),
           responseTrailer ? *responseTrailer : nsHttpHeaderArray())) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -1992,15 +2012,12 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
     responseHead = &cleanedUpResponseHead;
   }
 
-  ResourceTimingStruct timing;
-  GetTimingAttributes(mChannel, timing);
-
   bool result = false;
   if (!mIPCClosed) {
-    result = SendRedirect1Begin(mRedirectChannelId, uriParams, newLoadFlags,
-                                redirectFlags, loadInfoForwarderArg,
-                                *responseHead, secInfoSerialization, channelId,
-                                mChannel->GetPeerAddr(), timing);
+    result = SendRedirect1Begin(
+        mRedirectChannelId, uriParams, newLoadFlags, redirectFlags,
+        loadInfoForwarderArg, *responseHead, secInfoSerialization, channelId,
+        mChannel->GetPeerAddr(), GetTimingAttributes(mChannel));
   }
   if (!result) {
     // Bug 621446 investigation

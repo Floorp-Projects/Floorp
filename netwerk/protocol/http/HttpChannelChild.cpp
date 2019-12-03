@@ -377,7 +377,8 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
     const uint32_t& aCacheKey, const nsCString& aAltDataType,
     const int64_t& aAltDataLen, const bool& aDeliveringAltData,
     const bool& aApplyConversion, const bool& aIsResolvedByTRR,
-    const ResourceTimingStruct& aTiming, const bool& aAllRedirectsSameOrigin) {
+    const ResourceTimingStructArgs& aTiming,
+    const bool& aAllRedirectsSameOrigin) {
   AUTO_PROFILER_LABEL("HttpChannelChild::RecvOnStartRequest", NETWORK);
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -431,6 +432,19 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
   return IPC_OK();
 }
 
+static void ResourceTimingStructArgsToTimingsStruct(
+    const ResourceTimingStructArgs& aArgs, TimingStruct& aTimings) {
+  aTimings.domainLookupStart = aArgs.domainLookupStart();
+  aTimings.domainLookupEnd = aArgs.domainLookupEnd();
+  aTimings.connectStart = aArgs.connectStart();
+  aTimings.tcpConnectEnd = aArgs.tcpConnectEnd();
+  aTimings.secureConnectionStart = aArgs.secureConnectionStart();
+  aTimings.connectEnd = aArgs.connectEnd();
+  aTimings.requestStart = aArgs.requestStart();
+  aTimings.responseStart = aArgs.responseStart();
+  aTimings.responseEnd = aArgs.responseEnd();
+}
+
 void HttpChannelChild::OnStartRequest(
     const nsresult& aChannelStatus, const nsHttpResponseHead& aResponseHead,
     const bool& aUseResponseHead, const nsHttpHeaderArray& aRequestHeaders,
@@ -443,7 +457,7 @@ void HttpChannelChild::OnStartRequest(
     const NetAddr& aPeerAddr, const uint32_t& aCacheKey,
     const nsCString& aAltDataType, const int64_t& aAltDataLen,
     const bool& aDeliveringAltData, const bool& aApplyConversion,
-    const bool& aIsResolvedByTRR, const ResourceTimingStruct& aTiming,
+    const bool& aIsResolvedByTRR, const ResourceTimingStructArgs& aTiming,
     const bool& aAllRedirectsSameOrigin) {
   LOG(("HttpChannelChild::OnStartRequest [this=%p]\n", this));
 
@@ -518,7 +532,7 @@ void HttpChannelChild::OnStartRequest(
 
   mTracingEnabled = false;
 
-  mTransactionTimings = aTiming;
+  ResourceTimingStructArgsToTimingsStruct(aTiming, mTransactionTimings);
 
   mAllRedirectsSameOrigin = aAllRedirectsSameOrigin;
 
@@ -862,7 +876,7 @@ void HttpChannelChild::DoOnDataAvailable(nsIRequest* aRequest,
 }
 
 void HttpChannelChild::ProcessOnStopRequest(
-    const nsresult& aChannelStatus, const ResourceTimingStruct& aTiming,
+    const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
     const nsHttpHeaderArray& aResponseTrailers) {
   LOG(("HttpChannelChild::ProcessOnStopRequest [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
@@ -891,7 +905,7 @@ void HttpChannelChild::MaybeDivertOnStop(const nsresult& aChannelStatus) {
 }
 
 void HttpChannelChild::OnStopRequest(
-    const nsresult& aChannelStatus, const ResourceTimingStruct& aTiming,
+    const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
     const nsHttpHeaderArray& aResponseTrailers) {
   LOG(("HttpChannelChild::OnStopRequest [this=%p status=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(aChannelStatus)));
@@ -930,15 +944,7 @@ void HttpChannelChild::OnStopRequest(
     conv->GetDecodedDataLength(&mDecodedBodySize);
   }
 
-  mTransactionTimings.domainLookupStart = aTiming.domainLookupStart;
-  mTransactionTimings.domainLookupEnd = aTiming.domainLookupEnd;
-  mTransactionTimings.connectStart = aTiming.connectStart;
-  mTransactionTimings.tcpConnectEnd = aTiming.tcpConnectEnd;
-  mTransactionTimings.secureConnectionStart = aTiming.secureConnectionStart;
-  mTransactionTimings.connectEnd = aTiming.connectEnd;
-  mTransactionTimings.requestStart = aTiming.requestStart;
-  mTransactionTimings.responseStart = aTiming.responseStart;
-  mTransactionTimings.responseEnd = aTiming.responseEnd;
+  ResourceTimingStructArgsToTimingsStruct(aTiming, mTransactionTimings);
 
   // Do not overwrite or adjust the original mAsyncOpenTime by timing.fetchStart
   // We must use the original child process time in order to account for child
@@ -947,14 +953,14 @@ void HttpChannelChild::OnStopRequest(
   // This is true for modern hardware but for older platforms it is not always
   // true.
 
-  mRedirectStartTimeStamp = aTiming.redirectStart;
-  mRedirectEndTimeStamp = aTiming.redirectEnd;
-  mTransferSize = aTiming.transferSize;
-  mEncodedBodySize = aTiming.encodedBodySize;
-  mProtocolVersion = aTiming.protocolVersion;
+  mRedirectStartTimeStamp = aTiming.redirectStart();
+  mRedirectEndTimeStamp = aTiming.redirectEnd();
+  mTransferSize = aTiming.transferSize();
+  mEncodedBodySize = aTiming.encodedBodySize();
+  mProtocolVersion = aTiming.protocolVersion();
 
-  mCacheReadStart = aTiming.cacheReadStart;
-  mCacheReadEnd = aTiming.cacheReadEnd;
+  mCacheReadStart = aTiming.cacheReadStart();
+  mCacheReadEnd = aTiming.cacheReadEnd();
 
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
@@ -1422,7 +1428,7 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvRedirect1Begin(
     const ParentLoadInfoForwarderArgs& aLoadInfoForwarder,
     const nsHttpResponseHead& aResponseHead,
     const nsCString& aSecurityInfoSerialization, const uint64_t& aChannelId,
-    const NetAddr& aOldPeerAddr, const ResourceTimingStruct& aTiming) {
+    const NetAddr& aOldPeerAddr, const ResourceTimingStructArgs& aTiming) {
   // TODO: handle security info
   LOG(("HttpChannelChild::RecvRedirect1Begin [this=%p]\n", this));
   // We set peer address of child to the old peer,
@@ -1510,7 +1516,7 @@ void HttpChannelChild::Redirect1Begin(
     const ParentLoadInfoForwarderArgs& loadInfoForwarder,
     const nsHttpResponseHead& responseHead,
     const nsACString& securityInfoSerialization, const uint64_t& channelId,
-    const ResourceTimingStruct& timing) {
+    const ResourceTimingStructArgs& timing) {
   nsresult rv;
 
   LOG(("HttpChannelChild::Redirect1Begin [this=%p]\n", this));
@@ -1519,7 +1525,7 @@ void HttpChannelChild::Redirect1Begin(
 
   nsCOMPtr<nsIURI> uri = DeserializeURI(newOriginalURI);
 
-  mTransactionTimings = timing;
+  ResourceTimingStructArgsToTimingsStruct(timing, mTransactionTimings);
   PROFILER_ADD_NETWORK_MARKER(
       mURI, mPriority, mChannelId, NetworkLoadType::LOAD_REDIRECT,
       mLastStatusReported, TimeStamp::Now(), 0, kCacheUnknown,

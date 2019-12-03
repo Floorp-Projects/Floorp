@@ -51,6 +51,8 @@ class SocketProcessChild final
   PWebrtcTCPSocketChild* AllocPWebrtcTCPSocketChild(const Maybe<TabId>& tabId);
   bool DeallocPWebrtcTCPSocketChild(PWebrtcTCPSocketChild* aActor);
 
+  already_AddRefed<PHttpTransactionChild> AllocPHttpTransactionChild();
+
   PFileDescriptorSetChild* AllocPFileDescriptorSetChild(
       const FileDescriptor& fd);
   bool DeallocPFileDescriptorSetChild(PFileDescriptorSetChild* aActor);

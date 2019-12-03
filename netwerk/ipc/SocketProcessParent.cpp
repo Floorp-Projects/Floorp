@@ -5,6 +5,7 @@
 
 #include "SocketProcessParent.h"
 
+#include "HttpTransactionParent.h"
 #include "SocketProcessHost.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/net/DNSRequestParent.h"

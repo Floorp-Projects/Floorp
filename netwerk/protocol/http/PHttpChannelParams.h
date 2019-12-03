@@ -13,6 +13,7 @@
 #include "ipc/IPCMessageUtils.h"
 #include "nsHttp.h"
 #include "nsHttpHeaderArray.h"
+#include "nsHttpRequestHead.h"
 #include "nsHttpResponseHead.h"
 #include "mozilla/Tuple.h"
 
@@ -178,6 +179,43 @@ struct ParamTraits<mozilla::net::nsHttpHeaderArray> {
                    paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mHeaders)) return false;
 
+    return true;
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::net::nsHttpRequestHead> {
+  typedef mozilla::net::nsHttpRequestHead paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mHeaders);
+    WriteParam(aMsg, aParam.mMethod);
+    WriteParam(aMsg, static_cast<uint32_t>(aParam.mVersion));
+    WriteParam(aMsg, aParam.mRequestURI);
+    WriteParam(aMsg, aParam.mPath);
+    WriteParam(aMsg, aParam.mOrigin);
+    WriteParam(aMsg, static_cast<uint8_t>(aParam.mParsedMethod));
+    WriteParam(aMsg, aParam.mHTTPS);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    uint32_t version;
+    uint8_t method;
+    if (!ReadParam(aMsg, aIter, &aResult->mHeaders) ||
+        !ReadParam(aMsg, aIter, &aResult->mMethod) ||
+        !ReadParam(aMsg, aIter, &version) ||
+        !ReadParam(aMsg, aIter, &aResult->mRequestURI) ||
+        !ReadParam(aMsg, aIter, &aResult->mPath) ||
+        !ReadParam(aMsg, aIter, &aResult->mOrigin) ||
+        !ReadParam(aMsg, aIter, &method) ||
+        !ReadParam(aMsg, aIter, &aResult->mHTTPS)) {
+      return false;
+    }
+
+    aResult->mVersion = static_cast<mozilla::net::HttpVersion>(version);
+    aResult->mParsedMethod =
+        static_cast<mozilla::net::nsHttpRequestHead::ParsedMethodType>(method);
     return true;
   }
 };

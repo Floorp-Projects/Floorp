@@ -8,6 +8,7 @@
 #define QuicSocketControl_h
 
 #include "CommonSocketControl.h"
+#include "nsIWeakReferenceUtils.h"
 
 namespace mozilla {
 namespace net {

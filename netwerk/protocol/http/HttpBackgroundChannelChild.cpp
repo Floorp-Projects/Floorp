@@ -147,7 +147,7 @@ IPCResult HttpBackgroundChannelChild::RecvOnTransportAndData(
 }
 
 IPCResult HttpBackgroundChannelChild::RecvOnStopRequest(
-    const nsresult& aChannelStatus, const ResourceTimingStruct& aTiming,
+    const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
     const TimeStamp& aLastActiveTabOptHit,
     const nsHttpHeaderArray& aResponseTrailers) {
   LOG(("HttpBackgroundChannelChild::RecvOnStopRequest [this=%p]\n", this));
@@ -169,7 +169,7 @@ IPCResult HttpBackgroundChannelChild::RecvOnStopRequest(
          static_cast<uint32_t>(aChannelStatus)));
 
     mQueuedRunnables.AppendElement(
-        NewRunnableMethod<const nsresult, const ResourceTimingStruct,
+        NewRunnableMethod<const nsresult, const ResourceTimingStructArgs,
                           const TimeStamp, const nsHttpHeaderArray>(
             "HttpBackgroundChannelChild::RecvOnStopRequest", this,
             &HttpBackgroundChannelChild::RecvOnStopRequest, aChannelStatus,

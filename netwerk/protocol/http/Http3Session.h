@@ -8,6 +8,7 @@
 #define Http3Session_H__
 
 #include "nsISupportsImpl.h"
+#include "nsITimer.h"
 #include "mozilla/net/NeqoHttp3Conn.h"
 #include "nsAHttpConnection.h"
 #include "nsRefPtrHashtable.h"

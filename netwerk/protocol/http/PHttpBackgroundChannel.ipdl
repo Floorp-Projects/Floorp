@@ -11,7 +11,6 @@ include NeckoChannelParams;
 include "mozilla/net/NeckoMessageUtils.h";
 
 using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
-using struct mozilla::net::ResourceTimingStruct from "mozilla/net/TimingStruct.h";
 
 namespace mozilla {
 namespace net {
@@ -37,7 +36,7 @@ child:
                            nsCString data);
 
   async OnStopRequest(nsresult channelStatus,
-                      ResourceTimingStruct timing,
+                      ResourceTimingStructArgs timing,
                       TimeStamp lastActiveTabOptimization,
                       nsHttpHeaderArray responseTrailers);
 

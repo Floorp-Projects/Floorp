@@ -19,7 +19,6 @@ include "mozilla/net/NeckoMessageUtils.h";
 
 using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
 using mozilla::net::NetAddr from "mozilla/net/DNS.h";
-using struct mozilla::net::ResourceTimingStruct from "mozilla/net/TimingStruct.h";
 using refcounted class nsIReferrerInfo from "mozilla/dom/ReferrerInfoUtils.h";
 using nsIHttpChannel::FlashPluginState from "mozilla/net/NeckoMessageUtils.h";
 
@@ -128,7 +127,7 @@ child:
                        bool                deliveringAltData,
                        bool                applyConversion,
                        bool                isResolvedByTRR,
-                       ResourceTimingStruct timing,
+                       ResourceTimingStructArgs timing,
                        bool                allRedirectsSameOrigin);
 
   // Used to cancel child channel if we hit errors during creating and
@@ -146,7 +145,7 @@ child:
                        nsCString          securityInfoSerialization,
                        uint64_t           channelId,
                        NetAddr            oldPeerAddr,
-                       ResourceTimingStruct timing);
+                       ResourceTimingStructArgs timing);
 
   // Called if redirect successful so that child can complete setup.
   async Redirect3Complete();

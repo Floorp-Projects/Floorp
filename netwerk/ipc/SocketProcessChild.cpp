@@ -7,6 +7,7 @@
 #include "SocketProcessLogging.h"
 
 #include "base/task.h"
+#include "HttpTransactionChild.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/ipc/CrashReporterClient.h"
@@ -214,6 +215,12 @@ bool SocketProcessChild::DeallocPWebrtcTCPSocketChild(
   child->ReleaseIPDLReference();
 #endif
   return true;
+}
+
+already_AddRefed<PHttpTransactionChild>
+SocketProcessChild::AllocPHttpTransactionChild() {
+  RefPtr<HttpTransactionChild> actor = new HttpTransactionChild();
+  return actor.forget();
 }
 
 PFileDescriptorSetChild* SocketProcessChild::AllocPFileDescriptorSetChild(
