@@ -35,6 +35,6 @@ LOCAL_INCLUDES += [
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']
 
-SPHINX_TREES['l10n'] = 'docs'
+SPHINX_TREES['/l10n'] = 'docs'
 
 FINAL_LIBRARY = 'xul'
