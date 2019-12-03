@@ -104,6 +104,14 @@ class ServiceWorkerRegistrationInfo final
     return newest.forget();
   }
 
+  already_AddRefed<ServiceWorkerInfo> NewestIncludingEvaluating() const {
+    if (mEvaluatingWorker) {
+      RefPtr<ServiceWorkerInfo> newest = mEvaluatingWorker;
+      return newest.forget();
+    }
+    return Newest();
+  }
+
   already_AddRefed<ServiceWorkerInfo> GetServiceWorkerInfoById(uint64_t aId);
 
   void StartControllingClient() {
