@@ -104,6 +104,7 @@ rusty-enums = [
     "mozilla::StyleRubyAlign",
     "mozilla::StyleTextSizeAdjust",
     "mozilla::StyleHyphens",
+    "mozilla::StyleRubyPosition",
     "mozilla::StyleShapeSourceType",
     "mozilla::StyleBasicShapeType",
     "nsStyleImageLayers_Size_DimensionType",

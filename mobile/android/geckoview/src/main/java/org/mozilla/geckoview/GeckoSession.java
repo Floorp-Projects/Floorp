@@ -5377,6 +5377,10 @@ public class GeckoSession implements Parcelable {
 
 
     /* package */ void setFixedBottomOffset(final int offset) {
+        if (mFixedBottomOffset == offset) {
+            return;
+        }
+
         mFixedBottomOffset = offset;
 
         if (mCompositorReady) {

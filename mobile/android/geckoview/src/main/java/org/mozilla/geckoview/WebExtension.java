@@ -1036,6 +1036,12 @@ public class WebExtension {
     @AnyThread
     public void setActionDelegate(final @Nullable ActionDelegate delegate) {
         actionDelegate = delegate;
+
+        final GeckoBundle bundle = new GeckoBundle(1);
+        bundle.putString("extensionId", id);
+
+        EventDispatcher.getInstance().dispatch(
+                "GeckoView:ActionDelegate:Attached", bundle);
     }
 
     // TODO: make public

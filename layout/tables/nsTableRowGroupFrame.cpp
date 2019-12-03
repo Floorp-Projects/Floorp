@@ -1104,8 +1104,8 @@ nsresult nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
   nsTableRowFrame* prevRowFrame = nullptr;
   aDesiredSize.Height() = 0;
 
-  nscoord availWidth = aReflowInput.AvailableWidth();
-  nscoord availHeight = aReflowInput.AvailableHeight();
+  const nscoord availWidth = aReflowInput.AvailableWidth();
+  const nscoord availHeight = aReflowInput.AvailableHeight();
 
   const bool borderCollapse = aTableFrame->IsBorderCollapse();
 
@@ -1328,8 +1328,17 @@ nsresult nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
         }
       }
       if (aStatus.IsIncomplete() && !contRow) {
-        nsTableRowFrame* nextRow = lastRowThisPage->GetNextRow();
-        if (nextRow) {
+        if (nsTableRowFrame* nextRow = lastRowThisPage->GetNextRow()) {
+          PushChildren(nextRow, lastRowThisPage);
+        }
+      } else if (aStatus.IsComplete() && lastRowThisPage) {
+        // Our size from the unconstrained reflow exceeded the constrained
+        // available space but our size in the constrained reflow is Complete.
+        // This can happen when a non-zero block-end margin is suppressed in
+        // nsBlockFrame::ComputeFinalSize.
+        if (nsTableRowFrame* nextRow = lastRowThisPage->GetNextRow()) {
+          aStatus.Reset();
+          aStatus.SetIncomplete();
           PushChildren(nextRow, lastRowThisPage);
         }
       }

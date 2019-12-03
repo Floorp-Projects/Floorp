@@ -2173,6 +2173,11 @@
   value: true
   mirror: always
 
+- name: dom.security.featurePolicy.experimental.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Expose the 'policy' attribute in document and HTMLIFrameElement
 - name: dom.security.featurePolicy.webidl.enabled
   type: bool
@@ -3269,6 +3274,17 @@
 - name: gfx.compositor.clearstate
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+
+# Whether GL contexts can be migrated to a different GPU (to match the one the
+# OS is using for composition).
+#
+# 0 = force disable migration
+# 1 = use migration where in safe configurations (the default)
+# 2 = force enable migration (for testing)
+- name: gfx.compositor.gpu-migration
+  type: RelaxedAtomicInt32
+  value: 1
   mirror: always
 
 - name: gfx.core-animation.tint-opaque

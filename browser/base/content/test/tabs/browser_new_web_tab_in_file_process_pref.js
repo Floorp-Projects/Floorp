@@ -4,42 +4,105 @@
 const TEST_FILE = "dummy_page.html";
 const TEST_HTTP = "http://example.org/";
 const TEST_CROSS_ORIGIN = "http://example.com/";
+let testFile = getChromeDir(getResolvedURI(gTestPath));
+testFile.append(TEST_FILE);
+testFile.normalize();
+const testFileURI = Services.io.newFileURI(testFile).spec;
 
-function CheckBrowserInPid(browser, expectedPid, message) {
-  return ContentTask.spawn(browser, { expectedPid, message }, arg => {
-    is(Services.appinfo.processID, arg.expectedPid, arg.message);
+function getBrowserPid(browser) {
+  return SpecialPowers.spawn(browser, [], () => {
+    const { Services } = ChromeUtils.import(
+      "resource://gre/modules/Services.jsm"
+    );
+
+    return Services.appinfo.processID;
   });
 }
 
-function CheckBrowserNotInPid(browser, unExpectedPid, message) {
-  return ContentTask.spawn(browser, { unExpectedPid, message }, arg => {
-    isnot(Services.appinfo.processID, arg.unExpectedPid, arg.message);
+async function CheckBrowserInPid(browser, expectedPid, message) {
+  let pid = await getBrowserPid(browser);
+  is(pid, expectedPid, message);
+}
+
+async function CheckBrowserNotInPid(browser, unExpectedPid, message) {
+  let pid = await getBrowserPid(browser);
+  isnot(pid, unExpectedPid, message);
+}
+
+async function runWebNotInFileTest(prefValue) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.tabs.remote.allowLinkedWebInFileUriProcess", prefValue]],
+  });
+  info(`Running test with allowLinkedWebInFileUriProcess=${prefValue}`);
+
+  // Verify that with this pref disabled the new HTTP content loaded into a file
+  // tab causes a process switch.
+
+  // Open file:// page.
+  await BrowserTestUtils.withNewTab(testFileURI, async function(fileBrowser) {
+    // Get the file:// URI pid for comparison later.
+    let filePid = await getBrowserPid(fileBrowser);
+
+    // Check that http tab opened from JS in file:// page is in a different
+    // process.
+    let promiseTabOpened = BrowserTestUtils.waitForNewTab(
+      gBrowser,
+      TEST_HTTP,
+      /* waitForLoad */ true
+    );
+    await SpecialPowers.spawn(fileBrowser, [TEST_HTTP], uri => {
+      content.open(uri, "_blank");
+    });
+    let httpTab = await promiseTabOpened;
+    let httpBrowser = httpTab.linkedBrowser;
+    registerCleanupFunction(async function() {
+      BrowserTestUtils.removeTab(httpTab);
+    });
+    await CheckBrowserNotInPid(
+      httpBrowser,
+      filePid,
+      "Check that new http tab opened from file loaded in a new content process."
+    );
+    ok(
+      E10SUtils.isWebRemoteType(httpBrowser.remoteType),
+      `Check that tab now has web remote type, got ${httpBrowser.remoteType}.`
+    );
+
+    // Check that a file:// URI load switches back to the file process.
+    let httpPid = await getBrowserPid(httpBrowser);
+    let promiseLoad = BrowserTestUtils.browserLoaded(
+      httpBrowser,
+      /* includeSubFrames */ false,
+      testFileURI
+    );
+    BrowserTestUtils.loadURI(httpBrowser, testFileURI);
+    await promiseLoad;
+    await CheckBrowserNotInPid(
+      httpBrowser,
+      httpPid,
+      "Check that tab not in http content process after file:// load."
+    );
+    is(
+      httpBrowser.remoteType,
+      E10SUtils.FILE_REMOTE_TYPE,
+      "Check that tab now has file remote type."
+    );
   });
 }
 
 // Test for bug 1343184.
-add_task(async function() {
+async function runWebInFileTest() {
   // Set prefs to ensure file content process, to allow linked web content in
   // file URI process and allow more that one file content process.
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.tabs.remote.separateFileUriProcess", true],
-      ["browser.tabs.remote.allowLinkedWebInFileUriProcess", true],
-      ["browser.tabs.remote.useHTTPResponseProcessSelection", false],
-      ["dom.ipc.processCount.file", 2],
-    ],
+    set: [["browser.tabs.remote.allowLinkedWebInFileUriProcess", true]],
   });
+  info("Running test with allowLinkedWebInFileUriProcess=true");
 
   // Open file:// page.
-  let dir = getChromeDir(getResolvedURI(gTestPath));
-  dir.append(TEST_FILE);
-  dir.normalize();
-  const uriString = Services.io.newFileURI(dir).spec;
-  await BrowserTestUtils.withNewTab(uriString, async function(fileBrowser) {
+  await BrowserTestUtils.withNewTab(testFileURI, async function(fileBrowser) {
     // Get the file:// URI pid for comparison later.
-    let filePid = await ContentTask.spawn(fileBrowser, null, () => {
-      return Services.appinfo.processID;
-    });
+    let filePid = await getBrowserPid(fileBrowser);
 
     // Check that http tab opened from JS in file:// page is in same process.
     let promiseTabOpened = BrowserTestUtils.waitForNewTab(
@@ -47,7 +110,7 @@ add_task(async function() {
       TEST_HTTP,
       true
     );
-    await ContentTask.spawn(fileBrowser, TEST_HTTP, uri => {
+    await SpecialPowers.spawn(fileBrowser, [TEST_HTTP], uri => {
       content.open(uri, "_blank");
     });
     let httpTab = await promiseTabOpened;
@@ -59,6 +122,11 @@ add_task(async function() {
       httpBrowser,
       filePid,
       "Check that new http tab opened from file loaded in file content process."
+    );
+    is(
+      httpBrowser.remoteType,
+      E10SUtils.FILE_REMOTE_TYPE,
+      "Check that tab now has file remote type."
     );
 
     // Check that reload doesn't break the file content process affinity.
@@ -138,8 +206,12 @@ add_task(async function() {
     );
 
     // Check that file:// URI load doesn't break the affinity.
-    promiseLoad = BrowserTestUtils.browserLoaded(httpBrowser, false, uriString);
-    BrowserTestUtils.loadURI(httpBrowser, uriString);
+    promiseLoad = BrowserTestUtils.browserLoaded(
+      httpBrowser,
+      false,
+      testFileURI
+    );
+    BrowserTestUtils.loadURI(httpBrowser, testFileURI);
     await promiseLoad;
     await CheckBrowserInPid(
       httpBrowser,
@@ -149,7 +221,7 @@ add_task(async function() {
 
     // Check that location change doesn't break the affinity.
     promiseLoad = BrowserTestUtils.browserLoaded(httpBrowser, false, TEST_HTTP);
-    await ContentTask.spawn(httpBrowser, TEST_HTTP, uri => {
+    await SpecialPowers.spawn(httpBrowser, [TEST_HTTP], uri => {
       content.location = uri;
     });
     await promiseLoad;
@@ -178,9 +250,7 @@ add_task(async function() {
     );
 
     // Check that history back now remains in the web content process.
-    let httpPid = await ContentTask.spawn(httpBrowser, null, () => {
-      return Services.appinfo.processID;
-    });
+    let httpPid = await getBrowserPid(httpBrowser);
     promiseLocation = BrowserTestUtils.waitForLocationChange(
       gBrowser,
       TEST_HTTP
@@ -196,7 +266,7 @@ add_task(async function() {
     // Check that history back to file:// URI switches to file content process.
     promiseLocation = BrowserTestUtils.waitForLocationChange(
       gBrowser,
-      uriString
+      testFileURI
     );
     httpBrowser.goBack();
     await promiseLocation;
@@ -211,4 +281,29 @@ add_task(async function() {
       "Check that tab now has file remote type."
     );
   });
+
+  await SpecialPowers.popPrefEnv();
+}
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.tabs.remote.separateFileUriProcess", true],
+      ["browser.tabs.remote.useHTTPResponseProcessSelection", false],
+      ["dom.ipc.processCount.file", 2],
+    ],
+  });
 });
+
+add_task(async function runWebNotInFileTestFalse() {
+  await runWebNotInFileTest(false);
+});
+
+if (SpecialPowers.useRemoteSubframes) {
+  // With fission this pref is ignored.
+  add_task(async function runWebNotInFileTestTrue() {
+    await runWebNotInFileTest(true);
+  });
+} else {
+  add_task(runWebInFileTest);
+}

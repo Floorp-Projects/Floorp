@@ -10,8 +10,10 @@ FINAL_TARGET = '_tests/xpcshell/toolkit/mozapps/update/tests/data'
 
 if not CONFIG['MOZ_SUITE']:
     BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
+    BROWSER_CHROME_MANIFESTS += ['browser/browser.legacy.ini']
     if CONFIG['MOZ_BITS_DOWNLOAD']:
         BROWSER_CHROME_MANIFESTS += ['browser/browser.bits.ini']
+        BROWSER_CHROME_MANIFESTS += ['browser/browser.legacy.bits.ini']
 
 XPCSHELL_TESTS_MANIFESTS += [
     'unit_aus_update/xpcshell.ini',

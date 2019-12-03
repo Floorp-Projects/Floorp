@@ -2088,60 +2088,6 @@ void* AllocateBigIntNoGC(JSContext* cx) {
   return js::Allocate<BigInt, NoGC>(cx);
 }
 
-BigInt* BigIntAdd(JSContext* cx, HandleBigInt x, HandleBigInt y) {
-  return BigInt::add(cx, x, y);
-}
-
-BigInt* BigIntSub(JSContext* cx, HandleBigInt x, HandleBigInt y) {
-  return BigInt::sub(cx, x, y);
-}
-
-BigInt* BigIntMul(JSContext* cx, HandleBigInt x, HandleBigInt y) {
-  return BigInt::mul(cx, x, y);
-}
-
-BigInt* BigIntDiv(JSContext* cx, HandleBigInt x, HandleBigInt y) {
-  return BigInt::div(cx, x, y);
-}
-
-BigInt* BigIntMod(JSContext* cx, HandleBigInt x, HandleBigInt y) {
-  return BigInt::mod(cx, x, y);
-}
-
-BigInt* BigIntPow(JSContext* cx, HandleBigInt x, HandleBigInt y) {
-  return BigInt::pow(cx, x, y);
-}
-
-BigInt* BigIntBitAnd(JSContext* cx, HandleBigInt x, HandleBigInt y) {
-  return BigInt::bitAnd(cx, x, y);
-}
-
-BigInt* BigIntBitOr(JSContext* cx, HandleBigInt x, HandleBigInt y) {
-  return BigInt::bitOr(cx, x, y);
-}
-
-BigInt* BigIntBitXor(JSContext* cx, HandleBigInt x, HandleBigInt y) {
-  return BigInt::bitXor(cx, x, y);
-}
-
-BigInt* BigIntLeftShift(JSContext* cx, HandleBigInt x, HandleBigInt y) {
-  return BigInt::lsh(cx, x, y);
-}
-
-BigInt* BigIntRightShift(JSContext* cx, HandleBigInt x, HandleBigInt y) {
-  return BigInt::rsh(cx, x, y);
-}
-
-BigInt* BigIntBitNot(JSContext* cx, HandleBigInt x) {
-  return BigInt::bitNot(cx, x);
-}
-
-BigInt* BigIntNeg(JSContext* cx, HandleBigInt x) { return BigInt::neg(cx, x); }
-
-BigInt* BigIntInc(JSContext* cx, HandleBigInt x) { return BigInt::inc(cx, x); }
-
-BigInt* BigIntDec(JSContext* cx, HandleBigInt x) { return BigInt::dec(cx, x); }
-
 template <EqualityKind Kind>
 bool BigIntEqual(BigInt* x, BigInt* y) {
   AutoUnsafeCallWithABI unsafe;

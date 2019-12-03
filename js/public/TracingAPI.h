@@ -69,12 +69,6 @@ class JS_PUBLIC_API JSTracer {
     // everything reachable by regular edges has been marked.
     Marking,
 
-    // Same as Marking, except we have now moved on to the "weak marking
-    // phase", in which every marked obj/script is immediately looked up to
-    // see if it is a weak map key (and therefore might require marking its
-    // weak map value).
-    WeakMarking,
-
     // A tracer that traverses the graph for the purposes of moving objects
     // from the nursery to the tenured area.
     Tenuring,
@@ -83,12 +77,7 @@ class JS_PUBLIC_API JSTracer {
     // Traversing children is the responsibility of the callback.
     Callback
   };
-  bool isMarkingTracer() const {
-    return tag_ == TracerKindTag::Marking || tag_ == TracerKindTag::WeakMarking;
-  }
-  bool isWeakMarkingTracer() const {
-    return tag_ == TracerKindTag::WeakMarking;
-  }
+  bool isMarkingTracer() const { return tag_ == TracerKindTag::Marking; }
   bool isTenuringTracer() const { return tag_ == TracerKindTag::Tenuring; }
   bool isCallbackTracer() const { return tag_ == TracerKindTag::Callback; }
   inline JS::CallbackTracer* asCallbackTracer();
@@ -130,7 +119,7 @@ class JS_PUBLIC_API JSTracer {
 #endif
 
  protected:
-  TracerKindTag tag_;
+  const TracerKindTag tag_;
   bool traceWeakEdges_;
   bool canSkipJsids_;
 };

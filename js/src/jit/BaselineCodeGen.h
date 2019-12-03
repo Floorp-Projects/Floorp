@@ -95,6 +95,7 @@ namespace jit {
   _(JSOP_NEWARRAY_COPYONWRITE)      \
   _(JSOP_INITELEM_ARRAY)            \
   _(JSOP_NEWOBJECT)                 \
+  _(JSOP_NEWOBJECT_WITHGROUP)       \
   _(JSOP_NEWINIT)                   \
   _(JSOP_INITELEM)                  \
   _(JSOP_INITELEM_GETTER)           \
@@ -443,6 +444,9 @@ class BaselineCodeGen {
 
   // Handles JSOP_LT, JSOP_GT, and friends
   MOZ_MUST_USE bool emitCompare();
+
+  // Handles JSOP_NEWOBJECT, JSOP_NEWOBJECT_WITHGROUP, and JSOP_NEWINIT.
+  MOZ_MUST_USE bool emitNewObject();
 
   // For a JOF_JUMP op, jumps to the op's jump target.
   void emitJump();

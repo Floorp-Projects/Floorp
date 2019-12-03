@@ -176,6 +176,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   nsRect GetScrollRange(nscoord aWidth, nscoord aHeight) const;
   nsSize GetVisualViewportSize() const;
   nsPoint GetVisualViewportOffset() const;
+  nsRect GetVisualScrollRange() const;
 
   /**
    * Return the 'optimal viewing region' as a rect suitable for use by
@@ -207,9 +208,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
   }
 
   bool IsProcessingScrollEvent() const { return mProcessingScrollEvent; }
-
- protected:
-  nsRect GetVisualScrollRange() const;
 
  public:
   static void AsyncScrollCallback(ScrollFrameHelper* aInstance,
@@ -903,6 +901,9 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   nsPoint GetVisualViewportOffset() const final {
     return mHelper.GetVisualViewportOffset();
   }
+  nsRect GetVisualScrollRange() const final {
+    return mHelper.GetVisualScrollRange();
+  }
   nsSize GetLineScrollAmount() const final {
     return mHelper.GetLineScrollAmount();
   }
@@ -1361,6 +1362,9 @@ class nsXULScrollFrame final : public nsBoxFrame,
   }
   nsPoint GetVisualViewportOffset() const final {
     return mHelper.GetVisualViewportOffset();
+  }
+  nsRect GetVisualScrollRange() const final {
+    return mHelper.GetVisualScrollRange();
   }
   nsSize GetLineScrollAmount() const final {
     return mHelper.GetLineScrollAmount();

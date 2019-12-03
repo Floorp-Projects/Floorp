@@ -407,6 +407,8 @@ template <typename T>
 class Sequence : public FallibleTArray<T> {
  public:
   Sequence() : FallibleTArray<T>() {}
+  MOZ_IMPLICIT Sequence(FallibleTArray<T>&& aArray) : FallibleTArray<T>(std::move(aArray)) {}
+  MOZ_IMPLICIT Sequence(nsTArray<T>&& aArray) : FallibleTArray<T>(std::move(aArray)) {}
 };
 
 inline nsWrapperCache* GetWrapperCache(nsWrapperCache* cache) { return cache; }

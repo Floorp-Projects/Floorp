@@ -147,6 +147,13 @@ class FunctionFlags {
   bool hasFlags(uint16_t flags) const { return flags_ & flags; }
   void setFlags(uint16_t flags) { flags_ |= flags; }
   void clearFlags(uint16_t flags) { flags_ &= ~flags; }
+  void setFlags(uint16_t flags, bool set) {
+    if (set) {
+      setFlags(flags);
+    } else {
+      clearFlags(flags);
+    }
+  }
 
   FunctionKind kind() const {
     return static_cast<FunctionKind>((flags_ & FUNCTION_KIND_MASK) >>

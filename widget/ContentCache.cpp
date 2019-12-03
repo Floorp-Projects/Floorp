@@ -1119,9 +1119,13 @@ bool ContentCacheInParent::OnCompositionEvent(
   // RequestIMEToCommitComposition().  Then, eCommitComposition event will
   // be dispatched with the committed string in the remote process internally.
   if (mCommitStringByRequest) {
-    MOZ_ASSERT(aEvent.mMessage == eCompositionChange ||
-               aEvent.mMessage == eCompositionCommit);
-    *mCommitStringByRequest = aEvent.mData;
+    if (aEvent.mMessage == eCompositionCommitAsIs) {
+      *mCommitStringByRequest = mCompositionString;
+    } else {
+      MOZ_ASSERT(aEvent.mMessage == eCompositionChange ||
+                 aEvent.mMessage == eCompositionCommit);
+      *mCommitStringByRequest = aEvent.mData;
+    }
     // We need to wait eCompositionCommitRequestHandled from the remote process
     // in this case.  Therefore, mPendingEventsNeedingAck needs to be
     // incremented here.  Additionally, we stop sending eCompositionCommit(AsIs)

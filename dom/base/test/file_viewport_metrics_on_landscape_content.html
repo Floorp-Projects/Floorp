@@ -41,8 +41,8 @@ add_task(async () => {
   // Now the visual viewport size is same as the layout viewport.
   const layoutViewportHeight = window.visualViewport.height;
 
-  is(window.innerHeight, layoutViewportHeight,
-     "window.innerHeight should reflect the layout viewport");
+  todo_is(window.innerHeight, layoutViewportHeight,
+     "window.innerHeight should reflect the layout viewport (Bug 1598487)");
   is(document.documentElement.scrollHeight, layoutViewportHeight,
      "The root element's scrollHeight should be the layout viewport height");
   is(document.documentElement.getBoundingClientRect().height,
@@ -57,7 +57,7 @@ add_task(async () => {
      "Now the visual viewport height should be changed to half of the layout " +
      "viewport height");
   todo_is(window.innerHeight, layoutViewportHeight,
-          "window.innerHeight shouldn't be changed (Bug 1514429)");
+          "window.innerHeight shouldn't be changed (Bug 1598487)");
   is(document.documentElement.scrollHeight, layoutViewportHeight,
      "The root element's scrollHeight shouldn't be changed");
 });

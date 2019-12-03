@@ -21,6 +21,7 @@
 #include "jit/SharedICRegisters.h"
 #include "proxy/Proxy.h"
 #include "vm/ArrayBufferObject.h"
+#include "vm/BigIntType.h"
 #include "vm/GeneratorObject.h"
 
 #include "builtin/Boolean-inl.h"
@@ -2750,67 +2751,67 @@ bool CacheIRCompiler::emitBigIntBinaryOperationShared() {
 bool CacheIRCompiler::emitBigIntAddResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, jit::BigIntAdd>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::add>();
 }
 
 bool CacheIRCompiler::emitBigIntSubResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, jit::BigIntSub>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::sub>();
 }
 
 bool CacheIRCompiler::emitBigIntMulResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, jit::BigIntMul>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::mul>();
 }
 
 bool CacheIRCompiler::emitBigIntDivResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, jit::BigIntDiv>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::div>();
 }
 
 bool CacheIRCompiler::emitBigIntModResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, jit::BigIntMod>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::mod>();
 }
 
 bool CacheIRCompiler::emitBigIntPowResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, jit::BigIntPow>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::pow>();
 }
 
 bool CacheIRCompiler::emitBigIntBitAndResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, jit::BigIntBitAnd>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::bitAnd>();
 }
 
 bool CacheIRCompiler::emitBigIntBitOrResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, jit::BigIntBitOr>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::bitOr>();
 }
 
 bool CacheIRCompiler::emitBigIntBitXorResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, jit::BigIntBitXor>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::bitXor>();
 }
 
 bool CacheIRCompiler::emitBigIntLeftShiftResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, jit::BigIntLeftShift>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::lsh>();
 }
 
 bool CacheIRCompiler::emitBigIntRightShiftResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
-  return emitBigIntBinaryOperationShared<Fn, jit::BigIntRightShift>();
+  return emitBigIntBinaryOperationShared<Fn, BigInt::rsh>();
 }
 
 template <typename Fn, Fn fn>
@@ -2829,25 +2830,25 @@ bool CacheIRCompiler::emitBigIntUnaryOperationShared() {
 bool CacheIRCompiler::emitBigIntNotResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt);
-  return emitBigIntUnaryOperationShared<Fn, jit::BigIntBitNot>();
+  return emitBigIntUnaryOperationShared<Fn, BigInt::bitNot>();
 }
 
 bool CacheIRCompiler::emitBigIntNegationResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt);
-  return emitBigIntUnaryOperationShared<Fn, jit::BigIntNeg>();
+  return emitBigIntUnaryOperationShared<Fn, BigInt::neg>();
 }
 
 bool CacheIRCompiler::emitBigIntIncResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt);
-  return emitBigIntUnaryOperationShared<Fn, jit::BigIntInc>();
+  return emitBigIntUnaryOperationShared<Fn, BigInt::inc>();
 }
 
 bool CacheIRCompiler::emitBigIntDecResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   using Fn = BigInt* (*)(JSContext*, HandleBigInt);
-  return emitBigIntUnaryOperationShared<Fn, jit::BigIntDec>();
+  return emitBigIntUnaryOperationShared<Fn, BigInt::dec>();
 }
 
 bool CacheIRCompiler::emitTruncateDoubleToUInt32() {

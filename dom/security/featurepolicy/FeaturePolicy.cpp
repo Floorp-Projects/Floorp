@@ -234,7 +234,13 @@ void FeaturePolicy::GetAllowlistForFeature(const nsAString& aFeatureName,
 }
 
 void FeaturePolicy::MaybeSetAllowedPolicy(const nsAString& aFeatureName) {
-  MOZ_ASSERT(FeaturePolicyUtils::IsSupportedFeature(aFeatureName));
+  MOZ_ASSERT(FeaturePolicyUtils::IsSupportedFeature(aFeatureName) ||
+             FeaturePolicyUtils::IsExperimentalFeature(aFeatureName));
+  // Skip if feature is in experimental pharse
+  if (!StaticPrefs::dom_security_featurePolicy_experimental_enabled() &&
+      FeaturePolicyUtils::IsExperimentalFeature(aFeatureName)) {
+    return;
+  }
 
   if (HasDeclaredFeature(aFeatureName)) {
     return;

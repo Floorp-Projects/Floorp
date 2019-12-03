@@ -1145,23 +1145,6 @@ bool DoToNumeric(JSContext* cx, HandleValue arg, MutableHandleValue ret);
 
 void* AllocateBigIntNoGC(JSContext* cx);
 
-BigInt* BigIntAdd(JSContext* cx, HandleBigInt x, HandleBigInt y);
-BigInt* BigIntSub(JSContext* cx, HandleBigInt x, HandleBigInt y);
-BigInt* BigIntMul(JSContext* cx, HandleBigInt x, HandleBigInt y);
-BigInt* BigIntDiv(JSContext* cx, HandleBigInt x, HandleBigInt y);
-BigInt* BigIntMod(JSContext* cx, HandleBigInt x, HandleBigInt y);
-BigInt* BigIntPow(JSContext* cx, HandleBigInt x, HandleBigInt y);
-BigInt* BigIntBitAnd(JSContext* cx, HandleBigInt x, HandleBigInt y);
-BigInt* BigIntBitOr(JSContext* cx, HandleBigInt x, HandleBigInt y);
-BigInt* BigIntBitXor(JSContext* cx, HandleBigInt x, HandleBigInt y);
-BigInt* BigIntLeftShift(JSContext* cx, HandleBigInt x, HandleBigInt y);
-BigInt* BigIntRightShift(JSContext* cx, HandleBigInt x, HandleBigInt y);
-
-BigInt* BigIntBitNot(JSContext* cx, HandleBigInt x);
-BigInt* BigIntNeg(JSContext* cx, HandleBigInt x);
-BigInt* BigIntInc(JSContext* cx, HandleBigInt x);
-BigInt* BigIntDec(JSContext* cx, HandleBigInt x);
-
 template <EqualityKind Kind>
 bool BigIntEqual(BigInt* x, BigInt* y);
 
