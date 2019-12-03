@@ -80,6 +80,7 @@ interface nsIXULRuntime : nsISupports
   const unsigned long PROCESS_TYPE_RDD = 7;
   const unsigned long PROCESS_TYPE_SOCKET = 8;
   const unsigned long PROCESS_TYPE_SANDBOX_BROKER = 9;
+  const unsigned long PROCESS_TYPE_FORKSERVER = 10;
 
   /**
    * The type of the caller's process.  Returns one of the values above.
