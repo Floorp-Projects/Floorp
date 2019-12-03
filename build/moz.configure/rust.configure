@@ -44,6 +44,9 @@ def unwrap_rustup(prog, name):
     @imports(_from='__builtin__', _import='open')
     @imports('os')
     def unwrap(prog, name):
+        if not prog:
+            return
+
         def from_rustup_which():
             out = check_cmd_output('rustup', 'which', name,
                                    executable=prog).rstrip()
@@ -89,6 +92,8 @@ set_config('RUSTC', rustc)
 @depends_if(rustc)
 @checking('rustc version', lambda info: info.version)
 def rustc_info(rustc):
+    if not rustc:
+        return
     out = check_cmd_output(rustc, '--version', '--verbose').splitlines()
     info = dict((s.strip() for s in line.split(':', 1)) for line in out[1:])
     return namespace(
@@ -98,12 +103,15 @@ def rustc_info(rustc):
         llvm_version=Version(info.get('LLVM version', '0')),
     )
 
-set_config('RUSTC_VERSION', depends(rustc_info)(lambda info: str(info.version)))
+set_config('RUSTC_VERSION', depends(rustc_info)(
+    lambda info: str(info.version) if info else None))
 
 @depends_if(cargo)
 @checking('cargo version', lambda info: info.version)
 @imports('re')
 def cargo_info(cargo):
+    if not cargo:
+        return
     out = check_cmd_output(cargo, '--version', '--verbose').splitlines()
     info = dict((s.strip() for s in line.split(':', 1)) for line in out[1:])
     version = info.get('release')
