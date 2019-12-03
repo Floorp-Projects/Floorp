@@ -1,26 +1,23 @@
 #![allow(non_snake_case)]
 
-use crate::cdsl::formats::FormatRegistry;
 use crate::cdsl::instructions::{
     AllInstructions, InstructionBuilder as Inst, InstructionGroup, InstructionGroupBuilder,
 };
-use crate::cdsl::operands::{create_operand as operand, create_operand_doc as operand_doc};
+use crate::cdsl::operands::Operand;
 use crate::cdsl::types::ValueType;
 use crate::cdsl::typevar::{Interval, TypeSetBuilder, TypeVar};
+
+use crate::shared::formats::Formats;
 use crate::shared::immediates::Immediates;
 use crate::shared::types;
 
+#[allow(clippy::many_single_char_names)]
 pub(crate) fn define(
     mut all_instructions: &mut AllInstructions,
-    format_registry: &FormatRegistry,
+    formats: &Formats,
     immediates: &Immediates,
 ) -> InstructionGroup {
-    let mut ig = InstructionGroupBuilder::new(
-        "x86",
-        "x86 specific instruction set",
-        &mut all_instructions,
-        format_registry,
-    );
+    let mut ig = InstructionGroupBuilder::new(&mut all_instructions);
 
     let iflags: &TypeVar = &ValueType::Special(types::Flag::IFlags.into()).into();
 
@@ -29,11 +26,11 @@ pub(crate) fn define(
         "A scalar integer machine word",
         TypeSetBuilder::new().ints(32..64).build(),
     );
-    let nlo = &operand_doc("nlo", iWord, "Low part of numerator");
-    let nhi = &operand_doc("nhi", iWord, "High part of numerator");
-    let d = &operand_doc("d", iWord, "Denominator");
-    let q = &operand_doc("q", iWord, "Quotient");
-    let r = &operand_doc("r", iWord, "Remainder");
+    let nlo = &Operand::new("nlo", iWord).with_doc("Low part of numerator");
+    let nhi = &Operand::new("nhi", iWord).with_doc("High part of numerator");
+    let d = &Operand::new("d", iWord).with_doc("Denominator");
+    let q = &Operand::new("q", iWord).with_doc("Quotient");
+    let r = &Operand::new("r", iWord).with_doc("Remainder");
 
     ig.push(
         Inst::new(
@@ -48,6 +45,7 @@ pub(crate) fn define(
 
         Return both quotient and remainder.
         "#,
+            &formats.ternary,
         )
         .operands_in(vec![nlo, nhi, d])
         .operands_out(vec![q, r])
@@ -67,16 +65,17 @@ pub(crate) fn define(
 
         Return both quotient and remainder.
         "#,
+            &formats.ternary,
         )
         .operands_in(vec![nlo, nhi, d])
         .operands_out(vec![q, r])
         .can_trap(true),
     );
 
-    let argL = &operand("argL", iWord);
-    let argR = &operand("argR", iWord);
-    let resLo = &operand("resLo", iWord);
-    let resHi = &operand("resHi", iWord);
+    let argL = &Operand::new("argL", iWord);
+    let argR = &Operand::new("argR", iWord);
+    let resLo = &Operand::new("resLo", iWord);
+    let resHi = &Operand::new("resHi", iWord);
 
     ig.push(
         Inst::new(
@@ -87,6 +86,7 @@ pub(crate) fn define(
         Polymorphic over all scalar integer types, but does not support vector
         types.
         "#,
+            &formats.binary,
         )
         .operands_in(vec![argL, argR])
         .operands_out(vec![resLo, resHi]),
@@ -101,6 +101,7 @@ pub(crate) fn define(
         Polymorphic over all scalar integer types, but does not support vector
         types.
         "#,
+            &formats.binary,
         )
         .operands_in(vec![argL, argR])
         .operands_out(vec![resLo, resHi]),
@@ -122,8 +123,8 @@ pub(crate) fn define(
             .simd_lanes(Interval::All)
             .build(),
     );
-    let x = &operand("x", Float);
-    let a = &operand("a", IntTo);
+    let x = &Operand::new("x", Float);
+    let a = &Operand::new("a", IntTo);
 
     ig.push(
         Inst::new(
@@ -137,14 +138,15 @@ pub(crate) fn define(
 
         This instruction does not trap.
         "#,
+            &formats.unary,
         )
         .operands_in(vec![x])
         .operands_out(vec![a]),
     );
 
-    let x = &operand("x", Float);
-    let a = &operand("a", Float);
-    let y = &operand("y", Float);
+    let x = &Operand::new("x", Float);
+    let a = &Operand::new("a", Float);
+    let y = &Operand::new("y", Float);
 
     ig.push(
         Inst::new(
@@ -159,6 +161,7 @@ pub(crate) fn define(
         When the two operands don't compare as LT, `y` is returned unchanged,
         even if it is a signalling NaN.
         "#,
+            &formats.binary,
         )
         .operands_in(vec![x, y])
         .operands_out(vec![a]),
@@ -177,12 +180,13 @@ pub(crate) fn define(
         When the two operands don't compare as GT, `y` is returned unchanged,
         even if it is a signalling NaN.
         "#,
+            &formats.binary,
         )
         .operands_in(vec![x, y])
         .operands_out(vec![a]),
     );
 
-    let x = &operand("x", iWord);
+    let x = &Operand::new("x", iWord);
 
     ig.push(
         Inst::new(
@@ -195,6 +199,7 @@ pub(crate) fn define(
     This is polymorphic in i32 and i64. However, it is only implemented for i64
     in 64-bit mode, and only for i32 in 32-bit mode.
     "#,
+            &formats.unary,
         )
         .operands_in(vec![x])
         .other_side_effects(true)
@@ -213,14 +218,15 @@ pub(crate) fn define(
     This is polymorphic in i32 and i64. However, it is only implemented for i64
     in 64-bit mode, and only for i32 in 32-bit mode.
     "#,
+            &formats.nullary,
         )
         .operands_out(vec![x])
         .other_side_effects(true)
         .can_load(true),
     );
 
-    let y = &operand("y", iWord);
-    let rflags = &operand("rflags", iflags);
+    let y = &Operand::new("y", iWord);
+    let rflags = &Operand::new("rflags", iflags);
 
     ig.push(
         Inst::new(
@@ -234,6 +240,7 @@ pub(crate) fn define(
     This is polymorphic in i32 and i64. It is implemented for both i64 and
     i32 in 64-bit mode, and only for i32 in 32-bit mode.
     "#,
+            &formats.unary,
         )
         .operands_in(vec![x])
         .operands_out(vec![y, rflags]),
@@ -246,6 +253,7 @@ pub(crate) fn define(
     Bit Scan Forwards -- returns the bit-index of the least significant 1
     in the word. Is otherwise identical to 'bsr', just above.
     "#,
+            &formats.unary,
         )
         .operands_in(vec![x])
         .operands_out(vec![y, rflags]),
@@ -263,9 +271,9 @@ pub(crate) fn define(
             .includes_scalars(false)
             .build(),
     );
-    let a = &operand_doc("a", TxN, "A vector value (i.e. held in an XMM register)");
-    let b = &operand_doc("b", TxN, "A vector value (i.e. held in an XMM register)");
-    let i = &operand_doc("i", uimm8, "An ordering operand controlling the copying of data from the source to the destination; see PSHUFD in Intel manual for details");
+    let a = &Operand::new("a", TxN).with_doc("A vector value (i.e. held in an XMM register)");
+    let b = &Operand::new("b", TxN).with_doc("A vector value (i.e. held in an XMM register)");
+    let i = &Operand::new("i", uimm8,).with_doc( "An ordering operand controlling the copying of data from the source to the destination; see PSHUFD in Intel manual for details");
 
     ig.push(
         Inst::new(
@@ -274,6 +282,7 @@ pub(crate) fn define(
     Packed Shuffle Doublewords -- copies data from either memory or lanes in an extended
     register and re-orders the data according to the passed immediate byte.
     "#,
+            &formats.extract_lane,
         )
         .operands_in(vec![a, i]) // TODO allow copying from memory here (need more permissive type than TxN)
         .operands_out(vec![a]),
@@ -286,14 +295,15 @@ pub(crate) fn define(
     Packed Shuffle Bytes -- re-orders data in an extended register using a shuffle
     mask from either memory or another extended register
     "#,
+            &formats.binary,
         )
         .operands_in(vec![a, b]) // TODO allow re-ordering from memory here (need more permissive type than TxN)
         .operands_out(vec![a]),
     );
 
-    let Idx = &operand_doc("Idx", uimm8, "Lane index");
-    let x = &operand("x", TxN);
-    let a = &operand("a", &TxN.lane_of());
+    let Idx = &Operand::new("Idx", uimm8).with_doc("Lane index");
+    let x = &Operand::new("x", TxN);
+    let a = &Operand::new("a", &TxN.lane_of());
 
     ig.push(
         Inst::new(
@@ -303,6 +313,7 @@ pub(crate) fn define(
         The lane index, ``Idx``, is an immediate value, not an SSA value. It
         must indicate a valid lane index for the type of ``x``.
         "#,
+            &formats.extract_lane,
         )
         .operands_in(vec![x, Idx])
         .operands_out(vec![a]),
@@ -318,9 +329,9 @@ pub(crate) fn define(
             .includes_scalars(false)
             .build(),
     );
-    let x = &operand("x", IBxN);
-    let y = &operand_doc("y", &IBxN.lane_of(), "New lane value");
-    let a = &operand("a", IBxN);
+    let x = &Operand::new("x", IBxN);
+    let y = &Operand::new("y", &IBxN.lane_of()).with_doc("New lane value");
+    let a = &Operand::new("a", IBxN);
 
     ig.push(
         Inst::new(
@@ -330,6 +341,7 @@ pub(crate) fn define(
         The lane index, ``Idx``, is an immediate value, not an SSA value. It
         must indicate a valid lane index for the type of ``x``.
         "#,
+            &formats.insert_lane,
         )
         .operands_in(vec![x, Idx, y])
         .operands_out(vec![a]),
@@ -344,26 +356,27 @@ pub(crate) fn define(
             .includes_scalars(false)
             .build(),
     );
-    let x = &operand("x", FxN);
-    let y = &operand_doc("y", &FxN.lane_of(), "New lane value");
-    let a = &operand("a", FxN);
+    let x = &Operand::new("x", FxN);
+    let y = &Operand::new("y", &FxN.lane_of()).with_doc("New lane value");
+    let a = &Operand::new("a", FxN);
 
     ig.push(
         Inst::new(
             "x86_insertps",
             r#"
-        Insert a lane of ``y`` into ``x`` at using ``Idx`` to encode both which lane the value is 
-        extracted from and which it is inserted to. This is similar to x86_pinsr but inserts 
+        Insert a lane of ``y`` into ``x`` at using ``Idx`` to encode both which lane the value is
+        extracted from and which it is inserted to. This is similar to x86_pinsr but inserts
         floats, which are already stored in an XMM register.
         "#,
+            &formats.insert_lane,
         )
         .operands_in(vec![x, Idx, y])
         .operands_out(vec![a]),
     );
 
-    let x = &operand("x", FxN);
-    let y = &operand("y", FxN);
-    let a = &operand("a", FxN);
+    let x = &Operand::new("x", FxN);
+    let y = &Operand::new("y", FxN);
+    let a = &Operand::new("a", FxN);
 
     ig.push(
         Inst::new(
@@ -371,6 +384,7 @@ pub(crate) fn define(
             r#"
         Move the low 64 bits of the float vector ``y`` to the low 64 bits of float vector ``x``
         "#,
+            &formats.binary,
         )
         .operands_in(vec![x, y])
         .operands_out(vec![a]),
@@ -382,6 +396,7 @@ pub(crate) fn define(
             r#"
         Move the low 64 bits of the float vector ``y`` to the high 64 bits of float vector ``x``
         "#,
+            &formats.binary,
         )
         .operands_in(vec![x, y])
         .operands_out(vec![a]),
@@ -406,41 +421,122 @@ pub(crate) fn define(
             .includes_scalars(false)
             .build(),
     );
-    let x = &operand_doc("x", IxN, "Vector value to shift");
-    let y = &operand_doc("y", I64x2, "Number of bits to shift");
-    let a = &operand("a", IxN);
+
+    let x = &Operand::new("x", IxN).with_doc("Vector value to shift");
+    let y = &Operand::new("y", I64x2).with_doc("Number of bits to shift");
+    let a = &Operand::new("a", IxN);
+
     ig.push(
         Inst::new(
             "x86_psll",
             r#"
-        Shift Packed Data Left Logical -- This implements the behavior of the shared instruction 
+        Shift Packed Data Left Logical -- This implements the behavior of the shared instruction
         ``ishl`` but alters the shift operand to live in an XMM register as expected by the PSLL*
         family of instructions.
         "#,
+            &formats.binary,
         )
         .operands_in(vec![x, y])
         .operands_out(vec![a]),
     );
+
     ig.push(
         Inst::new(
             "x86_psrl",
             r#"
-        Shift Packed Data Right Logical -- This implements the behavior of the shared instruction 
+        Shift Packed Data Right Logical -- This implements the behavior of the shared instruction
         ``ushr`` but alters the shift operand to live in an XMM register as expected by the PSRL*
         family of instructions.
         "#,
+            &formats.binary,
         )
         .operands_in(vec![x, y])
         .operands_out(vec![a]),
     );
+
     ig.push(
         Inst::new(
             "x86_psra",
             r#"
-        Shift Packed Data Right Arithmetic -- This implements the behavior of the shared 
-        instruction ``sshr`` but alters the shift operand to live in an XMM register as expected by 
+        Shift Packed Data Right Arithmetic -- This implements the behavior of the shared
+        instruction ``sshr`` but alters the shift operand to live in an XMM register as expected by
         the PSRA* family of instructions.
         "#,
+            &formats.binary,
+        )
+        .operands_in(vec![x, y])
+        .operands_out(vec![a]),
+    );
+
+    let x = &Operand::new("x", TxN);
+    let y = &Operand::new("y", TxN);
+    let f = &Operand::new("f", iflags);
+    ig.push(
+        Inst::new(
+            "x86_ptest",
+            r#"
+        Logical Compare -- PTEST will set the ZF flag if all bits in the result are 0 of the
+        bitwise AND of the first source operand (first operand) and the second source operand
+        (second operand). PTEST sets the CF flag if all bits in the result are 0 of the bitwise
+        AND of the second source operand (second operand) and the logical NOT of the destination
+        operand (first operand).
+        "#,
+            &formats.binary,
+        )
+        .operands_in(vec![x, y])
+        .operands_out(vec![f]),
+    );
+
+    let x = &Operand::new("x", IxN);
+    let y = &Operand::new("y", IxN);
+    let a = &Operand::new("a", IxN);
+    ig.push(
+        Inst::new(
+            "x86_pmaxs",
+            r#"
+        Maximum of Packed Signed Integers -- Compare signed integers in the first and second
+        operand and return the maximum values.
+        "#,
+            &formats.binary,
+        )
+        .operands_in(vec![x, y])
+        .operands_out(vec![a]),
+    );
+
+    ig.push(
+        Inst::new(
+            "x86_pmaxu",
+            r#"
+        Maximum of Packed Unsigned Integers -- Compare unsigned integers in the first and second
+        operand and return the maximum values.
+        "#,
+            &formats.binary,
+        )
+        .operands_in(vec![x, y])
+        .operands_out(vec![a]),
+    );
+
+    ig.push(
+        Inst::new(
+            "x86_pmins",
+            r#"
+        Minimum of Packed Signed Integers -- Compare signed integers in the first and second
+        operand and return the minimum values.
+        "#,
+            &formats.binary,
+        )
+        .operands_in(vec![x, y])
+        .operands_out(vec![a]),
+    );
+
+    ig.push(
+        Inst::new(
+            "x86_pminu",
+            r#"
+        Minimum of Packed Unsigned Integers -- Compare unsigned integers in the first and second
+        operand and return the minimum values.
+        "#,
+            &formats.binary,
         )
         .operands_in(vec![x, y])
         .operands_out(vec![a]),

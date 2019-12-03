@@ -15,12 +15,9 @@
         clippy::use_self
     )
 )]
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
 
 extern crate alloc;
-
-#[macro_use]
-extern crate failure_derive;
 
 mod host;
 mod parse_error;

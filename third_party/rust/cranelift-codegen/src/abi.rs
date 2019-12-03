@@ -4,6 +4,7 @@
 //! `TargetIsa::legalize_signature()` method.
 
 use crate::ir::{AbiParam, ArgumentExtension, ArgumentLoc, Type};
+use alloc::borrow::Cow;
 use alloc::vec::Vec;
 use core::cmp::Ordering;
 
@@ -26,13 +27,13 @@ pub enum ArgAction {
 
 impl From<ArgumentLoc> for ArgAction {
     fn from(x: ArgumentLoc) -> Self {
-        ArgAction::Assign(x)
+        Self::Assign(x)
     }
 }
 
 impl From<ValueConversion> for ArgAction {
     fn from(x: ValueConversion) -> Self {
-        ArgAction::Convert(x)
+        Self::Convert(x)
     }
 }
 
@@ -59,17 +60,17 @@ impl ValueConversion {
     /// Apply this conversion to a type, return the converted type.
     pub fn apply(self, ty: Type) -> Type {
         match self {
-            ValueConversion::IntSplit => ty.half_width().expect("Integer type too small to split"),
-            ValueConversion::VectorSplit => ty.half_vector().expect("Not a vector"),
-            ValueConversion::IntBits => Type::int(ty.bits()).expect("Bad integer size"),
-            ValueConversion::Sext(nty) | ValueConversion::Uext(nty) => nty,
+            Self::IntSplit => ty.half_width().expect("Integer type too small to split"),
+            Self::VectorSplit => ty.half_vector().expect("Not a vector"),
+            Self::IntBits => Type::int(ty.bits()).expect("Bad integer size"),
+            Self::Sext(nty) | Self::Uext(nty) => nty,
         }
     }
 
     /// Is this a split conversion that results in two arguments?
     pub fn is_split(self) -> bool {
         match self {
-            ValueConversion::IntSplit | ValueConversion::VectorSplit => true,
+            Self::IntSplit | Self::VectorSplit => true,
             _ => false,
         }
     }
@@ -86,7 +87,9 @@ pub trait ArgAssigner {
 /// Legalize the arguments in `args` using the given argument assigner.
 ///
 /// This function can be used for both arguments and return values.
-pub fn legalize_args<AA: ArgAssigner>(args: &mut Vec<AbiParam>, aa: &mut AA) {
+pub fn legalize_args<AA: ArgAssigner>(args: &[AbiParam], aa: &mut AA) -> Option<Vec<AbiParam>> {
+    let mut args = Cow::Borrowed(args);
+
     // Iterate over the arguments.
     // We may need to mutate the vector in place, so don't use a normal iterator, and clone the
     // argument to avoid holding a reference.
@@ -102,19 +105,24 @@ pub fn legalize_args<AA: ArgAssigner>(args: &mut Vec<AbiParam>, aa: &mut AA) {
         match aa.assign(&arg) {
             // Assign argument to a location and move on to the next one.
             ArgAction::Assign(loc) => {
-                args[argno].location = loc;
+                args.to_mut()[argno].location = loc;
                 argno += 1;
             }
             // Split this argument into two smaller ones. Then revisit both.
             ArgAction::Convert(conv) => {
                 let value_type = conv.apply(arg.value_type);
                 let new_arg = AbiParam { value_type, ..arg };
-                args[argno].value_type = value_type;
+                args.to_mut()[argno].value_type = value_type;
                 if conv.is_split() {
-                    args.insert(argno + 1, new_arg);
+                    args.to_mut().insert(argno + 1, new_arg);
                 }
             }
         }
+    }
+
+    match args {
+        Cow::Borrowed(_) => None,
+        Cow::Owned(a) => Some(a),
     }
 }
 

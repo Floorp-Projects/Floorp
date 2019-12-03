@@ -53,9 +53,20 @@ impl PointerWidth {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 pub enum CallingConvention {
+    /// "System V", which is used on most Unix-like platfoms. Note that the
+    /// specific conventions vary between hardware architectures; for example,
+    /// x86-32's "System V" is entirely different from x86-64's "System V".
     SystemV,
+
+    /// The WebAssembly C ABI.
     /// https://github.com/WebAssembly/tool-conventions/blob/master/BasicCABI.md
     WasmBasicCAbi,
+
+    /// "Windows Fastcall", which is used on Windows. Note that like "System V",
+    /// this varies between hardware architectures. On x86-32 it describes what
+    /// Windows documentation calls "fastcall", and on x86-64 it describes what
+    /// Windows documentation often just calls the Windows x64 calling convention
+    /// (though the compiler still recognizes "fastcall" as an alias for it).
     WindowsFastcall,
 }
 
@@ -168,7 +179,8 @@ impl fmt::Display for Triple {
         if self.vendor == Vendor::Unknown
             && ((self.operating_system == OperatingSystem::Linux
                 && (self.environment == Environment::Android
-                    || self.environment == Environment::Androideabi))
+                    || self.environment == Environment::Androideabi
+                    || self.environment == Environment::Kernel))
                 || self.operating_system == OperatingSystem::Fuchsia
                 || self.operating_system == OperatingSystem::Wasi
                 || (self.operating_system == OperatingSystem::None_
@@ -179,7 +191,8 @@ impl fmt::Display for Triple {
                         || self.architecture == Architecture::Arm(ArmArchitecture::Thumbv7m)
                         || self.architecture == Architecture::Arm(ArmArchitecture::Thumbv8mBase)
                         || self.architecture == Architecture::Arm(ArmArchitecture::Thumbv8mMain)
-                        || self.architecture == Architecture::Msp430)))
+                        || self.architecture == Architecture::Msp430
+                        || self.architecture == Architecture::X86_64)))
         {
             // As a special case, omit the vendor for Android, Fuchsia, Wasi, and sometimes
             // None_, depending on the hardware architecture. This logic is entirely
@@ -264,17 +277,19 @@ impl FromStr for Triple {
         }
 
         if let Some(s) = current_part {
-            Err(if !has_vendor {
-                ParseError::UnrecognizedVendor(s.to_owned())
-            } else if !has_operating_system {
-                ParseError::UnrecognizedOperatingSystem(s.to_owned())
-            } else if !has_environment {
-                ParseError::UnrecognizedEnvironment(s.to_owned())
-            } else if !has_binary_format {
-                ParseError::UnrecognizedBinaryFormat(s.to_owned())
-            } else {
-                ParseError::UnrecognizedField(s.to_owned())
-            })
+            Err(
+                if !has_vendor && !has_operating_system && !has_environment && !has_binary_format {
+                    ParseError::UnrecognizedVendor(s.to_owned())
+                } else if !has_operating_system && !has_environment && !has_binary_format {
+                    ParseError::UnrecognizedOperatingSystem(s.to_owned())
+                } else if !has_environment && !has_binary_format {
+                    ParseError::UnrecognizedEnvironment(s.to_owned())
+                } else if !has_binary_format {
+                    ParseError::UnrecognizedBinaryFormat(s.to_owned())
+                } else {
+                    ParseError::UnrecognizedField(s.to_owned())
+                },
+            )
         } else {
             Ok(result)
         }

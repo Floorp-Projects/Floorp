@@ -13,24 +13,21 @@ use crate::shared::types::Reference::{R32, R64};
 use crate::shared::Definitions as SharedDefinitions;
 
 use super::recipes::RecipeGroup;
-use crate::cdsl::formats::FormatRegistry;
 
 pub(crate) struct PerCpuModeEncodings<'defs> {
     pub inst_pred_reg: InstructionPredicateRegistry,
     pub enc32: Vec<Encoding>,
     pub enc64: Vec<Encoding>,
     recipes: &'defs Recipes,
-    formats: &'defs FormatRegistry,
 }
 
 impl<'defs> PerCpuModeEncodings<'defs> {
-    fn new(recipes: &'defs Recipes, formats: &'defs FormatRegistry) -> Self {
+    fn new(recipes: &'defs Recipes) -> Self {
         Self {
             inst_pred_reg: InstructionPredicateRegistry::new(),
             enc32: Vec::new(),
             enc64: Vec::new(),
             recipes,
-            formats,
         }
     }
     fn enc(
@@ -39,7 +36,7 @@ impl<'defs> PerCpuModeEncodings<'defs> {
         recipe: EncodingRecipeNumber,
         bits: u16,
     ) -> EncodingBuilder {
-        EncodingBuilder::new(inst.into(), recipe, bits, self.formats)
+        EncodingBuilder::new(inst.into(), recipe, bits)
     }
     fn add32(&mut self, encoding: EncodingBuilder) {
         self.enc32
@@ -59,7 +56,7 @@ impl<'defs> PerCpuModeEncodings<'defs> {
 
 fn load_bits(funct3: u16) -> u16 {
     assert!(funct3 <= 0b111);
-    0b00000 | (funct3 << 5)
+    funct3 << 5
 }
 
 fn store_bits(funct3: u16) -> u16 {
@@ -94,13 +91,13 @@ fn opimm32_bits(funct3: u16, funct7: u16) -> u16 {
 
 fn op_bits(funct3: u16, funct7: u16) -> u16 {
     assert!(funct3 <= 0b111);
-    assert!(funct7 <= 0b1111111);
+    assert!(funct7 <= 0b111_1111);
     0b01100 | (funct3 << 5) | (funct7 << 8)
 }
 
 fn op32_bits(funct3: u16, funct7: u16) -> u16 {
     assert!(funct3 <= 0b111);
-    assert!(funct7 <= 0b1111111);
+    assert!(funct7 <= 0b111_1111);
     0b01110 | (funct3 << 5) | (funct7 << 8)
 }
 
@@ -176,15 +173,15 @@ pub(crate) fn define<'defs>(
     let use_m = isa_settings.predicate_by_name("use_m");
 
     // Definitions.
-    let mut e = PerCpuModeEncodings::new(&recipes.recipes, &shared_defs.format_registry);
+    let mut e = PerCpuModeEncodings::new(&recipes.recipes);
 
     // Basic arithmetic binary instructions are encoded in an R-type instruction.
     for &(inst, inst_imm, f3, f7) in &[
-        (iadd, Some(iadd_imm), 0b000, 0b0000000),
-        (isub, None, 0b000, 0b0100000),
-        (bxor, Some(bxor_imm), 0b100, 0b0000000),
-        (bor, Some(bor_imm), 0b110, 0b0000000),
-        (band, Some(band_imm), 0b111, 0b0000000),
+        (iadd, Some(iadd_imm), 0b000, 0b000_0000),
+        (isub, None, 0b000, 0b010_0000),
+        (bxor, Some(bxor_imm), 0b100, 0b000_0000),
+        (bor, Some(bor_imm), 0b110, 0b000_0000),
+        (band, Some(band_imm), 0b111, 0b000_0000),
     ] {
         e.add32(e.enc(inst.bind(I32), r_r, op_bits(f3, f7)));
         e.add64(e.enc(inst.bind(I64), r_r, op_bits(f3, f7)));
@@ -197,8 +194,8 @@ pub(crate) fn define<'defs>(
     }
 
     // 32-bit ops in RV64.
-    e.add64(e.enc(iadd.bind(I32), r_r, op32_bits(0b000, 0b0000000)));
-    e.add64(e.enc(isub.bind(I32), r_r, op32_bits(0b000, 0b0100000)));
+    e.add64(e.enc(iadd.bind(I32), r_r, op32_bits(0b000, 0b000_0000)));
+    e.add64(e.enc(isub.bind(I32), r_r, op32_bits(0b000, 0b010_0000)));
     // There are no andiw/oriw/xoriw variations.
     e.add64(e.enc(iadd_imm.bind(I32), r_ii, opimm32_bits(0b000, 0)));
 
@@ -211,7 +208,7 @@ pub(crate) fn define<'defs>(
     for &(inst, inst_imm, f3, f7) in &[
         (ishl, ishl_imm, 0b1, 0b0),
         (ushr, ushr_imm, 0b101, 0b0),
-        (sshr, sshr_imm, 0b101, 0b100000),
+        (sshr, sshr_imm, 0b101, 0b10_0000),
     ] {
         e.add32(e.enc(inst.bind(I32).bind(I32), r_r, op_bits(f3, f7)));
         e.add64(e.enc(inst.bind(I64).bind(I64), r_r, op_bits(f3, f7)));
@@ -242,27 +239,27 @@ pub(crate) fn define<'defs>(
                 bound_inst.clone().into(),
                 vec![Expr::Literal(cc), Expr::Var(x), Expr::Var(y)],
             )
-            .inst_predicate(&shared_defs.format_registry, &var_pool)
+            .inst_predicate(&var_pool)
             .unwrap()
         };
 
         let icmp_i32 = icmp.bind(I32);
         let icmp_i64 = icmp.bind(I64);
         e.add32(
-            e.enc(icmp_i32.clone(), r_ricmp, op_bits(0b010, 0b0000000))
+            e.enc(icmp_i32.clone(), r_ricmp, op_bits(0b010, 0b000_0000))
                 .inst_predicate(icmp_instp(&icmp_i32, "slt")),
         );
         e.add64(
-            e.enc(icmp_i64.clone(), r_ricmp, op_bits(0b010, 0b0000000))
+            e.enc(icmp_i64.clone(), r_ricmp, op_bits(0b010, 0b000_0000))
                 .inst_predicate(icmp_instp(&icmp_i64, "slt")),
         );
 
         e.add32(
-            e.enc(icmp_i32.clone(), r_ricmp, op_bits(0b011, 0b0000000))
+            e.enc(icmp_i32.clone(), r_ricmp, op_bits(0b011, 0b000_0000))
                 .inst_predicate(icmp_instp(&icmp_i32, "ult")),
         );
         e.add64(
-            e.enc(icmp_i64.clone(), r_ricmp, op_bits(0b011, 0b0000000))
+            e.enc(icmp_i64.clone(), r_ricmp, op_bits(0b011, 0b000_0000))
                 .inst_predicate(icmp_instp(&icmp_i64, "ult")),
         );
 
@@ -296,15 +293,15 @@ pub(crate) fn define<'defs>(
     // "M" Standard Extension for Integer Multiplication and Division.
     // Gated by the `use_m` flag.
     e.add32(
-        e.enc(imul.bind(I32), r_r, op_bits(0b000, 0b00000001))
+        e.enc(imul.bind(I32), r_r, op_bits(0b000, 0b0000_0001))
             .isa_predicate(use_m),
     );
     e.add64(
-        e.enc(imul.bind(I64), r_r, op_bits(0b000, 0b00000001))
+        e.enc(imul.bind(I64), r_r, op_bits(0b000, 0b0000_0001))
             .isa_predicate(use_m),
     );
     e.add64(
-        e.enc(imul.bind(I32), r_r, op32_bits(0b000, 0b00000001))
+        e.enc(imul.bind(I32), r_r, op32_bits(0b000, 0b0000_0001))
             .isa_predicate(use_m),
     );
 
@@ -339,7 +336,7 @@ pub(crate) fn define<'defs>(
                     Expr::Var(args),
                 ],
             )
-            .inst_predicate(&shared_defs.format_registry, &var_pool)
+            .inst_predicate(&var_pool)
             .unwrap()
         };
 

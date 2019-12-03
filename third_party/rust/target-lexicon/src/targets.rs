@@ -364,8 +364,10 @@ pub enum Environment {
     Musleabihf,
     Muslabi64,
     Msvc,
+    Kernel,
     Uclibc,
     Sgx,
+    Softfloat,
     Spe,
 }
 
@@ -867,8 +869,10 @@ impl fmt::Display for Environment {
             Environment::Musleabihf => "musleabihf",
             Environment::Muslabi64 => "muslabi64",
             Environment::Msvc => "msvc",
+            Environment::Kernel => "kernel",
             Environment::Uclibc => "uclibc",
             Environment::Sgx => "sgx",
+            Environment::Softfloat => "softfloat",
             Environment::Spe => "spe",
         };
         f.write_str(s)
@@ -897,8 +901,10 @@ impl FromStr for Environment {
             "musleabihf" => Environment::Musleabihf,
             "muslabi64" => Environment::Muslabi64,
             "msvc" => Environment::Msvc,
+            "kernel" => Environment::Kernel,
             "uclibc" => Environment::Uclibc,
             "sgx" => Environment::Sgx,
+            "softfloat" => Environment::Softfloat,
             "spe" => Environment::Spe,
             _ => return Err(()),
         })
@@ -956,6 +962,7 @@ mod tests {
             "aarch64-unknown-linux-musl",
             "aarch64-unknown-netbsd",
             "aarch64-unknown-none",
+            "aarch64-unknown-none-softfloat",
             "aarch64-unknown-openbsd",
             "aarch64-unknown-redox",
             "aarch64-uwp-windows-msvc",
@@ -1006,6 +1013,7 @@ mod tests {
             "i686-unknown-linux-musl",
             "i686-unknown-netbsd",
             "i686-unknown-openbsd",
+            "i686-unknown-uefi",
             "i686-uwp-windows-gnu",
             "i686-uwp-windows-msvc",
             "i686-wrs-vxworks",
@@ -1067,6 +1075,7 @@ mod tests {
             "x86_64-fortanix-unknown-sgx",
             "x86_64-fuchsia",
             "x86_64-linux-android",
+            "x86_64-linux-kernel",
             "x86_64-apple-macosx10.7.0",
             "x86_64-pc-solaris",
             "x86_64-pc-windows-gnu",

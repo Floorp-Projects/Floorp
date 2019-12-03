@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use crate::cdsl::camel_case;
 use crate::cdsl::typevar::TypeVar;
 
 /// An instruction operand can be an *immediate*, an *SSA value*, or an *entity reference*. The
@@ -17,13 +16,39 @@ use crate::cdsl::typevar::TypeVar;
 /// 4. An `EntityRefKind` instance indicates an operand that references another entity in the
 ///    function, typically something declared in the function preamble.
 #[derive(Clone, Debug)]
-pub struct Operand {
+pub(crate) struct Operand {
+    /// Name of the operand variable, as it appears in function parameters, legalizations, etc.
     pub name: &'static str,
-    pub doc: Option<String>,
+
+    /// Type of the operand.
     pub kind: OperandKind,
+
+    doc: Option<&'static str>,
 }
 
 impl Operand {
+    pub fn new(name: &'static str, kind: impl Into<OperandKind>) -> Self {
+        Self {
+            name,
+            doc: None,
+            kind: kind.into(),
+        }
+    }
+    pub fn with_doc(mut self, doc: &'static str) -> Self {
+        self.doc = Some(doc);
+        self
+    }
+
+    pub fn doc(&self) -> Option<&str> {
+        if let Some(doc) = &self.doc {
+            return Some(doc);
+        }
+        match &self.kind.fields {
+            OperandKindFields::TypeVar(tvar) => Some(&tvar.doc),
+            _ => self.kind.doc(),
+        }
+    }
+
     pub fn is_value(&self) -> bool {
         match self.kind.fields {
             OperandKindFields::TypeVar(_) => true,
@@ -46,8 +71,7 @@ impl Operand {
     }
 
     /// Returns true if the operand has an immediate kind or is an EntityRef.
-    // TODO inherited name from the python, rename to is_immediate_or_entityref later.
-    pub fn is_immediate(&self) -> bool {
+    pub fn is_immediate_or_entityref(&self) -> bool {
         match self.kind.fields {
             OperandKindFields::ImmEnum(_)
             | OperandKindFields::ImmValue
@@ -57,7 +81,7 @@ impl Operand {
     }
 
     /// Returns true if the operand has an immediate kind.
-    pub fn is_pure_immediate(&self) -> bool {
+    pub fn is_immediate(&self) -> bool {
         match self.kind.fields {
             OperandKindFields::ImmEnum(_) | OperandKindFields::ImmValue => true,
             _ => false,
@@ -76,46 +100,10 @@ impl Operand {
     }
 }
 
-pub struct OperandBuilder {
-    name: &'static str,
-    doc: Option<String>,
-    kind: OperandKind,
-}
-
-impl OperandBuilder {
-    pub fn new(name: &'static str, kind: OperandKind) -> Self {
-        Self {
-            name,
-            doc: None,
-            kind,
-        }
-    }
-    pub fn doc(mut self, doc: impl Into<String>) -> Self {
-        assert!(self.doc.is_none());
-        self.doc = Some(doc.into());
-        self
-    }
-    pub fn build(self) -> Operand {
-        let doc = match self.doc {
-            Some(doc) => Some(doc),
-            None => match &self.kind.fields {
-                OperandKindFields::TypeVar(tvar) => Some(tvar.doc.clone()),
-                _ => self.kind.doc.clone(),
-            },
-        };
-
-        Operand {
-            name: self.name,
-            doc,
-            kind: self.kind,
-        }
-    }
-}
-
-type EnumValues = HashMap<&'static str, &'static str>;
+pub type EnumValues = HashMap<&'static str, &'static str>;
 
 #[derive(Clone, Debug)]
-pub enum OperandKindFields {
+pub(crate) enum OperandKindFields {
     EntityRef,
     VariableArgs,
     ImmValue,
@@ -124,162 +112,62 @@ pub enum OperandKindFields {
 }
 
 #[derive(Clone, Debug)]
-pub struct OperandKind {
-    pub name: &'static str,
+pub(crate) struct OperandKind {
+    /// String representation of the Rust type mapping to this OperandKind.
+    pub rust_type: &'static str,
 
-    doc: Option<String>,
+    /// Name of this OperandKind in the format's member field.
+    pub rust_field_name: &'static str,
 
-    pub default_member: Option<&'static str>,
-
-    /// The camel-cased name of an operand kind is also the Rust type used to represent it.
-    pub rust_type: String,
-
+    /// Type-specific fields for this OperandKind.
     pub fields: OperandKindFields,
+
+    doc: Option<&'static str>,
 }
 
 impl OperandKind {
-    pub fn imm_key(&self) -> Option<String> {
-        match self.fields {
+    pub fn new(
+        rust_field_name: &'static str,
+        rust_type: &'static str,
+        fields: OperandKindFields,
+    ) -> Self {
+        Self {
+            rust_field_name,
+            rust_type,
+            fields,
+            doc: None,
+        }
+    }
+    pub fn with_doc(mut self, doc: &'static str) -> Self {
+        assert!(self.doc.is_none());
+        self.doc = Some(doc);
+        self
+    }
+    fn doc(&self) -> Option<&str> {
+        if let Some(doc) = &self.doc {
+            return Some(doc);
+        }
+        match &self.fields {
+            OperandKindFields::TypeVar(type_var) => Some(&type_var.doc),
             OperandKindFields::ImmEnum(_)
             | OperandKindFields::ImmValue
-            | OperandKindFields::EntityRef => Some(self.name.to_string()),
-            _ => None,
-        }
-    }
-
-    pub fn type_var(&self) -> TypeVar {
-        match &self.fields {
-            OperandKindFields::TypeVar(tvar) => tvar.clone(),
-            _ => panic!("not a typevar"),
-        }
-    }
-}
-
-pub struct OperandKindBuilder {
-    name: &'static str,
-
-    doc: Option<String>,
-
-    default_member: Option<&'static str>,
-
-    /// The camel-cased name of an operand kind is also the Rust type used to represent it.
-    rust_type: Option<String>,
-
-    fields: OperandKindFields,
-}
-
-impl OperandKindBuilder {
-    pub fn new(name: &'static str, fields: OperandKindFields) -> Self {
-        Self {
-            name,
-            doc: None,
-            default_member: None,
-            rust_type: None,
-            fields,
-        }
-    }
-
-    pub fn new_imm(name: &'static str) -> Self {
-        Self {
-            name,
-            doc: None,
-            default_member: None,
-            rust_type: None,
-            fields: OperandKindFields::ImmValue,
-        }
-    }
-
-    pub fn new_enum(name: &'static str, values: EnumValues) -> Self {
-        Self {
-            name,
-            doc: None,
-            default_member: None,
-            rust_type: None,
-            fields: OperandKindFields::ImmEnum(values),
-        }
-    }
-
-    pub fn doc(mut self, doc: &'static str) -> Self {
-        assert!(self.doc.is_none());
-        self.doc = Some(doc.to_string());
-        self
-    }
-    pub fn default_member(mut self, default_member: &'static str) -> Self {
-        assert!(self.default_member.is_none());
-        self.default_member = Some(default_member);
-        self
-    }
-    pub fn rust_type(mut self, rust_type: &'static str) -> Self {
-        assert!(self.rust_type.is_none());
-        self.rust_type = Some(rust_type.to_string());
-        self
-    }
-
-    pub fn build(self) -> OperandKind {
-        let default_member = match self.default_member {
-            Some(default_member) => Some(default_member),
-            None => match &self.fields {
-                OperandKindFields::ImmEnum(_) | OperandKindFields::ImmValue => Some("imm"),
-                OperandKindFields::TypeVar(_) | OperandKindFields::EntityRef => Some(self.name),
-                OperandKindFields::VariableArgs => None,
-            },
-        };
-
-        let rust_type = match self.rust_type {
-            Some(rust_type) => rust_type.to_string(),
-            None => match &self.fields {
-                OperandKindFields::ImmEnum(_) | OperandKindFields::ImmValue => {
-                    format!("ir::immediates::{}", camel_case(self.name))
-                }
-                OperandKindFields::VariableArgs => "&[Value]".to_string(),
-                OperandKindFields::TypeVar(_) | OperandKindFields::EntityRef => {
-                    format!("ir::{}", camel_case(self.name))
-                }
-            },
-        };
-
-        let doc = match self.doc {
-            Some(doc) => Some(doc),
-            None => match &self.fields {
-                OperandKindFields::TypeVar(type_var) => Some(type_var.doc.clone()),
-                OperandKindFields::ImmEnum(_)
-                | OperandKindFields::ImmValue
-                | OperandKindFields::EntityRef
-                | OperandKindFields::VariableArgs => None,
-            },
-        };
-
-        OperandKind {
-            name: self.name,
-            doc,
-            default_member,
-            rust_type,
-            fields: self.fields,
+            | OperandKindFields::EntityRef
+            | OperandKindFields::VariableArgs => None,
         }
     }
 }
 
 impl Into<OperandKind> for &TypeVar {
     fn into(self) -> OperandKind {
-        OperandKindBuilder::new("value", OperandKindFields::TypeVar(self.into())).build()
+        OperandKind::new(
+            "value",
+            "ir::Value",
+            OperandKindFields::TypeVar(self.into()),
+        )
     }
 }
 impl Into<OperandKind> for &OperandKind {
     fn into(self) -> OperandKind {
         self.clone()
     }
-}
-
-/// Helper to create an operand in definitions files.
-pub fn create_operand(name: &'static str, kind: impl Into<OperandKind>) -> Operand {
-    OperandBuilder::new(name, kind.into()).build()
-}
-
-/// Helper to create an operand with a documentation in definitions files.
-pub fn create_operand_doc(
-    name: &'static str,
-    kind: impl Into<OperandKind>,
-    doc: &'static str,
-) -> Operand {
-    OperandBuilder::new(name, kind.into()).doc(doc).build()
 }

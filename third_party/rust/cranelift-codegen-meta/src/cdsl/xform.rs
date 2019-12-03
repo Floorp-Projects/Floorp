@@ -214,7 +214,7 @@ fn rewrite_expr(
             .inst()
             .operands_in
             .iter()
-            .map(|operand| format!("{}: {}", operand.name, operand.kind.name))
+            .map(|operand| format!("{}: {}", operand.name, operand.kind.rust_type))
             .collect::<Vec<_>>(),
     );
 
@@ -255,6 +255,7 @@ fn rewrite_expr(
     Apply::new(apply_target, args)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn rewrite_def_list(
     position: PatternPosition,
     dummy_defs: Vec<DummyDef>,
@@ -465,14 +466,15 @@ impl TransformGroups {
 #[test]
 #[should_panic]
 fn test_double_custom_legalization() {
-    use crate::cdsl::formats::{FormatRegistry, InstructionFormatBuilder};
+    use crate::cdsl::formats::InstructionFormatBuilder;
     use crate::cdsl::instructions::{AllInstructions, InstructionBuilder, InstructionGroupBuilder};
 
+    let nullary = InstructionFormatBuilder::new("nullary").build();
+
     let mut dummy_all = AllInstructions::new();
-    let mut format = FormatRegistry::new();
-    format.insert(InstructionFormatBuilder::new("nullary"));
-    let mut inst_group = InstructionGroupBuilder::new("test", "", &mut dummy_all, &format);
-    inst_group.push(InstructionBuilder::new("dummy", "doc"));
+    let mut inst_group = InstructionGroupBuilder::new(&mut dummy_all);
+    inst_group.push(InstructionBuilder::new("dummy", "doc", &nullary));
+
     let inst_group = inst_group.build();
     let dummy_inst = inst_group.by_name("dummy");
 

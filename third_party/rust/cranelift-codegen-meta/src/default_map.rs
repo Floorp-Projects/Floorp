@@ -1,3 +1,4 @@
+//! Trait for extending `HashMap` with `get_or_default`.
 use std::collections::HashMap;
 use std::hash::Hash;
 
@@ -7,7 +8,7 @@ pub(crate) trait MapWithDefault<K, V: Default> {
 
 impl<K: Eq + Hash, V: Default> MapWithDefault<K, V> for HashMap<K, V> {
     fn get_or_default(&mut self, k: K) -> &mut V {
-        self.entry(k).or_insert_with(|| V::default())
+        self.entry(k).or_insert_with(V::default)
     }
 }
 

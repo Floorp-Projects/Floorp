@@ -11,7 +11,7 @@ use crate::ir::{
     Ebb, ExtFuncData, FuncRef, GlobalValue, GlobalValueData, Heap, HeapData, Inst, JumpTable,
     JumpTableData, SigRef, StackSlot, StackSlotData, Table, TableData,
 };
-use crate::ir::{EbbOffsets, InstEncodings, SourceLocs, StackSlots, ValueLocations};
+use crate::ir::{EbbOffsets, FrameLayout, InstEncodings, SourceLocs, StackSlots, ValueLocations};
 use crate::ir::{JumpTableOffsets, JumpTables};
 use crate::isa::{CallConv, EncInfo, Encoding, Legalize, TargetIsa};
 use crate::regalloc::{EntryRegDiversions, RegDiversions};
@@ -33,6 +33,10 @@ pub struct Function {
 
     /// Signature of this function.
     pub signature: Signature,
+
+    /// The old signature of this function, before the most recent legalization,
+    /// if any.
+    pub old_signature: Option<Signature>,
 
     /// Stack slots allocated in this function.
     pub stack_slots: StackSlots,
@@ -83,6 +87,18 @@ pub struct Function {
     /// Track the original source location for each instruction. The source locations are not
     /// interpreted by Cranelift, only preserved.
     pub srclocs: SourceLocs,
+
+    /// Instruction that marks the end (inclusive) of the function's prologue.
+    ///
+    /// This is used for some calling conventions to track the end of unwind information.
+    pub prologue_end: Option<Inst>,
+
+    /// Frame layout for the instructions.
+    ///
+    /// The stack unwinding requires to have information about which registers and where they
+    /// are saved in the frame. This information is created during the prologue and epilogue
+    /// passes.
+    pub frame_layout: Option<FrameLayout>,
 }
 
 impl Function {
@@ -91,6 +107,7 @@ impl Function {
         Self {
             name,
             signature: sig,
+            old_signature: None,
             stack_slots: StackSlots::new(),
             global_values: PrimaryMap::new(),
             heaps: PrimaryMap::new(),
@@ -104,6 +121,8 @@ impl Function {
             offsets: SecondaryMap::new(),
             jt_offsets: SecondaryMap::new(),
             srclocs: SecondaryMap::new(),
+            prologue_end: None,
+            frame_layout: None,
         }
     }
 
@@ -123,6 +142,8 @@ impl Function {
         self.offsets.clear();
         self.jt_offsets.clear();
         self.srclocs.clear();
+        self.prologue_end = None;
+        self.frame_layout = None;
     }
 
     /// Create a new empty, anonymous function with a Fast calling convention.
@@ -232,6 +253,7 @@ impl Function {
     /// Starts collection of debug information.
     pub fn collect_debug_info(&mut self) {
         self.dfg.collect_debug_info();
+        self.frame_layout = Some(FrameLayout::new());
     }
 
     /// Changes the destination of a jump or branch instruction.
@@ -266,6 +288,14 @@ impl Function {
         }
 
         Ok(())
+    }
+
+    /// Returns true if the function is function that doesn't call any other functions. This is not
+    /// to be confused with a "leaf function" in Windows terminology.
+    pub fn is_leaf(&self) -> bool {
+        // Conservative result: if there's at least one function signature referenced in this
+        // function, assume it may call.
+        !self.dfg.signatures.is_empty()
     }
 }
 

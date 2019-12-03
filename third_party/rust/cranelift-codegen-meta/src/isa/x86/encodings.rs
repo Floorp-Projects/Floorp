@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use crate::cdsl::encodings::{Encoding, EncodingBuilder};
 use crate::cdsl::instructions::{
-    vector, Bindable, InstSpec, Instruction, InstructionGroup, InstructionPredicate,
+    vector, Bindable, Immediate, InstSpec, Instruction, InstructionGroup, InstructionPredicate,
     InstructionPredicateNode, InstructionPredicateRegistry,
 };
 use crate::cdsl::recipes::{EncodingRecipe, EncodingRecipeNumber, Recipes};
@@ -20,27 +20,24 @@ use crate::shared::Definitions as SharedDefinitions;
 use crate::isa::x86::opcodes::*;
 
 use super::recipes::{RecipeGroup, Template};
-use crate::cdsl::formats::FormatRegistry;
 use crate::cdsl::instructions::BindParameter::Any;
 
-pub(crate) struct PerCpuModeEncodings<'defs> {
+pub(crate) struct PerCpuModeEncodings {
     pub enc32: Vec<Encoding>,
     pub enc64: Vec<Encoding>,
     pub recipes: Recipes,
     recipes_by_name: HashMap<String, EncodingRecipeNumber>,
     pub inst_pred_reg: InstructionPredicateRegistry,
-    formats: &'defs FormatRegistry,
 }
 
-impl<'defs> PerCpuModeEncodings<'defs> {
-    fn new(formats: &'defs FormatRegistry) -> Self {
+impl PerCpuModeEncodings {
+    fn new() -> Self {
         Self {
             enc32: Vec::new(),
             enc64: Vec::new(),
             recipes: Recipes::new(),
             recipes_by_name: HashMap::new(),
             inst_pred_reg: InstructionPredicateRegistry::new(),
-            formats,
         }
     }
 
@@ -73,7 +70,7 @@ impl<'defs> PerCpuModeEncodings<'defs> {
     {
         let (recipe, bits) = template.build();
         let recipe_number = self.add_recipe(recipe);
-        let builder = EncodingBuilder::new(inst.into(), recipe_number, bits, self.formats);
+        let builder = EncodingBuilder::new(inst, recipe_number, bits);
         builder_closure(builder).build(&self.recipes, &mut self.inst_pred_reg)
     }
 
@@ -105,7 +102,7 @@ impl<'defs> PerCpuModeEncodings<'defs> {
     }
     fn enc32_rec(&mut self, inst: impl Into<InstSpec>, recipe: &EncodingRecipe, bits: u16) {
         let recipe_number = self.add_recipe(recipe.clone());
-        let builder = EncodingBuilder::new(inst.into(), recipe_number, bits, self.formats);
+        let builder = EncodingBuilder::new(inst.into(), recipe_number, bits);
         let encoding = builder.build(&self.recipes, &mut self.inst_pred_reg);
         self.enc32.push(encoding);
     }
@@ -138,7 +135,7 @@ impl<'defs> PerCpuModeEncodings<'defs> {
     }
     fn enc64_rec(&mut self, inst: impl Into<InstSpec>, recipe: &EncodingRecipe, bits: u16) {
         let recipe_number = self.add_recipe(recipe.clone());
-        let builder = EncodingBuilder::new(inst.into(), recipe_number, bits, self.formats);
+        let builder = EncodingBuilder::new(inst.into(), recipe_number, bits);
         let encoding = builder.build(&self.recipes, &mut self.inst_pred_reg);
         self.enc64.push(encoding);
     }
@@ -370,14 +367,15 @@ impl<'defs> PerCpuModeEncodings<'defs> {
 
 // Definitions.
 
-pub(crate) fn define<'defs>(
-    shared_defs: &'defs SharedDefinitions,
+#[allow(clippy::cognitive_complexity)]
+pub(crate) fn define(
+    shared_defs: &SharedDefinitions,
     settings: &SettingGroup,
     x86: &InstructionGroup,
     r: &RecipeGroup,
-) -> PerCpuModeEncodings<'defs> {
+) -> PerCpuModeEncodings {
     let shared = &shared_defs.instructions;
-    let formats = &shared_defs.format_registry;
+    let formats = &shared_defs.formats;
 
     // Shorthands for instructions.
     let adjust_sp_down = shared.by_name("adjust_sp_down");
@@ -419,6 +417,8 @@ pub(crate) fn define<'defs>(
     let fill = shared.by_name("fill");
     let fill_nop = shared.by_name("fill_nop");
     let floor = shared.by_name("floor");
+    let fmax = shared.by_name("fmax");
+    let fmin = shared.by_name("fmin");
     let fmul = shared.by_name("fmul");
     let fpromote = shared.by_name("fpromote");
     let fsub = shared.by_name("fsub");
@@ -519,11 +519,16 @@ pub(crate) fn define<'defs>(
     let x86_pop = x86.by_name("x86_pop");
     let x86_pextr = x86.by_name("x86_pextr");
     let x86_pinsr = x86.by_name("x86_pinsr");
+    let x86_pmaxs = x86.by_name("x86_pmaxs");
+    let x86_pmaxu = x86.by_name("x86_pmaxu");
+    let x86_pmins = x86.by_name("x86_pmins");
+    let x86_pminu = x86.by_name("x86_pminu");
     let x86_pshufd = x86.by_name("x86_pshufd");
     let x86_pshufb = x86.by_name("x86_pshufb");
     let x86_psll = x86.by_name("x86_psll");
     let x86_psra = x86.by_name("x86_psra");
     let x86_psrl = x86.by_name("x86_psrl");
+    let x86_ptest = x86.by_name("x86_ptest");
     let x86_push = x86.by_name("x86_push");
     let x86_sdivmodx = x86.by_name("x86_sdivmodx");
     let x86_smulx = x86.by_name("x86_smulx");
@@ -548,6 +553,7 @@ pub(crate) fn define<'defs>(
     let rec_copysp = r.template("copysp");
     let rec_div = r.template("div");
     let rec_debugtrap = r.recipe("debugtrap");
+    let rec_f_ib = r.template("f_ib");
     let rec_f32imm_z = r.template("f32imm_z");
     let rec_f64imm_z = r.template("f64imm_z");
     let rec_fa = r.template("fa");
@@ -607,6 +613,7 @@ pub(crate) fn define<'defs>(
     let rec_null_fpr = r.recipe("null_fpr");
     let rec_pcrel_fnaddr8 = r.template("pcrel_fnaddr8");
     let rec_pcrel_gvaddr8 = r.template("pcrel_gvaddr8");
+    let rec_pfcmp = r.template("pfcmp");
     let rec_popq = r.template("popq");
     let rec_pu_id = r.template("pu_id");
     let rec_pu_id_bool = r.template("pu_id_bool");
@@ -686,9 +693,10 @@ pub(crate) fn define<'defs>(
     let use_sse41 = settings.predicate_by_name("use_sse41");
     let use_ssse3_simd = settings.predicate_by_name("use_ssse3_simd");
     let use_sse41_simd = settings.predicate_by_name("use_sse41_simd");
+    let use_sse42_simd = settings.predicate_by_name("use_sse42_simd");
 
     // Definitions.
-    let mut e = PerCpuModeEncodings::new(formats);
+    let mut e = PerCpuModeEncodings::new();
 
     // The pinned reg is fixed to a certain value entirely user-controlled, so it generates nothing!
     e.enc64_rec(get_pinned_reg.bind(I64), rec_get_pinned_reg, 0);
@@ -777,8 +785,8 @@ pub(crate) fn define<'defs>(
     e.enc64(iconst.bind(I32), rec_pu_id.opcodes(&MOV_IMM));
 
     // The 32-bit immediate movl also zero-extends to 64 bits.
-    let f_unary_imm = formats.get(formats.by_name("UnaryImm"));
-    let is_unsigned_int32 = InstructionPredicate::new_is_unsigned_int(f_unary_imm, "imm", 32, 0);
+    let is_unsigned_int32 =
+        InstructionPredicate::new_is_unsigned_int(&*formats.unary_imm, "imm", 32, 0);
 
     e.enc64_func(
         iconst.bind(I64),
@@ -804,7 +812,7 @@ pub(crate) fn define<'defs>(
     }
     e.enc64(bconst.bind(B64), rec_pu_id_bool.opcodes(&MOV_IMM).rex());
 
-    let is_zero_int = InstructionPredicate::new_is_zero_int(f_unary_imm, "imm");
+    let is_zero_int = InstructionPredicate::new_is_zero_int(&formats.unary_imm, "imm");
     e.enc_both_instp(
         iconst.bind(I8),
         rec_u_id_z.opcodes(&XORB),
@@ -883,8 +891,8 @@ pub(crate) fn define<'defs>(
     e.enc64_isap(ctz.bind(I32), rec_urm.opcodes(&TZCNT), use_bmi1);
 
     // Loads and stores.
-    let f_load_complex = formats.get(formats.by_name("LoadComplex"));
-    let is_load_complex_length_two = InstructionPredicate::new_length_equals(f_load_complex, 2);
+    let is_load_complex_length_two =
+        InstructionPredicate::new_length_equals(&*formats.load_complex, 2);
 
     for recipe in &[rec_ldWithIndex, rec_ldWithIndexDisp8, rec_ldWithIndexDisp32] {
         e.enc_i32_i64_instp(
@@ -928,8 +936,8 @@ pub(crate) fn define<'defs>(
         );
     }
 
-    let f_store_complex = formats.get(formats.by_name("StoreComplex"));
-    let is_store_complex_length_three = InstructionPredicate::new_length_equals(f_store_complex, 3);
+    let is_store_complex_length_three =
+        InstructionPredicate::new_length_equals(&*formats.store_complex, 3);
 
     for recipe in &[rec_stWithIndex, rec_stWithIndexDisp8, rec_stWithIndexDisp32] {
         e.enc_i32_i64_instp(
@@ -1235,8 +1243,8 @@ pub(crate) fn define<'defs>(
     );
 
     // 64-bit, colocated, both PIC and non-PIC. Use the lea instruction's pc-relative field.
-    let f_func_addr = formats.get(formats.by_name("FuncAddr"));
-    let is_colocated_func = InstructionPredicate::new_is_colocated_func(f_func_addr, "func_ref");
+    let is_colocated_func =
+        InstructionPredicate::new_is_colocated_func(&*formats.func_addr, "func_ref");
     e.enc64_instp(
         func_addr.bind(I64),
         rec_pcrel_fnaddr8.opcodes(&LEA).rex().w(),
@@ -1295,8 +1303,7 @@ pub(crate) fn define<'defs>(
     e.enc32(call, rec_call_id.opcodes(&CALL_RELATIVE));
 
     // 64-bit, colocated, both PIC and non-PIC. Use the call instruction's pc-relative field.
-    let f_call = formats.get(formats.by_name("Call"));
-    let is_colocated_func = InstructionPredicate::new_is_colocated_func(f_call, "func_ref");
+    let is_colocated_func = InstructionPredicate::new_is_colocated_func(&*formats.call, "func_ref");
     e.enc64_instp(call, rec_call_id.opcodes(&CALL_RELATIVE), is_colocated_func);
 
     // 64-bit, non-colocated, PIC. There is no 64-bit non-colocated non-PIC version, since non-PIC
@@ -1422,27 +1429,24 @@ pub(crate) fn define<'defs>(
     // or 1.
     //
     // Encode movzbq as movzbl, because it's equivalent and shorter.
-    e.enc32(
-        bint.bind(I32).bind(B1),
-        rec_urm_noflags_abcd.opcodes(&MOVZX_BYTE),
-    );
-
-    e.enc64(
-        bint.bind(I64).bind(B1),
-        rec_urm_noflags.opcodes(&MOVZX_BYTE).rex(),
-    );
-    e.enc64(
-        bint.bind(I64).bind(B1),
-        rec_urm_noflags_abcd.opcodes(&MOVZX_BYTE),
-    );
-    e.enc64(
-        bint.bind(I32).bind(B1),
-        rec_urm_noflags.opcodes(&MOVZX_BYTE).rex(),
-    );
-    e.enc64(
-        bint.bind(I32).bind(B1),
-        rec_urm_noflags_abcd.opcodes(&MOVZX_BYTE),
-    );
+    for &to in &[I8, I16, I32, I64] {
+        for &from in &[B1, B8] {
+            e.enc64(
+                bint.bind(to).bind(from),
+                rec_urm_noflags.opcodes(&MOVZX_BYTE).rex(),
+            );
+            e.enc64(
+                bint.bind(to).bind(from),
+                rec_urm_noflags_abcd.opcodes(&MOVZX_BYTE),
+            );
+            if to != I64 {
+                e.enc32(
+                    bint.bind(to).bind(from),
+                    rec_urm_noflags_abcd.opcodes(&MOVZX_BYTE),
+                );
+            }
+        }
+    }
 
     // Numerical conversions.
 
@@ -1566,16 +1570,16 @@ pub(crate) fn define<'defs>(
 
     // Floating-point constants equal to 0.0 can be encoded using either `xorps` or `xorpd`, for
     // 32-bit and 64-bit floats respectively.
-    let f_unary_ieee32 = formats.get(formats.by_name("UnaryIeee32"));
-    let is_zero_32_bit_float = InstructionPredicate::new_is_zero_32bit_float(f_unary_ieee32, "imm");
+    let is_zero_32_bit_float =
+        InstructionPredicate::new_is_zero_32bit_float(&*formats.unary_ieee32, "imm");
     e.enc32_instp(
         f32const,
         rec_f32imm_z.opcodes(&XORPS),
         is_zero_32_bit_float.clone(),
     );
 
-    let f_unary_ieee64 = formats.get(formats.by_name("UnaryIeee64"));
-    let is_zero_64_bit_float = InstructionPredicate::new_is_zero_64bit_float(f_unary_ieee64, "imm");
+    let is_zero_64_bit_float =
+        InstructionPredicate::new_is_zero_64bit_float(&*formats.unary_ieee64, "imm");
     e.enc32_instp(
         f64const,
         rec_f64imm_z.opcodes(&XORPD),
@@ -1847,18 +1851,17 @@ pub(crate) fn define<'defs>(
     // this must be encoded prior to the MOVUPS implementation (below) so the compiler sees this
     // encoding first
     for ty in ValueType::all_lane_types().filter(allowed_simd_type) {
-        let f_unary_const = formats.get(formats.by_name("UnaryConst"));
         let instruction = vconst.bind(vector(ty, sse_vector_size));
 
         let is_zero_128bit =
-            InstructionPredicate::new_is_all_zeroes(f_unary_const, "constant_handle");
+            InstructionPredicate::new_is_all_zeroes(&*formats.unary_const, "constant_handle");
         let template = rec_vconst_optimized.nonrex().opcodes(&PXOR);
         e.enc_32_64_func(instruction.clone(), template, |builder| {
             builder.inst_predicate(is_zero_128bit)
         });
 
         let is_ones_128bit =
-            InstructionPredicate::new_is_all_ones(f_unary_const, "constant_handle");
+            InstructionPredicate::new_is_all_ones(&*formats.unary_const, "constant_handle");
         let template = rec_vconst_optimized.nonrex().opcodes(&PCMPEQB);
         e.enc_32_64_func(instruction, template, |builder| {
             builder.inst_predicate(is_ones_128bit)
@@ -1879,7 +1882,7 @@ pub(crate) fn define<'defs>(
 
     // SIMD register movement: store, load, spill, fill, regmove. All of these use encodings of
     // MOVUPS and MOVAPS from SSE (TODO ideally all of these would either use MOVAPS when we have
-    // alignment or type-specific encodings, see https://github.com/CraneStation/cranelift/issues/1039).
+    // alignment or type-specific encodings, see https://github.com/bytecodealliance/cranelift/issues/1039).
     for ty in ValueType::all_lane_types().filter(allowed_simd_type) {
         // Store
         let bound_store = store.bind(vector(ty, sse_vector_size)).bind(Any);
@@ -1920,7 +1923,7 @@ pub(crate) fn define<'defs>(
 
     // SIMD integer addition
     for (ty, opcodes) in &[(I8, &PADDB), (I16, &PADDW), (I32, &PADDD), (I64, &PADDQ)] {
-        let iadd = iadd.bind(vector(ty.clone(), sse_vector_size));
+        let iadd = iadd.bind(vector(*ty, sse_vector_size));
         e.enc_32_64(iadd, rec_fa.opcodes(*opcodes));
     }
 
@@ -1944,7 +1947,7 @@ pub(crate) fn define<'defs>(
 
     // SIMD integer subtraction
     for (ty, opcodes) in &[(I8, &PSUBB), (I16, &PSUBW), (I32, &PSUBD), (I64, &PSUBQ)] {
-        let isub = isub.bind(vector(ty.clone(), sse_vector_size));
+        let isub = isub.bind(vector(*ty, sse_vector_size));
         e.enc_32_64(isub, rec_fa.opcodes(*opcodes));
     }
 
@@ -1972,7 +1975,7 @@ pub(crate) fn define<'defs>(
         (I16, &PMULLW[..], None),
         (I32, &PMULLD[..], Some(use_sse41_simd)),
     ] {
-        let imul = imul.bind(vector(ty.clone(), sse_vector_size));
+        let imul = imul.bind(vector(*ty, sse_vector_size));
         e.enc_32_64_maybe_isap(imul, rec_fa.opcodes(opcodes), *isap);
     }
 
@@ -1982,6 +1985,10 @@ pub(crate) fn define<'defs>(
         let band = band.bind(vector(ty, sse_vector_size));
         e.enc_32_64(band, rec_fa.opcodes(&PAND));
 
+        // and not (note flipped recipe operands to match band_not order)
+        let band_not = band_not.bind(vector(ty, sse_vector_size));
+        e.enc_32_64(band_not, rec_fax.opcodes(&PANDN));
+
         // or
         let bor = bor.bind(vector(ty, sse_vector_size));
         e.enc_32_64(bor, rec_fa.opcodes(&POR));
@@ -1989,13 +1996,17 @@ pub(crate) fn define<'defs>(
         // xor
         let bxor = bxor.bind(vector(ty, sse_vector_size));
         e.enc_32_64(bxor, rec_fa.opcodes(&PXOR));
+
+        // ptest
+        let x86_ptest = x86_ptest.bind(vector(ty, sse_vector_size));
+        e.enc_32_64_maybe_isap(x86_ptest, rec_fcmp.opcodes(&PTEST), Some(use_sse41_simd));
     }
 
     // SIMD bitcast from I32/I64 to the low bits of a vector (e.g. I64x2); this register movement
     // allows SIMD shifts to be legalized more easily. TODO ideally this would be typed as an
     // I128x1 but restrictions on the type builder prevent this; the general idea here is that
     // the upper bits are all zeroed and do not form parts of any separate lane. See
-    // https://github.com/CraneStation/cranelift/issues/1146.
+    // https://github.com/bytecodealliance/cranelift/issues/1146.
     e.enc_both(
         bitcast.bind(vector(I64, sse_vector_size)).bind(I32),
         rec_frurm.opcodes(&MOVD_LOAD_XMM),
@@ -2023,29 +2034,89 @@ pub(crate) fn define<'defs>(
         e.enc_32_64(x86_psra, rec_fa.opcodes(*opcodes));
     }
 
-    // SIMD icmp using PCMPEQ*
-    for ty in ValueType::all_lane_types().filter(|t| t.is_int() && allowed_simd_type(t)) {
-        let (opcodes, isa_predicate): (&[_], _) = match ty.lane_bits() {
-            8 => (&PCMPEQB, None),
-            16 => (&PCMPEQW, None),
-            32 => (&PCMPEQD, None),
-            64 => (&PCMPEQQ, Some(use_sse41_simd)),
-            _ => panic!("invalid size for SIMD icmp"),
-        };
+    // SIMD immediate shift
+    for (ty, opcodes) in &[(I16, &PS_W_IMM), (I32, &PS_D_IMM), (I64, &PS_Q_IMM)] {
+        let ishl_imm = ishl_imm.bind(vector(*ty, sse_vector_size));
+        e.enc_32_64(ishl_imm, rec_f_ib.opcodes(*opcodes).rrr(6));
 
-        let instruction = icmp.bind(vector(ty, sse_vector_size));
-        let f_int_compare = formats.get(formats.by_name("IntCompare"));
-        let has_eq_condition_code =
-            InstructionPredicate::new_has_condition_code(f_int_compare, IntCC::Equal, "cond");
-        let template = rec_icscc_fpr.nonrex().opcodes(opcodes);
-        e.enc_32_64_func(instruction, template, |builder| {
-            let builder = builder.inst_predicate(has_eq_condition_code);
-            if let Some(p) = isa_predicate {
-                builder.isa_predicate(p)
-            } else {
-                builder
-            }
-        });
+        let ushr_imm = ushr_imm.bind(vector(*ty, sse_vector_size));
+        e.enc_32_64(ushr_imm, rec_f_ib.opcodes(*opcodes).rrr(2));
+
+        let sshr_imm = sshr_imm.bind(vector(*ty, sse_vector_size));
+        e.enc_32_64(sshr_imm, rec_f_ib.opcodes(*opcodes).rrr(4));
+    }
+
+    // SIMD integer comparisons
+    {
+        use IntCC::*;
+        for (ty, cc, opcodes, isa_predicate) in &[
+            (I8, Equal, &PCMPEQB[..], None),
+            (I16, Equal, &PCMPEQW[..], None),
+            (I32, Equal, &PCMPEQD[..], None),
+            (I64, Equal, &PCMPEQQ[..], Some(use_sse41_simd)),
+            (I8, SignedGreaterThan, &PCMPGTB[..], None),
+            (I16, SignedGreaterThan, &PCMPGTW[..], None),
+            (I32, SignedGreaterThan, &PCMPGTD[..], None),
+            (I64, SignedGreaterThan, &PCMPGTQ, Some(use_sse42_simd)),
+        ] {
+            let instruction = icmp
+                .bind(Immediate::IntCC(*cc))
+                .bind(vector(*ty, sse_vector_size));
+            let template = rec_icscc_fpr.nonrex().opcodes(opcodes);
+            e.enc_32_64_maybe_isap(instruction, template, *isa_predicate);
+        }
+    }
+
+    // SIMD min/max
+    for (ty, inst, opcodes, isa_predicate) in &[
+        (I8, x86_pmaxs, &PMAXSB[..], Some(use_sse41_simd)),
+        (I16, x86_pmaxs, &PMAXSW[..], None),
+        (I32, x86_pmaxs, &PMAXSD[..], Some(use_sse41_simd)),
+        (I8, x86_pmaxu, &PMAXUB[..], None),
+        (I16, x86_pmaxu, &PMAXUW[..], Some(use_sse41_simd)),
+        (I32, x86_pmaxu, &PMAXUD[..], Some(use_sse41_simd)),
+        (I8, x86_pmins, &PMINSB[..], Some(use_sse41_simd)),
+        (I16, x86_pmins, &PMINSW[..], None),
+        (I32, x86_pmins, &PMINSD[..], Some(use_sse41_simd)),
+        (I8, x86_pminu, &PMINUB[..], None),
+        (I16, x86_pminu, &PMINUW[..], Some(use_sse41_simd)),
+        (I32, x86_pminu, &PMINUD[..], Some(use_sse41_simd)),
+    ] {
+        let inst = inst.bind(vector(*ty, sse_vector_size));
+        e.enc_32_64_maybe_isap(inst, rec_fa.opcodes(opcodes), *isa_predicate);
+    }
+
+    // SIMD float comparisons
+    e.enc_both(
+        fcmp.bind(vector(F32, sse_vector_size)),
+        rec_pfcmp.opcodes(&CMPPS),
+    );
+    e.enc_both(
+        fcmp.bind(vector(F64, sse_vector_size)),
+        rec_pfcmp.opcodes(&CMPPD),
+    );
+
+    // SIMD float arithmetic
+    for (ty, inst, opcodes) in &[
+        (F32, fadd, &ADDPS[..]),
+        (F64, fadd, &ADDPD[..]),
+        (F32, fsub, &SUBPS[..]),
+        (F64, fsub, &SUBPD[..]),
+        (F32, fmul, &MULPS[..]),
+        (F64, fmul, &MULPD[..]),
+        (F32, fdiv, &DIVPS[..]),
+        (F64, fdiv, &DIVPD[..]),
+        (F32, fmin, &MINPS[..]),
+        (F64, fmin, &MINPD[..]),
+        (F32, fmax, &MAXPS[..]),
+        (F64, fmax, &MAXPD[..]),
+    ] {
+        let inst = inst.bind(vector(*ty, sse_vector_size));
+        e.enc_both(inst, rec_fa.opcodes(opcodes));
+    }
+    for (ty, inst, opcodes) in &[(F32, sqrt, &SQRTPS[..]), (F64, sqrt, &SQRTPD[..])] {
+        let inst = inst.bind(vector(*ty, sse_vector_size));
+        e.enc_both(inst, rec_furm.opcodes(opcodes));
     }
 
     // Reference type instructions
