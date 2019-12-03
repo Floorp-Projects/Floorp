@@ -44,13 +44,6 @@
 namespace mozilla {
 namespace dom {
 
-void UniqueMessagePortId::ForceClose() {
-  if (!mIdentifier.neutered()) {
-    MessagePort::ForceClose(mIdentifier);
-    mIdentifier.neutered() = true;
-  }
-}
-
 class PostMessageRunnable final : public CancelableRunnable {
   friend class MessagePort;
 
@@ -228,14 +221,13 @@ already_AddRefed<MessagePort> MessagePort::Create(nsIGlobalObject* aGlobal,
 
 /* static */
 already_AddRefed<MessagePort> MessagePort::Create(
-    nsIGlobalObject* aGlobal, UniqueMessagePortId& aIdentifier,
+    nsIGlobalObject* aGlobal, const MessagePortIdentifier& aIdentifier,
     ErrorResult& aRv) {
   MOZ_ASSERT(aGlobal);
 
   RefPtr<MessagePort> mp = new MessagePort(aGlobal, eStateEntangling);
   mp->Initialize(aIdentifier.uuid(), aIdentifier.destinationUuid(),
                  aIdentifier.sequenceId(), aIdentifier.neutered(), aRv);
-  aIdentifier.neutered() = true;
   return mp.forget();
 }
 
@@ -668,7 +660,7 @@ void MessagePort::Disentangle() {
   UpdateMustKeepAlive();
 }
 
-void MessagePort::CloneAndDisentangle(UniqueMessagePortId& aIdentifier) {
+void MessagePort::CloneAndDisentangle(MessagePortIdentifier& aIdentifier) {
   MOZ_ASSERT(mIdentifier);
   MOZ_ASSERT(!mHasBeenTransferredOrClosed);
 

@@ -8,14 +8,12 @@
 
 #include "AudioParamMap.h"
 #include "mozilla/dom/AudioWorkletNodeBinding.h"
-#include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessagePort.h"
 
 namespace mozilla {
 namespace dom {
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(AudioWorkletNode, AudioNode)
-NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioWorkletNode, AudioNode, mPort)
 
 class WorkletNodeEngine final : public AudioNodeEngine {
  public:
@@ -30,8 +28,7 @@ class WorkletNodeEngine final : public AudioNodeEngine {
   MOZ_CAN_RUN_SCRIPT
   void ConstructProcessor(AudioWorkletImpl* aWorkletImpl,
                           const nsAString& aName,
-                          NotNull<StructuredCloneHolder*> aSerializedOptions,
-                          UniqueMessagePortId& aPortIdentifier);
+                          NotNull<StructuredCloneHolder*> aSerializedOptions);
 
   void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
@@ -121,15 +118,13 @@ void WorkletNodeEngine::SendProcessorError() {
 
 void WorkletNodeEngine::ConstructProcessor(
     AudioWorkletImpl* aWorkletImpl, const nsAString& aName,
-    NotNull<StructuredCloneHolder*> aSerializedOptions,
-    UniqueMessagePortId& aPortIdentifier) {
+    NotNull<StructuredCloneHolder*> aSerializedOptions) {
   MOZ_ASSERT(mInputs.mPorts.empty() && mOutputs.mPorts.empty());
   RefPtr<AudioWorkletGlobalScope> global = aWorkletImpl->GetGlobalScope();
   MOZ_ASSERT(global);  // global has already been used to register processor
   JS::RootingContext* cx = RootingCx();
   mProcessor.init(cx);
-  if (!global->ConstructProcessor(aName, aSerializedOptions, aPortIdentifier,
-                                  &mProcessor) ||
+  if (!global->ConstructProcessor(aName, aSerializedOptions, &mProcessor) ||
       // mInputs and mOutputs outer arrays are fixed length and so much of the
       // initialization need only be performed once (i.e. here).
       NS_WARN_IF(!mInputs.mPorts.growBy(InputCount())) ||
@@ -438,23 +433,6 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
   }
 
   /**
-   * 4. Let messageChannel be a new MessageChannel.
-   */
-  RefPtr<MessageChannel> messageChannel =
-      MessageChannel::Constructor(aGlobal, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-  /* 5. Let nodePort be the value of messageChannel’s port1 attribute.
-   * 6. Let processorPortOnThisSide be the value of messageChannel’s port2
-   *    attribute.
-   * 7. Let serializedProcessorPort be the result of
-   *    StructuredSerializeWithTransfer(processorPortOnThisSide,
-   *                                    « processorPortOnThisSide »).
-   */
-  UniqueMessagePortId processorPortId;
-  messageChannel->Port2()->CloneAndDisentangle(processorPortId);
-  /**
    * 8. Convert options dictionary to optionsObject.
    */
   JSContext* cx = aGlobal.Context();
@@ -478,10 +456,6 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
-  /**
-   * 10. Set node’s port to nodePort.
-   */
-  audioWorkletNode->mPort = messageChannel->Port1();
 
   auto engine =
       new WorkletNodeEngine(audioWorkletNode, aOptions.mOutputChannelCount);
@@ -504,18 +478,22 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
       // See bug 1535398.
       [track = audioWorkletNode->mTrack,
        workletImpl = RefPtr<AudioWorkletImpl>(workletImpl),
-       name = nsString(aName), options = std::move(serializedOptions),
-       portId = std::move(processorPortId)]()
-          MOZ_CAN_RUN_SCRIPT_BOUNDARY mutable {
+       name = nsString(aName), options = std::move(serializedOptions)]()
+          MOZ_CAN_RUN_SCRIPT_BOUNDARY {
             auto engine = static_cast<WorkletNodeEngine*>(track->Engine());
             engine->ConstructProcessor(workletImpl, name,
-                                       WrapNotNull(options.get()), portId);
+                                       WrapNotNull(options.get()));
           }));
 
   return audioWorkletNode.forget();
 }
 
 AudioParamMap* AudioWorkletNode::GetParameters(ErrorResult& aRv) const {
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
+}
+
+MessagePort* AudioWorkletNode::GetPort(ErrorResult& aRv) const {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return nullptr;
 }
