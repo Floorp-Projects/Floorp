@@ -9512,9 +9512,11 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
 }
 
 static bool SchemeUsesDocChannel(nsIURI* aURI) {
-  return SchemeIsHTTP(aURI) || SchemeIsHTTPS(aURI) || aURI->SchemeIs("moz") ||
-         SchemeIsData(aURI) || SchemeIsFile(aURI) || SchemeIsFTP(aURI) ||
-         SchemeIsBlob(aURI);
+  return !SchemeIsJavascript(aURI) && !SchemeIsViewSource(aURI) &&
+         !NS_IsAboutBlank(aURI) &&
+         !aURI->GetSpecOrDefault().EqualsLiteral("about:printpreview") &&
+         !aURI->GetSpecOrDefault().EqualsLiteral("about:privatebrowsing") &&
+         !aURI->GetSpecOrDefault().EqualsLiteral("about:crashcontent");
 }
 
 /* static */ bool nsDocShell::CreateChannelForLoadState(
@@ -9523,8 +9525,16 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
     const nsString* aInitiatorType, nsLoadFlags aLoadFlags, uint32_t aLoadType,
     uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc,
     bool aHasNonEmptySandboxingFlags, nsresult& aRv, nsIChannel** aChannel) {
+  nsAutoString srcdoc;
+  bool isSrcdoc = aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC);
+  if (isSrcdoc) {
+    srcdoc = aLoadState->SrcdocData();
+  } else {
+    srcdoc = VoidString();
+  }
+
   if (StaticPrefs::browser_tabs_documentchannel() && XRE_IsContentProcess() &&
-      SchemeUsesDocChannel(aLoadState->URI())) {
+      SchemeUsesDocChannel(aLoadState->URI()) && !isSrcdoc) {
     RefPtr<DocumentChannelChild> child = new DocumentChannelChild(
         aLoadState, aLoadInfo, aInitiatorType, aLoadFlags, aLoadType, aCacheKey,
         aIsActive, aIsTopLevelDoc, aHasNonEmptySandboxingFlags);
@@ -9535,14 +9545,6 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
   }
 
   nsCOMPtr<nsIChannel> channel;
-  nsAutoString srcdoc;
-  bool isSrcdoc = aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC);
-  if (isSrcdoc) {
-    srcdoc = aLoadState->SrcdocData();
-  } else {
-    srcdoc = VoidString();
-  }
-
   nsIURI* baseURI = aLoadState->BaseURI();
   if (!isSrcdoc) {
     aRv = NS_NewChannelInternal(getter_AddRefs(channel), aLoadState->URI(),
