@@ -1966,6 +1966,17 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun `onLoadRequest will complete GeckoResult if no observer is available`() {
+        GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        captureDelegates()
+
+        val geckoResult = navigationDelegate.value.onLoadRequest(
+            mock(), mockLoadRequest("sample:about", triggeredByRedirect = true))
+
+        assertEquals(geckoResult!!, GeckoResult.fromValue(AllowOrDeny.ALLOW))
+    }
+
+    @Test
     fun `onLoadRequest will not notify observers if request was intercepted`() {
         val defaultSettings = DefaultSettings(requestInterceptor = object : RequestInterceptor {
             override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
