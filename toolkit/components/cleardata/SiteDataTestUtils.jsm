@@ -142,7 +142,7 @@ var SiteDataTestUtils = {
     let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
       origin
     );
-    for (let cookie of Services.cookies.enumerator) {
+    for (let cookie of Services.cookies.cookies) {
       if (
         ChromeUtils.isOriginAttributesEqual(
           principal.originAttributes,

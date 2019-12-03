@@ -30,7 +30,7 @@ async function realTest(noneRequiresSecure) {
 
     let cookies = { test: null, test2: null, test3: null };
 
-    for (let cookie of Services.cookies.enumerator) {
+    for (let cookie of Services.cookies.cookies) {
       if (cookie.host != "example.com") continue;
 
       if (cookie.name == "test" && cookie.value == "wow") {
