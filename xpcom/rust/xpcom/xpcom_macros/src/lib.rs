@@ -242,12 +242,12 @@ impl ToTokens for RefcntKind {
 /// Scans through the attributes on a struct, and extracts the type of the refcount to use.
 fn get_refcnt_kind(attrs: &[Attribute]) -> Result<RefcntKind, Box<dyn Error>> {
     for attr in attrs {
-        if let Some(Meta::NameValue(ref attr)) = attr.interpret_meta() {
-            if attr.ident != "refcnt" {
+        if let Meta::NameValue(syn::MetaNameValue{ref path, ref lit, .. }) = attr.parse_meta()? {
+            if !path.is_ident("refcnt") {
                 continue;
             }
 
-            let value = if let Lit::Str(ref s) = attr.lit {
+            let value = if let Lit::Str(ref s) = lit {
                 s.value()
             } else {
                 Err("Unexpected non-string value in #[refcnt]")?
@@ -273,21 +273,25 @@ fn get_refcnt_kind(attrs: &[Attribute]) -> Result<RefcntKind, Box<dyn Error>> {
 fn get_bases(attrs: &[Attribute]) -> Result<Vec<&'static Interface>, Box<dyn Error>> {
     let mut inherits = Vec::new();
     for attr in attrs {
-        if let Some(Meta::List(ref attr)) = attr.interpret_meta() {
-            if attr.ident != "xpimplements" {
+        if let Meta::List(syn::MetaList{ ref path, ref nested, .. }) = attr.parse_meta()? {
+            if !path.is_ident("xpimplements") {
                 continue;
             }
 
-            for item in &attr.nested {
-                if let NestedMeta::Meta(Meta::Word(ref iface)) = *item {
-                    if let Some(&iface) = IFACES.get(iface.to_string().as_str()) {
-                        inherits.push(iface);
-                    } else {
-                        Err(format!("Unexpected invalid base interface `{}` in \
-                                     #[xpimplements(..)]", iface))?
-                    }
+            for item in nested.iter() {
+                let iface = match *item {
+                    NestedMeta::Meta(syn::Meta::Path(ref iface)) => iface,
+                    _ => Err("Unexpected non-identifier in #[xpimplements(..)]")?,
+                };
+                let ident = match iface.get_ident() {
+                    Some(ref iface) => iface.to_string(),
+                    _ => Err("Too many components in xpimplements path")?,
+                };
+                if let Some(&iface) = IFACES.get(ident.as_str()) {
+                    inherits.push(iface);
                 } else {
-                    Err("Unexpected non-identifier in #[xpimplements(..)]")?
+                    Err(format!("Unexpected invalid base interface `{}` in \
+                                 #[xpimplements(..)]", ident))?
                 }
             }
         }
