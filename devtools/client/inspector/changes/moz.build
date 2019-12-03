@@ -15,7 +15,6 @@ DIRS += [
 DevToolsModules(
     'ChangesContextMenu.js',
     'ChangesView.js',
-    'constants.js',
 )
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
