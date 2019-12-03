@@ -978,48 +978,6 @@ class _ASRouter {
     };
   }
 
-  _findAllMessages(
-    candidateMessages,
-    trigger,
-    { ordered = false, shouldCache = false } = {}
-  ) {
-    const messages = candidateMessages.filter(m =>
-      this.isBelowFrequencyCaps(m)
-    );
-    const context = this._getMessagesContext();
-
-    return ASRouterTargeting.findAllMatchingMessages({
-      messages,
-      trigger,
-      context,
-      onError: this._handleTargetingError,
-      ordered,
-      shouldCache,
-    });
-  }
-
-  _findMessage(
-    candidateMessages,
-    trigger,
-    { ordered = false, shouldCache = false } = {}
-  ) {
-    const messages = candidateMessages.filter(m =>
-      this.isBelowFrequencyCaps(m)
-    );
-    const context = this._getMessagesContext();
-
-    // Find a message that matches the targeting context as well as the trigger context (if one is provided)
-    // If no trigger is provided, we should find a message WITHOUT a trigger property defined.
-    return ASRouterTargeting.findMatchingMessage({
-      messages,
-      trigger,
-      context,
-      onError: this._handleTargetingError,
-      ordered,
-      shouldCache,
-    });
-  }
-
   async evaluateExpression(target, { expression, context }) {
     const channel = target || this.messageChannel;
     let evaluationStatus;
@@ -1126,11 +1084,14 @@ class _ASRouter {
       }
     } else {
       // Find all messages that matches the targeting context
-      const allMessages = await this._findAllMessages(
-        bundledMessagesOfSameTemplate,
-        trigger,
-        { ordered: true }
-      );
+      const allMessages = await this.handleMessageRequest({
+        messages: bundledMessagesOfSameTemplate,
+        triggerId: trigger && trigger.id,
+        triggerContext: trigger && trigger.context,
+        triggerParam: trigger && trigger.param,
+        ordered: true,
+        returnAll: true,
+      });
 
       if (allMessages && allMessages.length) {
         // Retrieve enough messages needed to fill a bundle
@@ -1404,53 +1365,56 @@ class _ASRouter {
   }
 
   handleMessageRequest({
+    messages: candidates,
     triggerId,
     triggerParam,
     triggerContext,
     template,
     provider,
+    ordered = false,
     returnAll = false,
   }) {
-    const msgs = this._getUnblockedMessages().filter(m => {
-      if (provider && m.provider !== provider) {
-        return false;
-      }
-      if (template && m.template !== template) {
-        return false;
-      }
-      if (triggerId && !m.trigger) {
-        return false;
-      }
-      if (triggerId && m.trigger.id !== triggerId) {
-        return false;
-      }
+    const messages =
+      candidates ||
+      this._getUnblockedMessages()
+        .filter(m => {
+          if (provider && m.provider !== provider) {
+            return false;
+          }
+          if (template && m.template !== template) {
+            return false;
+          }
+          if (triggerId && !m.trigger) {
+            return false;
+          }
+          if (triggerId && m.trigger.id !== triggerId) {
+            return false;
+          }
 
-      return true;
-    });
+          return true;
+        })
+        .filter(m => this.isBelowFrequencyCaps(m));
 
-    const shouldCache = msgs.every(m => JEXL_PROVIDER_CACHE.has(m.provider));
+    const shouldCache = messages.every(m =>
+      JEXL_PROVIDER_CACHE.has(m.provider)
+    );
+    const context = this._getMessagesContext();
 
-    if (returnAll) {
-      return this._findAllMessages(
-        msgs,
-        triggerId && {
-          id: triggerId,
-          param: triggerParam,
-          context: triggerContext,
-        },
-        { shouldCache }
-      );
-    }
-
-    return this._findMessage(
-      msgs,
-      triggerId && {
+    // Find a message that matches the targeting context as well as the trigger context (if one is provided)
+    // If no trigger is provided, we should find a message WITHOUT a trigger property defined.
+    return ASRouterTargeting.findMatchingMessage({
+      messages,
+      trigger: triggerId && {
         id: triggerId,
         param: triggerParam,
         context: triggerContext,
       },
-      { shouldCache }
-    );
+      context,
+      onError: this._handleTargetingError,
+      ordered,
+      shouldCache,
+      returnAll,
+    });
   }
 
   async setMessageById(id, target, force = true, action = {}) {

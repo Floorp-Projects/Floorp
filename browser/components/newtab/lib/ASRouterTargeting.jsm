@@ -698,13 +698,14 @@ this.ASRouterTargeting = {
    * findMatchingMessage - Given an array of messages, returns one message
    *                       whos targeting expression evaluates to true
    *
-   * @param {Array} messages An array of AS router messages
+   * @param {Array<Message>} messages An array of AS router messages
    * @param {trigger} string A trigger expression if a message for that trigger is desired
    * @param {obj|null} context A FilterExpression context. Defaults to TargetingGetters above.
    * @param {func} onError A function to handle errors (takes two params; error, message)
    * @param {func} ordered An optional param when true sort message by order specified in message
    * @param {boolean} shouldCache Should the JEXL evaluations be cached and reused.
-   * @returns {obj} an AS router message
+   * @param {boolean} returnAll Should we return all matching messages, not just the first one found.
+   * @returns {obj|Array<Message>} If returnAll is false, a single message. If returnAll is true, an array of messages.
    */
   async findMatchingMessage({
     messages,
@@ -713,56 +714,32 @@ this.ASRouterTargeting = {
     onError,
     ordered = false,
     shouldCache = false,
+    returnAll = false,
   }) {
     const sortedMessages = getSortedMessages(messages, { ordered });
     const combinedContext = this._getCombinedContext(trigger, context);
+    const matching = returnAll ? [] : null;
+
+    const isMatch = candidate =>
+      this._isMessageMatch(
+        candidate,
+        trigger,
+        combinedContext,
+        onError,
+        shouldCache
+      );
 
     for (const candidate of sortedMessages) {
-      if (
-        await this._isMessageMatch(
-          candidate,
-          trigger,
-          combinedContext,
-          onError,
-          shouldCache
-        )
-      ) {
-        return candidate;
+      if (await isMatch(candidate)) {
+        // If not returnAll, we should return the first message we find that matches.
+        if (!returnAll) {
+          return candidate;
+        }
+
+        matching.push(candidate);
       }
     }
-    return null;
-  },
-
-  /**
-   * findAllMatchingMessages - Given an array of messages, returns an array of
-   *                           messages that that match the targeting.
-   *
-   * @param {Array} messages An array of AS router messages.
-   * @param {trigger} string A trigger expression if a message for that trigger is desired.
-   * @param {obj|null} context A FilterExpression context. Defaults to TargetingGetters above.
-   * @param {func} onError A function to handle errors (takes two params; error, message)
-   * @param {func} ordered An optional param when true sort message by order specified in message
-   * @returns {Array} An array of AS router messages that match.
-   */
-  async findAllMatchingMessages({
-    messages,
-    trigger,
-    context,
-    onError,
-    ordered = false,
-  }) {
-    const sortedMessages = getSortedMessages(messages, { ordered });
-    const combinedContext = this._getCombinedContext(trigger, context);
-    const matchingMessages = [];
-
-    for (const candidate of sortedMessages) {
-      if (
-        await this._isMessageMatch(candidate, trigger, combinedContext, onError)
-      ) {
-        matchingMessages.push(candidate);
-      }
-    }
-    return matchingMessages;
+    return matching;
   },
 };
 
