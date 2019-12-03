@@ -226,7 +226,6 @@ class BrowsingContext : public nsISupports,
     MOZ_ASSERT_IF(mParent, mParent->mType == mType);
     return mParent;
   }
-
   BrowsingContext* Top();
 
   already_AddRefed<BrowsingContext> GetOpener() const {

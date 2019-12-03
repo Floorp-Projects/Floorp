@@ -12857,10 +12857,7 @@ NS_IMETHODIMP nsDocShell::GetIsTopLevelContentDocShell(
   *aIsTopLevelContentDocShell = false;
 
   if (mItemType == typeContent) {
-    nsCOMPtr<nsIDocShellTreeItem> root;
-    GetInProcessSameTypeRootTreeItem(getter_AddRefs(root));
-    *aIsTopLevelContentDocShell =
-        root.get() == static_cast<nsIDocShellTreeItem*>(this);
+    *aIsTopLevelContentDocShell = mBrowsingContext->IsTopContent();
   }
 
   return NS_OK;
