@@ -854,6 +854,38 @@
     },
 
     /**
+     * Determine if a URI is an about: page pointing to a local resource.
+     */
+    isLocalAboutURI(aURI, aResolvedURI) {
+      if (!aURI.schemeIs("about")) {
+        return false;
+      }
+
+      // Specially handle about:blank as local
+      if (aURI.pathQueryRef === "blank") {
+        return true;
+      }
+
+      try {
+        // Use the passed in resolvedURI if we have one
+        const resolvedURI =
+          aResolvedURI ||
+          Services.io.newChannelFromURI(
+            aURI,
+            null, // loadingNode
+            Services.scriptSecurityManager.getSystemPrincipal(), // loadingPrincipal
+            null, // triggeringPrincipal
+            Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL, // securityFlags
+            Ci.nsIContentPolicy.TYPE_OTHER // contentPolicyType
+          ).URI;
+        return resolvedURI.schemeIs("jar") || resolvedURI.schemeIs("file");
+      } catch (ex) {
+        // aURI might be invalid.
+        return false;
+      }
+    },
+
+    /**
      * Sets an icon for the tab if the URI is defined in FAVICON_DEFAULTS.
      */
     setDefaultIcon(aTab, aURI) {
@@ -5535,7 +5567,7 @@
       // pointing to local resources.
       if (
         aRequest instanceof Ci.nsIChannel &&
-        aRequest.originalURI.schemeIs("about")
+        gBrowser.isLocalAboutURI(aRequest.originalURI, aRequest.URI)
       ) {
         return false;
       }
