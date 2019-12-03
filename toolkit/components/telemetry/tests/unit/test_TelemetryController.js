@@ -23,6 +23,9 @@ const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
 ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
 
 const PING_FORMAT_VERSION = 4;
 const DELETION_REQUEST_PING_TYPE = "deletion-request";
@@ -183,8 +186,16 @@ add_task(async function test_disableDataUpload() {
     "Client ID should be valid and random"
   );
 
+  // The next step should trigger an event, watch for it.
+  let disableObserved = TestUtils.topicObserved(
+    TelemetryUtils.TELEMETRY_UPLOAD_DISABLED_TOPIC
+  );
+
   // Disable FHR upload: this should trigger a deletion-request ping.
   Preferences.set(TelemetryUtils.Preferences.FhrUploadEnabled, false);
+
+  // Wait for the disable event
+  await disableObserved;
 
   ping = await PingServer.promiseNextPing();
   checkPingFormat(ping, DELETION_REQUEST_PING_TYPE, true, false);
