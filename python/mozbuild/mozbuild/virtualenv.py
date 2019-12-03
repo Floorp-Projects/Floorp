@@ -118,26 +118,14 @@ class VirtualenvManager(object):
         on OS X our python path may end up being a different or modified
         executable.
         """
-        ver = self.python_executable_hexversion(python)
+        ver = subprocess.check_output([python, '-c', 'import sys; print(sys.hexversion)'],
+                                      universal_newlines=True).rstrip()
         with open(self.exe_info_path, 'w') as fh:
             fh.write("%s\n" % ver)
             fh.write("%s\n" % os.path.getsize(python))
 
-    def python_executable_hexversion(self, python):
-        """Run a Python executable and return its sys.hexversion value."""
-        program = 'import sys; print(sys.hexversion)'
-        out = subprocess.check_output([python, '-c', program]).rstrip()
-        return int(out)
-
-    def up_to_date(self, python):
-        """Returns whether the virtualenv is present and up to date.
-
-        Args:
-            python: Full path string to the Python executable that this virtualenv
-                should be running.  If the Python executable passed in to this
-                argument is not the same version as the Python the virtualenv was
-                built with then this method will return False.
-        """
+    def up_to_date(self, python=sys.executable):
+        """Returns whether the virtualenv is present and up to date."""
 
         deps = [self.manifest_path, __file__]
 
@@ -146,8 +134,7 @@ class VirtualenvManager(object):
                 not os.path.exists(self.activate_path):
             return False
 
-        # Modifications to our package dependency list or to this file mean the
-        # virtualenv should be rebuilt.
+        # check modification times
         activate_mtime = os.path.getmtime(self.activate_path)
         dep_mtime = max(os.path.getmtime(p) for p in deps)
         if dep_mtime > activate_mtime:
@@ -157,11 +144,9 @@ class VirtualenvManager(object):
         # python, or we have the Python version that was used to create the
         # virtualenv. If this fails, it is likely system Python has been
         # upgraded, and our virtualenv would not be usable.
-        orig_version, orig_size = self.get_exe_info()
         python_size = os.path.getsize(python)
-        hexversion = self.python_executable_hexversion(python)
         if ((python, python_size) != (self.python_path, os.path.getsize(self.python_path)) and
-                (hexversion, python_size) != (orig_version, orig_size)):
+            (sys.hexversion, python_size) != self.get_exe_info()):
             return False
 
         # recursively check sub packages.txt files
@@ -208,13 +193,14 @@ class VirtualenvManager(object):
 
         return proc.wait()
 
-    def create(self, python):
+    def create(self, python=sys.executable):
         """Create a new, empty virtualenv.
 
         Receives the path to virtualenv's virtualenv.py script (which will be
         called out to), the path to create the virtualenv in, and a handle to
         write output to.
         """
+        env = dict(os.environ)
 
         args = [python, self.virtualenv_script_path,
                 # Without this, virtualenv.py may attempt to contact the outside
@@ -224,13 +210,11 @@ class VirtualenvManager(object):
                 '--no-download',
                 self.virtualenv_root]
 
-        result = self._log_process_output(args,
-                                          env=ensure_subprocess_env(os.environ))
+        result = self._log_process_output(args, env=env)
 
         if result:
             raise Exception(
-                'Failed to create virtualenv: %s (virtualenv.py retcode: %s)' % (
-                    self.virtualenv_root, result))
+                'Failed to create virtualenv: %s' % self.virtualenv_root)
 
         self.write_exe_info(python)
 
@@ -484,7 +468,7 @@ class VirtualenvManager(object):
 
             raise Exception('Error installing package: %s' % directory)
 
-    def build(self, python):
+    def build(self, python=sys.executable):
         """Build a virtualenv per tree conventions.
 
         This returns the path of the created virtualenv.
@@ -495,16 +479,7 @@ class VirtualenvManager(object):
         # We need to populate the virtualenv using the Python executable in
         # the virtualenv for paths to be proper.
 
-        # If this module was run from Python 2 then the __file__ attribute may
-        # point to a Python 2 .pyc file. If we are generating a Python 3
-        # virtualenv from Python 2 make sure we call Python 3 with the path to
-        # the module and not the Python 2 .pyc file.
-        if os.path.splitext(__file__)[1] in ('.pyc', '.pyo'):
-            thismodule = __file__[:-1]
-        else:
-            thismodule = __file__
-
-        args = [self.python_path, thismodule, 'populate', self.topsrcdir,
+        args = [self.python_path, __file__, 'populate', self.topsrcdir,
                 self.topobjdir, self.virtualenv_root, self.manifest_path]
 
         result = self._log_process_output(args, cwd=self.topsrcdir)
