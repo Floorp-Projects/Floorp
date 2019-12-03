@@ -4,13 +4,21 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 24.0.0-SNAPSHOT (In Development)
+# 25.0.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v23.0.0...master)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v24.0.0...master)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/84?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+# 24.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v23.0.0...v24.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/84?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v24.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v24.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v24.0.0/buildSrc/src/main/java/Config.kt)
 
 * **browser-errorpages**
   * Added strings for "no network connection" error pages
