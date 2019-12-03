@@ -60,14 +60,8 @@ class ContentPrincipal final : public BasePrincipal {
   virtual nsresult PopulateJSONObject(Json::Value& aObject) override;
   // Serializable keys are the valid enum fields the serialization supports
   enum SerializableKeys { eURI = 0, eDomain, eSuffix, eMax = eSuffix };
-  // KeyVal is a lightweight storage that passes
-  // SerializableKeys and values after JSON parsing in the BasePrincipal to
-  // FromProperties
-  struct KeyVal {
-    bool valueWasSerialized;
-    nsCString value;
-    SerializableKeys key;
-  };
+  typedef mozilla::BasePrincipal::KeyValT<SerializableKeys> KeyVal;
+
   static already_AddRefed<BasePrincipal> FromProperties(
       nsTArray<ContentPrincipal::KeyVal>& aFields);
 
