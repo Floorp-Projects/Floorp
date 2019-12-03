@@ -1168,9 +1168,13 @@ parent:
      *       principals that can live in the content process should
      *       provided.
      */
-    async PContentPermissionRequest(PermissionRequest[] aRequests, Principal aPrincipal,
-                                    Principal aTopLevelPrincipal, bool aIsHandlingUserInput,
-                                    bool aDocumentHasUserInput, uint64_t aPageLoadTimestamp, TabId tabId);
+    async PContentPermissionRequest(PermissionRequest[] aRequests,
+                                    Principal aPrincipal,
+                                    Principal aTopLevelPrincipal,
+                                    bool aIsHandlingUserInput,
+                                    bool aMaybeUnsafePermissionDelegate,
+                                    bool aDocumentHasUserInput,
+                                    uint64_t aPageLoadTimestamp, TabId tabId);
 
     async ShutdownProfile(nsCString aProfile);
 
