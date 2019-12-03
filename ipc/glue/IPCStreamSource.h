@@ -14,19 +14,14 @@ class nsIAsyncInputStream;
 
 namespace mozilla {
 
-namespace dom {
-class ContentChild;
-class ContentParent;
-}  // namespace dom
-
 namespace wr {
 struct ByteBuffer;
 }  // namespace wr
 
 namespace ipc {
 
-class PBackgroundChild;
-class PBackgroundParent;
+class ParentToChildStreamActorManager;
+class ChildToParentStreamActorManager;
 class PChildToParentStreamChild;
 class PParentToChildStreamParent;
 
@@ -57,29 +52,17 @@ class PParentToChildStreamParent;
 // defined in InputStreamUtils.h instead of using IPCStreamSource directly.
 class IPCStreamSource {
  public:
-  // Create a IPCStreamSource using a PContent IPC manager on the
-  // main thread.  This can return nullptr if the provided stream is
-  // blocking.
-  static PChildToParentStreamChild* Create(nsIAsyncInputStream* aInputStream,
-                                           dom::ContentChild* aManager);
+  // Create a IPCStreamSource using a ChildToParentStreamActorManager manager.
+  // This can return nullptr if the provided stream is blocking.
+  static PChildToParentStreamChild* Create(
+      nsIAsyncInputStream* aInputStream,
+      ChildToParentStreamActorManager* aManager);
 
-  // Create a IPCStreamSource using a PBackground IPC manager on the
-  // main thread or a Worker thread.  This can return nullptr if the provided
-  // stream is blocking or if the Worker thread is already shutting down.
-  static PChildToParentStreamChild* Create(nsIAsyncInputStream* aInputStream,
-                                           PBackgroundChild* aManager);
-
-  // Create a IPCStreamSource using a PContent IPC manager on the
-  // main thread.  This can return nullptr if the provided stream is
-  // blocking.
-  static PParentToChildStreamParent* Create(nsIAsyncInputStream* aInputStream,
-                                            dom::ContentParent* aManager);
-
-  // Create a IPCStreamSource using a PBackground IPC manager on the
-  // main thread or a Worker thread.  This can return nullptr if the provided
-  // stream is blocking or if the Worker thread is already shutting down.
-  static PParentToChildStreamParent* Create(nsIAsyncInputStream* aInputStream,
-                                            PBackgroundParent* aManager);
+  // Create a IPCStreamSource using a ParentToChildStreamActorManager manager.
+  // This can return nullptr if the provided stream is blocking.
+  static PParentToChildStreamParent* Create(
+      nsIAsyncInputStream* aInputStream,
+      ParentToChildStreamActorManager* aManager);
 
   static IPCStreamSource* Cast(PChildToParentStreamChild* aActor);
 

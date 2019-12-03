@@ -10,8 +10,12 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/ipc/CrashReporterClient.h"
+#include "mozilla/ipc/FileDescriptorSetChild.h"
+#include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/net/DNSRequestChild.h"
+#include "mozilla/ipc/PChildToParentStreamChild.h"
+#include "mozilla/ipc/PParentToChildStreamChild.h"
 #include "mozilla/Preferences.h"
 #include "nsDebugImpl.h"
 #include "nsThreadManager.h"
@@ -210,6 +214,52 @@ bool SocketProcessChild::DeallocPWebrtcTCPSocketChild(
   child->ReleaseIPDLReference();
 #endif
   return true;
+}
+
+PFileDescriptorSetChild* SocketProcessChild::AllocPFileDescriptorSetChild(
+    const FileDescriptor& aFD) {
+  return new FileDescriptorSetChild(aFD);
+}
+
+bool SocketProcessChild::DeallocPFileDescriptorSetChild(
+    PFileDescriptorSetChild* aActor) {
+  delete aActor;
+  return true;
+}
+
+PChildToParentStreamChild*
+SocketProcessChild::AllocPChildToParentStreamChild() {
+  MOZ_CRASH("PChildToParentStreamChild actors should be manually constructed!");
+}
+
+bool SocketProcessChild::DeallocPChildToParentStreamChild(
+    PChildToParentStreamChild* aActor) {
+  delete aActor;
+  return true;
+}
+
+PParentToChildStreamChild*
+SocketProcessChild::AllocPParentToChildStreamChild() {
+  return mozilla::ipc::AllocPParentToChildStreamChild();
+}
+
+bool SocketProcessChild::DeallocPParentToChildStreamChild(
+    PParentToChildStreamChild* aActor) {
+  delete aActor;
+  return true;
+}
+
+PChildToParentStreamChild*
+SocketProcessChild::SendPChildToParentStreamConstructor(
+    PChildToParentStreamChild* aActor) {
+  MOZ_ASSERT(NS_IsMainThread());
+  return PSocketProcessChild::SendPChildToParentStreamConstructor(aActor);
+}
+
+PFileDescriptorSetChild* SocketProcessChild::SendPFileDescriptorSetConstructor(
+    const FileDescriptor& aFD) {
+  MOZ_ASSERT(NS_IsMainThread());
+  return PSocketProcessChild::SendPFileDescriptorSetConstructor(aFD);
 }
 
 }  // namespace net

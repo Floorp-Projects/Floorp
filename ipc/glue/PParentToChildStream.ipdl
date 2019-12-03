@@ -4,6 +4,7 @@
 
 include protocol PBackground;
 include protocol PContent;
+include protocol PSocketProcess;
 
 include "mozilla/layers/WebRenderMessageUtils.h";
 
@@ -16,7 +17,7 @@ namespace ipc {
 // protocols in sync.
 protocol PParentToChildStream
 {
-  manager PBackground or PContent;
+  manager PBackground or PContent or PSocketProcess;
 
 child:
   async Buffer(ByteBuffer aBuffer);

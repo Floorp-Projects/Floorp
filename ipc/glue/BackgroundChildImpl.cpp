@@ -758,6 +758,17 @@ bool BackgroundChildImpl::DeallocPMediaTransportChild(
   return true;
 }
 
+PChildToParentStreamChild*
+BackgroundChildImpl::SendPChildToParentStreamConstructor(
+    PChildToParentStreamChild* aActor) {
+  return PBackgroundChild::SendPChildToParentStreamConstructor(aActor);
+}
+
+PFileDescriptorSetChild* BackgroundChildImpl::SendPFileDescriptorSetConstructor(
+    const FileDescriptor& aFD) {
+  return PBackgroundChild::SendPFileDescriptorSetConstructor(aFD);
+}
+
 }  // namespace ipc
 }  // namespace mozilla
 
