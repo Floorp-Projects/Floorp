@@ -47,6 +47,9 @@ EXPORTS.mozilla.net += [
     'HttpBaseChannel.h',
     'HttpChannelChild.h',
     'HttpChannelParent.h',
+    'HttpConnectionMgrChild.h',
+    'HttpConnectionMgrParent.h',
+    'HttpConnectionMgrShell.h',
     'HttpInfo.h',
     'HttpTransactionChild.h',
     'HttpTransactionParent.h',
@@ -87,6 +90,8 @@ UNIFIED_SOURCES += [
     'HttpBaseChannel.cpp',
     'HttpChannelChild.cpp',
     'HttpChannelParent.cpp',
+    'HttpConnectionMgrChild.cpp',
+    'HttpConnectionMgrParent.cpp',
     'HttpInfo.cpp',
     'HttpTrafficAnalyzer.cpp',
     'HttpTransactionChild.cpp',
@@ -128,6 +133,7 @@ IPDL_SOURCES += [
     'PClassifierDummyChannel.ipdl',
     'PHttpBackgroundChannel.ipdl',
     'PHttpChannel.ipdl',
+    'PHttpConnectionMgr.ipdl',
     'PHttpTransaction.ipdl',
 ]
 
