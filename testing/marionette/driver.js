@@ -3330,6 +3330,7 @@ GeckoDriver.prototype.sendKeysToDialog = async function(cmd) {
     case "prompt":
       break;
     default:
+      await this.dismissDialog();
       throw new UnsupportedOperationError(
         `User prompt of type ${promptType} is not supported`
       );
