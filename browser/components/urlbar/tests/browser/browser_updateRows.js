@@ -5,6 +5,11 @@
 
 "use strict";
 
+let TEST_BASE_URL = "example.com/";
+if (UrlbarPrefs.get("update1.view.stripHttps")) {
+  TEST_BASE_URL = "http://" + TEST_BASE_URL;
+}
+
 add_task(async function init() {
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
@@ -49,7 +54,7 @@ add_task(async function urlToTip() {
       tagsContainer: null,
       titleSeparator: null,
       action: "",
-      url: "example.com/test",
+      url: TEST_BASE_URL + "test",
     },
     ["tipButton", "helpButton"]
   );
@@ -83,7 +88,7 @@ add_task(async function urlToTip() {
       tagsContainer: null,
       titleSeparator: null,
       action: "",
-      url: "example.com/testxx",
+      url: TEST_BASE_URL + "testxx",
     },
     ["tipButton", "helpButton"]
   );
@@ -165,7 +170,7 @@ add_task(async function tipToURL() {
       tagsContainer: null,
       titleSeparator: null,
       action: "",
-      url: "example.com/testx",
+      url: TEST_BASE_URL + "testx",
     },
     ["tipButton", "helpButton"]
   );
@@ -199,7 +204,7 @@ add_task(async function tipToURL() {
       tagsContainer: null,
       titleSeparator: null,
       action: "",
-      url: "example.com/testx",
+      url: TEST_BASE_URL + "testx",
     },
     ["tipButton", "helpButton"]
   );

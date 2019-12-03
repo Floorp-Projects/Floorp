@@ -132,7 +132,13 @@ add_task(async function test_popup_url() {
   UrlbarTestUtils.setSelectedRowIndex(window, 1);
   let actionResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   let urlResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-  let resultCS = window.getComputedStyle(urlResult.element.row);
+  let resultCS;
+  if (gURLBar.megabar) {
+    // The megabar styles the highlight on the urlbarView-row-inner element.
+    resultCS = window.getComputedStyle(urlResult.element.row._content);
+  } else {
+    resultCS = window.getComputedStyle(urlResult.element.row);
+  }
 
   Assert.equal(
     resultCS.backgroundColor,

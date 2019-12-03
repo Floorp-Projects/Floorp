@@ -140,7 +140,9 @@ add_task(async function() {
     if (testcase.expected.typeImageVisible) {
       Assert.equal(
         result.displayed.typeIcon,
-        'url("chrome://browser/skin/bookmark.svg")',
+        gURLBar.megabar
+          ? 'url("chrome://browser/skin/bookmark-12.svg")'
+          : 'url("chrome://browser/skin/bookmark.svg")',
         "Should have the star image displayed or not as expected"
       );
     } else {
