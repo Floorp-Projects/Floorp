@@ -9,6 +9,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const { getStr } = require("../utils/l10n");
+const { parseUserAgent } = require("../utils/ua");
 const Types = require("../types");
 
 loader.lazyRequireGetter(
@@ -50,8 +51,21 @@ class DeviceSelector extends PureComponent {
     for (const type of devices.types) {
       for (const device of devices[type]) {
         if (device.displayed) {
+          const { browser, os } = parseUserAgent(device.userAgent);
+          let label = device.name;
+          if (os) {
+            label += ` ${os.name}`;
+            if (os.version) {
+              label += ` ${os.version}`;
+            }
+          }
+          const image = browser
+            ? `chrome://devtools/skin/images/browsers/${browser.name.toLowerCase()}.svg`
+            : " ";
+
           menuItems.push({
-            label: device.name,
+            label,
+            image,
             type: "checkbox",
             checked: selectedDevice === device.name,
             click: () => {
