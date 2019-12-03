@@ -17,25 +17,21 @@ That is where GeckoView comes in. GeckoView is:
 
 ## Using GeckoView
 
-* [Quick Start Guide][1]
-* [Usage Documentation][7]
+* [Quick Start Guide](https://firefox-source-docs.mozilla.org/mobile/android/geckoview/consumer/docs/geckoview-quick-start.html)
+* [Usage Documentation](https://firefox-source-docs.mozilla.org/mobile/android/geckoview/consumer/docs/index.html)
 
 ## API Documentation
 
-* [Changelog][2]
-* [API][3]
+* [Changelog](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/doc-files/CHANGELOG)
+* [API](https://firefox-source-docs.mozilla.org/index.html)
 
 ## More information
-* [GeckoView Wiki][4]
-* [GeckoView Source Code][5]
-* [Raise a bug on GeckoView code][8]
-* [Raise a documentation bug][6]
+* [GeckoView Wiki][1]
+* [GeckoView Source Code][2]
+* [Raise a bug on GeckoView code][3]
+* [Raise a documentation bug][4]
 
-[1]:consumer/docs/geckoview-quick-start
-[2]:javadoc/mozilla-central/org/mozilla/geckoview/doc-files/CHANGELOG
-[3]:javadoc/mozilla-central/index.html
-[4]:https://wiki.mozilla.org/Mobile/GeckoView
-[5]:https://searchfox.org/mozilla-central/source/mobile/android/geckoview
-[6]:https://github.com/mozilla/geckoview/issues
-[7]:consumer/docs/index
-[8]:https://bugzilla.mozilla.org/enter_bug.cgi?product=GeckoView
+[1]:https://wiki.mozilla.org/Mobile/GeckoView
+[2]:https://searchfox.org/mozilla-central/source/mobile/android/geckoview
+[3]:https://bugzilla.mozilla.org/enter_bug.cgi?product=GeckoView
+[4]:https://github.com/mozilla/geckoview/issues

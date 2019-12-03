@@ -250,7 +250,10 @@ XDRResult LazyScript::XDRScriptData(XDRState<mode>* xdr,
   RootedAtom atom(cx);
   RootedFunction func(cx);
 
-  for (JS::GCCellPtr& elem : lazy->data_->gcthings()) {
+  mozilla::Span<JS::GCCellPtr> gcThings =
+      lazy->data_ ? lazy->data_->gcthings() : mozilla::Span<JS::GCCellPtr>();
+
+  for (JS::GCCellPtr& elem : gcThings) {
     JS::TraceKind kind = elem.kind();
 
     MOZ_TRY(xdr->codeEnum32(&kind));

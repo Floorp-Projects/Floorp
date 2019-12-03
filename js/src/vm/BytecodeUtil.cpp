@@ -28,6 +28,7 @@
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/SourceNotes.h"
+#include "gc/PublicIterators.h"
 #include "js/CharacterEncoding.h"
 #include "js/Printf.h"
 #include "js/Symbol.h"
@@ -47,7 +48,7 @@
 #include "vm/Realm.h"
 #include "vm/Shape.h"
 
-#include "gc/PrivateIterators-inl.h"
+#include "gc/GC-inl.h"
 #include "vm/BytecodeIterator-inl.h"
 #include "vm/BytecodeLocation-inl.h"
 #include "vm/JSContext-inl.h"
@@ -2080,6 +2081,7 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
 
       case JSOP_NEWINIT:
       case JSOP_NEWOBJECT:
+      case JSOP_NEWOBJECT_WITHGROUP:
       case JSOP_OBJWITHPROTO:
         return write("OBJ");
 

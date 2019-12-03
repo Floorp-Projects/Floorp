@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html class="reftest-paged">
+<head>
+  <title>Reference: Table fragmentation test</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1017137">
+  <meta charset="utf-8">
+  <meta name="flags" content="paged">
+  <style>
+@page { size:5in 3in; margin:0.5in; }
+html,body {
+    color:black; background-color:white; font:16px/1 monospace; padding:0; margin:0;
+}
+table,tr,td { border:0; padding:0; margin:0; }
+</style>
+</head>
+
+<body>
+  <table cellspacing=0 cellpadding=0>
+      <tr id="_TR_1"><td>
+          <div style="height:0.2in"></div>
+      </td></tr>
+
+      <tr id="_TR_2"><td>
+          <table cellspacing=0 cellpadding=0><tr><td><div style="height:0.5in; margin-top:64px"></div></td></tr></table>
+      </td></tr>
+
+      <tr id="_TR_3" style="page-break-before:always"><td>HELLO KITTY

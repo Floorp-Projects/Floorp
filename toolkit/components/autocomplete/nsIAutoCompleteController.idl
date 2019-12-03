@@ -22,7 +22,7 @@ interface nsIAutoCompleteController : nsISupports
   /*
    * The input widget that is currently being controlled.
    */
-  [can_run_script]  // Only setter.
+  [setter_can_run_script]
   attribute nsIAutoCompleteInput input;
 
   /*

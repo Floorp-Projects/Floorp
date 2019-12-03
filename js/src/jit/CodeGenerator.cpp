@@ -46,6 +46,7 @@
 #include "jit/StackSlotAllocator.h"
 #include "jit/VMFunctions.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlag
+#include "util/CheckedArithmetic.h"
 #include "util/Unicode.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"

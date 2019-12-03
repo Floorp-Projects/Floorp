@@ -177,6 +177,9 @@ def build_condprof_tests(config, tests):
         if 'chrome' in test['test-name'] or 'chromium' in test['test-name']:
             yield test
             continue
+        if test['test-platform'].startswith('windows10-aarch64'):
+            yield test
+            continue
 
         # Make condprof test
         condprof_test = deepcopy(test)

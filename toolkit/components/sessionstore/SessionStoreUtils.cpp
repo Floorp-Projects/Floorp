@@ -1345,24 +1345,24 @@ static void CollectFrameTreeData(JSContext* aCx,
   }
 
   if (selectedIndex.Length() != 0) {
-    ret.mSelectedIndex.Construct().Assign(std::move(selectedIndex));
+    ret.mSelectedIndex.Construct(std::move(selectedIndex));
   }
   if (valueIdx.Length() != 0) {
-    ret.mValueIdx.Construct().Assign(std::move(valueIdx));
+    ret.mValueIdx.Construct(std::move(valueIdx));
   }
   if (id.Length() != 0) {
-    ret.mId.Construct().Assign(std::move(id));
+    ret.mId.Construct(std::move(id));
   }
   if (selectVal.Length() != 0) {
-    ret.mSelectVal.Construct().Assign(std::move(selectVal));
+    ret.mSelectVal.Construct(std::move(selectVal));
   }
   if (strVal.Length() != 0) {
-    ret.mStrVal.Construct().Assign(std::move(strVal));
+    ret.mStrVal.Construct(std::move(strVal));
   }
   if (type.Length() != 0) {
-    ret.mType.Construct().Assign(std::move(type));
+    ret.mType.Construct(std::move(type));
   }
   if (boolVal.Length() != 0) {
-    ret.mBoolVal.Construct().Assign(std::move(boolVal));
+    ret.mBoolVal.Construct(std::move(boolVal));
   }
 }

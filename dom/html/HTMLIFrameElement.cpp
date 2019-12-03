@@ -306,8 +306,6 @@ void HTMLIFrameElement::RefreshFeaturePolicy(bool aParseAllowAttribute) {
       mFeaturePolicy->SetDeclaredPolicy(OwnerDoc(), allow, NodePrincipal(),
                                         origin);
     }
-
-    mFeaturePolicy->InheritPolicy(OwnerDoc()->FeaturePolicy());
   }
 
   if (AllowPaymentRequest()) {
@@ -318,6 +316,7 @@ void HTMLIFrameElement::RefreshFeaturePolicy(bool aParseAllowAttribute) {
     mFeaturePolicy->MaybeSetAllowedPolicy(NS_LITERAL_STRING("fullscreen"));
   }
 
+  mFeaturePolicy->InheritPolicy(OwnerDoc()->FeaturePolicy());
   MaybeStoreCrossOriginFeaturePolicy();
 }
 

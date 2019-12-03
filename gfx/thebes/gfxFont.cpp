@@ -2343,14 +2343,26 @@ bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
     return false;
   }
 
-  // defaultColor is the one that comes from CSS, so it has transparency info.
-  bool hasTransparency = 0.f < defaultColor.a && defaultColor.a < 1.f;
-  if (aTextDrawer && hasTransparency && layerGlyphs.Length() > 1) {
-    // WebRender doesn't support drawing multi-layer transparent color-glyphs,
-    // as it requires compositing all the layers before applying transparency.
-    // (pretend to succeed, output doesn't matter, we will emit a blob)
-    aTextDrawer->FoundUnsupportedFeature();
-    return true;
+  // Default to opaque rendering (non-webrender applies alpha with a layer)
+  float alpha = 1.0;
+  if (aTextDrawer) {
+    // defaultColor is the one that comes from CSS, so it has transparency info.
+    bool hasComplexTransparency = 0.f < defaultColor.a && defaultColor.a < 1.f;
+    if (hasComplexTransparency && layerGlyphs.Length() > 1) {
+      // WebRender doesn't support drawing multi-layer transparent color-glyphs,
+      // as it requires compositing all the layers before applying transparency.
+      // (pretend to succeed, output doesn't matter, we will emit a blob)
+      aTextDrawer->FoundUnsupportedFeature();
+      return true;
+    }
+
+    // If we get here, then either alpha is 0 or 1, or there's only one layer
+    // which shouldn't have composition issues. In all of these cases, applying
+    // transparency directly to the glyph should work perfectly fine.
+    //
+    // Note that we must still emit completely transparent emoji, because they
+    // might be wrapped in a shadow that uses the text run's glyphs.
+    alpha = defaultColor.a;
   }
 
   for (uint32_t layerIndex = 0; layerIndex < layerGlyphs.Length();
@@ -2363,8 +2375,9 @@ bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
     buffer.mGlyphs = &glyph;
     buffer.mNumGlyphs = 1;
 
-    aDrawTarget->FillGlyphs(scaledFont, buffer,
-                            ColorPattern(layerColors[layerIndex]),
+    mozilla::gfx::Color layerColor = layerColors[layerIndex];
+    layerColor.a *= alpha;
+    aDrawTarget->FillGlyphs(scaledFont, buffer, ColorPattern(layerColor),
                             aDrawOptions);
   }
   return true;

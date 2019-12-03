@@ -99,6 +99,14 @@ class RenderCompositor {
   // Whether the surface origin is top-left.
   virtual bool SurfaceOriginIsTopLeft() { return false; }
 
+  // Does readback if wr_renderer_readback() could not get correct WR rendered
+  // result. It could happen when WebRender renders to multiple overlay layers.
+  virtual bool MaybeReadback(const gfx::IntSize& aReadbackSize,
+                             const wr::ImageFormat& aReadbackFormat,
+                             const Range<uint8_t>& aReadbackBuffer) {
+    return false;
+  }
+
  protected:
   // We default this to 2, so that mLatestRenderFrameId.Prev() is always valid.
   RenderedFrameId mLatestRenderFrameId = RenderedFrameId{2};

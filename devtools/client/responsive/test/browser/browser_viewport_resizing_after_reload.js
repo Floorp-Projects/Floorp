@@ -38,7 +38,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
     },
     {
       metaSupport: true,
-      before: [0.5, 600, 1200],
+      before: [0.5, 300, 600],
       after: [1.0, 600, 300],
     },
   ];

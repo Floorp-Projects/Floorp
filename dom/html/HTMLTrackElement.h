@@ -22,6 +22,7 @@ namespace dom {
 
 class WebVTTListener;
 class WindowDestroyObserver;
+enum class TextTrackReadyState : uint8_t;
 
 class HTMLTrackElement final : public nsGenericHTMLElement {
  public:
@@ -68,8 +69,11 @@ class HTMLTrackElement final : public nsGenericHTMLElement {
     SetHTMLBoolAttr(nsGkAtoms::_default, aDefault, aError);
   }
 
-  uint16_t ReadyState() const;
-  void SetReadyState(uint16_t aReadyState);
+  TextTrackReadyState ReadyState() const;
+  uint16_t ReadyStateForBindings() const {
+    return static_cast<uint16_t>(ReadyState());
+  }
+  void SetReadyState(TextTrackReadyState);
 
   TextTrack* GetTrack();
 

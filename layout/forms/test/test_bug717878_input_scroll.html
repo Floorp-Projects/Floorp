@@ -21,12 +21,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717878
     font-family: monospace;
     font-size: 1em;"
   value="Short">
+<!-- ditto, with appearance:none -->
+<input id="no-overflow2" type="text"
+  size="10"
+  style="
+    -webkit-appearance:none;
+    font-family: monospace;
+    font-size: 1em;"
+  value="Short">
 <!-- size=10, monospace font, and height=0.5em ensure overflow in both directions -->
 <input id="overflow" type="text"
   size="10"
   style="
     font-family: monospace;
-    font-size: 1em;
+    font-size: 3em;
+    height: 0.5em;"
+  value="This is a long string">
+<!-- ditto, with appearance:none -->
+<input id="overflow2" type="text"
+  size="10"
+  style="
+    -webkit-appearance:none;
+    font-family: monospace;
+    font-size: 3em;
     height: 0.5em;"
   value="This is a long string">
 <pre id="test">
@@ -72,9 +89,17 @@ var no_overflow = document.getElementById("no-overflow");
 test_scroll(no_overflow, "scrollLeft", "scrollLeftMax", /* is_overflow */ false);
 test_scroll(no_overflow, "scrollTop", "scrollTopMax", /* is_overflow */ false);
 
+var no_overflow2 = document.getElementById("no-overflow2");
+test_scroll(no_overflow2, "scrollLeft", "scrollLeftMax", /* is_overflow */ false);
+test_scroll(no_overflow2, "scrollTop", "scrollTopMax", /* is_overflow */ false);
+
 var overflow = document.getElementById("overflow");
 test_scroll(overflow, "scrollLeft", "scrollLeftMax", /* is_overflow */ true);
 test_scroll(overflow, "scrollTop", "scrollTopMax", /* is_overflow */ true);
+
+var overflow2 = document.getElementById("overflow2");
+test_scroll(overflow2, "scrollLeft", "scrollLeftMax", /* is_overflow */ true);
+test_scroll(overflow2, "scrollTop", "scrollTopMax", /* is_overflow */ true);
 
 </script>
 </pre>

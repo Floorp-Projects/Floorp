@@ -14,11 +14,6 @@
 #include "BrowserParent.h"
 #include "mozilla/dom/MediaControlService.h"
 
-#if defined(ANDROID) || defined(LINUX)
-#  include <sys/time.h>
-#  include <sys/resource.h>
-#endif
-
 #include "chrome/common/process_watcher.h"
 
 #ifdef ACCESSIBILITY
@@ -1579,32 +1574,6 @@ void ContentParent::OnChannelConnected(int32_t pid) {
   MOZ_ASSERT(NS_IsMainThread());
 
   SetOtherProcessId(pid);
-
-#if defined(ANDROID) || defined(LINUX)
-  // Check nice preference
-  int32_t nice = Preferences::GetInt("dom.ipc.content.nice", 0);
-
-  // Environment variable overrides preference
-  char* relativeNicenessStr = getenv("MOZ_CHILD_PROCESS_RELATIVE_NICENESS");
-  if (relativeNicenessStr) {
-    nice = atoi(relativeNicenessStr);
-  }
-
-  /* make the GUI thread have higher priority on single-cpu devices */
-  nsCOMPtr<nsIPropertyBag2> infoService =
-      do_GetService(NS_SYSTEMINFO_CONTRACTID);
-  if (infoService) {
-    int32_t cpus;
-    nsresult rv =
-        infoService->GetPropertyAsInt32(NS_LITERAL_STRING("cpucount"), &cpus);
-    if (NS_FAILED(rv)) {
-      cpus = 1;
-    }
-    if (nice != 0 && cpus == 1) {
-      setpriority(PRIO_PROCESS, pid, getpriority(PRIO_PROCESS, pid) + nice);
-    }
-  }
-#endif
 }
 
 void ContentParent::ProcessingError(Result aCode, const char* aReason) {

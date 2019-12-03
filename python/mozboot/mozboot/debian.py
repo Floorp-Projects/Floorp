@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from mozboot.base import BaseBootstrapper
 from mozboot.linux_common import (
     ClangStaticAnalysisInstall,
+    LucetcInstall,
     NasmInstall,
     NodeInstall,
     SccacheInstall,
@@ -32,7 +33,7 @@ Your choice: '''
 
 
 class DebianBootstrapper(NasmInstall, NodeInstall, StyloInstall, ClangStaticAnalysisInstall,
-                         SccacheInstall, BaseBootstrapper):
+                         SccacheInstall, LucetcInstall, BaseBootstrapper):
     # These are common packages for all Debian-derived distros (such as
     # Ubuntu).
     COMMON_PACKAGES = [

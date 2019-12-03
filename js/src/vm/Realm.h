@@ -385,8 +385,26 @@ class JS::Realm : public JS::shadow::Realm {
   unsigned enterRealmDepthIgnoringJit_ = 0;
 
  public:
+  struct DebuggerVectorEntry {
+    // The debugger relies on iterating through the DebuggerVector to know what
+    // debuggers to notify about certain actions, which it does using this
+    // pointer. We need an explicit Debugger* because the JSObject* from
+    // the DebuggerDebuggeeLink to the Debugger is only set some of the time.
+    // This `Debugger*` pointer itself could also live on the
+    // DebuggerDebuggeeLink itself, but that would then require all of the
+    // places that iterate over the realm's DebuggerVector to also traverse
+    // the CCW which seems like it would be needlessly complicated.
+    js::WeakHeapPtr<js::Debugger*> dbg;
+
+    // This links to the debugger's DebuggerDebuggeeLink object, via a CCW.
+    // Tracing this link from the realm allows the debugger to define
+    // whether pieces of the debugger should be held live by a given realm.
+    js::HeapPtr<JSObject*> debuggerLink;
+
+    DebuggerVectorEntry(js::Debugger* dbg_, JSObject* link);
+  };
   using DebuggerVector =
-      js::Vector<js::WeakHeapPtr<js::Debugger*>, 0, js::ZoneAllocPolicy>;
+      js::Vector<DebuggerVectorEntry, 0, js::ZoneAllocPolicy>;
 
  private:
   DebuggerVector debuggers_;

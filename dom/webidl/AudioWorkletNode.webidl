@@ -28,7 +28,6 @@ interface AudioWorkletNode : AudioNode {
 
     [Throws]
     readonly        attribute AudioParamMap              parameters;
-    [Throws]
     readonly        attribute MessagePort                port;
                     attribute EventHandler               onprocessorerror;
 };

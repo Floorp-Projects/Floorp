@@ -225,6 +225,11 @@ bool WeakMap<K, V>::markEntries(GCMarker* marker) {
     if (markEntry(marker, e.front().mutableKey(), e.front().value())) {
       markedAny = true;
     }
+    if (!marker->isWeakMarking()) {
+      // No need to populate the weak key table yet; it will be built from
+      // scratch during enterWeakMarkingMode.
+      continue;
+    }
 
     JSRuntime* rt = zone()->runtimeFromAnyThread();
     CellColor keyColor =

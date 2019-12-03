@@ -100,8 +100,8 @@ void RenderCompositorEGL::Pause() {
 #ifdef MOZ_WIDGET_ANDROID
   java::GeckoSurfaceTexture::DestroyUnused((int64_t)gl());
   java::GeckoSurfaceTexture::DetachAllFromGLContext((int64_t)gl());
-  DestroyEGLSurface();
 #endif
+  DestroyEGLSurface();
 }
 
 bool RenderCompositorEGL::Resume() {
@@ -122,6 +122,7 @@ bool RenderCompositorEGL::Resume() {
     // than where the surface was created.
     const auto& gle = gl::GLContextEGL::Cast(gl());
     const auto& egl = gle->mEgl;
+    MakeCurrent();
     // Make eglSwapBuffers() non-blocking on wayland.
     egl->fSwapInterval(egl->Display(), 0);
   } else {

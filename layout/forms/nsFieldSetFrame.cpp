@@ -740,6 +740,7 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
   }
 
   if (aStatus.IsComplete() &&
+      aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
       finalSize.BSize(wm) > aReflowInput.AvailableBSize() &&
       border.BEnd(wm) > 0 && aReflowInput.AvailableBSize() > border.BEnd(wm)) {
     // Our end border doesn't fit but it should fit in the next column/page.
@@ -757,6 +758,8 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
   }
 
   if (!aStatus.IsComplete()) {
+    MOZ_ASSERT(aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE,
+               "must be Complete in an unconstrained available block-size");
     // Stretch our BSize to fill the fragmentainer.
     finalSize.BSize(wm) =
         std::max(finalSize.BSize(wm), aReflowInput.AvailableBSize());
@@ -830,6 +833,9 @@ bool nsFieldSetFrame::GetVerticalAlignBaseline(WritingMode aWM,
     return false;
   }
   nsIFrame* inner = GetInner();
+  if (MOZ_UNLIKELY(!inner)) {
+    return false;
+  }
   MOZ_ASSERT(!inner->GetWritingMode().IsOrthogonalTo(aWM));
   if (!inner->GetVerticalAlignBaseline(aWM, aBaseline)) {
     return false;
@@ -848,6 +854,9 @@ bool nsFieldSetFrame::GetNaturalBaselineBOffset(
     return false;
   }
   nsIFrame* inner = GetInner();
+  if (MOZ_UNLIKELY(!inner)) {
+    return false;
+  }
   MOZ_ASSERT(!inner->GetWritingMode().IsOrthogonalTo(aWM));
   if (!inner->GetNaturalBaselineBOffset(aWM, aBaselineGroup, aBaseline)) {
     return false;

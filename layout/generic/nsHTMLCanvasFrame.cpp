@@ -186,7 +186,39 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         break;
       }
       case CanvasContextType::ImageBitmap: {
-        // TODO: Support ImageBitmap
+        nsHTMLCanvasFrame* canvasFrame =
+            static_cast<nsHTMLCanvasFrame*>(mFrame);
+        nsIntSize canvasSizeInPx = canvasFrame->GetCanvasSize();
+        if (canvasSizeInPx.width <= 0 || canvasSizeInPx.height <= 0) {
+          return true;
+        }
+        bool isRecycled;
+        RefPtr<WebRenderCanvasData> canvasData =
+            aManager->CommandBuilder()
+                .CreateOrRecycleWebRenderUserData<WebRenderCanvasData>(
+                    this, aBuilder.GetRenderRoot(), &isRecycled);
+        if (!canvasFrame->UpdateWebRenderCanvasData(aDisplayListBuilder,
+                                                    canvasData)) {
+          canvasData->ClearImageContainer();
+          return true;
+        }
+
+        IntrinsicSize intrinsicSize =
+            IntrinsicSizeFromCanvasSize(canvasSizeInPx);
+        AspectRatio intrinsicRatio =
+            IntrinsicRatioFromCanvasSize(canvasSizeInPx);
+
+        nsRect area =
+            mFrame->GetContentRectRelativeToSelf() + ToReferenceFrame();
+        nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
+            area, intrinsicSize, intrinsicRatio, mFrame->StylePosition());
+
+        LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
+            dest, mFrame->PresContext()->AppUnitsPerDevPixel());
+
+        aManager->CommandBuilder().PushImage(
+            this, canvasData->GetImageContainer(), aBuilder, aResources, aSc,
+            bounds, bounds);
         break;
       }
       case CanvasContextType::NoContext:

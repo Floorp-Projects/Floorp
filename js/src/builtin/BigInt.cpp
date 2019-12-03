@@ -54,13 +54,12 @@ static bool BigIntConstructor(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 JSObject* BigIntObject::create(JSContext* cx, HandleBigInt bigInt) {
-  RootedObject obj(cx, NewBuiltinClassInstance(cx, &class_));
-  if (!obj) {
+  BigIntObject* bn = NewBuiltinClassInstance<BigIntObject>(cx);
+  if (!bn) {
     return nullptr;
   }
-  BigIntObject& bn = obj->as<BigIntObject>();
-  bn.setFixedSlot(PRIMITIVE_VALUE_SLOT, BigIntValue(bigInt));
-  return &bn;
+  bn->setFixedSlot(PRIMITIVE_VALUE_SLOT, BigIntValue(bigInt));
+  return bn;
 }
 
 BigInt* BigIntObject::unbox() const {
@@ -72,9 +71,8 @@ bool BigIntObject::valueOf_impl(JSContext* cx, const CallArgs& args) {
   // Step 1.
   HandleValue thisv = args.thisv();
   MOZ_ASSERT(IsBigInt(thisv));
-  RootedBigInt bi(cx, thisv.isBigInt()
-                          ? thisv.toBigInt()
-                          : thisv.toObject().as<BigIntObject>().unbox());
+  BigInt* bi = thisv.isBigInt() ? thisv.toBigInt()
+                                : thisv.toObject().as<BigIntObject>().unbox();
 
   args.rval().setBigInt(bi);
   return true;
@@ -135,7 +133,7 @@ bool BigIntObject::toLocaleString_impl(JSContext* cx, const CallArgs& args) {
                           ? thisv.toBigInt()
                           : thisv.toObject().as<BigIntObject>().unbox());
 
-  RootedString str(cx, BigInt::toString<CanGC>(cx, bi, 10));
+  JSString* str = BigInt::toString<CanGC>(cx, bi, 10);
   if (!str) {
     return false;
   }

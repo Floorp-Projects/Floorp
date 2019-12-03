@@ -76,12 +76,6 @@ const void* CompileRuntime::addressOfZone() {
   return runtime()->mainContextFromAnyThread()->addressOfZone();
 }
 
-#ifdef DEBUG
-bool CompileRuntime::isInsideNursery(gc::Cell* cell) {
-  return UninlinedIsInsideNursery(cell);
-}
-#endif
-
 const DOMCallbacks* CompileRuntime::DOMcallbacks() {
   return runtime()->DOMcallbacks;
 }

@@ -25,6 +25,17 @@ class SccacheInstall(object):
         self.install_toolchain_artifact(state_dir, checkout_root, sccache.LINUX_SCCACHE)
 
 
+class LucetcInstall(object):
+    def __init__(self, **kwargs):
+        pass
+
+    def ensure_lucetc_packages(self, state_dir, checkout_root):
+        from mozboot import lucetc
+
+        self.install_toolchain_artifact(state_dir, checkout_root,
+                                        lucetc.LINUX_LUCETC)
+
+
 class StyloInstall(object):
     def __init__(self, **kwargs):
         pass

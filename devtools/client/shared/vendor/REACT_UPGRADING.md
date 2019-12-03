@@ -155,6 +155,6 @@ cd <srcdir> # where sourcedir is the root of your Firefox repo.
 - When the interface appears type `debugger`.
 - Press `<enter>`.
 
-Once these tests pass on try then push to try as normal e.g. `./mach try -b do -p all -u all -t all -e all --setenv MOZ_QUIET=1`.
+Once these tests pass on try then push to try as normal e.g. `./mach try -b do -p all -u all -t all -e all`.
 
 If try passes then go celebrate otherwise you are on your own.

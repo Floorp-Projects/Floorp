@@ -15,11 +15,11 @@ Our current static-analysis infrastruture is based on
 checkers in order to assert different programming errors present in the
 code. The checkers that we use are split into 3 categories:
 
-#. Firefox specific checkers. They detect incorrect Gecko programming
+#. `Firefox specific checkers <https://searchfox.org/mozilla-central/source/build/clang-plugin>`_. They detect incorrect Gecko programming
    patterns which could lead to bugs or security issues.
-#. Clang-tidy checkers. They aim to suggest better programming practices
+#. `Clang-tidy checkers <https://clang.llvm.org/extra/clang-tidy/checks/list.html>`_. They aim to suggest better programming practices
    and to improve memory efficiency and performance.
-#. Clang-analyzer checkers. These checks are more advanced, for example
+#. `Clang-analyzer checkers <https://clang-analyzer.llvm.org/>`_. These checks are more advanced, for example
    some of them can detect dead code or memory leaks, but as a typical
    side effect they have false positives. Because of that, we have
    disabled them for now, but will enable some of them in the near

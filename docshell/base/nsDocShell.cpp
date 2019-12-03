@@ -262,6 +262,8 @@ static uint32_t gNumberOfPrivateDocShells = 0;
 
 #ifdef DEBUG
 static mozilla::LazyLogModule gDocShellLog("nsDocShell");
+static mozilla::LazyLogModule gDocShellAndDOMWindowLeakLogging(
+    "DocShellAndDOMWindowLeak");
 #endif
 static mozilla::LazyLogModule gDocShellLeakLog("nsDocShellLeak");
 extern mozilla::LazyLogModule gPageCacheLog;
@@ -411,11 +413,9 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
 #ifdef DEBUG
   // We're counting the number of |nsDocShells| to help find leaks
   ++gNumberOfDocShells;
-  if (!PR_GetEnv("MOZ_QUIET")) {
-    printf_stderr("++DOCSHELL %p == %ld [pid = %d] [id = %s]\n", (void*)this,
-                  gNumberOfDocShells, getpid(),
-                  nsIDToCString(mHistoryID).get());
-  }
+  MOZ_LOG(gDocShellAndDOMWindowLeakLogging, LogLevel::Info,
+          ("++DOCSHELL %p == %ld [pid = %d] [id = %s]\n", (void*)this,
+           gNumberOfDocShells, getpid(), nsIDToCString(mHistoryID).get()));
 #endif
 }
 
@@ -438,22 +438,24 @@ nsDocShell::~nsDocShell() {
   MOZ_LOG(gDocShellLeakLog, LogLevel::Debug, ("DOCSHELL %p destroyed\n", this));
 
 #ifdef DEBUG
-  nsAutoCString url;
-  if (mLastOpenedURI) {
-    url = mLastOpenedURI->GetSpecOrDefault();
+  if (MOZ_LOG_TEST(gDocShellAndDOMWindowLeakLogging, LogLevel::Info)) {
+    nsAutoCString url;
+    if (mLastOpenedURI) {
+      url = mLastOpenedURI->GetSpecOrDefault();
 
-    // Data URLs can be very long, so truncate to avoid flooding the log.
-    const uint32_t maxURLLength = 1000;
-    if (url.Length() > maxURLLength) {
-      url.Truncate(maxURLLength);
+      // Data URLs can be very long, so truncate to avoid flooding the log.
+      const uint32_t maxURLLength = 1000;
+      if (url.Length() > maxURLLength) {
+        url.Truncate(maxURLLength);
+      }
     }
-  }
-  // We're counting the number of |nsDocShells| to help find leaks
-  --gNumberOfDocShells;
-  if (!PR_GetEnv("MOZ_QUIET")) {
-    printf_stderr("--DOCSHELL %p == %ld [pid = %d] [id = %s] [url = %s]\n",
-                  (void*)this, gNumberOfDocShells, getpid(),
-                  nsIDToCString(mHistoryID).get(), url.get());
+
+    // We're counting the number of |nsDocShells| to help find leaks
+    --gNumberOfDocShells;
+    MOZ_LOG(gDocShellAndDOMWindowLeakLogging, LogLevel::Info,
+            ("--DOCSHELL %p == %ld [pid = %d] [id = %s] [url = %s]\n",
+             (void*)this, gNumberOfDocShells, getpid(),
+             nsIDToCString(mHistoryID).get(), url.get()));
   }
 #endif
 }

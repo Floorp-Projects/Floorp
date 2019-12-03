@@ -114,10 +114,6 @@ Or, if you prefer Git, by following the instruction here to clone from the
 Mercurial repository:
 
     https://github.com/glandium/git-cinnabar/wiki/Mozilla:-A-git-workflow-for-Gecko-development
-
-Or, if you really prefer vanilla flavor Git:
-
-    git clone https://github.com/mozilla/gecko-dev.git
 '''
 
 CONFIGURE_MERCURIAL = '''
@@ -394,6 +390,7 @@ class Bootstrapper(object):
             self.instance.ensure_clang_static_analysis_package(state_dir, checkout_root)
             self.instance.ensure_nasm_packages(state_dir, checkout_root)
             self.instance.ensure_sccache_packages(state_dir, checkout_root)
+            self.instance.ensure_lucetc_packages(state_dir, checkout_root)
 
     def check_telemetry_opt_in(self, state_dir):
         # We can't prompt the user.

@@ -3420,10 +3420,6 @@ bool APZCTreeManager::GetAPZTestData(LayersId aLayersId,
 
 void APZCTreeManager::SendSubtreeTransformsToChromeMainThread(
     const AsyncPanZoomController* aAncestor) {
-  if (!mRootNode) {
-    // Event dispatched during shutdown, after ClearTree().
-    return;
-  }
   RefPtr<GeckoContentController> controller =
       GetContentController(mRootLayersId);
   if (!controller) {
@@ -3433,6 +3429,11 @@ void APZCTreeManager::SendSubtreeTransformsToChromeMainThread(
   bool underAncestor = (aAncestor == nullptr);
   {
     RecursiveMutexAutoLock lock(mTreeLock);
+    if (!mRootNode) {
+      // Event dispatched during shutdown, after ClearTree().
+      // Note, mRootNode needs to be checked with mTreeLock held.
+      return;
+    }
     // This formulation duplicates matrix multiplications closer
     // to the root of the tree. For now, aiming for separation
     // of concerns rather than minimum number of multiplications.
