@@ -117,6 +117,7 @@
 #include "nsMixedContentBlocker.h"
 #include "CacheStorageService.h"
 #include "HttpChannelParent.h"
+#include "HttpTransactionParent.h"
 #include "ParentChannelListener.h"
 #include "InterceptedHttpChannel.h"
 #include "nsIBufferedStreams.h"
@@ -136,6 +137,7 @@
 #include "HttpTrafficAnalyzer.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/net/SocketProcessParent.h"
 #include "js/Conversions.h"
 
 #ifdef MOZ_TASK_TRACER
@@ -1251,9 +1253,26 @@ nsresult nsHttpChannel::SetupTransaction() {
                                          getter_AddRefs(callbacks));
 
   // create the transaction object
-  mTransaction = new nsHttpTransaction();
-  LOG1(("nsHttpChannel %p created nsHttpTransaction %p\n", this,
-        mTransaction.get()));
+  if (gIOService->UseSocketProcess()) {
+    MOZ_ASSERT(gIOService->SocketProcessReady(),
+               "Socket process should be ready.");
+
+    RefPtr<HttpTransactionParent> transParent = new HttpTransactionParent();
+    LOG1(("nsHttpChannel %p created HttpTransactionParent %p\n", this,
+          transParent.get()));
+
+    SocketProcessParent* socketProcess = SocketProcessParent::GetSingleton();
+    if (socketProcess) {
+      Unused << socketProcess->SendPHttpTransactionConstructor(transParent);
+    }
+
+    mTransaction = transParent;
+  } else {
+    mTransaction = new nsHttpTransaction();
+    LOG1(("nsHttpChannel %p created nsHttpTransaction %p\n", this,
+          mTransaction.get()));
+  }
+
   mTransaction->SetTransactionObserver(mTransactionObserver);
   mTransactionObserver = nullptr;
 
@@ -6460,6 +6479,14 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
   mWasOpened = true;
 
   mListener = listener;
+
+  if (gIOService->UseSocketProcess() &&
+      !gIOService->IsSocketProcessLaunchComplete()) {
+    RefPtr<nsHttpChannel> self = this;
+    gIOService->CallOrWaitForSocketProcess(
+        [self]() { self->AsyncOpenFinal(TimeStamp::Now()); });
+    return NS_OK;
+  }
 
   // PauseTask/DelayHttpChannel queuing
   if (!DelayHttpChannelQueue::AttemptQueueChannel(this)) {

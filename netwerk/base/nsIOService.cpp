@@ -449,6 +449,22 @@ bool nsIOService::SocketProcessReady() {
   return mSocketProcess && mSocketProcess->IsConnected();
 }
 
+static bool sUseSocketProcess = false;
+static bool sUseSocketProcessChecked = false;
+
+bool nsIOService::UseSocketProcess() {
+  if (sUseSocketProcessChecked) {
+    return sUseSocketProcess;
+  }
+
+  sUseSocketProcessChecked = true;
+  if (Preferences::GetBool("network.process.enabled")) {
+    sUseSocketProcess = Preferences::GetBool(
+        "network.http.network_access_on_socket_process.enabled", true);
+  }
+  return sUseSocketProcess;
+}
+
 // static
 void nsIOService::NotifySocketProcessPrefsChanged(const char* aName,
                                                   void* aSelf) {
