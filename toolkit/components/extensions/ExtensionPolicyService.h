@@ -84,9 +84,6 @@ class ExtensionPolicyService final : public nsIAddonPolicyService,
   bool RegisterObserver(extensions::DocumentObserver& aPolicy);
   bool UnregisterObserver(extensions::DocumentObserver& aPolicy);
 
-  void BaseCSP(nsAString& aDefaultCSP) const;
-  void DefaultCSP(nsAString& aDefaultCSP) const;
-
   bool UseRemoteExtensions() const;
   bool IsExtensionProcess() const;
 
@@ -127,6 +124,9 @@ class ExtensionPolicyService final : public nsIAddonPolicyService,
   nsCOMPtr<nsIObserverService> mObs;
 
   static bool sRemoteExtensions;
+
+  nsString mBaseCSP;
+  nsString mDefaultCSP;
 };
 
 }  // namespace mozilla
