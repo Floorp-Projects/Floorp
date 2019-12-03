@@ -18,7 +18,7 @@ let expectedConsoleCalls = [];
 
 function doConsoleCalls(aState)
 {
-  let longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 2)).join("a");
+  const longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 2)).join("a");
 
   top.console.log("foobarBaz-log", undefined);
 
@@ -33,8 +33,8 @@ function doConsoleCalls(aState)
   top.console.dir(top.document, top.location);
   top.console.log("foo", longString);
 
-  let sandbox = new Cu.Sandbox(null, { invisibleToDebugger: true });
-  let sandboxObj = sandbox.eval("new Object");
+  const sandbox = new Cu.Sandbox(null, { invisibleToDebugger: true });
+  const sandboxObj = sandbox.eval("new Object");
   top.console.log(sandboxObj);
 
   function fromAsmJS() {

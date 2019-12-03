@@ -37,7 +37,7 @@ function onStartPageError(aState, aResponse)
 
 function onStartPageErrorAndConsoleAPI(aState, aResponse)
 {
-  let startedListeners = aResponse.startedListeners;
+  const startedListeners = aResponse.startedListeners;
   is(startedListeners.length, 2, "startedListeners.length");
   isnot(startedListeners.indexOf("PageError"), -1, "startedListeners: PageError");
   isnot(startedListeners.indexOf("ConsoleAPI"), -1,

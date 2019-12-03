@@ -35,7 +35,7 @@ function onAttach(aState, aResponse)
 
   gState = aState;
 
-  let tests = [doCheckParent, doCdIframe, doCheckIframe,
+  const tests = [doCheckParent, doCdIframe, doCheckIframe,
       doCdContentIframe,
       doCdSandboxedIframe, doCheckSandboxedIframe,
       doCdParent,
@@ -125,7 +125,7 @@ function doCdSandboxedIframe()
 {
   // Don't use string to ensure we don't get security exception
   // when passing a content window reference.
-  let cmd = "cd(document.getElementById('sandboxed-iframe').contentWindow)";
+  const cmd = "cd(document.getElementById('sandboxed-iframe').contentWindow)";
   info("test " + cmd);
   gState.webConsoleFront.evaluateJSAsync(cmd).then(onCdSandboxedIframe.bind(null, cmd));
 }

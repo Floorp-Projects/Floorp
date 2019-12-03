@@ -39,7 +39,7 @@ window.onload = async function () {
 
 async function testSingleCustomStyleGroup(consoleFront) {
   info("Testing console.group with a custom style");
-  let packet = await consoleAPICall(
+  const packet = await consoleAPICall(
     consoleFront,
     () => top.console.group("%cfoobar", "color:red")
   );
@@ -52,7 +52,7 @@ async function testSingleCustomStyleGroup(consoleFront) {
 
 async function testSingleCustomStyleGroupCollapsed(consoleFront) {
   info("Testing console.groupCollapsed with a custom style");
-  let packet = await consoleAPICall(
+  const packet = await consoleAPICall(
     consoleFront,
     () => top.console.groupCollapsed("%cfoobaz", "color:blue")
   );
@@ -65,7 +65,7 @@ async function testSingleCustomStyleGroupCollapsed(consoleFront) {
 
 async function testMultipleCustomStyleGroup(consoleFront) {
   info("Testing console.group with multiple custom styles");
-  let packet = await consoleAPICall(
+  const packet = await consoleAPICall(
     consoleFront,
     () => top.console.group("%cfoo%cbar", "color:red", "color:blue")
   );
@@ -78,7 +78,7 @@ async function testMultipleCustomStyleGroup(consoleFront) {
 
 async function testMultipleCustomStyleGroupCollapsed(consoleFront) {
   info("Testing console.groupCollapsed with multiple custom styles");
-  let packet = await consoleAPICall(
+  const packet = await consoleAPICall(
     consoleFront,
     () => top.console.group("%cfoo%cbaz", "color:red", "color:green")
   );
@@ -91,7 +91,7 @@ async function testMultipleCustomStyleGroupCollapsed(consoleFront) {
 
 async function testFormatterWithNoStyleGroup(consoleFront) {
   info("Testing console.group with one formatter but no style");
-  let packet = await consoleAPICall(
+  const packet = await consoleAPICall(
     consoleFront,
     () => top.console.group("%cfoobar")
   );
@@ -104,7 +104,7 @@ async function testFormatterWithNoStyleGroup(consoleFront) {
 
 async function testFormatterWithNoStyleGroupCollapsed(consoleFront) {
   info("Testing console.groupCollapsed with one formatter but no style");
-  let packet = await consoleAPICall(
+  const packet = await consoleAPICall(
     consoleFront,
     () => top.console.groupCollapsed("%cfoobaz")
   );

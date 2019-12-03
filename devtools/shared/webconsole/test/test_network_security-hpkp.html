@@ -48,13 +48,13 @@ function startTest() {
     Services.prefs.setBoolPref(PROCESS_HPKP_FROM_NON_BUILTIN_ROOTS_PREF, false);
 
     // Reset pinning state.
-    let gSSService = Cc["@mozilla.org/ssservice;1"]
+    const gSSService = Cc["@mozilla.org/ssservice;1"]
                        .getService(Ci.nsISiteSecurityService);
 
-    let gIOService = Cc["@mozilla.org/network/io-service;1"]
+    const gIOService = Cc["@mozilla.org/network/io-service;1"]
                        .getService(Ci.nsIIOService);
-    for (let {url} of TEST_CASES) {
-      let uri = gIOService.newURI(url);
+    for (const {url} of TEST_CASES) {
+      const uri = gIOService.newURI(url);
       gSSService.resetState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
     }
   });
@@ -79,16 +79,16 @@ function runNextCase(state) {
     return;
   }
 
-  let { desc, url } = TEST_CASES[gCurrentTestCase];
+  const { desc, url } = TEST_CASES[gCurrentTestCase];
   info("Testing site with " + desc);
 
-  let iframe = document.querySelector("iframe").contentWindow;
+  const iframe = document.querySelector("iframe").contentWindow;
   iframe.wrappedJSObject.makeXhrCallback("GET", url);
 }
 
 function onNetworkEventUpdate(state, packet) {
   function onSecurityInfo(received) {
-    let data = TEST_CASES[gCurrentTestCase];
+    const data = TEST_CASES[gCurrentTestCase];
     is(received.securityInfo.hpkp, data.usesPinning,
       "Public Key Pinning detected correctly.");
 

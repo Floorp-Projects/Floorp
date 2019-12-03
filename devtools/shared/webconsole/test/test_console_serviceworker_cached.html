@@ -14,11 +14,11 @@
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
-let BASE_URL = "https://example.com/chrome/devtools/shared/webconsole/test/";
-let SERVICE_WORKER_URL = BASE_URL + "helper_serviceworker.js";
-let FRAME_URL = BASE_URL + "sandboxed_iframe.html";
+const BASE_URL = "https://example.com/chrome/devtools/shared/webconsole/test/";
+const SERVICE_WORKER_URL = BASE_URL + "helper_serviceworker.js";
+const FRAME_URL = BASE_URL + "sandboxed_iframe.html";
 
-let firstTabExpectedCalls = [
+const firstTabExpectedCalls = [
   {
     level: "log",
     filename: /helper_serviceworker/,
@@ -36,7 +36,7 @@ let firstTabExpectedCalls = [
   },
 ];
 
-let secondTabExpectedCalls = [
+const secondTabExpectedCalls = [
   {
     level: "log",
     filename: /helper_serviceworker/,
@@ -44,7 +44,7 @@ let secondTabExpectedCalls = [
   }
 ];
 
-let startTest = async function () {
+const startTest = async function () {
   removeEventListener("load", startTest);
 
   await new Promise(resolve => {
@@ -55,8 +55,8 @@ let startTest = async function () {
   });
 
   info("Adding a tab and attaching a service worker");
-  let tab1 = await addTab(FRAME_URL);
-  let swr = await withActiveServiceWorker(tab1.linkedBrowser.contentWindow,
+  const tab1 = await addTab(FRAME_URL);
+  const swr = await withActiveServiceWorker(tab1.linkedBrowser.contentWindow,
                                 SERVICE_WORKER_URL);
 
   await new Promise(resolve => {
@@ -73,7 +73,7 @@ let startTest = async function () {
   // they shouldn't show up in a call to getCachedMessages.
   // However, there is a fetch event which is logged due to loading the tab.
   info("Adding a new tab at the same URL");
-  let tab2 = await addTab(FRAME_URL);
+  const tab2 = await addTab(FRAME_URL);
   await new Promise(resolve => {
     info("Attaching console to tab 2");
     attachConsoleToTab(["ConsoleAPI"], function(state) {
@@ -92,7 +92,7 @@ addEventListener("load", startTest);
 
 // This test needs to add tabs that are controlled by a service worker
 // so use some special powers to dig around and find gBrowser
-let {gBrowser} = SpecialPowers._getTopChromeWindow(SpecialPowers.window);
+const {gBrowser} = SpecialPowers._getTopChromeWindow(SpecialPowers.window);
 
 SimpleTest.registerCleanupFunction(() => {
   while (gBrowser.tabs.length > 1) {
@@ -103,7 +103,7 @@ SimpleTest.registerCleanupFunction(() => {
 function addTab(url) {
   info("Adding a new tab with URL: '" + url + "'");
   return new Promise(resolve => {
-    let tab = gBrowser.selectedTab = gBrowser.addTab(url, {
+    const tab = gBrowser.selectedTab = gBrowser.addTab(url, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
     gBrowser.selectedBrowser.addEventListener("load", function () {
