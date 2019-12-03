@@ -106,7 +106,6 @@ PrimitiveHeader fetch_prim_header(int index) {
 
 struct VertexInfo {
     vec2 local_pos;
-    vec2 snap_offset;
     vec4 world_pos;
 };
 
@@ -135,7 +134,6 @@ VertexInfo write_vertex(RectWithSize instance_rect,
 
     VertexInfo vi = VertexInfo(
         clamped_local_pos,
-        vec2(0.0, 0.0),
         world_pos
     );
 
@@ -218,16 +216,15 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
 
     VertexInfo vi = VertexInfo(
         local_pos,
-        vec2(0.0),
         world_pos
     );
 
     return vi;
 }
 
-void write_clip(vec4 world_pos, vec2 snap_offset, ClipArea area) {
+void write_clip(vec4 world_pos, ClipArea area) {
     vec2 uv = world_pos.xy * area.device_pixel_scale +
-        world_pos.w * (snap_offset + area.common_data.task_rect.p0 - area.screen_origin);
+        world_pos.w * (area.common_data.task_rect.p0 - area.screen_origin);
     vClipMaskUvBounds = vec4(
         area.common_data.task_rect.p0,
         area.common_data.task_rect.p0 + area.common_data.task_rect.size
