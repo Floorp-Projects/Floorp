@@ -477,7 +477,7 @@ RefPtr<StyleSheet> Loader::Sheets::LookupInline(const nsAString& aBuffer) {
   if (!result) {
     return nullptr;
   }
-  if (result.Data()->HasForcedUniqueInner()) {
+  if (result.Data()->HasModifiedRules()) {
     // Remove it now that we know that we're never going to use this stylesheet
     // again.
     result.Remove();
@@ -525,7 +525,7 @@ auto Loader::Sheets::Lookup(SheetLoadDataHashKey& aKey, bool aSyncLoad)
         AssertComplete(*sheet);
         // We need to check the parsing mode manually because the XUL cache only
         // keys off the URI. See below for the unique inner check.
-        if (!sheet->HasForcedUniqueInner() &&
+        if (!sheet->HasModifiedRules() &&
             sheet->ParsingMode() == aKey.ParsingMode()) {
           return MakeTuple(CloneSheet(*sheet), SheetState::Complete);
         }
@@ -542,20 +542,38 @@ auto Loader::Sheets::Lookup(SheetLoadDataHashKey& aKey, bool aSyncLoad)
     LOG(("  From completed: %p", lookup.Data().get()));
     AssertComplete(*lookup.Data());
     MOZ_ASSERT(lookup.Data()->ParsingMode() == aKey.ParsingMode());
-    // Make sure it hasn't been forced to have a unique inner; that is an
-    // indication that its rules have been exposed to CSSOM and so we can't use
-    // it.
-    if (!lookup.Data()->HasForcedUniqueInner()) {
-      RefPtr<StyleSheet> clone = CloneSheet(*lookup.Data());
-      if (!lookup.Data()->GetOwnerNode() && !lookup.Data()->GetParentSheet()) {
+    // Make sure the stylesheet hasn't been modified; that is an indication that
+    // its rules have been exposed to CSSOM and so we can't use it.
+    if (!lookup.Data()->HasModifiedRules()) {
+      RefPtr<StyleSheet>& cachedSheet = lookup.Data();
+      RefPtr<StyleSheet> clone = CloneSheet(*cachedSheet);
+      MOZ_ASSERT(!clone->HasForcedUniqueInner());
+      MOZ_ASSERT(!clone->HasModifiedRules());
+
+      const bool oldSheetIsWorthKeeping = ([&cachedSheet] {
+        // If our current stylesheet in the cache has been touched by CSSOM, we
+        // need to do a full copy of it. The new clone still hasn't been
+        // touched, so we have better odds of doing a less-expensive clone in
+        // the future.
+        if (cachedSheet->HasForcedUniqueInner()) {
+          return false;
+        }
         // The sheet we're cloning isn't actually referenced by anyone.  Replace
         // it in the cache, so that if our CSSOM is later modified we don't end
         // up with two copies of our inner hanging around.
-        lookup.Data() = clone;
+        if (!cachedSheet->GetOwnerNode() && !cachedSheet->GetParentSheet()) {
+          return false;
+        }
+        return true;
+      }());
+
+      if (!oldSheetIsWorthKeeping) {
+        cachedSheet = clone;
       }
+
       return MakeTuple(std::move(clone), SheetState::Complete);
     }
-    LOG(("    Not cloning due to forced unique inner"));
+    LOG(("    Not cloning due to modified rules"));
     // Remove it now that we know that we're never going to use this stylesheet
     // again.
     lookup.Remove();
