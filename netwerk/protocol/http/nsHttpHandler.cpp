@@ -2249,12 +2249,7 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
     }
   } else if (!strcmp(topic, "browser:purge-session-history")) {
     if (mConnMgr) {
-      if (gSocketTransportService) {
-        nsCOMPtr<nsIRunnable> event = NewRunnableMethod(
-            "net::nsHttpConnectionMgr::ClearConnectionHistory", mConnMgr,
-            &nsHttpConnectionMgr::ClearConnectionHistory);
-        gSocketTransportService->Dispatch(event, NS_DISPATCH_NORMAL);
-      }
+      Unused << mConnMgr->ClearConnectionHistory();
       if (mAltSvcCache) {
         mAltSvcCache->ClearAltServiceMappings();
       }
