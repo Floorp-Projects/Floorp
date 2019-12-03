@@ -38,6 +38,9 @@ class CSSImportRule final : public css::Rule {
   dom::MediaList* GetMedia() const;
   StyleSheet* GetStyleSheet() const { return mChildSheet; }
 
+  // Clear the mSheet pointer on this rule and descendants.
+  void DropSheetReference() final;
+
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
