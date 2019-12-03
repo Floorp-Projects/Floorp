@@ -61,12 +61,15 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy, StyleSheet* aParentToUse,
       mInner(aCopy.mInner) {
   MOZ_ASSERT(mInner, "Should only copy StyleSheets with an mInner.");
   mInner->AddSheet(this);
-
-  if (HasForcedUniqueInner()) {  // CSSOM's been there, force full copy now
+  // CSSOM's been there, force full copy now.
+  if (HasForcedUniqueInner()) {
     MOZ_ASSERT(IsComplete(),
                "Why have rules been accessed on an incomplete sheet?");
-    // FIXME: handle failure?
     EnsureUniqueInner();
+    // But CSSOM hasn't been on _this_ stylesheet yet, so no need to clone
+    // ourselves.
+    mState &= ~(State::ForcedUniqueInner | State::ModifiedRules |
+                State::ModifiedRulesForDevtools);
   }
 
   if (aCopy.mMedia) {
@@ -549,17 +552,17 @@ ShadowRoot* StyleSheet::GetContainingShadow() const {
 }
 
 void StyleSheet::RuleAdded(css::Rule& aRule) {
-  mState |= State::ModifiedRules;
+  SetModifiedRules();
   NOTIFY(RuleAdded, (*this, aRule));
 }
 
 void StyleSheet::RuleRemoved(css::Rule& aRule) {
-  mState |= State::ModifiedRules;
+  SetModifiedRules();
   NOTIFY(RuleRemoved, (*this, aRule));
 }
 
 void StyleSheet::RuleChanged(css::Rule* aRule) {
-  mState |= State::ModifiedRules;
+  SetModifiedRules();
   NOTIFY(RuleChanged, (*this, aRule));
 }
 
@@ -1047,8 +1050,8 @@ nsresult StyleSheet::ReparseSheet(const nsAString& aInput) {
     }
   }
 
-  // Our rules are no longer considered modified.
-  ClearModifiedRules();
+  // Our rules are no longer considered modified for devtools.
+  mState &= ~State::ModifiedRulesForDevtools;
 
   return NS_OK;
 }
