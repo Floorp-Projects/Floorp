@@ -52,7 +52,7 @@ codespell:
         - tools/docs/
         - tools/lint/
         - tools/tryselect/
-    excludes:
+    exclude:
         - tools/lint/test/test_codespell.py
     # List of extensions coming from:
     # tools/lint/{flake8,eslint}.yml
