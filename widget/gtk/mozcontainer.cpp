@@ -247,8 +247,9 @@ static wl_surface* moz_container_get_gtk_container_surface(
   return surface;
 }
 
-static void frame_callback_handler(void* data, struct wl_callback* callback,
-                                   uint32_t time) {
+static void moz_container_frame_callback_handler(void* data,
+                                                 struct wl_callback* callback,
+                                                 uint32_t time) {
   MozContainer* container = MOZ_CONTAINER(data);
 
   LOGWAYLAND(
@@ -269,8 +270,8 @@ static void frame_callback_handler(void* data, struct wl_callback* callback,
   }
 }
 
-static const struct wl_callback_listener frame_listener = {
-    frame_callback_handler};
+static const struct wl_callback_listener moz_container_frame_listener = {
+    moz_container_frame_callback_handler};
 
 static void moz_container_request_parent_frame_callback(
     MozContainer* container) {
@@ -301,8 +302,8 @@ static void moz_container_request_parent_frame_callback(
   if (gtk_container_surface) {
     container->frame_callback_handler_surface_id = gtk_container_surface_id;
     container->frame_callback_handler = wl_surface_frame(gtk_container_surface);
-    wl_callback_add_listener(container->frame_callback_handler, &frame_listener,
-                             container);
+    wl_callback_add_listener(container->frame_callback_handler,
+                             &moz_container_frame_listener, container);
   } else {
     container->frame_callback_handler_surface_id = -1;
   }

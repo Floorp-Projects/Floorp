@@ -8,6 +8,7 @@
 #define WaylandDMABufSurface_h__
 
 #include <stdint.h>
+#include "GLContextTypes.h"
 #include "mozilla/widget/nsWaylandDisplay.h"
 
 typedef void* EGLImageKHR;

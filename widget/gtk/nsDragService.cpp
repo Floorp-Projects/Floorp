@@ -233,7 +233,7 @@ static void OnSourceGrabEventAfter(GtkWidget* widget, GdkEvent* event,
     // Update the cursor position.  The last of these recorded gets used for
     // the eDragEnd event.
     nsDragService* dragService = static_cast<nsDragService*>(user_data);
-    gint scale = ScreenHelperGTK::GetGTKMonitorScaleFactor();
+    gint scale = mozilla::widget::ScreenHelperGTK::GetGTKMonitorScaleFactor();
     auto p = LayoutDeviceIntPoint::Round(event->motion.x_root * scale,
                                          event->motion.y_root * scale);
     dragService->SetDragEndPoint(p);
@@ -427,7 +427,7 @@ bool nsDragService::SetAlphaPixmap(SourceSurface* aSurface,
       (void (*)(cairo_surface_t*, double, double))dlsym(
           RTLD_DEFAULT, "cairo_surface_set_device_scale");
   if (sCairoSurfaceSetDeviceScalePtr) {
-    gint scale = ScreenHelperGTK::GetGTKMonitorScaleFactor();
+    gint scale = mozilla::widget::ScreenHelperGTK::GetGTKMonitorScaleFactor();
     sCairoSurfaceSetDeviceScalePtr(surf, scale, scale);
   }
 
@@ -1270,7 +1270,7 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
     gint x, y;
     GdkDisplay* display = gdk_display_get_default();
     if (display) {
-      gint scale = ScreenHelperGTK::GetGTKMonitorScaleFactor();
+      gint scale = mozilla::widget::ScreenHelperGTK::GetGTKMonitorScaleFactor();
       gdk_display_get_pointer(display, nullptr, &x, &y, nullptr);
       SetDragEndPoint(LayoutDeviceIntPoint(x * scale, y * scale));
     }

@@ -7,9 +7,10 @@
 #ifndef _MOZILLA_WIDGET_GTK_WINDOW_SURFACE_PROVIDER_H
 #define _MOZILLA_WIDGET_GTK_WINDOW_SURFACE_PROVIDER_H
 
-#include "mozilla/widget/WindowSurface.h"
-#include "mozilla/gfx/Types.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Types.h"
+#include "mozilla/layers/LayersTypes.h"
+#include "mozilla/widget/WindowSurface.h"
 #include "Units.h"
 
 #include <gdk/gdk.h>
