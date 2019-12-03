@@ -83,6 +83,11 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
   bool mLogRemovals;
 
   /**
+   * Whether we should remove CSS conditional rules, no other changes.
+   */
+  bool mOnlyConditionalCSS;
+
+  /**
    * We have various tables of static atoms for elements and attributes.
    */
   class AtomsTable : public nsTHashtable<nsPtrHashKey<const nsStaticAtom>> {
