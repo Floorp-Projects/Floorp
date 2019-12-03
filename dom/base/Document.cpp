@@ -2814,20 +2814,23 @@ static void WarnIfSandboxIneffective(nsIDocShell* aDocShell,
   if (aSandboxFlags & SANDBOXED_NAVIGATION &&
       !(aSandboxFlags & SANDBOXED_SCRIPTS) &&
       !(aSandboxFlags & SANDBOXED_ORIGIN)) {
-    nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
-    aDocShell->GetInProcessSameTypeParent(getter_AddRefs(parentAsItem));
-    nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentAsItem);
-    if (!parentDocShell) {
+    RefPtr<BrowsingContext> bc = aDocShell->GetBrowsingContext();
+    MOZ_ASSERT(bc->IsInProcess());
+
+    RefPtr<BrowsingContext> parentBC = bc->GetParent();
+    if (!parentBC || !parentBC->IsInProcess()) {
+      // If parent document is not in process, then by construction it
+      // cannot be same origin.
       return;
     }
 
     // Don't warn if our parent is not the top-level document.
-    nsCOMPtr<nsIDocShellTreeItem> grandParentAsItem;
-    parentDocShell->GetInProcessSameTypeParent(
-        getter_AddRefs(grandParentAsItem));
-    if (grandParentAsItem) {
+    if (!parentBC->IsTopContent()) {
       return;
     }
+
+    nsCOMPtr<nsIDocShell> parentDocShell = parentBC->GetDocShell();
+    MOZ_ASSERT(parentDocShell);
 
     nsCOMPtr<nsIChannel> parentChannel;
     parentDocShell->GetCurrentDocumentChannel(getter_AddRefs(parentChannel));
@@ -6378,8 +6381,7 @@ void Document::SetStyleSheetApplicableState(StyleSheet& aSheet,
 
     RefPtr<StyleSheetApplicableStateChangeEvent> event =
         StyleSheetApplicableStateChangeEvent::Constructor(
-            this, NS_LITERAL_STRING("StyleSheetApplicableStateChanged"),
-            init);
+            this, NS_LITERAL_STRING("StyleSheetApplicableStateChanged"), init);
     event->SetTrusted(true);
     event->SetTarget(this);
     RefPtr<AsyncEventDispatcher> asyncDispatcher =
