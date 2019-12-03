@@ -2529,6 +2529,9 @@ describe("ASRouter", () => {
 
   describe("_triggerHandler", () => {
     it("should call #onMessage with the correct trigger", () => {
+      const getter = sandbox.stub();
+      getter.returns(false);
+      sandbox.stub(global.BrowserHandler, "kiosk").get(getter);
       sinon.spy(Router, "onMessage");
       const target = {};
       const trigger = { id: "FAKE_TRIGGER", param: "some fake param" };
