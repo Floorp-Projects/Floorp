@@ -42,6 +42,7 @@ redirects:
     browser/browser: browser
     dom/dom: dom
     gfx/gfx: gfx
+    intl/l10n/l10n: l10n
     modules/libpref/libpref: modules/libpref
     python/mach: mach
     python/python: python
@@ -49,3 +50,4 @@ redirects:
     testing/geckodriver/geckodriver: testing/geckodriver
     testing/marionette/marionette: testing/marionette
     toolkit/components/telemetry/telemetry: toolkit/components/telemetry
+    tools/compare-locales/index.html: build/buildsystem/locales.html
