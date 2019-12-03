@@ -29,11 +29,11 @@ async function CheckBrowserNotInPid(browser, unExpectedPid, message) {
   isnot(pid, unExpectedPid, message);
 }
 
-async function runWebNotInFileTest() {
+async function runWebNotInFileTest(prefValue) {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.tabs.remote.allowLinkedWebInFileUriProcess", false]],
+    set: [["browser.tabs.remote.allowLinkedWebInFileUriProcess", prefValue]],
   });
-  info("Running test with allowLinkedWebInFileUriProcess=false");
+  info(`Running test with allowLinkedWebInFileUriProcess=${prefValue}`);
 
   // Verify that with this pref disabled the new HTTP content loaded into a file
   // tab causes a process switch.
@@ -295,5 +295,15 @@ add_task(async function setup() {
   });
 });
 
-add_task(runWebNotInFileTest);
-add_task(runWebInFileTest);
+add_task(async function runWebNotInFileTestFalse() {
+  await runWebNotInFileTest(false);
+});
+
+if (SpecialPowers.useRemoteSubframes) {
+  // With fission this pref is ignored.
+  add_task(async function runWebNotInFileTestTrue() {
+    await runWebNotInFileTest(true);
+  });
+} else {
+  add_task(runWebInFileTest);
+}
