@@ -377,6 +377,11 @@ const TEST_GLOBAL = {
       return Promise.resolve(0);
     },
   },
+  BrowserHandler: {
+    get kiosk() {
+      return false;
+    },
+  },
 };
 overrider.set(TEST_GLOBAL);
 
