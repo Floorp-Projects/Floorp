@@ -2415,8 +2415,14 @@ static void MoveToSegment(SourceMediaTrack* aTrack, MediaSegment* aIn,
                           TrackTime aDesiredUpToTime) {
   MOZ_ASSERT(aIn->GetType() == aOut->GetType());
   MOZ_ASSERT(aOut->GetDuration() >= aCurrentTime);
+  MOZ_ASSERT(aDesiredUpToTime >= aCurrentTime);
   if (aIn->GetType() == MediaSegment::AUDIO) {
-    aOut->AppendFrom(aIn);
+    AudioSegment* in = static_cast<AudioSegment*>(aIn);
+    TrackTime desiredDurationToMove = aDesiredUpToTime - aCurrentTime;
+    TrackTime end = std::min(in->GetDuration(), desiredDurationToMove);
+
+    aOut->AppendSlice(*in, 0, end);
+    in->RemoveLeading(end);
   } else {
     VideoSegment* in = static_cast<VideoSegment*>(aIn);
     VideoSegment* out = static_cast<VideoSegment*>(aOut);
@@ -2458,8 +2464,8 @@ static void MoveToSegment(SourceMediaTrack* aTrack, MediaSegment* aIn,
       out->ExtendLastFrameBy(aDesiredUpToTime - out->GetDuration());
     }
     in->Clear();
+    MOZ_ASSERT(aIn->GetDuration() == 0, "aIn must be consumed");
   }
-  MOZ_ASSERT(aIn->GetDuration() == 0, "aIn must be consumed");
 }
 
 void SourceMediaTrack::ExtractPendingInput(GraphTime aCurrentTime,
