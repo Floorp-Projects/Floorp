@@ -568,7 +568,10 @@ const tests = [
     info(
       "With pageproxystate=invalid, open the panel with openViewOnFocus, click on entry."
     );
-    gURLBar.value = "mochi.test";
+    // This value must be different from the previous test, or else the
+    // Megabar's "retained results" feature will interfere with openViewOnFocus.
+    // This issue will be addressed in bug 1601052.
+    gURLBar.value = "example.com";
     gURLBar.setAttribute("pageproxystate", "invalid");
     let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", true);
@@ -587,7 +590,7 @@ const tests = [
       value: "typed",
       extra: {
         elapsed: val => parseInt(val) > 0,
-        numChars: "10",
+        numChars: "11",
         selType: "autofill",
         selIndex: "0",
       },
