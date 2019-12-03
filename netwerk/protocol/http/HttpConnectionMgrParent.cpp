@@ -1,0 +1,214 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et cin: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// HttpLog.h should generally be included first
+#include "HttpLog.h"
+
+#include "HttpConnectionMgrParent.h"
+#include "mozilla/net/HttpTransactionParent.h"
+#include "nsHttpConnectionInfo.h"
+
+namespace mozilla {
+namespace net {
+
+NS_IMPL_ISUPPORTS0(HttpConnectionMgrParent)
+
+HttpConnectionMgrParent::HttpConnectionMgrParent() : mShutDown(false) {}
+
+nsresult HttpConnectionMgrParent::Init(
+    uint16_t maxUrgentExcessiveConns, uint16_t maxConnections,
+    uint16_t maxPersistentConnectionsPerHost,
+    uint16_t maxPersistentConnectionsPerProxy, uint16_t maxRequestDelay,
+    bool throttleEnabled, uint32_t throttleVersion, uint32_t throttleSuspendFor,
+    uint32_t throttleResumeFor, uint32_t throttleReadLimit,
+    uint32_t throttleReadInterval, uint32_t throttleHoldTime,
+    uint32_t throttleMaxTime, bool beConservativeForProxy) {
+  // We don't have to do anything here. nsHttpConnectionMgr in socket process is
+  // initialized by nsHttpHandler.
+  return NS_OK;
+}
+
+nsresult HttpConnectionMgrParent::Shutdown() {
+  if (mShutDown) {
+    return NS_OK;
+  }
+
+  if (!CanSend()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  mShutDown = true;
+  Unused << Send__delete__(this);
+  return NS_OK;
+}
+
+nsresult HttpConnectionMgrParent::UpdateRequestTokenBucket(
+    EventTokenBucket* aBucket) {
+  // We don't have to do anything here. UpdateRequestTokenBucket() will be
+  // triggered by pref change in socket process.
+  return NS_OK;
+}
+
+nsresult HttpConnectionMgrParent::DoShiftReloadConnectionCleanup(
+    nsHttpConnectionInfo* aNotUsed) {
+  if (!CanSend()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  Unused << SendDoShiftReloadConnectionCleanup();
+  return NS_OK;
+}
+
+nsresult HttpConnectionMgrParent::PruneDeadConnections() {
+  if (!CanSend()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  Unused << SendPruneDeadConnections();
+  return NS_OK;
+}
+
+void HttpConnectionMgrParent::AbortAndCloseAllConnections(int32_t, ARefBase*) {
+  if (!CanSend()) {
+    return;
+  }
+
+  Unused << SendAbortAndCloseAllConnections();
+}
+
+nsresult HttpConnectionMgrParent::UpdateParam(nsParamName name,
+                                              uint16_t value) {
+  // Do nothing here. UpdateParam() will be triggered by pref change in
+  // socket process.
+  return NS_OK;
+}
+
+void HttpConnectionMgrParent::PrintDiagnostics() {
+  // Do nothing here. PrintDiagnostics() will be triggered by pref change in
+  // socket process.
+  return;
+}
+
+nsresult HttpConnectionMgrParent::UpdateCurrentTopLevelOuterContentWindowId(
+    uint64_t aWindowId) {
+  if (!CanSend()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  Unused << SendUpdateCurrentTopLevelOuterContentWindowId(aWindowId);
+  return NS_OK;
+}
+
+nsresult HttpConnectionMgrParent::AddTransaction(HttpTransactionShell* aTrans,
+                                                 int32_t aPriority) {
+  if (!CanSend()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  Unused << SendAddTransaction(aTrans->AsHttpTransactionParent(), aPriority);
+  return NS_OK;
+}
+
+nsresult HttpConnectionMgrParent::AddTransactionWithStickyConn(
+    HttpTransactionShell* aTrans, int32_t aPriority,
+    HttpTransactionShell* aTransWithStickyConn) {
+  if (!CanSend()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  Unused << SendAddTransactionWithStickyConn(
+      aTrans->AsHttpTransactionParent(), aPriority,
+      aTransWithStickyConn->AsHttpTransactionParent());
+  return NS_OK;
+}
+
+nsresult HttpConnectionMgrParent::RescheduleTransaction(
+    HttpTransactionShell* aTrans, int32_t aPriority) {
+  if (!CanSend()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  Unused << SendRescheduleTransaction(aTrans->AsHttpTransactionParent(),
+                                      aPriority);
+  return NS_OK;
+}
+
+void HttpConnectionMgrParent::UpdateClassOfServiceOnTransaction(
+    HttpTransactionShell* aTrans, uint32_t aClassOfService) {
+  if (!CanSend()) {
+    return;
+  }
+
+  Unused << SendUpdateClassOfServiceOnTransaction(
+      aTrans->AsHttpTransactionParent(), aClassOfService);
+}
+
+nsresult HttpConnectionMgrParent::CancelTransaction(
+    HttpTransactionShell* aTrans, nsresult aReason) {
+  if (!CanSend()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  Unused << SendCancelTransaction(aTrans->AsHttpTransactionParent(), aReason);
+  return NS_OK;
+}
+
+nsresult HttpConnectionMgrParent::ReclaimConnection(nsHttpConnection*) {
+  MOZ_ASSERT_UNREACHABLE("ReclaimConnection should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult HttpConnectionMgrParent::ProcessPendingQ(nsHttpConnectionInfo*) {
+  MOZ_ASSERT_UNREACHABLE("ProcessPendingQ should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult HttpConnectionMgrParent::ProcessPendingQ() {
+  MOZ_ASSERT_UNREACHABLE("ProcessPendingQ should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult HttpConnectionMgrParent::GetSocketThreadTarget(nsIEventTarget**) {
+  MOZ_ASSERT_UNREACHABLE("GetSocketThreadTarget should not be called");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult HttpConnectionMgrParent::SpeculativeConnect(nsHttpConnectionInfo*,
+                                                     nsIInterfaceRequestor*,
+                                                     uint32_t caps,
+                                                     NullHttpTransaction*) {
+  // TODO: fix this in bug 1527384
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult HttpConnectionMgrParent::VerifyTraffic() {
+  if (!CanSend()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  Unused << SendVerifyTraffic();
+  return NS_OK;
+}
+
+void HttpConnectionMgrParent::BlacklistSpdy(const nsHttpConnectionInfo* ci) {
+  MOZ_ASSERT_UNREACHABLE("BlacklistSpdy should not be called");
+}
+
+nsresult HttpConnectionMgrParent::ClearConnectionHistory() {
+  if (!CanSend()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  Unused << SendClearConnectionHistory();
+  return NS_OK;
+}
+
+nsHttpConnectionMgr* HttpConnectionMgrParent::AsHttpConnectionMgr() {
+  return nullptr;
+}
+
+}  // namespace net
+}  // namespace mozilla

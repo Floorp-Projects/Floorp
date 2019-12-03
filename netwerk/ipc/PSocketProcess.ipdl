@@ -8,6 +8,7 @@ include protocol PSocketProcessBridge;
 include protocol PProfiler;
 include protocol PWebrtcTCPSocket;
 include protocol PHttpTransaction;
+include protocol PHttpConnectionMgr;
 include protocol PFileDescriptorSet;
 include protocol PChildToParentStream;
 include protocol PParentToChildStream;
@@ -35,6 +36,7 @@ protocol PSocketProcess
   manages PWebrtcTCPSocket;
   manages PFileDescriptorSet;
   manages PHttpTransaction;
+  manages PHttpConnectionMgr;
   manages PChildToParentStream;
   manages PParentToChildStream;
 
@@ -69,6 +71,7 @@ child:
   async SocketProcessTelemetryPing();
   async PHttpTransaction();
   async PParentToChildStream();
+  async PHttpConnectionMgr();
 
 both:
   async PFileDescriptorSet(FileDescriptor fd);

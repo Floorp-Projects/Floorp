@@ -54,6 +54,8 @@ class HttpTransactionChild final : public PHttpTransactionChild,
   mozilla::ipc::IPCResult RecvSetH2WSConnRefTaken();
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
+  nsHttpTransaction* GetHttpTransaction();
+
  private:
   virtual ~HttpTransactionChild();
 

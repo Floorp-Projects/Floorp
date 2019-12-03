@@ -214,6 +214,10 @@ void HttpTransactionChild::ActorDestroy(ActorDestroyReason aWhy) {
   mTransactionPump = nullptr;
 }
 
+nsHttpTransaction* HttpTransactionChild::GetHttpTransaction() {
+  return mTransaction.get();
+}
+
 //-----------------------------------------------------------------------------
 // HttpTransactionChild <nsIStreamListener>
 //-----------------------------------------------------------------------------
