@@ -448,62 +448,6 @@ class TargetCompileFlags(BaseCompileFlags):
     """Base class that encapsulates some common logic between CompileFlags and
     WasmCompileFlags.
     """
-    def __init__(self, context, prefix='', additionally=(), instead={}):
-        # `prefix` is a string to be prepended to all dest_var names.
-        # `additionally` is a sequence of (flat, default, dest_vars) to be added
-        # to the flag_variables tuple.
-        # `instead` is a string-to-string map that maps base dest_var names to
-        # replacement names; e.g., if instead={'FOO':'BAR'}, then 'FOO' is
-        # replaced with 'BAR' wherever it would occur in a dest_var.
-        main_src_dir = mozpath.dirname(context.main_path)
-        self._context = context
-
-        self.flag_variables = tuple(list(additionally) + [
-            (flag, default, tuple(set(instead.get(prefix + dest_var, prefix + dest_var)
-                                      for dest_var in dest_vars)))
-            for flag, default, dest_vars in (
-                    ('LIBRARY_DEFINES', None, ('CXXFLAGS', 'CFLAGS')),
-                    ('BASE_INCLUDES',
-                     ['-I%s' % main_src_dir, '-I%s' % context.objdir],
-                     ('CXXFLAGS', 'CFLAGS')),
-                    ('LOCAL_INCLUDES', None, ('CXXFLAGS', 'CFLAGS')),
-                    ('EXTRA_INCLUDES',
-                     ['-I%s/dist/include' % context.config.topobjdir],
-                     ('CXXFLAGS', 'CFLAGS')),
-                    ('OS_INCLUDES',
-                     list(itertools.chain(*(
-                         context.config.substs.get(v, []) for v in (
-                             'NSPR_CFLAGS', 'NSS_CFLAGS', 'MOZ_JPEG_CFLAGS',
-                             'MOZ_PNG_CFLAGS', 'MOZ_ZLIB_CFLAGS',
-                             'MOZ_PIXMAN_CFLAGS')))),
-                     ('CXXFLAGS', 'CFLAGS')),
-                    ('DSO', context.config.substs.get('DSO_CFLAGS'),
-                     ('CXXFLAGS', 'CFLAGS')),
-                    ('DSO_PIC', context.config.substs.get('DSO_PIC_CFLAGS'),
-                     ('CXXFLAGS', 'CFLAGS')),
-                    ('RTL', None, ('CXXFLAGS', 'CFLAGS')),
-                    ('DEBUG', self._debug_flags(),
-                     ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
-                    ('CLANG_PLUGIN',
-                     context.config.substs.get('CLANG_PLUGIN_FLAGS'),
-                     ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
-                    ('OPTIMIZE', self._optimize_flags(),
-                     ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
-                    ('FRAMEPTR',
-                     context.config.substs.get('MOZ_FRAMEPTR_FLAGS'),
-                     ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
-                    ('WARNINGS_AS_ERRORS', self._warnings_as_errors(),
-                     ('CXXFLAGS', 'CFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
-                    ('WARNINGS_CFLAGS',
-                     context.config.substs.get('WARNINGS_CFLAGS'),
-                     ('CFLAGS', 'C_LDFLAGS')),
-                    ('MOZBUILD_CFLAGS', None, ('CFLAGS',)),
-                    ('MOZBUILD_CXXFLAGS', None, ('CXXFLAGS',)),
-                    ('COVERAGE', context.config.substs.get('COVERAGE_CFLAGS'),
-                     ('CXXFLAGS', 'CFLAGS')),
-            )])
-
-        BaseCompileFlags.__init__(self, context)
 
     def _debug_flags(self):
         if (self._context.config.substs.get('MOZ_DEBUG') or
@@ -550,10 +494,11 @@ class TargetCompileFlags(BaseCompileFlags):
 
 class CompileFlags(TargetCompileFlags):
     def __init__(self, context):
-        TargetCompileFlags.__init__(self, context, prefix='', additionally=(
-            ('DEFINES', None, ('CXXFLAGS', 'CFLAGS')),
-            ('STL', context.config.substs.get('STL_FLAGS'),
-             ('CXXFLAGS',)),
+        main_src_dir = mozpath.dirname(context.main_path)
+        self._context = context
+
+        self.flag_variables = (
+            ('STL', context.config.substs.get('STL_FLAGS'), ('CXXFLAGS',)),
             ('VISIBILITY', context.config.substs.get('VISIBILITY_FLAGS'),
              ('CXXFLAGS', 'CFLAGS')),
             ('MOZ_HARDENING_CFLAGS',
@@ -561,10 +506,25 @@ class CompileFlags(TargetCompileFlags):
               if _context_under_js_src(context) else
               context.config.substs.get('MOZ_HARDENING_CFLAGS')),
              ('CXXFLAGS', 'CFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
-            ('OS_COMPILE_CFLAGS',
-             context.config.substs.get('OS_COMPILE_CFLAGS'), ('CFLAGS',)),
-            ('OS_COMPILE_CXXFLAGS',
-             context.config.substs.get('OS_COMPILE_CXXFLAGS'),
+            ('DEFINES', None, ('CXXFLAGS', 'CFLAGS')),
+            ('LIBRARY_DEFINES', None, ('CXXFLAGS', 'CFLAGS')),
+            ('BASE_INCLUDES', ['-I%s' % main_src_dir, '-I%s' % context.objdir],
+             ('CXXFLAGS', 'CFLAGS')),
+            ('LOCAL_INCLUDES', None, ('CXXFLAGS', 'CFLAGS')),
+            ('EXTRA_INCLUDES', ['-I%s/dist/include' % context.config.topobjdir],
+             ('CXXFLAGS', 'CFLAGS')),
+            ('OS_INCLUDES', list(itertools.chain(*(context.config.substs.get(v, []) for v in (
+                'NSPR_CFLAGS', 'NSS_CFLAGS', 'MOZ_JPEG_CFLAGS', 'MOZ_PNG_CFLAGS',
+                'MOZ_ZLIB_CFLAGS', 'MOZ_PIXMAN_CFLAGS')))),
+             ('CXXFLAGS', 'CFLAGS')),
+            ('DSO', context.config.substs.get('DSO_CFLAGS'),
+             ('CXXFLAGS', 'CFLAGS')),
+            ('DSO_PIC', context.config.substs.get('DSO_PIC_CFLAGS'),
+             ('CXXFLAGS', 'CFLAGS')),
+            ('RTL', None, ('CXXFLAGS', 'CFLAGS')),
+            ('OS_COMPILE_CFLAGS', context.config.substs.get('OS_COMPILE_CFLAGS'),
+             ('CFLAGS',)),
+            ('OS_COMPILE_CXXFLAGS', context.config.substs.get('OS_COMPILE_CXXFLAGS'),
              ('CXXFLAGS',)),
             ('OS_CPPFLAGS', context.config.substs.get('OS_CPPFLAGS'),
              ('CXXFLAGS', 'CFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
@@ -572,25 +532,83 @@ class CompileFlags(TargetCompileFlags):
              ('CFLAGS', 'C_LDFLAGS')),
             ('OS_CXXFLAGS', context.config.substs.get('OS_CXXFLAGS'),
              ('CXXFLAGS', 'CXX_LDFLAGS')),
-        ))
+            ('DEBUG', self._debug_flags(),
+             ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('CLANG_PLUGIN', context.config.substs.get('CLANG_PLUGIN_FLAGS'),
+             ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('OPTIMIZE', self._optimize_flags(),
+             ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('FRAMEPTR', context.config.substs.get('MOZ_FRAMEPTR_FLAGS'),
+             ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('WARNINGS_AS_ERRORS', self._warnings_as_errors(),
+             ('CXXFLAGS', 'CFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('WARNINGS_CFLAGS', context.config.substs.get('WARNINGS_CFLAGS'),
+             ('CFLAGS', 'C_LDFLAGS')),
+            ('MOZBUILD_CFLAGS', None, ('CFLAGS',)),
+            ('MOZBUILD_CXXFLAGS', None, ('CXXFLAGS',)),
+            ('COVERAGE', context.config.substs.get('COVERAGE_CFLAGS'), ('CXXFLAGS', 'CFLAGS')),
+        )
+
+        TargetCompileFlags.__init__(self, context)
 
 
 class WasmFlags(TargetCompileFlags):
     def __init__(self, context):
-        TargetCompileFlags.__init__(
-            self, context, prefix='WASM_', additionally=(
-                tuple(
-                    (name, context.config.substs.get(name), (name,))
-                    for name in ('WASM_CFLAGS', 'WASM_CXXFLAGS', 'WASM_LDFLAGS')) +
-                (('WASM_DEFINES', None, ('WASM_CFLAGS', 'WASM_CXXFLAGS')),
-                 ('MOZBUILD_WASM_CFLAGS', None, ('WASM_CFLAGS',)),
-                 ('MOZBUILD_WASM_CXXFLAGS', None, ('WASM_CXXFLAGS',)))),
-            # Unlike target/host compilation, we don't distinguish between
-            # LDFLAGS for C and C++.
-            instead={
-                'WASM_C_LDFLAGS': 'WASM_LDFLAGS',
-                'WASM_CXX_LDFLAGS': 'WASM_LDFLAGS',
-            })
+        main_src_dir = mozpath.dirname(context.main_path)
+        self._context = context
+
+        self.flag_variables = (
+            ('LIBRARY_DEFINES', None, ('WASM_CXXFLAGS', 'WASM_CFLAGS')),
+            ('BASE_INCLUDES',
+             ['-I%s' % main_src_dir, '-I%s' % context.objdir],
+             ('WASM_CXXFLAGS', 'WASM_CFLAGS')),
+            ('LOCAL_INCLUDES', None, ('WASM_CXXFLAGS', 'WASM_CFLAGS')),
+            ('EXTRA_INCLUDES',
+             ['-I%s/dist/include' % context.config.topobjdir],
+             ('WASM_CXXFLAGS', 'WASM_CFLAGS')),
+            ('OS_INCLUDES',
+             list(itertools.chain(*(
+                 context.config.substs.get(v, []) for v in (
+                     'NSPR_CFLAGS', 'NSS_CFLAGS', 'MOZ_JPEG_CFLAGS',
+                     'MOZ_PNG_CFLAGS', 'MOZ_ZLIB_CFLAGS',
+                     'MOZ_PIXMAN_CFLAGS')))),
+             ('WASM_CXXFLAGS', 'WASM_CFLAGS')),
+            ('DSO', context.config.substs.get('DSO_CFLAGS'),
+             ('WASM_CXXFLAGS', 'WASM_CFLAGS')),
+            ('DSO_PIC', context.config.substs.get('DSO_PIC_CFLAGS'),
+             ('WASM_CXXFLAGS', 'WASM_CFLAGS')),
+            ('RTL', None, ('WASM_CXXFLAGS', 'WASM_CFLAGS')),
+            ('DEBUG', self._debug_flags(),
+             ('WASM_CFLAGS', 'WASM_CXXFLAGS', 'WASM_LDFLAGS')),
+            ('CLANG_PLUGIN',
+             context.config.substs.get('CLANG_PLUGIN_FLAGS'),
+             ('WASM_CFLAGS', 'WASM_CXXFLAGS', 'WASM_LDFLAGS')),
+            ('OPTIMIZE', self._optimize_flags(),
+             ('WASM_CFLAGS', 'WASM_CXXFLAGS', 'WASM_LDFLAGS')),
+            ('FRAMEPTR',
+             context.config.substs.get('MOZ_FRAMEPTR_FLAGS'),
+             ('WASM_CFLAGS', 'WASM_CXXFLAGS', 'WASM_LDFLAGS')),
+            ('WARNINGS_AS_ERRORS', self._warnings_as_errors(),
+             ('WASM_CXXFLAGS', 'WASM_CFLAGS', 'WASM_LDFLAGS')),
+            ('WARNINGS_CFLAGS',
+             context.config.substs.get('WARNINGS_CFLAGS'),
+             ('WASM_CFLAGS', 'WASM_LDFLAGS')),
+            ('MOZBUILD_CFLAGS', None, ('WASM_CFLAGS',)),
+            ('MOZBUILD_CXXFLAGS', None, ('WASM_CXXFLAGS',)),
+            ('COVERAGE', context.config.substs.get('COVERAGE_CFLAGS'),
+             ('WASM_CXXFLAGS', 'WASM_CFLAGS')),
+            ('WASM_CFLAGS', context.config.substs.get('WASM_CFLAGS'),
+             ('WASM_CFLAGS',)),
+            ('WASM_CXXFLAGS', context.config.substs.get('WASM_CXXFLAGS'),
+             ('WASM_CXXFLAGS',)),
+            ('WASM_LDFLAGS', context.config.substs.get('WASM_LDFLAGS'),
+             ('WASM_LDFLAGS',)),
+            ('WASM_DEFINES', None, ('WASM_CFLAGS', 'WASM_CXXFLAGS')),
+            ('MOZBUILD_WASM_CFLAGS', None, ('WASM_CFLAGS',)),
+            ('MOZBUILD_WASM_CXXFLAGS', None, ('WASM_CXXFLAGS',)),
+        )
+
+        TargetCompileFlags.__init__(self, context)
 
 
 class FinalTargetValue(ContextDerivedValue, unicode):
