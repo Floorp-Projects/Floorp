@@ -164,38 +164,34 @@ preferred over short identifiers like :js:`ok` or :js:`ok-button`.
 Localization Systems
 ====================
 
-Gecko has three main localization systems: two older ones (DTD and StringBundle) and
-a new system, called Fluent, that is progressively replacing them.
-
-DTD & StringBundle
-------------------
-
-DTD is primarily used for XUL and XHTML file localization. It uses `.dtd` files
-and the only localization feature it provides is the ability to reference one
-string from another via entity reference.
-
-StringBundle is a runtime API used primarily for localization of the JS code.
-The messages are stored in `.properties` files and loaded using the StringBundle API
-and then retrieved from there via imperative calls.
-
-The system provides external arguments which can be placed into the string, and
-support basic plural categories via a proprietary API `PluralForms.jsm`.
+Gecko has three main localization systems: Fluent and two legacy systems,
+DTD and StringBundle.
 
 Fluent
 ------
 
 Fluent is a modern localization system designed by Mozilla to address the challenges
-and limitations of the previous systems.
+and limitations of older systems.
 
 It's well suited for modern web development cycle, provides a number of localization
 features including good internationalization model and strong bidirectionality support.
 
-Fluent strictly supersedes the old systems and is currently being slowly introduced to
-Firefox and all other Mozilla products with the goal to become the only
-unified localization system at Mozilla and a foundation of the future localization
-standard.
 
 To learn more about Fluent, follow the `Fluent for Firefox Developers`_ guide.
+
+DTD & StringBundle
+------------------
+
+DTD are deprecated, but still used for XUL and XHTML file localization. It uses `.dtd` files
+and the only localization feature it provides is the ability to reference one
+string from another via entity reference.
+
+StringBundle is a runtime API used primarily for localization of C++ code.
+The messages are stored in `.properties` files and loaded using the StringBundle API
+and then retrieved from there via imperative calls.
+
+The system provides external arguments which can be placed into the string, and
+support basic plural categories via a proprietary API `PluralForms.jsm`.
 
 .. _Pontoon: https://pontoon.mozilla.org/
 .. _hg.mozilla.org/l10n-central: https://hg.mozilla.org/l10n-central/
