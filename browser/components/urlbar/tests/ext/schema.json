@@ -2,6 +2,14 @@
   {
     "namespace": "experiments.urlbar",
     "description": "APIs supporting urlbar experiments",
+    "types": [
+      {
+        "id": "BrowserUpdateStatus",
+        "type": "string",
+        "enum": ["checking", "downloadAndInstall", "downloadFailed", "downloading", "manualUpdate", "neverChecked", "noUpdater", "noUpdatesFound", "otherInstanceHandlingUpdates", "readyForRestart", "staging", "unsupportedSystem", "updateDisabledByPolicy"],
+        "description": "The browser's current update state. Each value corresponds to an AppUpdater.STATUS value."
+      }
+    ],
     "properties": {
       "engagementTelemetry": {
         "$ref": "types.Setting",
@@ -14,17 +22,24 @@
     },
     "functions": [
       {
+        "name": "checkForBrowserUpdate",
+        "type": "function",
+        "async": true,
+        "description": "Checks for an update to the app. If an update is available and the user's preferences allow, the update will automatically be downloaded and installed. This function will not restart the browser, however.",
+        "parameters": []
+      },
+      {
+        "name": "getBrowserUpdateStatus",
+        "type": "function",
+        "async": true,
+        "description": "Returns the browser's current update status. The return value is one of the <code>BrowserUpdateStatus</code> enums.",
+        "parameters": []
+      },
+      {
         "name": "isBrowserShowingNotification",
         "type": "function",
         "async": true,
         "description": "Returns true if the browser is showing any kind of notification.",
-        "parameters": []
-      },
-      {
-        "name": "isBrowserUpdateReadyToInstall",
-        "type": "function",
-        "async": true,
-        "description": "Returns true if there is an update ready to install.",
         "parameters": []
       },
       {

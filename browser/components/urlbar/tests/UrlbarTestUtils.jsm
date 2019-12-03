@@ -35,7 +35,7 @@ var UrlbarTestUtils = {
    * @param {function} options.waitForFocus The SimpleTest function
    * @param {boolean} [options.fireInputEvent] whether an input event should be
    *        used when starting the query (simulates the user's typing, sets
-   *        userTypedValued, etc.)
+   *        userTypedValued, triggers engagement event telemetry, etc.)
    * @param {number} [options.selectionStart] The input's selectionStart
    * @param {number} [options.selectionEnd] The input's selectionEnd
    */
