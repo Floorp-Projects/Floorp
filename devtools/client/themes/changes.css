@@ -201,3 +201,7 @@
 #sidebar-panel-changes .devtools-sidepanel-no-result :not(:first-child) {
   font-style: normal;
 }
+
+#sidebar-panel-changes.inspector-tabpanel {
+  min-width: 0;
+}
