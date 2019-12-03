@@ -53,10 +53,19 @@ class ThreeDotMenuMainRobot {
     fun clickBrowserViewSaveCollectionButton() {
         browserViewSaveCollectionButton().click()
     }
+
     fun clickAddNewCollection() {
         addNewCollectionButton().click()
     }
-    fun clickAddBookmarkButton() = addBookmarkButton().click()
+
+    fun clickAddBookmarkButton() {
+        mDevice.waitNotNull(
+            Until.findObject(By.desc("Bookmark")),
+            waitingTime
+        )
+        addBookmarkButton().click()
+    }
+
     fun verifyCollectionNameTextField() = assertCollectionNameTextField()
     fun verifyFindInPageButton() = assertFindInPageButton()
     fun verifyShareScrim() = assertShareScrim()

@@ -95,6 +95,11 @@ class HistoryRobot {
     }
 }
 
+fun historyMenu(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
+    HistoryRobot().interact()
+    return HistoryRobot.Transition()
+}
+
 private fun goBackButton() = onView(withContentDescription("Navigate up"))
 
 private fun testPageTitle() = onView(allOf(withId(R.id.title), withText("Test_Page_1")))

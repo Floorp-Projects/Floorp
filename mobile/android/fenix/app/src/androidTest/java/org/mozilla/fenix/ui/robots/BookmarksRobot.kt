@@ -17,13 +17,17 @@ import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Until
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
 import org.junit.Assert.assertEquals
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.click
+import org.mozilla.fenix.helpers.ext.waitNotNull
 
 /**
  * Implementation of Robot Pattern for the bookmarks menu.
@@ -38,7 +42,13 @@ class BookmarksRobot {
 
     fun verifyBookmarkedURL(url: Uri) = assertBookmarkURL(url)
 
-    fun verifyFolderTitle(title: String) = assertFolderTitle(title)
+    fun verifyFolderTitle(title: String) {
+        mDevice.waitNotNull(
+            Until.findObject(By.text(title)),
+            TestAssetHelper.waitingTime
+        )
+        assertFolderTitle(title)
+    }
 
     fun verifyDeleteSnackBarText() = assertDeleteSnackBarText()
 
@@ -51,8 +61,6 @@ class BookmarksRobot {
     fun verifyBookmarkURLEditBox() = assertBookmarkURLEditBox()
 
     fun verifyParentFolderSelector() = assertBookmarkFolderSelector()
-
-    fun verifyHomeScreen() = HomeScreenRobot().verifyHomeScreen()
 
     fun verifyKeyboardHidden() = assertKeyboardVisibility(isExpectedToBeVisible = false)
 
@@ -82,11 +90,11 @@ class BookmarksRobot {
     }
 
     class Transition {
-        fun goBack(interact: BookmarksRobot.() -> Unit): Transition {
+        fun goBack(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
             goBackButton().click()
 
-            BookmarksRobot().interact()
-            return Transition()
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
         }
 
         fun openThreeDotMenu(interact: ThreeDotMenuBookmarksRobot.() -> Unit): ThreeDotMenuBookmarksRobot.Transition {

@@ -26,7 +26,9 @@ class LibrarySubMenusMultipleSelectionToolbarRobot {
 
     fun verifyMultiSelectionCounter() = assertMultiSelectionCounter()
 
-    fun verifyShareButton() = assertShareButton()
+    fun verifyShareHistoryButton() = assertShareHistoryButton()
+
+    fun verifyShareBookmarksButton() = assertShareBookmarksButton()
 
     fun verifyShareOverlay() = assertShareOverlay()
 
@@ -38,14 +40,28 @@ class LibrarySubMenusMultipleSelectionToolbarRobot {
 
     fun verifyCloseToolbarButton() = assertCloseToolbarButton()
 
-    fun clickShareButton() {
-        shareButton().click()
+    fun clickShareHistoryButton() {
+        shareHistoryButton().click()
 
         mDevice.waitNotNull(
             Until.findObject(
                 By.text("SHARE A LINK")
             ), waitingTime
         )
+    }
+
+    fun clickShareBookmarksButton() {
+        shareBookmarksButton().click()
+
+        mDevice.waitNotNull(
+            Until.findObject(
+                By.text("SHARE A LINK")
+            ), waitingTime
+        )
+    }
+
+    fun clickMultiSelectionDelete() {
+        deleteButton().click()
     }
 
     class Transition {
@@ -81,13 +97,6 @@ class LibrarySubMenusMultipleSelectionToolbarRobot {
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
         }
-
-        fun clickMultiSelectionDelete(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
-            multiSelectionDeleteButton().click()
-
-            HistoryRobot().interact()
-            return HistoryRobot.Transition()
-        }
     }
 }
 
@@ -99,13 +108,15 @@ fun multipleSelectionToolbar(interact: LibrarySubMenusMultipleSelectionToolbarRo
 
 private fun closeToolbarButton() = onView(withContentDescription("Navigate up"))
 
-private fun shareButton() = onView(withId(R.id.share_history_multi_select))
+private fun shareHistoryButton() = onView(withId(R.id.share_history_multi_select))
+
+private fun shareBookmarksButton() = onView(withId(R.id.share_bookmark_multi_select))
 
 private fun openInNewTabButton() = onView(withText("Open in new tab"))
 
 private fun openInPrivateTabButton() = onView(withText("Open in private tab"))
 
-private fun multiSelectionDeleteButton() = onView(withText("Delete"))
+private fun deleteButton() = onView(withText("Delete"))
 
 private fun assertMultiSelectionCheckmark() =
     onView(withId(R.id.checkmark))
@@ -114,8 +125,11 @@ private fun assertMultiSelectionCheckmark() =
 private fun assertMultiSelectionCounter() =
     onView(withText("1 selected")).check(matches(isDisplayed()))
 
-private fun assertShareButton() =
-    shareButton().check(matches(isDisplayed()))
+private fun assertShareHistoryButton() =
+    shareHistoryButton().check(matches(isDisplayed()))
+
+private fun assertShareBookmarksButton() =
+    shareBookmarksButton().check(matches(isDisplayed()))
 
 private fun assertShareOverlay() =
     onView(withId(R.id.shareWrapper)).check(matches(isDisplayed()))

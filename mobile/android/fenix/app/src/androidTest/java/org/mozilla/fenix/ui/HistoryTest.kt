@@ -18,6 +18,7 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
+import org.mozilla.fenix.ui.robots.historyMenu
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.multipleSelectionToolbar
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -129,7 +130,7 @@ class HistoryTest {
         multipleSelectionToolbar {
             verifyMultiSelectionCheckmark()
             verifyMultiSelectionCounter()
-            verifyShareButton()
+            verifyShareHistoryButton()
             verifyCloseToolbarButton()
         }.closeToolbarReturnToHistory {
             verifyHistoryMenuView()
@@ -200,7 +201,10 @@ class HistoryTest {
         }
 
         multipleSelectionToolbar {
-        }.clickMultiSelectionDelete {
+            clickMultiSelectionDelete()
+        }
+
+        historyMenu {
             verifyEmptyHistoryView()
         }
     }
@@ -219,7 +223,7 @@ class HistoryTest {
         }
 
         multipleSelectionToolbar {
-            clickShareButton()
+            clickShareHistoryButton()
             verifyShareOverlay()
             verifyShareTabFavicon()
             verifyShareTabTitle()
