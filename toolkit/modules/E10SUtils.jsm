@@ -395,8 +395,7 @@ var E10SUtils = {
     aRemoteSubframes,
     aPreferredRemoteType = DEFAULT_REMOTE_TYPE,
     aCurrentUri = null,
-    aResultPrincipal = null,
-    aIsSubframe = false
+    aResultPrincipal = null
   ) {
     if (!aMultiProcess) {
       return NOT_REMOTE;
@@ -475,14 +474,9 @@ var E10SUtils = {
         return NOT_REMOTE;
 
       case "moz-extension":
-        if (WebExtensionPolicy.useRemoteWebExtensions) {
-          // Extension iframes should load in the same process
-          // as their outer frame, top-level ones should load
-          // in the extension process.
-          return aIsSubframe ? aPreferredRemoteType : EXTENSION_REMOTE_TYPE;
-        }
-
-        return NOT_REMOTE;
+        return WebExtensionPolicy.useRemoteWebExtensions
+          ? EXTENSION_REMOTE_TYPE
+          : NOT_REMOTE;
 
       default:
         // WebExtensions may set up protocol handlers for protocol names
@@ -533,8 +527,7 @@ var E10SUtils = {
     aMultiProcess,
     aRemoteSubframes,
     aPreferredRemoteType = DEFAULT_REMOTE_TYPE,
-    aCurrentPrincipal,
-    aIsSubframe
+    aCurrentPrincipal
   ) {
     if (!aMultiProcess) {
       return NOT_REMOTE;
@@ -572,8 +565,7 @@ var E10SUtils = {
       aRemoteSubframes,
       aPreferredRemoteType,
       currentURI,
-      aPrincipal,
-      aIsSubframe
+      aPrincipal
     );
   },
 

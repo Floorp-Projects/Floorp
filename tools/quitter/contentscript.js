@@ -7,12 +7,8 @@
 /* eslint-env webextensions */
 
 const Quitter = {
-  async quit() {
-    // This can be called before the background page has loaded,
-    // so we need to wait for it.
-    browser.runtime.sendMessage("quit").catch(() => {
-      setTimeout(this.quit, 100);
-    });
+  quit() {
+    browser.runtime.sendMessage("quit");
   },
 };
 
