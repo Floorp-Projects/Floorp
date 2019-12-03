@@ -291,7 +291,7 @@ uint32_t InspectorUtils::GetRelativeRuleLine(GlobalObject& aGlobal,
 /* static */
 bool InspectorUtils::HasRulesModifiedByCSSOM(GlobalObject& aGlobal,
                                              StyleSheet& aSheet) {
-  return aSheet.HasModifiedRules();
+  return aSheet.HasModifiedRulesForDevtools();
 }
 
 /* static */
