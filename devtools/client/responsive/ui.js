@@ -306,6 +306,9 @@ class ResponsiveUI {
       await this.inited;
     }
 
+    // Restore screen orientation of physical device.
+    await this.updateScreenOrientation("landscape-primary", 0);
+
     if (this.isBrowserUIEnabled) {
       await this.emulationFront.setDocumentInRDMPane(false);
     }
