@@ -31,6 +31,7 @@ categories:
         - tools/static-analysis
     l10n_doc:
         - intl
+        - l10n
         - tools/compare-locales
     python_doc:
         - mozbase

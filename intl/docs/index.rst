@@ -23,5 +23,3 @@ use Mozilla's I18n APIs.
 
    locale
    dataintl
-   localization
-   l10n/l10n/index

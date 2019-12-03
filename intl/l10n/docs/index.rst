@@ -1,25 +1,24 @@
-======
-Fluent
-======
+============
+Localization
+============
 
-`Fluent`_ is a new localization system, developed by Mozilla, which aims to replace
-all existing localization models currently used at Mozilla.
+Localization – sometimes written as l10n, where 10 is the number of letters between `l` and `n` –
+is an aspect of internationalization focused on adapting software to
+different cultural and regional needs.
 
-In case of Firefox it directly supersedes DTD and StringBundle systems, providing
-a large number of new features and improvements over both of them, for developers
-and localizers.
+The boundary between internationalization and localization is fuzzy. At Mozilla
+we refer to localization when we talk about adapting the user interface
+and messages, while internationalization handles operations on raw data.
+
+.. note::
+
+  Localization is a broader term than translation because it involves extensive research
+  into the target culture, and in result touches not only text and UI translation but also
+  cultural adaptation of icons, communication styles, colors, and UX.
 
 .. toctree::
    :maxdepth: 2
 
-   fluent_tutorial
-   fluent_migrations
-   fluent_review
-
-Other resources:
-
- * `Fluent Syntax Guide <http://projectfluent.org/fluent/guide/>`_
- * `Fluent Wiki <https://github.com/projectfluent/fluent/wiki>`_
- * `Fluent.js Wiki <https://github.com/projectfluent/fluent.js/wiki>`_
-
-.. _Fluent: http://projectfluent.org/
+   overview
+   fluent/index
+   migrations/index
