@@ -454,22 +454,25 @@ void MemoryTracker::adopt(MemoryTracker& other) {
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
 
-  for (auto r = other.map.all(); !r.empty(); r.popFront()) {
-    if (!map.put(r.front().key(), r.front().value())) {
+  for (auto r = other.gcMap.all(); !r.empty(); r.popFront()) {
+    if (!gcMap.put(r.front().key(), r.front().value())) {
       oomUnsafe.crash("MemoryTracker::adopt");
     }
   }
-  other.map.clear();
+  other.gcMap.clear();
 
   // There may still be ZoneAllocPolicies associated with the old zone since
   // some are not destroyed until the zone itself dies. Instead check there is
   // no memory associated with them and clear their zone pointer in debug builds
   // to catch further memory association.
-  for (auto r = other.policyMap.all(); !r.empty(); r.popFront()) {
+  for (auto r = other.nonGCMap.all(); !r.empty(); r.popFront()) {
     MOZ_ASSERT(r.front().value() == 0);
-    r.front().key()->zone_ = nullptr;
+    if (r.front().key().use() == MemoryUse::ZoneAllocPolicy) {
+      auto policy = static_cast<ZoneAllocPolicy*>(r.front().key().ptr());
+      policy->zone_ = nullptr;
+    }
   }
-  other.policyMap.clear();
+  other.nonGCMap.clear();
 }
 
 static const char* MemoryUseName(MemoryUse use) {
@@ -489,42 +492,56 @@ MemoryTracker::MemoryTracker() : mutex(mutexid::MemoryTracker) {}
 void MemoryTracker::checkEmptyOnDestroy() {
   bool ok = true;
 
-  if (!map.empty()) {
+  if (!gcMap.empty()) {
     ok = false;
     fprintf(stderr, "Missing calls to JS::RemoveAssociatedMemory:\n");
-    for (auto r = map.all(); !r.empty(); r.popFront()) {
-      fprintf(stderr, "  %p 0x%zx %s\n", r.front().key().cell(),
+    for (auto r = gcMap.all(); !r.empty(); r.popFront()) {
+      fprintf(stderr, "  %p 0x%zx %s\n", r.front().key().ptr(),
               r.front().value(), MemoryUseName(r.front().key().use()));
     }
   }
 
-  if (!policyMap.empty()) {
+  if (!nonGCMap.empty()) {
     ok = false;
-    fprintf(stderr, "Missing calls to Zone::decPolicyMemory:\n");
-    for (auto r = policyMap.all(); !r.empty(); r.popFront()) {
-      fprintf(stderr, "  %p 0x%zx\n", r.front().key(), r.front().value());
+    fprintf(stderr, "Missing calls to Zone::decNonGCMemory:\n");
+    for (auto r = nonGCMap.all(); !r.empty(); r.popFront()) {
+      fprintf(stderr, "  %p 0x%zx\n", r.front().key().ptr(), r.front().value());
     }
   }
 
   MOZ_ASSERT(ok);
 }
 
-inline bool MemoryTracker::allowMultipleAssociations(MemoryUse use) const {
+/* static */
+inline bool MemoryTracker::isGCMemoryUse(MemoryUse use) {
+  // Most memory uses are for memory associated with GC things but some are for
+  // memory associated with non-GC thing pointers.
+  return !isNonGCMemoryUse(use);
+}
+
+/* static */
+inline bool MemoryTracker::isNonGCMemoryUse(MemoryUse use) {
+  return use == MemoryUse::ZoneAllocPolicy;
+}
+
+/* static */
+inline bool MemoryTracker::allowMultipleAssociations(MemoryUse use) {
   // For most uses only one association is possible for each GC thing. Allow a
   // one-to-many relationship only where necessary.
-  return use == MemoryUse::RegExpSharedBytecode ||
+  return isNonGCMemoryUse(use) || use == MemoryUse::RegExpSharedBytecode ||
          use == MemoryUse::BreakpointSite || use == MemoryUse::Breakpoint ||
          use == MemoryUse::ForOfPICStub || use == MemoryUse::ICUObject;
 }
 
-void MemoryTracker::trackMemory(Cell* cell, size_t nbytes, MemoryUse use) {
+void MemoryTracker::trackGCMemory(Cell* cell, size_t nbytes, MemoryUse use) {
   MOZ_ASSERT(cell->isTenured());
+  MOZ_ASSERT(isGCMemoryUse(use));
 
   LockGuard<Mutex> lock(mutex);
 
-  Key key{cell, use};
+  Key<Cell> key{cell, use};
   AutoEnterOOMUnsafeRegion oomUnsafe;
-  auto ptr = map.lookupForAdd(key);
+  auto ptr = gcMap.lookupForAdd(key);
   if (ptr) {
     if (!allowMultipleAssociations(use)) {
       MOZ_CRASH_UNSAFE_PRINTF("Association already present: %p 0x%zx %s", cell,
@@ -534,18 +551,18 @@ void MemoryTracker::trackMemory(Cell* cell, size_t nbytes, MemoryUse use) {
     return;
   }
 
-  if (!map.add(ptr, key, nbytes)) {
-    oomUnsafe.crash("MemoryTracker::noteExternalAlloc");
+  if (!gcMap.add(ptr, key, nbytes)) {
+    oomUnsafe.crash("MemoryTracker::trackGCMemory");
   }
 }
 
-void MemoryTracker::untrackMemory(Cell* cell, size_t nbytes, MemoryUse use) {
+void MemoryTracker::untrackGCMemory(Cell* cell, size_t nbytes, MemoryUse use) {
   MOZ_ASSERT(cell->isTenured());
 
   LockGuard<Mutex> lock(mutex);
 
-  Key key{cell, use};
-  auto ptr = map.lookup(key);
+  Key<Cell> key{cell, use};
+  auto ptr = gcMap.lookup(key);
   if (!ptr) {
     MOZ_CRASH_UNSAFE_PRINTF("Association not found: %p 0x%zx %s", cell, nbytes,
                             MemoryUseName(use));
@@ -558,26 +575,26 @@ void MemoryTracker::untrackMemory(Cell* cell, size_t nbytes, MemoryUse use) {
         cell, MemoryUseName(use), ptr->value(), nbytes);
   }
 
-  if (ptr->value() < nbytes) {
+  if (nbytes > ptr->value()) {
     MOZ_CRASH_UNSAFE_PRINTF(
-        "Association for %p %s size is too small: "
-        "expected at least 0x%zx but got 0x%zx",
-        cell, MemoryUseName(use), nbytes, ptr->value());
+        "Association for %p %s size is too large: "
+        "expected at most 0x%zx but got 0x%zx",
+        cell, MemoryUseName(use), ptr->value(), nbytes);
   }
 
   ptr->value() -= nbytes;
 
   if (ptr->value() == 0) {
-    map.remove(ptr);
+    gcMap.remove(ptr);
   }
 }
 
-void MemoryTracker::swapMemory(Cell* a, Cell* b, MemoryUse use) {
+void MemoryTracker::swapGCMemory(Cell* a, Cell* b, MemoryUse use) {
   MOZ_ASSERT(a->isTenured());
   MOZ_ASSERT(b->isTenured());
 
-  Key ka{a, use};
-  Key kb{b, use};
+  Key<Cell> ka{a, use};
+  Key<Cell> kb{b, use};
 
   LockGuard<Mutex> lock(mutex);
 
@@ -586,100 +603,117 @@ void MemoryTracker::swapMemory(Cell* a, Cell* b, MemoryUse use) {
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
 
-  if ((sa && !map.put(kb, sa)) || (sb && !map.put(ka, sb))) {
-    oomUnsafe.crash("MemoryTracker::swapTrackedMemory");
+  if ((sa && !gcMap.put(kb, sa)) || (sb && !gcMap.put(ka, sb))) {
+    oomUnsafe.crash("MemoryTracker::swapGCMemory");
   }
 }
 
-size_t MemoryTracker::getAndRemoveEntry(const Key& key,
+size_t MemoryTracker::getAndRemoveEntry(const Key<Cell>& key,
                                         LockGuard<Mutex>& lock) {
-  auto ptr = map.lookup(key);
+  auto ptr = gcMap.lookup(key);
   if (!ptr) {
     return 0;
   }
 
   size_t size = ptr->value();
-  map.remove(ptr);
+  gcMap.remove(ptr);
   return size;
 }
 
-void MemoryTracker::registerPolicy(ZoneAllocPolicy* policy) {
+void MemoryTracker::registerNonGCMemory(void* mem, MemoryUse use) {
   LockGuard<Mutex> lock(mutex);
 
-  auto ptr = policyMap.lookupForAdd(policy);
+  Key<void> key{mem, use};
+  auto ptr = nonGCMap.lookupForAdd(key);
   if (ptr) {
-    MOZ_CRASH_UNSAFE_PRINTF("ZoneAllocPolicy %p already registered", policy);
+    MOZ_CRASH_UNSAFE_PRINTF("%s assocaition %p already registered",
+                            MemoryUseName(use), mem);
   }
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
-  if (!policyMap.add(ptr, policy, 0)) {
-    oomUnsafe.crash("MemoryTracker::registerPolicy");
+  if (!nonGCMap.add(ptr, key, 0)) {
+    oomUnsafe.crash("MemoryTracker::registerNonGCMemory");
   }
 }
 
-void MemoryTracker::unregisterPolicy(ZoneAllocPolicy* policy) {
+void MemoryTracker::unregisterNonGCMemory(void* mem, MemoryUse use) {
   LockGuard<Mutex> lock(mutex);
 
-  auto ptr = policyMap.lookup(policy);
+  Key<void> key{mem, use};
+  auto ptr = nonGCMap.lookup(key);
   if (!ptr) {
-    MOZ_CRASH_UNSAFE_PRINTF("ZoneAllocPolicy %p not found", policy);
+    MOZ_CRASH_UNSAFE_PRINTF("%s association %p not found", MemoryUseName(use),
+                            mem);
   }
+
   if (ptr->value() != 0) {
     MOZ_CRASH_UNSAFE_PRINTF(
-        "ZoneAllocPolicy %p still has 0x%zx bytes associated", policy,
-        ptr->value());
+        "%s association %p still has 0x%zx bytes associated",
+        MemoryUseName(use), mem, ptr->value());
   }
 
-  policyMap.remove(ptr);
+  nonGCMap.remove(ptr);
 }
 
-void MemoryTracker::movePolicy(ZoneAllocPolicy* dst, ZoneAllocPolicy* src) {
+void MemoryTracker::moveNonGCMemory(void* dst, void* src, MemoryUse use) {
   LockGuard<Mutex> lock(mutex);
 
-  auto srcPtr = policyMap.lookup(src);
+  Key<void> srcKey{src, use};
+  auto srcPtr = nonGCMap.lookup(srcKey);
   if (!srcPtr) {
-    MOZ_CRASH_UNSAFE_PRINTF("ZoneAllocPolicy %p not found", src);
+    MOZ_CRASH_UNSAFE_PRINTF("%s association %p not found", MemoryUseName(use),
+                            src);
   }
 
   size_t nbytes = srcPtr->value();
-  policyMap.remove(srcPtr);
+  nonGCMap.remove(srcPtr);
 
-  auto dstPtr = policyMap.lookupForAdd(dst);
+  Key<void> dstKey{dst, use};
+  auto dstPtr = nonGCMap.lookupForAdd(dstKey);
   if (dstPtr) {
-    MOZ_CRASH_UNSAFE_PRINTF("ZoneAllocPolicy %p already registered", dst);
+    MOZ_CRASH_UNSAFE_PRINTF("%s %p already registered", MemoryUseName(use),
+                            dst);
   }
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
-  if (!policyMap.add(dstPtr, dst, nbytes)) {
-    oomUnsafe.crash("MemoryTracker::movePolicy");
+  if (!nonGCMap.add(dstPtr, dstKey, nbytes)) {
+    oomUnsafe.crash("MemoryTracker::moveNonGCMemory");
   }
 }
 
-void MemoryTracker::incPolicyMemory(ZoneAllocPolicy* policy, size_t nbytes) {
+void MemoryTracker::incNonGCMemory(void* mem, size_t nbytes, MemoryUse use) {
+  MOZ_ASSERT(isNonGCMemoryUse(use));
+
   LockGuard<Mutex> lock(mutex);
 
-  auto ptr = policyMap.lookup(policy);
+  Key<void> key{mem, use};
+  auto ptr = nonGCMap.lookup(key);
   if (!ptr) {
-    MOZ_CRASH_UNSAFE_PRINTF("ZoneAllocPolicy %p not found", policy);
+    MOZ_CRASH_UNSAFE_PRINTF("%s allocation %p not found", MemoryUseName(use),
+                            mem);
   }
 
   ptr->value() += nbytes;
 }
 
-void MemoryTracker::decPolicyMemory(ZoneAllocPolicy* policy, size_t nbytes) {
+void MemoryTracker::decNonGCMemory(void* mem, size_t nbytes, MemoryUse use) {
+  MOZ_ASSERT(isNonGCMemoryUse(use));
+
   LockGuard<Mutex> lock(mutex);
 
-  auto ptr = policyMap.lookup(policy);
+  Key<void> key{mem, use};
+  auto ptr = nonGCMap.lookup(key);
   if (!ptr) {
-    MOZ_CRASH_UNSAFE_PRINTF("ZoneAllocPolicy %p not found", policy);
+    MOZ_CRASH_UNSAFE_PRINTF("%s allocation %p not found", MemoryUseName(use),
+                            mem);
   }
 
   size_t& value = ptr->value();
-  if (value < nbytes) {
+  if (nbytes > value) {
     MOZ_CRASH_UNSAFE_PRINTF(
-        "ZoneAllocPolicy %p is too small: "
-        "expected at least 0x%zx but got 0x%zx bytes",
-        policy, nbytes, value);
+        "%s allocation %p is too large: "
+        "expected at most 0x%zx but got 0x%zx bytes",
+        MemoryUseName(use), mem, value, nbytes);
   }
 
   value -= nbytes;
@@ -688,43 +722,49 @@ void MemoryTracker::decPolicyMemory(ZoneAllocPolicy* policy, size_t nbytes) {
 void MemoryTracker::fixupAfterMovingGC() {
   // Update the table after we move GC things. We don't use MovableCellHasher
   // because that would create a difference between debug and release builds.
-  for (Map::Enum e(map); !e.empty(); e.popFront()) {
-    const Key& key = e.front().key();
-    Cell* cell = key.cell();
+  for (GCMap::Enum e(gcMap); !e.empty(); e.popFront()) {
+    const auto& key = e.front().key();
+    Cell* cell = key.ptr();
     if (cell->isForwarded()) {
       cell = gc::RelocationOverlay::fromCell(cell)->forwardingAddress();
-      e.rekeyFront(Key{cell, key.use()});
+      e.rekeyFront(Key<Cell>{cell, key.use()});
     }
   }
 }
 
-inline MemoryTracker::Key::Key(Cell* cell, MemoryUse use)
-    : cell_(uint64_t(cell)), use_(uint64_t(use)) {
+template <typename Ptr>
+inline MemoryTracker::Key<Ptr>::Key(Ptr* ptr, MemoryUse use)
+    : ptr_(uint64_t(ptr)), use_(uint64_t(use)) {
 #  ifdef JS_64BIT
   static_assert(sizeof(Key) == 8,
                 "MemoryTracker::Key should be packed into 8 bytes");
 #  endif
-  MOZ_ASSERT(this->cell() == cell);
+  MOZ_ASSERT(this->ptr() == ptr);
   MOZ_ASSERT(this->use() == use);
 }
 
-inline Cell* MemoryTracker::Key::cell() const {
-  return reinterpret_cast<Cell*>(cell_);
+template <typename Ptr>
+inline Ptr* MemoryTracker::Key<Ptr>::ptr() const {
+  return reinterpret_cast<Ptr*>(ptr_);
 }
-inline MemoryUse MemoryTracker::Key::use() const {
+template <typename Ptr>
+inline MemoryUse MemoryTracker::Key<Ptr>::use() const {
   return static_cast<MemoryUse>(use_);
 }
 
-inline HashNumber MemoryTracker::Hasher::hash(const Lookup& l) {
-  return mozilla::HashGeneric(DefaultHasher<Cell*>::hash(l.cell()),
+template <typename Ptr>
+inline HashNumber MemoryTracker::Hasher<Ptr>::hash(const Lookup& l) {
+  return mozilla::HashGeneric(DefaultHasher<Ptr*>::hash(l.ptr()),
                               DefaultHasher<unsigned>::hash(unsigned(l.use())));
 }
 
-inline bool MemoryTracker::Hasher::match(const Key& k, const Lookup& l) {
-  return k.cell() == l.cell() && k.use() == l.use();
+template <typename Ptr>
+inline bool MemoryTracker::Hasher<Ptr>::match(const KeyT& k, const Lookup& l) {
+  return k.ptr() == l.ptr() && k.use() == l.use();
 }
 
-inline void MemoryTracker::Hasher::rekey(Key& k, const Key& newKey) {
+template <typename Ptr>
+inline void MemoryTracker::Hasher<Ptr>::rekey(KeyT& k, const KeyT& newKey) {
   k = newKey;
 }
 
