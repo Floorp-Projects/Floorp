@@ -69,6 +69,9 @@ const STALE_CLIENT_REMOTE_AGE = 604800; // 7 days
 // TTL of the message sent to another device when sending a tab
 const NOTIFY_TAB_SENT_TTL_SECS = 1 * 3600; // 1 hour
 
+// How often we force a refresh of the FxA device list.
+const REFRESH_FXA_DEVICE_INTERVAL_MS = 2 * 60 * 60 * 1000; // 2 hours
+
 // Reasons behind sending collection_changed push notifications.
 const COLLECTION_MODIFIED_REASON_SENDTAB = "sendtab";
 const COLLECTION_MODIFIED_REASON_FIRSTSYNC = "firstsync";
@@ -126,6 +129,7 @@ ClientEngine.prototype = {
   allowSkippedRecord: false,
   _knownStaleFxADeviceIds: null,
   _lastDeviceCounts: null,
+  _lastFxaDeviceRefresh: 0,
 
   async initialize() {
     // Reset the last sync timestamp on every startup so that we fetch all clients
@@ -396,10 +400,19 @@ ClientEngine.prototype = {
   },
 
   async _fetchFxADevices() {
-    try {
-      await this.fxAccounts.device.refreshDeviceList();
-    } catch (e) {
-      this._log.error("Could not refresh the FxA device list", e);
+    // We only force a refresh periodically to keep the load on the servers
+    // down, and because we expect FxA to have received a push message in
+    // most cases when the FxA device list would have changed. For this reason
+    // we still go ahead and check the stale list even if we didn't force a
+    // refresh.
+    let now = this.fxAccounts._internal.now(); // tests mock this .now() impl.
+    if (now - REFRESH_FXA_DEVICE_INTERVAL_MS > this._lastFxaDeviceRefresh) {
+      this._lastFxaDeviceRefresh = now;
+      try {
+        await this.fxAccounts.device.refreshDeviceList();
+      } catch (e) {
+        this._log.error("Could not refresh the FxA device list", e);
+      }
     }
 
     // We assume that clients not present in the FxA Device Manager list have been
