@@ -23,7 +23,10 @@ add_task(async function() {
     let before = TabStateCache.get(aBrowser);
 
     let newTab = SessionStore.duplicateTab(window, tab);
-    await BrowserTestUtils.browserLoaded(newTab.linkedBrowser);
+    await Promise.all([
+      BrowserTestUtils.browserLoaded(newTab.linkedBrowser),
+      TestUtils.topicObserved("sessionstore-debug-tab-restored"),
+    ]);
     let after = TabStateCache.get(newTab.linkedBrowser);
 
     isnot(
