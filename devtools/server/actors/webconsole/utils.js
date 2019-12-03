@@ -13,7 +13,7 @@ if (!isWorker) {
   loader.lazyImporter(
     this,
     "VariablesView",
-    "resource://devtools/client/storage/VariablesView.jsm"
+    "resource://devtools/client/shared/widgets/VariablesView.jsm"
   );
   loader.lazyRequireGetter(
     this,
