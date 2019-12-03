@@ -37,6 +37,8 @@ user_pref("dom.disable_beforeunload", true);
 // Enable implicit keyframes since the common animation interpolation test
 // function assumes this is available.
 user_pref("dom.animations-api.implicit-keyframes.enabled", true);
+// Disable high DPI
+user_pref("layout.css.devPixelsPerPx", "1.0")
 // sometime wpt runs test even before the document becomes visible, which would
 // delay video.play() and cause play() running in wrong order.
 user_pref("media.block-autoplay-until-in-foreground", false);
