@@ -377,8 +377,7 @@ class LogModuleManager {
 
   void Print(const char* aName, LogLevel aLevel, const char* aFmt,
              va_list aArgs) MOZ_FORMAT_PRINTF(4, 0) {
-    // We don't do nuwa-style forking anymore, so our pid can't change.
-    static long pid = static_cast<long>(base::GetCurrentProcId());
+    long pid = static_cast<long>(base::GetCurrentProcId());
     const size_t kBuffSize = 1024;
     char buff[kBuffSize];
 

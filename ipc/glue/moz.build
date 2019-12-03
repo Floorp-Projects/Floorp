@@ -231,6 +231,9 @@ if CONFIG['MOZ_ENABLE_FORKSERVER']:
         'ForkServiceChild.cpp',
         'MiniTransceiver.cpp',
     ]
+    XPCOM_MANIFESTS += [
+        'components.conf',
+    ]
 
 LOCAL_INCLUDES += [
     '/dom/ipc',

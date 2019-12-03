@@ -126,6 +126,10 @@ class Bootstrap {
 #ifdef MOZ_IPDL_TESTS
   virtual int XRE_RunIPDLTest(int argc, char** argv) = 0;
 #endif
+
+#ifdef MOZ_ENABLE_FORKSERVER
+  virtual int XRE_ForkServer(int* argc, char*** argv) = 0;
+#endif
 };
 
 enum class LibLoadingStrategy {
