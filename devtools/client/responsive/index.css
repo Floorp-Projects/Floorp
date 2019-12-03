@@ -15,6 +15,7 @@
   --viewport-active-color: #3b3b3b;
   --input-invalid-border-color: var(--red-60);
   --custom-device-button-hover: var(--grey-30);
+  --device-list-grid-template-columns: auto auto max-content 1fr;
 }
 
 :root.theme-dark {
@@ -484,9 +485,14 @@ input:-moz-focusring {
   }
 
   .device-modal-content {
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-areas: "phone phone custom"
-                         "tablet laptop tv";
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "phone phone"
+                         "tablet laptop"
+                         "tv custom";
+  }
+
+  .device-type-phones .device-list {
+    grid-template-columns: repeat(2, var(--device-list-grid-template-columns));
   }
 }
 
@@ -506,13 +512,6 @@ input:-moz-focusring {
   #device-form-name input,
   #device-form-user-agent input {
     width: 100%;
-  }
-
-  .device-modal-content {
-    grid-template-columns: 1fr 1fr;
-    grid-template-areas: "phone phone"
-                         "tablet laptop"
-                         "tv custom";
   }
 }
 
@@ -535,7 +534,9 @@ input:-moz-focusring {
   #device-form-size {
     justify-self: unset;
   }
+}
 
+@media (max-width: 749px) {
   .device-modal-content {
     grid-template-areas: "phone"
                          "phone"
@@ -543,10 +544,6 @@ input:-moz-focusring {
                          "laptop"
                          "tv"
                          "custom";
-  }
-
-  .device-type.device-type-phones .device-list {
-    grid-template-columns: 1fr;
   }
 
   .device-modal-header {
@@ -580,12 +577,18 @@ input:-moz-focusring {
   color: var(--theme-body-color);
   padding-bottom: 5px;
   padding-top: 5px;
-  display: flex;
   align-items: center;
+  display: grid;
+  grid-column: span 4;
+  grid-template-columns: subgrid;
 }
 
 .device-label > button {
   visibility: hidden;
+}
+
+.device-label > span {
+  margin-right: 6px;
 }
 
 .device-label:focus-within > button,
@@ -610,10 +613,11 @@ input:-moz-focusring {
 .device-list {
   display: grid;
   font-size: 13px;
+  grid-template-columns: var(--device-list-grid-template-columns);
 }
 
 .device-input-checkbox {
-  margin-right: 5px;
+  margin-right: 8px;
 }
 
 .device-modal-title {
@@ -621,8 +625,36 @@ input:-moz-focusring {
   margin: 30px 0 0px 30px;
 }
 
-.device-name {
-  flex: 1;
+.device-browser {
+  width: 16px;
+  height: 16px;
+  background-size: cover;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
+}
+
+.device-browser.chrome {
+  background-image: url("chrome://devtools/skin/images/browsers/chrome.svg");
+}
+
+.device-browser.edge {
+  background-image: url("chrome://devtools/skin/images/browsers/edge.svg");
+}
+
+.device-browser.firefox {
+  background-image: url("chrome://devtools/skin/images/browsers/firefox.svg");
+}
+
+.device-browser.ie {
+  background-image: url("chrome://devtools/skin/images/browsers/ie.svg");
+}
+
+.device-browser.opera {
+  background-image: url("chrome://devtools/skin/images/browsers/opera.svg");
+}
+
+.device-browser.safari {
+  background-image: url("chrome://devtools/skin/images/browsers/safari.svg");
 }
 
 .device-remove-button:empty::before {
@@ -778,13 +810,17 @@ input:-moz-focusring {
   grid-area: phone;
 }
 
-.device-type-phones .device-list {
-  grid-template-columns: repeat(2, auto);
-}
-
 .device-type-custom {
   grid-area: custom;
   align-self: start;
+}
+
+.device-type-custom .device-list {
+  grid-template-columns: var(--device-list-grid-template-columns) auto auto;
+}
+
+.device-type-custom .device-label {
+  grid-column: span 6;
 }
 
 .device-type-tablets {
