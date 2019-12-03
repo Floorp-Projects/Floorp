@@ -22,6 +22,7 @@ class MessagePortIdentifier;
 class RemoteWorkerData;
 class SharedWorkerManager;
 class SharedWorkerParent;
+class UniqueMessagePortId;
 
 class SharedWorkerService final {
  public:
@@ -43,7 +44,7 @@ class SharedWorkerService final {
   void GetOrCreateWorkerManagerOnMainThread(
       nsIEventTarget* aBackgroundEventTarget, SharedWorkerParent* aActor,
       const RemoteWorkerData& aData, uint64_t aWindowID,
-      const MessagePortIdentifier& aPortIdentifier);
+      UniqueMessagePortId& aPortIdentifier);
 
   void RemoveWorkerManagerOnMainThread(SharedWorkerManager* aManager);
 
