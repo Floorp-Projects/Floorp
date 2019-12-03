@@ -39,9 +39,6 @@
 #include "nsSerializationHelper.h"
 #include "json/json.h"
 
-#include "nsSerializationHelper.h"
-#include "json/json.h"
-
 using namespace mozilla;
 
 static inline ExtensionPolicyService& EPS() {
