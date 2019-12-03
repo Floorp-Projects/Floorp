@@ -25,6 +25,13 @@ permalink: /changelog/
 * **service-firefox-accounts**
   * Removed `StorageSync` interface as it is superseded by the sync manager.
 
+* **service-glean**
+  * Glean was updated to v21.3.0 ([Full changelog](https://github.com/mozilla/glean/compare/v21.2.0...21.3.0))
+    * Timers are reset when disabled. That avoids recording timespans across disabled/enabled toggling.
+    * Add a new flag to pings: send_if_empty.
+    * Upgrade glean_parser to v1.12.0.
+    * Implement the deletion request ping in Glean.
+
 # 23.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v22.0.0...v23.0.0)
