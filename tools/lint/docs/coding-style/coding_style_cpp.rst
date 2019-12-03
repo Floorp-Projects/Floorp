@@ -18,58 +18,49 @@ conforms to recommendations.
    Firefox code base uses the `Google Coding style for C++
    code <https://google.github.io/styleguide/cppguide.html>`__
 
-A significant part of the C++ coding style update can be
-delegated to clang-format. See:ref:`Formatting C++ Code With clang-format`
+
+Formatting code
+---------------
+
+Formatting is done automatically via clang-format, and controlled via in-tree
+configuration files. See :ref:`Formatting C++ Code With clang-format`
 for more information.
 
+Unix-style linebreaks (``\\n``), not Windows-style (``\\r\\n``). You can
+convert patches, with DOS newlines to Unix via the ``dos2unix`` utility,
+or your favorite text editor.
 
-Naming and formatting code
---------------------------
+Mode line
+~~~~~~~~~
 
-*The following norms should be followed for new code. For existing code,
+Files should have Emacs and vim mode line comments as the first two
+lines of the file, which should set indent-tabs-mode to nil. For new
+files, use the following, specifying two-space indentation:
+
+.. code-block:: cpp
+
+   /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+   /* vim: set ts=8 sts=2 et sw=2 tw=80: */
+   /* This Source Code Form is subject to the terms of the Mozilla Public
+    * License, v. 2.0. If a copy of the MPL was not distributed with this
+    * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+Be sure to use the correct "Mode" in the first line, don't use "C++" in
+JavaScript files.
+
+
+Additional rules
+----------------
+
+*The norms in this section should be followed for new code. For existing code,
 use the prevailing style in a file or module, ask the owner if you are
 in another team's codebase or it's not clear what style to use.*
 
-Whitespace
-~~~~~~~~~~
 
-No tabs. No whitespace at the end of a line.
-
-Unix-style linebreaks ('\n'), not Windows-style ('\r\n'). You can
-convert patches, with DOS newlines to Unix via the 'dos2unix' utility,
-or your favorite text editor.
-
-Line length
-~~~~~~~~~~~
-
-80 characters or less (for laptop side-by-side diffing and two-window
-tiling; also for Bonsai / hgweb and hardcopy printing).
-
-Following the Google coding style, we are using 100 characters line for
-Objective-C/C++.
-
-
-Indentation
-~~~~~~~~~~~
-
-Two spaces per logic level.
-
-Note that class visibility and ``goto`` labels do not consume a logic
-level, but ``switch`` ``case`` labels do. See examples below.
 
 
 Control structures
 ~~~~~~~~~~~~~~~~~~
-
-Use `K&R bracing
-style <https://en.wikipedia.org/wiki/Indentation_style#K&R>`__: left
-brace at end of first line, 'cuddled' else on both sides.
-
-.. note::
-
-   **Note:** Class and function definitions are not control structures;
-   left brace goes by itself on the second line and without extra
-   indentation, generally in C++.
 
 Always brace controlled statements, even a single-line consequent of
 ``if else else``. This is redundant, typically, but it avoids dangling
@@ -106,16 +97,6 @@ Examples:
        break;
    }
 
-You can achieve the following ``switch`` statement indentation in emacs
-by setting the "case-label" offset:
-
-::
-
-   (c-set-offset 'case-label '+)
-
-Control keywords ``if``, ``for``, ``while``, and ``switch`` are always
-followed by a space to distinguish them from function calls, which
-have no trailing space.
 ``else`` should only ever be followed by ``{`` or ``if``; i.e., other
 control keywords are not allowed and should be placed inside braces.
 
@@ -143,13 +124,6 @@ the fully qualified namespace. That is, to use ``Foo::Bar`` do not
 write ``using namespace Foo;``\ ``using namespace Bar;``, write
 ``using namespace Foo::Bar;``
 
-Don't indent code inside ``namespace ... { ... }``. You can prevent
-this, inside emacs, by setting the "innamespace" offset:
-
-::
-
-   (c-set-offset 'innamespace 0)
-
 
 Anonymous namespaces
 ~~~~~~~~~~~~~~~~~~~~
@@ -175,7 +149,7 @@ C++ classes
    };
 
    class MyClass
-     : public X  // When deriving from more than one class, put each on its own line.
+     : public X 
      , public Y
    {
    public:
@@ -185,9 +159,6 @@ C++ classes
      {
         ...
      }
-
-     // Tiny constructors and destructors can be written on a single line.
-     MyClass() { ... }
 
      // Special member functions, like constructors, that have default bodies
      // should use '= default' annotation instead.
@@ -207,8 +178,6 @@ C++ classes
        ...
      }
 
-     int TinyFunction() { return mVar; }  // Tiny functions can be written in a single line.
-
      int LargerFunction()
      {
        ...
@@ -226,11 +195,6 @@ Define classes using the style given above.
 Existing classes in the global namespace are named with a short prefix
 (For example, "ns") as a pseudo-namespace.
 
-For small functions, constructors, or other braced constructs, it's okay
-to collapse the definition to one line, as shown for ``TinyFunction``
-above. For larger ones, use something similar to method declarations,
-below.
-
 
 Methods and functions
 ~~~~~~~~~~~~~~~~~~~~~
@@ -240,27 +204,6 @@ C/C++
 ^^^^^
 
 In C/C++, method names should be capitalized and use camelCase.
-Typenames, and the names of arguments, should be separated with a single
-space character.
-
-.. code-block:: cpp
-
-   template<typename T>  // Templates on own line.
-   static int            // Return type on own line for top-level functions.
-   MyFunction(const nsACstring& aStr,
-              mozilla::UniquePtr<const char*>&& aBuffer,
-              nsISupports* aOptionalThing = nullptr)
-   {
-     ...
-   }
-
-   int
-   MyClass::Method(const nsACstring& aStr,
-                   mozilla::UniquePtr<const char*>&& aBuffer,
-                   nsISupports* aOptionalThing = nullptr)
-   {
-     ...
-   }
 
 Getters that never fail, and never return null, are named ``Foo()``,
 while all other getters use ``GetFoo()``. Getters can return an object
@@ -286,45 +229,9 @@ help the person reading the code fully understand what the declaration
 is doing, without needing to further examine base classes.
 
 
-Mode line
-~~~~~~~~~
-
-Files should have Emacs and vim mode line comments as the first two
-lines of the file, which should set indent-tabs-mode to nil. For new
-files, use the following, specifying two-space indentation:
-
-.. code-block:: cpp
-
-   /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-   /* vim: set ts=8 sts=2 et sw=2 tw=80: */
-   /* This Source Code Form is subject to the terms of the Mozilla Public
-    * License, v. 2.0. If a copy of the MPL was not distributed with this
-    * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-
-Be sure to use the correct "Mode" in the first line, don't use "C++" in
-JavaScript files.
-
-Declarations
-~~~~~~~~~~~~
-
-In general, snuggle pointer stars with the type, not the variable name:
-
-.. code-block:: cpp
-
-   T* p; // GOOD
-   T *p; // BAD
-   T* p, q; // OOPS put these on separate lines
-
-Some existing modules still use the ``T *p`` style.
-
 
 Operators
 ~~~~~~~~~
-
-In C++, when breaking lines containing overlong expressions, binary
-operators must be left on their original lines if the line break happens
-around the operator. The second line should start in the same column as
-the start of the expression in the first line.
 
 Unary keyword operators, such as ``typeof`` and ``sizeof``, should have
 their operand parenthesized; e.g. ``typeof("foo") == "string"``.
