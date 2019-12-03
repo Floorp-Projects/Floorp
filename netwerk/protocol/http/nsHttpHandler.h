@@ -246,7 +246,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   nsHttpAuthCache* AuthCache(bool aPrivate) {
     return aPrivate ? &mPrivateAuthCache : &mAuthCache;
   }
-  nsHttpConnectionMgr* ConnMgr() { return mConnMgr; }
+  nsHttpConnectionMgr* ConnMgr() { return mConnMgr->AsHttpConnectionMgr(); }
   AltSvcCache* AltServiceCache() const {
     MOZ_ASSERT(XRE_IsParentProcess());
     return mAltSvcCache.get();
@@ -499,7 +499,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   nsHttpAuthCache mPrivateAuthCache;
 
   // the connection manager
-  RefPtr<nsHttpConnectionMgr> mConnMgr;
+  RefPtr<HttpConnectionMgrShell> mConnMgr;
 
   UniquePtr<AltSvcCache> mAltSvcCache;
 
