@@ -160,11 +160,11 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
   }
 
   if (mExtensionPageCSP.IsVoid()) {
-    EPS().DefaultCSP(mExtensionPageCSP);
+    EPS().GetDefaultCSP(mExtensionPageCSP);
   }
 
   if (mContentScriptCSP.IsVoid()) {
-    EPS().DefaultCSP(mContentScriptCSP);
+    EPS().GetDefaultCSP(mContentScriptCSP);
   }
 
   mContentScripts.SetCapacity(aInit.mContentScripts.Length());
