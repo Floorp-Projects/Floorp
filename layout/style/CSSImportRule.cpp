@@ -76,6 +76,13 @@ dom::MediaList* CSSImportRule::GetMedia() const {
   return mChildSheet ? mChildSheet->Media() : nullptr;
 }
 
+void CSSImportRule::DropSheetReference() {
+  if (mChildSheet) {
+    mChildSheet->RemoveFromParent();
+  }
+  Rule::DropSheetReference();
+}
+
 void CSSImportRule::GetHref(nsAString& aHref) const {
   Servo_ImportRule_GetHref(mRawRule, &aHref);
 }

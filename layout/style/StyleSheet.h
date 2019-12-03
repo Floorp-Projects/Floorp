@@ -396,6 +396,9 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // This is true for any User Agent sheets once they are complete.
   bool IsReadOnly() const;
 
+  // Removes a stylesheet from its parent sheet child list, if any.
+  void RemoveFromParent();
+
  private:
   // Returns the ShadowRoot that contains this stylesheet or our ancestor
   // stylesheet, if any.
