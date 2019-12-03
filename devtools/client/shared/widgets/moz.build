@@ -23,7 +23,5 @@ DevToolsModules(
     'Spectrum.js',
     'TableWidget.js',
     'TreeWidget.js',
-    'VariablesView.jsm',
-    'VariablesViewController.jsm',
     'view-helpers.js',
 )
