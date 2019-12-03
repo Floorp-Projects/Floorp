@@ -30,7 +30,8 @@ class WorkletNodeEngine final : public AudioNodeEngine {
   MOZ_CAN_RUN_SCRIPT
   void ConstructProcessor(AudioWorkletImpl* aWorkletImpl,
                           const nsAString& aName,
-                          NotNull<StructuredCloneHolder*> aSerializedOptions);
+                          NotNull<StructuredCloneHolder*> aSerializedOptions,
+                          UniqueMessagePortId& aPortIdentifier);
 
   void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
@@ -120,13 +121,15 @@ void WorkletNodeEngine::SendProcessorError() {
 
 void WorkletNodeEngine::ConstructProcessor(
     AudioWorkletImpl* aWorkletImpl, const nsAString& aName,
-    NotNull<StructuredCloneHolder*> aSerializedOptions) {
+    NotNull<StructuredCloneHolder*> aSerializedOptions,
+    UniqueMessagePortId& aPortIdentifier) {
   MOZ_ASSERT(mInputs.mPorts.empty() && mOutputs.mPorts.empty());
   RefPtr<AudioWorkletGlobalScope> global = aWorkletImpl->GetGlobalScope();
   MOZ_ASSERT(global);  // global has already been used to register processor
   JS::RootingContext* cx = RootingCx();
   mProcessor.init(cx);
-  if (!global->ConstructProcessor(aName, aSerializedOptions, &mProcessor) ||
+  if (!global->ConstructProcessor(aName, aSerializedOptions, aPortIdentifier,
+                                  &mProcessor) ||
       // mInputs and mOutputs outer arrays are fixed length and so much of the
       // initialization need only be performed once (i.e. here).
       NS_WARN_IF(!mInputs.mPorts.growBy(InputCount())) ||
@@ -501,11 +504,12 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
       // See bug 1535398.
       [track = audioWorkletNode->mTrack,
        workletImpl = RefPtr<AudioWorkletImpl>(workletImpl),
-       name = nsString(aName), options = std::move(serializedOptions)]()
-          MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+       name = nsString(aName), options = std::move(serializedOptions),
+       portId = std::move(processorPortId)]()
+          MOZ_CAN_RUN_SCRIPT_BOUNDARY mutable {
             auto engine = static_cast<WorkletNodeEngine*>(track->Engine());
             engine->ConstructProcessor(workletImpl, name,
-                                       WrapNotNull(options.get()));
+                                       WrapNotNull(options.get()), portId);
           }));
 
   return audioWorkletNode.forget();
