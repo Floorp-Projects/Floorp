@@ -15,10 +15,12 @@
 #include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/InputStreamUtils.h"
-#include "mozilla/ipc/PBackgroundChild.h"
-#include "mozilla/ipc/PBackgroundParent.h"
+#include "mozilla/net/SocketProcessChild.h"
+#include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/Unused.h"
 #include "nsNetCID.h"
+#include "BackgroundParentImpl.h"
+#include "BackgroundChildImpl.h"
 
 using namespace mozilla::dom;
 
@@ -355,6 +357,28 @@ bool AutoIPCStream::Serialize(nsIInputStream* aStream,
     return true;
   }
 
+  BackgroundChildImpl* impl = static_cast<BackgroundChildImpl*>(aManager);
+  if (!SerializeInputStreamChild(aStream, impl, mValue, mOptionalValue,
+                                 mDelayedStart)) {
+    MOZ_CRASH("IPCStream creation failed!");
+  }
+
+  return true;
+}
+
+bool AutoIPCStream::Serialize(nsIInputStream* aStream,
+                              net::SocketProcessChild* aManager) {
+  MOZ_ASSERT(aStream || !mValue);
+  MOZ_ASSERT(aManager);
+  MOZ_ASSERT(mValue || mOptionalValue);
+  MOZ_ASSERT(!mTaken);
+  MOZ_ASSERT(!IsSet());
+
+  // If NormalizeOptionalValue returns false, we don't have to proceed.
+  if (!NormalizeOptionalValue(aStream, mValue, mOptionalValue)) {
+    return true;
+  }
+
   if (!SerializeInputStreamChild(aStream, aManager, mValue, mOptionalValue,
                                  mDelayedStart)) {
     MOZ_CRASH("IPCStream creation failed!");
@@ -386,6 +410,28 @@ bool AutoIPCStream::Serialize(nsIInputStream* aStream,
 
 bool AutoIPCStream::Serialize(nsIInputStream* aStream,
                               PBackgroundParent* aManager) {
+  MOZ_ASSERT(aStream || !mValue);
+  MOZ_ASSERT(aManager);
+  MOZ_ASSERT(mValue || mOptionalValue);
+  MOZ_ASSERT(!mTaken);
+  MOZ_ASSERT(!IsSet());
+
+  // If NormalizeOptionalValue returns false, we don't have to proceed.
+  if (!NormalizeOptionalValue(aStream, mValue, mOptionalValue)) {
+    return true;
+  }
+
+  BackgroundParentImpl* impl = static_cast<BackgroundParentImpl*>(aManager);
+  if (!SerializeInputStreamParent(aStream, impl, mValue, mOptionalValue,
+                                  mDelayedStart)) {
+    return false;
+  }
+
+  return true;
+}
+
+bool AutoIPCStream::Serialize(nsIInputStream* aStream,
+                              net::SocketProcessParent* aManager) {
   MOZ_ASSERT(aStream || !mValue);
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(mValue || mOptionalValue);

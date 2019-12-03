@@ -16,6 +16,7 @@
 #include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/dom/CPOWManagerGetter.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsAutoPtr.h"
@@ -76,10 +77,12 @@ class GetFilesHelperChild;
 class TabContext;
 enum class MediaControlActions : uint32_t;
 
-class ContentChild final : public PContentChild,
-                           public nsIWindowProvider,
-                           public CPOWManagerGetter,
-                           public mozilla::ipc::IShmemAllocator {
+class ContentChild final
+    : public PContentChild,
+      public nsIWindowProvider,
+      public CPOWManagerGetter,
+      public mozilla::ipc::IShmemAllocator,
+      public mozilla::ipc::ChildToParentStreamActorManager {
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
   typedef mozilla::ipc::FileDescriptor FileDescriptor;
   typedef mozilla::ipc::PFileDescriptorSetChild PFileDescriptorSetChild;
@@ -254,9 +257,6 @@ class ContentChild final : public PContentChild,
   PPrintingChild* AllocPPrintingChild();
 
   bool DeallocPPrintingChild(PPrintingChild*);
-
-  PChildToParentStreamChild* SendPChildToParentStreamConstructor(
-      PChildToParentStreamChild*);
 
   PChildToParentStreamChild* AllocPChildToParentStreamChild();
   bool DeallocPChildToParentStreamChild(PChildToParentStreamChild*);
@@ -502,9 +502,6 @@ class ContentChild final : public PContentChild,
 
   bool IsForBrowser() const { return mIsForBrowser; }
 
-  PFileDescriptorSetChild* SendPFileDescriptorSetConstructor(
-      const FileDescriptor&);
-
   PFileDescriptorSetChild* AllocPFileDescriptorSetChild(const FileDescriptor&);
 
   bool DeallocPFileDescriptorSetChild(PFileDescriptorSetChild*);
@@ -705,6 +702,11 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvInitSandboxTesting(
       Endpoint<PSandboxTestingChild>&& aEndpoint);
 #endif
+
+  PChildToParentStreamChild* SendPChildToParentStreamConstructor(
+      PChildToParentStreamChild* aActor) override;
+  PFileDescriptorSetChild* SendPFileDescriptorSetConstructor(
+      const FileDescriptor& aFD) override;
 
  private:
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);

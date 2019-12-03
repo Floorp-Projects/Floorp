@@ -8,8 +8,6 @@
 #include "IPCStreamSource.h"
 
 #include "mozilla/Unused.h"
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PChildToParentStreamChild.h"
 #include "mozilla/ipc/PParentToChildStreamChild.h"
 
@@ -68,29 +66,8 @@ class IPCStreamSourceChild final : public PChildToParentStreamChild,
 
 /* static */
 PChildToParentStreamChild* IPCStreamSource::Create(
-    nsIAsyncInputStream* aInputStream, dom::ContentChild* aManager) {
-  MOZ_ASSERT(aInputStream);
-  MOZ_ASSERT(aManager);
-
-  // PContent can only be used on the main thread
-  MOZ_ASSERT(NS_IsMainThread());
-
-  IPCStreamSourceChild* source = IPCStreamSourceChild::Create(aInputStream);
-  if (!source) {
-    return nullptr;
-  }
-
-  if (!aManager->SendPChildToParentStreamConstructor(source)) {
-    return nullptr;
-  }
-
-  source->ActorConstructed();
-  return source;
-}
-
-/* static */
-PChildToParentStreamChild* IPCStreamSource::Create(
-    nsIAsyncInputStream* aInputStream, PBackgroundChild* aManager) {
+    nsIAsyncInputStream* aInputStream,
+    ChildToParentStreamActorManager* aManager) {
   MOZ_ASSERT(aInputStream);
   MOZ_ASSERT(aManager);
 

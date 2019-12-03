@@ -247,7 +247,6 @@
 #include "mozilla/dom/MediaController.h"
 #include "mozilla/dom/PPresentationChild.h"
 #include "mozilla/dom/PresentationIPCService.h"
-#include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/IPCStreamDestination.h"
 #include "mozilla/ipc/IPCStreamSource.h"
@@ -1949,6 +1948,8 @@ void ContentChild::GetAvailableDictionaries(nsTArray<nsString>& aDictionaries) {
 
 PFileDescriptorSetChild* ContentChild::SendPFileDescriptorSetConstructor(
     const FileDescriptor& aFD) {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (IsShuttingDown()) {
     return nullptr;
   }
@@ -2195,6 +2196,8 @@ bool ContentChild::DeallocPPrintingChild(PPrintingChild* printing) {
 
 PChildToParentStreamChild* ContentChild::SendPChildToParentStreamConstructor(
     PChildToParentStreamChild* aActor) {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (IsShuttingDown()) {
     return nullptr;
   }
