@@ -9,32 +9,27 @@ const { LoginManagerParent } = ChromeUtils.import(
   "resource://gre/modules/LoginManagerParent.jsm"
 );
 
-add_task(async function test_doAutocompleteSearch_generated_noLogins() {
-  Services.prefs.setBoolPref("signon.generation.available", true); // TODO: test both with false
+// new-password to the happy path
+const NEW_PASSWORD_TEMPLATE_ARG = {
+  autocompleteInfo: {
+    section: "",
+    addressType: "",
+    contactType: "",
+    fieldName: "new-password",
+    canAutomaticallyPersist: false,
+  },
+  formOrigin: "https://example.com",
+  actionOrigin: "https://mozilla.org",
+  searchString: "",
+  previousResult: null,
+  requestId: "foo",
+  isSecure: true,
+  isPasswordField: true,
+};
+
+add_task(async function setup() {
+  Services.prefs.setBoolPref("signon.generation.available", true);
   Services.prefs.setBoolPref("signon.generation.enabled", true);
-
-  let LMP = new LoginManagerParent();
-  LMP.useBrowsingContext(123);
-
-  ok(LMP.doAutocompleteSearch, "doAutocompleteSearch exists");
-
-  // Default to the happy path
-  let arg1 = {
-    autocompleteInfo: {
-      section: "",
-      addressType: "",
-      contactType: "",
-      fieldName: "new-password",
-      canAutomaticallyPersist: false,
-    },
-    formOrigin: "https://example.com",
-    actionOrigin: "https://mozilla.org",
-    searchString: "",
-    previousResult: null,
-    requestId: "foo",
-    isSecure: true,
-    isPasswordField: true,
-  };
 
   sinon
     .stub(LoginManagerParent._browsingContextGlobal, "get")
@@ -48,25 +43,40 @@ add_task(async function test_doAutocompleteSearch_generated_noLogins() {
         },
       };
     });
+});
 
-  let result1 = await LMP.doAutocompleteSearch(arg1);
+add_task(async function test_generated_noLogins() {
+  let LMP = new LoginManagerParent();
+  LMP.useBrowsingContext(123);
+
+  ok(LMP.doAutocompleteSearch, "doAutocompleteSearch exists");
+
+  let result1 = await LMP.doAutocompleteSearch(NEW_PASSWORD_TEMPLATE_ARG);
   equal(result1.logins.length, 0, "no logins");
   ok(result1.generatedPassword, "has a generated password");
   equal(result1.generatedPassword.length, 15, "generated password length");
+  ok(
+    result1.willAutoSaveGeneratedPassword,
+    "will auto-save when storage is empty"
+  );
 
   info("repeat the search and ensure the same password was used");
-  let result2 = await LMP.doAutocompleteSearch(arg1);
+  let result2 = await LMP.doAutocompleteSearch(NEW_PASSWORD_TEMPLATE_ARG);
   equal(result2.logins.length, 0, "no logins");
   equal(
     result2.generatedPassword,
     result1.generatedPassword,
     "same generated password"
   );
+  ok(
+    result1.willAutoSaveGeneratedPassword,
+    "will auto-save when storage is still empty"
+  );
 
   info("Check cases where a password shouldn't be generated");
 
   let result3 = await LMP.doAutocompleteSearch({
-    ...arg1,
+    ...NEW_PASSWORD_TEMPLATE_ARG,
     ...{ isPasswordField: false },
   });
   equal(
@@ -75,7 +85,8 @@ add_task(async function test_doAutocompleteSearch_generated_noLogins() {
     "no generated password when not a pw. field"
   );
 
-  let arg1_2 = { ...arg1 };
+  // Deep copy since we need to modify a property of autocompleteInfo.
+  let arg1_2 = JSON.parse(JSON.stringify(NEW_PASSWORD_TEMPLATE_ARG));
   arg1_2.autocompleteInfo.fieldName = "";
   let result4 = await LMP.doAutocompleteSearch(arg1_2);
   equal(
@@ -84,13 +95,39 @@ add_task(async function test_doAutocompleteSearch_generated_noLogins() {
     "no generated password when not autocomplete=new-password"
   );
 
+  LMP.useBrowsingContext(999);
   let result5 = await LMP.doAutocompleteSearch({
-    ...arg1,
-    ...{ browsingContextId: 999 },
+    ...NEW_PASSWORD_TEMPLATE_ARG,
   });
   equal(
     result5.generatedPassword,
     null,
     "no generated password with a missing browsingContextId"
   );
+});
+
+add_task(async function test_generated_emptyUsernameSavedLogin() {
+  info("Test with a login that will prevent auto-saving");
+  await LoginTestUtils.addLogin({
+    username: "",
+    password: "my-saved-password",
+    origin: NEW_PASSWORD_TEMPLATE_ARG.formOrigin,
+    formActionOrigin: NEW_PASSWORD_TEMPLATE_ARG.actionOrigin,
+  });
+
+  let LMP = new LoginManagerParent();
+  LMP.useBrowsingContext(123);
+
+  ok(LMP.doAutocompleteSearch, "doAutocompleteSearch exists");
+
+  let result1 = await LMP.doAutocompleteSearch(NEW_PASSWORD_TEMPLATE_ARG);
+  equal(result1.logins.length, 1, "1 login");
+  ok(result1.generatedPassword, "has a generated password");
+  equal(result1.generatedPassword.length, 15, "generated password length");
+  ok(
+    !result1.willAutoSaveGeneratedPassword,
+    "won't auto-save when an empty-username match is found"
+  );
+
+  LoginTestUtils.clearData();
 });
