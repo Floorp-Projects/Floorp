@@ -17,6 +17,7 @@ import androidx.core.view.isVisible
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.browser_toolbar_popup_window.view.*
+import kotlinx.android.synthetic.main.component_browser_top_toolbar.view.*
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -58,8 +59,10 @@ class BrowserToolbarView(
         else -> R.layout.component_browser_top_toolbar
     }
 
-    val view: BrowserToolbar = LayoutInflater.from(container.context)
+    private val layout = LayoutInflater.from(container.context)
         .inflate(toolbarLayout, container, true)
+
+    val view: BrowserToolbar = layout
         .findViewById(R.id.toolbar)
 
     val toolbarIntegration: ToolbarIntegration
@@ -214,6 +217,12 @@ class BrowserToolbarView(
     @Suppress("UNUSED_PARAMETER")
     fun update(state: BrowserFragmentState) {
         // Intentionally leaving this as a stub for now since we don't actually want to update currently
+    }
+
+    fun expand() {
+        if (!settings.shouldUseBottomToolbar) {
+            layout.app_bar?.setExpanded(true)
+        }
     }
 
     companion object {

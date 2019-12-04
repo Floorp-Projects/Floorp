@@ -376,6 +376,18 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 view = view
             )
 
+            session.register(observer = object : Session.Observer {
+                override fun onLoadRequest(
+                    session: Session,
+                    url: String,
+                    triggeredByRedirect: Boolean,
+                    triggeredByWebContent: Boolean
+                ): Boolean {
+                    browserToolbarView.expand()
+                    return false
+                }
+            }, owner = viewLifecycleOwner)
+
             @Suppress("ConstantConditionIf")
             if (FeatureFlags.pullToRefreshEnabled) {
                 val primaryTextColor =
