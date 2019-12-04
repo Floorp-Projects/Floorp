@@ -126,6 +126,8 @@ clang_checkers:
     reliability: high
   - name: cppcoreguidelines-narrowing-conversions
     reliability: high
+  - name: cppcoreguidelines-pro-type-member-init
+    reliability: medium
   - name: misc-non-copyable-objects
     reliability: high
   - name: misc-redundant-expression
