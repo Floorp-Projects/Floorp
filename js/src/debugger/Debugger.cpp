@@ -3673,18 +3673,46 @@ void DebugAPI::slowPathTraceGeneratorFrame(JSTracer* tracer,
 
   // Ignore callback tracers.
   //
-  // Generator objects are background finalized, and thus the compacting GC
-  // assumes it can update their pointers in the background as well. Compacting
-  // GC updates pointers by visiting objects with a callback tracer that checks
-  // for forwarding pointers, so helper threads trying to update generator
-  // objects will end up calling this function. However, it is verboten to do
-  // weak map lookups (e.g., in Debugger::generatorFrames) off the main thread,
-  // since MovableCellHasher must consult the Zone to find the key's unique id.
+  // There are two kinds of callback tracers we need to bar: MovingTracers used
+  // by compacting GC; and CompartmentCheckTracers.
   //
-  // We can't quite recognize MovingTracers exactly, but MovingTracers are
-  // callback tracers, so we just show them all the door. This means the
-  // generator -> Debugger.Frame edge is going to be invisible to some
-  // traversals. We'll cope with that when it's a problem.
+  // MovingTracers are used by the compacting GC to update pointers to objects
+  // that have been moved: the MovingTracer checks each outgoing pointer to see
+  // if it refers to a forwarding pointer, and if so, updates the pointer stored
+  // in the object.
+  //
+  // Generator objects are background finalized, so the compacting GC assumes it
+  // can update their pointers in the background as well. Since we treat
+  // generator objects as having an owning edge to their Debugger.Frame objects,
+  // a helper thread trying to update a generator object will end up calling
+  // this function. However, it is verboten to do weak map lookups (e.g., in
+  // Debugger::generatorFrames) off the main thread, since MovableCellHasher
+  // must consult the Zone to find the key's unique id.
+  //
+  // Fortunately, it's not necessary for compacting GC to worry about that edge
+  // in the first place: the edge isn't a literal pointer stored on the
+  // generator object, it's only inferred from the realm's debuggee status and
+  // its Debuggers' generatorFrames weak maps. Those get relocated when the
+  // Debugger itself is visited, so compacting GC can just ignore this edge.
+  //
+  // CompartmentCheckTracers walk the graph and verify that all
+  // cross-compartment edges are recorded in the cross-compartment wrapper
+  // tables. But edges between Debugger.Foo objects and their referents are not
+  // in the CCW tables, so a CrossCompartmentCheckTracers also calls
+  // DebugAPI::edgeIsInDebuggerWeakmap to see if a given cross-compartment edge
+  // is accounted for there. However, edgeIsInDebuggerWeakmap only handles
+  // debugger -> debuggee edges, so it won't recognize the edge we're
+  // potentially traversing here, from a generator object to its Debugger.Frame.
+  //
+  // But since the purpose of this function is to retrieve such edges, if they
+  // exist, from the very tables that edgeIsInDebuggerWeakmap would consult,
+  // we're at no risk of reporting edges that they do not cover. So we can
+  // safely hide the edges from CompartmentCheckTracers.
+  //
+  // We can't quite recognize MovingTracers and CompartmentCheckTracers
+  // precisely, but they're both callback tracers, so we just show them all the
+  // door. This means the generator -> Debugger.Frame edge is going to be
+  // invisible to some traversals. We'll cope with that when it's a problem.
   if (tracer->isCallbackTracer()) {
     return;
   }
@@ -3696,9 +3724,7 @@ void DebugAPI::slowPathTraceGeneratorFrame(JSTracer* tracer,
             dbg->generatorFrames.lookupUnbarriered(generator)) {
       HeapPtr<DebuggerFrame*>& frameObj = entry->value();
       if (frameObj->hasAnyHooks()) {
-        // The AbstractGeneratorObject -> Debugger.Frame edge is recognized by
-        // DebugAPI::edgeIsInDebuggerWeakmap, so reporting this edge from the
-        // debuggee to the debugger compartment is all right.
+        // See comment above.
         TraceCrossCompartmentEdge(tracer, generator, &frameObj,
                                   "Debugger.Frame with hooks for generator");
       }
