@@ -4,7 +4,7 @@
 
 "use strict";
 
-const ObjectFront = require("devtools/shared/fronts/object");
+const { ObjectFront } = require("devtools/shared/fronts/object");
 
 class ConsoleCommands {
   constructor({ debuggerClient, proxy, threadFront, currentTarget }) {
