@@ -18,11 +18,8 @@ Cu.import("resource://reftest/manifest.jsm", this);
 Cu.import("resource://reftest/StructuredLog.jsm", this);
 Cu.import("resource://reftest/PerTestCoverageUtils.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-
-const { E10SUtils } = ChromeUtils.import(
-  "resource://gre/modules/E10SUtils.jsm"
-);
 
 XPCOMUtils.defineLazyGetter(this, "OS", function() {
     const { OS } = Cu.import("resource://gre/modules/osfile.jsm");
@@ -227,7 +224,7 @@ function OnRefTestLoad(win)
     g.browserMessageManager = g.browser.frameLoader.messageManager;
     // The content script waits for the initial onload, then notifies
     // us.
-    RegisterMessageListenersAndLoadContentScript(false);
+    RegisterMessageListenersAndLoadContentScript();
 }
 
 function InitAndStartRefTests()
@@ -672,41 +669,7 @@ function StartCurrentTest()
     }
 }
 
-// A simplified version of the function with the same name in tabbrowser.js.
-function updateBrowserRemotenessByURL(aBrowser, aURL) {
-  let remoteType = E10SUtils.getRemoteTypeForURI(
-    aURL,
-    aBrowser.ownerGlobal.docShell.nsILoadContext.useRemoteTabs,
-    aBrowser.ownerGlobal.docShell.nsILoadContext.useRemoteSubframes,
-    aBrowser.remoteType,
-    aBrowser.currentURI
-  );
-  // Things get confused if we switch to not-remote
-  // for chrome:// URIs, so lets not for now.
-  if (remoteType == E10SUtils.NOT_REMOTE &&
-      g.browserIsRemote) {
-    remoteType = aBrowser.remoteType;
-  }
-  if (aBrowser.remoteType != remoteType) {
-    if (remoteType == E10SUtils.NOT_REMOTE) {
-      aBrowser.removeAttribute("remote");
-      aBrowser.removeAttribute("remoteType");
-    } else {
-      aBrowser.setAttribute("remote", "true");
-      aBrowser.setAttribute("remoteType", remoteType);
-    }
-    aBrowser.changeRemoteness({ remoteType });
-    aBrowser.construct();
-
-    g.browserMessageManager = aBrowser.frameLoader.messageManager;
-    RegisterMessageListenersAndLoadContentScript(true);
-    return new Promise(resolve => { g.resolveContentReady = resolve;  });
-  }
-
-  return Promise.resolve();
-}
-
-async function StartCurrentURI(aURLTargetType)
+function StartCurrentURI(aURLTargetType)
 {
     const isStartingRef = (aURLTargetType == URL_TARGET_TYPE_REFERENCE);
 
@@ -804,8 +767,6 @@ async function StartCurrentURI(aURLTargetType)
         gDumpFn("REFTEST TEST-LOAD | " + g.currentURL + " | " + currentTest + " / " + g.totalTests +
                 " (" + Math.floor(100 * (currentTest / g.totalTests)) + "%)\n");
         TestBuffer("START " + g.currentURL);
-        await updateBrowserRemotenessByURL(g.browser, g.currentURL);
-
         var type = g.urls[0].type
         if (TYPE_SCRIPT == type) {
             SendLoadScriptTest(g.currentURL, g.loadTimeout);
@@ -1478,7 +1439,7 @@ function RestoreChangedPreferences()
     }
 }
 
-function RegisterMessageListenersAndLoadContentScript(aReload)
+function RegisterMessageListenersAndLoadContentScript()
 {
     g.browserMessageManager.addMessageListener(
         "reftest:AssertionCount",
@@ -1551,10 +1512,6 @@ function RegisterMessageListenersAndLoadContentScript(aReload)
 
     g.browserMessageManager.loadFrameScript("resource://reftest/reftest-content.js", true, true);
 
-    if (aReload) {
-        return;
-    }
-
     ChromeUtils.registerWindowActor("ReftestFission", {
         parent: {
           moduleURI: "resource://reftest/ReftestFissionParent.jsm",
@@ -1574,19 +1531,8 @@ function RecvAssertionCount(count)
 
 function RecvContentReady(info)
 {
-    if (g.resolveContentReady) {
-      // Focus the content browser.
-      if (g.focusFilterMode != FOCUS_FILTER_NON_NEEDS_FOCUS_TESTS) {
-        if (Services.focus.activeWindow != g.containingWindow) {
-            Focus();
-        }
-      }
-      g.resolveContentReady();
-      g.resolveContentReady = null;
-    } else {
-      g.contentGfxInfo = info.gfx;
-      InitAndStartRefTests();
-    }
+    g.contentGfxInfo = info.gfx;
+    InitAndStartRefTests();
     return { remote: g.browserIsRemote };
 }
 
