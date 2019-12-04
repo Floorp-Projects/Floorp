@@ -63,6 +63,11 @@
                 android:label="@string/add_ons"
                 android:theme="@style/Theme.AppCompat.Light" />
 
+        <activity
+            android:name=".addons.AddOnSettingsActivity"
+            android:label="@string/add_ons"
+            android:theme="@style/Theme.AppCompat.Light" />
+
         <activity android:name=".IntentReceiverActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

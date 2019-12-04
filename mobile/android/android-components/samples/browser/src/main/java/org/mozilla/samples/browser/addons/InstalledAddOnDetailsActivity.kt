@@ -30,7 +30,9 @@ class InstalledAddOnDetailsActivity : AppCompatActivity() {
 
         bindEnableSwitch(addOn.enabled)
 
-        bindSettings()
+        bindSettings(addOn)
+
+        bindSettings(addOn)
 
         bindDetails(addOn)
 
@@ -50,9 +52,11 @@ class InstalledAddOnDetailsActivity : AppCompatActivity() {
         }
     }
 
-    private fun bindSettings() {
+    private fun bindSettings(addOn: AddOn) {
         findViewById<View>(R.id.settings).setOnClickListener {
-            Toast.makeText(this, "Settings clicked", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, AddOnSettingsActivity::class.java)
+            intent.putExtra("add_on", addOn)
+            this.startActivity(intent)
         }
     }
 
