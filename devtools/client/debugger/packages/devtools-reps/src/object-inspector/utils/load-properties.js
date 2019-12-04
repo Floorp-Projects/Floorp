@@ -15,6 +15,7 @@ const {
 const {
   getClosestGripNode,
   getClosestNonBucketNode,
+  getFront,
   getValue,
   nodeHasAccessors,
   nodeHasAllEntriesInPreview,
@@ -38,8 +39,8 @@ import type {
 } from "../types";
 
 type Client = {
-  createObjectFront: CreateObjectFront,
-  createLongStringFront: CreateLongStringFront,
+  createObjectFront?: CreateObjectFront,
+  createLongStringFront?: CreateLongStringFront,
 };
 
 function loadItemProperties(
@@ -49,25 +50,25 @@ function loadItemProperties(
 ): Promise<GripProperties> {
   const gripItem = getClosestGripNode(item);
   const value = getValue(gripItem);
+  let front = getFront(gripItem);
+
+  if (!front && value && client && client.getFrontByID) {
+    front = client.getFrontByID(value.actor);
+  }
+
+  const getObjectFront = function() {
+    if (!front) {
+      front = client.createObjectFront(value);
+    }
+
+    return front;
+  };
 
   const [start, end] = item.meta
     ? [item.meta.startIndex, item.meta.endIndex]
     : [];
 
   const promises = [];
-  let objectFront;
-
-  if (value && client && client.getFrontByID) {
-    objectFront = client.getFrontByID(value.actor);
-  }
-
-  const getObjectFront = function() {
-    if (!objectFront) {
-      objectFront = client.createObjectFront(value);
-    }
-
-    return objectFront;
-  };
 
   if (shouldLoadItemIndexedProperties(item, loadedProperties)) {
     promises.push(enumIndexedProperties(getObjectFront(), start, end));
@@ -90,7 +91,8 @@ function loadItemProperties(
   }
 
   if (shouldLoadItemFullText(item, loadedProperties)) {
-    promises.push(getFullText(client.createLongStringFront(value), item));
+    const longStringFront = front || client.createLongStringFront(value);
+    promises.push(getFullText(longStringFront, item));
   }
 
   if (shouldLoadItemProxySlots(item, loadedProperties)) {

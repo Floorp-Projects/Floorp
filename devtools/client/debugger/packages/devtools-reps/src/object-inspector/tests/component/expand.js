@@ -50,8 +50,10 @@ function generateDefaults(overrides) {
 }
 const { LongStringFront } = require("../__mocks__/string-front");
 
-function mount(props, { initialState } = {}) {
-  const client = {
+function getClient(overrides = {}) {
+  return {
+    releaseActor: () => {},
+
     createObjectFront: grip =>
       ObjectFront(grip, {
         getPrototype: () => Promise.resolve(protoStub),
@@ -65,8 +67,12 @@ function mount(props, { initialState } = {}) {
           return "<<<<";
         },
       }),
-  };
 
+    ...overrides,
+  };
+}
+
+function mount(props, { initialState, client = getClient() } = {}) {
   return mountObjectInspector({
     client,
     props: generateDefaults(props),
@@ -181,6 +187,46 @@ describe("ObjectInspector - state", () => {
     expect(
       getActors(store.getState()).has(protoStub.prototype.actor)
     ).toBeTruthy();
+  });
+
+  it("does not handle actors when client does not have releaseActor function", async () => {
+    const { wrapper, store } = mount(
+      {},
+      { client: getClient({ releaseActor: null }) }
+    );
+
+    expect(formatObjectInspector(wrapper)).toMatchSnapshot();
+    let nodes = wrapper.find(".node");
+    const root1 = nodes.at(0);
+
+    let onPropertiesLoad = waitForDispatch(store, "NODE_PROPERTIES_LOADED");
+    root1.simulate("click");
+    await onPropertiesLoad;
+    wrapper.update();
+
+    expect(storeHasLoadedProperty(store, "root-1")).toBeTruthy();
+    // We don't want to track root actors.
+    expect(
+      getActors(store.getState()).has(
+        gripRepStubs.get("testMoreThanMaxProps").actor
+      )
+    ).toBeFalsy();
+    expect(formatObjectInspector(wrapper)).toMatchSnapshot();
+
+    nodes = wrapper.find(".node");
+    const protoNode = nodes.at(1);
+
+    onPropertiesLoad = waitForDispatch(store, "NODE_PROPERTIES_LOADED");
+    protoNode.simulate("click");
+    await onPropertiesLoad;
+    wrapper.update();
+
+    // Once all the loading promises are resolved, actors and loadedProperties
+    // should have the expected values.
+    expect(formatObjectInspector(wrapper)).toMatchSnapshot();
+    expect(storeHasLoadedProperty(store, "root-1◦<prototype>")).toBeTruthy();
+
+    expect(getActors(store.getState()).size).toBe(0);
   });
 
   it.skip("has the expected state when expanding a proxy node", async () => {

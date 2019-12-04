@@ -191,11 +191,17 @@ function propIterator(props, object, max) {
     const length = max - indexes.length;
 
     const symbolsProps = ownSymbols.slice(0, length).map(symbolItem => {
+      const symbolValue = symbolItem.descriptor.value;
+      const symbolGrip =
+        symbolValue && symbolValue.getGrip
+          ? symbolValue.getGrip()
+          : symbolValue;
+
       return PropRep({
         ...props,
         mode: MODE.TINY,
         name: symbolItem,
-        object: symbolItem.descriptor.value,
+        object: symbolGrip,
         equal: ": ",
         defaultRep: Grip,
         title: null,

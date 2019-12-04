@@ -97,7 +97,7 @@ function getProps(props, promiseState) {
         ...props,
         mode: MODE.TINY,
         name: `<${key}>`,
-        object,
+        object: object.getGrip ? object.getGrip() : object,
         equal: ": ",
         suppressQuotes: true,
       })

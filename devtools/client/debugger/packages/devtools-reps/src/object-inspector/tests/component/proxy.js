@@ -17,7 +17,9 @@ function generateDefaults(overrides) {
     roots: [
       {
         path: "root",
-        contents: { value: stub },
+        contents: {
+          value: stub,
+        },
       },
     ],
     autoExpandDepth: 1,
@@ -28,9 +30,7 @@ function generateDefaults(overrides) {
 
 function getEnumPropertiesMock() {
   return jest.fn(() => ({
-    iterator: {
-      slice: () => ({}),
-    },
+    slice: () => ({}),
   }));
 }
 
