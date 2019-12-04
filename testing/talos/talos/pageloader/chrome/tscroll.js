@@ -104,7 +104,7 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
   function FP_wait(ms) {
     return function() {
       return new Promise(function(resolve) {
-        content.setTimeout(resolve, ms);
+        setTimeout(resolve, ms);
       });
     };
   }
@@ -273,7 +273,7 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
       });
 
       // Get the measurements after APZ_MEASURE_MS of scrolling
-      content.setTimeout(function() {
+      setTimeout(function() {
         stopFrameTimeRecording(handle, function(intervals) {
           function average(arr) {
             var sum = 0;

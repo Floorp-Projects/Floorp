@@ -8,11 +8,12 @@ const { CreditCard } = ChromeUtils.import(
   "resource://gre/modules/CreditCard.jsm"
 );
 
-let FormAutofillParent, FormAutofillStatus;
+let FormAutofillParent;
 let OSKeyStore;
 add_task(async function setup() {
-  ({ FormAutofillParent, FormAutofillStatus } = ChromeUtils.import(
-    "resource://formautofill/FormAutofillParent.jsm"
+  ({ FormAutofillParent } = ChromeUtils.import(
+    "resource://formautofill/FormAutofillParent.jsm",
+    null
   ));
   ({ OSKeyStore } = ChromeUtils.import(
     "resource://formautofill/OSKeyStore.jsm"
@@ -54,10 +55,15 @@ let TEST_CREDIT_CARD_2 = {
   "cc-type": "visa",
 };
 
-add_task(async function test_getRecords() {
-  FormAutofillStatus.init();
+let target = {
+  sendAsyncMessage: function sendAsyncMessage(msg, payload) {},
+};
 
-  await FormAutofillStatus.formAutofillStorage.initialize();
+add_task(async function test_getRecords() {
+  let formAutofillParent = new FormAutofillParent();
+
+  await formAutofillParent.init();
+  await formAutofillParent.formAutofillStorage.initialize();
   let fakeResult = {
     addresses: [
       {
@@ -78,14 +84,20 @@ add_task(async function test_getRecords() {
   };
 
   for (let collectionName of ["addresses", "creditCards", "nonExisting"]) {
-    let collection = FormAutofillStatus.formAutofillStorage[collectionName];
+    let collection = formAutofillParent.formAutofillStorage[collectionName];
     let expectedResult = fakeResult[collectionName] || [];
+    let mock = sinon.mock(target);
+    mock
+      .expects("sendAsyncMessage")
+      .once()
+      .withExactArgs("FormAutofill:Records", expectedResult);
 
     if (collection) {
       sinon.stub(collection, "getAll");
       collection.getAll.returns(Promise.resolve(expectedResult));
     }
-    await FormAutofillParent._getRecords({ collectionName });
+    await formAutofillParent._getRecords({ collectionName }, target);
+    mock.verify();
     if (collection) {
       Assert.equal(collection.getAll.called, true);
       collection.getAll.restore();
@@ -94,9 +106,12 @@ add_task(async function test_getRecords() {
 });
 
 add_task(async function test_getRecords_addresses() {
-  await FormAutofillStatus.formAutofillStorage.initialize();
+  let formAutofillParent = new FormAutofillParent();
+
+  await formAutofillParent.init();
+  await formAutofillParent.formAutofillStorage.initialize();
   let mockAddresses = [TEST_ADDRESS_1, TEST_ADDRESS_2];
-  let collection = FormAutofillStatus.formAutofillStorage.addresses;
+  let collection = formAutofillParent.formAutofillStorage.addresses;
   sinon.stub(collection, "getAll");
   collection.getAll.returns(Promise.resolve(mockAddresses));
 
@@ -161,14 +176,22 @@ add_task(async function test_getRecords_addresses() {
 
   for (let testCase of testCases) {
     info("Starting testcase: " + testCase.description);
-    let result = await FormAutofillParent._getRecords(testCase.filter);
-    Assert.deepEqual(result, testCase.expectedResult);
+    let mock = sinon.mock(target);
+    mock
+      .expects("sendAsyncMessage")
+      .once()
+      .withExactArgs("FormAutofill:Records", testCase.expectedResult);
+    await formAutofillParent._getRecords(testCase.filter, target);
+    mock.verify();
   }
 });
 
 add_task(async function test_getRecords_creditCards() {
-  await FormAutofillStatus.formAutofillStorage.initialize();
-  let collection = FormAutofillStatus.formAutofillStorage.creditCards;
+  let formAutofillParent = new FormAutofillParent();
+
+  await formAutofillParent.init();
+  await formAutofillParent.formAutofillStorage.initialize();
+  let collection = formAutofillParent.formAutofillStorage.creditCards;
   let encryptedCCRecords = await Promise.all(
     [TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2].map(async record => {
       let clonedRecord = Object.assign({}, record);
@@ -252,7 +275,12 @@ add_task(async function test_getRecords_creditCards() {
       token.reset();
       token.initPassword("password");
     }
-    let result = await FormAutofillParent._getRecords(testCase.filter);
-    Assert.deepEqual(result, testCase.expectedResult);
+    let mock = sinon.mock(target);
+    mock
+      .expects("sendAsyncMessage")
+      .once()
+      .withExactArgs("FormAutofill:Records", testCase.expectedResult);
+    await formAutofillParent._getRecords(testCase.filter, target);
+    mock.verify();
   }
 });

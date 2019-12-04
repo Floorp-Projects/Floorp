@@ -25,7 +25,7 @@ function _contentHeroHandler(isload) {
     }
   } else if (isload) {
     // If the hero element is added from a settimeout handler, it might not run before 'load'
-    content.setTimeout(function() {
+    setTimeout(function() {
       _contentHeroHandler(false);
     }, 5000);
   } else {

@@ -19,7 +19,7 @@ async function waitForPaintAfterLoad() {
     return new Promise(function(resolve) {
       function listener() {
         if (content.document.readyState == "complete") {
-          content.requestAnimationFrame(() => content.setTimeout(resolve, 0));
+          content.requestAnimationFrame(() => setTimeout(resolve, 0));
         }
       }
       if (content.document.readyState != "complete") {

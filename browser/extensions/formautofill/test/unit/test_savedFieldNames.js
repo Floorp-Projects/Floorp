@@ -4,66 +4,72 @@
 
 "use strict";
 
-let FormAutofillStatus;
+let FormAutofillParent;
 
 add_task(async function setup() {
-  ({ FormAutofillStatus } = ChromeUtils.import(
-    "resource://formautofill/FormAutofillParent.jsm"
+  ({ FormAutofillParent } = ChromeUtils.import(
+    "resource://formautofill/FormAutofillParent.jsm",
+    null
   ));
 });
 
 add_task(async function test_profileSavedFieldNames_init() {
-  FormAutofillStatus.init();
-  sinon.stub(FormAutofillStatus, "updateSavedFieldNames");
+  let formAutofillParent = new FormAutofillParent();
+  sinon.stub(formAutofillParent, "_updateSavedFieldNames");
 
-  await FormAutofillStatus.formAutofillStorage.initialize();
-  Assert.equal(FormAutofillStatus.updateSavedFieldNames.called, true);
+  await formAutofillParent.init();
+  await formAutofillParent.formAutofillStorage.initialize();
+  Assert.equal(formAutofillParent._updateSavedFieldNames.called, true);
 
-  FormAutofillStatus.uninit();
+  formAutofillParent._uninit();
 });
 
 add_task(async function test_profileSavedFieldNames_observe() {
-  FormAutofillStatus.init();
+  let formAutofillParent = new FormAutofillParent();
+  sinon.stub(formAutofillParent, "_updateSavedFieldNames");
+
+  await formAutofillParent.init();
 
   // profile changed => Need to trigger updateValidFields
   ["add", "update", "remove", "reconcile", "removeAll"].forEach(event => {
-    FormAutofillStatus.observe(null, "formautofill-storage-changed", event);
-    Assert.equal(FormAutofillStatus.updateSavedFieldNames.called, true);
+    formAutofillParent.observe(null, "formautofill-storage-changed", event);
+    Assert.equal(formAutofillParent._updateSavedFieldNames.called, true);
   });
 
   // profile metadata updated => no need to trigger updateValidFields
-  FormAutofillStatus.updateSavedFieldNames.resetHistory();
-  FormAutofillStatus.observe(
+  formAutofillParent._updateSavedFieldNames.resetHistory();
+  formAutofillParent.observe(
     null,
     "formautofill-storage-changed",
     "notifyUsed"
   );
-  Assert.equal(FormAutofillStatus.updateSavedFieldNames.called, false);
-  FormAutofillStatus.updateSavedFieldNames.restore();
+  Assert.equal(formAutofillParent._updateSavedFieldNames.called, false);
 });
 
 add_task(async function test_profileSavedFieldNames_update() {
+  let formAutofillParent = new FormAutofillParent();
+  await formAutofillParent.init();
   registerCleanupFunction(function cleanup() {
     Services.prefs.clearUserPref("extensions.formautofill.addresses.enabled");
   });
 
   Object.defineProperty(
-    FormAutofillStatus.formAutofillStorage.addresses,
+    formAutofillParent.formAutofillStorage.addresses,
     "_data",
     { writable: true }
   );
 
-  FormAutofillStatus.formAutofillStorage.addresses._data = [];
+  formAutofillParent.formAutofillStorage.addresses._data = [];
 
   // The set is empty if there's no profile in the store.
-  FormAutofillStatus.updateSavedFieldNames();
+  formAutofillParent._updateSavedFieldNames();
   Assert.equal(
     Services.ppmm.sharedData.get("FormAutofill:savedFieldNames").size,
     0
   );
 
   // 2 profiles with 4 valid fields.
-  FormAutofillStatus.formAutofillStorage.addresses._data = [
+  formAutofillParent.formAutofillStorage.addresses._data = [
     {
       guid: "test-guid-1",
       organization: "Sesame Street",
@@ -88,7 +94,7 @@ add_task(async function test_profileSavedFieldNames_update() {
     },
   ];
 
-  FormAutofillStatus.updateSavedFieldNames();
+  formAutofillParent._updateSavedFieldNames();
 
   let autofillSavedFieldNames = Services.ppmm.sharedData.get(
     "FormAutofill:savedFieldNames"

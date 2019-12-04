@@ -91,7 +91,7 @@ add_task(async function() {
               let e = content.document.activeElement;
               if (e.tagName != test.tagName) {
                 // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-                content.setTimeout(f, 10);
+                setTimeout(f, 10);
               } else {
                 is(
                   Services.focus.focusedElement,
@@ -115,7 +115,7 @@ add_task(async function() {
               let e = content.document.activeElement;
               if (e.tagName != test.tagName) {
                 // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-                content.setTimeout(f, 10);
+                setTimeout(f, 10);
               } else {
                 isnot(
                   Services.focus.focusedElement,
@@ -166,7 +166,7 @@ add_task(async function() {
               let e = content.document.activeElement;
               if (e.tagName != test.tagName) {
                 // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-                content.setTimeout(f, 10);
+                setTimeout(f, 10);
               } else {
                 isnot(
                   Services.focus.focusedElement,
@@ -190,7 +190,7 @@ add_task(async function() {
               let e = content.document.activeElement;
               if (e.tagName != test.tagName) {
                 // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-                content.setTimeout(f, 10);
+                setTimeout(f, 10);
               } else {
                 isnot(
                   Services.focus.focusedElement,
