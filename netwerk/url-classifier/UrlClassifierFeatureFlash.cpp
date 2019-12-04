@@ -6,6 +6,7 @@
 
 #include "UrlClassifierFeatureFlash.h"
 #include "mozilla/net/HttpBaseChannel.h"
+#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_plugins.h"
 #include "nsScriptSecurityManager.h"
 #include "nsQueryObject.h"
@@ -96,8 +97,13 @@ void UrlClassifierFeatureFlash::MaybeShutdown() {
 void UrlClassifierFeatureFlash::MaybeCreate(
     nsIChannel* aChannel,
     nsTArray<nsCOMPtr<nsIUrlClassifierFeature>>& aFeatures) {
+  const auto fnIsFlashBlockingEnabled = [] {
+    return StaticPrefs::plugins_flashBlock_enabled() &&
+           !StaticPrefs::fission_autostart();
+  };
+
   // All disabled.
-  if (!StaticPrefs::plugins_flashBlock_enabled()) {
+  if (!fnIsFlashBlockingEnabled()) {
     return;
   }
 
