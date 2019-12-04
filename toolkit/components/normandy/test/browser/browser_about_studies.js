@@ -112,7 +112,8 @@ decorate_task(
   PreferenceExperiments.withMockExperiments([
     preferenceStudyFactory({
       slug: "fake-study-d",
-      userFacingName: "D Fake Preference Study",
+      userFacingName: null,
+      userFacingDescription: null,
       lastSeen: new Date(2018, 0, 3),
       expired: false,
     }),
