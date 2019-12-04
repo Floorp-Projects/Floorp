@@ -107,7 +107,6 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::texture_cache::TextureCacheHandle;
 use crate::util::{TransformedRectKind, MatrixHelpers, MaxRect, scale_factors, VecHelper, RectHelpers};
 use crate::filterdata::{FilterDataHandle};
-use crate::scene_building::{SliceFlags};
 
 /// Specify whether a surface allows subpixel AA text rendering.
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -1430,8 +1429,6 @@ pub struct TileCacheInstance {
     /// between display lists - this seems very unlikely to occur on most pages, but
     /// can be revisited if we ever notice that.
     pub slice: usize,
-    /// Propagated information about the slice
-    pub slice_flags: SliceFlags,
     /// The currently selected tile size to use for this cache
     pub current_tile_size: DeviceIntSize,
     /// The positioning node for this tile cache.
@@ -1501,7 +1498,6 @@ pub struct TileCacheInstance {
 impl TileCacheInstance {
     pub fn new(
         slice: usize,
-        slice_flags: SliceFlags,
         spatial_node_index: SpatialNodeIndex,
         background_color: Option<ColorF>,
         shared_clips: Vec<ClipDataHandle>,
@@ -1509,7 +1505,6 @@ impl TileCacheInstance {
     ) -> Self {
         TileCacheInstance {
             slice,
-            slice_flags,
             spatial_node_index,
             tiles: FastHashMap::default(),
             map_local_to_surface: SpaceMapper::new(
@@ -1667,18 +1662,21 @@ impl TileCacheInstance {
         // up constantly invalidating and reallocating tiles if the picture rect size is
         // changing near a threshold value.
         if self.frames_until_size_eval == 0 {
+            const TILE_SIZE_TINY: f32 = 32.0;
 
             // Work out what size tile is appropriate for this picture cache.
-            let desired_tile_size =
-                if self.slice_flags.contains(SliceFlags::IS_SCROLLBAR) {
-                    if pic_rect.size.width <= pic_rect.size.height {
-                        TILE_SIZE_SCROLLBAR_VERTICAL
-                    } else {
-                        TILE_SIZE_SCROLLBAR_HORIZONTAL
-                    }
-                } else {
-                    TILE_SIZE_DEFAULT
-                };
+            let desired_tile_size;
+
+            // There's no need to check the other dimension. If we encounter a picture
+            // that is small on one dimension, it's a reasonable choice to use a scrollbar
+            // sized tile configuration regardless of the other dimension.
+            if pic_rect.size.width <= TILE_SIZE_TINY {
+                desired_tile_size = TILE_SIZE_SCROLLBAR_VERTICAL;
+            } else if pic_rect.size.height <= TILE_SIZE_TINY {
+                desired_tile_size = TILE_SIZE_SCROLLBAR_HORIZONTAL;
+            } else {
+                desired_tile_size = TILE_SIZE_DEFAULT;
+            }
 
             // If the desired tile size has changed, then invalidate and drop any
             // existing tiles.
