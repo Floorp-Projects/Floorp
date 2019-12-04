@@ -17,13 +17,13 @@ with Files("browser/*unload*"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
 with Files("browser/*1238427*"):
-    BUG_COMPONENT = ("Core", "Geolocation")
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 with Files("browser/*Geolocation*"):
-    BUG_COMPONENT = ("Core", "Geolocation")
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 with Files("browser/*geo_*"):
-    BUG_COMPONENT = ("Core", "Geolocation")
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 with Files("browser/browser_cancel_keydown_keypress_event.js"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
@@ -80,7 +80,7 @@ with Files("mochitest/general/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("mochitest/geolocation/**"):
-    BUG_COMPONENT = ("Core", "Geolocation")
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 with Files("mochitest/localstorage/**"):
     BUG_COMPONENT = ("Core", "Storage: localStorage & sessionStorage")
@@ -140,7 +140,7 @@ with Files("unit/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("unit/*geolocation*"):
-    BUG_COMPONENT = ("Core", "Geolocation")
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 with Files("unit/test_bug465752.js"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")

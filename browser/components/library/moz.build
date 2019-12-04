@@ -8,4 +8,4 @@ JAR_MANIFESTS += ['jar.mn']
 FINAL_LIBRARY = 'browsercomps'
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Library')
+    BUG_COMPONENT = ('Firefox', 'New Tab Page')

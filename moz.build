@@ -38,7 +38,7 @@ with Files('GNUmakefile'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('*gradle*'):
-    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
+    BUG_COMPONENT = ('Firefox for Android', 'General')
     SCHEDULES.exclusive = ['android']
 
 with Files('*.json'):
