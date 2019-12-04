@@ -10,6 +10,7 @@
 #include "MediaTrackConstraints.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/RefPtr.h"
+#include "nsIPrefService.h"
 #include "Tracing.h"
 #include "VideoFrameUtils.h"
 #include "VideoUtils.h"

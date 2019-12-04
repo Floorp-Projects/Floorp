@@ -15,6 +15,8 @@
 #include "nsIURL.h"
 #include "nsIURIMutator.h"
 #include "nsISizeOf.h"
+#include "nsIDocShell.h"
+#include "nsIPrefetchService.h"
 #include "nsStyleLinkElement.h"
 
 #include "nsEscape.h"

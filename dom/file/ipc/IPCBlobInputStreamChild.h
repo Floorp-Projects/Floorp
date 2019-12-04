@@ -10,6 +10,7 @@
 #include "mozilla/dom/PIPCBlobInputStreamChild.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"
+#include "nsIThread.h"
 #include "nsTArray.h"
 
 namespace mozilla {

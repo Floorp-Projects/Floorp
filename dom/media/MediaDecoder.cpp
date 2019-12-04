@@ -31,6 +31,7 @@
 #include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsIMemoryReporter.h"
+#include "nsIObserver.h"
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
 #include <algorithm>

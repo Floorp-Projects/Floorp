@@ -29,6 +29,7 @@
 #include "nsIUploadChannel.h"
 #include "nsIURIMutator.h"
 #include "nsIScriptError.h"
+#include "nsIWebNavigation.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsIContentPolicy.h"

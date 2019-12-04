@@ -16,8 +16,10 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
+#include "nsIClassInfo.h"
 #include "nsDocShell.h"
 #include "nsCOMArray.h"
+#include "nsIRunnable.h"
 #include "nsWeakReference.h"
 
 namespace mozilla {

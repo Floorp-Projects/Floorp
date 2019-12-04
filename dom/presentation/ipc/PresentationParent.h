@@ -13,6 +13,7 @@
 #include "mozilla/dom/PPresentationRequestParent.h"
 #include "nsIPresentationListener.h"
 #include "nsIPresentationService.h"
+#include "nsIPresentationSessionTransportBuilder.h"
 
 namespace mozilla {
 namespace dom {

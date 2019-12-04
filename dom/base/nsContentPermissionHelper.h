@@ -12,6 +12,7 @@
 #include "nsIMutableArray.h"
 #include "mozilla/dom/PContentPermissionRequestChild.h"
 #include "mozilla/dom/ipc/IdType.h"
+#include "nsIDOMEventListener.h"
 #include "PermissionDelegateHandler.h"
 
 // Microsoft's API Name hackery sucks

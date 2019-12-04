@@ -37,6 +37,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsRepeatService.h"
 #include "nsContentCID.h"
+#include "nsIComponentManager.h"
 #include "mozilla/dom/ProgressEvent.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
@@ -48,6 +49,7 @@
 #include "nsITextControlFrame.h"
 #include "nsIFrame.h"
 #include "nsRangeFrame.h"
+#include "nsIServiceManager.h"
 #include "nsError.h"
 #include "nsIEditor.h"
 #include "nsAttrValueOrString.h"
@@ -100,6 +102,8 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/TextUtils.h"
+
+#include "nsIIDNService.h"
 
 #include <limits>
 

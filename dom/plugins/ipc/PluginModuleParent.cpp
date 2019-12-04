@@ -30,6 +30,7 @@
 #include "nsCRT.h"
 #include "nsIFile.h"
 #include "nsIObserverService.h"
+#include "nsIXULRuntime.h"
 #include "nsNPAPIPlugin.h"
 #include "nsPrintfCString.h"
 #include "prsystem.h"

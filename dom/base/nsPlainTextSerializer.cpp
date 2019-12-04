@@ -15,6 +15,7 @@
 #include <limits>
 
 #include "nsPrintfCString.h"
+#include "nsIServiceManager.h"
 #include "nsDebug.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"

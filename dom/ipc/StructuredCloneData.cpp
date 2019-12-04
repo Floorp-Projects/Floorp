@@ -6,6 +6,9 @@
 
 #include "StructuredCloneData.h"
 
+#include "nsIMutable.h"
+#include "nsIXPConnect.h"
+
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"

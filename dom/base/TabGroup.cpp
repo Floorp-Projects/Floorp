@@ -16,6 +16,8 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/ThrottledEventQueue.h"
 #include "nsIDocShell.h"
+#include "nsIEffectiveTLDService.h"
+#include "nsIURI.h"
 
 namespace mozilla {
 namespace dom {

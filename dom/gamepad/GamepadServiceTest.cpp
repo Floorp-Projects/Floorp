@@ -19,6 +19,9 @@
 
 #include "mozilla/Unused.h"
 
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
+
 namespace mozilla {
 namespace dom {
 

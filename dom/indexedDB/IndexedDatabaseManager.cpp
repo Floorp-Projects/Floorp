@@ -7,6 +7,7 @@
 #include "IndexedDatabaseManager.h"
 
 #include "chrome/common/ipc_channel.h"  // for IPC::Channel::kMaximumMessageSize
+#include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsIScriptGlobalObject.h"
 

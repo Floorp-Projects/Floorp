@@ -8,6 +8,7 @@
 
 #include "plstr.h"
 #include "nsXULPrototypeDocument.h"
+#include "nsIServiceManager.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 
@@ -16,6 +17,7 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIObserverService.h"
+#include "nsIStringStream.h"
 #include "nsIStorageStream.h"
 
 #include "nsAppDirectoryServiceDefs.h"

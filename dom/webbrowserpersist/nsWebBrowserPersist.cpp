@@ -19,9 +19,11 @@
 #include "nsILoadContext.h"
 #include "nsIPrivateBrowsingChannel.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIStorageStream.h"
 #include "nsISeekableStream.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIEncodedChannel.h"
 #include "nsIUploadChannel.h"
 #include "nsICacheInfoChannel.h"
@@ -36,13 +38,20 @@
 
 #include "nsIURL.h"
 #include "nsIFileURL.h"
+#include "nsIURIMutator.h"
 #include "nsIWebProgressListener.h"
 #include "nsIAuthPrompt.h"
 #include "nsIPrompt.h"
+#include "nsISHEntry.h"
+#include "nsIWebPageDescriptor.h"
 #include "nsIFormControl.h"
 #include "nsContentUtils.h"
 
+#include "nsIImageLoadingContent.h"
+
 #include "ftpCore.h"
+#include "nsITransport.h"
+#include "nsISocketTransport.h"
 #include "nsIStringBundle.h"
 #include "nsIProtocolHandler.h"
 

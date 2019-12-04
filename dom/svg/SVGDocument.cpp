@@ -7,6 +7,10 @@
 #include "mozilla/dom/SVGDocument.h"
 
 #include "mozilla/css/Loader.h"
+#include "nsICategoryManager.h"
+#include "nsISimpleEnumerator.h"
+#include "nsIStyleSheetService.h"
+#include "nsISupportsPrimitives.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"

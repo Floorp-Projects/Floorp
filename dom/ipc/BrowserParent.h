@@ -28,6 +28,7 @@
 #include "nsIBrowserDOMWindow.h"
 #include "nsIDOMEventListener.h"
 #include "nsIKeyEventInPluginCallback.h"
+#include "nsIRemoteTab.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsRefreshDriver.h"
 #include "nsWeakReference.h"

@@ -15,6 +15,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "nsICacheInfoChannel.h"
 #include "mozilla/dom/Document.h"
 #include "nsIIncrementalStreamLoader.h"
 #include "nsURIHashKey.h"

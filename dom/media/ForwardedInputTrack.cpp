@@ -20,6 +20,8 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
+#include "nsIAppShell.h"
+#include "nsIObserver.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWidgetsCID.h"

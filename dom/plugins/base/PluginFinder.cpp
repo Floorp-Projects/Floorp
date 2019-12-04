@@ -8,7 +8,6 @@
 
 #include "PluginFinder.h"
 
-#include "nsIBlocklistService.h"
 #include "nsIFile.h"
 #include "nsIXULRuntime.h"
 #if defined(XP_MACOSX)
@@ -26,7 +25,6 @@
 #include "prio.h"
 
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsPluginDirServiceProvider.h"
 #include "nsPluginHost.h"

@@ -8,6 +8,7 @@
 #define mozilla_dom_MIDIAccessManager_h
 
 #include "nsPIDOMWindow.h"
+#include "nsIObserver.h"
 #include "mozilla/dom/MIDITypes.h"
 #include "mozilla/Observer.h"
 

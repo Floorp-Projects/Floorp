@@ -10,6 +10,7 @@
 #include "LocalStorageCache.h"
 #include "LocalStorageManager.h"
 
+#include "nsIEffectiveTLDService.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsThreadUtils.h"
@@ -17,6 +18,7 @@
 #include "mozStorageCID.h"
 #include "mozStorageHelper.h"
 #include "mozIStorageService.h"
+#include "mozIStorageBindingParamsArray.h"
 #include "mozIStorageBindingParams.h"
 #include "mozIStorageValueArray.h"
 #include "mozIStorageFunction.h"

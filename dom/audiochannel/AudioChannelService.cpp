@@ -13,6 +13,7 @@
 #include "mozilla/Unused.h"
 
 #include "nsContentUtils.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsThreadUtils.h"
 #include "nsHashPropertyBag.h"

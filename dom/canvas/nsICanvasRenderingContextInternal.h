@@ -9,6 +9,7 @@
 #include "mozilla/gfx/2D.h"
 #include "nsISupports.h"
 #include "nsIInputStream.h"
+#include "nsIDocShell.h"
 #include "nsRefreshDriver.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/OffscreenCanvas.h"
@@ -25,7 +26,6 @@
   }
 
 class nsDisplayListBuilder;
-class nsIDocShell;
 
 namespace mozilla {
 class PresShell;

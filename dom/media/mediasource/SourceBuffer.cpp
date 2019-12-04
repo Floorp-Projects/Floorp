@@ -16,6 +16,7 @@
 #include "mozilla/dom/MediaSourceBinding.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "nsError.h"
+#include "nsIEventTarget.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"

@@ -9,6 +9,7 @@
 #include "nsXULElement.h"
 
 #include "nsAutoPtr.h"
+#include "nsIServiceManager.h"
 #include "nsMathUtils.h"
 #include "SVGImageContext.h"
 
@@ -108,6 +109,7 @@
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/FloatingPoint.h"
 #include "nsGlobalWindow.h"
+#include "nsIScreenManager.h"
 #include "nsFilterInstance.h"
 #include "nsDeviceContext.h"
 #include "nsFontMetrics.h"

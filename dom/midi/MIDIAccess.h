@@ -12,6 +12,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Observer.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIObserver.h"
 #include "nsWrapperCache.h"
 
 struct JSContext;

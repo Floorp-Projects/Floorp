@@ -13,6 +13,8 @@
 #include "nsFrameMessageManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptContext.h"
+#include "nsIClassInfo.h"
+#include "nsIRunnable.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWeakReference.h"
 #include "nsWrapperCache.h"

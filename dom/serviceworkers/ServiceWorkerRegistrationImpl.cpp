@@ -29,6 +29,7 @@
 
 #include "mozilla/dom/Document.h"
 #include "nsIServiceWorkerManager.h"
+#include "nsISupportsPrimitives.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentUtils.h"
 

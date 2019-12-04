@@ -13,6 +13,7 @@
 #include "GMPServiceParent.h"
 #include "MediaResult.h"
 #include "nsIFile.h"
+#include "nsISimpleEnumerator.h"
 #include "nsNSSComponent.h"  //For EnsureNSSInitializedChromeOrContent
 #include "nsThreadUtils.h"
 

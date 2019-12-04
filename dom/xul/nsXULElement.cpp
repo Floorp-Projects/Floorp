@@ -10,7 +10,7 @@
 #include "nsAtom.h"
 #include "nsIBaseWindow.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMXULControlElement.h"
+#include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/Document.h"
@@ -29,7 +29,10 @@
 #include "nsIObjectOutputStream.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptContext.h"
-#include "nsIXPConnect.h"
+#include "nsIScriptError.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsIServiceManager.h"
+#include "nsIURL.h"
 #include "nsViewManager.h"
 #include "nsIWidget.h"
 #include "nsLayoutCID.h"
@@ -56,6 +59,7 @@
 #include "nsIController.h"
 #include "nsQueryObject.h"
 #include <algorithm>
+#include "nsIDOMChromeWindow.h"
 
 #include "nsReadableUtils.h"
 #include "nsIFrame.h"

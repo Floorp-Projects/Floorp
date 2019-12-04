@@ -27,6 +27,7 @@
 #include "nsIConsoleService.h"
 #include "nsINetworkLinkService.h"
 #include "nsIRandomGenerator.h"
+#include "nsIServiceManager.h"
 #include "nsMathUtils.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"

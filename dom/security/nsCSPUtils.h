@@ -8,6 +8,7 @@
 #define nsCSPUtils_h___
 
 #include "nsCOMPtr.h"
+#include "nsIContentPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIURI.h"
 #include "nsLiteralString.h"

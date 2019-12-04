@@ -16,6 +16,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "nsIFile.h"
+#include "nsISimpleEnumerator.h"
 #include "nsString.h"
 
 namespace mozilla {

@@ -30,6 +30,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/Document.h"
 #include "nsIGlobalObject.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsMixedContentBlocker.h"
 #include "nsURLParsers.h"
 
