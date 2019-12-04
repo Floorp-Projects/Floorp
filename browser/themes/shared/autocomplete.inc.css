@@ -101,11 +101,15 @@
 }
 
 
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"] > .two-line-wrapper > .labels-wrapper > .line2-label {
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"] > .two-line-wrapper > .labels-wrapper > .line2-label > span {
+  /* The font-family is only adjusted on the inner span so that the
+     line-height of .line2-label matches that of .line1-label */
   font-family: monospace;
 }
 
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"] > .two-line-wrapper > .labels-wrapper > .generated-password-autosave {
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"] > .two-line-wrapper > .labels-wrapper > .generated-password-autosave > span {
+  /* The font-* properties are only adjusted on the inner span so that the
+     line-height of .generated-password-autosave matches that of .line1-label */
   font-style: italic;
   font-size: 0.85em;
   white-space: normal;
