@@ -4402,6 +4402,13 @@ class BaseCompiler final : public BaseCompilerInterface {
   }
 
   void assertStackInvariants() const {
+    if (deadCode_) {
+      // Nonlocal control flow can pass values in stack locations in a way that
+      // isn't accounted for by the value stack.  In dead code, which occurs
+      // after unconditional non-local control flow, there is no invariant to
+      // assert.
+      return;
+    }
     size_t size = 0;
     for (const Stk& v : stk_) {
       switch (v.kind()) {
@@ -4425,13 +4432,7 @@ class BaseCompiler final : public BaseCompilerInterface {
           break;
       }
     }
-    if (deadCode_) {
-      // Some stack allocation may be used to pass values along control flow
-      // edges without being accounted for on the value stack.
-      MOZ_ASSERT(size <= fr.dynamicHeight());
-    } else {
-      MOZ_ASSERT(size == fr.dynamicHeight());
-    }
+    MOZ_ASSERT(size == fr.dynamicHeight());
   }
 
 #endif
