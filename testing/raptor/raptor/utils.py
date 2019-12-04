@@ -49,6 +49,15 @@ def transform_platform(str_to_transform, config_platform, config_processor=None)
     return str_to_transform
 
 
+def transform_subtest(str_to_transform, subtest_name):
+    """Transform subtest name i.e. 'mitm4-linux-firefox-{subtest}.manifest'
+    transforms to 'mitm4-linux-firefox-amazon.manifest'."""
+    if '{subtest}' not in str_to_transform:
+        return str_to_transform
+
+    return str_to_transform.replace('{subtest}', subtest_name)
+
+
 def view_gecko_profile(ffox_bin):
     # automatically load the latest talos gecko-profile archive in profiler.firefox.com
     LOG_GECKO = RaptorLogger(component='raptor-view-gecko-profile')
