@@ -119,16 +119,19 @@ function messageGetMatchingElements(id, cssSelectors) {
   };
 }
 
-function messageGetTableData(id, grip, dataType) {
-  return async ({ dispatch, client }) => {
+function messageGetTableData(id, front, dataType) {
+  return async ({ dispatch }) => {
     const needEntries = ["Map", "WeakMap", "Set", "WeakSet"].includes(dataType);
-    const enumIndexedPropertiesOnly = getArrayTypeNames().includes(dataType);
+    const ignoreNonIndexedProperties = getArrayTypeNames().includes(dataType);
 
-    const results = await (needEntries
-      ? client.fetchObjectEntries(grip)
-      : client.fetchObjectProperties(grip, enumIndexedPropertiesOnly));
+    const iteratorFront = await (needEntries
+      ? front.enumEntries()
+      : front.enumProperties({
+          ignoreNonIndexedProperties,
+        }));
 
-    dispatch(messageUpdatePayload(id, results));
+    const { ownProperties } = await iteratorFront.all();
+    dispatch(messageUpdatePayload(id, ownProperties));
   };
 }
 

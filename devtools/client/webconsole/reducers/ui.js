@@ -33,7 +33,7 @@ const UiState = overrides =>
         showContentMessages: false,
         sidebarVisible: false,
         timestampsVisible: true,
-        gripInSidebar: null,
+        frontInSidebar: null,
         closeButtonVisible: false,
         reverseSearchInputVisible: false,
         reverseSearchInitialValue: "",
@@ -60,17 +60,17 @@ function ui(state = UiState(), action) {
       return {
         ...state,
         sidebarVisible: false,
-        gripInSidebar: null,
+        frontInSidebar: null,
       };
     case INITIALIZE:
       return { ...state, initialized: true };
     case MESSAGES_CLEAR:
-      return { ...state, sidebarVisible: false, gripInSidebar: null };
+      return { ...state, sidebarVisible: false, frontInSidebar: null };
     case SHOW_OBJECT_IN_SIDEBAR:
-      if (action.grip === state.gripInSidebar) {
+      if (action.front === state.frontInSidebar) {
         return state;
       }
-      return { ...state, sidebarVisible: true, gripInSidebar: action.grip };
+      return { ...state, sidebarVisible: true, frontInSidebar: action.front };
     case SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE:
       return { ...state, closeButtonVisible: action.shouldDisplayButton };
     case REVERSE_SEARCH_INPUT_TOGGLE:
