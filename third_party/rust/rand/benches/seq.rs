@@ -10,13 +10,16 @@
 #![allow(non_snake_case)]
 
 extern crate test;
-extern crate rand;
 
 use test::Bencher;
 
 use rand::prelude::*;
 use rand::seq::*;
 use std::mem::size_of;
+
+// We force use of 32-bit RNG since seq code is optimised for use with 32-bit
+// generators on all platforms.
+use rand_pcg::Pcg32 as SmallRng;
 
 const RAND_BENCH_N: u64 = 1000;
 
@@ -44,7 +47,7 @@ fn seq_slice_choose_1_of_1000(b: &mut Bencher) {
         }
         s
     });
-    b.bytes = size_of::<usize>() as u64 * ::RAND_BENCH_N;
+    b.bytes = size_of::<usize>() as u64 * crate::RAND_BENCH_N;
 }
 
 macro_rules! seq_slice_choose_multiple {
@@ -86,7 +89,7 @@ fn seq_iter_choose_from_1000(b: &mut Bencher) {
         }
         s
     });
-    b.bytes = size_of::<usize>() as u64 * ::RAND_BENCH_N;
+    b.bytes = size_of::<usize>() as u64 * crate::RAND_BENCH_N;
 }
 
 #[derive(Clone)]

@@ -66,9 +66,7 @@
 //! struct MyF32(f32);
 //!
 //! #[derive(Clone, Copy, Debug)]
-//! struct UniformMyF32 {
-//!     inner: UniformFloat<f32>,
-//! }
+//! struct UniformMyF32(UniformFloat<f32>);
 //!
 //! impl UniformSampler for UniformMyF32 {
 //!     type X = MyF32;
@@ -76,9 +74,7 @@
 //!         where B1: SampleBorrow<Self::X> + Sized,
 //!               B2: SampleBorrow<Self::X> + Sized
 //!     {
-//!         UniformMyF32 {
-//!             inner: UniformFloat::<f32>::new(low.borrow().0, high.borrow().0),
-//!         }
+//!         UniformMyF32(UniformFloat::<f32>::new(low.borrow().0, high.borrow().0))
 //!     }
 //!     fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self
 //!         where B1: SampleBorrow<Self::X> + Sized,
@@ -87,7 +83,7 @@
 //!         UniformSampler::new(low, high)
 //!     }
 //!     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
-//!         MyF32(self.inner.sample(rng))
+//!         MyF32(self.0.sample(rng))
 //!     }
 //! }
 //!
@@ -109,17 +105,17 @@
 
 #[cfg(feature = "std")]
 use std::time::Duration;
-#[cfg(all(not(feature = "std"), rustc_1_25))]
+#[cfg(not(feature = "std"))]
 use core::time::Duration;
 
-use Rng;
-use distributions::Distribution;
-use distributions::float::IntoFloat;
-use distributions::utils::{WideningMultiply, FloatSIMDUtils, FloatAsSIMD, BoolAsSIMD};
+use crate::Rng;
+use crate::distributions::Distribution;
+use crate::distributions::float::IntoFloat;
+use crate::distributions::utils::{WideningMultiply, FloatSIMDUtils, FloatAsSIMD, BoolAsSIMD};
 
 #[cfg(not(feature = "std"))]
 #[allow(unused_imports)] // rustc doesn't detect that this is actually used
-use distributions::utils::Float;
+use crate::distributions::utils::Float;
 
 
 #[cfg(feature="simd_support")]
@@ -166,9 +162,7 @@ use packed_simd::*;
 /// [`new`]: Uniform::new
 /// [`new_inclusive`]: Uniform::new_inclusive
 #[derive(Clone, Copy, Debug)]
-pub struct Uniform<X: SampleUniform> {
-    inner: X::Sampler,
-}
+pub struct Uniform<X: SampleUniform>(X::Sampler);
 
 impl<X: SampleUniform> Uniform<X> {
     /// Create a new `Uniform` instance which samples uniformly from the half
@@ -177,7 +171,7 @@ impl<X: SampleUniform> Uniform<X> {
         where B1: SampleBorrow<X> + Sized,
               B2: SampleBorrow<X> + Sized
     {
-        Uniform { inner: X::Sampler::new(low, high) }
+        Uniform(X::Sampler::new(low, high))
     }
 
     /// Create a new `Uniform` instance which samples uniformly from the closed
@@ -186,13 +180,13 @@ impl<X: SampleUniform> Uniform<X> {
         where B1: SampleBorrow<X> + Sized,
               B2: SampleBorrow<X> + Sized
     {
-        Uniform { inner: X::Sampler::new_inclusive(low, high) }
+        Uniform(X::Sampler::new_inclusive(low, high))
     }
 }
 
 impl<X: SampleUniform> Distribution<X> for Uniform<X> {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> X {
-        self.inner.sample(rng)
+        self.0.sample(rng)
     }
 }
 
@@ -246,14 +240,22 @@ pub trait UniformSampler: Sized {
     /// Sample a single value uniformly from a range with inclusive lower bound
     /// and exclusive upper bound `[low, high)`.
     ///
-    /// Usually users should not call this directly but instead use
-    /// `Uniform::sample_single`, which asserts that `low < high` before calling
-    /// this.
+    /// By default this is implemented using
+    /// `UniformSampler::new(low, high).sample(rng)`. However, for some types
+    /// more optimal implementations for single usage may be provided via this
+    /// method (which is the case for integers and floats).
+    /// Results may not be identical.
     ///
-    /// Via this method, implementations can provide a method optimized for
-    /// sampling only a single value from the specified range. The default
-    /// implementation simply calls `UniformSampler::new` then `sample` on the
-    /// result.
+    /// Note that to use this method in a generic context, the type needs to be
+    /// retrieved via `SampleUniform::Sampler` as follows:
+    /// ```
+    /// use rand::{thread_rng, distributions::uniform::{SampleUniform, UniformSampler}};
+    /// # #[allow(unused)]
+    /// fn sample_from_range<T: SampleUniform>(lb: T, ub: T) -> T {
+    ///     let mut rng = thread_rng();
+    ///     <T as SampleUniform>::Sampler::sample_single(lb, ub, &mut rng)
+    /// }
+    /// ```
     fn sample_single<R: Rng + ?Sized, B1, B2>(low: B1, high: B2, rng: &mut R)
         -> Self::X
         where B1: SampleBorrow<Self::X> + Sized,
@@ -270,7 +272,6 @@ impl<X: SampleUniform> From<::core::ops::Range<X>> for Uniform<X> {
     }
 }
 
-#[cfg(rustc_1_27)]
 impl<X: SampleUniform> From<::core::ops::RangeInclusive<X>> for Uniform<X> {
     fn from(r: ::core::ops::RangeInclusive<X>) -> Uniform<X> {
         Uniform::new_inclusive(r.start(), r.end())
@@ -309,31 +310,29 @@ impl<'a, Borrowed> SampleBorrow<Borrowed> for &'a Borrowed where Borrowed: Sampl
 ///
 /// # Implementation notes
 ///
+/// For simplicity, we use the same generic struct `UniformInt<X>` for all
+/// integer types `X`. This gives us only one field type, `X`; to store unsigned
+/// values of this size, we take use the fact that these conversions are no-ops.
+///
 /// For a closed range, the number of possible numbers we should generate is
-/// `range = (high - low + 1)`. It is not possible to end up with a uniform
-/// distribution if we map *all* the random integers that can be generated to
-/// this range. We have to map integers from a `zone` that is a multiple of the
-/// range. The rest of the integers, that cause a bias, are rejected.
+/// `range = (high - low + 1)`. To avoid bias, we must ensure that the size of
+/// our sample space, `zone`, is a multiple of `range`; other values must be
+/// rejected (by replacing with a new random sample).
 ///
-/// The problem with `range` is that to cover the full range of the type, it has
-/// to store `unsigned_max + 1`, which can't be represented. But if the range
-/// covers the full range of the type, no modulus is needed. A range of size 0
-/// can't exist, so we use that to represent this special case. Wrapping
-/// arithmetic even makes representing `unsigned_max + 1` as 0 simple.
+/// As a special case, we use `range = 0` to represent the full range of the
+/// result type (i.e. for `new_inclusive($ty::MIN, $ty::MAX)`).
 ///
-/// We don't calculate `zone` directly, but first calculate the number of
-/// integers to reject. To handle `unsigned_max + 1` not fitting in the type,
-/// we use:
-/// `ints_to_reject = (unsigned_max + 1) % range;`
-/// `ints_to_reject = (unsigned_max - range + 1) % range;`
+/// The optimum `zone` is the largest product of `range` which fits in our
+/// (unsigned) target type. We calculate this by calculating how many numbers we
+/// must reject: `reject = (MAX + 1) % range = (MAX - range + 1) % range`. Any (large)
+/// product of `range` will suffice, thus in `sample_single` we multiply by a
+/// power of 2 via bit-shifting (faster but may cause more rejections).
 ///
-/// The smallest integer PRNGs generate is `u32`. That is why for small integer
-/// sizes (`i8`/`u8` and `i16`/`u16`) there is an optimization: don't pick the
-/// largest zone that can fit in the small type, but pick the largest zone that
-/// can fit in an `u32`. `ints_to_reject` is always less than half the size of
-/// the small integer. This means the first bit of `zone` is always 1, and so
-/// are all the other preceding bits of a larger integer. The easiest way to
-/// grow the `zone` for the larger type is to simply sign extend it.
+/// The smallest integer PRNGs generate is `u32`. For 8- and 16-bit outputs we
+/// use `u32` for our `zone` and samples (because it's not slower and because
+/// it reduces the chance of having to reject a sample). In this case we cannot
+/// store `zone` in the target type since it is too large, however we know
+/// `ints_to_reject < range <= $unsigned::MAX`.
 ///
 /// An alternative to using a modulus is widening multiply: After a widening
 /// multiply by `range`, the result is in the high word. Then comparing the low
@@ -342,12 +341,11 @@ impl<'a, Borrowed> SampleBorrow<Borrowed> for &'a Borrowed where Borrowed: Sampl
 pub struct UniformInt<X> {
     low: X,
     range: X,
-    zone: X,
+    z: X,   // either ints_to_reject or zone depending on implementation
 }
 
 macro_rules! uniform_int_impl {
-    ($ty:ty, $signed:ty, $unsigned:ident,
-     $i_large:ident, $u_large:ident) => {
+    ($ty:ty, $unsigned:ident, $u_large:ident) => {
         impl SampleUniform for $ty {
             type Sampler = UniformInt<$ty>;
         }
@@ -382,34 +380,30 @@ macro_rules! uniform_int_impl {
                 let high = *high_b.borrow();
                 assert!(low <= high,
                         "Uniform::new_inclusive called with `low > high`");
-                let unsigned_max = ::core::$unsigned::MAX;
+                let unsigned_max = ::core::$u_large::MAX;
 
                 let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned;
                 let ints_to_reject =
                     if range > 0 {
+                        let range = $u_large::from(range);
                         (unsigned_max - range + 1) % range
                     } else {
                         0
                     };
-                let zone = unsigned_max - ints_to_reject;
 
                 UniformInt {
                     low: low,
                     // These are really $unsigned values, but store as $ty:
                     range: range as $ty,
-                    zone: zone as $ty
+                    z: ints_to_reject as $unsigned as $ty
                 }
             }
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 let range = self.range as $unsigned as $u_large;
                 if range > 0 {
-                    // Grow `zone` to fit a type of at least 32 bits, by
-                    // sign-extending it (the first bit is always 1, so are all
-                    // the preceding bits of the larger type).
-                    // For types that already have the right size, all the
-                    // casting is a no-op.
-                    let zone = self.zone as $signed as $i_large as $u_large;
+                    let unsigned_max = ::core::$u_large::MAX;
+                    let zone = unsigned_max - (self.z as $unsigned as $u_large);
                     loop {
                         let v: $u_large = rng.gen();
                         let (hi, lo) = v.wmul(range);
@@ -431,7 +425,7 @@ macro_rules! uniform_int_impl {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
                 assert!(low < high,
-                        "Uniform::sample_single called with low >= high");
+                        "UniformSampler::sample_single: low >= high");
                 let range = high.wrapping_sub(low) as $unsigned as $u_large;
                 let zone =
                     if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
@@ -459,20 +453,20 @@ macro_rules! uniform_int_impl {
     }
 }
 
-uniform_int_impl! { i8, i8, u8, i32, u32 }
-uniform_int_impl! { i16, i16, u16, i32, u32 }
-uniform_int_impl! { i32, i32, u32, i32, u32 }
-uniform_int_impl! { i64, i64, u64, i64, u64 }
-#[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
-uniform_int_impl! { i128, i128, u128, u128, u128 }
-uniform_int_impl! { isize, isize, usize, isize, usize }
-uniform_int_impl! { u8, i8, u8, i32, u32 }
-uniform_int_impl! { u16, i16, u16, i32, u32 }
-uniform_int_impl! { u32, i32, u32, i32, u32 }
-uniform_int_impl! { u64, i64, u64, i64, u64 }
-uniform_int_impl! { usize, isize, usize, isize, usize }
-#[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
-uniform_int_impl! { u128, u128, u128, i128, u128 }
+uniform_int_impl! { i8, u8, u32 }
+uniform_int_impl! { i16, u16, u32 }
+uniform_int_impl! { i32, u32, u32 }
+uniform_int_impl! { i64, u64, u64 }
+#[cfg(not(target_os = "emscripten"))]
+uniform_int_impl! { i128, u128, u128 }
+uniform_int_impl! { isize, usize, usize }
+uniform_int_impl! { u8, u8, u32 }
+uniform_int_impl! { u16, u16, u32 }
+uniform_int_impl! { u32, u32, u32 }
+uniform_int_impl! { u64, u64, u64 }
+uniform_int_impl! { usize, usize, usize }
+#[cfg(not(target_os = "emscripten"))]
+uniform_int_impl! { u128, u128, u128 }
 
 #[cfg(all(feature = "simd_support", feature = "nightly"))]
 macro_rules! uniform_simd_int_impl {
@@ -534,13 +528,13 @@ macro_rules! uniform_simd_int_impl {
                     low: low,
                     // These are really $unsigned values, but store as $ty:
                     range: range.cast(),
-                    zone: zone.cast(),
+                    z: zone.cast(),
                 }
             }
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 let range: $unsigned = self.range.cast();
-                let zone: $unsigned = self.zone.cast();
+                let zone: $unsigned = self.z.cast();
 
                 // This might seem very slow, generating a whole new
                 // SIMD vector for every sample rejection. For most uses
@@ -736,7 +730,7 @@ macro_rules! uniform_float_impl {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
                 assert!(low.all_lt(high),
-                        "Uniform::sample_single called with low >= high");
+                        "UniformSampler::sample_single: low >= high");
                 let mut scale = high - low;
 
                 loop {
@@ -787,7 +781,7 @@ macro_rules! uniform_float_impl {
                     let mask = !scale.finite_mask();
                     if mask.any() {
                         assert!(low.all_finite() && high.all_finite(),
-                                "Uniform::sample_single called with non-finite boundaries");
+                                "Uniform::sample_single: low and high must be finite");
                         scale = scale.decrease_masked(mask);
                     }
                 }
@@ -821,14 +815,12 @@ uniform_float_impl! { f64x8, u64x8, f64, u64, 64 - 52 }
 ///
 /// Unless you are implementing [`UniformSampler`] for your own types, this type
 /// should not be used directly, use [`Uniform`] instead.
-#[cfg(any(feature = "std", rustc_1_25))]
 #[derive(Clone, Copy, Debug)]
 pub struct UniformDuration {
     mode: UniformDurationMode,
     offset: u32,
 }
 
-#[cfg(any(feature = "std", rustc_1_25))]
 #[derive(Debug, Copy, Clone)]
 enum UniformDurationMode {
     Small {
@@ -845,12 +837,10 @@ enum UniformDurationMode {
     }
 }
 
-#[cfg(any(feature = "std", rustc_1_25))]
 impl SampleUniform for Duration {
     type Sampler = UniformDuration;
 }
 
-#[cfg(any(feature = "std", rustc_1_25))]
 impl UniformSampler for UniformDuration {
     type X = Duration;
 
@@ -880,8 +870,8 @@ impl UniformSampler for UniformDuration {
         let mut high_n = high.subsec_nanos();
 
         if high_n < low_n {
-            high_s = high_s - 1;
-            high_n = high_n + 1_000_000_000;
+            high_s -= 1;
+            high_n += 1_000_000_000;
         }
 
         let mode = if low_s == high_s {
@@ -892,10 +882,10 @@ impl UniformSampler for UniformDuration {
         } else {
             let max = high_s
                 .checked_mul(1_000_000_000)
-                .and_then(|n| n.checked_add(high_n as u64));
+                .and_then(|n| n.checked_add(u64::from(high_n)));
 
             if let Some(higher_bound) = max {
-                let lower_bound = low_s * 1_000_000_000 + low_n as u64;
+                let lower_bound = low_s * 1_000_000_000 + u64::from(low_n);
                 UniformDurationMode::Medium {
                     nanos: Uniform::new_inclusive(lower_bound, higher_bound),
                 }
@@ -944,11 +934,8 @@ impl UniformSampler for UniformDuration {
 
 #[cfg(test)]
 mod tests {
-    use Rng;
-    use rngs::mock::StepRng;
-    use distributions::uniform::Uniform;
-    use distributions::utils::FloatAsSIMD;
-    #[cfg(feature="simd_support")] use packed_simd::*;
+    use super::*;
+    use crate::rngs::mock::StepRng;
 
     #[should_panic]
     #[test]
@@ -958,7 +945,7 @@ mod tests {
 
     #[test]
     fn test_uniform_good_limits_equal_int() {
-        let mut rng = ::test::rng(804);
+        let mut rng = crate::test::rng(804);
         let dist = Uniform::new_inclusive(10, 10);
         for _ in 0..20 {
             assert_eq!(rng.sample(dist), 10);
@@ -972,13 +959,14 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_integers() {
         use core::{i8, i16, i32, i64, isize};
         use core::{u8, u16, u32, u64, usize};
-        #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
+        #[cfg(not(target_os = "emscripten"))]
         use core::{i128, u128};
 
-        let mut rng = ::test::rng(251);
+        let mut rng = crate::test::rng(251);
         macro_rules! t {
             ($ty:ident, $v:expr, $le:expr, $lt:expr) => {{
                 for &(low, high) in $v.iter() {
@@ -1039,7 +1027,7 @@ mod tests {
         }
         t!(i8, i16, i32, i64, isize,
            u8, u16, u32, u64, usize);
-        #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
+        #[cfg(not(target_os = "emscripten"))]
         t!(i128, u128);
 
         #[cfg(all(feature = "simd_support", feature = "nightly"))]
@@ -1056,8 +1044,9 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_floats() {
-        let mut rng = ::test::rng(252);
+        let mut rng = crate::test::rng(252);
         let mut zero_rng = StepRng::new(0, 0);
         let mut max_rng = StepRng::new(0xffff_ffff_ffff_ffff, 0);
         macro_rules! t {
@@ -1140,11 +1129,12 @@ mod tests {
     #[cfg(all(feature="std",
               not(target_arch = "wasm32"),
               not(target_arch = "asmjs")))]
+    #[cfg(not(miri))] // Miri does not support catching panics
     fn test_float_assertions() {
         use std::panic::catch_unwind;
         use super::SampleUniform;
         fn range<T: SampleUniform>(low: T, high: T) {
-            let mut rng = ::test::rng(253);
+            let mut rng = crate::test::rng(253);
             rng.gen_range(low, high);
         }
 
@@ -1194,14 +1184,14 @@ mod tests {
 
 
     #[test]
-    #[cfg(any(feature = "std", rustc_1_25))]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_durations() {
         #[cfg(feature = "std")]
         use std::time::Duration;
-        #[cfg(all(not(feature = "std"), rustc_1_25))]
+        #[cfg(not(feature = "std"))]
         use core::time::Duration;
 
-        let mut rng = ::test::rng(253);
+        let mut rng = crate::test::rng(253);
 
         let v = &[(Duration::new(10, 50000), Duration::new(100, 1234)),
                   (Duration::new(0, 100), Duration::new(1, 50)),
@@ -1217,24 +1207,20 @@ mod tests {
 
     #[test]
     fn test_custom_uniform() {
-        use distributions::uniform::{UniformSampler, UniformFloat, SampleUniform, SampleBorrow};
+        use crate::distributions::uniform::{UniformSampler, UniformFloat, SampleUniform, SampleBorrow};
         #[derive(Clone, Copy, PartialEq, PartialOrd)]
         struct MyF32 {
             x: f32,
         }
         #[derive(Clone, Copy, Debug)]
-        struct UniformMyF32 {
-            inner: UniformFloat<f32>,
-        }
+        struct UniformMyF32(UniformFloat<f32>);
         impl UniformSampler for UniformMyF32 {
             type X = MyF32;
             fn new<B1, B2>(low: B1, high: B2) -> Self
                 where B1: SampleBorrow<Self::X> + Sized,
                       B2: SampleBorrow<Self::X> + Sized
             {
-                UniformMyF32 {
-                    inner: UniformFloat::<f32>::new(low.borrow().x, high.borrow().x),
-                }
+                UniformMyF32(UniformFloat::<f32>::new(low.borrow().x, high.borrow().x))
             }
             fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self
                 where B1: SampleBorrow<Self::X> + Sized,
@@ -1243,7 +1229,7 @@ mod tests {
                 UniformSampler::new(low, high)
             }
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
-                MyF32 { x: self.inner.sample(rng) }
+                MyF32 { x: self.0.sample(rng) }
             }
         }
         impl SampleUniform for MyF32 {
@@ -1252,7 +1238,7 @@ mod tests {
 
         let (low, high) = (MyF32{ x: 17.0f32 }, MyF32{ x: 22.0f32 });
         let uniform = Uniform::new(low, high);
-        let mut rng = ::test::rng(804);
+        let mut rng = crate::test::rng(804);
         for _ in 0..100 {
             let x: MyF32 = rng.sample(uniform);
             assert!(low <= x && x < high);
@@ -1262,22 +1248,59 @@ mod tests {
     #[test]
     fn test_uniform_from_std_range() {
         let r = Uniform::from(2u32..7);
-        assert_eq!(r.inner.low, 2);
-        assert_eq!(r.inner.range, 5);
+        assert_eq!(r.0.low, 2);
+        assert_eq!(r.0.range, 5);
         let r = Uniform::from(2.0f64..7.0);
-        assert_eq!(r.inner.low, 2.0);
-        assert_eq!(r.inner.scale, 5.0);
+        assert_eq!(r.0.low, 2.0);
+        assert_eq!(r.0.scale, 5.0);
     }
 
-    #[cfg(rustc_1_27)]
     #[test]
     fn test_uniform_from_std_range_inclusive() {
         let r = Uniform::from(2u32..=6);
-        assert_eq!(r.inner.low, 2);
-        assert_eq!(r.inner.range, 5);
+        assert_eq!(r.0.low, 2);
+        assert_eq!(r.0.range, 5);
         let r = Uniform::from(2.0f64..=7.0);
-        assert_eq!(r.inner.low, 2.0);
-        assert!(r.inner.scale > 5.0);
-        assert!(r.inner.scale < 5.0 + 1e-14);
+        assert_eq!(r.0.low, 2.0);
+        assert!(r.0.scale > 5.0);
+        assert!(r.0.scale < 5.0 + 1e-14);
+    }
+    
+    #[test]
+    fn value_stability() {
+        fn test_samples<T: SampleUniform + Copy + core::fmt::Debug + PartialEq>(
+            lb: T, ub: T, expected_single: &[T], expected_multiple: &[T]
+        )
+        where Uniform<T>: Distribution<T>
+        {
+            let mut rng = crate::test::rng(897);
+            let mut buf = [lb; 3];
+            
+            for x in &mut buf {
+                *x = T::Sampler::sample_single(lb, ub, &mut rng);
+            }
+            assert_eq!(&buf, expected_single);
+            
+            let distr = Uniform::new(lb, ub);
+            for x in &mut buf {
+                *x = rng.sample(&distr);
+            }
+            assert_eq!(&buf, expected_multiple);
+        }
+        
+        // We test on a sub-set of types; possibly we should do more.
+        // TODO: SIMD types
+        
+        test_samples(11u8, 219, &[17, 66, 214], &[181, 93, 165]);
+        test_samples(11u32, 219, &[17, 66, 214], &[181, 93, 165]);
+        
+        test_samples(0f32, 1e-2f32, &[0.0003070104, 0.0026630748, 0.00979833],
+                &[0.008194133, 0.00398172, 0.007428536]);
+        test_samples(-1e10f64, 1e10f64, 
+                &[-4673848682.871551, 6388267422.932352, 4857075081.198343],
+                &[1173375212.1808167, 1917642852.109581, 2365076174.3153973]);
+        
+        test_samples(Duration::new(2, 0), Duration::new(4, 0),
+                &[Duration::new(2,532615131), Duration::new(3,638826742), Duration::new(3,485707508)], &[Duration::new(3,117337521), Duration::new(3,191764285), Duration::new(3,236507617)]);
     }
 }

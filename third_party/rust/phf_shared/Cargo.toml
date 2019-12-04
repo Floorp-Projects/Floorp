@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "phf_shared"
-version = "0.7.24"
+version = "0.8.0"
 authors = ["Steven Fackler <sfackler@gmail.com>"]
 description = "Support code shared by PHF libraries"
 license = "MIT"
@@ -23,11 +24,12 @@ name = "phf_shared"
 path = "src/lib.rs"
 test = false
 [dependencies.siphasher]
-version = "0.2"
+version = "0.3"
 
 [dependencies.unicase]
-version = "1.4"
+version = "2.4.0"
 optional = true
 
 [features]
-core = []
+default = ["std"]
+std = []

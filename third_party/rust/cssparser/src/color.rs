@@ -101,9 +101,6 @@ impl<'de> Deserialize<'de> for RGBA {
     }
 }
 
-#[cfg(feature = "heapsize")]
-known_heap_size!(0, RGBA);
-
 impl ToCss for RGBA {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result
     where
@@ -140,9 +137,6 @@ pub enum Color {
     /// Everything else gets converted to RGBA during parsing
     RGBA(RGBA),
 }
-
-#[cfg(feature = "heapsize")]
-known_heap_size!(0, Color);
 
 impl ToCss for Color {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result

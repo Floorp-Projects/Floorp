@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use cow_rc_str::CowRcStr;
+use crate::cow_rc_str::CowRcStr;
+use crate::tokenizer::Token;
 use std::borrow::Cow;
-use tokenizer::Token;
 
 macro_rules! size_of_test {
     ($testname: ident, $t: ty, $expected_size: expr) => {
@@ -41,19 +41,19 @@ size_of_test!(token, Token, 32);
 size_of_test!(std_cow_str, Cow<'static, str>, 32);
 size_of_test!(cow_rc_str, CowRcStr, 16);
 
-size_of_test!(tokenizer, ::tokenizer::Tokenizer, 72);
+size_of_test!(tokenizer, crate::tokenizer::Tokenizer, 72);
 size_of_test!(
     parser_input,
-    ::parser::ParserInput,
+    crate::parser::ParserInput,
     if cfg!(rustc_has_pr45225) { 136 } else { 144 }
 );
-size_of_test!(parser, ::parser::Parser, 16);
-size_of_test!(source_position, ::SourcePosition, 8);
-size_of_test!(parser_state, ::ParserState, 24);
+size_of_test!(parser, crate::parser::Parser, 16);
+size_of_test!(source_position, crate::SourcePosition, 8);
+size_of_test!(parser_state, crate::ParserState, 24);
 
-size_of_test!(basic_parse_error, ::BasicParseError, 48);
+size_of_test!(basic_parse_error, crate::BasicParseError, 48);
 size_of_test!(
     parse_error_lower_bound,
-    ::ParseError<()>,
+    crate::ParseError<()>,
     if cfg!(rustc_has_pr45225) { 48 } else { 56 }
 );

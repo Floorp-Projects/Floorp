@@ -67,58 +67,27 @@ fn parse_border_spacing(_context: &ParserContext, input: &mut Parser)
 
 #![recursion_limit = "200"] // For color::parse_color_keyword
 
-extern crate dtoa_short;
-extern crate itoa;
-#[macro_use]
-extern crate cssparser_macros;
-#[macro_use]
-extern crate matches;
-#[macro_use]
-extern crate procedural_masquerade;
-#[cfg(test)]
-extern crate difference;
-#[cfg(test)]
-extern crate encoding_rs;
-#[doc(hidden)]
-pub extern crate phf as _internal__phf;
-#[cfg(test)]
-extern crate serde_json;
-#[cfg(feature = "serde")]
-extern crate serde;
-#[cfg(feature = "heapsize")]
-#[macro_use]
-extern crate heapsize;
-extern crate smallvec;
-
-pub use cssparser_macros::*;
-
-pub use color::{
+pub use crate::color::{
     parse_color_keyword, AngleOrNumber, Color, ColorComponentParser, NumberOrPercentage, RGBA,
 };
-pub use cow_rc_str::CowRcStr;
-pub use from_bytes::{stylesheet_encoding, EncodingSupport};
-pub use nth::parse_nth;
-pub use parser::{BasicParseError, BasicParseErrorKind, ParseError, ParseErrorKind};
-pub use parser::{Delimiter, Delimiters, Parser, ParserInput, ParserState};
-pub use rules_and_declarations::parse_important;
-pub use rules_and_declarations::{parse_one_declaration, DeclarationListParser, DeclarationParser};
-pub use rules_and_declarations::{parse_one_rule, RuleListParser};
-pub use rules_and_declarations::{AtRuleParser, AtRuleType, QualifiedRuleParser};
-pub use serializer::{
-    serialize_identifier, serialize_name, serialize_string, CssStringWriter, ToCss,
-    TokenSerializationType,
-};
-pub use tokenizer::{SourceLocation, SourcePosition, Token};
-pub use unicode_range::UnicodeRange;
-
-// For macros
+pub use crate::cow_rc_str::CowRcStr;
+pub use crate::from_bytes::{stylesheet_encoding, EncodingSupport};
 #[doc(hidden)]
-pub use macros::_internal__to_lowercase;
-
-// For macros when used in this crate. Unsure how $crate works with procedural-masquerade.
-mod cssparser {
-    pub use _internal__phf;
-}
+pub use crate::macros::_cssparser_internal_to_lowercase;
+pub use crate::nth::parse_nth;
+pub use crate::parser::{BasicParseError, BasicParseErrorKind, ParseError, ParseErrorKind};
+pub use crate::parser::{Delimiter, Delimiters, Parser, ParserInput, ParserState};
+pub use crate::rules_and_declarations::{parse_important, parse_one_declaration};
+pub use crate::rules_and_declarations::{parse_one_rule, RuleListParser};
+pub use crate::rules_and_declarations::{AtRuleParser, AtRuleType, QualifiedRuleParser};
+pub use crate::rules_and_declarations::{DeclarationListParser, DeclarationParser};
+pub use crate::serializer::{serialize_identifier, serialize_name, serialize_string};
+pub use crate::serializer::{CssStringWriter, ToCss, TokenSerializationType};
+pub use crate::tokenizer::{SourceLocation, SourcePosition, Token};
+pub use crate::unicode_range::UnicodeRange;
+pub use cssparser_macros::*;
+#[doc(hidden)]
+pub use phf as _cssparser_internal_phf;
 
 #[macro_use]
 mod macros;

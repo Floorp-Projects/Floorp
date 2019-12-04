@@ -6,7 +6,8 @@
 extern crate test;
 
 use encoding_rs;
-use serde_json::{self, Value, json, Map};
+use matches::matches;
+use serde_json::{self, json, Map, Value};
 
 #[cfg(feature = "bench")]
 use self::test::Bencher;
@@ -30,7 +31,7 @@ fn almost_equals(a: &Value, b: &Value) -> bool {
             let a = a.as_f64().unwrap();
             let b = b.as_f64().unwrap();
             (a - b).abs() <= a.abs() * 1e-6
-        },
+        }
 
         (&Value::Bool(a), &Value::Bool(b)) => a == b,
         (&Value::String(ref a), &Value::String(ref b)) => a == b,
@@ -410,15 +411,16 @@ fn unicode_range() {
                 Ok(None)
             }
         });
-        result.unwrap()
+        result
+            .unwrap()
             .iter()
-            .map(|v|
-                if let Some((v0, v1)) = v{
+            .map(|v| {
+                if let Some((v0, v1)) = v {
                     json!([v0, v1])
                 } else {
                     Value::Null
                 }
-            )
+            })
             .collect::<Vec<_>>()
             .to_json()
     });
@@ -467,10 +469,11 @@ fn serializer(preserve_comments: bool) {
                         _ => None,
                     };
                     if let Some(closing_token) = closing_token {
-                        let result: Result<_, ParseError<()>> = input.parse_nested_block(|input| {
-                            write_to(previous_token, input, string, preserve_comments);
-                            Ok(())
-                        });
+                        let result: Result<_, ParseError<()>> =
+                            input.parse_nested_block(|input| {
+                                write_to(previous_token, input, string, preserve_comments);
+                                Ok(())
+                            });
                         result.unwrap();
                         closing_token.to_css(string).unwrap();
                     }
@@ -809,7 +812,11 @@ trait ToJson {
     fn to_json(&self) -> Value;
 }
 
-impl<T> ToJson for T where T: Clone, Value: From<T> {
+impl<T> ToJson for T
+where
+    T: Clone,
+    Value: From<T>,
+{
     fn to_json(&self) -> Value {
         Value::from(self.clone())
     }
@@ -935,7 +942,7 @@ impl<'i> AtRuleParser<'i> for JsonParser {
             "media" | "foo-with-block" => Ok(AtRuleType::WithBlock(prelude)),
             "charset" => {
                 Err(input.new_error(BasicParseErrorKind::AtRuleInvalid(name.clone()).into()))
-            }
+            },
             _ => Ok(AtRuleType::WithoutBlock(prelude)),
         }
     }
@@ -1391,4 +1398,33 @@ fn utf16_columns() {
         // Check the resulting column.
         assert_eq!(parser.current_source_location().column, test.1);
     }
+}
+
+#[test]
+fn servo_define_css_keyword_enum() {
+    macro_rules! define_css_keyword_enum {
+        (pub enum $name:ident { $($variant:ident = $css:expr,)+ }) => {
+            #[derive(PartialEq, Debug)]
+            pub enum $name {
+                $($variant),+
+            }
+
+            impl $name {
+                pub fn from_ident(ident: &str) -> Result<$name, ()> {
+                    match_ignore_ascii_case! { ident,
+                        $($css => Ok($name::$variant),)+
+                        _ => Err(())
+                    }
+                }
+            }
+        }
+    }
+    define_css_keyword_enum! {
+        pub enum UserZoom {
+            Zoom = "zoom",
+            Fixed = "fixed",
+        }
+    }
+
+    assert_eq!(UserZoom::from_ident("fixed"), Ok(UserZoom::Fixed));
 }

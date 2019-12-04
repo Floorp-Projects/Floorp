@@ -1,8 +1,3 @@
-#![cfg(rustc_1_26)]
-extern crate rand_pcg;
-extern crate rand_core;
-#[cfg(all(feature="serde1", test))] extern crate bincode;
-
 use rand_core::{RngCore, SeedableRng};
 use rand_pcg::{Mcg128Xsl64, Pcg64Mcg};
 

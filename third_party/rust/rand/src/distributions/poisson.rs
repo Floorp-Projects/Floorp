@@ -8,25 +8,17 @@
 // except according to those terms.
 
 //! The Poisson distribution.
+#![allow(deprecated)]
 
-use Rng;
-use distributions::{Distribution, Cauchy};
-use distributions::utils::log_gamma;
+use crate::Rng;
+use crate::distributions::{Distribution, Cauchy};
+use crate::distributions::utils::log_gamma;
 
 /// The Poisson distribution `Poisson(lambda)`.
 ///
 /// This distribution has a density function:
 /// `f(k) = lambda^k * exp(-lambda) / k!` for `k >= 0`.
-///
-/// # Example
-///
-/// ```
-/// use rand::distributions::{Poisson, Distribution};
-///
-/// let poi = Poisson::new(2.0);
-/// let v = poi.sample(&mut rand::thread_rng());
-/// println!("{} is from a Poisson(2) distribution", v);
-/// ```
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Poisson {
     lambda: f64,
@@ -113,13 +105,14 @@ impl Distribution<u64> for Poisson {
 
 #[cfg(test)]
 mod test {
-    use distributions::Distribution;
+    use crate::distributions::Distribution;
     use super::Poisson;
 
     #[test]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_poisson_10() {
         let poisson = Poisson::new(10.0);
-        let mut rng = ::test::rng(123);
+        let mut rng = crate::test::rng(123);
         let mut sum = 0;
         for _ in 0..1000 {
             sum += poisson.sample(&mut rng);
@@ -130,10 +123,11 @@ mod test {
     }
 
     #[test]
+    #[cfg(not(miri))] // Miri doesn't support transcendental functions
     fn test_poisson_15() {
         // Take the 'high expected values' path
         let poisson = Poisson::new(15.0);
-        let mut rng = ::test::rng(123);
+        let mut rng = crate::test::rng(123);
         let mut sum = 0;
         for _ in 0..1000 {
             sum += poisson.sample(&mut rng);

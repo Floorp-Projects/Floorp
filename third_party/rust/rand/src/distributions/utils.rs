@@ -11,9 +11,9 @@
 #[cfg(feature="simd_support")]
 use packed_simd::*;
 #[cfg(feature="std")]
-use distributions::ziggurat_tables;
+use crate::distributions::ziggurat_tables;
 #[cfg(feature="std")]
-use Rng;
+use crate::Rng;
 
 
 pub trait WideningMultiply<RHS = Self> {
@@ -61,7 +61,7 @@ macro_rules! wmul_impl {
 wmul_impl! { u8, u16, 8 }
 wmul_impl! { u16, u32, 16 }
 wmul_impl! { u32, u64, 32 }
-#[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
+#[cfg(not(target_os = "emscripten"))]
 wmul_impl! { u64, u128, 64 }
 
 // This code is a translation of the __mulddi3 function in LLVM's
@@ -125,9 +125,9 @@ macro_rules! wmul_impl_large {
         )+
     };
 }
-#[cfg(not(all(rustc_1_26, not(target_os = "emscripten"))))]
+#[cfg(target_os = "emscripten")]
 wmul_impl_large! { u64, 32 }
-#[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
+#[cfg(not(target_os = "emscripten"))]
 wmul_impl_large! { u128, 64 }
 
 macro_rules! wmul_impl_usize {
@@ -249,13 +249,9 @@ pub(crate) trait FloatSIMDUtils {
 /// Implement functions available in std builds but missing from core primitives
 #[cfg(not(std))]
 pub(crate) trait Float : Sized {
-    type Bits;
-
     fn is_nan(self) -> bool;
     fn is_infinite(self) -> bool;
     fn is_finite(self) -> bool;
-    fn to_bits(self) -> Self::Bits;
-    fn from_bits(v: Self::Bits) -> Self;
 }
 
 /// Implement functions on f32/f64 to give them APIs similar to SIMD types
@@ -289,8 +285,6 @@ macro_rules! scalar_float_impl {
     ($ty:ident, $uty:ident) => {
         #[cfg(not(std))]
         impl Float for $ty {
-            type Bits = $uty;
-
             #[inline]
             fn is_nan(self) -> bool {
                 self != self
@@ -304,17 +298,6 @@ macro_rules! scalar_float_impl {
             #[inline]
             fn is_finite(self) -> bool {
                 !(self.is_nan() || self.is_infinite())
-            }
-
-            #[inline]
-            fn to_bits(self) -> Self::Bits {
-                unsafe { ::core::mem::transmute(self) }
-            }
-
-            #[inline]
-            fn from_bits(v: Self::Bits) -> Self {
-                // It turns out the safety issues with sNaN were overblown! Hooray!
-                unsafe { ::core::mem::transmute(v) }
             }
         }
 
@@ -383,6 +366,7 @@ macro_rules! simd_impl {
                 <$ty>::from_bits(<$uty>::from_bits(self) + <$uty>::from_bits(mask))
             }
             type UInt = $uty;
+            #[inline]
             fn cast_from_int(i: Self::UInt) -> Self { i.cast() }
         }
     }
@@ -464,7 +448,7 @@ pub fn ziggurat<R: Rng + ?Sized, P, Z>(
             mut pdf: P,
             mut zero_case: Z)
             -> f64 where P: FnMut(f64) -> f64, Z: FnMut(&mut R, f64) -> f64 {
-    use distributions::float::IntoFloat;
+    use crate::distributions::float::IntoFloat;
     loop {
         // As an optimisation we re-implement the conversion to a f64.
         // From the remaining 12 most significant bits we use 8 to construct `i`.
