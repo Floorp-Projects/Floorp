@@ -22,6 +22,8 @@ type Args = {
 async function attachTargets(targetLists, args) {
   const { targets } = args;
 
+  targetLists = targetLists.filter(target => !!target);
+
   for (const actor of Object.keys(targets)) {
     if (!targetLists.some(target => target.targetForm.threadActor == actor)) {
       delete targets[actor];
