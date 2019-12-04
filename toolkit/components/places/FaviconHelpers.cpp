@@ -634,6 +634,15 @@ AsyncFetchAndSetIconForPage::OnStartRequest(nsIRequest* aRequest) {
   if (mCanceled) {
     mRequest->Cancel(NS_BINDING_ABORTED);
   }
+  // Don't store icons responding with Cache-Control: no-store.
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
+  if (httpChannel) {
+    bool isNoStore;
+    if (NS_SUCCEEDED(httpChannel->IsNoStoreResponse(&isNoStore)) && isNoStore) {
+      // Abandon the network fetch.
+      mRequest->Cancel(NS_BINDING_ABORTED);
+    }
+  }
   return NS_OK;
 }
 
