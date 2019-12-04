@@ -7,6 +7,7 @@ const {
   STUBS_UPDATE_ENV,
   getStubFilePath,
   getCleanedPacket,
+  getSerializedPacket,
   writeStubsToFile,
 } = require("devtools/client/webconsole/test/browser/stub-generator-helpers");
 
@@ -28,7 +29,6 @@ add_task(async function() {
     ok(true, `${STUB_FILE} was updated`);
     return;
   }
-
   const existingStubs = require(getStubFilePath(STUB_FILE));
   const FAILURE_MSG =
     "The consoleApi stubs file needs to be updated by running " +
@@ -36,19 +36,18 @@ add_task(async function() {
     "browser_webconsole_stubs_console_api.js --headless " +
     "--setenv WEBCONSOLE_STUBS_UPDATE=true`";
 
-  if (generatedStubs.size !== existingStubs.stubPackets.size) {
+  if (generatedStubs.size !== existingStubs.rawPackets.size) {
     ok(false, FAILURE_MSG);
     return;
   }
 
   let failed = false;
   for (const [key, packet] of generatedStubs) {
-    const packetStr = JSON.stringify(packet, null, 2);
-    const existingPacketStr = JSON.stringify(
-      existingStubs.stubPackets.get(key),
-      null,
-      2
+    const packetStr = getSerializedPacket(packet);
+    const existingPacketStr = getSerializedPacket(
+      existingStubs.rawPackets.get(key)
     );
+
     is(packetStr, existingPacketStr, `"${key}" packet has expected value`);
     failed = failed || packetStr !== existingPacketStr;
   }
@@ -58,6 +57,8 @@ add_task(async function() {
   } else {
     ok(true, "Stubs are up to date");
   }
+
+  await closeTabAndToolbox().catch(() => {});
 });
 
 async function generateConsoleApiStubs() {
@@ -100,7 +101,6 @@ async function generateConsoleApiStubs() {
   }
 
   Services.prefs.clearUserPref(PREFS.FILTER.LOG);
-  await closeTabAndToolbox().catch(() => {});
   return stubs;
 }
 

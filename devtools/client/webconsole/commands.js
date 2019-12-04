@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { ObjectFront } = require("devtools/shared/fronts/object");
-
 class ConsoleCommands {
   constructor({ debuggerClient, proxy, threadFront, currentTarget }) {
     this.debuggerClient = debuggerClient;
@@ -30,44 +28,6 @@ class ConsoleCommands {
     }
 
     return front.evaluateJSAsync(expression, options);
-  }
-
-  createObjectFront(object) {
-    return new ObjectFront(this.debuggerClient, object);
-  }
-
-  createLongStringFront(object) {
-    return this.proxy.webConsoleFront.longString(object);
-  }
-
-  releaseActor(actor) {
-    if (!actor) {
-      return null;
-    }
-
-    const objFront = this.debuggerClient.getFrontByID(actor);
-    if (objFront) {
-      return objFront.release();
-    }
-
-    // In case there's no object front, use the client's release method.
-    return this.debuggerClient.release(actor).catch(() => {});
-  }
-
-  async fetchObjectProperties(grip, ignoreNonIndexedProperties) {
-    const client = new ObjectFront(this.currentTarget.client, grip);
-    const iterator = await client.enumProperties({
-      ignoreNonIndexedProperties,
-    });
-    const { ownProperties } = await iterator.slice(0, iterator.count);
-    return ownProperties;
-  }
-
-  async fetchObjectEntries(grip) {
-    const client = new ObjectFront(this.currentTarget.client, grip);
-    const iterator = await client.enumEntries();
-    const { ownProperties } = await iterator.slice(0, iterator.count);
-    return ownProperties;
   }
 
   timeWarp(executionPoint) {

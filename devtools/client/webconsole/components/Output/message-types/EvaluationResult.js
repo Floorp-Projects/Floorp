@@ -57,13 +57,17 @@ function EvaluationResult(props) {
     typeof message.messageText !== "undefined" &&
     message.messageText !== null
   ) {
-    if (typeof message.messageText === "string") {
-      messageBody = message.messageText;
+    const messageText =
+      message.messageText && message.messageText.getGrip
+        ? message.messageText.getGrip()
+        : message.messageText;
+    if (typeof messageText === "string") {
+      messageBody = messageText;
     } else if (
-      typeof message.messageText === "object" &&
-      message.messageText.type === "longString"
+      typeof messageText === "object" &&
+      messageText.type === "longString"
     ) {
-      messageBody = `${message.messageText.initial}…`;
+      messageBody = `${messageText.initial}…`;
     }
   } else {
     messageBody = GripMessageBody({

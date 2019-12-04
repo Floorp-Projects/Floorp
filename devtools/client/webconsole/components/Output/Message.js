@@ -264,7 +264,17 @@ class Message extends Component {
                 className: "devtools-button",
                 onClick: () =>
                   navigator.clipboard.writeText(
-                    JSON.stringify(this.props.message, null, 2)
+                    JSON.stringify(
+                      this.props.message,
+                      function(key, value) {
+                        // The message can hold one or multiple fronts that we need to serialize
+                        if (value && value.getGrip) {
+                          return value.getGrip();
+                        }
+                        return value;
+                      },
+                      2
+                    )
                   ),
               },
               l10n.getStr(

@@ -101,10 +101,9 @@ const MessageState = overrides =>
         currentGroup: null,
         // This group handles "warning groups" (Content Blocking, CORS, CSP, …)
         warningGroupsById: new Map(),
-        // Array of removed actors (i.e. actors logged in removed messages) we keep track of
-        // in order to properly release them.
-        // This array is not supposed to be consumed by any UI component.
-        removedActors: [],
+        // Array of fronts to release (i.e. fronts logged in removed messages).
+        // This array *should not* be consumed by any UI component.
+        frontsToRelease: [],
         // Map of the form {messageId : numberOfRepeat}
         repeatById: {},
         // Map of the form {messageId : networkInformation}
@@ -130,7 +129,7 @@ function cloneState(state) {
     messagesPayloadById: new Map(state.messagesPayloadById),
     groupsById: new Map(state.groupsById),
     currentGroup: state.currentGroup,
-    removedActors: [...state.removedActors],
+    frontsToRelease: [...state.frontsToRelease],
     repeatById: { ...state.repeatById },
     networkMessagesUpdateById: { ...state.networkMessagesUpdateById },
     removedLogpointIds: new Set(state.removedLogpointIds),
@@ -439,8 +438,8 @@ function messages(
       return MessageState({
         // Store all actors from removed messages. This array is used by
         // `releaseActorsEnhancer` to release all of those backend actors.
-        removedActors: [...state.messagesById.values()].reduce((res, msg) => {
-          res.push(...getAllActorsInMessage(msg));
+        frontsToRelease: [...state.messagesById.values()].reduce((res, msg) => {
+          res.push(...getAllFrontsInMessage(msg));
           return res;
         }, []),
       });
@@ -617,10 +616,10 @@ function messages(
       };
     }
 
-    case constants.REMOVED_ACTORS_CLEAR:
+    case constants.FRONTS_TO_RELEASE_CLEAR:
       return {
         ...state,
-        removedActors: [],
+        frontsToRelease: [],
       };
 
     case constants.WARNING_GROUPS_TOGGLE:
@@ -856,7 +855,7 @@ function removeMessagesFromState(state, removedMessagesIds) {
     return state;
   }
 
-  const removedActors = [];
+  const frontsToRelease = [];
   const visibleMessages = [...state.visibleMessages];
   removedMessagesIds.forEach(id => {
     const index = visibleMessages.indexOf(id);
@@ -864,15 +863,15 @@ function removeMessagesFromState(state, removedMessagesIds) {
       visibleMessages.splice(index, 1);
     }
 
-    removedActors.push(...getAllActorsInMessage(state.messagesById.get(id)));
+    frontsToRelease.push(...getAllFrontsInMessage(state.messagesById.get(id)));
   });
 
   if (state.visibleMessages.length > visibleMessages.length) {
     state.visibleMessages = visibleMessages;
   }
 
-  if (removedActors.length > 0) {
-    state.removedActors = state.removedActors.concat(removedActors);
+  if (frontsToRelease.length > 0) {
+    state.frontsToRelease = state.frontsToRelease.concat(frontsToRelease);
   }
 
   const isInRemovedId = id => removedMessagesIds.includes(id);
@@ -933,28 +932,31 @@ function removeMessagesFromState(state, removedMessagesIds) {
 }
 
 /**
- * Get an array of all the actors logged in a specific message.
+ * Get an array of all the fronts logged in a specific message.
  *
  * @param {Message} message: The message to get actors from.
- * @return {Array} An array containing all the actors logged in a message.
+ * @return {Array<ObjectFront|LongStringFront>} An array containing all the fronts logged
+ *                                              in a message.
  */
-function getAllActorsInMessage(message) {
+function getAllFrontsInMessage(message) {
   const { parameters, messageText } = message;
 
-  const actors = [];
+  const fronts = [];
+  const isFront = p => p && typeof p.release === "function";
+
   if (Array.isArray(parameters)) {
     message.parameters.forEach(parameter => {
-      if (parameter && parameter.actor) {
-        actors.push(parameter.actor);
+      if (isFront(parameter)) {
+        fronts.push(parameter);
       }
     });
   }
 
-  if (messageText && messageText.actor) {
-    actors.push(messageText.actor);
+  if (isFront(messageText)) {
+    fronts.push(messageText);
   }
 
-  return actors;
+  return fronts;
 }
 
 /**
@@ -1351,27 +1353,30 @@ function isTextInParameter(text, regex, parameter) {
   const matchStr = str =>
     regex ? regex.test(str) : str.toLocaleLowerCase().includes(text);
 
-  if (parameter && parameter.class && matchStr(parameter.class)) {
+  const paramGrip =
+    parameter && parameter.getGrip ? parameter.getGrip() : parameter;
+
+  if (paramGrip && paramGrip.class && matchStr(paramGrip.class)) {
     return true;
   }
 
   const parameterType = typeof parameter;
   if (parameterType !== "object" && parameterType !== "undefined") {
-    const str = parameter + "";
+    const str = paramGrip + "";
     if (matchStr(str)) {
       return true;
     }
   }
 
-  const previewItems = getGripPreviewItems(parameter);
+  const previewItems = getGripPreviewItems(paramGrip);
   for (const item of previewItems) {
     if (isTextInParameter(text, regex, item)) {
       return true;
     }
   }
 
-  if (parameter && parameter.ownProperties) {
-    for (const [key, desc] of Object.entries(parameter.ownProperties)) {
+  if (paramGrip && paramGrip.ownProperties) {
+    for (const [key, desc] of Object.entries(paramGrip.ownProperties)) {
       if (matchStr(key)) {
         return true;
       }
@@ -1436,10 +1441,12 @@ function isTextInMessageText(text, regex, messageText) {
       : messageText.toLocaleLowerCase().includes(text);
   }
 
-  if (messageText.type === "longString") {
+  const grip =
+    messageText && messageText.getGrip ? messageText.getGrip() : messageText;
+  if (grip && grip.type === "longString") {
     return regex
-      ? regex.test(messageText.initial)
-      : messageText.initial.toLocaleLowerCase().includes(text);
+      ? regex.test(grip.initial)
+      : grip.initial.toLocaleLowerCase().includes(text);
   }
 
   return true;

@@ -54,9 +54,18 @@ class ConsoleTable extends Component {
   componentWillMount() {
     const { id, dispatch, parameters, tableData } = this.props;
 
-    const data = tableData || (parameters[0] && parameters[0].ownProperties);
+    const firstParam = Array.isArray(parameters) && parameters[0];
+    if (!firstParam) {
+      return;
+    }
 
-    if (!Array.isArray(parameters) || parameters.length === 0 || data) {
+    const data =
+      tableData ||
+      (firstParam.getGrip
+        ? firstParam.getGrip().ownProperties
+        : firstParam.ownProperties);
+
+    if (data) {
       return;
     }
 
@@ -125,7 +134,8 @@ class ConsoleTable extends Component {
 
   render() {
     const { parameters, tableData } = this.props;
-    const [valueGrip, headersGrip] = parameters;
+    const { valueGrip, headersGrip } = getValueAndHeadersGrip(parameters);
+
     const headers =
       headersGrip && headersGrip.preview ? headersGrip.preview.items : null;
 
@@ -163,11 +173,30 @@ class ConsoleTable extends Component {
   }
 }
 
+function getValueAndHeadersGrip(parameters) {
+  const [valueFront, headersFront] = parameters;
+
+  const headersGrip =
+    headersFront && headersFront.getGrip
+      ? headersFront.getGrip()
+      : headersFront;
+
+  const valueGrip =
+    valueFront && valueFront.getGrip ? valueFront.getGrip() : valueFront;
+
+  return { valueGrip, headersGrip };
+}
+
 function getParametersDataType(parameters = null) {
   if (!Array.isArray(parameters) || parameters.length === 0) {
     return null;
   }
-  return parameters[0].class;
+  const [firstParam] = parameters;
+  if (!firstParam || !firstParam.getGrip) {
+    return null;
+  }
+  const grip = firstParam.getGrip();
+  return grip.class;
 }
 
 const INDEX_NAME = "_index";
@@ -232,19 +261,23 @@ function getTableItems(data = {}, type, headers = null) {
     };
 
     const propertyValue = getDescriptorValue(property);
+    const propertyValueGrip =
+      propertyValue && propertyValue.getGrip
+        ? propertyValue.getGrip()
+        : propertyValue;
 
-    if (propertyValue && propertyValue.ownProperties) {
-      const entries = propertyValue.ownProperties;
+    if (propertyValueGrip && propertyValueGrip.ownProperties) {
+      const entries = propertyValueGrip.ownProperties;
       for (const [key, entry] of Object.entries(entries)) {
         item[key] = getDescriptorValue(entry);
       }
     } else if (
-      propertyValue &&
-      propertyValue.preview &&
+      propertyValueGrip &&
+      propertyValueGrip.preview &&
       (type === "Map" || type === "WeakMap")
     ) {
-      item.key = propertyValue.preview.key;
-      item[VALUE_NAME] = propertyValue.preview.value;
+      item.key = propertyValueGrip.preview.key;
+      item[VALUE_NAME] = propertyValueGrip.preview.value;
     } else {
       item[VALUE_NAME] = propertyValue;
     }
@@ -324,9 +357,11 @@ function deprecatedGetTableItems(data = {}, type, headers = null) {
     };
 
     const property = data[index] ? data[index].value : undefined;
+    const propertyGrip =
+      property && property.getGrip ? property.getGrip() : property;
 
-    if (property && property.preview) {
-      const { preview } = property;
+    if (propertyGrip && propertyGrip.preview) {
+      const { preview } = propertyGrip;
       const entries = preview.ownProperties || preview.items;
       if (entries) {
         for (const [key, entry] of Object.entries(entries)) {
