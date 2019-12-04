@@ -19,6 +19,7 @@ const { AddonTestUtils } = ChromeUtils.import(
 );
 
 AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
 
 ChromeUtils.defineModuleGetter(
   this,
