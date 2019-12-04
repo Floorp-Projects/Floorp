@@ -23,7 +23,6 @@ scripts:
     pre: rimraf $npm_package_config_mc_dir/browser/components/newtab/
     bundle: => bundle
     copy: rsync --exclude-from .mcignore -a . $npm_package_config_mc_dir/browser/components/newtab/
-    fluentExport: cpx "$npm_package_config_locales_dir/*.ftl" $npm_package_config_mc_dir/browser/locales/$npm_package_config_default_locale/browser/newtab/
     copyPingCentre: cpx "ping-centre/PingCentre.jsm" $npm_package_config_mc_dir/browser/modules
 
 # builduplift: Build and export to mozilla central for uplifts without exporting strings to browser/locales
@@ -57,7 +56,6 @@ scripts:
   # importmc: Import changes from mc to github repo
   importmc:
     src: rsync --exclude-from .mcignore -a $npm_package_config_mc_dir/browser/components/newtab/ .
-    ftl: rsync -a $npm_package_config_mc_dir/browser/locales/$npm_package_config_default_locale/browser/newtab/ $npm_package_config_locales_dir
 
   testmc:
     lint: =>lint
