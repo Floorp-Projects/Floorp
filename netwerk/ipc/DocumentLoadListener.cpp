@@ -384,6 +384,17 @@ void DocumentLoadListener::ResumeSuspendedChannel(
             aListener->OnStopRequest(aParams.request, rv);
           }
           rv = NS_OK;
+        },
+        [&](const OnAfterLastPartParams& aParams) {
+          nsCOMPtr<nsIMultiPartChannelListener> multiListener =
+              do_QueryInterface(aListener);
+          if (multiListener) {
+            if (NS_SUCCEEDED(rv)) {
+              multiListener->OnAfterLastPart(aParams.status);
+            } else {
+              multiListener->OnAfterLastPart(rv);
+            }
+          }
         });
   }
   // We don't expect to get new stream listener functions added
@@ -765,7 +776,9 @@ DocumentLoadListener::OnDataAvailable(nsIRequest* aRequest,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-DocumentLoadListener::OnAfterLastPart() {
+DocumentLoadListener::OnAfterLastPart(nsresult aStatus) {
+  mStreamListenerFunctions.AppendElement(StreamListenerFunction{
+      VariantIndex<3>{}, OnAfterLastPartParams{aStatus}});
   mIsFinished = true;
   return NS_OK;
 }

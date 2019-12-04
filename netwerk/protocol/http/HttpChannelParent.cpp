@@ -290,6 +290,7 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelParent)
   NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectReadyCallback)
   NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIRedirectResultListener)
+  NS_INTERFACE_MAP_ENTRY(nsIMultiPartChannelListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIParentRedirectingChannel)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(HttpChannelParent)
 NS_INTERFACE_MAP_END
@@ -1586,6 +1587,18 @@ HttpChannelParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
                 SuspendedLocal);
       }
     }
+  }
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// HttpChannelParent::nsIMultiPartChannelListener
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+HttpChannelParent::OnAfterLastPart(nsresult aStatus) {
+  if (!mIPCClosed) {
+    Unused << SendOnAfterLastPart(aStatus);
   }
   return NS_OK;
 }
