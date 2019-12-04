@@ -40,9 +40,9 @@ function test_pause_frame() {
     const parentClient = gThreadFront.pauseGrip(parentEnv.object);
     response = await parentClient.getPrototypeAndProperties();
     Assert.equal(response.ownProperties.PI.value, Math.PI);
-    Assert.equal(response.ownProperties.cos.value.type, "object");
-    Assert.equal(response.ownProperties.cos.value.class, "Function");
-    Assert.ok(!!response.ownProperties.cos.value.actor);
+    Assert.equal(response.ownProperties.cos.value.getGrip().type, "object");
+    Assert.equal(response.ownProperties.cos.value.getGrip().class, "Function");
+    Assert.ok(!!response.ownProperties.cos.value.actorID);
 
     parentEnv = parentEnv.parent;
     Assert.notEqual(parentEnv, undefined);
@@ -63,19 +63,24 @@ function test_pause_frame() {
   });
 
   /* eslint-disable */
-  gDebuggee.eval("(" + function () {
-    function stopMe(number) {
-      var a, obj = { one: 1, two: 2 };
-      var r = number;
-      with (Math) {
-        a = PI * r * r;
-        with (obj) {
-          var foo = two * PI;
-          debugger;
+  gDebuggee.eval(
+    "(" +
+      function() {
+        function stopMe(number) {
+          var a,
+            obj = { one: 1, two: 2 };
+          var r = number;
+          with (Math) {
+            a = PI * r * r;
+            with (obj) {
+              var foo = two * PI;
+              debugger;
+            }
+          }
         }
-      }
-    }
-    stopMe(10);
-  } + ")()");
+        stopMe(10);
+      } +
+      ")()"
+  );
   /* eslint-enable */
 }

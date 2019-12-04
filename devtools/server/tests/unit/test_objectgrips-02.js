@@ -17,15 +17,15 @@ add_task(
 
         Assert.equal(args[0].class, "Object");
 
-        const objClient = threadFront.pauseGrip(args[0]);
-        let response = await objClient.getPrototype();
+        const objectFront = threadFront.pauseGrip(args[0]);
+        const response = await objectFront.getPrototype();
         Assert.ok(response.prototype != undefined);
 
-        const protoClient = threadFront.pauseGrip(response.prototype);
-        response = await protoClient.getOwnPropertyNames();
-        Assert.equal(response.ownPropertyNames.length, 2);
-        Assert.equal(response.ownPropertyNames[0], "b");
-        Assert.equal(response.ownPropertyNames[1], "c");
+        const protoFront = response.prototype;
+        const { ownPropertyNames } = await protoFront.getOwnPropertyNames();
+        Assert.equal(ownPropertyNames.length, 2);
+        Assert.equal(ownPropertyNames[0], "b");
+        Assert.equal(ownPropertyNames[1], "c");
 
         await threadFront.resume();
         resolve();

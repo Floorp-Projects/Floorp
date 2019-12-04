@@ -15,14 +15,14 @@ add_task(
       threadFront.once("paused", async function(packet) {
         const [grip] = packet.frame.arguments;
 
-        const objClient = threadFront.pauseGrip(grip);
+        const objectFront = threadFront.pauseGrip(grip);
 
         // Checks the result of enumProperties.
-        let response = await objClient.enumProperties({});
+        let response = await objectFront.enumProperties({});
         await check_enum_properties(response);
 
         // Checks the result of enumSymbols.
-        response = await objClient.enumSymbols();
+        response = await objectFront.enumSymbols();
         await check_enum_symbols(response);
 
         await threadFront.resume();
@@ -138,7 +138,7 @@ add_task(
 
       const iteratorSymbol = ownSymbols[12];
       equal(iteratorSymbol.name, "Symbol(Symbol.iterator)");
-      equal(iteratorSymbol.descriptor.value.class, "Function");
+      equal(iteratorSymbol.descriptor.value.getGrip().class, "Function");
 
       info("Check iterator.all response");
       const allResponse = await iterator.all();

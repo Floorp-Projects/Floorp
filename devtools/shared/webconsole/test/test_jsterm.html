@@ -160,7 +160,7 @@ async function doEvalLongString() {
 
 async function doEvalWithBinding() {
   const response = await evaluateJS("document;");
-  const documentActor = response.result.actor;
+  const documentActor = response.result.actorID;
 
   info("running a command with _self as document using selectedObjectActor");
   const selectedObjectSame = await evaluateJS("_self === document", {
@@ -180,7 +180,7 @@ async function doEvalWithBindingFrame() {
   const response = await evaluateJS(
     "document.querySelector('iframe').contentWindow.fooFrame"
   );
-  const iframeObjectActor = response.result.actor;
+  const iframeObjectActor = response.result.actorID;
   ok(iframeObjectActor, "There is an actor associated with the response");
 
   await evaluateJS("this.temp1 = _self;", {

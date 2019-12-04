@@ -39,23 +39,30 @@ function test_pause_frame() {
     Assert.notEqual(parentEnv, undefined);
     const objClient = gThreadFront.pauseGrip(parentEnv.object);
     const response = await objClient.getPrototypeAndProperties();
-    Assert.equal(response.ownProperties.Object.value.type, "object");
-    Assert.equal(response.ownProperties.Object.value.class, "Function");
-    Assert.ok(!!response.ownProperties.Object.value.actor);
+    Assert.equal(response.ownProperties.Object.value.getGrip().type, "object");
+    Assert.equal(
+      response.ownProperties.Object.value.getGrip().class,
+      "Function"
+    );
+    Assert.ok(!!response.ownProperties.Object.value.actorID);
 
     await gThreadFront.resume();
     threadFrontTestFinished();
   });
 
   /* eslint-disable */
-  gDebuggee.eval("(" + function () {
-    function stopMe(number, bool, string, null_, undef, object) {
-      var a = 1;
-      var b = true;
-      var c = { a: "a" };
-      eval("");
-      debugger;
-    }
-    stopMe(42, true, "nasu", null, undefined, { foo: "bar" });
-  } + ")()");
+  gDebuggee.eval(
+    "(" +
+      function() {
+        function stopMe(number, bool, string, null_, undef, object) {
+          var a = 1;
+          var b = true;
+          var c = { a: "a" };
+          eval("");
+          debugger;
+        }
+        stopMe(42, true, "nasu", null, undefined, { foo: "bar" });
+      } +
+      ")()"
+  );
 }

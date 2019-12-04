@@ -1,71 +1,52 @@
 <!DOCTYPE HTML>
 <html lang="en">
-<head>
-  <meta charset="utf8">
-  <title>Test for Bug 819670 - Web console object inspection does not handle native getters throwing very well</title>
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="common.js"></script>
-  <!-- Any copyright is dedicated to the Public Domain.
-     - http://creativecommons.org/publicdomain/zero/1.0/ -->
-</head>
-<body>
-<p>Test for Bug 819670 - Web console object inspection does not handle native getters throwing very well</p>
+  <head>
+    <meta charset="utf8">
+    <title>Test for Bug 819670 - Web console object inspection does not handle native getters throwing very well</title>
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="common.js"></script>
+    <!-- Any copyright is dedicated to the Public Domain.
+         - http://creativecommons.org/publicdomain/zero/1.0/ -->
+  </head>
+  <body>
+    <p>Test for Bug 819670 - Web console object inspection does not handle native getters throwing very well</p>
 
-<script class="testbody" type="text/javascript">
-"use strict";
+    <script class="testbody" type="text/javascript">
+      "use strict";
 
-SimpleTest.waitForExplicitFinish();
+      SimpleTest.waitForExplicitFinish();
+      addEventListener("load", startTest);
 
-function startTest()
-{
-  removeEventListener("load", startTest);
-  attachConsoleToTab([], onAttach);
-}
+      async function startTest() {
+        removeEventListener("load", startTest);
+        const {state} = await attachConsoleToTab([]);
+        const evaluationResponse = await state.webConsoleFront.evaluateJSAsync("document.__proto__");
+        checkObject(evaluationResponse, {
+          input: "document.__proto__",
+          result: {
+            type: "object",
+            actor: /[a-z]/
+          }
+        });
 
-function onAttach(aState, aResponse)
-{
-  onEvaluate = onEvaluate.bind(null, aState);
-  aState.webConsoleFront.evaluateJSAsync("document.__proto__").then(onEvaluate);
-}
+        ok(!evaluationResponse.exception, "no eval exception");
+        ok(!evaluationResponse.helperResult, "no helper result");
 
-function onEvaluate(aState, aResponse)
-{
-  checkObject(aResponse, {
-    input: "document.__proto__",
-    result: {
-      type: "object",
-      actor: /[a-z]/,
-    },
-  });
+        const response = await evaluationResponse.result.getPrototypeAndProperties();
+        ok(! response.error, "no response error");
 
-  ok(!aResponse.exception, "no eval exception");
-  ok(!aResponse.helperResult, "no helper result");
+        const props = response.ownProperties;
+        ok(props, "response properties available");
 
-  onInspect = onInspect.bind(null, aState);
-  const client = new ObjectFront(aState.dbgClient, aResponse.result);
-  client.getPrototypeAndProperties().then(onInspect);
-}
+        if (props) {
+          // eslint-disable-next-line no-proto
+          const expectedProps = Object.getOwnPropertyNames(document.__proto__);
+          isDeeply(Object.keys(props), expectedProps, "Same own properties.");
+        }
 
-function onInspect(aState, aResponse)
-{
-  ok(!aResponse.error, "no response error");
-
-  // eslint-disable-next-line no-proto
-  const expectedProps =  Object.getOwnPropertyNames(document.__proto__);
-
-  const props = aResponse.ownProperties;
-  ok(props, "response properties available");
-
-  if (props) {
-    isDeeply(Object.keys(props), expectedProps, "Same own properties.");
-  }
-
-  closeDebugger(aState, function() {
-    SimpleTest.finish();
-  });
-}
-
-addEventListener("load", startTest);
-</script>
-</body>
+        await closeDebugger(state);
+        SimpleTest.finish();
+      }
+    </script>
+  </body>
 </html>

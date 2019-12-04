@@ -39,11 +39,10 @@ async function test_object_grip(debuggee, threadFront) {
       return arg1;
     }
   );
-  const objClient = threadFront.pauseGrip(obj);
+  const objectFront = threadFront.pauseGrip(obj);
 
-  const method = threadFront.pauseGrip(
-    (await objClient.getPropertyValue("method", null)).value.return
-  );
+  const method = (await objectFront.getPropertyValue("method", null)).value
+    .return;
 
   try {
     await method.apply(obj, []);

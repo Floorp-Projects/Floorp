@@ -49,7 +49,7 @@ async function test_object_grip(debuggee, threadFront) {
       };
       stopMe(obj);
     `,
-    async objClient => {
+    async objFront => {
       const expectedValues = {
         stringProp: {
           return: "a value",
@@ -62,14 +62,16 @@ async function test_object_grip(debuggee, threadFront) {
         },
         objectNormal: {
           return: {
-            type: "object",
-            class: "Object",
-            ownPropertyLength: 1,
-            preview: {
-              kind: "Object",
-              ownProperties: {
-                prop: {
-                  value: 4,
+            _grip: {
+              type: "object",
+              class: "Object",
+              ownPropertyLength: 1,
+              preview: {
+                kind: "Object",
+                ownProperties: {
+                  prop: {
+                    value: 4,
+                  },
                 },
               },
             },
@@ -77,14 +79,16 @@ async function test_object_grip(debuggee, threadFront) {
         },
         objectAbrupt: {
           throw: {
-            type: "object",
-            class: "Object",
-            ownPropertyLength: 1,
-            preview: {
-              kind: "Object",
-              ownProperties: {
-                prop: {
-                  value: 4,
+            _grip: {
+              type: "object",
+              class: "Object",
+              ownPropertyLength: 1,
+              preview: {
+                kind: "Object",
+                ownProperties: {
+                  prop: {
+                    value: 4,
+                  },
                 },
               },
             },
@@ -95,16 +99,17 @@ async function test_object_grip(debuggee, threadFront) {
         },
         method: {
           return: {
-            type: "object",
-            class: "Function",
-            name: "method",
+            _grip: {
+              type: "object",
+              class: "Function",
+              name: "method",
+            },
           },
         },
       };
 
       for (const [key, expected] of Object.entries(expectedValues)) {
-        const { value } = await objClient.getPropertyValue(key, null);
-
+        const { value } = await objFront.getPropertyValue(key, null);
         assert_completion(value, expected);
       }
     }

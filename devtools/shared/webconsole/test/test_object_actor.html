@@ -16,52 +16,36 @@
 
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
-																		true]]});
+SpecialPowers.pushPrefEnv({
+  "set":  [["security.allow_eval_with_system_principal", true]]
+});
 
-let expectedProps = [];
-
-function startTest() {
+async function startTest() {
   removeEventListener("load", startTest);
 
-  attachConsoleToTab(["ConsoleAPI"], onAttach);
-}
-
-function onAttach(state, response) {
-  onConsoleCall = onConsoleCall.bind(null, state);
-  state.webConsoleFront.on("consoleAPICall", onConsoleCall);
-
   const longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 3)).join("\u0629");
+  createTestGlobalVariable(longString);
 
-  // Here we put the objects in the correct window, to avoid having them all
-  // wrapped by proxies for cross-compartment access.
+  const {state} = await attachConsoleToTab(["ConsoleAPI"]);
+  const onConsoleApiCall = state.webConsoleFront.once("consoleAPICall");
+  top.console.log("hello", top.wrappedJSObject.foobarObject);
+  const {message} = await onConsoleApiCall;
 
-  const foobarObject = top.Object.create(null);
-  foobarObject.tamarbuta = longString;
-  foobarObject.foo = 1;
-  foobarObject.foobar = "hello";
-  foobarObject.omg = null;
-  foobarObject.testfoo = false;
-  foobarObject.notInspectable = top.Object.create(null);
-  foobarObject.omgfn = new top.Function("return 'myResult'");
-  foobarObject.abArray = new top.Array("a", "b");
-  foobarObject.foobaz = top.document;
-
-  top.Object.defineProperty(foobarObject, "getterAndSetter", {
-    enumerable: true,
-    get: new top.Function("return 'foo';"),
-    set: new top.Function("1+2"),
+  info("checking the console API call packet");
+  checkConsoleAPICall(message, {
+    level: "log",
+    filename: /test_object_actor/,
+    functionName: "startTest",
+    arguments: ["hello", {
+      type: "object",
+      actor: /[a-z]/,
+    }],
   });
 
-  foobarObject.longStringObj = top.Object.create(null);
-  foobarObject.longStringObj.toSource = new top.Function("'" + longString + "'");
-  foobarObject.longStringObj.toString = new top.Function("'" + longString + "'");
-  foobarObject.longStringObj.boom = "explode";
+  info("inspecting object properties");
+  const {ownProperties} = await message.arguments[1].getPrototypeAndProperties();
 
-  top.wrappedJSObject.foobarObject = foobarObject;
-  top.console.log("hello", top.wrappedJSObject.foobarObject);
-
-  expectedProps = {
+  const expectedProps = {
     "abArray": {
       value: {
         type: "object",
@@ -133,42 +117,40 @@ function onAttach(state, response) {
       value: false,
     },
   };
-}
-
-function onConsoleCall(state, aPacket) {
-  info("checking the console API call packet");
-
-  checkConsoleAPICall(aPacket.message, {
-    level: "log",
-    filename: /test_object_actor/,
-    functionName: "onAttach",
-    arguments: ["hello", {
-      type: "object",
-      actor: /[a-z]/,
-    }],
-  });
-
-  state.webConsoleFront.off("consoleAPICall", onConsoleCall);
-
-  info("inspecting object properties");
-  const args = aPacket.message.arguments;
-  onProperties = onProperties.bind(null, state);
-
-  const client = new ObjectFront(state.dbgClient, args[1]);
-  client.getPrototypeAndProperties().then(onProperties);
-}
-
-function onProperties(state, response) {
-  const props = response.ownProperties;
-  is(Object.keys(props).length, Object.keys(expectedProps).length,
+  is(Object.keys(ownProperties).length, Object.keys(expectedProps).length,
      "number of enumerable properties");
-  checkObject(props, expectedProps);
+  checkObject(ownProperties, expectedProps);
 
-  expectedProps = [];
+  await closeDebugger(state);
+  SimpleTest.finish();
+}
 
-  closeDebugger(state, function() {
-    SimpleTest.finish();
+
+function createTestGlobalVariable(longString) {
+  // Here we put the objects in the correct window, to avoid having them all
+  // wrapped by proxies for cross-compartment access.
+  const foobarObject = top.Object.create(null);
+  foobarObject.tamarbuta = longString;
+  foobarObject.foo = 1;
+  foobarObject.foobar = "hello";
+  foobarObject.omg = null;
+  foobarObject.testfoo = false;
+  foobarObject.notInspectable = top.Object.create(null);
+  foobarObject.omgfn = new top.Function("return 'myResult'");
+  foobarObject.abArray = new top.Array("a", "b");
+  foobarObject.foobaz = top.document;
+
+  top.Object.defineProperty(foobarObject, "getterAndSetter", {
+    enumerable: true,
+    get: new top.Function("return 'foo';"),
+    set: new top.Function("1+2"),
   });
+
+  foobarObject.longStringObj = top.Object.create(null);
+  foobarObject.longStringObj.toSource = new top.Function("'" + longString + "'");
+  foobarObject.longStringObj.toString = new top.Function("'" + longString + "'");
+  foobarObject.longStringObj.boom = "explode";
+  top.wrappedJSObject.foobarObject = foobarObject;
 }
 
 addEventListener("load", startTest);
