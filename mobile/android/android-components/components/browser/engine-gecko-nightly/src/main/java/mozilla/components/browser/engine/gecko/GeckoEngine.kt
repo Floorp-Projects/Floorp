@@ -243,6 +243,14 @@ class GeckoEngine(
     }
 
     /**
+     * See [Engine.listInstalledWebExtensions].
+     */
+    override fun listInstalledWebExtensions(onSuccess: (List<WebExtension>) -> Unit, onError: (Throwable) -> Unit) {
+        // TODO https://github.com/mozilla-mobile/android-components/issues/4500
+        onSuccess(emptyList())
+    }
+
+    /**
      * See [Engine.registerWebNotificationDelegate].
      */
     override fun registerWebNotificationDelegate(

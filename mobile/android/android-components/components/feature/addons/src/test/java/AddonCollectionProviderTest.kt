@@ -25,6 +25,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import java.io.IOException
 import java.util.Date
 import java.io.InputStream
 
@@ -138,8 +139,8 @@ class AddonCollectionProviderTest {
         }
     }
 
-    @Test
-    fun `getAvailableAddons - with a not successful status will return an empty list`() {
+    @Test(expected = IOException::class)
+    fun `getAvailableAddons - with unexpected status will throw exception`() {
         val mockedClient = mock<Client>()
         val mockedResponse = mock<Response>()
         val mockedMockedBody = mock<Response.Body>()
@@ -151,8 +152,7 @@ class AddonCollectionProviderTest {
         val provider = AddonCollectionProvider(testContext, client = mockedClient)
 
         runBlocking {
-            val addons = provider.getAvailableAddons()
-            assertTrue(addons.isEmpty())
+            provider.getAvailableAddons()
         }
     }
 

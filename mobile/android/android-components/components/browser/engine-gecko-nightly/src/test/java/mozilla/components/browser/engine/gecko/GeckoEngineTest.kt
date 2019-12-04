@@ -602,6 +602,22 @@ class GeckoEngineTest {
         assertNotNull(actionHandlerCaptor.value.onToggleBrowserActionPopup(extension, browserAction))
     }
 
+    @Test
+    fun `list web extensions successfully`() {
+        val runtime = mock<GeckoRuntime>()
+        val engine = GeckoEngine(context, runtime = runtime)
+        var extensions: List<WebExtension>? = null
+        var onErrorCalled = false
+
+        engine.listInstalledWebExtensions(
+            onSuccess = { extensions = it },
+            onError = { onErrorCalled = true }
+        )
+
+        assertFalse(onErrorCalled)
+        assertNotNull(extensions)
+    }
+
     @Test(expected = RuntimeException::class)
     fun `WHEN GeckoRuntime is shutting down THEN GeckoEngine throws runtime exception`() {
         val runtime: GeckoRuntime = mock()

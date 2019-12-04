@@ -139,6 +139,19 @@ interface Engine {
     ): Unit = onError(id, UnsupportedOperationException("Web extension support is not available in this engine"))
 
     /**
+     * Lists the currently installed web extensions in this engine.
+     *
+     * @param onSuccess callback invoked with the list of of installed [WebExtension]s.
+     * @param onError (optional) callback invoked if there was an error querying
+     * the installed extensions. This callback is invoked with an [UnsupportedOperationException]
+     * in case the engine doesn't have web extension support.
+     */
+    fun listInstalledWebExtensions(
+        onSuccess: ((List<WebExtension>) -> Unit),
+        onError: ((Throwable) -> Unit) = { }
+    ): Unit = onError(UnsupportedOperationException("Web extension support is not available in this engine"))
+
+    /**
      * Registers a [WebExtensionDelegate] to be notified of engine events
      * related to web extensions
      *

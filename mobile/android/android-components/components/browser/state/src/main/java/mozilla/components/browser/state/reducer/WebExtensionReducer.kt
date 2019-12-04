@@ -17,7 +17,7 @@ internal object WebExtensionReducer {
      */
     fun reduce(state: BrowserState, action: WebExtensionAction): BrowserState {
         return when (action) {
-            is WebExtensionAction.InstallWebExtension -> {
+            is WebExtensionAction.InstallWebExtensionAction -> {
                 val existingExtension = state.extensions[action.extension.id]
                 if (existingExtension == null) {
                     state.copy(

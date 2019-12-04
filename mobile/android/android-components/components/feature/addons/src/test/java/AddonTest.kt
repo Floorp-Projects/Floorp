@@ -8,6 +8,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -78,5 +80,45 @@ class AddonTest {
             R.string.mozac_feature_addons_permissions_top_sites_description
         )
         assertEquals(expectedPermissions, translatedPermissions)
+    }
+
+    @Test
+    fun `isInstalled - true if installed state present and otherwise false`() {
+        val addon = Addon(
+            id = "id",
+            authors = emptyList(),
+            categories = emptyList(),
+            downloadUrl = "downloadUrl",
+            version = "version",
+            permissions = emptyList(),
+            createdAt = "",
+            updatedAt = ""
+        )
+        assertFalse(addon.isInstalled())
+
+        val installedAddon = addon.copy(installedState = Addon.InstalledState("id", "1.0", ""))
+        assertTrue(installedAddon.isInstalled())
+    }
+
+    @Test
+    fun `isEnabled - true if installed state enabled and otherwise false`() {
+        val addon = Addon(
+            id = "id",
+            authors = emptyList(),
+            categories = emptyList(),
+            downloadUrl = "downloadUrl",
+            version = "version",
+            permissions = emptyList(),
+            createdAt = "",
+            updatedAt = ""
+
+        )
+        assertFalse(addon.isEnabled())
+
+        val installedAddon = addon.copy(installedState = Addon.InstalledState("id", "1.0", ""))
+        assertFalse(installedAddon.isEnabled())
+
+        val enabledAddon = addon.copy(installedState = Addon.InstalledState("id", "1.0", "", enabled = true))
+        assertTrue(enabledAddon.isEnabled())
     }
 }
