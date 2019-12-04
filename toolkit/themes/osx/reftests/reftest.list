@@ -1,7 +1,7 @@
 # This folder is registered in the chrome manifest at layout/tools/reftest/jar.mn.
 
-skip-if(!cocoaWidget) == chrome://reftest/content/osx-theme/482681.xul chrome://reftest/content/osx-theme/482681-ref.xul
-skip-if(!cocoaWidget) == chrome://reftest/content/osx-theme/radiosize.xul chrome://reftest/content/osx-theme/radiosize-ref.xul
-skip-if(!cocoaWidget) == chrome://reftest/content/osx-theme/checkboxsize.xul chrome://reftest/content/osx-theme/checkboxsize-ref.xul
-skip-if(!cocoaWidget) == chrome://reftest/content/osx-theme/baseline.xul about:blank
-skip-if(!cocoaWidget) == chrome://reftest/content/osx-theme/nostretch.xul chrome://reftest/content/osx-theme/nostretch-ref.xul
+skip-if(!cocoaWidget) == chrome://reftest/content/osx-theme/482681.xhtml chrome://reftest/content/osx-theme/482681-ref.xhtml
+skip-if(!cocoaWidget) == chrome://reftest/content/osx-theme/radiosize.xhtml chrome://reftest/content/osx-theme/radiosize-ref.xhtml
+skip-if(!cocoaWidget) == chrome://reftest/content/osx-theme/checkboxsize.xhtml chrome://reftest/content/osx-theme/checkboxsize-ref.xhtml
+skip-if(!cocoaWidget) == chrome://reftest/content/osx-theme/baseline.xhtml about:blank
+skip-if(!cocoaWidget) == chrome://reftest/content/osx-theme/nostretch.xhtml chrome://reftest/content/osx-theme/nostretch-ref.xhtml
