@@ -326,18 +326,17 @@ mozilla::ipc::IPCResult CamerasChild::RecvReplyGetCaptureDevice(
   return IPC_OK();
 }
 
-int CamerasChild::AllocateCaptureDevice(
-    CaptureEngine aCapEngine, const char* unique_idUTF8,
-    const unsigned int unique_idUTF8Length, int& aStreamId,
-    const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
+int CamerasChild::AllocateCaptureDevice(CaptureEngine aCapEngine,
+                                        const char* unique_idUTF8,
+                                        const unsigned int unique_idUTF8Length,
+                                        int& aStreamId, uint64_t aWindowID) {
   LOG(("%s", __PRETTY_FUNCTION__));
   nsCString unique_id(unique_idUTF8);
   nsCOMPtr<nsIRunnable> runnable =
-      mozilla::NewRunnableMethod<CaptureEngine, nsCString,
-                                 const mozilla::ipc::PrincipalInfo&>(
+      mozilla::NewRunnableMethod<CaptureEngine, nsCString, const uint64_t&>(
           "camera::PCamerasChild::SendAllocateCaptureDevice", this,
           &CamerasChild::SendAllocateCaptureDevice, aCapEngine, unique_id,
-          aPrincipalInfo);
+          aWindowID);
   LockAndDispatch<> dispatcher(this, __func__, runnable, -1, mZero);
   if (dispatcher.Success()) {
     LOG(("Capture Device allocated: %d", mReplyInteger));
