@@ -69,6 +69,10 @@
   list-style-image: url(chrome://browser/skin/notification-icons/geo.svg);
 }
 
+.xr-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/xr.svg);
+}
+
 .camera-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/camera.svg);
 }

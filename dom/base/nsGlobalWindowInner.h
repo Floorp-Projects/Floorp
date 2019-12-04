@@ -372,6 +372,9 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   bool HasUsedVR() const;
   bool IsVRContentDetected() const;
   bool IsVRContentPresenting() const;
+  void RequestXRPermission();
+  void OnXRPermissionRequestAllow();
+  void OnXRPermissionRequestCancel();
 
   using EventTarget::EventListenerAdded;
   virtual void EventListenerAdded(nsAtom* aType) override;
@@ -1286,6 +1289,15 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   // Indicates whether this window wants VRDisplayActivate events
   bool mHasVRDisplayActivateEvents : 1;
+
+  // Indicates that an XR permission request has been requested
+  // but has not yet been resolved.
+  bool mXRPermissionRequestInFlight : 1;
+
+  // Indicates that an XR permission request has been granted.
+  // The page should not request permission multiple times.
+  bool mXRPermissionGranted : 1;
+
   nsCheapSet<nsUint32HashKey> mGamepadIndexSet;
   nsRefPtrHashtable<nsUint32HashKey, mozilla::dom::Gamepad> mGamepads;
   bool mHasSeenGamepadInput;
