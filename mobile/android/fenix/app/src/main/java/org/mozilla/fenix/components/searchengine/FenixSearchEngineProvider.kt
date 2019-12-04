@@ -18,6 +18,7 @@ import mozilla.components.browser.search.provider.SearchEngineProvider
 import mozilla.components.browser.search.provider.filter.SearchEngineFilter
 import mozilla.components.browser.search.provider.localization.LocaleSearchLocalizationProvider
 import org.mozilla.fenix.ext.settings
+import java.util.Locale
 
 @SuppressWarnings("TooManyFunctions")
 class FenixSearchEngineProvider(
@@ -49,7 +50,7 @@ class FenixSearchEngineProvider(
         val engines = installedSearchEngines(context)
         val selectedName = context.settings().defaultSearchEngineName
 
-        return engines.list.find { it.name == selectedName } ?: engines.list.first()
+        return engines.list.find { it.name == selectedName } ?: engines.default ?: engines.list.first()
     }
 
     fun installedSearchEngines(context: Context): SearchEngineList = runBlocking {
@@ -59,7 +60,7 @@ class FenixSearchEngineProvider(
         engineList.copy(
             list = engineList.list.filter {
                 installedIdentifiers.contains(it.identifier)
-            },
+            }.sortedBy { it.name.toLowerCase(Locale.getDefault()) },
             default = engineList.default?.let {
                 if (installedIdentifiers.contains(it.identifier)) {
                     it
