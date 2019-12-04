@@ -13,7 +13,7 @@
  * @property {RecordingState} recordingState
  * @property {boolean} isSupportedPlatform
  * @property {boolean} recordingUnexpectedlyStopped
- * @property {boolean} isPopup
+ * @property {PageContext} pageContext
  */
 
 /**
@@ -29,6 +29,7 @@
  * @typedef {StateProps & DispatchProps} Props
  * @typedef {import("../@types/perf").RecordingState} RecordingState
  * @typedef {import("../@types/perf").State} StoreState
+ * @typedef {import("../@types/perf").PageContext} PageContext
  */
 
 "use strict";
@@ -65,7 +66,7 @@ class RecordingButton extends PureComponent {
    *   onClick?: any,
    *   additionalMessage?: React.ReactNode,
    *   isPrimary?: boolean,
-   *   isPopup?: boolean,
+   *   pageContext?: PageContext,
    *   additionalButton?: {
    *     label: string,
    *     onClick: any,
@@ -79,12 +80,12 @@ class RecordingButton extends PureComponent {
       onClick,
       additionalMessage,
       isPrimary,
-      isPopup,
+      pageContext,
       additionalButton,
     } = buttonSettings;
 
     const nbsp = "\u00A0";
-    const showAdditionalMessage = isPopup && additionalMessage;
+    const showAdditionalMessage = pageContext === "popup" && additionalMessage;
     const buttonClass = isPrimary ? "primary" : "default";
 
     return div(
@@ -223,7 +224,7 @@ function mapStateToProps(state) {
     recordingUnexpectedlyStopped: selectors.getRecordingUnexpectedlyStopped(
       state
     ),
-    isPopup: selectors.getIsPopup(state),
+    pageContext: selectors.getPageContext(state),
   };
 }
 

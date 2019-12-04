@@ -107,7 +107,7 @@ exports.changeEntries = entries =>
 exports.changeFeatures = features => {
   return (dispatch, getState) => {
     let promptEnvRestart = null;
-    if (selectors.getIsPopup(getState())) {
+    if (selectors.getPageContext(getState()) === "popup") {
       // The popup supports checks to restart the browser for environment
       // variables.
       if (

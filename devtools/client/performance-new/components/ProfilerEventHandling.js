@@ -13,7 +13,7 @@
  * @property {PerfFront} perfFront
  * @property {RecordingState} recordingState
  * @property {boolean?} isSupportedPlatform
- * @property {boolean?} isPopup
+ * @property {PageContext} pageContext
  * @property {string | null} promptEnvRestart
  */
 
@@ -29,6 +29,7 @@
  * @typedef {import("../@types/perf").PerfFront} PerfFront
  * @typedef {import("../@types/perf").RecordingState} RecordingState
  * @typedef {import("../@types/perf").State} StoreState
+ * @typedef {import("../@types/perf").PageContext} PageContext
  */
 
 /**
@@ -41,6 +42,7 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const actions = require("devtools/client/performance-new/store/actions");
 const selectors = require("devtools/client/performance-new/store/selectors");
+const { UnhandledCaseError } = require("devtools/client/performance-new/utils");
 
 /**
  * This component state changes for the performance recording. e.g. If the profiler
@@ -64,7 +66,7 @@ class ProfilerEventHandling extends PureComponent {
   }
 
   componentDidMount() {
-    const { perfFront, reportProfilerReady, isPopup } = this.props;
+    const { perfFront, reportProfilerReady, pageContext } = this.props;
 
     // Ask for the initial state of the profiler.
     Promise.all([
@@ -85,9 +87,22 @@ class ProfilerEventHandling extends PureComponent {
         if (isLockedForPrivateBrowsing) {
           recordingState = "locked-by-private-browsing";
         } else if (isActive) {
-          // The popup is a global control for the recording, so allow it to take
-          // control of it.
-          recordingState = isPopup ? "recording" : "other-is-recording";
+          switch (pageContext) {
+            case "popup":
+            case "aboutprofiling":
+              // These page contexts are in global control of the profiler, so allow it
+              // to take control of recording.
+              recordingState = "recording";
+              break;
+            case "devtools":
+              // The DevTools performance recording shouldn't take control of others
+              // use of the Gecko Profiler, since it's more interested in the current
+              // page.
+              recordingState = "other-is-recording";
+              break;
+            default:
+              throw new UnhandledCaseError(pageContext, "PageContext");
+          }
         } else {
           recordingState = "available-to-record";
         }
@@ -142,7 +157,7 @@ class ProfilerEventHandling extends PureComponent {
   }
 
   handleProfilerStarting() {
-    const { changeRecordingState, recordingState, isPopup } = this.props;
+    const { changeRecordingState, recordingState, pageContext } = this.props;
     switch (recordingState) {
       case "not-yet-known":
       // We couldn't have started it yet, so it must have been someone
@@ -153,14 +168,21 @@ class ProfilerEventHandling extends PureComponent {
       // We requested to stop the profiler, but someone else already started
       // it up. (fallthrough)
       case "request-to-get-profile-and-stop-profiler":
-        if (isPopup) {
-          // The profiler popup doesn't care who is recording. It will take control
-          // of it.
-          changeRecordingState("recording");
-        } else {
-          // Someone re-started the profiler while we were asking for the completed
-          // profile.
-          changeRecordingState("other-is-recording");
+        switch (pageContext) {
+          case "popup":
+          case "aboutprofiling":
+            // These page contexts are in global control of the profiler, so allow it
+            // to take control of recording.
+            changeRecordingState("recording");
+            break;
+          case "devtools":
+            // The DevTools performance recording shouldn't take control of others
+            // use of the Gecko Profiler, since it's more interested in the current
+            // page.
+            changeRecordingState("other-is-recording");
+            break;
+          default:
+            throw new UnhandledCaseError(pageContext, "PageContext");
         }
         break;
 
@@ -265,7 +287,7 @@ function mapStateToProps(state) {
     perfFront: selectors.getPerfFront(state),
     recordingState: selectors.getRecordingState(state),
     isSupportedPlatform: selectors.getIsSupportedPlatform(state),
-    isPopup: selectors.getIsPopup(state),
+    pageContext: selectors.getPageContext(state),
     promptEnvRestart: selectors.getPromptEnvRestart(state),
   };
 }
