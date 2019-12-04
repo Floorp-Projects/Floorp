@@ -2012,18 +2012,15 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetCursor(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserParent::RecvSetStatus(const uint32_t& aType,
-                                                     const nsString& aStatus) {
+mozilla::ipc::IPCResult BrowserParent::RecvSetStatusLink(
+    const nsString& aStatus) {
   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow = GetXULBrowserWindow();
   if (!xulBrowserWindow) {
     return IPC_OK();
   }
 
-  switch (aType) {
-    case nsIWebBrowserChrome::STATUS_LINK:
-      xulBrowserWindow->SetOverLink(aStatus, nullptr);
-      break;
-  }
+  xulBrowserWindow->SetOverLink(aStatus, nullptr);
+
   return IPC_OK();
 }
 
