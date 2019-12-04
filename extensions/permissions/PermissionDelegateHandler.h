@@ -115,15 +115,40 @@ class PermissionDelegateHandler final : nsISupports {
    */
   void DropDocumentReference() { mDocument = nullptr; }
 
- private:
-  virtual ~PermissionDelegateHandler() = default;
-
   /*
    * Helper function to return the delegate info value for aPermissionName.
    * @param aPermissionName the permission name to get
    */
-  const PermissionDelegateInfo* GetPermissionDelegateInfo(
-      const nsAString& aPermissionName) const;
+  static const PermissionDelegateInfo* GetPermissionDelegateInfo(
+      const nsAString& aPermissionName);
+
+  /*
+   * Helper function to return the delegate principal. This will return nullptr,
+   * or request's principal or top level principal based on the delegate policy
+   * will be applied for a given type.
+   * We use this function when prompting, no need to perform permission check
+   * (deny/allow).
+   *
+   * @param aType the permission type to get
+   * @param aRequest  The request which the principal is get from.
+   * @param aResult out argument which will be a principal that we
+   *                will return from this function.
+   */
+  static nsresult GetDelegatePrincipal(const nsACString& aType,
+                                       nsIContentPermissionRequest* aRequest,
+                                       nsIPrincipal** aResult);
+
+ private:
+  virtual ~PermissionDelegateHandler() = default;
+
+  /*
+   * Check whether the permission is blocked by FeaturePolicy directive.
+   * Default allowlist for a featureName of permission used in permissions
+   * delegate should be set to eSelf, to ensure that permission is denied by
+   * default and only have the opportunity to request permission with allow
+   * attribute.
+   */
+  bool HasFeaturePolicyAllowed(const PermissionDelegateInfo* info) const;
 
   // A weak pointer to our document. Nulled out by DropDocumentReference.
   mozilla::dom::Document* mDocument;

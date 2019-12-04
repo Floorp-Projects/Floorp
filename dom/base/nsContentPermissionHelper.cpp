@@ -35,7 +35,7 @@
 using mozilla::Unused;  // <snicker>
 using namespace mozilla::dom;
 using namespace mozilla;
-
+using DelegateInfo = PermissionDelegateHandler::PermissionDelegateInfo;
 #define kVisibilityChange "visibilitychange"
 
 class VisibilityChangeListener final : public nsIDOMEventListener {
@@ -582,8 +582,20 @@ ContentPermissionRequestBase::GetPrincipal(
 }
 
 NS_IMETHODIMP
+ContentPermissionRequestBase::GetDelegatePrincipal(
+    const nsACString& aType, nsIPrincipal** aRequestingPrincipal) {
+  return PermissionDelegateHandler::GetDelegatePrincipal(aType, this,
+                                                         aRequestingPrincipal);
+}
+
+NS_IMETHODIMP
 ContentPermissionRequestBase::GetTopLevelPrincipal(
     nsIPrincipal** aRequestingPrincipal) {
+  if (!mTopLevelPrincipal) {
+    *aRequestingPrincipal = nullptr;
+    return NS_OK;
+  }
+
   NS_IF_ADDREF(*aRequestingPrincipal = mTopLevelPrincipal);
   return NS_OK;
 }
@@ -911,8 +923,25 @@ nsContentPermissionRequestProxy::GetTopLevelPrincipal(
     return NS_ERROR_FAILURE;
   }
 
+  if (!mParent->mTopLevelPrincipal) {
+    *aRequestingPrincipal = nullptr;
+    return NS_OK;
+  }
+
   NS_ADDREF(*aRequestingPrincipal = mParent->mTopLevelPrincipal);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentPermissionRequestProxy::GetDelegatePrincipal(
+    const nsACString& aType, nsIPrincipal** aRequestingPrincipal) {
+  NS_ENSURE_ARG_POINTER(aRequestingPrincipal);
+  if (mParent == nullptr) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return PermissionDelegateHandler::GetDelegatePrincipal(aType, this,
+                                                         aRequestingPrincipal);
 }
 
 NS_IMETHODIMP
