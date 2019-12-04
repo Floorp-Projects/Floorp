@@ -258,14 +258,29 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
       SecurityWarningFunction;
   nsTArray<SecurityWarningFunction> mSecurityWarningFunctions;
 
-  struct OnDataAvailableRequest {
+  struct OnStartRequestParams {
+    nsCOMPtr<nsIRequest> request;
+  };
+  struct OnDataAvailableParams {
+    nsCOMPtr<nsIRequest> request;
     nsCString data;
     uint64_t offset;
     uint32_t count;
   };
+  struct OnStopRequestParams {
+    nsCOMPtr<nsIRequest> request;
+    nsresult status;
+  };
+  typedef mozilla::Variant<OnStartRequestParams, OnDataAvailableParams,
+                           OnStopRequestParams>
+      StreamListenerFunction;
   // TODO Backtrack this.
-  nsTArray<OnDataAvailableRequest> mPendingRequests;
-  Maybe<nsresult> mStopRequestValue;
+  // The set of nsIStreamListener functions that got called on this
+  // listener, so that we can replay them onto the replacement channel's
+  // listener. This should generally only be OnStartRequest, since we
+  // Suspend() the channel at that point, but it can fail sometimes
+  // so we have to support holding a list.
+  nsTArray<StreamListenerFunction> mStreamListenerFunctions;
 
   nsCOMPtr<nsIChannel> mChannel;
 
@@ -313,6 +328,10 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // Set to true if any previous channel that we redirected away
   // from had a COOP mismatch.
   bool mHasCrossOriginOpenerPolicyMismatch = false;
+  // Set to true if we've received OnStopRequest, and shouldn't
+  // setup a reference from the ParentChannelListener to the replacement
+  // channel.
+  bool mIsFinished = false;
 
   typedef MozPromise<uint64_t, nsresult, true /* exclusive */>
       ContentProcessIdPromise;
