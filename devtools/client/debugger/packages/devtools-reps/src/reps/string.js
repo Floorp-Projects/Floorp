@@ -125,12 +125,13 @@ function StringRep(props) {
   return span(config, text);
 }
 
-function maybeCropLongString(opts, text) {
+function maybeCropLongString(opts, object) {
   const { shouldCrop, cropLimit } = opts;
 
-  const { initial, length } = text;
+  const grip = object && object.getGrip ? object.getGrip() : object;
+  const { initial, length } = grip;
 
-  text = shouldCrop ? initial.substring(0, cropLimit) : initial;
+  let text = shouldCrop ? initial.substring(0, cropLimit) : initial;
 
   if (text.length < length) {
     text += ELLIPSIS;
@@ -339,7 +340,8 @@ function getCroppedString(text, offset = 0, startCropIndex, endCropIndex) {
 }
 
 function isLongString(object) {
-  return object && object.type === "longString";
+  const grip = object && object.getGrip ? object.getGrip() : object;
+  return grip && grip.type === "longString";
 }
 
 function supportsObject(object, noGrip = false) {

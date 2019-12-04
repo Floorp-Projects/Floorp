@@ -20,9 +20,7 @@ function generateDefaults(overrides) {
 
 function getEnumPropertiesMock() {
   return jest.fn(() => ({
-    iterator: {
-      slice: () => ({}),
-    },
+    slice: () => ({}),
   }));
 }
 
