@@ -27,6 +27,7 @@
 #define PermissionDelegateHandler_h__
 
 #include "nsISupports.h"
+#include "nsIPermissionDelegateHandler.h"
 
 class nsIPrincipal;
 class nsIContentPermissionRequest;
@@ -37,12 +38,15 @@ class Document;
 }
 }  // namespace mozilla
 
-class PermissionDelegateHandler final : nsISupports {
+class PermissionDelegateHandler final : public nsIPermissionDelegateHandler {
  public:
-  explicit PermissionDelegateHandler(mozilla::dom::Document* aDocument);
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(PermissionDelegateHandler)
+
+  NS_DECL_NSIPERMISSIONDELEGATEHANDLER
+
+  explicit PermissionDelegateHandler() = default;
+  explicit PermissionDelegateHandler(mozilla::dom::Document* aDocument);
 
   bool Initialize();
 
@@ -139,7 +143,7 @@ class PermissionDelegateHandler final : nsISupports {
                                        nsIPrincipal** aResult);
 
  private:
-  virtual ~PermissionDelegateHandler() = default;
+  ~PermissionDelegateHandler() = default;
 
   /*
    * Check whether the permission is blocked by FeaturePolicy directive.

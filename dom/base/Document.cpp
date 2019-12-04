@@ -8337,6 +8337,10 @@ void Document::SetPrototypeDocument(nsXULPrototypeDocument* aPrototype) {
   mSynchronousDOMContentLoaded = true;
 }
 
+nsIPermissionDelegateHandler* Document::PermDelegateHandler() {
+  return GetPermissionDelegateHandler();
+}
+
 Document* Document::RequestExternalResource(
     nsIURI* aURI, nsIReferrerInfo* aReferrerInfo, nsINode* aRequestingNode,
     ExternalResourceLoad** aPendingLoad) {

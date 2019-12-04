@@ -32,9 +32,20 @@ void FeaturePolicy::InheritPolicy(FeaturePolicy* aParentPolicy) {
 
   RefPtr<FeaturePolicy> dest = this;
   RefPtr<FeaturePolicy> src = aParentPolicy;
+
+  // Inherit origins which explicitly declared policy in chain
+  for (const Feature& featureInChain :
+       aParentPolicy->mDeclaredFeaturesInAncestorChain) {
+    dest->AppendToDeclaredAllowInAncestorChain(featureInChain);
+  }
+
   FeaturePolicyUtils::ForEachFeature([dest, src](const char* aFeatureName) {
     nsString featureName;
     featureName.AppendASCII(aFeatureName);
+    // Store unsafe allows all (allow=*)
+    if (src->HasFeatureUnsafeAllowsAll(featureName)) {
+      dest->mParentAllowedAllFeatures.AppendElement(featureName);
+    }
 
     // If the destination has a declared feature (via the HTTP header or 'allow'
     // attribute) we allow the feature if the destination allows it and the
@@ -76,6 +87,38 @@ bool FeaturePolicy::HasDeclaredFeature(const nsAString& aFeatureName) const {
   return false;
 }
 
+bool FeaturePolicy::HasFeatureUnsafeAllowsAll(
+    const nsAString& aFeatureName) const {
+  for (const Feature& feature : mFeatures) {
+    if (feature.AllowsAll() && feature.Name().Equals(aFeatureName)) {
+      return true;
+    }
+  }
+
+  // We should look into parent too (for example, document of iframe which
+  // allows all, would be unsafe)
+  return mParentAllowedAllFeatures.Contains(aFeatureName);
+}
+
+void FeaturePolicy::AppendToDeclaredAllowInAncestorChain(
+    const Feature& aFeature) {
+  for (Feature& featureInChain : mDeclaredFeaturesInAncestorChain) {
+    if (featureInChain.Name().Equals(aFeature.Name())) {
+      MOZ_ASSERT(featureInChain.HasAllowList());
+
+      nsTArray<nsCOMPtr<nsIPrincipal>> list;
+      aFeature.GetAllowList(list);
+
+      for (nsIPrincipal* principal : list) {
+        featureInChain.AppendToAllowList(principal);
+      }
+      continue;
+    }
+  }
+
+  mDeclaredFeaturesInAncestorChain.AppendElement(aFeature);
+}
+
 void FeaturePolicy::SetDeclaredPolicy(Document* aDocument,
                                       const nsAString& aPolicyString,
                                       nsIPrincipal* aSelfOrigin,
@@ -88,6 +131,13 @@ void FeaturePolicy::SetDeclaredPolicy(Document* aDocument,
 
   Unused << NS_WARN_IF(!FeaturePolicyParser::ParseString(
       aPolicyString, aDocument, aSelfOrigin, aSrcOrigin, mFeatures));
+
+  // Only store explicitly declared allowlist
+  for (const Feature& feature : mFeatures) {
+    if (feature.HasAllowList()) {
+      AppendToDeclaredAllowInAncestorChain(feature);
+    }
+  }
 }
 
 void FeaturePolicy::ResetDeclaredPolicy() {
@@ -95,6 +145,7 @@ void FeaturePolicy::ResetDeclaredPolicy() {
   mDeclaredString.Truncate();
   mSelfOrigin = nullptr;
   mSrcOrigin = nullptr;
+  mDeclaredFeaturesInAncestorChain.Clear();
 }
 
 JSObject* FeaturePolicy::WrapObject(JSContext* aCx,
@@ -122,6 +173,19 @@ bool FeaturePolicy::AllowsFeature(const nsAString& aFeatureName,
   }
 
   return AllowsFeatureInternal(aFeatureName, origin);
+}
+
+bool FeaturePolicy::AllowsFeatureExplicitlyInAncestorChain(
+    const nsAString& aFeatureName, nsIPrincipal* aOrigin) const {
+  MOZ_ASSERT(aOrigin);
+
+  for (const Feature& feature : mDeclaredFeaturesInAncestorChain) {
+    if (feature.Name().Equals(aFeatureName)) {
+      return feature.AllowListContains(aOrigin);
+    }
+  }
+
+  return false;
 }
 
 bool FeaturePolicy::AllowsFeatureInternal(const nsAString& aFeatureName,

@@ -123,6 +123,51 @@ FeaturePolicyUtils::DefaultAllowListFeature(const nsAString& aFeatureName) {
   return FeaturePolicyValue::eNone;
 }
 
+static bool IsSameOriginAsTop(Document* aDocument) {
+  MOZ_ASSERT(aDocument);
+
+  BrowsingContext* browsingContext = aDocument->GetBrowsingContext();
+  if (!browsingContext) {
+    return false;
+  }
+
+  nsPIDOMWindowOuter* topWindow = browsingContext->Top()->GetDOMWindow();
+  if (!topWindow) {
+    // If we don't have a DOMWindow, We are not in same origin.
+    return false;
+  }
+
+  Document* topLevelDocument = topWindow->GetExtantDoc();
+  if (!topLevelDocument) {
+    return false;
+  }
+
+  return NS_SUCCEEDED(
+      nsContentUtils::CheckSameOrigin(topLevelDocument, aDocument));
+}
+
+/* static */
+bool FeaturePolicyUtils::IsFeatureUnsafeAllowedAll(
+    Document* aDocument, const nsAString& aFeatureName) {
+  MOZ_ASSERT(aDocument);
+
+  if (!StaticPrefs::dom_security_featurePolicy_enabled()) {
+    return false;
+  }
+
+  if (!aDocument->IsHTMLDocument()) {
+    return false;
+  }
+
+  FeaturePolicy* policy = aDocument->FeaturePolicy();
+  MOZ_ASSERT(policy);
+
+  return policy->HasFeatureUnsafeAllowsAll(aFeatureName) &&
+         !policy->AllowsFeatureExplicitlyInAncestorChain(
+             aFeatureName, policy->DefaultOrigin()) &&
+         !IsSameOriginAsTop(aDocument);
+}
+
 /* static */
 bool FeaturePolicyUtils::IsFeatureAllowed(Document* aDocument,
                                           const nsAString& aFeatureName) {
