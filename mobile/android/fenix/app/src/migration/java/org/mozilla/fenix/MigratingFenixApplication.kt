@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix
 
+import android.content.Context
 import kotlinx.coroutines.runBlocking
 import mozilla.components.support.migration.FennecMigrator
 
@@ -11,12 +12,25 @@ import mozilla.components.support.migration.FennecMigrator
  * An application class which knows how to migrate Fennec data.
  */
 class MigratingFenixApplication : FenixApplication() {
+    val migrator by lazy {
+        FennecMigrator.Builder(this, this.components.analytics.crashReporter)
+            .migrateOpenTabs(this.components.core.sessionManager)
+            .migrateHistory(this.components.core.historyStorage)
+            .migrateBookmarks(this.components.core.bookmarksStorage)
+            .migrateLogins(
+                this.components.core.passwordsStorage.store,
+                this.components.core.passwordsEncryptionKey
+            )
+            .migrateFxa(this.components.backgroundServices.accountManager)
+            .build()
+    }
+
     override fun setupInMainProcessOnly() {
         migrateGeckoBlocking()
 
         super.setupInMainProcessOnly()
 
-        migrateDataAsynchronously()
+        migrator.startMigrationServiceIfNeeded(MigrationService::class.java)
     }
 
     private fun migrateGeckoBlocking() {
@@ -28,19 +42,8 @@ class MigratingFenixApplication : FenixApplication() {
             migrator.migrateAsync().await()
         }
     }
+}
 
-    private fun migrateDataAsynchronously() {
-        val migrator = FennecMigrator.Builder(this, this.components.analytics.crashReporter)
-            .migrateOpenTabs(this.components.core.sessionManager)
-            .migrateHistory(this.components.core.historyStorage)
-            .migrateBookmarks(this.components.core.bookmarksStorage)
-            .migrateLogins(
-                this.components.core.passwordsStorage.store,
-                this.components.core.passwordsEncryptionKey
-            )
-            .migrateFxa(this.components.backgroundServices.accountManager)
-            .build()
-
-        migrator.migrateAsync()
-    }
+fun Context.getMigratorFromApplication(): FennecMigrator {
+    return (applicationContext as MigratingFenixApplication).migrator
 }

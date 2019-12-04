@@ -12,6 +12,7 @@
     <application
         android:name="org.mozilla.fenix.MigratingFenixApplication"
         tools:replace="android:name">
+        <service android:name="org.mozilla.fenix.MigrationService" />
     </application>
 </manifest>
 
