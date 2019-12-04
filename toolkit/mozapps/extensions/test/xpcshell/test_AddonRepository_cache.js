@@ -12,8 +12,6 @@ const BASE_URL = "http://example.com";
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 const PREF_GETADDONS_CACHE_TYPES = "extensions.getAddons.cache.types";
 const GETADDONS_RESULTS = BASE_URL + "/data/test_AddonRepository_cache.json";
-const COMPAT_RESULTS =
-  BASE_URL + "/data/test_AddonRepository_cache_compat.json";
 const EMPTY_RESULT = BASE_URL + "/data/test_AddonRepository_empty.json";
 const FAILED_RESULT = BASE_URL + "/data/test_AddonRepository_fail.json";
 
@@ -540,7 +538,6 @@ add_task(async function run_test_3() {
   Assert.ok(gDBFile.exists());
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, FAILED_RESULT);
-  Services.prefs.setCharPref(PREF_COMPAT_OVERRIDES, FAILED_RESULT);
 
   await AddonRepository.backgroundUpdateCheck();
   await check_initialized_cache([false, false, false]);
@@ -549,7 +546,6 @@ add_task(async function run_test_3() {
 // Tests repopulateCache when search returns no results
 add_task(async function run_test_4() {
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, EMPTY_RESULT);
-  Services.prefs.setCharPref(PREF_COMPAT_OVERRIDES, FAILED_RESULT);
 
   await AddonRepository.backgroundUpdateCheck();
   await check_initialized_cache([false, false, false]);
@@ -558,7 +554,6 @@ add_task(async function run_test_4() {
 // Tests repopulateCache when search returns results
 add_task(async function run_test_5() {
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, GETADDONS_RESULTS);
-  Services.prefs.setCharPref(PREF_COMPAT_OVERRIDES, COMPAT_RESULTS);
 
   await AddonRepository.backgroundUpdateCheck();
   await check_initialized_cache([true, true, true]);

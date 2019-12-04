@@ -109,7 +109,6 @@ const PENDING_INSTALL_METADATA = [
   "installDate",
   "updateDate",
   "applyBackgroundUpdates",
-  "compatibilityOverrides",
   "installTelemetryInfo",
 ];
 
@@ -534,19 +533,6 @@ class AddonInternal {
       !this.strictCompatibility &&
       (!AddonManager.strictCompatibility || this.type == "dictionary")
     ) {
-      // The repository can specify compatibility overrides.
-      // Note: For now, only blacklisting is supported by overrides.
-      let overrides = AddonRepository.getCompatibilityOverridesSync(this.id);
-      if (overrides) {
-        let override = AddonRepository.findMatchingCompatOverride(
-          this.version,
-          overrides
-        );
-        if (override) {
-          return false;
-        }
-      }
-
       return Services.vc.compare(version, minVersion) >= 0;
     }
 
@@ -2545,10 +2531,7 @@ this.XPIDatabase = {
     await Promise.all(
       addons.map(addon =>
         AddonRepository.getCachedAddonByID(addon.id).then(aRepoAddon => {
-          if (
-            aRepoAddon ||
-            AddonRepository.getCompatibilityOverridesSync(addon.id)
-          ) {
+          if (aRepoAddon) {
             logger.debug("updateAddonRepositoryData got info for " + addon.id);
             addon._repositoryAddon = aRepoAddon;
             this.updateAddonDisabledState(addon);

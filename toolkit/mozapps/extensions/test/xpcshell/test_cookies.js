@@ -25,13 +25,6 @@ add_task(async function test_cookies() {
   makeHandler("/get", gets, JSON.stringify({ results: [] }));
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, "http://example.com/get");
 
-  let overrides = [];
-  makeHandler("/overrides", overrides, JSON.stringify({ results: [] }));
-  Services.prefs.setCharPref(
-    PREF_COMPAT_OVERRIDES,
-    "http://example.com/overrides"
-  );
-
   let updates = [];
   makeHandler(
     "/update",
@@ -88,13 +81,6 @@ add_task(async function test_cookies() {
 
   equal(gets.length, 1, "Saw one addon metadata request");
   equal(gets[0].hasHeader("Cookie"), false, "Metadata request has no cookies");
-
-  equal(overrides.length, 1, "Saw one compat overrides request");
-  equal(
-    overrides[0].hasHeader("Cookie"),
-    false,
-    "Compat overrides request has no cookies"
-  );
 
   await Promise.all([
     AddonTestUtils.promiseInstallEvent("onDownloadFailed"),

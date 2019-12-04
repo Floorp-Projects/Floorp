@@ -60,10 +60,6 @@ add_task(async function test_paged_api() {
     PREF_GETADDONS_BYIDS,
     `http://localhost:${PORT}/addons/0`
   );
-  Services.prefs.setCharPref(
-    PREF_COMPAT_OVERRIDES,
-    `http://localhost:${PORT}/empty`
-  );
 
   await promiseStartupManager();
 

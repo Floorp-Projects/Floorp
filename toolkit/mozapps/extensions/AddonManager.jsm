@@ -458,71 +458,6 @@ AddonScreenshot.prototype = {
 };
 
 /**
- * This represents a compatibility override for an addon.
- *
- * @param  aType
- *         Override type - "compatible" or "incompatible"
- * @param  aMinVersion
- *         Minimum version of the addon to match
- * @param  aMaxVersion
- *         Maximum version of the addon to match
- * @param  aAppID
- *         Application ID used to match appMinVersion and appMaxVersion
- * @param  aAppMinVersion
- *         Minimum version of the application to match
- * @param  aAppMaxVersion
- *         Maximum version of the application to match
- */
-function AddonCompatibilityOverride(
-  aType,
-  aMinVersion,
-  aMaxVersion,
-  aAppID,
-  aAppMinVersion,
-  aAppMaxVersion
-) {
-  this.type = aType;
-  this.minVersion = aMinVersion;
-  this.maxVersion = aMaxVersion;
-  this.appID = aAppID;
-  this.appMinVersion = aAppMinVersion;
-  this.appMaxVersion = aAppMaxVersion;
-}
-
-AddonCompatibilityOverride.prototype = {
-  /**
-   * Type of override - "incompatible" or "compatible".
-   * Only "incompatible" is supported for now.
-   */
-  type: null,
-
-  /**
-   * Min version of the addon to match.
-   */
-  minVersion: null,
-
-  /**
-   * Max version of the addon to match.
-   */
-  maxVersion: null,
-
-  /**
-   * Application ID to match.
-   */
-  appID: null,
-
-  /**
-   * Min version of the application to match.
-   */
-  appMinVersion: null,
-
-  /**
-   * Max version of the application to match.
-   */
-  appMaxVersion: null,
-};
-
-/**
  * A type of add-on, used by the UI to determine how to display different types
  * of add-ons.
  *
@@ -3611,8 +3546,6 @@ var AddonManagerPrivate = {
   AddonAuthor,
 
   AddonScreenshot,
-
-  AddonCompatibilityOverride,
 
   AddonType,
 
