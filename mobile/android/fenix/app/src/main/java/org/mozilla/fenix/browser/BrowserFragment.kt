@@ -256,7 +256,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             view?.let { view ->
                 FenixSnackbar.make(view, Snackbar.LENGTH_SHORT)
                     .setText(view.context.getString(R.string.create_collection_tab_saved))
-                    .setAnchorView(browserToolbarView.view)
+                    .setAnchorView(browserToolbarView.getSnackbarAnchor())
                     .show()
             }
         }

@@ -51,8 +51,8 @@ import mozilla.components.feature.session.SwipeRefreshFeature
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
-import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.PermissionsFeature
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
 import org.mozilla.fenix.Experiments
@@ -254,8 +254,14 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 promptsStyling = DownloadsFeature.PromptsStyling(
                     gravity = Gravity.BOTTOM,
                     shouldWidthMatchParent = true,
-                    positiveButtonBackgroundColor = ThemeManager.resolveAttribute(R.attr.accent, context),
-                    positiveButtonTextColor = ThemeManager.resolveAttribute(R.attr.contrastText, context),
+                    positiveButtonBackgroundColor = ThemeManager.resolveAttribute(
+                        R.attr.accent,
+                        context
+                    ),
+                    positiveButtonTextColor = ThemeManager.resolveAttribute(
+                        R.attr.contrastText,
+                        context
+                    ),
                     positiveButtonRadius = (resources.getDimensionPixelSize(R.dimen.tab_corner_radius)).toFloat()
                 ),
                 onNeedToRequestPermissions = { permissions ->
@@ -266,7 +272,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             downloadFeature.onDownloadStopped = { download, _, downloadJobStatus ->
                 // If the download is just paused, don't show any in-app notification
                 if (downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.COMPLETED ||
-                    downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED) {
+                    downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED
+                ) {
                     val dialog = DownloadNotificationBottomSheetDialog(
                         context = context,
                         didFail = downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED,
@@ -275,7 +282,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                         onCannotOpenFile = {
                             FenixSnackbar.make(view, Snackbar.LENGTH_SHORT)
                                 .setText(context.getString(R.string.mozac_feature_downloads_could_not_open_file))
-                                .setAnchorView(browserToolbarView.view)
+                                .setAnchorView(browserToolbarView.getSnackbarAnchor())
                                 .show()
                         }
 
@@ -670,7 +677,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
                 view?.let { view ->
                     FenixSnackbar.make(view, Snackbar.LENGTH_LONG)
-                        .setAnchorView(browserToolbarView.view)
+                        .setAnchorView(browserToolbarView.getSnackbarAnchor())
                         .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
                             nav(
                                 R.id.browserFragment,
