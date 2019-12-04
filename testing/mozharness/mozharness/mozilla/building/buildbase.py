@@ -307,6 +307,7 @@ class BuildOptionParser(object):
         'x86_64-beta': 'builds/releng_sub_%s_configs/%s_x86_64_beta.py',
         'x86_64-beta-debug': 'builds/releng_sub_%s_configs/%s_x86_64_beta_debug.py',
         'x86_64-debug': 'builds/releng_sub_%s_configs/%s_x86_64_debug.py',
+        'x86_64-fuzzing-asan': 'builds/releng_sub_%s_configs/%s_x86_64_fuzzing_asan.py',
         'api-16-partner-sample1': 'builds/releng_sub_%s_configs/%s_api_16_partner_sample1.py',
         'aarch64': 'builds/releng_sub_%s_configs/%s_aarch64.py',
         'aarch64-beta': 'builds/releng_sub_%s_configs/%s_aarch64_beta.py',
