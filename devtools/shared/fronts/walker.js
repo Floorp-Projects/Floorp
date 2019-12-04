@@ -512,6 +512,15 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
         return nodeFront;
       }
       nodeFront = await this.querySelector(nodeFront, selector);
+
+      // It's possible the containing iframe isn't available by the time
+      // this.querySelector is called, which causes the re-selected node to be
+      // unavailable. There also isn't a way for us to know when all iframes on the page
+      // have been created after a reload. Because of this, we should should bail here.
+      if (!nodeFront) {
+        return null;
+      }
+
       if (nodeSelectors.length > 0) {
         if (nodeFront.traits.supportsWaitForFrameLoad) {
           // Backward compatibility: only FF72 or newer are able to wait for
@@ -534,7 +543,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
           );
         });
       }
-      return querySelectors(nodeFront);
+      return querySelectors(nodeFront) || nodeFront;
     };
     const nodeFront = await this.getRootNode();
 
