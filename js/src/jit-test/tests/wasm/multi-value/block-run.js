@@ -239,3 +239,30 @@ wasmFullPass(`
         drop
       end))`,
              42);
+
+wasmFullPass(`
+  (module
+    (func (export "run") (result i32)
+      (block (result i32 i32)
+        (i32.popcnt (i32.const 1))
+        (i32.popcnt (i32.const 3))
+        (block (param i32 i32)
+          (i32.const 6)
+          (i32.const 7)
+          (br 1))
+        (unreachable))
+      i32.add))`,
+             13);
+
+wasmFullPass(`
+  (module
+    (func (export "run") (result i32)
+      (block (result i32 i32)
+        (i32.popcnt (i32.const 1))
+        (i32.popcnt (i32.const 3))
+        (block) ;; sync()
+        (i32.const 6)
+        (i32.const 7)
+        (br 0))
+      i32.add))`,
+             13);
