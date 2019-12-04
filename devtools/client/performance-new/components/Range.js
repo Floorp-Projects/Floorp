@@ -1,9 +1,23 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// @ts-check
+
+/**
+ * @typedef {import("../@types/perf").ScaleFunctions} ScaleFunctions
+ */
+
+/**
+ * @typedef {Object} Props
+ * @property {number} value
+ * @property {string} label
+ * @property {string} id
+ * @property {ScaleFunctions} scale
+ * @property {(value: number) => unknown} onChange
+ * @property {(value: number) => React.ReactNode} display
+ */
 "use strict";
 const { PureComponent } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   div,
   input,
@@ -12,28 +26,22 @@ const {
 
 /**
  * Provide a numeric range slider UI that works off of custom numeric scales.
+ * @extends React.PureComponent<Props>
  */
 class Range extends PureComponent {
-  static get propTypes() {
-    return {
-      value: PropTypes.number.isRequired,
-      label: PropTypes.string.isRequired,
-      id: PropTypes.string.isRequired,
-      scale: PropTypes.object.isRequired,
-      onChange: PropTypes.func.isRequired,
-      display: PropTypes.func.isRequired,
-    };
-  }
-
+  /** @param {Props} props */
   constructor(props) {
     super(props);
     this.handleInput = this.handleInput.bind(this);
   }
 
-  handleInput(e) {
-    e.preventDefault();
+  /**
+   * @param {React.ChangeEvent<HTMLInputElement>} event
+   */
+  handleInput(event) {
+    event.preventDefault();
     const { scale, onChange } = this.props;
-    const frac = e.target.value / 100;
+    const frac = Number(event.target.value) / 100;
     onChange(scale.fromFractionToSingleDigitValue(frac));
   }
 
