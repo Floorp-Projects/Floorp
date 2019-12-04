@@ -10315,6 +10315,23 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "text-underline-position": {
+    "isInherited": true,
+    "subproperties": [
+      "text-underline-position"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "left",
+      "revert",
+      "right",
+      "under",
+      "unset"
+    ]
+  },
   "top": {
     "isInherited": false,
     "subproperties": [
