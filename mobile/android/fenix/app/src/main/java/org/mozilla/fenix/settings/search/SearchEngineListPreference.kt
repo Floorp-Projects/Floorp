@@ -28,6 +28,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.allowUndo
+import java.util.Locale
 
 abstract class SearchEngineListPreference @JvmOverloads constructor(
     context: Context,
@@ -102,7 +103,7 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
 
         searchEngineList.list
             .filter { it.identifier != searchEngineList.default?.identifier }
-            .sortedBy { it.name }
+            .sortedBy { it.name.toLowerCase(Locale.getDefault()) }
             .forEachIndexed(setupSearchEngineItem)
     }
 
