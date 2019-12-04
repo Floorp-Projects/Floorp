@@ -1,0 +1,170 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.perf {
+  max-width: 670px;
+  margin: 10vh auto;
+  padding: 0 5%;
+}
+
+/* This styling was originally taken from the about:preferences page. */
+h1 {
+  margin: 0 0 8px;
+  font-size: 1.46em;
+  font-weight: 300;
+  line-height: 1.3em;
+}
+
+/* This styling was originally taken from the about:preferences page. */
+h2 {
+  /* This margin was enlarged */
+  margin: 30px 0 15px;
+  font-size: 1.14em;
+  line-height: normal;
+}
+
+.perf-intro-row {
+  margin: 1.7em 0;
+  display: flex;
+  line-height: 1.8em;
+  align-items: center;
+}
+
+.perf-intro-icon {
+  width: 4em;
+  height: 4em;
+  margin-inline-end: 1.3em;
+  background-image: url(chrome://devtools/skin/images/tool-profiler.svg);
+  background-size: 100%;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  opacity: 0.5;
+}
+
+.perf-presets {
+  margin: 2em 0;
+  border-bottom: 1px solid var(--in-content-border-color);
+}
+
+.perf-settings-row {
+  display: flex;
+  line-height: 1.8;
+}
+
+.perf-settings-label {
+  height: 30px;
+  min-width: 140px;
+}
+
+.perf-settings-value {
+  display: flex;
+  flex: 1;
+}
+
+.perf-settings-range-input {
+  flex: 1;
+}
+
+.perf-settings-range-input-el {
+  width: 100%;
+}
+
+.perf-settings-range-value {
+  min-width: 90px;
+  text-align: end;
+}
+
+.perf-settings-thread-columns {
+  margin-bottom: 20px;
+  display: flex;
+  line-height: 1.3;
+}
+
+.perf-settings-thread-column {
+  flex: 1;
+}
+
+.perf-settings-feature-label {
+  display: block;
+}
+
+.perf-settings-thread-label {
+  display: flex;
+  margin: 15px 0;
+}
+
+.perf-settings-text-label {
+  flex: 1;
+}
+
+.perf-settings-text-input {
+  width: calc(100% - 4px);
+  box-sizing: border-box;
+}
+
+.perf-settings-feature-label {
+  margin: 1.3em 0;
+
+}
+
+.perf-settings-checkbox-and-name {
+  display: flex;
+}
+
+.perf-settings-checkbox {
+  align-self: flex-start;
+}
+
+.perf-settings-feature-title {
+  font-size: 13px;
+  margin: 0.2em 0 0 30px;
+  line-height: 1.6;
+  opacity: 0.8;
+}
+
+.perf-settings-subtext {
+  font-weight: bold;
+}
+
+.perf-settings-checkbox-label-disabled {
+  opacity: 0.8;
+}
+
+.perf-settings-dir-list {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100px;
+  border: 1px solid var(--in-content-border-color);
+  padding: 0;
+  overflow-y: auto;
+  background-color: var(--in-content-box-background);
+  color: inherit !important;
+}
+
+.perf-settings-dir-list:hover {
+  border-color: var(--in-content-border-hover);
+}
+
+.pref-settings-dir-list-item {
+  padding: 3px 5px;
+}
+
+.pref-settings-dir-list-item::before {
+  content: url(chrome://devtools/skin/images/folder.svg);
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-inline-end: 4px;
+  vertical-align: -2px;
+  -moz-context-properties: fill;
+  fill: var(--in-content-page-color);
+}
+
+.perf-settings-dir-list-button-group {
+  padding: 4px 2px;
+}
+
+.perf-settings-dir-list-button-group input[type=button] {
+  margin-left: 0;
+}
