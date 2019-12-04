@@ -37,44 +37,19 @@
 
 "use strict";
 
-const {
-  PureComponent,
-  createFactory,
-} = require("devtools/client/shared/vendor/react");
+const { PureComponent } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const {
-  div,
-  button,
-} = require("devtools/client/shared/vendor/react-dom-factories");
-const RecordingButton = createFactory(
-  require("devtools/client/performance-new/components/RecordingButton.js")
-);
-const Settings = createFactory(
-  require("devtools/client/performance-new/components/Settings.js")
-);
-const Description = createFactory(
-  require("devtools/client/performance-new/components/Description.js")
-);
 const actions = require("devtools/client/performance-new/store/actions");
 const selectors = require("devtools/client/performance-new/store/selectors");
-const {
-  restartBrowserWithEnvironmentVariable,
-} = require("devtools/client/performance-new/browser");
 
 /**
- * This is the top level component for initializing the performance recording panel.
- * It has two jobs:
- *
- * 1) It manages state changes for the performance recording. e.g. If the profiler
+ * This component state changes for the performance recording. e.g. If the profiler
  * suddenly becomes unavailable, it needs to react to those changes, and update the
  * recordingState in the store.
  *
- * 2) It mounts all of the sub components, but is itself very light on actual
- * markup for presentation.
- *
  * @extends {React.PureComponent<Props>}
  */
-class Perf extends PureComponent {
+class ProfilerEventHandling extends PureComponent {
   /** @param {Props} props */
   constructor(props) {
     super(props);
@@ -86,7 +61,6 @@ class Perf extends PureComponent {
     this.handlePrivateBrowsingEnding = this.handlePrivateBrowsingEnding.bind(
       this
     );
-    this.handleRestart = this.handleRestart.bind(this);
   }
 
   componentDidMount() {
@@ -277,53 +251,8 @@ class Perf extends PureComponent {
     this.props.changeRecordingState("available-to-record");
   }
 
-  handleRestart() {
-    const { promptEnvRestart } = this.props;
-    if (!promptEnvRestart) {
-      throw new Error(
-        "handleRestart() should only be called when promptEnvRestart exists."
-      );
-    }
-    restartBrowserWithEnvironmentVariable(promptEnvRestart, "1");
-  }
-
   render() {
-    const { isSupportedPlatform, isPopup, promptEnvRestart } = this.props;
-
-    if (isSupportedPlatform === null) {
-      // We don't know yet if this is a supported platform, wait for a response.
-      return null;
-    }
-
-    const additionalClassName = isPopup ? "perf-popup" : "perf-devtools";
-
-    return div(
-      { className: `perf ${additionalClassName}` },
-      promptEnvRestart
-        ? div(
-            { className: "perf-env-restart" },
-            div(
-              {
-                className:
-                  "perf-photon-message-bar perf-photon-message-bar-warning perf-env-restart-fixed",
-              },
-              div({ className: "perf-photon-message-bar-warning-icon" }),
-              "The browser must be restarted to enable this feature.",
-              button(
-                {
-                  className: "perf-photon-button perf-photon-button-micro",
-                  type: "button",
-                  onClick: this.handleRestart,
-                },
-                "Restart"
-              )
-            )
-          )
-        : null,
-      RecordingButton(),
-      Settings(),
-      isPopup ? null : Description()
-    );
+    return null;
   }
 }
 
@@ -350,4 +279,4 @@ const mapDispatchToProps = {
 module.exports = connect(
   mapStateToProps,
   mapDispatchToProps
-)(Perf);
+)(ProfilerEventHandling);
