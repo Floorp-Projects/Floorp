@@ -62,8 +62,10 @@ class WorkerTargetFront extends TargetMixin(
         // process.
         // TODO: Cleanup after Bug 1496997 lands (no need to check
         // isParentInterceptEnabled trait)
-        this.registration = await this._getRegistration();
-        await this.registration.preventShutdown();
+        this.registration = await this._getRegistrationIfActive();
+        if (this.registration) {
+          await this.registration.preventShutdown();
+        }
       }
 
       this._url = response.url;
@@ -100,12 +102,12 @@ class WorkerTargetFront extends TargetMixin(
     return response;
   }
 
-  async _getRegistration() {
+  async _getRegistrationIfActive() {
     const {
       registrations,
     } = await this.client.mainRoot.listServiceWorkerRegistrations();
-    return registrations.find(registrationFront => {
-      return this.id === registrationFront.activeWorker.id;
+    return registrations.find(({ activeWorker }) => {
+      return activeWorker && this.id === activeWorker.id;
     });
   }
 
