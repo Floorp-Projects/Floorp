@@ -5803,10 +5803,10 @@ class Database final
   const PersistenceType mPersistenceType;
   const bool mFileHandleDisabled;
   const bool mChromeWriteAccessAllowed;
-  bool mClosed;
-  bool mInvalidated;
-  bool mActorWasAlive;
-  bool mActorDestroyed;
+  FlippedOnce<false> mClosed;
+  FlippedOnce<false> mInvalidated;
+  FlippedOnce<false> mActorWasAlive;
+  FlippedOnce<false> mActorDestroyed;
   nsCOMPtr<nsIEventTarget> mBackgroundThread;
 #ifdef DEBUG
   bool mAllBlobsUnmapped;
@@ -12871,10 +12871,6 @@ Database::Database(Factory* aFactory, const PrincipalInfo& aPrincipalInfo,
       mPersistenceType(aMetadata->mCommonMetadata.persistenceType()),
       mFileHandleDisabled(aFileHandleDisabled),
       mChromeWriteAccessAllowed(aChromeWriteAccessAllowed),
-      mClosed(false),
-      mInvalidated(false),
-      mActorWasAlive(false),
-      mActorDestroyed(false),
       mBackgroundThread(GetCurrentThreadEventTarget())
 #ifdef DEBUG
       ,
@@ -12971,7 +12967,7 @@ void Database::Invalidate() {
     return;
   }
 
-  mInvalidated = true;
+  mInvalidated.Flip();
 
   if (mActorWasAlive && !mActorDestroyed) {
     Unused << SendInvalidate();
@@ -13082,10 +13078,9 @@ void Database::NoteInactiveMutableFile() {
 
 void Database::SetActorAlive() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mActorWasAlive);
   MOZ_ASSERT(!mActorDestroyed);
 
-  mActorWasAlive = true;
+  mActorWasAlive.Flip();
 
   // This reference will be absorbed by IPDL and released when the actor is
   // destroyed.
@@ -13202,7 +13197,7 @@ bool Database::CloseInternal() {
     return true;
   }
 
-  mClosed = true;
+  mClosed.Flip();
 
   if (gConnectionPool) {
     gConnectionPool->CloseDatabaseWhenIdle(Id());
@@ -13305,9 +13300,8 @@ bool Database::VerifyRequestParams(const DatabaseRequestParams& aParams) const {
 
 void Database::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mActorDestroyed);
 
-  mActorDestroyed = true;
+  mActorDestroyed.Flip();
 
   if (!IsInvalidated()) {
     Invalidate();
