@@ -4622,8 +4622,13 @@ ContentParent::AllocPContentPermissionRequestParent(
     return nullptr;
   }
 
+  nsIPrincipal* topPrincipal = aTopLevelPrincipal;
+  if (!topPrincipal) {
+    nsCOMPtr<nsIPrincipal> principal = tp->GetContentPrincipal();
+    topPrincipal = principal;
+  }
   return nsContentPermissionUtils::CreateContentPermissionRequestParent(
-      aRequests, tp->GetOwnerElement(), aPrincipal, aTopLevelPrincipal,
+      aRequests, tp->GetOwnerElement(), aPrincipal, topPrincipal,
       aIsHandlingUserInput, aDocumentHasUserInput, aPageLoadTimestamp, aTabId);
 }
 
