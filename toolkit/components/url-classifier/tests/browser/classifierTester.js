@@ -339,32 +339,46 @@ var classifierTester = {
     })();
   },
 
-  getPluginInfo(browser, depth) {
-    return SpecialPowers.spawn(
-      browser,
-      [classifierTester.IFRAME_ID, depth],
-      (iframeId, depth) => {
-        let doc = content.document;
-        let win = content.window;
-        for (let i = 0; i < depth; ++i) {
-          let frame = doc.getElementById(iframeId);
-          doc = frame.contentDocument;
-          win = frame.contentWindow;
-        }
+  async getPluginInfo(browser, depth) {
+    async function fn(frame, iframeId, depth) {
+      return SpecialPowers.spawn(
+        frame,
+        [iframeId, depth, fn.toSource()],
+        async (iframeId, depth, fnSource) => {
+          // eslint-disable-next-line no-eval
+          let fnGetIframePluginInfo = eval(`(() => (${fnSource}))()`);
 
-        let pluginObj = doc.getElementById("testObject");
-        if (!(pluginObj instanceof Ci.nsIObjectLoadingContent)) {
-          throw new Error("Unable to find plugin!");
+          let doc = content.document;
+          let win = content.window;
+          let frame = doc.getElementById(iframeId);
+          if (!frame) {
+            throw new Error("Unable to find iframe!");
+          }
+          if (depth != 0) {
+            return fnGetIframePluginInfo(
+              frame.contentWindow,
+              iframeId,
+              --depth
+            );
+          }
+
+          let pluginObj = doc.getElementById("testObject");
+          if (!(pluginObj instanceof Ci.nsIObjectLoadingContent)) {
+            throw new Error("Unable to find plugin!");
+          }
+
+          return {
+            pluginFallbackType: pluginObj.pluginFallbackType,
+            activated: pluginObj.activated,
+            hasRunningPlugin: pluginObj.hasRunningPlugin,
+            listed: "Shockwave Flash" in win.navigator.plugins,
+            flashClassification: doc.documentFlashClassification,
+          };
         }
-        return {
-          pluginFallbackType: pluginObj.pluginFallbackType,
-          activated: pluginObj.activated,
-          hasRunningPlugin: pluginObj.hasRunningPlugin,
-          listed: "Shockwave Flash" in win.navigator.plugins,
-          flashClassification: doc.documentFlashClassification,
-        };
-      }
-    );
+      );
+    }
+
+    return fn(browser, classifierTester.IFRAME_ID, depth);
   },
 
   checkPluginInfo(pluginInfo, expectedClassification, flashSetting) {
