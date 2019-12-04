@@ -48,9 +48,6 @@ is(parseInt(percentHeight) + 50, parseInt(vhHeight),
    "vh units should be 50px greater than %-units");
 is(document.documentElement.clientHeight, parseInt(percentHeight),
    "documentElement.clientHeight should equal to %-units");
-is(window.innerHeight, parseInt(percentHeight),
-   "window.innerHeight should equal to %-units when the dynamic toolbar is " +
-   "visible");
 ok(matchMedia(`(height: ${percentHeight})`).matches,
    "Media Queries' height is not including the dynamic toolbar max height");
 
