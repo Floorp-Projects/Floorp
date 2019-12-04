@@ -156,7 +156,12 @@ function Inspector(toolbox) {
   this.telemetry = toolbox.telemetry;
   this.store = Store({
     createObjectFront: object => {
-      return new ObjectFront(toolbox.target.client, object);
+      return new ObjectFront(
+        this.inspectorFront.conn,
+        this.inspectorFront.targetFront,
+        this.inspectorFront,
+        object
+      );
     },
     releaseActor: actor => {
       if (!actor) {
