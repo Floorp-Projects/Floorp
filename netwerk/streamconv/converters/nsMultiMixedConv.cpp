@@ -555,6 +555,12 @@ nsMultiMixedConv::OnStopRequest(nsIRequest* request, nsresult aStatus) {
     (void)mFinalListener->OnStopRequest(request, aStatus);
   }
 
+  nsCOMPtr<nsIMultiPartChannelListener> multiListener =
+      do_QueryInterface(mFinalListener);
+  if (multiListener) {
+    multiListener->OnAfterLastPart(aStatus);
+  }
+
   return NS_OK;
 }
 

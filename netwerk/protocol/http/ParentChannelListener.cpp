@@ -61,6 +61,7 @@ NS_INTERFACE_MAP_BEGIN(ParentChannelListener)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIMultiPartChannelListener)
   NS_INTERFACE_MAP_ENTRY(nsINetworkInterceptController)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(ParentChannelListener)
@@ -93,7 +94,13 @@ ParentChannelListener::OnStopRequest(nsIRequest* aRequest,
        this, static_cast<uint32_t>(aStatusCode)));
   nsresult rv = mNextListener->OnStopRequest(aRequest, aStatusCode);
 
-  mNextListener = nullptr;
+  // If we're not a multi-part channel, then we can drop mListener and break the
+  // reference cycle. If we are, then this might be called again, so wait for
+  // AllPartsStopped instead.
+  nsCOMPtr<nsIMultiPartChannel> multiPartChannel = do_QueryInterface(aRequest);
+  if (!multiPartChannel) {
+    mNextListener = nullptr;
+  }
   return rv;
 }
 
@@ -113,6 +120,22 @@ ParentChannelListener::OnDataAvailable(nsIRequest* aRequest,
   LOG(("ParentChannelListener::OnDataAvailable [this=%p]\n", this));
   return mNextListener->OnDataAvailable(aRequest, aInputStream, aOffset,
                                         aCount);
+}
+
+//-----------------------------------------------------------------------------
+// ParentChannelListener::nsIMultiPartChannelListener
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+ParentChannelListener::OnAfterLastPart(nsresult aStatus) {
+  nsCOMPtr<nsIMultiPartChannelListener> multiListener =
+      do_QueryInterface(mNextListener);
+  if (multiListener) {
+    multiListener->OnAfterLastPart(aStatus);
+  }
+
+  mNextListener = nullptr;
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------

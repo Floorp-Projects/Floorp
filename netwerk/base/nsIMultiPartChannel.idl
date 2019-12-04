@@ -33,3 +33,17 @@ interface nsIMultiPartChannel : nsISupports
      */
     readonly attribute boolean isLastPart;
 };
+
+/**
+ * An interface that listeners can implement to receive a notification
+ * when the last part of the multi-part channel has finished, and the
+ * final OnStopRequest has been sent.
+  */
+[uuid(b084959a-4fb9-41a5-88a0-d0f045ce75cf)]
+interface nsIMultiPartChannelListener : nsISupports
+{
+    /**
+     * Sent when all parts have finished and sent OnStopRequest.
+     */
+    void onAfterLastPart(in nsresult status);
+};
