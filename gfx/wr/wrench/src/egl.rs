@@ -17,7 +17,7 @@ use glutin::Api;
 
 use std::ffi::{CStr, CString};
 use std::os::raw::c_int;
-use std::{mem, ptr};
+use std::ptr;
 use std::cell::Cell;
 
 use mozangle::egl::ffi as egl;
@@ -57,8 +57,8 @@ impl Context {
         }
 
         let egl_version = unsafe {
-            let mut major: ffi::egl::types::EGLint = mem::uninitialized();
-            let mut minor: ffi::egl::types::EGLint = mem::uninitialized();
+            let mut major: ffi::egl::types::EGLint = 0; // out param
+            let mut minor: ffi::egl::types::EGLint = 0; // out param
 
             if egl::Initialize(display, &mut major, &mut minor) == 0 {
                 return Err(CreationError::OsError(format!("eglInitialize failed")))
@@ -129,7 +129,7 @@ impl Context {
         };
 
         let (config_id, pixel_format) = unsafe {
-            r#try!(choose_fbconfig(display, &egl_version, api, version, pf_reqs))
+            choose_fbconfig(display, &egl_version, api, version, pf_reqs)?
         };
 
         Ok(ContextPrototype {
@@ -231,7 +231,7 @@ pub struct ContextPrototype<'a> {
 
 impl<'a> ContextPrototype<'a> {
     pub fn get_native_visual_id(&self) -> ffi::egl::types::EGLint {
-        let mut value = unsafe { mem::uninitialized() };
+        let mut value = 0;
         let ret = unsafe { egl::GetConfigAttrib(self.display, self.config_id,
                                                     ffi::egl::NATIVE_VISUAL_ID
                                                     as ffi::egl::types::EGLint, &mut value) };
@@ -278,9 +278,9 @@ impl<'a> ContextPrototype<'a> {
     {
         let context = unsafe {
             if let Some(version) = self.version {
-                r#try!(create_context(self.display, &self.egl_version,
-                                    &self.extensions, self.api, version, self.config_id,
-                                    self.opengl.debug, self.opengl.robustness))
+                create_context(self.display, &self.egl_version,
+                               &self.extensions, self.api, version, self.config_id,
+                               self.opengl.debug, self.opengl.robustness)?
 
             } else if self.api == Api::OpenGlEs {
                 if let Ok(ctxt) = create_context(self.display, &self.egl_version,
@@ -445,8 +445,8 @@ unsafe fn choose_fbconfig(display: ffi::egl::types::EGLDisplay,
     };
 
     // calling `eglChooseConfig`
-    let mut config_id = mem::uninitialized();
-    let mut num_configs = mem::uninitialized();
+    let mut config_id = ptr::null(); // out param
+    let mut num_configs = 0;         // out param
     if egl::ChooseConfig(display, descriptor.as_ptr(), &mut config_id, 1, &mut num_configs) == 0 {
         return Err(CreationError::OsError(format!("eglChooseConfig failed")));
     }
@@ -458,7 +458,7 @@ unsafe fn choose_fbconfig(display: ffi::egl::types::EGLDisplay,
     macro_rules! attrib {
         ($display:expr, $config:expr, $attr:expr) => (
             {
-                let mut value = mem::uninitialized();
+                let mut value = 0; // out param
                 let res = egl::GetConfigAttrib($display, $config,
                                                $attr as ffi::egl::types::EGLint, &mut value);
                 if res == 0 {
