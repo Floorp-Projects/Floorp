@@ -123,6 +123,13 @@
     <string name="mozac_browser_errorpages_unknown_host_title">Adres bulunamadı</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">İnternet bağlantısı yok</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Ağ bağlantınızı kontrol edin veya birkaç dakika sonra sayfayı tazelemeyi deneyin.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Tazele</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Geçersiz adres</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Girilen adres tanınan bir biçimde değil. Konum çubuğuna bakıp olası hataları giderdikten sonra yeniden deneyin.</p>]]></string>
     <!-- The document title and heading of an error page. -->
