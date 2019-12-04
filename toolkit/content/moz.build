@@ -164,9 +164,9 @@ with Files('tests/chrome/*451540*'):
     BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
 with Files('tests/chrome/*557987*'):
-    BUG_COMPONENT = ('Core', 'XP Toolkit/Widgets: Menus')
+    BUG_COMPONENT = ('Firefox', 'Menus')
 with Files('tests/chrome/*562554*'):
-    BUG_COMPONENT = ('Core', 'XP Toolkit/Widgets: Menus')
+    BUG_COMPONENT = ('Firefox', 'Menus')
 
 with Files('tests/chrome/*570192*'):
     BUG_COMPONENT = ('Firefox', 'Session Restore')

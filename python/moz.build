@@ -24,7 +24,7 @@ with Files('mozbuild/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('mozlint/**'):
-    BUG_COMPONENT = ('Testing', 'Lint')
+    BUG_COMPONENT = ('Firefox Build System', 'Linting and Formatting')
 
 with Files('mozversioncontrol/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
@@ -33,7 +33,7 @@ with Files('l10n/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('mozrelease/**'):
-    BUG_COMPONENT = ('Release Engineering', 'Release Automation')
+    BUG_COMPONENT = ('Release Engineering', 'General')
 
 with Files('mach_commands.py'):
     BUG_COMPONENT = ('Testing', 'Python Test')

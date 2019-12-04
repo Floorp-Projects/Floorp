@@ -27,13 +27,13 @@ with Files('dlmanager/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('enum34/**'):
-    BUG_COMPONENT = ('Release Engineering', 'General Automation')
+    BUG_COMPONENT = ('Release Engineering', 'General')
 
 with Files('futures/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('jsmin/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
+    BUG_COMPONENT = ('Firefox for Android', 'General')
 
 with Files('lldbutils/**'):
     BUG_COMPONENT = ('Core', 'General')
@@ -45,7 +45,7 @@ with Files('mohawk/**'):
     BUG_COMPONENT = ('Taskcluster', 'Platform Libraries')
 
 with Files('mozilla-version/**'):
-    BUG_COMPONENT = ('Release Engineering', 'General Automation')
+    BUG_COMPONENT = ('Release Engineering', 'General')
 
 with Files('psutil/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
@@ -54,7 +54,7 @@ with Files('py/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('pyasn1/**'):
-    BUG_COMPONENT = ('Release Engineering', 'General Automation')
+    BUG_COMPONENT = ('Release Engineering', 'General')
 
 with Files('pyasn1-modules/**'):
     BUG_COMPONENT = ('Core', 'Security: PSM')

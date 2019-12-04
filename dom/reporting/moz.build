@@ -39,7 +39,7 @@ IPDL_SOURCES += [
 include('/ipc/chromium/chromium-config.mozbuild')
 
 with Files('**'):
-    BUG_COMPONENT = ('DOM', 'Security')
+    BUG_COMPONENT = ('Core', 'DOM: Security')
 
 FINAL_LIBRARY = 'xul'
 

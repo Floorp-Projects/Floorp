@@ -79,7 +79,7 @@ with Files('IndexedDB.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Async Tooling')
 
 with Files('InlineSpellChecker*.jsm'):
-    BUG_COMPONENT = ('Core', 'Spell Checker')
+    BUG_COMPONENT = ('Core', 'Spelling checker')
 
 with Files('Integration.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Async Tooling')

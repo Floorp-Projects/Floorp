@@ -76,7 +76,7 @@ with Files("mozilla/tests/placeholder"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
 with Files("mozilla/tests/wasm/**"):
-    BUG_COMPONENT = ("Core", "Javascript: Web Assembly")
+    BUG_COMPONENT = ("Core", "Javascript: WebAssembly")
 
 with Files("update/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
@@ -481,7 +481,7 @@ with Files("tests/gamepad/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
 with Files("tests/geolocation-API/**"):
-    BUG_COMPONENT = ("Core", "Geolocation")
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 with Files("tests/gyroscope/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
@@ -624,7 +624,7 @@ with Files("tests/pointerlock/**"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
 with Files("tests/preload/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & Html")
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("tests/presentation-api/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
@@ -682,7 +682,7 @@ with Files("tests/storage/**"):
     BUG_COMPONENT = ("Core", "Storage: Quota Manager")
 
 with Files("tests/streams/**"):
-    BUG_COMPONENT = ("Core", "Javascript Engine")
+    BUG_COMPONENT = ("Core", "JavaScript Engine")
 
 with Files("tests/subresource-integrity/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
@@ -724,7 +724,7 @@ with Files("tests/wai-aria/**"):
     BUG_COMPONENT = ("Core", "Disability Access APIs")
 
 with Files("tests/wasm/**"):
-    BUG_COMPONENT = ("Core", "Javascript: Web Assembly")
+    BUG_COMPONENT = ("Core", "Javascript: WebAssembly")
 
 with Files("tests/web-animations/**"):
     BUG_COMPONENT = ("Core", "DOM: Animation")
@@ -763,10 +763,10 @@ with Files("tests/webusb/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
 with Files("tests/webvr/**"):
-    BUG_COMPONENT = ("Core", "DOM: WebVR")
+    BUG_COMPONENT = ("Core", "WebVR")
 
 with Files("tests/webxr/**"):
-    BUG_COMPONENT = ("Core", "DOM: WebVR")
+    BUG_COMPONENT = ("Core", "WebVR")
 
 with Files("tests/webvtt/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")

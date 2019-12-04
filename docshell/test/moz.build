@@ -79,7 +79,7 @@ with Files('mochitest/*402210*'):
     BUG_COMPONENT = ('Core', 'DOM: Security')
 
 with Files('mochitest/*509055*'):
-    BUG_COMPONENT = ('Core', 'History: Global')
+    BUG_COMPONENT = ('Firefox', 'Bookmarks & History')
 
 with Files('mochitest/*511449*'):
     BUG_COMPONENT = ('Core', 'Widget: Cocoa')
