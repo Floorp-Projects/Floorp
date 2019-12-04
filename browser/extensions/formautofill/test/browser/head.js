@@ -203,9 +203,12 @@ async function focusAndWaitForFieldsIdentified(browser, selector) {
     return;
   }
 
-  // Once the input is previously focused, no more FormAutofill:FieldsIdentified will be
-  // sent as the message goes along with focus event.
+  // Once the input is previously focused, no more notifications will be
+  // sent as the notification goes along with focus event.
+  /*
   if (!previouslyFocused) {
+    // XXXndeakin Disabling this doesn't seem to cause the test to fail,
+    // but it is easier to re-enable in the next patch.
     info("!previouslyFocused");
     await new Promise(resolve => {
       Services.mm.addMessageListener(
@@ -221,6 +224,7 @@ async function focusAndWaitForFieldsIdentified(browser, selector) {
     });
     info("FieldsIdentified");
   }
+  */
   // Wait 500ms to ensure that "markAsAutofillField" is completely finished.
   await sleep();
   await ContentTask.spawn(browser, {}, async function() {

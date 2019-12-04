@@ -17,6 +17,7 @@ async function readFile(path) {
 }
 
 function frameScript() {
+  const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
   addMessageListener("Test:WaitForIFrame", function() {
     var check = function() {
       if (content) {
