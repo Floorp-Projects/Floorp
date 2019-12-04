@@ -67,6 +67,7 @@ jobs:
         new: build-linux-reproduced/opt
         original: build-linux-shippable/opt
         fail-on-diff: true
+        run-on-projects: ['mozilla-central', 'try']
 
 
 # Make a task for each diff we might want. The following are just examples,
