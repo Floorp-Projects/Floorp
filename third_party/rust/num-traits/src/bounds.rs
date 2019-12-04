@@ -95,8 +95,8 @@ fn wrapping_bounded() {
     macro_rules! test_wrapping_bounded {
         ($($t:ty)+) => {
             $(
-                assert_eq!(Wrapping::<$t>::min_value().0, <$t>::min_value());
-                assert_eq!(Wrapping::<$t>::max_value().0, <$t>::max_value());
+                assert_eq!(<Wrapping<$t> as Bounded>::min_value().0, <$t>::min_value());
+                assert_eq!(<Wrapping<$t> as Bounded>::max_value().0, <$t>::max_value());
             )+
         };
     }
@@ -110,8 +110,8 @@ fn wrapping_bounded_i128() {
     macro_rules! test_wrapping_bounded {
         ($($t:ty)+) => {
             $(
-                assert_eq!(Wrapping::<$t>::min_value().0, <$t>::min_value());
-                assert_eq!(Wrapping::<$t>::max_value().0, <$t>::max_value());
+                assert_eq!(<Wrapping<$t> as Bounded>::min_value().0, <$t>::min_value());
+                assert_eq!(<Wrapping<$t> as Bounded>::max_value().0, <$t>::max_value());
             )+
         };
     }

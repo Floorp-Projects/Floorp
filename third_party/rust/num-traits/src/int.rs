@@ -5,6 +5,32 @@ use ops::checked::*;
 use ops::saturating::Saturating;
 use {Num, NumCast};
 
+/// Generic trait for primitive integers.
+///
+/// The `PrimInt` trait is an abstraction over the builtin primitive integer types (e.g., `u8`,
+/// `u32`, `isize`, `i128`, ...). It inherits the basic numeric traits and extends them with
+/// bitwise operators and non-wrapping arithmetic.
+///
+/// The trait explicitly inherits `Copy`, `Eq`, `Ord`, and `Sized`. The intention is that all
+/// types implementing this trait behave like primitive types that are passed by value by default
+/// and behave like builtin integers. Furthermore, the types are expected to expose the integer
+/// value in binary representation and support bitwise operators. The standard bitwise operations
+/// (e.g., bitwise-and, bitwise-or, right-shift, left-shift) are inherited and the trait extends
+/// these with introspective queries (e.g., `PrimInt::count_ones()`, `PrimInt::leading_zeros()`),
+/// bitwise combinators (e.g., `PrimInt::rotate_left()`), and endianness converters (e.g.,
+/// `PrimInt::to_be()`).
+///
+/// All `PrimInt` types are expected to be fixed-width binary integers. The width can be queried
+/// via `T::zero().count_zeros()`. The trait currently lacks a way to query the width at
+/// compile-time.
+///
+/// While a default implementation for all builtin primitive integers is provided, the trait is in
+/// no way restricted to these. Other integer types that fulfil the requirements are free to
+/// implement the trait was well.
+///
+/// This trait and many of the method names originate in the unstable `core::num::Int` trait from
+/// the rust standard library. The original trait was never stabilized and thus removed from the
+/// standard library.
 pub trait PrimInt:
     Sized
     + Copy
@@ -171,10 +197,10 @@ pub trait PrimInt:
     /// ```
     /// use num_traits::PrimInt;
     ///
-    /// let n = 0xFEDCBA9876543210i64;
-    /// let m = 0x000FEDCBA9876543i64;
+    /// let n = -8i8; // 0b11111000
+    /// let m = 62i8; // 0b00111110
     ///
-    /// assert_eq!(n.unsigned_shr(12), m);
+    /// assert_eq!(n.unsigned_shr(2), m);
     /// ```
     fn unsigned_shr(self, n: u32) -> Self;
 

@@ -7,6 +7,9 @@ use core::f64;
 
 use {Num, NumCast, ToPrimitive};
 
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use libm;
+
 /// Generic trait for floating point numbers that works with `no_std`.
 ///
 /// This trait implements a subset of the `Float` trait.
@@ -766,6 +769,8 @@ impl FloatCore for f32 {
         const EXP_MASK: u32 = 0x7f800000;
         const MAN_MASK: u32 = 0x007fffff;
 
+        // Safety: this identical to the implementation of f32::to_bits(),
+        // which is only available starting at Rust 1.20
         let bits: u32 = unsafe { mem::transmute(self) };
         match (bits & MAN_MASK, bits & EXP_MASK) {
             (0, 0) => FpCategory::Zero,
@@ -838,6 +843,8 @@ impl FloatCore for f64 {
         const EXP_MASK: u64 = 0x7ff0000000000000;
         const MAN_MASK: u64 = 0x000fffffffffffff;
 
+        // Safety: this identical to the implementation of f64::to_bits(),
+        // which is only available starting at Rust 1.20
         let bits: u64 = unsafe { mem::transmute(self) };
         match (bits & MAN_MASK, bits & EXP_MASK) {
             (0, 0) => FpCategory::Zero,
@@ -893,8 +900,8 @@ impl FloatCore for f64 {
 
 /// Generic trait for floating point numbers
 ///
-/// This trait is only available with the `std` feature.
-#[cfg(feature = "std")]
+/// This trait is only available with the `std` feature, or with the `libm` feature otherwise.
+#[cfg(any(feature = "std", feature = "libm"))]
 pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     /// Returns the `NaN` value.
     ///
@@ -1802,7 +1809,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
 }
 
 #[cfg(feature = "std")]
-macro_rules! float_impl {
+macro_rules! float_impl_std {
     ($T:ident $decode:ident) => {
         impl Float for $T {
             constant! {
@@ -1880,7 +1887,57 @@ macro_rules! float_impl {
     };
 }
 
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+macro_rules! float_impl_libm {
+    ($T:ident $decode:ident) => {
+        constant! {
+            nan() -> $T::NAN;
+            infinity() -> $T::INFINITY;
+            neg_infinity() -> $T::NEG_INFINITY;
+            neg_zero() -> -0.0;
+            min_value() -> $T::MIN;
+            min_positive_value() -> $T::MIN_POSITIVE;
+            epsilon() -> $T::EPSILON;
+            max_value() -> $T::MAX;
+        }
+
+        #[inline]
+        fn integer_decode(self) -> (u64, i16, i8) {
+            $decode(self)
+        }
+
+        #[inline]
+        fn fract(self) -> Self {
+            self - FloatCore::trunc(self)
+        }
+
+        #[inline]
+        fn log(self, base: Self) -> Self {
+            self.ln() / base.ln()
+        }
+
+        forward! {
+            FloatCore::is_nan(self) -> bool;
+            FloatCore::is_infinite(self) -> bool;
+            FloatCore::is_finite(self) -> bool;
+            FloatCore::is_normal(self) -> bool;
+            FloatCore::classify(self) -> FpCategory;
+            FloatCore::signum(self) -> Self;
+            FloatCore::is_sign_positive(self) -> bool;
+            FloatCore::is_sign_negative(self) -> bool;
+            FloatCore::recip(self) -> Self;
+            FloatCore::powi(self, n: i32) -> Self;
+            FloatCore::to_degrees(self) -> Self;
+            FloatCore::to_radians(self) -> Self;
+            FloatCore::max(self, other: Self) -> Self;
+            FloatCore::min(self, other: Self) -> Self;
+        }
+    };
+}
+
 fn integer_decode_f32(f: f32) -> (u64, i16, i8) {
+    // Safety: this identical to the implementation of f32::to_bits(),
+    // which is only available starting at Rust 1.20
     let bits: u32 = unsafe { mem::transmute(f) };
     let sign: i8 = if bits >> 31 == 0 { 1 } else { -1 };
     let mut exponent: i16 = ((bits >> 23) & 0xff) as i16;
@@ -1895,6 +1952,8 @@ fn integer_decode_f32(f: f32) -> (u64, i16, i8) {
 }
 
 fn integer_decode_f64(f: f64) -> (u64, i16, i8) {
+    // Safety: this identical to the implementation of f64::to_bits(),
+    // which is only available starting at Rust 1.20
     let bits: u64 = unsafe { mem::transmute(f) };
     let sign: i8 = if bits >> 63 == 0 { 1 } else { -1 };
     let mut exponent: i16 = ((bits >> 52) & 0x7ff) as i16;
@@ -1909,9 +1968,279 @@ fn integer_decode_f64(f: f64) -> (u64, i16, i8) {
 }
 
 #[cfg(feature = "std")]
-float_impl!(f32 integer_decode_f32);
+float_impl_std!(f32 integer_decode_f32);
 #[cfg(feature = "std")]
-float_impl!(f64 integer_decode_f64);
+float_impl_std!(f64 integer_decode_f64);
+
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+impl Float for f32 {
+    float_impl_libm!(f32 integer_decode_f32);
+
+    #[inline]
+    #[allow(deprecated)]
+    fn abs_sub(self, other: Self) -> Self {
+        libm::fdimf(self, other)
+    }
+    #[inline]
+    fn floor(self) -> Self {
+        libm::floorf(self)
+    }
+    #[inline]
+    fn ceil(self) -> Self {
+        libm::ceilf(self)
+    }
+    #[inline]
+    fn round(self) -> Self {
+        libm::roundf(self)
+    }
+    #[inline]
+    fn trunc(self) -> Self {
+        libm::truncf(self)
+    }
+    #[inline]
+    fn abs(self) -> Self {
+        libm::fabsf(self)
+    }
+    #[inline]
+    fn mul_add(self, a: Self, b: Self) -> Self {
+        libm::fmaf(self, a, b)
+    }
+    #[inline]
+    fn powf(self, n: Self) -> Self {
+        libm::powf(self, n)
+    }
+    #[inline]
+    fn sqrt(self) -> Self {
+        libm::sqrtf(self)
+    }
+    #[inline]
+    fn exp(self) -> Self {
+        libm::expf(self)
+    }
+    #[inline]
+    fn exp2(self) -> Self {
+        libm::exp2f(self)
+    }
+    #[inline]
+    fn ln(self) -> Self {
+        libm::logf(self)
+    }
+    #[inline]
+    fn log2(self) -> Self {
+        libm::log2f(self)
+    }
+    #[inline]
+    fn log10(self) -> Self {
+        libm::log10f(self)
+    }
+    #[inline]
+    fn cbrt(self) -> Self {
+        libm::cbrtf(self)
+    }
+    #[inline]
+    fn hypot(self, other: Self) -> Self {
+        libm::hypotf(self, other)
+    }
+    #[inline]
+    fn sin(self) -> Self {
+        libm::sinf(self)
+    }
+    #[inline]
+    fn cos(self) -> Self {
+        libm::cosf(self)
+    }
+    #[inline]
+    fn tan(self) -> Self {
+        libm::tanf(self)
+    }
+    #[inline]
+    fn asin(self) -> Self {
+        libm::asinf(self)
+    }
+    #[inline]
+    fn acos(self) -> Self {
+        libm::acosf(self)
+    }
+    #[inline]
+    fn atan(self) -> Self {
+        libm::atanf(self)
+    }
+    #[inline]
+    fn atan2(self, other: Self) -> Self {
+        libm::atan2f(self, other)
+    }
+    #[inline]
+    fn sin_cos(self) -> (Self, Self) {
+        libm::sincosf(self)
+    }
+    #[inline]
+    fn exp_m1(self) -> Self {
+        libm::expm1f(self)
+    }
+    #[inline]
+    fn ln_1p(self) -> Self {
+        libm::log1pf(self)
+    }
+    #[inline]
+    fn sinh(self) -> Self {
+        libm::sinhf(self)
+    }
+    #[inline]
+    fn cosh(self) -> Self {
+        libm::coshf(self)
+    }
+    #[inline]
+    fn tanh(self) -> Self {
+        libm::tanhf(self)
+    }
+    #[inline]
+    fn asinh(self) -> Self {
+        libm::asinhf(self)
+    }
+    #[inline]
+    fn acosh(self) -> Self {
+        libm::acoshf(self)
+    }
+    #[inline]
+    fn atanh(self) -> Self {
+        libm::atanhf(self)
+    }
+}
+
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+impl Float for f64 {
+    float_impl_libm!(f64 integer_decode_f64);
+
+    #[inline]
+    #[allow(deprecated)]
+    fn abs_sub(self, other: Self) -> Self {
+        libm::fdim(self, other)
+    }
+    #[inline]
+    fn floor(self) -> Self {
+        libm::floor(self)
+    }
+    #[inline]
+    fn ceil(self) -> Self {
+        libm::ceil(self)
+    }
+    #[inline]
+    fn round(self) -> Self {
+        libm::round(self)
+    }
+    #[inline]
+    fn trunc(self) -> Self {
+        libm::trunc(self)
+    }
+    #[inline]
+    fn abs(self) -> Self {
+        libm::fabs(self)
+    }
+    #[inline]
+    fn mul_add(self, a: Self, b: Self) -> Self {
+        libm::fma(self, a, b)
+    }
+    #[inline]
+    fn powf(self, n: Self) -> Self {
+        libm::pow(self, n)
+    }
+    #[inline]
+    fn sqrt(self) -> Self {
+        libm::sqrt(self)
+    }
+    #[inline]
+    fn exp(self) -> Self {
+        libm::exp(self)
+    }
+    #[inline]
+    fn exp2(self) -> Self {
+        libm::exp2(self)
+    }
+    #[inline]
+    fn ln(self) -> Self {
+        libm::log(self)
+    }
+    #[inline]
+    fn log2(self) -> Self {
+        libm::log2(self)
+    }
+    #[inline]
+    fn log10(self) -> Self {
+        libm::log10(self)
+    }
+    #[inline]
+    fn cbrt(self) -> Self {
+        libm::cbrt(self)
+    }
+    #[inline]
+    fn hypot(self, other: Self) -> Self {
+        libm::hypot(self, other)
+    }
+    #[inline]
+    fn sin(self) -> Self {
+        libm::sin(self)
+    }
+    #[inline]
+    fn cos(self) -> Self {
+        libm::cos(self)
+    }
+    #[inline]
+    fn tan(self) -> Self {
+        libm::tan(self)
+    }
+    #[inline]
+    fn asin(self) -> Self {
+        libm::asin(self)
+    }
+    #[inline]
+    fn acos(self) -> Self {
+        libm::acos(self)
+    }
+    #[inline]
+    fn atan(self) -> Self {
+        libm::atan(self)
+    }
+    #[inline]
+    fn atan2(self, other: Self) -> Self {
+        libm::atan2(self, other)
+    }
+    #[inline]
+    fn sin_cos(self) -> (Self, Self) {
+        libm::sincos(self)
+    }
+    #[inline]
+    fn exp_m1(self) -> Self {
+        libm::expm1(self)
+    }
+    #[inline]
+    fn ln_1p(self) -> Self {
+        libm::log1p(self)
+    }
+    #[inline]
+    fn sinh(self) -> Self {
+        libm::sinh(self)
+    }
+    #[inline]
+    fn cosh(self) -> Self {
+        libm::cosh(self)
+    }
+    #[inline]
+    fn tanh(self) -> Self {
+        libm::tanh(self)
+    }
+    #[inline]
+    fn asinh(self) -> Self {
+        libm::asinh(self)
+    }
+    #[inline]
+    fn acosh(self) -> Self {
+        libm::acosh(self)
+    }
+    #[inline]
+    fn atanh(self) -> Self {
+        libm::atanh(self)
+    }
+}
 
 macro_rules! float_const_impl {
     ($(#[$doc:meta] $constant:ident,)+) => (
@@ -1994,7 +2323,7 @@ mod tests {
         }
     }
 
-    #[cfg(feature = "std")]
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn convert_deg_rad_std() {
         for &(deg, rad) in &DEG_RAD_PAIRS {

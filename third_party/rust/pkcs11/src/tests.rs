@@ -46,6 +46,7 @@ fn pkcs11_module_name() -> PathBuf {
 }
 
 #[test]
+#[serial]
 fn test_label_from_str() {
   let s30 = "Löwe 老虎 Léopar虎d虎aaa";
   let s32 = "Löwe 老虎 Léopar虎d虎aaaö";
@@ -75,6 +76,7 @@ fn test_label_from_str() {
   assert_eq!(l34[31], 32);
 }
 #[test]
+#[serial]
 fn ctx_new() {
   let res = Ctx::new(pkcs11_module_name());
   assert!(
@@ -85,6 +87,7 @@ fn ctx_new() {
 }
 
 #[test]
+#[serial]
 fn ctx_initialize() {
   let mut ctx = Ctx::new(pkcs11_module_name()).unwrap();
   let res = ctx.initialize(None);
@@ -97,6 +100,7 @@ fn ctx_initialize() {
 }
 
 #[test]
+#[serial]
 fn ctx_new_and_initialize() {
   let res = Ctx::new_and_initialize(pkcs11_module_name());
   assert!(
@@ -107,6 +111,7 @@ fn ctx_new_and_initialize() {
 }
 
 #[test]
+#[serial]
 fn ctx_finalize() {
   let mut ctx = Ctx::new_and_initialize(pkcs11_module_name()).unwrap();
   let res = ctx.finalize();
@@ -118,6 +123,7 @@ fn ctx_finalize() {
 }
 
 #[test]
+#[serial]
 fn ctx_get_info() {
   let ctx = Ctx::new_and_initialize(pkcs11_module_name()).unwrap();
   let res = ctx.get_info();
@@ -131,6 +137,7 @@ fn ctx_get_info() {
 }
 
 #[test]
+#[serial]
 fn ctx_get_function_list() {
   let ctx = Ctx::new_and_initialize(pkcs11_module_name()).unwrap();
   let res = ctx.get_function_list();
@@ -144,6 +151,7 @@ fn ctx_get_function_list() {
 }
 
 #[test]
+#[serial]
 fn ctx_get_slot_list() {
   let ctx = Ctx::new_and_initialize(pkcs11_module_name()).unwrap();
   let res = ctx.get_slot_list(false);
@@ -157,6 +165,7 @@ fn ctx_get_slot_list() {
 }
 
 #[test]
+#[serial]
 fn ctx_get_slot_infos() {
   let ctx = Ctx::new_and_initialize(pkcs11_module_name()).unwrap();
   let slots = ctx.get_slot_list(false).unwrap();
@@ -175,6 +184,7 @@ fn ctx_get_slot_infos() {
 }
 
 #[test]
+#[serial]
 fn ctx_get_token_infos() {
   let ctx = Ctx::new_and_initialize(pkcs11_module_name()).unwrap();
   let slots = ctx.get_slot_list(false).unwrap();
@@ -193,6 +203,7 @@ fn ctx_get_token_infos() {
 }
 
 #[test]
+#[serial]
 fn ctx_get_mechanism_lists() {
   let ctx = Ctx::new_and_initialize(pkcs11_module_name()).unwrap();
   let slots = ctx.get_slot_list(false).unwrap();
@@ -211,6 +222,7 @@ fn ctx_get_mechanism_lists() {
 }
 
 #[test]
+#[serial]
 fn ctx_get_mechanism_infos() {
   let ctx = Ctx::new_and_initialize(pkcs11_module_name()).unwrap();
   let slots = ctx.get_slot_list(false).unwrap();
@@ -233,6 +245,7 @@ fn ctx_get_mechanism_infos() {
 }
 
 #[test]
+#[serial]
 fn ctx_init_token() {
   let ctx = Ctx::new_and_initialize(pkcs11_module_name()).unwrap();
   let slots = ctx.get_slot_list(false).unwrap();
@@ -258,6 +271,7 @@ fn ctx_init_token() {
 }
 
 #[test]
+#[serial]
 fn ctx_init_pin() {
   let ctx = Ctx::new_and_initialize(pkcs11_module_name()).unwrap();
   let slots = ctx.get_slot_list(false).unwrap();
@@ -283,6 +297,7 @@ fn ctx_init_pin() {
 }
 
 #[test]
+#[serial]
 fn ctx_set_pin() {
   let ctx = Ctx::new_and_initialize(pkcs11_module_name()).unwrap();
   let slots = ctx.get_slot_list(false).unwrap();
@@ -310,6 +325,7 @@ fn ctx_set_pin() {
 }
 
 #[test]
+#[serial]
 fn ctx_open_session() {
   let ctx = Ctx::new_and_initialize(pkcs11_module_name()).unwrap();
   let slots = ctx.get_slot_list(false).unwrap();
@@ -331,6 +347,7 @@ fn ctx_open_session() {
 }
 
 #[test]
+#[serial]
 fn ctx_close_session() {
   let ctx = Ctx::new_and_initialize(pkcs11_module_name()).unwrap();
   let slots = ctx.get_slot_list(false).unwrap();
@@ -354,6 +371,7 @@ fn ctx_close_session() {
 }
 
 #[test]
+#[serial]
 fn ctx_close_all_sessions() {
   let ctx = Ctx::new_and_initialize(pkcs11_module_name()).unwrap();
   let slots = ctx.get_slot_list(false).unwrap();
@@ -377,6 +395,7 @@ fn ctx_close_all_sessions() {
 }
 
 #[test]
+#[serial]
 fn ctx_get_session_info() {
   let ctx = Ctx::new_and_initialize(pkcs11_module_name()).unwrap();
   let slots = ctx.get_slot_list(false).unwrap();
@@ -401,6 +420,7 @@ fn ctx_get_session_info() {
 }
 
 #[test]
+#[serial]
 fn ctx_login() {
   let ctx = Ctx::new_and_initialize(pkcs11_module_name()).unwrap();
   let slots = ctx.get_slot_list(false).unwrap();
@@ -425,6 +445,7 @@ fn ctx_login() {
 }
 
 #[test]
+#[serial]
 fn ctx_logout() {
   let ctx = Ctx::new_and_initialize(pkcs11_module_name()).unwrap();
   let slots = ctx.get_slot_list(false).unwrap();
@@ -575,6 +596,7 @@ fn fixture_token() -> Result<(Ctx, CK_SESSION_HANDLE), Error> {
 }
 
 #[test]
+#[serial]
 fn ctx_create_object() {
   /*
         CKA_CLASS       ck_type  object_class:CKO_DATA
@@ -642,6 +664,7 @@ fn fixture_token_and_object() -> Result<(Ctx, CK_SESSION_HANDLE, CK_OBJECT_HANDL
 }
 
 #[test]
+#[serial]
 fn ctx_copy_object() {
   let (ctx, sh, oh) = fixture_token_and_object().unwrap();
 
@@ -663,6 +686,7 @@ fn ctx_copy_object() {
 }
 
 #[test]
+#[serial]
 fn ctx_destroy_object() {
   let (ctx, sh, oh) = fixture_token_and_object().unwrap();
 
@@ -677,6 +701,7 @@ fn ctx_destroy_object() {
 }
 
 #[test]
+#[serial]
 fn ctx_get_object_size() {
   let (ctx, sh, oh) = fixture_token_and_object().unwrap();
 
@@ -693,6 +718,7 @@ fn ctx_get_object_size() {
 }
 
 #[test]
+#[serial]
 fn ctx_get_attribute_value() {
   {
     let (ctx, sh, oh) = fixture_token_and_object().unwrap();
@@ -748,6 +774,7 @@ fn ctx_get_attribute_value() {
 }
 
 #[test]
+#[serial]
 fn ctx_set_attribute_value() {
   let (ctx, sh, oh) = fixture_token_and_object().unwrap();
 
@@ -771,6 +798,7 @@ fn ctx_set_attribute_value() {
 }
 
 #[test]
+#[serial]
 fn ctx_find_objects_init() {
   let (ctx, sh, _) = fixture_token_and_object().unwrap();
 
@@ -788,6 +816,7 @@ fn ctx_find_objects_init() {
 }
 
 #[test]
+#[serial]
 fn ctx_find_objects() {
   let (ctx, sh, _) = fixture_token_and_object().unwrap();
 
@@ -809,6 +838,7 @@ fn ctx_find_objects() {
 }
 
 #[test]
+#[serial]
 fn ctx_find_objects_final() {
   let (ctx, sh, _) = fixture_token_and_object().unwrap();
 
@@ -828,6 +858,7 @@ fn ctx_find_objects_final() {
 }
 
 #[test]
+#[serial]
 fn ctx_generate_key() {
   let (ctx, sh) = fixture_token().unwrap();
 
@@ -894,6 +925,7 @@ fn ctx_generate_key() {
 }
 
 #[test]
+#[serial]
 fn ctx_generate_key_pair() {
   let (ctx, sh) = fixture_token().unwrap();
 
@@ -1227,6 +1259,7 @@ fn fixture_dh_key_pair(
 }
 
 #[test]
+#[serial]
 fn ctx_wrap_key() {
   let (ctx, sh, wrapOh, secOh) = fixture_token_and_secret_keys().unwrap();
 
@@ -1256,6 +1289,7 @@ fn ctx_wrap_key() {
 }
 
 #[test]
+#[serial]
 fn ctx_unwrap_key() {
   let (ctx, sh, wrapOh, secOh) = fixture_token_and_secret_keys().unwrap();
 
@@ -1310,6 +1344,7 @@ fn ctx_unwrap_key() {
 }
 
 #[test]
+#[serial]
 fn ctx_derive_key() {
   let (ctx, sh) = fixture_token().unwrap();
 
@@ -1431,6 +1466,7 @@ fn ctx_derive_key() {
 }
 
 #[test]
+#[serial]
 fn ctx_seed_random() {
   let (ctx, sh) = fixture_token().unwrap();
 
@@ -1446,6 +1482,7 @@ fn ctx_seed_random() {
 }
 
 #[test]
+#[serial]
 fn ctx_generate_random() {
   let (ctx, sh) = fixture_token().unwrap();
   let res = ctx.generate_random(sh, 32);
@@ -1461,6 +1498,7 @@ fn ctx_generate_random() {
 }
 
 #[test]
+#[serial]
 fn ctx_get_function_status() {
   let (ctx, sh) = fixture_token().unwrap();
   let res = ctx.get_function_status(sh);
@@ -1475,6 +1513,7 @@ fn ctx_get_function_status() {
 }
 
 #[test]
+#[serial]
 fn ctx_cancel_function() {
   let (ctx, sh) = fixture_token().unwrap();
   let res = ctx.cancel_function(sh);
@@ -1489,6 +1528,7 @@ fn ctx_cancel_function() {
 }
 
 #[test]
+#[serial]
 fn ctx_wait_for_slot_event() {
   let (ctx, _) = fixture_token().unwrap();
   let res = ctx.wait_for_slot_event(CKF_DONT_BLOCK);

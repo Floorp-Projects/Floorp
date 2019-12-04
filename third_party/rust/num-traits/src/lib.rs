@@ -20,13 +20,17 @@
 #[cfg(feature = "std")]
 extern crate std;
 
+// Only `no_std` builds actually use `libm`.
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+extern crate libm;
+
 use core::fmt;
 use core::num::Wrapping;
 use core::ops::{Add, Div, Mul, Rem, Sub};
 use core::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
 
 pub use bounds::Bounded;
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "libm"))]
 pub use float::Float;
 pub use float::FloatConst;
 // pub use real::{FloatCore, Real}; // NOTE: Don't do this, it breaks `use num_traits::*;`.
@@ -53,7 +57,6 @@ pub mod identities;
 pub mod int;
 pub mod ops;
 pub mod pow;
-#[cfg(feature = "std")]
 pub mod real;
 pub mod sign;
 
@@ -90,13 +93,12 @@ pub trait NumOps<Rhs = Self, Output = Self>:
 {
 }
 
-impl<T, Rhs, Output> NumOps<Rhs, Output> for T
-where
+impl<T, Rhs, Output> NumOps<Rhs, Output> for T where
     T: Add<Rhs, Output = Output>
         + Sub<Rhs, Output = Output>
         + Mul<Rhs, Output = Output>
         + Div<Rhs, Output = Output>
-        + Rem<Rhs, Output = Output>,
+        + Rem<Rhs, Output = Output>
 {
 }
 
@@ -105,22 +107,14 @@ where
 ///
 /// This is automatically implemented for types which implement the operators.
 pub trait NumRef: Num + for<'r> NumOps<&'r Self> {}
-impl<T> NumRef for T
-where
-    T: Num + for<'r> NumOps<&'r T>,
-{
-}
+impl<T> NumRef for T where T: Num + for<'r> NumOps<&'r T> {}
 
 /// The trait for references which implement numeric operations, taking the
 /// second operand either by value or by reference.
 ///
 /// This is automatically implemented for types which implement the operators.
 pub trait RefNum<Base>: NumOps<Base, Base> + for<'r> NumOps<&'r Base, Base> {}
-impl<T, Base> RefNum<Base> for T
-where
-    T: NumOps<Base, Base> + for<'r> NumOps<&'r Base, Base>,
-{
-}
+impl<T, Base> RefNum<Base> for T where T: NumOps<Base, Base> + for<'r> NumOps<&'r Base, Base> {}
 
 /// The trait for types implementing numeric assignment operators (like `+=`).
 ///
@@ -130,9 +124,8 @@ pub trait NumAssignOps<Rhs = Self>:
 {
 }
 
-impl<T, Rhs> NumAssignOps<Rhs> for T
-where
-    T: AddAssign<Rhs> + SubAssign<Rhs> + MulAssign<Rhs> + DivAssign<Rhs> + RemAssign<Rhs>,
+impl<T, Rhs> NumAssignOps<Rhs> for T where
+    T: AddAssign<Rhs> + SubAssign<Rhs> + MulAssign<Rhs> + DivAssign<Rhs> + RemAssign<Rhs>
 {
 }
 
@@ -140,22 +133,14 @@ where
 ///
 /// This is automatically implemented for types which implement the operators.
 pub trait NumAssign: Num + NumAssignOps {}
-impl<T> NumAssign for T
-where
-    T: Num + NumAssignOps,
-{
-}
+impl<T> NumAssign for T where T: Num + NumAssignOps {}
 
 /// The trait for `NumAssign` types which also implement assignment operations
 /// taking the second operand by reference.
 ///
 /// This is automatically implemented for types which implement the operators.
 pub trait NumAssignRef: NumAssign + for<'r> NumAssignOps<&'r Self> {}
-impl<T> NumAssignRef for T
-where
-    T: NumAssign + for<'r> NumAssignOps<&'r T>,
-{
-}
+impl<T> NumAssignRef for T where T: NumAssign + for<'r> NumAssignOps<&'r T> {}
 
 macro_rules! int_trait_impl {
     ($name:ident for $($t:ty)*) => ($(
@@ -234,7 +219,12 @@ macro_rules! float_trait_impl {
                 }
 
                 fn slice_shift_char(src: &str) -> Option<(char, &str)> {
-                    src.chars().nth(0).map(|ch| (ch, &src[1..]))
+                    let mut chars = src.chars();
+                    if let Some(ch) = chars.next() {
+                        Some((ch, chars.as_str()))
+                    } else {
+                        None
+                    }
                 }
 
                 let (is_positive, src) =  match slice_shift_char(src) {
@@ -377,6 +367,8 @@ float_trait_impl!(Num for f32 f64);
 ///  If input is less than min then this returns min.
 ///  If input is greater than max then this returns max.
 ///  Otherwise this returns input.
+///
+/// **Panics** in debug mode if `!(min <= max)`.
 #[inline]
 pub fn clamp<T: PartialOrd>(input: T, min: T, max: T) -> T {
     debug_assert!(min <= max, "min must be less than or equal to max");
@@ -389,17 +381,97 @@ pub fn clamp<T: PartialOrd>(input: T, min: T, max: T) -> T {
     }
 }
 
+/// A value bounded by a minimum value
+///
+///  If input is less than min then this returns min.
+///  Otherwise this returns input.
+///  `clamp_min(std::f32::NAN, 1.0)` preserves `NAN` different from `f32::min(std::f32::NAN, 1.0)`.
+///
+/// **Panics** in debug mode if `!(min == min)`. (This occurs if `min` is `NAN`.)
+#[inline]
+pub fn clamp_min<T: PartialOrd>(input: T, min: T) -> T {
+    debug_assert!(min == min, "min must not be NAN");
+    if input < min {
+        min
+    } else {
+        input
+    }
+}
+
+/// A value bounded by a maximum value
+///
+///  If input is greater than max then this returns max.
+///  Otherwise this returns input.
+///  `clamp_max(std::f32::NAN, 1.0)` preserves `NAN` different from `f32::max(std::f32::NAN, 1.0)`.
+///
+/// **Panics** in debug mode if `!(max == max)`. (This occurs if `max` is `NAN`.)
+#[inline]
+pub fn clamp_max<T: PartialOrd>(input: T, max: T) -> T {
+    debug_assert!(max == max, "max must not be NAN");
+    if input > max {
+        max
+    } else {
+        input
+    }
+}
+
 #[test]
 fn clamp_test() {
     // Int test
     assert_eq!(1, clamp(1, -1, 2));
     assert_eq!(-1, clamp(-2, -1, 2));
     assert_eq!(2, clamp(3, -1, 2));
+    assert_eq!(1, clamp_min(1, -1));
+    assert_eq!(-1, clamp_min(-2, -1));
+    assert_eq!(-1, clamp_max(1, -1));
+    assert_eq!(-2, clamp_max(-2, -1));
 
     // Float test
     assert_eq!(1.0, clamp(1.0, -1.0, 2.0));
     assert_eq!(-1.0, clamp(-2.0, -1.0, 2.0));
     assert_eq!(2.0, clamp(3.0, -1.0, 2.0));
+    assert_eq!(1.0, clamp_min(1.0, -1.0));
+    assert_eq!(-1.0, clamp_min(-2.0, -1.0));
+    assert_eq!(-1.0, clamp_max(1.0, -1.0));
+    assert_eq!(-2.0, clamp_max(-2.0, -1.0));
+    assert!(clamp(::core::f32::NAN, -1.0, 1.0).is_nan());
+    assert!(clamp_min(::core::f32::NAN, 1.0).is_nan());
+    assert!(clamp_max(::core::f32::NAN, 1.0).is_nan());
+}
+
+#[test]
+#[should_panic]
+#[cfg(debug_assertions)]
+fn clamp_nan_min() {
+    clamp(0., ::core::f32::NAN, 1.);
+}
+
+#[test]
+#[should_panic]
+#[cfg(debug_assertions)]
+fn clamp_nan_max() {
+    clamp(0., -1., ::core::f32::NAN);
+}
+
+#[test]
+#[should_panic]
+#[cfg(debug_assertions)]
+fn clamp_nan_min_max() {
+    clamp(0., ::core::f32::NAN, ::core::f32::NAN);
+}
+
+#[test]
+#[should_panic]
+#[cfg(debug_assertions)]
+fn clamp_min_nan_min() {
+    clamp_min(0., ::core::f32::NAN);
+}
+
+#[test]
+#[should_panic]
+#[cfg(debug_assertions)]
+fn clamp_max_nan_max() {
+    clamp_max(0., ::core::f32::NAN);
 }
 
 #[test]
@@ -411,6 +483,15 @@ fn from_str_radix_unwrap() {
 
     let f: f32 = Num::from_str_radix("0.0", 10).unwrap();
     assert_eq!(f, 0.0);
+}
+
+#[test]
+fn from_str_radix_multi_byte_fail() {
+    // Ensure parsing doesn't panic, even on invalid sign characters
+    assert!(f32::from_str_radix("™0.2", 10).is_err());
+
+    // Even when parsing the exponent sign
+    assert!(f32::from_str_radix("0.2E™1", 10).is_err());
 }
 
 #[test]
