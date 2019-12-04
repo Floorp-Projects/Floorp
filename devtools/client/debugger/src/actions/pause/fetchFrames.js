@@ -6,22 +6,11 @@
 
 import type { ThreadContext } from "../../types";
 import type { ThunkArgs } from "../types";
-import { isValidThreadContext } from "../../utils/context";
 
 export function fetchFrames(cx: ThreadContext) {
-  return async function({ dispatch, client, getState }: ThunkArgs) {
+  return async function({ dispatch, client }: ThunkArgs) {
     const { thread } = cx;
-    let frames;
-    try {
-      frames = await client.getFrames(thread);
-    } catch (e) {
-      // getFrames will fail if the thread has resumed. In this case the thread
-      // should no longer be valid and the frames we would have fetched would be
-      // discarded anyways.
-      if (isValidThreadContext(getState(), cx)) {
-        throw new Error("Thread context is still valid");
-      }
-    }
+    const frames = await client.getFrames(thread);
     dispatch({ type: "FETCHED_FRAMES", thread, frames, cx });
   };
 }
