@@ -47,8 +47,8 @@ namespace gfx {
 // and mapped files if we have both release and nightlies
 // running at the same time? Or...what if we have multiple
 // release builds running on same machine? (Bug 1563232)
-#define SHMEM_VERSION "0.0.5"
-static const int32_t kVRExternalVersion = 12;
+#define SHMEM_VERSION "0.0.6"
+static const int32_t kVRExternalVersion = 13;
 
 // We assign VR presentations to groups with a bitmask.
 // Currently, we will only display either content or chrome.
@@ -365,12 +365,12 @@ struct VRControllerState {
   // start frame Id of the most recent primary squeeze
   // action, or 0 if the squeeze action has never occurred.
   uint64_t squeezeActionStartFrameId;
-  // End frame Id of the most recent primary squeez
+  // End frame Id of the most recent primary squeeze
   // action, or 0 if action never occurred.
   // If squeezeActionStopFrameId is less than
-  // squeezetActionStartFrameId, then the squeeze
+  // squeezeActionStartFrameId, then the squeeze
   // action has not ended yet.
-  uint64_t squeezeActionEndFrameId;
+  uint64_t squeezeActionStopFrameId;
 
   uint32_t numButtons;
   uint32_t numAxes;
