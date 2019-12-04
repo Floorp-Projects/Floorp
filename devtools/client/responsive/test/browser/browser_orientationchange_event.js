@@ -6,6 +6,20 @@
 // Test that the "orientationchange" event is fired when the "rotate button" is clicked.
 
 const TEST_URL = "data:text/html;charset=utf-8,";
+const testDevice = {
+  name: "Fake Phone RDM Test",
+  width: 320,
+  height: 570,
+  pixelRatio: 5.5,
+  userAgent: "Mozilla/5.0 (Mobile; rv:39.0) Gecko/39.0 Firefox/39.0",
+  touch: true,
+  firefoxOS: true,
+  os: "custom",
+  featured: true,
+};
+
+// Add the new device to the list
+addDeviceForTest(testDevice);
 
 addRDMTask(TEST_URL, async function({ ui }) {
   info("Rotate viewport to trigger 'orientationchange' event.");
@@ -45,18 +59,9 @@ addRDMTask(TEST_URL, async function({ ui }) {
     await orientationChange;
   });
 
-  info(
-    "Check that the viewport orientation changed, but not the angle after a reload"
-  );
+  info("Check that the viewport orientation values persist after reload");
   const browser = ui.getViewportBrowser();
-  const reload = browser.reload();
-  const onViewportOrientationChange = once(
-    ui,
-    "only-viewport-orientation-changed"
-  );
-  await reload;
-  await onViewportOrientationChange;
-  ok(true, "orientationchange event was not dispatched on reload.");
+  await browser.reload();
 
   await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
     info("Check that we still have the previous orientation values.");
@@ -65,6 +70,26 @@ addRDMTask(TEST_URL, async function({ ui }) {
       content.screen.orientation.type,
       "landscape-primary",
       "Orientation is still landscape-primary."
+    );
+  });
+
+  info(
+    "Check the orientationchange event is not dispatched when changing devices."
+  );
+  const onViewportOrientationChange = once(
+    ui,
+    "only-viewport-orientation-changed"
+  );
+  await selectDevice(ui, "Fake Phone RDM Test");
+  await onViewportOrientationChange;
+
+  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
+    info("Check the new orientation values after selecting device.");
+    is(content.screen.orientation.angle, 0, "Orientation angle is 0");
+    is(
+      content.screen.orientation.type,
+      "portrait-primary",
+      "New orientation is portrait-primary."
     );
   });
 });

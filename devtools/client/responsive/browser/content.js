@@ -154,11 +154,6 @@ var global = this;
       .getInterface(Ci.nsIWebProgress);
     webProgress.removeProgressListener(WebProgressListener);
     docShell.deviceSizeIsPageSize = gDeviceSizeWasPageSize;
-    // Restore the original physical screen orientation values before RDM is stopped.
-    // This is necessary since the window document's `setCurrentRDMPaneOrientation`
-    // WebIDL operation can only modify the window's screen orientation values while the
-    // window content is in RDM.
-    restoreScreenOrientation();
     restoreScrollbars();
     setDocumentInRDMPane(false);
     stopOnResize();
@@ -206,13 +201,6 @@ var global = this;
       } catch (e) {}
     }
     flushStyle();
-  }
-
-  function restoreScreenOrientation() {
-    docShell.contentViewer.DOMDocument.setRDMPaneOrientation(
-      "landscape-primary",
-      0
-    );
   }
 
   function setDocumentInRDMPane(inRDMPane) {
