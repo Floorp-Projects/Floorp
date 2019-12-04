@@ -1862,6 +1862,36 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     }
   }
 
+  // If the content is multipart/x-mixed-replace, we'll insert a MIME decoder
+  // in the pipeline to handle the content and pass it along to our
+  // original listener. nsUnknownDecoder doesn't support detecting this type,
+  // so we only need to insert this using the response header's mime type.
+  // We only do this for document loads, since we might want to send parts
+  // to the external protocol handler without leaving the parent process.
+  nsCOMPtr<nsIParentChannel> parentChannel;
+  NS_QueryNotificationCallbacks(this, parentChannel);
+  RefPtr<DocumentLoadListener> docListener = do_QueryObject(parentChannel);
+  if (mResponseHead && docListener) {
+    nsAutoCString contentType;
+    mResponseHead->ContentType(contentType);
+
+    if (contentType.Equals(NS_LITERAL_CSTRING("multipart/x-mixed-replace"))) {
+      nsCOMPtr<nsIStreamConverterService> convServ(
+          do_GetService("@mozilla.org/streamConverters;1", &rv));
+      if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIStreamListener> toListener(mListener);
+        nsCOMPtr<nsIStreamListener> fromListener;
+
+        rv = convServ->AsyncConvertData("multipart/x-mixed-replace", "*/*",
+                                        toListener, nullptr,
+                                        getter_AddRefs(fromListener));
+        if (NS_SUCCEEDED(rv)) {
+          mListener = fromListener;
+        }
+      }
+    }
+  }
+
   if (mResponseHead && !mResponseHead->HasContentCharset())
     mResponseHead->SetContentCharset(mContentCharsetHint);
 
